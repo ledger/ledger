@@ -105,12 +105,12 @@
   (ledger-reconcile-save))
 
 (defun ledger-do-reconcile ()
-    (let* ((buf ledger-buf)
+  (let* ((buf ledger-buf)
          (account ledger-acct)
          (items
-          (with-temp-buffer
-	    (ledger-exec-ledger buf (current-buffer) "--uncleared" "--real" "--related"
-                                      "emacs" account)
+          (with-current-buffer
+	    (apply #'ledger-exec-ledger
+                   buf nil "emacs" account "--uncleared" '("--real"))
 	    (goto-char (point-min))
 	    (unless (eobp)
 	      (unless (looking-at "(")
@@ -144,6 +144,7 @@
       (goto-char (point-min))
       (set-buffer-modified-p nil)
       (toggle-read-only t)))
+
 
 (defun ledger-reconcile (account)
   (interactive "sAccount to reconcile: ")

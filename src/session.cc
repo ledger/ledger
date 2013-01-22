@@ -146,7 +146,7 @@ std::size_t session_t::read_data(const string& master_account)
     }
 
     foreach (const path& pathname, HANDLER(file_).data_files) {
-      if (pathname == "-") {
+      if (pathname == "-" || pathname == "/dev/stdin") {
         // To avoid problems with stdin and pipes, etc., we read the entire
         // file in beforehand into a memory buffer, and then parcel it out
         // from there.
@@ -162,7 +162,6 @@ std::size_t session_t::read_data(const string& master_account)
 
         shared_ptr<std::istream> stream(new std::istringstream(buffer.str()));
         parsing_context.push(stream);
-        parsing_context.get_current().pathname = "/dev/stdin";
       } else {
         parsing_context.push(pathname);
       }

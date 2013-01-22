@@ -497,8 +497,8 @@ void handle_debug_options(int argc, char * argv[])
 #endif
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--init-file") == 0) {
-	_init_file = argv[i + 1];
-	i++;
+        _init_file = argv[i + 1];
+        i++;
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
 #if DEBUG_ON

@@ -1,3 +1,10 @@
+# The following will be generated or updated when the 'doc' target is built:
+# • user guide and man pages: if BUILD_DOCS is set
+# • HTML versions of the above: if BUILD_DOCS and BUILD_WEB_DOCS are set
+# • Doxygen / reference documentation: if USE_DOXYGEN is set
+
+########################################################################
+
 if (USE_DOXYGEN)
   find_package(Doxygen)
   if(NOT DOXYGEN_FOUND)
@@ -5,14 +12,23 @@ if (USE_DOXYGEN)
   endif()
 
   configure_file(Doxyfile.in Doxyfile @ONLY)
-  add_custom_target(doxygen ALL
+
+  # see INPUT/FILE_PATTERNS in Doxyfile.in
+  file(GLOB doxygen_input_files ${CMAKE_SOURCE_DIR}/src/*.h)
+
+  add_custom_command(OUTPUT html/index.html
     COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
-    SOURCES Doxyfile)
-endif(USE_DOXYGEN)
+    DEPENDS Doxyfile ${doxygen_input_files}
+    COMMENT "Building doxygen documentation")
+  add_custom_target(doc.doxygen DEPENDS html/index.html)
+else()
+  add_custom_target(doc.doxygen)
+endif()
 
 ########################################################################
 
 if(NOT BUILD_DOCS)
+  add_custom_target(doc DEPENDS doc.doxygen)
   return()
 endif()
 
@@ -42,7 +58,7 @@ foreach(file ${info_files})
     mesage(WARNING "Could not find texi2pdf. PDF version of documentation will not be built.")
   else()
     add_custom_command(OUTPUT ${file_base}.pdf
-      COMMAND texi2pdf -b -q --tidy -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      COMMAND texi2pdf -b -q -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.pdf)
@@ -69,7 +85,7 @@ endif(BUILD_WEB_DOCS)
 
 ########################################################################
 
-add_custom_target(doc ALL DEPENDS ${ledger_doc_files})
+add_custom_target(doc DEPENDS ${ledger_doc_files} doc.doxygen)
 
 ########################################################################
 

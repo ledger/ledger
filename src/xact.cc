@@ -803,12 +803,12 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
         post_t * new_post = new post_t(account, amt);
         new_post->copy_details(*post);
 
-	// A Cleared transaction implies all of its automatic posting are cleared
+        // A Cleared transaction implies all of its automatic posting are cleared
         // CPR 2012/10/23
-	if(xact.state() == item_t::CLEARED){
-	  DEBUG("xact.extend.cleared", "CLEARED");
-	  new_post->set_state(item_t::CLEARED);
-	}
+        if (xact.state() == item_t::CLEARED) {
+          DEBUG("xact.extend.cleared", "CLEARED");
+          new_post->set_state(item_t::CLEARED);
+        }
 
         new_post->add_flags(ITEM_GENERATED);
         new_post->account =

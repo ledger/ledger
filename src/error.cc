@@ -84,7 +84,7 @@ string source_context(const path&            file,
                       const string&          prefix)
 {
   const std::streamoff len = end_pos - pos;
-  if (! len || file == path("/dev/stdin") || file.empty())
+  if (! len || file.empty())
     return _("<no source context>");
 
   assert(len > 0);

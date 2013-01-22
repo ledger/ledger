@@ -4,7 +4,7 @@ test -f /dev/null --input-date-format "%m/%d/%Y" convert test/baseline/cmd-conve
     Expenses:Unknown                             $10
     Equity:Unknown                              $-10 = $20
 
-2011/12/12=2011/12/12 *   ;
+2011/12/12=2011/12/12 * 
     Expenses:Unknown                             $10
     Equity:Unknown
 end test
