@@ -1814,7 +1814,7 @@ sign.
 After this initial line there should be a set of one or more
 postings, just as if it were normal transaction.  If the amounts of the
 postings have no commodity, they will be applied as modifiers to
-whichever real posting is matched by the value expression(See @pxref{Automated transactions}).
+whichever real posting is matched by the value expression(See @pxref{Automated Transactions}).
 
 @item ~
 A period transaction.  A period expression must appear after the tilde.
@@ -2542,7 +2542,7 @@ kill the report buffer
 * Lot dates::                   
 * Lot notes::                   
 * Lot value expressions::       
-* Automated transactions::      
+* Automated Transactions::     
 @end menu
 
 @node Basic format, Eliding amounts, Transactions , Transactions
@@ -3271,7 +3271,7 @@ all optional.
 
 To show all lot information in a report, use @code{--lots}.
 
-@node Lot value expressions, Automated transactions, Lot notes, Transactions
+@node Lot value expressions, Automated Transactions, Lot notes, Transactions
 @section Lot value expressions
 
 Normally when you ask Ledger to display the values of commodities held, it
@@ -3338,8 +3338,8 @@ In most cases, it is simplest to either use explicit amounts in your valuation
 expressions, or just pass the arguments down to market after modifying them to
 suit your needs.
 
-@node Automated transactions,  , Lot value expressions, Transactions
-@section Automated transactions
+@node Automated Transactions,  , Lot value expressions, Transactions
+@section Automated Transactions
 
 An automated transaction is a special kind of transaction which adds its
 postings to other transactions any time one of that other transactions'
@@ -3391,9 +3391,10 @@ transaction.
 * State flags::                 
 * Effective Dates::             
 * Periodic Transactions::       
+* Concrete Example of Automated Transactions::  
 @end menu
 
-@node Amount multipliers, Accessing the matching posting's amount, Automated transactions, Automated transactions
+@node Amount multipliers, Accessing the matching posting's amount, Automated Transactions, Automated Transactions
 @subsection Amount multipliers
 
 As a special case, if an automated transaction's posting's amount (phew) has
@@ -3422,7 +3423,7 @@ Then the latter transaction turns into this during parsing:
        Bar                       $-1000.00
 @end smallexample
 
-@node Accessing the matching posting's amount, Referring to the matching posting's account, Amount multipliers, Automated transactions
+@node Accessing the matching posting's amount, Referring to the matching posting's account, Amount multipliers, Automated Transactions
 @subsection Accessing the matching posting's amount
 
 If you use an amount expression for an automated transaction's posting, that
@@ -3449,7 +3450,7 @@ This becomes:
        (Foo)                       $-40.00
 @end smallexample
 
-@node Referring to the matching posting's account, Applying metadata to every matched posting, Accessing the matching posting's amount, Automated transactions
+@node Referring to the matching posting's account, Applying metadata to every matched posting, Accessing the matching posting's amount, Automated Transactions
 @subsection Referring to the matching posting's account
 
 Sometimes want to refer to the account that matched in some way within the
@@ -3474,7 +3475,7 @@ Becomes:
        Assets:Cash                 $-20.00
 @end smallexample
 
-@node Applying metadata to every matched posting, Applying metadata to the generated posting, Referring to the matching posting's account, Automated transactions
+@node Applying metadata to every matched posting, Applying metadata to the generated posting, Referring to the matching posting's account, Automated Transactions
 @subsection Applying metadata to every matched posting
 
 If the automated transaction has a transaction note, that note is copied
@@ -3500,7 +3501,7 @@ Becomes:
        Assets:Cash                 $-20.00
 @end smallexample
 
-@node Applying metadata to the generated posting, State flags, Applying metadata to every matched posting, Automated transactions
+@node Applying metadata to the generated posting, State flags, Applying metadata to every matched posting, Automated Transactions
 @subsection Applying metadata to the generated posting
 
 If the automated transaction's posting has a note, that note is carried to the
@@ -3530,14 +3531,14 @@ This is slightly different from the rules for regular transaction notes, in
 that an automated transaction's note does not apply to every posting within
 the automated transaction itself, but rather to every posting it matches.
 
-@node State flags, Effective Dates, Applying metadata to the generated posting, Automated transactions
+@node State flags, Effective Dates, Applying metadata to the generated posting, Automated Transactions
 @subsection State flags
 
 Although you cannot mark an automated transaction as a whole as cleared or
 pending, you can mark its postings with a * or ! before the account name, and
 that state flag gets carried to the generated posting.
 
-@node Effective Dates, Periodic Transactions, State flags, Automated transactions
+@node Effective Dates, Periodic Transactions, State flags, Automated Transactions
 @subsection Effective Dates
 @cindex effective dates
 
@@ -3604,7 +3605,7 @@ automatic $37.50 deficit like you should, while your checking account
 really knows that it debited $225 this month.
 
 
-@node Periodic Transactions,  , Effective Dates, Automated transactions
+@node Periodic Transactions, Concrete Example of Automated Transactions, Effective Dates, Automated Transactions
 @subsection Periodic Transactions
 
 A periodic transaction starts with a ~ followed by a period expression.
@@ -3614,6 +3615,83 @@ have no effect without the @code{--budget} option specified.
 See @ref{Budgeting and Forecasting} for examples and details.
 
 
+@node Concrete Example of Automated Transactions,  , Periodic Transactions, Automated Transactions
+@subsection Concrete Example of Automated Transactions
+
+
+As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
+It is similar to tithing for Jews and Christians, or to Zakát for
+Muslims.  The exact details of computing Huqúqu'lláh are somewhat
+complex, but if you have further interest, please consult the Web.
+
+Ledger makes this otherwise difficult law very easy.  Just set up an
+automated posting at the top of your ledger file:
+
+@smallexample
+; This automated transaction will compute Huqúqu'lláh based on this
+; journal's postings.  Any that match will affect the
+; Liabilities:Huququ'llah account by 19% of the value of that posting.
+
+= /^(?:Income:|Expenses:(?:Business|Rent$|Furnishings|Taxes|Insurance))/
+  (Liabilities:Huququ'llah)               0.19
+@end smallexample
+
+This automated posting works by looking at each posting in the
+ledger file.  If any match the given value expression, 19% of the
+posting's value is applied to the @samp{Liabilities:Huququ'llah}
+account.  So, if $1000 is earned from @samp{Income:Salary}, $190 is
+added to @samp{Liabilities:Huqúqu'lláh}; if $1000 is spent on Rent,
+$190 is subtracted.  The ultimate balance of Huqúqu'lláh reflects how
+much is owed in order to fulfill one's obligation to Huqúqu'lláh.
+When ready to pay, just write a check to cover the amount shown in
+@samp{Liabilities:Huququ'llah}.  That transaction would look like:
+
+@smallexample
+2003/01/01 (101) Baha'i Huqúqu'lláh Trust
+    Liabilities:Huququ'llah          $1,000.00
+    Assets:Checking
+@end smallexample
+
+That's it.  To see how much Huqúq is currently owed based on your
+ledger transactions, use:
+
+@smallexample
+ledger balance Liabilities:Huquq
+@end smallexample
+
+This works fine, but omits one aspect of the law: that Huquq is only
+due once the liability exceeds the value of 19 mithqáls of gold (which
+is roughly 2.22 ounces).  So what we want is for the liability to
+appear in the balance report only when it exceeds the present day
+value of 2.22 ounces of gold.  This can be accomplished using the
+command:
+
+@smallexample
+ledger -Q -t "/Liab.*Huquq/?(a/P@{2.22 AU@}<=@{-1.0@}&a):a" -s bal liab
+@end smallexample
+
+With this command, the current price for gold is downloaded, and the
+Huqúqu'lláh is reported only if its value exceeds that of 2.22 ounces
+of gold.  If you wish the liability to be reflected in the parent
+subtotal either way, use this instead:
+
+@smallexample
+ledger -Q -T "/Liab.*Huquq/?(O/P@{2.22 AU@}<=@{-1.0@}&O):O" -s bal liab
+@end smallexample
+
+In some cases, you may wish to refer to the account of whichever
+posting matched your automated transaction's value expression.  To do
+this, use the special account name @samp{$account}:
+
+@smallexample
+= /^Some:Long:Account:Name/
+  [$account]  -0.10
+  [Savings]    0.10
+@end smallexample
+
+This example causes 10% of the matching account's total to be deferred
+to the @samp{Savings} account---as a balanced virtual posting,
+which may be excluded from reports by using @option{--real}.
 
 
 
