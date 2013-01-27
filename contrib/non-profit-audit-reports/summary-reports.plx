@@ -386,7 +386,7 @@ print STDERR "\n";
 open(TRIAL, ">", "trial-balance.csv") or die "unable to open accrued.txt for writing: $!";
 
 print TRIAL "\"TRIAL BALANCE REPORT\",\"ENDING: $formattedEndDate\"\n\n",
-             "\"ACCOUNT\",\"BALANCE AT $formattedStartDate\",\"CHANGE DURING FY\",\"BALANCE AT $formattedEndDate\"\n\n";
+             "\"ACCOUNT\",\"BALANCE AT $formattedStartDate\",\"CHANGE DURING PERIOD\",\"BALANCE AT $formattedEndDate\"\n\n";
 
 my %commands = (
                 'totalEndFY' => [ $LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
