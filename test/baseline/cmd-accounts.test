@@ -15,12 +15,12 @@
     Assets:Testing123ÕßDone
 
 test accounts
-Assets:Bank
-Equity:Opening balance
-Assets:XXX
 Assets:AAA
-Assets:♚
+Assets:Bank
 Assets:Testing123ÕßDone
+Assets:XXX
+Assets:♚
+Equity:Opening balance
 end test
 
 test accounts assets:a
