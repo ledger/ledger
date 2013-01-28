@@ -4,18 +4,24 @@
 (defvar ledger-acct nil)
 
 (defun ledger-display-balance ()
+  "Calculate the cleared balance of the account being reconciled"
   (let ((buffer ledger-buf)
         (account ledger-acct))
     (with-temp-buffer
-      (let ((exit-code (ledger-run-ledger buffer "-C" "balance" account)))
-        (if (/= 0 exit-code)
-            (message "Error determining cleared balance")
-          (goto-char (1- (point-max)))
-          (goto-char (line-beginning-position))
-          (delete-horizontal-space)
-          (message "Cleared balance = %s"
-                   (buffer-substring-no-properties (point)
-                                                   (line-end-position))))))))
+      (ledger-exec-ledger buffer (current-buffer) "-C" "balance"  account)
+      (goto-char (1- (point-max)))
+      (goto-char (line-beginning-position))
+      (delete-horizontal-space)
+      (message "Cleared balance = %s"
+	       (buffer-substring-no-properties (point)
+					       (line-end-position))))))
+
+(defun is-stdin (file)
+  "True if ledger file is standard input"
+  (or
+   (equal file "")
+   (equal file "<stdin>")
+   (equal file "/dev/stdin")))
 
 (defun ledger-reconcile-toggle ()
   (interactive)
@@ -23,17 +29,17 @@
         (account ledger-acct)
         (inhibit-read-only t)
         cleared)
-    (when (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin"))
+    (when (is-stdin (car where))
       (with-current-buffer ledger-buf
-          (goto-char (cdr where))
-        (setq cleared (ledger-toggle-current 'pending)))
+	(goto-char (cdr where))
+	(setq cleared (ledger-toggle-current)))
       (if cleared
-          (add-text-properties (line-beginning-position)
-                               (line-end-position)
-                               (list 'face 'bold))
-        (remove-text-properties (line-beginning-position)
-                                (line-end-position)
-                                (list 'face))))
+	  (add-text-properties (line-beginning-position)
+			       (line-end-position)
+			       (list 'face 'bold))
+	  (remove-text-properties (line-beginning-position)
+				  (line-end-position)
+				  (list 'face))))
     (forward-line)))
 
 (defun ledger-reconcile-refresh ()
@@ -62,7 +68,7 @@
 (defun ledger-reconcile-delete ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (when (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin"))
+    (when (is-stdin (car where))
       (with-current-buffer ledger-buf
         (goto-char (cdr where))
         (ledger-delete-current-entry))
@@ -74,7 +80,7 @@
 (defun ledger-reconcile-visit ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (when (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin"))
+    (when (is-stdin (car where))
       (switch-to-buffer-other-window ledger-buf)
       (goto-char (cdr where)))))
 
@@ -97,7 +103,7 @@
       (let ((where (get-text-property (point) 'where))
             (face  (get-text-property (point) 'face)))
         (if (and (eq face 'bold)
-                 (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin")))
+                 (when (is-stdin (car where))))
             (with-current-buffer ledger-buf
               (goto-char (cdr where))
               (ledger-toggle-current 'cleared))))
@@ -105,12 +111,13 @@
   (ledger-reconcile-save))
 
 (defun ledger-do-reconcile ()
-  (let* ((buf ledger-buf)
+  "get the uncleared transactions in the account and display them in the *Reconcile* buffer"
+    (let* ((buf ledger-buf)
          (account ledger-acct)
          (items
-          (with-current-buffer
-	    (apply #'ledger-exec-ledger
-                   buf nil "emacs" account "--uncleared" '("--real"))
+          (with-temp-buffer
+	    (ledger-exec-ledger buf (current-buffer) "--uncleared" "--real" 
+                                      "emacs" account)
 	    (goto-char (point-min))
 	    (unless (eobp)
 	      (unless (looking-at "(")
@@ -131,8 +138,8 @@
 			  (save-excursion
 			    (goto-line (nth 0 xact))
 			    (point-marker)))))))
-	      (insert (format "%s %-30s %-25s %15s\n"
-			      (format-time-string "%m/%d" (nth 2 item))
+	      (insert (format "%s %-30s %-30s %15s\n"
+			      (format-time-string "%Y/%m/%d" (nth 2 item))
 			      (nth 4 item) (nth 1 xact) (nth 2 xact)))
 	      (if (nth 3 xact)
 		  (set-text-properties beg (1- (point))
@@ -173,6 +180,7 @@
     (define-key map [? ] 'ledger-reconcile-toggle)
     (define-key map [?a] 'ledger-reconcile-add)
     (define-key map [?d] 'ledger-reconcile-delete)
+    (define-key map [?b] 'ledger-display-balance)
     (define-key map [?n] 'next-line)
     (define-key map [?p] 'previous-line)
     (define-key map [?s] 'ledger-reconcile-save)
