@@ -125,8 +125,8 @@ my $firstArg = shift @ARGV;
 
 my $solver = \&BruteForceSubSetSumSolver;
 
-if (@ARGV < 6) {
-  print STDERR "usage: $0 [-d] <TITLE> <ACCOUNT_REGEX> <END_DATE> <START_SEARCH_FROM_DATE> <BANK_STATEMENT_BALANCE> <LEDGER_OPTIONS>\n";
+if (@ARGV < 7) {
+  print STDERR "usage: $0 [-d] <TITLE> <ACCOUNT_REGEX> <END_DATE> <START_SEARCH_FROM_DATE> <END_SEARCH_TO_DATE> <BANK_STATEMENT_BALANCE> <LEDGER_OPTIONS>\n";
   exit 1;
 }
 if ($firstArg eq '-d') {
@@ -134,7 +134,7 @@ if ($firstArg eq '-d') {
 } else {
   unshift(@ARGV, $firstArg);
 }
-my($title, $account, $endDate, $startSearchFromDate, $bankBalance, @mainLedgerOptions) = @ARGV;
+my($title, $account, $endDate, $startSearchFromDate, $endSearchToDate, $bankBalance, @mainLedgerOptions) = @ARGV;
 
 $bankBalance = ParseNumber($bankBalance);
 
@@ -170,16 +170,16 @@ my $startDate = ParseDate($startSearchFromDate);
 
 my @solution;
 while ($startDate ge $earliestStartDate) {
-  print STDERR "START LOOP ITR: $startDate $earliestStartDate\n" if ($VERBOSE);
   $startDate = DateCalc(ParseDate($startDate), ParseDateDelta("- 1 day"), \$err);
   die "Date calculation error on $endDate" if ($err);
 
   my $formattedStartDate = UnixDate($startDate, "%Y-%m-%d");
 
-  print STDERR "Testing $formattedStartDate through $endDate: \n" if $VERBOSE;
+  print STDERR "Testing $formattedStartDate through $endSearchToDate for a total of ", Commify($differenceSought), ": \n"
+    if $VERBOSE;
 
   my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
-                      '-b', $formattedStartDate, '-e', $startSearchFromDate,
+                      '-b', $formattedStartDate, '-e', $endSearchToDate,
                       '-F', '"%(date)","%C","%P","%t"\n',
                       'reg', "/$account/");
 
