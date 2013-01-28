@@ -206,20 +206,24 @@ while ($startDate ge $earliestStartDate) {
                         ConvertTwoDigitPrecisionToInteger($differenceSought),
                         \&ConvertTwoDigitPrecisionToIntegerInEntry);
   if ($VERBOSE) {
-    use Data::Dumper;
-    print STDERR "Solution for $formattedStartDate to $formattedEndDate, $differenceSought: \n",
-                 Data::Dumper->Dump(\@solution);
+    if ($solution[0]) {
+      use Data::Dumper;
+      print STDERR "Solution for $formattedStartDate to $formattedEndDate, $differenceSought: \n",
+        Data::Dumper->Dump(\@solution);
+    } else {
+      print STDERR "No Solution Found. :(\n";
+    }
   }
   last if ($solution[0]);
 }
 if ($solution[0]) {
   print "\"title:$formattedEndDate: $title\"\n\"BANK RECONCILATION: $account\",\"ENDING\",\"$formattedEndDate\"\n";
   print "\n\n\"DATE\",\"CHECK NUM\",\"PAYEE\",\"AMOUNT\"\n\n";
-  print "\"$formattedEndDate\",\"\",\"BANK ACCOUNT BALANCE\",\"$bankBalance\"\n\n";
+  print "\"$formattedEndDate\",\"\",\"BANK ACCOUNT BALANCE\",\"\$$bankBalance\"\n\n";
   foreach my $ee (@{$solution[1]}) {
-    print "\"$ee->{date}\",\"$ee->{checkNum}\",\"$ee->{payee}\",\"$ee->{amount}\"\n";
+    print "\"$ee->{date}\",\"$ee->{checkNum}\",\"$ee->{payee}\",\"\$$ee->{amount}\"\n";
   }
-    print "\n\"$formattedEndDate\",\"\",\"OUR ACCOUNT BALANCE\",\"$total\"\n\n";
+    print "\n\"$formattedEndDate\",\"\",\"OUR ACCOUNT BALANCE\",\"\$$total\"\n\n";
 }
 ###############################################################################
 #
