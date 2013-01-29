@@ -1089,7 +1089,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(anon);
     else OPT_ALT(color, ansi);
     else OPT(auto_match);
-    else OPT(aux_date);
     else OPT(average);
     else OPT(account_width_);
     else OPT(amount_width_);
@@ -1097,7 +1096,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'b':
     OPT(balance_format_);
     else OPT(base);
-    else OPT(basis);
+    else OPT_ALT(basis, cost);
     else OPT_(begin_);
     else OPT(bold_if_);
     else OPT(budget);
@@ -1106,7 +1105,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'c':
     OPT(csv_format_);
-    else OPT_ALT(gain, change);
     else OPT(cleared);
     else OPT(collapse);
     else OPT(collapse_if_zero);
@@ -1124,7 +1122,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(dc);
     else OPT(depth_);
     else OPT(deviation);
-    else OPT_ALT(rich_data, detail);
     else OPT_(display_);
     else OPT(display_amount_);
     else OPT(display_total_);
@@ -1149,7 +1146,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT_ALT(head_, first_);
     break;
   case 'g':
-    OPT(gain);
+    OPT_ALT(gain, change);
     else OPT(group_by_);
     else OPT(group_title_format_);
     else OPT(generated);
@@ -1176,7 +1173,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT_ALT(tail_, last_);
     break;
   case 'm':
-    OPT(market);
+    OPT_ALT(market, value);
     else OPT(monthly);
     else OPT(meta_);
     else OPT(meta_width_);
@@ -1206,7 +1203,6 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(price);
     else OPT(prices_format_);
     else OPT(pricedb_format_);
-    else OPT(primary_date);
     else OPT(payee_width_);
     else OPT(prepend_format_);
     else OPT(prepend_width_);
@@ -1224,7 +1220,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(revalued);
     else OPT(revalued_only);
     else OPT(revalued_total_);
-    else OPT(rich_data);
+    else OPT_ALT(rich_data, detail);
     break;
   case 's':
     OPT(sort_);
@@ -1252,7 +1248,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(unround);
     break;
   case 'v':
-    OPT_ALT(market, value);
+    OPT(values);
     break;
   case 'w':
     OPT(weekly);
@@ -1670,7 +1666,11 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       else if (is_eq(p, "select"))
         return WRAP_FUNCTOR(select_command);
       break;
-
+    case 't':
+      if (is_eq(p, "tags")) {
+        return POSTS_REPORTER(new report_tags(*this));
+      }
+      break;
     case 'x':
       if (is_eq(p, "xact"))
         return WRAP_FUNCTOR(xact_command);
