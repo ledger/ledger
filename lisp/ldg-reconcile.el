@@ -203,3 +203,5 @@
     (define-key map [menu-bar ldg-recon-menu sav] '("Save" . ledger-reconcile-save))
 
     (use-local-map map)))
+
+(provide 'ldg-reconcile)

@@ -18,3 +18,4 @@
       (lambda ()
         (forward-paragraph))))))
 
+(provide 'ldg-xact)
