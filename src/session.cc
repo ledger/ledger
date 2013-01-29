@@ -98,8 +98,12 @@ std::size_t session_t::read_data(const string& master_account)
     acct = journal->find_account(master_account);
 
   optional<path> price_db_path;
-  if (HANDLED(price_db_))
+  if (HANDLED(price_db_)){
     price_db_path = resolve_path(HANDLER(price_db_).str());
+    if (!exists(price_db_path.get())){
+      throw_(parse_error, _f("Could not find specified price file %1%") % price_db_path);
+    }
+  }
 
   if (HANDLED(explicit))
     journal->force_checking = true;
