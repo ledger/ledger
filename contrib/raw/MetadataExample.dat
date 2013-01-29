@@ -1,0 +1,111 @@
+; TAG key: value
+
+2009/09/27 * (09/28/2009) HUDSON NEWS HOUSTN HBB HOUSTON, TX
+	Source:Visa	                         -$6.55
+    Projects:Meals
+       ; ER: AISER0033
+       ; PROJECT: PROJXXXX
+
+2009/09/27 * (09/28/2009) PEET'S COFFEE & TEA KINGWOOD, TX
+	Source:Visa	                         -$2.44
+    Projects:Meals
+          ; ER: AISER0033
+          ; PROJECT: PROJXXXX
+
+2009/09/28 * (09/29/2009) FUSIA NEW YORK, NY
+	Source:Visa	                        -$15.25
+    Projects:Meals
+        ; ER: AISER0033
+        ; PROJECT: PROJXXXX
+
+
+2009/09/29 * (09/30/2009) BALUCHI'S NEW YORK, NY
+	Source:Visa
+    Projects:Meals                       $20.00
+        ; ER: AISER0033
+        ; PROJECT: PROJXXXX
+    Internal:Travel                      $10.44
+        ; ER: AISER0036
+        ; PROJECT: Internal
+
+
+2009/10/01 * Reimbursing AISER0036
+    Bank:AISChecking
+        ; ER: AISER0036
+        ; PROJECT: Internal
+    Source:Visa                 $10.44
+
+
+----------
+
+$ ./ledger -Ef AISER0033.dat bal '--account=tag("ER")'
+             $-44.24  
+              $44.24  AISER0033
+                   0  AISER0036
+--------------------
+                   0
+
+$ ./ledger -Ef AISER0033.dat bal
+             $-10.44  Bank:AISChecking
+              $10.44  Internal:Travel
+              $44.24  Projects:Meals
+             $-44.24  Source:Visa
+--------------------
+                   0
+
+$ ./ledger -Ef AISER0033.dat bal '--account=tag("PROJECT")'
+             $-44.24  
+                   0  Internal
+              $44.24  PROJXXXX
+--------------------
+                   0
+
+$ ./ledger -f AISER0033.dat reg '--account=tag("PROJECT")'
+09-Sep-27 HUDSON NEWS HOUSTN ..                              $-6.55       $-6.55
+09-Sep-27 HUDSON NEWS HOUSTN .. PROJXXXX                      $6.55            0
+09-Sep-27 PEET'S COFFEE & TEA..                              $-2.44       $-2.44
+09-Sep-27 PEET'S COFFEE & TEA.. PROJXXXX                      $2.44            0
+09-Sep-28 FUSIA NEW YORK, NY                                $-15.25      $-15.25
+09-Sep-28 FUSIA NEW YORK, NY    PROJXXXX                     $15.25            0
+09-Sep-29 BALUCHI'S NEW YORK,..                             $-30.44      $-30.44
+09-Sep-29 BALUCHI'S NEW YORK,.. PROJXXXX                     $20.00      $-10.44
+09-Sep-29 BALUCHI'S NEW YORK,.. Internal                     $10.44            0
+09-Oct-01 Reimbursing AISER0036 Internal                    $-10.44      $-10.44
+09-Oct-01 Reimbursing AISER0036                              $10.44            0
+
+$ ./ledger -f AISER0033.dat reg '--account=tag("ER")'
+09-Sep-27 HUDSON NEWS HOUSTN ..                              $-6.55       $-6.55
+09-Sep-27 HUDSON NEWS HOUSTN .. AISER0033                     $6.55            0
+09-Sep-27 PEET'S COFFEE & TEA..                              $-2.44       $-2.44
+09-Sep-27 PEET'S COFFEE & TEA.. AISER0033                     $2.44            0
+09-Sep-28 FUSIA NEW YORK, NY                                $-15.25      $-15.25
+09-Sep-28 FUSIA NEW YORK, NY    AISER0033                    $15.25            0
+09-Sep-29 BALUCHI'S NEW YORK,..                             $-30.44      $-30.44
+09-Sep-29 BALUCHI'S NEW YORK,.. AISER0033                    $20.00      $-10.44
+09-Sep-29 BALUCHI'S NEW YORK,.. AISER0036                    $10.44            0
+09-Oct-01 Reimbursing AISER0036 AISER0036                   $-10.44      $-10.44
+09-Oct-01 Reimbursing AISER0036                              $10.44            0
+
+
+$ ./ledger -f AISER0033.dat reg %ER=AISER0033
+09-Sep-27 HUDSON NEWS HOUSTN .. Projects:Meals                $6.55        $6.55
+09-Sep-27 PEET'S COFFEE & TEA.. Projects:Meals                $2.44        $8.99
+09-Sep-28 FUSIA NEW YORK, NY    Projects:Meals               $15.25       $24.24
+09-Sep-29 BALUCHI'S NEW YORK,.. Projects:Meals               $20.00       $44.24
+
+
+$ ./ledger -f AISER0033.dat reg %ER=AISER0036
+09-Sep-29 BALUCHI'S NEW YORK,.. Internal:Travel              $10.44       $10.44
+09-Oct-01 Reimbursing AISER0036 Bank:AISChecking            $-10.44            0
+
+$ ./ledger -f AISER0033.dat reg %PROJECT=PROJXXXX
+09-Sep-27 HUDSON NEWS HOUSTN .. Projects:Meals                $6.55        $6.55
+09-Sep-27 PEET'S COFFEE & TEA.. Projects:Meals                $2.44        $8.99
+09-Sep-28 FUSIA NEW YORK, NY    Projects:Meals               $15.25       $24.24
+09-Sep-29 BALUCHI'S NEW YORK,.. Projects:Meals               $20.00       $44.24
+
+$ ./ledger -f AISER0033.dat --prepend-format='%(tag("IMG")) ' reg %ER=0033 
+image1.jpg 09-Sep-27 HUDSON NEWS HOUSTN .. Projects:Meals                $6.55        $6.55
+image2.jpg 09-Sep-27 PEET'S COFFEE & TEA.. Projects:Meals                $2.44        $8.99
+image3.jpg 09-Sep-28 FUSIA NEW YORK, NY    Projects:Meals               $15.25       $24.24
+image4.jpg 09-Sep-29 BALUCHI'S NEW YORK,.. Projects:Meals               $20.00       $44.24

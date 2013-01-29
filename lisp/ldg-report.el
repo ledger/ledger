@@ -246,72 +246,54 @@ the default."
         (ledger-reports-custom-save))
     report-cmd))
 
-(defvar ledger-report-patch-alist nil)
-
-(defun ledger-report-patch-reports (buf)
-  (when ledger-report-patch-alist
-    (let ((entry (assoc (expand-file-name (buffer-file-name buf))
-                        ledger-report-patch-alist)))
-      (when entry
-        (dolist (b (cdr entry))
-          (if (buffer-live-p b)
-              (with-current-buffer b
-                (save-excursion
-                  (goto-char (point-min))
-                  (while (not (eobp))
-                    (let ((record (get-text-property (point) 'ledger-source)))
-                      (if (and record (not (markerp (cdr record))))
-                          (setcdr record (with-current-buffer buf
-                                           (save-excursion
-                                             (goto-char (point-min))
-                                             (forward-line (cdr record))
-                                             (point-marker))))))
-                    (forward-line 1))))))))))
-
 (defun ledger-do-report (cmd)
   "Run a report command line."
   (goto-char (point-min))
   (insert (format "Report: %s\n" ledger-report-name)
           (format "Command: %s\n" cmd)
           (make-string (- (window-width) 1) ?=)
-          "\n")
-  (let ((register-report (string-match " reg\\(ister\\)? " cmd))
+          "\n\n")
+  (let ((data-pos (point))
+        (register-report (string-match " reg\\(ister\\)? " cmd))
         files-in-report)
     (shell-command
      (if register-report
          (concat cmd " --prepend-format='%(filename):%(beg_line):'")
        cmd) t nil)
     (when register-report
-      (goto-char (point-min))
+      (goto-char data-pos)
       (while (re-search-forward "^\\([^:]+\\)?:\\([0-9]+\\)?:" nil t)
         (let ((file (match-string 1))
-              (line (string-to-number (match-string 2))))
+               (line (string-to-number (match-string 2))))
           (delete-region (match-beginning 0) (match-end 0))
           (set-text-properties (line-beginning-position) (line-end-position)
-                               (list 'ledger-source (cons file line)))
-          (let* ((fullpath (expand-file-name file))
-                 (entry (assoc fullpath ledger-report-patch-alist)))
-            (if entry
-                (nconc (cdr entry) (list (current-buffer)))
-              (push (cons (expand-file-name file)
-                          (list (current-buffer)))
-                    ledger-report-patch-alist))
-            (add-to-list 'files-in-report fullpath)))
+                               (list 'ledger-source (cons file (save-window-excursion
+                                                                 (save-excursion
+                                                                   (find-file file)
+                                                                   (widen)
+                                                                   (goto-char (point-min))
+                                                                   (forward-line (1- line))
+                                                                   (point-marker))))))
+          (end-of-line))))
+    (goto-char data-pos)))
 
-        (dolist (path files-in-report)
-          (let ((buf (get-file-buffer path)))
-            (if (and buf (buffer-live-p buf))
-                (ledger-report-patch-reports buf))))))))
 
 (defun ledger-report-visit-source ()
   (interactive)
   (let ((prop (get-text-property (point) 'ledger-source)))
     (destructuring-bind (file . line-or-marker) prop
       (find-file-other-window file)
+      (widen)
       (if (markerp line-or-marker)
           (goto-char line-or-marker)
         (goto-char (point-min))
-        (forward-line (1- line-or-marker))))))
+        (forward-line (1- line-or-marker))
+        (re-search-backward "^[0-9]+")
+        (beginning-of-line)
+        (let ((start-of-txn (point)))
+          (forward-paragraph)
+          (narrow-to-region start-of-txn (point))
+          (backward-paragraph))))))
 
 (defun ledger-report-goto ()
   "Goto the ledger report buffer."
