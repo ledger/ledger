@@ -40,7 +40,8 @@
 	  (remove-text-properties (line-beginning-position)
 				  (line-end-position)
 				  (list 'face))))
-    (forward-line)))
+    (forward-line)
+    (ledger-display-balance)))
 
 (defun ledger-reconcile-refresh ()
   (interactive)
@@ -116,7 +117,7 @@
          (account ledger-acct)
          (items
           (with-temp-buffer
-	    (ledger-exec-ledger buf (current-buffer) "--uncleared" "--real" 
+	    (ledger-exec-ledger buf (current-buffer) "--uncleared" "--real"
                                       "emacs" account)
 	    (goto-char (point-min))
 	    (unless (eobp)
@@ -138,8 +139,9 @@
 			  (save-excursion
 			    (goto-line (nth 0 xact))
 			    (point-marker)))))))
-	      (insert (format "%s %-30s %-30s %15s\n"
+	      (insert (format "%s %-4s %-30s %-30s %15s\n"
 			      (format-time-string "%Y/%m/%d" (nth 2 item))
+			      (nth 3 item)
 			      (nth 4 item) (nth 1 xact) (nth 2 xact)))
 	      (if (nth 3 xact)
 		  (set-text-properties beg (1- (point))
@@ -180,7 +182,6 @@
     (define-key map [? ] 'ledger-reconcile-toggle)
     (define-key map [?a] 'ledger-reconcile-add)
     (define-key map [?d] 'ledger-reconcile-delete)
-    (define-key map [?b] 'ledger-display-balance)
     (define-key map [?n] 'next-line)
     (define-key map [?p] 'previous-line)
     (define-key map [?s] 'ledger-reconcile-save)
