@@ -40,6 +40,7 @@
 namespace ledger {
 
 bool commodity_t::decimal_comma_by_default = false;
+bool commodity_t::time_colon_by_default = false;
 
 void commodity_t::add_price(const datetime_t& date, const amount_t& price,
                             const bool reflexive)
