@@ -56,14 +56,18 @@
     
     (define-key map [menu-bar] (make-sparse-keymap "ldg-menu"))
     (define-key map [menu-bar ldg-menu] (cons "Ledger" map))
-    (define-key map [menu-bar ldg-menu ae] '("Add Entry" . ledger-add-entry))
-    (define-key map [menu-bar ldg-menu de] '("Delete Entry" . ledger-delete-current-entry))
-    (define-key map [menu-bar ldg-menu sy] '("Set Year" . ledger-set-year))
     (define-key map [menu-bar ldg-menu sm] '("Set Month" . ledger-set-month))
+    (define-key map [menu-bar ldg-menu sy] '("Set Year" . ledger-set-year))
+    (define-key map [menu-bar ldg-menu s1] '("--"))
+    (define-key map [menu-bar ldg-menu so] '("Sort Buffer" . ledger-sort))
+    (define-key map [menu-bar ldg-menu s2] '("--"))
     (define-key map [menu-bar ldg-menu tt] '("Toggle Current Transaction" . ledger-toggle-current))
-    (define-key map [menu-bar ldg-menu te] '("Toggle Current Entry" . ledger-toggle-current-entry))
-    (define-key map [menu-bar ldg-menu re] '("Reconcile" . ledger-reconcile))
-    (define-key map [menu-bar ldg-menu so] '("Sort" . ledger-sort)))
+    (define-key map [menu-bar ldg-menu te] '("Toggle Current Posting" . ledger-toggle-current-entry))
+    (define-key map [menu-bar ldg-menu s4] '("--"))
+    (define-key map [menu-bar ldg-menu de] '("Delete Entry" . ledger-delete-current-entry))
+    (define-key map [menu-bar ldg-menu ae] '("Add Entry" . ledger-add-entry))
+    (define-key map [menu-bar ldg-menu s3] '("--"))
+    (define-key map [menu-bar ldg-menu re] '("Reconcile Account" . ledger-reconcile)))
 
     
 
