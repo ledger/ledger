@@ -62,12 +62,7 @@ void set_session_context(session_t * session)
 session_t::session_t()
   : flush_on_next_data_file(false), journal(new journal_t)
 {
-  if (const char * home_var = std::getenv("HOME"))
-    HANDLER(price_db_).on(none, (path(home_var) / ".pricedb").string());
-  else
-    HANDLER(price_db_).on(none, path("./.pricedb").string());
-
-  parsing_context.push();
+ parsing_context.push();
 
   TRACE_CTOR(session_t, "");
 }
@@ -101,7 +96,13 @@ std::size_t session_t::read_data(const string& master_account)
   if (HANDLED(price_db_)){
     price_db_path = resolve_path(HANDLER(price_db_).str());
     if (!exists(price_db_path.get())){
-      throw_(parse_error, _f("Could not find specified price file %1%") % price_db_path);
+      throw_(parse_error, _f("Could not find specified price-db file %1%") % price_db_path);
+    }
+  } else {
+    if (const char * home_var = std::getenv("HOME")){
+      price_db_path = (path(home_var) / ".pricedb");
+    } else {
+      price_db_path = ("./.ledgerrc");
     }
   }
 
