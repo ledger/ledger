@@ -70,6 +70,21 @@ text that should replace the format specifier."
     (define-key map [(control ?c) (control ?l) (control ?e)]
       'ledger-report-edit)
     (define-key map [(control ?c) (control ?c)] 'ledger-report-visit-source)
+
+    
+    (define-key map [menu-bar] (make-sparse-keymap "ldg-rep"))
+    (define-key map [menu-bar ldg-rep] (cons "Reports" map))
+
+    (define-key map [menu-bar ldg-rep lrq] '("Quit" . ledger-report-quit))
+    (define-key map [menu-bar ldg-rep s2] '("--"))
+    (define-key map [menu-bar ldg-rep lrd] '("Scroll Down" . scroll-down))
+    (define-key map [menu-bar ldg-rep lru] '("Scroll Up" . scroll-up))
+    (define-key map [menu-bar ldg-rep s1] '("--"))
+    (define-key map [menu-bar ldg-rep lrk] '("Kill Report" . ledger-report-kill))
+    (define-key map [menu-bar ldg-rep lrr] '("Re-run Report" . ledger-report-redo))
+    (define-key map [menu-bar ldg-rep lre] '("Edit Report" . ledger-report-edit))
+    (define-key map [menu-bar ldg-rep lrs] '("Save Report" . ledger-report-save))
+
     (use-local-map map)))
 
 (defun ledger-report-read-name ()
