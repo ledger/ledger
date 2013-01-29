@@ -1,3 +1,16 @@
+(defsubst ledger-current-year ()
+  (format-time-string "%Y"))
+(defsubst ledger-current-month ()
+  (format-time-string "%m"))
+
+(defvar ledger-year (ledger-current-year)
+  "Start a ledger session with the current year, but make it
+customizable to ease retro-entry.")
+(defvar ledger-month (ledger-current-month)
+  "Start a ledger session with the current month, but make it
+customizable to ease retro-entry.")
+
+
 (defcustom ledger-default-acct-transaction-indent "    "
   "Default indentation for account transactions in an entry."
   :type 'string
@@ -152,7 +165,8 @@ Return the difference in the format of a time value."
     (setq ledger-month (format "%02d" newmonth))))
 
 (defun ledger-add-entry (entry-text &optional insert-at-point)
-  (interactive "sEntry: ")
+  (interactive (list
+		(read-string "Entry: " (concat ledger-year "/" ledger-month "/"))))
   (let* ((args (with-temp-buffer
                  (insert entry-text)
                  (eshell-parse-arguments (point-min) (point-max))))
