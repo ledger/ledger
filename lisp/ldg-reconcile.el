@@ -176,4 +176,17 @@
     (define-key map [?p] 'previous-line)
     (define-key map [?s] 'ledger-reconcile-save)
     (define-key map [?q] 'ledger-reconcile-quit)
+
+    (define-key map [menu-bar] (make-sparse-keymap "ldg-recon-menu"))
+    (define-key map [menu-bar ldg-recon-menu] (cons "Reconcile" map))
+    (define-key map [menu-bar ldg-recon-menu qui] '("Quit" . ledger-reconcile-quit))
+    (define-key map [menu-bar ldg-recon-menu pre] '("Previous Line" . previous-line))
+    (define-key map [menu-bar ldg-recon-menu nex] '("Next Entry" . next-line))
+    (define-key map [menu-bar ldg-recon-menu del] '("Delete Entry" . ledger-reconcile-delete))
+    (define-key map [menu-bar ldg-recon-menu add] '("Add Entry" . ledger-reconcile-add))
+    (define-key map [menu-bar ldg-recon-menu tog] '("Toggle" . ledger-reconcile-toggle))
+    (define-key map [menu-bar ldg-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
+    (define-key map [menu-bar ldg-recon-menu sav] '("Save" . ledger-reconcile-save))
+    (define-key map [menu-bar ldg-recon-menu fin] '("Finish" . ledger-reconcile-finish))
+
     (use-local-map map)))

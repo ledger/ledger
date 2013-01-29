@@ -19,6 +19,7 @@
 
 (defvar ledger-mode-abbrev-table)
 
+
 ;;;###autoload
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
@@ -51,8 +52,22 @@
     (define-key map [tab] 'pcomplete)
     (define-key map [(control ?i)] 'pcomplete)
     (define-key map [(control ?c) tab] 'ledger-fully-complete-entry)
-    (define-key map [(control ?c) (control ?i)] 'ledger-fully-complete-entry))
+    (define-key map [(control ?c) (control ?i)] 'ledger-fully-complete-entry)
+    
+    (define-key map [menu-bar] (make-sparse-keymap "ldg-menu"))
+    (define-key map [menu-bar ldg-menu] (cons "Ledger" map))
+    (define-key map [menu-bar ldg-menu ae] '("Add Entry" . ledger-add-entry))
+    (define-key map [menu-bar ldg-menu de] '("Delete Entry" . ledger-delete-current-entry))
+    (define-key map [menu-bar ldg-menu sy] '("Set Year" . ledger-set-year))
+    (define-key map [menu-bar ldg-menu sm] '("Set Month" . ledger-set-month))
+    (define-key map [menu-bar ldg-menu tt] '("Toggle Current Transaction" . ledger-toggle-current))
+    (define-key map [menu-bar ldg-menu te] '("Toggle Current Entry" . ledger-toggle-current-entry))
+    (define-key map [menu-bar ldg-menu re] '("Reconcile" . ledger-reconcile))
+    (define-key map [menu-bar ldg-menu so] '("Sort" . ledger-sort)))
 
+    
+
+ 
   (ledger-report-patch-reports (current-buffer)))
 
 (defun ledger-time-less-p (t1 t2)
