@@ -2574,7 +2574,7 @@ kill the report buffer
 * Lot dates::                   
 * Lot notes::                   
 * Lot value expressions::       
-* Automated Transactions::     
+* Automated Transactions::      
 @end menu
 
 @node Basic format, Eliding amounts, Transactions , Transactions
@@ -4776,6 +4776,7 @@ database files.
 @menu
 * accounts::                    
 * commodities::                 
+* tags::                        
 * entry and xact::              
 * payees::                      
 @end menu
@@ -4785,15 +4786,27 @@ database files.
 
 The @command{accounts} reports all of the accounts in the journal.
 Following the command with a regular expression will limit the output to
-accounts matching the regex.
+accounts matching the regex. The output is sorted by name.  Using the
+@code{--count} option will tell you haw many entries use each account.
 
 
-@node commodities, entry and xact, accounts, Reports about your Journals
+@node commodities, tags, accounts, Reports about your Journals
 @subsection @command{commodities}
-Report all commodities present in the journals under consideration.
+Report all commodities present in the journals under consideration.  The
+ output is sorted by name.  Using the @code{--count} option will tell
+ you haw many entries use each commodity.
+
+@node tags, entry and xact, commodities, Reports about your Journals
+@subsection @command{tags}
+
+The @command{tags} reports all of the tags in the journal.  The output
+is sorted by name.  Using the @code{--count} option will tell you haw
+many entries use each tag.  Using the @code{--values} option will report
+the values used by each tag.
 
 
-@node entry and xact, payees, commodities, Reports about your Journals
+
+@node entry and xact, payees, tags, Reports about your Journals
 @subsection @command{draft}, @command{entry} and @command{xact}
 
 The @code{draft}, @code{entry} and @command{xact} commands simplify the
