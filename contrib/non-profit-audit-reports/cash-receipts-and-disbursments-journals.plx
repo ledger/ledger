@@ -113,7 +113,7 @@ foreach my $acct (@accounts) {
     my $formatString = '\n"%(date)","%C","%P","%A","%t"\n%/"","","","%A","%t"';
     foreach my $tagField (qw/Receipt Invoice Statement Contract PurchaseOrder Approval Check IncomeDistributionAnalysis CurrencyRate/) {
       print CSV_OUT ',"', $tagField, '"';
-      $formatString .= ',"%(tag(\'' . $tagField . '\'))"';
+      $formatString .= ',"link:%(tag(\'' . $tagField . '\'))"';
     }
     $formatString .= "\n";
     print CSV_OUT "\n";
@@ -130,7 +130,7 @@ foreach my $acct (@accounts) {
     open(CSV_DATA, "-|", $LEDGER_CMD, @csvRegLedgerOpts)
       or die "unable to run ledger command for $fileNameBase.csv: $!";
 
-    while (my $line = <CSV_DATA>) { print CSV_OUT $line; }
+    while (my $line = <CSV_DATA>) { $line =~ s/"link:"/""/g; print CSV_OUT $line; }
     close(CSV_DATA); die "Error read from csv ledger command $!" unless $? == 0;
 
   SKIP_REGISTER_COMMANDS:
