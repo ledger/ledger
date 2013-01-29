@@ -32,12 +32,17 @@
 
 ;;; Commentary:
 
-(require 'ldg-post)
-(require 'ldg-mode)
 (require 'ldg-complete)
-(require 'ldg-state)
+(require 'ldg-exec)
+(require 'ldg-mode)
+(require 'ldg-post)
+(require 'ldg-reconcile)
+(require 'ldg-register)
 (require 'ldg-report)
-
+(require 'ldg-state)
+(require 'ldg-test)
+(require 'ldg-texi)
+(require 'ldg-xact)
 ;(autoload #'ledger-mode "ldg-mode" nil t)
 ;(autoload #'ledger-fully-complete-entry "ldg-complete" nil t)
 ;(autoload #'ledger-toggle-current "ldg-state" nil t)
