@@ -4,18 +4,24 @@
 (defvar ledger-acct nil)
 
 (defun ledger-display-balance ()
+  "Calculate the cleared balance of the account being reconciled"
   (let ((buffer ledger-buf)
         (account ledger-acct))
     (with-temp-buffer
-      (let ((exit-code (ledger-run-ledger buffer "-C" "balance" account)))
-        (if (/= 0 exit-code)
-            (message "Error determining cleared balance")
-          (goto-char (1- (point-max)))
-          (goto-char (line-beginning-position))
-          (delete-horizontal-space)
-          (message "Cleared balance = %s"
-                   (buffer-substring-no-properties (point)
-                                                   (line-end-position))))))))
+      (ledger-exec-ledger buffer (current-buffer) "-C" "balance"  account)
+      (goto-char (1- (point-max)))
+      (goto-char (line-beginning-position))
+      (delete-horizontal-space)
+      (message "Cleared balance = %s"
+	       (buffer-substring-no-properties (point)
+					       (line-end-position))))))
+
+(defun is-stdin (file)
+  "True if ledger file is standard input"
+  (or
+   (equal file "")
+   (equal file "<stdin>")
+   (equal file "/dev/stdin")))
 
 (defun ledger-reconcile-toggle ()
   (interactive)
@@ -23,18 +29,19 @@
         (account ledger-acct)
         (inhibit-read-only t)
         cleared)
-    (when (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin"))
+    (when (is-stdin (car where))
       (with-current-buffer ledger-buf
-          (goto-char (cdr where))
-        (setq cleared (ledger-toggle-current 'pending)))
+	(goto-char (cdr where))
+	(setq cleared (ledger-toggle-current)))
       (if cleared
-          (add-text-properties (line-beginning-position)
-                               (line-end-position)
-                               (list 'face 'bold))
-        (remove-text-properties (line-beginning-position)
-                                (line-end-position)
-                                (list 'face))))
-    (forward-line)))
+	  (add-text-properties (line-beginning-position)
+			       (line-end-position)
+			       (list 'face 'bold))
+	  (remove-text-properties (line-beginning-position)
+				  (line-end-position)
+				  (list 'face))))
+    (forward-line)
+    (ledger-display-balance)))
 
 (defun ledger-reconcile-refresh ()
   (interactive)
@@ -62,7 +69,7 @@
 (defun ledger-reconcile-delete ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (when (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin"))
+    (when (is-stdin (car where))
       (with-current-buffer ledger-buf
         (goto-char (cdr where))
         (ledger-delete-current-entry))
@@ -74,7 +81,7 @@
 (defun ledger-reconcile-visit ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (when (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin"))
+    (when (is-stdin (car where))
       (switch-to-buffer-other-window ledger-buf)
       (goto-char (cdr where)))))
 
@@ -97,7 +104,7 @@
       (let ((where (get-text-property (point) 'where))
             (face  (get-text-property (point) 'face)))
         (if (and (eq face 'bold)
-                 (or (equal (car where) "<stdin>") (equal (car where) "/dev/stdin")))
+                 (when (is-stdin (car where))))
             (with-current-buffer ledger-buf
               (goto-char (cdr where))
               (ledger-toggle-current 'cleared))))
@@ -105,45 +112,48 @@
   (ledger-reconcile-save))
 
 (defun ledger-do-reconcile ()
-  (let* ((buf ledger-buf)
+  "get the uncleared transactions in the account and display them in the *Reconcile* buffer"
+    (let* ((buf ledger-buf)
          (account ledger-acct)
          (items
-          (with-current-buffer
-	    (apply #'ledger-exec-ledger
-                   buf nil "emacs" account "--uncleared" '("--real"))
+          (with-temp-buffer
+	    (ledger-exec-ledger buf (current-buffer) "--uncleared" "--real"
+                                      "emacs" account)
 	    (goto-char (point-min))
 	    (unless (eobp)
 	      (unless (looking-at "(")
 		(error (buffer-string)))
-	      (read (current-buffer))))))
-    (dolist (item items)
-      (let ((index 1))
-        (dolist (xact (nthcdr 5 item))
-          (let ((beg (point))
-                (where
-                 (with-current-buffer buf
-                   (cons
-                    (nth 0 item)
-                    (if ledger-clear-whole-entries
-                        (save-excursion
-                          (goto-line (nth 1 item))
-                          (point-marker))
-                      (save-excursion
-                        (goto-line (nth 0 xact))
-                        (point-marker)))))))
-            (insert (format "%s %-30s %-25s %15s\n"
-                            (format-time-string "%m/%d" (nth 2 item))
-                            (nth 4 item) (nth 1 xact) (nth 2 xact)))
-            (if (nth 3 xact)
-                (set-text-properties beg (1- (point))
-                                     (list 'face 'bold
-                                           'where where))
-              (set-text-properties beg (1- (point))
-                                   (list 'where where))))
-          (setq index (1+ index)))))
-    (goto-char (point-min))
-    (set-buffer-modified-p nil)
-    (toggle-read-only t)))
+	      (read (current-buffer)))))) 
+      (dolist (item items)
+	(let ((index 1))
+	  (dolist (xact (nthcdr 5 item))
+	    (let ((beg (point))
+		  (where
+		   (with-current-buffer buf
+		     (cons
+		      (nth 0 item)
+		      (if ledger-clear-whole-entries
+			  (save-excursion
+			    (goto-line (nth 1 item))
+			    (point-marker))
+			  (save-excursion
+			    (goto-line (nth 0 xact))
+			    (point-marker)))))))
+	      (insert (format "%s %-4s %-30s %-30s %15s\n"
+			      (format-time-string "%Y/%m/%d" (nth 2 item))
+			      (nth 3 item)
+			      (nth 4 item) (nth 1 xact) (nth 2 xact)))
+	      (if (nth 3 xact)
+		  (set-text-properties beg (1- (point))
+				       (list 'face 'bold
+					     'where where))
+		  (set-text-properties beg (1- (point))
+				       (list 'where where))))
+	    (setq index (1+ index)))))
+      (goto-char (point-min))
+      (set-buffer-modified-p nil)
+      (toggle-read-only t)))
+
 
 (defun ledger-reconcile (account)
   (interactive "sAccount to reconcile: ")
@@ -176,4 +186,19 @@
     (define-key map [?p] 'previous-line)
     (define-key map [?s] 'ledger-reconcile-save)
     (define-key map [?q] 'ledger-reconcile-quit)
+
+    (define-key map [menu-bar] (make-sparse-keymap "ldg-recon-menu"))
+    (define-key map [menu-bar ldg-recon-menu] (cons "Reconcile" map))
+    (define-key map [menu-bar ldg-recon-menu qui] '("Quit" . ledger-reconcile-quit))
+    (define-key map [menu-bar ldg-recon-menu sep2] '("--"))
+    (define-key map [menu-bar ldg-recon-menu pre] '("Previous Entry" . previous-line))
+    (define-key map [menu-bar ldg-recon-menu vis] '("Visit Entry" . ledger-reconcile-visit))
+    (define-key map [menu-bar ldg-recon-menu nex] '("Next Entry" . next-line))
+    (define-key map [menu-bar ldg-recon-menu del] '("Delete Entry" . ledger-reconcile-delete))
+    (define-key map [menu-bar ldg-recon-menu add] '("Add Entry" . ledger-reconcile-add))
+    (define-key map [menu-bar ldg-recon-menu tog] '("Toggle" . ledger-reconcile-toggle))
+    (define-key map [menu-bar ldg-recon-menu sep1] '("--"))
+    (define-key map [menu-bar ldg-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
+    (define-key map [menu-bar ldg-recon-menu sav] '("Save" . ledger-reconcile-save))
+
     (use-local-map map)))

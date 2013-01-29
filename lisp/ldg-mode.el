@@ -19,6 +19,7 @@
 
 (defvar ledger-mode-abbrev-table)
 
+
 ;;;###autoload
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
@@ -51,8 +52,41 @@
     (define-key map [tab] 'pcomplete)
     (define-key map [(control ?i)] 'pcomplete)
     (define-key map [(control ?c) tab] 'ledger-fully-complete-entry)
-    (define-key map [(control ?c) (control ?i)] 'ledger-fully-complete-entry))
+    (define-key map [(control ?c) (control ?i)] 'ledger-fully-complete-entry)
+    (define-key map [(control ?c) (control ?o) (control ?r)] 'ledger-report)
+    (define-key map [(control ?c) (control ?o) (control ?g)] 'ledger-report-goto)
+    (define-key map [(control ?c) (control ?o) (control ?a)] 'ledger-report-redo)
+    (define-key map [(control ?c) (control ?o) (control ?s)] 'ledger-report-save)
+    (define-key map [(control ?c) (control ?o) (control ?e)] 'ledger-report-edit)
+    (define-key map [(control ?c) (control ?o) (control ?k)] 'ledger-report-kill)
 
+    
+    (define-key map [menu-bar] (make-sparse-keymap "ldg-menu"))
+    (define-key map [menu-bar ldg-menu] (cons "Ledger" map))
+
+    (define-key map [menu-bar ldg-menu lrk] '("Kill Report" . ledger-report-kill))
+    (define-key map [menu-bar ldg-menu lre] '("Edit Report" . ledger-report-edit))
+    (define-key map [menu-bar ldg-menu lrs] '("Save Report" . ledger-report-save))
+    (define-key map [menu-bar ldg-menu lrr] '("Re-run Report" . ledger-report-redo))
+    (define-key map [menu-bar ldg-menu lrg] '("Goto Report" . ledger-report-goto))
+    (define-key map [menu-bar ldg-menu lr] '("Run Report" .  ledger-report))
+    (define-key map [menu-bar ldg-menu s5] '("--"))
+    (define-key map [menu-bar ldg-menu sm] '("Set Month" . ledger-set-month))
+    (define-key map [menu-bar ldg-menu sy] '("Set Year" . ledger-set-year))
+    (define-key map [menu-bar ldg-menu s1] '("--"))
+    (define-key map [menu-bar ldg-menu so] '("Sort Buffer" . ledger-sort))
+    (define-key map [menu-bar ldg-menu s2] '("--"))
+    (define-key map [menu-bar ldg-menu tt] '("Toggle Current Transaction" . ledger-toggle-current))
+    (define-key map [menu-bar ldg-menu te] '("Toggle Current Posting" . ledger-toggle-current-entry))
+    (define-key map [menu-bar ldg-menu s4] '("--"))
+    (define-key map [menu-bar ldg-menu de] '("Delete Entry" . ledger-delete-current-entry))
+    (define-key map [menu-bar ldg-menu ae] '("Add Entry" . ledger-add-entry))
+    (define-key map [menu-bar ldg-menu s3] '("--"))
+    (define-key map [menu-bar ldg-menu re] '("Reconcile Account" . ledger-reconcile)))
+
+    
+
+ 
   (ledger-report-patch-reports (current-buffer)))
 
 (defun ledger-time-less-p (t1 t2)
