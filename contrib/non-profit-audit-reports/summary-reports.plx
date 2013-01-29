@@ -3,7 +3,7 @@
 #
 #    Script to generate end-of-year summary reports.
 #
-# Copyright (C) 2011, 2012, Bradley M. Kuhn
+# Copyright (C) 2011, 2012, 2013, Bradley M. Kuhn
 #
 # This program gives you software freedom; you can copy, modify, convey,
 # and/or redistribute it under the terms of the GNU General Public License
@@ -37,6 +37,40 @@ sub Commify ($) {
     my $text = reverse $_[0];
     $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
     return scalar reverse $text;
+}
+
+sub preferredAccountSorting ($$) {
+  if ($_[0] =~ /^Assets/ and $_[1] !~ /^Assets/) {
+    return -1;
+  } elsif ($_[1] =~ /^Assets/ and $_[0] !~ /^Assets/) {
+    return 1;
+  } elsif ($_[0] =~ /^Liabilities/ and $_[1] !~ /^(Assets|Liabilities)/) {
+    return -1;
+  } elsif ($_[1] =~ /^Liabilities/ and $_[0] !~ /^(Assets|Liabilities)/) {
+    return 1;
+  } elsif ($_[0] =~ /^(Accrued:[^:]+Receivable)/ and $_[1] !~ /^(Assets|Liabilities|Accrued:[^:]+Receivable)/) {
+    return -1;
+  } elsif ($_[1] =~ /^(Accrued:[^:]+Receivable)/ and $_[0] !~ /^(Assets|Liabilities|Accrued:[^:]+Receivable)/) {
+    return 1;
+  } elsif ($_[0] =~ /^(Accrued)/ and $_[1] !~ /^(Assets|Liabilities|Accrued)/) {
+    return -1;
+  } elsif ($_[1] =~ /^(Accrued)/ and $_[0] !~ /^(Assets|Liabilities|Accrued)/) {
+    return 1;
+  } elsif ($_[0] =~ /^(Unearned Income)/ and $_[1] !~ /^(Assets|Liabilities|Accrued|Unearned Income)/) {
+    return -1;
+  } elsif ($_[1] =~ /^(Unearned Income)/ and $_[0] !~ /^(Assets|Liabilities|Accrued|Unearned Income)/) {
+    return 1;
+  } elsif ($_[0] =~ /^Income/ and $_[1] !~ /^(Assets|Liabilities|Accrued|Unearned Income|Income)/) {
+    return -1;
+  } elsif ($_[1] =~ /^Income/ and $_[0] !~ /^(Assets|Liabilities|Accrued|Unearned Income|Income)/) {
+    return 1;
+  } elsif ($_[0] =~ /^Expense/ and $_[1] !~ /^(Assets|Liabilities|Accrued|Income|Unearned Income|Expense)/) {
+    return -1;
+  } elsif ($_[1] =~ /^Expense/ and $_[0] !~ /^(Assets|Liabilities|Accrued|Income|Unearned Income|Expense)/) {
+    return 1;
+  } else {
+    return $_[0] cmp $_[1];
+  }
 }
 
 sub ParseNumber($) {
@@ -116,15 +150,15 @@ foreach my $item (keys %reportFields) {
   print STDERR  "$item: $reportFields{$item}{total}\n" if $VERBOSE;
 }
 
-open(BALANCE_SHEET, ">", "balance-sheet.txt")
-  or die "unable to open balance-sheet.txt for writing: $!";
+open(BALANCE_SHEET, ">", "balance-sheet.csv")
+  or die "unable to open balance-sheet.csv for writing: $!";
 
-print BALANCE_SHEET "                          BALANCE SHEET\n",
-                    "                          Ending ", $formattedEndDate, "\n",
-                  "\n\nASSETS\n\n";
+print BALANCE_SHEET "\"BALANCE SHEET\"\n",
+                    "\"Ending\",\"", $formattedEndDate, "\"\n",
+                  "\n\n\"ASSETS\"\n\n";
 
-my $formatStr      = "   %-42s \$%13s\n";
-my $formatStrTotal = "%-45s \$%13s\n";
+my $formatStr      = "\"\",\"%-42s\",\"\$%13s\"\n";
+my $formatStrTotal = "\"\",\"%-45s\",\"\$%13s\"\n";
 my $tot = $ZERO;
 foreach my $item ('Cash', 'Accounts Receivable', 'Loans Receivable') {
   next if $reportFields{$item}{total} == $ZERO;
@@ -156,7 +190,7 @@ print BALANCE_SHEET "\n", sprintf($formatStr, "TOTAL NET ASSETS", Commify($totNe
 
 close BALANCE_SHEET;
 print STDERR "\n";
-die "unable to write to balance-sheet.txt: $!" unless ($? == 0);
+die "unable to write to balance-sheet.csv: $!" unless ($? == 0);
 
 die "Cash+accounts receivable total does not equal net assets and liabilities total"
   if (abs( ($reportFields{'Cash'}{total} + $reportFields{'Accounts Receivable'}{total}
@@ -193,7 +227,7 @@ foreach my $type (keys %incomeGroups) {
 $incomeGroups{"OTHER"}{args} = \@otherArgs;
 $incomeGroups{"TOTAL"}{args} = ['/^Income/'];
 
-open(INCOME, ">", "income.txt") or die "unable to open income.txt for writing: $!";
+open(INCOME, ">", "income.csv") or die "unable to open income.csv for writing: $!";
 
 foreach my $type (keys %incomeGroups) {
   my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
@@ -217,32 +251,32 @@ foreach my $type (keys %incomeGroups) {
     $account =~ s/\s+$//;
     next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
     die "Weird account found, $account with amount of $amount in income command\n"
-      unless $account =~ s/^\s*Income://;
+      unless $account =~ /^\s*Income:/;
 
     $incomeGroups{$type}{total} += $amount;
-    $incomeGroups{$type}{output} .= "    $line";
+    $incomeGroups{$type}{output} .= "\"$account\",\"\$$amount\"\n";
   }
 }
-print INCOME "                           INCOME\n",
-             "           Between $formattedStartDate and $formattedEndDate\n\n";
+print INCOME "\"INCOME\",",
+             "\"STARTING:\",\"$formattedStartDate\",\"ENDING:\",\"$formattedEndDate\"\n\n";
 
 
 my $overallTotal = $ZERO;
 
-$formatStrTotal = "%-90s    \$%14s\n";
+$formatStrTotal = "\"%-90s\",\"\$%14s\"\n";
 foreach my $type ('DONATIONS', 'LICENSE ENFORCEMENT',
                   'CONFERENCES, REGISTRATION', 'CONFERENCES, RELATED BUSINESS INCOME',
                   'BOOK ROYALTIES & AFFILIATE PROGRAMS', 'ADVERSITING',
                   'TRADEMARKS', 'INTEREST INCOME', 'OTHER') {
   next if ($incomeGroups{$type}{output} =~ /^\s*$/ and $incomeGroups{$type}{total} == $ZERO);
-  print INCOME "\n$type\n",
+  print INCOME "\n\"$type\"\n",
                $incomeGroups{$type}{output}, "\n",
                sprintf($formatStrTotal, "TOTAL $type:", Commify($incomeGroups{$type}{total}));
   $overallTotal += $incomeGroups{$type}{total};
 }
 print INCOME "\n\n\n", sprintf($formatStrTotal, "OVERALL TOTAL:", Commify($overallTotal));
 
-close INCOME;    die "unable to write to income.txt: $!" unless ($? == 0);
+close INCOME;    die "unable to write to income.csv: $!" unless ($? == 0);
 
 die "calculated total of $overallTotal does equal $incomeGroups{TOTAL}{total}"
   if (abs($overallTotal) - abs($incomeGroups{TOTAL}{total}) > $ONE_PENNY);
@@ -268,7 +302,7 @@ foreach my $type (keys %expenseGroups, 'TRAVEL') {
   $expenseGroups{$type}{output} = "";
 }
 
-open(EXPENSE, ">", "expense.txt") or die "unable to open expense.txt for writing: $!";
+open(EXPENSE, ">", "expense.csv") or die "unable to open expense.csv for writing: $!";
 
 my(@fullCommand) = ($LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
                     '-b', $startDate, '-e', $endDate,
@@ -291,6 +325,7 @@ foreach my $line (<FILE>) {
   die "Weird account found, $account, with amount of $amount in expenses command\n"
     unless $account =~ /^\s*Expenses:/;
 
+  my $outputLine = "\"$account\",\"\$$amount\"\n";
   my $taken = 0;
   # Note: Prioritize to put things under conference expenses if they were for a conference. 
   foreach my $type ('CONFERENCES', keys %expenseGroups) {
@@ -299,23 +334,23 @@ foreach my $line (<FILE>) {
     next unless $line =~ /$expenseGroups{$type}{regex}/;
     $taken = 1;
     $expenseGroups{$type}{total} += $amount;
-    $expenseGroups{$type}{output} .= "    $line";
+    $expenseGroups{$type}{output} .= $outputLine;
   }
   if (not $taken) {
     if ($account =~ /Travel/) {
       $expenseGroups{'TRAVEL'}{total} += $amount;
-      $expenseGroups{'TRAVEL'}{output} .= "    $line";
+      $expenseGroups{'TRAVEL'}{output} .= $outputLine;
     } else {
       $expenseGroups{'OTHER'}{total} += $amount;
-      $expenseGroups{'OTHER'}{output} .= "    $line";
+      $expenseGroups{'OTHER'}{output} .= $outputLine;
     }
   }
   $firstTotal += $amount;
 }
-print EXPENSE "                           EXPENSES\n",
-             "           Between $formattedStartDate and $formattedEndDate\n\n";
+print EXPENSE "\"EXPENSES\",",
+             "\"STARTING:\",\"$formattedStartDate\",\"ENDING:\",\"$formattedEndDate\"\n\n";
 $overallTotal = $ZERO;
-$formatStrTotal = "%-90s    \$%14s\n";
+$formatStrTotal = "\"%-90s\",\"\$%14s\"\n";
 
 my %verifyAllGroups;
 foreach my $key (keys %expenseGroups) {
@@ -330,7 +365,7 @@ foreach my $type ('PAYROLL', 'SOFTWARE DEVELOPMENT', 'LICENSE ENFORCEMENT', 'CON
   die "$type is not defined!" if not defined $expenseGroups{$type};
   next if ($expenseGroups{$type}{output} =~ /^\s*$/ and $expenseGroups{$type}{total} == $ZERO);
 
-  print EXPENSE "\n$type\n",
+  print EXPENSE "\n\"$type\"\n",
                $expenseGroups{$type}{output}, "\n",
                sprintf($formatStrTotal, "TOTAL $type:", Commify($expenseGroups{$type}{total}));
   $overallTotal += $expenseGroups{$type}{total};
@@ -338,7 +373,7 @@ foreach my $type ('PAYROLL', 'SOFTWARE DEVELOPMENT', 'LICENSE ENFORCEMENT', 'CON
 
 print EXPENSE "\n\n\n", sprintf($formatStrTotal, "OVERALL TOTAL:", Commify($overallTotal));
 
-close EXPENSE;    die "unable to write to expense.txt: $!" unless ($? == 0);
+close EXPENSE;    die "unable to write to expense.csv: $!" unless ($? == 0);
 
 die "GROUPS NOT INCLUDED : ", join(keys(%verifyAllGroups), ", "), "\n"
   unless (keys %verifyAllGroups == 0);
@@ -347,6 +382,80 @@ die "calculated total of $overallTotal does equal $firstTotal"
   if (abs($overallTotal) - abs($firstTotal) > $ONE_PENNY);
 
 print STDERR "\n";
+
+open(TRIAL, ">", "trial-balance.csv") or die "unable to open accrued.txt for writing: $!";
+
+print TRIAL "\"TRIAL BALANCE REPORT\",\"ENDING: $formattedEndDate\"\n\n",
+             "\"ACCOUNT\",\"BALANCE AT $formattedStartDate\",\"CHANGE DURING FY\",\"BALANCE AT $formattedEndDate\"\n\n";
+
+my %commands = (
+                'totalEndFY' => [ $LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
+                                              '-e', $endDate, '-F', '%-.80A   %22.108t\n', '-s',
+                                              'reg' ],
+                'amountInYear' =>  [ $LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
+                                     '-b', $startDate, '-e', $endDate, '-F', '%-.80A   %22.108t\n',
+                                     '-s', 'reg' ],
+                'totalBeginFY' =>  [ $LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
+                                     '-e', $startDate, '-F', '%-.80A   %22.108t\n',
+                                     '-s', 'reg' ]);
+
+my %trialBalanceData;
+my %fullAccountList;
+
+foreach my $id (keys %commands) {
+  my(@command) = @{$commands{$id}};
+
+  open(FILE, "-|", @command)
+  or die "unable to run command ledger command: @command: $!";
+
+  print STDERR ($VERBOSE ? "Running: @command\n" : ".");
+
+  foreach my $line (<FILE>) {
+    die "Unable to parse output line from trial balance $id command: $line"
+      unless $line =~ /^\s*([^\$]+)\s+\$\s*([\-\d\.\,]+)/;
+    my($account, $amount) = ($1, $2);
+    $amount = ParseNumber($amount);
+    $account =~ s/\s+$//;
+    next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
+    next if $account =~ /^Equity:/;   # Stupid auto-account made by ledger.
+    $trialBalanceData{$id}{$account} = $amount;
+    $fullAccountList{$account} = $id;
+  }
+  close FILE;
+  die "unable to run trial balance ledger command, @command: $!" unless ($? == 0);
+}
+
+my $curOn = 'Assets';
+
+foreach my $account (sort preferredAccountSorting keys %fullAccountList) {
+  # Blank lines right
+  if ($account !~ /^$curOn/) {
+    print TRIAL "pagebreak\n";
+    $curOn = $account;
+    if ($curOn =~ /(Accrued:[^:]+):.*$/) {
+      $curOn = $1;
+    } else {
+      $curOn =~ s/^([^:]+):.*$/$1/;
+    }
+  }
+  if ($account =~ /^Assets|Liabilities|Accrued|Unearned Income/) {
+    foreach my $id (qw/totalBeginFY totalEndFY amountInYear/) {
+      $trialBalanceData{$id}{$account} = $ZERO
+      unless defined $trialBalanceData{$id}{$account};
+    }
+    print TRIAL "\"$account\",\"\$$trialBalanceData{totalBeginFY}{$account}\",",
+     "\"\$$trialBalanceData{amountInYear}{$account}\",\"\$$trialBalanceData{totalEndFY}{$account}\"\n"
+       unless $trialBalanceData{totalBeginFY}{$account} == $ZERO and
+         $trialBalanceData{amountInYear}{$account} == $ZERO and
+           $trialBalanceData{totalEndFY}{$account} == $ZERO;
+  } else {
+    print TRIAL "\"$account\",\"\",\"\$$trialBalanceData{amountInYear}{$account}\",\"\"\n"
+      if defined $trialBalanceData{amountInYear}{$account} and
+        $trialBalanceData{amountInYear}{$account} != $ZERO;
+  }
+}
+close TRIAL;
+die "unable to write trial-balance.csv: $!" unless ($? == 0);
 
 ###############################################################################
 #
