@@ -2325,7 +2325,9 @@ doing it.
 
 Journal files are simple free text files easily modified by any text
 editor.  A special mode for EMACS is included with the source
-distribution.
+distribution.  This mode provides syntax highlighting, a reconcile mode
+and a report mode. This makes it quote possible to use ledger without
+ever leaving EMACS.
 
 @cindex EMACS .emacs file
 
@@ -2335,7 +2337,7 @@ Add the following line to your @file{.emacs} (or equivalent,
 (load "ldg-new")
 @end smallexample
 
-Copy the several lisp files from the source lisp directory your your
+Copy the several lisp files (@file{ldg-*.el}) from the source lisp directory your your
 @file{site-lisp} directory, or add the ledger lisp source directory to
 your EMACS load path by adding:
 @smallexample
@@ -2352,7 +2354,8 @@ To enter ledger-mode on a new file, type @command{M-x ledger-mode}.
  
 Once you have loaded a Journal file into EMACS, you have several
 commands available to make entering, clearing and reconciling
-transactions and producing reports:
+transactions and producing reports (these are also available from the
+menu if you can't remember the key combinations):
 
 @cindex EMACS commands
 @table @code
@@ -2431,10 +2434,11 @@ will be interpreted as a new account by ledger.
 @code{C-c C-a} will run the @code{ledger entry} command (@pxref{entry
 and xact}) from within EMACS.  When typed, the mini-buffer will appear
 with the current year and month, waiting for you to enter the day and
-the payee.  Ledger will generate a new entry based on the most recent
-entry for that payee, using the amount and accounts from that
-transaction.  If you have a new amount simply type the amount after the
-payee.  For example, if your journal  contains an entry 
+the payee, and optionally, a commoditized amount.  Ledger will generate
+a new entry based on the most recent entry for that payee, using the
+amount and accounts from that transaction.  If you have a new amount
+simply type the amount after the payee.  For example, if your journal
+contains an entry
 @smallexample
 2011/11/25   Viva Italiano 
      Expenses:Food  $12.45
@@ -2454,7 +2458,10 @@ Entry: 2011/11/28 viva food 34 tip 7 <enter>
     Liabilities:MasterCard
 @end smallexample
 @noindent  Notice that the entry will appear at the correct place in the journal
-ordered by date, not necessarily at the bottom of the file.
+ordered by date, not at the bottom of the file.  If you need to include
+spaces in the payee name, then surrond the name of the payee with double
+quotes, otherwise ledger will interpret the second part of the name as
+an account.
 @node Clearing Transactions,  , Automagically Adding new entries, Working with entries
 @subsubsection Clearing Transactions and Postings
 @cindex clearing transactions in EMACS
@@ -2483,21 +2490,46 @@ toggled.
 @node Reconciling accounts, Generating Reports, Working with entries, Using EMACS
 @subsection Reconciling accounts
 
-In the reconcile buffer, use SPACE to toggle the cleared status of a
-transaction, C-x C-s to save changes (to the ledger file as well).
+Enter the reconcile mode using the menu entry, or @code{C-c C-r}.  Emacs
+will prompt you for an account name, then display a second buffer with
+all of the uncleared transactions.  The reconcile buffer has several functions:
 
+@table @code
+  @item SPACE 
+  toggles the cleared status of a transaction, and show cleared balance inthe minibuffer
+  @item RETURN
+  moves the cursor to that transaction in the ledger.
+  @item C-x C-s 
+  to save changes (to the ledger file as well).
+  @item q
+  quite the reconcile mode
+  @item n p
+  next line or previous line
+  @item A
+  add entry
+  @item D
+  delete entry
+  @item C-l
+  refresh display
+@end table
 @node Generating Reports,  , Reconciling accounts, Using EMACS
 @subsection Generating Reports
 
 The ledger reports command asks the user to select a report to run then
 creates a report buffer containing the results of running the associated
-command line.  Its' behavior is modified by a prefix argument which,
-when given, causes the generated command line that will be used to
-create the report to be presented for editing before the report is
-actually run.  Arbitrary unnamed command lines can be run by specifying
-an empty name for the report.  The command line used can later be named
-and saved for future use as a named report from the generated reports
-buffer.
+command line.  This allows you to run frequently used reports without
+retyping the command line, or writing shell scripts for simple one line
+commands.
+
+To generate a report, select the @code{Run Reports} menu, or type
+@code{C-c C-o C-r}.  Emacs will prompt for a report name.  If it
+recognizes the name it will run the report again.  If it is a new name,
+or blank it will respond by giving you an example command line to edit.
+Hitting return willrun the report and present it in a new buffer.
+
+If you have given it a new name, then @code{s} will save the report for
+future use.  
+
 
 In a report buffer, the following keys are available:
 @table @code 
