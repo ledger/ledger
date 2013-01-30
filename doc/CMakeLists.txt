@@ -77,7 +77,7 @@ if(BUILD_WEB_DOCS)
   endif()
 
   add_custom_command(OUTPUT ledger.1.html
-    COMMAND ${BASH} -c "man2html $<1:CMAKE_CURRENT_SOURCE_DIR>/ledger.1 | tail -n+3 > ledger.1.html"
+    COMMAND ${BASH} -c "man2html ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 | tail -n+3 > ledger.1.html"
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
     VERBATIM)
   list(APPEND ledger_doc_files ledger.1.html)

@@ -117,12 +117,7 @@ customizable to ease retro-entry.")
     (define-key map [menu-bar ldg-menu de] '("Delete Entry" . ledger-delete-current-entry))
     (define-key map [menu-bar ldg-menu ae] '("Add Entry" . ledger-add-entry))
     (define-key map [menu-bar ldg-menu s3] '("--"))
-    (define-key map [menu-bar ldg-menu re] '("Reconcile Account" . ledger-reconcile)))
-
-    
-
- 
-  (ledger-report-patch-reports (current-buffer)))
+    (define-key map [menu-bar ldg-menu re] '("Reconcile Account" . ledger-reconcile))))
 
 (defun ledger-time-less-p (t1 t2)
   "Say whether time value T1 is less than time value T2."
