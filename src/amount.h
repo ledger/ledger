@@ -346,6 +346,13 @@ public:
   }
   void in_place_round();
 
+  amount_t roundto(int places) const {
+    amount_t temp(*this);
+    temp.in_place_round();
+    return temp;
+  }
+  void in_place_roundto(int places);
+
   /** Yields an amount which has lost all of its extra precision, beyond what
       the display precision of the commodity would have printed. */
   amount_t truncated() const {

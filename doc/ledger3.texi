@@ -7192,6 +7192,7 @@ Useful specifying a date in plain terms.  For example, you could say
 @item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
 @item @code{amount_expr } @tab @code{} @tab 
 @item @code{abs } @tab @code{} @tab  --> U
+@item @code{ceiling } @tab @code{} @tab Returns the next integer toward +infty
 @item @code{code} @tab @code{} @tab returns the transaction code, the string between the parenthesis after the date.
 @item @code{commodity } @tab @code{} @tab 
 @item @code{display_amount } @tab @code{} @tab   --> t
@@ -7199,7 +7200,7 @@ Useful specifying a date in plain terms.  For example, you could say
 @item @code{date } @tab @code{} @tab 
 @item @code{format_date } @tab @code{} @tab 
 @item @code{format } @tab @code{} @tab 
-@item @code{floor } @tab @code{} @tab 
+@item @code{floor } @tab @code{} @tab Returns the next integer toward -infty
 @item @code{get_at } @tab @code{} @tab 
 @item @code{is_seq } @tab @code{} @tab 
 @item @code{justify } @tab @code{} @tab 
@@ -7215,6 +7216,7 @@ Useful specifying a date in plain terms.  For example, you could say
 @item @code{quoted } @tab @code{} @tab 
 @item @code{quantity } @tab @code{} @tab 
 @item @code{rounded } @tab @code{} @tab 
+@item @code{roundto } @tab @code{} @tab Returns value rounded to n digits.  Does not affect formatting.
 @item @code{scrub } @tab @code{} @tab 
 @item @code{strip --> S } @tab @code{} @tab 
 @item @code{should_bold } @tab @code{} @tab 

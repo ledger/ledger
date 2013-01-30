@@ -325,6 +325,17 @@ public:
       pair.second.in_place_round();
   }
 
+  balance_t roundto(int places) const {
+    balance_t temp(*this);
+    temp.in_place_roundto(places);
+    return temp;
+  }
+
+  void in_place_roundto(int places) {
+    foreach (amounts_map::value_type& pair, amounts)
+      pair.second.in_place_roundto(places);
+  }
+
   balance_t truncated() const {
     balance_t temp(*this);
     temp.in_place_truncate();
