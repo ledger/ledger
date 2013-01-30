@@ -6,7 +6,7 @@ STOW_ROOT	= /usr/local/Cellar/boost
 PRODUCTS	= $(HOME)/Products
 
 GCC_VERSION	= 4.7
-BOOST_VERSION	= 1_50_0
+BOOST_VERSION	= 1_52_0
 
 CC		= gcc-mp-$(GCC_VERSION)
 ifeq ($(CC),clang)
