@@ -301,10 +301,9 @@ class PrepareBuild(CommandLineApp):
                       help='Enable use of Doxygen to build ref manual ("make docs")')
         op.add_option('', '--python', action='store_true', dest='python',
                       default=False,
-                      help='Enable Python support (if disabled in acprep)')
-        op.add_option('', '--no-python', action='store_true', dest='no_python',
-                      default=False,
-                      help='Do not enable Python support by default')
+                      help='Enable Python support')
+        op.add_option('', '--no-python', action='store_false', dest='python',
+                      help='Disable python support (default)')
         op.add_option('', '--prefix', metavar='DIR', action="store",
                       dest="prefix_dir", help='Use custom installation prefix')
         op.add_option('', '--products', metavar='DIR', action="store",
@@ -684,8 +683,6 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append('-DUSE_DOXYGEN=1')
         if self.options.python:
             self.configure_args.append('-DUSE_PYTHON=1')
-        if self.options.no_python:
-            self.configure_args.remove('-DUSE_PYTHON=1')
 
         if self.options.use_ninja:
             self.configure_args.append('-GNinja')
