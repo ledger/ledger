@@ -282,6 +282,10 @@ void instance_t::parse()
     }
   }
 
+#if defined(TIMELOG_SUPPORT)
+  timelog.close();
+#endif // TIMELOG_SUPPORT
+
   TRACE_STOP(instance_parse, 1);
 }
 
