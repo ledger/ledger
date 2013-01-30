@@ -875,7 +875,7 @@ class PrepareBuild(CommandLineApp):
         make_args   = []
 
         for arg in args:
-            if arg.startswith('--'):
+            if arg.startswith('--') or arg.startswith('-D'):
                 config_args.append(arg)
             else:
                 make_args.append(arg)
@@ -1068,12 +1068,17 @@ typical user:
   submodule         Updates Git submodules (better to use 'pull')
   version           Output current HEAD version to version.m4
 
-NOTE: If you wish to pass options to configure or make, add "--" followed by
-your options.  Here are some real-world examples:
+NOTE: If you wish to pass options to CMake or make, add "--" followed by
+your options.  Those starting with "-D" or "--" will be passed on to CMake,
+positional arguments and other options will be passed to make.
+For the 'config' and 'configure' phase everything will be passed to CMake.
+
+Here are some real-world examples:
 
   ./acprep
-  ./acprep opt -- make -j3
-  ./acprep --enable-doxygen"""
+  ./acprep --python
+  ./acprep opt make
+  ./acprep make doc -- -DBUILD_WEB_DOCS=1"""
         sys.exit(0)
 
 PrepareBuild().run()
