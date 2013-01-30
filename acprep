@@ -99,7 +99,7 @@ class CommandLineApp(object):
 
     force_exit    = True           # If true, always ends run() with sys.exit()
     log_handler   = None
-    boost_major   = "1_50"
+    boost_major   = "1_52"
 
     options = {
         'debug':    False,
