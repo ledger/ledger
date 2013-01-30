@@ -691,6 +691,12 @@ value_t report_t::fn_round(call_scope_t& args)
   return args[0].rounded();
 }
 
+value_t report_t::fn_roundto(call_scope_t& args)
+{
+  if(args.has<int>(1))
+    return args[0].roundto(args.get<int>(1));
+}
+
 value_t report_t::fn_unround(call_scope_t& args)
 {
   return args[0].unrounded();
@@ -1435,6 +1441,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return WRAP_FUNCTOR(fn_red);
       else if (is_eq(p, "round"))
         return MAKE_FUNCTOR(report_t::fn_round);
+      else if (is_eq(p, "roundto"))
+        return MAKE_FUNCTOR(report_t::fn_roundto);
       break;
 
     case 's':
