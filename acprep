@@ -666,8 +666,10 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append('-DCMAKE_CXX_COMPILER:PATH=/usr/local/bin/clang++')
 
             if self.current_flavor == 'opt':
-                self.configure_args.append('-DCMAKE_CXX_FLAGS_RELEASE:STRING=-O4')
-                self.configure_args.append('-DCMAKE_CXX_LINK_FLAGS_RELEASE:STRING=-O4')
+                self.configure_args.append('-DCMAKE_CXX_FLAGS_RELEASE:STRING=-O3')
+                self.configure_args.append('-DCMAKE_EXE_LINKER_FLAGS:STRING=-O3')
+                self.configure_args.append('-DCMAKE_SHARED_LINKER_FLAGS:STRING=-O3')
+                self.configure_args.append('-DCMAKE_MODULE_LINKER_FLAGS:STRING=-O3')
             #else:
             #    self.CXXFLAGS.append('-g -O1 -faddress-sanitizer')
             #    self.LDFLAGS.append('-g -O1 -faddress-sanitizer')
