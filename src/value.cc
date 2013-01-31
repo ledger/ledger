@@ -1612,6 +1612,27 @@ void value_t::in_place_round()
   throw_(value_error, _f("Cannot set rounding for %1%") % label());
 }
 
+void value_t::in_place_roundto(int places)
+{
+  DEBUG("amount.roundto", "=====> roundto places " << places);
+  switch (type()) {
+  case INTEGER:
+    return;
+  case AMOUNT:
+    as_amount_lval().in_place_roundto(places);
+    return;
+  case BALANCE:
+    as_balance_lval().in_place_roundto(places);
+    return;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_roundto(places);
+    return;
+  default:
+    break;
+  }
+}
+
 void value_t::in_place_truncate()
 {
   switch (type()) {

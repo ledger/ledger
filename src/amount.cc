@@ -30,6 +30,7 @@
  */
 
 #include <system.hh>
+#include <math.h>
 
 #include "amount.h"
 #include "commodity.h"
@@ -672,31 +673,31 @@ void amount_t::in_place_truncate()
 void amount_t::in_place_floor()
 {
   if (! quantity)
-    throw_(amount_error, _("Cannot floor an uninitialized amount"));
+    throw_(amount_error, _("Cannot compute floor on an uninitialized amount"));
 
   _dup();
 
-  mpz_t quot;
-  mpz_init(quot);
-  mpz_fdiv_q(quot,  mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
-  mpq_clear(MP(quantity));
-  mpq_init(MP(quantity));
-  mpq_set_num(MP(quantity), quot);
+  mpz_fdiv_q(temp,  mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
+  mpq_set_z(MP(quantity), temp);
 }
 
 void amount_t::in_place_ceiling()
 {
   if (! quantity)
-    throw_(amount_error, _("Cannot ceiling an uninitialized amount"));
+    throw_(amount_error, _("Cannot compute ceiling on an uninitialized amount"));
 
   _dup();
 
-  mpz_t quot;
-  mpz_init(quot);
-  mpz_cdiv_q(quot,  mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
-  mpq_clear(MP(quantity));
-  mpq_init(MP(quantity));
-  mpq_set_num(MP(quantity), quot);
+  mpz_cdiv_q(temp,  mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
+  mpq_set_z(MP(quantity), temp);
+}
+
+void amount_t::in_place_roundto(int places)
+{
+  if (! quantity)
+    throw_(amount_error, _("Cannot round an uninitialized amount"));
+    double x=ceil(mpq_get_d(MP(quantity))*pow(10, places) - 0.49999999) / pow(10, places);
+    mpq_set_d(MP(quantity), x);
 }
 
 void amount_t::in_place_unround()
