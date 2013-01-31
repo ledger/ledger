@@ -22,21 +22,32 @@
 ;; A sample entry sorting function, which works if entry dates are of
 ;; the form YYYY/mm/dd.
 
-(defun ledger-sort ()
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (sort-subr
-     nil
-     (function
-      (lambda ()
+(defun ledger-next-record-function ()
         (if (re-search-forward
              (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
                      "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)
             (goto-char (match-beginning 0))
-          (goto-char (point-max)))))
-     (function
-      (lambda ()
-        (forward-paragraph))))))
+	    (goto-char (point-max))))
+
+(defun ledger-end-record-function ()
+  (forward-paragraph))
+
+(defun ledger-sort-region (beg end)
+  (interactive "r") ;load beg and end from point and mark automagically
+  (save-excursion
+    (save-restriction
+      (narrow-to-region beg end)
+      (goto-char (point-min))
+      (message "%s %s %s" beg end (point-min)) 
+      (let ((inhibit-field-text-motion t))
+	(sort-subr
+	 nil
+	 'ledger-next-record-function
+	 'ledger-end-record-function)))))
+
+(defun ledger-sort-buffer ()
+  (interactive)
+    (ledger-sort-region (point-min) (point-max)))
+
 
 (provide 'ldg-xact)
