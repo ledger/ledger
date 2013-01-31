@@ -693,8 +693,7 @@ value_t report_t::fn_round(call_scope_t& args)
 
 value_t report_t::fn_roundto(call_scope_t& args)
 {
-  if(args.has<int>(1))
-    return args[0].roundto(args.get<int>(1));
+  return args[0].roundto(args.get<int>(1));
 }
 
 value_t report_t::fn_unround(call_scope_t& args)
