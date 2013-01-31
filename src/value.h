@@ -443,6 +443,13 @@ public:
   }
   void in_place_round();
 
+  value_t roundto(int places) const {
+    value_t temp(*this);
+    temp.in_place_roundto(places);
+    return temp;
+  }
+  void in_place_roundto(int places);
+  
   value_t truncated() const {
     value_t temp(*this);
     temp.in_place_truncate();
