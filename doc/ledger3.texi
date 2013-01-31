@@ -2502,13 +2502,17 @@ all of the uncleared transactions.  The reconcile buffer has several functions:
   @item C-x C-s 
   to save changes (to the ledger file as well).
   @item q
-  quite the reconcile mode
+  quit the reconcile mode
   @item n p
   next line or previous line
   @item A
   add entry
   @item D
   delete entry
+  @item g
+  reconcile new account
+  @item b     
+  show cleared balance in mini-buffer
   @item C-l
   refresh display
 @end table
