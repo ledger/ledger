@@ -26,6 +26,7 @@
 
 (defun ledger-display-balance ()
   "Calculate the cleared balance of the account being reconciled"
+  (interactive)
   (let ((buffer ledger-buf)
         (account ledger-acct))
     (with-temp-buffer
@@ -63,6 +64,11 @@
 				  (list 'face))))
     (forward-line)
     (ledger-display-balance)))
+
+(defun ledger-reconcile-new-account (account)
+  (interactive "sAccount to reconcile: ")
+  (set (make-local-variable 'ledger-acct) account)
+  (ledger-reconcile-refresh))
 
 (defun ledger-reconcile-refresh ()
   (interactive)
@@ -203,10 +209,12 @@
     (define-key map [? ] 'ledger-reconcile-toggle)
     (define-key map [?a] 'ledger-reconcile-add)
     (define-key map [?d] 'ledger-reconcile-delete)
+    (define-key map [?g] 'ledger-reconcile-new-account)
     (define-key map [?n] 'next-line)
     (define-key map [?p] 'previous-line)
     (define-key map [?s] 'ledger-reconcile-save)
     (define-key map [?q] 'ledger-reconcile-quit)
+    (define-key map [?b] 'ledger-display-balance)
 
     (define-key map [menu-bar] (make-sparse-keymap "ldg-recon-menu"))
     (define-key map [menu-bar ldg-recon-menu] (cons "Reconcile" map))
@@ -220,6 +228,9 @@
     (define-key map [menu-bar ldg-recon-menu add] '("Add Entry" . ledger-reconcile-add))
     (define-key map [menu-bar ldg-recon-menu tog] '("Toggle Entry" . ledger-reconcile-toggle))
     (define-key map [menu-bar ldg-recon-menu sep3] '("--"))
+    (define-key map [menu-bar ldg-recon-menu bal] '("Show Cleared Balance" . ledger-display-balance))
+    (define-key map [menu-bar ldg-recon-menu sep4] '("--"))
+    (define-key map [menu-bar ldg-recon-menu rna] '("Reconcile New Account" . ledger-reconcile-new-account))
     (define-key map [menu-bar ldg-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
     (define-key map [menu-bar ldg-recon-menu sav] '("Save" . ledger-reconcile-save))
 
