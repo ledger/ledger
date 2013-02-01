@@ -39,7 +39,6 @@
     (save-excursion
       (save-restriction
 	(ledger-next-record-function) ;make sure point is at the beginning of a xact
-	(message "beg: %s end: %s" new-beg new-end)
 	(setq new-beg (point))
 	(goto-char end)
 	(ledger-next-record-function) ;make sure end of region is at the beginning of
