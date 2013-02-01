@@ -2376,7 +2376,7 @@ reconcile uncleared entries related to an account
 @item C-c C-d
 delete the current entry
 @item C-c C-s
-sort all entries in the journal by date. Drop comments outside of entries
+sort all entries in the region. 
 @item C-c C-o C-r   
 run a ledger report
 @item C-C C-o C-g   

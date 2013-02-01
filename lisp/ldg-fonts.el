@@ -56,6 +56,21 @@
   "Face for Ledger comments"
   :group 'ledger-faces)
 
+(defface ledger-font-reconciler-uncleared-face 
+    `((t :foreground "green" :weight normal ))
+  "Default face for uncleared transactions in the reconcile window"
+  :group 'ledger-faces)
+
+(defface ledger-font-reconciler-cleared-face 
+    `((t :foreground "grey70" :weight normal ))
+  "Default face for cleared (*) transactions in the reconcile window"
+  :group 'ledger-faces)
+
+(defface ledger-font-reconciler-pending-face 
+    `((t :foreground "yellow" :weight normal ))
+  "Default face for pending (!) transactions in the reconcile window"
+  :group 'ledger-faces)
+
 
 (defvar ledger-font-lock-keywords
   '(("^[0-9]+[-/.=][-/.=0-9]+\\s-\\!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)" 2 'ledger-font-pending-face)
