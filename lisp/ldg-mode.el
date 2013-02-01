@@ -38,19 +38,6 @@ customizable to ease retro-entry.")
   :type 'string
   :group 'ledger)
 
-(defvar bold 'bold)
-(defvar ledger-font-lock-keywords
-  '(("\\(       \\|  \\|^\\)\\(;.*\\)" 2 font-lock-comment-face)
-    ("^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)" 2 bold)
-    ;;("^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([*].+?\\)\\(\\(       ;\\|  ;\\|$\\)\\)"
-    ;; 2 font-lock-type-face)
-    ("^\\s-+\\([*]\\s-*\\)?\\(\\([[(]\\)?[^*:
-        ]+?:\\([^]);
-        ]\\|\\s-\\)+?\\([])]\\)?\\)\\(    \\|  \\|$\\)"
-     2 font-lock-keyword-face)
-    ("^\\([~=].+\\)" 1 font-lock-function-name-face)
-    ("^\\([A-Za-z]+ .+\\)" 1 font-lock-function-name-face))
-  "Expressions to highlight in Ledger mode.")
 
 (defvar ledger-mode-abbrev-table)
 
