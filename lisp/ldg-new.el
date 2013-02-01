@@ -43,6 +43,7 @@
 (require 'ldg-test)
 (require 'ldg-texi)
 (require 'ldg-xact)
+(require 'ldg-sort)
 (require 'ldg-fonts)
 ;(autoload #'ledger-mode "ldg-mode" nil t)
 ;(autoload #'ledger-fully-complete-entry "ldg-complete" nil t)
