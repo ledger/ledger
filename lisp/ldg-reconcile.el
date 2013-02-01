@@ -55,13 +55,17 @@
       (with-current-buffer ledger-buf
 	(goto-char (cdr where))
 	(setq cleared (ledger-toggle-current-entry)))
+      ;remove the existing face and add the new face
+      (remove-text-properties (line-beginning-position)
+				  (line-end-position)
+				  (list 'face))
       (if cleared
 	  (add-text-properties (line-beginning-position)
 			       (line-end-position)
-			       (list 'face 'bold))
-	  (remove-text-properties (line-beginning-position)
-				  (line-end-position)
-				  (list 'face))))
+			       (list 'face 'ledger-font-reconciler-cleared-face ))
+	  (add-text-properties (line-beginning-position)
+			       (line-end-position)
+			       (list 'face 'ledger-font-reconciler-uncleared-face ))))
     (forward-line)
     (ledger-display-balance)))
 
@@ -172,10 +176,11 @@
 			      (nth 4 item) (nth 1 xact) (nth 2 xact)))
 	      (if (nth 3 xact)
 		  (set-text-properties beg (1- (point))
-				       (list 'face 'bold
+				       (list 'face 'ledger-font-reconciler-cleared-face 
 					     'where where))
 		  (set-text-properties beg (1- (point))
-				       (list 'where where))))
+				       (list 'face 'ledger-font-reconciler-uncleared-face 
+					     'where where))))
 	    (setq index (1+ index)))))
       (goto-char (point-min))
       (set-buffer-modified-p nil)
