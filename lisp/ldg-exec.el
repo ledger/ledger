@@ -19,6 +19,12 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 
+(defconst ledger-version-needed "3.0.0"
+  "The version of ledger executable needed for interactive features")
+
+(defvar ledger-works nil
+  "Flag showing whether the ledger binary can support ledger-mode interactive features")
+
 (defgroup ledger-exec nil
   "Interface to the Ledger command-line accounting program."
   :group 'ledger)
@@ -51,5 +57,30 @@
     (prog1
         (read (current-buffer))
       (kill-buffer (current-buffer)))))
+
+(defun ledger-version-greater-p (needed)
+  "verify the ledger binary is usable for ledger-mode"
+  (let ((buffer ledger-buf)
+        (version-strings '())
+	(version-number))
+    (with-temp-buffer
+      (ledger-exec-ledger buffer (current-buffer) "--version")
+      (goto-char (point-min))
+      (delete-horizontal-space)
+      (setq version-strings (split-string
+			    (buffer-substring-no-properties (point)
+							       (+ (point) 12))))
+      (if (and (string-match (regexp-quote "Ledger") (car version-strings))
+	       (or (string= needed (car (cdr version-strings)))
+		   (string< needed (car (cdr version-strings)))))
+	  t
+	  nil))))
+
+(defun ledger-check-version ()
+  (interactive)
+  (setq ledger-works (ledger-version-greater-p ledger-version-needed))
+  (if ledger-works
+      (message "Good Ledger Version")
+      (message "Bad Ledger Version")))
 
 (provide 'ldg-exec)
