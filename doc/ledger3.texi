@@ -77,8 +77,8 @@ twinkling in their father's CRT.
 * Budgeting and Forecasting::   
 * Value Expressions::           
 * Format Strings::              
-* Ledger for Developers::       
 * Extending with Python::       
+* Ledger for Developers::       
 * Major Changes from version 2.6::  
 * Example Data File::           
 * Miscellaneous Notes::         
@@ -4093,7 +4093,6 @@ of the balance.
 * Primary Financial Reports::   Reports in other formats:: Reports about
 * Reports in other Formats::    
 * Reports about your Journals::  
-* Developer Commands::          
 @end menu
 
 @node Primary Financial Reports, Reports in other Formats, Reporting Commands, Reporting Commands
@@ -4774,7 +4773,7 @@ by Ledger.  This is useful for generating and tidying up pricedb
 database files.
 
 
-@node Reports about your Journals, Developer Commands, Reports in other Formats, Reporting Commands
+@node Reports about your Journals,  , Reports in other Formats, Reporting Commands
 @section Reports about your Journals
 
 @menu
@@ -4879,199 +4878,6 @@ macbook-2:$
 
 
 
-@node Developer Commands,  , Reports about your Journals, Reporting Commands
-@section Developer Commands
-@menu
-* echo::                        
-* reload::                      
-* source::                      
-* Debug Options::               
-* Pre-commands::                
-@end menu
-
-@node echo, reload, Developer Commands, Developer Commands
-@subsection @command{echo}
-This command simply echos its argument back to the output.
-
-
-@node reload, source, echo, Developer Commands
-@subsection @command{reload}
-Forces ledger to reload any journal files.  This function exists to
-support external programs controlling a running ledger process and does
-nothing for a command line user.
-
-@node source, Debug Options, reload, Developer Commands
-@subsection @command{source}
-The @code{source} command take a journal file as an argument and parses
-it checking for errors, no other reports are generated, and no other
-arguments are necessary.  Ledger will return success if no errors are
-found.
-
-@node Debug Options, Pre-commands, source, Developer Commands
-@subsection Debug Options
-
-These options are primarily for Ledger developers, but may be of some
-use to a user trying something new.
-
-@table @code
-  @item --args-only
-ignore init
-files and environment variables for the ledger run.
-
-@item --verify
-enable additional assertions during run-time. This causes a significant
-slowdown.  When combined with @code{--debug} ledger will produce
-memory trace information.
-
-@item --debug "argument"
-If Ledger has been built with debug options this will provide extra data
-during the run.  The following are the available arguments to debug:
-
-@multitable @columnfractions .32 .43 .27
-@item @code{account.display}             @tab @code{expr.calc.when}                   @tab @code{org.next_amount}        
-@item @code{accounts.sorted}             @tab @code{expr.compile}                     @tab @code{org.next_total}         
-@item @code{amount.convert}              @tab @code{filters.changed_value}            @tab @code{parser.error}           
-@item @code{amount.is_zero}              @tab @code{filters.changed_value.rounding}   @tab @code{pool.commodities}       
-@item @code{amount.parse}                @tab @code{filters.collapse}                 @tab @code{post.assign}            
-@item @code{amount.price}                @tab @code{filters.forecast}                 @tab @code{python.init}            
-@item @code{amount.truncate}             @tab @code{filters.revalued}                 @tab @code{python.interp}          
-@item @code{amount.unround}              @tab @code{format.abbrev}                    @tab @code{query.mask}             
-@item @code{amounts.commodities}         @tab @code{format.expr}                      @tab @code{report.predicate}       
-@item @code{amounts.refs}                @tab @code{generate.post}                    @tab @code{scope.symbols}          
-@item @code{archive.journal}             @tab @code{generate.post.string}             @tab @code{textual.include}        
-@item @code{auto.columns}                @tab @code{item.meta}                        @tab @code{textual.parse}          
-@item @code{budget.generate}             @tab @code{ledger.read}                      @tab @code{timelog}                
-@item @code{commodity.annotated.strip}   @tab @code{ledger.validate}                  @tab @code{times.epoch}            
-@item @code{commodity.annotations}       @tab @code{lookup}                           @tab @code{times.interval}         
-@item @code{commodity.compare}           @tab @code{lookup.account}                   @tab @code{times.parse}            
-@item @code{commodity.download}          @tab @code{mask.match}                       @tab @code{value.sort}             
-@item @code{commodity.prices.add}        @tab @code{memory.counts}                    @tab @code{value.storage.refcount} 
-@item @code{commodity.prices.find}       @tab @code{memory.counts.live}               @tab @code{xact.extend}            
-@item @code{convert.csv}                 @tab @code{memory.debug}                     @tab @code{xact.extend.cleared}    
-@item @code{csv.mappings}                @tab @code{op.cons}                          @tab @code{xact.extend.fail}       
-@item @code{csv.parse}                   @tab @code{op.memory}                        @tab @code{xact.finalize}         
-@item @code{draft.xact}                  @tab @code{option.args}                           
-@item @code{expr.calc}                   @tab @code{option.names}                          
-@end multitable 
-
-@item --trace INTEGER_TRACE_LEVEL
-Enable tracing.  The integer specifies the level of trace desired:   
-@multitable @columnfractions .3 .7
-@item @code{LOG_OFF} @tab 0
-@item @code{LOG_CRIT} @tab 1
-@item @code{LOG_FATAL} @tab 2
-@item @code{LOG_ASSERT} @tab 3
-@item @code{LOG_ERROR} @tab 4
-@item @code{LOG_VERIFY} @tab 5
-@item @code{LOG_WARN} @tab 6
-@item @code{LOG_INFO} @tab 7
-@item @code{LOG_EXCEPT} @tab 8
-@item @code{LOG_DEBUG} @tab 9
-@item @code{LOG_TRACE} @tab 10
-@item @code{LOG_ALL} @tab 11
-@end multitable
-
-@item --verbose
-Print detailed information on the execution of Ledger.
-
-@item --version
-Print version information and exit.
-@end table
-
-@node Pre-commands,  , Debug Options, Developer Commands
-@subsection Pre-Commands
-Pre-commands are useful when you aren't sure how a command or option  
-will work.
-@table @code
-@item args
-evaluate the given arguments against the following model transaction:
-@smallexample
-2004/05/27 Book Store
-    ; This note applies to all postings. :SecondTag:
-    Expenses:Books                 20 BOOK @@ $10
-    ; Metadata: Some Value
-    ; Typed:: $100 + $200
-    ; :ExampleTag:
-    ; Here follows a note describing the posting.
-    Liabilities:MasterCard        $-200.00
-@end smallexample
-@item eval
-evaluate the given value expression against the model transaction
-@item expr "LIMIT EXPRESSION"
-Print details of how ledger parses the given limit expression and apply
-it against a model transaction.
-@item format "FORMATTING"
-Print details of how ledger uses the given formatting description and
-apply it against a model transaction.
-@item generate
-Randomly generates syntactically valid Ledger data from a seed.  Used by the
-GenerateTests harness for development testing
-@item parse <VALUE EXPR>
-Print details of how ledger uses the given value expression description
-and apply it against a model transaction.
-@item period
-evaluate the given period and report how Ledger interprets it:
-@smallexample
-20:22:21 ~/ledger (next)> ledger period "this year"
---- Period expression tokens ---
-TOK_THIS: this
-TOK_YEAR: year
-END_REACHED: <EOF>
-
---- Before stabilization ---
-   range: in year 2011
-
---- After stabilization ---
-   range: in year 2011
-   start: 11-Jan-01
-  finish: 12-Jan-01
-
---- Sample dates in range (max. 20) ---
- 1: 11-Jan-01
-@end smallexample
-@item query
-evaluate the given query and report how Ledger interprets it against the
-model transaction:
-
-@smallexample
-20:25:42 ~/ledger (next)> ledger query "/Book/"
---- Input arguments ---
-("/Book/")
-
---- Context is first posting of the following transaction ---
-2004/05/27 Book Store
-    ; This note applies to all postings. :SecondTag:
-    Expenses:Books                 20 BOOK @@ $10
-    ; Metadata: Some Value
-    ; Typed:: $100 + $200
-    ; :ExampleTag:
-    ; Here follows a note describing the posting.
-    Liabilities:MasterCard        $-200.00
-
---- Input expression ---
-(account =~ /Book/)
-
---- Text as parsed ---
-(account =~ /Book/)
-
---- Expression tree ---
-0x7fd639c0da40    O_MATCH (1)
-0x7fd639c10170     IDENT: account (1)
-0x7fd639c10780     VALUE: /Book/ (1)
-
---- Compiled tree ---
-0x7fd639c10520    O_MATCH (1)
-0x7fd639c0d6c0     IDENT: account (1)
-0x7fd639c0d680      FUNCTION (1)
-0x7fd639c10780     VALUE: /Book/ (1)
-
---- Calculated value ---
-true
-@end smallexample
-@item template
-Shows the insertion template that a @code{draft} or @code{xact} sub-command generates.
-This is a debugging command.
-@end table
 
 @node Command-line Syntax, Budgeting and Forecasting, Reporting Commands, Top
 @chapter Command-line Syntax
@@ -7241,7 +7047,7 @@ Useful specifying a date in plain terms.  For example, you could say
 @item @code{value_date } @tab @code{} @tab 
 @end multitable
 
-@node Format Strings, Ledger for Developers, Value Expressions, Top
+@node Format Strings, Extending with Python, Value Expressions, Top
 @chapter Format Strings
 
 @menu
@@ -7667,15 +7473,172 @@ line number in @code{filename} where posting's entry for posting ends, abbreviat
 
 
 
+@node Extending with Python, Ledger for Developers, Format Strings, Top
+@chapter Extending with Python
+Python can be used to extend your Ledger
+experience.  But first, a word must be said about Ledger's data model, so that
+other things make sense later.
+
+@menu
+* Basic data traversal::        
+* Raw vs. Cooked::              
+* Queries::                     
+* Embedded Python::             
+* Amounts::                     
+@end menu
+
+@node Basic data traversal, Raw vs. Cooked, Extending with Python, Extending with Python
+@section Basic data traversal
+
+Every interaction with Ledger happens in the context of a Session.  Even if
+you don't create a session manually, one is created for you by the top-level
+interface functions.  The Session is where objects live like the Commodity's
+that Amount's refer to.
+
+The make a Session useful, you must read a Journal into it, using the function
+`@code{read_journal}`.  This reads Ledger data from the given file, populates a
+Journal object within the current Session, and returns a reference to that
+Journal object.
+
+Within the Journal live all the Transaction's, Posting's, and other objects
+related to your data.  There are also AutomatedTransaction's and
+PeriodicTransaction's, etc.
+
+Here is how you would traverse all the postings in your data file:
+@smallexample
+
+   import ledger
+
+   for xact in ledger.read_journal("sample.dat").xacts:
+       for post in xact.posts:
+           print "Transferring %s to/from %s" % (post.amount, post.account)
+@end smallexample
+
+@node Raw vs. Cooked, Queries, Basic data traversal, Extending with Python
+@section Raw vs. Cooked
+
+Ledger data exists in one of two forms: raw and cooked.  Raw objects are what
+you get from a traversal like the above, and represent exactly what was seen
+in the data file.  Consider this journal:
+
+@smallexample
+   = true
+       (Assets:Cash)    $100
+
+   2012-03-01 KFC
+       Expenses:Food    $100
+       Assets:Credit
+@end smallexample
+
+
+In this case, the @emph{raw} regular transaction in this file is:
+
+@smallexample
+   2012-03-01 KFC
+       Expenses:Food    $100
+       Assets:Credit
+@end smallexample
+
+While the @emph{cooked} form is:
+
+@smallexample
+   2012-03-01 KFC
+       Expenses:Food    $100
+       Assets:Credit   $-100
+       (Assets:Cash)    $100
+@end smallexample
+
+So the easy way to think about raw vs. cooked is that raw is the unprocessed
+data, and cooked has had all considerations applied.
+
+When you traverse a Journal by iterating its transactions, you are generally
+looking at raw data.  In order to look at cooked data, you must generate a
+report of some kind by querying the journal:
+
+@smallexample
+   for post in ledger.read_journal("sample.dat").query("food"):
+       print "Transferring %s to/from %s" % (post.amount, post.account)
+@end smallexample
+
+The reason why queries iterate over postings instead of transactions is that
+queries often return only a ``slice'' of the transactions they apply to.  You
+can always get at a matching posting's transaction by looking at its "xact"
+member:
+
+@smallexample
+   last_xact = None
+   for post in ledger.read_journal("sample.dat").query(""):
+       if post.xact != last_xact:
+           for post in post.xact.posts:
+               print "Transferring %s to/from %s" % (post.amount,
+               post.account)
+           last_xact = post.xact
+@end smallexample
+
+This query ends up reporting every cooked posting in the Journal, but does it
+transaction-wise.  It relies on the fact that an unsorted report returns
+postings in the exact order they were parsed from the journal file.
+
+@node Queries, Embedded Python, Raw vs. Cooked, Extending with Python
+@section Queries
+
+The Journal.query() method accepts every argument you can specify on the
+command-line, including --options.
+
+Since a query ``cooks'' the journal it applies to, only one query may be active
+for that journal at a given time.  Once the query object is gone (after the
+for loop), then the data reverts back to its raw state.
+
+@node Embedded Python, Amounts, Queries, Extending with Python
+@section Embedded Python
+
+Can you embed Python into your data files using the 'python' directive:
+
+@smallexample
+   python
+       import so
+       def check_path(path_value):
+           print "%s => %s" % (str(path_value), os.path.isfile(str(path_value)))
+           return os.path.isfile(str(path_value))
+
+   tag PATH
+       assert check_path(value)
+
+   2012-02-29 KFC
+       ; PATH: somebogusfile.dat
+       Expenses:Food                $20
+       Assets:Cash
+@end smallexample
+
+Any Python functions you define this way become immediately available as
+valexpr functions.
+
+@node Amounts,  , Embedded Python, Extending with Python
+@section Amounts
+
+When numbers come from Ledger, like post.amount, the type of the value is
+Amount.  It can be used just like an ordinary number, except that addition
+and subtraction are restricted to amounts with the same commodity.  If you
+need to create sums of multiple commodities, use a Balance.  For example:
+
+@smallexample
+   total = Balance()
+   for post in ledger.read_journal("sample.dat").query(""):
+       total += post.amount
+   print total
+@end smallexample
 
 
 
-@node Ledger for Developers, Extending with Python, Format Strings, Top
+
+@node Ledger for Developers, Major Changes from version 2.6, Extending with Python, Top
 @chapter Ledger for Developers
 
 @menu
 * Internal Design::             
 * Journal File Format::         
+* Developer Commands::          
+* Ledger Development Environment::  
 @end menu
 
 @node Internal Design, Journal File Format, Ledger for Developers, Ledger for Developers
@@ -7902,7 +7865,7 @@ And that's Ledger in a nutshell.  All the rest are details, such as which
 value expressions each journal item exposes, how many filters currently exist,
 which options the report and session scopes define, etc.
 
-@node Journal File Format,  , Internal Design, Ledger for Developers
+@node Journal File Format, Developer Commands, Internal Design, Ledger for Developers
 @section Journal File Format for Developers
 
 This chapter offers a complete description of the journal data format,
@@ -8168,163 +8131,250 @@ considered a primary.  In fact, when Ledger goes about ensures that
 all transactions balance to zero, it only ever asks this of primary
 commodities.
 
-@node Extending with Python, Major Changes from version 2.6, Ledger for Developers, Top
-@chapter Extending with Python
-Python can be used to extend your Ledger
-experience.  But first, a word must be said about Ledger's data model, so that
-other things make sense later.
-
+@node Developer Commands, Ledger Development Environment, Journal File Format, Ledger for Developers
+@section Developer Commands
 @menu
-* Basic data traversal::        
-* Raw vs. Cooked::              
-* Queries::                     
-* Embedded Python::             
-* Amounts::                     
+* echo::                        
+* reload::                      
+* source::                      
+* Debug Options::               
+* Pre-commands::                
 @end menu
 
-@node Basic data traversal, Raw vs. Cooked, Extending with Python, Extending with Python
-@section Basic data traversal
+@node echo, reload, Developer Commands, Developer Commands
+@subsection @command{echo}
+This command simply echos its argument back to the output.
 
-Every interaction with Ledger happens in the context of a Session.  Even if
-you don't create a session manually, one is created for you by the top-level
-interface functions.  The Session is where objects live like the Commodity's
-that Amount's refer to.
 
-The make a Session useful, you must read a Journal into it, using the function
-`@code{read_journal}`.  This reads Ledger data from the given file, populates a
-Journal object within the current Session, and returns a reference to that
-Journal object.
+@node reload, source, echo, Developer Commands
+@subsection @command{reload}
+Forces ledger to reload any journal files.  This function exists to
+support external programs controlling a running ledger process and does
+nothing for a command line user.
 
-Within the Journal live all the Transaction's, Posting's, and other objects
-related to your data.  There are also AutomatedTransaction's and
-PeriodicTransaction's, etc.
+@node source, Debug Options, reload, Developer Commands
+@subsection @command{source}
+The @code{source} command take a journal file as an argument and parses
+it checking for errors, no other reports are generated, and no other
+arguments are necessary.  Ledger will return success if no errors are
+found.
 
-Here is how you would traverse all the postings in your data file:
+@node Debug Options, Pre-commands, source, Developer Commands
+@subsection Debug Options
+
+These options are primarily for Ledger developers, but may be of some
+use to a user trying something new.
+
+@table @code
+  @item --args-only
+ignore init
+files and environment variables for the ledger run.
+
+@item --verify
+enable additional assertions during run-time. This causes a significant
+slowdown.  When combined with @code{--debug} ledger will produce
+memory trace information.
+
+@item --debug "argument"
+If Ledger has been built with debug options this will provide extra data
+during the run.  The following are the available arguments to debug:
+
+@multitable @columnfractions .32 .43 .27
+@item @code{account.display}             @tab @code{expr.calc.when}                   @tab @code{org.next_amount}        
+@item @code{accounts.sorted}             @tab @code{expr.compile}                     @tab @code{org.next_total}         
+@item @code{amount.convert}              @tab @code{filters.changed_value}            @tab @code{parser.error}           
+@item @code{amount.is_zero}              @tab @code{filters.changed_value.rounding}   @tab @code{pool.commodities}       
+@item @code{amount.parse}                @tab @code{filters.collapse}                 @tab @code{post.assign}            
+@item @code{amount.price}                @tab @code{filters.forecast}                 @tab @code{python.init}            
+@item @code{amount.truncate}             @tab @code{filters.revalued}                 @tab @code{python.interp}          
+@item @code{amount.unround}              @tab @code{format.abbrev}                    @tab @code{query.mask}             
+@item @code{amounts.commodities}         @tab @code{format.expr}                      @tab @code{report.predicate}       
+@item @code{amounts.refs}                @tab @code{generate.post}                    @tab @code{scope.symbols}          
+@item @code{archive.journal}             @tab @code{generate.post.string}             @tab @code{textual.include}        
+@item @code{auto.columns}                @tab @code{item.meta}                        @tab @code{textual.parse}          
+@item @code{budget.generate}             @tab @code{ledger.read}                      @tab @code{timelog}                
+@item @code{commodity.annotated.strip}   @tab @code{ledger.validate}                  @tab @code{times.epoch}            
+@item @code{commodity.annotations}       @tab @code{lookup}                           @tab @code{times.interval}         
+@item @code{commodity.compare}           @tab @code{lookup.account}                   @tab @code{times.parse}            
+@item @code{commodity.download}          @tab @code{mask.match}                       @tab @code{value.sort}             
+@item @code{commodity.prices.add}        @tab @code{memory.counts}                    @tab @code{value.storage.refcount} 
+@item @code{commodity.prices.find}       @tab @code{memory.counts.live}               @tab @code{xact.extend}            
+@item @code{convert.csv}                 @tab @code{memory.debug}                     @tab @code{xact.extend.cleared}    
+@item @code{csv.mappings}                @tab @code{op.cons}                          @tab @code{xact.extend.fail}       
+@item @code{csv.parse}                   @tab @code{op.memory}                        @tab @code{xact.finalize}         
+@item @code{draft.xact}                  @tab @code{option.args}                           
+@item @code{expr.calc}                   @tab @code{option.names}                          
+@end multitable 
+
+@item --trace INTEGER_TRACE_LEVEL
+Enable tracing.  The integer specifies the level of trace desired:   
+@multitable @columnfractions .3 .7
+@item @code{LOG_OFF} @tab 0
+@item @code{LOG_CRIT} @tab 1
+@item @code{LOG_FATAL} @tab 2
+@item @code{LOG_ASSERT} @tab 3
+@item @code{LOG_ERROR} @tab 4
+@item @code{LOG_VERIFY} @tab 5
+@item @code{LOG_WARN} @tab 6
+@item @code{LOG_INFO} @tab 7
+@item @code{LOG_EXCEPT} @tab 8
+@item @code{LOG_DEBUG} @tab 9
+@item @code{LOG_TRACE} @tab 10
+@item @code{LOG_ALL} @tab 11
+@end multitable
+
+@item --verbose
+Print detailed information on the execution of Ledger.
+
+@item --version
+Print version information and exit.
+@end table
+
+@node Pre-commands,  , Debug Options, Developer Commands
+@subsection Pre-Commands
+Pre-commands are useful when you aren't sure how a command or option  
+will work.
+@table @code
+@item args
+evaluate the given arguments against the following model transaction:
 @smallexample
-
-   import ledger
-
-   for xact in ledger.read_journal("sample.dat").xacts:
-       for post in xact.posts:
-           print "Transferring %s to/from %s" % (post.amount, post.account)
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @@ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
 @end smallexample
+@item eval
+evaluate the given value expression against the model transaction
+@item expr "LIMIT EXPRESSION"
+Print details of how ledger parses the given limit expression and apply
+it against a model transaction.
+@item format "FORMATTING"
+Print details of how ledger uses the given formatting description and
+apply it against a model transaction.
+@item generate
+Randomly generates syntactically valid Ledger data from a seed.  Used by the
+GenerateTests harness for development testing
+@item parse <VALUE EXPR>
+Print details of how ledger uses the given value expression description
+and apply it against a model transaction.
+@item period
+evaluate the given period and report how Ledger interprets it:
+@smallexample
+20:22:21 ~/ledger (next)> ledger period "this year"
+--- Period expression tokens ---
+TOK_THIS: this
+TOK_YEAR: year
+END_REACHED: <EOF>
 
-@node Raw vs. Cooked, Queries, Basic data traversal, Extending with Python
-@section Raw vs. Cooked
+--- Before stabilization ---
+   range: in year 2011
 
-Ledger data exists in one of two forms: raw and cooked.  Raw objects are what
-you get from a traversal like the above, and represent exactly what was seen
-in the data file.  Consider this journal:
+--- After stabilization ---
+   range: in year 2011
+   start: 11-Jan-01
+  finish: 12-Jan-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 11-Jan-01
+@end smallexample
+@item query
+evaluate the given query and report how Ledger interprets it against the
+model transaction:
 
 @smallexample
-   = true
-       (Assets:Cash)    $100
+20:25:42 ~/ledger (next)> ledger query "/Book/"
+--- Input arguments ---
+("/Book/")
 
-   2012-03-01 KFC
-       Expenses:Food    $100
-       Assets:Credit
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @@ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input expression ---
+(account =~ /Book/)
+
+--- Text as parsed ---
+(account =~ /Book/)
+
+--- Expression tree ---
+0x7fd639c0da40    O_MATCH (1)
+0x7fd639c10170     IDENT: account (1)
+0x7fd639c10780     VALUE: /Book/ (1)
+
+--- Compiled tree ---
+0x7fd639c10520    O_MATCH (1)
+0x7fd639c0d6c0     IDENT: account (1)
+0x7fd639c0d680      FUNCTION (1)
+0x7fd639c10780     VALUE: /Book/ (1)
+
+--- Calculated value ---
+true
 @end smallexample
+@item template
+Shows the insertion template that a @code{draft} or @code{xact} sub-command generates.
+This is a debugging command.
+@end table
+
+@node Ledger Development Environment,  , Developer Commands, Ledger for Developers
+@section Ledger Development Environment
+
+@menu
+* acrep build configuration tool::  
+* Testing Framework::           
+@end menu
+
+@node acrep build configuration tool, Testing Framework, Ledger Development Environment, Ledger Development Environment
+@subsection @code{acprep} build configuration tool
+
+@node Testing Framework,  , acrep build configuration tool, Ledger Development Environment
+@subsection Testing Framework
+Ledger source ships with a farily complete set of tests to verify that
+all is well, and no old errors have been resurfaced.  Tests are run
+individually with @code{ctest}.  All tests can be run using @code{make
+check} or @code{ninja check} depending on which build tool you prefer.
+
+Once built, the ledger executable resides under the @file{build}
+subdirectory in the source tree.  Tests are built and stored in the test
+subdirectory for the build.  For example,
+@file{~/ledger/build/ledger/opt/test}.  
+
+@menu
+* Running Tests::               
+* Writing Tests::               
+@end menu
 
 
-In this case, the @emph{raw} regular transaction in this file is:
+@node Running Tests, Writing Tests, Testing Framework, Testing Framework
+@subsubsection Running Tests
 
-@smallexample
-   2012-03-01 KFC
-       Expenses:Food    $100
-       Assets:Credit
-@end smallexample
+The complete test sweet can be run from the build directory using the
+check option for the build tool you use.  For example, @code{make
+check}.  The entire test suit tast around a minute for the optimized
+built and many times longer for the debug version.  While developing and
+debugging, running individual tests can save a great deal of time.
 
-While the @emph{cooked} form is:
+Individual tests can be run fron the @file{test} subdirectory of the
+build location.  To execute a single test use @code{ctest -V -R regex},
+where the regex mathes the name of the test you want to build.  
 
-@smallexample
-   2012-03-01 KFC
-       Expenses:Food    $100
-       Assets:Credit   $-100
-       (Assets:Cash)    $100
-@end smallexample
+There are nearly 300 tests stored under the @file{test} sudirectoro
+tmain source distribution.  They are broken into two broad categories,
+baseline and regression.  To run the @file{5FBF2ED8} test, for example,
+issue @code{ctest -V -R "5FB"}. 
+@node Writing Tests,  , Running Tests, Testing Framework
+@subsubsection Writing Tests
 
-So the easy way to think about raw vs. cooked is that raw is the unprocessed
-data, and cooked has had all considerations applied.
-
-When you traverse a Journal by iterating its transactions, you are generally
-looking at raw data.  In order to look at cooked data, you must generate a
-report of some kind by querying the journal:
-
-@smallexample
-   for post in ledger.read_journal("sample.dat").query("food"):
-       print "Transferring %s to/from %s" % (post.amount, post.account)
-@end smallexample
-
-The reason why queries iterate over postings instead of transactions is that
-queries often return only a ``slice'' of the transactions they apply to.  You
-can always get at a matching posting's transaction by looking at its "xact"
-member:
-
-@smallexample
-   last_xact = None
-   for post in ledger.read_journal("sample.dat").query(""):
-       if post.xact != last_xact:
-           for post in post.xact.posts:
-               print "Transferring %s to/from %s" % (post.amount,
-               post.account)
-           last_xact = post.xact
-@end smallexample
-
-This query ends up reporting every cooked posting in the Journal, but does it
-transaction-wise.  It relies on the fact that an unsorted report returns
-postings in the exact order they were parsed from the journal file.
-
-@node Queries, Embedded Python, Raw vs. Cooked, Extending with Python
-@section Queries
-
-The Journal.query() method accepts every argument you can specify on the
-command-line, including --options.
-
-Since a query ``cooks'' the journal it applies to, only one query may be active
-for that journal at a given time.  Once the query object is gone (after the
-for loop), then the data reverts back to its raw state.
-
-@node Embedded Python, Amounts, Queries, Extending with Python
-@section Embedded Python
-
-Can you embed Python into your data files using the 'python' directive:
-
-@smallexample
-   python
-       import so
-       def check_path(path_value):
-           print "%s => %s" % (str(path_value), os.path.isfile(str(path_value)))
-           return os.path.isfile(str(path_value))
-
-   tag PATH
-       assert check_path(value)
-
-   2012-02-29 KFC
-       ; PATH: somebogusfile.dat
-       Expenses:Food                $20
-       Assets:Cash
-@end smallexample
-
-Any Python functions you define this way become immediately available as
-valexpr functions.
-
-@node Amounts,  , Embedded Python, Extending with Python
-@section Amounts
-
-When numbers come from Ledger, like post.amount, the type of the value is
-Amount.  It can be used just like an ordinary number, except that addition
-and subtraction are restricted to amounts with the same commodity.  If you
-need to create sums of multiple commodities, use a Balance.  For example:
-
-@smallexample
-   total = Balance()
-   for post in ledger.read_journal("sample.dat").query(""):
-       total += post.amount
-   print total
-@end smallexample
-
-
-@node Major Changes from version 2.6, Example Data File, Extending with Python, Top
+@node Major Changes from version 2.6, Example Data File, Ledger for Developers, Top
 @chapter Major Changes from version 2.6
 
 @itemize
