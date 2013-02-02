@@ -172,7 +172,9 @@
 			    (point-marker)))))))
 	      (insert (format "%s %-4s %-30s %-30s %15s\n"
 			      (format-time-string "%Y/%m/%d" (nth 2 item))
-			      (nth 3 item)
+			      (if (nth 3 item)
+				  (nth 3 item)
+				  "")
 			      (nth 4 item) (nth 1 xact) (nth 2 xact)))
 	      (if (nth 3 xact)
 		  (set-text-properties beg (1- (point))
