@@ -41,14 +41,6 @@ customizable to ease retro-entry.")
 
 (defvar ledger-mode-abbrev-table)
 
-(defmacro ledger-run-if-works (func-to-call)
-  "Macro to run func-to-call only if the ledger-works variable is non-nil"
-  `(lambda ()
-     (interactive)
-     (if ledger-works
-	 (funcall ,func-to-call)
-	 (message "Cannot run ledger, check your ledger executable"))))
-
 ;;;###autoload
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
@@ -70,25 +62,29 @@ customizable to ease retro-entry.")
   (set (make-local-variable 'pcomplete-termination-string) "")
 
   (let ((map (current-local-map)))
-    (define-key map [(control ?c) (control ?a)] (ledger-run-if-works 'ledger-add-entry))
+;    (define-key map [(control ?c) (control ?a)] '(lambda (account) 
+;						  (interactive "sAccount:")
+;						  (if ledger-works
+;						      (ledger-add-entry account))))
+    (define-key map [(control ?c) (control ?a)] 'ledger-add-entry)
     (define-key map [(control ?c) (control ?d)] 'ledger-delete-current-entry)
-    (define-key map [(control ?c) (control ?y)] (ledger-run-if-works 'ledger-set-year))
-    (define-key map [(control ?c) (control ?m)] (ledger-run-if-works 'ledger-set-month))
+    (define-key map [(control ?c) (control ?y)] 'ledger-set-year)
+    (define-key map [(control ?c) (control ?m)] 'ledger-set-month)
     (define-key map [(control ?c) (control ?c)] 'ledger-toggle-current)
     (define-key map [(control ?c) (control ?e)] 'ledger-toggle-current-entry)
-    (define-key map [(control ?c) (control ?r)] (ledger-run-if-works 'ledger-reconcile))
+    (define-key map [(control ?c) (control ?r)] 'ledger-reconcile)
     (define-key map [(control ?c) (control ?s)] 'ledger-sort-region)
-    (define-key map [(control ?c) (control ?t)] (ledger-run-if-works 'ledger-test-run))
+    (define-key map [(control ?c) (control ?t)] 'ledger-test-run)
     (define-key map [tab] 'pcomplete)
     (define-key map [(control ?i)] 'pcomplete)
     (define-key map [(control ?c) tab] 'ledger-fully-complete-entry)
     (define-key map [(control ?c) (control ?i)] 'ledger-fully-complete-entry)
-    (define-key map [(control ?c) (control ?o) (control ?r)] (ledger-run-if-works 'ledger-report))
-    (define-key map [(control ?c) (control ?o) (control ?g)] (ledger-run-if-works 'ledger-report-goto))
-    (define-key map [(control ?c) (control ?o) (control ?a)] (ledger-run-if-works 'ledger-report-redo))
-    (define-key map [(control ?c) (control ?o) (control ?s)] (ledger-run-if-works 'ledger-report-save))
-    (define-key map [(control ?c) (control ?o) (control ?e)] (ledger-run-if-works 'ledger-report-edit))
-    (define-key map [(control ?c) (control ?o) (control ?k)] (ledger-run-if-works 'ledger-report-kill))
+    (define-key map [(control ?c) (control ?o) (control ?r)] 'ledger-report)
+    (define-key map [(control ?c) (control ?o) (control ?g)] 'ledger-report-goto)
+    (define-key map [(control ?c) (control ?o) (control ?a)] 'ledger-report-redo)
+    (define-key map [(control ?c) (control ?o) (control ?s)] 'ledger-report-save)
+    (define-key map [(control ?c) (control ?o) (control ?e)] 'ledger-report-edit)
+    (define-key map [(control ?c) (control ?o) (control ?k)] 'ledger-report-kill)
 
     
     (define-key map [menu-bar] (make-sparse-keymap "ldg-menu"))
