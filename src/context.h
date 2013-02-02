@@ -117,7 +117,7 @@ inline parse_context_t open_for_reading(const path& pathname,
 #else
   filename = filesystem::complete(filename, cwd);
 #endif
-  if (! exists(filename))
+  if (! exists(filename) || is_directory(filename))
     throw_(std::runtime_error,
            _f("Cannot read journal file %1%") % filename);
 
