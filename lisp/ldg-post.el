@@ -183,11 +183,6 @@ This is done so that the last digit falls in COLUMN, which defaults to 52."
     (goto-char (match-end ledger-regex-post-line-group-account))))
 
 (defun ledger-post-setup ()
-  (let ((map (current-local-map)))
-    (define-key map [(meta ?p)] 'ledger-post-prev-xact)
-    (define-key map [(meta ?n)] 'ledger-post-next-xact)
-    (define-key map [(control ?c) (control ?c)] 'ledger-post-pick-account)
-    (define-key map [(control ?c) (control ?e)] 'ledger-post-edit-amount))
   (if ledger-post-auto-adjust-amounts
       (add-hook 'after-change-functions 'ledger-post-maybe-align t t))
   (add-hook 'after-save-hook #'(lambda () (setq ledger-post-current-list nil))))
