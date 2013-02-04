@@ -156,16 +156,23 @@ This is done so that the last digit falls in COLUMN, which defaults to 52."
 (defun ledger-post-edit-amount ()
   (interactive)
   (goto-char (line-beginning-position))
-  (when (re-search-forward ledger-post-line-regexp (line-end-position) t)
-    (goto-char (match-end ledger-regex-post-line-group-account))
-    (when (re-search-forward "[-.,0-9]+" (line-end-position) t)
-      (let ((val (match-string 0)))
-        (goto-char (match-beginning 0))
-        (delete-region (match-beginning 0) (match-end 0))
-        (calc)
-        (while (string-match "," val)
-          (setq val (replace-match "" nil nil val)))
-        (calc-eval val 'push)))))
+  (when (re-search-forward ledger-post-line-regexp (line-end-position) t) 
+    (goto-char (match-end ledger-regex-post-line-group-account)) ;go to the and of the account
+    (let ((end-of-amount (re-search-forward "[-.,0-9]+" (line-end-position) t))) ;determine if the is an amount to edit
+      (if end-of-amount
+	  (let ((val (match-string 0)))
+	    (goto-char (match-beginning 0))
+	    (delete-region (match-beginning 0) (match-end 0))
+	    (calc)
+	    (while (string-match "," val)
+	      (setq val (replace-match "" nil nil val))) ;gets rid of commas
+	    (calc-eval val 'push)) ;edit the amount
+	  (progn  ;make sure there are two spaces after the account name and go to calc
+	    (if (search-backward "  " (- (point) 3) t)
+		(goto-char (line-end-position))
+		(insert "  "))
+	    (calc)) 
+	  ))))
 
 (defun ledger-post-prev-xact ()
   (interactive)
