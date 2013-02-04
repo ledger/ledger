@@ -129,7 +129,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
 
   element_t * current = NULL;
 
-  char   buf[1024];
+  static char buf[65535];
   char * q = buf;
 
   for (const char * p = fmt.c_str(); *p; p++) {
