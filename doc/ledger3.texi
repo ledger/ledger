@@ -2367,6 +2367,8 @@ add a new entry, based on previous entries
 toggle cleared status of an entire entry
 @item C-c C-c
 toggle cleared status of an individual posting
+@item C-c C-f
+toggle folding mode.  When on shows only transactions that meet a given REGEX
 @item C-c C-y       
 set default year for entry mode
 @item C-c C-m       
@@ -2401,12 +2403,13 @@ kill the ledger report buffer
 @subsection Working with entries
 @menu
 * Manual Entry Support::        
+* Hiding Transactions::         
 * Automagically Adding new entries::  
 * Clearing Transactions::       
 * Calculating Values with EMACS Calc::  
 @end menu
 
-@node Manual Entry Support, Automagically Adding new entries, Working with entries, Working with entries
+@node Manual Entry Support, Hiding Transactions, Working with entries, Working with entries
 @subsubsection Manual Entry Support
 
 @cindex <TAB> completion
@@ -2427,8 +2430,38 @@ habit to get in to prevent misspellings of accounts. Remember Ledger
 does not validate the names of payees or account so a misspelled account
 will be interpreted as a new account by ledger.
 
+@node Hiding Transactions, Automagically Adding new entries, Manual Entry Support, Working with entries
+@subsubsection Hiding Transactions
 
-@node Automagically Adding new entries, Clearing Transactions, Manual Entry Support, Working with entries
+There are several ways to organize Ledger data files.  You can use a
+master file and @code{include} one file for each real bank or brokerage
+account, separate files for major expense categories, a mix of those
+ideas, or throw every transaction in to one giant file.  The biggest
+drawback to uing one file is that it can get confusing finding specific
+transactions in the file.
+
+Ledger mode has a special transaction hiding mode that you can use to
+hide all transactions except those that meet a regular expression you
+provide.  By default this command is bound to @code{C-c C-f}.  EMACS
+will ask for a regular expression, which at its simplest is just text
+you want to match.  For example, lets say you want to review the
+transactions in your checking account named @code{"Assets:Checking"}.
+Type @code{C-c C-f}, then type @code{Checking} in the minibuffer.  EMACS
+will hide all other transactions and highlight the remaining
+transactions.  You can edit them without fear that your other
+transaction have had anything done, they are only hidden from view.
+
+The color used to highlight the xaction can be customized in the EMACS
+customization menu. It is called @code{ledger-occur-xact-face}, and can
+be changed to alter any charactistic of a font that you want.  If you
+don't want any highlighting, simply set
+@code{ledger-occur-use-face-unfolded} to @code{nil} in the customization
+menu.
+
+To clear the highlighting and show all transactions, type @code{C-c C-f}
+again.
+
+@node Automagically Adding new entries, Clearing Transactions, Hiding Transactions, Working with entries
 @subsubsection Automagically Adding new entries
 @cindex new transactions in EMACS
 @cindex EMACS, adding new transactions
@@ -2463,7 +2496,7 @@ ordered by date, not at the bottom of the file.  If you need to include
 spaces in the payee name, then surrond the name of the payee with double
 quotes, otherwise ledger will interpret the second part of the name as
 an account.
-@node Clearing Transactions,  , Automagically Adding new entries, Working with entries
+@node Clearing Transactions, Calculating Values with EMACS Calc, Automagically Adding new entries, Working with entries
 @subsubsection Clearing Transactions and Postings
 @cindex clearing transactions in EMACS
 @cindex EMACS, clear transaction
@@ -2491,7 +2524,7 @@ toggled.
 @node Calculating Values with EMACS Calc,  , Clearing Transactions, Working with entries
 @subsubsection  Calculating Values with EMACS Calc
 
-EMACS come with a very power calculator built in.  You can use it to
+EMACS come with a very powerful calculator built in.  You can use it to
 easily insert calculated amounts directly into your ledger buffer.  From
 the menu, select @code{Calc on Amount}. Calc will pull the current
 amount to the top of the calc stack. Calulate the value as you normally
@@ -2529,6 +2562,14 @@ all of the uncleared transactions.  The reconcile buffer has several functions:
   @item C-l
   refresh display
 @end table
+
+By default the reconcile mode uses transaction hiding to show only
+transaction eligible for your reconcile.  Th reconcile widow itself will
+only show a summary of uncleared transaction while the main buffer will
+show all transaction meeting the regex, cleared or not.  This behavior
+can be disabled by setting @code{ledger-fold-on-reconcile} to nil in the
+emacs customization menus.
+
 @node Generating Reports,  , Reconciling accounts, Using EMACS
 @subsection Generating Reports
 
@@ -2539,7 +2580,7 @@ retyping the command line, or writing shell scripts for simple one line
 commands.
 
 To generate a report, select the @code{Run Reports} menu, or type
-@code{C-c C-o C-r}.  Emacs will prompt for a report name.  If it
+@code{C-c C-o C-r}.  EMACS will prompt for a report name.  If it
 recognizes the name it will run the report again.  If it is a new name,
 or blank it will respond by giving you an example command line to edit.
 Hitting return willrun the report and present it in a new buffer.

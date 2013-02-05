@@ -24,6 +24,12 @@
 (defvar ledger-buf nil)
 (defvar ledger-acct nil)
 
+(defcustom ledger-fold-on-reconcile t 
+  "if t, limit transactions shown in main buffer to those
+   matching the reconcile regex"
+  :group 'ledger)
+(make-variable-buffer-local 'ledger-fold-on-reconcilex)
+
 (defun ledger-display-balance ()
   "Calculate the cleared balance of the account being reconciled"
   (interactive)
@@ -55,10 +61,10 @@
       (with-current-buffer ledger-buf
 	(goto-char (cdr where))
 	(setq cleared (ledger-toggle-current-entry)))
-      ;remove the existing face and add the new face
+					;remove the existing face and add the new face
       (remove-text-properties (line-beginning-position)
-				  (line-end-position)
-				  (list 'face))
+			      (line-end-position)
+			      (list 'face))
       (if cleared
 	  (add-text-properties (line-beginning-position)
 			       (line-end-position)
@@ -72,7 +78,11 @@
 (defun ledger-reconcile-new-account (account)
   (interactive "sAccount to reconcile: ")
   (set (make-local-variable 'ledger-acct) account)
-  (ledger-reconcile-refresh))
+  (let ((buf (current-buffer)))
+    (if ledger-fold-on-reconcile
+	(ledger-occur-change-regex account ledger-buf))
+    (set-buffer buf)
+    (ledger-reconcile-refresh)))
 
 (defun ledger-reconcile-refresh ()
   (interactive)
@@ -125,7 +135,10 @@
 
 (defun ledger-reconcile-quit ()
   (interactive)
-  (kill-buffer (current-buffer)))
+  (let ((buf ledger-buf))
+    (kill-buffer (current-buffer))
+    (if ledger-fold-on-reconcile
+	(ledger-occur-quit-buffer buf))))
 
 (defun ledger-reconcile-finish ()
   (interactive)
@@ -144,49 +157,49 @@
 
 (defun ledger-do-reconcile ()
   "get the uncleared transactions in the account and display them in the *Reconcile* buffer"
-    (let* ((buf ledger-buf)
+  (let* ((buf ledger-buf)
          (account ledger-acct)
          (items
           (with-temp-buffer
 	    (ledger-exec-ledger buf (current-buffer) "--uncleared" "--real"
-                                      "emacs" account)
+				"emacs" account)
 	    (goto-char (point-min))
 	    (unless (eobp)
 	      (unless (looking-at "(")
 		(error (buffer-string)))
 	      (read (current-buffer)))))) 
-      (dolist (item items)
-	(let ((index 1))
-	  (dolist (xact (nthcdr 5 item))
-	    (let ((beg (point))
-		  (where
-		   (with-current-buffer buf
-		     (cons
-		      (nth 0 item)
-		      (if ledger-clear-whole-entries
-			  (save-excursion
-			    (goto-line (nth 1 item))
-			    (point-marker))
-			  (save-excursion
-			    (goto-line (nth 0 xact))
-			    (point-marker)))))))
-	      (insert (format "%s %-4s %-30s %-30s %15s\n"
-			      (format-time-string "%Y/%m/%d" (nth 2 item))
-			      (if (nth 3 item)
-				  (nth 3 item)
-				  "")
-			      (nth 4 item) (nth 1 xact) (nth 2 xact)))
-	      (if (nth 3 xact)
-		  (set-text-properties beg (1- (point))
-				       (list 'face 'ledger-font-reconciler-cleared-face 
-					     'where where))
-		  (set-text-properties beg (1- (point))
-				       (list 'face 'ledger-font-reconciler-uncleared-face 
-					     'where where))))
-	    (setq index (1+ index)))))
-      (goto-char (point-min))
-      (set-buffer-modified-p nil)
-      (toggle-read-only t)))
+    (dolist (item items)
+      (let ((index 1))
+	(dolist (xact (nthcdr 5 item))
+	  (let ((beg (point))
+		(where
+		 (with-current-buffer buf
+		   (cons
+		    (nth 0 item)
+		    (if ledger-clear-whole-entries
+			(save-excursion
+			  (goto-line (nth 1 item))
+			  (point-marker))
+			(save-excursion
+			  (goto-line (nth 0 xact))
+			  (point-marker)))))))
+	    (insert (format "%s %-4s %-30s %-30s %15s\n"
+			    (format-time-string "%Y/%m/%d" (nth 2 item))
+			    (if (nth 3 item)
+				(nth 3 item)
+				"")
+			    (nth 4 item) (nth 1 xact) (nth 2 xact)))
+	    (if (nth 3 xact)
+		(set-text-properties beg (1- (point))
+				     (list 'face 'ledger-font-reconciler-cleared-face 
+					   'where where))
+		(set-text-properties beg (1- (point))
+				     (list 'face 'ledger-font-reconciler-uncleared-face 
+					   'where where))))
+	  (setq index (1+ index)))))
+    (goto-char (point-min))
+    (set-buffer-modified-p nil)
+    (toggle-read-only t)))
 
 
 (defun ledger-reconcile (account)
@@ -196,6 +209,8 @@
     (if rbuf
         (kill-buffer rbuf))
     (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save)
+    (if ledger-fold-on-reconcile
+	(ledger-occur-mode account buf))
     (with-current-buffer
         (pop-to-buffer (get-buffer-create "*Reconcile*"))
       (ledger-reconcile-mode)
@@ -206,41 +221,41 @@
 (defvar ledger-reconcile-mode-abbrev-table)
 
 (define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
-  "A mode for reconciling ledger entries."
-  (let ((map (make-sparse-keymap)))
-    (define-key map [(control ?m)] 'ledger-reconcile-visit)
-    (define-key map [return] 'ledger-reconcile-visit)
-    (define-key map [(control ?c) (control ?c)] 'ledger-reconcile-finish)
-    (define-key map [(control ?x) (control ?s)] 'ledger-reconcile-save)
-    (define-key map [(control ?l)] 'ledger-reconcile-refresh)
-    (define-key map [? ] 'ledger-reconcile-toggle)
-    (define-key map [?a] 'ledger-reconcile-add)
-    (define-key map [?d] 'ledger-reconcile-delete)
-    (define-key map [?g] 'ledger-reconcile-new-account)
-    (define-key map [?n] 'next-line)
-    (define-key map [?p] 'previous-line)
-    (define-key map [?s] 'ledger-reconcile-save)
-    (define-key map [?q] 'ledger-reconcile-quit)
-    (define-key map [?b] 'ledger-display-balance)
+		     "A mode for reconciling ledger entries."
+		     (let ((map (make-sparse-keymap)))
+		       (define-key map [(control ?m)] 'ledger-reconcile-visit)
+		       (define-key map [return] 'ledger-reconcile-visit)
+		       (define-key map [(control ?c) (control ?c)] 'ledger-reconcile-finish)
+		       (define-key map [(control ?x) (control ?s)] 'ledger-reconcile-save)
+		       (define-key map [(control ?l)] 'ledger-reconcile-refresh)
+		       (define-key map [? ] 'ledger-reconcile-toggle)
+		       (define-key map [?a] 'ledger-reconcile-add)
+		       (define-key map [?d] 'ledger-reconcile-delete)
+		       (define-key map [?g] 'ledger-reconcile-new-account)
+		       (define-key map [?n] 'next-line)
+		       (define-key map [?p] 'previous-line)
+		       (define-key map [?s] 'ledger-reconcile-save)
+		       (define-key map [?q] 'ledger-reconcile-quit)
+		       (define-key map [?b] 'ledger-display-balance)
 
-    (define-key map [menu-bar] (make-sparse-keymap "ldg-recon-menu"))
-    (define-key map [menu-bar ldg-recon-menu] (cons "Reconcile" map))
-    (define-key map [menu-bar ldg-recon-menu qui] '("Quit" . ledger-reconcile-quit))
-    (define-key map [menu-bar ldg-recon-menu sep1] '("--"))
-    (define-key map [menu-bar ldg-recon-menu pre] '("Previous Entry" . previous-line))
-    (define-key map [menu-bar ldg-recon-menu vis] '("Visit Entry" . ledger-reconcile-visit))
-    (define-key map [menu-bar ldg-recon-menu nex] '("Next Entry" . next-line))
-    (define-key map [menu-bar ldg-recon-menu sep2] '("--"))
-    (define-key map [menu-bar ldg-recon-menu del] '("Delete Entry" . ledger-reconcile-delete))
-    (define-key map [menu-bar ldg-recon-menu add] '("Add Entry" . ledger-reconcile-add))
-    (define-key map [menu-bar ldg-recon-menu tog] '("Toggle Entry" . ledger-reconcile-toggle))
-    (define-key map [menu-bar ldg-recon-menu sep3] '("--"))
-    (define-key map [menu-bar ldg-recon-menu bal] '("Show Cleared Balance" . ledger-display-balance))
-    (define-key map [menu-bar ldg-recon-menu sep4] '("--"))
-    (define-key map [menu-bar ldg-recon-menu rna] '("Reconcile New Account" . ledger-reconcile-new-account))
-    (define-key map [menu-bar ldg-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
-    (define-key map [menu-bar ldg-recon-menu sav] '("Save" . ledger-reconcile-save))
+		       (define-key map [menu-bar] (make-sparse-keymap "ldg-recon-menu"))
+		       (define-key map [menu-bar ldg-recon-menu] (cons "Reconcile" map))
+		       (define-key map [menu-bar ldg-recon-menu qui] '("Quit" . ledger-reconcile-quit))
+		       (define-key map [menu-bar ldg-recon-menu sep1] '("--"))
+		       (define-key map [menu-bar ldg-recon-menu pre] '("Previous Entry" . previous-line))
+		       (define-key map [menu-bar ldg-recon-menu vis] '("Visit Entry" . ledger-reconcile-visit))
+		       (define-key map [menu-bar ldg-recon-menu nex] '("Next Entry" . next-line))
+		       (define-key map [menu-bar ldg-recon-menu sep2] '("--"))
+		       (define-key map [menu-bar ldg-recon-menu del] '("Delete Entry" . ledger-reconcile-delete))
+		       (define-key map [menu-bar ldg-recon-menu add] '("Add Entry" . ledger-reconcile-add))
+		       (define-key map [menu-bar ldg-recon-menu tog] '("Toggle Entry" . ledger-reconcile-toggle))
+		       (define-key map [menu-bar ldg-recon-menu sep3] '("--"))
+		       (define-key map [menu-bar ldg-recon-menu bal] '("Show Cleared Balance" . ledger-display-balance))
+		       (define-key map [menu-bar ldg-recon-menu sep4] '("--"))
+		       (define-key map [menu-bar ldg-recon-menu rna] '("Reconcile New Account" . ledger-reconcile-new-account))
+		       (define-key map [menu-bar ldg-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
+		       (define-key map [menu-bar ldg-recon-menu sav] '("Save" . ledger-reconcile-save))
 
-    (use-local-map map)))
+		       (use-local-map map)))
 
 (provide 'ldg-reconcile)

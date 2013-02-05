@@ -45,6 +45,8 @@
 (require 'ldg-xact)
 (require 'ldg-sort)
 (require 'ldg-fonts)
+(require 'ldg-occur)
+
 ;(autoload #'ledger-mode "ldg-mode" nil t)
 ;(autoload #'ledger-fully-complete-entry "ldg-complete" nil t)
 ;(autoload #'ledger-toggle-current "ldg-state" nil t)
