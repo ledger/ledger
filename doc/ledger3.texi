@@ -2564,7 +2564,7 @@ all of the uncleared transactions.  The reconcile buffer has several functions:
 @end table
 
 By default the reconcile mode uses transaction hiding to show only
-transaction eligible for your reconcile.  Th reconcile widow itself will
+transaction eligible for your reconcile.  The reconcile widow itself will
 only show a summary of uncleared transaction while the main buffer will
 show all transaction meeting the regex, cleared or not.  This behavior
 can be disabled by setting @code{ledger-fold-on-reconcile} to nil in the
