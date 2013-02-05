@@ -71,7 +71,7 @@
 
 
 (defun ledger-occur-mode (regex buffer)
-  (save-excursion
+  (progn
     (set-buffer buffer)
     (setq ledger-occur-mode 
 	  (if (or ledger-occur-mode
@@ -198,10 +198,10 @@
   (let ((prev-end (point-min))
         (overlays (list)))
     (when buffer-matches
-      (mapcar (lambda (line)
-		(push (list (car line) (cadr line)) overlays)
-		(setq prev-end (cadr line)))
-              buffer-matches)
+      (mapc (lambda (line)
+	      (push (list (car line) (cadr line)) overlays)
+	      (setq prev-end (cadr line)))
+	    buffer-matches)
       (setq overlays (nreverse overlays)))))
 
 (defun ledger-occur-find-xact-extents (pos)
@@ -213,11 +213,11 @@
     (let ((end-pos pos)
 	  (beg-pos pos))
       (backward-paragraph)
-      (next-line)
+      (forward-line)
       (beginning-of-line)
       (setq beg-pos (point))
       (forward-paragraph)
-      (previous-line)
+      (forward-line -1)
       (end-of-line)
       (setq end-pos (1+ (point)))
       (list beg-pos end-pos))))
@@ -240,8 +240,8 @@
 	    (let ((bounds (ledger-occur-find-xact-extents (match-beginning 0))))
 	      (push bounds lines)
 	      (setq curpoint (cadr bounds)))) ;move to the end of the
-					      ;xact, no need to search
-					      ;inside it more
+					;xact, no need to search
+					;inside it more
           (goto-char curpoint))
         (forward-line 1))
       (setq lines (nreverse lines)))))
