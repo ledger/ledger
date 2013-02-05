@@ -7220,7 +7220,7 @@ Inserts the ending line of that transaction within the file.
 @c @code{%D} gives the user more control over the way dates are output.
 
 @item d
-Returns the data according to the default format.  If the transaction
+Returns the date according to the default format.  If the transaction
 has an effective date, it prints @code{[ACTUAL_DATE=EFFECTIVE_DATE]}.
 
 @item X
