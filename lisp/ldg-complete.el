@@ -89,9 +89,9 @@
               (let ((entry (assoc (car elements) root)))
                 (if entry
                     (setq root (cdr entry))
-                  (setq entry (cons (car elements) (list t)))
-                  (nconc root (list entry))
-                  (setq root (cdr entry))))
+		    (setq entry (cons (car elements) (list t)))
+		    (nconc root (list entry))
+		    (setq root (cdr entry))))
               (setq elements (cdr elements)))))))))
 
 (defun ledger-accounts ()
@@ -106,18 +106,18 @@
             (setq prefix (concat prefix (and prefix ":")
                                  (car elements))
                   root (cdr entry))
-          (setq root nil elements nil)))
+	    (setq root nil elements nil)))
       (setq elements (cdr elements)))
     (and root
          (sort
           (mapcar (function
                    (lambda (x)
-                     (let ((term (if prefix
-                                     (concat prefix ":" (car x))
-                                   (car x))))
-                       (if (> (length (cdr x)) 1)
-                           (concat term ":")
-                         term))))
+		    (let ((term (if prefix
+				    (concat prefix ":" (car x))
+				    (car x))))
+		      (if (> (length (cdr x)) 1)
+			  (concat term ":")
+			  term))))
                   (cdr root))
           'string-lessp))))
 
@@ -129,21 +129,21 @@
                     (ledger-thing-at-point)) 'entry)
               (if (null current-prefix-arg)
                   (ledger-entries)  ; this completes against entry names
-                (progn
-                  (let ((text (buffer-substring (line-beginning-position)
-                                                (line-end-position))))
-                    (delete-region (line-beginning-position)
-                                   (line-end-position))
-                    (condition-case err
-                        (ledger-add-entry text t)
-                      ((error)
-                       (insert text))))
-                  (forward-line)
-                  (goto-char (line-end-position))
-                  (search-backward ";" (line-beginning-position) t)
-                  (skip-chars-backward " \t0123456789.,")
-                  (throw 'pcompleted t)))
-            (ledger-accounts)))))
+		  (progn
+		    (let ((text (buffer-substring (line-beginning-position)
+						  (line-end-position))))
+		      (delete-region (line-beginning-position)
+				     (line-end-position))
+		      (condition-case err
+			  (ledger-add-entry text t)
+			((error)
+			 (insert text))))
+		    (forward-line)
+		    (goto-char (line-end-position))
+		    (search-backward ";" (line-beginning-position) t)
+		    (skip-chars-backward " \t0123456789.,")
+		    (throw 'pcompleted t)))
+	      (ledger-accounts)))))
 
 (defun ledger-fully-complete-entry ()
   "Do appropriate completion for the thing at point"

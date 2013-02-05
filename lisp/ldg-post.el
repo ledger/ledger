@@ -66,16 +66,16 @@
 PROMPT is a string to prompt with.  CHOICES is a list of strings
 to choose from."
   (cond
-   (ledger-post-use-iswitchb
-    (let* ((iswitchb-use-virtual-buffers nil)
-           (iswitchb-make-buflist-hook
-            (lambda ()
-              (setq iswitchb-temp-buflist choices))))
-      (iswitchb-read-buffer prompt)))
-   (ledger-post-use-ido
-    (ido-completing-read prompt choices))
-   (t
-    (completing-read prompt choices))))
+    (ledger-post-use-iswitchb
+     (let* ((iswitchb-use-virtual-buffers nil)
+	    (iswitchb-make-buflist-hook
+	     (lambda ()
+	       (setq iswitchb-temp-buflist choices))))
+       (iswitchb-read-buffer prompt)))
+    (ledger-post-use-ido
+     (ido-completing-read prompt choices))
+    (t
+     (completing-read prompt choices))))
 
 (defvar ledger-post-current-list nil)
 
@@ -96,12 +96,12 @@ to choose from."
                        (match-end ledger-regex-post-line-group-account))
         (insert account)
         (cond
-         ((> existing-len account-len)
-          (insert (make-string (- existing-len account-len) ? )))
-         ((< existing-len account-len)
-          (dotimes (n (- account-len existing-len))
-            (if (looking-at "[ \t]\\( [ \t]\\|\t\\)")
-                (delete-char 1)))))))
+	  ((> existing-len account-len)
+	   (insert (make-string (- existing-len account-len) ? )))
+	  ((< existing-len account-len)
+	   (dotimes (n (- account-len existing-len))
+	     (if (looking-at "[ \t]\\( [ \t]\\|\t\\)")
+		 (delete-char 1)))))))
     (goto-char pos)))
 
 (defun ledger-next-amount (&optional end)
@@ -130,12 +130,12 @@ This is done so that the last digit falls in COLUMN, which defaults to 52."
           (setq adjust (- target-col col))
           (if (< col target-col)
               (insert (make-string (- target-col col) ? ))
-            (move-to-column target-col)
-            (if (looking-back "  ")
-                (delete-char (- col target-col))
-              (skip-chars-forward "^ \t")
-              (delete-horizontal-space)
-              (insert "  ")))
+	      (move-to-column target-col)
+	      (if (looking-back "  ")
+		  (delete-char (- col target-col))
+		  (skip-chars-forward "^ \t")
+		  (delete-horizontal-space)
+		  (insert "  ")))
           (forward-line))))))
 
 (defun ledger-post-align-amount ()

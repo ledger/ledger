@@ -23,11 +23,11 @@
 ;; the form YYYY/mm/dd.
 
 (defun ledger-next-record-function ()
-        (if (re-search-forward
-             (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-                     "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)
-            (goto-char (match-beginning 0))
-	    (goto-char (point-max))))
+  (if (re-search-forward
+       (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
+	       "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)
+      (goto-char (match-beginning 0))
+      (goto-char (point-max))))
 
 (defun ledger-end-record-function ()
   (forward-paragraph))
@@ -42,7 +42,7 @@
 	(setq new-beg (point))
 	(goto-char end)
 	(ledger-next-record-function) ;make sure end of region is at the beginning of
-                                      ;next record after the region
+					;next record after the region
 	(setq new-end (point))
 	(narrow-to-region beg end)
 	(goto-char (point-min))
@@ -55,7 +55,7 @@
 
 (defun ledger-sort-buffer ()
   (interactive)
-    (ledger-sort-region (point-min) (point-max)))
+  (ledger-sort-region (point-min) (point-max)))
 
 
 (provide 'ldg-sort)

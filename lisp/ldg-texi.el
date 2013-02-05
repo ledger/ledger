@@ -94,17 +94,17 @@
   (if (string-match "\\$LEDGER" command)
       (replace-match (format "%s -f \"%s\" %s" ledger-path
                              data-file ledger-normalization-args) t t command)
-    (concat (format "%s -f \"%s\" %s " ledger-path
-                    data-file ledger-normalization-args) command)))
+      (concat (format "%s -f \"%s\" %s " ledger-path
+		      data-file ledger-normalization-args) command)))
 
 (defun ledger-texi-invoke-command (command)
   (with-temp-buffer (shell-command command t (current-buffer))
-    (if (= (point-min) (point-max))
-        (progn
-          (push-mark nil t)
-          (message "Command '%s' yielded no result at %d" command (point))
-          (ding))
-      (buffer-string))))
+		    (if (= (point-min) (point-max))
+			(progn
+			  (push-mark nil t)
+			  (message "Command '%s' yielded no result at %d" command (point))
+			  (ding))
+			(buffer-string))))
 
 (defun ledger-texi-write-test-data (name input)
   (let ((path (expand-file-name name temporary-file-directory)))
@@ -149,7 +149,7 @@
 
         (let ((section-name (if (string= section "smex")
                                 "smallexample"
-                              "example"))
+				"example"))
               (output (ledger-texi-invoke-command
                        (ledger-texi-expand-command command data-file))))
           (insert "@" section-name ?\n output

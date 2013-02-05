@@ -39,7 +39,7 @@ the substitution.  See the documentation of the individual functions
 in that variable for more information on the behavior of each
 specifier."
   :type '(repeat (list (string :tag "Report Name")
-                       (string :tag "Command Line")))
+		  (string :tag "Command Line")))
   :group 'ledger)
 
 (defcustom ledger-report-format-specifiers
@@ -73,40 +73,40 @@ text that should replace the format specifier."
 (defvar ledger-report-mode-abbrev-table)
 
 (define-derived-mode ledger-report-mode text-mode "Ledger-Report"
-  "A mode for viewing ledger reports."
-  (let ((map (make-sparse-keymap)))
-    (define-key map [? ] 'scroll-up)
-    (define-key map [backspace] 'scroll-down)
-    (define-key map [?r] 'ledger-report-redo)
-    (define-key map [?s] 'ledger-report-save)
-    (define-key map [?k] 'ledger-report-kill)
-    (define-key map [?e] 'ledger-report-edit)
-    (define-key map [?q] 'ledger-report-quit)
-    (define-key map [(control ?c) (control ?l) (control ?r)]
-      'ledger-report-redo)
-    (define-key map [(control ?c) (control ?l) (control ?S)]
-      'ledger-report-save)
-    (define-key map [(control ?c) (control ?l) (control ?k)]
-      'ledger-report-kill)
-    (define-key map [(control ?c) (control ?l) (control ?e)]
-      'ledger-report-edit)
-    (define-key map [(control ?c) (control ?c)] 'ledger-report-visit-source)
+		     "A mode for viewing ledger reports."
+		     (let ((map (make-sparse-keymap)))
+		       (define-key map [? ] 'scroll-up)
+		       (define-key map [backspace] 'scroll-down)
+		       (define-key map [?r] 'ledger-report-redo)
+		       (define-key map [?s] 'ledger-report-save)
+		       (define-key map [?k] 'ledger-report-kill)
+		       (define-key map [?e] 'ledger-report-edit)
+		       (define-key map [?q] 'ledger-report-quit)
+		       (define-key map [(control ?c) (control ?l) (control ?r)]
+			 'ledger-report-redo)
+		       (define-key map [(control ?c) (control ?l) (control ?S)]
+			 'ledger-report-save)
+		       (define-key map [(control ?c) (control ?l) (control ?k)]
+			 'ledger-report-kill)
+		       (define-key map [(control ?c) (control ?l) (control ?e)]
+			 'ledger-report-edit)
+		       (define-key map [(control ?c) (control ?c)] 'ledger-report-visit-source)
 
-    
-    (define-key map [menu-bar] (make-sparse-keymap "ldg-rep"))
-    (define-key map [menu-bar ldg-rep] (cons "Reports" map))
+		       
+		       (define-key map [menu-bar] (make-sparse-keymap "ldg-rep"))
+		       (define-key map [menu-bar ldg-rep] (cons "Reports" map))
 
-    (define-key map [menu-bar ldg-rep lrq] '("Quit" . ledger-report-quit))
-    (define-key map [menu-bar ldg-rep s2] '("--"))
-    (define-key map [menu-bar ldg-rep lrd] '("Scroll Down" . scroll-down))
-    (define-key map [menu-bar ldg-rep lru] '("Scroll Up" . scroll-up))
-    (define-key map [menu-bar ldg-rep s1] '("--"))
-    (define-key map [menu-bar ldg-rep lrk] '("Kill Report" . ledger-report-kill))
-    (define-key map [menu-bar ldg-rep lrr] '("Re-run Report" . ledger-report-redo))
-    (define-key map [menu-bar ldg-rep lre] '("Edit Report" . ledger-report-edit))
-    (define-key map [menu-bar ldg-rep lrs] '("Save Report" . ledger-report-save))
+		       (define-key map [menu-bar ldg-rep lrq] '("Quit" . ledger-report-quit))
+		       (define-key map [menu-bar ldg-rep s2] '("--"))
+		       (define-key map [menu-bar ldg-rep lrd] '("Scroll Down" . scroll-down))
+		       (define-key map [menu-bar ldg-rep lru] '("Scroll Up" . scroll-up))
+		       (define-key map [menu-bar ldg-rep s1] '("--"))
+		       (define-key map [menu-bar ldg-rep lrk] '("Kill Report" . ledger-report-kill))
+		       (define-key map [menu-bar ldg-rep lrr] '("Re-run Report" . ledger-report-redo))
+		       (define-key map [menu-bar ldg-rep lre] '("Edit Report" . ledger-report-edit))
+		       (define-key map [menu-bar ldg-rep lrs] '("Save Report" . ledger-report-save))
 
-    (use-local-map map)))
+		       (use-local-map map)))
 
 (defun ledger-report-read-name ()
   "Read the name of a ledger report to use, with completion.
@@ -201,13 +201,13 @@ this variable would be set in a file local variable comment block at the
 end of a ledger file which is included in some other file."
   (if ledger-master-file
       (expand-file-name ledger-master-file)
-    (buffer-file-name)))
+      (buffer-file-name)))
 
 (defun ledger-read-string-with-default (prompt default)
   (let ((default-prompt (concat prompt
                                 (if default
                                     (concat " (" default "): ")
-                                  ": "))))
+				    ": "))))
     (read-string default-prompt nil nil default)))
 
 (defun ledger-report-payee-format-specifier ()
@@ -234,7 +234,7 @@ the default."
          (default
           (if (eq (ledger-context-line-type context) 'acct-transaction)
               (regexp-quote (ledger-context-field-value context 'account))
-            nil)))
+	      nil)))
     (ledger-read-string-with-default "Account" default)))
 
 (defun ledger-report-expand-format-specifiers (report-cmd)
@@ -248,9 +248,9 @@ the default."
                                   (with-current-buffer ledger-buf
                                     (shell-quote-argument (funcall f))))
                                 t t expanded-cmd))
-          (progn
-            (set-window-configuration ledger-original-window-cfg)
-            (error "Invalid ledger report format specifier '%s'" specifier)))))
+	    (progn
+	      (set-window-configuration ledger-original-window-cfg)
+	      (error "Invalid ledger report format specifier '%s'" specifier)))))
     expanded-cmd))
 
 (defun ledger-report-cmd (report-name edit)
@@ -280,12 +280,12 @@ the default."
     (shell-command
      (if register-report
          (concat cmd " --prepend-format='%(filename):%(beg_line):'")
-       cmd) t nil)
+	 cmd) t nil)
     (when register-report
       (goto-char data-pos)
       (while (re-search-forward "^\\([^:]+\\)?:\\([0-9]+\\)?:" nil t)
         (let ((file (match-string 1))
-               (line (string-to-number (match-string 2))))
+	      (line (string-to-number (match-string 2))))
           (delete-region (match-beginning 0) (match-end 0))
           (set-text-properties (line-beginning-position) (line-end-position)
                                (list 'ledger-source (cons file (save-window-excursion
@@ -307,14 +307,14 @@ the default."
       (widen)
       (if (markerp line-or-marker)
           (goto-char line-or-marker)
-        (goto-char (point-min))
-        (forward-line (1- line-or-marker))
-        (re-search-backward "^[0-9]+")
-        (beginning-of-line)
-        (let ((start-of-txn (point)))
-          (forward-paragraph)
-          (narrow-to-region start-of-txn (point))
-          (backward-paragraph))))))
+	  (goto-char (point-min))
+	  (forward-line (1- line-or-marker))
+	  (re-search-backward "^[0-9]+")
+	  (beginning-of-line)
+	  (let ((start-of-txn (point)))
+	    (forward-paragraph)
+	    (narrow-to-region start-of-txn (point))
+	    (backward-paragraph))))))
 
 (defun ledger-report-goto ()
   "Goto the ledger report buffer."
@@ -487,7 +487,7 @@ specified line, returns nil."
     (let ((left (forward-line offset)))
       (if (not (equal left 0))
           nil
-        (ledger-context-at-point)))))
+	  (ledger-context-at-point)))))
 
 (defun ledger-context-line-type (context-info)
   (nth 0 context-info))
@@ -525,6 +525,6 @@ specified line, returns nil."
     (let ((context-info (ledger-context-other-line i)))
       (if (eq (ledger-context-line-type context-info) 'entry)
           (ledger-context-field-value context-info 'payee)
-        nil))))
+	  nil))))
 
 (provide 'ldg-report)

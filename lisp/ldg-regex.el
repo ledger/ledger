@@ -27,10 +27,10 @@
 (defmacro ledger-define-regexp (name regex docs &rest args)
   "Simplify the creation of a Ledger regex and helper functions."
   (let ((defs
-          (list
-           `(defconst
-              ,(intern (concat "ledger-" (symbol-name name) "-regexp"))
-              ,(eval regex))))
+	 (list
+	  `(defconst
+	       ,(intern (concat "ledger-" (symbol-name name) "-regexp"))
+	     ,(eval regex))))
         (addend 0) last-group)
     (if (null args)
         (progn
@@ -38,82 +38,82 @@
            defs
            (list
             `(defconst
-               ,(intern
-                 (concat "ledger-regex-" (symbol-name name) "-group"))
+		 ,(intern
+		   (concat "ledger-regex-" (symbol-name name) "-group"))
                1)))
           (nconc
            defs
            (list
             `(defconst
-               ,(intern (concat "ledger-regex-" (symbol-name name)
-                                "-group--count"))
+		 ,(intern (concat "ledger-regex-" (symbol-name name)
+				  "-group--count"))
                1)))
           (nconc
            defs
            (list
             `(defmacro
-               ,(intern (concat "ledger-regex-" (symbol-name name)))
-               (&optional string)
+		 ,(intern (concat "ledger-regex-" (symbol-name name)))
+		 (&optional string)
                ,(format "Return the match string for the %s" name)
                (match-string
                 ,(intern (concat "ledger-regex-" (symbol-name name)
                                  "-group"))
                 string)))))
-      
-      (dolist (arg args)
-        (let (var grouping target)
-          (if (symbolp arg)
-              (setq var arg target arg)
-            (assert (listp arg))
-            (if (= 2 (length arg))
-                (setq var (car arg)
-                      target (cadr arg))
-              (setq var (car arg)
-                    grouping (cadr arg)
-                    target (caddr arg))))
+	
+	(dolist (arg args)
+	  (let (var grouping target)
+	    (if (symbolp arg)
+		(setq var arg target arg)
+		(assert (listp arg))
+		(if (= 2 (length arg))
+		    (setq var (car arg)
+			  target (cadr arg))
+		    (setq var (car arg)
+			  grouping (cadr arg)
+			  target (caddr arg))))
 
-          (if (and last-group
-                   (not (eq last-group (or grouping target))))
-              (incf addend
-                    (symbol-value
-                     (intern-soft (concat "ledger-regex-"
-                                          (symbol-name last-group)
-                                          "-group--count")))))
-          (nconc
-           defs
-           (list
-            `(defconst
-               ,(intern (concat "ledger-regex-" (symbol-name name)
-                                "-group-" (symbol-name var)))
-               ,(+ addend
-                   (symbol-value
-                    (intern-soft
-                     (if grouping
-                         (concat "ledger-regex-" (symbol-name grouping)
-                                 "-group-" (symbol-name target))
-                       (concat "ledger-regex-" (symbol-name target)
-                               "-group"))))))))
-          (nconc
-           defs
-           (list
-            `(defmacro
-               ,(intern (concat "ledger-regex-" (symbol-name name)
-                                "-" (symbol-name var)))
-               (&optional string)
-               ,(format "Return the sub-group match for the %s %s."
-                        name var)
-               (match-string
-                ,(intern (concat "ledger-regex-" (symbol-name name)
-                                 "-group-" (symbol-name var)))
-                string))))
+	    (if (and last-group
+		     (not (eq last-group (or grouping target))))
+		(incf addend
+		      (symbol-value
+		       (intern-soft (concat "ledger-regex-"
+					    (symbol-name last-group)
+					    "-group--count")))))
+	    (nconc
+	     defs
+	     (list
+	      `(defconst
+		   ,(intern (concat "ledger-regex-" (symbol-name name)
+				    "-group-" (symbol-name var)))
+		 ,(+ addend
+		     (symbol-value
+		      (intern-soft
+		       (if grouping
+			   (concat "ledger-regex-" (symbol-name grouping)
+				   "-group-" (symbol-name target))
+			   (concat "ledger-regex-" (symbol-name target)
+				   "-group"))))))))
+	    (nconc
+	     defs
+	     (list
+	      `(defmacro
+		   ,(intern (concat "ledger-regex-" (symbol-name name)
+				    "-" (symbol-name var)))
+		   (&optional string)
+		 ,(format "Return the sub-group match for the %s %s."
+			  name var)
+		 (match-string
+		  ,(intern (concat "ledger-regex-" (symbol-name name)
+				   "-group-" (symbol-name var)))
+		  string))))
 
-          (setq last-group (or grouping target))))
+	    (setq last-group (or grouping target))))
 
-      (nconc defs
-             (list
-              `(defconst ,(intern (concat "ledger-regex-" (symbol-name name)
-                                          "-group--count"))
-                 ,(length args)))))
+	(nconc defs
+	       (list
+		`(defconst ,(intern (concat "ledger-regex-" (symbol-name name)
+					    "-group--count"))
+		   ,(length args)))))
 
     (cons 'progn defs)))
 

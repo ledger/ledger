@@ -52,7 +52,7 @@
   :group 'ledger-faces)
 
 (defface ledger-font-comment-face
-  `((t :foreground "orange" ))
+    `((t :foreground "orange" ))
   "Face for Ledger comments"
   :group 'ledger-faces)
 

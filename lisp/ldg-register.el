@@ -37,8 +37,8 @@
   :group 'ledger-register)
 
 (defface ledger-register-pending-face
-  '((((background light)) (:weight bold))
-    (((background dark)) (:weight bold)))
+    '((((background light)) (:weight bold))
+      (((background dark)) (:weight bold)))
   "Face used to highlight pending entries in a register report."
   :group 'ledger-register)
 
@@ -55,9 +55,9 @@
                       (save-excursion
                         (goto-line (nth 1 post))
                         (point-marker))
-                    (save-excursion
-                      (goto-line (nth 0 xact))
-                      (point-marker)))))))
+		      (save-excursion
+			(goto-line (nth 0 xact))
+			(point-marker)))))))
           (insert (format ledger-register-line-format
                           (format-time-string ledger-register-date-format
                                               (nth 2 post))
@@ -66,8 +66,8 @@
               (set-text-properties beg (1- (point))
                                    (list 'face 'ledger-register-pending-face
                                          'where where))
-            (set-text-properties beg (1- (point))
-                                 (list 'where where))))
+	      (set-text-properties beg (1- (point))
+				   (list 'where where))))
         (setq index (1+ index)))))
   (goto-char (point-min))
   )

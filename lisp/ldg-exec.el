@@ -68,8 +68,8 @@
       (goto-char (point-min))
       (delete-horizontal-space)
       (setq version-strings (split-string
-			    (buffer-substring-no-properties (point)
-							       (+ (point) 12))))
+			     (buffer-substring-no-properties (point)
+							     (+ (point) 12))))
       (if (and (string-match (regexp-quote "Ledger") (car version-strings))
 	       (or (string= needed (car (cdr version-strings)))
 		   (string< needed (car (cdr version-strings)))))

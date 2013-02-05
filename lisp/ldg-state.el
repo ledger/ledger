@@ -28,9 +28,9 @@
   (if (not (null state))
       (if (and style (eq style 'cleared))
           'cleared)
-    (if (and style (eq style 'pending))
-        'pending
-      'cleared)))
+      (if (and style (eq style 'pending))
+	  'pending
+	  'cleared)))
 
 (defun ledger-entry-state ()
   (save-excursion
@@ -106,23 +106,23 @@ dropped."
                     (progn
                       (insert "* ")
                       (setq inserted t)))
-              (if (and style (eq style 'pending))
-                  (progn
-                    (insert "! ")
-                    (setq inserted t))
-                (progn
-                  (insert "* ")
-                  (setq inserted t))))
+		(if (and style (eq style 'pending))
+		    (progn
+		      (insert "! ")
+		      (setq inserted t))
+		    (progn
+		      (insert "* ")
+		      (setq inserted t))))
             (if (and inserted
                      (re-search-forward "\\(\t\\| [ \t]\\)"
                                         (line-end-position) t))
                 (cond
-                 ((looking-at "\t")
-                  (delete-char 1))
-                 ((looking-at " [ \t]")
-                  (delete-char 2))
-                 ((looking-at " ")
-                  (delete-char 1))))
+		  ((looking-at "\t")
+		   (delete-char 1))
+		  ((looking-at " [ \t]")
+		   (delete-char 2))
+		  ((looking-at " ")
+		   (delete-char 1))))
             (setq clear inserted)))))
     ;; Clean up the entry so that it displays minimally
     (save-excursion
@@ -135,12 +135,12 @@ dropped."
           (skip-chars-forward " \t")
           (let ((cleared (if (member (char-after) '(?\* ?\!))
                              (char-after)
-                           ? )))
+			     ? )))
             (if first
                 (setq state cleared
                       first nil)
-              (if (/= state cleared)
-                  (setq hetero t))))
+		(if (/= state cleared)
+		    (setq hetero t))))
           (forward-line))
         (when (and (not hetero) (/= state ? ))
           (goto-char (car bounds))
@@ -162,12 +162,12 @@ dropped."
           (if (re-search-forward "\\(\t\\| [ \t]\\)"
                                  (line-end-position) t)
               (cond
-               ((looking-at "\t")
-                (delete-char 1))
-               ((looking-at " [ \t]")
-                (delete-char 2))
-               ((looking-at " ")
-                (delete-char 1)))))))
+		((looking-at "\t")
+		 (delete-char 1))
+		((looking-at " [ \t]")
+		 (delete-char 2))
+		((looking-at " ")
+		 (delete-char 1)))))))
     clear))
 
 (defun ledger-toggle-current (&optional style)
@@ -186,7 +186,7 @@ dropped."
             (forward-line)
             (goto-char (line-beginning-position))))
         (ledger-toggle-current-entry style))
-    (ledger-toggle-current-transaction style)))
+      (ledger-toggle-current-transaction style)))
 
 (defun ledger-toggle-current-entry (&optional style)
   (interactive)
@@ -201,10 +201,10 @@ dropped."
               (delete-char 1)
               (if (and style (eq style 'cleared))
                   (insert " *")))
-          (if (and style (eq style 'pending))
-              (insert " ! ")
-            (insert " * "))
-          (setq clear t))))
+	    (if (and style (eq style 'pending))
+		(insert " ! ")
+		(insert " * "))
+	    (setq clear t))))
     clear))
 
 (provide 'ldg-state)
