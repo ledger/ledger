@@ -73,40 +73,40 @@ text that should replace the format specifier."
 (defvar ledger-report-mode-abbrev-table)
 
 (define-derived-mode ledger-report-mode text-mode "Ledger-Report"
-		     "A mode for viewing ledger reports."
-		     (let ((map (make-sparse-keymap)))
-		       (define-key map [? ] 'scroll-up)
-		       (define-key map [backspace] 'scroll-down)
-		       (define-key map [?r] 'ledger-report-redo)
-		       (define-key map [?s] 'ledger-report-save)
-		       (define-key map [?k] 'ledger-report-kill)
-		       (define-key map [?e] 'ledger-report-edit)
-		       (define-key map [?q] 'ledger-report-quit)
-		       (define-key map [(control ?c) (control ?l) (control ?r)]
-			 'ledger-report-redo)
-		       (define-key map [(control ?c) (control ?l) (control ?S)]
-			 'ledger-report-save)
-		       (define-key map [(control ?c) (control ?l) (control ?k)]
-			 'ledger-report-kill)
-		       (define-key map [(control ?c) (control ?l) (control ?e)]
-			 'ledger-report-edit)
-		       (define-key map [(control ?c) (control ?c)] 'ledger-report-visit-source)
+   "A mode for viewing ledger reports."
+   (let ((map (make-sparse-keymap)))
+     (define-key map [? ] 'scroll-up)
+     (define-key map [backspace] 'scroll-down)
+     (define-key map [?r] 'ledger-report-redo)
+     (define-key map [?s] 'ledger-report-save)
+     (define-key map [?k] 'ledger-report-kill)
+     (define-key map [?e] 'ledger-report-edit)
+     (define-key map [?q] 'ledger-report-quit)
+     (define-key map [(control ?c) (control ?l) (control ?r)]
+       'ledger-report-redo)
+     (define-key map [(control ?c) (control ?l) (control ?S)]
+       'ledger-report-save)
+     (define-key map [(control ?c) (control ?l) (control ?k)]
+       'ledger-report-kill)
+     (define-key map [(control ?c) (control ?l) (control ?e)]
+       'ledger-report-edit)
+     (define-key map [(control ?c) (control ?c)] 'ledger-report-visit-source)
 
-		       
-		       (define-key map [menu-bar] (make-sparse-keymap "ldg-rep"))
-		       (define-key map [menu-bar ldg-rep] (cons "Reports" map))
+     
+     (define-key map [menu-bar] (make-sparse-keymap "ldg-rep"))
+     (define-key map [menu-bar ldg-rep] (cons "Reports" map))
 
-		       (define-key map [menu-bar ldg-rep lrq] '("Quit" . ledger-report-quit))
-		       (define-key map [menu-bar ldg-rep s2] '("--"))
-		       (define-key map [menu-bar ldg-rep lrd] '("Scroll Down" . scroll-down))
-		       (define-key map [menu-bar ldg-rep lru] '("Scroll Up" . scroll-up))
-		       (define-key map [menu-bar ldg-rep s1] '("--"))
-		       (define-key map [menu-bar ldg-rep lrk] '("Kill Report" . ledger-report-kill))
-		       (define-key map [menu-bar ldg-rep lrr] '("Re-run Report" . ledger-report-redo))
-		       (define-key map [menu-bar ldg-rep lre] '("Edit Report" . ledger-report-edit))
-		       (define-key map [menu-bar ldg-rep lrs] '("Save Report" . ledger-report-save))
+     (define-key map [menu-bar ldg-rep lrq] '("Quit" . ledger-report-quit))
+     (define-key map [menu-bar ldg-rep s2] '("--"))
+     (define-key map [menu-bar ldg-rep lrd] '("Scroll Down" . scroll-down))
+     (define-key map [menu-bar ldg-rep lru] '("Scroll Up" . scroll-up))
+     (define-key map [menu-bar ldg-rep s1] '("--"))
+     (define-key map [menu-bar ldg-rep lrk] '("Kill Report" . ledger-report-kill))
+     (define-key map [menu-bar ldg-rep lrr] '("Re-run Report" . ledger-report-redo))
+     (define-key map [menu-bar ldg-rep lre] '("Edit Report" . ledger-report-edit))
+     (define-key map [menu-bar ldg-rep lrs] '("Save Report" . ledger-report-save))
 
-		       (use-local-map map)))
+     (use-local-map map)))
 
 (defun ledger-report-read-name ()
   "Read the name of a ledger report to use, with completion.
