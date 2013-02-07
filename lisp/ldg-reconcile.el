@@ -126,7 +126,8 @@
   (let ((where (get-text-property (point) 'where)))
     (when (is-stdin (car where))
       (switch-to-buffer-other-window ledger-buf)
-      (goto-char (cdr where)))))
+      (goto-char (cdr where))
+      (recenter))))
 
 (defun ledger-reconcile-save ()
   (interactive)
