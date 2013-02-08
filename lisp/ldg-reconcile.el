@@ -22,7 +22,6 @@
 ;; Reconcile mode
 
 (defvar ledger-buf nil)
-(defvar ledger-bufs nil)
 (defvar ledger-acct nil)
 (defcustom ledger-recon-buffer-name "*Reconcile*"
   "Name to use for reconciliation window"
@@ -54,18 +53,14 @@
    (equal file "<stdin>")
    (equal file "/dev/stdin")))
 
-(defun ledger-reconcile-get-buffer (where)
-  (when (bufferp (car where))
-    (car where)))
-
 (defun ledger-reconcile-toggle ()
   (interactive)
   (let ((where (get-text-property (point) 'where))
         (account ledger-acct)
         (inhibit-read-only t)
         cleared)
-    (when (ledger-reconcile-get-buffer where)
-      (with-current-buffer (ledger-reconcile-get-buffer where)
+    (when (is-stdin (car where))
+      (with-current-buffer ledger-buf
 	(goto-char (cdr where))
 	(setq cleared (ledger-toggle-current-entry)))
 					;remove the existing face and add the new face
@@ -117,8 +112,8 @@
 (defun ledger-reconcile-delete ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (when (ledger-reconcile-get-buffer where)
-      (with-current-buffer (ledger-reconcile-get-buffer where)
+    (when (is-stdin (car where))
+      (with-current-buffer ledger-buf
         (goto-char (cdr where))
         (ledger-delete-current-entry))
       (let ((inhibit-read-only t))
@@ -129,16 +124,15 @@
 (defun ledger-reconcile-visit ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (when (ledger-reconcile-get-buffer where)
-      (switch-to-buffer-other-window (ledger-reconcile-get-buffer where))
+    (when (is-stdin (car where))
+      (switch-to-buffer-other-window ledger-buf)
       (goto-char (cdr where))
       (recenter))))
 
 (defun ledger-reconcile-save ()
   (interactive)
-  (dolist (buf (cons ledger-buf ledger-bufs))
-    (with-current-buffer buf
-      (save-buffer)))
+  (with-current-buffer ledger-buf
+    (save-buffer))
   (set-buffer-modified-p nil)
   (ledger-display-balance))
 
@@ -160,8 +154,8 @@
       (let ((where (get-text-property (point) 'where))
             (face  (get-text-property (point) 'face)))
         (if (and (eq face 'bold)
-                 (ledger-reconcile-get-buffer where))
-            (with-current-buffer (ledger-reconcile-get-buffer where)
+                 (when (is-stdin (car where))))
+            (with-current-buffer ledger-buf
               (goto-char (cdr where))
               (ledger-toggle-current 'cleared))))
       (forward-line 1)))
@@ -171,12 +165,10 @@
   "find the position of the xact in the ledger-buf buffer using
    the emacs output from ledger, return a marker to the beginning
    of the xact in the buffer"
-  (let ((buf (if (is-stdin emacs-xact) 
-                 ledger-buf
-                 (find-file-noselect (nth 0 item)))))
+  (let ((buf ledger-buf))
     (with-current-buffer buf  ;use the ledger-buf buffer
       (cons
-       buf
+       (nth 0 item)
        (if ledger-clear-whole-entries  ;determines whether to
 					;clear on the payee line
 					;or posting line
@@ -201,14 +193,12 @@
 	      (unless (looking-at "(")
 		(error (buffer-string)))
 	      (read (current-buffer))))))
-    (setq ledger-bufs ())
     (if (> (length items) 0)
 	(dolist (item items)
 	  (let ((index 1))
 	    (dolist (xact (nthcdr 5 item))
 	      (let ((beg (point))  
 		    (where (ledger-marker-where-xact-is item)))
-		(add-to-list 'ledger-bufs (car where))
 		(insert (format "%s %-4s %-30s %-30s %15s\n"
 				(format-time-string "%Y/%m/%d" (nth 2 item))
 				(if (nth 3 item)
