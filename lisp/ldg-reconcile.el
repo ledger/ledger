@@ -54,8 +54,8 @@
    (equal file "/dev/stdin")))
 
 (defun ledger-reconcile-get-buffer (where)
-  (when (is-stdin (car where))
-    ledger-buf))
+  (when (bufferp (car where))
+    (car where)))
 
 (defun ledger-reconcile-toggle ()
   (interactive)
