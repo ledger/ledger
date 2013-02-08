@@ -89,8 +89,9 @@
 	  (setq ledger-occur-overlay-list
 		(append ledger-occur-overlay-list
 			(ledger-occur-create-folded-overlays buffer-matches)))
-	  (setq ledger-occur-last-match regex))
-	(recenter))))
+	  (setq ledger-occur-last-match regex)
+	  (select-window (get-buffer-window buffer))))
+    (recenter)))
 
 (defun ledger-occur (regex)
   "Perform a simple grep in current buffer for the regular
