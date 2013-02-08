@@ -105,7 +105,7 @@ to choose from."
     (goto-char pos)))
 
 (defun ledger-next-amount (&optional end)
-  (when (re-search-forward "\\(  \\|\t\\| \t\\)[ \t]*-?\\([A-Z$]+ *\\)?\\(-?[0-9,]+?\\)\\(.[0-9]+\\)?\\( *[A-Z$]+\\)?\\([ \t]*@@?[^\n;]+?\\)?\\([ \t]+;.+?\\)?$" (marker-position end) t)
+  (when (re-search-forward "\\(  \\|\t\\| \t\\)[ \t]*-?\\([A-Z$€£]+ *\\)?\\(-?[0-9,]+?\\)\\(.[0-9]+\\)?\\( *[A-Z$€£]+\\)?\\([ \t]*@@?[^\n;]+?\\)?\\([ \t]+;.+?\\)?$" (marker-position end) t)
     (goto-char (match-beginning 0))
     (skip-syntax-forward " ")
     (- (or (match-end 4)
