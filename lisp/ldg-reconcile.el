@@ -169,10 +169,12 @@
   "find the position of the xact in the ledger-buf buffer using
    the emacs output from ledger, return a marker to the beginning
    of the xact in the buffer"
-  (let ((buf ledger-buf))
+  (let ((buf (if (is-stdin emacs-xact) 
+                 ledger-buf
+                 (find-file-noselect (nth 0 item)))))
     (with-current-buffer buf  ;use the ledger-buf buffer
       (cons
-       (nth 0 item)
+       buf
        (if ledger-clear-whole-entries  ;determines whether to
 					;clear on the payee line
 					;or posting line
