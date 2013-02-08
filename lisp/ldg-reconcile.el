@@ -22,6 +22,7 @@
 ;; Reconcile mode
 
 (defvar ledger-buf nil)
+(defvar ledger-bufs nil)
 (defvar ledger-acct nil)
 (defcustom ledger-recon-buffer-name "*Reconcile*"
   "Name to use for reconciliation window"
@@ -135,8 +136,9 @@
 
 (defun ledger-reconcile-save ()
   (interactive)
-  (with-current-buffer ledger-buf
-    (save-buffer))
+  (dolist (buf (cons ledger-buf ledger-bufs))
+    (with-current-buffer buf
+      (save-buffer)))
   (set-buffer-modified-p nil)
   (ledger-display-balance))
 
@@ -199,12 +201,14 @@
 	      (unless (looking-at "(")
 		(error (buffer-string)))
 	      (read (current-buffer))))))
+    (setq ledger-bufs ())
     (if (> (length items) 0)
 	(dolist (item items)
 	  (let ((index 1))
 	    (dolist (xact (nthcdr 5 item))
 	      (let ((beg (point))  
 		    (where (ledger-marker-where-xact-is item)))
+		(add-to-list 'ledger-bufs (car where))
 		(insert (format "%s %-4s %-30s %-30s %15s\n"
 				(format-time-string "%Y/%m/%d" (nth 2 item))
 				(if (nth 3 item)
