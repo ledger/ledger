@@ -53,14 +53,18 @@
    (equal file "<stdin>")
    (equal file "/dev/stdin")))
 
+(defun ledger-reconcile-get-buffer (where)
+  (when (is-stdin (car where))
+    ledger-buf))
+
 (defun ledger-reconcile-toggle ()
   (interactive)
   (let ((where (get-text-property (point) 'where))
         (account ledger-acct)
         (inhibit-read-only t)
         cleared)
-    (when (is-stdin (car where))
-      (with-current-buffer ledger-buf
+    (when (ledger-reconcile-get-buffer where)
+      (with-current-buffer (ledger-reconcile-get-buffer where)
 	(goto-char (cdr where))
 	(setq cleared (ledger-toggle-current-entry)))
 					;remove the existing face and add the new face
@@ -112,8 +116,8 @@
 (defun ledger-reconcile-delete ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (when (is-stdin (car where))
-      (with-current-buffer ledger-buf
+    (when (ledger-reconcile-get-buffer where)
+      (with-current-buffer (ledger-reconcile-get-buffer where)
         (goto-char (cdr where))
         (ledger-delete-current-entry))
       (let ((inhibit-read-only t))
@@ -124,8 +128,8 @@
 (defun ledger-reconcile-visit ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (when (is-stdin (car where))
-      (switch-to-buffer-other-window ledger-buf)
+    (when (ledger-reconcile-get-buffer where)
+      (switch-to-buffer-other-window (ledger-reconcile-get-buffer where))
       (goto-char (cdr where))
       (recenter))))
 
@@ -154,8 +158,8 @@
       (let ((where (get-text-property (point) 'where))
             (face  (get-text-property (point) 'face)))
         (if (and (eq face 'bold)
-                 (when (is-stdin (car where))))
-            (with-current-buffer ledger-buf
+                 (ledger-reconcile-get-buffer where))
+            (with-current-buffer (ledger-reconcile-get-buffer where)
               (goto-char (cdr where))
               (ledger-toggle-current 'cleared))))
       (forward-line 1)))
