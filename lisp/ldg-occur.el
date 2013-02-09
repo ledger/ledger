@@ -70,13 +70,14 @@
   "A list of currently active overlays to the ledger buffer.")
 (make-variable-buffer-local 'ledger-occur-overlay-list)
 
-
 (defun ledger-occur-mode (regex buffer)
+  "Higlight transaction that match REGEX, hiding others
+
+When REGEX is nil, unhide everything, and remove higlight"
   (progn
     (set-buffer buffer)
     (setq ledger-occur-mode 
-	  (if (or ledger-occur-mode
-		  (null regex)
+	  (if (or (null regex)
 		  (zerop (length regex)))
 	      nil
 	      (concat " Ledger-Folded: " regex)))
@@ -128,31 +129,32 @@
     prompt))
 
 (defun ledger-occur-create-folded-overlays(buffer-matches)
-  (let ((overlays 
-	 (let ((prev-end (point-min))
-	       (temp (point-max)))
-	   (mapcar (lambda (match)
-		     (progn
-		       (setq temp prev-end) ;need a swap so that the
+  (if buffer-matches
+      (let ((overlays
+             (let ((prev-end (point-min))
+                   (temp (point-max)))
+               (mapcar (lambda (match)
+                         (progn
+                           (setq temp prev-end) ;need a swap so that the
 					;last form in the lambda
 					;is the (make-overlay)
-		       (setq prev-end (1+ (cadr match))) ;add 1 so
+                           (setq prev-end (1+ (cadr match))) ;add 1 so
 					;that we skip
 					;the empty
 					;line after
 					;the xact
-		       (make-overlay
-			temp
-			(car match)
-			(current-buffer) t nil)))
-		   buffer-matches))))
-    (mapcar (lambda (ovl) 
-              (overlay-put ovl ledger-occur-overlay-property-name t)
-              (overlay-put ovl 'invisible t)
-              (overlay-put ovl 'intangible t))
-            (push  (make-overlay (cadr (car(last buffer-matches))) 
-				 (point-max) 
-				 (current-buffer) t nil) overlays))))
+                           (make-overlay
+                            temp
+                            (car match)
+                            (current-buffer) t nil)))
+                       buffer-matches))))
+        (mapcar (lambda (ovl)
+                  (overlay-put ovl ledger-occur-overlay-property-name t)
+                  (overlay-put ovl 'invisible t)
+                  (overlay-put ovl 'intangible t))
+                (push  (make-overlay (cadr (car(last buffer-matches)))
+                                     (point-max)
+                                     (current-buffer) t nil) overlays)))))
 
 
 (defun ledger-occur-create-xact-overlays (ovl-bounds)
