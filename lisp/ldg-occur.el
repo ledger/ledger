@@ -69,13 +69,14 @@
   "A list of currently active overlays to the ledger buffer.")
 (make-variable-buffer-local 'ledger-occur-overlay-list)
 
-
 (defun ledger-occur-mode (regex buffer)
+  "Higlight transaction that match REGEX, hiding others
+
+When REGEX is nil, unhide everything, and remove higlight"
   (progn
     (set-buffer buffer)
     (setq ledger-occur-mode 
-	  (if (or ledger-occur-mode
-		  (null regex)
+	  (if (or (null regex)
 		  (zerop (length regex)))
 	      nil
 	      (concat " Ledger-Folded: " regex)))
