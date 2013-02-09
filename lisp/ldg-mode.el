@@ -28,16 +28,15 @@
 (defvar ledger-year (ledger-current-year)
   "Start a ledger session with the current year, but make it
 customizable to ease retro-entry.")
+
 (defvar ledger-month (ledger-current-month)
   "Start a ledger session with the current month, but make it
 customizable to ease retro-entry.")
-
 
 (defcustom ledger-default-acct-transaction-indent "    "
   "Default indentation for account transactions in an entry."
   :type 'string
   :group 'ledger)
-
 
 (defvar ledger-mode-abbrev-table)
 
