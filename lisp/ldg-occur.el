@@ -46,6 +46,7 @@
 
 (defcustom ledger-occur-use-face-unfolded t 
   "if non-nil use a custom face for xacts shown in ledger-occur mode"
+  :type 'boolean
   :group 'ledger)
 (make-variable-buffer-local 'ledger-occur-use-face-unfolded)
 
