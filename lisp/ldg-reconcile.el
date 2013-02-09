@@ -121,11 +121,13 @@
     (forward-line line)))
 
 (defun ledger-reconcile-refresh-after-save ()
-  (let ((buf (get-buffer ledger-recon-buffer-name)))
-    (if buf
-        (with-current-buffer buf
-          (ledger-reconcile-refresh)
-          (set-buffer-modified-p nil)))))
+  (condition-case er
+      (let ((buf (get-buffer ledger-recon-buffer-name)))
+        (if buf
+            (with-current-buffer buf
+              (ledger-reconcile-refresh)
+              (set-buffer-modified-p nil))))
+    (error nil)))
 
 (defun ledger-reconcile-add ()
   (interactive)
