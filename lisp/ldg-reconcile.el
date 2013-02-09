@@ -22,6 +22,7 @@
 ;; Reconcile mode
 
 (defvar ledger-buf nil)
+(defvar ledger-bufs nil)
 (defvar ledger-acct nil)
 (defcustom ledger-recon-buffer-name "*Reconcile*"
   "Name to use for reconciliation window"
@@ -53,17 +54,27 @@
    (equal file "<stdin>")
    (equal file "/dev/stdin")))
 
+(defun ledger-reconcile-get-buffer (where)
+;  (when (is-stdin (car where))
+;    ledger-buf))
+  (if (bufferp (car where))
+      (car where)
+      (error "buffer not set")))
+
+
 (defun ledger-reconcile-toggle ()
   (interactive)
   (let ((where (get-text-property (point) 'where))
         (account ledger-acct)
         (inhibit-read-only t)
         cleared)
-    (when (is-stdin (car where))
-      (with-current-buffer ledger-buf
+;    (when (is-stdin (car where))
+;      (with-current-buffer ledger-buf
+    (when (ledger-reconcile-get-buffer where)
+      (with-current-buffer (ledger-reconcile-get-buffer where)
 	(goto-char (cdr where))
 	(setq cleared (ledger-toggle-current-entry)))
-					;remove the existing face and add the new face
+	;remove the existing face and add the new face
       (remove-text-properties (line-beginning-position)
 			      (line-end-position)
 			      (list 'face))
@@ -112,8 +123,8 @@
 (defun ledger-reconcile-delete ()
   (interactive)
   (let ((where (get-text-property (point) 'where)))
-    (when (is-stdin (car where))
-      (with-current-buffer ledger-buf
+    (when (ledger-reconcile-get-buffer where)
+      (with-current-buffer (ledger-reconcile-get-buffer where)
         (goto-char (cdr where))
         (ledger-delete-current-entry))
       (let ((inhibit-read-only t))
@@ -123,16 +134,21 @@
 
 (defun ledger-reconcile-visit ()
   (interactive)
-  (let ((where (get-text-property (point) 'where)))
-    (when (is-stdin (car where))
-      (switch-to-buffer-other-window ledger-buf)
+  (let* ((where (get-text-property (point) 'where))
+	 (target-buffer (ledger-reconcile-get-buffer 
+			 where)))
+    (when target-buffer
+      (switch-to-buffer-other-window target-buffer)
       (goto-char (cdr where))
       (recenter))))
 
 (defun ledger-reconcile-save ()
   (interactive)
-  (with-current-buffer ledger-buf
-    (save-buffer))
+;  (with-current-buffer ledger-buf
+;    (save-buffer))
+  (dolist (buf (cons ledger-buf ledger-bufs))
+    (with-current-buffer buf
+      (save-buffer)))
   (set-buffer-modified-p nil)
   (ledger-display-balance))
 
@@ -146,38 +162,19 @@
     (if ledger-fold-on-reconcile
 	(ledger-occur-quit-buffer buf))))
 
-(defun ledger-reconcile-finish ()
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (not (eobp))
-      (let ((where (get-text-property (point) 'where))
-            (face  (get-text-property (point) 'face)))
-        (if (and (eq face 'bold)
-                 (when (is-stdin (car where))))
-            (with-current-buffer ledger-buf
-              (goto-char (cdr where))
-              (ledger-toggle-current 'cleared))))
-      (forward-line 1)))
-  (ledger-reconcile-save))
-
 (defun ledger-marker-where-xact-is (emacs-xact)
   "find the position of the xact in the ledger-buf buffer using
-   the emacs output from ledger, return a marker to the beginning
-   of the xact in the buffer"
-  (let ((buf ledger-buf))
-    (with-current-buffer buf  ;use the ledger-buf buffer
+   the emacs output from ledger, return the buffer and a marker
+   to the beginning of the xact in that buffer"
+  (let ((buf (if (is-stdin (nth 0 emacs-xact))
+		 ledger-buf
+		 (find-file-noselect (nth 0 emacs-xact)))))
+    (with-current-buffer buf 
       (cons
-       (nth 0 item)
-       (if ledger-clear-whole-entries  ;determines whether to
-					;clear on the payee line
-					;or posting line
-	   (save-excursion
-	     (goto-line (nth 1 item))
-	     (point-marker))
-	   (save-excursion
-	     (goto-line (nth 0 xact))
-	     (point-marker)))))))
+       buf
+       (save-excursion
+	 (goto-line (nth 1 emacs-xact))
+	 (point-marker))))))
 
 (defun ledger-do-reconcile ()
   "get the uncleared transactions in the account and display them
@@ -265,7 +262,6 @@
    (let ((map (make-sparse-keymap)))
      (define-key map [(control ?m)] 'ledger-reconcile-visit)
      (define-key map [return] 'ledger-reconcile-visit)
-     (define-key map [(control ?c) (control ?c)] 'ledger-reconcile-finish)
      (define-key map [(control ?x) (control ?s)] 'ledger-reconcile-save)
      (define-key map [(control ?l)] 'ledger-reconcile-refresh)
      (define-key map [? ] 'ledger-reconcile-toggle)
