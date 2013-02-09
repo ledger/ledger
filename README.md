@@ -95,12 +95,12 @@ You can even just install the current Ledger **RELEASE** directly:
 ### Ubuntu
 
 If you're going to build on Ubuntu, `sudo apt-get install ...` the
-following packages (current as of Ubuntu Hardy):
+following packages (current as of Ubuntu 12.04):
 
     sudo apt-get install build-essential cmake zlib1g-dev libbz2-dev
-         python-dev bjam cvs gettext libgmp3-dev libmpfr-dev libboost1.35-dev
-         libboost-regex1.35-dev libboost-date-time1.35-dev
-         libboost-filesystem1.35-dev libboost-python1.35-dev texinfo lcov
+         python-dev gettext libgmp3-dev libmpfr-dev libboost-dev
+         libboost-regex-dev libboost-date-time-dev
+         libboost-filesystem-dev libboost-python-dev texinfo lcov
          sloccount
 
 Or, for Ubuntu Karmic:
@@ -159,5 +159,5 @@ Now that you're up and running, here are a few resources to keep in mind:
 
 If you have ideas you'd like to share, the best way is either to e-mail me a
 patch (I prefer attachments over pasted text), or to get an account on GitHub.
-Once you do, fork the [Ledger project](http://github.com/jwiegley/ledger),
+Once you do, fork the [Ledger project](http://github.com/ledger/ledger),
 hack as much as you like, then send me a pull request via GitHub.
