@@ -262,7 +262,8 @@
 				 'previous-line
 				 'mouse-set-point
 				 'ledger-reconcile-toggle))
-      (ledger-reconcile-visit t)))
+      (save-excursion
+        (ledger-reconcile-visit t))))
 
 (defun ledger-reconcile (account)
   (interactive "sAccount to reconcile: ")
