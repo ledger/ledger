@@ -24,6 +24,7 @@
 (defvar ledger-buf nil)
 (defvar ledger-bufs nil)
 (defvar ledger-acct nil)
+
 (defcustom ledger-recon-buffer-name "*Reconcile*"
   "Name to use for reconciliation window"
   :group 'ledger)
@@ -31,6 +32,12 @@
 (defcustom ledger-fold-on-reconcile t 
   "if t, limit transactions shown in main buffer to those
    matching the reconcile regex"
+  :group 'ledger)
+
+(defcustom ledger-buffer-tracks-reconcile-buffer t
+  "if t, then when the cursor is moved to a new xact in the recon
+   window, then that transaction will be shown in its source
+   buffer."
   :group 'ledger)
 
 (defun ledger-display-balance ()
@@ -231,6 +238,22 @@
       
       (select-window recon-window))))
 
+(defun ledger-reconcile-track-xact ()
+  (if (or (eq this-command 'next-line)
+	  (eq this-command 'previous-line)
+	  (eq this-command 'mouse-set-point))
+      (let* ((where (get-text-property (point) 'where))
+	     (target-buffer (ledger-reconcile-get-buffer 
+			     where))
+	     (cur-buf (current-buffer)))
+	(when target-buffer
+	  (switch-to-buffer-other-window target-buffer)
+	  (goto-char (cdr where))
+	  (recenter)
+	  (switch-to-buffer-other-window cur-buf)
+	  ))))
+
+
 (defun ledger-reconcile (account)
   (interactive "sAccount to reconcile: ")
   (let ((buf (current-buffer))
@@ -240,6 +263,7 @@
 	  (quit-window (get-buffer-window rbuf))
 	  (kill-buffer rbuf)))
     (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save)
+    (add-hook 'post-command-hook 'ledger-reconcile-track-xact)
     (if ledger-fold-on-reconcile
 	(ledger-occur-mode account buf))
 
