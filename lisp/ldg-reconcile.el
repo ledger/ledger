@@ -32,17 +32,20 @@
 (defcustom ledger-fold-on-reconcile t 
   "if t, limit transactions shown in main buffer to those
    matching the reconcile regex"
+  :type 'boolean
   :group 'ledger)
 
 (defcustom ledger-buffer-tracks-reconcile-buffer t
   "if t, then when the cursor is moved to a new xact in the recon
    window, then that transaction will be shown in its source
    buffer."
+  :type 'boolean
   :group 'ledger)
 
 (defcustom ledger-reconcile-force-window-bottom nil
   "If t make the reconcile window appear along the bottom of the
    register window and resize"
+  :type 'boolean
   :group 'ledger)
 
 (defun ledger-display-balance ()
@@ -146,8 +149,9 @@
   (progn
     (beginning-of-line)
     (let* ((where (get-text-property (1+ (point)) 'where))
-	   (target-buffer (ledger-reconcile-get-buffer 
-			   where))
+	   (target-buffer (if where 
+			      (ledger-reconcile-get-buffer where)
+			      nil))
 	   (cur-buf (current-buffer)))
       (when target-buffer
 	(switch-to-buffer-other-window target-buffer)
