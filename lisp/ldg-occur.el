@@ -208,23 +208,6 @@ When REGEX is nil, unhide everything, and remove higlight"
 	    buffer-matches)
       (setq overlays (nreverse overlays)))))
 
-(defun ledger-occur-find-xact-extents (pos)
-  "return point for beginning of xact and and of xact containing
-   position.  Requires empty line separating xacts"
-  (interactive "d")
-  (save-excursion
-    (goto-char pos)
-    (let ((end-pos pos)
-	  (beg-pos pos))
-      (backward-paragraph)
-      (forward-line)
-      (beginning-of-line)
-      (setq beg-pos (point))
-      (forward-paragraph)
-      (forward-line -1)
-      (end-of-line)
-      (setq end-pos (1+ (point)))
-      (list beg-pos end-pos))))
 
 (defun ledger-occur-find-matches (regex)
   "Returns a list of 2-number tuples, specifying begnning of the
@@ -241,7 +224,7 @@ When REGEX is nil, unhide everything, and remove higlight"
         ;; if something found
         (when (setq endpoint (re-search-forward regex nil 'end))
           (save-excursion
-	    (let ((bounds (ledger-occur-find-xact-extents (match-beginning 0))))
+	    (let ((bounds (ledger-find-xact-extents (match-beginning 0))))
 	      (push bounds lines)
 	      (setq curpoint (cadr bounds)))) ;move to the end of the
 					;xact, no need to search

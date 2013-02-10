@@ -60,6 +60,9 @@ customizable to ease retro-entry.")
 	 'ledger-complete-at-point)
     (set (make-local-variable 'pcomplete-termination-string) "")
 
+    (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
+    (make-variable-buffer-local 'highlight-overlay)
+
     (let ((map (current-local-map)))
       (define-key map [(control ?c) (control ?a)] 'ledger-add-entry)
       (define-key map [(control ?c) (control ?d)] 'ledger-delete-current-entry)
@@ -114,8 +117,7 @@ customizable to ease retro-entry.")
       (define-key map [add-xact] '(menu-item "Add Entry" ledger-add-entry :enable ledger-works))
       (define-key map [sep3] '(menu-item "--"))
       (define-key map [reconcile] '(menu-item "Reconcile Account" ledger-reconcile :enable ledger-works))
-      (define-key map [reconcile] '(menu-item "Hide Xacts" ledger-occur))
-      ))
+      (define-key map [reconcile] '(menu-item "Hide Xacts" ledger-occur))))
 
 (defun ledger-time-less-p (t1 t2)
   "Say whether time value T1 is less than time value T2."

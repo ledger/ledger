@@ -156,6 +156,7 @@
 	(switch-to-buffer-other-window target-buffer)
 	(goto-char (cdr where))
 	(recenter)
+	(ledger-highlight-xact-under-point)
 	(if come-back
 	    (switch-to-buffer-other-window cur-buf))))))
 

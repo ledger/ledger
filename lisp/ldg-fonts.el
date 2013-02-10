@@ -31,6 +31,11 @@
   "Default face for cleared (*) transactions"
   :group 'ledger-faces)
 
+(defface ledger-font-highlight-face 
+    `((t :background "#003366" :weight normal ))
+  "Default face for transaction under point"
+  :group 'ledger-faces)
+
 (defface ledger-font-pending-face 
     `((t :foreground "yellow" :weight normal ))
   "Default face for pending (!) transactions"
