@@ -178,7 +178,7 @@
     ;Make sure you delete the window before you delete the buffer,
     ;otherwise, madness ensues
     (delete-window (get-buffer-window reconcile-buf))
-    (kill-buffer (reconcile-buf))
+    (kill-buffer reconcile-buf)
     (if ledger-fold-on-reconcile
 	(ledger-occur-quit-buffer buf))))
 
