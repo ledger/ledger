@@ -22,6 +22,46 @@
 ;; A sample entry sorting function, which works if entry dates are of
 ;; the form YYYY/mm/dd.
 
+(defcustom ledger-highlight-xact-under-point t
+  "If t highlight xact under point"
+  :type 'boolean
+  :group 'ledger)
 
+
+
+(defvar highlight-overlay (list))
+
+(defun ledger-find-xact-extents (pos)
+  "return point for beginning of xact and and of xact containing
+   position.  Requires empty line separating xacts"
+  (interactive "d")
+  (save-excursion
+    (goto-char pos)
+    (let ((end-pos pos)
+	  (beg-pos pos))
+      (backward-paragraph)
+      (forward-line)
+      (beginning-of-line)
+      (setq beg-pos (point))
+      (forward-paragraph)
+      (forward-line -1)
+      (end-of-line)
+      (setq end-pos (1+ (point)))
+      (list beg-pos end-pos))))
+
+
+(defun ledger-highlight-xact-under-point ()
+  (if ledger-highlight-xact-under-point
+      (let ((exts (ledger-find-xact-extents (point)))
+	    (ovl highlight-overlay))
+	(if (not highlight-overlay)
+	    (setq ovl
+		  (setq highlight-overlay
+			(make-overlay (car exts)
+				      (cadr exts)
+				      (current-buffer) t nil)))
+	    (move-overlay ovl (car exts) (cadr exts)))
+	(overlay-put ovl 'face 'ledger-font-highlight-face)
+	(overlay-put ovl 'priority 100))))
 
 (provide 'ldg-xact)
