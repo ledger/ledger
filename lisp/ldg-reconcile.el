@@ -170,14 +170,15 @@
 
 (defun ledger-reconcile-quit ()
   (interactive)
-  (let ((buf ledger-buf))
+  (let ((buf ledger-buf)
+        (reconcile-buf (current-buffer)))
     (with-current-buffer ledger-buf
       (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t))
 
     ;Make sure you delete the window before you delete the buffer,
     ;otherwise, madness ensues
-    (delete-window (get-buffer-window (current-buffer)))
-    (kill-buffer (current-buffer))
+    (delete-window (get-buffer-window reconcile-buf))
+    (kill-buffer (reconcile-buf))
     (if ledger-fold-on-reconcile
 	(ledger-occur-quit-buffer buf))))
 
