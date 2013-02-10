@@ -81,12 +81,10 @@
         (account ledger-acct)
         (inhibit-read-only t)
         cleared)
-;    (when (is-stdin (car where))
-;      (with-current-buffer ledger-buf
     (when (ledger-reconcile-get-buffer where)
       (with-current-buffer (ledger-reconcile-get-buffer where)
 	(goto-char (cdr where))
-	(setq cleared (ledger-toggle-current-entry)))
+	(setq cleared (ledger-toggle-current)))
 	;remove the existing face and add the new face
       (remove-text-properties (line-beginning-position)
 			      (line-end-position)
@@ -146,6 +144,7 @@
         (set-buffer-modified-p t)))))
 
 (defun ledger-reconcile-visit (&optional come-back)
+  (interactive)
   (progn
     (beginning-of-line)
     (let* ((where (get-text-property (1+ (point)) 'where))
@@ -162,8 +161,6 @@
 
 (defun ledger-reconcile-save ()
   (interactive)
-;  (with-current-buffer ledger-buf
-;    (save-buffer))
   (dolist (buf (cons ledger-buf ledger-bufs))
     (with-current-buffer buf
       (save-buffer)))
@@ -194,7 +191,9 @@
       (cons
        buf
        (save-excursion
-	 (goto-line (nth 1 emacs-xact))
+	 (if ledger-clear-whole-entries
+	     (goto-line (nth 1 emacs-xact))
+	     (goto-line (nth 0 (nth 5 emacs-xact))))
 	 (point-marker))))))
 
 (defun ledger-do-reconcile ()
@@ -262,8 +261,9 @@
 				 'previous-line
 				 'mouse-set-point
 				 'ledger-reconcile-toggle))
-      (save-excursion
-        (ledger-reconcile-visit t))))
+      (if ledger-buffer-tracks-reconcile-buffer
+	  (save-excursion
+	    (ledger-reconcile-visit t)))))
 
 (defun ledger-reconcile (account)
   (interactive "sAccount to reconcile: ")
