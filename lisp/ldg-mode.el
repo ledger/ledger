@@ -38,6 +38,11 @@ customizable to ease retro-entry.")
   :type 'string
   :group 'ledger)
 
+(defun ledger-remove-overlays ()
+  (interactive)
+  "remove overlays formthe buffer, used if the buffer is reverted"
+   (remove-overlays))
+
 (defvar ledger-mode-abbrev-table)
 
 ;;;###autoload
@@ -61,6 +66,7 @@ customizable to ease retro-entry.")
     (set (make-local-variable 'pcomplete-termination-string) "")
 
     (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
+    (add-hook 'before-revert-hook 'ledger-remove-overlays nil t)
     (make-variable-buffer-local 'highlight-overlay)
 
     (let ((map (current-local-map)))
