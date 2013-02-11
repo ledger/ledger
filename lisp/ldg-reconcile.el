@@ -190,8 +190,7 @@
     (if ledger-fold-on-reconcile
 	(ledger-occur-quit-buffer buf)))) 
 
-
-(defun ledger-marker-where-xact-is (emacs-xact)
+(defun ledger-marker-where-xact-is (emacs-xact posting)
   "find the position of the xact in the ledger-buf buffer using
    the emacs output from ledger, return the buffer and a marker
    to the beginning of the xact in that buffer"
@@ -204,15 +203,15 @@
        (save-excursion
 	 (if ledger-clear-whole-entries
 	     (goto-line (nth 1 emacs-xact))
-	     (goto-line (nth 0 (nth 5 emacs-xact))))
-	 (point-marker))))))
+	     (goto-line (nth 0 posting)))
+	 (1+ (point-marker))))))) ;Add 1 to make sure the marker is within the transaction
 
 (defun ledger-do-reconcile ()
   "get the uncleared transactions in the account and display them
    in the *Reconcile* buffer"
   (let* ((buf ledger-buf)
          (account ledger-acct)
-         (items
+         (xacts
           (with-temp-buffer 
 	    (ledger-exec-ledger buf (current-buffer) 
 				"--uncleared" "--real" "emacs" account)
@@ -221,20 +220,20 @@
 	      (unless (looking-at "(")
 		(error (buffer-string)))
 	      (read (current-buffer))))))
-    (if (> (length items) 0)
+    (if (> (length xacts) 0)
 	(progn
-	  (dolist (item items)
+	  (dolist (xact xacts)
 	    (let ((index 1))
-	      (dolist (xact (nthcdr 5 item))
+	      (dolist (posting (nthcdr 5 xact))
 		(let ((beg (point))  
-		      (where (ledger-marker-where-xact-is item)))
+		      (where (ledger-marker-where-xact-is xact posting)))
 		  (insert (format "%s %-4s %-30s %-30s %15s\n"
-				  (format-time-string "%Y/%m/%d" (nth 2 item))
-				  (if (nth 3 item)
-				      (nth 3 item)
+				  (format-time-string "%Y/%m/%d" (nth 2 xact))
+				  (if (nth 3 xact)
+				      (nth 3 xact)
 				      "")
-				  (nth 4 item) (nth 1 xact) (nth 2 xact)))
-		  (if (nth 3 xact)
+				  (nth 4 xact) (nth 1 posting) (nth 2 posting)))
+		  (if (nth 3 posting)
 		      (set-text-properties beg (1- (point))
 					   (list 'face 'ledger-font-reconciler-cleared-face 
 						 'where where))
