@@ -97,6 +97,7 @@
 			       (line-end-position)
 			       (list 'face 'ledger-font-reconciler-uncleared-face ))))
     (forward-line)
+    (beginning-of-line)
     (ledger-display-balance)))
 
 (defun ledger-reconcile-new-account (account)
