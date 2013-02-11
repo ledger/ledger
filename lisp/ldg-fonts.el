@@ -22,7 +22,7 @@
 
 (defgroup ledger-faces nil "Ledger mode highlighting" :group 'ledger)
 (defface ledger-font-uncleared-face 
-    `((t :foreground "green" :weight bold ))
+    `((t :foreground "#dc322f" :weight bold ))
   "Default face for Ledger"
   :group 'ledger-faces)
 
@@ -32,7 +32,7 @@
   :group 'ledger-faces)
 
 (defface ledger-font-highlight-face 
-    `((t :background "#eee8d5"))
+    `((t :background "white"))
   "Default face for transaction under point"
   :group 'ledger-faces)
 
@@ -54,6 +54,16 @@
 (defface ledger-font-posting-amount-face     
     `((t :foreground "yellow" ))
   "Face for Ledger amounts"
+  :group 'ledger-faces)
+
+(defface ledger-occur-folded-face 
+    `((t :foreground "grey70" :invisible t ))
+  "Default face for Ledger occur mode hidden transactions"
+  :group 'ledger-faces)
+
+(defface ledger-occur-xact-face 
+    `((t :background "#eee8d5" ))
+  "Default face for Ledger occur mode shown transactions"
   :group 'ledger-faces)
 
 (defface ledger-font-comment-face

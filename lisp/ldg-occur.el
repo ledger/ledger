@@ -32,16 +32,6 @@
 
 ;;; Code:
 
-(defface ledger-occur-folded-face 
-    `((t :foreground "grey70" :invisible t ))
-  "Default face for Ledger occur mode hidden transactions"
-  :group 'ledger-faces)
-
-(defface ledger-occur-xact-face 
-    `((t :background "blue" :weight normal ))
-  "Default face for Ledger occur mode shown transactions"
-  :group 'ledger-faces)
-
 (defconst ledger-occur-overlay-property-name 'ledger-occur-custom-buffer-grep)
 
 (defcustom ledger-occur-use-face-unfolded t 
