@@ -170,17 +170,25 @@
 
 (defun ledger-reconcile-quit ()
   (interactive)
+  ;(ledger-reconcile-quit-cleanup)
   (let ((buf ledger-buf)
-        (reconcile-buf (current-buffer)))
-    (with-current-buffer ledger-buf
-      (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t))
+	(recon-buf  (get-buffer ledger-recon-buffer-name)))
+    					;Make sure you delete the window before you delete the buffer,
+					;otherwise, madness ensues
+    (with-current-buffer recon-buf
+      (delete-window (get-buffer-window recon-buf))
+      (kill-buffer recon-buf))
+    (set-window-buffer (selected-window) buf)))
 
-    ;Make sure you delete the window before you delete the buffer,
-    ;otherwise, madness ensues
-    (delete-window (get-buffer-window reconcile-buf))
-    (kill-buffer reconcile-buf)
+(defun ledger-reconcile-quit-cleanup ()
+  (interactive)
+  (let ((buf ledger-buf)
+	(reconcile-buf (get-buffer ledger-recon-buffer-name)))
+    (with-current-buffer buf
+      (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t))
     (if ledger-fold-on-reconcile
-	(ledger-occur-quit-buffer buf))))
+	(ledger-occur-quit-buffer buf)))) 
+
 
 (defun ledger-marker-where-xact-is (emacs-xact)
   "find the position of the xact in the ledger-buf buffer using
@@ -330,6 +338,8 @@
      (define-key map [menu-bar ldg-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
      (define-key map [menu-bar ldg-recon-menu sav] '("Save" . ledger-reconcile-save))
 
-     (use-local-map map)))
+     (use-local-map map)
+     
+     (add-hook 'kill-buffer-hook 'ledger-reconcile-quit-cleanup nil t)))
 
 (provide 'ldg-reconcile)
