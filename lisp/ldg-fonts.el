@@ -27,17 +27,17 @@
   :group 'ledger-faces)
 
 (defface ledger-font-cleared-face 
-    `((t :foreground "grey70" :weight normal ))
+    `((t :foreground "#657b83" :weight normal ))
   "Default face for cleared (*) transactions"
   :group 'ledger-faces)
 
 (defface ledger-font-highlight-face 
-    `((t :background "#003366" :weight normal ))
+    `((t :background "#eee8d5"))
   "Default face for transaction under point"
   :group 'ledger-faces)
 
 (defface ledger-font-pending-face 
-    `((t :foreground "yellow" :weight normal ))
+    `((t :foreground "#cb4b16" :weight normal ))
   "Default face for pending (!) transactions"
   :group 'ledger-faces)
 
@@ -47,7 +47,7 @@
   :group 'ledger-faces)
 
 (defface ledger-font-posting-account-face     
-    `((t :foreground "lightblue" ))
+    `((t :foreground "#268bd2" ))
   "Face for Ledger accounts"
   :group 'ledger-faces)
 
@@ -57,22 +57,22 @@
   :group 'ledger-faces)
 
 (defface ledger-font-comment-face
-    `((t :foreground "orange" ))
+    `((t :foreground "#93a1a1" :slant italic))
   "Face for Ledger comments"
   :group 'ledger-faces)
 
 (defface ledger-font-reconciler-uncleared-face 
-    `((t :foreground "green" :weight normal ))
+    `((t :foreground "#dc322f" :weight bold ))
   "Default face for uncleared transactions in the reconcile window"
   :group 'ledger-faces)
 
 (defface ledger-font-reconciler-cleared-face 
-    `((t :foreground "grey70" :weight normal ))
+    `((t :foreground "#657b83" :weight normal ))
   "Default face for cleared (*) transactions in the reconcile window"
   :group 'ledger-faces)
 
 (defface ledger-font-reconciler-pending-face 
-    `((t :foreground "yellow" :weight normal ))
+    `((t :foreground "#cb4b16" :weight normal ))
   "Default face for pending (!) transactions in the reconcile window"
   :group 'ledger-faces)
 
