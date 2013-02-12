@@ -62,7 +62,7 @@ achieved more certainly by passing the entry to ledger for
 formatting, but doing so causes inline math expressions to be
 dropped."
   (interactive)
-  (let ((bounds (ledger-current-entry-bounds))
+  (let ((bounds (ledger-current-transaction-bounds))
         clear cleared)
     ;; Uncompact the entry, to make it easier to toggle the
     ;; transaction
