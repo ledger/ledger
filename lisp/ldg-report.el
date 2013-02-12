@@ -216,7 +216,7 @@ end of a ledger file which is included in some other file."
 The user is prompted to enter a payee and that is substitued.  If
 point is in an entry, the payee for that entry is used as the
 default."
-  ;; It is intended copmletion should be available on existing
+  ;; It is intended completion should be available on existing
   ;; payees, but the list of possible completions needs to be
   ;; developed to allow this.
   (ledger-read-string-with-default "Payee" (regexp-quote (ledger-entry-payee))))

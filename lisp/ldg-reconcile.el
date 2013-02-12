@@ -119,7 +119,7 @@
 (defun ledger-reconcile-add ()
   (interactive)
   (with-current-buffer ledger-buf
-    (call-interactively #'ledger-add-entry))
+    (call-interactively #'ledger-add-transaction))
   (ledger-reconcile-refresh))
 
 (defun ledger-reconcile-delete ()
@@ -128,7 +128,7 @@
     (when (ledger-reconcile-get-buffer where)
       (with-current-buffer (ledger-reconcile-get-buffer where)
         (goto-char (cdr where))
-        (ledger-delete-current-entry))
+        (ledger-delete-current-transaction))
       (let ((inhibit-read-only t))
         (goto-char (line-beginning-position))
         (delete-region (point) (1+ (line-end-position)))
@@ -158,6 +158,23 @@
       (save-buffer)))
   (set-buffer-modified-p nil)
   (ledger-display-balance))
+
+(defun ledger-reconcile-finish ()
+  "Mark all pending transactions as cleared, save the buffers and exit reconcile mode"
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (let ((where (get-text-property (point) 'where))
+            (face  (get-text-property (point) 'face)))
+        (if (and (eq face 'bold)
+                 (when (is-stdin (car where))))
+            (with-current-buffer ledger-buf
+              (goto-char (cdr where))
+              (ledger-toggle-current 'cleared))))
+      (forward-line 1)))
+  (ledger-reconcile-save))
+
 
 (defun ledger-reconcile-quit ()
   (interactive)
@@ -191,7 +208,7 @@
       (cons
        buf
        (save-excursion
-	 (if ledger-clear-whole-entries
+	 (if ledger-clear-whole-transactions
 	     (goto-line (nth 1 emacs-xact))
 	     (goto-line (nth 0 posting)))
 	 (1+ (point-marker))))))) ;Add 1 to make sure the marker is within the transaction

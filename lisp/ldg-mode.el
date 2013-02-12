@@ -70,8 +70,8 @@ customizable to ease retro-entry.")
     (make-variable-buffer-local 'highlight-overlay)
 
     (let ((map (current-local-map)))
-      (define-key map [(control ?c) (control ?a)] 'ledger-add-entry)
-      (define-key map [(control ?c) (control ?d)] 'ledger-delete-current-entry)
+      (define-key map [(control ?c) (control ?a)] 'ledger-add-transaction)
+      (define-key map [(control ?c) (control ?d)] 'ledger-delete-current-transaction)
       (define-key map [(control ?c) (control ?y)] 'ledger-set-year)
       (define-key map [(control ?c) (control ?m)] 'ledger-set-month)
       (define-key map [(control ?c) (control ?c)] 'ledger-toggle-current)
@@ -119,8 +119,8 @@ customizable to ease retro-entry.")
       (define-key map [sep4] '(menu-item "--"))
       (define-key map [edit-amount] '(menu-item "Calc on Amount" ledger-post-edit-amount))
       (define-key map [sep] '(menu-item "--"))
-      (define-key map [delete-xact] '(menu-item "Delete Entry" ledger-delete-current-entry))
-      (define-key map [add-xact] '(menu-item "Add Entry" ledger-add-entry :enable ledger-works))
+      (define-key map [delete-xact] '(menu-item "Delete Entry" ledger-delete-current-transaction))
+      (define-key map [add-xact] '(menu-item "Add Transaction" ledger-add-transaction :enable ledger-works))
       (define-key map [sep3] '(menu-item "--"))
       (define-key map [reconcile] '(menu-item "Reconcile Account" ledger-reconcile :enable ledger-works))
       (define-key map [reconcile] '(menu-item "Hide Xacts" ledger-occur))))
@@ -140,13 +140,13 @@ Return the difference in the format of a time value."
 
 (defun ledger-find-slot (moment)
   (catch 'found
-    (ledger-iterate-entries
+    (ledger-iterate-transactions
      (function
       (lambda (start date mark desc)
        (if (ledger-time-less-p moment date)
 	   (throw 'found t)))))))
 
-(defun ledger-iterate-entries (callback)
+(defun ledger-iterate-transactions (callback)
   (goto-char (point-min))
   (let* ((now (current-time))
          (current-year (nth 5 (decode-time now))))
@@ -187,11 +187,11 @@ Return the difference in the format of a time value."
       (setq ledger-month (read-string "Month: " (ledger-current-month)))
       (setq ledger-month (format "%02d" newmonth))))
 
-(defun ledger-add-entry (entry-text &optional insert-at-point)
+(defun ledger-add-transaction (transaction-text &optional insert-at-point)
   (interactive (list
-		(read-string "Entry: " (concat ledger-year "/" ledger-month "/"))))
+		(read-string "Transaction: " (concat ledger-year "/" ledger-month "/"))))
   (let* ((args (with-temp-buffer
-                 (insert entry-text)
+                 (insert transaction-text)
                  (eshell-parse-arguments (point-min) (point-max))))
          (ledger-buf (current-buffer))
          exit-code)
@@ -208,7 +208,7 @@ Return the difference in the format of a time value."
 	  (insert
 	   (with-temp-buffer
 	     (setq exit-code
-		   (apply #'ledger-exec-ledger ledger-buf ledger-buf "entry"
+		   (apply #'ledger-exec-ledger ledger-buf ledger-buf "xact"
 			  (mapcar 'eval args)))
 	     (goto-char (point-min))
 	     (if (looking-at "Error: ")
@@ -219,7 +219,7 @@ Return the difference in the format of a time value."
 	  (insert (car args) " \n\n")
 	  (end-of-line -1)))))
 
-(defun ledger-current-entry-bounds ()
+(defun ledger-current-transaction-bounds ()
   (save-excursion
     (when (or (looking-at "^[0-9]")
               (re-search-backward "^[0-9]" nil t))
@@ -228,9 +228,9 @@ Return the difference in the format of a time value."
           (forward-line))
         (cons (copy-marker beg) (point-marker))))))
 
-(defun ledger-delete-current-entry ()
+(defun ledger-delete-current-transaction ()
   (interactive)
-  (let ((bounds (ledger-current-entry-bounds)))
+  (let ((bounds (ledger-current-transaction-bounds)))
     (delete-region (car bounds) (cdr bounds))))
 
 (provide 'ldg-mode)

@@ -51,7 +51,7 @@
                (with-current-buffer data-buffer
                  (cons
                   (nth 0 post)
-                  (if ledger-clear-whole-entries
+                  (if ledger-clear-whole-transactions
                       (save-excursion
                         (goto-line (nth 1 post))
                         (point-marker))

@@ -19,8 +19,8 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 
-(defcustom ledger-clear-whole-entries nil
-  "If non-nil, clear whole entries, not individual transactions."
+(defcustom ledger-clear-whole-transactions nil
+  "If non-nil, clear whole transactions, not individual postings."
   :type 'boolean
   :group 'ledger)
 
@@ -32,7 +32,7 @@
 	  'pending
 	  'cleared)))
 
-(defun ledger-entry-state ()
+(defun ledger-transaction-state ()
   (save-excursion
     (when (or (looking-at "^[0-9]")
               (re-search-backward "^[0-9]" nil t))
@@ -42,13 +42,13 @@
             ((looking-at "\\*\\s-*") 'cleared)
             (t nil)))))
 
-(defun ledger-transaction-state ()
+(defun ledger-posting-state ()
   (save-excursion
     (goto-char (line-beginning-position))
     (skip-syntax-forward " ")
     (cond ((looking-at "!\\s-*") 'pending)
           ((looking-at "\\*\\s-*") 'cleared)
-          (t (ledger-entry-state)))))
+          (t (ledger-transaction-state)))))
 
 (defun ledger-toggle-current-transaction (&optional style)
   "Toggle the cleared status of the transaction under point.
@@ -172,15 +172,15 @@ dropped."
 
 (defun ledger-toggle-current (&optional style)
   (interactive)
-  (if (or ledger-clear-whole-entries
-          (eq 'entry (ledger-thing-at-point)))
+  (if (or ledger-clear-whole-transactions
+          (eq 'transaction (ledger-thing-at-point)))
       (progn
         (save-excursion
           (forward-line)
           (goto-char (line-beginning-position))
           (while (and (not (eolp))
                       (save-excursion
-                        (not (eq 'entry (ledger-thing-at-point)))))
+                        (not (eq 'transaction (ledger-thing-at-point)))))
             (if (looking-at "\\s-+[*!]")
                 (ledger-toggle-current-transaction nil))
             (forward-line)

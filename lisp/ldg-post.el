@@ -158,7 +158,7 @@ This is done so that the last digit falls in COLUMN, which defaults to 52."
   (goto-char (line-beginning-position))
   (when (re-search-forward ledger-post-line-regexp (line-end-position) t) 
     (goto-char (match-end ledger-regex-post-line-group-account)) ;go to the and of the account
-    (let ((end-of-amount (re-search-forward "[-.,0-9]+" (line-end-position) t))) ;determine if the is an amount to edit
+    (let ((end-of-amount (re-search-forward "[-.,0-9]+" (line-end-position) t))) ;determine if there is an amount to edit
       (if end-of-amount
 	  (let ((val (match-string 0)))
 	    (goto-char (match-beginning 0))
@@ -171,8 +171,7 @@ This is done so that the last digit falls in COLUMN, which defaults to 52."
 	    (if (search-backward "  " (- (point) 3) t)
 		(goto-char (line-end-position))
 		(insert "  "))
-	    (calc)) 
-	  ))))
+	    (calc))))))
 
 (defun ledger-post-prev-xact ()
   (interactive)

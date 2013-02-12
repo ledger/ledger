@@ -30,10 +30,10 @@
     (goto-char (line-beginning-position))
     (cond ((looking-at "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.+?)\\)?\\s-+")
            (goto-char (match-end 0))
-           'entry)
+           'transaction)
           ((looking-at "^\\s-+\\([*!]\\s-+\\)?[[(]?\\(.\\)")
            (goto-char (match-beginning 2))
-           'transaction)
+           'posting)
           ((looking-at "^\\(sun\\|mon\\|tue\\|wed\\|thu\\|fri\\|sat\\)\\s-+")
            (goto-char (match-end 0))
            'entry)
@@ -57,24 +57,26 @@
                          args)))
       (cons (reverse args) (reverse begins)))))
 
-(defun ledger-entries ()
+(defun ledger-payees ()
   (let ((origin (point))
-        entries-list)
+        payees-list)
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward
               (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-                      "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)
+                      "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)  ;matches first line of transaction
         (unless (and (>= origin (match-beginning 0))
                      (< origin (match-end 0)))
-          (setq entries-list (cons (match-string-no-properties 3)
-                                   entries-list)))))
-    (pcomplete-uniqify-list (nreverse entries-list))))
+          (setq payees-list (cons (match-string-no-properties 3)
+                                   payees-list)))))  ;add the payee to the list
+    (pcomplete-uniqify-list (nreverse payees-list))))
 
 (defvar ledger-account-tree nil)
 
 (defun ledger-find-accounts ()
-  (let ((origin (point)) account-path elements)
+  (let ((origin (point)) 
+	account-path 
+	elements)
     (save-excursion
       (setq ledger-account-tree (list t))
       (goto-char (point-min))
@@ -126,16 +128,16 @@
   (interactive)
   (while (pcomplete-here
           (if (eq (save-excursion
-                    (ledger-thing-at-point)) 'entry)
+                    (ledger-thing-at-point)) 'transaction)
               (if (null current-prefix-arg)
-                  (ledger-entries)  ; this completes against entry names
+                  (ledger-payees)  ; this completes against payee names
 		  (progn
 		    (let ((text (buffer-substring (line-beginning-position)
 						  (line-end-position))))
 		      (delete-region (line-beginning-position)
 				     (line-end-position))
 		      (condition-case err
-			  (ledger-add-entry text t)
+			  (ledger-add-transaction text t)
 			((error)
 			 (insert text))))
 		    (forward-line)
@@ -151,7 +153,7 @@
   (let ((name (caar (ledger-parse-arguments)))
         xacts)
     (save-excursion
-      (when (eq 'entry (ledger-thing-at-point))
+      (when (eq 'transaction (ledger-thing-at-point))
         (when (re-search-backward
                (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
                        (regexp-quote name) "\\(\t\\|\n\\| [ \t]\\)") nil t)
