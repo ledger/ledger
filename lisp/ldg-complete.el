@@ -64,11 +64,12 @@
       (goto-char (point-min))
       (while (re-search-forward
               (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-                      "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)  ;matches first line of transaction
+                      "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)  ;; matches first line
         (unless (and (>= origin (match-beginning 0))
                      (< origin (match-end 0)))
           (setq payees-list (cons (match-string-no-properties 3)
-                                   payees-list)))))  ;add the payee to the list
+                                   payees-list)))))  ;; add the payee
+						     ;; to the list
     (pcomplete-uniqify-list (nreverse payees-list))))
 
 (defvar ledger-account-tree nil)
@@ -130,7 +131,7 @@
           (if (eq (save-excursion
                     (ledger-thing-at-point)) 'transaction)
               (if (null current-prefix-arg)
-                  (ledger-payees)  ; this completes against payee names
+                  (ledger-payees)  ;; this completes against payee names
 		  (progn
 		    (let ((text (buffer-substring (line-beginning-position)
 						  (line-end-position))))

@@ -69,8 +69,7 @@
 	      (set-text-properties beg (1- (point))
 				   (list 'where where))))
         (setq index (1+ index)))))
-  (goto-char (point-min))
-  )
+  (goto-char (point-min)))
 
 (defun ledger-register-generate (&optional data-buffer &rest args)
   (let ((buf (or data-buffer (current-buffer))))

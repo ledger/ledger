@@ -125,14 +125,13 @@ When REGEX is nil, unhide everything, and remove higlight"
                    (temp (point-max)))
                (mapcar (lambda (match)
                          (progn
-                           (setq temp prev-end) ;need a swap so that the
-					;last form in the lambda
-					;is the (make-overlay)
-                           (setq prev-end (1+ (cadr match))) ;add 1 so
-					;that we skip
-					;the empty
-					;line after
-					;the xact
+                           (setq temp prev-end) ;; need a swap so that
+						;; the last form in
+						;; the lambda is the
+						;; (make-overlay)
+                           (setq prev-end (1+ (cadr match))) 
+					;; add 1 so that we skip the
+					;; empty line after the xact
                            (make-overlay
                             temp
                             (car match)
@@ -216,9 +215,9 @@ When REGEX is nil, unhide everything, and remove higlight"
           (save-excursion
 	    (let ((bounds (ledger-find-xact-extents (match-beginning 0))))
 	      (push bounds lines)
-	      (setq curpoint (cadr bounds)))) ;move to the end of the
-					;xact, no need to search
-					;inside it more
+	      (setq curpoint (cadr bounds)))) ;; move to the end of
+	                                      ;; the xact, no need to
+	                                      ;; search inside it more
           (goto-char curpoint))
         (forward-line 1))
       (setq lines (nreverse lines)))))

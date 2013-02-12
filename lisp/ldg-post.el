@@ -63,8 +63,8 @@
 
 (defun ledger-post-completing-read (prompt choices)
   "Use iswitchb as a completing-read replacement to choose from choices.
-PROMPT is a string to prompt with.  CHOICES is a list of strings
-to choose from."
+   PROMPT is a string to prompt with.  CHOICES is a list of
+   strings to choose from."
   (cond
     (ledger-post-use-iswitchb
      (let* ((iswitchb-use-virtual-buffers nil)
@@ -113,7 +113,8 @@ to choose from."
 
 (defun ledger-align-amounts (&optional column)
   "Align amounts in the current region.
-This is done so that the last digit falls in COLUMN, which defaults to 52."
+   This is done so that the last digit falls in COLUMN, which
+   defaults to 52."
   (interactive "p")
   (if (or (null column) (= column 1))
       (setq column ledger-post-amount-alignment-column))
@@ -157,17 +158,18 @@ This is done so that the last digit falls in COLUMN, which defaults to 52."
   (interactive)
   (goto-char (line-beginning-position))
   (when (re-search-forward ledger-post-line-regexp (line-end-position) t) 
-    (goto-char (match-end ledger-regex-post-line-group-account)) ;go to the and of the account
-    (let ((end-of-amount (re-search-forward "[-.,0-9]+" (line-end-position) t))) ;determine if there is an amount to edit
+    (goto-char (match-end ledger-regex-post-line-group-account)) ;; go to the and of the account
+    (let ((end-of-amount (re-search-forward "[-.,0-9]+" (line-end-position) t))) 
+      ;; determine if there is an amount to edit
       (if end-of-amount
 	  (let ((val (match-string 0)))
 	    (goto-char (match-beginning 0))
 	    (delete-region (match-beginning 0) (match-end 0))
 	    (calc)
 	    (while (string-match "," val)
-	      (setq val (replace-match "" nil nil val))) ;gets rid of commas
-	    (calc-eval val 'push)) ;edit the amount
-	  (progn  ;make sure there are two spaces after the account name and go to calc
+	      (setq val (replace-match "" nil nil val))) ;; gets rid of commas
+	    (calc-eval val 'push)) ;; edit the amount
+	  (progn ;;make sure there are two spaces after the account name and go to calc
 	    (if (search-backward "  " (- (point) 3) t)
 		(goto-char (line-end-position))
 		(insert "  "))

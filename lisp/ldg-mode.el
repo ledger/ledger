@@ -132,8 +132,8 @@ customizable to ease retro-entry.")
            (< (nth 1 t1) (nth 1 t2)))))
 
 (defun ledger-time-subtract (t1 t2)
-  "Subtract two time values.
-Return the difference in the format of a time value."
+  "Subtract two time values. Return the difference in the format
+   of a time value."
   (let ((borrow (< (cadr t1) (cadr t2))))
     (list (- (car t1) (car t2) (if borrow 1 0))
           (- (+ (if borrow 65536 0) (cadr t1)) (cadr t2)))))

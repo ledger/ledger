@@ -81,11 +81,11 @@ dropped."
         new-status cur-status)
     ;; Uncompact the entry, to make it easier to toggle the
     ;; transaction
-    (save-excursion  ;this excursion unclears the posting
-      (goto-char (car bounds))  ;beginning of xact
-      (skip-chars-forward "0-9./= \t") ;skip the date
+    (save-excursion  ;; this excursion unclears the posting
+      (goto-char (car bounds))  ;; beginning of xact
+      (skip-chars-forward "0-9./= \t") ;; skip the date
       (setq cur-status (and (member (char-after) '(?\* ?\!))
-			    (ledger-state-from-char (char-after)))) ;if the next char is !, * store it
+			    (ledger-state-from-char (char-after))))
       ;;if cur-status if !, or * then delete the marker
       (when cur-status 
         (let ((here (point)))

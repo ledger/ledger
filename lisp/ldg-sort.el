@@ -33,16 +33,19 @@
   (forward-paragraph))
 
 (defun ledger-sort-region (beg end)
-  (interactive "r") ;load beg and end from point and mark automagically
+  (interactive "r") ;; load beg and end from point and mark
+		    ;; automagically
   (let ((new-beg beg)
 	(new-end end))
     (save-excursion
       (save-restriction
-	(ledger-next-record-function) ;make sure point is at the beginning of a xact
+	(ledger-next-record-function) ;; make sure point is at the
+				      ;; beginning of a xact
 	(setq new-beg (point))
 	(goto-char end)
-	(ledger-next-record-function) ;make sure end of region is at the beginning of
-					;next record after the region
+	(ledger-next-record-function) ;; make sure end of region is at
+				      ;; the beginning of next record
+				      ;; after the region
 	(setq new-end (point))
 	(narrow-to-region beg end)
 	(goto-char (point-min))

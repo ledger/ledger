@@ -92,7 +92,7 @@
 	(setq status (ledger-toggle-current (if ledger-reconcile-toggle-to-pending 
 						'pending
 						'cleared))))
-	;remove the existing face and add the new face
+	;; remove the existing face and add the new face
       (remove-text-properties (line-beginning-position)
 			      (line-end-position)
 			      (list 'face))
@@ -193,8 +193,8 @@
   (ledger-reconcile-quit-cleanup)
   (let ((buf ledger-buf)
 	(recon-buf  (get-buffer ledger-recon-buffer-name)))
-    ;Make sure you delete the window before you delete the buffer,
-    ;otherwise, madness ensues
+    ;; Make sure you delete the window before you delete the buffer,
+    ;; otherwise, madness ensues
     (with-current-buffer recon-buf
       (delete-window (get-buffer-window recon-buf))
       (kill-buffer recon-buf))
@@ -223,7 +223,8 @@
 	 (if ledger-clear-whole-transactions
 	     (goto-line (nth 1 emacs-xact))
 	     (goto-line (nth 0 posting)))
-	 (1+ (point-marker))))))) ;Add 1 to make sure the marker is within the transaction
+	 (1+ (point-marker))))))) ;;Add 1 to make sure the marker is
+				  ;;within the transaction
 
 (defun ledger-do-reconcile ()
   "get the uncleared transactions in the account and display them
@@ -269,11 +270,11 @@
     (set-buffer-modified-p nil)
     (toggle-read-only t)
 
-    ; this next piece of code ensures that the last of the visible
-    ; transactions in the ledger buffer is at the bottom of the main
-    ; window.  The key to this is to ensure the window is selected
-    ; when the buffer point is moved and recentered.  If they aren't
-    ; strange things happen.
+    ;; this next piece of code ensures that the last of the visible
+    ;; transactions in the ledger buffer is at the bottom of the main
+    ;; window.  The key to this is to ensure the window is selected
+    ;; when the buffer point is moved and recentered.  If they aren't
+    ;; strange things happen.
     
     (let 
 	((recon-window (get-buffer-window (get-buffer ledger-recon-buffer-name))))
@@ -299,20 +300,24 @@
 (defun ledger-reconcile (account)
   (interactive "sAccount to reconcile: ")
   (let ((buf (current-buffer))
-        (rbuf (get-buffer ledger-recon-buffer-name)))  ;this means only one *Reconcile* buffer, ever
-    (if rbuf  ; *Reconcile* already exists
+        (rbuf (get-buffer ledger-recon-buffer-name)))  ;; this means
+						       ;; only one
+						       ;; *Reconcile*
+						       ;; buffer, ever
+    (if rbuf  ;; *Reconcile* already exists
 	(with-current-buffer rbuf
-	  (set 'ledger-acct account)  ; already buffer local
+	  (set 'ledger-acct account)  ;; already buffer local
 	  (if (not (eq buf rbuf)) 
-	      (progn ; called from some other ledger-mode buffer
+	      (progn ;; called from some other ledger-mode buffer
 		(ledger-reconcile-quit-cleanup)
-		(set 'ledger-buf buf)))  ; should already be buffer-local
+		(set 'ledger-buf buf)))  ;; should already be
+					 ;; buffer-local
 	  (if ledger-fold-on-reconcile
 	      (ledger-occur-change-regex account ledger-buf))
 	  (set-buffer (get-buffer ledger-recon-buffer-name))
 	  (ledger-reconcile-refresh))
 
-	  (progn  ; no recon-buffer, starting from scratch.
+	  (progn  ;; no recon-buffer, starting from scratch.
 	    (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save nil t)
 	    (if ledger-fold-on-reconcile
 		(ledger-occur-mode account buf))
