@@ -48,6 +48,12 @@
   :type 'boolean
   :group 'ledger)
 
+(defcustom ledger-reconcile-toggle-to-pending t
+  "if true then toggle between uncleared and pending.
+   reconcile-finish will mark all pending posting cleared. "
+   :type 'boolean
+   :group 'ledger)
+
 (defun ledger-display-balance ()
   "Calculate the cleared balance of the account being reconciled"
   (interactive)
@@ -79,22 +85,29 @@
   (let ((where (get-text-property (point) 'where))
         (account ledger-acct)
         (inhibit-read-only t)
-        cleared)
+        status)
     (when (ledger-reconcile-get-buffer where)
       (with-current-buffer (ledger-reconcile-get-buffer where)
 	(goto-char (cdr where))
-	(setq cleared (ledger-toggle-current)))
+	(setq status (ledger-toggle-current (if ledger-reconcile-toggle-to-pending 
+						'pending
+						'cleared))))
 	;remove the existing face and add the new face
       (remove-text-properties (line-beginning-position)
 			      (line-end-position)
 			      (list 'face))
-      (if cleared
-	  (add-text-properties (line-beginning-position)
-			       (line-end-position)
-			       (list 'face 'ledger-font-reconciler-cleared-face ))
-	  (add-text-properties (line-beginning-position)
-			       (line-end-position)
-			       (list 'face 'ledger-font-reconciler-uncleared-face ))))
+      (cond ((eq status 'pending)
+	     (add-text-properties (line-beginning-position)
+				  (line-end-position)
+				  (list 'face 'ledger-font-reconciler-pending-face )))
+	    ((eq status 'cleared)
+	     (add-text-properties (line-beginning-position)
+				  (line-end-position)
+				  (list 'face 'ledger-font-reconciler-cleared-face )))
+	    (t 
+	     (add-text-properties (line-beginning-position)
+				  (line-end-position)
+				  (list 'face 'ledger-font-reconciler-uncleared-face )))))
     (forward-line)
     (beginning-of-line)
     (ledger-display-balance)))
@@ -167,9 +180,8 @@
     (while (not (eobp))
       (let ((where (get-text-property (point) 'where))
             (face  (get-text-property (point) 'face)))
-        (if (and (eq face 'bold)
-                 (when (is-stdin (car where))))
-            (with-current-buffer ledger-buf
+        (if (eq face 'ledger-font-reconciler-pending-face)
+            (with-current-buffer (ledger-reconcile-get-buffer where)
               (goto-char (cdr where))
               (ledger-toggle-current 'cleared))))
       (forward-line 1)))
@@ -240,9 +252,13 @@
 				      "")
 				  (nth 4 xact) (nth 1 posting) (nth 2 posting)))
 		  (if (nth 3 posting)
-		      (set-text-properties beg (1- (point))
-					   (list 'face 'ledger-font-reconciler-cleared-face 
-						 'where where))
+		      (if (eq (nth 3 posting) 'pending)
+			  (set-text-properties beg (1- (point))
+					       (list 'face 'ledger-font-reconciler-pending-face 
+						     'where where))
+			  (set-text-properties beg (1- (point))
+					       (list 'face 'ledger-font-reconciler-cleared-face 
+						     'where where)))
 		      (set-text-properties beg (1- (point))
 					   (list 'face 'ledger-font-reconciler-uncleared-face 
 						 'where where))))  ))
@@ -327,6 +343,7 @@
      (define-key map [(control ?m)] 'ledger-reconcile-visit)
      (define-key map [return] 'ledger-reconcile-visit)
      (define-key map [(control ?l)] 'ledger-reconcile-refresh)
+     (define-key map [(control ?c) (control ?c)] 'ledger-reconcile-finish)
      (define-key map [? ] 'ledger-reconcile-toggle)
      (define-key map [?a] 'ledger-reconcile-add)
      (define-key map [?d] 'ledger-reconcile-delete)
@@ -353,6 +370,8 @@
      (define-key map [menu-bar ldg-recon-menu bal] '("Show Cleared Balance" . ledger-display-balance))
      (define-key map [menu-bar ldg-recon-menu sep4] '("--"))
      (define-key map [menu-bar ldg-recon-menu rna] '("Reconcile New Account" . ledger-reconcile))
+     (define-key map [menu-bar ldg-recon-menu sep5] '("--"))
+     (define-key map [menu-bar ldg-recon-menu fin] '("Finish" . ledger-reconcile-finish))
      (define-key map [menu-bar ldg-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
      (define-key map [menu-bar ldg-recon-menu sav] '("Save" . ledger-reconcile-save))
      

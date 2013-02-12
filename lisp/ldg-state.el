@@ -50,11 +50,26 @@
           ((looking-at "\\*\\s-*") 'cleared)
           (t (ledger-transaction-state)))))
 
-(defun ledger-toggle-current-transaction (&optional style)
+(defun ledger-char-from-state (state)
+  (if state
+      (if (eq state 'pending)
+	  "!"
+	  "*")
+      ""))
+
+(defun ledger-state-from-char (state-char)
+  (cond ((eql state-char ?\!)
+	 'pending)
+	((eql state-char ?\*)
+	 'cleared)
+	(t
+	 nil)))
+
+(defun ledger-toggle-current-posting (&optional style)
   "Toggle the cleared status of the transaction under point.
 Optional argument STYLE may be `pending' or `cleared', depending
 on which type of status the caller wishes to indicate (default is
-`cleared').
+`cleared'). Returns the new status as 'pending 'cleared or nil.
 This function is rather complicated because it must preserve both
 the overall formatting of the ledger entry, as well as ensuring
 that the most minimal display format is used.  This could be
@@ -63,15 +78,16 @@ formatting, but doing so causes inline math expressions to be
 dropped."
   (interactive)
   (let ((bounds (ledger-current-transaction-bounds))
-        clear cleared)
+        new-status cur-status)
     ;; Uncompact the entry, to make it easier to toggle the
     ;; transaction
-    (save-excursion
-      (goto-char (car bounds))
-      (skip-chars-forward "0-9./= \t")
-      (setq cleared (and (member (char-after) '(?\* ?\!))
-                         (char-after)))
-      (when cleared
+    (save-excursion  ;this excursion unclears the posting
+      (goto-char (car bounds))  ;beginning of xact
+      (skip-chars-forward "0-9./= \t") ;skip the date
+      (setq cur-status (and (member (char-after) '(?\* ?\!))
+			    (ledger-state-from-char (char-after)))) ;if the next char is !, * store it
+      ;;if cur-status if !, or * then delete the marker
+      (when cur-status 
         (let ((here (point)))
           (skip-chars-forward "*! ")
           (let ((width (- (point) here)))
@@ -82,17 +98,19 @@ dropped."
         (forward-line)
         (while (looking-at "[ \t]")
           (skip-chars-forward " \t")
-          (insert cleared " ")
+          (insert (ledger-char-from-state cur-status) " ")
           (if (search-forward "  " (line-end-position) t)
               (delete-char 2))
-          (forward-line))))
-    ;; Toggle the individual transaction
-    (save-excursion
+          (forward-line))
+	(setq new-status nil)))
+
+    ;;this excursion marks the posting pending or cleared
+    (save-excursion 
       (goto-char (line-beginning-position))
       (when (looking-at "[ \t]")
         (skip-chars-forward " \t")
         (let ((here (point))
-              (cleared (member (char-after) '(?\* ?\!))))
+              (cur-status (ledger-state-from-char (char-after))))
           (skip-chars-forward "*! ")
           (let ((width (- (point) here)))
             (when (> width 0)
@@ -101,18 +119,18 @@ dropped."
                 (if (search-forward "  " (line-end-position) t)
                     (insert (make-string width ? ))))))
           (let (inserted)
-            (if cleared
+            (if cur-status
                 (if (and style (eq style 'cleared))
                     (progn
                       (insert "* ")
-                      (setq inserted t)))
+                      (setq inserted 'cleared)))
 		(if (and style (eq style 'pending))
 		    (progn
 		      (insert "! ")
-		      (setq inserted t))
+		      (setq inserted 'pending))
 		    (progn
 		      (insert "* ")
-		      (setq inserted t))))
+		      (setq inserted 'cleared))))
             (if (and inserted
                      (re-search-forward "\\(\t\\| [ \t]\\)"
                                         (line-end-position) t))
@@ -123,26 +141,25 @@ dropped."
 		   (delete-char 2))
 		  ((looking-at " ")
 		   (delete-char 1))))
-            (setq clear inserted)))))
-    ;; Clean up the entry so that it displays minimally
+            (setq new-status inserted)))))
+
+    ;; This excursion cleans up the entry so that it displays minimally
     (save-excursion
       (goto-char (car bounds))
       (forward-line)
       (let ((first t)
-            (state ? )
+            (state nil)
             (hetero nil))
         (while (and (not hetero) (looking-at "[ \t]"))
           (skip-chars-forward " \t")
-          (let ((cleared (if (member (char-after) '(?\* ?\!))
-                             (char-after)
-			     ? )))
+          (let ((cur-status (ledger-state-from-char (char-after))))
             (if first
-                (setq state cleared
+                (setq state cur-status
                       first nil)
-		(if (/= state cleared)
+		(if (not (eq state cur-status))
 		    (setq hetero t))))
           (forward-line))
-        (when (and (not hetero) (/= state ? ))
+        (when (and (not hetero) (not (eq state nil)))
           (goto-char (car bounds))
           (forward-line)
           (while (looking-at "[ \t]")
@@ -158,7 +175,8 @@ dropped."
             (forward-line))
           (goto-char (car bounds))
           (skip-chars-forward "0-9./= \t")
-          (insert state " ")
+          (insert (ledger-char-from-state state) " ")
+	  (setq new-status state)
           (if (re-search-forward "\\(\t\\| [ \t]\\)"
                                  (line-end-position) t)
               (cond
@@ -168,7 +186,7 @@ dropped."
 		 (delete-char 2))
 		((looking-at " ")
 		 (delete-char 1)))))))
-    clear))
+    new-status))
 
 (defun ledger-toggle-current (&optional style)
   (interactive)
@@ -182,21 +200,22 @@ dropped."
                       (save-excursion
                         (not (eq 'transaction (ledger-thing-at-point)))))
             (if (looking-at "\\s-+[*!]")
-                (ledger-toggle-current-transaction nil))
+                (ledger-toggle-current-transaction style))
             (forward-line)
             (goto-char (line-beginning-position))))
-        (ledger-toggle-current-entry style))
-      (ledger-toggle-current-transaction style)))
+        (ledger-toggle-current-transaction style))
+      (ledger-toggle-current-posting style)))
 
-(defun ledger-toggle-current-entry (&optional style)
+(defun ledger-toggle-current-transaction (&optional style)
   (interactive)
-  (let (clear)
+  (let (status)
     (save-excursion
       (when (or (looking-at "^[0-9]")
                 (re-search-backward "^[0-9]" nil t))
         (skip-chars-forward "0-9./=")
         (delete-horizontal-space)
-        (if (member (char-after) '(?\* ?\!))
+        (if (or (eq (ledger-state-from-char (char-after)) 'pending)
+		(eq (ledger-state-from-char (char-after)) 'cleared))
             (progn
               (delete-char 1)
               (if (and style (eq style 'cleared))
@@ -204,7 +223,7 @@ dropped."
 	    (if (and style (eq style 'pending))
 		(insert " ! ")
 		(insert " * "))
-	    (setq clear t))))
-    clear))
+	    (setq status t))))
+    status))
 
 (provide 'ldg-state)
