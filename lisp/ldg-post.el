@@ -45,6 +45,12 @@
   :type 'boolean
   :group 'ledger-post)
 
+(defcustom ledger-post-use-decimal-comma nil
+  "if non-nil the use commas as decimal separator.  This only has
+   effect interfacing to calc mode in edit amount"
+  :type 'boolean
+  :group 'ledger-post)
+
 (defun ledger-post-all-accounts ()
   (let ((origin (point))
         (ledger-post-list nil)
@@ -166,8 +172,15 @@
 	    (goto-char (match-beginning 0))
 	    (delete-region (match-beginning 0) (match-end 0))
 	    (calc)
-	    (while (string-match "," val)
-	      (setq val (replace-match "" nil nil val))) ;; gets rid of commas
+	    (if ledger-post-use-decimal-comma
+		(progn
+		  (while (string-match "\\." val)
+		    (setq val (replace-match "" nil nil val))) ;; gets rid of periods
+		  (while (string-match "," val)
+		    (setq val (replace-match "." nil nil val)))) ;; switch to period separator
+		(progn
+		  (while (string-match "," val)
+		    (setq val (replace-match "" nil nil val))))) ;; gets rid of commas
 	    (calc-eval val 'push)) ;; edit the amount
 	  (progn ;;make sure there are two spaces after the account name and go to calc
 	    (if (search-backward "  " (- (point) 3) t)
