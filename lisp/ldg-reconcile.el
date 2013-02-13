@@ -251,7 +251,7 @@ and exit reconcile mode"
 (defun ledger-reconcile-quit-cleanup ()
   "Cleanup all hooks established by reconcile mode."
   (interactive)
-  (let ((buf ledger-buf))
+  (dolist (buf (cons ledger-buf ledger-bufs))
     (if buf
 	(with-current-buffer buf
 	  (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t)
@@ -293,6 +293,9 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	      (dolist (posting (nthcdr 5 xact))
 		(let ((beg (point))
 		      (where (ledger-marker-where-xact-is xact posting)))
+		  (with-current-buffer (car where) 
+		    (add-to-list 'ledger-bufs (car where))
+		    (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save nil t))
 		  (insert (format "%s %-4s %-30s %-30s %15s\n"
 				  (format-time-string (if date-format
 							  date-format
@@ -384,16 +387,14 @@ moved and recentered.  If they aren't strange things happen."
 	  (unless (get-buffer-window rbuf)
 	    (ledger-reconcile-open-windows buf rbuf)))
 
-	(progn  ;; no recon-buffer, starting from scratch.
-	  (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save nil t)
-	  
-	  (with-current-buffer (setq rbuf 
-				     (get-buffer-create ledger-recon-buffer-name))
-	    (ledger-reconcile-open-windows buf rbuf)
-	    (ledger-reconcile-mode)
-	    (make-local-variable 'ledger-target)
-	    (set (make-local-variable 'ledger-buf) buf)
-	    (set (make-local-variable 'ledger-acct) account))))
+        ;; no recon-buffer, starting from scratch.
+        (with-current-buffer (setq rbuf 
+                                   (get-buffer-create ledger-recon-buffer-name))
+          (ledger-reconcile-open-windows buf rbuf)
+          (ledger-reconcile-mode)
+          (make-local-variable 'ledger-target)
+          (set (make-local-variable 'ledger-buf) buf)
+          (set (make-local-variable 'ledger-acct) account)))
     
     ;; Fold the ledger buffer
 
