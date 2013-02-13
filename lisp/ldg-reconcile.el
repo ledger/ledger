@@ -24,6 +24,7 @@
 (defvar ledger-buf nil)
 (defvar ledger-bufs nil)
 (defvar ledger-acct nil)
+(defvar ledger-target nil)
 
 (defcustom ledger-recon-buffer-name "*Reconcile*"
   "Name to use for reconciliation window"
@@ -54,19 +55,42 @@
    :type 'boolean
    :group 'ledger)
 
+
+(defun ledger-reconcile-get-balances ()
+  "Calculate the cleared and uncleared balance of the account being reconciled, 
+   return a list with the account, uncleared and cleared balances as numbers"
+  (interactive)
+  (let ((buffer ledger-buf)
+        (account ledger-acct)
+	(val nil))
+    (with-temp-buffer
+      (ledger-exec-ledger buffer (current-buffer) 
+	   ; note that in the line below, the --format option is
+           ; separated from the actual format string.  emacs does not
+           ; split arguments like the shell does, so you need to
+           ; specify the individual fields in the command line.
+	   "balance" "--limit" "cleared or pending" 
+	   "--format" "(\"%(amount)\")" account)
+      (setq val (read (buffer-substring-no-properties (point-min) (point-max)))))))
+
 (defun ledger-display-balance ()
   "Calculate the cleared balance of the account being reconciled"
   (interactive)
-  (let ((buffer ledger-buf)
-        (account ledger-acct))
-    (with-temp-buffer
-      (ledger-exec-ledger buffer (current-buffer) "balance" "--limit" "cleared or pending"   account)
-      (goto-char (1- (point-max)))
-      (goto-char (line-beginning-position))
-      (delete-horizontal-space)
-      (message "Current pending balance = %s"
-	       (buffer-substring-no-properties (point)
-					       (line-end-position))))))
+  (let* ((pending (car (ledger-string-balance-to-commoditized-amount
+		  (car (ledger-reconcile-get-balances)))))
+	 (target-delta (if ledger-target
+			   (-commodity ledger-target pending)
+			   nil)))
+    
+    (if target-delta
+	(message "Pending balance: %s,   Difference from target: %s" 
+		 (ledger-commodity-to-string pending)
+		 (ledger-commodity-to-string target-delta))
+	(message "Pending balance: %s" 
+		 (ledger-commodity-to-string pending)))))
+		 
+		 
+
 
 (defun is-stdin (file)
   "True if ledger file is standard input"
@@ -323,6 +347,8 @@ Spliting the windows of BUF if needed"
 	  (if ledger-fold-on-reconcile
 	      (ledger-occur-change-regex account ledger-buf))
 	  (set-buffer (get-buffer ledger-recon-buffer-name))
+	  (setq ledger-target
+		(call-interactively #'ledger-read-commodity-string))
 	  (unless (get-buffer-window rbuf)
 	    (ledger-reconcile-open-windows buf rbuf))
 	  (ledger-reconcile-refresh))
@@ -337,9 +363,17 @@ Spliting the windows of BUF if needed"
 	      (ledger-reconcile-mode)
 	      (set (make-local-variable 'ledger-buf) buf)
 	      (set (make-local-variable 'ledger-acct) account)
+	      (set (make-local-variable 'ledger-target)
+		   (call-interactively #'ledger-read-commodity-string))
 	      (ledger-do-reconcile))))))
 
 (defvar ledger-reconcile-mode-abbrev-table)
+
+(defun ledger-reconcile-change-target ()
+  (setq ledger-target (call-interactively #'ledger-read-commodity-string)))
+;  (setq ledger-target
+;	(if (and target (> (length target) 0))
+;	    (ledger-string-balance-to-commoditized-amount target))))
 
 (defun ledger-reconcile-display-internals ()
   (interactive)
@@ -358,6 +392,7 @@ Spliting the windows of BUF if needed"
      (define-key map [?g] 'ledger-reconcile);
      (define-key map [?n] 'next-line)
      (define-key map [?p] 'previous-line)
+     (define-key map [?t] 'ledger-reconcile-change-target)
      (define-key map [?s] 'ledger-reconcile-save)
      (define-key map [?q] 'ledger-reconcile-quit)
      (define-key map [?b] 'ledger-display-balance)
@@ -376,6 +411,7 @@ Spliting the windows of BUF if needed"
      (define-key map [menu-bar ldg-recon-menu tog] '("Toggle Entry" . ledger-reconcile-toggle))
      (define-key map [menu-bar ldg-recon-menu sep3] '("--"))
      (define-key map [menu-bar ldg-recon-menu bal] '("Show Cleared Balance" . ledger-display-balance))
+     (define-key map [menu-bar ldg-recon-menu tgt] '("Change Target Balance" . ledger-reconcile-change-target))
      (define-key map [menu-bar ldg-recon-menu sep4] '("--"))
      (define-key map [menu-bar ldg-recon-menu rna] '("Reconcile New Account" . ledger-reconcile))
      (define-key map [menu-bar ldg-recon-menu sep5] '("--"))

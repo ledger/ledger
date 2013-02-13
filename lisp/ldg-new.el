@@ -46,6 +46,8 @@
 (require 'ldg-sort)
 (require 'ldg-fonts)
 (require 'ldg-occur)
+(require 'ldg-commodities)
+
 
 (autoload #'ledger-texi-update-test "ldg-texi" nil t)
 (autoload #'ledger-texi-update-examples "ldg-texi" nil t)
