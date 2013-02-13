@@ -276,17 +276,17 @@
     ;; when the buffer point is moved and recentered.  If they aren't
     ;; strange things happen.
     
-    (let 
-	((recon-window (get-buffer-window (get-buffer ledger-recon-buffer-name))))
-      (fit-window-to-buffer recon-window)
-      (with-current-buffer buf
-	(select-window (get-buffer-window buf))
-	(goto-char (point-max))
-	(recenter -1))
-      
-      (select-window recon-window)
-      (add-hook 'post-command-hook 'ledger-reconcile-track-xact nil t)
-      (ledger-reconcile-visit t))))
+    (let ((recon-window (get-buffer-window (get-buffer ledger-recon-buffer-name))))
+      (when recon-window
+	(fit-window-to-buffer recon-window)
+	(with-current-buffer buf
+	  (select-window (get-buffer-window buf))
+	  (goto-char (point-max))
+	  (recenter -1))
+        
+        (select-window recon-window)
+        (ledger-reconcile-visit t))
+      (add-hook 'post-command-hook 'ledger-reconcile-track-xact nil t))))
 
 (defun ledger-reconcile-track-xact ()
   (if (member this-command (list 'next-line
