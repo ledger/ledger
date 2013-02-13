@@ -83,7 +83,6 @@
 (defun ledger-reconcile-toggle ()
   (interactive)
   (let ((where (get-text-property (point) 'where))
-        (account ledger-acct)
         (inhibit-read-only t)
         status)
     (when (ledger-reconcile-get-buffer where)
@@ -173,7 +172,9 @@
   (ledger-display-balance))
 
 (defun ledger-reconcile-finish ()
-  "Mark all pending transactions as cleared, save the buffers and exit reconcile mode"
+  "Mark all pending posting or transactions as cleared, depending
+   on ledger-reconcile-clear-whole-transactions, save the buffers
+   and exit reconcile mode"
   (interactive)
   (save-excursion
     (goto-char (point-min))

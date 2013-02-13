@@ -219,11 +219,16 @@ dropped."
             (progn
               (delete-char 1)
               (if (and style (eq style 'cleared))
-                  (insert " *")))
+                  (progn 
+		    (insert " *")
+		    (setq status 'cleared))))
 	    (if (and style (eq style 'pending))
-		(insert " ! ")
-		(insert " * "))
-	    (setq status t))))
+		(progn
+		  (insert " ! ")
+		  (setq status 'pending))
+		(progn
+		  (insert " * ")
+		  (setq status 'cleared))))))
     status))
 
 (provide 'ldg-state)
