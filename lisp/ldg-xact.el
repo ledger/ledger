@@ -64,4 +64,15 @@
 	(overlay-put ovl 'face 'ledger-font-highlight-face)
 	(overlay-put ovl 'priority 100))))
 
+(defun ledger-xact-payee ()
+  "Returns the payee of the entry containing point or nil."
+  (let ((i 0))
+    (while (eq (ledger-context-line-type (ledger-context-other-line i)) 'acct-transaction)
+      (setq i (- i 1)))
+    (let ((context-info (ledger-context-other-line i)))
+      (if (eq (ledger-context-line-type context-info) 'entry)
+          (ledger-context-field-value context-info 'payee)
+	  nil))))
+
+
 (provide 'ldg-xact)

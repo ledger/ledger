@@ -69,6 +69,7 @@ text that should replace the format specifier."
 (defvar ledger-report-name-prompt-history nil)
 (defvar ledger-report-cmd-prompt-history nil)
 (defvar ledger-original-window-cfg nil)
+(defvar ledger-report-saved nil)
 
 (defvar ledger-report-mode-abbrev-table)
 
@@ -146,6 +147,7 @@ used to generate the buffer, navigating the buffer, etc."
     (with-current-buffer
         (pop-to-buffer (get-buffer-create ledger-report-buffer-name))
       (ledger-report-mode)
+      (set (make-local-variable 'ledger-report-saved) nil)
       (set (make-local-variable 'ledger-buf) buf)
       (set (make-local-variable 'ledger-report-name) report-name)
       (set (make-local-variable 'ledger-original-window-cfg) wcfg)
@@ -219,7 +221,7 @@ default."
   ;; It is intended completion should be available on existing
   ;; payees, but the list of possible completions needs to be
   ;; developed to allow this.
-  (ledger-read-string-with-default "Payee" (regexp-quote (ledger-entry-payee))))
+  (ledger-read-string-with-default "Payee" (regexp-quote (ledger-xact-payee))))
 
 (defun ledger-report-account-format-specifier ()
   "Substitute an account name
@@ -258,13 +260,15 @@ the default."
   (let ((report-cmd (car (cdr (assoc report-name ledger-reports)))))
     ;; logic for substitution goes here
     (when (or (null report-cmd) edit)
-      (setq report-cmd (ledger-report-read-command report-cmd)))
+      (setq report-cmd (ledger-report-read-command report-cmd))
+      (setq ledger-report-saved nil)) ;; this is a new report, or edited report
     (setq report-cmd (ledger-report-expand-format-specifiers report-cmd))
     (set (make-local-variable 'ledger-report-cmd) report-cmd)
     (or (string-empty-p report-name)
         (ledger-report-name-exists report-name)
-        (ledger-reports-add report-name report-cmd)
-        (ledger-reports-custom-save))
+        (progn
+	  (ledger-reports-add report-name report-cmd) 
+	  (ledger-reports-custom-save)))
     report-cmd))
 
 (defun ledger-do-report (cmd)
@@ -368,20 +372,23 @@ the default."
     (when (string-empty-p ledger-report-name)
       (setq ledger-report-name (ledger-report-read-new-name)))
 
-    (while (setq existing-name (ledger-report-name-exists ledger-report-name))
-      (cond ((y-or-n-p (format "Overwrite existing report named '%s' "
-                               ledger-report-name))
-             (when (string-equal
-                    ledger-report-cmd
-                    (car (cdr (assq existing-name ledger-reports))))
-               (error "Current command is identical to existing saved one"))
-             (setq ledger-reports
-                   (assq-delete-all existing-name ledger-reports)))
-            (t
-             (setq ledger-report-name (ledger-report-read-new-name)))))
-
-    (ledger-reports-add ledger-report-name ledger-report-cmd)
-    (ledger-reports-custom-save)))
+    (if (setq existing-name (ledger-report-name-exists ledger-report-name))
+	(cond ((y-or-n-p (format "Overwrite existing report named '%s' "
+				 ledger-report-name))
+	       (if (string-equal
+		    ledger-report-cmd
+		    (car (cdr (assq existing-name ledger-reports))))
+		   (message "Nothing to save. Current command is identical to existing saved one")
+		   (progn
+		     (setq ledger-reports
+			   (assq-delete-all existing-name ledger-reports))
+		     (ledger-reports-add ledger-report-name ledger-report-cmd)
+		     (ledger-reports-custom-save))))
+	      (t
+	       (progn
+		 (setq ledger-report-name (ledger-report-read-new-name)) 
+		 (ledger-reports-add ledger-report-name ledger-report-cmd)
+		 (ledger-reports-custom-save)))))))
 
 (defconst ledger-line-config
   '((entry
@@ -516,15 +523,5 @@ specified line, returns nil."
 
 (defun ledger-context-goto-field-end (context-info field-name)
   (goto-char (ledger-context-field-end-position context-info field-name)))
-
-(defun ledger-entry-payee ()
-  "Returns the payee of the entry containing point or nil."
-  (let ((i 0))
-    (while (eq (ledger-context-line-type (ledger-context-other-line i)) 'acct-transaction)
-      (setq i (- i 1)))
-    (let ((context-info (ledger-context-other-line i)))
-      (if (eq (ledger-context-line-type context-info) 'entry)
-          (ledger-context-field-value context-info 'payee)
-	  nil))))
 
 (provide 'ldg-report)
