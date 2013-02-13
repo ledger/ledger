@@ -74,5 +74,7 @@
           (ledger-context-field-value context-info 'payee)
 	  nil))))
 
+(defsubst ledger-goto-line (line-number)
+  (goto-char (point-min)) (forward-line (1- line-number)))
 
 (provide 'ldg-xact)

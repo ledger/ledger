@@ -60,11 +60,11 @@
   (let ((buffer ledger-buf)
         (account ledger-acct))
     (with-temp-buffer
-      (ledger-exec-ledger buffer (current-buffer) "-C" "balance"  account)
+      (ledger-exec-ledger buffer (current-buffer) "balance" "--limit" "cleared or pending"   account)
       (goto-char (1- (point-max)))
       (goto-char (line-beginning-position))
       (delete-horizontal-space)
-      (message "Cleared balance = %s"
+      (message "Current pending balance = %s"
 	       (buffer-substring-no-properties (point)
 					       (line-end-position))))))
 
@@ -87,7 +87,8 @@
         status)
     (when (ledger-reconcile-get-buffer where)
       (with-current-buffer (ledger-reconcile-get-buffer where)
-	(goto-char (cdr where))
+	(ledger-goto-line (cdr where))
+	(forward-char)
 	(setq status (ledger-toggle-current (if ledger-reconcile-toggle-to-pending 
 						'pending
 						'cleared))))
@@ -139,7 +140,7 @@
   (let ((where (get-text-property (point) 'where)))
     (when (ledger-reconcile-get-buffer where)
       (with-current-buffer (ledger-reconcile-get-buffer where)
-        (goto-char (cdr where))
+        (ledger-goto-line (cdr where))
         (ledger-delete-current-transaction))
       (let ((inhibit-read-only t))
         (goto-char (line-beginning-position))
@@ -157,7 +158,8 @@
 	   (cur-buf (get-buffer ledger-recon-buffer-name)))
       (when target-buffer
 	(switch-to-buffer-other-window target-buffer)
-	(goto-char (cdr where))
+	(ledger-goto-line (cdr where))
+	(forward-char)
 	(recenter)
 	(ledger-highlight-xact-under-point)
 	(if come-back
@@ -183,7 +185,7 @@
             (face  (get-text-property (point) 'face)))
         (if (eq face 'ledger-font-reconciler-pending-face)
             (with-current-buffer (ledger-reconcile-get-buffer where)
-              (goto-char (cdr where))
+              (ledger-goto-line (cdr where))
               (ledger-toggle-current 'cleared))))
       (forward-line 1)))
   (ledger-reconcile-save))
@@ -217,15 +219,11 @@
   (let ((buf (if (is-stdin (nth 0 emacs-xact))
 		 ledger-buf
 		 (find-file-noselect (nth 0 emacs-xact)))))
-    (with-current-buffer buf 
-      (cons
-       buf
-       (save-excursion
-	 (if ledger-clear-whole-transactions
-	     (goto-line (nth 1 emacs-xact))
-	     (goto-line (nth 0 posting)))
-	 (1+ (point-marker))))))) ;;Add 1 to make sure the marker is
-				  ;;within the transaction
+    (cons
+     buf
+     (if ledger-clear-whole-transactions
+	 (nth 1 emacs-xact)  ;; return line-no of xact
+	 (nth 0 posting))))) ;; return line-no of posting
 
 (defun ledger-do-reconcile ()
   "get the uncleared transactions in the account and display them
