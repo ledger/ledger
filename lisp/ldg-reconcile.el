@@ -297,6 +297,15 @@
 	  (save-excursion
 	    (ledger-reconcile-visit t)))))
 
+(defun ledger-reconcile-open-windows (buf rbuf)
+  "Ensure that the reconcile buffer has its windows
+
+Spliting the windows of BUF if needed"
+  (if ledger-reconcile-force-window-bottom
+      ;;create the *Reconcile* window directly below the ledger buffer.
+      (set-window-buffer (split-window (get-buffer-window buf) nil nil) rbuf)
+      (pop-to-buffer rbuf)))
+
 (defun ledger-reconcile (account)
   (interactive "sAccount to reconcile: ")
   (let ((buf (current-buffer))
@@ -315,6 +324,8 @@
 	  (if ledger-fold-on-reconcile
 	      (ledger-occur-change-regex account ledger-buf))
 	  (set-buffer (get-buffer ledger-recon-buffer-name))
+	  (unless (get-buffer-window rbuf)
+	    (ledger-reconcile-open-windows buf rbuf))
 	  (ledger-reconcile-refresh))
 
 	  (progn  ;; no recon-buffer, starting from scratch.
@@ -322,19 +333,12 @@
 	    (if ledger-fold-on-reconcile
 		(ledger-occur-mode account buf))
 	    
-	    (with-current-buffer
-		(if ledger-reconcile-force-window-bottom
-		    ;create the *Reconcile* window directly below the ledger buffer.
-		    (progn
-		      (set-window-buffer
-		       (split-window (get-buffer-window buf) nil nil) 
-		       (get-buffer-create ledger-recon-buffer-name))
-		      (get-buffer ledger-recon-buffer-name))
-		    (pop-to-buffer (get-buffer-create ledger-recon-buffer-name)))
+	    (with-current-buffer (get-buffer-create ledger-recon-buffer-name)
+	      (ledger-reconcile-open-windows buf (current-buffer))
 	      (ledger-reconcile-mode)
 	      (set (make-local-variable 'ledger-buf) buf)
 	      (set (make-local-variable 'ledger-acct) account)
-	      (ledger-do-reconcile))))))  
+	      (ledger-do-reconcile))))))
 
 (defvar ledger-reconcile-mode-abbrev-table)
 
