@@ -100,6 +100,7 @@ text that should replace the format specifier."
      (define-key map [menu-bar ldg-rep lrq] '("Quit" . ledger-report-quit))
      (define-key map [menu-bar ldg-rep s2] '("--"))
      (define-key map [menu-bar ldg-rep lrd] '("Scroll Down" . scroll-down))
+     (define-key map [menu-bar ldg-rep vis] '("Visit Source" . ledger-report-visit-source))
      (define-key map [menu-bar ldg-rep lru] '("Scroll Up" . scroll-up))
      (define-key map [menu-bar ldg-rep s1] '("--"))
      (define-key map [menu-bar ldg-rep lrk] '("Kill Report" . ledger-report-kill))
@@ -240,20 +241,19 @@ the default."
     (ledger-read-string-with-default "Account" default)))
 
 (defun ledger-report-expand-format-specifiers (report-cmd)
-  (let ((expanded-cmd report-cmd))
-    (while (string-match "%(\\([^)]*\\))" expanded-cmd)
-      (let* ((specifier (match-string 1 expanded-cmd))
-             (f (cdr (assoc specifier ledger-report-format-specifiers))))
-        (if f
-            (setq expanded-cmd (replace-match
-                                (save-match-data
-                                  (with-current-buffer ledger-buf
-                                    (shell-quote-argument (funcall f))))
-                                t t expanded-cmd))
-	    (progn
-	      (set-window-configuration ledger-original-window-cfg)
-	      (error "Invalid ledger report format specifier '%s'" specifier)))))
-    expanded-cmd))
+  (save-match-data
+    (let ((expanded-cmd report-cmd))
+      (set-match-data (list 0 0))
+      (while (string-match "%(\\([^)]*\\))" expanded-cmd (match-end 0))
+	(let* ((specifier (match-string 1 expanded-cmd))
+	       (f (cdr (assoc specifier ledger-report-format-specifiers))))
+	  (if f
+	      (setq expanded-cmd (replace-match
+				  (save-match-data
+				    (with-current-buffer ledger-buf
+				      (shell-quote-argument (funcall f))))
+				  t t expanded-cmd)))))
+      expanded-cmd)))
 
 (defun ledger-report-cmd (report-name edit)
   "Get the command line to run the report."
@@ -280,45 +280,50 @@ the default."
           "\n\n")
   (let ((data-pos (point))
         (register-report (string-match " reg\\(ister\\)? " cmd))
-        files-in-report)
+	files-in-report)
     (shell-command
-     (if register-report
-         (concat cmd " --prepend-format='%(filename):%(beg_line):'")
+     ;; subtotal doe not produce identifiable transactions, so don't
+     ;; prepend location information for them
+     (if (and register-report
+	      (not (string-match "--subtotal" cmd)))
+	 (concat cmd " --prepend-format='%(filename):%(beg_line):'")
 	 cmd) t nil)
     (when register-report
       (goto-char data-pos)
-      (while (re-search-forward "^\\([^:]+\\)?:\\([0-9]+\\)?:" nil t)
-        (let ((file (match-string 1))
+      (while (re-search-forward "^\\(/[^:]+\\)?:\\([0-9]+\\)?:" nil t)
+	(let ((file (match-string 1))
 	      (line (string-to-number (match-string 2))))
-          (delete-region (match-beginning 0) (match-end 0))
-          (set-text-properties (line-beginning-position) (line-end-position)
-                               (list 'ledger-source (cons file (save-window-excursion
-                                                                 (save-excursion
-                                                                   (find-file file)
-                                                                   (widen)
-                                                                   (goto-char (point-min))
-                                                                   (forward-line (1- line))
-                                                                   (point-marker))))))
-          (end-of-line))))
+	  (delete-region (match-beginning 0) (match-end 0))
+	  (set-text-properties (line-beginning-position) (line-end-position)
+			       (list 'ledger-source (cons file (save-window-excursion
+								 (save-excursion
+								   (find-file file)
+								   (widen)
+								   (ledger-goto-line line)
+								   (point-marker))))))
+	  (end-of-line))))
     (goto-char data-pos)))
 
 
 (defun ledger-report-visit-source ()
   (interactive)
-  (let ((prop (get-text-property (point) 'ledger-source)))
-    (destructuring-bind (file . line-or-marker) prop
-      (find-file-other-window file)
-      (widen)
-      (if (markerp line-or-marker)
-          (goto-char line-or-marker)
-	  (goto-char (point-min))
-	  (forward-line (1- line-or-marker))
-	  (re-search-backward "^[0-9]+")
-	  (beginning-of-line)
-	  (let ((start-of-txn (point)))
-	    (forward-paragraph)
-	    (narrow-to-region start-of-txn (point))
-	    (backward-paragraph))))))
+  (let* ((prop (get-text-property (point) 'ledger-source))
+	 (file (if prop (car prop)))
+	 (line-or-marker (if prop (cdr prop))))
+    (if (and file line-or-marker)
+	(progn
+	  (find-file-other-window file)
+	  (widen)
+	  (if (markerp line-or-marker)
+	      (goto-char line-or-marker)
+	      (goto-char (point-min))
+	      (forward-line (1- line-or-marker))
+	      (re-search-backward "^[0-9]+")
+	      (beginning-of-line)
+	      (let ((start-of-txn (point)))
+		(forward-paragraph)
+		(narrow-to-region start-of-txn (point))
+		(backward-paragraph)))))))
 
 (defun ledger-report-goto ()
   "Goto the ledger report buffer."
