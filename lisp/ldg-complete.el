@@ -21,9 +21,15 @@
 
 ;;(require 'esh-util)
 ;;(require 'esh-arg)
+
+;;; Commentary:
+;; Functions providing payee and account auto complete.
+
 (require 'pcomplete)
 
 ;; In-place completion support
+
+;;; Code:
 
 (defun ledger-parse-arguments ()
   "Parse whitespace separated arguments in the current region."
@@ -43,6 +49,7 @@
       (cons (reverse args) (reverse begins)))))
 
 (defun ledger-payees-in-buffer ()
+  "Scan buffer and return list of all payees."
   (let ((origin (point))
         payees-list)
     (save-excursion
@@ -58,9 +65,9 @@
     (pcomplete-uniqify-list (nreverse payees-list))))
 
 (defun ledger-find-accounts-in-buffer ()
-  "search through buffer and build tree of accounts.  Return tree
-   structure"
-  (let ((origin (point)) 
+  "Search through buffer and build tree of accounts.
+Return tree structure"
+  (let ((origin (point))
 	(account-tree (list t))
 	(account-elements nil))
     (save-excursion
@@ -69,8 +76,8 @@
               "^[ \t]+\\([*!]\\s-+\\)?[[(]?\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)" nil t)
         (unless (and (>= origin (match-beginning 0))
                      (< origin (match-end 0)))
-          (setq account-elements 
-		(split-string 
+          (setq account-elements
+		(split-string
 		 (match-string-no-properties 2) ":"))
           (let ((root account-tree))
             (while account-elements
@@ -84,6 +91,7 @@
     account-tree))
 
 (defun ledger-accounts ()
+  "Return a tree of all accounts in the buffer."
   (let* ((current (caar (ledger-parse-arguments)))
          (elements (and current (split-string current ":")))
          (root (ledger-find-accounts-in-buffer))
@@ -110,7 +118,7 @@
           'string-lessp))))
 
 (defun ledger-complete-at-point ()
-  "Do appropriate completion for the thing at point"
+  "Do appropriate completion for the thing at point."
   (interactive)
   (while (pcomplete-here
           (if (eq (save-excursion
@@ -134,8 +142,8 @@
 	      (ledger-accounts)))))
 
 (defun ledger-fully-complete-entry ()
-  "Completes a transaction if there is another matching payee in
-   the buffer.  Does not use ledger xact"
+  "Completes a transaction if there is another matching payee in the buffer.
+Does not use ledger xact"
   (interactive)
   (let ((name (caar (ledger-parse-arguments)))
         xacts)
@@ -164,3 +172,5 @@
           (goto-char (match-end 0))))))
 
 (provide 'ldg-complete)
+
+;;; ldg-complete.el ends here

@@ -19,11 +19,17 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 
+
+;;; Commentary:
+;; Code for executing ledger synchronously.
+
+;;; Code:
+
 (defconst ledger-version-needed "3.0.0"
-  "The version of ledger executable needed for interactive features")
+  "The version of ledger executable needed for interactive features.")
 
 (defvar ledger-works nil
-  "Flag showing whether the ledger binary can support ledger-mode interactive features")
+  "Flag showing whether the ledger binary can support `ledger-mode' interactive features.")
 
 (defgroup ledger-exec nil
   "Interface to the Ledger command-line accounting program."
@@ -35,7 +41,7 @@
   :group 'ledger)
 
 (defun ledger-exec-ledger (input-buffer &optional output-buffer &rest args)
-  "Run Ledger."
+  "Run Ledger using INPUT-BUFFER and optionally capturing output in OUTPUT-BUFFER with ARGS."
   (if (null ledger-binary-path)
       (error "The variable `ledger-binary-path' has not been set"))
   (let ((buf (or input-buffer (current-buffer)))
@@ -51,6 +57,7 @@
       outbuf)))
 
 (defun ledger-exec-read (&optional input-buffer &rest args)
+  "Run ledger from option INPUT-BUFFER using ARGS, return a list structure of the ledger Emacs output."
   (with-current-buffer
       (apply #'ledger-exec-ledger input-buffer nil "emacs" args)
     (goto-char (point-min))
@@ -59,7 +66,7 @@
       (kill-buffer (current-buffer)))))
 
 (defun ledger-version-greater-p (needed)
-  "verify the ledger binary is usable for ledger-mode"
+  "Verify the ledger binary is usable for `ledger-mode' (version greater than NEEDED)."
   (let ((buffer ledger-buf)
         (version-strings '())
 	(version-number))
@@ -77,6 +84,7 @@
 	  nil))))
 
 (defun ledger-check-version ()
+  "Verify that ledger works and is modern enough."
   (interactive)
   (setq ledger-works (ledger-version-greater-p ledger-version-needed))
   (if ledger-works
@@ -84,3 +92,5 @@
       (message "Bad Ledger Version")))
 
 (provide 'ldg-exec)
+
+;;; ldg-exec.el ends here

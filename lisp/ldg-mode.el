@@ -20,18 +20,24 @@
 ;; MA 02111-1307, USA.
 
 
+
+;;; Commentary:
+;; Most of the general ledger-mode code is here.
+
+;;; Code:
+
 (defsubst ledger-current-year ()
+  "The default current year for adding transactions."
   (format-time-string "%Y"))
 (defsubst ledger-current-month ()
+  "The default current month for adding transactions."
   (format-time-string "%m"))
 
 (defvar ledger-year (ledger-current-year)
-  "Start a ledger session with the current year, but make it
-customizable to ease retro-entry.")
+  "Start a ledger session with the current year, but make it customizable to ease retro-entry.")
 
 (defvar ledger-month (ledger-current-month)
-  "Start a ledger session with the current month, but make it
-customizable to ease retro-entry.")
+  "Start a ledger session with the current month, but make it customizable to ease retro-entry.")
 
 (defcustom ledger-default-acct-transaction-indent "    "
   "Default indentation for account transactions in an entry."
@@ -39,7 +45,8 @@ customizable to ease retro-entry.")
   :group 'ledger)
 
 (defun ledger-remove-overlays ()
-  (interactive)
+  "Remove all overlays from the ledger buffer."
+(interactive)
   "remove overlays formthe buffer, used if the buffer is reverted"
    (remove-overlays))
 
@@ -135,13 +142,15 @@ customizable to ease retro-entry.")
            (< (nth 1 t1) (nth 1 t2)))))
 
 (defun ledger-time-subtract (t1 t2)
-  "Subtract two time values. Return the difference in the format
-   of a time value."
+  "Subtract two time values, T1 - T2.
+Return the difference in the format of a time value."
   (let ((borrow (< (cadr t1) (cadr t2))))
     (list (- (car t1) (car t2) (if borrow 1 0))
           (- (+ (if borrow 65536 0) (cadr t1)) (cadr t2)))))
 
 (defun ledger-find-slot (moment)
+  "Find the right place in the buffer for a transaction at MOMENT.
+MOMENT is an encoded date"
   (catch 'found
     (ledger-iterate-transactions
      (function
@@ -150,6 +159,7 @@ customizable to ease retro-entry.")
 	   (throw 'found t)))))))
 
 (defun ledger-iterate-transactions (callback)
+  "Iterate through each transaction call CALLBACK for each."
   (goto-char (point-min))
   (let* ((now (current-time))
          (current-year (nth 5 (decode-time now))))
@@ -177,20 +187,24 @@ customizable to ease retro-entry.")
       (forward-line))))
 
 (defun ledger-set-year (newyear)
-  "Set ledger's idea of the current year to the prefix argument."
+  "Set ledger's idea of the current year to the prefix argument NEWYEAR."
   (interactive "p")
   (if (= newyear 1)
       (setq ledger-year (read-string "Year: " (ledger-current-year)))
       (setq ledger-year (number-to-string newyear))))
 
 (defun ledger-set-month (newmonth)
-  "Set ledger's idea of the current month to the prefix argument."
+  "Set ledger's idea of the current month to the prefix argument NEWMONTH."
   (interactive "p")
   (if (= newmonth 1)
       (setq ledger-month (read-string "Month: " (ledger-current-month)))
       (setq ledger-month (format "%02d" newmonth))))
 
 (defun ledger-add-transaction (transaction-text &optional insert-at-point)
+  "Use ledger xact TRANSACTION-TEXT to add a transaction to the buffer.
+If INSERT-AT-POINT is non-nil insert the transaction
+there, otherwise call `ledger-find-slot' to insert it at the
+correct chronological place in the buffer."
   (interactive (list
 		(read-string "Transaction: " (concat ledger-year "/" ledger-month "/"))))
   (let* ((args (with-temp-buffer
@@ -223,6 +237,7 @@ customizable to ease retro-entry.")
 	  (end-of-line -1)))))
 
 (defun ledger-current-transaction-bounds ()
+  "Return markers for the beginning and end of transaction surrounding point."
   (save-excursion
     (when (or (looking-at "^[0-9]")
               (re-search-backward "^[0-9]" nil t))
@@ -232,8 +247,11 @@ customizable to ease retro-entry.")
         (cons (copy-marker beg) (point-marker))))))
 
 (defun ledger-delete-current-transaction ()
+  "Delete the transaction surrounging point."
   (interactive)
   (let ((bounds (ledger-current-transaction-bounds)))
     (delete-region (car bounds) (cdr bounds))))
 
 (provide 'ldg-mode)
+
+;;; ldg-mode.el ends here

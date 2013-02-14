@@ -19,7 +19,13 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 
+
+;;; Commentary:
+;; Utility functions for dealing with postings.
+
 (require 'ldg-regex)
+
+;;; Code:
 
 (defgroup ledger-post nil
   ""
@@ -46,12 +52,13 @@
   :group 'ledger-post)
 
 (defcustom ledger-post-use-decimal-comma nil
-  "if non-nil the use commas as decimal separator.  This only has
-   effect interfacing to calc mode in edit amount"
+  "If non-nil the use commas as decimal separator.
+This only has effect interfacing to calc mode in edit amount"
   :type 'boolean
   :group 'ledger-post)
 
 (defun ledger-post-all-accounts ()
+  "Return a list of all accounts in the buffer."
   (let ((origin (point))
         (ledger-post-list nil)
         account elements)
@@ -68,8 +75,8 @@
 (defvar iswitchb-temp-buflist)
 
 (defun ledger-post-completing-read (prompt choices)
-  "Use iswitchb as a completing-read replacement to choose from choices.
-   PROMPT is a string to prompt with.  CHOICES is a list of
+  "Use iswitchb as a `completing-read' replacement to choose from choices.
+PROMPT is a string to prompt with.  CHOICES is a list of
    strings to choose from."
   (cond
     (ledger-post-use-iswitchb
@@ -86,6 +93,7 @@
 (defvar ledger-post-current-list nil)
 
 (defun ledger-post-pick-account ()
+  "Insert an account entered by the user."
   (interactive)
   (let* ((account
           (ledger-post-completing-read
@@ -111,6 +119,7 @@
     (goto-char pos)))
 
 (defun ledger-next-amount (&optional end)
+  "Move point to the next amount, as long as it is not past END."
   (when (re-search-forward "\\(  \\|\t\\| \t\\)[ \t]*-?\\([A-Z$€£]+ *\\)?\\(-?[0-9,]+?\\)\\(.[0-9]+\\)?\\( *[A-Z$€£]+\\)?\\([ \t]*@@?[^\n;]+?\\)?\\([ \t]+;.+?\\)?$" (marker-position end) t)
     (goto-char (match-beginning 0))
     (skip-syntax-forward " ")
@@ -119,7 +128,7 @@
 
 (defun ledger-align-amounts (&optional column)
   "Align amounts in the current region.
-   This is done so that the last digit falls in COLUMN, which
+This is done so that the last digit falls in COLUMN, which
    defaults to 52."
   (interactive "p")
   (if (or (null column) (= column 1))
@@ -146,6 +155,7 @@
           (forward-line))))))
 
 (defun ledger-post-align-amount ()
+  "Align the amounts in this posting."
   (interactive)
   (save-excursion
     (set-mark (line-beginning-position))
@@ -153,6 +163,8 @@
     (ledger-align-amounts)))
 
 (defun ledger-post-maybe-align (beg end len)
+  "Align amounts only if point is in a posting.
+BEG, END, and LEN control how far it can align."
   (save-excursion
     (goto-char beg)
     (when (< end (line-end-position))
@@ -161,11 +173,12 @@
           (ledger-post-align-amount)))))
 
 (defun ledger-post-edit-amount ()
+  "Call 'calc-mode' and push the amount in the posting to the top of stack."
   (interactive)
   (goto-char (line-beginning-position))
-  (when (re-search-forward ledger-post-line-regexp (line-end-position) t) 
+  (when (re-search-forward ledger-post-line-regexp (line-end-position) t)
     (goto-char (match-end ledger-regex-post-line-group-account)) ;; go to the and of the account
-    (let ((end-of-amount (re-search-forward "[-.,0-9]+" (line-end-position) t))) 
+    (let ((end-of-amount (re-search-forward "[-.,0-9]+" (line-end-position) t)))
       ;; determine if there is an amount to edit
       (if end-of-amount
 	  (let ((val (match-string 0)))
@@ -189,6 +202,7 @@
 	    (calc))))))
 
 (defun ledger-post-prev-xact ()
+  "Move point to the previous transaction."
   (interactive)
   (backward-paragraph)
   (when (re-search-backward ledger-xact-line-regexp nil t)
@@ -197,6 +211,7 @@
     (goto-char (match-end ledger-regex-post-line-group-account))))
 
 (defun ledger-post-next-xact ()
+  "Move point to the next transaction."
   (interactive)
   (when (re-search-forward ledger-xact-line-regexp nil t)
     (goto-char (match-beginning 0))
@@ -204,8 +219,11 @@
     (goto-char (match-end ledger-regex-post-line-group-account))))
 
 (defun ledger-post-setup ()
+  "Configure `ledger-mode' to auto-align postings."
   (if ledger-post-auto-adjust-amounts
       (add-hook 'after-change-functions 'ledger-post-maybe-align t t))
   (add-hook 'after-save-hook #'(lambda () (setq ledger-post-current-list nil))))
 
 (provide 'ldg-post)
+
+;;; ldg-post.el ends here

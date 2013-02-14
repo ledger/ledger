@@ -20,48 +20,54 @@
 ;; MA 02111-1307, USA.
 
 
+
+;;; Commentary:
+;; All of the faces for ledger mode are defined here.
+
+;;; Code:
+
 (defgroup ledger-faces nil "Ledger mode highlighting" :group 'ledger)
-(defface ledger-font-uncleared-face 
+(defface ledger-font-uncleared-face
     `((t :foreground "#dc322f" :weight bold ))
   "Default face for Ledger"
   :group 'ledger-faces)
 
-(defface ledger-font-cleared-face 
+(defface ledger-font-cleared-face
     `((t :foreground "#657b83" :weight normal ))
   "Default face for cleared (*) transactions"
   :group 'ledger-faces)
 
-(defface ledger-font-highlight-face 
+(defface ledger-font-highlight-face
     `((t :background "white"))
   "Default face for transaction under point"
   :group 'ledger-faces)
 
-(defface ledger-font-pending-face 
+(defface ledger-font-pending-face
     `((t :foreground "#cb4b16" :weight normal ))
   "Default face for pending (!) transactions"
   :group 'ledger-faces)
 
-(defface ledger-font-other-face 
+(defface ledger-font-other-face
     `((t :foreground "yellow" ))
   "Default face for other transactions"
   :group 'ledger-faces)
 
-(defface ledger-font-posting-account-face     
+(defface ledger-font-posting-account-face
     `((t :foreground "#268bd2" ))
   "Face for Ledger accounts"
   :group 'ledger-faces)
 
-(defface ledger-font-posting-amount-face     
+(defface ledger-font-posting-amount-face
     `((t :foreground "yellow" ))
   "Face for Ledger amounts"
   :group 'ledger-faces)
 
-(defface ledger-occur-folded-face 
+(defface ledger-occur-folded-face
     `((t :foreground "grey70" :invisible t ))
   "Default face for Ledger occur mode hidden transactions"
   :group 'ledger-faces)
 
-(defface ledger-occur-xact-face 
+(defface ledger-occur-xact-face
     `((t :background "#eee8d5" ))
   "Default face for Ledger occur mode shown transactions"
   :group 'ledger-faces)
@@ -71,22 +77,22 @@
   "Face for Ledger comments"
   :group 'ledger-faces)
 
-(defface ledger-font-reconciler-uncleared-face 
+(defface ledger-font-reconciler-uncleared-face
     `((t :foreground "#dc322f" :weight bold ))
   "Default face for uncleared transactions in the reconcile window"
   :group 'ledger-faces)
 
-(defface ledger-font-reconciler-cleared-face 
+(defface ledger-font-reconciler-cleared-face
     `((t :foreground "#657b83" :weight normal ))
   "Default face for cleared (*) transactions in the reconcile window"
   :group 'ledger-faces)
 
-(defface ledger-font-reconciler-pending-face 
+(defface ledger-font-reconciler-pending-face
     `((t :foreground "#cb4b16" :weight normal ))
   "Default face for pending (!) transactions in the reconcile window"
   :group 'ledger-faces)
 
-(defface ledger-font-report-clickable-face 
+(defface ledger-font-report-clickable-face
     `((t :foreground "#cb4b16" :weight normal ))
   "Default face for pending (!) transactions in the reconcile window"
   :group 'ledger-faces)
@@ -95,7 +101,7 @@
 (defvar ledger-font-lock-keywords
   '(("^[0-9]+[-/.=][-/.=0-9]+\\s-\\!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)" 2 'ledger-font-pending-face)
     ("^[0-9]+[-/.=][-/.=0-9]+\\s-\\*\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)" 2 'ledger-font-cleared-face)
-    ("^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)" 2 'ledger-font-uncleared-face) 
+    ("^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)" 2 'ledger-font-uncleared-face)
     ("^\\s-+\\([*]\\s-*\\)?\\(\\([[(]\\)?[^*:
         ]+?:\\([^]);
         ]\\|\\s-\\)+?\\([])]\\)?\\)\\(    \\|  \\|$\\)"
@@ -105,4 +111,7 @@
     ("^\\([A-Za-z]+ .+\\)" 1 ledger-font-other-face))
   "Expressions to highlight in Ledger mode.")
 
+
 (provide 'ldg-fonts)
+
+;;; ldg-fonts.el ends here

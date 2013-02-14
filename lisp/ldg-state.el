@@ -19,12 +19,19 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 
+
+;;; Commentary:
+;; Utilities for dealing with transaction and posting status.
+
+;;; Code:
+
 (defcustom ledger-clear-whole-transactions nil
   "If non-nil, clear whole transactions, not individual postings."
   :type 'boolean
   :group 'ledger)
 
 (defun ledger-toggle-state (state &optional style)
+  "Return the correct toggle state given the current STATE, and STYLE."
   (if (not (null state))
       (if (and style (eq style 'cleared))
           'cleared)
@@ -33,6 +40,7 @@
 	  'cleared)))
 
 (defun ledger-transaction-state ()
+  "Return the state of the transaction at point."
   (save-excursion
     (when (or (looking-at "^[0-9]")
               (re-search-backward "^[0-9]" nil t))
@@ -43,6 +51,7 @@
             (t nil)))))
 
 (defun ledger-posting-state ()
+  "Return the state of the posting."
   (save-excursion
     (goto-char (line-beginning-position))
     (skip-syntax-forward " ")
@@ -51,6 +60,7 @@
           (t (ledger-transaction-state)))))
 
 (defun ledger-char-from-state (state)
+  "Return the char representation of STATE."
   (if state
       (if (eq state 'pending)
 	  "!"
@@ -58,6 +68,7 @@
       ""))
 
 (defun ledger-state-from-char (state-char)
+  "Get state from STATE-CHAR."
   (cond ((eql state-char ?\!)
 	 'pending)
 	((eql state-char ?\*)
@@ -69,7 +80,7 @@
   "Toggle the cleared status of the transaction under point.
 Optional argument STYLE may be `pending' or `cleared', depending
 on which type of status the caller wishes to indicate (default is
-`cleared'). Returns the new status as 'pending 'cleared or nil.
+`cleared').  Returns the new status as 'pending 'cleared or nil.
 This function is rather complicated because it must preserve both
 the overall formatting of the ledger entry, as well as ensuring
 that the most minimal display format is used.  This could be
@@ -87,7 +98,7 @@ dropped."
       (setq cur-status (and (member (char-after) '(?\* ?\!))
 			    (ledger-state-from-char (char-after))))
       ;;if cur-status if !, or * then delete the marker
-      (when cur-status 
+      (when cur-status
         (let ((here (point)))
           (skip-chars-forward "*! ")
           (let ((width (- (point) here)))
@@ -105,7 +116,7 @@ dropped."
 	(setq new-status nil)))
 
     ;;this excursion marks the posting pending or cleared
-    (save-excursion 
+    (save-excursion
       (goto-char (line-beginning-position))
       (when (looking-at "[ \t]")
         (skip-chars-forward " \t")
@@ -189,6 +200,7 @@ dropped."
     new-status))
 
 (defun ledger-toggle-current (&optional style)
+  "Toggle the current thing at point with optional STYLE."
   (interactive)
   (if (or ledger-clear-whole-transactions
           (eq 'transaction (ledger-thing-at-point)))
@@ -207,6 +219,7 @@ dropped."
       (ledger-toggle-current-posting style)))
 
 (defun ledger-toggle-current-transaction (&optional style)
+  "Toggle the transaction at point using optional STYLE."
   (interactive)
   (let (status)
     (save-excursion
@@ -219,7 +232,7 @@ dropped."
             (progn
               (delete-char 1)
               (if (and style (eq style 'cleared))
-                  (progn 
+                  (progn
 		    (insert " *")
 		    (setq status 'cleared))))
 	    (if (and style (eq style 'pending))
@@ -232,3 +245,7 @@ dropped."
     status))
 
 (provide 'ldg-state)
+
+(provide 'ldg-state)
+
+;;; ldg-state.el ends here

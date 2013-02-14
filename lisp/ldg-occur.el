@@ -25,7 +25,7 @@
 ;;; Commentary:
 ;; Provide code folding to ledger mode.  Adapted from original loccur
 ;; mode by Alexey Veretennikov <alexey dot veretennikov at gmail dot
-;; com> 
+;; com>
 ;;
 ;; Adapted to ledger mode by Craig Earls <enderww at gmail dot
 ;; com>
@@ -34,8 +34,8 @@
 
 (defconst ledger-occur-overlay-property-name 'ledger-occur-custom-buffer-grep)
 
-(defcustom ledger-occur-use-face-unfolded t 
-  "if non-nil use a custom face for xacts shown in ledger-occur mode"
+(defcustom ledger-occur-use-face-unfolded t
+  "If non-nil use a custom face for xacts shown in `ledger-occur' mode."
   :type 'boolean
   :group 'ledger)
 (make-variable-buffer-local 'ledger-occur-use-face-unfolded)
@@ -49,11 +49,11 @@
            (list '(ledger-occur-mode ledger-occur-mode))))
 
 (defvar ledger-occur-history nil
-  "History of previously searched expressions for the prompt")
+  "History of previously searched expressions for the prompt.")
 (make-variable-buffer-local 'ledger-occur-history)
 
 (defvar ledger-occur-last-match nil
-  "Last match found")
+  "Last match found.")
 (make-variable-buffer-local 'ledger-occur-last-match)
 
 (defvar ledger-occur-overlay-list nil
@@ -61,12 +61,12 @@
 (make-variable-buffer-local 'ledger-occur-overlay-list)
 
 (defun ledger-occur-mode (regex buffer)
-  "Higlight transaction that match REGEX, hiding others
+  "Highlight transactions that match REGEX in BUFFER, hiding others.
 
 When REGEX is nil, unhide everything, and remove higlight"
   (progn
     (set-buffer buffer)
-    (setq ledger-occur-mode 
+    (setq ledger-occur-mode
 	  (if (or (null regex)
 		  (zerop (length regex)))
 	      nil
@@ -76,7 +76,7 @@ When REGEX is nil, unhide everything, and remove higlight"
     (if ledger-occur-mode
 	(let* ((buffer-matches (ledger-occur-find-matches regex))
 	       (ovl-bounds (ledger-occur-create-xact-overlay-bounds buffer-matches)))
-	  (setq ledger-occur-overlay-list 
+	  (setq ledger-occur-overlay-list
 		(ledger-occur-create-xact-overlays ovl-bounds))
 	  (setq ledger-occur-overlay-list
 		(append ledger-occur-overlay-list
@@ -86,13 +86,12 @@ When REGEX is nil, unhide everything, and remove higlight"
     (recenter)))
 
 (defun ledger-occur (regex)
-  "Perform a simple grep in current buffer for the regular
-   expression REGEX
+  "Perform a simple grep in current buffer for the regular expression REGEX.
 
    This command hides all xact from the current buffer except
-   those containing the regular expression REGEX. A second call
+   those containing the regular expression REGEX.  A second call
    of the function unhides lines again"
-  (interactive 
+  (interactive
    (if ledger-occur-mode
        (list nil)
        (list (read-string (concat "Regexp<" (ledger-occur-prompt)
@@ -101,7 +100,7 @@ When REGEX is nil, unhide everything, and remove higlight"
   (ledger-occur-mode regex (current-buffer)))
 
 (defun ledger-occur-prompt ()
-  "Returns the default value of the prompt.
+  "Return the default value of the prompt.
 
    Default value for prompt is a current word or active
    region(selection), if its size is 1 line"
@@ -129,7 +128,7 @@ When REGEX is nil, unhide everything, and remove higlight"
 						;; the last form in
 						;; the lambda is the
 						;; (make-overlay)
-                           (setq prev-end (1+ (cadr match))) 
+                           (setq prev-end (1+ (cadr match)))
 					;; add 1 so that we skip the
 					;; empty line after the xact
                            (make-overlay
@@ -147,7 +146,9 @@ When REGEX is nil, unhide everything, and remove higlight"
 
 
 (defun ledger-occur-create-xact-overlays (ovl-bounds)
-  (let ((overlays 
+  "Create the overlay for the visible transactions.
+Argument OVL-BOUNDS contains bounds for the transactions to be left visible."
+  (let ((overlays
          (mapcar (lambda (bnd)
                    (make-overlay
                     (car bnd)
@@ -161,8 +162,7 @@ When REGEX is nil, unhide everything, and remove higlight"
             overlays)))
 
 (defun ledger-occur-change-regex (regex buffer)
-  "use this function to programatically change the overlays,
-   rather than quitting out and restarting"
+  "Use this function to programatically change the overlays using REGEX in BUFFER, rather than quitting out and restarting."
   (progn
     (set-buffer buffer)
     (setq ledger-occur-mode nil)
@@ -171,8 +171,8 @@ When REGEX is nil, unhide everything, and remove higlight"
     (recenter)))
 
 (defun ledger-occur-quit-buffer (buffer)
-  "quits hidings transaction in the given buffer.  Used for
-   coordinating ledger-occur with other buffers, like reconcile"
+  "Quits hidings transaction in the given BUFFER.
+Used for coordinating `ledger-occur' with other buffers, like reconcile."
   (progn
     (set-buffer buffer)
     (setq ledger-occur-mode nil)
@@ -181,13 +181,15 @@ When REGEX is nil, unhide everything, and remove higlight"
     (recenter)))
 
 (defun ledger-occur-remove-overlays ()
+  "Remove the transaction hiding overlays."
   (interactive)
-  (remove-overlays (point-min) 
+  (remove-overlays (point-min)
 		   (point-max) ledger-occur-overlay-property-name t)
   (setq ledger-occur-overlay-list nil))
 
 
 (defun ledger-occur-create-xact-overlay-bounds (buffer-matches)
+  "Use BUFFER-MATCHES to produce the overlay for the visible transactions."
   (let ((prev-end (point-min))
         (overlays (list)))
     (when buffer-matches
@@ -199,8 +201,7 @@ When REGEX is nil, unhide everything, and remove higlight"
 
 
 (defun ledger-occur-find-matches (regex)
-  "Returns a list of 2-number tuples, specifying begnning of the
-   line and end of a line containing matching xact"
+  "Return a list of 2-number tuples describing the beginning and start of transactions meeting REGEX."
   (save-excursion
     (goto-char (point-min))
     ;; Set initial values for variables

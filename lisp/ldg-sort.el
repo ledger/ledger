@@ -19,10 +19,15 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 
-;; A sample entry sorting function, which works if entry dates are of
-;; the form YYYY/mm/dd.
+
+
+;;; Commentary:
+;; 
+
+;;; Code:
 
 (defun ledger-next-record-function ()
+  "Move point to next transaction."
   (if (re-search-forward
        (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
 	       "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)
@@ -30,9 +35,11 @@
       (goto-char (point-max))))
 
 (defun ledger-end-record-function ()
+  "Move point to end of transaction."
   (forward-paragraph))
 
 (defun ledger-sort-region (beg end)
+  "Sort the region from BEG to END in chronological order."
   (interactive "r") ;; load beg and end from point and mark
 		    ;; automagically
   (let ((new-beg beg)
@@ -57,8 +64,10 @@
 	   'ledger-end-record-function))))))
 
 (defun ledger-sort-buffer ()
+  "Sort the entire buffer."
   (interactive)
   (ledger-sort-region (point-min) (point-max)))
 
-
 (provide 'ldg-sort)
+
+;;; ldg-sort.el ends here

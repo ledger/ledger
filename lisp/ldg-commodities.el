@@ -33,11 +33,12 @@
 ;;; Code:
 
 (defcustom ledger-reconcile-default-commodity "$"
-  "the default commodity for use in target calculations in ledger reconcile"
+  "The default commodity for use in target calculations in ledger reconcile."
   :type 'string
   :group 'ledger)
 
 (defun ledger-string-balance-to-commoditized-amount (str)
+  "Return a commoditized amount (val, 'comm') from STR."
   (let ((fields (split-string str "[\n\r]"))) ; break any balances
 					      ; with multi commodities
 					      ; into a list
@@ -48,29 +49,36 @@
 		;"^-*[1-9][0-9]*[.,][0-9]*"
 		(if (string-match "^-*[1-9]+" first)
 		    (list (string-to-number first) second)
-		    (list (string-to-number second) first))))		
+		    (list (string-to-number second) first))))
 	    fields)))
 
 
 (defun -commodity (c1 c2)
-  (if (string= (cadr c1) (cadr c2)) 
+  "Subtract C2 from C1, ensuring their commodities match."
+  (if (string= (cadr c1) (cadr c2))
       (list (- (car c1) (car c2)) (cadr c1))
       (error "Can't subtract different commodities %S from %S" c2 c1)))
 
 (defun +commodity (c1 c2)
+  "Add C1 and C2, ensuring their commodities match."
   (if (string= (cadr c1) (cadr c2))
       (list (+ (car c1) (car c2)) (cadr c1))
       (error "Can't add different commodities, %S to %S" c1 c2)))
 
 (defun ledger-commodity-to-string (c1)
-  (let ((val (number-to-string (car c1)))
+  "Return string representing C1.
+Single character commodities are placed ahead of the value,
+longer one are after the value."
+(let ((val (number-to-string (car c1)))
 	(commodity (cadr c1)))
     (if (> (length commodity) 1)
 	(concat val " " commodity)
 	(concat commodity " " val))))
 
 (defun ledger-read-commodity-string (comm)
-  (interactive (list (read-from-minibuffer 
+  "Return a commoditizd value (val 'comm') from COMM.
+Assumes a space between the value and the commodity."
+  (interactive (list (read-from-minibuffer
 		(concat "Enter commoditized amount (" ledger-reconcile-default-commodity "): "))))
   (let ((parts (split-string comm)))
     (if parts
@@ -86,7 +94,7 @@
 		    ((and (/= 0 valp2) (= valp1 0))
 		     (list valp2 (car parts)))
 		    (t
-		     (error "cannot understand commodity"))))))))
+		     (error "Cannot understand commodity"))))))))
 
 (provide 'ldg-commodities)
 

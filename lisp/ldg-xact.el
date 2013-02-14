@@ -19,19 +19,23 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 
-;; A sample entry sorting function, which works if entry dates are of
-;; the form YYYY/mm/dd.
+
+;;; Commentary:
+;; Utilites for running ledger synchronously.
+
+;;; Code:
 
 (defcustom ledger-highlight-xact-under-point t
-  "If t highlight xact under point"
+  "If t highlight xact under point."
   :type 'boolean
   :group 'ledger)
 
 (defvar highlight-overlay (list))
 
 (defun ledger-find-xact-extents (pos)
-  "return point for beginning of xact and and of xact containing
-   position.  Requires empty line separating xacts"
+  "Return point for beginning of xact and and of xact containing position.
+Requires empty line separating xacts.  Argument POS is a location
+within the transaction."
   (interactive "d")
   (save-excursion
     (goto-char pos)
@@ -49,7 +53,8 @@
 
 
 (defun ledger-highlight-xact-under-point ()
-  (if ledger-highlight-xact-under-point
+  "Move the highlight overlay to the current transaction."
+(if ledger-highlight-xact-under-point
       (let ((exts (ledger-find-xact-extents (point)))
 	    (ovl highlight-overlay))
 	(if (not highlight-overlay)
@@ -63,7 +68,7 @@
 	(overlay-put ovl 'priority 100))))
 
 (defun ledger-xact-payee ()
-  "Returns the payee of the entry containing point or nil."
+  "Return the payee of the entry containing point or nil."
   (let ((i 0))
     (while (eq (ledger-context-line-type (ledger-context-other-line i)) 'acct-transaction)
       (setq i (- i 1)))
@@ -73,10 +78,12 @@
 	  nil))))
 
 (defsubst ledger-goto-line (line-number)
-  (goto-char (point-min)) (forward-line (1- line-number)))
+  "Rapidly move point to line LINE-NUMBER."
+(goto-char (point-min)) (forward-line (1- line-number)))
 
 (defun ledger-thing-at-point ()
-  (let ((here (point)))
+  "Describe thing at points.  Return 'transaction, 'posting, or nil."
+(let ((here (point)))
     (goto-char (line-beginning-position))
     (cond ((looking-at "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.+?)\\)?\\s-+")
            (goto-char (match-end 0))
@@ -91,9 +98,9 @@
            (ignore (goto-char here))))))
 
 (defun ledger-copy-transaction-at-point (date)
-  (interactive  (list
-		 (read-string "Copy to date: " 
-			      (concat ledger-year "/" ledger-month "/")))) 
+  "Ask for a new DATE and copy the transaction under point to that date.  Leave point on the first amount."(interactive  (list
+		 (read-string "Copy to date: "
+			      (concat ledger-year "/" ledger-month "/"))))
   (let* ((here (point))
 	 (extents (ledger-find-xact-extents (point)))
 	 (transaction (buffer-substring (car extents) (cadr extents)))
@@ -113,3 +120,6 @@
 
     
 (provide 'ldg-xact)
+(provide 'ldg-xact)
+
+;;; ldg-xact.el ends here

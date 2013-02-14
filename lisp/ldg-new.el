@@ -31,7 +31,7 @@
 ;; MA 02111-1307, USA.
 
 ;;; Commentary:
-
+;; Load up the ledger mode
 (require 'ldg-complete)
 (require 'ldg-exec)
 (require 'ldg-mode)
@@ -49,6 +49,8 @@
 (require 'ldg-commodities)
 
 
+;;; Code:
+
 (autoload #'ledger-texi-update-test "ldg-texi" nil t)
 (autoload #'ledger-texi-update-examples "ldg-texi" nil t)
 
@@ -57,13 +59,12 @@
   :group 'data)
 
 (defconst ledger-version "3.0"
-  "The version of ledger.el currently loaded")
-
-(provide 'ledger)
+  "The version of ledger.el currently loaded.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun ledger-create-test ()
+  "Create a regression test."
   (interactive)
   (save-restriction
     (org-narrow-to-subtree)
@@ -87,4 +88,6 @@
           (delete-char 3)
           (forward-line 1))))))
 
-;;; ledger.el ends here
+(provide 'ledger)
+
+;;; ldg-new.el ends here

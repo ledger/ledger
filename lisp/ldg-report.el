@@ -19,6 +19,12 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 
+
+;;; Commentary:
+;; 
+
+;;; Code:
+
 (eval-when-compile
   (require 'cl))
 
@@ -34,7 +40,7 @@ contain format specifiers that are replaced with context sensitive
 information.  Format specifiers have the format '%(<name>)' where
 <name> is an identifier for the information to be replaced.  The
 `ledger-report-format-specifiers' alist variable contains a mapping
-from format specifier identifier to a lisp function that implements
+from format specifier identifier to a Lisp function that implements
 the substitution.  See the documentation of the individual functions
 in that variable for more information on the behavior of each
 specifier."
@@ -46,7 +52,7 @@ specifier."
   '(("ledger-file" . ledger-report-ledger-file-format-specifier)
     ("payee" . ledger-report-payee-format-specifier)
     ("account" . ledger-report-account-format-specifier))
-  "Alist mapping ledger report format specifiers to implementing functions
+  "An alist mapping ledger report format specifiers to implementing functions.
 
 The function is called with no parameters and expected to return the
 text that should replace the format specifier."
@@ -121,13 +127,14 @@ The empty string and unknown names are allowed."
 (defun ledger-report (report-name edit)
   "Run a user-specified report from `ledger-reports'.
 
-Prompts the user for the name of the report to run.  If no name is
-entered, the user will be prompted for a command line to run.  The
-command line specified or associated with the selected report name
-is run and the output is made available in another buffer for viewing.
-If a prefix argument is given and the user selects a valid report
-name, the user is prompted with the corresponding command line for
-editing before the command is run.
+Prompts the user for the REPORT-NAME of the report to run or
+EDIT.  If no name is entered, the user will be prompted for a
+command line to run.  The command line specified or associated
+with the selected report name is run and the output is made
+available in another buffer for viewing.  If a prefix argument is
+given and the user selects a valid report name, the user is
+prompted with the corresponding command line for editing before
+the command is run.
 
 The output buffer will be in `ledger-report-mode', which defines
 commands for saving a new named report based on the command line
@@ -159,11 +166,11 @@ used to generate the buffer, navigating the buffer, etc."
       (message "q to quit; r to redo; e to edit; k to kill; s to save; SPC and DEL to scroll"))))
 
 (defun string-empty-p (s)
-  "Check for the empty string."
+  "Check S for the empty string."
   (string-equal "" s))
 
 (defun ledger-report-name-exists (name)
-  "Check to see if the given report name exists.
+  "Check to see if the given report NAME exists.
 
    If name exists, returns the object naming the report,
    otherwise returns nil."
@@ -171,7 +178,7 @@ used to generate the buffer, navigating the buffer, etc."
     (car (assoc name ledger-reports))))
 
 (defun ledger-reports-add (name cmd)
-  "Add a new report to `ledger-reports'."
+  "Add a new report NAME and CMD to `ledger-reports'."
   (setq ledger-reports (cons (list name cmd) ledger-reports)))
 
 (defun ledger-reports-custom-save ()
@@ -179,15 +186,15 @@ used to generate the buffer, navigating the buffer, etc."
   (customize-save-variable 'ledger-reports ledger-reports))
 
 (defun ledger-report-read-command (report-cmd)
-  "Read the command line to create a report."
+  "Read the command line to create a report from REPORT-CMD."
   (read-from-minibuffer "Report command line: "
                         (if (null report-cmd) "ledger " report-cmd)
                         nil nil 'ledger-report-cmd-prompt-history))
 
 (defun ledger-report-ledger-file-format-specifier ()
-  "Substitute the full path to master or current ledger file
+  "Substitute the full path to master or current ledger file.
 
-   The master file name is determined by the ledger-master-file
+   The master file name is determined by the variable `ledger-master-file'
    buffer-local variable which can be set using file variables.
    If it is set, it is used, otherwise the current buffer file is
    used."
@@ -201,7 +208,7 @@ used to generate the buffer, navigating the buffer, etc."
   "Return the master file for a ledger file.
 
    The master file is either the file for the current ledger buffer or the
-   file specified by the buffer-local variable ledger-master-file.  Typically
+   file specified by the buffer-local variable `ledger-master-file'.  Typically
    this variable would be set in a file local variable comment block at the
    end of a ledger file which is included in some other file."
   (if ledger-master-file
@@ -209,6 +216,7 @@ used to generate the buffer, navigating the buffer, etc."
       (buffer-file-name)))
 
 (defun ledger-read-string-with-default (prompt default)
+  "Return user supplied string after PROMPT, or DEFAULT."
   (let ((default-prompt (concat prompt
                                 (if default
                                     (concat " (" default "): ")
@@ -216,7 +224,7 @@ used to generate the buffer, navigating the buffer, etc."
     (read-string default-prompt nil nil default)))
 
 (defun ledger-report-payee-format-specifier ()
-  "Substitute a payee name
+  "Substitute a payee name.
 
    The user is prompted to enter a payee and that is substitued.  If
    point is in an entry, the payee for that entry is used as the
@@ -227,7 +235,7 @@ used to generate the buffer, navigating the buffer, etc."
   (ledger-read-string-with-default "Payee" (regexp-quote (ledger-xact-payee))))
 
 (defun ledger-report-account-format-specifier ()
-  "Substitute an account name
+  "Substitute an account name.
 
    The user is prompted to enter an account name, which can be any
    regular expression identifying an account.  If point is on an account
@@ -243,6 +251,7 @@ used to generate the buffer, navigating the buffer, etc."
     (ledger-read-string-with-default "Account" default)))
 
 (defun ledger-report-expand-format-specifiers (report-cmd)
+  "Expand %(account) and %(payee) appearing in REPORT-CMD with thing under point."
   (save-match-data
     (let ((expanded-cmd report-cmd))
       (set-match-data (list 0 0))
@@ -258,7 +267,8 @@ used to generate the buffer, navigating the buffer, etc."
       expanded-cmd)))
 
 (defun ledger-report-cmd (report-name edit)
-  "Get the command line to run the report."
+  "Get the command line to run the report name REPORT-NAME.
+Optional EDIT the command."
   (let ((report-cmd (car (cdr (assoc report-name ledger-reports)))))
     ;; logic for substitution goes here
     (when (or (null report-cmd) edit)
@@ -269,12 +279,12 @@ used to generate the buffer, navigating the buffer, etc."
     (or (string-empty-p report-name)
         (ledger-report-name-exists report-name)
         (progn
-	  (ledger-reports-add report-name report-cmd) 
+	  (ledger-reports-add report-name report-cmd)
 	  (ledger-reports-custom-save)))
     report-cmd))
 
 (defun ledger-do-report (cmd)
-  "Run a report command line."
+  "Run a report command line CMD."
   (goto-char (point-min))
   (insert (format "Report: %s\n" ledger-report-name)
           (format "Command: %s\n" cmd)
@@ -289,7 +299,8 @@ used to generate the buffer, navigating the buffer, etc."
      (if (and register-report
 	      (not (string-match "--subtotal" cmd)))
 	 (concat cmd " --prepend-format='%(filename):%(beg_line):'")
-	 cmd) t nil)
+	 cmd)
+     t nil)
     (when register-report
       (goto-char data-pos)
       (while (re-search-forward "^\\(/[^:]+\\)?:\\([0-9]+\\)?:" nil t)
@@ -310,6 +321,7 @@ used to generate the buffer, navigating the buffer, etc."
 
 
 (defun ledger-report-visit-source ()
+  "Visit the transaction under point in the report window."
   (interactive)
   (let* ((prop (get-text-property (point) 'ledger-source))
 	 (file (if prop (car prop)))
@@ -382,7 +394,7 @@ used to generate the buffer, navigating the buffer, etc."
       (setq ledger-report-name (ledger-report-read-new-name)))
 
     (if (setq existing-name (ledger-report-name-exists ledger-report-name))
-	(cond ((y-or-n-p (format "Overwrite existing report named '%s' "
+	(cond ((y-or-n-p (format "Overwrite existing report named '%s'? "
 				 ledger-report-name))
 	       (if (string-equal
 		    ledger-report-cmd
@@ -395,7 +407,7 @@ used to generate the buffer, navigating the buffer, etc."
 		     (ledger-reports-custom-save))))
 	      (t
 	       (progn
-		 (setq ledger-report-name (ledger-report-read-new-name)) 
+		 (setq ledger-report-name (ledger-report-read-new-name))
 		 (ledger-reports-add ledger-report-name ledger-report-cmd)
 		 (ledger-reports-custom-save)))))))
 
@@ -424,9 +436,9 @@ used to generate the buffer, navigating the buffer, etc."
        (indent account))))))
 
 (defun ledger-extract-context-info (line-type pos)
-  "Get context info for current line.
+  "Get context info for current line with LINE-TYPE.
 
-Assumes point is at beginning of line, and the pos argument specifies
+Assumes point is at beginning of line, and the POS argument specifies
 where the \"users\" point was."
   (let ((linfo (assoc line-type ledger-line-config))
         found field fields)
@@ -495,7 +507,7 @@ the fields in the line in a association list."
                '(unknown nil nil)))))))
 
 (defun ledger-context-other-line (offset)
-  "Return a list describing context of line offset for existing position.
+  "Return a list describing context of line OFFSET from existing position.
 
 Offset can be positive or negative.  If run out of buffer before reaching
 specified line, returns nil."
@@ -534,3 +546,5 @@ specified line, returns nil."
   (goto-char (ledger-context-field-end-position context-info field-name)))
 
 (provide 'ldg-report)
+
+;;; ldg-report.el ends here
