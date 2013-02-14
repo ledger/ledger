@@ -86,6 +86,11 @@
   "Default face for pending (!) transactions in the reconcile window"
   :group 'ledger-faces)
 
+(defface ledger-font-report-clickable-face 
+    `((t :foreground "#cb4b16" :weight normal ))
+  "Default face for pending (!) transactions in the reconcile window"
+  :group 'ledger-faces)
+
 
 (defvar ledger-font-lock-keywords
   '(("^[0-9]+[-/.=][-/.=0-9]+\\s-\\!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)" 2 'ledger-font-pending-face)

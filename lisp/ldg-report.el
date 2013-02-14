@@ -165,7 +165,8 @@ used to generate the buffer, navigating the buffer, etc."
 (defun ledger-report-name-exists (name)
   "Check to see if the given report name exists.
 
-If name exists, returns the object naming the report, otherwise returns nil."
+   If name exists, returns the object naming the report,
+   otherwise returns nil."
   (unless (string-empty-p name)
     (car (assoc name ledger-reports))))
 
@@ -186,9 +187,10 @@ If name exists, returns the object naming the report, otherwise returns nil."
 (defun ledger-report-ledger-file-format-specifier ()
   "Substitute the full path to master or current ledger file
 
-The master file name is determined by the ledger-master-file buffer-local
-variable which can be set using file variables.  If it is set, it is used,
-otherwise the current buffer file is used."
+   The master file name is determined by the ledger-master-file
+   buffer-local variable which can be set using file variables.
+   If it is set, it is used, otherwise the current buffer file is
+   used."
   (ledger-master-file))
 
 ;; General helper functions
@@ -198,10 +200,10 @@ otherwise the current buffer file is used."
 (defun ledger-master-file ()
   "Return the master file for a ledger file.
 
-The master file is either the file for the current ledger buffer or the
-file specified by the buffer-local variable ledger-master-file.  Typically
-this variable would be set in a file local variable comment block at the
-end of a ledger file which is included in some other file."
+   The master file is either the file for the current ledger buffer or the
+   file specified by the buffer-local variable ledger-master-file.  Typically
+   this variable would be set in a file local variable comment block at the
+   end of a ledger file which is included in some other file."
   (if ledger-master-file
       (expand-file-name ledger-master-file)
       (buffer-file-name)))
@@ -216,9 +218,9 @@ end of a ledger file which is included in some other file."
 (defun ledger-report-payee-format-specifier ()
   "Substitute a payee name
 
-The user is prompted to enter a payee and that is substitued.  If
-point is in an entry, the payee for that entry is used as the
-default."
+   The user is prompted to enter a payee and that is substitued.  If
+   point is in an entry, the payee for that entry is used as the
+   default."
   ;; It is intended completion should be available on existing
   ;; payees, but the list of possible completions needs to be
   ;; developed to allow this.
@@ -227,10 +229,10 @@ default."
 (defun ledger-report-account-format-specifier ()
   "Substitute an account name
 
-The user is prompted to enter an account name, which can be any
-regular expression identifying an account.  If point is on an account
-transaction line for an entry, the full account name on that line is
-the default."
+   The user is prompted to enter an account name, which can be any
+   regular expression identifying an account.  If point is on an account
+   transaction line for an entry, the full account name on that line is
+   the default."
   ;; It is intended completion should be available on existing account
   ;; names, but it remains to be implemented.
   (let* ((context (ledger-context-at-point))
@@ -301,6 +303,8 @@ the default."
 								   (widen)
 								   (ledger-goto-line line)
 								   (point-marker))))))
+	  (add-text-properties (line-beginning-position) (line-end-position)
+			       (list 'face 'ledger-font-report-clickable-face))
 	  (end-of-line))))
     (goto-char data-pos)))
 
