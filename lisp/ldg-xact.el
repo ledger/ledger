@@ -27,8 +27,6 @@
   :type 'boolean
   :group 'ledger)
 
-
-
 (defvar highlight-overlay (list))
 
 (defun ledger-find-xact-extents (pos)
@@ -92,4 +90,26 @@
           (t
            (ignore (goto-char here))))))
 
+(defun ledger-copy-transaction-at-point (date)
+  (interactive  (list
+		 (read-string "Copy to date: " 
+			      (concat ledger-year "/" ledger-month "/")))) 
+  (let* ((here (point))
+	 (extents (ledger-find-xact-extents (point)))
+	 (transaction (buffer-substring (car extents) (cadr extents)))
+	 encoded-date)
+    (if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
+	(setq encoded-date
+	      (encode-time 0 0 0 (string-to-number (match-string 3 date))
+			   (string-to-number (match-string 2 date))
+			   (string-to-number (match-string 1 date)))))
+    (ledger-find-slot encoded-date)
+    (insert transaction "\n")
+    (backward-paragraph)
+    (re-search-forward "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)")
+    (replace-match date)
+    (re-search-forward "[1-9][0-9]+\.[0-9]+")))
+
+
+    
 (provide 'ldg-xact)
