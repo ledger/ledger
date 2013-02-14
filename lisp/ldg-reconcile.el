@@ -370,6 +370,7 @@ Spliting the windows of BUF if needed"
 (defvar ledger-reconcile-mode-abbrev-table)
 
 (defun ledger-reconcile-change-target ()
+  (interactive)
   (setq ledger-target (call-interactively #'ledger-read-commodity-string)))
 ;  (setq ledger-target
 ;	(if (and target (> (length target) 0))
