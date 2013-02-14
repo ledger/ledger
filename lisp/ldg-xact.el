@@ -77,4 +77,19 @@
 (defsubst ledger-goto-line (line-number)
   (goto-char (point-min)) (forward-line (1- line-number)))
 
+(defun ledger-thing-at-point ()
+  (let ((here (point)))
+    (goto-char (line-beginning-position))
+    (cond ((looking-at "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.+?)\\)?\\s-+")
+           (goto-char (match-end 0))
+           'transaction)
+          ((looking-at "^\\s-+\\([*!]\\s-+\\)?[[(]?\\(.\\)")
+           (goto-char (match-beginning 2))
+           'posting)
+          ((looking-at "^\\(sun\\|mon\\|tue\\|wed\\|thu\\|fri\\|sat\\)\\s-+")
+           (goto-char (match-end 0))
+           'entry)
+          (t
+           (ignore (goto-char here))))))
+
 (provide 'ldg-xact)

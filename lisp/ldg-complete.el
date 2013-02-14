@@ -25,21 +25,6 @@
 
 ;; In-place completion support
 
-(defun ledger-thing-at-point ()
-  (let ((here (point)))
-    (goto-char (line-beginning-position))
-    (cond ((looking-at "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.+?)\\)?\\s-+")
-           (goto-char (match-end 0))
-           'transaction)
-          ((looking-at "^\\s-+\\([*!]\\s-+\\)?[[(]?\\(.\\)")
-           (goto-char (match-beginning 2))
-           'posting)
-          ((looking-at "^\\(sun\\|mon\\|tue\\|wed\\|thu\\|fri\\|sat\\)\\s-+")
-           (goto-char (match-end 0))
-           'entry)
-          (t
-           (ignore (goto-char here))))))
-
 (defun ledger-parse-arguments ()
   "Parse whitespace separated arguments in the current region."
   (let* ((info (save-excursion
@@ -57,7 +42,7 @@
                          args)))
       (cons (reverse args) (reverse begins)))))
 
-(defun ledger-payees ()
+(defun ledger-payees-in-buffer ()
   (let ((origin (point))
         payees-list)
     (save-excursion
@@ -72,36 +57,36 @@
 						     ;; to the list
     (pcomplete-uniqify-list (nreverse payees-list))))
 
-(defvar ledger-account-tree nil)
-
-(defun ledger-find-accounts ()
+(defun ledger-find-accounts-in-buffer ()
+  "search through buffer and build tree of accounts.  Return tree
+   structure"
   (let ((origin (point)) 
-	account-path 
-	elements)
+	(account-tree (list t))
+	(account-elements nil))
     (save-excursion
-      (setq ledger-account-tree (list t))
       (goto-char (point-min))
       (while (re-search-forward
               "^[ \t]+\\([*!]\\s-+\\)?[[(]?\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)" nil t)
         (unless (and (>= origin (match-beginning 0))
                      (< origin (match-end 0)))
-          (setq account-path (match-string-no-properties 2))
-          (setq elements (split-string account-path ":"))
-          (let ((root ledger-account-tree))
-            (while elements
-              (let ((entry (assoc (car elements) root)))
+          (setq account-elements 
+		(split-string 
+		 (match-string-no-properties 2) ":"))
+          (let ((root account-tree))
+            (while account-elements
+              (let ((entry (assoc (car account-elements) root)))
                 (if entry
                     (setq root (cdr entry))
-		    (setq entry (cons (car elements) (list t)))
+		    (setq entry (cons (car account-elements) (list t)))
 		    (nconc root (list entry))
 		    (setq root (cdr entry))))
-              (setq elements (cdr elements)))))))))
+              (setq account-elements (cdr account-elements)))))))
+    account-tree))
 
 (defun ledger-accounts ()
-  (ledger-find-accounts)
   (let* ((current (caar (ledger-parse-arguments)))
          (elements (and current (split-string current ":")))
-         (root ledger-account-tree)
+         (root (ledger-find-accounts-in-buffer))
          (prefix nil))
     (while (cdr elements)
       (let ((entry (assoc (car elements) root)))
@@ -131,7 +116,7 @@
           (if (eq (save-excursion
                     (ledger-thing-at-point)) 'transaction)
               (if (null current-prefix-arg)
-                  (ledger-payees)  ;; this completes against payee names
+                  (ledger-payees-in-buffer)  ;; this completes against payee names
 		  (progn
 		    (let ((text (buffer-substring (line-beginning-position)
 						  (line-end-position))))
@@ -149,7 +134,8 @@
 	      (ledger-accounts)))))
 
 (defun ledger-fully-complete-entry ()
-  "Do appropriate completion for the thing at point"
+  "Completes a transaction if there is another matching payee in
+   the buffer.  Does not use ledger xact"
   (interactive)
   (let ((name (caar (ledger-parse-arguments)))
         xacts)
@@ -157,7 +143,7 @@
       (when (eq 'transaction (ledger-thing-at-point))
         (when (re-search-backward
                (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-                       (regexp-quote name) "\\(\t\\|\n\\| [ \t]\\)") nil t)
+                       (regexp-quote name) ) nil t)  ;; "\\(\t\\|\n\\| [ \t]\\)"
           (forward-line)
           (while (looking-at "^\\s-+")
             (setq xacts (cons (buffer-substring-no-properties
