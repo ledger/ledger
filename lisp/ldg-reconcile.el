@@ -74,7 +74,7 @@ numbers"
            ; split arguments like the shell does, so you need to
            ; specify the individual fields in the command line.
 	   "balance" "--limit" "cleared or pending"
-	   "--format" "(\"%(amount)\")" account)
+	   "--format" "(\"%(display_total)\")" account)
       (setq val (read (buffer-substring-no-properties (point-min) (point-max)))))))
 
 (defun ledger-display-balance ()
@@ -363,7 +363,8 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 		(call-interactively #'ledger-read-commodity-string))
 	  (unless (get-buffer-window rbuf)
 	    (ledger-reconcile-open-windows buf rbuf))
-	  (ledger-reconcile-refresh))
+	  (ledger-reconcile-refresh)
+	  (goto-char (point-min)))
 
 	  (progn  ;; no recon-buffer, starting from scratch.
 	    (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save nil t)
