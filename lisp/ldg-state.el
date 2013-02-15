@@ -73,6 +73,8 @@
 	 'pending)
 	((eql state-char ?\*)
 	 'cleared)
+	((eql state-char ?\;)
+	 'comment)
 	(t
 	 nil)))
 
@@ -92,7 +94,8 @@ dropped."
         new-status cur-status)
     ;; Uncompact the entry, to make it easier to toggle the
     ;; transaction
-    (save-excursion  ;; this excursion unclears the posting
+    (save-excursion  ;; this excursion checks state of entire
+		     ;; transaction and unclears if marked
       (goto-char (car bounds))  ;; beginning of xact
       (skip-chars-forward "0-9./= \t") ;; skip the date
       (setq cur-status (and (member (char-after) '(?\* ?\!))
@@ -107,15 +110,17 @@ dropped."
               (if (search-forward "  " (line-end-position) t)
                   (insert (make-string width ? ))))))
         (forward-line)
+	;; Shift the cleared/pending status to the postings
         (while (looking-at "[ \t]")
           (skip-chars-forward " \t")
-          (insert (ledger-char-from-state cur-status) " ")
-          (if (search-forward "  " (line-end-position) t)
-              (delete-char 2))
-          (forward-line))
+	  (when (not (eq (ledger-state-from-char (char-after)) 'comment))
+	    (insert (ledger-char-from-state cur-status) " ")
+	    (if (search-forward "  " (line-end-position) t)
+		(delete-char 2)))
+	  (forward-line))
 	(setq new-status nil)))
 
-    ;;this excursion marks the posting pending or cleared
+    ;;this excursion toggles the posting status
     (save-excursion
       (goto-char (line-beginning-position))
       (when (looking-at "[ \t]")
@@ -154,7 +159,9 @@ dropped."
 		   (delete-char 1))))
             (setq new-status inserted)))))
 
-    ;; This excursion cleans up the entry so that it displays minimally
+    ;; This excursion cleans up the entry so that it displays
+    ;; minimally.  This means that if all posts are cleared, remove
+    ;; the marks and clear the entire transaction.
     (save-excursion
       (goto-char (car bounds))
       (forward-line)
@@ -164,11 +171,12 @@ dropped."
         (while (and (not hetero) (looking-at "[ \t]"))
           (skip-chars-forward " \t")
           (let ((cur-status (ledger-state-from-char (char-after))))
-            (if first
-                (setq state cur-status
-                      first nil)
-		(if (not (eq state cur-status))
-		    (setq hetero t))))
+	    (if (not (eq cur-status 'comment))
+		(if first
+		    (setq state cur-status
+			  first nil)
+		    (if (not (eq state cur-status))
+			(setq hetero t)))))
           (forward-line))
         (when (and (not hetero) (not (eq state nil)))
           (goto-char (car bounds))
