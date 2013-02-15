@@ -31,7 +31,7 @@
 (defcustom ledger-reports
   '(("bal" "ledger -f %(ledger-file) bal")
     ("reg" "ledger -f %(ledger-file) reg")
-    ("payee" "ledger -f %(ledger-file) reg -- %(payee)")
+    ("payee" "ledger -f %(ledger-file) reg @%(payee)")
     ("account" "ledger -f %(ledger-file) reg %(account)"))
   "Definition of reports to run.
 
@@ -79,12 +79,22 @@ text that should replace the format specifier."
 
 (defvar ledger-report-mode-abbrev-table)
 
+(defun ledger-report-reverse-lines ()
+  (interactive)
+  (goto-char (point-min))
+  (forward-paragraph)
+  (next-line)
+  (save-excursion
+    (setq inhibit-read-only t)
+    (reverse-region (point) (point-max))))
+
 (define-derived-mode ledger-report-mode text-mode "Ledger-Report"
    "A mode for viewing ledger reports."
    (let ((map (make-sparse-keymap)))
      (define-key map [? ] 'scroll-up)
      (define-key map [backspace] 'scroll-down)
      (define-key map [?r] 'ledger-report-redo)
+     (define-key map [?R] 'ledger-report-reverse-lines)
      (define-key map [?s] 'ledger-report-save)
      (define-key map [?k] 'ledger-report-kill)
      (define-key map [?e] 'ledger-report-edit)
@@ -109,6 +119,8 @@ text that should replace the format specifier."
      (define-key map [menu-bar ldg-rep vis] '("Visit Source" . ledger-report-visit-source))
      (define-key map [menu-bar ldg-rep lru] '("Scroll Up" . scroll-up))
      (define-key map [menu-bar ldg-rep s1] '("--"))
+     (define-key map [menu-bar ldg-rep rev] '("Reverse report order" . ledger-report-reverse-lines))
+     (define-key map [menu-bar ldg-rep s0] '("--"))
      (define-key map [menu-bar ldg-rep lrk] '("Kill Report" . ledger-report-kill))
      (define-key map [menu-bar ldg-rep lrr] '("Re-run Report" . ledger-report-redo))
      (define-key map [menu-bar ldg-rep lre] '("Edit Report" . ledger-report-edit))
@@ -255,7 +267,9 @@ used to generate the buffer, navigating the buffer, etc."
   (save-match-data
     (let ((expanded-cmd report-cmd))
       (set-match-data (list 0 0))
-      (while (string-match "%(\\([^)]*\\))" expanded-cmd (match-end 0))
+      (while (string-match "%(\\([^)]*\\))" expanded-cmd (if (> (length expanded-cmd) (match-end 0))
+							     (match-end 0)
+							     (1- (length expanded-cmd))))
 	(let* ((specifier (match-string 1 expanded-cmd))
 	       (f (cdr (assoc specifier ledger-report-format-specifiers))))
 	  (if f
@@ -294,7 +308,7 @@ Optional EDIT the command."
         (register-report (string-match " reg\\(ister\\)? " cmd))
 	files-in-report)
     (shell-command
-     ;; subtotal doe not produce identifiable transactions, so don't
+     ;; --subtotal does not produce identifiable transactions, so don't
      ;; prepend location information for them
      (if (and register-report
 	      (not (string-match "--subtotal" cmd)))
