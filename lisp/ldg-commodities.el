@@ -19,12 +19,6 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 
-;; A sample entry sorting function, which works if entry dates are of
-;; the form YYYY/mm/dd.
-
-
-
-
 ;;; Commentary:
 ;; Helper functions to deal with commoditized numbers.  A commoditized
 ;; number will be a cons of value and string where the string contains

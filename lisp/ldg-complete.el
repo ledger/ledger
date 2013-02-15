@@ -132,7 +132,7 @@ Return tree structure"
 				     (line-end-position))
 		      (condition-case err
 			  (ledger-add-transaction text t)
-			((error)
+			((error "ledger-complete-at-point")
 			 (insert text))))
 		    (forward-line)
 		    (goto-char (line-end-position))

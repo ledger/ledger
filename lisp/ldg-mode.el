@@ -229,7 +229,7 @@ correct chronological place in the buffer."
 			  (mapcar 'eval args)))
 	     (goto-char (point-min))
 	     (if (looking-at "Error: ")
-		 (error (buffer-string))
+		 (error (concat "Error in ledger-add-transaction: " (buffer-string))
 		 (buffer-string)))
 	   "\n"))
 	(progn

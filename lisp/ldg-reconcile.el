@@ -107,7 +107,7 @@ numbers"
   "Return a buffer from WHERE the transaction is."
   (if (bufferp (car where))
       (car where)
-      (error "Buffer not set")))
+      (error "ledger-reconcile-get-buffer: Buffer not set")))
 
 (defun ledger-reconcile-toggle ()
   "Toggle the current transaction, and mark the recon window."
@@ -273,7 +273,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	    (goto-char (point-min))
 	    (unless (eobp)
 	      (unless (looking-at "(")
-		(error (buffer-string)))
+		(error (concat "ledger-do-reconcile: " (buffer-string)))
 	      (read (current-buffer)))))) ;current-buffer is the *temp* created above
     (if (> (length xacts) 0)
 	(progn
