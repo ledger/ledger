@@ -220,7 +220,7 @@ dropped."
                       (save-excursion
                         (not (eq 'transaction (ledger-thing-at-point)))))
             (if (looking-at "\\s-+[*!]")
-                (ledger-toggle-current-transaction style))
+                (ledger-toggle-current-posting style))
             (forward-line)
             (goto-char (line-beginning-position))))
         (ledger-toggle-current-transaction style))
