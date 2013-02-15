@@ -273,7 +273,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	    (goto-char (point-min))
 	    (unless (eobp)
 	      (unless (looking-at "(")
-		(error (concat "ledger-do-reconcile: " (buffer-string)))
+		(error (concat "ledger-do-reconcile: " (buffer-string))))
 	      (read (current-buffer)))))) ;current-buffer is the *temp* created above
     (if (> (length xacts) 0)
 	(progn
