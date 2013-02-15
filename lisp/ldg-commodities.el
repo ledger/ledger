@@ -69,12 +69,11 @@ longer one are after the value."
 	(concat val " " commodity)
 	(concat commodity " " val))))
 
-(defun ledger-read-commodity-string (comm)
+(defun ledger-read-commodity-string (prompt)
   "Return a commoditizd value (val 'comm') from COMM.
 Assumes a space between the value and the commodity."
-  (interactive (list (read-from-minibuffer
-		(concat "Enter commoditized amount (" ledger-reconcile-default-commodity "): "))))
-  (let ((parts (split-string comm)))
+  (let ((parts (split-string (read-from-minibuffer
+			      (concat prompt " (" ledger-reconcile-default-commodity "): ")))))
     (if parts
 	(if (/= (length parts) 2) ;;assume a number was entered and use default commodity
 	    (list (string-to-number (car parts))

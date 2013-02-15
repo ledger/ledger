@@ -360,7 +360,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	      (ledger-occur-change-regex account ledger-buf))
 	  (set-buffer (get-buffer ledger-recon-buffer-name))
 	  (setq ledger-target
-		(call-interactively #'ledger-read-commodity-string))
+		(ledger-read-commodity-string "Set reconciliation target"))
 	  (unless (get-buffer-window rbuf)
 	    (ledger-reconcile-open-windows buf rbuf))
 	  (ledger-reconcile-refresh)
@@ -377,7 +377,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	      (set (make-local-variable 'ledger-buf) buf)
 	      (set (make-local-variable 'ledger-acct) account)
 	      (set (make-local-variable 'ledger-target)
-		   (call-interactively #'ledger-read-commodity-string))
+		   (ledger-read-commodity-string "Set reconciliation target"))
 	      (ledger-do-reconcile))))))
 
 (defvar ledger-reconcile-mode-abbrev-table)
@@ -385,7 +385,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 (defun ledger-reconcile-change-target ()
   "Change the traget amount for the reconciliation process."
   (interactive)
-  (setq ledger-target (call-interactively #'ledger-read-commodity-string)))
+  (setq ledger-target (ledger-read-commodity-string "Set reconciliation target")))
 
 (define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
    "A mode for reconciling ledger entries."
