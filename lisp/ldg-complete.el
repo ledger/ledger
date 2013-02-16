@@ -146,13 +146,17 @@ Return tree structure"
 Does not use ledger xact"
   (interactive)
   (let ((name (caar (ledger-parse-arguments)))
+	rest-of-name
         xacts)
     (save-excursion
       (when (eq 'transaction (ledger-thing-at-point))
+	;; Search backward for a matching payee
         (when (re-search-backward
                (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
                        (regexp-quote name) ) nil t)  ;; "\\(\t\\|\n\\| [ \t]\\)"
-          (forward-line)
+	  (setq rest-of-name (buffer-substring-no-properties (match-end 0) (line-end-position)))
+          ;; Start copying the postings
+	  (forward-line)
           (while (looking-at "^\\s-+")
             (setq xacts (cons (buffer-substring-no-properties
                                (line-beginning-position)
@@ -162,6 +166,7 @@ Does not use ledger xact"
           (setq xacts (nreverse xacts)))))
     (when xacts
       (save-excursion
+	(insert rest-of-name)
         (insert ?\n)
         (while xacts
           (insert (car xacts) ?\n)
