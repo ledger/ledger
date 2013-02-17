@@ -7656,11 +7656,11 @@ for loop), then the data reverts back to its raw state.
 @node Embedded Python, Amounts, Queries, Extending with Python
 @section Embedded Python
 
-Can you embed Python into your data files using the 'python' directive:
+You can embed Python into your data files using the 'python' directive:
 
 @smallexample
    python
-       import so
+       import os
        def check_path(path_value):
            print "%s => %s" % (str(path_value), os.path.isfile(str(path_value)))
            return os.path.isfile(str(path_value))
