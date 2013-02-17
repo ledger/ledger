@@ -4,7 +4,7 @@
 #    Script to generate a General Ledger report that accountants like
 #    using Ledger.
 #
-# Copyright (C) 2011, 2012 Bradley M. Kuhn
+# Copyright (C) 2011, 2012, 2013 Bradley M. Kuhn
 #
 # This program gives you software freedom; you can copy, modify, convey,
 # and/or redistribute it under the terms of the GNU General Public License
@@ -20,6 +20,7 @@
 # with this program in a file called 'GPLv3'.  If not, write to the:
 #    Free Software Foundation, Inc., 51 Franklin St, Fifth Floor
 #                                    Boston, MA 02110-1301, USA.
+
 
 use strict;
 use warnings;
@@ -76,19 +77,14 @@ die "bad one day less" if $oneDayLess->parse("- 1 day");
 $formattedEndDate = $formattedEndDate->calc($oneDayLess);
 $formattedEndDate = $formattedEndDate->printf("%Y/%m/%d");
 
-foreach my $acct (@accounts) {
-  next unless ($acct =~ /^(?:Assets|Liabilities)/);
+foreach my $typeData ({ name => 'disbursements', query => 'a<=0' },
+                      { name => 'receipts', query => 'a>0' }) {
+  my $fileNameBase = $typeData->{name};
 
-  my $acctFilename = LedgerAcctToFilename($acct);
+  open(CSV_OUT, ">", "$fileNameBase.csv") or die "unable to open $fileNameBase.csv: $!";
 
-  foreach my $typeData ({ name => 'disbursements', query => 'a<=0' },
-                         { name => 'receipts', query => 'a>0' }) {
-    my $fileNameBase = $acctFilename . '-' . $typeData->{name};
-
-    open(CSV_OUT, ">", "$fileNameBase.csv") or die "unable to open $fileNameBase.csv: $!";
-
-    print CSV_OUT "\n\"ACCOUNT:\",\"$acct\"\n\"PERIOD START:\",\"$beginDate\"\n\"PERIOD END:\",\"$formattedEndDate\"\n";
-    print CSV_OUT '"DATE","CHECK NUM","NAME","ACCOUNT","AMOUNT"';
+  foreach my $acct (sort { $a cmp $b } @accounts) {
+    next unless ($acct =~ /^(?:Assets|Liabilities)/);
 
     my @entryLedgerOpts = ('-l', $typeData->{query},
                            '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'print', $acct);
@@ -104,27 +100,30 @@ foreach my $acct (@accounts) {
 
     goto SKIP_REGISTER_COMMANDS if (-z $tempFile);
 
-    my $formatString = '\n"%(date)","%C","%P","%A","%t"\n%/"","","","%A","%t"';
+    print CSV_OUT "\n\"ACCOUNT:\",\"$acct\"\n\"PERIOD START:\",\"$beginDate\"\n\"PERIOD END:\",\"$formattedEndDate\"\n";
+    print CSV_OUT '"DATE","CHECK NUM","NAME","ACCOUNT","AMOUNT"';
+
+    my $formatString = '\n"%(date)","%C","%P","%A","%t"';
+    my $tagStrings = "";
     foreach my $tagField (qw/Receipt Invoice Statement Contract PurchaseOrder Approval Check IncomeDistributionAnalysis CurrencyRate/) {
       print CSV_OUT ',"', $tagField, '"';
-      $formatString .= ',"link:%(tag(\'' . $tagField . '\'))"';
+      $tagStrings .= ',"link:%(tag(\'' . $tagField . '\'))"';
     }
-    $formatString .= "\n";
-    print CSV_OUT "\n";
+    $formatString .= $tagStrings . '\n%/"","","","%A","%t"' . $tagStrings . '\n';
+
     my @csvRegLedgerOpts = ('-f', $tempFile, '-V', '-F', $formatString, '-w', '--sort', 'd',
                             '-b', $beginDate, '-e', $endDate, 'reg');
-
 
     open(CSV_DATA, "-|", $LEDGER_CMD, @csvRegLedgerOpts)
       or die "unable to run ledger command for $fileNameBase.csv: $!";
 
     while (my $line = <CSV_DATA>) { $line =~ s/"link:"/""/g; print CSV_OUT $line; }
     close(CSV_DATA); die "Error read from csv ledger command $!" unless $? == 0;
-
+    print CSV_OUT "\npagebreak\n";
   SKIP_REGISTER_COMMANDS:
-    close(CSV_OUT); die "Error read write csv out to $fileNameBase.csv: $!" unless $? == 0;
     unlink($tempFile);
   }
+  close(CSV_OUT); die "Error read write csv out to $fileNameBase.csv: $!" unless $? == 0;
 }
 ###############################################################################
 #
