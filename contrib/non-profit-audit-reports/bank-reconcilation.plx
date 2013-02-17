@@ -220,7 +220,7 @@ if ($solution[0]) {
   print "\"title:$formattedEndDate: $title\"\n\"BANK RECONCILATION: $account\",\"ENDING\",\"$formattedEndDate\"\n";
   print "\n\n\"DATE\",\"CHECK NUM\",\"PAYEE\",\"AMOUNT\"\n\n";
   print "\"$formattedEndDate\",\"\",\"BANK ACCOUNT BALANCE\",\"\$$bankBalance\"\n\n";
-  foreach my $ee (@{$solution[1]}) {
+  foreach my $ee (sort { $a->{date} cmp $b->{date} } @{$solution[1]}) {
     print "\"$ee->{date}\",\"$ee->{checkNum}\",\"$ee->{payee}\",\"\$$ee->{amount}\"\n";
   }
     print "\n\"$formattedEndDate\",\"\",\"OUR ACCOUNT BALANCE\",\"\$$total\"\n\n";
