@@ -151,7 +151,6 @@ foreach my $typeData ({ name => 'disbursements', query => 'a<=0' },
 
         $curDepositTotal = 0.0 unless defined $curDepositTotal;
         $curDepositTotal += $amt;
-        print "$amt and $curDepositTotal for deposit on $curDepositDate\n";
       }
       print CSV_OUT $line;
     }
