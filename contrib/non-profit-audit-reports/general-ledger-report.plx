@@ -166,7 +166,7 @@ foreach my $acct (@sortedAccounts) {
   print GL_TEXT_OUT "\n\nACCOUNT: $acct\nFROM:    $beginDate TO $formattedEndDate\n\n";
   my @acctLedgerOpts = ('-V', '-F',
                         "%(date)  %-.10C   %-.80P  %-.80N  %18t  %18T\n", '-w', '--sort', 'd',
-                        '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg', $acct);
+                        '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg', '/^' . $acct . '$/');
   open(GL_TEXT_DATA, "-|", $LEDGER_CMD, @acctLedgerOpts)
     or die "Unable to run $LEDGER_CMD @acctLedgerOpts: $!";
 
@@ -190,7 +190,7 @@ foreach my $acct (@sortedAccounts) {
     print GL_CSV_OUT "\"$formattedBeginDate\"", ',"","BALANCE","","$', "$balanceData{totalBegin}{$acct}\"\n";
   }
 
-  @acctLedgerOpts = ('-V', '-F', $formatString, '-w', '--sort', 'd', '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg', $acct);
+  @acctLedgerOpts = ('-V', '-F', $formatString, '-w', '--sort', 'd', '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg', '/^' . $acct . '$/');
   open(GL_CSV_DATA, "-|", $LEDGER_CMD, @acctLedgerOpts)
     or die "Unable to run $LEDGER_CMD @acctLedgerOpts: $!";
 
