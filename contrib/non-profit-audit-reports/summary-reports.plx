@@ -214,7 +214,7 @@ my %incomeGroups = ('INTEREST INCOME' => { args => ['/^Income.*Interest/' ] },
                     'BOOK ROYALTIES & AFFILIATE PROGRAMS' =>
                     { args => [ '/^Income.*(Royalt|Affilate)/' ] },
                     'CONFERENCES, REGISTRATION' => {args => [ '/^Income.*Reg/' ] },
-                    'CONFERENCES, RELATED BUSINESS INCOME' => { args => [ '/^Income.*(Conference:.*Sponsor|Booth|RBI)/'] },
+                    'CONFERENCES, RELATED BUSINESS INCOME' => { args => [ '/^Income.*(Conferences?:.*Sponsor|Booth|RBI)/'] },
                     'LICENSE ENFORCEMENT' => { args => [ '/^Income.*Enforce/' ]},
                     'TRADEMARKS' => {args => [ '/^Income.*Trademark/' ]},
                     'ADVERSITING' => {args => [ '/^Income.*Advertising/' ]});
