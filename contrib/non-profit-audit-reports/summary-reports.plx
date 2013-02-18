@@ -104,9 +104,9 @@ my %reportFields =
    'Liabilities, Other' => {args => [ '-e', $endDate, 'bal', '/^Liabilities/',
                                     'and', 'not', '/^Liabilities:Credit Card/']},
    'Unearned Income, Conference Registration' => {args => [ '-e', $endDate, 'bal',
-                                                   '/^Unearned Income.*Conf.*Reg/' ]},
+                                                   '/^Unearned Income.*Reg/' ]},
    'Unearned Income, Other' => {args => [ '-e', $endDate, 'bal', '/^Unearned Income/', 'and', 'not',
-                                                   '/^Unearned Income.*Conf.*Reg/' ]},
+                                                   '/^Unearned Income.*Reg/' ]},
    'Unrestricted Net Assets' => {args => [ '-e', $endDate, 'bal', '/^(Income|Expenses):Conservancy/' ]},
    'Temporarily Restricted Net Assets' =>  {args => [ '-e', $endDate, 'bal', '/^(Income|Expenses)/',
                               'and', 'not', '/^(Unearned Income|(Income|Expenses):Conservancy)/' ]},
@@ -213,8 +213,8 @@ my %incomeGroups = ('INTEREST INCOME' => { args => ['/^Income.*Interest/' ] },
                     'DONATIONS' => { args => [ '/^Income.*Donation/' ] },
                     'BOOK ROYALTIES & AFFILIATE PROGRAMS' =>
                     { args => [ '/^Income.*(Royalt|Affilate)/' ] },
-                    'CONFERENCES, REGISTRATION' => {args => [ '/^Income.*Conf.*Reg/' ] },
-                    'CONFERENCES, RELATED BUSINESS INCOME' => { args => [ '/^Income.*(Booth|RBI)/'] },
+                    'CONFERENCES, REGISTRATION' => {args => [ '/^Income.*Reg/' ] },
+                    'CONFERENCES, RELATED BUSINESS INCOME' => { args => [ '/^Income.*(Conferences?:.*Sponsor|Booth|RBI)/'] },
                     'LICENSE ENFORCEMENT' => { args => [ '/^Income.*Enforce/' ]},
                     'TRADEMARKS' => {args => [ '/^Income.*Trademark/' ]},
                     'ADVERSITING' => {args => [ '/^Income.*Advertising/' ]});
@@ -386,7 +386,7 @@ print STDERR "\n";
 open(TRIAL, ">", "trial-balance.csv") or die "unable to open accrued.txt for writing: $!";
 
 print TRIAL "\"TRIAL BALANCE REPORT\",\"ENDING: $formattedEndDate\"\n\n",
-             "\"ACCOUNT\",\"BALANCE AT $formattedStartDate\",\"CHANGE DURING FY\",\"BALANCE AT $formattedEndDate\"\n\n";
+             "\"ACCOUNT\",\"BALANCE AT $formattedStartDate\",\"CHANGE DURING PERIOD\",\"BALANCE AT $formattedEndDate\"\n\n";
 
 my %commands = (
                 'totalEndFY' => [ $LEDGER_BIN, @mainLedgerOptions, '-V', '-X', '$',
