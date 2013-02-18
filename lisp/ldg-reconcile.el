@@ -81,7 +81,7 @@ numbers"
   "Calculate the cleared balance of the account being reconciled."
   (interactive)
   (let* ((pending (car (ledger-string-balance-to-commoditized-amount
-		  (car (ledger-reconcile-get-balances)))))
+			(car (ledger-reconcile-get-balances)))))
 	 (target-delta (if ledger-target
 			   (-commodity ledger-target pending)
 			   nil)))

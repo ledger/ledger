@@ -51,12 +51,6 @@
   :type 'boolean
   :group 'ledger-post)
 
-(defcustom ledger-post-use-decimal-comma nil
-  "If non-nil the use commas as decimal separator.
-This only has effect interfacing to calc mode in edit amount"
-  :type 'boolean
-  :group 'ledger-post)
-
 (defun ledger-post-all-accounts ()
   "Return a list of all accounts in the buffer."
   (let ((origin (point))
@@ -185,7 +179,7 @@ BEG, END, and LEN control how far it can align."
 	    (goto-char (match-beginning 0))
 	    (delete-region (match-beginning 0) (match-end 0))
 	    (calc)
-	    (if ledger-post-use-decimal-comma
+	    (if ledger-use-decimal-comma
 		(progn
 		  (while (string-match "\\." val)
 		    (setq val (replace-match "" nil nil val))) ;; gets rid of periods

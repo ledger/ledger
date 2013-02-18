@@ -21,7 +21,7 @@
 
 
 ;;; Commentary:
-;; 
+;;  Provide facilities for running and saving reports in emacs
 
 ;;; Code:
 
@@ -51,22 +51,14 @@ specifier."
 (defcustom ledger-report-format-specifiers
   '(("ledger-file" . ledger-report-ledger-file-format-specifier)
     ("payee" . ledger-report-payee-format-specifier)
-    ("account" . ledger-report-account-format-specifier))
+    ("account" . ledger-report-account-format-specifier)
+    ("value" . ledger-report-value-format-specifier))
   "An alist mapping ledger report format specifiers to implementing functions.
 
 The function is called with no parameters and expected to return the
 text that should replace the format specifier."
   :type 'alist
   :group 'ledger)
-
-;;(define-key map [(control ?c) (control ?o) (control ?r)] 'ledger-report)
-;;(define-key map [(control ?c) (control ?o) (control ?g)] 'ledger-report-goto)
-;;(define-key map [(control ?c) (control ?o) (control ?a)] 'ledger-report-redo)
-;;(define-key map [(control ?c) (control ?o) (control ?s)] 'ledger-report-save)
-;;(define-key map [(control ?c) (control ?o) (control ?e)] 'ledger-report-edit)
-;;(define-key map [(control ?c) (control ?o) (control ?k)] 'ledger-report-kill)
-
-;; Ledger report mode
 
 (defvar ledger-report-buffer-name "*Ledger Report*")
 
@@ -127,6 +119,12 @@ text that should replace the format specifier."
      (define-key map [menu-bar ldg-rep lrs] '("Save Report" . ledger-report-save))
 
      (use-local-map map)))
+
+(defun ledger-report-value-format-specifier ()
+  "Return a valid meta-data tag name"
+  ;; It is intended completion should be available on existing account
+  ;; names, but it remains to be implemented.
+  (ledger-read-string-with-default "Value: " nil))
 
 (defun ledger-report-read-name ()
   "Read the name of a ledger report to use, with completion.

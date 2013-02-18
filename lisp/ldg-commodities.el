@@ -31,6 +31,12 @@
   :type 'string
   :group 'ledger)
 
+(defcustom ledger-use-decimal-comma nil
+  "If non-nil the use commas as decimal separator.
+This only has effect interfacing to calc mode in edit amount"
+  :type 'boolean
+  :group 'ledger)
+
 (defun ledger-string-balance-to-commoditized-amount (str)
   "Return a commoditized amount (val, 'comm') from STR."
   (let ((fields (split-string str "[\n\r]"))) ; break any balances
@@ -40,10 +46,11 @@
 	      (let* ((parts (split-string str))  ;break into number and commodity string
 		     (first (car parts))
 		     (second (cadr parts)))
-		;"^-*[1-9][0-9]*[.,][0-9]*"
 		(if (string-match "^-*[1-9]+" first)
-		    (list (string-to-number first) second)
-		    (list (string-to-number second) first))))
+		    (list (string-to-number 
+			   (ledger-commodity-string-number-decimalize first :from-user)) second)
+		    (list (string-to-number 
+			   (ledger-commodity-string-number-decimalize second :from-user)) first))))
 	    fields)))
 
 
@@ -59,15 +66,38 @@
       (list (+ (car c1) (car c2)) (cadr c1))
       (error "Can't add different commodities, %S to %S" c1 c2)))
 
+(defun ledger-commodity-string-number-decimalize (number-string direction)
+  "Take NUMBER-STRING and ensure proper decimalization for use by string-to-number and number-to-string.  
+
+DIRECTION can be :to-user or :from-user.  All math calculations
+are done with decimal-period, some users may prefer decimal-comma
+which must be translated both directions."
+  (let ((val number-string))
+    (if ledger-use-decimal-comma
+	(cond ((eq direction :from-user)
+	       ;; change string to decimal-period
+	       (while (string-match "," val)
+		 (setq val (replace-match "." nil nil val)))) ;; switch to period separator
+	      ((eq direction :to-user)
+	     ;; change to decimal-comma
+	       (while (string-match "\\." val)
+		 (setq val (replace-match "," nil nil val)))) ;; gets rid of periods
+	      (t
+	       (error "ledger-commodity-string-number-decimalize: direction not properly specified %S" direction))))
+    val))
+      
+	  
+      
 (defun ledger-commodity-to-string (c1)
   "Return string representing C1.
 Single character commodities are placed ahead of the value,
 longer one are after the value."
-(let ((val (number-to-string (car c1)))
-	(commodity (cadr c1)))
-    (if (> (length commodity) 1)
-	(concat val " " commodity)
-	(concat commodity " " val))))
+(let ((val (ledger-commodity-string-number-decimalize
+	    (number-to-string (car c1)) :to-user))
+      (commodity (cadr c1)))
+  (if (> (length commodity) 1)
+      (concat val " " commodity)
+      (concat commodity " " val))))
 
 (defun ledger-read-commodity-string (prompt)
   "Return a commoditizd value (val 'comm') from COMM.

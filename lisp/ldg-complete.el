@@ -164,10 +164,10 @@ Does not use ledger xact"
                               xacts))
             (forward-line))
           (setq xacts (nreverse xacts)))))
+    ;; Insert rest-of-name and the postings
     (when xacts
       (save-excursion
-	(insert rest-of-name)
-        (insert ?\n)
+	(insert rest-of-name ?\n)
         (while xacts
           (insert (car xacts) ?\n)
           (setq xacts (cdr xacts))))
