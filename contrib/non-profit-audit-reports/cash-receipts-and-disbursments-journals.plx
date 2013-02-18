@@ -111,15 +111,56 @@ foreach my $typeData ({ name => 'disbursements', query => 'a<=0' },
     }
     $formatString .= $tagStrings . '\n%/"","","","%A","%t"' . $tagStrings . '\n';
 
+    # I thought '--sort', 'd', '--sort-xact', 'a',  should
+    # have worked below for a good sort.  Then I tried
+    # rather than '--sort', "d,n,a", which didn't work either.
+    #  I opened a bug: http://bugs.ledger-cli.org/show_bug.cgi?id=901
+
     my @csvRegLedgerOpts = ('-f', $tempFile, '-V', '-F', $formatString, '-w', '--sort', 'd',
                             '-b', $beginDate, '-e', $endDate, 'reg');
 
     open(CSV_DATA, "-|", $LEDGER_CMD, @csvRegLedgerOpts)
       or die "unable to run ledger command for $fileNameBase.csv: $!";
 
-    while (my $line = <CSV_DATA>) { $line =~ s/"link:"/""/g; print CSV_OUT $line; }
+    my($curDepositDate, $curDepositTotal);
+
+    while (my $line = <CSV_DATA>) {
+      $line =~ s/"link:"/""/g;
+
+      my $date = $line;  chomp $date;
+      $date =~ s/^\s*"([^"]*)"\s*,.*$/$1/;
+      if (defined $date and $date !~ /^\s*$/ and
+          defined $curDepositDate and ($date ne $curDepositDate or
+          ($date eq $curDepositDate and $line !~ /DEPOSIT[\s\-]+BRANCH/))) {
+        print CSV_OUT "\"$curDepositDate\",\"SUBTOTAL\",\"BRANCH DEPOSIT TOTAL:\",\"\",\"\$$curDepositTotal\"\n\n";
+        $curDepositTotal = $curDepositDate = undef;
+      }
+      if ($line =~ /DEPOSIT[\s\-]+BRANCH/) {
+        if (not defined $curDepositDate) {
+          $curDepositDate = $line; chomp $curDepositDate;
+          $curDepositDate =~ s/^\s*"([^"]+)"\s*,.*$/$1/;
+        }
+      }
+      # This is a bit of a hack because I can't ssume that the line with the
+      # description on it has the account name in it.
+      if (defined $curDepositDate and $line =~ /$acct/) {
+        my $amt = $line;
+        chomp $amt;
+        $amt =~ s/^\s*"[^"]*","[^"]*","[^"]*","[^"]*","\$\s*([^"]*)".*$/$1/;
+        $amt =~ s/,//g;
+
+        $curDepositTotal = 0.0 unless defined $curDepositTotal;
+        $curDepositTotal += $amt;
+        print "$amt and $curDepositTotal for deposit on $curDepositDate\n";
+      }
+      print CSV_OUT $line;
+    }
+    # Catch potential last Deposit subtotal
+    print CSV_OUT "\n\"$curDepositDate\",\"SUBTOTAL\",\"BRANCH DEPOSIT TOTAL:\",\"\",\"\$$curDepositTotal\"\n\n"
+      if (defined $curDepositDate);
+
     close(CSV_DATA); die "Error read from csv ledger command $!" unless $? == 0;
-    print CSV_OUT "\npagebreak\n";
+    print CSV_OUT "pagebreak\n";
   SKIP_REGISTER_COMMANDS:
     unlink($tempFile);
   }
