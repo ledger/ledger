@@ -228,23 +228,23 @@ and exit reconcile mode"
 
 
 (defun ledger-reconcile-quit ()
-  "Quite the reconcile window without saving ledger buffer."
+  "Quit the reconcile window without saving ledger buffer."
   (interactive)
-  (ledger-reconcile-quit-cleanup)
-  (let ((buf ledger-buf)
-	(recon-buf  (get-buffer ledger-recon-buffer-name)))
-    ;; Make sure you delete the window before you delete the buffer,
-    ;; otherwise, madness ensues
+  (let ((recon-buf (get-buffer ledger-recon-buffer-name))
+	buf)
     (with-current-buffer recon-buf
+      (ledger-reconcile-quit-cleanup)
+      (set 'buf ledger-buf)
+      ;; Make sure you delete the window before you delete the buffer,
+      ;; otherwise, madness ensues
       (delete-window (get-buffer-window recon-buf))
-      (kill-buffer recon-buf))
-    (set-window-buffer (selected-window) buf)))
+      (kill-buffer recon-buf)
+      (set-window-buffer (selected-window) buf))))
 
 (defun ledger-reconcile-quit-cleanup ()
   "Cleanup all hooks established by reconcile mode."
   (interactive)
-  (let ((buf ledger-buf)
-	(reconcile-buf (get-buffer ledger-recon-buffer-name)))
+  (let ((buf ledger-buf))
     (with-current-buffer buf
       (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t)
       (if ledger-fold-on-reconcile
@@ -315,6 +315,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
       (when recon-window
 	(fit-window-to-buffer recon-window)
 	(with-current-buffer buf
+	  (add-hook 'kill-buffer-hook 'ledger-reconcile-quit nil t)
 	  (select-window (get-buffer-window buf))
 	  (goto-char (point-max))
 	  (recenter -1))
@@ -426,9 +427,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
      (define-key map [menu-bar ldg-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
      (define-key map [menu-bar ldg-recon-menu sav] '("Save" . ledger-reconcile-save))
      
-     (use-local-map map)
-     
-     (add-hook 'kill-buffer-hook 'ledger-reconcile-quit-cleanup nil t)))
+     (use-local-map map)))
 
 (provide 'ldg-reconcile)
 (provide 'ldg-reconcile)
