@@ -100,7 +100,7 @@ foreach my $typeData ({ name => 'disbursements', query => 'a<=0' },
 
     goto SKIP_REGISTER_COMMANDS if (-z $tempFile);
 
-    print CSV_OUT "\n\"ACCOUNT:\",\"$acct\"\n\"PERIOD START:\",\"$beginDate\"\n\"PERIOD END:\",\"$formattedEndDate\"\n";
+    print CSV_OUT "\"ACCOUNT:\",\"$acct\"\n\"PERIOD START:\",\"$beginDate\"\n\"PERIOD END:\",\"$formattedEndDate\"\n";
     print CSV_OUT '"DATE","CHECK NUM","NAME","ACCOUNT","AMOUNT"';
 
     my $formatString = '\n"%(date)","%C","%P","%A","%t"';
