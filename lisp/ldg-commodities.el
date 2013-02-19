@@ -37,20 +37,30 @@ This only has effect interfacing to calc mode in edit amount"
   :type 'boolean
   :group 'ledger)
 
+(defun ledger-split-commodity-string (str)
+  "Split a commoditized amount into two parts"
+  (let (val
+	comm)
+    (with-temp-buffer
+      (insert str)
+      (goto-char (point-min))
+      (re-search-forward "-?[1-9][0-9]*[.,][0-9]*")
+      (setq val 
+	    (string-to-number
+	    (ledger-commodity-string-number-decimalize 
+	     (delete-and-extract-region (match-beginning 0) (match-end 0)) :from-user)))
+      (delete-trailing-whitespace)
+      (setq comm (buffer-substring (point-min) (point-max)))
+      (list val comm))))
+    
+
 (defun ledger-string-balance-to-commoditized-amount (str)
   "Return a commoditized amount (val, 'comm') from STR."
   (let ((fields (split-string str "[\n\r]"))) ; break any balances
 					      ; with multi commodities
 					      ; into a list
     (mapcar '(lambda (str)
-	      (let* ((parts (split-string str))  ;break into number and commodity string
-		     (first (car parts))
-		     (second (cadr parts)))
-		(if (string-match "^-*[1-9]+" first)
-		    (list (string-to-number 
-			   (ledger-commodity-string-number-decimalize first :from-user)) second)
-		    (list (string-to-number 
-			   (ledger-commodity-string-number-decimalize second :from-user)) first))))
+	      (ledger-split-commodity-string str))
 	    fields)))
 
 
