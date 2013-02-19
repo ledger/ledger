@@ -232,23 +232,25 @@ and exit reconcile mode"
   (interactive)
   (let ((recon-buf (get-buffer ledger-recon-buffer-name))
 	buf)
-    (with-current-buffer recon-buf
-      (ledger-reconcile-quit-cleanup)
-      (set 'buf ledger-buf)
-      ;; Make sure you delete the window before you delete the buffer,
-      ;; otherwise, madness ensues
-      (delete-window (get-buffer-window recon-buf))
-      (kill-buffer recon-buf)
-      (set-window-buffer (selected-window) buf))))
+    (if recon-buf
+	(with-current-buffer recon-buf
+	  (ledger-reconcile-quit-cleanup)
+	  (set 'buf ledger-buf)
+	  ;; Make sure you delete the window before you delete the buffer,
+	  ;; otherwise, madness ensues
+	  (delete-window (get-buffer-window recon-buf))
+	  (kill-buffer recon-buf)
+	  (set-window-buffer (selected-window) buf)))))
 
 (defun ledger-reconcile-quit-cleanup ()
   "Cleanup all hooks established by reconcile mode."
   (interactive)
   (let ((buf ledger-buf))
-    (with-current-buffer buf
-      (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t)
-      (if ledger-fold-on-reconcile
-	  (ledger-occur-quit-buffer buf)))))
+    (if buf
+	(with-current-buffer buf
+	  (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t)
+	  (if ledger-fold-on-reconcile
+	      (ledger-occur-quit-buffer buf))))))
 
 (defun ledger-marker-where-xact-is (emacs-xact posting)
   "Find the position of the EMACS-XACT in the `ledger-buf'.

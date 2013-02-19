@@ -47,6 +47,7 @@
 (require 'ldg-fonts)
 (require 'ldg-occur)
 (require 'ldg-commodities)
+(require 'esh-arg)
 
 
 ;;; Code:
