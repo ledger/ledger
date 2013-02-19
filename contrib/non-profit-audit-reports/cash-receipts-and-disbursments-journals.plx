@@ -64,6 +64,8 @@ open(CHART_DATA, "-|", $LEDGER_CMD, @chartOfAccountsOpts)
 my @accounts;
 while (my $line = <CHART_DATA>) {
   chomp $line;
+  next if $line =~ /^\s*\<\s*Adjustment\s*\>\s*$/;
+  next if $line =~ /^Equity:/;   # Stupid auto-account made by ledger.
   $line =~ s/^\s*//;   $line =~ s/\s*$//;
   push(@accounts, $line);
 
@@ -126,6 +128,10 @@ foreach my $typeData ({ name => 'disbursements', query => 'a<=0' },
 
     while (my $line = <CSV_DATA>) {
       $line =~ s/"link:"/""/g;
+
+      # Skip lines that have Adjustment or Equity: in them.
+      next if $line =~
+         /^\s*"[^"]*","[^"]*","[^"]*","(\s*\<\s*Adjustment\s*\>\s*|Equity:)/;
 
       my $date = $line;  chomp $date;
       $date =~ s/^\s*"([^"]*)"\s*,.*$/$1/;
