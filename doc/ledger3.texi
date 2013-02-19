@@ -1971,7 +1971,7 @@ account. For example:
 capture  Expenses:Deductible:Medical  Medical
 @end smallexample
 
-Would cause any posting with @code{Medical} in it's name to be replaced with
+Would cause any posting with @code{Medical} in its name to be replaced with
 @code{Expenses:Deductible:Medical}.
 
 
@@ -2889,9 +2889,9 @@ cannot appear in the Key:
 @node Typed metadata,  , Metadata values, Metadata
 @subsection Typed metadata
 
-If a metadata tag ends in ::, it's value will be parsed as a value expression
-and stored internally as a value rather than as a string.  For example,
-although I can specify a date textually like so:
+If a metadata tag ends in ::, its value will be parsed as a value
+expression and stored internally as a value rather than as a string.
+For example, although I can specify a date textually like so:
 
 @smallexample
    2012-03-10 * KFC
@@ -2900,10 +2900,10 @@ although I can specify a date textually like so:
          ; AuxDate: 2012/02/30
 @end smallexample
 
-@noindent This date is just a string, and won't be parsed as a date unless its value is
-used in a date-context (at which time the string is parsed into a date
-automatically every time it is needed as a date).  If on the other hand I
-write this:
+@noindent This date is just a string, and won't be parsed as a date
+unless its value is used in a date-context (at which time the string
+is parsed into a date automatically every time it is needed as a
+date).  If on the other hand I write this:
 
 @smallexample
    2012-03-10 * KFC
@@ -2912,8 +2912,9 @@ write this:
          ; AuxDate:: [2012/02/30]
 @end smallexample
 
-@noindent Then it is parsed as a date only once, and during parsing of the journal file,
-which would let me know right away that it is an invalid date.
+@noindent Then it is parsed as a date only once, and during parsing
+of the journal file, which would let me know right away that it is an
+invalid date.
 
 @node Virtual postings, Expression amounts, Metadata, Transactions
 @section  Virtual postings
