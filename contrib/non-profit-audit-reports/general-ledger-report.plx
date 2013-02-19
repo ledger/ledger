@@ -72,6 +72,7 @@ my @accounts;
 while (my $line = <CHART_DATA>) {
   chomp $line;
   next if $line =~ /^\s*\<\s*Adjustment\s*\>\s*$/;
+  next if $line =~ /^\s*Equity:/;   # Stupid auto-account made by ledger.
   $line =~ s/^\s*//;   $line =~ s/\s*$//;
   push(@accounts, $line);
 
@@ -118,7 +119,6 @@ sub preferredAccountSorting ($$) {
     return $_[0] cmp $_[1];
   }
 }
-
 
 my @sortedAccounts;
 foreach my $acct ( sort preferredAccountSorting @accounts) {
