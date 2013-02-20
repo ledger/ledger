@@ -1,8 +1,20 @@
 #!/usr/bin/perl
 # cash-receipts-and-disbursments-journals                                    -*- Perl -*-
 #
-#    Script to generate a General Ledger report that accountants like
+#    Script to generate a cash receipts and disbursement joural reports
 #    using Ledger.
+#
+#    Accountants sometimes ask for a report called the "cash receipts and
+#    disbursements journals".  From a programmer's perspective, these are two
+#    reports that have the following properties:
+#
+#       * Receipts: "a list of all transactions in the period where funds
+#                    enter a cash account (i.e., the amount reconciled
+#                    against the cash account is > 0"
+#
+#       * Disbursements: "a list of all transactions in the period where
+#                         funds leave a cash account (i.e., the amount
+#                         reconciled against the cash account is < 0)
 #
 # Copyright (C) 2011, 2012, 2013 Bradley M. Kuhn
 #
