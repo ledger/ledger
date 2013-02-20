@@ -379,7 +379,7 @@ close EXPENSE;    die "unable to write to expense.csv: $!" unless ($? == 0);
 die "GROUPS NOT INCLUDED : ", join(keys(%verifyAllGroups), ", "), "\n"
   unless (keys %verifyAllGroups == 0);
 
-die "calculated total of $overallTotal does equal $firstTotal"
+die "calculated total of $overallTotal does *not* equal $firstTotal"
   if (abs($overallTotal) - abs($firstTotal) > $ONE_PENNY);
 
 print STDERR "\n";
