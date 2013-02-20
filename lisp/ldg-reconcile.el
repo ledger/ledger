@@ -362,12 +362,12 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	  (if ledger-fold-on-reconcile
 	      (ledger-occur-change-regex account ledger-buf))
 	  (set-buffer (get-buffer ledger-recon-buffer-name))
-	  (setq ledger-target
-		(ledger-read-commodity-string "Set reconciliation target"))
 	  (unless (get-buffer-window rbuf)
 	    (ledger-reconcile-open-windows buf rbuf))
 	  (ledger-reconcile-refresh)
-	  (goto-char (point-min)))
+	  (goto-char (point-min))
+	  (setq ledger-target
+		(ledger-read-commodity-string "Set reconciliation target")))
 
 	  (progn  ;; no recon-buffer, starting from scratch.
 	    (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save nil t)
@@ -379,9 +379,9 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	      (ledger-reconcile-mode)
 	      (set (make-local-variable 'ledger-buf) buf)
 	      (set (make-local-variable 'ledger-acct) account)
+	      (ledger-do-reconcile)
 	      (set (make-local-variable 'ledger-target)
-		   (ledger-read-commodity-string "Set reconciliation target"))
-	      (ledger-do-reconcile))))))
+		   (ledger-read-commodity-string "Set reconciliation target")))))))
 
 (defvar ledger-reconcile-mode-abbrev-table)
 
