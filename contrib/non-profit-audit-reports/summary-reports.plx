@@ -80,6 +80,7 @@ sub ParseNumber($) {
 Math::BigFloat->precision(-2);
 my $ZERO =  Math::BigFloat->new("0.00");
 my $ONE_PENNY =  Math::BigFloat->new("0.01");
+my $TWO_CENTS =  Math::BigFloat->new("0.02");
 
 if (@ARGV < 2) {
   print STDERR "usage: $0 <START_DATE> <END_DATE> <LEDGER_OPTIONS>\n";
@@ -249,7 +250,7 @@ foreach my $type (keys %incomeGroups) {
     my($account, $amount) = ($1, $2);
     $amount = ParseNumber($amount);
     $account =~ s/\s+$//;
-    next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
+    next if $account =~ /\<Adjustment\>/ and (abs($amount) <= $TWO_CENTS);
     die "Weird account found, $account with amount of $amount in income command\n"
       unless $account =~ /^\s*Income:/;
 
@@ -321,7 +322,7 @@ foreach my $line (<FILE>) {
   my($account, $amount) = ($1, $2);
   $amount = ParseNumber($amount);
   $account =~ s/\s+$//;
-  next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
+  next if $account =~ /\<Adjustment\>/ and (abs($amount) <= $TWO_CENTS);
   die "Weird account found, $account, with amount of $amount in expenses command\n"
     unless $account =~ /^\s*Expenses:/;
 
@@ -378,7 +379,7 @@ close EXPENSE;    die "unable to write to expense.csv: $!" unless ($? == 0);
 die "GROUPS NOT INCLUDED : ", join(keys(%verifyAllGroups), ", "), "\n"
   unless (keys %verifyAllGroups == 0);
 
-die "calculated total of $overallTotal does equal $firstTotal"
+die "calculated total of $overallTotal does *not* equal $firstTotal"
   if (abs($overallTotal) - abs($firstTotal) > $ONE_PENNY);
 
 print STDERR "\n";
@@ -416,7 +417,7 @@ foreach my $id (keys %commands) {
     my($account, $amount) = ($1, $2);
     $amount = ParseNumber($amount);
     $account =~ s/\s+$//;
-    next if $account =~ /\<Adjustment\>/ and (abs($amount) <= 0.02);
+    next if $account =~ /\<Adjustment\>/ and (abs($amount) <= $TWO_CENTS);
     next if $account =~ /^Equity:/;   # Stupid auto-account made by ledger.
     $trialBalanceData{$id}{$account} = $amount;
     $fullAccountList{$account} = $id;

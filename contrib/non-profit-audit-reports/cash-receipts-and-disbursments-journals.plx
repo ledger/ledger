@@ -1,8 +1,20 @@
 #!/usr/bin/perl
 # cash-receipts-and-disbursments-journals                                    -*- Perl -*-
 #
-#    Script to generate a General Ledger report that accountants like
+#    Script to generate a cash receipts and disbursement joural reports
 #    using Ledger.
+#
+#    Accountants sometimes ask for a report called the "cash receipts and
+#    disbursements journals".  From a programmer's perspective, these are two
+#    reports that have the following properties:
+#
+#       * Receipts: "a list of all transactions in the period where funds
+#                    enter a cash account (i.e., the amount reconciled
+#                    against the cash account is > 0"
+#
+#       * Disbursements: "a list of all transactions in the period where
+#                         funds leave a cash account (i.e., the amount
+#                         reconciled against the cash account is < 0)
 #
 # Copyright (C) 2011, 2012, 2013 Bradley M. Kuhn
 #
@@ -132,6 +144,19 @@ foreach my $typeData ({ name => 'disbursements', query => 'a<=0' },
       # Skip lines that have Adjustment or Equity: in them.
       next if $line =~
          /^\s*"[^"]*","[^"]*","[^"]*","(\s*\<\s*Adjustment\s*\>\s*|Equity:)/;
+
+      #  Note that we don't do our usual "$TWO_CENTS" check on Adjustment
+      #  here.  That's by design: if we consistently ignore Adjustements in
+      #  the same way, it might have the appearance that a Superman
+      #  III/Office Space -style movement of funds is going on.  By just
+      #  straight "ignoring" them here, and not doing the TWO_CENTS test, it
+      #  helps to assure that.
+
+      # However, it's worth noting that the ignoring of "Adjustment" in these
+      # scripts is not that meaningful and doesn't indicate as Superman
+      # III/Office Space -style scheme, because such a scheme would also have
+      # to be implemented in the main Ledger codebase.
+
 
       my $date = $line;  chomp $date;
       $date =~ s/^\s*"([^"]*)"\s*,.*$/$1/;
