@@ -250,7 +250,9 @@ and exit reconcile mode"
 	(with-current-buffer buf
 	  (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t)
 	  (if ledger-fold-on-reconcile
-	      (ledger-occur-quit-buffer buf))))))
+	      (progn
+		(ledger-occur-quit-buffer buf)
+		(ledger-highlight-xact-under-point)))))))
 
 (defun ledger-marker-where-xact-is (emacs-xact posting)
   "Find the position of the EMACS-XACT in the `ledger-buf'.
