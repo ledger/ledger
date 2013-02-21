@@ -82,7 +82,8 @@ When REGEX is nil, unhide everything, and remove higlight"
 		(append ledger-occur-overlay-list
 			(ledger-occur-create-folded-overlays buffer-matches)))
 	  (setq ledger-occur-last-match regex)
-	  (select-window (get-buffer-window buffer))))
+	  (if (get-buffer-window buffer)
+	      (select-window (get-buffer-window buffer)))))
     (recenter)))
 
 (defun ledger-occur (regex)

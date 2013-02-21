@@ -320,10 +320,10 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	(fit-window-to-buffer recon-window)
 	(with-current-buffer buf
 	  (add-hook 'kill-buffer-hook 'ledger-reconcile-quit nil t)
-	  (select-window (get-buffer-window buf))
+	  (if (get-window-for-other-buffer buf)
+	      (select-window (get-buffer-window buf)))
 	  (goto-char (point-max))
 	  (recenter -1))
-        
         (select-window recon-window)
         (ledger-reconcile-visit t))
       (add-hook 'post-command-hook 'ledger-reconcile-track-xact nil t))))
