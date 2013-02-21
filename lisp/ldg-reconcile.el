@@ -112,6 +112,7 @@ numbers"
 (defun ledger-reconcile-toggle ()
   "Toggle the current transaction, and mark the recon window."
   (interactive)
+  (beginning-of-line)
   (let ((where (get-text-property (point) 'where))
         (inhibit-read-only t)
         status)
