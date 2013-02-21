@@ -198,6 +198,7 @@ numbers"
 	(forward-char)
 	(recenter)
 	(ledger-highlight-xact-under-point)
+	(forward-char -1)
 	(if come-back
 	    (switch-to-buffer-other-window cur-buf))))))
 
