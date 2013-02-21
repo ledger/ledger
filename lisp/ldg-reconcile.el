@@ -321,7 +321,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	(fit-window-to-buffer recon-window)
 	(with-current-buffer buf
 	  (add-hook 'kill-buffer-hook 'ledger-reconcile-quit nil t)
-	  (if (get-window-for-other-buffer buf)
+	  (if (get-buffer-window buf)
 	      (select-window (get-buffer-window buf)))
 	  (goto-char (point-max))
 	  (recenter -1))
