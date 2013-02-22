@@ -49,6 +49,7 @@ This only has effect interfacing to calc mode in edit amount"
 	    (string-to-number
 	    (ledger-commodity-string-number-decimalize 
 	     (delete-and-extract-region (match-beginning 0) (match-end 0)) :from-user)))
+      (goto-char (point-min))
       (re-search-forward "[^[:space:]]" nil t)
       (setq comm 
 	    (delete-and-extract-region (match-beginning 0) (match-end 0)))
