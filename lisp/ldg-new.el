@@ -90,7 +90,6 @@
           (forward-line 1))))))
 
 (defun ledger-dump-variable (var)
-  
   (insert (format "%s: %S\n" (symbol-name var) (eval var))))
 
 (defun ledger-mode-dump-variables ()
@@ -128,15 +127,12 @@
   (ledger-dump-variable 'ledger-register-line-format)
   (insert "ldg-reports:\n")
   (ledger-dump-variable 'ledger-reports)
-(ledger-dump-variable 'ledger-report-format-specifiers)
-(ledger-dump-variable 'ledger-report-buffer-name)
-(insert "ldg-state:")
-(ledger-dump-variable 'ledger-clear-whole-transactions)
-(insert "ldg-xact:\n")
-(ledger-dump-variable 'ledger-highlight-xact-under-point)
- 
-
-)
+  (ledger-dump-variable 'ledger-report-format-specifiers)
+  (ledger-dump-variable 'ledger-report-buffer-name)
+  (insert "ldg-state:")
+  (ledger-dump-variable 'ledger-clear-whole-transactions)
+  (insert "ldg-xact:\n")
+  (ledger-dump-variable 'ledger-highlight-xact-under-point))
   
  
 (provide 'ledger)
