@@ -1,0 +1,62 @@
+;;; ldg-init.el --- Helper code for use with the "ledger" command-line tool
+
+;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
+
+;; This file is not part of GNU Emacs.
+
+;; This is free software; you can redistribute it and/or modify it under
+;; the terms of the GNU General Public License as published by the Free
+;; Software Foundation; either version 2, or (at your option) any later
+;; version.
+;;
+;; This is distributed in the hope that it will be useful, but WITHOUT
+;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+;; for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+;; MA 02111-1307, USA.
+
+;;; Commentary:
+;; Determine the ledger environment
+
+(defvar init-file-name "~/.ledgerrc")
+(defvar ledger-environment-alist nil)
+
+(defun ledger-init-parse-initialization (file)
+     (with-current-buffer file
+     (setq ledger-environment-alist nil)
+     (goto-char (point-min))
+     (while (re-search-forward "^--.+?\\($\\|[ ]\\)" nil t )
+      (let ((matchb (match-beginning 0)) ;; save the match data, string-match stomp on it
+	    (matche (match-end 0)))
+	(end-of-line)
+	(setq ledger-environment-alist 
+	      (append ledger-environment-alist
+		      (list (cons (let ((flag (buffer-substring (+ 2 matchb) matche)))
+				    (if (string-match "[ \t\n\r]+\\'" flag)
+					(replace-match "" t t flag)
+					flag))
+				  (let ((value (buffer-substring  matche (point) )))
+				    (if (> (length value) 0)
+					value
+					t))))))))
+     ledger-environment-alist))
+
+(defun ledger-init-load-init-file ()
+  (interactive)
+  (save-excursion
+    (if (and (file-exists-p init-file-name)
+	     (file-readable-p init-file-name))
+	(progn
+	  (find-file init-file-name)
+	  (ledger-init-parse-initialization (file-name-nondirectory init-file-name))
+	  (kill-buffer (file-name-nondirectory init-file-name))))))
+
+
+
+(provide 'ldg-init)
+
+;;; ldg-init.el ends here
