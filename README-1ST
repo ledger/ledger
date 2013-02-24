@@ -117,16 +117,18 @@ it's usually fairly obvious where things have gone astray.
 
  - Q: Something else fails, or Ledger crashes on startup
 
-   A: This, I am most interested in hearing about.  Please e-mail me a copy of
-      config.log and your build log to <johnw@newartisans.com>.  Also, if
-      Ledger is crashing, try running it under gdb like so:
+   A: This, I am most interested in hearing about.  Please file a bug
+      at the Ledger Bugzilla, http://bugs.ledger-cli.org/.  The more
+      details you can provide, the better.  Also, if Ledger is crashing,
+      try running it under gdb like so:
 
         $ gdb ledger
         (gdb) run <ARGS TO LEDGER>
         ... runs till crash ...
         (gdb) bt
 
-      Send me that backtrace output, and the output from "ledger --version".
+      Put that backtrace output, and the output from "ledger
+      --version" in the bug report.
 
    ----------------------------------------------------------------------
 
