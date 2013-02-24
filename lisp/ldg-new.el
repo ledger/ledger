@@ -32,22 +32,23 @@
 
 ;;; Commentary:
 ;; Load up the ledger mode
+(require 'esh-arg)
+(require 'ldg-commodities)
 (require 'ldg-complete)
 (require 'ldg-exec)
+(require 'ldg-fonts)
+(require 'ldg-init)
 (require 'ldg-mode)
+(require 'ldg-occur)
 (require 'ldg-post)
 (require 'ldg-reconcile)
 (require 'ldg-register)
 (require 'ldg-report)
+(require 'ldg-sort)
 (require 'ldg-state)
 (require 'ldg-test)
 (require 'ldg-texi)
 (require 'ldg-xact)
-(require 'ldg-sort)
-(require 'ldg-fonts)
-(require 'ldg-occur)
-(require 'ldg-commodities)
-(require 'esh-arg)
 
 
 ;;; Code:

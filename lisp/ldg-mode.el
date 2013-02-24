@@ -76,6 +76,8 @@
     (add-hook 'before-revert-hook 'ledger-remove-overlays nil t)
     (make-variable-buffer-local 'highlight-overlay)
 
+    (ledger-init-load-init-file)
+
     (let ((map (current-local-map)))
       (define-key map [(control ?c) (control ?a)] 'ledger-add-transaction)
       (define-key map [(control ?c) (control ?b)] 'ledger-post-edit-amount)

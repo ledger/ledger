@@ -22,14 +22,17 @@
 ;;; Commentary:
 ;; Determine the ledger environment
 
-(defvar init-file-name "~/.ledgerrc")
+(defcustom init-file-name "~/.ledgerrc"
+  "Location of the ledger initialization file. nil if you don't have one"
+  :group 'ledger)
+
 (defvar ledger-environment-alist nil)
 
 (defun ledger-init-parse-initialization (file)
-     (with-current-buffer file
-     (setq ledger-environment-alist nil)
-     (goto-char (point-min))
-     (while (re-search-forward "^--.+?\\($\\|[ ]\\)" nil t )
+  (with-current-buffer file
+    (setq ledger-environment-alist nil)
+    (goto-char (point-min))
+    (while (re-search-forward "^--.+?\\($\\|[ ]\\)" nil t )
       (let ((matchb (match-beginning 0)) ;; save the match data, string-match stomp on it
 	    (matche (match-end 0)))
 	(end-of-line)
@@ -43,17 +46,21 @@
 				    (if (> (length value) 0)
 					value
 					t))))))))
-     ledger-environment-alist))
+    ledger-environment-alist))
 
 (defun ledger-init-load-init-file ()
   (interactive)
   (save-excursion
-    (if (and (file-exists-p init-file-name)
+    (if (get-buffer (file-name-nondirectory init-file-name))
+	(ledger-init-parse-initialization (file-name-nondirectory init-file-name))
+	(if (and
+	     init-file-name
+	     (file-exists-p init-file-name)
 	     (file-readable-p init-file-name))
-	(progn
-	  (find-file init-file-name)
-	  (ledger-init-parse-initialization (file-name-nondirectory init-file-name))
-	  (kill-buffer (file-name-nondirectory init-file-name))))))
+	    (let 
+		(find-file-noselect init-file-name)
+	      (ledger-init-parse-initialization (file-name-nondirectory init-file-name))
+	      (kill-buffer (file-name-nondirectory init-file-name)))))))
 
 
 
