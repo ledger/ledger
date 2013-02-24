@@ -153,8 +153,7 @@ Now that you're up and running, here are a few resources to keep in mind:
  - [Home page](http://ledger-cli.org)
  - [IRC channel](irc://irc.freenode.net/ledger)
  - [Mailing List / Forum](http://groups.google.com/group/ledger-cli)
- - [GitHub project page](http://github.com/jwiegley/ledger)
- - [Buildbot status](http://www.newartisans.com:9090)
+ - [GitHub project page](http://github.com/ledger/ledger)
  - [Ohloh code analysis](http://www.ohloh.net/projects/ledger)
 
 If you have ideas you'd like to share, the best way is either to e-mail me a
