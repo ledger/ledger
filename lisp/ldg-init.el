@@ -22,7 +22,7 @@
 ;;; Commentary:
 ;; Determine the ledger environment
 
-(defcustom init-file-name "~/.ledgerrc"
+(defcustom ledger-init-file-name "~/.ledgerrc"
   "Location of the ledger initialization file. nil if you don't have one"
   :group 'ledger)
 
@@ -50,17 +50,17 @@
 
 (defun ledger-init-load-init-file ()
   (interactive)
-  (save-excursion
-    (if (get-buffer (file-name-nondirectory init-file-name))
-	(ledger-init-parse-initialization (file-name-nondirectory init-file-name))
-	(if (and
-	     init-file-name
-	     (file-exists-p init-file-name)
-	     (file-readable-p init-file-name))
-	    (let 
-		(find-file-noselect init-file-name)
-	      (ledger-init-parse-initialization (file-name-nondirectory init-file-name))
-	      (kill-buffer (file-name-nondirectory init-file-name)))))))
+  (let ((init-base-name (file-name-nondirectory ledger-init-file-name)))
+    (if (get-buffer init-base-name) ;; init file already loaded, parse it and leave it
+	(ledger-init-parse-initialization init-base-name)
+       (if (and  ;; init file not loaded, load, parse and kill
+	    ledger-init-file-name
+	    (file-exists-p ledger-init-file-name)
+	    (file-readable-p ledger-init-file-name))
+	   (progn 
+	     (find-file-noselect ledger-init-file-name)
+	     (ledger-init-parse-initialization init-base-name)
+	     (kill-buffer init-base-name))))))
 
 
 
