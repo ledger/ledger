@@ -10,7 +10,7 @@ few alternatives.
 I know, you just want to build and play.  If you have all the dependencies
 installed (see below), then simply do this:
 
-    git clone git://github.com/jwiegley/ledger.git
+    git clone git://github.com/ledger/ledger.git
     cd ledger && ./acprep update  # Update to the latest, configure, make
 
 Now try your first ledger command:
@@ -153,8 +153,7 @@ Now that you're up and running, here are a few resources to keep in mind:
  - [Home page](http://ledger-cli.org)
  - [IRC channel](irc://irc.freenode.net/ledger)
  - [Mailing List / Forum](http://groups.google.com/group/ledger-cli)
- - [GitHub project page](http://github.com/jwiegley/ledger)
- - [Buildbot status](http://www.newartisans.com:9090)
+ - [GitHub project page](http://github.com/ledger/ledger)
  - [Ohloh code analysis](http://www.ohloh.net/projects/ledger)
 
 If you have ideas you'd like to share, the best way is either to e-mail me a
