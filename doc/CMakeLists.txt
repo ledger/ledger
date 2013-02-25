@@ -55,7 +55,7 @@ foreach(file ${info_files})
   endif(BUILD_WEB_DOCS)
 
   if(NOT TEXI2PDF)
-    mesage(WARNING "Could not find texi2pdf. PDF version of documentation will not be built.")
+    message(WARNING "Could not find texi2pdf. PDF version of documentation will not be built.")
   else()
     add_custom_command(OUTPUT ${file_base}.pdf
       COMMAND texi2pdf -b -q -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
