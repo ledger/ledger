@@ -36,7 +36,6 @@
 This only has effect interfacing to calc mode in edit amount"
   :type 'boolean
   :group 'ledger)
-
 (defun ledger-split-commodity-string (str)
   "Split a commoditized amount into two parts"
   (let (val
@@ -85,7 +84,7 @@ DIRECTION can be :to-user or :from-user.  All math calculations
 are done with decimal-period, some users may prefer decimal-comma
 which must be translated both directions."
   (let ((val number-string))
-    (if ledger-use-decimal-comma
+    (if (assoc "decimal-comma" ledger-environment-alist)
 	(cond ((eq direction :from-user)
 	       ;; change string to decimal-period
 	       (while (string-match "," val)
@@ -95,7 +94,9 @@ which must be translated both directions."
 	       (while (string-match "\\." val)
 		 (setq val (replace-match "," nil nil val)))) ;; gets rid of periods
 	      (t
-	       (error "ledger-commodity-string-number-decimalize: direction not properly specified %S" direction))))
+	       (error "ledger-commodity-string-number-decimalize: direction not properly specified %S" direction)))
+	(while (string-match "," val)
+	  (setq val (replace-match "" nil nil val))))
     val))
       
 	  

@@ -304,6 +304,16 @@ If you would rather start with your own journal right away please see @ref{Keepi
 * Using the Windows command line::  
 @end menu
 
+Please note that as a command line program, Ledger is controlled from
+your shell.  There are several different command shells that all behave
+slightly differently with repsect to some special characters.  In
+particular, the BaSH shell will interpret $ signs differently than
+ledger and they must be escaped to reach the actual program.  Another
+example is zsh, which will interpret ^ differently than ledger expects.
+In all cases that follow you should take that into account when entering
+the commandline arguments given.  There are too many variations between
+shells to give concrete examples for each.
+
 @node Balance Report, Register Report, Run Some Reports, Run Some Reports
 @subsection Balance Report
 @cindex balance report

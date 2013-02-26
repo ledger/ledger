@@ -319,16 +319,18 @@ Optional EDIT the command."
 	(let ((file (match-string 1))
 	      (line (string-to-number (match-string 2))))
 	  (delete-region (match-beginning 0) (match-end 0))
-	  (set-text-properties (line-beginning-position) (line-end-position)
-			       (list 'ledger-source (cons file (save-window-excursion
-								 (save-excursion
-								   (find-file file)
-								   (widen)
-								   (ledger-goto-line line)
-								   (point-marker))))))
-	  (add-text-properties (line-beginning-position) (line-end-position)
+	  (if file 
+	      (progn
+		(set-text-properties (line-beginning-position) (line-end-position)
+				    (list 'ledger-source (cons file (save-window-excursion
+								      (save-excursion
+									(find-file file)
+									(widen)
+									(ledger-goto-line line)
+									(point-marker))))))
+		(add-text-properties (line-beginning-position) (line-end-position)
 			       (list 'face 'ledger-font-report-clickable-face))
-	  (end-of-line))))
+		(end-of-line))))))
     (goto-char data-pos)))
 
 
