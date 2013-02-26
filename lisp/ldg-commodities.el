@@ -94,7 +94,9 @@ which must be translated both directions."
 	       (while (string-match "\\." val)
 		 (setq val (replace-match "," nil nil val)))) ;; gets rid of periods
 	      (t
-	       (error "ledger-commodity-string-number-decimalize: direction not properly specified %S" direction))))
+	       (error "ledger-commodity-string-number-decimalize: direction not properly specified %S" direction)))
+	(while (string-match "," val)
+	  (setq val (replace-match "" nil nil val))))
     val))
       
 	  
