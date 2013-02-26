@@ -128,6 +128,8 @@
       (define-key map [toggle-post] '(menu-item "Toggle Current Posting" ledger-toggle-current))
       (define-key map [toggle-xact] '(menu-item "Toggle Current Transaction" ledger-toggle-current-entry))
       (define-key map [sep4] '(menu-item "--"))
+      (define-key map [edit-amount] '(menu-item "Reconcile Account" ledger-reconcile))
+      (define-key map [sep6] '(menu-item "--"))
       (define-key map [edit-amount] '(menu-item "Calc on Amount" ledger-post-edit-amount))
       (define-key map [sep] '(menu-item "--"))
       (define-key map [delete-xact] '(menu-item "Delete Entry" ledger-delete-current-transaction))
