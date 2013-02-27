@@ -106,7 +106,7 @@ within the transaction."
 	 (extents (ledger-find-xact-extents (point)))
 	 (transaction (buffer-substring (car extents) (cadr extents)))
 	 encoded-date)
-    (if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
+    (if (string-match ledger-date-regex date)
 	(setq encoded-date
 	      (encode-time 0 0 0 (string-to-number (match-string 3 date))
 			   (string-to-number (match-string 2 date))
@@ -114,7 +114,7 @@ within the transaction."
     (ledger-find-slot encoded-date)
     (insert transaction "\n")
     (backward-paragraph)
-    (re-search-forward "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)")
+    (re-search-forward ledger-date-regex)
     (replace-match date)
     (re-search-forward "[1-9][0-9]+\.[0-9]+")))
 

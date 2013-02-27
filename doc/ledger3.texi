@@ -1559,7 +1559,7 @@ whose market value disregards any future changes in the price of
 gasoline.
 
 If you do not want price fixing, you can specify this same transaction
-in one of two ways, both equivalent (note the lack of the equal sing
+in one of two ways, both equivalent (note the lack of the equal sign
 from the transaction above):
 
 @smallexample
