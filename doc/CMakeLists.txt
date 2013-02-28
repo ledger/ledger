@@ -32,7 +32,7 @@ if(NOT BUILD_DOCS)
   return()
 endif()
 
-set(info_files ledger.texi ledger3.texi)
+set(info_files ledger.texi ledger3.texi ledger-mode.texi)
 
 find_program(MAKEINFO makeinfo)
 find_program(TEXI2PDF texi2pdf)
