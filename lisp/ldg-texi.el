@@ -19,9 +19,19 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 
-(defvar ledger-path "/Users/johnw/bin/ledger")
-(defvar ledger-sample-doc-path "/Users/johnw/src/ledger/doc/sample.dat")
-(defvar ledger-normalization-args "--args-only --columns 80")
+(defgroup ledger-texi nil
+"Options for working on Ledger texi documentation"
+:group 'ledger)
+
+(defcustom ledger-texi-sample-doc-path "~/ledger/doc/sample.dat"
+"Location for sample data to be used in texi tests"
+:type 'file
+:group 'ledger-texi)
+
+(defcustom ledger-texi-normalization-args "--args-only --columns 80"
+"texi normalization for producing ledger output"
+:type 'string
+:group 'ledger-texi)
 
 (defun ledger-update-test ()
   (interactive)
@@ -92,10 +102,10 @@
 
 (defun ledger-texi-expand-command (command data-file)
   (if (string-match "\\$LEDGER" command)
-      (replace-match (format "%s -f \"%s\" %s" ledger-path
-                             data-file ledger-normalization-args) t t command)
-      (concat (format "%s -f \"%s\" %s " ledger-path
-		      data-file ledger-normalization-args) command)))
+      (replace-match (format "%s -f \"%s\" %s" ledger-binary-path
+                             data-file ledger-texi-normalization-args) t t command)
+      (concat (format "%s -f \"%s\" %s " ledger-binary-path
+		      data-file ledger-texi-normalization-args) command)))
 
 (defun ledger-texi-invoke-command (command)
   (with-temp-buffer (shell-command command t (current-buffer))
@@ -122,7 +132,7 @@
       (let ((section (match-string 1))
             (example-name (match-string 2))
             (command (match-string 3)) expanded-command
-            (data-file ledger-sample-doc-path)
+            (data-file ledger-texi-sample-doc-path)
             input output)
         (goto-char (match-end 0))
         (forward-line)

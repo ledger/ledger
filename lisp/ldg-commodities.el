@@ -29,7 +29,7 @@
 (defcustom ledger-reconcile-default-commodity "$"
   "The default commodity for use in target calculations in ledger reconcile."
   :type 'string
-  :group 'ledger)
+  :group 'ledger-reconcile)
 
 (defun ledger-split-commodity-string (str)
   "Split a commoditized amount into two parts"
