@@ -28,6 +28,11 @@
 (eval-when-compile
   (require 'cl))
 
+(defgroup ledger-report nil
+  "Customization option for the Report buffer"
+  :group 'ledger
+)
+
 (defcustom ledger-reports
   '(("bal" "ledger -f %(ledger-file) bal")
     ("reg" "ledger -f %(ledger-file) reg")
@@ -46,7 +51,7 @@ in that variable for more information on the behavior of each
 specifier."
   :type '(repeat (list (string :tag "Report Name")
 		  (string :tag "Command Line")))
-  :group 'ledger)
+  :group 'ledger-report)
 
 (defcustom ledger-report-format-specifiers
   '(("ledger-file" . ledger-report-ledger-file-format-specifier)
@@ -58,7 +63,7 @@ specifier."
 The function is called with no parameters and expected to return the
 text that should replace the format specifier."
   :type 'alist
-  :group 'ledger)
+  :group 'ledger-report)
 
 (defvar ledger-report-buffer-name "*Ledger Report*")
 

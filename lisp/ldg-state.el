@@ -44,7 +44,7 @@
   (save-excursion
     (when (or (looking-at "^[0-9]")
               (re-search-backward "^[0-9]" nil t))
-      (skip-chars-forward "0-9./=")
+      (skip-chars-forward "0-9./=\\-")
       (skip-syntax-forward " ")
       (cond ((looking-at "!\\s-*") 'pending)
             ((looking-at "\\*\\s-*") 'cleared)
@@ -97,7 +97,7 @@ dropped."
     (save-excursion  ;; this excursion checks state of entire
 		     ;; transaction and unclears if marked
       (goto-char (car bounds))  ;; beginning of xact
-      (skip-chars-forward "0-9./= \t") ;; skip the date
+      (skip-chars-forward "0-9./=\\- \t") ;; skip the date
       (setq cur-status (and (member (char-after) '(?\* ?\!))
 			    (ledger-state-from-char (char-after))))
       ;;if cur-status if !, or * then delete the marker
@@ -193,7 +193,7 @@ dropped."
                       (insert (make-string width ? ))))))
             (forward-line))
           (goto-char (car bounds))
-          (skip-chars-forward "0-9./= \t")
+          (skip-chars-forward "0-9./=\\- \t")
           (insert (ledger-char-from-state state) " ")
 	  (setq new-status state)
           (if (re-search-forward "\\(\t\\| [ \t]\\)"
@@ -233,7 +233,7 @@ dropped."
     (save-excursion
       (when (or (looking-at "^[0-9]")
                 (re-search-backward "^[0-9]" nil t))
-        (skip-chars-forward "0-9./=")
+        (skip-chars-forward "0-9./=\\-")
         (delete-horizontal-space)
         (if (or (eq (ledger-state-from-char (char-after)) 'pending)
 		(eq (ledger-state-from-char (char-after)) 'cleared))

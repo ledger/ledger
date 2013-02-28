@@ -19,15 +19,19 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 
-(defcustom ledger-source-directory "~/src/ledger"
-  "Directory where the Ledger sources are located."
-  :type 'directory
+(defgroup ledger-test nil
+  "Definitions for the Ledger testing framework"
   :group 'ledger)
 
-(defcustom ledger-test-binary "~/Products/ledger/debug/ledger"
+(defcustom ledger-source-directory "~/ledger/"
   "Directory where the Ledger sources are located."
+  :type 'directory
+  :group 'ledger-test)
+
+(defcustom ledger-test-binary "/Products/ledger/debug/ledger"
+  "Directory where the Ledger debug binary is located."
   :type 'file
-  :group 'ledger)
+  :group 'ledger-test)
 
 (defun ledger-test-org-narrow-to-entry ()
   (outline-back-to-heading)
