@@ -2318,7 +2318,6 @@ any electronic statements received during the year.  In the arena of
 organization, just keep in mind this maxim: Do whatever keeps you
 doing it.
 
-
 @node Transactions , Building Reports, Keeping a Journal, Top
 @chapter  Transactions 
 @menu
