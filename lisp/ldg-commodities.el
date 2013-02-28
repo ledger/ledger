@@ -29,13 +29,7 @@
 (defcustom ledger-reconcile-default-commodity "$"
   "The default commodity for use in target calculations in ledger reconcile."
   :type 'string
-  :group 'ledger)
-
-(defcustom ledger-use-decimal-comma nil
-  "If non-nil the use commas as decimal separator.
-This only has effect interfacing to calc mode in edit amount"
-  :type 'boolean
-  :group 'ledger)
+  :group 'ledger-reconcile)
 
 (defun ledger-split-commodity-string (str)
   "Split a commoditized amount into two parts"

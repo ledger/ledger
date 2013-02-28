@@ -38,7 +38,7 @@
 (defcustom ledger-binary-path "ledger"
   "Path to the ledger executable."
   :type 'file
-  :group 'ledger)
+  :group 'ledger-exec)
 
 (defun ledger-exec-ledger (input-buffer &optional output-buffer &rest args)
   "Run Ledger using INPUT-BUFFER and optionally capturing output in OUTPUT-BUFFER with ARGS."

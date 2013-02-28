@@ -23,7 +23,7 @@
 
 
 ;;; Commentary:
-;; 
+;; Code to handle reconciling Ledger files wiht outside sources
 
 ;;; Code:
 
@@ -32,31 +32,35 @@
 (defvar ledger-acct nil)
 (defvar ledger-target nil)
 
+(defgroup ledger-reconcile nil
+   "Options for Ledger-mode reconciliation"
+  :group 'ledger)
+
 (defcustom ledger-recon-buffer-name "*Reconcile*"
   "Name to use for reconciliation window."
-  :group 'ledger)
+  :group 'ledger-reconcile)
 
 (defcustom ledger-fold-on-reconcile t
   "If t, limit transactions shown in main buffer to those matching the reconcile regex."
   :type 'boolean
-  :group 'ledger)
+  :group 'ledger-reconcile)
 
 (defcustom ledger-buffer-tracks-reconcile-buffer t
   "If t, then when the cursor is moved to a new xact in the recon window.
 Then that transaction will be shown in its source buffer."
   :type 'boolean
-  :group 'ledger)
+  :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-force-window-bottom nil
   "If t make the reconcile window appear along the bottom of the register window and resize."
   :type 'boolean
-  :group 'ledger)
+  :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-toggle-to-pending t
   "If true then toggle between uncleared and pending.
 reconcile-finish will mark all pending posting cleared."
    :type 'boolean
-   :group 'ledger)
+   :group 'ledger-reconcile)
 
 
 (defun ledger-reconcile-get-balances ()

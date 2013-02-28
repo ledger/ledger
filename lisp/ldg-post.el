@@ -28,7 +28,7 @@
 ;;; Code:
 
 (defgroup ledger-post nil
-  ""
+  "Options for controlling how Ledger-mode deals with postings and completion"
   :group 'ledger)
 
 (defcustom ledger-post-auto-adjust-amounts nil
@@ -37,19 +37,17 @@
   :group 'ledger-post)
 
 (defcustom ledger-post-amount-alignment-column 52
-  "If non-nil, ."
+  "The column Ledger-mode attempts to align amounts to."
   :type 'integer
   :group 'ledger-post)
 
-(defcustom ledger-post-use-iswitchb nil
-  "If non-nil, ."
-  :type 'boolean
-  :group 'ledger-post)
-
-(defcustom ledger-post-use-ido nil
-  "If non-nil, ."
-  :type 'boolean
-  :group 'ledger-post)
+(defcustom ledger-post-use-completion-engine :built-in
+  "Which completion engine to use, :iswitchb or :ido chose those engines,
+:built-in uses built-in Ledger-mode completion"
+   :type '(radio (const :tag "built in completion" :built-in) 
+	   (const :tag "ido completion" :ido) 
+	   (const :tag "iswitchb completion" :iswitchb) )
+   :group 'ledger-post)
 
 (defun ledger-post-all-accounts ()
   "Return a list of all accounts in the buffer."
@@ -73,13 +71,13 @@
 PROMPT is a string to prompt with.  CHOICES is a list of
    strings to choose from."
   (cond
-    (ledger-post-use-iswitchb
+    ((eq ledger-post-use-completion-engine :iswitchb)
      (let* ((iswitchb-use-virtual-buffers nil)
 	    (iswitchb-make-buflist-hook
 	     (lambda ()
 	       (setq iswitchb-temp-buflist choices))))
        (iswitchb-read-buffer prompt)))
-    (ledger-post-use-ido
+    ((eq ledger-post-use-completion-engine :ido)
      (ido-completing-read prompt choices))
     (t
      (completing-read prompt choices))))
@@ -114,7 +112,7 @@ PROMPT is a string to prompt with.  CHOICES is a list of
 
 (defun ledger-next-amount (&optional end)
   "Move point to the next amount, as long as it is not past END."
-  (when (re-search-forward "\\(  \\|\t\\| \t\\)[ \t]*-?\\([A-Z$€£]+ *\\)?\\(-?[0-9,]+?\\)\\(.[0-9]+\\)?\\( *[A-Z$€£]+\\)?\\([ \t]*@@?[^\n;]+?\\)?\\([ \t]+;.+?\\)?$" (marker-position end) t)
+  (when (re-search-forward "\\(  \\|\t\\| \t\\)[ \t]*-?\\([A-Z$€£]+ *\\)?\\(-?[0-9,]+?\\)\\(.[0-9]+\\)?\\( *[A-Z$€£]+\\)?\\([ \t]*@@?[^\n;]+?\\)?\\([ \t]+;.+?\\|[ \t]*\\)?$" (marker-position end) t)
     (goto-char (match-beginning 0))
     (skip-syntax-forward " ")
     (- (or (match-end 4)
