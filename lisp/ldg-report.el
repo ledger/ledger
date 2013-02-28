@@ -91,7 +91,7 @@ text that should replace the format specifier."
      (define-key map [? ] 'scroll-up)
      (define-key map [backspace] 'scroll-down)
      (define-key map [?r] 'ledger-report-redo)
-     (define-key map [?R] 'ledger-report-reverse-lines)
+     (define-key map [(shift ?r)] 'ledger-report-reverse-lines)
      (define-key map [?s] 'ledger-report-save)
      (define-key map [?k] 'ledger-report-kill)
      (define-key map [?e] 'ledger-report-edit)
