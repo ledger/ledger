@@ -31,12 +31,6 @@
   :type 'string
   :group 'ledger)
 
-(defcustom ledger-use-decimal-comma nil
-  "If non-nil the use commas as decimal separator.
-This only has effect interfacing to calc mode in edit amount"
-  :type 'boolean
-  :group 'ledger)
-
 (defun ledger-split-commodity-string (str)
   "Split a commoditized amount into two parts"
   (let (val
