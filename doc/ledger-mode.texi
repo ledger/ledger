@@ -154,7 +154,7 @@ the proper chronological place in the ledger.
 @subsection Reconciliation
 
 The biggest task of maintaining a ledger is ensuring the it matches the
-outside world.  This process is called reconciliation (@xref{Basics of
+outside world.  This process is called reconciliation (@pxref{Basics of
 Reconciliation}) and can be quite onerous.  Ledger mode attempts to make
 it as painless as possible.
 
@@ -166,7 +166,7 @@ Normally this would be the ending value from your bank statement, or the
 latest value in your on-line transaction summary.  Enter @code{1710}.
 Note that Ledger-mode assumes your are using $ (USD) as your default
 commodity, this can be easily changed in the customization
-variables. @xref{Ledger-mode Customization}
+variables. @xref{Ledger-mode Customization}.
 
 You now see a list of uncleared transactions in a buffer below the
 @file{demo.ledger} buffer.  Touching the space bar will mark a
@@ -231,7 +231,7 @@ Ledger mode can also help you keep your amounts in alignment.  Setting
 @code{ledger-post-auto-adjust-amounts} to true tells Ledger-mode to
 automatically place any amounts such that their last digit is aligned to
 the column specified by @code{ledger-post-amount-alignment-column},
-which defautls to 52. @xref{Ledger Post Customization Group}
+which defautls to 52. @xref{Ledger Post Customization Group}.
 
 @node Editing Amounts, Marking Transactions, Adding Transactions, The Ledger Buffer
 @section Editing Amounts
