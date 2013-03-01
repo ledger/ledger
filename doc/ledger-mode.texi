@@ -184,7 +184,7 @@ The real power of Ledger is in it reporting capabilities.  Reports can
 be run and displayed in a spearate Emacs buffer.  In the
 @file{demo.ledger} buffer, type @code{C-c C-o C-r}.  In the mini-buffer
 Emacs will prompt for a report name.  There are a few built-in reports,
-and you can add any report you need @xref{Adding New Reports}.
+and you can add any report you need @xref{Adding and Editing Reports}.
 
 In the mini-buffer type @code{account}.  When prompted for an account
 type @code{checking}.  In another buffer you will see a Ledger register
