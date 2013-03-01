@@ -38,16 +38,23 @@
     (with-temp-buffer
       (insert str)
       (goto-char (point-min))
-      (re-search-forward "-?[1-9][0-9]*[.,][0-9]*" nil t)
-      (setq val 
-	    (string-to-number
-	    (ledger-commodity-string-number-decimalize 
-	     (delete-and-extract-region (match-beginning 0) (match-end 0)) :from-user)))
-      (goto-char (point-min))
-      (re-search-forward "[^[:space:]]" nil t)
-      (setq comm 
-	    (delete-and-extract-region (match-beginning 0) (match-end 0)))
-      (list val comm))))
+      (cond ((re-search-forward "-?[1-9][0-9]*[.,][0-9]*" nil t)
+	     ;; found a decimal number
+	     (setq val 
+		   (string-to-number
+		    (ledger-commodity-string-number-decimalize 
+		     (delete-and-extract-region (match-beginning 0) (match-end 0)) :from-user)))
+	     (goto-char (point-min))
+	     (re-search-forward "[^[:space:]]" nil t)
+	     (setq comm 
+		   (delete-and-extract-region (match-beginning 0) (match-end 0)))
+	     (list val comm))
+	    ((re-search-forward "0" nil t)
+	     ;; couldn't find a decimal number, look for a single 0,
+	     ;; indicating account with zero balance
+	     (list 0 ledger-reconcile-default-commodity))
+	    (t
+	     (error "split-commodity-string: cannot parse commodity string: %S" str))))))
     
 
 (defun ledger-string-balance-to-commoditized-amount (str)
