@@ -1,5 +1,5 @@
 \input texinfo  @c -*-texinfo-*-
-@setfilename ledger3.info
+@setfilename ledger-mode.info
 @settitle Ledger: Command-Line Accounting
 
 @dircategory Major Modes
