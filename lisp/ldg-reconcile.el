@@ -63,10 +63,8 @@ reconcile-finish will mark all pending posting cleared."
    :group 'ledger-reconcile)
 
 
-(defun ledger-reconcile-get-balances ()
-  "Calculate the cleared and uncleared balance of the account.
-Return a list with the account, uncleared and cleared balances as
-numbers"
+(defun ledger-reconcile-get-cleared-or-pending-balance ()
+  "Calculate the cleared or pending balance of the account."
   (interactive)
   (let ((buffer ledger-buf)
         (account ledger-acct)
@@ -77,15 +75,17 @@ numbers"
            ; separated from the actual format string.  emacs does not
            ; split arguments like the shell does, so you need to
            ; specify the individual fields in the command line.
-	   "balance" "--limit" "cleared or pending"
-	   "--format" "(\"%(display_total)\")" account)
-      (setq val (read (buffer-substring-no-properties (point-min) (point-max)))))))
+	   "balance" "--limit" "cleared or pending" "--empty"
+	   "--format" "%(display_total)" account)
+      (setq val  
+	    (ledger-split-commodity-string
+	     (buffer-substring-no-properties (point-min) (point-max)))))))
 
 (defun ledger-display-balance ()
-  "Calculate the cleared balance of the account being reconciled."
+  "Display the cleared-or-pending balnce and calculate the
+target-delta of the account being reconciled."
   (interactive)
-  (let* ((pending (car (ledger-string-balance-to-commoditized-amount
-			(car (ledger-reconcile-get-balances)))))
+  (let* ((pending (ledger-reconcile-get-cleared-or-pending-balance))
 	 (target-delta (if ledger-target
 			   (-commodity ledger-target pending)
 			   nil)))
@@ -156,7 +156,8 @@ numbers"
     (ledger-do-reconcile)
     (set-buffer-modified-p t)
     (goto-char (point-min))
-    (forward-line line)))
+    (forward-line line)
+    (ledger-display-balance)))
 
 (defun ledger-reconcile-refresh-after-save ()
   "Refresh the recon-window after the ledger buffer is saved."
@@ -375,7 +376,8 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	  (ledger-reconcile-refresh)
 	  (goto-char (point-min))
 	  (setq ledger-target
-		(ledger-read-commodity-string "Set reconciliation target")))
+		(ledger-read-commodity-string "Set reconciliation target"))
+	  (ledger-display-balance))
 
 	  (progn  ;; no recon-buffer, starting from scratch.
 	    (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save nil t)
@@ -389,7 +391,8 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	      (set (make-local-variable 'ledger-acct) account)
 	      (ledger-do-reconcile)
 	      (set (make-local-variable 'ledger-target)
-		   (ledger-read-commodity-string "Set reconciliation target")))))))
+		   (ledger-read-commodity-string "Set reconciliation target"))
+	      (ledger-display-balance))))))
 
 (defvar ledger-reconcile-mode-abbrev-table)
 
