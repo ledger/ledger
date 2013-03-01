@@ -291,7 +291,7 @@ transaction operation is in the undo buffer.
 As you operating on the Ledger files, they may become disorganized.  For
 the most part, Ledger doesn't care, but our human brains prefer a bit of
 order.  Sorting the transactions in a buffer into chronological order
-can help bring order to chaos.  Ledger sort (@code C-c C-s) will sort
+can help bring order to chaos.  Ledger sort (@code{C-c C-s}) will sort
 all of the transactions in a region by date.  Ledger-mode isn't
 particularly smart about handling dates and it simply sorts the
 transactions using the string at the beginning of the transaction.  So,
@@ -318,7 +318,7 @@ regular expression can match on any part of the transaction.  If you
 want to find all transactions whose amount ends in .37, you can do that
 ( I don't know why, but hey, whatever ever flaots you aerostat).
 
-Using @code(C-c C-f) or the @code{Hide Xacts} menu entry, enter a
+Using @code{C-c C-f} or the @code{Hide Xacts} menu entry, enter a
 regualr expression in the minbuffer.  Ledger-mode will hide all oter
 transactions.  For details of the regualr expression syntax, see the
 Emacs Manual or the Emac Elisp Reference Manual.  A few examples using
@@ -385,7 +385,7 @@ enter the account enter the target amount.  Ledger expects you to enter
 an amount with a commodity.  It assumes initially that you are using $
 (USD) as your default commodity.  If you are working in a difference
 currency you can change the default in variable
-@code(ledger-reconcile-default-commodity) to whatever you need.  If you
+@code{ledger-reconcile-default-commodity} to whatever you need.  If you
 work in multiple commodities simply enter the commoditized amount (for
 example @code{340 VSDX}, for 340 shares of VSDX).  
 
