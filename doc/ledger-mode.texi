@@ -596,8 +596,6 @@ for Ledger under the data options.  Alternately you can choose
 @node Ledger Customization Group, Ledger Reconcile Customization Group, Customization Variables, Customization Variables
 @subsection Ledger Customization Group
 @table @code
-@item ledger-default-acct-transaction-indent
-   Default indentation for account transactions in an entry.
 @item ledger-occur-use-face-unfolded
    If non-nil use a custom face for xacts shown in `ledger-occur' mode using @code{ledger-occur-xact-face}.
 @item ledger-clear-whole-transactions
@@ -678,11 +676,14 @@ Default face for pending (!) transactions in the reconcile window
 @subsection Ledger Post Customization Group
 Ledger Post : 
 @table @code
+
 @item ledger-post-auto-adjust-amounts
 If non-nil, then automatically align amounts to column specified in
 @code{ledger-post-amount-alignment-column}
 @item ledger-post-amount-alignment-column
 The column Ledger-mode uses to align amounts
+@item ledger-default-acct-transaction-indent
+Default indentation for account transactions in an entry.
 @item ledger-post-use-completion-engine
 Which completion engine to use, iswitchb, ido, or built-in
 @item ledger-post-use-ido

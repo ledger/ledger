@@ -39,11 +39,6 @@
 (defvar ledger-month (ledger-current-month)
   "Start a ledger session with the current month, but make it customizable to ease retro-entry.")
 
-(defcustom ledger-default-acct-transaction-indent "    "
-  "Default indentation for account transactions in an entry."
-  :type 'string
-  :group 'ledger)
-
 (defun ledger-remove-overlays ()
   "Remove all overlays from the ledger buffer."
 (interactive)
