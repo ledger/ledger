@@ -27,6 +27,11 @@
 
 ;;; Code:
 
+(defcustom ledger-default-acct-transaction-indent "    "
+  "Default indentation for account transactions in an entry."
+  :type 'string
+  :group 'ledger-post)
+
 (defgroup ledger-post nil
   "Options for controlling how Ledger-mode deals with postings and completion"
   :group 'ledger)
@@ -119,17 +124,25 @@ PROMPT is a string to prompt with.  CHOICES is a list of
            (match-end 3)) (point))))
 
 (defun ledger-align-amounts (&optional column)
-  "Align amounts in the current region.
+  "Align amounts and accounts in the current region.
 This is done so that the last digit falls in COLUMN, which
-   defaults to 52."
+defaults to 52.  ledger-default-acct-transaction-indent positions
+the account"
   (interactive "p")
   (if (or (null column) (= column 1))
       (setq column ledger-post-amount-alignment-column))
   (save-excursion
+    ;; Position the account
+    (beginning-of-line)
+    (set-mark (point))
+    (delete-horizontal-space)
+    (insert ledger-default-acct-transaction-indent)
+    (goto-char (1+ (line-end-position)))
     (let* ((mark-first (< (mark) (point)))
            (begin (if mark-first (mark) (point)))
            (end (if mark-first (point-marker) (mark-marker)))
            offset)
+      ;; Position the amount
       (goto-char begin)
       (while (setq offset (ledger-next-amount end))
         (let ((col (current-column))
@@ -159,10 +172,10 @@ This is done so that the last digit falls in COLUMN, which
 BEG, END, and LEN control how far it can align."
   (save-excursion
     (goto-char beg)
-    (when (< end (line-end-position))
+    (when (<= end (line-end-position))
       (goto-char (line-beginning-position))
       (if (looking-at ledger-post-line-regexp)
-          (ledger-post-align-amount)))))
+          (ledger-align-amounts)))))
 
 (defun ledger-post-edit-amount ()
   "Call 'calc-mode' and push the amount in the posting to the top of stack."
