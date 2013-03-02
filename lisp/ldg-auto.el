@@ -34,16 +34,17 @@
   (and (>= val low) (<= val high)))
 
 (defun ledger-auto-days-in-month (month year)
-  "Return number of days in the MONTH, MONTH is form 1 to 12"
+  "Return number of days in the MONTH, MONTH is from 1 to 12.
+If year is nil, assume it is not a leap year"
   (if (between month 1 12)
-      (if (and (date-leap-year-p year) (= 2 month))
+      (if (and year (date-leap-year-p year) (= 2 month))
 	  29
 	  (nth (1- month) '(31 28 31 30 31 30 31 31 30 31 30 31)))
       (error "Month out of range, MONTH=%S" month)))
 
 ;; Macros to handle date expressions
       
-(defmacro ledger-auto-day-in-month-macro (count day-of-week)
+(defmacro ledger-auto-constrain-day-in-month-macro (count day-of-week)
   "Return a form that evaluates DATE that returns true for the COUNT DAY-OF-WEEK.
 For example, return true if date is the 3rd Thursday of the
 month.  Negative COUNT starts from the end of the month. (EQ
@@ -78,20 +79,33 @@ COUNT 0) means EVERY day-of-week (eg. every Saturday)"
       (error "Invalid argument to ledger-auto-day-in-month-macro %S %S" 
 	     count 
 	     day-of-week)))
-		  
-(defmacro ledger-auto-day-of-month-macro (day)
-  "Return a form of date that returns true for the DAY of the month.
-For example, return true if date is the 23rd of the month."
-  `(if (eq (nth 3 (decode-time date)) ,day)
-       t))
 
-(defmacro ledger-auto-month-of-year-macro (month)
-  "Return a form of date that returns true for the MONTH of the year.
-For example, return true if date is the 4th month of the year."
-  `(if (eq (nth 4 (decode-time date)) ,month)
-       t))
+(defmacro ledger-auto-constrain-numerical-date-macro (year month day)
+  "Return a function of date that is only true if all constraints are met.
+A nil constraint matches any input, a numerical entry must match that field 
+of date."
+  ;; Do bounds checking to make sure the incoming date constraint is sane
+  (if 
+   (if (eval month) ;; if we have a month
+       (and (between (eval month) 1 12) ;; make sure it is between 1
+					;; and twelve and the number
+					;; of days are ok
+	    (between (eval day) 1 (ledger-auto-days-in-month (eval month) (eval year))))
+       (between (eval day) 1 31))  ;; no month specified, assume 31 days.
+   `#'(lambda (date)
+	(and ,(if (eval year)  
+		  `(if (eq (nth 5 (decode-time date)) ,(eval year)) t)
+		  `t)
+	     ,(if (eval month)
+		  `(if (eq (nth 4 (decode-time date)) ,(eval month)) t)
+		  `t)
+	     ,(if (eval day)
+		  `(if (eq (nth 3 (decode-time date)) ,(eval day)) t))))
+   (error "ledger-auto-constraint-numerical-date-macro: date out of range %S %S %S" (eval year) (eval month) (eval day))))
 
-(defmacro ledger-auto-every-count-day-macro (day-of-week skip start-date)
+
+
+(defmacro ledger-auto-constrain-every-count-day-macro (day-of-week skip start-date)
   "Return a form that is true for every DAY skipping SKIP, starting on START.
 For example every second Friday, regardless of month."
   (let ((start-day (nth 6 (decode-time (eval start-date)))))
@@ -101,7 +115,7 @@ For example every second Friday, regardless of month."
 	     nil)
 	(error "START-DATE day of week doesn't match DAY-OF-WEEK"))))
 
-(defmacro ledger-auto-date-range-macro (month1 day1 month2 day2)
+(defmacro ledger-auto-constrain-date-range-macro (month1 day1 month2 day2)
   "Return a form of DATE that is true if DATE falls between MONTH1 DAY1 and MONTH2 DAY2."
   (let ((decoded (gensym))
 	(target-month (gensym))
@@ -114,13 +128,15 @@ For example every second Friday, regardless of month."
 	    (and (> ,target-day ,day1)
 		 (< ,target-day ,day2))))))
 
+
 (defun ledger-auto-is-holiday (date)
   "Return true if DATE is a holiday.")
 
 (defun ledger-auto-scan-transactions (auto-file)
+  (interactive "fFile name: ")
   (let ((xact-list (list)))
-    (save-excursion
-      (find-file auto-file)
+    (with-current-buffer
+	(find-file-noselect auto-file)
       (goto-char (point-min))
       (while (re-search-forward "^\\[\\(.*\\)\\] " nil t)
 	(let ((date-descriptor "")
@@ -143,16 +159,19 @@ For example every second Friday, regardless of month."
   "Take a date descriptor string and return a function that
 returns true if the date meets the requirements"
   (with-temp-buffer
+    ;; copy the descriptor string into a temp buffer for manipulation
     (let (pos)
+      ;; Replace brackets with parens
       (insert descriptor-string)
       (goto-char (point-min))
       (replace-string "[" "(")
       (goto-char (point-min))
       (replace-string "]" ")")
       (goto-char (point-max))
+      ;; double quote all the descriptors for string processing later
       (while (re-search-backward 
-	      (concat "\\([0-9]+\\|[\*]\\)/"  ;; Year slot
-		      "\\([\*EO]\\|[0-9]+\\)/" ;; Month slot
+	      (concat "\\(20[0-9][0-9]\\|[\*]\\)[/\\-]"  ;; Year slot
+		      "\\([\*EO]\\|[0-9]+\\)[/\\-]" ;; Month slot
 		      "\\([\*]\\|\\([0-9][0-9]\\)\\|"
 		      "\\([0-5]"
 		      "\\(\\(Su\\)\\|"
@@ -167,20 +186,58 @@ returns true if the date meets the requirements"
 	(insert ?\")
 	(goto-char (match-beginning 0))
 	(insert "\"" )))
-       (ledger-auto-traverse-descriptor-tree 
-	(read (buffer-substring (point-min) (point-max))) 0)))
+    
+    ;; read the descriptor string into a lisp object the transform the
+    ;; string descriptor into useable things
+    (ledger-transform-auto-tree 
+     (read (buffer-substring (point-min) (point-max))))))
 
-(defun ledger-auto-traverse-descriptor-tree (tree depth)
-  (dolist (node tree)
-	  (cond ((eq (type-of node) 'string)
-		 (ledger-auto-parse-date-descriptor node))
-		((eq (type-of node) 'cons)
-		 (ledger-auto-traverse-descriptor-tree node (1+ depth))))))
-  
+(defun ledger-transform-auto-tree (tree)
+  (if (consp tree)
+      (let (result)
+	(while (consp tree)
+	  (let ((newcar (car tree)))
+	    (if (consp (car tree))
+		(setq newcar (ledger-transform-auto-tree (car tree))))
+	    (if (consp newcar) 
+		(push newcar result)
+		(push (ledger-auto-parse-date-descriptor newcar) result)) )
+	  (setq tree (cdr tree)))
+	(nconc (nreverse result) tree))))
+
+(defun ledger-auto-split-constraints (descriptor-string)
+  "Return a list with the year, month and day fields split"
+  (let ((fields (split-string descriptor-string "[/\\-]" t))
+	constrain-year constrain-month constrain-day)
+    (if (string= (car fields) "*")
+	(setq constrain-year nil)
+	(setq constrain-year (car fields)))
+    (if (string= (cadr fields) "*")
+	(setq constrain-month nil)
+	(setq constrain-month (cadr fields)))
+    (if (string= (nth 2 fields) "*")
+	(setq constrain-day nil)
+	(setq constrain-day (nth 2 fields)))
+    (list constrain-year constrain-month constrain-day)))
+
+(defun ledger-string-to-number-or-nil (str)
+  (if str
+      (string-to-number str)
+      nil))
+
+(defun ledger-auto-compile-constraints (constraint-list)
+  (let ((year-constraint (ledger-string-to-number-or-nil (nth 0 constraint-list)))
+	(month-constraint (ledger-string-to-number-or-nil (nth 1 constraint-list)))
+	(day-constraint (ledger-string-to-number-or-nil (nth 2 constraint-list))))
+    (ledger-auto-constrain-numerical-date-macro 
+     year-constraint
+     month-constraint
+     day-constraint)))
 
 (defun ledger-auto-parse-date-descriptor (descriptor)
   "Parse the date descriptor, return the evaluator"
-  descriptor)
+  (ledger-auto-compile-constraints 
+   (ledger-auto-split-constraints descriptor)))
 
 (provide 'ldg-auto)
 
