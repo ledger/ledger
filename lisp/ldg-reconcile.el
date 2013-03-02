@@ -156,8 +156,7 @@ target-delta of the account being reconciled."
     (ledger-do-reconcile)
     (set-buffer-modified-p t)
     (goto-char (point-min))
-    (forward-line line)
-    (ledger-display-balance)))
+    (forward-line line)))
 
 (defun ledger-reconcile-refresh-after-save ()
   "Refresh the recon-window after the ledger buffer is saved."
