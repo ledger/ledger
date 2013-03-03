@@ -303,6 +303,21 @@ transactions like automated transaction, will be moved in the sorting
 process and may not function correctly afterwards.  For this reason
 there is no key sequence.
 
+You can limit the allowed sort region by using embedded Ledger-mode
+markup within your ledger.  For exmaple 
+@smallexample
+<<< infomration to not sort >>>
+
+; Ledger-mode: Start sort
+
+<<< xacts to sort >>>
+
+;Ledger-mode: End sort
+
+<<< information to not sort >>>
+@end smallexample
+
+
 @node Hiding Transactions,  , Sorting Transactions, The Ledger Buffer
 @section Hiding Transactions
 
