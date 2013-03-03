@@ -133,10 +133,10 @@ the account"
       (setq column ledger-post-amount-alignment-column))
   (save-excursion
     ;; Position the account
-    (beginning-of-line)
+    ;; (beginning-of-line)
     (set-mark (point))
-    (delete-horizontal-space)
-    (insert ledger-default-acct-transaction-indent)
+    ;; (delete-horizontal-space)
+    ;; (insert ledger-default-acct-transaction-indent)
     (goto-char (1+ (line-end-position)))
     (let* ((mark-first (< (mark) (point)))
            (begin (if mark-first (mark) (point)))
