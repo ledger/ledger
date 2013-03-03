@@ -54,8 +54,8 @@
 				      ;; the beginning of next record
 				      ;; after the region
 	(setq new-end (point))
-	(narrow-to-region beg end)
-	(goto-char (point-min))
+	(narrow-to-region new-beg new-end)
+	(goto-char new-beg)
 
 	(let ((inhibit-field-text-motion t))
 	  (sort-subr
@@ -66,7 +66,14 @@
 (defun ledger-sort-buffer ()
   "Sort the entire buffer."
   (interactive)
-  (ledger-sort-region (point-min) (point-max)))
+  (let ((sort-start (point-min))
+	(sort-end (point-max)))
+    (goto-char (point-min))
+    (if (re-search-forward ";.*Ledger-mode:.*Start sort" nil t)
+	(set 'sort-start (match-end 0)))
+    (if (re-search-forward ";.*Ledger-mode:.*End sort" nil t)
+	(set 'sort-end (match-end 0)))    
+    (ledger-sort-region sort-start sort-end)))
 
 (provide 'ldg-sort)
 
