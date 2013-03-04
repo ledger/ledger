@@ -351,10 +351,11 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
       (set-window-buffer (split-window (get-buffer-window buf) nil nil) rbuf)
       (pop-to-buffer rbuf)))
 
-(defun ledger-reconcile (account)
-  "Start reconciling ACCOUNT."
-  (interactive "sAccount to reconcile: ")
-  (let ((buf (current-buffer))
+(defun ledger-reconcile ()
+  "Start reconciling, prompt for account."
+  (interactive)
+  (let ((account (ledger-post-read-account-with-prompt "Account to reconcile"))
+	(buf (current-buffer))
         (rbuf (get-buffer ledger-recon-buffer-name)))  ;; this means
 						       ;; only one
 						       ;; *Reconcile*

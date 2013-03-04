@@ -229,6 +229,18 @@ BEG, END, and LEN control how far it can align."
       (add-hook 'after-change-functions 'ledger-post-maybe-align t t))
   (add-hook 'after-save-hook #'(lambda () (setq ledger-post-current-list nil))))
 
+
+(defun ledger-post-read-account-with-prompt (prompt) 
+  (let* ((context (ledger-context-at-point))
+	 (default
+	  (if (eq (ledger-context-line-type context) 'acct-transaction)
+	      (regexp-quote (ledger-context-field-value context 'account))
+	      nil)))
+    (ledger-read-string-with-default prompt default)))
+
+
 (provide 'ldg-post)
+
+
 
 ;;; ldg-post.el ends here

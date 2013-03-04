@@ -258,12 +258,7 @@ used to generate the buffer, navigating the buffer, etc."
    the default."
   ;; It is intended completion should be available on existing account
   ;; names, but it remains to be implemented.
-  (let* ((context (ledger-context-at-point))
-         (default
-          (if (eq (ledger-context-line-type context) 'acct-transaction)
-              (regexp-quote (ledger-context-field-value context 'account))
-	      nil)))
-    (ledger-read-string-with-default "Account" default)))
+  (ledger-post-read-account-with-prompt "Account"))
 
 (defun ledger-report-expand-format-specifiers (report-cmd)
   "Expand %(account) and %(payee) appearing in REPORT-CMD with thing under point."
@@ -437,9 +432,9 @@ Optional EDIT the command."
       ("^\\(\\([0-9][0-9][0-9][0-9]/\\)?[01]?[0-9]/[0123]?[0-9]\\)[ \t]+\\(\\([!*]\\)[ \t]\\)?[ \t]*\\((\\(.*\\))\\)?[ \t]*\\(.*\\)[ \t]*$"
        (date nil status nil nil code payee))))
     (acct-transaction
-     (("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$]\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
+     (("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
        (indent account commodity amount nil comment))
-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$]\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*$"
+      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*$"
        (indent account commodity amount nil))
       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
        (indent account amount nil commodity comment))
