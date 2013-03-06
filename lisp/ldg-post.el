@@ -186,19 +186,10 @@ BEG, END, and LEN control how far it can align."
     (let ((end-of-amount (re-search-forward "[-.,0-9]+" (line-end-position) t)))
       ;; determine if there is an amount to edit
       (if end-of-amount
-	  (let ((val (match-string 0)))
+	  (let ((val (ledger-commodity-string-number-decimalize (match-string 0) :from-user)))
 	    (goto-char (match-beginning 0))
 	    (delete-region (match-beginning 0) (match-end 0))
 	    (calc)
-	    (if ledger-use-decimal-comma
-		(progn
-		  (while (string-match "\\." val)
-		    (setq val (replace-match "" nil nil val))) ;; gets rid of periods
-		  (while (string-match "," val)
-		    (setq val (replace-match "." nil nil val)))) ;; switch to period separator
-		(progn
-		  (while (string-match "," val)
-		    (setq val (replace-match "" nil nil val))))) ;; gets rid of commas
 	    (calc-eval val 'push)) ;; edit the amount
 	  (progn ;;make sure there are two spaces after the account name and go to calc
 	    (if (search-backward "  " (- (point) 3) t)
