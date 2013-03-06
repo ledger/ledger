@@ -41,7 +41,9 @@
 (make-variable-buffer-local 'ledger-occur-use-face-unfolded)
 
 
-(defvar ledger-occur-mode nil) ;; name of the minor mode, shown in the mode-line
+(defvar ledger-occur-mode nil 
+"name of the minor mode, shown in the mode-line")
+
 (make-variable-buffer-local 'ledger-occur-mode)
 
 (or (assq 'ledger-occur-mode minor-mode-alist)

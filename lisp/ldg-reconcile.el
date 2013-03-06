@@ -443,6 +443,5 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
      (use-local-map map)))
 
 (provide 'ldg-reconcile)
-(provide 'ldg-reconcile)
 
 ;;; ldg-reconcile.el ends here

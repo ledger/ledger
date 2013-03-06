@@ -24,7 +24,8 @@
 (eval-when-compile
   (require 'cl))
 
-(defvar ledger-date-regex "\\([0-9]+\\)[/-]\\([0-9]+\\)[/-]\\([0-9]+\\)")
+(defvar ledger-date-regex 
+  "\\([0-9]+\\)[/-]\\([0-9]+\\)[/-]\\([0-9]+\\)")
 
 (defmacro ledger-define-regexp (name regex docs &rest args)
   "Simplify the creation of a Ledger regex and helper functions."
