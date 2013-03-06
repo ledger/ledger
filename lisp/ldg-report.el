@@ -432,11 +432,13 @@ Optional EDIT the command."
       ("^\\(\\([0-9][0-9][0-9][0-9]/\\)?[01]?[0-9]/[0123]?[0-9]\\)[ \t]+\\(\\([!*]\\)[ \t]\\)?[ \t]*\\((\\(.*\\))\\)?[ \t]*\\(.*\\)[ \t]*$"
        (date nil status nil nil code payee))))
     (acct-transaction
-     (("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
+     (("^\\([ \t]+;\\|;\\)\\s-?\\(.*\\)"
+       (indent comment))
+      ("\\(^[ \t]+\\)\\([:A-Za-z0-9]+?\\)\\s-\\s-+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)$"
+       (indent account commodity amount))
+      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
        (indent account commodity amount nil comment))
-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*$"
-       (indent account commodity amount nil))
-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
+      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*\\(;[ \t]*\\(.*?\\)[ \t]*$\\|@+\\)"
        (indent account amount nil commodity comment))
       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*$"
        (indent account amount nil commodity))
@@ -447,7 +449,13 @@ Optional EDIT the command."
       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
        (indent account comment))
       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]*$"
-       (indent account))))))
+       (indent account))
+
+;; Bad regexes
+      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*$"
+       (indent account commodity amount nil))
+
+      ))))
 
 (defun ledger-extract-context-info (line-type pos)
   "Get context info for current line with LINE-TYPE.
