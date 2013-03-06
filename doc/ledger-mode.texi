@@ -316,7 +316,9 @@ markup within your ledger.  For exmaple
 
 <<< information to not sort >>>
 @end smallexample
-
+You can use menu entries to insert start and end markers.  These
+functions will automatically delete old markers and put new new marker
+at point.
 
 @node Hiding Transactions,  , Sorting Transactions, The Ledger Buffer
 @section Hiding Transactions

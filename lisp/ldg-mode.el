@@ -116,6 +116,8 @@
 								    (interactive)
 								    (customize-group 'ledger))))
       (define-key map [sep1] '("--"))
+      (define-key map [sort-end] '(menu-item "Mark Sort End" ledger-sort-insert-end-mark))
+      (define-key map [sort-start] '(menu-item "Mark Sort Beginning" ledger-sort-insert-start-mark))
       (define-key map [sort-buff] '(menu-item "Sort Buffer" ledger-sort-buffer))
       (define-key map [sort-reg] '(menu-item "Sort Region" ledger-sort-region :enable mark-active))
       (define-key map [sep2] '(menu-item "--"))
