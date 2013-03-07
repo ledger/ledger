@@ -31,12 +31,11 @@
   "Default indentation for account transactions in an entry."
   :type 'string
   :group 'ledger-post)
-
 (defgroup ledger-post nil
   "Options for controlling how Ledger-mode deals with postings and completion"
   :group 'ledger)
 
-(defcustom ledger-post-auto-adjust-postings nil
+(defcustom ledger-post-auto-adjust-postings t
   "If non-nil, adjust account and amount to columns set below"
   :type 'boolean
   :group 'ledger-post)
@@ -138,8 +137,9 @@ the account"
       (setq column ledger-post-amount-alignment-column))
   (save-excursion
     ;; Position the account
-    (if (not (and (looking-at "[ \t]+\n")
-     		  (looking-back "[ \n]" (- (point) 2))))
+    (if (not (or (looking-at "[ \t]*[1-9]")
+		 (and (looking-at "[ \t]+\n")
+		      (looking-back "[ \n]" (- (point) 2)))))
 	(save-excursion
 	  (beginning-of-line)
 	  (set-mark (point)) 
@@ -180,12 +180,13 @@ the account"
 (defun ledger-post-maybe-align (beg end len)
   "Align amounts only if point is in a posting.
 BEG, END, and LEN control how far it can align."
-  (save-excursion
-    (goto-char beg)
-    (when (<= end (line-end-position))
-      (goto-char (line-beginning-position))
-      (if (looking-at ledger-post-line-regexp)
-          (ledger-post-align-postings)))))
+  (if ledger-post-auto-adjust-postings
+      (save-excursion
+     (goto-char beg)
+     (when (<= end (line-end-position))
+       (goto-char (line-beginning-position))
+       (if (looking-at ledger-post-line-regexp)
+	   (ledger-post-align-postings))))))
 
 (defun ledger-post-edit-amount ()
   "Call 'calc-mode' and push the amount in the posting to the top of stack."
