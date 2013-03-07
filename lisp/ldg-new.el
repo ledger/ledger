@@ -32,6 +32,7 @@
 
 ;;; Commentary:
 ;; Load up the ledger mode
+(require 'esh-util)
 (require 'esh-arg)
 (require 'ldg-commodities)
 (require 'ldg-complete)

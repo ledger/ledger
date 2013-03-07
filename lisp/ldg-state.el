@@ -122,42 +122,48 @@ dropped."
 
     ;;this excursion toggles the posting status
     (save-excursion
-      (goto-char (line-beginning-position))
-      (when (looking-at "[ \t]")
-        (skip-chars-forward " \t")
-        (let ((here (point))
-              (cur-status (ledger-state-from-char (char-after))))
-          (skip-chars-forward "*! ")
-          (let ((width (- (point) here)))
-            (when (> width 0)
-              (delete-region here (point))
-              (save-excursion
-                (if (search-forward "  " (line-end-position) t)
-                    (insert (make-string width ? ))))))
-          (let (inserted)
-            (if cur-status
-                (if (and style (eq style 'cleared))
-                    (progn
-                      (insert "* ")
-                      (setq inserted 'cleared)))
-		(if (and style (eq style 'pending))
-		    (progn
-		      (insert "! ")
-		      (setq inserted 'pending))
-		    (progn
-		      (insert "* ")
-		      (setq inserted 'cleared))))
-            (if (and inserted
-                     (re-search-forward "\\(\t\\| [ \t]\\)"
-                                        (line-end-position) t))
-                (cond
-		  ((looking-at "\t")
-		   (delete-char 1))
-		  ((looking-at " [ \t]")
-		   (delete-char 2))
-		  ((looking-at " ")
-		   (delete-char 1))))
-            (setq new-status inserted)))))
+      (let ((has-align-hook (remove-hook 
+			 'after-change-functions
+			 'ledger-post-maybe-align t)))
+      
+       (goto-char (line-beginning-position))
+       (when (looking-at "[ \t]")
+	 (skip-chars-forward " \t")
+	 (let ((here (point))
+	       (cur-status (ledger-state-from-char (char-after))))
+	   (skip-chars-forward "*! ")
+	   (let ((width (- (point) here)))
+	     (when (> width 0)
+	       (delete-region here (point))
+	       (save-excursion
+		 (if (search-forward "  " (line-end-position) t)
+		     (insert (make-string width ? ))))))
+	   (let (inserted)
+	     (if cur-status
+		 (if (and style (eq style 'cleared))
+		     (progn
+		       (insert  "* ")
+		       (setq inserted 'cleared)))
+		 (if (and style (eq style 'pending))
+		     (progn
+		       (insert  "! ")
+		       (setq inserted 'pending))
+		     (progn
+		       (insert  "* ")
+		       (setq inserted 'cleared))))
+	     (if (and inserted
+		      (re-search-forward "\\(\t\\| [ \t]\\)"
+					 (line-end-position) t))
+		 (cond
+		   ((looking-at "\t")
+		    (delete-char 1))
+		   ((looking-at " [ \t]")
+		    (delete-char 2))
+		   ((looking-at " ")
+		    (delete-char 1))))
+	     (setq new-status inserted))))
+	   (if has-align-hook
+	   (add-hook 'after-change-functions 'ledger-post-maybe-align t t))))
 
     ;; This excursion cleans up the entry so that it displays
     ;; minimally.  This means that if all posts are cleared, remove
@@ -251,8 +257,6 @@ dropped."
 		  (insert " * ")
 		  (setq status 'cleared))))))
     status))
-
-(provide 'ldg-state)
 
 (provide 'ldg-state)
 

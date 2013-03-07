@@ -36,9 +36,14 @@
   "Options for controlling how Ledger-mode deals with postings and completion"
   :group 'ledger)
 
-(defcustom ledger-post-auto-adjust-amounts nil
-  "If non-nil, ."
+(defcustom ledger-post-auto-adjust-postings nil
+  "If non-nil, adjust account and amount to columns set below"
   :type 'boolean
+  :group 'ledger-post)
+
+(defcustom ledger-post-account-alignment-column 4
+  "The column Ledger-mode attempts to align accounts to."
+  :type 'integer 
   :group 'ledger-post)
 
 (defcustom ledger-post-amount-alignment-column 52
@@ -123,25 +128,25 @@ PROMPT is a string to prompt with.  CHOICES is a list of
     (- (or (match-end 4)
            (match-end 3)) (point))))
 
-(defun ledger-align-amounts (&optional column)
+(defun ledger-post-align-postings (&optional column)
   "Align amounts and accounts in the current region.
 This is done so that the last digit falls in COLUMN, which
-defaults to 52.  ledger-default-acct-transaction-indent positions
+defaults to 52.  ledger-post-account-column positions
 the account"
   (interactive "p")
   (if (or (null column) (= column 1))
       (setq column ledger-post-amount-alignment-column))
   (save-excursion
     ;; Position the account
-    (if (not 
-	 (and (looking-at "[ \t]+\n")
-	      (looking-back "[ \n]" (- (point) 2))))
-	(progn
+    (if (not (and (looking-at "[ \t]+\n")
+     		  (looking-back "[ \n]" (- (point) 2))))
+	(save-excursion
 	  (beginning-of-line)
-	  (set-mark (point))
-	  (delete-horizontal-space)
-	  (insert ledger-default-acct-transaction-indent))
+	  (set-mark (point)) 
+	  (delete-horizontal-space) 
+	  (insert (make-string ledger-post-account-alignment-column ? )))
 	(set-mark (point)))
+    (set-mark (point))
     (goto-char (1+ (line-end-position)))
     (let* ((mark-first (< (mark) (point)))
            (begin (if mark-first (mark) (point)))
@@ -153,7 +158,7 @@ the account"
         (let ((col (current-column))
               (target-col (- column offset))
               adjust)
-          (setq adjust (- target-col col))
+    (setq adjust (- target-col col))
           (if (< col target-col)
               (insert (make-string (- target-col col) ? ))
 	      (move-to-column target-col)
@@ -164,13 +169,13 @@ the account"
 		  (insert "  ")))
           (forward-line))))))
 
-(defun ledger-post-align-amount ()
+(defun ledger-post-align-posting ()
   "Align the amounts in this posting."
   (interactive)
   (save-excursion
     (set-mark (line-beginning-position))
     (goto-char (1+ (line-end-position)))
-    (ledger-align-amounts)))
+    (ledger-post-align-postings)))
 
 (defun ledger-post-maybe-align (beg end len)
   "Align amounts only if point is in a posting.
@@ -180,7 +185,7 @@ BEG, END, and LEN control how far it can align."
     (when (<= end (line-end-position))
       (goto-char (line-beginning-position))
       (if (looking-at ledger-post-line-regexp)
-          (ledger-align-amounts)))))
+          (ledger-post-align-postings)))))
 
 (defun ledger-post-edit-amount ()
   "Call 'calc-mode' and push the amount in the posting to the top of stack."
@@ -221,8 +226,7 @@ BEG, END, and LEN control how far it can align."
 
 (defun ledger-post-setup ()
   "Configure `ledger-mode' to auto-align postings."
-  (if ledger-post-auto-adjust-amounts
-      (add-hook 'after-change-functions 'ledger-post-maybe-align t t))
+  (add-hook 'after-change-functions 'ledger-post-maybe-align t t)
   (add-hook 'after-save-hook #'(lambda () (setq ledger-post-current-list nil))))
 
 

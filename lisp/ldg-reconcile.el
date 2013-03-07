@@ -70,20 +70,20 @@ reconcile-finish will mark all pending posting cleared."
         (account ledger-acct)
 	(val nil))
     (with-temp-buffer
+      ;; note that in the line below, the --format option is
+      ;; separated from the actual format string.  emacs does not
+      ;; split arguments like the shell does, so you need to
+      ;; specify the individual fields in the command line.
       (ledger-exec-ledger buffer (current-buffer)
-	   ; note that in the line below, the --format option is
-           ; separated from the actual format string.  emacs does not
-           ; split arguments like the shell does, so you need to
-           ; specify the individual fields in the command line.
 	   "balance" "--limit" "cleared or pending" "--empty"
 	   "--format" "%(display_total)" account)
-      (setq val  
+      (setq val
 	    (ledger-split-commodity-string
 	     (buffer-substring-no-properties (point-min) (point-max)))))))
 
 (defun ledger-display-balance ()
-  "Display the cleared-or-pending balnce and calculate the
-target-delta of the account being reconciled."
+  "Display the cleared-or-pending balance.
+And calculate the target-delta of the account being reconciled."
   (interactive)
   (let* ((pending (ledger-reconcile-get-cleared-or-pending-balance))
 	 (target-delta (if ledger-target
@@ -111,7 +111,7 @@ target-delta of the account being reconciled."
   "Return a buffer from WHERE the transaction is."
   (if (bufferp (car where))
       (car where)
-      (error "ledger-reconcile-get-buffer: Buffer not set")))
+      (error "Function ledger-reconcile-get-buffer: Buffer not set")))
 
 (defun ledger-reconcile-toggle ()
   "Toggle the current transaction, and mark the recon window."
