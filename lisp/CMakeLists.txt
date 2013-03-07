@@ -3,6 +3,7 @@ set(EMACS_LISP_SOURCES
   ldg-complete.el
   ldg-exec.el
   ldg-fonts.el
+  ldg-init.el
   ldg-mode.el
   ldg-new.el
   ldg-occur.el

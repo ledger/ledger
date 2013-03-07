@@ -43,6 +43,7 @@
 (require 'ldg-occur)
 (require 'ldg-post)
 (require 'ldg-reconcile)
+(require 'ldg-regex)
 (require 'ldg-register)
 (require 'ldg-report)
 (require 'ldg-sort)
