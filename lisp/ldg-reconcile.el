@@ -397,7 +397,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 (defvar ledger-reconcile-mode-abbrev-table)
 
 (defun ledger-reconcile-change-target ()
-  "Change the traget amount for the reconciliation process."
+  "Change the target amount for the reconciliation process."
   (interactive)
   (setq ledger-target (ledger-read-commodity-string "Set reconciliation target")))
 
