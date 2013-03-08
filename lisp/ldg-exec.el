@@ -40,30 +40,48 @@
   :type 'file
   :group 'ledger-exec)
 
+(defun ledger-exec-handle-error (ledger-output)
+  "Deal with ledger errors contained in LEDGER-OUTPUT."
+  (with-current-buffer (get-buffer-create "*Ledger Error*")
+    (insert-buffer-substring ledger-output)
+    (make-frame)
+    (fit-frame)
+    (view-mode)
+    (toggle-read-only)))
+
+(defun ledger-exec-success-p (ledger-output-buffer)
+  (with-current-buffer ledger-output-buffer
+    (goto-char (point-min))
+    (if (and (> (buffer-size) 1) (looking-at (regexp-quote "While")))
+	nil
+	ledger-output-buffer)))
+
 (defun ledger-exec-ledger (input-buffer &optional output-buffer &rest args)
   "Run Ledger using INPUT-BUFFER and optionally capturing output in OUTPUT-BUFFER with ARGS."
   (if (null ledger-binary-path)
-      (error "The variable `ledger-binary-path' has not been set"))
-  (let ((buf (or input-buffer (current-buffer)))
-        (outbuf (or output-buffer
-                    (generate-new-buffer " *ledger-tmp*"))))
-    (with-current-buffer buf
-      (let ((coding-system-for-write 'utf-8)
-            (coding-system-for-read 'utf-8))
-        (apply #'call-process-region
-               (append (list (point-min) (point-max)
-                             ledger-binary-path nil outbuf nil "-f" "-")
-                       args)))
-      outbuf)))
+      (error "The variable `ledger-binary-path' has not been set")
+      (let ((buf (or input-buffer (current-buffer)))
+	    (outbuf (or output-buffer
+			(generate-new-buffer " *ledger-tmp*"))))
+	(with-current-buffer buf
+	  (let ((coding-system-for-write 'utf-8)
+		(coding-system-for-read 'utf-8))
+	    (apply #'call-process-region
+		   (append (list (point-min) (point-max)
+				 ledger-binary-path nil outbuf nil "-f" "-")
+			   args)))
+	  (if (ledger-exec-success-p outbuf)
+	      outbuf
+	      (ledger-exec-handle-error outbuf))))))
 
-(defun ledger-exec-read (&optional input-buffer &rest args)
-  "Run ledger from option INPUT-BUFFER using ARGS, return a list structure of the ledger Emacs output."
-  (with-current-buffer
-      (apply #'ledger-exec-ledger input-buffer nil "emacs" args)
-    (goto-char (point-min))
-    (prog1
-        (read (current-buffer))
-      (kill-buffer (current-buffer)))))
+;; (defun ledger-exec-read (&optional input-buffer &rest args)
+;;   "Run ledger from option INPUT-BUFFER using ARGS, return a list structure of the ledger Emacs output."
+;;   (with-current-buffer
+;;       (apply #'ledger-exec-ledger input-buffer nil "emacs" args)
+;;     (goto-char (point-min))
+;;     (prog1
+;;         (read (current-buffer))
+;;       (kill-buffer (current-buffer)))))
 
 (defun ledger-version-greater-p (needed)
   "Verify the ledger binary is usable for `ledger-mode' (version greater than NEEDED)."
@@ -71,17 +89,18 @@
         (version-strings '())
 	(version-number))
     (with-temp-buffer
-      (ledger-exec-ledger buffer (current-buffer) "--version")
-      (goto-char (point-min))
-      (delete-horizontal-space)
-      (setq version-strings (split-string
-			     (buffer-substring-no-properties (point)
-							     (+ (point) 12))))
-      (if (and (string-match (regexp-quote "Ledger") (car version-strings))
-	       (or (string= needed (car (cdr version-strings)))
-		   (string< needed (car (cdr version-strings)))))
-	  t
-	  nil))))
+      (if (ledger-exec-ledger (current-buffer) (current-buffer) "--version")
+	  (progn
+	    (goto-char (point-min))
+	    (delete-horizontal-space)
+	    (setq version-strings (split-string
+				   (buffer-substring-no-properties (point)
+								   (point-max))))
+	    (if (and (string-match (regexp-quote "Ledger") (car version-strings))
+		     (or (string= needed (car (cdr version-strings)))
+			 (string< needed (car (cdr version-strings)))))
+		t
+		nil))))))
 
 (defun ledger-check-version ()
   "Verify that ledger works and is modern enough."

@@ -74,28 +74,25 @@ reconcile-finish will mark all pending posting cleared."
       ;; separated from the actual format string.  emacs does not
       ;; split arguments like the shell does, so you need to
       ;; specify the individual fields in the command line.
-      (ledger-exec-ledger buffer (current-buffer)
-	   "balance" "--limit" "cleared or pending" "--empty"
-	   "--format" "%(display_total)" account)
-      (setq val
-	    (ledger-split-commodity-string
-	     (buffer-substring-no-properties (point-min) (point-max)))))))
+      (if (ledger-exec-ledger buffer (current-buffer)
+			      "balance" "--limit" "cleared or pending" "--empty"
+			      "--format" "%(display_total)" account)
+	  (setq val
+		(ledger-split-commodity-string
+		 (buffer-substring-no-properties (point-min) (point-max))))))))
 
 (defun ledger-display-balance ()
   "Display the cleared-or-pending balance.
 And calculate the target-delta of the account being reconciled."
   (interactive)
-  (let* ((pending (ledger-reconcile-get-cleared-or-pending-balance))
-	 (target-delta (if ledger-target
-			   (-commodity ledger-target pending)
-			   nil)))
-    
-    (if target-delta
-	(message "Pending balance: %s,   Difference from target: %s"
-		 (ledger-commodity-to-string pending)
-		 (ledger-commodity-to-string target-delta))
-	(message "Pending balance: %s"
-		 (ledger-commodity-to-string pending)))))
+  (let* ((pending (ledger-reconcile-get-cleared-or-pending-balance)))
+    (if pending
+	(if ledger-target
+	    (message "Pending balance: %s,   Difference from target: %s"
+		     (ledger-commodity-to-string pending)
+		     (ledger-commodity-to-string (-commodity ledger-target pending)))
+	    (message "Pending balance: %s"
+		     (ledger-commodity-to-string pending))))))
 		 
 		 
 
@@ -276,16 +273,18 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
   "Get the uncleared transactions in the account and display them in the *Reconcile* buffer."
   (let* ((buf ledger-buf)
          (account ledger-acct)
+	 (ledger-success nil)
          (xacts
           (with-temp-buffer
-	    (ledger-exec-ledger buf (current-buffer)
-				"--uncleared" "--real" "emacs" account)
-	    (goto-char (point-min))
-	    (unless (eobp)
-	      (unless (looking-at "(")
-		(error (concat "ledger-do-reconcile: " (buffer-string))))
-	      (read (current-buffer)))))) ;current-buffer is the *temp* created above
-    (if (> (length xacts) 0)
+	    (if (ledger-exec-ledger buf (current-buffer)
+				    "--uncleared" "--real" "emacs" account)
+		(progn
+		  (setq ledger-success t)
+		  (goto-char (point-min))
+		  (unless (eobp)
+		    (if (looking-at "(")
+			(read (current-buffer))))))))) ;current-buffer is the *temp* created above
+    (if (and ledger-success (> (length xacts) 0))
 	(progn
 	  (dolist (xact xacts)
 	      (dolist (posting (nthcdr 5 xact))
@@ -310,7 +309,9 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 						 'where where))))  ))
 	  (goto-char (point-max))
 	  (delete-char -1)) ;gets rid of the extra line feed at the bottom of the list
-	(insert (concat "There are no uncleared entries for " account)))
+	(if ledger-success 
+	    (insert (concat "There are no uncleared entries for " account))
+	    (insert "Ledger has reported a problem.  Check *Ledger Error* buffer.")))
     (goto-char (point-min))
     (set-buffer-modified-p nil)
     (toggle-read-only t)
