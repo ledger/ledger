@@ -10,7 +10,6 @@ set(EMACS_LISP_SOURCES
   ldg-post.el
   ldg-reconcile.el
   ldg-regex.el
-  ldg-register.el
   ldg-report.el
   ldg-sort.el
   ldg-state.el
