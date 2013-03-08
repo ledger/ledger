@@ -36,6 +36,11 @@
    "Options for Ledger-mode reconciliation"
   :group 'ledger)
 
+(defcustom ledger-reconcile-date-format "%m/%d/%y"
+  "The date format used in the reconcile buffer."
+  :type 'string
+  :group 'ledger-reconcile)
+
 (defcustom ledger-recon-buffer-name "*Reconcile*"
   "Name to use for reconciliation window."
   :group 'ledger-reconcile)
@@ -291,7 +296,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 		(let ((beg (point))
 		      (where (ledger-marker-where-xact-is xact posting)))
 		  (insert (format "%s %-4s %-30s %-30s %15s\n"
-				  (format-time-string "%Y/%m/%d" (nth 2 xact))
+				  (format-time-string ledger-reconcile-date-format (nth 2 xact))
 				  (if (nth 3 xact)
 				      (nth 3 xact)
 				      "")
