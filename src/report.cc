@@ -1628,11 +1628,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       }
       break;
 
-    case 'j':
-      if (is_eq(p, "json"))
-        return POSTS_REPORTER(new format_ptree(*this,
-                                               format_ptree::FORMAT_JSON));
-      break;
     case 'l':
       if (is_eq(p, "lisp"))
         return POSTS_REPORTER(new format_emacs_posts(output_stream));

@@ -1320,13 +1320,11 @@ bool amount_t::valid() const
   return true;
 }
 
-void put_amount(property_tree::ptree& pt, const amount_t& amt,
-                bool wrap, bool commodity_details)
+void put_amount(property_tree::ptree& st, const amount_t& amt,
+                bool commodity_details)
 {
-  property_tree::ptree& st(wrap ? pt.put("amount", "") : pt);
-
   if (amt.has_commodity())
-    put_commodity(st, amt.commodity(), commodity_details);
+    put_commodity(st.put("commodity", ""), amt.commodity(), commodity_details);
 
   st.put("quantity", amt.quantity_string());
 }

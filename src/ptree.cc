@@ -61,28 +61,27 @@ void format_ptree::flush()
 
   property_tree::ptree& ct(pt.put("ledger.commodities", ""));
   foreach (const commodities_pair& pair, commodities)
-    put_commodity(ct, *pair.second, true);
+    put_commodity(ct.add("commodity", ""), *pair.second, true);
 
   property_tree::ptree& at(pt.put("ledger.accounts", ""));
-  put_account(at, *report.session.journal->master, account_visited_p);
+  put_account(at.add("account", ""), *report.session.journal->master, account_visited_p);
 
   property_tree::ptree& tt(pt.put("ledger.transactions", ""));
   foreach (const xact_t * xact, transactions) {
-    put_xact(tt, *xact);
+    property_tree::ptree& t(tt.add("transaction", ""));
+    put_xact(t, *xact);
 
-    property_tree::ptree& post_tree(tt.put("postings", ""));
+    property_tree::ptree& post_tree(t.put("postings", ""));
     foreach (const post_t * post, xact->posts)
       if (post->has_xdata() &&
           post->xdata().has_flags(POST_EXT_VISITED))
-        put_post(post_tree, *post);
+        put_post(post_tree.add("posting", ""), *post);
   }
 
   switch (format) {
   case FORMAT_XML:
     property_tree::write_xml(out, pt);
-    break;
-  case FORMAT_JSON:
-    property_tree::write_json(out, pt);
+    out << std::endl;
     break;
   }
 }

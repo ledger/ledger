@@ -336,12 +336,10 @@ void balance_t::print(std::ostream&       out,
     amount_printer.close();
 }
 
-void put_balance(property_tree::ptree& pt, const balance_t& bal)
+void put_balance(property_tree::ptree& st, const balance_t& bal)
 {
-  property_tree::ptree& st(pt.put("balance", ""));
-
   foreach (const balance_t::amounts_map::value_type& pair, bal.amounts)
-    put_amount(st, pair.second);
+    put_amount(st.add("amount", ""), pair.second);
 }
 
 } // namespace ledger
