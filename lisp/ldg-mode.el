@@ -167,8 +167,8 @@ MOMENT is an encoded date"
     (while (not (eobp))
       (when (looking-at
              (concat "\\(Y\\s-+\\([0-9]+\\)\\|"
-                     "\\([0-9]\\{4\\}+\\)?[./]?"
-                     "\\([0-9]+\\)[./]\\([0-9]+\\)\\s-+"
+                     "\\([0-9]\\{4\\}+\\)?[./-]?"
+                     "\\([0-9]+\\)[./-]\\([0-9]+\\)\\s-+"
                      "\\(\\*\\s-+\\)?\\(.+\\)\\)"))
         (let ((found (match-string 2)))
           (if found
@@ -215,7 +215,7 @@ correct chronological place in the buffer."
          exit-code)
     (unless insert-at-point
       (let ((date (car args)))
-        (if (string-match "\\([0-9]+\\)/\\([0-9]+\\)/\\([0-9]+\\)" date)
+        (if (string-match "\\([0-9]+\\)[-/]\\([0-9]+\\)[-/]\\([0-9]+\\)" date)
             (setq date
                   (encode-time 0 0 0 (string-to-number (match-string 3 date))
                                (string-to-number (match-string 2 date))
