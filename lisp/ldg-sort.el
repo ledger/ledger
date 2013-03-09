@@ -76,6 +76,7 @@
 	(new-end end))
     (save-excursion
       (save-restriction
+   (goto-char beg)
 	(ledger-next-record-function) ;; make sure point is at the
 				      ;; beginning of a xact
 	(setq new-beg (point))
