@@ -285,13 +285,15 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 		    (if (looking-at "(")
 			(read (current-buffer))))))))) ;current-buffer is the *temp* created above
     (if (and ledger-success (> (length xacts) 0))
-	(progn
+	(let ((date-format (cdr (assoc "date-format" ledger-environment-alist))))
 	  (dolist (xact xacts)
 	      (dolist (posting (nthcdr 5 xact))
 		(let ((beg (point))
 		      (where (ledger-marker-where-xact-is xact posting)))
 		  (insert (format "%s %-4s %-30s %-30s %15s\n"
-				  (format-time-string "%Y/%m/%d" (nth 2 xact))
+				  (format-time-string (if date-format
+							  date-format
+							  "%Y/%m/%d") (nth 2 xact))
 				  (if (nth 3 xact)
 				      (nth 3 xact)
 				      "")
