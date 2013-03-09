@@ -234,7 +234,8 @@ BEG, END, and LEN control how far it can align."
 (defun ledger-post-read-account-with-prompt (prompt) 
   (let* ((context (ledger-context-at-point))
 	 (default
-	  (if (eq (ledger-context-line-type context) 'acct-transaction)
+	  (if (and (eq (ledger-context-line-type context) 'acct-transaction)
+		   (eq (ledger-context-current-field context) 'account))
 	      (regexp-quote (ledger-context-field-value context 'account))
 	      nil)))
     (ledger-read-string-with-default prompt default)))
