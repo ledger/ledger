@@ -118,9 +118,6 @@ within the transaction."
     (replace-match date)
     (re-search-forward "[1-9][0-9]+\.[0-9]+")))
 
-
-    
-(provide 'ldg-xact)
 (provide 'ldg-xact)
 
 ;;; ldg-xact.el ends here

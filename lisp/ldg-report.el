@@ -258,12 +258,7 @@ used to generate the buffer, navigating the buffer, etc."
    the default."
   ;; It is intended completion should be available on existing account
   ;; names, but it remains to be implemented.
-  (let* ((context (ledger-context-at-point))
-         (default
-          (if (eq (ledger-context-line-type context) 'acct-transaction)
-              (regexp-quote (ledger-context-field-value context 'account))
-	      nil)))
-    (ledger-read-string-with-default "Account" default)))
+  (ledger-post-read-account-with-prompt "Account"))
 
 (defun ledger-report-expand-format-specifiers (report-cmd)
   "Expand %(account) and %(payee) appearing in REPORT-CMD with thing under point."
@@ -437,11 +432,13 @@ Optional EDIT the command."
       ("^\\(\\([0-9][0-9][0-9][0-9]/\\)?[01]?[0-9]/[0123]?[0-9]\\)[ \t]+\\(\\([!*]\\)[ \t]\\)?[ \t]*\\((\\(.*\\))\\)?[ \t]*\\(.*\\)[ \t]*$"
        (date nil status nil nil code payee))))
     (acct-transaction
-     (("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$]\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
+     (("^\\([ \t]+;\\|;\\)\\s-?\\(.*\\)"
+       (indent comment))
+      ("\\(^[ \t]+\\)\\([:A-Za-z0-9]+?\\)\\s-\\s-+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)$"
+       (indent account commodity amount))
+      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
        (indent account commodity amount nil comment))
-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$]\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*$"
-       (indent account commodity amount nil))
-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
+      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*\\(;[ \t]*\\(.*?\\)[ \t]*$\\|@+\\)"
        (indent account amount nil commodity comment))
       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*$"
        (indent account amount nil commodity))
@@ -452,7 +449,13 @@ Optional EDIT the command."
       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
        (indent account comment))
       ("\\(^[ \t]+\\)\\(.*?\\)[ \t]*$"
-       (indent account))))))
+       (indent account))
+
+;; Bad regexes
+      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*$"
+       (indent account commodity amount nil))
+
+      ))))
 
 (defun ledger-extract-context-info (line-type pos)
   "Get context info for current line with LINE-TYPE.

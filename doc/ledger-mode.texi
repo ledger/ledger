@@ -316,12 +316,14 @@ markup within your ledger.  For exmaple
 
 <<< information to not sort >>>
 @end smallexample
-
+You can use menu entries to insert start and end markers.  These
+functions will automatically delete old markers and put new new marker
+at point.
 
 @node Hiding Transactions,  , Sorting Transactions, The Ledger Buffer
 @section Hiding Transactions
 
-Often you will want to run Ledger register reports just to look at a
+Often you will want to run Ledger register reports just to look at ax
 specific set of transactions.  If you don't need the running total
 calculation handled by Ledger, Ledger-mode provides a rapid way of
 narrowing what is displayed in the buffer in a way that is simpler than

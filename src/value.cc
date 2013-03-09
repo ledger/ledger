@@ -2062,35 +2062,35 @@ void put_value(property_tree::ptree& pt, const value_t& value)
 {
   switch (value.type()) {
   case value_t::VOID:
-    pt.put("void", "");
+    pt.add("void", "");
     break;
   case value_t::BOOLEAN:
-    pt.put("bool", value.as_boolean() ? "true" : "false");
+    pt.add("bool", value.as_boolean() ? "true" : "false");
     break;
   case value_t::INTEGER:
-    pt.put("int", value.to_string());
+    pt.add("int", value.to_string());
     break;
   case value_t::AMOUNT:
-    put_amount(pt, value.as_amount());
+    put_amount(pt.add("amount", ""), value.as_amount());
     break;
   case value_t::BALANCE:
-    put_balance(pt, value.as_balance());
+    put_balance(pt.add("balance", ""), value.as_balance());
     break;
   case value_t::DATETIME:
-    put_datetime(pt, value.as_datetime());
+    put_datetime(pt.add("datetime", ""), value.as_datetime());
     break;
   case value_t::DATE:
-    put_date(pt, value.as_date());
+    put_date(pt.add("date", ""), value.as_date());
     break;
   case value_t::STRING:
-    pt.put("string", value.as_string());
+    pt.add("string", value.as_string());
     break;
   case value_t::MASK:
-    put_mask(pt, value.as_mask());
+    put_mask(pt.add("mask", ""), value.as_mask());
     break;
 
   case value_t::SEQUENCE: {
-    property_tree::ptree& st(pt.put("sequence", ""));
+    property_tree::ptree& st(pt.add("sequence", ""));
     foreach (const value_t& member, value.as_sequence())
       put_value(st, member);
     break;

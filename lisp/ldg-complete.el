@@ -145,16 +145,17 @@ Return tree structure"
   "Completes a transaction if there is another matching payee in the buffer.
 Does not use ledger xact"
   (interactive)
-  (let ((name (caar (ledger-parse-arguments)))
-	rest-of-name
+  (let* ((name (caar (ledger-parse-arguments)))
+	(rest-of-name name)
         xacts)
     (save-excursion
       (when (eq 'transaction (ledger-thing-at-point))
+	(delete-region (point) (+ (length name) (point)))
 	;; Search backward for a matching payee
         (when (re-search-backward
-               (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-                       (regexp-quote name) ) nil t)  ;; "\\(\t\\|\n\\| [ \t]\\)"
-	  (setq rest-of-name (buffer-substring-no-properties (match-end 0) (line-end-position)))
+               (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+\\(.*"
+                       (regexp-quote name) ".*\\)" ) nil t)  ;; "\\(\t\\|\n\\| [ \t]\\)"
+	  (setq rest-of-name (match-string 3))
           ;; Start copying the postings
 	  (forward-line)
           (while (looking-at "^\\s-+")

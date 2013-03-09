@@ -32,6 +32,7 @@
 
 ;;; Commentary:
 ;; Load up the ledger mode
+(require 'esh-util)
 (require 'esh-arg)
 (require 'ldg-commodities)
 (require 'ldg-complete)
@@ -42,7 +43,7 @@
 (require 'ldg-occur)
 (require 'ldg-post)
 (require 'ldg-reconcile)
-(require 'ldg-register)
+(require 'ldg-regex)
 (require 'ldg-report)
 (require 'ldg-sort)
 (require 'ldg-state)
@@ -123,9 +124,6 @@
   (ledger-dump-variable 'ledger-buffer-tracks-reconcile-buffer)
   (ledger-dump-variable 'ledger-reconcile-force-window-bottom)
   (ledger-dump-variable 'ledger-reconcile-toggle-to-pending)
-  (insert "ldg-register:\n")
-  (ledger-dump-variable 'ledger-register-date-format)
-  (ledger-dump-variable 'ledger-register-line-format)
   (insert "ldg-reports:\n")
   (ledger-dump-variable 'ledger-reports)
   (ledger-dump-variable 'ledger-report-format-specifiers)

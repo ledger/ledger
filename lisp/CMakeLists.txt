@@ -1,19 +1,21 @@
 set(EMACS_LISP_SOURCES
+  ldg-commodities.el
   ldg-complete.el
   ldg-exec.el
+  ldg-fonts.el
+  ldg-init.el
   ldg-mode.el
   ldg-new.el
+  ldg-occur.el
   ldg-post.el
   ldg-reconcile.el
   ldg-regex.el
-  ldg-register.el
   ldg-report.el
+  ldg-sort.el
   ldg-state.el
   ldg-test.el
   ldg-texi.el
-  ldg-xact.el
-  ledger.el
-  timeclock.el)
+  ldg-xact.el)
 
 # find emacs and complain if not found
 find_program(EMACS_EXECUTABLE emacs)

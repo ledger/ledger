@@ -70,32 +70,29 @@ reconcile-finish will mark all pending posting cleared."
         (account ledger-acct)
 	(val nil))
     (with-temp-buffer
-      (ledger-exec-ledger buffer (current-buffer)
-	   ; note that in the line below, the --format option is
-           ; separated from the actual format string.  emacs does not
-           ; split arguments like the shell does, so you need to
-           ; specify the individual fields in the command line.
-	   "balance" "--limit" "cleared or pending" "--empty"
-	   "--format" "%(display_total)" account)
-      (setq val  
-	    (ledger-split-commodity-string
-	     (buffer-substring-no-properties (point-min) (point-max)))))))
+      ;; note that in the line below, the --format option is
+      ;; separated from the actual format string.  emacs does not
+      ;; split arguments like the shell does, so you need to
+      ;; specify the individual fields in the command line.
+      (if (ledger-exec-ledger buffer (current-buffer)
+			      "balance" "--limit" "cleared or pending" "--empty"
+			      "--format" "%(display_total)" account)
+	  (setq val
+		(ledger-split-commodity-string
+		 (buffer-substring-no-properties (point-min) (point-max))))))))
 
 (defun ledger-display-balance ()
-  "Display the cleared-or-pending balnce and calculate the
-target-delta of the account being reconciled."
+  "Display the cleared-or-pending balance.
+And calculate the target-delta of the account being reconciled."
   (interactive)
-  (let* ((pending (ledger-reconcile-get-cleared-or-pending-balance))
-	 (target-delta (if ledger-target
-			   (-commodity ledger-target pending)
-			   nil)))
-    
-    (if target-delta
-	(message "Pending balance: %s,   Difference from target: %s"
-		 (ledger-commodity-to-string pending)
-		 (ledger-commodity-to-string target-delta))
-	(message "Pending balance: %s"
-		 (ledger-commodity-to-string pending)))))
+  (let* ((pending (ledger-reconcile-get-cleared-or-pending-balance)))
+    (if pending
+	(if ledger-target
+	    (message "Pending balance: %s,   Difference from target: %s"
+		     (ledger-commodity-to-string pending)
+		     (ledger-commodity-to-string (-commodity ledger-target pending)))
+	    (message "Pending balance: %s"
+		     (ledger-commodity-to-string pending))))))
 		 
 		 
 
@@ -111,7 +108,7 @@ target-delta of the account being reconciled."
   "Return a buffer from WHERE the transaction is."
   (if (bufferp (car where))
       (car where)
-      (error "ledger-reconcile-get-buffer: Buffer not set")))
+      (error "Function ledger-reconcile-get-buffer: Buffer not set")))
 
 (defun ledger-reconcile-toggle ()
   "Toggle the current transaction, and mark the recon window."
@@ -276,23 +273,27 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
   "Get the uncleared transactions in the account and display them in the *Reconcile* buffer."
   (let* ((buf ledger-buf)
          (account ledger-acct)
+	 (ledger-success nil)
          (xacts
           (with-temp-buffer
-	    (ledger-exec-ledger buf (current-buffer)
-				"--uncleared" "--real" "emacs" account)
-	    (goto-char (point-min))
-	    (unless (eobp)
-	      (unless (looking-at "(")
-		(error (concat "ledger-do-reconcile: " (buffer-string))))
-	      (read (current-buffer)))))) ;current-buffer is the *temp* created above
-    (if (> (length xacts) 0)
-	(progn
+	    (if (ledger-exec-ledger buf (current-buffer)
+				    "--uncleared" "--real" "emacs" account)
+		(progn
+		  (setq ledger-success t)
+		  (goto-char (point-min))
+		  (unless (eobp)
+		    (if (looking-at "(")
+			(read (current-buffer))))))))) ;current-buffer is the *temp* created above
+    (if (and ledger-success (> (length xacts) 0))
+	(let ((date-format (cdr (assoc "date-format" ledger-environment-alist))))
 	  (dolist (xact xacts)
 	      (dolist (posting (nthcdr 5 xact))
 		(let ((beg (point))
 		      (where (ledger-marker-where-xact-is xact posting)))
 		  (insert (format "%s %-4s %-30s %-30s %15s\n"
-				  (format-time-string "%Y/%m/%d" (nth 2 xact))
+				  (format-time-string (if date-format
+							  date-format
+							  "%Y/%m/%d") (nth 2 xact))
 				  (if (nth 3 xact)
 				      (nth 3 xact)
 				      "")
@@ -310,7 +311,9 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 						 'where where))))  ))
 	  (goto-char (point-max))
 	  (delete-char -1)) ;gets rid of the extra line feed at the bottom of the list
-	(insert (concat "There are no uncleared entries for " account)))
+	(if ledger-success 
+	    (insert (concat "There are no uncleared entries for " account))
+	    (insert "Ledger has reported a problem.  Check *Ledger Error* buffer.")))
     (goto-char (point-min))
     (set-buffer-modified-p nil)
     (toggle-read-only t)
@@ -351,10 +354,11 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
       (set-window-buffer (split-window (get-buffer-window buf) nil nil) rbuf)
       (pop-to-buffer rbuf)))
 
-(defun ledger-reconcile (account)
-  "Start reconciling ACCOUNT."
-  (interactive "sAccount to reconcile: ")
-  (let ((buf (current-buffer))
+(defun ledger-reconcile ()
+  "Start reconciling, prompt for account."
+  (interactive)
+  (let ((account (ledger-post-read-account-with-prompt "Account to reconcile"))
+	(buf (current-buffer))
         (rbuf (get-buffer ledger-recon-buffer-name)))  ;; this means
 						       ;; only one
 						       ;; *Reconcile*
@@ -396,7 +400,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 (defvar ledger-reconcile-mode-abbrev-table)
 
 (defun ledger-reconcile-change-target ()
-  "Change the traget amount for the reconciliation process."
+  "Change the target amount for the reconciliation process."
   (interactive)
   (setq ledger-target (ledger-read-commodity-string "Set reconciliation target")))
 
@@ -441,7 +445,6 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
      
      (use-local-map map)))
 
-(provide 'ldg-reconcile)
 (provide 'ldg-reconcile)
 
 ;;; ldg-reconcile.el ends here

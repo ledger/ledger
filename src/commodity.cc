@@ -497,11 +497,9 @@ bool commodity_t::compare_by_commodity::operator()(const amount_t * left,
   }
 }
 
-void put_commodity(property_tree::ptree& pt, const commodity_t& comm,
+void put_commodity(property_tree::ptree& st, const commodity_t& comm,
                    bool commodity_details)
 {
-  property_tree::ptree& st(pt.put("commodity", ""));
-
   std::string flags;
   if (! (comm.has_flags(COMMODITY_STYLE_SUFFIXED)))  flags += 'P';
   if (comm.has_flags(COMMODITY_STYLE_SEPARATED))     flags += 'S';
@@ -512,7 +510,7 @@ void put_commodity(property_tree::ptree& pt, const commodity_t& comm,
   st.put("symbol", comm.symbol());
 
   if (commodity_details && comm.has_annotation())
-    put_annotation(st, as_annotated_commodity(comm).details);
+    put_annotation(st.put("annotation", ""), as_annotated_commodity(comm).details);
 }
 
 } // namespace ledger

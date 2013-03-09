@@ -38,6 +38,36 @@
   "Move point to end of transaction."
   (forward-paragraph))
 
+(defun ledger-sort-find-start ()
+  (if (re-search-forward ";.*Ledger-mode:.*Start sort" nil t)
+      (match-end 0)))
+
+(defun ledger-sort-find-end ()
+  (if (re-search-forward ";.*Ledger-mode:.*End sort" nil t)
+      (match-end 0)))
+
+(defun ledger-sort-insert-start-mark ()
+  (interactive)
+  (let (has-old-marker) 
+    (save-excursion
+      (goto-char (point-min))
+      (setq has-old-marker (ledger-sort-find-start))
+      (if has-old-marker 
+	  (delete-region (match-beginning 0) (match-end 0))))
+    (beginning-of-line)
+    (insert "\n; Ledger-mode: Start sort\n\n")))
+
+(defun ledger-sort-insert-end-mark ()
+  (interactive)
+  (let (has-old-marker) 
+    (save-excursion
+      (goto-char (point-min))
+      (setq has-old-marker (ledger-sort-find-end))
+      (if has-old-marker 
+	  (delete-region (match-beginning 0) (match-end 0))))
+    (beginning-of-line)
+    (insert "\n; Ledger-mode: End sort\n\n")))
+
 (defun ledger-sort-region (beg end)
   "Sort the region from BEG to END in chronological order."
   (interactive "r") ;; load beg and end from point and mark
@@ -66,14 +96,15 @@
 (defun ledger-sort-buffer ()
   "Sort the entire buffer."
   (interactive)
-  (let ((sort-start (point-min))
-	(sort-end (point-max)))
-    (goto-char (point-min))
-    (if (re-search-forward ";.*Ledger-mode:.*Start sort" nil t)
-	(set 'sort-start (match-end 0)))
-    (if (re-search-forward ";.*Ledger-mode:.*End sort" nil t)
-	(set 'sort-end (match-end 0)))    
-    (ledger-sort-region sort-start sort-end)))
+  (goto-char (point-min))
+  (let ((sort-start (ledger-sort-find-start))
+	(sort-end (ledger-sort-find-end)))
+    (ledger-sort-region (if sort-start
+			    sort-start
+			    (point-min)) 
+			(if sort-end
+			    sort-end
+			    (point-max)))))
 
 (provide 'ldg-sort)
 

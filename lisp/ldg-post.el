@@ -31,14 +31,18 @@
   "Default indentation for account transactions in an entry."
   :type 'string
   :group 'ledger-post)
-
 (defgroup ledger-post nil
   "Options for controlling how Ledger-mode deals with postings and completion"
   :group 'ledger)
 
-(defcustom ledger-post-auto-adjust-amounts nil
-  "If non-nil, ."
+(defcustom ledger-post-auto-adjust-postings t
+  "If non-nil, adjust account and amount to columns set below"
   :type 'boolean
+  :group 'ledger-post)
+
+(defcustom ledger-post-account-alignment-column 4
+  "The column Ledger-mode attempts to align accounts to."
+  :type 'integer 
   :group 'ledger-post)
 
 (defcustom ledger-post-amount-alignment-column 52
@@ -123,20 +127,26 @@ PROMPT is a string to prompt with.  CHOICES is a list of
     (- (or (match-end 4)
            (match-end 3)) (point))))
 
-(defun ledger-align-amounts (&optional column)
+(defun ledger-post-align-postings (&optional column)
   "Align amounts and accounts in the current region.
 This is done so that the last digit falls in COLUMN, which
-defaults to 52.  ledger-default-acct-transaction-indent positions
+defaults to 52.  ledger-post-account-column positions
 the account"
   (interactive "p")
   (if (or (null column) (= column 1))
       (setq column ledger-post-amount-alignment-column))
   (save-excursion
     ;; Position the account
-    ;; (beginning-of-line)
+    (if (not (or (looking-at "[ \t]*[1-9]")
+		 (and (looking-at "[ \t]+\n")
+		      (looking-back "[ \n]" (- (point) 2)))))
+	(save-excursion
+	  (beginning-of-line)
+	  (set-mark (point)) 
+	  (delete-horizontal-space) 
+	  (insert (make-string ledger-post-account-alignment-column ? )))
+	(set-mark (point)))
     (set-mark (point))
-    ;; (delete-horizontal-space)
-    ;; (insert ledger-default-acct-transaction-indent)
     (goto-char (1+ (line-end-position)))
     (let* ((mark-first (< (mark) (point)))
            (begin (if mark-first (mark) (point)))
@@ -148,7 +158,7 @@ the account"
         (let ((col (current-column))
               (target-col (- column offset))
               adjust)
-          (setq adjust (- target-col col))
+    (setq adjust (- target-col col))
           (if (< col target-col)
               (insert (make-string (- target-col col) ? ))
 	      (move-to-column target-col)
@@ -159,23 +169,24 @@ the account"
 		  (insert "  ")))
           (forward-line))))))
 
-(defun ledger-post-align-amount ()
+(defun ledger-post-align-posting ()
   "Align the amounts in this posting."
   (interactive)
   (save-excursion
     (set-mark (line-beginning-position))
     (goto-char (1+ (line-end-position)))
-    (ledger-align-amounts)))
+    (ledger-post-align-postings)))
 
 (defun ledger-post-maybe-align (beg end len)
   "Align amounts only if point is in a posting.
 BEG, END, and LEN control how far it can align."
-  (save-excursion
-    (goto-char beg)
-    (when (<= end (line-end-position))
-      (goto-char (line-beginning-position))
-      (if (looking-at ledger-post-line-regexp)
-          (ledger-align-amounts)))))
+  (if ledger-post-auto-adjust-postings
+      (save-excursion
+     (goto-char beg)
+     (when (<= end (line-end-position))
+       (goto-char (line-beginning-position))
+       (if (looking-at ledger-post-line-regexp)
+	   (ledger-post-align-postings))))))
 
 (defun ledger-post-edit-amount ()
   "Call 'calc-mode' and push the amount in the posting to the top of stack."
@@ -186,19 +197,10 @@ BEG, END, and LEN control how far it can align."
     (let ((end-of-amount (re-search-forward "[-.,0-9]+" (line-end-position) t)))
       ;; determine if there is an amount to edit
       (if end-of-amount
-	  (let ((val (match-string 0)))
+	  (let ((val (ledger-commodity-string-number-decimalize (match-string 0) :from-user)))
 	    (goto-char (match-beginning 0))
 	    (delete-region (match-beginning 0) (match-end 0))
 	    (calc)
-	    (if ledger-use-decimal-comma
-		(progn
-		  (while (string-match "\\." val)
-		    (setq val (replace-match "" nil nil val))) ;; gets rid of periods
-		  (while (string-match "," val)
-		    (setq val (replace-match "." nil nil val)))) ;; switch to period separator
-		(progn
-		  (while (string-match "," val)
-		    (setq val (replace-match "" nil nil val))))) ;; gets rid of commas
 	    (calc-eval val 'push)) ;; edit the amount
 	  (progn ;;make sure there are two spaces after the account name and go to calc
 	    (if (search-backward "  " (- (point) 3) t)
@@ -225,10 +227,21 @@ BEG, END, and LEN control how far it can align."
 
 (defun ledger-post-setup ()
   "Configure `ledger-mode' to auto-align postings."
-  (if ledger-post-auto-adjust-amounts
-      (add-hook 'after-change-functions 'ledger-post-maybe-align t t))
+  (add-hook 'after-change-functions 'ledger-post-maybe-align t t)
   (add-hook 'after-save-hook #'(lambda () (setq ledger-post-current-list nil))))
 
+
+(defun ledger-post-read-account-with-prompt (prompt) 
+  (let* ((context (ledger-context-at-point))
+	 (default
+	  (if (eq (ledger-context-line-type context) 'acct-transaction)
+	      (regexp-quote (ledger-context-field-value context 'account))
+	      nil)))
+    (ledger-read-string-with-default prompt default)))
+
+
 (provide 'ldg-post)
+
+
 
 ;;; ldg-post.el ends here

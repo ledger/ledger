@@ -75,8 +75,7 @@ protected:
 
 public:
   enum format_t {
-    FORMAT_XML,
-    FORMAT_JSON
+    FORMAT_XML
   } format;
 
   format_ptree(report_t& _report, format_t _format = FORMAT_XML)

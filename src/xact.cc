@@ -847,10 +847,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
   }
 }
 
-void put_xact(property_tree::ptree& pt, const xact_t& xact)
+void put_xact(property_tree::ptree& st, const xact_t& xact)
 {
-  property_tree::ptree& st(pt.put("transaction", ""));
-
   if (xact.state() == item_t::CLEARED)
     st.put("<xmlattr>.state", "cleared");
   else if (xact.state() == item_t::PENDING)
@@ -859,14 +857,10 @@ void put_xact(property_tree::ptree& pt, const xact_t& xact)
   if (xact.has_flags(ITEM_GENERATED))
     st.put("<xmlattr>.generated", "true");
 
-  if (xact._date) {
-    property_tree::ptree& t(st.put("date", ""));
-    put_date(t, *xact._date, false);
-  }
-  if (xact._date_aux) {
-    property_tree::ptree& t(st.put("aux-date", ""));
-    put_date(t, *xact._date_aux, false);
-  }
+  if (xact._date)
+    put_date(st.put("date", ""), *xact._date);
+  if (xact._date_aux)
+    put_date(st.put("aux-date", ""), *xact._date_aux);
 
   if (xact.code)
     st.put("code", *xact.code);
@@ -877,7 +871,7 @@ void put_xact(property_tree::ptree& pt, const xact_t& xact)
     st.put("note", *xact.note);
 
   if (xact.metadata)
-    put_metadata(st,  *xact.metadata);
+    put_metadata(st.put("metadata", ""),  *xact.metadata);
 }
 
 } // namespace ledger

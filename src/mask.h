@@ -151,7 +151,7 @@ inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {
 }
 
 inline void put_mask(property_tree::ptree& pt, const mask_t& mask) {
-  pt.put("mask", mask.str());
+  pt.put_value(mask.str());
 }
 
 } // namespace ledger

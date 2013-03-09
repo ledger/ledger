@@ -793,7 +793,7 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
 }
 
 void put_amount(property_tree::ptree& pt, const amount_t& amt,
-                bool wrap = true, bool commodity_details = false);
+                bool commodity_details = false);
 
 } // namespace ledger
 
