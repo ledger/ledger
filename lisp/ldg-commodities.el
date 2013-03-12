@@ -39,7 +39,7 @@
 	(with-temp-buffer
 	  (insert str)
 	  (goto-char (point-min))
-	  (cond ((re-search-forward "-?[1-9][0-9]*[.,][0-9]*" nil t)
+	  (cond ((re-search-forward "-?[1-9][0-9,]*[.,][0-9]*" nil t)
 		 ;; found a decimal number
 		 (setq val 
 		       (string-to-number
