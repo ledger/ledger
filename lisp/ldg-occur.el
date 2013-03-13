@@ -19,9 +19,6 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 
-
-
-
 ;;; Commentary:
 ;; Provide code folding to ledger mode.  Adapted from original loccur
 ;; mode by Alexey Veretennikov <alexey dot veretennikov at gmail dot
@@ -163,15 +160,6 @@ Argument OVL-BOUNDS contains bounds for the transactions to be left visible."
 	      (if ledger-occur-use-face-unfolded
 		  (overlay-put ovl 'face 'ledger-occur-xact-face )))
             overlays)))
-
-(defun ledger-occur-change-regex (regex buffer)
-  "Use this function to programatically change the overlays using REGEX in BUFFER, rather than quitting out and restarting."
-  (progn
-    (set-buffer buffer)
-    (setq ledger-occur-mode nil)
-    (force-mode-line-update)
-    (ledger-occur-mode regex buffer)
-    (recenter)))
 
 (defun ledger-occur-quit-buffer (buffer)
   "Quits hidings transaction in the given BUFFER.
