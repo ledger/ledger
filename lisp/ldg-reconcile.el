@@ -318,11 +318,13 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
     (set-buffer-modified-p nil)
     (toggle-read-only t)
 
-    ;; this next piece of code ensures that the last of the visible
-    ;; transactions in the ledger buffer is at the bottom of the main
-    ;; window.  The key to this is to ensure the window is selected
-    ;; when the buffer point is moved and recentered.  If they aren't
-    ;; strange things happen.
+    (ledger-reconcile-ensure-xacts-visible)))
+
+(defun ledger-reconcile-ensure-xacts-visible ()
+  "Ensures that the last of the visible transactions in the
+ledger buffer is at the bottom of the main window.  The key to
+this is to ensure the window is selected when the buffer point is
+moved and recentered.  If they aren't strange things happen."
     
     (let ((recon-window (get-buffer-window (get-buffer ledger-recon-buffer-name))))
       (when recon-window
@@ -335,10 +337,10 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	  (recenter -1))
         (select-window recon-window)
         (ledger-reconcile-visit t))
-      (add-hook 'post-command-hook 'ledger-reconcile-track-xact nil t))))
+      (add-hook 'post-command-hook 'ledger-reconcile-track-xact nil t)))
 
 (defun ledger-reconcile-track-xact ()
-  "Force the ledger buffer to recenter on the transactionat point in the reconcile buffer."
+  "Force the ledger buffer to recenter on the transaction at point in the reconcile buffer."
   (if (member this-command (list 'next-line
 				 'previous-line
 				 'mouse-set-point
@@ -388,11 +390,12 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	    (set (make-local-variable 'ledger-acct) account))))
     
     ;; Fold the ledger buffer
-    (if ledger-fold-on-reconcile
-	(ledger-occur-mode account buf))
 
     ;; Now, actually run the reconciliation
     (with-current-buffer rbuf
+      (save-excursion
+	(if ledger-fold-on-reconcile
+	    (ledger-occur-mode account ledger-buf)))
       (ledger-reconcile-refresh)
       (goto-char (point-min))
       (ledger-reconcile-change-target)
