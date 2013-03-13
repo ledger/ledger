@@ -145,15 +145,16 @@ And calculate the target-delta of the account being reconciled."
     (ledger-display-balance)))
 
 (defun ledger-reconcile-refresh ()
-  "Force the reconciliation window to refresh."
+  "Force the reconciliation window to refresh.
+Return the number of uncleared xacts found."
   (interactive)
   (let ((inhibit-read-only t)
         (line (count-lines (point-min) (point))))
     (erase-buffer)
-    (ledger-do-reconcile)
-    (set-buffer-modified-p t)
-    (goto-char (point-min))
-    (forward-line line)))
+    (prog1 (ledger-do-reconcile)
+      (set-buffer-modified-p t)
+      (goto-char (point-min))
+      (forward-line line))))
 
 (defun ledger-reconcile-refresh-after-save ()
   "Refresh the recon-window after the ledger buffer is saved."
@@ -270,7 +271,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	 (nth 0 posting))))) ;; return line-no of posting
 
 (defun ledger-do-reconcile ()
-  "Get the uncleared transactions in the account and display them in the *Reconcile* buffer."
+  "Return the number of uncleared transactions in the account and display them in the *Reconcile* buffer."
   (let* ((buf ledger-buf)
          (account ledger-acct)
 	 (ledger-success nil)
@@ -318,7 +319,8 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
     (set-buffer-modified-p nil)
     (toggle-read-only t)
 
-    (ledger-reconcile-ensure-xacts-visible)))
+    (ledger-reconcile-ensure-xacts-visible)
+    (length xacts)))
 
 (defun ledger-reconcile-ensure-xacts-visible ()
   "Ensures that the last of the visible transactions in the
@@ -396,9 +398,8 @@ moved and recentered.  If they aren't strange things happen."
       (save-excursion
 	(if ledger-fold-on-reconcile
 	    (ledger-occur-mode account ledger-buf)))
-      (ledger-reconcile-refresh)
-      (goto-char (point-min))
-      (ledger-reconcile-change-target)
+      (if (> (ledger-reconcile-refresh) 0)
+	  (ledger-reconcile-change-target))
       (ledger-display-balance))))
 
 (defvar ledger-reconcile-mode-abbrev-table)
