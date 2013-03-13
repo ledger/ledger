@@ -363,6 +363,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 						       ;; only one
 						       ;; *Reconcile*
 						       ;; buffer, ever
+    ;; Set up the reconcile buffer
     (if rbuf  ;; *Reconcile* already exists
 	(with-current-buffer rbuf
 	  (set 'ledger-acct account)  ;; already buffer local
@@ -371,31 +372,31 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 		(ledger-reconcile-quit-cleanup)
 		(set 'ledger-buf buf)))  ;; should already be
 					 ;; buffer-local
-	  (if ledger-fold-on-reconcile
-	      (ledger-occur-change-regex account ledger-buf))
-	  (set-buffer (get-buffer ledger-recon-buffer-name))
+	  
 	  (unless (get-buffer-window rbuf)
-	    (ledger-reconcile-open-windows buf rbuf))
-	  (ledger-reconcile-refresh)
-	  (goto-char (point-min))
-	  (setq ledger-target
-		(ledger-read-commodity-string "Set reconciliation target"))
-	  (ledger-display-balance))
+	    (ledger-reconcile-open-windows buf rbuf)))
 
-	  (progn  ;; no recon-buffer, starting from scratch.
-	    (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save nil t)
-	    (if ledger-fold-on-reconcile
-		(ledger-occur-mode account buf))
-	    
-	    (with-current-buffer (get-buffer-create ledger-recon-buffer-name)
-	      (ledger-reconcile-open-windows buf (current-buffer))
-	      (ledger-reconcile-mode)
-	      (set (make-local-variable 'ledger-buf) buf)
-	      (set (make-local-variable 'ledger-acct) account)
-	      (ledger-do-reconcile)
-	      (set (make-local-variable 'ledger-target)
-		   (ledger-read-commodity-string "Set reconciliation target"))
-	      (ledger-display-balance))))))
+	(progn  ;; no recon-buffer, starting from scratch.
+	  (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save nil t)
+	  
+	  (with-current-buffer (setq rbuf 
+				     (get-buffer-create ledger-recon-buffer-name))
+	    (ledger-reconcile-open-windows buf rbuf)
+	    (ledger-reconcile-mode)
+	    (make-local-variable 'ledger-target)
+	    (set (make-local-variable 'ledger-buf) buf)
+	    (set (make-local-variable 'ledger-acct) account))))
+    
+    ;; Fold the ledger buffer
+    (if ledger-fold-on-reconcile
+	(ledger-occur-mode account buf))
+
+    ;; Now, actually run the reconciliation
+    (with-current-buffer rbuf
+      (ledger-reconcile-refresh)
+      (goto-char (point-min))
+      (ledger-reconcile-change-target)
+      (ledger-display-balance))))
 
 (defvar ledger-reconcile-mode-abbrev-table)
 
