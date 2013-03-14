@@ -148,13 +148,11 @@ And calculate the target-delta of the account being reconciled."
   "Force the reconciliation window to refresh.
 Return the number of uncleared xacts found."
   (interactive)
-  (let ((inhibit-read-only t)
-        (line (count-lines (point-min) (point))))
+  (let ((inhibit-read-only t))
     (erase-buffer)
     (prog1 (ledger-do-reconcile)
       (set-buffer-modified-p t)
-      (goto-char (point-min))
-      (forward-line line))))
+      (goto-char (point-min)))))
 
 (defun ledger-reconcile-refresh-after-save ()
   "Refresh the recon-window after the ledger buffer is saved."
