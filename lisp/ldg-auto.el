@@ -21,8 +21,8 @@
 
 ;;; Commentary:
 ;; 
-;; This module provides or automatically adding transactions to a
-;; ledger buffer on a periodic basis. h Recurrence expressions are
+;; This module provides for automatically adding transactions to a
+;; ledger buffer on a periodic basis. Recurrence expressions are
 ;; inspired by Martin Fowler's "Recurring Events for Calendars",
 ;; martinfowler.com/apsupp/recurring.pdf
 
@@ -92,15 +92,14 @@ of date."
 					;; of days are ok
 	    (between (eval day) 1 (ledger-auto-days-in-month (eval month) (eval year))))
        (between (eval day) 1 31))  ;; no month specified, assume 31 days.
-   `#'(lambda (date)
-	(and ,(if (eval year)  
-		  `(if (eq (nth 5 (decode-time date)) ,(eval year)) t)
-		  `t)
-	     ,(if (eval month)
-		  `(if (eq (nth 4 (decode-time date)) ,(eval month)) t)
-		  `t)
-	     ,(if (eval day)
-		  `(if (eq (nth 3 (decode-time date)) ,(eval day)) t))))
+   `'(and ,(if (eval year)  
+		`(if (eq (nth 5 (decode-time date)) ,(eval year)) t)
+		`t)
+	   ,(if (eval month)
+		`(if (eq (nth 4 (decode-time date)) ,(eval month)) t)
+		`t)
+	   ,(if (eval day)
+		`(if (eq (nth 3 (decode-time date)) ,(eval day)) t)))
    (error "ledger-auto-constraint-numerical-date-macro: date out of range %S %S %S" (eval year) (eval month) (eval day))))
 
 
@@ -155,6 +154,15 @@ For example every second Friday, regardless of month."
 	  (setq xact-list (cons transaction xact-list))))
     xact-list)))
 	  
+(defun ledger-auto-replace-brackets ()
+    "Replace all brackets with parens"
+    (goto-char (point-min))
+    (while (search-forward "]" nil t)
+      (replace-match ")" nil t))
+    (goto-char (point-min))
+    (while (search-forward "[" nil t)
+      (replace-match "(" nil t)))
+
 (defun ledger-auto-read-descriptor-tree (descriptor-string)
   "Take a date descriptor string and return a function that
 returns true if the date meets the requirements"
@@ -163,16 +171,14 @@ returns true if the date meets the requirements"
     (let (pos)
       ;; Replace brackets with parens
       (insert descriptor-string)
-      (goto-char (point-min))
-      (replace-string "[" "(")
-      (goto-char (point-min))
-      (replace-string "]" ")")
+      (ledger-auto-replace-brackets)
+      
       (goto-char (point-max))
       ;; double quote all the descriptors for string processing later
       (while (re-search-backward 
 	      (concat "\\(20[0-9][0-9]\\|[\*]\\)[/\\-]"  ;; Year slot
-		      "\\([\*EO]\\|[0-9]+\\)[/\\-]" ;; Month slot
-		      "\\([\*]\\|\\([0-9][0-9]\\)\\|"
+		      "\\([\*EO]\\|[01][0-9]\\)[/\\-]" ;; Month slot
+		      "\\([\*]\\|\\([0-3][0-9]\\)\\|"
 		      "\\([0-5]"
 		      "\\(\\(Su\\)\\|"
 		      "\\(Mo\\)\\|" 
@@ -193,17 +199,20 @@ returns true if the date meets the requirements"
      (read (buffer-substring (point-min) (point-max))))))
 
 (defun ledger-transform-auto-tree (tree)
+"Takes a lisp list of date descriptor strings, TREE, and returns a string with a lambda function of date."
+;; use funcall to use the lambda function spit out here
   (if (consp tree)
       (let (result)
 	(while (consp tree)
 	  (let ((newcar (car tree)))
-	    (if (consp (car tree))
+	    (if (consp newcar)
 		(setq newcar (ledger-transform-auto-tree (car tree))))
 	    (if (consp newcar) 
 		(push newcar result)
 		(push (ledger-auto-parse-date-descriptor newcar) result)) )
 	  (setq tree (cdr tree)))
-	(nconc (nreverse result) tree))))
+	`(lambda (date) 
+	   ,(nconc (list 'or) (nreverse result) tree)))))
 
 (defun ledger-auto-split-constraints (descriptor-string)
   "Return a list with the year, month and day fields split"
