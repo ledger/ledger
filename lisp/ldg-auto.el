@@ -30,6 +30,16 @@
 ;; function slot of the symbol VARNAME.  Then use VARNAME as the
 ;; function without have to use funcall.
 
+(defgroup ledger-auto nil
+  "Support for automatically recommendation transactions."
+    :group 'ledger)
+
+(defcustom ledger-auto-look-forward 14
+  "Number of days auto look forward to recommend transactions"
+  :type 'integer
+  :group 'ledger-auto)
+
+
 (defsubst between (val low high)
   (and (>= val low) (<= val high)))
 
@@ -132,6 +142,9 @@ For example every second Friday, regardless of month."
   "Return true if DATE is a holiday.")
 
 (defun ledger-auto-scan-transactions (auto-file)
+  "Scans AUTO_FILE and returns a list of transactions with date predicates.
+The car of each item is a fuction of date that returns true if
+the transaction should be logged for that day."
   (interactive "fFile name: ")
   (let ((xact-list (list)))
     (with-current-buffer
@@ -211,6 +224,8 @@ returns true if the date meets the requirements"
 		(push newcar result)
 		(push (ledger-auto-parse-date-descriptor newcar) result)) )
 	  (setq tree (cdr tree)))
+
+	;; tie up all the clauses in a big or and lambda
 	`(lambda (date) 
 	   ,(nconc (list 'or) (nreverse result) tree)))))
 
@@ -247,6 +262,26 @@ returns true if the date meets the requirements"
   "Parse the date descriptor, return the evaluator"
   (ledger-auto-compile-constraints 
    (ledger-auto-split-constraints descriptor)))
+
+
+
+;;
+;;  Test harnesses for use in ielm
+;;
+(defvar auto-items)
+
+(defun ledger-auto-test-setup ()
+  (setq auto-items 
+	(ledger-auto-scan-transactions "~/FinanceData/ledger-auto.ledger")))
+
+
+(defun ledger-auto-test-predict ()
+  (let ((today (current-time))
+	test-date)
+    
+    (loop for day from 0 to ledger-auto-look-forward by 1 do
+	 (setq test-date (time-add today (days-to-time day)))
+	 (message "date: %S" (decode-time test-date)))))
 
 (provide 'ldg-auto)
 
