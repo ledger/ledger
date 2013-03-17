@@ -27,10 +27,6 @@
 
 ;;; Code:
 
-(defcustom ledger-default-acct-transaction-indent "    "
-  "Default indentation for account transactions in an entry."
-  :type 'string
-  :group 'ledger-post)
 (defgroup ledger-post nil
   "Options for controlling how Ledger-mode deals with postings and completion"
   :group 'ledger)
