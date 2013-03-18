@@ -344,7 +344,9 @@ moved and recentered.  If they aren't strange things happen."
   (if (member this-command (list 'next-line
 				 'previous-line
 				 'mouse-set-point
-				 'ledger-reconcile-toggle))
+				 'ledger-reconcile-toggle
+				 'end-of-buffer
+				 'beginning-of-buffer))
       (if ledger-buffer-tracks-reconcile-buffer
 	  (save-excursion
 	    (ledger-reconcile-visit t)))))
