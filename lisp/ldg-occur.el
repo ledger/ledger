@@ -49,7 +49,7 @@
 
 (defvar ledger-occur-history nil
   "History of previously searched expressions for the prompt.")
-(make-variable-buffer-local 'ledger-occur-history)
+;;(make-variable-buffer-local 'ledger-occur-history)
 
 (defvar ledger-occur-last-match nil
   "Last match found.")
@@ -95,8 +95,7 @@ When REGEX is nil, unhide everything, and remove higlight"
    (if ledger-occur-mode
        (list nil)
        (list (read-string (concat "Regexp<" (ledger-occur-prompt)
-				  ">: ") "" 'ledger-occur-history ))))
-  (if (string-equal "" regex) (setq regex (ledger-occur-prompt)))
+				  ">: ") nil 'ledger-occur-history (ledger-occur-prompt)))))
   (ledger-occur-mode regex (current-buffer)))
 
 (defun ledger-occur-prompt ()
