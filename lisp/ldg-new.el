@@ -92,7 +92,8 @@
           (forward-line 1))))))
 
 (defun ledger-dump-variable (var)
-  (insert (format "%s: %S\n" (symbol-name var) (eval var))))
+  (if var
+   (insert (format "%s: %S\n" (symbol-name var) (eval var)))))
 
 (defun ledger-mode-dump-variables ()
   (interactive)
@@ -103,7 +104,6 @@
   (insert "Emacs: " (version) "\n")
   (insert "System Configuration: "system-configuration "\n")
   (insert "ldg-commodities:\n")
-  (ledger-dump-variable 'ledger-use-decimal-comma)
   (ledger-dump-variable 'ledger-reconcile-default-commodity)
   (insert "ldg-exec:\n")
   (ledger-dump-variable 'ledger-works)
@@ -114,10 +114,10 @@
   (ledger-dump-variable 'ledger-occur-history)
   (ledger-dump-variable 'ledger-occur-last-match)
   (insert "ldg-post:\n")
-  (ledger-dump-variable 'ledger-post-auto-adjust-amounts)
+  (ledger-dump-variable 'ledger-post-auto-adjust-postings)
+  (ledger-dump-variable 'ledger-post-account-alignment-column)
   (ledger-dump-variable 'ledger-post-amount-alignment-column)
-  (ledger-dump-variable 'ledger-post-use-iswitchb)
-  (ledger-dump-variable 'ledger-post-use-ido)
+  (ledger-dump-variable 'ledger-post-use-completion-engine)
   (insert "ldg-reconcile:\n")
   (ledger-dump-variable 'ledger-recon-buffer-name)
   (ledger-dump-variable 'ledger-fold-on-reconcile)

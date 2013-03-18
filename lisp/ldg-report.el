@@ -73,7 +73,7 @@ text that should replace the format specifier."
 (defvar ledger-report-cmd-prompt-history nil)
 (defvar ledger-original-window-cfg nil)
 (defvar ledger-report-saved nil)
-
+(defvar ledger-minibuffer-history nil)
 (defvar ledger-report-mode-abbrev-table)
 
 (defun ledger-report-reverse-lines ()
@@ -236,7 +236,7 @@ used to generate the buffer, navigating the buffer, etc."
                                 (if default
                                     (concat " (" default "): ")
 				    ": "))))
-    (read-string default-prompt nil nil default)))
+    (read-string default-prompt nil 'ledger-minibuffer-history default)))
 
 (defun ledger-report-payee-format-specifier ()
   "Substitute a payee name.

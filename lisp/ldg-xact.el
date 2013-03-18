@@ -99,9 +99,10 @@ within the transaction."
            (ignore (goto-char here))))))
 
 (defun ledger-copy-transaction-at-point (date)
-  "Ask for a new DATE and copy the transaction under point to that date.  Leave point on the first amount."(interactive  (list
-		 (read-string "Copy to date: "
-			      (concat ledger-year "/" ledger-month "/"))))
+  "Ask for a new DATE and copy the transaction under point to that date.  Leave point on the first amount."
+  (interactive  (list
+		 (read-string "Copy to date: " 
+			      (concat ledger-year "/" ledger-month "/") 'ledger-minibuffer-history)))
   (let* ((here (point))
 	 (extents (ledger-find-xact-extents (point)))
 	 (transaction (buffer-substring (car extents) (cadr extents)))
