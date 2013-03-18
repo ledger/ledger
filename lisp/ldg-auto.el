@@ -264,7 +264,16 @@ returns true if the date meets the requirements"
    (ledger-auto-split-constraints descriptor)))
 
 
-
+(defun ledger-auto-list-upcoming-xacts (candidate-items early horizon)
+  "Search CANDIDATE-ITEMS for xacts that occur within the perios today - EARLY  to today + HORIZON"
+  (let ((start-date (time-subtract (current-time) (days-to-time early)))
+	test-date items)
+    (loop for day from 0 to (+ early horizon) by 1 do
+	 (setq test-date (time-add start-date (days-to-time day)))
+	 (dolist (candidate candidate-items items)
+	   (if (funcall (car candidate) test-date)
+	       (setq items (append items (list test-date (cdr candidate)))))))
+    items))
 ;;
 ;;  Test harnesses for use in ielm
 ;;
@@ -277,11 +286,15 @@ returns true if the date meets the requirements"
 
 (defun ledger-auto-test-predict ()
   (let ((today (current-time))
-	test-date)
+	test-date items)
     
     (loop for day from 0 to ledger-auto-look-forward by 1 do
 	 (setq test-date (time-add today (days-to-time day)))
-	 (message "date: %S" (decode-time test-date)))))
+	 ;;(message "date: %S" (decode-time test-date))
+	 (dolist (item auto-items items)
+	   (if (funcall (car item) test-date)
+	       (setq items (append items (list (decode-time test-date) (cdr item)))))))
+    items))
 
 (provide 'ldg-auto)
 
