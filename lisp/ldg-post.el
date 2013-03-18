@@ -173,6 +173,55 @@ the account"
     (goto-char (1+ (line-end-position)))
     (ledger-post-align-postings)))
 
+;;
+;;  This is the orignal ledger align amount code it does not attempt to format accounts
+;;  
+
+
+(defun ledger-align-amounts (&optional column)
+  "Align amounts and accounts in the current region.
+This is done so that the last digit falls in COLUMN, which
+defaults to 52.  ledger-default-acct-transaction-indent positions
+the account"
+  (interactive "p")
+  (if (or (null column) (= column 1))
+      (setq column ledger-post-amount-alignment-column))
+  (save-excursion
+    ;; Position the account
+    ;; (beginning-of-line)
+    (set-mark (point))
+    ;; (delete-horizontal-space)
+    ;; (insert ledger-default-acct-transaction-indent)
+    (goto-char (1+ (line-end-position)))
+    (let* ((mark-first (< (mark) (point)))
+           (begin (if mark-first (mark) (point)))
+           (end (if mark-first (point-marker) (mark-marker)))
+           offset)
+      ;; Position the amount
+      (goto-char begin)
+      (while (setq offset (ledger-next-amount end))
+        (let ((col (current-column))
+              (target-col (- column offset))
+              adjust)
+          (setq adjust (- target-col col))
+          (if (< col target-col)
+              (insert (make-string (- target-col col) ? ))
+	      (move-to-column target-col)
+	      (if (looking-back "  ")
+		  (delete-char (- col target-col))
+		  (skip-chars-forward "^ \t")
+		  (delete-horizontal-space)
+		  (insert "  ")))
+          (forward-line))))))
+
+(defun ledger-post-align-amount ()
+  "Align the amounts in this posting."
+  (interactive)
+  (save-excursion
+    (set-mark (line-beginning-position))
+    (goto-char (1+ (line-end-position)))
+    (ledger-align-amounts)))
+
 (defun ledger-post-maybe-align (beg end len)
   "Align amounts only if point is in a posting.
 BEG, END, and LEN control how far it can align."

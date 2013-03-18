@@ -209,9 +209,11 @@ Return the number of uncleared xacts found."
    (dolist (buf (cons ledger-buf ledger-bufs))
      (with-current-buffer buf
        (save-buffer)))
-   (set-buffer-modified-p nil)
-   (ledger-display-balance)
-   (goto-char curpoint)))
+   (with-current-buffer (get-buffer ledger-recon-buffer-name) 
+     (set-buffer-modified-p nil)
+     (ledger-display-balance)
+     (goto-char curpoint)
+     (ledger-reconcile-visit t))))
 
 (defun ledger-reconcile-finish ()
   "Mark all pending posting or transactions as cleared.
