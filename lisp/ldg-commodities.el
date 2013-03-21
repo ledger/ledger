@@ -34,12 +34,14 @@
 (defun ledger-split-commodity-string (str)
   "Split a commoditized amount into two parts"
   (if (> (length str) 0) 
-      (let (val
-	    comm)
+      (let (val comm number-regex)
 	(with-temp-buffer
 	  (insert str)
 	  (goto-char (point-min))
-	  (cond ((re-search-forward "-?[1-9][0-9]*[.,][0-9]*" nil t)
+	  (if (assoc "decimal-comma" ledger-environment-alist)
+	      (setq number-regex "-?[1-9][0-9.]*[,][0-9]*")
+	      (setq number-regex "-?[1-9][0-9,]*[.][0-9]*"))
+	  (cond ((re-search-forward number-regex nil t)
 		 ;; found a decimal number
 		 (setq val 
 		       (string-to-number
