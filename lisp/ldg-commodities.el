@@ -36,12 +36,12 @@
   (if (> (length str) 0) 
       (let (val comm number-regex)
 	(cond 
-	  ((string-match "^\\(-?[0-9.,]+\\) *\\([^-[:space:]0-9.,]+\\)$" str) ;We know that commodity contain no dot, no comma, no digit, nor dash
-	   (setq comm (match-string 2 str))
+	  ((or (string-match "^\\(-?[0-9.,]+\\) *\\(\\([^-[:space:]0-9.,]+\\)\\|\"\\(.+\\)\"\\)$" str))
+	   (setq comm (or (match-string 3 str) (match-string 4 str)))
 	   (setq val (match-string 1 str)))
-	  ((string-match "^\\([^-[:space:]0-9.,]+\\) *\\(-?[0-9.,]+\\)$" str)
-	   (setq comm (match-string 1 str))
-	   (setq val (match-string 2 str)))
+	  ((or (string-match "^\\(\\([^-[:space:]0-9.,]+\\)\\|\"\\(.+\\)\"\\) *\\(-?[0-9.,]+\\)$" str))
+	   (setq comm (or (match-string 2 str) (match-string 3 str)))
+	   (setq val (match-string 4 str)))
 	  (t
 	   (error "split-commodity-string: cannot parse commodity string: %S" str)))
 	(list (string-to-number
