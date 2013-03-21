@@ -32,17 +32,28 @@
 
 (defgroup ledger-schedule nil
   "Support for automatically recommendation transactions."
-    :group 'ledger)
+  :group 'ledger)
+
+(defcustom ledger-schedule-buffer-name "*Ledger Schedule*"
+  "Name for the schedule buffer"
+  :type 'string
+  :group 'ledger-schedule)
+
+(defcustom ledger-schedule-look-backward 7
+  "Number of days to look back in time for transactions."
+  :type 'integer
+  :group 'ledger-schedule)
 
 (defcustom ledger-schedule-look-forward 14
   "Number of days auto look forward to recommend transactions"
   :type 'integer
   :group 'ledger-schedule)
 
-(defcustom ledger-schedule-file "ledger-schedule.ledger"
+(defcustom ledger-schedule-file "~/FinanceData/ledger-schedule.ledger"
   "File to find scheduled transactions."
   :type 'file
   :group 'ledger-schedule)
+
 (defsubst between (val low high)
   (and (>= val low) (<= val high)))
 
@@ -121,7 +132,7 @@ of date."
   "Return a form that is true for every DAY skipping SKIP, starting on START.
 For example every second Friday, regardless of month."
   (let ((start-day (nth 6 (decode-time (eval start-date)))))
-    (if (eq start-day day-of-week)  ;; good, can proceed
+     (if (eq start-day day-of-week)  ;; good, can proceed
 	`(if (zerop (mod (- (time-to-days date) ,(time-to-days (eval start-date))) ,(* skip 7)))
 	     t
 	     nil)
@@ -144,14 +155,14 @@ For example every second Friday, regardless of month."
 (defun ledger-schedule-is-holiday (date)
   "Return true if DATE is a holiday.")
 
-(defun ledger-schedule-scan-transactions (auto-file)
+(defun ledger-schedule-scan-transactions (schedule-file)
   "Scans AUTO_FILE and returns a list of transactions with date predicates.
 The car of each item is a fuction of date that returns true if
 the transaction should be logged for that day."
   (interactive "fFile name: ")
   (let ((xact-list (list)))
     (with-current-buffer
-	(find-file-noselect auto-file)
+	(find-file-noselect schedule-file)
       (goto-char (point-min))
       (while (re-search-forward "^\\[\\(.*\\)\\] " nil t)
 	(let ((date-descriptor "")
@@ -268,7 +279,7 @@ returns true if the date meets the requirements"
 
 
 (defun ledger-schedule-list-upcoming-xacts (candidate-items early horizon)
-  "Search CANDIDATE-ITEMS for xacts that occur within the perios today - EARLY  to today + HORIZON"
+  "Search CANDIDATE-ITEMS for xacts that occur within the period today - EARLY  to today + HORIZON"
   (let ((start-date (time-subtract (current-time) (days-to-time early)))
 	test-date items)
     (loop for day from 0 to (+ early horizon) by 1 do
@@ -278,15 +289,23 @@ returns true if the date meets the requirements"
 	       (setq items (append items (list (list test-date (cadr candidate))))))))
     items))
 
-(defun ledger-schedule-create-auto-buffer (candidate-items early horizon)
+(defun ledger-schedule-already-entered (candidate buffer)
+  (let ((target-date (format-time-string date-format (car candidate)))
+	     (target-payee (cadr candidate)))
+    nil))
+
+(defun ledger-schedule-create-auto-buffer (candidate-items early horizon ledger-buf)
   "Format CANDIDATE-ITEMS for display."
   (let ((candidates (ledger-schedule-list-upcoming-xacts candidate-items early horizon))
-	(auto-buf (get-buffer-create "*Ledger Auto*"))
+	(schedule-buf (get-buffer-create ledger-schedule-buffer-name))
 	(date-format (cdr (assoc "date-format" ledger-environment-alist))))
-    (with-current-buffer auto-buf
+    (with-current-buffer schedule-buf
       (erase-buffer)
      (dolist (candidate candidates)
-       (insert (format-time-string date-format (car candidate) ) " " (cadr candidate) "/n")))))
+       (if (not (ledger-schedule-already-entered candidate ledger-buf))
+	   (insert (format-time-string date-format (car candidate) ) " " (cadr candidate) "\n"))))))
+
+
 ;;
 ;;  Test harnesses for use in ielm
 ;;
@@ -294,7 +313,7 @@ returns true if the date meets the requirements"
 
 (defun ledger-schedule-test-setup ()
   (setq auto-items 
-	(ledger-schedule-scan-transactions "~/FinanceData/ledger-schedule.ledger")))
+	(ledger-schedule-scan-transactions ledger-schedule-file)))
 
 
 (defun ledger-schedule-test-predict ()
