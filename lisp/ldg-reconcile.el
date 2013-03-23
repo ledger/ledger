@@ -257,7 +257,7 @@ and exit reconcile mode"
   "Cleanup all hooks established by reconcile mode."
   (interactive)
   (let ((buf ledger-buf))
-    (if buf
+    (if (buffer-live-p buf)
 	(with-current-buffer buf
 	  (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t)
 	  (if ledger-fold-on-reconcile
