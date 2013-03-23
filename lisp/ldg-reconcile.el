@@ -152,15 +152,20 @@ Return the number of uncleared xacts found."
     (erase-buffer)
     (prog1 (ledger-do-reconcile)
       (set-buffer-modified-p t)
-      (goto-char (point-min)))))
+      ;;(goto-char (point-min))
+      )))
 
 (defun ledger-reconcile-refresh-after-save ()
   "Refresh the recon-window after the ledger buffer is saved."
-  (let ((buf (get-buffer ledger-recon-buffer-name)))
+  (let ((curbuf (current-buffer))
+	(curpoint (point))
+	(buf (get-buffer ledger-recon-buffer-name)))
     (if buf
-        (with-current-buffer buf
-          (ledger-reconcile-refresh)
-          (set-buffer-modified-p nil)))))
+	(progn
+	  (with-current-buffer buf
+	   (ledger-reconcile-refresh)
+	   (set-buffer-modified-p nil))
+	  (select-window  (get-buffer-window curbuf))))))
 
 (defun ledger-reconcile-add ()
   "Use ledger xact to add a new transaction."
