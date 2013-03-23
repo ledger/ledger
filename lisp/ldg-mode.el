@@ -120,6 +120,7 @@
       (define-key map [sort-start] '(menu-item "Mark Sort Beginning" ledger-sort-insert-start-mark))
       (define-key map [sort-buff] '(menu-item "Sort Buffer" ledger-sort-buffer))
       (define-key map [sort-reg] '(menu-item "Sort Region" ledger-sort-region :enable mark-active))
+      (define-key map [align-reg] '(menu-item "Align Region" ledger-post-align-region :enable mark-active))
       (define-key map [sep2] '(menu-item "--"))
       (define-key map [copy-xact] '(menu-item "Copy Trans at Point" ledger-copy-transaction))
       (define-key map [toggle-post] '(menu-item "Toggle Current Posting" ledger-toggle-current))
