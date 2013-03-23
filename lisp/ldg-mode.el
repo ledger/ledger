@@ -130,7 +130,7 @@
       (define-key map [sep6] '(menu-item "--"))
       (define-key map [edit-amount] '(menu-item "Calc on Amount" ledger-post-edit-amount))
       (define-key map [sep] '(menu-item "--"))
-      (define-key map [delete-xact] '(menu-item "Delete Entry" ledger-delete-current-transaction))
+      (define-key map [delete-xact] '(menu-item "Delete Transaction" ledger-delete-current-transaction))
       (define-key map [cmp-xact] '(menu-item "Complete Transaction" ledger-fully-complete-entry))
       (define-key map [add-xact] '(menu-item "Add Transaction (ledger xact)" ledger-add-transaction :enable ledger-works))
       (define-key map [sep3] '(menu-item "--"))
