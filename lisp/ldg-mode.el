@@ -135,7 +135,7 @@
       (define-key map [add-xact] '(menu-item "Add Transaction (ledger xact)" ledger-add-transaction :enable ledger-works))
       (define-key map [sep3] '(menu-item "--"))
       (define-key map [reconcile] '(menu-item "Reconcile Account" ledger-reconcile :enable ledger-works))
-      (define-key map [reconcile] '(menu-item "Hide Xacts" ledger-occur))))
+      (define-key map [reconcile] '(menu-item "Narrow to REGEX" ledger-occur))))
 
 (defun ledger-time-less-p (t1 t2)
   "Say whether time value T1 is less than time value T2."

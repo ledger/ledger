@@ -128,7 +128,7 @@ Ledger from a convenient command line.
 * Quick Add::                   
 * Reconciliation::              
 * Reports::                     
-* Folding::                     
+* Narrowing::                   
 @end menu
 
 @node Quick Add, Reconciliation, Quick Demo, Quick Demo
@@ -177,7 +177,7 @@ reach $0.  End the reconciliation by typing @code{C-c C-c}.  This saves
 the demo.ledger buffer and marks the transactions and finally cleared.
 Type @code{q} to close out the reconciliation buffer.
 
-@node Reports, Folding, Reconciliation, Quick Demo
+@node Reports, Narrowing, Reconciliation, Quick Demo
 @subsection Reports
 
 The real power of Ledger is in it reporting capabilities.  Reports can
@@ -197,8 +197,8 @@ Another built-in report is the balance report.  In the
 report to run, type @code{bal}, and a balance report of all accounts
 will be shown.
 
-@node Folding,  , Reports, Quick Demo
-@subsection Folding
+@node Narrowing,  , Reports, Quick Demo
+@subsection Narrowing
 
 A ledger file can get very large.  It can be helpful to collapse the buffer
 to display only the transactions you are interested in.  Ledger-mode
@@ -214,7 +214,7 @@ match the regex.  The regex can be on any field, or amount.
 * Marking Transactions::        
 * Deleting Transactions::       
 * Sorting Transactions::        
-* Hiding Transactions::         
+* Narrowing Transactions::      
 @end menu
 
 @node Adding Transactions, Editing Amounts, The Ledger Buffer, The Ledger Buffer
@@ -285,7 +285,7 @@ provides an easy way to delete the transaction under point: @code{C-c
 C-d}.  The advantage to using this method is that the complete
 transaction operation is in the undo buffer.
 
-@node Sorting Transactions, Hiding Transactions, Deleting Transactions, The Ledger Buffer
+@node Sorting Transactions, Narrowing Transactions, Deleting Transactions, The Ledger Buffer
 @section Sorting Transactions
 
 As you operating on the Ledger files, they may become disorganized.  For
@@ -320,10 +320,10 @@ You can use menu entries to insert start and end markers.  These
 functions will automatically delete old markers and put new new marker
 at point.
 
-@node Hiding Transactions,  , Sorting Transactions, The Ledger Buffer
-@section Hiding Transactions
+@node Narrowing Transactions,  , Sorting Transactions, The Ledger Buffer
+@section Narrowing Transactions
 
-Often you will want to run Ledger register reports just to look at ax
+Often you will want to run Ledger register reports just to look at a
 specific set of transactions.  If you don't need the running total
 calculation handled by Ledger, Ledger-mode provides a rapid way of
 narrowing what is displayed in the buffer in a way that is simpler than
@@ -363,7 +363,7 @@ C-f} again.
 * Starting a Reconciliation::   
 * Mark Transactions Pending::   
 * Edit Transactions During Reconciliation::  
-* Finalize Reconciliation::    
+* Finalize Reconciliation::     
 * Adding and Deleting Transactions during Reconciliation::  
 * Changing Reconciliation Account::  
 * Changing Reconciliation Target::  
