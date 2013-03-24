@@ -159,13 +159,14 @@ Return the number of uncleared xacts found."
   "Refresh the recon-window after the ledger buffer is saved."
   (let ((curbuf (current-buffer))
 	(curpoint (point))
-	(buf (get-buffer ledger-recon-buffer-name)))
-    (if buf
+	(recon-buf (get-buffer ledger-recon-buffer-name)))
+    (if (buffer-live-p recon-buf)
 	(progn
-	  (with-current-buffer buf
-	   (ledger-reconcile-refresh)
-	   (set-buffer-modified-p nil))
-	  (select-window  (get-buffer-window curbuf))))))
+	  (with-current-buffer recon-buf
+	    (ledger-reconcile-refresh)
+	    (set-buffer-modified-p nil))
+	  (select-window  (get-buffer-window curbuf))
+	  (goto-char curpoint)))))
 
 (defun ledger-reconcile-add ()
   "Use ledger xact to add a new transaction."
@@ -211,14 +212,14 @@ Return the number of uncleared xacts found."
   "Save the ledger buffer."
   (interactive)
   (let ((curpoint (point)))
-   (dolist (buf (cons ledger-buf ledger-bufs))
-     (with-current-buffer buf
-       (save-buffer)))
-   (with-current-buffer (get-buffer ledger-recon-buffer-name) 
-     (set-buffer-modified-p nil)
-     (ledger-display-balance)
-     (goto-char curpoint)
-     (ledger-reconcile-visit t))))
+    (dolist (buf (cons ledger-buf ledger-bufs))
+      (with-current-buffer buf
+	(save-buffer)))
+    (with-current-buffer (get-buffer ledger-recon-buffer-name) 
+      (set-buffer-modified-p nil)
+      (ledger-display-balance)
+      (goto-char curpoint)
+      (ledger-reconcile-visit t))))
 
 (defun ledger-reconcile-finish ()
   "Mark all pending posting or transactions as cleared.
@@ -401,8 +402,6 @@ moved and recentered.  If they aren't strange things happen."
 	    (set (make-local-variable 'ledger-acct) account))))
     
     ;; Narrow the ledger buffer
-
-    ;; Now, actually run the reconciliation
     (with-current-buffer rbuf
       (save-excursion
 	(if ledger-narrow-on-reconcile
