@@ -119,7 +119,7 @@ PROMPT is a string to prompt with.  CHOICES is a list of
   "Move point to the next amount, as long as it is not past END.
 Return the width of the amount field as an integer."
   (beginning-of-line)
-  (when (re-search-forward "\\(  \\|\t\\| \t\\)[ \t]*-?\\([A-Z$€£]+ *\\)?\\(-?[0-9,]+?\\)\\(.[0-9]+\\)?\\( *[A-Z$€£]+\\)?\\([ \t]*@@?[^\n;]+?\\)?\\([ \t]+;.+?\\|[ \t]*\\)?$" (marker-position end) t)
+  (when (re-search-forward "\\(  \\|\t\\| \t\\)[ \t]*-?\\([A-Z$€£_]+ *\\)?\\(-?[0-9,]+?\\)\\(.[0-9]+\\)?\\( *[[:word:]€£_\"]+\\)?\\([ \t]*[@={]@?[^\n;]+?\\)?\\([ \t]+;.+?\\|[ \t]*\\)?$" (marker-position end) t)
     (goto-char (match-beginning 0))
     (skip-syntax-forward " ")
     (- (or (match-end 4)
@@ -130,60 +130,59 @@ Return the width of the amount field as an integer."
 Return the column of the beginning of the account"
   (beginning-of-line)
   (if (> (marker-position end) (point))
-      (when (re-search-forward "\\(^[ 	]+\\)\\([*!;a-zA-Z0-9]+?\\)" (marker-position end) t)
+      (when (re-search-forward "\\(^[ 	]+\\)\\([\\[(*!;a-zA-Z0-9]+?\\)" (marker-position end) t)
 	(goto-char (match-beginning 2))
 	(current-column))))
+
+
+(defun end-of-line-or-region (end-region)
+  "Return a number or marker to the END-REGION or end of line
+position, whichever is closer."
+  (let ((end (if (< end-region (line-end-position))
+		 end-region
+		 (line-end-position))))
+    (if (markerp end-region)
+	(copy-marker end)
+	end)))
+
+(defun ledger-post-adjust (adjust-by)
+  (if (> adjust-by 0)
+      (insert (make-string adjust-by ? ))
+      (if (looking-back " " (- (point) 3))
+	  (delete-char adjust-by)
+	  (skip-chars-forward "^ \t")
+	  (delete-horizontal-space)
+	  (insert "  "))))
 
 (defun ledger-post-align-postings ()
   "Align all accounts and amounts within region, if there is no
 region alight the posting on the current line."
   (interactive)
-  (let ((region-boundaries-verified nil)) (save-excursion
-     ;; If there is no region set
-     (when (or (not (mark)) 
-	       (= (point) (mark)))
-       (beginning-of-line)
-       (set-mark (point))
-       (goto-char (line-end-position))
-       (setq region-boundaries-verified t))
-
-     (let* ((mark-first (< (mark) (point)))
-	    (begin (if mark-first (mark) (point)))
-	    (end (if mark-first (point-marker) (mark-marker)))
-	    acc-col amt-offset)
-       (if (not region-boundaries-verified)
-	   (progn
-	     (goto-char end)
-	     (end-of-line)
-	     (setq end (point-marker))
-	     (goto-char begin)
-	     (beginning-of-line)
-	     (setq begin (point-marker)))
-	   (goto-char begin))
-       (while (setq acc-col (ledger-next-account end))
-	 ;; Adjust account position if necessary
-	 (let ((acc-adjust (- ledger-post-account-alignment-column acc-col)))
-	   (if (/= acc-adjust 0)
-	       (if (> acc-adjust 0)
-		   (insert (make-string acc-adjust ? ))	;; Account too far left
-		   (if (looking-back " " (- (point) 3))
-		       (delete-char acc-adjust)
-		       (skip-chars-forward "^ \t")
-		       (delete-horizontal-space)
-		       (insert "  ")))))
-	 (when (setq amt-offset (ledger-next-amount end))
-	   (let* ((amt-adjust (- ledger-post-amount-alignment-column 
-				 amt-offset 
-				 (current-column))))
-	     (if (/= amt-adjust 0)
-		 (if (> amt-adjust 0)
-		     (insert (make-string amt-adjust ? ))
-		     (if (looking-back "  ")
-			 (delete-char amt-adjust)
-			 (skip-chars-forward "^ \t")
-			 (delete-horizontal-space)
-			 (insert "  "))))))
-	 (forward-line))))))
+  (save-excursion
+    (let* ((mark-first (< (mark) (point)))
+	   (begin-region (if mark-first (mark) (point)))
+	   (end-region (if mark-first (point-marker) (mark-marker)))
+	   acc-col amt-offset acc-adjust)
+      ;; Condition point and mark to the beginning and end of lines
+      (goto-char end-region)
+      (setq end-region (copy-marker (line-end-position)))
+      (goto-char begin-region)
+      (setq begin-region (copy-marker (line-beginning-position)))
+      (goto-char begin-region)
+      (while (or (setq acc-col (ledger-next-account (end-of-line-or-region end-region)))
+		 (< (point) (marker-position end-region)))
+	(when acc-col 
+	    (setq acc-adjust (- ledger-post-account-alignment-column acc-col))
+	    (if (/= acc-adjust 0)
+		(ledger-post-adjust acc-adjust))
+	    
+	    (when (setq amt-offset (ledger-next-amount (end-of-line-or-region end-region)))
+	      (let* ((amt-adjust (- ledger-post-amount-alignment-column 
+				    amt-offset 
+				    (current-column))))
+		(if (/= amt-adjust 0)
+		    (ledger-post-adjust amt-adjust)))))
+	(forward-line)))))
 
 (defun ledger-post-maybe-align (beg end len)
   "Align amounts only if point is in a posting.
