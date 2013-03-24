@@ -81,6 +81,8 @@ Can be pcomplete, or align-posting"
     
     (ledger-init-load-init-file)
 
+    (setq indent-line-function 'ledger-post-align-postings)
+
     (let ((map (current-local-map)))
       (define-key map [(control ?c) (control ?a)] 'ledger-add-transaction)
       (define-key map [(control ?c) (control ?b)] 'ledger-post-edit-amount)
