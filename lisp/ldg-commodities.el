@@ -32,7 +32,7 @@
   :group 'ledger-reconcile)
 
 (defun ledger-split-commodity-string (str)
-  "Split a commoditized amount into two parts"
+    "Split a commoditized amount into two parts"
   (if (> (length str) 0) 
       (let (val comm number-regex)
 	(with-temp-buffer
@@ -48,18 +48,16 @@
 			(ledger-commodity-string-number-decimalize 
 			 (delete-and-extract-region (match-beginning 0) (match-end 0)) :from-user)))
 		 (goto-char (point-min))
-		 (re-search-forward "[^[:space:]]" nil t)
-		 (setq comm 
-		       (delete-and-extract-region (match-beginning 0) (match-end 0)))
+		 (setq comm (nth 0 (split-string (buffer-substring (point-min) (point-max)))))
 		 (list val comm))
 		((re-search-forward "0" nil t)
-		 ;; couldn't find a decimal number, look for a single 0,
-		 ;; indicating account with zero balance
-		 (list 0 ledger-reconcile-default-commodity))
-		(t
-		 (error "split-commodity-string: cannot parse commodity string: %S" str)))))
+		  ;; couldn't find a decimal number, look for a single 0,
+		  ;; indicating account with zero balance
+		  (list 0 ledger-reconcile-default-commodity))
+	    )))
+
+      ;; nothing found, return 0
       (list 0 ledger-reconcile-default-commodity)))
-    
 
 (defun ledger-string-balance-to-commoditized-amount (str)
   "Return a commoditized amount (val, 'comm') from STR."
