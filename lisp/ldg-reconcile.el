@@ -76,7 +76,7 @@ reconcile-finish will mark all pending posting cleared."
       ;; specify the individual fields in the command line.
       (if (ledger-exec-ledger buffer (current-buffer)
 			      "balance" "--limit" "cleared or pending" "--empty"
-			      "--format" "%(display_total)" account)
+			      "--collapse" "--format" "%(display_total)" account)
 	  (setq val
 		(ledger-split-commodity-string
 		 (buffer-substring-no-properties (point-min) (point-max))))))))
