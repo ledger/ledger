@@ -306,13 +306,13 @@ there is no key sequence.
 You can limit the allowed sort region by using embedded Ledger-mode
 markup within your ledger.  For exmaple 
 @smallexample
-<<< infomration to not sort >>>
+<<< information to not sort >>>
 
 ; Ledger-mode: Start sort
 
 <<< xacts to sort >>>
 
-;Ledger-mode: End sort
+; Ledger-mode: End sort
 
 <<< information to not sort >>>
 @end smallexample
@@ -349,11 +349,13 @@ Show only transactions that have a posting to the `Groceries' account.
 Show only transactions occurring in January of 2011.
 @item ^2011/.*/25
 Show only transactions occurring on the 25th of the month in 2011
-@item .*ore
-Show only transaction with payees or accounts ending in `ore'
+@item auto
+Show only transactions with payees or accounts or comments containing `auto'
+@item harley$
+Show only transcations with any line ending with `harley'
 @end table
 
-To show all transactions simply invoke @code{Hide Xacts} or @code{C-c
+To show back all transactions simply invoke @code{Hide Xacts} or @code{C-c
 C-f} again.
 
 @node The Reconcile Buffer, The Report Buffer, The Ledger Buffer, Top
@@ -401,13 +403,13 @@ particular about what you enter for the account.  You can leave it blank
 and Reconcile Mode will show you ALL uncleared transactions.  After you
 enter the account enter the target amount.  Ledger expects you to enter
 an amount with a commodity.  It assumes initially that you are using $
-(USD) as your default commodity.  If you are working in a difference
+(USD) as your default commodity.  If you are working in a different
 currency you can change the default in variable
 @code{ledger-reconcile-default-commodity} to whatever you need.  If you
 work in multiple commodities simply enter the commoditized amount (for
 example @code{340 VSDX}, for 340 shares of VSDX).  
 
-Ledger-mode reconcile cannot currently reconcile accounts the have
+Ledger-mode reconcile cannot currently reconcile accounts that have
 multiple commodities, such as brokerage accounts. You may use
 reconciliation mode to clear transactions, but balance calculations will
 not display the complete list of commodities.
@@ -416,7 +418,7 @@ not display the complete list of commodities.
 @section Mark Transactions Pending
 
 The @file{*Reconcile*} buffer will show all the uncleared transactions
-that meeting the criteria set in the regex.  By default uncleared
+that meet the criteria set in the regex.  By default uncleared
 transactions are shown in red.  When you have verified that a
 transaction has been correctly and completely recorded by the opposing
 party, mark the transaction as pending using the space bar.  Continue
@@ -448,7 +450,7 @@ into your ledger.  Simply type @code{a} to bring up the quick add for
 the ledger buffer.
 
 Typing @code{d} will delete the transaction under point in the
-@file{*Reconcile*} buffer form the ledger buffer.
+@file{*Reconcile*} buffer from the ledger buffer.
 
 @node Changing Reconciliation Account, Changing Reconciliation Target, Adding and Deleting Transactions during Reconciliation, The Reconcile Buffer
 @section Changing Reconciliation Account
@@ -512,11 +514,11 @@ to provide a prefix argument to the run-report command.  For example,
 type @code{M-1 C-c C-o C-r}. This will prompt you for the report name,
 then present the report command line to be edited.  When you hit enter,
 the report will be run, but it will not be permanently saved.  If you
-want to save it, type @code{S} in the the @file{*Ledger Report*} buffer you
+want to save it, type @code{S} in the @file{*Ledger Report*} buffer you
 will have the option to give it a new name, or overwrite the old report.
 
-Deleting reports is accomplished by type @code{C-c C-o C-e} Edit Reports
-in the ledger buffer, or typing @code{E} in the @file{*Ledger Report*}
+Deleting reports is accomplished by typing @code{C-c C-o C-e} Edit Reports
+in the ledger buffer, or typing @code{e} in the @file{*Ledger Report*}
 buffer.  This takes you to the Emacs customization window for the
 @code{ledger-reports} variable.  Use the widgets to delete the report
 you want removed.
@@ -547,8 +549,7 @@ example, if you wanted to specify a register report the displayed
 transactions from a user-determined account with a particular meta-data
 tag value, you specify the following command line:
 @smallexample
-ledger -f %(ledger-file) reg %(account)  --limit \"tag('my-tag') =~
-/%(value)/\"
+ledger -f %(ledger-file) reg %(account)  --limit \"tag('my-tag') =~/%(value)/\"
 @end smallexample
 
 @noindent Note how the double-quotes are escaped with back-slashes.
@@ -589,9 +590,9 @@ mathematical sense.
 @section Ledger-mode Customization
 
 Ledger-mode has several options available for configuration.  All
-options can be configure through the Emacs customization menus, or
+options can be configured through the Emacs customization menus, or
 specified in your Emacs initialization file.  The complete list of
-options is show below. To change the option using the Emacs
+options is shown below. To change the option using the Emacs
 customization menu, simply chose customize in the Options menu and look
 for Ledger under the data options.  Alternately you can choose
 ``Customize Specific Group'' and enter ``Ledger'' as the group.
@@ -614,11 +615,11 @@ for Ledger under the data options.  Alternately you can choose
 @subsection Ledger Customization Group
 @table @code
 @item ledger-occur-use-face-unfolded
-   If non-nil use a custom face for xacts shown in `ledger-occur' mode using @code{ledger-occur-xact-face}.
+   If non-nil, use a custom face for xacts shown in `ledger-occur' mode using @code{ledger-occur-xact-face}.
 @item ledger-clear-whole-transactions
    If non-nil, clear whole transactions, not individual postings.
 @item ledger-highlight-xact-under-point
-   If non-nil highlight xact under point using @code{ledger-font-highlight-face}.
+   If non-nil, highlight xact under point using @code{ledger-font-highlight-face}.
 @end table
 
 @node Ledger Reconcile Customization Group, Ledger Report Customization Group, Ledger Customization Group, Customization Variables
