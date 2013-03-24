@@ -55,6 +55,17 @@ Can be pcomplete, or align-posting"
 
 (defvar ledger-mode-abbrev-table)
 
+(defun ledger-insert-effective-date ()
+  (interactive)
+  (let ((context (car (ledger-context-at-point)))
+	(date-string (format-time-string (cdr (assoc "date-format" ledger-environment-alist)))))
+   (cond ((eq 'entry context)
+	  (beginning-of-line)
+	  (insert date-string "="))
+	 ((eq 'acct-transaction context)
+	  (end-of-line)
+	  (insert "  ; [=" date-string "]")))))
+
 ;;;###autoload
 (define-derived-mode ledger-mode text-mode "Ledger"
     "A mode for editing ledger data files."
@@ -94,7 +105,7 @@ Can be pcomplete, or align-posting"
       (define-key map [(control ?c) (control ?m)] 'ledger-set-month)
       (define-key map [(control ?c) (control ?r)] 'ledger-reconcile)
       (define-key map [(control ?c) (control ?s)] 'ledger-sort-region)
-      (define-key map [(control ?c) (control ?t)] 'ledger-test-run)
+      (define-key map [(control ?c) (control ?t)] 'ledger-insert-effective-date)
       (define-key map [(control ?c) (control ?y)] 'ledger-set-year)
       (define-key map [tab] 'ledger-magic-tab)
       (define-key map [(control ?i)] 'ledger-magic-tab)
@@ -126,6 +137,7 @@ Can be pcomplete, or align-posting"
 								    (interactive)
 								    (customize-group 'ledger))))
       (define-key map [sep1] '("--"))
+      (define-key map [effective-date] '(menu-item "Set effective date" ledger-insert-effective-date))
       (define-key map [sort-end] '(menu-item "Mark Sort End" ledger-sort-insert-end-mark))
       (define-key map [sort-start] '(menu-item "Mark Sort Beginning" ledger-sort-insert-start-mark))
       (define-key map [sort-buff] '(menu-item "Sort Buffer" ledger-sort-buffer))
@@ -136,7 +148,7 @@ Can be pcomplete, or align-posting"
       (define-key map [toggle-post] '(menu-item "Toggle Current Posting" ledger-toggle-current))
       (define-key map [toggle-xact] '(menu-item "Toggle Current Transaction" ledger-toggle-current-transaction))
       (define-key map [sep4] '(menu-item "--"))
-      (define-key map [edit-amount] '(menu-item "Reconcile Account" ledger-reconcile))
+      (define-key map [recon-account] '(menu-item "Reconcile Account" ledger-reconcile))
       (define-key map [sep6] '(menu-item "--"))
       (define-key map [edit-amount] '(menu-item "Calc on Amount" ledger-post-edit-amount))
       (define-key map [sep] '(menu-item "--"))
