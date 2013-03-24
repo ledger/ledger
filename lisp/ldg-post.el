@@ -138,48 +138,52 @@ Return the column of the beginning of the account"
   "Align all accounts and amounts within region, if there is no
 region alight the posting on the current line."
   (interactive)
-  (save-excursion
-    ;; If there is no region set
-    (when (or (not (mark)) 
-	      (= (point) (mark)))
-      (beginning-of-line)
-      (set-mark (point))
-      (goto-char (1+ (line-end-position))))
+  (let ((region-boundaries-verified nil)) (save-excursion
+     ;; If there is no region set
+     (when (or (not (mark)) 
+	       (= (point) (mark)))
+       (beginning-of-line)
+       (set-mark (point))
+       (goto-char (line-end-position))
+       (setq region-boundaries-verified t))
 
-    (let* ((mark-first (< (mark) (point)))
-           (begin (if mark-first (mark) (point)))
-           (end (if mark-first (point-marker) (mark-marker)))
-           acc-col amt-offset)
-      (goto-char end)
-      (end-of-line)
-      (setq end (point-marker))
-      (goto-char begin)
-      (beginning-of-line)
-      (setq begin (point-marker))
-      (while (setq acc-col (ledger-next-account end))
-	;; Adjust account position if necessary
-        (let ((acc-adjust (- ledger-post-account-alignment-column acc-col)))
-	  (if (/= acc-adjust 0)
-	      (if (> acc-adjust 0)
-		  (insert (make-string acc-adjust ? ))  ;; Account too far left
-		  (if (looking-back " " (- (point) 3))
-		      (delete-char acc-adjust)
-		      (skip-chars-forward "^ \t")
-		      (delete-horizontal-space)
-		      (insert "  ")))))
-	(when (setq amt-offset (ledger-next-amount end))
-	    (let* ((amt-adjust (- ledger-post-amount-alignment-column 
-				  amt-offset 
-				  (current-column))))
-	      (if (/= amt-adjust 0)
-		  (if (> amt-adjust 0)
-		      (insert (make-string amt-adjust ? ))
-		      (if (looking-back "  ")
-			  (delete-char amt-adjust)
-			  (skip-chars-forward "^ \t")
-			  (delete-horizontal-space)
-			  (insert "  "))))))
-	(forward-line)))))
+     (let* ((mark-first (< (mark) (point)))
+	    (begin (if mark-first (mark) (point)))
+	    (end (if mark-first (point-marker) (mark-marker)))
+	    acc-col amt-offset)
+       (if (not region-boundaries-verified)
+	   (progn
+	     (goto-char end)
+	     (end-of-line)
+	     (setq end (point-marker))
+	     (goto-char begin)
+	     (beginning-of-line)
+	     (setq begin (point-marker)))
+	   (goto-char begin))
+       (while (setq acc-col (ledger-next-account end))
+	 ;; Adjust account position if necessary
+	 (let ((acc-adjust (- ledger-post-account-alignment-column acc-col)))
+	   (if (/= acc-adjust 0)
+	       (if (> acc-adjust 0)
+		   (insert (make-string acc-adjust ? ))	;; Account too far left
+		   (if (looking-back " " (- (point) 3))
+		       (delete-char acc-adjust)
+		       (skip-chars-forward "^ \t")
+		       (delete-horizontal-space)
+		       (insert "  ")))))
+	 (when (setq amt-offset (ledger-next-amount end))
+	   (let* ((amt-adjust (- ledger-post-amount-alignment-column 
+				 amt-offset 
+				 (current-column))))
+	     (if (/= amt-adjust 0)
+		 (if (> amt-adjust 0)
+		     (insert (make-string amt-adjust ? ))
+		     (if (looking-back "  ")
+			 (delete-char amt-adjust)
+			 (skip-chars-forward "^ \t")
+			 (delete-horizontal-space)
+			 (insert "  "))))))
+	 (forward-line))))))
 
 (defun ledger-post-maybe-align (beg end len)
   "Align amounts only if point is in a posting.
