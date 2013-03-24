@@ -115,22 +115,35 @@ PROMPT is a string to prompt with.  CHOICES is a list of
 		 (delete-char 1)))))))
     (goto-char pos)))
 
+(defvar ledger-post-amount-regex
+  (concat "\\(  \\|\t\\| \t\\)[ \t]*-?"
+	  "\\([A-Z$€£_]+ *\\)?"
+	  "\\(-?[0-9,]+?\\)"
+	  "\\(.[0-9]+\\)?"
+	  "\\( *[[:word:]€£_\"]+\\)?"
+	  "\\([ \t]*[@={]@?[^\n;]+?\\)?"
+	  "\\([ \t]+;.+?\\|[ \t]*\\)?$"))
+
 (defun ledger-next-amount (&optional end)
   "Move point to the next amount, as long as it is not past END.
 Return the width of the amount field as an integer."
   (beginning-of-line)
-  (when (re-search-forward "\\(  \\|\t\\| \t\\)[ \t]*-?\\([A-Z$€£_]+ *\\)?\\(-?[0-9,]+?\\)\\(.[0-9]+\\)?\\( *[[:word:]€£_\"]+\\)?\\([ \t]*[@={]@?[^\n;]+?\\)?\\([ \t]+;.+?\\|[ \t]*\\)?$" (marker-position end) t)
+  (when (re-search-forward ledger-post-amount-regex (marker-position end) t)
     (goto-char (match-beginning 0))
     (skip-syntax-forward " ")
     (- (or (match-end 4)
            (match-end 3)) (point))))
+
+(defvar ledger-post-account-regex
+  (concat "\\(^[ 	]+\\)"
+	  "\\([\\[(*!;a-zA-Z0-9]+?\\)"))
 
 (defun ledger-next-account (&optional end)
   "Move point to the beginning of the next account, or status marker (!*), as long as it is not past END.
 Return the column of the beginning of the account"
   (beginning-of-line)
   (if (> (marker-position end) (point))
-      (when (re-search-forward "\\(^[ 	]+\\)\\([\\[(*!;a-zA-Z0-9]+?\\)" (marker-position end) t)
+      (when (re-search-forward ledger-post-account-regex (marker-position end) t)
 	(goto-char (match-beginning 2))
 	(current-column))))
 
