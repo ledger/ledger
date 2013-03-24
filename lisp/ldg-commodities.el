@@ -35,31 +35,20 @@
   "Split a commoditized amount into two parts"
   (if (> (length str) 0) 
       (let (val comm number-regex)
-	(with-temp-buffer
-	  (insert str)
-	  (goto-char (point-min))
-	  (if (assoc "decimal-comma" ledger-environment-alist)
-	      (setq number-regex "-?[1-9][0-9.]*[,][0-9]*")
-	      (setq number-regex "-?[1-9][0-9,]*[.][0-9]*"))
-	  (cond ((re-search-forward number-regex nil t)
-		 ;; found a decimal number
-		 (setq val 
-		       (string-to-number
-			(ledger-commodity-string-number-decimalize 
-			 (delete-and-extract-region (match-beginning 0) (match-end 0)) :from-user)))
-		 (goto-char (point-min))
-		 (re-search-forward "[^[:space:]]" nil t)
-		 (setq comm 
-		       (delete-and-extract-region (match-beginning 0) (match-end 0)))
-		 (list val comm))
-		((re-search-forward "0" nil t)
-		 ;; couldn't find a decimal number, look for a single 0,
-		 ;; indicating account with zero balance
-		 (list 0 ledger-reconcile-default-commodity))
-		(t
-		 (error "split-commodity-string: cannot parse commodity string: %S" str)))))
+	(cond 
+	  ((or (string-match "^\\(-?[0-9.,]+\\) *\\(\\([^-[:space:]0-9.,]+\\)\\|\"\\(.+\\)\"\\)$" str))
+	   (setq comm (or (match-string 3 str) (match-string 4 str)))
+	   (setq val (match-string 1 str)))
+	  ((or (string-match "^\\(\\([^-[:space:]0-9.,]+\\)\\|\"\\(.+\\)\"\\) *\\(-?[0-9.,]+\\)$" str))
+	   (setq comm (or (match-string 2 str) (match-string 3 str)))
+	   (setq val (match-string 4 str)))
+	  (t
+	   (error "split-commodity-string: cannot parse commodity string: %S" str)))
+	(list (string-to-number
+	       (ledger-commodity-string-number-decimalize val :from-user))
+	      comm))
       (list 0 ledger-reconcile-default-commodity)))
-    
+
 
 (defun ledger-string-balance-to-commoditized-amount (str)
   "Return a commoditized amount (val, 'comm') from STR."
