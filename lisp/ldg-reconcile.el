@@ -40,7 +40,7 @@
   "Name to use for reconciliation window."
   :group 'ledger-reconcile)
 
-(defcustom ledger-fold-on-reconcile t
+(defcustom ledger-narrow-on-reconcile t
   "If t, limit transactions shown in main buffer to those matching the reconcile regex."
   :type 'boolean
   :group 'ledger-reconcile)
@@ -152,15 +152,21 @@ Return the number of uncleared xacts found."
     (erase-buffer)
     (prog1 (ledger-do-reconcile)
       (set-buffer-modified-p t)
-      (goto-char (point-min)))))
+      ;;(goto-char (point-min))
+      )))
 
 (defun ledger-reconcile-refresh-after-save ()
   "Refresh the recon-window after the ledger buffer is saved."
-  (let ((buf (get-buffer ledger-recon-buffer-name)))
-    (if buf
-        (with-current-buffer buf
-          (ledger-reconcile-refresh)
-          (set-buffer-modified-p nil)))))
+  (let ((curbuf (current-buffer))
+	(curpoint (point))
+	(recon-buf (get-buffer ledger-recon-buffer-name)))
+    (if (buffer-live-p recon-buf)
+	(progn
+	  (with-current-buffer recon-buf
+	    (ledger-reconcile-refresh)
+	    (set-buffer-modified-p nil))
+	  (select-window  (get-buffer-window curbuf))
+	  (goto-char curpoint)))))
 
 (defun ledger-reconcile-add ()
   "Use ledger xact to add a new transaction."
@@ -206,14 +212,14 @@ Return the number of uncleared xacts found."
   "Save the ledger buffer."
   (interactive)
   (let ((curpoint (point)))
-   (dolist (buf (cons ledger-buf ledger-bufs))
-     (with-current-buffer buf
-       (save-buffer)))
-   (with-current-buffer (get-buffer ledger-recon-buffer-name) 
-     (set-buffer-modified-p nil)
-     (ledger-display-balance)
-     (goto-char curpoint)
-     (ledger-reconcile-visit t))))
+    (dolist (buf (cons ledger-buf ledger-bufs))
+      (with-current-buffer buf
+	(save-buffer)))
+    (with-current-buffer (get-buffer ledger-recon-buffer-name) 
+      (set-buffer-modified-p nil)
+      (ledger-display-balance)
+      (goto-char curpoint)
+      (ledger-reconcile-visit t))))
 
 (defun ledger-reconcile-finish ()
   "Mark all pending posting or transactions as cleared.
@@ -252,10 +258,10 @@ and exit reconcile mode"
   "Cleanup all hooks established by reconcile mode."
   (interactive)
   (dolist (buf (cons ledger-buf ledger-bufs))
-    (if buf
+    (if (buffer-live-p buf)
 	(with-current-buffer buf
 	  (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t)
-	  (if ledger-fold-on-reconcile
+	  (if ledger-narrow-on-reconcile
 	      (progn
 		(ledger-occur-quit-buffer buf)
 		(ledger-highlight-xact-under-point)))))))
@@ -396,12 +402,10 @@ moved and recentered.  If they aren't strange things happen."
           (set (make-local-variable 'ledger-buf) buf)
           (set (make-local-variable 'ledger-acct) account)))
     
-    ;; Fold the ledger buffer
-
-    ;; Now, actually run the reconciliation
+    ;; Narrow the ledger buffer
     (with-current-buffer rbuf
       (save-excursion
-	(if ledger-fold-on-reconcile
+	(if ledger-narrow-on-reconcile
 	    (ledger-occur-mode account ledger-buf)))
       (if (> (ledger-reconcile-refresh) 0)
 	  (ledger-reconcile-change-target))

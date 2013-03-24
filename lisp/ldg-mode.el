@@ -41,9 +41,17 @@
 
 (defun ledger-remove-overlays ()
   "Remove all overlays from the ledger buffer."
-(interactive)
-  "remove overlays formthe buffer, used if the buffer is reverted"
-   (remove-overlays))
+  (interactive)
+  (remove-overlays))
+
+(defun ledger-magic-tab ()
+  "Decide what to with with <TAB> .
+Can be pcomplete, or align-posting"
+  (interactive)
+  (if (and (> (point) 1) 
+	   (looking-back "[:A-Za-z0-9]" 1))
+      (pcomplete)
+      (ledger-post-align-postings)))
 
 (defvar ledger-mode-abbrev-table)
 
@@ -70,7 +78,7 @@
     (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
     (add-hook 'before-revert-hook 'ledger-remove-overlays nil t)
     (make-variable-buffer-local 'highlight-overlay)
-
+    
     (ledger-init-load-init-file)
 
     (let ((map (current-local-map)))
@@ -86,8 +94,8 @@
       (define-key map [(control ?c) (control ?s)] 'ledger-sort-region)
       (define-key map [(control ?c) (control ?t)] 'ledger-test-run)
       (define-key map [(control ?c) (control ?y)] 'ledger-set-year)
-      (define-key map [tab] 'pcomplete)
-      (define-key map [(control ?i)] 'pcomplete)
+      (define-key map [tab] 'ledger-magic-tab)
+      (define-key map [(control ?i)] 'ledger-magic-tab)
       (define-key map [(control ?c) tab] 'ledger-fully-complete-entry)
       (define-key map [(control ?c) (control ?i)] 'ledger-fully-complete-entry)
       (define-key map [(control ?c) (control ?o) (control ?r)] 'ledger-report)
@@ -120,21 +128,22 @@
       (define-key map [sort-start] '(menu-item "Mark Sort Beginning" ledger-sort-insert-start-mark))
       (define-key map [sort-buff] '(menu-item "Sort Buffer" ledger-sort-buffer))
       (define-key map [sort-reg] '(menu-item "Sort Region" ledger-sort-region :enable mark-active))
+      (define-key map [align-reg] '(menu-item "Align Region" ledger-post-align-region :enable mark-active))
       (define-key map [sep2] '(menu-item "--"))
       (define-key map [copy-xact] '(menu-item "Copy Trans at Point" ledger-copy-transaction))
       (define-key map [toggle-post] '(menu-item "Toggle Current Posting" ledger-toggle-current))
-      (define-key map [toggle-xact] '(menu-item "Toggle Current Transaction" ledger-toggle-current-entry))
+      (define-key map [toggle-xact] '(menu-item "Toggle Current Transaction" ledger-toggle-current-transaction))
       (define-key map [sep4] '(menu-item "--"))
       (define-key map [edit-amount] '(menu-item "Reconcile Account" ledger-reconcile))
       (define-key map [sep6] '(menu-item "--"))
       (define-key map [edit-amount] '(menu-item "Calc on Amount" ledger-post-edit-amount))
       (define-key map [sep] '(menu-item "--"))
-      (define-key map [delete-xact] '(menu-item "Delete Entry" ledger-delete-current-transaction))
+      (define-key map [delete-xact] '(menu-item "Delete Transaction" ledger-delete-current-transaction))
       (define-key map [cmp-xact] '(menu-item "Complete Transaction" ledger-fully-complete-entry))
       (define-key map [add-xact] '(menu-item "Add Transaction (ledger xact)" ledger-add-transaction :enable ledger-works))
       (define-key map [sep3] '(menu-item "--"))
       (define-key map [reconcile] '(menu-item "Reconcile Account" ledger-reconcile :enable ledger-works))
-      (define-key map [reconcile] '(menu-item "Hide Xacts" ledger-occur))))
+      (define-key map [reconcile] '(menu-item "Narrow to REGEX" ledger-occur))))
 
 (defun ledger-time-less-p (t1 t2)
   "Say whether time value T1 is less than time value T2."
