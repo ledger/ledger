@@ -20,7 +20,7 @@
 ;; MA 02111-1307, USA.
 
 ;;; Commentary:
-;; Provide code folding to ledger mode.  Adapted from original loccur
+;; Provide buffer narrowing to ledger mode.  Adapted from original loccur
 ;; mode by Alexey Veretennikov <alexey dot veretennikov at gmail dot
 ;; com>
 ;;
@@ -31,11 +31,11 @@
 
 (defconst ledger-occur-overlay-property-name 'ledger-occur-custom-buffer-grep)
 
-(defcustom ledger-occur-use-face-unfolded t
+(defcustom ledger-occur-use-face-shown t
   "If non-nil, use a custom face for xacts shown in `ledger-occur' mode using ledger-occur-xact-face."
   :type 'boolean
   :group 'ledger)
-(make-variable-buffer-local 'ledger-occur-use-face-unfolded)
+(make-variable-buffer-local 'ledger-occur-use-face-shown)
 
 
 (defvar ledger-occur-mode nil 
@@ -69,7 +69,7 @@ When REGEX is nil, unhide everything, and remove higlight"
 	  (if (or (null regex)
 		  (zerop (length regex)))
 	      nil
-	      (concat " Ledger-Folded: " regex)))
+	      (concat " Ledger-Narrowed: " regex)))
     (force-mode-line-update)
     (ledger-occur-remove-overlays)
     (if ledger-occur-mode
@@ -79,7 +79,7 @@ When REGEX is nil, unhide everything, and remove higlight"
 		(ledger-occur-create-xact-overlays ovl-bounds))
 	  (setq ledger-occur-overlay-list
 		(append ledger-occur-overlay-list
-			(ledger-occur-create-folded-overlays buffer-matches)))
+			(ledger-occur-create-narrowed-overlays buffer-matches)))
 	  (setq ledger-occur-last-match regex)
 	  (if (get-buffer-window buffer)
 	      (select-window (get-buffer-window buffer)))))
@@ -116,7 +116,7 @@ When REGEX is nil, unhide everything, and remove higlight"
 	     (current-word))))
     prompt))
 
-(defun ledger-occur-create-folded-overlays(buffer-matches)
+(defun ledger-occur-create-narrowed-overlays(buffer-matches)
   (if buffer-matches
       (let ((overlays
              (let ((prev-end (point-min))
@@ -156,7 +156,7 @@ Argument OVL-BOUNDS contains bounds for the transactions to be left visible."
                  ovl-bounds)))
     (mapcar (lambda (ovl)
 	      (overlay-put ovl ledger-occur-overlay-property-name t)
-	      (if ledger-occur-use-face-unfolded
+	      (if ledger-occur-use-face-shown
 		  (overlay-put ovl 'face 'ledger-occur-xact-face )))
             overlays)))
 

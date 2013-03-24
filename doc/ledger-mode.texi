@@ -614,7 +614,7 @@ for Ledger under the data options.  Alternately you can choose
 @node Ledger Customization Group, Ledger Reconcile Customization Group, Customization Variables, Customization Variables
 @subsection Ledger Customization Group
 @table @code
-@item ledger-occur-use-face-unfolded
+@item ledger-occur-use-face-shown
    If non-nil, use a custom face for xacts shown in `ledger-occur' mode using @code{ledger-occur-xact-face}.
 @item ledger-clear-whole-transactions
    If non-nil, clear whole transactions, not individual postings.
@@ -631,7 +631,7 @@ The default commodity for use in target calculations in ledger
 reconcile.  Defaults to $ (USD)
 @item ledger-recon-buffer-name
    Name to use for reconciliation window.
-@item ledger-fold-on-reconcile
+@item ledger-narrow-on-reconcile
    If non-nil, limit transactions shown in main buffer to those matching the
    reconcile regex.
 @item ledger-buffer-tracks-reconcile-buffer
@@ -674,7 +674,7 @@ Default face for other transactions
 Face for Ledger accounts
 @item ledger-font-posting-amount-face
 Face for Ledger amounts
-@item ledger-occur-folded-face
+@item ledger-occur-narrowed-face
 Default face for Ledger occur mode hidden transactions
 @item ledger-occur-xact-face
 Default face for Ledger occur mode shown transactions

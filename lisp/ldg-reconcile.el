@@ -40,7 +40,7 @@
   "Name to use for reconciliation window."
   :group 'ledger-reconcile)
 
-(defcustom ledger-fold-on-reconcile t
+(defcustom ledger-narrow-on-reconcile t
   "If t, limit transactions shown in main buffer to those matching the reconcile regex."
   :type 'boolean
   :group 'ledger-reconcile)
@@ -260,7 +260,7 @@ and exit reconcile mode"
     (if (buffer-live-p buf)
 	(with-current-buffer buf
 	  (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t)
-	  (if ledger-fold-on-reconcile
+	  (if ledger-narrow-on-reconcile
 	      (progn
 		(ledger-occur-quit-buffer buf)
 		(ledger-highlight-xact-under-point)))))))
@@ -400,12 +400,12 @@ moved and recentered.  If they aren't strange things happen."
 	    (set (make-local-variable 'ledger-buf) buf)
 	    (set (make-local-variable 'ledger-acct) account))))
     
-    ;; Fold the ledger buffer
+    ;; Narrow the ledger buffer
 
     ;; Now, actually run the reconciliation
     (with-current-buffer rbuf
       (save-excursion
-	(if ledger-fold-on-reconcile
+	(if ledger-narrow-on-reconcile
 	    (ledger-occur-mode account ledger-buf)))
       (if (> (ledger-reconcile-refresh) 0)
 	  (ledger-reconcile-change-target))

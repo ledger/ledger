@@ -62,7 +62,7 @@
   "Face for Ledger amounts"
   :group 'ledger-faces)
 
-(defface ledger-occur-folded-face
+(defface ledger-occur-narrowed-face
     `((t :foreground "grey70" :invisible t ))
   "Default face for Ledger occur mode hidden transactions"
   :group 'ledger-faces)
