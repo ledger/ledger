@@ -39,8 +39,8 @@
 	  (insert str)
 	  (goto-char (point-min))
 	  (if (assoc "decimal-comma" ledger-environment-alist)
-	      (setq number-regex "-?[1-9][0-9.]*[,][0-9]*")
-	      (setq number-regex "-?[1-9][0-9,]*[.][0-9]*"))
+	      (setq number-regex "-?[1-9][0-9.]*[,]?[0-9]*")
+	      (setq number-regex "-?[1-9][0-9,]*[.]?[0-9]*"))
 	  (cond ((re-search-forward number-regex nil t)
 		 ;; found a decimal number
 		 (setq val 
