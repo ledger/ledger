@@ -41,9 +41,17 @@
 
 (defun ledger-remove-overlays ()
   "Remove all overlays from the ledger buffer."
-(interactive)
-  "remove overlays formthe buffer, used if the buffer is reverted"
-   (remove-overlays))
+  (interactive)
+  (remove-overlays))
+
+(defun ledger-magic-tab ()
+  "Decide what to with with <TAB> .
+Can be pcomplete, or align-posting"
+  (interactive)
+  (if (and (> (point) 1) 
+	   (looking-back "[:A-Za-z0-9]" 1))
+      (pcomplete)
+      (ledger-post-align-postings)))
 
 (defvar ledger-mode-abbrev-table)
 
@@ -70,7 +78,7 @@
     (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
     (add-hook 'before-revert-hook 'ledger-remove-overlays nil t)
     (make-variable-buffer-local 'highlight-overlay)
-
+    
     (ledger-init-load-init-file)
 
     (let ((map (current-local-map)))
@@ -86,8 +94,8 @@
       (define-key map [(control ?c) (control ?s)] 'ledger-sort-region)
       (define-key map [(control ?c) (control ?t)] 'ledger-test-run)
       (define-key map [(control ?c) (control ?y)] 'ledger-set-year)
-      (define-key map [tab] 'pcomplete)
-      (define-key map [(control ?i)] 'pcomplete)
+      (define-key map [tab] 'ledger-magic-tab)
+      (define-key map [(control ?i)] 'ledger-magic-tab)
       (define-key map [(control ?c) tab] 'ledger-fully-complete-entry)
       (define-key map [(control ?c) (control ?i)] 'ledger-fully-complete-entry)
       (define-key map [(control ?c) (control ?o) (control ?r)] 'ledger-report)

@@ -116,76 +116,81 @@ PROMPT is a string to prompt with.  CHOICES is a list of
     (goto-char pos)))
 
 (defun ledger-next-amount (&optional end)
-  "Move point to the next amount, as long as it is not past END."
+  "Move point to the next amount, as long as it is not past END.
+Return the width of the amount field as an integer."
+  (beginning-of-line)
   (when (re-search-forward "\\(  \\|\t\\| \t\\)[ \t]*-?\\([A-Z$€£]+ *\\)?\\(-?[0-9,]+?\\)\\(.[0-9]+\\)?\\( *[A-Z$€£]+\\)?\\([ \t]*@@?[^\n;]+?\\)?\\([ \t]+;.+?\\|[ \t]*\\)?$" (marker-position end) t)
     (goto-char (match-beginning 0))
     (skip-syntax-forward " ")
     (- (or (match-end 4)
            (match-end 3)) (point))))
 
-(defun ledger-post-align-posting (&optional column)
-  "Align amounts and accounts in the current posting.
-This is done so that the last digit falls in COLUMN, which
-defaults to 52.  ledger-post-account-column positions
-the account"
-  (interactive "p")
-  (if (or (null column) (= column 1))
-      (setq column ledger-post-amount-alignment-column))
+(defun ledger-next-account (&optional end)
+  "Move point to the beginning of the next account, or status marker (!*), as long as it is not past END.
+Return the column of the beginning of the account"
+  (beginning-of-line)
+  (if (> (marker-position end) (point))
+      (when (re-search-forward "\\(^[ 	]+\\)\\([*!;a-zA-Z0-9]+?\\)" (marker-position end) t)
+	(goto-char (match-beginning 2))
+	(current-column))))
+
+(defun ledger-post-align-postings ()
+  "Align all accounts and amounts within region, if there is no
+region alight the posting on the current line."
+  (interactive)
   (save-excursion
-    ;; Position the account
-    (if (not (or (looking-at "[ \t]*[1-9]")
-		 (and (looking-at "[ \t]+\n")
-		      (looking-back "[ \n]" (- (point) 2)))))
-	(save-excursion
-	  (beginning-of-line)
-	  (set-mark (point)) 
-	  (delete-horizontal-space) 
-	  (insert (make-string ledger-post-account-alignment-column ? )))
-	(set-mark (point)))
-    (set-mark (point))
-    (goto-char (1+ (line-end-position)))
+    ;; If there is no region set
+    (when (or (not (mark)) 
+	      (= (point) (mark)))
+      (beginning-of-line)
+      (set-mark (point))
+      (goto-char (1+ (line-end-position))))
+
     (let* ((mark-first (< (mark) (point)))
            (begin (if mark-first (mark) (point)))
            (end (if mark-first (point-marker) (mark-marker)))
-           offset)
-      ;; Position the amount
+           acc-col amt-offset)
+      (goto-char end)
+      (end-of-line)
+      (setq end (point-marker))
       (goto-char begin)
-      (while (setq offset (ledger-next-amount end))
-        (let ((col (current-column))
-              (target-col (- column offset))
-              adjust)
-    (setq adjust (- target-col col))
-          (if (< col target-col)
-              (insert (make-string (- target-col col) ? ))
-	      (move-to-column target-col)
-	      (if (looking-back "  ")
-		  (delete-char (- col target-col))
-		  (skip-chars-forward "^ \t")
-		  (delete-horizontal-space)
-		  (insert "  ")))
-          (forward-line))))))
-
-
-(defun ledger-post-align-region (beg end)
-  (interactive "r")
-  (save-excursion
-    (goto-char beg)
-    (backward-paragraph)  ;; make sure we are at the beginning of an xact
-    (while (< (point) end)
-      (ledger-post-align-posting)
-      (forward-line))))
-
+      (beginning-of-line)
+      (setq begin (point-marker))
+      (while (setq acc-col (ledger-next-account end))
+	;; Adjust account position if necessary
+        (let ((acc-adjust (- ledger-post-account-alignment-column acc-col)))
+	  (if (/= acc-adjust 0)
+	      (if (> acc-adjust 0)
+		  (insert (make-string acc-adjust ? ))  ;; Account too far left
+		  (if (looking-back " " (- (point) 3))
+		      (delete-char acc-adjust)
+		      (skip-chars-forward "^ \t")
+		      (delete-horizontal-space)
+		      (insert "  ")))))
+	(when (setq amt-offset (ledger-next-amount end))
+	    (let* ((amt-adjust (- ledger-post-amount-alignment-column 
+				  amt-offset 
+				  (current-column))))
+	      (if (/= amt-adjust 0)
+		  (if (> amt-adjust 0)
+		      (insert (make-string amt-adjust ? ))
+		      (if (looking-back "  ")
+			  (delete-char amt-adjust)
+			  (skip-chars-forward "^ \t")
+			  (delete-horizontal-space)
+			  (insert "  "))))))
+	(forward-line)))))
 
 (defun ledger-post-maybe-align (beg end len)
   "Align amounts only if point is in a posting.
 BEG, END, and LEN control how far it can align."
   (if ledger-post-auto-adjust-postings
       (save-excursion
-     (goto-char beg)
-     (when (<= end (line-end-position))
-       (goto-char (line-beginning-position))
-       (if (looking-at ledger-post-line-regexp)
-	   (ledger-post-align-posting))))))
+	(goto-char beg)
+	(when (<= end (line-end-position))
+	  (goto-char (line-beginning-position))
+	  (if (looking-at ledger-post-line-regexp)
+	      (ledger-post-align-postings))))))
 
 (defun ledger-post-edit-amount ()
   "Call 'calc-mode' and push the amount in the posting to the top of stack."
