@@ -74,15 +74,6 @@
 	      outbuf
 	      (ledger-exec-handle-error outbuf))))))
 
-;; (defun ledger-exec-read (&optional input-buffer &rest args)
-;;   "Run ledger from option INPUT-BUFFER using ARGS, return a list structure of the ledger Emacs output."
-;;   (with-current-buffer
-;;       (apply #'ledger-exec-ledger input-buffer nil "emacs" args)
-;;     (goto-char (point-min))
-;;     (prog1
-;;         (read (current-buffer))
-;;       (kill-buffer (current-buffer)))))
-
 (defun ledger-version-greater-p (needed)
   "Verify the ledger binary is usable for `ledger-mode' (version greater than NEEDED)."
   (let ((buffer ledger-buf)

@@ -21,7 +21,7 @@
 
 ;;; Commentary:
 ;; Helper functions to deal with commoditized numbers.  A commoditized
-;; number will be a cons of value and string where the string contains
+;; number will be a list of value and string where the string contains
 ;; the commodity
 
 ;;; Code:
@@ -32,30 +32,29 @@
   :group 'ledger-reconcile)
 
 (defun ledger-split-commodity-string (str)
-    "Split a commoditized amount into two parts"
+  "Split a commoditized amount into two parts"
   (if (> (length str) 0) 
-      (let (val comm number-regex)
+      (let ((number-regex (if (assoc "decimal-comma" ledger-environment-alist)
+			      "-?[1-9][0-9.]*[,]?[0-9]*"
+			      "-?[1-9][0-9,]*[.]?[0-9]*")))
 	(with-temp-buffer
 	  (insert str)
 	  (goto-char (point-min))
-	  (if (assoc "decimal-comma" ledger-environment-alist)
-	      (setq number-regex "-?[1-9][0-9.]*[,]?[0-9]*")
-	      (setq number-regex "-?[1-9][0-9,]*[.]?[0-9]*"))
 	  (cond ((re-search-forward number-regex nil t)
-		 ;; found a decimal number
-		 (setq val 
-		       (string-to-number
-			(ledger-commodity-string-number-decimalize 
-			 (delete-and-extract-region (match-beginning 0) (match-end 0)) :from-user)))
-		 (goto-char (point-min))
-		 (setq comm (nth 0 (split-string (buffer-substring (point-min) (point-max)))))
-		 (list val comm))
+		 ;; found a number in the current locale, return it in
+		 ;; the car.  Anything left over is annotation,
+		 ;; the first thing should be the commodity, separated
+		 ;; by whitespace, return it in the cdr.  I can't think of any
+		 ;; counterexamples
+		 (list
+		  (string-to-number
+		   (ledger-commodity-string-number-decimalize 
+		    (delete-and-extract-region (match-beginning 0) (match-end 0)) :from-user))
+		  (nth 0 (split-string (buffer-substring (point-min) (point-max))))))
 		((re-search-forward "0" nil t)
-		  ;; couldn't find a decimal number, look for a single 0,
-		  ;; indicating account with zero balance
-		  (list 0 ledger-reconcile-default-commodity))
-	    )))
-
+		 ;; couldn't find a decimal number, look for a single 0,
+		 ;; indicating account with zero balance
+		 (list 0 ledger-reconcile-default-commodity)))))
       ;; nothing found, return 0
       (list 0 ledger-reconcile-default-commodity)))
 
@@ -67,7 +66,6 @@
     (mapcar '(lambda (str)
 	      (ledger-split-commodity-string str))
 	    fields)))
-
 
 (defun -commodity (c1 c2)
   "Subtract C2 from C1, ensuring their commodities match."
@@ -108,7 +106,7 @@ which must be translated both directions."
 (defun ledger-commodity-to-string (c1)
   "Return string representing C1.
 Single character commodities are placed ahead of the value,
-longer one are after the value."
+longer ones are after the value."
 (let ((val (ledger-commodity-string-number-decimalize
 	    (number-to-string (car c1)) :to-user))
       (commodity (cadr c1)))
@@ -122,12 +120,13 @@ Assumes a space between the value and the commodity."
   (let ((parts (split-string (read-from-minibuffer
 			      (concat prompt " (" ledger-reconcile-default-commodity "): ")))))
     (if parts
-	(if (/= (length parts) 2) ;;assume a number was entered and use default commodity
+	(if (/= (length parts) 2) ;;assume a number was entered and
+				  ;;use default commodity
 	    (list (string-to-number (car parts))
 		  ledger-reconcile-default-commodity)
 	    (let ((valp1 (string-to-number (car parts)))
 		  (valp2 (string-to-number (cadr parts))))
-	      (cond ((and (= valp1 valp2) (= 0 valp1));; means neither contained a valid number (both = 0)
+	      (cond ((and (= valp1 valp2) (= 0 valp1)) ;; means neither contained a valid number (both = 0)
 		     (list 0 ""))
 		    ((and (/= 0 valp1) (= valp2 0))
 		     (list valp1 (cadr parts)))
