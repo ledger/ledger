@@ -32,7 +32,8 @@
   :group 'ledger-reconcile)
 
 (defun ledger-split-commodity-string (str)
-  "Split a commoditized amount into two parts"
+  "Split a commoditized string, STR, into two parts.
+Returns a list with (value commodity)."
   (if (> (length str) 0) 
       (let ((number-regex (if (assoc "decimal-comma" ledger-environment-alist)
 			      "-?[1-9][0-9.]*[,]?[0-9]*"

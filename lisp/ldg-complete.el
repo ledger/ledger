@@ -155,7 +155,7 @@ Does not use ledger xact"
 	  (setq rest-of-name (match-string 3))
           ;; Start copying the postings
 	  (forward-line)
-          (while (looking-at "^\\s-+")
+          (while (looking-at ledger-post-account-regex)
             (setq xacts (cons (buffer-substring-no-properties
                                (line-beginning-position)
                                (line-end-position))
