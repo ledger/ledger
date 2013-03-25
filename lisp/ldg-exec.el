@@ -53,7 +53,7 @@
   (with-current-buffer ledger-output-buffer
     (goto-char (point-min))
     (if (and (> (buffer-size) 1) (looking-at (regexp-quote "While")))
-	nil
+	nil  ;; failure, there is an error starting with "While"
 	ledger-output-buffer)))
 
 (defun ledger-exec-ledger (input-buffer &optional output-buffer &rest args)
@@ -77,27 +77,24 @@
 (defun ledger-version-greater-p (needed)
   "Verify the ledger binary is usable for `ledger-mode' (version greater than NEEDED)."
   (let ((buffer ledger-buf)
-        (version-strings '())
-	(version-number))
+        (version-strings '()))
     (with-temp-buffer
-      (if (ledger-exec-ledger (current-buffer) (current-buffer) "--version")
-	  (progn
-	    (goto-char (point-min))
-	    (delete-horizontal-space)
-	    (setq version-strings (split-string
-				   (buffer-substring-no-properties (point)
-								   (point-max))))
-	    (if (and (string-match (regexp-quote "Ledger") (car version-strings))
-		     (or (string= needed (car (cdr version-strings)))
-			 (string< needed (car (cdr version-strings)))))
-		t
-		nil))))))
+      (when (ledger-exec-ledger (current-buffer) (current-buffer) "--version")	
+	(goto-char (point-min))
+	(delete-horizontal-space)
+	(setq version-strings (split-string
+			       (buffer-substring-no-properties (point)
+							       (point-max))))
+	(if (and (string-match (regexp-quote "Ledger") (car version-strings))
+		 (or (string= needed (cadr version-strings))
+		     (string< needed (cadr version-strings))))
+	    t ;; success
+	    nil))))) ;;failure
 
 (defun ledger-check-version ()
   "Verify that ledger works and is modern enough."
   (interactive)
-  (setq ledger-works (ledger-version-greater-p ledger-version-needed))
-  (if ledger-works
+  (if (setq ledger-works (ledger-version-greater-p ledger-version-needed))
       (message "Good Ledger Version")
       (message "Bad Ledger Version")))
 

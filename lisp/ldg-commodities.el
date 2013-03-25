@@ -50,7 +50,7 @@
 		  (string-to-number
 		   (ledger-commodity-string-number-decimalize 
 		    (delete-and-extract-region (match-beginning 0) (match-end 0)) :from-user))
-		  (nth 0 (split-string (buffer-substring (point-min) (point-max))))))
+		  (nth 0 (split-string (buffer-substring-no-properties (point-min) (point-max))))))
 		((re-search-forward "0" nil t)
 		 ;; couldn't find a decimal number, look for a single 0,
 		 ;; indicating account with zero balance

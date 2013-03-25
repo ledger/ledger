@@ -223,7 +223,7 @@ returns true if the date meets the requirements"
     ;; read the descriptor string into a lisp object the transform the
     ;; string descriptor into useable things
     (ledger-transform-auto-tree 
-     (read (buffer-substring (point-min) (point-max))))))
+     (read (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defun ledger-transform-auto-tree (tree)
 "Takes a lisp list of date descriptor strings, TREE, and returns a string with a lambda function of date."

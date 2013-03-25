@@ -44,12 +44,10 @@ within the transaction."
       (backward-paragraph)
       (if (/= (point) (point-min))
 	  (forward-line))
-      (beginning-of-line)
-      (setq beg-pos (point))
+      (setq beg-pos (line-beginning-position))
       (forward-paragraph)
       (forward-line -1)
-      (end-of-line)
-      (setq end-pos (1+ (point)))
+      (setq end-pos (1+ (line-end-position)))
       (list beg-pos end-pos))))
 
 
@@ -80,11 +78,12 @@ within the transaction."
 
 (defsubst ledger-goto-line (line-number)
   "Rapidly move point to line LINE-NUMBER."
-(goto-char (point-min)) (forward-line (1- line-number)))
+  (goto-char (point-min)) 
+  (forward-line (1- line-number)))
 
 (defun ledger-thing-at-point ()
   "Describe thing at points.  Return 'transaction, 'posting, or nil."
-(let ((here (point)))
+  (let ((here (point)))
     (goto-char (line-beginning-position))
     (cond ((looking-at "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.+?)\\)?\\s-+")
            (goto-char (match-end 0))
@@ -105,7 +104,7 @@ within the transaction."
 			      (concat ledger-year "/" ledger-month "/") 'ledger-minibuffer-history)))
   (let* ((here (point))
 	 (extents (ledger-find-xact-extents (point)))
-	 (transaction (buffer-substring (car extents) (cadr extents)))
+	 (transaction (buffer-substring-no-properties (car extents) (cadr extents)))
 	 encoded-date)
     (if (string-match ledger-date-regex date)
 	(setq encoded-date

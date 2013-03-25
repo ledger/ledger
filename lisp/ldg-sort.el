@@ -47,26 +47,22 @@
       (match-end 0)))
 
 (defun ledger-sort-insert-start-mark ()
-  (interactive)
-  (let (has-old-marker) 
-    (save-excursion
-      (goto-char (point-min))
-      (setq has-old-marker (ledger-sort-find-start))
-      (if has-old-marker 
-	  (delete-region (match-beginning 0) (match-end 0))))
-    (beginning-of-line)
-    (insert "\n; Ledger-mode: Start sort\n\n")))
+  (interactive)  
+  (save-excursion
+    (goto-char (point-min))
+    (if (ledger-sort-find-start)
+	 (delete-region (match-beginning 0) (match-end 0))))
+  (beginning-of-line)
+  (insert "\n; Ledger-mode: Start sort\n\n"))
 
 (defun ledger-sort-insert-end-mark ()
-  (interactive)
-  (let (has-old-marker) 
-    (save-excursion
-      (goto-char (point-min))
-      (setq has-old-marker (ledger-sort-find-end))
-      (if has-old-marker 
-	  (delete-region (match-beginning 0) (match-end 0))))
-    (beginning-of-line)
-    (insert "\n; Ledger-mode: End sort\n\n")))
+  (interactive)  
+  (save-excursion
+    (goto-char (point-min))
+    (if (ledger-sort-find-end)
+	(delete-region (match-beginning 0) (match-end 0))))
+  (beginning-of-line)
+  (insert "\n; Ledger-mode: End sort\n\n"))
 
 (defun ledger-sort-region (beg end)
   "Sort the region from BEG to END in chronological order."

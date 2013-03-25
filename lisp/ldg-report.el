@@ -30,8 +30,7 @@
 
 (defgroup ledger-report nil
   "Customization option for the Report buffer"
-  :group 'ledger
-)
+  :group 'ledger)
 
 (defcustom ledger-reports
   '(("bal" "ledger -f %(ledger-file) bal")
@@ -319,18 +318,17 @@ Optional EDIT the command."
 	(let ((file (match-string 1))
 	      (line (string-to-number (match-string 2))))
 	  (delete-region (match-beginning 0) (match-end 0))
-	  (if file 
-	      (progn
-		(set-text-properties (line-beginning-position) (line-end-position)
-				    (list 'ledger-source (cons file (save-window-excursion
-								      (save-excursion
-									(find-file file)
-									(widen)
-									(ledger-goto-line line)
-									(point-marker))))))
-		(add-text-properties (line-beginning-position) (line-end-position)
-			       (list 'face 'ledger-font-report-clickable-face))
-		(end-of-line))))))
+	  (when file 	    
+	    (set-text-properties (line-beginning-position) (line-end-position)
+				 (list 'ledger-source (cons file (save-window-excursion
+								   (save-excursion
+								     (find-file file)
+								     (widen)
+								     (ledger-goto-line line)
+								     (point-marker))))))
+	    (add-text-properties (line-beginning-position) (line-end-position)
+				 (list 'face 'ledger-font-report-clickable-face))
+	    (end-of-line)))))
     (goto-char data-pos)))
 
 
@@ -340,20 +338,19 @@ Optional EDIT the command."
   (let* ((prop (get-text-property (point) 'ledger-source))
 	 (file (if prop (car prop)))
 	 (line-or-marker (if prop (cdr prop))))
-    (if (and file line-or-marker)
-	(progn
-	  (find-file-other-window file)
-	  (widen)
-	  (if (markerp line-or-marker)
-	      (goto-char line-or-marker)
-	      (goto-char (point-min))
-	      (forward-line (1- line-or-marker))
-	      (re-search-backward "^[0-9]+")
-	      (beginning-of-line)
-	      (let ((start-of-txn (point)))
-		(forward-paragraph)
-		(narrow-to-region start-of-txn (point))
-		(backward-paragraph)))))))
+    (when (and file line-or-marker)      
+      (find-file-other-window file)
+      (widen)
+      (if (markerp line-or-marker)
+	  (goto-char line-or-marker)
+	  (goto-char (point-min))
+	  (forward-line (1- line-or-marker))
+	  (re-search-backward "^[0-9]+")
+	  (beginning-of-line)
+	  (let ((start-of-txn (point)))
+	    (forward-paragraph)
+	    (narrow-to-region start-of-txn (point))
+	    (backward-paragraph))))))
 
 (defun ledger-report-goto ()
   "Goto the ledger report buffer."

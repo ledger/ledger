@@ -63,27 +63,24 @@
   "Highlight transactions that match REGEX in BUFFER, hiding others.
 
 When REGEX is nil, unhide everything, and remove higlight"
-  (progn
-    (set-buffer buffer)
-    (setq ledger-occur-mode
-	  (if (or (null regex)
-		  (zerop (length regex)))
-	      nil
-	      (concat " Ledger-Narrowed: " regex)))
-    (force-mode-line-update)
-    (ledger-occur-remove-overlays)
-    (if ledger-occur-mode
-	(let* ((buffer-matches (ledger-occur-find-matches regex))
-	       (ovl-bounds (ledger-occur-create-xact-overlay-bounds buffer-matches)))
-	  (setq ledger-occur-overlay-list
-		(ledger-occur-create-xact-overlays ovl-bounds))
-	  (setq ledger-occur-overlay-list
-		(append ledger-occur-overlay-list
-			(ledger-occur-create-narrowed-overlays buffer-matches)))
-	  (setq ledger-occur-last-match regex)
-	  (if (get-buffer-window buffer)
-	      (select-window (get-buffer-window buffer)))))
-    (recenter)))
+  (set-buffer buffer)
+  (setq ledger-occur-mode
+	(if (or (null regex)
+		(zerop (length regex)))
+	    nil
+	    (concat " Ledger-Narrowed: " regex)))
+  (force-mode-line-update)
+  (ledger-occur-remove-overlays)
+  (if ledger-occur-mode
+      (let* ((buffer-matches (ledger-occur-find-matches regex))
+	     (ovl-bounds (ledger-occur-create-xact-overlay-bounds buffer-matches)))
+	(setq ledger-occur-overlay-list
+	      (append (ledger-occur-create-xact-overlays ovl-bounds)
+		      (ledger-occur-create-narrowed-overlays buffer-matches)))
+	(setq ledger-occur-last-match regex)
+	(if (get-buffer-window buffer)
+	    (select-window (get-buffer-window buffer)))))
+  (recenter))
 
 (defun ledger-occur (regex)
   "Perform a simple grep in current buffer for the regular expression REGEX.
@@ -163,12 +160,11 @@ Argument OVL-BOUNDS contains bounds for the transactions to be left visible."
 (defun ledger-occur-quit-buffer (buffer)
   "Quits hidings transaction in the given BUFFER.
 Used for coordinating `ledger-occur' with other buffers, like reconcile."
-  (progn
-    (set-buffer buffer)
-    (setq ledger-occur-mode nil)
-    (force-mode-line-update)
-    (ledger-occur-remove-overlays)
-    (recenter)))
+  (set-buffer buffer)
+  (setq ledger-occur-mode nil)
+  (force-mode-line-update)
+  (ledger-occur-remove-overlays)
+  (recenter))
 
 (defun ledger-occur-remove-overlays ()
   "Remove the transaction hiding overlays."

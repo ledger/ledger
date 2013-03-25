@@ -19,9 +19,6 @@
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ;; MA 02111-1307, USA.
 
-;;(require 'esh-util)
-;;(require 'esh-arg)
-
 ;;; Commentary:
 ;; Functions providing payee and account auto complete.
 
@@ -126,8 +123,8 @@ Return tree structure"
               (if (null current-prefix-arg)
                   (ledger-payees-in-buffer)  ;; this completes against payee names
 		  (progn
-		    (let ((text (buffer-substring (line-beginning-position)
-						  (line-end-position))))
+		    (let ((text (buffer-substring-no-properties (line-beginning-position)
+								(line-end-position))))
 		      (delete-region (line-beginning-position)
 				     (line-end-position))
 		      (condition-case err
@@ -154,7 +151,7 @@ Does not use ledger xact"
 	;; Search backward for a matching payee
         (when (re-search-backward
                (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+\\(.*"
-                       (regexp-quote name) ".*\\)" ) nil t)  ;; "\\(\t\\|\n\\| [ \t]\\)"
+                       (regexp-quote name) ".*\\)" ) nil t) 
 	  (setq rest-of-name (match-string 3))
           ;; Start copying the postings
 	  (forward-line)
@@ -180,7 +177,7 @@ Does not use ledger xact"
 
 (defun ledger-pcomplete (&optional interactively)
   "Complete rip-off of pcomplete from pcomplete.el, only added
-ledger-magic-tab in the previos commads list so that
+ledger-magic-tab in the previous commands list so that
 ledger-magic-tab would cycle properly"
   (interactive "p")
   (if (and interactively

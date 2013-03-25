@@ -245,10 +245,9 @@ dropped."
 		(eq (ledger-state-from-char (char-after)) 'cleared))
             (progn
               (delete-char 1)
-              (if (and style (eq style 'cleared))
-                  (progn
-		    (insert " *")
-		    (setq status 'cleared))))
+              (when (and style (eq style 'cleared))		
+		(insert " *")
+		(setq status 'cleared)))
 	    (if (and style (eq style 'pending))
 		(progn
 		  (insert " ! ")

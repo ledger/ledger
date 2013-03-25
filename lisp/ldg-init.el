@@ -33,16 +33,16 @@
     (setq ledger-environment-alist nil)
     (goto-char (point-min))
     (while (re-search-forward "^--.+?\\($\\|[ ]\\)" nil t )
-      (let ((matchb (match-beginning 0)) ;; save the match data, string-match stomp on it
+      (let ((matchb (match-beginning 0)) ;; save the match data, string-match stamp on it
 	    (matche (match-end 0)))
 	(end-of-line)
 	(setq ledger-environment-alist 
 	      (append ledger-environment-alist
-		      (list (cons (let ((flag (buffer-substring (+ 2 matchb) matche)))
+		      (list (cons (let ((flag (buffer-substring-no-properties (+ 2 matchb) matche)))
 				    (if (string-match "[ \t\n\r]+\\'" flag)
 					(replace-match "" t t flag)
 					flag))
-				  (let ((value (buffer-substring  matche (point) )))
+				  (let ((value (buffer-substring-no-properties  matche (point) )))
 				    (if (> (length value) 0)
 					value
 					t))))))))
@@ -53,16 +53,12 @@
   (let ((init-base-name (file-name-nondirectory ledger-init-file-name)))
     (if (get-buffer init-base-name) ;; init file already loaded, parse it and leave it
 	(ledger-init-parse-initialization init-base-name)
-       (if (and  ;; init file not loaded, load, parse and kill
-	    ledger-init-file-name
-	    (file-exists-p ledger-init-file-name)
-	    (file-readable-p ledger-init-file-name))
-	   (progn 
-	     (find-file-noselect ledger-init-file-name)
-	     (ledger-init-parse-initialization init-base-name)
-	     (kill-buffer init-base-name))))))
-
-
+       (when (and ledger-init-file-name
+		  (file-exists-p ledger-init-file-name)
+		  (file-readable-p ledger-init-file-name))	 
+	 (find-file-noselect ledger-init-file-name)
+	 (ledger-init-parse-initialization init-base-name)
+	 (kill-buffer init-base-name)))))
 
 (provide 'ldg-init)
 

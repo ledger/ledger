@@ -135,7 +135,7 @@ Return the width of the amount field as an integer."
            (match-end 3)) (point))))
 
 (defvar ledger-post-account-regex
-  (concat "\\(^[ 	]+\\)"
+  (concat "\\(^[ \t]+\\)"
 	  "\\([\\[(*!;a-zA-Z0-9]+?\\)"))
 
 (defun ledger-next-account (&optional end)
