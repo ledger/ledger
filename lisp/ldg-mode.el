@@ -92,7 +92,7 @@ Can be pcomplete, or align-posting"
     
     (ledger-init-load-init-file)
 
-    (setq indent-line-function 'ledger-post-align-postings)
+    (setq indent-region-function 'ledger-post-align-postings)
 
     (let ((map (current-local-map)))
       (define-key map [(control ?c) (control ?a)] 'ledger-add-transaction)

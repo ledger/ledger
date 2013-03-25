@@ -167,17 +167,22 @@ position, whichever is closer."
 	  (delete-horizontal-space)
 	  (insert "  "))))
 
-(defun ledger-post-align-postings ()
+(defun ledger-post-align-postings (&optional beg end)
   "Align all accounts and amounts within region, if there is no
-region alight the posting on the current line."
+region align the posting on the current line."
   (interactive)
   (save-excursion
     (if (or (not (mark))
 	    (not (use-region-p)))
 	(set-mark (point)))
+    
     (let* ((mark-first (< (mark) (point)))
-	   (begin-region (if mark-first (mark) (point)))
-	   (end-region (if mark-first (point-marker) (mark-marker)))
+	   (begin-region (if beg
+			     beg
+			     (if mark-first (mark) (point))))
+	   (end-region (if end
+			   end
+			   (if mark-first (point-marker) (mark-marker))))
 	   acc-col amt-offset acc-adjust)
       ;; Condition point and mark to the beginning and end of lines
       (goto-char end-region)
