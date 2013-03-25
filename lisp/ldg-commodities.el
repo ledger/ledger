@@ -36,10 +36,10 @@
   (if (> (length str) 0) 
       (let (val comm number-regex)
 	(cond 
-	  ((or (string-match "^\\(-?[0-9.,]+\\) *\\(\\([^-[:space:]0-9.,]+\\)\\|\"\\(.+\\)\"\\)$" str))
+	  ((or (string-match "^\\(-?[0-9.,]+\\) *\\(\\([^-[:space:]0-9.,]+\\)\\|\"\\([^\"]+\\)\"\\)\\([:space:]*\"{.*}.*\\)?" str))
 	   (setq comm (or (match-string 3 str) (match-string 4 str)))
 	   (setq val (match-string 1 str)))
-	  ((or (string-match "^\\(\\([^-[:space:]0-9.,]+\\)\\|\"\\(.+\\)\"\\) *\\(-?[0-9.,]+\\)$" str))
+	  ((or (string-match "^\\(\\([^-[:space:]0-9.,]+\\)\\|\"\\([^\"]+\\)\"\\) *\\(-?[0-9.,]+\\)\\([:space:]*\"{.*}.*\\)?" str))
 	   (setq comm (or (match-string 2 str) (match-string 3 str)))
 	   (setq val (match-string 4 str)))
 	  (t
