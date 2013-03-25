@@ -172,6 +172,9 @@ position, whichever is closer."
 region alight the posting on the current line."
   (interactive)
   (save-excursion
+    (if (or (not (mark))
+	    (not (use-region-p)))
+	(set-mark (point)))
     (let* ((mark-first (< (mark) (point)))
 	   (begin-region (if mark-first (mark) (point)))
 	   (end-region (if mark-first (point-marker) (mark-marker)))
@@ -180,8 +183,9 @@ region alight the posting on the current line."
       (goto-char end-region)
       (setq end-region (copy-marker (line-end-position)))
       (goto-char begin-region)
-      (setq begin-region (copy-marker (line-beginning-position)))
-      (goto-char begin-region)
+      (goto-char 
+       (setq begin-region 
+	     (copy-marker (line-beginning-position))))
       (while (or (setq acc-col (ledger-next-account (end-of-line-or-region end-region)))
 		 (< (point) (marker-position end-region)))
 	(when acc-col 

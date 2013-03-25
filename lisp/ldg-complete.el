@@ -177,6 +177,51 @@ Does not use ledger xact"
       (if (re-search-backward "\\(\t\\| [ \t]\\)" nil t)
           (goto-char (match-end 0))))))
 
+
+(defun ledger-pcomplete (&optional interactively)
+  "Complete rip-off of pcomplete from pcomplete.el, only added
+ledger-magic-tab in the previos commads list so that
+ledger-magic-tab would cycle properly"
+  (interactive "p")
+  (if (and interactively
+	   pcomplete-cycle-completions
+	   pcomplete-current-completions
+	   (memq last-command '(ledger-magic-tab
+				ledger-pcomplete
+				pcomplete-expand-and-complete
+				pcomplete-reverse)))
+      (progn
+	(delete-backward-char pcomplete-last-completion-length)
+	(if (eq this-command 'pcomplete-reverse)
+	    (progn
+              (push (car (last pcomplete-current-completions))
+                    pcomplete-current-completions)
+	      (setcdr (last pcomplete-current-completions 2) nil))
+	  (nconc pcomplete-current-completions
+		 (list (car pcomplete-current-completions)))
+	  (setq pcomplete-current-completions
+		(cdr pcomplete-current-completions)))
+	(pcomplete-insert-entry pcomplete-last-completion-stub
+                                (car pcomplete-current-completions)
+				nil pcomplete-last-completion-raw))
+    (setq pcomplete-current-completions nil
+	  pcomplete-last-completion-raw nil)
+    (catch 'pcompleted
+      (let* ((pcomplete-stub)
+	     pcomplete-seen pcomplete-norm-func
+	     pcomplete-args pcomplete-last pcomplete-index
+	     (pcomplete-autolist pcomplete-autolist)
+	     (pcomplete-suffix-list pcomplete-suffix-list)
+	     (completions (pcomplete-completions))
+	     (result (pcomplete-do-complete pcomplete-stub completions)))
+	(and result
+	     (not (eq (car result) 'listed))
+	     (cdr result)
+	     (pcomplete-insert-entry pcomplete-stub (cdr result)
+				     (memq (car result)
+					   '(sole shortest))
+				     pcomplete-last-completion-raw))))))
+
 (provide 'ldg-complete)
 
 ;;; ldg-complete.el ends here

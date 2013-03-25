@@ -44,13 +44,13 @@
   (interactive)
   (remove-overlays))
 
-(defun ledger-magic-tab ()
+(defun ledger-magic-tab (&optional interactively)
   "Decide what to with with <TAB> .
 Can be pcomplete, or align-posting"
-  (interactive)
+  (interactive "p")
   (if (and (> (point) 1) 
 	   (looking-back "[:A-Za-z0-9]" 1))
-      (pcomplete)
+      (ledger-pcomplete interactively)
       (ledger-post-align-postings)))
 
 (defvar ledger-mode-abbrev-table)
