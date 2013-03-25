@@ -76,7 +76,7 @@ reconcile-finish will mark all pending posting cleared."
       ;; split arguments like the shell does, so you need to
       ;; specify the individual fields in the command line.
       (if (ledger-exec-ledger buffer (current-buffer)
-			      "balance" "--limit" "cleared or pending" "--empty"
+			      "balance" "--limit" "cleared or pending" "--empty" "--collapse"
 			      "--format" "%(display_total)" account)
 	  (ledger-split-commodity-string
 	   (buffer-substring-no-properties (point-min) (point-max)))))))
