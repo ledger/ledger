@@ -77,7 +77,8 @@ Return tree structure"
 		(split-string
 		 (match-string-no-properties 2) ":"))
           (let ((root account-tree))
-            (while account-elements
+            (while (and account-elements
+			(not (char-equal (string-to-char (car account-elements)) ?\;)))
               (let ((entry (assoc (car account-elements) root)))
                 (if entry
                     (setq root (cdr entry))
