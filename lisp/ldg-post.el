@@ -124,11 +124,12 @@ PROMPT is a string to prompt with.  CHOICES is a list of
 	  "\\([ \t]*[@={]@?[^\n;]+?\\)?"
 	  "\\([ \t]+;.+?\\|[ \t]*\\)?$"))
 
-(defun ledger-next-amount (&optional end)
+(defsubst ledger-next-amount (&optional end)
   "Move point to the next amount, as long as it is not past END.
-Return the width of the amount field as an integer."
-  (beginning-of-line)
-  (when (re-search-forward ledger-post-amount-regex (marker-position end) t)
+Return the width of the amount field as an integer and leave
+point at beginning of the commodity."
+  ;;(beginning-of-line)
+  (when (re-search-forward ledger-post-amount-regex end t)
     (goto-char (match-beginning 0))
     (skip-syntax-forward " ")
     (- (or (match-end 4)
@@ -138,34 +139,29 @@ Return the width of the amount field as an integer."
   (concat "\\(^[ \t]+\\)"
 	  "\\([\\[(*!;a-zA-Z0-9]+?\\)"))
 
-(defun ledger-next-account (&optional end)
+(defsubst ledger-next-account (&optional end)
   "Move point to the beginning of the next account, or status marker (!*), as long as it is not past END.
-Return the column of the beginning of the account"
-  (beginning-of-line)
-  (if (> (marker-position end) (point))
-      (when (re-search-forward ledger-post-account-regex (marker-position end) t)
-	(goto-char (match-beginning 2))
-	(current-column))))
+Return the column of the beginning of the account and leave point
+at beginning of account"
+  ;; (beginning-of-line)
+    (if (> end (point))
+	(when (re-search-forward ledger-post-account-regex end t)
+	  (goto-char (match-beginning 2))
+	  (current-column))))
 
 
-(defun end-of-line-or-region (end-region)
-  "Return a number or marker to the END-REGION or end of line
+(defsubst ledger-post-end-of-line-or-region (end-region)
+  "Return a number the END-REGION or end of line
 position, whichever is closer."
-  (let ((end (if (< end-region (line-end-position))
-		 end-region
-		 (line-end-position))))
-    (if (markerp end-region)
-	(copy-marker end)
-	end)))
+  (let ((eol (line-end-position)))
+    (if (< end-region eol)
+	end-region
+	eol)))
 
 (defsubst ledger-post-adjust (adjust-by)
   (if (> adjust-by 0)
       (insert (make-string adjust-by ? ))
-      (if (looking-back " " (- (point) 1))
-	  (delete-char adjust-by)
-	  (skip-chars-forward "^ \t")
-	  (delete-horizontal-space)
-	  (insert "  "))))
+      (delete-char adjust-by)))
 
 (defun ledger-post-align-postings (&optional beg end)
   "Align all accounts and amounts within region, if there is no
@@ -176,42 +172,40 @@ region align the posting on the current line."
 	    (not (use-region-p)))
 	(set-mark (point)))
     
-    (let* ((has-align-hook (remove-hook 
-			    'after-change-functions
-			    'ledger-post-maybe-align t))
+    (let* ((inhibit-modification-hooks t)
 	   (mark-first (< (mark) (point)))
 	   (begin-region (if beg
 			     beg
 			     (if mark-first (mark) (point))))
 	   (end-region (if end
 			   end
-			   (if mark-first (point-marker) (mark-marker))))
+			   (if mark-first (point) (mark))))
 	   acc-col amt-offset acc-adjust 
 	   (lines-left 1))
       ;; Condition point and mark to the beginning and end of lines
       (goto-char end-region)
-      (setq end-region (copy-marker (line-end-position)))
+      (setq end-region (line-end-position))
       (goto-char begin-region)
       (goto-char 
-       (setq begin-region 
-	     (copy-marker (line-beginning-position))))
-      (while (or (setq acc-col (ledger-next-account (end-of-line-or-region end-region)))
-		 (and (< (point) (marker-position end-region))
-		      (> lines-left 0)))
+       (setq begin-region
+	     (line-beginning-position)))
+      (while (or (setq acc-col (ledger-next-account (ledger-post-end-of-line-or-region end-region)))
+		 (and (< (point) end-region)
+		      lines-left))
 	(when acc-col 
 	    (setq acc-adjust (- ledger-post-account-alignment-column acc-col))
 	    (if (/= acc-adjust 0)
 		(ledger-post-adjust acc-adjust))
 	    
-	    (when (setq amt-offset (ledger-next-amount (end-of-line-or-region end-region)))
+	    (when (setq amt-offset (ledger-next-amount (ledger-post-end-of-line-or-region end-region)))
 	      (let* ((amt-adjust (- ledger-post-amount-alignment-column 
 				    amt-offset 
 				    (current-column))))
 		(if (/= amt-adjust 0)
 		    (ledger-post-adjust amt-adjust)))))
-	(setq lines-left (forward-line)))
-      (if has-align-hook
-	  (add-hook 'after-change-functions 'ledger-post-maybe-align t t)))))
+	(forward-line)
+	(setq lines-left (not (eobp))))
+      (setq inhibit-modification-hooks nil))))
 
 (defun ledger-post-maybe-align (beg end len)
   "Align amounts only if point is in a posting.

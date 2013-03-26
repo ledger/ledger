@@ -122,12 +122,10 @@ dropped."
 
     ;;this excursion toggles the posting status
     (save-excursion
-      (let ((has-align-hook (remove-hook 
-			 'after-change-functions
-			 'ledger-post-maybe-align t)))
+      (setq inhibit-modification-hooks t)
       
-       (goto-char (line-beginning-position))
-       (when (looking-at "[ \t]")
+      (goto-char (line-beginning-position))
+      (when (looking-at "[ \t]")
 	 (skip-chars-forward " \t")
 	 (let ((here (point))
 	       (cur-status (ledger-state-from-char (char-after))))
@@ -162,8 +160,7 @@ dropped."
 		   ((looking-at " ")
 		    (delete-char 1))))
 	     (setq new-status inserted))))
-	   (if has-align-hook
-	       (add-hook 'after-change-functions 'ledger-post-maybe-align t t))))
+      (setq inhibit-modification-hooks nil))
 
     ;; This excursion cleans up the entry so that it displays
     ;; minimally.  This means that if all posts are cleared, remove
