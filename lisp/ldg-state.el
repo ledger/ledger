@@ -163,7 +163,7 @@ dropped."
 		    (delete-char 1))))
 	     (setq new-status inserted))))
 	   (if has-align-hook
-	   (add-hook 'after-change-functions 'ledger-post-maybe-align t t))))
+	       (add-hook 'after-change-functions 'ledger-post-maybe-align t t))))
 
     ;; This excursion cleans up the entry so that it displays
     ;; minimally.  This means that if all posts are cleared, remove

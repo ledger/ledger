@@ -158,10 +158,10 @@ position, whichever is closer."
 	(copy-marker end)
 	end)))
 
-(defun ledger-post-adjust (adjust-by)
+(defsubst ledger-post-adjust (adjust-by)
   (if (> adjust-by 0)
       (insert (make-string adjust-by ? ))
-      (if (looking-back " " (- (point) 3))
+      (if (looking-back " " (- (point) 1))
 	  (delete-char adjust-by)
 	  (skip-chars-forward "^ \t")
 	  (delete-horizontal-space)
@@ -176,7 +176,10 @@ region align the posting on the current line."
 	    (not (use-region-p)))
 	(set-mark (point)))
     
-    (let* ((mark-first (< (mark) (point)))
+    (let* ((has-align-hook (remove-hook 
+			    'after-change-functions
+			    'ledger-post-maybe-align t))
+	   (mark-first (< (mark) (point)))
 	   (begin-region (if beg
 			     beg
 			     (if mark-first (mark) (point))))
@@ -204,7 +207,9 @@ region align the posting on the current line."
 				    (current-column))))
 		(if (/= amt-adjust 0)
 		    (ledger-post-adjust amt-adjust)))))
-	(forward-line)))))
+	(forward-line))
+      (if has-align-hook
+	  (add-hook 'after-change-functions 'ledger-post-maybe-align t t)))))
 
 (defun ledger-post-maybe-align (beg end len)
   "Align amounts only if point is in a posting.
