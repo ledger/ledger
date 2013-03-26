@@ -41,21 +41,32 @@ Returns a list with (value commodity)."
 	(with-temp-buffer
 	  (insert str)
 	  (goto-char (point-min))
-	  (cond ((re-search-forward number-regex nil t)
-		 ;; found a number in the current locale, return it in
-		 ;; the car.  Anything left over is annotation,
-		 ;; the first thing should be the commodity, separated
-		 ;; by whitespace, return it in the cdr.  I can't think of any
-		 ;; counterexamples
-		 (list
-		  (string-to-number
-		   (ledger-commodity-string-number-decimalize 
-		    (delete-and-extract-region (match-beginning 0) (match-end 0)) :from-user))
-		  (nth 0 (split-string (buffer-substring-no-properties (point-min) (point-max))))))
-		((re-search-forward "0" nil t)
-		 ;; couldn't find a decimal number, look for a single 0,
-		 ;; indicating account with zero balance
-		 (list 0 ledger-reconcile-default-commodity)))))
+	  (cond 
+	    ((re-search-forward "\"\\(.*\\)\"" nil t) 
+	     (let ((com (delete-and-extract-region 
+			 (match-beginning 1)       
+			 (match-end 1))))
+	       (if (re-search-forward number-regex nil t)
+		   (list 
+		    (string-to-number
+		     (ledger-commodity-string-number-decimalize
+		      (delete-and-extract-region (match-beginning 0) (match-end 0)) :from-user))
+		    com))))
+	    ((re-search-forward number-regex nil t)
+	     ;; found a number in the current locale, return it in
+	     ;; the car.  Anything left over is annotation,
+	     ;; the first thing should be the commodity, separated
+	     ;; by whitespace, return it in the cdr.  I can't think of any
+	     ;; counterexamples
+	     (list
+	      (string-to-number
+	       (ledger-commodity-string-number-decimalize 
+		(delete-and-extract-region (match-beginning 0) (match-end 0)) :from-user))
+	      (nth 0 (split-string (buffer-substring-no-properties (point-min) (point-max))))))
+	    ((re-search-forward "0" nil t)
+	     ;; couldn't find a decimal number, look for a single 0,
+	     ;; indicating account with zero balance
+	     (list 0 ledger-reconcile-default-commodity)))))
       ;; nothing found, return 0
       (list 0 ledger-reconcile-default-commodity)))
 
