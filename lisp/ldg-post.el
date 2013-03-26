@@ -186,7 +186,8 @@ region align the posting on the current line."
 	   (end-region (if end
 			   end
 			   (if mark-first (point-marker) (mark-marker))))
-	   acc-col amt-offset acc-adjust)
+	   acc-col amt-offset acc-adjust 
+	   (lines-left 1))
       ;; Condition point and mark to the beginning and end of lines
       (goto-char end-region)
       (setq end-region (copy-marker (line-end-position)))
@@ -195,7 +196,8 @@ region align the posting on the current line."
        (setq begin-region 
 	     (copy-marker (line-beginning-position))))
       (while (or (setq acc-col (ledger-next-account (end-of-line-or-region end-region)))
-		 (< (point) (marker-position end-region)))
+		 (and (< (point) (marker-position end-region))
+		      (> lines-left 0)))
 	(when acc-col 
 	    (setq acc-adjust (- ledger-post-account-alignment-column acc-col))
 	    (if (/= acc-adjust 0)
@@ -207,7 +209,7 @@ region align the posting on the current line."
 				    (current-column))))
 		(if (/= amt-adjust 0)
 		    (ledger-post-adjust amt-adjust)))))
-	(forward-line))
+	(setq lines-left (forward-line)))
       (if has-align-hook
 	  (add-hook 'after-change-functions 'ledger-post-maybe-align t t)))))
 

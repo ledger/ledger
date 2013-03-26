@@ -127,10 +127,9 @@ Return tree structure"
 								(line-end-position))))
 		      (delete-region (line-beginning-position)
 				     (line-end-position))
-		      (condition-case err
+		      (condition-case nil
 			  (ledger-add-transaction text t)
-			((error "ledger-complete-at-point")
-			 (insert text))))
+			(error nil)))
 		    (forward-line)
 		    (goto-char (line-end-position))
 		    (search-backward ";" (line-beginning-position) t)
