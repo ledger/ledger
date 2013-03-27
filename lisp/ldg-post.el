@@ -136,17 +136,16 @@ point at beginning of the commodity."
            (match-end 3)) (point))))
 
 (defvar ledger-post-account-regex
-  (concat "\\(^[ \t]+\\)"
-	  "\\([\\[(*!;a-zA-Z0-9]\\)"))
+  "\\(^[ \t]+\\)\\([\\[(;!*A-Za-z0-9]\\)\\(.+?\\)\\(  \\|\n\\)") 
 
-(defsubst ledger-next-account (&optional end)
+(defun ledger-next-account (&optional end)
   "Move point to the beginning of the next account, or status marker (!*), as long as it is not past END.
 Return the column of the beginning of the account and leave point
 at beginning of account"
     (if (> end (point))
-	(when (re-search-forward ledger-post-account-regex end t)
+	(when (re-search-forward ledger-post-account-regex (1+ end) t)
 	  (goto-char (match-beginning 2))
-	  (current-column))))
+	  (list (current-column) (length (match-string-no-properties 3))))))
 
 (defsubst ledger-post-adjust (adjust-by)
   (if (> adjust-by 0)
@@ -185,10 +184,12 @@ region align the posting on the current line."
 			  lines-left)
 		      (< (point) end-region))
 	(when acc-col 
-	    (if (/= (setq acc-adjust (- ledger-post-account-alignment-column acc-col)) 0)
+	    (if (/= (setq acc-adjust (- ledger-post-account-alignment-column (car acc-col))) 0)
 		(ledger-post-adjust acc-adjust))
 	    
-	    (when (setq amt-offset (ledger-next-amount (line-end-position)))
+	    (when (and
+		   (> ledger-post-amount-alignment-column (+ ledger-post-account-alignment-column (cadr acc-col)))
+		   (setq amt-offset (ledger-next-amount (line-end-position))))
 	      (let* ((amt-adjust (- ledger-post-amount-alignment-column 
 				    amt-offset 
 				    (current-column))))
