@@ -181,9 +181,9 @@ region align the posting on the current line."
 	     (line-beginning-position)))
 
       ;; This is the guts of the alignment loop
-      (while (or (setq acc-col (ledger-next-account (line-end-position)))
-		 (and (< (point) end-region)
-		      lines-left))
+      (while (and (or (setq acc-col (ledger-next-account (line-end-position)))
+			  lines-left)
+		      (< (point) end-region))
 	(when acc-col 
 	    (if (/= (setq acc-adjust (- ledger-post-account-alignment-column acc-col)) 0)
 		(ledger-post-adjust acc-adjust))
