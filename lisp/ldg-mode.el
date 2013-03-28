@@ -249,7 +249,7 @@ correct chronological place in the buffer."
 	  (insert
 	   (with-temp-buffer
 	     (setq exit-code
-		   (apply #'ledger-exec-ledger ledger-buf ledger-buf "xact"
+		   (apply #'ledger-exec-ledger ledger-buf (current-buffer) "xact"
 			  (mapcar 'eval args)))
 	     (goto-char (point-min))
 	     (if (looking-at "Error: ")

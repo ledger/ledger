@@ -136,22 +136,17 @@ point at beginning of the commodity."
            (match-end 3)) (point))))
 
 (defvar ledger-post-account-regex
-  (concat "\\(^[ \t]+\\)"
-	  "\\([\\[(*!;a-zA-Z0-9]\\)"))
+  "\\(^[ \t]+\\)\\(.+?\\)\\(  \\|\n\\)")  
 
-(defsubst ledger-next-account (&optional end)
+(defun ledger-next-account (&optional end)
   "Move point to the beginning of the next account, or status marker (!*), as long as it is not past END.
 Return the column of the beginning of the account and leave point
 at beginning of account"
     (if (> end (point))
-	(when (re-search-forward ledger-post-account-regex end t)
+	(when (re-search-forward ledger-post-account-regex (1+ end) t)  
+	  ;; the 1+ is to make sure we can catch the newline
 	  (goto-char (match-beginning 2))
 	  (current-column))))
-
-(defsubst ledger-post-adjust (adjust-by)
-  (if (> adjust-by 0)
-      (insert (make-string adjust-by ? ))
-      (delete-char adjust-by)))
 
 (defun ledger-post-align-postings (&optional beg end)
   "Align all accounts and amounts within region, if there is no
@@ -179,22 +174,31 @@ region align the posting on the current line."
       (goto-char 
        (setq begin-region
 	     (line-beginning-position)))
-
+      
       ;; This is the guts of the alignment loop
       (while (and (or (setq acc-col (ledger-next-account (line-end-position)))
-			  lines-left)
-		      (< (point) end-region))
+		      lines-left)
+		  (< (point) end-region))
 	(when acc-col 
-	    (if (/= (setq acc-adjust (- ledger-post-account-alignment-column acc-col)) 0)
-		(ledger-post-adjust acc-adjust))
-	    
-	    (when (setq amt-offset (ledger-next-amount (line-end-position)))
-	      (let* ((amt-adjust (- ledger-post-amount-alignment-column 
-				    amt-offset 
-				    (current-column))))
-		(if (/= amt-adjust 0)
-		    (ledger-post-adjust amt-adjust)))))
-	(forward-line)
+	  (when (/= (setq acc-adjust (- ledger-post-account-alignment-column acc-col)) 0)
+	    (if (> acc-adjust 0)
+		(insert (make-string acc-adjust ? ))
+		(delete-char acc-adjust)))
+	  (when (setq amt-offset (ledger-next-amount (line-end-position)))
+	    (let* ((amt-adjust (- ledger-post-amount-alignment-column 
+				  amt-offset 
+				  (current-column))))
+	      (if (/= amt-adjust 0)
+		  (if (> amt-adjust 0)
+		      (insert (make-string amt-adjust ? ))
+		      (let ((curpoint (point)))
+			(beginning-of-line)
+			(ledger-next-account (line-end-position))
+			(when (> (+ curpoint amt-adjust)
+			       (match-end 2))
+			    (goto-char curpoint)
+			    (delete-char amt-adjust))))))))  
+  	(forward-line)
 	(setq lines-left (not (eobp))))
       (setq inhibit-modification-hooks nil))))
 
