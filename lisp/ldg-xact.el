@@ -21,7 +21,7 @@
 
 
 ;;; Commentary:
-;; Utilites for running ledger synchronously.
+;; Utilities for running ledger synchronously.
 
 ;;; Code:
 
