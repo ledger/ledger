@@ -42,6 +42,9 @@
 	  ((or (string-match "^\\(\\([^-[:space:]0-9.,]+\\)\\|\"\\([^\"]+\\)\"\\) *\\(-?[0-9.,]+\\)\\([:space:]*\"{.*}.*\\)?" str))
 	   (setq comm (or (match-string 2 str) (match-string 3 str)))
 	   (setq val (match-string 4 str)))
+          ((string-match "^\\(-?[0-9.,]+\\)$" str) ;No comodity: use default one
+           (setq comm ledger-reconcile-default-commodity)
+           (setq val str))
 	  (t
 	   (error "split-commodity-string: cannot parse commodity string: %S" str)))
 	(list (string-to-number
