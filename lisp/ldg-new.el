@@ -50,7 +50,7 @@
 (require 'ldg-test)
 (require 'ldg-texi)
 (require 'ldg-xact)
-
+(require 'ldg-schedule)
 
 ;;; Code:
 
