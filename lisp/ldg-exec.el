@@ -45,9 +45,8 @@
   (with-current-buffer (get-buffer-create "*Ledger Error*")
     (insert-buffer-substring ledger-output)
     (make-frame)
-    (fit-frame)
     (view-mode)
-    (toggle-read-only)))
+    (setq buffer-read-only t)))
 
 (defun ledger-exec-success-p (ledger-output-buffer)
   (with-current-buffer ledger-output-buffer
