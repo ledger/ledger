@@ -64,13 +64,17 @@
   (beginning-of-line)
   (insert "\n; Ledger-mode: End sort\n\n"))
 
+(defun ledger-sort-startkey ()
+  "Return the actual date so the sort-subr doesn't sort onthe entire first line."
+  (buffer-substring-no-properties (point) (+ 10 (point))))
+
 (defun ledger-sort-region (beg end)
   "Sort the region from BEG to END in chronological order."
   (interactive "r") ;; load beg and end from point and mark
 		    ;; automagically
   (let ((new-beg beg)
 	(new-end end))
-    (save-excursion
+    (save-excursion 
       (save-restriction
 	(goto-char beg)
 	(ledger-next-record-function) ;; make sure point is at the
@@ -88,7 +92,8 @@
 	  (sort-subr
 	   nil
 	   'ledger-next-record-function
-	   'ledger-end-record-function))))))
+	   'ledger-end-record-function
+	   'ledger-sort-startkey))))))
 
 (defun ledger-sort-buffer ()
   "Sort the entire buffer."
