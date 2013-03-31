@@ -75,7 +75,7 @@ Returns a list with (value commodity)."
   (let ((fields (split-string str "[\n\r]"))) ; break any balances
 					      ; with multi commodities
 					      ; into a list
-    (mapcar '(lambda (str)
+    (mapcar #'(lambda (str)
 	      (ledger-split-commodity-string str))
 	    fields)))
 

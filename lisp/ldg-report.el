@@ -79,7 +79,7 @@ text that should replace the format specifier."
   (interactive)
   (goto-char (point-min))
   (forward-paragraph)
-  (next-line)
+  (forward-line)
   (save-excursion
     (setq inhibit-read-only t)
     (reverse-region (point) (point-max))))
