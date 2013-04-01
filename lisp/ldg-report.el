@@ -103,7 +103,7 @@ text that should replace the format specifier."
        'ledger-report-kill)
      (define-key map [(control ?c) (control ?l) (control ?e)]
        'ledger-report-edit)
-     (define-key map [(control ?c) (control ?c)] 'ledger-report-visit-source)
+     (define-key map [return] 'ledger-report-visit-source)
 
      
      (define-key map [menu-bar] (make-sparse-keymap "ldg-rep"))
