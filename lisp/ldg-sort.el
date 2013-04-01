@@ -74,6 +74,7 @@
 		    ;; automagically
   (let ((new-beg beg)
 	(new-end end))
+    (setq inhibit-modification-hooks t)
     (save-excursion 
       (save-restriction
 	(goto-char beg)
@@ -93,7 +94,8 @@
 	   nil
 	   'ledger-next-record-function
 	   'ledger-end-record-function
-	   'ledger-sort-startkey))))))
+	   'ledger-sort-startkey))))
+    (setq inhibit-modification-hooks nil)))
 
 (defun ledger-sort-buffer ()
   "Sort the entire buffer."

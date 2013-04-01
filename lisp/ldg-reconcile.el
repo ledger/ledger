@@ -434,7 +434,7 @@ moved and recentered.  If they aren't strange things happen."
      (define-key map [menu-bar ldg-recon-menu qui] '("Quit" . ledger-reconcile-quit))
      (define-key map [menu-bar ldg-recon-menu sep1] '("--"))
      (define-key map [menu-bar ldg-recon-menu pre] '("Previous Entry" . previous-line))
-     (define-key map [menu-bar ldg-recon-menu vis] '("Visit Entry" . ledger-reconcile-visit))
+     (define-key map [menu-bar ldg-recon-menu vis] '("Visit Source" . ledger-reconcile-visit))
      (define-key map [menu-bar ldg-recon-menu nex] '("Next Entry" . next-line))
      (define-key map [menu-bar ldg-recon-menu sep2] '("--"))
      (define-key map [menu-bar ldg-recon-menu del] '("Delete Entry" . ledger-reconcile-delete))

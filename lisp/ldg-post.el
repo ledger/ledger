@@ -187,7 +187,8 @@ region align the posting on the current line."
 	  (when (setq amt-offset (ledger-next-amount (line-end-position)))
 	    (let* ((amt-adjust (- ledger-post-amount-alignment-column 
 				  amt-offset 
-				  (current-column))))
+				  (current-column)
+				  2)))
 	      (if (/= amt-adjust 0)
 		  (if (> amt-adjust 0)
 		      (insert (make-string amt-adjust ? ))
