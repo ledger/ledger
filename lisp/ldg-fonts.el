@@ -38,7 +38,7 @@
   :group 'ledger-faces)
 
 (defface ledger-font-highlight-face
-    `((t :background "white"))
+    `((t :background "#eee8d5"))
   "Default face for transaction under point"
   :group 'ledger-faces)
 
