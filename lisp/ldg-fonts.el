@@ -26,6 +26,8 @@
 
 ;;; Code:
 
+(require 'ldg-regex)
+
 (defgroup ledger-faces nil "Ledger mode highlighting" :group 'ledger)
 (defface ledger-font-uncleared-face
     `((t :foreground "#dc322f" :weight bold ))
@@ -54,6 +56,16 @@
 
 (defface ledger-font-posting-account-face
     `((t :foreground "#268bd2" ))
+  "Face for Ledger accounts"
+  :group 'ledger-faces)
+
+(defface ledger-font-posting-account-cleared-face
+    `((t :foreground "#657b83" ))
+  "Face for Ledger accounts"
+  :group 'ledger-faces)
+
+(defface ledger-font-posting-account-pending-face
+    `((t :foreground "#cb4b16" ))
   "Face for Ledger accounts"
   :group 'ledger-faces)
 
@@ -99,16 +111,17 @@
 
 
 (defvar ledger-font-lock-keywords
-  '(("^[0-9]+[-/.=][-/.=0-9]+\\s-\\!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)" 2 'ledger-font-pending-face)
-    ("^[0-9]+[-/.=][-/.=0-9]+\\s-\\*\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)" 2 'ledger-font-cleared-face)
-    ("^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)" 2 'ledger-font-uncleared-face)
-    ("^\\s-+\\([*]\\s-*\\)?\\(\\([[(]\\)?[^*:
-        ]+?:\\([^]);
-        ]\\|\\s-\\)+?\\([])]\\)?\\)\\(    \\|  \\|$\\)"
+  `((,ledger-payee-pending-regex 2 'ledger-font-pending-face)
+    (,ledger-payee-cleared-regex 2 'ledger-font-cleared-face)
+    (,ledger-payee-uncleared-regex 2 'ledger-font-uncleared-face)
+    (,ledger-posting-account-cleared-regex
+      2 'ledger-font-posting-account-cleared-face) 
+    (,ledger-posting-account-pending-regex
+      2 'ledger-font-posting-account-pending-face) ; works
+    (,ledger-posting-account-all-regex
      2 'ledger-font-posting-account-face) ; works
-    ("\\(       \\|  \\|^\\)\\(;.*\\)" 2 'ledger-font-comment-face)  ; works
-    ("^\\([~=].+\\)" 1 ledger-font-other-face)
-    ("^\\([A-Za-z]+ .+\\)" 1 ledger-font-other-face))
+    (,ledger-comment-regex 2 'ledger-font-comment-face)  ; works
+    (,ledger-other-entries-regex 1 ledger-font-other-face))
   "Expressions to highlight in Ledger mode.")
 
 

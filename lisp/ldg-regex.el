@@ -24,6 +24,30 @@
 (eval-when-compile
   (require 'cl))
 
+(defvar ledger-other-entries-regex
+  "^\\(\\([~=].+\\)\\|\\(^\\([A-Za-z]+ .+\\)\\)\\)")
+
+(defvar ledger-comment-regex
+  "\\(       \\|  \\|^\\)\\(;.*\\)")
+(defvar ledger-payee-pending-regex 
+  "^[0-9]+[-/.=][-/.=0-9]+\\s-\\!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)")
+
+(defvar ledger-payee-cleared-regex
+  "^[0-9]+[-/.=][-/.=0-9]+\\s-\\*\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)")
+
+(defvar ledger-payee-uncleared-regex
+  "^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)")
+
+
+(defvar ledger-posting-account-all-regex
+  "\\(^[ \t]+\\)\\(.+?\\)\\(  \\|$\\)")  
+
+(defvar ledger-posting-account-cleared-regex
+  "\\(^[ \t]+\\)\\(\\*.+?\\)\\(  \\|$\\)")  
+
+(defvar ledger-posting-account-pending-regex
+  "\\(^[ \t]+\\)\\(!.+?\\)\\(  \\|$\\)")  
+
 (defvar ledger-date-regex 
   "\\([0-9]+\\)[/-]\\([0-9]+\\)[/-]\\([0-9]+\\)")
 

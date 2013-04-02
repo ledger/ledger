@@ -136,14 +136,14 @@ point at beginning of the commodity."
            (match-end 3)) (point))))
 
 (defvar ledger-post-account-regex
-  "\\(^[ \t]+\\)\\(.+?\\)\\(  \\|\n\\)")  
+  "\\(^[ \t]+\\)\\([!*]?.+?\\)\\(  \\|$\\)")  
 
 (defun ledger-next-account (&optional end)
   "Move point to the beginning of the next account, or status marker (!*), as long as it is not past END.
 Return the column of the beginning of the account and leave point
 at beginning of account"
     (if (> end (point))
-	(when (re-search-forward ledger-post-account-regex (1+ end) t)  
+	(when (re-search-forward ledger-posting-account-all-regex (1+ end) t)  
 	  ;; the 1+ is to make sure we can catch the newline
 	  (goto-char (match-beginning 2))
 	  (current-column))))
