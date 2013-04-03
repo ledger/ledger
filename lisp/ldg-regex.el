@@ -24,58 +24,45 @@
 (eval-when-compile
   (require 'cl))
 
-(defvar ledger-amount-decimal-comma-regex
+(defconst ledger-amount-decimal-comma-regex
   "-?[1-9][0-9.]*[,]?[0-9]*")
 
-(defvar ledger-amount-decimal-period-regex
+(defconst ledger-amount-decimal-period-regex
   "-?[1-9][0-9.]*[.]?[0-9]*")
 
-(defvar ledger-other-entries-regex
+(defconst ledger-other-entries-regex
   "\\(^[~=A-Za-z].+\\)+")
 
 ;\\|^\\([A-Za-z] .+\\)\\)
 
-(defvar ledger-xact-payee-regex
-  (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-                      "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)"))
-(defvar ledger-comment-regex
+(defconst ledger-comment-regex
   "\\(       \\|  \\|^\\)\\(;.*\\)")
 
-(defvar ledger-payee-pending-regex 
-  "^[0-9]+[-/.=][-/.=0-9]+\\s-\\!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)")
+(defconst ledger-payee-any-status-regex 
+  "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)")
 
-(defvar ledger-payee-cleared-regex
-  "^[0-9]+[-/.=][-/.=0-9]+\\s-\\*\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)")
+(defconst ledger-payee-pending-regex 
+  "^[0-9]+[-/.=][-/.=0-9]+\\s-\\!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(;\\|$\\)")
 
-(defvar ledger-payee-uncleared-regex
-  "^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)")
+(defconst ledger-payee-cleared-regex
+  "^[0-9]+[-/.=][-/.=0-9]+\\s-\\*\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(;\\|$\\)")
 
-(defvar ledger-iso-date-regex
-  "\\([12][0-9]\\{3\\}\\)[-/]\\([0-9]\\{2\\}\\)[-/]\\([0-9]\\{2\\}\\)")
+(defconst ledger-payee-uncleared-regex
+  "^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(;\\|$\\)")
 
-(defvar ledger-init-string-regex
+(defconst ledger-init-string-regex
   "^--.+?\\($\\|[ ]\\)")
 
-(defvar ledger-posting-account-all-regex
-  "\\(^[ \t]+\\)\\(.+?\\)\\(  \\|$\\)")  
+(defconst ledger-account-any-status-regex
+  "^[ \t]+\\([*!]\\s-+\\)?[[(]?\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)")  
 
-(defvar ledger-sort-next-record-regex
-  (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-	  "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)"))
-
-(defvar ledger-posting-account-cleared-regex
-  "\\(^[ \t]+\\)\\(\\*.+?\\)\\(  \\|$\\)")  
-
-(defvar ledger-complete-account-regex
-  "^[ \t]+\\([*!]\\s-+\\)?[[(]?\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)")
-
-(defvar ledger-posting-account-pending-regex
+(defconst ledger-account-pending-regex
   "\\(^[ \t]+\\)\\(!.+?\\)\\(  \\|$\\)")  
 
-(defvar ledger-date-regex 
-  "\\([0-9]+\\)[/-]\\([0-9]+\\)[/-]\\([0-9]+\\)")
+(defconst ledger-account-cleared-regex
+  "\\(^[ \t]+\\)\\(\\*.+?\\)\\(  \\|$\\)")  
 
-(defvar ledger-post-amount-regex
+(defconst ledger-amount-regex
   (concat "\\(  \\|\t\\| \t\\)[ \t]*-?"
 	  "\\([A-Z$€£_]+ *\\)?"
 	  "\\(-?[0-9,]+?\\)"
@@ -83,6 +70,7 @@
 	  "\\( *[[:word:]€£_\"]+\\)?"
 	  "\\([ \t]*[@={]@?[^\n;]+?\\)?"
 	  "\\([ \t]+;.+?\\|[ \t]*\\)?$"))
+
 
 (defmacro ledger-define-regexp (name regex docs &rest args)
   "Simplify the creation of a Ledger regex and helper functions."
@@ -179,23 +167,23 @@
 
 (put 'ledger-define-regexp 'lisp-indent-function 1)
 
-(ledger-define-regexp date
-  (let ((sep '(or ?- (any ?. ?/))))     ; can't do (any ?- ?. ?/) due to bug
+(ledger-define-regexp iso-date
+  ( let ((sep '(or ?-  ?/)))    
     (rx (group
-         (and (? (= 4 num)
-                 (eval sep))
-              (and num (? num))
+         (and (group (? (= 4 num)))
+	      (eval sep)
+              (group (and num (? num)))
               (eval sep)
-              (and num (? num))))))
+              (group (and num (? num)))))))
   "Match a single date, in its 'written' form.")
 
 (ledger-define-regexp full-date
   (macroexpand
-   `(rx (and (regexp ,ledger-date-regexp)
-             (? (and ?= (regexp ,ledger-date-regexp))))))
+   `(rx (and (regexp ,ledger-iso-date-regexp)
+             (? (and ?= (regexp ,ledger-iso-date-regexp))))))
   "Match a compound date, of the form ACTUAL=EFFECTIVE"
-  (actual date)
-  (effective date))
+  (actual iso-date)
+  (effective iso-date))
 
 (ledger-define-regexp state
   (rx (group (any ?! ?*)))
@@ -292,7 +280,7 @@
   (macroexpand
    `(rx (* (+ blank)
            (or (and ?\{ (regexp ,ledger-commoditized-amount-regexp) ?\})
-               (and ?\[ (regexp ,ledger-date-regexp) ?\])
+               (and ?\[ (regexp ,ledger-iso-date-regexp) ?\])
                (and ?\( (not (any ?\))) ?\))))))
   "")
 
@@ -327,5 +315,13 @@
   (account full-account name)
   (amount full-amount)
   (note end-note))
+
+(defconst ledger-iterate-regex
+  (concat "\\(Y\\s-+\\([0-9]+\\)\\|"  ;; Catches a Y directive
+	  ledger-iso-date-regexp
+	  "\\([ *!]+\\)"  ;; mark
+	  "\\((.*)\\)"  ;; code
+	  "\\(.*\\)"   ;; desc
+	  "\\)"))
 
 (provide 'ldg-regex)

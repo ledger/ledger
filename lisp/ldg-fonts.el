@@ -121,12 +121,12 @@
  				  'ledger-font-payee-cleared-face) ; Works
      (,ledger-payee-uncleared-regex 2 
  				    'ledger-font-payee-uncleared-face) ; Works
-     (,ledger-posting-account-cleared-regex 2 
- 					    'ledger-font-posting-account-cleared-face) ; Works
-     (,ledger-posting-account-pending-regex 2 
- 					    'ledger-font-posting-account-pending-face) ; Works
-     (,ledger-posting-account-all-regex 2 
- 					'ledger-font-posting-account-face)) ; Works
+     (,ledger-account-cleared-regex 2 
+ 	      			    'ledger-font-posting-account-cleared-face) ; Works
+     (,ledger-account-pending-regex 2 
+ 	      			    'ledger-font-posting-account-pending-face) ; Works
+     (,ledger-account-any-status-regex 2 
+				       'ledger-font-posting-account-face)) ; Works
   "Expressions to highlight in Ledger mode.")
     
 

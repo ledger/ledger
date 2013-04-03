@@ -122,7 +122,7 @@ PROMPT is a string to prompt with.  CHOICES is a list of
 Return the width of the amount field as an integer and leave
 point at beginning of the commodity."
   ;;(beginning-of-line)
-  (when (re-search-forward ledger-post-amount-regex end t)
+  (when (re-search-forward ledger-amount-regex end t)
     (goto-char (match-beginning 0))
     (skip-syntax-forward " ")
     (- (or (match-end 4)
@@ -134,7 +134,7 @@ point at beginning of the commodity."
 Return the column of the beginning of the account and leave point
 at beginning of account"
     (if (> end (point))
-	(when (re-search-forward ledger-posting-account-all-regex (1+ end) t)  
+	(when (re-search-forward ledger-account-any-status-regex (1+ end) t)  
 	  ;; the 1+ is to make sure we can catch the newline
 	  (goto-char (match-beginning 2))
 	  (current-column))))

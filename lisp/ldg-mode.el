@@ -101,7 +101,7 @@ Can be pcomplete, or align-posting"
       (define-key map [(control ?c) (control ?d)] 'ledger-delete-current-transaction)
       (define-key map [(control ?c) (control ?e)] 'ledger-toggle-current-transaction)
       (define-key map [(control ?c) (control ?f)] 'ledger-occur)
-      (define-key map [(control ?c) (control ?k)] 'ledger-copy-transaction)
+      (define-key map [(control ?c) (control ?k)] 'ledger-copy-transaction-at-point)
       (define-key map [(control ?c) (control ?m)] 'ledger-set-month)
       (define-key map [(control ?c) (control ?r)] 'ledger-reconcile)
       (define-key map [(control ?c) (control ?s)] 'ledger-sort-region)
@@ -144,7 +144,7 @@ Can be pcomplete, or align-posting"
       (define-key map [sort-reg] '(menu-item "Sort Region" ledger-sort-region :enable mark-active))
       (define-key map [align-reg] '(menu-item "Align Region" ledger-post-align-postings :enable mark-active))
       (define-key map [sep2] '(menu-item "--"))
-      (define-key map [copy-xact] '(menu-item "Copy Trans at Point" ledger-copy-transaction))
+      (define-key map [copy-xact] '(menu-item "Copy Trans at Point" ledger-copy-transaction-at-point))
       (define-key map [toggle-post] '(menu-item "Toggle Current Posting" ledger-toggle-current))
       (define-key map [toggle-xact] '(menu-item "Toggle Current Transaction" ledger-toggle-current-transaction))
       (define-key map [sep4] '(menu-item "--"))
@@ -172,43 +172,6 @@ Return the difference in the format of a time value."
     (list (- (car t1) (car t2) (if borrow 1 0))
           (- (+ (if borrow 65536 0) (cadr t1)) (cadr t2)))))
 
-(defun ledger-find-slot (moment)
-  "Find the right place in the buffer for a transaction at MOMENT.
-MOMENT is an encoded date"
-  (catch 'found
-    (ledger-iterate-transactions
-     (function
-      (lambda (start date mark desc)
-       (if (ledger-time-less-p moment date)
-	   (throw 'found t)))))))
-
-(defun ledger-iterate-transactions (callback)
-  "Iterate through each transaction call CALLBACK for each."
-  (goto-char (point-min))
-  (let* ((now (current-time))
-         (current-year (nth 5 (decode-time now))))
-    (while (not (eobp))
-      (when (looking-at
-             (concat "\\(Y\\s-+\\([0-9]+\\)\\|"
-                     "\\([0-9]\\{4\\}+\\)?[./-]?"
-                     "\\([0-9]+\\)[./-]\\([0-9]+\\)\\s-+"
-                     "\\(\\*\\s-+\\)?\\(.+\\)\\)"))
-        (let ((found (match-string 2)))
-          (if found
-              (setq current-year (string-to-number found))
-	      (let ((start (match-beginning 0))
-		    (year (match-string 3))
-		    (month (string-to-number (match-string 4)))
-		    (day (string-to-number (match-string 5)))
-		    (mark (match-string 6))
-		    (desc (match-string 7)))
-		(if (and year (> (length year) 0))
-		    (setq year (string-to-number year)))
-		(funcall callback start
-			 (encode-time 0 0 0 day month
-				      (or year current-year))
-			 mark desc)))))
-      (forward-line))))
 
 (defun ledger-set-year (newyear)
   "Set ledger's idea of the current year to the prefix argument NEWYEAR."
@@ -227,7 +190,7 @@ MOMENT is an encoded date"
 (defun ledger-add-transaction (transaction-text &optional insert-at-point)
   "Use ledger xact TRANSACTION-TEXT to add a transaction to the buffer.
 If INSERT-AT-POINT is non-nil insert the transaction
-there, otherwise call `ledger-find-slot' to insert it at the
+there, otherwise call `ledger-xact-find-slot' to insert it at the
 correct chronological place in the buffer."
   (interactive (list
 		(read-string "Transaction: " (concat ledger-year "/" ledger-month "/"))))
@@ -238,12 +201,12 @@ correct chronological place in the buffer."
          exit-code)
     (unless insert-at-point
       (let ((date (car args)))
-        (if (string-match ledger-iso-date-regex date)
+        (if (string-match ledger-iso-date-regexp date)
             (setq date
-                  (encode-time 0 0 0 (string-to-number (match-string 3 date))
-                               (string-to-number (match-string 2 date))
-                               (string-to-number (match-string 1 date)))))
-        (ledger-find-slot date)))
+                  (encode-time 0 0 0 (string-to-number (match-string 4 date))
+                               (string-to-number (match-string 3 date))
+                               (string-to-number (match-string 2 date)))))
+        (ledger-xact-find-slot date)))
     (if (> (length args) 1)
 	(save-excursion
 	  (insert
