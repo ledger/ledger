@@ -29,17 +29,17 @@
 (require 'ldg-regex)
 
 (defgroup ledger-faces nil "Ledger mode highlighting" :group 'ledger)
-(defface ledger-font-uncleared-face
+(defface ledger-font-payee-uncleared-face
     `((t :foreground "#dc322f" :weight bold ))
   "Default face for Ledger"
   :group 'ledger-faces)
 
-(defface ledger-font-cleared-face
+(defface ledger-font-payee-cleared-face
     `((t :foreground "#657b83" :weight normal ))
   "Default face for cleared (*) transactions"
   :group 'ledger-faces)
 
-(defface ledger-font-highlight-face
+(defface ledger-font-xact-highlight-face
     `((t :background "#eee8d5"))
   "Default face for transaction under point"
   :group 'ledger-faces)
@@ -50,7 +50,7 @@
   :group 'ledger-faces)
 
 (defface ledger-font-other-face
-    `((t :foreground "yellow" ))
+    `((t :foreground "#657b83" :weight bold))
   "Default face for other transactions"
   :group 'ledger-faces)
 
@@ -70,7 +70,7 @@
   :group 'ledger-faces)
 
 (defface ledger-font-posting-amount-face
-    `((t :foreground "yellow" ))
+    `((t :foreground "#cb4b16" ))
   "Face for Ledger amounts"
   :group 'ledger-faces)
 
@@ -111,20 +111,30 @@
 
 
 (defvar ledger-font-lock-keywords
-  `((,ledger-payee-pending-regex 2 'ledger-font-pending-face)
-    (,ledger-payee-cleared-regex 2 'ledger-font-cleared-face)
-    (,ledger-payee-uncleared-regex 2 'ledger-font-uncleared-face)
-    (,ledger-posting-account-cleared-regex
-      2 'ledger-font-posting-account-cleared-face) 
-    (,ledger-posting-account-pending-regex
-      2 'ledger-font-posting-account-pending-face) ; works
-    (,ledger-posting-account-all-regex
-     2 'ledger-font-posting-account-face) ; works
-    (,ledger-comment-regex 2 'ledger-font-comment-face)  ; works
-    (,ledger-other-entries-regex 1 ledger-font-other-face))
+  `( ;; (,ledger-other-entries-regex 1 
+     ;; 				  ledger-font-other-face)
+     (,ledger-comment-regex 2 
+			    'ledger-font-comment-face)
+     (,ledger-payee-pending-regex 2 
+				  'ledger-font-payee-pending-face) ; Works
+     (,ledger-payee-cleared-regex 2 
+ 				  'ledger-font-payee-cleared-face) ; Works
+     (,ledger-payee-uncleared-regex 2 
+ 				    'ledger-font-payee-uncleared-face) ; Works
+     (,ledger-posting-account-cleared-regex 2 
+ 					    'ledger-font-posting-account-cleared-face) ; Works
+     (,ledger-posting-account-pending-regex 2 
+ 					    'ledger-font-posting-account-pending-face) ; Works
+     (,ledger-posting-account-all-regex 2 
+ 					'ledger-font-posting-account-face)) ; Works
   "Expressions to highlight in Ledger mode.")
+    
 
-
+;; (defvar ledger-font-lock-keywords
+;;   `( (,ledger-other-entries-regex 1 
+;; 				  ledger-font-other-face))
+;;   "Expressions to highlight in Ledger mode.")
+    
 (provide 'ldg-fonts)
 
 ;;; ldg-fonts.el ends here

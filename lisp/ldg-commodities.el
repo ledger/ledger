@@ -26,6 +26,8 @@
 
 ;;; Code:
 
+(require 'ldg-regex)
+
 (defcustom ledger-reconcile-default-commodity "$"
   "The default commodity for use in target calculations in ledger reconcile."
   :type 'string
@@ -36,13 +38,13 @@
 Returns a list with (value commodity)."
   (if (> (length str) 0) 
       (let ((number-regex (if (assoc "decimal-comma" ledger-environment-alist)
-			      "-?[1-9][0-9.]*[,]?[0-9]*"
-			      "-?[1-9][0-9,]*[.]?[0-9]*")))
+			      ledger-amount-decimal-comma-regex
+			      ledger-amount-decimal-period-regex)))
 	(with-temp-buffer
 	  (insert str)
 	  (goto-char (point-min))
 	  (cond 
-	    ((re-search-forward "\"\\(.*\\)\"" nil t) 
+	    ((re-search-forward "\"\\(.*\\)\"" nil t) ; look for quoted commodities
 	     (let ((com (delete-and-extract-region 
 			 (match-beginning 1)       
 			 (match-end 1))))

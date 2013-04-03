@@ -22,6 +22,8 @@
 ;;; Commentary:
 ;; Determine the ledger environment
 
+(require 'ldg-regex)
+
 (defcustom ledger-init-file-name "~/.ledgerrc"
   "Location of the ledger initialization file. nil if you don't have one"
   :group 'ledger-exec)
@@ -32,7 +34,7 @@
   (with-current-buffer file
     (setq ledger-environment-alist nil)
     (goto-char (point-min))
-    (while (re-search-forward "^--.+?\\($\\|[ ]\\)" nil t )
+    (while (re-search-forward ledger-init-string-regex nil t )
       (let ((matchb (match-beginning 0)) ;; save the match data, string-match stamp on it
 	    (matche (match-end 0)))
 	(end-of-line)

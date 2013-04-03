@@ -238,7 +238,7 @@ correct chronological place in the buffer."
          exit-code)
     (unless insert-at-point
       (let ((date (car args)))
-        (if (string-match "\\([0-9]+\\)[-/]\\([0-9]+\\)[-/]\\([0-9]+\\)" date)
+        (if (string-match ledger-iso-date-regex date)
             (setq date
                   (encode-time 0 0 0 (string-to-number (match-string 3 date))
                                (string-to-number (match-string 2 date))

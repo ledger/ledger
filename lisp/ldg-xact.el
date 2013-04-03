@@ -53,7 +53,7 @@ within the transaction."
 
 (defun ledger-highlight-xact-under-point ()
   "Move the highlight overlay to the current transaction."
-(if ledger-highlight-xact-under-point
+  (if ledger-highlight-xact-under-point
       (let ((exts (ledger-find-xact-extents (point)))
 	    (ovl highlight-overlay))
 	(if (not highlight-overlay)
@@ -63,7 +63,7 @@ within the transaction."
 				      (cadr exts)
 				      (current-buffer) t nil)))
 	    (move-overlay ovl (car exts) (cadr exts)))
-	(overlay-put ovl 'face 'ledger-font-highlight-face)
+	(overlay-put ovl 'face 'ledger-font-xact-highlight-face)
 	(overlay-put ovl 'priority 100))))
 
 (defun ledger-xact-payee ()

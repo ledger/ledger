@@ -32,6 +32,7 @@
 
 ;;; Commentary:
 ;; Load up the ledger mode
+(require 'ldg-regex)
 (require 'esh-util)
 (require 'esh-arg)
 (require 'ldg-commodities)
@@ -43,7 +44,6 @@
 (require 'ldg-occur)
 (require 'ldg-post)
 (require 'ldg-reconcile)
-(require 'ldg-regex)
 (require 'ldg-report)
 (require 'ldg-sort)
 (require 'ldg-state)

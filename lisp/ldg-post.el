@@ -115,14 +115,7 @@ PROMPT is a string to prompt with.  CHOICES is a list of
 		 (delete-char 1)))))))
     (goto-char pos)))
 
-(defvar ledger-post-amount-regex
-  (concat "\\(  \\|\t\\| \t\\)[ \t]*-?"
-	  "\\([A-Z$€£_]+ *\\)?"
-	  "\\(-?[0-9,]+?\\)"
-	  "\\(.[0-9]+\\)?"
-	  "\\( *[[:word:]€£_\"]+\\)?"
-	  "\\([ \t]*[@={]@?[^\n;]+?\\)?"
-	  "\\([ \t]+;.+?\\|[ \t]*\\)?$"))
+
 
 (defsubst ledger-next-amount (&optional end)
   "Move point to the next amount, as long as it is not past END.
@@ -135,8 +128,6 @@ point at beginning of the commodity."
     (- (or (match-end 4)
            (match-end 3)) (point))))
 
-(defvar ledger-post-account-regex
-  "\\(^[ \t]+\\)\\([!*]?.+?\\)\\(  \\|$\\)")  
 
 (defun ledger-next-account (&optional end)
   "Move point to the beginning of the next account, or status marker (!*), as long as it is not past END.

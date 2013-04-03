@@ -24,11 +24,23 @@
 (eval-when-compile
   (require 'cl))
 
-(defvar ledger-other-entries-regex
-  "^\\(\\([~=].+\\)\\|\\(^\\([A-Za-z]+ .+\\)\\)\\)")
+(defvar ledger-amount-decimal-comma-regex
+  "-?[1-9][0-9.]*[,]?[0-9]*")
 
+(defvar ledger-amount-decimal-period-regex
+  "-?[1-9][0-9.]*[.]?[0-9]*")
+
+(defvar ledger-other-entries-regex
+  "\\(^[~=A-Za-z].+\\)+")
+
+;\\|^\\([A-Za-z] .+\\)\\)
+
+(defvar ledger-xact-payee-regex
+  (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
+                      "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)"))
 (defvar ledger-comment-regex
   "\\(       \\|  \\|^\\)\\(;.*\\)")
+
 (defvar ledger-payee-pending-regex 
   "^[0-9]+[-/.=][-/.=0-9]+\\s-\\!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)")
 
@@ -38,18 +50,39 @@
 (defvar ledger-payee-uncleared-regex
   "^[0-9]+[-/.=][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(\\(        ;\\|  ;\\|$\\)\\)")
 
+(defvar ledger-iso-date-regex
+  "\\([12][0-9]\\{3\\}\\)[-/]\\([0-9]\\{2\\}\\)[-/]\\([0-9]\\{2\\}\\)")
+
+(defvar ledger-init-string-regex
+  "^--.+?\\($\\|[ ]\\)")
 
 (defvar ledger-posting-account-all-regex
   "\\(^[ \t]+\\)\\(.+?\\)\\(  \\|$\\)")  
 
+(defvar ledger-sort-next-record-regex
+  (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
+	  "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)"))
+
 (defvar ledger-posting-account-cleared-regex
   "\\(^[ \t]+\\)\\(\\*.+?\\)\\(  \\|$\\)")  
+
+(defvar ledger-complete-account-regex
+  "^[ \t]+\\([*!]\\s-+\\)?[[(]?\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)")
 
 (defvar ledger-posting-account-pending-regex
   "\\(^[ \t]+\\)\\(!.+?\\)\\(  \\|$\\)")  
 
 (defvar ledger-date-regex 
   "\\([0-9]+\\)[/-]\\([0-9]+\\)[/-]\\([0-9]+\\)")
+
+(defvar ledger-post-amount-regex
+  (concat "\\(  \\|\t\\| \t\\)[ \t]*-?"
+	  "\\([A-Z$€£_]+ *\\)?"
+	  "\\(-?[0-9,]+?\\)"
+	  "\\(.[0-9]+\\)?"
+	  "\\( *[[:word:]€£_\"]+\\)?"
+	  "\\([ \t]*[@={]@?[^\n;]+?\\)?"
+	  "\\([ \t]+;.+?\\|[ \t]*\\)?$"))
 
 (defmacro ledger-define-regexp (name regex docs &rest args)
   "Simplify the creation of a Ledger regex and helper functions."

@@ -52,8 +52,7 @@
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward
-              (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-                      "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)  ;; matches first line
+              ledger-xact-payee-regex nil t)  ;; matches first line
         (unless (and (>= origin (match-beginning 0))
                      (< origin (match-end 0)))
           (setq payees-list (cons (match-string-no-properties 3)
@@ -70,7 +69,7 @@ Return tree structure"
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward
-              "^[ \t]+\\([*!]\\s-+\\)?[[(]?\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)" nil t)
+              ledger-complete-account-regex nil t)
         (unless (and (>= origin (match-beginning 0))
                      (< origin (match-end 0)))
           (setq account-elements
