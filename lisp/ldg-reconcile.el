@@ -62,6 +62,16 @@ reconcile-finish will mark all pending posting cleared."
    :type 'boolean
    :group 'ledger-reconcile)
 
+(defcustom ledger-reconcile-default-date-format "%Y/%m/%d"
+  "Default date format for the reconcile buffer"
+  :type 'string
+  :group 'ledger-reconcile)
+
+(defcustom ledger-reconcile-target-prompt-string "Target amount for reconciliation "
+  "Default prompt for recon target prompt"
+  :type 'string
+  :group 'ledger-reconcile)
+
 
 (defun ledger-reconcile-get-cleared-or-pending-balance ()
   "Calculate the cleared or pending balance of the account."
@@ -217,8 +227,7 @@ Return the number of uncleared xacts found."
       (set-buffer-modified-p nil)
       (ledger-display-balance)
       (goto-char curpoint)
-      ;; (ledger-reconcile-visit t)
-      )))
+      (ledger-reconcile-visit t))))
 
 (defun ledger-reconcile-finish ()
   "Mark all pending posting or transactions as cleared.
@@ -299,7 +308,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 		  (insert (format "%s %-4s %-30s %-30s %15s\n"
 				  (format-time-string (if date-format
 							  date-format
-							  "%Y/%m/%d") (nth 2 xact))
+							  ledger-reconcile-default-date-format) (nth 2 xact))
 				  (if (nth 3 xact)
 				      (nth 3 xact)
 				      "")
@@ -409,7 +418,7 @@ moved and recentered.  If they aren't strange things happen."
 (defun ledger-reconcile-change-target ()
   "Change the target amount for the reconciliation process."
   (interactive)
-  (setq ledger-target (ledger-read-commodity-string "Set reconciliation target")))
+  (setq ledger-target (ledger-read-commodity-string ledger-reconcile-target-prompt-string)))
 
 (define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
    "A mode for reconciling ledger entries."

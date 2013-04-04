@@ -53,7 +53,7 @@ within the transaction."
 
 (defun ledger-highlight-xact-under-point ()
   "Move the highlight overlay to the current transaction."
-(if ledger-highlight-xact-under-point
+  (if ledger-highlight-xact-under-point
       (let ((exts (ledger-find-xact-extents (point)))
 	    (ovl highlight-overlay))
 	(if (not highlight-overlay)
@@ -63,7 +63,7 @@ within the transaction."
 				      (cadr exts)
 				      (current-buffer) t nil)))
 	    (move-overlay ovl (car exts) (cadr exts)))
-	(overlay-put ovl 'face 'ledger-font-highlight-face)
+	(overlay-put ovl 'face 'ledger-font-xact-highlight-face)
 	(overlay-put ovl 'priority 100))))
 
 (defun ledger-xact-payee ()
@@ -75,6 +75,41 @@ within the transaction."
       (if (eq (ledger-context-line-type context-info) 'entry)
           (ledger-context-field-value context-info 'payee)
 	  nil))))
+
+(defun ledger-xact-find-slot (moment)
+  "Find the right place in the buffer for a transaction at MOMENT.
+MOMENT is an encoded date"
+  (catch 'found
+    (ledger-xact-iterate-transactions
+     (function
+      (lambda (start date mark desc)
+       (if (ledger-time-less-p moment date)
+	   (throw 'found t)))))))
+
+(defun ledger-xact-iterate-transactions (callback)
+  "Iterate through each transaction call CALLBACK for each."
+  (goto-char (point-min))
+  (let* ((now (current-time))
+         (current-year (nth 5 (decode-time now))))
+    (while (not (eobp))
+      (when (looking-at ledger-iterate-regex)
+        (let ((found-y-p (match-string 2)))  
+          (if found-y-p  
+              (setq current-year (string-to-number found-y-p)) ;; a Y directive was found
+	      (let ((start (match-beginning 0))
+		    (year (match-string 4))
+		    (month (string-to-number (match-string 5)))
+		    (day (string-to-number (match-string 6)))
+		    (mark (match-string 7))
+		    (code (match-string 8))
+		    (desc (match-string 9)))
+		(if (and year (> (length year) 0))
+		    (setq year (string-to-number year)))
+		(funcall callback start
+			 (encode-time 0 0 0 day month
+				      (or year current-year))
+			 mark desc)))))
+      (forward-line))))
 
 (defsubst ledger-goto-line (line-number)
   "Rapidly move point to line LINE-NUMBER."
@@ -106,17 +141,17 @@ within the transaction."
 	 (extents (ledger-find-xact-extents (point)))
 	 (transaction (buffer-substring-no-properties (car extents) (cadr extents)))
 	 encoded-date)
-    (if (string-match ledger-date-regex date)
+    (if (string-match ledger-iso-date-regexp date)
 	(setq encoded-date
-	      (encode-time 0 0 0 (string-to-number (match-string 3 date))
-			   (string-to-number (match-string 2 date))
-			   (string-to-number (match-string 1 date)))))
-    (ledger-find-slot encoded-date)
+	      (encode-time 0 0 0 (string-to-number (match-string 4 date))
+			   (string-to-number (match-string 3 date))
+			   (string-to-number (match-string 2 date)))))
+    (ledger-xact-find-slot encoded-date)
     (insert transaction "\n")
-    (backward-paragraph)
-    (re-search-forward ledger-date-regex)
+    (backward-paragraph 2)
+    (re-search-forward ledger-iso-date-regexp)
     (replace-match date)
-    (re-search-forward "[1-9][0-9]+\.[0-9]+")))
+    (ledger-next-amount)))
 
 (provide 'ldg-xact)
 

@@ -28,9 +28,8 @@
 
 (defun ledger-next-record-function ()
   "Move point to next transaction."
-  (if (re-search-forward
-       (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+"
-	       "\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)") nil t)
+  (if (re-search-forward  ledger-payee-any-status-regex
+       			 nil t)
       (goto-char (match-beginning 0))
       (goto-char (point-max))))
 

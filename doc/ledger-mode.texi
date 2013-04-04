@@ -672,6 +672,11 @@ Default face for pending (!) transactions
 Default face for other transactions
 @item ledger-font-posting-account-face
 Face for Ledger accounts
+@item ledger-font-posting-account-cleared-face
+Face for cleared Ledger accounts
+@item ledger-font-posting-account-pending-face
+Face for Ledger pending accounts
+
 @item ledger-font-posting-amount-face
 Face for Ledger amounts
 @item ledger-occur-narrowed-face

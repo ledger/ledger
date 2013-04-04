@@ -26,6 +26,8 @@
 
 ;;; Code:
 
+(require 'ldg-regex)
+
 (defcustom ledger-reconcile-default-commodity "$"
   "The default commodity for use in target calculations in ledger reconcile."
   :type 'string
@@ -36,13 +38,13 @@
 Returns a list with (value commodity)."
   (if (> (length str) 0) 
       (let ((number-regex (if (assoc "decimal-comma" ledger-environment-alist)
-			      "-?[1-9][0-9.]*[,]?[0-9]*"
-			      "-?[1-9][0-9,]*[.]?[0-9]*")))
+			      ledger-amount-decimal-comma-regex
+			      ledger-amount-decimal-period-regex)))
 	(with-temp-buffer
 	  (insert str)
 	  (goto-char (point-min))
 	  (cond 
-	    ((re-search-forward "\"\\(.*\\)\"" nil t) 
+	    ((re-search-forward "\"\\(.*\\)\"" nil t) ; look for quoted commodities
 	     (let ((com (delete-and-extract-region 
 			 (match-beginning 1)       
 			 (match-end 1))))
@@ -127,25 +129,15 @@ longer ones are after the value."
       (concat commodity " " val))))
 
 (defun ledger-read-commodity-string (prompt)
-  "Return a commoditizd value (val 'comm') from COMM.
-Assumes a space between the value and the commodity."
-  (let ((parts (split-string (read-from-minibuffer
-			      (concat prompt " (" ledger-reconcile-default-commodity "): ")))))
-    (if parts
-	(if (/= (length parts) 2) ;;assume a number was entered and
-				  ;;use default commodity
-	    (list (string-to-number (car parts))
-		  ledger-reconcile-default-commodity)
-	    (let ((valp1 (string-to-number (car parts)))
-		  (valp2 (string-to-number (cadr parts))))
-	      (cond ((and (= valp1 valp2) (= 0 valp1)) ;; means neither contained a valid number (both = 0)
-		     (list 0 ""))
-		    ((and (/= 0 valp1) (= valp2 0))
-		     (list valp1 (cadr parts)))
-		    ((and (/= 0 valp2) (= valp1 0))
-		     (list valp2 (car parts)))
-		    (t
-		     (error "Cannot understand commodity"))))))))
+  (let ((str (read-from-minibuffer
+	      (concat prompt " (" ledger-reconcile-default-commodity "): ")))
+	comm)
+    (if (> (length str) 0)
+	(progn
+	  (setq comm (ledger-split-commodity-string str))
+	  (if (cadr comm)
+	      comm
+	      (list (car comm) ledger-reconcile-default-commodity))))))
 
 (provide 'ldg-commodities)
 

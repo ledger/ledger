@@ -115,43 +115,38 @@ PROMPT is a string to prompt with.  CHOICES is a list of
 		 (delete-char 1)))))))
     (goto-char pos)))
 
-(defvar ledger-post-amount-regex
-  (concat "\\(  \\|\t\\| \t\\)[ \t]*-?"
-	  "\\([A-Z$€£_]+ *\\)?"
-	  "\\(-?[0-9,]+?\\)"
-	  "\\(.[0-9]+\\)?"
-	  "\\( *[[:word:]€£_\"]+\\)?"
-	  "\\([ \t]*[@={]@?[^\n;]+?\\)?"
-	  "\\([ \t]+;.+?\\|[ \t]*\\)?$"))
+
 
 (defsubst ledger-next-amount (&optional end)
   "Move point to the next amount, as long as it is not past END.
 Return the width of the amount field as an integer and leave
 point at beginning of the commodity."
   ;;(beginning-of-line)
-  (when (re-search-forward ledger-post-amount-regex end t)
+  (when (re-search-forward ledger-amount-regex end t)
     (goto-char (match-beginning 0))
     (skip-syntax-forward " ")
     (- (or (match-end 4)
            (match-end 3)) (point))))
 
-(defvar ledger-post-account-regex
-  "\\(^[ \t]+\\)\\(.+?\\)\\(  \\|\n\\)")  
 
 (defun ledger-next-account (&optional end)
   "Move point to the beginning of the next account, or status marker (!*), as long as it is not past END.
 Return the column of the beginning of the account and leave point
 at beginning of account"
     (if (> end (point))
-	(when (re-search-forward ledger-post-account-regex (1+ end) t)  
+	(when (re-search-forward ledger-account-any-status-regex (1+ end) t)  
 	  ;; the 1+ is to make sure we can catch the newline
-	  (goto-char (match-beginning 2))
+	  (if (match-beginning 1)
+	      (goto-char (match-beginning 1))
+	      (goto-char (match-beginning 2)))
 	  (current-column))))
 
 (defun ledger-post-align-postings (&optional beg end)
   "Align all accounts and amounts within region, if there is no
 region align the posting on the current line."
   (interactive)
+  (assert (eq major-mode 'ledger-mode))
+
   (save-excursion
     (if (or (not (mark))
 	    (not (use-region-p)))
@@ -254,7 +249,7 @@ BEG, END, and LEN control how far it can align."
 (defun ledger-post-setup ()
   "Configure `ledger-mode' to auto-align postings."
   (add-hook 'after-change-functions 'ledger-post-maybe-align t t)
-  (add-hook 'after-save-hook #'(lambda () (setq ledger-post-current-list nil))))
+  (add-hook 'after-save-hook #'(lambda () (setq ledger-post-current-list nil)) t t))
 
 
 (defun ledger-post-read-account-with-prompt (prompt) 
