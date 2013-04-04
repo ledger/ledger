@@ -136,13 +136,17 @@ at beginning of account"
     (if (> end (point))
 	(when (re-search-forward ledger-account-any-status-regex (1+ end) t)  
 	  ;; the 1+ is to make sure we can catch the newline
-	  (goto-char (match-beginning 2))
+	  (if (match-beginning 1)
+	      (goto-char (match-beginning 1))
+	      (goto-char (match-beginning 2)))
 	  (current-column))))
 
 (defun ledger-post-align-postings (&optional beg end)
   "Align all accounts and amounts within region, if there is no
 region align the posting on the current line."
   (interactive)
+  (assert (eq major-mode 'ledger-mode))
+
   (save-excursion
     (if (or (not (mark))
 	    (not (use-region-p)))
@@ -245,7 +249,7 @@ BEG, END, and LEN control how far it can align."
 (defun ledger-post-setup ()
   "Configure `ledger-mode' to auto-align postings."
   (add-hook 'after-change-functions 'ledger-post-maybe-align t t)
-  (add-hook 'after-save-hook #'(lambda () (setq ledger-post-current-list nil))))
+  (add-hook 'after-save-hook #'(lambda () (setq ledger-post-current-list nil)) t t))
 
 
 (defun ledger-post-read-account-with-prompt (prompt) 
