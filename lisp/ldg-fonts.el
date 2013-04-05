@@ -126,7 +126,9 @@
      (,ledger-account-pending-regex 2 
  	      			    'ledger-font-posting-account-pending-face) ; Works
      (,ledger-account-any-status-regex 2 
-				       'ledger-font-posting-account-face)) ; Works
+				       'ledger-font-posting-account-face) ; Works
+     (,ledger-other-entries-regex 1 
+				  'ledger-font-other-face))
   "Expressions to highlight in Ledger mode.")
     
 
