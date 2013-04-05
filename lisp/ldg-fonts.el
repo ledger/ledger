@@ -50,7 +50,7 @@
   :group 'ledger-faces)
 
 (defface ledger-font-other-face
-    `((t :foreground "#657b83" :weight bold))
+    `((t :foreground "#657b83" ))
   "Default face for other transactions"
   :group 'ledger-faces)
 
@@ -132,11 +132,6 @@
   "Expressions to highlight in Ledger mode.")
     
 
-;; (defvar ledger-font-lock-keywords
-;;   `( (,ledger-other-entries-regex 1 
-;; 				  ledger-font-other-face))
-;;   "Expressions to highlight in Ledger mode.")
-    
 (provide 'ldg-fonts)
 
 ;;; ldg-fonts.el ends here
