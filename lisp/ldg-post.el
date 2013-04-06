@@ -160,7 +160,7 @@ region align the posting on the current line."
 	   (end-region (if end
 			   end
 			   (if mark-first (point) (mark))))
-	   acct-start-column amt-width acct-adjust acct-end-column
+	   acct-start-column acct-end-column acct-adjust amt-width  
 	   (lines-left 1))
       ;; Condition point and mark to the beginning and end of lines
       (goto-char end-region)
@@ -179,22 +179,20 @@ region align the posting on the current line."
 				  (goto-char (match-end 2))
 				  (current-column)))
 	  (when (/= (setq acct-adjust (- ledger-post-account-alignment-column acct-start-column)) 0)
-	    (setq acct-end-column (+ acct-end-column acct-adjust))
+	    (setq acct-end-column (+ acct-end-column acct-adjust))  ;;adjust the account ending column
 	    (if (> acct-adjust 0)
 		(insert (make-string acct-adjust ? ))
 		(delete-char acct-adjust)))
 	  (when (setq amt-width (ledger-next-amount (line-end-position)))
-	    (let ((amt-adjust (- (if (> (- ledger-post-amount-alignment-column amt-width) 
-					(+ 2 acct-end-column))
-				     ledger-post-amount-alignment-column
-				     (+ acct-end-column
-					2 amt-width)) 
-				 amt-width 
-				 (current-column))))
-	      (if (/= amt-adjust 0)
-		  (if (> amt-adjust 0)
-		      (insert (make-string amt-adjust ? ))
-		      (delete-char amt-adjust))))))  
+	    (if (/= 0 (setq amt-adjust (- (if (> (- ledger-post-amount-alignment-column amt-width) 
+						  (+ 2 acct-end-column))
+					      ledger-post-amount-alignment-column ;;we have room
+					      (+ acct-end-column 2 amt-width)) 
+					  amt-width 
+					  (current-column))))
+		(if (> amt-adjust 0)
+		    (insert (make-string amt-adjust ? ))
+		    (delete-char amt-adjust)))))  
   	(forward-line)
 	(setq lines-left (not (eobp))))
       (setq inhibit-modification-hooks nil))))
