@@ -3951,7 +3951,7 @@ functions.
 @subsubsection The @code{convert} command
 The @code{convert} command parses a comma separated value
 (csv) file and outputs Ledger transactions.  Many banks offer csv file
-downloads.  Unfortunately the file formats, aside the from commas, are
+downloads.  Unfortunately, the file formats, aside the from commas, are
 all different.  The ledger @code{convert} command tries to help as much as it
 can.
 
