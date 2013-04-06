@@ -160,7 +160,7 @@ region align the posting on the current line."
 	   (end-region (if end
 			   end
 			   (if mark-first (point) (mark))))
-	   acc-col amt-offset acc-adjust 
+	   acct-start-column amt-width acct-adjust acct-end-column
 	   (lines-left 1))
       ;; Condition point and mark to the beginning and end of lines
       (goto-char end-region)
@@ -171,29 +171,30 @@ region align the posting on the current line."
 	     (line-beginning-position)))
       
       ;; This is the guts of the alignment loop
-      (while (and (or (setq acc-col (ledger-next-account (line-end-position)))
+      (while (and (or (setq acct-start-column (ledger-next-account (line-end-position)))
 		      lines-left)
 		  (< (point) end-region))
-	(when acc-col 
-	  (when (/= (setq acc-adjust (- ledger-post-account-alignment-column acc-col)) 0)
-	    (if (> acc-adjust 0)
-		(insert (make-string acc-adjust ? ))
-		(delete-char acc-adjust)))
-	  (when (setq amt-offset (ledger-next-amount (line-end-position)))
-	    (let* ((amt-adjust (- ledger-post-amount-alignment-column 
-				  amt-offset 
-				  (current-column)
-				  2)))
+	(when acct-start-column 
+	  (setq acct-end-column (save-excursion 
+				  (goto-char (match-end 2))
+				  (current-column)))
+	  (when (/= (setq acct-adjust (- ledger-post-account-alignment-column acct-start-column)) 0)
+	    (setq acct-end-column (+ acct-end-column acct-adjust))
+	    (if (> acct-adjust 0)
+		(insert (make-string acct-adjust ? ))
+		(delete-char acct-adjust)))
+	  (when (setq amt-width (ledger-next-amount (line-end-position)))
+	    (let ((amt-adjust (- (if (> (- ledger-post-amount-alignment-column amt-width) 
+					(+ 2 acct-end-column))
+				     ledger-post-amount-alignment-column
+				     (+ acct-end-column
+					2 amt-width)) 
+				 amt-width 
+				 (current-column))))
 	      (if (/= amt-adjust 0)
 		  (if (> amt-adjust 0)
 		      (insert (make-string amt-adjust ? ))
-		      (let ((curpoint (point)))
-			(beginning-of-line)
-			(ledger-next-account (line-end-position))
-			(when (> (+ curpoint amt-adjust)
-			       (match-end 2))
-			    (goto-char curpoint)
-			    (delete-char amt-adjust))))))))  
+		      (delete-char amt-adjust))))))  
   	(forward-line)
 	(setq lines-left (not (eobp))))
       (setq inhibit-modification-hooks nil))))
