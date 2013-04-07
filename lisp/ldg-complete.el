@@ -30,9 +30,12 @@
 
 (defun ledger-parse-arguments ()
   "Parse whitespace separated arguments in the current region."
-  (let* ((info (save-excursion
-                 (cons (ledger-thing-at-point) (point))))
-         (begin (cdr info))
+  ;; this is more complex than it appears to need, so that it can work
+  ;; with pcomplete.  See pcomplete-parse-arguments-function for
+  ;; details
+  (let* ((begin (save-excursion
+		 (ledger-thing-at-point) ;; leave point at beginning of thing under point
+                 (point)))
          (end (point))
          begins args)
     (save-excursion
@@ -44,6 +47,7 @@
                           (car begins) end)
                          args)))
       (cons (reverse args) (reverse begins)))))
+
 
 (defun ledger-payees-in-buffer ()
   "Scan buffer and return list of all payees."
@@ -77,12 +81,12 @@ Return tree structure"
 		 (match-string-no-properties 2) ":"))
           (let ((root account-tree))
 	    (while account-elements
-	      (let ((entry (assoc (car account-elements) root)))
-		(if entry
-                    (setq root (cdr entry))
-		    (setq entry (cons (car account-elements) (list t)))
-		    (nconc root (list entry))
-		    (setq root (cdr entry))))
+	      (let ((xact (assoc (car account-elements) root)))
+		(if xact
+                    (setq root (cdr xact))
+		    (setq xact (cons (car account-elements) (list t)))
+		    (nconc root (list xact))
+		    (setq root (cdr xact))))
               (setq account-elements (cdr account-elements)))))))
     account-tree))
 
@@ -93,11 +97,11 @@ Return tree structure"
          (root (ledger-find-accounts-in-buffer))
          (prefix nil))
     (while (cdr elements)
-      (let ((entry (assoc (car elements) root)))
-        (if entry
+      (let ((xact (assoc (car elements) root)))
+        (if xact
             (setq prefix (concat prefix (and prefix ":")
                                  (car elements))
-                  root (cdr entry))
+                  root (cdr xact))
 	    (setq root nil elements nil)))
       (setq elements (cdr elements)))
     (and root
@@ -136,7 +140,7 @@ Return tree structure"
 		    (throw 'pcompleted t)))
 	      (ledger-accounts)))))
 
-(defun ledger-fully-complete-entry ()
+(defun ledger-fully-complete-xact ()
   "Completes a transaction if there is another matching payee in the buffer.
 Does not use ledger xact"
   (interactive)

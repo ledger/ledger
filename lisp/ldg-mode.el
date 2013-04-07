@@ -39,10 +39,22 @@
 (defvar ledger-month (ledger-current-month)
   "Start a ledger session with the current month, but make it customizable to ease retro-entry.")
 
-(defun ledger-remove-overlays ()
-  "Remove all overlays from the ledger buffer."
-  (interactive)
-  (remove-overlays))
+(defun ledger-read-account-with-prompt (prompt) 
+  (let* ((context (ledger-context-at-point))
+	 (default
+	  (if (and (eq (ledger-context-line-type context) 'acct-transaction)
+		   (eq (ledger-context-current-field context) 'account))
+	      (regexp-quote (ledger-context-field-value context 'account))
+	      nil)))
+    (ledger-read-string-with-default prompt default)))
+
+(defun ledger-read-string-with-default (prompt default)
+  "Return user supplied string after PROMPT, or DEFAULT."
+  (let ((default-prompt (concat prompt
+                                (if default
+                                    (concat " (" default "): ")
+				    ": "))))
+    (read-string default-prompt nil 'ledger-minibuffer-history default)))
 
 (defun ledger-magic-tab (&optional interactively)
   "Decide what to with with <TAB> .
@@ -59,7 +71,7 @@ Can be pcomplete, or align-posting"
   (interactive)
   (let ((context (car (ledger-context-at-point)))
 	(date-string (format-time-string (cdr (assoc "date-format" ledger-environment-alist)))))
-   (cond ((eq 'entry context)
+   (cond ((eq 'xact context)
 	  (beginning-of-line)
 	  (insert date-string "="))
 	 ((eq 'acct-transaction context)
@@ -87,7 +99,7 @@ Can be pcomplete, or align-posting"
     (set (make-local-variable 'pcomplete-termination-string) "")
 
     (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
-    (add-hook 'before-revert-hook 'ledger-remove-overlays nil t)
+    (add-hook 'before-revert-hook 'ledger-occur-remove-all-overlays nil t)
     (make-variable-buffer-local 'highlight-overlay)
     
     (ledger-init-load-init-file)
@@ -110,8 +122,8 @@ Can be pcomplete, or align-posting"
       (define-key map [(control ?c) (control ?y)] 'ledger-set-year)
      (define-key map [tab] 'ledger-magic-tab)
       (define-key map [(control ?i)] 'ledger-magic-tab)
-      (define-key map [(control ?c) tab] 'ledger-fully-complete-entry)
-      (define-key map [(control ?c) (control ?i)] 'ledger-fully-complete-entry)
+      (define-key map [(control ?c) tab] 'ledger-fully-complete-xact)
+      (define-key map [(control ?c) (control ?i)] 'ledger-fully-complete-xact)
 
       (define-key map [(control ?c) (control ?o) (control ?a)] 'ledger-report-redo)
       (define-key map [(control ?c) (control ?o) (control ?e)] 'ledger-report-edit)
@@ -155,7 +167,7 @@ Can be pcomplete, or align-posting"
       (define-key map [edit-amount] '(menu-item "Calc on Amount" ledger-post-edit-amount))
       (define-key map [sep] '(menu-item "--"))
       (define-key map [delete-xact] '(menu-item "Delete Transaction" ledger-delete-current-transaction))
-      (define-key map [cmp-xact] '(menu-item "Complete Transaction" ledger-fully-complete-entry))
+      (define-key map [cmp-xact] '(menu-item "Complete Transaction" ledger-fully-complete-xact))
       (define-key map [add-xact] '(menu-item "Add Transaction (ledger xact)" ledger-add-transaction :enable ledger-works))
       (define-key map [sep3] '(menu-item "--"))
       (define-key map [reconcile] '(menu-item "Reconcile Account" ledger-reconcile :enable ledger-works))

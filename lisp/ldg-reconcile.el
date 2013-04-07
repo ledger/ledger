@@ -377,7 +377,7 @@ moved and recentered.  If they aren't strange things happen."
 (defun ledger-reconcile ()
   "Start reconciling, prompt for account."
   (interactive)
-  (let ((account (ledger-post-read-account-with-prompt "Account to reconcile"))
+  (let ((account (ledger-read-account-with-prompt "Account to reconcile"))
 	(buf (current-buffer))
         (rbuf (get-buffer ledger-recon-buffer-name))) 
     ;; this means only one *Reconcile* buffer, ever Set up the

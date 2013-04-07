@@ -84,15 +84,15 @@ Optional argument STYLE may be `pending' or `cleared', depending
 on which type of status the caller wishes to indicate (default is
 `cleared').  Returns the new status as 'pending 'cleared or nil.
 This function is rather complicated because it must preserve both
-the overall formatting of the ledger entry, as well as ensuring
+the overall formatting of the ledger xact, as well as ensuring
 that the most minimal display format is used.  This could be
-achieved more certainly by passing the entry to ledger for
+achieved more certainly by passing the xact to ledger for
 formatting, but doing so causes inline math expressions to be
 dropped."
   (interactive)
   (let ((bounds (ledger-current-transaction-bounds))
         new-status cur-status)
-    ;; Uncompact the entry, to make it easier to toggle the
+    ;; Uncompact the xact, to make it easier to toggle the
     ;; transaction
     (save-excursion  ;; this excursion checks state of entire
 		     ;; transaction and unclears if marked
@@ -162,7 +162,7 @@ dropped."
 	     (setq new-status inserted))))
       (setq inhibit-modification-hooks nil))
 
-    ;; This excursion cleans up the entry so that it displays
+    ;; This excursion cleans up the xact so that it displays
     ;; minimally.  This means that if all posts are cleared, remove
     ;; the marks and clear the entire transaction.
     (save-excursion

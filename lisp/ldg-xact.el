@@ -67,12 +67,12 @@ within the transaction."
 	(overlay-put ovl 'priority 100))))
 
 (defun ledger-xact-payee ()
-  "Return the payee of the entry containing point or nil."
+  "Return the payee of the transaction containing point or nil."
   (let ((i 0))
     (while (eq (ledger-context-line-type (ledger-context-other-line i)) 'acct-transaction)
       (setq i (- i 1)))
     (let ((context-info (ledger-context-other-line i)))
-      (if (eq (ledger-context-line-type context-info) 'entry)
+      (if (eq (ledger-context-line-type context-info) 'xact)
           (ledger-context-field-value context-info 'payee)
 	  nil))))
 
@@ -116,21 +116,6 @@ MOMENT is an encoded date"
   (goto-char (point-min)) 
   (forward-line (1- line-number)))
 
-(defun ledger-thing-at-point ()
-  "Describe thing at points.  Return 'transaction, 'posting, or nil."
-  (let ((here (point)))
-    (goto-char (line-beginning-position))
-    (cond ((looking-at "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.+?)\\)?\\s-+")
-           (goto-char (match-end 0))
-           'transaction)
-          ((looking-at "^\\s-+\\([*!]\\s-+\\)?[[(]?\\(.\\)")
-           (goto-char (match-beginning 2))
-           'posting)
-          ((looking-at "^\\(sun\\|mon\\|tue\\|wed\\|thu\\|fri\\|sat\\)\\s-+")
-           (goto-char (match-end 0))
-           'entry)
-          (t
-           (ignore (goto-char here))))))
 
 (defun ledger-copy-transaction-at-point (date)
   "Ask for a new DATE and copy the transaction under point to that date.  Leave point on the first amount."

@@ -229,19 +229,11 @@ used to generate the buffer, navigating the buffer, etc."
       (expand-file-name ledger-master-file)
       (buffer-file-name)))
 
-(defun ledger-read-string-with-default (prompt default)
-  "Return user supplied string after PROMPT, or DEFAULT."
-  (let ((default-prompt (concat prompt
-                                (if default
-                                    (concat " (" default "): ")
-				    ": "))))
-    (read-string default-prompt nil 'ledger-minibuffer-history default)))
-
 (defun ledger-report-payee-format-specifier ()
   "Substitute a payee name.
 
    The user is prompted to enter a payee and that is substitued.  If
-   point is in an entry, the payee for that entry is used as the
+   point is in an xact, the payee for that xact is used as the
    default."
   ;; It is intended completion should be available on existing
   ;; payees, but the list of possible completions needs to be
@@ -253,11 +245,11 @@ used to generate the buffer, navigating the buffer, etc."
 
    The user is prompted to enter an account name, which can be any
    regular expression identifying an account.  If point is on an account
-   transaction line for an entry, the full account name on that line is
+   posting line for an xact, the full account name on that line is
    the default."
   ;; It is intended completion should be available on existing account
   ;; names, but it remains to be implemented.
-  (ledger-post-read-account-with-prompt "Account"))
+  (ledger-read-account-with-prompt "Account"))
 
 (defun ledger-report-expand-format-specifiers (report-cmd)
   "Expand %(account) and %(payee) appearing in REPORT-CMD with thing under point."
@@ -421,148 +413,6 @@ Optional EDIT the command."
 		 (setq ledger-report-name (ledger-report-read-new-name))
 		 (ledger-reports-add ledger-report-name ledger-report-cmd)
 		 (ledger-reports-custom-save)))))))
-
-(defconst ledger-line-config
-  '((entry
-     (("^\\(\\([0-9][0-9][0-9][0-9]/\\)?[01]?[0-9]/[0123]?[0-9]\\)[ \t]+\\(\\([!*]\\)[ \t]\\)?[ \t]*\\((\\(.*\\))\\)?[ \t]*\\(.*?\\)[ \t]*;\\(.*\\)[ \t]*$"
-       (date nil status nil nil code payee comment))
-      ("^\\(\\([0-9][0-9][0-9][0-9]/\\)?[01]?[0-9]/[0123]?[0-9]\\)[ \t]+\\(\\([!*]\\)[ \t]\\)?[ \t]*\\((\\(.*\\))\\)?[ \t]*\\(.*\\)[ \t]*$"
-       (date nil status nil nil code payee))))
-    (acct-transaction
-     (("^\\([ \t]+;\\|;\\)\\s-?\\(.*\\)"
-       (indent comment))
-      ("\\(^[ \t]+\\)\\([:A-Za-z0-9]+?\\)\\s-\\s-+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)$"
-       (indent account commodity amount))
-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
-       (indent account commodity amount nil comment))
-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*\\(;[ \t]*\\(.*?\\)[ \t]*$\\|@+\\)"
-       (indent account amount nil commodity comment))
-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?[0-9]+\\(\\.[0-9]*\\)?\\)[ \t]+\\(.*?\\)[ \t]*$"
-       (indent account amount nil commodity))
-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?\\(\\.[0-9]*\\)\\)[ \t]+\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
-       (indent account amount nil commodity comment))
-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\(-?\\(\\.[0-9]*\\)\\)[ \t]+\\(.*?\\)[ \t]*$"
-       (indent account amount nil commodity))
-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
-       (indent account comment))
-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]*$"
-       (indent account))
-
-;; Bad regexes
-      ("\\(^[ \t]+\\)\\(.*?\\)[ \t]+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*$"
-       (indent account commodity amount nil))
-
-      ))))
-
-(defun ledger-extract-context-info (line-type pos)
-  "Get context info for current line with LINE-TYPE.
-
-Assumes point is at beginning of line, and the POS argument specifies
-where the \"users\" point was."
-  (let ((linfo (assoc line-type ledger-line-config))
-        found field fields)
-    (dolist (re-info (nth 1 linfo))
-      (let ((re (nth 0 re-info))
-            (names (nth 1 re-info)))
-        (unless found
-          (when (looking-at re)
-            (setq found t)
-            (dotimes (i (length names))
-              (when (nth i names)
-                (setq fields (append fields
-                                     (list
-                                      (list (nth i names)
-                                            (match-string-no-properties (1+ i))
-                                            (match-beginning (1+ i))))))))
-            (dolist (f fields)
-              (and (nth 1 f)
-                   (>= pos (nth 2 f))
-                   (setq field (nth 0 f))))))))
-    (list line-type field fields)))
-
-(defun ledger-context-at-point ()
-  "Return a list describing the context around point.
-
-The contents of the list are the line type, the name of the field
-point containing point, and for selected line types, the content of
-the fields in the line in a association list."
-  (let ((pos (point)))
-    (save-excursion
-      (beginning-of-line)
-      (let ((first-char (char-after)))
-        (cond ((equal (point) (line-end-position))
-               '(empty-line nil nil))
-              ((memq first-char '(?\ ?\t))
-               (ledger-extract-context-info 'acct-transaction pos))
-              ((memq first-char '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
-               (ledger-extract-context-info 'entry pos))
-              ((equal first-char ?\=)
-               '(automated-entry nil nil))
-              ((equal first-char ?\~)
-               '(period-entry nil nil))
-              ((equal first-char ?\!)
-               '(command-directive))
-              ((equal first-char ?\;)
-               '(comment nil nil))
-              ((equal first-char ?Y)
-               '(default-year nil nil))
-              ((equal first-char ?P)
-               '(commodity-price nil nil))
-              ((equal first-char ?N)
-               '(price-ignored-commodity nil nil))
-              ((equal first-char ?D)
-               '(default-commodity nil nil))
-              ((equal first-char ?C)
-               '(commodity-conversion nil nil))
-              ((equal first-char ?i)
-               '(timeclock-i nil nil))
-              ((equal first-char ?o)
-               '(timeclock-o nil nil))
-              ((equal first-char ?b)
-               '(timeclock-b nil nil))
-              ((equal first-char ?h)
-               '(timeclock-h  nil nil))
-              (t
-               '(unknown nil nil)))))))
-
-(defun ledger-context-other-line (offset)
-  "Return a list describing context of line OFFSET from existing position.
-
-Offset can be positive or negative.  If run out of buffer before reaching
-specified line, returns nil."
-  (save-excursion
-    (let ((left (forward-line offset)))
-      (if (not (equal left 0))
-          nil
-	  (ledger-context-at-point)))))
-
-(defun ledger-context-line-type (context-info)
-  (nth 0 context-info))
-
-(defun ledger-context-current-field (context-info)
-  (nth 1 context-info))
-
-(defun ledger-context-field-info (context-info field-name)
-  (assoc field-name (nth 2 context-info)))
-
-(defun ledger-context-field-present-p (context-info field-name)
-  (not (null (ledger-context-field-info context-info field-name))))
-
-(defun ledger-context-field-value (context-info field-name)
-  (nth 1 (ledger-context-field-info context-info field-name)))
-
-(defun ledger-context-field-position (context-info field-name)
-  (nth 2 (ledger-context-field-info context-info field-name)))
-
-(defun ledger-context-field-end-position (context-info field-name)
-  (+ (ledger-context-field-position context-info field-name)
-     (length (ledger-context-field-value context-info field-name))))
-
-(defun ledger-context-goto-field-start (context-info field-name)
-  (goto-char (ledger-context-field-position context-info field-name)))
-
-(defun ledger-context-goto-field-end (context-info field-name)
-  (goto-char (ledger-context-field-end-position context-info field-name)))
 
 (provide 'ldg-report)
 

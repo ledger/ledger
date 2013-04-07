@@ -37,6 +37,7 @@
 (require 'esh-arg)
 (require 'ldg-commodities)
 (require 'ldg-complete)
+(require 'ldg-context)
 (require 'ldg-exec)
 (require 'ldg-fonts)
 (require 'ldg-init)
