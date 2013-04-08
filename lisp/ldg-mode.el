@@ -62,16 +62,12 @@ And calculate the target-delta of the account being reconciled."
   (interactive)
   
   (let* ((account (ledger-read-account-with-prompt "Account balance to show"))
-	 (pending (ledger-reconcile-get-cleared-or-pending-balance (current-buffer) account)))
-    (when pending
-	(if ledger-target
-	    (message "%s balance: %s,   Difference from target: %s"
-		     account
-		     (ledger-commodity-to-string pending)
-		     (ledger-commodity-to-string (-commodity ledger-target pending)))
-	    (message "%s balance: %s"
-		     account
-		     (ledger-commodity-to-string pending))))))
+	 (buffer (current-buffer))
+	 (balance (with-temp-buffer
+		    (ledger-exec-ledger buffer (current-buffer) "cleared" account)
+		    (buffer-substring-no-properties (point-min) (1- (point-max))))))
+    (when balance      
+      (message balance))))
 
 (defun ledger-magic-tab (&optional interactively)
   "Decide what to with with <TAB> .
