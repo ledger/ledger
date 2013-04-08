@@ -56,6 +56,21 @@
 				    ": "))))
     (read-string default-prompt nil 'ledger-minibuffer-history default)))
 
+(defun ledger-display-balance-at-point ()
+  "Display the cleared-or-pending balance.
+And calculate the target-delta of the account being reconciled."
+  (interactive)
+  
+  (let* ((account (ledger-read-account-with-prompt "Account balance to show"))
+	 (pending (ledger-reconcile-get-cleared-or-pending-balance (current-buffer) account)))
+    (when pending
+	(if ledger-target
+	    (message "Pending balance: %s,   Difference from target: %s"
+		     (ledger-commodity-to-string pending)
+		     (ledger-commodity-to-string (-commodity ledger-target pending)))
+	    (message "Pending balance: %s"
+		     (ledger-commodity-to-string pending))))))
+
 (defun ledger-magic-tab (&optional interactively)
   "Decide what to with with <TAB> .
 Can be pcomplete, or align-posting"
@@ -120,6 +135,7 @@ Can be pcomplete, or align-posting"
       (define-key map [(control ?c) (control ?t)] 'ledger-insert-effective-date)
       (define-key map [(control ?c) (control ?u)] 'ledger-schedule-upcoming)
       (define-key map [(control ?c) (control ?y)] 'ledger-set-year)
+      (define-key map [(control ?c) (control ?p)] 'ledger-display-balance-at-point)
      (define-key map [tab] 'ledger-magic-tab)
       (define-key map [(control ?i)] 'ledger-magic-tab)
       (define-key map [(control ?c) tab] 'ledger-fully-complete-xact)
@@ -163,6 +179,7 @@ Can be pcomplete, or align-posting"
       (define-key map [toggle-xact] '(menu-item "Toggle Current Transaction" ledger-toggle-current-transaction))
       (define-key map [sep4] '(menu-item "--"))
       (define-key map [recon-account] '(menu-item "Reconcile Account" ledger-reconcile))
+      (define-key map [check-balance] '(menu-item "Check Balance" ledger-display-balance-at-point))
       (define-key map [sep6] '(menu-item "--"))
       (define-key map [edit-amount] '(menu-item "Calc on Amount" ledger-post-edit-amount))
       (define-key map [sep] '(menu-item "--"))
