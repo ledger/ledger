@@ -1236,7 +1236,7 @@ For example, you do not need to tell Ledger about the accounts you
 use.  Any time Ledger sees a posting involving an account it knows
 nothing about, it will create it@footnote{This also means if you
 misspell an account it will end up getting counted separately from what
-you intended.  The provided EMACS major mode provides for automatically
+you intended.  The provided Emacs major mode provides for automatically
 filling in account names.}.  If you use a commodity that is new to
 Ledger, it will create that commodity, and determine its display
 characteristics (placement of the symbol before or after the amount,
@@ -3925,7 +3925,7 @@ file whose formatting has gotten out of hand.
 @menu
 * Comma Separated Variable files::  
 * The lisp command::            
-* EMACS org mode::              
+* Emacs Org mode::              
 * The pricemap Command::        
 * The xml Command::             
 * prices and pricedb::          
@@ -4039,11 +4039,11 @@ passed through @code{ledger print} a second time if you want to match on the
 new payee field. During the @code{ledger convert} run only the original payee
 name as specified in the csv data seems to be used.
 
-@node The lisp command, EMACS org mode, Comma Separated Variable files, Reports in other Formats
+@node The lisp command, Emacs Org mode, Comma Separated Variable files, Reports in other Formats
 @subsection The @code{lisp} command
 
 The @command{lisp} command outputs results in a form that can be read
-directly by EMACS Lisp.  The format of the @code{sexp} is:
+directly by Emacs Lisp.  The format of the @code{sexp} is:
 
 @smallexample
 ((BEG-POS CLEARED DATE CODE PAYEE
@@ -4053,10 +4053,10 @@ directly by EMACS Lisp.  The format of the @code{sexp} is:
 
 @noindent @code{emacs} can also be used as a synonym for @code{lisp}
 
-@node EMACS org mode, The pricemap Command, The lisp command, Reports in other Formats
-@subsection EMACS @code{org} Mode
+@node Emacs Org mode, The pricemap Command, The lisp command, Reports in other Formats
+@subsection Emacs @code{org} Mode
 The @code{org} command produces a journal file suitable for use in the
-EMACS org mode.  More details on using org mode can be found at
+Emacs Org mode.  More details on using Org mode can be found at
 @url{http://www.orgmode.org}.
 
 Org mode has a sub-system known as Babel which allows for literate
@@ -4069,7 +4069,7 @@ have ledger commands embedded in a text file and have the output of
 ledger commands also appear in the text file.  The output can be
 updated whenever any new ledger entries are added.
 
-For instance, the following org mode text document snippet illustrates a
+For instance, the following Org mode text document snippet illustrates a
 very naive but still useful of the @code{org+babel} system:
 
 @smallexample
@@ -4110,7 +4110,7 @@ You can combine multiple source code blocks before executing ledger and
 do all kinds of other wonderful things with Babel (and org).
 
 
-@subsection Org-mode with Babel
+@subsection Org mode with Babel
 
 Using Babel, it is possible to record financial transactions
 conveniently in an org file and subsequently generate the financial
@@ -4363,7 +4363,7 @@ file and manipulated using Babel. However, only simple Ledger features
 have been illustrated; please refer to the Ledger documentation for
 examples of more complex operations with a ledger.
 
-@node The pricemap Command, The xml Command, EMACS org mode, Reports in other Formats
+@node The pricemap Command, The xml Command, Emacs Org mode, Reports in other Formats
 @subsection The @code{pricemap} Command
 
 If you have the @code{graphviz} graph visualization package installed, ledger
@@ -4719,7 +4719,7 @@ commands.
 @item @code{csv} @tab Show transactions in csv format, for exporting to other programs
 @item @code{print} @tab  Print transaction in a ledger readable format
 @item @code{xml} @tab Produce XML output of the register command
-@item @code{emacs} @tab Produce EMACS lisp output
+@item @code{emacs} @tab Produce Emacs lisp output
 @item @code{equity} @tab Print account balances as transactions
 @item @code{prices} @tab Print price history for matching commodities
 @item @code{pricedb} @tab Print price history for matching commodities in ledger readable format
@@ -6507,7 +6507,7 @@ ACCOUNT.  If the checkout uses a capital ``O'', the transaction is marked
 Now, there are a few ways to generate this information.  You can use the
 @file{timeclock.el} package, which is part of Emacs.  Or you can write a
 simple script in whichever language you prefer to emit similar
-information.  Or you can use Org-mode's time-clocking abilities and the
+information.  Or you can use Org mode's time-clocking abilities and the
 org2tc script developed by John Wiegly.
 
 These timelog entries can appear in a separate file, or directly in your
