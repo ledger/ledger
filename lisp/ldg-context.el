@@ -41,6 +41,15 @@
 (defconst code-string "\\((\\(.*\\))\\)?")
 (defconst payee-string "\\(.*\\)")
 
+(defmacro line-regex (&rest elements)
+  (let (regex-string)
+    (concat (dolist (e elements regex-string)
+	      (setq regex-string 
+		    (concat regex-string 
+			    (eval 
+			     (intern 
+			      (concat (symbol-name e) "-string")))))) "[ \t]*$")))
+
 (defmacro single-line-config (&rest elements)
 "Take list of ELEMENTS and return regex and element list for use in context-at-point"
   (let (regex-string)
@@ -96,8 +105,8 @@ where the \"users\" point was."
 Leave point at the beginning of the thing under point"
   (let ((here (point)))
     (goto-char (line-beginning-position))
-    (cond ((looking-at "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.+?)\\)?\\s-+")
-           (goto-char (match-end 0))
+    (cond ((looking-at "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.+?)\\)?\\s-+") 
+	   (goto-char (match-end 0))
            'transaction)
           ((looking-at "^\\s-+\\([*!]\\s-+\\)?[[(]?\\(.\\)")
            (goto-char (match-beginning 2))

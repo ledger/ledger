@@ -39,17 +39,14 @@ within the transaction."
   (interactive "d")
   (save-excursion
     (goto-char pos)
-    (let ((end-pos pos)
-	  (beg-pos pos))
-      (backward-paragraph)
-      (if (/= (point) (point-min))
-	  (forward-line))
-      (setq beg-pos (line-beginning-position))
-      (forward-paragraph)
-      (forward-line -1)
-      (setq end-pos (1+ (line-end-position)))
-      (list beg-pos end-pos))))
-
+    (list (progn
+	    (backward-paragraph)
+	    (if (/= (point) (point-min))
+		(forward-line))
+	    (line-beginning-position))
+	  (progn
+	    (forward-paragraph)
+	    (line-beginning-position)))))
 
 (defun ledger-highlight-xact-under-point ()
   "Move the highlight overlay to the current transaction."
@@ -75,6 +72,12 @@ within the transaction."
       (if (eq (ledger-context-line-type context-info) 'xact)
           (ledger-context-field-value context-info 'payee)
 	  nil))))
+
+(defun ledger-time-less-p (t1 t2)
+  "Say whether time value T1 is less than time value T2."
+  (or (< (car t1) (car t2))
+      (and (= (car t1) (car t2))
+           (< (nth 1 t1) (nth 1 t2)))))
 
 (defun ledger-xact-find-slot (moment)
   "Find the right place in the buffer for a transaction at MOMENT.
@@ -137,6 +140,49 @@ MOMENT is an encoded date"
     (re-search-forward ledger-iso-date-regexp)
     (replace-match date)
     (ledger-next-amount)))
+
+(defun ledger-delete-current-transaction (pos)
+  "Delete the transaction surrounging point."
+  (interactive "d")
+  (let ((bounds (ledger-find-xact-extents pos)))
+    (delete-region (car bounds) (cadr bounds))))
+
+(defun ledger-add-transaction (transaction-text &optional insert-at-point)
+  "Use ledger xact TRANSACTION-TEXT to add a transaction to the buffer.
+If INSERT-AT-POINT is non-nil insert the transaction
+there, otherwise call `ledger-xact-find-slot' to insert it at the
+correct chronological place in the buffer."
+  (interactive (list
+		(read-string "Transaction: " (concat ledger-year "/" ledger-month "/"))))
+  (let* ((args (with-temp-buffer
+                 (insert transaction-text)
+                 (eshell-parse-arguments (point-min) (point-max))))
+         (ledger-buf (current-buffer))
+         exit-code)
+    (unless insert-at-point
+      (let ((date (car args)))
+        (if (string-match ledger-iso-date-regexp date)
+            (setq date
+                  (encode-time 0 0 0 (string-to-number (match-string 4 date))
+                               (string-to-number (match-string 3 date))
+                               (string-to-number (match-string 2 date)))))
+        (ledger-xact-find-slot date)))
+    (if (> (length args) 1)
+	(save-excursion
+	  (insert
+	   (with-temp-buffer
+	     (setq exit-code
+		   (apply #'ledger-exec-ledger ledger-buf (current-buffer) "xact"
+			  (mapcar 'eval args)))
+	     (goto-char (point-min))
+	     (if (looking-at "Error: ")
+		 (error (concat "Error in ledger-add-transaction: " (buffer-string)))
+		 (buffer-string)))
+	   "\n"))
+	(progn
+	  (insert (car args) " \n\n")
+	  (end-of-line -1)))))
+
 
 (provide 'ldg-xact)
 

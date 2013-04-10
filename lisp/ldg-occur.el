@@ -96,8 +96,8 @@ When REGEX is nil, unhide everything, and remove higlight"
   (interactive
    (if ledger-occur-mode
        (list nil)
-       (list (read-string (concat "Regexp<" (ledger-occur-prompt)
-				  ">: ") nil 'ledger-occur-history (ledger-occur-prompt)))))
+       (list (read-string (concat "Regexp<" (ledger-occur-prompt) ">: ") 
+			  nil 'ledger-occur-history (ledger-occur-prompt)))))
   (ledger-occur-mode regex (current-buffer)))
 
 (defun ledger-occur-prompt ()
@@ -121,21 +121,12 @@ When REGEX is nil, unhide everything, and remove higlight"
 (defun ledger-occur-create-narrowed-overlays(buffer-matches)
   (if buffer-matches
       (let ((overlays
-             (let ((prev-end (point-min))
-                   (temp (point-max)))
+             (let ((prev-end (point-min)))
                (mapcar (lambda (match)
-                         (progn
-                           (setq temp prev-end) ;; need a swap so that
-						;; the last form in
-						;; the lambda is the
-						;; (make-overlay)
-                           (setq prev-end (1+ (cadr match)))
-					;; add 1 so that we skip the
-					;; empty line after the xact
-                           (make-overlay
-                            temp
-                            (car match)
-                            (current-buffer) t nil)))
+                         (prog1
+			     (make-overlay prev-end (car match)
+					   (current-buffer) t nil)
+                           (setq prev-end (1+ (cadr match)))))
                        buffer-matches))))
         (mapcar (lambda (ovl)
                   (overlay-put ovl ledger-occur-overlay-property-name t)
@@ -151,10 +142,9 @@ When REGEX is nil, unhide everything, and remove higlight"
 Argument OVL-BOUNDS contains bounds for the transactions to be left visible."
   (let ((overlays
          (mapcar (lambda (bnd)
-                   (make-overlay
-                    (car bnd)
-                    (cadr bnd)
-                    (current-buffer) t nil))
+                   (make-overlay (car bnd)
+				 (cadr bnd)
+				 (current-buffer) t nil))
                  ovl-bounds)))
     (mapcar (lambda (ovl)
 	      (overlay-put ovl ledger-occur-overlay-property-name t)
@@ -196,9 +186,9 @@ Used for coordinating `ledger-occur' with other buffers, like reconcile."
   (save-excursion
     (goto-char (point-min))
     ;; Set initial values for variables
-    (let ((curpoint nil)
-          (endpoint nil)
-          (lines (list)))
+    (let (curpoint 
+	  endpoint
+	  (lines (list)))
       ;; Search loop
       (while (not (eobp))
         (setq curpoint (point))

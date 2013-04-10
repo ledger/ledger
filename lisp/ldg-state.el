@@ -30,15 +30,6 @@
   :type 'boolean
   :group 'ledger)
 
-(defun ledger-toggle-state (state &optional style)
-  "Return the correct toggle state given the current STATE, and STYLE."
-  (if (not (null state))
-      (if (and style (eq style 'cleared))
-          'cleared)
-      (if (and style (eq style 'pending))
-	  'pending
-	  'cleared)))
-
 (defun ledger-transaction-state ()
   "Return the state of the transaction at point."
   (save-excursion
@@ -69,14 +60,10 @@
 
 (defun ledger-state-from-char (state-char)
   "Get state from STATE-CHAR."
-  (cond ((eql state-char ?\!)
-	 'pending)
-	((eql state-char ?\*)
-	 'cleared)
-	((eql state-char ?\;)
-	 'comment)
-	(t
-	 nil)))
+  (cond ((eql state-char ?\!) 'pending)
+	((eql state-char ?\*) 'cleared)
+	((eql state-char ?\;) 'comment)
+	(t nil)))
 
 (defun ledger-toggle-current-posting (&optional style)
   "Toggle the cleared status of the transaction under point.
@@ -90,7 +77,7 @@ achieved more certainly by passing the xact to ledger for
 formatting, but doing so causes inline math expressions to be
 dropped."
   (interactive)
-  (let ((bounds (ledger-current-transaction-bounds))
+  (let ((bounds (ledger-find-xact-extents (point)))
         new-status cur-status)
     ;; Uncompact the xact, to make it easier to toggle the
     ;; transaction
@@ -232,27 +219,25 @@ dropped."
 (defun ledger-toggle-current-transaction (&optional style)
   "Toggle the transaction at point using optional STYLE."
   (interactive)
-  (let (status)
-    (save-excursion
-      (when (or (looking-at "^[0-9]")
-                (re-search-backward "^[0-9]" nil t))
-        (skip-chars-forward "0-9./=\\-")
-        (delete-horizontal-space)
-        (if (or (eq (ledger-state-from-char (char-after)) 'pending)
-		(eq (ledger-state-from-char (char-after)) 'cleared))
-            (progn
-              (delete-char 1)
-              (when (and style (eq style 'cleared))		
-		(insert " *")
-		(setq status 'cleared)))
-	    (if (and style (eq style 'pending))
-		(progn
-		  (insert " ! ")
-		  (setq status 'pending))
-		(progn
-		  (insert " * ")
-		  (setq status 'cleared))))))
-    status))
+  (save-excursion
+    (when (or (looking-at "^[0-9]")
+	      (re-search-backward "^[0-9]" nil t))
+      (skip-chars-forward "0-9./=\\-")
+      (delete-horizontal-space)
+      (if (or (eq (ledger-state-from-char (char-after)) 'pending)
+	      (eq (ledger-state-from-char (char-after)) 'cleared))
+	  (progn
+	    (delete-char 1)
+	    (when (and style (eq style 'cleared))		
+	      (insert " *")
+	      'cleared))
+	  (if (and style (eq style 'pending))
+	      (progn
+		(insert " ! ")
+		'pending)
+	      (progn
+		(insert " * ")
+		'cleared))))))
 
 (provide 'ldg-state)
 

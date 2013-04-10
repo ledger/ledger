@@ -41,26 +41,24 @@
 
 (defun ledger-read-account-with-prompt (prompt) 
   (let* ((context (ledger-context-at-point))
-	 (default
-	  (if (and (eq (ledger-context-line-type context) 'acct-transaction)
-		   (eq (ledger-context-current-field context) 'account))
-	      (regexp-quote (ledger-context-field-value context 'account))
-	      nil)))
+	 (default (if (and (eq (ledger-context-line-type context) 'acct-transaction)
+			   (eq (ledger-context-current-field context) 'account))
+		      (regexp-quote (ledger-context-field-value context 'account))
+		      nil)))
     (ledger-read-string-with-default prompt default)))
 
 (defun ledger-read-string-with-default (prompt default)
   "Return user supplied string after PROMPT, or DEFAULT."
-  (let ((default-prompt (concat prompt
-                                (if default
-                                    (concat " (" default "): ")
-				    ": "))))
-    (read-string default-prompt nil 'ledger-minibuffer-history default)))
+  (read-string (concat prompt
+		       (if default
+			   (concat " (" default "): ")
+			   ": ")) 
+	       nil 'ledger-minibuffer-history default))
 
 (defun ledger-display-balance-at-point ()
   "Display the cleared-or-pending balance.
 And calculate the target-delta of the account being reconciled."
   (interactive)
-  
   (let* ((account (ledger-read-account-with-prompt "Account balance to show"))
 	 (buffer (current-buffer))
 	 (balance (with-temp-buffer
@@ -134,7 +132,7 @@ Can be pcomplete, or align-posting"
       (define-key map [(control ?c) (control ?u)] 'ledger-schedule-upcoming)
       (define-key map [(control ?c) (control ?y)] 'ledger-set-year)
       (define-key map [(control ?c) (control ?p)] 'ledger-display-balance-at-point)
-     (define-key map [tab] 'ledger-magic-tab)
+      (define-key map [tab] 'ledger-magic-tab)
       (define-key map [(control ?i)] 'ledger-magic-tab)
       (define-key map [(control ?c) tab] 'ledger-fully-complete-xact)
       (define-key map [(control ?c) (control ?i)] 'ledger-fully-complete-xact)
@@ -188,18 +186,7 @@ Can be pcomplete, or align-posting"
       (define-key map [reconcile] '(menu-item "Reconcile Account" ledger-reconcile :enable ledger-works))
       (define-key map [reconcile] '(menu-item "Narrow to REGEX" ledger-occur))))
 
-(defun ledger-time-less-p (t1 t2)
-  "Say whether time value T1 is less than time value T2."
-  (or (< (car t1) (car t2))
-      (and (= (car t1) (car t2))
-           (< (nth 1 t1) (nth 1 t2)))))
 
-(defun ledger-time-subtract (t1 t2)
-  "Subtract two time values, T1 - T2.
-Return the difference in the format of a time value."
-  (let ((borrow (< (cadr t1) (cadr t2))))
-    (list (- (car t1) (car t2) (if borrow 1 0))
-          (- (+ (if borrow 65536 0) (cadr t1)) (cadr t2)))))
 
 
 (defun ledger-set-year (newyear)
@@ -216,57 +203,7 @@ Return the difference in the format of a time value."
       (setq ledger-month (read-string "Month: " (ledger-current-month)))
       (setq ledger-month (format "%02d" newmonth))))
 
-(defun ledger-add-transaction (transaction-text &optional insert-at-point)
-  "Use ledger xact TRANSACTION-TEXT to add a transaction to the buffer.
-If INSERT-AT-POINT is non-nil insert the transaction
-there, otherwise call `ledger-xact-find-slot' to insert it at the
-correct chronological place in the buffer."
-  (interactive (list
-		(read-string "Transaction: " (concat ledger-year "/" ledger-month "/"))))
-  (let* ((args (with-temp-buffer
-                 (insert transaction-text)
-                 (eshell-parse-arguments (point-min) (point-max))))
-         (ledger-buf (current-buffer))
-         exit-code)
-    (unless insert-at-point
-      (let ((date (car args)))
-        (if (string-match ledger-iso-date-regexp date)
-            (setq date
-                  (encode-time 0 0 0 (string-to-number (match-string 4 date))
-                               (string-to-number (match-string 3 date))
-                               (string-to-number (match-string 2 date)))))
-        (ledger-xact-find-slot date)))
-    (if (> (length args) 1)
-	(save-excursion
-	  (insert
-	   (with-temp-buffer
-	     (setq exit-code
-		   (apply #'ledger-exec-ledger ledger-buf (current-buffer) "xact"
-			  (mapcar 'eval args)))
-	     (goto-char (point-min))
-	     (if (looking-at "Error: ")
-		 (error (concat "Error in ledger-add-transaction: " (buffer-string)))
-		 (buffer-string)))
-	   "\n"))
-	(progn
-	  (insert (car args) " \n\n")
-	  (end-of-line -1)))))
 
-(defun ledger-current-transaction-bounds ()
-  "Return markers for the beginning and end of transaction surrounding point."
-  (save-excursion
-    (when (or (looking-at "^[0-9]")
-              (re-search-backward "^[0-9]" nil t))
-      (let ((beg (point)))
-        (while (not (eolp))
-          (forward-line))
-        (cons (copy-marker beg) (point-marker))))))
-
-(defun ledger-delete-current-transaction ()
-  "Delete the transaction surrounging point."
-  (interactive)
-  (let ((bounds (ledger-current-transaction-bounds)))
-    (delete-region (car bounds) (cdr bounds))))
 
 (provide 'ldg-mode)
 

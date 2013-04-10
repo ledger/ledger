@@ -69,23 +69,23 @@
 
 (declare-function iswitchb-read-buffer "iswitchb"
                   (prompt &optional default require-match start matches-set))
+
 (defvar iswitchb-temp-buflist)
 
 (defun ledger-post-completing-read (prompt choices)
   "Use iswitchb as a `completing-read' replacement to choose from choices.
-PROMPT is a string to prompt with.  CHOICES is a list of
-   strings to choose from."
-  (cond
-    ((eq ledger-post-use-completion-engine :iswitchb)
-     (let* ((iswitchb-use-virtual-buffers nil)
-	    (iswitchb-make-buflist-hook
-	     (lambda ()
-	       (setq iswitchb-temp-buflist choices))))
-       (iswitchb-read-buffer prompt)))
-    ((eq ledger-post-use-completion-engine :ido)
-     (ido-completing-read prompt choices))
-    (t
-     (completing-read prompt choices))))
+PROMPT is a string to prompt with.  CHOICES is a list of strings
+to choose from."
+  (cond ((eq ledger-post-use-completion-engine :iswitchb)
+	 (let* ((iswitchb-use-virtual-buffers nil)
+		(iswitchb-make-buflist-hook
+		 (lambda ()
+		   (setq iswitchb-temp-buflist choices))))
+	   (iswitchb-read-buffer prompt)))
+	((eq ledger-post-use-completion-engine :ido)
+	 (ido-completing-read prompt choices))
+	(t
+	 (completing-read prompt choices))))
 
 (defvar ledger-post-current-list nil)
 
