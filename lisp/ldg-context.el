@@ -28,7 +28,8 @@
 (eval-when-compile
   (require 'cl))
 
-
+;; *-string constants are assembled in the single-line-config macro to
+;; form the regex and list of elements
 (defconst indent-string "\\(^[ \t]+\\)")
 (defconst status-string "\\([*! ]?\\)")
 (defconst account-string "[\\[(]?\\(.*?\\)[])]?")
@@ -49,20 +50,20 @@
 			 (eval 
 			  (intern 
 			   (concat (symbol-name e) "-string")))))) "[ \t]*$")
-      ,(append elements))))
+       ,elements)))
 
 
 (defconst ledger-line-config
-  `((xact (,(single-line-config date nil status nil nil code payee comment)
-	    ,(single-line-config date nil status nil nil code payee)))
-    (acct-transaction (,(single-line-config indent comment)
-			,(single-line-config indent status account commodity amount nil comment)
-			,(single-line-config indent status account commodity amount)
-			,(single-line-config indent status account amount nil commodity comment)
-			,(single-line-config indent status account amount nil commodity)
-			,(single-line-config indent status account amount)
-			,(single-line-config indent status account comment)
-			,(single-line-config indent status account)))))
+  (list (list 'xact (list (single-line-config date nil status nil nil code payee comment)
+			  (single-line-config date nil status nil nil code payee)))
+	(list 'acct-transaction (list (single-line-config indent comment)
+				      (single-line-config indent status account commodity amount nil comment)
+				      (single-line-config indent status account commodity amount)
+				      (single-line-config indent status account amount nil commodity comment)
+				      (single-line-config indent status account amount nil commodity)
+				      (single-line-config indent status account amount)
+				      (single-line-config indent status account comment)
+				      (single-line-config indent status account)))))
 
 (defun ledger-extract-context-info (line-type pos)
   "Get context info for current line with LINE-TYPE.
