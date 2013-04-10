@@ -32,11 +32,11 @@
 ;; form the regex and list of elements
 (defconst indent-string "\\(^[ \t]+\\)")
 (defconst status-string "\\([*! ]?\\)")
-(defconst account-string "[\\[(]?\\(.*?\\)[])]?")
-(defconst amount-string "\\s-\\s-[ \t]+\\(-?[0-9]+\\.[0-9]*\\)")
+(defconst account-string "[\\[(]?\\(.*?\\)[])]?[ \t]\\{2\\}")
+(defconst amount-string "[ \t]?\\(-?[0-9]+\\.[0-9]*\\)")
 (defconst comment-string "[ \t]*;[ \t]*\\(.*?\\)")
 (defconst nil-string "[ \t]+")
-(defconst commodity-string "\\(.*\\)")
+(defconst commodity-string "\\(.+?\\)")
 (defconst date-string "^\\(\\([0-9]\\{4\\}[/-]\\)?[01]?[0-9][/-][0123]?[0-9]\\)")
 (defconst code-string "\\((\\(.*\\))\\)?")
 (defconst payee-string "\\(.*\\)")
@@ -50,7 +50,7 @@
 			     (intern 
 			      (concat (symbol-name e) "-string")))))) "[ \t]*$")))
 
-(defmacro single-line-config (&rest elements)
+(defmacro single-line-config2 (&rest elements)
 "Take list of ELEMENTS and return regex and element list for use in context-at-point"
   (let (regex-string)
     `'(,(concat (dolist (e elements regex-string)
@@ -61,6 +61,10 @@
 			   (concat (symbol-name e) "-string")))))) "[ \t]*$")
        ,elements)))
 
+(defmacro single-line-config (&rest elements)
+  "Take list of ELEMENTS and return regex and element list for use in context-at-point"
+  `'(,(eval `(line-regex ,@elements))		  
+     ,elements))
 
 (defconst ledger-line-config
   (list (list 'xact (list (single-line-config date nil status nil nil code payee comment)
