@@ -29,27 +29,40 @@
   (require 'cl))
 
 
+(defconst indent-string "\\(^[ \t]+\\)")
+(defconst status-string "\\([*! ]?\\)")
+(defconst account-string "[\\[(]?\\(.*?\\)[])]?")
+(defconst amount-string "\\s-\\s-[ \t]+\\(-?[0-9]+\\.[0-9]*\\)")
+(defconst comment-string "[ \t]*;[ \t]*\\(.*?\\)")
+(defconst nil-string "[ \t]+")
+(defconst commodity-string "\\(.*\\)")
+(defconst date-string "^\\(\\([0-9]\\{4\\}[/-]\\)?[01]?[0-9][/-][0123]?[0-9]\\)")
+(defconst code-string "\\((\\(.*\\))\\)?")
+(defconst payee-string "\\(.*\\)")
+
+(defmacro single-line-config (&rest elements)
+"Take list of ELEMENTS and return regex and element list for use in context-at-point"
+  (let (regex-string)
+    `'(,(concat (dolist (e elements regex-string)
+	   (setq regex-string 
+		 (concat regex-string 
+			 (eval 
+			  (intern 
+			   (concat (symbol-name e) "-string")))))) "[ \t]*$")
+      ,(append elements))))
+
+
 (defconst ledger-line-config
-  '((xact
-     (("^\\(\\([0-9][0-9][0-9][0-9]/\\)?[01]?[0-9]/[0123]?[0-9]\\)[ \t]+\\(\\([!*]\\)[ \t]\\)?[ \t]*\\((\\(.*\\))\\)?[ \t]*\\(.*?\\)[ \t]*;\\(.*\\)[ \t]*$"
-       (date nil status nil nil code payee comment))
-      ("^\\(\\([0-9][0-9][0-9][0-9]/\\)?[01]?[0-9]/[0123]?[0-9]\\)[ \t]+\\(\\([!*]\\)[ \t]\\)?[ \t]*\\((\\(.*\\))\\)?[ \t]*\\(.*\\)[ \t]*$"
-       (date nil status nil nil code payee))))
-    (acct-transaction
-     (("^\\([ \t]+;\\|;\\)\\s-?\\(.*\\)"
-       (indent comment))
-      ("\\(^[ \t]+\\)\\([*! ]?\\)\\(.*?\\)\\s-\\s-[ \t]+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)[ \t]*;[ \t]*\\(.*\\)[ \t]*$"
-       (indent status account commodity amount nil comment)) ;checked 2013-04-06 
-      ("\\(^[ \t]+\\)\\([*! ]?\\)\\(.*?\\)\\s-\\s-[ \t]+\\([$€£]\\s-?\\)\\(-?[0-9]*\\(\\.[0-9]*\\)?\\)$"
-       (indent status account commodity amount))  ;checked 2013-04-06 
-      ("\\(^[ \t]+\\)\\([*! ]?\\)\\(.*?\\)\\s-\\s-[ \t]+\\(-?[0-9]+\\.[0-9]*\\)[ \t]+\\(.*?\\)[ \t]*\\(;[ \t]*\\(.*?\\)[ \t]*$\\|@+\\)"
-       (indent status account amount nil commodity comment)) ;checked 2013-04-06 
-      ("\\(^[ \t]+\\)\\([*! ]?\\)\\(.*?\\)\\s-\\s-[ \t]+\\(-?[0-9]+\\.[0-9]*\\)[ \t]+\\(.*\\)"
-       (indent status account amount nil commodity))  ;checked 2013-04-06 
-      ("\\(^[ \t]+\\)\\([*! ]?\\)\\(.*?\\)[ \t]*;[ \t]*\\(.*?\\)[ \t]*$"
-       (indent status account comment))
-      ("\\(^[ \t]+\\)\\([*! ]?\\)\\(.*?\\)[ \t]*$"
-       (indent status account))))))
+  `((xact (,(single-line-config date nil status nil nil code payee comment)
+	    ,(single-line-config date nil status nil nil code payee)))
+    (acct-transaction (,(single-line-config indent comment)
+			,(single-line-config indent status account commodity amount nil comment)
+			,(single-line-config indent status account commodity amount)
+			,(single-line-config indent status account amount nil commodity comment)
+			,(single-line-config indent status account amount nil commodity)
+			,(single-line-config indent status account amount)
+			,(single-line-config indent status account comment)
+			,(single-line-config indent status account)))))
 
 (defun ledger-extract-context-info (line-type pos)
   "Get context info for current line with LINE-TYPE.
