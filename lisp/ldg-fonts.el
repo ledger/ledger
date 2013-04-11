@@ -113,7 +113,7 @@
 (defvar ledger-font-lock-keywords
   `( ;; (,ledger-other-entries-regex 1 
      ;; 				  ledger-font-other-face)
-     (,ledger-comment-regex 2 
+     (,ledger-comment-regex 0
 			    'ledger-font-comment-face)
      (,ledger-payee-pending-regex 2 
 				  'ledger-font-payee-pending-face) ; Works
