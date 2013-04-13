@@ -43,7 +43,7 @@
   "\\(^[~=A-Za-z].+\\)+")
 
 (defconst ledger-comment-regex
-  "\\(       \\|  \\|^\\)\\(;.*\\)")
+  "^[;#|\\*%].*\\|[ \t]+;.*")
 
 (defconst ledger-payee-any-status-regex 
   "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)")
@@ -61,13 +61,22 @@
   "^--.+?\\($\\|[ ]\\)")
 
 (defconst ledger-account-any-status-regex
-  "^[ \t]+\\([*!]\\s-+\\)?\\([[(]?.+?\\)\\(\t\\|\n\\| [ \t]\\)")  
+  "^[ \t]+\\(?1:[*!]\\s-*\\)?\\(?2:[^ ;].*?\\)\\(  \\|\t\\|$\\)")
 
 (defconst ledger-account-pending-regex
-  "\\(^[ \t]+\\)\\(!.+?\\)\\(  \\|$\\)")  
+  "\\(^[ \t]+\\)\\(!\\s-*.*?\\)\\(  \\|\t\\|$\\)")
 
 (defconst ledger-account-cleared-regex
-  "\\(^[ \t]+\\)\\(\\*.+?\\)\\(  \\|$\\)")  
+  "\\(^[ \t]+\\)\\(*\\s-*.*?\\)\\(  \\|\t\\|$\\)")
+
+(defconst ledger-metadata-regex
+  "[ \t]+\\(?2:;[ \t]+.+\\)$")
+
+(defconst ledger-account-or-metadata-regex
+  (concat
+   ledger-account-any-status-regex
+   "\\|"
+   ledger-metadata-regex))
 
 
 
