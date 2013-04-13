@@ -354,7 +354,7 @@ class PrepareBuild(CommandLineApp):
                 self.log.error("Execution failed: " + string.join(args, ' '))
                 sys.exit(1)
         except OSError, e:
-            self.log.error("Execution failed:", e)
+            self.log.error("Execution failed: " + e)
             sys.exit(1)
 
     def get_stdout(self, *args):
@@ -373,7 +373,7 @@ class PrepareBuild(CommandLineApp):
                 sys.exit(1)
             return stdout[:-1]
         except OSError, e:
-            self.log.error("Execution failed:", e)
+            self.log.error("Execution failed:" + e)
             sys.exit(1)
 
     def isnewer(self, file1, file2):
