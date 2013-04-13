@@ -68,13 +68,18 @@ And calculate the target-delta of the account being reconciled."
       (message balance))))
 
 (defun ledger-magic-tab (&optional interactively)
-  "Decide what to with with <TAB> .
-Can be pcomplete, or align-posting"
+  "Decide what to with with <TAB>.
+Can indent, complete or align depending on context."
   (interactive "p")
-  (if (and (> (point) 1) 
-	   (looking-back "[:A-Za-z0-9]" 1))
-      (ledger-pcomplete interactively)
-      (ledger-post-align-postings)))
+  (when (= (point) (line-end-position))
+    (if (= (point) (line-beginning-position))
+        (indent-to ledger-post-account-alignment-column)
+      (save-excursion
+        (re-search-backward ledger-account-or-metadata-regex
+                            (line-beginning-position) t))
+      (when (= (point) (match-end 0))
+        (ledger-pcomplete interactively))))
+  (ledger-post-align-postings))
 
 (defvar ledger-mode-abbrev-table)
 
