@@ -61,13 +61,22 @@
   "^--.+?\\($\\|[ ]\\)")
 
 (defconst ledger-account-any-status-regex
-  "^[ \t]+\\([*!]\\s-*\\)?\\([^ ;].*?\\)\\(  \\|$\\)")
+  "^[ \t]+\\(?1:[*!]\\s-*\\)?\\(?2:[^ ;].*?\\)\\(  \\|\t\\|$\\)")
 
 (defconst ledger-account-pending-regex
-  "\\(^[ \t]+\\)\\(!\\s-*.*?\\)\\(  \\|$\\)")
+  "\\(^[ \t]+\\)\\(!\\s-*.*?\\)\\(  \\|\t\\|$\\)")
 
 (defconst ledger-account-cleared-regex
-  "\\(^[ \t]+\\)\\(*\\s-*.*?\\)\\(  \\|$\\)")
+  "\\(^[ \t]+\\)\\(*\\s-*.*?\\)\\(  \\|\t\\|$\\)")
+
+(defconst ledger-metadata-regex
+  "[ \t]+\\(?2:;[ \t]+.+\\)$")
+
+(defconst ledger-account-or-metadata-regex
+  (concat
+   ledger-account-any-status-regex
+   "\\|"
+   ledger-metadata-regex))
 
 
 
