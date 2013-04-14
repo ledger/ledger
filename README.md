@@ -101,7 +101,7 @@ following packages (current as of Ubuntu 12.04):
          python-dev gettext libgmp3-dev libmpfr-dev libboost-dev
          libboost-regex-dev libboost-date-time-dev
          libboost-filesystem-dev libboost-python-dev texinfo lcov
-         sloccount
+         sloccount libboost-iostreams-dev libboost-test-dev
 
 Or, for Ubuntu Karmic:
 
