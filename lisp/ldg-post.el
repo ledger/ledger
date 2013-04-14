@@ -217,7 +217,7 @@ BEG, END, and LEN control how far it can align."
     (let ((end-of-amount (re-search-forward "[-.,0-9]+" (line-end-position) t)))
       ;; determine if there is an amount to edit
       (if end-of-amount
-	  (let ((val (ledger-commodity-string-number-decimalize (match-string 0) :from-user)))
+	  (let ((val (ledger-string-to-number (match-string 0))))
 	    (goto-char (match-beginning 0))
 	    (delete-region (match-beginning 0) (match-end 0))
 	    (calc)

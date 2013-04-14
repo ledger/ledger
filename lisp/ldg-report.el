@@ -295,32 +295,32 @@ Optional EDIT the command."
           "\n\n")
   (let ((data-pos (point))
         (register-report (string-match " reg\\(ister\\)? " cmd))
-	files-in-report)
+				files-in-report)
     (shell-command
      ;; --subtotal does not produce identifiable transactions, so don't
      ;; prepend location information for them
      (if (and register-report
-	      (not (string-match "--subtotal" cmd)))
-	 (concat cmd " --prepend-format='%(filename):%(beg_line):'")
-	 cmd)
+							(not (string-match "--subtotal" cmd)))
+				 (concat cmd " --prepend-format='%(filename):%(beg_line):'")
+				 cmd)
      t nil)
     (when register-report
       (goto-char data-pos)
       (while (re-search-forward "^\\(/[^:]+\\)?:\\([0-9]+\\)?:" nil t)
-	(let ((file (match-string 1))
-	      (line (string-to-number (match-string 2))))
-	  (delete-region (match-beginning 0) (match-end 0))
-	  (when file 	    
-	    (set-text-properties (line-beginning-position) (line-end-position)
-				 (list 'ledger-source (cons file (save-window-excursion
-								   (save-excursion
-								     (find-file file)
-								     (widen)
-								     (ledger-goto-line line)
-								     (point-marker))))))
-	    (add-text-properties (line-beginning-position) (line-end-position)
-				 (list 'face 'ledger-font-report-clickable-face))
-	    (end-of-line)))))
+				(let ((file (match-string 1))
+							(line (string-to-number (match-string 2))))
+					(delete-region (match-beginning 0) (match-end 0))
+					(when file 	    
+						(set-text-properties (line-beginning-position) (line-end-position)
+																 (list 'ledger-source (cons file (save-window-excursion
+																																	 (save-excursion
+																																		 (find-file file)
+																																		 (widen)
+																																		 (ledger-goto-line line)
+																																		 (point-marker))))))
+						(add-text-properties (line-beginning-position) (line-end-position)
+																 (list 'face 'ledger-font-report-clickable-face))
+						(end-of-line)))))
     (goto-char data-pos)))
 
 

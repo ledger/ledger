@@ -37,7 +37,7 @@
   "-?[1-9][0-9.]*[,]?[0-9]*")
 
 (defconst ledger-amount-decimal-period-regex
-  "-?[1-9][0-9.]*[.]?[0-9]*")
+  "-?[1-9][0-9,]*[.]?[0-9]*")
 
 (defconst ledger-other-entries-regex
   "\\(^[~=A-Za-z].+\\)+")
