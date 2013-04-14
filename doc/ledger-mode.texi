@@ -233,7 +233,11 @@ automatically place any amounts such that their last digit is aligned to
 the column specified by @code{ledger-post-amount-alignment-column},
 which defaults to 52. @xref{Ledger Post Customization Group}.
 
-@node Quick Balance Display
+@menu
+* Quick Balance Display::       
+@end menu
+
+@node Quick Balance Display,  , Adding Transactions, Adding Transactions
 @subsection Quick Balance Display
 You will often want to quickly check the balance of an account.  The
 easiest way it to position point on the account you are interested in,
