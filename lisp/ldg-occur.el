@@ -59,7 +59,7 @@
   "A list of currently active overlays to the ledger buffer.")
 (make-variable-buffer-local 'ledger-occur-overlay-list)
 
-(defun ledger-remove-all-overlays ()
+(defun ledger-occur-remove-all-overlays ()
   "Remove all overlays from the ledger buffer."
   (interactive)
   (remove-overlays))
