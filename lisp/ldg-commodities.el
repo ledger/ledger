@@ -91,12 +91,10 @@ Returns a list with (value commodity)."
       (error "Can't add different commodities, %S to %S" c1 c2)))
 
 (defun ledger-strip (str char)
-	(let (new-str )
-		
-		(dolist (ch (append str nil))
-			(unless (= ch char)
-						 (setq new-str (append new-str (list ch)))))
-		(concat new-str)))
+	(let (new-str)
+		(concat (dolist (ch (append str nil) new-str)
+							(unless (= ch char)
+								(setq new-str (append new-str (list ch))))))))
 
 (defun ledger-string-to-number (str &optional decimal-comma)
 	"improve builtin string-to-number by handling internationalization, and return nil of number can't be parsed"
@@ -104,7 +102,7 @@ Returns a list with (value commodity)."
 											(assoc "decimal-comma" ledger-environment-alist))
 									(ledger-strip str ?.)
 									(ledger-strip str ?,))))
-		(while (string-match "," nstr)
+		(while (string-match "," nstr)  ;if there is a comma now, it is a thousands separator
 			(setq nstr (replace-match "." nil nil nstr)))
 		(string-to-number nstr)))
 
@@ -115,30 +113,6 @@ Returns a list with (value commodity)."
 				(while (string-match "\\." str)
 					 (setq str (replace-match "," nil nil str)))
 				str)))
-
-;; (defun ledger-commodity-string-number-decimalize (number-string direction)
-;;   "Take NUMBER-STRING and ensure proper decimalization for use by string-to-number and number-to-string.  
-
-;; DIRECTION can be :to-user or :from-user.  All math calculations
-;; are done with decimal-period, some users may prefer decimal-comma
-;; which must be translated both directions."
-;;   (let ((val number-string))
-;;     (if (assoc "decimal-comma" ledger-environment-alist)
-;; 	(cond ((eq direction :from-user)
-;; 	       ;; change string to decimal-period
-;; 	       (while (string-match "," val)
-;; 					 (setq val (replace-match "." nil nil val)))) ;; switch to period separator
-;; 	      ((eq direction :to-user)
-;; 				 ;; change to decimal-comma
-;; 	       (while (string-match "\\." val)
-;; 					 (setq val (replace-match "," nil nil val)))) ;; gets rid of periods
-;; 	      (t
-;; 	       (error "ledger-commodity-string-number-decimalize: direction not properly specified %S" direction)))
-;; 	(while (string-match "," val)
-;; 	  (setq val (replace-match "" nil nil val))))
-;;     val))
-      
-	  
       
 (defun ledger-commodity-to-string (c1)
   "Return string representing C1.
