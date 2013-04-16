@@ -5,7 +5,7 @@
 
 @dircategory User Applications
 @copying
-Copyright (c) 2003-2011, John Wiegley.  All rights reserved.
+Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -312,7 +312,7 @@ particular, the BaSH shell will interpret $ signs differently than
 ledger and they must be escaped to reach the actual program.  Another
 example is zsh, which will interpret ^ differently than ledger expects.
 In all cases that follow you should take that into account when entering
-the commandline arguments given.  There are too many variations between
+the command line arguments given.  There are too many variations between
 shells to give concrete examples for each.
 
 @node Balance Report, Register Report, Run Some Reports, Run Some Reports
@@ -415,7 +415,7 @@ ledger -f drewr3.dat register
                                 (Liabilities:Tithe)         $ -3.60    $ -243.60
 @end smallexample
 
-@noindent To limit this to a more useful subset, simply add the accounts you are are interested in seeing transactions for:
+@noindent To limit this to a more useful subset, simply add the accounts you are interested in seeing transactions for:
 @cindex accounts, limiting by
 @cindex limiting by accounts
 @smallexample
@@ -1240,7 +1240,7 @@ you intended.  The provided Emacs major mode provides for automatically
 filling in account names.}.  If you use a commodity that is new to
 Ledger, it will create that commodity, and determine its display
 characteristics (placement of the symbol before or after the amount,
-display precision, etc) based on how you used the commodity in the
+display precision, etc.) based on how you used the commodity in the
 posting.
 
 @menu
@@ -1283,7 +1283,7 @@ For this transaction, Ledger will figure out that $-23.00 must come from
 @code{Assets:Checking} in order to balance the transaction.
 
 Also note the structure of the account entries.  There is an implied
-hierarchy established by separating with colons (see @pxref{Structuring
+hierarchy established by separating with colons (@pxref{Structuring
 Your Accounts}).
 
 
@@ -1310,7 +1310,7 @@ Unless you have recently arrived from another planet, you already have a
 financial state.  You need to capture that financial state so that
 Ledger has a starting point.
 
-At some convenient point in time you new the balances and outstanding
+At some convenient point in time you knew the balances and outstanding
 obligation of every financial account you have.  Those amounts form the
 basis of the opening entry for ledger. For example if you chose the
 beginning of 2011 as the date to start tracking finances with ledger,
@@ -1807,7 +1807,7 @@ posting cost, by specifying @code{@@ AMOUNT}, or a complete
 posting cost with @code{@@@@ AMOUNT}.  Lastly, the @code{NOTE} may
 specify an actual and/or effective date for the posting by using
 the syntax @code{[ACTUAL_DATE]} or @code{[=EFFECTIVE_DATE]} or
-@code{[ACTUAL_DATE=EFFECTIVE_DATE]}.(See @pxref{Virtual postings})
+@code{[ACTUAL_DATE=EFFECTIVE_DATE]} (@pxref{Virtual postings}).
 
 @item P
 Specifies a historical price for a commodity.  These are usually found
@@ -1824,7 +1824,7 @@ sign.
 After this initial line there should be a set of one or more
 postings, just as if it were normal transaction.  If the amounts of the
 postings have no commodity, they will be applied as modifiers to
-whichever real posting is matched by the value expression(See @pxref{Automated Transactions}).
+whichever real posting is matched by the value expression (@pxref{Automated Transactions}).
 
 @item ~
 A period transaction.  A period expression must appear after the tilde.
@@ -1916,7 +1916,7 @@ apply account Personal
 @end smallexample
 
 Would result in all postings going into
-@code{Personal:Expenses:Groceries} and @code{Personal:Assets:hecking}
+@code{Personal:Expenses:Groceries} and @code{Personal:Assets:Checking}
 until and @code{end apply account}  directive was found.
 
 @item alias
@@ -3670,7 +3670,7 @@ postings matching @code{^expenses}.
 This works just as well for report the overall total, too:
 
 @example
-ledger -s -r --display "account =~ /mastercard/"/ reg ^expenses
+ledger -s -r --display "account =~ /mastercard/" reg ^expenses
 @end example
 
 The @code{-s} option subtotals all postings, just as @code{-M}
@@ -3796,7 +3796,7 @@ third line is where we calculate and display the percentages.  The
 the account in this line.  The @code{parent.total} command gives the
 total for the next level up in the tree.  @code{percent} formats their
 ratio as a percentage.  The fourth line tells ledger to display the
-current market value of the the line. The last two characters ``%/''
+current market value of the line. The last two characters ``%/''
 tell Ledger what to do for the last line, in this case, nothing.
 
 @cindex plotting
@@ -4556,20 +4556,20 @@ database files.
 The @command{accounts} reports all of the accounts in the journal.
 Following the command with a regular expression will limit the output to
 accounts matching the regex. The output is sorted by name.  Using the
-@code{--count} option will tell you haw many entries use each account.
+@code{--count} option will tell you how many entries use each account.
 
 
 @node commodities, tags, accounts, Reports about your Journals
 @subsection @command{commodities}
 Report all commodities present in the journals under consideration.  The
  output is sorted by name.  Using the @code{--count} option will tell
- you haw many entries use each commodity.
+ you how many entries use each commodity.
 
 @node tags, entry and xact, commodities, Reports about your Journals
 @subsection @command{tags}
 
 The @command{tags} reports all of the tags in the journal.  The output
-is sorted by name.  Using the @code{--count} option will tell you haw
+is sorted by name.  Using the @code{--count} option will tell you how
 many entries use each tag.  Using the @code{--values} option will report
 the values used by each tag.
 
@@ -4635,8 +4635,8 @@ The @command{payees} reports all of the unique payees in the journal. To
 filter the payees displayed you must use the  prefix:
 @smallexample
 macbook-2:$ ledger payees 'Tar.+t'
-El Dorade Restaraunt
-My Big Fat Greek Restaraunt
+El Dorade Restaurant
+My Big Fat Greek Restaurant
 Target
 macbook-2:$
 @end smallexample 
@@ -4799,7 +4799,7 @@ commands.
 @item @tab @code{--plot-amount-format STR} @tab specify the format for the plot output
 @item @code{-J} @tab @code{--total-data} @tab Show only dates and totals to format the output for plots
 @item @tab @code{--plot-total-format STR} @tab specify the format for the plot output
-@item @code{-d EXPR} @tab @code{--display EXPR} @tab Display only posting that meet the criteris in the EXPR
+@item @code{-d EXPR} @tab @code{--display EXPR} @tab Display only posting that meet the criterias in the EXPR
 @item @code{-y STR} @tab @code{--date-format STR} @tab Change the basic date format used in reports
 @item @code{-F STR} @tab @code{--format STR} @tab Set reporting format
 @item @code{} @tab @code{--balance-format STR} @tab
@@ -4950,7 +4950,7 @@ ledger convert Export.csv --input-date-format "%m/%d/%Y"
 @end smallexample
 
 Would convert the @file{Export.csv} file to ledger format, assuming the
-the dates in the CSV file are like 12/23/2009 (@pxref{Date and Time Format Codes}).
+dates in the CSV file are like 12/23/2009 (@pxref{Date and Time Format Codes}).
 
 
 @item --master-account <STRING>
@@ -4970,7 +4970,7 @@ Prepends all account names with the argument.
             $ 300.00      Escrow
             $ 334.00      Food:Groceries
             $ 500.00      Interest:Mortgage
-         $ -5,520.00      ssets:Checking
+         $ -5,520.00      Assets:Checking
          $ -2,030.00    Income
          $ -2,000.00      Salary
             $ -30.00      Sales
@@ -5266,7 +5266,7 @@ group transactions by the day of the week.
 @smallexample
 ledger reg Expenses --dow --collapse
 @end smallexample
-@noindent will print all Expenses totalled for each day of the week. 
+@noindent will print all Expenses totaled for each day of the week. 
 
 @item --effective
 
@@ -5487,7 +5487,7 @@ ledger bal Fuel --pivot "Car"  --period "this year"
 @xref{Metadata values}.
 @item --plot-amount-format
 
-Define the output format for a amount data plot. @xref{Visualizing with Gnuplot}.
+Define the output format for an amount data plot. @xref{Visualizing with Gnuplot}.
 
 @item --plot-total-format
 
@@ -5666,7 +5666,7 @@ goes to standard output.
 causes @code{FILE} to be read by ledger before any other ledger file.  This
 file may not contain any postings, but it may contain option settings.
 To specify options in the init file, use the same syntax as the
-command-line, but put each option on it's own line.  Here's an example
+command-line, but put each option on its own line.  Here is an example
 init file:
 
 @smallexample
@@ -6096,7 +6096,7 @@ These options affect how commodity values are displayed:
 @table @code
 @item --price-db FILE
 sets the file that is used for recording downloaded commodity prices.
-It is always read on start up, to determine historical prices.  Other
+It is always read on startup, to determine historical prices.  Other
 settings can be placed in this file manually, to prevent downloading
 quotes for a specific commodity, for example.  This is done by adding a
 line like the following:
@@ -6290,7 +6290,7 @@ costs or lot prices.
 Every option to ledger may be set using an environment variable.  If
 an option has a long name such @code{--this-option}, setting the
 environment variable @env{LEDGER_THIS_OPTION} will have the same
-affect as specifying that option on the command-line.  Options on the
+effect as specifying that option on the command-line.  Options on the
 command-line always take precedence over environment variable
 settings, however.
 
@@ -6317,7 +6317,7 @@ The optional @var{INTERVAL} part may be any one of:
 @smallexample
 every day
 every week
-every monthly
+every month
 every quarter
 every year
 every N days     # N is any integer
@@ -6508,7 +6508,7 @@ Now, there are a few ways to generate this information.  You can use the
 @file{timeclock.el} package, which is part of Emacs.  Or you can write a
 simple script in whichever language you prefer to emit similar
 information.  Or you can use Org mode's time-clocking abilities and the
-org2tc script developed by John Wiegly.
+org2tc script developed by John Wiegley.
 
 These timelog entries can appear in a separate file, or directly in your
 main ledger file.  The initial "i" and "o" count as Ledger "directives",
@@ -7179,7 +7179,7 @@ You can have additional month information in your date with @code{%B} as
 
 @table @code
 @item %m-%d-%Y %B
-yields  @code{ 02-10-2010 Februrary}
+yields  @code{ 02-10-2010 February}
 
 @item %B %m-%d-%Y
 yields  @code{February 02-10-2010}
@@ -7506,7 +7506,7 @@ Those tiers are:
 
   Expressions can be onerous to type at the command-line, so there's a
   shorthand for reporting called ``query expressions''.  These add no
-  functionality of there own, but are purely translated from the input string
+  functionality of their own, but are purely translated from the input string
   (cash) down to the corresponding value expression @code{(account =~ /cash/)}.
   This is a convenience layer.
 
@@ -7938,7 +7938,7 @@ commodities.
 
 @node echo, reload, Developer Commands, Developer Commands
 @subsection @command{echo}
-This command simply echos its argument back to the output.
+This command simply echoes its argument back to the output.
 
 
 @node reload, source, echo, Developer Commands
