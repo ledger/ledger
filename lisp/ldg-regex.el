@@ -46,16 +46,16 @@
   "^[;#|\\*%].*\\|[ \t]+;.*")
 
 (defconst ledger-payee-any-status-regex 
-  "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)")
+  "^[0-9]+[-/][-/.=0-9]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+\\(.+?\\)\\s-*\\(;\\|$\\)")
 
 (defconst ledger-payee-pending-regex 
-  "^[0-9]+[-/][-/.=0-9]+\\s-\\!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(;\\|$\\)")
+  "^[0-9]+[-/][-/.=0-9]+\\s-\\!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\s-*\\(;\\|$\\)")
 
 (defconst ledger-payee-cleared-regex
-  "^[0-9]+[-/][-/.=0-9]+\\s-\\*\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(;\\|$\\)")
+  "^[0-9]+[-/][-/.=0-9]+\\s-\\*\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\s-*\\(;\\|$\\)")
 
 (defconst ledger-payee-uncleared-regex
-  "^[0-9]+[-/][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(;\\|$\\)")
+  "^[0-9]+[-/][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\s-*\\(;\\|$\\)")
 
 (defconst ledger-init-string-regex
   "^--.+?\\($\\|[ ]\\)")
@@ -78,7 +78,11 @@
    "\\|"
    ledger-metadata-regex))
 
-
+(defmacro rx-static-or (&rest rx-strs)
+  "Returns rx union of regexps which can be symbols that eval to strings."
+  `(rx (or ,@(mapcar #'(lambda (rx-str)
+                         `(regexp ,(eval rx-str)))
+                     rx-strs))))
 
 (defmacro ledger-define-regexp (name regex docs &rest args)
   "Simplify the creation of a Ledger regex and helper functions."
