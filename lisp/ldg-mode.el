@@ -76,10 +76,9 @@ Can indent, complete or align depending on context."
         (indent-to ledger-post-account-alignment-column)
       (save-excursion
         (re-search-backward
-         (macroexpand
-          `(rx (or (regex ,ledger-account-any-status-regex)
-                   (regex ,ledger-metadata-regex)
-                   (regex ,ledger-payee-any-status-regex))))
+         (rx-static-or ledger-account-any-status-regex
+                       ledger-metadata-regex
+                       ledger-payee-any-status-regex)
          (line-beginning-position) t))
       (when (= (point) (match-end 0))
         (ledger-pcomplete interactively))))

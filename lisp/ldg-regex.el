@@ -78,7 +78,11 @@
    "\\|"
    ledger-metadata-regex))
 
-
+(defmacro rx-static-or (&rest rx-strs)
+  "Returns rx union of regexps which can be symbols that eval to strings."
+  `(rx (or ,@(mapcar #'(lambda (rx-str)
+                         `(regexp ,(eval rx-str)))
+                     rx-strs))))
 
 (defmacro ledger-define-regexp (name regex docs &rest args)
   "Simplify the creation of a Ledger regex and helper functions."
