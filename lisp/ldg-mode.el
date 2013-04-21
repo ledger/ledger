@@ -110,6 +110,10 @@ Can indent, complete or align depending on context."
     (if (boundp 'font-lock-defaults)
 	(set (make-local-variable 'font-lock-defaults)
 	     '(ledger-font-lock-keywords nil t)))
+    (setq font-lock-extend-region-functions
+          (list #'font-lock-extend-region-wholelines
+                #'ledger-extend-region-multiline-comment))
+    (setq font-lock-multiline nil)
 
     (set (make-local-variable 'pcomplete-parse-arguments-function)
 	 'ledger-parse-arguments)
