@@ -45,6 +45,13 @@
 (defconst ledger-comment-regex
   "^[;#|\\*%].*\\|[ \t]+;.*")
 
+(defconst ledger-multiline-comment-start-regex
+  "^!comment$")
+(defconst ledger-multiline-comment-end-regex
+  "^!end_comment$")
+(defconst ledger-multiline-comment-regex
+  "^!comment\n\\(.*\n\\)*?!end_comment$")
+
 (defconst ledger-payee-any-status-regex 
   "^[0-9]+[-/][-/.=0-9]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+\\(.+?\\)\\s-*\\(;\\|$\\)")
 
