@@ -2423,7 +2423,7 @@ date with an equals sign:
 @end smallexample
 
 What this auxiliary date means is entirely up to you.  The only use Ledger has
-for it is that if you specify --aux-date, then all reports and calculations
+for it is that if you specify @code{--aux-date}, then all reports and calculations
 (including pricing) will use the aux date as if it were the primary date.
 
 @node Codes, Transaction state, Auxiliary dates, Transactions
@@ -2461,9 +2461,9 @@ after date or code:
        Assets:Cash
 @end smallexample
 
-What these mean is entirely up to you.  The --cleared option will limits to
-reports to only cleared items, while --uncleared shows both uncleared and
-pending items, and --pending shows only pending items.
+What these mean is entirely up to you.  The @code{--cleared} option will limits to
+reports to only cleared items, while @code{--uncleared} shows both uncleared and
+pending items, and @code{--pending} shows only pending items.
 
 I use cleared to mean that I've reconciled the transaction with my bank
 statement, and pending to mean that I'm in the middle of a reconciliation.
@@ -2745,7 +2745,7 @@ Assets:Brokerage does indeed contain 10 AAPL at that point in the input file.
 
 A balanced virtual transaction is used simply to indicate to Ledger that this
 is not a "real" transaction.  It won't appear in any reports anyway (unless
-you use a register report with --empty).
+you use a register report with @code{--empty}).
 
 @node Posting cost, Explicit posting costs, Balance verification, Transactions
 @section Posting cost
@@ -2806,8 +2806,8 @@ used for purchasing and tracked in the cost is "primary".
 Said another way, whenever Ledger sees a posting cost of the form "AMOUNT @@
 AMOUNT", the commodity used in the second amount is marked "primary".
 
-The only meaning a primary commodity has is that -V flag will never convert a
-primary commodity into any other commodity.  -X still will, however.
+The only meaning a primary commodity has is that @code{-V} flag will never convert a
+primary commodity into any other commodity.  @code{-X} still will, however.
 
 @node Posting cost expressions, Total posting costs, Explicit posting costs, Transactions
 @section Posting cost expressions
@@ -3058,7 +3058,7 @@ that dates are parsed in value expressions):
 @section Lot notes
 
 You can also associate arbitrary notes for your own record keeping in
-parentheses, and reveal them with --lot-notes.  One caveat is that the note
+parentheses, and reveal them with @code{--lot-notes}.  One caveat is that the note
 cannot begin with an @@ character, as that would indicate a virtual cost:
 
 @smallexample
@@ -3078,7 +3078,7 @@ To show all lot information in a report, use @code{--lots}.
 
 Normally when you ask Ledger to display the values of commodities held, it
 uses a value expression called ``market'' to determine the most recent value
-from its price database -- even downloading prices from the Internet, if -Q
+from its price database -- even downloading prices from the Internet, if @code{-Q}
 was specified and a suitable ``getquote'' script is found on your system.
 
 However, you can override this valuation logic by providing a commodity
@@ -6185,7 +6185,7 @@ the function 'market' so it can be further revalued if the user has
 asked for a specific currency.
 
 Or, if it better suits your accounting, you can be less symbolic, which
-allows you to report most everything in EUR if you use -X EUR, except
+allows you to report most everything in EUR if you use @code{-X EUR}, except
 for certain accounts or postings which should always be valuated in
 another currency.  For example:
 
