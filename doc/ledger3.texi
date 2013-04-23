@@ -65,26 +65,26 @@ twinkling in their father's CRT.
 @end ifnottex
 
 @menu
-* Copying::                     
-* Introduction to Ledger::      
-* Ledger Tutorial ::            
-* Principles of Accounting::    
-* Keeping a Journal::           
-* Transactions ::               
-* Building Reports::            
-* Reporting Commands::          
-* Command-line Syntax::         
-* Budgeting and Forecasting::   
-* Time Keeping::                
-* Value Expressions::           
-* Format Strings::              
-* Extending with Python::       
-* Ledger for Developers::       
-* Major Changes from version 2.6::  
-* Example Data File::           
-* Miscellaneous Notes::         
-* Concept Index::               
-* Command Index::               
+* Copying::
+* Introduction to Ledger::
+* Ledger Tutorial ::
+* Principles of Accounting::
+* Keeping a Journal::
+* Transactions ::
+* Building Reports::
+* Reporting Commands::
+* Command-line Syntax::
+* Budgeting and Forecasting::
+* Time Keeping::
+* Value Expressions::
+* Format Strings::
+* Extending with Python::
+* Ledger for Developers::
+* Major Changes from version 2.6::
+* Example Data File::
+* Miscellaneous Notes::
+* Concept Index::
+* Command Index::
 @end menu
 
 @node Copying, Introduction to Ledger, Top, Top
@@ -97,9 +97,9 @@ This license can also be obtained from the command-line by executing
 @node Introduction to Ledger, Ledger Tutorial , Copying, Top
 @chapter Introduction to Ledger
 @menu
-* Fat-free Accounting::         
-* Building the Program::        
-* Getting Help::                
+* Fat-free Accounting::
+* Building the Program::
+* Getting Help::
 @end menu
 
 @node Fat-free Accounting, Building the Program, Introduction to Ledger, Introduction to Ledger
@@ -279,8 +279,8 @@ http://groups.google.com/group/ledger-cli
 @chapter Ledger Tutorial
 
 @menu
-* Start a Journal::             
-* Run Some Reports::            
+* Start a Journal::
+* Run Some Reports::
 @end menu
 
 @node Start a Journal, Run Some Reports, Ledger Tutorial , Ledger Tutorial
@@ -299,10 +299,10 @@ If you would rather start with your own journal right away please see @ref{Keepi
 @section Run a Few Reports
 
 @menu
-* Balance Report::              
-* Register Report::             
-* Cleared Report::              
-* Using the Windows command line::  
+* Balance Report::
+* Register Report::
+* Cleared Report::
+* Using the Windows command line::
 @end menu
 
 Please note that as a command line program, Ledger is controlled from
@@ -350,7 +350,7 @@ Ledger will generate:
            $ -243.60
 @end smallexample
 
-@noindent Showing you the balance of all accounts.  Options and search terms can pare 
+@noindent Showing you the balance of all accounts.  Options and search terms can pare
 this down to show only the accounts you want.
 
 A more useful report is to show only your Assets and Liabilities:
@@ -480,7 +480,7 @@ $ ledger -f drewr3.dat cleared
         $ 200.00                   0                   Mortgage:Principal
        $ -243.60                   0                   Tithe
 ----------------    ----------------    ---------
-       $ -243.60                   0    
+       $ -243.60                   0
 @end smallexample
 
 @noindent The first column shows the outstanding balance, the second column shows the ``cleared'' balance.
@@ -497,14 +497,14 @@ cannot display any currency symbols other than dollar signs ($).
 @chapter Principles of Accounting with Ledger
 
 @menu
-* Accounting with Ledger::      
-* Stating where money goes::    
-* Assets and Liabilities::      
-* Commodities and Currencies::  
-* Accounts and Inventories::    
-* Understanding Equity::        
-* Dealing with Petty Cash::     
-* Working with multiple funds and accounts::  
+* Accounting with Ledger::
+* Stating where money goes::
+* Assets and Liabilities::
+* Commodities and Currencies::
+* Accounts and Inventories::
+* Understanding Equity::
+* Dealing with Petty Cash::
+* Working with multiple funds and accounts::
 @end menu
 
 
@@ -640,7 +640,7 @@ This assumes, of course, that you use account names like
 @code{Expenses:Auto:Gas} and @code{Expenses:Auto:Repair}.
 
 @menu
-* Tracking reimbursable expenses::  
+* Tracking reimbursable expenses::
 @end menu
 @cindex reimbursable expense tracking
 @node Tracking reimbursable expenses,  , Assets and Liabilities, Assets and Liabilities
@@ -886,8 +886,8 @@ the left value's commodity.  The result of this command might be:
 @end smallexample
 
 @menu
-* Commodity Price Histories::   
-* Commodity equivalencies::     
+* Commodity Price Histories::
+* Commodity equivalencies::
 @end menu
 
 @node Commodity Price Histories, Commodity equivalencies, Commodities and Currencies, Commodities and Currencies
@@ -1244,15 +1244,15 @@ display precision, etc.) based on how you used the commodity in the
 posting.
 
 @menu
-* Most Basic Entry::            
-* Starting up::                 
-* Structuring Your Accounts::   
-* Commenting on your journal::  
-* Currency and Commodities::    
-* Keeping it Consistent::       
-* Journal Format::              
-* Converting from other formats::  
-* Archiving Previous Years ::   
+* Most Basic Entry::
+* Starting up::
+* Structuring Your Accounts::
+* Commenting on your journal::
+* Currency and Commodities::
+* Keeping it Consistent::
+* Journal Format::
+* Converting from other formats::
+* Archiving Previous Years ::
 @end menu
 
 @node Most Basic Entry, Starting up, Keeping a Journal, Keeping a Journal
@@ -1476,10 +1476,10 @@ my wallet.  The bottom line balances to zero, but is shown in two lines
 since we haven't told ledger to convert commodities.
 
 @menu
-* Naming Commodities::          
-* Buying and Selling Stock::    
-* Fixing Lot Prices::           
-* Complete control over commodity pricing::  
+* Naming Commodities::
+* Buying and Selling Stock::
+* Fixing Lot Prices::
+* Complete control over commodity pricing::
 @end menu
 
 @node Naming Commodities, Buying and Selling Stock, Currency and Commodities, Currency and Commodities
@@ -1766,8 +1766,8 @@ supports many options, though typically the user can ignore most of
 them.  They are summarized below.
 
 @menu
-* Transaction and Comments::    
-* Command Directives::          
+* Transaction and Comments::
+* Command Directives::
 @end menu
 
 @node Transaction and Comments, Command Directives, Journal Format, Journal Format
@@ -2320,30 +2320,30 @@ organization, just keep in mind this maxim: Do whatever keeps you
 doing it.
 
 @node Transactions , Building Reports, Keeping a Journal, Top
-@chapter  Transactions 
+@chapter  Transactions
 @menu
-* Basic format::                
-* Eliding amounts::             
-* Auxiliary dates::             
-* Codes::                       
-* Transaction state::           
-* Transaction notes::           
-* Metadata::                    
-* Virtual postings::            
-* Expression amounts::          
-* Balance verification::        
-* Posting cost::                
-* Explicit posting costs::      
-* Posting cost expressions::    
-* Total posting costs::         
-* Virtual posting costs::       
-* Commodity prices::            
-* Prices vs. costs::            
-* Fixated prices::              
-* Lot dates::                   
-* Lot notes::                   
-* Lot value expressions::       
-* Automated Transactions::      
+* Basic format::
+* Eliding amounts::
+* Auxiliary dates::
+* Codes::
+* Transaction state::
+* Transaction notes::
+* Metadata::
+* Virtual postings::
+* Expression amounts::
+* Balance verification::
+* Posting cost::
+* Explicit posting costs::
+* Posting cost expressions::
+* Total posting costs::
+* Virtual posting costs::
+* Commodity prices::
+* Prices vs. costs::
+* Fixated prices::
+* Lot dates::
+* Lot notes::
+* Lot value expressions::
+* Automated Transactions::
 @end menu
 
 @node Basic format, Eliding amounts, Transactions , Transactions
@@ -2547,9 +2547,9 @@ calculations.
 The are two forms of metadata: tags and tag/value pairs.
 
 @menu
-* Metadata tags::               
-* Metadata values::             
-* Typed metadata::              
+* Metadata tags::
+* Metadata values::
+* Typed metadata::
 @end menu
 
 @node Metadata tags, Metadata values, Metadata, Metadata
@@ -2665,10 +2665,10 @@ expression with parentheses:
 @node Balance verification, Posting cost, Expression amounts, Transactions
 @section Balance verification
 @menu
-* Balance assertions::          
-* Balance assignments::         
-* Resetting a balance::         
-* Balancing transactions::      
+* Balance assertions::
+* Balance assignments::
+* Resetting a balance::
+* Balancing transactions::
 @end menu
 
 If at the end of a posting's amount (and after the cost too, if there is one)
@@ -2791,7 +2791,7 @@ the first posting's cost, you can elide the other amount:
 @end smallexample
 
 @menu
-* Primary and secondary commodities::  
+* Primary and secondary commodities::
 @end menu
 
 @node Primary and secondary commodities,  , Explicit posting costs, Explicit posting costs
@@ -2923,7 +2923,7 @@ not match.  The lot price also identifies which shares you purchased on that
 prior date.
 
 @menu
-* Total commodity prices::      
+* Total commodity prices::
 @end menu
 
 @node Total commodity prices,  , Commodity prices, Commodity prices
@@ -3185,15 +3185,15 @@ One thing you cannot do, however, is elide amounts in an automated
 transaction.
 
 @menu
-* Amount multipliers::          
-* Accessing the matching posting's amount::  
-* Referring to the matching posting's account::  
-* Applying metadata to every matched posting::  
-* Applying metadata to the generated posting::  
-* State flags::                 
-* Effective Dates::             
-* Periodic Transactions::       
-* Concrete Example of Automated Transactions::  
+* Amount multipliers::
+* Accessing the matching posting's amount::
+* Referring to the matching posting's account::
+* Applying metadata to every matched posting::
+* Applying metadata to the generated posting::
+* State flags::
+* Effective Dates::
+* Periodic Transactions::
+* Concrete Example of Automated Transactions::
 @end menu
 
 @node Amount multipliers, Accessing the matching posting's amount, Automated Transactions, Automated Transactions
@@ -3501,10 +3501,10 @@ which may be excluded from reports by using @option{--real}.
 @chapter Building Reports
 
 @menu
-* Introduction::                
-* Balance Reports::             
-* Typical queries::             
-* Advanced Reports::            
+* Introduction::
+* Balance Reports::
+* Typical queries::
+* Advanced Reports::
 @end menu
 
 @node Introduction, Balance Reports, Building Reports, Building Reports
@@ -3520,8 +3520,8 @@ options.
 @node Balance Reports, Typical queries, Introduction, Building Reports
 @section Balance Reports
 @menu
-* Controlling the Accounts and Payees::  
-* Controlling formatting::      
+* Controlling the Accounts and Payees::
+* Controlling formatting::
 @end menu
 
 @node Controlling the Accounts and Payees, Controlling formatting, Balance Reports, Balance Reports
@@ -3565,7 +3565,7 @@ command.
             $ -20.00  Liabilities:MasterCard
 --------------------
           $ 5,480.00
-20:39:21 ~/ledger/test/input > 
+20:39:21 ~/ledger/test/input >
 @end smallexample
 @noindent note the implicit logical and between @code{Auto} and @code{Mastercard}.
 
@@ -3578,7 +3578,7 @@ highest common name in the branch:
             $ -30.00    Sales
 --------------------
          $ -2,030.00
-20:40:28 ~/ledger/test/input > 
+20:40:28 ~/ledger/test/input >
 @end smallexample
 
 You can use general regular expressions in nearly anyplace Ledger needs a string:
@@ -3631,7 +3631,7 @@ show all sub-accounts; sort by the absolute value of the total; and
 report the balance for all accounts that begin with ``expenses''.
 
 @menu
-* Reporting monthly expenses::  
+* Reporting monthly expenses::
 @end menu
 
 @node Reporting monthly expenses,  , Typical queries, Typical queries
@@ -3683,8 +3683,8 @@ however, since a display expression is being used.
 @section Advanced Reports
 
 @menu
-* Asset Allocation::            
-* Visualizing with Gnuplot::    
+* Asset Allocation::
+* Visualizing with Gnuplot::
 @end menu
 
 @node Asset Allocation, Visualizing with Gnuplot, Advanced Reports, Advanced Reports
@@ -3857,18 +3857,18 @@ of the balance.
 @chapter Reporting Commands
 @menu
 * Primary Financial Reports::   Reports in other formats:: Reports about
-* Reports in other Formats::    
-* Reports about your Journals::  
+* Reports in other Formats::
+* Reports about your Journals::
 @end menu
 
 @node Primary Financial Reports, Reports in other Formats, Reporting Commands, Reporting Commands
 @section Primary Financial Reports
 
 @menu
-* The balance Command::         
-* The equity Command::          
-* The register Command::        
-* The print Command::           
+* The balance Command::
+* The equity Command::
+* The register Command::
+* The print Command::
 @end menu
 
 @node The balance Command, The equity Command, Primary Financial Reports, Primary Financial Reports
@@ -3923,19 +3923,19 @@ file whose formatting has gotten out of hand.
 @node Reports in other Formats, Reports about your Journals, Primary Financial Reports, Reporting Commands
 @section Reports in other Formats
 @menu
-* Comma Separated Variable files::  
-* The lisp command::            
-* Emacs Org mode::              
-* The pricemap Command::        
-* The xml Command::             
-* prices and pricedb::          
+* Comma Separated Variable files::
+* The lisp command::
+* Emacs Org mode::
+* The pricemap Command::
+* The xml Command::
+* prices and pricedb::
 @end menu
 
 @node Comma Separated Variable files, The lisp command, Reports in other Formats, Reports in other Formats
 @subsection Comma Separated Variable files
 @menu
-* The csv command::             
-* The convert command::         
+* The csv command::
+* The convert command::
 @end menu
 
 @node The csv command, The convert command, Comma Separated Variable files, Comma Separated Variable files
@@ -4543,11 +4543,11 @@ database files.
 @section Reports about your Journals
 
 @menu
-* accounts::                    
-* commodities::                 
-* tags::                        
-* entry and xact::              
-* payees::                      
+* accounts::
+* commodities::
+* tags::
+* entry and xact::
+* payees::
 @end menu
 
 @node accounts, commodities, Reports about your Journals, Reports about your Journals
@@ -4650,10 +4650,10 @@ macbook-2:$
 
 
 @menu
-* Basic Usage::                 
-* Command Line Quick Reference::  
-* Detailed Options Description::  
-* Period Expressions::          
+* Basic Usage::
+* Command Line Quick Reference::
+* Detailed Options Description::
+* Period Expressions::
 @end menu
 
 @node Basic Usage, Command Line Quick Reference, Command-line Syntax, Command-line Syntax
@@ -4701,13 +4701,13 @@ commands.
 @section Command Line Quick Reference
 
 @menu
-* Reporting Commands Quick Reference::  
-* Basic Options Quick Reference::  
-* Report Filtering Quick Reference::  
-* Error Checking and Calculation Options::  
-* Output Customization Quick Reference::  
-* Grouping Options::            
-* Commodity Reporting Quick Reference::  
+* Reporting Commands Quick Reference::
+* Basic Options Quick Reference::
+* Report Filtering Quick Reference::
+* Error Checking and Calculation Options::
+* Output Customization Quick Reference::
+* Grouping Options::
+* Commodity Reporting Quick Reference::
 @end menu
 
 @node Reporting Commands Quick Reference, Basic Options Quick Reference, Command Line Quick Reference, Command Line Quick Reference
@@ -4842,13 +4842,13 @@ commands.
 @section Detailed Option Description
 
 @menu
-* Global Options::              
-* Session Options::             
-* Report Options::              
-* Report Filtering::            
-* Output Customization::        
-* Commodity Reporting::         
-* Environment Variables::       
+* Global Options::
+* Session Options::
+* Report Options::
+* Report Filtering::
+* Output Customization::
+* Commodity Reporting::
+* Environment Variables::
 @end menu
 
 @node Global Options, Session Options, Detailed Options Description, Detailed Options Description
@@ -6394,8 +6394,8 @@ weekly last august
 @chapter Budgeting and Forecasting
 
 @menu
-* Budgeting::                   
-* Forecasting::                 
+* Budgeting::
+* Forecasting::
 @end menu
 
 @node Budgeting, Forecasting, Budgeting and Forecasting, Budgeting and Forecasting
@@ -6570,10 +6570,10 @@ ledger -b "this month" register checking
 @end smallexample
 
 @menu
-* Variables::                   
-* Functions::                   
-* Operators::                   
-* Complex Expressions::         
+* Variables::
+* Functions::
+* Operators::
+* Complex Expressions::
 @end menu
 
 @node Variables, Functions, Value Expressions, Value Expressions
@@ -6706,8 +6706,8 @@ The binary and ternary operators, in order of precedence, are:
 @end enumerate
 
 @menu
-* Unary Operators::             
-* Binary Operators::            
+* Unary Operators::
+* Binary Operators::
 @end menu
 
 @node Unary Operators, Binary Operators, Operators, Operators
@@ -6719,25 +6719,25 @@ The binary and ternary operators, in order of precedence, are:
 @node Binary Operators,  , Unary Operators, Operators
 @subsection Binary Operators
 
-@code{==} 	
-@code{<} 	
-@code{<=} 	
-@code{>}	
-@code{>=} 	
+@code{==}
+@code{<}
+@code{<=}
+@code{>}
+@code{>=}
 @code{and}
-@code{or} 	
-@code{+} 	
-@code{-} 	
-@code{*} 	
-@code{/} 	
-@code{QUERY} 	
-@code{COLON} 	
-@code{CONS} 	
-@code{SEQ} 	
-@code{DEFINE} 	
-@code{LOOKUP} 	
-@code{LAMBDA} 	
-@code{CALL} 	
+@code{or}
+@code{+}
+@code{-}
+@code{*}
+@code{/}
+@code{QUERY}
+@code{COLON}
+@code{CONS}
+@code{SEQ}
+@code{DEFINE}
+@code{LOOKUP}
+@code{LAMBDA}
+@code{CALL}
 @code{MATCH}
 
 @node Complex Expressions,  , Operators, Value Expressions
@@ -6788,7 +6788,7 @@ Useful specifying a date in plain terms.  For example, you could say
 @end table
 
 @menu
-* Misc::                        
+* Misc::
 @end menu
 
 @node Misc,  , Complex Expressions, Complex Expressions
@@ -6846,11 +6846,11 @@ Useful specifying a date in plain terms.  For example, you could say
 @chapter Format Strings
 
 @menu
-* Basics::                      
-* Format String Structure::     
-* Format Expressions::          
-* --balance-format::            
-* Formatting codes::            
+* Basics::
+* Format String Structure::
+* Format Expressions::
+* --balance-format::
+* Formatting codes::
 @end menu
 
 @node Basics, Format String Structure, Format Strings, Format Strings
@@ -7028,13 +7028,13 @@ balance format looks like this (the various functions are described later):
 @section Formatting Functions and Codes
 
 @menu
-* Field Widths::                
-* Colors::                      
-* Quantities and Calculations::  
-* Dates::                       
-* Date and Time Format Codes::  
-* Text Formatting::             
-* Data File Parsing Information::  
+* Field Widths::
+* Colors::
+* Quantities and Calculations::
+* Dates::
+* Date and Time Format Codes::
+* Text Formatting::
+* Data File Parsing Information::
 @end menu
 
 @node Field Widths, Colors, Formatting codes, Formatting codes
@@ -7115,7 +7115,7 @@ convert a string to date value
 @end table
 
 @menu
-* Date and Time Format Codes::  
+* Date and Time Format Codes::
 @end menu
 
 @node Date and Time Format Codes, Text Formatting, Dates, Formatting codes
@@ -7216,9 +7216,9 @@ locale’s date representation @code{02/10/2010} for the U.S.
 yields  @code{%Y-%m-%d 2010-02-10}
 @end table
 @menu
-* Text Formatting::             
-* Data File Parsing Information::  
-* Misc::                        
+* Text Formatting::
+* Data File Parsing Information::
+* Misc::
 @end menu
 
 @node Text Formatting, Data File Parsing Information, Date and Time Format Codes, Formatting codes
@@ -7275,11 +7275,11 @@ experience.  But first, a word must be said about Ledger's data model, so that
 other things make sense later.
 
 @menu
-* Basic data traversal::        
-* Raw vs. Cooked::              
-* Queries::                     
-* Embedded Python::             
-* Amounts::                     
+* Basic data traversal::
+* Raw vs. Cooked::
+* Queries::
+* Embedded Python::
+* Amounts::
 @end menu
 
 @node Basic data traversal, Raw vs. Cooked, Extending with Python, Extending with Python
@@ -7430,10 +7430,10 @@ need to create sums of multiple commodities, use a Balance.  For example:
 @chapter Ledger for Developers
 
 @menu
-* Internal Design::             
-* Journal File Format::         
-* Developer Commands::          
-* Ledger Development Environment::  
+* Internal Design::
+* Journal File Format::
+* Developer Commands::
+* Ledger Development Environment::
 @end menu
 
 @node Internal Design, Journal File Format, Ledger for Developers, Ledger for Developers
@@ -7709,10 +7709,10 @@ amount of the first posting is typically positive.  Consider:
 @end smallexample
 
 @menu
-* Comments and meta-data::      
-* Specifying Amounts::          
-* Posting costs::               
-* Primary commodities::         
+* Comments and meta-data::
+* Specifying Amounts::
+* Posting costs::
+* Primary commodities::
 @end menu
 
 @node Comments and meta-data, Specifying Amounts, Journal File Format, Journal File Format
@@ -7736,8 +7736,8 @@ spaces between the end of the post and the beginning of the amount
 (including a commodity designator).
 
 @menu
-* Integer Amounts::             
-* Commoditized Amounts::        
+* Integer Amounts::
+* Commoditized Amounts::
 @end menu
 
 @node Integer Amounts, Commoditized Amounts, Specifying Amounts, Specifying Amounts
@@ -7929,11 +7929,11 @@ commodities.
 @node Developer Commands, Ledger Development Environment, Journal File Format, Ledger for Developers
 @section Developer Commands
 @menu
-* echo::                        
-* reload::                      
-* source::                      
-* Debug Options::               
-* Pre-commands::                
+* echo::
+* reload::
+* source::
+* Debug Options::
+* Pre-commands::
 @end menu
 
 @node echo, reload, Developer Commands, Developer Commands
@@ -8124,8 +8124,8 @@ This is a debugging command.
 @section Ledger Development Environment
 
 @menu
-* acprep build configuration tool::  
-* Testing Framework::           
+* acprep build configuration tool::
+* Testing Framework::
 @end menu
 
 @node acprep build configuration tool, Testing Framework, Ledger Development Environment, Ledger Development Environment
@@ -8144,8 +8144,8 @@ subdirectory for the build.  For example,
 @file{~/ledger/build/ledger/opt/test}.
 
 @menu
-* Running Tests::               
-* Writing Tests::               
+* Running Tests::
+* Writing Tests::
 @end menu
 
 
@@ -8256,7 +8256,7 @@ issue @code{ctest -V -R "5FB"}.
 Various notes from the discussion list that I haven't incorporated in to the main body of the documentation.
 
 @menu
-* Cookbook::                    
+* Cookbook::
 @end menu
 
 @node Cookbook,  , Miscellaneous Notes, Miscellaneous Notes
