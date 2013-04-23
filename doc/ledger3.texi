@@ -307,8 +307,8 @@ If you would rather start with your own journal right away please see @ref{Keepi
 
 Please note that as a command line program, Ledger is controlled from
 your shell.  There are several different command shells that all behave
-slightly differently with repsect to some special characters.  In
-particular, the BaSH shell will interpret $ signs differently than
+slightly differently with respect to some special characters.  In
+particular, the BASH shell will interpret $ signs differently than
 ledger and they must be escaped to reach the actual program.  Another
 example is zsh, which will interpret ^ differently than ledger expects.
 In all cases that follow you should take that into account when entering
@@ -5051,7 +5051,7 @@ an arbitrary transformation to the postings.
 column in the register report.
 
 @item --anon
- anonymizes registry output, mostly for sending in bug
+ Anonymizes registry output, mostly for sending in bug
 reports.
 
 @item --average
@@ -6797,7 +6797,7 @@ Useful specifying a date in plain terms.  For example, you could say
 @item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
 @item @code{amount_expr } @tab @code{} @tab
 @item @code{abs } @tab @code{} @tab  --> U
-@item @code{ceiling } @tab @code{} @tab Returns the next integer toward +infty
+@item @code{ceiling } @tab @code{} @tab Returns the next integer toward +infinity
 @item @code{code} @tab @code{} @tab returns the transaction code, the string between the parenthesis after the date.
 @item @code{commodity } @tab @code{} @tab
 @item @code{display_amount } @tab @code{} @tab   --> t
@@ -6805,7 +6805,7 @@ Useful specifying a date in plain terms.  For example, you could say
 @item @code{date } @tab @code{} @tab
 @item @code{format_date } @tab @code{} @tab
 @item @code{format } @tab @code{} @tab
-@item @code{floor } @tab @code{} @tab Returns the next integer toward -infty
+@item @code{floor } @tab @code{} @tab Returns the next integer toward -infinity
 @item @code{get_at } @tab @code{} @tab
 @item @code{is_seq } @tab @code{} @tab
 @item @code{justify } @tab @code{} @tab
@@ -8124,16 +8124,16 @@ This is a debugging command.
 @section Ledger Development Environment
 
 @menu
-* acrep build configuration tool::  
+* acprep build configuration tool::  
 * Testing Framework::           
 @end menu
 
-@node acrep build configuration tool, Testing Framework, Ledger Development Environment, Ledger Development Environment
+@node acprep build configuration tool, Testing Framework, Ledger Development Environment, Ledger Development Environment
 @subsection @code{acprep} build configuration tool
 
-@node Testing Framework,  , acrep build configuration tool, Ledger Development Environment
+@node Testing Framework,  , acprep build configuration tool, Ledger Development Environment
 @subsection Testing Framework
-Ledger source ships with a farily complete set of tests to verify that
+Ledger source ships with a fairly complete set of tests to verify that
 all is well, and no old errors have been resurfaced.  Tests are run
 individually with @code{ctest}.  All tests can be run using @code{make
 check} or @code{ninja check} depending on which build tool you prefer.
@@ -8154,16 +8154,16 @@ subdirectory for the build.  For example,
 
 The complete test sweet can be run from the build directory using the
 check option for the build tool you use.  For example, @code{make
-check}.  The entire test suit tast around a minute for the optimized
+check}.  The entire test suit lasts around a minute for the optimized
 built and many times longer for the debug version.  While developing and
 debugging, running individual tests can save a great deal of time.
 
-Individual tests can be run fron the @file{test} subdirectory of the
+Individual tests can be run from the @file{test} subdirectory of the
 build location.  To execute a single test use @code{ctest -V -R regex},
-where the regex mathes the name of the test you want to build.
+where the regex matches the name of the test you want to build.
 
-There are nearly 300 tests stored under the @file{test} sudirectoro
-tmain source distribution.  They are broken into two broad categories,
+There are nearly 300 tests stored under the @file{test} subdirectory
+in main source distribution.  They are broken into two broad categories,
 baseline and regression.  To run the @file{5FBF2ED8} test, for example,
 issue @code{ctest -V -R "5FB"}.
 @node Writing Tests,  , Running Tests, Testing Framework
