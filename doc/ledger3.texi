@@ -118,7 +118,7 @@ learn.  The little booklet that comes with your checkbook is a journal,
 so we'll describe double-entry accounting in terms of that.
 
 @c If you use
-@c another GUI accounting program like GNUCash, the vast majority of its
+@c another GUI accounting program like GnuCash, the vast majority of its
 @c functionality is geared towards helping you keep a journal.
 
 A checkbook journal records debits (subtractions, or withdrawals) and
@@ -3800,10 +3800,10 @@ current market value of the line. The last two characters ``%/''
 tell Ledger what to do for the last line, in this case, nothing.
 
 @cindex plotting
-@cindex GNUplot
+@cindex Gnuplot
 @node Visualizing with Gnuplot,  , Asset Allocation, Advanced Reports
 @subsection Visualizing with Gnuplot
-@cindex GNUplot script
+@cindex Gnuplot script
 If you have @command{Gnuplot} installed, you can graph any of the above
 register reports.  The script to do this is included in the ledger
 distribution, and is named @file{contrib/report}.  Install @file{report}
