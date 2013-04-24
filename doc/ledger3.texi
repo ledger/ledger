@@ -23,7 +23,7 @@ met:
   this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
 OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
@@ -2425,7 +2425,7 @@ for it is that if you specify @code{--aux-date}, then all reports and calculatio
 @node Codes, Transaction state, Auxiliary dates, Transactions
 @section Codes
 
-A transaction can have a textual "code".  This has no meaning and is only
+A transaction can have a textual ``code''.  This has no meaning and is only
 displayed by the print command.  Checking accounts often use codes like DEP,
 XFER, etc., as well as check numbers.  This is to give you a place to put
 those codes:
@@ -2482,7 +2482,7 @@ its postings.  That is:
        * Assets:Cash
 @end smallexample
 
-@noindent You can mark individual postings as cleared or pending, in case one "side" of
+@noindent You can mark individual postings as cleared or pending, in case one ``side'' of
 the transaction has cleared, but the other hasn't yet:
 
 @smallexample
@@ -2740,7 +2740,7 @@ balance, ensure that its value is zero.  This can only be true if
 Assets:Brokerage does indeed contain 10 AAPL at that point in the input file.
 
 A balanced virtual transaction is used simply to indicate to Ledger that this
-is not a "real" transaction.  It won't appear in any reports anyway (unless
+is not a ``real'' transaction.  It won't appear in any reports anyway (unless
 you use a register report with @code{--empty}).
 
 @node Posting cost, Explicit posting costs, Balance verification, Transactions
@@ -2751,7 +2751,7 @@ transformed during the transaction.  This happens when you spend money on gas,
 for example, which transforms dollars into gallons of gasoline, or dollars
 into stocks in a company.
 
-In those cases, Ledger will remember the "cost" of that transaction for you,
+In those cases, Ledger will remember the ``cost'' of that transaction for you,
 and can use it during reporting in various ways.  Here's an example of a stock
 purchase:
 
@@ -2793,14 +2793,14 @@ the first posting's cost, you can elide the other amount:
 @node Primary and secondary commodities,  , Explicit posting costs, Explicit posting costs
 @subsection Primary and secondary commodities
 
-It is a general convention within Ledger that the "top" postings in a
+It is a general convention within Ledger that the ``top'' postings in a
 transaction contain the target accounts, while the final posting contains the
 source account.  Whenever a commodity is exchanged like this, the commodity
-moved to the target account is considered "secondary", while the commodity
-used for purchasing and tracked in the cost is "primary".
+moved to the target account is considered ``secondary'', while the commodity
+used for purchasing and tracked in the cost is ``primary''.
 
 Said another way, whenever Ledger sees a posting cost of the form "AMOUNT @@
-AMOUNT", the commodity used in the second amount is marked "primary".
+AMOUNT", the commodity used in the second amount is marked ``primary''.
 
 The only meaning a primary commodity has is that @code{-V} flag will never convert a
 primary commodity into any other commodity.  @code{-X} still will, however.
@@ -6452,7 +6452,7 @@ information.  Or you can use Org mode's time-clocking abilities and the
 org2tc script developed by John Wiegley.
 
 These timelog entries can appear in a separate file, or directly in your
-main ledger file.  The initial "i" and "o" count as Ledger "directives",
+main ledger file.  The initial ``i'' and ``o'' count as Ledger ``directives'',
 and are accepted anywhere that ordinary transactions are.
 
 
@@ -7138,7 +7138,7 @@ Locale’s full month, variable length February
 @end table
 
 @subsubsection Miscellaneous Date Codes
-Additional date format parameters which can be used :
+Additional date format parameters which can be used:
 
 @table @code
 @item %U
@@ -7298,7 +7298,7 @@ report of some kind by querying the journal:
 
 The reason why queries iterate over postings instead of transactions is that
 queries often return only a ``slice'' of the transactions they apply to.  You
-can always get at a matching posting's transaction by looking at its "xact"
+can always get at a matching posting's transaction by looking at its ``xact''
 member:
 
 @smallexample
