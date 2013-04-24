@@ -1419,7 +1419,7 @@ Dollars, Euros, Pounds, Francs, Shares etc. are just ``commodities''.
 Holdings in stocks, bonds, mutual funds and other financial instruments
 can be labeled using whatever is convenient for you (stock ticker
 symbols are suggested for publicly traded assets).@footnote{you can
-track ANYTHING, even time or distance traveled. As long as it cannot be
+track @emph{anything}, even time or distance traveled. As long as it cannot be
 created or destroyed inside your accounting system.}
 
 For the rest of this manual, we will only use the word ``commodities''
@@ -1428,7 +1428,7 @@ when referring to the units on a transaction value.
 This is fundamentally different than many common accounting packages,
 which assume the same currency throughout all of your accounts.  This
 means if you typically operate in Euros, but travel to the US and have
-some expenses, you would have to do the currency conversion BEFORE you
+some expenses, you would have to do the currency conversion @emph{before} you
 made the entry into your financial system.  With ledger this is not
 required.  In the same journal you can have entries in any or all
 commodities you actually hold.  You can use the reporting capabilities
