@@ -67,10 +67,10 @@ twinkling in their father's CRT.
 @menu
 * Copying::
 * Introduction to Ledger::
-* Ledger Tutorial ::
+* Ledger Tutorial::
 * Principles of Accounting::
 * Keeping a Journal::
-* Transactions ::
+* Transactions::
 * Building Reports::
 * Reporting Commands::
 * Command-line Syntax::
@@ -94,7 +94,7 @@ twinkling in their father's CRT.
 This license can also be obtained from the command-line by executing
 @code{ledger --license}
 
-@node Introduction to Ledger, Ledger Tutorial , Copying, Top
+@node Introduction to Ledger, Ledger Tutorial, Copying, Top
 @chapter Introduction to Ledger
 @menu
 * Fat-free Accounting::
@@ -257,7 +257,7 @@ enter these commands:
 @end smallexample
 
 @findex help
-@node Getting Help,  , Building the Program, Introduction to Ledger
+@node Getting Help, , Building the Program, Introduction to Ledger
 @section Getting help
 Ledger has a complete online help system based on GNU Info.  This manual
 can be searched directly from the command line using the following
@@ -271,7 +271,7 @@ You can also find help at the @code{#ledger} channel on the IRC server
 @code{irc.freenode.net}.
 
 @cindex tutorial
-@node Ledger Tutorial , Principles of Accounting, Introduction to Ledger, Top
+@node Ledger Tutorial, Principles of Accounting, Introduction to Ledger, Top
 @chapter Ledger Tutorial
 
 @menu
@@ -279,7 +279,7 @@ You can also find help at the @code{#ledger} channel on the IRC server
 * Run Some Reports::
 @end menu
 
-@node Start a Journal, Run Some Reports, Ledger Tutorial , Ledger Tutorial
+@node Start a Journal, Run Some Reports, Ledger Tutorial, Ledger Tutorial
 @section Start a Journal File
 @cindex journals
 A journal is a record of your financial transactions and will be central
@@ -291,7 +291,7 @@ directory.
 
 If you would rather start with your own journal right away please see @ref{Keeping a Journal}.
 
-@node Run Some Reports,  , Start a Journal, Ledger Tutorial
+@node Run Some Reports, , Start a Journal, Ledger Tutorial
 @section Run a Few Reports
 
 @menu
@@ -480,7 +480,7 @@ $ ledger -f drewr3.dat cleared
 @end smallexample
 
 @noindent The first column shows the outstanding balance, the second column shows the ``cleared'' balance.
-@node Using the Windows command line,  , Cleared Report, Run Some Reports
+@node Using the Windows command line, , Cleared Report, Run Some Reports
 @subsection Using the Windows Command Line
 @cindex windows cmd.exe
 @cindex currency symbol display on windows
@@ -489,7 +489,7 @@ limitation.  CMD.exe is limited to standard ASCII characters and as such
 cannot display any currency symbols other than dollar signs ($).
 
 
-@node Principles of Accounting, Keeping a Journal, Ledger Tutorial , Top
+@node Principles of Accounting, Keeping a Journal, Ledger Tutorial, Top
 @chapter Principles of Accounting with Ledger
 
 @menu
@@ -639,7 +639,7 @@ This assumes, of course, that you use account names like
 * Tracking reimbursable expenses::
 @end menu
 @cindex reimbursable expense tracking
-@node Tracking reimbursable expenses,  , Assets and Liabilities, Assets and Liabilities
+@node Tracking reimbursable expenses, , Assets and Liabilities, Assets and Liabilities
 @subsection Tracking reimbursable expenses
 
 Sometimes you will want to spend money on behalf of someone else,
@@ -908,7 +908,7 @@ its various reports.  It will always report balances in terms of the
 commodity total, rather than the current value of those commodities.
 To enable pricing reports, use one of the commodity reporting options.
 
-@node Commodity equivalencies,  , Commodity Price Histories, Commodities and Currencies
+@node Commodity equivalencies, , Commodity Price Histories, Commodities and Currencies
 @subsection Commodity equivalencies
 
 Sometimes a commodity has several forms which are all equivalent.  An
@@ -1070,7 +1070,7 @@ the target account:
 This way, you can still track large cash expenses, while ignoring all
 of the smaller ones.
 
-@node Working with multiple funds and accounts,  , Dealing with Petty Cash, Principles of Accounting
+@node Working with multiple funds and accounts, , Dealing with Petty Cash, Principles of Accounting
 @section Working with multiple funds and accounts
 
 There are situations when the accounts you're tracking are different
@@ -1207,7 +1207,7 @@ associated with particular transactions.  Your own tastes will decide which
 is best for your situation.
 
 
-@node Keeping a Journal, Transactions , Principles of Accounting, Top
+@node Keeping a Journal, Transactions, Principles of Accounting, Top
 @chapter Keeping a Journal
 
 The most important part of accounting is keeping a good journal.  If you
@@ -1248,7 +1248,7 @@ posting.
 * Keeping it Consistent::
 * Journal Format::
 * Converting from other formats::
-* Archiving Previous Years ::
+* Archiving Previous Years::
 @end menu
 
 @node Most Basic Entry, Starting up, Keeping a Journal, Keeping a Journal
@@ -1581,7 +1581,7 @@ a balance posting in this case to Equity:Capital Losses to reflect the
 1.1 cent difference, which is then balanced by Assets:Checking because
 its amount is null.
 
-@node Complete control over commodity pricing,  , Fixing Lot Prices, Currency and Commodities
+@node Complete control over commodity pricing, , Fixing Lot Prices, Currency and Commodities
 @subsection Complete control over commodity pricing
 
 Ledger allows you to have very detailed control over how your
@@ -1839,7 +1839,7 @@ tags can be used to augment the reporting and filtering capabilities of
 Ledger.
 @end table
 
-@node Command Directives,  , Transaction and Comments, Journal Format
+@node Command Directives, , Transaction and Comments, Journal Format
 @subsection Command Directives
 
 @table @code
@@ -2242,7 +2242,7 @@ timelog files.  See the timeclock's documentation for more info on the
 syntax of its timelog files.
 @end table
 
-@node Converting from other formats, Archiving Previous Years , Journal Format, Keeping a Journal
+@node Converting from other formats, Archiving Previous Years, Journal Format, Keeping a Journal
 @section Converting from other formats
 There are numerous tools to help convert various formats to a Ledger
 file.  Most banks will generate a commas separated value file that can
@@ -2256,7 +2256,7 @@ easily be parsed into Ledger format using one of those tools.  Some of the more 
 function.
 
 
-@node Archiving Previous Years ,  , Converting from other formats, Keeping a Journal
+@node Archiving Previous Years, , Converting from other formats, Keeping a Journal
 @section Archiving Previous Years
 
 
@@ -2315,7 +2315,7 @@ any electronic statements received during the year.  In the arena of
 organization, just keep in mind this maxim: Do whatever keeps you
 doing it.
 
-@node Transactions , Building Reports, Keeping a Journal, Top
+@node Transactions, Building Reports, Keeping a Journal, Top
 @chapter  Transactions
 @menu
 * Basic format::
@@ -2342,7 +2342,7 @@ doing it.
 * Automated Transactions::
 @end menu
 
-@node Basic format, Eliding amounts, Transactions , Transactions
+@node Basic format, Eliding amounts, Transactions, Transactions
 @section Basic format
 
 
@@ -2583,7 +2583,7 @@ cannot appear in the Key:
          ; MyTag: This is just a bogus value for MyTag
 @end smallexample
 
-@node Typed metadata,  , Metadata values, Metadata
+@node Typed metadata, , Metadata values, Metadata
 @subsection Typed metadata
 
 If a metadata tag ends in ::, its value will be parsed as a value
@@ -2724,7 +2724,7 @@ This is the only time in ledger when more than one posting's amount may be
 empty -- and then only because it's not true empty, it is indirectly provided
 by the balance assignment's value.
 
-@node  Balancing transactions,  , Resetting a balance, Balance verification
+@node  Balancing transactions, , Resetting a balance, Balance verification
 @subsection  Balancing transactions
 
 As a consequence of all the above, consider the following transaction:
@@ -2790,7 +2790,7 @@ the first posting's cost, you can elide the other amount:
 * Primary and secondary commodities::
 @end menu
 
-@node Primary and secondary commodities,  , Explicit posting costs, Explicit posting costs
+@node Primary and secondary commodities, , Explicit posting costs, Explicit posting costs
 @subsection Primary and secondary commodities
 
 It is a general convention within Ledger that the ``top'' postings in a
@@ -2922,7 +2922,7 @@ prior date.
 * Total commodity prices::
 @end menu
 
-@node Total commodity prices,  , Commodity prices, Commodity prices
+@node Total commodity prices, , Commodity prices, Commodity prices
 @subsection Total commodity prices
 
 As a shorthand, you can specify the total price instead of the per-share
@@ -3136,7 +3136,7 @@ In most cases, it is simplest to either use explicit amounts in your valuation
 expressions, or just pass the arguments down to market after modifying them to
 suit your needs.
 
-@node Automated Transactions,  , Lot value expressions, Transactions
+@node Automated Transactions, , Lot value expressions, Transactions
 @section Automated Transactions
 
 An automated transaction is a special kind of transaction which adds its
@@ -3413,7 +3413,7 @@ have no effect without the @code{--budget} option specified.
 See @ref{Budgeting and Forecasting} for examples and details.
 
 
-@node Concrete Example of Automated Transactions,  , Periodic Transactions, Automated Transactions
+@node Concrete Example of Automated Transactions, , Periodic Transactions, Automated Transactions
 @subsection Concrete Example of Automated Transactions
 
 
@@ -3493,7 +3493,7 @@ which may be excluded from reports by using @option{--real}.
 
 
 
-@node Building Reports, Reporting Commands, Transactions , Top
+@node Building Reports, Reporting Commands, Transactions, Top
 @chapter Building Reports
 
 @menu
@@ -3607,7 +3607,7 @@ exclude multiple accounts with parentheses:
 ledger -s bal Expenses and not \(Expenses:Drinks or Expenses:Candy or Expenses:Gifts\)
 @end smallexample
 
-@node Controlling formatting,  , Controlling the Accounts and Payees, Balance Reports
+@node Controlling formatting, , Controlling the Accounts and Payees, Balance Reports
 @subsection Controlling Formatting
 These examples all use the default formatting for the balance
 report. Customizing the formatting can easily allowing to see only what
@@ -3630,7 +3630,7 @@ report the balance for all accounts that begin with ``expenses''.
 * Reporting monthly expenses::
 @end menu
 
-@node Reporting monthly expenses,  , Typical queries, Typical queries
+@node Reporting monthly expenses, , Typical queries, Typical queries
 @subsection Reporting monthly expenses
 
 The following query makes it easy to see monthly expenses, with each
@@ -3675,7 +3675,7 @@ however, since a display expression is being used.
 
 
 
-@node Advanced Reports,  , Typical queries, Building Reports
+@node Advanced Reports, , Typical queries, Building Reports
 @section Advanced Reports
 
 @menu
@@ -3797,7 +3797,7 @@ tell Ledger what to do for the last line, in this case, nothing.
 
 @cindex plotting
 @cindex Gnuplot
-@node Visualizing with Gnuplot,  , Asset Allocation, Advanced Reports
+@node Visualizing with Gnuplot, , Asset Allocation, Advanced Reports
 @subsection Visualizing with Gnuplot
 @cindex Gnuplot script
 If you have @command{Gnuplot} installed, you can graph any of the above
@@ -3903,7 +3903,7 @@ included in the Ledger distribution.  The only requirement is that you
 add either @code{-j} or @code{-J} to your register command, in
 order to plot either the amount or total column, respectively.
 
-@node The print Command,  , The register Command, Primary Financial Reports
+@node The print Command, , The register Command, Primary Financial Reports
 @subsection The @code{print} Command
 
 The @command{print} command prints out ledger transactions in a textual
@@ -3943,7 +3943,7 @@ functions.
 @cindex csv conversion
 @cindex reading csv
 @cindex comma separated variable file reading
-@node The convert command,  , The csv command, Comma Separated Variable files
+@node The convert command, , The csv command, Comma Separated Variable files
 @subsubsection The @code{convert} command
 The @code{convert} command parses a comma separated value
 (csv) file and outputs Ledger transactions.  Many banks offer csv file
@@ -4521,7 +4521,7 @@ output such data if the @command{xml} command is used, and can read
 the same data.
 
 
-@node prices and pricedb,  , The xml Command, Reports in other Formats
+@node prices and pricedb, , The xml Command, Reports in other Formats
 @subsection @code{prices} and @code{pricedb}
 
 The @command{prices} command displays the price history for matching
@@ -4535,7 +4535,7 @@ by Ledger.  This is useful for generating and tidying up pricedb
 database files.
 
 
-@node Reports about your Journals,  , Reports in other Formats, Reporting Commands
+@node Reports about your Journals, , Reports in other Formats, Reporting Commands
 @section Reports about your Journals
 
 @menu
@@ -4625,7 +4625,7 @@ ledger xact 4/9 viva dining "DM 11.50"
 @command{xact} is identical to @command{entry} and is provide for
 backwards compatibility with Ledger 2.X.
 
-@node payees,  , entry and xact, Reports about your Journals
+@node payees, , entry and xact, Reports about your Journals
 @subsection @code{payees}
 The @command{payees} reports all of the unique payees in the journal. To
 filter the payees displayed you must use the  prefix:
@@ -4819,7 +4819,7 @@ commands.
 @item @code{-s} @tab @code{--subtotal} @tab Group posting together, similar to balance report
 @end multitable
 
-@node Commodity Reporting Quick Reference,  , Grouping Options, Command Line Quick Reference
+@node Commodity Reporting Quick Reference, , Grouping Options, Command Line Quick Reference
 @subsection Commodity Reporting
 
 @multitable @columnfractions .1 .25 .65
@@ -6225,7 +6225,7 @@ relative to the date that amount was encountered.
 You can also now use @code{-X} (and @code{-H}) in conjunction with
 @code{-B} and @code{-I}, to see valuation reports of just your basis
 costs or lot prices.
-@node Environment Variables,  , Commodity Reporting, Detailed Options Description
+@node Environment Variables, , Commodity Reporting, Detailed Options Description
 @subsection Environment variables
 
 Every option to ledger may be set using an environment variable.  If
@@ -6243,7 +6243,7 @@ option settings in the file @file{~/.ledgerrc}, for example:
 
 @end smallexample
 
-@node Period Expressions,  , Detailed Options Description, Command-line Syntax
+@node Period Expressions, , Detailed Options Description, Command-line Syntax
 @section Period Expressions
 
 A period expression indicates a span of time, or a reporting interval,
@@ -6404,7 +6404,7 @@ ledger --unbudgeted --monthly register ^expenses
 
 You can also use these flags with the @command{balance} command.
 
-@node Forecasting,  , Budgeting, Budgeting and Forecasting
+@node Forecasting, , Budgeting, Budgeting and Forecasting
 @section Forecasting
 
 Sometimes it's useful to know what your finances will look like in the
@@ -6657,7 +6657,7 @@ The binary and ternary operators, in order of precedence, are:
 @code{not}
 @code{neg}
 
-@node Binary Operators,  , Unary Operators, Operators
+@node Binary Operators, , Unary Operators, Operators
 @subsection Binary Operators
 
 @code{==}
@@ -6681,7 +6681,7 @@ The binary and ternary operators, in order of precedence, are:
 @code{CALL}
 @code{MATCH}
 
-@node Complex Expressions,  , Operators, Value Expressions
+@node Complex Expressions, , Operators, Value Expressions
 @section Complex expressions
 
 More complicated expressions are possible using:
@@ -6732,7 +6732,7 @@ Useful specifying a date in plain terms.  For example, you could say
 * Misc::
 @end menu
 
-@node Misc,  , Complex Expressions, Complex Expressions
+@node Misc, , Complex Expressions, Complex Expressions
 @subsection Miscellaneous
 @multitable @columnfractions .3 .2 .5
 @item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
@@ -6965,7 +6965,7 @@ balance format looks like this (the various functions are described later):
          "--------------------\n"
 @end smallexample
 
-@node Formatting codes,  , --balance-format, Format Strings
+@node Formatting codes, , --balance-format, Format Strings
 @section Formatting Functions and Codes
 
 @menu
@@ -7187,7 +7187,7 @@ Values can have numerous annotations, such as effective dates and lot
 prices.  @code{strip} removes these annotations.
 @end table
 
-@node Data File Parsing Information,  , Text Formatting, Formatting codes
+@node Data File Parsing Information, , Text Formatting, Formatting codes
 @subsection Data File Parsing Information
 
 The following format strings provide locational metadata
@@ -7349,7 +7349,7 @@ You can embed Python into your data files using the 'python' directive:
 Any Python functions you define this way become immediately available as
 valexpr functions.
 
-@node Amounts,  , Embedded Python, Extending with Python
+@node Amounts, , Embedded Python, Extending with Python
 @section Amounts
 
 When numbers come from Ledger, like post.amount, the type of the value is
@@ -7735,7 +7735,7 @@ called @dfn{full precision}, as opposed to commoditized amounts, which
 always look to their commodity to know what precision they should
 round to, and so use @dfn{commodity precision}.
 
-@node Commoditized Amounts,  , Integer Amounts, Specifying Amounts
+@node Commoditized Amounts, , Integer Amounts, Specifying Amounts
 @subsubsection Commoditized Amounts
 
 A @dfn{commoditized amount} is an integer amount which has an
@@ -7834,7 +7834,7 @@ postings are involved:
 Here the implied cost is @code{$57.00}, which is entered into the null
 posting automatically so that the transaction balances.
 
-@node Primary commodities,  , Posting costs, Journal File Format
+@node Primary commodities, , Posting costs, Journal File Format
 @subsection Primary commodities
 
 In every transaction involving more than one commodity, there is
@@ -7966,7 +7966,7 @@ Print detailed information on the execution of Ledger.
 Print version information and exit.
 @end table
 
-@node Pre-commands,  , Debug Options, Developer Commands
+@node Pre-commands, , Debug Options, Developer Commands
 @subsection Pre-Commands
 Pre-commands are useful when you aren't sure how a command or option
 will work.
@@ -8061,7 +8061,7 @@ Shows the insertion template that a @code{draft} or @code{xact} sub-command gene
 This is a debugging command.
 @end table
 
-@node Ledger Development Environment,  , Developer Commands, Ledger for Developers
+@node Ledger Development Environment, , Developer Commands, Ledger for Developers
 @section Ledger Development Environment
 
 @menu
@@ -8072,7 +8072,7 @@ This is a debugging command.
 @node acprep build configuration tool, Testing Framework, Ledger Development Environment, Ledger Development Environment
 @subsection @code{acprep} build configuration tool
 
-@node Testing Framework,  , acprep build configuration tool, Ledger Development Environment
+@node Testing Framework, , acprep build configuration tool, Ledger Development Environment
 @subsection Testing Framework
 Ledger source ships with a fairly complete set of tests to verify that
 all is well, and no old errors have been resurfaced.  Tests are run
@@ -8107,7 +8107,7 @@ There are nearly 300 tests stored under the @file{test} subdirectory
 in main source distribution.  They are broken into two broad categories,
 baseline and regression.  To run the @file{5FBF2ED8} test, for example,
 issue @code{ctest -V -R "5FB"}.
-@node Writing Tests,  , Running Tests, Testing Framework
+@node Writing Tests, , Running Tests, Testing Framework
 @subsubsection Writing Tests
 
 @node Major Changes from version 2.6, Example Data File, Ledger for Developers, Top
@@ -8200,7 +8200,7 @@ Various notes from the discussion list that I haven't incorporated in to the mai
 * Cookbook::
 @end menu
 
-@node Cookbook,  , Miscellaneous Notes, Miscellaneous Notes
+@node Cookbook, , Miscellaneous Notes, Miscellaneous Notes
 @section Cookbook
 
 @subsection Invoking Ledger
@@ -8231,7 +8231,7 @@ ledger register Checking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
 
 @printindex cp
 
-@node Command Index,  , Concept Index, Top
+@node Command Index, , Concept Index, Top
 @unnumbered Command Index
 
 @printindex fn
