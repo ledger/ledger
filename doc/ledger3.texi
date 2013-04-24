@@ -265,13 +265,9 @@ options:
 @code{ledger --help} bring up this entire manual in your tty.
 
 If you need help on how to use Ledger, or run into problems, you can
-join the Ledger mailing list at the following Web address:
+join the Ledger mailing list at @url{http://groups.google.com/group/ledger-cli}.
 
-@smallexample
-http://groups.google.com/group/ledger-cli
-@end smallexample
-
-@noindent You can also find help at the @code{#ledger} channel on the IRC server
+You can also find help at the @code{#ledger} channel on the IRC server
 @code{irc.freenode.net}.
 
 @cindex tutorial
