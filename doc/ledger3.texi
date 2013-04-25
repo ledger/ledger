@@ -4540,13 +4540,13 @@ database files.
 
 @menu
 * accounts::
+* payees::
 * commodities::
 * tags::
 * entry and xact::
-* payees::
 @end menu
 
-@node accounts, commodities, Reports about your Journals, Reports about your Journals
+@node accounts, payees, Reports about your Journals, Reports about your Journals
 @subsection @code{accounts}
 
 The @command{accounts} reports all of the accounts in the journal.
@@ -4554,12 +4554,25 @@ Following the command with a regular expression will limit the output to
 accounts matching the regex. The output is sorted by name.  Using the
 @code{--count} option will tell you how many entries use each account.
 
+@node payees, commodities, accounts, Reports about your Journals
+@subsection @code{payees}
 
-@node commodities, tags, accounts, Reports about your Journals
+The @command{payees} reports all of the unique payees in the journal. To
+filter the payees displayed you must use the  prefix:
+@smallexample
+macbook-2:$ ledger payees 'Tar.+t'
+El Dorade Restaurant
+My Big Fat Greek Restaurant
+Target
+macbook-2:$
+@end smallexample
+
+@node commodities, tags, payees, Reports about your Journals
 @subsection @command{commodities}
+
 Report all commodities present in the journals under consideration.  The
- output is sorted by name.  Using the @code{--count} option will tell
- you how many entries use each commodity.
+output is sorted by name.  Using the @code{--count} option will tell you
+how many entries use each commodity.
 
 @node tags, entry and xact, commodities, Reports about your Journals
 @subsection @command{tags}
@@ -4569,9 +4582,7 @@ is sorted by name.  Using the @code{--count} option will tell you how
 many entries use each tag.  Using the @code{--values} option will report
 the values used by each tag.
 
-
-
-@node entry and xact, payees, tags, Reports about your Journals
+@node entry and xact,  , tags, Reports about your Journals
 @subsection @command{draft}, @command{entry} and @command{xact}
 
 The @code{draft}, @code{entry} and @command{xact} commands simplify the
@@ -4624,19 +4635,6 @@ ledger xact 4/9 viva dining "DM 11.50"
 
 @command{xact} is identical to @command{entry} and is provide for
 backwards compatibility with Ledger 2.X.
-
-@node payees,  , entry and xact, Reports about your Journals
-@subsection @code{payees}
-The @command{payees} reports all of the unique payees in the journal. To
-filter the payees displayed you must use the  prefix:
-@smallexample
-macbook-2:$ ledger payees 'Tar.+t'
-El Dorade Restaurant
-My Big Fat Greek Restaurant
-Target
-macbook-2:$
-@end smallexample
-
 
 
 
