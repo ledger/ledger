@@ -202,11 +202,11 @@ at Whole Foods Markets you might assign the transactions like this
 
 @smallexample
 2011/03/15   Trader Joe's
-      Expenses:Groceries   $100.00
-      Assets:Checking
+    Expenses:Groceries   $100.00
+    Assets:Checking
 2011/03/15   Whole Food Market
-      Expenses:Groceries   $75.00
-      Assets:Checking
+    Expenses:Groceries   $75.00
+    Assets:Checking
 @end smallexample
 
 In both cases the money goes to the ``Groceries'' account, even though
@@ -230,8 +230,8 @@ above, formatted as the Ledger program wishes to see them:
 
 @smallexample
 2004/09/29 Pacific Bell
-     Expenses:Pacific Bell              $23.00
-     Assets:Checking
+    Expenses:Pacific Bell              $23.00
+    Assets:Checking
 @end smallexample
 
 The account balances and registers in this file, if saved as
@@ -260,7 +260,7 @@ To build and install once you have these libraries on your system,
 enter these commands:
 
 @smallexample
-./configure && make install
+$ ./configure && make install
 @end smallexample
 
 @node Getting Help,  , Building the Program, Introduction to Ledger
@@ -330,7 +330,7 @@ variations between shells to give concrete examples for each.
 To find the balances of all of your accounts, run this command:
 
 @smallexample
-ledger -f drewr3.dat balance
+$ ledger -f drewr3.dat balance
 @end smallexample
 
 Ledger will generate:
@@ -386,7 +386,7 @@ $ ledger -f drewr3.dat balance Assets Liabilities
 To show all transactions and a running total:
 
 @smallexample
-ledger -f drewr3.dat register
+$ ledger -f drewr3.dat register
 @end smallexample
 
 @noindent
@@ -1219,14 +1219,14 @@ postings related to a specific fund.  So, to see the current
 monetary balances of all funds, the command would be:
 
 @smallexample
-ledger --code-as-payee -P reg ^Assets
+$ ledger --code-as-payee -P reg ^Assets
 @end smallexample
 
 Or to see a particular funds expenses, the @code{School} fund in this
 case:
 
 @smallexample
-ledger --code-as-payee -P reg ^Expenses @@School
+$ ledger --code-as-payee -P reg ^Expenses @@School
 @end smallexample
 
 Both approaches yield different kinds of flexibility, depending on how
@@ -1340,16 +1340,16 @@ your opening balance entry could look like this:
 
 @smallexample
 2011/01/01 * Opening Balance
-      Assets:Joint Checking                   $800.14
-      Assets:Other Checking                    $63.44
-      Assets:Savings                         $2805.54
-      Assets:Investments:401K:Deferred         100.0000 VIFSX @@ $80.5227
-      Assets:Investments:401K:Matching          50.0000 VIFSX @@ $83.7015
-      Assets:Investments:IRA                   250.0000 VTHRX @@ $20.5324
-      Liabilities:Mortgage                $-175634.88
-      Liabilities:Car Loan                  $-3494.26
-      Liabilities:Visa                      -$1762.44
-      Equity:Opening Balances
+    Assets:Joint Checking                   $800.14
+    Assets:Other Checking                    $63.44
+    Assets:Savings                         $2805.54
+    Assets:Investments:401K:Deferred         100.0000 VIFSX @@ $80.5227
+    Assets:Investments:401K:Matching          50.0000 VIFSX @@ $83.7015
+    Assets:Investments:IRA                   250.0000 VTHRX @@ $20.5324
+    Liabilities:Mortgage                $-175634.88
+    Liabilities:Car Loan                  $-3494.26
+    Liabilities:Visa                      -$1762.44
+    Equity:Opening Balances
 @end smallexample
 
 There is nothing special about the name ``Opening Balances'' as the
@@ -1400,7 +1400,6 @@ Block comments can be made by use @code{@!comment} ... @code{@!end
 comment}
 
 @smallexample
-
 ; This is a single line comment,
 #  and this,
 %   and this,
@@ -1421,10 +1420,10 @@ There are several forms of comments within a transaction, for example:
 ; output from 'print' or 'output'
 
 2011/12/11  Something Sweet
-      ; German Chocolate Cake
-      ; :Broke Diet:
-      Expenses:Food                  $10.00 ; Friends: The gang
-      Assets:Credit Union:Checking
+    ; German Chocolate Cake
+    ; :Broke Diet:
+    Expenses:Food                  $10.00 ; Friends: The gang
+    Assets:Credit Union:Checking
 @end smallexample
 
 @noindent
@@ -1513,12 +1512,12 @@ commodity name must be enclosed in double quotes:
 
 @smallexample
 1999/06/09 !  Achat
-        Actif:SG PEE STK  49.957 "Arcancia Equilibre 454"
-        Actif:SG PEE STK  $-234.90
+    Actif:SG PEE STK  49.957 "Arcancia Equilibre 454"
+    Actif:SG PEE STK  $-234.90
 
 2000/12/08 !  Achat
-        Actif:SG PEE STK  215.796 "Arcancia Equilibre 455"
-        Actif:SG PEE STK  $-10742.54
+    Actif:SG PEE STK  215.796 "Arcancia Equilibre 455"
+    Actif:SG PEE STK  $-10742.54
 @end smallexample
 
 @node Buying and Selling Stock, Fixing Lot Prices, Naming Commodities, Currency and Commodities
@@ -1532,21 +1531,21 @@ unit you made the purchase in ($ for AAPL). Yes, the typical
 convention is as follows:
 
 @smallexample
-   2004/05/01 Stock purchase
-       Assets:Broker                    50 AAPL @@ $30.00
-       Expenses:Broker:Commissions       $19.95
-       Assets:Broker                 $-1,500.00
+2004/05/01 Stock purchase
+    Assets:Broker                    50 AAPL @@ $30.00
+    Expenses:Broker:Commissions       $19.95
+    Assets:Broker                 $-1,500.00
 @end smallexample
 
 This assumes you have a brokerage account that is capable of managed
 both liquid and commodity assets.  Now, on the day of the sale:
 
 @smallexample
-   2005/08/01 Stock sale
-       Assets:Broker                   -50 APPL @{$30.00@} @@ $50.00
-       Expenses:Broker:Commissions       $19.95
-       Income:Capital Gains          $-1,000.00
-       Assets:Broker                  $2,500.00
+2005/08/01 Stock sale
+    Assets:Broker                   -50 APPL @{$30.00@} @@ $50.00
+    Expenses:Broker:Commissions       $19.95
+    Income:Capital Gains          $-1,000.00
+    Assets:Broker                  $2,500.00
 @end smallexample
 
 @noindent
@@ -1577,9 +1576,9 @@ reported in terms of today's price.
 This is supported as follows:
 
 @smallexample
-     2009/01/01 Shell
-         Expenses:Gasoline             11 GAL @{=$2.299@}
-         Assets:Checking
+2009/01/01 Shell
+    Expenses:Gasoline             11 GAL @{=$2.299@}
+    Assets:Checking
 @end smallexample
 
 This transaction actually introduces a new commodity, ``GAL @{=$2.29@}'',
@@ -1591,22 +1590,22 @@ in one of two ways, both equivalent (note the lack of the equal sign
 from the transaction above):
 
 @smallexample
-     2009/01/01 Shell
-         Expenses:Gasoline             11 GAL @{$2.299@}
-         Assets:Checking
+2009/01/01 Shell
+    Expenses:Gasoline             11 GAL @{$2.299@}
+    Assets:Checking
 
-     2009/01/01 Shell
-         Expenses:Gasoline             11 GAL @@ $2.299
-         Assets:Checking
+2009/01/01 Shell
+    Expenses:Gasoline             11 GAL @@ $2.299
+    Assets:Checking
 @end smallexample
 
 There is no difference in meaning between these two forms.  Why do
 both exist, you ask?  To support things like this:
 
 @smallexample
-     2009/01/01 Shell
-         Expenses:Gasoline             11 GAL @{=$2.299@} @@ $2.30
-         Assets:Checking
+2009/01/01 Shell
+    Expenses:Gasoline             11 GAL @{=$2.299@} @@ $2.30
+    Assets:Checking
 @end smallexample
 
 This transaction says that you bought 11 gallons priced at $2.299 per
@@ -1783,7 +1782,7 @@ Using the @code{--strict} option will cause Ledger to complain if any
 accounts are not previously defined:
 
 @smallexample
-15:27:39 ~/ledger (next) > ledger bal --strict
+$ ledger bal --strict
 Warning: "FinanceData/Master.dat", line 6: Unknown account 'Liabilities:Tithe Owed'
 Warning: "FinanceData/Master.dat", line 8: Unknown account 'Liabilities:Tithe Owed'
 Warning: "FinanceData/Master.dat", line 15: Unknown account 'Allocation:Equities:Domestic'
@@ -1793,7 +1792,7 @@ If you have a large Ledger register already created use the
 @code{accounts} command to get started:
 
 @smallexample
-ledger accounts >> Accounts.dat
+$ ledger accounts >> Accounts.dat
 @end smallexample
 
 @noindent
@@ -1840,7 +1839,7 @@ payee, or a description of the posting.
 The format of each following posting is:
 
 @smallexample
-  ACCOUNT  AMOUNT  [; NOTE]
+ACCOUNT  AMOUNT  [; NOTE]
 @end smallexample
 
 The @code{ACCOUNT} may be surrounded by parentheses if it is a virtual
@@ -1905,14 +1904,14 @@ they immediately follow the account directive and if they begin with
 whitespace:
 
 @smallexample
- account Expenses:Food
-     note This account is all about the chicken!
-     alias food
-     payee ^(KFC|Popeyes)$
-     check commodity == "$"
-     assert commodity == "$"
-     eval print("Hello!")
-     default
+account Expenses:Food
+    note This account is all about the chicken!
+    alias food
+    payee ^(KFC|Popeyes)$
+    check commodity == "$"
+    assert commodity == "$"
+    eval print("Hello!")
+    default
 @end smallexample
 
 The @code{note} sub-directive associates a textual note with the
@@ -1929,9 +1928,9 @@ encountered and an account within its transaction ends in the name
 "Unknown".  Example:
 
 @smallexample
- 2012-02-27 KFC
-     Expenses:Unknown      $10.00  ; Read now as "Expenses:Food"
-     Assets:Cash
+2012-02-27 KFC
+    Expenses:Unknown      $10.00  ; Read now as "Expenses:Food"
+    Assets:Cash
 @end smallexample
 
 The @code{check} and @code{assert} directives warn or error
@@ -1978,8 +1977,8 @@ alias Dining=Expenses:Entertainment:Dining
 alias Checking=Assets:Credit Union:Joint Checking Account
 
 2011/11/28 YummyPalace
-   Dining        $10.00
-   Checking
+    Dining        $10.00
+    Checking
 
 @end smallexample
 
@@ -2010,13 +2009,13 @@ balancing the transaction.  The following example set the
 @smallexample
 bucket Assets:Checking
 2011/01/25 Tom's Used Cars
-  Expenses:Auto                    $ 5,500.00
+    Expenses:Auto                    $ 5,500.00
 
 2011/01/27 Book Store
-  Expenses:Books                       $20.00
+    Expenses:Books                       $20.00
 
 2011/12/01 Sale
-  Assets:Checking:Business            $ 30.00
+    Assets:Checking:Business            $ 30.00
 
 @end smallexample
 
@@ -2060,7 +2059,7 @@ sub-directives, if they immediately follow the commodity directive and
 if they begin with whitespace:
 
 @smallexample
- commodity $
+commodity $
    note American Dollars
    format $1,000.00
    nomarket
@@ -2088,8 +2087,8 @@ Allows you to define value expression for future use. For example:
 define var_name=$100
 
 2011/12/01 Test
-   Expenses  (var_name*4)
-   Assets
+    Expenses  (var_name*4)
+    Assets
 @end smallexample
 
 The posting will have a cost of $400.
@@ -2125,13 +2124,13 @@ endfixed
 is equivalent to this:
 
 @smallexample
-   2012-04-10 Lunch in Canada
-       Assets:Wallet            -15.50 CAD @{=$0.90@}
-       Expenses:Food            15.50 CAD  @{=$0.90@}
+2012-04-10 Lunch in Canada
+    Assets:Wallet            -15.50 CAD @{=$0.90@}
+    Expenses:Food            15.50 CAD  @{=$0.90@}
 
-   2012-04-11 Second day Dinner in Canada
-       Assets:Wallet            -25.75 CAD  @{=$0.90@}
-       Expenses:Food            25.75 CAD   @{=$0.90@}
+2012-04-11 Second day Dinner in Canada
+    Assets:Wallet            -25.75 CAD  @{=$0.90@}
+    Expenses:Food            25.75 CAD   @{=$0.90@}
 @end smallexample
 
 Note that ending a @code{fixed} is done differently than other
@@ -2153,16 +2152,16 @@ immediately follows the payee directive and if it begins with
 whitespace:
 
 @smallexample
- payee KFC
-     alias KENTUCKY FRIED CHICKEN
+payee KFC
+    alias KENTUCKY FRIED CHICKEN
 @end smallexample
 
 The @code{alias} directive provides a regexp which, if it matches
 a parsed payee, the declared payee name is substituted:
 
 @smallexample
- 2012-02-27 KENTUCKY FRIED CHICKEN  ; will be read as being 'KFC'
-   ...
+2012-02-27 KENTUCKY FRIED CHICKEN  ; will be read as being 'KFC'
+...
 @end smallexample
 
 Ledger will display the mapped payees in @code{print} and
@@ -2176,20 +2175,22 @@ tag to all.  Tags can have values and may be nested.
 @smallexample
 apply tag hastag
 apply tag nestedtag: true
+
 2011/01/25 Tom's Used Cars
-  Expenses:Auto                    $ 5,500.00
-  ; :nobudget:
-  Assets:Checking
+    Expenses:Auto                    $ 5,500.00
+    ; :nobudget:
+    Assets:Checking
 
 2011/01/27 Book Store
-  Expenses:Books                       $20.00
-  Liabilities:MasterCard
+    Expenses:Books                       $20.00
+    Liabilities:MasterCard
 
 end apply tag nestedtag
 
 2011/12/01 Sale
-  Assets:Checking:Business            $ 30.00
-  Income:Sales
+    Assets:Checking:Business            $ 30.00
+    Income:Sales
+
 end apply tag hastag
 @end smallexample
 
@@ -2198,22 +2199,22 @@ is the equivalent of
 
 @smallexample
 2011/01/25 Tom's Used Cars
-  :hastag:
-  nestedtag: true
-  Expenses:Auto                    $ 5,500.00
-  ; :nobudget:
-  Assets:Checking
+    :hastag:
+    nestedtag: true
+    Expenses:Auto                    $ 5,500.00
+    ; :nobudget:
+    Assets:Checking
 
 2011/01/27 Book Store
-  :hastag:
-  nestedtag: true
-  Expenses:Books                       $20.00
-  Liabilities:MasterCard
+    :hastag:
+    nestedtag: true
+    Expenses:Books                       $20.00
+    Liabilities:MasterCard
 
 2011/12/01 Sale
-  :hastag:
-  Assets:Checking:Business            $ 30.00
-  Income:Sales
+    :hastag:
+    Assets:Checking:Business            $ 30.00
+    Income:Sales
 @end smallexample
 
 Note that anything following ``@code{end tag}'' is ignored.  placing
@@ -2225,8 +2226,8 @@ Pre-declares tag names.  This only has effect if @code{--strict} or
 @code{--pedantic} is used (see below).
 
 @smallexample
- tag Receipt
- tag CSV
+tag Receipt
+tag CSV
 @end smallexample
 
 The 'tag' directive supports two optional sub-directives, if they
@@ -2234,9 +2235,9 @@ immediately follow the tag directive and if they begin with
 whitespace:
 
 @smallexample
- tag Receipt
-   check value =~ /pattern/
-   assert value != "foobar"
+tag Receipt
+  check value =~ /pattern/
+  assert value != "foobar"
 @end smallexample
 
 The @code{check} and @code{assert} directives warn or error
@@ -2349,15 +2350,15 @@ leaving just 2003 and 2004 in the current file.  So, use
 called @file{ledger-old.dat}:
 
 @smallexample
-ledger -f ledger.dat -b 2000 -e 2001 print > ledger-old.dat
+$ ledger -f ledger.dat -b 2000 -e 2001 print > ledger-old.dat
 @end smallexample
 
 To delete older data from the current ledger file, use @command{print}
 again, this time specifying year 2002 as the starting date:
 
 @smallexample
-ledger -f ledger.dat -b 2002 print > x
-mv x ledger.dat
+$ ledger -f ledger.dat -b 2002 print > x
+$ mv x ledger.dat
 @end smallexample
 
 However, now the current file contains @emph{only} postings from 2002
@@ -2367,10 +2368,10 @@ compensate for this, we must append an equity report for the old ledger
 at the beginning of the new one:
 
 @smallexample
-ledger -f ledger-old.dat equity > equity.dat
-cat equity.dat ledger.dat > x
-mv x ledger.dat
-rm equity.dat
+$ ledger -f ledger-old.dat equity > equity.dat
+$ cat equity.dat ledger.dat > x
+$ mv x ledger.dat
+$ rm equity.dat
 @end smallexample
 
 Now the balances reported from @file{ledger.dat} are identical to what
@@ -2422,9 +2423,9 @@ doing it.
 The most basic form of transaction is:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Assets:Cash                 $-20.00
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Assets:Cash                 $-20.00
 @end smallexample
 
 This transaction has a date, a payee or description, a target account
@@ -2434,10 +2435,10 @@ posting specifies what action is taken related to that account.
 A transaction can have any number of postings:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Assets:Cash                 $-10.00
-       Liabilities:Credit          $-10.00
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Assets:Cash                 $-10.00
+    Liabilities:Credit          $-10.00
 @end smallexample
 
 @node Eliding amounts, Auxiliary dates, Basic format, Transactions
@@ -2448,10 +2449,10 @@ That is, if exactly one posting has no amount specified, Ledger will
 infer the inverse of the other postings' amounts:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Assets:Cash                 $-10.00
-       Liabilities:Credit                   ; same as specifying $-10
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Assets:Cash                 $-10.00
+    Liabilities:Credit                   ; same as specifying $-10
 @end smallexample
 
 @noindent
@@ -2460,26 +2461,26 @@ empty posting N times and fill in the negated values of the various
 commodities:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Expenses:Tips                 $2.00
-       Assets:Cash              EUR -10.00
-       Assets:Cash              GBP -10.00
-       Liabilities:Credit
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Expenses:Tips                 $2.00
+    Assets:Cash              EUR -10.00
+    Assets:Cash              GBP -10.00
+    Liabilities:Credit
 @end smallexample
 
 @noindent
 This transaction is identical to writing:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Expenses:Tips                 $2.00
-       Assets:Cash              EUR -10.00
-       Assets:Cash              GBP -10.00
-       Liabilities:Credit          $-22.00
-       Liabilities:Credit        EUR 10.00
-       Liabilities:Credit        GBP 10.00
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Expenses:Tips                 $2.00
+    Assets:Cash              EUR -10.00
+    Assets:Cash              GBP -10.00
+    Liabilities:Credit          $-22.00
+    Liabilities:Credit        EUR 10.00
+    Liabilities:Credit        GBP 10.00
 @end smallexample
 
 @node Auxiliary dates, Codes, Eliding amounts, Transactions
@@ -2489,9 +2490,9 @@ You can associate a second date with a transaction by following the
 primary date with an equals sign:
 
 @smallexample
-   2012-03-10=2012-03-08 KFC
-       Expenses:Food                $20.00
-       Assets:Cash                 $-20.00
+2012-03-10=2012-03-08 KFC
+    Expenses:Food                $20.00
+    Assets:Cash                 $-20.00
 @end smallexample
 
 What this auxiliary date means is entirely up to you.  The only use
@@ -2508,9 +2509,9 @@ codes like DEP, XFER, etc., as well as check numbers.  This is to give
 you a place to put those codes:
 
 @smallexample
-   2012-03-10 (#100) KFC
-       Expenses:Food                $20.00
-       Assets:Checking
+2012-03-10 (#100) KFC
+    Expenses:Food                $20.00
+    Assets:Checking
 @end smallexample
 
 @node Transaction state, Transaction notes, Codes, Transactions
@@ -2521,18 +2522,18 @@ The default is uncleared.  To mark a transaction cleared, put a *
 before the payee, and after date or code:
 
 @smallexample
-   2012-03-10 * KFC
-       Expenses:Food                $20.00
-       Assets:Cash
+2012-03-10 * KFC
+    Expenses:Food                $20.00
+    Assets:Cash
 @end smallexample
 
 @noindent
 To mark it pending, use a !:
 
 @smallexample
-   2012-03-10 ! KFC
-       Expenses:Food                $20.00
-       Assets:Cash
+2012-03-10 ! KFC
+    Expenses:Food                $20.00
+    Assets:Cash
 @end smallexample
 
 What these mean is entirely up to you.  The @code{--cleared} option
@@ -2548,18 +2549,18 @@ When you clear a transaction, that's really just shorthand for
 clearing all of its postings.  That is:
 
 @smallexample
-   2012-03-10 * KFC
-       Expenses:Food                $20.00
-       Assets:Cash
+2012-03-10 * KFC
+    Expenses:Food                $20.00
+    Assets:Cash
 @end smallexample
 
 @noindent
 Is the same as writing:
 
 @smallexample
-   2012-03-10 KFC
-       * Expenses:Food                $20.00
-       * Assets:Cash
+2012-03-10 KFC
+    * Expenses:Food                $20.00
+    * Assets:Cash
 @end smallexample
 
 @noindent
@@ -2567,9 +2568,9 @@ You can mark individual postings as cleared or pending, in case one
 ``side'' of the transaction has cleared, but the other hasn't yet:
 
 @smallexample
-   2012-03-10 KFC
-       Liabilities:Credit            $100.00
-       * Assets:Checking
+2012-03-10 KFC
+    Liabilities:Credit            $100.00
+    * Assets:Checking
 @end smallexample
 
 @node Transaction notes, Metadata, Transaction state, Transactions
@@ -2580,9 +2581,9 @@ and a tab, which Ledger calls this a ``hard separator''), you may
 introduce a note about the transaction using the ; character:
 
 @smallexample
-   2012-03-10 * KFC                ; yum, chicken...
-       Expenses:Food                $20.00
-       Assets:Cash
+2012-03-10 * KFC                ; yum, chicken...
+    Expenses:Food                $20.00
+    Assets:Cash
 @end smallexample
 
 @noindent
@@ -2590,15 +2591,15 @@ Notes can also appear on the next line, so long as that line begins
 with whitespace:
 
 @smallexample
-   2012-03-10 * KFC                ; yum, chicken...
-       ; and more notes...
-       Expenses:Food                $20.00
-       Assets:Cash
+2012-03-10 * KFC                ; yum, chicken...
+    ; and more notes...
+    Expenses:Food                $20.00
+    Assets:Cash
 
-   2012-03-10 * KFC
-       ; just these notes...
-       Expenses:Food                $20.00
-       Assets:Cash
+2012-03-10 * KFC
+    ; just these notes...
+    Expenses:Food                $20.00
+    Assets:Cash
 @end smallexample
 
 A transaction note is shared by all its postings.  This becomes
@@ -2607,10 +2608,10 @@ a note belongs only to one posting, place it after a hard separator
 after the amount, or on its own line preceded by whitespace:
 
 @smallexample
-   2012-03-10 * KFC
-       Expenses:Food                $20.00  ; posting #1 note
-       Assets:Cash
-         ; posting #2 note, extra indentation is optional
+2012-03-10 * KFC
+    Expenses:Food                $20.00  ; posting #1 note
+    Assets:Cash
+      ; posting #2 note, extra indentation is optional
 @end smallexample
 
 @node Metadata, Virtual postings, Transaction notes, Transactions
@@ -2636,19 +2637,19 @@ To tag an item, put any word not containing whitespace between two
 colons:
 
 @smallexample
-   2012-03-10 * KFC
-       Expenses:Food                $20.00
-       Assets:Cash
-         ; :TAG:
+2012-03-10 * KFC
+    Expenses:Food                $20.00
+    Assets:Cash
+      ; :TAG:
 @end smallexample
 
 You can gang up multiple tags by sharing colons:
 
 @smallexample
-   2012-03-10 * KFC
-       Expenses:Food                $20.00
-       Assets:Cash
-         ; :TAG1:TAG2:TAG3:
+2012-03-10 * KFC
+    Expenses:Food                $20.00
+    Assets:Cash
+      ; :TAG1:TAG2:TAG3:
 @end smallexample
 
 @node Metadata values, Typed metadata, Metadata tags, Metadata
@@ -2659,10 +2660,10 @@ the value can be any string of characters.  Whitespace is needed after
 the colon, and cannot appear in the Key:
 
 @smallexample
-   2012-03-10 * KFC
-       Expenses:Food                $20.00
-       Assets:Cash
-         ; MyTag: This is just a bogus value for MyTag
+2012-03-10 * KFC
+    Expenses:Food                $20.00
+    Assets:Cash
+      ; MyTag: This is just a bogus value for MyTag
 @end smallexample
 
 @node Typed metadata,  , Metadata values, Metadata
@@ -2673,10 +2674,10 @@ expression and stored internally as a value rather than as a string.
 For example, although I can specify a date textually like so:
 
 @smallexample
-   2012-03-10 * KFC
-       Expenses:Food                $20.00
-       Assets:Cash
-         ; AuxDate: 2012/02/30
+2012-03-10 * KFC
+    Expenses:Food                $20.00
+    Assets:Cash
+      ; AuxDate: 2012/02/30
 @end smallexample
 
 @noindent
@@ -2686,10 +2687,10 @@ into a date automatically every time it is needed as a date).  If on
 the other hand I write this:
 
 @smallexample
-   2012-03-10 * KFC
-       Expenses:Food                $20.00
-       Assets:Cash
-         ; AuxDate:: [2012/02/30]
+2012-03-10 * KFC
+    Expenses:Food                $20.00
+    Assets:Cash
+      ; AuxDate:: [2012/02/30]
 @end smallexample
 
 @noindent
@@ -2713,10 +2714,10 @@ To specify a virtual account, surround the account name with
 parentheses:
 
 @smallexample
-   2012-03-10 * KFC
-       Expenses:Food                $20.00
-       Assets:Cash
-       (Budget:Food)               $-20.00
+2012-03-10 * KFC
+    Expenses:Food                $20.00
+    Assets:Cash
+    (Budget:Food)               $-20.00
 @end smallexample
 
 If you want, you can state that virtual postings @emph{should} balance
@@ -2724,11 +2725,11 @@ against one or more other virtual postings by using brackets (which
 look ``harder'') rather than parentheses:
 
 @smallexample
-   2012-03-10 * KFC
-       Expenses:Food                $20.00
-       Assets:Cash
-       [Budget:Food]               $-20.00
-       [Equity:Budgets]             $20.00
+2012-03-10 * KFC
+    Expenses:Food                $20.00
+    Assets:Cash
+    [Budget:Food]               $-20.00
+    [Equity:Budgets]             $20.00
 @end smallexample
 
 @node Expression amounts, Balance verification, Virtual postings, Transactions
@@ -2739,9 +2740,9 @@ but it can also be any value expression.  To indicate this, surround
 the amount expression with parentheses:
 
 @smallexample
-   2012-03-10 * KFC
-       Expenses:Food      ($10.00 + $20.00)  ; Ledger adds it up for you
-       Assets:Cash
+2012-03-10 * KFC
+    Expenses:Food      ($10.00 + $20.00)  ; Ledger adds it up for you
+    Assets:Cash
 @end smallexample
 
 @node Balance verification, Posting cost, Expression amounts, Transactions
@@ -2768,9 +2769,9 @@ assignments.
 A balance assertion has this general form:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Assets:Cash                 $-20.00 = $500.00
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Assets:Cash                 $-20.00 = $500.00
 @end smallexample
 
 This simply asserts that after subtracting $20.00 from Assets:Cash,
@@ -2782,9 +2783,9 @@ that the resulting total matches $500.00.  If not, it is an error.
 A balance assignment has this form:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Assets:Cash                         = $500.00
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Assets:Cash                         = $500.00
 @end smallexample
 
 This sets the amount of the second posting to whatever it would need
@@ -2799,9 +2800,9 @@ balance no longer matches your bank balance.  You can create an
 adjustment transaction using balance assignments:
 
 @smallexample
-   2012-03-10 Adjustment
-       Assets:Cash                         = $500.00
-       Equity:Adjustments
+2012-03-10 Adjustment
+    Assets:Cash                         = $500.00
+    Equity:Adjustments
 @end smallexample
 
 Since the second posting is also null, it's value will become the
@@ -2817,8 +2818,8 @@ indirectly provided by the balance assignment's value.
 As a consequence of all the above, consider the following transaction:
 
 @smallexample
-   2012-03-10 My Broker
-       [Assets:Brokerage]            = 10 AAPL
+2012-03-10 My Broker
+    [Assets:Brokerage]            = 10 AAPL
 @end smallexample
 
 What this says is: set the amount of the posting to whatever value is
@@ -2844,9 +2845,9 @@ for you, and can use it during reporting in various ways.  Here's an
 example of a stock purchase:
 
 @smallexample
-   2012-03-10 My Broker
-       Assets:Brokerage             10 AAPL
-       Assets:Brokerage:Cash       $-500.00
+2012-03-10 My Broker
+    Assets:Brokerage             10 AAPL
+    Assets:Brokerage:Cash       $-500.00
 @end smallexample
 
 This is different from transferring 10 AAPL shares from one account to
@@ -2860,18 +2861,18 @@ You can make any posting's cost explicit using the @@ symbol after the
 amount or amount expression:
 
 @smallexample
-   2012-03-10 My Broker
-       Assets:Brokerage             10 AAPL @@ $50.00
-       Assets:Brokerage:Cash       $-500.00
+2012-03-10 My Broker
+    Assets:Brokerage             10 AAPL @@ $50.00
+    Assets:Brokerage:Cash       $-500.00
 @end smallexample
 
 When you do this, since Ledger can now figure out the balancing amount
 from the first posting's cost, you can elide the otheramount:
 
 @smallexample
-   2012-03-10 My Broker
-       Assets:Brokerage             10 AAPL @@ $50.00
-       Assets:Brokerage:Cash
+2012-03-10 My Broker
+    Assets:Brokerage             10 AAPL @@ $50.00
+    Assets:Brokerage:Cash
 @end smallexample
 
 @menu
@@ -2903,17 +2904,17 @@ Just as you can have amount expressions, you can have posting
 expressions:
 
 @smallexample
-   2012-03-10 My Broker
-       Assets:Brokerage             10 AAPL @@ ($500.00 / 10)
-       Assets:Brokerage:Cash
+2012-03-10 My Broker
+    Assets:Brokerage             10 AAPL @@ ($500.00 / 10)
+    Assets:Brokerage:Cash
 @end smallexample
 
 You can even have both:
 
 @smallexample
-   2012-03-10 My Broker
-       Assets:Brokerage             (5 AAPL * 2) @@ ($500.00 / 10)
-       Assets:Brokerage:Cash
+2012-03-10 My Broker
+    Assets:Brokerage             (5 AAPL * 2) @@ ($500.00 / 10)
+    Assets:Brokerage:Cash
 @end smallexample
 
 @node Total posting costs, Virtual posting costs, Posting cost expressions, Transactions
@@ -2924,17 +2925,17 @@ The cost figure following the @@ character specifies the
 like to specify the total cost instead, use @@@@:
 
 @smallexample
-   2012-03-10 My Broker
-       Assets:Brokerage             10 AAPL @@@@ $500.00
-       Assets:Brokerage:Cash
+2012-03-10 My Broker
+    Assets:Brokerage             10 AAPL @@@@ $500.00
+    Assets:Brokerage:Cash
 @end smallexample
 
 Ledger reads this as if you had written:
 
 @smallexample
-   2012-03-10 My Broker
-       Assets:Brokerage             10 AAPL @@ ($500.00 / 10)
-       Assets:Brokerage:Cash
+2012-03-10 My Broker
+    Assets:Brokerage             10 AAPL @@ ($500.00 / 10)
+    Assets:Brokerage:Cash
 @end smallexample
 
 @node Virtual posting costs, Commodity prices, Total posting costs, Transactions
@@ -2947,9 +2948,9 @@ happening in the case of an exceptional transaction, surround the @@
 or @@@@ with parentheses:
 
 @smallexample
-   2012-03-10 My Brother
-       Assets:Brokerage            1000 AAPL (@@) $1
-       Income:Gifts Received
+2012-03-10 My Brother
+    Assets:Brokerage            1000 AAPL (@@) $1
+    Income:Gifts Received
 @end smallexample
 
 @node Commodity prices, Prices vs. costs, Virtual posting costs, Transactions
@@ -2964,9 +2965,9 @@ fact remains invisible to the user, unless you turn on
 For example, consider the stock sale given above:
 
 @smallexample
-   2012-03-10 My Broker
-       Assets:Brokerage             10 AAPL @@ $50.00
-       Assets:Brokerage:Cash
+2012-03-10 My Broker
+    Assets:Brokerage             10 AAPL @@ $50.00
+    Assets:Brokerage:Cash
 @end smallexample
 
 The commodity transferred into Assets:Brokerage is not actually 10
@@ -2979,19 +2980,19 @@ This becomes significant if you later sell that commodity again.  For
 example, you might write this:
 
 @smallexample
-   2012-04-10 My Broker
-       Assets:Brokerage:Cash
-       Assets:Brokerage            -10 AAPL @@ $75.00
+2012-04-10 My Broker
+    Assets:Brokerage:Cash
+    Assets:Brokerage            -10 AAPL @@ $75.00
 @end smallexample
 
 And that would be perfectly fine, but how do you track the capital
 gains on the sale?  It could be done with a virtual posting:
 
 @smallexample
-   2012-04-10 My Broker
-       Assets:Brokerage:Cash
-       Assets:Brokerage            -10 AAPL @@ $75.00
-       (Income:Capital Gains)      $-250.00
+2012-04-10 My Broker
+    Assets:Brokerage:Cash
+    Assets:Brokerage            -10 AAPL @@ $75.00
+    (Income:Capital Gains)      $-250.00
 @end smallexample
 
 But this gets messy since capital gains income is very real, and not
@@ -3002,9 +3003,9 @@ will figure out that the price of the shares you're selling, and the
 cost you're selling them at, don't balance:
 
 @smallexample
-   2012-04-10 My Broker
-       Assets:Brokerage:Cash       $750.00
-       Assets:Brokerage            -10 AAPL @{$50.00@} @@ $75.00
+2012-04-10 My Broker
+    Assets:Brokerage:Cash       $750.00
+    Assets:Brokerage            -10 AAPL @{$50.00@} @@ $75.00
 @end smallexample
 
 This transaction will fail because the $250.00 price difference
@@ -3024,10 +3025,10 @@ per-share price in doubled braces.  This goes well with total costs,
 but is not required to be used with them:
 
 @smallexample
-   2012-04-10 My Broker
-       Assets:Brokerage:Cash       $750.00
-       Assets:Brokerage            -10 AAPL @{@{$500.00@}@} @@@@ $750.00
-       Income:Capital Gains       $-250.00
+2012-04-10 My Broker
+    Assets:Brokerage:Cash       $750.00
+    Assets:Brokerage            -10 AAPL @{@{$500.00@}@} @@@@ $750.00
+    Income:Capital Gains       $-250.00
 @end smallexample
 
 It should be noted that this is a convenience only for cases where you
@@ -3041,38 +3042,38 @@ price form is a shorthand only.
 Plus, it comes with dangers.  This works fine:
 
 @smallexample
-   2012-04-10 My Broker
-       Assets:Brokerage            10 AAPL @@ $50.00
-       Assets:Brokerage:Cash       $750.00
+2012-04-10 My Broker
+    Assets:Brokerage            10 AAPL @@ $50.00
+    Assets:Brokerage:Cash       $750.00
 
-   2012-04-10 My Broker
-       Assets:Brokerage:Cash       $375.00
-       Assets:Brokerage            -5 AAPL @{$50.00@} @@ $375.00
-       Income:Capital Gains       $-125.00
+2012-04-10 My Broker
+    Assets:Brokerage:Cash       $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} @@ $375.00
+    Income:Capital Gains       $-125.00
 
-   2012-04-10 My Broker
-       Assets:Brokerage:Cash       $375.00
-       Assets:Brokerage            -5 AAPL @{$50.00@} @@ $375.00
-       Income:Capital Gains       $-125.00
+2012-04-10 My Broker
+    Assets:Brokerage:Cash       $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} @@ $375.00
+    Income:Capital Gains       $-125.00
 @end smallexample
 
 @noindent
 But this does not do what you might expect:
 
 @smallexample
-   2012-04-10 My Broker
-       Assets:Brokerage            10 AAPL @@ $50.00
-       Assets:Brokerage:Cash       $750.00
+2012-04-10 My Broker
+    Assets:Brokerage            10 AAPL @@ $50.00
+    Assets:Brokerage:Cash       $750.00
 
-   2012-04-10 My Broker
-       Assets:Brokerage:Cash       $375.00
-       Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@ $375.00
-       Income:Capital Gains       $-125.00
+2012-04-10 My Broker
+    Assets:Brokerage:Cash       $375.00
+    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@ $375.00
+    Income:Capital Gains       $-125.00
 
-   2012-04-10 My Broker
-       Assets:Brokerage:Cash       $375.00
-       Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@ $375.00
-       Income:Capital Gains       $-125.00
+2012-04-10 My Broker
+    Assets:Brokerage:Cash       $375.00
+    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@ $375.00
+    Income:Capital Gains       $-125.00
 @end smallexample
 
 And in cases where the amounts do not divide into whole figure and
@@ -3086,13 +3087,13 @@ Because lot pricing provides enough information to infer the cost, the
 following two transactions are equivalent:
 
 @smallexample
-   2012-04-10 My Broker
-       Assets:Brokerage            10 AAPL @@ $50.00
-       Assets:Brokerage:Cash       $750.00
+2012-04-10 My Broker
+    Assets:Brokerage            10 AAPL @@ $50.00
+    Assets:Brokerage:Cash       $750.00
 
-   2012-04-10 My Broker
-       Assets:Brokerage            10 AAPL @{$50.00@}
-       Assets:Brokerage:Cash       $750.00
+2012-04-10 My Broker
+    Assets:Brokerage            10 AAPL @{$50.00@}
+    Assets:Brokerage:Cash       $750.00
 @end smallexample
 
 However, note that what you see in some reports may differ, for
@@ -3109,9 +3110,9 @@ stock is.  You can short-circuit this lookup by ``fixing'' the price
 at the time of a transaction.  This is done using @{=AMOUNT@}:
 
 @smallexample
-   2012-04-10 My Broker
-       Assets:Brokerage            10 AAPL @{=$50.00@}
-       Assets:Brokerage:Cash       $750.00
+2012-04-10 My Broker
+    Assets:Brokerage            10 AAPL @{=$50.00@}
+    Assets:Brokerage:Cash       $750.00
 @end smallexample
 
 These 10 AAPL will now always be reported as being worth $50, no
@@ -3125,9 +3126,9 @@ a matter of preference, there is an equivalent syntax for specified
 fixated prices by way of the cost:
 
 @smallexample
-   2012-04-10 My Broker
-       Assets:Brokerage            10 AAPL @@ =$50.00
-       Assets:Brokerage:Cash       $750.00
+2012-04-10 My Broker
+    Assets:Brokerage            10 AAPL @@ =$50.00
+    Assets:Brokerage:Cash       $750.00
 @end smallexample
 
 This is the same as the previous transaction, with the same caveats
@@ -3143,10 +3144,10 @@ square brackets (the same way that dates are parsed in value
 expressions):
 
 @smallexample
-   2012-04-10 My Broker
-       Assets:Brokerage:Cash       $375.00
-       Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] @@ $375.00
-       Income:Capital Gains       $-125.00
+2012-04-10 My Broker
+    Assets:Brokerage:Cash       $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] @@ $375.00
+    Income:Capital Gains       $-125.00
 @end smallexample
 
 @node Lot notes, Lot value expressions, Lot dates, Transactions
@@ -3158,10 +3159,10 @@ that the note cannot begin with an @@ character, as that would
 indicate a virtual cost:
 
 @smallexample
-   2012-04-10 My Broker
-       Assets:Brokerage:Cash       $375.00
-       Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] (Oh my!) @@ $375.00
-       Income:Capital Gains       $-125.00
+2012-04-10 My Broker
+    Assets:Brokerage:Cash       $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] (Oh my!) @@ $375.00
+    Income:Capital Gains       $-125.00
 @end smallexample
 
 You can any combination of lot prices, dates or notes, in any order.
@@ -3190,26 +3191,26 @@ name, or a lambda expression.  Here's a function that yields the price
 as $10 in whatever commodity is being requested:
 
 @smallexample
-   define ten_dollars(s, date, t) = market($10, date, t)
+define ten_dollars(s, date, t) = market($10, date, t)
 @end smallexample
 
 I can now use that in a lot value expression as follows:
 
 @smallexample
-   2012-04-10 My Broker
-       Assets:Brokerage:Cash       $375.00
-       Assets:Brokerage            -5 AAPL @{$50.00@} ((ten_dollars)) @@@@ $375.00
-       Income:Capital Gains       $-125.00
+2012-04-10 My Broker
+    Assets:Brokerage:Cash       $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} ((ten_dollars)) @@@@ $375.00
+    Income:Capital Gains       $-125.00
 @end smallexample
 
 Alternatively, I could do the same thing without pre-defining
 a function by using a lambda expression taking three arguments:
 
 @smallexample
-   2012-04-10 My Broker
-       A:B:Cash       $375.00
-       A:B     -5 AAPL @{$50.00@} ((s, d, t -> market($10, date, t))) @@@@ $375.00
-       Income:Capital Gains       $-125.00
+2012-04-10 My Broker
+    A:B:Cash       $375.00
+    A:B     -5 AAPL @{$50.00@} ((s, d, t -> market($10, date, t))) @@@@ $375.00
+    Income:Capital Gains       $-125.00
 @end smallexample
 
 The arguments passed to these functions have the following meaning:
@@ -3252,30 +3253,30 @@ same query syntax as the Ledger command line.
 Consider this posting:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Assets:Cash
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Assets:Cash
 @end smallexample
 
 If I write this automated transaction before it in the file:
 
 @smallexample
-   = expr true
-       Foo                          $50.00
-       Bar                         $-50.00
+= expr true
+    Foo                          $50.00
+    Bar                         $-50.00
 @end smallexample
 
 Then the first transaction will be modified during parsing as if I'd
 written this:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Foo                          $50.00
-       Bar                         $-50.00
-       Assets:Cash                 $-20.00
-       Foo                          $50.00
-       Bar                         $-50.00
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Foo                          $50.00
+    Bar                         $-50.00
+    Assets:Cash                 $-20.00
+    Foo                          $50.00
+    Bar                         $-50.00
 @end smallexample
 
 Despite this fancy logic, automated transactions themselves follow
@@ -3306,25 +3307,25 @@ As a special case, if an automated transaction's posting's amount
 posting's cost.  For example:
 
 @smallexample
-   = expr true
-       Foo                           50.00
-       Bar                          -50.00
+= expr true
+    Foo                           50.00
+    Bar                          -50.00
 
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Assets:Cash
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Assets:Cash
 @end smallexample
 
 Then the latter transaction turns into this during parsing:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Foo                        $1000.00
-       Bar                       $-1000.00
-       Assets:Cash                 $-20.00
-       Foo                        $1000.00
-       Bar                       $-1000.00
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Foo                        $1000.00
+    Bar                       $-1000.00
+    Assets:Cash                 $-20.00
+    Foo                        $1000.00
+    Bar                       $-1000.00
 @end smallexample
 
 @node Accessing the matching posting's amount, Referring to the matching posting's account, Amount multipliers, Automated Transactions
@@ -3336,22 +3337,22 @@ posting.  For example, you can refer to that posting's amount using
 the ``amount'' value expression variable:
 
 @smallexample
-   = expr true
-       (Foo)                  (amount * 2)  ; same as just "2" in this case
+= expr true
+    (Foo)                  (amount * 2)  ; same as just "2" in this case
 
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Assets:Cash
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Assets:Cash
 @end smallexample
 
 This becomes:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       (Foo)                        $40.00
-       Assets:Cash                 $-20.00
-       (Foo)                       $-40.00
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    (Foo)                        $40.00
+    Assets:Cash                 $-20.00
+    (Foo)                       $-40.00
 @end smallexample
 
 @node Referring to the matching posting's account, Applying metadata to every matched posting, Accessing the matching posting's amount, Automated Transactions
@@ -3362,21 +3363,21 @@ the automated transaction itself.  This is done by using the string
 $account, anywhere within the account part of the automated posting:
 
 @smallexample
-   = food
-       (Budget:$account)                10
+= food
+    (Budget:$account)                10
 
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Assets:Cash
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Assets:Cash
 @end smallexample
 
 Becomes:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       (Budget:Expenses:Food)      $200.00
-       Assets:Cash                 $-20.00
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    (Budget:Expenses:Food)      $200.00
+    Assets:Cash                 $-20.00
 @end smallexample
 
 @node Applying metadata to every matched posting, Applying metadata to the generated posting, Referring to the matching posting's account, Automated Transactions
@@ -3387,23 +3388,23 @@ copied (along with any metadata) to every posting that matches the
 predicate:
 
 @smallexample
-   = food
-       ; Foo: Bar
-       (Budget:$account)                10
+= food
+    ; Foo: Bar
+    (Budget:$account)                10
 
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Assets:Cash
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Assets:Cash
 @end smallexample
 
 Becomes:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-         ; Foo: Bar
-       (Budget:Expenses:Food)      $200.00
-       Assets:Cash                 $-20.00
+2012-03-10 KFC
+    Expenses:Food                $20.00
+      ; Foo: Bar
+    (Budget:Expenses:Food)      $200.00
+    Assets:Cash                 $-20.00
 @end smallexample
 
 @node Applying metadata to the generated posting, State flags, Applying metadata to every matched posting, Automated Transactions
@@ -3413,23 +3414,23 @@ If the automated transaction's posting has a note, that note is
 carried to the generated posting within the matched transaction:
 
 @smallexample
-   = food
-       (Budget:$account)                10
-         ; Foo: Bar
+= food
+    (Budget:$account)                10
+      ; Foo: Bar
 
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       Assets:Cash
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    Assets:Cash
 @end smallexample
 
 Becomes:
 
 @smallexample
-   2012-03-10 KFC
-       Expenses:Food                $20.00
-       (Budget:Expenses:Food)      $200.00
-         ; Foo: Bar
-       Assets:Cash                 $-20.00
+2012-03-10 KFC
+    Expenses:Food                $20.00
+    (Budget:Expenses:Food)      $200.00
+      ; Foo: Bar
+    Assets:Cash                 $-20.00
 @end smallexample
 
 This is slightly different from the rules for regular transaction
@@ -3460,16 +3461,16 @@ something like
 
 @smallexample
 2008/01/01=2008/01/14 Client invoice  ;  estimated date you'll be paid
-  Assets:Accounts Receivable            $100.00
-  Income: Client name
+    Assets:Accounts Receivable            $100.00
+    Income: Client name
 @end smallexample
 
 Then, when you receive the payment, you change it to
 
 @smallexample
 2008/01/01=2008/01/15 Client invoice ;  actual date money received
-  Assets:Accounts Receivable            $100.00
-  Income: Client name
+    Assets:Accounts Receivable            $100.00
+    Income: Client name
 @end smallexample
 
 @noindent
@@ -3477,21 +3478,21 @@ and add something like
 
 @smallexample
 2008/01/15 Client payment
-  Assets:Checking                       $100.00
-  Assets:Accounts Receivable
+    Assets:Checking                       $100.00
+    Assets:Accounts Receivable
 @end smallexample
 
 Now
 
 @smallexample
-ledger --subtotal --begin 2008/01/01 --end 2008/01/14 bal Income
+$ ledger --subtotal --begin 2008/01/01 --end 2008/01/14 bal Income
 @end smallexample
 
 @noindent
 gives you your accrued income in the first two weeks of the year, and
 
 @smallexample
-ledger --effective --subtotal --begin 2008/01/01 --end 2008/01/14 bal Income
+$ ledger --effective --subtotal --begin 2008/01/01 --end 2008/01/14 bal Income
 @end smallexample
 
 @noindent
@@ -3570,7 +3571,7 @@ That's it.  To see how much Huqúq is currently owed based on your
 ledger transactions, use:
 
 @smallexample
-ledger balance Liabilities:Huquq
+$ ledger balance Liabilities:Huquq
 @end smallexample
 
 This works fine, but omits one aspect of the law: that Huquq is only
@@ -3581,7 +3582,7 @@ value of 2.22 ounces of gold.  This can be accomplished using the
 command:
 
 @smallexample
-ledger -Q -t "/Liab.*Huquq/?(a/P@{2.22 AU@}<=@{-1.0@}&a):a" -s bal liab
+$ ledger -Q -t "/Liab.*Huquq/?(a/P@{2.22 AU@}<=@{-1.0@}&a):a" -s bal liab
 @end smallexample
 
 With this command, the current price for gold is downloaded, and the
@@ -3590,7 +3591,7 @@ of gold.  If you wish the liability to be reflected in the parent
 subtotal either way, use this instead:
 
 @smallexample
-ledger -Q -T "/Liab.*Huquq/?(O/P@{2.22 AU@}<=@{-1.0@}&O):O" -s bal liab
+$ ledger -Q -T "/Liab.*Huquq/?(O/P@{2.22 AU@}<=@{-1.0@}&O):O" -s bal liab
 @end smallexample
 
 In some cases, you may wish to refer to the account of whichever
@@ -3599,8 +3600,8 @@ this, use the special account name @samp{$account}:
 
 @smallexample
 = /^Some:Long:Account:Name/
-  [$account]  -0.10
-  [Savings]    0.10
+    [$account]  -0.10
+    [Savings]    0.10
 @end smallexample
 
 This example causes 10% of the matching account's total to be deferred
@@ -3643,7 +3644,7 @@ The balance report is the most commonly used report.  The simplest
 invocation is:
 
 @smallexample
-ledger balance -f drewr3.dat
+$ ledger balance -f drewr3.dat
 @end smallexample
 
 @noindent
@@ -3677,7 +3678,7 @@ specific accounts is as easy as entering the names of the accounts
 after the command.
 
 @smallexample
-20:37:53 ~/ledger/test/input > ledger balance -f drewr3.dat Auto MasterCard
+$ ledger balance -f drewr3.dat Auto MasterCard
           $ 5,500.00  Expenses:Auto
             $ -20.00  Liabilities:MasterCard
 --------------------
@@ -3693,7 +3694,7 @@ If you want the entire contents of a branch of your account tree, use
 the highest common name in the branch:
 
 @smallexample
-20:39:21 ~/ledger/test/input > ledger balance -f drewr3.dat Income
+$ ledger balance -f drewr3.dat Income
          $ -2,030.00  Income
          $ -2,000.00    Salary
             $ -30.00    Sales
@@ -3706,8 +3707,8 @@ You can use general regular expressions in nearly anyplace Ledger
 needs a string:
 
 @smallexample
-20:40:28 ~/ledger/test/input > ledger balance -f drewr3.dat ^Bo
-21:13:29 ~/ledger/test/input > ledger balance -f drewr3.dat Bo
+$ ledger balance -f drewr3.dat ^Bo
+$ ledger balance -f drewr3.dat Bo
              $ 20.00  Expenses:Books
 @end smallexample
 
@@ -3721,8 +3722,8 @@ If you want to know exactly how much you have spent in a particular
 account on a particular payee, the following are equivalent:
 
 @smallexample
-> ledger balance Auto:Fuel and Chevron
-> ledger balance --limit "(account=~/Fuel/) & (payee=~/Chev/)"
+$ ledger balance Auto:Fuel and Chevron
+$ ledger balance --limit "(account=~/Fuel/) & (payee=~/Chev/)"
 @end smallexample
 
 @noindent
@@ -3736,7 +3737,7 @@ If you want to exclude specific accounts from the report, you can
 exclude multiple accounts with parentheses:
 
 @smallexample
-ledger -s bal Expenses and not \(Expenses:Drinks or Expenses:Candy or Expenses:Gifts\)
+$ ledger -s bal Expenses and not \(Expenses:Drinks or Expenses:Candy or Expenses:Gifts\)
 @end smallexample
 
 @node Controlling formatting,  , Controlling the Accounts and Payees, Balance Reports
@@ -3869,15 +3870,15 @@ would look like:
 ; automatic calculations for asset allocation tracking
 ;
 = expr ( commodity == 'VIFSX' )
-  (Allocation:Equities:Domestic)                 1.000
+    (Allocation:Equities:Domestic)                 1.000
 
 = expr ( commodity == 'VTHRX' )
-      (Allocation:Equities:Global)               0.240
-      (Allocation:Equities:Domestic)             0.563
-      (Allocation:Bonds/Cash)                    0.197
+    (Allocation:Equities:Global)               0.240
+    (Allocation:Equities:Domestic)             0.563
+    (Allocation:Bonds/Cash)                    0.197
 
 = expr ( commodity == 'VBMFX')
-      (Allocation:Bonds/Cash)                    1.000
+    (Allocation:Bonds/Cash)                    1.000
 @end smallexample
 
 How do these work? First the `=' sign at the beginning of the line
@@ -3898,9 +3899,9 @@ formatting!
 
 @smallexample
 ledger bal Allocation --current --format "\
-               %-17((depth_spacer)+(partial_account))\
-               %10(percent(market(display_total), market(parent.total)))\
-               %16(market(display_total))\n%/"
+        %-17((depth_spacer)+(partial_account))\
+        %10(percent(market(display_total), market(parent.total)))\
+        %16(market(display_total))\n%/"
 @end smallexample
 
 @noindent
@@ -4137,7 +4138,7 @@ line in the data above with:
 Then execute ledger like this:
 
 @smallexample
-ledger convert download.csv --input-date-format "%m/%d/%Y"
+$ ledger convert download.csv --input-date-format "%m/%d/%Y"
 @end smallexample
 
 Where the @code{--input-date-format} option tells ledger how to
@@ -4747,11 +4748,11 @@ The @command{payees} reports all of the unique payees in the
 journal. To filter the payees displayed you must use the prefix:
 
 @smallexample
-macbook-2:$ ledger payees 'Tar.+t'
-El Dorade Restaurant
-My Big Fat Greek Restaurant
-Target
-macbook-2:$
+$ ledger payees @Nic
+Nicolas
+Nicolas BOILABUS
+Oudtshoorn Municipality
+Vaca Veronica
 @end smallexample
 
 @node commodities, tags, payees, Reports about your Journals
@@ -4796,7 +4797,7 @@ Italiano} again.  The exact amounts are different, but the overall
 form is the same.  With the @command{xact} command you can type:
 
 @smallexample
-ledger entry 2004/4/9 viva food 11 tips 2.50
+$ ledger entry 2004/4/9 viva food 11 tips 2.50
 @end smallexample
 
 This produces the following output:
@@ -4818,12 +4819,12 @@ Here are a few more examples of the @command{xact} command, assuming
 the above journal transaction:
 
 @smallexample
-ledger entry 4/9 viva 11.50
-ledger entry 4/9 viva 11.50 checking # (from `checking')
-ledger entry 4/9 viva food 11.50 tips 8
-ledger xact 4/9 viva food 11.50 tips 8 cash
-ledger xact 4/9 viva food $11.50 tips $8 cash
-ledger xact 4/9 viva dining "DM 11.50"
+$ ledger entry 4/9 viva 11.50
+$ ledger entry 4/9 viva 11.50 checking # (from `checking')
+$ ledger entry 4/9 viva food 11.50 tips 8
+$ ledger xact 4/9 viva food 11.50 tips 8 cash
+$ ledger xact 4/9 viva food $11.50 tips $8 cash
+$ ledger xact 4/9 viva dining "DM 11.50"
 @end smallexample
 
 @command{xact} is identical to @command{entry} and is provide for
@@ -4852,7 +4853,7 @@ a large number of options for refining the output from those commands.
 The basic syntax of any ledger command is:
 
 @smallexample
-ledger [OPTIONS...] COMMAND [ARGS...]
+$ ledger [OPTIONS...] COMMAND [ARGS...]
 @end smallexample
 
 After the command word there may appear any number of arguments.  For
@@ -4868,14 +4869,14 @@ example, the following balance command reports account totals for
 rent, food and movies, but only those whose payee matches Freddie:
 
 @smallexample
-ledger bal rent food movies payee freddie
+$ ledger bal rent food movies payee freddie
 @end smallexample
 
 @noindent
 or
 
 @smallexample
-ledger bal rent food movies @@freddie
+$ ledger bal rent food movies @@freddie
 @end smallexample
 
 There are many, many command options available with the
@@ -5196,7 +5197,7 @@ Display the options in effect for this Ledger invocation, along with
 their values and the source of those values, for example:
 
 @smallexample
-14:15:02 > ledger --options bal --cleared -f ~/ledger/test/input/drewr3.dat
+$ ledger --options bal --cleared -f ~/ledger/test/input/drewr3.dat
 ===========================================================================
 [Global scope options]
 
@@ -5267,7 +5268,7 @@ information.
 Specify the input date format for journal entries. For example,
 
 @smallexample
-ledger convert Export.csv --input-date-format "%m/%d/%Y"
+$ ledger convert Export.csv --input-date-format "%m/%d/%Y"
 @end smallexample
 
 Would convert the @file{Export.csv} file to ledger format, assuming
@@ -5409,7 +5410,7 @@ Print the entire line in bold if the given
 value expression is true (@pxref{Value Expressions}).
 
 @smallexample
-ledger reg Expenses --begin Dec --bold-if "amount > 100"
+$ ledger reg Expenses --begin Dec --bold-if "amount > 100"
 @end smallexample
 
 @noindent
@@ -5596,7 +5597,7 @@ calculations occur.
 group transactions by the day of the week.
 
 @smallexample
-ledger reg Expenses --dow --collapse
+$ ledger reg Expenses --dow --collapse
 @end smallexample
 
 @noindent
@@ -5664,7 +5665,7 @@ a grouped report.  Only has effect with a @code{--group-by} register
 report.
 
 @smallexample
-ledger reg Expenses --group-by "payee" --group-title-format "------------------------ %-20(value) ---------------------\n"
+$ ledger reg Expenses --group-by "payee" --group-title-format "------------------------ %-20(value) ---------------------\n"
 ------------------------ 7-Eleven             ---------------------
 2011/08/13 7-Eleven              Expenses:Auto:Misc          $ 5.80       $ 5.80
 
@@ -6020,7 +6021,7 @@ monthly expenses, in order to view the highest expense categories at
 the top of each month:
 
 @smallexample
-ledger -M --period-sort -At reg ^Expenses
+$ ledger -M --period-sort -At reg ^Expenses
 @end smallexample
 
 @item --cleared
@@ -6063,7 +6064,7 @@ this transaction:
 And the register command was:
 
 @smallexample
-ledger -r register food
+$ ledger -r register food
 @end smallexample
 
 The following would be output, showing the postings related to the
@@ -6258,7 +6259,7 @@ useful for seeing last month's checking postings, against a running
 balance which includes all posting values:
 
 @smallexample
-ledger -d "d>=[last month]" reg checking
+$ ledger -d "d>=[last month]" reg checking
 @end smallexample
 
 The output from this command is very different from the following,
@@ -6266,7 +6267,7 @@ whose running total includes only postings from the last month
 onward:
 
 @smallexample
-ledger -p "last month" reg checking
+$ ledger -p "last month" reg checking
 @end smallexample
 
 Which is more useful depends on what you're looking to know: the total
@@ -6498,7 +6499,7 @@ default, as if you'd specified a global, automated transaction as
 follows:
 
 @smallexample
-  = expr true
+= expr true
     ; VALUE:: market(amount, date, exchange)
 @end smallexample
 
@@ -6523,7 +6524,7 @@ Or how about never re-valuating commodities used in Expenses, since
 they cannot have a different future value:
 
 @smallexample
-  = /^Expenses:/
+= /^Expenses:/
     ; VALUE:: market(amount, post.date, exchange)
 @end smallexample
 
@@ -6535,7 +6536,7 @@ Or how about valuating miles based on a reimbursement rate during a
 specific time period:
 
 @smallexample
-  = expr commodity == "miles" and date >= [2007] and date < [2008]
+= expr commodity == "miles" and date >= [2007] and date < [2008]
     ; VALUE:: market($1.05, date, exchange)
 @end smallexample
 
@@ -6549,12 +6550,12 @@ posting or transaction, by overriding these general defaults using
 specific meta-data:
 
 @smallexample
-  2010-12-26 Example
-      Expenses:Food                $20
-      ; Just to be silly, always valuate *these* $20 as 30 DM, no matter what
-      ; the user asks for with -V or -X
-      ; VALUE:: 30 DM
-      Assets:Cash
+2010-12-26 Example
+    Expenses:Food                $20
+    ; Just to be silly, always valuate *these* $20 as 30 DM, no matter what
+    ; the user asks for with -V or -X
+    ; VALUE:: 30 DM
+    Assets:Cash
 @end smallexample
 
 This example demonstrates that your VALUE expression should be as
@@ -6569,7 +6570,7 @@ EUR}, except for certain accounts or postings which should always be
 valuated in another currency.  For example:
 
 @smallexample
-  = /^Assets:Brokerage:CAD$/
+= /^Assets:Brokerage:CAD$/
     ; Always report the value of commodities in this account in
     ; terms of present day dollars, despite what was asked for
     ; on the command-line VALUE:: market(amount, date, '$')
@@ -6624,7 +6625,6 @@ option settings in the file @file{~/.ledgerrc}, for example:
 
 @smallexample
 --pager /bin/cat
-
 @end smallexample
 
 @node Period Expressions,  , Detailed Options Description, Command-line Syntax
@@ -6816,8 +6816,8 @@ ledger --forecast "d<[2010]" bal ^assets ^liabilities
 Ledger directly supports ``timelog'' entries, which have this form:
 
 @smallexample
-    i 2013/03/28 22:13:00 ACCOUNT[  PAYEE]
-    o 2013/03/29 03:39:00
+i 2013/03/28 22:13:00 ACCOUNT[  PAYEE]
+o 2013/03/29 03:39:00
 @end smallexample
 
 This records a check-in to the given ACCOUNT, and a check-out.  You
@@ -6879,7 +6879,7 @@ command shows only transactions from the beginning of the current month,
 while still calculating the running balance based on all transactions:
 
 @smallexample
-ledger -d "d>[this month]" register checking
+$ ledger -d "d>[this month]" register checking
 @end smallexample
 
 This advantage to this command's complexity is that it prints the
@@ -6888,7 +6888,7 @@ following, simpler command is similar, but totals only the displayed
 postings:
 
 @smallexample
-ledger -b "this month" register checking
+$ ledger -b "this month" register checking
 @end smallexample
 
 @menu
@@ -7350,11 +7350,11 @@ default balance format looks like this (the various functions are
 described later):
 
 @smallexample
-         "%(justify(scrub(display_total), 20, -1, true, color))"
-         "  %(!options.flat ? depth_spacer : \"\")"
-         "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
-         "%$1\n%/"
-         "--------------------\n"
+"%(justify(scrub(display_total), 20, -1, true, color))"
+"  %(!options.flat ? depth_spacer : \"\")"
+"%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+"%$1\n%/"
+"--------------------\n"
 @end smallexample
 
 @node Formatting codes,  , --balance-format, Format Strings
@@ -7671,12 +7671,11 @@ and PeriodicTransaction's, etc.
 Here is how you would traverse all the postings in your data file:
 
 @smallexample
+import ledger
 
-   import ledger
-
-   for xact in ledger.read_journal("sample.dat").xacts:
-       for post in xact.posts:
-           print "Transferring %s to/from %s" % (post.amount, post.account)
+for xact in ledger.read_journal("sample.dat").xacts:
+    for post in xact.posts:
+        print "Transferring %s to/from %s" % (post.amount, post.account)
 @end smallexample
 
 @node Raw vs. Cooked, Queries, Basic data traversal, Extending with Python
@@ -7687,29 +7686,29 @@ are what you get from a traversal like the above, and represent
 exactly what was seen in the data file.  Consider this journal:
 
 @smallexample
-   = true
-       (Assets:Cash)    $100
+= true
+    (Assets:Cash)    $100
 
-   2012-03-01 KFC
-       Expenses:Food    $100
-       Assets:Credit
+2012-03-01 KFC
+    Expenses:Food    $100
+    Assets:Credit
 @end smallexample
 
 In this case, the @emph{raw} regular transaction in this file is:
 
 @smallexample
-   2012-03-01 KFC
-       Expenses:Food    $100
-       Assets:Credit
+2012-03-01 KFC
+    Expenses:Food    $100
+    Assets:Credit
 @end smallexample
 
 While the @emph{cooked} form is:
 
 @smallexample
-   2012-03-01 KFC
-       Expenses:Food    $100
-       Assets:Credit   $-100
-       (Assets:Cash)    $100
+2012-03-01 KFC
+    Expenses:Food    $100
+    Assets:Credit   $-100
+    (Assets:Cash)    $100
 @end smallexample
 
 So the easy way to think about raw vs. cooked is that raw is the
@@ -7720,8 +7719,8 @@ generally looking at raw data.  In order to look at cooked data, you
 must generate a report of some kind by querying the journal:
 
 @smallexample
-   for post in ledger.read_journal("sample.dat").query("food"):
-       print "Transferring %s to/from %s" % (post.amount, post.account)
+for post in ledger.read_journal("sample.dat").query("food"):
+    print "Transferring %s to/from %s" % (post.amount, post.account)
 @end smallexample
 
 The reason why queries iterate over postings instead of transactions
@@ -7730,13 +7729,13 @@ apply to.  You can always get at a matching posting's transaction by
 looking at its ``xact'' member:
 
 @smallexample
-   last_xact = None
-   for post in ledger.read_journal("sample.dat").query(""):
-       if post.xact != last_xact:
-           for post in post.xact.posts:
-               print "Transferring %s to/from %s" % (post.amount,
-               post.account)
-           last_xact = post.xact
+last_xact = None
+for post in ledger.read_journal("sample.dat").query(""):
+    if post.xact != last_xact:
+        for post in post.xact.posts:
+            print "Transferring %s to/from %s" % (post.amount,
+            post.account)
+        last_xact = post.xact
 @end smallexample
 
 This query ends up reporting every cooked posting in the Journal, but
@@ -7761,19 +7760,19 @@ state.
 You can embed Python into your data files using the 'python' directive:
 
 @smallexample
-   python
-       import os
-       def check_path(path_value):
-           print "%s => %s" % (str(path_value), os.path.isfile(str(path_value)))
-           return os.path.isfile(str(path_value))
+python
+    import os
+    def check_path(path_value):
+        print "%s => %s" % (str(path_value), os.path.isfile(str(path_value)))
+        return os.path.isfile(str(path_value))
 
-   tag PATH
-       assert check_path(value)
+tag PATH
+    assert check_path(value)
 
-   2012-02-29 KFC
-       ; PATH: somebogusfile.dat
-       Expenses:Food                $20
-       Assets:Cash
+2012-02-29 KFC
+    ; PATH: somebogusfile.dat
+    Expenses:Food                $20
+    Assets:Cash
 @end smallexample
 
 Any Python functions you define this way become immediately available
@@ -7789,10 +7788,10 @@ commodity.  If you need to create sums of multiple commodities, use
 a Balance.  For example:
 
 @smallexample
-   total = Balance()
-   for post in ledger.read_journal("sample.dat").query(""):
-       total += post.amount
-   print total
+total = Balance()
+for post in ledger.read_journal("sample.dat").query(""):
+    total += post.amount
+print total
 @end smallexample
 
 @node Ledger for Developers, Major Changes from version 2.6, Extending with Python, Top
@@ -8450,7 +8449,7 @@ and apply it against a model transaction.
 Evaluate the given period and report how Ledger interprets it:
 
 @smallexample
-20:22:21 ~/ledger (next)> ledger period "this year"
+$ ledger period "this year"
 --- Period expression tokens ---
 TOK_THIS: this
 TOK_YEAR: year
@@ -8473,7 +8472,7 @@ Evaluate the given query and report how Ledger interprets it against
 the model transaction:
 
 @smallexample
-20:25:42 ~/ledger (next)> ledger query "/Book/"
+$ ledger query "/Book/"
 --- Input arguments ---
 ("/Book/")
 
@@ -8666,11 +8665,11 @@ to the main body of the documentation.
 @subsection Invoking Ledger
 
 @smallexample
-ledger --group-by "tag('trip')" bal
-legder reg --sort "tag('foo')" %foo
-ledger cleared VWCU NFCU Tithe Misentry
-ledger register Joint --uncleared
-ledger register Checking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
+$ ledger --group-by "tag('trip')" bal
+$ legder reg --sort "tag('foo')" %foo
+$ ledger cleared VWCU NFCU Tithe Misentry
+$ ledger register Joint --uncleared
+$ ledger register Checking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
 @end smallexample
 
 @node Ledger Files,  , Invoking Ledger, Cookbook
