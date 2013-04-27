@@ -1,4 +1,4 @@
-\input texinfo  @c -*-texinfo-*-
+\input texinfo @c -*-texinfo-*-
 
 @setfilename ledger3.info
 @settitle Ledger: Command-Line Accounting
@@ -1531,7 +1531,7 @@ commodity name must be enclosed in double quotes:
 
 Buying stock is a typical example that many will use that involves
 multiple commodities in the same transaction.  The type of the share
-(AAPL for Apple Inc.)  and the share purchase price in the currency
+(AAPL for Apple Inc.) and the share purchase price in the currency
 unit you made the purchase in ($ for AAPL). Yes, the typical
 convention is as follows:
 
@@ -1970,7 +1970,7 @@ apply account Personal
 
 Would result in all postings going into
 @code{Personal:Expenses:Groceries} and @code{Personal:Assets:Checking}
-until and @code{end apply account}  directive was found.
+until and @code{end apply account} directive was found.
 
 @item alias
 @c instance_t::alias_directive
@@ -2393,7 +2393,7 @@ organization, just keep in mind this maxim: Do whatever keeps you
 doing it.
 
 @node Transactions, Building Reports, Keeping a Journal, Top
-@chapter  Transactions
+@chapter Transactions
 
 @menu
 * Basic format::
@@ -2445,7 +2445,7 @@ A transaction can have any number of postings:
 @end smallexample
 
 @node Eliding amounts, Auxiliary dates, Basic format, Transactions
-@section  Eliding amounts
+@section Eliding amounts
 
 The first thing you can do to make things easier is elide amounts.
 That is, if exactly one posting has no amount specified, Ledger will
@@ -2702,7 +2702,7 @@ journal file, which would let me know right away that it is an invalid
 date.
 
 @node Virtual postings, Expression amounts, Metadata, Transactions
-@section  Virtual postings
+@section Virtual postings
 
 Ordinarily, the amounts of all postings in a transaction must balance
 to zero.  This is non-negotiable.  It's what double-entry accounting
@@ -2796,7 +2796,7 @@ to be for the total in Assets:Cash to be $500.00 after the posting.
 If the resulting amount is not $-20.00 in this case, it is an error.
 
 @node  Resetting a balance, Balancing transactions, Balance assignments, Balance verification
-@subsection  Resetting a balance
+@subsection Resetting a balance
 
 Say your book-keeping has gotten a bit out of date, and your Ledger
 balance no longer matches your bank balance.  You can create an
@@ -2816,7 +2816,7 @@ may be empty --- and then only because it's not true empty, it is
 indirectly provided by the balance assignment's value.
 
 @node  Balancing transactions,  , Resetting a balance, Balance verification
-@subsection  Balancing transactions
+@subsection Balancing transactions
 
 As a consequence of all the above, consider the following transaction:
 
@@ -3845,10 +3845,10 @@ invested in equities, and partially invested in bonds and cash.  Below
 is the asset allocation for each of the instruments listed above:
 
 @multitable @columnfractions .2 .2 .3 .3
-@item @tab Domestic @tab Global  @tab
-@item Symbol @tab Equity @tab Equity @tab  bonds/cash
+@item @tab Domestic @tab Global @tab
+@item Symbol @tab Equity @tab Equity @tab bonds/cash
 @item VIFSX @tab 100% @tab @tab
-@item VTHRX @tab 24.0%  @tab 56.3%  @tab 19.7%
+@item VTHRX @tab 24.0% @tab 56.3% @tab 19.7%
 @item VSGBX @tab @tab @tab 100%
 @end multitable
 
@@ -4932,7 +4932,7 @@ commands.
 @end multitable
 
 @node Error Checking and Calculation Options, Output Customization Quick Reference, Report Filtering Quick Reference, Command Line Quick Reference
-@subsection  Error Checking and Calculation Options
+@subsection Error Checking and Calculation Options
 
 @multitable @columnfractions .1 .25 .65
 @item @strong{Short} @tab @strong{Long} @tab @strong{Description}
@@ -4975,7 +4975,7 @@ commands.
 @item @code{} @tab @code{--register-format STR} @tab
 @item @code{} @tab @code{--prices-format STR} @tab
 @item @code{-w register} @tab @code{--wide-register-format STR} @tab
-@item @code{} @tab @code{--anon} @tab  Print the ledger register with anonymized accounts and payees, useful for filing bug reports
+@item @code{} @tab @code{--anon} @tab Print the ledger register with anonymized accounts and payees, useful for filing bug reports
 @end multitable
 
 @node Grouping Options, Commodity Reporting Quick Reference, Output Customization Quick Reference, Command Line Quick Reference
@@ -4984,12 +4984,12 @@ commands.
 @multitable @columnfractions .1 .25 .65
 @item @strong{Short} @tab @strong{Long} @tab @strong{Description}
 @item @code{-P} @tab @code{--by-payee} @tab Group postings by common payee names
-@item @code{-D} @tab @code{--daily} @tab  Group postings by day
+@item @code{-D} @tab @code{--daily} @tab Group postings by day
 @item @code{-W} @tab @code{--weekly} @tab Group postings by week
 @item @code{-M} @tab @code{--monthly} @tab Group postings by month
-@item @code{} @tab @code{--quarterly} @tab  Group postings by quarter
-@item @code{-Y} @tab @code{--yearly} @tab  Group postings by year
-@item @code{} @tab @code{--dow} @tab  Group by day of weeks
+@item @code{} @tab @code{--quarterly} @tab Group postings by quarter
+@item @code{-Y} @tab @code{--yearly} @tab Group postings by year
+@item @code{} @tab @code{--dow} @tab Group by day of weeks
 @item @code{-s} @tab @code{--subtotal} @tab Group posting together, similar to balance report
 @end multitable
 
@@ -5002,10 +5002,10 @@ commands.
 @item @code{-L MINS} @tab @code{--price-exp MINS} @tab Set expected freshness of prices in minutes
 @item @code{-Q} @tab @code{--download} @tab Download quotes using @code{getquote}
 @item @code{} @tab @code{--getquote} @tab Sets path to a user defined script to download commodity prices.
-@item @code{-O} @tab @code{--quantity} @tab  Report commodity totals without conversion
+@item @code{-O} @tab @code{--quantity} @tab Report commodity totals without conversion
 @item @code{-B} @tab @code{--basis} @tab Report cost basis
 @item @code{-V} @tab @code{--market} @tab Report last known market value
-@item @code{-G} @tab @code{--gain} @tab  Report net gain loss for commodities that have a price history
+@item @code{-G} @tab @code{--gain} @tab Report net gain loss for commodities that have a price history
 @end multitable
 
 @node Detailed Options Description, Period Expressions, Command Line Quick Reference, Command-line Syntax
@@ -5957,7 +5957,7 @@ Set the value expression used for the ``totals'' column in the
 
 @c Valid Ledger invocations look like:
 @c @smallexample
-@c  ledger [OPTIONS] <COMMAND> <SEARCH-TERMS>
+@c ledger [OPTIONS] <COMMAND> <SEARCH-TERMS>
 @c @end smallexample
 
 @c Where @code{COMMAND} is any command verb (@pxref{Reporting
@@ -5965,25 +5965,25 @@ Set the value expression used for the ``totals'' column in the
 @c @code{SEARCH-TERM} is one or more of the following:
 
 @c @smallexample
-@c  word              search for any account containing 'word'
-@c  TERM and TERM     boolean AND between terms
-@c  TERM or TERM      boolean OR between terms
-@c  not TERM          invert the meaning of the term
-@c  payee word        search for any payee containing 'word'
-@c  @@word             shorthand for 'payee word'
-@c  desc word         alternate for 'payee word'
-@c  note word         search for any note containing 'word'
-@c  &word             shorthand for 'note word'
-@c  tag word          search for any metadata tag containing 'word'
-@c  tag word=value    search for any metadata tag containing 'word'
-@c                    whose value contains 'value'
-@c  %word             shorthand for 'tag word'
-@c  %word=value       shorthand for 'tag word=value'
-@c  meta word         alternate for 'tag word'
-@c  meta word=value   alternate for 'tag word=value'
-@c  expr 'EXPR'       apply the given value expression as a predicate
-@c  '=EXPR'           shorthand for 'expr EXPR'
-@c  \( TERMS \)     group terms; useful if using and/or/not
+@c word              search for any account containing 'word'
+@c TERM and TERM     boolean AND between terms
+@c TERM or TERM      boolean OR between terms
+@c not TERM          invert the meaning of the term
+@c payee word        search for any payee containing 'word'
+@c @@word            shorthand for 'payee word'
+@c desc word         alternate for 'payee word'
+@c note word         search for any note containing 'word'
+@c &word             shorthand for 'note word'
+@c tag word          search for any metadata tag containing 'word'
+@c tag word=value    search for any metadata tag containing 'word'
+@c                   whose value contains 'value'
+@c %word             shorthand for 'tag word'
+@c %word=value       shorthand for 'tag word=value'
+@c meta word         alternate for 'tag word'
+@c meta word=value   alternate for 'tag word=value'
+@c expr 'EXPR'       apply the given value expression as a predicate
+@c '=EXPR'           shorthand for 'expr EXPR'
+@c \( TERMS \)       group terms; useful if using and/or/not
 @c @end smallexample
 
 @c So, to list all transaction that charged to ``food'' but not
@@ -5991,9 +5991,9 @@ Set the value expression used for the ``totals'' column in the
 @c commands would be equivalent:
 
 @c @smallexample
-@c  ledger reg food not dining @@chang
-@c  ledger reg food and not dining and not payee chang
-@c  ledger reg food not dining expr 'payee =~ /chang/'
+@c ledger reg food not dining @@chang
+@c ledger reg food and not dining and not payee chang
+@c ledger reg food not dining expr 'payee =~ /chang/'
 @c @end smallexample
 
 @node Output Customization, Commodity Reporting, Report Filtering, Detailed Options Description
@@ -6976,12 +6976,12 @@ Useful specifying a date in plain terms.  For example, you could say
 @multitable @columnfractions .3 .2 .5
 @item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
 @item @code{amount_expr } @tab @code{} @tab
-@item @code{abs } @tab @code{} @tab  --> U
+@item @code{abs } @tab @code{} @tab --> U
 @item @code{ceiling } @tab @code{} @tab Return the next integer toward +infinity
 @item @code{code} @tab @code{} @tab Return the transaction code, the string between the parenthesis after the date.
 @item @code{commodity } @tab @code{} @tab
-@item @code{display_amount } @tab @code{} @tab   --> t
-@item @code{display_total } @tab @code{} @tab  --> T
+@item @code{display_amount } @tab @code{} @tab --> t
+@item @code{display_total } @tab @code{} @tab --> T
 @item @code{date } @tab @code{} @tab
 @item @code{format_date } @tab @code{} @tab
 @item @code{format } @tab @code{} @tab
@@ -6992,7 +6992,7 @@ Useful specifying a date in plain terms.  For example, you could say
 @item @code{join } @tab @code{} @tab
 @item @code{market --> P } @tab @code{} @tab
 @item @code{null } @tab @code{} @tab
-@item @code{now  --> d m } @tab @code{} @tab
+@item @code{now --> d m } @tab @code{} @tab
 @item @code{options } @tab @code{} @tab
 @item @code{post } @tab @code{} @tab
 @item @code{percent } @tab @code{} @tab
@@ -7348,10 +7348,10 @@ as
 
 @table @code
 @item %m-%d-%Y %A
-yields  @code{02-10-2010 Wednesday}
+yields @code{02-10-2010 Wednesday}
 
 @item %A %m-%d-%Y
-yields  @code{Wednesday 02-10-2010}
+yields @code{Wednesday 02-10-2010}
 @end table
 
 @noindent
@@ -7382,10 +7382,10 @@ as
 
 @table @code
 @item %m-%d-%Y %B
-yields  @code{ 02-10-2010 February}
+yields @code{ 02-10-2010 February}
 
 @item %B %m-%d-%Y
-yields  @code{February 02-10-2010}
+yields @code{February 02-10-2010}
 @end table
 
 @noindent
@@ -7418,11 +7418,11 @@ week of the year 01–53
 @item %C
 @code{cc} century 00–99
 @item %D
-yields  @code{mm/dd/yy 02/10/10}
+yields @code{mm/dd/yy 02/10/10}
 @item %x
 locale’s date representation @code{02/10/2010} for the U.S.
 @item %F
-yields  @code{%Y-%m-%d 2010-02-10}
+yields @code{%Y-%m-%d 2010-02-10}
 @end table
 
 @menu
