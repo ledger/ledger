@@ -49,7 +49,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @finalout
 @end iftex
 
-
 @titlepage
 @title Ledger: Command-Line Accounting
 @subtitle For Version 3.0 of Ledger
@@ -162,7 +161,6 @@ credit made to another account}.  This is what is meant by
 ``double-entry'' accounting: the journal must always balance to zero,
 with an equal number of debits and credits.
 
-
 For example, let's say you have a checking account and a brokerage
 account, and you can write checks from both of them.  Rather than keep
 two checkbooks, you decide to use one journal for both.  In this
@@ -253,7 +251,6 @@ An important difference between Ledger and other finance packages is
 that Ledger will never alter your input file.  You can create and edit
 that file in any way you prefer, but Ledger is only for analyzing the
 data, not for altering it.
-
 
 @node Building the Program, Getting Help, Fat-free Accounting, Introduction to Ledger
 @section Building the program
@@ -384,7 +381,6 @@ $ ledger -f drewr3.dat balance Assets Liabilities
 --------------------
          $ -3,867.60
 @end smallexample
-
 
 @node Register Report, Cleared Report, Balance Report, Run Some Reports
 @subsection Register Report
@@ -1242,7 +1238,6 @@ you prefer to think of your funds: as virtual accounts, or as tags
 associated with particular transactions.  Your own tastes will decide
 which is best for your situation.
 
-
 @node Keeping a Journal, Transactions, Principles of Accounting, Top
 @chapter Keeping a Journal
 
@@ -1318,7 +1313,6 @@ from @code{Assets:Checking} in order to balance the transaction.
 Also note the structure of the account entries.  There is an implied
 hierarchy established by separating with colons (@pxref{Structuring
 Your Accounts}).
-
 
 @cindex spaces in postings
 @cindex posting format details
@@ -1645,7 +1639,6 @@ points of interception, you can specify the valuation method:
 Fixated pricing (such as @code{@{=$20@})} still plays a role in this
 scheme.  As far as valuation goes, it's shorthand for writing
 @code{((s,d,t -> market($20,d,t)))}.
-
 
 A valuation function receives three arguments:
 
@@ -2043,7 +2036,6 @@ capture  Expenses:Deductible:Medical  Medical
 Would cause any posting with @code{Medical} in its name to be replaced
 with @code{Expenses:Deductible:Medical}.
 
-
 Ledger will display the mapped payees in @code{print} and
 @code{register} reports.
 
@@ -2275,7 +2267,6 @@ transactions specify a year, however, this command has no effect.
 
 The following single letter commands may be at the beginning of a line
 alone, for backwards compatibility with older Ledger versions.
-
 
 @table @code
 @item A
@@ -2774,7 +2765,6 @@ specified.
 
 There are two forms of this features: balance assertions, and balance
 assignments.
-
 
 @node Balance assertions, Balance assignments, Balance verification, Balance verification
 @subsection Balance assertions
@@ -3536,7 +3526,6 @@ This entry accomplishes this.  Every month until you'll start with an
 automatic $37.50 deficit like you should, while your checking account
 really knows that it debited $225 this month.
 
-
 @node Periodic Transactions, Concrete Example of Automated Transactions, Effective Dates, Automated Transactions
 @subsection Periodic Transactions
 
@@ -3545,7 +3534,6 @@ Periodic transactions are used for budgeting and forecasting only, they
 have no effect without the @code{--budget} option specified.
 
 See @ref{Budgeting and Forecasting} for examples and details.
-
 
 @node Concrete Example of Automated Transactions,  , Periodic Transactions, Automated Transactions
 @subsection Concrete Example of Automated Transactions
@@ -5434,7 +5422,6 @@ And with @code{--dc} it becomes this:
              $145           $145              0
 @end smallexample
 
-
 @item --depth <INT>
 Limit the depth of the account tree.  In a balance report, for
 example, a @code{--depth 2} statement will print balances only for
@@ -6340,7 +6327,6 @@ Report the net gain/loss for all commodities in the report that have
 a price history.
 @end table
 
-
 Often you will be more interested in the value of your entire holdings,
 in your preferred currency.  It might be nice to know you hold 10,000
 shares of PENNY, but you are more interested in whether or not that is
@@ -6372,7 +6358,6 @@ via the string 'exchange' above).
 One thing many people have wanted to do is to fixate the valuation of
 old European currencies in terms of the Euro after a certain date:
 
-
 @smallexample
   = expr commodity == "DM"
     ; VALUE:: date < [Jun 2008] ? market(amount, date, exchange) : 1.44 EUR
@@ -6396,7 +6381,6 @@ the value of @code{--now} (defaults to today).
 
 Or how about valuating miles based on a reimbursement rate during a
 specific time period:
-
 
 @smallexample
   = expr commodity == "miles" and date >= [2007] and date < [2008]
@@ -7546,7 +7530,6 @@ exactly what was seen in the data file.  Consider this journal:
        Expenses:Food    $100
        Assets:Credit
 @end smallexample
-
 
 In this case, the @emph{raw} regular transaction in this file is:
 
