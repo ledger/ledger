@@ -4141,7 +4141,7 @@ but, by default, will appear immediately below the source code block.
 You can combine multiple source code blocks before executing ledger and
 do all kinds of other wonderful things with Babel (and org).
 
-
+@node Org mode with Babel, The pricemap Command, Emacs Org mode, Reports in other Formats
 @subsection Org mode with Babel
 
 Using Babel, it is possible to record financial transactions
@@ -5613,7 +5613,7 @@ Synonym for @code{--period "yearly"}
 @end table
 
 
-
+@node Basic options, Report Filtering, Report Options, Detailed Options Description
 @subsection Basic options
 
 These are the most basic command options.  Most likely, the user will
@@ -6593,6 +6593,7 @@ not specified, the current report style's value expression is used.
 This is always the present moment/date.
 @end table
 
+@node Posting/account details,  , Variables, Variables
 @subsection Posting/account details
 
 @table @code
@@ -6633,6 +6634,7 @@ account.
 1 if a posting is not automated, 0 otherwise.
 @end table
 
+@node Calculated totals,  , Posting/account details, Variables
 @subsection Calculated totals
 
 @table @code
@@ -7122,6 +7124,7 @@ Date and time format are specified as strings of single letter codes
 preceded by percent signs.  Any separator, or no separator can be
 specified.
 
+@node Days, , Date and Time Format Codes, Date and Time Format Codes
 @subsubsection Days
 
 Dates are formed from a combination of day, month and year codes, in
@@ -7143,6 +7146,7 @@ Two digit date
 
 @noindent So @code{"%Y%m%d"}  yields @code{20111214} which provides a date that is simple to sort on.
 
+@node Weekdays, Month, Days, Date and Time Format Codes
 @subsubsection Weekdays
 
 You can have additional weekday information in your date with @code{%A}
@@ -7175,6 +7179,7 @@ day of week starting with Monday (1), i.e. @code{mtwtfss} 3
 day of week starting with Sunday (0), i.e. @code{smtwtfs} 3
 @end table
 
+@node Month, Miscellaneous Date Codes, Date and Time Format Codes, Date and Time Format Codes
 @subsubsection Month
 
 You can have additional month information in your date with @code{%B} as
@@ -7200,6 +7205,7 @@ Locale’s abbreviated month, for example @code{02} might be abbreviated as @cod
 Locale’s full month, variable length February
 @end table
 
+@node Miscellaneous Date Codes,  , Date and Time Format Codes, Date and Time Format Codes
 @subsubsection Miscellaneous Date Codes
 
 Additional date format parameters which can be used:
@@ -8283,6 +8289,7 @@ Various notes from the discussion list that I haven't incorporated in to the mai
 @node Cookbook,  , Miscellaneous Notes, Miscellaneous Notes
 @section Cookbook
 
+@node Invoking Ledger, Ledger Files, Cookbook, Cookbook
 @subsection Invoking Ledger
 
 @smallexample
@@ -8293,6 +8300,7 @@ ledger register Joint --uncleared
 ledger register Checking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
 @end smallexample
 
+@node Ledger Files,  , Cookbook, Cookbook
 @subsection Ledger Files
 
 @smallexample
