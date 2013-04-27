@@ -4062,7 +4062,7 @@ file whose formatting has gotten out of hand.
 @section Reports in other Formats
 
 @menu
-* Comma Separated Variable files::
+* Comma Separated Values files::
 * The lisp command::
 * Emacs Org mode::
 * Org mode with Babel::
@@ -4071,15 +4071,15 @@ file whose formatting has gotten out of hand.
 * prices and pricedb::
 @end menu
 
-@node Comma Separated Variable files, The lisp command, Reports in other Formats, Reports in other Formats
-@subsection Comma Separated Variable files
+@node  Comma Separated Values files, The lisp command, Reports in other Formats, Reports in other Formats
+@subsection Comma Separated Values files
 
 @menu
 * The csv command::
 * The convert command::
 @end menu
 
-@node The csv command, The convert command, Comma Separated Variable files, Comma Separated Variable files
+@node The csv command, The convert command, Comma Separated Values files, Comma Separated Values files
 @subsubsection The @code{csv} command
 
 The @command{csv} command will output print out the desired ledger
@@ -4087,7 +4087,7 @@ transactions in a csv format suitable for import into other programs.
 You can specify the transactions to print using all the normal
 limiting and searching functions.
 
-@node The convert command,  , The csv command, Comma Separated Variable files
+@node The convert command,  , The csv command, Comma Separated Values files
 @subsubsection The @code{convert} command
 @cindex csv conversion
 @cindex reading csv
@@ -4188,7 +4188,7 @@ match on the new payee field. During the @code{ledger convert} run
 only the original payee name as specified in the csv data seems to be
 used.
 
-@node The lisp command, Emacs Org mode, Comma Separated Variable files, Reports in other Formats
+@node The lisp command, Emacs Org mode, Comma Separated Values files, Reports in other Formats
 @subsection The @code{lisp} command
 
 The @command{lisp} command outputs results in a form that can be read
