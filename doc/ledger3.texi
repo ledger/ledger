@@ -4714,6 +4714,7 @@ commands.
 
 @node Reporting Commands Quick Reference, Basic Options Quick Reference, Command Line Quick Reference, Command Line Quick Reference
 @subsection Reporting Commands
+
 @multitable @columnfractions .2 .8
 @item @strong{Report} @tab @strong{Description}
 @item @code{balance} @tab Show account balances
@@ -4730,6 +4731,7 @@ commands.
 
 @node Basic Options Quick Reference, Report Filtering Quick Reference, Reporting Commands Quick Reference, Command Line Quick Reference
 @subsection Basic Options
+
 @multitable @columnfractions .1 .25 .65
 @item @strong{Short} @tab @strong{Long} @tab @strong{Description}
 @item @code{-h} @tab @code{--help} @tab Print summary of all options
@@ -4742,6 +4744,7 @@ commands.
 
 @node Report Filtering Quick Reference, Error Checking and Calculation Options, Basic Options Quick Reference, Command Line Quick Reference
 @subsection Report Filtering
+
 @multitable @columnfractions .1 .25 .65
 @item @strong{Short} @tab @strong{Long} @tab @strong{Description}
 @item @code{-c} @tab @code{--current} @tab Display transaction on or before the current date
@@ -4778,6 +4781,7 @@ commands.
 
 @node Output Customization Quick Reference, Grouping Options, Error Checking and Calculation Options, Command Line Quick Reference
 @subsection Output Customization
+
 @multitable @columnfractions .15 .4 .45
 @item @strong{Short} @tab @strong{Long} @tab @strong{Description}
 @item @code{-n} @tab @code{--collapse} @tab Collapse transactions with multiple postings
@@ -4813,6 +4817,7 @@ commands.
 
 @node Grouping Options, Commodity Reporting Quick Reference, Output Customization Quick Reference, Command Line Quick Reference
 @subsection Grouping Options
+
 @multitable @columnfractions .1 .25 .65
 @item @strong{Short} @tab @strong{Long} @tab @strong{Description}
 @item @code{-P} @tab @code{--by-payee} @tab Group postings by common payee names
@@ -4999,6 +5004,7 @@ Ledger interprets all cleared transactions as correct, and if it finds a
 new account or commodity (same as a misspelled commodity or account) it
 will issue a warning giving you the file and line number of the problem.
 @end table
+
 @node Report Options, Report Filtering, Session Options, Detailed Options Description
 @subsection Report Options
 Options for Ledger report affect three separate scopes of operation:
@@ -5745,6 +5751,7 @@ totals in the @command{balance} report, and the values printed in the
 Set the value expression used for the ``totals'' column in the
 @command{register} and @command{balance} reports.
 @end table
+
 @c @node Search Terms, Output Customization, Report Filtering, Detailed Options Description
 @c @subsection Search Terms
 
@@ -6040,6 +6047,7 @@ Set the format for the @command{prices} report. The default is:
 @subsection Commodity Reporting
 
 These options affect how commodity values are displayed:
+
 @table @code
 @item --price-db FILE
 Set the file that is used for recording downloaded commodity prices.
@@ -6079,6 +6087,7 @@ distribution.  Downloaded quote price are then appended to the price
 database, usually specified using the environment variable
 @env{LEDGER_PRICE_DB}.
 @end table
+
 There are several different ways that ledger can report the totals it
 displays.  The most flexible way to adjust them is by using value
 expressions, and the @code{-t} and @code{-T} options.  However,
@@ -6740,6 +6749,7 @@ Useful specifying a date in plain terms.  For example, you could say
 
 @node Misc,  , Complex Expressions, Complex Expressions
 @subsection Miscellaneous
+
 @multitable @columnfractions .3 .2 .5
 @item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
 @item @code{amount_expr } @tab @code{} @tab
@@ -7002,6 +7012,7 @@ options:
 
 The character based formatting ledger can do is limited to the ANSI
 terminal character colors and font highlights in a normal TTY session.
+
 @multitable @columnfractions .3 .3 .3
 @item @code{red} @tab @code{magenta} @tab @code{bold}
 @item @code{green } @tab @code{cyan} @tab @code{underline}
@@ -7043,6 +7054,7 @@ terminal character colors and font highlights in a normal TTY session.
 @node Dates, Date and Time Format Codes, Quantities and Calculations, Formatting codes
 @subsection Date Functions
 The following functions allow you to manipulate and format dates.
+
 @table @code
 @item date
 Return the date of the current transaction
@@ -7102,6 +7114,7 @@ yields  @code{02-10-2010 Wednesday}
 @item %A %m-%d-%Y
 yields  @code{Wednesday 02-10-2010}
 @end table
+
 @noindent These are options you can select for weekday
 
 @table @code
@@ -7120,6 +7133,7 @@ day of week starting with Monday (1), i.e. @code{mtwtfss} 3
 @item %w
 day of week starting with Sunday (0), i.e. @code{smtwtfs} 3
 @end table
+
 @subsubsection Month
 
 You can have additional month information in your date with @code{%B} as
@@ -7131,7 +7145,9 @@ yields  @code{ 02-10-2010 February}
 @item %B %m-%d-%Y
 yields  @code{February 02-10-2010}
 @end table
+
 @noindent These are options you can select for month
+
 @table @code
 @item %m
 @code{mm} month as two digits
@@ -7162,6 +7178,7 @@ locale’s date representation @code{02/10/2010} for the U.S.
 @item %F
 yields  @code{%Y-%m-%d 2010-02-10}
 @end table
+
 @menu
 * Text Formatting::
 * Data File Parsing Information::
@@ -7171,6 +7188,7 @@ yields  @code{%Y-%m-%d 2010-02-10}
 @node Text Formatting, Data File Parsing Information, Date and Time Format Codes, Formatting codes
 @subsection Text Formatting
 The following format functions allow you limited formatting of text:
+
 @table @code
 @item ansify_if(value, color)
 Surrounds the string representing value with ANSI codes to give it
@@ -7950,6 +7968,7 @@ during the run.  The following are the available arguments to debug:
 
 @item --trace INTEGER_TRACE_LEVEL
 Enable tracing.  The integer specifies the level of trace desired:
+
 @multitable @columnfractions .3 .7
 @item @code{LOG_OFF} @tab 0
 @item @code{LOG_CRIT} @tab 1
@@ -7976,6 +7995,7 @@ Print version information and exit.
 @subsection Pre-Commands
 Pre-commands are useful when you aren't sure how a command or option
 will work.
+
 @table @code
 @item args
 Evaluate the given arguments against the following model transaction:
