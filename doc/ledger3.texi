@@ -1614,7 +1614,7 @@ both exist, you ask?  To support things like this:
 @end smallexample
 
 This transaction says that you bought 11 gallons priced at $2.299 per
-gallon at a @strong{cost to you} of $2.30 per gallon.  Ledger
+gallon at a @emph{cost to you} of $2.30 per gallon.  Ledger
 auto-generates a balance posting in this case to Equity:Capital Losses
 to reflect the 1.1 cent difference, which is then balanced by
 Assets:Checking because its amount is null.
@@ -2140,7 +2140,7 @@ is equivalent to this:
 
 Note that ending a @code{fixed} is done differently than other
 directives, as @code{fixed} is closed with an @code{endfixed} (i.e.,
-there is @strong{no space} between @code{end} and @code{fixed}).
+there is @emph{no space} between @code{end} and @code{fixed}).
 
 For the moment, users may wish to study
 @uref{http://bugs.ledger-cli.org/show_bug.cgi?id=789, Bug Report 789}
@@ -5436,15 +5436,15 @@ Report each posting’s deviation from the average. It is only
 meaningful in the register and prices reports.
 
 @item --display-amount <EXPR>
-Apply a transform to the
-@strong{displayed} amount.  This occurs after calculations occur.
+Apply a transform to the @emph{displayed} amount.  This occurs after
+calculations occur.
 
 @item --display <BOOLEAN_EXPR>
 Display lines that satisfy the expression given.
 
 @item --display-total <EXPR>
-Apply a transform to the
-@strong{displayed} total.  This occurs after calculations occur.
+Apply a transform to the @emph{displayed} total.  This occurs after
+calculations occur.
 
 @item --dow
 group transactions by the day of the week.
