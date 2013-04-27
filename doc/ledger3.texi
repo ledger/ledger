@@ -1123,7 +1123,7 @@ Savings?
 
 Traditional finance packages require that the money reside in only one
 place.  But there are really two ``views'' of the data: from the
-account point of view and from the fund point of view -- yet both sets
+account point of view and from the fund point of view --- yet both sets
 should reflect the same overall expenses and cash flow.  It's simply
 where the money resides that differs.
 
@@ -1561,7 +1561,7 @@ the per-unit price of a commodity.
 For example, say you buy 10 gallons of gas at $1.20.  In future
 ``value'' reports, you don't want these gallons reported in terms of
 today's price, but rather the price when you bought it.  At the same
-time, you also want other kinds of commodities -- like stocks --
+time, you also want other kinds of commodities --- like stocks ---
 reported in terms of today's price.
 
 This is supported as follows:
@@ -2745,7 +2745,7 @@ Since the second posting is also null, it's value will become the inverse of
 whatever amount is generated for the first posting.
 
 This is the only time in ledger when more than one posting's amount may be
-empty -- and then only because it's not true empty, it is indirectly provided
+empty --- and then only because it's not true empty, it is indirectly provided
 by the balance assignment's value.
 
 @node  Balancing transactions,  , Resetting a balance, Balance verification
@@ -3098,7 +3098,7 @@ To show all lot information in a report, use @code{--lots}.
 
 Normally when you ask Ledger to display the values of commodities held, it
 uses a value expression called ``market'' to determine the most recent value
-from its price database -- even downloading prices from the Internet, if @code{-Q}
+from its price database --- even downloading prices from the Internet, if @code{-Q}
 was specified and a suitable ``getquote'' script is found on your system.
 
 However, you can override this valuation logic by providing a commodity
