@@ -4880,7 +4880,7 @@ commands.
 @subsection Reporting Commands
 
 @multitable @columnfractions .2 .8
-@item @strong{Report} @tab @strong{Description}
+@headitem Report @tab Description
 @item @code{balance} @tab Show account balances
 @item @code{register} @tab Show all transactions with running total
 @item @code{csv} @tab Show transactions in csv format, for exporting to other programs
@@ -4897,7 +4897,7 @@ commands.
 @subsection Basic Options
 
 @multitable @columnfractions .1 .25 .65
-@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@headitem Short @tab Long @tab Description
 @item @code{-h} @tab @code{--help} @tab Print summary of all options
 @item @code{-v} @tab @code{--version} @tab Print version of ledger executable
 @item @code{-f FILE} @tab @code{--file FILE} @tab Read @file{FILE} as a ledger file
@@ -4910,7 +4910,7 @@ commands.
 @subsection Report Filtering
 
 @multitable @columnfractions .1 .25 .65
-@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@headitem Short @tab Long @tab Description
 @item @code{-c} @tab @code{--current} @tab Display transaction on or before the current date
 @item @code{-b DATE} @tab @code{--begin DATE} @tab Begin reports on or after @code{DATE}
 @item @code{-e DATE} @tab @code{--end DATE} @tab Limit end date of transactions for report
@@ -4935,7 +4935,7 @@ commands.
 @subsection Error Checking and Calculation Options
 
 @multitable @columnfractions .1 .25 .65
-@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@headitem Short @tab Long @tab Description
 @item @code{} @tab @code{--strict} @tab Accounts, tags or commodities not previously declared will cause warnings
 @item @code{} @tab @code{--pedantic} @tab Accounts, tags or commodities not previously declared will cause errors
 @item @code{} @tab @code{--check-payees} @tab Enable strict and pedantic checking for payees as well as accounts, commodities and tags
@@ -4946,7 +4946,7 @@ commands.
 @subsection Output Customization
 
 @multitable @columnfractions .15 .4 .45
-@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@headitem Short @tab Long @tab Description
 @item @code{-n} @tab @code{--collapse} @tab Collapse transactions with multiple postings
 @item @code{-s} @tab @code{--subtotal} @tab Report register as a single subtotal
 @item @code{-P} @tab @code{--by-payee} @tab Report subtotals by payee
@@ -4982,7 +4982,7 @@ commands.
 @subsection Grouping Options
 
 @multitable @columnfractions .1 .25 .65
-@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@headitem Short @tab Long @tab Description
 @item @code{-P} @tab @code{--by-payee} @tab Group postings by common payee names
 @item @code{-D} @tab @code{--daily} @tab Group postings by day
 @item @code{-W} @tab @code{--weekly} @tab Group postings by week
@@ -4997,7 +4997,7 @@ commands.
 @subsection Commodity Reporting
 
 @multitable @columnfractions .1 .25 .65
-@item @strong{Short} @tab @strong{Long} @tab @strong{Description}
+@headitem Short @tab Long @tab Description
 @item @code{} @tab @code{--price-db FILE} @tab Use @file{FILE} for retrieving stored commodity prices
 @item @code{-L MINS} @tab @code{--price-exp MINS} @tab Set expected freshness of prices in minutes
 @item @code{-Q} @tab @code{--download} @tab Download quotes using @code{getquote}
@@ -6974,7 +6974,7 @@ Useful specifying a date in plain terms.  For example, you could say
 @subsection Miscellaneous
 
 @multitable @columnfractions .3 .2 .5
-@item @strong{Function} @tab @strong{Abbrev.} @tab @strong{Description}
+@headitem Function @tab Abbrev. @tab Description
 @item @code{amount_expr } @tab @code{} @tab
 @item @code{abs } @tab @code{} @tab --> U
 @item @code{ceiling } @tab @code{} @tab Return the next integer toward +infinity
