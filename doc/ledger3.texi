@@ -4297,7 +4297,8 @@ least) in which these can be included:
 
 The first two are described in more detail in this short tutorial.
 
-@subsubheading Embedded Ledger example with single source block
+@node Embedded Ledger example with single source block, , Org mode with Babel, Org mode with Babel
+@subsubsection Embedded Ledger example with single source block
 
 The easiest, albeit possibly less useful, way in which to use Ledger
 within an org file is to use a single source block to record all Ledger
@@ -4363,7 +4364,8 @@ financial state. Eventually, babel will support passing arguments to
 currently. Instead, we can use the concepts of literary programming, as
 implemented by the noweb features of babel, to help us.
 
-@subsubheading Multiple Ledger source blocks with @command{noweb}
+@node Multiple Ledger source blocks with @command{noweb},  , Embedded Ledger example with single source block, Org mode with Babel
+@subsubsection Multiple Ledger source blocks with @command{noweb}
 
 The @command{noweb} feature of babel allows us to expand references to
 other code blocks within a code block. For Ledger, this can be used to
@@ -4373,7 +4375,8 @@ of transactions together to generate reports.
 Using the same transactions used above, we could consider splitting
 these into expenses and income, as follows:
 
-@subsubheading Income Entries
+@node Income Entries,  , Multiple Ledger source blocks with @command{noweb}, Org mode with Babel
+@subsubsection Income Entries
 
 The first set of entries relates to income, either monthly pay or
 interest, all typically going into one of my bank accounts. Here, I have
@@ -4402,7 +4405,8 @@ have the :noweb yes babel header argument specified.
 #+end_src
 @end smallexample
 
-@subsubheading Expenses
+@node Expenses,  , Income Entries, Org mode with Babel
+@subsubsection Expenses
 
 The following entries relate to personal expenses, such as rent and
 food. Again, these have all been placed in a single src block but could
@@ -4420,7 +4424,8 @@ have been done individually.
 #+end_src
 @end smallexample
 
-@subsubheading Financial Summaries
+@node Financial Summaries,  , Expenses, Org mode with Babel
+@subsubsection Financial Summaries
 
 Given the ledger entries defined above in the income and expenses code
 blocks, we can now refer to these using the noweb expansion
@@ -4429,7 +4434,8 @@ to generate specific reports for those transactions. Below are two
 examples, one to generate a balance report and one to generate
 a register report of all transactions.
 
-@subsubheading An overall balance summary
+@node An overall balance summary,  , Financial Summaries, Org mode with Babel
+@subsubsection An overall balance summary
 
 The overall balance of your account and expenditure with a breakdown
 according to category is specified by passing the :cmdline bal
@@ -4474,7 +4480,8 @@ in the report.
 :          £-1300.00    starting balances
 @end smallexample
 
-@subsubheading Generating a monthly register
+@node Generating a monthly register,  , An overall balance summary, Org mode with Babel
+@subsubsection Generating a monthly register
 
 You can also generate a monthly register (the reg command) by
 executing the following src block. This presents a summary of
@@ -4520,7 +4527,8 @@ the running total of the assets in our ledger.
 : 2010/08/01 - 2010/08/01         assets:bank:chequing      £1000.00    £2653.53
 @end smallexample
 
-@subsubheading Summary
+@node Summary,  , Generating a monthly register, Org mode with Babel
+@subsubsection Summary
 
 This short tutorial shows how Ledger entries can be embedded in a org
 file and manipulated using Babel. However, only simple Ledger features
