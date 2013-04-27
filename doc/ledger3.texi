@@ -4065,6 +4065,7 @@ file whose formatting has gotten out of hand.
 * Comma Separated Variable files::
 * The lisp command::
 * Emacs Org mode::
+* Org mode with Babel::
 * The pricemap Command::
 * The xml Command::
 * prices and pricedb::
@@ -4202,7 +4203,7 @@ directly by Emacs Lisp.  The format of the @code{sexp} is:
 @noindent
 @code{emacs} can also be used as a synonym for @code{lisp}
 
-@node Emacs Org mode, The pricemap Command, The lisp command, Reports in other Formats
+@node Emacs Org mode, Org mode with Babel, The lisp command, Reports in other Formats
 @subsection Emacs @code{org} Mode
 
 The @code{org} command produces a journal file suitable for use in the
@@ -4530,7 +4531,7 @@ file and manipulated using Babel. However, only simple Ledger features
 have been illustrated; please refer to the Ledger documentation for
 examples of more complex operations with a ledger.
 
-@node The pricemap Command, The xml Command, Emacs Org mode, Reports in other Formats
+@node The pricemap Command, The xml Command, Org mode with Babel, Reports in other Formats
 @subsection The @code{pricemap} Command
 
 If you have the @code{graphviz} graph visualization package installed,
@@ -5014,6 +5015,7 @@ commands.
 * Global Options::
 * Session Options::
 * Report Options::
+* Basic options::
 * Report Filtering::
 * Output Customization::
 * Commodity Reporting::
@@ -5173,7 +5175,7 @@ it will issue a warning giving you the file and line number of the
 problem.
 @end table
 
-@node Report Options, Report Filtering, Session Options, Detailed Options Description
+@node Report Options, Basic options, Session Options, Detailed Options Description
 @subsection Report Options
 
 Options for Ledger report affect three separate scopes of operation:
@@ -5832,7 +5834,7 @@ Specify the default account which QIF file postings are assumed to
 relate to.
 @end table
 
-@node Report Filtering, Output Customization, Report Options, Detailed Options Description
+@node Report Filtering, Output Customization, Basic options, Detailed Options Description
 @subsection Report filtering
 
 These options change which postings affect the outcome of a
@@ -6773,7 +6775,12 @@ not specified, the current report style's value expression is used.
 This is always the present moment/date.
 @end table
 
-@node Posting/account details,  , Variables, Variables
+@menu
+* Posting/account details::
+* Calculated totals::
+@end menu
+
+@node Posting/account details, Calculated totals, Variables, Variables
 @subsection Posting/account details
 
 @table @code
@@ -7302,7 +7309,14 @@ Date and time format are specified as strings of single letter codes
 preceded by percent signs.  Any separator, or no separator can be
 specified.
 
-@node Days, , Date and Time Format Codes, Date and Time Format Codes
+@menu
+* Days::
+* Weekdays::
+* Month::
+* Miscellaneous Date Codes::
+@end menu
+
+@node Days, Weekdays, Date and Time Format Codes, Date and Time Format Codes
 @subsubsection Days
 
 Dates are formed from a combination of day, month and year codes, in
@@ -7360,7 +7374,7 @@ day of week starting with Monday (1), i.e. @code{mtwtfss} 3
 day of week starting with Sunday (0), i.e. @code{smtwtfs} 3
 @end table
 
-@node Month, Miscellaneous Date Codes, Date and Time Format Codes, Date and Time Format Codes
+@node Month, Miscellaneous Date Codes, Weekdays, Date and Time Format Codes
 @subsubsection Month
 
 You can have additional month information in your date with @code{%B}
@@ -7389,7 +7403,7 @@ as @code{Feb}
 Locale’s full month, variable length February
 @end table
 
-@node Miscellaneous Date Codes,  , Date and Time Format Codes, Date and Time Format Codes
+@node Miscellaneous Date Codes,  , Month, Date and Time Format Codes
 @subsubsection Miscellaneous Date Codes
 
 Additional date format parameters which can be used:
@@ -8493,6 +8507,11 @@ to the main body of the documentation.
 @node Cookbook,  , Miscellaneous Notes, Miscellaneous Notes
 @section Cookbook
 
+@menu
+* Invoking Ledger::
+* Ledger Files::
+@end menu
+
 @node Invoking Ledger, Ledger Files, Cookbook, Cookbook
 @subsection Invoking Ledger
 
@@ -8504,7 +8523,7 @@ ledger register Joint --uncleared
 ledger register Checking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
 @end smallexample
 
-@node Ledger Files,  , Cookbook, Cookbook
+@node Ledger Files,  , Invoking Ledger, Cookbook
 @subsection Ledger Files
 
 @smallexample
