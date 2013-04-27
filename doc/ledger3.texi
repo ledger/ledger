@@ -63,6 +63,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @contents
 
 @ifnottex
+
 @node Top, Copying, (dir), (dir)
 @top Overview
 Ledger is a command line accounting tool that provides double-entry
@@ -269,9 +270,9 @@ enter these commands:
 ./configure && make install
 @end smallexample
 
-@findex help
 @node Getting Help,  , Building the Program, Introduction to Ledger
 @section Getting help
+@findex help
 
 Ledger has a complete online help system based on GNU Info.  This
 manual can be searched directly from the command line using the
@@ -285,9 +286,9 @@ join the Ledger mailing list at
 You can also find help at the @code{#ledger} channel on the IRC server
 @code{irc.freenode.net}.
 
-@cindex tutorial
 @node Ledger Tutorial, Principles of Accounting, Introduction to Ledger, Top
 @chapter Ledger Tutorial
+@cindex tutorial
 
 @menu
 * Start a Journal::
@@ -522,7 +523,6 @@ Using ledger under the windows command shell has one significant
 limitation.  CMD.exe is limited to standard ASCII characters and as
 such cannot display any currency symbols other than dollar signs ($).
 
-
 @node Principles of Accounting, Keeping a Journal, Ledger Tutorial, Top
 @chapter Principles of Accounting with Ledger
 
@@ -536,7 +536,6 @@ such cannot display any currency symbols other than dollar signs ($).
 * Dealing with Petty Cash::
 * Working with multiple funds and accounts::
 @end menu
-
 
 @node Accounting with Ledger, Stating where money goes, Principles of Accounting, Principles of Accounting
 @section Accounting with Ledger
@@ -1332,7 +1331,6 @@ two spaces, or a tab, between the amount and the account.  If you do
 not have adequate separation between the amount and the account Ledger
 will give an error and stop calculating.}
 
-
 @node Starting up, Structuring Your Accounts, Most Basic Entry, Keeping a Journal
 @section Starting up
 @cindex initial equity
@@ -1400,7 +1398,6 @@ you spend on burgers and fries, you could have the following:
 @smallexample
 Expenses:Food:Hamburgers and Fries
 @end smallexample
-
 
 @node Commenting on your journal, Currency and Commodities, Structuring Your Accounts, Keeping a Journal
 @section Commenting on your Journal
@@ -1535,8 +1532,6 @@ commodity name must be enclosed in double quotes:
         Actif:SG PEE STK  215.796 "Arcancia Equilibre 455"
         Actif:SG PEE STK  $-10742.54
 @end smallexample
-
-
 
 @node Buying and Selling Stock, Fixing Lot Prices, Naming Commodities, Currency and Commodities
 @subsection Buying and Selling Stock
@@ -1773,7 +1768,6 @@ ledger reg -V food
 12-Mar-08 XACT                  Expenses:Food8                8 EUR       25 EUR
 12-Mar-09 POST                  (Expenses:Food9)              9 EUR       34 EUR
 @end smallexample
-
 
 @node Keeping it Consistent, Journal Format, Currency and Commodities, Keeping a Journal
 @section Keeping it Consistent
@@ -2334,10 +2328,8 @@ the more popular tools are:
 Directly pulling information from banks is outside the scope of
 Ledger's function.
 
-
 @node Archiving Previous Years,  , Converting from other formats, Keeping a Journal
 @section Archiving Previous Years
-
 
 After a while, your journal can get to be pretty large.  While this
 will not slow down Ledger---it's designed to process journals very
@@ -3618,8 +3610,6 @@ This example causes 10% of the matching account's total to be deferred
 to the @samp{Savings} account---as a balanced virtual posting,
 which may be excluded from reports by using @option{--real}.
 
-
-
 @node Building Reports, Reporting Commands, Transactions, Top
 @chapter Building Reports
 
@@ -3821,7 +3811,6 @@ The @code{-s} option subtotals all postings, just as @code{-M}
 subtotaled by the month.  The running total in both cases is off,
 however, since a display expression is being used.
 
-
 @node Advanced Reports,  , Typical queries, Building Reports
 @section Advanced Reports
 
@@ -3998,10 +3987,6 @@ limits the transactions @emph{displayed} to just those since last
 February, even those transactions from before then will be computed as
 part of the balance.
 
-
-
-
-
 @node Reporting Commands, Command-line Syntax, Building Reports, Top
 @chapter Reporting Commands
 
@@ -4069,7 +4054,6 @@ postings which match in some way to be printed.
 
 The @command{print} command can be a handy way to clean up a ledger
 file whose formatting has gotten out of hand.
-
 
 @node Reports in other Formats, Reports about your Journals, Primary Financial Reports, Reporting Commands
 @section Reports in other Formats
@@ -4697,7 +4681,6 @@ That is the extent of the XML data format used by Ledger.  It will
 output such data if the @command{xml} command is used, and can read
 the same data.
 
-
 @node prices and pricedb,  , The xml Command, Reports in other Formats
 @subsection @code{prices} and @code{pricedb}
 
@@ -4710,7 +4693,6 @@ There is also a @command{pricedb} command which outputs the same
 information as @command{prices}, but does in a format that can be
 parsed by Ledger.  This is useful for generating and tidying up
 pricedb database files.
-
 
 @node Reports about your Journals,  , Reports in other Formats, Reporting Commands
 @section Reports about your Journals
@@ -4816,12 +4798,8 @@ ledger xact 4/9 viva dining "DM 11.50"
 @command{xact} is identical to @command{entry} and is provide for
 backwards compatibility with Ledger 2.X.
 
-
-
-
 @node Command-line Syntax, Budgeting and Forecasting, Reporting Commands, Top
 @chapter Command-line Syntax
-
 
 @menu
 * Basic Usage::
@@ -4952,7 +4930,6 @@ commands.
 @item @code{} @tab @code{--check-payees} @tab Enable strict and pedantic checking for payees as well as accounts, commodities and tags
 @item @code{} @tab @code{--immediate} @tab Instruct ledger to evaluate calculations immediately rather than lazily
 @end multitable
-
 
 @node Output Customization Quick Reference, Grouping Options, Error Checking and Calculation Options, Command Line Quick Reference
 @subsection Output Customization
@@ -5783,7 +5760,6 @@ Synonym for @code{--period "yearly"}
 
 @end table
 
-
 @node Basic options, Report Filtering, Report Options, Detailed Options Description
 @subsection Basic options
 
@@ -6563,7 +6539,6 @@ last oct
 weekly last august
 @end smallexample
 
-
 @node Budgeting and Forecasting, Time Keeping, Command-line Syntax, Top
 @chapter Budgeting and Forecasting
 
@@ -6663,7 +6638,6 @@ ledger --forecast "d<[2010]" bal ^assets ^liabilities
 @node Time Keeping, Value Expressions, Budgeting and Forecasting, Top
 @chapter Time Keeping
 
-
 Ledger directly supports ``timelog'' entries, which have this form:
 
 @smallexample
@@ -6689,8 +6663,6 @@ These timelog entries can appear in a separate file, or directly in
 your main ledger file.  The initial ``i'' and ``o'' count as Ledger
 ``directives'', and are accepted anywhere that ordinary transactions
 are.
-
-
 
 @node Value Expressions, Format Strings, Time Keeping, Top
 @chapter Value Expressions
@@ -7246,12 +7218,8 @@ terminal character colors and font highlights in a normal TTY session.
 @item @code{blue }
 @end multitable
 
-
-
 @node Quantities and Calculations, Dates, Colors, Formatting codes
 @subsection Quantities and Calculations
-
-
 
 @table @code
 @item amount_expr
@@ -7481,8 +7449,6 @@ line number in @code{filename} where posting's entry for posting ends,
 abbreviated @code{e}
 @end table
 
-
-
 @node Extending with Python, Ledger for Developers, Format Strings, Top
 @chapter Extending with Python
 
@@ -7642,9 +7608,6 @@ a Balance.  For example:
        total += post.amount
    print total
 @end smallexample
-
-
-
 
 @node Ledger for Developers, Major Changes from version 2.6, Extending with Python, Top
 @chapter Ledger for Developers
@@ -8168,7 +8131,6 @@ commodities.
 
 This command simply echoes its argument back to the output.
 
-
 @node reload, source, echo, Developer Commands
 @subsection @command{reload}
 
@@ -8384,7 +8346,6 @@ test subdirectory for the build.  For example,
 * Writing Tests::
 @end menu
 
-
 @node Running Tests, Writing Tests, Testing Framework, Testing Framework
 @subsubsection Running Tests
 
@@ -8485,9 +8446,7 @@ features, include automatic and virtual transactions,
 2004/02/01 Sale
   Assets:Checking:Business            $ 30.00
   Income:Sales
-
 @end smallexample
-
 
 @node Miscellaneous Notes, Concept Index, Example Data File, Top
 @appendix Miscellaneous Notes
@@ -8516,7 +8475,6 @@ ledger register Checking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
 @node Ledger Files,  , Cookbook, Cookbook
 @subsection Ledger Files
 
-
 @smallexample
 = /^Income:Taxable/
   (Liabilities:Tithe Owed)    -0.1
@@ -8527,7 +8485,6 @@ ledger register Checking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
 = /Tithe/
   (Liabilities:Tithe Owed)    -1.0
 @end smallexample
-
 
 @node Concept Index, Command Index, Miscellaneous Notes, Top
 @unnumbered Concept Index
