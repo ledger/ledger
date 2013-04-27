@@ -1645,7 +1645,7 @@ A valuation function receives three arguments:
 @table @code
 @item  source
 A string identifying the commodity whose price is being asked for
-(example: "EUR")
+(example: ``EUR'')
 
 @item date
 The reference date the price should be relative.
@@ -4642,7 +4642,7 @@ The format of an amount contains two members, the commodity and the
 quantity.  The commodity can have a set of flags that indicate how to
 display it.  The meaning of the flags (all of which are optional) are:
 
-@table @strong
+@table @code
 @item P
 The commodity is prefixed to the value.
 @item S
