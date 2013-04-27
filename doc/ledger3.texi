@@ -392,6 +392,7 @@ $ ledger -f drewr3.dat balance Assets Liabilities
 @findex register (reg)
 
 To show all transactions and a running total:
+
 @smallexample
 ledger -f drewr3.dat register
 @end smallexample
@@ -1335,6 +1336,7 @@ will give an error and stop calculating.}
 @section Starting up
 @cindex initial equity
 @cindex beginning ledger
+@cindex opening balance
 
 Unless you have recently arrived from another planet, you already have
 a financial state.  You need to capture that financial state so that
@@ -1346,7 +1348,6 @@ basis of the opening entry for ledger. For example if you chose the
 beginning of 2011 as the date to start tracking finances with ledger,
 your opening balance entry could look like this:
 
-@cindex opening balance
 @smallexample
 2011/01/01 * Opening Balance
       Assets:Joint Checking                   $800.14
@@ -1427,8 +1428,8 @@ comment}
 @end smallexample
 
 There are several forms of comments within a transaction, for example:
-@smallexample
 
+@smallexample
 ; this is a global comment that is not applied to a specific transaction
 ; it can start with any of the five characters but is not included in the
 ; output from 'print' or 'output'
@@ -1491,6 +1492,7 @@ Euros. The implied exchange rate was $1.32.  Then 35.00 Euros was
 spent on Dinner in Munich.
 
 Running a ledger balance report shows:
+
 @smallexample
 $ ledger -f example.dat bal
              $-66.00
@@ -1549,8 +1551,10 @@ convention is as follows:
        Expenses:Broker:Commissions       $19.95
        Assets:Broker                 $-1,500.00
 @end smallexample
+
 This assumes you have a brokerage account that is capable of managed
 both liquid and commodity assets.  Now, on the day of the sale:
+
 @smallexample
    2005/08/01 Stock sale
        Assets:Broker                   -50 APPL @{$30.00@} @@ $50.00
@@ -1585,6 +1589,7 @@ time, you also want other kinds of commodities --- like stocks ---
 reported in terms of today's price.
 
 This is supported as follows:
+
 @smallexample
      2009/01/01 Shell
          Expenses:Gasoline             11 GAL @{=$2.299@}
@@ -1608,8 +1613,10 @@ from the transaction above):
          Expenses:Gasoline             11 GAL @@ $2.299
          Assets:Checking
 @end smallexample
+
 There is no difference in meaning between these two forms.  Why do
 both exist, you ask?  To support things like this:
+
 @smallexample
      2009/01/01 Shell
          Expenses:Gasoline             11 GAL @{=$2.299@} @@ $2.30
@@ -1752,7 +1759,6 @@ amount using the @code{(( ))} commodity annotation.
     Assets:Cash9
 @end smallexample
 
-
 @smallexample
 ledger reg -V food
 12-Mar-02 KFC                   Expenses:Food2                2 EUR        2 EUR
@@ -1864,6 +1870,7 @@ the syntax @code{[ACTUAL_DATE]} or @code{[=EFFECTIVE_DATE]} or
 Specifies a historical price for a commodity.  These are usually found
 in a pricing history file (see the @code{-Q} option).  The syntax
 is:
+
 @smallexample
 P DATE SYMBOL PRICE
 @end smallexample
@@ -1979,8 +1986,8 @@ until and @code{end apply account}  directive was found.
 @c instance_t::alias_directive
 Define an alias for an account name.  If you have a deeply nested tree
 of accounts, it may be convenient to define an alias, for example:
-@smallexample
 
+@smallexample
 alias Dining=Expenses:Entertainment:Dining
 alias Checking=Assets:Credit Union:Joint Checking Account
 
@@ -2048,10 +2055,9 @@ A check can issue a warning if a condition is not met during Ledger's
 run.
 
 @smallexample
-
 check <VALUE EXPRESSION BOOLEAN RESULT>
-
 @end smallexample
+
 @item comment
 @c instance_t::comment_directive in textual.cc
 Start a block comment, closed by @code{end comment}.
@@ -2091,6 +2097,7 @@ The @code{default} directive marks this as the ``default'' commodity.
 @item define
 @c instance_t::define_directive in textual.cc
 Allows you to define value expression for future use. For example:
+
 @smallexample
 define var_name=$100
 
@@ -2114,6 +2121,7 @@ for a series of transactions.  It's purely a typing saver, for use
 when entering many transactions with fixated prices.
 
 Thus, the following:
+
 @smallexample
 fixed CAD $0.90
    2012-04-10 Lunch in Canada
@@ -2125,7 +2133,9 @@ fixed CAD $0.90
        Expenses:Food            25.75 CAD
 endfixed
 @end smallexample
+
 is equivalent to this:
+
 @smallexample
    2012-04-10 Lunch in Canada
        Assets:Wallet            -15.50 CAD @{=$0.90@}
@@ -2174,6 +2184,7 @@ Ledger will display the mapped payees in @code{print} and
 @c instance_t::tag_directive in textual.cc
 Allows you to designate a block of transactions and assign the same
 tag to all.  Tags can have values and may be nested.
+
 @smallexample
 apply tag hastag
 apply tag nestedtag: true
@@ -2279,6 +2290,7 @@ symbol, nor will quotes ever be downloaded for that symbol.  Useful
 with a home currency, such as the dollar ($).  It is recommended that
 these pricing options be set in the price database file, which
 defaults to @file{~/.pricedb}.  The syntax for this command is:
+
 @smallexample
 N SYMBOL
 @end smallexample
@@ -2292,6 +2304,7 @@ different commodities; whichever is seen last is used as the default
 commodity.  For example, to set US dollars as the default commodity,
 while also setting the thousands flag and decimal flag for that
 commodity, use:
+
 @smallexample
 D $1,000.00
 @end smallexample
@@ -2300,6 +2313,7 @@ D $1,000.00
 Specifies a commodity conversion, where the first amount is given to
 be equivalent to the second amount.  The first amount should use the
 decimal precision desired during reporting:
+
 @smallexample
 C 1.00 Kb = 1024 bytes
 @end smallexample
@@ -3866,6 +3880,7 @@ actual balances.
 
 For the three instruments listed above, those automatic transactions
 would look like:
+
 @smallexample
 ;
 ; automatic calculations for asset allocation tracking
@@ -4149,7 +4164,6 @@ transaction as meta data if it doesn't recognize the field name. For
 example, if you want to capture the bank transaction number and it
 occurs in the first column of the data use:
 
-
 @smallexample
 transid,date,payee,note,amount,,,code,
 @end smallexample
@@ -4303,6 +4317,7 @@ The first two are described in more detail in this short tutorial.
 The easiest, albeit possibly less useful, way in which to use Ledger
 within an org file is to use a single source block to record all Ledger
 entries. The following is an example source block:
+
 @smallexample
 #+name: allinone
 #+begin_src ledger
@@ -4329,6 +4344,7 @@ entries. The following is an example source block:
   income:salary
 #+end_src
 @end smallexample
+
 In this example, we have combined both expenses and income into one set
 of Ledger entries. We can now generate register and balance reports (as
 well as many other types of reports) using babel to invoke Ledger with
@@ -4337,18 +4353,22 @@ specific arguments. The arguments are passed to Ledger using the
 argument so the system takes the default. For Ledger code blocks, the
 default :cmdline argument is bal and the result of evaluating this code
 block (@command{C-c C-c}) would be:
+
 @smallexample
 #+results: allinone()
 :            £2653.53  assets
 :             £650.00  expenses
 :           £-3303.53  income
 @end smallexample
+
 If, instead, you wished to generate a register of all the transactions,
 you would change the #+begin_src line for the code block to include the
 required command line option:
+
 @smallexample
 #+begin_src ledger :cmdline reg
 @end smallexample
+
 Evaluating the code block again would generate a different report.
 
 Having to change the actual directive on the code block and re-evaluate
@@ -4375,6 +4395,7 @@ interest, all typically going into one of my bank accounts. Here, I have
 placed several entries, but we could have had each entry in a separate
 src block. Note that all code blocks you wish to refer to later must
 have the :noweb yes babel header argument specified.
+
 @smallexample
 #+name: income
 #+begin_src ledger :noweb yes
@@ -4401,6 +4422,7 @@ have the :noweb yes babel header argument specified.
 The following entries relate to personal expenses, such as rent and
 food. Again, these have all been placed in a single src block but could
 have been done individually.
+
 @smallexample
 #+name: expenses
 #+begin_src ledger :noweb yes
@@ -5036,6 +5058,7 @@ Specify the location of the init file. The default is @file{~/.ledgerrc}
 @item --options
 Display the options in effect for this Ledger invocation, along with
 their values and the source of those values, for example:
+
 @smallexample
 14:15:02 > ledger --options bal --cleared -f ~/ledger/test/input/drewr3.dat
 ===============================================================================
@@ -5106,6 +5129,7 @@ information.
 
 @item --input-date-format <DATE-FORMAT>
 Specify the input date format for journal entries. For example,
+
 @smallexample
 ledger convert Export.csv --input-date-format "%m/%d/%Y"
 @end smallexample
@@ -5117,6 +5141,7 @@ Format Codes}).
 
 @item --master-account <STRING>
 Prepend all account names with the argument.
+
 @smallexample
 21:51:39 ~/ledger (next)> ledger -f test/input/drewr3.dat bal --master-account HUMBUG
                    0  HUMBUG
@@ -5225,6 +5250,7 @@ instead of running totals.
 @item --balance-format <STR>
 Specify the format to use for the
 @code{balance} report (@pxref{Format Strings}).  The default is:
+
 @smallexample
                "%(justify(scrub(display_total), 20, -1, true, color))"
                "  %(!options.flat ? depth_spacer : \"\")"
@@ -5258,6 +5284,7 @@ posting greater than $100
 @item --budget-format <FORMAT_STRING>
 Specify the format to use for the @code{budget} report (@pxref{Format
 Strings}).  The default is:
+
 @smallexample
         "%(justify(scrub(display_total), 20, -1, true, color))"
         "  %(!options.flat ? depth_spacer : \"\")"
@@ -5317,6 +5344,7 @@ appended to the commodities, accounts or payees command.
 @item --csv-format
 Specify the format to use for the @code{csv}
 report (@pxref{Format Strings}).  The default is:
+
 @smallexample
          "%(quoted(date)),"
          "%(quoted(code)),"
@@ -5353,6 +5381,7 @@ ASK JOHN
 Display register or balance in debit/credit format If you use
 @code{--dc} with either the register (reg) or balance (bal) commands,
 you will now get extra columns.  The register goes from this:
+
 @smallexample
    12-Mar-10 Employer           Assets:Cash                $100        $100
                                 Income:Employer           $-100           0
@@ -5431,6 +5460,7 @@ Apply a transform to the
 
 @item --dow
 group transactions by the day of the week.
+
 @smallexample
 ledger reg Expenses --dow --collapse
 @end smallexample
@@ -5498,6 +5528,7 @@ also useful here.
 Set the format for the headers that separate reports section of
 a grouped report.  Only has effect with a @code{--group-by} register
 report.
+
 @smallexample
 ledger reg Expenses --group-by "payee" --group-title-format "------------------------ %-20(value) ---------------------\n"
 ------------------------ 7-Eleven             ---------------------
@@ -5519,6 +5550,7 @@ Print the first @code{INT} entries. Opposite of @code{--tail}.
 Use @code{Expected} amounts in calculations.  In the case that you know
 that amount a transaction should be, but the actual transaction has the
 wrong value you can use metadata to put in the expected amount:
+
 @smallexample
 2012-03-12  Paycheck
    Income  $-990;  Expected:: $-1000.00
@@ -5624,6 +5656,7 @@ if you have multiple cars and track each fuel purchase in
 @code{Expenses:Auto:Fuel} and tag each fuel purchase with a tag
 identifying which car the purchase was for @code{; Car: Prius}, then
 the command:
+
 @smallexample
 ledger bal Fuel --pivot "Car"  --period "this year"
            $ 3491.26  Car
@@ -6127,6 +6160,7 @@ each report type:
 @item --balance-format STR
 Define the output format for the @code{balance} report.  The default
 (defined in @code{report.h} is:
+
 @smallexample
  "%(ansify_if(
          justify(scrub(display_total), 20,
@@ -6143,6 +6177,7 @@ Define the output format for the @code{balance} report.  The default
 
 @item --cleared-format
 Define the format for the cleared report. The default is:
+
 @smallexample
  "%(justify(scrub(get_at(display_total, 0)), 16, 16 + int(prepend_width),
         true, color))  %(justify(scrub(get_at(display_total, 1)), 18,
@@ -6158,6 +6193,7 @@ Define the format for the cleared report. The default is:
 @item --register-format STR
 Define the output format for the @code{register} report.  The default
 (defined in @code{report.h} is:
+
 @smallexample
  "%(ansify_if(
          ansify_if(justify(format_date(date), int(date_width)),
@@ -6191,8 +6227,10 @@ Define the output format for the @code{register} report.  The default
                     bold if should_bold))
         %$3 %$4 %$5\n"
 @end smallexample
+
 @item --csv-format
 Set the format for @code{csv} reports.  The default is:
+
 @smallexample
 "%(quoted(date)),
  %(quoted(code)),
@@ -6207,6 +6245,7 @@ Set the format for @code{csv} reports.  The default is:
 @item --plot-amount-format STR
 Set the format for amount plots, using the @code{-j} option. The
 default is:
+
 @smallexample
 "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_amount)))\n"
 @end smallexample
@@ -6214,18 +6253,21 @@ default is:
 @item --plot-total-format STR
 Set the format for total plots, using the @code{-J} option.  The
 default is:
+
 @smallexample
 "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n"
 @end smallexample
 
 @item --pricedb-format STR
 Set the format expected for the historical price file. The default is
+
 @smallexample
 "P %(datetime) %(display_account) %(scrub(display_amount))\n"
 @end smallexample
 
 @item --prices-format STR
 Set the format for the @command{prices} report. The default is:
+
 @smallexample
 "%(date) %-8(display_account) %(justify(scrub(display_amount), 12,
            2 + 9 + 8 + 12, true, color))\n"
@@ -6325,6 +6367,7 @@ follows:
   = expr true
     ; VALUE:: market(amount, date, exchange)
 @end smallexample
+
 This definition emulates the present day behavior of @code{-V} and
 @code{-X} (in the case of @code{-X}, the requested commodity is passed
 via the string 'exchange' above).
@@ -7938,6 +7981,7 @@ In the simplest form, bare decimal numbers are accepted:
     Assets:Checking        1000.00
     Income:Salary
 @end smallexample
+
 @cindex uncommoditized amounts
 Such amounts may only use an optional period for a decimal point.
 These are referred to as @dfn{integer amounts} or @dfn{uncommoditized
@@ -8228,6 +8272,7 @@ will work.
 @table @code
 @item args
 Evaluate the given arguments against the following model transaction:
+
 @smallexample
 2004/05/27 Book Store
     ; This note applies to all postings. :SecondTag:
@@ -8238,22 +8283,29 @@ Evaluate the given arguments against the following model transaction:
     ; Here follows a note describing the posting.
     Liabilities:MasterCard        $-200.00
 @end smallexample
+
 @item eval
 Evaluate the given value expression against the model transaction
+
 @item expr "LIMIT EXPRESSION"
 Print details of how ledger parses the given limit expression and apply
 it against a model transaction.
+
 @item format "FORMATTING"
 Print details of how ledger uses the given formatting description and
 apply it against a model transaction.
+
 @item generate
 Randomly generates syntactically valid Ledger data from a seed.  Used
 by the GenerateTests harness for development testing
+
 @item parse <VALUE EXPR>
 Print details of how ledger uses the given value expression description
 and apply it against a model transaction.
+
 @item period
 Evaluate the given period and report how Ledger interprets it:
+
 @smallexample
 20:22:21 ~/ledger (next)> ledger period "this year"
 --- Period expression tokens ---
@@ -8312,6 +8364,7 @@ the model transaction:
 --- Calculated value ---
 true
 @end smallexample
+
 @item template
 Shows the insertion template that a @code{draft} or @code{xact}
 sub-command generates.  This is a debugging command.
