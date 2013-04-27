@@ -634,9 +634,9 @@ offsets the value of your assets.
 The combined total of your Assets and Liabilities is your net worth.
 So to see your current net worth, use this command:
 
-@example
-ledger balance ^assets ^liabilities
-@end example
+@smallexample
+$ ledger balance ^assets ^liabilities
+@end smallexample
 
 In a similar vein, your Income accounts show up negative, because they
 transfer money @emph{from} an account in order to increase your
@@ -646,18 +646,18 @@ flow.  A positive cash flow means you are spending more than you make,
 since income is always a negative figure.  To see your current cash
 flow, use this command:
 
-@example
-ledger balance ^income ^expenses
-@end example
+@smallexample
+$ ledger balance ^income ^expenses
+@end smallexample
 
 Another common question to ask of your expenses is: How much do I
 spend each month on X?  Ledger provides a simple way of displaying
 monthly totals for any account.  Here is an example that summarizes
 your monthly automobile expenses:
 
-@example
-ledger -M register expenses:auto
-@end example
+@smallexample
+$ ledger -M register expenses:auto
+@end smallexample
 
 This assumes, of course, that you use account names like
 @code{Expenses:Auto:Gas} and @code{Expenses:Auto:Repair}.
@@ -829,13 +829,13 @@ currencies, while non-joined symbols appearing after the amount refer
 to commodities.  Here are some valid currency and commodity
 specifiers:
 
-@example
+@smallexample
 $20.00         ; currency: twenty US dollars
 40 AAPL        ; commodity: 40 shares of Apple stock
 60 DM          ; currency: 60 Deutsch Mark
 £50            ; currency: 50 British pounds
 50 EUR         ; currency: 50 Euros (or use appropriate symbol)
-@end example
+@end smallexample
 
 Ledger will examine the first use of any commodity to determine how
 that commodity should be printed on reports.  It pays attention to
@@ -878,9 +878,9 @@ Specify the price history to use with the @code{--price-db} option,
 with the @code{-V} option to report in terms of current market
 value:
 
-@example
-ledger --price-db prices.db -V balance brokerage
-@end example
+@smallexample
+$ ledger --price-db prices.db -V balance brokerage
+@end smallexample
 
 The balance for your brokerage account will be reported in US dollars,
 since the prices database uses that currency.
@@ -894,9 +894,9 @@ you had $5000 in your checking account, and for whatever reason you
 wanted to know many ounces of gold that would buy, in terms of the
 current price of gold:
 
-@example
-ledger -T "@{1 AU@}*(O/P@{1 AU@})" balance checking
-@end example
+@smallexample
+$ ledger -T "@{1 AU@}*(O/P@{1 AU@})" balance checking
+@end smallexample
 
 Although the total expression appears complex, it is simply saying
 that the reported total should be in multiples of AU units, where the
@@ -1168,16 +1168,16 @@ funds.  In this case, you will likely want to mask out your
 @code{Assets} account, because otherwise the balance won't make much
 sense:
 
-@example
-ledger bal -^Assets
-@end example
+@smallexample
+$ ledger bal -^Assets
+@end smallexample
 
 If the @code{--real} option is used, the report will be in terms of
 the real accounts:
 
-@example
-ledger --real bal
-@end example
+@smallexample
+$ ledger --real bal
+@end smallexample
 
 If more asset accounts are needed as the source of a posting, just
 list them as you would normally, for example:
@@ -3753,9 +3753,9 @@ you want, or interface Ledger with other programs.
 A query such as the following shows all expenses since last
 October, sorted by total:
 
-@example
-ledger -b "last oct" -s -S T bal ^expenses
-@end example
+@smallexample
+$ ledger -b "last oct" -s -S T bal ^expenses
+@end smallexample
 
 From left to right the options mean: Show transactions since last
 October; show all sub-accounts; sort by the absolute value of the
@@ -3772,17 +3772,17 @@ total; and report the balance for all accounts that begin with
 The following query makes it easy to see monthly expenses, with each
 month's expenses sorted by the amount:
 
-@example
-ledger -M --period-sort "(amount)" reg ^expenses
-@end example
+@smallexample
+$ ledger -M --period-sort "(amount)" reg ^expenses
+@end smallexample
 
 Now, you might wonder where the money came from to pay for these
 things.  To see that report, add @code{-r}, which shows the
 ``related account'' postings:
 
-@example
-ledger -M --period-sort "(amount)" -r reg ^expenses
-@end example
+@smallexample
+$ ledger -M --period-sort "(amount)" -r reg ^expenses
+@end smallexample
 
 But maybe this prints too much information.  You might just want to
 see how much you're spending with your MasterCard.  That kind of query
@@ -3790,9 +3790,9 @@ requires the use of a display predicate, since the postings
 calculated must match @code{^expenses}, while the postings
 displayed must match @code{mastercard}.  The command would be:
 
-@example
-ledger -M -r --display "account =~ /mastercard/" reg ^expenses
-@end example
+@smallexample
+$ ledger -M -r --display "account =~ /mastercard/" reg ^expenses
+@end smallexample
 
 This query says: Report monthly subtotals; report the ``related
 account'' postings; display only related postings whose
@@ -3801,9 +3801,9 @@ postings matching @code{^expenses}.
 
 This works just as well for report the overall total, too:
 
-@example
-ledger -s -r --display "account =~ /mastercard/" reg ^expenses
-@end example
+@smallexample
+$ ledger -s -r --display "account =~ /mastercard/" reg ^expenses
+@end smallexample
 
 The @code{-s} option subtotals all postings, just as @code{-M}
 subtotaled by the month.  The running total in both cases is off,
@@ -3950,9 +3950,9 @@ whether Gnuplot should plot the amount, or the running total.  For
 example, this command plots total monthly expenses made on your
 MasterCard.
 
-@example
-report -j -M -r --display "account =~ /mastercard/" reg ^expenses
-@end example
+@smallexample
+$ report -j -M -r --display "account =~ /mastercard/" reg ^expenses
+@end smallexample
 
 The @command{report} script is a very simple Bourne shell script, that
 passes a set of scripted commands to Gnuplot.  Feel free to modify the
@@ -4748,7 +4748,7 @@ The @command{payees} reports all of the unique payees in the
 journal. To filter the payees displayed you must use the prefix:
 
 @smallexample
-$ ledger payees @Nic
+$ ledger payees @@Nic
 Nicolas
 Nicolas BOILABUS
 Oudtshoorn Municipality
@@ -6756,9 +6756,9 @@ These two period transactions give the usual monthly expenses, as well
 as one typical yearly expense.  For help on finding out what your
 average monthly expense is for any category, use a command like:
 
-@example
-ledger -p "this year" --monthly --average --subtotal balance ^expenses
-@end example
+@smallexample
+$ ledger -p "this year" --monthly --average --subtotal balance ^expenses
+@end smallexample
 
 The reported totals are the current year's average for each account.
 
@@ -6766,24 +6766,24 @@ Once these period transactions are defined, creating a budget report
 is as easy as adding @code{--budget} to the command-line.  For
 example, a typical monthly expense report would be:
 
-@example
-ledger --monthly register ^expenses
-@end example
+@smallexample
+$ ledger --monthly register ^expenses
+@end smallexample
 
 To see the same report balanced against your budget, use:
 
-@example
-ledger --budget --monthly register ^expenses
-@end example
+@smallexample
+$ ledger --budget --monthly register ^expenses
+@end smallexample
 
 A budget report includes only those accounts that appear in the
 budget.  To see all expenses balanced against the budget, use
 @code{--add-budget}.  You can even see only the un-budgeted expenses
 using @code{--unbudgeted}:
 
-@example
-ledger --unbudgeted --monthly register ^expenses
-@end example
+@smallexample
+$ ledger --unbudgeted --monthly register ^expenses
+@end smallexample
 
 You can also use these flags with the @command{balance} command.
 
@@ -6795,9 +6795,9 @@ future, such as determining when an account will reach zero.  Ledger
 makes this easy to do, using the same period transactions as are used
 for budgeting.  An example forecast report can be generated with:
 
-@example
-ledger --forecast "T>@{\$-500.00@}" register ^assets ^liabilities
-@end example
+@smallexample
+$ ledger --forecast "T>@{\$-500.00@}" register ^assets ^liabilities
+@end smallexample
 
 This report continues outputting postings until the running total
 is greater than $-500.00.  A final posting is always output, to
@@ -6806,9 +6806,9 @@ show you what the total afterwards would be.
 Forecasting can also be used with the balance report, but by date
 only, and not against the running total:
 
-@example
-ledger --forecast "d<[2010]" bal ^assets ^liabilities
-@end example
+@smallexample
+$ ledger --forecast "d<[2010]" bal ^assets ^liabilities
+@end smallexample
 
 @node Time Keeping, Value Expressions, Budgeting and Forecasting, Top
 @chapter Time Keeping
