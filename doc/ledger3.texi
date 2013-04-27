@@ -2,10 +2,6 @@
 
 @setfilename ledger3.info
 @settitle Ledger: Command-Line Accounting
-@c Define a new index for options.
-@defcodeindex op
-@c Put options in function index.
-@syncodeindex op fn
 
 @c Before release, run C-u C-c C-u C-a (texinfo-all-menus-update with
 @c a prefix arg).  This updates the node pointers, which texinfmt.el
