@@ -5197,7 +5197,7 @@ their values and the source of those values, for example:
 
 @smallexample
 14:15:02 > ledger --options bal --cleared -f ~/ledger/test/input/drewr3.dat
-===============================================================================
+===========================================================================
 [Global scope options]
 
 [Session scope options]
@@ -5216,7 +5216,7 @@ their values and the source of those values, for example:
          --account-width = 21                                  ?normalize
           --amount-width = 12                                  ?normalize
            --total-width = 12                                  ?normalize
-===============================================================================
+===========================================================================
             $ 775.00  Assets:Checking
          $ -1,000.00  Equity:Opening Balances
             $ 225.00  Expenses:Food:Groceries
@@ -5278,7 +5278,7 @@ Format Codes}).
 Prepend all account names with the argument.
 
 @smallexample
-21:51:39 ~/ledger (next)> ledger -f test/input/drewr3.dat bal --master-account HUMBUG
+$ ledger -f test/input/drewr3.dat bal --master-account HUMBUG
                    0  HUMBUG
          $ -3,804.00    Assets
           $ 1,396.00      Checking
@@ -5387,11 +5387,11 @@ Specify the format to use for the
 @code{balance} report (@pxref{Format Strings}).  The default is:
 
 @smallexample
-               "%(justify(scrub(display_total), 20, -1, true, color))"
-               "  %(!options.flat ? depth_spacer : \"\")"
-               "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
-               "%$1\n%/"
-               "--------------------\n"
+"%(justify(scrub(display_total), 20, -1, true, color))"
+"  %(!options.flat ? depth_spacer : \"\")"
+"%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+"%$1\n%/"
+"--------------------\n"
 @end smallexample
 
 @item --base
@@ -5421,11 +5421,11 @@ Specify the format to use for the @code{budget} report (@pxref{Format
 Strings}).  The default is:
 
 @smallexample
-        "%(justify(scrub(display_total), 20, -1, true, color))"
-        "  %(!options.flat ? depth_spacer : \"\")"
-        "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
-        "%$1\n%/"
-        "--------------------\n"
+"%(justify(scrub(display_total), 20, -1, true, color))"
+"  %(!options.flat ? depth_spacer : \"\")"
+"%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+"%$1\n%/"
+"--------------------\n"
 @end smallexample
 
 @item --budget
@@ -5441,15 +5441,15 @@ Specify the format to use
 for the @code{cleared} report (@pxref{Format Strings}).  The default is:
 
 @smallexample
-        "%(justify(scrub(get_at(total_expr, 0)), 16, 16 + prepend_width, "
-        " true, color))  %(justify(scrub(get_at(total_expr, 1)), 18, "
-        " 36 + prepend_width, true, color))"
-        "    %(latest_cleared ? format_date(latest_cleared) : \"         \")"
-        "    %(!options.flat ? depth_spacer : \"\")"
-        "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
-        "%$1  %$2    %$3\n%/"
-        "%(prepend_width ? \" \" * prepend_width : \"\")"
-        "----------------    ----------------    ---------\n"
+"%(justify(scrub(get_at(total_expr, 0)), 16, 16 + prepend_width, "
+" true, color))  %(justify(scrub(get_at(total_expr, 1)), 18, "
+" 36 + prepend_width, true, color))"
+"    %(latest_cleared ? format_date(latest_cleared) : \"         \")"
+"    %(!options.flat ? depth_spacer : \"\")"
+"%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
+"%$1  %$2    %$3\n%/"
+"%(prepend_width ? \" \" * prepend_width : \"\")"
+"----------------    ----------------    ---------\n"
 @end smallexample
 
 @item --cleared
@@ -5481,14 +5481,14 @@ Specify the format to use for the @code{csv}
 report (@pxref{Format Strings}).  The default is:
 
 @smallexample
-         "%(quoted(date)),"
-         "%(quoted(code)),"
-         "%(quoted(payee)),"
-         "%(quoted(display_account)),"
-         "%(quoted(commodity)),"
-         "%(quoted(quantity(scrub(display_amount)))),"
-         "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
-         "%(quoted(join(note | xact.note)))\n"
+"%(quoted(date)),"
+"%(quoted(code)),"
+"%(quoted(payee)),"
+"%(quoted(display_account)),"
+"%(quoted(commodity)),"
+"%(quoted(quantity(scrub(display_amount)))),"
+"%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
+"%(quoted(join(note | xact.note)))\n"
 @end smallexample
 
 @item --current
@@ -5518,30 +5518,30 @@ Display register or balance in debit/credit format If you use
 you will now get extra columns.  The register goes from this:
 
 @smallexample
-   12-Mar-10 Employer           Assets:Cash                $100        $100
-                                Income:Employer           $-100           0
-   12-Mar-10 KFC                Expenses:Food               $20         $20
-                                Assets:Cash                $-20           0
-   12-Mar-10 KFC - Rebate       Assets:Cash                  $5          $5
-                                Expenses:Food               $-5           0
-   12-Mar-10 KFC - Food & Reb.. Expenses:Food               $20         $20
-                                Expenses:Food               $-5         $15
-                                Assets:Cash                $-15           0
+12-Mar-10 Employer           Assets:Cash                $100        $100
+                             Income:Employer           $-100           0
+12-Mar-10 KFC                Expenses:Food               $20         $20
+                             Assets:Cash                $-20           0
+12-Mar-10 KFC - Rebate       Assets:Cash                  $5          $5
+                             Expenses:Food               $-5           0
+12-Mar-10 KFC - Food & Reb.. Expenses:Food               $20         $20
+                             Expenses:Food               $-5         $15
+                             Assets:Cash                $-15           0
 @end smallexample
 
 @noindent
 To this:
 
 @smallexample
-   12-Mar-10 Employer       Assets:Cash        $100           0        $100
-                            In:Employer           0        $100           0
-   12-Mar-10 KFC            Expens:Food         $20           0         $20
-                            Assets:Cash           0         $20           0
-   12-Mar-10 KFC - Rebate   Assets:Cash          $5           0          $5
-                            Expens:Food           0          $5           0
-   12-Mar-10 KFC - Food &.. Expens:Food         $20           0         $20
-                            Expens:Food           0          $5         $15
-                            Assets:Cash           0         $15           0
+12-Mar-10 Employer       Assets:Cash        $100           0        $100
+                         In:Employer           0        $100           0
+12-Mar-10 KFC            Expens:Food         $20           0         $20
+                         Assets:Cash           0         $20           0
+12-Mar-10 KFC - Rebate   Assets:Cash          $5           0          $5
+                         Expens:Food           0          $5           0
+12-Mar-10 KFC - Food &.. Expens:Food         $20           0         $20
+                         Expens:Food           0          $5         $15
+                         Assets:Cash           0         $15           0
 @end smallexample
 
 @noindent
@@ -5552,22 +5552,22 @@ values.
 For the balance report without @code{--dc}:
 
 @smallexample
-                    $70  Assets:Cash
-                    $30  Expenses:Food
-                  $-100  Income:Employer
-   --------------------
-                      0
+                 $70  Assets:Cash
+                 $30  Expenses:Food
+               $-100  Income:Employer
+--------------------
+                   0
 @end smallexample
 
 @noindent
 And with @code{--dc} it becomes this:
 
 @smallexample
-             $105            $35            $70  Assets:Cash
-              $40            $10            $30  Expenses:Food
-                0           $100          $-100  Income:Employer
-   --------------------------------------------
-             $145           $145              0
+          $105            $35            $70  Assets:Cash
+           $40            $10            $30  Expenses:Food
+             0           $100          $-100  Income:Employer
+--------------------------------------------
+          $145           $145              0
 @end smallexample
 
 @item --depth <INT>
@@ -5686,8 +5686,8 @@ wrong value you can use metadata to put in the expected amount:
 
 @smallexample
 2012-03-12  Paycheck
-   Income  $-990;  Expected:: $-1000.00
-   Checking
+    Income  $-990;  Expected:: $-1000.00
+    Checking
 @end smallexample
 
 Then using the command @code{ledger reg --inject=Expected Income} would
@@ -5791,7 +5791,7 @@ identifying which car the purchase was for @code{; Car: Prius}, then
 the command:
 
 @smallexample
-ledger bal Fuel --pivot "Car"  --period "this year"
+$ ledger bal Fuel --pivot "Car"  --period "this year"
            $ 3491.26  Car
            $ 1084.22    M3:Expenses:Auto:Fuel
             $ 149.65    MG V11:Expenses:Auto:Fuel
@@ -6070,8 +6070,8 @@ The following would be output, showing the postings related to the
 posting that matched:
 
 @smallexample
-2004/03/20 Safeway              Expenses:Cash               $-20.00      $-20.00
-                                Assets:Checking              $85.00       $65.00
+2004/03/20 Safeway         Expenses:Cash          $-20.00      $-20.00
+                           Assets:Checking         $85.00       $65.00
 @end smallexample
 
 @item --budget
@@ -6293,32 +6293,32 @@ Define the output format for the @code{balance} report.  The default
 (defined in @code{report.h} is:
 
 @smallexample
- "%(ansify_if(
-         justify(scrub(display_total), 20,
-                 20 + int(prepend_width), true, color),
-                   bold if should_bold))
-         %(!options.flat ? depth_spacer : \"\")
-       %-(ansify_if(
-          ansify_if(partial_account(options.flat), blue if color),
-                    bold if should_bold))\n%/
-       %$1\n%/
-       %(prepend_width ? \" \" * int(prepend_width) : \"\")
-       --------------------\n"
+"%(ansify_if(
+        justify(scrub(display_total), 20,
+                20 + int(prepend_width), true, color),
+                  bold if should_bold))
+        %(!options.flat ? depth_spacer : \"\")
+      %-(ansify_if(
+         ansify_if(partial_account(options.flat), blue if color),
+                   bold if should_bold))\n%/
+      %$1\n%/
+      %(prepend_width ? \" \" * int(prepend_width) : \"\")
+      --------------------\n"
 @end smallexample
 
 @item --cleared-format
 Define the format for the cleared report. The default is:
 
 @smallexample
- "%(justify(scrub(get_at(display_total, 0)), 16, 16 + int(prepend_width),
-        true, color))  %(justify(scrub(get_at(display_total, 1)), 18,
-        36 + int(prepend_width), true, color))
-           %(latest_cleared ? format_date(latest_cleared) : \"         \")
-           %(!options.flat ? depth_spacer : \"\")
-       %-(ansify_if(partial_account(options.flat), blue if color))\n%/
-       %$1  %$2    %$3\n%/
-       %(prepend_width ? \" \" * int(prepend_width) : \"\")
-       ----------------  ----------------    ---------\n"
+"%(justify(scrub(get_at(display_total, 0)), 16, 16 + int(prepend_width),
+       true, color))  %(justify(scrub(get_at(display_total, 1)), 18,
+       36 + int(prepend_width), true, color))
+          %(latest_cleared ? format_date(latest_cleared) : \"         \")
+          %(!options.flat ? depth_spacer : \"\")
+      %-(ansify_if(partial_account(options.flat), blue if color))\n%/
+      %$1  %$2    %$3\n%/
+      %(prepend_width ? \" \" * int(prepend_width) : \"\")
+      ----------------  ----------------    ---------\n"
 @end smallexample
 
 @item --register-format STR
@@ -6326,37 +6326,37 @@ Define the output format for the @code{register} report.  The default
 (defined in @code{report.h} is:
 
 @smallexample
- "%(ansify_if(
-         ansify_if(justify(format_date(date), int(date_width)),
-                   green if color and date > today),
-                   bold if should_bold))
-        %(ansify_if(
-          ansify_if(justify(truncated(payee, int(payee_width)), int(payee_width)),
-                    bold if color and !cleared and actual),
-                    bold if should_bold))
-        %(ansify_if(
-          ansify_if(justify(truncated(display_account, int(account_width),
-                                      int(abbrev_len)), int(account_width)),
-                    blue if color),
-                    bold if should_bold))
-        %(ansify_if(
-          justify(scrub(display_amount), int(amount_width),
-                  3 + int(meta_width) + int(date_width) + int(payee_width)
-                    + int(account_width) + int(amount_width) + int(prepend_width),
-                  true, color),
+"%(ansify_if(
+        ansify_if(justify(format_date(date), int(date_width)),
+                  green if color and date > today),
                   bold if should_bold))
-        %(ansify_if(
-          justify(scrub(display_total), int(total_width),
-                  4 + int(meta_width) + int(date_width) + int(payee_width)
-                    + int(account_width) + int(amount_width) + int(total_width)
-                    + int(prepend_width), true, color),
-                  bold if should_bold))\n%/
-       %(justify(\" \", int(date_width)))
-        %(ansify_if(
-          justify(truncated(has_tag(\"Payee\") ? payee : \" \",
-                            int(payee_width)), int(payee_width)),
-                    bold if should_bold))
-        %$3 %$4 %$5\n"
+       %(ansify_if(
+         ansify_if(justify(truncated(payee, int(payee_width)), int(payee_width)),
+                   bold if color and !cleared and actual),
+                   bold if should_bold))
+       %(ansify_if(
+         ansify_if(justify(truncated(display_account, int(account_width),
+                                     int(abbrev_len)), int(account_width)),
+                   blue if color),
+                   bold if should_bold))
+       %(ansify_if(
+         justify(scrub(display_amount), int(amount_width),
+                 3 + int(meta_width) + int(date_width) + int(payee_width)
+                   + int(account_width) + int(amount_width) + int(prepend_width),
+                 true, color),
+                 bold if should_bold))
+       %(ansify_if(
+         justify(scrub(display_total), int(total_width),
+                 4 + int(meta_width) + int(date_width) + int(payee_width)
+                   + int(account_width) + int(amount_width) + int(total_width)
+                   + int(prepend_width), true, color),
+                 bold if should_bold))\n%/
+      %(justify(\" \", int(date_width)))
+       %(ansify_if(
+         justify(truncated(has_tag(\"Payee\") ? payee : \" \",
+                           int(payee_width)), int(payee_width)),
+                   bold if should_bold))
+       %$3 %$4 %$5\n"
 @end smallexample
 
 @item --csv-format
