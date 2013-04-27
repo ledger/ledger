@@ -1376,17 +1376,13 @@ your sanity we suggest some very basic structure to your accounting
 system.
 
 At the highest level you have five sorts of accounts:
+
 @enumerate
-@item
-Expenses: where money goes
-@item
-Assets: where money sits
-@item
-Income: where money comes from
-@item
-Liabilities: money you owe
-@item
-Equity: the real value of your property.
+@item Expenses: where money goes
+@item Assets: where money sits
+@item Income: where money comes from
+@item Liabilities: money you owe
+@item Equity: the real value of your property.
 @end enumerate
 
 Starting the structure off this way will make it simpler for you to get
@@ -1656,7 +1652,8 @@ A valuation function receives three arguments:
 @table @code
 @item  source
 A string identifying the commodity whose price is being asked for
-              (example: "EUR")
+(example: "EUR")
+
 @item date
 The reference date the price should be relative.
 
@@ -1895,6 +1892,7 @@ postings, just as if it were normal transaction.
 A line beginning with a colon, pound, percent, bar or asterisk
 indicates a comment, and is ignored. Comments will not be returned in
 a ``print'' response.
+
 @item indented ;
 If the semi colon is indented and occurs inside a transaction, it is
 parsed as a persistent note for its preceding category.  These notes or
@@ -1911,7 +1909,6 @@ Command directives must occur at the beginning of a line.  Use of ! and
 @@ is deprecated.
 
 @item account
-
 Pre-declare valid account names.  This only has effect if
 @code{--strict} or @code{--pedantic} is used (see below).  The
 @code{account} directive supports several optional sub-directives, if
@@ -2000,6 +1997,7 @@ alias Checking=Assets:Credit Union:Joint Checking Account
 The aliases are only in effect for transactions read in after the alias
 is defined and are effected by @code{account} directives that precede
 them.
+
 @item assert
 @c instance_t::assert_directive
 An assertion can throw an error if a condition is not met during
@@ -2107,9 +2105,11 @@ define var_name=$100
 @end smallexample
 
 The posting will have a cost of $400.
+
 @item end
 @c instance_t::end_directive in textual.cc
 Closes block commands like @code{tag} or @code{comment}.
+
 @item expr
 @c instance_t::expr_directive in textual.cc
 
@@ -2280,9 +2280,9 @@ alone, for backwards compatibility with older Ledger versions.
 @table @code
 @item A
 See @code{bucket}
+
 @item Y
 See @code{year}
-
 
 @item N SYMBOL
 Indicates that pricing information is to be ignored for a given
@@ -5121,9 +5121,9 @@ Direct Ledger to download prices using the script defined in
 @item --file <PATH>
 Specify the input file path for this invocation.
 
+@item --getquote <PATH>
 @cindex getquote
 @cindex download prices
-@item --getquote <PATH>
 Tell ledger where to find the user defined script to download prices
 information.
 
@@ -5137,7 +5137,6 @@ ledger convert Export.csv --input-date-format "%m/%d/%Y"
 Would convert the @file{Export.csv} file to ledger format, assuming
 the dates in the CSV file are like 12/23/2009 (@pxref{Date and Time
 Format Codes}).
-
 
 @item --master-account <STRING>
 Prepend all account names with the argument.
@@ -5205,6 +5204,7 @@ name will be truncated on the right. If @code{abbrev-len} is greater
 than @code{account-width} then the account will be truncated on the
 left, with no shortening of the account names in order to fit into the
 desired width.
+
 @item --account <STR>
 Prepend @code{<STR>} to all accounts reported. That is, the option
 @code{--account Personal} would tack @code{Personal:} to the beginning
@@ -5228,7 +5228,6 @@ Show only un-budgeted postings.
 @item --amount-data
 On a register report print only the dates and
 amount of postings.  Useful for graphing and spreadsheet applications.
-
 
 @item --amount <EXPR>
 Apply the given value expression to the posting
@@ -5542,7 +5541,6 @@ ledger reg Expenses --group-by "payee" --group-title-format "-------------------
 ...
 @end smallexample
 
-
 @item --head <INT>
 Print the first @code{INT} entries. Opposite of @code{--tail}.
 
@@ -5670,6 +5668,7 @@ ledger bal Fuel --pivot "Car"  --period "this year"
 @end smallexample
 
 @xref{Metadata values}.
+
 @item --plot-amount-format
 Define the output format for an amount data plot. @xref{Visualizing
 with Gnuplot}.
@@ -5702,7 +5701,6 @@ amounts.
 @item --real
 Account using only real transactions ignoring virtual and automatic
 transactions.
-
 
 @item --related-all
 Show all postings in a transaction, similar to @code{--related} but
@@ -5840,7 +5838,6 @@ example init file:
 
 Option settings on the command-line or in the environment always take
 precedence over settings in the init file.
-
 
 @item --account NAME
 @item -a NAME
@@ -6030,7 +6027,6 @@ into a single, subtotaled transaction.
 @item --by-payee
 @item -P
 Report subtotals by payee.
-
 
 @item --empty
 @item -E
@@ -6339,7 +6335,7 @@ Report the cost basis for all postings.
 @item -V, --market
 Use the last known value for commodities to calculate final values.
 
-@item -G --gain
+@item -G, --gain
 Report the net gain/loss for all commodities in the report that have
 a price history.
 @end table
@@ -7195,7 +7191,6 @@ Inserts the full name of an account.
 @c others, it inserts the posting amount and its cost.  It's use is
 @c not recommended unless you are modifying the print report.
 
-
 @item N
 Inserts the note associated with a posting, if one exists.
 
@@ -7240,6 +7235,7 @@ described later):
 The following codes return the width allocated for the specific fields.
 The defaults can be changed using the corresponding command line
 options:
+
 @itemize
 @item @code{date_width}
 @item @code{payee_width}
