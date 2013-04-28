@@ -315,12 +315,13 @@ If you would rather start with your own journal right away please
 Please note that as a command line program, Ledger is controlled from
 your shell.  There are several different command shells that all
 behave slightly differently with respect to some special characters.
-In particular, the BASH shell will interpret $ signs differently than
-ledger and they must be escaped to reach the actual program.  Another
-example is zsh, which will interpret ^ differently than ledger
-expects.  In all cases that follow you should take that into account
-when entering the command line arguments given.  There are too many
-variations between shells to give concrete examples for each.
+In particular, the BASH shell will interpret @samp{$} signs
+differently than ledger and they must be escaped to reach the actual
+program.  Another example is zsh, which will interpret @samp{^}
+differently than ledger expects.  In all cases that follow you should
+take that into account when entering the command line arguments given.
+There are too many variations between shells to give concrete examples
+for each.
 
 @node Balance Report, Register Report, Run Some Reports, Run Some Reports
 @subsection Balance Report
@@ -454,7 +455,7 @@ $ ledger -f drewr3.dat balance Groceries
 
 @noindent
 If you would like to find transaction to only a certain payee use
-@code{payee} or @@:
+@samp{payee} or @samp{@@}:
 
 @smallexample
 $ ledger -f drewr3.dat register payee "Organic"
@@ -514,7 +515,8 @@ shows the ``cleared'' balance.
 
 Using ledger under the windows command shell has one significant
 limitation.  CMD.exe is limited to standard ASCII characters and as
-such cannot display any currency symbols other than dollar signs ($).
+such cannot display any currency symbols other than dollar signs
+@samp{$}.
 
 @node Principles of Accounting, Keeping a Journal, Ledger Tutorial, Top
 @chapter Principles of Accounting with Ledger
@@ -981,7 +983,7 @@ C 1.00 Gb = 1024 Mb
 C 1.00 Tb = 1024 Gb
 @end smallexample
 
-Each of these definitions correlates a commodity (such as @code{Kb})
+Each of these definitions correlates a commodity (such as @samp{Kb})
 and a default precision, with a certain quantity of another commodity.
 In the above example, kilobytes are reported with two decimal places
 of precision and each kilobyte is equal to 1024 bytes.
@@ -1398,7 +1400,7 @@ Expenses:Food:Hamburgers and Fries
 Comments are generally started using a @samp{;}.  However, in order to
 increase compatibility with other text manipulation programs and
 methods four additional comment characters are valid if used at the
-beginning of a line: @code{#}, @code{|}, and @code{*} and @code{%}.
+beginning of a line: @samp{#}, @samp{|}, and @samp{*} and @samp{%}.
 @cindex block comments
 @cindex comments, block
 Block comments can be made by use @code{@!comment} ... @code{@!end
@@ -1497,7 +1499,7 @@ $ ledger -f example.dat bal
 
 The top two lines show my current assets as $-66.00 in checking (in
 this very short example I didn't establish opening an opening balance
-for the checking account) and E15.00.  After spending on dinner i have
+for the checking account) and E15.00.  After spending on dinner I have
 E15.00 in my wallet.  The bottom line balances to zero, but is shown
 in two lines since we haven't told ledger to convert commodities.
 
@@ -1513,16 +1515,16 @@ in two lines since we haven't told ledger to convert commodities.
 
 Commodity names can have any character, including white-space.
 However, if you include white-space or numeric characters the
-commodity name must be enclosed in double quotes:
+commodity name must be enclosed in double quotes @samp{"}:
 
 @smallexample
-1999/06/09 !  Achat
-    Actif:SG PEE STK  49.957 "Arcancia Equilibre 454"
-    Actif:SG PEE STK  $-234.90
-
-2000/12/08 !  Achat
-    Actif:SG PEE STK  215.796 "Arcancia Equilibre 455"
-    Actif:SG PEE STK  $-10742.54
+1999/06/09 ! Achat
+    Actif:SG PEE STK         49.957 "Arcancia Équilibre 454"
+    Actif:SG PEE STK      $-234.90
+                       
+2000/12/08 ! Achat
+    Actif:SG PEE STK        215.796 "Arcancia Équilibre 455"
+    Actif:SG PEE STK    $-10742.54
 @end smallexample
 
 @node Buying and Selling Stock, Fixing Lot Prices, Naming Commodities, Currency and Commodities
@@ -1537,9 +1539,9 @@ convention is as follows:
 
 @smallexample
 2004/05/01 Stock purchase
-    Assets:Broker                    50 AAPL @@ $30.00
-    Expenses:Broker:Commissions       $19.95
-    Assets:Broker                 $-1,500.00
+    Assets:Broker                     50 AAPL @@ $30.00
+    Expenses:Broker:Commissions        $19.95
+    Assets:Broker                  $-1,500.00
 @end smallexample
 
 This assumes you have a brokerage account that is capable of managed
@@ -1547,19 +1549,20 @@ both liquid and commodity assets.  Now, on the day of the sale:
 
 @smallexample
 2005/08/01 Stock sale
-    Assets:Broker                   -50 APPL @{$30.00@} @@ $50.00
-    Expenses:Broker:Commissions       $19.95
-    Income:Capital Gains          $-1,000.00
-    Assets:Broker                  $2,500.00
+    Assets:Broker                    -50 APPL @{$30.00@} @@ $50.00
+    Expenses:Broker:Commissions        $19.95
+    Income:Capital Gains           $-1,000.00
+    Assets:Broker                   $2,500.00
 @end smallexample
 
 @noindent
 You can, of course, elide the amount of the last posting.  It is there
 for clarity's sake.
 
-The @{$30.00@} is a lot price.  You can also use a lot date,
-[2004/05/01], or both, in case you have several lots of the same
-price/date and your taxation model is based on longest-held-first.
+The @samp{@{$30.00@}} is a lot price.  You can also use a lot date,
+@samp{[2004/05/01]}, or both, in case you have several lots of the
+same price/date and your taxation model is based on
+longest-held-first.
 
 @node Fixing Lot Prices, Complete control over commodity pricing, Buying and Selling Stock, Currency and Commodities
 @subsection Fixing Lot Prices
@@ -1586,9 +1589,9 @@ This is supported as follows:
     Assets:Checking
 @end smallexample
 
-This transaction actually introduces a new commodity, ``GAL @{=$2.29@}'',
-whose market value disregards any future changes in the price of
-gasoline.
+This transaction actually introduces a new commodity, @samp{GAL
+@{=$2.29@}}, whose market value disregards any future changes in the
+price of gasoline.
 
 If you do not want price fixing, you can specify this same transaction
 in one of two ways, both equivalent (note the lack of the equal sign
@@ -1639,16 +1642,16 @@ points of interception, you can specify the valuation method:
 @item by changing the journal default of @code{market}
 @end enumerate
 
-Fixated pricing (such as @code{@{=$20@})} still plays a role in this
+Fixated pricing (such as @samp{@{=$20@}}) still plays a role in this
 scheme.  As far as valuation goes, it's shorthand for writing
-@code{((s,d,t -> market($20,d,t)))}.
+@samp{((s,d,t -> market($20,d,t)))}.
 
 A valuation function receives three arguments:
 
 @table @code
 @item  source
 A string identifying the commodity whose price is being asked for
-(example: ``EUR'')
+(example: @samp{EUR})
 
 @item date
 The reference date the price should be relative.
@@ -1661,7 +1664,7 @@ was used instead of @code{--exchange}.
 
 The valuation function should return an amount.  If you've written
 your function in Python, you can return something like
-@code{Amount("$100")}.  If the function returns an explicit value,
+@samp{Amount("$100")}.  If the function returns an explicit value,
 that value is always used, regardless of the commodity, the date, or
 the desired target commodity. For example,
 
@@ -1714,7 +1717,7 @@ function on a transaction-wide or per-posting basis.
 @end smallexample
 
 Lastly, you can specify the valuation function/value for any specific
-amount using the @code{(( ))} commodity annotation.
+amount using the @samp{(( ))} commodity annotation.
 
 @smallexample
 2012-03-02 KFC
@@ -1787,7 +1790,7 @@ account Expenses:Utilities
 ...
 @end smallexample
 
-Using the @code{--strict} option will cause Ledger to complain if any
+Using the @option{--strict} option will cause Ledger to complain if any
 accounts are not previously defined:
 
 @smallexample
@@ -1836,10 +1839,10 @@ line is:
 DATE[=EDATE] [*|!] [(CODE)] DESC
 @end smallexample
 
-If @code{*} appears after the date (with optional effective date), it
+If @samp{*} appears after the date (with optional effective date), it
 indicates the transaction is ``cleared'', which can mean whatever the
-user wants it to mean.  If @code{!} appears after the date, it
-indicates d the transaction is ``pending''; i.e., tentatively cleared
+user wants it to mean.  If @samp{!} appears after the date, it
+indicates the transaction is ``pending''; i.e., tentatively cleared
 from the user's point of view, but not yet actually cleared.  If
 a @code{CODE} appears in parentheses, it may be used to indicate
 a check number, or the type of the posting.  Following these is the
@@ -1904,8 +1907,8 @@ Ledger.
 
 @table @code
 @item beginning of line
-Command directives must occur at the beginning of a line.  Use of ! and
-@@ is deprecated.
+Command directives must occur at the beginning of a line.  Use of
+@samp{!} and @samp{@@} is deprecated.
 
 @item account
 Pre-declare valid account names.  This only has effect if
@@ -2286,8 +2289,8 @@ See @code{year}
 @item N SYMBOL
 Indicates that pricing information is to be ignored for a given
 symbol, nor will quotes ever be downloaded for that symbol.  Useful
-with a home currency, such as the dollar ($).  It is recommended that
-these pricing options be set in the price database file, which
+with a home currency, such as the dollar @samp{$}.  It is recommended
+that these pricing options be set in the price database file, which
 defaults to @file{~/.pricedb}.  The syntax for this command is:
 
 @smallexample
@@ -2593,7 +2596,7 @@ You can mark individual postings as cleared or pending, in case one
 
 After the payee, and after at least one tab or two spaces (or a space
 and a tab, which Ledger calls this a ``hard separator''), you may
-introduce a note about the transaction using the ; character:
+introduce a note about the transaction using the @samp{;} character:
 
 @smallexample
 2012-03-10 * KFC                ; yum, chicken...
@@ -2873,8 +2876,8 @@ another.  The resulting posting cost is $50.00 per share.
 @node Explicit posting costs, Posting cost expressions, Posting cost, Transactions
 @section Explicit posting costs
 
-You can make any posting's cost explicit using the @@ symbol after the
-amount or amount expression:
+You can make any posting's cost explicit using the @samp{@@} symbol
+after the amount or amount expression:
 
 @smallexample
 2012-03-10 My Broker
@@ -2936,9 +2939,9 @@ You can even have both:
 @node Total posting costs, Virtual posting costs, Posting cost expressions, Transactions
 @section Total posting costs
 
-The cost figure following the @@ character specifies the
+The cost figure following the @samp{@@} character specifies the
 @emph{per-unit} price for the commodity being transferred.  If you'd
-like to specify the total cost instead, use @@@@:
+like to specify the total cost instead, use @samp{@@@@}:
 
 @smallexample
 2012-03-10 My Broker
@@ -2960,8 +2963,8 @@ Ledger reads this as if you had written:
 Normally whenever a commodity exchange like this happens, the price of
 the exchange (such as $50 per share of AAPL, above) is recorded in
 Ledger's internal price history database.  To prevent this from
-happening in the case of an exceptional transaction, surround the @@
-or @@@@ with parentheses:
+happening in the case of an exceptional transaction, surround the
+@samp{@@} or @samp{@@@@} with parentheses:
 
 @smallexample
 2012-03-10 My Brother
@@ -3175,7 +3178,7 @@ expressions):
 
 You can also associate arbitrary notes for your own record keeping in
 parentheses, and reveal them with @code{--lot-notes}.  One caveat is
-that the note cannot begin with an @@ character, as that would
+that the note cannot begin with an @samp{@@} character, as that would
 indicate a virtual cost:
 
 @smallexample
@@ -3462,9 +3465,9 @@ posting it matches.
 @subsection State flags
 
 Although you cannot mark an automated transaction as a whole as
-cleared or pending, you can mark its postings with a * or ! before the
-account name, and that state flag gets carried to the generated
-posting.
+cleared or pending, you can mark its postings with a @samp{*} or
+@samp{!} before the account name, and that state flag gets carried to
+the generated posting.
 
 @node Effective Dates, Periodic Transactions, State flags, Automated Transactions
 @subsection Effective Dates
@@ -3547,7 +3550,7 @@ really knows that it debited $225 this month.
 @subsection Periodic Transactions
 @findex --budget
 
-A periodic transaction starts with a ~ followed by a period
+A periodic transaction starts with a @samp{~} followed by a period
 expression.  Periodic transactions are used for budgeting and
 forecasting only, they have no effect without the @code{--budget}
 option specified. @xref{Budgeting and Forecasting} for examples and
@@ -4859,7 +4862,7 @@ It works by finding a past posting matching the regular expression
 @code{viva}, and assuming that any accounts or amounts specified will
 be similar to that earlier posting.  If Ledger does not succeed in
 generating a new transaction, an error is printed and the exit code is
-set to @code{1}.
+set to @samp{1}.
 
 Here are a few more examples of the @command{xact} command, assuming
 the above journal transaction:
@@ -4910,9 +4913,10 @@ meaning, described below.
 
 The regular expressions arguments always match the account name that
 a posting refers to.  To match on the payee of the transaction
-instead, precede the regular expression with @code{payee} or @@.  For
-example, the following balance command reports account totals for
-rent, food and movies, but only those whose payee matches Freddie:
+instead, precede the regular expression with @samp{payee} or
+@samp{@@}.  For example, the following balance command reports account
+totals for rent, food and movies, but only those whose payee matches
+Freddie:
 
 @smallexample
 $ ledger bal rent food movies payee freddie
@@ -5272,9 +5276,9 @@ $ ledger --options bal --cleared -f ~/ledger/test/input/drewr3.dat
 @end smallexample
 
 @noindent
-For the source column, a value starting with a @code{-} or @code{--}
+For the source column, a value starting with a @samp{-} or @samp{--}
 indicated the source was a command line argument.  It the entry starts
-with a @code{$}, the source was an environment variable. If the source
+with a @samp{$}, the source was an environment variable. If the source
 is @code{?normalize} the value was set internally by ledger, in
 a function called @code{normalize_options}.
 
@@ -6999,7 +7003,7 @@ The market value of a posting, or an account without its children.
 
 @item g
 The net gain (market value minus cost basis), for a posting or an
-account without its children.  It is the same as @code{v-b}.
+account without its children.  It is the same as @samp{v-b}.
 
 @item l
 The depth (``level'') of an account.  If an account has one parent,
@@ -7010,13 +7014,13 @@ The index of a posting, or the count of postings affecting an
 account.
 
 @item X
-1 if a posting's transaction has been cleared, 0 otherwise.
+@samp{1} if a posting's transaction has been cleared, @samp{0} otherwise.
 
 @item R
-1 if a posting is not virtual, 0 otherwise.
+@samp{1} if a posting is not virtual, @samp{0} otherwise.
 
 @item Z
-1 if a posting is not automated, 0 otherwise.
+@samp{1} if a posting is not automated, @samp{0} otherwise.
 @end table
 
 @node Calculated totals,  , Posting/account details, Variables
@@ -7042,7 +7046,7 @@ all its children.
 @item G
 The total net gain (market value minus cost basis), for a series of
 postings, or an account and its children.  It is the same as
-@code{V-B}.
+@samp{V-B}.
 @end table
 
 @node Functions, Operators, Variables, Value Expressions
@@ -7061,12 +7065,12 @@ The absolute (unsigned) value of the argument.
 Strips the commodity from the argument.
 
 @item A
-The arithmetic mean of the argument; @code{Ax} is the same as
-@code{x/n}.
+The arithmetic mean of the argument; @samp{Ax} is the same as
+@samp{x/n}.
 
 @item P
-The present market value of the argument.  The syntax @code{P(x,d)} is
-supported, which yields the market value at time @code{d}.  If no date
+The present market value of the argument.  The syntax @samp{P(x,d)} is
+supported, which yields the market value at time @samp{d}.  If no date
 is given, then the current moment is used.
 @end table
 
@@ -7173,51 +7177,51 @@ Useful specifying a date in plain terms.  For example, you could say
 
 @multitable @columnfractions .3 .2 .5
 @headitem Function @tab Abbrev. @tab Description
-@item @code{amount_expr } @tab @code{} @tab
-@item @code{abs } @tab @code{} @tab --> U
-@item @code{ceiling } @tab @code{} @tab Return the next integer toward +infinity
+@item @code{amount_expr} @tab @code{} @tab
+@item @code{abs} @tab @code{} @tab --> U
+@item @code{ceiling} @tab @code{} @tab Return the next integer toward +infinity
 @item @code{code} @tab @code{} @tab Return the transaction code, the string between the parenthesis after the date.
-@item @code{commodity } @tab @code{} @tab
-@item @code{display_amount } @tab @code{} @tab --> t
-@item @code{display_total } @tab @code{} @tab --> T
-@item @code{date } @tab @code{} @tab
-@item @code{format_date } @tab @code{} @tab
-@item @code{format } @tab @code{} @tab
-@item @code{floor } @tab @code{} @tab Return the next integer toward -infinity
-@item @code{get_at } @tab @code{} @tab
-@item @code{is_seq } @tab @code{} @tab
-@item @code{justify } @tab @code{} @tab
-@item @code{join } @tab @code{} @tab
-@item @code{market --> P } @tab @code{} @tab
-@item @code{null } @tab @code{} @tab
-@item @code{now --> d m } @tab @code{} @tab
-@item @code{options } @tab @code{} @tab
-@item @code{post } @tab @code{} @tab
-@item @code{percent } @tab @code{} @tab
-@item @code{price } @tab @code{} @tab
-@item @code{print } @tab @code{} @tab
-@item @code{quoted } @tab @code{} @tab
-@item @code{quantity } @tab @code{} @tab
-@item @code{rounded } @tab @code{} @tab
-@item @code{roundto } @tab @code{} @tab Return value rounded to n digits.  Does not affect formatting.
-@item @code{scrub } @tab @code{} @tab
-@item @code{strip --> S } @tab @code{} @tab
-@item @code{should_bold } @tab @code{} @tab
-@item @code{truncated } @tab @code{} @tab
-@item @code{total_expr } @tab @code{} @tab
-@item @code{today } @tab @code{} @tab
-@item @code{top_amount } @tab @code{} @tab
-@item @code{to_boolean } @tab @code{} @tab
-@item @code{to_int } @tab @code{} @tab
-@item @code{to_datetime } @tab @code{} @tab
-@item @code{to_date } @tab @code{} @tab
-@item @code{to_amount } @tab @code{} @tab
-@item @code{to_balance } @tab @code{} @tab
-@item @code{to_spring } @tab @code{} @tab
-@item @code{to_mask } @tab @code{} @tab
-@item @code{to_sequence } @tab @code{} @tab
-@item @code{unrounded } @tab @code{} @tab
-@item @code{value_date } @tab @code{} @tab
+@item @code{commodity} @tab @code{} @tab
+@item @code{display_amount} @tab @code{} @tab --> t
+@item @code{display_total} @tab @code{} @tab --> T
+@item @code{date} @tab @code{} @tab
+@item @code{format_date} @tab @code{} @tab
+@item @code{format} @tab @code{} @tab
+@item @code{floor} @tab @code{} @tab Return the next integer toward -infinity
+@item @code{get_at} @tab @code{} @tab
+@item @code{is_seq} @tab @code{} @tab
+@item @code{justify} @tab @code{} @tab
+@item @code{join} @tab @code{} @tab
+@item @code{market --> P} @tab @code{} @tab
+@item @code{null} @tab @code{} @tab
+@item @code{now --> d m} @tab @code{} @tab
+@item @code{options} @tab @code{} @tab
+@item @code{post} @tab @code{} @tab
+@item @code{percent} @tab @code{} @tab
+@item @code{price} @tab @code{} @tab
+@item @code{print} @tab @code{} @tab
+@item @code{quoted} @tab @code{} @tab
+@item @code{quantity} @tab @code{} @tab
+@item @code{rounded} @tab @code{} @tab
+@item @code{roundto} @tab @code{} @tab Return value rounded to n digits.  Does not affect formatting.
+@item @code{scrub} @tab @code{} @tab
+@item @code{strip --> S} @tab @code{} @tab
+@item @code{should_bold} @tab @code{} @tab
+@item @code{truncated} @tab @code{} @tab
+@item @code{total_expr} @tab @code{} @tab
+@item @code{today} @tab @code{} @tab
+@item @code{top_amount} @tab @code{} @tab
+@item @code{to_boolean} @tab @code{} @tab
+@item @code{to_int} @tab @code{} @tab
+@item @code{to_datetime} @tab @code{} @tab
+@item @code{to_date} @tab @code{} @tab
+@item @code{to_amount} @tab @code{} @tab
+@item @code{to_balance} @tab @code{} @tab
+@item @code{to_spring} @tab @code{} @tab
+@item @code{to_mask} @tab @code{} @tab
+@item @code{to_sequence} @tab @code{} @tab
+@item @code{unrounded} @tab @code{} @tab
+@item @code{value_date} @tab @code{} @tab
 @end multitable
 
 @node Format Strings, Extending with Python, Value Expressions, Top
@@ -7270,18 +7274,18 @@ without having to enter a new format for each command.
 @section Format String Structure
 
 Within a format string, a substitution is specified using a percent
-character (@code{%}).  The basic format of all substitutions is:
+@samp{%} character.  The basic format of all substitutions is:
 
 @smallexample
 %[-][MIN WIDTH][.MAX WIDTH](VALEXPR)
 @end smallexample
 
-If the optional minus sign (@code{-}) follows the percent character,
+If the optional minus sign @samp{-} follows the percent character,
 whatever is substituted will be left justified.  The default is right
-justified.  If a minimum width is given next, the substituted text will
-be at least that wide, perhaps wider.  If a period and a maximum width
-is given, the substituted text will never be wider than this, and will
-be truncated to fit.  Here are some examples:
+justified.  If a minimum width is given next, the substituted text
+will be at least that wide, perhaps wider.  If a period and a maximum
+width is given, the substituted text will never be wider than this,
+and will be truncated to fit.  Here are some examples:
 
 @table @code
 @item %-20P
@@ -7357,7 +7361,7 @@ has an effective date, it prints @code{[ACTUAL_DATE=EFFECTIVE_DATE]}.
 If a posting has been cleared, this returns a 1, otherwise returns 0.
 
 @item Y
-This is the same as @code{%X}, except that it only displays a state
+This is the same as @samp{%X}, except that it only displays a state
 character if all of the member postings have the same state.
 
 @item C
@@ -7393,7 +7397,7 @@ Inserts the full name of an account.
 Inserts the note associated with a posting, if one exists.
 
 @item /
-The @code{%/} construct is special.  It separates a format string
+The @samp{%/} construct is special.  It separates a format string
 between what is printed for the first posting of a transaction, and
 what is printed for all subsequent postings.  If not used, the
 same format string is used for all postings.
@@ -7451,10 +7455,10 @@ The character based formatting ledger can do is limited to the ANSI
 terminal character colors and font highlights in a normal TTY session.
 
 @multitable @columnfractions .3 .3 .3
-@item @code{red} @tab @code{magenta} @tab @code{bold}
-@item @code{green } @tab @code{cyan} @tab @code{underline}
-@item @code{yellow } @tab @code{white} @tab @code{blink}
-@item @code{blue }
+@item @code{red}    @tab @code{magenta} @tab @code{bold}
+@item @code{green}  @tab @code{cyan}    @tab @code{underline}
+@item @code{yellow} @tab @code{white}   @tab @code{blink}
+@item @code{blue}
 @end multitable
 
 @node Quantities and Calculations, Dates, Colors, Formatting codes
@@ -7553,7 +7557,7 @@ is simple to sort on.
 @node Weekdays, Month, Days, Date and Time Format Codes
 @subsubsection Weekdays
 
-You can have additional weekday information in your date with @code{%A}
+You can have additional weekday information in your date with @samp{%A}
 as
 
 @table @code
@@ -7587,12 +7591,12 @@ day of week starting with Sunday (0), i.e. @code{smtwtfs} 3
 @node Month, Miscellaneous Date Codes, Weekdays, Date and Time Format Codes
 @subsubsection Month
 
-You can have additional month information in your date with @code{%B}
+You can have additional month information in your date with @samp{%B}
 as
 
 @table @code
 @item %m-%d-%Y %B
-yields @code{ 02-10-2010 February}
+yields @code{02-10-2010 February}
 
 @item %B %m-%d-%Y
 yields @code{February 02-10-2010}
@@ -7603,11 +7607,11 @@ These are options you can select for month
 
 @table @code
 @item %m
-@code{mm} month as two digits
+@samp{mm} month as two digits
 
 @item %b
-Locale’s abbreviated month, for example @code{02} might be abbreviated
-as @code{Feb}
+Locale’s abbreviated month, for example @samp{02} might be abbreviated
+as @samp{Feb}
 
 @item %B
 Locale’s full month, variable length February
@@ -7662,7 +7666,7 @@ justified and padded to the full width of the field.  If
 @code{colorize} is true then ledger will honor color settings.
 
 @item join(STR)
-Replaces line feeds in @code{STR} with @code{\n}.
+Replaces line feeds in @code{STR} with @samp{\n}.
 
 @item quoted(STR)
 Return @code{STR} surrounded by double quotes, @code{"STR"}.
@@ -7681,19 +7685,19 @@ generated the posting.
 
 @table @code
 @item filename
-name of ledger data file from whence posting came, abbreviated @code{S}
+name of ledger data file from whence posting came, abbreviated @samp{S}
 @item beg_pos
 character position in @code{filename} where entry for posting begins,
-abbreviated @code{B}
+abbreviated @samp{B}
 @item end_pos
 character position in @code{filename} where entry for posting ends,
-abbreviated @code{E}
+abbreviated @samp{E}
 @item beg_line
 line number in @code{filename} where entry for posting begins,
-abbreviated @code{b}
+abbreviated @samp{b}
 @item end_line
 line number in @code{filename} where posting's entry for posting ends,
-abbreviated @code{e}
+abbreviated @samp{e}
 @end table
 
 @node Extending with Python, Ledger for Developers, Format Strings, Top
@@ -8150,10 +8154,10 @@ amount of the first posting is typically positive.  Consider:
 @node Comments and meta-data, Specifying Amounts, Journal File Format, Journal File Format
 @subsection Comments and meta-data
 
-Comments are generally started using a @code{;}.  However, in order to
+Comments are generally started using a @samp{;}.  However, in order to
 increase compatibility with other text manipulation programs and
 methods three additional comment characters are valid if used at the
-beginning of a line: @code{#}, @code{|}, and @code{*}.
+beginning of a line: @samp{#}, @samp{|}, and @samp{*}.
 
 @node Specifying Amounts, Posting costs, Comments and meta-data, Journal File Format
 @subsection Specifying Amounts
@@ -8200,8 +8204,8 @@ case of @code{1000.00} above, the internal value is @code{100000/100}.
 While rational numbers are great at not losing precision, the question
 arises: How should they be displayed?  A number like @code{100000/100}
 is no problem, since it represents a clean decimal fraction.  But what
-about when the number @code{1/1} is divided by three?  How should one
-print @code{1/3}, an infinitely repeating decimal?
+about when the number @samp{1/1} is divided by three?  How should one
+print @samp{1/3}, an infinitely repeating decimal?
 
 Ledger gets around this problem by rendering rationals into decimal at
 the last possible moment, and only for display.  As such, some
@@ -8212,11 +8216,11 @@ rarely, but even then it does not reflect adjustment of the
 @emph{internal amount}, only the displayed amount.
 
 What has still not been answered is how Ledger rounds values.  Should
-@code{1/3} be printed as @code{0.33} or @code{0.33333}?  For
+@samp{1/3} be printed as @samp{0.33} or @samp{0.33333}?  For
 commoditized amounts, the number of decimal places is decided by
 observing how each commodity is used; but in the case of integer
 amounts, an arbitrary factor must be chosen.  Initially, this factor
-is six.  Thus, @code{1/3} is printed back as @code{0.333333}.
+is six.  Thus, @samp{1/3} is printed back as @samp{0.333333}.
 Further, this rounding factor becomes associated with each particular
 value, and is carried through mathematical operations.  For example,
 if that particular number were multiplied by itself, the decimal
