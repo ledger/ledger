@@ -3525,7 +3525,7 @@ gives you your cash basis income in the same two weeks.
 
 Another use is distributing costs out in time. As an example, suppose
 you just prepaid into a local vegetable co-op that sustains you
-through the winter.  It cost $225 to join the program, so you write
+through the winter.  It costs $225 to join the program, so you write
 a check.  You don't want your October grocery budget to be blown
 because you bought food ahead, however.  What you really want is for
 the money to be evenly distributed over the next six months so that
@@ -5467,7 +5467,7 @@ of every account reported in a balance report or register report.
 
 @item --account-width @var{INT}
 Set the width of the account column in the @command{register} report
-to @code{INT} characters.
+to @var{INT} characters.
 
 @item --actual
 @itemx -L
@@ -7420,20 +7420,20 @@ Within a format string, a substitution is specified using a percent
 %[-][MIN WIDTH][.MAX WIDTH](VALEXPR)
 @end smallexample
 
-If the optional minus sign @samp{-} follows the percent character,
-whatever is substituted will be left justified.  The default is right
-justified.  If a minimum width is given next, the substituted text
-will be at least that wide, perhaps wider.  If a period and a maximum
-width is given, the substituted text will never be wider than this,
-and will be truncated to fit.  Here are some examples:
+If the optional minus sign @samp{-} follows the percent character
+@samp{%}, whatever is substituted will be left justified.  The default
+is right justified.  If a minimum width is given next, the substituted
+text will be at least that wide, perhaps wider.  If a period and
+a maximum width is given, the substituted text will never be wider
+than this, and will be truncated to fit.  Here are some examples:
 
 @table @code
 @item %-20P
 A transaction's payee, left justified and padded to 20 characters wide.
 @item %20P
-The same, right justified, at least 20 chars wide
+The same, right justified, at least 20 chars wide.
 @item %.20P
-The same, no more than 20 chars wide
+The same, no more than 20 chars wide.
 @end table
 
 The expression following the format constraints can be a single letter,
@@ -8624,26 +8624,8 @@ is that pre-commands ignore the journal data file completely, nor is
 the user's init file read.
 
 @ftable @code
-@item args
-Evaluate the given arguments against the following model transaction:
-
-@smallexample
-2004/05/27 Book Store
-    ; This note applies to all postings. :SecondTag:
-    Expenses:Books                 20 BOOK @@ $10
-    ; Metadata: Some Value
-    ; Typed:: $100 + $200
-    ; :ExampleTag:
-    ; Here follows a note describing the posting.
-    Liabilities:MasterCard        $-200.00
-@end smallexample
-
 @item eval @var{VEXPR}
 Evaluate the given value expression against the model transaction
-
-@item expr "LIMIT EXPRESSION"
-Print details of how ledger parses the given limit expression and apply
-it against a model transaction.
 
 @item format @var{FORMAT_STRING}
 Print details of how ledger uses the given formatting description and
@@ -8654,10 +8636,11 @@ Randomly generates syntactically valid Ledger data from a seed.  Used
 by the GenerateTests harness for development testing
 
 @item parse @var{VEXPR}
+@itemx expr @var{VEXPR}
 Print details of how ledger uses the given value expression description
 and apply it against a model transaction.
 
-@item period
+@item period @var{PERIOD_EXPRESSION}
 Evaluate the given period and report how Ledger interprets it:
 
 @smallexample
@@ -8680,8 +8663,9 @@ END_REACHED: <EOF>
 @end smallexample
 
 @item query
+@itemx args
 Evaluate the given arguments and report how Ledger interprets it against
-the model transaction:
+the following model transaction:
 
 @smallexample
 $ ledger query "/Book/"
