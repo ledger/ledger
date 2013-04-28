@@ -192,7 +192,7 @@ deal with multiple accounts.
 
 @cindex account, meaning of
 @cindex meaning of account
-Here is a good place for an aside on the use of the word `account'.
+Here is a good place for an aside on the use of the word ``account''.
 Most private people consider an account to be something that holds
 money at an institution for them.  Ledger uses a more general
 definition of the word.  An account is anywhere money can go.  Other
@@ -1395,7 +1395,7 @@ Expenses:Food:Hamburgers and Fries
 @section Commenting on your Journal
 @cindex comments, characters
 
-Comments are generally started using a ';'.  However, in order to
+Comments are generally started using a @samp{;}.  However, in order to
 increase compatibility with other text manipulation programs and
 methods four additional comment characters are valid if used at the
 beginning of a line: @code{#}, @code{|}, and @code{*} and @code{%}.
@@ -1434,8 +1434,8 @@ There are several forms of comments within a transaction, for example:
 @noindent
 The first comment is global and Ledger will not attach it to any
 specific transactions.  The comments within the transaction must all
-start with `;'s and are preserved as part of the transaction.  The
-`:'s indicate meta-data and tags (@pxref{Metadata}).
+start with @samp{;} and are preserved as part of the transaction.  The
+@samp{:} indicates meta-data and tags (@pxref{Metadata}).
 
 @node Currency and Commodities, Keeping it Consistent, Commenting on your journal, Keeping a Journal
 @section Currency and Commodities
@@ -2241,7 +2241,7 @@ tag Receipt
 tag CSV
 @end smallexample
 
-The 'tag' directive supports two optional sub-directives, if they
+The @code{tag} directive supports two optional sub-directives, if they
 immediately follow the tag directive and if they begin with
 whitespace:
 
@@ -3240,9 +3240,9 @@ The arguments passed to these functions have the following meaning:
         The source commodity string, or an amount object.  If it is
         a string, the return value must be an amount representing the
         price of the commodity identified by that string (example:
-        ``$'').  If it is an amount, return the value of that amount
-        as a new amount (usually calculated as commodity price times
-        source amount).
+        @samp{$}).  If it is an amount, return the value of that
+        amount as a new amount (usually calculated as commodity price
+        times source amount).
 
 @item   date
         The date to use for determining the value.  If null, it means
@@ -3905,11 +3905,11 @@ would look like:
     (Allocation:Bonds/Cash)                    1.000
 @end smallexample
 
-How do these work? First the `=' sign at the beginning of the line
-tells ledger this is an automatic transaction to be applied when the
-condition following the `=' is true.  After the `=' sign is a value
-expression (@pxref{Value Expressions}) that returns true any time
-a posting contains the commodity of interest.
+How do these work? First the @samp{=} sign at the beginning of the
+line tells ledger this is an automatic transaction to be applied when
+the condition following the @samp{=} is true.  After the @samp{=} sign
+is a value expression (@pxref{Value Expressions}) that returns true
+any time a posting contains the commodity of interest.
 
 The following line gives the proportions (not percentages) of each unit
 of commodity that belongs to each asset class.  Whenever Ledger sees a
@@ -3954,8 +3954,9 @@ third line is where we calculate and display the percentages.  The
 for the account in this line.  The @code{parent.total} command gives
 the total for the next level up in the tree.  @code{percent} formats
 their ratio as a percentage.  The fourth line tells ledger to display
-the current market value of the line. The last two characters ``%/''
-tell Ledger what to do for the last line, in this case, nothing.
+the current market value of the line. The last two characters
+@samp{%/} tell Ledger what to do for the last line, in this case,
+nothing.
 
 @node Visualizing with Gnuplot,  , Asset Allocation, Advanced Reports
 @subsection Visualizing with Gnuplot
@@ -6614,7 +6615,7 @@ valuated in another currency.  For example:
 = /^Assets:Brokerage:CAD$/
     ; Always report the value of commodities in this account in
     ; terms of present day dollars, despite what was asked for
-    ; on the command-line VALUE:: market(amount, date, '$')
+    ; on the command-line VALUE:: market(amount, date, @samp{$})
 @end smallexample
 
 @cindex FIFO/LIFO
@@ -6871,7 +6872,7 @@ This records a check-in to the given ACCOUNT, and a check-out.  You
 can be checked-in to multiple accounts at a time, if you wish, and
 they can span multiple days (use @code{--day-break} to break them up
 in the report).  The number of seconds between is accumulated as time
-to that ACCOUNT.  If the checkout uses a capital ``O'', the
+to that ACCOUNT.  If the checkout uses a capital @samp{O}, the
 transaction is marked ``cleared''.  You can use an optional PAYEE for
 whatever meaning you like.
 
@@ -6882,9 +6883,9 @@ information.  Or you can use Org mode's time-clocking abilities and
 the org2tc script developed by John Wiegley.
 
 These timelog entries can appear in a separate file, or directly in
-your main ledger file.  The initial ``i'' and ``o'' count as Ledger
-``directives'', and are accepted anywhere that ordinary transactions
-are.
+your main ledger file.  The initial @samp{i} and @samp{o} count as
+Ledger ``directives'', and are accepted anywhere that ordinary
+transactions are.
 
 @node Value Expressions, Format Strings, Time Keeping, Top
 @chapter Value Expressions
