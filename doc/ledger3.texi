@@ -4334,7 +4334,18 @@ least) in which these can be included:
 
 The first two are described in more detail in this short tutorial.
 
-@node Embedded Ledger example with single source block, , Org mode with Babel, Org mode with Babel
+@menu
+* Embedded Ledger example with single source block::
+* Multiple Ledger source blocks with @command{noweb}::
+* Income Entries::
+* Expenses::
+* Financial Summaries::
+* An overall balance summary::
+* Generating a monthly register::
+* Summary::
+@end menu
+
+@node Embedded Ledger example with single source block, Multiple Ledger source blocks with @command{noweb}, Org mode with Babel, Org mode with Babel
 @subsubsection Embedded Ledger example with single source block
 
 The easiest, albeit possibly less useful, way in which to use Ledger
@@ -4401,7 +4412,7 @@ financial state. Eventually, babel will support passing arguments to
 currently. Instead, we can use the concepts of literary programming, as
 implemented by the noweb features of babel, to help us.
 
-@node Multiple Ledger source blocks with @command{noweb},  , Embedded Ledger example with single source block, Org mode with Babel
+@node Multiple Ledger source blocks with @command{noweb}, Income Entries, Embedded Ledger example with single source block, Org mode with Babel
 @subsubsection Multiple Ledger source blocks with @command{noweb}
 
 The @command{noweb} feature of babel allows us to expand references to
@@ -4412,7 +4423,7 @@ of transactions together to generate reports.
 Using the same transactions used above, we could consider splitting
 these into expenses and income, as follows:
 
-@node Income Entries,  , Multiple Ledger source blocks with @command{noweb}, Org mode with Babel
+@node Income Entries, Expenses, Multiple Ledger source blocks with @command{noweb}, Org mode with Babel
 @subsubsection Income Entries
 
 The first set of entries relates to income, either monthly pay or
@@ -4442,7 +4453,7 @@ have the :noweb yes babel header argument specified.
 #+end_src
 @end smallexample
 
-@node Expenses,  , Income Entries, Org mode with Babel
+@node Expenses, Financial Summaries, Income Entries, Org mode with Babel
 @subsubsection Expenses
 
 The following entries relate to personal expenses, such as rent and
@@ -4461,7 +4472,7 @@ have been done individually.
 #+end_src
 @end smallexample
 
-@node Financial Summaries,  , Expenses, Org mode with Babel
+@node Financial Summaries, An overall balance summary, Expenses, Org mode with Babel
 @subsubsection Financial Summaries
 
 Given the ledger entries defined above in the income and expenses code
@@ -4471,7 +4482,7 @@ to generate specific reports for those transactions. Below are two
 examples, one to generate a balance report and one to generate
 a register report of all transactions.
 
-@node An overall balance summary,  , Financial Summaries, Org mode with Babel
+@node An overall balance summary, Generating a monthly register, Financial Summaries, Org mode with Babel
 @subsubsection An overall balance summary
 
 The overall balance of your account and expenditure with a breakdown
@@ -4517,7 +4528,7 @@ in the report.
 :          £-1300.00    starting balances
 @end smallexample
 
-@node Generating a monthly register,  , An overall balance summary, Org mode with Babel
+@node Generating a monthly register, Summary, An overall balance summary, Org mode with Babel
 @subsubsection Generating a monthly register
 
 You can also generate a monthly register (the reg command) by
