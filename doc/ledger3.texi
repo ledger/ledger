@@ -8471,9 +8471,12 @@ Print version information and exit.
 
 @node Pre-commands,  , Debug Options, Developer Commands
 @subsection Pre-Commands
+@cindex pre-commands
 
 Pre-commands are useful when you aren't sure how a command or option
-will work.
+will work. The difference between a pre-command and a regular command
+is that pre-commands ignore the journal data file completely, nor is
+the user's init file read.
 
 @ftable @code
 @item args
@@ -8490,14 +8493,14 @@ Evaluate the given arguments against the following model transaction:
     Liabilities:MasterCard        $-200.00
 @end smallexample
 
-@item eval
+@item eval @var{VEXPR}
 Evaluate the given value expression against the model transaction
 
 @item expr "LIMIT EXPRESSION"
 Print details of how ledger parses the given limit expression and apply
 it against a model transaction.
 
-@item format "FORMATTING"
+@item format @var{FORMAT_STRING}
 Print details of how ledger uses the given formatting description and
 apply it against a model transaction.
 
@@ -8505,7 +8508,7 @@ apply it against a model transaction.
 Randomly generates syntactically valid Ledger data from a seed.  Used
 by the GenerateTests harness for development testing
 
-@item parse <VALUE EXPR>
+@item parse @var{VEXPR}
 Print details of how ledger uses the given value expression description
 and apply it against a model transaction.
 
