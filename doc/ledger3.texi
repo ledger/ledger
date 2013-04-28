@@ -182,13 +182,13 @@ simply moved from one account to another in both cases.  This is the
 basis of double-entry accounting: money never pops in or out of
 existence; it is always a posting from one account to another.
 
-Keeping a general journal is the same as keeping two separate journals:
-One for Pacific Bell and one for Checking.  In that case, each time a
-payment is written into one, you write a corresponding withdrawal into
-the other.  This makes it easier to write in a ``running balance'',
-since you don't have to look back at the last time the account was
-referenced---but it also means having a lot of journal books, if you
-deal with multiple accounts.
+Keeping a general journal is the same as keeping two separate
+journals: One for Pacific Bell and one for Checking.  In that case,
+each time a payment is written into one, you write a corresponding
+withdrawal into the other.  This makes it easier to write in
+a ``running balance'', since you don't have to look back at the last
+time the account was referenced---but it also means having a lot of
+journal books, if you deal with multiple accounts.
 
 @cindex account, meaning of
 @cindex meaning of account
@@ -626,8 +626,8 @@ it:
     Liabilities:MasterCard
 @end smallexample
 
-The Dining account balance now shows $25 spent on Dining, and a
-corresponding $25 owed on the MasterCard---and therefore shown as
+The Dining account balance now shows $25 spent on Dining, and
+a corresponding $25 owed on the MasterCard---and therefore shown as
 $-25.00.  The MasterCard liability shows up as negative because it
 offsets the value of your assets.
 
@@ -1134,7 +1134,7 @@ Savings?
 
 Traditional finance packages require that the money reside in only one
 place.  But there are really two ``views'' of the data: from the
-account point of view and from the fund point of view --- yet both sets
+account point of view and from the fund point of view---yet both sets
 should reflect the same overall expenses and cash flow.  It's simply
 where the money resides that differs.
 
@@ -1575,7 +1575,7 @@ can fix the per-unit price of a commodity.
 For example, say you buy 10 gallons of gas at $1.20.  In future
 ``value'' reports, you don't want these gallons reported in terms of
 today's price, but rather the price when you bought it.  At the same
-time, you also want other kinds of commodities --- like stocks ---
+time, you also want other kinds of commodities---like stocks---
 reported in terms of today's price.
 
 This is supported as follows:
@@ -2825,7 +2825,7 @@ Since the second posting is also null, it's value will become the
 inverse of whatever amount is generated for the first posting.
 
 This is the only time in ledger when more than one posting's amount
-may be empty --- and then only because it's not true empty, it is
+may be empty---and then only because it's not true empty, it is
 indirectly provided by the balance assignment's value.
 
 @node  Balancing transactions,  , Resetting a balance, Balance verification
@@ -3195,7 +3195,7 @@ To show all lot information in a report, use @code{--lots}.
 
 Normally when you ask Ledger to display the values of commodities
 held, it uses a value expression called ``market'' to determine the
-most recent value from its price database --- even downloading prices
+most recent value from its price database---even downloading prices
 from the Internet, if @code{-Q} was specified and a suitable
 ``getquote'' script is found on your system.
 
@@ -3627,8 +3627,8 @@ this, use the special account name @samp{$account}:
 @end smallexample
 
 This example causes 10% of the matching account's total to be deferred
-to the @samp{Savings} account---as a balanced virtual posting,
-which may be excluded from reports by using @option{--real}.
+to the @samp{Savings} account---as a balanced virtual posting, which
+may be excluded from reports by using @option{--real}.
 
 @node Building Reports, Reporting Commands, Transactions, Top
 @chapter Building Reports
