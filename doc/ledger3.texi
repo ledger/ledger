@@ -874,9 +874,11 @@ P 2004/06/21 02:18:02 AAPL $32.91
 P 2004/06/21 02:18:02 AU $400.00
 @end smallexample
 
+@findex --price-db FILE
+@findex --market
 Specify the price history to use with the @code{--price-db} option,
-with the @code{-V} option to report in terms of current market
-value:
+with the @code{-V (--market)} option to report in terms of current
+market value:
 
 @smallexample
 $ ledger --price-db prices.db -V balance brokerage
@@ -1172,6 +1174,7 @@ sense:
 $ ledger bal -^Assets
 @end smallexample
 
+@findex --real
 If the @code{--real} option is used, the report will be in terms of
 the real accounts:
 
@@ -1210,6 +1213,8 @@ Note how the accounts now relate only to the real accounts, and any
 balance or registers reports will reflect this.  That the transactions
 relate to a particular fund is kept only in the code.
 
+@findex --code-as-payee
+@findex --by-payee
 How does this become a fund report?  By using the
 @code{--code-as-payee} option, you can generate a register report
 where the payee for each posting shows the code.  Alone, this is
@@ -1616,19 +1621,22 @@ Assets:Checking because its amount is null.
 
 @node Complete control over commodity pricing,  , Fixing Lot Prices, Currency and Commodities
 @subsection Complete control over commodity pricing
+@findex --market
+@findex --exchange
 
 Ledger allows you to have very detailed control over how your
 commodities are valued. You can fine tune the results given using the
 @code{--market} or @code{--exchange} options. There are now several
 points of interception, you can specify the valuation method:
+
 @enumerate
-  @item on a commodity itself
-  @item on a posting, via metadata (affect is largely the same as #1)
-  @item on an xact, which then applies to all postings in that xact
-  @item on any posting via an automated transaction
-  @item on a per-account basis
-  @item on a per-commodity basis
-  @item by changing the journal default of @code{market}
+@item on a commodity itself
+@item on a posting, via metadata (affect is largely the same as #1)
+@item on an xact, which then applies to all postings in that xact
+@item on any posting via an automated transaction
+@item on a per-account basis
+@item on a per-commodity basis
+@item by changing the journal default of @code{market}
 @end enumerate
 
 Fixated pricing (such as @code{@{=$20@})} still plays a role in this
@@ -1647,8 +1655,8 @@ The reference date the price should be relative.
 
 @item target
 A string identifying the ``target'' commodity, or the commodity the
-              returned price should be in.  This argument is null if
-              @code{--market} was used instead of @code{--exchange}.
+returned price should be in. This argument is null if @code{--market}
+was used instead of @code{--exchange}.
 @end table
 
 The valuation function should return an amount.  If you've written
@@ -1762,6 +1770,7 @@ ledger reg -V food
 
 @node Keeping it Consistent, Journal Format, Currency and Commodities, Keeping a Journal
 @section Keeping it Consistent
+@findex --strict
 
 Sometimes Ledger's flexibility can lead to difficulties.  Using a
 freeform text editor to enter transactions makes it easy to keep the
@@ -1890,6 +1899,8 @@ Ledger.
 
 @node Command Directives,  , Transaction and Comments, Journal Format
 @subsection Command Directives
+@findex --strict
+@findex --pedantic
 
 @table @code
 @item beginning of line
@@ -2485,6 +2496,7 @@ This transaction is identical to writing:
 
 @node Auxiliary dates, Codes, Eliding amounts, Transactions
 @section Auxiliary dates
+@findex --aux-date
 
 You can associate a second date with a transaction by following the
 primary date with an equals sign:
@@ -2516,6 +2528,9 @@ you a place to put those codes:
 
 @node Transaction state, Transaction notes, Codes, Transactions
 @section Transaction state
+@findex --cleared
+@findex --uncleared
+@findex --pending
 
 A transaction can have a ``state'': cleared, pending, or uncleared.
 The default is uncleared.  To mark a transaction cleared, put a *
@@ -2700,6 +2715,7 @@ date.
 
 @node Virtual postings, Expression amounts, Metadata, Transactions
 @section Virtual postings
+@findex --real
 
 Ordinarily, the amounts of all postings in a transaction must balance
 to zero.  This is non-negotiable.  It's what double-entry accounting
@@ -2955,6 +2971,7 @@ or @@@@ with parentheses:
 
 @node Commodity prices, Prices vs. costs, Virtual posting costs, Transactions
 @section Commodity prices
+@findex --lot-prices
 
 When a transaction occurs that exchange one commodity for another,
 Ledger records that commodity price not only within its internal price
@@ -3136,6 +3153,7 @@ found in @ref{Prices vs. costs}.
 
 @node Lot dates, Lot notes, Fixated prices, Transactions
 @section Lot dates
+@findex --lot-dates
 
 In addition to lot prices, you can specify lot dates and reveal them
 with @code{--lot-dates}.  Other than that, however, they have no
@@ -3152,6 +3170,8 @@ expressions):
 
 @node Lot notes, Lot value expressions, Lot dates, Transactions
 @section Lot notes
+@findex --lot-notes
+@findex --lots
 
 You can also associate arbitrary notes for your own record keeping in
 parentheses, and reveal them with @code{--lot-notes}.  One caveat is
@@ -3449,6 +3469,7 @@ posting.
 @node Effective Dates, Periodic Transactions, State flags, Automated Transactions
 @subsection Effective Dates
 @cindex effective dates
+@findex --effective
 
 In the real world transactions do not take place instantaneously.
 Purchases can take several days to post to a bank account. And you may
@@ -3524,6 +3545,7 @@ really knows that it debited $225 this month.
 
 @node Periodic Transactions, Concrete Example of Automated Transactions, Effective Dates, Automated Transactions
 @subsection Periodic Transactions
+@findex --budget
 
 A periodic transaction starts with a ~ followed by a period
 expression.  Periodic transactions are used for budgeting and
@@ -3683,7 +3705,6 @@ $ ledger balance -f drewr3.dat Auto MasterCard
             $ -20.00  Liabilities:MasterCard
 --------------------
           $ 5,480.00
-20:39:21 ~/ledger/test/input >
 @end smallexample
 
 @noindent
@@ -3700,7 +3721,6 @@ $ ledger balance -f drewr3.dat Income
             $ -30.00    Sales
 --------------------
          $ -2,030.00
-20:40:28 ~/ledger/test/input >
 @end smallexample
 
 You can use general regular expressions in nearly anyplace Ledger
@@ -3768,6 +3788,10 @@ total; and report the balance for all accounts that begin with
 
 @node Reporting monthly expenses,  , Typical queries, Typical queries
 @subsection Reporting monthly expenses
+@findex --monthly
+@findex -M
+@findex --display
+@findex --period-sort
 
 The following query makes it easy to see monthly expenses, with each
 month's expenses sorted by the amount:
@@ -3938,6 +3962,8 @@ tell Ledger what to do for the last line, in this case, nothing.
 @cindex Gnuplot script
 @cindex plotting
 @cindex Gnuplot
+@findex --amount-data
+@findex --total-data
 
 If you have @command{Gnuplot} installed, you can graph any of the
 above register reports.  The script to do this is included in the
@@ -4093,6 +4119,7 @@ limiting and searching functions.
 @cindex reading csv
 @cindex comma separated variable file reading
 @findex convert
+@findex --input-date-format
 
 The @code{convert} command parses a comma separated value (csv) file
 and outputs Ledger transactions.  Many banks offer csv file downloads.
@@ -4121,12 +4148,12 @@ Transaction Number,Date,Description,Memo,Amount Debit,Amount Credit,Balance,Chec
 1113648,12/12/2011,"Withdrawal","Tuscan IT #00037657",-29.73,,00001908.37,,
 @end smallexample
 
-Unfortunately, as it stands Ledger cannot read it, but you can.  Ledger
+Unfortunately, as it stands Ledger cannot read it, but you can. Ledger
 expects the first line to contain a description of the fields on each
-line of the file.  The fields ledger can recognize are called
-``@code{date}'' ``@code{posted}'', ``@code{code}'', ``@code{payee} or
-@code{desc}'', ``@code{amount}'', ``@code{cost}'', ``@code{total}'', and
-``@code{note}''.
+line of the file. The fields ledger can recognize are called
+@option{date}, @option{posted}, @option{code}, @option{payee} or
+@option{desc}, @option{amount}, @option{cost}, @option{total}, and
+@option{note}.
 
 Delete the account description lines at the top, and replace the first
 line in the data above with:
@@ -4160,6 +4187,10 @@ transid,date,payee,note,amount,,,code,
 
 Ledger will include @code{; transid: 767718} in the first transaction
 is from the file above.
+
+@findex --invert
+@findex --account NAME
+@findex --rich-data
 
 The @code{convert} command accepts three options, the most important
 ones are @code{--invert} which inverts the amount field, and
@@ -4721,6 +4752,7 @@ pricedb database files.
 
 @node Reports about your Journals,  , Reports in other Formats, Reporting Commands
 @section Reports about your Journals
+@findex --count
 
 @menu
 * accounts::
@@ -4744,8 +4776,9 @@ account.
 @subsection @code{payees}
 @findex payees
 
-The @command{payees} reports all of the unique payees in the
-journal. To filter the payees displayed you must use the prefix:
+The @command{payees} reports all of the unique payees in the journal.
+Using the @code{--count} option will tell you how many entries use
+each payee. To filter the payees displayed you must use the prefix:
 
 @smallexample
 $ ledger payees @@Nic
@@ -4766,6 +4799,7 @@ tell you how many entries use each commodity.
 @node tags, entry and xact, commodities, Reports about your Journals
 @subsection @command{tags}
 @findex tags
+@findex --values
 
 The @command{tags} reports all of the tags in the journal.  The output
 is sorted by name.  Using the @code{--count} option will tell you how
@@ -5179,7 +5213,7 @@ GUIs, which would make use of the different scopes by keeping an
 instance of Ledger running in the background and running multiple
 sessions with multiple reports per session.
 
-@table @code
+@ftable @code
 @item --args-only
 Ignore all environment and init-file settings and
 use only command-line arguments to control Ledger.  Useful for debugs
@@ -5234,7 +5268,7 @@ a function called @code{normalize_options}.
 
 @item --script <PATH>
 Execute a ledger script.
-@end table
+@end ftable
 
 @node Session Options, Report Options, Global Options, Detailed Options Description
 @subsection Session Options
@@ -5302,7 +5336,7 @@ $ ledger -f test/input/drewr3.dat bal --master-account HUMBUG
             $ 200.00      Mortgage:Principal
 @end smallexample
 
-@item --price-db <PATH>
+@item --price-db FILE
 Specify the location of the price entry data file.
 
 @item --price-exp INTEGER_MINUTES
@@ -6488,6 +6522,8 @@ commodity can mean different things to different people, depending on
 the accounts involved, the commodities, the nature of the transactions,
 etc.
 
+@findex --now
+
 When you specify @code{-V}, or @code{-X COMM}, you are requesting that
 some or all of the commodities be valuated as of today (or whatever
 @code{--now} is set to).  But what does such a valuation mean?  This
@@ -6578,6 +6614,7 @@ valuated in another currency.  For example:
 
 @cindex FIFO/LIFO
 @cindex LIFO/FIFO
+@findex --lots
 Ledger presently has no way of handling such things as FIFO and LIFO.
 
 If you specify an unadorned commodity name, like AAPL, it will balance
@@ -6585,6 +6622,7 @@ against itself.  If @code{--lots} are not being displayed, then it will
 appear to balance against any lot of AAPL.
 
 @cindex adorned commodity
+@findex --lot-prices
 If you specify an adorned commodity, like AAPL @{$10.00@}, it will
 also balance against itself, and against any AAPL if @code{--lots} is
 not specified.  But if you do specify @code{--lot-prices}, for
@@ -6724,6 +6762,9 @@ weekly last august
 
 @node Budgeting, Forecasting, Budgeting and Forecasting, Budgeting and Forecasting
 @section Budgeting
+@findex --budget
+@findex --add-budget
+@findex --unbudgeted
 
 Keeping a budget allows you to pay closer attention to your income and
 expenses, by reporting how far your actual financial activity is from
@@ -6789,6 +6830,7 @@ You can also use these flags with the @command{balance} command.
 
 @node Forecasting,  , Budgeting, Budgeting and Forecasting
 @section Forecasting
+@findex --forecast
 
 Sometimes it's useful to know what your finances will look like in the
 future, such as determining when an account will reach zero.  Ledger
@@ -7185,6 +7227,17 @@ Useful specifying a date in plain terms.  For example, you could say
 
 @node Basics, Format String Structure, Format Strings, Format Strings
 @section Format String Basics
+@findex --format
+@findex -F
+@findex --balance-report
+@findex --cleared-report
+@findex --register-report
+@findex --csv-report
+@findex --plot-amount-report
+@findex --plot-total-report
+@findex --pricedb-report
+@findex --prices-report
+@findex --wide-register-report
 
 Format strings may be used to change the output format of reports.
 They are specified by passing a formatting string to the
@@ -7344,6 +7397,8 @@ same format string is used for all postings.
 
 @node --balance-format, Formatting codes, Format Expressions, Format Strings
 @section --balance-format
+@findex --balance-format
+@findex --format
 
 As an example of how flexible the @code{--format} strings can be, the
 default balance format looks like this (the various functions are
@@ -7427,6 +7482,7 @@ terminal character colors and font highlights in a normal TTY session.
 
 @node Dates, Date and Time Format Codes, Quantities and Calculations, Formatting codes
 @subsection Date Functions
+@findex --now
 
 The following functions allow you to manipulate and format dates.
 
