@@ -874,7 +874,7 @@ P 2004/06/21 02:18:02 AAPL $32.91
 P 2004/06/21 02:18:02 AU $400.00
 @end smallexample
 
-@findex --price-db FILE
+@findex --price-db @var{FILE}
 @findex --market
 Specify the price history to use with the @code{--price-db} option,
 with the @code{-V (--market)} option to report in terms of current
@@ -3790,7 +3790,7 @@ total; and report the balance for all accounts that begin with
 @subsection Reporting monthly expenses
 @findex --monthly
 @findex -M
-@findex --display
+@findex --display @var{EXPR}
 @findex --period-sort
 
 The following query makes it easy to see monthly expenses, with each
@@ -3966,13 +3966,13 @@ tell Ledger what to do for the last line, in this case, nothing.
 @findex --total-data
 
 If you have @command{Gnuplot} installed, you can graph any of the
-above register reports.  The script to do this is included in the
-ledger distribution, and is named @file{contrib/report}.  Install
+above register reports. The script to do this is included in the
+ledger distribution, and is named @file{contrib/report}. Install
 @file{report} anywhere along your @env{PATH}, and then use
 @command{report} instead of @command{ledger} when doing a register
-report.  The only thing to keep in mind is that you must specify
+report. The only thing to keep in mind is that you must specify
 @code{-j (--amount-data)} or @code{-J (--total-data)} to indicate
-whether Gnuplot should plot the amount, or the running total.  For
+whether Gnuplot should plot the amount, or the running total. For
 example, this command plots total monthly expenses made on your
 MasterCard.
 
@@ -4119,7 +4119,7 @@ limiting and searching functions.
 @cindex reading csv
 @cindex comma separated variable file reading
 @findex convert
-@findex --input-date-format
+@findex --input-date-format @var{DATE_FORMAT}
 
 The @code{convert} command parses a comma separated value (csv) file
 and outputs Ledger transactions.  Many banks offer csv file downloads.
@@ -4189,17 +4189,17 @@ Ledger will include @code{; transid: 767718} in the first transaction
 is from the file above.
 
 @findex --invert
-@findex --account NAME
+@findex --account @var{NAME}
 @findex --rich-data
 
 The @code{convert} command accepts three options, the most important
 ones are @code{--invert} which inverts the amount field, and
-@code{--account NAME} which you can use to specify the account to
+@code{--account @var{NAME}} which you can use to specify the account to
 balance against and @code{--rich-data}. When using the rich-data
 switch additional metadata is stored as tags. There is, for example,
 a UUID field. If an entry with the same UUID tag is already included
-in the normal ledger file (specified via @code{-f} or
-@code{$LEDGER_FILE}) this entry will not be printed again.
+in the normal ledger file (specified via @code{-f} or via environment
+variable @env{LEDGER_FILE}) this entry will not be printed again.
 
 You can also use @code{convert} with @code{payee} and @code{account}
 directives. First, you can use the @code{payee} and @code{alias}
@@ -4980,21 +4980,21 @@ Print summary of all options
 @itemx -v
 Print version of ledger executable
 
-@item --file FILE
-@itemx -f FILE
+@item --file @var{FILE}
+@itemx -f @var{FILE}
 Read @file{FILE} as a ledger file
 
-@item --output FILE
-@itemx -o FILE
+@item --output @var{FILE}
+@itemx -o @var{FILE}
 Redirect output to @file{FILE}
 
-@item --init-file FILE
-@itemx -i FILE
+@item --init-file @var{FILE}
+@itemx -i @var{FILE}
 Specify options file
 
-@item --account NAME
-@itemx -a NAME
-Specify default account name for QIF file postings
+@item --account @var{NAME}
+@itemx -a @var{NAME}
+Specify default account @var{NAME} for QIF file postings
 @end ftable
 
 @node Report Filtering Quick Reference, Error Checking and Calculation Options, Basic Options Quick Reference, Command Line Quick Reference
@@ -5004,15 +5004,15 @@ Specify default account name for QIF file postings
 @item --current
 @itemx -c
 Display transaction on or before the current date
-@item --begin DATE
-@itemx -b DATE
-Begin reports on or after @code{DATE}
-@item --end DATE
-@itemx -e DATE
+@item --begin @var{DATE}
+@itemx -b @var{DATE}
+Begin reports on or after @var{DATE}
+@item --end @var{DATE}
+@itemx -e @var{DATE}
 Limit end date of transactions for report
-@item --period
-@itemx -p STR
-Set report period to STR
+@item --period @var{STR}
+@itemx -p @var{STR}
+Set report period to @var{STR}
 @item --period-sort
 Sort postings within each period
 @item --cleared
@@ -5040,16 +5040,16 @@ Show un-budgeted postings
 Show only un-budgeted postings
 @item --forecast
 Project balances into the future
-@item --limit EXPR
-@itemx -l EXPR
+@item --limit @var{EXPR}
+@itemx -l @var{EXPR}
 Limit postings in calculations
-@item --amount
-@itemx -t EXPR
-Change value expression reported in register report
-@item --total
-@itemx -T EXPR
-Change the value expression used for ``totals'' column in register and
-balance reports
+@item --amount @var{EXPR}
+@itemx -t @var{EXPR}
+Change value expression reported in @command{register} report
+@item --total @var{VEXPR}
+@itemx -T @var{VEXPR}
+Change the value expression used for ``totals'' column in
+@command{register} and @command{balance} reports
 @end ftable
 
 @node Error Checking and Calculation Options, Output Customization Quick Reference, Report Filtering Quick Reference, Command Line Quick Reference
@@ -5090,18 +5090,18 @@ Report posting totals by week
 Report posting totals by year
 @item --dow
 Report Posting totals by day of week
-@item --sort EXPR
-@itemx -S EXPR
-Sort a report using @code{EXPR}
+@item --sort @var{VEXPR}
+@itemx -S @var{VEXPR}
+Sort a report using @var{VEXPR}
 @item --wide
 @itemx -w
 Assume 132 columns instead of 80
-@item --head N
-Report the first N postings
-@item --tail N
-Report the last N postings
-@item --pager PATH
-Direct output to @code{PATH} pager program
+@item --head @var{INT}
+Report the first @var{INT} postings
+@item --tail @var{INT}
+Report the last @var{INT} postings
+@item --pager @var{FILE}
+Direct output to @var{FILE} pager program
 @item --average
 @itemx -A
 Report average posting value
@@ -5113,31 +5113,31 @@ Report each posting deviation from the average
 Show subtotals in the balance report as percentages
 @c @item --totals
 @c Include running total in the @code{xml} report
-@item --pivot TAG
-Produce a pivot table of the tag type specified
+@item --pivot @var{TAG}
+Produce a pivot table of the @var{TAG} type specified
 @item --amount-data
 @itemx -j
 Show only date and value column to format the output for plots
-@item --plot-amount-format STR
+@item --plot-amount-format @var{STR}
 Specify the format for the plot output
 @item --total-data
 @itemx -J
 Show only dates and totals to format the output for plots
-@item --plot-total-format STR
+@item --plot-total-format @var{STR}
 Specify the format for the plot output
-@item --display EXPR
-@itemx -d EXPR
-Display only posting that meet the criterias in the EXPR
-@item --date-format STR
-@itemx -y STR
+@item --display @var{EXPR}
+@itemx -d @var{EXPR}
+Display only posting that meet the criterias in the @var{EXPR}
+@item --date-format @var{STR}
+@itemx -y @var{STR}
 Change the basic date format used in reports
-@item --format STR
-@itemx --balance-format STR
-@itemx --register-format STR
-@itemx --prices-format STR
-@itemx -F STR
+@item --format @var{STR}
+@itemx --balance-format @var{STR}
+@itemx --register-format @var{STR}
+@itemx --prices-format @var{STR}
+@itemx -F @var{STR}
 Set reporting format
-@item --wide-register-format STR
+@item --wide
 @itemx -w
 Wide
 @item --anon
@@ -5176,28 +5176,28 @@ Group posting together, similar to balance report
 @subsection Commodity Reporting
 
 @ftable @code
-@item --price-db FILE
-Use @file{FILE} for retrieving stored commodity prices
-@item --price-exp MINS
-@itemx -L MINS
-Set expected freshness of prices in minutes
+@item --price-db @var{FILE}
+Use @file{FILE} for retrieving stored commodity prices.
+@item --price-exp @var{INT}
+@itemx -L @var{INT}
+Set expected freshness of prices in @var{INT} minutes.
 @item --download
 @itemx -Q
-Download quotes using @code{getquote}
-@item --getquote
+Download quotes using named @file{getquote}.
+@item --getquote @var{FILE}
 Sets path to a user defined script to download commodity prices.
 @item --quantity
 @itemx -O
-Report commodity totals without conversion
+Report commodity totals without conversion.
 @item --basis
 @itemx -B
-Report cost basis
+Report cost basis.
 @item --market
 @itemx -V
-Report last known market value
+Report last known market value.
 @item --gain
 @itemx -G
-Report net gain loss for commodities that have a price history
+Report net gain loss for commodities that have a price history.
 @end ftable
 
 @node Detailed Options Description, Period Expressions, Command Line Quick Reference, Command-line Syntax
@@ -5234,7 +5234,7 @@ database.
 @item --help
 Display the info page for ledger.
 
-@item --init-file <PATH>
+@item --init-file @var{FILE}
 Specify the location of the init file. The default is @file{~/.ledgerrc}
 
 @item --options
@@ -5277,7 +5277,7 @@ with a @code{$}, the source was an environment variable. If the source
 is @code{?normalize} the value was set internally by ledger, in
 a function called @code{normalize_options}.
 
-@item --script <PATH>
+@item --script @var{FILE}
 Execute a ledger script.
 @end ftable
 
@@ -5298,18 +5298,18 @@ decimal separator, vice a period.
 
 @item --download
 Direct Ledger to download prices using the script defined in
-@code{--getquote}.
+@code{--getquote @var{FILE}}.
 
-@item --file <PATH>
-Specify the input file path for this invocation.
+@item --file @var{FILE}
+Specify the input @file{FILE} for this invocation.
 
-@item --getquote <PATH>
+@item --getquote @var{FILE}
 @cindex getquote
 @cindex download prices
 Tell ledger where to find the user defined script to download prices
 information.
 
-@item --input-date-format <DATE-FORMAT>
+@item --input-date-format @var{DATE_FORMAT}
 Specify the input date format for journal entries. For example,
 
 @smallexample
@@ -5320,7 +5320,7 @@ Would convert the @file{Export.csv} file to ledger format, assuming
 the dates in the CSV file are like 12/23/2009 (@pxref{Date and Time
 Format Codes}).
 
-@item --master-account <STRING>
+@item --master-account @var{STR}
 Prepend all account names with the argument.
 
 @smallexample
@@ -5347,15 +5347,15 @@ $ ledger -f test/input/drewr3.dat bal --master-account HUMBUG
             $ 200.00      Mortgage:Principal
 @end smallexample
 
-@item --price-db FILE
+@item --price-db @var{FILE}
 Specify the location of the price entry data file.
 
-@item --price-exp INTEGER_MINUTES
-Set the expected freshness of price quotes, in minutes. That is, if
-the last known quote for any commodity is older than this value, and
-if @code{--download} is being used, then the Internet will be
-consulted again for a newer price. Otherwise, the old price is still
-considered to be fresh enough.
+@item --price-exp @var{INT}
+Set the expected freshness of price quotes, in @var{INT} minutes. That
+is, if the last known quote for any commodity is older than this
+value, and if @code{--download} is being used, then the Internet will
+be consulted again for a newer price. Otherwise, the old price is
+still considered to be fresh enough.
 
 @item --strict
 Ledger normally silently accepts any account or commodity in
@@ -5378,59 +5378,57 @@ instance of Ledger running in the background and running multiple
 sessions with multiple reports per session.
 
 @ftable @code
-@item --abbrev-len <INT>
-Set the minimum
-length an account can be abbreviated to if it doesn't fit inside the
-@code{account-width}.  If @code{abbrev-len} is zero, then the account
-name will be truncated on the right. If @code{abbrev-len} is greater
+@item --abbrev-len @var{INT}
+Set the minimum length an account can be abbreviated to if it doesn't
+fit inside the @code{account-width}. If @var{INT} is zero, then the
+account name will be truncated on the right. If @var{INT} is greater
 than @code{account-width} then the account will be truncated on the
 left, with no shortening of the account names in order to fit into the
 desired width.
 
-@item --account <STR>
-Prepend @code{<STR>} to all accounts reported. That is, the option
+@item --account @var{STR}
+Prepend @var{STR} to all accounts reported. That is, the option
 @code{--account Personal} would tack @code{Personal:} to the beginning
 of every account reported in a balance report or register report.
 
-@item --account-width <INT>
-Set the width of the account column in
-the @code{register} report to @code{N} characters.
+@item --account-width @var{INT}
+Set the width of the account column in the @command{register} report
+to @code{INT} characters.
 
 @item --actual-dates
-Show actual dates of transactions
-(@pxref{Effective Dates}). Also @code{-L}.
+Show actual dates of transactions (@pxref{Effective Dates}). Also
+@code{-L}.
 
 @item --actual
-Report only real transactions, with no automated or
-virtual transactions used.
+Report only real transactions, with no automated or virtual
+transactions used.
 
 @item --add-budget
 Show only un-budgeted postings.
 
 @item --amount-data
-On a register report print only the dates and
-amount of postings.  Useful for graphing and spreadsheet applications.
+On a register report print only the dates and amount of postings.
+Useful for graphing and spreadsheet applications.
 
-@item --amount <EXPR>
-Apply the given value expression to the posting
-amount (@pxref{Value Expressions}). Using @code{--amount} you can apply
-an arbitrary transformation to the postings.
+@item --amount @var{EXPR}
+Apply the given value expression to the posting amount (@pxref{Value
+Expressions}). Using @code{--amount} you can apply an arbitrary
+transformation to the postings.
 
-@item --amount-width <INT>
-Set the width in characters of the amount
-column in the register report.
+@item --amount-width @var{INT}
+Set the width in characters of the amount column in the
+@command{register} report.
 
 @item --anon
-Anonymize registry output, mostly for sending in bug
-reports.
+Anonymize registry output, mostly for sending in bug reports.
 
 @item --average
-Print average values over the number of transactions
-instead of running totals.
+Print average values over the number of transactions instead of
+running totals.
 
-@item --balance-format <STR>
-Specify the format to use for the
-@code{balance} report (@pxref{Format Strings}).  The default is:
+@item --balance-format @var{STR}
+Specify the format to use for the @code{balance} report (@pxref{Format
+Strings}). The default is:
 
 @smallexample
 "%(justify(scrub(display_total), 20, -1, true, color))"
@@ -5446,13 +5444,13 @@ ASK JOHN
 @item --basis
 Report the cost basis on all posting
 
-@item --begin <DATE>
-Specify the start date of all calculations.
-Transactions before that date will be ignored.
+@item --begin @var{DATE}
+Specify the start @var{DATE} of all calculations. Transactions before
+that date will be ignored.
 
-@item --bold-if <EXPR>
-Print the entire line in bold if the given
-value expression is true (@pxref{Value Expressions}).
+@item --bold-if @var{EXPR}
+Print the entire line in bold if the given value expression is true
+(@pxref{Value Expressions}).
 
 @smallexample
 $ ledger reg Expenses --begin Dec --bold-if "amount > 100"
@@ -5462,7 +5460,7 @@ $ ledger reg Expenses --begin Dec --bold-if "amount > 100"
 list all transactions since the beginning of December and bold any
 posting greater than $100
 
-@item --budget-format <FORMAT_STRING>
+@item --budget-format @var{FORMAT_STRING}
 Specify the format to use for the @code{budget} report (@pxref{Format
 Strings}).  The default is:
 
@@ -5479,12 +5477,12 @@ Only display budgeted items. In a register report this
 displays transaction in the budget, in a balance report this displays
 accounts in the budget (@pxref{Budgeting and Forecasting}).
 
-@item --by-payee <REGEXP>
+@item --by-payee
 Group the register report by payee.
 
-@item --cleared-format <FORMAT_STRING>
-Specify the format to use
-for the @code{cleared} report (@pxref{Format Strings}).  The default is:
+@item --cleared-format @var{FORMAT_STRING}
+Specify the format to use for the @code{cleared} report (@pxref{Format
+Strings}). The default is:
 
 @smallexample
 "%(justify(scrub(get_at(total_expr, 0)), 16, 16 + prepend_width, "
@@ -5514,9 +5512,8 @@ a zero balance.
 @item --color
 Use color is the tty supports it.
 
-@item --columns <INT>
-Specify the width of the register report in
-characters.
+@item --columns @var{INT}
+Specify the width of the @command{register} report in characters.
 
 @item --count
 Direct ledger to report the number of items when
@@ -5543,17 +5540,16 @@ Shorthand for @code{--limit "date <= today"}
 @item --daily
 Shorthand for @code{--period "daily"}
 
-@item --date-format <DATE-FORMAT>
-Specify format ledger should use
-to print dates (@pxref{Date and Time Format Codes}).
+@item --date-format @var{DATE_FORMAT}
+Specify format ledger should use to print dates (@pxref{Date and Time
+Format Codes}).
 
-@item --date <EXPR>
-Transform the date of the transaction using
-@code{EXPR}
+@item --date @var{EXPR}
+Transform the date of the transaction using @var{EXPR}.
 
-@item --date-width <INT>
-Specify the width, in characters, of the
-date column in the register report.
+@item --date-width @var{INT}
+Specify the width, in characters, of the date column in the
+@command{register} report.
 
 @item --datetime-format
 ASK JOHN
@@ -5616,7 +5612,7 @@ And with @code{--dc} it becomes this:
           $145           $145              0
 @end smallexample
 
-@item --depth <INT>
+@item --depth @var{INT}
 Limit the depth of the account tree.  In a balance report, for
 example, a @code{--depth 2} statement will print balances only for
 account with two levels, i.e. @code{Expenses:Entertainment} but not
@@ -5627,14 +5623,14 @@ which means it only affects display, not the total calculations.
 Report each posting’s deviation from the average. It is only
 meaningful in the register and prices reports.
 
-@item --display-amount <EXPR>
+@item --display-amount @var{EXPR}
 Apply a transform to the @emph{displayed} amount.  This occurs after
 calculations occur.
 
-@item --display <BOOLEAN_EXPR>
+@item --display @var{BOOLEAN_EXPR}
 Display lines that satisfy the expression given.
 
-@item --display-total <EXPR>
+@item --display-total @var{EXPR}
 Apply a transform to the @emph{displayed} total.  This occurs after
 calculations occur.
 
@@ -5654,8 +5650,9 @@ Use effective dates for all calculations (@pxref{Effective Dates}).
 @item --empty
 Include empty accounts in the report.
 
-@item --end <DATE>
-Specify the end date for transaction to be considered in the report.
+@item --end @var{DATE}
+Specify the end @var{DATE} for transaction to be considered in the
+report.
 
 @item --equity
 Related to the @code{equity} command (@pxref{The
@@ -5665,29 +5662,29 @@ register report.
 @item --exact
 ASK JOHN
 
-@item --exchange <COMMODITY>
-Display values in terms of the given
-commodity.  The latest available price is used.
+@item --exchange @var{COMMODITY}
+@itemx -X @var{COMMODITY}
+Display values in terms of the given @var{COMMODITY}. The latest
+available price is used.
 
 @item --flat
-Force the full names of accounts to be used in the
-balance report. The balance report will not use an indented tree.
+Force the full names of accounts to be used in the balance report. The
+balance report will not use an indented tree.
 
 @item --force-color
-Output tty color codes even if the tty doesn't
-support them.  Useful for TTY that don't advertise their capabilities
-correctly.
+Output tty color codes even if the tty doesn't support them. Useful
+for TTY that don't advertise their capabilities correctly.
 
 @item --force-pager
 Force Ledger to paginate its output.
 
-@item --forecast-while <VEXPR>
-Continue forecasting while @code{<VEXPR>} is true.
+@item --forecast-while @var{VEXPR}
+Continue forecasting while @var{VEXPR} is true.
 
-@item --forecast-years <INT>
-Forecast at most @code{N} years in the future.
+@item --forecast-years @var{INT}
+Forecast at most @var{INT} years in the future.
 
-@item --format <FORMAT STRING>
+@item --format @var{FORMAT_STRING}
 Use the given format string to print output.
 
 @item --gain
@@ -5698,11 +5695,10 @@ Include auto-generated postings (such as those from automated
 transactions) in the report, in cases where you normally wouldn't want
 them.
 
-@item --group-by <EXPR>
-Group transaction together in the register
-report.  @code{EXPR} can be anything, although most common would be
-@code{payee} or @code{commodity}.  The @code{tags()} function is
-also useful here.
+@item --group-by @var{EXPR}
+Group transaction together in the @command{register} report.
+@var{EXPR} can be anything, although most common would be @code{payee}
+or @code{commodity}. The @code{tags()} function is also useful here.
 
 @item --group-title-format
 Set the format for the headers that separate reports section of
@@ -5722,8 +5718,8 @@ $ ledger reg Expenses --group-by "payee" --group-title-format "-----------------
 ...
 @end smallexample
 
-@item --head <INT>
-Print the first @code{INT} entries. Opposite of @code{--tail}.
+@item --head @var{INT}
+Print the first @var{INT} entries. Opposite of @code{--tail}.
 
 @item --inject
 Use @code{Expected} amounts in calculations.  In the case that you know
@@ -5742,7 +5738,7 @@ treat the transaction as if the ``Expected Value'' was actual.
 @item --invert
 Change the sign of all reported values.
 
-@item --limit <EXPR>
+@item --limit @var{EXPR}
 Only transactions that satisfy the expression will be considered in the
 calculation.
 
@@ -5767,11 +5763,11 @@ a balance report.
 @item --market
 Use the latest market value for all commodities.
 
-@item --meta <TAG>
+@item --meta @var{TAG}
 In the register report, prepend the transaction with the value of the
-given tag.
+given @var{TAG}.
 
-@item --meta-width
+@item --meta-width @var{INT}
 Specify the width of the Meta column used for the @code{--meta}
 options.
 
@@ -5800,18 +5796,18 @@ future using @code{--current}
 This is a postings predicate that applies after certain transforms have
 been executed, such as periodic gathering.
 
-@item --output <PATH>
-Redirect the output of ledger to the file defined in @file{PATH}.
+@item --output @var{FILE}
+Redirect the output of ledger to the file defined in @file{FILE}.
 
-@item --pager
+@item --pager @var{FILE}
 Specify the pager program to use.
 
-@item --payee <VEXPR>
-Sets a value expression for formatting the payee. In the register
-report this prevents the second entry from having a date and payee for
-each transaction
+@item --payee @var{VEXPR}
+Sets a value expression for formatting the payee. In the
+@command{register} report this prevents the second entry from having
+a date and payee for each transaction.
 
-@item --payee-width N
+@item --payee-width @var{INT}
 Set the number of columns dedicated to the payee in the register
 report.
 
@@ -5822,16 +5818,16 @@ Use only postings that are marked pending
 Calculate the percentage value of each account in a balance reports.
 Only works for account that have a single commodity.
 
-@item --period <PERIOD EXPRESSION>
-Define a period expression the sets the time period during which
-transactions are to be accounted.  For a register report only the
-transactions that satisfy the period expression with be displayed.  For
-a balance report only those transactions will be accounted in the final
-balances.
+@item --period @var{PERIOD_EXPRESSION}
+Define a period expression that sets the time period during which
+transactions are to be accounted. For a @command{register} report only
+the transactions that satisfy the period expression with be displayed.
+For a balance report only those transactions will be accounted in the
+final balances.
 
-@item --pivot <VALUED TAG>
-Produce a balance pivot report ``around'' the given tag.  For example,
-if you have multiple cars and track each fuel purchase in
+@item --pivot @var{TAG}
+Produce a balance pivot report ``around'' the given @var{TAG}. For
+example, if you have multiple cars and track each fuel purchase in
 @code{Expenses:Auto:Fuel} and tag each fuel purchase with a tag
 identifying which car the purchase was for @code{; Car: Prius}, then
 the command:
@@ -5850,22 +5846,22 @@ $ ledger bal Fuel --pivot "Car"  --period "this year"
 
 @xref{Metadata values}.
 
-@item --plot-amount-format
+@item --plot-amount-format @var{STR}
 Define the output format for an amount data plot. @xref{Visualizing
 with Gnuplot}.
 
-@item --plot-total-format
+@item --plot-total-format @var{STR}
 Define the output format for a total data plot. @xref{Visualizing with
 Gnuplot}.
 
-@item --prepend-format STR
-Prepend STR to every line of the output
+@item --prepend-format @var{STR}
+Prepend @var{STR} to every line of the output
 
-@item --prepend-width N
-Reserve @code{N} spaces at the beginning of each line of the output
+@item --prepend-width @var{INT}
+Reserve @var{INT} spaces at the beginning of each line of the output.
 
 @item --price
-Use the price of the commodity purchase for performing calculations
+Use the price of the commodity purchase for performing calculations.
 
 @item --quantity
 FIX THIS ENTRY
@@ -5907,13 +5903,13 @@ development testing.
 @item --sort-all
 FIX THIS ENTRY
 
-@item --sort <VEXPR>
-Sort the register report based on the value expression given to sort
+@item --sort @var{VEXPR}
+Sort the register report based on the value expression given to sort.
 
-@item --sort-xacts <VEXPR>
-Sort the posting within transactions using the given value expression
+@item --sort-xacts @var{VEXPR}
+Sort the posting within transactions using the given value expression.
 
-@item --start-of-week <INT>
+@item --start-of-week @var{INT}
 Tell ledger to use a particular day of the week to start its ``weekly''
 summary. @code{--start-of-week=1} specifies Monday as the start of the
 week.
@@ -5921,17 +5917,17 @@ week.
 @item --subtotal
 FIX THIS ENTRY
 
-@item --tail <INT>
-Report only the last @code{INT} entries.  Only useful on a register
+@item --tail @var{INT}
+Report only the last @var{INT} entries. Only useful on a register
 report.
 
 @item --total-data
 FIX THIS ENTRY
 
-@item --total <VEXPR>
+@item --total @var{VEXPR}
 Define a value expression used to calculate the total in reports.
 
-@item --total-width
+@item --total-width @var{INT}
 Set the width of the total field in the register report.
 
 @item --truncate
@@ -5992,20 +5988,20 @@ Print the current version of ledger and exits.  This is useful for
 sending bug reports, to let the author know which version of ledger you
 are using.
 
-@item --file FILE
-@itemx -f FILE
-Read FILE as a ledger file.  This command may be used multiple times.
-Typically, the environment variable @env{LEDGER_FILE} is set, rather
-than using this command-line option.
+@item --file @var{FILE}
+@itemx -f @var{FILE}
+Read @file{FILE} as a ledger file. This command may be used multiple
+times. Typically, the environment variable @env{LEDGER_FILE} is set,
+rather than using this command-line option.
 
-@item --output FILE
-@itemx -o FILE
-Redirect output from any command to @var{FILE}.  By default, all output
+@item --output @var{FILE}
+@itemx -o @var{FILE}
+Redirect output from any command to @file{FILE}.  By default, all output
 goes to standard output.
 
-@item --init-file FILE
-@itemx -i FILE
-Causes @code{FILE} to be read by ledger before any other ledger file.
+@item --init-file @var{FILE}
+@itemx -i @var{FILE}
+Causes @file{FILE} to be read by ledger before any other ledger file.
 This file may not contain any postings, but it may contain option
 settings.  To specify options in the init file, use the same syntax as
 the command-line, but put each option on its own line.  Here is an
@@ -6020,8 +6016,8 @@ example init file:
 Option settings on the command-line or in the environment always take
 precedence over settings in the init file.
 
-@item --account NAME
-@itemx -a NAME
+@item --account @var{NAME}
+@itemx -a @var{NAME}
 Specify the default account which QIF file postings are assumed to
 relate to.
 @end ftable
@@ -6037,21 +6033,21 @@ report, in ways other than just using regular expressions:
 @itemx -c
 Display only transactions occurring on or before the current date.
 
-@item --begin DATE
-@itemx -b DATE
+@item --begin @var{DATE}
+@itemx -b @var{DATE}
 Constrain the report to transactions on or after @var{DATE}.  Only
 transactions after that date will be calculated, which means that the
 running total in the balance report will always start at zero with the
 first matching transaction.  (Note: This is different from using
 @code{--display} to constrain what is displayed).
 
-@item --end DATE
-@itemx -e DATE
+@item --end @var{DATE}
+@itemx -e @var{DATE}
 Constrain the report so that transactions on or after @var{DATE} are
 not considered.  The ending date is inclusive.
 
-@item --period STR
-@itemx -p STR
+@item --period @var{STR}
+@itemx -p @var{STR}
 Set the reporting period to @var{STR}.  This will subtotal all matching
 transactions within each period separately, making it easy to see
 weekly, monthly, quarterly, etc., posting totals.  A period string can
@@ -6059,7 +6055,7 @@ even specify the beginning and end of the report range, using simple
 terms like ``last June'' or ``next month''.  For more using period
 expressions, see @ref{Period Expressions}.
 
-@item --period-sort EXPR
+@item --period-sort @var{EXPR}
 Sort the postings within each reporting period using the value
 expression @var{EXPR}.  This is most often useful when reporting
 monthly expenses, in order to view the highest expense categories at
@@ -6127,19 +6123,19 @@ Useful for displaying how close your postings meet your budget.
 option that projects your budget into the future, showing how it will
 affect future balances.  @xref{Budgeting and Forecasting}.
 
-@item --limit EXPR
-@itemx -l EXPR
+@item --limit @var{EXPR}
+@itemx -l @var{EXPR}
 Limit which postings take part in the calculations of a report.
 
-@item --amount EXPR
-@itemx -t EXPR
+@item --amount @var{EXPR}
+@itemx -t @var{EXPR}
 Change the value expression used to calculate the ``value'' column in
 the @command{register} report, the amount used to calculate account
 totals in the @command{balance} report, and the values printed in the
 @command{equity} report.  @xref{Value Expressions}.
 
-@item --total EXPR
-@itemx -T EXPR
+@item --total @var{VEXPR}
+@itemx -T @var{VEXPR}
 Set the value expression used for the ``totals'' column in the
 @command{register} and @command{balance} reports.
 @end ftable
@@ -6227,40 +6223,40 @@ Report posting totals by month;
 @itemx -Y
 Report posting totals by year.  For more complex period, using the
 
-@item --period
+@item --period @var{STR}
 Option described above.
 
 @item --dow
 Report postings totals for each day of the week.  This is an easy way
 to see if weekend spending is more than on weekdays.
 
-@item --sort EXPR
-@itemx -S EXPR
+@item --sort @var{VEXPR}
+@itemx -S @var{VEXPR}
 Sort a report by comparing the values determined using the value
-expression @var{EXPR}.  For example, using @code{-S -UT} in the
+expression @var{VEXPR}.  For example, using @code{-S -UT} in the
 balance report will sort account balances from greatest to least, using
 the absolute value of the total.  For more on how to use value
 expressions, see @ref{Value Expressions}.
 
-@item --pivot TAG
-Produce a pivot table around the tag provided.  This requires meta data
-using valued tags.
+@item --pivot @var{TAG}
+Produce a pivot table around the @var{TAG} provided. This requires
+meta data using valued tags.
 
 @item --wide
 @itemx -w
 Cause the default @command{register} report to assume 132 columns
 instead of 80.
 
-@item --head
-Cause only the first @code{N} transactions to be printed.  This is
+@item --head @var{INT}
+Cause only the first @var{INT} transactions to be printed. This is
 different from using the command-line utility @command{head}, which
-would limit to the first N postings.  @code{--tail} outputs only the
-last @code{N} transactions.  Both options may be used simultaneously.
-If a negative amount is given, it will invert the meaning of the flag
-(instead of the first five transactions being printed, for example, it
-would print all but the first five).
+would limit to the first @var{INT} postings. @code{--tail} outputs
+only the last @var{INT} transactions. Both options may be used
+simultaneously. If a negative amount is given, it will invert the
+meaning of the flag (instead of the first five transactions being
+printed, for example, it would print all but the first five).
 
-@item --pager
+@item --pager @var{FILE}
 Tell Ledger to pass its output to the given pager program; very useful
 when the output is especially long.  This behavior can be made the
 default by setting the @env{LEDGER_PAGER} environment variable.
@@ -6295,8 +6291,8 @@ etc.
 Change the @command{register} report so that it outputs nothing but the
 date and totals column, without commodities.
 
-@item --display EXPR
-@itemx -d EXPR
+@item --display @var{EXPR}
+@itemx -d @var{EXPR}
 Limit which postings or accounts or actually displayed in a report.
 They might still be calculated, and be part of the running total of a
 register report, for example, but they will not be displayed.  This is
@@ -6319,8 +6315,8 @@ Which is more useful depends on what you're looking to know: the total
 amount for the reporting range (@code{-p}), or simply a display
 restricted to the reporting range (using @code{-d}).
 
-@item --date-format STR
-@itemx -y STR
+@item --date-format @var{STR}
+@itemx -y @var{STR}
 Change the basic date format used by reports.  The default uses a date
 like @code{2004/08/01}, which represents the default date format of
 @code{%Y/%m/%d}.  To change the way dates are printed in general, the
@@ -6328,13 +6324,13 @@ easiest way is to put @code{--date-format FORMAT} in the Ledger
 initialization file @file{~/.ledgerrc} (or the file referred to by
 @env{LEDGER_INIT}).
 
-@item --format STR
-@itemx -F STR
+@item --format @var{STR}
+@itemx -F @var{STR}
 Set the reporting format for whatever report ledger is about to make.
 @xref{Format Strings}.  There are also specific format commands for
 each report type:
 
-@item --balance-format STR
+@item --balance-format @var{STR}
 Define the output format for the @code{balance} report.  The default
 (defined in @code{report.h} is:
 
@@ -6352,7 +6348,7 @@ Define the output format for the @code{balance} report.  The default
       --------------------\n"
 @end smallexample
 
-@item --cleared-format
+@item --cleared-format @var{FORMAT_STRING}
 Define the format for the cleared report. The default is:
 
 @smallexample
@@ -6367,7 +6363,7 @@ Define the format for the cleared report. The default is:
       ----------------  ----------------    ---------\n"
 @end smallexample
 
-@item --register-format STR
+@item --register-format @var{STR}
 Define the output format for the @code{register} report.  The default
 (defined in @code{report.h} is:
 
@@ -6419,7 +6415,7 @@ Set the format for @code{csv} reports.  The default is:
  %(quoted(join(note | xact.note)))\n"
 @end smallexample
 
-@item --plot-amount-format STR
+@item --plot-amount-format @var{STR}
 Set the format for amount plots, using the @code{-j} option. The
 default is:
 
@@ -6427,7 +6423,7 @@ default is:
 "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_amount)))\n"
 @end smallexample
 
-@item --plot-total-format STR
+@item --plot-total-format @var{STR}
 Set the format for total plots, using the @code{-J} option.  The
 default is:
 
@@ -6435,23 +6431,20 @@ default is:
 "%(format_date(date, \"%Y-%m-%d\")) %(quantity(scrub(display_total)))\n"
 @end smallexample
 
-@item --pricedb-format STR
+@item --pricedb-format @var{STR}
 Set the format expected for the historical price file. The default is
 
 @smallexample
 "P %(datetime) %(display_account) %(scrub(display_amount))\n"
 @end smallexample
 
-@item --prices-format STR
+@item --prices-format @var{STR}
 Set the format for the @command{prices} report. The default is:
 
 @smallexample
 "%(date) %-8(display_account) %(justify(scrub(display_amount), 12,
            2 + 9 + 8 + 12, true, color))\n"
 @end smallexample
-
-@item --wide-register-format STR
-(-w @command{register})
 @end ftable
 
 @node Commodity Reporting, Environment Variables, Output Customization, Detailed Options Description
@@ -6460,7 +6453,7 @@ Set the format for the @command{prices} report. The default is:
 These options affect how commodity values are displayed:
 
 @ftable @code
-@item --price-db FILE
+@item --price-db @var{FILE}
 Set the file that is used for recording downloaded commodity prices.
 It is always read on startup, to determine historical prices.  Other
 settings can be placed in this file manually, to prevent downloading
@@ -6481,13 +6474,13 @@ download script maintain this file.
 The format of the file can be changed by telling ledger to use the
 @code{--pricedb-format} you define.
 
-@item --price-exp MINS
-@itemx -L MINS
-Set the expected freshness of price quotes, in minutes.  That is, if
-the last known quote for any commodity is older than this value, and if
-@code{--download} is being used, then the Internet will be consulted
-again for a newer price.  Otherwise, the old price is still considered
-to be fresh enough.
+@item --price-exp @var{INT}
+@itemx -L @var{INT}
+Set the expected freshness of price quotes, in @var{INT} minutes. That
+is, if the last known quote for any commodity is older than this
+value, and if @code{--download} is being used, then the Internet will
+be consulted again for a newer price. Otherwise, the old price is
+still considered to be fresh enough.
 
 @item --download
 @itemx -Q
@@ -6535,11 +6528,12 @@ etc.
 
 @findex --now
 
-When you specify @code{-V}, or @code{-X COMM}, you are requesting that
-some or all of the commodities be valuated as of today (or whatever
-@code{--now} is set to).  But what does such a valuation mean?  This
-meaning is governed by the presence of a @code{VALUE} meta-data
-property, whose content is an expression used to compute that value.
+When you specify @code{-V}, or @code{-X @var{COMMODITY}}, you are
+requesting that some or all of the commodities be valuated as of today
+(or whatever @code{--now} is set to). But what does such a valuation
+mean? This meaning is governed by the presence of a @code{VALUE}
+meta-data property, whose content is an expression used to compute
+that value.
 
 If no VALUE property is specified, each posting is assumed to have a
 default, as if you'd specified a global, automated transaction as
@@ -6639,7 +6633,7 @@ also balance against itself, and against any AAPL if @code{--lots} is
 not specified.  But if you do specify @code{--lot-prices}, for
 example, then it will balance against that specific price for AAPL.
 
-Normally when you use @code{-X <commodity>} to request that amounts be
+Normally when you use @code{-X @var{COMMODITY}} to request that amounts be
 reported in a specific commodity, Ledger uses these values:
 @itemize
 
@@ -7238,8 +7232,8 @@ Useful specifying a date in plain terms.  For example, you could say
 
 @node Basics, Format String Structure, Format Strings, Format Strings
 @section Format String Basics
-@findex --format
-@findex -F
+@findex --format @var{STR}
+@findex -F @var{STR}
 @findex --balance-report
 @findex --cleared-report
 @findex --register-report
@@ -7248,18 +7242,17 @@ Useful specifying a date in plain terms.  For example, you could say
 @findex --plot-total-report
 @findex --pricedb-report
 @findex --prices-report
-@findex --wide-register-report
 
 Format strings may be used to change the output format of reports.
-They are specified by passing a formatting string to the
-@code{--format} (@code{-F}) option.  Within that string, constructs
-are allowed which make it possible to display the various parts of an
-account or posting in custom ways.
+They are specified by passing a formatting string to the @code{-F
+(--format)} option. Within that string, constructs are allowed which
+make it possible to display the various parts of an account or posting
+in custom ways.
 
 There are several additional flags that allow you to define formats
-for specific reports.  These are useful to define in your
-configuration file and will allow you to run ledger reports from the
-command line without having to enter a new format for each command.
+for specific reports. These are useful to define in your configuration
+file and will allow you to run ledger reports from the command line
+without having to enter a new format for each command.
 
 @itemize
 @item @code{--balance-report}
@@ -7270,7 +7263,6 @@ command line without having to enter a new format for each command.
 @item @code{--plot-total-report}
 @item @code{--pricedb-report}
 @item @code{--prices-report}
-@item @code{--wide-register-report}
 @end itemize
 
 @node Format String Structure, Format Expressions, Basics, Format Strings
@@ -7408,8 +7400,8 @@ same format string is used for all postings.
 
 @node --balance-format, Formatting codes, Format Expressions, Format Strings
 @section --balance-format
-@findex --balance-format
-@findex --format
+@findex --balance-format @var{STR}
+@findex --format @var{STR}
 
 As an example of how flexible the @code{--format} strings can be, the
 default balance format looks like this (the various functions are
@@ -7500,7 +7492,7 @@ The following functions allow you to manipulate and format dates.
 @table @code
 @item date
 Return the date of the current transaction
-@item format_date(date, "FORMAT STRING")
+@item format_date(date, "FORMAT_STRING")
 Format the date using the given format string.
 @item now
 Return the current date and time.  If the @code{--now} option is
@@ -8415,9 +8407,9 @@ Enable additional assertions during run-time. This causes a significant
 slowdown.  When combined with @code{--debug} ledger will produce
 memory trace information.
 
-@item --debug "argument"
+@item --debug @var{CODE}
 If Ledger has been built with debug options this will provide extra
-data during the run.  The following are the available arguments to
+data during the run. The following are the available @var{CODES} to
 debug:
 
 @multitable @columnfractions .32 .43 .27
@@ -8447,8 +8439,8 @@ debug:
 @item @code{expr.calc}                   @tab @code{option.names}
 @end multitable
 
-@item --trace INTEGER_TRACE_LEVEL
-Enable tracing.  The integer specifies the level of trace desired:
+@item --trace @var{INT}
+Enable tracing. The @var{INT} specifies the level of trace desired:
 
 @multitable @columnfractions .3 .7
 @item @code{LOG_OFF} @tab 0
