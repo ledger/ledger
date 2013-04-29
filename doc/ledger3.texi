@@ -5435,7 +5435,11 @@ it will issue a warning giving you the file and line number of the
 problem.
 
 @item --time-colon
-FIX THIS ENTRY @c FIXME thdox
+The --time-colon option will display the value for a seconds based
+commodity as real hours and minutes.
+
+For example 8100 seconds by default will be displayed as 2.25 whereas
+with the --time-colon option they will be displayed as 2:15.
 
 @item --value-expr @var{FIXME}
 FIX THIS ENTRY @c FIXME thdox
