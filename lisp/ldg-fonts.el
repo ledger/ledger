@@ -113,8 +113,9 @@
 (defvar ledger-font-lock-keywords
   `( ;; (,ledger-other-entries-regex 1 
      ;; 				  ledger-font-other-face)
-     (,ledger-comment-regex 2 
+     (,ledger-comment-regex 0
 			    'ledger-font-comment-face)
+     (,ledger-multiline-comment-regex 0 'ledger-font-comment-face)
      (,ledger-payee-pending-regex 2 
 				  'ledger-font-payee-pending-face) ; Works
      (,ledger-payee-cleared-regex 2 
@@ -130,7 +131,34 @@
      (,ledger-other-entries-regex 1 
 				  'ledger-font-other-face))
   "Expressions to highlight in Ledger mode.")
-    
+
+(defun ledger-extend-region-multiline-comment ()
+  "Adjusts the variables font-lock-beg and font-lock-end if they
+  fall within a multiline comment.  Returns non-nil if an
+  adjustment is made."
+  (let (beg end)
+    ;; fix beg
+    (save-excursion
+     (goto-char font-lock-beg)
+     (end-of-line)
+     (when (re-search-backward ledger-multiline-comment-start-regex nil t)
+       (setq beg (point))
+       (re-search-forward ledger-multiline-comment-regex nil t)
+       (if (and (>= (point) font-lock-beg)
+                (/= beg font-lock-beg))
+           (setq font-lock-beg beg)
+         (setq beg nil))))
+    ;; fix end
+    (save-excursion
+      (goto-char font-lock-end)
+      (end-of-line)
+      (when (re-search-backward ledger-multiline-comment-start-regex nil t)
+        (re-search-forward ledger-multiline-comment-regex nil t)
+        (setq end (point))
+        (if (> end font-lock-end)
+            (setq font-lock-end end)
+          (setq end nil))))
+    (or beg end)))
 
 (provide 'ldg-fonts)
 

@@ -206,7 +206,7 @@ class CommandLineApp(object):
         except KeyboardInterrupt:
             exit_code = self.handleInterrupt()
 
-        except SystemExit, msg:
+        except SystemExit as msg:
             exit_code = msg.args[0]
 
         except Exception:
@@ -244,7 +244,7 @@ class PrepareBuild(CommandLineApp):
         }
 
         for varname in self.envvars.keys():
-            if os.environ.has_key(varname):
+            if varname in os.environ:
                 self.envvars[varname] = os.environ[varname]
 
                 if varname.endswith('FLAGS'):
@@ -327,7 +327,7 @@ class PrepareBuild(CommandLineApp):
 
         if args:
             cmd = args[0]
-            if not PrepareBuild.__dict__.has_key('phase_' + cmd):
+            if 'phase_' + cmd not in PrepareBuild.__dict__:
                 self.log.error("Unknown build phase: " + cmd + "\n")
                 sys.exit(1)
             else:
@@ -344,22 +344,22 @@ class PrepareBuild(CommandLineApp):
 
     def execute(self, *args):
         try:
-            self.log.debug('Executing command: ' + string.join(args, ' '))
+            self.log.debug('Executing command: ' + ' '.join(args))
 
             retcode = call(args, shell=False)
             if retcode < 0:
                 self.log.error("Child was terminated by signal", -retcode)
                 sys.exit(1)
             elif retcode != 0:
-                self.log.error("Execution failed: " + string.join(args, ' '))
+                self.log.error("Execution failed: " + ' '.join(args))
                 sys.exit(1)
-        except OSError, e:
-            self.log.error("Execution failed:", e)
+        except OSError as e:
+            self.log.error("Execution failed: " + e)
             sys.exit(1)
 
     def get_stdout(self, *args):
         try:
-            self.log.debug('Executing command: ' + string.join(args, ' '))
+            self.log.debug('Executing command: ' + ' '.join(args))
 
             proc    = Popen(args, shell=False, stdout=PIPE)
             stdout  = proc.stdout.read()
@@ -369,11 +369,11 @@ class PrepareBuild(CommandLineApp):
                                -retcode)
                 sys.exit(1)
             elif retcode != 0:
-                self.log.error("Execution failed: " + string.join(args, ' '))
+                self.log.error("Execution failed: " + ' '.join(args))
                 sys.exit(1)
             return stdout[:-1]
-        except OSError, e:
-            self.log.error("Execution failed:", e)
+        except OSError as e:
+            self.log.error("Execution failed:" + e)
             sys.exit(1)
 
     def isnewer(self, file1, file2):
@@ -445,14 +445,14 @@ class PrepareBuild(CommandLineApp):
                 if match:
                     date = match.group(1)
                     break
-            self.current_ver = "%s.%s.%s%s" % (major, minor, patch, 
+            self.current_ver = "%s.%s.%s%s" % (major, minor, patch,
                                                "-%s" % date if date else "")
             version_m4.close()
         return self.current_ver
 
     def phase_products(self, *args):
         self.log.info('Executing phase: products')
-        print self.products_directory()
+        print(self.products_directory())
 
     def phase_info(self, *args):
         self.log.info('Executing phase: info')
@@ -527,7 +527,7 @@ class PrepareBuild(CommandLineApp):
                     'texlive-xetex', 'doxygen', 'graphviz', 'texinfo',
                     'lcov', 'sloccount'
                 ] + BoostInfo.dependencies('darwin')
-                self.log.info('Executing: ' + string.join(packages, ' '))
+                self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
             elif exists('/sw/bin/fink'):
                 self.log.info('Looks like you are using Fink on OS X')
@@ -616,7 +616,7 @@ class PrepareBuild(CommandLineApp):
                         self.log.info('I do not recognize your version of Ubuntu!')
                         packages = None
                     if packages:
-                        self.log.info('Executing: ' + string.join(packages, ' '))
+                        self.log.info('Executing: ' + ' '.join(packages))
                         self.execute(*packages)
 
             if exists('/etc/redhat-release'):
@@ -646,7 +646,7 @@ class PrepareBuild(CommandLineApp):
                         #'lcov',
                         #'sloccount'
                     ]
-                    self.log.info('Executing: ' + string.join(packages, ' '))
+                    self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
 
     #########################################################################
@@ -678,7 +678,7 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append(self.source_dir)
 
     def setup_for_system(self):
-        system = self.get_stdout('uname', '-s')
+        system = str(self.get_stdout('uname', '-s'))
         self.log.info('System type is => ' + system)
 
         if self.options.enable_doxygen:
@@ -695,8 +695,7 @@ class PrepareBuild(CommandLineApp):
     def setup_flavor(self):
         self.setup_for_system()
 
-        if not PrepareBuild.__dict__.has_key('setup_flavor_' +
-                                             self.current_flavor):
+        if 'setup_flavor_' + self.current_flavor not in PrepareBuild.__dict__:
             self.log.error('Unknown build flavor "%s"' % self.current_flavor)
             sys.exit(1)
 
@@ -725,7 +724,7 @@ class PrepareBuild(CommandLineApp):
                 self.log.debug('Final value of %s: %s' %
                                (var, self.envvars[var]))
 
-            elif self.envvars.has_key(var):
+            elif var in self.envvars:
                 del self.envvars[var]
 
     #########################################################################
@@ -795,8 +794,8 @@ class PrepareBuild(CommandLineApp):
             sys.exit(1)
 
         for var in ('CXX', 'CXXFLAGS', 'LDFLAGS'):
-            if self.envvars.has_key(var) and self.envvars[var] and \
-               (var.endswith('FLAGS') or exists(self.envvars[var])):
+            if self.envvars.get(var) and (var.endswith('FLAGS')
+                                          or exists(self.envvars[var])):
                 if var == 'CXX':
                     conf_args.append('-DCMAKE_CXX_COMPILER=%s' %
                                      self.envvars[var])
@@ -848,7 +847,7 @@ class PrepareBuild(CommandLineApp):
                     self.log.error("Child was terminated by signal", -retcode)
                     sys.exit(1)
                 elif retcode != 0:
-                    self.log.error("Execution failed: " + string.join(conf_args, ' '))
+                    self.log.error("Execution failed: " + ' '.join(conf_args))
                     sys.exit(1)
             else:
                 self.log.debug('configure does not need to be run')
@@ -1031,7 +1030,7 @@ class PrepareBuild(CommandLineApp):
     def phase_help(self, *args):
         self.option_parser.print_help()
 
-        print """
+        print("""
 Of the optional ARGS, the first is an optional build FLAVOR, with the default
 being 'debug':
 
@@ -1077,7 +1076,7 @@ Here are some real-world examples:
   ./acprep
   ./acprep --python
   ./acprep opt make
-  ./acprep make doc -- -DBUILD_WEB_DOCS=1"""
+  ./acprep make doc -- -DBUILD_WEB_DOCS=1""")
         sys.exit(0)
 
 PrepareBuild().run()

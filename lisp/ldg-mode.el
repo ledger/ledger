@@ -68,13 +68,21 @@ And calculate the target-delta of the account being reconciled."
       (message balance))))
 
 (defun ledger-magic-tab (&optional interactively)
-  "Decide what to with with <TAB> .
-Can be pcomplete, or align-posting"
+  "Decide what to with with <TAB>.
+Can indent, complete or align depending on context."
   (interactive "p")
-  (if (and (> (point) 1) 
-	   (looking-back "[:A-Za-z0-9]" 1))
-      (ledger-pcomplete interactively)
-      (ledger-post-align-postings)))
+  (when (= (point) (line-end-position))
+    (if (= (point) (line-beginning-position))
+        (indent-to ledger-post-account-alignment-column)
+      (save-excursion
+        (re-search-backward
+         (rx-static-or ledger-account-any-status-regex
+                       ledger-metadata-regex
+                       ledger-payee-any-status-regex)
+         (line-beginning-position) t))
+      (when (= (point) (match-end 0))
+        (ledger-pcomplete interactively))))
+  (ledger-post-align-postings))
 
 (defvar ledger-mode-abbrev-table)
 
@@ -102,6 +110,10 @@ Can be pcomplete, or align-posting"
     (if (boundp 'font-lock-defaults)
 	(set (make-local-variable 'font-lock-defaults)
 	     '(ledger-font-lock-keywords nil t)))
+    (setq font-lock-extend-region-functions
+          (list #'font-lock-extend-region-wholelines
+                #'ledger-extend-region-multiline-comment))
+    (setq font-lock-multiline nil)
 
     (set (make-local-variable 'pcomplete-parse-arguments-function)
 	 'ledger-parse-arguments)

@@ -59,7 +59,7 @@
   "A list of currently active overlays to the ledger buffer.")
 (make-variable-buffer-local 'ledger-occur-overlay-list)
 
-(defun ledger-remove-all-overlays ()
+(defun ledger-occur-remove-all-overlays ()
   "Remove all overlays from the ledger buffer."
   (interactive)
   (remove-overlays))
@@ -130,8 +130,7 @@ When REGEX is nil, unhide everything, and remove higlight"
                        buffer-matches))))
         (mapcar (lambda (ovl)
                   (overlay-put ovl ledger-occur-overlay-property-name t)
-                  (overlay-put ovl 'invisible t)
-                  (overlay-put ovl 'intangible t))
+                  (overlay-put ovl 'invisible t))
                 (push  (make-overlay (cadr (car(last buffer-matches)))
                                      (point-max)
                                      (current-buffer) t nil) overlays)))))
