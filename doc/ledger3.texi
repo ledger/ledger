@@ -4889,13 +4889,13 @@ backwards compatibility with Ledger 2.X.
 @findex stats
 @findex stat
 
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @node select,  , stats, Reports about your Journals
 @subsection @code{select}
 @findex select
 
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @node Command-line Syntax, Budgeting and Forecasting, Reporting Commands, Top
 @chapter Command-line Syntax
@@ -5258,7 +5258,7 @@ or testing small Journal files not associated with you main financial
 database.
 
 @item --debug @var{CODE}
-FIXME TD
+FIX THIS ENTRY @c FIXME thdox
 
 @item --help
 @itemx -h
@@ -5311,20 +5311,20 @@ a function called @code{normalize_options}.
 Execute a ledger script.
 
 @item --trace @var{INT}
-FIXME TD
+FIX THIS ENTRY @c FIXME thdox
 
 @item --verbose
 @itemx -v
-FIXME TD
+FIX THIS ENTRY @c FIXME thdox
 
 @item --verify
-FIXME TD
+FIX THIS ENTRY @c FIXME thdox
 
 @item --verify-memory
-FIXME TD
+FIX THIS ENTRY @c FIXME thdox
 
 @item --version
-FIXME TD
+FIX THIS ENTRY @c FIXME thdox
 @end ftable
 
 @node Session Options, Report Options, Global Options, Detailed Options Description
@@ -5339,13 +5339,13 @@ sessions with multiple reports per session.
 
 @ftable @code
 @item --cache @var{FIXME}
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --check-payees
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --day-break
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --decimal-comma
 Direct Ledger to parse journals using the European standard comma as
@@ -5357,7 +5357,7 @@ Direct Ledger to download prices using the script defined in
 @code{--getquote @var{FILE}}.
 
 @item --explicit
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --file @var{FILE}
 @itemx -f @var{FILE}
@@ -5408,10 +5408,10 @@ $ ledger -f test/input/drewr3.dat bal --master-account HUMBUG
 @end smallexample
 
 @item --pedantic
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --permissive
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --price-db @var{FILE}
 Specify the location of the price entry data file.
@@ -5435,10 +5435,10 @@ it will issue a warning giving you the file and line number of the
 problem.
 
 @item --time-colon
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --value-expr @var{FIXME}
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 @end ftable
 
 @node Report Options, Basic options, Session Options, Detailed Options Description
@@ -5496,7 +5496,7 @@ Set the width in characters of the amount column in the
 Anonymize registry output, mostly for sending in bug reports.
 
 @item --auto-match
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --aux-date
 @itemx --effective
@@ -5520,7 +5520,7 @@ Strings}). The default is:
 @end smallexample
 
 @item --base
-ASK JOHN
+FIX THIS ENTRY @c ASK JOHN
 
 @item --basis
 @itemx -B
@@ -5570,7 +5570,7 @@ Consider only transaction that have been cleared for
 display and calculation.
 
 @item --cleared-format @var{FORMAT_STRING}
-FIXME: to keep?
+FIX THIS ENTRY @c FIXME thdox: to keep?
 Specify the format to use for the @code{cleared} report (@pxref{Format
 Strings}). The default is:
 
@@ -5641,7 +5641,7 @@ Specify the width, in characters, of the date column in the
 @command{register} report.
 
 @item --datetime-format @var{FIXME}
-ASK JOHN
+FIX THIS ENTRY @c ASK JOHN
 
 @item --dc
 Display register or balance in debit/credit format If you use
@@ -5748,7 +5748,7 @@ equity Command}).  Gives current account balances in the form of a
 register report.
 
 @item --exact
-ASK JOHN
+FIX THIS ENTRY @c ASK JOHN
 
 @item --exchange @var{COMMODITY}
 @itemx -X @var{COMMODITY}
@@ -5816,10 +5816,10 @@ Print the first @var{INT} entries. Opposite of @code{--tail}.
 
 @item --historical
 @itemx -H
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --immediate
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --inject
 Use @code{Expected} amounts in calculations.  In the case that you know
@@ -5970,10 +5970,10 @@ Reserve @var{INT} spaces at the beginning of each line of the output.
 Use the price of the commodity purchase for performing calculations.
 
 @item --pricedb-format @var{FORMAT_STRING}
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --prices-format @var{FORMAT_STRING}
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --primary-date
 @itemx --actual-dates
@@ -5998,7 +5998,7 @@ Account using only real transactions ignoring virtual and automatic
 transactions.
 
 @item --register-format @var{FORMAT_STRING}
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --related
 In a register report show the related account.  This is the other
@@ -6019,7 +6019,7 @@ FIX THIS ENTRY
 
 @item --rich-data
 @itemx --detail
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --seed @var{FIXME}
 Set the random seed for the @code{generate} command.  Used as part of
@@ -6050,7 +6050,7 @@ Report only the last @var{INT} entries. Only useful on a register
 report.
 
 @item --time-report
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --total @var{VEXPR}
 @itemx -T @var{VEXPR}
@@ -6091,7 +6091,7 @@ Perform all calculations without rounding and display results to full
 precision.
 
 @item --values
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --weekly
 @itemx -W
@@ -8610,7 +8610,7 @@ slowdown.  When combined with @code{--debug} ledger will produce
 memory trace information.
 
 @item --verify-memory
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item --version
 Print version information and exit.
@@ -8706,7 +8706,7 @@ true
 @end smallexample
 
 @item script
-FIXME
+FIX THIS ENTRY @c FIXME thdox
 
 @item template
 Shows the insertion template that a @code{draft} or @code{xact}
