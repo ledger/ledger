@@ -6138,7 +6138,8 @@ are using.
 
 @item --file @var{FILE}
 @itemx -f @var{FILE}
-Read @file{FILE} as a ledger file. This command may be used multiple
+Read @file{FILE} as a ledger file. @var{FILE} can be @samp{-} that is
+a synonym of @samp{/dev/stdin}. This command may be used multiple
 times. Typically, the environment variable @env{LEDGER_FILE} is set,
 rather than using this command-line option.
 
