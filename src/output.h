@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -142,7 +142,7 @@ class report_accounts : public item_handler<post_t>
 protected:
   report_t& report;
 
-  std::map<account_t *, std::size_t> accounts;
+  std::map<account_t *, std::size_t, account_compare> accounts;
 
   typedef std::map<account_t *, std::size_t>::value_type accounts_pair;
 
@@ -189,12 +189,39 @@ public:
   }
 };
 
+class report_tags : public item_handler<post_t>
+{
+protected:
+  report_t& report;
+
+  std::map<string, std::size_t> tags;
+
+  typedef std::map<string, std::size_t>::value_type tags_pair;
+
+public:
+  report_tags(report_t& _report) : report(_report) {
+    TRACE_CTOR(report_tags, "report&");
+  }
+  virtual ~report_tags() {
+    TRACE_DTOR(report_tags);
+  }
+
+  virtual void flush();
+  virtual void operator()(post_t& post);
+
+  virtual void clear() {
+    tags.clear();
+    item_handler<post_t>::clear();
+  }
+};
+
+
 class report_commodities : public item_handler<post_t>
 {
 protected:
   report_t& report;
 
-  std::map<commodity_t *, std::size_t> commodities;
+  std::map<commodity_t *, std::size_t, commodity_compare> commodities;
 
   typedef std::map<commodity_t *, std::size_t>::value_type commodities_pair;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -40,6 +40,7 @@
 namespace ledger {
 
 bool commodity_t::decimal_comma_by_default = false;
+bool commodity_t::time_colon_by_default = false;
 
 void commodity_t::add_price(const datetime_t& date, const amount_t& price,
                             const bool reflexive)
@@ -496,11 +497,9 @@ bool commodity_t::compare_by_commodity::operator()(const amount_t * left,
   }
 }
 
-void put_commodity(property_tree::ptree& pt, const commodity_t& comm,
+void put_commodity(property_tree::ptree& st, const commodity_t& comm,
                    bool commodity_details)
 {
-  property_tree::ptree& st(pt.put("commodity", ""));
-
   std::string flags;
   if (! (comm.has_flags(COMMODITY_STYLE_SUFFIXED)))  flags += 'P';
   if (comm.has_flags(COMMODITY_STYLE_SEPARATED))     flags += 'S';
@@ -511,7 +510,7 @@ void put_commodity(property_tree::ptree& pt, const commodity_t& comm,
   st.put("symbol", comm.symbol());
 
   if (commodity_details && comm.has_annotation())
-    put_annotation(st, as_annotated_commodity(comm).details);
+    put_annotation(st.put("annotation", ""), as_annotated_commodity(comm).details);
 }
 
 } // namespace ledger

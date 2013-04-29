@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -330,6 +330,21 @@ namespace {
       return NULL_VALUE;
   }
 
+  value_t get_filebase(item_t& item) {
+    if (item.pos)
+      return string_value(item.pos->pathname.filename().string());
+    else
+      return NULL_VALUE;
+  }
+
+  value_t get_filepath(item_t& item) {
+    if (item.pos)
+      return string_value(item.pos->pathname.parent_path().string());
+    else
+      return NULL_VALUE;
+  }
+
+
   value_t get_beg_pos(item_t& item) {
     return item.pos ? long(item.pos->beg_pos) : 0L;
   }
@@ -456,7 +471,11 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
   case 'f':
     if (name == "filename")
       return WRAP_FUNCTOR(get_wrapper<&get_pathname>);
-    break;
+    else if (name == "filebase")
+      return WRAP_FUNCTOR(get_wrapper<&get_filebase>);
+    else if (name == "filepath")
+      return WRAP_FUNCTOR(get_wrapper<&get_filepath>);
+     break;
 
   case 'h':
     if (name == "has_tag")
@@ -563,8 +582,8 @@ string item_context(const item_t& item, const string& desc)
 
   std::ostringstream out;
 
-  if (item.pos->pathname == path("/dev/stdin")) {
-    out << desc << _(" from standard input:");
+  if (item.pos->pathname.empty()) {
+    out << desc << _(" from streamed input:");
     return out.str();
   }
 
@@ -581,16 +600,15 @@ string item_context(const item_t& item, const string& desc)
   return out.str();
 }
 
-void put_metadata(property_tree::ptree& pt, const item_t::string_map& metadata)
+void put_metadata(property_tree::ptree& st, const item_t::string_map& metadata)
 {
-  property_tree::ptree& st(pt.put("metadata", ""));
   foreach (const item_t::string_map::value_type& pair, metadata) {
     if (pair.second.first) {
-      property_tree::ptree& vt(st.put("pair", ""));
-      vt.put("key", pair.first);
+      property_tree::ptree& vt(st.add("value", ""));
+      vt.put("<xmlattr>.key", pair.first);
       put_value(vt, *pair.second.first);
     } else {
-      st.put("tag", pair.first);
+      st.add("tag", pair.first);
     }
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -111,20 +111,12 @@ std::string format_date(const date_t& when,
 void set_date_format(const char * format);
 void set_input_date_format(const char * format);
 
-inline void put_datetime(property_tree::ptree& pt, const datetime_t& when,
-                         bool wrap = true) {
-  if (wrap)
-    pt.put("datetime", format_datetime(when, FMT_WRITTEN));
-  else
-    pt.put_value(format_datetime(when, FMT_WRITTEN));
+inline void put_datetime(property_tree::ptree& pt, const datetime_t& when) {
+  pt.put_value(format_datetime(when, FMT_WRITTEN));
 }
 
-inline void put_date(property_tree::ptree& pt, const date_t& when,
-                      bool wrap = true) {
-  if (wrap)
-    pt.put("date", format_date(when, FMT_WRITTEN));
-  else
-    pt.put_value(format_date(when, FMT_WRITTEN));
+inline void put_date(property_tree::ptree& pt, const date_t& when) {
+  pt.put_value(format_date(when, FMT_WRITTEN));
 }
 
 struct date_traits_t

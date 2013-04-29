@@ -31,15 +31,29 @@
 ;; MA 02111-1307, USA.
 
 ;;; Commentary:
-
-(require 'ldg-post)
-(require 'ldg-mode)
+;; Load up the ledger mode
+(require 'ldg-regex)
+(require 'esh-util)
+(require 'esh-arg)
+(require 'ldg-commodities)
 (require 'ldg-complete)
+(require 'ldg-context)
+(require 'ldg-exec)
+(require 'ldg-fonts)
+(require 'ldg-init)
+(require 'ldg-mode)
+(require 'ldg-occur)
+(require 'ldg-post)
+(require 'ldg-reconcile)
+(require 'ldg-report)
+(require 'ldg-sort)
 (require 'ldg-state)
+(require 'ldg-test)
+(require 'ldg-texi)
+(require 'ldg-xact)
+(require 'ldg-schedule)
 
-;(autoload #'ledger-mode "ldg-mode" nil t)
-;(autoload #'ledger-fully-complete-entry "ldg-complete" nil t)
-;(autoload #'ledger-toggle-current "ldg-state" nil t)
+;;; Code:
 
 (autoload #'ledger-texi-update-test "ldg-texi" nil t)
 (autoload #'ledger-texi-update-examples "ldg-texi" nil t)
@@ -49,34 +63,28 @@
   :group 'data)
 
 (defconst ledger-version "3.0"
-  "The version of ledger.el currently loaded")
+  "The version of ledger.el currently loaded.")
 
+(defun ledger-mode-dump-variable (var)
+  (if var
+   (insert (format "         %s: %S\n" (symbol-name var) (eval var)))))
+  
+(defun ledger-mode-dump-group (group)
+  "Dump GROUP customizations to current buffer"
+  (let ((members (custom-group-members group nil)))
+    (dolist (member members)
+      (cond ((eq (cadr member) 'custom-group)
+	     (insert (format "Group %s:\n" (symbol-name (car member))))
+	     (ledger-mode-dump-group (car member)))
+	    ((eq (cadr member) 'custom-variable) 
+	     (ledger-mode-dump-variable (car member)))))))
+
+(defun ledger-mode-dump-configuration ()
+  "Dump all customizations"
+  (find-file "ledger-mode-dump")
+  (ledger-mode-dump-group 'ledger))
+ 
 (provide 'ledger)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; ldg-new.el ends here
 
-(defun ledger-create-test ()
-  (interactive)
-  (save-restriction
-    (org-narrow-to-subtree)
-    (save-excursion
-      (let (text beg)
-        (goto-char (point-min))
-        (forward-line 1)
-        (setq beg (point))
-        (search-forward ":PROPERTIES:")
-        (goto-char (line-beginning-position))
-        (setq text (buffer-substring-no-properties beg (point)))
-        (goto-char (point-min))
-        (re-search-forward ":ID:\\s-+\\([^-]+\\)")
-        (find-file-other-window
-         (format "~/src/ledger/test/regress/%s.test" (match-string 1)))
-        (sit-for 0)
-        (insert text)
-        (goto-char (point-min))
-        (while (not (eobp))
-          (goto-char (line-beginning-position))
-          (delete-char 3)
-          (forward-line 1))))))
-
-;;; ledger.el ends here

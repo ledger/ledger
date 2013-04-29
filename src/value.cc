@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -1612,6 +1612,27 @@ void value_t::in_place_round()
   throw_(value_error, _f("Cannot set rounding for %1%") % label());
 }
 
+void value_t::in_place_roundto(int places)
+{
+  DEBUG("amount.roundto", "=====> roundto places " << places);
+  switch (type()) {
+  case INTEGER:
+    return;
+  case AMOUNT:
+    as_amount_lval().in_place_roundto(places);
+    return;
+  case BALANCE:
+    as_balance_lval().in_place_roundto(places);
+    return;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_roundto(places);
+    return;
+  default:
+    break;
+  }
+}
+
 void value_t::in_place_truncate()
 {
   switch (type()) {
@@ -1656,6 +1677,29 @@ void value_t::in_place_floor()
 
   add_error_context(_f("While flooring %1%:") % *this);
   throw_(value_error, _f("Cannot floor %1%") % label());
+}
+
+void value_t::in_place_ceiling()
+{
+  switch (type()) {
+  case INTEGER:
+    return;
+  case AMOUNT:
+    as_amount_lval().in_place_ceiling();
+    return;
+  case BALANCE:
+    as_balance_lval().in_place_ceiling();
+    return;
+  case SEQUENCE:
+    foreach (value_t& value, as_sequence_lval())
+      value.in_place_ceiling();
+    return;
+  default:
+    break;
+  }
+
+  add_error_context(_f("While ceiling %1%:") % *this);
+  throw_(value_error, _f("Cannot ceiling %1%") % label());
 }
 
 void value_t::in_place_unround()
@@ -1803,7 +1847,7 @@ void value_t::print(std::ostream&       _out,
 
   switch (type()) {
   case VOID:
-    out << "(null)";
+    out << "";
     break;
 
   case BOOLEAN:
@@ -2018,35 +2062,35 @@ void put_value(property_tree::ptree& pt, const value_t& value)
 {
   switch (value.type()) {
   case value_t::VOID:
-    pt.put("void", "");
+    pt.add("void", "");
     break;
   case value_t::BOOLEAN:
-    pt.put("bool", value.as_boolean() ? "true" : "false");
+    pt.add("bool", value.as_boolean() ? "true" : "false");
     break;
   case value_t::INTEGER:
-    pt.put("int", value.to_string());
+    pt.add("int", value.to_string());
     break;
   case value_t::AMOUNT:
-    put_amount(pt, value.as_amount());
+    put_amount(pt.add("amount", ""), value.as_amount());
     break;
   case value_t::BALANCE:
-    put_balance(pt, value.as_balance());
+    put_balance(pt.add("balance", ""), value.as_balance());
     break;
   case value_t::DATETIME:
-    put_datetime(pt, value.as_datetime());
+    put_datetime(pt.add("datetime", ""), value.as_datetime());
     break;
   case value_t::DATE:
-    put_date(pt, value.as_date());
+    put_date(pt.add("date", ""), value.as_date());
     break;
   case value_t::STRING:
-    pt.put("string", value.as_string());
+    pt.add("string", value.as_string());
     break;
   case value_t::MASK:
-    put_mask(pt, value.as_mask());
+    put_mask(pt.add("mask", ""), value.as_mask());
     break;
 
   case value_t::SEQUENCE: {
-    property_tree::ptree& st(pt.put("sequence", ""));
+    property_tree::ptree& st(pt.add("sequence", ""));
     foreach (const value_t& member, value.as_sequence())
       put_value(st, member);
     break;

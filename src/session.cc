@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -62,12 +62,7 @@ void set_session_context(session_t * session)
 session_t::session_t()
   : flush_on_next_data_file(false), journal(new journal_t)
 {
-  if (const char * home_var = std::getenv("HOME"))
-    HANDLER(price_db_).on(none, (path(home_var) / ".pricedb").string());
-  else
-    HANDLER(price_db_).on(none, path("./.pricedb").string());
-
-  parsing_context.push();
+ parsing_context.push();
 
   TRACE_CTOR(session_t, "");
 }
@@ -98,8 +93,18 @@ std::size_t session_t::read_data(const string& master_account)
     acct = journal->find_account(master_account);
 
   optional<path> price_db_path;
-  if (HANDLED(price_db_))
+  if (HANDLED(price_db_)){
     price_db_path = resolve_path(HANDLER(price_db_).str());
+    if (!exists(price_db_path.get())){
+      throw_(parse_error, _f("Could not find specified price-db file %1%") % price_db_path);
+    }
+  } else {
+    if (const char * home_var = std::getenv("HOME")){
+      price_db_path = (path(home_var) / ".pricedb");
+    } else {
+      price_db_path = ("./.ledgerrc");
+    }
+  }
 
   if (HANDLED(explicit))
     journal->force_checking = true;
@@ -143,7 +148,7 @@ std::size_t session_t::read_data(const string& master_account)
     }
 
     foreach (const path& pathname, HANDLER(file_).data_files) {
-      if (pathname == "-") {
+      if (pathname == "-" || pathname == "/dev/stdin") {
         // To avoid problems with stdin and pipes, etc., we read the entire
         // file in beforehand into a memory buffer, and then parcel it out
         // from there.
@@ -348,9 +353,11 @@ option_t<session_t> * session_t::lookup_option(const char * p)
   case 's':
     OPT(strict);
     break;
+  case 't':
+    OPT(time_colon);
+    break;
   case 'v':
     OPT(value_expr_);
-    break;
   }
   return NULL;
 }

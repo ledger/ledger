@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -36,6 +36,7 @@
 #include "account.h"
 #include "journal.h"
 #include "context.h"
+#include "format.h"
 #include "pool.h"
 
 namespace ledger {
@@ -355,14 +356,16 @@ bool xact_base_t::finalize()
           }
         }
       } else {
-        if (post->amount.has_annotation()) {
-          if (breakdown.amount.has_annotation())
-            breakdown.amount.annotation().tag = post->amount.annotation().tag;
-          else
-            breakdown.amount.annotate
-              (annotation_t(none, none, post->amount.annotation().tag));
-        }
-        post->amount = breakdown.amount;
+        post->amount =
+          breakdown.amount.has_annotation() ?
+          amount_t(breakdown.amount,
+                   annotation_t(breakdown.amount.annotation().price,
+                                breakdown.amount.annotation().date,
+                                post->amount.has_annotation() ?
+                                post->amount.annotation().tag :
+                                breakdown.amount.annotation().tag,
+                                breakdown.amount.annotation().value_expr)) :
+          breakdown.amount;
         DEBUG("xact.finalize", "added breakdown, balance = " << balance);
       }
 
@@ -642,6 +645,18 @@ namespace {
   }
 }
 
+static string apply_format(const string& str, scope_t& scope)
+{
+  if (contains(str, "%(")) {
+    format_t str_format(str);
+    std::ostringstream buf;
+    buf << str_format(scope);
+    return buf.str();
+  } else {
+    return str;
+  }
+}
+
 void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
 {
   posts_list initial_posts(xact.posts.begin(), xact.posts.end());
@@ -693,8 +708,9 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
       if (deferred_notes) {
         foreach (deferred_tag_data_t& data, *deferred_notes) {
           if (data.apply_to_post == NULL)
-            initial_post->parse_tags(data.tag_data.c_str(), bound_scope,
-                                     data.overwrite_existing);
+            initial_post->append_note(
+              apply_format(data.tag_data, bound_scope).c_str(),
+              bound_scope, data.overwrite_existing);
         }
       }
 
@@ -773,11 +789,27 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
             account = account->parent;
           account = account->find_account(fullname);
         }
+        else if (contains(fullname, "%(")) {
+          format_t account_name(fullname);
+          std::ostringstream buf;
+          buf << account_name(bound_scope);
+          while (account->parent)
+            account = account->parent;
+          account = account->find_account(buf.str());
+        }
 
         // Copy over details so that the resulting post is a mirror of
         // the automated xact's one.
         post_t * new_post = new post_t(account, amt);
         new_post->copy_details(*post);
+
+        // A Cleared transaction implies all of its automatic posting are cleared
+        // CPR 2012/10/23
+        if (xact.state() == item_t::CLEARED) {
+          DEBUG("xact.extend.cleared", "CLEARED");
+          new_post->set_state(item_t::CLEARED);
+        }
+
         new_post->add_flags(ITEM_GENERATED);
         new_post->account =
           journal->register_account(account->fullname(), new_post,
@@ -785,9 +817,11 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
 
         if (deferred_notes) {
           foreach (deferred_tag_data_t& data, *deferred_notes) {
-            if (! data.apply_to_post || data.apply_to_post == post)
-              new_post->parse_tags(data.tag_data.c_str(), bound_scope,
-                                   data.overwrite_existing);
+            if (! data.apply_to_post || data.apply_to_post == post) {
+              new_post->append_note(
+                apply_format(data.tag_data, bound_scope).c_str(),
+                bound_scope, data.overwrite_existing);
+            }
           }
         }
 
@@ -813,10 +847,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
   }
 }
 
-void put_xact(property_tree::ptree& pt, const xact_t& xact)
+void put_xact(property_tree::ptree& st, const xact_t& xact)
 {
-  property_tree::ptree& st(pt.put("transaction", ""));
-
   if (xact.state() == item_t::CLEARED)
     st.put("<xmlattr>.state", "cleared");
   else if (xact.state() == item_t::PENDING)
@@ -825,14 +857,10 @@ void put_xact(property_tree::ptree& pt, const xact_t& xact)
   if (xact.has_flags(ITEM_GENERATED))
     st.put("<xmlattr>.generated", "true");
 
-  if (xact._date) {
-    property_tree::ptree& t(st.put("date", ""));
-    put_date(t, *xact._date, false);
-  }
-  if (xact._date_aux) {
-    property_tree::ptree& t(st.put("aux-date", ""));
-    put_date(t, *xact._date_aux, false);
-  }
+  if (xact._date)
+    put_date(st.put("date", ""), *xact._date);
+  if (xact._date_aux)
+    put_date(st.put("aux-date", ""), *xact._date_aux);
 
   if (xact.code)
     st.put("code", *xact.code);
@@ -843,7 +871,7 @@ void put_xact(property_tree::ptree& pt, const xact_t& xact)
     st.put("note", *xact.note);
 
   if (xact.metadata)
-    put_metadata(st,  *xact.metadata);
+    put_metadata(st.put("metadata", ""),  *xact.metadata);
 }
 
 } // namespace ledger

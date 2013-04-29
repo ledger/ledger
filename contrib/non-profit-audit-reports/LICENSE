@@ -1,0 +1,14 @@
+Contents under contrib/non-profit-audit-reports/ are licensed GPLv3-or-later.
+
+The GPLv3-or-later licensing of the contents of this directory does not,
+to our knowledge and belief, impact the licensing of any other part of
+Ledger.  Parts of the files herein are likely derivative works of the rest
+of Ledger, but these works are under this subdirectory are not, to our
+knowledge, used, imported, included, copied, etc. into other parts of the
+codebase.
+
+In short, this is a small application written to use Ledger like a
+library, particularly via its Python API interface.  It derives from
+Ledger, but Ledger does not, to our knowledge, derive from it.
+
+We are not lawyers and this is not legal advice.

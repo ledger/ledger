@@ -1,15 +1,83 @@
+;;; ldg-regex.el --- Helper code for use with the "ledger" command-line tool
+
+;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
+
+;; This file is not part of GNU Emacs.
+
+;; This is free software; you can redistribute it and/or modify it under
+;; the terms of the GNU General Public License as published by the Free
+;; Software Foundation; either version 2, or (at your option) any later
+;; version.
+;;
+;; This is distributed in the hope that it will be useful, but WITHOUT
+;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+;; for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
+;; MA 02111-1307, USA.
+
 (require 'rx)
 
 (eval-when-compile
   (require 'cl))
 
+(defconst ledger-amount-regex
+  (concat "\\(  \\|\t\\| \t\\)[ \t]*-?"
+	  "\\([A-Z$€£_]+ *\\)?"
+	  "\\(-?[0-9,]+?\\)"
+	  "\\(.[0-9]+\\)?"
+	  "\\( *[[:word:]€£_\"]+\\)?"
+	  "\\([ \t]*[@={]@?[^\n;]+?\\)?"
+	  "\\([ \t]+;.+?\\|[ \t]*\\)?$"))
+
+(defconst ledger-amount-decimal-comma-regex
+  "-?[1-9][0-9.]*[,]?[0-9]*")
+
+(defconst ledger-amount-decimal-period-regex
+  "-?[1-9][0-9.]*[.]?[0-9]*")
+
+(defconst ledger-other-entries-regex
+  "\\(^[~=A-Za-z].+\\)+")
+
+(defconst ledger-comment-regex
+  "\\(       \\|  \\|^\\)\\(;.*\\)")
+
+(defconst ledger-payee-any-status-regex 
+  "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+\\(.+?\\)\\(\t\\|\n\\| [ \t]\\)")
+
+(defconst ledger-payee-pending-regex 
+  "^[0-9]+[-/][-/.=0-9]+\\s-\\!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(;\\|$\\)")
+
+(defconst ledger-payee-cleared-regex
+  "^[0-9]+[-/][-/.=0-9]+\\s-\\*\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(;\\|$\\)")
+
+(defconst ledger-payee-uncleared-regex
+  "^[0-9]+[-/][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\(;\\|$\\)")
+
+(defconst ledger-init-string-regex
+  "^--.+?\\($\\|[ ]\\)")
+
+(defconst ledger-account-any-status-regex
+  "^[ \t]+\\([*!]\\s-+\\)?\\([[(]?.+?\\)\\(\t\\|\n\\| [ \t]\\)")  
+
+(defconst ledger-account-pending-regex
+  "\\(^[ \t]+\\)\\(!.+?\\)\\(  \\|$\\)")  
+
+(defconst ledger-account-cleared-regex
+  "\\(^[ \t]+\\)\\(\\*.+?\\)\\(  \\|$\\)")  
+
+
+
 (defmacro ledger-define-regexp (name regex docs &rest args)
   "Simplify the creation of a Ledger regex and helper functions."
   (let ((defs
-          (list
-           `(defconst
-              ,(intern (concat "ledger-" (symbol-name name) "-regexp"))
-              ,(eval regex))))
+	 (list
+	  `(defconst
+	       ,(intern (concat "ledger-" (symbol-name name) "-regexp"))
+	     ,(eval regex))))
         (addend 0) last-group)
     (if (null args)
         (progn
@@ -17,104 +85,104 @@
            defs
            (list
             `(defconst
-               ,(intern
-                 (concat "ledger-regex-" (symbol-name name) "-group"))
+		 ,(intern
+		   (concat "ledger-regex-" (symbol-name name) "-group"))
                1)))
           (nconc
            defs
            (list
             `(defconst
-               ,(intern (concat "ledger-regex-" (symbol-name name)
-                                "-group--count"))
+		 ,(intern (concat "ledger-regex-" (symbol-name name)
+				  "-group--count"))
                1)))
           (nconc
            defs
            (list
             `(defmacro
-               ,(intern (concat "ledger-regex-" (symbol-name name)))
-               (&optional string)
+		 ,(intern (concat "ledger-regex-" (symbol-name name)))
+		 (&optional string)
                ,(format "Return the match string for the %s" name)
                (match-string
                 ,(intern (concat "ledger-regex-" (symbol-name name)
                                  "-group"))
                 string)))))
-      
-      (dolist (arg args)
-        (let (var grouping target)
-          (if (symbolp arg)
-              (setq var arg target arg)
-            (assert (listp arg))
-            (if (= 2 (length arg))
-                (setq var (car arg)
-                      target (cadr arg))
-              (setq var (car arg)
-                    grouping (cadr arg)
-                    target (caddr arg))))
+	
+	(dolist (arg args)
+	  (let (var grouping target)
+	    (if (symbolp arg)
+		(setq var arg target arg)
+		(assert (listp arg))
+		(if (= 2 (length arg))
+		    (setq var (car arg)
+			  target (cadr arg))
+		    (setq var (car arg)
+			  grouping (cadr arg)
+			  target (caddr arg))))
 
-          (if (and last-group
-                   (not (eq last-group (or grouping target))))
-              (incf addend
-                    (symbol-value
-                     (intern-soft (concat "ledger-regex-"
-                                          (symbol-name last-group)
-                                          "-group--count")))))
-          (nconc
-           defs
-           (list
-            `(defconst
-               ,(intern (concat "ledger-regex-" (symbol-name name)
-                                "-group-" (symbol-name var)))
-               ,(+ addend
-                   (symbol-value
-                    (intern-soft
-                     (if grouping
-                         (concat "ledger-regex-" (symbol-name grouping)
-                                 "-group-" (symbol-name target))
-                       (concat "ledger-regex-" (symbol-name target)
-                               "-group"))))))))
-          (nconc
-           defs
-           (list
-            `(defmacro
-               ,(intern (concat "ledger-regex-" (symbol-name name)
-                                "-" (symbol-name var)))
-               (&optional string)
-               ,(format "Return the sub-group match for the %s %s."
-                        name var)
-               (match-string
-                ,(intern (concat "ledger-regex-" (symbol-name name)
-                                 "-group-" (symbol-name var)))
-                string))))
+	    (if (and last-group
+		     (not (eq last-group (or grouping target))))
+		(incf addend
+		      (symbol-value
+		       (intern-soft (concat "ledger-regex-"
+					    (symbol-name last-group)
+					    "-group--count")))))
+	    (nconc
+	     defs
+	     (list
+	      `(defconst
+		   ,(intern (concat "ledger-regex-" (symbol-name name)
+				    "-group-" (symbol-name var)))
+		 ,(+ addend
+		     (symbol-value
+		      (intern-soft
+		       (if grouping
+			   (concat "ledger-regex-" (symbol-name grouping)
+				   "-group-" (symbol-name target))
+			   (concat "ledger-regex-" (symbol-name target)
+				   "-group"))))))))
+	    (nconc
+	     defs
+	     (list
+	      `(defmacro
+		   ,(intern (concat "ledger-regex-" (symbol-name name)
+				    "-" (symbol-name var)))
+		   (&optional string)
+		 ,(format "Return the sub-group match for the %s %s."
+			  name var)
+		 (match-string
+		  ,(intern (concat "ledger-regex-" (symbol-name name)
+				   "-group-" (symbol-name var)))
+		  string))))
 
-          (setq last-group (or grouping target))))
+	    (setq last-group (or grouping target))))
 
-      (nconc defs
-             (list
-              `(defconst ,(intern (concat "ledger-regex-" (symbol-name name)
-                                          "-group--count"))
-                 ,(length args)))))
+	(nconc defs
+	       (list
+		`(defconst ,(intern (concat "ledger-regex-" (symbol-name name)
+					    "-group--count"))
+		   ,(length args)))))
 
     (cons 'progn defs)))
 
 (put 'ledger-define-regexp 'lisp-indent-function 1)
 
-(ledger-define-regexp date
-  (let ((sep '(or ?- (any ?. ?/))))     ; can't do (any ?- ?. ?/) due to bug
+(ledger-define-regexp iso-date
+  ( let ((sep '(or ?-  ?/)))    
     (rx (group
-         (and (? (= 4 num)
-                 (eval sep))
-              (and num (? num))
+         (and (group (? (= 4 num)))
+	      (eval sep)
+              (group (and num (? num)))
               (eval sep)
-              (and num (? num))))))
+              (group (and num (? num)))))))
   "Match a single date, in its 'written' form.")
 
 (ledger-define-regexp full-date
   (macroexpand
-   `(rx (and (regexp ,ledger-date-regexp)
-             (? (and ?= (regexp ,ledger-date-regexp))))))
+   `(rx (and (regexp ,ledger-iso-date-regexp)
+             (? (and ?= (regexp ,ledger-iso-date-regexp))))))
   "Match a compound date, of the form ACTUAL=EFFECTIVE"
-  (actual date)
-  (effective date))
+  (actual iso-date)
+  (effective iso-date))
 
 (ledger-define-regexp state
   (rx (group (any ?! ?*)))
@@ -211,7 +279,7 @@
   (macroexpand
    `(rx (* (+ blank)
            (or (and ?\{ (regexp ,ledger-commoditized-amount-regexp) ?\})
-               (and ?\[ (regexp ,ledger-date-regexp) ?\])
+               (and ?\[ (regexp ,ledger-iso-date-regexp) ?\])
                (and ?\( (not (any ?\))) ?\))))))
   "")
 
@@ -246,5 +314,13 @@
   (account full-account name)
   (amount full-amount)
   (note end-note))
+
+(defconst ledger-iterate-regex
+  (concat "\\(Y\\s-+\\([0-9]+\\)\\|"  ;; Catches a Y directive
+	  ledger-iso-date-regexp
+	  "\\([ *!]+\\)"  ;; mark
+	  "\\((.*)\\)"  ;; code
+	  "\\(.*\\)"   ;; desc
+	  "\\)"))
 
 (provide 'ldg-regex)

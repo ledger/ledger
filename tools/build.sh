@@ -3,10 +3,14 @@
 flavor=$1
 shift 1
 
-time (                                                                          \
-    cd ~/src/ledger ;                                                           \
-    PATH=/usr/local/bin:/opt/local/bin:$PATH                                    \
-      nice -n 20 ./acprep $flavor --debug --python --doxygen make "$@" &&       \
-    PATH=/usr/local/bin:/opt/local/bin:$PATH                                    \
-      nice -n 20 ./acprep $flavor --debug --python --doxygen check "$@"         \
+JOBS=-j$(sysctl -n hw.activecpu)
+OPTIONS="$flavor --debug --python --ninja --doxygen $JOBS"
+OPTIONS="$OPTIONS --prefix /usr/local/Cellar/ledger/HEAD"
+
+time (                                                  \
+    cd ~/src/ledger ;                                   \
+    PATH=/usr/local/bin:/opt/local/bin:$PATH            \
+      nice -n 20 ./acprep $OPTIONS make $JOBS "$@" &&   \
+    PATH=/usr/local/bin:/opt/local/bin:$PATH            \
+      nice -n 20 ./acprep $OPTIONS check $JOBS "$@"     \
 )

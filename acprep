@@ -99,14 +99,7 @@ class CommandLineApp(object):
 
     force_exit    = True           # If true, always ends run() with sys.exit()
     log_handler   = None
-    boost_major   = "1_49"
-
-    options = {
-        'debug':    False,
-        'verbose':  False,
-        'logfile':  False,
-        'loglevel': False
-    }
+    boost_major   = "1_52"
 
     def __init__(self):
         "Initialize CommandLineApp."
@@ -137,7 +130,8 @@ class CommandLineApp(object):
         op.add_option('', '--loglevel', metavar='LEVEL',
                       type='string', action='store', dest='loglevel',
                       default=False, help='set log level: DEBUG, INFO, WARNING, ERROR, CRITICAL')
-        return
+
+        self.options = op.get_default_values()
 
     def main(self, *args):
         """Main body of your application.
@@ -167,7 +161,7 @@ class CommandLineApp(object):
         Process options and execute callback functions as needed.  This method
         should not need to be overridden, if the main() method is defined."""
         # Process the options supported and given
-        self.options, main_args = self.option_parser.parse_args()
+        self.options, main_args = self.option_parser.parse_args(values=self.options)
 
         if self.options.logfile:
             fh = logging.handlers.RotatingFileHandler(self.options.logfile,
@@ -238,9 +232,7 @@ class PrepareBuild(CommandLineApp):
         self.current_ver     = None
         #self.current_flavor  = 'default'
         self.current_flavor  = 'debug'
-        self.prefix_dir      = None
         self.products_dir    = None
-        self.build_dir       = self.source_dir
         self.configure_args  = []
         self.CXXFLAGS        = []
         self.LDFLAGS         = []
@@ -264,15 +256,13 @@ class PrepareBuild(CommandLineApp):
         products = self.default_products_directory()
         if (exists(products) and isdir(products)) or \
            (exists('build') and isdir('build')):
-            self.build_dir = None
+            self.options.build_dir = None
 
     def __init__(self):
         CommandLineApp.__init__(self)
         self.log.setLevel(logging.INFO)
 
         self.source_dir = os.getcwd()
-
-        self.initialize()
 
         op = self.option_parser
 
@@ -300,6 +290,9 @@ class PrepareBuild(CommandLineApp):
                       action="store", dest="compiler",
                       help='Use the Clang C++ compiler')
 
+        op.add_option('-N', '--ninja', action='store_true', dest='use_ninja',
+                      default=False,
+                      help='Use ninja to build, rather than make')
         op.add_option('', '--no-git', action='store_true', dest='no_git',
                       default=False,
                       help='Do not call out to Git; useful for offline builds')
@@ -308,20 +301,24 @@ class PrepareBuild(CommandLineApp):
                       help='Enable use of Doxygen to build ref manual ("make docs")')
         op.add_option('', '--python', action='store_true', dest='python',
                       default=False,
-                      help='Enable Python support (if disabled in acprep)')
-        op.add_option('', '--no-python', action='store_true', dest='no_python',
-                      default=False,
-                      help='Do not enable Python support by default')
+                      help='Enable Python support')
+        op.add_option('', '--no-python', action='store_false', dest='python',
+                      help='Disable python support (default)')
         op.add_option('', '--prefix', metavar='DIR', action="store",
                       dest="prefix_dir", help='Use custom installation prefix')
         op.add_option('', '--products', metavar='DIR', action="store",
                       dest="option_products",
                       help='Collect all build products in this directory')
         op.add_option('', '--output', metavar='DIR', action="store",
+                      default=self.source_dir,
                       dest="build_dir", help='Build in the specified directory')
         op.add_option('', '--local', action="callback",
                       callback=self.option_local,
                       help='Build directly within the source tree (default)')
+
+        self.options = op.get_default_values()
+
+        self.initialize()
 
     def main(self, *args):
         if args and args[0] in ['default', 'debug', 'opt', 'gcov', 'gprof']:
@@ -390,8 +387,8 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def prefix_directory(self):
-        if self.prefix_dir:
-            return self.prefix_dir
+        if self.options.prefix_dir:
+            return self.options.prefix_dir
         else:
             return None
 
@@ -412,10 +409,10 @@ class PrepareBuild(CommandLineApp):
         return self.products_dir
 
     def build_directory(self):
-        if not self.build_dir:
-            self.build_dir = join(self.products_directory(),
-                                  self.current_flavor)
-        return self.build_dir
+        if not self.options.build_dir:
+            self.options.build_dir = join(self.products_directory(),
+                                          self.current_flavor)
+        return self.options.build_dir
 
     def ensure(self, dirname):
         if not exists(dirname):
@@ -658,50 +655,26 @@ class PrepareBuild(CommandLineApp):
 
     def setup_for_johnw(self):
         self.configure_args.append('-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON')
-        self.configure_args.append('-DBoost_USE_MULTITHREADED:BOOL=OFF')
 
         if not self.options.compiler:
-            self.configure_args.append('-DCMAKE_CXX_COMPILER:PATH=/usr/local/stow/clang-3.1/bin/clang++')
-
-            self.CXXFLAGS.append('-Qunused-arguments')
-            self.CXXFLAGS.append('-nostdlibinc')
-            self.CXXFLAGS.append('-isystem')
-            self.CXXFLAGS.append('/usr/local/include/c++/v1')
-            self.CXXFLAGS.append('-isystem')
-            self.CXXFLAGS.append('/usr/include')
-            self.CXXFLAGS.append('-stdlib=libc++')
-            self.CXXFLAGS.append('-Wl,/usr/local/lib/libc++.dylib')
-            self.CXXFLAGS.append('-Wno-disabled-macro-expansion')
+            self.configure_args.append('-DCMAKE_CXX_COMPILER:PATH=/usr/local/bin/clang++')
 
             if self.current_flavor == 'opt':
-                self.configure_args.append('-DCMAKE_CXX_FLAGS:STRING=-O4')
-                self.configure_args.append('-DCMAKE_CXX_LINK_FLAGS:STRING=-O4')
+                self.configure_args.append('-DCMAKE_CXX_FLAGS_RELEASE:STRING=-O3')
+                self.configure_args.append('-DCMAKE_EXE_LINKER_FLAGS:STRING=-O3')
+                self.configure_args.append('-DCMAKE_SHARED_LINKER_FLAGS:STRING=-O3')
+                self.configure_args.append('-DCMAKE_MODULE_LINKER_FLAGS:STRING=-O3')
+            #else:
+            #    self.CXXFLAGS.append('-g -O1 -faddress-sanitizer')
+            #    self.LDFLAGS.append('-g -O1 -faddress-sanitizer')
 
-            self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/usr/local/include;/opt/local/include')
-            self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/usr/local/lib;/opt/local/lib')
-
-            self.configure_args.append('-DBOOST_ROOT=/usr/local')
-            self.configure_args.append('-DBOOST_INCLUDEDIR=/usr/local/include/boost-1_49')
-            self.configure_args.append('-DBoost_COMPILER=-clang-darwin')
-
-            self.configure_args.append(self.source_dir)
-
-        elif self.options.compiler == "icc":
-            self.configure_args.append('-DCMAKE_AR:PATH=/opt/intel/bin/xiar')
-            self.configure_args.append('-DCMAKE_CXX_COMPILER:PATH=/opt/intel/bin/icc')
-            if self.current_flavor == 'opt':
-                self.configure_args.append('-DCMAKE_CXX_FLAGS:STRING=-fast')
-                self.configure_args.append('-DCMAKE_CXX_LINK_FLAGS:STRING=-fast')
-            self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/opt/local/include')
-            self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/opt/local/lib')
-            self.configure_args.append('-DBOOST_ROOT=/opt/local')
             self.configure_args.append(self.source_dir)
 
         else:
             self.configure_args.append('-DCMAKE_CXX_COMPILER:PATH=' + self.options.compiler)
-            self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/opt/local/include')
-            self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/opt/local/lib')
-            self.configure_args.append('-DBOOST_ROOT=/opt/local')
+            self.configure_args.append('-DCMAKE_INCLUDE_PATH:STRING=/usr/local/include')
+            self.configure_args.append('-DCMAKE_LIBRARY_PATH:STRING=/usr/local/lib')
+            self.configure_args.append('-DBOOST_ROOT=/usr/local')
             self.configure_args.append(self.source_dir)
 
     def setup_for_system(self):
@@ -712,8 +685,9 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append('-DUSE_DOXYGEN=1')
         if self.options.python:
             self.configure_args.append('-DUSE_PYTHON=1')
-        if self.options.no_python:
-            self.configure_args.remove('-DUSE_PYTHON=1')
+
+        if self.options.use_ninja:
+            self.configure_args.append('-GNinja')
 
         if exists('/Users/johnw/Projects/ledger/plan/TODO'):
             self.setup_for_johnw()
@@ -760,7 +734,7 @@ class PrepareBuild(CommandLineApp):
 
     def option_local(self, option=None, opt_str=None, value=None, parser=None):
         self.log.debug('Saw option --local')
-        self.build_dir = self.source_dir
+        self.options.build_dir = self.source_dir
 
     def option_help(self, option=None, opt_str=None, value=None, parser=None):
         self.phase_help()
@@ -844,7 +818,7 @@ class PrepareBuild(CommandLineApp):
                              self.options.boost_include)
 
         if self.prefix_directory():
-            conf_args.append('-DCMAKE_PREFIX_PATH=%s' % self.prefix_directory())
+            conf_args.append('-DCMAKE_INSTALL_PREFIX=%s' % self.prefix_directory())
 
         return (environ, conf_args + self.configure_args)
 
@@ -861,7 +835,7 @@ class PrepareBuild(CommandLineApp):
         try:
             os.chdir(build_dir)
 
-            need_to_config = not isfile('Makefile')
+            need_to_config = not isfile('rules.ninja' if self.options.use_ninja else 'Makefile')
             if need_to_config:
                 self.log.debug('Source => ' + self.source_dir)
                 self.log.debug('Build  => ' + build_dir)
@@ -900,14 +874,13 @@ class PrepareBuild(CommandLineApp):
         make_args   = []
 
         for arg in args:
-            if arg.startswith('--'):
+            if arg.startswith('--') or arg.startswith('-D'):
                 config_args.append(arg)
             else:
                 make_args.append(arg)
 
         if self.options.jobs > 1 and self.current_flavor != 'gcov':
             make_args.append('-j%d' % self.options.jobs)
-            make_args.append('ARGS=-j%d' % self.options.jobs)
 
         if self.options.verbose:
             make_args.append('VERBOSE=1')
@@ -923,18 +896,29 @@ class PrepareBuild(CommandLineApp):
             self.log.debug('Changing directory to ' + build_dir)
             os.chdir(build_dir)
 
-            self.execute(*(['make'] + make_args))
+            self.execute(*(['ninja' if self.options.use_ninja else 'make'] + 
+                           make_args))
         finally:
             os.chdir(self.source_dir)
 
     def phase_check(self, *args):
         self.log.info('Executing phase: update')
-        self.phase_make(*(['check'] + list(args)))
+        build_dir = self.ensure(self.build_directory())
+        try:
+            self.log.debug('Changing directory to ' + build_dir)
+            os.chdir(build_dir)
+
+            make_args = list(args)
+            if self.options.jobs > 1:
+                make_args.append('-j%d' % self.options.jobs)
+
+            self.execute(*(['ctest'] + list(make_args)))
+        finally:
+            os.chdir(self.source_dir)
 
     def phase_update(self, *args):
         self.log.info('Executing phase: update')
         self.phase_pull()
-        #self.phase_check(*args)
         self.phase_make(*args)
 
     #########################################################################
@@ -955,10 +939,10 @@ class PrepareBuild(CommandLineApp):
     #########################################################################
 
     def configure_flavor(self, flavor, reset=True):
-        self.initialize()               # reset everything
-        self.build_dir      = None      # use the build/ tree
+        self.initialize()                  # reset everything
         self.current_flavor = flavor
-        self.prefix_dir     = None
+        self.options.build_dir      = None # use the build/ tree
+        self.options.prefix_dir     = None
 
         if reset and exists(self.build_directory()) and \
            isdir(self.build_directory()):
@@ -1083,12 +1067,17 @@ typical user:
   submodule         Updates Git submodules (better to use 'pull')
   version           Output current HEAD version to version.m4
 
-NOTE: If you wish to pass options to configure or make, add "--" followed by
-your options.  Here are some real-world examples:
+NOTE: If you wish to pass options to CMake or make, add "--" followed by
+your options.  Those starting with "-D" or "--" will be passed on to CMake,
+positional arguments and other options will be passed to make.
+For the 'config' and 'configure' phase everything will be passed to CMake.
+
+Here are some real-world examples:
 
   ./acprep
-  ./acprep opt -- make -j3
-  ./acprep --enable-doxygen"""
+  ./acprep --python
+  ./acprep opt make
+  ./acprep make doc -- -DBUILD_WEB_DOCS=1"""
         sys.exit(0)
 
 PrepareBuild().run()

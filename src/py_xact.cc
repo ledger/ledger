@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -119,8 +119,8 @@ void export_xact()
     .def("__str__", py_xact_to_string)
 
     .add_property("code",
-                  make_getter(&xact_t::code),
-                  make_setter(&xact_t::code))
+                  make_getter(&xact_t::code, return_value_policy<return_by_value>()),
+                  make_setter(&xact_t::code, return_value_policy<return_by_value>()))
     .add_property("payee",
                   make_getter(&xact_t::payee),
                   make_setter(&xact_t::payee))
@@ -157,6 +157,8 @@ void export_xact()
                   make_getter(&period_xact_t::period_string),
                   make_setter(&period_xact_t::period_string))
     ;
+
+  register_optional_to_python<std::string>();
 }
 
 } // namespace ledger

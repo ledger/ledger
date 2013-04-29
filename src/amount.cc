@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,6 +30,7 @@
  */
 
 #include <system.hh>
+#include <math.h>
 
 #include "amount.h"
 #include "commodity.h"
@@ -195,7 +196,10 @@ namespace {
 
         for (const char * p = buf; *p; p++) {
           if (*p == '.') {
-            if (commodity_t::decimal_comma_by_default ||
+            if (commodity_t::time_colon_by_default ||
+                (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON)))
+              out << ':';
+            else if (commodity_t::decimal_comma_by_default ||
                 (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
               out << ',';
             else
@@ -209,7 +213,10 @@ namespace {
             out << *p;
 
             if (integer_digits > 3 && --integer_digits % 3 == 0) {
-              if (commodity_t::decimal_comma_by_default ||
+              if (commodity_t::time_colon_by_default ||
+                  (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON)))
+                out << ':';
+              else if (commodity_t::decimal_comma_by_default ||
                   (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
                 out << '.';
               else
@@ -666,14 +673,31 @@ void amount_t::in_place_truncate()
 void amount_t::in_place_floor()
 {
   if (! quantity)
-    throw_(amount_error, _("Cannot floor an uninitialized amount"));
+    throw_(amount_error, _("Cannot compute floor on an uninitialized amount"));
 
   _dup();
 
-  std::ostringstream out;
-  stream_out_mpq(out, MP(quantity), precision_t(0), -1, GMP_RNDZ);
+  mpz_fdiv_q(temp,  mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
+  mpq_set_z(MP(quantity), temp);
+}
 
-  mpq_set_str(MP(quantity), out.str().c_str(), 10);
+void amount_t::in_place_ceiling()
+{
+  if (! quantity)
+    throw_(amount_error, _("Cannot compute ceiling on an uninitialized amount"));
+
+  _dup();
+
+  mpz_cdiv_q(temp,  mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
+  mpq_set_z(MP(quantity), temp);
+}
+
+void amount_t::in_place_roundto(int places)
+{
+  if (! quantity)
+    throw_(amount_error, _("Cannot round an uninitialized amount"));
+    double x=ceil(mpq_get_d(MP(quantity))*pow(10, places) - 0.49999999) / pow(10, places);
+    mpq_set_d(MP(quantity), x);
 }
 
 void amount_t::in_place_unround()
@@ -720,6 +744,16 @@ void amount_t::in_place_unreduce()
   }
 
   if (shifted) {
+    if ("h" == comm->symbol() && commodity_t::time_colon_by_default) {
+      amount_t floored = tmp.floored();
+      amount_t precision = tmp - floored;
+      if (precision < 0.0) {
+        precision += 1.0;
+        floored -= 1.0;
+      }
+      tmp = floored + (precision * (comm->smaller()->number() / 100.0));
+    }
+
     *this      = tmp;
     commodity_ = comm;
   }
@@ -1073,6 +1107,9 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
   bool decimal_comma_style
     = (commodity_t::decimal_comma_by_default ||
        commodity().has_flags(COMMODITY_STYLE_DECIMAL_COMMA));
+  bool time_colon_style
+    = (commodity_t::time_colon_by_default ||
+       commodity().has_flags(COMMODITY_STYLE_TIME_COLON));
 
   new_quantity->prec = 0;
 
@@ -1283,13 +1320,11 @@ bool amount_t::valid() const
   return true;
 }
 
-void put_amount(property_tree::ptree& pt, const amount_t& amt,
-                bool wrap, bool commodity_details)
+void put_amount(property_tree::ptree& st, const amount_t& amt,
+                bool commodity_details)
 {
-  property_tree::ptree& st(wrap ? pt.put("amount", "") : pt);
-
   if (amt.has_commodity())
-    put_commodity(st, amt.commodity(), commodity_details);
+    put_commodity(st.put("commodity", ""), amt.commodity(), commodity_details);
 
   st.put("quantity", amt.quantity_string());
 }

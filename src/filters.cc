@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -530,9 +530,11 @@ bool display_filter_posts::output_rounding(post_t& post)
   }
 
   // Allow the posting to be displayed if:
-  //  1. It's display_amount would display as non-zero
-  //  2. The --empty option was specified
-  //  3. The account of the posting is <Revalued>
+  //  1. Its display_amount would display as non-zero, or
+  //  2. The --empty option was specified, or
+  //  3. a) The account of the posting is <Revalued>, and
+  //     b) the revalued option is specified, and
+  //     c) the --no-rounding option is not specified.
 
   if (post.account == revalued_account) {
     if (show_rounding)
@@ -981,7 +983,8 @@ void interval_posts::flush()
                    sort_posts_by_date());
 
   // Determine the beginning interval by using the earliest post
-  if (! interval.find_period(all_posts.front()->date()))
+  if (all_posts.front() &&
+      ! interval.find_period(all_posts.front()->date()))
     throw_(std::logic_error, _("Failed to find period for interval report"));
 
   // Walk the interval forward reporting all posts within each one

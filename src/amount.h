@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -346,6 +346,13 @@ public:
   }
   void in_place_round();
 
+  amount_t roundto(int places) const {
+    amount_t temp(*this);
+    temp.in_place_round();
+    return temp;
+  }
+  void in_place_roundto(int places);
+
   /** Yields an amount which has lost all of its extra precision, beyond what
       the display precision of the commodity would have printed. */
   amount_t truncated() const {
@@ -363,6 +370,15 @@ public:
     return temp;
   }
   void in_place_floor();
+
+  /** Yields an amount which has lost all of its extra precision, beyond what
+      the display precision of the commodity would have printed. */
+  amount_t ceilinged() const {
+    amount_t temp(*this);
+    temp.in_place_ceiling();
+    return temp;
+  }
+  void in_place_ceiling();
 
   /** Yields an amount whose display precision is never truncated, even
       though its commodity normally displays only rounded values. */
@@ -777,7 +793,7 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
 }
 
 void put_amount(property_tree::ptree& pt, const amount_t& amt,
-                bool wrap = true, bool commodity_details = false);
+                bool commodity_details = false);
 
 } // namespace ledger
 

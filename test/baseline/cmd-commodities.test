@@ -15,10 +15,10 @@
     Income:Rewards
 
 test commodities
-GBP
-AAA
 "AA2"
 "M&M"
+AAA
+GBP
 end test
 
 test commodities Assets:Rewards

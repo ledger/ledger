@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -380,7 +380,9 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
     break;
 
   case 'd':
-    if (fn_name == "depth")
+    if (fn_name == "date")
+      return WRAP_FUNCTOR(get_wrapper<&get_latest>);
+    else if (fn_name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_depth>);
     else if (fn_name == "depth_spacer")
       return WRAP_FUNCTOR(get_wrapper<&get_depth_spacer>);
@@ -690,12 +692,10 @@ void account_t::xdata_t::details_t::update(post_t& post,
   }
 }
 
-void put_account(property_tree::ptree& pt, const account_t& acct,
+void put_account(property_tree::ptree& st, const account_t& acct,
                  function<bool(const account_t&)> pred)
 {
   if (pred(acct)) {
-    property_tree::ptree& st(pt.put("account", ""));
-
     std::ostringstream buf;
     buf.width(sizeof(unsigned long) * 2);
     buf.fill('0');
@@ -707,18 +707,15 @@ void put_account(property_tree::ptree& pt, const account_t& acct,
     st.put("fullname", acct.fullname());
 
     value_t total = acct.amount();
-    if (! total.is_null()) {
-      property_tree::ptree& t(st.put("account-amount", ""));
-      put_value(t, total);
-    }
+    if (! total.is_null())
+      put_value(st.put("account-amount", ""), total);
+
     total = acct.total();
-    if (! total.is_null()) {
-      property_tree::ptree& t(st.put("account-total", ""));
-      put_value(t, total);
-    }
+    if (! total.is_null())
+      put_value(st.put("account-total", ""), total);
 
     foreach (const accounts_map::value_type& pair, acct.accounts)
-      put_account(st, *pair.second, pred);
+      put_account(st.add("account", ""), *pair.second, pred);
   }
 }
 

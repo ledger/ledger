@@ -1,0 +1,15 @@
+2012/08/22 Payment
+    Accrued                       €208.00  {=$1.3109}     @ $1.2799
+    Expenses                        €4.16  {=$1.2798689}  @ $1.2799
+    Assets                       $-271.54
+    Income:Currency Conversion     $-6.45
+
+test bal -X $
+             $272.67  Accrued
+            $-271.54  Assets
+               $6.45  Equity:Capital Gains
+               $5.32  Expenses
+              $-6.45  Income:Currency Conversion
+--------------------
+               $6.45
+end test

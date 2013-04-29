@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -75,8 +75,7 @@ protected:
 
 public:
   enum format_t {
-    FORMAT_XML,
-    FORMAT_JSON
+    FORMAT_XML
   } format;
 
   format_ptree(report_t& _report, format_t _format = FORMAT_XML)

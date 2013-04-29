@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -127,6 +127,10 @@ public:
 commodity_history_t::commodity_history_t()
 {
   p_impl.reset(new commodity_history_impl_t);
+}
+
+commodity_history_t::~commodity_history_t()
+{
 }
 
 void commodity_history_t::add_commodity(commodity_t& comm)

@@ -17,14 +17,14 @@
     Assets:Cash              -30.00 EUR
 
 test accounts --count
-2 Expenses:Phone
 4 Assets:Cash
+2 Expenses:Phone
 2 Expenses:Rent
 end test
 
 test commodities --count
-4 GBP
 4 EUR
+4 GBP
 end test
 
 test payees --count
@@ -33,8 +33,8 @@ test payees --count
 end test
 
 test commodities :rent --count
-1 GBP
 1 EUR
+1 GBP
 end test
 
 test payees tag bnb --count

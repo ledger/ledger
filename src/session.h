@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -100,6 +100,7 @@ public:
     HANDLER(day_break).report(out);
     HANDLER(download).report(out);
     HANDLER(decimal_comma).report(out);
+    HANDLER(time_colon).report(out);
     HANDLER(file_).report(out);
     HANDLER(input_date_format_).report(out);
     HANDLER(explicit).report(out);
@@ -128,6 +129,10 @@ public:
 
   OPTION_(session_t, decimal_comma, DO() {
       commodity_t::decimal_comma_by_default = true;
+    });
+
+  OPTION_(session_t, time_colon, DO() {
+      commodity_t::time_colon_by_default = true;
     });
 
   OPTION__

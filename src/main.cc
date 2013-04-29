@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -59,6 +59,7 @@ int main(int argc, char * argv[], char * envp[])
   //   --debug CATEGORY    ; turns on debug logging
   //   --trace LEVEL       ; turns on trace logging
   //   --memory            ; turns on memory usage tracing
+  //   --init-file         ; directs ledger to use a different init file
   handle_debug_options(argc, argv);
 #if VERIFY_ON
   IF_VERIFY() initialize_memory_tracing();
@@ -213,7 +214,8 @@ int main(int argc, char * argv[], char * envp[])
   } else
 #endif
   {
-    global_scope->quick_close();
+    if (global_scope)
+      global_scope->quick_close();
     INFO("Ledger ended");       // let global_scope leak!
   }
 

@@ -1,0 +1,90 @@
+# Environment for ledger expenses
+
+[ $(whoami) == "adamsrl" ] \
+    && export LEDGER_HOME="/home/adamsrl/AdamsInfoServ/BusinessDocuments/Ledger/AdamsRussell" \
+    || export LEDGER_HOME="/home/Heather/AdamsRussell"
+
+[ $(hostname) == "cardamom" ] \
+    && export LEDGER_BIN="${LEDGER_HOME}/ledger" \
+    || export LEDGER_BIN="${LEDGER_HOME}/ledger.exe"
+
+[ $(whoami) == "andersonll" ] \
+    && export LEDGER_HOME="/home/andersonll/AdamsInfoServ/Expenses" \
+	&& export LEDGER_BIN="${LEDGER_HOME}/ledger"
+
+# Common reports
+
+alias ledger='${LEDGER_BIN} -f "${LEDGER_HOME}/.ledger" -VE '
+alias ERSummary='ledger --pivot ER bal | egrep "AIS(ER|IN)[0-9]+|Unassigned"'
+
+function ERTxns() {
+    [ -z "$1" ] && echo "Please specify an ER number (ie: AISER0042)." && return
+
+    ledger reg "%ER=${1}"
+}
+
+function ERCategorySummary() {
+    [ -z "$1" ] && echo "Please specify an ER number (ie: AISER0042)." && return
+
+    ledger bal --pivot CATEGORY "%ER=${1}"
+}
+
+function ERMealSummary() {
+    [ -z "$1" ] && echo "Please specify an ER number (ie: AISER0042)." && return
+
+    ledger reg "%ER=${1}" and %CATEGORY=Meals -D
+}
+
+function ERMeals() {
+    [ -z "$1" ] && echo "Please specify an ER number (ie: AISER0042)." && return
+
+    ledger reg "%ER=${1}" and %CATEGORY=Meals
+}
+
+function ERUncleared() {
+    [ -z "$1" ] && echo "Please specify an ER number (ie: AISER0042)." && return
+
+    ledger reg "%ER=${1}" -U
+}
+
+function ERMissingReceipts() {
+    [ -z "$1" ] && echo "Please specify an ER number (ie: AISER0042)." && return
+
+    ledger reg "%ER=${1}" and not %RECEIPT
+}
+
+function ERVerify() {
+    [ -z "$1" ] && echo "Please specify an ER number (ie: AISER0042)." && return
+
+    echo "========== Uncleared txns below =========="
+    ERUncleared "$1"
+    echo "========== Missing receipts below (miles and stubs ok) =========="
+    ERMissingReceipts "$1"
+    echo "========== Category Summary (airline? mileage? car? hotel? =========="
+    ERCategorySummary "$1"
+    echo "========== Meal summary (<\$50 / day unless otherwise specified) =========="
+    ERMealSummary "$1"
+    echo "========== Account Verification (Internal vs Project ER should be ONE type) =========="
+    echo $1 | grep AISIN >/dev/null 2>&1 \
+         || { ledger reg "%ER=${1}" | grep Dest:Internal ; } \
+         && { ledger reg "%ER=${1}" | grep Dest:Projects ; }
+    echo "========== Project Verification (only one project code should be listed) =========="
+    ledger print "%ER=${1}" | grep PROJECT | sort -u
+    echo "========== Receipts missing =========="
+    ledger print "%ER=${1}" | grep -h '; RECEIPT: ' \
+	    | sed 's,\W*; RECEIPT: ,,g' \
+	    | tr , '\n' \
+	    | sort -u \
+	    | while read X ; do
+	    [ -f "${LEDGER_HOME}/${X}" ] \
+		    || echo XX $X
+    done
+}
+
+function ERListing() {
+    ledger reg Stub --register-format="%(tag('ER')) %(tag('NOTE'))\n" | sort -u
+}
+
+function ERQueue() {
+    ledger reg %ER=Unassigned --prepend-format="%(filename) "
+}

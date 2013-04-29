@@ -5,9 +5,12 @@ To build this code after doing a Git clone, run:
 
     $ ./acprep update
 
-If you try to configure and build on your own, you are almost certainly going
-to run into problems.  In future, you can run this command again and again,
-and it will keep you updated to the very latest version.
+If anything goes wrong, see "COMMON CONFIGURE/BUILD PROBLEMS" below.
+
+If you try to configure and build without running acprep first, you are
+almost certainly going to run into problems.  In future, you can run
+'acprep update' again and again, and it will keep you updated to the
+very latest version.
 
 I further recommend building both debug and optimized versions of Ledger, in a
 subdirectory of your source tree named 'build' (which acprep will manage for
@@ -17,12 +20,17 @@ you, you simply need to create it):
     $ ./acprep opt make
     $ ./acprep debug make
 
-Now install the optimized version, but know that you have 'build/debug/ledger'
-available for testing and more useful bug reports.
+Now install the optimized version:
+
+    $ cd build/ledger/opt
+    $ sudo make install
+
+but know that you have 'build/ledger/debug' available for testing and
+for more useful bug reports.
 
 ===============================================================================
-
-                   IF YOU HAVE CONFIGURE OR BUILD PROBLEMS
+                       COMMON CONFIGURE/BUILD PROBLEMS
+===============================================================================
 
 To build and install Ledger requires several dependencies on various
 platforms.  You can install these dependencies very simply for most of them
@@ -41,13 +49,37 @@ With the contents of config.log, and the output from acprep --debug update,
 it's usually fairly obvious where things have gone astray.
 
 ===============================================================================
-
                                     F.A.Q.
+===============================================================================
+
 
  - Q: The build fails saying it can't find utf8.h
 
    A: You didn't run ./acprep update.
 
+   ----------------------------------------------------------------------
+
+ - Q: './acprep update' gives errors or './acprep dependencies' fails
+
+   A: You're probably missing some dependency libraries.  If you tried
+      './acprep dependencies' already and that didn't solve the problem,
+      then you may need to install dependencies by hand.  On a Debian
+      GNU/Linux system (or Debian-based system such as Ubuntu), something
+      like this should work (as root):
+
+      # aptitude update
+      # for name in                                                   \
+            cmake libboost-dev libboost-date-time-dev libboost-doc    \
+            libboost-dbg libboost-filesystem-dev libboost-graph-dev   \
+            libboost-iostreams-dev libboost-program-options-dev       \
+            libboost-python-dev libboost-regex-dev                    \
+            libboost-serialization-dev libboost-signals-dev           \
+            libboost-test-dev libboost-thread-dev libboost-wave-dev   \
+            libmpfr-dev libmpfr-dbg libmpfr-doc;                      \
+        do                                                            \
+            aptitude install ${name};                                 \
+        done
+    
    ----------------------------------------------------------------------
 
  - Q: Configure fails saying it can't find boost_regex
@@ -68,7 +100,10 @@ it's usually fairly obvious where things have gone astray.
  - Q: Configure fails saying it can't find MPFR
 
    A: You need MPFR version 2.4.0 or higher.  This version does not come with
-      most Debian distributions, so you will need to build it.
+      most Debian distributions, so you will need to build it.  The
+      relevant packages are 'libmpfr-dev' and 'libmpfr-dbg'.  See also
+      the question above about what to do if './acprep update' gives
+      errors or './acprep dependencies' fails.
 
    ----------------------------------------------------------------------
 
@@ -82,16 +117,18 @@ it's usually fairly obvious where things have gone astray.
 
  - Q: Something else fails, or Ledger crashes on startup
 
-   A: This, I am most interested in hearing about.  Please e-mail me a copy of
-      config.log and your build log to <johnw@newartisans.com>.  Also, if
-      Ledger is crashing, try running it under gdb like so:
+   A: This, I am most interested in hearing about.  Please file a bug
+      at the Ledger Bugzilla, http://bugs.ledger-cli.org/.  The more
+      details you can provide, the better.  Also, if Ledger is crashing,
+      try running it under gdb like so:
 
         $ gdb ledger
         (gdb) run <ARGS TO LEDGER>
         ... runs till crash ...
         (gdb) bt
 
-      Send me that backtrace output, and the output from "ledger --version".
+      Put that backtrace output, and the output from "ledger
+      --version" in the bug report.
 
    ----------------------------------------------------------------------
 
@@ -114,3 +151,42 @@ it's usually fairly obvious where things have gone astray.
 
    A: This can happen for the same reason as above.  It can also happen if you
       have ICU support enabled.  This is a bug I'm still trying to track down.
+
+   ----------------------------------------------------------------------
+
+ - Q: My distribution has versions of Boost and/or CMake that are too old for
+      Ledger.  How do I build my own Boost and/or CMake binaries that will
+      work properly with Ledger?  Thereafter, how do I configure Ledger
+      properly to use those newly built verisons of Boost and/or CMake?
+
+   A: Here's commands that one user used to make this work, for Boost 1.51.0
+      on Debian GNU/Linux 6.0.x (aka Debian squeeze).  It's likely to work ok
+      for other versions of Boost as well.  YMMV on other distributions and/or
+      other Debian distribution versions, though.
+
+      # Preparing and building Boost 1.51.0
+
+      $ cd /somewhere/you/want/to/build/boost
+      $ wget -N http://iweb.dl.sourceforge.net/project/boost/boost/1.51.0/boost_1_51_0.tar.bz2
+      $ tar xvf boost_1_51_0.tar.bz2
+      $ cd boost_1_51_0
+      $ ./bootstrap.sh
+      $ ./b2 --build-type=complete --layout=tagged --prefix=/where/you/want/boost/installed
+      $ ./b2 --build-type=complete --layout=tagged --prefix=/where/you/want/boost/installed install
+
+      # Preparing and building CMake 2.8.8
+
+      $ cd /somewhere/you/want/to/build/cmake
+      $ wget -N http://www.cmake.org/files/v2.8/cmake-2.8.8.tar.gz
+      $ tar xvf cmake-2.8.8.tar.gz
+      $ cd cmake-2.8.8
+      $ ./configure --prefix=/where/you/want/cmake/installed/
+      $ make
+      $ make install
+
+      # Building Ledger using the CMake and/or Boost as installed above
+
+      $ cd /path/to/ledger/sources
+      $ env PATH=/where/you/want/cmake/installed/bin:$PATH  BOOST_ROOT=/where/you/want/boost/installed ./acprep --prefix=/where/you/want/ledger/installed --debug --python config
+      $ env PATH=/where/you/want/cmake/installed/bin:$PATH  BOOST_ROOT=/where/you/want/boost/installed ./acprep --prefix=/where/you/want/ledger/installed --debug --python make
+      $ env PATH=/where/you/want/cmake/installed/bin:$PATH  BOOST_ROOT=/where/you/want/boost/installed ./acprep --prefix=/where/you/want/ledger/installed --debug --python install

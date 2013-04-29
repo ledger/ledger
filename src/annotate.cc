@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -216,19 +216,13 @@ void annotation_t::print(std::ostream& out, bool keep_base,
     out << " ((" << *value_expr << "))";
 }
 
-void put_annotation(property_tree::ptree& pt, const annotation_t& details)
+void put_annotation(property_tree::ptree& st, const annotation_t& details)
 {
-  property_tree::ptree& st(pt.put("annotation", ""));
+  if (details.price)
+    put_amount(st.put("price", ""), *details.price);
 
-  if (details.price) {
-    property_tree::ptree& t(st.put("price", ""));
-    put_amount(t, *details.price, false);
-  }
-
-  if (details.date) {
-    property_tree::ptree& t(st.put("date", ""));
-    put_date(t, *details.date, false);
-  }
+  if (details.date)
+    put_date(st.put("date", ""), *details.date);
 
   if (details.tag)
     st.put("tag", *details.tag);

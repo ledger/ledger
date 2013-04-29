@@ -1,43 +1,43 @@
-test -f src/amount.h reg -> 20
+test -f test/garbage-input.dat reg -> 20
 __ERROR__
-While parsing file "src/amount.h", line 2: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 2: 
 Error: Unexpected whitespace at beginning of line
-While parsing file "src/amount.h", line 33: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 33: 
 Error: Unexpected whitespace at beginning of line
-While parsing file "src/amount.h", line 37: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 37: 
 Error: Unexpected whitespace at beginning of line
-While parsing file "src/amount.h", line 66: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 66: 
 Error: No quantity specified for amount
-While parsing file "src/amount.h", line 69: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 69: 
 Error: Unexpected whitespace at beginning of line
-While parsing file "src/amount.h", line 83: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 83: 
 Error: Unexpected whitespace at beginning of line
-While parsing file "src/amount.h", line 93: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 93: 
 Error: Unexpected whitespace at beginning of line
-While parsing file "src/amount.h", line 99: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 99: 
 Error: Unexpected whitespace at beginning of line
-While parsing file "src/amount.h", line 121: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 121: 
 Error: Unexpected whitespace at beginning of line
-While parsing file "src/amount.h", line 132: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 132: 
 Error: Unexpected whitespace at beginning of line
-While parsing file "src/amount.h", line 702: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 711: 
 Error: Unexpected whitespace at beginning of line
-While parsing file "src/amount.h", line 732: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 741: 
 Error: Unexpected whitespace at beginning of line
-While parsing file "src/amount.h", line 740: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 749: 
 Error: Unexpected whitespace at beginning of line
-While parsing file "src/amount.h", line 743: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 752: 
 Error: Invalid date/time: line amount_t amoun
-While parsing file "src/amount.h", line 749: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 758: 
 Error: Invalid date/time: line string amount_
-While parsing file "src/amount.h", line 755: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 764: 
 Error: Invalid date/time: line string amount_
-While parsing file "src/amount.h", line 761: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 770: 
 Error: Invalid date/time: line string amount_
-While parsing file "src/amount.h", line 767: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 776: 
 Error: Invalid date/time: line std::ostream& 
-While parsing file "src/amount.h", line 774: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 783: 
 Error: Invalid date/time: line std::istream& 
-While parsing file "src/amount.h", line 780: 
+While parsing file "$sourcepath/test/garbage-input.dat", line 789: 
 Error: Unexpected whitespace at beginning of line
 end test

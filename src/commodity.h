@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -107,6 +107,7 @@ protected:
 #define COMMODITY_SAW_ANNOTATED          0x200
 #define COMMODITY_SAW_ANN_PRICE_FLOAT    0x400
 #define COMMODITY_SAW_ANN_PRICE_FIXATED  0x800
+#define COMMODITY_STYLE_TIME_COLON       0x1000
 
     string                symbol;
     optional<std::size_t> graph_index;
@@ -176,6 +177,7 @@ protected:
 
 public:
   static bool decimal_comma_by_default;
+  static bool time_colon_by_default;
 
   virtual ~commodity_t() {
     TRACE_DTOR(commodity_t);
@@ -348,6 +350,13 @@ inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
 
 void put_commodity(property_tree::ptree& pt, const commodity_t& comm,
                    bool commodity_details = false);
+
+//simple struct to allow std::map to compare commodities names
+struct commodity_compare {
+  bool operator() (const commodity_t* lhs, const commodity_t* rhs){
+    return (lhs->symbol().compare(rhs->symbol()) < 0);
+  }
+};
 
 } // namespace ledger
 

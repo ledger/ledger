@@ -1109,6 +1109,60 @@ BOOST_AUTO_TEST_CASE(testCommodityAbs)
   BOOST_CHECK(x2.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testFloor)
+{
+  amount_t x0;
+  amount_t x1("123.123");
+  amount_t x2("-123.123");
+
+  BOOST_CHECK_THROW(x0.floored(), amount_error);
+  BOOST_CHECK_EQUAL(amount_t(123L), x1.floored());
+  BOOST_CHECK_EQUAL(amount_t(-124L), x2.floored());
+
+  BOOST_CHECK(x0.valid());
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testCommodityFloor)
+{
+  amount_t x1("$1234.56");
+  amount_t x2("$-1234.56");
+
+  BOOST_CHECK_EQUAL(amount_t("$1234"), x1.floored());
+  BOOST_CHECK_EQUAL(amount_t("$-1235"), x2.floored());
+
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testCeiling)
+{
+  amount_t x0;
+  amount_t x1("123.123");
+  amount_t x2("-123.123");
+
+  BOOST_CHECK_THROW(x0.ceilinged(), amount_error);
+  BOOST_CHECK_EQUAL(amount_t(124L), x1.ceilinged());
+  BOOST_CHECK_EQUAL(amount_t(-123L), x2.ceilinged());
+
+  BOOST_CHECK(x0.valid());
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testCommodityCeiling)
+{
+  amount_t x1("$1234.56");
+  amount_t x2("$-1234.56");
+
+  BOOST_CHECK_EQUAL(amount_t("$1235"), x1.ceilinged());
+  BOOST_CHECK_EQUAL(amount_t("$-1234"), x2.ceilinged());
+
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+}
+
 #ifndef NOT_FOR_PYTHON
 #if 0
 BOOST_AUTO_TEST_CASE(testReduction)

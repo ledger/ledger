@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -696,10 +696,8 @@ void extend_post(post_t& post, journal_t& journal)
   }
 }
 
-void put_post(property_tree::ptree& pt, const post_t& post)
+void put_post(property_tree::ptree& st, const post_t& post)
 {
-  property_tree::ptree& st(pt.put("posting", ""));
-
   if (post.state() == item_t::CLEARED)
     st.put("<xmlattr>.state", "cleared");
   else if (post.state() == item_t::PENDING)
@@ -710,14 +708,10 @@ void put_post(property_tree::ptree& pt, const post_t& post)
   if (post.has_flags(ITEM_GENERATED))
     st.put("<xmlattr>.generated", "true");
 
-  if (post._date) {
-    property_tree::ptree& t(st.put("date", ""));
-    put_date(t, *post._date, false);
-  }
-  if (post._date_aux) {
-    property_tree::ptree& t(st.put("aux-date", ""));
-    put_date(t, *post._date_aux, false);
-  }
+  if (post._date)
+    put_date(st.put("date", ""), *post._date);
+  if (post._date_aux)
+    put_date(st.put("aux-date", ""), *post._date_aux);
 
   if (post.account) {
     property_tree::ptree& t(st.put("account", ""));
@@ -736,34 +730,27 @@ void put_post(property_tree::ptree& pt, const post_t& post)
     if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
       put_value(t, post.xdata().compound_value);
     else
-      put_amount(t, post.amount);
+      put_amount(t.put("amount", ""), post.amount);
   }
 
-  if (post.cost) {
-    property_tree::ptree& t(st.put("cost", ""));
-    put_amount(t, *post.cost, false);
-  }
+  if (post.cost)
+    put_amount(st.put("cost", ""), *post.cost);
 
   if (post.assigned_amount) {
-    if (post.has_flags(POST_CALCULATED)) {
-      property_tree::ptree& t(st.put("balance-assertion", ""));
-      put_amount(t, *post.assigned_amount, false);
-    } else {
-      property_tree::ptree& t(st.put("balance-assignment", ""));
-      put_amount(t, *post.assigned_amount, false);
-    }
+    if (post.has_flags(POST_CALCULATED))
+      put_amount(st.put("balance-assertion", ""), *post.assigned_amount);
+    else
+      put_amount(st.put("balance-assignment", ""), *post.assigned_amount);
   }
 
   if (post.note)
     st.put("note", *post.note);
 
   if (post.metadata)
-    put_metadata(st,  *post.metadata);
+    put_metadata(st.put("metadata", ""),  *post.metadata);
 
-  if (post.xdata_ && ! post.xdata_->total.is_null()) {
-    property_tree::ptree& t(st.put("total", ""));
-    put_value(t, post.xdata_->total);
-  }
+  if (post.xdata_ && ! post.xdata_->total.is_null())
+    put_value(st.put("total", ""), post.xdata_->total);
 }
 
 } // namespace ledger

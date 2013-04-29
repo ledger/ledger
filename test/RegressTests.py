@@ -98,8 +98,10 @@ class RegressFile(object):
 
     def run_test(self, test):
         use_stdin = False
-        if test['command'].find("-f - ") != -1:
-            use_stdin = True
+        if test['command'].find("-f ") != -1:
+            test['command'] = '$ledger ' + test['command']
+            if re.search("-f (-|/dev/stdin)(\s|$)", test['command']):
+                use_stdin = True
         else:
             test['command'] = (('$ledger -f "%s" ' % 
                                 os.path.abspath(self.filename)) +

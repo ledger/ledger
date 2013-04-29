@@ -10,7 +10,7 @@ few alternatives.
 I know, you just want to build and play.  If you have all the dependencies
 installed (see below), then simply do this:
 
-    git clone git://github.com/jwiegley/ledger.git
+    git clone git://github.com/ledger/ledger.git
     cd ledger && ./acprep update  # Update to the latest, configure, make
 
 Now try your first ledger command:
@@ -95,12 +95,12 @@ You can even just install the current Ledger **RELEASE** directly:
 ### Ubuntu
 
 If you're going to build on Ubuntu, `sudo apt-get install ...` the
-following packages (current as of Ubuntu Hardy):
+following packages (current as of Ubuntu 12.04):
 
     sudo apt-get install build-essential cmake zlib1g-dev libbz2-dev
-         python-dev bjam cvs gettext libgmp3-dev libmpfr-dev libboost1.35-dev
-         libboost-regex1.35-dev libboost-date-time1.35-dev
-         libboost-filesystem1.35-dev libboost-python1.35-dev texinfo lcov
+         python-dev gettext libgmp3-dev libmpfr-dev libboost-dev
+         libboost-regex-dev libboost-date-time-dev
+         libboost-filesystem-dev libboost-python-dev texinfo lcov
          sloccount
 
 Or, for Ubuntu Karmic:
@@ -122,7 +122,7 @@ command:
     sudo apt-get install build-essential cmake autopoint texinfo python-dev
          zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev
          libboost-date-time1.49-dev libboost-filesystem1.49-dev
-         libboost-graph49-dev libboost-iostreams1.49-dev
+         libboost-graph1.49-dev libboost-iostreams1.49-dev
          libboost-python1.49-dev libboost-regex1.49-dev libboost-test1.49-dev
 
 ## Building
@@ -153,11 +153,10 @@ Now that you're up and running, here are a few resources to keep in mind:
  - [Home page](http://ledger-cli.org)
  - [IRC channel](irc://irc.freenode.net/ledger)
  - [Mailing List / Forum](http://groups.google.com/group/ledger-cli)
- - [GitHub project page](http://github.com/jwiegley/ledger)
- - [Buildbot status](http://www.newartisans.com:9090)
+ - [GitHub project page](http://github.com/ledger/ledger)
  - [Ohloh code analysis](http://www.ohloh.net/projects/ledger)
 
 If you have ideas you'd like to share, the best way is either to e-mail me a
 patch (I prefer attachments over pasted text), or to get an account on GitHub.
-Once you do, fork the [Ledger project](http://github.com/jwiegley/ledger),
+Once you do, fork the [Ledger project](http://github.com/ledger/ledger),
 hack as much as you like, then send me a pull request via GitHub.

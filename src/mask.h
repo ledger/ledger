@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -151,7 +151,7 @@ inline std::ostream& operator<<(std::ostream& out, const mask_t& mask) {
 }
 
 inline void put_mask(property_tree::ptree& pt, const mask_t& mask) {
-  pt.put("mask", mask.str());
+  pt.put_value(mask.str());
 }
 
 } // namespace ledger

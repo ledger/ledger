@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2012, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -46,6 +46,8 @@ namespace ledger {
 class session_t;
 class report_t;
 
+extern std::string       _init_file;
+
 class global_scope_t : public noncopyable, public scope_t
 {
   shared_ptr<session_t> session_ptr;
@@ -65,6 +67,7 @@ public:
     return _("global scope");
   }
 
+  void           parse_init(path init_file);
   void           read_init();
   void           read_environment_settings(char * envp[]);
   strings_list   read_command_arguments(scope_t& scope, strings_list args);
@@ -124,7 +127,7 @@ public:
       out << '-' << Ledger_VERSION_DATE;
     out << _(", the command-line accounting tool");
     out <<
-      _("\n\nCopyright (c) 2003-2012, John Wiegley.  All rights reserved.\n\n\
+      _("\n\nCopyright (c) 2003-2013, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.");
     out << std::endl;
@@ -151,10 +154,9 @@ See LICENSE file included with the distribution for details and disclaimer.");
   OPTION__
   (global_scope_t, init_file_, // -i
    CTOR(global_scope_t, init_file_) {
-     if (const char * home_var = std::getenv("HOME"))
-       on(none, (path(home_var) / ".ledgerrc").string());
-     else
-       on(none, path("./.ledgerrc").string());
+    if (!_init_file.empty())
+      // _init_file is filled during handle_debug_options
+      on(none, _init_file);
    });
 
   OPTION(global_scope_t, options);
