@@ -7379,14 +7379,15 @@ Return value rounded to n digits.  Does not affect formatting.
 @section Format String Basics
 @findex --format @var{FORMAT_STRING}
 @findex -F @var{FORMAT_STRING}
-@findex --balance-report
-@findex --cleared-report
-@findex --register-report
-@findex --csv-report
-@findex --plot-amount-report
-@findex --plot-total-report
-@findex --pricedb-report
-@findex --prices-report
+@findex --balance-format
+@findex --budget-format
+@findex --cleared-format
+@findex --csv-format
+@findex --plot-amount-format
+@findex --plot-total-format
+@findex --pricedb-format
+@findex --prices-format
+@findex --register-format
 
 Format strings may be used to change the output format of reports.
 They are specified by passing a formatting string to the @code{-F
@@ -7400,14 +7401,15 @@ file and will allow you to run ledger reports from the command line
 without having to enter a new format for each command.
 
 @itemize
-@item @code{--balance-report}
-@item @code{--cleared-report}
-@item @code{--register-report}
-@item @code{--csv-report}
-@item @code{--plot-amount-report}
-@item @code{--plot-total-report}
-@item @code{--pricedb-report}
-@item @code{--prices-report}
+@item @code{--balance-format}
+@item @code{--budget-format}
+@item @code{--cleared-format}
+@item @code{--csv-format}
+@item @code{--plot-amount-format}
+@item @code{--plot-total-format}
+@item @code{--pricedb-format}
+@item @code{--prices-format}
+@item @code{--register-format}
 @end itemize
 
 @node Format String Structure, Format Expressions, Basics, Format Strings
