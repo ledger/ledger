@@ -1,6 +1,11 @@
 \input texinfo  @c -*-texinfo-*-
+
 @setfilename ledger-mode.info
 @settitle Ledger: Command-Line Accounting
+
+@c Before release, run C-u C-c C-u C-a (texinfo-all-menus-update with
+@c a prefix arg).  This updates the node pointers, which texinfmt.el
+@c needs.
 
 @dircategory Major Modes
 @copying
@@ -10,28 +15,28 @@ Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
 met:
 
-- Redistributions of source code must retain the above copyright
-  notice, this list of conditions and the following disclaimer.
+- Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
 
 - Redistributions in binary form must reproduce the above copyright
   notice, this list of conditions and the following disclaimer in the
   documentation and/or other materials provided with the distribution.
 
-- Neither the name of New Artisans LLC nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
+- Neither the name of New Artisans LLC nor the names of its contributors
+  may be used to endorse or promote products derived from this software
+  without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS
+IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
 OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @end copying
 
 @documentencoding UTF-8
@@ -39,7 +44,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @iftex
 @finalout
 @end iftex
-
 
 @titlepage
 @title Ledger Mode
@@ -54,40 +58,44 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @contents
 
 @ifnottex
+
 @node Top, Copying, (dir), (dir)
 @top Overview
+
 Ledger is a command line accounting tool that provides double-entry
 accounting based on a text journal.  It provides no bells or whistles,
-and returns the user to the days before user interfaces were even a
-1twinkling in their father's CRT.
+and returns the user to the days before user interfaces were even
+a 1twinkling in their father's CRT.
 
 Ledger Mode assists you in maintaining input files for Ledger, running
 reports and much more...
-@c @insertcopying
+
 @end ifnottex
 
 @menu
-* Copying::                     
-* Introduction to Ledger Mode::  
-* The Ledger Buffer::           
-* The Reconcile Buffer::        
-* The Report Buffer::           
-* Customizing Ledger-mode::     
-* Generating Ledger Regression Tests::  
-* Embedding Example results in Ledger Documentation::  
-* Hacking Ledger-mode::         
+* Copying::
+* Introduction to Ledger Mode::
+* The Ledger Buffer::
+* The Reconcile Buffer::
+* The Report Buffer::
+* Customizing Ledger-mode::
+* Generating Ledger Regression Tests::
+* Embedding Example results in Ledger Documentation::
+* Hacking Ledger-mode::
 @end menu
 
 @node Copying, Introduction to Ledger Mode, Top, Top
 @chapter Copying
+
 @insertcopying
 
 @node Introduction to Ledger Mode, The Ledger Buffer, Copying, Top
 @chapter Introduction to Ledger Mode
+
 @menu
-* Quick Installation::          
-* Menus::                       
-* Quick Demo::                  
+* Quick Installation::
+* Menus::
+* Quick Demo::
 @end menu
 
 @node Quick Installation, Menus, Introduction to Ledger Mode, Introduction to Ledger Mode
@@ -95,15 +103,15 @@ reports and much more...
 
 The Emacs lisp source for Ledger-mode is included with the source
 distribution of Ledger.  It is entirely included in the @file{lisp}
-subdirectory. To use ledger mode include the following in your Emacs
-initialization file (@file{~/.emacs}, @file{~/.emacs.d/init.el},
-@file{~/.Aquamacs/Preferences.el} 
+subdirectory. To use ledger mode, include the following in your Emacs
+initialization file (@file{~/.emacs}, @file{~/.emacs.d/init.el}, or
+@file{~/.Aquamacs/Preferences.el}
 
-@smallexample
+@lisp
 (add-to-list 'load-path (expand-file-name "/path/to/ledger/source/lisp/"))
 (load "ldg-new")
 (add-to-list 'auto-mode-alist '("\\.ledger$" . ledger-mode))
-@end smallexample
+@end lisp
 
 This sets up Emacs to automatically recognize files that end with
 @file{.ledger} and start Ledger mode.  Nothing else should be required
@@ -125,10 +133,10 @@ highlighted.  At this point you could manually edit transactions and run
 Ledger from a convenient command line.
 
 @menu
-* Quick Add::                   
-* Reconciliation::              
-* Reports::                     
-* Narrowing::                   
+* Quick Add::
+* Reconciliation::
+* Reports::
+* Narrowing::
 @end menu
 
 @node Quick Add, Reconciliation, Quick Demo, Quick Demo
@@ -169,8 +177,8 @@ commodity, this can be easily changed in the customization
 variables. @xref{Ledger-mode Customization}.
 
 You now see a list of uncleared transactions in a buffer below the
-@file{demo.ledger} buffer.  Touching the space bar will mark a
-transaction as pending and display the current cleared (and pending)
+@file{demo.ledger} buffer.  Touching the space bar will mark
+a transaction as pending and display the current cleared (and pending)
 balance, along with the difference remaining to meet your target. Clear
 the first three transactions, and you will see the difference to target
 reach $0.  End the reconciliation by typing @code{C-c C-c}.  This saves
@@ -193,28 +201,30 @@ type @code{C-c C-c}.  Ledger mode will take you directly to that
 transaction in the @file{demo.ledger} buffer.
 
 Another built-in report is the balance report.  In the
-@file{demo.ledger} buffer, type @code{C-c C-o C-r}.  When prompted for a
-report to run, type @code{bal}, and a balance report of all accounts
+@file{demo.ledger} buffer, type @code{C-c C-o C-r}.  When prompted for
+a report to run, type @code{bal}, and a balance report of all accounts
 will be shown.
 
 @node Narrowing,  , Reports, Quick Demo
 @subsection Narrowing
 
-A ledger file can get very large.  It can be helpful to collapse the buffer
-to display only the transactions you are interested in.  Ledger-mode
-copies the @code{occur} mode functionality.  Typing @code{C-c C-f} and
-entering any regex in the mini-buffer will show only transactions that
-match the regex.  The regex can be on any field, or amount.
+A ledger file can get very large.  It can be helpful to collapse the
+buffer to display only the transactions you are interested in.
+Ledger-mode copies the @code{occur} mode functionality.  Typing
+@code{C-c C-f} and entering any regex in the mini-buffer will show only
+transactions that match the regex.  The regex can be on any field, or
+amount.
 
 @node The Ledger Buffer, The Reconcile Buffer, Introduction to Ledger Mode, Top
 @chapter The Ledger Buffer
+
 @menu
-* Adding Transactions::         
-* Editing Amounts::             
-* Marking Transactions::        
-* Deleting Transactions::       
-* Sorting Transactions::        
-* Narrowing Transactions::      
+* Adding Transactions::
+* Editing Amounts::
+* Marking Transactions::
+* Deleting Transactions::
+* Sorting Transactions::
+* Narrowing Transactions::
 @end menu
 
 @node Adding Transactions, Editing Amounts, The Ledger Buffer, The Ledger Buffer
@@ -234,11 +244,12 @@ the column specified by @code{ledger-post-amount-alignment-column},
 which defaults to 52. @xref{Ledger Post Customization Group}.
 
 @menu
-* Quick Balance Display::       
+* Quick Balance Display::
 @end menu
 
 @node Quick Balance Display,  , Adding Transactions, Adding Transactions
 @subsection Quick Balance Display
+
 You will often want to quickly check the balance of an account.  The
 easiest way it to position point on the account you are interested in,
 and type @code{C-C C-P}.  The minibuffer will ask you to verify the name
@@ -247,27 +258,29 @@ balance of the account will be displayed in the minibuffer.
 
 @node Editing Amounts, Marking Transactions, Adding Transactions, The Ledger Buffer
 @section Editing Amounts
+
 GNU Calc is a very powerful Reverse Polish Notation calculator built
 into all recent version of Emacs.  Ledger-mode makes it easy to
 calculate values for amount by integrating GNU Calc. With the point
-anywhere in the same line as a posting, typing @code{C-c C-b} will
-bring up the Calc buffer, and push the current amount for the posting
-onto the top of the Calc stack.  Perform any calculations you need to
-arrive at the final value, then type @code{y} to yank the value at the
-top of stack back into the ledger buffer.  Note: GNU Calc does not
-directly support commas as decimal separators.  Ledger mode will
-translate values from decimal-comma format to decimal-period format for
-use in Calc, but it cannot intercept the value being yanked form the
-Calc stack, so decimal-comma users will have to manually replace the
-period with a comma.
-
+anywhere in the same line as a posting, typing @code{C-c C-b} will bring
+up the Calc buffer, and push the current amount for the posting onto the
+top of the Calc stack.  Perform any calculations you need to arrive at
+the final value, then type @code{y} to yank the value at the top of
+stack back into the ledger buffer.  Note: GNU Calc does not directly
+support commas as decimal separators.  Ledger mode will translate values
+from decimal-comma format to decimal-period format for use in Calc, but
+it cannot intercept the value being yanked form the Calc stack, so
+decimal-comma users will have to manually replace the period with
+a comma.
 
 @node Marking Transactions, Deleting Transactions, Editing Amounts, The Ledger Buffer
 @section Marking Transactions
+
 Ledger considers transaction or posting to be in one of three states:
 uncleared, cleared, and pending.  For calculation Ledger ignores these
 states unless specifically instructed to use them.  Ledger-mode assigns
 some additional meaning to the states:
+
 @itemize
 @item Uncleared.
 No state.  This is equivalent to sticking a check in the mail.  It has
@@ -277,12 +290,13 @@ your account balance.  You bank may call these transactions 'pending',
 but Ledger-mode uses a slightly different meaning.
 @item Pending.
 Ledger-mode's reconciliation function see pending transactions as an
-intermediate step in reconciling an account.  When doing a
-reconciliation (@pxref{Reconciliation}), marking a transaction as
+intermediate step in reconciling an account.  When doing
+a reconciliation (@pxref{Reconciliation}), marking a transaction as
 pending means that you have seen the transaction finally recorded by the
 recipient, but you have not completely reconciled the account.
 @item Cleared.
-The transaction has been completely recognized by all parties to the transaction.
+The transaction has been completely recognized by all parties to the
+transaction.
 @end itemize
 
 Clearing complete transactions is done by typing @code{C-c C-e} with
@@ -292,6 +306,7 @@ while in a posting. This places an asterisk prior to the posting.
 
 @node Deleting Transactions, Sorting Transactions, Marking Transactions, The Ledger Buffer
 @section Deleting Transactions
+
 Along with normal buffer editing methods to delete text, Ledger mode
 provides an easy way to delete the transaction under point: @code{C-c
 C-d}.  The advantage to using this method is that the complete
@@ -307,8 +322,8 @@ can help bring order to chaos.  Ledger sort (@code{C-c C-s}) will sort
 all of the transactions in a region by date.  Ledger-mode isn't
 particularly smart about handling dates and it simply sorts the
 transactions using the string at the beginning of the transaction.  So,
-you should use the preferred ISO 8601 standard date format @code{YYYY/MM/DD}
-which easily sorts.
+you should use the preferred ISO 8601 standard date format
+@code{YYYY/MM/DD} which easily sorts.
 
 Note, there is a menu entry to sort the entire buffer.  Special
 transactions like automated transaction, will be moved in the sorting
@@ -316,7 +331,8 @@ process and may not function correctly afterwards.  For this reason
 there is no key sequence.
 
 You can limit the allowed sort region by using embedded Ledger-mode
-markup within your ledger.  For exmaple 
+markup within your ledger.  For exmaple
+
 @smallexample
 <<< information to not sort >>>
 
@@ -328,6 +344,7 @@ markup within your ledger.  For exmaple
 
 <<< information to not sort >>>
 @end smallexample
+
 You can use menu entries to insert start and end markers.  These
 functions will automatically delete old markers and put new new marker
 at point.
@@ -335,8 +352,8 @@ at point.
 @node Narrowing Transactions,  , Sorting Transactions, The Ledger Buffer
 @section Narrowing Transactions
 
-Often you will want to run Ledger register reports just to look at a
-specific set of transactions.  If you don't need the running total
+Often you will want to run Ledger register reports just to look at
+a specific set of transactions.  If you don't need the running total
 calculation handled by Ledger, Ledger-mode provides a rapid way of
 narrowing what is displayed in the buffer in a way that is simpler than
 the Ledger register command.
@@ -347,8 +364,8 @@ regular expression can match on any part of the transaction.  If you
 want to find all transactions whose amount ends in .37, you can do that
 ( I don't know why, but hey, whatever ever floats you aerostat).
 
-Using @code{C-c C-f} or the @code{Hide Xacts} menu entry, enter a
-regular expression in the minibuffer.  Ledger-mode will hide all other
+Using @code{C-c C-f} or the @code{Hide Xacts} menu entry, enter
+a regular expression in the minibuffer.  Ledger-mode will hide all other
 transactions.  For details of the regular expression syntax, see
 @ref{(emacs)Regexps, Syntax of Regular Expressions} or
 @ref{(elisp)Regular Expressions, Regular Expressions}.  A few examples
@@ -367,20 +384,21 @@ Show only transactions with payees or accounts or comments containing `auto'
 Show only transcations with any line ending with `harley'
 @end table
 
-To show back all transactions simply invoke @code{Hide Xacts} or @code{C-c
-C-f} again.
+To show back all transactions simply invoke @code{Hide Xacts} or
+@code{C-c C-f} again.
 
 @node The Reconcile Buffer, The Report Buffer, The Ledger Buffer, Top
 @chapter The Reconcile Buffer
+
 @menu
-* Basics of Reconciliation::    
-* Starting a Reconciliation::   
-* Mark Transactions Pending::   
-* Edit Transactions During Reconciliation::  
-* Finalize Reconciliation::     
-* Adding and Deleting Transactions during Reconciliation::  
-* Changing Reconciliation Account::  
-* Changing Reconciliation Target::  
+* Basics of Reconciliation::
+* Starting a Reconciliation::
+* Mark Transactions Pending::
+* Edit Transactions During Reconciliation::
+* Finalize Reconciliation::
+* Adding and Deleting Transactions during Reconciliation::
+* Changing Reconciliation Account::
+* Changing Reconciliation Target::
 @end menu
 
 @node Basics of Reconciliation, Starting a Reconciliation, The Reconcile Buffer, The Reconcile Buffer
@@ -398,7 +416,7 @@ money has actually made it to you.
 
 After an account has been reconciled you have verified that all the
 transactions in that account have been correctly recorded and all
-parties agree. 
+parties agree.
 
 @node Starting a Reconciliation, Mark Transactions Pending, Basics of Reconciliation, The Reconcile Buffer
 @section Starting a Reconciliation
@@ -414,12 +432,12 @@ account you wish to reconcile in the mini-buffer.  Ledger-mode is not
 particular about what you enter for the account.  You can leave it blank
 and Reconcile Mode will show you ALL uncleared transactions.  After you
 enter the account enter the target amount.  Ledger expects you to enter
-an amount with a commodity.  It assumes initially that you are using $
-(USD) as your default commodity.  If you are working in a different
+an amount with a commodity.  It assumes initially that you are using
+$ (USD) as your default commodity.  If you are working in a different
 currency you can change the default in variable
 @code{ledger-reconcile-default-commodity} to whatever you need.  If you
 work in multiple commodities simply enter the commoditized amount (for
-example @code{340 VSDX}, for 340 shares of VSDX).  
+example @code{340 VSDX}, for 340 shares of VSDX).
 
 Ledger-mode reconcile cannot currently reconcile accounts that have
 multiple commodities, such as brokerage accounts. You may use
@@ -431,14 +449,14 @@ not display the complete list of commodities.
 
 The @file{*Reconcile*} buffer will show all the uncleared transactions
 that meet the criteria set in the regex.  By default uncleared
-transactions are shown in red.  When you have verified that a
-transaction has been correctly and completely recorded by the opposing
+transactions are shown in red.  When you have verified that
+a transaction has been correctly and completely recorded by the opposing
 party, mark the transaction as pending using the space bar.  Continue
 this process until you agree with the opposing party and the difference
 from your target is zero.
 
 @node Edit Transactions During Reconciliation, Finalize Reconciliation, Mark Transactions Pending, The Reconcile Buffer
-@section Edit Transactions during Reconciliation 
+@section Edit Transactions during Reconciliation
 
 If you find errors during reconciliation.  You can visit the transaction
 under point in the @file{*Reconcile*} buffer by hitting the @code{enter}
@@ -478,23 +496,25 @@ the ledger buffer are left in that state when the account is switched.
 If for some reason during reconciliation your target amount changes,
 type @code{t} and enter the new target value.
 
-
 @node The Report Buffer, Customizing Ledger-mode, The Reconcile Buffer, Top
 @chapter The Report Buffer
+
 @menu
-* Running Basic Reports::       
-* Adding and Editing Reports::  
-* Reversing Report Order::      
+* Running Basic Reports::
+* Adding and Editing Reports::
+* Reversing Report Order::
 @end menu
 
 @node Running Basic Reports, Adding and Editing Reports, The Report Buffer, The Report Buffer
 @section Running Reports
+
 The real power behind Ledger is in its amazing reporting capability.
 Ledger-mode provides easy facility to run reports directly from Emacs.
 It has four reports built-in and facilities for adding custom reports.
 
 Typing @code{C-c C-o C-r} or using menu @code{Ledger Run Report} prompt
 for the name of a saved report.  The built-in reports are:
+
 @table @samp
 @item bal
 Produce a balance reports of all accounts.
@@ -508,12 +528,12 @@ Prompt for an account, the produce a register report of all transaction
 involving that account.
 @end table
 
-
 @node Adding and Editing Reports, Reversing Report Order, Running Basic Reports, The Report Buffer
 @section Adding and Editing Reports
+
 @menu
-* Expansion Formats::           
-* Make Report Transactions Active::  
+* Expansion Formats::
+* Make Report Transactions Active::
 @end menu
 
 If you type a report name that Ledger-mode doesn't recognize it will
@@ -529,11 +549,11 @@ the report will be run, but it will not be permanently saved.  If you
 want to save it, type @code{S} in the @file{*Ledger Report*} buffer you
 will have the option to give it a new name, or overwrite the old report.
 
-Deleting reports is accomplished by typing @code{C-c C-o C-e} Edit Reports
-in the ledger buffer, or typing @code{e} in the @file{*Ledger Report*}
-buffer.  This takes you to the Emacs customization window for the
-@code{ledger-reports} variable.  Use the widgets to delete the report
-you want removed.
+Deleting reports is accomplished by typing @code{C-c C-o C-e} Edit
+Reports in the ledger buffer, or typing @code{e} in the @file{*Ledger
+Report*} buffer.  This takes you to the Emacs customization window for
+the @code{ledger-reports} variable.  Use the widgets to delete the
+report you want removed.
 
 @node Expansion Formats, Make Report Transactions Active, Adding and Editing Reports, Adding and Editing Reports
 @subsection Expansion Formats
@@ -560,6 +580,7 @@ You can use these expansion values in your ledger report commands.  For
 example, if you wanted to specify a register report the displayed
 transactions from a user-determined account with a particular meta-data
 tag value, you specify the following command line:
+
 @smallexample
 ledger -f %(ledger-file) reg %(account)  --limit \"tag('my-tag') =~/%(value)/\"
 @end smallexample
@@ -571,9 +592,9 @@ ledger -f %(ledger-file) reg %(account)  --limit \"tag('my-tag') =~/%(value)/\"
 
 In a large register report it is convenient to be able to jump to the
 source transaction.  Ledger-mode will automatically include source
-information in every register file that doesn't contain a
-@code{--subtotal} option. It does this by adding a
-@code{--prepend-format='%(filename):%(beg_line):'} to the register
+information in every register file that doesn't contain
+a @code{--subtotal} option. It does this by adding
+a @code{--prepend-format='%(filename):%(beg_line):'} to the register
 report command-line you specify.  You should never have to see this, but
 if there is an error in your ledger output this additional information
 may not get stripped out of the visible report.
@@ -581,21 +602,21 @@ may not get stripped out of the visible report.
 @node Reversing Report Order,  , Adding and Editing Reports, The Report Buffer
 @section Reversing Report Order
 
-Often, banks show their online transaction histories with the most recent
-transaction at the top.  Ledger itself cannot do a sensible ledger
-report in reverse chronological order, if you sort on reverse date the
-calculation will also run in the opposite direction.  If you want to
-compare a ledger register report to a bank report with the most recent
-transactions at the top, type R in the @file{*Ledger Report*} buffer and
-it will reverse the order of the transactions and maintain the proper
-mathematical sense.
-
+Often, banks show their online transaction histories with the most
+recent transaction at the top.  Ledger itself cannot do a sensible
+ledger report in reverse chronological order, if you sort on reverse
+date the calculation will also run in the opposite direction.  If you
+want to compare a ledger register report to a bank report with the most
+recent transactions at the top, type R in the @file{*Ledger Report*}
+buffer and it will reverse the order of the transactions and maintain
+the proper mathematical sense.
 
 @node Customizing Ledger-mode, Generating Ledger Regression Tests, The Report Buffer, Top
 @chapter Customizing Ledger-mode
+
 @menu
-* Ledger-mode Customization::   
-* Customization Variables::     
+* Ledger-mode Customization::
+* Customization Variables::
 @end menu
 
 @node Ledger-mode Customization, Customization Variables, Customizing Ledger-mode, Customizing Ledger-mode
@@ -613,25 +634,28 @@ for Ledger under the data options.  Alternately you can choose
 @section Customization Variables
 
 @menu
-* Ledger Customization Group::  
-* Ledger Reconcile Customization Group::  
-* Ledger Report Customization Group::  
-* Ledger Faces Customization Group::  
-* Ledger Post Customization Group::  
-* Ledger Exec Customization Group::  
-* Ledger Test Customization Group::  
-* Ledger Texi Customization Group::  
+* Ledger Customization Group::
+* Ledger Reconcile Customization Group::
+* Ledger Report Customization Group::
+* Ledger Faces Customization Group::
+* Ledger Post Customization Group::
+* Ledger Exec Customization Group::
+* Ledger Test Customization Group::
+* Ledger Texi Customization Group::
 @end menu
 
 @node Ledger Customization Group, Ledger Reconcile Customization Group, Customization Variables, Customization Variables
 @subsection Ledger Customization Group
+
 @table @code
 @item ledger-occur-use-face-shown
-   If non-nil, use a custom face for xacts shown in `ledger-occur' mode using @code{ledger-occur-xact-face}.
+If non-nil, use a custom face for xacts shown in `ledger-occur' mode
+using @code{ledger-occur-xact-face}.
 @item ledger-clear-whole-transactions
-   If non-nil, clear whole transactions, not individual postings.
+If non-nil, clear whole transactions, not individual postings.
 @item ledger-highlight-xact-under-point
-   If non-nil, highlight xact under point using @code{ledger-font-highlight-face}.
+If non-nil, highlight xact under point using
+@code{ledger-font-highlight-face}.
 @end table
 
 @node Ledger Reconcile Customization Group, Ledger Report Customization Group, Ledger Customization Group, Customization Variables
@@ -642,19 +666,19 @@ for Ledger under the data options.  Alternately you can choose
 The default commodity for use in target calculations in ledger
 reconcile.  Defaults to $ (USD)
 @item ledger-recon-buffer-name
-   Name to use for reconciliation window.
+Name to use for reconciliation window.
 @item ledger-narrow-on-reconcile
-   If non-nil, limit transactions shown in main buffer to those matching the
-   reconcile regex.
+If non-nil, limit transactions shown in main buffer to those matching
+the reconcile regex.
 @item ledger-buffer-tracks-reconcile-buffer
-   If non-nil, then when the cursor is moved to a new xact in the recon
-   window.
+If non-nil, then when the cursor is moved to a new xact in the recon
+window.
 @item ledger-reconcile-force-window-bottom
-   If non-nil, make the reconcile window appear along the bottom of the
-   register window and resize.
+If non-nil, make the reconcile window appear along the bottom of the
+register window and resize.
 @item ledger-reconcile-toggle-to-pending
-   If non-nil, then toggle between uncleared and pending (@code{!}). If false
-   toggle between uncleared and cleared (@code{*})
+If non-nil, then toggle between uncleared and pending (@code{!}). If
+false toggle between uncleared and cleared (@code{*})
 @end table
 
 @node Ledger Report Customization Group, Ledger Faces Customization Group, Ledger Reconcile Customization Group, Customization Variables
@@ -662,15 +686,17 @@ reconcile.  Defaults to $ (USD)
 
 @table @code
 @item ledger-reports
-   Definition of reports to run.
+Definition of reports to run.
 @item ledger-report-format-specifiers
-   An alist mapping ledger report format specifiers to implementing functions.  
+An alist mapping ledger report format specifiers to implementing
+functions.
 @end table
 
-
 @node Ledger Faces Customization Group, Ledger Post Customization Group, Ledger Report Customization Group, Customization Variables
-@subsection Ledger Faces Customization Group 
+@subsection Ledger Faces Customization Group
+
 Ledger Faces : Ledger mode highlighting
+
 @table @code
 @item ledger-font-uncleared-face
 Default face for Ledger
@@ -688,7 +714,6 @@ Face for Ledger accounts
 Face for cleared Ledger accounts
 @item ledger-font-posting-account-pending-face
 Face for Ledger pending accounts
-
 @item ledger-font-posting-amount-face
 Face for Ledger amounts
 @item ledger-occur-narrowed-face
@@ -709,9 +734,10 @@ Default face for pending (!) transactions in the reconcile window
 
 @node Ledger Post Customization Group, Ledger Exec Customization Group, Ledger Faces Customization Group, Customization Variables
 @subsection Ledger Post Customization Group
-Ledger Post : 
-@table @code
 
+Ledger Post :
+
+@table @code
 @item ledger-post-auto-adjust-amounts
 If non-nil, then automatically align amounts to column specified in
 @code{ledger-post-amount-alignment-column}
@@ -736,24 +762,26 @@ Path to the ledger executable.
 Location of the ledger initialization file. nil if you don't have one
 @end table
 
-
 @node Ledger Test Customization Group, Ledger Texi Customization Group, Ledger Exec Customization Group, Customization Variables
 @subsection Ledger Test Customization Group
+
 @table @code
 @item ledger-source-directory
-   Directory where the Ledger sources are located.
+Directory where the Ledger sources are located.
 @item ledger-test-binary
-   Directory where the debug binary.
+Directory where the debug binary.
 @end table
 
 @node Ledger Texi Customization Group,  , Ledger Test Customization Group, Customization Variables
 @subsection Ledger Texi Customization Group
 
 @table @code
-@item ledger-texi-sample-doc-path 
-Location for sample data to be used in texi tests, defaults to @file{~/ledger/doc/sample.dat}
-@item ledger-texi-normalization-args 
-texi normalization for producing ledger output, defaults to ``@code{--args-only --columns 80}''
+@item ledger-texi-sample-doc-path
+Location for sample data to be used in texi tests, defaults to
+@file{~/ledger/doc/sample.dat}
+@item ledger-texi-normalization-args
+texi normalization for producing ledger output, defaults to
+``@code{--args-only --columns 80}''
 @end table
 
 @node Generating Ledger Regression Tests, Embedding Example results in Ledger Documentation, Customizing Ledger-mode, Top
@@ -770,4 +798,5 @@ Work in Progress.
 @chapter Hacking Ledger-mode
 
 Work in Progress.
+
 @bye
