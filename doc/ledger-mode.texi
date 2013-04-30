@@ -588,7 +588,8 @@ transactions from a user-determined account with a particular meta-data
 tag value, you specify the following command line:
 
 @example
-ledger -f %(ledger-file) reg %(account)  --limit \"tag('my-tag') =~/%(value)/\"
+ledger -f %(ledger-file) reg %(account) \
+  --limit \"tag('my-tag') =~/%(value)/\"
 @end example
 
 Note how the double-quotes are escaped with back-slashes.
