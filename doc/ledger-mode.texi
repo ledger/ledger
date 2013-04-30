@@ -331,9 +331,9 @@ process and may not function correctly afterwards.  For this reason
 there is no key sequence.
 
 You can limit the allowed sort region by using embedded Ledger-mode
-markup within your ledger.  For exmaple
+markup within your ledger.  For example:
 
-@smallexample
+@example
 <<< information to not sort >>>
 
 ; Ledger-mode: Start sort
@@ -343,7 +343,7 @@ markup within your ledger.  For exmaple
 ; Ledger-mode: End sort
 
 <<< information to not sort >>>
-@end smallexample
+@end example
 
 You can use menu entries to insert start and end markers.  These
 functions will automatically delete old markers and put new new marker
@@ -581,9 +581,9 @@ example, if you wanted to specify a register report the displayed
 transactions from a user-determined account with a particular meta-data
 tag value, you specify the following command line:
 
-@smallexample
+@example
 ledger -f %(ledger-file) reg %(account)  --limit \"tag('my-tag') =~/%(value)/\"
-@end smallexample
+@end example
 
 @noindent Note how the double-quotes are escaped with back-slashes.
 
