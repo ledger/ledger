@@ -67,14 +67,14 @@ accounting based on a text journal.  It provides no bells or whistles,
 and returns the user to the days before user interfaces were even
 a 1twinkling in their father's CRT.
 
-Ledger Mode assists you in maintaining input files for Ledger, running
+Ledger-mode assists you in maintaining input files for Ledger, running
 reports and much more...
 
 @end ifnottex
 
 @menu
 * Copying::
-* Introduction to Ledger Mode::
+* Introduction to Ledger-mode::
 * The Ledger Buffer::
 * The Reconcile Buffer::
 * The Report Buffer::
@@ -82,15 +82,17 @@ reports and much more...
 * Generating Ledger Regression Tests::
 * Embedding Example results in Ledger Documentation::
 * Hacking Ledger-mode::
+* Concept Index::
+* Command Index::
 @end menu
 
-@node Copying, Introduction to Ledger Mode, Top, Top
+@node Copying, Introduction to Ledger-mode, Top, Top
 @chapter Copying
 
 @insertcopying
 
-@node Introduction to Ledger Mode, The Ledger Buffer, Copying, Top
-@chapter Introduction to Ledger Mode
+@node Introduction to Ledger-mode, The Ledger Buffer, Copying, Top
+@chapter Introduction to Ledger-mode
 
 @menu
 * Quick Installation::
@@ -98,12 +100,12 @@ reports and much more...
 * Quick Demo::
 @end menu
 
-@node Quick Installation, Menus, Introduction to Ledger Mode, Introduction to Ledger Mode
+@node Quick Installation, Menus, Introduction to Ledger-mode, Introduction to Ledger-mode
 @section Quick Installation
 
 The Emacs lisp source for Ledger-mode is included with the source
 distribution of Ledger.  It is entirely included in the @file{lisp}
-subdirectory. To use ledger mode, include the following in your Emacs
+subdirectory. To use Ledger-mode, include the following in your Emacs
 initialization file (@file{~/.emacs}, @file{~/.emacs.d/init.el}, or
 @file{~/.Aquamacs/Preferences.el}
 
@@ -114,17 +116,17 @@ initialization file (@file{~/.emacs}, @file{~/.emacs.d/init.el}, or
 @end lisp
 
 This sets up Emacs to automatically recognize files that end with
-@file{.ledger} and start Ledger mode.  Nothing else should be required
+@file{.ledger} and start Ledger-mode.  Nothing else should be required
 as long as the ledger command line utility is properly installed.
 
-@node Menus, Quick Demo, Quick Installation, Introduction to Ledger Mode
+@node Menus, Quick Demo, Quick Installation, Introduction to Ledger-mode
 @section Menus
 
 The vast majority of Ledger-mode functionality is available from the
 Emacs menu system.  The keystrokes are shown in the menu to help you
 learn the faster keyboard methods.
 
-@node Quick Demo,  , Menus, Introduction to Ledger Mode
+@node Quick Demo,  , Menus, Introduction to Ledger-mode
 @section Quick Demo
 
 Load the demo file @file{demo.ledger} from the Ledger source
@@ -154,7 +156,7 @@ search for a Payee that has the same beginning and copy the rest of the
 transaction to you new entry.
 
 Additionally you can use the ledger xact command, by typing @code{C-c
-C-a} then typing a close match to the payee. Ledger mode will call
+C-a} then typing a close match to the payee. Ledger-mode will call
 @code{ledger xact} with the data you enter and place the transaction in
 the proper chronological place in the ledger.
 
@@ -163,7 +165,7 @@ the proper chronological place in the ledger.
 
 The biggest task of maintaining a ledger is ensuring the it matches the
 outside world.  This process is called reconciliation (@pxref{Basics of
-Reconciliation}) and can be quite onerous.  Ledger mode attempts to make
+Reconciliation}) and can be quite onerous.  Ledger-mode attempts to make
 it as painless as possible.
 
 In the @file{demo.ledger} buffer type @code{C-c C-r}.  Emacs will prompt
@@ -197,7 +199,7 @@ and you can add any report you need @xref{Adding and Editing Reports}.
 In the mini-buffer type @code{account}.  When prompted for an account
 type @code{checking}.  In another buffer you will see a Ledger register
 report. You can move around the buffer, with the point on a transaction,
-type @code{C-c C-c}.  Ledger mode will take you directly to that
+type @code{C-c C-c}.  Ledger-mode will take you directly to that
 transaction in the @file{demo.ledger} buffer.
 
 Another built-in report is the balance report.  In the
@@ -215,7 +217,7 @@ Ledger-mode copies the @code{occur} mode functionality.  Typing
 transactions that match the regex.  The regex can be on any field, or
 amount.
 
-@node The Ledger Buffer, The Reconcile Buffer, Introduction to Ledger Mode, Top
+@node The Ledger Buffer, The Reconcile Buffer, Introduction to Ledger-mode, Top
 @chapter The Ledger Buffer
 
 @menu
@@ -237,7 +239,7 @@ payees and accounts. Included files are not currently included in the
 completion scan. Repeatedly hitting @code{TAB} will cycle through the
 possible completions.
 
-Ledger mode can also help you keep your amounts in alignment.  Setting
+Ledger-mode can also help you keep your amounts in alignment.  Setting
 @code{ledger-post-auto-adjust-amounts} to true tells Ledger-mode to
 automatically place any amounts such that their last digit is aligned to
 the column specified by @code{ledger-post-amount-alignment-column},
@@ -267,7 +269,7 @@ up the Calc buffer, and push the current amount for the posting onto the
 top of the Calc stack.  Perform any calculations you need to arrive at
 the final value, then type @code{y} to yank the value at the top of
 stack back into the ledger buffer.  Note: GNU Calc does not directly
-support commas as decimal separators.  Ledger mode will translate values
+support commas as decimal separators.  Ledger-mode will translate values
 from decimal-comma format to decimal-period format for use in Calc, but
 it cannot intercept the value being yanked form the Calc stack, so
 decimal-comma users will have to manually replace the period with
@@ -307,7 +309,7 @@ while in a posting. This places an asterisk prior to the posting.
 @node Deleting Transactions, Sorting Transactions, Marking Transactions, The Ledger Buffer
 @section Deleting Transactions
 
-Along with normal buffer editing methods to delete text, Ledger mode
+Along with normal buffer editing methods to delete text, Ledger-mode
 provides an easy way to delete the transaction under point: @code{C-c
 C-d}.  The advantage to using this method is that the complete
 transaction operation is in the undo buffer.
@@ -695,7 +697,7 @@ functions.
 @node Ledger Faces Customization Group, Ledger Post Customization Group, Ledger Report Customization Group, Customization Variables
 @subsection Ledger Faces Customization Group
 
-Ledger Faces : Ledger mode highlighting
+Ledger Faces : Ledger-mode highlighting
 
 @table @code
 @item ledger-font-uncleared-face
@@ -794,17 +796,17 @@ Work in Progress.
 
 Work in Progress.
 
-@node Hacking Ledger-mode,  , Embedding Example results in Ledger Documentation, Top
+@node Hacking Ledger-mode, Concept Index, Embedding Example results in Ledger Documentation, Top
 @chapter Hacking Ledger-mode
 
 Work in Progress.
 
-@node Concept Index
+@node Concept Index, Command Index, Hacking Ledger-mode, Top
 @unnumbered Concept Index
 
 @printindex cp
 
-@node Command Index
+@node Command Index,  , Concept Index, Top
 @unnumbered Command Index
 
 @printindex fn
