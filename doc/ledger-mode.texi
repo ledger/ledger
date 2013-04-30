@@ -107,12 +107,13 @@ The Emacs lisp source for Ledger-mode is included with the source
 distribution of Ledger.  It is entirely included in the @file{lisp}
 subdirectory. To use Ledger-mode, include the following in your Emacs
 initialization file (@file{~/.emacs}, @file{~/.emacs.d/init.el}, or
-@file{~/.Aquamacs/Preferences.el}
+@file{~/.Aquamacs/Preferences.el}).
 
 @lisp
-(add-to-list 'load-path (expand-file-name "/path/to/ledger/source/lisp/"))
+(add-to-list ’load-path
+	      (expand-file-name "/path/to/ledger/source/lisp/"))
 (load "ldg-new")
-(add-to-list 'auto-mode-alist '("\\.ledger$" . ledger-mode))
+(add-to-list ’auto-mode-alist ’("\\.ledger$" . ledger-mode))
 @end lisp
 
 This sets up Emacs to automatically recognize files that end with
@@ -184,8 +185,8 @@ a transaction as pending and display the current cleared (and pending)
 balance, along with the difference remaining to meet your target. Clear
 the first three transactions, and you will see the difference to target
 reach @samp{$0}.  End the reconciliation by typing @kbd{C-c C-c}.  This
-saves the @file{demo.ledger} buffer and marks the transactions and finally
-cleared.  Type @kbd{q} to close out the reconciliation buffer.
+saves the @file{demo.ledger} buffer and marks the transactions and
+finally cleared.  Type @kbd{q} to close out the reconciliation buffer.
 
 @node Reports, Narrowing, Reconciliation, Quick Demo
 @subsection Reports
@@ -255,8 +256,8 @@ which defaults to @samp{52}. @xref{Ledger Post Customization Group}.
 You will often want to quickly check the balance of an account.  The
 easiest way it to position point on the account you are interested in,
 and type @kbd{C-C C-P}.  The minibuffer will ask you to verify the name
-of the account you want, if it is already correct hit @kbd{RET}, then the
-balance of the account will be displayed in the minibuffer.
+of the account you want, if it is already correct hit @kbd{RET}, then
+the balance of the account will be displayed in the minibuffer.
 
 @node Editing Amounts, Marking Transactions, Adding Transactions, The Ledger Buffer
 @section Editing Amounts
@@ -267,11 +268,11 @@ calculate values for amount by integrating GNU Calc. With the point
 anywhere in the same line as a posting, typing @kbd{C-c C-b} will bring
 up the Calc buffer, and push the current amount for the posting onto the
 top of the Calc stack.  Perform any calculations you need to arrive at
-the final value, then type @kbd{y} to yank the value at the top of
-stack back into the ledger buffer.  Note: GNU Calc does not directly
-support commas as decimal separators.  Ledger-mode will translate values
-from decimal-comma format to decimal-period format for use in Calc, but
-it cannot intercept the value being yanked form the Calc stack, so
+the final value, then type @kbd{y} to yank the value at the top of stack
+back into the ledger buffer.  Note: GNU Calc does not directly support
+commas as decimal separators.  Ledger-mode will translate values from
+decimal-comma format to decimal-period format for use in Calc, but it
+cannot intercept the value being yanked form the Calc stack, so
 decimal-comma users will have to manually replace the period with
 a comma.
 
@@ -320,12 +321,12 @@ transaction operation is in the undo buffer.
 As you operating on the Ledger files, they may become disorganized.  For
 the most part, Ledger doesn't care, but our human brains prefer a bit of
 order.  Sorting the transactions in a buffer into chronological order
-can help bring order to chaos.  Ledger sort @kbd{C-c C-s} will sort
-all of the transactions in a region by date.  Ledger-mode isn't
-particularly smart about handling dates and it simply sorts the
-transactions using the string at the beginning of the transaction.  So,
-you should use the preferred ISO 8601 standard date format
-@samp{YYYY/MM/DD} which easily sorts.
+can help bring order to chaos.  Ledger sort @kbd{C-c C-s} will sort all
+of the transactions in a region by date.  Ledger-mode isn't particularly
+smart about handling dates and it simply sorts the transactions using
+the string at the beginning of the transaction.  So, you should use the
+preferred ISO 8601 standard date format @samp{YYYY/MM/DD} which easily
+sorts.
 
 Note, there is a menu entry to sort the entire buffer.  Special
 transactions like automated transaction, will be moved in the sorting
@@ -366,8 +367,8 @@ The regular expression can match on any part of the transaction.  If you
 want to find all transactions whose amount ends in @samp{.37}, you can
 do that (I don't know why, but hey, whatever ever floats you aerostat).
 
-Using @kbd{C-c C-f} or the @samp{Hide Xacts} menu entry, enter
-a regular expression in the minibuffer.  Ledger-mode will hide all other
+Using @kbd{C-c C-f} or the @samp{Hide Xacts} menu entry, enter a regular
+expression in the minibuffer.  Ledger-mode will hide all other
 transactions.  For details of the regular expression syntax, see
 @ref{(emacs)Regexps, Syntax of Regular Expressions} or
 @ref{(elisp)Regular Expressions, Regular Expressions}.  A few examples
@@ -380,12 +381,12 @@ account.
 @item ^2011/01
 Show only transactions occurring in January of 2011.
 @item ^2011/.*/25
-Show only transactions occurring on the 25th of the month in 2011
+Show only transactions occurring on the 25th of the month in 2011.
 @item auto
-Show only transactions with payees or accounts or comments containing
+Show only transactions with payees or accounts or comments containing.
 @samp{auto}
 @item harley$
-Show only transactions with any line ending with @samp{harley}
+Show only transactions with any line ending with @samp{harley}.
 @end table
 
 To show back all transactions simply invoke @samp{Hide Xacts} or
@@ -412,8 +413,8 @@ Even in this relatively modern era, financial transactions do not happen
 instantaneously, unless you are paying cash.  When you swipe your debit
 card the money may take several days to actually come out of your
 account, or a check may take several days to @emph{clear}.  That is the
-root of the difference between @dfn{obligating} funds and
-@dfn{expending} funds.  Obligation says you have agreed to pay it, the
+root of the difference between @emph{obligating} funds and
+@emph{expending} funds.  Obligation says you have agreed to pay it, the
 expenditure doesn't happen until the money actually leaves your
 account. Or in the case of receiving payment, you have an account
 receivable until the money has actually made it to you.
@@ -455,9 +456,9 @@ The @file{*Reconcile*} buffer will show all the uncleared transactions
 that meet the criteria set in the regex.  By default uncleared
 transactions are shown in red.  When you have verified that
 a transaction has been correctly and completely recorded by the opposing
-party, mark the transaction as pending using the @kbd{SPC} bar.  Continue
-this process until you agree with the opposing party and the difference
-from your target is zero.
+party, mark the transaction as pending using the @kbd{SPC} bar.
+Continue this process until you agree with the opposing party and the
+difference from your target is zero.
 
 @node Edit Transactions During Reconciliation, Finalize Reconciliation, Mark Transactions Pending, The Reconcile Buffer
 @section Edit Transactions during Reconciliation
@@ -480,8 +481,8 @@ marks all pending transaction as cleared and saves the ledger buffer.
 @section Adding and Deleting Transactions during Reconciliation
 
 While reconciling, you may find new transactions that need to be entered
-into your ledger.  Simply type @kbd{a} to bring up the quick add for
-the ledger buffer.
+into your ledger.  Simply type @kbd{a} to bring up the quick add for the
+ledger buffer.
 
 Typing @kbd{d} will delete the transaction under point in the
 @file{*Reconcile*} buffer from the ledger buffer.
@@ -548,10 +549,11 @@ time.
 There are two ways to edit the command line for a report. The first is
 to provide a prefix argument to the run-report command.  For example,
 type @kbd{M-1 C-c C-o C-r}. This will prompt you for the report name,
-then present the report command line to be edited.  When you hit @kbd{RET},
-the report will be run, but it will not be permanently saved.  If you
-want to save it, type @kbd{S} in the @file{*Ledger Report*} buffer you
-will have the option to give it a new name, or overwrite the old report.
+then present the report command line to be edited.  When you hit
+@kbd{RET}, the report will be run, but it will not be permanently saved.
+If you want to save it, type @kbd{S} in the @file{*Ledger Report*}
+buffer you will have the option to give it a new name, or overwrite the
+old report.
 
 Deleting reports is accomplished by typing @kbd{C-c C-o C-e} Edit
 Reports in the ledger buffer, or typing @kbd{e} in the @file{*Ledger
@@ -703,35 +705,35 @@ Ledger Faces: Ledger-mode highlighting
 
 @table @option
 @item ledger-font-uncleared-face
-Default face for Ledger
+Default face for Ledger.
 @item ledger-font-cleared-face
-Default face for cleared @samp{*} transactions
+Default face for cleared @samp{*} transactions.
 @item ledger-font-highlight-face
-Default face for transaction under point
+Default face for transaction under point.
 @item ledger-font-pending-face
-Default face for pending @samp{!} transactions
+Default face for pending @samp{!} transactions.
 @item ledger-font-other-face
-Default face for other transactions
+Default face for other transactions.
 @item ledger-font-posting-account-face
-Face for Ledger accounts
+Face for Ledger accounts.
 @item ledger-font-posting-account-cleared-face
-Face for cleared Ledger accounts
+Face for cleared Ledger accounts.
 @item ledger-font-posting-account-pending-face
-Face for Ledger pending accounts
+Face for Ledger pending accounts.
 @item ledger-font-posting-amount-face
-Face for Ledger amounts
+Face for Ledger amounts.
 @item ledger-occur-narrowed-face
-Default face for Ledger occur mode hidden transactions
+Default face for Ledger occur mode hidden transactions.
 @item ledger-occur-xact-face
-Default face for Ledger occur mode shown transactions
+Default face for Ledger occur mode shown transactions.
 @item ledger-font-comment-face
-Face for Ledger comments
+Face for Ledger comments.
 @item ledger-font-reconciler-uncleared-face
-Default face for uncleared transactions in the reconcile window
+Default face for uncleared transactions in the reconcile window.
 @item ledger-font-reconciler-cleared-face
-Default face for cleared  @samp{*} transactions in the reconcile window
+Default face for cleared  @samp{*} transactions in the reconcile window.
 @item ledger-font-reconciler-pending-face
-Default face for pending  @samp{!} transactions in the reconcile window
+Default face for pending  @samp{!} transactions in the reconcile window.
 @item ledger-font-report-clickable-face
 FIXME
 @end table
@@ -744,9 +746,9 @@ Ledger Post:
 @table @option
 @item ledger-post-auto-adjust-amounts
 If non-nil, then automatically align amounts to column specified in
-@option{ledger-post-amount-alignment-column}
+@option{ledger-post-amount-alignment-column}.
 @item ledger-post-amount-alignment-column
-The column Ledger-mode uses to align amounts
+The column Ledger-mode uses to align amounts.
 @item ledger-default-acct-transaction-indent
 Default indentation for account transactions in an entry.
 @item ledger-post-use-completion-engine
