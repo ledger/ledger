@@ -799,4 +799,14 @@ Work in Progress.
 
 Work in Progress.
 
+@node Concept Index
+@unnumbered Concept Index
+
+@printindex cp
+
+@node Command Index
+@unnumbered Command Index
+
+@printindex fn
+
 @bye
