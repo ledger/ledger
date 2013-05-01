@@ -6618,7 +6618,7 @@ updating the price-db file.  The best way is to have your price
 download script maintain this file.
 
 The format of the file can be changed by telling ledger to use the
-@code{--pricedb-format} you define.
+@code{--pricedb-format @var{FORMAT_STRING}} you define.
 
 @item --price-exp @var{INT}
 @itemx -L @var{INT}
@@ -7386,15 +7386,15 @@ Return value rounded to n digits.  Does not affect formatting.
 @section Format String Basics
 @findex --format @var{FORMAT_STRING}
 @findex -F @var{FORMAT_STRING}
-@findex --balance-format
-@findex --budget-format
-@findex --cleared-format
-@findex --csv-format
-@findex --plot-amount-format
-@findex --plot-total-format
-@findex --pricedb-format
-@findex --prices-format
-@findex --register-format
+@findex --balance-format @var{FORMAT_STRING}
+@findex --budget-format @var{FORMAT_STRING}
+@findex --cleared-format @var{FORMAT_STRING}
+@findex --csv-format @var{FORMAT_STRING}
+@findex --plot-amount-format @var{FORMAT_STRING}
+@findex --plot-total-format @var{FORMAT_STRING}
+@findex --pricedb-format @var{FORMAT_STRING}
+@findex --prices-format @var{FORMAT_STRING}
+@findex --register-format @var{FORMAT_STRING}
 
 Format strings may be used to change the output format of reports.
 They are specified by passing a formatting string to the @code{-F
@@ -7557,9 +7557,9 @@ same format string is used for all postings.
 @findex --balance-format @var{FORMAT_STRING}
 @findex --format @var{FORMAT_STRING}
 
-As an example of how flexible the @code{--format} strings can be, the
-default balance format looks like this (the various functions are
-described later):
+As an example of how flexible the @code{--format @var{FORMAT_STRING}}
+strings can be, the default balance format looks like this (the
+various functions are described later):
 
 @smallexample
 "%(justify(scrub(display_total), 20, -1, true, color))"
