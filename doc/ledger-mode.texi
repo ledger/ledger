@@ -245,6 +245,13 @@ amount.
 * Narrowing Transactions::
 @end menu
 
+@c TODO
+@c Describe also:
+@c - Align Region
+@c - Set effective date C-c C-t
+@c - Set Year           C-c C-t
+@c - Set Month          C-c RET
+
 @node Adding Transactions, Copying Transactions, The Ledger Buffer, The Ledger Buffer
 @section Adding Transactions
 @findex ledger-post-auto-adjust-amounts
@@ -577,6 +584,12 @@ type @kbd{t} and enter the new target value.
 * Adding and Editing Reports::
 * Reversing Report Order::
 @end menu
+
+@c TODO Describe also:
+@c - Goto Report   C-c C-o C-g
+@c - Re-run Report C-c C-o C-a
+@c - Save Report   C-c C-o C-s
+@c - Kill Report   C-c C-o C-k
 
 @node Running Basic Reports, Adding and Editing Reports, The Report Buffer, The Report Buffer
 @section Running Reports
