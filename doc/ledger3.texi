@@ -6083,15 +6083,14 @@ Use only uncleared transactions in calculations and reports.
 FIX THIS ENTRY
 
 @item --unrealized-gains @var{STR}
+Allow the user to specify what account name should be used for
+unrealized gains. Defaults to @samp{"Equity:Unrealized Gains"}.
+Often set in one's @file{~/.ledgerrc} file to change default.
+
 @itemx --unrealized-losses @var{STR}
-These options allow the user to specify what accounts names should be
-used for these two types of accounts.  They are optional, and default
-to:
-
---unrealized-gains "Equity:Unrealized Gains"
---unrealized-losses "Equity:Unrealized Losses"
-
-These are intended to be set in one's @file{~/.ledgerrc} file.
+Allow the user to specify what account name should be used for
+unrealized gains. Defaults to @samp{"Equity:Unrealized Losses"}.
+Often set in one's @file{~/.ledgerrc} file to change default.
 
 @item --unround
 Perform all calculations without rounding and display results to full
