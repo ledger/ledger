@@ -620,8 +620,8 @@ old report.
 Deleting reports is accomplished by typing @kbd{C-c C-o C-e} or using
 @samp{Edit Reports} menu in the ledger buffer, or typing @kbd{e} in the
 @file{*Ledger Report*} buffer.  This takes you to the Emacs
-customization window for the @option{ledger-reports} variable.  Use the
-widgets to delete the report you want removed.
+customization window for the Ledger Reports variables.  Use the widgets
+to delete the report you want removed.
 
 @node Expansion Formats, Make Report Transactions Active, Adding and Editing Reports, Adding and Editing Reports
 @subsection Expansion Formats
@@ -642,6 +642,7 @@ Prompts for a payee.
 @item account
 Prompt for an account.
 @item value
+@c FIXME : is it 'value' or 'tag' for @item above?
 Prompt for a tag value.
 @end table
 
