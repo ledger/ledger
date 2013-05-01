@@ -369,17 +369,17 @@ transaction operation is in the undo buffer.
 As you operating on the Ledger files, they may become disorganized.  For
 the most part, Ledger doesn't care, but our human brains prefer a bit of
 order.  Sorting the transactions in a buffer into chronological order
-can help bring order to chaos.  Ledger sort @kbd{C-c C-s} will sort all
-of the transactions in a region by date.  Ledger-mode isn't particularly
-smart about handling dates and it simply sorts the transactions using
-the string at the beginning of the transaction.  So, you should use the
-preferred ISO 8601 standard date format @samp{YYYY/MM/DD} which easily
-sorts.
+can help bring order to chaos.  Either using @samp{Sort Region} menu
+entry or typing @kbd{C-c C-s} will sort all of the transactions in
+a region by date.  Ledger-mode isn't particularly smart about handling
+dates and it simply sorts the transactions using the string at the
+beginning of the transaction.  So, you should use the preferred ISO 8601
+standard date format @samp{YYYY/MM/DD} which easily sorts.
 
-Note, there is a menu entry to sort the entire buffer.  Special
-transactions like automated transaction, will be moved in the sorting
-process and may not function correctly afterwards.  For this reason
-there is no key sequence.
+Note, there is a menu entry @samp{Sort Buffer} to sort the entire
+buffer.  Special transactions like automated transaction, will be moved
+in the sorting process and may not function correctly afterwards.  For
+this reason there is no key sequence.
 
 You can limit the allowed sort region by using embedded Ledger-mode
 markup within your ledger.  For example:
@@ -396,9 +396,9 @@ markup within your ledger.  For example:
 <<< information to not sort >>>
 @end example
 
-You can use menu entries to insert start and end markers.  These
-functions will automatically delete old markers and put new new marker
-at point.
+You can use menu entries @samp{Mark Sort Beginning} to insert start and
+@samp{Mark Sort End} to insert end markers.  These functions will
+automatically delete old markers and put new new marker at point.
 
 @node Narrowing Transactions,  , Sorting Transactions, The Ledger Buffer
 @section Narrowing Transactions
