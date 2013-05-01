@@ -162,10 +162,11 @@ format. Then type the first few characters of another payee in the
 search for a Payee that has the same beginning and copy the rest of the
 transaction to you new entry.
 
-Additionally you can use the ledger xact command, by typing @kbd{C-c
-C-a} then typing a close match to the payee. Ledger-mode will call
-@command{ledger xact} with the data you enter and place the transaction
-in the proper chronological place in the ledger.
+Additionally you can use the ledger @command{xact} command, by either
+typing @kbd{C-c C-a} or using @samp{Add Transaction} menu entry. Then
+typing a close match to the payee. Ledger-mode will call @command{ledger
+xact} with the data you enter and place the transaction in the proper
+chronological place in the ledger.
 
 @node Reconciliation, Reports, Quick Add, Quick Demo
 @subsection Reconciliation
@@ -180,7 +181,7 @@ Reconciliation}) and can be quite onerous.  Ledger-mode attempts to make
 it as painless as possible.
 
 In the @file{demo.ledger} buffer type @kbd{C-c C-r}.  Emacs will prompt
-for an account to reconcile in the mini-buffer.  Enter @samp{Checking}.
+for an account to reconcile in the Minibuffer.  Enter @samp{Checking}.
 Emacs will then prompt for a target value.  The target value is the
 amount you want the cleared transactions in the buffer to total.
 Normally this would be the ending value from your bank statement, or the
@@ -205,11 +206,11 @@ finally cleared.  Type @kbd{q} to close out the reconciliation buffer.
 
 The real power of Ledger is in it reporting capabilities.  Reports can
 be run and displayed in a separate Emacs buffer.  In the
-@file{demo.ledger} buffer, type @kbd{C-c C-o C-r}.  In the mini-buffer
+@file{demo.ledger} buffer, type @kbd{C-c C-o C-r}.  In the Minibuffer
 Emacs will prompt for a report name.  There are a few built-in reports,
 and you can add any report you need @xref{Adding and Editing Reports}.
 
-In the mini-buffer type @samp{account}.  When prompted for an account
+In the Minibuffer type @samp{account}.  When prompted for an account
 type @samp{checking}.  In another buffer you will see a Ledger register
 report. You can move around the buffer, with the point on a transaction,
 type @kbd{C-c C-c}.  Ledger-mode will take you directly to that
@@ -227,7 +228,7 @@ will be shown.
 A ledger file can get very large.  It can be helpful to collapse the
 buffer to display only the transactions you are interested in.
 Ledger-mode copies the @command{occur} mode functionality.  Typing
-@kbd{C-c C-f} and entering any regex in the mini-buffer will show only
+@kbd{C-c C-f} and entering any regex in the Minibuffer will show only
 transactions that match the regex.  The regex can be on any field, or
 amount.
 
@@ -236,6 +237,7 @@ amount.
 
 @menu
 * Adding Transactions::
+* Copying Transactions::
 * Editing Amounts::
 * Marking Transactions::
 * Deleting Transactions::
@@ -243,7 +245,7 @@ amount.
 * Narrowing Transactions::
 @end menu
 
-@node Adding Transactions, Editing Amounts, The Ledger Buffer, The Ledger Buffer
+@node Adding Transactions, Copying Transactions, The Ledger Buffer, The Ledger Buffer
 @section Adding Transactions
 @findex ledger-post-auto-adjust-amounts
 @findex ledger-post-amount-alignment-column
@@ -274,30 +276,42 @@ which defaults to @samp{52}. @xref{Ledger Post Customization Group}.
 
 You will often want to quickly check the balance of an account.  The
 easiest way it to position point on the account you are interested in,
-and type @kbd{C-c C-p}.  The minibuffer will ask you to verify the name
+and type @kbd{C-c C-p}.  The Minibuffer will ask you to verify the name
 of the account you want, if it is already correct hit @kbd{RET}, then
-the balance of the account will be displayed in the minibuffer.
+the balance of the account will be displayed in the Minibuffer.
 
-@node Editing Amounts, Marking Transactions, Adding Transactions, The Ledger Buffer
+@node Copying Transactions, Editing Amounts, Adding Transactions, The Ledger Buffer
+@section Copying Transactions
+@kindex C-c C-k
+@cindex transaction, copying
+
+An easy way to copy a transaction is to type @kbd{C-c C-k} or menu entry
+@samp{Copy Trans at Point}. You will be prompted the new date for the
+copied transaction, and after having confirmed with @kbd{RET}, new
+transaction will be inserted at @emph{date} position in buffer.
+
+@node Editing Amounts, Marking Transactions, Copying Transactions, The Ledger Buffer
 @section Editing Amounts
 @kindex C-c C-b
 @kindex y
-@cindex calc
+@cindex Calc
+@cindex GNU Emacs Calculator
 @cindex transaction, editing amounts
 
-GNU Calc is a very powerful Reverse Polish Notation calculator built
-into all recent version of Emacs.  Ledger-mode makes it easy to
-calculate values for amount by integrating GNU Calc. With the point
-anywhere in the same line as a posting, typing @kbd{C-c C-b} will bring
-up the Calc buffer, and push the current amount for the posting onto the
-top of the Calc stack.  Perform any calculations you need to arrive at
-the final value, then type @kbd{y} to yank the value at the top of stack
-back into the ledger buffer.  Note: GNU Calc does not directly support
-commas as decimal separators.  Ledger-mode will translate values from
-decimal-comma format to decimal-period format for use in Calc, but it
-cannot intercept the value being yanked form the Calc stack, so
-decimal-comma users will have to manually replace the period with
-a comma.
+GNU Emacs Calculator, aka @samp{Calc}, is a very powerful Reverse Polish
+Notation calculator built into all recent version of Emacs.  Ledger-mode
+makes it easy to calculate values for amount by integrating
+@command{Calc}. With the point anywhere in the same line as a posting,
+typing @kbd{C-c C-b} will bring up the @file{Calc} buffer, and push the
+current amount for the posting onto the top of the @command{Calc} stack.
+Perform any calculations you need to arrive at the final value, then
+type @kbd{y} to yank the value at the top of stack back into the ledger
+buffer.  Note: @command{Calc} does not directly support commas as
+decimal separators.  Ledger-mode will translate values from
+decimal-comma format to decimal-period format for use in @command{Calc},
+but it cannot intercept the value being yanked form the @command{Calc}
+stack, so decimal-comma users will have to manually replace the period
+with a comma.
 
 @node Marking Transactions, Deleting Transactions, Editing Amounts, The Ledger Buffer
 @section Marking Transactions
@@ -375,7 +389,7 @@ markup within your ledger.  For example:
 
 ; Ledger-mode: Start sort
 
-<<< xacts to sort >>>
+<<< transactions to sort >>>
 
 ; Ledger-mode: End sort
 
@@ -404,8 +418,8 @@ The regular expression can match on any part of the transaction.  If you
 want to find all transactions whose amount ends in @samp{.37}, you can
 do that (I don't know why, but hey, whatever ever floats you aerostat).
 
-Using @kbd{C-c C-f} or the @samp{Hide Xacts} menu entry, enter a regular
-expression in the minibuffer.  Ledger-mode will hide all other
+Using @kbd{C-c C-f} or the @samp{Narrow to Regex} menu entry, enter
+a regular expression in the Minibuffer.  Ledger-mode will hide all other
 transactions.  For details of the regular expression syntax, see
 @ref{(emacs)Regexps, Syntax of Regular Expressions} or
 @ref{(elisp)Regular Expressions, Regular Expressions}.  A few examples
@@ -426,7 +440,7 @@ Show only transactions with payees or accounts or comments containing.
 Show only transactions with any line ending with @samp{harley}.
 @end table
 
-To show back all transactions simply invoke @samp{Hide Xacts} or
+To show back all transactions simply invoke @samp{Narrow to Regex} or
 @kbd{C-c C-f} again.
 
 @node The Reconcile Buffer, The Report Buffer, The Ledger Buffer, Top
@@ -470,20 +484,20 @@ parties agree.
 To start reconciling an account you must have a target, both the
 transactions that you know about and the transactions the bank knows
 about.  You can get this from a monthly statement, or from checking your
-online transaction history.  It also helps immensely to know the final
+on-line transaction history.  It also helps immensely to know the final
 cleared balance you are aiming for.
 
 Use menu @samp{Reconcile Account} or @kbd{C-c C-r} and enter the account
-you wish to reconcile in the mini-buffer.  Ledger-mode is not particular
+you wish to reconcile in the Minibuffer.  Ledger-mode is not particular
 about what you enter for the account.  You can leave it blank and
-Reconcile Mode will show you @emph{all} uncleared transactions.  After
-you enter the account enter the target amount.  Ledger expects you to
-enter an amount with a commodity.  It assumes initially that you are
-using @samp{$} (USD) as your default commodity.  If you are working in
-a different currency you can change the default in variable
-@option{ledger-reconcile-default-commodity} to whatever you need.  If
-you work in multiple commodities simply enter the commoditized amount
-(for example @samp{340 VSDX}, for 340 shares of VSDX).
+@file{*Reconcile*} buffer will show you @emph{all} uncleared
+transactions.  After you enter the account enter the target amount.
+Ledger expects you to enter an amount with a commodity.  It assumes
+initially that you are using @samp{$} (USD) as your default commodity.
+If you are working in a different currency you can change the default in
+variable @option{ledger-reconcile-default-commodity} to whatever you
+need.  If you work in multiple commodities simply enter the commoditized
+amount (for example @samp{340 VSDX}, for 340 shares of VSDX).
 
 Ledger-mode reconcile cannot currently reconcile accounts that have
 multiple commodities, such as brokerage accounts. You may use
@@ -676,7 +690,7 @@ may not get stripped out of the visible report.
 @kindex R
 @cindex report, order reversing
 
-Often, banks show their online transaction histories with the most
+Often, banks show their on-line transaction histories with the most
 recent transaction at the top.  Ledger itself cannot do a sensible
 ledger report in reverse chronological order, if you sort on reverse
 date the calculation will also run in the opposite direction.  If you
@@ -724,12 +738,12 @@ for Ledger under the data options.  Alternately you can choose
 
 @ftable @option
 @item ledger-occur-use-face-shown
-If non-nil, use a custom face for xacts shown in @option{ledger-occur}
-mode using @option{ledger-occur-xact-face}.
+If non-nil, use a custom face for transactions shown in
+@option{ledger-occur} mode using @option{ledger-occur-xact-face}.
 @item ledger-clear-whole-transactions
 If non-nil, clear whole transactions, not individual postings.
 @item ledger-highlight-xact-under-point
-If non-nil, highlight xact under point using
+If non-nil, highlight transaction under point using
 @option{ledger-font-highlight-face}.
 @end ftable
 
@@ -742,13 +756,13 @@ If non-nil, highlight xact under point using
 The default commodity for use in target calculations in ledger
 reconcile.  Defaults to @samp{$} (USD).
 @item ledger-recon-buffer-name
-Name to use for reconciliation window.
+Name to use for reconciliation buffer. Defaults to @file{*Reconcile*}.
 @item ledger-narrow-on-reconcile
 If non-nil, limit transactions shown in main buffer to those matching
 the reconcile regex.
 @item ledger-buffer-tracks-reconcile-buffer
-If non-nil, then when the cursor is moved to a new xact in the recon
-window.
+If non-nil, then when the cursor is moved to a new transaction in the
+reconcile window.
 @item ledger-reconcile-force-window-bottom
 If non-nil, make the reconcile window appear along the bottom of the
 register window and resize.
