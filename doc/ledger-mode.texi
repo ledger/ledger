@@ -7,24 +7,26 @@
 @c a prefix arg).  This updates the node pointers, which texinfmt.el
 @c needs.
 
-@dircategory Major Modes
 @copying
-Copyright (c) 2013, Craig Earls.  All rights reserved.
+Copyright @copyright{} 2013, Craig Earls.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
 met:
 
-- Redistributions of source code must retain the above copyright notice,
-  this list of conditions and the following disclaimer.
-
-- Redistributions in binary form must reproduce the above copyright
-  notice, this list of conditions and the following disclaimer in the
-  documentation and/or other materials provided with the distribution.
-
-- Neither the name of New Artisans LLC nor the names of its contributors
-  may be used to endorse or promote products derived from this software
-  without specific prior written permission.
+@itemize
+@item
+Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+@item
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+@item
+Neither the name of New Artisans LLC nor the names of its contributors
+may be used to endorse or promote products derived from this software
+without specific prior written permission.
+@end itemize
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS
 IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
@@ -39,6 +41,11 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @end copying
 
+@dircategory Major Modes
+@direntry
+* Ledger Mode: (ledger-mode).           Command-Line Accounting
+@end direntry
+
 @documentencoding UTF-8
 
 @iftex
@@ -49,17 +56,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @title Ledger Mode
 @subtitle Emacs Support For Version 3.0 of Ledger
 @author Craig Earls
+@page
+@vskip 0pt plus 1filll
+@insertcopying
 @end titlepage
-
-@direntry
-* Ledger Mode: (ledger-mode).           Command-Line Accounting
-@end direntry
 
 @contents
 
 @ifnottex
 
-@node Top, Copying, (dir), (dir)
+@node Top, Introduction to Ledger-mode, (dir), (dir)
 @top Overview
 
 Ledger is a command line accounting tool that provides double-entry
@@ -73,7 +79,6 @@ reports and much more...
 @end ifnottex
 
 @menu
-* Copying::
 * Introduction to Ledger-mode::
 * The Ledger Buffer::
 * The Reconcile Buffer::
@@ -87,12 +92,7 @@ reports and much more...
 * Keystroke Index::
 @end menu
 
-@node Copying, Introduction to Ledger-mode, Top, Top
-@chapter Copying
-
-@insertcopying
-
-@node Introduction to Ledger-mode, The Ledger Buffer, Copying, Top
+@node Introduction to Ledger-mode, The Ledger Buffer, Top, Top
 @chapter Introduction to Ledger-mode
 
 @menu
