@@ -39,7 +39,7 @@
 (defvar ledger-month (ledger-current-month)
   "Start a ledger session with the current month, but make it customizable to ease retro-entry.")
 
-(defun ledger-read-account-with-prompt (prompt) 
+(defun ledger-read-account-with-prompt (prompt)
   (let* ((context (ledger-context-at-point))
 	 (default (if (and (eq (ledger-context-line-type context) 'acct-transaction)
 			   (eq (ledger-context-current-field context) 'account))
@@ -52,7 +52,7 @@
   (read-string (concat prompt
 		       (if default
 			   (concat " (" default "): ")
-			   ": ")) 
+			   ": "))
 	       nil 'ledger-minibuffer-history default))
 
 (defun ledger-display-balance-at-point ()
@@ -64,7 +64,18 @@ And calculate the target-delta of the account being reconciled."
 	 (balance (with-temp-buffer
 		    (ledger-exec-ledger buffer (current-buffer) "cleared" account)
 		    (buffer-substring-no-properties (point-min) (1- (point-max))))))
-    (when balance      
+    (when balance
+      (message balance))))
+
+(defun ledger-display-ledger-stats ()
+  "Display the cleared-or-pending balance.
+And calculate the target-delta of the account being reconciled."
+  (interactive)
+  (let* ((buffer (current-buffer))
+				 (balance (with-temp-buffer
+										(ledger-exec-ledger buffer (current-buffer) "stats")
+										(buffer-substring-no-properties (point-min) (1- (point-max))))))
+    (when balance
       (message balance))))
 
 (defun ledger-magic-tab (&optional interactively)
@@ -124,7 +135,7 @@ Can indent, complete or align depending on context."
     (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
     (add-hook 'before-revert-hook 'ledger-occur-remove-all-overlays nil t)
     (make-variable-buffer-local 'highlight-overlay)
-    
+
     (ledger-init-load-init-file)
 
     (set (make-local-variable 'indent-region-function) 'ledger-post-align-postings)
@@ -144,6 +155,8 @@ Can indent, complete or align depending on context."
       (define-key map [(control ?c) (control ?u)] 'ledger-schedule-upcoming)
       (define-key map [(control ?c) (control ?y)] 'ledger-set-year)
       (define-key map [(control ?c) (control ?p)] 'ledger-display-balance-at-point)
+      (define-key map [(control ?c) (control ?l)] 'ledger-display-ledger-stats)
+
       (define-key map [tab] 'ledger-magic-tab)
       (define-key map [(control ?i)] 'ledger-magic-tab)
       (define-key map [(control ?c) tab] 'ledger-fully-complete-xact)
@@ -155,7 +168,7 @@ Can indent, complete or align depending on context."
       (define-key map [(control ?c) (control ?o) (control ?k)] 'ledger-report-kill)
       (define-key map [(control ?c) (control ?o) (control ?r)] 'ledger-report)
       (define-key map [(control ?c) (control ?o) (control ?s)] 'ledger-report-save)
- 
+
       (define-key map [(meta ?p)] 'ledger-post-prev-xact)
       (define-key map [(meta ?n)] 'ledger-post-next-xact)
 
@@ -186,8 +199,8 @@ Can indent, complete or align depending on context."
       (define-key map [toggle-post] '(menu-item "Toggle Current Posting" ledger-toggle-current))
       (define-key map [toggle-xact] '(menu-item "Toggle Current Transaction" ledger-toggle-current-transaction))
       (define-key map [sep4] '(menu-item "--"))
-      (define-key map [recon-account] '(menu-item "Reconcile Account" ledger-reconcile))
-      (define-key map [check-balance] '(menu-item "Check Balance" ledger-display-balance-at-point))
+      (define-key map [recon-account] '(menu-item "Reconcile Account" ledger-reconcile :enable ledger-works))
+      (define-key map [check-balance] '(menu-item "Check Balance" ledger-display-balance-at-point :enable ledger-works))
       (define-key map [sep6] '(menu-item "--"))
       (define-key map [edit-amount] '(menu-item "Calc on Amount" ledger-post-edit-amount))
       (define-key map [sep] '(menu-item "--"))
@@ -195,8 +208,8 @@ Can indent, complete or align depending on context."
       (define-key map [cmp-xact] '(menu-item "Complete Transaction" ledger-fully-complete-xact))
       (define-key map [add-xact] '(menu-item "Add Transaction (ledger xact)" ledger-add-transaction :enable ledger-works))
       (define-key map [sep3] '(menu-item "--"))
-      (define-key map [reconcile] '(menu-item "Reconcile Account" ledger-reconcile :enable ledger-works))
-      (define-key map [reconcile] '(menu-item "Narrow to REGEX" ledger-occur))))
+      (define-key map [stats] '(menu-item "Ledger Statistics" ledger-display-ledger-stats :enable ledger-works))
+      (define-key map [fold-buffer] '(menu-item "Narrow to REGEX" ledger-occur))))
 
 
 
