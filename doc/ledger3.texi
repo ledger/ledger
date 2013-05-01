@@ -1519,7 +1519,7 @@ commodity name must be enclosed in double quotes @samp{"}:
 1999/06/09 ! Achat
     Actif:SG PEE STK         49.957 "Arcancia Équilibre 454"
     Actif:SG PEE STK      $-234.90
-                       
+
 2000/12/08 ! Achat
     Actif:SG PEE STK        215.796 "Arcancia Équilibre 455"
     Actif:SG PEE STK    $-10742.54
@@ -4996,7 +4996,7 @@ Generate transactions based on previous postings
 @subsection Basic Options
 
 @ftable @code
-@item --help 
+@item --help
 @itemx -h
 Print summary of all options
 
