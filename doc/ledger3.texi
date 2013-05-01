@@ -1936,7 +1936,7 @@ the alias to be used in place of the full account name anywhere that
 account names are allowed.
 
 The @code{payee} sub-directive, which can occur multiple times,
-provides regexps that identify the account if that payee is
+provides regexes that identify the account if that payee is
 encountered and an account within its transaction ends in the name
 "Unknown".  Example:
 
@@ -2169,7 +2169,7 @@ payee KFC
     alias KENTUCKY FRIED CHICKEN
 @end smallexample
 
-The @code{alias} directive provides a regexp which, if it matches
+The @code{alias} directive provides a regex which, if it matches
 a parsed payee, the declared payee name is substituted:
 
 @smallexample
@@ -4038,7 +4038,7 @@ part of the balance.
 @findex balance
 
 The @command{balance} command reports the current balance of all
-accounts.  It accepts a list of optional regexps, which confine the
+accounts.  It accepts a list of optional regexes, which confine the
 balance report to the matching accounts.  If an account contains
 multiple types of commodities, each commodity's total is reported
 separately.
@@ -4056,8 +4056,8 @@ balances for an account, such as when @ref{Archiving Previous Years}.
 @findex register
 
 The @command{register} command displays all the postings occurring
-in a single account, line by line.  The account regexp must be
-specified as the only argument to this command.  If any regexps occur
+in a single account, line by line.  The account regex must be
+specified as the only argument to this command.  If any regexes occur
 after the required account name, the register will contain only those
 postings that match.  Very useful for hunting down a particular
 posting.
@@ -4080,7 +4080,7 @@ order to plot either the amount or total column, respectively.
 The @command{print} command prints out ledger transactions in a textual
 format that can be parsed by Ledger.  They will be properly formatted,
 and output in the most economic form possible.  The ``print'' command
-also takes a list of optional regexps, which will cause only those
+also takes a list of optional regexes, which will cause only those
 postings which match in some way to be printed.
 
 The @command{print} command can be a handy way to clean up a ledger
@@ -4197,7 +4197,7 @@ is from the file above.
 
 The @code{convert} command accepts three options, the most important
 ones are @code{--invert} which inverts the amount field, and
-@code{--account @var{NAME}} which you can use to specify the account to
+@code{--account @var{STR}} which you can use to specify the account to
 balance against and @code{--rich-data}. When using the rich-data
 switch additional metadata is stored as tags. There is, for example,
 a UUID field. If an entry with the same UUID tag is already included
@@ -7276,27 +7276,27 @@ A plain integer represents a commodity-less amount.
 An amount in braces can be any kind of amount supported by ledger,
 with or without a commodity.  Use this for decimal values.
 
-@item /REGEXP/
-@itemx W/REGEXP/
+@item /REGEX/
+@itemx W/REGEX/
 A regular expression that matches against an account's full name.  If
 a posting, this will match against the account affected by the
 posting.
 
-@item //REGEXP/
-@itemx p/REGEXP/
+@item //REGEX/
+@itemx p/REGEX/
 A regular expression that matches against a transaction's payee name.
 
-@item ///REGEXP/
-@itemx w/REGEXP/
+@item ///REGEX/
+@itemx w/REGEX/
 A regular expression that matches against an account's base name.  If
 a posting, this will match against the account affected by the
 posting.
 
-@item c/REGEXP/
+@item c/REGEX/
 A regular expression that matches against the transaction code (the
 text that occurs between parentheses before the payee name).
 
-@item e/REGEXP/
+@item e/REGEX/
 A regular expression that matches against a posting's note, or
 comment field.
 
