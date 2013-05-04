@@ -8,6 +8,7 @@
 @c needs.
 
 @copying
+
 Copyright @copyright{} 2003-2013, John Wiegley.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -39,6 +40,7 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 @end copying
 
 @dircategory User Applications
@@ -428,6 +430,7 @@ Ledger will generate:
 @noindent
 To limit this to a more useful subset, simply add the accounts you are
 interested in seeing transactions for:
+
 @cindex accounts, limiting by
 @cindex limiting by accounts
 
@@ -532,13 +535,13 @@ such cannot display any currency symbols other than dollar signs
 
 @node Accounting with Ledger, Stating where money goes, Principles of Accounting, Principles of Accounting
 @section Accounting with Ledger
+@cindex double-entry accounting
 
 Accounting is simply tracking your money.  It can range from nothing,
 and just waiting for automatic overdraft protection to kick in, or
 not, to a full blown double entry accounting system.  Ledger
 accomplishes the latter.  With ledger you can handle your personal
 finances or your businesses.  Double-entry accounting scales.
-@cindex double-entry accounting
 
 @node Stating where money goes, Assets and Liabilities, Accounting with Ledger, Principles of Accounting
 @section Stating where money goes
@@ -1317,6 +1320,7 @@ Your Accounts}).
 
 @cindex spaces in postings
 @cindex posting format details
+
 @strong{The format is very flexible and it isn't necessary that you
 indent and space out things exactly as shown. The only requirements
 are that the start of the transaction (the date typically) is at the
@@ -1394,15 +1398,16 @@ Expenses:Food:Hamburgers and Fries
 @node Commenting on your journal, Currency and Commodities, Structuring Your Accounts, Keeping a Journal
 @section Commenting on your Journal
 @cindex comments, characters
+@cindex block comments
+@cindex comments, block
 
 Comments are generally started using a @samp{;}.  However, in order to
 increase compatibility with other text manipulation programs and
 methods four additional comment characters are valid if used at the
 beginning of a line: @samp{#}, @samp{|}, and @samp{*} and @samp{%}.
-@cindex block comments
-@cindex comments, block
+
 Block comments can be made by use @code{@!comment} ... @code{@!end
-comment}
+comment}.
 
 @smallexample
 ; This is a single line comment,
@@ -5081,13 +5086,16 @@ Change the value expression used for ``totals'' column in
 
 @ftable @code
 @item --strict
-Accounts, tags or commodities not previously declared will cause warnings
+Accounts, tags or commodities not previously declared will cause
+warnings.
 @item --pedantic
-Accounts, tags or commodities not previously declared will cause errors
+Accounts, tags or commodities not previously declared will cause errors.
+
 @item --check-payees
-Enable strict and pedantic checking for payees as well as accounts, commodities and tags
+Enable strict and pedantic checking for payees as well as accounts,
+commodities and tags.
 @item --immediate
-Instruct ledger to evaluate calculations immediately rather than lazily
+Instruct ledger to evaluate calculations immediately rather than lazily.
 @end ftable
 
 @node Output Customization Quick Reference, Grouping Options, Error Checking and Calculation Options, Command Line Quick Reference
@@ -5165,7 +5173,8 @@ Set reporting format
 @itemx -w
 Wide
 @item --anon
-Print the ledger register with anonymized accounts and payees, useful for filing bug reports
+Print the ledger register with anonymized accounts and payees, useful
+for filing bug reports.
 @end ftable
 
 @node Grouping Options, Commodity Reporting Quick Reference, Output Customization Quick Reference, Command Line Quick Reference
@@ -7323,7 +7332,8 @@ Useful specifying a date in plain terms.  For example, you could say
 @item ceiling
 Return the next integer toward +infinity
 @item code
-Return the transaction code, the string between the parenthesis after the date.
+Return the transaction code, the string between the parenthesis after
+the date.
 @item commodity
 @item date
 @item display_amount --> t
@@ -8774,8 +8784,11 @@ for example, issue @code{ctest -V -R "5FB"}.
 @chapter Major Changes from version 2.6
 
 @itemize
-@item OFX support has been removed from Ledger 3.0
-@item single character value expressions are deprecated and should be changed to the new value expressions available in 3.0
+@item 
+OFX support has been removed from Ledger 3.0
+@item 
+Single character value expressions are deprecated and should be changed
+to the new value expressions available in 3.0
 @end itemize
 
 @node Example Data File, Miscellaneous Notes, Major Changes from version 2.6, Top

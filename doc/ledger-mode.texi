@@ -668,8 +668,9 @@ Returns the file to be operated on.
 Prompts for a payee.
 @item account
 Prompt for an account.
+
+@c FIXME : is it 'value' or 'tag' for '@item value' just below?
 @item value
-@c FIXME : is it 'value' or 'tag' for @item above?
 Prompt for a tag value.
 @end table
 
