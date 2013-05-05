@@ -2076,8 +2076,10 @@ Start a block comment, closed by @code{end comment}.
 Pre-declare commodity names.  This only has effect if @code{--strict}
 or @code{--pedantic} is used (see below).
 
- commodity $
- commodity CAD
+@smallexample
+commodity $
+commodity CAD
+@end smallexample
 
 The @code{commodity} directive supports several optional
 sub-directives, if they immediately follow the commodity directive and
