@@ -16,17 +16,21 @@ modification, are permitted provided that the following conditions are
 met:
 
 @itemize
+
 @item
 Redistributions of source code must retain the above copyright
 notice, this list of conditions and the following disclaimer.
+
 @item
 Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
+
 @item
 Neither the name of New Artisans LLC nor the names of its
 contributors may be used to endorse or promote products derived from
 this software without specific prior written permission.
+
 @end itemize
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -1653,6 +1657,7 @@ scheme.  As far as valuation goes, it's shorthand for writing
 A valuation function receives three arguments:
 
 @table @code
+
 @item  source
 A string identifying the commodity whose price is being asked for
 (example: @samp{EUR})
@@ -1664,6 +1669,7 @@ The reference date the price should be relative.
 A string identifying the ``target'' commodity, or the commodity the
 returned price should be in. This argument is null if @code{--market}
 was used instead of @code{--exchange @var{COMMODITY}}.
+
 @end table
 
 The valuation function should return an amount.  If you've written
@@ -1833,6 +1839,7 @@ The initial character of each line determines what the line means, and
 how it should be interpreted.  Allowable initial characters are:
 
 @table @code
+
 @item NUMBER
 A line beginning with a number denotes a transaction.  It may be
 followed by any number of lines, each beginning with white-space, to
@@ -1902,6 +1909,7 @@ If the semi colon is indented and occurs inside a transaction, it is
 parsed as a persistent note for its preceding category.  These notes or
 tags can be used to augment the reporting and filtering capabilities of
 Ledger.
+
 @end table
 
 @node Command Directives,  , Transaction and Comments, Journal Format
@@ -1910,6 +1918,7 @@ Ledger.
 @findex --pedantic
 
 @table @code
+
 @item beginning of line
 Command directives must occur at the beginning of a line.  Use of
 @samp{!} and @samp{@@} is deprecated.
@@ -1997,7 +2006,6 @@ alias Checking=Assets:Credit Union:Joint Checking Account
 2011/11/28 YummyPalace
     Dining        $10.00
     Checking
-
 @end smallexample
 
 The aliases are only in effect for transactions read in after the alias
@@ -2034,7 +2042,6 @@ bucket Assets:Checking
 
 2011/12/01 Sale
     Assets:Checking:Business            $ 30.00
-
 @end smallexample
 
 @item capture
@@ -2284,6 +2291,7 @@ The following single letter commands may be at the beginning of a line
 alone, for backwards compatibility with older Ledger versions.
 
 @table @code
+
 @item A
 See @code{bucket}
 
@@ -2328,6 +2336,7 @@ C 1.00 Kb = 1024 bytes
 These four relate to timeclock support, which permits Ledger to read
 timelog files.  See the timeclock's documentation for more info on the
 syntax of its timelog files.
+
 @end table
 
 @node Converting from other formats, Archiving Previous Years, Journal Format, Keeping a Journal
@@ -3243,26 +3252,25 @@ a function by using a lambda expression taking three arguments:
 The arguments passed to these functions have the following meaning:
 
 @itemize
-@item   source
-        The source commodity string, or an amount object.  If it is
-        a string, the return value must be an amount representing the
-        price of the commodity identified by that string (example:
-        @samp{$}).  If it is an amount, return the value of that
-        amount as a new amount (usually calculated as commodity price
-        times source amount).
 
-@item   date
-        The date to use for determining the value.  If null, it means
-        no date was specified, which can mean whatever you want it to
-        mean.
+@item source
+The source commodity string, or an amount object.  If it is a string,
+the return value must be an amount representing the price of the
+commodity identified by that string (example: @samp{$}).  If it is an
+amount, return the value of that amount as a new amount (usually
+calculated as commodity price times source amount).
 
-@item   target
-        If not null, a string representing the desired target
-        commodity that the commodity price, or repriced amount, should
-        be valued in.  Note that this string can be a comma-separated
-        list, and that some or all of the commodities in that list may
-        be suffixed with an exclamation mark, to indicate what is
-        being desired.
+@item date
+The date to use for determining the value.  If null, it means no date
+was specified, which can mean whatever you want it to mean.
+
+@item target
+If not null, a string representing the desired target commodity that the
+commodity price, or repriced amount, should be valued in.  Note that
+this string can be a comma-separated list, and that some or all of the
+commodities in that list may be suffixed with an exclamation mark, to
+indicate what is being desired.
+
 @end itemize
 
 In most cases, it is simplest to either use explicit amounts in your
@@ -3485,6 +3493,7 @@ Ledger you can control every aspect of the timing of a transaction.
 
 Say you're in business.  If you bill a customer, you can enter
 something like
+
 @cindex effective date of invoice
 
 @smallexample
@@ -4327,19 +4336,20 @@ include Ledger entries within an org file. There are three ways (at
 least) in which these can be included:
 
 @enumerate
+
 @item
-         place all Ledger entries within one source block and execute
-         this block with different arguments to generate the
-         appropriate reports;
+place all Ledger entries within one source block and execute this block
+with different arguments to generate the appropriate reports;
+
 @item
-         place Ledger entries in more than one source block and use the
-         noweb literary programming approach, supported by babel, to
-         combine these into one block elsewhere in the file for
-         processing by Ledger; and,
+place Ledger entries in more than one source block and use the noweb
+literary programming approach, supported by babel, to combine these into
+one block elsewhere in the file for processing by Ledger; and,
+
 @item
-         place Ledger entries in different source blocks and use
-         tangling to generate a Ledger file which you can subsequently
-         process using Ledger directly.
+place Ledger entries in different source blocks and use tangling to
+generate a Ledger file which you can subsequently process using Ledger
+directly.
 @end enumerate
 
 The first two are described in more detail in this short tutorial.
@@ -4707,15 +4717,20 @@ quantity.  The commodity can have a set of flags that indicate how to
 display it.  The meaning of the flags (all of which are optional) are:
 
 @table @code
+
 @item P
 The commodity is prefixed to the value.
+
 @item S
 The commodity is separated from the value by a space.
+
 @item T
 Thousands markers are used to display the amount.
+
 @item E
 The format of the amount is European, with period used as a thousands
 marker, and comma used as the decimal point.
+
 @end table
 
 The actual quantity for an amount is an integer of arbitrary size.
@@ -4972,35 +4987,47 @@ commands.
 @subsection Reporting Commands
 
 @ftable @code
+
 @item balance
 @itemx bal
 Show account balances
+
 @item register
 @itemx reg
 Show all transactions with running total
+
 @item csv
 Show transactions in csv format, for exporting to other programs
+
 @item print
 Print transaction in a ledger readable format
+
 @item xml
 Produce XML output of the register command
+
 @item lisp
 @itemx emacs
 Produce Emacs lisp output
+
 @item equity
 Print account balances as transactions
+
 @item prices
 Print price history for matching commodities
+
 @item pricedb
 Print price history for matching commodities in ledger readable format
+
 @item xact
 Generate transactions based on previous postings
+
 @end ftable
 
 @node Basic Options Quick Reference, Report Filtering Quick Reference, Reporting Commands Quick Reference, Command Line Quick Reference
 @subsection Basic Options
 
 @ftable @code
+
 @item --help
 @itemx -h
 Print summary of all options
@@ -5024,213 +5051,281 @@ Specify options file
 @item --account @var{STR}
 @itemx -a @var{STR}
 Specify default account @var{STR} for QIF file postings
+
 @end ftable
 
 @node Report Filtering Quick Reference, Error Checking and Calculation Options, Basic Options Quick Reference, Command Line Quick Reference
 @subsection Report Filtering
 
 @ftable @code
+
 @item --current
 @itemx -c
 Display transaction on or before the current date
+
 @item --begin @var{DATE}
 @itemx -b @var{DATE}
 Begin reports on or after @var{DATE}
+
 @item --end @var{DATE}
 @itemx -e @var{DATE}
 Limit end date of transactions for report
+
 @item --period @var{PERIOD_EXPRESSION}
 @itemx -p @var{PERIOD_EXPRESSION}
 Set report period to @var{PERIOD_EXPRESSION}
+
 @item --period-sort @var{VEXPR}
 Sort postings within each period
+
 @item --cleared
 @itemx -C
 Display only cleared postings
+
 @item --dc
 Display register or balance in debit/credit format
+
 @item --uncleared
 @itemx -U
 Display only uncleared postings
+
 @item --real
 @itemx -R
 Display only real postings
+
 @item --actual
 @itemx -L
 Display only actual postings, not automated
+
 @item --related
 @itemx -r
 Display related postings
+
 @item --budget
 Display how close your postings meet your budget
+
 @item --add-budget
 Show un-budgeted postings
+
 @item --unbudgeted
 Show only un-budgeted postings
+
 @item --forecast
 Project balances into the future
+
 @item --limit @var{EXPR}
 @itemx -l @var{EXPR}
 Limit postings in calculations
+
 @item --amount @var{EXPR}
 @itemx -t @var{EXPR}
 Change value expression reported in @command{register} report
+
 @item --total @var{VEXPR}
 @itemx -T @var{VEXPR}
 Change the value expression used for ``totals'' column in
 @command{register} and @command{balance} reports
+
 @end ftable
 
 @node Error Checking and Calculation Options, Output Customization Quick Reference, Report Filtering Quick Reference, Command Line Quick Reference
 @subsection Error Checking and Calculation Options
 
 @ftable @code
+
 @item --strict
 Accounts, tags or commodities not previously declared will cause
 warnings.
+
 @item --pedantic
 Accounts, tags or commodities not previously declared will cause errors.
 
 @item --check-payees
 Enable strict and pedantic checking for payees as well as accounts,
 commodities and tags.
+
 @item --immediate
 Instruct ledger to evaluate calculations immediately rather than lazily.
+
 @end ftable
 
 @node Output Customization Quick Reference, Grouping Options, Error Checking and Calculation Options, Command Line Quick Reference
 @subsection Output Customization
 
 @ftable @code
+
 @item --collapse
 @itemx -n
 Collapse transactions with multiple postings
+
 @item --subtotal
 @itemx -s
 Report register as a single subtotal
+
 @item --by-payee
 @itemx -P
 Report subtotals by payee
+
 @item --empty
 @itemx -E
 Include empty accounts in report
+
 @item --weekly
 @itemx -W
 Report posting totals by week
+
 @item --yearly
 @itemx -Y
 Report posting totals by year
+
 @item --dow
 Report Posting totals by day of week
+
 @item --sort @var{VEXPR}
 @itemx -S @var{VEXPR}
 Sort a report using @var{VEXPR}
+
 @item --wide
 @itemx -w
 Assume 132 columns instead of 80
+
 @item --head @var{INT}
 Report the first @var{INT} postings
+
 @item --tail @var{INT}
 Report the last @var{INT} postings
+
 @item --pager @var{FILE}
 Direct output to @var{FILE} pager program
+
 @item --average
 @itemx -A
 Report average posting value
+
 @item --deviation
 @itemx -D
 Report each posting deviation from the average
+
 @item --percent
 @itemx -%
 Show subtotals in the balance report as percentages
 @c @item --totals
 @c Include running total in the @code{xml} report
+
 @item --pivot @var{TAG}
 Produce a pivot table of the @var{TAG} type specified
+
 @item --amount-data
 @itemx -j
 Show only date and value column to format the output for plots
+
 @item --plot-amount-format @var{FORMAT_STRING}
 Specify the format for the plot output
+
 @item --total-data
 @itemx -J
 Show only dates and totals to format the output for plots
+
 @item --plot-total-format @var{FORMAT_STRING}
 Specify the format for the plot output
+
 @item --display @var{EXPR}
 @itemx -d @var{EXPR}
 Display only posting that meet the criterias in the @var{EXPR}
+
 @item --date-format @var{DATE_FORMAT}
 @itemx -y @var{DATE_FORMAT}
 Change the basic date format used in reports
+
 @item --format @var{FORMAT_STRING}
 @itemx --balance-format @var{FORMAT_STRING}
 @itemx --register-format @var{FORMAT_STRING}
 @itemx --prices-format @var{FORMAT_STRING}
 @itemx -F @var{FORMAT_STRING}
 Set reporting format
+
 @item --wide
 @itemx -w
 Wide
+
 @item --anon
 Print the ledger register with anonymized accounts and payees, useful
 for filing bug reports.
+
 @end ftable
 
 @node Grouping Options, Commodity Reporting Quick Reference, Output Customization Quick Reference, Command Line Quick Reference
 @subsection Grouping Options
 
 @ftable @code
+
 @item --by-payee
 @itemx -P
 Group postings by common payee names
+
 @item --daily
 @itemx -D
 Group postings by day
+
 @item --weekly
 @itemx -W
 Group postings by week
+
 @item --monthly
 @itemx -M
 Group postings by month
+
 @item --quarterly
 Group postings by quarter
+
 @item --yearly
 @itemx -Y
 Group postings by year
+
 @item --dow
 Group by day of weeks
+
 @item --subtotal
 @itemx -s
 Group posting together, similar to balance report
+
 @end ftable
 
 @node Commodity Reporting Quick Reference,  , Grouping Options, Command Line Quick Reference
 @subsection Commodity Reporting
 
 @ftable @code
+
 @item --price-db @var{FILE}
 Use @file{FILE} for retrieving stored commodity prices.
+
 @item --price-exp @var{INT}
 @itemx -L @var{INT}
 Set expected freshness of prices in @var{INT} minutes.
+
 @item --download
 @itemx -Q
 Download quotes using named @file{getquote}.
+
 @item --getquote @var{FILE}
 Sets path to a user defined script to download commodity prices.
+
 @item --quantity
 @itemx -O
 Report commodity totals without conversion.
+
 @item --basis
 @itemx -B
 Report cost basis.
+
 @item --market
 @itemx -V
 Report last known market value.
+
 @item --gain
 @itemx -G
 Report net gain loss for commodities that have a price history.
+
 @end ftable
 
 @node Detailed Options Description, Period Expressions, Command Line Quick Reference, Command-line Syntax
@@ -5258,6 +5353,7 @@ instance of Ledger running in the background and running multiple
 sessions with multiple reports per session.
 
 @ftable @code
+
 @item --args-only
 Ignore all environment and init-file settings and
 use only command-line arguments to control Ledger.  Useful for debugs
@@ -5332,6 +5428,7 @@ FIX THIS ENTRY @c FIXME thdox
 
 @item --version
 FIX THIS ENTRY @c FIXME thdox
+
 @end ftable
 
 @node Session Options, Report Options, Global Options, Detailed Options Description
@@ -5345,6 +5442,7 @@ instance of Ledger running in the background and running multiple
 sessions with multiple reports per session.
 
 @ftable @code
+
 @item --cache @var{FIXME}
 FIX THIS ENTRY @c FIXME thdox
 
@@ -5450,6 +5548,7 @@ with the --time-colon option they will be displayed as 2:15.
 
 @item --value-expr @var{FIXME}
 FIX THIS ENTRY @c FIXME thdox
+
 @end ftable
 
 @node Report Options, Basic options, Session Options, Detailed Options Description
@@ -5463,6 +5562,7 @@ instance of Ledger running in the background and running multiple
 sessions with multiple reports per session.
 
 @ftable @code
+
 @item --abbrev-len @var{INT}
 Set the minimum length an account can be abbreviated to if it doesn't
 fit inside the @code{account-width}. If @var{INT} is zero, then the
@@ -6130,6 +6230,7 @@ want to set them using environment variables (see @ref{Environment
 Variables}), instead of using actual command-line options:
 
 @ftable @code
+
 @item --help
 @itemx -h
 Print a summary of all the options, and what they are used for.  This
@@ -6175,6 +6276,7 @@ precedence over settings in the init file.
 @itemx -a @var{STR}
 Specify the default account which QIF file postings are assumed to
 relate to.
+
 @end ftable
 
 @node Report Filtering, Output Customization, Basic options, Detailed Options Description
@@ -6184,6 +6286,7 @@ These options change which postings affect the outcome of a
 report, in ways other than just using regular expressions:
 
 @ftable @code
+
 @item --current
 @itemx -c
 Display only transactions occurring on or before the current date.
@@ -6293,6 +6396,7 @@ totals in the @command{balance} report, and the values printed in the
 @itemx -T @var{VEXPR}
 Set the value expression used for the ``totals'' column in the
 @command{register} and @command{balance} reports.
+
 @end ftable
 
 @c @node Search Terms, Output Customization, Report Filtering, Detailed Options Description
@@ -6346,6 +6450,7 @@ These options affect only the output, but not which postings are
 used to create it:
 
 @ftable @code
+
 @item --collapse
 @itemx -n
 Cause transactions in a @command{register} report with multiple
@@ -6600,6 +6705,7 @@ Set the format for the @command{prices} report. The default is:
 "%(date) %-8(display_account) %(justify(scrub(display_amount), 12,
            2 + 9 + 8 + 12, true, color))\n"
 @end smallexample
+
 @end ftable
 
 @node Commodity Reporting, Environment Variables, Output Customization, Detailed Options Description
@@ -6608,6 +6714,7 @@ Set the format for the @command{prices} report. The default is:
 These options affect how commodity values are displayed:
 
 @ftable @code
+
 @item --price-db @var{FILE}
 Set the file that is used for recording downloaded commodity prices.
 It is always read on startup, to determine historical prices.  Other
@@ -6646,6 +6753,7 @@ value understood by ledger.  A sample implementation of a
 distribution.  Downloaded quote price are then appended to the price
 database, usually specified using the environment variable
 @env{LEDGER_PRICE_DB}.
+
 @end ftable
 
 There are several different ways that ledger can report the totals it
@@ -6655,6 +6763,7 @@ there are also several ``default'' reports, which will satisfy most
 users basic reporting needs:
 
 @ftable @code
+
 @item --quantity
 @itemx -O
 Report commodity totals (this is the default)
@@ -6671,6 +6780,7 @@ Use the last known value for commodities to calculate final values.
 @itemx -G
 Report the net gain/loss for all commodities in the report that have
 a price history.
+
 @end ftable
 
 Often you will be more interested in the value of your entire holdings,
@@ -6708,7 +6818,7 @@ One thing many people have wanted to do is to fixate the valuation of
 old European currencies in terms of the Euro after a certain date:
 
 @smallexample
-  = expr commodity == "DM"
+= expr commodity == "DM"
     ; VALUE:: date < [Jun 2008] ? market(amount, date, exchange) : 1.44 EUR
 @end smallexample
 
@@ -6790,6 +6900,7 @@ example, then it will balance against that specific price for AAPL.
 
 Normally when you use @code{-X @var{COMMODITY}} to request that
 amounts be reported in a specific commodity, Ledger uses these values:
+
 @itemize
 
 @item Register Report
@@ -6799,6 +6910,7 @@ end of today's value is different from the value of the last posting.
 
 @item Balance Report
 For the balance report, use the value of that commodity as of today.
+
 @end itemize
 
 You can now specify @code{-H} to ask that all valuations for any
@@ -7048,15 +7160,20 @@ Ledger uses value expressions to make calculations for many different
 purposes:
 
 @enumerate
+
 @item
 The values displayed in reports
+
 @item
 For predicates (where truth is anything non-zero), to determine which
 postings are calculated (@code{-l}) or displayed (@code{-d}).
+
 @item
 For sorting criteria, to yield the sort key.
+
 @item
 In the matching criteria used by automated postings.
+
 @end enumerate
 
 Value expressions support most simple math and logic operators, in
@@ -7111,6 +7228,7 @@ accounts, often with a subtle difference in meaning.  The use of each
 variable for both is specified.
 
 @table @code
+
 @item t
 This maps to whatever the user specified with @code{-t}.  In a
 register report, @code{-t} changes the value column; in a balance
@@ -7125,6 +7243,7 @@ not specified, the current report style's value expression is used.
 
 @item m
 This is always the present moment/date.
+
 @end table
 
 @menu
@@ -7136,6 +7255,7 @@ This is always the present moment/date.
 @subsection Posting/account details
 
 @table @code
+
 @item d
 A posting's date, as the number of seconds past the epoch.  This
 is always ``today'' for an account.
@@ -7171,12 +7291,14 @@ account.
 
 @item Z
 @samp{1} if a posting is not automated, @samp{0} otherwise.
+
 @end table
 
 @node Calculated totals,  , Posting/account details, Variables
 @subsection Calculated totals
 
 @table @code
+
 @item O
 The total of all postings seen so far, or the total of an account
 and all its children.
@@ -7197,6 +7319,7 @@ all its children.
 The total net gain (market value minus cost basis), for a series of
 postings, or an account and its children.  It is the same as
 @samp{V-B}.
+
 @end table
 
 @node Functions, Operators, Variables, Value Expressions
@@ -7205,6 +7328,7 @@ postings, or an account and its children.  It is the same as
 The available one letter functions are:
 
 @table @code
+
 @item -
 Negates the argument.
 
@@ -7222,6 +7346,7 @@ The arithmetic mean of the argument; @samp{Ax} is the same as
 The present market value of the argument.  The syntax @samp{P(x,d)} is
 supported, which yields the market value at time @samp{d}.  If no date
 is given, then the current moment is used.
+
 @end table
 
 @node Operators, Complex Expressions, Functions, Value Expressions
@@ -7277,6 +7402,7 @@ The binary and ternary operators, in order of precedence, are:
 More complicated expressions are possible using:
 
 @table @code
+
 @item NUM
 A plain integer represents a commodity-less amount.
 
@@ -7316,6 +7442,7 @@ precedence order of operators.
 @item [DATE]
 Useful specifying a date in plain terms.  For example, you could say
 @code{[2004/06/01]}.
+
 @end table
 
 @menu
@@ -7447,12 +7574,16 @@ a maximum width is given, the substituted text will never be wider
 than this, and will be truncated to fit.  Here are some examples:
 
 @table @code
+
 @item %-20P
 A transaction's payee, left justified and padded to 20 characters wide.
+
 @item %20P
 The same, right justified, at least 20 chars wide.
+
 @item %.20P
 The same, no more than 20 chars wide.
+
 @end table
 
 The expression following the format constraints can be a single letter,
@@ -7464,6 +7595,7 @@ or an expression enclosed in parentheses or brackets.
 The allowable expressions are:
 
 @table @code
+
 @item %
 Inserts a percent sign.
 
@@ -7560,6 +7692,7 @@ The @samp{%/} construct is special.  It separates a format string
 between what is printed for the first posting of a transaction, and
 what is printed for all subsequent postings.  If not used, the
 same format string is used for all postings.
+
 @end table
 
 @node --balance-format, Formatting codes, Format Expressions, Format Strings
@@ -7654,21 +7787,29 @@ terminal character colors and font highlights in a normal TTY session.
 The following functions allow you to manipulate and format dates.
 
 @table @code
+
 @item date
 Return the date of the current transaction
+
 @item format_date(date, "FORMAT_STRING")
 Format the date using the given format string.
+
 @item now
 Return the current date and time.  If the @code{--now @var{DATE}}
 option is defined it will return that value.
+
 @item today
 Return the current date. If the @code{--now @var{DATE}} option is
 defined it will return that value.
+
 @item to_datetime
 Convert a string to a date-time value
+
 @item to_date
 Convert a string to date value
+
 @item value_date
+
 @end table
 
 @menu
@@ -7696,6 +7837,7 @@ Dates are formed from a combination of day, month and year codes, in
 whatever order you prefer:
 
 @table @code
+
 @item %Y
 Four digit year
 
@@ -7707,6 +7849,7 @@ Two digit month
 
 @item %d
 Two digit date
+
 @end table
 
 @noindent
@@ -7720,31 +7863,41 @@ You can have additional weekday information in your date with @samp{%A}
 as
 
 @table @code
+
 @item %m-%d-%Y %A
 yields @code{02-10-2010 Wednesday}
 
 @item %A %m-%d-%Y
 yields @code{Wednesday 02-10-2010}
+
 @end table
 
 @noindent
 These are options you can select for weekday
 
 @table @code
+
 @item %a
 weekday, abbreviated Wed
+
 @item %A
 weekday, full Wednesday
+
 @item %d
 day of the month (dd), zero padded 10
+
 @item %e
 day of the month (dd) 10
+
 @item %j
 day of year, zero padded 000-366
+
 @item %u
 day of week starting with Monday (1), i.e. @code{mtwtfss} 3
+
 @item %w
 day of week starting with Sunday (0), i.e. @code{smtwtfs} 3
+
 @end table
 
 @node Month, Miscellaneous Date Codes, Weekdays, Date and Time Format Codes
@@ -7754,17 +7907,20 @@ You can have additional month information in your date with @samp{%B}
 as
 
 @table @code
+
 @item %m-%d-%Y %B
 yields @code{02-10-2010 February}
 
 @item %B %m-%d-%Y
 yields @code{February 02-10-2010}
+
 @end table
 
 @noindent
 These are options you can select for month
 
 @table @code
+
 @item %m
 @samp{mm} month as two digits
 
@@ -7774,6 +7930,7 @@ as @samp{Feb}
 
 @item %B
 Locale’s full month, variable length February
+
 @end table
 
 @node Miscellaneous Date Codes,  , Month, Date and Time Format Codes
@@ -7782,20 +7939,28 @@ Locale’s full month, variable length February
 Additional date format parameters which can be used:
 
 @table @code
+
 @item %U
 week number Sunday as first day of week 01–53
+
 @item %W
 week number Monday as first day of week 01–53
+
 @item %V
 week of the year 01–53
+
 @item %C
 @code{cc} century 00–99
+
 @item %D
 yields @code{mm/dd/yy 02/10/10}
+
 @item %x
 locale’s date representation @code{02/10/2010} for the U.S.
+
 @item %F
 yields @code{%Y-%m-%d 2010-02-10}
+
 @end table
 
 @menu
@@ -7810,6 +7975,7 @@ yields @code{%Y-%m-%d 2010-02-10}
 The following format functions allow you limited formatting of text:
 
 @table @code
+
 @item ansify_if(value, color)
 Surrounds the string representing value with ANSI codes to give it
 @code{color} on an TTY display.  Has no effect if directed to a file.
@@ -7833,6 +7999,7 @@ Return @code{STR} surrounded by double quotes, @code{"STR"}.
 @item strip(value)
 Values can have numerous annotations, such as effective dates and lot
 prices.  @code{strip} removes these annotations.
+
 @end table
 
 @node Data File Parsing Information,  , Text Formatting, Formatting codes
@@ -7843,20 +8010,26 @@ regarding the coordinates of entries in the source data file(s) that
 generated the posting.
 
 @table @code
+
 @item filename
 name of ledger data file from whence posting came, abbreviated @samp{S}
+
 @item beg_pos
 character position in @code{filename} where entry for posting begins,
 abbreviated @samp{B}
+
 @item end_pos
 character position in @code{filename} where entry for posting ends,
 abbreviated @samp{E}
+
 @item beg_line
 line number in @code{filename} where entry for posting begins,
 abbreviated @samp{b}
+
 @item end_line
 line number in @code{filename} where posting's entry for posting ends,
 abbreviated @samp{e}
+
 @end table
 
 @node Extending with Python, Ledger for Developers, Format Strings, Top
@@ -8039,6 +8212,7 @@ modularity.
 Those tiers are:
 
 @itemize
+
 @item Utility code
 
 There's lots of general utility in Ledger for doing time parsing,
@@ -8248,6 +8422,7 @@ Application object.
 This creates the global scope object, performs error reporting, and
 handles command-line options which must precede even the creation of
 the global scope, such as @code{--debug}.
+
 @end itemize
 
 And that's Ledger in a nutshell.  All the rest are details, such as
@@ -8565,6 +8740,7 @@ These options are primarily for Ledger developers, but may be of some
 use to a user trying something new.
 
 @ftable @code
+
 @item --args-only
 Ignore init files and environment variables for the ledger run.
 
@@ -8631,6 +8807,7 @@ FIX THIS ENTRY @c FIXME thdox
 
 @item --version
 Print version information and exit.
+
 @end ftable
 
 @node Pre-commands,  , Debug Options, Developer Commands
@@ -8643,6 +8820,7 @@ is that pre-commands ignore the journal data file completely, nor is
 the user's init file read.
 
 @ftable @code
+
 @item eval @var{VEXPR}
 Evaluate the given value expression against the model transaction
 
@@ -8728,6 +8906,7 @@ FIX THIS ENTRY @c FIXME thdox
 @item template
 Shows the insertion template that a @code{draft} or @code{xact}
 sub-command generates.  This is a debugging command.
+
 @end ftable
 
 @node Ledger Development Environment,  , Developer Commands, Ledger for Developers
@@ -8784,11 +8963,14 @@ for example, issue @code{ctest -V -R "5FB"}.
 @chapter Major Changes from version 2.6
 
 @itemize
+
 @item 
 OFX support has been removed from Ledger 3.0
+
 @item 
 Single character value expressions are deprecated and should be changed
 to the new value expressions available in 3.0
+
 @end itemize
 
 @node Example Data File, Miscellaneous Notes, Major Changes from version 2.6, Top
