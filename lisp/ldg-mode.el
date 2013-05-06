@@ -63,7 +63,9 @@ And calculate the target-delta of the account being reconciled."
 	 (buffer (current-buffer))
 	 (balance (with-temp-buffer
 		    (ledger-exec-ledger buffer (current-buffer) "cleared" account)
-		    (buffer-substring-no-properties (point-min) (1- (point-max))))))
+				(if (> (buffer-size) 0)
+						(buffer-substring-no-properties (point-min) (1- (point-max)))
+						(concat account " is empty.")))))
     (when balance
       (message balance))))
 
