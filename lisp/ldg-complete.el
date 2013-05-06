@@ -69,31 +69,36 @@
 						     ;; to the list
     (pcomplete-uniqify-list (nreverse payees-list))))
 
+
 (defun ledger-find-accounts-in-buffer ()
-  "Search through buffer and build tree of accounts.
-Return tree structure"
-  (let ((origin (point))
-	(account-tree (list t))
-	(account-elements nil))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward
-              ledger-account-or-metadata-regex nil t)
-        (unless (and (>= origin (match-beginning 0))
-                     (< origin (match-end 0)))
+	(interactive)
+	(let ((origin (point))
+				accounts
+				(account-tree (list t))
+				(account-elements nil))
+		(save-excursion
+			(goto-char (point-min))
+
+			(dolist (account
+								(delete-dups
+								 (progn
+									 (while (re-search-forward ledger-account-or-metadata-regex nil t)
+										 (unless (between origin (match-beginning 0) (match-end 0))
+											 (setq accounts (cons (match-string-no-properties 2) accounts))))
+									 accounts)))
+				(let ((root account-tree))
           (setq account-elements
-		(split-string
-		 (match-string-no-properties 2) ":"))
-          (let ((root account-tree))
-	    (while account-elements
-	      (let ((xact (assoc (car account-elements) root)))
-		(if xact
-                    (setq root (cdr xact))
-		    (setq xact (cons (car account-elements) (list t)))
-		    (nconc root (list xact))
-		    (setq root (cdr xact))))
-              (setq account-elements (cdr account-elements)))))))
-    account-tree))
+								(split-string
+								 account ":"))
+					(while account-elements
+						(let ((xact (assoc (car account-elements) root)))
+							(if xact
+									(setq root (cdr xact))
+									(setq xact (cons (car account-elements) (list t)))
+									(nconc root (list xact))
+									(setq root (cdr xact))))
+						(setq account-elements (cdr account-elements))))))
+		account-tree))
 
 (defun ledger-find-metadata-in-buffer ()
   "Search through buffer and build list of metadata.
@@ -177,7 +182,7 @@ Does not use ledger xact"
 	;; Search backward for a matching payee
         (when (re-search-backward
                (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+\\(.*"
-                       (regexp-quote name) ".*\\)" ) nil t) 
+                       (regexp-quote name) ".*\\)" ) nil t)
 	  (setq rest-of-name (match-string 3))
           ;; Start copying the postings
 	  (forward-line)

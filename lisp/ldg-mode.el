@@ -124,8 +124,7 @@ Can indent, complete or align depending on context."
 	(set (make-local-variable 'font-lock-defaults)
 	     '(ledger-font-lock-keywords nil t)))
     (setq font-lock-extend-region-functions
-          (list #'font-lock-extend-region-wholelines
-                #'ledger-extend-region-multiline-comment))
+          (list #'font-lock-extend-region-wholelines))
     (setq font-lock-multiline nil)
 
     (set (make-local-variable 'pcomplete-parse-arguments-function)
