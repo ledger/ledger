@@ -7,6 +7,13 @@
 @c a prefix arg).  This updates the node pointers, which texinfmt.el
 @c needs.
 
+@c | Formating | Indexing |                                           |
+@c |           | @cindex  | concept                                   |
+@c | @command  | @findex  | Ledger CLI Command (like balance)         |
+@c | @option   | @oindex  | Ledger CLI Option (like --file)           |
+@c | @var      |          | Ledger CLI option Variable (like -f FILE) |
+@c |           | @sindex  | Ledger file Syntax                        |
+
 @copying
 
 Copyright @copyright{} 2003-2013, John Wiegley.  All rights reserved.
@@ -2649,6 +2656,15 @@ after the amount, or on its own line preceded by whitespace:
 
 @node Metadata, Virtual postings, Transaction notes, Transactions
 @section Metadata
+@c TODO add cindex
+@c TODO https://groups.google.com/d/msg/ledger-cli/2csLPcHJ3ak/a17jOClzLTUJ
+@c > Is there a way to produce a register report that lists all the transaction
+@c > that contain a certain tag, and sort them based on the value of the tag?
+@c ledger reg --sort "tag('foo')" %foo
+@c ledger reg --group-by "tag('Employer)" Remboursement:Employer and tag Employer
+@c > Is it possible to get subtotals for each tag value?
+@c ledger --group-by "tag('foo')" bal
+@c TODO https://groups.google.com/d/msg/ledger-cli/K9NBhNlVnYc/TDYDAWhOA5EJ
 
 One of Ledger's more powerful features is the ability to associate
 typed metadata with postings and transactions (by which I mean all of
@@ -6941,6 +6957,7 @@ option settings in the file @file{~/.ledgerrc}, for example:
 
 @node Period Expressions,  , Detailed Options Description, Command-line Syntax
 @section Period Expressions
+@c TODO use @var below
 
 A period expression indicates a span of time, or a reporting interval,
 or both.  The full syntax is:
@@ -8394,6 +8411,7 @@ based on all the various options specified by the user.  This is the
 job of the chain logic, found entirely in @code{chain.cc}.  It took
 a really long time to get this logic exactly write, which is why
 I haven't exposed this layer to the Python bridge yet.
+@c TODO : correct above ``write'' as ``right'' ?
 
 @item Output modules
 
