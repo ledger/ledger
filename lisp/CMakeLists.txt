@@ -15,7 +15,9 @@ set(EMACS_LISP_SOURCES
   ldg-state.el
   ldg-test.el
   ldg-texi.el
-  ldg-xact.el)
+  ldg-xact.el
+  ldg-context.el
+  ldg-schedule.el)
 
 # find emacs and complain if not found
 find_program(EMACS_EXECUTABLE emacs)
@@ -26,10 +28,10 @@ macro(add_emacs_lisp_target el)
   # add rule (i.e. command) how to generate the byte-compiled file
   add_custom_command(
     OUTPUT ${el}c
-    COMMAND ${EMACS_EXECUTABLE} 
-            -L ${CMAKE_CURRENT_BINARY_DIR} 
+    COMMAND ${EMACS_EXECUTABLE}
+            -L ${CMAKE_CURRENT_BINARY_DIR}
             -l ${CMAKE_CURRENT_BINARY_DIR}/ldg-regex.el
-            -batch -f batch-byte-compile 
+            -batch -f batch-byte-compile
              ${CMAKE_CURRENT_BINARY_DIR}/${el}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${el}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
