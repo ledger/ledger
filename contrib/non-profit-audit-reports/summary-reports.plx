@@ -265,7 +265,7 @@ print INCOME "\"INCOME\",",
 my $overallTotal = $ZERO;
 
 $formatStrTotal = "\"%-90s\",\"\$%14s\"\n";
-foreach my $type ('DONATIONS', 'LICENSE ENFORCEMENT',
+foreach my $type ('DONATIONS', 'LICENSE COMPLIANCE',
                   'CONFERENCES, REGISTRATION', 'CONFERENCES, RELATED BUSINESS INCOME',
                   'BOOK ROYALTIES & AFFILIATE PROGRAMS', 'ADVERSITING',
                   'TRADEMARKS', 'INTEREST INCOME', 'OTHER') {
@@ -357,7 +357,7 @@ my %verifyAllGroups;
 foreach my $key (keys %expenseGroups) {
   $verifyAllGroups{$key} = 1;
 }
-foreach my $type ('PAYROLL', 'SOFTWARE DEVELOPMENT', 'LICENSE ENFORCEMENT', 'CONFERENCES',
+foreach my $type ('PAYROLL', 'SOFTWARE DEVELOPMENT', 'LICENSE COMPLIANCE', 'CONFERENCES',
                   'DEVELOPER MENTORING', 'TRAVEL', 'BANKING FEES', 'ADVOCACY AND PROMOTION',
                   'COMPUTING, HOSTING AND EQUIPMENT', 'ACCOUNTING',
                   'OFFICE', 'RENT', 'ADVERSITING', 'OTHER PROGRAM ACTIVITY', 'OTHER') {
