@@ -82,7 +82,7 @@
 			(dolist (account
 								(delete-dups
 								 (progn
-									 (while (re-search-forward ledger-account-or-metadata-regex nil t)
+									 (while (re-search-forward ledger-account-any-status-regex nil t)
 										 (unless (between origin (match-beginning 0) (match-end 0))
 											 (setq accounts (cons (match-string-no-properties 2) accounts))))
 									 accounts)))

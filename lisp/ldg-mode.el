@@ -84,18 +84,12 @@ And calculate the target-delta of the account being reconciled."
   "Decide what to with with <TAB>.
 Can indent, complete or align depending on context."
   (interactive "p")
-  (when (= (point) (line-end-position))
-    (if (= (point) (line-beginning-position))
-        (indent-to ledger-post-account-alignment-column)
-      (save-excursion
-        (re-search-backward
-         (rx-static-or ledger-account-any-status-regex
-                       ledger-metadata-regex
-                       ledger-payee-any-status-regex)
-         (line-beginning-position) t))
-      (when (= (point) (match-end 0))
-        (ledger-pcomplete interactively))))
-  (ledger-post-align-postings))
+	(if (= (point) (line-beginning-position))
+			(indent-to ledger-post-account-alignment-column)
+			(if (and (> (point) 1)
+							 (looking-back "[:A-Za-z0-9]" 1))
+					(ledger-pcomplete interactively)
+					(ledger-post-align-postings))))
 
 (defvar ledger-mode-abbrev-table)
 
