@@ -216,7 +216,7 @@ my %incomeGroups = ('INTEREST INCOME' => { args => ['/^Income.*Interest/' ] },
                     { args => [ '/^Income.*(Royalt|Affilate)/' ] },
                     'CONFERENCES, REGISTRATION' => {args => [ '/^Income.*Reg/' ] },
                     'CONFERENCES, RELATED BUSINESS INCOME' => { args => [ '/^Income.*(Conferences?:.*Sponsor|Booth|RBI)/'] },
-                    'LICENSE ENFORCEMENT' => { args => [ '/^Income.*Enforce/' ]},
+                    'LICENSE COMPLIANCE' => { args => [ '/^Income.*(Enforce|Compliance)/' ]},
                     'TRADEMARKS' => {args => [ '/^Income.*Trademark/' ]},
                     'ADVERSITING' => {args => [ '/^Income.*Advertising/' ]});
 
@@ -265,7 +265,7 @@ print INCOME "\"INCOME\",",
 my $overallTotal = $ZERO;
 
 $formatStrTotal = "\"%-90s\",\"\$%14s\"\n";
-foreach my $type ('DONATIONS', 'LICENSE ENFORCEMENT',
+foreach my $type ('DONATIONS', 'LICENSE COMPLIANCE',
                   'CONFERENCES, REGISTRATION', 'CONFERENCES, RELATED BUSINESS INCOME',
                   'BOOK ROYALTIES & AFFILIATE PROGRAMS', 'ADVERSITING',
                   'TRADEMARKS', 'INTEREST INCOME', 'OTHER') {
@@ -288,7 +288,7 @@ my %expenseGroups = ('BANKING FEES' => { regex => '^Expenses.*(Banking Fees|Curr
                     'COMPUTING, HOSTING AND EQUIPMENT' => { regex =>  '^Expenses.*(Hosting|Computer Equipment)'  },
                     'CONFERENCES' => { regex =>  '^Expenses.*(Conferences|Sprint)'  },
                     'DEVELOPER MENTORING' => {regex =>  '^Expenses.*Mentor'  },
-                    'LICENSE ENFORCEMENT' => { regex =>  '^Expenses.*Enforce' },
+                    'LICENSE COMPLIANCE' => { regex =>  '^Expenses.*(Enforce|Compliance)' },
                     'ACCOUNTING' => { regex =>  '^Expenses.*(Accounting|Annual Audit)' },
                     'PAYROLL' => { regex =>  '^Expenses.*Payroll' },
                     'OFFICE' => { regex =>  '^Expenses.*(Office|Phones)' },
@@ -357,7 +357,7 @@ my %verifyAllGroups;
 foreach my $key (keys %expenseGroups) {
   $verifyAllGroups{$key} = 1;
 }
-foreach my $type ('PAYROLL', 'SOFTWARE DEVELOPMENT', 'LICENSE ENFORCEMENT', 'CONFERENCES',
+foreach my $type ('PAYROLL', 'SOFTWARE DEVELOPMENT', 'LICENSE COMPLIANCE', 'CONFERENCES',
                   'DEVELOPER MENTORING', 'TRAVEL', 'BANKING FEES', 'ADVOCACY AND PROMOTION',
                   'COMPUTING, HOSTING AND EQUIPMENT', 'ACCOUNTING',
                   'OFFICE', 'RENT', 'ADVERSITING', 'OTHER PROGRAM ACTIVITY', 'OTHER') {
