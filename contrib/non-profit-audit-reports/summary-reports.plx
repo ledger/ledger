@@ -216,7 +216,7 @@ my %incomeGroups = ('INTEREST INCOME' => { args => ['/^Income.*Interest/' ] },
                     { args => [ '/^Income.*(Royalt|Affilate)/' ] },
                     'CONFERENCES, REGISTRATION' => {args => [ '/^Income.*Reg/' ] },
                     'CONFERENCES, RELATED BUSINESS INCOME' => { args => [ '/^Income.*(Conferences?:.*Sponsor|Booth|RBI)/'] },
-                    'LICENSE ENFORCEMENT' => { args => [ '/^Income.*Enforce/' ]},
+                    'LICENSE COMPLIANCE' => { args => [ '/^Income.*(Enforce|Compliance)/' ]},
                     'TRADEMARKS' => {args => [ '/^Income.*Trademark/' ]},
                     'ADVERSITING' => {args => [ '/^Income.*Advertising/' ]});
 
@@ -288,7 +288,7 @@ my %expenseGroups = ('BANKING FEES' => { regex => '^Expenses.*(Banking Fees|Curr
                     'COMPUTING, HOSTING AND EQUIPMENT' => { regex =>  '^Expenses.*(Hosting|Computer Equipment)'  },
                     'CONFERENCES' => { regex =>  '^Expenses.*(Conferences|Sprint)'  },
                     'DEVELOPER MENTORING' => {regex =>  '^Expenses.*Mentor'  },
-                    'LICENSE ENFORCEMENT' => { regex =>  '^Expenses.*Enforce' },
+                    'LICENSE COMPLIANCE' => { regex =>  '^Expenses.*(Enforce|Compliance)' },
                     'ACCOUNTING' => { regex =>  '^Expenses.*(Accounting|Annual Audit)' },
                     'PAYROLL' => { regex =>  '^Expenses.*Payroll' },
                     'OFFICE' => { regex =>  '^Expenses.*(Office|Phones)' },
