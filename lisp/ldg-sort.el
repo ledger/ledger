@@ -22,7 +22,7 @@
 
 
 ;;; Commentary:
-;; 
+;;
 
 ;;; Code:
 
@@ -45,7 +45,7 @@
       (match-end 0)))
 
 (defun ledger-sort-insert-start-mark ()
-  (interactive)  
+  (interactive)
   (save-excursion
     (goto-char (point-min))
     (if (ledger-sort-find-start)
@@ -54,7 +54,7 @@
   (insert "\n; Ledger-mode: Start sort\n\n"))
 
 (defun ledger-sort-insert-end-mark ()
-  (interactive)  
+  (interactive)
   (save-excursion
     (goto-char (point-min))
     (if (ledger-sort-find-end)
@@ -79,7 +79,7 @@
 		(setq point-delta (- (point) (car bounds)))
 		(setq target-xact (buffer-substring (car bounds) (cadr bounds)))
 		(setq inhibit-modification-hooks t)
-    (save-excursion 
+    (save-excursion
       (save-restriction
 				(goto-char beg)
 				(ledger-next-record-function) ;; make sure point is at the
@@ -100,7 +100,7 @@
 					 'ledger-end-record-function
 					 'ledger-sort-startkey))))
 
-		(goto-char beg)
+		(goto-char (point-min))
 		(re-search-forward (regexp-quote target-xact))
 		(goto-char (+ (match-beginning 0) point-delta))
     (setq inhibit-modification-hooks nil)))
@@ -108,7 +108,7 @@
 (defun ledger-sort-buffer ()
   "Sort the entire buffer."
   (interactive)
-  (let (sort-start 
+  (let (sort-start
 				sort-end)
 		(save-excursion
 			(goto-char (point-min))
@@ -116,7 +116,7 @@
 						sort-end (ledger-sort-find-end)))
     (ledger-sort-region (if sort-start
 														sort-start
-														(point-min)) 
+														(point-min))
 												(if sort-end
 														sort-end
 														(point-max)))))
