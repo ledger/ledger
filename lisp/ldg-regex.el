@@ -325,7 +325,7 @@
   (concat "\\(Y\\s-+\\([0-9]+\\)\\|"  ;; Catches a Y directive
 	  ledger-iso-date-regexp
 	  "\\([ *!]+\\)"  ;; mark
-	  "\\((.*)\\)"  ;; code
+	  "\\((.*)\\)?"  ;; code
 	  "\\(.*\\)"   ;; desc
 	  "\\)"))
 
