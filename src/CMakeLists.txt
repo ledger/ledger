@@ -136,6 +136,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   if((CMAKE_CXX_COMPILER MATCHES "clang") OR (CMAKE_CXX_COMPILER MATCHES "cxx"))
     add_definitions(
       -Weverything
+      -Wno-disabled-macro-expansion
       -Wno-padded
       -Wno-weak-vtables
       -Wno-exit-time-destructors
