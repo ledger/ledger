@@ -11,5 +11,5 @@ test bal -X $
                $5.32  Expenses
               $-6.45  Income:Currency Conversion
 --------------------
-               $6.45
+               $6.46
 end test
