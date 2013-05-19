@@ -487,11 +487,11 @@ $ ledger -f drewr3.dat register payee "Organic"
 @findex cleared
 
 A very useful report is to show what your obligations are versus what
-expenditures have actually been recorded.  It can take several days
-for a check to clear, but you should treat it as money spent.  The
-@code{cleared} report shows just that (note that the cleared report
-will not format correctly for accounts that contain multiple
-commodities):
+expenditures have actually been recorded.  It can take several days for
+a check to clear, but you should treat it as money spent.  The
+@command{cleared} report shows just that (note that the
+@command{cleared} report will not format correctly for accounts that
+contain multiple commodities):
 
 @smallexample
 $ ledger -f drewr3.dat cleared
@@ -1819,7 +1819,7 @@ Warning: "FinanceData/Master.dat", line 15: Unknown account 'Allocation:Equities
 @end smallexample
 
 If you have a large Ledger register already created use the
-@code{accounts} command to get started:
+@command{accounts} command to get started:
 
 @smallexample
 $ ledger accounts >> Accounts.dat
@@ -2064,8 +2064,8 @@ capture  Expenses:Deductible:Medical  Medical
 Would cause any posting with @code{Medical} in its name to be replaced
 with @code{Expenses:Deductible:Medical}.
 
-Ledger will display the mapped payees in @code{print} and
-@code{register} reports.
+Ledger will display the mapped payees in @command{print} and
+@command{register} reports.
 
 @item check
 @c instance_t::check_directive in textual.cc
@@ -2199,8 +2199,8 @@ a parsed payee, the declared payee name is substituted:
 ...
 @end smallexample
 
-Ledger will display the mapped payees in @code{print} and
-@code{register} reports.
+Ledger will display the mapped payees in @command{print} and
+@command{register} reports.
 
 @item apply tag
 @c instance_t::tag_directive in textual.cc
@@ -4059,14 +4059,14 @@ part of the balance.
 @section Primary Financial Reports
 
 @menu
-* The balance Command::
-* The equity Command::
-* The register Command::
-* The print Command::
+* The @command{balance} command::
+* The @command{equity} command::
+* The @command{register} command::
+* The @command{print} command::
 @end menu
 
-@node The balance Command, The equity Command, Primary Financial Reports, Primary Financial Reports
-@subsection The @code{balance} command
+@node  The @command{balance} command, The @command{equity} command, Primary Financial Reports, Primary Financial Reports
+@subsection The @command{balance} command
 @findex balance
 
 The @command{balance} command reports the current balance of all
@@ -4075,16 +4075,16 @@ balance report to the matching accounts.  If an account contains
 multiple types of commodities, each commodity's total is reported
 separately.
 
-@node The equity Command, The register Command, The balance Command, Primary Financial Reports
-@subsection The @code{equity} command
+@node The @command{equity} command, The @command{register} command, The @command{balance} command, Primary Financial Reports
+@subsection The @command{equity} command
 @findex equity
 
 The @command{equity} command prints out accounts balances as if they
 were transactions.  This makes it easy to establish the starting
 balances for an account, such as when @ref{Archiving Previous Years}.
 
-@node The register Command, The print Command, The equity Command, Primary Financial Reports
-@subsection The @code{register} command
+@node  The @command{register} command, The @command{print} command, The @command{equity} command, Primary Financial Reports
+@subsection The @command{register} command
 @findex register
 
 The @command{register} command displays all the postings occurring
@@ -4105,8 +4105,8 @@ included in the Ledger distribution.  The only requirement is that you
 add either @code{-j} or @code{-J} to your register command, in
 order to plot either the amount or total column, respectively.
 
-@node The print Command,  , The register Command, Primary Financial Reports
-@subsection The @code{print} command
+@node  The @command{print} command,  , The @command{register} command, Primary Financial Reports
+@subsection The @command{print} command
 @findex print
 
 The @command{print} command prints out ledger transactions in a textual
@@ -4123,24 +4123,24 @@ file whose formatting has gotten out of hand.
 
 @menu
 * Comma Separated Values files::
-* The lisp command::
-* Emacs Org mode::
+* The @command{lisp} command::
+* Emacs @command{org} Mode::
 * Org mode with Babel::
-* The pricemap Command::
-* The xml Command::
-* prices and pricedb::
+* The @command{pricemap} command::
+* The @command{xml} command::
+* @command{prices} and @command{pricedb} commands::
 @end menu
 
-@node  Comma Separated Values files, The lisp command, Reports in other Formats, Reports in other Formats
+@node  Comma Separated Values files, The @command{lisp} command, Reports in other Formats, Reports in other Formats
 @subsection Comma Separated Values files
 
 @menu
-* The csv command::
-* The convert command::
+* The @command{csv} command::
+* The @command{convert} command::
 @end menu
 
-@node The csv command, The convert command, Comma Separated Values files, Comma Separated Values files
-@subsubsection The @code{csv} command
+@node  The @command{csv} command, The @command{convert} command, Comma Separated Values files, Comma Separated Values files
+@subsubsection The @command{csv} command
 @findex csv
 
 The @command{csv} command will output print out the desired ledger
@@ -4148,19 +4148,19 @@ transactions in a csv format suitable for import into other programs.
 You can specify the transactions to print using all the normal
 limiting and searching functions.
 
-@node The convert command,  , The csv command, Comma Separated Values files
-@subsubsection The @code{convert} command
+@node  The @command{convert} command,  , The @command{csv} command, Comma Separated Values files
+@subsubsection The @command{convert} command
 @cindex csv conversion
 @cindex reading csv
 @cindex comma separated variable file reading
 @findex convert
 @findex --input-date-format @var{DATE_FORMAT}
 
-The @code{convert} command parses a comma separated value (csv) file
+The @command{convert} command parses a comma separated value (csv) file
 and outputs Ledger transactions.  Many banks offer csv file downloads.
 Unfortunately, the file formats, aside the from commas, are all
-different.  The ledger @code{convert} command tries to help as much as
-it can.
+different.  The ledger @command{convert} command tries to help as much
+as it can.
 
 Your banks csv files will have fields in different orders from other
 banks, so there must be a way to tell Ledger what to expect.  Insert
@@ -4227,16 +4227,16 @@ is from the file above.
 @findex --account @var{STR}
 @findex --rich-data
 
-The @code{convert} command accepts three options, the most important
+The @command{convert} command accepts three options, the most important
 ones are @code{--invert} which inverts the amount field, and
 @code{--account @var{STR}} which you can use to specify the account to
-balance against and @code{--rich-data}. When using the rich-data
-switch additional metadata is stored as tags. There is, for example,
-a UUID field. If an entry with the same UUID tag is already included
-in the normal ledger file (specified via @code{-f} or via environment
-variable @env{LEDGER_FILE}) this entry will not be printed again.
+balance against and @code{--rich-data}. When using the rich-data switch
+additional metadata is stored as tags. There is, for example, a UUID
+field. If an entry with the same UUID tag is already included in the
+normal ledger file (specified via @code{-f} or via environment variable
+@env{LEDGER_FILE}) this entry will not be printed again.
 
-You can also use @code{convert} with @code{payee} and @code{account}
+You can also use @command{convert} with @code{payee} and @code{account}
 directives. First, you can use the @code{payee} and @code{alias}
 directive to rewrite the @code{payee} field based on some rules. Then
 you can use the account and its @code{payee} directive to specify the
@@ -4255,8 +4255,8 @@ match on the new payee field. During the @code{ledger convert} run
 only the original payee name as specified in the csv data seems to be
 used.
 
-@node The lisp command, Emacs Org mode, Comma Separated Values files, Reports in other Formats
-@subsection The @code{lisp} command
+@node  The @command{lisp} command, Emacs @command{org} Mode, Comma Separated Values files, Reports in other Formats
+@subsection The @command{lisp} command
 @findex lisp
 @findex emacs
 
@@ -4270,14 +4270,14 @@ directly by Emacs Lisp.  The format of the @code{sexp} is:
 @end smallexample
 
 @noindent
-@code{emacs} can also be used as a synonym for @code{lisp}
+@command{emacs} can also be used as a synonym for @command{lisp}.
 
-@node Emacs Org mode, Org mode with Babel, The lisp command, Reports in other Formats
-@subsection Emacs @code{org} Mode
+@node  Emacs @command{org} Mode, Org mode with Babel, The @command{lisp} command, Reports in other Formats
+@subsection Emacs @command{org} Mode
 @findex org
 
-The @code{org} command produces a journal file suitable for use in the
-Emacs Org mode.  More details on using Org mode can be found at
+The @command{org} command produces a journal file suitable for use in
+the Emacs Org mode.  More details on using Org mode can be found at
 @url{http://www.orgmode.org}.
 
 Org mode has a sub-system known as Babel which allows for literate
@@ -4330,7 +4330,7 @@ default, will appear immediately below the source code block.
 You can combine multiple source code blocks before executing ledger and
 do all kinds of other wonderful things with Babel (and Org mode).
 
-@node Org mode with Babel, The pricemap Command, Emacs Org mode, Reports in other Formats
+@node Org mode with Babel, The @command{pricemap} command, Emacs @command{org} Mode, Reports in other Formats
 @subsection Org mode with Babel
 
 Using Babel, it is possible to record financial transactions
@@ -4374,7 +4374,7 @@ The first two are described in more detail in this short tutorial.
 
 @menu
 * Embedded Ledger example with single source block::
-* Multiple Ledger source blocks with @command{noweb}::
+* Multiple Ledger source blocks with @code{noweb}::
 * Income Entries::
 * Expenses::
 * Financial Summaries::
@@ -4383,7 +4383,7 @@ The first two are described in more detail in this short tutorial.
 * Summary::
 @end menu
 
-@node Embedded Ledger example with single source block, Multiple Ledger source blocks with @command{noweb}, Org mode with Babel, Org mode with Babel
+@node Embedded Ledger example with single source block, Multiple Ledger source blocks with @code{noweb}, Org mode with Babel, Org mode with Babel
 @subsubsection Embedded Ledger example with single source block
 
 The easiest, albeit possibly less useful, way in which to use Ledger
@@ -4423,7 +4423,7 @@ well as many other types of reports) using Babel to invoke Ledger with
 specific arguments. The arguments are passed to Ledger using the
 @code{:cmdline} header argument. In the code block above, there is no
 such argument so the system takes the default. For Ledger code blocks,
-the default @code{:cmdline} argument is @code{bal} and the result of
+the default @code{:cmdline} argument is @command{bal} and the result of
 evaluating this code block (@kbd{C-c C-c}) would be:
 
 @smallexample
@@ -4450,10 +4450,10 @@ financial state. Eventually, Babel will support passing arguments to
 currently. Instead, we can use the concepts of literary programming, as
 implemented by the @code{noweb} features of Babel, to help us.
 
-@node Multiple Ledger source blocks with @command{noweb}, Income Entries, Embedded Ledger example with single source block, Org mode with Babel
-@subsubsection Multiple Ledger source blocks with @command{noweb}
+@node Multiple Ledger source blocks with @code{noweb}, Income Entries, Embedded Ledger example with single source block, Org mode with Babel
+@subsubsection Multiple Ledger source blocks with @code{noweb}
 
-The @command{noweb} feature of Babel allows us to expand references to
+The @code{noweb} feature of Babel allows us to expand references to
 other code blocks within a code block. For Ledger, this can be used to
 group transactions according to type, say, and then bring various sets
 of transactions together to generate reports.
@@ -4461,7 +4461,7 @@ of transactions together to generate reports.
 Using the same transactions used above, we could consider splitting
 these into expenses and income, as follows:
 
-@node Income Entries, Expenses, Multiple Ledger source blocks with @command{noweb}, Org mode with Babel
+@node Income Entries, Expenses, Multiple Ledger source blocks with @code{noweb}, Org mode with Babel
 @subsubsection Income Entries
 
 The first set of entries relates to income, either monthly pay or
@@ -4621,8 +4621,8 @@ file and manipulated using Babel. However, only simple Ledger features
 have been illustrated; please refer to the Ledger documentation for
 examples of more complex operations with a ledger.
 
-@node The pricemap Command, The xml Command, Org mode with Babel, Reports in other Formats
-@subsection The @code{pricemap} command
+@node  The @command{pricemap} command, The @command{xml} command, Org mode with Babel, Reports in other Formats
+@subsection The @command{pricemap} command
 @findex pricemap
 
 If you have the @code{graphviz} graph visualization package installed,
@@ -4633,8 +4633,8 @@ This is probably not very interesting, unless you have many different
 commodities valued in terms of each other. For example, multiple
 currencies and multiples investments valued in those currencies.
 
-@node The xml Command, prices and pricedb, The pricemap Command, Reports in other Formats
-@subsection The @code{xml} command
+@node  The @command{xml} command, @command{prices} and @command{pricedb} commands, The @command{pricemap} command, Reports in other Formats
+@subsection The @command{xml} command
 @findex xml
 
 By default, Ledger uses a human-readable data format, and displays its
@@ -4789,8 +4789,8 @@ That is the extent of the XML data format used by Ledger.  It will
 output such data if the @command{xml} command is used, and can read
 the same data.
 
-@node prices and pricedb,  , The xml Command, Reports in other Formats
-@subsection @code{prices} and @code{pricedb} commands
+@node  @command{prices} and @command{pricedb} commands,  , The @command{xml} command, Reports in other Formats
+@subsection @command{prices} and @command{pricedb} commands
 @findex prices
 @findex pricedb
 
@@ -4809,17 +4809,17 @@ pricedb database files.
 @findex --count
 
 @menu
-* accounts::
-* payees::
-* commodities::
-* tags::
-* entry and xact::
-* stats::
-* select::
+* @command{accounts}::
+* @command{payees}::
+* @command{commodities}::
+* @command{tags}::
+* @command{xact}::
+* @command{stats}::
+* @command{select}::
 @end menu
 
-@node accounts, payees, Reports about your Journals, Reports about your Journals
-@subsection @code{accounts}
+@node  @command{accounts}, @command{payees}, Reports about your Journals, Reports about your Journals
+@subsection @command{accounts}
 @findex accounts
 
 The @command{accounts} reports all of the accounts in the journal.
@@ -4828,8 +4828,8 @@ to accounts matching the regex. The output is sorted by name.  Using
 the @code{--count} option will tell you how many entries use each
 account.
 
-@node payees, commodities, accounts, Reports about your Journals
-@subsection @code{payees}
+@node  @command{payees}, @command{commodities}, @command{accounts}, Reports about your Journals
+@subsection @command{payees}
 @findex payees
 
 The @command{payees} reports all of the unique payees in the journal.
@@ -4844,7 +4844,7 @@ Oudtshoorn Municipality
 Vaca Veronica
 @end smallexample
 
-@node commodities, tags, payees, Reports about your Journals
+@node  @command{commodities}, @command{tags}, @command{payees}, Reports about your Journals
 @subsection @command{commodities}
 @findex commodities
 
@@ -4852,7 +4852,7 @@ Report all commodities present in the journals under consideration.
 The output is sorted by name.  Using the @code{--count} option will
 tell you how many entries use each commodity.
 
-@node tags, entry and xact, commodities, Reports about your Journals
+@node  @command{tags}, , @command{commodities}, Reports about your Journals
 @subsection @command{tags}
 @findex tags
 @findex --values
@@ -4862,16 +4862,15 @@ is sorted by name.  Using the @code{--count} option will tell you how
 many entries use each tag.  Using the @code{--values} option will
 report the values used by each tag.
 
-@node entry and xact, stats, tags, Reports about your Journals
-@subsection @command{draft}, @command{entry} and @command{xact}
+@node  @command{xact}, @command{stats}, @command{tags}, Reports about your Journals
+@subsection @command{xact}
 @findex draft
 @findex entry
 @findex xact
 
-The @code{draft}, @code{entry} and @command{xact} commands simplify
-the creation of new transactions.  It works on the principle that 80%
-of all postings are variants of earlier postings.  Here's how it
-works:
+The @command{xact} command simplify the creation of new transactions.
+It works on the principle that 80% of all postings are variants of
+earlier postings.  Here's how it works:
 
 Say you currently have this posting in your ledger file:
 
@@ -4882,12 +4881,12 @@ Say you currently have this posting in your ledger file:
     Liabilities:MasterCard             $-15.00
 @end smallexample
 
-Now it's @code{2004/4/9}, and you've just eating at @code{Viva
-Italiano} again.  The exact amounts are different, but the overall
-form is the same.  With the @command{xact} command you can type:
+Now it's @code{2004/4/9}, and you've just eating at @code{Viva Italiano}
+again.  The exact amounts are different, but the overall form is the
+same.  With the @command{xact} command you can type:
 
 @smallexample
-$ ledger entry 2004/4/9 viva food 11 tips 2.50
+$ ledger xact 2004/4/9 viva food 11 tips 2.50
 @end smallexample
 
 This produces the following output:
@@ -4900,8 +4899,8 @@ This produces the following output:
 @end smallexample
 
 It works by finding a past posting matching the regular expression
-@code{viva}, and assuming that any accounts or amounts specified will
-be similar to that earlier posting.  If Ledger does not succeed in
+@code{viva}, and assuming that any accounts or amounts specified will be
+similar to that earlier posting.  If Ledger does not succeed in
 generating a new transaction, an error is printed and the exit code is
 set to @samp{1}.
 
@@ -4909,26 +4908,27 @@ Here are a few more examples of the @command{xact} command, assuming
 the above journal transaction:
 
 @smallexample
-$ ledger entry 4/9 viva 11.50
-$ ledger entry 4/9 viva 11.50 checking # (from `checking')
-$ ledger entry 4/9 viva food 11.50 tips 8
+$ ledger xact 4/9 viva 11.50
+$ ledger xact 4/9 viva 11.50 checking # (from `checking')
+$ ledger xact 4/9 viva food 11.50 tips 8
 $ ledger xact 4/9 viva food 11.50 tips 8 cash
 $ ledger xact 4/9 viva food $11.50 tips $8 cash
 $ ledger xact 4/9 viva dining "DM 11.50"
 @end smallexample
 
-@command{xact} is identical to @command{entry} and is provide for
-backwards compatibility with Ledger 2.X.
+@command{draft} and @command{entry} are both synonyms of
+@command{xact}. @command{entry} is provided for backwards compatibility
+with Ledger 2.X.
 
-@node stats, select, entry and xact, Reports about your Journals
-@subsection @code{stats}
+@node  @command{stats}, @command{select}, @command{xact}, Reports about your Journals
+@subsection @command{stats}
 @findex stats
 @findex stat
 
 FIX THIS ENTRY @c FIXME thdox
 
-@node select,  , stats, Reports about your Journals
-@subsection @code{select}
+@node  @command{select},  , @command{stats}, Reports about your Journals
+@subsection @command{select}
 @findex select
 
 FIX THIS ENTRY @c FIXME thdox
@@ -5228,7 +5228,7 @@ Report each posting deviation from the average
 @itemx -%
 Show subtotals in the balance report as percentages
 @c @item --totals
-@c Include running total in the @code{xml} report
+@c Include running total in the @command{xml} report
 
 @item --pivot @var{TAG}
 Produce a pivot table of the @var{TAG} type specified
@@ -5637,7 +5637,7 @@ Print average values over the number of transactions instead of
 running totals.
 
 @item --balance-format @var{FORMAT_STRING}
-Specify the format to use for the @code{balance} report (@pxref{Format
+Specify the format to use for the @command{balance} report (@pxref{Format
 Strings}). The default is:
 
 @smallexample
@@ -5678,7 +5678,7 @@ displays transaction in the budget, in a balance report this displays
 accounts in the budget (@pxref{Budgeting and Forecasting}).
 
 @item --budget-format @var{FORMAT_STRING}
-Specify the format to use for the @code{budget} report (@pxref{Format
+Specify the format to use for the @command{budget} report (@pxref{Format
 Strings}).  The default is:
 
 @smallexample
@@ -5700,7 +5700,7 @@ display and calculation.
 
 @item --cleared-format @var{FORMAT_STRING}
 FIX THIS ENTRY @c FIXME thdox: to keep?
-Specify the format to use for the @code{cleared} report (@pxref{Format
+Specify the format to use for the @command{cleared} report (@pxref{Format
 Strings}). The default is:
 
 @smallexample
@@ -5736,7 +5736,7 @@ Direct ledger to report the number of items when
 appended to the commodities, accounts or payees command.
 
 @item --csv-format @var{FORMAT_STRING}
-Specify the format to use for the @code{csv} report (@pxref{Format
+Specify the format to use for the @command{csv} report (@pxref{Format
 Strings}).  The default is:
 
 @smallexample
@@ -5872,9 +5872,9 @@ Specify the end @var{DATE} for transaction to be considered in the
 report.
 
 @item --equity
-Related to the @code{equity} command (@pxref{The
-equity Command}).  Gives current account balances in the form of a
-register report.
+Related to the @command{equity} command (@pxref{The @command{equity}
+command}).  Gives current account balances in the form of a register
+report.
 
 @item --exact
 FIX THIS ENTRY @c ASK JOHN
@@ -6550,8 +6550,8 @@ meaningful in the @command{register} and @command{prices} reports.
 
 @item --percent
 @itemx -%
-Show account subtotals in the @command{balance} report as percentages
-of the parent account.
+Show account subtotals in the @command{balance} report as percentages of
+the parent account.
 
 @c @code{--totals} include running total information in the
 @c @command{xml} report.
@@ -6609,7 +6609,7 @@ Set the reporting format for whatever report ledger is about to make.
 each report type:
 
 @item --balance-format @var{FORMAT_STRING}
-Define the output format for the @code{balance} report.  The default
+Define the output format for the @command{balance} report.  The default
 (defined in @code{report.h} is:
 
 @smallexample
@@ -6642,7 +6642,7 @@ Define the format for the cleared report. The default is:
 @end smallexample
 
 @item --register-format @var{FORMAT_STRING}
-Define the output format for the @code{register} report.  The default
+Define the output format for the @command{register} report.  The default
 (defined in @code{report.h} is:
 
 @smallexample
@@ -6680,7 +6680,7 @@ Define the output format for the @code{register} report.  The default
 @end smallexample
 
 @item --csv-format @var{FORMAT_STRING}
-Set the format for @code{csv} reports.  The default is:
+Set the format for @command{csv} reports.  The default is:
 
 @smallexample
 "%(quoted(date)),
@@ -8723,20 +8723,20 @@ commodities.
 @section Developer Commands
 
 @menu
-* echo::
-* reload::
-* source::
+* @command{echo}::
+* @command{reload}::
+* @command{source}::
 * Debug Options::
 * Pre-commands::
 @end menu
 
-@node echo, reload, Developer Commands, Developer Commands
+@node  @command{echo}, @command{reload}, Developer Commands, Developer Commands
 @subsection @command{echo}
 @findex echo
 
 This command simply echoes its argument back to the output.
 
-@node reload, source, echo, Developer Commands
+@node  @command{reload}, @command{source}, @command{echo}, Developer Commands
 @subsection @command{reload}
 @findex reload
 
@@ -8744,16 +8744,16 @@ Forces ledger to reload any journal files.  This function exists to
 support external programs controlling a running ledger process and does
 nothing for a command line user.
 
-@node source, Debug Options, reload, Developer Commands
+@node  @command{source}, Debug Options, @command{reload}, Developer Commands
 @subsection @command{source}
 @findex source
 
-The @code{source} command take a journal file as an argument and parses
-it checking for errors, no other reports are generated, and no other
-arguments are necessary.  Ledger will return success if no errors are
-found.
+The @command{source} command take a journal file as an argument and
+parses it checking for errors, no other reports are generated, and no
+other arguments are necessary.  Ledger will return success if no errors
+are found.
 
-@node Debug Options, Pre-commands, source, Developer Commands
+@node Debug Options, Pre-commands, @command{source}, Developer Commands
 @subsection Debug Options
 
 These options are primarily for Ledger developers, but may be of some
@@ -8839,7 +8839,7 @@ will work. The difference between a pre-command and a regular command
 is that pre-commands ignore the journal data file completely, nor is
 the user's init file read.
 
-@ftable @code
+@ftable @command
 
 @item eval @var{VEXPR}
 Evaluate the given value expression against the model transaction
@@ -8924,7 +8924,7 @@ true
 FIX THIS ENTRY @c FIXME thdox
 
 @item template
-Shows the insertion template that a @code{draft} or @code{xact}
+Shows the insertion template that a @command{draft} or @command{xact}
 sub-command generates.  This is a debugging command.
 
 @end ftable
@@ -8933,14 +8933,14 @@ sub-command generates.  This is a debugging command.
 @section Ledger Development Environment
 
 @menu
-* acprep build configuration tool::
+* @code{acprep} build configuration tool::
 * Testing Framework::
 @end menu
 
-@node acprep build configuration tool, Testing Framework, Ledger Development Environment, Ledger Development Environment
+@node @code{acprep} build configuration tool, Testing Framework, Ledger Development Environment, Ledger Development Environment
 @subsection @code{acprep} build configuration tool
 
-@node Testing Framework,  , acprep build configuration tool, Ledger Development Environment
+@node Testing Framework,  , @code{acprep} build configuration tool, Ledger Development Environment
 @subsection Testing Framework
 
 Ledger source ships with a fairly complete set of tests to verify that
