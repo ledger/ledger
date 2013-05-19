@@ -5558,11 +5558,11 @@ it will issue a warning giving you the file and line number of the
 problem.
 
 @item --time-colon
-The --time-colon option will display the value for a seconds based
-commodity as real hours and minutes.
+The @code{--time-colon} option will display the value for a seconds
+based commodity as real hours and minutes.
 
 For example 8100 seconds by default will be displayed as 2.25 whereas
-with the --time-colon option they will be displayed as 2:15.
+with the @code{--time-colon} option they will be displayed as 2:15.
 
 @item --value-expr @var{FIXME}
 FIX THIS ENTRY @c FIXME thdox
@@ -7534,7 +7534,7 @@ Return value rounded to n digits.  Does not affect formatting.
 * Basics::
 * Format String Structure::
 * Format Expressions::
-* --balance-format::
+* @code{--balance-format}::
 * Formatting codes::
 @end menu
 
@@ -7608,7 +7608,7 @@ The same, no more than 20 chars wide.
 The expression following the format constraints can be a single letter,
 or an expression enclosed in parentheses or brackets.
 
-@node Format Expressions, --balance-format, Format String Structure, Format Strings
+@node Format Expressions, @code{--balance-format}, Format String Structure, Format Strings
 @section Format Expressions
 
 The allowable expressions are:
@@ -7714,8 +7714,8 @@ same format string is used for all postings.
 
 @end table
 
-@node --balance-format, Formatting codes, Format Expressions, Format Strings
-@section --balance-format
+@node @code{--balance-format}, Formatting codes, Format Expressions, Format Strings
+@section @code{--balance-format}
 @findex --balance-format @var{FORMAT_STRING}
 @findex --format @var{FORMAT_STRING}
 
@@ -7731,7 +7731,7 @@ various functions are described later):
 "--------------------\n"
 @end smallexample
 
-@node Formatting codes,  , --balance-format, Format Strings
+@node Formatting codes,  , @code{--balance-format}, Format Strings
 @section Formatting Functions and Codes
 
 @menu
@@ -7909,7 +7909,7 @@ day of the month (dd), zero padded 10
 day of the month (dd) 10
 
 @item %j
-day of year, zero padded 000-366
+day of year, zero padded 000–366
 
 @item %u
 day of week starting with Monday (1), i.e. @code{mtwtfss} 3
@@ -8162,7 +8162,7 @@ journal file.
 @section Queries
 
 The Journal.query() method accepts every argument you can specify on
-the command-line, including --options.
+the command-line, including @code{--options}.
 
 Since a query ``cooks'' the journal it applies to, only one query may
 be active for that journal at a given time.  Once the query object is
