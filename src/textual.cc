@@ -848,7 +848,8 @@ void instance_t::apply_tag_directive(char * line)
 void instance_t::apply_rate_directive(char * line)
 {
   if (optional<std::pair<commodity_t *, price_point_t> > price_point =
-      commodity_pool_t::current_pool->parse_price_directive(trim_ws(line), true)) {
+      commodity_pool_t::current_pool->parse_price_directive
+        (trim_ws(line), true, true)) {
     apply_stack.push_front
       (application_t("fixed", fixed_rate_t(price_point->first,
                                            price_point->second.price)));
@@ -1445,6 +1446,9 @@ post_t * instance_t::parse_post(char *          line,
                         PARSE_NO_REDUCE | PARSE_SINGLE | PARSE_NO_ASSIGN,
                         defer_expr, &post->amount_expr);
 
+    DEBUG("textual.parse", "line " << context.linenum << ": "
+          << "post amount = " << post->amount);
+
     if (! post->amount.is_null() && post->amount.has_commodity()) {
       context.journal->register_commodity(post->amount.commodity(), post.get());
 
@@ -1456,14 +1460,13 @@ post_t * instance_t::parse_post(char *          line,
             annotation_t details(rate.second);
             details.add_flags(ANNOTATION_PRICE_FIXATED);
             post->amount.annotate(details);
+            DEBUG("textual.parse", "line " << context.linenum << ": "
+                  << "applied rate = " << post->amount);
             break;
           }
         }
       }
     }
-
-    DEBUG("textual.parse", "line " << context.linenum << ": "
-          << "post amount = " << post->amount);
 
     if (stream.eof()) {
       next = NULL;

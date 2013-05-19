@@ -311,7 +311,8 @@ commodity_pool_t::exchange(const amount_t&             amount,
 }
 
 optional<std::pair<commodity_t *, price_point_t> >
-commodity_pool_t::parse_price_directive(char * line, bool do_not_add_price)
+commodity_pool_t::parse_price_directive
+  (char * line, bool do_not_add_price, bool no_date)
 {
   char * date_field_ptr = line;
   char * time_field_ptr = next_element(date_field_ptr);
@@ -322,13 +323,13 @@ commodity_pool_t::parse_price_directive(char * line, bool do_not_add_price)
   datetime_t datetime;
   string     symbol;
 
-  if (std::isdigit(time_field_ptr[0])) {
+  if (! no_date && std::isdigit(time_field_ptr[0])) {
     symbol_and_price = next_element(time_field_ptr);
     if (! symbol_and_price) return none;
 
     datetime = parse_datetime(date_field + " " + time_field_ptr);
   }
-  else if (std::isdigit(date_field_ptr[0])) {
+  else if (! no_date && std::isdigit(date_field_ptr[0])) {
     symbol_and_price = time_field_ptr;
     datetime = datetime_t(parse_date(date_field));
   }

@@ -125,7 +125,8 @@ public:
   // Parse commodity prices from a textual representation
 
   optional<std::pair<commodity_t *, price_point_t> >
-  parse_price_directive(char * line, bool do_not_add_price = false);
+  parse_price_directive(char * line, bool do_not_add_price = false,
+                        bool no_date = false);
 
   commodity_t *
   parse_price_expression(const std::string&          str,
