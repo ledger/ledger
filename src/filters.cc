@@ -1040,7 +1040,7 @@ void interval_posts::flush()
           "Calling subtotal_posts::report_subtotal() at end");
     report_subtotal(interval);
   }
-    
+
   // Tell our parent class to flush
   subtotal_posts::flush();
 }
