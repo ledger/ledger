@@ -1792,6 +1792,7 @@ ledger reg -V food
 @node Keeping it Consistent, Journal Format, Currency and Commodities, Keeping a Journal
 @section Keeping it Consistent
 @findex --strict
+@findex accounts
 
 Sometimes Ledger's flexibility can lead to difficulties.  Using a
 freeform text editor to enter transactions makes it easy to keep the
@@ -2054,6 +2055,9 @@ bucket Assets:Checking
 
 @item capture
 @c instance_t::account_mapping_directive
+@findex print
+@findex register
+
 Directs Ledger to replace any account matching a regex with the given
 account. For example:
 
@@ -2182,6 +2186,9 @@ Include the stated file as if it were part of the current file.
 
 @item payee
 @c instance_t::payee_mapping_directive in textual.cc
+@findex print
+@findex register
+
 The @code{payee} directive supports one optional sub-directive, if it
 immediately follows the payee directive and if it begins with
 whitespace:
@@ -2320,14 +2327,15 @@ N SYMBOL
 @end smallexample
 
 @item D AMOUNT
+@findex xact
+
 Specifies the default commodity to use, by specifying an amount in the
-expected format.  The @command{transaction} command will use this
-commodity as the default when none other can be determined.  This
-command may be used multiple times, to set the default flags for
-different commodities; whichever is seen last is used as the default
-commodity.  For example, to set US dollars as the default commodity,
-while also setting the thousands flag and decimal flag for that
-commodity, use:
+expected format.  The @command{xact} command will use this commodity as
+the default when none other can be determined.  This command may be used
+multiple times, to set the default flags for different commodities;
+whichever is seen last is used as the default commodity.  For example,
+to set US dollars as the default commodity, while also setting the
+thousands flag and decimal flag for that commodity, use:
 
 @smallexample
 D $1,000.00
@@ -2369,6 +2377,8 @@ Ledger's function.
 
 @node Archiving Previous Years,  , Converting from other formats, Keeping a Journal
 @section Archiving Previous Years
+@findex equity
+@findex print
 
 After a while, your journal can get to be pretty large.  While this
 will not slow down Ledger---it's designed to process journals very
@@ -4423,7 +4433,7 @@ well as many other types of reports) using Babel to invoke Ledger with
 specific arguments. The arguments are passed to Ledger using the
 @code{:cmdline} header argument. In the code block above, there is no
 such argument so the system takes the default. For Ledger code blocks,
-the default @code{:cmdline} argument is @command{bal} and the result of
+the default @code{:cmdline} argument is @code{bal} and the result of
 evaluating this code block (@kbd{C-c C-c}) would be:
 
 @smallexample
@@ -4568,6 +4578,7 @@ the report.
 
 @node Generating a monthly register, Summary, An overall balance summary, Org mode with Babel
 @subsubsection Generating a monthly register
+@findex register
 
 You can also generate a monthly register (the @command{reg} command) by
 executing the following @code{src} block. This presents a summary of
@@ -4818,7 +4829,7 @@ pricedb database files.
 * @command{select}::
 @end menu
 
-@node  @command{accounts}, @command{payees}, Reports about your Journals, Reports about your Journals
+@node @command{accounts}, @command{payees}, Reports about your Journals, Reports about your Journals
 @subsection @command{accounts}
 @findex accounts
 
@@ -4828,7 +4839,7 @@ to accounts matching the regex. The output is sorted by name.  Using
 the @code{--count} option will tell you how many entries use each
 account.
 
-@node  @command{payees}, @command{commodities}, @command{accounts}, Reports about your Journals
+@node @command{payees}, @command{commodities}, @command{accounts}, Reports about your Journals
 @subsection @command{payees}
 @findex payees
 
@@ -4844,7 +4855,7 @@ Oudtshoorn Municipality
 Vaca Veronica
 @end smallexample
 
-@node  @command{commodities}, @command{tags}, @command{payees}, Reports about your Journals
+@node @command{commodities}, @command{tags}, @command{payees}, Reports about your Journals
 @subsection @command{commodities}
 @findex commodities
 
@@ -4852,7 +4863,7 @@ Report all commodities present in the journals under consideration.
 The output is sorted by name.  Using the @code{--count} option will
 tell you how many entries use each commodity.
 
-@node  @command{tags}, , @command{commodities}, Reports about your Journals
+@node @command{tags}, @command{xact}, @command{commodities}, Reports about your Journals
 @subsection @command{tags}
 @findex tags
 @findex --values
@@ -4862,7 +4873,7 @@ is sorted by name.  Using the @code{--count} option will tell you how
 many entries use each tag.  Using the @code{--values} option will
 report the values used by each tag.
 
-@node  @command{xact}, @command{stats}, @command{tags}, Reports about your Journals
+@node @command{xact}, @command{stats}, @command{tags}, Reports about your Journals
 @subsection @command{xact}
 @findex draft
 @findex entry
@@ -4920,14 +4931,14 @@ $ ledger xact 4/9 viva dining "DM 11.50"
 @command{xact}. @command{entry} is provided for backwards compatibility
 with Ledger 2.X.
 
-@node  @command{stats}, @command{select}, @command{xact}, Reports about your Journals
+@node @command{stats}, @command{select}, @command{xact}, Reports about your Journals
 @subsection @command{stats}
 @findex stats
 @findex stat
 
 FIX THIS ENTRY @c FIXME thdox
 
-@node  @command{select},  , @command{stats}, Reports about your Journals
+@node @command{select},  , @command{stats}, Reports about your Journals
 @subsection @command{select}
 @findex select
 
@@ -4962,8 +4973,8 @@ $ ledger [OPTIONS...] COMMAND [ARGS...]
 After the command word there may appear any number of arguments.  For
 most commands, these arguments are regular expressions that cause the
 output to relate only to postings matching those regular expressions.
-For the @command{transaction} command, the arguments have a special
-meaning, described below.
+For the @command{xact} command, the arguments have a special meaning,
+described below.
 
 The regular expressions arguments always match the account name that
 a posting refers to.  To match on the payee of the transaction
@@ -8924,8 +8935,8 @@ true
 FIX THIS ENTRY @c FIXME thdox
 
 @item template
-Shows the insertion template that a @command{draft} or @command{xact}
-sub-command generates.  This is a debugging command.
+Shows the insertion template that @command{xact} sub-command generates.
+This is a debugging command.
 
 @end ftable
 
