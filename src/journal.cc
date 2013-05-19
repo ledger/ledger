@@ -134,9 +134,9 @@ account_t * journal_t::register_account(const string& name, post_t * post,
       // that can be expanded successfully
       size_t colon = name.find(':');
       if(colon != string::npos) {
-        accounts_map::const_iterator i = account_aliases.find(name.substr(0, colon));
-        if (i != account_aliases.end()) {
-          result = find_account((*i).second->fullname() + name.substr(colon));
+        accounts_map::const_iterator j = account_aliases.find(name.substr(0, colon));
+        if (j != account_aliases.end()) {
+          result = find_account((*j).second->fullname() + name.substr(colon));
         }
       }
     }

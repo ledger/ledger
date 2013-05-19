@@ -1107,9 +1107,11 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
   bool decimal_comma_style
     = (commodity_t::decimal_comma_by_default ||
        commodity().has_flags(COMMODITY_STYLE_DECIMAL_COMMA));
+#if 0
   bool time_colon_style
     = (commodity_t::time_colon_by_default ||
        commodity().has_flags(COMMODITY_STYLE_TIME_COLON));
+#endif
 
   new_quantity->prec = 0;
 

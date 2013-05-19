@@ -48,11 +48,6 @@ namespace {
    *
    * This function returns only for the process that is still Ledger.
    *
-   * @param out Pointer to a pointer to the output stream.  This The
-   * pointer to the output stream is changed so that the stream is
-   * connected to the stdin of the pager.  The caller is responsible for
-   * cleaning this up.
-   *
    * @param pager_path Path to the pager command.
    *
    * @return The file descriptor of the pipe to the pager.  The caller

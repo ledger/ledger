@@ -210,7 +210,7 @@ namespace {
         string amt;
         if (post->amount_expr) {
           std::ostringstream amt_str;
-          justify(amt_str, post->amount_expr->text(), amount_width, true);
+          justify(amt_str, post->amount_expr->text(), (int)amount_width, true);
           amt = amt_str.str();
         }
         else if (count == 2 && index == 2 &&

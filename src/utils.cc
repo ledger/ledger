@@ -635,7 +635,7 @@ optional<boost::u32regex> _log_category_re;
 optional<boost::regex>    _log_category_re;
 #endif
 
-struct __maybe_enable_debugging {
+static struct __maybe_enable_debugging {
   __maybe_enable_debugging() {
     if (const char * p = std::getenv("LEDGER_DEBUG")) {
       _log_level    = LOG_DEBUG;

@@ -39,10 +39,8 @@ namespace ledger {
 generate_posts_iterator::generate_posts_iterator
   (session_t&   _session,
    unsigned int _seed,
-   std::size_t  _quantity,
-   bool         _allow_invalid)
+   std::size_t  _quantity)
   : session(_session), seed(_seed), quantity(_quantity),
-    allow_invalid(_allow_invalid),
 
     rnd_gen(seed == 0 ? static_cast<unsigned int>(std::time(0)) : seed),
 

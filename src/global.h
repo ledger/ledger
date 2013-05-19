@@ -99,11 +99,11 @@ public:
 
   void report_error(const std::exception& err);
 
+  void execute_command(strings_list args, bool at_repl);
   /**
    * @return \c true if a command was actually executed; otherwise, it probably
    *         just resulted in setting some options.
    */
-  void execute_command(strings_list args, bool at_repl);
   int  execute_command_wrapper(strings_list args, bool at_repl);
 
   value_t push_command(call_scope_t&) {
