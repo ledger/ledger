@@ -13,6 +13,7 @@
 @c | @option   | @oindex  | Ledger CLI Option (like --file)           |
 @c | @var      |          | Ledger CLI option Variable (like -f FILE) |
 @c |           | @sindex  | Ledger file Syntax                        |
+@c | @samp     |          | Example                                   |
 
 @copying
 
@@ -7872,7 +7873,7 @@ Two digit date
 @end table
 
 @noindent
-So @code{"%Y%m%d"} yields @code{20111214} which provides a date that
+So @code{"%Y%m%d"} yields @samp{20111214} which provides a date that
 is simple to sort on.
 
 @node Weekdays, Month, Days, Date and Time Format Codes
@@ -7884,10 +7885,10 @@ as
 @table @code
 
 @item %m-%d-%Y %A
-yields @code{02-10-2010 Wednesday}
+yields @samp{02-10-2010 Wednesday}
 
 @item %A %m-%d-%Y
-yields @code{Wednesday 02-10-2010}
+yields @samp{Wednesday 02-10-2010}
 
 @end table
 
@@ -7928,10 +7929,10 @@ as
 @table @code
 
 @item %m-%d-%Y %B
-yields @code{02-10-2010 February}
+yields @samp{02-10-2010 February}
 
 @item %B %m-%d-%Y
-yields @code{February 02-10-2010}
+yields @samp{February 02-10-2010}
 
 @end table
 
@@ -7960,25 +7961,25 @@ Additional date format parameters which can be used:
 @table @code
 
 @item %U
-week number Sunday as first day of week 01–53
+week number Sunday as first day of week, ranging 01–53
 
 @item %W
-week number Monday as first day of week 01–53
+week number Monday as first day of week, ranging 01–53
 
 @item %V
-week of the year 01–53
+week of the year, ranging 01–53
 
 @item %C
-@code{cc} century 00–99
+century, ranging 00–99
 
 @item %D
-yields @code{mm/dd/yy 02/10/10}
+yields @code{%m/%d/%y} as in @samp{02/10/10}
 
 @item %x
-locale’s date representation @code{02/10/2010} for the U.S.
+locale’s date representation, as @samp{02/10/2010} for the U.S.
 
 @item %F
-yields @code{%Y-%m-%d 2010-02-10}
+yields @code{%Y-%m-%d} as in @samp{2010-02-10}
 
 @end table
 
