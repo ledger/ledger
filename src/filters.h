@@ -655,7 +655,8 @@ protected:
       TRACE_CTOR(acct_value_t, "account_t *, value_t&, bool, bool");
     }
     acct_value_t(const acct_value_t& av)
-      : account(av.account), value(av.value), is_virtual(av.is_virtual) {
+      : account(av.account), value(av.value), is_virtual(av.is_virtual),
+        must_balance(av.must_balance) {
       TRACE_CTOR(acct_value_t, "copy");
     }
     ~acct_value_t() throw() {
