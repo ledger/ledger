@@ -1,0 +1,33 @@
+2005/01/03 Opening Balances
+    Assets:Current:Checking               $-1,000.00
+    Liabilities:CredCard                   $1,000.00
+    (Virtualaccount)                       $1,000.00
+
+2005/01/10 carfund
+    Assets:Savings           $1550.00
+    Assets:Checking
+
+2005/01/03 Joe's
+    Expenses:Dining                          $46.50   
+    Liabilities:CredCard
+    (Virtualaccount2)                        $46.50
+
+2005/01/05 Another gift
+    Expenses:Gifts                          $30.00
+    Liabilities:CredCard
+
+2006/01/03 Gift shop
+    Expenses:Gifts                          $46.50   
+    Liabilities:CredCard
+
+test equity -e 2006
+2005/01/10 Opening Balances
+    Assets:Checking                       $-1,550.00
+    Assets:Current:Checking               $-1,000.00
+    Assets:Savings                         $1,550.00
+    Expenses:Dining                           $46.50
+    Expenses:Gifts                            $30.00
+    Liabilities:CredCard                     $923.50
+    (Virtualaccount)                       $1,000.00
+    (Virtualaccount2)                         $46.50
+end test
