@@ -252,44 +252,15 @@ bool xact_base_t::finalize()
       const amount_t * x = &(*a++).second;
       const amount_t * y = &(*a++).second;
 
-      if (x->commodity() != top_post->amount.commodity()) {
-        const amount_t * t = x;
-        x = y;
-        y = t;
-      }
-
       if (*x && *y) {
+        if (x->commodity() != top_post->amount.commodity())
+          std::swap(x, y);
+
         DEBUG("xact.finalize", "primary   amount = " << *x);
         DEBUG("xact.finalize", "secondary amount = " << *y);
 
-        commodity_t&     comm(x->commodity());
-        amount_t         per_unit_cost;
-        amount_t         total_cost;
-        const amount_t * prev_y = y;
-
-        foreach (post_t * post, posts) {
-          if (post != top_post && post->must_balance() &&
-              ! post->amount.is_null() &&
-              post->amount.has_annotation() &&
-              post->amount.annotation().price) {
-            amount_t temp = *post->amount.annotation().price * post->amount;
-            if (total_cost.is_null()) {
-              total_cost = temp;
-              y = &total_cost;
-            }
-            else if (total_cost.commodity() == temp.commodity()) {
-              total_cost += temp;
-            }
-            else {
-              DEBUG("xact.finalize",
-                    "multiple price commodities, aborting price calc");
-              y = prev_y;
-              break;
-            }
-            DEBUG("xact.finalize", "total_cost = " << total_cost);
-          }
-        }
-        per_unit_cost = (*y / *x).abs().unrounded();
+        commodity_t& comm(x->commodity());
+        amount_t     per_unit_cost = (*y / *x).abs().unrounded();
 
         DEBUG("xact.finalize", "per_unit_cost = " << per_unit_cost);
 
