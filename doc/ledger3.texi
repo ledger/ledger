@@ -12,8 +12,9 @@
 @c | @command  | @findex  | Ledger CLI Command (like balance)         |
 @c | @option   | @findex  | Ledger CLI Option (like --market)         |
 @c | @var      |          | Ledger CLI option Variable (like -f FILE) |
-@c |           | @sindex  | Ledger file Syntax                        |
+@c |           |          | Ledger file Syntax                        |
 @c | @samp     |          | Example                                   |
+@c | @file     |          | Program (like ledger, report, head)       |
 
 @c Restructuring manual ideas
 @c http://beyondgrep.com/documentation/ack-2.04-man.html
@@ -3248,7 +3249,7 @@ Normally when you ask Ledger to display the values of commodities held,
 it uses a value expression called ``market'' to determine the most
 recent value from its price database---even downloading prices from the
 Internet, if @option{--download (-Q)} was specified and a suitable
-``getquote'' script is found on your system.
+@file{getquote} script is found on your system.
 
 However, you can override this valuation logic by providing
 a commodity valuation expression in doubled parentheses.  This
@@ -4013,7 +4014,6 @@ nothing.
 
 @node Visualizing with Gnuplot,  , Asset Allocation, Advanced Reports
 @subsection Visualizing with Gnuplot
-@cindex Gnuplot script
 @cindex plotting
 @cindex Gnuplot
 @findex --amount-data
@@ -4021,24 +4021,24 @@ nothing.
 @findex --limit @var{EXPR}
 @findex --display @var{EXPR}
 
-If you have @command{Gnuplot} installed, you can graph any of the above
-register reports. The script to do this is included in the ledger
+If you have ``Gnuplot'' program installed, you can graph any of the
+above register reports. The script to do this is included in the ledger
 distribution, and is named @file{contrib/report}. Install @file{report}
-anywhere along your @env{PATH}, and then use @command{report} instead of
-@command{ledger} when doing a register report. The only thing to keep in
+anywhere along your @env{PATH}, and then use @file{report} instead of
+@file{ledger} when doing a register report. The only thing to keep in
 mind is that you must specify @option{--amount-data (-j)} or
-@option{--total-data (-J)} to indicate whether Gnuplot should plot the
-amount, or the running total. For example, this command plots total
+@option{--total-data (-J)} to indicate whether ``Gnuplot'' should plot
+the amount, or the running total. For example, this command plots total
 monthly expenses made on your MasterCard.
 
 @smallexample
 $ report -j -M -r --display "account =~ /mastercard/" reg ^expenses
 @end smallexample
 
-The @command{report} script is a very simple Bourne shell script, that
-passes a set of scripted commands to Gnuplot.  Feel free to modify the
-script to your liking, since you may prefer histograms to line plots,
-for example.
+The @file{report} script is a very simple Bourne shell script, that
+passes a set of scripted commands to ``Gnuplot''.  Feel free to modify
+the script to your liking, since you may prefer histograms to line
+plots, for example.
 
 Here are some useful plots:
 
@@ -4121,12 +4121,12 @@ checkbook, or single-account ledger, would look like.  It also shows a
 running balance.  The final running balance of any register should
 always be the same as the current balance of that account.
 
-If you have Gnuplot installed, you may plot the amount or running total
-of any register by using the script @file{report}, which is included in
-the Ledger distribution.  The only requirement is that you add either
-@option{--amount-data (-j)} or @option{--total-data (-J)} to your
-register command, in order to plot either the amount or total column,
-respectively.
+If you have ``Gnuplot'' installed, you may plot the amount or running
+total of any register by using the script @file{report}, which is
+included in the Ledger distribution.  The only requirement is that you
+add either @option{--amount-data (-j)} or @option{--total-data (-J)} to
+your register command, in order to plot either the amount or total
+column, respectively.
 
 @node The @command{print} command,  , The @command{register} command, Primary Financial Reports
 @subsection The @command{print} command
@@ -4171,7 +4171,7 @@ transactions in a csv format suitable for import into other programs.
 You can specify the transactions to print using all the normal
 limiting and searching functions.
 
-@node The @command{convert} command,  , The @command{csv} command, Comma Separated Values files
+@node  The @command{convert} command,  , The @command{csv} command, Comma Separated Values files
 @subsubsection The @command{convert} command
 @cindex csv conversion
 @cindex reading csv
@@ -4272,7 +4272,7 @@ account Aufwand:Einkauf:Lebensmittel
     payee ^(Aldi|Alnatura|Kaufland|REWE)$
 @end smallexample
 
-Note that it may be necessary for the output of @code{ledger convert}
+Note that it may be necessary for the output of @samp{ledger convert}
 to be passed through @code{ledger print} a second time if you want to
 match on the new payee field. During the @code{ledger convert} run
 only the original payee name as specified in the csv data seems to be
@@ -4977,7 +4977,7 @@ survey this to get an overview before diving in to the @ref{Ledger
 Tutorial} and more detailed examples that follow.
 
 Ledger has a very simple command-line interface, named---enticingly
-enough---@command{ledger}.  It supports a few reporting commands, and
+enough---@file{ledger}.  It supports a few reporting commands, and
 a large number of options for refining the output from those commands.
 The basic syntax of any ledger command is:
 
@@ -5009,10 +5009,9 @@ or
 $ ledger bal rent food movies @@freddie
 @end smallexample
 
-There are many, many command options available with the
-@command{ledger} command, and it takes a while to master them.
-However, none of them are required to use the basic reporting
-commands.
+There are many, many command options available with the @file{ledger}
+program, and it takes a while to master them.  However, none of them are
+required to use the basic reporting commands.
 
 @node  Command Line Quick Reference, Detailed Option Description, Basic Usage, Command-line Syntax
 @section Command Line Quick Reference
@@ -6086,11 +6085,11 @@ For a balance report only those transactions will be accounted in the
 final balances.
 
 @item --pivot @var{TAG}
-Produce a balance pivot report ``around'' the given @var{TAG}. For
+Produce a balance pivot report @emph{around} the given @var{TAG}. For
 example, if you have multiple cars and track each fuel purchase in
-@code{Expenses:Auto:Fuel} and tag each fuel purchase with a tag
-identifying which car the purchase was for @code{; Car: Prius}, then
-the command:
+@samp{Expenses:Auto:Fuel} and tag each fuel purchase with a tag
+identifying which car the purchase was for @samp{; Car: Prius}, then the
+command:
 
 @smallexample
 $ ledger bal Fuel --pivot "Car"  --period "this year"
@@ -6554,9 +6553,9 @@ instead of 80.
 
 @item --head @var{INT}
 Cause only the first @var{INT} transactions to be printed. This is
-different from using the command-line utility @command{head}, which
-would limit to the first @var{INT} postings. @option{--tail @var{INT}}
-outputs only the last @var{INT} transactions. Both options may be used
+different from using the command-line utility @file{head}, which would
+limit to the first @var{INT} postings. @option{--tail @var{INT}} outputs
+only the last @var{INT} transactions. Both options may be used
 simultaneously. If a negative amount is given, it will invert the
 meaning of the flag (instead of the first five transactions being
 printed, for example, it would print all but the first five).
@@ -6792,10 +6791,10 @@ considered to be fresh enough.
 
 @item --download
 @itemx -Q
-Cause quotes to be automagically downloaded, as needed, by running a
-script named @command{getquote} and expecting that script to return a
-value understood by ledger.  A sample implementation of a
-@command{getquote} script, implemented in Perl, is provided in the
+Cause quotes to be automagically downloaded, as needed, by running
+a script named @file{getquote} and expecting that script to return
+a value understood by ledger.  A sample implementation of
+a @file{getquote} script, implemented in Perl, is provided in the
 distribution.  Downloaded quote price are then appended to the price
 database, usually specified using the environment variable
 @env{LEDGER_PRICE_DB}.
