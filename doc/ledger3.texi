@@ -108,7 +108,7 @@ twinkling in their father's CRT.
 * Extending with Python::
 * Ledger for Developers::
 * Major Changes from version 2.6::
-* Example Journal File: drewr.dat::
+* Example Journal File::
 * Miscellaneous Notes::
 * Concepts Index::
 * Commands & Options Index::
@@ -307,12 +307,11 @@ You can also find help at the @code{#ledger} channel on the IRC server
 @section Start a Journal File
 @cindex journals
 
-A journal is a record of your financial transactions and will be
-central to using Ledger.  For now we just want to get a taste of what
-Ledger can do.  An example journal is included with the source code
-distribution, called @file{drewr3.dat} (@pxref{Example Data File}).
-Copy it someplace convenient and open up a terminal window in that
-directory.
+A journal is a record of your financial transactions and will be central
+to using Ledger.  For now we just want to get a taste of what Ledger can
+do.  An example journal is included with the source code distribution,
+called @file{drewr3.dat} (@pxref{Example Journal File}).  Copy it
+someplace convenient and open up a terminal window in that directory.
 
 If you would rather start with your own journal right away please
 @pxref{Keeping a Journal}.
@@ -1330,8 +1329,8 @@ For this transaction, Ledger will figure out that $-23.00 must come
 from @code{Assets:Checking} in order to balance the transaction.
 
 Also note the structure of the account entries.  There is an implied
-hierarchy established by separating with colons (@pxref{Structuring
-Your Accounts}).
+hierarchy established by separating with colons (@pxref{Structuring your
+Accounts}).
 
 @cindex spaces in postings
 @cindex posting format details
@@ -2146,9 +2145,9 @@ Closes block commands like @code{tag} or @code{comment}.
 @item fixed
 @c instance_t::fixed_directive in textual.cc
 
-A fixed block is used to set fixated prices (@pxref{Fixated prices})
-for a series of transactions.  It's purely a typing saver, for use
-when entering many transactions with fixated prices.
+A fixed block is used to set fixated prices (@pxref{Fixated prices and
+costs}) for a series of transactions.  It's purely a typing saver, for
+use when entering many transactions with fixated prices.
 
 Thus, the following:
 
@@ -5015,11 +5014,11 @@ There are many, many command options available with the
 However, none of them are required to use the basic reporting
 commands.
 
-@node Command Line Quick Reference, Detailed Option Description, Basic Usage, Command-line Syntax
+@node  Command Line Quick Reference, Detailed Option Description, Basic Usage, Command-line Syntax
 @section Command Line Quick Reference
 
 @menu
-* Reporting Commands::
+* Basic Reporting Commands::
 * Basic Options::
 * Report Filtering::
 * Error Checking and Calculation Options::
@@ -5028,8 +5027,8 @@ commands.
 * Commodity Reporting::
 @end menu
 
-@node Reporting Commands, Basic Options, Command Line Quick Reference, Command Line Quick Reference
-@subsection Reporting Commands
+@node  Basic Reporting Commands, Basic Options, Command Line Quick Reference, Command Line Quick Reference
+@subsection Basic Reporting Commands
 
 @ftable @code
 
@@ -5068,7 +5067,7 @@ Generate transactions based on previous postings.
 
 @end ftable
 
-@node Basic Options, Report Filtering, Reporting Commands, Command Line Quick Reference
+@node Basic Options, Report Filtering, Basic Reporting Commands, Command Line Quick Reference
 @subsection Basic Options
 
 @ftable @code
@@ -5373,7 +5372,7 @@ Report net gain loss for commodities that have a price history.
 
 @end ftable
 
-@node Detailed Option Description, Period Expressions, Command Line Quick Reference, Command-line Syntax
+@node  Detailed Option Description, Period Expressions, Command Line Quick Reference, Command-line Syntax
 @section Detailed Option Description
 
 @menu
@@ -5382,8 +5381,8 @@ Report net gain loss for commodities that have a price history.
 * Report Options::
 * Basic options::
 * Report filtering::
-* Output Customization::
-* Commodity Reporting::
+* Output customization::
+* Commodity reporting::
 * Environment variables::
 @end menu
 
@@ -6272,7 +6271,7 @@ Synonym for @samp{--period "yearly"}.
 
 These are the most basic command options.  Most likely, the user will
 want to set them using environment variables (see @ref{Environment
-Variables}), instead of using actual command-line options:
+variables}), instead of using actual command-line options:
 
 @ftable @code
 
@@ -6324,7 +6323,7 @@ relate to.
 
 @end ftable
 
-@node Report filtering, Output Customization, Basic options, Detailed Option Description
+@node Report filtering, Output customization, Basic options, Detailed Option Description
 @subsection Report filtering
 
 These options change which postings affect the outcome of a
@@ -6488,8 +6487,8 @@ Set the value expression used for the ``totals'' column in the
 @c ledger reg food not dining expr 'payee =~ /chang/'
 @c @end smallexample
 
-@node Output Customization, Commodity Reporting, Report filtering, Detailed Option Description
-@subsection Output Customization
+@node  Output customization, Commodity reporting, Report filtering, Detailed Option Description
+@subsection Output customization
 
 These options affect only the output, but not which postings are
 used to create it:
@@ -6755,8 +6754,8 @@ Set the format for the @command{prices} report. The default is:
 
 @end ftable
 
-@node Commodity Reporting, Environment variables, Output Customization, Detailed Option Description
-@subsection Commodity Reporting
+@node Commodity reporting, Environment variables, Output customization, Detailed Option Description
+@subsection Commodity reporting
 
 These options affect how commodity values are displayed:
 
@@ -6980,7 +6979,7 @@ You can also now use @option{--exchange @var{COMMODITY} (-X)} (and
 and @option{--price (-I)}, to see valuation reports of just your basis
 costs or lot prices.
 
-@node Environment variables,  , Commodity Reporting, Detailed Option Description
+@node Environment variables,  , Commodity reporting, Detailed Option Description
 @subsection Environment variables
 
 Every option to ledger may be set using an environment variable.  If
@@ -8034,12 +8033,6 @@ yields @code{%Y-%m-%d} as in @samp{2010-02-10}.
 
 @end table
 
-@menu
-* Text Formatting::
-* Data File Parsing Information::
-* Misc::
-@end menu
-
 @node Text Formatting, Data File Parsing Information, Date and Time Format Codes, Formatting Functions and Codes
 @subsection Text Formatting
 
@@ -8522,13 +8515,13 @@ journal files:
     Income:Another:Account
 @end smallexample
 
-In this example, there is a transaction date, a payee, or description
-of the transaction, and two postings.  The postings show movement of
-one hundred dollars from an account within the Income hierarchy, to
-the specified expense account.  The name and meaning of these accounts
-in arbitrary, with no preferences implied, although you will find it
-useful to follow standard accounting practice (@pxref{Principles of
-Accounting}).
+In this example, there is a transaction date, a payee, or description of
+the transaction, and two postings.  The postings show movement of one
+hundred dollars from an account within the Income hierarchy, to the
+specified expense account.  The name and meaning of these accounts in
+arbitrary, with no preferences implied, although you will find it useful
+to follow standard accounting practice (@pxref{Principles of Accounting
+with Ledger}).
 
 Since an amount is missing from the second posting, it is assumed to
 be the inverse of the first.  This guarantees the cardinal rule of
@@ -9034,7 +9027,7 @@ for example, issue @code{ctest -V -R "5FB"}.
 @node Writing Tests,  , Running Tests, Testing Framework
 @subsubsection Writing Tests
 
-@node Major Changes from version 2.6, Example Journal File: drewr.dat, Ledger for Developers, Top
+@node Major Changes from version 2.6, Example Journal File, Ledger for Developers, Top
 @chapter Major Changes from version 2.6
 
 @itemize
@@ -9048,8 +9041,8 @@ to the new value expressions available in 3.0
 
 @end itemize
 
-@node Example Journal File: drewr.dat, Miscellaneous Notes, Major Changes from version 2.6, Top
-@appendix Example Journal File: drewr.dat
+@node  Example Journal File, Miscellaneous Notes, Major Changes from version 2.6, Top
+@appendix Example Journal File
 
 The following journal file is included with the source distribution of
 ledger.  It is called @file{drewr.dat} and exhibits many ledger
@@ -9121,7 +9114,7 @@ features, include automatic and virtual transactions,
   Income:Sales
 @end smallexample
 
-@node Miscellaneous Notes, Concepts Index, Example Journal File: drewr.dat, Top
+@node Miscellaneous Notes, Concepts Index, Example Journal File, Top
 @appendix Miscellaneous Notes
 
 Various notes from the discussion list that I haven't incorporated in
