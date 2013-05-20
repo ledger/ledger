@@ -2717,10 +2717,52 @@ You can gang up multiple tags by sharing colons:
       ; :TAG1:TAG2:TAG3:
 @end smallexample
 
+@menu
+* Payee metadata tag::
+@end menu
+
+@node Payee metadata tag,  , Metadata tags, Metadata tags
+@subsubsection Payee metadata tag
+@cindex Payee metadata tag
+@findex register
+@findex payees
+@findex --by-payee
+
+``Payee'' is a special metadata field. If set on a posting, it will be
+used as the payee name for that posting.  This affects the
+@command{register} report, the @command{payees} report, and the
+@option{--by-payee} option.
+
+This is useful when for example you deposit 4 checks at a time to
+the bank. On the bank statement, there is just one amount @samp{$400},
+but you can specify from whom each check came from, as shown by example below:
+
+@smallexample
+2010-06-17 Sample
+    Assets:Bank        $400.00
+    Income:Check1     $-100.00  ; Payee: Person One
+    Income:Check2     $-100.00  ; Payee: Person Two
+    Income:Check3     $-100.00  ; Payee: Person Three
+    Income:Check4     $-100.00  ; Payee: Person Four
+@end smallexample
+
+When reporting this, it appears as:
+
+@smallexample
+10-Jun-17 Sample             Assets:Bank             $400.00     $400.00
+          Person One         Income:Check1          $-100.00     $300.00
+          Person Two         Income:Check2          $-100.00     $200.00
+          Person Three       Income:Check3          $-100.00     $100.00
+          Person Four        Income:Check4          $-100.00           0
+@end smallexample
+
+This shows that they are all in the same transaction (which is why the
+date is not repeated), but they have different payees now.
+
 @node Metadata values, Typed metadata, Metadata tags, Metadata
 @subsection Metadata values
 
-To associate a value with a tag, use the syntax "Key: Value", where
+To associate a value with a tag, use the syntax ``Key: Value'', where
 the value can be any string of characters.  Whitespace is needed after
 the colon, and cannot appear in the Key:
 
