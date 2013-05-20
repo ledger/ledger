@@ -8,6 +8,7 @@
 @c needs.
 
 @copying
+
 Copyright @copyright{} 2013, Craig Earls.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -15,17 +16,21 @@ modification, are permitted provided that the following conditions are
 met:
 
 @itemize
+
 @item
 Redistributions of source code must retain the above copyright notice,
 this list of conditions and the following disclaimer.
+
 @item
 Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
+
 @item
 Neither the name of New Artisans LLC nor the names of its contributors
 may be used to endorse or promote products derived from this software
 without specific prior written permission.
+
 @end itemize
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS
@@ -39,6 +44,7 @@ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 @end copying
 
 @dircategory Major Modes
@@ -333,21 +339,25 @@ states unless specifically instructed to use them.  Ledger-mode assigns
 some additional meaning to the states:
 
 @itemize
+
 @item Uncleared.
 No state.  This is equivalent to sticking a check in the mail.  It has
 been obligated, but not been cashed by the recipient.  It could also
 apply to credit/debit card transactions that have not been cleared into
 your account balance.  You bank may call these transactions ``pending'',
 but Ledger-mode uses a slightly different meaning.
+
 @item Pending.
 Ledger-mode's reconciliation function see pending transactions as an
 intermediate step in reconciling an account.  When doing
 a reconciliation (@pxref{Reconciliation}), marking a transaction as
 pending means that you have seen the transaction finally recorded by the
 recipient, but you have not completely reconciled the account.
+
 @item Cleared.
 The transaction has been completely recognized by all parties to the
 transaction.
+
 @end itemize
 
 @kindex C-c C-e
@@ -433,18 +443,24 @@ transactions.  For details of the regular expression syntax, see
 using the @file{demo.ledger} are given here:
 
 @table @samp
+
 @item Groceries
 Show only transactions that have a posting to the @samp{Groceries}
 account.
+
 @item ^2011/01
 Show only transactions occurring in January of 2011.
+
 @item ^2011/.*/25
 Show only transactions occurring on the 25th of the month in 2011.
+
 @item auto
 Show only transactions with payees or accounts or comments containing.
 @samp{auto}
+
 @item harley$
 Show only transactions with any line ending with @samp{harley}.
+
 @end table
 
 To show back all transactions simply invoke @samp{Narrow to Regex} or
@@ -604,16 +620,21 @@ Typing @kbd{C-c C-o C-r} or using menu @samp{Ledger Run Report} prompt
 for the name of a saved report.  The built-in reports are:
 
 @table @var
+
 @item bal
 Produce a balance reports of all accounts.
+
 @item reg
 Produce a register report of all transactions.
+
 @item payee
 Prompt for a payee, then produce a register report of all transactions
 involving that payee.
+
 @item account
 Prompt for an account, then produce a register report of all
 transactions involving that account.
+
 @end table
 
 @node Adding and Editing Reports, Reversing Report Order, Running Basic Reports, The Report Buffer
@@ -662,15 +683,20 @@ expansion to prompt the user for the account to use.  There are four
 variables that can be expanded to run a report:
 
 @table @var
+
 @item ledger-file
 Returns the file to be operated on.
+
 @item payee
 Prompts for a payee.
+
 @item account
 Prompt for an account.
+
+@c FIXME : is it 'value' or 'tag' for '@item value' just below?
 @item value
-@c FIXME : is it 'value' or 'tag' for @item above?
 Prompt for a tag value.
+
 @end table
 
 You can use these expansion values in your ledger report commands.  For
@@ -750,14 +776,18 @@ for Ledger under the data options.  Alternately you can choose
 @cindex customization, ledger-mode
 
 @ftable @option
+
 @item ledger-occur-use-face-shown
 If non-nil, use a custom face for transactions shown in
 @option{ledger-occur} mode using @option{ledger-occur-xact-face}.
+
 @item ledger-clear-whole-transactions
 If non-nil, clear whole transactions, not individual postings.
+
 @item ledger-highlight-xact-under-point
 If non-nil, highlight transaction under point using
 @option{ledger-font-highlight-face}.
+
 @end ftable
 
 @node Ledger Reconcile Customization Group, Ledger Report Customization Group, Ledger Customization Group, Customization Variables
@@ -765,23 +795,30 @@ If non-nil, highlight transaction under point using
 @cindex customization, reconcile
 
 @ftable @option
+
 @item ledger-reconcile-default-commodity
 The default commodity for use in target calculations in ledger
 reconcile.  Defaults to @samp{$} (USD).
+
 @item ledger-recon-buffer-name
 Name to use for reconciliation buffer. Defaults to @file{*Reconcile*}.
+
 @item ledger-narrow-on-reconcile
 If non-nil, limit transactions shown in main buffer to those matching
 the reconcile regex.
+
 @item ledger-buffer-tracks-reconcile-buffer
 If non-nil, then when the cursor is moved to a new transaction in the
 reconcile window.
+
 @item ledger-reconcile-force-window-bottom
 If non-nil, make the reconcile window appear along the bottom of the
 register window and resize.
+
 @item ledger-reconcile-toggle-to-pending
 If non-nil, then toggle between uncleared and pending @samp{!}. If
 false toggle between uncleared and cleared @samp{*}.
+
 @end ftable
 
 @node Ledger Report Customization Group, Ledger Faces Customization Group, Ledger Reconcile Customization Group, Customization Variables
@@ -789,11 +826,14 @@ false toggle between uncleared and cleared @samp{*}.
 @cindex customization, report
 
 @ftable @option
+
 @item ledger-reports
 Definition of reports to run.
+
 @item ledger-report-format-specifiers
 An alist mapping ledger report format specifiers to implementing
 functions.
+
 @end ftable
 
 @node Ledger Faces Customization Group, Ledger Post Customization Group, Ledger Report Customization Group, Customization Variables
@@ -803,38 +843,55 @@ functions.
 Ledger Faces: Ledger-mode highlighting
 
 @ftable @option
+
 @item ledger-font-uncleared-face
 Default face for Ledger.
+
 @item ledger-font-cleared-face
 Default face for cleared @samp{*} transactions.
+
 @item ledger-font-highlight-face
 Default face for transaction under point.
+
 @item ledger-font-pending-face
 Default face for pending @samp{!} transactions.
+
 @item ledger-font-other-face
 Default face for other transactions.
+
 @item ledger-font-posting-account-face
 Face for Ledger accounts.
+
 @item ledger-font-posting-account-cleared-face
 Face for cleared Ledger accounts.
+
 @item ledger-font-posting-account-pending-face
 Face for Ledger pending accounts.
+
 @item ledger-font-posting-amount-face
 Face for Ledger amounts.
+
 @item ledger-occur-narrowed-face
 Default face for Ledger occur mode hidden transactions.
+
 @item ledger-occur-xact-face
 Default face for Ledger occur mode shown transactions.
+
 @item ledger-font-comment-face
 Face for Ledger comments.
+
 @item ledger-font-reconciler-uncleared-face
 Default face for uncleared transactions in the reconcile window.
+
 @item ledger-font-reconciler-cleared-face
 Default face for cleared  @samp{*} transactions in the reconcile window.
+
 @item ledger-font-reconciler-pending-face
 Default face for pending  @samp{!} transactions in the reconcile window.
+
 @item ledger-font-report-clickable-face
 FIXME
+
 @end ftable
 
 @node Ledger Post Customization Group, Ledger Exec Customization Group, Ledger Faces Customization Group, Customization Variables
@@ -844,16 +901,22 @@ FIXME
 Ledger Post:
 
 @ftable @option
+
 @item ledger-post-auto-adjust-amounts
 If non-nil, then automatically align amounts to column specified in
 @option{ledger-post-amount-alignment-column}.
+
 @item ledger-post-amount-alignment-column
 The column Ledger-mode uses to align amounts.
+
 @item ledger-default-acct-transaction-indent
 Default indentation for account transactions in an entry.
+
 @item ledger-post-use-completion-engine
 Which completion engine to use: @var{iswitchb}, @var{ido}, or built-in.
+
 @item ledger-post-use-ido
+
 @end ftable
 
 @node Ledger Exec Customization Group, Ledger Test Customization Group, Ledger Post Customization Group, Customization Variables
@@ -863,10 +926,13 @@ Which completion engine to use: @var{iswitchb}, @var{ido}, or built-in.
 Ledger Exec: Interface to the Ledger command-line accounting program.
 
 @ftable @option
+
 @item ledger-binary-path
 Path to the ledger executable.
+
 @item ledger-init-file-name
 Location of the ledger initialization file. nil if you don't have one.
+
 @end ftable
 
 @node Ledger Test Customization Group, Ledger Texi Customization Group, Ledger Exec Customization Group, Customization Variables
@@ -874,10 +940,13 @@ Location of the ledger initialization file. nil if you don't have one.
 @cindex customization, test
 
 @ftable @option
+
 @item ledger-source-directory
 Directory where the Ledger sources are located.
+
 @item ledger-test-binary
 Directory where the debug binary.
+
 @end ftable
 
 @node Ledger Texi Customization Group,  , Ledger Test Customization Group, Customization Variables
@@ -885,12 +954,15 @@ Directory where the debug binary.
 @cindex customization, texi
 
 @ftable @option
+
 @item ledger-texi-sample-doc-path
 Location for sample data to be used in texi tests, defaults to
 @file{~/ledger/doc/sample.dat}.
+
 @item ledger-texi-normalization-args
 texi normalization for producing ledger output, defaults to
 @samp{--args-only --columns 80}.
+
 @end ftable
 
 @node Generating Ledger Regression Tests, Embedding Example results in Ledger Documentation, Customizing Ledger-mode, Top
