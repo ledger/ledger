@@ -13,8 +13,9 @@
 @c | @option   | @findex  | Ledger CLI Option (like --market)         |
 @c | @var      |          | Ledger CLI option Variable (like -f FILE) |
 @c |           |          | Ledger file Syntax                        |
-@c | @samp     |          | Example                                   |
-@c | @file     |          | Program (like ledger, report, head)       |
+@c | @samp     |          | Valued example or single char             |
+@c | @file     |          | File                                      |
+@c | @file     |          | Program (like ledger, report, acprep)     |
 
 @c Restructuring manual ideas
 @c http://beyondgrep.com/documentation/ack-2.04-man.html
@@ -225,9 +226,9 @@ at Whole Foods Markets you might assign the transactions like this
     Assets:Checking
 @end smallexample
 
-In both cases the money goes to the ``Groceries'' account, even though
-the payees were different.  You can set up your accounts in any way you
-choose.
+In both cases the money goes to the @samp{Groceries} account, even
+though the payees were different.  You can set up your accounts in any
+way you choose.
 
 Enter the beauty of computerized accounting.  The purpose of the
 Ledger program is to make general journal accounting simple, by
@@ -462,7 +463,7 @@ $ ledger -f drewr3.dat register Groceries
 @end smallexample
 
 @noindent
-Which matches the balance reported for the @code{Groceries} account:
+Which matches the balance reported for the @samp{Groceries} account:
 
 @smallexample
 $ ledger -f drewr3.dat balance Groceries
@@ -629,8 +630,8 @@ account, such as when you get paid.  Here is a typical transaction:
     Income:Salary
 @end smallexample
 
-Money, here, comes from an Income account belonging to ``My
-Employer'', and is transferred to your checking account.  The money is
+Money, here, comes from an Income account belonging to @samp{My
+Employer}, and is transferred to your checking account.  The money is
 now yours, which makes it an Asset.
 
 Liabilities track money owed to others.  This can happen when you
@@ -678,7 +679,7 @@ $ ledger -M register expenses:auto
 @end smallexample
 
 This assumes, of course, that you use account names like
-@code{Expenses:Auto:Gas} and @code{Expenses:Auto:Repair}.
+@samp{Expenses:Auto:Gas} and @samp{Expenses:Auto:Repair}.
 
 @menu
 * Tracking reimbursable expenses::
@@ -688,11 +689,11 @@ This assumes, of course, that you use account names like
 @subsection Tracking reimbursable expenses
 @cindex reimbursable expense tracking
 
-Sometimes you will want to spend money on behalf of someone else,
-which will eventually get repaid.  Since the money is still ``yours'',
-it is really an asset.  And since the expenditure was for someone
-else, you don't want it contaminating your Expenses reports.  You will
-need to keep an account for tracking reimbursements.
+Sometimes you will want to spend money on behalf of someone else, which
+will eventually get repaid.  Since the money is still @emph{yours}, it
+is really an asset.  And since the expenditure was for someone else, you
+don't want it contaminating your Expenses reports.  You will need to
+keep an account for tracking reimbursements.
 
 This is fairly easy to do in ledger.  When spending the money, spend
 it @emph{to} your Assets:Reimbursements, using a different account for
@@ -778,12 +779,12 @@ It's easier shown than said:
     Company XYZ:Assets:Checking              $-100.00
 @end smallexample
 
-And now the reimbursements account is paid off, accounts payable is
-paid off, and $100.00 has been effectively transferred from the
-company's checking account to your personal checking account.  The
-money simply ``waited''---in both @code{Assets:Reimbursements:Company
-XYZ}, and @code{Company XYZ:Accounts Payable:Your Name}---until such
-time as it could be paid off.
+And now the reimbursements account is paid off, accounts payable is paid
+off, and $100.00 has been effectively transferred from the company's
+checking account to your personal checking account.  The money simply
+``waited''---in both @samp{Assets:Reimbursements:Company XYZ}, and
+@samp{Company XYZ:Accounts Payable:Your Name}---until such time as it
+could be paid off.
 
 The value of tracking expenses from both sides like that is that you
 do not contaminate your personal expense report with expenses made on
@@ -965,7 +966,7 @@ or days, it should be possible to convert between the various forms.
 Doing this requires the use of commodity equivalencies.
 
 For example, you might have the following two postings, one which
-transfers an hour of time into a @code{Billable} account, and another
+transfers an hour of time into a @samp{Billable} account, and another
 which decreases the same account by ten minutes.  The resulting report
 will indicate that fifty minutes remain:
 
@@ -1005,7 +1006,7 @@ In the above example, kilobytes are reported with two decimal places
 of precision and each kilobyte is equal to 1024 bytes.
 
 Equivalency chains can be as long as desired.  Whenever a commodity
-would report as a decimal amount (less than @code{1.00}), the next
+would report as a decimal amount (less than @samp{1.00}), the next
 smallest commodity is used.  If a commodity could be reported in terms
 of a higher commodity without resulting to a partial fraction, then
 the larger commodity is used.
@@ -1030,8 +1031,8 @@ EverQuest account:
 Now your EverQuest:Inventory has 3 apples and 5 steaks in it.  The
 amounts are negative, because you are taking @emph{from} Black's
 Tavern in order to add to your Inventory account.  Note that you don't
-have to use @code{Places:Black's Tavern} as the source account.  You
-could use @code{EverQuest:System} to represent the fact that you
+have to use @samp{Places:Black's Tavern} as the source account.  You
+could use @samp{EverQuest:System} to represent the fact that you
 acquired them online.  The only purpose for choosing one kind of
 source account over another is for generate more informative reports
 later on.  The more you know, the better analysis you can perform.
@@ -1097,7 +1098,7 @@ a few large ones, as with checks.
 
 One solution is: don't bother.  Move your spending to a debit card,
 but in general ignore cash.  Once you withdraw it from the ATM, mark
-it as already spent to an @code{Expenses:Cash} category:
+it as already spent to an @samp{Expenses:Cash} category:
 
 @smallexample
 2004/03/15 ATM
@@ -1106,8 +1107,8 @@ it as already spent to an @code{Expenses:Cash} category:
 @end smallexample
 
 If at some point you make a large cash expense that you want to track,
-just ``move'' the amount of the expense from @code{Expenses:Cash} into
-the target account:
+just @emph{move} the amount of the expense from @samp{Expenses:Cash}
+into the target account:
 
 @smallexample
 2004/03/20 Somebody
@@ -1146,8 +1147,8 @@ reserves resources for later:
 The problem with this kind of setup is that when you spend money, it
 comes from two or more places at once: the account and the fund.  And
 yet, the correlation of amounts between funds and accounts is rarely
-one-to-one.  What if the school fund has @code{$500.00}, but
-@code{$400.00} of that comes from Checking, and @code{$100.00} from
+one-to-one.  What if the school fund has @samp{$500.00}, but
+@samp{$400.00} of that comes from Checking, and @samp{$100.00} from
 Savings?
 
 Traditional finance packages require that the money reside in only one
@@ -1185,7 +1186,7 @@ account:
 
 When reports are generated, by default they'll appear in terms of the
 funds.  In this case, you will likely want to mask out your
-@code{Assets} account, because otherwise the balance won't make much
+@samp{Assets} account, because otherwise the balance won't make much
 sense:
 
 @smallexample
@@ -1327,7 +1328,7 @@ amount, if it is the same as the first line:
 @end smallexample
 
 For this transaction, Ledger will figure out that $-23.00 must come
-from @code{Assets:Checking} in order to balance the transaction.
+from @samp{Assets:Checking} in order to balance the transaction.
 
 Also note the structure of the account entries.  There is an implied
 hierarchy established by separating with colons (@pxref{Structuring your
@@ -1724,7 +1725,7 @@ account Expenses:Food5
     value myfunc_five
 @end smallexample
 
-The metadata field @code{Value}, if found, overrides the valuation
+The metadata field @samp{Value}, if found, overrides the valuation
 function on a transaction-wide or per-posting basis.
 
 @smallexample
@@ -1991,8 +1992,8 @@ Sets the root for all accounts following the directive.  Ledger
 supports a hierarchical tree of accounts.  It may be convenient to
 keep two ``root accounts''.  For example you may be tracking your
 personal finances and your business finances.  In order to keep them
-separate you could preface all personal accounts with @code{personal:}
-and all business account with @code{business:}.  You can easily split
+separate you could preface all personal accounts with @samp{personal:}
+and all business account with @samp{business:}.  You can easily split
 out large groups of transaction without manually editing them using
 the account directive.  For example:
 
@@ -2004,8 +2005,8 @@ apply account Personal
 @end smallexample
 
 Would result in all postings going into
-@code{Personal:Expenses:Groceries} and @code{Personal:Assets:Checking}
-until and @code{end apply account} directive was found.
+@samp{Personal:Expenses:Groceries} and @samp{Personal:Assets:Checking}
+until and @samp{end apply account} directive was found.
 
 @item alias
 @c instance_t::alias_directive
@@ -2043,7 +2044,7 @@ amount and automatically calculate balance the transaction in the
 posting.  The @code{bucket} allows you to fill in all postings and
 automatically generate an additional posting to the bucket account
 balancing the transaction.  The following example set the
-@code{Assets:Checking} as the bucket:
+@samp{Assets:Checking} as the bucket:
 
 @smallexample
 bucket Assets:Checking
@@ -2263,7 +2264,7 @@ is the equivalent of:
     Income:Sales
 @end smallexample
 
-Note that anything following ``@code{end tag}'' is ignored.  placing
+Note that anything following @code{end apply tag} is ignored.  placing
 the name of the tag that is being closed is a simple way to keep
 track.
 
@@ -3760,8 +3761,8 @@ $ ledger balance -f drewr3.dat Auto MasterCard
 @end smallexample
 
 @noindent
-note the implicit logical and between @code{Auto} and
-@code{Mastercard}.
+note the implicit logical and between @samp{Auto} and
+@samp{Mastercard}.
 
 If you want the entire contents of a branch of your account tree, use
 the highest common name in the branch:
@@ -3784,9 +3785,9 @@ $ ledger balance -f drewr3.dat Bo
              $ 20.00  Expenses:Books
 @end smallexample
 
-The first example looks for any account starting with ``Bo'', of which
-there are none.  The second looks for any account with ``Bo'', which is
-@code{Expenses:Books}.
+The first example looks for any account starting with @samp{Bo}, of
+which there are none.  The second looks for any account with @samp{Bo},
+which is @samp{Expenses:Books}.
 
 @cindex limit by payees
 @findex --limit @var{EXPR}
@@ -3833,7 +3834,7 @@ $ ledger -b "last oct" -s -S T bal ^expenses
 From left to right the options mean: Show transactions since last
 October; show all sub-accounts; sort by the absolute value of the
 total; and report the balance for all accounts that begin with
-``expenses''.
+@samp{expenses}.
 
 @menu
 * Reporting monthly expenses::
@@ -3865,8 +3866,8 @@ $ ledger -M --period-sort "(amount)" -r reg ^expenses
 But maybe this prints too much information.  You might just want to
 see how much you're spending with your MasterCard.  That kind of query
 requires the use of a display predicate, since the postings
-calculated must match @code{^expenses}, while the postings
-displayed must match @code{mastercard}.  The command would be:
+calculated must match @samp{^expenses}, while the postings
+displayed must match @samp{mastercard}.  The command would be:
 
 @smallexample
 $ ledger -M -r --display "account =~ /mastercard/" reg ^expenses
@@ -3874,8 +3875,8 @@ $ ledger -M -r --display "account =~ /mastercard/" reg ^expenses
 
 This query says: Report monthly subtotals; report the ``related
 account'' postings; display only related postings whose
-account matches @code{mastercard}, and base the calculation on
-postings matching @code{^expenses}.
+account matches @samp{mastercard}, and base the calculation on
+postings matching @samp{^expenses}.
 
 This works just as well for report the overall total, too:
 
@@ -4134,9 +4135,9 @@ column, respectively.
 
 The @command{print} command prints out ledger transactions in a textual
 format that can be parsed by Ledger.  They will be properly formatted,
-and output in the most economic form possible.  The ``print'' command
-also takes a list of optional regexes, which will cause only those
-postings which match in some way to be printed.
+and output in the most economic form possible.  The @command{print}
+command also takes a list of optional regexes, which will cause only
+those postings which match in some way to be printed.
 
 The @command{print} command can be a handy way to clean up a ledger
 file whose formatting has gotten out of hand.
@@ -4242,7 +4243,7 @@ occurs in the first column of the data use:
 transid,date,payee,note,amount,,,code,
 @end smallexample
 
-Ledger will include @code{; transid: 767718} in the first transaction
+Ledger will include @samp{; transid: 767718} in the first transaction
 is from the file above.
 
 @findex --invert
@@ -4651,7 +4652,7 @@ examples of more complex operations with a ledger.
 @subsection The @command{pricemap} command
 @findex pricemap
 
-If you have the @code{graphviz} graph visualization package installed,
+If you have the @file{graphviz} graph visualization package installed,
 ledger can generate a graph of the relationship between your various
 commodities.  The output file is in the ``dot'' format.
 
@@ -4706,7 +4707,7 @@ both contain whatever text the user wishes.
 After the initial transaction data, there must follow a set of postings
 marked with @code{en:postings}.  Typically these postings will all
 balance each other, but if not they will be automatically balanced into
-an account named @code{<Unknown>}.
+an account named @samp{Unknown}.
 
 Within the @code{en:postings} tag is a series of one or more
 @code{posting}'s, which have the following form:
@@ -4907,7 +4908,7 @@ Say you currently have this posting in your ledger file:
     Liabilities:MasterCard             $-15.00
 @end smallexample
 
-Now it's @code{2004/4/9}, and you've just eating at @code{Viva Italiano}
+Now it's @samp{2004/4/9}, and you've just eating at @samp{Viva Italiano}
 again.  The exact amounts are different, but the overall form is the
 same.  With the @command{xact} command you can type:
 
@@ -4925,7 +4926,7 @@ This produces the following output:
 @end smallexample
 
 It works by finding a past posting matching the regular expression
-@code{viva}, and assuming that any accounts or amounts specified will be
+@samp{viva}, and assuming that any accounts or amounts specified will be
 similar to that earlier posting.  If Ledger does not succeed in
 generating a new transaction, an error is printed and the exit code is
 set to @samp{1}.
@@ -6036,9 +6037,9 @@ Synonym for @samp{--period "monthly"}.
 Suppress any color TTY output.
 
 @item --no-rounding
-Don't output <Rounding> postings.  Note that this will cause the running
-total to often not add up!  It's main use is for @option{--amount-data
-(-j)} and @option{--total-data (-J)} reports.
+Don't output @samp{<Rounding>} postings.  Note that this will cause the
+running total to often not add up!  It's main use is for
+@option{--amount-data (-j)} and @option{--total-data (-J)} reports.
 
 @item --no-titles
 Suppress the output of group titles.
@@ -6156,11 +6157,11 @@ FIX THIS ENTRY @c FIXME thdox
 
 @item --related
 In a register report show the related account.  This is the other
-``side'' of the transaction.
+@emph{side} of the transaction.
 
 @item --related-all
 Show all postings in a transaction, similar to @option{--related} but
-show both ``sides'' of each transaction.
+show both @emph{sides} of each transaction.
 
 @item --revalued
 FIX THIS ENTRY
@@ -6353,7 +6354,7 @@ Set the reporting period to @var{STR}.  This will subtotal all matching
 transactions within each period separately, making it easy to see
 weekly, monthly, quarterly, etc., posting totals.  A period string can
 even specify the beginning and end of the report range, using simple
-terms like ``last June'' or ``next month''.  For more using period
+terms like @samp{last June} or @samp{next month}.  For more using period
 expressions, see @ref{Period Expressions}.
 
 @item --period-sort @var{VEXPR}
@@ -6516,7 +6517,7 @@ Include even empty accounts in the @command{balance} report.
 @itemx -W
 Report posting totals by the week.  The week begins on whichever day of
 the week begins the month containing that posting.  To set a specific
-begin date, use a period string, such as @code{weekly from DATE}.
+begin date, use a period string, such as @samp{weekly from DATE}.
 
 @item --monthly
 @itemx -M
@@ -6623,7 +6624,7 @@ reporting range (using @option{--display @var{EXPR} (-d)}).
 @item --date-format @var{DATE_FORMAT}
 @itemx -y @var{DATE_FORMAT}
 Change the basic date format used by reports.  The default uses a date
-like @code{2004/08/01}, which represents the default date format of
+like @samp{2004/08/01}, which represents the default date format of
 @code{%Y/%m/%d}.  To change the way dates are printed in general, the
 easiest way is to put @option{--date-format @var{DATE_FORMAT}} in the
 Ledger initialization file @file{~/.ledgerrc} (or the file referred to
@@ -6637,7 +6638,7 @@ each report type:
 
 @item --balance-format @var{FORMAT_STRING}
 Define the output format for the @command{balance} report.  The default
-(defined in @code{report.h} is:
+(defined in @file{report.h} is:
 
 @smallexample
 "%(ansify_if(
@@ -6670,7 +6671,7 @@ Define the format for the cleared report. The default is:
 
 @item --register-format @var{FORMAT_STRING}
 Define the output format for the @command{register} report.  The default
-(defined in @code{report.h} is:
+(defined in @file{report.h} is:
 
 @smallexample
 "%(ansify_if(
@@ -6845,11 +6846,11 @@ When you specify @option{--market (-V)}, or @option{--exchange
 @var{COMMODITY} (-X)}, you are requesting that some or all of the
 commodities be valuated as of today (or whatever @option{--now
 @var{DATE}} is set to). But what does such a valuation mean? This
-meaning is governed by the presence of a @code{VALUE} meta-data
-property, whose content is an expression used to compute that value.
+meaning is governed by the presence of a @var{VALUE} meta-data property,
+whose content is an expression used to compute that value.
 
-If no VALUE property is specified, each posting is assumed to have a
-default, as if you'd specified a global, automated transaction as
+If no @var{VALUE} property is specified, each posting is assumed to have
+a default, as if you'd specified a global, automated transaction as
 follows:
 
 @smallexample
@@ -6960,9 +6961,10 @@ these values:
 @itemize
 
 @item Register Report
-For the register report, use the value of that commodity on the date
-of the posting being reported, with a <Revalued> posting added at the
-end of today's value is different from the value of the last posting.
+For the register report, use the value of that commodity on the date of
+the posting being reported, with a @samp{<Revalued>} posting added at
+the end of today's value is different from the value of the last
+posting.
 
 @item Balance Report
 For the balance report, use the value of that commodity as of today.
@@ -7059,7 +7061,7 @@ last week
 
 The beginning and ending can be given at the same time, if it spans a
 single period.  In that case, just use @var{SPEC} by itself.  In that
-case, the period @code{oct}, for example, will cover all the days in
+case, the period @samp{oct}, for example, will cover all the days in
 October.  The possible forms are:
 
 @smallexample
@@ -7509,7 +7511,7 @@ precedence order of operators.
 
 @item [DATE]
 Useful specifying a date in plain terms.  For example, you could say
-@code{[2004/06/01]}.
+@samp{[2004/06/01]}.
 
 @end table
 
@@ -7681,14 +7683,14 @@ specified, the current report style's value expression is used.
 @item (EXPR)
 Inserts the amount resulting from the value expression given in
 parentheses.  To insert five times the total value of an account, for
-example, one could say @code{%12(5*O)}.  Note: It's important to put the
+example, one could say @samp{%12(5*O)}.  Note: It's important to put the
 five first in that expression, so that the commodity doesn't get
 stripped from the total.
 
 @item [DATEFMT]
 Inserts the result of formatting a posting's date with a date
 format string, exactly like those supported by @code{strftime}.  For
-example: @code{%[%Y/%m/%d %H:%M:%S]}.
+example: @samp{%[%Y/%m/%d %H:%M:%S]}.
 
 @item S
 Insert the pathname of the file from which the transaction's data was
@@ -8057,7 +8059,7 @@ justified and padded to the full width of the field.  If
 Replaces line feeds in @code{STR} with @samp{\n}.
 
 @item quoted(STR)
-Return @code{STR} surrounded by double quotes, @code{"STR"}.
+Return @code{STR} surrounded by double quotes, @samp{"STR"}.
 
 @item strip(value)
 Values can have numerous annotations, such as effective dates and lot
@@ -8140,9 +8142,9 @@ for xact in ledger.read_journal("sample.dat").xacts:
 @node Raw vs. Cooked, Queries, Basic data traversal, Extending with Python
 @section Raw vs. Cooked
 
-Ledger data exists in one of two forms: raw and cooked.  Raw objects
-are what you get from a traversal like the above, and represent
-exactly what was seen in the data file.  Consider this journal:
+Ledger data exists in one of two forms: raw and cooked.  Raw objects are
+what you get from a traversal like the above, and represent exactly what
+was seen in the data file.  Consider this journal:
 
 @smallexample
 = true
@@ -8182,10 +8184,10 @@ for post in ledger.read_journal("sample.dat").query("food"):
     print "Transferring %s to/from %s" % (post.amount, post.account)
 @end smallexample
 
-The reason why queries iterate over postings instead of transactions
-is that queries often return only a ``slice'' of the transactions they
+The reason why queries iterate over postings instead of transactions is
+that queries often return only a ``slice'' of the transactions they
 apply to.  You can always get at a matching posting's transaction by
-looking at its ``xact'' member:
+looking at its @code{xact} member:
 
 @smallexample
 last_xact = None
@@ -8198,20 +8200,19 @@ for post in ledger.read_journal("sample.dat").query(""):
 @end smallexample
 
 This query ends up reporting every cooked posting in the Journal, but
-does it transaction-wise.  It relies on the fact that an unsorted
-report returns postings in the exact order they were parsed from the
-journal file.
+does it transaction-wise.  It relies on the fact that an unsorted report
+returns postings in the exact order they were parsed from the journal
+file.
 
 @node Queries, Embedded Python, Raw vs. Cooked, Extending with Python
 @section Queries
 
-The Journal.query() method accepts every argument you can specify on
-the command-line, including @option{--options}.
+The Journal.query() method accepts every argument you can specify on the
+command-line, including @option{--options}.
 
-Since a query ``cooks'' the journal it applies to, only one query may
-be active for that journal at a given time.  Once the query object is
-gone (after the for loop), then the data reverts back to its raw
-state.
+Since a query ``cooks'' the journal it applies to, only one query may be
+active for that journal at a given time.  Once the query object is gone
+(after the for loop), then the data reverts back to its raw state.
 
 @node Embedded Python, Amounts, Queries, Extending with Python
 @section Embedded Python
@@ -8234,8 +8235,8 @@ tag PATH
     Assets:Cash
 @end smallexample
 
-Any Python functions you define this way become immediately available
-as valexpr functions.
+Any Python functions you define this way become immediately available as
+valexpr functions.
 
 @node Amounts,  , Embedded Python, Extending with Python
 @section Amounts
@@ -8278,88 +8279,88 @@ Those tiers are:
 
 @item Utility code
 
-There's lots of general utility in Ledger for doing time parsing,
-using Boost.Regex, error handling, etc.  It's all done in a way that
-can be reused in other projects as needed.
+There's lots of general utility in Ledger for doing time parsing, using
+Boost.Regex, error handling, etc.  It's all done in a way that can be
+reused in other projects as needed.
 
 @item Commoditized Amounts (amount_t, commodity_t and friends)
 
-An numerical abstraction combining multi-precision rational numbers
-(via GMP) with commodities.  These structures can be manipulated like
-regular numbers in either C++ or Python (as Amount objects).
+An numerical abstraction combining multi-precision rational numbers (via
+GMP) with commodities.  These structures can be manipulated like regular
+numbers in either C++ or Python (as Amount objects).
 
 @item Commodity Pool
 
-Commodities are all owned by a commodity pool, so that future parsing
-of amounts can link to the same commodity and established a consistent
+Commodities are all owned by a commodity pool, so that future parsing of
+amounts can link to the same commodity and established a consistent
 price history and record of formatting details.
 
 @item Balances
 
-Adds the concept of multiple amounts with varying commodities.
-Supports simple arithmetic, and multiplication and division with
-non-commoditized values.
+Adds the concept of multiple amounts with varying commodities.  Supports
+simple arithmetic, and multiplication and division with non-commoditized
+values.
 
 @item Price history
 
-Amounts have prices, and these are kept in a data graph which the
-amount code itself is only dimly aware of (there's three points of
-access so an amount can query its revalued price on a given date).
+Amounts have prices, and these are kept in a data graph which the amount
+code itself is only dimly aware of (there's three points of access so an
+amount can query its revalued price on a given date).
 
 @item Values
 
 Often the higher layers in Ledger don't care if something is an amount
-or a balance, they just want to add stuff to it or print it.  For
-this, I created a type-erasure class, value_t/Value, into which many
-things can be stuffed and then operated on.  They can contain amounts,
-balances, dates, strings, etc.  If you try to apply an operation
-between two values that makes no sense (like dividing an amount by
-a balance), an error occurs at runtime, rather than at compile-time
-(as would happen if you actually tried to divide an @code{amount_t} by
+or a balance, they just want to add stuff to it or print it.  For this,
+I created a type-erasure class, value_t/Value, into which many things
+can be stuffed and then operated on.  They can contain amounts,
+balances, dates, strings, etc.  If you try to apply an operation between
+two values that makes no sense (like dividing an amount by a balance),
+an error occurs at runtime, rather than at compile-time (as would happen
+if you actually tried to divide an @code{amount_t} by
 a @code{balance_t}).
 
 This is the core data type for the value expression language.
 
 @item Value expressions
 
-The next layer up adds functions and operators around the Value
-concept.  This lets you apply transformations and tests to Values at
-runtime without having to bake it into C++.  The set of functions
-available is defined by each object type in Ledger (posts, accounts,
-transactions, etc.), though the core engine knows nothing about these.
-At its base, it only knows how to apply operators to values, and how
-to pass them to and receive them from functions.
+The next layer up adds functions and operators around the Value concept.
+This lets you apply transformations and tests to Values at runtime
+without having to bake it into C++.  The set of functions available is
+defined by each object type in Ledger (posts, accounts, transactions,
+etc.), though the core engine knows nothing about these.  At its base,
+it only knows how to apply operators to values, and how to pass them to
+and receive them from functions.
 
 @item Query expressions
 
 Expressions can be onerous to type at the command-line, so there's
 a shorthand for reporting called ``query expressions''.  These add no
 functionality of their own, but are purely translated from the input
-string (cash) down to the corresponding value expression
-@code{(account =~ /cash/)}.  This is a convenience layer.
+string (cash) down to the corresponding value expression @samp{(account
+=~ /cash/)}.  This is a convenience layer.
 
 @item Format strings
 
 Format strings let you interpolate value expressions into string, with
 the requirement that any interpolated value have a string
-representation.  Really all this does is calculate the value
-expression in the current report context, call the resulting value's
-@code{to_string()} method, and stuffs the result into the output
-string.  It also provides printf-like behavior, such as min/max width,
-right/left justification, etc.
+representation.  Really all this does is calculate the value expression
+in the current report context, call the resulting value's
+@code{to_string()} method, and stuffs the result into the output string.
+It also provides printf-like behavior, such as min/max width, right/left
+justification, etc.
 
 @item Journal items
 
-Next is a base type shared by anything that can appear in a journal:
-an item_t.  It contains details common to all such parsed entities,
-like what file and line it was found on, etc.
+Next is a base type shared by anything that can appear in a journal: an
+item_t.  It contains details common to all such parsed entities, like
+what file and line it was found on, etc.
 
 @item Journal posts
 
-The most numerous object found in a Journal, postings are a type of
-item that contain an account, an amount, a cost, and metadata.  There
-are some other complications, like the account can be marked virtual,
-the amount could be an expression, etc.
+The most numerous object found in a Journal, postings are a type of item
+that contain an account, an amount, a cost, and metadata.  There are
+some other complications, like the account can be marked virtual, the
+amount could be an expression, etc.
 
 @item Journal transactions
 
@@ -8371,8 +8372,8 @@ transaction is queried to see if it can provide it.
 @item Journal accounts
 
 Postings are also shared by accounts, though the actual memory is
-managed by the transaction.  Each account knows all the postings
-within it, but contains relatively little information of its own.
+managed by the transaction.  Each account knows all the postings within
+it, but contains relatively little information of its own.
 
 @item The Journal object
 
@@ -8383,15 +8384,15 @@ querying ad reporting on your data.
 @item Textual journal parser
 
 There is a textual parser, wholly contained in textual.cc, which knows
-how to parse text into journal objects, which then get ``finalized''
-and added to the journal.  Finalization is the step that enforces the
+how to parse text into journal objects, which then get ``finalized'' and
+added to the journal.  Finalization is the step that enforces the
 double-entry guarantee.
 
 @item Iterators
 
-Every journal object is ``iterable'', and these iterators are defined
-in iterators.h and iterators.cc.  This iteration logic is kept out of
-the basic journal objects themselves for the sake of modularity.
+Every journal object is ``iterable'', and these iterators are defined in
+iterators.h and iterators.cc.  This iteration logic is kept out of the
+basic journal objects themselves for the sake of modularity.
 
 @item Comparators
 
@@ -8401,17 +8402,16 @@ the user passed to @option{--sort @var{VEXPR}}.
 
 @item Temporaries
 
-Many reports bring pseudo-journal objects into existence, like
-postings which report totals in a @code{<Total>} account.  These
-objects are created and managed by a temporaries_t object, which gets
-used in many places by the reporting filters.
+Many reports bring pseudo-journal objects into existence, like postings
+which report totals in a @samp{Total} account.  These objects are
+created and managed by a temporaries_t object, which gets used in many
+places by the reporting filters.
 
 @item Option handling
 
-There is an option handling subsystem used by many of the layers
-further down.  It makes it relatively easy for me to add new options,
-and to have those option settings immediately accessible to value
-expressions.
+There is an option handling subsystem used by many of the layers further
+down.  It makes it relatively easy for me to add new options, and to
+have those option settings immediately accessible to value expressions.
 
 @item Session objects
 
@@ -8423,10 +8423,10 @@ a separate session.  They are all owned by the global scope.
 @item Report objects
 
 Every time you create report output, a report object is created to
-determine what you want to see.  In the Ledger REPL, a new report
-object is created every time a command is executed.  In CLI mode, only
-one report object ever comes into being, as Ledger immediately exits
-after displaying the results.
+determine what you want to see.  In the Ledger REPL, a new report object
+is created every time a command is executed.  In CLI mode, only one
+report object ever comes into being, as Ledger immediately exits after
+displaying the results.
 
 @item Reporting filters
 
@@ -8434,28 +8434,26 @@ The way Ledger generates data is this: it asks the session for the
 current journal, and then creates an iterator applied to that journal.
 The kind of iterator depends on the type of report.
 
-This iterator is then walked, and every object yielded from the
-iterator is passed to an ``item handler'', whose type is directly
-related to the type of the iterator.
+This iterator is then walked, and every object yielded from the iterator
+is passed to an ``item handler'', whose type is directly related to the
+type of the iterator.
 
-There are many, many item handlers, which can be chained together.
-Each one receives an item (post, account, xact, etc.), performs some
-action on it, and then passes it down to the next handler in the
-chain.  There are filters which compute the running totals; that queue
-and sort all the input items before playing them back out in a new
-order; that filter out items which fail to match a predicate, etc.
-Almost every reporting feature in Ledger is related to one or more
-filters.  Looking at @code{filters.h}, I see over 25 of them defined
-currently.
+There are many, many item handlers, which can be chained together.  Each
+one receives an item (post, account, xact, etc.), performs some action
+on it, and then passes it down to the next handler in the chain.  There
+are filters which compute the running totals; that queue and sort all
+the input items before playing them back out in a new order; that filter
+out items which fail to match a predicate, etc.  Almost every reporting
+feature in Ledger is related to one or more filters.  Looking at
+@file{filters.h}, I see over 25 of them defined currently.
 
 @item The filter chain
 
-How filters get wired up, and in what order, is a complex process
-based on all the various options specified by the user.  This is the
-job of the chain logic, found entirely in @code{chain.cc}.  It took
-a really long time to get this logic exactly write, which is why
-I haven't exposed this layer to the Python bridge yet.
-@c TODO : correct above ``write'' as ``right'' ?
+How filters get wired up, and in what order, is a complex process based
+on all the various options specified by the user.  This is the job of
+the chain logic, found entirely in @file{chain.cc}.  It took a really
+long time to get this logic exactly right, which is why I haven't
+exposed this layer to the Python bridge yet.
 
 @item Output modules
 
@@ -8463,16 +8461,16 @@ Although filters are great and all, in the end you want to see stuff.
 This is the job of special ``leaf'' filters call output modules.  They
 are implemented just like a regular filter, but they don't have
 a ``next'' filter to pass the time on down to.  Instead, they are the
-end of the line and must do something with the item that results in
-the user seeing something on their screen or in a file.
+end of the line and must do something with the item that results in the
+user seeing something on their screen or in a file.
 
 @item Select queries
 
 Select queries know a lot about everything, even though they implement
 their logic by implementing the user's query in terms of all the other
-features thus presented.  Select queries have no functionality of
-their own, they are simple a shorthand to provide access to much of
-Ledger's functionality via a cleaner, more consistent syntax.
+features thus presented.  Select queries have no functionality of their
+own, they are simple a shorthand to provide access to much of Ledger's
+functionality via a cleaner, more consistent syntax.
 
 @item The Global Scope
 
@@ -8484,8 +8482,8 @@ Application object.
 @item The Main Driver
 
 This creates the global scope object, performs error reporting, and
-handles command-line options which must precede even the creation of
-the global scope, such as @option{--debug @var{CODE}}.
+handles command-line options which must precede even the creation of the
+global scope, such as @option{--debug @var{CODE}}.
 
 @end itemize
 
@@ -8498,9 +8496,9 @@ etc.
 @section Journal File Format for Developers
 
 This chapter offers a complete description of the journal data format,
-suitable for implementers in other languages to follow.  For users,
-the chapter on keeping a journal is less extensive, but more typical
-of common usage (@pxref{Keeping a Journal}).
+suitable for implementers in other languages to follow.  For users, the
+chapter on keeping a journal is less extensive, but more typical of
+common usage (@pxref{Keeping a Journal}).
 
 Data is collected in the form of @dfn{transactions} which occur in one
 or more @dfn{journal files}.  Each transaction, in turn, is made up of
@@ -8522,15 +8520,15 @@ arbitrary, with no preferences implied, although you will find it useful
 to follow standard accounting practice (@pxref{Principles of Accounting
 with Ledger}).
 
-Since an amount is missing from the second posting, it is assumed to
-be the inverse of the first.  This guarantees the cardinal rule of
+Since an amount is missing from the second posting, it is assumed to be
+the inverse of the first.  This guarantees the cardinal rule of
 double-entry accounting: the sum of every transaction must balance to
 zero, or it is in error.  Whenever Ledger encounters a @dfn{null
 posting} in a transaction, it uses it to balance the remainder.
 
-It is also typical, though not enforced, to think of the first
-posting as the destination, and the final as the source.  Thus, the
-amount of the first posting is typically positive.  Consider:
+It is also typical, though not enforced, to think of the first posting
+as the destination, and the final as the source.  Thus, the amount of
+the first posting is typically positive.  Consider:
 
 @smallexample
 2010/05/31 An income transaction
@@ -8553,9 +8551,9 @@ amount of the first posting is typically positive.  Consider:
 @subsection Comments and meta-data
 
 Comments are generally started using a @samp{;}.  However, in order to
-increase compatibility with other text manipulation programs and
-methods three additional comment characters are valid if used at the
-beginning of a line: @samp{#}, @samp{|}, and @samp{*}.
+increase compatibility with other text manipulation programs and methods
+three additional comment characters are valid if used at the beginning
+of a line: @samp{#}, @samp{|}, and @samp{*}.
 
 @node Specifying Amounts, Posting costs, Comments and meta-data, Journal File Format for Developers
 @subsection Specifying Amounts
@@ -8587,20 +8585,20 @@ In the simplest form, bare decimal numbers are accepted:
 @end smallexample
 
 @cindex uncommoditized amounts
-Such amounts may only use an optional period for a decimal point.
-These are referred to as @dfn{integer amounts} or @dfn{uncommoditized
-amounts}.  In most ways they are similar to @dfn{commoditized
-amounts}, but for one significant difference: They always display in
-reports with @dfn{full precision}.  More on this in a moment.  For
-now, a word must be said about how Ledger stores numbers.
+Such amounts may only use an optional period for a decimal point.  These
+are referred to as @dfn{integer amounts} or @dfn{uncommoditized
+amounts}.  In most ways they are similar to @dfn{commoditized amounts},
+but for one significant difference: They always display in reports with
+@dfn{full precision}.  More on this in a moment.  For now, a word must
+be said about how Ledger stores numbers.
 
 Every number parsed by Ledger is stored internally as an
 infinite-precision rational value.  Floating-point math is never used,
 as it cannot be trusted to maintain precision of values.  So, in the
-case of @code{1000.00} above, the internal value is @code{100000/100}.
+case of @samp{1000.00} above, the internal value is @samp{100000/100}.
 
 While rational numbers are great at not losing precision, the question
-arises: How should they be displayed?  A number like @code{100000/100}
+arises: How should they be displayed?  A number like @samp{100000/100}
 is no problem, since it represents a clean decimal fraction.  But what
 about when the number @samp{1/1} is divided by three?  How should one
 print @samp{1/3}, an infinitely repeating decimal?
@@ -8660,9 +8658,9 @@ part is the commodity.
 
 Another feature of commoditized amounts is that they are reported back
 in the same form as parsed.  If you specify dollar amounts using
-@code{$100}, they will print the same; likewise with @code{100 $} or
-@code{$100.000}.  You may even use decimal commas, such as
-@code{$100,00}, or thousand-marks, as in @code{$10,000.00}.
+@samp{$100}, they will print the same; likewise with @samp{100 $} or
+@samp{$100.000}.  You may even use decimal commas, such as
+@samp{$100,00}, or thousand-marks, as in @samp{$10,000.00}.
 
 These display characteristics become associated with the commodity,
 with the result being that all amounts of the same commodity are
@@ -8727,7 +8725,7 @@ postings are involved:
     Assets:Checking
 @end smallexample
 
-Here the implied cost is @code{$57.00}, which is entered into the null
+Here the implied cost is @samp{$57.00}, which is entered into the null
 posting automatically so that the transaction balances.
 
 @node Primary commodities,  , Posting costs, Journal File Format for Developers
@@ -8980,19 +8978,19 @@ This is a debugging command.
 @section Ledger Development Environment
 
 @menu
-* @code{acprep} build configuration tool::
+* @file{acprep} build configuration tool::
 * Testing Framework::
 @end menu
 
-@node @code{acprep} build configuration tool, Testing Framework, Ledger Development Environment, Ledger Development Environment
-@subsection @code{acprep} build configuration tool
+@node @file{acprep} build configuration tool, Testing Framework, Ledger Development Environment, Ledger Development Environment
+@subsection @file{acprep} build configuration tool
 
-@node Testing Framework,  , @code{acprep} build configuration tool, Ledger Development Environment
+@node Testing Framework,  , @file{acprep} build configuration tool, Ledger Development Environment
 @subsection Testing Framework
 
 Ledger source ships with a fairly complete set of tests to verify that
 all is well, and no old errors have been resurfaced.  Tests are run
-individually with @code{ctest}.  All tests can be run using @code{make
+individually with @file{ctest}.  All tests can be run using @code{make
 check} or @code{ninja check} depending on which build tool you prefer.
 
 Once built, the ledger executable resides under the @file{build}
@@ -9021,7 +9019,7 @@ where the regex matches the name of the test you want to build.
 There are nearly 300 tests stored under the @file{test} subdirectory
 in main source distribution.  They are broken into two broad
 categories, baseline and regression.  To run the @file{5FBF2ED8} test,
-for example, issue @code{ctest -V -R "5FB"}.
+for example, issue @samp{ctest -V -R "5FB"}.
 
 @node Writing Tests,  , Running Tests, Testing Framework
 @subsubsection Writing Tests
