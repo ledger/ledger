@@ -2364,16 +2364,19 @@ syntax of its timelog files.
 
 @node Converting from other formats, Archiving Previous Years, Journal Format, Keeping a Journal
 @section Converting from other formats
+@cindex csv importing
 
 There are numerous tools to help convert various formats to a Ledger
-file.  Most banks will generate a commas separated value file that can
+file.  Most banks will generate a comma separated values file that can
 easily be parsed into Ledger format using one of those tools.  Some of
-the more popular tools are:
+the most popular tools are:
 
 @itemize
-@item @code{icsv2ledger}
-@item @code{csvToLedger}
-@item @code{CSV2Ledger}
+@item @code{ledger convert download.csv}
+@item @code{hledger -f checking.csv print}
+@item @uref{https://github.com/quentinsf/icsv2ledger, @code{icsv2ledger}}
+@item @uref{https://github.com/tazzben/csvToLedger, @code{csvToLedger}}
+@item @uref{https://launchpad.net/csv2ledger, @code{CSV2Ledger}}
 @end itemize
 
 @noindent
@@ -4216,8 +4219,7 @@ limiting and searching functions.
 
 @node  The @command{convert} command,  , The @command{csv} command, Comma Separated Values files
 @subsubsection The @command{convert} command
-@cindex csv conversion
-@cindex reading csv
+@cindex csv importing
 @cindex comma separated variable file reading
 @findex convert
 @findex --input-date-format @var{DATE_FORMAT}
@@ -5083,6 +5085,7 @@ Show account balances.
 Show all transactions with running total.
 
 @item csv
+@cindex csv exporting
 Show transactions in csv format, for exporting to other programs.
 
 @item print
