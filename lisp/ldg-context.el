@@ -37,46 +37,47 @@
 (defconst comment-string "[ \t]*;[ \t]*\\(.*?\\)")
 (defconst nil-string "\\([ \t]+\\)")
 (defconst commodity-string "\\(.+?\\)")
-(defconst date-string "^\\(\\([0-9]\\{4\\}[/-]\\)?[01]?[0-9][/-][0123]?[0-9]\\)")
-(defconst code-string "\\((\\(.*\\))\\)?")
+(defconst date-string "^\\([0-9]\\{4\\}[/-][01]?[0-9][/-][0123]?[0-9]\\)")
+(defconst code-string "\\((.*)\\)?")
 (defconst payee-string "\\(.*\\)")
 
 (defmacro line-regex (&rest elements)
   (let (regex-string)
     (concat (dolist (e elements regex-string)
-	      (setq regex-string 
-		    (concat regex-string 
-			    (eval 
-			     (intern 
+	      (setq regex-string
+		    (concat regex-string
+			    (eval
+			     (intern
 			      (concat (symbol-name e) "-string")))))) "[ \t]*$")))
 
 (defmacro single-line-config2 (&rest elements)
 "Take list of ELEMENTS and return regex and element list for use in context-at-point"
   (let (regex-string)
     `'(,(concat (dolist (e elements regex-string)
-	   (setq regex-string 
-		 (concat regex-string 
-			 (eval 
-			  (intern 
+	   (setq regex-string
+		 (concat regex-string
+			 (eval
+			  (intern
 			   (concat (symbol-name e) "-string")))))) "[ \t]*$")
        ,elements)))
 
 (defmacro single-line-config (&rest elements)
   "Take list of ELEMENTS and return regex and element list for use in context-at-point"
-  `'(,(eval `(line-regex ,@elements))		  
+  `'(,(eval `(line-regex ,@elements))
      ,elements))
 
 (defconst ledger-line-config
-  (list (list 'xact (list (single-line-config date nil status nil nil code payee comment)
-			  (single-line-config date nil status nil nil code payee)))
+  (list (list 'xact (list (single-line-config date nil status nil code nil payee nil comment)
+													(single-line-config date nil status nil code nil payee)
+													(single-line-config date nil status nil payee)))
 	(list 'acct-transaction (list (single-line-config indent comment)
-				      (single-line-config indent status account nil commodity amount nil comment)
-				      (single-line-config indent status account nil commodity amount)
-				      (single-line-config indent status account nil amount nil commodity comment)
-				      (single-line-config indent status account nil amount nil commodity)
-				      (single-line-config indent status account nil amount)
-				      (single-line-config indent status account nil comment)
-				      (single-line-config indent status account)))))
+				      (single-line-config2 indent status account nil commodity amount nil comment)
+				      (single-line-config2 indent status account nil commodity amount)
+				      (single-line-config2 indent status account nil amount nil commodity comment)
+				      (single-line-config2 indent status account nil amount nil commodity)
+				      (single-line-config2 indent status account nil amount)
+				      (single-line-config2 indent status account nil comment)
+				      (single-line-config2 indent status account)))))
 
 (defun ledger-extract-context-info (line-type pos)
   "Get context info for current line with LINE-TYPE.
@@ -109,7 +110,7 @@ where the \"users\" point was."
 Leave point at the beginning of the thing under point"
   (let ((here (point)))
     (goto-char (line-beginning-position))
-    (cond ((looking-at "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.+?)\\)?\\s-+") 
+    (cond ((looking-at "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.+?)\\)?\\s-+")
 	   (goto-char (match-end 0))
            'transaction)
           ((looking-at "^\\s-+\\([*!]\\s-+\\)?[[(]?\\(.\\)")
