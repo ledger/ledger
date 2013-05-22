@@ -30,6 +30,12 @@
   :type 'boolean
   :group 'ledger)
 
+(defcustom ledger-use-iso-dates nil
+  "If non-nil, use the iso-8601 format for dates (YYYY-MM-DD)."
+  :type 'boolean
+  :group 'ledger
+  :safe t)
+
 (defvar highlight-overlay (list))
 
 (defun ledger-find-xact-extents (pos)
@@ -119,12 +125,17 @@ MOMENT is an encoded date"
   (goto-char (point-min))
   (forward-line (1- line-number)))
 
+(defun ledger-year-and-month ()
+  (let ((sep (if ledger-use-iso-dates
+                 "-"
+               "/")))
+   (concat ledger-year sep ledger-month sep)))
 
 (defun ledger-copy-transaction-at-point (date)
   "Ask for a new DATE and copy the transaction under point to that date.  Leave point on the first amount."
   (interactive  (list
-								 (read-string "Copy to date: "
-															(concat ledger-year "/" ledger-month "/") 'ledger-minibuffer-history)))
+                 (read-string "Copy to date: " (ledger-year-and-month)
+                              'ledger-minibuffer-history)))
   (let* ((here (point))
 				 (extents (ledger-find-xact-extents (point)))
 				 (transaction (buffer-substring-no-properties (car extents) (cadr extents)))
@@ -153,7 +164,7 @@ If INSERT-AT-POINT is non-nil insert the transaction
 there, otherwise call `ledger-xact-find-slot' to insert it at the
 correct chronological place in the buffer."
   (interactive (list
-								(read-string "Transaction: " (concat ledger-year "/" ledger-month "/"))))
+                (read-string "Transaction: " (ledger-year-and-month))))
   (let* ((args (with-temp-buffer
                  (insert transaction-text)
                  (eshell-parse-arguments (point-min) (point-max))))
