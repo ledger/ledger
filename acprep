@@ -248,7 +248,7 @@ class PrepareBuild(CommandLineApp):
                 self.envvars[varname] = os.environ[varname]
 
                 if varname.endswith('FLAGS'):
-                    self.__dict__[varname] = string.split(os.environ[varname])
+                    self.__dict__[varname] = str.split(os.environ[varname])
                     self.envvars[varname]  = ''
 
         # If ~/Products/ or build/ exists, use them instead of the source tree
