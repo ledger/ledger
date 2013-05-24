@@ -53,8 +53,8 @@
   Assets:Savings
   ; :nobudget:
 
-@tag hastag: true
-@tag nestedtag: true
+apply tag hastag: true
+apply tag nestedtag: true
 2011/01/25 Tom's Used Cars
   Expenses:Auto                    $ 5,500.00
   ; :nobudget:
@@ -63,20 +63,20 @@
 2011/01/27 Book Store
   Expenses:Books                       $20.00
   Liabilities:MasterCard
-@end tag nestedtag
+end tag
 2011/12/01 Sale
   Assets:Checking:Business            $ 30.00
   Income:Sales
-@end tag
+end tag
 
-@account Expenses
-@bucket Assets:Checking
+apply account Expenses
+bucket Assets:Checking
 2011/04/25 Tom's Used Cars
   Auto                    $ 5,500.00
   ; :nobudget:
 
-@end account
-@payee Amazon.com  B.*k Store
+end account
+apply payee Amazon.com  B.*k Store
 
 2011/04/27 Book Store
   Books                       $20.00
