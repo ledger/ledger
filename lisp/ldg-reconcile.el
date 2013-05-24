@@ -376,8 +376,9 @@ moved and recentered.  If they aren't strange things happen."
   (let ((account (ledger-read-account-with-prompt "Account to reconcile"))
 				(buf (current-buffer))
         (rbuf (get-buffer ledger-recon-buffer-name)))
-    ;; this means only one *Reconcile* buffer, ever Set up the
-    ;; reconcile buffer
+
+		(add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save nil t)
+
     (if rbuf ;; *Reconcile* already exists
 				(with-current-buffer rbuf
 					(set 'ledger-acct account) ;; already buffer local
@@ -390,7 +391,6 @@ moved and recentered.  If they aren't strange things happen."
 						(ledger-reconcile-open-windows buf rbuf)))
 
 				;; no recon-buffer, starting from scratch.
-				(add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save nil t)
 
 				(with-current-buffer (setq rbuf
 																	 (get-buffer-create ledger-recon-buffer-name))
@@ -417,45 +417,45 @@ moved and recentered.  If they aren't strange things happen."
   (setq ledger-target (ledger-read-commodity-string ledger-reconcile-target-prompt-string)))
 
 (define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
-										 "A mode for reconciling ledger entries."
-										 (let ((map (make-sparse-keymap)))
-											 (define-key map [(control ?m)] 'ledger-reconcile-visit)
-											 (define-key map [return] 'ledger-reconcile-visit)
-											 (define-key map [(control ?l)] 'ledger-reconcile-refresh)
-											 (define-key map [(control ?c) (control ?c)] 'ledger-reconcile-finish)
-											 (define-key map [? ] 'ledger-reconcile-toggle)
-											 (define-key map [?a] 'ledger-reconcile-add)
-											 (define-key map [?d] 'ledger-reconcile-delete)
-											 (define-key map [?g] 'ledger-reconcile);
-											 (define-key map [?n] 'next-line)
-											 (define-key map [?p] 'previous-line)
-											 (define-key map [?t] 'ledger-reconcile-change-target)
-											 (define-key map [?s] 'ledger-reconcile-save)
-											 (define-key map [?q] 'ledger-reconcile-quit)
-											 (define-key map [?b] 'ledger-display-balance)
+	"A mode for reconciling ledger entries."
+	(let ((map (make-sparse-keymap)))
+		(define-key map [(control ?m)] 'ledger-reconcile-visit)
+		(define-key map [return] 'ledger-reconcile-visit)
+		(define-key map [(control ?l)] 'ledger-reconcile-refresh)
+		(define-key map [(control ?c) (control ?c)] 'ledger-reconcile-finish)
+		(define-key map [? ] 'ledger-reconcile-toggle)
+		(define-key map [?a] 'ledger-reconcile-add)
+		(define-key map [?d] 'ledger-reconcile-delete)
+		(define-key map [?g] 'ledger-reconcile);
+		(define-key map [?n] 'next-line)
+		(define-key map [?p] 'previous-line)
+		(define-key map [?t] 'ledger-reconcile-change-target)
+		(define-key map [?s] 'ledger-reconcile-save)
+		(define-key map [?q] 'ledger-reconcile-quit)
+		(define-key map [?b] 'ledger-display-balance)
 
-											 (define-key map [menu-bar] (make-sparse-keymap "ldg-recon-menu"))
-											 (define-key map [menu-bar ldg-recon-menu] (cons "Reconcile" map))
-											 (define-key map [menu-bar ldg-recon-menu qui] '("Quit" . ledger-reconcile-quit))
-											 (define-key map [menu-bar ldg-recon-menu sep1] '("--"))
-											 (define-key map [menu-bar ldg-recon-menu pre] '("Previous Entry" . previous-line))
-											 (define-key map [menu-bar ldg-recon-menu vis] '("Visit Source" . ledger-reconcile-visit))
-											 (define-key map [menu-bar ldg-recon-menu nex] '("Next Entry" . next-line))
-											 (define-key map [menu-bar ldg-recon-menu sep2] '("--"))
-											 (define-key map [menu-bar ldg-recon-menu del] '("Delete Entry" . ledger-reconcile-delete))
-											 (define-key map [menu-bar ldg-recon-menu add] '("Add Entry" . ledger-reconcile-add))
-											 (define-key map [menu-bar ldg-recon-menu tog] '("Toggle Entry" . ledger-reconcile-toggle))
-											 (define-key map [menu-bar ldg-recon-menu sep3] '("--"))
-											 (define-key map [menu-bar ldg-recon-menu bal] '("Show Cleared Balance" . ledger-display-balance))
-											 (define-key map [menu-bar ldg-recon-menu tgt] '("Change Target Balance" . ledger-reconcile-change-target))
-											 (define-key map [menu-bar ldg-recon-menu sep4] '("--"))
-											 (define-key map [menu-bar ldg-recon-menu rna] '("Reconcile New Account" . ledger-reconcile))
-											 (define-key map [menu-bar ldg-recon-menu sep5] '("--"))
-											 (define-key map [menu-bar ldg-recon-menu fin] '("Finish" . ledger-reconcile-finish))
-											 (define-key map [menu-bar ldg-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
-											 (define-key map [menu-bar ldg-recon-menu sav] '("Save" . ledger-reconcile-save))
+		(define-key map [menu-bar] (make-sparse-keymap "ldg-recon-menu"))
+		(define-key map [menu-bar ldg-recon-menu] (cons "Reconcile" map))
+		(define-key map [menu-bar ldg-recon-menu qui] '("Quit" . ledger-reconcile-quit))
+		(define-key map [menu-bar ldg-recon-menu sep1] '("--"))
+		(define-key map [menu-bar ldg-recon-menu pre] '("Previous Entry" . previous-line))
+		(define-key map [menu-bar ldg-recon-menu vis] '("Visit Source" . ledger-reconcile-visit))
+		(define-key map [menu-bar ldg-recon-menu nex] '("Next Entry" . next-line))
+		(define-key map [menu-bar ldg-recon-menu sep2] '("--"))
+		(define-key map [menu-bar ldg-recon-menu del] '("Delete Entry" . ledger-reconcile-delete))
+		(define-key map [menu-bar ldg-recon-menu add] '("Add Entry" . ledger-reconcile-add))
+		(define-key map [menu-bar ldg-recon-menu tog] '("Toggle Entry" . ledger-reconcile-toggle))
+		(define-key map [menu-bar ldg-recon-menu sep3] '("--"))
+		(define-key map [menu-bar ldg-recon-menu bal] '("Show Cleared Balance" . ledger-display-balance))
+		(define-key map [menu-bar ldg-recon-menu tgt] '("Change Target Balance" . ledger-reconcile-change-target))
+		(define-key map [menu-bar ldg-recon-menu sep4] '("--"))
+		(define-key map [menu-bar ldg-recon-menu rna] '("Reconcile New Account" . ledger-reconcile))
+		(define-key map [menu-bar ldg-recon-menu sep5] '("--"))
+		(define-key map [menu-bar ldg-recon-menu fin] '("Finish" . ledger-reconcile-finish))
+		(define-key map [menu-bar ldg-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
+		(define-key map [menu-bar ldg-recon-menu sav] '("Save" . ledger-reconcile-save))
 
-											 (use-local-map map)))
+		(use-local-map map)))
 
 (provide 'ldg-reconcile)
 
