@@ -88,10 +88,6 @@ run:
         boost +st+python26+icu texlive doxygen graphviz
         texinfo lcov sloccount
 
-You can even just install the current Ledger **RELEASE** directly:
-
-    sudo port install ledger
-
 ### Ubuntu
 
 If you're going to build on Ubuntu, `sudo apt-get install ...` the
@@ -142,9 +138,6 @@ options.  It's pretty much the only command I run for configuring, building
 and testing Ledger.
 
 You can run `make check` to confirm the result, and `make install` to install.
-
-If you have extra CPU cycles to burn, try `./acprep proof`, which provides the
-most thorough shakedown of a healthy source tree.
 
 ## Resources
 
