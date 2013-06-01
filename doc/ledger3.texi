@@ -9086,14 +9086,39 @@ for example, issue @samp{ctest -V -R "5FB"}.
 @node Major Changes from version 2.6, Example Journal File, Ledger for Developers, Top
 @chapter Major Changes from version 2.6
 
+The following have been removed from Ledger 3.0:
+
 @itemize
 
 @item
-OFX support has been removed from Ledger 3.0
+OFX support
 
 @item
+GnuCash file import
+
+@end itemize
+
+@noindent
+The following are deprecated in Ledger 3.0:
+
+@itemize
+
+@item 
 Single character value expressions are deprecated and should be changed
 to the new value expressions available in 3.0
+
+@item
+The following environment variables have been renamed in Ledger 3.0:
+@table @env
+@item LEDGER
+is now @env{LEDGER_FILE},
+@item LEDGER_INIT
+is now @env{LEDGER_INIT_FILE},
+@item PRICE_HIST
+is now @env{LEDGER_PRICE_DB},
+@item PRICE_EXP
+is now @env{LEDGER_PRICE_EXP}.
+@end table
 
 @end itemize
 
