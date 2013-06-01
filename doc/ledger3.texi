@@ -3641,6 +3641,20 @@ This entry accomplishes this.  Every month until you'll start with an
 automatic $37.50 deficit like you should, while your checking account
 really knows that it debited $225 this month.
 
+And using @option{--effective} option, initial date will be overridden
+by effective dates.
+
+@smallexample
+$ ledger --effective register Groceries
+
+08-Oct-01 Bountiful Blessi.. Expe:Food:Groceries     $ 37.50     $ 37.50
+08-Nov-01 Bountiful Blessi.. Expe:Food:Groceries     $ 37.50     $ 75.00
+08-Dec-01 Bountiful Blessi.. Expe:Food:Groceries     $ 37.50    $ 112.50
+09-Jan-01 Bountiful Blessi.. Expe:Food:Groceries     $ 37.50    $ 150.00
+09-Feb-01 Bountiful Blessi.. Expe:Food:Groceries     $ 37.50    $ 187.50
+09-Mar-01 Bountiful Blessi.. Expe:Food:Groceries     $ 37.50    $ 225.00
+@end smallexample
+
 @node Periodic Transactions, Concrete Example of Automated Transactions, Effective Dates, Automated Transactions
 @subsection Periodic Transactions
 @findex --budget
