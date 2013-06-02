@@ -16,6 +16,6 @@ fi
 (cat <<EOF; ledger "$@") | gnuplot
   set terminal $LEDGER_TERM
   set xdata time
-  set timefmt "%Y/%m/%d"
+  set timefmt "%Y-%m-%d"
   plot "-" using 1:2 with lines
 EOF
