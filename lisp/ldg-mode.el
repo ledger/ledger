@@ -87,7 +87,7 @@ Can indent, complete or align depending on context."
 	(if (= (point) (line-beginning-position))
 			(indent-to ledger-post-account-alignment-column)
 			(if (and (> (point) 1)
-							 (looking-back "[:A-Za-z0-9]" 1))
+							 (looking-back "\\([[:print:]]\\)" 1))
 					(ledger-pcomplete interactively)
 					(ledger-post-align-postings))))
 
