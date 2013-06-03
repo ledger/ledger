@@ -153,6 +153,7 @@ Can indent, complete or align depending on context."
       (define-key map [(control ?c) (control ?l)] 'ledger-display-ledger-stats)
 
       (define-key map [tab] 'ledger-magic-tab)
+			(define-key map [(control tab)] 'ledger-post-align-xact)
       (define-key map [(control ?i)] 'ledger-magic-tab)
       (define-key map [(control ?c) tab] 'ledger-fully-complete-xact)
       (define-key map [(control ?c) (control ?i)] 'ledger-fully-complete-xact)
@@ -188,6 +189,7 @@ Can indent, complete or align depending on context."
       (define-key map [sort-start] '(menu-item "Mark Sort Beginning" ledger-sort-insert-start-mark))
       (define-key map [sort-buff] '(menu-item "Sort Buffer" ledger-sort-buffer))
       (define-key map [sort-reg] '(menu-item "Sort Region" ledger-sort-region :enable mark-active))
+			(define-key map [align-xact] '(menu-item "Align Xact" ledger-post-align-xact))
       (define-key map [align-reg] '(menu-item "Align Region" ledger-post-align-postings :enable mark-active))
       (define-key map [sep2] '(menu-item "--"))
       (define-key map [copy-xact] '(menu-item "Copy Trans at Point" ledger-copy-transaction-at-point))

@@ -31,11 +31,6 @@
   "Options for controlling how Ledger-mode deals with postings and completion"
   :group 'ledger)
 
-(defcustom ledger-post-auto-adjust-postings t
-  "If non-nil, adjust account and amount to columns set below"
-  :type 'boolean
-  :group 'ledger-post)
-
 (defcustom ledger-post-account-alignment-column 4
   "The column Ledger-mode attempts to align accounts to."
   :type 'integer
@@ -141,6 +136,11 @@ at beginning of account"
 						(goto-char (match-beginning 2)))
 				(current-column))))
 
+(defun ledger-post-align-xact (pos)
+	(interactive "d")
+	(let ((bounds (ledger-find-xact-extents pos)))
+		(ledger-post-align-postings (car bounds) (cadr bounds))))
+
 (defun ledger-post-align-postings (&optional beg end)
   "Align all accounts and amounts within region, if there is no
 region align the posting on the current line."
@@ -198,16 +198,6 @@ region align the posting on the current line."
       (setq inhibit-modification-hooks nil))))
 
 
-(defun ledger-post-maybe-align (beg end len)
-  "Align amounts only if point is in a posting.
-BEG, END, and LEN control how far it can align."
-  (if ledger-post-auto-adjust-postings
-      (save-excursion
-				(goto-char beg)
-				(when (<= end (line-end-position))
-					(goto-char (line-beginning-position))
-					(if (looking-at ledger-post-line-regexp)
-							(ledger-post-align-postings))))))
 
 (defun ledger-post-edit-amount ()
   "Call 'calc-mode' and push the amount in the posting to the top of stack."
@@ -248,7 +238,6 @@ BEG, END, and LEN control how far it can align."
 
 (defun ledger-post-setup ()
   "Configure `ledger-mode' to auto-align postings."
-  (add-hook 'after-change-functions 'ledger-post-maybe-align t t)
   (add-hook 'after-save-hook #'(lambda () (setq ledger-post-current-list nil)) t t))
 
 
