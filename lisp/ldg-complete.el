@@ -174,18 +174,18 @@ Return list."
 Does not use ledger xact"
   (interactive)
   (let* ((name (caar (ledger-parse-arguments)))
-	(rest-of-name name)
-        xacts)
+				 (rest-of-name name)
+				 xacts)
     (save-excursion
       (when (eq 'transaction (ledger-thing-at-point))
-	(delete-region (point) (+ (length name) (point)))
-	;; Search backward for a matching payee
+				(delete-region (point) (+ (length name) (point)))
+				;; Search backward for a matching payee
         (when (re-search-backward
                (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+\\(.*"
                        (regexp-quote name) ".*\\)" ) nil t)
-	  (setq rest-of-name (match-string 3))
+					(setq rest-of-name (match-string 3))
           ;; Start copying the postings
-	  (forward-line)
+					(forward-line)
           (while (looking-at ledger-account-any-status-regex)
             (setq xacts (cons (buffer-substring-no-properties
                                (line-beginning-position)
@@ -196,7 +196,7 @@ Does not use ledger xact"
     ;; Insert rest-of-name and the postings
     (when xacts
       (save-excursion
-	(insert rest-of-name ?\n)
+				(insert rest-of-name ?\n)
         (while xacts
           (insert (car xacts) ?\n)
           (setq xacts (cdr xacts))))
