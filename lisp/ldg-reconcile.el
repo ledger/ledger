@@ -210,7 +210,9 @@ Return the number of uncleared xacts found."
 				(ledger-highlight-xact-under-point)
 				(forward-char -1)
 				(if come-back
-						(switch-to-buffer-other-window cur-buf))))))
+						(select-window
+						 (get-buffer-window
+							(get-buffer ledger-recon-buffer-name))))))))
 
 (defun ledger-reconcile-save ()
   "Save the ledger buffer."
@@ -240,7 +242,8 @@ and exit reconcile mode"
               (ledger-goto-line (cdr where))
               (ledger-toggle-current 'cleared))))
       (forward-line 1)))
-  (ledger-reconcile-save))
+  (ledger-reconcile-save)
+	(ledger-reconcile-quit))
 
 
 (defun ledger-reconcile-quit ()
