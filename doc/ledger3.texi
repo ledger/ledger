@@ -3604,14 +3604,14 @@ and add something like
 Now
 
 @smallexample
-$ ledger --subtotal --begin 2008/01/01 --end 2008/01/14 bal Income
+$ ledger --begin 2008/01/01 --end 2008/01/14 bal Income
 @end smallexample
 
 @noindent
 gives you your accrued income in the first two weeks of the year, and
 
 @smallexample
-$ ledger --effective --subtotal --begin 2008/01/01 --end 2008/01/14 bal Income
+$ ledger --effective --begin 2008/01/01 --end 2008/01/14 bal Income
 @end smallexample
 
 @noindent
@@ -3716,7 +3716,7 @@ value of 2.22 ounces of gold.  This can be accomplished using the
 command:
 
 @smallexample
-$ ledger -Q -t "/Liab.*Huquq/?(a/P@{2.22 AU@}<=@{-1.0@}&a):a" -s bal liab
+$ ledger -Q -t "/Liab.*Huquq/?(a/P@{2.22 AU@}<=@{-1.0@}&a):a" bal liab
 @end smallexample
 
 With this command, the current price for gold is downloaded, and the
@@ -3725,12 +3725,12 @@ of gold.  If you wish the liability to be reflected in the parent
 subtotal either way, use this instead:
 
 @smallexample
-$ ledger -Q -T "/Liab.*Huquq/?(O/P@{2.22 AU@}<=@{-1.0@}&O):O" -s bal liab
+$ ledger -Q -T "/Liab.*Huquq/?(O/P@{2.22 AU@}<=@{-1.0@}&O):O" bal liab
 @end smallexample
 
-In some cases, you may wish to refer to the account of whichever
-posting matched your automated transaction's value expression.  To do
-this, use the special account name @samp{$account}:
+In some cases, you may wish to refer to the account of whichever posting
+matched your automated transaction's value expression.  To do this, use
+the special account name @samp{$account}:
 
 @smallexample
 = /^Some:Long:Account:Name/
@@ -3870,7 +3870,7 @@ If you want to exclude specific accounts from the report, you can
 exclude multiple accounts with parentheses:
 
 @smallexample
-$ ledger -s bal Expenses and not \(Expenses:Drinks or Expenses:Candy or Expenses:Gifts\)
+$ ledger bal Expenses and not \(Expenses:Drinks or Expenses:Candy or Expenses:Gifts\)
 @end smallexample
 
 @node Controlling Formatting,  , Controlling the Accounts and Payees, Balance Reports
@@ -3887,13 +3887,12 @@ A query such as the following shows all expenses since last
 October, sorted by total:
 
 @smallexample
-$ ledger -b "last oct" -s -S T bal ^expenses
+$ ledger -b "last oct" -S T bal ^expenses
 @end smallexample
 
 From left to right the options mean: Show transactions since last
-October; show all sub-accounts; sort by the absolute value of the
-total; and report the balance for all accounts that begin with
-@samp{expenses}.
+October; sort by the absolute value of the total; and report the balance
+for all accounts that begin with @samp{expenses}.
 
 @menu
 * Reporting monthly expenses::
@@ -4382,7 +4381,7 @@ to generate a balance on the accounts.  I could have asked for
 a register or, in fact, anything at all the ledger can do through
 command line options.
 
-#+begin_src ledger :cmdline -s bal :results value
+#+begin_src ledger :cmdline bal :results value
 2010/01/01 * Starting balance
   assets:bank:savings       £1300.00
   income:starting balances
@@ -4510,9 +4509,16 @@ evaluating this code block (@kbd{C-c C-c}) would be:
 
 @smallexample
 #+results: allinone()
-:            £2653.53  assets
+:            £2653.53  assets:bank
+:            £1100.00    chequing
+:            £1553.53    savings
 :             £650.00  expenses
+:             £150.00    food
+:             £500.00    rent
 :           £-3303.53  income
+:              £-3.53    interest
+:           £-2000.00    salary
+:           £-1300.00    starting balances
 @end smallexample
 
 If, instead, you wished to generate a register of all the transactions,
@@ -4620,33 +4626,32 @@ by the @code{<<income>>} and @code{<<expenses>>} lines.
 #+end_src
 
 #+results: balance
-:            £2653.53  assets
+:            £2653.53  assets:bank
+:            £1100.00    chequing
+:            £1553.53    savings
 :             £650.00  expenses
+:             £150.00    food
+:             £500.00    rent
 :           £-3303.53  income
+:              £-3.53    interest
+:           £-2000.00    salary
+:           £-1300.00    starting balances
 @end smallexample
 
-If you want a more detailed breakdown of where your money is and where
-it has been spent, you can specify the @option{--subtotal (-s)} flag
-(i.e. @code{:cmdline -s bal}) to tell Ledger to include sub-accounts in
-the report.
+If you want a less detailed breakdown of where your money is, you can
+specify the @option{--collapse (-n)} flag (i.e. @samp{:cmdline -n bal})
+to tell Ledger to exclude sub-accounts in the report.
 
 @smallexample
-#+begin_src ledger :cmdline -s bal :noweb yes
+#+begin_src ledger :cmdline -n bal :noweb yes
 <<income>>
 <<expenses>>
 #+end_src
 
 #+results:
-:           £2653.53  assets:bank
-:           £1100.00    chequing
-:           £1553.53    savings
-:            £650.00  expenses
-:            £150.00    food
-:            £500.00    rent
-:          £-3303.53  income
-:             £-3.53    interest
-:          £-2000.00    salary
-:          £-1300.00    starting balances
+:            £2653.53  assets
+:             £650.00  expenses
+:           £-3303.53  income
 @end smallexample
 
 @node Generating a monthly register, Summary, An overall balance summary, Org mode with Babel
@@ -6256,6 +6261,7 @@ summary. @samp{--start-of-week=1} specifies Monday as the start of the
 week.
 
 @item --subtotal
+@itemx -s
 FIX THIS ENTRY
 
 @item --tail @var{INT}
@@ -7191,7 +7197,7 @@ as one typical yearly expense.  For help on finding out what your
 average monthly expense is for any category, use a command like:
 
 @smallexample
-$ ledger -p "this year" --monthly --average --subtotal balance ^expenses
+$ ledger -p "this year" --monthly --average balance ^expenses
 @end smallexample
 
 The reported totals are the current year's average for each account.
@@ -9091,10 +9097,20 @@ The following have been removed from Ledger 3.0:
 @itemize
 
 @item
-OFX support
+OFX support.
 
 @item
-GnuCash file import
+GnuCash file import.
+
+@item
+The option @option{--performance (-g)}.
+
+@item
+The balance report now defaults to showing all relevant accounts. This
+is the opposite of 2.x. That is, @command{bal} in 3.0 does what @samp{-s
+bal} did in 2.x. To see 2.6 behavior, use @option{--collapse (-n)}
+option in 3.0, like @samp{bal -n}. The @option{--subtotal (-s)} option
+no longer has any effect on balance reports.
 
 @end itemize
 
@@ -9103,7 +9119,7 @@ The following are deprecated in Ledger 3.0:
 
 @itemize
 
-@item 
+@item
 Single character value expressions are deprecated and should be changed
 to the new value expressions available in 3.0
 
