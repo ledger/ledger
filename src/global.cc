@@ -399,11 +399,13 @@ void global_scope_t::read_environment_settings(char * envp[])
       process_option("environ", "init-file", report(), p, "LEDGER_INIT");
   }
   if (const char * p = std::getenv("PRICE_HIST")) {
-    if (! std::getenv("LEDGER_PRICEDB"))
+    if (! std::getenv("LEDGER_PRICE_DB"))
       process_option("environ", "price-db", report(), p, "PRICE_HIST");
   }
-  if (const char * p = std::getenv("PRICE_EXP"))
-    process_option("environ", "price-exp", report(), p, "PRICE_EXP");
+  if (const char * p = std::getenv("PRICE_EXP")) {
+    if (! std::getenv("LEDGER_PRICE_EXP"))
+			process_option("environ", "price-exp", report(), p, "PRICE_EXP");
+	}
 #endif
 
   TRACE_FINISH(environment, 1);
