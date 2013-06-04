@@ -72,6 +72,8 @@ reconcile-finish will mark all pending posting cleared."
   :type 'string
   :group 'ledger-reconcile)
 
+(defvar ledger-reconcile-sort-key "(date)"
+	"Default key for sorting reconcile buffer")
 
 (defun ledger-reconcile-get-cleared-or-pending-balance (buffer account)
   "Calculate the cleared or pending balance of the account."
@@ -157,7 +159,7 @@ Return the number of uncleared xacts found."
   (let ((inhibit-read-only t))
     (erase-buffer)
     (prog1
-				(ledger-do-reconcile)
+				(ledger-do-reconcile ledger-reconcile-sort-key)
       (set-buffer-modified-p t))))
 
 (defun ledger-reconcile-refresh-after-save ()
@@ -284,15 +286,18 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 				 (nth 1 emacs-xact)  ;; return line-no of xact
 				 (nth 0 posting))))) ;; return line-no of posting
 
-(defun ledger-do-reconcile ()
+(defun ledger-do-reconcile (&optional sort)
   "Return the number of uncleared transactions in the account and display them in the *Reconcile* buffer."
   (let* ((buf ledger-buf)
          (account ledger-acct)
 				 (ledger-success nil)
+				 (sort-by (if sort
+											sort
+											"(date)"))
          (xacts
           (with-temp-buffer
 						(when (ledger-exec-ledger buf (current-buffer)
-																			"--uncleared" "--real" "emacs" account)
+																			"--uncleared" "--real" "emacs" "--sort" sort-by account)
 							(setq ledger-success t)
 							(goto-char (point-min))
 							(unless (eobp)
@@ -419,6 +424,13 @@ moved and recentered.  If they aren't strange things happen."
   (interactive)
   (setq ledger-target (ledger-read-commodity-string ledger-reconcile-target-prompt-string)))
 
+(defmacro ledger-reconcile-change-sort-key-and-refresh (sort-by)
+	`(lambda ()
+		 (interactive)
+
+		 (setq ledger-reconcile-sort-key ,sort-by)
+		 (ledger-reconcile-refresh)))
+
 (define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
 	"A mode for reconciling ledger entries."
 	(let ((map (make-sparse-keymap)))
@@ -437,6 +449,12 @@ moved and recentered.  If they aren't strange things happen."
 		(define-key map [?q] 'ledger-reconcile-quit)
 		(define-key map [?b] 'ledger-display-balance)
 
+		(define-key map [(control ?c) (control ?a)] (ledger-reconcile-change-sort-key-and-refresh "(amount)"))
+
+		(define-key map [(control ?c) (control ?d)] (ledger-reconcile-change-sort-key-and-refresh "(date)"))
+
+		(define-key map [(control ?c) (control ?p)] (ledger-reconcile-change-sort-key-and-refresh "(payee)"))
+
 		(define-key map [menu-bar] (make-sparse-keymap "ldg-recon-menu"))
 		(define-key map [menu-bar ldg-recon-menu] (cons "Reconcile" map))
 		(define-key map [menu-bar ldg-recon-menu qui] '("Quit" . ledger-reconcile-quit))
@@ -449,11 +467,15 @@ moved and recentered.  If they aren't strange things happen."
 		(define-key map [menu-bar ldg-recon-menu add] '("Add Entry" . ledger-reconcile-add))
 		(define-key map [menu-bar ldg-recon-menu tog] '("Toggle Entry" . ledger-reconcile-toggle))
 		(define-key map [menu-bar ldg-recon-menu sep3] '("--"))
+		(define-key map [menu-bar ldg-recon-menu sort-amt] `("Sort by amount" . ,(ledger-reconcile-change-sort-key-and-refresh "(amount)")))
+		(define-key map [menu-bar ldg-recon-menu sort-pay] `("Sort by date" . ,(ledger-reconcile-change-sort-key-and-refresh "(date)")))
+		(define-key map [menu-bar ldg-recon-menu sort-dat] `("Sort by payee" . ,(ledger-reconcile-change-sort-key-and-refresh "(payee)")))
+		(define-key map [menu-bar ldg-recon-menu sep4] '("--"))
 		(define-key map [menu-bar ldg-recon-menu bal] '("Show Cleared Balance" . ledger-display-balance))
 		(define-key map [menu-bar ldg-recon-menu tgt] '("Change Target Balance" . ledger-reconcile-change-target))
-		(define-key map [menu-bar ldg-recon-menu sep4] '("--"))
-		(define-key map [menu-bar ldg-recon-menu rna] '("Reconcile New Account" . ledger-reconcile))
 		(define-key map [menu-bar ldg-recon-menu sep5] '("--"))
+		(define-key map [menu-bar ldg-recon-menu rna] '("Reconcile New Account" . ledger-reconcile))
+		(define-key map [menu-bar ldg-recon-menu sep6] '("--"))
 		(define-key map [menu-bar ldg-recon-menu fin] '("Finish" . ledger-reconcile-finish))
 		(define-key map [menu-bar ldg-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
 		(define-key map [menu-bar ldg-recon-menu sav] '("Save" . ledger-reconcile-save))
