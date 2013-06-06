@@ -104,6 +104,19 @@ Can indent, complete or align depending on context."
 					 (end-of-line)
 					 (insert "  ; [=" date-string "]")))))
 
+(defun ledger-mode-remove-extra-lines ()
+	(goto-char (point-min))
+	(while (re-search-forward "\n\n\\(\n\\)+" nil t)
+		(replace-match "\n\n")))
+
+(defun ledger-mode-clean-buffer ()
+	"indent, remove multiple linfe feeds and sort the buffer"
+	(interactive)
+	(ledger-sort-buffer)
+	(ledger-post-align-postings (point-min) (point-max))
+	(ledger-mode-remove-extra-lines))
+
+
 ;;;###autoload
 (define-derived-mode ledger-mode text-mode "Ledger"
 	"A mode for editing ledger data files."
@@ -151,6 +164,7 @@ Can indent, complete or align depending on context."
 		(define-key map [(control ?c) (control ?y)] 'ledger-set-year)
 		(define-key map [(control ?c) (control ?p)] 'ledger-display-balance-at-point)
 		(define-key map [(control ?c) (control ?l)] 'ledger-display-ledger-stats)
+		(define-key map [(control ?c) (control ?q)] 'ledger-mode-clean-buffer)
 
 		(define-key map [tab] 'ledger-magic-tab)
 		(define-key map [(control tab)] 'ledger-post-align-xact)
@@ -191,6 +205,7 @@ Can indent, complete or align depending on context."
 		(define-key map [sort-reg] '(menu-item "Sort Region" ledger-sort-region :enable mark-active))
 		(define-key map [align-xact] '(menu-item "Align Xact" ledger-post-align-xact))
 		(define-key map [align-reg] '(menu-item "Align Region" ledger-post-align-postings :enable mark-active))
+		(define-key map [clean-buf] '(menu-item "Clean-up Buffer" ledger-mode-clean-buffer))
 		(define-key map [sep2] '(menu-item "--"))
 		(define-key map [copy-xact] '(menu-item "Copy Trans at Point" ledger-copy-transaction-at-point))
 		(define-key map [toggle-post] '(menu-item "Toggle Current Posting" ledger-toggle-current))
