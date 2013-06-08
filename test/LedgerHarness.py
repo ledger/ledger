@@ -45,7 +45,7 @@ class LedgerHarness:
             sys.exit(1)
 
         self.ledger     = os.path.abspath(argv[1])
-        self.sourcepath = os.path.abspath(argv[2])
+        self.sourcepath = os.path.realpath(os.path.abspath(argv[2]))
         self.succeeded  = 0
         self.failed     = 0
         self.verify     = '--verify' in argv
