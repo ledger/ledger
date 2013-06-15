@@ -334,7 +334,7 @@ void commodity_history_impl_t::map_prices(
   FNameMap namemap(get(vertex_name, fg));
 
   graph_traits<FGraph>::adjacency_iterator f_vi, f_vend;
-  for (tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
+  for (boost::tuples::tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
     std::pair<Graph::edge_descriptor, bool> edgePair = edge(sv, *f_vi, fg);
     Graph::edge_descriptor edge = edgePair.first;
 
@@ -392,7 +392,7 @@ commodity_history_impl_t::find_price(const commodity_t& source,
   amount_t   price;
 
   graph_traits<FGraph>::adjacency_iterator f_vi, f_vend;
-  for (tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
+  for (boost::tuples::tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
     std::pair<Graph::edge_descriptor, bool> edgePair = edge(sv, *f_vi, fg);
     Graph::edge_descriptor edge = edgePair.first;
 
