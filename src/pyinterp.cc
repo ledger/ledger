@@ -320,7 +320,7 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
   if (! is_initialized)
     initialize();
 
-  char ** argv(new char *[args.size() + 1]);
+  char ** argv = new char *[args.size() + 1];
 
   argv[0] = new char[std::strlen(argv0) + 1];
   std::strcpy(argv[0], argv0);
