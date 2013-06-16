@@ -48,7 +48,8 @@ set(LEDGER_SOURCES
   mask.cc
   times.cc
   error.cc
-  utils.cc)
+  utils.cc
+  strptime.cc)
 
 if(HAVE_BOOST_PYTHON)
   list(APPEND LEDGER_SOURCES
@@ -130,6 +131,7 @@ set(LEDGER_INCLUDES
   value.h
   views.h
   xact.h
+  strptime.h
   ${PROJECT_BINARY_DIR}/system.hh)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

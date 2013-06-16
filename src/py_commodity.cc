@@ -151,13 +151,13 @@ namespace {
   py_pool_commodities_keys_begin(commodity_pool_t& pool) {
     return make_transform_iterator
       (pool.commodities.begin(),
-       bind(&commodity_pool_t::commodities_map::value_type::first, _1));
+       boost::bind(&commodity_pool_t::commodities_map::value_type::first, _1));
   }
   commodities_map_firsts_iterator
   py_pool_commodities_keys_end(commodity_pool_t& pool) {
     return make_transform_iterator
       (pool.commodities.end(),
-       bind(&commodity_pool_t::commodities_map::value_type::first, _1));
+       boost::bind(&commodity_pool_t::commodities_map::value_type::first, _1));
   }
 
   typedef transform_iterator
@@ -169,15 +169,15 @@ namespace {
   py_pool_commodities_values_begin(commodity_pool_t& pool) {
     return make_transform_iterator
       (pool.commodities.begin(),
-       bind(&shared_ptr<commodity_t>::get,
-            bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
+       boost::bind(&shared_ptr<commodity_t>::get,
+            boost::bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
   }
   commodities_map_seconds_iterator
   py_pool_commodities_values_end(commodity_pool_t& pool) {
     return make_transform_iterator
       (pool.commodities.end(),
-       bind(&shared_ptr<commodity_t>::get,
-            bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
+       boost::bind(&shared_ptr<commodity_t>::get,
+            boost::bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
   }
 
   void py_add_price_2(commodity_t& commodity,

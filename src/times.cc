@@ -33,6 +33,10 @@
 
 #include "times.h"
 
+#ifdef WIN32
+#include "strptime.h"
+#endif
+
 namespace ledger {
 
 optional<datetime_t> epoch;

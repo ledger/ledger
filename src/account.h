@@ -128,11 +128,11 @@ public:
 
   accounts_map_seconds_iterator accounts_begin() {
     return make_transform_iterator
-      (accounts.begin(), bind(&accounts_map::value_type::second, _1));
+      (accounts.begin(), boost::bind(&accounts_map::value_type::second, _1));
   }
   accounts_map_seconds_iterator accounts_end() {
     return make_transform_iterator
-      (accounts.end(), bind(&accounts_map::value_type::second, _1));
+      (accounts.end(), boost::bind(&accounts_map::value_type::second, _1));
   }
 
   void add_post(post_t * post);
