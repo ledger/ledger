@@ -164,7 +164,7 @@ Can indent, complete or align depending on context."
 		(define-key map [(control ?c) (control ?y)] 'ledger-set-year)
 		(define-key map [(control ?c) (control ?p)] 'ledger-display-balance-at-point)
 		(define-key map [(control ?c) (control ?l)] 'ledger-display-ledger-stats)
-		(define-key map [(control ?c) (control ?q)] 'ledger-mode-clean-buffer)
+		(define-key map [(control ?c) (control ?q)] 'ledger-post-align-xact)
 
 		(define-key map [tab] 'ledger-magic-tab)
 		(define-key map [(control tab)] 'ledger-post-align-xact)

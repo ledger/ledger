@@ -203,7 +203,7 @@ Return the number of uncleared xacts found."
 					 (target-buffer (if where
 															(ledger-reconcile-get-buffer where)
 															nil))
-					 (cur-buf (get-buffer ledger-recon-buffer-name)))
+					 (cur-win (get-buffer-window (get-buffer ledger-recon-buffer-name))))
       (when target-buffer
 				(switch-to-buffer-other-window target-buffer)
 				(ledger-goto-line (cdr where))
@@ -211,10 +211,8 @@ Return the number of uncleared xacts found."
 				(recenter)
 				(ledger-highlight-xact-under-point)
 				(forward-char -1)
-				(if come-back
-						(select-window
-						 (get-buffer-window
-							(get-buffer ledger-recon-buffer-name))))))))
+				(if (and come-back cur-win)
+						(select-window cur-win))))))
 
 (defun ledger-reconcile-save ()
   "Save the ledger buffer."
