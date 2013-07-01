@@ -38,19 +38,19 @@
 Returns a list with (value commodity)."
   (let ((number-regex (if (assoc "decimal-comma" ledger-environment-alist)
 											 ledger-amount-decimal-comma-regex
-											 ledger-amount-decimal-period-regex))) 
-		(if (> (length str) 0) 
+											 ledger-amount-decimal-period-regex)))
+		(if (> (length str) 0)
 				(with-temp-buffer
 					(insert str)
 					(goto-char (point-min))
-					(cond 
+					(cond
 						((re-search-forward "\"\\(.*\\)\"" nil t) ; look for quoted commodities
-						 (let ((com (delete-and-extract-region 
-												 (match-beginning 1)       
+						 (let ((com (delete-and-extract-region
+												 (match-beginning 1)
 												 (match-end 1))))
-							 (if (re-search-forward 
+							 (if (re-search-forward
 										number-regex nil t)
-									(list 
+									(list
 									 (ledger-string-to-number
 										(delete-and-extract-region (match-beginning 0) (match-end 0)))
 									 com))))
@@ -113,7 +113,7 @@ Returns a list with (value commodity)."
 				(while (string-match "\\." str)
 					 (setq str (replace-match "," nil nil str)))
 				str)))
-      
+
 (defun ledger-commodity-to-string (c1)
   "Return string representing C1.
 Single character commodities are placed ahead of the value,
@@ -126,14 +126,15 @@ longer ones are after the value."
 
 (defun ledger-read-commodity-string (prompt)
   (let ((str (read-from-minibuffer
-	      (concat prompt " (" ledger-reconcile-default-commodity "): ")))
-	comm)
-    (if (> (length str) 0)
-	(progn
-	  (setq comm (ledger-split-commodity-string str))
-	  (if (cadr comm)
-	      comm
-	      (list (car comm) ledger-reconcile-default-commodity))))))
+							(concat prompt " (" ledger-reconcile-default-commodity "): ")))
+				comm)
+    (if (and (> (length str) 0)
+						 (ledger-split-commodity-string str))
+				(progn
+					(setq comm (ledger-split-commodity-string str))
+					(if (cadr comm)
+							comm
+							(list (car comm) ledger-reconcile-default-commodity))))))
 
 (provide 'ldg-commodities)
 
