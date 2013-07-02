@@ -89,6 +89,7 @@ reports and much more...
 * The Ledger Buffer::
 * The Reconcile Buffer::
 * The Report Buffer::
+* Scheduling Transactions::
 * Customizing Ledger-mode::
 * Generating Ledger Regression Tests::
 * Embedding Example results in Ledger Documentation::
@@ -592,7 +593,7 @@ the ledger buffer are left in that state when the account is switched.
 If for some reason during reconciliation your target amount changes,
 type @kbd{t} and enter the new target value.
 
-@node The Report Buffer, Customizing Ledger-mode, The Reconcile Buffer, Top
+@node The Report Buffer, Scheduling Transactions, The Reconcile Buffer, Top
 @chapter The Report Buffer
 
 @menu
@@ -738,8 +739,31 @@ recent transactions at the top, type @kbd{R} in the @file{*Ledger
 Report*} buffer and it will reverse the order of the transactions and
 maintain the proper mathematical sense.
 
-@node Customizing Ledger-mode, Generating Ledger Regression Tests, The Report Buffer, Top
+@node Scheduling Transactions, Customizing Ledger-mode, The Report Buffer, Top
+@chapter Scheduling Transactions
+
+@node Customizing Ledger-mode, Generating Ledger Regression Tests, Scheduling Transactions, Top
 @chapter Customizing Ledger-mode
+
+The Ledger program provide for automating transactions but these
+transaction aren't ``real'', they only exist inside a ledger session and
+are not reflected in the actual data file.  Many transactions are very
+repetitive, but may vary slightly in the date they occur on, or the
+amount.  Some transactions are weekly, monthly, quarterly or annually.
+Ledger mode provides a way to schedule upcoming transaction with a
+flexible scheduler that allows you to specify the transactions in a
+separate ledger file and calculate the upcoming occurences of those
+transactions.  You can then copy the transactions into your live data
+file.
+
+@node Specifying Upcming Transactions
+@section Specifying Upcming Transactions
+
+The format for specifying transactions is identical to Ledger's file
+format with the exception of the date field.  The data field is modified
+by surrounding it with brackets and using wild cards to specity free
+months or years.
+
 
 @menu
 * Ledger-mode Customization::
