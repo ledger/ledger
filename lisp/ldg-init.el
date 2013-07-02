@@ -38,7 +38,7 @@
 	(let ((matchb (match-beginning 0)) ;; save the match data, string-match stamp on it
 	      (matche (match-end 0)))
 	  (end-of-line)
-	  (setq environment-alist 
+	  (setq environment-alist
 		(append environment-alist
 			(list (cons (let ((flag (buffer-substring-no-properties (+ 2 matchb) matche)))
 				      (if (string-match "[ \t\n\r]+\\'" flag)
@@ -55,13 +55,13 @@
   (let ((init-base-name (file-name-nondirectory ledger-init-file-name)))
     (if (get-buffer init-base-name) ;; init file already loaded, parse it and leave it
 	(ledger-init-parse-initialization init-base-name)
-       (when (and ledger-init-file-name
-		  (file-exists-p ledger-init-file-name)
-		  (file-readable-p ledger-init-file-name))	 
-	 (find-file-noselect ledger-init-file-name)
-	 (setq ledger-environment-alist 
-	       (ledger-init-parse-initialization init-base-name))
-	 (kill-buffer init-base-name)))))
+	(when (and ledger-init-file-name
+		   (file-exists-p ledger-init-file-name)
+		   (file-readable-p ledger-init-file-name))
+	  (find-file-noselect ledger-init-file-name)
+	  (setq ledger-environment-alist
+		(ledger-init-parse-initialization init-base-name))
+	  (kill-buffer init-base-name)))))
 
 (provide 'ldg-init)
 
