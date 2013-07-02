@@ -26,6 +26,57 @@
 
 ;;; Code:
 
+(require 'ldg-regex)
+(require 'esh-util)
+(require 'esh-arg)
+(require 'ldg-commodities)
+(require 'ldg-complete)
+(require 'ldg-context)
+(require 'ldg-exec)
+(require 'ldg-fonts)
+(require 'ldg-init)
+(require 'ldg-occur)
+(require 'ldg-post)
+(require 'ldg-reconcile)
+(require 'ldg-report)
+(require 'ldg-sort)
+(require 'ldg-state)
+(require 'ldg-test)
+(require 'ldg-texi)
+(require 'ldg-xact)
+(require 'ldg-schedule)
+
+;;; Code:
+
+(defgroup ledger nil
+  "Interface to the Ledger command-line accounting program."
+  :group 'data)
+
+(defconst ledger-version "3.0"
+  "The version of ledger.el currently loaded.")
+
+(defconst ledger-mode-version "3.0.0")
+
+(defun ledger-mode-dump-variable (var)
+  (if var
+   (insert (format "         %s: %S\n" (symbol-name var) (eval var)))))
+
+(defun ledger-mode-dump-group (group)
+  "Dump GROUP customizations to current buffer"
+  (let ((members (custom-group-members group nil)))
+    (dolist (member members)
+      (cond ((eq (cadr member) 'custom-group)
+	     (insert (format "Group %s:\n" (symbol-name (car member))))
+	     (ledger-mode-dump-group (car member)))
+	    ((eq (cadr member) 'custom-variable)
+	     (ledger-mode-dump-variable (car member)))))))
+
+(defun ledger-mode-dump-configuration ()
+  "Dump all customizations"
+  (find-file "ledger-mode-dump")
+  (ledger-mode-dump-group 'ledger))
+
+
 (defsubst ledger-current-year ()
   "The default current year for adding transactions."
   (format-time-string "%Y"))
@@ -242,6 +293,6 @@ Can indent, complete or align depending on context."
 
 
 
-(provide 'ldg-mode)
+(provide 'ledger)
 
 ;;; ldg-mode.el ends here
