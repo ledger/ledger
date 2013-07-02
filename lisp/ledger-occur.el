@@ -1,4 +1,4 @@
-;;; ldg-mode.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-mode.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -187,6 +187,6 @@ Used for coordinating `ledger-occur' with other buffers, like reconcile."
 	  (setq current-end (cadr match))))
     (nreverse (push (list current-beginning current-end) points))))
 
-(provide 'ldg-occur)
+(provide 'ledger-occur)
 
-;;; ldg-occur.el ends here
+;;; ledger-occur.el ends here

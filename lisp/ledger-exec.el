@@ -1,4 +1,4 @@
-;;; ldg-exec.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-exec.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -77,7 +77,7 @@
   (let ((buffer ledger-buf)
         (version-strings '()))
     (with-temp-buffer
-      (when (ledger-exec-ledger (current-buffer) (current-buffer) "--version")	
+      (when (ledger-exec-ledger (current-buffer) (current-buffer) "--version")
 	(goto-char (point-min))
 	(delete-horizontal-space)
 	(setq version-strings (split-string
@@ -96,6 +96,6 @@
       (message "Good Ledger Version")
       (message "Bad Ledger Version")))
 
-(provide 'ldg-exec)
+(provide 'ledger-exec)
 
-;;; ldg-exec.el ends here
+;;; ledger-exec.el ends here

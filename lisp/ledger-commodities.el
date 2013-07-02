@@ -1,4 +1,4 @@
-;;; ldg-commodities.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-commodities.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -26,7 +26,7 @@
 
 ;;; Code:
 
-(require 'ldg-regex)
+(require 'ledger-regex)
 
 (defcustom ledger-reconcile-default-commodity "$"
   "The default commodity for use in target calculations in ledger reconcile."
@@ -144,6 +144,6 @@ longer ones are after the value."
 	      comm
 	      (list (car comm) ledger-reconcile-default-commodity))))))
 
-(provide 'ldg-commodities)
+(provide 'ledger-commodities)
 
-;;; ldg-commodities.el ends here
+;;; ledger-commodities.el ends here

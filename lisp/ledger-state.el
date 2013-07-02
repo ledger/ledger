@@ -1,4 +1,4 @@
-;;; ldg-state.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-state.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -110,7 +110,7 @@ dropped."
     ;;this excursion toggles the posting status
     (save-excursion
       (setq inhibit-modification-hooks t)
-      
+
       (goto-char (line-beginning-position))
       (when (looking-at "[ \t]")
 	 (skip-chars-forward " \t")
@@ -228,7 +228,7 @@ dropped."
 	      (eq (ledger-state-from-char (char-after)) 'cleared))
 	  (progn
 	    (delete-char 1)
-	    (when (and style (eq style 'cleared))		
+	    (when (and style (eq style 'cleared))
 	      (insert " *")
 	      'cleared))
 	  (if (and style (eq style 'pending))
@@ -239,6 +239,6 @@ dropped."
 		(insert " * ")
 		'cleared))))))
 
-(provide 'ldg-state)
+(provide 'ledger-state)
 
-;;; ldg-state.el ends here
+;;; ledger-state.el ends here

@@ -1,4 +1,4 @@
-;;; ldg-schedule.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-schedule.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2013 Craig Earls (enderw88 at gmail dot com)
 
@@ -306,6 +306,6 @@ returns true if the date meets the requirements"
    (current-buffer)))
 
 
-(provide 'ldg-schedule)
+(provide 'ledger-schedule)
 
-;;; ldg-schedule.el ends here
+;;; ledger-schedule.el ends here

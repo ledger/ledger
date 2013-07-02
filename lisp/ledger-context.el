@@ -1,4 +1,4 @@
-;;; ldg-context.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-context.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -206,6 +206,6 @@ specified line, returns nil."
 (defun ledger-context-goto-field-end (context-info field-name)
   (goto-char (ledger-context-field-end-position context-info field-name)))
 
-(provide 'ldg-context)
+(provide 'ledger-context)
 
-;;; ldg-report.el ends here
+;;; ledger-report.el ends here

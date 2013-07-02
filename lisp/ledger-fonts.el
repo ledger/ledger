@@ -1,4 +1,4 @@
-;;; ldg-fonts.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-fonts.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -26,7 +26,7 @@
 
 ;;; Code:
 
-(require 'ldg-regex)
+(require 'ledger-regex)
 
 (defgroup ledger-faces nil "Ledger mode highlighting" :group 'ledger)
 (defface ledger-font-payee-uncleared-face
@@ -133,6 +133,6 @@
   "Expressions to highlight in Ledger mode.")
 
 
-(provide 'ldg-fonts)
+(provide 'ledger-fonts)
 
-;;; ldg-fonts.el ends here
+;;; ledger-fonts.el ends here
