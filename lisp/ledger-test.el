@@ -1,4 +1,4 @@
-;;; ldg-test.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-test.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -124,4 +124,4 @@
 	       (async-shell-command (format "\"%s\" %s" command args))
             (cd prev-directory)))))))
 
-(provide 'ldg-test)
+(provide 'ledger-test)

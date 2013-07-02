@@ -1,4 +1,4 @@
-;;; ldg-regex.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-regex.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -332,4 +332,4 @@
 	  "\\(.*\\)"   ;; desc
 	  "\\)"))
 
-(provide 'ldg-regex)
+(provide 'ledger-regex)

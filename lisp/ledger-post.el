@@ -1,4 +1,4 @@
-;;; ldg-post.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-post.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -23,7 +23,7 @@
 ;;; Commentary:
 ;; Utility functions for dealing with postings.
 
-(require 'ldg-regex)
+(require 'ledger-regex)
 
 ;;; Code:
 
@@ -242,8 +242,8 @@ region align the posting on the current line."
 
 
 
-(provide 'ldg-post)
+(provide 'ledger-post)
 
 
 
-;;; ldg-post.el ends here
+;;; ledger-post.el ends here

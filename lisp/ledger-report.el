@@ -1,4 +1,4 @@
-;;; ldg-report.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-report.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -105,22 +105,22 @@ text that should replace the format specifier."
        'ledger-report-edit)
      (define-key map [return] 'ledger-report-visit-source)
 
-     
-     (define-key map [menu-bar] (make-sparse-keymap "ldg-rep"))
-     (define-key map [menu-bar ldg-rep] (cons "Reports" map))
 
-     (define-key map [menu-bar ldg-rep lrq] '("Quit" . ledger-report-quit))
-     (define-key map [menu-bar ldg-rep s2] '("--"))
-     (define-key map [menu-bar ldg-rep lrd] '("Scroll Down" . scroll-down))
-     (define-key map [menu-bar ldg-rep vis] '("Visit Source" . ledger-report-visit-source))
-     (define-key map [menu-bar ldg-rep lru] '("Scroll Up" . scroll-up))
-     (define-key map [menu-bar ldg-rep s1] '("--"))
-     (define-key map [menu-bar ldg-rep rev] '("Reverse report order" . ledger-report-reverse-lines))
-     (define-key map [menu-bar ldg-rep s0] '("--"))
-     (define-key map [menu-bar ldg-rep lrk] '("Kill Report" . ledger-report-kill))
-     (define-key map [menu-bar ldg-rep lrr] '("Re-run Report" . ledger-report-redo))
-     (define-key map [menu-bar ldg-rep lre] '("Edit Report" . ledger-report-edit))
-     (define-key map [menu-bar ldg-rep lrs] '("Save Report" . ledger-report-save))
+     (define-key map [menu-bar] (make-sparse-keymap "ledger-rep"))
+     (define-key map [menu-bar ledger-rep] (cons "Reports" map))
+
+     (define-key map [menu-bar ledger-rep lrq] '("Quit" . ledger-report-quit))
+     (define-key map [menu-bar ledger-rep s2] '("--"))
+     (define-key map [menu-bar ledger-rep lrd] '("Scroll Down" . scroll-down))
+     (define-key map [menu-bar ledger-rep vis] '("Visit Source" . ledger-report-visit-source))
+     (define-key map [menu-bar ledger-rep lru] '("Scroll Up" . scroll-up))
+     (define-key map [menu-bar ledger-rep s1] '("--"))
+     (define-key map [menu-bar ledger-rep rev] '("Reverse report order" . ledger-report-reverse-lines))
+     (define-key map [menu-bar ledger-rep s0] '("--"))
+     (define-key map [menu-bar ledger-rep lrk] '("Kill Report" . ledger-report-kill))
+     (define-key map [menu-bar ledger-rep lrr] '("Re-run Report" . ledger-report-redo))
+     (define-key map [menu-bar ledger-rep lre] '("Edit Report" . ledger-report-edit))
+     (define-key map [menu-bar ledger-rep lrs] '("Save Report" . ledger-report-save))
 
      (use-local-map map)))
 
@@ -310,7 +310,7 @@ Optional EDIT the command."
 				(let ((file (match-string 1))
 							(line (string-to-number (match-string 2))))
 					(delete-region (match-beginning 0) (match-end 0))
-					(when file 	    
+					(when file
 						(set-text-properties (line-beginning-position) (line-end-position)
 																 (list 'ledger-source (cons file (save-window-excursion
 																																	 (save-excursion
@@ -330,7 +330,7 @@ Optional EDIT the command."
   (let* ((prop (get-text-property (point) 'ledger-source))
 	 (file (if prop (car prop)))
 	 (line-or-marker (if prop (cdr prop))))
-    (when (and file line-or-marker)      
+    (when (and file line-or-marker)
       (find-file-other-window file)
       (widen)
       (if (markerp line-or-marker)
@@ -414,6 +414,6 @@ Optional EDIT the command."
 		 (ledger-reports-add ledger-report-name ledger-report-cmd)
 		 (ledger-reports-custom-save)))))))
 
-(provide 'ldg-report)
+(provide 'ledger-report)
 
-;;; ldg-report.el ends here
+;;; ledger-report.el ends here

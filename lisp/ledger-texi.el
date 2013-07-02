@@ -1,4 +1,4 @@
-;;; ldg-texi.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-texi.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -169,4 +169,4 @@
         (ledger-texi-write-test example-name command input output
                                 "../test/manual")))))
 
-(provide 'ldg-texi)
+(provide 'ledger-texi)

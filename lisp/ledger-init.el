@@ -1,4 +1,4 @@
-;;; ldg-init.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-init.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -22,7 +22,7 @@
 ;;; Commentary:
 ;; Determine the ledger environment
 
-(require 'ldg-regex)
+(require 'ledger-regex)
 
 (defcustom ledger-init-file-name "~/.ledgerrc"
   "Location of the ledger initialization file. nil if you don't have one"
@@ -38,7 +38,7 @@
 	(let ((matchb (match-beginning 0)) ;; save the match data, string-match stamp on it
 	      (matche (match-end 0)))
 	  (end-of-line)
-	  (setq environment-alist 
+	  (setq environment-alist
 		(append environment-alist
 			(list (cons (let ((flag (buffer-substring-no-properties (+ 2 matchb) matche)))
 				      (if (string-match "[ \t\n\r]+\\'" flag)
@@ -57,12 +57,12 @@
 	(ledger-init-parse-initialization init-base-name)
        (when (and ledger-init-file-name
 		  (file-exists-p ledger-init-file-name)
-		  (file-readable-p ledger-init-file-name))	 
+		  (file-readable-p ledger-init-file-name))
 	 (find-file-noselect ledger-init-file-name)
-	 (setq ledger-environment-alist 
+	 (setq ledger-environment-alist
 	       (ledger-init-parse-initialization init-base-name))
 	 (kill-buffer init-base-name)))))
 
-(provide 'ldg-init)
+(provide 'ledger-init)
 
-;;; ldg-init.el ends here
+;;; ledger-init.el ends here

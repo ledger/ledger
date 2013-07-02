@@ -1,4 +1,4 @@
-;;; ldg-xact.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-xact.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -121,6 +121,6 @@
 														sort-end
 														(point-max)))))
 
-(provide 'ldg-sort)
+(provide 'ledger-sort)
 
-;;; ldg-sort.el ends here
+;;; ledger-sort.el ends here

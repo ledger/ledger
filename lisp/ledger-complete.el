@@ -1,4 +1,4 @@
-;;; ldg-complete.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-complete.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -252,6 +252,6 @@ ledger-magic-tab would cycle properly"
 																						 '(sole shortest))
 																			 pcomplete-last-completion-raw))))))
 
-(provide 'ldg-complete)
+(provide 'ledger-complete)
 
-;;; ldg-complete.el ends here
+;;; ledger-complete.el ends here

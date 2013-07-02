@@ -1,4 +1,4 @@
-;;; ldg-xact.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-xact.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -195,6 +195,6 @@ correct chronological place in the buffer."
 					(end-of-line -1)))))
 
 
-(provide 'ldg-xact)
+(provide 'ledger-xact)
 
-;;; ldg-xact.el ends here
+;;; ledger-xact.el ends here

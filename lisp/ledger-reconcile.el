@@ -1,4 +1,4 @@
-;;; ldg-reconcile.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-reconcile.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -453,33 +453,33 @@ moved and recentered.  If they aren't strange things happen."
 
 		(define-key map [(control ?c) (control ?p)] (ledger-reconcile-change-sort-key-and-refresh "(payee)"))
 
-		(define-key map [menu-bar] (make-sparse-keymap "ldg-recon-menu"))
-		(define-key map [menu-bar ldg-recon-menu] (cons "Reconcile" map))
-		(define-key map [menu-bar ldg-recon-menu qui] '("Quit" . ledger-reconcile-quit))
-		(define-key map [menu-bar ldg-recon-menu sep1] '("--"))
-		(define-key map [menu-bar ldg-recon-menu pre] '("Previous Entry" . previous-line))
-		(define-key map [menu-bar ldg-recon-menu vis] '("Visit Source" . ledger-reconcile-visit))
-		(define-key map [menu-bar ldg-recon-menu nex] '("Next Entry" . next-line))
-		(define-key map [menu-bar ldg-recon-menu sep2] '("--"))
-		(define-key map [menu-bar ldg-recon-menu del] '("Delete Entry" . ledger-reconcile-delete))
-		(define-key map [menu-bar ldg-recon-menu add] '("Add Entry" . ledger-reconcile-add))
-		(define-key map [menu-bar ldg-recon-menu tog] '("Toggle Entry" . ledger-reconcile-toggle))
-		(define-key map [menu-bar ldg-recon-menu sep3] '("--"))
-		(define-key map [menu-bar ldg-recon-menu sort-amt] `("Sort by amount" . ,(ledger-reconcile-change-sort-key-and-refresh "(amount)")))
-		(define-key map [menu-bar ldg-recon-menu sort-pay] `("Sort by date" . ,(ledger-reconcile-change-sort-key-and-refresh "(date)")))
-		(define-key map [menu-bar ldg-recon-menu sort-dat] `("Sort by payee" . ,(ledger-reconcile-change-sort-key-and-refresh "(payee)")))
-		(define-key map [menu-bar ldg-recon-menu sep4] '("--"))
-		(define-key map [menu-bar ldg-recon-menu bal] '("Show Cleared Balance" . ledger-display-balance))
-		(define-key map [menu-bar ldg-recon-menu tgt] '("Change Target Balance" . ledger-reconcile-change-target))
-		(define-key map [menu-bar ldg-recon-menu sep5] '("--"))
-		(define-key map [menu-bar ldg-recon-menu rna] '("Reconcile New Account" . ledger-reconcile))
-		(define-key map [menu-bar ldg-recon-menu sep6] '("--"))
-		(define-key map [menu-bar ldg-recon-menu fin] '("Finish" . ledger-reconcile-finish))
-		(define-key map [menu-bar ldg-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
-		(define-key map [menu-bar ldg-recon-menu sav] '("Save" . ledger-reconcile-save))
+		(define-key map [menu-bar] (make-sparse-keymap "ledger-recon-menu"))
+		(define-key map [menu-bar ledger-recon-menu] (cons "Reconcile" map))
+		(define-key map [menu-bar ledger-recon-menu qui] '("Quit" . ledger-reconcile-quit))
+		(define-key map [menu-bar ledger-recon-menu sep1] '("--"))
+		(define-key map [menu-bar ledger-recon-menu pre] '("Previous Entry" . previous-line))
+		(define-key map [menu-bar ledger-recon-menu vis] '("Visit Source" . ledger-reconcile-visit))
+		(define-key map [menu-bar ledger-recon-menu nex] '("Next Entry" . next-line))
+		(define-key map [menu-bar ledger-recon-menu sep2] '("--"))
+		(define-key map [menu-bar ledger-recon-menu del] '("Delete Entry" . ledger-reconcile-delete))
+		(define-key map [menu-bar ledger-recon-menu add] '("Add Entry" . ledger-reconcile-add))
+		(define-key map [menu-bar ledger-recon-menu tog] '("Toggle Entry" . ledger-reconcile-toggle))
+		(define-key map [menu-bar ledger-recon-menu sep3] '("--"))
+		(define-key map [menu-bar ledger-recon-menu sort-amt] `("Sort by amount" . ,(ledger-reconcile-change-sort-key-and-refresh "(amount)")))
+		(define-key map [menu-bar ledger-recon-menu sort-pay] `("Sort by date" . ,(ledger-reconcile-change-sort-key-and-refresh "(date)")))
+		(define-key map [menu-bar ledger-recon-menu sort-dat] `("Sort by payee" . ,(ledger-reconcile-change-sort-key-and-refresh "(payee)")))
+		(define-key map [menu-bar ledger-recon-menu sep4] '("--"))
+		(define-key map [menu-bar ledger-recon-menu bal] '("Show Cleared Balance" . ledger-display-balance))
+		(define-key map [menu-bar ledger-recon-menu tgt] '("Change Target Balance" . ledger-reconcile-change-target))
+		(define-key map [menu-bar ledger-recon-menu sep5] '("--"))
+		(define-key map [menu-bar ledger-recon-menu rna] '("Reconcile New Account" . ledger-reconcile))
+		(define-key map [menu-bar ledger-recon-menu sep6] '("--"))
+		(define-key map [menu-bar ledger-recon-menu fin] '("Finish" . ledger-reconcile-finish))
+		(define-key map [menu-bar ledger-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
+		(define-key map [menu-bar ledger-recon-menu sav] '("Save" . ledger-reconcile-save))
 
 		(use-local-map map)))
 
-(provide 'ldg-reconcile)
+(provide 'ledger-reconcile)
 
-;;; ldg-reconcile.el ends here
+;;; ledger-reconcile.el ends here

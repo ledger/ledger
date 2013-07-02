@@ -1,4 +1,4 @@
-;;; ldg-mode.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-mode.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2013 John Wiegley (johnw AT gnu DOT org)
 
@@ -26,25 +26,25 @@
 
 ;;; Code:
 
-(require 'ldg-regex)
+(require 'ledger-regex)
 (require 'esh-util)
 (require 'esh-arg)
-(require 'ldg-commodities)
-(require 'ldg-complete)
-(require 'ldg-context)
-(require 'ldg-exec)
-(require 'ldg-fonts)
-(require 'ldg-init)
-(require 'ldg-occur)
-(require 'ldg-post)
-(require 'ldg-reconcile)
-(require 'ldg-report)
-(require 'ldg-sort)
-(require 'ldg-state)
-(require 'ldg-test)
-(require 'ldg-texi)
-(require 'ldg-xact)
-(require 'ldg-schedule)
+(require 'ledger-commodities)
+(require 'ledger-complete)
+(require 'ledger-context)
+(require 'ledger-exec)
+(require 'ledger-fonts)
+(require 'ledger-init)
+(require 'ledger-occur)
+(require 'ledger-post)
+(require 'ledger-reconcile)
+(require 'ledger-report)
+(require 'ledger-sort)
+(require 'ledger-state)
+(require 'ledger-test)
+(require 'ledger-texi)
+(require 'ledger-xact)
+(require 'ledger-schedule)
 
 ;;; Code:
 
@@ -233,8 +233,8 @@ Can indent, complete or align depending on context."
 		(define-key map [(meta ?p)] 'ledger-post-prev-xact)
 		(define-key map [(meta ?n)] 'ledger-post-next-xact)
 
-		(define-key map [menu-bar] (make-sparse-keymap "ldg-menu"))
-		(define-key map [menu-bar ldg-menu] (cons "Ledger" map))
+		(define-key map [menu-bar] (make-sparse-keymap "ledger-menu"))
+		(define-key map [menu-bar ledger-menu] (cons "Ledger" map))
 
 		(define-key map [report-kill] '(menu-item "Kill Report" ledger-report-kill :enable ledger-works))
 		(define-key map [report-edit] '(menu-item "Edit Report" ledger-report-edit :enable ledger-works))
@@ -295,4 +295,4 @@ Can indent, complete or align depending on context."
 
 (provide 'ledger)
 
-;;; ldg-mode.el ends here
+;;; ledger-mode.el ends here
