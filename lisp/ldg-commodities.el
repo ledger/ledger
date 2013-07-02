@@ -33,6 +33,10 @@
   :type 'string
   :group 'ledger-reconcile)
 
+(defcustom ledger-scale  10000
+	"The 10 ^ maximum number of digits you would expect to appear in your reports.
+This is a cheap way of getting around floating point silliness in subtraction")
+
 (defun ledger-split-commodity-string (str)
   "Split a commoditized string, STR, into two parts.
 Returns a list with (value commodity)."
@@ -81,7 +85,9 @@ Returns a list with (value commodity)."
 (defun -commodity (c1 c2)
   "Subtract C2 from C1, ensuring their commodities match."
   (if (string= (cadr c1) (cadr c2))
-      (list (- (car c1) (car c2)) (cadr c1))
+			; the scaling below is to get around inexact subtraction results where, for example
+			; 1.23 - 4.56 = -3.3299999999999996 instead of -3.33
+      (list (/ (-  (* ledger-scale (car c1)) (* ledger-scale (car c2))) ledger-scale) (cadr c1))
       (error "Can't subtract different commodities %S from %S" c2 c1)))
 
 (defun +commodity (c1 c2)
@@ -97,7 +103,7 @@ Returns a list with (value commodity)."
 								(setq new-str (append new-str (list ch))))))))
 
 (defun ledger-string-to-number (str &optional decimal-comma)
-	"improve builtin string-to-number by handling internationalization, and return nil of number can't be parsed"
+	"improve builtin string-to-number by handling internationalization, and return nil if number can't be parsed"
 	(let ((nstr (if (or decimal-comma
 											(assoc "decimal-comma" ledger-environment-alist))
 									(ledger-strip str ?.)
