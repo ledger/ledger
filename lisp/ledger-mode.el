@@ -172,6 +172,7 @@ Can indent, complete or align depending on context."
 (define-derived-mode ledger-mode text-mode "Ledger"
 	"A mode for editing ledger data files."
 	(ledger-check-version)
+	(ledger-schedule-check-available)
 	(ledger-post-setup)
 
 	(set (make-local-variable 'comment-start) " ; ")
@@ -270,6 +271,7 @@ Can indent, complete or align depending on context."
 		(define-key map [delete-xact] '(menu-item "Delete Transaction" ledger-delete-current-transaction))
 		(define-key map [cmp-xact] '(menu-item "Complete Transaction" ledger-fully-complete-xact))
 		(define-key map [add-xact] '(menu-item "Add Transaction (ledger xact)" ledger-add-transaction :enable ledger-works))
+		(define-key map [add-xact] '(menu-item "Show upcoming transactions" ledger-schedule-upcoming :enable ledger-schedule-available))
 		(define-key map [sep3] '(menu-item "--"))
 		(define-key map [stats] '(menu-item "Ledger Statistics" ledger-display-ledger-stats :enable ledger-works))
 		(define-key map [fold-buffer] '(menu-item "Narrow to REGEX" ledger-occur))))

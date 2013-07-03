@@ -59,7 +59,7 @@
 (defsubst between (val low high)
   (and (>= val low) (<= val high)))
 
-(defun ledger-check-schedule-available ()
+(defun ledger-schedule-check-available ()
 	(setq ledger-schedule-available (and ledger-schedule-file
 				(file-exists-p ledger-schedule-file))))
 
