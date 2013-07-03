@@ -35,6 +35,11 @@
   "Interface to the Ledger command-line accounting program."
   :group 'ledger)
 
+(defcustom ledger-mode-should-check-version t
+	"Should Ledger-mode verify that the executable is working"
+	:type 'boolean
+	:group 'ledger-exec)
+
 (defcustom ledger-binary-path "ledger"
   "Path to the ledger executable."
   :type 'file
@@ -92,9 +97,11 @@
 (defun ledger-check-version ()
   "Verify that ledger works and is modern enough."
   (interactive)
-  (if (setq ledger-works (ledger-version-greater-p ledger-version-needed))
-      (message "Good Ledger Version")
-      (message "Bad Ledger Version")))
+	(if ledger-mode-should-check-version
+			(if (setq ledger-works (ledger-version-greater-p ledger-version-needed))
+					(message "Good Ledger Version")
+					(message "Bad Ledger Version"))
+			setq ledger-works t))
 
 (provide 'ledger-exec)
 
