@@ -174,7 +174,7 @@ Can indent, complete or align depending on context."
 	(ledger-check-version)
 	(ledger-post-setup)
 
-	(set (make-local-variable 'comment-start) " ; ")
+	(set (make-local-variable 'comment-start) "; ")
 	(set (make-local-variable 'comment-end) "")
 	(set (make-local-variable 'indent-tabs-mode) nil)
 
