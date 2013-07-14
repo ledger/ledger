@@ -98,7 +98,7 @@ die "Date calculation error on $startDate" if ($err);
 my %reportFields =
   ('Cash' => { args => [ '-e', $endDate, 'bal', '/^Assets/' ] },
    'Accounts Receivable' => {args => [ '-e', $endDate, 'bal', '/^Accrued:Accounts Receivable/' ]},
-   'Loans Receivable' => {args => [ '-e', $endDate, 'bal', '/^Accrued:Loans Receivable/' ]},
+   'Loans/Fraud Receivable' => {args => [ '-e', $endDate, 'bal', '/^Accrued:(Loans|Fraud) Receivable/' ]},
    'Accounts Payable' => {args => [ '-e', $endDate, 'bal', '/^Accrued.*Accounts Payable/' ]},
    'Accrued Expenses' => {args => [ '-e', $endDate, 'bal', '/^Accrued.*Expenses/' ]},
    'Liabilities, Credit Cards' => {args => [ '-e', $endDate, 'bal', '/^Liabilities:Credit Card/' ]},
@@ -161,7 +161,7 @@ print BALANCE_SHEET "\"BALANCE SHEET\"\n",
 my $formatStr      = "\"\",\"%-42s\",\"\$%13s\"\n";
 my $formatStrTotal = "\"\",\"%-45s\",\"\$%13s\"\n";
 my $tot = $ZERO;
-foreach my $item ('Cash', 'Accounts Receivable', 'Loans Receivable') {
+foreach my $item ('Cash', 'Accounts Receivable', 'Loans/Fraud Receivable') {
   next if $reportFields{$item}{total} == $ZERO;
   print BALANCE_SHEET sprintf($formatStr, "$item:", Commify($reportFields{$item}{total}));
   $tot += $reportFields{$item}{total};
@@ -195,7 +195,7 @@ die "unable to write to balance-sheet.csv: $!" unless ($? == 0);
 
 die "Cash+accounts receivable total does not equal net assets and liabilities total"
   if (abs( ($reportFields{'Cash'}{total} + $reportFields{'Accounts Receivable'}{total}
-       + $reportFields{'Loans Receivable'}{total})) -
+       + $reportFields{'Loans/Fraud Receivable'}{total})) -
       abs($reportFields{'Accounts Payable'}{total} +
        $reportFields{'Accrued Expenses'}{total} +
        $reportFields{'Unearned Income, Conference Registration'}{total} +
