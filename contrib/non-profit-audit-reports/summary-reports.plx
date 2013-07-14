@@ -202,12 +202,12 @@ die "Cash+accounts receivable total does not equal net assets and liabilities to
        $reportFields{'Unearned Income, Other'}{total} +
        $reportFields{'Liabilities, Credit Cards'}{total} +
        $reportFields{'Liabilities, Other'}{total} +
-       $reportFields{'Total Net Assets'}{total}) > $ONE_PENNY);
+       $reportFields{'Total Net Assets'}{total}) > $TWO_CENTS);
 
 die "Total net assets doesn't equal sum of restricted and unrestricted ones!"
   if (abs($reportFields{'Total Net Assets'}{total}) -
       abs($reportFields{'Unrestricted Net Assets'}{total} +
-      $reportFields{'Temporarily Restricted Net Assets'}{total}) > $ONE_PENNY);
+      $reportFields{'Temporarily Restricted Net Assets'}{total}) > $TWO_CENTS);
 
 
 my %incomeGroups = ('INTEREST INCOME' => { args => ['/^Income.*Interest/' ] },
@@ -280,7 +280,7 @@ print INCOME "\n\n\n", sprintf($formatStrTotal, "OVERALL TOTAL:", Commify($overa
 close INCOME;    die "unable to write to income.csv: $!" unless ($? == 0);
 
 die "calculated total of $overallTotal does equal $incomeGroups{TOTAL}{total}"
-  if (abs($overallTotal) - abs($incomeGroups{TOTAL}{total}) > $ONE_PENNY);
+  if (abs($overallTotal) - abs($incomeGroups{TOTAL}{total}) > $TWO_CENTS);
 
 print STDERR "\n";
 
@@ -380,7 +380,7 @@ die "GROUPS NOT INCLUDED : ", join(keys(%verifyAllGroups), ", "), "\n"
   unless (keys %verifyAllGroups == 0);
 
 die "calculated total of $overallTotal does *not* equal $firstTotal"
-  if (abs($overallTotal) - abs($firstTotal) > $ONE_PENNY);
+  if (abs($overallTotal) - abs($firstTotal) > $TWO_CENTS);
 
 print STDERR "\n";
 
