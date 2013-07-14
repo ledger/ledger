@@ -98,7 +98,7 @@ die "Date calculation error on $startDate" if ($err);
 my %reportFields =
   ('Cash' => { args => [ '-e', $endDate, 'bal', '/^Assets/' ] },
    'Accounts Receivable' => {args => [ '-e', $endDate, 'bal', '/^Accrued:Accounts Receivable/' ]},
-   'Loans Receivable' => {args => [ '-e', $endDate, 'bal', '/^Accrued:Loans Receivable/' ]},
+   'Loans/Fraud Receivable' => {args => [ '-e', $endDate, 'bal', '/^Accrued:(Loans|Fraud) Receivable/' ]},
    'Accounts Payable' => {args => [ '-e', $endDate, 'bal', '/^Accrued.*Accounts Payable/' ]},
    'Accrued Expenses' => {args => [ '-e', $endDate, 'bal', '/^Accrued.*Expenses/' ]},
    'Liabilities, Credit Cards' => {args => [ '-e', $endDate, 'bal', '/^Liabilities:Credit Card/' ]},
@@ -161,7 +161,7 @@ print BALANCE_SHEET "\"BALANCE SHEET\"\n",
 my $formatStr      = "\"\",\"%-42s\",\"\$%13s\"\n";
 my $formatStrTotal = "\"\",\"%-45s\",\"\$%13s\"\n";
 my $tot = $ZERO;
-foreach my $item ('Cash', 'Accounts Receivable', 'Loans Receivable') {
+foreach my $item ('Cash', 'Accounts Receivable', 'Loans/Fraud Receivable') {
   next if $reportFields{$item}{total} == $ZERO;
   print BALANCE_SHEET sprintf($formatStr, "$item:", Commify($reportFields{$item}{total}));
   $tot += $reportFields{$item}{total};
@@ -195,19 +195,19 @@ die "unable to write to balance-sheet.csv: $!" unless ($? == 0);
 
 die "Cash+accounts receivable total does not equal net assets and liabilities total"
   if (abs( ($reportFields{'Cash'}{total} + $reportFields{'Accounts Receivable'}{total}
-       + $reportFields{'Loans Receivable'}{total})) -
+       + $reportFields{'Loans/Fraud Receivable'}{total})) -
       abs($reportFields{'Accounts Payable'}{total} +
        $reportFields{'Accrued Expenses'}{total} +
        $reportFields{'Unearned Income, Conference Registration'}{total} +
        $reportFields{'Unearned Income, Other'}{total} +
        $reportFields{'Liabilities, Credit Cards'}{total} +
        $reportFields{'Liabilities, Other'}{total} +
-       $reportFields{'Total Net Assets'}{total}) > $ONE_PENNY);
+       $reportFields{'Total Net Assets'}{total}) > $TWO_CENTS);
 
 die "Total net assets doesn't equal sum of restricted and unrestricted ones!"
   if (abs($reportFields{'Total Net Assets'}{total}) -
       abs($reportFields{'Unrestricted Net Assets'}{total} +
-      $reportFields{'Temporarily Restricted Net Assets'}{total}) > $ONE_PENNY);
+      $reportFields{'Temporarily Restricted Net Assets'}{total}) > $TWO_CENTS);
 
 
 my %incomeGroups = ('INTEREST INCOME' => { args => ['/^Income.*Interest/' ] },
@@ -280,7 +280,7 @@ print INCOME "\n\n\n", sprintf($formatStrTotal, "OVERALL TOTAL:", Commify($overa
 close INCOME;    die "unable to write to income.csv: $!" unless ($? == 0);
 
 die "calculated total of $overallTotal does equal $incomeGroups{TOTAL}{total}"
-  if (abs($overallTotal) - abs($incomeGroups{TOTAL}{total}) > $ONE_PENNY);
+  if (abs($overallTotal) - abs($incomeGroups{TOTAL}{total}) > $TWO_CENTS);
 
 print STDERR "\n";
 
@@ -380,7 +380,7 @@ die "GROUPS NOT INCLUDED : ", join(keys(%verifyAllGroups), ", "), "\n"
   unless (keys %verifyAllGroups == 0);
 
 die "calculated total of $overallTotal does *not* equal $firstTotal"
-  if (abs($overallTotal) - abs($firstTotal) > $ONE_PENNY);
+  if (abs($overallTotal) - abs($firstTotal) > $TWO_CENTS);
 
 print STDERR "\n";
 
