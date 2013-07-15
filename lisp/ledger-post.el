@@ -117,11 +117,12 @@ to choose from."
 Return the width of the amount field as an integer and leave
 point at beginning of the commodity."
   ;;(beginning-of-line)
-  (when (re-search-forward ledger-amount-regex end t)
-    (goto-char (match-beginning 0))
-    (skip-syntax-forward " ")
-    (- (or (match-end 4)
-           (match-end 3)) (point))))
+  (let ((case-fold-search nil))
+    (when (re-search-forward ledger-amount-regex end t)
+      (goto-char (match-beginning 0))
+      (skip-syntax-forward " ")
+      (- (or (match-end 4)
+             (match-end 3)) (point)))))
 
 
 (defun ledger-next-account (&optional end)
