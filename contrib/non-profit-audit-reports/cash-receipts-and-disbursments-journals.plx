@@ -67,8 +67,7 @@ if (@ARGV < 2) {
 
 my($beginDate, $endDate, @otherLedgerOpts) = @ARGV;
 
-my(@chartOfAccountsOpts) = ('-V', '-F', "%150A\n",  '-w', '-s',
-                            '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg');
+my(@chartOfAccountsOpts) = ('-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'accounts');
 
 open(CHART_DATA, "-|", $LEDGER_CMD, @chartOfAccountsOpts)
   or die "Unable to run $LEDGER_CMD @chartOfAccountsOpts: $!";
