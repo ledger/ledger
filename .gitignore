@@ -106,3 +106,7 @@ contrib/non-profit-audit-reports/tests/general-ledger.txt
 contrib/non-profit-audit-reports/tests/MANIFEST
 contrib/non-profit-audit-reports/general-ledger.zip
 /wiki/
+doc/ledger-mode.info
+doc/ledger3.info-1
+doc/ledger3.info-2
+CTestTestfile.cmake
