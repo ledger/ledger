@@ -72,8 +72,10 @@ reconcile-finish will mark all pending posting cleared."
   :type 'string
   :group 'ledger-reconcile)
 
-(defvar ledger-reconcile-sort-key "(date)"
-	"Default key for sorting reconcile buffer")
+(defcustom ledger-reconcile-sort-key "(date)"
+	"Default key for sorting reconcile buffer. For no sorting by default, use '(0)'."
+	:type 'string
+	:group 'ledger-reconcile)
 
 (defun ledger-reconcile-get-cleared-or-pending-balance (buffer account)
   "Calculate the cleared or pending balance of the account."
@@ -447,6 +449,8 @@ moved and recentered.  If they aren't strange things happen."
 		(define-key map [?q] 'ledger-reconcile-quit)
 		(define-key map [?b] 'ledger-display-balance)
 
+		(define-key map [(control ?c) (control ?o)] (ledger-reconcile-change-sort-key-and-refresh "(0)"))
+
 		(define-key map [(control ?c) (control ?a)] (ledger-reconcile-change-sort-key-and-refresh "(amount)"))
 
 		(define-key map [(control ?c) (control ?d)] (ledger-reconcile-change-sort-key-and-refresh "(date)"))
@@ -465,6 +469,7 @@ moved and recentered.  If they aren't strange things happen."
 		(define-key map [menu-bar ledger-recon-menu add] '("Add Entry" . ledger-reconcile-add))
 		(define-key map [menu-bar ledger-recon-menu tog] '("Toggle Entry" . ledger-reconcile-toggle))
 		(define-key map [menu-bar ledger-recon-menu sep3] '("--"))
+		(define-key map [menu-bar ledger-recon-menu sort-orig] `("Sort by file order" . ,(ledger-reconcile-change-sort-key-and-refresh "(0)")))
 		(define-key map [menu-bar ledger-recon-menu sort-amt] `("Sort by amount" . ,(ledger-reconcile-change-sort-key-and-refresh "(amount)")))
 		(define-key map [menu-bar ledger-recon-menu sort-pay] `("Sort by date" . ,(ledger-reconcile-change-sort-key-and-refresh "(date)")))
 		(define-key map [menu-bar ledger-recon-menu sort-dat] `("Sort by payee" . ,(ledger-reconcile-change-sort-key-and-refresh "(payee)")))
