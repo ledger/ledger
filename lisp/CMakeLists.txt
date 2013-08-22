@@ -1,23 +1,21 @@
 set(EMACS_LISP_SOURCES
-  ldg-commodities.el
-  ldg-complete.el
-  ldg-exec.el
-  ldg-fonts.el
-  ldg-init.el
-  ldg-mode.el
-  ldg-new.el
-  ldg-occur.el
-  ldg-post.el
-  ldg-reconcile.el
-  ldg-regex.el
-  ldg-report.el
-  ldg-sort.el
-  ldg-state.el
-  ldg-test.el
-  ldg-texi.el
-  ldg-xact.el
-  ldg-context.el
-  ldg-schedule.el)
+  ledger-commodities.el
+  ledger-complete.el
+  ledger-exec.el
+  ledger-fonts.el
+  ledger-init.el
+  ledger-mode.el
+  ledger-occur.el
+  ledger-post.el
+  ledger-reconcile.el
+  ledger-regex.el
+  ledger-report.el
+  ledger-schedule.el
+  ledger-sort.el
+  ledger-state.el
+  ledger-test.el
+  ledger-texi.el
+  ledger-xact.el)
 
 # find emacs and complain if not found
 find_program(EMACS_EXECUTABLE emacs)
@@ -30,7 +28,7 @@ macro(add_emacs_lisp_target el)
     OUTPUT ${el}c
     COMMAND ${EMACS_EXECUTABLE}
             -L ${CMAKE_CURRENT_BINARY_DIR}
-            -l ${CMAKE_CURRENT_BINARY_DIR}/ldg-regex.el
+            -l ${CMAKE_CURRENT_BINARY_DIR}/ledger-regex.el
             -batch -f batch-byte-compile
              ${CMAKE_CURRENT_BINARY_DIR}/${el}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${el}
