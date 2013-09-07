@@ -2000,7 +2000,7 @@ the account directive.  For example:
 @smallexample
 apply account Personal
 2011/11/15  Supermarket
-    Expenses:Groceries
+    Expenses:Groceries      $ 50.00
     Assets:Checking
 @end smallexample
 
