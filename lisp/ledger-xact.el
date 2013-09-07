@@ -150,7 +150,8 @@ MOMENT is an encoded date"
     (backward-paragraph 2)
     (re-search-forward ledger-iso-date-regexp)
     (replace-match date)
-    (ledger-next-amount)))
+    (ledger-next-amount)
+    (forward-char 2)))
 
 (defun ledger-delete-current-transaction (pos)
   "Delete the transaction surrounging point."
