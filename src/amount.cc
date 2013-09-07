@@ -196,8 +196,8 @@ namespace {
 
         for (const char * p = buf; *p; p++) {
           if (*p == '.') {
-            if (commodity_t::time_colon_by_default ||
-                (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON)))
+            if (("h" == comm->symbol() || "m" == comm->symbol()) && (commodity_t::time_colon_by_default ||
+                (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON))))
               out << ':';
             else if (commodity_t::decimal_comma_by_default ||
                 (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
@@ -213,8 +213,8 @@ namespace {
             out << *p;
 
             if (integer_digits > 3 && --integer_digits % 3 == 0) {
-              if (commodity_t::time_colon_by_default ||
-                  (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON)))
+              if (("h" == comm->symbol() || "m" == comm->symbol()) && (commodity_t::time_colon_by_default ||
+                  (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON))))
                 out << ':';
               else if (commodity_t::decimal_comma_by_default ||
                   (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
@@ -744,7 +744,7 @@ void amount_t::in_place_unreduce()
   }
 
   if (shifted) {
-    if ("h" == comm->symbol() && commodity_t::time_colon_by_default) {
+    if (("h" == comm->symbol() || "m" == comm->symbol()) && commodity_t::time_colon_by_default) {
       amount_t floored = tmp.floored();
       amount_t precision = tmp - floored;
       if (precision < 0.0) {
