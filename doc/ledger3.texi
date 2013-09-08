@@ -1422,7 +1422,7 @@ increase compatibility with other text manipulation programs and
 methods four additional comment characters are valid if used at the
 beginning of a line: @samp{#}, @samp{|}, and @samp{*} and @samp{%}.
 
-Block comments can be made by use @code{@!comment} ... @code{@!end
+Block comments can be made by use @code{comment} ... @code{end
 comment}.
 
 @smallexample
@@ -1432,10 +1432,10 @@ comment}.
 |    and this,
 *     and this.
 
-!comment
+comment
     This is a block comment with
     multiple lines
-!end comment
+end comment
 @end smallexample
 
 There are several forms of comments within a transaction, for example:
