@@ -11,21 +11,9 @@ almost certainly going to run into problems.  In future, you can run
 'acprep update' again and again, and it will keep you updated to the
 very latest version.
 
-I further recommend building both debug and optimized versions of Ledger, in a
-subdirectory of your source tree named 'build' (which acprep will manage for
-you, you simply need to create it):
+Now install it:
 
-    $ mkdir build
-    $ ./acprep opt make
-    $ ./acprep debug make
-
-Now install the optimized version:
-
-    $ cd build/ledger/opt
     $ sudo make install
-
-but know that you have 'build/ledger/debug' available for testing and
-for more useful bug reports.
 
 ===============================================================================
                        COMMON CONFIGURE/BUILD PROBLEMS
