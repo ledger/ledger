@@ -151,7 +151,7 @@ account_t * journal_t::register_account(const string& name, post_t * post,
   // the payee indicates an account that should be used.
   if (result->name == _("Unknown")) {
     foreach (account_mapping_t& value, payees_for_unknown_accounts) {
-      if (value.first.match(post->xact->payee)) {
+      if (post && value.first.match(post->xact->payee)) {
         result = value.second;
         break;
       }

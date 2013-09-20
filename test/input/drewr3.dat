@@ -69,15 +69,4 @@ end tag
   Income:Sales
 end tag
 
-apply account Expenses
-bucket Assets:Checking
-2011/04/25 Tom's Used Cars
-  Auto                    $ 5,500.00
-  ; :nobudget:
-
-end account
-apply payee Amazon.com  B.*k Store
-
-2011/04/27 Book Store
-  Books                       $20.00
 
