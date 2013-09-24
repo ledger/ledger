@@ -1085,7 +1085,7 @@ assets is greater than the absolute value of your starting equity, it
 means you are making money.
 
 Clear as mud?  Keep thinking about it.  Until you figure it out, put
-@code{-Equity} at the end of your balance command, to remove the
+@code{not Equity} at the end of your balance command, to remove the
 confusing figure from the total.
 
 @node Dealing with Petty Cash, Working with multiple funds and accounts, Understanding Equity, Principles of Accounting with Ledger
