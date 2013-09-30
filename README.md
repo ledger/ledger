@@ -130,7 +130,7 @@ footwork for you:
     ./acprep update
     # or, if you want to use the Boost libraries with suffix -mt, install in
     # $HOME/local and build with 2 processes in parallel
-    ./acprep update --boost-suffix=-mt -- --prefix=$HOME/local -j2
+    ./acprep update --boost-suffix=-mt --prefix=$HOME/local -j2
 
 Please read the contents of `config.log` if the configure step fails.  Also,
 see the `help` subcommand to `acprep`, which explains some of its many
