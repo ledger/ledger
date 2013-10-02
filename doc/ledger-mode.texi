@@ -119,10 +119,10 @@ initialization file (@file{~/.emacs}, @file{~/.emacs.d/init.el}, or
 @file{~/.Aquamacs/Preferences.el}).
 
 @lisp
-(add-to-list ’load-path
-        (expand-file-name "/path/to/ledger/source/lisp/"))
-(load "ldg-new")
-(add-to-list ’auto-mode-alist ’("\\.ledger$" . ledger-mode))
+(add-to-list 'load-path
+             (expand-file-name "/path/to/ledger/source/lisp/"))
+(load "ledger-mode")
+(add-to-list 'auto-mode-alist '("\\.ledger$" . ledger-mode))
 @end lisp
 
 This sets up Emacs to automatically recognize files that end with
