@@ -163,6 +163,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
       set(_args ${CMAKE_CXX_FLAGS})
       list(APPEND _args ${CMAKE_CXX_FLAGS_DEBUG})
+      if(BUILD_LIBRARY)
+        list(APPEND _args ${CMAKE_SHARED_LIBRARY_CXX_FLAGS})
+      endif()
       list(APPEND _args "-x c++-header " ${_inc})
       list(APPEND _args -c ${_header_filename} -o ${_pch_filename})
 
@@ -215,6 +218,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
       set(_args ${CMAKE_CXX_FLAGS})
       list(APPEND _args ${CMAKE_CXX_FLAGS_DEBUG})
+      if(BUILD_LIBRARY)
+        list(APPEND _args ${CMAKE_SHARED_LIBRARY_CXX_FLAGS})
+      endif()
       list(APPEND _args ${GXX_WARNING_FLAGS})
       list(APPEND _args "-x c++-header " ${_inc})
       list(APPEND _args -c ${_header_filename} -o ${_gch_filename})
@@ -243,30 +249,42 @@ endif()
 
 add_pch_rule(${PROJECT_BINARY_DIR}/system.hh LEDGER_SOURCES main.cc global.cc)
 
-if(BUILD_LIBRARY)
-  add_library(pyledger SHARED ${LEDGER_SOURCES})
-  add_ledger_library_dependencies(pyledger)
-  if(CMAKE_HOST_APPLE)
-    set_target_properties(pyledger PROPERTIES OUTPUT_NAME ledger)
-    set_target_properties(pyledger PROPERTIES SUFFIX .so)
-    set(CMAKE_SHARED_LIBRARY_PREFIX )
-  endif()
+include(GNUInstallDirs)
 
-  add_library(libledger ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp)
-  set_target_properties(libledger PROPERTIES OUTPUT_NAME ledger)
+if(BUILD_LIBRARY)
+  add_library(libledger SHARED ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp)
+  add_ledger_library_dependencies(libledger)
+  set_property(TARGET libledger PROPERTY PREFIX "")
 
   add_executable(ledger main.cc global.cc)
+  target_link_libraries(ledger libledger)
 
-  install(TARGETS pyledger DESTINATION lib)
-  install(TARGETS libledger DESTINATION lib)
-  install(FILES ${LEDGER_INCLUDES} DESTINATION include/ledger)
+  install(TARGETS libledger DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  install(FILES ${LEDGER_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
 else()
   add_executable(ledger
     ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp main.cc global.cc)
+  add_ledger_library_dependencies(ledger)
 endif()
 
-add_ledger_library_dependencies(ledger)
+if(USE_PYTHON)
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
+    "from __future__ import print_function
+import distutils.sysconfig as s
+print(s.get_python_lib(True, prefix=''))"
+    OUTPUT_VARIABLE _TMP_PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(PYTHON_SITE_PACKAGES ${_TMP_PYTHON_SITE_PACKAGES}
+    CACHE PATH "python module directory (${_TMP_PYTHON_SITE_PACKAGES})")
 
-install(TARGETS ledger DESTINATION bin)
+  if (PYTHON_SITE_PACKAGES)
+    # FIXME: symlink would be sufficient
+    install(TARGETS libledger
+      DESTINATION ${PYTHON_SITE_PACKAGES} RENAME "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
+  else()
+    message(WARNING "PYTHON_SITE_PACKAGES not set. Will not install python module.")
+  endif()
+endif()
+
+install(TARGETS ledger DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 ### CMakeLists.txt ends here

@@ -1,5 +1,5 @@
 macro(add_ledger_test _name)
-  add_ledger_library_dependencies(${_name})
+  target_link_libraries(${_name} libledger)
   add_test(Ledger${_name} ${PROJECT_BINARY_DIR}/${_name})
 endmacro(add_ledger_test _name)
 
