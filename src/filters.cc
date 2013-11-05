@@ -449,13 +449,16 @@ void collapse_posts::report_subtotal()
     DEBUG("filters.collapse", "earliest date    = " << earliest_date);
     DEBUG("filters.collapse", "latest date      = " << latest_date);
 
-    handle_value(/* value=      */ subtotal,
-                 /* account=    */ totals_account,
-                 /* xact=       */ &xact,
-                 /* temps=      */ temps,
-                 /* handler=    */ handler,
-                 /* date=       */ latest_date,
-                 /* act_date_p= */ false);
+    foreach (post_t * post, component_posts) {
+			handle_value(/* value=      */ subtotal,
+									 /* account=    */ find_totals_account(post->account),
+									 /* xact=       */ &xact,
+									 /* temps=      */ temps,
+									 /* handler=    */ handler,
+									 /* date=       */ latest_date,
+									 /* act_date_p= */ false);
+    }
+
   }
 
   component_posts.clear();
@@ -464,6 +467,21 @@ void collapse_posts::report_subtotal()
   last_post = NULL;
   subtotal  = 0L;
   count     = 0;
+}
+
+account_t* collapse_posts::find_totals_account(account_t* account)
+{
+  unsigned short depth=2;
+  if(account->depth==depth)
+  {
+    string name=account->fullname();
+    account_t*& acc = totals_accounts[name];
+    if(acc==NULL)
+      acc= &temps.create_account(name);
+    return acc;
+  }
+  //recurse
+  return find_totals_account(account->parent);
 }
 
 void collapse_posts::operator()(post_t& post)

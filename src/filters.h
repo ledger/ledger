@@ -421,18 +421,18 @@ public:
 
 class collapse_posts : public item_handler<post_t>
 {
-  expr_t&             amount_expr;
-  predicate_t         display_predicate;
-  predicate_t         only_predicate;
-  value_t             subtotal;
-  std::size_t         count;
-  xact_t *            last_xact;
-  post_t *            last_post;
-  temporaries_t       temps;
-  account_t *         totals_account;
-  bool                only_collapse_if_zero;
-  std::list<post_t *> component_posts;
-  report_t&           report;
+  expr_t&                      amount_expr;
+  predicate_t                  display_predicate;
+  predicate_t                  only_predicate;
+  value_t                      subtotal;
+  std::size_t                  count;
+  xact_t *                     last_xact;
+  post_t *                     last_post;
+  temporaries_t                temps;
+  std::map<string,account_t *> totals_accounts;
+  bool                         only_collapse_if_zero;
+  std::list<post_t *>          component_posts;
+  report_t&                    report;
 
   collapse_posts();
 
@@ -448,17 +448,13 @@ public:
       only_predicate(_only_predicate), count(0),
       last_xact(NULL), last_post(NULL),
       only_collapse_if_zero(_only_collapse_if_zero), report(_report) {
-    create_accounts();
     TRACE_CTOR(collapse_posts, "post_handler_ptr, ...");
   }
   virtual ~collapse_posts() {
     TRACE_DTOR(collapse_posts);
     handler.reset();
   }
-
-  void create_accounts() {
-    totals_account = &temps.create_account(_("<Total>"));
-  }
+  account_t* find_totals_account(account_t* account);
 
   virtual void flush() {
     report_subtotal();
@@ -480,7 +476,7 @@ public:
     last_post = NULL;
 
     temps.clear();
-    create_accounts();
+    totals_accounts.clear();
     component_posts.clear();
 
     item_handler<post_t>::clear();
