@@ -448,10 +448,10 @@ void collapse_posts::report_subtotal()
     DEBUG("filters.collapse", "Pseudo-xact date = " << *xact._date);
     DEBUG("filters.collapse", "earliest date    = " << earliest_date);
     DEBUG("filters.collapse", "latest date      = " << latest_date);
-
-    foreach (post_t * post, component_posts) {
-			handle_value(/* value=      */ subtotal,
-									 /* account=    */ find_totals_account(post->account),
+		
+		foreach (totals_map::value_type& pat, totals) {
+			handle_value(/* value=      */ pat.second,
+									 /* account=    */ &temps.create_account(pat.first),
 									 /* xact=       */ &xact,
 									 /* temps=      */ temps,
 									 /* handler=    */ handler,
@@ -461,6 +461,7 @@ void collapse_posts::report_subtotal()
 
   }
 
+	totals.clear();
   component_posts.clear();
 
   last_xact = NULL;
@@ -469,19 +470,14 @@ void collapse_posts::report_subtotal()
   count     = 0;
 }
 
-account_t* collapse_posts::find_totals_account(account_t* account)
+value_t& collapse_posts::find_totals(account_t* account)
 {
-  unsigned short depth=2;
+  unsigned short depth=3;
   if(account->depth==depth)
-  {
-    string name=account->fullname();
-    account_t*& acc = totals_accounts[name];
-    if(acc==NULL)
-      acc= &temps.create_account(name);
-    return acc;
-  }
-  //recurse
-  return find_totals_account(account->parent);
+    return totals[account->fullname()];
+	
+  //else recurse
+  return find_totals(account->parent);
 }
 
 void collapse_posts::operator()(post_t& post)
@@ -493,6 +489,7 @@ void collapse_posts::operator()(post_t& post)
     report_subtotal();
 
   post.add_to_value(subtotal, amount_expr);
+  post.add_to_value(find_totals(post.account), amount_expr);
 
   component_posts.push_back(&post);
 

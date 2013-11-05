@@ -421,18 +421,21 @@ public:
 
 class collapse_posts : public item_handler<post_t>
 {
-  expr_t&                      amount_expr;
-  predicate_t                  display_predicate;
-  predicate_t                  only_predicate;
-  value_t                      subtotal;
-  std::size_t                  count;
-  xact_t *                     last_xact;
-  post_t *                     last_post;
-  temporaries_t                temps;
-  std::map<string,account_t *> totals_accounts;
-  bool                         only_collapse_if_zero;
-  std::list<post_t *>          component_posts;
-  report_t&                    report;
+
+  typedef std::map<string,value_t> totals_map;
+  
+  expr_t&             amount_expr;
+  predicate_t         display_predicate;
+  predicate_t         only_predicate;
+  value_t             subtotal;
+  std::size_t         count;
+  xact_t *            last_xact;
+  post_t *            last_post;
+  temporaries_t       temps;
+  totals_map          totals;
+  bool                only_collapse_if_zero;
+  std::list<post_t *> component_posts;
+  report_t&           report;
 
   collapse_posts();
 
@@ -454,7 +457,7 @@ public:
     TRACE_DTOR(collapse_posts);
     handler.reset();
   }
-  account_t* find_totals_account(account_t* account);
+  value_t& find_totals(account_t* account);
 
   virtual void flush() {
     report_subtotal();
@@ -476,7 +479,7 @@ public:
     last_post = NULL;
 
     temps.clear();
-    totals_accounts.clear();
+    totals.clear();
     component_posts.clear();
 
     item_handler<post_t>::clear();
