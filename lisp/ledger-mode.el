@@ -295,6 +295,6 @@ Can indent, complete or align depending on context."
 
 
 
-(provide 'ledger)
+(provide 'ledger-mode)
 
 ;;; ledger-mode.el ends here

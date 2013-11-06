@@ -310,7 +310,7 @@ void put_account(property_tree::ptree& pt, const account_t& acct,
 
 //simple struct added to allow std::map to compare accounts in the accounts report
 struct account_compare {
-  bool operator() (const account_t& lhs, const account_t& rhs){
+  bool operator() (const account_t& lhs, const account_t& rhs) const {
     return (lhs.fullname().compare(rhs.fullname()) < 0);
   }
 };
