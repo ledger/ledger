@@ -92,31 +92,31 @@
 
 (defun ledger-read-account-with-prompt (prompt)
   (let* ((context (ledger-context-at-point))
-				 (default (if (and (eq (ledger-context-line-type context) 'acct-transaction)
-													 (eq (ledger-context-current-field context) 'account))
-											(regexp-quote (ledger-context-field-value context 'account))
-											nil)))
+	 (default (if (and (eq (ledger-context-line-type context) 'acct-transaction)
+			   (eq (ledger-context-current-field context) 'account))
+		      (regexp-quote (ledger-context-field-value context 'account))
+		      nil)))
     (ledger-read-string-with-default prompt default)))
 
 (defun ledger-read-string-with-default (prompt default)
   "Return user supplied string after PROMPT, or DEFAULT."
   (read-string (concat prompt
-											 (if default
-													 (concat " (" default "): ")
-													 ": "))
-							 nil 'ledger-minibuffer-history default))
+		       (if default
+			   (concat " (" default "): ")
+			   ": "))
+	       nil 'ledger-minibuffer-history default))
 
 (defun ledger-display-balance-at-point ()
   "Display the cleared-or-pending balance.
 And calculate the target-delta of the account being reconciled."
   (interactive)
   (let* ((account (ledger-read-account-with-prompt "Account balance to show"))
-				 (buffer (current-buffer))
-				 (balance (with-temp-buffer
-										(ledger-exec-ledger buffer (current-buffer) "cleared" account)
-										(if (> (buffer-size) 0)
-												(buffer-substring-no-properties (point-min) (1- (point-max)))
-												(concat account " is empty.")))))
+	 (buffer (current-buffer))
+	 (balance (with-temp-buffer
+		    (ledger-exec-ledger buffer (current-buffer) "cleared" account)
+		    (if (> (buffer-size) 0)
+			(buffer-substring-no-properties (point-min) (1- (point-max)))
+			(concat account " is empty.")))))
     (when balance
       (message balance))))
 
@@ -125,9 +125,9 @@ And calculate the target-delta of the account being reconciled."
 And calculate the target-delta of the account being reconciled."
   (interactive)
   (let* ((buffer (current-buffer))
-				 (balance (with-temp-buffer
-										(ledger-exec-ledger buffer (current-buffer) "stats")
-										(buffer-substring-no-properties (point-min) (1- (point-max))))))
+	 (balance (with-temp-buffer
+		    (ledger-exec-ledger buffer (current-buffer) "stats")
+		    (buffer-substring-no-properties (point-min) (1- (point-max))))))
     (when balance
       (message balance))))
 
@@ -135,43 +135,44 @@ And calculate the target-delta of the account being reconciled."
   "Decide what to with with <TAB>.
 Can indent, complete or align depending on context."
   (interactive "p")
-	(if (= (point) (line-beginning-position))
-			(indent-to ledger-post-account-alignment-column)
-			(if (and (> (point) 1)
-							 (looking-back "\\([^ \t]\\)" 1))
-					(ledger-pcomplete interactively)
-					(ledger-post-align-postings))))
+  (if (= (point) (line-beginning-position))
+      (indent-to ledger-post-account-alignment-column)
+      (if (and (> (point) 1)
+	       (looking-back "\\([^ \t]\\)" 1))
+	  (ledger-pcomplete interactively)
+	  (ledger-post-align-postings))))
 
 (defvar ledger-mode-abbrev-table)
 
 (defun ledger-insert-effective-date ()
   (interactive)
   (let ((context (car (ledger-context-at-point)))
-				(date-string (format-time-string (cdr (assoc "date-format" ledger-environment-alist)))))
-		(cond ((eq 'xact context)
-					 (beginning-of-line)
-					 (insert date-string "="))
-					((eq 'acct-transaction context)
-					 (end-of-line)
-					 (insert "  ; [=" date-string "]")))))
+	(date-string (format-time-string (cdr (assoc "date-format" ledger-environment-alist)))))
+    (cond ((eq 'xact context)
+	   (beginning-of-line)
+	   (insert date-string "="))
+	  ((eq 'acct-transaction context)
+	   (end-of-line)
+	   (insert "  ; [=" date-string "]")))))
 
 (defun ledger-mode-remove-extra-lines ()
-	(goto-char (point-min))
-	(while (re-search-forward "\n\n\\(\n\\)+" nil t)
-		(replace-match "\n\n")))
+  (goto-char (point-min))
+  (while (re-search-forward "\n\n\\(\n\\)+" nil t)
+    (replace-match "\n\n")))
 
 (defun ledger-mode-clean-buffer ()
-	"indent, remove multiple linfe feeds and sort the buffer"
-	(interactive)
-	(ledger-sort-buffer)
-	(ledger-post-align-postings (point-min) (point-max))
-	(ledger-mode-remove-extra-lines))
+  "indent, remove multiple linfe feeds and sort the buffer"
+  (interactive)
+  (ledger-sort-buffer)
+  (ledger-post-align-postings (point-min) (point-max))
+  (ledger-mode-remove-extra-lines))
 
 
 ;;;###autoload
 (define-derived-mode ledger-mode text-mode "Ledger"
 	"A mode for editing ledger data files."
 	(ledger-check-version)
+	(ledger-schedule-check-available)
 	(ledger-post-setup)
 
 	(set (make-local-variable 'comment-start) "; ")
@@ -270,6 +271,7 @@ Can indent, complete or align depending on context."
 		(define-key map [delete-xact] '(menu-item "Delete Transaction" ledger-delete-current-transaction))
 		(define-key map [cmp-xact] '(menu-item "Complete Transaction" ledger-fully-complete-xact))
 		(define-key map [add-xact] '(menu-item "Add Transaction (ledger xact)" ledger-add-transaction :enable ledger-works))
+		(define-key map [add-xact] '(menu-item "Show upcoming transactions" ledger-schedule-upcoming :enable ledger-schedule-available))
 		(define-key map [sep3] '(menu-item "--"))
 		(define-key map [stats] '(menu-item "Ledger Statistics" ledger-display-ledger-stats :enable ledger-works))
 		(define-key map [fold-buffer] '(menu-item "Narrow to REGEX" ledger-occur))))

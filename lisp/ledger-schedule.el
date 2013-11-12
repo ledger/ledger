@@ -49,13 +49,19 @@
   :type 'integer
   :group 'ledger-schedule)
 
-(defcustom ledger-schedule-file "~/FinanceData/ledger-schedule.ledger"
+(defcustom ledger-schedule-file "~/ledger-schedule.ledger"
   "File to find scheduled transactions."
   :type 'file
   :group 'ledger-schedule)
 
+(defvar ledger-schedule-available nil)
+
 (defsubst between (val low high)
   (and (>= val low) (<= val high)))
+
+(defun ledger-schedule-check-available ()
+	(setq ledger-schedule-available (and ledger-schedule-file
+				(file-exists-p ledger-schedule-file))))
 
 (defun ledger-schedule-days-in-month (month year)
   "Return number of days in the MONTH, MONTH is from 1 to 12.
@@ -290,31 +296,6 @@ returns true if the date meets the requirements"
 	   (insert (format-time-string date-format (car candidate) ) " " (cadr candidate) "\n")))
      (ledger-mode))
     (length candidates)))
-
-
-;;
-;;  Test harnesses for use in ielm
-;;
-(defvar auto-items)
-
-(defun ledger-schedule-test ( early horizon)
-   (ledger-schedule-create-auto-buffer
-    (ledger-schedule-scan-transactions ledger-schedule-file)
-    early
-    horizon
-    (get-buffer "2013.ledger")))
-
-
-(defun ledger-schedule-test-predict ()
-  (let ((today (current-time))
-	test-date items)
-
-    (loop for day from 0 to ledger-schedule-look-forward by 1 do
-	 (setq test-date (time-add today (days-to-time day)))
-	 (dolist (item auto-items items)
-	   (if (funcall (car item) test-date)
-	       (setq items (append items (list (decode-time test-date) (cdr item)))))))
-    items))
 
 (defun ledger-schedule-upcoming ()
   (interactive)
