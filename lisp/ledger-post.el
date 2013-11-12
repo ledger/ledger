@@ -209,11 +209,11 @@ region align the posting on the current line."
     (let ((end-of-amount (re-search-forward "[-.,0-9]+" (line-end-position) t)))
       ;; determine if there is an amount to edit
       (if end-of-amount
-					(let ((val (ledger-string-to-number (match-string 0))))
+					(let ((val-string (match-string 0)))
 						(goto-char (match-beginning 0))
 						(delete-region (match-beginning 0) (match-end 0))
 						(calc)
-						(calc-eval val 'push)) ;; edit the amount
+						(calc-eval val-string 'push)) ;; edit the amount
 					(progn ;;make sure there are two spaces after the account name and go to calc
 						(if (search-backward "  " (- (point) 3) t)
 								(goto-char (line-end-position))
