@@ -742,9 +742,6 @@ maintain the proper mathematical sense.
 @node Scheduling Transactions, Customizing Ledger-mode, The Report Buffer, Top
 @chapter Scheduling Transactions
 
-@node Customizing Ledger-mode, Generating Ledger Regression Tests, Scheduling Transactions, Top
-@chapter Customizing Ledger-mode
-
 The Ledger program provide for automating transactions but these
 transaction aren't ``real'', they only exist inside a ledger session and
 are not reflected in the actual data file.  Many transactions are very
@@ -756,14 +753,21 @@ separate ledger file and calculate the upcoming occurences of those
 transactions.  You can then copy the transactions into your live data
 file.
 
-@node Specifying Upcming Transactions
-@section Specifying Upcming Transactions
+@menu
+* Specifying Upcoming Transactions::
+@end menu
+
+@node Specifying Upcoming Transactions
+@section Specifying Upcoming Transactions
 
 The format for specifying transactions is identical to Ledger's file
 format with the exception of the date field.  The data field is modified
 by surrounding it with brackets and using wild cards to specity free
 months or years.
 
+
+@node Customizing Ledger-mode, Generating Ledger Regression Tests, Scheduling Transactions, Top
+@chapter Customizing Ledger-mode
 
 @menu
 * Ledger-mode Customization::
