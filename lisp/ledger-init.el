@@ -54,7 +54,8 @@
   (interactive)
   (let ((init-base-name (file-name-nondirectory ledger-init-file-name)))
     (if (get-buffer init-base-name) ;; init file already loaded, parse it and leave it
-				(ledger-init-parse-initialization init-base-name)
+				(setq ledger-environment-alist
+              (ledger-init-parse-initialization init-base-name))
 			(when (and ledger-init-file-name
 								 (file-exists-p ledger-init-file-name)
 								 (file-readable-p ledger-init-file-name))
