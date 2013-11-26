@@ -303,7 +303,8 @@ returns true if the date meets the requirements"
    (ledger-schedule-scan-transactions ledger-schedule-file)
    ledger-schedule-look-backward
    ledger-schedule-look-forward
-   (current-buffer)))
+   (current-buffer))
+  (pop-to-buffer ledger-schedule-buffer-name))
 
 
 (provide 'ledger-schedule)
