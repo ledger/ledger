@@ -241,7 +241,7 @@ returns true if the date meets the requirements"
 	  ((/= 0 (setq year-match (string-to-number str)))
 	   `(eq (nth 5 (decode-time date)) ,year-match))
 	  (t
-	   (error "Improperly specified year constraint: " str)))))
+	   (error "Improperly specified year constraint: %s" str)))))
 
 (defun ledger-schedule-constrain-month (str)
 
@@ -253,7 +253,7 @@ returns true if the date meets the requirements"
 	       `(eq (nth 4 (decode-time date)) ,month-match)
 	       (error "ledger-schedule-constrain-numerical-month: month out of range %S" month-match)))
 	 (t
-	  (error "Improperly specified month constraint: " str)))))
+	  (error "Improperly specified month constraint: %s" str)))))
 
 (defun ledger-schedule-constrain-day (str)
   (let ((day-match t))
@@ -262,7 +262,7 @@ returns true if the date meets the requirements"
 	  ((/= 0 (setq day-match (string-to-number str)))
 	   `(eq (nth 3 (decode-time date)) ,day-match))
 	  (t
-	   (error "Improperly specified day constraint: " str)))))
+	   (error "Improperly specified day constraint: %s" str)))))
 
 (defun ledger-schedule-parse-date-descriptor (descriptor)
   "Parse the date descriptor, return the evaluator"

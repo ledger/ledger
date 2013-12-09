@@ -97,11 +97,10 @@
 (defun ledger-check-version ()
   "Verify that ledger works and is modern enough."
   (interactive)
-	(if ledger-mode-should-check-version
-			(if (setq ledger-works (ledger-version-greater-p ledger-version-needed))
-					(message "Good Ledger Version")
-					(message "Bad Ledger Version"))
-			setq ledger-works t))
+  (if ledger-mode-should-check-version
+      (if (setq ledger-works (ledger-version-greater-p ledger-version-needed))
+	  (message "Good Ledger Version")
+	(message "Bad Ledger Version"))))
 
 (provide 'ledger-exec)
 
