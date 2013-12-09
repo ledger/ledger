@@ -168,6 +168,14 @@ Can indent, complete or align depending on context."
   (ledger-mode-remove-extra-lines))
 
 
+(defvar ledger-mode-syntax-table
+	(let ((table (make-syntax-table)))
+		;; Support comments via the syntax table
+		(modify-syntax-entry ?\; "< b" table)
+		(modify-syntax-entry ?\n "> b" table)
+		table)
+	"Syntax table for `ledger-mode' buffers.")
+
 ;;;###autoload
 (define-derived-mode ledger-mode text-mode "Ledger"
 	"A mode for editing ledger data files."
@@ -175,6 +183,7 @@ Can indent, complete or align depending on context."
 	(ledger-schedule-check-available)
 	(ledger-post-setup)
 
+	(set-syntax-table ledger-mode-syntax-table)
 	(set (make-local-variable 'comment-start) "; ")
 	(set (make-local-variable 'comment-end) "")
 	(set (make-local-variable 'indent-tabs-mode) nil)
