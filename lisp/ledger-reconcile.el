@@ -190,7 +190,7 @@ Return the number of uncleared xacts found."
     (when (ledger-reconcile-get-buffer where)
       (with-current-buffer (ledger-reconcile-get-buffer where)
         (ledger-goto-line (cdr where))
-        (ledger-delete-current-transaction))
+        (ledger-delete-current-transaction (point)))
       (let ((inhibit-read-only t))
         (goto-char (line-beginning-position))
         (delete-region (point) (1+ (line-end-position)))
