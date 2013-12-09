@@ -291,16 +291,18 @@ Can indent, complete or align depending on context."
 (defun ledger-set-year (newyear)
   "Set ledger's idea of the current year to the prefix argument NEWYEAR."
   (interactive "p")
-  (if (= newyear 1)
-      (setq ledger-year (read-string "Year: " (ledger-current-year)))
-      (setq ledger-year (number-to-string newyear))))
+  (setq ledger-year
+        (if (= newyear 1)
+            (read-string "Year: " (ledger-current-year))
+          (number-to-string newyear))))
 
 (defun ledger-set-month (newmonth)
   "Set ledger's idea of the current month to the prefix argument NEWMONTH."
   (interactive "p")
-  (if (= newmonth 1)
-      (setq ledger-month (read-string "Month: " (ledger-current-month)))
-      (setq ledger-month (format "%02d" newmonth))))
+  (setq ledger-month
+        (if (= newmonth 1)
+            (read-string "Month: " (ledger-current-month))
+          (format "%02d" newmonth))))
 
 
 
