@@ -35,7 +35,8 @@
 
 (defcustom ledger-scale  10000
   "The 10 ^ maximum number of digits you would expect to appear in your reports.
-This is a cheap way of getting around floating point silliness in subtraction")
+This is a cheap way of getting around floating point silliness in subtraction"
+  :group 'ledger)
 
 (defun ledger-split-commodity-string (str)
   "Split a commoditized string, STR, into two parts.

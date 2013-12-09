@@ -221,7 +221,7 @@ ledger-magic-tab would cycle properly"
                                 pcomplete-expand-and-complete
                                 pcomplete-reverse)))
       (progn
-        (delete-backward-char pcomplete-last-completion-length)
+        (delete-char pcomplete-last-completion-length)
         (if (eq this-command 'pcomplete-reverse)
             (progn
               (push (car (last pcomplete-current-completions))
