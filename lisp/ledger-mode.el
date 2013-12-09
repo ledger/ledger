@@ -203,7 +203,6 @@ Can indent, complete or align depending on context."
 
 	(add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
 	(add-hook 'before-revert-hook 'ledger-occur-remove-all-overlays nil t)
-	(make-variable-buffer-local 'highlight-overlay)
 
 	(ledger-init-load-init-file)
 

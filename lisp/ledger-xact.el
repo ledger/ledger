@@ -36,7 +36,8 @@
   :group 'ledger
   :safe t)
 
-(defvar highlight-overlay (list))
+(defvar ledger-xact-highlight-overlay (list))
+(make-variable-buffer-local 'ledger-xact-highlight-overlay)
 
 (defun ledger-find-xact-extents (pos)
   "Return point for beginning of xact and and of xact containing position.
@@ -58,10 +59,10 @@ within the transaction."
   "Move the highlight overlay to the current transaction."
   (if ledger-highlight-xact-under-point
       (let ((exts (ledger-find-xact-extents (point)))
-	    (ovl highlight-overlay))
-	(if (not highlight-overlay)
+	    (ovl ledger-xact-highlight-overlay))
+	(if (not ledger-xact-highlight-overlay)
 	    (setq ovl
-		  (setq highlight-overlay
+		  (setq ledger-xact-highlight-overlay
 			(make-overlay (car exts)
 				      (cadr exts)
 				      (current-buffer) t nil)))
