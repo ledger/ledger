@@ -176,40 +176,8 @@ Can indent, complete or align depending on context."
 		table)
 	"Syntax table for `ledger-mode' buffers.")
 
-;;;###autoload
-(define-derived-mode ledger-mode text-mode "Ledger"
-	"A mode for editing ledger data files."
-	(ledger-check-version)
-	(ledger-schedule-check-available)
-	(ledger-post-setup)
-
-	(set-syntax-table ledger-mode-syntax-table)
-	(set (make-local-variable 'comment-start) "; ")
-	(set (make-local-variable 'comment-end) "")
-	(set (make-local-variable 'indent-tabs-mode) nil)
-
-	(if (boundp 'font-lock-defaults)
-			(set (make-local-variable 'font-lock-defaults)
-					 '(ledger-font-lock-keywords nil t)))
-	(setq font-lock-extend-region-functions
-				(list #'font-lock-extend-region-wholelines))
-	(setq font-lock-multiline nil)
-
-	(set (make-local-variable 'pcomplete-parse-arguments-function)
-			 'ledger-parse-arguments)
-	(set (make-local-variable 'pcomplete-command-completion-function)
-			 'ledger-complete-at-point)
-	(set (make-local-variable 'pcomplete-termination-string) "")
-
-	(add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
-	(add-hook 'before-revert-hook 'ledger-occur-remove-all-overlays nil t)
-	(make-variable-buffer-local 'highlight-overlay)
-
-	(ledger-init-load-init-file)
-
-	(set (make-local-variable 'indent-region-function) 'ledger-post-align-postings)
-
-	(let ((map (current-local-map)))
+(defvar ledger-mode-map
+  (let ((map (make-sparse-keymap)))
 		(define-key map [(control ?c) (control ?a)] 'ledger-add-transaction)
 		(define-key map [(control ?c) (control ?b)] 'ledger-post-edit-amount)
 		(define-key map [(control ?c) (control ?c)] 'ledger-toggle-current)
@@ -283,9 +251,42 @@ Can indent, complete or align depending on context."
 		(define-key map [add-xact] '(menu-item "Show upcoming transactions" ledger-schedule-upcoming :enable ledger-schedule-available))
 		(define-key map [sep3] '(menu-item "--"))
 		(define-key map [stats] '(menu-item "Ledger Statistics" ledger-display-ledger-stats :enable ledger-works))
-		(define-key map [fold-buffer] '(menu-item "Narrow to REGEX" ledger-occur))))
+		(define-key map [fold-buffer] '(menu-item "Narrow to REGEX" ledger-occur))
+    map)
+  "Keymap for `ledger-mode'.")
 
+;;;###autoload
+(define-derived-mode ledger-mode text-mode "Ledger"
+	"A mode for editing ledger data files."
+	(ledger-check-version)
+	(ledger-schedule-check-available)
+	(ledger-post-setup)
 
+	(set-syntax-table ledger-mode-syntax-table)
+	(set (make-local-variable 'comment-start) "; ")
+	(set (make-local-variable 'comment-end) "")
+	(set (make-local-variable 'indent-tabs-mode) nil)
+
+	(if (boundp 'font-lock-defaults)
+			(set (make-local-variable 'font-lock-defaults)
+					 '(ledger-font-lock-keywords nil t)))
+	(setq font-lock-extend-region-functions
+				(list #'font-lock-extend-region-wholelines))
+	(setq font-lock-multiline nil)
+
+	(set (make-local-variable 'pcomplete-parse-arguments-function)
+			 'ledger-parse-arguments)
+	(set (make-local-variable 'pcomplete-command-completion-function)
+			 'ledger-complete-at-point)
+	(set (make-local-variable 'pcomplete-termination-string) "")
+
+	(add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
+	(add-hook 'before-revert-hook 'ledger-occur-remove-all-overlays nil t)
+	(make-variable-buffer-local 'highlight-overlay)
+
+	(ledger-init-load-init-file)
+
+	(set (make-local-variable 'indent-region-function) 'ledger-post-align-postings))
 
 
 (defun ledger-set-year (newyear)

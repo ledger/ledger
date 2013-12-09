@@ -431,8 +431,7 @@ moved and recentered.  If they aren't strange things happen."
      (setq ledger-reconcile-sort-key ,sort-by)
      (ledger-reconcile-refresh)))
 
-(define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
-	"A mode for reconciling ledger entries."
+(defvar ledger-reconcile-mode-map
 	(let ((map (make-sparse-keymap)))
 		(define-key map [(control ?m)] 'ledger-reconcile-visit)
 		(define-key map [return] 'ledger-reconcile-visit)
@@ -482,8 +481,11 @@ moved and recentered.  If they aren't strange things happen."
 		(define-key map [menu-bar ledger-recon-menu fin] '("Finish" . ledger-reconcile-finish))
 		(define-key map [menu-bar ledger-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
 		(define-key map [menu-bar ledger-recon-menu sav] '("Save" . ledger-reconcile-save))
+		map)
+	"Keymap for `ledger-reconcile-mode'.")
 
-		(use-local-map map)))
+(define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
+	"A mode for reconciling ledger entries.")
 
 (provide 'ledger-reconcile)
 
