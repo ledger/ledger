@@ -1,6 +1,5 @@
 ((nil . ((tab-width . 2)
          (sentence-end-double-space . t)
-         (fill-column . 8)
          (bug-reference-url-format
           . "http://bugs.ledger-cli.org/show_bug.cgi?id=%s")))
  (c-mode . ((c-file-style . "ledger")
