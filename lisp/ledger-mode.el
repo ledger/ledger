@@ -29,6 +29,7 @@
 (require 'ledger-regex)
 (require 'esh-util)
 (require 'esh-arg)
+(require 'easymenu)
 (require 'ledger-commodities)
 (require 'ledger-complete)
 (require 'ledger-context)
@@ -210,50 +211,49 @@ Can indent, complete or align depending on context."
 
 		(define-key map [(meta ?p)] 'ledger-post-prev-xact)
 		(define-key map [(meta ?n)] 'ledger-post-next-xact)
-
-		(define-key map [menu-bar] (make-sparse-keymap "ledger-menu"))
-		(define-key map [menu-bar ledger-menu] (cons "Ledger" map))
-
-		(define-key map [report-kill] '(menu-item "Kill Report" ledger-report-kill :enable ledger-works))
-		(define-key map [report-edit] '(menu-item "Edit Report" ledger-report-edit :enable ledger-works))
-		(define-key map [report-save] '(menu-item "Save Report" ledger-report-save :enable ledger-works))
-		(define-key map [report-rrun] '(menu-item "Re-run Report" ledger-report-redo :enable ledger-works))
-		(define-key map [report-goto] '(menu-item "Goto Report" ledger-report-goto :enable ledger-works))
-		(define-key map [report-run] '(menu-item "Run Report" ledger-report :enable ledger-works))
-		(define-key map [sep5] '(menu-item "--"))
-		(define-key map [set-month] '(menu-item "Set Month" ledger-set-month :enable ledger-works))
-		(define-key map [set-year] '(menu-item "Set Year" ledger-set-year :enable ledger-works))
-		(define-key map [cust] '(menu-item "Customize Ledger Mode"  (lambda ()
-																																	(interactive)
-																																	(customize-group 'ledger))))
-		(define-key map [sep1] '("--"))
-		(define-key map [effective-date] '(menu-item "Set effective date" ledger-insert-effective-date))
-		(define-key map [sort-end] '(menu-item "Mark Sort End" ledger-sort-insert-end-mark))
-		(define-key map [sort-start] '(menu-item "Mark Sort Beginning" ledger-sort-insert-start-mark))
-		(define-key map [sort-buff] '(menu-item "Sort Buffer" ledger-sort-buffer))
-		(define-key map [sort-reg] '(menu-item "Sort Region" ledger-sort-region :enable mark-active))
-		(define-key map [align-xact] '(menu-item "Align Xact" ledger-post-align-xact))
-		(define-key map [align-reg] '(menu-item "Align Region" ledger-post-align-postings :enable mark-active))
-		(define-key map [clean-buf] '(menu-item "Clean-up Buffer" ledger-mode-clean-buffer))
-		(define-key map [sep2] '(menu-item "--"))
-		(define-key map [copy-xact] '(menu-item "Copy Trans at Point" ledger-copy-transaction-at-point))
-		(define-key map [toggle-post] '(menu-item "Toggle Current Posting" ledger-toggle-current))
-		(define-key map [toggle-xact] '(menu-item "Toggle Current Transaction" ledger-toggle-current-transaction))
-		(define-key map [sep4] '(menu-item "--"))
-		(define-key map [recon-account] '(menu-item "Reconcile Account" ledger-reconcile :enable ledger-works))
-		(define-key map [check-balance] '(menu-item "Check Balance" ledger-display-balance-at-point :enable ledger-works))
-		(define-key map [sep6] '(menu-item "--"))
-		(define-key map [edit-amount] '(menu-item "Calc on Amount" ledger-post-edit-amount))
-		(define-key map [sep] '(menu-item "--"))
-		(define-key map [delete-xact] '(menu-item "Delete Transaction" ledger-delete-current-transaction))
-		(define-key map [cmp-xact] '(menu-item "Complete Transaction" ledger-fully-complete-xact))
-		(define-key map [add-xact] '(menu-item "Add Transaction (ledger xact)" ledger-add-transaction :enable ledger-works))
-		(define-key map [add-xact] '(menu-item "Show upcoming transactions" ledger-schedule-upcoming :enable ledger-schedule-available))
-		(define-key map [sep3] '(menu-item "--"))
-		(define-key map [stats] '(menu-item "Ledger Statistics" ledger-display-ledger-stats :enable ledger-works))
-		(define-key map [fold-buffer] '(menu-item "Narrow to REGEX" ledger-occur))
     map)
   "Keymap for `ledger-mode'.")
+
+(easy-menu-define ledger-mode-menu ledger-mode-map
+  "Ledger menu"
+  '("Ledger"
+    ["Narrow to REGEX" ledger-occur]
+    ["Ledger Statistics" ledger-display-ledger-stats ledger-works]
+    "---"
+    ["Show upcoming transactions" ledger-schedule-upcoming ledger-schedule-available]
+    ["Add Transaction (ledger xact)" ledger-add-transaction ledger-works]
+    ["Complete Transaction" ledger-fully-complete-xact]
+    ["Delete Transaction" ledger-delete-current-transaction]
+    "---"
+    ["Calc on Amount" ledger-post-edit-amount]
+    "---"
+    ["Check Balance" ledger-display-balance-at-point ledger-works]
+    ["Reconcile Account" ledger-reconcile ledger-works]
+    "---"
+    ["Toggle Current Transaction" ledger-toggle-current-transaction]
+    ["Toggle Current Posting" ledger-toggle-current]
+    ["Copy Trans at Point" ledger-copy-transaction-at-point]
+    "---"
+    ["Clean-up Buffer" ledger-mode-clean-buffer]
+    ["Align Region" ledger-post-align-postings mark-active]
+    ["Align Xact" ledger-post-align-xact]
+    ["Sort Region" ledger-sort-region mark-active]
+    ["Sort Buffer" ledger-sort-buffer]
+    ["Mark Sort Beginning" ledger-sort-insert-start-mark]
+    ["Mark Sort End" ledger-sort-insert-end-mark]
+    ["Set effective date" ledger-insert-effective-date]
+    "---"
+    ["Customize Ledger Mode" (lambda () (interactive) (customize-group 'ledger))]
+    ["Set Year" ledger-set-year ledger-works]
+    ["Set Month" ledger-set-month ledger-works]
+    "---"
+    ["Run Report" ledger-report ledger-works]
+    ["Goto Report" ledger-report-goto ledger-works]
+    ["Re-run Report" ledger-report-redo ledger-works]
+    ["Save Report" ledger-report-save ledger-works]
+    ["Edit Report" ledger-report-edit ledger-works]
+    ["Kill Report" ledger-report-kill ledger-works]
+    ))
 
 ;;;###autoload
 (define-derived-mode ledger-mode text-mode "Ledger"

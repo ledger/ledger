@@ -25,6 +25,7 @@
 
 ;;; Code:
 
+(require 'easymenu)
 (eval-when-compile
   (require 'cl))
 
@@ -103,25 +104,25 @@ text that should replace the format specifier."
     (define-key map [(control ?c) (control ?l) (control ?e)]
       'ledger-report-edit)
     (define-key map [return] 'ledger-report-visit-source)
-
-
-    (define-key map [menu-bar] (make-sparse-keymap "ledger-rep"))
-    (define-key map [menu-bar ledger-rep] (cons "Reports" map))
-
-    (define-key map [menu-bar ledger-rep lrq] '("Quit" . ledger-report-quit))
-    (define-key map [menu-bar ledger-rep s2] '("--"))
-    (define-key map [menu-bar ledger-rep lrd] '("Scroll Down" . scroll-down))
-    (define-key map [menu-bar ledger-rep vis] '("Visit Source" . ledger-report-visit-source))
-    (define-key map [menu-bar ledger-rep lru] '("Scroll Up" . scroll-up))
-    (define-key map [menu-bar ledger-rep s1] '("--"))
-    (define-key map [menu-bar ledger-rep rev] '("Reverse report order" . ledger-report-reverse-lines))
-    (define-key map [menu-bar ledger-rep s0] '("--"))
-    (define-key map [menu-bar ledger-rep lrk] '("Kill Report" . ledger-report-kill))
-    (define-key map [menu-bar ledger-rep lrr] '("Re-run Report" . ledger-report-redo))
-    (define-key map [menu-bar ledger-rep lre] '("Edit Report" . ledger-report-edit))
-    (define-key map [menu-bar ledger-rep lrs] '("Save Report" . ledger-report-save))
     map)
   "Keymap for `ledger-report-mode'.")
+
+(easy-menu-define ledger-report-mode-menu ledger-report-mode-map
+  "Ledger report menu"
+  '("Reports"
+    ["Save Report" ledger-report-save]
+    ["Edit Report" ledger-report-edit]
+    ["Re-run Report" ledger-report-redo]
+    ["Kill Report" ledger-report-kill]
+    "---"
+    ["Reverse report order" ledger-report-reverse-lines]
+    "---"
+    ["Scroll Up" scroll-up]
+    ["Visit Source" ledger-report-visit-source]
+    ["Scroll Down" scroll-down]
+    "---"
+    ["Quit" ledger-report-quit]
+    ))
 
 (define-derived-mode ledger-report-mode text-mode "Ledger-Report"
   "A mode for viewing ledger reports.")

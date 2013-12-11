@@ -27,6 +27,8 @@
 
 ;;; Code:
 
+(require 'easymenu)
+
 (defvar ledger-buf nil)
 (defvar ledger-bufs nil)
 (defvar ledger-acct nil)
@@ -455,34 +457,36 @@ moved and recentered.  If they aren't strange things happen."
 		(define-key map [(control ?c) (control ?d)] (ledger-reconcile-change-sort-key-and-refresh "(date)"))
 
 		(define-key map [(control ?c) (control ?p)] (ledger-reconcile-change-sort-key-and-refresh "(payee)"))
-
-		(define-key map [menu-bar] (make-sparse-keymap "ledger-recon-menu"))
-		(define-key map [menu-bar ledger-recon-menu] (cons "Reconcile" map))
-		(define-key map [menu-bar ledger-recon-menu qui] '("Quit" . ledger-reconcile-quit))
-		(define-key map [menu-bar ledger-recon-menu sep1] '("--"))
-		(define-key map [menu-bar ledger-recon-menu pre] '("Previous Entry" . previous-line))
-		(define-key map [menu-bar ledger-recon-menu vis] '("Visit Source" . ledger-reconcile-visit))
-		(define-key map [menu-bar ledger-recon-menu nex] '("Next Entry" . next-line))
-		(define-key map [menu-bar ledger-recon-menu sep2] '("--"))
-		(define-key map [menu-bar ledger-recon-menu del] '("Delete Entry" . ledger-reconcile-delete))
-		(define-key map [menu-bar ledger-recon-menu add] '("Add Entry" . ledger-reconcile-add))
-		(define-key map [menu-bar ledger-recon-menu tog] '("Toggle Entry" . ledger-reconcile-toggle))
-		(define-key map [menu-bar ledger-recon-menu sep3] '("--"))
-		(define-key map [menu-bar ledger-recon-menu sort-orig] `("Sort by file order" . ,(ledger-reconcile-change-sort-key-and-refresh "(0)")))
-		(define-key map [menu-bar ledger-recon-menu sort-amt] `("Sort by amount" . ,(ledger-reconcile-change-sort-key-and-refresh "(amount)")))
-		(define-key map [menu-bar ledger-recon-menu sort-pay] `("Sort by date" . ,(ledger-reconcile-change-sort-key-and-refresh "(date)")))
-		(define-key map [menu-bar ledger-recon-menu sort-dat] `("Sort by payee" . ,(ledger-reconcile-change-sort-key-and-refresh "(payee)")))
-		(define-key map [menu-bar ledger-recon-menu sep4] '("--"))
-		(define-key map [menu-bar ledger-recon-menu bal] '("Show Cleared Balance" . ledger-display-balance))
-		(define-key map [menu-bar ledger-recon-menu tgt] '("Change Target Balance" . ledger-reconcile-change-target))
-		(define-key map [menu-bar ledger-recon-menu sep5] '("--"))
-		(define-key map [menu-bar ledger-recon-menu rna] '("Reconcile New Account" . ledger-reconcile))
-		(define-key map [menu-bar ledger-recon-menu sep6] '("--"))
-		(define-key map [menu-bar ledger-recon-menu fin] '("Finish" . ledger-reconcile-finish))
-		(define-key map [menu-bar ledger-recon-menu ref] '("Refresh" . ledger-reconcile-refresh))
-		(define-key map [menu-bar ledger-recon-menu sav] '("Save" . ledger-reconcile-save))
 		map)
 	"Keymap for `ledger-reconcile-mode'.")
+
+(easy-menu-define ledger-reconcile-mode-menu ledger-reconcile-mode-map
+  "Ledger reconcile menu"
+  `("Reconcile"
+    ["Save" ledger-reconcile-save]
+    ["Refresh" ledger-reconcile-refresh]
+    ["Finish" ledger-reconcile-finish]
+    "---"
+    ["Reconcile New Account" ledger-reconcile]
+    "---"
+    ["Change Target Balance" ledger-reconcile-change-target]
+    ["Show Cleared Balance" ledger-display-balance]
+    "---"
+    ["Sort by payee" ,(ledger-reconcile-change-sort-key-and-refresh "(payee)")]
+    ["Sort by date" ,(ledger-reconcile-change-sort-key-and-refresh "(date)")]
+    ["Sort by amount" ,(ledger-reconcile-change-sort-key-and-refresh "(amount)")]
+    ["Sort by file order" ,(ledger-reconcile-change-sort-key-and-refresh "(0)")]
+    "---"
+    ["Toggle Entry" ledger-reconcile-toggle]
+    ["Add Entry" ledger-reconcile-add]
+    ["Delete Entry" ledger-reconcile-delete]
+    "---"
+    ["Next Entry" next-line]
+    ["Visit Source" ledger-reconcile-visit]
+    ["Previous Entry" previous-line]
+    "---"
+    ["Quit" ledger-reconcile-quit]
+    ))
 
 (define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
 	"A mode for reconciling ledger entries.")
