@@ -95,6 +95,7 @@ text that should replace the format specifier."
     (define-key map [?k] 'ledger-report-kill)
     (define-key map [?e] 'ledger-report-edit)
     (define-key map [?q] 'ledger-report-quit)
+    (define-key map [?g] 'ledger-report-redo)
     (define-key map [(control ?c) (control ?l) (control ?r)]
       'ledger-report-redo)
     (define-key map [(control ?c) (control ?l) (control ?S)]
