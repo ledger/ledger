@@ -297,13 +297,28 @@ returns true if the date meets the requirements"
      (ledger-mode))
     (length candidates)))
 
-(defun ledger-schedule-upcoming ()
-  (interactive)
+(defun ledger-schedule-upcoming (file look-backward look-forward)
+  "Generate upcoming transaction
+
+FILE is the file containing the scheduled transaction,
+default to `ledger-schedule-file'.
+LOOK-BACKWARD is the number of day in the past to look at
+default to `ledger-schedule-look-backward'
+LOOK-FORWARD is the number of day in the futur to look at
+default to `ledger-schedule-look-forward'
+
+Use a prefix arg to change the default value"
+  (interactive (if current-prefix-arg
+                   (list (read-file-name "Schedule File: " () ledger-schedule-file t)
+                         (read-number "Look backward: " ledger-schedule-look-backward)
+                         (read-number "Look forward: " ledger-schedule-look-forward))
+                   (list ledger-schedule-file ledger-schedule-look-backward ledger-schedule-look-forward)))
   (ledger-schedule-create-auto-buffer
-   (ledger-schedule-scan-transactions ledger-schedule-file)
-   ledger-schedule-look-backward
-   ledger-schedule-look-forward
-   (current-buffer)))
+   (ledger-schedule-scan-transactions file)
+   look-backward
+   look-forward
+   (current-buffer))
+  (pop-to-buffer ledger-schedule-buffer-name))
 
 
 (provide 'ledger-schedule)
