@@ -49,6 +49,7 @@ syn region ledgerApply
     \ contains=ledgerApplyHead,ledgerApply,ledgerTransaction,ledgerComment
 syn match ledgerApplyHead /\%(^apply\s\+\)\@<=\S.*$/ contained
 
+highlight default link ledgerComment Comment
 highlight default link ledgerTransactionDate Constant
 highlight default link ledgerTransactionExpression Statement
 highlight default link ledgerMetadata Tag
