@@ -113,7 +113,7 @@ Leave point at the beginning of the thing under point"
     (cond ((looking-at "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.+?)\\)?\\s-+")
 	   (goto-char (match-end 0))
            'transaction)
-          ((looking-at "^\\s-+\\([*!]\\s-+\\)?[[(]?\\(.\\)")
+          ((looking-at "^\\s-+\\([*!]\\s-+\\)?[[(]?\\([^\\s-]\\)")
            (goto-char (match-beginning 2))
            'posting)
           ((looking-at "^\\(sun\\|mon\\|tue\\|wed\\|thu\\|fri\\|sat\\)\\s-+")
