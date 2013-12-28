@@ -117,11 +117,11 @@ Returns a list with (value commodity)."
 
 (defun ledger-number-to-string (n &optional decimal-comma)
   (let ((str (number-to-string n)))
-    (if (or decimal-comma
-	    (assoc "decimal-comma" ledger-environment-alist))
-	(while (string-match "\\." str)
-	  (setq str (replace-match "," nil nil str)))
-	str)))
+    (when (or decimal-comma
+              (assoc "decimal-comma" ledger-environment-alist))
+      (while (string-match "\\." str)
+        (setq str (replace-match "," nil nil str))))
+    str))
 
 (defun ledger-commodity-to-string (c1)
   "Return string representing C1.
