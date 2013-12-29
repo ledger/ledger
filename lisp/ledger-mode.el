@@ -145,6 +145,29 @@ Can indent, complete or align depending on context."
 
 (defvar ledger-mode-abbrev-table)
 
+(defun ledger-remove-effective-date ()
+  "Removes the effective date from a transaction or posting."
+  (interactive)
+  (let ((context (car (ledger-context-at-point))))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region (point-at-bol) (point-at-eol))
+        (beginning-of-line)
+        (cond ((eq 'xact context)
+               (re-search-forward ledger-iso-date-regexp)
+               (when (= (char-after) ?=)
+                 (let ((eq-pos (point)))
+                   (delete-region
+                    eq-pos
+                    (re-search-forward ledger-iso-date-regexp)))))
+              ((eq 'acct-transaction context)
+               ;; Match "; [=date]" & delete string
+               (when (re-search-forward
+                      (concat ledger-comment-regex
+                              "\\[=" ledger-iso-date-regexp "\\]")
+                      nil 'noerr)
+                 (replace-match ""))))))))
+
 (defun ledger-insert-effective-date ()
   (interactive)
   (let ((context (car (ledger-context-at-point)))
