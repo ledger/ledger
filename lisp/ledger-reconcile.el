@@ -109,7 +109,7 @@ And calculate the target-delta of the account being reconciled."
 	  (message "Pending balance: %s"
 		   (ledger-commodity-to-string pending))))))
 
-(defun is-stdin (file)
+(defun ledger-is-stdin (file)
   "True if ledger FILE is standard input."
   (or
    (equal file "")
@@ -279,7 +279,7 @@ and exit reconcile mode"
 (defun ledger-marker-where-xact-is (emacs-xact posting)
   "Find the position of the EMACS-XACT in the `ledger-buf'.
 POSTING is used in `ledger-clear-whole-transactions' is nil."
-  (let ((buf (if (is-stdin (nth 0 emacs-xact))
+  (let ((buf (if (ledger-is-stdin (nth 0 emacs-xact))
 		 ledger-buf
 		 (find-file-noselect (nth 0 emacs-xact)))))
     (cons
