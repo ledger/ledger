@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'easymenu)
+(require 'ledger-init)
 
 (defvar ledger-buf nil)
 (defvar ledger-bufs nil)
@@ -64,7 +65,7 @@ reconcile-finish will mark all pending posting cleared."
   :type 'boolean
   :group 'ledger-reconcile)
 
-(defcustom ledger-reconcile-default-date-format "%Y/%m/%d"
+(defcustom ledger-reconcile-default-date-format ledger-default-date-format
   "Default date format for the reconcile buffer"
   :type 'string
   :group 'ledger-reconcile)
@@ -109,7 +110,7 @@ And calculate the target-delta of the account being reconciled."
 	  (message "Pending balance: %s"
 		   (ledger-commodity-to-string pending))))))
 
-(defun is-stdin (file)
+(defun ledger-is-stdin (file)
   "True if ledger FILE is standard input."
   (or
    (equal file "")
@@ -279,7 +280,7 @@ and exit reconcile mode"
 (defun ledger-marker-where-xact-is (emacs-xact posting)
   "Find the position of the EMACS-XACT in the `ledger-buf'.
 POSTING is used in `ledger-clear-whole-transactions' is nil."
-  (let ((buf (if (is-stdin (nth 0 emacs-xact))
+  (let ((buf (if (ledger-is-stdin (nth 0 emacs-xact))
 		 ledger-buf
 		 (find-file-noselect (nth 0 emacs-xact)))))
     (cons
@@ -306,15 +307,14 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 		(if (looking-at "(")
 		    (read (current-buffer)))))))) ;current-buffer is the *temp* created above
     (if (and ledger-success (> (length xacts) 0))
-	(let ((date-format (cdr (assoc "date-format" ledger-environment-alist))))
+	(let ((date-format (or (cdr (assoc "date-format" ledger-environment-alist))
+												 ledger-default-date-format)))
 	  (dolist (xact xacts)
 	    (dolist (posting (nthcdr 5 xact))
 	      (let ((beg (point))
 		    (where (ledger-marker-where-xact-is xact posting)))
 		(insert (format "%s %-4s %-30s %-30s %15s\n"
-				(format-time-string (if date-format
-							date-format
-							ledger-reconcile-default-date-format) (nth 2 xact))
+                    (format-time-string date-format (nth 2 xact))
 				(if (nth 3 xact)
 				    (nth 3 xact)
 				    "")

@@ -30,6 +30,8 @@
 
 (defvar ledger-environment-alist nil)
 
+(defvar ledger-default-date-format "%Y/%m/%d")
+
 (defun ledger-init-parse-initialization (buffer)
   (with-current-buffer buffer
     (let (environment-alist)

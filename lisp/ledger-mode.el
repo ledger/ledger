@@ -145,16 +145,58 @@ Can indent, complete or align depending on context."
 
 (defvar ledger-mode-abbrev-table)
 
-(defun ledger-insert-effective-date ()
+(defun ledger-remove-effective-date ()
+  "Removes the effective date from a transaction or posting."
   (interactive)
-  (let ((context (car (ledger-context-at-point)))
-	(date-string (format-time-string (cdr (assoc "date-format" ledger-environment-alist)))))
-    (cond ((eq 'xact context)
-	   (beginning-of-line)
-	   (insert date-string "="))
-	  ((eq 'acct-transaction context)
-	   (end-of-line)
-	   (insert "  ; [=" date-string "]")))))
+  (let ((context (car (ledger-context-at-point))))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region (point-at-bol) (point-at-eol))
+        (beginning-of-line)
+        (cond ((eq 'xact context)
+               (re-search-forward ledger-iso-date-regexp)
+               (when (= (char-after) ?=)
+                 (let ((eq-pos (point)))
+                   (delete-region
+                    eq-pos
+                    (re-search-forward ledger-iso-date-regexp)))))
+              ((eq 'acct-transaction context)
+               ;; Match "; [=date]" & delete string
+               (when (re-search-forward
+                      (concat ledger-comment-regex
+                              "\\[=" ledger-iso-date-regexp "\\]")
+                      nil 'noerr)
+                 (replace-match ""))))))))
+
+(defun ledger-insert-effective-date (&optional arg)
+  "Insert an effective date to the transaction or posting.
+
+Replace the current effective date if there's one in the same
+line.
+
+With a prefix argument, remove the effective date. "
+  (interactive "P")
+  (if (and (listp arg)
+           (= 4 (prefix-numeric-value arg)))
+      (ledger-remove-effective-date)
+    (let* ((context (car (ledger-context-at-point)))
+           (date-format (or
+                         (cdr (assoc "date-format" ledger-environment-alist))
+                         ledger-default-date-format))
+           (date-string (format-time-string date-format)))
+      (save-restriction
+        (narrow-to-region (point-at-bol) (point-at-eol))
+        (cond
+         ((eq 'xact context)
+          (beginning-of-line)
+          (re-search-forward ledger-iso-date-regexp)
+          (when (= (char-after) ?=)
+            (ledger-remove-effective-date))
+          (insert "=" date-string))
+         ((eq 'acct-transaction context)
+          (end-of-line)
+          (ledger-remove-effective-date)
+          (insert "  ; [=" date-string "]")))))))
 
 (defun ledger-mode-remove-extra-lines ()
   (goto-char (point-min))
