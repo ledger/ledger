@@ -179,9 +179,11 @@ With a prefix argument, remove the effective date. "
   (if (and (listp arg)
            (= 4 (prefix-numeric-value arg)))
       (ledger-remove-effective-date)
-    (let ((context (car (ledger-context-at-point)))
-          (date-string (format-time-string
-                        (cdr (assoc "date-format" ledger-environment-alist)))))
+    (let* ((context (car (ledger-context-at-point)))
+           (date-format (or
+                         (cdr (assoc "date-format" ledger-environment-alist))
+                         ledger-default-date-format))
+           (date-string (format-time-string date-format)))
       (save-restriction
         (narrow-to-region (point-at-bol) (point-at-eol))
         (cond

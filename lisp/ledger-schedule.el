@@ -30,6 +30,8 @@
 ;; function slot of the symbol VARNAME.  Then use VARNAME as the
 ;; function without have to use funcall.
 
+(require 'ledger-init)
+
 (defgroup ledger-schedule nil
   "Support for automatically recommendation transactions."
   :group 'ledger)
@@ -288,7 +290,8 @@ returns true if the date meets the requirements"
   "Format CANDIDATE-ITEMS for display."
   (let ((candidates (ledger-schedule-list-upcoming-xacts candidate-items early horizon))
 	(schedule-buf (get-buffer-create ledger-schedule-buffer-name))
-	(date-format (cdr (assoc "date-format" ledger-environment-alist))))
+	(date-format (or (cdr (assoc "date-format" ledger-environment-alist))
+									 ledger-default-date-format)))
     (with-current-buffer schedule-buf
       (erase-buffer)
      (dolist (candidate candidates)
