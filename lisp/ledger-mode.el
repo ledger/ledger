@@ -145,6 +145,11 @@ Can indent, complete or align depending on context."
 
 (defvar ledger-mode-abbrev-table)
 
+(defvar ledger-date-string-today
+  (format-time-string (or
+        (cdr (assoc "date-format" ledger-environment-alist))
+        ledger-default-date-format)))
+
 (defun ledger-remove-effective-date ()
   "Removes the effective date from a transaction or posting."
   (interactive)
@@ -153,7 +158,7 @@ Can indent, complete or align depending on context."
       (save-restriction
         (narrow-to-region (point-at-bol) (point-at-eol))
         (beginning-of-line)
-        (cond ((eq 'xact context)
+        (cond ((eq 'pmnt-transaction context)
                (re-search-forward ledger-iso-date-regexp)
                (when (= (char-after) ?=)
                  (let ((eq-pos (point)))
@@ -187,7 +192,7 @@ With a prefix argument, remove the effective date. "
       (save-restriction
         (narrow-to-region (point-at-bol) (point-at-eol))
         (cond
-         ((eq 'xact context)
+         ((eq 'pmnt-transaction context)
           (beginning-of-line)
           (re-search-forward ledger-iso-date-regexp)
           (when (= (char-after) ?=)
@@ -320,7 +325,6 @@ With a prefix argument, remove the effective date. "
 			 'ledger-parse-arguments)
 	(set (make-local-variable 'pcomplete-command-completion-function)
 			 'ledger-complete-at-point)
-	(set (make-local-variable 'pcomplete-termination-string) "")
 
 	(add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
 	(add-hook 'before-revert-hook 'ledger-occur-remove-all-overlays nil t)
