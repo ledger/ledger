@@ -79,6 +79,8 @@
 (defconst ledger-account-cleared-regex
   "\\(^[ \t]+\\)\\(*\\s-*.*?\\)\\(  \\|\t\\|$\\)")
 
+(defconst ledger-metadata-regex
+  "[ \t]+\\(?2:;[ \t]+.+\\)$")
 
 (defmacro ledger-define-regexp (name regex docs &rest args)
   "Simplify the creation of a Ledger regex and helper functions."

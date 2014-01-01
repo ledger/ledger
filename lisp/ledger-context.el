@@ -42,16 +42,7 @@
 (defconst ledger-code-string "\\((.*)\\)?")
 (defconst ledger-payee-string "\\(.*\\)")
 
-(defmacro ledger-line-regex (&rest elements)
-  (let (regex-string)
-    (concat (dolist (e elements regex-string)
-	      (setq regex-string
-		    (concat regex-string
-			    (eval
-			     (intern
-			      (concat "ledger-" (symbol-name e) "-string")))))) "[ \t]*$")))
-
-(defmacro ledger-single-line-config2 (&rest elements)
+(defmacro ledger-single-line-config (&rest elements)
   "Take list of ELEMENTS and return regex and element list for use in context-at-point"
   (let (regex-string)
     `'(,(concat (dolist (e elements regex-string)
@@ -62,23 +53,25 @@
 				  (concat "ledger-" (symbol-name e) "-string")))))) "[ \t]*$")
        ,elements)))
 
-(defmacro ledger-single-line-config (&rest elements)
-  "Take list of ELEMENTS and return regex and element list for use in context-at-point"
-  `'(,(eval `(ledger-line-regex ,@elements))
-     ,elements))
-
 (defconst ledger-line-config
-  (list (list 'xact (list (ledger-single-line-config date nil status nil code nil payee nil comment)
-			  (ledger-single-line-config date nil status nil code nil payee)
-			  (ledger-single-line-config date nil status nil payee)))
-	(list 'acct-transaction (list (ledger-single-line-config indent comment)
-				      (ledger-single-line-config2 indent status account nil commodity amount nil comment)
-				      (ledger-single-line-config2 indent status account nil commodity amount)
-				      (ledger-single-line-config2 indent status account nil amount nil commodity comment)
-				      (ledger-single-line-config2 indent status account nil amount nil commodity)
-				      (ledger-single-line-config2 indent status account nil amount)
-				      (ledger-single-line-config2 indent status account nil comment)
-				      (ledger-single-line-config2 indent status account)))))
+  (list
+   (list 'pmnt-transaction
+         (list (ledger-single-line-config date nil status nil code nil payee nil comment)
+               (ledger-single-line-config date nil status nil code nil payee)
+               (ledger-single-line-config date nil status nil payee)
+               (ledger-single-line-config date nil code nil payee nil comment)
+               (ledger-single-line-config date nil code nil payee)
+               (ledger-single-line-config date nil payee)
+               (ledger-single-line-config date)))
+   (list 'acct-transaction
+         (list (ledger-single-line-config indent comment)
+               (ledger-single-line-config indent status account nil commodity amount nil comment)
+               (ledger-single-line-config indent status account nil commodity amount)
+               (ledger-single-line-config indent status account nil amount nil commodity comment)
+               (ledger-single-line-config indent status account nil amount nil commodity)
+               (ledger-single-line-config indent status account nil amount)
+               (ledger-single-line-config indent status account nil comment)
+               (ledger-single-line-config indent status account)))))
 
 (defun ledger-extract-context-info (line-type pos)
   "Get context info for current line with LINE-TYPE.
@@ -138,7 +131,7 @@ the fields in the line in a association list."
               ((memq first-char '(?\ ?\t))
                (ledger-extract-context-info 'acct-transaction pos))
               ((memq first-char '(?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
-               (ledger-extract-context-info 'xact pos))
+               (ledger-extract-context-info 'pmnt-transaction pos))
               ((equal first-char ?\=)
                '(automated-xact nil nil))
               ((equal first-char ?\~)
