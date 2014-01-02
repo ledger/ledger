@@ -184,22 +184,21 @@ Can indent, complete or align depending on context."
                       nil 'noerr)
                  (replace-match ""))))))))
 
-(defun ledger-insert-effective-date (&optional arg)
-  "Insert an effective date to the transaction or posting.
+(defun ledger-insert-effective-date (&optional date)
+  "Insert effective date `DATE' to the transaction or posting.
+
+If `DATE' is nil, prompt the user a date.
 
 Replace the current effective date if there's one in the same
 line.
 
 With a prefix argument, remove the effective date. "
-  (interactive "P")
-  (if (and (listp arg)
-           (= 4 (prefix-numeric-value arg)))
+  (interactive)
+  (if (and (listp current-prefix-arg)
+           (= 4 (prefix-numeric-value current-prefix-arg)))
       (ledger-remove-effective-date)
     (let* ((context (car (ledger-context-at-point)))
-           (date-format (or
-                         (cdr (assoc "date-format" ledger-environment-alist))
-                         ledger-default-date-format))
-           (date-string (format-time-string date-format)))
+           (date-string (or date (ledger-read-date "Effective date: "))))
       (save-restriction
         (narrow-to-region (point-at-bol) (point-at-eol))
         (cond
