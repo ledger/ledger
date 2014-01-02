@@ -80,6 +80,11 @@ reconcile-finish will mark all pending posting cleared."
 	:type 'string
 	:group 'ledger-reconcile)
 
+(defcustom ledger-reconcile-insert-effective-date nil
+  "If t, prompt for effective date when clearing transactions during reconciliation."
+  :type 'boolean
+  :group 'ledger-reconcile)
+
 (defun ledger-reconcile-get-cleared-or-pending-balance (buffer account)
   "Calculate the cleared or pending balance of the account."
 
@@ -136,7 +141,10 @@ And calculate the target-delta of the account being reconciled."
 	(forward-char)
 	(setq status (ledger-toggle-current (if ledger-reconcile-toggle-to-pending
 						'pending
-						'cleared))))
+						'cleared)))
+      (when ledger-reconcile-insert-effective-date
+        ;; Ask for effective date & insert it
+        (ledger-insert-effective-date)))
       ;; remove the existing face and add the new face
       (remove-text-properties (line-beginning-position)
 			      (line-end-position)
