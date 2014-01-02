@@ -135,8 +135,7 @@ MOMENT is an encoded date"
 (defun ledger-copy-transaction-at-point (date)
   "Ask for a new DATE and copy the transaction under point to that date.  Leave point on the first amount."
   (interactive  (list
-                 (read-string "Copy to date: " (ledger-year-and-month)
-                              'ledger-minibuffer-history)))
+                 (ledger-read-date "Copy to date: ")))
   (let* ((here (point))
 	 (extents (ledger-find-xact-extents (point)))
 	 (transaction (buffer-substring-no-properties (car extents) (cadr extents)))
@@ -167,7 +166,9 @@ If INSERT-AT-POINT is non-nil insert the transaction
 there, otherwise call `ledger-xact-find-slot' to insert it at the
 correct chronological place in the buffer."
   (interactive (list
-                (read-string "Transaction: " (ledger-year-and-month))))
+                ;; Note: This isn't "just" the date - it can contain
+                ;; other text too
+                (ledger-read-date "Transaction: ")))
   (let* ((args (with-temp-buffer
                  (insert transaction-text)
                  (eshell-parse-arguments (point-min) (point-max))))
