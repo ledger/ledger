@@ -53,8 +53,6 @@ Argument N is provided for compatibility and is not used."
                   ledger--hs-forward
                   nil)))
 
-(add-hook 'ledger-mode-hook 'hs-minor-mode)
-
 (provide 'ledger-hideshow)
 
 ;;; ledger-hideshow.el ends here
