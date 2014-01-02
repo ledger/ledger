@@ -99,6 +99,18 @@
 		      nil)))
     (ledger-read-string-with-default prompt default)))
 
+(defun ledger-read-date (prompt)
+  "Returns user-supplied date after `PROMPT', defaults to today."
+  (let* ((default (ledger-year-and-month))
+         (date (read-string prompt default
+                            'ledger-minibuffer-history)))
+    (if (or (string= date default)
+            (string= "" date))
+        (format-time-string
+         (or (cdr (assoc "date-format" ledger-environment-alist))
+             ledger-default-date-format))
+      date)))
+
 (defun ledger-read-string-with-default (prompt default)
   "Return user supplied string after PROMPT, or DEFAULT."
   (read-string (concat prompt
@@ -173,22 +185,21 @@ Can indent, complete or align depending on context."
                       nil 'noerr)
                  (replace-match ""))))))))
 
-(defun ledger-insert-effective-date (&optional arg)
-  "Insert an effective date to the transaction or posting.
+(defun ledger-insert-effective-date (&optional date)
+  "Insert effective date `DATE' to the transaction or posting.
+
+If `DATE' is nil, prompt the user a date.
 
 Replace the current effective date if there's one in the same
 line.
 
 With a prefix argument, remove the effective date. "
-  (interactive "P")
-  (if (and (listp arg)
-           (= 4 (prefix-numeric-value arg)))
+  (interactive)
+  (if (and (listp current-prefix-arg)
+           (= 4 (prefix-numeric-value current-prefix-arg)))
       (ledger-remove-effective-date)
     (let* ((context (car (ledger-context-at-point)))
-           (date-format (or
-                         (cdr (assoc "date-format" ledger-environment-alist))
-                         ledger-default-date-format))
-           (date-string (format-time-string date-format)))
+           (date-string (or date (ledger-read-date "Effective date: "))))
       (save-restriction
         (narrow-to-region (point-at-bol) (point-at-eol))
         (cond
