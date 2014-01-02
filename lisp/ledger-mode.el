@@ -99,6 +99,17 @@
 		      nil)))
     (ledger-read-string-with-default prompt default)))
 
+(defun ledger-read-date (prompt)
+  "Returns user-supplied date after `PROMPT', defaults to today."
+  (let* ((default (ledger-year-and-month))
+         (date (read-string prompt default)))
+    (if (or (string= date default)
+            (string= "" date))
+        (format-time-string
+         (or (cdr (assoc "date-format" ledger-environment-alist))
+             ledger-default-date-format))
+      date)))
+
 (defun ledger-read-string-with-default (prompt default)
   "Return user supplied string after PROMPT, or DEFAULT."
   (read-string (concat prompt
