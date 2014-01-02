@@ -102,7 +102,8 @@
 (defun ledger-read-date (prompt)
   "Returns user-supplied date after `PROMPT', defaults to today."
   (let* ((default (ledger-year-and-month))
-         (date (read-string prompt default)))
+         (date (read-string prompt default
+                            'ledger-minibuffer-history)))
     (if (or (string= date default)
             (string= "" date))
         (format-time-string
