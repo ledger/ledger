@@ -56,7 +56,7 @@ if(EMACS_EXECUTABLE)
 
   # install the byte-compiled emacs-lisp sources
   install(FILES ${EMACS_LISP_SOURCES} ${EMACS_LISP_BINARIES} ${EMACS_LISP_UNCOMPILABLE}
-    DESTINATION share/emacs/site-lisp)
+    DESTINATION share/emacs/site-lisp/ledger-mode)
 endif()
 
 ### CMakeLists.txt ends here
