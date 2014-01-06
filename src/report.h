@@ -521,7 +521,7 @@ public:
        "%(quoted(code)),"
        "%(quoted(payee)),"
        "%(quoted(display_account)),"
-       "%(quoted(commodity)),"
+       "%(quoted(commodity(scrub(display_amount)))),"
        "%(quoted(quantity(scrub(display_amount)))),"
        "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
        "%(quoted(join(note | xact.note)))\n");
