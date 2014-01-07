@@ -145,38 +145,9 @@ Return list."
                   (cdr root))
           'string-lessp))))
 
-(defun ledger-command-at-point ()
-  "Do appropriate completion for current context."
-  (let ((context (mapcar*
-                  (lambda(x) (if (symbolp x) (symbol-name x)))
-                  (ledger-context-at-point))))
-       (cond
-        ((string= "acct-transaction" (car context))
-         (concat (car context) "/" (nth 1 context)))
-        ((string= "pmnt-transaction" (car context))
-         (concat (car context) "/" (nth 1 context)))
-        (t
-         (car context)))))
-
 (defun ledger-complete-at-point ()
-  "Calls the right completion function for first argument completions."
-  (ignore
-   (funcall (or (pcomplete-find-completion-function
-                 (ledger-command-at-point))
-                pcomplete-default-completion-function))))
-
-(defun pcomplete/ledger-mode/empty-line ()
-  "Complete when at empty line."
-  (ignore
-   (ledger-add-transaction (read-string "Transaction: "
-                                        (ledger-year-and-month)) (point))))
-
-(defun pcomplete/ledger-mode/pmnt-transaction/date ()
-  "Complete when at date in transaction."
-  (ignore))
-
-(defun pcomplete/ledger-mode/pmnt-transaction/payee ()
-  "Complete when at payee in transaction."
+  "Do appropriate completion for the thing at point."
+  (interactive)
   (while (pcomplete-here
           (if (eq (save-excursion
                     (ledger-thing-at-point)) 'transaction)
@@ -197,24 +168,8 @@ Return list."
 		    (goto-char (line-end-position))
 		    (search-backward ";" (line-beginning-position) t)
 		    (skip-chars-backward " \t0123456789.,")
-		    (throw 'pcompleted t)))))))
-
-(defun pcomplete/ledger-mode/acct-transaction/indent ()
-  "Complete when at indent in transaction."
-  (ignore (ledger-thing-at-point)))
-
-(defun pcomplete/ledger-mode/acct-transaction/account ()
-  "Complete when at account in transaction."
-  (set (make-local-variable 'pcomplete-termination-string) "  ")
-  (pcomplete-here (ledger-accounts)))
-
-(defun pcomplete/ledger-mode/acct-transaction/amount ()
-  "Complete when at amount in transaction."
-  (ignore (ledger-post-edit-amount)))
-
-(defun pcomplete/ledger-mode/acct-transaction/comment ()
-  "Complete when at amount in transaction."
-  (pcomplete-here (ledger-find-metadata-in-buffer)))
+		    (throw 'pcompleted t)))
+	      (ledger-accounts)))))
 
 (defun ledger-fully-complete-xact ()
   "Completes a transaction if there is another matching payee in the buffer.
@@ -266,7 +221,7 @@ ledger-magic-tab would cycle properly"
                                 pcomplete-expand-and-complete
                                 pcomplete-reverse)))
       (progn
-        (delete-char pcomplete-last-completion-length)
+        (delete-backward-char pcomplete-last-completion-length)
         (if (eq this-command 'pcomplete-reverse)
             (progn
               (push (car (last pcomplete-current-completions))

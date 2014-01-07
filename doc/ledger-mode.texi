@@ -175,11 +175,6 @@ typing a close match to the payee. Ledger-mode will call @command{ledger
 xact} with the data you enter and place the transaction in the proper
 chronological place in the ledger.
 
-To complete just the part of the transaction where your cursor is at,
-Ledger-mode supports Emacs' universal @command{completion-at-point}
-command. You may bind this command to @kbd{C-M-i} since this is the
-default for Emacs programming modes.
-
 @node Reconciliation, Reports, Quick Add, Quick Demo
 @subsection Reconciliation
 @kindex C-c C-r
