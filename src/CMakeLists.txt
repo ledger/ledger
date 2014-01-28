@@ -244,11 +244,20 @@ endif()
 add_pch_rule(${PROJECT_BINARY_DIR}/system.hh LEDGER_SOURCES main.cc global.cc)
 
 if(BUILD_LIBRARY)
+  add_library(pyledger SHARED ${LEDGER_SOURCES})
+  add_ledger_library_dependencies(pyledger)
+  if(CMAKE_HOST_APPLE)
+    set_target_properties(pyledger PROPERTIES OUTPUT_NAME ledger)
+    set_target_properties(pyledger PROPERTIES SUFFIX .so)
+    set(CMAKE_SHARED_LIBRARY_PREFIX )
+  endif()
+
   add_library(libledger ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp)
   set_target_properties(libledger PROPERTIES OUTPUT_NAME ledger)
 
   add_executable(ledger main.cc global.cc)
 
+  install(TARGETS pyledger DESTINATION lib)
   install(TARGETS libledger DESTINATION lib)
   install(FILES ${LEDGER_INCLUDES} DESTINATION include/ledger)
 else()
