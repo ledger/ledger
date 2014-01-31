@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ledger/ledger.png?branch=master)](https://travis-ci.org/ledger/ledger)
+
 # Ledger: Command-Line Accounting
 
 Ledger is a powerful, double-entry accounting system that is accessed from the

@@ -1,0 +1,9 @@
+language: cpp
+compiler:
+  - clang
+  - gcc
+install: "./acprep dependencies"
+before_script: "./acprep opt make --python"
+script:
+  - "./acprep check -- --output-on-failure"
+  - "PYTHONPATH=. python python/demo.py"
