@@ -61,12 +61,25 @@ def which(program):
     return None
 
 class BoostInfo(object):
-    def dependencies(system):
-        if system == 'darwin':
+    def dependencies(self, system):
+        if system == 'darwin-homebrew':
+            return [ 'boost' ]
+
+        if system == 'darwin-macports':
             return [ 'boost-jam', 'boost', '+python27+universal' ]
 
         if system == 'centos':
             return [ 'boost-devel' ]
+
+        elif system == 'ubuntu-precise':
+            return [ 'autopoint',
+                     'libboost-dev',
+                     'libboost-test-dev',
+                     'libboost-regex-dev',
+                     'libboost-date-time-dev',
+                     'libboost-filesystem-dev',
+                     'libboost-iostreams-dev',
+                     'libboost-python-dev' ]
 
         elif system == 'ubuntu-lucid':
             return [ 'bjam', 'autopoint',
@@ -526,7 +539,16 @@ class PrepareBuild(CommandLineApp):
                     'libedit' ,'+universal',
                     'texlive-xetex', 'doxygen', 'graphviz', 'texinfo',
                     'lcov', 'sloccount'
-                ] + BoostInfo.dependencies('darwin')
+                ] + BoostInfo().dependencies('darwin-macports')
+                self.log.info('Executing: ' + ' '.join(packages))
+                self.execute(*packages)
+            elif exists('/usr/local/bin/brew') or exists('/opt/local/bin/brew'):
+                self.log.info('Looks like you are using Homebrew on OS X')
+                packages = [
+                    'brew', 'install',
+                    'cmake', 'ninja',
+                    'mpfr', 'gmp',
+                ] + BoostInfo().dependencies('darwin-homebrew')
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
             elif exists('/sw/bin/fink'):
@@ -541,7 +563,25 @@ class PrepareBuild(CommandLineApp):
                     release = open('/etc/lsb-release')
                     info = release.read()
                     release.close()
-                    if re.search('karmic', info):
+                    if re.search('precise', info):
+                        self.log.info('Looks like you are using APT on Ubuntu Precise')
+                        packages = [
+                            'sudo', 'apt-get', 'install',
+                            'build-essential',
+                            'libtool',
+                            'cmake',
+                            'zlib1g-dev',
+                            'libbz2-dev',
+                            'python-dev',
+                            'libgmp-dev',
+                            'libmpfr-dev',
+                            'gettext',
+                            'libedit-dev',
+                            'texinfo',
+                            'lcov',
+                            'sloccount'
+                        ] + BoostInfo().dependencies('ubuntu-precise')
+                    elif re.search('karmic', info):
                         self.log.info('Looks like you are using APT on Ubuntu Karmic')
                         packages = [
                             'sudo', 'apt-get', 'install',
@@ -563,7 +603,7 @@ class PrepareBuild(CommandLineApp):
                             'texinfo',
                             'lcov',
                             'sloccount'
-                        ] + BoostInfo.dependencies('ubuntu-karmic')
+                        ] + BoostInfo().dependencies('ubuntu-karmic')
                     elif re.search('hardy', info):
                         self.log.info('Looks like you are using APT on Ubuntu Hardy')
                         packages = [
