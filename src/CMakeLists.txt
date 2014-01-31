@@ -261,7 +261,12 @@ if(BUILD_LIBRARY)
 
   install(TARGETS pyledger DESTINATION lib)
   install(TARGETS libledger DESTINATION lib)
-  install(FILES ${LEDGER_INCLUDES} DESTINATION include/ledger)
+  install(FILES ${LEDGER_INCLUDES}
+                ${PROJECT_SOURCE_DIR}/lib/sha1.h
+                ${PROJECT_SOURCE_DIR}/lib/utfcpp/source/utf8.h
+                DESTINATION include/ledger)
+  install(DIRECTORY ${PROJECT_SOURCE_DIR}/lib/utfcpp/source/utf8
+                DESTINATION include/ledger)
 else()
   add_executable(ledger
     ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp main.cc global.cc)
