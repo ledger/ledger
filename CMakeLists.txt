@@ -232,9 +232,6 @@ find_opt_library_and_header(EDIT_PATH histedit.h EDIT_LIB edit HAVE_EDIT)
 ########################################################################
 
 macro(add_ledger_library_dependencies _target)
-  if(BUILD_LIBRARY)
-    target_link_libraries(${_target} libledger)
-  endif()
   target_link_libraries(${_target} ${MPFR_LIB})
   target_link_libraries(${_target} ${GMP_LIB})
   if(HAVE_EDIT)

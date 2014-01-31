@@ -244,28 +244,35 @@ endif()
 add_pch_rule(${PROJECT_BINARY_DIR}/system.hh LEDGER_SOURCES main.cc global.cc)
 
 if(BUILD_LIBRARY)
-  add_library(pyledger SHARED ${LEDGER_SOURCES})
+  add_library(libledger SHARED ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp global.cc)
+  add_ledger_library_dependencies(libledger)
+  set_target_properties(libledger PROPERTIES PREFIX "")
+
+  add_library(pyledger SHARED ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp global.cc)
   add_ledger_library_dependencies(pyledger)
+  set_target_properties(pyledger PROPERTIES PREFIX "")
+  set_target_properties(pyledger PROPERTIES OUTPUT_NAME ledger)
   if(CMAKE_HOST_APPLE)
-    set_target_properties(pyledger PROPERTIES OUTPUT_NAME ledger)
     set_target_properties(pyledger PROPERTIES SUFFIX .so)
-    set(CMAKE_SHARED_LIBRARY_PREFIX )
   endif()
 
-  add_library(libledger ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp)
-  set_target_properties(libledger PROPERTIES OUTPUT_NAME ledger)
-
-  add_executable(ledger main.cc global.cc)
+  add_executable(ledger main.cc)
+  target_link_libraries(ledger libledger)
 
   install(TARGETS pyledger DESTINATION lib)
   install(TARGETS libledger DESTINATION lib)
-  install(FILES ${LEDGER_INCLUDES} DESTINATION include/ledger)
+  install(FILES ${LEDGER_INCLUDES}
+                ${PROJECT_SOURCE_DIR}/lib/sha1.h
+                ${PROJECT_SOURCE_DIR}/lib/utfcpp/source/utf8.h
+                DESTINATION include/ledger)
+  install(DIRECTORY ${PROJECT_SOURCE_DIR}/lib/utfcpp/source/utf8
+                DESTINATION include/ledger)
 else()
   add_executable(ledger
     ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp main.cc global.cc)
+  add_ledger_library_dependencies(ledger)
 endif()
 
-add_ledger_library_dependencies(ledger)
 
 install(TARGETS ledger DESTINATION bin)
 
