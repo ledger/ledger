@@ -941,7 +941,7 @@ class PrepareBuild(CommandLineApp):
             os.chdir(self.source_dir)
 
     def phase_check(self, *args):
-        self.log.info('Executing phase: update')
+        self.log.info('Executing phase: check')
         build_dir = self.ensure(self.build_directory())
         try:
             self.log.debug('Changing directory to ' + build_dir)
