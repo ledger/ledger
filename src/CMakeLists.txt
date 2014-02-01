@@ -278,8 +278,15 @@ print(s.get_python_lib(True, prefix=''))"
 
   if (PYTHON_SITE_PACKAGES)
     # FIXME: symlink would be sufficient
-    install(TARGETS libledger
-      DESTINATION ${PYTHON_SITE_PACKAGES} RENAME "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    set(_ledger_python_module_name "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    add_custom_command(
+      TARGET libledger POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_FILE:libledger> "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}")
+    install(
+      FILES "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}"
+      DESTINATION ${PYTHON_SITE_PACKAGES})
+
   else()
     message(WARNING "PYTHON_SITE_PACKAGES not set. Will not install python module.")
   endif()
