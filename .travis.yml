@@ -7,3 +7,8 @@ before_script: "./acprep opt make --python"
 script:
   - "./acprep check -- --output-on-failure"
   - "PYTHONPATH=. python python/demo.py"
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+  irc: "chat.freenode.net#ledger"
