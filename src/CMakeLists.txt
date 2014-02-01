@@ -257,7 +257,7 @@ if(BUILD_LIBRARY)
   set_target_properties(libledger PROPERTIES
     PREFIX ""
     #INSTALL_NAME_DIR "@executable_path/../lib"
-    INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
+    INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
     VERSION ${Ledger_VERSION_MAJOR}
     SOVERSION ${Ledger_VERSION_MAJOR})
 
@@ -287,8 +287,18 @@ print(s.get_python_lib(True, prefix=''))"
     CACHE PATH "python module directory (${_TMP_PYTHON_SITE_PACKAGES})")
 
   if (PYTHON_SITE_PACKAGES)
-    # FIXME: symlink would be sufficient
-    set(_ledger_python_module_name "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    if(WIN32 AND NOT CYGWIN)
+      set(_ledger_python_module_name "ledger.pyd")
+    elseif(CMAKE_HOST_APPLE)
+      set(_ledger_python_module_name "ledger.so")
+    else()
+      set(_ledger_python_module_name "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    endif()
+
+    # FIXME: symlink would be sufficient:
+    # maybe using install(CODE "...") and
+    # execute_process(COMMAND "${CMAKE_COMMAND}" -E create_symlink ...).
+    # Windows will need a special case due to not supporting symlinks.
     add_custom_command(
       TARGET libledger POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
