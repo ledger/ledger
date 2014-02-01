@@ -254,13 +254,23 @@ include(GNUInstallDirs)
 if(BUILD_LIBRARY)
   add_library(libledger SHARED ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp)
   add_ledger_library_dependencies(libledger)
-  set_property(TARGET libledger PROPERTY PREFIX "")
+  set_target_properties(libledger PROPERTIES
+    PREFIX ""
+    #INSTALL_NAME_DIR "@executable_path/../lib"
+    INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib"
+    VERSION ${Ledger_VERSION_MAJOR}
+    SOVERSION ${Ledger_VERSION_MAJOR})
 
   add_executable(ledger main.cc global.cc)
   target_link_libraries(ledger libledger)
 
   install(TARGETS libledger DESTINATION ${CMAKE_INSTALL_LIBDIR})
-  install(FILES ${LEDGER_INCLUDES} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
+  install(FILES ${LEDGER_INCLUDES}
+    ${PROJECT_SOURCE_DIR}/lib/sha1.h
+    ${PROJECT_SOURCE_DIR}/lib/utfcpp/source/utf8.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
+  install(DIRECTORY ${PROJECT_SOURCE_DIR}/lib/utfcpp/source/utf8
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
 else()
   add_executable(ledger
     ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp main.cc global.cc)
@@ -286,7 +296,6 @@ print(s.get_python_lib(True, prefix=''))"
     install(
       FILES "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}"
       DESTINATION ${PYTHON_SITE_PACKAGES})
-
   else()
     message(WARNING "PYTHON_SITE_PACKAGES not set. Will not install python module.")
   endif()
