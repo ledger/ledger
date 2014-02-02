@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2014, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -127,7 +127,7 @@ public:
       out << '-' << Ledger_VERSION_DATE;
     out << _(", the command-line accounting tool");
     out <<
-      _("\n\nCopyright (c) 2003-2013, John Wiegley.  All rights reserved.\n\n\
+      _("\n\nCopyright (c) 2003-2014, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.");
     out << std::endl;
