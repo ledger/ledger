@@ -71,7 +71,7 @@ class BoostInfo(object):
         if system == 'centos':
             return [ 'boost-devel' ]
 
-        elif system == 'ubuntu-precise':
+        elif system == 'ubuntu-saucy' or system == 'ubuntu-precise':
             return [ 'autopoint',
                      'libboost-dev',
                      'libboost-test-dev',
@@ -563,7 +563,26 @@ class PrepareBuild(CommandLineApp):
                     release = open('/etc/lsb-release')
                     info = release.read()
                     release.close()
-                    if re.search('precise', info):
+                    if re.search('saucy', info):
+                        self.log.info('Looks like you are using APT on Ubuntu Saucy')
+                        packages = [
+                            'sudo', 'apt-get', 'install',
+                            'build-essential',
+                            'libtool',
+                            'cmake',
+                            'ninja-build',
+                            'zlib1g-dev',
+                            'libbz2-dev',
+                            'python-dev',
+                            'libgmp-dev',
+                            'libmpfr-dev',
+                            'gettext',
+                            'libedit-dev',
+                            'texinfo',
+                            'lcov',
+                            'sloccount'
+                        ] + BoostInfo().dependencies('ubuntu-saucy')
+                    elif re.search('precise', info):
                         self.log.info('Looks like you are using APT on Ubuntu Precise')
                         packages = [
                             'sudo', 'apt-get', 'install',
