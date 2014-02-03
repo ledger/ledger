@@ -252,11 +252,11 @@ add_pch_rule(${PROJECT_BINARY_DIR}/system.hh LEDGER_SOURCES main.cc global.cc)
 include(GNUInstallDirs)
 
 if(BUILD_LIBRARY)
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
   add_library(libledger SHARED ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp)
   add_ledger_library_dependencies(libledger)
   set_target_properties(libledger PROPERTIES
     PREFIX ""
-    #INSTALL_NAME_DIR "@executable_path/../lib"
     INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
     VERSION ${Ledger_VERSION_MAJOR}
     SOVERSION ${Ledger_VERSION_MAJOR})
