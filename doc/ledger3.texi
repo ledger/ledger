@@ -346,13 +346,13 @@ for each.
 
 To find the balances of all of your accounts, run this command:
 
-@smallexample
+@smallexample @c command:1071890
 $ ledger -f drewr3.dat balance
 @end smallexample
 
 Ledger will generate:
 
-@smallexample
+@smallexample @c output:1071890
          $ -3,804.00  Assets
           $ 1,396.00    Checking
              $ 30.00      Business
@@ -381,8 +381,11 @@ pare this down to show only the accounts you want.
 
 A more useful report is to show only your Assets and Liabilities:
 
-@smallexample
+@smallexample @c command:5BF4D8E
 $ ledger -f drewr3.dat balance Assets Liabilities
+@end smallexample
+
+@smallexample @c output:5BF4D8E
          $ -3,804.00  Assets
           $ 1,396.00    Checking
              $ 30.00      Business
@@ -402,16 +405,16 @@ $ ledger -f drewr3.dat balance Assets Liabilities
 
 To show all transactions and a running total:
 
-@smallexample
+@smallexample @c command:66E3A2C
 $ ledger -f drewr3.dat register
 @end smallexample
 
 @noindent
 Ledger will generate:
 
-@smallexample
+@smallexample @c output:66E3A2C
 10-Dec-01 Checking balance      Assets:Checking          $ 1,000.00   $ 1,000.00
-                                Equity:Opening Balances $ -1,000.00            0
+                                Equit:Opening Balances  $ -1,000.00            0
 10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
                                 Expense:Food:Groceries      $ 37.50      $ 75.00
                                 Expense:Food:Groceries      $ 37.50     $ 112.50
@@ -450,8 +453,11 @@ interested in seeing transactions for:
 @cindex accounts, limiting by
 @cindex limiting by accounts
 
-@smallexample
+@smallexample @c command:96B0EB3
 $ ledger -f drewr3.dat register Groceries
+@end smallexample
+
+@smallexample @c output:96B0EB3
 10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
                                 Expense:Food:Groceries      $ 37.50      $ 75.00
                                 Expense:Food:Groceries      $ 37.50     $ 112.50
@@ -465,8 +471,11 @@ $ ledger -f drewr3.dat register Groceries
 @noindent
 Which matches the balance reported for the @samp{Groceries} account:
 
-@smallexample
+@smallexample @c command:AECD64E
 $ ledger -f drewr3.dat balance Groceries
+@end smallexample
+
+@smallexample @c output:AECD64E
             $ 334.00  Expenses:Food:Groceries
 @end smallexample
 
@@ -474,8 +483,11 @@ $ ledger -f drewr3.dat balance Groceries
 If you would like to find transaction to only a certain payee use
 @samp{payee} or @samp{@@}:
 
-@smallexample
+@smallexample @c command:C6BC57E
 $ ledger -f drewr3.dat register payee "Organic"
+@end smallexample
+
+@smallexample @c output:C10BC57E
 10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
                                 Expense:Food:Groceries      $ 37.50      $ 75.00
                                 Expense:Food:Groceries      $ 37.50     $ 112.50
@@ -497,8 +509,11 @@ a check to clear, but you should treat it as money spent.  The
 @command{cleared} report will not format correctly for accounts that
 contain multiple commodities):
 
-@smallexample
+@smallexample @c command:B86F6A6
 $ ledger -f drewr3.dat cleared
+@end smallexample
+
+@smallexample @c output:B86F6A6
      $ -3,804.00            $ 775.00                 Assets
       $ 1,396.00            $ 775.00    10-Dec-20      Checking
          $ 30.00                   0                     Business
@@ -517,8 +532,8 @@ $ ledger -f drewr3.dat cleared
         $ -20.00                   0                   MasterCard
         $ 200.00                   0                   Mortgage:Principal
        $ -243.60                   0                   Tithe
-----------------    ----------------    ---------
-       $ -243.60                   0
+----------------  ----------------    ---------
+       $ -243.60                   0             
 @end smallexample
 
 @noindent
@@ -3826,8 +3841,11 @@ note the implicit logical and between @samp{Auto} and
 If you want the entire contents of a branch of your account tree, use
 the highest common name in the branch:
 
-@smallexample
+@smallexample @c command:B0468E1
 $ ledger balance -f drewr3.dat Income
+@end smallexample
+
+@smallexample @c output:B0468E1
          $ -2,030.00  Income
          $ -2,000.00    Salary
             $ -30.00    Sales
@@ -3838,15 +3856,25 @@ $ ledger balance -f drewr3.dat Income
 You can use general regular expressions in nearly anyplace Ledger
 needs a string:
 
-@smallexample
+@smallexample @c command:EAE389F
 $ ledger balance -f drewr3.dat ^Bo
+@end smallexample
+@smallexample @c output:EAE389F
+@end smallexample
+
+This first example looks for any account starting with @samp{Bo}, of
+which there are none.
+
+@smallexample @c command:E2AF6AD
 $ ledger balance -f drewr3.dat Bo
+@end smallexample
+
+@smallexample @c output:E2AF6AD
              $ 20.00  Expenses:Books
 @end smallexample
 
-The first example looks for any account starting with @samp{Bo}, of
-which there are none.  The second looks for any account with @samp{Bo},
-which is @samp{Expenses:Books}.
+This second example looks for any account with @samp{Bo}, which is
+@samp{Expenses:Books}.
 
 @cindex limit by payees
 @findex --limit @var{EXPR}
@@ -5596,22 +5624,23 @@ Format Codes}).
 @item --master-account @var{STR}
 Prepend all account names with the argument.
 
-@smallexample
-$ ledger -f test/input/drewr3.dat bal --master-account HUMBUG
+@smallexample @c command:A76BB56
+$ ledger -f drewr3.dat bal --no-total --master-account HUMBUG
+@end smallexample
+
+@smallexample @c output:A76BB56
                    0  HUMBUG
          $ -3,804.00    Assets
           $ 1,396.00      Checking
              $ 30.00        Business
          $ -5,200.00      Savings
-             $ 20.00    Books
          $ -1,000.00    Equity:Opening Balances
-          $ 6,634.00    Expenses
-         $ 11,000.00      Auto
+          $ 6,654.00    Expenses
+          $ 5,500.00      Auto
              $ 20.00      Books
             $ 300.00      Escrow
             $ 334.00      Food:Groceries
             $ 500.00      Interest:Mortgage
-         $ -5,520.00      Assets:Checking
          $ -2,030.00    Income
          $ -2,000.00      Salary
             $ -30.00      Sales
