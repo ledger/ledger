@@ -2979,7 +2979,7 @@ after the amount or amount expression:
 @end smallexample
 
 When you do this, since Ledger can now figure out the balancing amount
-from the first posting's cost, you can elide the otheramount:
+from the first posting's cost, you can elide the other amount:
 
 @smallexample
 2012-03-10 My Broker
@@ -5339,7 +5339,7 @@ Specify the format for the plot output.
 
 @item --display @var{EXPR}
 @itemx -d @var{EXPR}
-Display only posting that meet the criterias in the @var{EXPR}.
+Display only posting that meet the criteria in the @var{EXPR}.
 
 @item --date-format @var{DATE_FORMAT}
 @itemx -y @var{DATE_FORMAT}
