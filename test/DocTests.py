@@ -26,6 +26,8 @@ class DocTests:
     self.examples = dict()
     self.testin_token = 'command'
     self.testout_token = 'output'
+    self.testdat_token = 'input'
+    self.test_files = list()
 
   def read_example(self):
     endexample = re.compile(r'^@end\s+smallexample\s*$')
@@ -41,7 +43,8 @@ class DocTests:
     return hashlib.sha1(example.rstrip()).hexdigest()[0:7].upper()
 
   def find_examples(self):
-    startexample = re.compile(r'^@smallexample\s+@c\s+(%s|%s)(?::([\dA-Fa-f]+))?' % (self.testin_token, self.testout_token))
+    startexample = re.compile(r'^@smallexample\s+@c\s+(%s|%s|%s)(?::([\dA-Fa-f]+))?'
+        % (self.testin_token, self.testout_token, self.testdat_token))
     while True:
       line = self.file.readline()
       self.current_line += 1
@@ -87,10 +90,16 @@ class DocTests:
         command = example[self.testin_token][self.testin_token]
       except KeyError:
         command = None
+
       try:
         output = example[self.testout_token][self.testout_token]
       except KeyError:
         output = None
+
+      try:
+        input = example[self.testdat_token][self.testdat_token]
+      except KeyError:
+        input = None
 
       if command and output:
         command = command.rstrip().split()
@@ -99,19 +108,37 @@ class DocTests:
         command[index] = self.ledger
         command.insert(index+1, '--init-file')
         command.insert(index+2, '/dev/null')
-        scriptpath = os.path.dirname(os.path.realpath(__file__))
-        test_input_dir = scriptpath + '/../test/input/'
-        for i, arg in enumerate(command):
-          if '.dat' in arg or '.ledger' in arg:
-            if os.path.exists(test_input_dir + arg):
-              command[i] = test_input_dir + arg
         try:
-          verify = subprocess.check_output(command)#.decode('utf-8')
+          findex = command.index('-f')
+        except ValueError:
+          try:
+            findex = command.index('--file')
+          except ValueError:
+            findex = index+1
+            command.insert(findex, '--file')
+            command.insert(findex+1, test_id + '.dat')
+            
+        if findex:
+          scriptpath = os.path.dirname(os.path.realpath(__file__))
+          test_input_dir = scriptpath + '/../test/input/'
+          test_file = command[findex+1]
+          test_file_created = False
+          if not os.path.exists(test_file):
+            if input:
+              test_file_created = True
+              with open(test_file, 'w') as f:
+                f.write(input)
+            elif os.path.exists(test_input_dir + test_file):
+              command[findex+1] = test_input_dir + test_file
+        try:
+          verify = subprocess.check_output(command)
         except:
           verify = str()
+        if test_file_created:
+          os.remove(test_file)
         valid = (output == verify)
         if self.verbose:
-          print test_id, ':', u'Passed' if valid else u'FAILED'
+          print test_id, ':', 'Passed' if valid else 'FAILED'
         else:
           sys.stdout.write('.' if valid else 'E')
 
