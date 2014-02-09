@@ -20,6 +20,67 @@
 @c Restructuring manual ideas
 @c http://beyondgrep.com/documentation/ack-2.04-man.html
 
+@c How to make documented ledger examples validate automatically.
+@c
+@c The test/DocTests.py script will be run along the with the other
+@c tests when using ctest or acprep check.
+@c The script parses the texinfo file and looks for three kinds of
+@c specially marked @smallexamples, then it will run the ledger
+@c command from the exmaple, and compare the results with the output
+@c from the documentation.
+@c
+@c To specially mark a @smallexample append @c command:UUID, where
+@c UUID is the first 7 digits from the commands sha1sum, e.g.:
+@c 
+@c @smallexample @c command:CDE330A
+@c $ ledger -f sample.dat reg expenses
+@c @end smallexample
+@c 
+@c Then DocTests.py will look for corresponding documented output,
+@c which may appear anywhere in the file, and is marked with
+@c @smallexample @c output:UUID where UUID is the UUID from the
+@c corresponding ledger command example, e.g.:
+@c 
+@c @smallexample @c output:CDE330A
+@c 04-May-27 Book Store            Expenses:Books               $20.00       $20.00
+@c                                 Expenses:Cards               $40.00       $60.00
+@c                                 Expenses:Docs                $30.00       $90.0
+@c @end smallexample
+@c 
+@c Now where does this data in sample.dat come from?
+@c DocTests.py is a bit smart about ledger's file argument, since
+@c it will check if the given filename exists in the test/input/
+@c directory.
+@c 
+@c Sometimes the journal data for an example is specified within
+@c the documentation itself, in that case the journal example data
+@c needs to be specially marked as well using @smallexample @c input:UUID,
+@c again with the UUID being the UUID of the corresponding ledger example
+@c command, e.g.:
+@c 
+@c @smallexample @c input:35CB2A3
+@c 2014/02/09 The Italian Place
+@c   Expenses:Food:Dining                    $ 36.84
+@c   Assets:Cash
+@c @end smallexample
+@c 
+@c @smallexample @c command:35CB2A3
+@c $ ledger -f inline.dat accounts
+@c @end smallexample
+@c 
+@c @smallexample @c output:35CB2A3
+@c Assets:Cash
+@c Expenses:Food:Dining
+@c @end smallexample
+@c 
+@c Additionally DocTests.py will pass --init-file /dev/null to ledger to
+@c ignore any default arguments to ledger the user running the tests
+@c has configured.
+@c 
+@c To manually run the tests in this file run:
+@c $ ./test/DocTests.py -vv --ledger ./ledger --file ./test/ledger3.texi
+ 
+
 @copying
 
 Copyright @copyright{} 2003–2014, John Wiegley.  All rights reserved.
