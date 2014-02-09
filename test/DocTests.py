@@ -83,7 +83,7 @@ class DocTests:
             }
 
   def test_examples(self):
-    failed = 0
+    failed = set()
     for test_id in self.examples:
       example = self.examples[test_id]
       try:
@@ -143,14 +143,17 @@ class DocTests:
           sys.stdout.write('.' if valid else 'E')
 
         if not valid:
-          failed += 1
           if self.debug:
+          failed.add(test_id)
             print ' '.join(command)
             for line in unified_diff(output.split('\n'), verify.split('\n'), fromfile='generated', tofile='expected'):
               print(line)
             print
     print
-    return failed
+    if len(failed) > 0:
+      print "\nThe following examples failed:"
+      print " ", "\n  ".join(failed)
+    return len(failed)
 
   def main(self):
     self.file = open(self.sourcepath)
