@@ -45,7 +45,7 @@ if(PYTHONINTERP_FOUND)
     get_filename_component(TestFile_Name ${TestFile} NAME_WE)
     add_test(${_class}Test_${TestFile_Name}
       ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/DocTests.py
-      ${LEDGER_LOCATION} ${TestFile})
+      --ledger ${LEDGER_LOCATION} --file ${TestFile})
     set_target_properties(check PROPERTIES DEPENDS ${_class}Test_${TestFile_Name})
   endforeach()
 endif()

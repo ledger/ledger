@@ -5,29 +5,23 @@ import os
 import re
 import sys
 import hashlib
+import argparse
 import subprocess
 
 from difflib import unified_diff
 
 class DocTests:
-  def __init__(self, argv):
-    if not os.path.isfile(argv[1]):
-        print "Cannot find ledger at '%s'" % argv[1]
-        sys.exit(1)
-    if not os.path.isfile(argv[2]):
-        print "Cannot find source path at '%s'" % argv[2]
-        sys.exit(1)
+  def __init__(self, args):
+    scriptpath      = os.path.dirname(os.path.realpath(__file__))
+    self.ledger     = os.path.abspath(args.ledger)
+    self.sourcepath = os.path.abspath(args.file)
+    self.verbose    = args.verbose
 
-    self.ledger     = os.path.abspath(argv[1])
-    self.sourcepath = os.path.abspath(argv[2])
-    scriptpath = os.path.dirname(os.path.realpath(__file__))
-    self.verbose = False
-    self.debug = False
-    self.examples = dict()
-    self.testin_token = 'command'
+    self.examples      = dict()
+    self.test_files    = list()
+    self.testin_token  = 'command'
     self.testout_token = 'output'
     self.testdat_token = 'input'
-    self.test_files = list()
 
   def read_example(self):
     endexample = re.compile(r'^@end\s+smallexample\s*$')
@@ -137,19 +131,20 @@ class DocTests:
         if test_file_created:
           os.remove(test_file)
         valid = (output == verify)
-        if self.verbose:
+        if self.verbose > 0:
           print test_id, ':', 'Passed' if valid else 'FAILED'
         else:
           sys.stdout.write('.' if valid else 'E')
 
         if not valid:
-          if self.debug:
           failed.add(test_id)
+          if self.verbose > 1:
             print ' '.join(command)
             for line in unified_diff(output.split('\n'), verify.split('\n'), fromfile='generated', tofile='expected'):
               print(line)
             print
-    print
+    if not self.verbose:
+      print
     if len(failed) > 0:
       print "\nThe following examples failed:"
       print " ", "\n  ".join(failed)
@@ -164,6 +159,27 @@ class DocTests:
     return failed_examples
 
 if __name__ == "__main__":
-  script = DocTests(sys.argv)
+  def getargs():
+    parser = argparse.ArgumentParser(description='DocTests', prefix_chars='-')
+    parser.add_argument('-v', '--verbose',
+        dest='verbose',
+        action='count',
+        help='be verbose. Add -vv for more verbosity')
+    parser.add_argument('-l', '--ledger',
+        dest='ledger',
+        type=str,
+        action='store',
+        required=True,
+        help='the path to the ledger executable to test with')
+    parser.add_argument('-f', '--file',
+        dest='file',
+        type=str,
+        action='store',
+        required=True,
+        help='the texinfo documentation file to run the examples from')
+    return parser.parse_args()
+
+  args = getargs()
+  script = DocTests(args)
   status = script.main()
   sys.exit(status)
