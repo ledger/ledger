@@ -20,6 +20,67 @@
 @c Restructuring manual ideas
 @c http://beyondgrep.com/documentation/ack-2.04-man.html
 
+@c How to make documented ledger examples validate automatically.
+@c
+@c The test/DocTests.py script will be run along the with the other
+@c tests when using ctest or acprep check.
+@c The script parses the texinfo file and looks for three kinds of
+@c specially marked @smallexamples, then it will run the ledger
+@c command from the exmaple, and compare the results with the output
+@c from the documentation.
+@c
+@c To specially mark a @smallexample append @c command:UUID, where
+@c UUID is the first 7 digits from the commands sha1sum, e.g.:
+@c 
+@c @smallexample @c command:CDE330A
+@c $ ledger -f sample.dat reg expenses
+@c @end smallexample
+@c 
+@c Then DocTests.py will look for corresponding documented output,
+@c which may appear anywhere in the file, and is marked with
+@c @smallexample @c output:UUID where UUID is the UUID from the
+@c corresponding ledger command example, e.g.:
+@c 
+@c @smallexample @c output:CDE330A
+@c 04-May-27 Book Store            Expenses:Books               $20.00       $20.00
+@c                                 Expenses:Cards               $40.00       $60.00
+@c                                 Expenses:Docs                $30.00       $90.0
+@c @end smallexample
+@c 
+@c Now where does this data in sample.dat come from?
+@c DocTests.py is a bit smart about ledger's file argument, since
+@c it will check if the given filename exists in the test/input/
+@c directory.
+@c 
+@c Sometimes the journal data for an example is specified within
+@c the documentation itself, in that case the journal example data
+@c needs to be specially marked as well using @smallexample @c input:UUID,
+@c again with the UUID being the UUID of the corresponding ledger example
+@c command, e.g.:
+@c 
+@c @smallexample @c input:35CB2A3
+@c 2014/02/09 The Italian Place
+@c   Expenses:Food:Dining                    $ 36.84
+@c   Assets:Cash
+@c @end smallexample
+@c 
+@c @smallexample @c command:35CB2A3
+@c $ ledger -f inline.dat accounts
+@c @end smallexample
+@c 
+@c @smallexample @c output:35CB2A3
+@c Assets:Cash
+@c Expenses:Food:Dining
+@c @end smallexample
+@c 
+@c Additionally DocTests.py will pass --init-file /dev/null to ledger to
+@c ignore any default arguments to ledger the user running the tests
+@c has configured.
+@c 
+@c To manually run the tests in this file run:
+@c $ ./test/DocTests.py -vv --ledger ./ledger --file ./test/ledger3.texi
+ 
+
 @copying
 
 Copyright @copyright{} 2003–2014, John Wiegley.  All rights reserved.
@@ -346,13 +407,13 @@ for each.
 
 To find the balances of all of your accounts, run this command:
 
-@smallexample
+@smallexample @c command:1071890
 $ ledger -f drewr3.dat balance
 @end smallexample
 
 Ledger will generate:
 
-@smallexample
+@smallexample @c output:1071890
          $ -3,804.00  Assets
           $ 1,396.00    Checking
              $ 30.00      Business
@@ -381,8 +442,11 @@ pare this down to show only the accounts you want.
 
 A more useful report is to show only your Assets and Liabilities:
 
-@smallexample
+@smallexample @c command:5BF4D8E
 $ ledger -f drewr3.dat balance Assets Liabilities
+@end smallexample
+
+@smallexample @c output:5BF4D8E
          $ -3,804.00  Assets
           $ 1,396.00    Checking
              $ 30.00      Business
@@ -402,16 +466,16 @@ $ ledger -f drewr3.dat balance Assets Liabilities
 
 To show all transactions and a running total:
 
-@smallexample
+@smallexample @c command:66E3A2C
 $ ledger -f drewr3.dat register
 @end smallexample
 
 @noindent
 Ledger will generate:
 
-@smallexample
+@smallexample @c output:66E3A2C
 10-Dec-01 Checking balance      Assets:Checking          $ 1,000.00   $ 1,000.00
-                                Equity:Opening Balances $ -1,000.00            0
+                                Equit:Opening Balances  $ -1,000.00            0
 10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
                                 Expense:Food:Groceries      $ 37.50      $ 75.00
                                 Expense:Food:Groceries      $ 37.50     $ 112.50
@@ -450,8 +514,11 @@ interested in seeing transactions for:
 @cindex accounts, limiting by
 @cindex limiting by accounts
 
-@smallexample
+@smallexample @c command:96B0EB3
 $ ledger -f drewr3.dat register Groceries
+@end smallexample
+
+@smallexample @c output:96B0EB3
 10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
                                 Expense:Food:Groceries      $ 37.50      $ 75.00
                                 Expense:Food:Groceries      $ 37.50     $ 112.50
@@ -465,8 +532,11 @@ $ ledger -f drewr3.dat register Groceries
 @noindent
 Which matches the balance reported for the @samp{Groceries} account:
 
-@smallexample
+@smallexample @c command:AECD64E
 $ ledger -f drewr3.dat balance Groceries
+@end smallexample
+
+@smallexample @c output:AECD64E
             $ 334.00  Expenses:Food:Groceries
 @end smallexample
 
@@ -474,8 +544,11 @@ $ ledger -f drewr3.dat balance Groceries
 If you would like to find transaction to only a certain payee use
 @samp{payee} or @samp{@@}:
 
-@smallexample
+@smallexample @c command:C6BC57E
 $ ledger -f drewr3.dat register payee "Organic"
+@end smallexample
+
+@smallexample @c output:C10BC57E
 10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
                                 Expense:Food:Groceries      $ 37.50      $ 75.00
                                 Expense:Food:Groceries      $ 37.50     $ 112.50
@@ -497,8 +570,11 @@ a check to clear, but you should treat it as money spent.  The
 @command{cleared} report will not format correctly for accounts that
 contain multiple commodities):
 
-@smallexample
+@smallexample @c command:B86F6A6
 $ ledger -f drewr3.dat cleared
+@end smallexample
+
+@smallexample @c output:B86F6A6
      $ -3,804.00            $ 775.00                 Assets
       $ 1,396.00            $ 775.00    10-Dec-20      Checking
          $ 30.00                   0                     Business
@@ -517,8 +593,8 @@ $ ledger -f drewr3.dat cleared
         $ -20.00                   0                   MasterCard
         $ 200.00                   0                   Mortgage:Principal
        $ -243.60                   0                   Tithe
-----------------    ----------------    ---------
-       $ -243.60                   0
+----------------  ----------------    ---------
+       $ -243.60                   0             
 @end smallexample
 
 @noindent
@@ -1488,7 +1564,7 @@ entry.
 For example, the following entries reflect transaction made for a
 business trip to Europe from the US:
 
-@smallexample
+@smallexample @c input:82150D9
 2011/09/23 Cash in Munich
     Assets:Cash                               E50.00
     Assets:Checking                          $-66.00
@@ -1504,8 +1580,11 @@ spent on Dinner in Munich.
 
 Running a ledger balance report shows:
 
-@smallexample
+@smallexample @c command:82150D9
 $ ledger -f example.dat bal
+@end smallexample
+
+@smallexample @c output:82150D9
              $-66.00
               E15.00  Assets
               E15.00    Cash
@@ -3626,7 +3705,7 @@ the money to be evenly distributed over the next six months so that
 your monthly budgets gradually take a hit for the vegetables you'll
 pick up from the co-op, even though you've already paid for them.
 
-@smallexample
+@smallexample @c input:6453542
 2008/10/16 * (2090) Bountiful Blessings Farm
     Expenses:Food:Groceries                  $ 37.50  ; [=2008/10/01]
     Expenses:Food:Groceries                  $ 37.50  ; [=2008/11/01]
@@ -3644,15 +3723,17 @@ really knows that it debited $225 this month.
 And using @option{--effective} option, initial date will be overridden
 by effective dates.
 
-@smallexample
+@smallexample @c command:6453542
 $ ledger --effective register Groceries
+@end smallexample
 
-08-Oct-01 Bountiful Blessi.. Expe:Food:Groceries     $ 37.50     $ 37.50
-08-Nov-01 Bountiful Blessi.. Expe:Food:Groceries     $ 37.50     $ 75.00
-08-Dec-01 Bountiful Blessi.. Expe:Food:Groceries     $ 37.50    $ 112.50
-09-Jan-01 Bountiful Blessi.. Expe:Food:Groceries     $ 37.50    $ 150.00
-09-Feb-01 Bountiful Blessi.. Expe:Food:Groceries     $ 37.50    $ 187.50
-09-Mar-01 Bountiful Blessi.. Expe:Food:Groceries     $ 37.50    $ 225.00
+@smallexample @c output:6453542
+08-Oct-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50      $ 37.50
+08-Nov-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50      $ 75.00
+08-Dec-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50     $ 112.50
+09-Jan-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50     $ 150.00
+09-Feb-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50     $ 187.50
+09-Mar-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50     $ 225.00
 @end smallexample
 
 @node Periodic Transactions, Concrete Example of Automated Transactions, Effective Dates, Automated Transactions
@@ -3777,14 +3858,14 @@ options.
 The balance report is the most commonly used report.  The simplest
 invocation is:
 
-@smallexample
+@smallexample @c command:1D00D56
 $ ledger balance -f drewr3.dat
 @end smallexample
 
 @noindent
 which will print the balances of every account in your journal.
 
-@smallexample
+@smallexample @c output:1D00D56
          $ -3,804.00  Assets
           $ 1,396.00    Checking
              $ 30.00      Business
@@ -3811,8 +3892,11 @@ Most times this is more than you want.  Limiting the results to
 specific accounts is as easy as entering the names of the accounts
 after the command.
 
-@smallexample
+@smallexample @c command:06B2AD4
 $ ledger balance -f drewr3.dat Auto MasterCard
+@end smallexample
+
+@smallexample @c output:06B2AD4
           $ 5,500.00  Expenses:Auto
             $ -20.00  Liabilities:MasterCard
 --------------------
@@ -3826,8 +3910,11 @@ note the implicit logical and between @samp{Auto} and
 If you want the entire contents of a branch of your account tree, use
 the highest common name in the branch:
 
-@smallexample
+@smallexample @c command:B0468E1
 $ ledger balance -f drewr3.dat Income
+@end smallexample
+
+@smallexample @c output:B0468E1
          $ -2,030.00  Income
          $ -2,000.00    Salary
             $ -30.00    Sales
@@ -3838,15 +3925,25 @@ $ ledger balance -f drewr3.dat Income
 You can use general regular expressions in nearly anyplace Ledger
 needs a string:
 
-@smallexample
+@smallexample @c command:EAE389F
 $ ledger balance -f drewr3.dat ^Bo
+@end smallexample
+@smallexample @c output:EAE389F
+@end smallexample
+
+This first example looks for any account starting with @samp{Bo}, of
+which there are none.
+
+@smallexample @c command:E2AF6AD
 $ ledger balance -f drewr3.dat Bo
+@end smallexample
+
+@smallexample @c output:E2AF6AD
              $ 20.00  Expenses:Books
 @end smallexample
 
-The first example looks for any account starting with @samp{Bo}, of
-which there are none.  The second looks for any account with @samp{Bo},
-which is @samp{Expenses:Books}.
+This second example looks for any account with @samp{Bo}, which is
+@samp{Expenses:Books}.
 
 @cindex limit by payees
 @findex --limit @var{EXPR}
@@ -4964,7 +5061,7 @@ earlier postings.  Here's how it works:
 
 Say you currently have this posting in your ledger file:
 
-@smallexample
+@smallexample @c input:03ACB97
 2004/03/15 * Viva Italiano
     Expenses:Food                       $12.45
     Expenses:Tips                        $2.55
@@ -4975,17 +5072,17 @@ Now it's @samp{2004/4/9}, and you've just eating at @samp{Viva Italiano}
 again.  The exact amounts are different, but the overall form is the
 same.  With the @command{xact} command you can type:
 
-@smallexample
+@smallexample @c command:03ACB97
 $ ledger xact 2004/4/9 viva food 11 tips 2.50
 @end smallexample
 
 This produces the following output:
 
-@smallexample
+@smallexample @c output:03ACB97
 2004/04/09 Viva Italiano
-    Expenses:Food                       $11.00
-    Expenses:Tips                        $2.50
-    Liabilities:MasterCard             $-13.50
+    Expenses:Food                             $11.00
+    Expenses:Tips                              $2.50
+    Liabilities:MasterCard
 @end smallexample
 
 It works by finding a past posting matching the regular expression
@@ -5596,22 +5693,23 @@ Format Codes}).
 @item --master-account @var{STR}
 Prepend all account names with the argument.
 
-@smallexample
-$ ledger -f test/input/drewr3.dat bal --master-account HUMBUG
+@smallexample @c command:A76BB56
+$ ledger -f drewr3.dat bal --no-total --master-account HUMBUG
+@end smallexample
+
+@smallexample @c output:A76BB56
                    0  HUMBUG
          $ -3,804.00    Assets
           $ 1,396.00      Checking
              $ 30.00        Business
          $ -5,200.00      Savings
-             $ 20.00    Books
          $ -1,000.00    Equity:Opening Balances
-          $ 6,634.00    Expenses
-         $ 11,000.00      Auto
+          $ 6,654.00    Expenses
+          $ 5,500.00      Auto
              $ 20.00      Books
             $ 300.00      Escrow
             $ 334.00      Food:Groceries
             $ 500.00      Interest:Mortgage
-         $ -5,520.00      Assets:Checking
          $ -2,030.00    Income
          $ -2,000.00      Salary
             $ -30.00      Sales
@@ -6462,7 +6560,7 @@ In the balance report, it shows all the accounts affected by
 transactions having a related posting.  For example, if a file had
 this transaction:
 
-@smallexample
+@smallexample @c input:94C5675
 2004/03/20 Safeway
     Expenses:Food                       $65.00
     Expenses:Cash                       $20.00
@@ -6471,16 +6569,16 @@ this transaction:
 
 And the register command was:
 
-@smallexample
-$ ledger -r register food
+@smallexample @c command:94C5675
+$ ledger -f example.dat -r register food
 @end smallexample
 
 The following would be output, showing the postings related to the
 posting that matched:
 
-@smallexample
-2004/03/20 Safeway         Expenses:Cash          $-20.00      $-20.00
-                           Assets:Checking         $85.00       $65.00
+@smallexample @c output:94C5675
+04-Mar-20 Safeway               Expenses:Cash                $20.00       $20.00
+                                Assets:Checking             $-85.00      $-65.00
 @end smallexample
 
 @item --budget
