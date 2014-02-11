@@ -700,7 +700,7 @@ owe.  ``Liabilities'' is just a more inclusive name for Debts.
 An Asset is typically increased by transferring money from an Income
 account, such as when you get paid.  Here is a typical transaction:
 
-@smallexample
+@smallexample @c input:6B43DD4
 2004/09/29  My Employer
     Assets:Checking               $500.00
     Income:Salary
@@ -715,7 +715,7 @@ borrow money to buy something, or if you owe someone money.  Here is
 an example of increasing a MasterCard liability by spending money with
 it:
 
-@smallexample
+@smallexample @c input:6B43DD4
 2004/09/30  Restaurant
     Expenses:Dining                $25.00
     Liabilities:MasterCard
@@ -729,8 +729,15 @@ offsets the value of your assets.
 The combined total of your Assets and Liabilities is your net worth.
 So to see your current net worth, use this command:
 
-@smallexample
+@smallexample @c command:6B43DD4
 $ ledger balance ^assets ^liabilities
+@end smallexample
+
+@smallexample @c output:6B43DD4
+             $500.00  Assets:Checking
+             $-25.00  Liabilities:MasterCard
+--------------------
+             $475.00
 @end smallexample
 
 In a similar vein, your Income accounts show up negative, because they

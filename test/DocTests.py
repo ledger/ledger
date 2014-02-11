@@ -68,6 +68,11 @@ class DocTests:
         except KeyError:
           self.examples[test_id] = dict()
 
+        try:
+          example = self.examples[test_id][test_kind][test_kind] + example
+        except KeyError:
+          pass
+
         self.examples[test_id][test_kind] = {
             'bpos': test_begin_pos,
             'epos': test_end_pos,
