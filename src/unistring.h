@@ -44,7 +44,7 @@
 
 namespace ledger {
 
-int mk_wcwidth_cjk(boost::uint32_t ucs);
+int mk_wcwidth(boost::uint32_t ucs);
 
 /**
  * @class unistring
@@ -86,7 +86,7 @@ public:
   std::size_t width() const {
     std::size_t width = 0;
     foreach (const boost::uint32_t& ch, utf32chars) {
-      width += mk_wcwidth_cjk(ch);
+      width += mk_wcwidth(ch);
     }
     return width;
   }
