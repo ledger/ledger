@@ -3904,7 +3904,7 @@ $ ledger balance -f drewr3.dat Auto MasterCard
 @end smallexample
 
 @noindent
-note the implicit logical and between @samp{Auto} and
+note the implicit logical or between @samp{Auto} and
 @samp{Mastercard}.
 
 If you want the entire contents of a branch of your account tree, use
