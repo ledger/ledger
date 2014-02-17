@@ -44,6 +44,8 @@
 
 namespace ledger {
 
+int mk_wcwidth(boost::uint32_t ucs);
+
 /**
  * @class unistring
  *
@@ -79,6 +81,14 @@ public:
 
   std::size_t length() const {
     return utf32chars.size();
+  }
+
+  std::size_t width() const {
+    std::size_t width = 0;
+    foreach (const boost::uint32_t& ch, utf32chars) {
+      width += mk_wcwidth(ch);
+    }
+    return width;
   }
 
   std::string extract(const std::string::size_type begin = 0,
@@ -133,7 +143,7 @@ inline void justify(std::ostream&      out,
 
   unistring temp(str);
 
-  int spacing = width - int(temp.length());
+  int spacing = width - int(temp.width());
   while (spacing-- > 0)
     out << ' ';
 
