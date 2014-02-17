@@ -416,7 +416,7 @@ void instance_t::read_next_directive(bool& error_flag)
         price_xact_directive(line);
         break;
       case 'Y':                 // set the current year
-        apply_year_directive(line);
+        apply_year_directive(line + 1);
         break;
       }
     }
@@ -865,7 +865,7 @@ void instance_t::apply_year_directive(char * line)
   // This must be set to the last day of the year, otherwise partial
   // dates like "11/01" will refer to last year's november, not the
   // current year.
-  unsigned short year(lexical_cast<unsigned short>(skip_ws(line + 1)));
+  unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));
   DEBUG("times.epoch", "Setting current year to " << year);
   epoch = datetime_t(date_t(year, 12, 31));
 }
