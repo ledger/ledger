@@ -56,7 +56,8 @@
 @c the documentation itself, in that case the journal example data
 @c needs to be specially marked as well using @smallexample @c input:UUID,
 @c again with the UUID being the UUID of the corresponding ledger example
-@c command, e.g.:
+@c command. If multiple inputs with the same UUID are found they will be
+@c concatenated together and given as one set of data to the example command.
 @c 
 @c @smallexample @c input:35CB2A3
 @c 2014/02/09 The Italian Place
@@ -72,7 +73,19 @@
 @c Assets:Cash
 @c Expenses:Food:Dining
 @c @end smallexample
-@c 
+@c
+@c To use different example commands with the same input from the documentation
+@c add with_input:UUID to the example command, where UUID is the UUID of the input,
+@c e.g.:
+@c
+@c @smallexample @c command:94FD2B6,with_input:35CB2A3
+@c $ ledger -f inline.dat bal expenses
+@c @end smallexample
+@c
+@c @smallexample @c output:94FD2B6
+@c              $ 36.84  Expenses:Food:Dining
+@c @end smallexample
+@c
 @c Additionally DocTests.py will pass --init-file /dev/null to ledger to
 @c ignore any default arguments to ledger the user running the tests
 @c has configured.
@@ -306,7 +319,7 @@ And just for the sake of example---as a starting point for those who
 want to dive in head-first---here are the journal transactions from
 above, formatted as the Ledger program wishes to see them:
 
-@smallexample
+@smallexample @c input:48DDF26
 2004/09/29 Pacific Bell
     Expenses:Pacific Bell              $23.00
     Assets:Checking
@@ -315,10 +328,35 @@ above, formatted as the Ledger program wishes to see them:
 The account balances and registers in this file, if saved as
 @file{ledger.dat}, could be reported using:
 
-@smallexample
+@smallexample @c command:48DDF26
 $ ledger -f ledger.dat balance
+@end smallexample
+
+@smallexample @c output:48DDF26
+             $-23.00  Assets:Checking
+              $23.00  Expenses:Pacific Bell
+--------------------
+                   0
+@end smallexample
+
+Or
+
+@smallexample @c command:8C7295F,with_input:48DDF26
 $ ledger -f ledger.dat register checking
+@end smallexample
+
+@smallexample @c output:8C7295F
+04-Sep-29 Pacific Bell          Assets:Checking             $-23.00      $-23.00
+@end smallexample
+
+And even:
+
+@smallexample @c command:BB32EF2,with_input:48DDF26
 $ ledger -f ledger.dat register Bell
+@end smallexample
+
+@smallexample @c output:BB32EF2
+04-Sep-29 Pacific Bell          Expenses:Pacific Bell        $23.00       $23.00
 @end smallexample
 
 An important difference between Ledger and other finance packages is
@@ -548,7 +586,7 @@ If you would like to find transaction to only a certain payee use
 $ ledger -f drewr3.dat register payee "Organic"
 @end smallexample
 
-@smallexample @c output:C10BC57E
+@smallexample @c output:C6BC57E
 10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
                                 Expense:Food:Groceries      $ 37.50      $ 75.00
                                 Expense:Food:Groceries      $ 37.50     $ 112.50
@@ -700,7 +738,7 @@ owe.  ``Liabilities'' is just a more inclusive name for Debts.
 An Asset is typically increased by transferring money from an Income
 account, such as when you get paid.  Here is a typical transaction:
 
-@smallexample
+@smallexample @c input:6B43DD4
 2004/09/29  My Employer
     Assets:Checking               $500.00
     Income:Salary
@@ -715,7 +753,7 @@ borrow money to buy something, or if you owe someone money.  Here is
 an example of increasing a MasterCard liability by spending money with
 it:
 
-@smallexample
+@smallexample @c input:6B43DD4
 2004/09/30  Restaurant
     Expenses:Dining                $25.00
     Liabilities:MasterCard
@@ -729,8 +767,15 @@ offsets the value of your assets.
 The combined total of your Assets and Liabilities is your net worth.
 So to see your current net worth, use this command:
 
-@smallexample
+@smallexample @c command:6B43DD4
 $ ledger balance ^assets ^liabilities
+@end smallexample
+
+@smallexample @c output:6B43DD4
+             $500.00  Assets:Checking
+             $-25.00  Liabilities:MasterCard
+--------------------
+             $475.00
 @end smallexample
 
 In a similar vein, your Income accounts show up negative, because they
@@ -741,8 +786,15 @@ flow.  A positive cash flow means you are spending more than you make,
 since income is always a negative figure.  To see your current cash
 flow, use this command:
 
-@smallexample
+@smallexample @c command:DB128F3,with_input:6B43DD4
 $ ledger balance ^income ^expenses
+@end smallexample
+
+@smallexample @c output:DB128F3
+              $25.00  Expenses:Dining
+            $-500.00  Income:Salary
+--------------------
+            $-475.00
 @end smallexample
 
 Another common question to ask of your expenses is: How much do I
@@ -1820,7 +1872,7 @@ function on a transaction-wide or per-posting basis.
 Lastly, you can specify the valuation function/value for any specific
 amount using the @samp{(( ))} commodity annotation.
 
-@smallexample
+@smallexample @c input:814A366
 2012-03-02 KFC
     Expenses:Food2               $1 ((2 EUR))
     Assets:Cash2
@@ -1856,20 +1908,24 @@ amount using the @samp{(( ))} commodity annotation.
     Assets:Cash9
 @end smallexample
 
-@smallexample
-ledger reg -V food
+@smallexample @c command:814A366
+$ ledger reg -V food
+@end smallexample
+
+@smallexample @c output:814A366
 12-Mar-02 KFC                   Expenses:Food2                2 EUR        2 EUR
-12-Mar-03 KFC                   <Adjustment>                 -1 EUR        1 EUR
-                                Expenses:Food3                3 EUR        4 EUR
-12-Mar-04 KFC                   <Adjustment>                 -2 EUR        2 EUR
-                                Expenses:Food4                4 EUR        6 EUR
-12-Mar-05 KFC                   <Adjustment>                 -3 EUR        3 EUR
-                                Expenses:Food5                5 EUR        8 EUR
-12-Mar-06 KFC                   <Adjustment>                 -4 EUR        4 EUR
-                                Expenses:Food6                6 EUR       10 EUR
-12-Mar-07 KFC                   Expenses:Food7                7 EUR       17 EUR
-12-Mar-08 XACT                  Expenses:Food8                8 EUR       25 EUR
-12-Mar-09 POST                  (Expenses:Food9)              9 EUR       34 EUR
+12-Mar-03 KFC                   Expenses:Food3                3 EUR        5 EUR
+12-Mar-04 KFC                   Expenses:Food4                4 EUR        9 EUR
+12-Mar-05 KFC                   Expenses:Food5                   $1           $1
+                                                                           9 EUR
+12-Mar-06 KFC                   Expenses:Food6                   $1           $2
+                                                                           9 EUR
+12-Mar-07 KFC                   Expenses:Food7                1 CAD           $2
+                                                                           1 CAD
+                                                                           9 EUR
+12-Mar-08 XACT                  Expenses:Food8                   $1           $3
+                                                                           1 CAD
+                                                                           9 EUR
 @end smallexample
 
 @node Keeping it Consistent, Journal Format, Currency and Commodities, Keeping a Journal
