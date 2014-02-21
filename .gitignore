@@ -110,3 +110,10 @@ doc/ledger-mode.info
 doc/ledger3.info-1
 doc/ledger3.info-2
 CTestTestfile.cmake
+.ninja_deps
+.ninja_log
+build.ninja
+rules.ninja
+Testing/Temporary
+/MathTests
+/UtilTests
