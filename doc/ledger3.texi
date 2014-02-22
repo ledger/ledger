@@ -9225,7 +9225,7 @@ test subdirectory for the build.  For example,
 @node Running Tests, Writing Tests, Testing Framework, Testing Framework
 @subsubsection Running Tests
 
-The complete test sweet can be run from the build directory using the
+The complete test suite can be run from the build directory using the
 check option for the build tool you use.  For example, @code{make
 check}.  The entire test suit lasts around a minute for the optimized
 built and many times longer for the debug version.  While developing
