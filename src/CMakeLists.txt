@@ -49,7 +49,8 @@ set(LEDGER_SOURCES
   times.cc
   error.cc
   utils.cc
-  strptime.cc)
+  strptime.cc
+  wcwidth.cc)
 
 if(HAVE_BOOST_PYTHON)
   list(APPEND LEDGER_SOURCES
