@@ -205,7 +205,8 @@ Return the number of uncleared xacts found."
       (let ((inhibit-read-only t))
         (goto-char (line-beginning-position))
         (delete-region (point) (1+ (line-end-position)))
-        (set-buffer-modified-p t)))))
+        (set-buffer-modified-p t))
+			(ledger-reconcile-refresh))))
 
 (defun ledger-reconcile-visit (&optional come-back)
   "Recenter ledger buffer on transaction and COME-BACK if non-nil."
@@ -321,23 +322,25 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	    (dolist (posting (nthcdr 5 xact))
 	      (let ((beg (point))
 		    (where (ledger-marker-where-xact-is xact posting)))
-		(insert (format "%s %-4s %-30s %-30s %15s\n"
+		(insert (format "%s %-4s %-50s %-30s %15s\n"
                     (format-time-string date-format (nth 2 xact))
-				(if (nth 3 xact)
-				    (nth 3 xact)
-				    "")
-				(nth 4 xact) (nth 1 posting) (nth 2 posting)))
+										(if (nth 3 xact)
+												(nth 3 xact)
+												"")
+										(truncate-string-to-width
+										 (nth 4 xact) 49)
+										(nth 1 posting) (nth 2 posting)))
 		(if (nth 3 posting)
 		    (if (eq (nth 3 posting) 'pending)
-			(set-text-properties beg (1- (point))
-					     (list 'face 'ledger-font-reconciler-pending-face
-						   'where where))
-			(set-text-properties beg (1- (point))
-					     (list 'face 'ledger-font-reconciler-cleared-face
-						   'where where)))
+						(set-text-properties beg (1- (point))
+																 (list 'face 'ledger-font-reconciler-pending-face
+																			 'where where))
+						(set-text-properties beg (1- (point))
+																 (list 'face 'ledger-font-reconciler-cleared-face
+																			 'where where)))
 		    (set-text-properties beg (1- (point))
-					 (list 'face 'ledger-font-reconciler-uncleared-face
-					       'where where))))  ))
+														 (list 'face 'ledger-font-reconciler-uncleared-face
+																	 'where where))))  ))
 	  (goto-char (point-max))
 	  (delete-char -1)) ;gets rid of the extra line feed at the bottom of the list
 	(if ledger-success
