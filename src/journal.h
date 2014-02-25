@@ -167,6 +167,8 @@ public:
   account_t * find_account(const string& name, bool auto_create = true);
   account_t * find_account_re(const string& regexp);
 
+  account_t * expand_aliases(string name);
+
   account_t * register_account(const string& name, post_t * post,
                                account_t * master = NULL);
   string      register_payee(const string& name, xact_t * xact);

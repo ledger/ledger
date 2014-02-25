@@ -2158,8 +2158,21 @@ alias Checking=Assets:Credit Union:Joint Checking Account
 @end smallexample
 
 The aliases are only in effect for transactions read in after the alias
-is defined and are effected by @code{account} directives that precede
+is defined and are affected by @code{account} directives that precede
 them.
+
+Aliases can refer to other aliases, the following example produces exactly
+the same accounts as the preceding one:
+
+@smallexample
+alias Entertainment=Expenses:Entertainment
+alias Dining=Entertainment:Dining
+alias Checking=Assets:Credit Union:Joint Checking Account
+
+2011/11/30 ChopChop
+  Dining          $10.00
+  Checking
+@end smallexample
 
 @item assert
 @c instance_t::assert_directive

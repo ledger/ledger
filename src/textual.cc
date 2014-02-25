@@ -977,6 +977,11 @@ void instance_t::account_alias_directive(account_t * account, string alias)
   // (account), add a reference to the account in the `account_aliases'
   // map, which is used by the post parser to resolve alias references.
   trim(alias);
+  // Ensure that no alias like "alias Foo=Foo" is registered.
+  if ( alias == account->fullname()) {
+    throw_(parse_error, _f("Illegal alias %1%=%2%")
+           % alias % account->fullname());
+  }
   std::pair<accounts_map::iterator, bool> result =
     context.journal->account_aliases.insert
       (accounts_map::value_type(alias, account));
