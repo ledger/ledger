@@ -2161,8 +2161,9 @@ The aliases are only in effect for transactions read in after the alias
 is defined and are affected by @code{account} directives that precede
 them.
 
-Aliases can refer to other aliases, the following example produces exactly
-the same accounts as the preceding one:
+With the option @option{--recursive-aliases}, aliases can refer to other aliases,
+the following example produces exactly the same transactions and account names
+as the preceding one:
 
 @smallexample
 alias Entertainment=Expenses:Entertainment
@@ -5813,6 +5814,11 @@ even if you have misspelled a common used one.  The option
 correct, and if it finds a new account or commodity (same as
 a misspelled commodity or account) it will issue a warning giving you
 the file and line number of the problem.
+
+@item --recursive-aliases
+Normally, ledger only expands aliases once. With this option, ledger tries
+to expand the result of alias expansion recursively, until no more expansions
+apply.
 
 @item --time-colon
 The @option{--time-colon} option will display the value for a seconds

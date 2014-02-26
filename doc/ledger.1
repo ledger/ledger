@@ -420,6 +420,9 @@ For use only with the
 command, it causes Ledger to print out matching entries exactly as they
 appeared in the original journal file.
 .It Fl \-real Pq Fl R
+.It Fl \-recursive-aliases
+Causes ledger to try to expand aliases recursively, i.e. try to expand
+the result of an earlier expansion again, until no more expansions apply.
 .It Fl \-register-format Ar FMT
 .It Fl \-related Pq Fl r
 .It Fl \-related-all

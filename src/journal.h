@@ -131,6 +131,7 @@ public:
   bool                  force_checking;
   bool                  check_payees;
   bool                  day_break;
+  bool                  recursive_aliases;
   payee_mappings_t      payee_mappings;
   account_mappings_t    account_mappings;
   accounts_map          account_aliases;

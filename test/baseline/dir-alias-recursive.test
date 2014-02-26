@@ -6,8 +6,7 @@ alias C=D:C
   A  10 EUR
   Foo
 
-test reg
-01-Jan-01 Test                  B:A                          10 EUR       10 EUR
+test reg --recursive-aliases
+01-Jan-01 Test                  D:C:B:A                      10 EUR       10 EUR
                                 Foo                         -10 EUR            0
 end test
-

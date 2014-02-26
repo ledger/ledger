@@ -96,6 +96,7 @@ void journal_t::initialize()
   check_payees      = false;
   day_break         = false;
   checking_style    = CHECK_PERMISSIVE;
+  recursive_aliases = false;
 }
 
 void journal_t::add_account(account_t * acct)
@@ -175,7 +176,7 @@ account_t * journal_t::expand_aliases(string name) {
   bool keep_expanding = true;
   std::list<string> already_seen;
   // loop until no expansion can be found
-  while(keep_expanding) {
+  do {
     if (account_aliases.size() > 0) {
       accounts_map::const_iterator i = account_aliases.find(name);
       if (i != account_aliases.end()) {
@@ -214,7 +215,7 @@ account_t * journal_t::expand_aliases(string name) {
     } else {
       keep_expanding = false;
     }
-  }
+  } while(keep_expanding && recursive_aliases);
   return result;
 }
 
