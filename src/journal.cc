@@ -173,6 +173,9 @@ account_t * journal_t::expand_aliases(string name) {
   // prevent infinite excursion. Each alias may only be expanded at most once.
   account_t * result = NULL;
 
+  if(no_aliases)
+    return result;
+
   bool keep_expanding = true;
   std::list<string> already_seen;
   // loop until no expansion can be found

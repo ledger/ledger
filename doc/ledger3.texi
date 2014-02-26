@@ -2175,6 +2175,8 @@ alias Checking=Assets:Credit Union:Joint Checking Account
   Checking
 @end smallexample
 
+The option @option{--no-aliases} completely disables alias expansion.
+
 @item assert
 @c instance_t::assert_directive
 An assertion can throw an error if a condition is not met during
@@ -5787,6 +5789,9 @@ $ ledger -f drewr3.dat bal --no-total --master-account HUMBUG
             $ -20.00      MasterCard
             $ 200.00      Mortgage:Principal
 @end smallexample
+
+@item --no-aliases
+Ledger does not expand any aliases if this option is specified.
 
 @item --pedantic
 FIX THIS ENTRY @c FIXME thdox
