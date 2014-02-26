@@ -1,0 +1,31 @@
+alias Cash=Assets:Cash
+alias fast-food=food:FastFood
+alias food=Expenses:Food
+
+2012-02-27 KFC
+    fast-food                          $20.00
+    Assets:Cash
+
+2012-02-28 KFC
+    fast-food                                      $20.00
+    Assets:Cash
+
+2012-02-29 KFC
+    fast-food                                      $25.00
+    Assets:Cash
+
+2012-02-29 KFC
+    fast-food                                      $25.00
+    Assets:Cash
+
+test reg
+12-Feb-27 KFC                   Expenses:Food:FastFood       $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+12-Feb-28 KFC                   Expenses:Food:FastFood       $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+12-Feb-29 KFC                   Expenses:Food:FastFood       $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+12-Feb-29 KFC                   Expenses:Food:FastFood       $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+end test
+
