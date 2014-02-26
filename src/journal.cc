@@ -211,6 +211,8 @@ account_t * journal_t::expand_aliases(string name) {
           keep_expanding = false;
         }
       }
+    } else {
+      keep_expanding = false;
     }
   }
   return result;
