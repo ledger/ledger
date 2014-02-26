@@ -69,8 +69,8 @@ namespace ledger {
 
 namespace {
   struct interval {
-    int first;
-    int last;
+    boost::uint32_t first;
+    boost::uint32_t last;
   };
 }
 
