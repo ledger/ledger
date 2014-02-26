@@ -1,0 +1,13 @@
+alias A=B:A
+alias B=C:B
+alias C=D:C
+
+2001-01-01 Test
+  A  10 EUR
+  Foo
+
+test reg
+01-Jan-01 Test                  B:A                          10 EUR       10 EUR
+                                Foo                         -10 EUR            0
+end test
+
