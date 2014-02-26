@@ -110,6 +110,7 @@ public:
     HANDLER(price_db_).report(out);
     HANDLER(price_exp_).report(out);
     HANDLER(recursive_aliases).report(out);
+    HANDLER(no_aliases).report(out);
     HANDLER(strict).report(out);
     HANDLER(value_expr_).report(out);
   }
@@ -166,6 +167,7 @@ public:
   OPTION(session_t, strict);
   OPTION(session_t, value_expr_);
   OPTION(session_t, recursive_aliases);
+  OPTION(session_t, no_aliases);
 };
 
 /**
