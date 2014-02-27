@@ -5311,7 +5311,7 @@ Print summary of all options.
 
 @item --version
 @itemx -v
-Print version of ledger executable.
+Print version information and exit.
 
 @item --file @var{FILE}
 @itemx -f @var{FILE}
@@ -5601,7 +5601,7 @@ Report last known market value.
 
 @item --gain
 @itemx -G
-Report net gain loss for commodities that have a price history.
+Report net gain or loss for commodities that have a price history.
 
 @end ftable
 
@@ -5794,7 +5794,7 @@ $ ledger -f drewr3.dat bal --no-total --master-account HUMBUG
 Ledger does not expand any aliases if this option is specified.
 
 @item --pedantic
-FIX THIS ENTRY @c FIXME thdox
+Accounts, tags or commodities not previously declared will cause errors.
 
 @item --permissive
 FIX THIS ENTRY @c FIXME thdox
@@ -5859,7 +5859,7 @@ desired width.
 
 @item --account @var{STR}
 Prepend @var{STR} to all accounts reported. That is, the option
-@samp{--account Personal} would track @samp{Personal:} to the beginning
+@samp{--account Personal} would tack @samp{Personal:} to the beginning
 of every account reported in a balance report or register report.
 
 @item --account-width @var{INT}
@@ -5985,15 +5985,15 @@ Strings}). The default is:
 
 @item --collapse
 @itemx -n
-By default ledger prints all account in an account tree. With
-@option{--collapse} it print only the top level account specified.
+By default ledger prints all accounts in an account tree. With
+@option{--collapse} it prints only the top level account specified.
 
 @item --collapse-if-zero
 Collapse the account display only if it has a zero balance.
 
 @item --color
 @itemx --ansi
-Use color is the tty supports it.
+Use color if the terminal supports it.
 
 @item --columns @var{INT}
 Specify the width of the @command{register} report in characters.
@@ -6029,7 +6029,7 @@ Transform the date of the transaction using @var{EXPR}.
 
 @item --date-format @var{DATE_FORMAT}
 @itemx -y @var{DATE_FORMAT}
-Specify format ledger should use to print dates (@pxref{Date and Time
+Specify the format ledger should use to print dates (@pxref{Date and Time
 Format Codes}).
 
 @item --date-width @var{INT}
@@ -6109,14 +6109,14 @@ Report each posting’s deviation from the average. It is only meaningful
 in the register and prices reports.
 
 @item --display @var{EXPR}
-Display lines that satisfy the expression given.
+Display lines that satisfy the expression @var{EXPR}.
 
 @item --display-amount @var{EXPR}
-Apply a transform to the @emph{displayed} amount.  This occurs after
+Apply a transformation to the @emph{displayed} amount.  This occurs after
 calculations occur.
 
 @item --display-total @var{EXPR}
-Apply a transform to the @emph{displayed} total.  This occurs after
+Apply a transformation to the @emph{displayed} total.  This occurs after
 calculations occur.
 
 @item --dow
@@ -6135,7 +6135,7 @@ Will print all Expenses totaled for each day of the week.
 Include empty accounts in the report.
 
 @item --end @var{DATE}
-Specify the end @var{DATE} for transaction to be considered in the
+Specify the end @var{DATE} for a transaction to be considered in the
 report.
 
 @item --equity
@@ -6156,8 +6156,8 @@ Force the full names of accounts to be used in the balance report. The
 balance report will not use an indented tree.
 
 @item --force-color
-Output tty color codes even if the tty doesn't support them. Useful
-for TTY that don't advertise their capabilities correctly.
+Output TTY color codes even if the TTY doesn't support them. Useful
+for TTYs that don't advertise their capabilities correctly.
 
 @item --force-pager
 Force Ledger to paginate its output.
@@ -6167,7 +6167,7 @@ Force Ledger to paginate its output.
 Continue forecasting while @var{VEXPR} is true.
 
 @item --forecast-years @var{INT}
-Forecast at most @var{INT} years in the future.
+Forecast at most @var{INT} years into the future.
 
 @item --format @var{FORMAT_STRING}
 @itemx -F @var{FORMAT_STRING}
@@ -6275,6 +6275,9 @@ Specify the width of the Meta column used for the @option{--meta
 @itemx -M
 Synonym for @samp{--period "monthly"}.
 
+@item --no-aliases
+Aliases are completely ignored.
+
 @item --no-color
 Suppress any color TTY output.
 
@@ -6310,7 +6313,7 @@ a date and payee for each transaction.
 
 @item --payee-width @var{INT}
 Set the number of columns dedicated to the payee in the register
-report.
+report to @var{INT}.
 
 @item --pending
 Use only postings that are marked pending.
@@ -6378,13 +6381,13 @@ Show primary dates for all calculations (@pxref{Effective Dates}).
 
 @item --quantity
 @itemx -O
-FIX THIS ENTRY
+Report commodity totals (this is the default).
 
 @item --quarterly
 Synonym for @samp{--period "quarterly"}.
 
 @item --raw
-In the print report, show transactions using the exact same syntax as
+In the @command{print} report, show transactions using the exact same syntax as
 specified by the user in their data file.  Don't do any massaging or
 interpreting.  Can be useful for minor cleanups, like just aligning
 amounts.
@@ -6395,7 +6398,7 @@ Account using only real transactions ignoring virtual and automatic
 transactions.
 
 @item --register-format @var{FORMAT_STRING}
-FIX THIS ENTRY @c FIXME thdox
+Define the output format for the @command{register} report.
 
 @item --related
 In a register report show the related account.  This is the other
@@ -6419,7 +6422,7 @@ FIX THIS ENTRY
 FIX THIS ENTRY @c FIXME thdox
 
 @item --seed @var{FIXME}
-Set the random seed for the @code{generate} command.  Used as part of
+Set the random seed to @var{FIXME} for the @code{generate} command.  Used as part of
 development testing.
 
 @item --sort @var{VEXPR}
@@ -6456,7 +6459,7 @@ Define a value expression used to calculate the total in reports.
 
 @item --total-data
 @itemx -J
-FIX THIS ENTRY
+Show only dates and totals to format the output for plots.
 
 @item --total-width @var{INT}
 Set the width of the total field in the register report.
@@ -6469,7 +6472,7 @@ as it considers sub-names within the account name (that style is
 called ``abbreviate'').
 
 @item --unbudgeted
-FIX THIS ENTRY
+Show only un-budgeted postings.
 
 @item --uncleared
 @itemx -U
@@ -6481,12 +6484,12 @@ FIX THIS ENTRY
 @item --unrealized-gains @var{STR}
 Allow the user to specify what account name should be used for
 unrealized gains. Defaults to @samp{"Equity:Unrealized Gains"}.
-Often set in one's @file{~/.ledgerrc} file to change default.
+Often set in one's @file{~/.ledgerrc} file to change the default.
 
 @item --unrealized-losses @var{STR}
 Allow the user to specify what account name should be used for
 unrealized gains. Defaults to @samp{"Equity:Unrealized Losses"}.
-Often set in one's @file{~/.ledgerrc} file to change default.
+Often set in one's @file{~/.ledgerrc} file to change the default.
 
 @item --unround
 Perform all calculations without rounding and display results to full
@@ -9212,7 +9215,7 @@ true
 FIX THIS ENTRY @c FIXME thdox
 
 @item template
-Shows the insertion template that @command{xact} sub-command generates.
+Shows the insertion template that the @command{xact} sub-command generates.
 This is a debugging command.
 
 @end ftable
