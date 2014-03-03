@@ -91,7 +91,7 @@
 @c has configured.
 @c 
 @c To manually run the tests in this file run:
-@c $ ./test/DocTests.py -vv --ledger ./ledger --file ./test/ledger3.texi
+@c $ ./test/DocTests.py -vv --ledger ./ledger --file ./doc/ledger3.texi
  
 
 @copying
@@ -802,8 +802,12 @@ spend each month on X?  Ledger provides a simple way of displaying
 monthly totals for any account.  Here is an example that summarizes
 your monthly automobile expenses:
 
-@smallexample
-$ ledger -M register expenses:auto
+@smallexample @c command:DB524E4
+$ ledger -M register -f drewr3.dat expenses:auto
+@end smallexample
+
+@smallexample @c output:DB524E4
+11-Jan-01 - 11-Jan-31           Expenses:Auto            $ 5,500.00   $ 5,500.00
 @end smallexample
 
 This assumes, of course, that you use account names like
@@ -929,7 +933,7 @@ above.  For example, for both the expense and the pay-back shown
 above, the following four transactions would be created.  Two in your
 personal ledger file:
 
-@smallexample
+@smallexample @c input:990E0D1
 2004/09/29  Circuit City
     Assets:Reimbursements:Company XYZ     $100.00
     Liabilities:MasterCard               $-100.00
@@ -941,7 +945,7 @@ personal ledger file:
 
 And two in your company ledger file:
 
-@smallexample
+@smallexample @c input:990E0D1
 apply account Company XYZ
 
 2004/09/29  Circuit City
@@ -963,6 +967,18 @@ After creating these transactions, you will always know that $100.00
 was spent using your MasterCard on behalf of Company XYZ, and that
 Company XYZ spent the money on computer software and paid it back
 about two weeks later.
+
+@smallexample @c command:990E0D1
+$ ledger balance --no-total
+@end smallexample
+
+@smallexample @c output:990E0D1
+             $100.00  Assets:Checking
+                   0  Company XYZ
+            $-100.00    Assets:Checking
+             $100.00    Expenses:Computer:Software
+            $-100.00  Liabilities:MasterCard
+@end smallexample
 
 @node Commodities and Currencies, Accounts and Inventories, Assets and Liabilities, Principles of Accounting with Ledger
 @section Commodities and Currencies
@@ -1098,7 +1114,7 @@ transfers an hour of time into a @samp{Billable} account, and another
 which decreases the same account by ten minutes.  The resulting report
 will indicate that fifty minutes remain:
 
-@smallexample
+@smallexample @c input:DF3FEBE
 2005/10/01 Work done for company
     Billable:Client                 1h
     Project:XYZ
@@ -1110,9 +1126,13 @@ will indicate that fifty minutes remain:
 
 Reporting the balance for this ledger file produces:
 
-@smallexample
-       50.0m  Billable:Client
-      -50.0m  Project:XYZ
+@smallexample @c command:DF3FEBE
+$ ledger --no-total balance Billable Project
+@end smallexample
+
+@smallexample @c output:DF3FEBE
+               50.0m  Billable:Client
+              -50.0m  Project:XYZ
 @end smallexample
 
 This example works because ledger already knows how to handle seconds,
@@ -1149,7 +1169,7 @@ various items in EverQuest, and want to keep track of them using a
 ledger.  Just add items of whatever quantity you wish into your
 EverQuest account:
 
-@smallexample
+@smallexample @c input:48F4E47
 9/29  Get some stuff at the Inn
     Places:Black's Tavern                   -3 Apples
     Places:Black's Tavern                   -5 Steaks
@@ -1168,7 +1188,7 @@ later on.  The more you know, the better analysis you can perform.
 If you later sell some of these items to another player, the
 transaction would look like:
 
-@smallexample
+@smallexample @c input:48F4E47
 10/2  Sturm Brightblade
     EverQuest:Inventory                     -2 Steaks
     EverQuest:Inventory                     15 Gold
@@ -1176,6 +1196,16 @@ transaction would look like:
 
 Now you've turned 2 steaks into 15 gold, courtesy of your customer,
 Sturm Brightblade.
+
+@smallexample @c command:48F4E47
+$ ledger balance EverQuest
+@end smallexample
+
+@smallexample @c output:48F4E47
+            3 Apples
+             15 Gold
+            3 Steaks  EverQuest:Inventory
+@end smallexample
 
 @node Understanding Equity, Dealing with Petty Cash, Accounts and Inventories, Principles of Accounting with Ledger
 @section Understanding Equity
@@ -1289,7 +1319,7 @@ This situation can be handled one of two ways.  The first is using
 virtual postings to represent the fact that money is moving to and
 from two kind of accounts at the same time:
 
-@smallexample
+@smallexample @c input:396F24E
 2004/03/20 Contributions
     Assets:Checking                    $500.00
     Income:Donations
@@ -1305,7 +1335,7 @@ virtual postings balance to zero.  Now money can be spent directly
 from a fund at the same time as money is drawn from a physical
 account:
 
-@smallexample
+@smallexample @c input:396F24E
 2004/03/25 Payment for books (paid from Checking)
     Expenses:Books                    $100.00
     Assets:Checking                  $-100.00
@@ -1317,16 +1347,30 @@ funds.  In this case, you will likely want to mask out your
 @samp{Assets} account, because otherwise the balance won't make much
 sense:
 
-@smallexample
-$ ledger bal -^Assets
+@smallexample @c command:396F24E
+$ ledger --no-total bal not ^Assets
+@end smallexample
+
+@smallexample @c output:396F24E
+             $100.00  Expenses:Books
+             $400.00  Funds
+             $200.00    Building
+             $200.00    School
+            $-500.00  Income:Donations
 @end smallexample
 
 @findex --real
 If the @option{--real} option is used, the report will be in terms of
 the real accounts:
 
-@smallexample
-$ ledger --real bal
+@smallexample @c command:2F1CB75,with_input:396F24E
+$ ledger --real --no-total bal
+@end smallexample
+
+@smallexample @c output:2F1CB75
+             $400.00  Assets:Checking
+             $100.00  Expenses:Books
+            $-500.00  Income:Donations
 @end smallexample
 
 If more asset accounts are needed as the source of a posting, just
@@ -1339,6 +1383,7 @@ list them as you would normally, for example:
     Liabilities:Credit Card           $-50.00
     (Funds:School)                   $-100.00
 @end smallexample
+@c TODO: Is the following section still relevant / correct? ledger seems to have lost --code-as-payee
 
 The second way of tracking funds is to use transaction codes.  In this
 respect the codes become like virtual accounts that embrace the entire
@@ -1618,11 +1663,11 @@ business trip to Europe from the US:
 
 @smallexample @c input:82150D9
 2011/09/23 Cash in Munich
-    Assets:Cash                               E50.00
+    Assets:Cash                               €50.00
     Assets:Checking                          $-66.00
 
 2011/09/24 Dinner in Munich
-    Expenses:Business:Travel                  E35.00
+    Expenses:Business:Travel                  €35.00
     Assets:Cash
 @end smallexample
 
@@ -1638,13 +1683,13 @@ $ ledger -f example.dat bal
 
 @smallexample @c output:82150D9
              $-66.00
-              E15.00  Assets
-              E15.00    Cash
+              €15.00  Assets
+              €15.00    Cash
              $-66.00    Checking
-              E35.00  Expenses:Business:Travel
+              €35.00  Expenses:Business:Travel
 --------------------
              $-66.00
-              E50.00
+              €50.00
 @end smallexample
 
 The top two lines show my current assets as $-66.00 in checking (in
@@ -2141,7 +2186,7 @@ apply account Personal
 
 Would result in all postings going into
 @samp{Personal:Expenses:Groceries} and @samp{Personal:Assets:Checking}
-until and @samp{end apply account} directive was found.
+until an @samp{end apply account} directive was found.
 
 @item alias
 @c instance_t::alias_directive
@@ -3829,7 +3874,7 @@ complex, but if you have further interest, please consult the Web.
 Ledger makes this otherwise difficult law very easy.  Just set up an
 automated posting at the top of your ledger file:
 
-@smallexample
+@smallexample @c input:C371854
 ; This automated transaction will compute Huqúqu'lláh based on this
 ; journal's postings.  Any that match will affect the
 ; Liabilities:Huququ'llah account by 19% of the value of that posting.
@@ -3843,7 +3888,19 @@ ledger file.  If any match the given value expression, 19% of the
 posting's value is applied to the @samp{Liabilities:Huququ'llah}
 account.  So, if $1000 is earned from @samp{Income:Salary}, $190 is
 added to @samp{Liabilities:Huqúqu'lláh}; if $1000 is spent on Rent,
-$190 is subtracted.  The ultimate balance of Huqúqu'lláh reflects how
+$190 is subtracted.
+
+@smallexample @c input:C371854
+2003/01/01 (99) Salary
+  Income:Salary  -$1000
+  Assets:Checking
+
+2003/01/01 (100) Rent
+  Expenses:Rent  $500
+  Assets:Checking
+@end smallexample
+
+The ultimate balance of Huqúqu'lláh reflects how
 much is owed in order to fulfill one's obligation to Huqúqu'lláh.
 When ready to pay, just write a check to cover the amount shown in
 @samp{Liabilities:Huququ'llah}.  That transaction would look like:
@@ -3857,8 +3914,12 @@ When ready to pay, just write a check to cover the amount shown in
 That's it.  To see how much Huqúq is currently owed based on your
 ledger transactions, use:
 
-@smallexample
+@smallexample @c command:C371854
 $ ledger balance Liabilities:Huquq
+@end smallexample
+
+@smallexample @c output:C371854
+                $-95  Liabilities:Huququ'llah
 @end smallexample
 
 This works fine, but omits one aspect of the law: that Huquq is only
