@@ -2205,7 +2205,7 @@ until an @samp{end apply account} directive was found.
 Define an alias for an account name.  If you have a deeply nested tree
 of accounts, it may be convenient to define an alias, for example:
 
-@smallexample @c input:94A99E8
+@smallexample @c input:validate
 alias Dining=Expenses:Entertainment:Dining
 alias Checking=Assets:Credit Union:Joint Checking Account
 
@@ -2218,11 +2218,11 @@ The aliases are only in effect for transactions read in after the alias
 is defined and are affected by @code{account} directives that precede
 them.
 
-@smallexample @c command:94A99E8
+@smallexample @c command:validate
 $ ledger bal --no-total ^Exp
 @end smallexample
 
-@smallexample @c output:94A99E8
+@smallexample
               $10.00  Expenses:Entertainment:Dining
 @end smallexample
 
@@ -2230,7 +2230,7 @@ With the option @option{--recursive-aliases}, aliases can refer to other aliases
 the following example produces exactly the same transactions and account names
 as the preceding one:
 
-@smallexample @c input:83E1FB3
+@smallexample @c input:validate
 alias Entertainment=Expenses:Entertainment
 alias Dining=Entertainment:Dining
 alias Checking=Assets:Credit Union:Joint Checking Account
@@ -2240,11 +2240,11 @@ alias Checking=Assets:Credit Union:Joint Checking Account
   Checking
 @end smallexample
 
-@smallexample @c command:83E1FB3
+@smallexample @c command:validate
 $ ledger balance --no-total --recursive-aliases ^Exp
 @end smallexample
 
-@smallexample @c output:83E1FB3
+@smallexample
               $10.00  Expenses:Entertainment:Dining
 @end smallexample
 
