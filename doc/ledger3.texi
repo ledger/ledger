@@ -1604,7 +1604,7 @@ Expenses:Food:Hamburgers and Fries
 
 Comments are generally started using a @samp{;}.  However, in order to
 increase compatibility with other text manipulation programs and
-methods four additional comment characters are valid if used at the
+methods, four additional comment characters are valid if used at the
 beginning of a line: @samp{#}, @samp{|}, and @samp{*} and @samp{%}.
 
 Block comments can be made by use @code{comment} ... @code{end
@@ -1649,7 +1649,7 @@ start with @samp{;} and are preserved as part of the transaction.  The
 @cindex commodity
 
 Ledger is agnostic when it comes to how you value your accounts.
-Dollars, Euros, Pounds, Francs, Shares etc. are just ``commodities''.
+Dollars, Euros, Pounds, Francs, Shares etc. are all just ``commodities''.
 Holdings in stocks, bonds, mutual funds and other financial
 instruments can be labeled using whatever is convenient for you (stock
 ticker symbols are suggested for publicly traded assets).@footnote{You
@@ -1670,7 +1670,7 @@ reporting capabilities to convert all commodities to a single
 commodity for reporting purposes without ever changing the underlying
 entry.
 
-For example, the following entries reflect transaction made for a
+For example, the following entries reflect transactions made for a
 business trip to Europe from the US:
 
 @smallexample @c input:82150D9
@@ -1684,7 +1684,7 @@ business trip to Europe from the US:
 @end smallexample
 
 This says that $66.00 came out of checking and turned into 50
-Euros. The implied exchange rate was $1.32.  Then 35.00 Euros was
+Euros. The implied exchange rate was $1.32.  Then 35.00 Euros were
 spent on Dinner in Munich.
 
 Running a ledger balance report shows:
@@ -1706,8 +1706,8 @@ $ ledger -f example.dat bal
 
 The top two lines show my current assets as $-66.00 in checking (in
 this very short example I didn't establish opening an opening balance
-for the checking account) and E15.00.  After spending on dinner I have
-E15.00 in my wallet.  The bottom line balances to zero, but is shown
+for the checking account) and €15.00.  After spending on dinner I have
+€15.00 in my wallet.  The bottom line balances to zero, but is shown
 in two lines since we haven't told ledger to convert commodities.
 
 @menu
@@ -1721,7 +1721,7 @@ in two lines since we haven't told ledger to convert commodities.
 @subsection Naming Commodities
 
 Commodity names can have any character, including white-space.
-However, if you include white-space or numeric characters the
+However, if you include white-space or numeric characters, the
 commodity name must be enclosed in double quotes @samp{"}:
 
 @smallexample @c input:validate
@@ -1751,7 +1751,7 @@ convention is as follows:
     Assets:Broker                  $-1,519.95
 @end smallexample
 
-This assumes you have a brokerage account that is capable of managed
+This assumes you have a brokerage account that is capable of managing
 both liquid and commodity assets.  Now, on the day of the sale:
 
 @smallexample @c input:validate
@@ -1776,7 +1776,7 @@ longest-held-first.
 @cindex fixing lot prices
 @cindex consumable commodity pricing
 
-Commodities that you keep in order to sell them at a later time have
+Commodities that you keep in order to sell at a later time have
 a variable value that fluctuates with the market prices.  Commodities
 that you consume should not fluctuate in value, but stay at the lot
 price they were purchased at.  As an extension of ``lot pricing'', you
@@ -1802,7 +1802,7 @@ price of gasoline.
 
 If you do not want price fixing, you can specify this same transaction
 in one of two ways, both equivalent (note the lack of the equal sign
-from the transaction above):
+compared to the transaction above):
 
 @smallexample @c input:validate
 2009/01/01 Shell
@@ -1837,12 +1837,12 @@ Assets:Checking because its amount is null.
 Ledger allows you to have very detailed control over how your
 commodities are valued. You can fine tune the results given using the
 @option{--market} or @option{--exchange @var{COMMODITY}} options. There
-are now several points of interception, you can specify the valuation
+are now several points of interception; you can specify the valuation
 method:
 
 @enumerate
 @item on a commodity itself,
-@item on a posting, via metadata (affect is largely the same as #1),
+@item on a posting, via metadata (effect is largely the same as #1),
 @item on an xact, which then applies to all postings in that xact,
 @item on any posting via an automated transaction,
 @item on a per-account basis,
@@ -1995,9 +1995,9 @@ freeform text editor to enter transactions makes it easy to keep the
 data, but also easy to enter accounts or payees inconsistently or with
 spelling errors.
 
-In order to combat inconsistency you can define allowable accounts and
-or payees.  For simplicity, create a separate text file and enter
-define accounts a payees like
+In order to combat inconsistency you can define allowable accounts and 
+payees.  For simplicity, create a separate text file and define accounts 
+and payees like
 
 @smallexample
 account Expenses
@@ -2023,7 +2023,7 @@ $ ledger accounts >> Accounts.dat
 @end smallexample
 
 @noindent
-You will have to edit this file to add the @code{account} directive.
+You will have to edit this file to add the @code{account} directive in front of every line.
 
 @node Journal Format, Converting from other formats, Keeping it Consistent, Keeping a Journal
 @section Journal Format
@@ -2067,7 +2067,7 @@ payee, or a description of the posting.
 The format of each following posting is:
 
 @smallexample
-ACCOUNT  AMOUNT  [; NOTE]
+  ACCOUNT  AMOUNT  [; NOTE]
 @end smallexample
 
 The @code{ACCOUNT} may be surrounded by parentheses if it is a virtual
@@ -2094,24 +2094,24 @@ An automated transaction.  A value expression must appear after the
 equal sign.
 
 After this initial line there should be a set of one or more postings,
-just as if it were normal transaction.  If the amounts of the postings
-have no commodity, they will be applied as modifiers to whichever real
+just as if it were a normal transaction.  If the amounts of the postings
+have no commodity, they will be applied as multipliers to whichever real
 posting is matched by the value expression (@pxref{Automated
 Transactions}).
 
 @item ~
-A period transaction.  A period expression must appear after the tilde.
+A periodic transaction.  A period expression must appear after the tilde.
 
 After this initial line there should be a set of one or more
-postings, just as if it were normal transaction.
+postings, just as if it were a normal transaction.
 
 @item ; # % | *
-A line beginning with a colon, pound, percent, bar or asterisk
+A line beginning with a semicolon, pound, percent, bar or asterisk
 indicates a comment, and is ignored. Comments will not be returned in
 a ``print'' response.
 
 @item indented ;
-If the semi colon is indented and occurs inside a transaction, it is
+If the semicolon is indented and occurs inside a transaction, it is
 parsed as a persistent note for its preceding category.  These notes or
 tags can be used to augment the reporting and filtering capabilities of
 Ledger.
@@ -2130,7 +2130,7 @@ Command directives must occur at the beginning of a line.  Use of
 @samp{!} and @samp{@@} is deprecated.
 
 @item account
-Pre-declare valid account names.  This only has effect if
+Pre-declare valid account names.  This only has an effect if
 @option{--strict} or @option{--pedantic} is used (see below).  The
 @code{account} directive supports several optional sub-directives, if
 they immediately follow the account directive and if they begin with
@@ -2148,7 +2148,7 @@ account Expenses:Food
 @end smallexample
 
 The @code{note} sub-directive associates a textual note with the
-account.  This can be accessed later using the @code{note} valexpr
+account.  This can be accessed later using the @code{note} value expression
 function in any account context.
 
 The @code{alias} sub-directive, which can occur multiple times, allows
@@ -2166,7 +2166,7 @@ encountered and an account within its transaction ends in the name
     Assets:Cash
 @end smallexample
 
-The @code{check} and @code{assert} directives warn or error
+The @code{check} and @code{assert} directives warn or raise an error
 (respectively) if the given value expression evaluates to false within
 the context of any posting.
 
@@ -2180,13 +2180,13 @@ contain only a single posting.
 
 @item apply account
 @c instance_t::master_account_directive
-Sets the root for all accounts following the directive.  Ledger
+Sets the root for all accounts following this directive.  Ledger
 supports a hierarchical tree of accounts.  It may be convenient to
 keep two ``root accounts''.  For example you may be tracking your
 personal finances and your business finances.  In order to keep them
 separate you could preface all personal accounts with @samp{personal:}
-and all business account with @samp{business:}.  You can easily split
-out large groups of transaction without manually editing them using
+and all business accounts with @samp{business:}.  You can easily split
+out large groups of transactions without manually editing them using
 the account directive.  For example:
 
 @smallexample @c input:validate
@@ -2248,7 +2248,8 @@ $ ledger balance --no-total --recursive-aliases ^Exp
               $10.00  Expenses:Entertainment:Dining
 @end smallexample
 
-The option @option{--no-aliases} completely disables alias expansion.
+The option @option{--no-aliases} completely disables alias expansion. 
+All accounts are read verbatim as they are in the ledger file.
 
 @item assert
 @c instance_t::assert_directive
@@ -7450,7 +7451,7 @@ your expectations.
 
 To start keeping a budget, put some periodic transactions
 (@pxref{Periodic Transactions}) at the top of your ledger file.  A
-period transaction is almost identical to a regular transaction, except
+periodic transaction is almost identical to a regular transaction, except
 that it begins with a tilde and has a period expression in place of a
 payee.  For example:
 
@@ -7471,7 +7472,7 @@ payee.  For example:
     Assets
 @end smallexample
 
-These two period transactions give the usual monthly expenses, as well
+These two periodic transactions give the usual monthly expenses, as well
 as one typical yearly expense.  For help on finding out what your
 average monthly expense is for any category, use a command like:
 
@@ -7481,7 +7482,7 @@ $ ledger -p "this year" --monthly --average balance ^expenses
 
 The reported totals are the current year's average for each account.
 
-Once these period transactions are defined, creating a budget report is
+Once these periodic transactions are defined, creating a budget report is
 as easy as adding @option{--budget} to the command-line.  For example,
 a typical monthly expense report would be:
 
@@ -7512,7 +7513,7 @@ You can also use these flags with the @command{balance} command.
 
 Sometimes it's useful to know what your finances will look like in the
 future, such as determining when an account will reach zero.  Ledger
-makes this easy to do, using the same period transactions as are used
+makes this easy to do, using the same periodic transactions as are used
 for budgeting.  An example forecast report can be generated with:
 
 @smallexample @c command:validate
