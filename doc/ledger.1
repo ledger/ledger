@@ -182,7 +182,7 @@ Invert the value of amounts shown.
 .It Fl \-market Pq Fl V
 Show current market values for all amounts.  This is determined in a somewhat
 magical fashion.  It is probably more straightforward to use
-.Fl \-exchange Pq Fl X .
+.Fl \-exchange Ar commodity Pq Fl X .
 .It Fl \-period Ar time-period Pq Fl p
 Show postings only for the given
 .Ar time-period .
@@ -281,193 +281,586 @@ transactions they are contained in.  See the manual for more information.
 .Pp
 .Bl -tag -width -indent
 .It Fl \-abbrev-len Ar INT
+Set the minimum length an account can be abbreviated to if it doesn't
+fit inside the
+.Nm account-width .
+If
+.Ar INT
+is zero, then the
+account name will be truncated on the right. If
+.Ar INT
+is greater
+than
+.Nm account-width
+then the account will be truncated on the
+left, with no shortening of the account names in order to fit into the
+desired width.
 .It Fl \-account Ar STR
+Prepend
+.Ar STR
+to all accounts reported. That is, the option
+.Nm --account Personal
+would tack
+.Nm Personal:
+to the beginning of every account reported in a balance report or register report.
 .It Fl \-account-width Ar INT
+Set the width of the account column in the
+.Nm register
+report
+to
+.Ar INT
+characters.
 .It Fl \-actual Pq Fl L
+Report only real transactions, with no automated or virtual
+transactions used.
 .It Fl \-add-budget
+Show only un-budgeted postings.
 .It Fl \-amount Ar EXPR Pq Fl t
+Apply the given value expression to the posting amount. Using
+.Nm --amount Ar EXPR
+you can apply an
+arbitrary transformation to the postings.
 .It Fl \-amount-data Pq Fl j
+On a register report print only the dates and amount of postings.
+Useful for graphing and spreadsheet applications.
 .It Fl \-amount-width Ar INT
+Set the width in characters of the amount column in the
+.Nm register
+report.
 .It Fl \-anon
+Anonymize registry output, mostly for sending in bug reports.
 .It Fl \-args-only
 .It Fl \-auto-match
 .It Fl \-aux-date
+Show auxiliary dates for all calculations.
+Alias for 
+.Fl \-effective
 .It Fl \-average Pq Fl A
+Print average values over the number of transactions instead of
+running totals.
 .It Fl \-balance-format Ar FMT
+Specify the format to use for the
+.Nm balance
+report.
 .It Fl \-base
 .It Fl \-basis Pq Fl B
+Report the cost basis on all posting.
+Alias for
+.Fl \-cost
 .It Fl \-begin Ar DATE Pq Fl b
+Specify the start
+.Ar DATE
+of all calculations. Transactions before
+that date will be ignored.
 .It Fl \-bold-if Ar EXPR
+Print the entire line in bold if the given value expression is true.
 .It Fl \-budget
+Only display budgeted items. In a register report this
+displays transaction in the budget, in a balance report this displays
+accounts in the budget.
 .It Fl \-budget-format Ar FMT
+Specify the format to use for the
+.Nm budget
+report.
 .It Fl \-by-payee Pq Fl P
+Group postings in the register report by common payee names.
 .It Fl \-cache Ar FILE
 .It Fl \-check-payees
+Enable strict and pedantic checking for payees as well as accounts,
+commodities and tags.
 .It Fl \-cleared Pq Fl C
+Display only cleared postings.
 .It Fl \-cleared-format Ar FMT
+Specify the format to use for the
+.Nm cleared
+report
 .It Fl \-collapse Pq Fl n
+By default ledger prints all accounts in an account tree. With
+.Fl \-collapse
+it prints only the top level account specified.
 .It Fl \-collapse-if-zero
+Collapse the account display only if it has a zero balance.
 .It Fl \-color
+Use color if the terminal supports it.
+Alias for
+.Fl \-ansi
 .It Fl \-columns Ar INT
+Specify the width of the
+.Nm register
+report in characters.
 .It Fl \-cost
-See
+Report the cost basis on all posting.
+Alias for
 .Fl \-basis .
 .It Fl \-count
+Direct ledger to report the number of items when appended to the
+commodities, accounts or payees command.
 .It Fl \-csv-format Ar FMT
+Specify the format to use for the
+.Nm csv
+report
 .It Fl \-current Pq Fl c
-.It Fl \-daily
+Shorthand for
+.Nm --limit 'date <= today' .
+.It Fl \-daily Pq Fl D
+Shorthand for
+.Nm --period 'daily' .
 .It Fl \-date Ar EXPR
+Transform the date of the transaction using
+.Ar EXPR .
 .It Fl \-date-format Ar DATEFMT Pq Fl y
+Specify the format ledger should use to print dates.
 .It Fl \-datetime-format Ar FMT
 .It Fl \-date-width Ar INT
+Specify the width, in characters, of the date column in the
+.Nm register
+report.
 .It Fl \-day-break
 .It Fl \-dc
+Display register or balance in debit/credit format If you use
+.Fl \-dc
+with either the register (reg) or balance (bal) commands,
+you will now get separate columns for debits and credits.
 .It Fl \-debug Ar STR
+If Ledger has been built with debug options this will provide extra
+data during the run.
 .It Fl \-decimal-comma
+Direct Ledger to parse journals using the European standard comma as
+decimal separator, vice a period.
 .It Fl \-depth Ar INT
+Limit the depth of the account tree.  In a balance report, for example,
+a
+.Fl \-depth 2
+statement will print balances only for account with
+two levels, i.e.
+.Nm Expenses:Entertainment
+but not
+.Nm Expenses:entertainemnt:Dining .
+This is a display predicate, which
+means it only affects display, not the total calculations.
 .It Fl \-deviation Pq Fl D
+Report each posting’s deviation from the average. It is only meaningful
+in the register and prices reports.
 .It Fl \-display Ar EXPR Pq Fl d
+Display lines that satisfy the expression
+.Ar EXPR .
 .It Fl \-display-amount Ar EXPR
+Apply a transformation to the
+.Nm displayed
+amount.  This occurs after
+calculations occur.
 .It Fl \-display-total Ar EXPR
+Apply a transformation to the
+.Nm displayed
+total.  This occurs after
+calculations occur.
 .It Fl \-dow
+Group transactions by the days of the week.
+Alias for
+.Fl \-days-of-week
 .It Fl \-download
+Cause quotes to be automagically downloaded, as needed, by running
+a script named
+.Nm getquote
+and expecting that script to return
+a value understood by ledger.  A sample implementation of
+a
+.Nm getquote
+script, implemented in Perl, is provided in the
+distribution.  Downloaded quote price are then appended to the price
+database, usually specified using the environment variable
+.NmLEDGER_PRICE_DB .
 .It Fl \-empty Pq Fl E
-.It Fl \-end Pq Fl e
+Include empty accounts in report.
+.It Fl \-end Ar DATE Pq Fl e
+Specify the end
+.Ar DATE
+for a transaction to be considered in the
+report.
 .It Fl \-equity
+Related to the
+.Nm equity
+command.  Gives current account balances in the form of a register
+report.
 .It Fl \-exact
-.It Fl \-exchange Ar COMM Oo , COMM, ... Oc Pq Fl X
+.It Fl \-exchange Ar COMMODITY Oo , COMM, ... Oc Pq Fl X
+Display values in terms of the given
+.Ar COMMODITY .
+The latest available price is used.
 .It Fl \-explicit
 .It Fl \-file Ar FILE
+Read
+.Ar FILE
+as a ledger file.
 .It Fl \-first Ar INT
-See
+Print the first
+.Ar INT
+entries. Opposite of
+.Fl \-tail Ar INT .
+Alias for 
 .Fl \-head .
 .It Fl \-flat
+Force the full names of accounts to be used in the balance report. The
+balance report will not use an indented tree.
 .It Fl \-force-color
+Output TTY color codes even if the TTY doesn't support them. Useful
+for TTYs that don't advertise their capabilities correctly.
 .It Fl \-force-pager
+Force Ledger to paginate its output.
 .It Fl \-forecast-while Ar EXPR
-(Also
-.Fl \-forecast
-).
+Continue forecasting while
+.Ar VEXPR
+is true.
+Alias for
+.Fl \-forecast .
 .It Fl \-forecast-years Ar INT
+Forecast at most
+.Ar INT
+years into the future.
 .It Fl \-format Ar FMT Pq Fl F
-.It Fl \-full-help
+Use the given format string
+.Ar FMT
+to print output.
 .It Fl \-gain Pq Fl G
+Report net gain or loss for commodities that have a price history.
 .It Fl \-generated
+Include auto-generated postings (such as those from automated
+transactions) in the report, in cases where you normally wouldn't want
+them.
 .It Fl \-group-by Ar EXPR
+Group transaction together in the
+.Nm register
+report.
+.Ar EXPR
+can be anything, although most common would be
+.Nm payee
+or
+.Nm commodity .
+The
+.Nm tags()
+function is also useful here.
 .It Fl \-group-title-format Ar FMT
+Set the format for the headers that separate reports section of
+a grouped report.  Only has effect with a
+.Fl \-group-by Ar EXPR
+register report.
 .It Fl \-head Ar INT
+Print the first
+.Ar INT
+entries. Opposite of
+.Fl \-tail Ar INT .
+Alias for
+.Fl \-first
 .It Fl \-help
-.It Fl \-help-calc
-.It Fl \-help-comm
-.It Fl \-help-disp
+Print a summary of all the options, and what they are used for.  This
+can be a handy way to remember which options do what.  This help screen
+is also printed if ledger is run without a command.
 .It Fl \-immediate
-.It Fl \-import Ar STR
+Instruct ledger to evaluate calculations immediately rather than lazily.
 .It Fl \-init-file Ar FILE
+Causes
+.Nm FILE
+to be read by ledger before any other ledger file.
+This file may not contain any postings, but it may contain option
+settings.  To specify options in the init file, use the same syntax as
+the command-line, but put each option on its own line.
 .It Fl \-inject Ar STR
+TODO
 .It Fl \-input-date-format Ar DATEFMT
+Specify the input date format for journal entries.
 .It Fl \-invert
+Change the sign of all reported values.
 .It Fl \-last Ar INT
-See
+Report only the last
+.Ar INT
+entries. Only useful on a register
+report.
+Alias for
 .Fl \-tail .
 .It Fl \-leeway Ar INT Pq Fl Z
+Alias for 
+.Fl \-price-expr .
 .It Fl \-limit Ar EXPR Pq Fl l
+Limit postings in calculations.
 .It Fl \-lot-dates
+Report the date on which each commodity in a balance report was
+purchased.
 .It Fl \-lot-notes
+Report the tag attached to each commodity in a balance report.
 .It Fl \-lot-prices
+Report the price at which each commodity in a balance report was
+purchased.
 .It Fl \-lots
+Report the date and price at which each commodity was purchased in
+a balance report.
 .It Fl \-lots-actual
 .It Fl \-market Pq Fl V
+Use the latest market value for all commodities.
 .It Fl \-master-account Ar STR
+Prepend all account names with
+.Ar STR
 .It Fl \-meta Ar EXPR
+In the register report, prepend the transaction with the value of the given
+.Ar TAG .
 .It Fl \-meta-width Ar INT
+Specify the width of the Meta column used for the
+.Fl \-meta Ar TAG
+options.
 .It Fl \-monthly Pq Fl M
+Shorthand for
+.Fl \-period 'monthly' .
+.It Fl \-no-aliases
+Aliases are completely ignored.
 .It Fl \-no-color
-.It Fl \-no-pager
+Suppress any color TTY output.
 .It Fl \-no-rounding
+Don't output
+.Nm <Rounding>
+postings.  Note that this will cause the
+running total to often not add up!  It's main use is for
+.Fl \-amount-data Pq Fl j
+and
+.Fl \-total-data Pq Fl J
+reports.
 .It Fl \-no-titles
+Suppress the output of group titles.
 .It Fl \-no-total
+Suppress printing the final total line in a balance report.
 .It Fl \-now Ar DATE
+Define the current date in case to you to do calculate in the past or
+future using
+.Fl \-current .
 .It Fl \-only Ar EXPR
+This is a postings predicate that applies after certain transforms have
+been executed, such as periodic gathering.
 .It Fl \-options
+Display the options in effect for this Ledger invocation, along with
+their values and the source of those values.
 .It Fl \-output Ar FILE Pq Fl o
+Redirect the output of ledger to the file defined in
+.Ar FILE .
 .It Fl \-pager Ar STR
+Specify the pager program to use as
+.Ar STR .
 .It Fl \-payee
+Sets a value expression for formatting the payee. In the
+.Nm register
+report this prevents the second entry from having
+a date and payee for each transaction.
 .It Fl \-payee-width Ar INT
+Set the number of columns dedicated to the payee in the register
+report to
+.Ar INT .
 .It Fl \-pedantic
+Accounts, tags or commodities not previously declared will cause errors.
 .It Fl \-pending
-.It Fl \-percent Pq Fl \%
+Use only postings that are marked pending.
+.It Fl \-percent Pq Fl \b'%'
+Calculate the percentage value of each account in a balance reports.
+Only works for account that have a single commodity.
 .It Fl \-period Ar PERIOD Pq Fl p
+Define a period expression that sets the time period during which
+transactions are to be accounted. For a
+.Nm register
+report only
+the transactions that satisfy the period expression with be displayed.
+For a balance report only those transactions will be accounted in the
+final balances.
 .It Fl \-period-sort
+Sort the posting within transactions using the given value expression.
 .It Fl \-permissive
 .It Fl \-pivot Ar STR
+Produce a balance pivot report
+.Nm around
+the given
+.Ar TAG .
 .It Fl \-plot-amount-format Ar FMT
+Define the output format for an amount data plot.
 .It Fl \-plot-total-format Ar FMT
+Define the output format for a total data plot.
 .It Fl \-prepend-format Ar FMT
+Prepend
+.Ar STR
+to every line of the output.
 .It Fl \-prepend-width Ar INT
+Reserve
+.Ar INT
+spaces at the beginning of each line of the output.
 .It Fl \-price Pq Fl I
+Use the price of the commodity purchase for performing calculations.
 .It Fl \-price-db Ar FILE
-.It Fl \-price-exp Ar STR
-See
-.Fl \-leeway .
+.It Fl \-price-exp Ar STR Pq Fl Z
+Set the expected freshness of price quotes, in
+.Ar INT
+minutes. That
+is, if the last known quote for any commodity is older than this value,
+and if
+.Fl \-download
+is being used, then the Internet will be
+consulted again for a newer price. Otherwise, the old price is still
+considered to be fresh enough.
+Alias for
+.Fl \-leeway Ar INT Pq Fl Z
 .It Fl \-prices-format Ar FMT
 .It Fl \-pricedb-format Ar FMT
 .It Fl \-primary-date
+Show primary dates for all calculations. Alias for
+.Fl \-actual-dates
 .It Fl \-quantity Pq Fl O
+Report commodity totals (this is the default).
 .It Fl \-quarterly
+Synonym for
+\Fl \-period 'quarterly' .
 .It Fl \-raw
-For use only with the
+In the
 .Nm print
-command, it causes Ledger to print out matching entries exactly as they
-appeared in the original journal file.
+report, show transactions using the exact same syntax as
+specified by the user in their data file.  Don't do any massaging or
+interpreting.  Can be useful for minor cleanups, like just aligning
+amounts.
 .It Fl \-real Pq Fl R
+Account using only real transactions ignoring virtual and automatic
+transactions.
+.It Fl \-recursive-aliases
+Causes ledger to try to expand aliases recursively, i.e. try to expand
+the result of an earlier expansion again, until no more expansions apply.
 .It Fl \-register-format Ar FMT
+Define the output format for the
+.Nm register
+report.
 .It Fl \-related Pq Fl r
+In a register report show the related account.  This is the other
+.Nm side
+of the transaction.
 .It Fl \-related-all
+Show all postings in a transaction, similar to
+.Fl \-related
+but show 
+.Nm both sides
+of each transaction.
 .It Fl \-revalued
 .It Fl \-revalued-only
 .It Fl \-revalued-total Ar EXPR
 .It Fl \-rich-data
 .It Fl \-seed Ar INT
-.It Fl \-script
+Set the random seed to
+.Ar INT
+for the
+.Nm generate
+command.  Used as part of development testing.
+.It Fl \-script Ar FILE
+Execute a ledger script.
 .It Fl \-sort Ar EXPR Pq Fl S
+Sort the register report based on the value expression given to sort.
 .It Fl \-sort-all
 .It Fl \-sort-xacts
+Sort the posting within transactions using the given value expression.
 .It Fl \-start-of-week Ar STR
+Tell ledger to use a particular day of the week to start its "weekly"
+summary.
+.Fl \-start-of-week=1
+specifies Monday as the start of the week.
 .It Fl \-strict
+Accounts, tags or commodities not previously declared will cause warnings.
 .It Fl \-subtotal Pq Fl s
+Report register as a single subtotal.
 .It Fl \-tail Ar INT
+Report only the last
+.Ar INT
+entries. Only useful on a register report. Alias for
+.Fl \-last Ar INT
 .It Fl \-time-report
-.It Fl \-total Ar EXPR
+.It Fl \-total Ar EXPR Pq Fl T
+Define a value expression used to calculate the total in reports.
 .It Fl \-total-data Pq Fl J
+Show only dates and totals to format the output for plots.
 .It Fl \-total-width Ar INT
+Set the width of the total field in the register report.
 .It Fl \-trace Ar INT
-.It Fl \-truncate
+Enable tracing. The
+.Ar INT
+specifies the level of trace desired.
+.It Fl \-truncate Ar CODE
+Indicates how truncation should happen when the contents of columns
+exceed their width. Valid arguments are
+.Nm leading , Nm middle ,
+and
+.Nm trailing .
+The default is smarter than any of these three,
+as it considers sub-names within the account name (that style is
+called "abbreviate").
 .It Fl \-unbudgeted
+Show only un-budgeted postings.
 .It Fl \-uncleared Pq Fl U
+Use only uncleared transactions in calculations and reports.
 .It Fl \-unrealized
 .It Fl \-unrealized-gains
+Allow the user to specify what account name should be used for
+unrealized gains. Defaults to
+.Nm "Equity:Unrealized Gains" .
+Often set in one's
+.Nm ~/.ledgerrc
+file to change the default.
 .It Fl \-unrealized-losses
+Allow the user to specify what account name should be used for
+unrealized gains. Defaults to
+.Nm "Equity:Unrealized Losses" .
+Often set in one's
+.Nm ~/.ledgerrc
+file to change the default.
 .It Fl \-unround
+Perform all calculations without rounding and display results to full
+precision.
+.It Fl \-values
 .It Fl \-value-expr Ar EXPR
 .It Fl \-verbose
+Print detailed information on the execution of Ledger.
 .It Fl \-verify
+Enable additional assertions during run-time. This causes a significant
+slowdown.  When combined with
+.Fl \-debug Ar CODE
+ledger will produce memory trace information.
 .It Fl \-verify-memory
 .It Fl \-version
+Print version information and exit.
 .It Fl \-weekly Pq Fl W
+Synonym for
+.Fl \-period 'weekly' .
 .It Fl \-wide Pq Fl w
+Assume 132 columns instead of 80.
 .It Fl \-yearly Pq Fl Y
+Synonym for
+.Fl \-period 'yearly' .
 .El
 .Pp
-.Sh PRECOMMANDS
+.Sh PRE-COMMANDS
+Pre-commands are useful when you aren't sure how a command or option
+will work. The difference between a pre-command and a regular command
+is that pre-commands ignore the journal data file completely, nor is
+the user's init file read.
 .Pp
 .Bl -tag -width -indent
-.It Nm args
+.It Nm args / query
+Evaluate the given arguments and report how Ledger interprets it against
+the following model transaction.
 .It Nm eval
+Evaluate the given value expression against the model transaction.
 .It Nm format
-.It Nm parse
+Print details of how ledger uses the given formatting description and
+apply it against a model transaction.
+.It Nm parse / expr
+Print details of how ledger uses the given value expression description
+and apply it against a model transaction.
+.It Nm generate
+Randomly generates syntactically valid Ledger data from a seed.  Used
+by the GenerateTests harness for development testing.
 .It Nm period
-.It Nm python
+Evaluate the given period and report how Ledger interprets it.
+.It Nm script
 .It Nm template
+Shows the insertion template that the
+.Nm xact sub-command generates.
+This is a debugging command.
 .El
 .Pp
 .Sh QUERIES

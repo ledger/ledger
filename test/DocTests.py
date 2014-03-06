@@ -22,6 +22,7 @@ class DocTests:
     self.testin_token  = 'command'
     self.testout_token = 'output'
     self.testdat_token = 'input'
+    self.validate_token = 'validate'
     self.testwithdat_token = 'with_input'
 
   def read_example(self):
@@ -31,14 +32,14 @@ class DocTests:
       line = self.file.readline()
       self.current_line += 1
       if len(line) <= 0 or endexample.match(line): break
-      example += line
+      example += line.replace("@@","@").replace("@{","{").replace("@}","}")
     return example
 
   def test_id(self, example):
     return hashlib.sha1(example.rstrip()).hexdigest()[0:7].upper()
 
   def find_examples(self):
-    startexample = re.compile(r'^@smallexample\s+@c\s+(%s|%s|%s)(?::([\dA-Fa-f]+))?(?:,(.*))?'
+    startexample = re.compile(r'^@smallexample\s+@c\s+(%s|%s|%s)(?::([\dA-Fa-f]+|validate))?(?:,(.*))?'
         % (self.testin_token, self.testout_token, self.testdat_token))
     while True:
       line = self.file.readline()
@@ -67,10 +68,16 @@ class DocTests:
           test_id = self.test_id(example)
           if test_kind == self.testin_token:
             print >> sys.stderr, 'Use', self.test_id(example)
-        elif test_kind == self.testin_token and test_id != self.test_id(example):
+        elif test_kind == self.testin_token and test_id != self.validate_token and test_id != self.test_id(example):
           print >> sys.stderr, 'Expected test id', test_id, 'for example' \
               , test_kind, 'on line', test_begin_line, 'to be', self.test_id(example)
 
+        if test_id == self.validate_token:
+          test_id = "Val-" + str(test_begin_line)
+          if test_kind == self.testin_token:
+            test_kind = "validate-command"
+          elif test_kind == self.testdat_token:
+            test_kind = "validate-data"
         try:
           self.examples[test_id]
         except KeyError:
@@ -91,10 +98,17 @@ class DocTests:
             }
 
   def parse_command(self, test_id, example):
+    validate_command = False
     try:
       command = example[self.testin_token][self.testin_token]
     except KeyError:
-      return None
+      if 'validate-data' in example:
+        command = '$ ledger bal'
+      elif 'validate-command' in example:
+        validate_command = True
+        command = example['validate-command']['validate-command']
+      else:
+        return None
 
     command = command.rstrip().split()
     if command[0] == '$': command.remove('$')
@@ -110,12 +124,18 @@ class DocTests:
       except ValueError:
         findex = index+1
         command.insert(findex, '--file')
-        command.insert(findex+1, test_id + '.dat')
+        if validate_command:
+          command.insert(findex+1, 'sample.dat')
+        else:
+          command.insert(findex+1, test_id + '.dat')
     return (command, findex+1)
 
   def test_examples(self):
     failed = set()
     for test_id in self.examples:
+      validation = False
+      if "validate-data" in self.examples[test_id] or "validate-command" in self.examples[test_id]:
+        validation = True
       example = self.examples[test_id]
       try:
         (command, findex) = self.parse_command(test_id, example)
@@ -135,9 +155,12 @@ class DocTests:
           with_input = example[self.testin_token]['opts'][self.testwithdat_token]
           input = self.examples[with_input][self.testdat_token][self.testdat_token]
         except KeyError:
-          input = None
+          try:
+            input = example['validate-data']['validate-data']
+          except KeyError:
+            input = None
 
-      if command and output:
+      if command and (output or validation):
         test_file_created = False
         if findex:
           scriptpath = os.path.dirname(os.path.realpath(__file__))
@@ -150,11 +173,13 @@ class DocTests:
                 f.write(input)
             elif os.path.exists(test_input_dir + test_file):
               command[findex] = test_input_dir + test_file
+        error = False
         try:
           verify = subprocess.check_output(command)
         except:
           verify = str()
-        valid = (output == verify)
+          error = True
+        valid = (output == verify) or (not error and validation)
         if valid and test_file_created:
           os.remove(test_file)
         if self.verbose > 0:
@@ -166,9 +191,10 @@ class DocTests:
           failed.add(test_id)
           if self.verbose > 1:
             print ' '.join(command)
-            for line in unified_diff(output.split('\n'), verify.split('\n'), fromfile='generated', tofile='expected'):
-              print(line)
-            print
+            if not validation:
+              for line in unified_diff(output.split('\n'), verify.split('\n'), fromfile='generated', tofile='expected'):
+                print(line)
+              print
     if not self.verbose:
       print
     if len(failed) > 0:

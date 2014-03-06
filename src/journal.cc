@@ -96,6 +96,7 @@ void journal_t::initialize()
   check_payees      = false;
   day_break         = false;
   checking_style    = CHECK_PERMISSIVE;
+  recursive_aliases = false;
 }
 
 void journal_t::add_account(account_t * acct)
@@ -121,26 +122,9 @@ account_t * journal_t::find_account_re(const string& regexp)
 account_t * journal_t::register_account(const string& name, post_t * post,
                                         account_t * master_account)
 {
-  account_t * result = NULL;
-
-  // If there any account aliases, substitute before creating an account
+  // If there are any account aliases, substitute before creating an account
   // object.
-  if (account_aliases.size() > 0) {
-    accounts_map::const_iterator i = account_aliases.find(name);
-    if (i != account_aliases.end()) {
-      result = (*i).second;
-    } else {
-      // only check the very first account for alias expansion, in case
-      // that can be expanded successfully
-      size_t colon = name.find(':');
-      if(colon != string::npos) {
-        accounts_map::const_iterator j = account_aliases.find(name.substr(0, colon));
-        if (j != account_aliases.end()) {
-          result = find_account((*j).second->fullname() + name.substr(colon));
-        }
-      }
-    }
-  }
+  account_t * result = expand_aliases(name);
 
   // Create the account object and associate it with the journal; this
   // is registering the account.
@@ -178,7 +162,63 @@ account_t * journal_t::register_account(const string& name, post_t * post,
       }
     }
   }
+  return result;
+}
 
+account_t * journal_t::expand_aliases(string name) {
+  // Aliases are expanded recursively, so if both alias Foo=Bar:Foo and
+  // alias Bar=Baaz:Bar are in effect, first Foo will be expanded to Bar:Foo,
+  // then Bar:Foo will be expanded to Baaz:Bar:Foo.
+  // The expansion loop keeps a list of already expanded names in order to
+  // prevent infinite excursion. Each alias may only be expanded at most once.
+  account_t * result = NULL;
+
+  if(no_aliases)
+    return result;
+
+  bool keep_expanding = true;
+  std::list<string> already_seen;
+  // loop until no expansion can be found
+  do {
+    if (account_aliases.size() > 0) {
+      accounts_map::const_iterator i = account_aliases.find(name);
+      if (i != account_aliases.end()) {
+        if(std::find(already_seen.begin(), already_seen.end(), name) != already_seen.end()) {
+          throw_(std::runtime_error,
+                 _f("Infinite recursion on alias expansion for %1%")
+                 % name);
+        }
+        // there is an alias for the full account name, including colons
+        already_seen.push_back(name);
+        result = (*i).second;
+        name = result->fullname();
+      } else {
+        // only check the very first account for alias expansion, in case
+        // that can be expanded successfully
+        size_t colon = name.find(':');
+        if(colon != string::npos) {
+          string first_account_name = name.substr(0, colon);
+          accounts_map::const_iterator j = account_aliases.find(first_account_name);
+          if (j != account_aliases.end()) {
+            if(std::find(already_seen.begin(), already_seen.end(), first_account_name) != already_seen.end()) {
+              throw_(std::runtime_error,
+                     _f("Infinite recursion on alias expansion for %1%")
+                     % first_account_name);
+            }
+            already_seen.push_back(first_account_name);
+            result = find_account((*j).second->fullname() + name.substr(colon));
+            name = result->fullname();
+          } else {
+            keep_expanding = false;
+          }
+        } else {
+          keep_expanding = false;
+        }
+      }
+    } else {
+      keep_expanding = false;
+    }
+  } while(keep_expanding && recursive_aliases);
   return result;
 }
 
