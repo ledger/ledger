@@ -2265,11 +2265,12 @@ assert <VALUE EXPRESSION BOOLEAN RESULT>
 Defines the default account to use for balancing transactions.
 Normally, each transaction has at least two postings, which must
 balance to zero.  Ledger allows you to leave one posting with no
-amount and automatically calculate balance the transaction in the
+amount and automatically balance the transaction in the
 posting.  The @code{bucket} allows you to fill in all postings and
 automatically generate an additional posting to the bucket account
-balancing the transaction.  The following example set the
-@samp{Assets:Checking} as the bucket:
+balancing the transaction.  If any transaction is unbalanced, it 
+will automatically be balanced against the @code{bucket} account.
+The following example sets @samp{Assets:Checking} as the bucket:
 
 @smallexample @c input:validate
 bucket Assets:Checking
@@ -2295,7 +2296,7 @@ account. For example:
 capture  Expenses:Deductible:Medical  Medical
 @end smallexample
 
-Would cause any posting with @samp{Medical} in its name to be replaced
+would cause any posting with @samp{Medical} in its name to be replaced
 with @samp{Expenses:Deductible:Medical}.
 
 Ledger will display the mapped payees in @command{print} and
@@ -2303,7 +2304,7 @@ Ledger will display the mapped payees in @command{print} and
 
 @item check
 @c instance_t::check_directive in textual.cc
-A check can issue a warning if a condition is not met during Ledger's
+A check issues a warning if a condition is not met during Ledger's
 run.
 
 @smallexample
@@ -2315,7 +2316,7 @@ check <VALUE EXPRESSION BOOLEAN RESULT>
 Start a block comment, closed by @code{end comment}.
 
 @item commodity
-Pre-declare commodity names.  This only has effect if @option{--strict}
+Pre-declare commodity names.  This only has an effect if @option{--strict}
 or @option{--pedantic} is used (see below).
 
 @smallexample @c input:validate
@@ -2324,8 +2325,8 @@ commodity CAD
 @end smallexample
 
 The @code{commodity} directive supports several optional
-sub-directives, if they immediately follow the commodity directive and
-if they begin with whitespace:
+sub-directives, if they immediately follow the commodity directive 
+and---if they are on successive lines---begin with whitespace:
 
 @smallexample @c input:validate
 commodity $
@@ -2338,19 +2339,19 @@ commodity $
 The @code{note} sub-directive associates a textual note with the
 commodity.  At present this has no value other than documentation.
 
-The @code{format} directive gives you a way to tell Ledger how to
-format this commodity.  In future using this directive will disable
+The @code{format} sub-directive gives you a way to tell Ledger how to
+format this commodity.  In the future, using this directive will disable
 Ledger's observation of other ways that commodity is used, and will
 provide the ``canonical'' representation.
 
-The @code{nomarket} directive states that the commodity's price should
+The @code{nomarket} sub-directive states that the commodity's price should
 never be auto-downloaded.
 
-The @code{default} directive marks this as the ``default'' commodity.
+The @code{default} sub-directive marks this as the ``default'' commodity.
 
 @item define
 @c instance_t::define_directive in textual.cc
-Allows you to define value expression for future use. For example:
+Allows you to define value expressions for future use. For example:
 
 @smallexample @c input:validate
 define var_name=$100
@@ -2420,15 +2421,15 @@ Include the stated file as if it were part of the current file.
 @findex register
 
 The @code{payee} directive supports one optional sub-directive, if it
-immediately follows the payee directive and if it begins with
-whitespace:
+immediately follows the payee directive and---if it is on a successive
+line---begins with whitespace:
 
 @smallexample @c input:validate
 payee KFC
     alias KENTUCKY FRIED CHICKEN
 @end smallexample
 
-The @code{alias} directive provides a regex which, if it matches
+The @code{alias} sub-directive provides a regex which, if it matches
 a parsed payee, the declared payee name is substituted:
 
 @smallexample
@@ -2489,12 +2490,15 @@ is the equivalent of:
     Income:Sales
 @end smallexample
 
-Note that anything following @code{end apply tag} is ignored.  placing
-the name of the tag that is being closed is a simple way to keep
-track.
+@c TODO: the following paragraph seems to be false, the automated tests
+@c fail, if anything appears after end apply tag.
+
+@c Note that anything following @code{end apply tag} is ignored.  placing
+@c the name of the tag that is being closed is a simple way to keep
+@c track.
 
 @item tag
-Pre-declares tag names.  This only has effect if @option{--strict} or
+Pre-declares tag names.  This only has an effect if @option{--strict} or
 @option{--pedantic} is used (see below).
 
 @smallexample @c input:validate
@@ -2503,8 +2507,8 @@ tag CSV
 @end smallexample
 
 The @code{tag} directive supports two optional sub-directives, if they
-immediately follow the tag directive and if they begin with
-whitespace:
+immediately follow the tag directive and---if on a successive line---begin
+with whitespace:
 
 @smallexample @c input:validate
 tag Receipt
@@ -2512,12 +2516,12 @@ tag Receipt
   assert value != "foobar"
 @end smallexample
 
-The @code{check} and @code{assert} directives warn or error
+The @code{check} and @code{assert} sub-directives warn or error
 (respectively) if the given value expression evaluates to false within
 the context of any use of the related tag.  In such a context,
-``value'' is bound to the value of the tag (which may not be a string
-if typed-metadata is used!).  Such checks or assertions are not called
-if no value is given.
+``value'' is bound to the value of the tag (which may be something else 
+but a string if typed metadata is used!).  Such checks or assertions are 
+not called if no value is given.
 
 @item test
 @c instance_t::comment_directive in textual.cc
@@ -2582,7 +2586,7 @@ C 1.00 Kb = 1024 bytes
 
 @item I, i, O, o, b, h
 These four relate to timeclock support, which permits Ledger to read
-timelog files.  See the timeclock's documentation for more info on the
+timelog files.  See timeclock's documentation for more info on the
 syntax of its timelog files.
 
 @end table
@@ -2778,8 +2782,8 @@ primary date with an equals sign:
 
 What this auxiliary date means is entirely up to you.  The only use
 Ledger has for it is that if you specify @option{--aux-date}, then all
-reports and calculations (including pricing) will use the aux date as if
-it were the primary date.
+reports and calculations (including pricing) will use the auxiliary
+date as if it were the primary date.
 
 @node Codes, Transaction state, Auxiliary dates, Transactions
 @section Codes
@@ -2802,8 +2806,8 @@ you a place to put those codes:
 @findex --pending
 
 A transaction can have a ``state'': cleared, pending, or uncleared.
-The default is uncleared.  To mark a transaction cleared, put a *
-before the payee, and after date or code:
+The default is uncleared.  To mark a transaction cleared, put an asterisk (*)
+before the payee, after the date or code:
 
 @smallexample @c input:validate
 2012-03-10 * KFC
@@ -2821,7 +2825,7 @@ To mark it pending, use a !:
 @end smallexample
 
 What these mean is entirely up to you.  The @option{--cleared} option
-will limits to reports to only cleared items, while @option{--uncleared}
+limits reports to only cleared items, while @option{--uncleared}
 shows both uncleared and pending items, and @option{--pending} shows
 only pending items.
 
@@ -2861,7 +2865,7 @@ You can mark individual postings as cleared or pending, in case one
 @section Transaction notes
 
 After the payee, and after at least one tab or two spaces (or a space
-and a tab, which Ledger calls this a ``hard separator''), you may
+and a tab, which Ledger calls a ``hard separator''), you may
 introduce a note about the transaction using the @samp{;} character:
 
 @smallexample @c input:validate
@@ -2886,7 +2890,7 @@ with whitespace:
     Assets:Cash
 @end smallexample
 
-A transaction note is shared by all its postings.  This becomes
+A transaction's note is shared by all its postings.  This becomes
 significant when querying for metadata (see below).  To specify that
 a note belongs only to one posting, place it after a hard separator
 after the amount, or on its own line preceded by whitespace:
@@ -2915,7 +2919,7 @@ typed metadata with postings and transactions (by which I mean all of
 a transaction's postings).  This metadata can be queried, displayed,
 and used in calculations.
 
-The are two forms of metadata: tags and tag/value pairs.
+The are two forms of metadata: plain tags, and tag/value pairs.
 
 @menu
 * Metadata tags::
@@ -2927,7 +2931,7 @@ The are two forms of metadata: tags and tag/value pairs.
 @subsection Metadata tags
 
 To tag an item, put any word not containing whitespace between two
-colons:
+colons inside a comment:
 
 @smallexample @c input:validate
 2012-03-10 * KFC
@@ -3125,7 +3129,7 @@ A balance assignment has this form:
 @end smallexample
 
 This sets the amount of the second posting to whatever it would need
-to be for the total in Assets:Cash to be $500.00 after the posting.
+to be for the total in @samp{Assets:Cash} to be $500.00 after the posting.
 If the resulting amount is not $-20.00 in this case, it is an error.
 
 @node Resetting a balance, Balancing transactions, Balance assignments, Balance verification
@@ -3145,7 +3149,7 @@ Since the second posting is also null, it's value will become the
 inverse of whatever amount is generated for the first posting.
 
 This is the only time in ledger when more than one posting's amount
-may be empty---and then only because it's not true empty, it is
+may be empty---and then only because it's not truly empty, it is
 indirectly provided by the balance assignment's value.
 
 @node Balancing transactions,  , Resetting a balance, Balance verification
@@ -3160,7 +3164,7 @@ As a consequence of all the above, consider the following transaction:
 @end smallexample
 
 What this says is: set the amount of the posting to whatever value is
-needed so that Assets:Brokerage contains 10 AAPL.  Then, because this
+needed so that @samp{Assets:Brokerage} contains 10 AAPL.  Then, because this
 posting must balance, ensure that its value is zero.  This can only be
 true if Assets:Brokerage does indeed contain 10 AAPL at that point in
 the input file.
@@ -3173,7 +3177,7 @@ anyway (unless you use a register report with @option{--empty}).
 @section Posting cost
 
 When you transfer a commodity from one account to another, sometimes
-it get transformed during the transaction.  This happens when you
+it gets transformed during the transaction.  This happens when you
 spend money on gas, for example, which transforms dollars into gallons
 of gasoline, or dollars into stocks in a company.
 
@@ -3189,7 +3193,7 @@ example of a stock purchase:
 
 This is different from transferring 10 AAPL shares from one account to
 another, in this case you are @emph{exchanging} one commodity for
-another.  The resulting posting cost is $50.00 per share.
+another.  The resulting posting's cost is $50.00 per share.
 
 @node Explicit posting costs, Posting cost expressions, Posting cost, Transactions
 @section Explicit posting costs
@@ -3232,7 +3236,7 @@ Said another way, whenever Ledger sees a posting cost of the form
 "AMOUNT @@ AMOUNT", the commodity used in the second amount is marked
 ``primary''.
 
-The only meaning a primary commodity has is that @option{--market (-V)}
+The only meaning a primary commodity has is that the @option{--market (-V)}
 flag will never convert a primary commodity into any other commodity.
 @option{--exchange @var{COMMODITY} (-X)} still will, however.
 
@@ -3296,7 +3300,7 @@ happening in the case of an exceptional transaction, surround the
 @section Commodity prices
 @findex --lot-prices
 
-When a transaction occurs that exchange one commodity for another,
+When a transaction occurs that exchanges one commodity for another,
 Ledger records that commodity price not only within its internal price
 database, but also attached to the commodity itself.  Usually this fact
 remains invisible to the user, unless you turn on @option{--lot-prices}
@@ -3310,7 +3314,7 @@ For example, consider the stock sale given above:
     Assets:Brokerage:Cash
 @end smallexample
 
-The commodity transferred into Assets:Brokerage is not actually 10
+The commodity transferred into @samp{Assets:Brokerage} is not actually 10
 AAPL, but rather 10 AAPL @{$5.00@}.  The figure in braces after the
 amount is called the ``lot price''.  It's Ledger's way of remembering
 that this commodity was transferred through an exchange, and that
@@ -3373,11 +3377,11 @@ but is not required to be used with them:
 
 It should be noted that this is a convenience only for cases where you
 buy and sell whole lots.  The @{@{$500.00@}@} is @emph{not} an
-attribute of commodity, whereas @{$5.00@} is.  In fact, when you write
+attribute of the commodity, whereas @{$5.00@} is.  In fact, when you write
 @{@{$500.00@}@}, Ledger just divides that value by 10 and sees
 @{$50.00@}.  So if you use the print command to look at this
-transaction, you'll see the single form in the output.  The double
-price form is a shorthand only.
+transaction, you'll see the single braces form in the output.  
+The double braces price form is a shorthand only.
 
 Plus, it comes with dangers.  This works fine:
 
@@ -3416,7 +3420,7 @@ But this does not do what you might expect:
     Income:Capital Gains       $-125.00
 @end smallexample
 
-And in cases where the amounts do not divide into whole figure and
+And in cases where the amounts do not divide into whole figures and
 must be rounded, the capital gains figure could be off by a cent.  Use
 with caution.
 
@@ -3508,7 +3512,7 @@ indicate a virtual cost:
     Income:Capital Gains       $-125.00
 @end smallexample
 
-You can any combination of lot prices, dates or notes, in any order.
+You can specify any combination of lot prices, dates or notes, in any order.
 They are all optional.
 
 To show all lot information in a report, use @option{--lots}.
@@ -3526,7 +3530,7 @@ However, you can override this valuation logic by providing
 a commodity valuation expression in doubled parentheses.  This
 expression must result in one of two values: either an amount to
 always be used as the per-share price for that commodity; or
-a function taking three argument which is called to determine that
+a function taking three arguments, which is called to determine that
 price.
 
 If you use the functional form, you can either specify a function
@@ -3581,8 +3585,8 @@ indicate what is being desired.
 @end itemize
 
 In most cases, it is simplest to either use explicit amounts in your
-valuation expressions, or just pass the arguments down to market after
-modifying them to suit your needs.
+valuation expressions, or just pass the arguments down to @samp{market}
+after modifying them to suit your needs.
 
 @node Automated Transactions,  , Lot value expressions, Transactions
 @section Automated Transactions
@@ -3700,9 +3704,10 @@ This becomes:
 @node Referring to the matching posting's account, Applying metadata to every matched posting, Accessing the matching posting's amount, Automated Transactions
 @subsection Referring to the matching posting's account
 
-Sometimes want to refer to the account that matched in some way within
-the automated transaction itself.  This is done by using the string
-$account, anywhere within the account part of the automated posting:
+Sometimes you want to refer to the account that was matched 
+in some way within the automated transaction itself.  This is 
+done by using the string @samp{$account}, anywhere within the 
+account part of the automated posting:
 
 @smallexample @c input:validate
 = food
@@ -3793,7 +3798,7 @@ the generated posting.
 @cindex effective dates
 @findex --effective
 
-In the real world transactions do not take place instantaneously.
+In the real world, transactions do not take place instantaneously.
 Purchases can take several days to post to a bank account. And you may
 pay ahead for something for which you want to distribute costs.  With
 Ledger you can control every aspect of the timing of a transaction.
@@ -3862,12 +3867,12 @@ pick up from the co-op, even though you've already paid for them.
     Assets:Checking
 @end smallexample
 
-This entry accomplishes this.  Every month until you'll start with an
+This entry accomplishes this.  Every month you'll see an
 automatic $37.50 deficit like you should, while your checking account
 really knows that it debited $225 this month.
 
-And using @option{--effective} option, initial date will be overridden
-by effective dates.
+And using the @option{--effective} option, the initial date will be overridden
+by the effective dates.
 
 @smallexample @c command:6453542
 $ ledger --effective register Groceries
@@ -3905,7 +3910,7 @@ automated posting at the top of your ledger file:
 
 @smallexample @c input:C371854
 ; This automated transaction will compute Huqúqu'lláh based on this
-; journal's postings.  Any that match will affect the
+; journal's postings.  Any accounts that match will affect the
 ; Liabilities:Huququ'llah account by 19% of the value of that posting.
 
 = /^(?:Income:|Expenses:(?:Business|Rent$|Furnishings|Taxes|Insurance))/
@@ -3951,14 +3956,14 @@ $ ledger balance Liabilities:Huquq
                 $-95  Liabilities:Huququ'llah
 @end smallexample
 
-This works fine, but omits one aspect of the law: that Huquq is only
+This works fine, but omits one aspect of the law: that Huqúq is only
 due once the liability exceeds the value of 19 mithqáls of gold (which
 is roughly 2.22 ounces).  So what we want is for the liability to
 appear in the balance report only when it exceeds the present day
 value of 2.22 ounces of gold.  This can be accomplished using the
 command:
 
-@c TODO: fix this
+@c TODO: fix this, it doesn't work any longer
 @smallexample
 $ ledger -Q -t "/Liab.*Huquq/?(a/P@{2.22 AU@}<=@{-1.0@}&a):a" bal liab
 @end smallexample
@@ -3968,7 +3973,7 @@ Huqúqu'lláh is reported only if its value exceeds that of 2.22 ounces
 of gold.  If you wish the liability to be reflected in the parent
 subtotal either way, use this instead:
 
-@c TODO: fix this
+@c TODO: fix this, it doesn't work any longer
 @smallexample
 $ ledger -Q -T "/Liab.*Huquq/?(O/P@{2.22 AU@}<=@{-1.0@}&O):O" bal liab
 @end smallexample
@@ -4052,9 +4057,9 @@ which will print the balances of every account in your journal.
            $ -243.60
 @end smallexample
 
-Most times this is more than you want.  Limiting the results to
+Most times, this is more than you want.  Limiting the results to
 specific accounts is as easy as entering the names of the accounts
-after the command.
+after the command:
 
 @smallexample @c command:06B2AD4
 $ ledger balance -f drewr3.dat Auto MasterCard
@@ -4068,7 +4073,7 @@ $ ledger balance -f drewr3.dat Auto MasterCard
 @end smallexample
 
 @noindent
-note the implicit logical or between @samp{Auto} and
+Note the implicit logical or between @samp{Auto} and
 @samp{Mastercard}.
 
 If you want the entire contents of a branch of your account tree, use
@@ -4086,7 +4091,7 @@ $ ledger balance -f drewr3.dat Income
          $ -2,030.00
 @end smallexample
 
-You can use general regular expressions in nearly anyplace Ledger
+You can use general regular expressions in nearly any place Ledger
 needs a string:
 
 @smallexample @c command:EAE389F
@@ -4106,7 +4111,7 @@ $ ledger balance -f drewr3.dat Bo
              $ 20.00  Expenses:Books
 @end smallexample
 
-This second example looks for any account with @samp{Bo}, which is
+This second example looks for any account containing @samp{Bo}, which is
 @samp{Expenses:Books}.
 
 @cindex limit by payees
@@ -4152,7 +4157,7 @@ October, sorted by total:
 
 @c TODO: does not validate with @c command:validate, because "last oct" is split at the space
 @smallexample
-$ ledger -b "last oct" -f sample.dat -S T bal ^expenses
+$ ledger -b "last oct" -S T bal ^expenses
 @end smallexample
 
 From left to right the options mean: Show transactions since last
@@ -4201,7 +4206,7 @@ account'' postings; display only related postings whose
 account matches @samp{mastercard}, and base the calculation on
 postings matching @samp{^expenses}.
 
-This works just as well for report the overall total, too:
+This works just as well for reporting the overall total, too:
 
 @smallexample @c command:validate
 $ ledger -s -r --display "account=~/mastercard/" reg ^expenses
@@ -4230,11 +4235,11 @@ allocation in ledger is not difficult but does require some additional
 effort to describe how the various assets you own contribute to the
 asset classes you want to track.
 
-In our simple example we assume you want to apportion you assets into
+In our simple example we assume you want to apportion your assets into
 the general categories of domestic and international equities (stocks)
-and a combined category of bonds and cash.  For illustrative purposes
+and a combined category of bonds and cash.  For illustrative purposes,
 we will use several publicly available mutual funds from Vanguard.
-the three funds we will track are the Vanguard 500 IDX FD Signal
+The three funds we will track are the Vanguard 500 IDX FD Signal
 (VIFSX), the Vanguard Target Retirement 2030 (VTHRX), and the Vanguard
 Short Term Federal Fund (VSGBX).  Each of these funds allocates assets
 to different categories of the investment universe and in different
@@ -4329,7 +4334,7 @@ tree, using a special formatter.
 The magic is in the formatter.  The second line simply tells Ledger to
 print the partial account name indented by its depth in the tree.  The
 third line is where we calculate and display the percentages.  The
-@code{display_total} command give the values of the total calculated
+@code{display_total} command gives the values of the total calculated
 for the account in this line.  The @code{parent.total} command gives
 the total for the next level up in the tree.  @code{percent} formats
 their ratio as a percentage.  The fourth line tells ledger to display
@@ -4346,7 +4351,7 @@ nothing.
 @findex --limit @var{EXPR}
 @findex --display @var{EXPR}
 
-If you have ``Gnuplot'' program installed, you can graph any of the
+If you have the ``Gnuplot'' program installed, you can graph any of the
 above register reports. The script to do this is included in the ledger
 distribution, and is named @file{contrib/report}. Install @file{report}
 anywhere along your @env{PATH}, and then use @file{report} instead of
@@ -4385,11 +4390,11 @@ report -J -l "Ua>=@{\$0.01@}" -d "d>=[last feb]" reg ^assets ^liab
 
 The last report uses both a calculation predicate @option{--limit
 @var{EXPR} (-l)} and a display predicate @option{--display @var{EXPR}
-(-d)}.  The calculation predicates limits the report to postings whose
-amount is greater than $1 (which can only happen if the posting amount
+(-d)}.  The calculation predicate limits the report to postings whose
+amount is greater than or equal to $1 (which can only happen if the posting amount
 is in dollars).  The display predicate limits the transactions
-@emph{displayed} to just those since last February, even those
-transactions from before then will be computed as part of the balance.
+@emph{displayed} to just those since last February, even though those
+transactions from before will be computed as part of the balance.
 
 @node Reporting Commands, Command-line Syntax, Building Reports, Top
 @chapter Reporting Commands
@@ -4424,7 +4429,7 @@ separately.
 @subsection The @command{equity} command
 @findex equity
 
-The @command{equity} command prints out accounts balances as if they
+The @command{equity} command prints out account balances as if they
 were transactions.  This makes it easy to establish the starting
 balances for an account, such as when @ref{Archiving Previous Years}.
 
@@ -4438,7 +4443,7 @@ The @command{register} command displays all the postings occurring
 in a single account, line by line.  The account regex must be
 specified as the only argument to this command.  If any regexes occur
 after the required account name, the register will contain only those
-postings that match.  Very useful for hunting down a particular
+postings that match, which makes it very useful for hunting down a particular
 posting.
 
 The output from @command{register} is very close to what a typical
@@ -4450,7 +4455,7 @@ If you have ``Gnuplot'' installed, you may plot the amount or running
 total of any register by using the script @file{report}, which is
 included in the Ledger distribution.  The only requirement is that you
 add either @option{--amount-data (-j)} or @option{--total-data (-J)} to
-your register command, in order to plot either the amount or total
+your @command{register} command, in order to plot either the amount or total
 column, respectively.
 
 @node The @command{print} command,  , The @command{register} command, Primary Financial Reports
@@ -4491,8 +4496,8 @@ file whose formatting has gotten out of hand.
 @subsubsection The @command{csv} command
 @findex csv
 
-The @command{csv} command will output print out the desired ledger
-transactions in a csv format suitable for import into other programs.
+The @command{csv} command prints the desired ledger
+transactions in a csv format suitable for importing into other programs.
 You can specify the transactions to print using all the normal
 limiting and searching functions.
 
@@ -4504,12 +4509,12 @@ limiting and searching functions.
 @findex --input-date-format @var{DATE_FORMAT}
 
 The @command{convert} command parses a comma separated value (csv) file
-and outputs Ledger transactions.  Many banks offer csv file downloads.
-Unfortunately, the file formats, aside the from commas, are all
+and prints Ledger transactions.  Many banks offer csv file downloads.
+Unfortunately, the file formats, aside from the commas, are all
 different.  The ledger @command{convert} command tries to help as much
 as it can.
 
-Your banks csv files will have fields in different orders from other
+Your bank's csv files will have fields in different orders from other
 banks, so there must be a way to tell Ledger what to expect.  Insert
 a line at the beginning of the csv file that describes the fields to
 Ledger.
@@ -4552,7 +4557,7 @@ $ ledger convert download.csv --input-date-format "%m/%d/%Y"
 Where the @option{--input-date-format @var{DATE_FORMAT}} option tells
 ledger how to interpret the dates.
 
-Importing csv files is a lot of work, and but is very amenable to
+Importing csv files is a lot of work, but is very amenable to
 scripting.
 
 If there are columns in the bank data you would like to keep in your
@@ -4573,14 +4578,14 @@ is from the file above.
 @findex --account @var{STR}
 @findex --rich-data
 
-The @command{convert} command accepts three options, the most important
+The @command{convert} command accepts three options. The most important
 ones are @option{--invert} which inverts the amount field, and
 @option{--account @var{STR}} which you can use to specify the account to
 balance against and @option{--rich-data}. When using the rich-data
-switch additional metadata is stored as tags. There is, for example,
+switch, additional metadata is stored as tags. There is, for example,
 a UUID field. If an entry with the same UUID tag is already included in
 the normal ledger file (specified via @option{--file @var{FILE} (-f)} or
-via environment variable @env{LEDGER_FILE}) this entry will not be
+via the environment variable @env{LEDGER_FILE}) this entry will not be
 printed again.
 
 You can also use @command{convert} with @code{payee} and @code{account}
@@ -4607,7 +4612,7 @@ used.
 @findex lisp
 @findex emacs
 
-The @command{lisp} command outputs results in a form that can be read
+The @command{lisp} command prints results in a form that can be read
 directly by Emacs Lisp.  The format of the @code{sexp} is:
 
 @smallexample
@@ -4638,7 +4643,7 @@ commands also appear in the text file.  The output can be updated
 whenever any new ledger entries are added.
 
 For instance, the following Org mode text document snippet illustrates
-a very naive but still useful of the Babel system:
+a very naive but still useful application of the Babel system:
 
 @smallexample
 * A simple test of ledger in an org file
@@ -4684,7 +4689,7 @@ Using Babel, it is possible to record financial transactions
 conveniently in an org file and subsequently generate the financial
 reports required.
 
-As of Org-mode 7.01, Ledger support is provided. Check the Babel
+As of Org mode 7.01, Ledger support is provided. Check the Babel
 documentation on Worg for instructions on how to achieve this but
 I currently do this directly as follows:
 
@@ -4695,7 +4700,7 @@ I currently do this directly as follows:
   ))
 @end smallexample
 
-Once Ledger support in Babel has been enabled, we can use proceed to
+Once Ledger support in Babel has been enabled, we can proceed to
 include Ledger entries within an org file. There are three ways (at
 least) in which these can be included:
 
@@ -4733,7 +4738,7 @@ The first two are described in more detail in this short tutorial.
 @node Embedded Ledger example with single source block, Multiple Ledger source blocks with @code{noweb}, Org mode with Babel, Org mode with Babel
 @subsubsection Embedded Ledger example with single source block
 
-The easiest, albeit possibly less useful, way in which to use Ledger
+The easiest, albeit possibly least useful, way in which to use Ledger
 within an org file is to use a single source block to record all Ledger
 entries. The following is an example source block:
 
@@ -4972,10 +4977,10 @@ the running total of the assets in our ledger.
 @node Summary,  , Generating a monthly register, Org mode with Babel
 @subsubsection Summary
 
-This short tutorial shows how Ledger entries can be embedded in a org
+This short tutorial shows how Ledger entries can be embedded in an org
 file and manipulated using Babel. However, only simple Ledger features
 have been illustrated; please refer to the Ledger documentation for
-examples of more complex operations with a ledger.
+examples of more complex operations on a ledger.
 
 @node The @command{pricemap} command, The @command{xml} command, Org mode with Babel, Reports in other Formats
 @subsection The @command{pricemap} command
@@ -4987,7 +4992,7 @@ commodities.  The output file is in the ``dot'' format.
 
 This is probably not very interesting, unless you have many different
 commodities valued in terms of each other. For example, multiple
-currencies and multiples investments valued in those currencies.
+currencies and multiple investments valued in those currencies.
 
 @node The @command{xml} command, @command{prices} and @command{pricedb} commands, The @command{pricemap} command, Reports in other Formats
 @subsection The @command{xml} command
@@ -5010,7 +5015,7 @@ The general format used for Ledger data is:
 @end smallexample
 
 The data stream is enclosed in a @code{ledger} tag, which contains a
-series of one or more transactions.  Each @code{xact} describes the
+series of one or more transactions.  Each @code{xact} describes one
 transaction and contains a series of one or more postings:
 
 @smallexample
@@ -5055,7 +5060,7 @@ Within the @code{en:postings} tag is a series of one or more
 </posting>
 @end smallexample
 
-This is a basic posting.  It may also be begin with
+This is a basic posting.  It may also begin with
 @code{tr:virtual} and/or @code{tr:generated} tags, to indicate virtual
 and auto-generated postings.  Then follows the @code{tr:account}
 tag, which contains the full name of the account the posting is
@@ -5157,7 +5162,7 @@ report, to display the running average price, or @option{--deviation
 (-D)} to show each price's deviation from that average.
 
 There is also a @command{pricedb} command which outputs the same
-information as @command{prices}, but does in a format that can be
+information as @command{prices}, but does so in a format that can be
 parsed by Ledger.  This is useful for generating and tidying up
 pricedb database files.
 
@@ -5179,7 +5184,7 @@ pricedb database files.
 @subsection @command{accounts}
 @findex accounts
 
-The @command{accounts} reports all of the accounts in the journal.
+The @command{accounts} command reports all of the accounts in the journal.
 Following the command with a regular expression will limit the output to
 accounts matching the regex. The output is sorted by name.  Using the
 @option{--count} option will tell you how many entries use each account.
@@ -5188,9 +5193,9 @@ accounts matching the regex. The output is sorted by name.  Using the
 @subsection @command{payees}
 @findex payees
 
-The @command{payees} reports all of the unique payees in the journal.
+The @command{payees} command reports all of the unique payees in the journal.
 Using the @option{--count} option will tell you how many entries use
-each payee. To filter the payees displayed you must use the prefix:
+each payee. To filter the payees displayed you must use the prefix @@:
 
 @smallexample
 $ ledger payees @@Nic
@@ -5213,7 +5218,7 @@ you how many entries use each commodity.
 @findex tags
 @findex --values
 
-The @command{tags} reports all of the tags in the journal.  The output
+The @command{tags} command reports all of the tags in the journal.  The output
 is sorted by name.  Using the @option{--count} option will tell you how
 many entries use each tag.  Using the @option{--values} option will
 report the values used by each tag.
@@ -5303,7 +5308,7 @@ FIX THIS ENTRY @c FIXME thdox
 @section Basic Usage
 
 This chapter describes Ledger's features and options. You may wish to
-survey this to get an overview before diving in to the @ref{Ledger
+survey this to get an overview before diving into the @ref{Ledger
 Tutorial} and more detailed examples that follow.
 
 Ledger has a very simple command-line interface, named---enticingly
