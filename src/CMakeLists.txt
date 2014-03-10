@@ -268,9 +268,6 @@ if(BUILD_LIBRARY)
   install(TARGETS libledger DESTINATION ${CMAKE_INSTALL_LIBDIR})
   install(FILES ${LEDGER_INCLUDES}
     ${PROJECT_SOURCE_DIR}/lib/sha1.h
-    ${PROJECT_SOURCE_DIR}/lib/utfcpp/source/utf8.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
-  install(DIRECTORY ${PROJECT_SOURCE_DIR}/lib/utfcpp/source/utf8
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
 else()
   add_executable(ledger
