@@ -7538,7 +7538,6 @@ but by date only, and not against the running total:
 $ ledger --forecast "d<[2010]" bal ^assets ^liabilities
 @end smallexample
 
-@c CONTINUE HERE
 @node Time Keeping, Value Expressions, Budgeting and Forecasting, Top
 @chapter Time Keeping
 @findex --day-break
@@ -7553,21 +7552,21 @@ o 2013/03/29 03:39:00
 This records a check-in to the given ACCOUNT, and a check-out.  You can
 be checked-in to multiple accounts at a time, if you wish, and they can
 span multiple days (use @option{--day-break} to break them up in the
-report).  The number of seconds between is accumulated as time to that
-ACCOUNT.  If the checkout uses a capital @samp{O}, the transaction is
-marked ``cleared''.  You can use an optional PAYEE for whatever meaning
-you like.
+report).  The number of seconds between check-in and check-out is accumulated 
+as time to that ACCOUNT.  If the checkout uses a capital @samp{O}, the
+transaction is marked ``cleared''.  You can use an optional PAYEE for
+whatever meaning you like.
 
 Now, there are a few ways to generate this information.  You can use
 the @file{timeclock.el} package, which is part of Emacs.  Or you can
 write a simple script in whichever language you prefer to emit similar
 information.  Or you can use Org mode's time-clocking abilities and
-the org2tc script developed by John Wiegley.
+the @samp{org2tc} script developed by John Wiegley.
 
 These timelog entries can appear in a separate file, or directly in
-your main ledger file.  The initial @samp{i} and @samp{o} count as
-Ledger ``directives'', and are accepted anywhere that ordinary
-transactions are.
+your main ledger file.  The initial @samp{i} and @samp{o} characters 
+count as Ledger ``directives'', and are accepted anywhere that 
+ordinary transactions are valid.
 
 @node Value Expressions, Format Strings, Time Keeping, Top
 @chapter Value Expressions
@@ -7620,7 +7619,7 @@ while still calculating the running balance based on all transactions:
 $ ledger -d "d>[this month]" register checking
 @end smallexample
 
-This advantage to this command's complexity is that it prints the
+The advantage of this command's complexity is that it prints the
 running total in terms of all transactions in the register.  The
 following, simpler command is similar, but totals only the displayed
 postings:
@@ -7642,9 +7641,9 @@ $ ledger -b "this month" register checking
 @findex --total @var{VEXPR}
 
 Below are the one letter variables available in any value expression.
-For the register and print commands, these variables relate to
-individual postings, and sometimes the account affected by a
-posting.  For the balance command, these variables relate to
+For the @command{register} and @command{print} commands, these variables 
+relate to individual postings, and sometimes the account affected by a
+posting.  For the @command{balance} command, these variables relate to
 accounts, often with a subtle difference in meaning.  The use of each
 variable for both is specified.
 
@@ -7652,8 +7651,8 @@ variable for both is specified.
 
 @item t
 This maps to whatever the user specified with @option{--amount
-@var{EXPR} (-t)}.  In a register report, @option{--amount @var{EXPR}
-(-t)} changes the value column; in a balance report, it has no meaning
+@var{EXPR} (-t)}.  In a @command{register} report, @option{--amount @var{EXPR}
+(-t)} changes the value column; in a @command{balance} report, it has no meaning
 by default.  If @option{--amount @var{EXPR} (-t)} was not specified, the
 current report style's value expression is used.
 
@@ -7692,15 +7691,15 @@ The cost of a posting; the cost of an account, without its
 children.
 
 @item v
-The market value of a posting, or an account without its children.
+The market value of a posting or an account, without its children.
 
 @item g
 The net gain (market value minus cost basis), for a posting or an
-account without its children.  It is the same as @samp{v-b}.
+account, without its children.  It is the same as @samp{v-b}.
 
 @item l
 The depth (``level'') of an account.  If an account has one parent,
-it's depth is one.
+its depth is one.
 
 @item n
 The index of a posting, or the count of postings affecting an
@@ -7851,10 +7850,10 @@ posting.
 
 @item c/REGEX/
 A regular expression that matches against the transaction code (the
-text that occurs between parentheses before the payee name).
+text that occurs between parentheses before the payee).
 
 @item e/REGEX/
-A regular expression that matches against a posting's note, or
+A regular expression that matches against a posting's note or
 comment field.
 
 @item (EXPR)
@@ -7863,7 +7862,7 @@ more complicated arguments to functions, or for overriding the natural
 precedence order of operators.
 
 @item [DATE]
-Useful specifying a date in plain terms.  For example, you could say
+Useful for specifying a date in plain terms.  For example, you could say
 @samp{[2004/06/01]}.
 
 @end table
@@ -8046,8 +8045,8 @@ format string, exactly like those supported by @code{strftime}.  For
 example: @samp{%[%Y/%m/%d %H:%M:%S]}.
 
 @item S
-Insert the pathname of the file from which the transaction's data was
-read.  Only sensible in a register report.
+Insert the path name of the file from which the transaction's data was
+read.  Only sensible in a @command{register} report.
 
 @item B
 Inserts the beginning character position of that transaction within the
@@ -8080,8 +8079,8 @@ This is the same as @samp{%X}, except that it only displays a state
 character if all of the member postings have the same state.
 
 @item C
-Inserts the transaction type.  This is the value specified between
-parenthesis on the first line of the transaction.
+Inserts the transaction code.  This is the value specified between
+parentheses on the first line of the transaction.
 
 @item P
 Inserts the payee related to a posting.
@@ -8167,7 +8166,7 @@ options:
 @node Colors, Quantities and Calculations, Field Widths, Formatting Functions and Codes
 @subsection Colors
 
-The character based formatting ledger can do is limited to the ANSI
+The character-based formatting ledger can do is limited to the ANSI
 terminal character colors and font highlights in a normal TTY session.
 
 @multitable @columnfractions .3 .3 .3
@@ -8308,10 +8307,10 @@ weekday, abbreviated Wed.
 weekday, full Wednesday.
 
 @item %d
-day of the month (dd), zero padded 10.
+day of the month (dd), zero padded up to 10.
 
 @item %e
-day of the month (dd) 10.
+day of the month (dd) , no leading zero up to 10.
 
 @item %j
 day of year, zero padded 000–366.
@@ -8353,7 +8352,7 @@ Locale’s abbreviated month, for example @samp{02} might be abbreviated
 as @samp{Feb}.
 
 @item %B
-Locale’s full month, variable length February.
+Locale’s full month, variable length, e.g. February.
 
 @end table
 
@@ -8406,7 +8405,7 @@ subsequent lines the width is given by @code{latterwidth}.  If
 If @code{right_justify=true} then the field is right justify within
 the width of the field. If it is @code{false}, then the field is left
 justified and padded to the full width of the field.  If
-@code{colorize} is true then ledger will honor color settings.
+@code{colorize} is true, then ledger will honor color settings.
 
 @item join(STR)
 Replaces line feeds in @code{STR} with @samp{\n}.
@@ -8430,7 +8429,7 @@ generated the posting.
 @table @code
 
 @item filename
-name of ledger data file from whence posting came, abbreviated @samp{S}.
+the name of ledger the data file from whence the posting came, abbreviated @samp{S}.
 
 @item beg_pos
 character position in @code{filename} where entry for posting begins,
@@ -8471,16 +8470,16 @@ make sense later.
 Every interaction with Ledger happens in the context of a Session.
 Even if you don't create a session manually, one is created for you by
 the top-level interface functions.  The Session is where objects live
-like the Commodity's that Amount's refer to.
+like the Commodities that Amounts refer to.
 
 The make a Session useful, you must read a Journal into it, using the
 function `@code{read_journal}`.  This reads Ledger data from the given
 file, populates a Journal object within the current Session, and
 returns a reference to that Journal object.
 
-Within the Journal live all the Transaction's, Posting's, and other
-objects related to your data.  There are also AutomatedTransaction's
-and PeriodicTransaction's, etc.
+Within the Journal live all the Transactions, Postings, and other
+objects related to your data.  There are also AutomatedTransactions
+and PeriodicTransactions, etc.
 
 Here is how you would traverse all the postings in your data file:
 
@@ -8528,7 +8527,7 @@ While the @emph{cooked} form is:
 So the easy way to think about raw vs. cooked is that raw is the
 unprocessed data, and cooked has had all considerations applied.
 
-When you traverse a Journal by iterating its transactions, you are
+When you traverse a Journal by iterating over its transactions, you are
 generally looking at raw data.  In order to look at cooked data, you
 must generate a report of some kind by querying the journal:
 
@@ -8638,7 +8637,7 @@ reused in other projects as needed.
 
 @item Commoditized Amounts (amount_t, commodity_t and friends)
 
-An numerical abstraction combining multi-precision rational numbers (via
+A numerical abstraction combining multi-precision rational numbers (via
 GMP) with commodities.  These structures can be manipulated like regular
 numbers in either C++ or Python (as Amount objects).
 
@@ -8694,7 +8693,7 @@ string (cash) down to the corresponding value expression @samp{(account
 
 @item Format strings
 
-Format strings let you interpolate value expressions into string, with
+Format strings let you interpolate value expressions into strings, with
 the requirement that any interpolated value have a string
 representation.  Really all this does is calculate the value expression
 in the current report context, call the resulting value's
@@ -8736,7 +8735,7 @@ querying ad reporting on your data.
 
 @item Textual journal parser
 
-There is a textual parser, wholly contained in textual.cc, which knows
+There is a textual parser, wholly contained in @file{textual.cc}, which knows
 how to parse text into journal objects, which then get ``finalized'' and
 added to the journal.  Finalization is the step that enforces the
 double-entry guarantee.
@@ -8744,7 +8743,7 @@ double-entry guarantee.
 @item Iterators
 
 Every journal object is ``iterable'', and these iterators are defined in
-iterators.h and iterators.cc.  This iteration logic is kept out of the
+@file{iterators.h} and @file{iterators.cc}.  This iteration logic is kept out of the
 basic journal objects themselves for the sake of modularity.
 
 @item Comparators
@@ -8757,7 +8756,7 @@ the user passed to @option{--sort @var{VEXPR}}.
 
 Many reports bring pseudo-journal objects into existence, like postings
 which report totals in a @samp{Total} account.  These objects are
-created and managed by a temporaries_t object, which gets used in many
+created and managed by a @code{temporaries_t} object, which gets used in many
 places by the reporting filters.
 
 @item Option handling
@@ -8775,7 +8774,7 @@ a separate session.  They are all owned by the global scope.
 
 @item Report objects
 
-Every time you create report output, a report object is created to
+Every time you create any report output, a report object is created to
 determine what you want to see.  In the Ledger REPL, a new report object
 is created every time a command is executed.  In CLI mode, only one
 report object ever comes into being, as Ledger immediately exits after
@@ -8798,7 +8797,7 @@ are filters which compute the running totals; that queue and sort all
 the input items before playing them back out in a new order; that filter
 out items which fail to match a predicate, etc.  Almost every reporting
 feature in Ledger is related to one or more filters.  Looking at
-@file{filters.h}, I see over 25 of them defined currently.
+@file{filters.h}, there are over 25 of them defined currently.
 
 @item The filter chain
 
@@ -8811,9 +8810,9 @@ exposed this layer to the Python bridge yet.
 @item Output modules
 
 Although filters are great and all, in the end you want to see stuff.
-This is the job of special ``leaf'' filters call output modules.  They
+This is the job of special ``leaf'' filters called output modules.  They
 are implemented just like a regular filter, but they don't have
-a ``next'' filter to pass the time on down to.  Instead, they are the
+a ``next'' filter to pass the data on down to.  Instead, they are the
 end of the line and must do something with the item that results in the
 user seeing something on their screen or in a file.
 
@@ -8868,9 +8867,9 @@ journal files:
 In this example, there is a transaction date, a payee, or description of
 the transaction, and two postings.  The postings show movement of one
 hundred dollars from an account within the Income hierarchy, to the
-specified expense account.  The name and meaning of these accounts in
+specified expense account.  The name and meaning of these accounts is
 arbitrary, with no preferences implied, although you will find it useful
-to follow standard accounting practice (@pxref{Principles of Accounting
+to follow standard accounting practices (@pxref{Principles of Accounting
 with Ledger}).
 
 Since an amount is missing from the second posting, it is assumed to be
@@ -8918,7 +8917,7 @@ are covered here, though it must be said that sometimes, there are
 multiple ways to achieve a desired result.
 
 @emph{Note:} It is important to note that there must be at least two
-spaces between the end of the post and the beginning of the amount
+spaces between the end of the account and the beginning of the amount
 (including a commodity designator).
 
 @menu
@@ -9056,7 +9055,7 @@ implied cost for you.  You can also make the cost explicit using a
 @end smallexample
 
 Here the @dfn{per-unit cost} is given explicitly in the form of a cost
-amount; and since cost amount are @emph{unobserved}, the use of six
+amount; and since cost amounts are @emph{unobserved}, the use of six
 decimal places has no effect on how dollar amounts are displayed in
 the final report.  You can also specify the @dfn{total cost}:
 
@@ -9089,9 +9088,9 @@ posting automatically so that the transaction balances.
 In every transaction involving more than one commodity, there is
 always one which is the @dfn{primary commodity}.  This commodity
 should be thought of as the exchange commodity, or the commodity used
-to buy and sells units of the other commodity.  In the fruit examples
+to buy and sell units of the other commodity.  In the fruit examples
 above, dollars are the primary commodity.  This is decided by Ledger
-on the placement of the commodity in the transaction:
+based on the placement of the commodity in the transaction:
 
 @smallexample @c input:validate
 2010/05/31 Sample Transaction
@@ -9113,7 +9112,7 @@ play is in reports that use the @option{--market (-V)} or
 shown.
 
 If a transaction uses only one commodity, this commodity is also
-considered a primary.  In fact, when Ledger goes about ensures that
+considered a primary.  In fact, when Ledger goes about ensuring that
 all transactions balance to zero, it only ever asks this of primary
 commodities.
 
@@ -9146,8 +9145,8 @@ nothing for a command line user.
 @subsection @command{source}
 @findex source
 
-The @command{source} command take a journal file as an argument and
-parses it checking for errors, no other reports are generated, and no
+The @command{source} command takes a journal file as an argument and
+parses it checking for errors; no other reports are generated, and no
 other arguments are necessary.  Ledger will return success if no errors
 are found.
 
@@ -9248,7 +9247,7 @@ apply it against a model transaction.
 
 @item generate
 Randomly generates syntactically valid Ledger data from a seed.  Used
-by the GenerateTests harness for development testing.
+by the @samp{GenerateTests} harness for development testing.
 
 @item parse @var{VEXPR}
 @itemx expr @var{VEXPR}
@@ -9342,13 +9341,13 @@ This is a debugging command.
 @subsection Testing Framework
 
 Ledger source ships with a fairly complete set of tests to verify that
-all is well, and no old errors have been resurfaced.  Tests are run
+all is well, and no old errors have resurfaced.  Tests are run
 individually with @file{ctest}.  All tests can be run using @code{make
 check} or @code{ninja check} depending on which build tool you prefer.
 
 Once built, the ledger executable resides under the @file{build}
 subdirectory in the source tree.  Tests are built and stored in the
-test subdirectory for the build.  For example,
+@file{test} subdirectory for the build.  For example,
 @file{~/ledger/build/ledger/opt/test}.
 
 @menu
@@ -9370,7 +9369,7 @@ build location.  To execute a single test use @code{ctest -V -R regex},
 where the regex matches the name of the test you want to build.
 
 There are nearly 300 tests stored under the @file{test} subdirectory
-in main source distribution.  They are broken into two broad
+in the main source distribution.  They are broken into two broad
 categories, baseline and regression.  To run the @file{5FBF2ED8} test,
 for example, issue @samp{ctest -V -R "5FB"}.
 
