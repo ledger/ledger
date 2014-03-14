@@ -2296,7 +2296,7 @@ account. For example:
 capture  Expenses:Deductible:Medical  Medical
 @end smallexample
 
-would cause any posting with @samp{Medical} in its name to be replaced
+Would cause any posting with @samp{Medical} in its name to be replaced
 with @samp{Expenses:Deductible:Medical}.
 
 Ledger will display the mapped payees in @command{print} and
@@ -5379,14 +5379,14 @@ Show all transactions with running total.
 Show transactions in csv format, for exporting to other programs.
 
 @item print
-Print transaction in a ledger readable format.
+Print transactions in a format readable by ledger.
 
 @item xml
 Produce XML output of the register command.
 
 @item lisp
 @itemx emacs
-Produce Emacs lisp output.
+Produce s-expression output, suitable for Emacs.
 
 @item equity
 Print account balances as transactions.
@@ -5395,7 +5395,7 @@ Print account balances as transactions.
 Print price history for matching commodities.
 
 @item pricedb
-Print price history for matching commodities in ledger readable format.
+Print price history for matching commodities in a format readable by ledger.
 
 @item xact
 Generate transactions based on previous postings.
@@ -5425,7 +5425,7 @@ Redirect output to @file{FILE}.
 
 @item --init-file @var{FILE}
 @itemx -i @var{FILE}
-Specify options file.
+Specify an options file.
 
 @item --account @var{STR}
 @itemx -a @var{STR}
@@ -5440,22 +5440,22 @@ Specify default account @var{STR} for QIF file postings.
 
 @item --current
 @itemx -c
-Display transaction on or before the current date.
+Display only transactions on or before the current date.
 
 @item --begin @var{DATE}
 @itemx -b @var{DATE}
-Begin reports on or after @var{DATE}.
+Limit the processing to transactions on or after @var{DATE}.
 
 @item --end @var{DATE}
 @itemx -e @var{DATE}
-Limit end date of transactions for report.
+Limit the processing to transactions before @var{DATE}.
 
 @item --period @var{PERIOD_EXPRESSION}
 @itemx -p @var{PERIOD_EXPRESSION}
-Set report period to @var{PERIOD_EXPRESSION}.
+Limit the processing to transactions in @var{PERIOD_EXPRESSION}.
 
 @item --period-sort @var{VEXPR}
-Sort postings within each period.
+Sort postings within each period according to @var{VEXPR}.
 
 @item --cleared
 @itemx -C
@@ -5474,7 +5474,7 @@ Display only real postings.
 
 @item --actual
 @itemx -L
-Display only actual postings, not automated.
+Display only actual postings, not automated ones.
 
 @item --related
 @itemx -r
@@ -5484,17 +5484,17 @@ Display related postings.
 Display how close your postings meet your budget.
 
 @item --add-budget
-Show un-budgeted postings.
+Show unbudgeted postings.
 
 @item --unbudgeted
-Show only un-budgeted postings.
+Show only unbudgeted postings.
 
 @item --forecast @var{VEXPR}
 Project balances into the future.
 
 @item --limit @var{EXPR}
 @itemx -l @var{EXPR}
-Limit postings in calculations.
+Limit which postings are used in calculations by @var{EXPR}.
 
 @item --amount @var{EXPR}
 @itemx -t @var{EXPR}
@@ -5521,7 +5521,8 @@ Accounts, tags or commodities not previously declared will cause errors.
 
 @item --check-payees
 Enable strict and pedantic checking for payees as well as accounts,
-commodities and tags.
+commodities and tags. This only works in conjunction with 
+@option{--strict} or @option{--pedantic}.
 
 @item --immediate
 Instruct ledger to evaluate calculations immediately rather than lazily.
@@ -5547,18 +5548,21 @@ Report subtotals by payee.
 
 @item --empty
 @itemx -E
-Include empty accounts in report.
+Include empty accounts in the report.
 
 @item --weekly
 @itemx -W
 Report posting totals by week.
+
+@item --quarterly
+Report posting totals by quarter.
 
 @item --yearly
 @itemx -Y
 Report posting totals by year.
 
 @item --dow
-Report Posting totals by day of week.
+Report posting totals by day of week.
 
 @item --sort @var{VEXPR}
 @itemx -S @var{VEXPR}
@@ -5579,11 +5583,11 @@ Direct output to @var{FILE} pager program.
 
 @item --average
 @itemx -A
-Report average posting value.
+Report the average posting value.
 
 @item --deviation
 @itemx -D
-Report each posting deviation from the average.
+Report each posting's deviation from the average.
 
 @item --percent
 @itemx -%
@@ -5596,21 +5600,21 @@ Produce a pivot table of the @var{TAG} type specified.
 
 @item --amount-data
 @itemx -j
-Show only date and value column to format the output for plots.
+Show only the date and value columns to format the output for plots.
 
 @item --plot-amount-format @var{FORMAT_STRING}
 Specify the format for the plot output.
 
 @item --total-data
 @itemx -J
-Show only dates and totals to format the output for plots.
+Show only the date and total columns to format the output for plots.
 
 @item --plot-total-format @var{FORMAT_STRING}
 Specify the format for the plot output.
 
 @item --display @var{EXPR}
 @itemx -d @var{EXPR}
-Display only posting that meet the criteria in the @var{EXPR}.
+Display only postings that meet the criteria in the @var{EXPR}.
 
 @item --date-format @var{DATE_FORMAT}
 @itemx -y @var{DATE_FORMAT}
@@ -5621,11 +5625,7 @@ Change the basic date format used in reports.
 @itemx --register-format @var{FORMAT_STRING}
 @itemx --prices-format @var{FORMAT_STRING}
 @itemx -F @var{FORMAT_STRING}
-Set reporting format.
-
-@item --wide
-@itemx -w
-Wide.
+Set the reporting format for various reports.
 
 @item --anon
 Print the ledger register with anonymized accounts and payees, useful
@@ -5666,7 +5666,7 @@ Group by day of weeks.
 
 @item --subtotal
 @itemx -s
-Group posting together, similar to balance report.
+Group postings together, similar to the balance report.
 
 @end ftable
 
@@ -5684,10 +5684,10 @@ Set expected freshness of prices in @var{INT} minutes.
 
 @item --download
 @itemx -Q
-Download quotes using named @file{getquote}.
+Download quotes using the script named @file{getquote}.
 
 @item --getquote @var{FILE}
-Sets path to a user defined script to download commodity prices.
+Sets the path to a user-defined script to download commodity prices.
 
 @item --quantity
 @itemx -O
@@ -5724,7 +5724,7 @@ Report net gain or loss for commodities that have a price history.
 @node Global Options, Session Options, Detailed Option Description, Detailed Option Description
 @subsection Global Options
 
-Options for Ledger report affect three separate scopes of operation:
+Options for Ledger reports affect three separate scopes of operation:
 Global, Session, and Report.  In practice there is very little
 difference between these scopes.  Ledger 3.0 contains provisions for
 GUIs, which would make use of the different scopes by keeping an
@@ -5735,8 +5735,8 @@ sessions with multiple reports per session.
 
 @item --args-only
 Ignore all environment and init-file settings and
-use only command-line arguments to control Ledger.  Useful for debugs
-or testing small Journal files not associated with you main financial
+use only command-line arguments to control Ledger.  Useful for debugging
+or testing small journal files not associated with your main financial
 database.
 
 @item --debug @var{CODE}
@@ -5744,7 +5744,7 @@ FIX THIS ENTRY @c FIXME thdox
 
 @item --help
 @itemx -h
-Display the info page for ledger.
+Display the man page for ledger.
 
 @item --init-file @var{FILE}
 Specify the location of the init file. The default is @file{~/.ledgerrc}.
@@ -5784,7 +5784,7 @@ $ ledger --options bal --cleared -f ~/ledger/test/input/drewr3.dat
 
 @noindent
 For the source column, a value starting with a @samp{-} or @samp{--}
-indicated the source was a command line argument.  It the entry starts
+indicated the source was a command line argument.  If the entry starts
 with a @samp{$}, the source was an environment variable. If the source
 is @code{?normalize} the value was set internally by ledger, in
 a function called @code{normalize_options}.
@@ -5813,7 +5813,7 @@ FIX THIS ENTRY @c FIXME thdox
 @node Session Options, Report Options, Global Options, Detailed Option Description
 @subsection Session Options
 
-Options for Ledger report affect three separate scopes of operation:
+Options for Ledger reports affect three separate scopes of operation:
 Global, Session, and Report.  In practice there is very little
 difference between these scopes.  Ledger 3.0 contains provisions for
 GUIs, which would make use of the different scopes by keeping an
@@ -5833,11 +5833,11 @@ FIX THIS ENTRY @c FIXME thdox
 
 @item --decimal-comma
 Direct Ledger to parse journals using the European standard comma as
-decimal separator, vice a period.
+a decimal separator, not the usual period.
 
 @item --download
 @itemx -Q
-Direct Ledger to download prices using the script defined in
+Direct Ledger to download prices using the script defined via the option 
 @option{--getquote @var{FILE}}.
 
 @item --explicit
@@ -5915,10 +5915,10 @@ considered to be fresh enough.
 
 @item --strict
 Ledger normally silently accepts any account or commodity in a posting,
-even if you have misspelled a common used one.  The option
-@option{--strict} changes that behavior.  While running
+even if you have misspelled a commonly used one.  The option
+@option{--strict} changes that behavior.  While running with
 @option{--strict}, Ledger interprets all cleared transactions as
-correct, and if it finds a new account or commodity (same as
+correct, and if it encounters a new account or commodity (same as
 a misspelled commodity or account) it will issue a warning giving you
 the file and line number of the problem.
 
@@ -5942,7 +5942,7 @@ FIX THIS ENTRY @c FIXME thdox
 @node Report Options, Basic options, Session Options, Detailed Option Description
 @subsection Report Options
 
-Options for Ledger report affect three separate scopes of operation:
+Options for Ledger reports affect three separate scopes of operation:
 Global, Session, and Report.  In practice there is very little
 difference between these scopes.  Ledger 3.0 contains provisions for
 GUIs, which would make use of the different scopes by keeping an
@@ -5970,11 +5970,11 @@ to @var{INT} characters.
 
 @item --actual
 @itemx -L
-Report only real transactions, with no automated or virtual
-transactions used.
+Report only real transactions, ignoring all automated or virtual
+transactions.
 
 @item --add-budget
-Show only un-budgeted postings.
+Show only unbudgeted postings.
 
 @item --amount @var{EXPR}
 @itemx -t @var{EXPR}
@@ -5984,7 +5984,7 @@ arbitrary transformation to the postings.
 
 @item --amount-data
 @itemx -j
-On a register report print only the dates and amount of postings.
+On a register report print only the date and amount of postings.
 Useful for graphing and spreadsheet applications.
 
 @item --amount-width @var{INT}
@@ -6039,12 +6039,12 @@ $ ledger reg Expenses --begin Dec --bold-if "amount>100"
 @end smallexample
 
 @noindent
-list all transactions since the beginning of December and bold any
-posting greater than $100.
+list all transactions since the beginning of December and print in 
+bold any posting greater than $100.
 
 @item --budget
 Only display budgeted items. In a register report this
-displays transaction in the budget, in a balance report this displays
+displays transactions in the budget, in a balance report this displays
 accounts in the budget (@pxref{Budgeting and Forecasting}).
 
 @item --budget-format @var{FORMAT_STRING}
@@ -6065,7 +6065,7 @@ Group the register report by payee.
 
 @item --cleared
 @itemx -C
-Consider only transaction that have been cleared for display and
+Consider only transactions that have been cleared for display and
 calculation.
 
 @item --cleared-format @var{FORMAT_STRING}
@@ -6102,7 +6102,7 @@ Specify the width of the @command{register} report in characters.
 
 @item --count
 Direct ledger to report the number of items when appended to the
-commodities, accounts or payees command.
+@command{commodities}, @command{accounts} or @command{payees} command.
 
 @item --csv-format @var{FORMAT_STRING}
 Specify the format to use for the @command{csv} report (@pxref{Format
@@ -6131,8 +6131,8 @@ Transform the date of the transaction using @var{EXPR}.
 
 @item --date-format @var{DATE_FORMAT}
 @itemx -y @var{DATE_FORMAT}
-Specify the format ledger should use to print dates (@pxref{Date and Time
-Format Codes}).
+Specify the format ledger should use to read and print dates 
+(@pxref{Date and Time Format Codes}).
 
 @item --date-width @var{INT}
 Specify the width, in characters, of the date column in the
@@ -6143,8 +6143,9 @@ FIX THIS ENTRY @c ASK JOHN
 
 @item --dc
 Display register or balance in debit/credit format If you use
-@option{--dc} with either the register (reg) or balance (bal) commands,
-you will now get extra columns.  The register goes from this:
+@option{--dc} with either the @command{register} (reg) or
+@command{balance} (bal) commands, you will now get extra columns.  
+The register goes from this:
 
 @smallexample
 12-Mar-10 Employer           Assets:Cash                $100        $100
@@ -6201,9 +6202,9 @@ And with @option{--dc} it becomes this:
 
 @item --depth @var{INT}
 Limit the depth of the account tree.  In a balance report, for example,
-a @samp{--depth 2} statement will print balances only for account with
+a @samp{--depth 2} statement will print balances only for accounts with
 two levels, i.e. @samp{Expenses:Entertainment} but not
-@samp{Expenses:entertainemnt:Dining}. This is a display predicate, which
+@samp{Expenses:Entertainment:Dining}. This is a display predicate, which
 means it only affects display, not the total calculations.
 
 @item --deviation
@@ -6211,19 +6212,19 @@ Report each posting’s deviation from the average. It is only meaningful
 in the register and prices reports.
 
 @item --display @var{EXPR}
-Display lines that satisfy the expression @var{EXPR}.
+Display only lines that satisfy the expression @var{EXPR}.
 
 @item --display-amount @var{EXPR}
-Apply a transformation to the @emph{displayed} amount.  This occurs after
+Apply a transformation to the @emph{displayed} amount.  This happens after
 calculations occur.
 
 @item --display-total @var{EXPR}
-Apply a transformation to the @emph{displayed} total.  This occurs after
+Apply a transformation to the @emph{displayed} total.  This happens after
 calculations occur.
 
 @item --dow
 @itemx --days-of-week
-Group transactions by the days of the week.
+Group transactions by the day of the week.
 
 @smallexample @c command:validate
 $ ledger reg Expenses --dow --collapse
@@ -6234,11 +6235,11 @@ Will print all Expenses totaled for each day of the week.
 
 @item --empty
 @itemx -E
-Include empty accounts in the report.
+Include empty accounts in the report and in average calculations.
 
 @item --end @var{DATE}
 Specify the end @var{DATE} for a transaction to be considered in the
-report.
+report. All transactions on or after this date are ignored.
 
 @item --equity
 Related to the @command{equity} command (@pxref{The @command{equity}
@@ -6286,13 +6287,13 @@ transactions) in the report, in cases where you normally wouldn't want
 them.
 
 @item --group-by @var{EXPR}
-Group transaction together in the @command{register} report.
+Group transactions together in the @command{register} report.
 @var{EXPR} can be anything, although most common would be @code{payee}
 or @code{commodity}. The @code{tags()} function is also useful here.
 
 @item --group-title-format @var{FORMAT_STRING}
-Set the format for the headers that separate reports section of
-a grouped report.  Only has effect with a @option{--group-by @var{EXPR}}
+Set the format for the headers that separates the report sections of
+a grouped report.  Only has an effect with a @option{--group-by @var{EXPR}}
 register report.
 
 @smallexample
@@ -6321,9 +6322,9 @@ FIX THIS ENTRY @c FIXME thdox
 FIX THIS ENTRY @c FIXME thdox
 
 @item --inject
-Use @code{Expected} amounts in calculations.  In the case that you know
-that amount a transaction should be, but the actual transaction has the
-wrong value you can use metadata to put in the expected amount:
+Use @code{Expected} amounts in calculations.  In case you know
+what amount a transaction should be, but the actual transaction has the
+wrong value you can use metadata to specify the expected amount:
 
 @smallexample @c input:validate
 2012-03-12  Paycheck
@@ -6339,8 +6340,8 @@ Change the sign of all reported values.
 
 @item --limit @var{EXPR}
 @itemx -l @var{EXPR}
-Only transactions that satisfy the expression will be considered in the
-calculation.
+Only transactions that satisfy @var{EXPR} are considered in
+calculations and for display.
 
 @item --lot-dates
 Report the date on which each commodity in a balance report was
@@ -6385,7 +6386,7 @@ Suppress any color TTY output.
 
 @item --no-rounding
 Don't output @samp{<Rounding>} postings.  Note that this will cause the
-running total to often not add up!  It's main use is for
+running total to often not add up!  Its main use is for
 @option{--amount-data (-j)} and @option{--total-data (-J)} reports.
 
 @item --no-titles
@@ -6395,7 +6396,7 @@ Suppress the output of group titles.
 Suppress printing the final total line in a balance report.
 
 @item --now @var{DATE}
-Define the current date in case to you to do calculate in the past or
+Define the current date in case you want to calculate in the past or
 future using @option{--current}.
 
 @item --only @var{FIXME}
@@ -6422,15 +6423,15 @@ Use only postings that are marked pending.
 
 @item --percent
 @itemx -%
-Calculate the percentage value of each account in a balance reports.
-Only works for account that have a single commodity.
+Calculate the percentage value of each account in balance reports.
+Only works for accounts that have a single commodity.
 
 @item --period @var{PERIOD_EXPRESSION}
 Define a period expression that sets the time period during which
 transactions are to be accounted. For a @command{register} report only
 the transactions that satisfy the period expression with be displayed.
-For a balance report only those transactions will be accounted in the
-final balances.
+For a @command{balance} report only those transactions will be accounted 
+in the final balances.
 
 @item --pivot @var{TAG}
 Produce a balance pivot report @emph{around} the given @var{TAG}. For
@@ -6491,7 +6492,7 @@ Synonym for @samp{--period "quarterly"}.
 @item --raw
 In the @command{print} report, show transactions using the exact same syntax as
 specified by the user in their data file.  Don't do any massaging or
-interpreting.  Can be useful for minor cleanups, like just aligning
+interpreting.  This can be useful for minor cleanups, like just aligning
 amounts.
 
 @item --real
@@ -6503,7 +6504,7 @@ transactions.
 Define the output format for the @command{register} report.
 
 @item --related
-In a register report show the related account.  This is the other
+In a @command{register} report show the related account.  This is the other
 @emph{side} of the transaction.
 
 @item --related-all
@@ -6529,14 +6530,14 @@ development testing.
 
 @item --sort @var{VEXPR}
 @itemx -S @var{VEXPR}
-Sort the register report based on the value expression given to sort.
+Sort the @command{register} report based on the value expression given to sort.
 
 @item --sort-all @var{FIXME}
 FIX THIS ENTRY
 
 @item --sort-xacts @var{VEXPR}
 @itemx --period-sort @var{VEXPR}
-Sort the posting within transactions using the given value expression.
+Sort the postings within transactions using the given value expression.
 
 @item --start-of-week @var{INT}
 Tell ledger to use a particular day of the week to start its ``weekly''
@@ -6549,7 +6550,7 @@ FIX THIS ENTRY
 
 @item --tail @var{INT}
 @itemx --last @var{INT}
-Report only the last @var{INT} entries. Only useful on a register
+Report only the last @var{INT} entries. Only useful in a @command{register}
 report.
 
 @item --time-report
@@ -6574,7 +6575,7 @@ as it considers sub-names within the account name (that style is
 called ``abbreviate'').
 
 @item --unbudgeted
-Show only un-budgeted postings.
+Show only unbudgeted postings.
 
 @item --uncleared
 @itemx -U
@@ -6605,8 +6606,8 @@ FIX THIS ENTRY @c FIXME thdox
 Synonym for @samp{--period "weekly"}.
 
 @item --wide
-Let the register report use 132 columns.  Identical to @samp{--columns
-"132"}.
+Let the register report use 132 columns instead of 80 (the default).
+Identical to @samp{--columns "132"}.
 
 @item --yearly
 @itemx -Y
@@ -6626,19 +6627,17 @@ variables}), instead of using actual command-line options:
 @item --help
 @itemx -h
 Print a summary of all the options, and what they are used for.  This
-can be a handy way to remember which options do what.  This help screen
-is also printed if ledger is run without a command.
+can be a handy way to remember which options do what.
 
 @item --version
-@itemx -v
 Print the current version of ledger and exits.  This is useful for
 sending bug reports, to let the author know which version of ledger you
 are using.
 
 @item --file @var{FILE}
 @itemx -f @var{FILE}
-Read @file{FILE} as a ledger file. @var{FILE} can be @samp{-} that is
-a synonym of @samp{/dev/stdin}. This command may be used multiple
+Read @file{FILE} as a ledger file. @var{FILE} can be @samp{-} which is
+a synonym for @samp{/dev/stdin}. This command may be used multiple
 times. Typically, the environment variable @env{LEDGER_FILE} is set,
 rather than using this command-line option.
 
@@ -6652,12 +6651,12 @@ goes to standard output.
 Causes @file{FILE} to be read by ledger before any other ledger file.
 This file may not contain any postings, but it may contain option
 settings.  To specify options in the init file, use the same syntax as
-the command-line, but put each option on its own line.  Here is an
+on the command-line, but put each option on its own line.  Here is an
 example init file:
 
 @smallexample
 --price-db ~/finance/.pricedb
-
+--wide
 ; ~/.ledgerrc ends here
 @end smallexample
 
@@ -6694,7 +6693,7 @@ first matching transaction.  (Note: This is different from using
 @item --end @var{DATE}
 @itemx -e @var{DATE}
 Constrain the report so that transactions on or after @var{DATE} are
-not considered.  The ending date is inclusive.
+not considered.
 
 @item --period @var{PERIOD_EXPRESSION}
 @itemx -p @var{PERIOD_EXPRESSION}
@@ -6702,7 +6701,7 @@ Set the reporting period to @var{STR}.  This will subtotal all matching
 transactions within each period separately, making it easy to see
 weekly, monthly, quarterly, etc., posting totals.  A period string can
 even specify the beginning and end of the report range, using simple
-terms like @samp{last June} or @samp{next month}.  For more using period
+terms like @samp{last June} or @samp{next month}.  For more details on period
 expressions, see @ref{Period Expressions}.
 
 @item --period-sort @var{VEXPR}
@@ -6711,8 +6710,9 @@ expression @var{EXPR}.  This is most often useful when reporting
 monthly expenses, in order to view the highest expense categories at
 the top of each month:
 
-@smallexample @c input:validate
-$ ledger -M --period-sort -At reg ^Expenses
+@c TODO: the parameter to --period-sort was -At, which doesn't seem to work any longer
+@smallexample @c command:validate
+$ ledger -M --period-sort total reg ^Expenses
 @end smallexample
 
 @item --cleared
@@ -6733,8 +6733,8 @@ see @ref{Virtual postings} for more information).
 
 @item --actual
 @itemx -L
-Display only actual postings, and not those created due to automated
-postings.
+Display only actual postings, and not those created by automated
+transactions.
 
 @item --related
 @itemx -r
@@ -6758,7 +6758,7 @@ And the register command was:
 $ ledger -f example.dat -r register food
 @end smallexample
 
-The following would be output, showing the postings related to the
+The following would be printed, showing the postings related to the
 posting that matched:
 
 @smallexample @c output:94C5675
@@ -6768,7 +6768,7 @@ posting that matched:
 
 @item --budget
 Useful for displaying how close your postings meet your budget.
-@option{--add-budget} also shows un-budgeted postings, while
+@option{--add-budget} also shows unbudgeted postings, while
 @option{--unbudgeted} shows only those.  @option{--forecast @var{VEXPR}}
 is a related option that projects your budget into the future, showing
 how it will affect future balances.  @xref{Budgeting and Forecasting}.
@@ -6873,22 +6873,22 @@ Report posting totals by month.
 
 @item --yearly
 @itemx -Y
-Report posting totals by year.  For more complex period, using the
+Report posting totals by year.  For more complex periods, use @option{--period}.
 @c TODO end this sentence
 
 @item --period @var{PERIOD_EXPRESSION}
 Option described above.
 
 @item --dow
-Report postings totals for each day of the week.  This is an easy way
+Report posting totals for each day of the week.  This is an easy way
 to see if weekend spending is more than on weekdays.
 
 @item --sort @var{VEXPR}
 @itemx -S @var{VEXPR}
 Sort a report by comparing the values determined using the value
-expression @var{VEXPR}.  For example, using @samp{-S -UT} in the balance
-report will sort account balances from greatest to least, using the
-absolute value of the total.  For more on how to use value expressions,
+expression @var{VEXPR}.  For example, using @samp{-S "-abs(total)"} in the 
+@command{balance} report will sort account balances from greatest to least, 
+using the absolute value of the total.  For more on how to use value expressions,
 see @ref{Value Expressions}.
 
 @item --pivot @var{TAG}
@@ -6933,7 +6933,7 @@ the parent account.
 
 @item --amount-data
 @itemx -j
-Change the @command{register} report so that it outputs nothing but the
+Change the @command{register} report so that it prints nothing but the
 date and the value column, and the latter without commodities.  This is
 only meaningful if the report uses a single commodity.  This data can
 then be fed to other programs, which could plot the date, analyze it,
@@ -6941,12 +6941,12 @@ etc.
 
 @item --total-data
 @itemx -J
-Change the @command{register} report so that it outputs nothing but the
-date and totals column, without commodities.
+Change the @command{register} report so that it prints nothing but the
+date and total columns, without commodities.
 
 @item --display @var{EXPR}
 @itemx -d @var{EXPR}
-Limit which postings or accounts or actually displayed in a report.
+Limit which postings or accounts are actually displayed in a report.
 They might still be calculated, and be part of the running total of a
 register report, for example, but they will not be displayed.  This is
 useful for seeing last month's checking postings, against a running
@@ -7156,7 +7156,7 @@ There are several different ways that ledger can report the totals it
 displays.  The most flexible way to adjust them is by using value
 expressions, and the @option{--amount @var{EXPR} (-t)} and
 @option{--total @var{VEXPR} (-T)} options.  However, there are also
-several ``default'' reports, which will satisfy most users basic
+several ``default'' reports, which will satisfy most users' basic
 reporting needs:
 
 @ftable @code
@@ -7264,7 +7264,7 @@ specific meta-data:
     Assets:Cash
 @end smallexample
 
-This example demonstrates that your VALUE expression should be as
+This example demonstrates that your value expression should be as
 symbolic as possible, using terms like 'amount' and 'date', rather than
 specific amounts and dates.  Also, you should pass the amount along to
 the function 'market' so it can be further revalued if the user has
@@ -7275,6 +7275,8 @@ which allows you to report most everything in EUR if you use @samp{-X
 EUR}, except for certain accounts or postings which should always be
 valuated in another currency.  For example:
 
+@c TODO is this example missing the actual line to get the effect? 
+@c it looks like it only contains a match, but no effect
 @smallexample @c input:validate
 = /^Assets:Brokerage:CAD$/
     ; Always report the value of commodities in this account in
@@ -7311,13 +7313,13 @@ these values:
 @itemize
 
 @item Register Report
-For the register report, use the value of that commodity on the date of
+For the @command{register} report, use the value of that commodity on the date of
 the posting being reported, with a @samp{<Revalued>} posting added at
-the end of today's value is different from the value of the last
+the end if today's value is different from the value of the last
 posting.
 
 @item Balance Report
-For the balance report, use the value of that commodity as of today.
+For the @command{balance} report, use the value of that commodity as of today.
 
 @end itemize
 
@@ -7479,7 +7481,7 @@ payee.  For example:
 
 These two periodic transactions give the usual monthly expenses, as well
 as one typical yearly expense.  For help on finding out what your
-average monthly expense is for any category, use a command like:
+average monthly expenses are for any category, use a command like:
 
 @smallexample
 $ ledger -p "this year" --monthly --average balance ^expenses
@@ -7503,7 +7505,7 @@ $ ledger --budget --monthly register ^expenses
 
 A budget report includes only those accounts that appear in the budget.
 To see all expenses balanced against the budget, use
-@option{--add-budget}.  You can even see only the un-budgeted expenses
+@option{--add-budget}.  You can even see only the unbudgeted expenses
 using @option{--unbudgeted}:
 
 @smallexample @c command:validate
@@ -7526,16 +7528,17 @@ $ ledger --forecast "T>@{\$-500.00@}" register ^assets ^liabilities
 @end smallexample
 
 This report continues outputting postings until the running total
-is greater than $-500.00.  A final posting is always output, to
-show you what the total afterwards would be.
+is greater than $-500.00.  A final posting is always shown, to
+inform you what the total afterwards would be.
 
-Forecasting can also be used with the balance report, but by date
-only, and not against the running total:
+Forecasting can also be used with the @command{balance} report, 
+but by date only, and not against the running total:
 
 @smallexample @c command:validate
 $ ledger --forecast "d<[2010]" bal ^assets ^liabilities
 @end smallexample
 
+@c CONTINUE HERE
 @node Time Keeping, Value Expressions, Budgeting and Forecasting, Top
 @chapter Time Keeping
 @findex --day-break
