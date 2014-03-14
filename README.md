@@ -65,6 +65,7 @@ current `master` branch:
 <tr><td>Boost</td><td>1.35</td><td></td></tr>
 <tr><td>GMP</td><td>4.2.2</td><td></td></tr>
 <tr><td>MPFR</td><td>2.4.0</td><td></td></tr>
+<tr><td>utfcpp</td><td>2.3.4</td><td></td></tr>
 <tr><td>gettext</td><td>0.17</td><td><em>optional</em></td></tr>
 <tr><td>libedit</td><td>20090111-3.0</td><td><em>optional</em></td></tr>
 <tr><td>Python</td><td>2.4</td><td><em>optional</em></td></tr>
