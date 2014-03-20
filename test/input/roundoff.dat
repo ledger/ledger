@@ -1,0 +1,17 @@
+; -*- ledger -*-
+; Time-stamp: <2014-03-21 >
+
+; this journal file will round off the balance from first transaction 
+; to zero.This round off is ommitted if the transaction amount
+; has precision upto a non zero digit("0.0"=> "0.0000" )
+; unround option  has no effect
+
+2014/03/21 * Test Round off
+  Expenses:purchase:euro           1 EUR @  $0.0086
+  Income:sale:cash                 1 CAD @  $0.0080
+  Income:checking:salary          $0.0
+ 
+; non-zero transaction 
+2014/03/21 * Asset sold 
+  Assets:computer                  -$200.0045
+  Income:checking                   
