@@ -3,7 +3,7 @@
 
 ; this journal file will round off the balance from first transaction 
 ; to zero.This round off is omitted if the transaction amount
-; has precision upto a non zero digit("0.0"=> "0.0000" )
+; has precision upto a non zero digit in the result("0.0"=> "0.0000" )
 ; unround option  has no effect
 
 2014/03/21 * Test Round off
