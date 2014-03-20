@@ -2,7 +2,7 @@
 ; Time-stamp: <2014-03-21 >
 
 ; this journal file will round off the balance from first transaction 
-; to zero.This round off is ommitted if the transaction amount
+; to zero.This round off is omitted if the transaction amount
 ; has precision upto a non zero digit("0.0"=> "0.0000" )
 ; unround option  has no effect
 
