@@ -40,7 +40,8 @@
   :group 'ledger-faces)
 
 (defface ledger-font-xact-highlight-face
-    `((t :background "#eee8d5"))
+    `((((background dark)) :background "#1a1a1a" )
+      (t :background "#eee8d5"))
   "Default face for transaction under point"
   :group 'ledger-faces)
 
@@ -80,7 +81,8 @@
   :group 'ledger-faces)
 
 (defface ledger-occur-xact-face
-    `((t :background "#eee8d5" ))
+    `((((background dark)) :background "#1a1a1a" )
+      (t :background "#eee8d5" ))
   "Default face for Ledger occur mode shown transactions"
   :group 'ledger-faces)
 
