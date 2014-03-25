@@ -112,9 +112,9 @@ following packages (current as of Ubuntu 12.04):
 Or, for Ubuntu Karmic:
 
     sudo apt-get install build-essential cmake texinfo python-dev zlib1g-dev
-         libbz2-dev libgmp3-dev bjam gettext cvs libboost1.40-dev
-         libboost-regex1.40-dev libboost-date-time1.40-dev
-         libboost-filesystem1.40-dev libmpfr-dev
+         libbz2-dev libgmp3-dev bjam gettext cvs libboost-dev
+         libboost-regex-dev libboost-date-time-dev
+         libboost-filesystem-dev libmpfr-dev
 
 ### Debian
 
@@ -125,11 +125,11 @@ Debian wheezy (7.0) contains all components needed to build ledger.
 You can install all required build dependencies using the following
 command:
 
-    sudo apt-get install build-essential cmake autopoint texinfo python-dev
-         zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev
-         libboost-date-time1.49-dev libboost-filesystem1.49-dev
-         libboost-graph1.49-dev libboost-iostreams1.49-dev
-         libboost-python1.49-dev libboost-regex1.49-dev libboost-test1.49-dev
+    sudo apt-get install build-essential cmake autopoint texinfo python-dev \
+         zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
+         libboost-date-time-dev libboost-filesystem-dev \
+         libboost-graph-dev libboost-iostreams-dev \
+         libboost-python-dev libboost-regex-dev libboost-test-dev
 
 ## Building
 

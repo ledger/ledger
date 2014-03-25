@@ -54,19 +54,12 @@ it's usually fairly obvious where things have gone astray.
       GNU/Linux system (or Debian-based system such as Ubuntu), something
       like this should work (as root):
 
-      # aptitude update
-      # for name in                                                   \
-            cmake libboost-dev libboost-date-time-dev libboost-doc    \
-            libboost-dbg libboost-filesystem-dev libboost-graph-dev   \
-            libboost-iostreams-dev libboost-program-options-dev       \
-            libboost-python-dev libboost-regex-dev                    \
-            libboost-serialization-dev libboost-signals-dev           \
-            libboost-test-dev libboost-thread-dev libboost-wave-dev   \
-            libmpfr-dev libmpfr-dbg libmpfr-doc;                      \
-        do                                                            \
-            aptitude install ${name};                                 \
-        done
-    
+        sudo apt-get install build-essential cmake autopoint texinfo python-dev \
+            zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
+            libboost-date-time-dev libboost-filesystem-dev \
+            libboost-graph-dev libboost-iostreams-dev \
+            libboost-python-dev libboost-regex-dev libboost-test-dev
+
    ----------------------------------------------------------------------
 
  - Q: Configure fails saying it can't find boost_regex
