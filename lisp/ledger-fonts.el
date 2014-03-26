@@ -16,8 +16,8 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
-;; MA 02111-1307, USA.
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+;; MA 02110-1301 USA.
 
 
 
@@ -40,7 +40,8 @@
   :group 'ledger-faces)
 
 (defface ledger-font-xact-highlight-face
-    `((t :background "#eee8d5"))
+    `((((background dark)) :background "#1a1a1a" )
+      (t :background "#eee8d5"))
   "Default face for transaction under point"
   :group 'ledger-faces)
 
@@ -80,7 +81,8 @@
   :group 'ledger-faces)
 
 (defface ledger-occur-xact-face
-    `((t :background "#eee8d5" ))
+    `((((background dark)) :background "#1a1a1a" )
+      (t :background "#eee8d5" ))
   "Default face for Ledger occur mode shown transactions"
   :group 'ledger-faces)
 
