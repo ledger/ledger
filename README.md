@@ -45,7 +45,8 @@ much further with those.
 ## Dependencies
 
 If you wish to proceed in this venture, you'll need a few dependencies.  The
-easiest way to get them for your platform is to run:
+easiest way to get them for your platform is to run this handy Python
+script:
 
     ./acprep dependencies
 
