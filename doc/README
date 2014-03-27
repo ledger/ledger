@@ -1,17 +1,20 @@
-
                           Welcome to Ledger
 
-                 the command-line accounting program
+                 The Command-line Accounting Program
 
 Introduction
 ============
 
-Ledger is an accounting program which is invoked from the command-line using a
-textual ledger file.  To start using Ledger, you will need to create such a
-file containing your financial postings.  A sample has been provided in the
-file "sample.dat".  See the documentation (ledger.pdf, or ledger.info) for
-full documentation on creating a ledger file and using Ledger to generate
-reports.
+Ledger is a powerful, double-entry accounting system that is accessed from the 
+UNIX command-line. This may put off some users, since there is no flashy UI, 
+but for those who want unparalleled reporting access to their data there are 
+few alternatives.
+
+To start using Ledger, you will need to create such a
+file containing your financial transactions.  A sample has been provided in the
+file "test/input/sample.dat".  See the Ledger 3 Manual (ledger.pdf, ledger.info, 
+or http://www.ledger-cli.org/3.0/doc/ledger3.pdf) for full documentation on creating 
+a ledger file and using Ledger to generate reports.
 
 Once you have such a file -- you might call it "ledger.dat" -- you can start
 looking at balances and account registers using commands like the following:
@@ -23,6 +26,10 @@ This assumes, of course, that like the sample file you use account names such
 as "Assets:Checking" and "Expenses:Food".  If you use other account names, you
 will need to vary the reporting commands you use accordingly.
 
+You can find more information on getting starting, building from source, and 
+getting help from the ./README.md file in your ledger source repository or
+online at https://github.com/ledger/ledger.
+
 
 Building
 ========
@@ -33,8 +40,9 @@ work), and at least these two libraries installed:
     gmp        GNU multi-precision library
     pcre       Perl regular expression library
 
-(On some GNU/Linux systems, the packages you need to install are called
-"gmp-dev" and "pcre-dev").
+On some GNU/Linux systems, the packages you need to install are called
+"gmp-dev" and "pcre-dev".  See the ./README.md in the source repository for
+a more complete list of dependencies.
 
 Once you have determined where the headers and libraries for the above
 packages are installed, run the script "configure", passing those paths.  If
