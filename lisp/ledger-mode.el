@@ -46,6 +46,7 @@
 (require 'ledger-texi)
 (require 'ledger-xact)
 (require 'ledger-schedule)
+(require 'ledger-hideshow)
 
 ;;; Code:
 
