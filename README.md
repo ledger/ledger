@@ -7,6 +7,15 @@ UNIX command-line.  This may put off some users, since there is no flashy UI,
 but for those who want unparalleled reporting access to their data there are
 few alternatives.
 
+Ledger uses text files for input.  It reads the files and generates reports;
+there is no other database or stored state.  To use Ledger, you create a
+file of your account names and transactions, run from the command line with
+some options to specify input and requested reports, and get output.
+The output is generally plain text, though you could generate a graph or
+html instead.  Ledger is simple in concept, surprisingly rich in ability,
+and easy to use.
+
+
 ## For the Impatient
 
 I know, you just want to build and play.  If you have all the dependencies
@@ -54,7 +63,8 @@ much further with those.
 ## Dependencies
 
 If you wish to proceed in this venture, you'll need a few dependencies.  The
-easiest way to get them for your platform is to run:
+easiest way to get them for your platform is to run this handy Python
+script:
 
     ./acprep dependencies
 
@@ -154,6 +164,7 @@ You can run `make check` to confirm the result, and `make install` to install.
 Now that you're up and running, here are a few resources to keep in mind:
 
  - [Home page](http://ledger-cli.org)
+ - [Documentation](http://www.ledger-cli.org/docs.html)
  - [IRC channel](irc://irc.freenode.net/ledger)
  - [Mailing List / Forum](http://groups.google.com/group/ledger-cli)
  - [GitHub project page](http://github.com/ledger/ledger)
