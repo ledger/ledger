@@ -5,12 +5,13 @@ UNIX command-line.  This may put off some users, since there is no flashy UI,
 but for those who want unparalleled reporting access to their data there are
 few alternatives.
 
-Ledger uses text files for input.  It reads the files and generates reports.  
-There is no other database or storing state.  To use Ledger, you create a 
+Ledger uses text files for input.  It reads the files and generates reports;
+there is no other database or stored state.  To use Ledger, you create a
 file of your account names and transactions, run from the command line with
-command lines options to specify a report, and get output.   The output is
-generally plain text, though one generate a graph or html instead.  Ledger
-is simple in concept, surprisingly rich in ability, and easy to use.
+some options to specify input and requested reports, and get output.
+The output is generally plain text, though you could generate a graph or
+html instead.  Ledger is simple in concept, surprisingly rich in ability,
+and easy to use.
 
 
 ## For the Impatient
