@@ -1,29 +1,112 @@
 ACCOUNTING GLOSSARY
 ---
 
-   Accounting and bookkeeping represent an entire field of human effort and has evolved its own specialized vocabulary.  Accounting hopes to summarize and add understanding to where the money is going.
+   Accounting and bookkeeping represent an entire field of human effort and
+   has evolved its own specialized vocabulary.  Accounting hopes to
+   summarize and add understanding to where the money is going.
 
-**Account**:   A category for grouping together amounts from similar transactions.  Each account has a name, which is usually capitalized, and an account type.  Accounts are often organized into a heirarchy when it helps understanding.  For example, a coffee shop might have Coffee, Merchandise, and Equipment as accounts but arranged under an Inventory account because different decisions are made on the total inventory rather than just coffee.  A heirarchy can be part of the account name in Ledger, e.g., "Assets:Inventory:Coffee".  Note that the Ledger software usually creates the list of accounts on the fly:  accounts are created when transactions use them.
+**Account**: A category for grouping together amounts from similar
+  transactions.  Each account has a name, which is usually capitalized, and
+  an account type.  Accounts are often organized into a heirarchy when it
+  helps understanding.  For example, a coffee shop might have Coffee,
+  Merchandise, and Equipment as accounts but arranged under an Inventory
+  account because different decisions are made on the total inventory
+  rather than just coffee.  A heirarchy can be part of the account name in
+  Ledger, e.g., "Assets:Inventory:Coffee".  Note that the Ledger software
+  usually creates the list of accounts on the fly: accounts are created
+  when transactions use them.
 
-**Account Type**:  Each account has a type of Asset, Liability, Equity, Income, or Expense.   Assets represent something owned, e.g., Cash or Inventory.  Liabilities represent sometime owed, e.g., a Loan or Mortgage.   Equity, also called capital, is everything owned minus everything owed (Assets - Liabilities).  It is the financial measure of how much you are ahead.   Income is money earned somewhere, which puts you more ahead.  Expenses is money spent somewhere, which puts you less ahead.  The type of account determines if a debit represents an increase or decrease in an account.  For example, Inventory is an asset so a transcation debiting Inventory would increase its value.  Assets and Expenses increase with debits and decrease with credits; Liabilities, Equity, and Expenses increase with credits and decrease with debits.
+**Account Type**: Each account has a type of Asset, Liability, Equity,
+  Income, or Expense.  Assets represent something owned, e.g., Cash or
+  Inventory.  Liabilities represent sometime owed, e.g., a Loan or
+  Mortgage.  Equity, also called capital, is everything owned minus
+  everything owed (Assets - Liabilities).  It is the financial measure of
+  how much you are ahead.  Income is money earned somewhere, which puts you
+  more ahead.  Expenses is money spent somewhere, which puts you less
+  ahead.  The type of account determines if a debit represents an increase
+  or decrease in an account.  For example, Inventory is an asset so a
+  transcation debiting Inventory would increase its value.  Assets and
+  Expenses increase with debits and decrease with credits; Liabilities,
+  Equity, and Expenses increase with credits and decrease with debits.
 
-**Journal**:  A record of all the financial transactions of a person or firm.   This data of where money goes can be collated into reports.  This used to be done with a physical book, called a ledger, where each account was on one page.  Each debit or credit in the journal was transfered to the appropriate account page and the pages were totalled to produce reports.  This process is now done with the Ledger software which creates reports from the journal.  A journal is sometimes called a register.
+**Journal**: A record of all the financial transactions of a person or
+  firm.  This data of where money goes can be collated into reports.  This
+  used to be done with a physical book, called a ledger, where each account
+  was on one page.  Each debit or credit in the journal was transfered to
+  the appropriate account page and the pages were totalled to produce
+  reports.  This process is now done with the Ledger software which creates
+  reports from the journal.  A journal is sometimes called a register.
 
-**Report**:  A summary made from a journal of transactions.  Each transaction affects accounts and those effects are collated and totaled.  The two most common reports are the balance sheet, which shows what is owned and owed on a specific date, and the cash flow statement, which shows how money was earned and spent over a period.   The cash flow statement is also called a profit and loss statement or an income statement.
+**Report**: A summary made from a journal of transactions.  Each
+  transaction affects accounts and those effects are collated and totaled.
+  The two most common reports are the balance sheet, which shows what is
+  owned and owed on a specific date, and the cash flow statement, which
+  shows how money was earned and spent over a period.  The cash flow
+  statement is also called a profit and loss statement or an income
+  statement.
 
-**Transaction**:  Our financial lives are recorded as a series of transactions.  Each transaction has a specific date, an equal total of debits and credits affecting accounts, and some sort of description.  For example, "On January 1, pay $100 with check #243 from Checking to Utilities for my Verizon phone bill" is a transaction.  A credit of $100 decreases my Checking asset, while a balancing debit of $100 increases my Utility expense.  A transaction needs at least two *postings*, meaning account debits or credits, but can be as complicated as humans can make finances.
+**Transaction**: Our financial lives are recorded as a series of
+  transactions.  Each transaction has a specific date, an equal total of
+  debits and credits affecting accounts, and some sort of description.  For
+  example, "On January 1, pay $100 with check #243 from Checking to
+  Utilities for my Verizon phone bill" is a transaction.  A credit of $100
+  decreases my Checking asset, while a balancing debit of $100 increases my
+  Utility expense.  A transaction needs at least two *postings*, meaning
+  account debits or credits, but can be as complicated as humans can make
+  finances.
 
 LEDGER GLOSSARY
 ---
 
 The Ledger software also has its own terms.
 
-**Commodity**:  any currency, stock, time or resource to be tracked numerically.  While many people only track money in Ledger, Ledger can track different resources and manage rules to convert between them.  The system is flexible enough for the needs of very different users.   Some track billable time, converting minutes and hours into dollars.   Others track multiple currencies.   Still others track the purchase and sale of stocks.  Each commodity is seperate unless a conversion rule is given.  [&sect; Commodities and Currencies](http://www.ledger-cli.org/3.0/doc/ledger3.html#Commodities-and-Currencies); [&sect; Currencies and Commodities](http://www.ledger-cli.org/3.0/doc/ledger3.html#Currency-and-Commodities); [&sect; Accounts and Inventories](http://www.ledger-cli.org/3.0/doc/ledger3.html#Accounts-and-Inventories); [&sect; Posting Cost](http://www.ledger-cli.org/3.0/doc/ledger3.html#Posting-cost) *(and next ten sections)*; [&sect; Commodity Reporting](http://www.ledger-cli.org/3.0/doc/ledger3.html#Commodity-Reporting)
+**Command Directive**: a command in a journal file to change how subsequent
+lines and transactions in a journal file are processed.  Command directives
+control processing, set default values for subsequent accounts and
+transactions, or override parts of subsequent transactions.  A directive
+line begins with name of the directive and may have addidtional arguments
+or additional indented lines.  The single letters *AbCDhIiNOoY* are aliased
+to other command directives, providing compatiblity with the ancient past.
+[&sect; Command Directives](http://www.ledger-cli.org/3.0/doc/ledger3.html#Command-Directives)
 
-**Transaction Metadata**:  a term for comments and tags annotating a transaction.  Comments indented with a transaction will be stored with each posting of a transaction.  Tags are words in comments followed by colons.  Tags can be used as filters in reports and certain tags, "Payee" or "Value", may affect fields of the transaction.   [&sect; Metadata](http://www.ledger-cli.org/3.0/doc/ledger3.html#Metadata), [&sect; Applying Metadata to every matched posting](http://www.ledger-cli.org/3.0/doc/ledger3.html#Applying-metadata-to-every-matched-posting), [&sect; Applying Metadata to the generated posting](http://www.ledger-cli.org/3.0/doc/ledger3.html#Applying-metadata-to-the-generated-posting)
+**Commodity**: any currency, stock, time or resource to be tracked
+  numerically.  While many people only track money in Ledger, Ledger can
+  track different resources and manage rules to convert between them.  The
+  system is flexible enough for the needs of very different users.  Some
+  track billable time, converting minutes and hours into dollars.  Others
+  track multiple currencies.  Still others track the purchase and sale of
+  stocks.  Each commodity is seperate unless a conversion rule is given.
+  [&sect; Commodities and Currencies](http://www.ledger-cli.org/3.0/doc/ledger3.html#Commodities-and-Currencies);
+  [&sect; Currencies and Commodities](http://www.ledger-cli.org/3.0/doc/ledger3.html#Currency-and-Commodities);
+  [&sect; Accounts and Inventories](http://www.ledger-cli.org/3.0/doc/ledger3.html#Accounts-and-Inventories);
+  [&sect; Posting Cost](http://www.ledger-cli.org/3.0/doc/ledger3.html#Posting-cost)
+  *(and next ten sections)*;
+  [&sect; Commodity Reporting](http://www.ledger-cli.org/3.0/doc/ledger3.html#Commodity-Reporting)
 
-**Transaction State**: a state of *cleared*, *pending*, or *uncleared* on each posting.  The state is usually set for an entire transaction at once with a mark after the date.  The marks are **&#42;** (cleared), **!** (pending), or no mark (uncleared).  The
-interpretation of this state is up to the user, but is typically used in bank reconcilations or differentiating time worked versus billed.  Ledger supports
-reports and filters based on state.   [&sect; Transaction State](http://www.ledger-cli.org/3.0/doc/ledger3.html#Transaction-state); [&sect; Cleared Report](
+**Journal File**: the text input file for ledger, sometimes called a
+register file.  A journal file is a series of transactions, command
+directives, and comments.  Command directives start with the single word
+name of the directive at the beginning of the line and include any
+following indented lines.  Transactions start with a date a the beginning
+of the line and include any indented lines following.  The journal file is
+expected to be encoded as ASCII or utf-8 text.
+
+**Transaction Metadata**: a term for comments and tags annotating a
+transaction.  Comments indented with a transaction will be stored with each
+posting of a transaction.  Tags are words in comments followed by colons.
+Tags can be used as filters in reports and certain tags, "Payee" or
+"Value", may affect fields of the transaction.
+[&sect; Metadata](http://www.ledger-cli.org/3.0/doc/ledger3.html#Metadata),
+[&sect; Applying Metadata to every matched posting](http://www.ledger-cli.org/3.0/doc/ledger3.html#Applying-metadata-to-every-matched-posting),
+[&sect; Applying Metadata to the generated posting](http://www.ledger-cli.org/3.0/doc/ledger3.html#Applying-metadata-to-the-generated-posting)
+
+**Transaction State**: a state of *cleared*, *pending*, or *uncleared* on
+each posting.  The state is usually set for an entire transaction at once
+with a mark after the date.  The marks are **&#42;** (cleared), **!**
+(pending), or no mark (uncleared).  The interpretation of this state is up
+to the user, but is typically used in bank reconcilations or
+differentiating time worked versus billed.  Ledger supports reports and
+filters based on state.
+[&sect; Transaction State](http://www.ledger-cli.org/3.0/doc/ledger3.html#Transaction-state);
 [&sect; Cleared Report](
 http://www.ledger-cli.org/3.0/doc/ledger3.html#Cleared-Report)
