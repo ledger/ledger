@@ -25,4 +25,5 @@ The Ledger software also has its own terms.
 **Transaction State**: a state of *cleared*, *pending*, or *uncleared* on each posting.  The state is usually set for an entire transaction at once with a mark after the date.  The marks are **&#42;** (cleared), **!** (pending), or no mark (uncleared).  The
 interpretation of this state is up to the user, but is typically used in bank reconcilations or differentiating time worked versus billed.  Ledger supports
 reports and filters based on state.   [&sect; Transaction State](http://www.ledger-cli.org/3.0/doc/ledger3.html#Transaction-state); [&sect; Cleared Report](
+[&sect; Cleared Report](
 http://www.ledger-cli.org/3.0/doc/ledger3.html#Cleared-Report)
