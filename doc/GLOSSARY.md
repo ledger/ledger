@@ -37,6 +37,12 @@ ACCOUNTING GLOSSARY
   reports.  This process is now done with the Ledger software which creates
   reports from the journal.  A journal is sometimes called a register.
 
+**Posting**: A single debit or credit line of a transaction.  A posting
+comprises an account and the debit or credit amount.  It also inherits the
+shared description and date from the transaction.  In the Ledger software,
+a posting may also have metadata and an account state.
+
+
 **Report**: A summary made from a journal of transactions.  Each
   transaction affects accounts and those effects are collated and totaled.
   The two most common reports are the balance sheet, which shows what is
@@ -126,3 +132,10 @@ filters based on state.
 [&sect; Transaction State](http://www.ledger-cli.org/3.0/doc/ledger3.html#Transaction-state);
 [&sect; Cleared Report](
 http://www.ledger-cli.org/3.0/doc/ledger3.html#Cleared-Report)
+
+**Virtual Posting**: an annotation posting in a transaction, similar in form as a regular posting but not required to balance debits and
+credits.   It is often used to support
+[Fund Accounting](http://en.wikipedia.org/wiki/Fund_accounting) and various reports will collate and summarize virtual postings.  Virtual postings should not be
+confused with virtual posting costs.
+[&sect; Virtual Postings](http://www.ledger-cli.org/3.0/doc/ledger3.html#Virtual-postings)
+[&sect; Working with Multiple Funds and Accounts](http://www.ledger-cli.org/3.0/doc/ledger3.html#Working-with-multiple-funds-and-accounts)
