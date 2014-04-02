@@ -80,18 +80,10 @@ namespace {
       close(pfd[1]);
       close(pfd[0]);
 
-      // Find command name: its the substring starting right of the
-      // rightmost '/' character in the pager pathname.  See manpage for
-      // strrchr.
-#if BOOST_VERSION >= 103700
-      path basename(pager_path.filename());
-#else
-      path basename(pager_path.leaf());
-#endif
-      execlp(pager_path.string().c_str(), basename.string().c_str(), NULL);
+      execlp("/bin/sh", "/bin/sh", "-c", pager_path.string().c_str(), NULL);
 
       // We should never, ever reach here
-      perror((std::string("execlp: ") + pager_path.string()).c_str());
+      perror("execlp: /bin/sh");
       exit(1);
     }
     else {                      // parent
