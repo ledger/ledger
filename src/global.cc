@@ -110,7 +110,7 @@ global_scope_t::~global_scope_t()
 void global_scope_t::parse_init(path init_file)
 {
   TRACE_START(init, 1, "Read initialization file");
-  
+
   parse_context_stack_t parsing_context;
   parsing_context.push(init_file);
   parsing_context.get_current().journal = session().journal.get();
@@ -122,13 +122,13 @@ void global_scope_t::parse_init(path init_file)
     throw_(parse_error, _f("Transactions found in initialization file '%1%'")
 	   % init_file);
   }
-  
+
   TRACE_FINISH(init, 1);
 }
 
 void global_scope_t::read_init()
 {
-  // if specified on the command line init_file_ is filled in 
+  // if specified on the command line init_file_ is filled in
   // global_scope_t::handle_debug_options.  If it was specified on the command line
   // fail is the file doesn't exist. If no init file was specified
   // on the command-line then try the default values, but don't fail if there
@@ -388,7 +388,7 @@ void global_scope_t::read_environment_settings(char * envp[])
   process_environment(const_cast<const char **>(envp), "LEDGER_", report());
 
 #if 1
-  // These are here for backwards compatability, but are deprecated.
+  // These are here for backwards compatibility, but are deprecated.
 
   if (const char * p = std::getenv("LEDGER")) {
     if (! std::getenv("LEDGER_FILE"))
@@ -505,7 +505,7 @@ void handle_debug_options(int argc, char * argv[])
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
 #if DEBUG_ON
-        _log_level    = LOG_DEBUG;  
+        _log_level    = LOG_DEBUG;
         _log_category = argv[i + 1];
         i++;
 #endif

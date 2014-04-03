@@ -475,7 +475,7 @@ commodity_history_impl_t::find_price(const commodity_t& source,
 #endif
 
   vertex_descriptor v = tv;
-  for (vertex_descriptor u = predecessorMap[v]; 
+  for (vertex_descriptor u = predecessorMap[v];
        u != v;
        v = u, u = predecessorMap[v])
   {

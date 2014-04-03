@@ -77,7 +77,7 @@ public:
     if (name != "__main__")
       main_module->define_global(name, mod->module_object);
     return mod;
-  }    
+  }
 
   python_interpreter_t() : session_t(), is_initialized(false) {
     TRACE_CTOR(python_interpreter_t, "");
