@@ -32,7 +32,7 @@ ACCOUNTING GLOSSARY
 **Journal**: A record of all the financial transactions of a person or
   firm.  This data of where money goes can be collated into reports.  This
   used to be done with a physical book, called a ledger, where each account
-  was on one page.  Each debit or credit in the journal was transfered to
+  was on one page.  Each debit or credit in the journal was transferred to
   the appropriate account page and the pages were totalled to produce
   reports.  This process is now done with the Ledger software which creates
   reports from the journal.  A journal is sometimes called a register.
@@ -80,7 +80,7 @@ control processing, set default values for subsequent accounts and
 transactions, or override parts of subsequent transactions.  A directive
 line begins with name of the directive and may have addidtional arguments
 or additional indented lines.  The single letters *AbCDhIiNOoY* are aliased
-to other command directives, providing compatiblity with the ancient past.
+to other command directives, providing compatibility with the ancient past.
 The characters **'='** and **'-'** are command directives for a automatic
 transactions and periodic transactions, respectively.
 [&sect; Command Directives](http://www.ledger-cli.org/3.0/doc/ledger3.html#Command-Directives)
@@ -91,7 +91,7 @@ transactions and periodic transactions, respectively.
   system is flexible enough for the needs of very different users.  Some
   track billable time, converting minutes and hours into dollars.  Others
   track multiple currencies.  Still others track the purchase and sale of
-  stocks.  Each commodity is seperate unless a conversion rule is given.
+  stocks.  Each commodity is separate unless a conversion rule is given.
   [&sect; Commodities and Currencies](http://www.ledger-cli.org/3.0/doc/ledger3.html#Commodities-and-Currencies);
   [&sect; Currencies and Commodities](http://www.ledger-cli.org/3.0/doc/ledger3.html#Currency-and-Commodities);
   [&sect; Accounts and Inventories](http://www.ledger-cli.org/3.0/doc/ledger3.html#Accounts-and-Inventories);

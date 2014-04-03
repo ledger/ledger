@@ -449,7 +449,7 @@ public:
     return temp;
   }
   void in_place_roundto(int places);
-  
+
   value_t truncated() const {
     value_t temp(*this);
     temp.in_place_truncate();

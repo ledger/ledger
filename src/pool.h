@@ -78,8 +78,8 @@ public:
   commodity_t *             default_commodity;
 
   bool           keep_base;     // --base
-  optional<path> price_db;      // --price-db= 
-  long           quote_leeway;  // --leeway= 
+  optional<path> price_db;      // --price-db=
+  long           quote_leeway;  // --leeway=
   bool           get_quotes;    // --download
 
   function<optional<price_point_t>

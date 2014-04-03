@@ -117,7 +117,7 @@ std::size_t session_t::read_data(const string& master_account)
     journal->recursive_aliases = true;
   if (HANDLED(no_aliases))
     journal->no_aliases = true;
-  
+
   if (HANDLED(permissive))
     journal->checking_style = journal_t::CHECK_PERMISSIVE;
   else if (HANDLED(pedantic))
