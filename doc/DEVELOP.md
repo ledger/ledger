@@ -34,3 +34,23 @@ files.
   the top left of the main project's
   [README.md](https://github.com/ledger/ledger/blob/master/README.md), and
   emails the author of the commit if any tests fail.
+
+
+Orientation
+---
+
+The source tree can be confusing to a new developer.  Here is a selective
+orientation:
+
+**./acprep**: a custom thousand-line script to install dependencies, grab
+  updates, and build.  It also creates *\*.cmake*,
+  *./CmakeFiles/* and other CMake temporary files.  Use *./acprep --help*
+  for more information.
+
+**./README.md**: user readme file in markdown format, also used as the project
+  discription on GitHub.
+
+**./contrib**: contributed scripts of random quality and completion.  They usually require editing to run.
+
+**./doc**: documentation, licenses, and
+  tools for generating documents such as the *pdf* manual.
