@@ -99,6 +99,13 @@ transactions and periodic transactions, respectively.
   *(and next ten sections)*;
   [&sect; Commodity Reporting](http://www.ledger-cli.org/3.0/doc/ledger3.html#Commodity-Reporting)
 
+**Effective Date**: an optional, second date information item in for a
+posting or transaction.  Some use the effective date for when work is
+billed or when a check has cleared.  The `--effective-date` option causes
+the effective date to override the transaction's initial date for that
+report.
+[&sect; Effective Dates](http://www.ledger-cli.org/3.0/doc/ledger3.html#Effective-Dates);
+
 **Journal File**: the text input file for ledger, sometimes called a
 register file.  A journal file is a series of transactions, command
 directives, and comments.  Command directives start with the single word
@@ -112,6 +119,12 @@ expected to be encoded as ASCII or utf-8 text.
   budgeting and forecasting reports using the `--budget`,
   `--forecast`, or `--unbudgeted` options.
   [&sect; Budgeting and Forecasting](http://www.ledger-cli.org/3.0/doc/ledger3.html#Budgeting-and-Forecasting)
+
+**Transaction Code**: an optional item in a transaction or posting often
+  used to record a check number or bank code.  Certain custom reports can
+  report this code.
+  [&sect; Codes](http://www.ledger-cli.org/3.0/doc/ledger3.html#Codes);
+  [&sect; Format Expressions](http://www.ledger-cli.org/3.0/doc/ledger3.html#Format-Expressions)
 
 **Transaction Metadata**: a term for comments and tags annotating a
 transaction.  Comments indented with a transaction will be stored with each
