@@ -106,6 +106,9 @@ the effective date to override the transaction's initial date for that
 report.
 [&sect; Effective Dates](http://www.ledger-cli.org/3.0/doc/ledger3.html#Effective-Dates);
 
+**Elided Amount**:  an absent amount in a posting that is substituted with the amount needed to balance a transaction.  A transaction may never have more than one elided amount.
+[&sect; Eliding Amounts](http://www.ledger-cli.org/3.0/doc/ledger3.html#Eliding-amounts)
+
 **Journal File**: the text input file for ledger, sometimes called a
 register file.  A journal file is a series of transactions, command
 directives, and comments.  Command directives start with the single word
