@@ -522,7 +522,8 @@ void expr_t::token_t::expected(const char wanted, char c)
 void expr_t::token_t::expected(const kind_t wanted)
 {
   try {
-    if (wanted == '\0' || wanted == -1)
+    if (wanted == expr_t::token_t::ERROR ||
+        wanted == expr_t::token_t::UNKNOWN)
       throw_(parse_error, _f("Invalid token '%1%'") % *this);
     else
       throw_(parse_error,
