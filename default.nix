@@ -1,8 +1,8 @@
 { stdenv, fetchgit, cmake, ninja, boost, gmp, mpfr, libedit, python, texinfo }:
 
 stdenv.mkDerivation {
-  name = "ledger-3.0.1";
-  version = "3.0.1";
+  name = "ledger-3.0.2";
+  version = "3.0.2";
 
   src = ./.;
 

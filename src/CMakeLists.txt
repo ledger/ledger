@@ -254,7 +254,7 @@ include(GNUInstallDirs)
 
 if(BUILD_LIBRARY)
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
-  add_library(libledger SHARED ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp)
+  add_library(libledger SHARED ${LEDGER_SOURCES})
   add_ledger_library_dependencies(libledger)
   set_target_properties(libledger PROPERTIES
     PREFIX ""
@@ -267,11 +267,9 @@ if(BUILD_LIBRARY)
 
   install(TARGETS libledger DESTINATION ${CMAKE_INSTALL_LIBDIR})
   install(FILES ${LEDGER_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/lib/sha1.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
 else()
-  add_executable(ledger
-    ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp main.cc global.cc)
+  add_executable(ledger ${LEDGER_SOURCES} main.cc global.cc)
   add_ledger_library_dependencies(ledger)
 endif()
 

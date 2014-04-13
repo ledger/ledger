@@ -160,7 +160,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 
 #include <gmp.h>
 #include <mpfr.h>
-#include "sha1.h"
 #include "utf8.h"
 
 #if HAVE_EDIT

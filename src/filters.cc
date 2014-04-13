@@ -237,7 +237,7 @@ void anonymize_posts::render_commodity(amount_t& amt)
 
 void anonymize_posts::operator()(post_t& post)
 {
-  SHA1         sha;
+	boost::uuids::detail::sha1  sha;
   unsigned int message_digest[5];
   bool         copy_xact_details = false;
 
@@ -256,9 +256,9 @@ void anonymize_posts::operator()(post_t& post)
     buf << reinterpret_cast<uintmax_t>(post.xact->payee.c_str())
         << integer_gen() << post.xact->payee.c_str();
 
-    sha.Reset();
-    sha << buf.str().c_str();
-    sha.Result(message_digest);
+		sha.reset();
+    sha.process_bytes(buf.str().c_str(), buf.str().length());
+    sha.get_digest(message_digest);
 
     xact.payee = to_hex(message_digest);
     xact.note  = none;
@@ -274,9 +274,9 @@ void anonymize_posts::operator()(post_t& post)
     std::ostringstream buf;
     buf << integer_gen() << acct << acct->fullname();
 
-    sha.Reset();
-    sha << buf.str().c_str();
-    sha.Result(message_digest);
+    sha.reset();
+    sha.process_bytes(buf.str().c_str(), buf.str().length());
+    sha.get_digest(message_digest);
 
     account_names.push_front(to_hex(message_digest));
   }
