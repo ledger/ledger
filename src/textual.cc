@@ -1432,6 +1432,12 @@ post_t * instance_t::parse_post(char *          line,
     }
     p++; e--;
   }
+  else if (*p == '<' && *(e - 1) == '>') {
+    post->add_flags(POST_DEFERRED);
+    DEBUG("textual.parse", "line " << context.linenum << ": "
+          << "Parsed a deferred account name");
+    p++; e--;
+  }
 
   string name(p, static_cast<string::size_type>(e - p));
   DEBUG("textual.parse", "line " << context.linenum << ": "

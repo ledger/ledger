@@ -139,6 +139,21 @@ void account_t::add_post(post_t * post)
   }
 }
 
+void account_t::add_deferred_post(const string& uuid, post_t * post)
+{
+  if (! deferred_posts)
+    deferred_posts = deferred_posts_map_t();
+
+  deferred_posts_map_t::iterator i = deferred_posts->find(uuid);
+  if (i == deferred_posts->end()) {
+    posts_list lst;
+    lst.push_back(post);
+    deferred_posts->insert(deferred_posts_map_t::value_type(uuid, lst));
+  } else {
+    (*i).second.push_back(post);
+  }
+}
+
 bool account_t::remove_post(post_t * post)
 {
   // It's possible that 'post' wasn't yet in this account, but try to

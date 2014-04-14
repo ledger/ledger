@@ -385,9 +385,24 @@ bool journal_t::add_xact(xact_t * xact)
   // will have been performed by extend_xact, so asserts can still be
   // applied to it.
   if (optional<value_t> ref = xact->get_tag(_("UUID"))) {
+    std::string uuid = ref->to_string();
     std::pair<checksum_map_t::iterator, bool> result
-      = checksum_map.insert(checksum_map_t::value_type(ref->to_string(), xact));
+      = checksum_map.insert(checksum_map_t::value_type(uuid, xact));
     if (! result.second) {
+      // This UUID has been seen before; apply any postings which the
+      // earlier version may have deferred.
+      foreach (post_t * post, xact->posts) {
+        account_t * acct = post->account;
+        if (acct->deferred_posts) {
+          deferred_posts_map_t::iterator
+            i = acct->deferred_posts->find(uuid);
+          if (i != acct->deferred_posts->end()) {
+            foreach (post_t * rpost, (*i).second)
+              acct->add_post(rpost);
+          }
+        }
+      }
+
       // jww (2012-02-27): Confirm that the xact in
       // (*result.first).second is exact match in its significant
       // details to xact.
