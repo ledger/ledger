@@ -42,6 +42,17 @@ find_program(MAN2HTML man2html)
 
 foreach(file ${info_files})
   get_filename_component(file_base ${file} NAME_WE)
+
+  if(NOT MAKEINFO)
+    message(FATAL_ERROR "Could not find makeinfo. Texinfo documentation cannot be built.")
+  else()
+    add_custom_command(OUTPUT ${file_base}.info
+      COMMAND makeinfo --force --no-split -o ${file_base}.info ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      VERBATIM)
+    list(APPEND ledger_doc_files ${file_base}.info)
+  endif()
+
   if(BUILD_WEB_DOCS)
     if(NOT MAKEINFO)
       message(FATAL_ERROR "Could not find makeinfo. HTML version of documentation cannot be built.")
@@ -99,7 +110,7 @@ endif(CMAKE_INSTALL_MANDIR)
 foreach(file ${info_files})
   get_filename_component(file_base ${file} NAME_WE)
 
-  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${file_base}.info
     DESTINATION ${CMAKE_INSTALL_INFODIR} COMPONENT doc)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${file_base}.pdf
     DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT doc OPTIONAL)
