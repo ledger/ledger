@@ -1925,6 +1925,9 @@ std::size_t journal_t::read_textual(parse_context_stack_t& context_stack)
   }
   TRACE_STOP(parsing_total, 1);
 
+  // Apply any deferred postings at this time
+  master->apply_deferred_posts();
+
   // These tracers were started in textual.cc
   TRACE_FINISH(xact_text, 1);
   TRACE_FINISH(xact_details, 1);

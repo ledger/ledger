@@ -22,6 +22,11 @@
     Liabilities:MasterCard  $150.00 = $0
     <Assets:Checking>
 
+2012-01-04 Test
+    ; UUID: baz
+    Liabilities:MasterCard  $150.00 = $0
+    <Assets:Checking>
+
 ;; b.dat
 
 2012-01-01 Test

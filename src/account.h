@@ -139,6 +139,7 @@ public:
 
   void add_post(post_t * post);
   void add_deferred_post(const string& uuid, post_t * post);
+  void apply_deferred_posts();
   bool remove_post(post_t * post);
 
   posts_list::iterator posts_begin() {

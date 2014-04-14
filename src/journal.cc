@@ -399,6 +399,7 @@ bool journal_t::add_xact(xact_t * xact)
           if (i != acct->deferred_posts->end()) {
             foreach (post_t * rpost, (*i).second)
               acct->add_post(rpost);
+            acct->deferred_posts->erase(i);
           }
         }
       }
