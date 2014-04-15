@@ -363,6 +363,21 @@ namespace {
   }
 }
 
+bool lt_posting_account(post_t * left, post_t * right) {
+  return left->account < right->account;
+}
+
+bool is_equivalent_posting(post_t * left, post_t * right)
+{
+  if (left->account != right->account)
+    return false;
+
+  if (left->amount != right->amount)
+    return false;
+
+  return true;
+}
+
 bool journal_t::add_xact(xact_t * xact)
 {
   xact->journal = this;
@@ -398,15 +413,42 @@ bool journal_t::add_xact(xact_t * xact)
             i = acct->deferred_posts->find(uuid);
           if (i != acct->deferred_posts->end()) {
             foreach (post_t * rpost, (*i).second)
-              acct->add_post(rpost);
+              if (acct == rpost->account)
+                acct->add_post(rpost);
             acct->deferred_posts->erase(i);
           }
         }
       }
 
-      // jww (2012-02-27): Confirm that the xact in
-      // (*result.first).second is exact match in its significant
-      // details to xact.
+      xact_t * other = (*result.first).second;
+
+      // Copy the two lists of postings (which should be relatively
+      // short), and make sure that the intersection is the empty set
+      // (i.e., that they are the same list).
+      std::vector<post_t *> this_posts(xact->posts.begin(),
+                                       xact->posts.end());
+      std::sort(this_posts.begin(), this_posts.end(),
+                lt_posting_account);
+      std::vector<post_t *> other_posts(other->posts.begin(),
+                                        other->posts.end());
+      std::sort(other_posts.begin(), other_posts.end(),
+                lt_posting_account);
+      bool match = std::equal(this_posts.begin(), this_posts.end(),
+                              other_posts.begin(), is_equivalent_posting);
+
+      if (! match || this_posts.size() != other_posts.size()) {
+        add_error_context(_("While comparing this previously seen transaction:"));
+        add_error_context(source_context(other->pos->pathname,
+                                         other->pos->beg_pos,
+                                         other->pos->end_pos, "> "));
+        add_error_context(_("to this later transaction:"));
+        add_error_context(source_context(xact->pos->pathname,
+                                         xact->pos->beg_pos,
+                                         xact->pos->end_pos, "> "));
+        throw_(std::runtime_error,
+               _f("Transactions with the same UUID must have equivalent postings"));
+      }
+
       xact->journal = NULL;
       return false;
     }
