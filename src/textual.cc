@@ -1609,21 +1609,24 @@ post_t * instance_t::parse_post(char *          line,
             "line " << context.linenum << ": " << "post amount = " << amt);
 
       amount_t diff = amt;
+      amount_t tot;
 
       switch (account_total.type()) {
       case value_t::AMOUNT:
-        diff -= account_total.as_amount();
+        tot = account_total.as_amount();
         break;
 
       case value_t::BALANCE:
         if (optional<amount_t> comm_bal =
             account_total.as_balance().commodity_amount(amt.commodity()))
-          diff -= *comm_bal;
+          tot = *comm_bal;
         break;
 
       default:
         break;
       }
+
+      diff -= tot;
 
       DEBUG("post.assign",
             "line " << context.linenum << ": " << "diff = " << diff);
@@ -1634,7 +1637,9 @@ post_t * instance_t::parse_post(char *          line,
         if (! post->amount.is_null()) {
           diff -= post->amount;
           if (! no_assertions && ! diff.is_zero())
-            throw_(parse_error, _f("Balance assertion off by %1%") % diff);
+            throw_(parse_error,
+                   _f("Balance assertion off by %1% (expected to see %2%)")
+                   % diff % tot);
         } else {
           post->amount = diff;
           DEBUG("textual.parse", "line " << context.linenum << ": "
