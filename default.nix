@@ -1,4 +1,4 @@
-{ stdenv, fetchgit, cmake, boost, gmp, mpfr, libedit, python, texinfo }:
+{ stdenv, fetchgit, cmake, ninja, boost, gmp, mpfr, libedit, python, texinfo }:
 
 stdenv.mkDerivation {
   name = "ledger-3.0.1";
@@ -6,7 +6,7 @@ stdenv.mkDerivation {
 
   src = ./.;
 
-  buildInputs = [ cmake boost gmp mpfr libedit python texinfo ];
+  buildInputs = [ cmake ninja boost gmp mpfr libedit python texinfo ];
 
   # Tests on Darwin are failing
   doCheck = !stdenv.isDarwin;
