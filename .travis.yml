@@ -5,7 +5,7 @@ compiler:
 install: 
   - "./acprep dependencies"
   - wget http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.bz2/download
-  - tar jxf boost_1_55_0.tar.bz2
+  - tar jxf download
   - mv boost_1_55_0 $HOME/boost-trunk
 before_script:
   - BOOST="$HOME/boost-trunk"
