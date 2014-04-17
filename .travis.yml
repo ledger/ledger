@@ -2,13 +2,15 @@ language: cpp
 compiler:
   - clang
   - gcc
-install: "./acprep dependencies"
-before_script: "./acprep opt make --python"
-script:
+install: 
+  - "./acprep dependencies"
   - wget http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.bz2/download
   - tar jxf boost_1_55_0.tar.bz2
   - mv boost_1_55_0 $HOME/boost-trunk
+before_script:
   - BOOST="$HOME/boost-trunk"
+  - "./acprep opt make --python"
+script:
   - "./acprep check -- --output-on-failure"
   - "PYTHONPATH=. python python/demo.py"
 notifications:
