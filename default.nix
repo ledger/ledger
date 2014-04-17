@@ -1,16 +1,25 @@
-{ stdenv, fetchgit, cmake, ninja, boost, gmp, mpfr, libedit, python, texinfo }:
+{ stdenv, fetchgit, cmake, boost, gmp, mpfr, libedit, python
+, texinfo, gnused }:
+
+let
+  rev = "20140417";
+in
 
 stdenv.mkDerivation {
-  name = "ledger-3.0.2";
-  version = "3.0.2";
+  name = "ledger-3.0.2.${rev}";
 
   src = ./.;
 
-  buildInputs = [ cmake ninja boost gmp mpfr libedit python texinfo ];
+  buildInputs = [ cmake boost gmp mpfr libedit python texinfo gnused ];
 
-  # Tests on Darwin are failing
-  doCheck = !stdenv.isDarwin;
   enableParallelBuilding = true;
+
+  # Skip byte-compiling of emacs-lisp files because this is currently
+  # broken in ledger...
+  postInstall = ''
+    mkdir -p $out/share/emacs/site-lisp/
+    cp -v $src/lisp/*.el $out/share/emacs/site-lisp/
+  '';
 
   meta = {
     homepage = "http://ledger-cli.org/";
@@ -25,6 +34,6 @@ stdenv.mkDerivation {
     '';
 
     platforms = stdenv.lib.platforms.all;
-    maintainers = with stdenv.lib.maintainers; [ simons the-kenny ];
+    maintainers = with stdenv.lib.maintainers; [ simons the-kenny jwiegley ];
   };
 }

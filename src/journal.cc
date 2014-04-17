@@ -409,10 +409,9 @@ bool journal_t::add_xact(xact_t * xact)
       foreach (post_t * post, xact->posts) {
         account_t * acct = post->account;
         if (acct->deferred_posts) {
-          deferred_posts_map_t::iterator
-            i = acct->deferred_posts->find(uuid);
+          auto i = acct->deferred_posts->find(uuid);
           if (i != acct->deferred_posts->end()) {
-            foreach (post_t * rpost, (*i).second)
+            for (post_t * rpost : (*i).second)
               if (acct == rpost->account)
                 acct->add_post(rpost);
             acct->deferred_posts->erase(i);

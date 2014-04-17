@@ -485,11 +485,7 @@ inline void check_for_signal() {
 /*@{*/
 
 #define foreach BOOST_FOREACH
-#if HAVE_CXX11
 using std::unique_ptr;
-#else
-#define unique_ptr std::auto_ptr
-#endif
 
 namespace ledger {
 
