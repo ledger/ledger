@@ -5,6 +5,10 @@ compiler:
 install: "./acprep dependencies"
 before_script: "./acprep opt make --python"
 script:
+  - wget http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.bz2/download
+  - tar jxf boost_1_55_0.tar.bz2
+  - mv boost_1_55_0 $HOME/boost-trunk
+  - BOOST="$HOME/boost-trunk"
   - "./acprep check -- --output-on-failure"
   - "PYTHONPATH=. python python/demo.py"
 notifications:
