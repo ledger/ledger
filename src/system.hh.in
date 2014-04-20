@@ -56,8 +56,6 @@
 #define Ledger_VERSION_PATCH     @Ledger_VERSION_PATCH@
 #define Ledger_VERSION_DATE      @Ledger_VERSION_DATE@
 
-#define HAVE_CXX11               @HAVE_CXX11@
-
 #define HAVE_EDIT                @HAVE_EDIT@
 #define HAVE_GETTEXT             @HAVE_GETTEXT@
 
@@ -160,7 +158,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 
 #include <gmp.h>
 #include <mpfr.h>
-#include "sha1.h"
 #include "utf8.h"
 
 #if HAVE_EDIT

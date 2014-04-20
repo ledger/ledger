@@ -139,6 +139,36 @@ void account_t::add_post(post_t * post)
   }
 }
 
+void account_t::add_deferred_post(const string& uuid, post_t * post)
+{
+  if (! deferred_posts)
+    deferred_posts = deferred_posts_map_t();
+
+  deferred_posts_map_t::iterator i = deferred_posts->find(uuid);
+  if (i == deferred_posts->end()) {
+    posts_list lst;
+    lst.push_back(post);
+    deferred_posts->insert(deferred_posts_map_t::value_type(uuid, lst));
+  } else {
+    (*i).second.push_back(post);
+  }
+}
+
+void account_t::apply_deferred_posts()
+{
+  if (deferred_posts) {
+    foreach (deferred_posts_map_t::value_type& pair, *deferred_posts) {
+      foreach (post_t * post, pair.second)
+        post->account->add_post(post);
+    }
+    deferred_posts = none;
+  }
+
+  // Also apply in child accounts
+  foreach (const accounts_map::value_type& pair, accounts)
+    pair.second->apply_deferred_posts();
+}
+
 bool account_t::remove_post(post_t * post)
 {
   // It's possible that 'post' wasn't yet in this account, but try to

@@ -44,6 +44,8 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
+#include <boost/uuid/sha1.hpp>
+
 /**
  * @name Default values
  */
@@ -483,11 +485,7 @@ inline void check_for_signal() {
 /*@{*/
 
 #define foreach BOOST_FOREACH
-#if HAVE_CXX11
 using std::unique_ptr;
-#else
-#define unique_ptr std::auto_ptr
-#endif
 
 namespace ledger {
 
@@ -625,11 +623,12 @@ inline string to_hex(unsigned int * message_digest, const int len = 1)
 
 inline string sha1sum(const string& str)
 {
-  SHA1 sha;
-  sha.Reset();
-  sha << str.c_str();
+	boost::uuids::detail::sha1 sha;
+
+  sha.process_bytes(str.c_str(), str.length());
+
   unsigned int message_digest[5];
-  sha.Result(message_digest);
+  sha.get_digest(message_digest);
   return to_hex(message_digest, 5);
 }
 

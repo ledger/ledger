@@ -144,6 +144,7 @@ public:
 
   enum checking_style_t {
     CHECK_PERMISSIVE,
+    CHECK_NORMAL,
     CHECK_WARNING,
     CHECK_ERROR
   } checking_style;

@@ -4,8 +4,8 @@ flavor=$1
 shift 1
 
 JOBS=-j$(sysctl -n hw.activecpu)
-OPTIONS="$flavor --debug --python --ninja --doxygen $JOBS"
-OPTIONS="$OPTIONS --prefix /usr/local/Cellar/ledger/HEAD"
+#OPTIONS="$flavor --debug --python --ninja --doxygen $JOBS"
+OPTIONS="$flavor --debug --ninja $JOBS"
 
 time (                                                  \
     cd ~/src/ledger ;                                   \

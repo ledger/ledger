@@ -4,10 +4,12 @@ PROJECT(ledger)
 
 set(Ledger_VERSION_MAJOR 3)
 set(Ledger_VERSION_MINOR 0)
-set(Ledger_VERSION_PATCH 1)
-set(Ledger_VERSION_DATE  20140327)
+set(Ledger_VERSION_PATCH 2)
+set(Ledger_VERSION_DATE  20140417)
 
 enable_testing()
+
+add_definitions(-std=c++11)
 
 ########################################################################
 
@@ -65,7 +67,7 @@ else()
 endif()
 
 # Set BOOST_ROOT to help CMake to find the right Boost version
-find_package(Boost 1.46.0
+find_package(Boost 1.55.0
   REQUIRED date_time filesystem system iostreams regex unit_test_framework
   ${BOOST_PYTHON})
 
@@ -147,37 +149,6 @@ else()
 endif()
 
 cmake_pop_check_state()
-
-#cmake_push_check_state()
-#
-#set(CMAKE_REQUIRED_FLAGS -std=c++11)
-#set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH})
-#
-#check_cxx_source_runs("
-##include <regex>
-##include <vector>
-##include <iostream>
-#
-#int main() {
-#  std::vector<int> x {0, 1, 2, 3, 4};
-#  for (auto i : x)
-#    std::cout << i << std::endl;
-#
-#  std::regex r(\"foo\");
-#  std::cout << std::regex_match(\"foobar\", r) << std::endl;
-#  return 0;
-#}" CXX11_RUNS)
-#
-#cmake_pop_check_state()
-#
-#if(CXX11_RUNS)
-#  set(HAVE_CXX11 1)
-#  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-#else()
-  set(HAVE_CXX11 0)
-#endif()
-#
-#cmake_pop_check_state()
 
 ########################################################################
 

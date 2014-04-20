@@ -52,6 +52,7 @@ class post_t;
 
 typedef std::list<post_t *> posts_list;
 typedef std::map<string, account_t *> accounts_map;
+typedef std::map<string, posts_list> deferred_posts_map_t;
 
 class account_t : public supports_flags<>, public scope_t
 {
@@ -61,13 +62,14 @@ class account_t : public supports_flags<>, public scope_t
 #define ACCOUNT_GENERATED 0x04  // account never actually existed
 
 public:
-  account_t *      parent;
-  string           name;
-  optional<string> note;
-  unsigned short   depth;
-  accounts_map     accounts;
-  posts_list       posts;
-  optional<expr_t> value_expr;
+  account_t *                    parent;
+  string                         name;
+  optional<string>               note;
+  unsigned short                 depth;
+  accounts_map                   accounts;
+  posts_list                     posts;
+  optional<deferred_posts_map_t> deferred_posts;
+  optional<expr_t>               value_expr;
 
   mutable string   _fullname;
 #if DOCUMENT_MODEL
@@ -136,6 +138,8 @@ public:
   }
 
   void add_post(post_t * post);
+  void add_deferred_post(const string& uuid, post_t * post);
+  void apply_deferred_posts();
   bool remove_post(post_t * post);
 
   posts_list::iterator posts_begin() {

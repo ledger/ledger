@@ -77,16 +77,18 @@ namespace {
     std::istream&            in;
     instance_t *             parent;
     std::list<application_t> apply_stack;
+    bool                     no_assertions;
 #if defined(TIMELOG_SUPPORT)
     time_log_t               timelog;
 #endif
 
     instance_t(parse_context_stack_t& _context_stack,
                parse_context_t&       _context,
-               instance_t *           _parent = NULL)
+               instance_t *           _parent = NULL,
+               const bool             _no_assertions = false)
       : context_stack(_context_stack), context(_context),
         in(*context.stream.get()), parent(_parent),
-        timelog(context) {}
+        no_assertions(_no_assertions), timelog(context) {}
 
     virtual string description() {
       return _("textual parser");
@@ -779,8 +781,8 @@ void instance_t::include_directive(char * line)
           context_stack.get_current().master  = master;
           context_stack.get_current().scope   = scope;
           try {
-            instance_t instance(context_stack,
-                                context_stack.get_current(), this);
+            instance_t instance(context_stack, context_stack.get_current(),
+                                this, no_assertions);
             instance.apply_stack.push_front(application_t("account", master));
             instance.parse();
           }
@@ -1430,6 +1432,12 @@ post_t * instance_t::parse_post(char *          line,
     }
     p++; e--;
   }
+  else if (*p == '<' && *(e - 1) == '>') {
+    post->add_flags(POST_DEFERRED);
+    DEBUG("textual.parse", "line " << context.linenum << ": "
+          << "Parsed a deferred account name");
+    p++; e--;
+  }
 
   string name(p, static_cast<string::size_type>(e - p));
   DEBUG("textual.parse", "line " << context.linenum << ": "
@@ -1601,21 +1609,24 @@ post_t * instance_t::parse_post(char *          line,
             "line " << context.linenum << ": " << "post amount = " << amt);
 
       amount_t diff = amt;
+      amount_t tot;
 
       switch (account_total.type()) {
       case value_t::AMOUNT:
-        diff -= account_total.as_amount();
+        tot = account_total.as_amount();
         break;
 
       case value_t::BALANCE:
         if (optional<amount_t> comm_bal =
             account_total.as_balance().commodity_amount(amt.commodity()))
-          diff -= *comm_bal;
+          tot = *comm_bal;
         break;
 
       default:
         break;
       }
+
+      diff -= tot;
 
       DEBUG("post.assign",
             "line " << context.linenum << ": " << "diff = " << diff);
@@ -1625,8 +1636,10 @@ post_t * instance_t::parse_post(char *          line,
       if (! diff.is_zero()) {
         if (! post->amount.is_null()) {
           diff -= post->amount;
-          if (! diff.is_zero())
-            throw_(parse_error, _f("Balance assertion off by %1%") % diff);
+          if (! no_assertions && ! diff.is_zero())
+            throw_(parse_error,
+                   _f("Balance assertion off by %1% (expected to see %2%)")
+                   % diff % tot);
         } else {
           post->amount = diff;
           DEBUG("textual.parse", "line " << context.linenum << ": "
@@ -1909,12 +1922,16 @@ std::size_t journal_t::read_textual(parse_context_stack_t& context_stack)
 {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
   {
-    instance_t instance(context_stack, context_stack.get_current());
+    instance_t instance(context_stack, context_stack.get_current(), NULL,
+                        checking_style == journal_t::CHECK_PERMISSIVE);
     instance.apply_stack.push_front
       (application_t("account", context_stack.get_current().master));
     instance.parse();
   }
   TRACE_STOP(parsing_total, 1);
+
+  // Apply any deferred postings at this time
+  master->apply_deferred_posts();
 
   // These tracers were started in textual.cc
   TRACE_FINISH(xact_text, 1);
