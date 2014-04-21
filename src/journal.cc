@@ -97,6 +97,7 @@ void journal_t::initialize()
   day_break         = false;
   checking_style    = CHECK_NORMAL;
   recursive_aliases = false;
+  no_aliases        = false;
 }
 
 void journal_t::add_account(account_t * acct)
