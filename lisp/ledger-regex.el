@@ -178,8 +178,8 @@
 (ledger-define-regexp iso-date
   ( let ((sep '(or ?-  ?/)))
     (rx (group
-         (and (group (? (= 4 num)))
-	      (eval sep)
+         (and (? (and (group (= 4 num)))
+                 (eval sep))
               (group (and num (? num)))
               (eval sep)
               (group (and num (? num)))))))
