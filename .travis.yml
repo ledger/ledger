@@ -1,7 +1,8 @@
-# Since the Travis CI environment (URL) provides GNU GCC 4.6, which does not
-# support -std=c++11 GNU GCC 4.8 is installed. Additionally boost 1.55.0 is
-# compiled from source, since in the Travis CI environment only boost 1.46 is
-# available and no backported package was found on the net.
+# Since the Travis CI environment http://docs.travis-ci.com/user/ci-environment/
+# provides GNU GCC 4.6, which does not support -std=c++11 GNU GCC 4.8 is
+# installed. Additionally boost 1.55.0 is compiled from source, since in the
+# Travis CI environment only boost 1.46 is available and no backported package
+# was found on the net.
 
 language: cpp
 compiler:
