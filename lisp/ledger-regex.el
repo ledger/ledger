@@ -325,7 +325,7 @@
   (note end-note))
 
 (defconst ledger-iterate-regex
-  (concat "\\(Y\\s-+\\([0-9]+\\)\\|"  ;; Catches a Y directive
+  (concat "\\(\\(?:Y\\|year\\)\\s-+\\([0-9]+\\)\\|"  ;; Catches a Y/year directive
 	  ledger-iso-date-regexp
 	  "\\([ *!]+\\)"  ;; mark
 	  "\\((.*)\\)?"  ;; code
