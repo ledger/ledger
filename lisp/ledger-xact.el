@@ -89,12 +89,20 @@ within the transaction."
 (defun ledger-xact-find-slot (moment)
   "Find the right place in the buffer for a transaction at MOMENT.
 MOMENT is an encoded date"
-  (catch 'found
-    (ledger-xact-iterate-transactions
-     (function
-      (lambda (start date mark desc)
-       (if (ledger-time-less-p moment date)
-	   (throw 'found t)))))))
+  (let (last-xact-start)
+    (catch 'found
+      (ledger-xact-iterate-transactions
+       (function
+        (lambda (start date mark desc)
+          (setq last-xact-start start)
+          (if (ledger-time-less-p moment date)
+              (throw 'found t))))))
+    (when (and (eobp) last-xact-start)
+      (let ((end (cadr (ledger-find-xact-extents last-xact-start))))
+        (goto-char end)
+        (if (eobp)
+            (insert "\n")
+          (forward-line))))))
 
 (defun ledger-xact-iterate-transactions (callback)
   "Iterate through each transaction call CALLBACK for each."

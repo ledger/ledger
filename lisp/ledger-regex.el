@@ -178,8 +178,8 @@
 (ledger-define-regexp iso-date
   ( let ((sep '(or ?-  ?/)))
     (rx (group
-         (and (group (? (= 4 num)))
-	      (eval sep)
+         (and (? (and (group (= 4 num)))
+                 (eval sep))
               (group (and num (? num)))
               (eval sep)
               (group (and num (? num)))))))
@@ -325,7 +325,7 @@
   (note end-note))
 
 (defconst ledger-iterate-regex
-  (concat "\\(Y\\s-+\\([0-9]+\\)\\|"  ;; Catches a Y directive
+  (concat "\\(\\(?:Y\\|year\\)\\s-+\\([0-9]+\\)\\|"  ;; Catches a Y/year directive
 	  ledger-iso-date-regexp
 	  "\\([ *!]+\\)"  ;; mark
 	  "\\((.*)\\)?"  ;; code

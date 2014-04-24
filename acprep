@@ -868,6 +868,7 @@ class PrepareBuild(CommandLineApp):
         if self.options.boost_root:
             conf_args.append('-DBOOST_ROOT=%s' %
                              self.options.boost_root)
+            conf_args.append('-DBoost_NO_SYSTEM_PATHS=TRUE')
         if self.options.boost_suffix:
             conf_args.append('-DBoost_COMPILER=%s' %
                              self.options.boost_suffix)
