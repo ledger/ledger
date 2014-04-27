@@ -15,5 +15,7 @@ esac
 
 echo "===================================== Making Info..."
 makeinfo ledger3.texi
+echo "===================================== Making HTML..."
+makeinfo --html --no-split ledger3.texi
 echo "===================================== Making PDF..."
 texi2pdf --quiet --batch ${papersize} ledger3.texi
