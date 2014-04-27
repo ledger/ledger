@@ -37,6 +37,7 @@ set(info_files ledger3.texi ledger-mode.texi)
 find_program(MAKEINFO makeinfo)
 find_program(TEXI2PDF texi2pdf)
 find_program(MAN2HTML man2html)
+find_program(GROFF groff)
 
 ########################################################################
 
@@ -57,8 +58,11 @@ foreach(file ${info_files})
   if(NOT TEXI2PDF)
     message(WARNING "Could not find texi2pdf. PDF version of documentation will not be built.")
   else()
+    if(BUILD_A4_PDF)
+      set(papersize --texinfo=@afourpaper)
+    endif()
     add_custom_command(OUTPUT ${file_base}.pdf
-      COMMAND texi2pdf -b -q -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      COMMAND texi2pdf ${papersize} -b -q -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.pdf)
@@ -72,15 +76,21 @@ if(BUILD_WEB_DOCS)
   if(NOT BASH)
     message(FATAL_ERROR "Could not find bash. Unable to build documentation.")
   endif()
-  if(NOT MAN2HTML)
-    message(FATAL_ERROR "Could not find man2html. HTML version of man page cannot be built.")
+  if(MAN2HTML)
+    add_custom_command(OUTPUT ledger.1.html
+      COMMAND ${BASH} -c "man2html ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 | tail -n+3 > ledger.1.html"
+      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
+      VERBATIM)
+    list(APPEND ledger_doc_files ledger.1.html)
+  elseif(GROFF)
+    add_custom_command(OUTPUT ledger.1.html
+      COMMAND ${BASH} -c "groff -mandoc -Thtml ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 > ledger.1.html"
+      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
+      VERBATIM)
+    list(APPEND ledger_doc_files ledger.1.html)
+  else()
+    message(FATAL_ERROR "Could not find man2html or groff. HTML version of man page cannot be built.")
   endif()
-
-  add_custom_command(OUTPUT ledger.1.html
-    COMMAND ${BASH} -c "man2html ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 | tail -n+3 > ledger.1.html"
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
-    VERBATIM)
-  list(APPEND ledger_doc_files ledger.1.html)
 endif(BUILD_WEB_DOCS)
 
 ########################################################################
