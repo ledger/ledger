@@ -13,6 +13,14 @@ case $1 in
     papersize='';; # US Letter is texinfo default
 esac
 
+# Use keg-only Mac Hombrew texinfo if installed.
+# Since texi2pdf is a shell script itself executing texi2dvi
+# PATH is prepended with the path to correct texinfo scripts.
+if [ $(uname -s) = 'Darwin' ]; then
+  brew list texinfo >/dev/null 2>&1 \
+    && export PATH="$(brew --prefix texinfo)/bin:$PATH"
+fi
+
 echo "===================================== Making Info..."
 makeinfo ledger3.texi
 echo "===================================== Making HTML..."
