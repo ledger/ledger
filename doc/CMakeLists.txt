@@ -58,8 +58,11 @@ foreach(file ${info_files})
   if(NOT TEXI2PDF)
     message(WARNING "Could not find texi2pdf. PDF version of documentation will not be built.")
   else()
+    if(BUILD_A4_PDF)
+      set(papersize --texinfo=@afourpaper)
+    endif()
     add_custom_command(OUTPUT ${file_base}.pdf
-      COMMAND texi2pdf -b -q -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      COMMAND texi2pdf ${papersize} -b -q -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.pdf)
