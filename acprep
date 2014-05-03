@@ -875,6 +875,9 @@ class PrepareBuild(CommandLineApp):
         if self.options.boost_include:
             conf_args.append('-DBOOST_INCLUDEDIR=%s' %
                              self.options.boost_include)
+        if self.options.build_dir:
+            conf_args.append('-DBUILD_DIR=%s' %
+                             self.options.build_dir)
 
         if self.prefix_directory():
             conf_args.append('-DCMAKE_INSTALL_PREFIX=%s' % self.prefix_directory())

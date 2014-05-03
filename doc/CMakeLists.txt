@@ -120,8 +120,19 @@ endif(CMAKE_INSTALL_MANDIR)
 foreach(file ${info_files})
   get_filename_component(file_base ${file} NAME_WE)
 
-  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+  if (CMAKE_SOURCE_DIR STREQUAL BUILD_DIR)
+    set(doc_dir CMAKE_CURRENT_SOURCE_DIR)
+  else()
+    get_filename_component(dir_base ${CMAKE_CURRENT_SOURCE_DIR} NAME_WE)
+    set(doc_dir "${CMAKE_SOURCE_DIR}/${BUILD_DIR}/${dir_base}")
+  endif()
+
+  install(FILES ${doc_dir}/${file_base}.info
     DESTINATION ${CMAKE_INSTALL_INFODIR} COMPONENT doc)
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${file_base}.pdf
+  install(FILES ${doc_dir}/${file_base}.pdf
     DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT doc OPTIONAL)
+  if (BUILD_WEB_DOCS)
+    install(FILES ${doc_dir}/${file_base}.html
+      DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT doc)
+  endif(BUILD_WEB_DOCS)
 endforeach()
