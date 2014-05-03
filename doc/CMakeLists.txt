@@ -43,6 +43,17 @@ find_program(GROFF groff)
 
 foreach(file ${info_files})
   get_filename_component(file_base ${file} NAME_WE)
+
+  if(NOT MAKEINFO)
+    message(WARNING "Could not find makeinfo. Info version of documentation cannot be built.")
+  else()
+    add_custom_command(OUTPUT ${file_base}.info
+      COMMAND makeinfo --force --no-split -o ${file_base}.info ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      VERBATIM)
+    list(APPEND ledger_doc_files ${file_base}.info)
+  endif()
+
   if(BUILD_WEB_DOCS)
     if(NOT MAKEINFO)
       message(FATAL_ERROR "Could not find makeinfo. HTML version of documentation cannot be built.")
