@@ -36,6 +36,7 @@ set(info_files ledger3.texi ledger-mode.texi)
 
 find_program(MAKEINFO makeinfo)
 find_program(TEXI2PDF texi2pdf)
+find_program(TEX tex)
 find_program(MAN2HTML man2html)
 find_program(GROFF groff)
 
@@ -56,9 +57,8 @@ foreach(file ${info_files})
 
   if(BUILD_WEB_DOCS)
     if(NOT MAKEINFO)
-      message(FATAL_ERROR "Could not find makeinfo. HTML version of documentation cannot be built.")
+      message(WARNING "Could not find makeinfo. HTML version of documentation cannot be built.")
     endif()
-
     add_custom_command(OUTPUT ${file_base}.html
       COMMAND makeinfo --force --html --no-split -o ${file_base}.html ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
@@ -66,8 +66,8 @@ foreach(file ${info_files})
     list(APPEND ledger_doc_files ${file_base}.html)
   endif(BUILD_WEB_DOCS)
 
-  if(NOT TEXI2PDF)
-    message(WARNING "Could not find texi2pdf. PDF version of documentation will not be built.")
+  if(NOT TEXI2PDF OR NOT TEX)
+    message(WARNING "Could not find texi2pdf or tex. PDF version of documentation will not be built.")
   else()
     if(BUILD_A4_PDF)
       set(papersize --texinfo=@afourpaper)
