@@ -942,7 +942,7 @@ class PrepareBuild(CommandLineApp):
             make_args.append('-j%d' % self.options.jobs)
 
         if self.options.verbose:
-            make_args.append('VERBOSE=1')
+            make_args.append('-v' if self.options.use_ninja else 'VERBOSE=1')
 
         self.log.debug('Configure arguments => ' + str(config_args))
         self.log.debug('Makefile arguments  => ' + str(make_args))
