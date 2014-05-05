@@ -20,7 +20,7 @@ option(DISABLE_ASSERTS "Build without any internal consistency checks" OFF)
 option(BUILD_DEBUG "Build support for runtime debugging" OFF)
 
 option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
-option(BUILD_DOCS "Build and install documentation" ON)
+option(BUILD_DOCS "Build and install documentation" OFF)
 option(BUILD_WEB_DOCS "Build version of documentation suitable for viewing online" OFF)
 option(BUILD_EMACSLISP "Build and install ledger-mode for Emacs" OFF)
 
