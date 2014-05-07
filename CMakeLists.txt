@@ -5,7 +5,7 @@ PROJECT(ledger)
 set(Ledger_VERSION_MAJOR 3)
 set(Ledger_VERSION_MINOR 0)
 set(Ledger_VERSION_PATCH 2)
-set(Ledger_VERSION_DATE  20140417)
+set(Ledger_VERSION_DATE  20140507)
 
 enable_testing()
 
