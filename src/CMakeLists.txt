@@ -185,7 +185,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   
   elseif(CMAKE_CXX_COMPILER MATCHES "g\\+\\+")
     set(GXX_WARNING_FLAGS
-      -ansi
       -pedantic
       -Wall
       -Winvalid-pch
