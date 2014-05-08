@@ -267,7 +267,8 @@ commodity_pool_t::exchange(const amount_t&             amount,
   // Do not record commodity exchanges where amount's commodity has a
   // fixated price, since this does not establish a market value for the
   // base commodity.
-  if (! per_unit_cost.is_realzero() &&
+  if (add_price &&
+      ! per_unit_cost.is_realzero() &&
       (current_annotation == NULL ||
        ! (current_annotation->price &&
           current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))) &&
