@@ -2,7 +2,7 @@
 , texinfo, gnused }:
 
 let
-  rev = "20140417";
+  rev = "20140507";
 in
 
 stdenv.mkDerivation {

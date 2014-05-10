@@ -302,6 +302,7 @@ public:
     HANDLER(market).report(out);
     HANDLER(meta_).report(out);
     HANDLER(monthly).report(out);
+    HANDLER(no_pager).report(out);
     HANDLER(no_rounding).report(out);
     HANDLER(no_titles).report(out);
     HANDLER(no_total).report(out);

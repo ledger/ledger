@@ -42,43 +42,28 @@
 (defconst ledger-code-string "\\((.*)\\)?")
 (defconst ledger-payee-string "\\(.*\\)")
 
-(defmacro ledger-line-regex (&rest elements)
-  (let (regex-string)
-    (concat (dolist (e elements regex-string)
-	      (setq regex-string
-		    (concat regex-string
-			    (eval
-			     (intern
-			      (concat "ledger-" (symbol-name e) "-string")))))) "[ \t]*$")))
+(defun ledger-get-regex-str (name)
+  (symbol-value (intern (concat "ledger-" (symbol-name name) "-string"))))
 
-(defmacro ledger-single-line-config2 (&rest elements)
-  "Take list of ELEMENTS and return regex and element list for use in context-at-point"
-  (let (regex-string)
-    `'(,(concat (dolist (e elements regex-string)
-		  (setq regex-string
-			(concat regex-string
-				(eval
-				 (intern
-				  (concat "ledger-" (symbol-name e) "-string")))))) "[ \t]*$")
-       ,elements)))
+(defun ledger-line-regex (elements)
+  (concat (apply 'concat (mapcar 'ledger-get-regex-str elements)) "[ \t]*$"))
 
 (defmacro ledger-single-line-config (&rest elements)
   "Take list of ELEMENTS and return regex and element list for use in context-at-point"
-  `'(,(eval `(ledger-line-regex ,@elements))
-     ,elements))
+  `(list (ledger-line-regex (quote ,elements)) (quote ,elements)))
 
 (defconst ledger-line-config
   (list (list 'xact (list (ledger-single-line-config date nil status nil code nil payee nil comment)
 			  (ledger-single-line-config date nil status nil code nil payee)
 			  (ledger-single-line-config date nil status nil payee)))
 	(list 'acct-transaction (list (ledger-single-line-config indent comment)
-				      (ledger-single-line-config2 indent status account nil commodity amount nil comment)
-				      (ledger-single-line-config2 indent status account nil commodity amount)
-				      (ledger-single-line-config2 indent status account nil amount nil commodity comment)
-				      (ledger-single-line-config2 indent status account nil amount nil commodity)
-				      (ledger-single-line-config2 indent status account nil amount)
-				      (ledger-single-line-config2 indent status account nil comment)
-				      (ledger-single-line-config2 indent status account)))))
+				      (ledger-single-line-config indent status account nil commodity amount nil comment)
+				      (ledger-single-line-config indent status account nil commodity amount)
+				      (ledger-single-line-config indent status account nil amount nil commodity comment)
+				      (ledger-single-line-config indent status account nil amount nil commodity)
+				      (ledger-single-line-config indent status account nil amount)
+				      (ledger-single-line-config indent status account nil comment)
+				      (ledger-single-line-config indent status account)))))
 
 (defun ledger-extract-context-info (line-type pos)
   "Get context info for current line with LINE-TYPE.

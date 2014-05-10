@@ -167,6 +167,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
       if(BUILD_LIBRARY)
         list(APPEND _args ${CMAKE_SHARED_LIBRARY_CXX_FLAGS})
       endif()
+      list(APPEND _args "-std=c++11 ")
       list(APPEND _args "-x c++-header " ${_inc})
       list(APPEND _args -c ${_header_filename} -o ${_pch_filename})
 
@@ -185,7 +186,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   
   elseif(CMAKE_CXX_COMPILER MATCHES "g\\+\\+")
     set(GXX_WARNING_FLAGS
-      -ansi
       -pedantic
       -Wall
       -Winvalid-pch
@@ -223,6 +223,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         list(APPEND _args ${CMAKE_SHARED_LIBRARY_CXX_FLAGS})
       endif()
       list(APPEND _args ${GXX_WARNING_FLAGS})
+      list(APPEND _args "-std=c++11 ")
       list(APPEND _args "-x c++-header " ${_inc})
       list(APPEND _args -c ${_header_filename} -o ${_gch_filename})
 

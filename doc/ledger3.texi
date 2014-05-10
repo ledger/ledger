@@ -2693,7 +2693,7 @@ doing it.
 * Total posting costs::
 * Virtual posting costs::
 * Commodity prices::
-* Prices vs. costs::
+* Prices versus costs::
 * Fixated prices and costs::
 * Lot dates::
 * Lot notes::
@@ -3296,7 +3296,7 @@ happening in the case of an exceptional transaction, surround the
     Income:Gifts Received
 @end smallexample
 
-@node Commodity prices, Prices vs. costs, Virtual posting costs, Transactions
+@node Commodity prices, Prices versus costs, Virtual posting costs, Transactions
 @section Commodity prices
 @findex --lot-prices
 
@@ -3424,8 +3424,8 @@ And in cases where the amounts do not divide into whole figures and
 must be rounded, the capital gains figure could be off by a cent.  Use
 with caution.
 
-@node Prices vs. costs, Fixated prices and costs, Commodity prices, Transactions
-@section Prices vs. costs
+@node Prices versus costs, Fixated prices and costs, Commodity prices, Transactions
+@section Prices versus costs
 
 Because lot pricing provides enough information to infer the cost, the
 following two transactions are equivalent:
@@ -3445,7 +3445,7 @@ example in the print report.  Functionally, however, there is no
 difference, and neither the register nor the balance report are
 sensitive to this difference.
 
-@node Fixated prices and costs, Lot dates, Prices vs. costs, Transactions
+@node Fixated prices and costs, Lot dates, Prices versus costs, Transactions
 @section Fixated prices and costs
 
 If you buy a stock last year, and ask for its value today, Ledger will
@@ -3476,7 +3476,7 @@ fixated prices by way of the cost:
 @end smallexample
 
 This is the same as the previous transaction, with the same caveats
-found in @ref{Prices vs. costs}.
+found in @ref{Prices versus costs}.
 
 @node Lot dates, Lot notes, Fixated prices and costs, Transactions
 @section Lot dates
@@ -8458,13 +8458,13 @@ make sense later.
 
 @menu
 * Basic data traversal::
-* Raw vs. Cooked::
+* Raw versus Cooked::
 * Queries::
 * Embedded Python::
 * Amounts::
 @end menu
 
-@node Basic data traversal, Raw vs. Cooked, Extending with Python, Extending with Python
+@node Basic data traversal, Raw versus Cooked, Extending with Python, Extending with Python
 @section Basic data traversal
 
 Every interaction with Ledger happens in the context of a Session.
@@ -8491,8 +8491,8 @@ for xact in ledger.read_journal("sample.dat").xacts:
         print "Transferring %s to/from %s" % (post.amount, post.account)
 @end smallexample
 
-@node Raw vs. Cooked, Queries, Basic data traversal, Extending with Python
-@section Raw vs. Cooked
+@node Raw versus Cooked, Queries, Basic data traversal, Extending with Python
+@section Raw versus Cooked
 
 Ledger data exists in one of two forms: raw and cooked.  Raw objects are
 what you get from a traversal like the above, and represent exactly what
@@ -8556,7 +8556,7 @@ does it transaction-wise.  It relies on the fact that an unsorted report
 returns postings in the exact order they were parsed from the journal
 file.
 
-@node Queries, Embedded Python, Raw vs. Cooked, Extending with Python
+@node Queries, Embedded Python, Raw versus Cooked, Extending with Python
 @section Queries
 
 The Journal.query() method accepts every argument you can specify on the
