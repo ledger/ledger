@@ -156,6 +156,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <sys/wait.h>
 #endif
 
+#include <cstddef> /* needed for gcc 4.9 */
 #include <gmp.h>
 #include <mpfr.h>
 #include "utf8.h"
