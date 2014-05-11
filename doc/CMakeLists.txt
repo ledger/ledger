@@ -121,7 +121,7 @@ foreach(file ${info_files})
   get_filename_component(file_base ${file} NAME_WE)
 
   if (CMAKE_SOURCE_DIR STREQUAL BUILD_DIR)
-    set(doc_dir CMAKE_CURRENT_SOURCE_DIR)
+    set(doc_dir ${CMAKE_CURRENT_SOURCE_DIR})
   else()
     get_filename_component(dir_base ${CMAKE_CURRENT_SOURCE_DIR} NAME_WE)
     set(doc_dir "${CMAKE_SOURCE_DIR}/${BUILD_DIR}/${dir_base}")
