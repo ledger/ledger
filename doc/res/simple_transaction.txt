@@ -1,0 +1,6 @@
+
+
+
+  {A} 2014/4/7 {B}  KFC
+         {C} Expenses:Food  {D}   {E}$20
+         Assets:Cash  {F}

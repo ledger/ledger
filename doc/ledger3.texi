@@ -2678,6 +2678,7 @@ doing it.
 
 @menu
 * Basic format::
+* Simple Transaction::
 * Eliding amounts::
 * Auxiliary dates::
 * Codes::
@@ -2701,7 +2702,7 @@ doing it.
 * Automated Transactions::
 @end menu
 
-@node Basic format, Eliding amounts, Transactions, Transactions
+@node Basic format, Simple Transaction, Transactions, Transactions
 @section Basic format
 
 The most basic form of transaction is:
@@ -2725,7 +2726,40 @@ A transaction can have any number of postings:
     Liabilities:Credit          $-10.00
 @end smallexample
 
-@node Eliding amounts, Auxiliary dates, Basic format, Transactions
+@node Simple Transaction, Eliding amounts, Basic format, Transactions
+@section Simple Transaction
+
+Here is a simple transaction.  Look at its parts in detail:
+
+@image{res/simple_transaction}
+
+@enumerate A
+@item
+The date for the transaction and all the postings.  April 7 can be
+written as "14/4/7", "2014-4-7", "14.4.7", "04.7", etc.  The year ("Y")
+directive will set the default year.
+@item
+The payee, or person or company paid.
+@item
+The posting account name.  The name includes colons to break account names into
+categories and subcategories that define where subtotals are calculated in
+reports.  Account names may have single spaces in them, but not double
+spaces.
+@item
+Use at least two spaces between an account name and an amount, otherwise Ledger
+can't guess where the account name ends and the amount starts.
+@item
+The amount.   The '$' picks the currency, or commodity, to be dollars.  The
+positve amount means this posting is a debit.
+@item
+An elided amount is implied.
+The amount necessary to balance the transaction is assumed when exactly one
+posting has no amount.  In this case, this blank is exactly the same as
+typing the credit "-$20".
+@end enumerate
+
+
+@node Eliding amounts, Auxiliary dates, Simple Transaction, Transactions
 @section Eliding amounts
 
 The first thing you can do to make things easier is elide amounts.
