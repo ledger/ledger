@@ -84,7 +84,8 @@ dropped."
     (save-excursion  ;; this excursion checks state of entire
 		     ;; transaction and unclears if marked
       (goto-char (car bounds))  ;; beginning of xact
-      (skip-chars-forward "0-9./=\\- \t") ;; skip the date
+      (skip-chars-forward "0-9./=\\-") ;; skip the date
+			(skip-chars-forward " \t") ;; skip the white space after the date
       (setq cur-status (and (member (char-after) '(?\* ?\!))
 			    (ledger-state-from-char (char-after))))
       ;;if cur-status if !, or * then delete the marker
@@ -183,7 +184,8 @@ dropped."
                       (insert (make-string width ? ))))))
             (forward-line))
           (goto-char (car bounds))
-          (skip-chars-forward "0-9./=\\- \t")
+          (skip-chars-forward "0-9./=\\-") ;; Skip the date
+					(skip-chars-forward " \t") ;; Skip the white space
           (insert (ledger-char-from-state state) " ")
 	  (setq new-status state)
           (if (re-search-forward "\\(\t\\| [ \t]\\)"
