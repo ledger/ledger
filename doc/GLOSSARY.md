@@ -7,11 +7,11 @@ ACCOUNTING GLOSSARY
 
 **Account**: A category for grouping together amounts from similar
   transactions.  Each account has a name, which is usually capitalized, and
-  an account type.  Accounts are often organized into a heirarchy when it
+  an account type.  Accounts are often organized into a hierarchy when it
   helps understanding.  For example, a coffee shop might have Coffee,
   Merchandise, and Equipment as accounts but arranged under an Inventory
   account because different decisions are made on the total inventory
-  rather than just coffee.  A heirarchy can be part of the account name in
+  rather than just coffee.  A hierarchy can be part of the account name in
   Ledger, e.g., "Assets:Inventory:Coffee".  Note that the Ledger software
   usually creates the list of accounts on the fly: accounts are created
   when transactions use them.
@@ -25,14 +25,14 @@ ACCOUNTING GLOSSARY
   more ahead.  Expenses is money spent somewhere, which puts you less
   ahead.  The type of account determines if a debit represents an increase
   or decrease in an account.  For example, Inventory is an asset so a
-  transcation debiting Inventory would increase its value.  Assets and
+  transaction debiting Inventory would increase its value.  Assets and
   Expenses increase with debits and decrease with credits; Liabilities,
   Equity, and Expenses increase with credits and decrease with debits.
 
 **Journal**: A record of all the financial transactions of a person or
   firm.  This data of where money goes can be collated into reports.  This
   used to be done with a physical book, called a ledger, where each account
-  was on one page.  Each debit or credit in the journal was transfered to
+  was on one page.  Each debit or credit in the journal was transferred to
   the appropriate account page and the pages were totalled to produce
   reports.  This process is now done with the Ledger software which creates
   reports from the journal.  A journal is sometimes called a register.
@@ -78,9 +78,9 @@ The Ledger software also has its own terms.
 lines and transactions in a journal file are processed.  Command directives
 control processing, set default values for subsequent accounts and
 transactions, or override parts of subsequent transactions.  A directive
-line begins with name of the directive and may have addidtional arguments
+line begins with name of the directive and may have additional arguments
 or additional indented lines.  The single letters *AbCDhIiNOoY* are aliased
-to other command directives, providing compatiblity with the ancient past.
+to other command directives, providing compatibility with the ancient past.
 The characters **'='** and **'-'** are command directives for a automatic
 transactions and periodic transactions, respectively.
 [&sect; Command Directives](http://www.ledger-cli.org/3.0/doc/ledger3.html#Command-Directives)
@@ -91,7 +91,7 @@ transactions and periodic transactions, respectively.
   system is flexible enough for the needs of very different users.  Some
   track billable time, converting minutes and hours into dollars.  Others
   track multiple currencies.  Still others track the purchase and sale of
-  stocks.  Each commodity is seperate unless a conversion rule is given.
+  stocks.  Each commodity is separate unless a conversion rule is given.
   [&sect; Commodities and Currencies](http://www.ledger-cli.org/3.0/doc/ledger3.html#Commodities-and-Currencies);
   [&sect; Currencies and Commodities](http://www.ledger-cli.org/3.0/doc/ledger3.html#Currency-and-Commodities);
   [&sect; Accounts and Inventories](http://www.ledger-cli.org/3.0/doc/ledger3.html#Accounts-and-Inventories);
@@ -112,7 +112,7 @@ directives, and comments.  Command directives start with the single word
 name of the directive at the beginning of the line and include any
 following indented lines.  Transactions start with a date a the beginning
 of the line and include any indented lines following.  The journal file is
-expected to be encoded as ASCII or utf-8 text.
+expected to be encoded as ASCII or UTF-8 text.
 
 **Periodic Transaction**: the estimate of a transaction that would occur
   periodically, e.g., a monthly expense.  These estimates are only used in
@@ -139,7 +139,7 @@ Tags can be used as filters in reports and certain tags, "Payee" or
 each posting.  The state is usually set for an entire transaction at once
 with a mark after the date.  The marks are **&#42;** (cleared), **!**
 (pending), or no mark (uncleared).  The interpretation of this state is up
-to the user, but is typically used in bank reconcilations or
+to the user, but is typically used in bank reconciliations or
 differentiating time worked versus billed.  Ledger supports reports and
 filters based on state.
 [&sect; Transaction State](http://www.ledger-cli.org/3.0/doc/ledger3.html#Transaction-state);
