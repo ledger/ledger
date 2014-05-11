@@ -100,22 +100,6 @@ class BoostInfo(object):
                      'libboost-iostreams-dev',
                      'libboost-python-dev' ]
 
-        elif system == 'ubuntu-karmic' or system == 'ubuntu-hardy':
-            return [ 'bjam', 'libboost-dev',
-                     'libboost-regex-dev',
-                     'libboost-date-time-dev',
-                     'libboost-filesystem-dev',
-                     'libboost-iostreams-dev',
-                     'libboost-python-dev' ]
-
-        elif system == 'ubuntu-oneiric':
-            return [ 'libboost-dev',
-                     'libboost-python-dev',
-                     'libboost-regex-dev',
-                     'libboost-date-time-dev',
-                     'libboost-filesystem-dev',
-                     'libboost-iostreams-dev' ]
-
 
 class CommandLineApp(object):
     "Base class for building command line applications."
@@ -629,77 +613,6 @@ class PrepareBuild(CommandLineApp):
                             'lcov',
                             'sloccount'
                         ] + BoostInfo().dependencies('ubuntu-precise')
-                    elif re.search('karmic', info):
-                        self.log.info('Looks like you are using APT on Ubuntu Karmic')
-                        packages = [
-                            'sudo', 'apt-get', 'install',
-                            'build-essential',
-                            'libtool',
-                            'autoconf',
-                            'automake',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'cvs',
-                            'libedit-dev',
-                            #'texlive-full',
-                            #'doxygen',
-                            #'graphviz',
-                            'texinfo',
-                            'lcov',
-                            'sloccount'
-                        ] + BoostInfo().dependencies('ubuntu-karmic')
-                    elif re.search('hardy', info):
-                        self.log.info('Looks like you are using APT on Ubuntu Hardy')
-                        packages = [
-                            'sudo', 'apt-get', 'install',
-                            'build-essential',
-                            'libtool',
-                            'autoconf',
-                            'automake',
-                            'autopoint',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'cvs',
-                            'gettext',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'libedit-dev',
-                            #'texlive-full',
-                            #'doxygen',
-                            #'graphviz',
-                            'texinfo',
-                            'lcov',
-                            'sloccount'
-                        ] + self.boost_info.dependencies('ubuntu-hardy')
-                    elif re.search('oneiric', info):
-                        self.log.info('Looks like you are using APT on Ubuntu Oneiric')
-                        packages = [
-                            'sudo', 'apt-get', 'install',
-                            'build-essential',
-                            'libtool',
-                            'autoconf',
-                            'automake',
-                            'autopoint',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'cvs',
-                            'gettext',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'libedit-dev',
-                            #'texlive-full',
-                            #'doxygen',
-                            #'graphviz',
-                            'texinfo',
-                            'lcov',
-                            'sloccount'
-                        ] + self.boost_info.dependencies('ubuntu-oneiric')
                     else:
                         self.log.info('I do not recognize your version of Ubuntu!')
                         packages = None
