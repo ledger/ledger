@@ -1041,8 +1041,8 @@ void instance_t::payee_directive(char * line)
 void instance_t::payee_alias_directive(const string& payee, string alias)
 {
   trim(alias);
-  context.journal->payee_mappings
-    .push_back(payee_mapping_t(mask_t(alias), payee));
+  context.journal->payee_alias_mappings
+    .push_back(payee_alias_mapping_t(mask_t(alias), payee));
 }
 
 void instance_t::commodity_directive(char * line)
