@@ -6,6 +6,8 @@
 
 - The option --permissive now quiets balance assertions
 
+- Remove SHA1 files due to license issues and use boost instead.
+
 - Added option --no-pager to disable the pager.
 
 - Added option --no-aliases to completely disable alias expansion
