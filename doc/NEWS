@@ -1,5 +1,21 @@
                              Ledger NEWS
 
+* 3.x
+
+- Support for virtual posting costs.
+
+- The option --permissive now quiets balance assertions
+
+- Added option --no-pager to disable the pager.
+
+- Added option --no-aliases to completely disable alias expansion
+
+- Added option --recursive-aliases to expand aliases recursively
+
+- Build fix for GCC 4.9
+
+- Contrib: Added script to generate commodities from ISO 4217
+
 * 3.0
 
 Due to the magnitude of changes in 3.0, only changes that affect compatibility
