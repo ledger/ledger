@@ -46,7 +46,7 @@ test equity --lot-prices
     Equity:Opening Balances                 3.80 GBP
 end test
 
-test equity --lots
+test equity --lots --date-format %Y/%m/%d
 2011/03/05 Opening Balances
     Assets:Bank                            -3.80 GBP
     Assets:Broker                       2 AAA {0.90 GBP} [2011/03/04]

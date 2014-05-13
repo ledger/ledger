@@ -549,7 +549,7 @@ D 1.00G
     Assets:Tajer:Items                  "Orb of Deception" 1 @ 155G
     Assets:Tajer
 
-test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates
+test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-dates --date-format %Y/%m/%d
                                                                          133.98G
                                                                          158.85G
                                                                                0

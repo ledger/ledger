@@ -206,7 +206,7 @@ void annotation_t::print(std::ostream& out, bool keep_base,
 
   if (date &&
       (! no_computed_annotations || ! has_flags(ANNOTATION_DATE_CALCULATED)))
-    out << " [" << format_date(*date, FMT_WRITTEN) << ']';
+    out << " [" << format_date(*date, FMT_PRINTED) << ']';
 
   if (tag &&
       (! no_computed_annotations || ! has_flags(ANNOTATION_TAG_CALCULATED)))
