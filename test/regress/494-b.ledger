@@ -1,0 +1,17 @@
+
+--input-date-format %d.%m
+
+Y2010
+03.01 * Foo
+    A                 10.00 EUR
+    B
+
+05.02 * Bar
+    A                 20.00 EUR
+    B
+
+test reg A
+10-Jan-03 Foo                   A                         10.00 EUR    10.00 EUR
+10-Feb-05 Bar                   A                         20.00 EUR    30.00 EUR
+end test
+

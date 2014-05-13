@@ -1,0 +1,10 @@
+
+15.03.2006 Exxon
+    Expenses:Auto:Gas          10,00 €
+    Liabilities:MasterCard    -10,00 €
+
+test --input-date-format '%d.%m.%Y' reg
+06-Mar-15 Exxon                 Expenses:Auto:Gas           10,00 €      10,00 €
+                                Liabilities:MasterCard     -10,00 €            0
+end test
+
