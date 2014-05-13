@@ -2416,17 +2416,19 @@ before using the @code{fixed} directive in production.
 Include the stated file as if it were part of the current file.
 
 @item payee
-@c instance_t::payee_mapping_directive in textual.cc
+@c instance_t::payee_alias_mapping_directive in textual.cc
+@c instance_t::payee_uuid_mapping_directive in textual.cc
 @findex print
 @findex register
 
-The @code{payee} directive supports one optional sub-directive, if it
-immediately follows the payee directive and---if it is on a successive
+The @code{payee} directive supports two optional sub-directives, if they
+immediately follow the payee directive and---if it is on a successive
 line---begins with whitespace:
 
 @smallexample @c input:validate
 payee KFC
     alias KENTUCKY FRIED CHICKEN
+    uuid 2a2e21d434356f886c84371eebac6e44f1337fda
 @end smallexample
 
 The @code{alias} sub-directive provides a regex which, if it matches
@@ -2435,6 +2437,14 @@ a parsed payee, the declared payee name is substituted:
 @smallexample
 2012-02-27 KENTUCKY FRIED CHICKEN  ; will be read as being 'KFC'
 ...
+@end smallexample
+
+The @code{uuid} sub-directive specifies that a transaction with exactly
+the uuid given should have the declared payee name substituted:
+
+@smallexample
+2014-05-13 UNHELPFUL PAYEE  ; will be read as being 'KFC'
+    ; UUID: 2a2e21d434356f886c84371eebac6e44f1337fda
 @end smallexample
 
 Ledger will display the mapped payees in @command{print} and
