@@ -58,15 +58,17 @@ class account_t;
 class parse_context_t;
 class parse_context_stack_t;
 
-typedef std::list<xact_t *>            xacts_list;
-typedef std::list<auto_xact_t *>       auto_xacts_list;
-typedef std::list<period_xact_t *>     period_xacts_list;
-typedef std::pair<mask_t, string>      payee_mapping_t;
-typedef std::list<payee_mapping_t>     payee_mappings_t;
-typedef std::pair<mask_t, account_t *> account_mapping_t;
-typedef std::list<account_mapping_t>   account_mappings_t;
-typedef std::map<string, account_t *>  accounts_map;
-typedef std::map<string, xact_t *>     checksum_map_t;
+typedef std::list<xact_t *>              xacts_list;
+typedef std::list<auto_xact_t *>         auto_xacts_list;
+typedef std::list<period_xact_t *>       period_xacts_list;
+typedef std::pair<mask_t, string>        payee_alias_mapping_t;
+typedef std::list<payee_alias_mapping_t> payee_alias_mappings_t;
+typedef std::pair<string, string>        payee_uuid_mapping_t;
+typedef std::list<payee_uuid_mapping_t>  payee_uuid_mappings_t;
+typedef std::pair<mask_t, account_t *>   account_mapping_t;
+typedef std::list<account_mapping_t>     account_mappings_t;
+typedef std::map<string, account_t *>    accounts_map;
+typedef std::map<string, xact_t *>       checksum_map_t;
 
 typedef std::multimap<string, expr_t::check_expr_pair> tag_check_exprs_map;
 
@@ -115,32 +117,33 @@ public:
 #endif // HAVE_BOOST_SERIALIZATION
   };
 
-  account_t *           master;
-  account_t *           bucket;
-  xacts_list            xacts;
-  auto_xacts_list       auto_xacts;
-  period_xacts_list     period_xacts;
-  std::list<fileinfo_t> sources;
-  std::set<string>      known_payees;
-  std::set<string>      known_tags;
-  bool                  fixed_accounts;
-  bool                  fixed_payees;
-  bool                  fixed_commodities;
-  bool                  fixed_metadata;
-  bool                  was_loaded;
-  bool                  force_checking;
-  bool                  check_payees;
-  bool                  day_break;
-  bool                  recursive_aliases;
-  bool                  no_aliases;
-  payee_mappings_t      payee_mappings;
-  account_mappings_t    account_mappings;
-  accounts_map          account_aliases;
-  account_mappings_t    payees_for_unknown_accounts;
-  checksum_map_t        checksum_map;
-  tag_check_exprs_map   tag_check_exprs;
-  optional<expr_t>      value_expr;
-  parse_context_t *     current_context;
+  account_t *            master;
+  account_t *            bucket;
+  xacts_list             xacts;
+  auto_xacts_list        auto_xacts;
+  period_xacts_list      period_xacts;
+  std::list<fileinfo_t>  sources;
+  std::set<string>       known_payees;
+  std::set<string>       known_tags;
+  bool                   fixed_accounts;
+  bool                   fixed_payees;
+  bool                   fixed_commodities;
+  bool                   fixed_metadata;
+  bool                   was_loaded;
+  bool                   force_checking;
+  bool                   check_payees;
+  bool                   day_break;
+  bool                   recursive_aliases;
+  bool                   no_aliases;
+  payee_alias_mappings_t payee_alias_mappings;
+  payee_uuid_mappings_t  payee_uuid_mappings;
+  account_mappings_t     account_mappings;
+  accounts_map           account_aliases;
+  account_mappings_t     payees_for_unknown_accounts;
+  checksum_map_t         checksum_map;
+  tag_check_exprs_map    tag_check_exprs;
+  optional<expr_t>       value_expr;
+  parse_context_t *      current_context;
 
   enum checking_style_t {
     CHECK_PERMISSIVE,

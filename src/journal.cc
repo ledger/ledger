@@ -249,7 +249,7 @@ string journal_t::register_payee(const string& name, xact_t * xact)
     }
   }
 
-  foreach (payee_mapping_t& value, payee_mappings) {
+  foreach (payee_alias_mapping_t& value, payee_alias_mappings) {
     if (value.first.match(name)) {
       payee = value.second;
       break;
