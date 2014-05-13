@@ -63,6 +63,8 @@ typedef std::list<auto_xact_t *>         auto_xacts_list;
 typedef std::list<period_xact_t *>       period_xacts_list;
 typedef std::pair<mask_t, string>        payee_alias_mapping_t;
 typedef std::list<payee_alias_mapping_t> payee_alias_mappings_t;
+typedef std::pair<string, string>        payee_uuid_mapping_t;
+typedef std::list<payee_uuid_mapping_t>  payee_uuid_mappings_t;
 typedef std::pair<mask_t, account_t *>   account_mapping_t;
 typedef std::list<account_mapping_t>     account_mappings_t;
 typedef std::map<string, account_t *>    accounts_map;
@@ -134,6 +136,7 @@ public:
   bool                   recursive_aliases;
   bool                   no_aliases;
   payee_alias_mappings_t payee_alias_mappings;
+  payee_uuid_mappings_t  payee_uuid_mappings;
   account_mappings_t     account_mappings;
   accounts_map           account_aliases;
   account_mappings_t     payees_for_unknown_accounts;

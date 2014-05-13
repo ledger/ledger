@@ -155,6 +155,7 @@ namespace {
 
     void payee_directive(char * line);
     void payee_alias_directive(const string& payee, string alias);
+    void payee_uuid_directive(const string& payee, string uuid);
 
     void commodity_directive(char * line);
     void commodity_alias_directive(commodity_t& comm, string alias);
@@ -1035,6 +1036,8 @@ void instance_t::payee_directive(char * line)
     string keyword(p);
     if (keyword == "alias")
       payee_alias_directive(payee, b);
+    if (keyword == "uuid")
+      payee_uuid_directive(payee, b);
   }
 }
 
@@ -1043,6 +1046,13 @@ void instance_t::payee_alias_directive(const string& payee, string alias)
   trim(alias);
   context.journal->payee_alias_mappings
     .push_back(payee_alias_mapping_t(mask_t(alias), payee));
+}
+
+void instance_t::payee_uuid_directive(const string& payee, string uuid)
+{
+  trim(uuid);
+  context.journal->payee_uuid_mappings
+    .push_back(payee_uuid_mapping_t(uuid, payee));
 }
 
 void instance_t::commodity_directive(char * line)
@@ -1861,6 +1871,17 @@ xact_t * instance_t::parse_xact(char *          line,
     }
     else {
       reveal_context = false;
+
+      if (!last_post) {
+        if (xact->has_tag(_("UUID"))) {
+          string uuid = xact->get_tag(_("UUID"))->to_string();
+          foreach (payee_uuid_mapping_t value, context.journal->payee_uuid_mappings) {
+            if (value.first.compare(uuid) == 0) {
+              xact->payee = value.second;
+            }
+          }
+        }
+      }
 
       if (post_t * post =
           parse_post(p, len - (p - line), account, xact.get())) {
