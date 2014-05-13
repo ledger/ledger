@@ -16,7 +16,7 @@
 
 test reg -> 1
 __ERROR__
-While parsing file "$FILE", line 6: 
+While parsing file "$FILE", line 6:
 While parsing posting:
   Expenses:Food                              $- 20
                                              ^^^^^

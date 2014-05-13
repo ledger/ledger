@@ -12,6 +12,6 @@
 
 test reg -> 1
 __ERROR__
-While parsing file "$FILE", line 5: 
+While parsing file "$FILE", line 5:
 Error: Unexpected whitespace at beginning of line
 end test

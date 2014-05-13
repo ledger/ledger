@@ -6,7 +6,7 @@
 
 test bal -> 1
 __ERROR__
-While parsing file "$FILE", line 4: 
+While parsing file "$FILE", line 4:
 While parsing posting:
   A                          (2 FOO @ 10.00 EUR) = 20.00 EUR
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

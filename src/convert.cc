@@ -86,7 +86,7 @@ value_t convert_command(call_scope_t& args)
       if (entry != journal.checksum_map.end()) {
         INFO(file_context(reader.get_pathname(),
                           reader.get_linenum())
-             << "Ignoring known UUID " << ref);
+             << " " << "Ignoring known UUID " << ref);
         checked_delete(xact);     // ignore it
         continue;
       }

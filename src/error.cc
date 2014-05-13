@@ -49,7 +49,7 @@ string error_context()
 string file_context(const path& file, const std::size_t line)
 {
   std::ostringstream buf;
-  buf << '"' << file.string() << "\", line " << line << ": ";
+  buf << '"' << file.string() << "\", line " << line << ":";
   return buf.str();
 }
 

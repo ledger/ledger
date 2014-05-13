@@ -6,7 +6,7 @@ D 1,000.00 USD
 
 test bal -> 1
 __ERROR__
-While parsing file "$FILE", line 5: 
+While parsing file "$FILE", line 5:
 While balancing transaction from "$FILE", lines 3-5:
 > 2007-12-31 * Start of year / Opening balances.
 >   Account1   1000 EUR @ 1.6 USD

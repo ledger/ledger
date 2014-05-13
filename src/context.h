@@ -101,10 +101,10 @@ public:
   }
 
   void warning(const string& what) const {
-    warning_func(location() + what);
+    warning_func(location() + " " + what);
   }
   void warning(const boost::format& what) const {
-    warning_func(location() + string(what.str()));
+    warning_func(location() + " " + string(what.str()));
   }
 };
 

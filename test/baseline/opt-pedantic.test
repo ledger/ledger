@@ -8,7 +8,7 @@
 
 test bal --pedantic -> 1
 __ERROR__
-While parsing file "$FILE", line 2: 
+While parsing file "$FILE", line 2:
 While parsing posting:
   Expenses:Phone            20.00 GBP
 

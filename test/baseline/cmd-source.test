@@ -28,29 +28,29 @@
 
 test source -> 7
 __ERROR__
-While parsing file "$FILE", line 1: 
+While parsing file "$FILE", line 1:
 While parsing periodic transaction:
 > ~ xxx
 Error: Unexpected date period token 'xxx'
-While parsing file "$FILE", line 6: 
+While parsing file "$FILE", line 6:
 Error: Only one posting with null amount allowed per transaction
-While parsing file "$FILE", line 11: 
+While parsing file "$FILE", line 11:
 Error: Only one posting with null amount allowed per transaction
-While parsing file "$FILE", line 13: 
+While parsing file "$FILE", line 13:
 While parsing transaction:
 > 2012/03/xx
 Error: Invalid date: 2012/03/xx
-While parsing file "$FILE", line 18: 
+While parsing file "$FILE", line 18:
 While parsing posting:
   G               AAA
                   ^^^
 Error: No quantity specified for amount
-While parsing file "$FILE", line 22: 
+While parsing file "$FILE", line 22:
 While parsing posting:
   I             1,00.00 EUR
                 ^^^^^^^^^^^
 Error: Incorrect use of thousand-mark comma
-While parsing file "$FILE", line 27: 
+While parsing file "$FILE", line 27:
 While balancing transaction from "$FILE", lines 25-27:
 > 2012-03-27 * Test
 >     K              100.00 EUR

@@ -14,7 +14,7 @@
 
 test -J reg checking -> 1
 __ERROR__
-While parsing file "$FILE", line 13: 
+While parsing file "$FILE", line 13:
 While parsing periodic transaction:
 > ~ Monthly from 2010/7/1
 >     Expenses:Auto:Gas               $100.00
