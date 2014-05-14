@@ -1268,6 +1268,14 @@ bool instance_t::general_directive(char * line)
   if (*p == '@' || *p == '!')
     p++;
 
+  // Ensure there's an argument for all directives that need one.
+  if (! arg &&
+      std::strcmp(p, "comment") != 0 && std::strcmp(p, "end") != 0
+      && std::strcmp(p, "python") != 0 && std::strcmp(p, "test") != 0 &&
+      *p != 'Y') {
+    throw_(parse_error, _f("Directive '%1%' requires an argument") % p);
+  }
+
   switch (*p) {
   case 'a':
     if (std::strcmp(p, "account") == 0) {

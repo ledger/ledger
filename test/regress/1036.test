@@ -1,0 +1,80 @@
+
+account
+
+alias
+
+apply
+
+assert
+
+bucket
+
+check
+
+commodity
+
+def
+
+define
+
+apply account foo
+end
+
+expr
+
+eval
+
+include
+
+!include
+
+import
+
+payee
+
+tag
+
+comment
+foo bar
+end comment
+
+value
+
+test source -> 17
+__ERROR__
+While parsing file "$FILE", line 2:
+Error: Directive 'account' requires an argument
+While parsing file "$FILE", line 4:
+Error: Directive 'alias' requires an argument
+While parsing file "$FILE", line 6:
+Error: Directive 'apply' requires an argument
+While parsing file "$FILE", line 8:
+Error: Directive 'assert' requires an argument
+While parsing file "$FILE", line 10:
+Error: Directive 'bucket' requires an argument
+While parsing file "$FILE", line 12:
+Error: Directive 'check' requires an argument
+While parsing file "$FILE", line 14:
+Error: Directive 'commodity' requires an argument
+While parsing file "$FILE", line 16:
+Error: Directive 'def' requires an argument
+While parsing file "$FILE", line 18:
+Error: Directive 'define' requires an argument
+While parsing file "$FILE", line 23:
+Error: Directive 'expr' requires an argument
+While parsing file "$FILE", line 25:
+Error: Directive 'eval' requires an argument
+While parsing file "$FILE", line 27:
+Error: Directive 'include' requires an argument
+While parsing file "$FILE", line 29:
+Error: Directive 'include' requires an argument
+While parsing file "$FILE", line 31:
+Error: Directive 'import' requires an argument
+While parsing file "$FILE", line 33:
+Error: Directive 'payee' requires an argument
+While parsing file "$FILE", line 35:
+Error: Directive 'tag' requires an argument
+While parsing file "$FILE", line 41:
+Error: Directive 'value' requires an argument
+end test
+
