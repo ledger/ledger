@@ -918,6 +918,10 @@ void instance_t::account_directive(char * line)
 
     char * b = next_element(q);
     string keyword(q);
+    // Ensure there's an argument for the directives that need one.
+    if (! b && keyword != "default")
+      throw_(parse_error, _f("Account directive '%1%' requires an argument") % keyword);
+
     if (keyword == "alias") {
       account_alias_directive(account, b);
     }
@@ -1034,6 +1038,9 @@ void instance_t::payee_directive(char * line)
 
     char * b = next_element(p);
     string keyword(p);
+    if (! b)
+      throw_(parse_error, _f("Payee directive '%1%' requires an argument") % keyword);
+
     if (keyword == "alias")
       payee_alias_directive(payee, b);
     if (keyword == "uuid")
@@ -1073,6 +1080,10 @@ void instance_t::commodity_directive(char * line)
 
       char * b = next_element(q);
       string keyword(q);
+      // Ensure there's an argument for the directives that need one.
+      if (! b && keyword != "nomarket" && keyword != "default")
+        throw_(parse_error, _f("Commodity directive '%1%' requires an argument") % keyword);
+
       if (keyword == "alias")
         commodity_alias_directive(*commodity, b);
       else if (keyword == "value")
