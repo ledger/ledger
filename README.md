@@ -134,9 +134,9 @@ Or, for Ubuntu 12.04:
 Debian squeeze (6.0): the version of boost in squeeze is too old
 for ledger and unfortunately no backport is available at the moment.
 
-Debian wheezy (7.0) contains all components needed to build ledger.
-You can install all required build dependencies using the following
-command:
+Debian 7 (wheezy) and Debian 8 (jessie) contains all components needed to
+build ledger.  You can install all required build dependencies using the
+following command:
 
     sudo apt-get install build-essential cmake autopoint texinfo python-dev \
          zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
