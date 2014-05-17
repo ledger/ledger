@@ -54,16 +54,16 @@
   "Return the char representation of STATE."
   (if state
       (if (eq state 'pending)
-	  "!"
-	  "*")
-      ""))
+          "!"
+        "*")
+    ""))
 
 (defun ledger-state-from-char (state-char)
   "Get state from STATE-CHAR."
   (cond ((eql state-char ?\!) 'pending)
-	((eql state-char ?\*) 'cleared)
-	((eql state-char ?\;) 'comment)
-	(t nil)))
+        ((eql state-char ?\*) 'cleared)
+        ((eql state-char ?\;) 'comment)
+        (t nil)))
 
 (defun ledger-toggle-current-posting (&optional style)
   "Toggle the cleared status of the transaction under point.
@@ -82,12 +82,12 @@ dropped."
     ;; Uncompact the xact, to make it easier to toggle the
     ;; transaction
     (save-excursion  ;; this excursion checks state of entire
-		     ;; transaction and unclears if marked
+      ;; transaction and unclears if marked
       (goto-char (car bounds))  ;; beginning of xact
       (skip-chars-forward "0-9./=\\-") ;; skip the date
-			(skip-chars-forward " \t") ;; skip the white space after the date
+      (skip-chars-forward " \t") ;; skip the white space after the date
       (setq cur-status (and (member (char-after) '(?\* ?\!))
-			    (ledger-state-from-char (char-after))))
+                            (ledger-state-from-char (char-after))))
       ;;if cur-status if !, or * then delete the marker
       (when cur-status
         (let ((here (point)))
@@ -98,15 +98,15 @@ dropped."
               (if (search-forward "  " (line-end-position) t)
                   (insert (make-string width ? ))))))
         (forward-line)
-	;; Shift the cleared/pending status to the postings
+        ;; Shift the cleared/pending status to the postings
         (while (looking-at "[ \t]")
           (skip-chars-forward " \t")
-	  (when (not (eq (ledger-state-from-char (char-after)) 'comment))
-	    (insert (ledger-char-from-state cur-status) " ")
-	    (if (search-forward "  " (line-end-position) t)
-		(delete-char 2)))
-	  (forward-line))
-	(setq new-status nil)))
+          (when (not (eq (ledger-state-from-char (char-after)) 'comment))
+            (insert (ledger-char-from-state cur-status) " ")
+            (if (search-forward "  " (line-end-position) t)
+                (delete-char 2)))
+          (forward-line))
+        (setq new-status nil)))
 
     ;;this excursion toggles the posting status
     (save-excursion
@@ -114,40 +114,40 @@ dropped."
 
       (goto-char (line-beginning-position))
       (when (looking-at "[ \t]")
-	 (skip-chars-forward " \t")
-	 (let ((here (point))
-	       (cur-status (ledger-state-from-char (char-after))))
-	   (skip-chars-forward "*! ")
-	   (let ((width (- (point) here)))
-	     (when (> width 0)
-	       (delete-region here (point))
-	       (save-excursion
-		 (if (search-forward "  " (line-end-position) t)
-		     (insert (make-string width ? ))))))
-	   (let (inserted)
-	     (if cur-status
-		 (if (and style (eq style 'cleared))
-		     (progn
-		       (insert  "* ")
-		       (setq inserted 'cleared)))
-		 (if (and style (eq style 'pending))
-		     (progn
-		       (insert  "! ")
-		       (setq inserted 'pending))
-		     (progn
-		       (insert  "* ")
-		       (setq inserted 'cleared))))
-	     (if (and inserted
-		      (re-search-forward "\\(\t\\| [ \t]\\)"
-					 (line-end-position) t))
-		 (cond
-		   ((looking-at "\t")
-		    (delete-char 1))
-		   ((looking-at " [ \t]")
-		    (delete-char 2))
-		   ((looking-at " ")
-		    (delete-char 1))))
-	     (setq new-status inserted))))
+        (skip-chars-forward " \t")
+        (let ((here (point))
+              (cur-status (ledger-state-from-char (char-after))))
+          (skip-chars-forward "*! ")
+          (let ((width (- (point) here)))
+            (when (> width 0)
+              (delete-region here (point))
+              (save-excursion
+                (if (search-forward "  " (line-end-position) t)
+                    (insert (make-string width ? ))))))
+          (let (inserted)
+            (if cur-status
+                (if (and style (eq style 'cleared))
+                    (progn
+                      (insert  "* ")
+                      (setq inserted 'cleared)))
+              (if (and style (eq style 'pending))
+                  (progn
+                    (insert  "! ")
+                    (setq inserted 'pending))
+                (progn
+                  (insert  "* ")
+                  (setq inserted 'cleared))))
+            (if (and inserted
+                     (re-search-forward "\\(\t\\| [ \t]\\)"
+                                        (line-end-position) t))
+                (cond
+                 ((looking-at "\t")
+                  (delete-char 1))
+                 ((looking-at " [ \t]")
+                  (delete-char 2))
+                 ((looking-at " ")
+                  (delete-char 1))))
+            (setq new-status inserted))))
       (setq inhibit-modification-hooks nil))
 
     ;; This excursion cleans up the xact so that it displays
@@ -162,12 +162,12 @@ dropped."
         (while (and (not hetero) (looking-at "[ \t]"))
           (skip-chars-forward " \t")
           (let ((cur-status (ledger-state-from-char (char-after))))
-	    (if (not (eq cur-status 'comment))
-		(if first
-		    (setq state cur-status
-			  first nil)
-		    (if (not (eq state cur-status))
-			(setq hetero t)))))
+            (if (not (eq cur-status 'comment))
+                (if first
+                    (setq state cur-status
+                          first nil)
+                  (if (not (eq state cur-status))
+                      (setq hetero t)))))
           (forward-line))
         (when (and (not hetero) (not (eq state nil)))
           (goto-char (car bounds))
@@ -185,18 +185,18 @@ dropped."
             (forward-line))
           (goto-char (car bounds))
           (skip-chars-forward "0-9./=\\-") ;; Skip the date
-					(skip-chars-forward " \t") ;; Skip the white space
+          (skip-chars-forward " \t") ;; Skip the white space
           (insert (ledger-char-from-state state) " ")
-	  (setq new-status state)
+          (setq new-status state)
           (if (re-search-forward "\\(\t\\| [ \t]\\)"
                                  (line-end-position) t)
               (cond
-		((looking-at "\t")
-		 (delete-char 1))
-		((looking-at " [ \t]")
-		 (delete-char 2))
-		((looking-at " ")
-		 (delete-char 1)))))))
+               ((looking-at "\t")
+                (delete-char 1))
+               ((looking-at " [ \t]")
+                (delete-char 2))
+               ((looking-at " ")
+                (delete-char 1)))))))
     new-status))
 
 (defun ledger-toggle-current (&optional style)
@@ -216,30 +216,30 @@ dropped."
             (forward-line)
             (goto-char (line-beginning-position))))
         (ledger-toggle-current-transaction style))
-      (ledger-toggle-current-posting style)))
+    (ledger-toggle-current-posting style)))
 
 (defun ledger-toggle-current-transaction (&optional style)
   "Toggle the transaction at point using optional STYLE."
   (interactive)
   (save-excursion
     (when (or (looking-at "^[0-9]")
-	      (re-search-backward "^[0-9]" nil t))
+              (re-search-backward "^[0-9]" nil t))
       (skip-chars-forward "0-9./=\\-")
       (delete-horizontal-space)
       (if (or (eq (ledger-state-from-char (char-after)) 'pending)
-	      (eq (ledger-state-from-char (char-after)) 'cleared))
-	  (progn
-	    (delete-char 1)
-	    (when (and style (eq style 'cleared))
-	      (insert " *")
-	      'cleared))
-	  (if (and style (eq style 'pending))
-	      (progn
-		(insert " ! ")
-		'pending)
-	      (progn
-		(insert " * ")
-		'cleared))))))
+              (eq (ledger-state-from-char (char-after)) 'cleared))
+          (progn
+            (delete-char 1)
+            (when (and style (eq style 'cleared))
+              (insert " *")
+              'cleared))
+        (if (and style (eq style 'pending))
+            (progn
+              (insert " ! ")
+              'pending)
+          (progn
+            (insert " * ")
+            'cleared))))))
 
 (provide 'ledger-state)
 

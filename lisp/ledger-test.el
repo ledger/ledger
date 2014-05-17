@@ -98,9 +98,9 @@
         (ledger-mode)
         (if input
             (insert input)
-	    (insert "2012-03-17 Payee\n")
-	    (insert "    Expenses:Food                $20\n")
-	    (insert "    Assets:Cash\n"))
+          (insert "2012-03-17 Payee\n")
+          (insert "    Expenses:Food                $20\n")
+          (insert "    Assets:Cash\n"))
         (insert "\ntest reg\n")
         (if output
             (insert output))
@@ -121,7 +121,7 @@
         (let ((prev-directory default-directory))
           (cd ledger-source-directory)
           (unwind-protect
-	       (async-shell-command (format "\"%s\" %s" command args))
+              (async-shell-command (format "\"%s\" %s" command args))
             (cd prev-directory)))))))
 
 (provide 'ledger-test)

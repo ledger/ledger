@@ -30,7 +30,7 @@
   "Move point to next transaction."
   (if (re-search-forward  ledger-payee-any-status-regex nil t)
       (goto-char (match-beginning 0))
-      (goto-char (point-max))))
+    (goto-char (point-max))))
 
 (defun ledger-end-record-function ()
   "Move point to end of transaction."
@@ -49,7 +49,7 @@
   (save-excursion
     (goto-char (point-min))
     (if (ledger-sort-find-start)
-	(delete-region (match-beginning 0) (match-end 0))))
+        (delete-region (match-beginning 0) (match-end 0))))
   (beginning-of-line)
   (insert "\n; Ledger-mode: Start sort\n\n"))
 
@@ -58,7 +58,7 @@
   (save-excursion
     (goto-char (point-min))
     (if (ledger-sort-find-end)
-	(delete-region (match-beginning 0) (match-end 0))))
+        (delete-region (match-beginning 0) (match-end 0))))
   (beginning-of-line)
   (insert "\n; Ledger-mode: End sort\n\n"))
 
@@ -71,34 +71,34 @@
   (interactive "r") ;; load beg and end from point and mark
   ;; automagically
   (let ((new-beg beg)
-	(new-end end)
-	point-delta
-	(bounds (ledger-find-xact-extents (point)))
-	target-xact)
+        (new-end end)
+        point-delta
+        (bounds (ledger-find-xact-extents (point)))
+        target-xact)
 
     (setq point-delta (- (point) (car bounds)))
     (setq target-xact (buffer-substring (car bounds) (cadr bounds)))
     (setq inhibit-modification-hooks t)
     (save-excursion
       (save-restriction
-	(goto-char beg)
-	(ledger-next-record-function) ;; make sure point is at the
-	;; beginning of a xact
-	(setq new-beg (point))
-	(goto-char end)
-	(ledger-next-record-function) ;; make sure end of region is at
-	;; the beginning of next record
-	;; after the region
-	(setq new-end (point))
-	(narrow-to-region new-beg new-end)
-	(goto-char new-beg)
+        (goto-char beg)
+        (ledger-next-record-function) ;; make sure point is at the
+        ;; beginning of a xact
+        (setq new-beg (point))
+        (goto-char end)
+        (ledger-next-record-function) ;; make sure end of region is at
+        ;; the beginning of next record
+        ;; after the region
+        (setq new-end (point))
+        (narrow-to-region new-beg new-end)
+        (goto-char new-beg)
 
-	(let ((inhibit-field-text-motion t))
-	  (sort-subr
-	   nil
-	   'ledger-next-record-function
-	   'ledger-end-record-function
-	   'ledger-sort-startkey))))
+        (let ((inhibit-field-text-motion t))
+          (sort-subr
+           nil
+           'ledger-next-record-function
+           'ledger-end-record-function
+           'ledger-sort-startkey))))
 
     (goto-char (point-min))
     (re-search-forward (regexp-quote target-xact))
@@ -109,17 +109,17 @@
   "Sort the entire buffer."
   (interactive)
   (let (sort-start
-	sort-end)
+        sort-end)
     (save-excursion
       (goto-char (point-min))
       (setq sort-start (ledger-sort-find-start)
-	    sort-end (ledger-sort-find-end)))
+            sort-end (ledger-sort-find-end)))
     (ledger-sort-region (if sort-start
-			    sort-start
-			    (point-min))
-			(if sort-end
-			    sort-end
-			    (point-max)))))
+                            sort-start
+                          (point-min))
+                        (if sort-end
+                            sort-end
+                          (point-max)))))
 
 (provide 'ledger-sort)
 

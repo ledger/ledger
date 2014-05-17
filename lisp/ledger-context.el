@@ -54,16 +54,16 @@
 
 (defconst ledger-line-config
   (list (list 'xact (list (ledger-single-line-config date nil status nil code nil payee nil comment)
-			  (ledger-single-line-config date nil status nil code nil payee)
-			  (ledger-single-line-config date nil status nil payee)))
-	(list 'acct-transaction (list (ledger-single-line-config indent comment)
-				      (ledger-single-line-config indent status account nil commodity amount nil comment)
-				      (ledger-single-line-config indent status account nil commodity amount)
-				      (ledger-single-line-config indent status account nil amount nil commodity comment)
-				      (ledger-single-line-config indent status account nil amount nil commodity)
-				      (ledger-single-line-config indent status account nil amount)
-				      (ledger-single-line-config indent status account nil comment)
-				      (ledger-single-line-config indent status account)))))
+                          (ledger-single-line-config date nil status nil code nil payee)
+                          (ledger-single-line-config date nil status nil payee)))
+        (list 'acct-transaction (list (ledger-single-line-config indent comment)
+                                      (ledger-single-line-config indent status account nil commodity amount nil comment)
+                                      (ledger-single-line-config indent status account nil commodity amount)
+                                      (ledger-single-line-config indent status account nil amount nil commodity comment)
+                                      (ledger-single-line-config indent status account nil amount nil commodity)
+                                      (ledger-single-line-config indent status account nil amount)
+                                      (ledger-single-line-config indent status account nil comment)
+                                      (ledger-single-line-config indent status account)))))
 
 (defun ledger-extract-context-info (line-type pos)
   "Get context info for current line with LINE-TYPE.
@@ -97,7 +97,7 @@ Leave point at the beginning of the thing under point"
   (let ((here (point)))
     (goto-char (line-beginning-position))
     (cond ((looking-at "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.+?)\\)?\\s-+")
-	   (goto-char (match-end 0))
+           (goto-char (match-end 0))
            'transaction)
           ((looking-at "^\\s-+\\([*!]\\s-+\\)?[[(]?\\([^\\s-]\\)")
            (goto-char (match-beginning 2))
@@ -162,7 +162,7 @@ specified line, returns nil."
     (let ((left (forward-line offset)))
       (if (not (equal left 0))
           nil
-	  (ledger-context-at-point)))))
+        (ledger-context-at-point)))))
 
 (defun ledger-context-line-type (context-info)
   (nth 0 context-info))

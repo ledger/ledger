@@ -50,7 +50,7 @@ the substitution.  See the documentation of the individual functions
 in that variable for more information on the behavior of each
 specifier."
   :type '(repeat (list (string :tag "Report Name")
-		  (string :tag "Command Line")))
+                       (string :tag "Command Line")))
   :group 'ledger-report)
 
 (defcustom ledger-report-format-specifiers
@@ -231,7 +231,7 @@ used to generate the buffer, navigating the buffer, etc."
    end of a ledger file which is included in some other file."
   (if ledger-master-file
       (expand-file-name ledger-master-file)
-      (buffer-file-name)))
+    (buffer-file-name)))
 
 (defun ledger-report-payee-format-specifier ()
   "Substitute a payee name.
@@ -261,16 +261,16 @@ used to generate the buffer, navigating the buffer, etc."
     (let ((expanded-cmd report-cmd))
       (set-match-data (list 0 0))
       (while (string-match "%(\\([^)]*\\))" expanded-cmd (if (> (length expanded-cmd) (match-end 0))
-							     (match-end 0)
-							     (1- (length expanded-cmd))))
-	(let* ((specifier (match-string 1 expanded-cmd))
-	       (f (cdr (assoc specifier ledger-report-format-specifiers))))
-	  (if f
-	      (setq expanded-cmd (replace-match
-				  (save-match-data
-				    (with-current-buffer ledger-buf
-				      (shell-quote-argument (funcall f))))
-				  t t expanded-cmd)))))
+                                                             (match-end 0)
+                                                           (1- (length expanded-cmd))))
+        (let* ((specifier (match-string 1 expanded-cmd))
+               (f (cdr (assoc specifier ledger-report-format-specifiers))))
+          (if f
+              (setq expanded-cmd (replace-match
+                                  (save-match-data
+                                    (with-current-buffer ledger-buf
+                                      (shell-quote-argument (funcall f))))
+                                  t t expanded-cmd)))))
       expanded-cmd)))
 
 (defun ledger-report-cmd (report-name edit)
@@ -286,8 +286,8 @@ Optional EDIT the command."
     (or (string-empty-p report-name)
         (ledger-report-name-exists report-name)
         (progn
-	  (ledger-reports-add report-name report-cmd)
-	  (ledger-reports-custom-save)))
+          (ledger-reports-add report-name report-cmd)
+          (ledger-reports-custom-save)))
     report-cmd))
 
 (defun ledger-do-report (cmd)
@@ -299,32 +299,32 @@ Optional EDIT the command."
           "\n\n")
   (let ((data-pos (point))
         (register-report (string-match " reg\\(ister\\)? " cmd))
-				files-in-report)
+        files-in-report)
     (shell-command
      ;; --subtotal does not produce identifiable transactions, so don't
      ;; prepend location information for them
      (if (and register-report
-							(not (string-match "--subtotal" cmd)))
-				 (concat cmd " --prepend-format='%(filename):%(beg_line):'")
-				 cmd)
+              (not (string-match "--subtotal" cmd)))
+         (concat cmd " --prepend-format='%(filename):%(beg_line):'")
+       cmd)
      t nil)
     (when register-report
       (goto-char data-pos)
       (while (re-search-forward "^\\(/[^:]+\\)?:\\([0-9]+\\)?:" nil t)
-				(let ((file (match-string 1))
-							(line (string-to-number (match-string 2))))
-					(delete-region (match-beginning 0) (match-end 0))
-					(when file
-						(set-text-properties (line-beginning-position) (line-end-position)
-																 (list 'ledger-source (cons file (save-window-excursion
-																																	 (save-excursion
-																																		 (find-file file)
-																																		 (widen)
-																																		 (ledger-goto-line line)
-																																		 (point-marker))))))
-						(add-text-properties (line-beginning-position) (line-end-position)
-																 (list 'face 'ledger-font-report-clickable-face))
-						(end-of-line)))))
+        (let ((file (match-string 1))
+              (line (string-to-number (match-string 2))))
+          (delete-region (match-beginning 0) (match-end 0))
+          (when file
+            (set-text-properties (line-beginning-position) (line-end-position)
+                                 (list 'ledger-source (cons file (save-window-excursion
+                                                                   (save-excursion
+                                                                     (find-file file)
+                                                                     (widen)
+                                                                     (ledger-goto-line line)
+                                                                     (point-marker))))))
+            (add-text-properties (line-beginning-position) (line-end-position)
+                                 (list 'face 'ledger-font-report-clickable-face))
+            (end-of-line)))))
     (goto-char data-pos)))
 
 
@@ -332,21 +332,21 @@ Optional EDIT the command."
   "Visit the transaction under point in the report window."
   (interactive)
   (let* ((prop (get-text-property (point) 'ledger-source))
-	 (file (if prop (car prop)))
-	 (line-or-marker (if prop (cdr prop))))
+         (file (if prop (car prop)))
+         (line-or-marker (if prop (cdr prop))))
     (when (and file line-or-marker)
       (find-file-other-window file)
       (widen)
       (if (markerp line-or-marker)
-	  (goto-char line-or-marker)
-	  (goto-char (point-min))
-	  (forward-line (1- line-or-marker))
-	  (re-search-backward "^[0-9]+")
-	  (beginning-of-line)
-	  (let ((start-of-txn (point)))
-	    (forward-paragraph)
-	    (narrow-to-region start-of-txn (point))
-	    (backward-paragraph))))))
+          (goto-char line-or-marker)
+        (goto-char (point-min))
+        (forward-line (1- line-or-marker))
+        (re-search-backward "^[0-9]+")
+        (beginning-of-line)
+        (let ((start-of-txn (point)))
+          (forward-paragraph)
+          (narrow-to-region start-of-txn (point))
+          (backward-paragraph))))))
 
 (defun ledger-report-goto ()
   "Goto the ledger report buffer."
@@ -401,22 +401,22 @@ Optional EDIT the command."
       (setq ledger-report-name (ledger-report-read-new-name)))
 
     (if (setq existing-name (ledger-report-name-exists ledger-report-name))
-	(cond ((y-or-n-p (format "Overwrite existing report named '%s'? "
-				 ledger-report-name))
-	       (if (string-equal
-		    ledger-report-cmd
-		    (car (cdr (assq existing-name ledger-reports))))
-		   (message "Nothing to save. Current command is identical to existing saved one")
-		   (progn
-		     (setq ledger-reports
-			   (assq-delete-all existing-name ledger-reports))
-		     (ledger-reports-add ledger-report-name ledger-report-cmd)
-		     (ledger-reports-custom-save))))
-	      (t
-	       (progn
-		 (setq ledger-report-name (ledger-report-read-new-name))
-		 (ledger-reports-add ledger-report-name ledger-report-cmd)
-		 (ledger-reports-custom-save)))))))
+        (cond ((y-or-n-p (format "Overwrite existing report named '%s'? "
+                                 ledger-report-name))
+               (if (string-equal
+                    ledger-report-cmd
+                    (car (cdr (assq existing-name ledger-reports))))
+                   (message "Nothing to save. Current command is identical to existing saved one")
+                 (progn
+                   (setq ledger-reports
+                         (assq-delete-all existing-name ledger-reports))
+                   (ledger-reports-add ledger-report-name ledger-report-cmd)
+                   (ledger-reports-custom-save))))
+              (t
+               (progn
+                 (setq ledger-report-name (ledger-report-read-new-name))
+                 (ledger-reports-add ledger-report-name ledger-report-cmd)
+                 (ledger-reports-custom-save)))))))
 
 (provide 'ledger-report)
 

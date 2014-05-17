@@ -30,108 +30,108 @@
 
 (defgroup ledger-faces nil "Ledger mode highlighting" :group 'ledger)
 (defface ledger-font-payee-uncleared-face
-    `((t :foreground "#dc322f" :weight bold ))
+  `((t :foreground "#dc322f" :weight bold ))
   "Default face for Ledger"
   :group 'ledger-faces)
 
 (defface ledger-font-payee-cleared-face
-    `((t :foreground "#657b83" :weight normal ))
+  `((t :foreground "#657b83" :weight normal ))
   "Default face for cleared (*) transactions"
   :group 'ledger-faces)
 
 (defface ledger-font-xact-highlight-face
-    `((((background dark)) :background "#1a1a1a" )
-      (t :background "#eee8d5"))
+  `((((background dark)) :background "#1a1a1a" )
+    (t :background "#eee8d5"))
   "Default face for transaction under point"
   :group 'ledger-faces)
 
 (defface ledger-font-pending-face
-    `((t :foreground "#cb4b16" :weight normal ))
+  `((t :foreground "#cb4b16" :weight normal ))
   "Default face for pending (!) transactions"
   :group 'ledger-faces)
 
 (defface ledger-font-other-face
-    `((t :foreground "#657b83" ))
+  `((t :foreground "#657b83" ))
   "Default face for other transactions"
   :group 'ledger-faces)
 
 (defface ledger-font-posting-account-face
-    `((t :foreground "#268bd2" ))
+  `((t :foreground "#268bd2" ))
   "Face for Ledger accounts"
   :group 'ledger-faces)
 
 (defface ledger-font-posting-account-cleared-face
-    `((t :foreground "#657b83" ))
+  `((t :foreground "#657b83" ))
   "Face for Ledger accounts"
   :group 'ledger-faces)
 
 (defface ledger-font-posting-account-pending-face
-    `((t :foreground "#cb4b16" ))
+  `((t :foreground "#cb4b16" ))
   "Face for Ledger accounts"
   :group 'ledger-faces)
 
 (defface ledger-font-posting-amount-face
-    `((t :foreground "#cb4b16" ))
+  `((t :foreground "#cb4b16" ))
   "Face for Ledger amounts"
   :group 'ledger-faces)
 
 (defface ledger-occur-narrowed-face
-    `((t :foreground "grey70" :invisible t ))
+  `((t :foreground "grey70" :invisible t ))
   "Default face for Ledger occur mode hidden transactions"
   :group 'ledger-faces)
 
 (defface ledger-occur-xact-face
-    `((((background dark)) :background "#1a1a1a" )
-      (t :background "#eee8d5" ))
+  `((((background dark)) :background "#1a1a1a" )
+    (t :background "#eee8d5" ))
   "Default face for Ledger occur mode shown transactions"
   :group 'ledger-faces)
 
 (defface ledger-font-comment-face
-    `((t :foreground "#93a1a1" :slant italic))
+  `((t :foreground "#93a1a1" :slant italic))
   "Face for Ledger comments"
   :group 'ledger-faces)
 
 (defface ledger-font-reconciler-uncleared-face
-    `((t :foreground "#dc322f" :weight bold ))
+  `((t :foreground "#dc322f" :weight bold ))
   "Default face for uncleared transactions in the reconcile window"
   :group 'ledger-faces)
 
 (defface ledger-font-reconciler-cleared-face
-    `((t :foreground "#657b83" :weight normal ))
+  `((t :foreground "#657b83" :weight normal ))
   "Default face for cleared (*) transactions in the reconcile window"
   :group 'ledger-faces)
 
 (defface ledger-font-reconciler-pending-face
-    `((t :foreground "#cb4b16" :weight normal ))
+  `((t :foreground "#cb4b16" :weight normal ))
   "Default face for pending (!) transactions in the reconcile window"
   :group 'ledger-faces)
 
 (defface ledger-font-report-clickable-face
-    `((t :foreground "#cb4b16" :weight normal ))
+  `((t :foreground "#cb4b16" :weight normal ))
   "Default face for pending (!) transactions in the reconcile window"
   :group 'ledger-faces)
 
 
 (defvar ledger-font-lock-keywords
   `( ;; (,ledger-other-entries-regex 1
-     ;; 				  ledger-font-other-face)
-     (,ledger-comment-regex 0
-			    'ledger-font-comment-face)
-     (,ledger-multiline-comment-regex 0 'ledger-font-comment-face)
-     (,ledger-payee-pending-regex 2
-				  'ledger-font-payee-pending-face) ; Works
-     (,ledger-payee-cleared-regex 2
- 				  'ledger-font-payee-cleared-face) ; Works
-     (,ledger-payee-uncleared-regex 2
- 				    'ledger-font-payee-uncleared-face) ; Works
-     (,ledger-account-cleared-regex 2
- 	      			    'ledger-font-posting-account-cleared-face) ; Works
-     (,ledger-account-pending-regex 2
- 	      			    'ledger-font-posting-account-pending-face) ; Works
-     (,ledger-account-any-status-regex 2
-				       'ledger-font-posting-account-face) ; Works
-     (,ledger-other-entries-regex 1
-				  'ledger-font-other-face))
+    ;;          ledger-font-other-face)
+    (,ledger-comment-regex 0
+                           'ledger-font-comment-face)
+    (,ledger-multiline-comment-regex 0 'ledger-font-comment-face)
+    (,ledger-payee-pending-regex 2
+                                 'ledger-font-payee-pending-face) ; Works
+    (,ledger-payee-cleared-regex 2
+                                 'ledger-font-payee-cleared-face) ; Works
+    (,ledger-payee-uncleared-regex 2
+                                   'ledger-font-payee-uncleared-face) ; Works
+    (,ledger-account-cleared-regex 2
+                                   'ledger-font-posting-account-cleared-face) ; Works
+    (,ledger-account-pending-regex 2
+                                   'ledger-font-posting-account-pending-face) ; Works
+    (,ledger-account-any-status-regex 2
+                                      'ledger-font-posting-account-face) ; Works
+    (,ledger-other-entries-regex 1
+                                 'ledger-font-other-face))
   "Expressions to highlight in Ledger mode.")
 
 
