@@ -114,12 +114,10 @@ If you're going to build on Ubuntu, `sudo apt-get install ...` the
 following packages (current as of Ubuntu 14.04):
 
     sudo apt-get install build-essential cmake doxygen
-         libboost-system1.55-dev libboost1.55-dev python-dev
-				 gettext git libboost-date-time1.55-dev
-			   libboost-filesystem1.55-dev libboost-iostreams1.55-dev
-				 libboost-python1.55-dev libboost-regex1.55-dev
-				 libboost-test1.55-dev libedit-dev libgmp3-dev
-				 libmpfr-dev texinfo
+         libboost-system-dev libboost-dev python-dev gettext git
+         libboost-date-time-dev libboost-filesystem-dev
+         libboost-iostreams-dev libboost-python-dev libboost-regex-dev
+         libboost-test-dev libedit-dev libgmp3-dev libmpfr-dev texinfo
 
 Or, for Ubuntu 12.04:
 
