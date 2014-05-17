@@ -1,4 +1,6 @@
 *.[oa]
+*.so
+*.so.*
 *.backup
 *.elc
 *.gcov
