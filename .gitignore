@@ -36,7 +36,12 @@ depcomp
 doc/Doxyfile
 doc/*.aux
 doc/*.cp
+doc/*.cps
 doc/*.fn
+doc/*.fns
+doc/*.html
+doc/*.info
+doc/*.info-*
 doc/*.ky
 doc/*.log
 doc/*.pdf
@@ -47,8 +52,6 @@ doc/*.vr
 doc/.dirstamp
 doc/html/
 doc/latex/
-doc/ledger.info
-doc/ledger3.info
 doc/refman.pdf
 doc/report/
 elisp-comp
@@ -83,9 +86,6 @@ dist/win/vc9/ledger.vcproj.*.user
 dist/win/vc9/ledger.suo
 dist/win/vc9/lib/Win32/Debug/
 dist/win/vc9/system.hh
-doc/ledger.1.html
-doc/ledger.html
-doc/ledger3.html
 src/TAGS
 CMakeCache.txt
 CPackConfig.cmake
@@ -107,9 +107,6 @@ contrib/non-profit-audit-reports/tests/general-ledger.txt
 contrib/non-profit-audit-reports/tests/MANIFEST
 contrib/non-profit-audit-reports/general-ledger.zip
 /wiki/
-doc/ledger-mode.info
-doc/ledger3.info-1
-doc/ledger3.info-2
 CTestTestfile.cmake
 .ninja_deps
 .ninja_log
