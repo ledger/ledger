@@ -65,10 +65,10 @@
 When REGEX is nil, unhide everything, and remove higlight"
   (set-buffer buffer)
   (setq ledger-occur-mode
-	(if (or (null regex)
-		(zerop (length regex)))
-	    nil
-	    (concat " Ledger-Narrowed: " regex)))
+        (if (or (null regex)
+                (zerop (length regex)))
+            nil
+          (concat " Ledger-Narrowed: " regex)))
   (force-mode-line-update)
   (ledger-occur-remove-overlays)
   (when ledger-occur-mode
@@ -77,7 +77,7 @@ When REGEX is nil, unhide everything, and remove higlight"
       (ledger-occur-find-matches regex)))
     (setq ledger-occur-last-match regex)
     (if (get-buffer-window buffer)
-	(select-window (get-buffer-window buffer))))
+        (select-window (get-buffer-window buffer))))
   (recenter))
 
 (defun ledger-occur (regex)
@@ -89,8 +89,8 @@ When REGEX is nil, unhide everything, and remove higlight"
   (interactive
    (if ledger-occur-mode
        (list nil)
-       (list (read-string (concat "Regexp<" (ledger-occur-prompt) ">: ")
-			  nil 'ledger-occur-history (ledger-occur-prompt)))))
+     (list (read-string (concat "Regexp<" (ledger-occur-prompt) ">: ")
+                        nil 'ledger-occur-history (ledger-occur-prompt)))))
   (ledger-occur-mode regex (current-buffer)))
 
 (defun ledger-occur-prompt ()
@@ -108,7 +108,7 @@ When REGEX is nil, unhide everything, and remove higlight"
                (if (= (line-number-at-pos pos1)
                       (line-number-at-pos pos2))
                    (buffer-substring-no-properties pos1 pos2)))
-	     (current-word))))
+           (current-word))))
     prompt))
 
 
@@ -126,7 +126,7 @@ When REGEX is nil, unhide everything, and remove higlight"
   "Create the overlays for the visible transactions.
 Argument OVL-BOUNDS contains bounds for the transactions to be left visible."
   (let* ((beg (caar ovl-bounds))
-	 (end (cadar ovl-bounds)))
+         (end (cadar ovl-bounds)))
     (ledger-occur-make-invisible-overlay (point-min) (1- beg))
     (dolist (visible (cdr ovl-bounds))
       (ledger-occur-make-visible-overlay beg end)
@@ -148,7 +148,7 @@ Used for coordinating `ledger-occur' with other buffers, like reconcile."
   "Remove the transaction hiding overlays."
   (interactive)
   (remove-overlays (point-min)
-		   (point-max) ledger-occur-overlay-property-name t)
+                   (point-max) ledger-occur-overlay-property-name t)
   (setq ledger-occur-overlay-list nil))
 
 (defun ledger-occur-find-matches (regex)
@@ -157,19 +157,19 @@ Used for coordinating `ledger-occur' with other buffers, like reconcile."
     (goto-char (point-min))
     ;; Set initial values for variables
     (let (curpoint
-	  endpoint
-	  (lines (list)))
+          endpoint
+          (lines (list)))
       ;; Search loop
       (while (not (eobp))
         (setq curpoint (point))
         ;; if something found
         (when (setq endpoint (re-search-forward regex nil 'end))
           (save-excursion
-	    (let ((bounds (ledger-find-xact-extents (match-beginning 0))))
-	      (push bounds lines)
-	      (setq curpoint (cadr bounds)))) ;; move to the end of
-	  ;; the xact, no need to
-	  ;; search inside it more
+            (let ((bounds (ledger-find-xact-extents (match-beginning 0))))
+              (push bounds lines)
+              (setq curpoint (cadr bounds)))) ;; move to the end of
+          ;; the xact, no need to
+          ;; search inside it more
           (goto-char curpoint))
         (forward-line 1))
       (setq lines (nreverse lines)))))
@@ -177,14 +177,14 @@ Used for coordinating `ledger-occur' with other buffers, like reconcile."
 (defun ledger-occur-compress-matches (buffer-matches)
   "identify sequential xacts to reduce number of overlays required"
   (let ((points (list))
-	(current-beginning (caar buffer-matches))
-	(current-end (cadar buffer-matches)))
+        (current-beginning (caar buffer-matches))
+        (current-end (cadar buffer-matches)))
     (dolist (match (cdr buffer-matches))
       (if (< (- (car match) current-end) 2)
-	  (setq current-end (cadr match))
-	  (push (list current-beginning current-end) points)
-	  (setq current-beginning (car match))
-	  (setq current-end (cadr match))))
+          (setq current-end (cadr match))
+        (push (list current-beginning current-end) points)
+        (setq current-beginning (car match))
+        (setq current-end (cadr match))))
     (nreverse (push (list current-beginning current-end) points))))
 
 (provide 'ledger-occur)

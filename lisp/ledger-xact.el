@@ -47,28 +47,28 @@ within the transaction."
   (save-excursion
     (goto-char pos)
     (list (progn
-	    (backward-paragraph)
-	    (if (/= (point) (point-min))
-		(forward-line))
-	    (line-beginning-position))
-	  (progn
-	    (forward-paragraph)
-	    (line-beginning-position)))))
+            (backward-paragraph)
+            (if (/= (point) (point-min))
+                (forward-line))
+            (line-beginning-position))
+          (progn
+            (forward-paragraph)
+            (line-beginning-position)))))
 
 (defun ledger-highlight-xact-under-point ()
   "Move the highlight overlay to the current transaction."
   (if ledger-highlight-xact-under-point
       (let ((exts (ledger-find-xact-extents (point)))
-	    (ovl ledger-xact-highlight-overlay))
-	(if (not ledger-xact-highlight-overlay)
-	    (setq ovl
-		  (setq ledger-xact-highlight-overlay
-			(make-overlay (car exts)
-				      (cadr exts)
-				      (current-buffer) t nil)))
-	    (move-overlay ovl (car exts) (cadr exts)))
-	(overlay-put ovl 'face 'ledger-font-xact-highlight-face)
-	(overlay-put ovl 'priority 100))))
+            (ovl ledger-xact-highlight-overlay))
+        (if (not ledger-xact-highlight-overlay)
+            (setq ovl
+                  (setq ledger-xact-highlight-overlay
+                        (make-overlay (car exts)
+                                      (cadr exts)
+                                      (current-buffer) t nil)))
+          (move-overlay ovl (car exts) (cadr exts)))
+        (overlay-put ovl 'face 'ledger-font-xact-highlight-face)
+        (overlay-put ovl 'priority 100))))
 
 (defun ledger-xact-payee ()
   "Return the payee of the transaction containing point or nil."
@@ -78,7 +78,7 @@ within the transaction."
     (let ((context-info (ledger-context-other-line i)))
       (if (eq (ledger-context-line-type context-info) 'xact)
           (ledger-context-field-value context-info 'payee)
-	  nil))))
+        nil))))
 
 (defun ledger-time-less-p (t1 t2)
   "Say whether time value T1 is less than time value T2."
@@ -114,19 +114,19 @@ MOMENT is an encoded date"
         (let ((found-y-p (match-string 2)))
           (if found-y-p
               (setq current-year (string-to-number found-y-p)) ;; a Y directive was found
-	      (let ((start (match-beginning 0))
-		    (year (match-string 4))
-		    (month (string-to-number (match-string 5)))
-		    (day (string-to-number (match-string 6)))
-		    (mark (match-string 7))
-		    (code (match-string 8))
-		    (desc (match-string 9)))
-		(if (and year (> (length year) 0))
-		    (setq year (string-to-number year)))
-		(funcall callback start
-			 (encode-time 0 0 0 day month
-				      (or year current-year))
-			 mark desc)))))
+            (let ((start (match-beginning 0))
+                  (year (match-string 4))
+                  (month (string-to-number (match-string 5)))
+                  (day (string-to-number (match-string 6)))
+                  (mark (match-string 7))
+                  (code (match-string 8))
+                  (desc (match-string 9)))
+              (if (and year (> (length year) 0))
+                  (setq year (string-to-number year)))
+              (funcall callback start
+                       (encode-time 0 0 0 day month
+                                    (or year current-year))
+                       mark desc)))))
       (forward-line))))
 
 (defsubst ledger-goto-line (line-number)
@@ -137,7 +137,7 @@ MOMENT is an encoded date"
 (defun ledger-year-and-month ()
   (let ((sep (if ledger-use-iso-dates
                  "-"
-		 "/")))
+               "/")))
     (concat ledger-year sep ledger-month sep)))
 
 (defun ledger-copy-transaction-at-point (date)
@@ -145,14 +145,14 @@ MOMENT is an encoded date"
   (interactive  (list
                  (ledger-read-date "Copy to date: ")))
   (let* ((here (point))
-	 (extents (ledger-find-xact-extents (point)))
-	 (transaction (buffer-substring-no-properties (car extents) (cadr extents)))
-	 encoded-date)
+         (extents (ledger-find-xact-extents (point)))
+         (transaction (buffer-substring-no-properties (car extents) (cadr extents)))
+         encoded-date)
     (if (string-match ledger-iso-date-regexp date)
-	(setq encoded-date
-	      (encode-time 0 0 0 (string-to-number (match-string 4 date))
-			   (string-to-number (match-string 3 date))
-			   (string-to-number (match-string 2 date)))))
+        (setq encoded-date
+              (encode-time 0 0 0 (string-to-number (match-string 4 date))
+                           (string-to-number (match-string 3 date))
+                           (string-to-number (match-string 2 date)))))
     (ledger-xact-find-slot encoded-date)
     (insert transaction "\n")
     (backward-paragraph 2)
@@ -191,20 +191,20 @@ correct chronological place in the buffer."
                                (string-to-number (match-string 2 date)))))
         (ledger-xact-find-slot date)))
     (if (> (length args) 1)
-	(save-excursion
-	  (insert
-	   (with-temp-buffer
-	     (setq exit-code
-		   (apply #'ledger-exec-ledger ledger-buf (current-buffer) "xact"
-			  (mapcar 'eval args)))
-	     (goto-char (point-min))
-	     (if (looking-at "Error: ")
-		 (error (concat "Error in ledger-add-transaction: " (buffer-string)))
-		 (buffer-string)))
-	   "\n"))
-	(progn
-	  (insert (car args) " \n\n")
-	  (end-of-line -1)))))
+        (save-excursion
+          (insert
+           (with-temp-buffer
+             (setq exit-code
+                   (apply #'ledger-exec-ledger ledger-buf (current-buffer) "xact"
+                          (mapcar 'eval args)))
+             (goto-char (point-min))
+             (if (looking-at "Error: ")
+                 (error (concat "Error in ledger-add-transaction: " (buffer-string)))
+               (buffer-string)))
+           "\n"))
+      (progn
+        (insert (car args) " \n\n")
+        (end-of-line -1)))))
 
 
 (provide 'ledger-xact)

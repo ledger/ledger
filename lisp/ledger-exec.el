@@ -36,9 +36,9 @@
   :group 'ledger)
 
 (defcustom ledger-mode-should-check-version t
-	"Should Ledger-mode verify that the executable is working"
-	:type 'boolean
-	:group 'ledger-exec)
+  "Should Ledger-mode verify that the executable is working"
+  :type 'boolean
+  :group 'ledger-exec)
 
 (defcustom ledger-binary-path "ledger"
   "Path to the ledger executable."
@@ -56,26 +56,26 @@
   (with-current-buffer ledger-output-buffer
     (goto-char (point-min))
     (if (and (> (buffer-size) 1) (looking-at (regexp-quote "While")))
-	nil  ;; failure, there is an error starting with "While"
-	ledger-output-buffer)))
+        nil  ;; failure, there is an error starting with "While"
+      ledger-output-buffer)))
 
 (defun ledger-exec-ledger (input-buffer &optional output-buffer &rest args)
   "Run Ledger using INPUT-BUFFER and optionally capturing output in OUTPUT-BUFFER with ARGS."
   (if (null ledger-binary-path)
       (error "The variable `ledger-binary-path' has not been set")
-      (let ((buf (or input-buffer (current-buffer)))
-	    (outbuf (or output-buffer
-			(generate-new-buffer " *ledger-tmp*"))))
-	(with-current-buffer buf
-	  (let ((coding-system-for-write 'utf-8)
-		(coding-system-for-read 'utf-8))
-	    (apply #'call-process-region
-		   (append (list (point-min) (point-max)
-				 ledger-binary-path nil outbuf nil "-f" "-")
-			   args)))
-	  (if (ledger-exec-success-p outbuf)
-	      outbuf
-	      (ledger-exec-handle-error outbuf))))))
+    (let ((buf (or input-buffer (current-buffer)))
+          (outbuf (or output-buffer
+                      (generate-new-buffer " *ledger-tmp*"))))
+      (with-current-buffer buf
+        (let ((coding-system-for-write 'utf-8)
+              (coding-system-for-read 'utf-8))
+          (apply #'call-process-region
+                 (append (list (point-min) (point-max)
+                               ledger-binary-path nil outbuf nil "-f" "-")
+                         args)))
+        (if (ledger-exec-success-p outbuf)
+            outbuf
+          (ledger-exec-handle-error outbuf))))))
 
 (defun ledger-version-greater-p (needed)
   "Verify the ledger binary is usable for `ledger-mode' (version greater than NEEDED)."
@@ -83,24 +83,24 @@
         (version-strings '()))
     (with-temp-buffer
       (when (ledger-exec-ledger (current-buffer) (current-buffer) "--version")
-	(goto-char (point-min))
-	(delete-horizontal-space)
-	(setq version-strings (split-string
-			       (buffer-substring-no-properties (point)
-							       (point-max))))
-	(if (and (string-match (regexp-quote "Ledger") (car version-strings))
-		 (or (string= needed (cadr version-strings))
-		     (string< needed (cadr version-strings))))
-	    t ;; success
-	    nil))))) ;;failure
+        (goto-char (point-min))
+        (delete-horizontal-space)
+        (setq version-strings (split-string
+                               (buffer-substring-no-properties (point)
+                                                               (point-max))))
+        (if (and (string-match (regexp-quote "Ledger") (car version-strings))
+                 (or (string= needed (cadr version-strings))
+                     (string< needed (cadr version-strings))))
+            t ;; success
+          nil))))) ;;failure
 
 (defun ledger-check-version ()
   "Verify that ledger works and is modern enough."
   (interactive)
   (if ledger-mode-should-check-version
       (if (setq ledger-works (ledger-version-greater-p ledger-version-needed))
-	  (message "Good Ledger Version")
-	(message "Bad Ledger Version"))))
+          (message "Good Ledger Version")
+        (message "Bad Ledger Version"))))
 
 (provide 'ledger-exec)
 

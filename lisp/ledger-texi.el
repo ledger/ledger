@@ -20,18 +20,18 @@
 ;; MA 02110-1301 USA.
 
 (defgroup ledger-texi nil
-"Options for working on Ledger texi documentation"
-:group 'ledger)
+  "Options for working on Ledger texi documentation"
+  :group 'ledger)
 
 (defcustom ledger-texi-sample-doc-path "~/ledger/doc/sample.dat"
-"Location for sample data to be used in texi tests"
-:type 'file
-:group 'ledger-texi)
+  "Location for sample data to be used in texi tests"
+  :type 'file
+  :group 'ledger-texi)
 
 (defcustom ledger-texi-normalization-args "--args-only --columns 80"
-"texi normalization for producing ledger output"
-:type 'string
-:group 'ledger-texi)
+  "texi normalization for producing ledger output"
+  :type 'string
+  :group 'ledger-texi)
 
 (defun ledger-update-test ()
   (interactive)
@@ -104,17 +104,17 @@
   (if (string-match "\\$LEDGER" command)
       (replace-match (format "%s -f \"%s\" %s" ledger-binary-path
                              data-file ledger-texi-normalization-args) t t command)
-      (concat (format "%s -f \"%s\" %s " ledger-binary-path
-		      data-file ledger-texi-normalization-args) command)))
+    (concat (format "%s -f \"%s\" %s " ledger-binary-path
+                    data-file ledger-texi-normalization-args) command)))
 
 (defun ledger-texi-invoke-command (command)
   (with-temp-buffer (shell-command command t (current-buffer))
-		    (if (= (point-min) (point-max))
-			(progn
-			  (push-mark nil t)
-			  (message "Command '%s' yielded no result at %d" command (point))
-			  (ding))
-			(buffer-string))))
+                    (if (= (point-min) (point-max))
+                        (progn
+                          (push-mark nil t)
+                          (message "Command '%s' yielded no result at %d" command (point))
+                          (ding))
+                      (buffer-string))))
 
 (defun ledger-texi-write-test-data (name input)
   (let ((path (expand-file-name name temporary-file-directory)))
@@ -159,7 +159,7 @@
 
         (let ((section-name (if (string= section "smex")
                                 "smallexample"
-				"example"))
+                              "example"))
               (output (ledger-texi-invoke-command
                        (ledger-texi-expand-command command data-file))))
           (insert "@" section-name ?\n output

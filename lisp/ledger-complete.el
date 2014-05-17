@@ -34,8 +34,8 @@
   ;; with pcomplete.  See pcomplete-parse-arguments-function for
   ;; details
   (let* ((begin (save-excursion
-		  (ledger-thing-at-point) ;; leave point at beginning of thing under point
-		  (point)))
+                  (ledger-thing-at-point) ;; leave point at beginning of thing under point
+                  (point)))
          (end (point))
          begins args)
     ;; to support end of line metadata
@@ -65,7 +65,7 @@
         (unless (and (>= origin (match-beginning 0))
                      (< origin (match-end 0)))
           (setq payees-list (cons (match-string-no-properties 3)
-				  payees-list)))))  ;; add the payee
+                                  payees-list)))))  ;; add the payee
     ;; to the list
     (pcomplete-uniqify-list (nreverse payees-list))))
 
@@ -73,33 +73,33 @@
 (defun ledger-find-accounts-in-buffer ()
   (interactive)
   (let ((origin (point))
-	accounts
-	(account-tree (list t))
-	(account-elements nil)
-	(seed-regex (ledger-account-any-status-with-seed-regex
-		     (regexp-quote (car pcomplete-args)))))
+        accounts
+        (account-tree (list t))
+        (account-elements nil)
+        (seed-regex (ledger-account-any-status-with-seed-regex
+                     (regexp-quote (car pcomplete-args)))))
     (save-excursion
       (goto-char (point-min))
 
       (dolist (account
-		(delete-dups
-		 (progn
-		   (while (re-search-forward seed-regex nil t)
-		     (unless (between origin (match-beginning 0) (match-end 0))
-		       (setq accounts (cons (match-string-no-properties 2) accounts))))
-		   accounts)))
-	(let ((root account-tree))
+               (delete-dups
+                (progn
+                  (while (re-search-forward seed-regex nil t)
+                    (unless (between origin (match-beginning 0) (match-end 0))
+                      (setq accounts (cons (match-string-no-properties 2) accounts))))
+                  accounts)))
+        (let ((root account-tree))
           (setq account-elements
-		(split-string
-		 account ":"))
-	  (while account-elements
-	    (let ((xact (assoc (car account-elements) root)))
-	      (if xact
-		  (setq root (cdr xact))
-		  (setq xact (cons (car account-elements) (list t)))
-		  (nconc root (list xact))
-		  (setq root (cdr xact))))
-	    (setq account-elements (cdr account-elements))))))
+                (split-string
+                 account ":"))
+          (while account-elements
+            (let ((xact (assoc (car account-elements) root)))
+              (if xact
+                  (setq root (cdr xact))
+                (setq xact (cons (car account-elements) (list t)))
+                (nconc root (list xact))
+                (setq root (cdr xact))))
+            (setq account-elements (cdr account-elements))))))
     account-tree))
 
 (defun ledger-find-metadata-in-buffer ()
@@ -129,19 +129,19 @@ Return list."
             (setq prefix (concat prefix (and prefix ":")
                                  (car elements))
                   root (cdr xact))
-	    (setq root nil elements nil)))
+          (setq root nil elements nil)))
       (setq elements (cdr elements)))
     (setq root (delete (list (car elements) t) root))
     (and root
          (sort
           (mapcar (function
                    (lambda (x)
-		    (let ((term (if prefix
-				    (concat prefix ":" (car x))
-				    (car x))))
-		      (if (> (length (cdr x)) 1)
-			  (concat term ":")
-			  term))))
+                     (let ((term (if prefix
+                                     (concat prefix ":" (car x))
+                                   (car x))))
+                       (if (> (length (cdr x)) 1)
+                           (concat term ":")
+                         term))))
                   (cdr root))
           'string-lessp))))
 
@@ -155,44 +155,44 @@ Return list."
                   (delete
                    (caar (ledger-parse-arguments))
                    (ledger-payees-in-buffer)) ;; this completes against payee names
-		  (progn
-		    (let ((text (buffer-substring-no-properties
-				 (line-beginning-position)
-				 (line-end-position))))
-		      (delete-region (line-beginning-position)
-				     (line-end-position))
-		      (condition-case nil
-			  (ledger-add-transaction text t)
-			(error nil)))
-		    (forward-line)
-		    (goto-char (line-end-position))
-		    (search-backward ";" (line-beginning-position) t)
-		    (skip-chars-backward " \t0123456789.,")
-		    (throw 'pcompleted t)))
-	      (ledger-accounts)))))
+                (progn
+                  (let ((text (buffer-substring-no-properties
+                               (line-beginning-position)
+                               (line-end-position))))
+                    (delete-region (line-beginning-position)
+                                   (line-end-position))
+                    (condition-case nil
+                        (ledger-add-transaction text t)
+                      (error nil)))
+                  (forward-line)
+                  (goto-char (line-end-position))
+                  (search-backward ";" (line-beginning-position) t)
+                  (skip-chars-backward " \t0123456789.,")
+                  (throw 'pcompleted t)))
+            (ledger-accounts)))))
 
 (defun ledger-trim-trailing-whitespace (str)
-	(let ((s str))
-		(when (string-match "[ \t]*$" s)
-			(replace-match "" nil nil s))))
+  (let ((s str))
+    (when (string-match "[ \t]*$" s)
+      (replace-match "" nil nil s))))
 
 (defun ledger-fully-complete-xact ()
   "Completes a transaction if there is another matching payee in the buffer.
 Does not use ledger xact"
   (interactive)
   (let* ((name (ledger-trim-trailing-whitespace (caar (ledger-parse-arguments))))
-				 (rest-of-name name)
-				 xacts)
+         (rest-of-name name)
+         xacts)
     (save-excursion
       (when (eq 'transaction (ledger-thing-at-point))
-				(delete-region (point) (+ (length name) (point)))
-				;; Search backward for a matching payee
+        (delete-region (point) (+ (length name) (point)))
+        ;; Search backward for a matching payee
         (when (re-search-backward
                (concat "^[0-9/.=-]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+\\(.*"
                        (regexp-quote name) ".*\\)" ) nil t)
-					(setq rest-of-name (match-string 3))
+          (setq rest-of-name (match-string 3))
           ;; Start copying the postings
-					(forward-line)
+          (forward-line)
           (while (looking-at ledger-account-any-status-regex)
             (setq xacts (cons (buffer-substring-no-properties
                                (line-beginning-position)
@@ -203,7 +203,7 @@ Does not use ledger xact"
     ;; Insert rest-of-name and the postings
     (when xacts
       (save-excursion
-				(insert rest-of-name ?\n)
+        (insert rest-of-name ?\n)
         (while xacts
           (insert (car xacts) ?\n)
           (setq xacts (cdr xacts))))
@@ -214,54 +214,54 @@ Does not use ledger xact"
 
 
 (defcustom ledger-complete-ignore-case t
-	"Non-nil means that ledger-complete-at-point will be case-insensitive"
-	:type 'boolean
-	:group 'ledger)
+  "Non-nil means that ledger-complete-at-point will be case-insensitive"
+  :type 'boolean
+  :group 'ledger)
 
 (defun ledger-pcomplete (&optional interactively)
   "Complete rip-off of pcomplete from pcomplete.el, only added
 ledger-magic-tab in the previous commands list so that
 ledger-magic-tab would cycle properly"
   (interactive "p")
-	(let ((pcomplete-ignore-case ledger-complete-ignore-case))
-		(if (and interactively
-						 pcomplete-cycle-completions
-						 pcomplete-current-completions
-						 (memq last-command '(ledger-magic-tab
-																	ledger-pcomplete
-																	pcomplete-expand-and-complete
-																	pcomplete-reverse)))
-				(progn
-					(delete-backward-char pcomplete-last-completion-length)
-					(if (eq this-command 'pcomplete-reverse)
-							(progn
-								(push (car (last pcomplete-current-completions))
-											pcomplete-current-completions)
-								(setcdr (last pcomplete-current-completions 2) nil))
-						(nconc pcomplete-current-completions
-									 (list (car pcomplete-current-completions)))
-						(setq pcomplete-current-completions
-									(cdr pcomplete-current-completions)))
-					(pcomplete-insert-entry pcomplete-last-completion-stub
-																	(car pcomplete-current-completions)
-																	nil pcomplete-last-completion-raw))
+  (let ((pcomplete-ignore-case ledger-complete-ignore-case))
+    (if (and interactively
+             pcomplete-cycle-completions
+             pcomplete-current-completions
+             (memq last-command '(ledger-magic-tab
+                                  ledger-pcomplete
+                                  pcomplete-expand-and-complete
+                                  pcomplete-reverse)))
+        (progn
+          (delete-backward-char pcomplete-last-completion-length)
+          (if (eq this-command 'pcomplete-reverse)
+              (progn
+                (push (car (last pcomplete-current-completions))
+                      pcomplete-current-completions)
+                (setcdr (last pcomplete-current-completions 2) nil))
+            (nconc pcomplete-current-completions
+                   (list (car pcomplete-current-completions)))
+            (setq pcomplete-current-completions
+                  (cdr pcomplete-current-completions)))
+          (pcomplete-insert-entry pcomplete-last-completion-stub
+                                  (car pcomplete-current-completions)
+                                  nil pcomplete-last-completion-raw))
       (setq pcomplete-current-completions nil
-						pcomplete-last-completion-raw nil)
+            pcomplete-last-completion-raw nil)
       (catch 'pcompleted
-				(let* ((pcomplete-stub)
-							 pcomplete-seen pcomplete-norm-func
-							 pcomplete-args pcomplete-last pcomplete-index
-							 (pcomplete-autolist pcomplete-autolist)
-							 (pcomplete-suffix-list pcomplete-suffix-list)
-							 (completions (pcomplete-completions))
-							 (result (pcomplete-do-complete pcomplete-stub completions)))
-					(and result
-							 (not (eq (car result) 'listed))
-							 (cdr result)
-							 (pcomplete-insert-entry pcomplete-stub (cdr result)
-																			 (memq (car result)
-																						 '(sole shortest))
-																			 pcomplete-last-completion-raw)))))))
+        (let* ((pcomplete-stub)
+               pcomplete-seen pcomplete-norm-func
+               pcomplete-args pcomplete-last pcomplete-index
+               (pcomplete-autolist pcomplete-autolist)
+               (pcomplete-suffix-list pcomplete-suffix-list)
+               (completions (pcomplete-completions))
+               (result (pcomplete-do-complete pcomplete-stub completions)))
+          (and result
+               (not (eq (car result) 'listed))
+               (cdr result)
+               (pcomplete-insert-entry pcomplete-stub (cdr result)
+                                       (memq (car result)
+                                             '(sole shortest))
+                                       pcomplete-last-completion-raw)))))))
 
 (provide 'ledger-complete)
 

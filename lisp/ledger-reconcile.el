@@ -76,9 +76,9 @@ reconcile-finish will mark all pending posting cleared."
   :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-sort-key "(date)"
-	"Default key for sorting reconcile buffer. For no sorting by default, use '(0)'."
-	:type 'string
-	:group 'ledger-reconcile)
+  "Default key for sorting reconcile buffer. For no sorting by default, use '(0)'."
+  :type 'string
+  :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-insert-effective-date nil
   "If t, prompt for effective date when clearing transactions during reconciliation."
@@ -97,10 +97,10 @@ reconcile-finish will mark all pending posting cleared."
     ;; split arguments like the shell does, so you need to
     ;; specify the individual fields in the command line.
     (if (ledger-exec-ledger buffer (current-buffer)
-			    "balance" "--limit" "cleared or pending" "--empty" "--collapse"
-			    "--format" "%(display_total)" account)
-	(ledger-split-commodity-string
-	 (buffer-substring-no-properties (point-min) (point-max))))))
+                            "balance" "--limit" "cleared or pending" "--empty" "--collapse"
+                            "--format" "%(display_total)" account)
+        (ledger-split-commodity-string
+         (buffer-substring-no-properties (point-min) (point-max))))))
 
 (defun ledger-display-balance ()
   "Display the cleared-or-pending balance.
@@ -109,11 +109,11 @@ And calculate the target-delta of the account being reconciled."
   (let* ((pending (ledger-reconcile-get-cleared-or-pending-balance ledger-buf ledger-acct)))
     (when pending
       (if ledger-target
-	  (message "Pending balance: %s,   Difference from target: %s"
-		   (ledger-commodity-to-string pending)
-		   (ledger-commodity-to-string (-commodity ledger-target pending)))
-	  (message "Pending balance: %s"
-		   (ledger-commodity-to-string pending))))))
+          (message "Pending balance: %s,   Difference from target: %s"
+                   (ledger-commodity-to-string pending)
+                   (ledger-commodity-to-string (-commodity ledger-target pending)))
+        (message "Pending balance: %s"
+                 (ledger-commodity-to-string pending))))))
 
 (defun ledger-is-stdin (file)
   "True if ledger FILE is standard input."
@@ -126,7 +126,7 @@ And calculate the target-delta of the account being reconciled."
   "Return a buffer from WHERE the transaction is."
   (if (bufferp (car where))
       (car where)
-      (error "Function ledger-reconcile-get-buffer: Buffer not set")))
+    (error "Function ledger-reconcile-get-buffer: Buffer not set")))
 
 (defun ledger-reconcile-toggle ()
   "Toggle the current transaction, and mark the recon window."
@@ -137,30 +137,30 @@ And calculate the target-delta of the account being reconciled."
         status)
     (when (ledger-reconcile-get-buffer where)
       (with-current-buffer (ledger-reconcile-get-buffer where)
-	(ledger-goto-line (cdr where))
-	(forward-char)
-	(setq status (ledger-toggle-current (if ledger-reconcile-toggle-to-pending
-						'pending
-						'cleared)))
-      (when ledger-reconcile-insert-effective-date
-        ;; Ask for effective date & insert it
-        (ledger-insert-effective-date)))
+        (ledger-goto-line (cdr where))
+        (forward-char)
+        (setq status (ledger-toggle-current (if ledger-reconcile-toggle-to-pending
+                                                'pending
+                                              'cleared)))
+        (when ledger-reconcile-insert-effective-date
+          ;; Ask for effective date & insert it
+          (ledger-insert-effective-date)))
       ;; remove the existing face and add the new face
       (remove-text-properties (line-beginning-position)
-			      (line-end-position)
-			      (list 'face))
+                              (line-end-position)
+                              (list 'face))
       (cond ((eq status 'pending)
-	     (add-text-properties (line-beginning-position)
-				  (line-end-position)
-				  (list 'face 'ledger-font-reconciler-pending-face )))
-	    ((eq status 'cleared)
-	     (add-text-properties (line-beginning-position)
-				  (line-end-position)
-				  (list 'face 'ledger-font-reconciler-cleared-face )))
-	    (t
-	     (add-text-properties (line-beginning-position)
-				  (line-end-position)
-				  (list 'face 'ledger-font-reconciler-uncleared-face )))))
+             (add-text-properties (line-beginning-position)
+                                  (line-end-position)
+                                  (list 'face 'ledger-font-reconciler-pending-face )))
+            ((eq status 'cleared)
+             (add-text-properties (line-beginning-position)
+                                  (line-end-position)
+                                  (list 'face 'ledger-font-reconciler-cleared-face )))
+            (t
+             (add-text-properties (line-beginning-position)
+                                  (line-end-position)
+                                  (list 'face 'ledger-font-reconciler-uncleared-face )))))
     (forward-line)
     (beginning-of-line)
     (ledger-display-balance)))
@@ -172,18 +172,18 @@ Return the number of uncleared xacts found."
   (let ((inhibit-read-only t))
     (erase-buffer)
     (prog1
-	(ledger-do-reconcile ledger-reconcile-sort-key)
+        (ledger-do-reconcile ledger-reconcile-sort-key)
       (set-buffer-modified-p t))))
 
 (defun ledger-reconcile-refresh-after-save ()
   "Refresh the recon-window after the ledger buffer is saved."
   (let ((curbuf (current-buffer))
-	(curpoint (point))
-	(recon-buf (get-buffer ledger-recon-buffer-name)))
+        (curpoint (point))
+        (recon-buf (get-buffer ledger-recon-buffer-name)))
     (when (buffer-live-p recon-buf)
       (with-current-buffer recon-buf
-	(ledger-reconcile-refresh)
-	(set-buffer-modified-p nil))
+        (ledger-reconcile-refresh)
+        (set-buffer-modified-p nil))
       (select-window  (get-buffer-window curbuf))
       (goto-char curpoint))))
 
@@ -206,7 +206,7 @@ Return the number of uncleared xacts found."
         (goto-char (line-beginning-position))
         (delete-region (point) (1+ (line-end-position)))
         (set-buffer-modified-p t))
-			(ledger-reconcile-refresh))))
+      (ledger-reconcile-refresh))))
 
 (defun ledger-reconcile-visit (&optional come-back)
   "Recenter ledger buffer on transaction and COME-BACK if non-nil."
@@ -214,19 +214,19 @@ Return the number of uncleared xacts found."
   (progn
     (beginning-of-line)
     (let* ((where (get-text-property (1+ (point)) 'where))
-	   (target-buffer (if where
-			      (ledger-reconcile-get-buffer where)
-			      nil))
-	   (cur-win (get-buffer-window (get-buffer ledger-recon-buffer-name))))
+           (target-buffer (if where
+                              (ledger-reconcile-get-buffer where)
+                            nil))
+           (cur-win (get-buffer-window (get-buffer ledger-recon-buffer-name))))
       (when target-buffer
-	(switch-to-buffer-other-window target-buffer)
-	(ledger-goto-line (cdr where))
-	(forward-char)
-	(recenter)
-	(ledger-highlight-xact-under-point)
-	(forward-char -1)
-	(if (and come-back cur-win)
-	    (select-window cur-win))))))
+        (switch-to-buffer-other-window target-buffer)
+        (ledger-goto-line (cdr where))
+        (forward-char)
+        (recenter)
+        (ledger-highlight-xact-under-point)
+        (forward-char -1)
+        (if (and come-back cur-win)
+            (select-window cur-win))))))
 
 (defun ledger-reconcile-save ()
   "Save the ledger buffer."
@@ -234,7 +234,7 @@ Return the number of uncleared xacts found."
   (let ((curpoint (point)))
     (dolist (buf (cons ledger-buf ledger-bufs))
       (with-current-buffer buf
-	(save-buffer)))
+        (save-buffer)))
     (with-current-buffer (get-buffer ledger-recon-buffer-name)
       (set-buffer-modified-p nil)
       (ledger-display-balance)
@@ -264,88 +264,88 @@ and exit reconcile mode"
   "Quit the reconcile window without saving ledger buffer."
   (interactive)
   (let ((recon-buf (get-buffer ledger-recon-buffer-name))
-	buf)
+        buf)
     (if recon-buf
-	(with-current-buffer recon-buf
-	  (ledger-reconcile-quit-cleanup)
-	  (setq buf ledger-buf)
-	  ;; Make sure you delete the window before you delete the buffer,
-	  ;; otherwise, madness ensues
-	  (delete-window (get-buffer-window recon-buf))
-	  (kill-buffer recon-buf)
-	  (set-window-buffer (selected-window) buf)))))
+        (with-current-buffer recon-buf
+          (ledger-reconcile-quit-cleanup)
+          (setq buf ledger-buf)
+          ;; Make sure you delete the window before you delete the buffer,
+          ;; otherwise, madness ensues
+          (delete-window (get-buffer-window recon-buf))
+          (kill-buffer recon-buf)
+          (set-window-buffer (selected-window) buf)))))
 
 (defun ledger-reconcile-quit-cleanup ()
   "Cleanup all hooks established by reconcile mode."
   (interactive)
   (let ((buf ledger-buf))
     (if (buffer-live-p buf)
-	(with-current-buffer buf
-	  (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t)
-	  (when ledger-narrow-on-reconcile
-	    (ledger-occur-quit-buffer buf)
-	    (ledger-highlight-xact-under-point))))))
+        (with-current-buffer buf
+          (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t)
+          (when ledger-narrow-on-reconcile
+            (ledger-occur-quit-buffer buf)
+            (ledger-highlight-xact-under-point))))))
 
 (defun ledger-marker-where-xact-is (emacs-xact posting)
   "Find the position of the EMACS-XACT in the `ledger-buf'.
 POSTING is used in `ledger-clear-whole-transactions' is nil."
   (let ((buf (if (ledger-is-stdin (nth 0 emacs-xact))
-		 ledger-buf
-		 (find-file-noselect (nth 0 emacs-xact)))))
+                 ledger-buf
+               (find-file-noselect (nth 0 emacs-xact)))))
     (cons
      buf
      (if ledger-clear-whole-transactions
-	 (nth 1 emacs-xact)  ;; return line-no of xact
-	 (nth 0 posting))))) ;; return line-no of posting
+         (nth 1 emacs-xact)  ;; return line-no of xact
+       (nth 0 posting))))) ;; return line-no of posting
 
 (defun ledger-do-reconcile (&optional sort)
   "Return the number of uncleared transactions in the account and display them in the *Reconcile* buffer."
   (let* ((buf ledger-buf)
          (account ledger-acct)
-	 (ledger-success nil)
-	 (sort-by (if sort
-		      sort
-		      "(date)"))
+         (ledger-success nil)
+         (sort-by (if sort
+                      sort
+                    "(date)"))
          (xacts
           (with-temp-buffer
-	    (when (ledger-exec-ledger buf (current-buffer)
-				      "--uncleared" "--real" "emacs" "--sort" sort-by account)
-	      (setq ledger-success t)
-	      (goto-char (point-min))
-	      (unless (eobp)
-		(if (looking-at "(")
-		    (read (current-buffer)))))))) ;current-buffer is the *temp* created above
+            (when (ledger-exec-ledger buf (current-buffer)
+                                      "--uncleared" "--real" "emacs" "--sort" sort-by account)
+              (setq ledger-success t)
+              (goto-char (point-min))
+              (unless (eobp)
+                (if (looking-at "(")
+                    (read (current-buffer)))))))) ;current-buffer is the *temp* created above
     (if (and ledger-success (> (length xacts) 0))
-	(let ((date-format (or (cdr (assoc "date-format" ledger-environment-alist))
-												 ledger-default-date-format)))
-	  (dolist (xact xacts)
-	    (dolist (posting (nthcdr 5 xact))
-	      (let ((beg (point))
-		    (where (ledger-marker-where-xact-is xact posting)))
-		(insert (format "%s %-4s %-50s %-30s %15s\n"
-                    (format-time-string date-format (nth 2 xact))
-										(if (nth 3 xact)
-												(nth 3 xact)
-												"")
-										(truncate-string-to-width
-										 (nth 4 xact) 49)
-										(nth 1 posting) (nth 2 posting)))
-		(if (nth 3 posting)
-		    (if (eq (nth 3 posting) 'pending)
-						(set-text-properties beg (1- (point))
-																 (list 'face 'ledger-font-reconciler-pending-face
-																			 'where where))
-						(set-text-properties beg (1- (point))
-																 (list 'face 'ledger-font-reconciler-cleared-face
-																			 'where where)))
-		    (set-text-properties beg (1- (point))
-														 (list 'face 'ledger-font-reconciler-uncleared-face
-																	 'where where))))  ))
-	  (goto-char (point-max))
-	  (delete-char -1)) ;gets rid of the extra line feed at the bottom of the list
-	(if ledger-success
-	    (insert (concat "There are no uncleared entries for " account))
-	    (insert "Ledger has reported a problem.  Check *Ledger Error* buffer.")))
+        (let ((date-format (or (cdr (assoc "date-format" ledger-environment-alist))
+                               ledger-default-date-format)))
+          (dolist (xact xacts)
+            (dolist (posting (nthcdr 5 xact))
+              (let ((beg (point))
+                    (where (ledger-marker-where-xact-is xact posting)))
+                (insert (format "%s %-4s %-50s %-30s %15s\n"
+                                (format-time-string date-format (nth 2 xact))
+                                (if (nth 3 xact)
+                                    (nth 3 xact)
+                                  "")
+                                (truncate-string-to-width
+                                 (nth 4 xact) 49)
+                                (nth 1 posting) (nth 2 posting)))
+                (if (nth 3 posting)
+                    (if (eq (nth 3 posting) 'pending)
+                        (set-text-properties beg (1- (point))
+                                             (list 'face 'ledger-font-reconciler-pending-face
+                                                   'where where))
+                      (set-text-properties beg (1- (point))
+                                           (list 'face 'ledger-font-reconciler-cleared-face
+                                                 'where where)))
+                  (set-text-properties beg (1- (point))
+                                       (list 'face 'ledger-font-reconciler-uncleared-face
+                                             'where where))))  ))
+          (goto-char (point-max))
+          (delete-char -1)) ;gets rid of the extra line feed at the bottom of the list
+      (if ledger-success
+          (insert (concat "There are no uncleared entries for " account))
+        (insert "Ledger has reported a problem.  Check *Ledger Error* buffer.")))
     (goto-char (point-min))
     (set-buffer-modified-p nil)
     (toggle-read-only t)
@@ -363,11 +363,11 @@ moved and recentered.  If they aren't strange things happen."
     (when recon-window
       (fit-window-to-buffer recon-window)
       (with-current-buffer buf
-	(add-hook 'kill-buffer-hook 'ledger-reconcile-quit nil t)
-	(if (get-buffer-window buf)
-	    (select-window (get-buffer-window buf)))
-	(goto-char (point-max))
-	(recenter -1))
+        (add-hook 'kill-buffer-hook 'ledger-reconcile-quit nil t)
+        (if (get-buffer-window buf)
+            (select-window (get-buffer-window buf)))
+        (goto-char (point-max))
+        (recenter -1))
       (select-window recon-window)
       (ledger-reconcile-visit t))
     (add-hook 'post-command-hook 'ledger-reconcile-track-xact nil t)))
@@ -375,59 +375,59 @@ moved and recentered.  If they aren't strange things happen."
 (defun ledger-reconcile-track-xact ()
   "Force the ledger buffer to recenter on the transaction at point in the reconcile buffer."
   (if (and ledger-buffer-tracks-reconcile-buffer
-	   (member this-command (list 'next-line
-				      'previous-line
-				      'mouse-set-point
-				      'ledger-reconcile-toggle
-				      'end-of-buffer
-				      'beginning-of-buffer)))
+           (member this-command (list 'next-line
+                                      'previous-line
+                                      'mouse-set-point
+                                      'ledger-reconcile-toggle
+                                      'end-of-buffer
+                                      'beginning-of-buffer)))
       (save-excursion
-	(ledger-reconcile-visit t))))
+        (ledger-reconcile-visit t))))
 
 (defun ledger-reconcile-open-windows (buf rbuf)
   "Ensure that the ledger buffer BUF is split by RBUF."
   (if ledger-reconcile-force-window-bottom
       ;;create the *Reconcile* window directly below the ledger buffer.
       (set-window-buffer (split-window (get-buffer-window buf) nil nil) rbuf)
-      (pop-to-buffer rbuf)))
+    (pop-to-buffer rbuf)))
 
 (defun ledger-reconcile ()
   "Start reconciling, prompt for account."
   (interactive)
   (let ((account (ledger-read-account-with-prompt "Account to reconcile"))
-	(buf (current-buffer))
+        (buf (current-buffer))
         (rbuf (get-buffer ledger-recon-buffer-name)))
 
     (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save nil t)
 
     (if rbuf ;; *Reconcile* already exists
-	(with-current-buffer rbuf
-	  (set 'ledger-acct account) ;; already buffer local
-	  (when (not (eq buf rbuf))
-	    ;; called from some other ledger-mode buffer
-	    (ledger-reconcile-quit-cleanup)
-	    (set 'ledger-buf buf)) ;; should already be buffer-local
+        (with-current-buffer rbuf
+          (set 'ledger-acct account) ;; already buffer local
+          (when (not (eq buf rbuf))
+            ;; called from some other ledger-mode buffer
+            (ledger-reconcile-quit-cleanup)
+            (set 'ledger-buf buf)) ;; should already be buffer-local
 
-	  (unless (get-buffer-window rbuf)
-	    (ledger-reconcile-open-windows buf rbuf)))
+          (unless (get-buffer-window rbuf)
+            (ledger-reconcile-open-windows buf rbuf)))
 
-	;; no recon-buffer, starting from scratch.
+      ;; no recon-buffer, starting from scratch.
 
-	(with-current-buffer (setq rbuf
-				   (get-buffer-create ledger-recon-buffer-name))
-	  (ledger-reconcile-open-windows buf rbuf)
-	  (ledger-reconcile-mode)
-	  (make-local-variable 'ledger-target)
-	  (set (make-local-variable 'ledger-buf) buf)
-	  (set (make-local-variable 'ledger-acct) account)))
+      (with-current-buffer (setq rbuf
+                                 (get-buffer-create ledger-recon-buffer-name))
+        (ledger-reconcile-open-windows buf rbuf)
+        (ledger-reconcile-mode)
+        (make-local-variable 'ledger-target)
+        (set (make-local-variable 'ledger-buf) buf)
+        (set (make-local-variable 'ledger-acct) account)))
 
     ;; Narrow the ledger buffer
     (with-current-buffer rbuf
       (save-excursion
-	(if ledger-narrow-on-reconcile
-	    (ledger-occur-mode account ledger-buf)))
+        (if ledger-narrow-on-reconcile
+            (ledger-occur-mode account ledger-buf)))
       (if (> (ledger-reconcile-refresh) 0)
-	  (ledger-reconcile-change-target))
+          (ledger-reconcile-change-target))
       (ledger-display-balance))))
 
 (defvar ledger-reconcile-mode-abbrev-table)
@@ -445,31 +445,31 @@ moved and recentered.  If they aren't strange things happen."
      (ledger-reconcile-refresh)))
 
 (defvar ledger-reconcile-mode-map
-	(let ((map (make-sparse-keymap)))
-		(define-key map [(control ?m)] 'ledger-reconcile-visit)
-		(define-key map [return] 'ledger-reconcile-visit)
-		(define-key map [(control ?l)] 'ledger-reconcile-refresh)
-		(define-key map [(control ?c) (control ?c)] 'ledger-reconcile-finish)
-		(define-key map [? ] 'ledger-reconcile-toggle)
-		(define-key map [?a] 'ledger-reconcile-add)
-		(define-key map [?d] 'ledger-reconcile-delete)
-		(define-key map [?g] 'ledger-reconcile);
-		(define-key map [?n] 'next-line)
-		(define-key map [?p] 'previous-line)
-		(define-key map [?t] 'ledger-reconcile-change-target)
-		(define-key map [?s] 'ledger-reconcile-save)
-		(define-key map [?q] 'ledger-reconcile-quit)
-		(define-key map [?b] 'ledger-display-balance)
+  (let ((map (make-sparse-keymap)))
+    (define-key map [(control ?m)] 'ledger-reconcile-visit)
+    (define-key map [return] 'ledger-reconcile-visit)
+    (define-key map [(control ?l)] 'ledger-reconcile-refresh)
+    (define-key map [(control ?c) (control ?c)] 'ledger-reconcile-finish)
+    (define-key map [? ] 'ledger-reconcile-toggle)
+    (define-key map [?a] 'ledger-reconcile-add)
+    (define-key map [?d] 'ledger-reconcile-delete)
+    (define-key map [?g] 'ledger-reconcile);
+    (define-key map [?n] 'next-line)
+    (define-key map [?p] 'previous-line)
+    (define-key map [?t] 'ledger-reconcile-change-target)
+    (define-key map [?s] 'ledger-reconcile-save)
+    (define-key map [?q] 'ledger-reconcile-quit)
+    (define-key map [?b] 'ledger-display-balance)
 
-		(define-key map [(control ?c) (control ?o)] (ledger-reconcile-change-sort-key-and-refresh "(0)"))
+    (define-key map [(control ?c) (control ?o)] (ledger-reconcile-change-sort-key-and-refresh "(0)"))
 
-		(define-key map [(control ?c) (control ?a)] (ledger-reconcile-change-sort-key-and-refresh "(amount)"))
+    (define-key map [(control ?c) (control ?a)] (ledger-reconcile-change-sort-key-and-refresh "(amount)"))
 
-		(define-key map [(control ?c) (control ?d)] (ledger-reconcile-change-sort-key-and-refresh "(date)"))
+    (define-key map [(control ?c) (control ?d)] (ledger-reconcile-change-sort-key-and-refresh "(date)"))
 
-		(define-key map [(control ?c) (control ?p)] (ledger-reconcile-change-sort-key-and-refresh "(payee)"))
-		map)
-	"Keymap for `ledger-reconcile-mode'.")
+    (define-key map [(control ?c) (control ?p)] (ledger-reconcile-change-sort-key-and-refresh "(payee)"))
+    map)
+  "Keymap for `ledger-reconcile-mode'.")
 
 (easy-menu-define ledger-reconcile-mode-menu ledger-reconcile-mode-map
   "Ledger reconcile menu"
@@ -500,7 +500,7 @@ moved and recentered.  If they aren't strange things happen."
     ))
 
 (define-derived-mode ledger-reconcile-mode text-mode "Reconcile"
-	"A mode for reconciling ledger entries.")
+  "A mode for reconciling ledger entries.")
 
 (provide 'ledger-reconcile)
 
