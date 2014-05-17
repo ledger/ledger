@@ -13,12 +13,9 @@
 .deps/
 .libs/
 ABOUT-NLS
-BaselineTests
 Makefile
 Makefile.am
 Makefile.in
-PyUnitTests
-RegressionTests
 TAGS
 acconf.h.in
 aclocal.m4
@@ -33,7 +30,6 @@ config.status
 config.sub
 configure
 configure.ac
-data_tests
 depcomp
 doc/Doxyfile
 doc/*.aux
@@ -57,7 +53,6 @@ doc/latex/
 doc/refman.pdf
 doc/report/
 elisp-comp
-expr_tests
 install-sh
 intl/
 ledger
@@ -65,19 +60,16 @@ libtool
 ltmain.sh
 m4/
 make.sh
-math_tests
 missing
 mkinstalldirs
 po/
 py-compile
-report_tests
 shave
 shave-libtool
 stamp-h1
 texinfo.tex
 tmpcvs*/
 tmpwrk*/
-util_tests
 dist/win/vc9/Debug/
 dist/win/vc9/gen-mpir.exe
 dist/win/vc9/gen-mpir.ilk
@@ -111,6 +103,6 @@ contrib/non-profit-audit-reports/general-ledger.zip
 .ninja_log
 build.ninja
 rules.ninja
-Testing/Temporary
+test/Testing
 /MathTests
 /UtilTests
