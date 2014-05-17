@@ -71,7 +71,6 @@ py-compile
 report_tests
 shave
 shave-libtool
-src/system.hh.gch
 stamp-h1
 texinfo.tex
 tmpcvs*/
@@ -85,7 +84,6 @@ dist/win/vc9/ledger.ncb
 dist/win/vc9/ledger.vcproj.*.user
 dist/win/vc9/ledger.suo
 dist/win/vc9/lib/Win32/Debug/
-dist/win/vc9/system.hh
 src/TAGS
 CMakeCache.txt
 CPackConfig.cmake
@@ -107,7 +105,6 @@ contrib/non-profit-audit-reports/tests/general-ledger.txt
 contrib/non-profit-audit-reports/tests/MANIFEST
 contrib/non-profit-audit-reports/general-ledger.zip
 /wiki/
-CTestTestfile.cmake
 .ninja_deps
 .ninja_log
 build.ninja
