@@ -75,8 +75,8 @@ reconcile-finish will mark all pending posting cleared."
   :type 'string
   :group 'ledger-reconcile)
 
-(defcustom ledger-reconcile-sort-key "(date)"
-  "Default key for sorting reconcile buffer. For no sorting by default, use '(0)'."
+(defcustom ledger-reconcile-sort-key "(0)"
+  "Default key for sorting reconcile buffer. Possible values are '(date)', '(amount)', '(payee)'. For no sorting, i.e. using ledger file order, use '(0)'."
   :type 'string
   :group 'ledger-reconcile)
 
