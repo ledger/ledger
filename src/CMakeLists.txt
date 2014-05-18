@@ -52,7 +52,7 @@ set(LEDGER_SOURCES
   strptime.cc
   wcwidth.cc)
 
-if(HAVE_BOOST_PYTHON)
+if (HAVE_BOOST_PYTHON)
   list(APPEND LEDGER_SOURCES
     py_account.cc
     py_amount.cc
@@ -135,8 +135,8 @@ set(LEDGER_INCLUDES
   strptime.h
   ${PROJECT_BINARY_DIR}/system.hh)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if((CMAKE_CXX_COMPILER MATCHES "clang") OR (CMAKE_CXX_COMPILER MATCHES "cxx"))
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if ((CMAKE_CXX_COMPILER MATCHES "clang") OR (CMAKE_CXX_COMPILER MATCHES "cxx"))
     add_definitions(
       -Weverything
       -Wno-disabled-macro-expansion
@@ -156,7 +156,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
       set_source_files_properties(
         ${${_src_list}} PROPERTIES COMPILE_FLAGS "-include ${_header_filename}")
-      if(_other_srcs)
+      if (_other_srcs)
         set_source_files_properties(
           ${_other_srcs} PROPERTIES COMPILE_FLAGS "-include ${_header_filename}")
       endif()
@@ -164,7 +164,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
       set(_args ${CMAKE_CXX_FLAGS})
       list(APPEND _args ${CMAKE_CXX_FLAGS_DEBUG})
-      if(BUILD_LIBRARY)
+      if (BUILD_LIBRARY)
         list(APPEND _args ${CMAKE_SHARED_LIBRARY_CXX_FLAGS})
       endif()
       list(APPEND _args "-std=c++11 ")
@@ -211,7 +211,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
       set_source_files_properties(
         ${${_src_list}} PROPERTIES COMPILE_FLAGS "-Winvalid-pch")
-      if(_other_srcs)
+      if (_other_srcs)
         set_source_files_properties(
           ${_other_srcs} PROPERTIES COMPILE_FLAGS "-Winvalid-pch")
       endif()
@@ -219,7 +219,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
       set(_args ${CMAKE_CXX_FLAGS})
       list(APPEND _args ${CMAKE_CXX_FLAGS_DEBUG})
-      if(BUILD_LIBRARY)
+      if (BUILD_LIBRARY)
         list(APPEND _args ${CMAKE_SHARED_LIBRARY_CXX_FLAGS})
       endif()
       list(APPEND _args ${GXX_WARNING_FLAGS})
@@ -253,7 +253,7 @@ add_pch_rule(${PROJECT_BINARY_DIR}/system.hh LEDGER_SOURCES main.cc global.cc)
 
 include(GNUInstallDirs)
 
-if(BUILD_LIBRARY)
+if (BUILD_LIBRARY)
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
   add_library(libledger SHARED ${LEDGER_SOURCES})
   add_ledger_library_dependencies(libledger)
@@ -274,7 +274,7 @@ else()
   add_ledger_library_dependencies(ledger)
 endif()
 
-if(USE_PYTHON)
+if (USE_PYTHON)
   execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
     "from __future__ import print_function
 import distutils.sysconfig as s
@@ -284,7 +284,7 @@ print(s.get_python_lib(True, prefix=''))"
     CACHE PATH "python module directory (${_TMP_PYTHON_SITE_PACKAGES})")
 
   if (PYTHON_SITE_PACKAGES)
-    if(WIN32 AND NOT CYGWIN)
+    if (WIN32 AND NOT CYGWIN)
       set(_ledger_python_module_name "ledger.pyd")
     elseif(CMAKE_HOST_APPLE)
       set(_ledger_python_module_name "ledger.so")

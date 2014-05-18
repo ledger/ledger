@@ -1,0 +1,10 @@
+2008/01/20 * La Poste
+    Revenu:Invest:Exonéré
+    Actif:Courant:LaPosteLivretA         25,24 € = 25,24 €
+
+test --args-only --decimal-comma bal
+             25,24 €  Actif:Courant:LaPosteLivretA
+            -25,24 €  Revenu:Invest:Exonéré
+--------------------
+                   0
+end test

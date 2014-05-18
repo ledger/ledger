@@ -5,7 +5,7 @@ endmacro(add_ledger_test _name)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
-if(BUILD_LIBRARY)
+if (BUILD_LIBRARY)
   add_executable(UtilTests t_times.cc)
   add_ledger_test(UtilTests)
 

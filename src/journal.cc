@@ -174,7 +174,7 @@ account_t * journal_t::expand_aliases(string name) {
   // prevent infinite excursion. Each alias may only be expanded at most once.
   account_t * result = NULL;
 
-  if(no_aliases)
+  if (no_aliases)
     return result;
 
   bool keep_expanding = true;
@@ -184,7 +184,7 @@ account_t * journal_t::expand_aliases(string name) {
     if (account_aliases.size() > 0) {
       accounts_map::const_iterator i = account_aliases.find(name);
       if (i != account_aliases.end()) {
-        if(std::find(already_seen.begin(), already_seen.end(), name) != already_seen.end()) {
+        if (std::find(already_seen.begin(), already_seen.end(), name) != already_seen.end()) {
           throw_(std::runtime_error,
                  _f("Infinite recursion on alias expansion for %1%")
                  % name);
@@ -197,11 +197,11 @@ account_t * journal_t::expand_aliases(string name) {
         // only check the very first account for alias expansion, in case
         // that can be expanded successfully
         size_t colon = name.find(':');
-        if(colon != string::npos) {
+        if (colon != string::npos) {
           string first_account_name = name.substr(0, colon);
           accounts_map::const_iterator j = account_aliases.find(first_account_name);
           if (j != account_aliases.end()) {
-            if(std::find(already_seen.begin(), already_seen.end(), first_account_name) != already_seen.end()) {
+            if (std::find(already_seen.begin(), already_seen.end(), first_account_name) != already_seen.end()) {
               throw_(std::runtime_error,
                      _f("Infinite recursion on alias expansion for %1%")
                      % first_account_name);

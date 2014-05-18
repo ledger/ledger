@@ -142,13 +142,13 @@ void global_scope_t::read_init()
       throw_(parse_error, _f("Could not find specified init file %1%") % init_file);
     }
   } else {
-    if (const char * home_var = std::getenv("HOME")){
+    if (const char * home_var = std::getenv("HOME")) {
       init_file = (path(home_var) / ".ledgerrc");
     } else {
       init_file = ("./.ledgerrc");
     }
   }
-  if(exists(init_file)){
+  if (exists(init_file)) {
     parse_init(init_file);
   }
 }

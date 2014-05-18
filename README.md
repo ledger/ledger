@@ -101,30 +101,30 @@ And for building the current `maint` branch:
 If you build stuff using MacPorts on OS X, as I do, here is what you would
 run:
 
-    sudo port install -f cmake python26
-        libiconv +universal zlib +universal gmp +universal
-        mpfr +universal ncurses +universal ncursesw +universal
-        gettext +universal libedit +universal boost-jam
-        boost +st+python26+icu texlive doxygen graphviz
-        texinfo lcov sloccount
+    sudo port install -f cmake python26 \
+         libiconv +universal zlib +universal gmp +universal \
+         mpfr +universal ncurses +universal ncursesw +universal \
+         gettext +universal libedit +universal boost-jam \
+         boost +st+python26+icu texlive doxygen graphviz \
+         texinfo lcov sloccount
 
 ### Ubuntu
 
 If you're going to build on Ubuntu, `sudo apt-get install ...` the
 following packages (current as of Ubuntu 14.04):
 
-    sudo apt-get install build-essential cmake doxygen
-         libboost-system-dev libboost-dev python-dev gettext git
-         libboost-date-time-dev libboost-filesystem-dev
-         libboost-iostreams-dev libboost-python-dev libboost-regex-dev
+    sudo apt-get install build-essential cmake doxygen \
+         libboost-system-dev libboost-dev python-dev gettext git \
+         libboost-date-time-dev libboost-filesystem-dev \
+         libboost-iostreams-dev libboost-python-dev libboost-regex-dev \
          libboost-test-dev libedit-dev libgmp3-dev libmpfr-dev texinfo
 
 Or, for Ubuntu 12.04:
 
-    sudo apt-get install build-essential cmake zlib1g-dev libbz2-dev
-         python-dev gettext libgmp3-dev libmpfr-dev libboost-dev
-         libboost-regex-dev libboost-date-time-dev
-         libboost-filesystem-dev libboost-python-dev texinfo lcov
+    sudo apt-get install build-essential cmake zlib1g-dev libbz2-dev \
+         python-dev gettext libgmp3-dev libmpfr-dev libboost-dev \
+         libboost-regex-dev libboost-date-time-dev \
+         libboost-filesystem-dev libboost-python-dev texinfo lcov \
          sloccount libboost-iostreams-dev libboost-test-dev
 
 ### Debian

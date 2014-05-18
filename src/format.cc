@@ -206,7 +206,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
                                    sizeof(format_mapping_t)); i++) {
         if (*p == single_letter_mappings[i].letter) {
           std::ostringstream expr;
-          for (const char * ptr = single_letter_mappings[i].expr; *ptr; ){
+          for (const char * ptr = single_letter_mappings[i].expr; *ptr;) {
             if (*ptr == '$') {
               const char * beg = ++ptr;
               while (*ptr && std::isalpha(*ptr))

@@ -229,7 +229,7 @@ public:
 inline bool is_eq(const char * p, const char * n) {
   // Test whether p matches n, substituting - in p for _ in n.
   for (; *p && *n; p++, n++) {
-    if (! (*p == '-' && *n == '_' ) && *p != *n)
+    if (! (*p == '-' && *n == '_') && *p != *n)
       return false;
   }
   // Ignore any trailing underscore
