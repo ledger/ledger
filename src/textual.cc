@@ -1638,24 +1638,23 @@ post_t * instance_t::parse_post(char *          line,
             "line " << context.linenum << ": " << "post amount = " << amt);
 
       amount_t diff = amt;
-      amount_t tot;
 
       switch (account_total.type()) {
       case value_t::AMOUNT:
-        tot = account_total.as_amount();
+        diff -= account_total.as_amount();
         break;
 
       case value_t::BALANCE:
         if (optional<amount_t> comm_bal =
             account_total.as_balance().commodity_amount(amt.commodity()))
-          tot = *comm_bal;
+          diff -= *comm_bal;
         break;
 
       default:
         break;
       }
 
-      diff -= tot;
+      amount_t tot = amt - diff;
 
       DEBUG("post.assign",
             "line " << context.linenum << ": " << "diff = " << diff);
