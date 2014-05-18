@@ -39,7 +39,7 @@ macro(add_emacs_lisp_target el)
     COMMENT "Creating byte-compiled Emacs lisp ${CMAKE_CURRENT_BINARY_DIR}/${el}c")
 endmacro(add_emacs_lisp_target el)
 
-if(EMACS_EXECUTABLE)
+if (EMACS_EXECUTABLE)
   # uncompilable .el files
   foreach(el ${EMACS_LISP_SOURCES_UNCOMPILABLE})
     configure_file(${el} ${CMAKE_CURRENT_BINARY_DIR}/${el})

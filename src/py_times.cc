@@ -108,7 +108,7 @@ struct datetime_from_python
   static void* convertible(PyObject* obj_ptr)
   {
     MY_PyDateTime_IMPORT;
-    if(PyDateTime_Check(obj_ptr)) return obj_ptr;
+    if (PyDateTime_Check(obj_ptr)) return obj_ptr;
     return 0;
   }
 

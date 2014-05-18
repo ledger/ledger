@@ -93,13 +93,13 @@ std::size_t session_t::read_data(const string& master_account)
     acct = journal->find_account(master_account);
 
   optional<path> price_db_path;
-  if (HANDLED(price_db_)){
+  if (HANDLED(price_db_)) {
     price_db_path = resolve_path(HANDLER(price_db_).str());
-    if (!exists(price_db_path.get())){
+    if (!exists(price_db_path.get())) {
       throw_(parse_error, _f("Could not find specified price-db file %1%") % price_db_path);
     }
   } else {
-    if (const char * home_var = std::getenv("HOME")){
+    if (const char * home_var = std::getenv("HOME")) {
       price_db_path = (path(home_var) / ".pricedb");
     } else {
       price_db_path = ("./.ledgerrc");

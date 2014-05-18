@@ -7,7 +7,7 @@
 
 if (USE_DOXYGEN)
   find_package(Doxygen)
-  if(NOT DOXYGEN_FOUND)
+  if (NOT DOXYGEN_FOUND)
     message(FATAL_ERROR "Could not find doxygen. Reference documentation cannot be built.")
   endif()
 
@@ -27,7 +27,7 @@ endif()
 
 ########################################################################
 
-if(NOT BUILD_DOCS)
+if (NOT BUILD_DOCS)
   add_custom_target(doc DEPENDS doc.doxygen)
   return()
 endif()
@@ -45,7 +45,7 @@ find_program(GROFF groff)
 foreach(file ${info_files})
   get_filename_component(file_base ${file} NAME_WE)
 
-  if(NOT MAKEINFO)
+  if (NOT MAKEINFO)
     message(WARNING "Could not find makeinfo. Info version of documentation cannot be built.")
   else()
     add_custom_command(OUTPUT ${file_base}.info
@@ -55,8 +55,8 @@ foreach(file ${info_files})
     list(APPEND ledger_doc_files ${file_base}.info)
   endif()
 
-  if(BUILD_WEB_DOCS)
-    if(NOT MAKEINFO)
+  if (BUILD_WEB_DOCS)
+    if (NOT MAKEINFO)
       message(WARNING "Could not find makeinfo. HTML version of documentation cannot be built.")
     endif()
     add_custom_command(OUTPUT ${file_base}.html
@@ -66,10 +66,10 @@ foreach(file ${info_files})
     list(APPEND ledger_doc_files ${file_base}.html)
   endif(BUILD_WEB_DOCS)
 
-  if(NOT TEXI2PDF OR NOT TEX)
+  if (NOT TEXI2PDF OR NOT TEX)
     message(WARNING "Could not find texi2pdf or tex. PDF version of documentation will not be built.")
   else()
-    if(BUILD_A4_PDF)
+    if (BUILD_A4_PDF)
       set(papersize --texinfo=@afourpaper)
     endif()
     add_custom_command(OUTPUT ${file_base}.pdf
@@ -82,12 +82,12 @@ endforeach()
 
 ########################################################################
 
-if(BUILD_WEB_DOCS)
+if (BUILD_WEB_DOCS)
   include(FindUnixCommands)
-  if(NOT BASH)
+  if (NOT BASH)
     message(FATAL_ERROR "Could not find bash. Unable to build documentation.")
   endif()
-  if(MAN2HTML)
+  if (MAN2HTML)
     add_custom_command(OUTPUT ledger.1.html
       COMMAND ${BASH} -c "man2html ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 | tail -n+3 > ledger.1.html"
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
@@ -112,7 +112,7 @@ add_custom_target(doc DEPENDS ${ledger_doc_files} doc.doxygen)
 
 include(GNUInstallDirs)
 
-if(CMAKE_INSTALL_MANDIR)
+if (CMAKE_INSTALL_MANDIR)
   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
     DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT doc)
 endif(CMAKE_INSTALL_MANDIR)

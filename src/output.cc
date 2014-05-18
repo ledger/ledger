@@ -331,10 +331,10 @@ void report_tags::flush()
 
 void report_tags::operator()(post_t& post)
 {
-  if(post.metadata){
-    foreach (const item_t::string_map::value_type& data, *post.metadata){
+  if (post.metadata) {
+    foreach (const item_t::string_map::value_type& data, *post.metadata) {
       string tag=data.first;
-      if(report.HANDLED(values) && (data.second).first){
+      if (report.HANDLED(values) && (data.second).first) {
 	tag+=": "+ (data.second).first.get().to_string();
       }
       std::map<string, std::size_t>::iterator i = tags.find(tag);
