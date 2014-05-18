@@ -239,7 +239,8 @@ Return the number of uncleared xacts found."
       (set-buffer-modified-p nil)
       (ledger-display-balance)
       (goto-char curpoint)
-      (ledger-reconcile-visit t))))
+      ;(ledger-reconcile-visit t)
+			)))
 
 (defun ledger-reconcile-finish ()
   "Mark all pending posting or transactions as cleared.
