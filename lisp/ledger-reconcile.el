@@ -228,19 +228,18 @@ Return the number of uncleared xacts found."
         (if (and come-back cur-win)
             (select-window cur-win))))))
 
+
 (defun ledger-reconcile-save ()
   "Save the ledger buffer."
   (interactive)
-  (let ((curpoint (point)))
-    (dolist (buf (cons ledger-buf ledger-bufs))
-      (with-current-buffer buf
-        (save-buffer)))
-    (with-current-buffer (get-buffer ledger-recon-buffer-name)
-      (set-buffer-modified-p nil)
-      (ledger-display-balance)
-      (goto-char curpoint)
-      ;(ledger-reconcile-visit t)
-			)))
+	(let ((cur-buf (current-buffer))
+				(cur-point (point)))
+		(dolist (buf (cons ledger-buf ledger-bufs))
+			(with-current-buffer buf
+				(basic-save-buffer)))
+		(switch-to-buffer-other-window cur-buf)
+		(goto-char cur-point)))
+
 
 (defun ledger-reconcile-finish ()
   "Mark all pending posting or transactions as cleared.
