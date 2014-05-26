@@ -1,5 +1,3 @@
---explicit
---pedantic
 
 commodity $
     format $1,000.00
