@@ -5,6 +5,6 @@ alias Foo=Foo
    Bar
 test source -> 1
 __ERROR__
-While parsing file "$FILE", line 3:
+While parsing file "$FILE", line 1:
 Error: Illegal alias Foo=Foo
 end test
