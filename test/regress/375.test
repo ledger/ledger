@@ -1,0 +1,36 @@
+
+2009-01-01 * Jan 09
+    Assets:Current               100.00 EUR
+    Income:Salary
+
+2009-02-01 * Feb 09
+    Assets:Current               100.00 EUR
+    Income:Salary
+
+2009-03-01 * Mar 09
+    Assets:Current               100.00 EUR
+    Income:Salary
+
+2010-01-01 * Jan 10
+    Assets:Current               100.00 EUR
+    Income:Salary
+
+2010-02-01 * Feb 10
+    Assets:Current               100.00 EUR
+    Income:Salary
+
+test reg -p "until Feb 2009"
+09-Jan-01 Jan 09                Assets:Current           100.00 EUR   100.00 EUR
+                                Income:Salary           -100.00 EUR            0
+end test
+
+test reg -p "until February 2009"
+09-Jan-01 Jan 09                Assets:Current           100.00 EUR   100.00 EUR
+                                Income:Salary           -100.00 EUR            0
+end test
+
+test reg -p "in Feb 2009"
+09-Feb-01 Feb 09                Assets:Current           100.00 EUR   100.00 EUR
+                                Income:Salary           -100.00 EUR            0
+end test
+
