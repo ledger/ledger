@@ -291,17 +291,17 @@ value_t select_command(call_scope_t& args)
             thus_far += "int(payee_width) + 1";
           }
           else if (ident == "account") {
-            formatter << "ansify_if("
-                      << "ansify_if(";
+            formatter << "ansify_if(";
 
             if (accounts_report) {
+              formatter << "ansify_if(";
               formatter << "partial_account(options.flat), blue if color),";
             } else {
               formatter << "justify(truncated(";
               as_expr(column)->print(formatter);
               formatter << ", int(account_width), int(abbrev_len)),"
-                        << "int(account_width)),";
-              formatter << "true, color),";
+                        << "int(account_width), -1, ";
+              formatter << "false, color),";
 
               if (! thus_far.empty())
                 thus_far += " + ";
