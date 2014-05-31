@@ -358,10 +358,9 @@ value_t select_command(call_scope_t& args)
         formatter << ")";
       }
       formatter << "\\n";
+      DEBUG("select.parse", "formatter: " << formatter.str());
     }
     else if (keyword == "from") {
-      DEBUG("select.parse", "formatter: " << formatter.str());
-
       if (arg == "xacts" || arg == "txns" || arg == "transactions") {
         report_functor = expr_t::op_t::wrap_functor
           (reporter<>(post_handler_ptr(new print_xacts(report,
