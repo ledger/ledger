@@ -1,0 +1,90 @@
+
+; Test backwards compatibility with ledger2
+
+--date-format %Y/%m/%d
+
+2009-04-17 * Test 1
+    A                     10.00 EUR
+    B
+
+2009-04-18=2010-04-20 (110) Test 2
+    * C                   20.00 EUR ;foo
+    * B
+
+test -F "%a\n" reg
+A
+B
+C
+B
+end test
+
+test -F "%A\n" reg
+A
+B
+C
+B
+end test
+
+test -F "%d\n" reg
+2009/04/17
+2009/04/17
+2009/04/18=2010/04/20
+2009/04/18=2010/04/20
+end test
+
+test -F "%D\n" reg
+2009/04/17
+2009/04/17
+2009/04/18
+2009/04/18
+end test
+
+test -F "%S\n" reg
+$FILE
+$FILE
+$FILE
+$FILE
+end test
+
+test -F "%b\n" reg
+7
+8
+11
+12
+end test
+
+test -F "%B\n" reg
+90
+126
+168
+209
+end test
+
+test -F "%X%P\n" reg
+* Test 1
+* Test 1
+* Test 2
+* Test 2
+end test
+
+test -F "%Y%P\n" reg
+* Test 1
+* Test 1
+Test 2
+Test 2
+end test
+
+test -F "%C%P\n" reg
+Test 1
+Test 1
+(110) Test 2
+(110) Test 2
+end test
+
+test -F "%N\n" reg
+
+
+foo
+
+end test
+

@@ -8072,10 +8072,8 @@ file.
 @item e
 Inserts the ending line of that transaction within the file.
 
-@c @item D By default, this is the same as @code{%[%Y/%m%/d]}.  The date
-@c format used can be changed at any time with the @option{--date-format
-@c @var{DATE_FORMAT} (-y)} flag, however.  Using @code{%D} gives the
-@c user more control over the way dates are output.
+@item D
+Returns the date according to the default format.
 
 @item d
 Returns the date according to the default format.  If the transaction

@@ -74,17 +74,18 @@ namespace {
     char letter;
     const char * expr;
   } single_letter_mappings[] = {
-    { 'd', "date" },
+    { 'd', "aux_date ? format_date(date) + \"=\" + format_date(aux_date) : format_date(date)" },
+    { 'D', "date" },
     { 'S', "filename" },
     { 'B', "beg_pos" },
     { 'b', "beg_line" },
     { 'E', "end_pos" },
     { 'e', "end_line" },
-    { 'X', "cleared" },
-    { 'Y', "xact.cleared" },
-    { 'C', "code" },
+    { 'X', "\"* \" if cleared" },
+    { 'Y', "\"* \" if xact.cleared" },
+    { 'C', "\"(\" + code + \") \" if code" },
     { 'P', "payee" },
-    { 'a', "account.name" },
+    { 'a', "account" },
     { 'A', "account" },
     { 't', "justify(scrub(display_amount), $min, $max, $left, color)" },
     { 'T', "justify(scrub(display_total), $min, $max, $left, color)" },
