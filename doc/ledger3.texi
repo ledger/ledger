@@ -8079,7 +8079,7 @@ Inserts the ending line of that transaction within the file.
 
 @item d
 Returns the date according to the default format.  If the transaction
-has an effective date, it prints @code{[ACTUAL_DATE=EFFECTIVE_DATE]}.
+has an effective date, it prints @code{ACTUAL_DATE=EFFECTIVE_DATE}.
 
 @item X
 If a posting has been cleared, this returns a 1, otherwise returns 0.
