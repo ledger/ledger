@@ -1113,6 +1113,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT(csv_format_);
     else OPT_ALT(gain, change);
     else OPT(cleared);
+    else OPT(cleared_format_);
     else OPT(collapse);
     else OPT(collapse_if_zero);
     else OPT(color);
