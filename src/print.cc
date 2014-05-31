@@ -245,10 +245,18 @@ namespace {
 
         if (post->cost &&
             ! post->has_flags(POST_CALCULATED | POST_COST_CALCULATED)) {
+          std::string cost_op;
           if (post->has_flags(POST_COST_IN_FULL))
-            amtbuf << " @@ " << post->cost->abs();
+            cost_op = "@@";
           else
-            amtbuf << " @ "
+            cost_op = "@";
+          if (post->has_flags(POST_COST_VIRTUAL))
+            cost_op = "(" + cost_op + ")";
+
+          if (post->has_flags(POST_COST_IN_FULL))
+            amtbuf << " " << cost_op << " " << post->cost->abs();
+          else
+            amtbuf << " " << cost_op << " "
                    << (*post->cost / post->amount).abs();
         }
 

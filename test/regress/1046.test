@@ -1,0 +1,35 @@
+
+2014-05-01 * Test 1
+    A                  1.00 GBP (@) 1.23 EUR
+    B                 -1.23 EUR
+
+2014-05-02 * Test 2
+    A                  1.00 GBP (@@) 1.23 EUR
+    B                 -1.23 EUR
+
+2014-05-03 * Test 3
+    A                  1.00 GBP @ 1.23 EUR
+    B                 -1.23 EUR
+
+2014-05-04 * Test 4
+    A                  1.00 GBP @@ 1.23 EUR
+    B                 -1.23 EUR
+
+test print
+2014/05/01 * Test 1
+    A                                       1.00 GBP (@) 1.23 EUR
+    B                                      -1.23 EUR
+
+2014/05/02 * Test 2
+    A                                       1.00 GBP (@@) 1.23 EUR
+    B                                      -1.23 EUR
+
+2014/05/03 * Test 3
+    A                                       1.00 GBP @ 1.23 EUR
+    B                                      -1.23 EUR
+
+2014/05/04 * Test 4
+    A                                       1.00 GBP @@ 1.23 EUR
+    B                                      -1.23 EUR
+end test
+
