@@ -1532,12 +1532,11 @@ post_t * instance_t::parse_post(char *          line,
           post->add_flags(POST_COST_IN_FULL);
           DEBUG("textual.parse", "line " << context.linenum << ": "
                 << "And it's for a total price");
+          next++;
         }
 
-        if (post->has_flags(POST_COST_VIRTUAL) && *(next + 1) == ')')
+        if (post->has_flags(POST_COST_VIRTUAL) && *next == ')')
           ++next;
-
-        beg = static_cast<std::streamsize>(++next - line);
 
         p = skip_ws(next);
         if (*p) {
