@@ -36,8 +36,6 @@ LEVELS = {'DEBUG':    logging.DEBUG,
           'ERROR':    logging.ERROR,
           'CRITICAL': logging.CRITICAL}
 
-search_prefixes = [ '/usr/local', '/opt/local', '/sw', '/usr' ]
-
 def which(program):
     def is_exe(fpath):
         return os.path.exists(fpath) and os.access(fpath, os.X_OK)
