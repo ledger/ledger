@@ -7360,7 +7360,7 @@ but you want no other commodities to be automatically displayed in terms of
 @var{COMMODITY2} without additional @option{--exchange} options.   For
 example, if you wanted to report EUR and BTC in terms of USD, but report
 all other commodities without conversion to USD, you could use:
-@option{--exchange EUR:USD -X BTC:USD}.
+@option{--exchange EUR:USD --exchange BTC:USD}.
 
 @node Environment variables,  , Commodity reporting, Detailed Option Description
 @subsection Environment variables
