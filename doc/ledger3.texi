@@ -6271,7 +6271,7 @@ single command line (as in
 @option{-X COMMODITY1:COMMODITY2 -X COMMODITY3:COMMODITY2}),
 which is particularly useful for situations where many prices are
 available for reporting in terms of @var{COMMODITY2}, but only a few
-should be displayed that way .
+should be displayed that way.
 
 @item --flat
 Force the full names of accounts to be used in the balance report. The
