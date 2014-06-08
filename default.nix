@@ -6,7 +6,7 @@ let
 in
 
 stdenv.mkDerivation {
-  name = "ledger-3.0.2.${rev}";
+  name = "ledger-3.0.3.${rev}";
 
   src = ./.;
 
