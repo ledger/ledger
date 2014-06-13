@@ -254,7 +254,8 @@ ledger-magic-tab would cycle properly"
                (pcomplete-autolist pcomplete-autolist)
                (pcomplete-suffix-list pcomplete-suffix-list)
                (completions (pcomplete-completions))
-               (result (pcomplete-do-complete pcomplete-stub completions)))
+               (result (pcomplete-do-complete pcomplete-stub completions))
+               (pcomplete-termination-string ""))
           (and result
                (not (eq (car result) 'listed))
                (cdr result)
