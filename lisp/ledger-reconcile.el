@@ -448,6 +448,7 @@ moved and recentered.  If they aren't strange things happen."
   (let ((map (make-sparse-keymap)))
     (define-key map [(control ?m)] 'ledger-reconcile-visit)
     (define-key map [return] 'ledger-reconcile-visit)
+    (define-key map [(control ?x) (control ?s)] 'ledger-reconcile-save)
     (define-key map [(control ?l)] 'ledger-reconcile-refresh)
     (define-key map [(control ?c) (control ?c)] 'ledger-reconcile-finish)
     (define-key map [? ] 'ledger-reconcile-toggle)
