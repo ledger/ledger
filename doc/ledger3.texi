@@ -4511,7 +4511,7 @@ transactions in a csv format suitable for importing into other programs.
 You can specify the transactions to print using all the normal
 limiting and searching functions.
 
-@node  The @command{convert} command,  , The @command{csv} command, Comma Separated Values files
+@node The @command{convert} command,  , The @command{csv} command, Comma Separated Values files
 @subsubsection The @command{convert} command
 @cindex csv importing
 @cindex comma separated variable file reading
@@ -8338,7 +8338,7 @@ weekday, full Wednesday.
 day of the month (dd), zero padded up to 10.
 
 @item %e
-day of the month (dd) , no leading zero up to 10.
+day of the month (dd), no leading zero up to 10.
 
 @item %j
 day of year, zero padded 000–366.
