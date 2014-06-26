@@ -222,6 +222,7 @@ With a prefix argument, remove the effective date. "
 (defun ledger-mode-clean-buffer ()
   "indent, remove multiple linfe feeds and sort the buffer"
   (interactive)
+	(untabify (point-min) (point-max))
   (ledger-sort-buffer)
   (ledger-post-align-postings (point-min) (point-max))
   (ledger-mode-remove-extra-lines))

@@ -163,7 +163,16 @@ region align the posting on the current line."
                          (if mark-first (point) (mark))))
            acct-start-column acct-end-column acct-adjust amt-width
            (lines-left 1))
-      ;; Condition point and mark to the beginning and end of lines
+		  ;; Condition point and mark to the beginning and end of lines
+      (goto-char end-region)
+      (setq end-region (line-end-position))
+      (goto-char begin-region)
+      (goto-char
+       (setq begin-region
+             (line-beginning-position)))
+
+			(untabify begin-region end-region)
+
       (goto-char end-region)
       (setq end-region (line-end-position))
       (goto-char begin-region)
