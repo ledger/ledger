@@ -30,7 +30,7 @@
  */
 
 #include <system.hh>
-
+#include <boost/algorithm/string.hpp>
 #include "emacs.h"
 #include "xact.h"
 #include "post.h"
@@ -38,78 +38,84 @@
 
 namespace ledger {
 
-void format_emacs_posts::write_xact(xact_t& xact)
-{
-  if (xact.pos)
-    out << "\"" << xact.pos->pathname.string() << "\" "
-        << xact.pos->beg_line << " ";
-  else
-    out << "\"\" " << -1 << " ";
+	void format_emacs_posts::write_xact(xact_t& xact)
+	{
+		if (xact.pos)
+			out << "\"" << xact.pos->pathname.string() << "\" "
+					<< xact.pos->beg_line << " ";
+		else
+			out << "\"\" " << -1 << " ";
 
-  tm          when = gregorian::to_tm(xact.date());
-  std::time_t date = std::mktime(&when);
+		tm          when = gregorian::to_tm(xact.date());
+		std::time_t date = std::mktime(&when);
 
-  out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
+		out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
 
-  if (xact.code)
-    out << "\"" << *xact.code << "\" ";
-  else
-    out << "nil ";
+		if (xact.code)
+			out << "\"" << *xact.code << "\" ";
+		else
+			out << "nil ";
 
-  if (xact.payee.empty())
-    out << "nil";
-  else
-    out << "\"" << xact.payee << "\"";
+		if (xact.payee.empty())
+			out << "nil";
+		else
+			out << "\"" << xact.payee << "\"";
 
-  out << "\n";
-}
+		out << "\n";
+	}
 
-void format_emacs_posts::operator()(post_t& post)
-{
-  if (! post.has_xdata() ||
-      ! post.xdata().has_flags(POST_EXT_DISPLAYED)) {
-    if (! last_xact) {
-      out << "((";
-      write_xact(*post.xact);
-    }
-    else if (post.xact != last_xact) {
-      out << ")\n (";
-      write_xact(*post.xact);
-    }
-    else {
-      out << "\n";
-    }
+	void format_emacs_posts::operator()(post_t& post)
+	{
+		if (! post.has_xdata() ||
+				! post.xdata().has_flags(POST_EXT_DISPLAYED)) {
+			if (! last_xact) {
+				out << "((";
+				write_xact(*post.xact);
+			}
+			else if (post.xact != last_xact) {
+				out << ")\n (";
+				write_xact(*post.xact);
+			}
+			else {
+				out << "\n";
+			}
 
-    if (post.pos)
-      out << "  (" << post.pos->beg_line << " ";
-    else
-      out << "  (" << -1 << " ";
+			if (post.pos)
+				out << "  (" << post.pos->beg_line << " ";
+			else
+				out << "  (" << -1 << " ";
 
-    out << "\"" << post.reported_account()->fullname() << "\" \""
-        << post.amount << "\"";
+			out << "\"" << post.reported_account()->fullname() << "\" \""
+					<< post.amount << "\"";
 
-    switch (post.state()) {
-    case item_t::UNCLEARED:
-      out << " nil";
-      break;
-    case item_t::CLEARED:
-      out << " t";
-      break;
-    case item_t::PENDING:
-      out << " pending";
-      break;
-    }
+			switch (post.state()) {
+			case item_t::UNCLEARED:
+				out << " nil";
+				break;
+			case item_t::CLEARED:
+				out << " t";
+				break;
+			case item_t::PENDING:
+				out << " pending";
+				break;
+			}
 
-    if (post.cost)
-      out << " \"" << *post.cost << "\"";
-    if (post.note)
-      out << " \"" << *post.note << "\"";
-    out << ")";
+			if (post.cost)
+				out << " \"" << *post.cost << "\"";
+			if (post.note)
+				out << " \"" << escape_string(*post.note) << "\"";
+			out << ")";
 
-    last_xact = post.xact;
+			last_xact = post.xact;
 
-    post.xdata().add_flags(POST_EXT_DISPLAYED);
-  }
-}
+			post.xdata().add_flags(POST_EXT_DISPLAYED);
+		}
+	}
+
+	string format_emacs_posts::escape_string(string raw){
+		replace_all(raw, "\\", "\\\\");
+		replace_all(raw, "\"", "\\\"");
+		return raw;
+	}
 
 } // namespace ledger

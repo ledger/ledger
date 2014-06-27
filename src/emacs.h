@@ -72,6 +72,7 @@ public:
     out.flush();
   }
   virtual void operator()(post_t& post);
+	virtual string escape_string(string raw);
 };
 
 } // namespace ledger
