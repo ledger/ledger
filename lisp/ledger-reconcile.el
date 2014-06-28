@@ -348,7 +348,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
         (insert "Ledger has reported a problem.  Check *Ledger Error* buffer.")))
     (goto-char (point-min))
     (set-buffer-modified-p nil)
-    (toggle-read-only t)
+    (setq buffer-read-only t)
 
     (ledger-reconcile-ensure-xacts-visible)
     (length xacts)))
@@ -362,10 +362,10 @@ moved and recentered.  If they aren't strange things happen."
   (let ((recon-window (get-buffer-window (get-buffer ledger-recon-buffer-name))))
     (when recon-window
       (fit-window-to-buffer recon-window)
-      (with-current-buffer buf
+      (with-current-buffer ledger-buf
         (add-hook 'kill-buffer-hook 'ledger-reconcile-quit nil t)
-        (if (get-buffer-window buf)
-            (select-window (get-buffer-window buf)))
+        (if (get-buffer-window ledger-buf)
+            (select-window (get-buffer-window ledger-buf)))
         (goto-char (point-max))
         (recenter -1))
       (select-window recon-window)
@@ -406,7 +406,7 @@ moved and recentered.  If they aren't strange things happen."
           (when (not (eq buf rbuf))
             ;; called from some other ledger-mode buffer
             (ledger-reconcile-quit-cleanup)
-            (set 'ledger-buf buf)) ;; should already be buffer-local
+            (setq ledger-buf buf)) ;; should already be buffer-local
 
           (unless (get-buffer-window rbuf)
             (ledger-reconcile-open-windows buf rbuf)))
