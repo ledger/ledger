@@ -102,21 +102,6 @@
             (setq account-elements (cdr account-elements))))))
     account-tree))
 
-(defun ledger-find-metadata-in-buffer ()
-  "Search through buffer and build list of metadata.
-Return list."
-  (let ((origin (point)) accounts)
-    (save-excursion
-      (setq ledger-account-tree (list t))
-      (goto-char (point-min))
-      (while (re-search-forward
-              ledger-metadata-regex
-              nil t)
-        (unless (and (>= origin (match-beginning 0))
-                     (< origin (match-end 0)))
-          (setq accounts (cons (match-string-no-properties 2) accounts)))))
-    accounts))
-
 (defun ledger-accounts ()
   "Return a tree of all accounts in the buffer."
   (let* ((current (caar (ledger-parse-arguments)))
@@ -232,7 +217,7 @@ ledger-magic-tab would cycle properly"
                                   pcomplete-expand-and-complete
                                   pcomplete-reverse)))
         (progn
-          (delete-backward-char pcomplete-last-completion-length)
+          (delete-char (* -1 pcomplete-last-completion-length))
           (if (eq this-command 'pcomplete-reverse)
               (progn
                 (push (car (last pcomplete-current-completions))
@@ -248,12 +233,11 @@ ledger-magic-tab would cycle properly"
       (setq pcomplete-current-completions nil
             pcomplete-last-completion-raw nil)
       (catch 'pcompleted
-        (let* ((pcomplete-stub)
+        (let* (pcomplete-stub
                pcomplete-seen pcomplete-norm-func
                pcomplete-args pcomplete-last pcomplete-index
-               (pcomplete-autolist pcomplete-autolist)
-               (pcomplete-suffix-list pcomplete-suffix-list)
-               (completions (pcomplete-completions))
+               pcomplete-autolist
+							 (completions (pcomplete-completions))
                (result (pcomplete-do-complete pcomplete-stub completions))
                (pcomplete-termination-string ""))
           (and result
