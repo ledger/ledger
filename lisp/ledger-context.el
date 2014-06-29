@@ -33,8 +33,8 @@
 ;; elements
 (defconst ledger-indent-string "\\(^[ \t]+\\)")
 (defconst ledger-status-string "\\([*! ]?\\)")
-(defconst ledger-account-string "[\\[(]?\\(.*?\\)[])]?")
-(defconst ledger-amount-string "[ \t]?\\(-?[0-9]+\\.[0-9]*\\)")
+(defconst ledger-account-string "[\\[(]?\\(.*?\\)[])]?  ")
+(defconst ledger-amount-string "[ \t]?\\(-?[0-9]+[\\.,][0-9]*\\)")
 (defconst ledger-comment-string "[ \t]*;[ \t]*\\(.*?\\)")
 (defconst ledger-nil-string "\\([ \t]+\\)")
 (defconst ledger-commodity-string "\\(.+?\\)")
