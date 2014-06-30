@@ -1,0 +1,61 @@
+
+--date-format %Y-%m-%d
+
+2014-06-30 Uncleared
+    U:U       10.00 EUR
+  ! U:P       10.00 EUR
+  * U:C       10.00 EUR
+    Equity   -30.00 EUR
+
+2014-06-30 ! Pending
+    P:U       10.00 EUR
+  ! P:P       10.00 EUR
+  * P:C       10.00 EUR
+    Equity   -30.00 EUR
+
+2014-06-30 * Cleared
+    C:C       10.00 EUR
+  ! C:P       10.00 EUR
+  * C:P       10.00 EUR
+    Equity   -30.00 EUR
+
+test reg u: --uncleared
+2014-06-30 Uncleared            U:U                       10.00 EUR    10.00 EUR
+                                U:P                       10.00 EUR    20.00 EUR
+end test
+
+test reg u: --pending
+2014-06-30 Uncleared            U:P                       10.00 EUR    10.00 EUR
+end test
+
+test reg u: --cleared
+2014-06-30 Uncleared            U:C                       10.00 EUR    10.00 EUR
+end test
+
+test reg p: --uncleared
+2014-06-30 Pending              P:U                       10.00 EUR    10.00 EUR
+                                P:P                       10.00 EUR    20.00 EUR
+end test
+
+test reg p: --pending
+2014-06-30 Pending              P:U                       10.00 EUR    10.00 EUR
+                                P:P                       10.00 EUR    20.00 EUR
+end test
+
+test reg p: --cleared
+2014-06-30 Pending              P:C                       10.00 EUR    10.00 EUR
+end test
+
+test reg c: --uncleared
+2014-06-30 Cleared              C:P                       10.00 EUR    10.00 EUR
+end test
+
+test reg c: --pending
+2014-06-30 Cleared              C:P                       10.00 EUR    10.00 EUR
+end test
+
+test reg c: --cleared
+2014-06-30 Cleared              C:C                       10.00 EUR    10.00 EUR
+                                C:P                       10.00 EUR    20.00 EUR
+end test
+
