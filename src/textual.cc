@@ -1434,8 +1434,7 @@ post_t * instance_t::parse_post(char *          line,
   }
 
   if (xact &&
-      ((xact->_state == item_t::CLEARED && post->_state != item_t::CLEARED) ||
-       (xact->_state == item_t::PENDING && post->_state == item_t::UNCLEARED)))
+      (xact->_state != item_t::UNCLEARED && post->_state == item_t::UNCLEARED))
     post->set_state(xact->_state);
 
   // Parse the account name
