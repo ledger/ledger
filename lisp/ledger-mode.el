@@ -93,8 +93,7 @@
 
 (defun ledger-read-account-with-prompt (prompt)
   (let* ((context (ledger-context-at-point))
-         (default (if (and (eq (ledger-context-line-type context) 'acct-transaction)
-                           (eq (ledger-context-current-field context) 'account))
+         (default (if (eq (ledger-context-line-type context) 'acct-transaction)
                       (regexp-quote (ledger-context-field-value context 'account))
                     nil)))
     (ledger-read-string-with-default prompt default)))
