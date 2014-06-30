@@ -6619,7 +6619,8 @@ Perform all calculations without rounding and display results to full
 precision.
 
 @item --values
-FIX THIS ENTRY @c FIXME thdox
+Shows the values used by each tag when used in combination with the
+@command{tags} command.
 
 @item --weekly
 @itemx -W
