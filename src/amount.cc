@@ -301,7 +301,7 @@ void amount_t::_copy(const amount_t& amt)
       quantity = new bigint_t(*amt.quantity);
     } else {
       quantity = amt.quantity;
-      DEBUG("amounts.refs",
+      DEBUG("amount.refs",
              quantity << " refc++, now " << (quantity->refc + 1));
       quantity->refc++;
     }
@@ -339,7 +339,7 @@ void amount_t::_release()
 {
   VERIFY(valid());
 
-  DEBUG("amounts.refs", quantity << " refc--, now " << (quantity->refc - 1));
+  DEBUG("amount.refs", quantity << " refc--, now " << (quantity->refc - 1));
 
   if (--quantity->refc == 0) {
     if (quantity->has_flags(BIGINT_BULK_ALLOC))
@@ -928,7 +928,7 @@ void amount_t::annotate(const annotation_t& details)
   }
   assert(this_base);
 
-  DEBUG("amounts.commodities", "Annotating commodity for amount "
+  DEBUG("amount.commodities", "Annotating commodity for amount "
         << *this << std::endl << details);
 
   if (commodity_t * ann_comm =
@@ -939,7 +939,7 @@ void amount_t::annotate(const annotation_t& details)
     assert(false);
 #endif
 
-  DEBUG("amounts.commodities", "Annotated amount is " << *this);
+  DEBUG("amount.commodities", "Annotated amount is " << *this);
 }
 
 bool amount_t::has_annotation() const

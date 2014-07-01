@@ -187,8 +187,8 @@ void annotation_t::parse(std::istream& in)
   } while (true);
 
 #if DEBUG_ON
-  if (SHOW_DEBUG("amounts.commodities") && *this) {
-    DEBUG("amounts.commodities",
+  if (SHOW_DEBUG("amount.commodities") && *this) {
+    DEBUG("amount.commodities",
           "Parsed commodity annotations: " << std::endl << *this);
   }
 #endif

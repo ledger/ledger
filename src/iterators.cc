@@ -204,9 +204,9 @@ void sorted_accounts_iterator::push_back(account_t& account)
                      compare_items<account_t>(sort_cmp));
 
 #if DEBUG_ON
-    if (SHOW_DEBUG("accounts.sorted")) {
+    if (SHOW_DEBUG("account.sorted")) {
       foreach (account_t * acct, accounts_list.back())
-        DEBUG("accounts.sorted",
+        DEBUG("account.sorted",
               "Account (flat): " << acct->fullname());
     }
 #endif
@@ -237,9 +237,9 @@ void sorted_accounts_iterator::sort_accounts(account_t& account,
                    compare_items<account_t>(sort_cmp));
 
 #if DEBUG_ON
-  if (SHOW_DEBUG("accounts.sorted")) {
+  if (SHOW_DEBUG("account.sorted")) {
     foreach (account_t * acct, deque)
-      DEBUG("accounts.sorted", "Account: " << acct->fullname());
+      DEBUG("account.sorted", "Account: " << acct->fullname());
   }
 #endif
 }
