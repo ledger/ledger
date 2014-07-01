@@ -75,6 +75,11 @@
   "Face for Ledger amounts"
   :group 'ledger-faces)
 
+(defface ledger-font-posting-date-face
+  `((t :foreground "#cb4b16" ))
+  "Face for Ledger dates"
+  :group 'ledger-faces)
+
 (defface ledger-occur-narrowed-face
   `((t :foreground "grey70" :invisible t ))
   "Default face for Ledger occur mode hidden transactions"
@@ -117,6 +122,8 @@
     ;;          ledger-font-other-face)
     (,ledger-comment-regex 0
                            'ledger-font-comment-face)
+		(,ledger-amount-regex 0
+																				 'ledger-font-posting-amount-face)
     (,ledger-multiline-comment-regex 0 'ledger-font-comment-face)
     (,ledger-payee-pending-regex 2
                                  'ledger-font-payee-pending-face) ; Works
