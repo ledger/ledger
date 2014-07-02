@@ -44,7 +44,8 @@
   :group 'ledger-reconcile)
 
 (defcustom ledger-narrow-on-reconcile t
-  "If t, limit transactions shown in main buffer to those matching the reconcile regex."
+  "If t, limit transactions shown in main buffer to those
+matching the reconcile regex."
   :type 'boolean
   :group 'ledger-reconcile)
 
@@ -55,7 +56,8 @@ Then that transaction will be shown in its source buffer."
   :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-force-window-bottom nil
-  "If t make the reconcile window appear along the bottom of the register window and resize."
+  "If t make the reconcile window appear along the bottom of the
+register window and resize."
   :type 'boolean
   :group 'ledger-reconcile)
 
@@ -75,8 +77,20 @@ reconcile-finish will mark all pending posting cleared."
   :type 'string
   :group 'ledger-reconcile)
 
+(defcustom ledger-reconcile-buffer-header "Reconciling account %s\n\n"
+	"Default header string for the reconcile buffer.  If non-nil,
+	the name of the account being reconciled will be substituted
+	into the '%s'.  If nil, no header willbe displayed."
+	:type 'string
+	:group 'ledger-reconcile)
+
+(defcustom ledger-reconcile-buffer-line-format ""
+	"Format string for the ledger reconcile posting format. Available fields are date, status, code, payee, account, relatedaccount, amount")
+
 (defcustom ledger-reconcile-sort-key "(0)"
-  "Default key for sorting reconcile buffer. Possible values are '(date)', '(amount)', '(payee)'. For no sorting, i.e. using ledger file order, use '(0)'."
+  "Default key for sorting reconcile buffer. Possible values are
+'(date)', '(amount)', '(payee)'. For no sorting, i.e. using
+ledger file order, use '(0)'."
   :type 'string
   :group 'ledger-reconcile)
 
@@ -298,6 +312,39 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
          (nth 1 emacs-xact)  ;; return line-no of xact
        (nth 0 posting))))) ;; return line-no of posting
 
+(defun ledger-reconcile-format-posting (beg where date code status payee account amount)
+	(insert (format "%s %-4s %-50s %-30s %15s\n"
+												date code payee account amount))
+
+																				; Set face depending on cleared status
+	(if status
+						(if (eq status 'pending)
+								(set-text-properties beg (1- (point))
+																		 (list 'face 'ledger-font-reconciler-pending-face
+																					 'where where))
+							(set-text-properties beg (1- (point))
+																	 (list 'face 'ledger-font-reconciler-cleared-face
+																				 'where where)))
+		(set-text-properties beg (1- (point))
+												 (list 'face 'ledger-font-reconciler-uncleared-face
+																		 'where where))))
+
+(defun ledger-reconcile-format-xact (xact)
+	(let ((date-format (or (cdr (assoc "date-format" ledger-environment-alist))
+													ledger-default-date-format)))
+		(dolist (posting (nthcdr 5 xact))
+			(let ((beg (point))
+						(where (ledger-marker-where-xact-is xact posting)))
+				(ledger-reconcile-format-posting
+				 beg
+				 where
+				 (format-time-string date-format (nth 2 xact))
+				 (if (nth 3 xact) (nth 3 xact) "")
+				 (nth 3 posting)
+				 (truncate-string-to-width (nth 4 xact) 49)
+				 (nth 1 posting)
+				 (nth 2 posting))))))
+
 (defun ledger-do-reconcile (&optional sort)
   "Return the number of uncleared transactions in the account and display them in the *Reconcile* buffer."
   (let* ((buf ledger-buf)
@@ -316,31 +363,10 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
                 (if (looking-at "(")
                     (read (current-buffer)))))))) ;current-buffer is the *temp* created above
     (if (and ledger-success (> (length xacts) 0))
-        (let ((date-format (or (cdr (assoc "date-format" ledger-environment-alist))
-                               ledger-default-date-format)))
+        (progn
+					(insert (format ledger-reconcile-buffer-header account))
           (dolist (xact xacts)
-            (dolist (posting (nthcdr 5 xact))
-              (let ((beg (point))
-                    (where (ledger-marker-where-xact-is xact posting)))
-                (insert (format "%s %-4s %-50s %-30s %15s\n"
-                                (format-time-string date-format (nth 2 xact))
-                                (if (nth 3 xact)
-                                    (nth 3 xact)
-                                  "")
-                                (truncate-string-to-width
-                                 (nth 4 xact) 49)
-                                (nth 1 posting) (nth 2 posting)))
-                (if (nth 3 posting)
-                    (if (eq (nth 3 posting) 'pending)
-                        (set-text-properties beg (1- (point))
-                                             (list 'face 'ledger-font-reconciler-pending-face
-                                                   'where where))
-                      (set-text-properties beg (1- (point))
-                                           (list 'face 'ledger-font-reconciler-cleared-face
-                                                 'where where)))
-                  (set-text-properties beg (1- (point))
-                                       (list 'face 'ledger-font-reconciler-uncleared-face
-                                             'where where))))  ))
+            (ledger-reconcile-format-xact xact))
           (goto-char (point-max))
           (delete-char -1)) ;gets rid of the extra line feed at the bottom of the list
       (if ledger-success
