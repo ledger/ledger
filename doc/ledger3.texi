@@ -7857,45 +7857,98 @@ More complicated expressions are possible using:
 
 @table @code
 
-@item NUM
-A plain integer represents a commodity-less amount.
-
-@item @{AMOUNT@}
-An amount in braces can be any kind of amount supported by ledger,
+@item "amount == COMMODITY AMOUNT"
+The amount can be any kind of amount supported by ledger,
 with or without a commodity.  Use this for decimal values.
 
 @item /REGEX/
-@itemx W/REGEX/
+@itemx account =~ /REGEX/
 A regular expression that matches against an account's full name.  If
 a posting, this will match against the account affected by the
 posting.
 
-@item //REGEX/
-@itemx p/REGEX/
+@item @@/REGEX/
+@itemx expr payee =~ /REGEX/
 A regular expression that matches against a transaction's payee name.
 
-@item ///REGEX/
-@itemx w/REGEX/
-A regular expression that matches against an account's base name.  If
-a posting, this will match against the account affected by the
-posting.
+@item %/REGEX/
+@itemx tag(REGEX)
+A regular expression that matches against a transaction's tags.
 
-@item c/REGEX/
-A regular expression that matches against the transaction code (the
-text that occurs between parentheses before the payee).
+@itemx expr date =~ /REGEX/
+Useful for specifying a date in plain terms.  For example, you could say
+@samp{expr date =~ /2014/}.
 
-@item e/REGEX/
-A regular expression that matches against a posting's note or
-comment field.
+
+@item expr comment =~ /REGEX/
+A regular expression that matches against a posting's comment field. This
+searches only a posting's field, not the transaction's note or comment field.
+For example, @samp{ledger reg "expr" "comment =~ /landline/"} will match:
+
+@smallexample
+2014/1/29  Phone bill
+    Assets:Checking                           $50.00
+    Expenses:Phone                           $-50.00  ; landline bill
+@end smallexample
+
+but will not match:
+
+@smallexample
+2014/1/29  Phone bill  ; landline bill
+    ; landline bill
+    Assets:Checking                           $50.00
+    Expenses:Phone                           $-50.00
+@end smallexample
+
+To match the latter, use @samp{ledger reg "expr" "note =~ /landline/"}
+instead.
+
+@item expr note =~ /REGEX/
+A regular expression that matches against a transaction's note field.
+This searches all comments in the transaction, including comments on
+individual postings. Thus, @samp{ledger reg "expr" "note =~ /landline/"} will
+match both all the three examples below:
+
+@smallexample
+2014/1/29  Phone bill
+    Assets:Checking                           $50.00
+    Expenses:Phone                           $-50.00  ; landline bill
+@end smallexample
+
+@smallexample
+2014/1/29  Phone bill  ; landline bill
+    Assets:Checking                           $50.00
+    Expenses:Phone                           $-50.00
+@end smallexample
+
+@smallexample
+2014/1/29  Phone bill
+    ; landline bill
+    Assets:Checking                           $50.00
+    Expenses:Phone                           $-50.00
+@end smallexample
+
+
 
 @item (EXPR)
 A sub-expression is nested in parenthesis.  This can be useful passing
 more complicated arguments to functions, or for overriding the natural
 precedence order of operators.
 
-@item [DATE]
-Useful for specifying a date in plain terms.  For example, you could say
-@samp{[2004/06/01]}.
+
+The @samp{query} command can be used to see how Ledger interprets your query.
+This can be useful if you are not getting the results you expect. See
+@pxref{Pre-Commands} for more.
+
+
+@itemx expr base =~ /REGEX/
+A regular expression that matches against an account's base name.  If
+a posting, this will match against the account affected by the
+posting.
+
+@itemx expr code =~ /REGEX/
+A regular expression that matches against the transaction code (the
+text that occurs between parentheses before the payee).
 
 @end table
 
