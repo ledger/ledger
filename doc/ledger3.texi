@@ -7936,11 +7936,6 @@ more complicated arguments to functions, or for overriding the natural
 precedence order of operators.
 
 
-The @samp{query} command can be used to see how Ledger interprets your query.
-This can be useful if you are not getting the results you expect. See
-@pxref{Pre-Commands} for more.
-
-
 @itemx expr base =~ /REGEX/
 A regular expression that matches against an account's base name.  If
 a posting, this will match against the account affected by the
@@ -7951,6 +7946,10 @@ A regular expression that matches against the transaction code (the
 text that occurs between parentheses before the payee).
 
 @end table
+
+The @samp{query} command can be used to see how Ledger interprets your query.
+This can be useful if you are not getting the results you expect. See
+@pxref{Pre-Commands} for more.
 
 @menu
 * Miscellaneous::
