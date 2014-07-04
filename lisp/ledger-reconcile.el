@@ -85,7 +85,11 @@ reconcile-finish will mark all pending posting cleared."
 	:group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-buffer-line-format "%(date)s %-4(code)s %-50(payee)s %-30(account)s %15(amount)s\n"
-	"Format string for the ledger reconcile posting format. Available fields are date, status, code, payee, account, amount"
+	"Format string for the ledger reconcile posting
+format. Available fields are date, status, code, payee, account,
+amount.  The format for each field is %WIDTH(FIELD), WIDTH can be
+preced by a minus sign which mean to left justify and pad the
+field."
 	:type 'string
 	:group 'ledger-reconcile)
 
@@ -316,9 +320,16 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 
 (defun ledger-reconcile-compile-format-string (fstr)
 	"return a function that implements the format string in fstr"
+	(let (fields
+				(start 0))
+		(while (string-match "(\\(.*?\\))" fstr start)
+			(setq fields (list fields (intern (substring fstr (match-beginning 1) (match-end 1)))))
+			(setq start (match-end 0)))
+		(setq fields (flatten (list 'format (replace-regexp-in-string "(.*?)" "" fstr) (cdr (flatten fields)))))
+		`(lambda (date code status payee account amount)
+			 ,fields)))
 
-	`(lambda (date code status payee account amount)
-		 (format "%s %-4s %-50s %-30s %15s\n" date code payee account amount)))
+
 
 (defun ledger-reconcile-format-posting (beg where fmt date code status payee account amount)
 	(insert (funcall fmt date code status payee account amount))
@@ -369,7 +380,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
               (unless (eobp)
                 (if (looking-at "(")
                     (read (current-buffer)))))))  ;current-buffer is the *temp* created above
-				 (fmt (ledger-reconcile-compile-format-string "str")))
+				 (fmt (ledger-reconcile-compile-format-string ledger-reconcile-buffer-line-format)))
     (if (and ledger-success (> (length xacts) 0))
         (progn
 					(insert (format ledger-reconcile-buffer-header account))
