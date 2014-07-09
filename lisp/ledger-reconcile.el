@@ -323,9 +323,9 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 	(let (fields
 				(start 0))
 		(while (string-match "(\\(.*?\\))" fstr start)
-			(setq fields (list fields (intern (substring fstr (match-beginning 1) (match-end 1)))))
+			(setq fields (cons (intern (match-string 1 fstr)) fields))
 			(setq start (match-end 0)))
-		(setq fields (flatten (list 'format (replace-regexp-in-string "(.*?)" "" fstr) (cdr (flatten fields)))))
+		(setq fields (list* 'format (replace-regexp-in-string "(.*?)" "" fstr) (nreverse fields)))
 		`(lambda (date code status payee account amount)
 			 ,fields)))
 
