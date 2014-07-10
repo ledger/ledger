@@ -408,6 +408,11 @@ value_t& value_t::operator+=(const value_t& val)
         in_place_cast(BALANCE);
         return *this += val;
       } else {
+        if (as_amount().has_commodity() && as_amount().commodity().has_flags(COMMODITY_SET_CUSTOM_PRECISION)) {
+            amount_t temp(as_amount());
+            temp.in_place_roundto(as_amount().commodity().custom_precision());
+        }
+
         as_amount_lval() += val.as_amount();
         return *this;
       }

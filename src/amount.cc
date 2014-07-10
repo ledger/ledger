@@ -628,6 +628,12 @@ void amount_t::in_place_round()
   else if (! keep_precision())
     return;
 
+  if (has_commodity()) {
+      commodity_t& comm = commodity();
+      if (comm.has_flags(COMMODITY_SET_CUSTOM_PRECISION))
+          in_place_roundto(comm.custom_precision());
+  }
+
   _dup();
   set_keep_precision(false);
 }

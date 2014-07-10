@@ -108,10 +108,13 @@ protected:
 #define COMMODITY_SAW_ANN_PRICE_FLOAT    0x400
 #define COMMODITY_SAW_ANN_PRICE_FIXATED  0x800
 #define COMMODITY_STYLE_TIME_COLON       0x1000
+#define COMMODITY_SET_CUSTOM_PRECISION   0X2000
+
 
     string                symbol;
     optional<std::size_t> graph_index;
     amount_t::precision_t precision;
+    int_least16_t         custom_precision;
     optional<string>      name;
     optional<string>      note;
     optional<amount_t>    smaller;
@@ -132,7 +135,7 @@ protected:
         (commodity_t::decimal_comma_by_default ?
          static_cast<uint_least16_t>(COMMODITY_STYLE_DECIMAL_COMMA) :
          static_cast<uint_least16_t>(COMMODITY_STYLE_DEFAULTS)),
-        symbol(_symbol), precision(0) {
+        symbol(_symbol), precision(0), custom_precision(0) {
       TRACE_CTOR(commodity_t::base_t, "const string&");
     }
     virtual ~base_t() {
@@ -247,8 +250,14 @@ public:
   amount_t::precision_t precision() const {
     return base->precision;
   }
+  int_least16_t custom_precision() const {
+    return base->custom_precision;
+  }
   void set_precision(amount_t::precision_t arg) {
     base->precision = arg;
+  }
+  void set_custom_precision(int_least16_t arg) {
+    base->custom_precision = arg;
   }
 
   optional<amount_t> smaller() const {
