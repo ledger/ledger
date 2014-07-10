@@ -1,0 +1,18 @@
+D 1000.000 EUR
+commodity EUR
+  precision 2
+  default
+
+
+2012-01-02 * 
+   A                      3.692 EUR
+   C			    -269 boots @@ 3.691 EUR
+ 
+
+test -V bal
+           3.690 EUR  A
+          -3.690 EUR  C
+--------------------
+                   0
+end test
+

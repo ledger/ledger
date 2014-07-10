@@ -1,0 +1,21 @@
+D $1000.00
+commodity $
+ precision 2
+ default
+ 
+2014-06-15 Test 1
+    Liabilities:Payable           GBP -19.86 @ $1.3869
+    Expenses
+
+2014-06-16 Test 2
+    Liabilities:Payable           GBP -19.86 @ $1.3869
+    Expenses
+
+
+test -V bal
+              $55.08  Expenses
+             $-55.08  Liabilities:Payable
+--------------------
+                   0
+end test
+

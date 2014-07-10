@@ -1,0 +1,20 @@
+D 1000.000 EUR
+commodity EUR
+  precision 2
+  default
+
+2012-01-01 *
+   A                        1 AAA @@ 10.00 EUR
+   A                        1 BBB @@ 20.00 EUR
+   C
+
+P 2012-07-01 AAA 10.123 EUR
+P 2012-07-01 BBB 20.123 EUR 
+
+test -V bal
+          30.240 EUR  A
+         -30.000 EUR  C
+--------------------
+           0.240 EUR
+end test
+

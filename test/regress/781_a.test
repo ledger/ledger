@@ -1,0 +1,18 @@
+D 10.00 EUR
+commodity EUR
+  precision 2
+  default
+
+2014-01-01 Opening balance
+ Assets:Investments     10 AAA @ 10.1234 EUR
+ Assets:Investments     10 BBB @ 10.5692 EUR
+ Equity:Opening balance
+
+
+test -V bal
+          206.92 EUR  Assets:Investments
+         -206.92 EUR  Equity:Opening balance
+--------------------
+                   0
+end test
+
