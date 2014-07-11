@@ -447,6 +447,9 @@ amount_t& amount_t::operator+=(const amount_t& amt)
 
   mpq_add(MP(quantity), MP(quantity), MP(amt.quantity));
 
+ if (has_commodity() && commodity().has_flags(COMMODITY_SET_CUSTOM_PRECISION))
+    in_place_roundto(commodity().custom_precision());
+
   if (has_commodity() == amt.has_commodity())
     if (quantity->prec < amt.quantity->prec)
       quantity->prec = amt.quantity->prec;
