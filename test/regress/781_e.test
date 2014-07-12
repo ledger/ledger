@@ -1,0 +1,22 @@
+D 100.000 EUR
+commodity EUR
+  precision 2
+  default
+
+D 100.000 GBP  
+commodity GBP
+  precision 2
+
+2014-01-01 *
+ A		-38.24 EUR
+ B 		 30.00 GBP
+ C		 2.09 EUR
+
+test -V bal
+         -31.730 GBP  A
+          30.000 GBP  B
+           1.730 GBP  C
+--------------------
+                   0
+end test
+

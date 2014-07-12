@@ -1,0 +1,17 @@
+D 100.000 GBP
+commodity GBP
+  precision 2
+  default
+
+2014-01-01 *  
+ A		 3.6911 GBP
+ B 		-100 boots @@ 3.6921 GBP 
+ 
+
+ test -V bal
+          3.6900 GBP  A
+         -3.6900 GBP  B
+--------------------
+                   0
+end test
+

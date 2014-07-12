@@ -1,0 +1,19 @@
+D 100.000 GBP 
+commodity GBP
+  precision 2
+  default
+
+2014-02-01 *interest
+ Asset:Savings				 0.34 GBP
+ Income:Interest			-0.43 GBP
+ Expenditure:Tax:Interest		 0.09 GBP
+ 
+
+ test -V bal
+           0.340 GBP  Asset:Savings
+           0.090 GBP  Expenditure:Tax:Interest
+          -0.430 GBP  Income:Interest
+--------------------
+                   0
+end test
+
