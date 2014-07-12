@@ -121,8 +121,8 @@
     ;;          ledger-font-other-face)
     (,ledger-comment-regex 0
                            'ledger-font-comment-face)
-		(,ledger-amount-regex 0
-																				 'ledger-font-posting-amount-face)
+    (,ledger-amount-regex 0
+                          'ledger-font-posting-amount-face)
     (,ledger-multiline-comment-regex 0 'ledger-font-comment-face)
     (,ledger-payee-pending-regex 2
                                  'ledger-font-payee-pending-face) ; Works
