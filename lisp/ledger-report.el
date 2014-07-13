@@ -361,7 +361,8 @@ Optional EDIT the command."
   "Redo the report in the current ledger report buffer."
   (interactive)
 
-	(if (get-buffer ledger-report-buffer-name)
+	(if (and (get-buffer ledger-buf)
+					 (get-buffer ledger-report-buffer-name))
 			(progn
 				(pop-to-buffer (get-buffer ledger-report-buffer-name))
 				(shrink-window-if-larger-than-buffer)

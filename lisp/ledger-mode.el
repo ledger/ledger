@@ -337,6 +337,7 @@ With a prefix argument, remove the effective date. "
   (set (make-local-variable 'pcomplete-command-completion-function)
        'ledger-complete-at-point)
   (add-hook 'completion-at-point-functions 'pcomplete-completions-at-point nil t)
+	(add-hook 'after-save-hook 'ledger-report-redo)
 
 	;(add-hook 'after-save-hook)
   (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
