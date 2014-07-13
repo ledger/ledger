@@ -74,6 +74,7 @@
 
 (defun ledger-mode-dump-configuration ()
   "Dump all customizations"
+	(interactive)
   (find-file "ledger-mode-dump")
   (ledger-mode-dump-group 'ledger))
 
