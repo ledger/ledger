@@ -148,8 +148,7 @@ Used for coordinating `ledger-occur' with other buffers, like reconcile."
   "Remove the transaction hiding overlays."
   (interactive)
   (remove-overlays (point-min)
-                   (point-max) ledger-occur-overlay-property-name t)
-  (setq ledger-occur-overlay-list nil))
+                   (point-max) ledger-occur-overlay-property-name t))
 
 (defun ledger-occur-find-matches (regex)
   "Return a list of 2-number tuples describing the beginning and end of transactions meeting REGEX."

@@ -129,7 +129,7 @@ MOMENT is an encoded date"
                        mark desc)))))
       (forward-line))))
 
-(defsubst ledger-goto-line (line-number)
+(defun ledger-goto-line (line-number)
   "Rapidly move point to line LINE-NUMBER."
   (goto-char (point-min))
   (forward-line (1- line-number)))
@@ -170,8 +170,8 @@ MOMENT is an encoded date"
 
 (defun ledger-add-transaction (transaction-text &optional insert-at-point)
   "Use ledger xact TRANSACTION-TEXT to add a transaction to the buffer.
-If INSERT-AT-POINT is non-nil insert the transaction
-there, otherwise call `ledger-xact-find-slot' to insert it at the
+If INSERT-AT-POINT is non-nil insert the transaction there,
+otherwise call `ledger-xact-find-slot' to insert it at the
 correct chronological place in the buffer."
   (interactive (list
                 ;; Note: This isn't "just" the date - it can contain

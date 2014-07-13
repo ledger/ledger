@@ -78,10 +78,11 @@
   (ledger-mode-dump-group 'ledger))
 
 
-(defsubst ledger-current-year ()
+(defun ledger-current-year ()
   "The default current year for adding transactions."
   (format-time-string "%Y"))
-(defsubst ledger-current-month ()
+
+(defun ledger-current-month ()
   "The default current month for adding transactions."
   (format-time-string "%m"))
 
@@ -310,15 +311,14 @@ With a prefix argument, remove the effective date. "
     ["Re-run Report" ledger-report-redo ledger-works]
     ["Save Report" ledger-report-save ledger-works]
     ["Edit Report" ledger-report-edit ledger-works]
-    ["Kill Report" ledger-report-kill ledger-works]
-    ))
+    ["Kill Report" ledger-report-kill ledger-works]))
 
 ;;;###autoload
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
   (ledger-check-version)
   (ledger-schedule-check-available)
-  (ledger-post-setup)
+  ;;(ledger-post-setup)
 
   (set-syntax-table ledger-mode-syntax-table)
   (set (make-local-variable 'comment-start) "; ")
@@ -338,6 +338,7 @@ With a prefix argument, remove the effective date. "
        'ledger-complete-at-point)
   (add-hook 'completion-at-point-functions 'pcomplete-completions-at-point nil t)
 
+	;(add-hook 'after-save-hook)
   (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
   (add-hook 'before-revert-hook 'ledger-occur-remove-all-overlays nil t)
 

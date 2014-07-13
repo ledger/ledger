@@ -360,18 +360,22 @@ Optional EDIT the command."
 (defun ledger-report-redo ()
   "Redo the report in the current ledger report buffer."
   (interactive)
-  (ledger-report-goto)
-  (setq buffer-read-only nil)
-  (erase-buffer)
-  (ledger-do-report ledger-report-cmd)
-  (setq buffer-read-only nil))
+
+	(if (get-buffer ledger-report-buffer-name)
+			(progn
+				(pop-to-buffer (get-buffer ledger-report-buffer-name))
+				(shrink-window-if-larger-than-buffer)
+				(setq buffer-read-only nil)
+				(erase-buffer)
+				(ledger-do-report ledger-report-cmd)
+				(setq buffer-read-only nil))))
 
 (defun ledger-report-quit ()
-  "Quit the ledger report buffer by burying it."
-  (interactive)
-  (ledger-report-goto)
-  (set-window-configuration ledger-original-window-cfg)
-  (bury-buffer (get-buffer ledger-report-buffer-name)))
+	"Quit the ledger report buffer."
+	(interactive)
+	(ledger-report-goto)
+	(set-window-configuration ledger-original-window-cfg)
+	(kill-buffer (get-buffer ledger-report-buffer-name)))
 
 (defun ledger-report-kill ()
   "Kill the ledger report buffer."
