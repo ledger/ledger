@@ -65,6 +65,11 @@ text that should replace the format specifier."
   :type 'alist
   :group 'ledger-report)
 
+(defcustom ledger-report-auto-refresh t
+	"If t then automatically rerun the report when the ledger buffer is saved."
+	:type 'boolean
+	:group 'ledger-report)
+
 (defvar ledger-report-buffer-name "*Ledger Report*")
 
 (defvar ledger-report-name nil)
@@ -361,8 +366,9 @@ Optional EDIT the command."
   "Redo the report in the current ledger report buffer."
   (interactive)
 	(let ((cur-buf (current-buffer)))
- 		(if (and (string= mode-name "Ledger")
-						 (get-buffer ledger-report-buffer-name))
+ 		(if (and ledger-report-auto-refresh
+				 (string= mode-name "Ledger")
+				 (get-buffer ledger-report-buffer-name))
 				(progn
 
 					(pop-to-buffer (get-buffer ledger-report-buffer-name))
