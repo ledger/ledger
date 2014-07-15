@@ -1578,6 +1578,8 @@ post_t * instance_t::parse_post(char *          line,
           if (fixed_cost)
             post->add_flags(POST_COST_FIXATED);
 
+          post->given_cost = post->cost;
+
           DEBUG("textual.parse", "line " << context.linenum << ": "
                 << "Total cost is " << *post->cost);
           DEBUG("textual.parse", "line " << context.linenum << ": "

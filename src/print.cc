@@ -243,7 +243,7 @@ namespace {
           amtbuf << string(2 - (slip + amt_slip), ' ');
         amtbuf << amt;
 
-        if (post->cost &&
+        if (post->given_cost &&
             ! post->has_flags(POST_CALCULATED | POST_COST_CALCULATED)) {
           std::string cost_op;
           if (post->has_flags(POST_COST_IN_FULL))
@@ -254,10 +254,10 @@ namespace {
             cost_op = "(" + cost_op + ")";
 
           if (post->has_flags(POST_COST_IN_FULL))
-            amtbuf << " " << cost_op << " " << post->cost->abs();
+            amtbuf << " " << cost_op << " " << post->given_cost->abs();
           else
             amtbuf << " " << cost_op << " "
-                   << (*post->cost / post->amount).abs();
+                   << (*post->given_cost / post->amount).abs();
         }
 
         if (post->assigned_amount)
