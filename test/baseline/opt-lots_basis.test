@@ -676,9 +676,8 @@ test reg --basis
 06-Mar-16 Post                  Expenses:Fees:Mail              90c          90c
                                 Assets:Tajer                   -90c            0
 06-Mar-16 Auction House         Assets:Tajer                119.58G      119.58G
-                                Assets:Tajer:Items         -119.58G            0
-                                Income:Brokering            -54.58G      -54.58G
-                                Equity:Capital Gains         54.58G            0
+                                Assets:Tajer:Items          -65.00G       54.58G
+                                Income:Brokering            -54.58G            0
 06-Mar-16 Auction House         Assets:Wyshona:Items   "Plans: Mithril Shield Spike" 1 "Plans: Mithril Shield Spike" 1
                                 Assets:Wyshona:Items   "Plans: Mithril Shield Spike" 1 "Plans: Mithril Shield Spike" 2
                                 Assets:Wyshona:Items   "Recipe: Elixir of Giant Growth" 1 "Plans: Mithril Shield Spike" 2
@@ -745,13 +744,11 @@ test reg --basis
 06-Mar-16 Player                Assets:Tajer                  1.00G        1.00G
                                 Equity:Gold                  -1.00G            0
 06-Mar-17 Auction House         Assets:Wyshona               18.06G       18.06G
-                                Assets:Wyshona:Items        -18.06G            0
-                                Income:Brokering            -16.56G      -16.56G
-                                Equity:Capital Gains         16.56G            0
+                                Assets:Wyshona:Items         -1.50G       16.56G
+                                Income:Brokering            -16.56G            0
 06-Mar-17 Auction House         Assets:Wyshona               18.06G       18.06G
-                                Assets:Wyshona:Items        -18.06G            0
-                                Income:Brokering            -17.06G      -17.06G
-                                Equity:Capital Gains         17.06G            0
+                                Assets:Wyshona:Items         -1.00G       17.06G
+                                Income:Brokering            -17.06G            0
 06-Mar-17 Post                  Expenses:Fees:Mail              30c          30c
                                 Assets:Tajer                   -30c            0
 06-Mar-17 Player: raev          Assets:Tajer:Items           30.00G       30.00G
@@ -761,9 +758,8 @@ test reg --basis
 06-Mar-17 Post                  Expenses:Fees:Mail            3.00s        3.00s
                                 Assets:Wyshona               -3.00s            0
 06-Mar-17 Player                Assets:Wyshona                1.00G        1.00G
-                                Assets:Wyshona:Items         -1.00G            0
-                                Expenses:Capital Loss        25.00s       25.00s
-                                Equity:Capital Losses       -25.00s            0
+                                Assets:Wyshona:Items         -1.25G      -25.00s
+                                Expenses:Capital Loss        25.00s            0
 06-Mar-17 Auction House (impl.. Expenses:Items                2.79G        2.79G
                                 Assets:Wyshona               -2.79G            0
 06-Mar-17 Auction House (impl.. Assets:Danell:Items           3.00G        3.00G
@@ -776,24 +772,20 @@ test reg --basis
                                 Assets:Tajer:Items            1.00G       26.90G
                                 Assets:Wyshona              -26.90G            0
 06-Mar-17 Auction House         Assets:Tajer                  4.00G        4.00G
-                                Assets:Tajer:Items           -4.00G            0
-                                Income:Brokering             -3.00G       -3.00G
-                                Equity:Capital Gains          3.00G            0
+                                Assets:Tajer:Items           -1.00G        3.00G
+                                Income:Brokering             -3.00G            0
 06-Mar-17 Auction House         Assets:Danell                31.71s       31.71s
-                                Assets:Danell:Items         -31.71s            0
-                                Expenses:Capital Loss         2.68G        2.68G
-                                Equity:Capital Losses        -2.68G            0
+                                Assets:Danell:Items          -3.00G       -2.68G
+                                Expenses:Capital Loss         2.68G            0
 06-Mar-17 Auction House         Expenses:Fees:Auction         1.25G        1.25G
                                 Assets:Danell                -1.25G            0
 06-Mar-17 Transfer              Assets:Gruulmorg             15.00G       15.00G
                                 Expenses:Fees:Mail              30c       15.00G
                                 Assets:Tajer                -15.00G            0
 06-Mar-17 Auction House         Assets:Wyshona               36.25G       36.25G
-                                Assets:Wyshona:Items        -18.12G       18.12G
-                                Assets:Wyshona:Items        -18.12G            0
-                                Income:Brokering            -31.84G      -31.84G
-                                Equity:Capital Gains         16.02G      -15.82G
-                                Equity:Capital Gains         15.82G            0
+                                Assets:Wyshona:Items         -2.11G       34.14G
+                                Assets:Wyshona:Items         -2.30G       31.84G
+                                Income:Brokering            -31.84G            0
 06-Mar-17 Transfer              Assets:Danell                49.96G       49.96G
                                 Expenses:Gifts                1.00G       50.96G
                                 Expenses:Fees:Mail              30c       50.96G
@@ -811,44 +803,35 @@ test reg --basis
                                 Expenses:Fees:Mail              30c       75.30s
                                 Assets:Tajer                -75.30s            0
 06-Mar-18 Auction House         Assets:Tajer                 15.00G       15.00G
-                                Assets:Tajer:Items          -15.00G            0
-                                Income:Brokering            -11.10G      -11.10G
-                                Equity:Capital Gains         11.10G            0
+                                Assets:Tajer:Items           -3.90G       11.10G
+                                Income:Brokering            -11.10G            0
 06-Mar-18 Auction House         Assets:Tajer                 43.45G       43.45G
-                                Assets:Tajer:Items          -43.45G            0
-                                Income:Brokering            -13.45G      -13.45G
-                                Equity:Capital Gains         13.45G            0
+                                Assets:Tajer:Items          -30.00G       13.45G
+                                Income:Brokering            -13.45G            0
 06-Mar-18 Auction House         Assets:Tajer                 19.95G       19.95G
-                                Assets:Tajer:Items          -19.95G            0
-                                Income:Brokering            -14.95G      -14.95G
-                                Equity:Capital Gains         14.95G            0
+                                Assets:Tajer:Items           -5.00G       14.95G
+                                Income:Brokering            -14.95G            0
 06-Mar-19 Auction House         Assets:Tajer                 28.50G       28.50G
-                                Assets:Tajer:Items          -28.50G            0
-                                Income:Brokering            -24.50G      -24.50G
-                                Equity:Capital Gains         24.50G            0
+                                Assets:Tajer:Items           -4.00G       24.50G
+                                Income:Brokering            -24.50G            0
 06-Mar-19 Auction House         Assets:Tajer                 17.10G       17.10G
-                                Assets:Tajer:Items          -17.10G            0
-                                Income:Brokering            -13.10G      -13.10G
-                                Equity:Capital Gains         13.10G            0
+                                Assets:Tajer:Items           -4.00G       13.10G
+                                Income:Brokering            -13.10G            0
 06-Mar-19 Auction House         Assets:Tajer                  4.65G        4.65G
-                                Assets:Tajer:Items           -4.65G            0
-                                Income:Brokering             -3.65G       -3.65G
-                                Equity:Capital Gains          3.65G            0
+                                Assets:Tajer:Items           -1.00G        3.65G
+                                Income:Brokering             -3.65G            0
 06-Mar-19 Auction House         Assets:Tajer:Items            3.00G        3.00G
                                 Assets:Tajer:Items            2.50G        5.50G
                                 Assets:Tajer                 -5.50G            0
 06-Mar-20 Auction House         Assets:Tajer                 16.34G       16.34G
-                                Assets:Tajer:Items          -16.34G            0
-                                Income:Brokering            -14.34G      -14.34G
-                                Equity:Capital Gains         14.34G            0
+                                Assets:Tajer:Items           -2.00G       14.34G
+                                Income:Brokering            -14.34G            0
 06-Mar-20 Auction House         Assets:Tajer                  5.00G        5.00G
-                                Assets:Tajer:Items           -5.00G            0
-                                Income:Brokering             -2.00G       -2.00G
-                                Equity:Capital Gains          2.00G            0
+                                Assets:Tajer:Items           -3.00G        2.00G
+                                Income:Brokering             -2.00G            0
 06-Mar-20 Auction House         Assets:Tajer                 15.00G       15.00G
-                                Assets:Tajer:Items          -15.00G            0
-                                Income:Brokering            -11.00G      -11.00G
-                                Equity:Capital Gains         11.00G            0
+                                Assets:Tajer:Items           -4.00G       11.00G
+                                Income:Brokering            -11.00G            0
 06-Mar-20 Auction House         Expenses:Fees:Mail              60c          60c
                                 Assets:Tajer                   -60c            0
 06-Mar-21 Auction House         Assets:Tajer:Items          170.00G      170.00G
@@ -865,21 +848,18 @@ test reg --basis
                                 Expenses:Fees:Auction        75.00s        7.83G
                                 Assets:Tajer                 -7.83G            0
 06-Mar-23 Auction House         Assets:Tajer                166.53G      166.53G
-                                Assets:Tajer:Items         -166.53G            0
-                                Expenses:Capital Loss         3.47G        3.47G
-                                Equity:Capital Losses        -3.47G            0
+                                Assets:Tajer:Items         -170.00G       -3.47G
+                                Expenses:Capital Loss         3.47G            0
 06-Mar-26 Auction House         Assets:Tajer                  8.20G        8.20G
-                                Assets:Tajer:Items           -8.20G            0
-                                Income:Brokering             -5.70G       -5.70G
-                                Equity:Capital Gains          5.70G            0
+                                Assets:Tajer:Items           -2.50G        5.70G
+                                Income:Brokering             -5.70G            0
 06-Mar-26 Player                Expenses:Items                1.50G        1.50G
                                 Expenses:Fees:Mail              30c        1.50G
                                 Expenses:Fees:Mail              30c        1.51G
                                 Assets:Tajer                 -1.51G            0
 06-Mar-27 Player                Assets:Tajer                160.00G      160.00G
-                                Assets:Tajer:Items         -160.00G            0
-                                Expenses:Capital Loss        40.00G       40.00G
-                                Equity:Capital Losses       -40.00G            0
+                                Assets:Tajer:Items         -200.00G      -40.00G
+                                Expenses:Capital Loss        40.00G            0
 06-Mar-27 Player                Expenses:Fees:Mail              30c          30c
                                 Assets:Tajer                   -30c            0
 06-Mar-26 Player                Expenses:Items               54.00G       54.00G
