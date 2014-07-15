@@ -304,10 +304,9 @@ bool xact_base_t::finalize()
             DEBUG("xact.finalize", "gain_loss = " << gain_loss);
             gain_loss.in_place_round();
             DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
-
             if (post->must_balance())
               add_or_set_value(balance, gain_loss.reduced());
-
+#if 0
             account_t * account;
             if (gain_loss.sign() > 0)
               account = journal->find_account(_("Equity:Capital Gains"));
@@ -321,6 +320,9 @@ bool xact_base_t::finalize()
               p->add_flags(post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE));
             }
             add_post(p);
+#else
+            *post->cost += gain_loss;
+#endif
             DEBUG("xact.finalize", "added gain_loss, balance = " << balance);
           } else {
             DEBUG("xact.finalize", "gain_loss would have displayed as zero");

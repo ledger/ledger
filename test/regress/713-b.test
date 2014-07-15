@@ -1,0 +1,48 @@
+
+2014-01-01 * Opening balances
+    Assets:Cash                                     100.00 GBP
+    Equity:Opening balances
+
+2014-02-01 * Buy 1 AAA for 10 GBP
+    Assets:Investments                       1 AAA @ 10.00 GBP
+    Assets:Cash                                     -10.00 GBP
+
+2014-03-01 * Buy 1 AAA for 20 GBP
+    Assets:Investments                       1 AAA @ 20.00 GBP
+    Assets:Cash                                     -20.00 GBP
+
+; Let's say the second purchase attracts an equalisation of 2.00 GBP.
+; This means that the purchase price from now on should be 18.00
+; rather than 20.00 GBP.  So we add a new share with that price and
+; the original date, and remove the existing share at the old price; the
+; difference of 2.00 GBP is the equalisation received, which is paid to
+; the account.
+2014-04-16 * Dividend (Equalisation) from AAA
+    Assets:Investments          1 AAA {18.00 GBP} [2014-03-01] @@ 18.00 GBP
+    Assets:Investments         -1 AAA {20.00 GBP} [2014-03-01] @@ 20.00 GBP
+    Assets:Broker               2.00 GBP
+
+test bal -B Assets:Investment -p "until 2014-02-20"
+           10.00 GBP  Assets:Investments
+end test
+
+test bal -B Assets:Investment -p "until 2014-03-20"
+           30.00 GBP  Assets:Investments
+end test
+
+test bal -B Assets:Investment -p "until 2014-04-20"
+           28.00 GBP  Assets:Investments
+end test
+
+test bal Assets:Investment -p "until 2014-02-20"
+               1 AAA  Assets:Investments
+end test
+
+test bal Assets:Investment -p "until 2014-03-20"
+               2 AAA  Assets:Investments
+end test
+
+test bal Assets:Investment -p "until 2014-04-20"
+               2 AAA  Assets:Investments
+end test
+

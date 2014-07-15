@@ -1,0 +1,22 @@
+
+2011-01-01 * Opening balance
+    Assets:Cash                               10.00 GBP
+    Equity:Opening balance                   -10.00 GBP
+
+2011-02-01 * Buy 1 AAA for 10.00 GBP
+    Assets:Investments                 1 AAA {10.00 GBP}
+    Assets:Cash                              -10.00 GBP
+
+2011-12-07 * Sell AAA with a gain
+    Assets:Cash                               12.00 GBP
+    Assets:Investments  -1 AAA {10.00 GBP} @@ 12.00 GBP
+    Income:Capital gains                      -2.00 GBP
+
+test bal
+           12.00 GBP  Assets:Cash
+          -10.00 GBP  Equity:Opening balance
+           -2.00 GBP  Income:Capital gains
+--------------------
+                   0
+end test
+

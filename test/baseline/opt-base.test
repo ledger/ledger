@@ -16,12 +16,11 @@ test bal --base
                7200s  A
            $8,000.00  Assets:Receivable
                7200s  B
-           $3,200.00  Equity:Capital Gains
           $-3,200.00
             -288000s  Income
             -288000s    Contracts
           $-3,200.00    Gains
 --------------------
-           $8,000.00
+           $4,800.00
             -273600s
 end test

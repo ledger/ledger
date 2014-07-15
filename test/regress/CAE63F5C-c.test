@@ -7,9 +7,8 @@
 test bal -X $
              $272.67  Accrued
             $-271.54  Assets
-               $6.45  Equity:Capital Gains
                $5.32  Expenses
               $-6.45  Income:Currency Conversion
 --------------------
-               $6.46
+                   0
 end test
