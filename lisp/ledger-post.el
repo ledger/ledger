@@ -104,7 +104,6 @@ at beginning of account"
   "Align all accounts and amounts within region, if there is no
 region align the posting on the current line."
   (interactive)
-  (assert (eq major-mode 'ledger-mode))
 
   (save-excursion
     (if (or (not (mark))

@@ -200,7 +200,8 @@ correct chronological place in the buffer."
              (goto-char (point-min))
              (if (looking-at "Error: ")
                  (error (concat "Error in ledger-add-transaction: " (buffer-string)))
-               (buffer-string)))
+							 (ledger-post-align-postings (point-min) (point-max))
+							 (buffer-string)))
            "\n"))
       (progn
         (insert (car args) " \n\n")
