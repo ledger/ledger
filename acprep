@@ -763,7 +763,7 @@ class PrepareBuild(CommandLineApp):
         self.LDFLAGS.append('-ftest-coverage')
 
         if not self.options.compiler or self.options.compiler == "clang-3.1":
-            self.LDFLAGS.append('-lprofile_rt')
+            self.LDFLAGS.append('-lgcov')
 
     def setup_flavor_gprof(self):
         self.configure_args.append('-DBUILD_DEBUG=1')
