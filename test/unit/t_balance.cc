@@ -28,6 +28,26 @@ struct balance_fixture {
   }
 };
 
-//BOOST_FIXTURE_TEST_SUITE(balance, balance_fixture)
+BOOST_FIXTURE_TEST_SUITE(balance, balance_fixture)
 
-//BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_CASE(testConstructors)
+{
+  balance_t b0;
+  balance_t b1(1.00);
+  balance_t b2(12345UL);
+  balance_t b3(123456L);
+
+  BOOST_CHECK_EQUAL(balance_t(), b0);
+  BOOST_CHECK_NE(balance_t("0"), b0);
+  BOOST_CHECK_NE(balance_t("0.0"), b0);
+  BOOST_CHECK_EQUAL(balance_t(12345UL), 12345UL);
+  BOOST_CHECK_EQUAL(balance_t(123456L), 123456L);
+
+  BOOST_CHECK(b0.valid());
+  BOOST_CHECK(b1.valid());
+  BOOST_CHECK(b2.valid());
+  BOOST_CHECK(b3.valid());
+
+}
+
+BOOST_AUTO_TEST_SUITE_END()
