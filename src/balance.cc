@@ -190,6 +190,14 @@ balance_t::value(const datetime_t&   moment,
 {
   balance_t temp;
   bool      resolved = false;
+  std::multimap<commodity_t*, amount_t, ledger::commodity_compare> tmp_amounts ;
+  tmp_amounts.insert(amounts.begin(), amounts.end());
+  commodity_t* tmp_comm = NULL;
+  amount_t* tmp_amount = NULL;
+  bool round_amt = false;
+  std::multimap<commodity_t*, amount_t, ledger::commodity_compare>::iterator
+                                  i,j,k;
+
 
   foreach (const amounts_map::value_type& pair, amounts) {
     if (optional<amount_t> val = pair.second.value(moment, in_terms_of)) {
