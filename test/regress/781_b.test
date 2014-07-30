@@ -14,8 +14,8 @@ commodity $
 
 test -V bal
               $55.08  Expenses
-             $-55.08  Liabilities:Payable
+             $-55.09  Liabilities:Payable
 --------------------
-                   0
+              $-0.01
 end test
 
