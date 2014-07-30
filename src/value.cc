@@ -414,6 +414,13 @@ value_t& value_t::operator+=(const value_t& val)
         }
 
         as_amount_lval() += val.as_amount();
+        amount_t& t_lval = as_amount_lval();
+
+        if (t_lval.has_commodity() && t_lval.commodity().has_flags(COMMODITY_SET_CUSTOM_PRECISION)) {
+            amount_t temp(t_lval);
+            temp.in_place_roundto(t_lval.commodity().custom_precision());
+        }
+
         return *this;
       }
 
