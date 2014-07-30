@@ -1,0 +1,25 @@
+D 1000.000 EUR
+commodity EUR
+  precision 2
+  default
+  
+
+
+2014-06-01 * Opening balance
+    Assets:Investments            123 XXX {1.23456 EUR} @ 1.23456 EUR
+    Equity:Opening balances          -151.85 EUR
+
+2014-06-22 * Sell some shares
+    Assets:Investments            -123 XXX {1.23456 EUR} @ 2.345 EUR
+    Assets:Cash                        288.44 EUR
+    Income:Capital gains              -136.59 EUR 
+    
+
+test -V bal
+         288.440 EUR  Assets:Cash
+        -151.850 EUR  Equity:Opening balances
+        -136.590 EUR  Income:Capital gains
+--------------------
+                   0
+end test 
+

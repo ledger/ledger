@@ -1,0 +1,34 @@
+commodity GBP
+   precision 2
+   format 1000.000 GBP
+
+2010-01-10 * Buy XXX
+    Assets:Pension                 342.2904 XXX @@  820.72 GBP
+    Assets:Cash
+
+2010-02-10 * Buy XXX
+    Assets:Pension                 108.0939 XXX @@  259.18 GBP
+    Assets:Cash
+
+2010-03-10 * Buy XXX
+    Assets:Pension                 108.0939 XXX @@  259.18 GBP
+    Assets:Cash
+
+2010-04-02 * Buy XXX
+    Assets:Pension                 476.4930 XXX @@ 1079.90 GBP
+    Assets:Cash
+
+2010-05-02 * Buy XXX
+    Assets:Pension                 114.3601 XXX @@  259.18 GBP
+    Assets:Cash
+
+P 2011/01/01 XXX 2.7316 GBP
+
+test -V bal
+         461.350 GBP  Assets
+       -2678.160 GBP    Cash
+        3139.510 GBP    Pension
+--------------------
+         461.350 GBP
+end test
+
