@@ -1431,8 +1431,15 @@ value_t value_t::value(const datetime_t&   moment,
     return NULL_VALUE;
 
   case AMOUNT:
-    if (optional<amount_t> val = as_amount().value(moment, in_terms_of))
+    if (optional<amount_t> val = as_amount().value(moment, in_terms_of)) {
+      amount_t& amt = *val;
+
+      if (amt.has_commodity() && amt.commodity().has_flags(COMMODITY_SET_CUSTOM_PRECISION))
+        amt.in_place_roundto(amt.commodity().custom_precision());
+
       return *val;
+    }
+
     return NULL_VALUE;
 
   case BALANCE:
