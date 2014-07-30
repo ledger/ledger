@@ -198,13 +198,42 @@ balance_t::value(const datetime_t&   moment,
   std::multimap<commodity_t*, amount_t, ledger::commodity_compare>::iterator
                                   i,j,k;
 
+  for(i = tmp_amounts.begin(), j = i; i != tmp_amounts.end(); i++) {
+    j++;
+    tmp_amount = NULL;
+    const amounts_map::value_type& pair = *i;
 
-  foreach (const amounts_map::value_type& pair, amounts) {
+    if (j == tmp_amounts.end() || pair.second.commodity().symbol() !=
+                                   (*j).second.commodity().symbol() )
+      round_amt = true;
+
     if (optional<amount_t> val = pair.second.value(moment, in_terms_of)) {
+      tmp_amount = &(*val);
       temp += *val;
       resolved = true;
+
+      if (round_amt) {
+        tmp_comm = &(*tmp_amount).commodity();
+        if ((*tmp_amount).has_commodity() && tmp_comm->has_flags(COMMODITY_SET_CUSTOM_PRECISION)) {
+          k = temp.amounts.find(tmp_comm);
+          if (k != temp.amounts.end() )
+            (k->second).in_place_roundto(tmp_comm->custom_precision());
+        }
+        round_amt = false;
+      }
     } else {
       temp += pair.second;
+
+      if (round_amt) {
+        tmp_amount = const_cast<amount_t*>(&pair.second);
+        tmp_comm = &(*tmp_amount).commodity();
+        if ((*tmp_amount).has_commodity() && tmp_comm->has_flags(COMMODITY_SET_CUSTOM_PRECISION)) {
+          k = temp.amounts.find(tmp_comm);
+          if (k != temp.amounts.end() )
+            (k->second).in_place_roundto(tmp_comm->custom_precision());
+        }
+        round_amt = false;
+      }
     }
   }
   return resolved ? temp : optional<balance_t>();
