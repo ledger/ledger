@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(testSubtraction)
   b2 -= b3;
   b3 -= a1;
   b3 -= a2;
-  b4 += b3;
+  b4 = b3;
   b5 -= a1;
   b5 -= a4;
 
