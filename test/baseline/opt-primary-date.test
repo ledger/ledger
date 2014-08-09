@@ -26,7 +26,7 @@ test bal Income --effective --begin 2014/01/01 --end 2014/01/14
            $ -100.00  Income: Client ABC
 end test
 
-test bal Income --primary-date --effective --begin 2014/01/01 --end 2014/01/14
+test bal Income --primary-date  --begin 2014/01/01 --end 2014/01/14
            $ -200.00  Income: Client ABC
 end test
 
@@ -43,7 +43,7 @@ test reg  Income --effective --begin 2014/01/01 --end 2014/01/14
 14-Jan-13 Client invoice        Income: Client ABC        $ -100.00    $ -100.00
 end test
 
-test reg  Income --primary-date --effective --begin 2014/01/01 --end 2014/01/14
+test reg  Income --primary-date  --begin 2014/01/01 --end 2014/01/14
 14-Jan-01 Client invoice        Income: Client ABC        $ -100.00    $ -100.00
 14-Jan-01 Client invoice        Income: Client ABC        $ -100.00    $ -200.00
 end test
@@ -57,7 +57,7 @@ test  reg checking
 13-Oct-16 Bountiful Blessings.. Assets:Checking           $ -225.00    $ -225.00
 end test
 
-test reg checking --primary-date --effective
+test reg checking --primary-date 
 13-Oct-16 Bountiful Blessings.. Assets:Checking           $ -225.00    $ -225.00
 end test
 
@@ -79,7 +79,7 @@ test register Groceries --effective
 14-Mar-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50     $ 225.00
 end test
 
-test register Groceries --primary-date --effective
+test register Groceries --primary-date
 13-Oct-16 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50      $ 37.50
                                 Expense:Food:Groceries      $ 37.50      $ 75.00
                                 Expense:Food:Groceries      $ 37.50     $ 112.50
