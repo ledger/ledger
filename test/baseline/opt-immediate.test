@@ -1,0 +1,32 @@
+D 1000.00 EUR
+
+2012-01-01 * Test
+   Assets:Investments       1 AAA @@ 10.00 EUR
+   Assets:Investments       1 BBB @@ 20.00 EUR
+   Equity:Opening balance
+
+P 2012-07-01 AAA 10.123 EUR
+P 2012-07-01 BBB 20.123 EUR
+
+test bal -V --unrealized
+           30.25 EUR  Assets:Investments
+          -30.25 EUR  Equity
+          -30.00 EUR    Opening balance
+           -0.25 EUR    Unrealized Gains
+--------------------
+                   0
+end test
+
+test bal -V --immediate
+           30.00 EUR  Assets:Investments
+          -30.00 EUR  Equity:Opening balance
+--------------------
+                   0
+end test
+
+test reg -V --immediate
+12-Jan-01 Test                  Assets:Investments        10.00 EUR    10.00 EUR
+                                Assets:Investments        20.00 EUR    30.00 EUR
+                                Equity:Opening balance   -30.00 EUR            0
+end test
+
