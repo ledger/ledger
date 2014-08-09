@@ -1,4 +1,5 @@
-; primary-date display primary dates for all calculations
+;; primary-date display primary dates for all calculations
+;; use of primary-date or actual-dates overrides effective
 2014/01/01=2014/01/13 Client invoice  ;  estimated date you'll be paid
     Assets:Accounts Receivable            $100.00
     Income: Client ABC
@@ -57,7 +58,7 @@ test  reg checking
 13-Oct-16 Bountiful Blessings.. Assets:Checking           $ -225.00    $ -225.00
 end test
 
-test reg checking --primary-date 
+test reg checking --primary-date
 13-Oct-16 Bountiful Blessings.. Assets:Checking           $ -225.00    $ -225.00
 end test
 
