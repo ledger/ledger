@@ -202,3 +202,17 @@ test reg --head=10 books
 08-May-01 May                   Expenses:Books               $50.00      $250.00
 08-May-31 End of May            Expenses:Books               $50.00      $300.00
 end test
+
+test reg --first=10 books
+08-Jan-01 January               Expenses:Books               $10.00       $10.00
+08-Jan-31 End of January        Expenses:Books               $10.00       $20.00
+08-Feb-01 February              Expenses:Books               $20.00       $40.00
+08-Feb-28 End of February       Expenses:Books               $20.00       $60.00
+08-Mar-01 March                 Expenses:Books               $30.00       $90.00
+08-Mar-31 End of March          Expenses:Books               $30.00      $120.00
+08-Apr-01 April                 Expenses:Books               $40.00      $160.00
+08-Apr-30 End of April          Expenses:Books               $40.00      $200.00
+08-May-01 May                   Expenses:Books               $50.00      $250.00
+08-May-31 End of May            Expenses:Books               $50.00      $300.00
+end test
+

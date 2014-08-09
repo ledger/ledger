@@ -1,0 +1,22 @@
+i 2013/04/05 09:30:00 Internal:Meeting:Tactical  Intelligent comment
+o 2013/04/05 10:00:00
+i 2013/04/05 10:00:00 CustomerA:Email
+o 2013/04/05 10:05:00
+i 2013/04/05 10:05:00 CustomerB:Config
+o 2013/04/05 11:30:00
+i 2013/04/05 11:30:00 Personal:Walk
+o 2013/04/05 12:00:00
+i 2013/04/05 12:00:00 Personal:Lunch
+o 2013/04/05 13:30:00
+
+test bal --time-report --datetime-format '%m/%d/%y %I:%M %p'
+  04/05/13 10:00 AM    04/05/13 10:05 AM        5.0m  CustomerA:Email
+  04/05/13 10:05 AM    04/05/13 11:30 AM       1.42h  CustomerB:Config
+  04/05/13 09:30 AM    04/05/13 10:00 AM       30.0m  Internal:Meeting:Tactical
+                                               2.00h  Personal
+  04/05/13 12:00 PM    04/05/13 01:30 PM       1.50h    Lunch
+  04/05/13 11:30 AM    04/05/13 12:00 PM       30.0m    Walk
+--------------------------------------------------
+                                           
+end test
+
