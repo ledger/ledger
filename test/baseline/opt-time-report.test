@@ -1,0 +1,44 @@
+i 2013/04/05 09:30:00 Internal:Meeting:Tactical [Intelligent comment]
+o 2013/04/05 10:00:00
+i 2013/04/05 10:00:00 CustomerA:Email
+o 2013/04/05 10:05:00
+i 2013/04/05 10:05:00 CustomerB:Config
+o 2013/04/05 11:30:00
+i 2013/04/05 11:30:00 Personal:Walk
+o 2013/04/05 12:00:00
+i 2013/04/05 12:00:00 Personal:Lunch
+o 2013/04/05 13:30:00
+
+test bal
+                5.0m  CustomerA:Email
+               1.42h  CustomerB:Config
+               30.0m  Internal:Meeting:Tactical [Intelligent comment]
+               2.00h  Personal
+               1.50h    Lunch
+               30.0m    Walk
+--------------------
+               4.00h
+end test
+
+test bal --time-report
+ 13-Apr-05 10:00:00   13-Apr-05 10:05:00        5.0m  CustomerA:Email
+ 13-Apr-05 10:05:00   13-Apr-05 11:30:00       1.42h  CustomerB:Config
+ 13-Apr-05 09:30:00   13-Apr-05 10:00:00       30.0m  Internal:Meeting:Tactical [Intelligent comment]
+                                               2.00h  Personal
+ 13-Apr-05 12:00:00   13-Apr-05 13:30:00       1.50h    Lunch
+ 13-Apr-05 11:30:00   13-Apr-05 12:00:00       30.0m    Walk
+--------------------------------------------------
+                                           
+end test
+
+test bal --time-report --time-colon
+ 13-Apr-05 10:00:00   13-Apr-05 10:05:00        5:0m  CustomerA:Email
+ 13-Apr-05 10:05:00   13-Apr-05 11:30:00       1:25h  CustomerB:Config
+ 13-Apr-05 09:30:00   13-Apr-05 10:00:00       30:0m  Internal:Meeting:Tactical [Intelligent comment]
+                                               2:00h  Personal
+ 13-Apr-05 12:00:00   13-Apr-05 13:30:00       1:30h    Lunch
+ 13-Apr-05 11:30:00   13-Apr-05 12:00:00       30:0m    Walk
+--------------------------------------------------
+                                           
+end test
+
