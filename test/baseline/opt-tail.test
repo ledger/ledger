@@ -202,3 +202,17 @@ test reg --tail=10 books
 09-Dec-01 December              Expenses:Books              $120.00     $3000.00
 09-Dec-31 End of December       Expenses:Books              $120.00     $3120.00
 end test
+
+test reg --last=10 books
+09-Aug-01 August                Expenses:Books               $80.00     $2200.00
+09-Aug-31 End of August         Expenses:Books               $80.00     $2280.00
+09-Sep-01 September             Expenses:Books               $90.00     $2370.00
+09-Sep-30 End of September      Expenses:Books               $90.00     $2460.00
+09-Oct-01 October               Expenses:Books              $100.00     $2560.00
+09-Oct-31 End of October        Expenses:Books              $100.00     $2660.00
+09-Nov-01 November              Expenses:Books              $110.00     $2770.00
+09-Nov-30 End of November       Expenses:Books              $110.00     $2880.00
+09-Dec-01 December              Expenses:Books              $120.00     $3000.00
+09-Dec-31 End of December       Expenses:Books              $120.00     $3120.00
+end test
+
