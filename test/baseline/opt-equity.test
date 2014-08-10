@@ -1,0 +1,49 @@
+D 1000.00 GBP
+
+2011-03-04 Buy shares
+    Assets:Broker           2 AAA @ 0.90 GBP
+    Assets:Bank
+
+2011-03-05 Buy shares
+    Assets:Broker           2 AAA @ 1.00 GBP
+    Assets:Bank
+
+test reg --equity
+11-Mar-05 Opening Balances      Assets:Bank               -3.80 GBP    -3.80 GBP
+                                Assets:Broker                 4 AAA        4 AAA
+                                                                       -3.80 GBP
+                                Equit:Opening Balances       -4 AAA    -3.80 GBP
+                                Equit:Opening Balances     3.80 GBP            0
+end test
+
+test reg assets --equity
+11-Mar-05 Opening Balances      Assets:Bank               -3.80 GBP    -3.80 GBP
+                                Assets:Broker                 4 AAA        4 AAA
+                                                                       -3.80 GBP
+                                Equit:Opening Balances       -4 AAA    -3.80 GBP
+                                Equit:Opening Balances     3.80 GBP            0
+end test
+
+test reg assets:bank --equity
+11-Mar-05 Opening Balances      Assets:Bank               -3.80 GBP    -3.80 GBP
+                                Equit:Opening Balances     3.80 GBP            0
+end test
+
+test reg assets:broker --equity
+11-Mar-05 Opening Balances      Assets:Broker                 4 AAA        4 AAA
+                                Equit:Opening Balances       -4 AAA            0
+end test
+
+test reg --lots --date-format %Y/%m/%d --equity
+2011/03/05 Opening Balances     Assets:Bank               -3.80 GBP    -3.80 GBP
+                                Assets:Broker          2 AAA {0.90 GBP} [2011/03/04] 2 AAA {0.90 GBP} [2011/03/04]
+                                                                       -3.80 GBP
+                                Assets:Broker          2 AAA {1.00 GBP} [2011/03/05] 2 AAA {0.90 GBP} [2011/03/04]
+                                                   2 AAA {1.00 GBP} [2011/03/05]
+                                                                       -3.80 GBP
+                                Equit:Opening Balances -2 AAA {0.90 GBP} [2011/03/04] 2 AAA {1.00 GBP} [2011/03/05]
+                                                                       -3.80 GBP
+                                Equit:Opening Balances -2 AAA {1.00 GBP} [2011/03/05]    -3.80 GBP
+                                Equit:Opening Balances     3.80 GBP            0
+end test
+
