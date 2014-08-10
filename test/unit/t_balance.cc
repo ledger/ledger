@@ -315,4 +315,29 @@ BOOST_AUTO_TEST_CASE(testNegation)
   BOOST_CHECK(b3.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testAbs)
+{
+  amount_t a1("0.00");
+  amount_t a2("$ 123");
+  amount_t a3("EUR 456");
+
+  balance_t b0;
+  balance_t b1;
+  balance_t b2;
+
+  b1 += a1;
+  b1 += a2;
+  b1 += a3;
+  b2 += -a1;
+  b2 += -a2;
+  b2 += -a3;
+
+  BOOST_CHECK_EQUAL(b0.abs(), b0);
+  BOOST_CHECK_EQUAL(b2.abs(), b1.abs());
+
+  BOOST_CHECK(b0.valid());
+  BOOST_CHECK(b1.valid());
+  BOOST_CHECK(b2.valid());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
