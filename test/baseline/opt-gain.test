@@ -67,7 +67,7 @@ test bal --change
               4500 P  Assets:Brokerage:Stocks
 end test
 
-test bal -G 
+test bal -G
               4500 P  Assets:Brokerage:Stocks
 end test
 

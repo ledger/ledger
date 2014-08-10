@@ -22,7 +22,7 @@ test bal
                30.0m    Walk
 --------------------
                4.00h
-end test 
+end test
 
 test bal --time-colon
                 5:0m  CustomerA:Email
@@ -35,7 +35,7 @@ test bal --time-colon
                4:00h
 end test
 
-test  reg --time-colon
+test reg --time-colon
 13-Apr-05 <Unspecified payee>   (Int:Meeting:Tactical)        30:0m        30:0m
 13-Apr-05 <Unspecified payee>   (CustomerA:Email)              5:0m        35:0m
 13-Apr-05 <Unspecified payee>   (CustomerB:Config)            1:25h        2:00h

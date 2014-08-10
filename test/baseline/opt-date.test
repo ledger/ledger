@@ -4,11 +4,11 @@ D 1000.00 GBP
     Assets:Broker           2 AAA @ 0.90 GBP
     Assets:Bank
 
-2011-03-05 Buy shares	; date: 2011-04-06
+2011-03-05 Buy shares   ; date: 2011-04-06
     Assets:Broker           2 AAA @ 1.00 GBP
     Assets:Bank
 
-test reg --input-date-format '%Y-%m-%d'  --date-format %d-%m-%Y --date 'has_tag("date") ? to_date(tag("date")) : date'
+test reg --input-date-format %Y-%m-%d --date-format %d-%m-%Y --date 'has_tag("date") ? to_date(tag("date")) : date'
 05-04-2011 Buy shares           Assets:Broker                 2 AAA        2 AAA
 05-04-2011 Buy shares           Assets:Bank               -1.80 GBP        2 AAA
                                                                        -1.80 GBP
@@ -18,7 +18,7 @@ test reg --input-date-format '%Y-%m-%d'  --date-format %d-%m-%Y --date 'has_tag(
                                                                        -3.80 GBP
 end test
 
-test  reg --date 'date + 2'
+test reg --date 'date + 2'
 11-Mar-06 Buy shares            Assets:Broker                 2 AAA        2 AAA
 11-Mar-06 Buy shares            Assets:Bank               -1.80 GBP        2 AAA
                                                                        -1.80 GBP
@@ -38,7 +38,7 @@ test reg --date 'date - 2'
                                                                        -3.80 GBP
 end test
 
-test reg --date 'date +  365*2'
+test reg --date 'date + 365*2'
 13-Mar-03 Buy shares            Assets:Broker                 2 AAA        2 AAA
 13-Mar-03 Buy shares            Assets:Bank               -1.80 GBP        2 AAA
                                                                        -1.80 GBP
