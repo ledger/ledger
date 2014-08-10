@@ -476,4 +476,24 @@ BOOST_AUTO_TEST_CASE(testRound)
   BOOST_CHECK(b4.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testTruth)
+{
+  amount_t a1("0.00");
+  amount_t a2("$ 123");
+  amount_t a3("EUR 456");
+
+  balance_t b0;
+  balance_t b1;
+
+  b1 += a1;
+  b1 += a2;
+  b1 += a3;
+
+  BOOST_CHECK(!b0);
+  BOOST_CHECK(b1);
+
+  BOOST_CHECK(b0.valid());
+  BOOST_CHECK(b1.valid());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
