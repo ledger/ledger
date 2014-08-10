@@ -383,4 +383,47 @@ BOOST_AUTO_TEST_CASE(testCeiling)
   BOOST_CHECK(b4.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testFloor)
+{
+  amount_t a1("0.00");
+  amount_t a2("$ 123.123");
+  amount_t a3("EUR 456.56");
+  amount_t a4(-a1);
+  amount_t a5(-a2);
+  amount_t a6(-a3);
+
+  balance_t b0;
+  balance_t b1;
+  balance_t b2;
+  balance_t b3;
+  balance_t b4;
+
+  b1 += a1;
+  b1 += a2;
+  b1 += a3;
+  b2 += -a1;
+  b2 += -a2;
+  b2 += -a3;
+
+  b3 += a1.floored();
+  b3 += a2.floored();
+  b3 += a3.floored();
+  b4 += a4.floored();
+  b4 += a5.floored();
+  b4 += a6.floored();
+
+  BOOST_CHECK_EQUAL(b0.floored(), b0);
+  BOOST_CHECK_EQUAL(b2.floored(), b4);
+  BOOST_CHECK_EQUAL(b1.floored(), b3);
+
+  b1.in_place_floor();
+  BOOST_CHECK_EQUAL(b1, b3);
+
+  BOOST_CHECK(b0.valid());
+  BOOST_CHECK(b1.valid());
+  BOOST_CHECK(b2.valid());
+  BOOST_CHECK(b3.valid());
+  BOOST_CHECK(b4.valid());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
