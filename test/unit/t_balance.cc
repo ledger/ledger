@@ -522,4 +522,35 @@ BOOST_AUTO_TEST_CASE(testForZero)
   BOOST_CHECK(b1.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testPrinting)
+{
+  amount_t a1("0.00");
+  amount_t a2("$ 123");
+  amount_t a3("EUR 456");
+
+  balance_t b0;
+  balance_t b1;
+
+  b1 += a1;
+  b1 += a2;
+  b1 += a3;
+
+  {
+  std::ostringstream bufstr;
+  b0.dump(bufstr);
+  BOOST_CHECK_EQUAL(std::string("BALANCE()"), bufstr.str());
+  }
+
+  {
+  std::ostringstream bufstr;
+  b1.dump(bufstr);
+
+  BOOST_CHECK_EQUAL(std::string("BALANCE(EUR 456, $ 123.00)"),
+  bufstr.str());
+  }
+
+  BOOST_CHECK(b0.valid());
+  BOOST_CHECK(b1.valid());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
