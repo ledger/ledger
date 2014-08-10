@@ -235,4 +235,49 @@ BOOST_AUTO_TEST_CASE(testMultiplication)
   BOOST_CHECK(b6.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testDivision)
+{
+  amount_t a0;
+  amount_t a1("0.00");
+
+  balance_t b0;
+  balance_t b1(4.00);
+  balance_t b2(4UL);
+  balance_t b3("CAD -24");
+  balance_t b4("EUR 4");
+  balance_t b5("$2");
+  balance_t b6;
+
+  BOOST_CHECK_EQUAL(b1 /= 2.00, amount_t(2.00));
+  BOOST_CHECK_EQUAL(b2 /= 2L, amount_t(2L));
+  BOOST_CHECK_EQUAL(b2 /= 2UL, amount_t(1UL));
+  BOOST_CHECK_EQUAL(b3 /= amount_t("-3 CAD"), amount_t("CAD 8"));
+  BOOST_CHECK_EQUAL(b0 /= 2UL, b0);
+
+  b6 += b3;
+  b3 += b4;
+  b3 += b5;
+  b3 /= 2L;
+  b6 /= 2L;
+  b4 /= 2L;
+  b5 /= 2L;
+  b6 += b4;
+  b6 += b5;
+
+  BOOST_CHECK_EQUAL(b3, b6);
+
+  BOOST_CHECK_THROW(b1 /= a0 , balance_error);
+  BOOST_CHECK_THROW(b1 /= a1 , balance_error);
+  BOOST_CHECK_THROW(b4 /= amount_t("1 CAD") , balance_error);
+  BOOST_CHECK_THROW(b3 /= amount_t("1 CAD") , balance_error);
+
+  BOOST_CHECK(b0.valid());
+  BOOST_CHECK(b1.valid());
+  BOOST_CHECK(b2.valid());
+  BOOST_CHECK(b3.valid());
+  BOOST_CHECK(b4.valid());
+  BOOST_CHECK(b5.valid());
+  BOOST_CHECK(b6.valid());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
