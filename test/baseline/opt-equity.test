@@ -34,19 +34,6 @@ test reg assets:broker --equity
                                 Equit:Opening Balances       -4 AAA            0
 end test
 
-test reg --lot-prices --equity
-11-Mar-05 Opening Balances      Assets:Bank               -3.80 GBP    -3.80 GBP
-                                Assets:Broker          2 AAA {0.90 GBP} 2 AAA {0.90 GBP}
-                                                                       -3.80 GBP
-                                Assets:Broker          2 AAA {1.00 GBP} 2 AAA {0.90 GBP}
-                                                                2 AAA {1.00 GBP}
-                                                                       -3.80 GBP
-                                Equit:Opening Balances -2 AAA {0.90 GBP} 2 AAA {1.00 GBP}
-                                                                       -3.80 GBP
-                                Equit:Opening Balances -2 AAA {1.00 GBP}    -3.80 GBP
-                                Equit:Opening Balances     3.80 GBP            0
-end test
-
 test reg --lots --date-format %Y/%m/%d --equity
 2011/03/05 Opening Balances     Assets:Bank               -3.80 GBP    -3.80 GBP
                                 Assets:Broker          2 AAA {0.90 GBP} [2011/03/04] 2 AAA {0.90 GBP} [2011/03/04]
