@@ -9,7 +9,7 @@ if (BUILD_LIBRARY)
   add_executable(UtilTests t_times.cc)
   add_ledger_test(UtilTests)
 
-  add_executable(MathTests t_amount.cc t_commodity.cc t_balance.cc t_expr.cc)
+  add_executable(MathTests t_amount.cc t_commodity.cc t_balance.cc t_expr.cc t_value.cc)
   add_ledger_test(MathTests)
 
   set_target_properties(check PROPERTIES DEPENDS LedgerUtilTests)
