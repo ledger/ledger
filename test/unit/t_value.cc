@@ -526,6 +526,63 @@ BOOST_AUTO_TEST_CASE(testType)
   BOOST_CHECK(v14.is_string());
   BOOST_CHECK(v15.is_string());
 
+  v11.push_back(v6);
+  BOOST_CHECK(v11.is_sequence());
+
+  BOOST_CHECK(v1.valid());
+  BOOST_CHECK(v2.valid());
+  BOOST_CHECK(v3.valid());
+  BOOST_CHECK(v4.valid());
+  BOOST_CHECK(v5.valid());
+  BOOST_CHECK(v6.valid());
+  BOOST_CHECK(v7.valid());
+  BOOST_CHECK(v8.valid());
+  BOOST_CHECK(v9.valid());
+  BOOST_CHECK(v10.valid());
+  BOOST_CHECK(v11.valid());
+  BOOST_CHECK(v12.valid());
+  BOOST_CHECK(v13.valid());
+  BOOST_CHECK(v14.valid());
+  BOOST_CHECK(v15.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testForZero)
+{
+  value_t v1;
+  value_t v2(true);
+  value_t v3(boost::posix_time::from_time_t(time_t(NULL)));
+  value_t v4(date_t(0));
+  value_t v5(2L);
+  value_t v6(0UL);
+  value_t v7(1.00);
+  value_t v8(amount_t("4 GBP"));
+  value_t v9(balance_t("0"));
+  value_t v10(mask_t(""));
+  value_t v11(new value_t::sequence_t());
+  value_t v12(string("$1"));
+  value_t v13("2 CAD");
+  value_t v14("comment", true);
+  value_t v15(string(""), true);
+
+  BOOST_CHECK(v1.is_null());
+  BOOST_CHECK(v2.is_nonzero());
+  BOOST_CHECK(!v3.is_zero());
+  BOOST_CHECK(v4.is_nonzero());
+  BOOST_CHECK(v5.is_nonzero());
+  BOOST_CHECK(v6.is_realzero());
+  BOOST_CHECK(v7.is_nonzero());
+  BOOST_CHECK(v8.is_nonzero());
+  BOOST_CHECK(v9.is_zero());
+  BOOST_CHECK_THROW(v10.is_zero(), value_error);
+  BOOST_CHECK(v11.is_nonzero());
+  BOOST_CHECK(v12.is_nonzero());
+  BOOST_CHECK(v13.is_nonzero());
+  BOOST_CHECK(v14.is_nonzero());
+  BOOST_CHECK(v15.is_zero());
+
+  v11.push_back(v6);
+  BOOST_CHECK(v11.is_nonzero());
+
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
   BOOST_CHECK(v3.valid());
