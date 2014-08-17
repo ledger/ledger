@@ -48,8 +48,8 @@ BOOST_AUTO_TEST_CASE(testConstructors)
   value_t v11(new value_t::sequence_t());
   value_t v12(string("$1"));
   value_t v13("2 CAD");
-  value_t v14("comment",true);
-  value_t v15(string("tag"),true);
+  value_t v14("comment", true);
+  value_t v15(string("tag"), true);
 
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
@@ -122,8 +122,8 @@ BOOST_AUTO_TEST_CASE(testEquality)
   value_t v11(new value_t::sequence_t());
   value_t v12(string("$1"));
   value_t v13("2 CAD");
-  value_t v14("comment",true);
-  value_t v15(string("comment"),true);
+  value_t v14("comment", true);
+  value_t v15(string("comment"), true);
   value_t v16;
 
   BOOST_CHECK_EQUAL(v1, value_t());
