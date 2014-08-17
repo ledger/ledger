@@ -409,16 +409,6 @@ BOOST_AUTO_TEST_CASE(testMultiplication)
   v18 += value_t(4L);
   BOOST_CHECK_EQUAL(v17, v18);
 
-  value_t v20(new value_t::sequence_t());
-  v11.push_back(value_t(2L));
-  v11.push_back(value_t("4 GBP"));
-  v20.push_back(value_t(2L));
-  v20 += value_t("4 GBP");
-  v20.push_back(value_t(2L));
-  v20 += value_t("4 GBP");
-  v11 *= value_t(2L);
-  BOOST_CHECK_EQUAL(v11, v20);
-
   BOOST_CHECK_THROW(v10 += v8, value_error);
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
@@ -438,7 +428,6 @@ BOOST_AUTO_TEST_CASE(testMultiplication)
   BOOST_CHECK(v16.valid());
   BOOST_CHECK(v17.valid());
   BOOST_CHECK(v18.valid());
-  BOOST_CHECK(v20.valid());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
