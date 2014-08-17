@@ -511,6 +511,7 @@ BOOST_AUTO_TEST_CASE(testType)
   value_t v14("comment", true);
   value_t v15(string("tag"), true);
 
+  BOOST_CHECK(v1.is_null());
   BOOST_CHECK(v2.is_boolean());
   BOOST_CHECK(v3.is_datetime());
   BOOST_CHECK(v4.is_date());
