@@ -430,5 +430,68 @@ BOOST_AUTO_TEST_CASE(testMultiplication)
   BOOST_CHECK(v18.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testDivision)
+{
+  struct tm localtime;
+  strptime("10 February 2010 00:00:00", "%d %b %Y %H:%M:%S", &localtime);
+  time_t time_var = mktime(&localtime);
+
+  value_t v1;
+  value_t v2(true);
+  value_t v3(boost::posix_time::from_time_t(time_var));
+  value_t v4(date_t(parse_date("2014/08/14")));
+  value_t v5(8L);
+  value_t v6(2UL);
+  value_t v7(1.00);
+  value_t v8(amount_t("4 GBP"));
+  value_t v9(balance_t("4 GBP"));
+  value_t v10(mask_t("regex"));
+  value_t v11(new value_t::sequence_t());
+  value_t v12(string("$1"));
+  value_t v13("2 CAD");
+  value_t v14("comment", true);
+  value_t v15(string("comment"), true);
+  value_t v16(amount_t("8"));
+
+  v5 /= value_t(2L);
+  BOOST_CHECK_EQUAL(v5, value_t(4L));
+  v5 /= value_t(amount_t("8"));
+  BOOST_CHECK_EQUAL(v5, value_t(amount_t("2")));
+
+  v16 /= value_t(2L);
+  v16 /= value_t(amount_t("2"));
+  BOOST_CHECK_EQUAL(v5, v16);
+
+  v8 /= v9;
+  v8 /= value_t(balance_t(2L));
+  BOOST_CHECK_EQUAL(v8, value_t("0.5 GBP"));
+
+  value_t v17(v9);
+  v9 /= value_t(2L);
+  BOOST_CHECK_EQUAL(v9, value_t("2 GBP"));
+  v17 /= value_t("2 GBP");
+  v17 /= value_t("2");
+  BOOST_CHECK_EQUAL(v17, value_t(balance_t("1 GBP")));
+
+  BOOST_CHECK_THROW(v10 /= v8, value_error);
+  BOOST_CHECK(v1.valid());
+  BOOST_CHECK(v2.valid());
+  BOOST_CHECK(v3.valid());
+  BOOST_CHECK(v4.valid());
+  BOOST_CHECK(v5.valid());
+  BOOST_CHECK(v6.valid());
+  BOOST_CHECK(v7.valid());
+  BOOST_CHECK(v8.valid());
+  BOOST_CHECK(v9.valid());
+  BOOST_CHECK(v10.valid());
+  BOOST_CHECK(v11.valid());
+  BOOST_CHECK(v12.valid());
+  BOOST_CHECK(v13.valid());
+  BOOST_CHECK(v14.valid());
+  BOOST_CHECK(v15.valid());
+  BOOST_CHECK(v16.valid());
+  BOOST_CHECK(v17.valid());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
