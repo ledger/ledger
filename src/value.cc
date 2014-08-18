@@ -341,6 +341,10 @@ value_t& value_t::operator+=(const value_t& val)
   }
 
   switch (type()) {
+  case VOID:
+    *this = value_t(val);
+    return *this;
+
   case DATETIME:
     switch (val.type()) {
     case INTEGER:
