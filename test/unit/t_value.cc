@@ -167,6 +167,38 @@ BOOST_AUTO_TEST_CASE(testEquality)
   BOOST_CHECK(v20.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testSequence)
+{
+  value_t::sequence_t s1;
+  value_t v1(s1);
+  BOOST_CHECK(v1.is_sequence());
+  v1.push_back(value_t(2L));
+  v1.push_back(value_t("3 GBP"));
+
+  value_t v2("3 GBP");
+  value_t seq(v1);
+  const value_t v3(seq);
+  value_t::sequence_t::iterator i = std::find(seq.begin(), seq.end(), v2);
+  if (i != seq.end())
+    BOOST_CHECK(v2 == *i);
+  value_t::sequence_t::const_iterator j = std::find(v3.begin(), v3.end(), v2);
+  if (j != v3.end())
+    BOOST_CHECK(v2 == *j);
+  BOOST_CHECK(v2 == seq[1]);
+  BOOST_CHECK(v2 == v3[1]);
+  v1.pop_back();
+  v1.pop_back();
+  v1.push_front(v2);
+  v1.push_front(value_t(2L));
+  BOOST_CHECK(v2 == v1[1]);
+  BOOST_CHECK(seq == v1);
+
+  BOOST_CHECK(v1.valid());
+  BOOST_CHECK(v2.valid());
+  BOOST_CHECK(v3.valid());
+  BOOST_CHECK(seq.valid());
+}
+
 BOOST_AUTO_TEST_CASE(testAddition)
 {
   struct tm localtime;
