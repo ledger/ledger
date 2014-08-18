@@ -83,10 +83,10 @@ BOOST_AUTO_TEST_CASE(testAssignment)
   value_t v9 = balance_t("3 EUR");
   value_t v10 = mask_t("regex");
   value_t v11 = s1;
-  value_t v12 = new value_t(string("$1"));
-  value_t v13 = new value_t("2 CAD");
-  value_t v14 = new value_t("comment",true);
-  value_t v15 = new value_t(string("tag"),true);
+  value_t v12 = value_t(string("$1"));
+  value_t v13 = value_t("2 CAD");
+  value_t v14 = value_t("comment", true);
+  value_t v15 = value_t(string("tag"), true);
 
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
@@ -181,12 +181,15 @@ BOOST_AUTO_TEST_CASE(testSequence)
   value_t v2("3 GBP");
   value_t seq(v1);
   const value_t v3(seq);
+
   value_t::sequence_t::iterator i = std::find(seq.begin(), seq.end(), v2);
   if (i != seq.end())
     BOOST_CHECK(v2 == *i);
+
   value_t::sequence_t::const_iterator j = std::find(v3.begin(), v3.end(), v2);
   if (j != v3.end())
     BOOST_CHECK(v2 == *j);
+
   BOOST_CHECK(v2 == seq[1]);
   BOOST_CHECK(v2 == v3[1]);
   v1.pop_back();
@@ -468,7 +471,7 @@ BOOST_AUTO_TEST_CASE(testMultiplication)
   v11 *= value_t(2L);
   BOOST_CHECK_EQUAL(v11 ,v20);
 
-  BOOST_CHECK_THROW(v10 += v8, value_error);
+  BOOST_CHECK_THROW(v10 *= v8, value_error);
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
   BOOST_CHECK(v3.valid());
