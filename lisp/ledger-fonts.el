@@ -29,6 +29,32 @@
 (require 'ledger-regex)
 
 (defgroup ledger-faces nil "Ledger mode highlighting" :group 'ledger)
+
+(defface ledger-font-auto-xact-face
+	`((t :foreground "orange" :weight normal))
+	"Default face for automatic transactions"
+	:group 'ledger-faces)
+
+(defface ledger-font-periodic-xact-face
+	`((t :foreground "green" :weight normal))
+	"Default face for automatic transactions"
+	:group 'ledger-faces)
+
+(defface ledger-font-xact-cleared-face
+  `((t :foreground "#AAAAAA" :weight normal))
+  "Default face for cleared transaction"
+  :group 'ledger-faces)
+
+(defface ledger-font-xact-pending-face
+  `((t :foreground "#444444" :weight normal))
+  "Default face for pending transaction"
+  :group 'ledger-faces)
+
+(defface ledger-font-xact-open-face
+  `((t :foreground "#000000" :weight normal))
+  "Default face for transaction under point"
+  :group 'ledger-faces)
+
 (defface ledger-font-payee-uncleared-face
   `((t :foreground "#dc322f" :weight bold ))
   "Default face for Ledger"
@@ -36,13 +62,14 @@
 
 (defface ledger-font-payee-cleared-face
   `((t :inherit ledger-font-other-face))
-  "Default face for cleared (*) transactions"
+  "Default face for cleared (*) payees"
   :group 'ledger-faces)
 
 (defface ledger-font-xact-highlight-face
   `((t :inherit ledger-occur-xact-face))
   "Default face for transaction under point"
   :group 'ledger-faces)
+
 
 (defface ledger-font-pending-face
   `((t :foreground "#cb4b16" :weight normal ))
@@ -51,6 +78,91 @@
 
 (defface ledger-font-other-face
   `((t :foreground "#657b83" :weight normal))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-directive-face
+  `((t :foreground "#009900" :weight normal))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-account-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-apply-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-alias-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-assert-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-bucket-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-capture-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-check-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-commodity-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-define-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-end-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-expr-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-fixed-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-include-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-payee-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-tag-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-year-directive-face
+  `((t :inherit ledger-font-directive-face))
   "Default face for other transactions"
   :group 'ledger-faces)
 

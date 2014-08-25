@@ -40,9 +40,8 @@
 (make-variable-buffer-local 'ledger-xact-highlight-overlay)
 
 (defun ledger-find-xact-extents (pos)
-  "Return point for beginning of xact and and of xact containing position.
-Requires empty line separating xacts.  Argument POS is a location
-within the transaction."
+  "Return list containing point for beginning and end of xact containing POS.
+Requires empty line separating xacts."
   (interactive "d")
   (save-excursion
     (goto-char pos)

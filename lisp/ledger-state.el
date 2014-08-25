@@ -65,6 +65,14 @@
         ((eql state-char ?\;) 'comment)
         (t nil)))
 
+
+(defun ledger-state-from-string (state-string)
+  "Get state from STATE-CHAR."
+  (cond ((string= state-string "!") 'pending)
+        ((string= state-string "*") 'cleared)
+        ((string= state-string ";") 'comment)
+        (t nil)))
+
 (defun ledger-toggle-current-posting (&optional style)
   "Toggle the cleared status of the transaction under point.
 Optional argument STYLE may be `pending' or `cleared', depending
