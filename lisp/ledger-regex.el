@@ -341,12 +341,14 @@
           ))
 
 (defconst ledger-posting-regex
-	(concat "^[ \t]+"  ;; initial white space
-					"\\("
-					"\\([[:word:]: ]*?\n?\\)  "  ;; account, subexpr 2
-					"\\(.*?\\)"  ;; amount, subexpr 3
-					"\\(\n\\|\\(;.*\\)\\)" ;; comment, subexpr 5
-					"\\)"))
+	(concat "^[ \t]+ ?"  ;; initial white space
+					"\\([*!]\\)? ?" ;; state, subexpr 1
+					"\\([[:word:]: ]+\\(\n\\|[ \t][ \t]\\)\\)"  ;; account, subexpr 2
+					"\\([^;\n]*\\)"  ;; amount, subexpr 4
+					"\\(.*\\)" ;; comment, subexpr 5
+					))
+
+
 
 (defconst ledger-directive-start-regex
 	"[=~;#%|\\*[A-Za-z]")

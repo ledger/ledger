@@ -53,17 +53,7 @@
 	(interactive)
 	(if (string= (format-mode-line 'mode-name) "Ledger")
 			(progn
-				(add-hook 'post-command-hook 'ledger-fontify-buffer-part)
-				;; this is a silly work around to emacs bug 16796 wherein
-				;; after-change-functions is randomly reset to nil.  Before
-				;; each change make sure after-change-functions is properly
-				;; set.
-;				(add-hook 'before-change-functions 'ledger-fontify-ensure-after-change-hook)
-				)))
-
-;; (defun ledger-fontify-ensure-after-change-hook (beg end)
-;; 	(if (string= (format-mode-line 'mode-name) "Ledger")
-;; 			(add-hook 'after-change-functions 'ledger-fontify-buffer-part)))
+				(add-hook 'post-command-hook 'ledger-fontify-buffer-part))))
 
 (defun ledger-fontify-buffer-part ()
 	(save-excursion
@@ -85,10 +75,13 @@
 							 (ledger-fontify-set-face extents 'ledger-font-xact-pending-face)))
 			(ledger-fontify-xact-by-line extents))))
 
-(defun ledger-fontify-xact-by-line (extends)
+(defun ledger-fontify-xact-by-line (extents)
 	"do line-by-line detailed fontification of xact"
 	(save-excursion
-		(ledger-fontify-xact-start (car extents))))
+		(ledger-fontify-xact-start (car extents))
+		(while (< (point) (cadr extents))
+			(ledger-fontify-posting (point))
+			(forward-line))))
 
 (defun ledger-fontify-xact-start (pos)
 	(interactive "d")
@@ -106,6 +99,28 @@
 																		'ledger-font-payee-uncleared-face)))
 		(ledger-fontify-set-face (list (match-beginning 8)
 																	 (match-end 8)) 'ledger-font-comment-face)))
+
+(defun ledger-fontify-posting (pos)
+	(let ((state nil))
+		(re-search-forward ledger-posting-regex)
+		(if (match-string 1)
+				(save-match-data (setq state (ledger-state-from-string (s-trim (match-string 1))))))
+		(ledger-fontify-set-face (list (match-beginning 0) (match-end 2))
+														 (cond ((eq state 'cleared)
+																		'ledger-font-posting-account-cleared-face)
+																	 ((eq state 'pending)
+																		'ledger-font-posting-account-pending-face)
+																	 (t
+																		'ledger-font-posting-account-face)))
+		(ledger-fontify-set-face (list (match-beginning 4) (match-end 4))
+														 (cond ((eq state 'cleared)
+																		'ledger-font-posting-account-cleared-face)
+																	 ((eq state 'cleared)
+																		'ledger-font-posting-account-pending-face)
+																	 (t
+																		'ledger-font-posting-amount-face)))
+		(ledger-fontify-set-face (list (match-beginning 5) (match-end 5))
+														 'ledger-font-comment-face)))
 
 (defun ledger-fontify-directive-at (position)
 	(interactive "d")
