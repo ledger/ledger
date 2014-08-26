@@ -191,7 +191,7 @@ public:
   static bool use_aux_date;
 
   virtual bool has_date() const {
-    return _date;
+    return _date != NULL;
   }
 
   virtual date_t date() const {
