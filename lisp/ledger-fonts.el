@@ -228,29 +228,49 @@
   :group 'ledger-faces)
 
 
+;; (defvar ledger-font-lock-keywords
+;;   `( ;; (,ledger-other-entries-regex 1
+;;     ;;          ledger-font-other-face)
+;;     (,ledger-comment-regex 0
+;;                            'ledger-font-comment-face)
+;;     (,ledger-amount-regex 0
+;;                           'ledger-font-posting-amount-face)
+;;     (,ledger-multiline-comment-regex 0 'ledger-font-comment-face)
+;;     (,ledger-payee-pending-regex 2
+;;                                  'ledger-font-payee-pending-face) ; Works
+;;     (,ledger-payee-cleared-regex 2
+;;                                  'ledger-font-payee-cleared-face) ; Works
+;;     (,ledger-payee-uncleared-regex 2
+;;                                    'ledger-font-payee-uncleared-face) ; Works
+;;     (,ledger-account-cleared-regex 2
+;;                                    'ledger-font-posting-account-cleared-face) ; Works
+;;     (,ledger-account-pending-regex 2
+;;                                    'ledger-font-posting-account-pending-face) ; Works
+;;     (,ledger-account-any-status-regex 2
+;;                                       'ledger-font-posting-account-face) ; Works
+;;     (,ledger-other-entries-regex 1
+;;                                  'ledger-font-other-face))
+;;   "Expressions to highlight in Ledger mode.")
+
 (defvar ledger-font-lock-keywords
-  `( ;; (,ledger-other-entries-regex 1
-    ;;          ledger-font-other-face)
-    (,ledger-comment-regex 0
-                           'ledger-font-comment-face)
-    (,ledger-amount-regex 0
-                          'ledger-font-posting-amount-face)
-    (,ledger-multiline-comment-regex 0 'ledger-font-comment-face)
-    (,ledger-payee-pending-regex 2
-                                 'ledger-font-payee-pending-face) ; Works
-    (,ledger-payee-cleared-regex 2
-                                 'ledger-font-payee-cleared-face) ; Works
-    (,ledger-payee-uncleared-regex 2
-                                   'ledger-font-payee-uncleared-face) ; Works
-    (,ledger-account-cleared-regex 2
-                                   'ledger-font-posting-account-cleared-face) ; Works
-    (,ledger-account-pending-regex 2
-                                   'ledger-font-posting-account-pending-face) ; Works
-    (,ledger-account-any-status-regex 2
-                                      'ledger-font-posting-account-face) ; Works
-    (,ledger-other-entries-regex 1
-                                 'ledger-font-other-face))
+  `(("account" . ledger-font-account-directive-face)
+		("apply" . ledger-font-apply-directive-face)
+		("alias" . ledger-font-alias-directive-face)
+		("assert" . ledger-font-assert-directive-face)
+		("bucket" . ledger-font-bucket-directive-face)
+		("capture" . ledger-font-capture-directive-face)
+		("check" . ledger-font-check-directive-face)
+		("commodity" . ledger-font-commodity-directive-face)
+		("define" . ledger-font-define-directive-face)
+		("end" . ledger-font-end-directive-face)
+		("expr" . ledger-font-expr-directive-face)
+		("fixed" . ledger-font-fixed-directive-face)
+		("include" . ledger-font-include-directive-face)
+		("payee" . ledger-font-payee-directive-face)
+		("tag" . ledger-font-tag-directive-face)
+		("year" . ledger-font-year-directive-face))
   "Expressions to highlight in Ledger mode.")
+
 
 
 (provide 'ledger-fonts)
