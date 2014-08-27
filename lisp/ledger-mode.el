@@ -320,8 +320,8 @@ With a prefix argument, remove the effective date. "
   (add-hook 'completion-at-point-functions 'pcomplete-completions-at-point nil t)
 	(add-hook 'after-save-hook 'ledger-report-redo)
 
-	(ledger-fontify-whole-buffer)
-	(ledger-fontify-activate)
+	;(ledger-fontify-whole-buffer)
+	;(ledger-fontify-activate)
 
 	;(add-hook 'after-save-hook)
   (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
@@ -329,8 +329,12 @@ With a prefix argument, remove the effective date. "
 
   (ledger-init-load-init-file)
 
-  (set (make-local-variable 'indent-region-function) 'ledger-post-align-postings)
-	(run-mode-hooks))
+	(setq font-lock-defaults
+	 			'(nil t nil nil nil
+	 						(font-lock-fontify-buffer-function . ledger-fontify-whole-buffer)
+	 						(font-lock-fontify-region-function . ledger-fontify-buffer-part)))
+
+  (set (make-local-variable 'indent-region-function) 'ledger-post-align-postings))
 
 
 (defun ledger-set-year (newyear)

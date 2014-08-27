@@ -38,6 +38,7 @@
 (defun ledger-fontify-whole-buffer ()
 	(interactive)
   (save-excursion
+		(message "Ledger fontify whole buffer")
     (goto-char (point-min))
     (while (not (eobp))
       (cond ((looking-at ledger-xact-start-regex)
@@ -53,13 +54,26 @@
 	(interactive)
 	(if (string= (format-mode-line 'mode-name) "Ledger")
 			(progn
-				(add-hook 'post-command-hook 'ledger-fontify-buffer-part))))
+				(add-hook 'after-change-functions 'ledger-fontify-buffer-part)
+;				(add-hook 'before-change-functions 'ledger-fontify-ensure-activation)
+				(message "ledger-fontify-activate called"))))
 
-(defun ledger-fontify-buffer-part ()
+(defun ledger-fontify-ensure-activation (beg end)
+	(if (string= (format-mode-line 'mode-name) "Ledger")
+			(add-hook 'after-change-functions 'ledger-fontify-buffer-part)))
+
+(defun ledger-fontify-buffer-part (beg end len)
 	(save-excursion
+		(message (concat "ledger-fontify-buffer-part: "
+										 (int-to-string beg) " "
+										 (int-to-string end) " "
+										 (int-to-string len)
+										 ))
+;		(goto-char beg)
 		(backward-paragraph)
 		(forward-char)
-		(cond ((looking-at ledger-xact-start-regex)
+		(cond ((or (looking-at ledger-xact-start-regex)
+							 (looking-at ledger-posting-regex))
 					 (ledger-fontify-xact-at (point)))
 					((looking-at ledger-directive-start-regex)
 					 (ledger-fontify-directive-at (point))))))

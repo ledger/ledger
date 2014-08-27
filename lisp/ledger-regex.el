@@ -336,7 +336,7 @@
 	(concat ledger-iso-date-regexp  ;; subexp 1
           " ?\\([ *!]\\)"  ;; mark, subexp 5
           " ?\\((.*)\\)?"  ;; code, subexp 6
-          " ?\\([[:word:] ]+\\)"   ;; desc, subexp 7
+          " ?\\([^;\n]+\\)"   ;; desc, subexp 7
 					"\\(\n\\|;.*\\)" ;; comment, subexp 8
           ))
 
