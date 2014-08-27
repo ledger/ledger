@@ -568,7 +568,7 @@ public:
   void   stabilize(const optional<date_t>& date = none);
 
   bool   is_valid() const {
-    return start != NULL;
+    return start;
   }
 
   /** Find the current or next period containing date.  Returns false if

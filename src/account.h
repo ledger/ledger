@@ -261,7 +261,7 @@ public:
   mutable optional<xdata_t> xdata_;
 
   bool has_xdata() const {
-    return xdata_ != NULL;
+    return xdata_;
   }
   void clear_xdata();
   xdata_t& xdata() {
