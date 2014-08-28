@@ -1,6 +1,7 @@
 *.[oa]
 *.so
 *.so.*
+*.dylib
 *.backup
 *.elc
 *.gcov
