@@ -261,7 +261,11 @@ public:
   mutable optional<xdata_t> xdata_;
 
   bool has_xdata() const {
+#if BOOST_VERSION >= 105600
+    return xdata_ != NULL;
+#else
     return xdata_;
+#endif
   }
   void clear_xdata();
   xdata_t& xdata() {
