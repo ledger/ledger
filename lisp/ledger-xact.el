@@ -206,6 +206,32 @@ correct chronological place in the buffer."
         (insert (car args) " \n\n")
         (end-of-line -1)))))
 
+(defun ledger-xact-start-xact-or-directive-p ()
+	"return t if at the beginning of an empty line or line
+beginning with whitespace"
+	(not (looking-at "[ \t]\\|\\(^$\\)")))
+
+(defun ledger-xact-next-xact-or-directive ()
+	"move to the beginning of the next xact"
+	(interactive)
+	(beginning-of-line)
+	(if (ledger-xact-start-xact-or-directive-p) ; if we are the start of an xact, move forward to the next xact
+			(progn
+				(forward-line)
+				(if (not (ledger-xact-start-xact-or-directive-p)) ; we have moved forward and are not at another xact, recurse forward
+						(ledger-xact-next-xact-or-directive)))
+		(while (not	(or (eobp)  ; we didn't start off at the beginning of an xact
+										(ledger-xact-start-xact-or-directive-p)))
+			(forward-line))))
+
+(defun ledger-xact-next-xact ()
+	(interactive)
+	(beginning-of-line)
+	(if (looking-at ledger-xact-start-regex)
+			(forward-line))
+	(re-search-forward ledger-xact-start-regex)
+	(forward-line -1))
+
 
 (provide 'ledger-xact)
 

@@ -40,14 +40,14 @@
   (save-excursion
 		(message "Ledger fontify whole buffer")
     (goto-char (point-min))
+
     (while (not (eobp))
-      (cond ((looking-at ledger-xact-start-regex)
+			(cond ((looking-at ledger-xact-start-regex)
 							(ledger-fontify-xact-at (point)))
 						((looking-at ledger-directive-start-regex)
 						 (ledger-fontify-directive-at (point))))
-
-			(forward-paragraph)
-			(forward-char))))
+			(ledger-xact-next-xact-or-directive)  ;; gets to beginning of next xact
+			)))
 
 (defun ledger-fontify-activate ()
 	"add hook to fontify after buffer changes"
