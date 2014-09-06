@@ -63,7 +63,7 @@
 	(if (string= (format-mode-line 'mode-name) "Ledger")
 			(add-hook 'after-change-functions 'ledger-fontify-buffer-part)))
 
-(defun ledger-fontify-buffer-part (beg end)
+(defun ledger-fontify-buffer-part (beg end len)
 	(save-excursion
 		;; (message (concat "ledger-fontify-buffer-part: "
 		;; 								 (int-to-string beg) " "

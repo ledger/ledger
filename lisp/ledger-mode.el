@@ -347,14 +347,15 @@ With a prefix argument, remove the effective date. "
 
   (if (boundp 'font-lock-defaults)
       (setq-local font-lock-defaults
-									'(ledger-font-lock-keywords t t)))
+									'(ledger-font-lock-keywords t t nil nil
+																							(font-lock-fontify-region-function . ledger-fontify-buffer-part))))
 
   ;; (setq font-lock-extend-region-functions
   ;;       (list #'font-lock-extend-region-wholelines))
   ;; (setq font-lock-multiline nil)
 
-	(jit-lock-register 'ledger-fontify-buffer-part)
-	(jit-lock-unregister 'font-lock-fontify-region)
+	;(jit-lock-register 'ledger-fontify-buffer-part)
+	;(jit-lock-unregister 'font-lock-fontify-region)
 
 	(setq-local pcomplete-parse-arguments-function 'ledger-parse-arguments)
 	(setq-local pcomplete-command-completion-function 'ledger-complete-at-point)
