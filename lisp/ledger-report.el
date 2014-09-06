@@ -367,8 +367,9 @@ Optional EDIT the command."
   (interactive)
 	(let ((cur-buf (current-buffer)))
  		(if (and ledger-report-auto-refresh
-						 (string= (format-mode-line 'mode-name) "Ledger")
-				 (get-buffer ledger-report-buffer-name))
+						 (or (string= (format-mode-line 'mode-name) "Ledger")
+								 (string= (format-mode-line 'mode-name) "Ledger-Report"))
+						 (get-buffer ledger-report-buffer-name))
 				(progn
 
 					(pop-to-buffer (get-buffer ledger-report-buffer-name))
