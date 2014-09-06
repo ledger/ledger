@@ -54,8 +54,9 @@
 	(interactive)
 	(if (string= (format-mode-line 'mode-name) "Ledger")
 			(progn
+				(ledger-fontify-whole-buffer)
 				(add-hook 'after-change-functions 'ledger-fontify-buffer-part)
-;				(add-hook 'before-change-functions 'ledger-fontify-ensure-activation)
+				(add-hook 'before-change-functions 'ledger-fontify-ensure-activation)
 				(message "ledger-fontify-activate called"))))
 
 (defun ledger-fontify-ensure-activation (beg end)
@@ -64,11 +65,11 @@
 
 (defun ledger-fontify-buffer-part (beg end len)
 	(save-excursion
-		(message (concat "ledger-fontify-buffer-part: "
-										 (int-to-string beg) " "
-										 (int-to-string end) " "
-										 (int-to-string len)
-										 ))
+		;; (message (concat "ledger-fontify-buffer-part: "
+		;; 								 (int-to-string beg) " "
+		;; 								 (int-to-string end) " "
+		;; 								 (int-to-string len)
+		;; 								 ))
 ;		(goto-char beg)
 		(backward-paragraph)
 		(forward-char)

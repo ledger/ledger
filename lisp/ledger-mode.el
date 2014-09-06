@@ -329,10 +329,11 @@ With a prefix argument, remove the effective date. "
 	;;  						(font-lock-fontify-buffer-function . ledger-fontify-whole-buffer)
 	;;  						(font-lock-fontify-region-function . ledger-fontify-buffer-part)))
 
-	(setq-local font-lock-defaults `(,ledger-font-lock-keywords nil t nil nil
-																															(font-lock-fontify-buffer-function . ledger-fontify-whole-buffer)))
+	;; (setq-local font-lock-defaults `(,ledger-font-lock-keywords nil t nil nil
+	;; 																														(font-lock-fontify-buffer-function . ledger-fontify-whole-buffer)))
 
-  (setq-local indent-region-function 'ledger-post-align-postings))
+  (setq-local indent-region-function 'ledger-post-align-postings)
+	(ledger-fontify-activate))
 
 
 (defun ledger-set-year (newyear)
