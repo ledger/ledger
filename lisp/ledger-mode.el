@@ -307,16 +307,58 @@ With a prefix argument, remove the effective date. "
     ["Kill Report" ledger-report-kill ledger-works]))
 
 ;;;###autoload
+;; (define-derived-mode ledger-mode text-mode "Ledger"
+;;   "A mode for editing ledger data files."
+;;   (ledger-check-version)
+;;   (ledger-schedule-check-available)
+;;   ;;(ledger-post-setup)
+
+;;   (setq-local pcomplete-parse-arguments-function 'ledger-parse-arguments)
+;;   (setq-local pcomplete-command-completion-function 'ledger-complete-at-point)
+;;   (add-hook 'completion-at-point-functions 'pcomplete-completions-at-point nil t)
+
+;; 	(add-hook 'after-save-hook 'ledger-report-redo)
+
+;;   (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
+;;   (add-hook 'before-revert-hook 'ledger-occur-remove-all-overlays nil t)
+
+;;   (ledger-init-load-init-file)
+
+;; 	;; (setq font-lock-defaults
+;; 	;;  			`(,ledger-font-lock-keywords t nil nil nil
+;; 	;;  						(font-lock-fontify-buffer-function . ledger-fontify-whole-buffer)
+;; 	;;  						(font-lock-fontify-region-function . ledger-fontify-buffer-part)))
+
+;; 	;; (setq-local font-lock-defaults `(,ledger-font-lock-keywords nil t nil nil
+;; 	;; 																														(font-lock-fontify-buffer-function . ledger-fontify-whole-buffer)))
+
+;;   (setq-local indent-region-function 'ledger-post-align-postings))
+
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
   (ledger-check-version)
   (ledger-schedule-check-available)
   ;;(ledger-post-setup)
 
-  (setq-local pcomplete-parse-arguments-function 'ledger-parse-arguments)
-  (setq-local pcomplete-command-completion-function 'ledger-complete-at-point)
-  (add-hook 'completion-at-point-functions 'pcomplete-completions-at-point nil t)
+  ;; (set-syntax-table ledger-mode-syntax-table)
+  ;; (set (make-local-variable 'comment-start) "; ")
+  ;; (set (make-local-variable 'comment-end) "")
+  ;; (set (make-local-variable 'indent-tabs-mode) nil)
 
+  (if (boundp 'font-lock-defaults)
+      (setq-local font-lock-defaults
+									'(ledger-font-lock-keywords t t)))
+
+  ;; (setq font-lock-extend-region-functions
+  ;;       (list #'font-lock-extend-region-wholelines))
+  ;; (setq font-lock-multiline nil)
+
+	(jit-lock-register 'ledger-fontify-buffer-part)
+	(jit-lock-unregister 'font-lock-fontify-region)
+
+	(setq-local pcomplete-parse-arguments-function 'ledger-parse-arguments)
+	(setq-local pcomplete-command-completion-function 'ledger-complete-at-point)
+  (add-hook 'completion-at-point-functions 'pcomplete-completions-at-point nil t)
 	(add-hook 'after-save-hook 'ledger-report-redo)
 
   (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
@@ -324,16 +366,8 @@ With a prefix argument, remove the effective date. "
 
   (ledger-init-load-init-file)
 
-	;; (setq font-lock-defaults
-	;;  			`(,ledger-font-lock-keywords t nil nil nil
-	;;  						(font-lock-fontify-buffer-function . ledger-fontify-whole-buffer)
-	;;  						(font-lock-fontify-region-function . ledger-fontify-buffer-part)))
+  (setq-local indent-region-function 'ledger-post-align-postings))
 
-	;; (setq-local font-lock-defaults `(,ledger-font-lock-keywords nil t nil nil
-	;; 																														(font-lock-fontify-buffer-function . ledger-fontify-whole-buffer)))
-
-  (setq-local indent-region-function 'ledger-post-align-postings)
-	(ledger-fontify-activate))
 
 
 (defun ledger-set-year (newyear)
