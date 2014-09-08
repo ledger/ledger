@@ -185,7 +185,7 @@ bool xact_base_t::finalize()
 
       if (post_account_bad || null_post_account_bad)
         throw_(std::logic_error,
-               _f("Posting with null amount's account may be mispelled:\n  \"%1%\"")
+               _f("Posting with null amount's account may be misspelled:\n  \"%1%\"")
                % (post_account_bad ? post->account->fullname() :
                    null_post->account->fullname()));
       else
