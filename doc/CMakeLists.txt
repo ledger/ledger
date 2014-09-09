@@ -113,22 +113,16 @@ if (CMAKE_INSTALL_MANDIR)
     DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT doc)
 endif(CMAKE_INSTALL_MANDIR)
 
-foreach(file ${ledger_info_files})
-  get_filename_component(file_base ${file} NAME_WE)
+foreach(file ${ledger_doc_files})
+  get_filename_component(file_ext ${file} EXT)
 
-  if (CMAKE_SOURCE_DIR STREQUAL BUILD_DIR)
-    set(doc_dir ${CMAKE_CURRENT_SOURCE_DIR})
-  else()
-    get_filename_component(dir_base ${CMAKE_CURRENT_SOURCE_DIR} NAME_WE)
-    set(doc_dir "${CMAKE_SOURCE_DIR}/${BUILD_DIR}/${dir_base}")
-  endif()
-
-  install(FILES ${doc_dir}/${file_base}.info
-    DESTINATION ${CMAKE_INSTALL_INFODIR} COMPONENT doc)
-  install(FILES ${doc_dir}/${file_base}.pdf
-    DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT doc OPTIONAL)
-  if (BUILD_WEB_DOCS)
-    install(FILES ${doc_dir}/${file_base}.html
+  if(file_ext STREQUAL ".info")
+    if(CMAKE_INSTALL_INFODIR)
+      install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${file}
+        DESTINATION ${CMAKE_INSTALL_INFODIR} COMPONENT doc)
+    endif()
+  elseif(CMAKE_INSTALL_DOCDIR)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${file}
       DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT doc)
-  endif(BUILD_WEB_DOCS)
+  endif()
 endforeach()
