@@ -34,6 +34,14 @@ if (BUILD_DOCS)
   find_program(MAN2HTML man2html)
   find_program(GROFF groff)
   set(ledger_info_files ledger3.texi ledger-mode.texi)
+
+  if (NOT MAKEINFO)
+    message(WARNING "Could not find makeinfo. Info version of documentation cannot be built.")
+  endif()
+
+  if (NOT TEXI2PDF OR NOT TEX)
+    message(WARNING "Could not find texi2pdf or tex. PDF version of documentation will not be built.")
+  endif()
 endif()
 
 ########################################################################
@@ -41,9 +49,7 @@ endif()
 foreach(file ${ledger_info_files})
   get_filename_component(file_base ${file} NAME_WE)
 
-  if (NOT MAKEINFO)
-    message(WARNING "Could not find makeinfo. Info version of documentation cannot be built.")
-  else()
+  if (MAKEINFO)
     add_custom_command(OUTPUT ${file_base}.info
       COMMAND makeinfo --force --no-split -o ${file_base}.info ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
@@ -51,20 +57,15 @@ foreach(file ${ledger_info_files})
     list(APPEND ledger_doc_files ${file_base}.info)
   endif()
 
-  if (BUILD_WEB_DOCS)
-    if (NOT MAKEINFO)
-      message(WARNING "Could not find makeinfo. HTML version of documentation cannot be built.")
-    endif()
+  if (BUILD_WEB_DOCS AND MAKEINFO)
     add_custom_command(OUTPUT ${file_base}.html
       COMMAND makeinfo --force --html --no-split -o ${file_base}.html ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.html)
-  endif(BUILD_WEB_DOCS)
+  endif()
 
-  if (NOT TEXI2PDF OR NOT TEX)
-    message(WARNING "Could not find texi2pdf or tex. PDF version of documentation will not be built.")
-  else()
+  if (TEXI2PDF AND TEX)
     if (BUILD_A4_PDF)
       set(papersize --texinfo=@afourpaper)
     endif()
