@@ -29,6 +29,32 @@
 (require 'ledger-regex)
 
 (defgroup ledger-faces nil "Ledger mode highlighting" :group 'ledger)
+
+(defface ledger-font-auto-xact-face
+	`((t :foreground "orange" :weight normal))
+	"Default face for automatic transactions"
+	:group 'ledger-faces)
+
+(defface ledger-font-periodic-xact-face
+	`((t :foreground "green" :weight normal))
+	"Default face for automatic transactions"
+	:group 'ledger-faces)
+
+(defface ledger-font-xact-cleared-face
+  `((t :foreground "#AAAAAA" :weight normal))
+  "Default face for cleared transaction"
+  :group 'ledger-faces)
+
+(defface ledger-font-xact-pending-face
+  `((t :foreground "#444444" :weight normal))
+  "Default face for pending transaction"
+  :group 'ledger-faces)
+
+(defface ledger-font-xact-open-face
+  `((t :foreground "#000000" :weight normal))
+  "Default face for transaction under point"
+  :group 'ledger-faces)
+
 (defface ledger-font-payee-uncleared-face
   `((t :foreground "#dc322f" :weight bold ))
   "Default face for Ledger"
@@ -36,13 +62,14 @@
 
 (defface ledger-font-payee-cleared-face
   `((t :inherit ledger-font-other-face))
-  "Default face for cleared (*) transactions"
+  "Default face for cleared (*) payees"
   :group 'ledger-faces)
 
 (defface ledger-font-xact-highlight-face
   `((t :inherit ledger-occur-xact-face))
   "Default face for transaction under point"
   :group 'ledger-faces)
+
 
 (defface ledger-font-pending-face
   `((t :foreground "#cb4b16" :weight normal ))
@@ -51,6 +78,91 @@
 
 (defface ledger-font-other-face
   `((t :foreground "#657b83" :weight normal))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-directive-face
+  `((t :foreground "#009900" :weight normal))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-account-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-apply-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-alias-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-assert-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-bucket-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-capture-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-check-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-commodity-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-define-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-end-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-expr-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-fixed-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-include-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-payee-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-tag-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-year-directive-face
+  `((t :inherit ledger-font-directive-face))
   "Default face for other transactions"
   :group 'ledger-faces)
 
@@ -115,30 +227,25 @@
   "Default face for pending (!) transactions in the reconcile window"
   :group 'ledger-faces)
 
+ (defvar ledger-font-lock-keywords
+   `(("account" . ledger-font-account-directive-face)
+ 		("apply" . ledger-font-apply-directive-face)
+ 		("alias" . ledger-font-alias-directive-face)
+ 		("assert" . ledger-font-assert-directive-face)
+ 		("bucket" . ledger-font-bucket-directive-face)
+ 		("capture" . ledger-font-capture-directive-face)
+ 		("check" . ledger-font-check-directive-face)
+ 		("commodity" . ledger-font-commodity-directive-face)
+ 		("define" . ledger-font-define-directive-face)
+ 		("end" . ledger-font-end-directive-face)
+ 		("expr" . ledger-font-expr-directive-face)
+ 		("fixed" . ledger-font-fixed-directive-face)
+ 		("include" . ledger-font-include-directive-face)
+ 		("payee" . ledger-font-payee-directive-face)
+ 		("tag" . ledger-font-tag-directive-face)
+ 		("year" . ledger-font-year-directive-face))
+   "Expressions to highlight in Ledger mode.")
 
-(defvar ledger-font-lock-keywords
-  `( ;; (,ledger-other-entries-regex 1
-    ;;          ledger-font-other-face)
-    (,ledger-comment-regex 0
-                           'ledger-font-comment-face)
-    (,ledger-amount-regex 0
-                          'ledger-font-posting-amount-face)
-    (,ledger-multiline-comment-regex 0 'ledger-font-comment-face)
-    (,ledger-payee-pending-regex 2
-                                 'ledger-font-payee-pending-face) ; Works
-    (,ledger-payee-cleared-regex 2
-                                 'ledger-font-payee-cleared-face) ; Works
-    (,ledger-payee-uncleared-regex 2
-                                   'ledger-font-payee-uncleared-face) ; Works
-    (,ledger-account-cleared-regex 2
-                                   'ledger-font-posting-account-cleared-face) ; Works
-    (,ledger-account-pending-regex 2
-                                   'ledger-font-posting-account-pending-face) ; Works
-    (,ledger-account-any-status-regex 2
-                                      'ledger-font-posting-account-face) ; Works
-    (,ledger-other-entries-regex 1
-                                 'ledger-font-other-face))
-  "Expressions to highlight in Ledger mode.")
 
 
 (provide 'ledger-fonts)

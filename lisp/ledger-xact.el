@@ -40,9 +40,8 @@
 (make-variable-buffer-local 'ledger-xact-highlight-overlay)
 
 (defun ledger-find-xact-extents (pos)
-  "Return point for beginning of xact and and of xact containing position.
-Requires empty line separating xacts.  Argument POS is a location
-within the transaction."
+  "Return list containing point for beginning and end of xact containing POS.
+Requires empty line separating xacts."
   (interactive "d")
   (save-excursion
     (goto-char pos)
@@ -206,6 +205,32 @@ correct chronological place in the buffer."
       (progn
         (insert (car args) " \n\n")
         (end-of-line -1)))))
+
+(defun ledger-xact-start-xact-or-directive-p ()
+	"return t if at the beginning of an empty line or line
+beginning with whitespace"
+	(not (looking-at "[ \t]\\|\\(^$\\)")))
+
+(defun ledger-xact-next-xact-or-directive ()
+	"move to the beginning of the next xact"
+	(interactive)
+	(beginning-of-line)
+	(if (ledger-xact-start-xact-or-directive-p) ; if we are the start of an xact, move forward to the next xact
+			(progn
+				(forward-line)
+				(if (not (ledger-xact-start-xact-or-directive-p)) ; we have moved forward and are not at another xact, recurse forward
+						(ledger-xact-next-xact-or-directive)))
+		(while (not	(or (eobp)  ; we didn't start off at the beginning of an xact
+										(ledger-xact-start-xact-or-directive-p)))
+			(forward-line))))
+
+(defun ledger-xact-next-xact ()
+	(interactive)
+	(beginning-of-line)
+	(if (looking-at ledger-xact-start-regex)
+			(forward-line))
+	(re-search-forward ledger-xact-start-regex)
+	(forward-line -1))
 
 
 (provide 'ledger-xact)
