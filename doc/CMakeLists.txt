@@ -27,22 +27,18 @@ endif()
 
 ########################################################################
 
-if (NOT BUILD_DOCS)
-  add_custom_target(doc DEPENDS doc.doxygen)
-  return()
+if (BUILD_DOCS)
+  find_program(MAKEINFO makeinfo)
+  find_program(TEXI2PDF texi2pdf)
+  find_program(TEX tex)
+  find_program(MAN2HTML man2html)
+  find_program(GROFF groff)
+  set(ledger_info_files ledger3.texi ledger-mode.texi)
 endif()
-
-set(info_files ledger3.texi ledger-mode.texi)
-
-find_program(MAKEINFO makeinfo)
-find_program(TEXI2PDF texi2pdf)
-find_program(TEX tex)
-find_program(MAN2HTML man2html)
-find_program(GROFF groff)
 
 ########################################################################
 
-foreach(file ${info_files})
+foreach(file ${ledger_info_files})
   get_filename_component(file_base ${file} NAME_WE)
 
   if (NOT MAKEINFO)
@@ -117,7 +113,7 @@ if (CMAKE_INSTALL_MANDIR)
     DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT doc)
 endif(CMAKE_INSTALL_MANDIR)
 
-foreach(file ${info_files})
+foreach(file ${ledger_info_files})
   get_filename_component(file_base ${file} NAME_WE)
 
   if (CMAKE_SOURCE_DIR STREQUAL BUILD_DIR)
