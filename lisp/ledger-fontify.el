@@ -35,33 +35,33 @@
   :type 'boolean
   :group 'ledger-fontification)
 
-(defun ledger-fontify-whole-buffer ()
-	(interactive)
-  (save-excursion
-		(message "Ledger fontify whole buffer")
-    (goto-char (point-min))
+;; (defun ledger-fontify-whole-buffer ()
+;; 	(interactive)
+;;   (save-excursion
+;; 		(message "Ledger fontify whole buffer")
+;;     (goto-char (point-min))
 
-    (while (not (eobp))
-			(cond ((looking-at ledger-xact-start-regex)
-							(ledger-fontify-xact-at (point)))
-						((looking-at ledger-directive-start-regex)
-						 (ledger-fontify-directive-at (point))))
-			(ledger-xact-next-xact-or-directive)  ;; gets to beginning of next xact
-			)))
+;;     (while (not (eobp))
+;; 			(cond ((looking-at ledger-xact-start-regex)
+;; 							(ledger-fontify-xact-at (point)))
+;; 						((looking-at ledger-directive-start-regex)
+;; 						 (ledger-fontify-directive-at (point))))
+;; 			(ledger-xact-next-xact-or-directive)  ;; gets to beginning of next xact
+;; 			)))
 
-(defun ledger-fontify-activate ()
-	"add hook to fontify after buffer changes"
-	(interactive)
-	(if (string= (format-mode-line 'mode-name) "Ledger")
-			(progn
-				(ledger-fontify-whole-buffer)
-				(add-hook 'after-change-functions 'ledger-fontify-buffer-part)
-				(add-hook 'before-change-functions 'ledger-fontify-ensure-activation)
-				(message "ledger-fontify-activate called"))))
+;; (defun ledger-fontify-activate ()
+;; 	"add hook to fontify after buffer changes"
+;; 	(interactive)
+;; 	(if (string= (format-mode-line 'mode-name) "Ledger")
+;; 			(progn
+;; 				(ledger-fontify-whole-buffer)
+;; 				(add-hook 'after-change-functions 'ledger-fontify-buffer-part)
+;; 				(add-hook 'before-change-functions 'ledger-fontify-ensure-activation)
+;; 				(message "ledger-fontify-activate called"))))
 
-(defun ledger-fontify-ensure-activation (beg end)
-	(if (string= (format-mode-line 'mode-name) "Ledger")
-			(add-hook 'after-change-functions 'ledger-fontify-buffer-part)))
+;; (defun ledger-fontify-ensure-activation (beg end)
+;; 	(if (string= (format-mode-line 'mode-name) "Ledger")
+;; 			(add-hook 'after-change-functions 'ledger-fontify-buffer-part)))
 
 (defun ledger-fontify-buffer-part (beg end len)
 	(save-excursion
