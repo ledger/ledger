@@ -29,6 +29,6 @@ While parsing periodic transaction:
 >     Liabilities:Education:ULL       $100.00
 >     Liabilities:Mortgage            $100.00
 >     Assets:Bank:Checking
-Error: Posting with null amount's account may be mispelled:
+Error: Posting with null amount's account may be misspelled:
   "Expenses:Entertainment:Blizzard $100.00"
 end test
