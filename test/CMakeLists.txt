@@ -6,8 +6,6 @@ if (NOT PROCESSORS EQUAL 0)
   set(CTEST_BUILD_FLAGS -j${JOBS})
 endif()
 
-get_target_property(LEDGER_LOCATION ledger LOCATION)
-
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} ${CTEST_BUILD_FLAGS})
 
 add_subdirectory(unit)
@@ -23,9 +21,9 @@ macro(add_ledger_harness_tests _class)
       get_filename_component(TestFile_Name ${TestFile} NAME_WE)
       string(FIND ${TestFile_Name} "_py" TestFile_IsPythonTest)
       if ((TestFile_IsPythonTest EQUAL -1) OR HAVE_BOOST_PYTHON)
-        add_test(${_class}Test_${TestFile_Name}
-          ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/RegressTests.py 
-          ${LEDGER_LOCATION} ${PROJECT_SOURCE_DIR} 
+        add_test(NAME ${_class}Test_${TestFile_Name}
+          COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/RegressTests.py
+          $<TARGET_FILE:ledger> ${PROJECT_SOURCE_DIR}
           ${TestFile} ${TEST_PYTHON_FLAGS})
         set_target_properties(check 
           PROPERTIES DEPENDS ${_class}Test_${TestFile_Name})
@@ -44,9 +42,9 @@ add_subdirectory(regress)
 #  file(GLOB ${_class}_TESTS ${PROJECT_SOURCE_DIR}/doc/*.texi)
 #  foreach(TestFile ${${_class}_TESTS})
 #    get_filename_component(TestFile_Name ${TestFile} NAME_WE)
-#    add_test(${_class}Test_${TestFile_Name}
-#      ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/DocTests.py
-#      --ledger ${LEDGER_LOCATION} --file ${TestFile})
+#    add_test(NAME ${_class}Test_${TestFile_Name}
+#      COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/DocTests.py
+#      --ledger $<TARGET_FILE:ledger> --file ${TestFile})
 #    set_target_properties(check PROPERTIES DEPENDS ${_class}Test_${TestFile_Name})
 #  endforeach()
 #endif()
