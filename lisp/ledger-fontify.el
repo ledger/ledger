@@ -65,19 +65,17 @@
 
 (defun ledger-fontify-buffer-part (beg end len)
 	(save-excursion
-		;; (message (concat "ledger-fontify-buffer-part: "
-		;; 								 (int-to-string beg) " "
-		;; 								 (int-to-string end) " "
-		;; 								 (int-to-string len)
-		;; 								 ))
-;		(goto-char beg)
-		(backward-paragraph)
-		(forward-char)
-		(cond ((or (looking-at ledger-xact-start-regex)
-							 (looking-at ledger-posting-regex))
-					 (ledger-fontify-xact-at (point)))
-					((looking-at ledger-directive-start-regex)
-					 (ledger-fontify-directive-at (point))))))
+		(unless beg (setq beg (point-min)))
+		(unless end (setq end (point-max)))
+		(unless len (setq len (- end beg)))
+		(goto-char beg)
+		(while (< (point) end)
+			(cond ((or (looking-at ledger-xact-start-regex)
+								 (looking-at ledger-posting-regex))
+						 (ledger-fontify-xact-at (point)))
+						((looking-at ledger-directive-start-regex)
+						 (ledger-fontify-directive-at (point))))
+			(ledger-xact-next-xact-or-directive))))
 
 (defun ledger-fontify-xact-at (position)
   (interactive "d")
