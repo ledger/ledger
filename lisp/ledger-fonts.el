@@ -176,8 +176,18 @@
   "Face for Ledger accounts"
   :group 'ledger-faces)
 
+(defface ledger-font-posting-amount-cleared-face
+  `((t :inherit ledger-font-posting-account-cleared-face))
+  "Face for Ledger accounts"
+  :group 'ledger-faces)
+
 (defface ledger-font-posting-account-pending-face
   `((t :inherit ledger-font-pending-face))
+  "Face for Ledger accounts"
+  :group 'ledger-faces)
+
+(defface ledger-font-posting-amount-pending-face
+  `((t :inherit ledger-font-posting-account-pending-face))
   "Face for Ledger accounts"
   :group 'ledger-faces)
 
