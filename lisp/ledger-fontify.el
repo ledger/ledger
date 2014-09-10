@@ -35,39 +35,10 @@
   :type 'boolean
   :group 'ledger-fontification)
 
-;; (defun ledger-fontify-whole-buffer ()
-;; 	(interactive)
-;;   (save-excursion
-;; 		(message "Ledger fontify whole buffer")
-;;     (goto-char (point-min))
-
-;;     (while (not (eobp))
-;; 			(cond ((looking-at ledger-xact-start-regex)
-;; 							(ledger-fontify-xact-at (point)))
-;; 						((looking-at ledger-directive-start-regex)
-;; 						 (ledger-fontify-directive-at (point))))
-;; 			(ledger-xact-next-xact-or-directive)  ;; gets to beginning of next xact
-;; 			)))
-
-;; (defun ledger-fontify-activate ()
-;; 	"add hook to fontify after buffer changes"
-;; 	(interactive)
-;; 	(if (string= (format-mode-line 'mode-name) "Ledger")
-;; 			(progn
-;; 				(ledger-fontify-whole-buffer)
-;; 				(add-hook 'after-change-functions 'ledger-fontify-buffer-part)
-;; 				(add-hook 'before-change-functions 'ledger-fontify-ensure-activation)
-;; 				(message "ledger-fontify-activate called"))))
-
-;; (defun ledger-fontify-ensure-activation (beg end)
-;; 	(if (string= (format-mode-line 'mode-name) "Ledger")
-;; 			(add-hook 'after-change-functions 'ledger-fontify-buffer-part)))
-
 (defun ledger-fontify-buffer-part (beg end len)
 	(save-excursion
 		(unless beg (setq beg (point-min)))
 		(unless end (setq end (point-max)))
-		(unless len (setq len (- end beg)))
 		(goto-char beg)
 		(while (< (point) end)
 			(cond ((or (looking-at ledger-xact-start-regex)
@@ -118,6 +89,7 @@
 		(re-search-forward ledger-posting-regex)
 		(if (match-string 1)
 				(save-match-data (setq state (ledger-state-from-string (s-trim (match-string 1))))))
+;;; FIX THIS.  Pull the COND to the outer level and put the fontify-set-face inside.  It will be clearer
 		(ledger-fontify-set-face (list (match-beginning 0) (match-end 2))
 														 (cond ((eq state 'cleared)
 																		'ledger-font-posting-account-cleared-face)
@@ -127,9 +99,9 @@
 																		'ledger-font-posting-account-face)))
 		(ledger-fontify-set-face (list (match-beginning 4) (match-end 4))
 														 (cond ((eq state 'cleared)
-																		'ledger-font-posting-account-cleared-face)
+																		'ledger-font-posting-amount-cleared-face)
 																	 ((eq state 'cleared)
-																		'ledger-font-posting-account-pending-face)
+																		'ledger-font-posting-amount-pending-face)
 																	 (t
 																		'ledger-font-posting-amount-face)))
 		(ledger-fontify-set-face (list (match-beginning 5) (match-end 5))

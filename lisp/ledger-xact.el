@@ -212,7 +212,7 @@ beginning with whitespace"
 	(not (looking-at "[ \t]\\|\\(^$\\)")))
 
 (defun ledger-xact-next-xact-or-directive ()
-	"move to the beginning of the next xact"
+	"move to the beginning of the next xact or directive"
 	(interactive)
 	(beginning-of-line)
 	(if (ledger-xact-start-xact-or-directive-p) ; if we are the start of an xact, move forward to the next xact
@@ -224,13 +224,30 @@ beginning with whitespace"
 										(ledger-xact-start-xact-or-directive-p)))
 			(forward-line))))
 
-(defun ledger-xact-next-xact ()
-	(interactive)
-	(beginning-of-line)
-	(if (looking-at ledger-xact-start-regex)
-			(forward-line))
-	(re-search-forward ledger-xact-start-regex)
-	(forward-line -1))
+(defun ledger-xact-prev-xact ()
+  "Move point to the previous transaction."
+  (interactive)
+  (backward-paragraph)
+  (when (re-search-backward ledger-xact-line-regexp nil t)
+    (goto-char (match-beginning 0))
+    (re-search-forward ledger-post-line-regexp)
+    (goto-char (match-end ledger-regex-post-line-group-account))))
+
+;; (defun ledger-post-next-xact ()
+;;   "Move point to the next transaction."
+;;   (interactive)
+;;   (when (re-search-forward ledger-xact-line-regexp nil t)
+;;     (goto-char (match-beginning 0))
+;;     (re-search-forward ledger-post-line-regexp)
+;;     (goto-char (match-end ledger-regex-post-line-group-account))))
+
+;; (defun ledger-xact-next-xact ()
+;; 	(interactive)
+;; 	(beginning-of-line)
+;; 	(if (looking-at ledger-xact-start-regex)
+;; 			(forward-line))
+;; 	(re-search-forward ledger-xact-start-regex)
+;; 	(forward-line -1))
 
 
 (provide 'ledger-xact)

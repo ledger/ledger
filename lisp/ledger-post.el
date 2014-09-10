@@ -82,7 +82,6 @@ point at beginning of the commodity."
       (- (or (match-end 4)
              (match-end 3)) (point)))))
 
-
 (defun ledger-next-account (&optional end)
   "Move point to the beginning of the next account, or status marker (!*), as long as it is not past END.
 Return the column of the beginning of the account and leave point
@@ -164,8 +163,6 @@ region align the posting on the current line."
         (setq lines-left (not (eobp))))
       (setq inhibit-modification-hooks nil))))
 
-
-
 (defun ledger-post-edit-amount ()
   "Call 'calc-mode' and push the amount in the posting to the top of stack."
   (interactive)
@@ -185,24 +182,6 @@ region align the posting on the current line."
               (goto-char (line-end-position))
             (insert "  "))
           (calc))))))
-
-(defun ledger-post-prev-xact ()
-  "Move point to the previous transaction."
-  (interactive)
-  (backward-paragraph)
-  (when (re-search-backward ledger-xact-line-regexp nil t)
-    (goto-char (match-beginning 0))
-    (re-search-forward ledger-post-line-regexp)
-    (goto-char (match-end ledger-regex-post-line-group-account))))
-
-(defun ledger-post-next-xact ()
-  "Move point to the next transaction."
-  (interactive)
-  (when (re-search-forward ledger-xact-line-regexp nil t)
-    (goto-char (match-beginning 0))
-    (re-search-forward ledger-post-line-regexp)
-    (goto-char (match-end ledger-regex-post-line-group-account))))
-
 
 (provide 'ledger-post)
 
