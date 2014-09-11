@@ -27,27 +27,29 @@ endif()
 
 ########################################################################
 
-if (NOT BUILD_DOCS)
-  add_custom_target(doc DEPENDS doc.doxygen)
-  return()
-endif()
-
-set(info_files ledger3.texi ledger-mode.texi)
-
-find_program(MAKEINFO makeinfo)
-find_program(TEXI2PDF texi2pdf)
-find_program(TEX tex)
-find_program(MAN2HTML man2html)
-find_program(GROFF groff)
-
-########################################################################
-
-foreach(file ${info_files})
-  get_filename_component(file_base ${file} NAME_WE)
+if (BUILD_DOCS)
+  find_program(MAKEINFO makeinfo)
+  find_program(TEXI2PDF texi2pdf)
+  find_program(TEX tex)
+  find_program(MAN2HTML man2html)
+  find_program(GROFF groff)
+  set(ledger_info_files ledger3.texi ledger-mode.texi)
 
   if (NOT MAKEINFO)
     message(WARNING "Could not find makeinfo. Info version of documentation cannot be built.")
-  else()
+  endif()
+
+  if (NOT TEXI2PDF OR NOT TEX)
+    message(WARNING "Could not find texi2pdf or tex. PDF version of documentation will not be built.")
+  endif()
+endif()
+
+########################################################################
+
+foreach(file ${ledger_info_files})
+  get_filename_component(file_base ${file} NAME_WE)
+
+  if (MAKEINFO)
     add_custom_command(OUTPUT ${file_base}.info
       COMMAND makeinfo --force --no-split -o ${file_base}.info ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
@@ -55,20 +57,15 @@ foreach(file ${info_files})
     list(APPEND ledger_doc_files ${file_base}.info)
   endif()
 
-  if (BUILD_WEB_DOCS)
-    if (NOT MAKEINFO)
-      message(WARNING "Could not find makeinfo. HTML version of documentation cannot be built.")
-    endif()
+  if (BUILD_WEB_DOCS AND MAKEINFO)
     add_custom_command(OUTPUT ${file_base}.html
       COMMAND makeinfo --force --html --no-split -o ${file_base}.html ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.html)
-  endif(BUILD_WEB_DOCS)
+  endif()
 
-  if (NOT TEXI2PDF OR NOT TEX)
-    message(WARNING "Could not find texi2pdf or tex. PDF version of documentation will not be built.")
-  else()
+  if (TEXI2PDF AND TEX)
     if (BUILD_A4_PDF)
       set(papersize --texinfo=@afourpaper)
     endif()
@@ -117,22 +114,16 @@ if (CMAKE_INSTALL_MANDIR)
     DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT doc)
 endif(CMAKE_INSTALL_MANDIR)
 
-foreach(file ${info_files})
-  get_filename_component(file_base ${file} NAME_WE)
+foreach(file ${ledger_doc_files})
+  get_filename_component(file_ext ${file} EXT)
 
-  if (CMAKE_SOURCE_DIR STREQUAL BUILD_DIR)
-    set(doc_dir ${CMAKE_CURRENT_SOURCE_DIR})
-  else()
-    get_filename_component(dir_base ${CMAKE_CURRENT_SOURCE_DIR} NAME_WE)
-    set(doc_dir "${CMAKE_SOURCE_DIR}/${BUILD_DIR}/${dir_base}")
-  endif()
-
-  install(FILES ${doc_dir}/${file_base}.info
-    DESTINATION ${CMAKE_INSTALL_INFODIR} COMPONENT doc)
-  install(FILES ${doc_dir}/${file_base}.pdf
-    DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT doc OPTIONAL)
-  if (BUILD_WEB_DOCS)
-    install(FILES ${doc_dir}/${file_base}.html
+  if(file_ext STREQUAL ".info")
+    if(CMAKE_INSTALL_INFODIR)
+      install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${file}
+        DESTINATION ${CMAKE_INSTALL_INFODIR} COMPONENT doc)
+    endif()
+  elseif(CMAKE_INSTALL_DOCDIR)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${file}
       DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT doc)
-  endif(BUILD_WEB_DOCS)
+  endif()
 endforeach()
