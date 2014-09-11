@@ -109,37 +109,35 @@ region align the posting on the current line."
             (not (use-region-p)))
         (set-mark (point)))
 
-    (let* ((inhibit-modification-hooks t)
+    (let ((inhibit-modification-hooks t)
            (mark-first (< (mark) (point)))
-           (begin-region (if beg
-                             beg
-                           (if mark-first (mark) (point))))
-           (end-region (if end
-                           end
-                         (if mark-first (point) (mark))))
            acct-start-column acct-end-column acct-adjust amt-width amt-adjust
            (lines-left 1))
+
+			(unless beg (setq beg (if mark-first (mark) (point))))
+			(unless end (setq end (if mark-first (mark) (point))))
 		  ;; Condition point and mark to the beginning and end of lines
-      (goto-char end-region)
-      (setq end-region (line-end-position))
-      (goto-char begin-region)
+      (goto-char end)
+      (setq end (line-end-position))
+      (goto-char beg)
       (goto-char
-       (setq begin-region
+       (setq beg
              (line-beginning-position)))
 
-			(untabify begin-region end-region)
+			(untabify beg end)
 
-      (goto-char end-region)
-      (setq end-region (line-end-position))
-      (goto-char begin-region)
+			;; if untabify actually changed anything, then our begin and end are not correct.
+      (goto-char end)
+      (setq end (line-end-position))
+      (goto-char beg)
       (goto-char
-       (setq begin-region
+       (setq beg
              (line-beginning-position)))
 
       ;; This is the guts of the alignment loop
       (while (and (or (setq acct-start-column (ledger-next-account (line-end-position)))
                       lines-left)
-                  (< (point) end-region))
+                  (< (point) end))
         (when acct-start-column
           (setq acct-end-column (save-excursion
                                   (goto-char (match-end 2))
