@@ -28,13 +28,17 @@
 
 (defun ledger-next-record-function ()
   "Move point to next transaction."
+	(if (looking-at ledger-payee-any-status-regex)
+			(forward-line))  ;; make sure we actually move to the next xact,
+											 ;; even if we are the beginning of one now.
   (if (re-search-forward  ledger-payee-any-status-regex nil t)
       (goto-char (match-beginning 0))
     (goto-char (point-max))))
 
 (defun ledger-end-record-function ()
   "Move point to end of transaction."
-  (forward-paragraph))
+  (ledger-next-record-function)
+	(backward-char))
 
 (defun ledger-sort-find-start ()
   (if (re-search-forward ";.*Ledger-mode:.*Start sort" nil t)
@@ -69,7 +73,7 @@
 (defun ledger-sort-region (beg end)
   "Sort the region from BEG to END in chronological order."
   (interactive "r") ;; load beg and end from point and mark
-  ;; automagically
+										;; automagically
   (let ((new-beg beg)
         (new-end end)
         point-delta
@@ -82,12 +86,12 @@
     (save-excursion
       (save-restriction
         (goto-char beg)
-        (ledger-next-record-function) ;; make sure point is at the
-        ;; beginning of a xact
+				;; make sure point is at the beginning of a xact
+        (ledger-next-record-function)
         (setq new-beg (point))
         (goto-char end)
-        (ledger-next-record-function) ;; make sure end of region is at
-        ;; the beginning of next record
+        (ledger-next-record-function)
+				;; make sure end of region is at the beginning of next record
         ;; after the region
         (setq new-end (point))
         (narrow-to-region new-beg new-end)
