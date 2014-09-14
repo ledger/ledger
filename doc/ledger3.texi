@@ -367,17 +367,24 @@ data, not for altering it.
 @node Building the program, Getting help, Fat-free Accounting, Introduction to Ledger
 @section Building the program
 
-Ledger is written in ANSI C++, and should compile on any platform.  It
-depends on the GNU multiple precision arithmetic library (libgmp), and
-the Perl regular expression library (libpcre).  It was developed using
-GNU make and gcc 3.3, on a PowerBook running OS/X.
-
-To build and install once you have these libraries on your system,
-enter these commands:
+Ledger is written in ANSI C++, and should compile on any unix platform.
+The easiest way to build and install ledger is to use the prepared
+acprep script, that does a lot of the footwork:
 
 @smallexample
-$ ./configure && make install
+    # to install missing dependencies
+    ./acprep dependencies
+    # building ledger
+    ./acprep update
+    # to run the actual installation
+    make install
 @end smallexample
+
+Please read the contents of `config.log` if the configure step fails.
+Also, see the `help` subcommand to `acprep`, which explains some of its
+many options.  It's pretty much the only command I run for configuring,
+building and testing Ledger.  You can run `make check` to confirm the
+result, and `make install` to install.
 
 @node Getting help,  , Building the program, Introduction to Ledger
 @section Getting help
