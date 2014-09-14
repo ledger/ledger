@@ -164,7 +164,7 @@ Used for coordinating `ledger-occur' with other buffers, like reconcile."
         ;; if something found
         (when (setq endpoint (re-search-forward regex nil 'end))
           (save-excursion
-            (let ((bounds (ledger-find-xact-extents (match-beginning 0))))
+            (let ((bounds (ledger-navigate-find-xact-extents (match-beginning 0))))
               (push bounds lines)
               (setq curpoint (cadr bounds)))) ;; move to the end of
           ;; the xact, no need to

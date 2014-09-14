@@ -325,7 +325,7 @@ Optional EDIT the command."
                                                                    (save-excursion
                                                                      (find-file file)
                                                                      (widen)
-                                                                     (ledger-goto-line line)
+                                                                     (ledger-navigate-to-line line)
                                                                      (point-marker))))))
             (add-text-properties (line-beginning-position) (line-end-position)
                                  (list 'face 'ledger-font-report-clickable-face))

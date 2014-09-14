@@ -157,7 +157,7 @@ And calculate the target-delta of the account being reconciled."
         status)
     (when (ledger-reconcile-get-buffer where)
       (with-current-buffer (ledger-reconcile-get-buffer where)
-        (ledger-goto-line (cdr where))
+        (ledger-navigate-to-line (cdr where))
         (forward-char)
         (setq status (ledger-toggle-current (if ledger-reconcile-toggle-to-pending
                                                 'pending
@@ -220,7 +220,7 @@ Return the number of uncleared xacts found."
   (let ((where (get-text-property (point) 'where)))
     (when (ledger-reconcile-get-buffer where)
       (with-current-buffer (ledger-reconcile-get-buffer where)
-        (ledger-goto-line (cdr where))
+        (ledger-navigate-to-line (cdr where))
         (ledger-delete-current-transaction (point)))
       (let ((inhibit-read-only t))
         (goto-char (line-beginning-position))
@@ -240,7 +240,7 @@ Return the number of uncleared xacts found."
            (cur-win (get-buffer-window (get-buffer ledger-recon-buffer-name))))
       (when target-buffer
         (switch-to-buffer-other-window target-buffer)
-        (ledger-goto-line (cdr where))
+        (ledger-navigate-to-line (cdr where))
         (forward-char)
         (recenter)
         (ledger-highlight-xact-under-point)
@@ -273,7 +273,7 @@ and exit reconcile mode"
             (face  (get-text-property (point) 'face)))
         (if (eq face 'ledger-font-reconciler-pending-face)
             (with-current-buffer (ledger-reconcile-get-buffer where)
-              (ledger-goto-line (cdr where))
+              (ledger-navigate-to-line (cdr where))
               (ledger-toggle-current 'cleared))))
       (forward-line 1)))
   (ledger-reconcile-save)

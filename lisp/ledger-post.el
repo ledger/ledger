@@ -96,7 +96,7 @@ at beginning of account"
 
 (defun ledger-post-align-xact (pos)
   (interactive "d")
-  (let ((bounds (ledger-find-xact-extents pos)))
+  (let ((bounds (ledger-navigate-find-xact-extents pos)))
     (ledger-post-align-postings (car bounds) (cadr bounds))))
 
 (defun ledger-post-align-postings (&optional beg end)

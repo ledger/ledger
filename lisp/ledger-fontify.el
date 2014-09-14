@@ -50,13 +50,13 @@
 						 (ledger-fontify-xact-at (point)))
 						((looking-at ledger-directive-start-regex)
 						 (ledger-fontify-directive-at (point))))
-			(ledger-next-record-function))))
+			(ledger-navigate-next-xact-or-directive))))
 
 (defun ledger-fontify-xact-at (position)
   (interactive "d")
 	(save-excursion
 		(goto-char position)
-		(let ((extents (ledger-find-xact-extents position))
+		(let ((extents (ledger-navigate-find-xact-extents position))
 					(state (ledger-transaction-state)))
 			;; (message (concat "ledger-fontify-xact-at: "
 			;; 								 (int-to-string position)
@@ -121,7 +121,7 @@
 														 'ledger-font-comment-face)))
 
 (defun ledger-fontify-directive-at (position)
-	(let ((extents (ledger-find-xact-extents position))
+	(let ((extents (ledger-navigate-find-xact-extents position))
 				(face 'ledger-font-default-face))
 		(cond ((looking-at "=")
 					 (setq face 'ledger-font-auto-xact-face))

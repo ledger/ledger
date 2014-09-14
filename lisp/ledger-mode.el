@@ -37,6 +37,7 @@
 (require 'ledger-fonts)
 (require 'ledger-fontify)
 (require 'ledger-init)
+(require 'ledger-navigate)
 (require 'ledger-occur)
 (require 'ledger-post)
 (require 'ledger-reconcile)
@@ -261,8 +262,8 @@ With a prefix argument, remove the effective date. "
     (define-key map [(control ?c) (control ?o) (control ?r)] 'ledger-report)
     (define-key map [(control ?c) (control ?o) (control ?s)] 'ledger-report-save)
 
-    (define-key map [(meta ?p)] 'ledger-prev-record-function)
-    (define-key map [(meta ?n)] 'ledger-next-record-function)
+    (define-key map [(meta ?p)] 'ledger-navigate-prev-xact)
+    (define-key map [(meta ?n)] 'ledger-navigate-next-xact-or-directive)
     map)
   "Keymap for `ledger-mode'.")
 

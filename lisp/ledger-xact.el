@@ -39,19 +39,10 @@
 (defvar ledger-xact-highlight-overlay (list))
 (make-variable-buffer-local 'ledger-xact-highlight-overlay)
 
-(defun ledger-find-xact-extents (pos)
-  "Return list containing point for beginning and end of xact containing POS.
-Requires empty line separating xacts."
-  (interactive "d")
-  (save-excursion
-    (goto-char pos)
-    (list (ledger-beginning-record-function)
-					(ledger-end-record-function))))
-
 (defun ledger-highlight-xact-under-point ()
   "Move the highlight overlay to the current transaction."
   (if ledger-highlight-xact-under-point
-      (let ((exts (ledger-find-xact-extents (point)))
+      (let ((exts (ledger-navigate-find-xact-extents (point)))
             (ovl ledger-xact-highlight-overlay))
         (if (not ledger-xact-highlight-overlay)
             (setq ovl
@@ -91,7 +82,7 @@ MOMENT is an encoded date"
           (if (ledger-time-less-p moment date)
               (throw 'found t))))))
     (when (and (eobp) last-xact-start)
-      (let ((end (cadr (ledger-find-xact-extents last-xact-start))))
+      (let ((end (cadr (ledger-navigate-find-xact-extents last-xact-start))))
         (goto-char end)
         (if (eobp)
             (insert "\n")
@@ -122,11 +113,6 @@ MOMENT is an encoded date"
                        mark desc)))))
       (forward-line))))
 
-(defun ledger-goto-line (line-number)
-  "Rapidly move point to line LINE-NUMBER."
-  (goto-char (point-min))
-  (forward-line (1- line-number)))
-
 (defun ledger-year-and-month ()
   (let ((sep (if ledger-use-iso-dates
                  "-"
@@ -138,7 +124,7 @@ MOMENT is an encoded date"
   (interactive  (list
                  (ledger-read-date "Copy to date: ")))
   (let* ((here (point))
-         (extents (ledger-find-xact-extents (point)))
+         (extents (ledger-navigate-find-xact-extents (point)))
          (transaction (buffer-substring-no-properties (car extents) (cadr extents)))
          encoded-date)
     (if (string-match ledger-iso-date-regexp date)
@@ -148,7 +134,7 @@ MOMENT is an encoded date"
                            (string-to-number (match-string 2 date)))))
     (ledger-xact-find-slot encoded-date)
     (insert transaction "\n")
-    (ledger-beginning-record-function)
+    (ledger-navigate-beginning-of-xact)
     (re-search-forward ledger-iso-date-regexp)
     (replace-match date)
     (ledger-next-amount)
@@ -158,7 +144,7 @@ MOMENT is an encoded date"
 (defun ledger-delete-current-transaction (pos)
   "Delete the transaction surrounging point."
   (interactive "d")
-  (let ((bounds (ledger-find-xact-extents pos)))
+  (let ((bounds (ledger-navigate-find-xact-extents pos)))
     (delete-region (car bounds) (cadr bounds))))
 
 (defun ledger-add-transaction (transaction-text &optional insert-at-point)
@@ -199,24 +185,6 @@ correct chronological place in the buffer."
       (progn
         (insert (car args) " \n\n")
         (end-of-line -1)))))
-
-(defun ledger-xact-start-xact-or-directive-p ()
-	"return t if at the beginning of an empty line or line
-beginning with whitespace"
-	(not (looking-at "[ \t]\\|\\(^$\\)")))
-
-(defun ledger-xact-next-xact-or-directive ()
-	"move to the beginning of the next xact or directive"
-	(interactive)
-	(beginning-of-line)
-	(if (ledger-xact-start-xact-or-directive-p) ; if we are the start of an xact, move forward to the next xact
-			(progn
-				(forward-line)
-				(if (not (ledger-xact-start-xact-or-directive-p)) ; we have moved forward and are not at another xact, recurse forward
-						(ledger-xact-next-xact-or-directive)))
-		(while (not	(or (eobp)  ; we didn't start off at the beginning of an xact
-										(ledger-xact-start-xact-or-directive-p)))
-			(forward-line))))
 
 (provide 'ledger-xact)
 

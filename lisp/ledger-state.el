@@ -85,7 +85,7 @@ achieved more certainly by passing the xact to ledger for
 formatting, but doing so causes inline math expressions to be
 dropped."
   (interactive)
-  (let ((bounds (ledger-find-xact-extents (point)))
+  (let ((bounds (ledger-navigate-find-xact-extents (point)))
         new-status cur-status)
     ;; Uncompact the xact, to make it easier to toggle the
     ;; transaction
