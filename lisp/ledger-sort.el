@@ -104,10 +104,10 @@
       (save-restriction
         (goto-char beg)
 				;; make sure point is at the beginning of a xact
-        (ledger-navigate-next-xact-or-directive)
+        (ledger-navigate-next-xact)
         (setq new-beg (point))
         (goto-char end)
-        (ledger-navigate-next-xact-or-directive)
+        (ledger-navigate-next-xact)
 				;; make sure end of region is at the beginning of next record
         ;; after the region
         (setq new-end (point))
@@ -117,7 +117,7 @@
         (let ((inhibit-field-text-motion t))
           (sort-subr
            nil
-           'ledger-navigate-next-xact-or-directive
+           'ledger-navigate-next-xact
            'ledger-navigate-end-of-xact
            'ledger-sort-startkey))))
 

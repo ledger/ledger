@@ -26,15 +26,15 @@
 
 (provide 'ledger-navigate)
 
-;; (defun ledger-navigate-next-xact-or-directive ()
-;;   "Move point to beginning of next xact."
-;; 	;; make sure we actually move to the next xact, even if we are the
-;; 	;; beginning of one now.
-;; 	(if (looking-at ledger-payee-any-status-regex)
-;; 			(forward-line))
-;;   (if (re-search-forward  ledger-payee-any-status-regex nil t)
-;;       (goto-char (match-beginning 0))
-;;     (goto-char (point-max))))
+(defun ledger-navigate-next-xact ()
+	"Move point to beginning of next xact."
+ 	;; make sure we actually move to the next xact, even if we are the
+ 	;; beginning of one now.
+ 	(if (looking-at ledger-payee-any-status-regex)
+ 			(forward-line))
+   (if (re-search-forward  ledger-payee-any-status-regex nil t)
+       (goto-char (match-beginning 0))
+     (goto-char (point-max))))
 
 (defun ledger-navigate-start-xact-or-directive-p ()
 	"return t if at the beginning of an empty line or line
