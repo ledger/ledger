@@ -35,29 +35,41 @@
   :type 'boolean
   :group 'ledger-fontification)
 
-(defun ledger-fontify-buffer-part (beg end len)
+(defun ledger-fontify-buffer-part (&optional beg end len)
+	;; (message (concat "ledger-fontify-buffer-part: ("
+	;; 										 (int-to-string beg) ", "
+	;; 										 (int-to-string end)
+	;; 										 ")"))
 	(save-excursion
 		(unless beg (setq beg (point-min)))
 		(unless end (setq end (point-max)))
-		(goto-char beg)
+		(beginning-of-line)
 		(while (< (point) end)
 			(cond ((or (looking-at ledger-xact-start-regex)
 								 (looking-at ledger-posting-regex))
 						 (ledger-fontify-xact-at (point)))
 						((looking-at ledger-directive-start-regex)
 						 (ledger-fontify-directive-at (point))))
-			(ledger-xact-next-xact-or-directive))))
+			(ledger-next-record-function))))
 
 (defun ledger-fontify-xact-at (position)
   (interactive "d")
-	(let ((extents (ledger-find-xact-extents position))
-				(state (ledger-transaction-state)))
-		(if (and ledger-fontify-xact-state-overrides state)
-				(cond ((eq state 'cleared)
-							 (ledger-fontify-set-face extents 'ledger-font-xact-cleared-face))
-							((eq state 'pending)
-							 (ledger-fontify-set-face extents 'ledger-font-xact-pending-face)))
-			(ledger-fontify-xact-by-line extents))))
+	(save-excursion
+		(goto-char position)
+		(let ((extents (ledger-find-xact-extents position))
+					(state (ledger-transaction-state)))
+			;; (message (concat "ledger-fontify-xact-at: "
+			;; 								 (int-to-string position)
+			;; 								 " ("
+			;; 								 (int-to-string (car extents)) ", "
+			;; 								 (int-to-string (cadr extents))
+			;; 								 ")"))
+			(if (and ledger-fontify-xact-state-overrides state)
+					(cond ((eq state 'cleared)
+								 (ledger-fontify-set-face extents 'ledger-font-xact-cleared-face))
+								((eq state 'pending)
+								 (ledger-fontify-set-face extents 'ledger-font-xact-pending-face)))
+				(ledger-fontify-xact-by-line extents)))))
 
 (defun ledger-fontify-xact-by-line (extents)
 	"do line-by-line detailed fontification of xact"
@@ -68,8 +80,9 @@
 			(forward-line))))
 
 (defun ledger-fontify-xact-start (pos)
-	(interactive "d")
+	"POS shoul dbe at the beginning of a line starting an xact"
 	(goto-char pos)
+	(beginning-of-line)
 	(let ((state nil))
 		(re-search-forward ledger-xact-start-regex)
 		(ledger-fontify-set-face (list (match-beginning 1) (match-end 1)) 'ledger-font-posting-date-face)
@@ -108,7 +121,6 @@
 														 'ledger-font-comment-face)))
 
 (defun ledger-fontify-directive-at (position)
-	(interactive "d")
 	(let ((extents (ledger-find-xact-extents position))
 				(face 'ledger-font-default-face))
 		(cond ((looking-at "=")

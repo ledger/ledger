@@ -28,17 +28,34 @@
 
 (defun ledger-next-record-function ()
   "Move point to next transaction."
+	;; make sure we actually move to the next xact, even if we are the
+	;; beginning of one now.
 	(if (looking-at ledger-payee-any-status-regex)
-			(forward-line))  ;; make sure we actually move to the next xact,
-											 ;; even if we are the beginning of one now.
+			(forward-line))
   (if (re-search-forward  ledger-payee-any-status-regex nil t)
       (goto-char (match-beginning 0))
     (goto-char (point-max))))
 
+(defun ledger-prev-record-function ()
+  "Move point to beginning of previous xact."
+	(ledger-beginning-record-function)
+	(re-search-backward ledger-xact-start-regex nil t))
+
+(defun ledger-beginning-record-function ()
+	"Move point to the beginning of the current xact"
+	(interactive)
+	(unless (looking-at ledger-xact-start-regex)
+		(re-search-backward ledger-xact-start-regex nil t)
+		(beginning-of-line))
+	(point))
+
 (defun ledger-end-record-function ()
-  "Move point to end of transaction."
+  "Move point to end of xact."
+	(interactive)
   (ledger-next-record-function)
-	(backward-char))
+	(backward-char)
+	(end-of-line)
+	(point))
 
 (defun ledger-sort-find-start ()
   (if (re-search-forward ";.*Ledger-mode:.*Start sort" nil t)

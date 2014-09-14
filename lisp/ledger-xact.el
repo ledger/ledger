@@ -45,14 +45,8 @@ Requires empty line separating xacts."
   (interactive "d")
   (save-excursion
     (goto-char pos)
-    (list (progn
-            (backward-paragraph)
-            (if (/= (point) (point-min))
-                (forward-line))
-            (line-beginning-position))
-          (progn
-            (forward-paragraph)
-            (line-beginning-position)))))
+    (list (ledger-beginning-record-function)
+					(ledger-end-record-function))))
 
 (defun ledger-highlight-xact-under-point ()
   "Move the highlight overlay to the current transaction."
@@ -154,7 +148,7 @@ MOMENT is an encoded date"
                            (string-to-number (match-string 2 date)))))
     (ledger-xact-find-slot encoded-date)
     (insert transaction "\n")
-    (backward-paragraph 2)
+    (ledger-beginning-record-function)
     (re-search-forward ledger-iso-date-regexp)
     (replace-match date)
     (ledger-next-amount)
@@ -223,32 +217,6 @@ beginning with whitespace"
 		(while (not	(or (eobp)  ; we didn't start off at the beginning of an xact
 										(ledger-xact-start-xact-or-directive-p)))
 			(forward-line))))
-
-(defun ledger-xact-prev-xact ()
-  "Move point to the previous transaction."
-  (interactive)
-  (backward-paragraph)
-  (when (re-search-backward ledger-xact-line-regexp nil t)
-    (goto-char (match-beginning 0))
-    (re-search-forward ledger-post-line-regexp)
-    (goto-char (match-end ledger-regex-post-line-group-account))))
-
-;; (defun ledger-post-next-xact ()
-;;   "Move point to the next transaction."
-;;   (interactive)
-;;   (when (re-search-forward ledger-xact-line-regexp nil t)
-;;     (goto-char (match-beginning 0))
-;;     (re-search-forward ledger-post-line-regexp)
-;;     (goto-char (match-end ledger-regex-post-line-group-account))))
-
-;; (defun ledger-xact-next-xact ()
-;; 	(interactive)
-;; 	(beginning-of-line)
-;; 	(if (looking-at ledger-xact-start-regex)
-;; 			(forward-line))
-;; 	(re-search-forward ledger-xact-start-regex)
-;; 	(forward-line -1))
-
 
 (provide 'ledger-xact)
 
