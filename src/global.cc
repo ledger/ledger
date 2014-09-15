@@ -388,7 +388,7 @@ void global_scope_t::read_environment_settings(char * envp[])
   process_environment(const_cast<const char **>(envp), "LEDGER_", report());
 
 #if 1
-  // These are here for backwards compatability, but are deprecated.
+  // These are here for backwards compatibility, but are deprecated.
 
   if (const char * p = std::getenv("LEDGER")) {
     if (! std::getenv("LEDGER_FILE"))

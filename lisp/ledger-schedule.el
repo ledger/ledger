@@ -135,7 +135,7 @@ For example every second Friday, regardless of month."
 
 (defun ledger-schedule-scan-transactions (schedule-file)
   "Scans AUTO_FILE and returns a list of transactions with date predicates.
-The car of each item is a fuction of date that returns true if
+The car of each item is a function of date that returns true if
 the transaction should be logged for that day."
   (interactive "fFile name: ")
   (let ((xact-list (list)))
@@ -201,7 +201,7 @@ returns true if the date meets the requirements"
         (insert "\"" )))
 
     ;; read the descriptor string into a lisp object the transform the
-    ;; string descriptor into useable things
+    ;; string descriptor into usable things
     (ledger-schedule-transform-auto-tree
      (read (buffer-substring-no-properties (point-min) (point-max))))))
 
