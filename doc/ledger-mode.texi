@@ -749,7 +749,7 @@ repetitive, but may vary slightly in the date they occur on, or the
 amount.  Some transactions are weekly, monthly, quarterly or annually.
 Ledger mode provides a way to schedule upcoming transaction with a
 flexible scheduler that allows you to specify the transactions in a
-separate ledger file and calculate the upcoming occurences of those
+separate ledger file and calculate the upcoming occurrences of those
 transactions.  You can then copy the transactions into your live data
 file.
 
