@@ -65,11 +65,15 @@
   "Default face for cleared (*) payees"
   :group 'ledger-faces)
 
+(defface ledger-font-payee-pending-face
+  `((t :foreground "#F24B61" :weight normal))
+  "Default face for pending (!) payees"
+  :group 'ledger-faces)
+
 (defface ledger-font-xact-highlight-face
   `((t :inherit ledger-occur-xact-face))
   "Default face for transaction under point"
   :group 'ledger-faces)
-
 
 (defface ledger-font-pending-face
   `((t :foreground "#cb4b16" :weight normal ))
