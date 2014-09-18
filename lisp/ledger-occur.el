@@ -155,23 +155,16 @@ Used for coordinating `ledger-occur' with other buffers, like reconcile."
   (save-excursion
     (goto-char (point-min))
     ;; Set initial values for variables
-    (let (curpoint
-          endpoint
-          (lines (list)))
+    (let (endpoint lines bounds)
       ;; Search loop
       (while (not (eobp))
-        (setq curpoint (point))
         ;; if something found
         (when (setq endpoint (re-search-forward regex nil 'end))
-          (save-excursion
-            (let ((bounds (ledger-navigate-find-xact-extents (match-beginning 0))))
-              (push bounds lines)
-              (setq curpoint (cadr bounds)))) ;; move to the end of
-          ;; the xact, no need to
-          ;; search inside it more
-          (goto-char curpoint))
-        (forward-line 1))
-      (setq lines (nreverse lines)))))
+					(setq bounds (ledger-navigate-find-xact-extents endpoint))
+					(push bounds lines)
+					;; move to the end of the xact, no need to search inside it more
+          (goto-char (cadr bounds))))
+      (nreverse lines))))
 
 (defun ledger-occur-compress-matches (buffer-matches)
   "identify sequential xacts to reduce number of overlays required"
