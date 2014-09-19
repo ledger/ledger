@@ -98,7 +98,8 @@ text that should replace the format specifier."
     (define-key map [(shift ?r)] 'ledger-report-reverse-lines)
     (define-key map [?s] 'ledger-report-save)
     (define-key map [?k] 'ledger-report-kill)
-    (define-key map [?e] 'ledger-report-edit)
+    (define-key map [?e] 'ledger-report-edit-report)
+    (define-key map [( shift ?e)] 'ledger-report-edit-reports)
     (define-key map [?q] 'ledger-report-quit)
     (define-key map [?g] 'ledger-report-redo)
     (define-key map [(control ?c) (control ?l) (control ?r)]
@@ -393,10 +394,16 @@ Optional EDIT the command."
   (ledger-report-quit)
   (kill-buffer (get-buffer ledger-report-buffer-name)))
 
-(defun ledger-report-edit ()
+(defun ledger-report-edit-reports ()
   "Edit the defined ledger reports."
   (interactive)
   (customize-variable 'ledger-reports))
+
+(defun ledger-report-edit-report ()
+	(interactive)
+	"Edit the current report command in the mini buffer and re-run the report"
+	(setq ledger-report-cmd (ledger-report-read-command ledger-report-cmd))
+	(ledger-report-redo))
 
 (defun ledger-report-read-new-name ()
   "Read the name for a new report from the minibuffer."
