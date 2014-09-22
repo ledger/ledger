@@ -48,7 +48,7 @@ major bugs that you find.  Just e-mail me, or post to the mailing list,
 they'll become a part of my work list.
 
 <table>
-<tr><td><strong>RELEASE</strong></td><td><tt>git checkout v2.6.3</tt></td></tr>
+<tr><td><strong>RELEASE</strong></td><td><tt>git checkout v3.0.3</tt></td></tr>
 <tr><td><strong>CURRENT</strong></td><td><tt>git checkout maint</tt></td></tr>
 <tr><td><strong>BETA</strong></td><td><tt>git checkout -b master origin/master</tt></td></tr>
 <tr><td><strong>ALPHA</strong></td><td><tt>git checkout -b next origin/next</tt></td></tr>
