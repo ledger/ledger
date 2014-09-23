@@ -3,8 +3,10 @@ set(EMACS_LISP_SOURCES
   ledger-complete.el
   ledger-exec.el
   ledger-fonts.el
+  ledger-fontify.el
   ledger-init.el
   ledger-mode.el
+  ledger-navigate.el
   ledger-occur.el
   ledger-post.el
   ledger-reconcile.el
