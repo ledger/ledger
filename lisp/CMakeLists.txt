@@ -2,6 +2,7 @@ set(EMACS_LISP_SOURCES
   ledger-commodities.el
   ledger-complete.el
   ledger-exec.el
+  ledger-fontify.el
   ledger-fonts.el
   ledger-fontify.el
   ledger-init.el
