@@ -28,12 +28,12 @@
 
 (provide 'ledger-fontify)
 
-(defcustom ledger-fontify-xact-state-overrides t
+(defcustom ledger-fontify-xact-state-overrides nil
   "If t the overall xact state (cleard, pending, nil) will
   control the font of the entire transaction, not just the payee
   line."
   :type 'boolean
-  :group 'ledger-fontification)
+  :group 'ledger)
 
 (defun ledger-fontify-buffer-part (&optional beg end len)
 	;; (message (concat "ledger-fontify-buffer-part: ("
