@@ -343,7 +343,7 @@
 (defconst ledger-posting-regex
 	(concat "^[ \t]+ ?"  ;; initial white space
 					"\\([*!]\\)? ?" ;; state, subexpr 1
-					"\\([[:word:]: ]+?\\(\n\\|[ \t][ \t]\\)\\)"  ;; account, subexpr 2
+					"\\(.+?\\(\n\\|[ \t][ \t]\\)\\)"  ;; account, subexpr 2
 					"\\([^;\n]*\\)"  ;; amount, subexpr 4
 					"\\(.*\\)" ;; comment, subexpr 5
 					))
