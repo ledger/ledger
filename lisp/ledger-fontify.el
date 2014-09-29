@@ -36,10 +36,6 @@
   :group 'ledger)
 
 (defun ledger-fontify-buffer-part (&optional beg end len)
-	;; (message (concat "ledger-fontify-buffer-part: ("
-	;; 										 (int-to-string beg) ", "
-	;; 										 (int-to-string end)
-	;; 										 ")"))
 	(save-excursion
 		(unless beg (setq beg (point-min)))
 		(unless end (setq end (point-max)))
@@ -58,12 +54,6 @@
 		(goto-char position)
 		(let ((extents (ledger-navigate-find-xact-extents position))
 					(state (ledger-transaction-state)))
-			;; (message (concat "ledger-fontify-xact-at: "
-			;; 								 (int-to-string position)
-			;; 								 " ("
-			;; 								 (int-to-string (car extents)) ", "
-			;; 								 (int-to-string (cadr extents))
-			;; 								 ")"))
 			(if (and ledger-fontify-xact-state-overrides state)
 					(cond ((eq state 'cleared)
 								 (ledger-fontify-set-face extents 'ledger-font-xact-cleared-face))
@@ -76,11 +66,16 @@
 	(save-excursion
 		(ledger-fontify-xact-start (car extents))
 		(while (< (point) (cadr extents))
-			(ledger-fontify-posting (point))
+			(if (looking-at "[ \t]+;")
+					(ledger-fontify-set-face (list (point) (progn
+																									 (end-of-line)
+																									 (point))) 'ledger-font-comment-face)
+				(ledger-fontify-posting (point)))
 			(forward-line))))
 
 (defun ledger-fontify-xact-start (pos)
-	"POS shoul dbe at the beginning of a line starting an xact"
+	"POS should be at the beginning of a line starting an xact.
+Fontify the first line of an xact"
 	(goto-char pos)
 	(beginning-of-line)
 	(let ((state nil))
@@ -102,7 +97,6 @@
 		(re-search-forward ledger-posting-regex)
 		(if (match-string 1)
 				(save-match-data (setq state (ledger-state-from-string (s-trim (match-string 1))))))
-;;; FIX THIS.  Pull the COND to the outer level and put the fontify-set-face inside.  It will be clearer
 		(ledger-fontify-set-face (list (match-beginning 0) (match-end 2))
 														 (cond ((eq state 'cleared)
 																		'ledger-font-posting-account-cleared-face)
@@ -113,7 +107,7 @@
 		(ledger-fontify-set-face (list (match-beginning 4) (match-end 4))
 														 (cond ((eq state 'cleared)
 																		'ledger-font-posting-amount-cleared-face)
-																	 ((eq state 'cleared)
+																	 ((eq state 'pending)
 																		'ledger-font-posting-amount-pending-face)
 																	 (t
 																		'ledger-font-posting-amount-face)))
