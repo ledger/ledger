@@ -172,10 +172,9 @@ footwork for you:
     # $HOME/local and build with 2 processes in parallel
     ./acprep update --boost-suffix=-mt --prefix=$HOME/local -j2
 
-Please read the contents of `config.log` if the configure step fails.  Also,
-see the `help` subcommand to `acprep`, which explains some of its many
-options.  It's pretty much the only command I run for configuring, building
-and testing Ledger.
+See the `help` subcommand to `acprep`, which explains some of its many options.
+It's pretty much the only command I run for configuring, building and testing
+Ledger.
 
 You can run `make check` to confirm the result, and `make install` to install.
 
