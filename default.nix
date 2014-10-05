@@ -2,11 +2,11 @@
 , texinfo, gnused }:
 
 let
-  rev = "20140507";
+  rev = "20141005";
 in
 
 stdenv.mkDerivation {
-  name = "ledger-3.0.3.${rev}";
+  name = "ledger-3.1.0.${rev}";
 
   src = ./.;
 

@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 2.8.5)
 PROJECT(ledger)
 
 set(Ledger_VERSION_MAJOR 3)
-set(Ledger_VERSION_MINOR 0)
-set(Ledger_VERSION_PATCH 3)
-set(Ledger_VERSION_DATE  20140608)
+set(Ledger_VERSION_MINOR 1)
+set(Ledger_VERSION_PATCH 0)
+set(Ledger_VERSION_DATE  20141005)
 
 enable_testing()
 
