@@ -1,12 +1,21 @@
                              Ledger NEWS
 
-* 3.x
+* 3.1
+
+- Changed the definition of cost basis to preserve the original cost basis
+  when a gain or loss is made (if you bought 1 AAA for $10 and then sold
+  it for $12, ledger would previously take $12 as the cost; the original
+  cost of $10 is preserved as the cost basis now, which addresses strange
+  behaviour with -B after a capital gain or loss is made).
+
+- Incorrect automatic Equity:Capital Gains and Equity:Capital Loss entries
+  are no longer generated when a commodity is sold for loss or profit.
 
 - Support for virtual posting costs.
 
 - The option --permissive now quiets balance assertions
 
-- Remove SHA1 files due to license issues and use boost instead.
+- Removed SHA1 files due to license issues and use boost instead.
 
 - Added option --no-pager to disable the pager.
 
@@ -14,7 +23,23 @@
 
 - Added option --recursive-aliases to expand aliases recursively
 
+- Support payee "uuid" directive.
+
+- Bug fix: when a status flag (! or *) is explicitly specified for an
+  individual posting, it always has a priority over entire transaction
+  status.
+
+- Bug fix: don't lose commodity when cost is not separated by whitespace
+
+- Improved backwards compatibility with ledger 2.x
+
 - Build fix for GCC 4.9
+
+- Build fix for boost 1.56
+
+- Many improvements to ledger-mode, including fontification
+
+- More test cases and unit tests
 
 - Contrib: Added script to generate commodities from ISO 4217
 
