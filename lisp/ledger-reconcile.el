@@ -118,7 +118,7 @@ ledger file order, use '(0)'."
     ;; specify the individual fields in the command line.
     (if (ledger-exec-ledger buffer (current-buffer)
                             "balance" "--limit" "cleared or pending" "--empty" "--collapse"
-                            "--format" "%(display_total)" account)
+                            "--format" "%(scrub(display_total))" account)
         (ledger-split-commodity-string
          (buffer-substring-no-properties (point-min) (point-max))))))
 
