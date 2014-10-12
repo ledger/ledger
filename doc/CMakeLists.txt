@@ -27,6 +27,11 @@ endif()
 
 ########################################################################
 
+# BUILD_WEB_DOCS implies BUILD_DOCS
+if (BUILD_WEB_DOCS)
+  set(BUILD_DOCS 1)
+endif()
+
 if (BUILD_DOCS)
   find_program(MAKEINFO makeinfo)
   find_program(TEXI2PDF texi2pdf)
