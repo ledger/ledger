@@ -7875,10 +7875,9 @@ A regular expression that matches against a transaction's payee name.
 @itemx tag(REGEX)
 A regular expression that matches against a transaction's tags.
 
-@itemx expr date =~ /REGEX/
+@item expr date =~ /REGEX/
 Useful for specifying a date in plain terms.  For example, you could say
 @samp{expr date =~ /2014/}.
-
 
 @item expr comment =~ /REGEX/
 A regular expression that matches against a posting's comment field. This
@@ -7935,13 +7934,12 @@ A sub-expression is nested in parenthesis.  This can be useful passing
 more complicated arguments to functions, or for overriding the natural
 precedence order of operators.
 
-
-@itemx expr base =~ /REGEX/
+@item expr base =~ /REGEX/
 A regular expression that matches against an account's base name.  If
 a posting, this will match against the account affected by the
 posting.
 
-@itemx expr code =~ /REGEX/
+@item expr code =~ /REGEX/
 A regular expression that matches against the transaction code (the
 text that occurs between parentheses before the payee).
 
