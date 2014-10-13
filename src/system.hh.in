@@ -63,6 +63,7 @@
 #define HAVE_REALPATH            @HAVE_REALPATH@
 #define HAVE_GETPWUID            @HAVE_GETPWUID@
 #define HAVE_GETPWNAM            @HAVE_GETPWNAM@
+#define HAVE_IOCTL               @HAVE_IOCTL@
 #define HAVE_ISATTY              @HAVE_ISATTY@
 
 #define HAVE_UNIX_PIPES          @HAVE_UNIX_PIPES@
@@ -149,6 +150,10 @@ typedef std::ostream::pos_type ostream_pos_type;
 #endif
 #if HAVE_GETPWUID || HAVE_GETPWNAM
 #include <pwd.h>
+#endif
+
+#if HAVE_IOCTL
+#include <sys/ioctl.h>
 #endif
 
 #if HAVE_UNIX_PIPES

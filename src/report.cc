@@ -181,10 +181,17 @@ void report_t::normalize_options(const string& verb)
   }
 
   long cols = 0;
+#if HAVE_IOCTL
+  struct winsize ws;
+#endif
   if (HANDLED(columns_))
     cols = lexical_cast<long>(HANDLER(columns_).value);
   else if (const char * columns = std::getenv("COLUMNS"))
     cols = lexical_cast<long>(columns);
+#if HAVE_IOCTL
+  else if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1)
+      cols = ws.ws_col;
+#endif
   else
     cols = 80L;
 
