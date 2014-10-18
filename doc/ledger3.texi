@@ -3325,10 +3325,10 @@ For example, consider the stock sale given above:
 @end smallexample
 
 The commodity transferred into @samp{Assets:Brokerage} is not actually 10
-AAPL, but rather 10 AAPL @{$5.00@}.  The figure in braces after the
+AAPL, but rather 10 AAPL @{$50.00@}.  The figure in braces after the
 amount is called the ``lot price''.  It's Ledger's way of remembering
 that this commodity was transferred through an exchange, and that
-$5.00 was the price of that exchange.
+$50.00 was the price of that exchange.
 
 This becomes significant if you later sell that commodity again.  For
 example, you might write this:
