@@ -1756,7 +1756,7 @@ both liquid and commodity assets.  Now, on the day of the sale:
 
 @smallexample @c input:validate
 2005/08/01 Stock sale
-    Assets:Broker                    -50 APPL @{$30.00@} @@ $50.00
+    Assets:Broker                    -50 AAPL @{$30.00@} @@ $50.00
     Expenses:Broker:Commissions        $19.95
     Income:Capital Gains           $-1,000.00
     Assets:Broker                   $2,480.05
