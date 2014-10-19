@@ -4547,8 +4547,8 @@ Transaction Number,Date,Description,Memo,Amount Debit,Amount Credit,Balance,Chec
 
 Unfortunately, as it stands Ledger cannot read it, but you can. Ledger
 expects the first line to contain a description of the fields on each
-line of the file. The fields ledger can recognize are called
-@code{date}, @code{posted}, @code{code}, @code{payee} or @code{desc},
+line of the file. The fields ledger can recognize contain these case-insensitive strings
+@code{date}, @code{posted}, @code{code}, @code{payee} or @code{desc} or @code{description},
 @code{amount}, @code{cost}, @code{total}, and @code{note}.
 
 Delete the account description lines at the top, and replace the first
@@ -4582,7 +4582,7 @@ transid,date,payee,note,amount,,,code,
 @end smallexample
 
 Ledger will include @samp{; transid: 767718} in the first transaction
-is from the file above.
+from the file above.
 
 @findex --invert
 @findex --account @var{STR}
@@ -4613,7 +4613,7 @@ account Aufwand:Einkauf:Lebensmittel
 
 Note that it may be necessary for the output of @samp{ledger convert}
 to be passed through @code{ledger print} a second time if you want to
-match on the new payee field. During the @code{ledger convert} run
+match on the new payee field. During the @code{ledger convert} run,
 only the original payee name as specified in the csv data seems to be
 used.
 
@@ -5239,7 +5239,7 @@ report the values used by each tag.
 @findex entry
 @findex xact
 
-The @command{xact} command simplify the creation of new transactions.
+The @command{xact} command simplifies the creation of new transactions.
 It works on the principle that 80% of all postings are variants of
 earlier postings.  Here's how it works:
 
