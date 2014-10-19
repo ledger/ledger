@@ -4588,11 +4588,11 @@ from the file above.
 @findex --account @var{STR}
 @findex --rich-data
 
-The @command{convert} command accepts three options. The most important
-ones are @option{--invert} which inverts the amount field, and
+The @command{convert} command accepts three options. They are
+@option{--invert} which inverts the amount field,
 @option{--account @var{STR}} which you can use to specify the account to
-balance against and @option{--rich-data}. When using the rich-data
-switch, additional metadata is stored as tags. There is, for example,
+balance against, and @option{--rich-data} which stores
+additional metadata as tags. There is, for example,
 a UUID field. If an entry with the same UUID tag is already included in
 the normal ledger file (specified via @option{--file @var{FILE} (-f)} or
 via the environment variable @env{LEDGER_FILE}) this entry will not be
