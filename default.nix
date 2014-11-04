@@ -7,8 +7,7 @@ in
 
 stdenv.mkDerivation {
   name = "ledger-3.1.0.${rev}";
-
-  src = ./.;
+  src = builtins.filterSource (path: type: type != "unknown") ./.;
 
   buildInputs = [ cmake boost gmp mpfr libedit python texinfo gnused ];
 
@@ -18,7 +17,12 @@ stdenv.mkDerivation {
   # broken in ledger...
   postInstall = ''
     mkdir -p $out/share/emacs/site-lisp/
-    cp -v $src/lisp/*.el $out/share/emacs/site-lisp/
+    cp -v "$src/lisp/"*.el $out/share/emacs/site-lisp/
+  '' + stdenv.lib.optionalString stdenv.isDarwin ''
+    for i in date_time filesystem system iostreams regex unit_test_framework; do
+      boostlib=libboost_''$i.dylib
+      install_name_tool -change ''$boostlib ${boost}/lib/''$boostlib $out/bin/ledger
+    done
   '';
 
   meta = {
