@@ -91,4 +91,20 @@ Requires empty line separating xacts."
     (list (ledger-navigate-beginning-of-xact)
 					(ledger-navigate-end-of-xact))))
 
+(defun ledger-navigate-find-directive-extents (pos)
+	(goto-char pos)
+	(list (progn (beginning-of-line)
+							 (point))
+				(progn (end-of-line)
+							 (point))))
+
+(defun ledger-navigate-find-element-extents (pos)
+	"return list containing beginning and end of the entity surrounding point"
+	(interactive "d")
+	(save-excursion
+		(goto-char pos)
+		(beginning-of-line)
+		(if (looking-at "[ 0-9]")
+				(ledger-navigate-find-xact-extents pos)
+			(ledger-navigate-find-directive-extents pos))))
 ;;; ledger-navigate.el ends here

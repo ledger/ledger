@@ -52,7 +52,7 @@
   (interactive "d")
 	(save-excursion
 		(goto-char position)
-		(let ((extents (ledger-navigate-find-xact-extents position))
+		(let ((extents (ledger-navigate-find-element-extents position))
 					(state (ledger-transaction-state)))
 			(if (and ledger-fontify-xact-state-overrides state)
 					(cond ((eq state 'cleared)
@@ -115,7 +115,7 @@ Fontify the first line of an xact"
 														 'ledger-font-comment-face)))
 
 (defun ledger-fontify-directive-at (position)
-	(let ((extents (ledger-navigate-find-xact-extents position))
+	(let ((extents (ledger-navigate-find-element-extents position))
 				(face 'ledger-font-default-face))
 		(cond ((looking-at "=")
 					 (setq face 'ledger-font-auto-xact-face))
@@ -153,6 +153,8 @@ Fontify the first line of an xact"
 					 (setq face 'ledger-font-include-directive-face))
 					((looking-at "payee")
 					 (setq face 'ledger-font-payee-directive-face))
+					((looking-at "P")
+					 (setq face 'ledger-font-price-directive-face))
 					((looking-at "tag")
 					 (setq face 'ledger-font-tag-directive-face)))
 		(ledger-fontify-set-face extents face)))

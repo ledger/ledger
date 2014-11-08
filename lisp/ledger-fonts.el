@@ -70,6 +70,8 @@
   "Default face for pending (!) payees"
   :group 'ledger-faces)
 
+
+
 (defface ledger-font-xact-highlight-face
   `((t :inherit ledger-occur-xact-face))
   "Default face for transaction under point"
@@ -91,6 +93,11 @@
   :group 'ledger-faces)
 
 (defface ledger-font-account-directive-face
+  `((t :inherit ledger-font-directive-face))
+  "Default face for other transactions"
+  :group 'ledger-faces)
+
+(defface ledger-font-price-directive-face
   `((t :inherit ledger-font-directive-face))
   "Default face for other transactions"
   :group 'ledger-faces)
