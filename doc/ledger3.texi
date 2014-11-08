@@ -1756,7 +1756,7 @@ both liquid and commodity assets.  Now, on the day of the sale:
 
 @smallexample @c input:validate
 2005/08/01 Stock sale
-    Assets:Broker                    -50 APPL @{$30.00@} @@ $50.00
+    Assets:Broker                    -50 AAPL @{$30.00@} @@ $50.00
     Expenses:Broker:Commissions        $19.95
     Income:Capital Gains           $-1,000.00
     Assets:Broker                   $2,480.05
@@ -3325,10 +3325,10 @@ For example, consider the stock sale given above:
 @end smallexample
 
 The commodity transferred into @samp{Assets:Brokerage} is not actually 10
-AAPL, but rather 10 AAPL @{$5.00@}.  The figure in braces after the
+AAPL, but rather 10 AAPL @{$50.00@}.  The figure in braces after the
 amount is called the ``lot price''.  It's Ledger's way of remembering
 that this commodity was transferred through an exchange, and that
-$5.00 was the price of that exchange.
+$50.00 was the price of that exchange.
 
 This becomes significant if you later sell that commodity again.  For
 example, you might write this:
@@ -4547,8 +4547,8 @@ Transaction Number,Date,Description,Memo,Amount Debit,Amount Credit,Balance,Chec
 
 Unfortunately, as it stands Ledger cannot read it, but you can. Ledger
 expects the first line to contain a description of the fields on each
-line of the file. The fields ledger can recognize are called
-@code{date}, @code{posted}, @code{code}, @code{payee} or @code{desc},
+line of the file. The fields ledger can recognize contain these case-insensitive strings
+@code{date}, @code{posted}, @code{code}, @code{payee} or @code{desc} or @code{description},
 @code{amount}, @code{cost}, @code{total}, and @code{note}.
 
 Delete the account description lines at the top, and replace the first
@@ -4582,17 +4582,17 @@ transid,date,payee,note,amount,,,code,
 @end smallexample
 
 Ledger will include @samp{; transid: 767718} in the first transaction
-is from the file above.
+from the file above.
 
 @findex --invert
 @findex --account @var{STR}
 @findex --rich-data
 
-The @command{convert} command accepts three options. The most important
-ones are @option{--invert} which inverts the amount field, and
+The @command{convert} command accepts three options. They are
+@option{--invert} which inverts the amount field,
 @option{--account @var{STR}} which you can use to specify the account to
-balance against and @option{--rich-data}. When using the rich-data
-switch, additional metadata is stored as tags. There is, for example,
+balance against, and @option{--rich-data} which stores
+additional metadata as tags. There is, for example,
 a UUID field. If an entry with the same UUID tag is already included in
 the normal ledger file (specified via @option{--file @var{FILE} (-f)} or
 via the environment variable @env{LEDGER_FILE}) this entry will not be
@@ -4613,7 +4613,7 @@ account Aufwand:Einkauf:Lebensmittel
 
 Note that it may be necessary for the output of @samp{ledger convert}
 to be passed through @code{ledger print} a second time if you want to
-match on the new payee field. During the @code{ledger convert} run
+match on the new payee field. During the @code{ledger convert} run,
 only the original payee name as specified in the csv data seems to be
 used.
 
@@ -5239,7 +5239,7 @@ report the values used by each tag.
 @findex entry
 @findex xact
 
-The @command{xact} command simplify the creation of new transactions.
+The @command{xact} command simplifies the creation of new transactions.
 It works on the principle that 80% of all postings are variants of
 earlier postings.  Here's how it works:
 
@@ -7875,10 +7875,9 @@ A regular expression that matches against a transaction's payee name.
 @itemx tag(REGEX)
 A regular expression that matches against a transaction's tags.
 
-@itemx expr date =~ /REGEX/
+@item expr date =~ /REGEX/
 Useful for specifying a date in plain terms.  For example, you could say
 @samp{expr date =~ /2014/}.
-
 
 @item expr comment =~ /REGEX/
 A regular expression that matches against a posting's comment field. This
@@ -7935,13 +7934,12 @@ A sub-expression is nested in parenthesis.  This can be useful passing
 more complicated arguments to functions, or for overriding the natural
 precedence order of operators.
 
-
-@itemx expr base =~ /REGEX/
+@item expr base =~ /REGEX/
 A regular expression that matches against an account's base name.  If
 a posting, this will match against the account affected by the
 posting.
 
-@itemx expr code =~ /REGEX/
+@item expr code =~ /REGEX/
 A regular expression that matches against the transaction code (the
 text that occurs between parentheses before the payee).
 

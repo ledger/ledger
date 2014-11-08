@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 
-# acprep, version 3.0
+# acprep, version 3.1
 #
-# This script configures my ledger source tree on my Mac OS/X machine.  This
-# is not necessary, however, since I keep all the files necessary for building
-# checked in to the source tree.  Users can just type './configure && make'.
 # This script simply sets up the compiler and linker flags for all the various
 # build permutations I use for testing and profiling.
 
@@ -802,7 +799,7 @@ class PrepareBuild(CommandLineApp):
                     conf_args.append('-DCMAKE_CXX_FLAGS=%s' %
                                      self.envvars[var])
                 elif var == 'LDFLAGS':
-                    conf_args.append('-DCMAKE_EXE_LINKER_FLAGS=%s' % 
+                    conf_args.append('-DCMAKE_EXE_LINKER_FLAGS=%s' %
                                      self.envvars[var])
 
         if self.options.boost_root:
@@ -895,7 +892,7 @@ class PrepareBuild(CommandLineApp):
             self.log.debug('Changing directory to ' + build_dir)
             os.chdir(build_dir)
 
-            self.execute(*(['ninja' if self.options.use_ninja else 'make'] + 
+            self.execute(*(['ninja' if self.options.use_ninja else 'make'] +
                            make_args))
         finally:
             os.chdir(self.source_dir)
