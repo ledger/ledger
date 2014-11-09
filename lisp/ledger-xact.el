@@ -42,7 +42,7 @@
 (defun ledger-highlight-xact-under-point ()
   "Move the highlight overlay to the current transaction."
   (if ledger-highlight-xact-under-point
-      (let ((exts (ledger-navigate-find-xact-extents (point)))
+      (let ((exts (ledger-navigate-find-element-extents (point)))
             (ovl ledger-xact-highlight-overlay))
         (if (not ledger-xact-highlight-overlay)
             (setq ovl

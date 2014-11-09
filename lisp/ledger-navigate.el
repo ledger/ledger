@@ -56,6 +56,7 @@ beginning with whitespace"
 
 (defun ledger-navigate-prev-xact ()
   "Move point to beginning of previous xact."
+	(interactive)
 	(ledger-navigate-beginning-of-xact)
 	(re-search-backward ledger-xact-start-regex nil t))
 

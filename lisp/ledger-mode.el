@@ -96,11 +96,11 @@
   "Start a ledger session with the current month, but make it customizable to ease retro-entry.")
 
 (defun ledger-read-account-with-prompt (prompt)
-  (let* ((context (ledger-context-at-point))
-         (default (if (eq (ledger-context-line-type context) 'acct-transaction)
-                      (regexp-quote (ledger-context-field-value context 'account))
-                    nil)))
-    (ledger-read-string-with-default prompt default)))
+  (let ((context (ledger-context-at-point)))
+    (ledger-read-string-with-default prompt
+																		 (if (eq (ledger-context-line-type context) 'acct-transaction)
+																				 (regexp-quote (ledger-context-field-value context 'account))
+																			 nil))))
 
 (defun ledger-read-date (prompt)
   "Returns user-supplied date after `PROMPT', defaults to today."
