@@ -95,10 +95,56 @@ Requires empty line separating xacts."
 
 (defun ledger-navigate-find-directive-extents (pos)
 	(goto-char pos)
-	(list (progn (beginning-of-line)
-							 (point))
-				(progn (end-of-line)
-							 (point))))
+	(let ((begin (progn (beginning-of-line)
+											(point)))
+				(end (progn (end-of-line)
+										(point))))
+		;; handle block comments here
+		(beginning-of-line)
+		(if (looking-at " *;")
+				(progn
+					(while (and (looking-at " *;")
+											(> (point) (point-min)))
+						(forward-line -1))
+					;; We are either at the beginning of the buffer, or we found
+					;; a line outside the comment.  If we are not at the
+					;; beginning of the buffer then we need to move forward a
+					;; line.
+					(if (> (point) (point-min))
+							(progn (forward-line 1)
+										 (beginning-of-line)))
+					(setq begin (point))
+					(goto-char pos)
+					(beginning-of-line)
+					(while (and (looking-at " *;")
+											(< (point) (point-max)))
+						(forward-line 1))
+					(setq end (point))))
+		(list begin end)))
+
+(defun ledger-navigate-block-comment (pos)
+	(interactive "d")
+	(goto-char pos)
+	(let ((begin (progn (beginning-of-line)
+											(point)))
+				(end (progn (end-of-line)
+										(point))))
+		;; handle block comments here
+		(beginning-of-line)
+		(if (looking-at " *;")
+				(progn
+					(while (and (looking-at " *;")
+											(> (point) (point-min)))
+						(forward-line -1))
+					(setq begin (point))
+					(goto-char pos)
+					(beginning-of-line)
+					(while (and (looking-at " *;")
+											(< (point) (point-max)))
+						(forward-line 1))
+					(setq end (point))))
+		(list begin end)))
+
 
 (defun ledger-navigate-find-element-extents (pos)
 	"return list containing beginning and end of the entity surrounding point"
