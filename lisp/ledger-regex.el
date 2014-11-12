@@ -333,7 +333,8 @@
           "\\)"))
 
 (defconst ledger-xact-start-regex
-	(concat ledger-iso-date-regexp  ;; subexp 1
+	(concat "^" ledger-iso-date-regexp  ;; subexp 1
+				;;	"\\(=" ledger-iso-date-regexp "\\)?"
           " ?\\([ *!]\\)"  ;; mark, subexp 5
           " ?\\((.*)\\)?"  ;; code, subexp 6
           " ?\\([^;\n]+\\)"   ;; desc, subexp 7
@@ -343,7 +344,7 @@
 (defconst ledger-posting-regex
 	(concat "^[ \t]+ ?"  ;; initial white space
 					"\\([*!]\\)? ?" ;; state, subexpr 1
-					"\\(.+?\\(\n\\|[ \t][ \t]\\)\\)"  ;; account, subexpr 2
+					"\\([[:print:]]+\\([ \t][ \t]\\)\\)"  ;; account, subexpr 2
 					"\\([^;\n]*\\)"  ;; amount, subexpr 4
 					"\\(.*\\)" ;; comment, subexpr 5
 					))

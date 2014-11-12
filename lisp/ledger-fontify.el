@@ -63,6 +63,7 @@
 
 (defun ledger-fontify-xact-by-line (extents)
 	"do line-by-line detailed fontification of xact"
+	(interactive)
 	(save-excursion
 		(ledger-fontify-xact-start (car extents))
 		(while (< (point) (cadr extents))
@@ -92,27 +93,55 @@ Fontify the first line of an xact"
 		(ledger-fontify-set-face (list (match-beginning 8)
 																	 (match-end 8)) 'ledger-font-comment-face)))
 
+
 (defun ledger-fontify-posting (pos)
-	(let ((state nil))
-		(re-search-forward ledger-posting-regex)
-		(if (match-string 1)
-				(save-match-data (setq state (ledger-state-from-string (s-trim (match-string 1))))))
-		(ledger-fontify-set-face (list (match-beginning 0) (match-end 2))
-														 (cond ((eq state 'cleared)
-																		'ledger-font-posting-account-cleared-face)
-																	 ((eq state 'pending)
-																		'ledger-font-posting-account-pending-face)
-																	 (t
-																		'ledger-font-posting-account-face)))
-		(ledger-fontify-set-face (list (match-beginning 4) (match-end 4))
-														 (cond ((eq state 'cleared)
-																		'ledger-font-posting-amount-cleared-face)
-																	 ((eq state 'pending)
-																		'ledger-font-posting-amount-pending-face)
-																	 (t
-																		'ledger-font-posting-amount-face)))
-		(ledger-fontify-set-face (list (match-beginning 5) (match-end 5))
-														 'ledger-font-comment-face)))
+	(let* ((state nil)
+				 (end-of-line-comment nil)
+				(end (progn (end-of-line)
+										(point)))
+				(start (progn (beginning-of-line)
+											(point))))
+
+		;; Look for a posting status flag
+		(save-match-data ;; must use save-match-data to shadow the search
+										 ;; results.  If there is no status flag then the
+										 ;; search below will fail and NOT clear the match
+										 ;; data.  So if the previous line did have a
+										 ;; status flag it is still sitting in the match
+										 ;; data, causing the current line to be fontified
+										 ;; like the previous line.  Don't ask how long
+										 ;; that took to figure out
+			(re-search-forward " \\([*!]\\) " end t)
+			(if (match-string 1)
+					(setq state (ledger-state-from-string (s-trim (match-string 1))))))
+		(beginning-of-line)
+		(re-search-forward "[[:graph:]]\\([ \t][ \t]\\)" end 'end)  ;; find the end of the account, or end of line
+
+		(when (<= (point) end)  ;; we are still on the line
+		  (ledger-fontify-set-face (list start (point))
+															 (cond ((eq state 'cleared)
+																			'ledger-font-posting-account-cleared-face)
+																		 ((eq state 'pending)
+																			'ledger-font-posting-account-pending-face)
+																		 (t
+																			'ledger-font-posting-account-face)))
+
+
+			(when (< (point) end)  ;; there is still more to fontify
+				(setq start (point))  ;; update start of next font region
+				(setq end-of-line-comment (re-search-forward ";" end 'end))  ;; find the end of the line, or start of a comment
+				(ledger-fontify-set-face (list start (point) )
+																 (cond ((eq state 'cleared)
+																				'ledger-font-posting-amount-cleared-face)
+																			 ((eq state 'pending)
+																				'ledger-font-posting-amount-pending-face)
+																			 (t
+																				'ledger-font-posting-amount-face)))
+				(when end-of-line-comment
+					(setq start (point))
+					(end-of-line)
+					(ledger-fontify-set-face (list (- start 1) (point)) ;; subtract 1 from start because we passed the semi-colon
+																	 'ledger-font-comment-face))))))
 
 (defun ledger-fontify-directive-at (position)
 	(let ((extents (ledger-navigate-find-element-extents position))
