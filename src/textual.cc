@@ -1602,9 +1602,17 @@ post_t * instance_t::parse_post(char *          line,
     DEBUG("textual.parse", "line " << context.linenum << ": "
           << "Found a balance assignment indicator");
 
-    beg = static_cast<std::streamsize>(++next - line);
+    bool approx = false;
 
+    beg = static_cast<std::streamsize>(++next - line);
     p = skip_ws(next);
+
+    if (*p == '~') {
+        approx = true;
+        beg = static_cast<std::streamsize>(++p - line);
+        p = skip_ws(p);
+    }
+
     if (*p) {
       post->assigned_amount = amount_t();
 
@@ -1631,6 +1639,9 @@ post_t * instance_t::parse_post(char *          line,
       amount_t& amt(*post->assigned_amount);
       value_t account_total
         (post->account->amount().strip_annotations(keep_details_t()));
+      if (approx) {
+          account_total.in_place_truncate();
+      }
 
       DEBUG("post.assign", "line " << context.linenum << ": "
             << "account balance = " << account_total);
