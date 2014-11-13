@@ -265,6 +265,11 @@ void session_t::close_journal_files()
   amount_t::initialize();
 }
 
+journal_t * session_t::get_journal()
+{
+    return journal.get();
+}
+
 value_t session_t::fn_account(call_scope_t& args)
 {
   if (args[0].is_string())

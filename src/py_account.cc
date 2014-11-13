@@ -35,6 +35,7 @@
 #include "pyutils.h"
 #include "account.h"
 #include "post.h"
+#include "expr.h"
 
 namespace ledger {
 
@@ -95,6 +96,26 @@ namespace {
 
   PyObject * py_account_unicode(account_t& account) {
     return str_to_py_unicode(account.fullname());
+  }
+
+  value_t py_amount_0(const account_t& account)
+  {
+      return account.amount();
+  }
+
+  value_t py_amount_1(const account_t& account, const boost::optional<expr_t&>& expr)
+  {
+      return account.amount(expr);
+  }
+
+  value_t py_total_0(const account_t& account)
+  {
+      return account.total();
+  }
+
+  value_t py_total_1(const account_t& account, const boost::optional<expr_t&>& expr)
+  {
+      return account.total(expr);
   }
 
 } // unnamed namespace
@@ -221,8 +242,10 @@ void export_account()
     .def("xdata", py_xdata,
          return_internal_reference<>())
 
-    .def("amount", &account_t::amount)
-    .def("total", &account_t::total)
+    .def("amount", py_amount_0)
+    .def("amount", py_amount_1, args("expr"))
+    .def("total", py_total_0)
+    .def("total", py_total_1, args("expr"))
 
     .def("self_details", &account_t::self_details,
          return_internal_reference<>())
