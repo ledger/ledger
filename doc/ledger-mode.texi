@@ -119,9 +119,9 @@ initialization file (@file{~/.emacs}, @file{~/.emacs.d/init.el}, or
 @file{~/.Aquamacs/Preferences.el}).
 
 @lisp
+(autoload 'ledger-mode "ledger-mode" "A major mode for Ledger" t)
 (add-to-list 'load-path
              (expand-file-name "/path/to/ledger/source/lisp/"))
-(load "ledger-mode")
 (add-to-list 'auto-mode-alist '("\\.ledger$" . ledger-mode))
 @end lisp
 
