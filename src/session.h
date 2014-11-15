@@ -84,6 +84,8 @@ public:
   journal_t * read_journal_files();
   void close_journal_files();
 
+  journal_t * get_journal();
+
   value_t fn_account(call_scope_t& scope);
   value_t fn_min(call_scope_t& scope);
   value_t fn_max(call_scope_t& scope);

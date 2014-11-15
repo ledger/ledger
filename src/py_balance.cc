@@ -64,7 +64,7 @@ namespace {
 
   boost::optional<amount_t>
   py_commodity_amount_1(const balance_t& balance,
-                        const boost::optional<const commodity_t&>& commodity) {
+                        const commodity_t& commodity) {
     return balance.commodity_amount(commodity);
   }
 
