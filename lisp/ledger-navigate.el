@@ -65,7 +65,7 @@ beginning with whitespace"
 	(interactive)
 	;; need to start at the beginning of a line incase we are in the first line of an xact already.
 	(beginning-of-line)
-	(let ((sreg (concat "^\\(~\\|" ledger-iso-date-regexp "\\)")))
+	(let ((sreg (concat "^\\(=\\|~\\|" ledger-iso-date-regexp "\\)")))
 		(unless (looking-at sreg)
 			(re-search-backward sreg nil t)
 			(beginning-of-line)))
@@ -152,7 +152,7 @@ Requires empty line separating xacts."
 	(save-excursion
 		(goto-char pos)
 		(beginning-of-line)
-		(if (looking-at "[ ~0-9]")
+		(if (looking-at "[ =~0-9]")
 				(ledger-navigate-find-xact-extents pos)
 			(ledger-navigate-find-directive-extents pos))))
 ;;; ledger-navigate.el ends here

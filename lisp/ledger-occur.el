@@ -160,7 +160,7 @@ Used for coordinating `ledger-occur' with other buffers, like reconcile."
       (while (not (eobp))
         ;; if something found
         (when (setq endpoint (re-search-forward regex nil 'end))
-					(setq bounds (ledger-navigate-find-xact-extents endpoint))
+					(setq bounds (ledger-navigate-find-element-extents endpoint))
 					(push bounds lines)
 					;; move to the end of the xact, no need to search inside it more
           (goto-char (cadr bounds))))
