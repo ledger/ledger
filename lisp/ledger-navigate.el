@@ -54,11 +54,14 @@ beginning with whitespace"
 										(ledger-navigate-start-xact-or-directive-p)))
 			(forward-line))))
 
-(defun ledger-navigate-prev-xact ()
+(defun ledger-navigate-prev-xact-or-directive ()
   "Move point to beginning of previous xact."
 	(interactive)
-	(ledger-navigate-beginning-of-xact)
-	(re-search-backward ledger-xact-start-regex nil t))
+	(let ((context (car (ledger-context-at-point))))
+		(when (equal context 'acct-transaction)
+			(ledger-navigate-beginning-of-xact))
+		(beginning-of-line)
+		(re-search-backward "^[[:graph:]]" nil t)))
 
 (defun ledger-navigate-beginning-of-xact ()
 	"Move point to the beginning of the current xact"
@@ -75,7 +78,7 @@ beginning with whitespace"
   "Move point to end of xact."
 	(interactive)
   (ledger-navigate-next-xact-or-directive)
-	(backward-char)
+	(re-search-backward "^[ \t]")
 	(end-of-line)
 	(point))
 

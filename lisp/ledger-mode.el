@@ -262,7 +262,7 @@ With a prefix argument, remove the effective date. "
     (define-key map [(control ?c) (control ?o) (control ?r)] 'ledger-report)
     (define-key map [(control ?c) (control ?o) (control ?s)] 'ledger-report-save)
 
-    (define-key map [(meta ?p)] 'ledger-navigate-prev-xact)
+    (define-key map [(meta ?p)] 'ledger-navigate-prev-xact-or-directive)
     (define-key map [(meta ?n)] 'ledger-navigate-next-xact-or-directive)
     map)
   "Keymap for `ledger-mode'.")
