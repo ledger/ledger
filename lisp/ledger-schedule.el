@@ -239,25 +239,24 @@ the transaction should be logged for that day."
 				(months (mapcar 'string-to-number (split-string month-desc ",")))
 				(day-parts (split-string day-desc "+"))
 				(every-nth (string-match "+" day-desc)))
-		(when every-nth
-			(let ((base-day (string-to-number (car day-parts)))
-						(increment (string-to-number (substring (cadr day-parts) 0
-																										(string-match "[A-Za-z]" (cadr day-parts)))))
-						(day-of-week (ledger-schedule-encode-day-of-week
-													(substring (cadr day-parts) (string-match "[A-Za-z]" (cadr day-parts))))))
-				(ledger-schedule-constrain-every-count-day day-of-week increment (encode-time 0 0 0 base-day (car months) (car years)))
-				))))
+		(if every-nth
+				(let ((base-day (string-to-number (car day-parts)))
+							(increment (string-to-number (substring (cadr day-parts) 0
+																											(string-match "[A-Za-z]" (cadr day-parts)))))
+							(day-of-week (ledger-schedule-encode-day-of-week
+														(substring (cadr day-parts) (string-match "[A-Za-z]" (cadr day-parts))))))
+					(ledger-schedule-constrain-every-count-day day-of-week increment (encode-time 0 0 0 base-day (car months) (car years)))))))
 
 (defun ledger-schedule-list-upcoming-xacts (candidate-items early horizon)
-  "Search CANDIDATE-ITEMS for xacts that occur within the period today - EARLY  to today + HORIZON"
-  (let ((start-date (time-subtract (current-time) (days-to-time early)))
-        test-date items)
-    (loop for day from 0 to (+ early horizon) by 1 do
-          (setq test-date (time-add start-date (days-to-time day)))
-          (dolist (candidate candidate-items items)
-            (if (funcall (car candidate) test-date)
-                (setq items (append items (list (list test-date (cadr candidate))))))))
-    items))
+	"Search CANDIDATE-ITEMS for xacts that occur within the period today - EARLY  to today + HORIZON"
+	(let ((start-date (time-subtract (current-time) (days-to-time early)))
+				test-date items)
+		(loop for day from 0 to (+ early horizon) by 1 do
+					(setq test-date (time-add start-date (days-to-time day)))
+					(dolist (candidate candidate-items items)
+						(if (funcall (car candidate) test-date)
+								(setq items (append items (list (list test-date (cadr candidate))))))))
+		items))
 
 (defun ledger-schedule-already-entered (candidate buffer)
 	"return TRUE if CANDIDATE is already in BUFFER"
