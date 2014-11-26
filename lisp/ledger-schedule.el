@@ -131,10 +131,11 @@ For example every second Friday, regardless of month."
 
 
 (defun ledger-schedule-is-holiday (date)
-  "Return true if DATE is a holiday.")
+  "Return true if DATE is a holiday."
+	nil)
 
 (defun ledger-schedule-scan-transactions (schedule-file)
-  "Scans AUTO_FILE and returns a list of transactions with date predicates.
+  "Scans SCHEDULE-FILE and returns a list of transactions with date predicates.
 The car of each item is a function of date that returns true if
 the transaction should be logged for that day."
   (interactive "fFile name: ")
@@ -159,51 +160,8 @@ the transaction should be logged for that day."
           (setq xact-list (cons transaction xact-list))))
       xact-list)))
 
-(defun ledger-schedule-replace-brackets ()
-  "Replace all brackets with parens"
-  (goto-char (point-min))
-  (while (search-forward "]" nil t)
-    (replace-match ")" nil t))
-  (goto-char (point-min))
-  (while (search-forward "[" nil t)
-    (replace-match "(" nil t)))
-
-(defvar ledger-schedule-descriptor-regex
-  (concat "\\(20[0-9][0-9]\\|[\*]\\)[/\\-]"  ;; Year slot
-          "\\([\*EO]\\|[01][0-9]\\)[/\\-]" ;; Month slot
-          "\\([\*]\\|\\([0-3][0-9]\\)\\|"
-          "\\([0-5]"
-          "\\(\\(Su\\)\\|"
-          "\\(Mo\\)\\|"
-          "\\(Tu\\)\\|"
-          "\\(We\\)\\|"
-          "\\(Th\\)\\|"
-          "\\(Fr\\)\\|"
-          "\\(Sa\\)\\)\\)\\)"))
-
 (defun ledger-schedule-read-descriptor-tree (descriptor-string)
-  "Take a date DESCRIPTOR-STRING and return a function of date that
-returns true if the date meets the requirements"
-  (with-temp-buffer
-    ;; copy the descriptor string into a temp buffer for manipulation
-    (let (pos)
-      ;; Replace brackets with parens
-      (insert descriptor-string)
-      (ledger-schedule-replace-brackets)
-
-      (goto-char (point-max))
-      ;; double quote all the descriptors for string processing later
-      (while (re-search-backward ledger-schedule-descriptor-regex nil t) ;; Day slot
-        (goto-char
-         (match-end 0))
-        (insert ?\")
-        (goto-char (match-beginning 0))
-        (insert "\"" )))
-
-    ;; read the descriptor string into a lisp object the transform the
-    ;; string descriptor into usable things
-    (ledger-schedule-transform-auto-tree
-     (read (buffer-substring-no-properties (point-min) (point-max))))))
+	(ledger-schedule-transform-auto-tree (split-string (substring descriptor-string 1 -2) " ")))
 
 (defun ledger-schedule-transform-auto-tree (descriptor-string-list)
   "Takes a lisp list of date descriptor strings, TREE, and returns a string with a lambda function of date."
@@ -221,7 +179,7 @@ returns true if the date meets the requirements"
               (push (ledger-schedule-compile-constraints newcar) result)) )
           (setq descriptor-string-list (cdr descriptor-string-list)))
 
-        ;; tie up all the clauses in a big or and lambda, and return
+        ;; tie up all the clauses in a big or lambda, and return
         ;; the lambda function as list to be executed by funcall
         `(lambda (date)
            ,(nconc (list 'or) (nreverse result) descriptor-string-list)))))
@@ -230,41 +188,40 @@ returns true if the date meets the requirements"
   "Return a list with the year, month and day fields split"
   (let ((fields (split-string descriptor-string "[/\\-]" t))
         constrain-year constrain-month constrain-day)
-    (setq constrain-year (ledger-schedule-constrain-year (nth 0 fields)))
-    (setq constrain-month (ledger-schedule-constrain-month (nth 1 fields)))
-    (setq constrain-day (ledger-schedule-constrain-day (nth 2 fields)))
+    (setq constrain-year (ledger-schedule-constrain-year (nth 0 fields) (nth 1 fields) (nth 2 fields)))
+    (setq constrain-month (ledger-schedule-constrain-month (nth 0 fields) (nth 1 fields) (nth 2 fields)))
+    (setq constrain-day (ledger-schedule-constrain-day (nth 0 fields) (nth 1 fields) (nth 2 fields)))
 
     (list 'and constrain-year constrain-month constrain-day)))
 
-(defun ledger-schedule-constrain-year (str)
+(defun ledger-schedule-constrain-year (year-desc month-desc day-desc)
   (let ((year-match t))
-    (cond ((string= str "*")
+    (cond ((string= year-desc "*")
            year-match)
-          ((/= 0 (setq year-match (string-to-number str)))
+          ((/= 0 (setq year-match (string-to-number year-desc)))
            `(eq (nth 5 (decode-time date)) ,year-match))
           (t
-           (error "Improperly specified year constraint: %s" str)))))
+           (error "Improperly specified year constraint: %s %s %s" year-desc month-desc day-desc)))))
 
-(defun ledger-schedule-constrain-month (str)
+(defun ledger-schedule-constrain-month (year-desc month-desc day-desc)
+	(cond ((string= month-desc "*")
+				 t)  ;; always match
+				((string= month-desc "E")  ;; Even
+				 `(evenp (nth 4 (decode-time date))))
+				((string= month-desc "O")  ;; Odd
+				 `(oddp (nth 4 (decode-time date))))
+				((/= 0 (string-to-number month-desc)) ;; Starts with number
+				 `(memq (nth 4 (decode-time date)) ',(mapcar 'string-to-number (split-string month-desc ","))))
+				(t
+				 (error "Improperly specified month constraint: %s %s %s" year-desc month-desc day-desc))))
 
-  (let ((month-match t))
-    (cond ((string= str "*")
-           month-match)  ;; always match
-          ((/= 0 (setq month-match (string-to-number str)))
-           (if (between month-match 1 12) ;; no month specified, assume 31 days.
-               `(eq (nth 4 (decode-time date)) ,month-match)
-             (error "ledger-schedule-constrain-numerical-month: month out of range %S" month-match)))
-          (t
-           (error "Improperly specified month constraint: %s" str)))))
-
-(defun ledger-schedule-constrain-day (str)
-  (let ((day-match t))
-    (cond ((string= str "*")
-           t)
-          ((/= 0 (setq day-match (string-to-number str)))
-           `(eq (nth 3 (decode-time date)) ,day-match))
-          (t
-           (error "Improperly specified day constraint: %s" str)))))
+(defun ledger-schedule-constrain-day (year-desc month-desc day-desc)
+	(cond ((string= day-desc "*")
+				 t)
+				((/= 0 (string-to-number day-desc))
+				 `(memq (nth 3 (decode-time date)) ',(mapcar 'string-to-number (split-string day-desc ","))))
+				(t
+				 (error "Improperly specified day constraint: %s %s %s" year-desc month-desc day-desc))))
 
 (defun ledger-schedule-parse-date-descriptor (descriptor)
   "Parse the date descriptor, return the evaluator"
@@ -282,6 +239,7 @@ returns true if the date meets the requirements"
     items))
 
 (defun ledger-schedule-already-entered (candidate buffer)
+	"return TRUE if CANDIDATE is already in BUFFER"
   (let ((target-date (format-time-string date-format (car candidate)))
         (target-payee (cadr candidate)))
     nil))
