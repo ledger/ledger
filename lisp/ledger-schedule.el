@@ -245,7 +245,11 @@ the transaction should be logged for that day."
 																											(string-match "[A-Za-z]" (cadr day-parts)))))
 							(day-of-week (ledger-schedule-encode-day-of-week
 														(substring (cadr day-parts) (string-match "[A-Za-z]" (cadr day-parts))))))
-					(ledger-schedule-constrain-every-count-day day-of-week increment (encode-time 0 0 0 base-day (car months) (car years)))))))
+					(ledger-schedule-constrain-every-count-day day-of-week increment (encode-time 0 0 0 base-day (car months) (car years))))
+			(let ((count (string-to-number (substring (car day-parts) 0 1)))
+						(day-of-week (ledger-schedule-encode-day-of-week
+													(substring (car day-parts) (string-match "[A-Za-z]" (car day-parts))))))
+				(ledger-schedule-constrain-day-in-month count day-of-week)))))
 
 (defun ledger-schedule-list-upcoming-xacts (candidate-items early horizon)
 	"Search CANDIDATE-ITEMS for xacts that occur within the period today - EARLY  to today + HORIZON"
