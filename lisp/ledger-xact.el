@@ -52,7 +52,7 @@
                                       (current-buffer) t nil)))
           (move-overlay ovl (car exts) (cadr exts)))
         (overlay-put ovl 'face 'ledger-font-xact-highlight-face)
-        (overlay-put ovl 'priority 100))))
+        (overlay-put ovl 'priority '(nil . 99)))))
 
 (defun ledger-xact-payee ()
   "Return the payee of the transaction containing point or nil."
