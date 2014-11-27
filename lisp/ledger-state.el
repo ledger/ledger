@@ -68,9 +68,9 @@
 
 (defun ledger-state-from-string (state-string)
   "Get state from STATE-CHAR."
-  (cond ((string= state-string "!") 'pending)
-        ((string= state-string "*") 'cleared)
-        ((string= state-string ";") 'comment)
+  (cond ((string-match "\\!" state-string) 'pending)
+        ((string-match "\\*" state-string) 'cleared)
+        ((string-match ";" state-string) 'comment)
         (t nil)))
 
 (defun ledger-toggle-current-posting (&optional style)
