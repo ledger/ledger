@@ -82,7 +82,7 @@ Fontify the first line of an xact"
 	(let ((state nil))
 		(re-search-forward ledger-xact-start-regex)
 		(ledger-fontify-set-face (list (match-beginning 1) (match-end 1)) 'ledger-font-posting-date-face)
-		(save-match-data (setq state (ledger-state-from-string (s-trim (match-string 5)))))
+		(save-match-data (setq state (ledger-state-from-string (match-string 5))))
 		(ledger-fontify-set-face (list (match-beginning 7) (match-end 7))
 														 (cond ((eq state 'pending)
 																		'ledger-font-payee-pending-face)
@@ -113,7 +113,7 @@ Fontify the first line of an xact"
 										 ;; that took to figure out
 			(re-search-forward " \\([*!]\\) " end t)
 			(if (match-string 1)
-					(setq state (ledger-state-from-string (s-trim (match-string 1))))))
+					(setq state (ledger-state-from-string  (match-string 1)))))
 		(beginning-of-line)
 		(re-search-forward "[[:graph:]]\\([ \t][ \t]\\)" end 'end)  ;; find the end of the account, or end of line
 
@@ -191,20 +191,4 @@ Fontify the first line of an xact"
 (defun ledger-fontify-set-face (extents face)
 	(put-text-property (car extents) (cadr extents) 'face face))
 
-
-(defun s-trim-left (s)
-  "Remove whitespace at the beginning of S."
-  (if (string-match "\\`[ \t\n\r]+" s)
-      (replace-match "" t t s)
-    s))
-
-(defun s-trim-right (s)
-  "Remove whitespace at the end of S."
-  (if (string-match "[ \t\n\r]+\\'" s)
-      (replace-match "" t t s)
-    s))
-
-(defun s-trim (s)
-  "Remove whitespace at the beginning and end of S."
-  (s-trim-left (s-trim-right s)))
 ;;; ledger-fontify.el ends here
