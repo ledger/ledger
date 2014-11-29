@@ -35,6 +35,7 @@ endmacro(add_ledger_harness_tests _class)
 add_subdirectory(manual)
 add_subdirectory(baseline)
 add_subdirectory(regress)
+add_subdirectory(python)
 
 # jww (2014-04-17): This is temporary until we find a fix.
 #if (PYTHONINTERP_FOUND)

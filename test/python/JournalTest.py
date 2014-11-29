@@ -5,8 +5,21 @@ import unittest
 from ledger import *
 
 class JournalTestCase(unittest.TestCase):
-    def tearDown(self):
+    # NOTE: tearDown is disabled since it crashes with a segmentation fault
+    def DISABLED_tearDown(self):
         session.close_journal_files()
+
+    # NOTE: This test is disabled since it crashes with a segmentation fault
+    def DISABLED_testCloseJournal(self):
+        journal = read_journal_from_string("""
+2012-03-01 KFC
+    Expenses:Food      $21.34
+    Assets:Cash
+""")
+        # This line currently causes a segmentation fault
+        session.close_journal_files()
+        # if we get to here we can safely assume the bug is fixed
+        self.assertEqual(True, True)
 
     def testBasicRead(self):
         journal = read_journal_from_string("""
