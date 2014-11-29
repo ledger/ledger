@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ledger/ledger.png?branch=master)](https://travis-ci.org/ledger/ledger)
+[![Build Status](https://travis-ci.org/ledger/ledger.svg?branch=master)](https://travis-ci.org/ledger/ledger)
 
 # Ledger: Command-Line Accounting
 
