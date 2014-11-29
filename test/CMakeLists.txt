@@ -36,17 +36,16 @@ add_subdirectory(manual)
 add_subdirectory(baseline)
 add_subdirectory(regress)
 
-# jww (2014-04-17): This is temporary until we find a fix.
-#if (PYTHONINTERP_FOUND)
-#  set(_class DocTests)
-#  file(GLOB ${_class}_TESTS ${PROJECT_SOURCE_DIR}/doc/*.texi)
-#  foreach(TestFile ${${_class}_TESTS})
-#    get_filename_component(TestFile_Name ${TestFile} NAME_WE)
-#    add_test(NAME ${_class}Test_${TestFile_Name}
-#      COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/DocTests.py
-#      --ledger $<TARGET_FILE:ledger> --file ${TestFile})
-#    set_target_properties(check PROPERTIES DEPENDS ${_class}Test_${TestFile_Name})
-#  endforeach()
-#endif()
+if (PYTHONINTERP_FOUND)
+  set(_class DocTests)
+  file(GLOB ${_class}_TESTS ${PROJECT_SOURCE_DIR}/doc/*.texi)
+  foreach(TestFile ${${_class}_TESTS})
+    get_filename_component(TestFile_Name ${TestFile} NAME_WE)
+    add_test(NAME ${_class}Test_${TestFile_Name}
+      COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/DocTests.py
+      --ledger $<TARGET_FILE:ledger> --file ${TestFile})
+    set_target_properties(check PROPERTIES DEPENDS ${_class}Test_${TestFile_Name})
+  endforeach()
+endif()
 
 ### CMakeLists.txt ends here
