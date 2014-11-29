@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+import sys
+sys.path.append(".")
 
 from ledger import *
 
@@ -22,8 +24,12 @@ class JournalTestCase(unittest.TestCase):
         self.assertEqual(True, True)
 
     def testBasicRead(self):
+        # TODO: There is a bug when reading multiple journal data
+        #       results in the journal data to be mixed up.
+        #       Closing the journal may help, but that currently
+        #       results in a segmentation fault
         journal = read_journal_from_string("""
-2012-03-01 KFC
+2012-03-01 * (2) KFC
     Expenses:Food      $21.34
     Assets:Cash
 """)

@@ -3,19 +3,25 @@
 import unittest
 import exceptions
 import operator
+import sys
+sys.path.append(".")
 
 from ledger import *
 from StringIO import *
 from datetime import *
 
-class JournalTestCase(unittest.TestCase):
+class TransactionTestCase(unittest.TestCase):
     def setUp(self):
+        # TODO: There is a bug when reading multiple journal data
+        #       results in the journal data to be mixed up.
+        #       Closing the journal may help, but that currently
+        #       results in a segmentation fault
         journal = read_journal_from_string("""
-2012-03-01 * (2) KFC
-    Expenses:Food      $21.34
-    Assets:Cash
+;2012-03-01 * (2) KFC
+;    Expenses:Food      $21.34
+;    Assets:Cash
 """)
-        self.xact = [xact for xact in journal.xacts()][0]
+        self.xact = journal.xacts().next()
 
     def tearDown(self):
         pass
@@ -39,7 +45,7 @@ class JournalTestCase(unittest.TestCase):
         self.assertEqual(str(self.xact), "")
 
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(JournalTestCase)
+    return unittest.TestLoader().loadTestsFromTestCase(TransactionTestCase)
 
 if __name__ == '__main__':
     unittest.main()

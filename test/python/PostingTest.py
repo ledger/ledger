@@ -3,6 +3,8 @@
 import unittest
 import exceptions
 import operator
+import sys
+sys.path.append(".")
 
 from ledger import *
 from StringIO import *
@@ -10,10 +12,14 @@ from datetime import *
 
 class PostingTestCase(unittest.TestCase):
     def setUp(self):
+        # TODO: There is a bug when reading multiple journal data
+        #       results in the journal data to be mixed up.
+        #       Closing the journal may help, but that currently
+        #       results in a segmentation fault
         journal = read_journal_from_string("""
-2012-03-01 * (2) KFC
-    Expenses:Food      $21.34
-    Assets:Cash
+;2012-03-01 * (2) KFC
+;    Expenses:Food      $21.34
+;    Assets:Cash
 """)
         self.posting = journal.query("food")[0]
 
