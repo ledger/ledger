@@ -56,6 +56,11 @@ namespace {
                                         const datetime_t& moment) {
     return balance.value(moment, in_terms_of);
   }
+  boost::optional<balance_t> py_value_2d(const balance_t& balance,
+                                         const commodity_t * in_terms_of,
+                                         const date_t& moment) {
+    return balance.value(datetime_t(moment), in_terms_of);
+  }
 
   boost::optional<amount_t>
   py_commodity_amount_0(const balance_t& balance) {
@@ -200,6 +205,7 @@ void export_balance()
     .def("value", py_value_0)
     .def("value", py_value_1, args("in_terms_of"))
     .def("value", py_value_2, args("in_terms_of", "moment"))
+    .def("value", py_value_2d, args("in_terms_of", "moment"))
 
     .def("__nonzero__", &balance_t::is_nonzero)
     .def("is_nonzero", &balance_t::is_nonzero)
