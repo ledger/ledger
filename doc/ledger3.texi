@@ -2388,7 +2388,7 @@ fixed CAD $0.90
 2012-04-11 Second day Dinner in Canada
     Assets:Wallet            -25.75 CAD
     Expenses:Food            25.75 CAD
-endfixed
+endfixed CAD
 @end smallexample
 
 is equivalent to this:
