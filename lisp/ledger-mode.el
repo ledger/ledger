@@ -273,7 +273,7 @@ With a prefix argument, remove the effective date. "
     ["Narrow to REGEX" ledger-occur]
     ["Ledger Statistics" ledger-display-ledger-stats ledger-works]
     "---"
-    ["Show upcoming transactions" ledger-schedule-upcoming ledger-schedule-available]
+    ["Show upcoming transactions" ledger-schedule-upcoming]
     ["Add Transaction (ledger xact)" ledger-add-transaction ledger-works]
     ["Complete Transaction" ledger-fully-complete-xact]
     ["Delete Transaction" ledger-delete-current-transaction]
@@ -312,8 +312,6 @@ With a prefix argument, remove the effective date. "
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
   (ledger-check-version)
-  (ledger-schedule-check-available)
-
   (if (boundp 'font-lock-defaults)
       (setq-local font-lock-defaults
 									'(ledger-font-lock-keywords t t nil nil

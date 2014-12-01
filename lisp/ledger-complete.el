@@ -157,9 +157,7 @@
             (ledger-accounts)))))
 
 (defun ledger-trim-trailing-whitespace (str)
-  (let ((s str))
-    (when (string-match "[ \t]*$" s)
-      (replace-match "" nil nil s))))
+	(replace-regexp-in-string "[ \t]*$" "" str))
 
 (defun ledger-fully-complete-xact ()
   "Completes a transaction if there is another matching payee in the buffer.
