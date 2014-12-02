@@ -70,8 +70,6 @@
   "Default face for pending (!) payees"
   :group 'ledger-faces)
 
-
-
 (defface ledger-font-xact-highlight-face
   `((t :inherit ledger-occur-xact-face))
   "Default face for transaction under point"

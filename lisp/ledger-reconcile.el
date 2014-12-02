@@ -231,22 +231,24 @@ Return the number of uncleared xacts found."
 (defun ledger-reconcile-visit (&optional come-back)
   "Recenter ledger buffer on transaction and COME-BACK if non-nil."
   (interactive)
-  (progn
-    (beginning-of-line)
-    (let* ((where (get-text-property (1+ (point)) 'where))
-           (target-buffer (if where
-                              (ledger-reconcile-get-buffer where)
-                            nil))
-           (cur-win (get-buffer-window (get-buffer ledger-recon-buffer-name))))
-      (when target-buffer
-        (switch-to-buffer-other-window target-buffer)
-        (ledger-navigate-to-line (cdr where))
-        (forward-char)
-        (recenter)
-        (ledger-highlight-xact-under-point)
-        (forward-char -1)
-        (if (and come-back cur-win)
-            (select-window cur-win))))))
+	(beginning-of-line)
+	(let* ((where (get-text-property (1+ (point)) 'where))
+				 (target-buffer (if where
+														(ledger-reconcile-get-buffer where)
+													nil))
+				 (cur-win (get-buffer-window (get-buffer ledger-recon-buffer-name)))
+				 (cur-frame (selected-frame)))
+		(when target-buffer
+			(switch-to-buffer-other-window target-buffer)
+			(ledger-navigate-to-line (cdr where))
+			(forward-char)
+			(recenter)
+			(ledger-highlight-xact-under-point)
+			(forward-char -1)
+			(when (and come-back cur-win)
+				(select-frame-set-input-focus cur-frame)
+				(select-window cur-win)
+				(get-buffer)))))
 
 
 (defun ledger-reconcile-save ()

@@ -26,16 +26,17 @@
 ;;  states
 
 
+;;; Code:
+
 (provide 'ledger-fontify)
 
 (defcustom ledger-fontify-xact-state-overrides nil
-  "If t the overall xact state (cleard, pending, nil) will
-  control the font of the entire transaction, not just the payee
-  line."
+  "If t the highlight entire xact with state."
   :type 'boolean
   :group 'ledger)
 
 (defun ledger-fontify-buffer-part (&optional beg end len)
+"Fontify buffer from BEG to END, length LEN."
 	(save-excursion
 		(unless beg (setq beg (point-min)))
 		(unless end (setq end (point-max)))
@@ -49,7 +50,7 @@
 			(ledger-navigate-next-xact-or-directive))))
 
 (defun ledger-fontify-xact-at (position)
-  (interactive "d")
+  "Fontify the xact at POS."
 	(save-excursion
 		(goto-char position)
 		(let ((extents (ledger-navigate-find-element-extents position))
@@ -62,8 +63,7 @@
 				(ledger-fontify-xact-by-line extents)))))
 
 (defun ledger-fontify-xact-by-line (extents)
-	"do line-by-line detailed fontification of xact"
-	(interactive)
+	"Do line-by-line detailed fontification of xact in EXTENTS."
 	(save-excursion
 		(ledger-fontify-xact-start (car extents))
 		(while (< (point) (cadr extents))
@@ -96,6 +96,7 @@ Fontify the first line of an xact"
 																	 (match-end 4)) 'ledger-font-comment-face)))
 
 (defun ledger-fontify-posting (pos)
+	"FOntify the posting at POS."
 	(let* ((state nil)
 				 (end-of-line-comment nil)
 				(end (progn (end-of-line)
@@ -144,8 +145,9 @@ Fontify the first line of an xact"
 					(ledger-fontify-set-face (list (- start 1) (point)) ;; subtract 1 from start because we passed the semi-colon
 																	 'ledger-font-comment-face))))))
 
-(defun ledger-fontify-directive-at (position)
-	(let ((extents (ledger-navigate-find-element-extents position))
+(defun ledger-fontify-directive-at (pos)
+	"Fontify the directive at POS."
+	(let ((extents (ledger-navigate-find-element-extents pos))
 				(face 'ledger-font-default-face))
 		(cond ((looking-at "=")
 					 (setq face 'ledger-font-auto-xact-face))
@@ -190,6 +192,7 @@ Fontify the first line of an xact"
 		(ledger-fontify-set-face extents face)))
 
 (defun ledger-fontify-set-face (extents face)
+	"Set the text in EXTENTS to FACE."
 	(put-text-property (car extents) (cadr extents) 'face face))
 
 ;;; ledger-fontify.el ends here

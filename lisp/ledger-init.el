@@ -24,8 +24,10 @@
 
 (require 'ledger-regex)
 
+;;; Code:
+
 (defcustom ledger-init-file-name "~/.ledgerrc"
-  "Location of the ledger initialization file. nil if you don't have one"
+  "Location of the ledger initialization file.  nil if you don't have one."
   :group 'ledger-exec)
 
 (defvar ledger-environment-alist nil)
@@ -33,6 +35,7 @@
 (defvar ledger-default-date-format "%Y/%m/%d")
 
 (defun ledger-init-parse-initialization (buffer)
+	"Parse the .ledgerrc file in BUFFER."
   (with-current-buffer buffer
     (let (environment-alist)
       (goto-char (point-min))
@@ -53,6 +56,7 @@
       environment-alist)))
 
 (defun ledger-init-load-init-file ()
+	"Load and parse the .ledgerrc file."
   (interactive)
   (let ((init-base-name (file-name-nondirectory ledger-init-file-name)))
     (if (get-buffer init-base-name) ;; init file already loaded, parse it and leave it
