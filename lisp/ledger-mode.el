@@ -61,11 +61,12 @@
 (defconst ledger-mode-version "3.0.0")
 
 (defun ledger-mode-dump-variable (var)
-  (if var
+  "Format VAR for dump to buffer."
+	(if var
       (insert (format "         %s: %S\n" (symbol-name var) (eval var)))))
 
 (defun ledger-mode-dump-group (group)
-  "Dump GROUP customizations to current buffer"
+  "Dump GROUP customizations to current buffer."
   (let ((members (custom-group-members group nil)))
     (dolist (member members)
       (cond ((eq (cadr member) 'custom-group)
@@ -75,7 +76,7 @@
              (ledger-mode-dump-variable (car member)))))))
 
 (defun ledger-mode-dump-configuration ()
-  "Dump all customizations"
+  "Dump all customizations."
 	(interactive)
   (find-file "ledger-mode-dump")
   (ledger-mode-dump-group 'ledger))
@@ -96,14 +97,15 @@
   "Start a ledger session with the current month, but make it customizable to ease retro-entry.")
 
 (defun ledger-read-account-with-prompt (prompt)
-  (let ((context (ledger-context-at-point)))
+  "Read an account from the minibuffer with PROMPT."
+	(let ((context (ledger-context-at-point)))
     (ledger-read-string-with-default prompt
 																		 (if (eq (ledger-context-line-type context) 'acct-transaction)
 																				 (regexp-quote (ledger-context-field-value context 'account))
 																			 nil))))
 
 (defun ledger-read-date (prompt)
-  "Returns user-supplied date after `PROMPT', defaults to today."
+  "Return user-supplied date after `PROMPT', defaults to today."
   (let* ((default (ledger-year-and-month))
          (date (read-string prompt default
                             'ledger-minibuffer-history)))
@@ -148,7 +150,7 @@ And calculate the target-delta of the account being reconciled."
       (message balance))))
 
 (defun ledger-magic-tab (&optional interactively)
-  "Decide what to with with <TAB>.
+  "Decide what to with with <TAB>, INTERACTIVELY.
 Can indent, complete or align depending on context."
   (interactive "p")
   (if (= (point) (line-beginning-position))
@@ -166,14 +168,14 @@ Can indent, complete or align depending on context."
                        ledger-default-date-format)))
 
 (defun ledger-remove-effective-date ()
-  "Removes the effective date from a transaction or posting."
+  "Remove the effective date from a transaction or posting."
   (interactive)
   (let ((context (car (ledger-context-at-point))))
     (save-excursion
       (save-restriction
         (narrow-to-region (point-at-bol) (point-at-eol))
         (beginning-of-line)
-        (cond ((eq 'pmnt-transaction context)
+        (cond ((eq 'xact context)
                (re-search-forward ledger-iso-date-regexp)
                (when (= (char-after) ?=)
                  (let ((eq-pos (point)))
@@ -196,7 +198,7 @@ If `DATE' is nil, prompt the user a date.
 Replace the current effective date if there's one in the same
 line.
 
-With a prefix argument, remove the effective date. "
+With a prefix argument, remove the effective date."
   (interactive)
   (if (and (listp current-prefix-arg)
            (= 4 (prefix-numeric-value current-prefix-arg)))
@@ -206,7 +208,7 @@ With a prefix argument, remove the effective date. "
       (save-restriction
         (narrow-to-region (point-at-bol) (point-at-eol))
         (cond
-         ((eq 'pmnt-transaction context)
+         ((eq 'xact context)
           (beginning-of-line)
           (re-search-forward ledger-iso-date-regexp)
           (when (= (char-after) ?=)
@@ -218,12 +220,13 @@ With a prefix argument, remove the effective date. "
           (insert "  ; [=" date-string "]")))))))
 
 (defun ledger-mode-remove-extra-lines ()
-  (goto-char (point-min))
+  "Get rid of multiple empty lines."
+	(goto-char (point-min))
   (while (re-search-forward "\n\n\\(\n\\)+" nil t)
     (replace-match "\n\n")))
 
 (defun ledger-mode-clean-buffer ()
-  "indent, remove multiple linfe feeds and sort the buffer"
+  "Indent, remove multiple linfe feeds and sort the buffer."
   (interactive)
 	(untabify (point-min) (point-max))
   (ledger-sort-buffer)
