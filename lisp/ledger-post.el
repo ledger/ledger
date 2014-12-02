@@ -42,7 +42,7 @@
   :group 'ledger-post)
 
 (defcustom ledger-post-use-completion-engine :built-in
-  "Which completion engine to use, :iswitchb or :ido chose those engines,
+  "Which completion engine to use, :iswitchb or :ido chose those engines.
 :built-in uses built-in Ledger-mode completion"
   :type '(radio (const :tag "built in completion" :built-in)
                 (const :tag "ido completion" :ido)
@@ -83,7 +83,7 @@ point at beginning of the commodity."
              (match-end 3)) (point)))))
 
 (defun ledger-next-account (&optional end)
-  "Move point to the beginning of the next account, or status marker (!*), as long as it is not past END.
+  "Move to the beginning of the posting, or status marker, limit to END.
 Return the column of the beginning of the account and leave point
 at beginning of account"
   (if (> end (point))
@@ -95,13 +95,13 @@ at beginning of account"
         (current-column))))
 
 (defun ledger-post-align-xact (pos)
-  (interactive "d")
+	"Align all the posting in the xact at POS."
+	(interactive "d")
   (let ((bounds (ledger-navigate-find-xact-extents pos)))
     (ledger-post-align-postings (car bounds) (cadr bounds))))
 
 (defun ledger-post-align-postings (&optional beg end)
-  "Align all accounts and amounts within region, if there is no
-region align the posting on the current line."
+  "Align all accounts and amounts between BEG and END, or the current line."
   (interactive)
 
   (save-excursion

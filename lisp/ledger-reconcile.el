@@ -44,8 +44,7 @@
   :group 'ledger-reconcile)
 
 (defcustom ledger-narrow-on-reconcile t
-  "If t, limit transactions shown in main buffer to those
-matching the reconcile regex."
+  "If t, limit transactions shown in main buffer to those matching the reconcile regex."
   :type 'boolean
   :group 'ledger-reconcile)
 
@@ -56,8 +55,7 @@ Then that transaction will be shown in its source buffer."
   :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-force-window-bottom nil
-  "If t make the reconcile window appear along the bottom of the
-register window and resize."
+  "If t make the reconcile window appear along the bottom of the register window and resize."
   :type 'boolean
   :group 'ledger-reconcile)
 
@@ -68,25 +66,26 @@ reconcile-finish will mark all pending posting cleared."
   :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-default-date-format ledger-default-date-format
-  "Default date format for the reconcile buffer"
+  "Default date format for the reconcile buffer."
   :type 'string
   :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-target-prompt-string "Target amount for reconciliation "
-  "Default prompt for recon target prompt"
+  "Default prompt for recon target prompt."
   :type 'string
   :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-buffer-header "Reconciling account %s\n\n"
-	"Default header string for the reconcile buffer.  If non-nil,
-	the name of the account being reconciled will be substituted
+	"Default header string for the reconcile buffer.
+
+If non-nil, the name of the account being reconciled will be substituted
 	into the '%s'.  If nil, no header willbe displayed."
 	:type 'string
 	:group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-buffer-line-format "%(date)s %-4(code)s %-50(payee)s %-30(account)s %15(amount)s\n"
-	"Format string for the ledger reconcile posting
-format. Available fields are date, status, code, payee, account,
+	"Format string for the ledger reconcile posting format.
+Available fields are date, status, code, payee, account,
 amount.  The format for each field is %WIDTH(FIELD), WIDTH can be
 preced by a minus sign which mean to left justify and pad the
 field."
@@ -94,8 +93,9 @@ field."
 	:group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-sort-key "(0)"
-  "Default key for sorting reconcile buffer. Possible values are
-'(date)', '(amount)', '(payee)'. For no sorting, i.e. using
+  "Default key for sorting reconcile buffer.
+
+Possible values are '(date)', '(amount)', '(payee)'.  For no sorting, i.e. using
 ledger file order, use '(0)'."
   :type 'string
   :group 'ledger-reconcile)
@@ -106,7 +106,7 @@ ledger file order, use '(0)'."
   :group 'ledger-reconcile)
 
 (defun ledger-reconcile-get-cleared-or-pending-balance (buffer account)
-  "Calculate the cleared or pending balance of the account."
+  "Use BUFFER to Calculate the cleared or pending balance of the ACCOUNT."
 
   ;; these vars are buffer local, need to hold them for use in the
   ;; temp buffer below
@@ -321,7 +321,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
        (nth 0 posting))))) ;; return line-no of posting
 
 (defun ledger-reconcile-compile-format-string (fstr)
-	"return a function that implements the format string in fstr"
+	"Return a function that implements the format string in FSTR."
 	(let (fields
 				(start 0))
 		(while (string-match "(\\(.*?\\))" fstr start)
@@ -334,6 +334,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 
 
 (defun ledger-reconcile-format-posting (beg where fmt date code status payee account amount)
+	"Format posting for the reconcile buffer."
 	(insert (funcall fmt date code status payee account amount))
 
 																				; Set face depending on cleared status
@@ -350,6 +351,7 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 																		 'where where))))
 
 (defun ledger-reconcile-format-xact (xact fmt)
+	"Format XACT using FMT."
 	(let ((date-format (or (cdr (assoc "date-format" ledger-environment-alist))
 													ledger-default-date-format)))
 		(dolist (posting (nthcdr 5 xact))
@@ -366,7 +368,8 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 																				 (nth 2 posting))))))  ; amount
 
 (defun ledger-do-reconcile (&optional sort)
-  "Return the number of uncleared transactions in the account and display them in the *Reconcile* buffer."
+  "SORT the uncleared transactions in the account and display them in the *Reconcile* buffer.
+Return a count of the uncleared transactions."
   (let* ((buf ledger-buf)
          (account ledger-acct)
          (ledger-success nil)
@@ -401,9 +404,8 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
     (length xacts)))
 
 (defun ledger-reconcile-ensure-xacts-visible ()
-  "Ensures that the last of the visible transactions in the
-ledger buffer is at the bottom of the main window.  The key to
-this is to ensure the window is selected when the buffer point is
+  "Ensure the last of the visible transactions in the ledger buffer is at the bottom of the main window.
+The key to this is to ensure the window is selected when the buffer point is
 moved and recentered.  If they aren't strange things happen."
 
   (let ((recon-window (get-buffer-window (get-buffer ledger-recon-buffer-name))))
@@ -485,7 +487,8 @@ moved and recentered.  If they aren't strange things happen."
   (setq ledger-target (ledger-read-commodity-string ledger-reconcile-target-prompt-string)))
 
 (defmacro ledger-reconcile-change-sort-key-and-refresh (sort-by)
-  `(lambda ()
+  "Set the sort-key to SORT-BY."
+	`(lambda ()
      (interactive)
 
      (setq ledger-reconcile-sort-key ,sort-by)
