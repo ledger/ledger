@@ -51,6 +51,7 @@
 
 (defun ledger-fontify-xact-at (position)
   "Fontify the xact at POS."
+	(interactive "d")
 	(save-excursion
 		(goto-char position)
 		(let ((extents (ledger-navigate-find-element-extents position))
@@ -83,9 +84,10 @@ Fontify the first line of an xact"
 				(cur-point (point)))
 		(re-search-forward " ")
 		(ledger-fontify-set-face (list cur-point (point)) 'ledger-font-posting-date-face)
+		(beginning-of-line)
 		(re-search-forward ledger-xact-after-date-regex)
 		(save-match-data (setq state (ledger-state-from-string (match-string 1)))
-										 (ledger-fontify-set-face (list (match-beginning 3) (match-end 3))
+										 (ledger-fontify-set-face (list (match-beginning 1) (match-end 3))
 																							(cond ((eq state 'pending)
 																										 'ledger-font-payee-pending-face)
 																										((eq state 'cleared)
