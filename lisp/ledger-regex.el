@@ -334,11 +334,14 @@
 
 (defconst ledger-xact-start-regex
 	(concat "^" ledger-iso-date-regexp  ;; subexp 1
-				;;	"\\(=" ledger-iso-date-regexp "\\)?"
-          " ?\\([ *!]\\)"  ;; mark, subexp 5
-          " ?\\((.*)\\)?"  ;; code, subexp 6
-          " ?\\([^;\n]+\\)"   ;; desc, subexp 7
-					"\\(\n\\|;.*\\)" ;; comment, subexp 8
+					"\\(=" ledger-iso-date-regexp "\\)?"
+          ))
+
+(defconst ledger-xact-after-date-regex
+	(concat " ?\\([ *!]\\)"  ;; mark, subexp 1
+          " ?\\((.*)\\)?"  ;; code, subexp 2
+          " ?\\([^;\n]+\\)"   ;; desc, subexp 3
+					"\\(\n\\|;.*\\)" ;; comment, subexp 4
           ))
 
 (defconst ledger-posting-regex
