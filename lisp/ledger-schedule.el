@@ -289,8 +289,7 @@ date descriptor."
     (with-current-buffer schedule-buf
       (erase-buffer)
       (dolist (candidate candidates)
-        (if (not (ledger-schedule-already-entered candidate ledger-buf))
-            (insert (format-time-string date-format (car candidate) ) " " (cadr candidate) "\n")))
+				(insert (format-time-string date-format (car candidate) ) " " (cadr candidate) "\n"))
       (ledger-mode))
     (length candidates)))
 

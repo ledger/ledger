@@ -86,19 +86,19 @@ Fontify the first line of an xact"
 		(ledger-fontify-set-face (list cur-point (point)) 'ledger-font-posting-date-face)
 		(beginning-of-line)
 		(re-search-forward ledger-xact-after-date-regex)
-		(save-match-data (setq state (ledger-state-from-string (match-string 1)))
-										 (ledger-fontify-set-face (list (match-beginning 1) (match-end 3))
-																							(cond ((eq state 'pending)
-																										 'ledger-font-payee-pending-face)
-																										((eq state 'cleared)
-																										 'ledger-font-payee-cleared-face)
-																										(t
-																										 'ledger-font-payee-uncleared-face))))
+		(save-match-data (setq state (ledger-state-from-string (match-string 1))))
+		(ledger-fontify-set-face (list (match-beginning 1) (match-end 3))
+														 (cond ((eq state 'pending)
+																		'ledger-font-payee-pending-face)
+																	 ((eq state 'cleared)
+																		'ledger-font-payee-cleared-face)
+																	 (t
+																		'ledger-font-payee-uncleared-face)))
 		(ledger-fontify-set-face (list (match-beginning 4)
 																	 (match-end 4)) 'ledger-font-comment-face)))
 
 (defun ledger-fontify-posting (pos)
-	"FOntify the posting at POS."
+	"Fontify the posting at POS."
 	(let* ((state nil)
 				 (end-of-line-comment nil)
 				(end (progn (end-of-line)
@@ -107,17 +107,10 @@ Fontify the first line of an xact"
 											(point))))
 
 		;; Look for a posting status flag
-		(save-match-data ;; must use save-match-data to shadow the search
-										 ;; results.  If there is no status flag then the
-										 ;; search below will fail and NOT clear the match
-										 ;; data.  So if the previous line did have a
-										 ;; status flag it is still sitting in the match
-										 ;; data, causing the current line to be fontified
-										 ;; like the previous line.  Don't ask how long
-										 ;; that took to figure out
-			(re-search-forward " \\([*!]\\) " end t)
-			(if (match-string 1)
-					(setq state (ledger-state-from-string  (match-string 1)))))
+		(set-match-data nil 'reseat)
+		(re-search-forward " \\([*!]\\) " end t)
+		(if (match-string 1)
+				(setq state (ledger-state-from-string  (match-string 1))))
 		(beginning-of-line)
 		(re-search-forward "[[:graph:]]\\([ \t][ \t]\\)" end 'end)  ;; find the end of the account, or end of line
 
