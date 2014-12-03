@@ -114,8 +114,9 @@ class DocTests:
     if command[0] == '$': command.remove('$')
     index = command.index('ledger')
     command[index] = self.ledger
-    command.insert(index+1, '--init-file')
-    command.insert(index+2, '/dev/null')
+    for i,argument in enumerate('--init-file /dev/null --columns 80'.split()):
+      command.insert(index+i+1, argument)
+
     try:
       findex = command.index('-f')
     except ValueError:
