@@ -30,6 +30,11 @@
 
 (defgroup ledger-faces nil "Ledger mode highlighting" :group 'ledger)
 
+(defface ledger-font-default-face
+	`((t :foreground "black" :weight normal))
+	"Default face for automatic transactions"
+	:group 'ledger-faces)
+
 (defface ledger-font-auto-xact-face
 	`((t :foreground "orange" :weight normal))
 	"Default face for automatic transactions"
