@@ -78,7 +78,7 @@ beginning with whitespace"
   "Move point to end of xact."
 	(interactive)
   (ledger-navigate-next-xact-or-directive)
-	(re-search-backward "^[ \t]")
+	(re-search-backward ".$")
 	(end-of-line)
 	(point))
 

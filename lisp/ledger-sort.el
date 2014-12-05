@@ -26,46 +26,19 @@
 
 ;;; Code:
 
-;; (defun ledger-next-record-function ()
-;;   "Move point to next transaction."
-;; 	;; make sure we actually move to the next xact, even if we are the
-;; 	;; beginning of one now.
-;; 	(if (looking-at ledger-payee-any-status-regex)
-;; 			(forward-line))
-;;   (if (re-search-forward  ledger-payee-any-status-regex nil t)
-;;       (goto-char (match-beginning 0))
-;;     (goto-char (point-max))))
-
-;; (defun ledger-prev-record-function ()
-;;   "Move point to beginning of previous xact."
-;; 	(ledger-beginning-record-function)
-;; 	(re-search-backward ledger-xact-start-regex nil t))
-
-;; (defun ledger-beginning-record-function ()
-;; 	"Move point to the beginning of the current xact"
-;; 	(interactive)
-;; 	(unless (looking-at ledger-xact-start-regex)
-;; 		(re-search-backward ledger-xact-start-regex nil t)
-;; 		(beginning-of-line))
-;; 	(point))
-
-;; (defun ledger-end-record-function ()
-;;   "Move point to end of xact."
-;; 	(interactive)
-;;   (ledger-navigate-next-xact)
-;; 	(backward-char)
-;; 	(end-of-line)
-;; 	(point))
 
 (defun ledger-sort-find-start ()
+	"Find the beginning of a sort region"
   (if (re-search-forward ";.*Ledger-mode:.*Start sort" nil t)
       (match-end 0)))
 
 (defun ledger-sort-find-end ()
+	"Find the end of a sort region"
   (if (re-search-forward ";.*Ledger-mode:.*End sort" nil t)
       (match-end 0)))
 
 (defun ledger-sort-insert-start-mark ()
+	"Insert a marker to start a sort region"
   (interactive)
   (save-excursion
     (goto-char (point-min))
@@ -75,6 +48,7 @@
   (insert "\n; Ledger-mode: Start sort\n\n"))
 
 (defun ledger-sort-insert-end-mark ()
+	"Insert a marker to end a sort region"
   (interactive)
   (save-excursion
     (goto-char (point-min))
