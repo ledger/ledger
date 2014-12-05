@@ -216,18 +216,17 @@
   :group 'ledger-faces)
 
 (defface ledger-occur-narrowed-face
-  `((t :foreground "grey70" :invisible t ))
+  `((t :inherit font-lock-comment-face :invisible t))
   "Default face for Ledger occur mode hidden transactions"
   :group 'ledger-faces)
 
 (defface ledger-occur-xact-face
-  `((((background dark)) :background "#1a1a1a" )
-    (t :background "#eee8d5" ))
+  `((t :inherit highlight))
   "Default face for Ledger occur mode shown transactions"
   :group 'ledger-faces)
 
 (defface ledger-font-comment-face
-  `((t :foreground "#93a1a1" :slant italic))
+  `((t :inherit font-lock-comment-face))
   "Face for Ledger comments"
   :group 'ledger-faces)
 
