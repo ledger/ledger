@@ -226,12 +226,19 @@ With a prefix argument, remove the effective date."
     (replace-match "\n\n")))
 
 (defun ledger-mode-clean-buffer ()
-  "Indent, remove multiple linfe feeds and sort the buffer."
+  "Indent, remove multiple line feeds and sort the buffer."
   (interactive)
-	(untabify (point-min) (point-max))
-  (ledger-sort-buffer)
-  (ledger-post-align-postings (point-min) (point-max))
-  (ledger-mode-remove-extra-lines))
+	(ledger-navigate-beginning-of-xact)
+	(beginning-of-line)
+	(let ((target (buffer-substring (point) (progn
+																						(end-of-line)
+																						(point)))))
+		(untabify (point-min) (point-max))
+		(ledger-sort-buffer)
+		(ledger-post-align-postings (point-min) (point-max))
+		(ledger-mode-remove-extra-lines)
+		(goto-char (point-min))
+		(search-forward target)))
 
 (defvar ledger-mode-map
   (let ((map (make-sparse-keymap)))
