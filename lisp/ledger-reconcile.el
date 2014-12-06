@@ -438,6 +438,13 @@ moved and recentered.  If they aren't strange things happen."
       (set-window-buffer (split-window (get-buffer-window buf) nil nil) rbuf)
     (pop-to-buffer rbuf)))
 
+(defun ledger-reconcile-check-valid-account (account)
+	"Check to see if ACCOUNT exists in the ledger file"
+	(if (> (length account) 0)
+			(save-excursion
+				(goto-char (point-min))
+				(search-forward account nil t))))
+
 (defun ledger-reconcile ()
   "Start reconciling, prompt for account."
   (interactive)
@@ -445,37 +452,38 @@ moved and recentered.  If they aren't strange things happen."
         (buf (current-buffer))
         (rbuf (get-buffer ledger-recon-buffer-name)))
 
-    (add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save nil t)
+		(when (ledger-reconcile-check-valid-account account)
+			(add-hook 'after-save-hook 'ledger-reconcile-refresh-after-save nil t)
 
-    (if rbuf ;; *Reconcile* already exists
-        (with-current-buffer rbuf
-          (set 'ledger-acct account) ;; already buffer local
-          (when (not (eq buf rbuf))
-            ;; called from some other ledger-mode buffer
-            (ledger-reconcile-quit-cleanup)
-            (setq ledger-buf buf)) ;; should already be buffer-local
+			(if rbuf ;; *Reconcile* already exists
+					(with-current-buffer rbuf
+						(set 'ledger-acct account) ;; already buffer local
+						(when (not (eq buf rbuf))
+							;; called from some other ledger-mode buffer
+							(ledger-reconcile-quit-cleanup)
+							(setq ledger-buf buf)) ;; should already be buffer-local
 
-          (unless (get-buffer-window rbuf)
-            (ledger-reconcile-open-windows buf rbuf)))
+						(unless (get-buffer-window rbuf)
+							(ledger-reconcile-open-windows buf rbuf)))
 
-      ;; no recon-buffer, starting from scratch.
+				;; no recon-buffer, starting from scratch.
 
-      (with-current-buffer (setq rbuf
-                                 (get-buffer-create ledger-recon-buffer-name))
-        (ledger-reconcile-open-windows buf rbuf)
-        (ledger-reconcile-mode)
-        (make-local-variable 'ledger-target)
-        (set (make-local-variable 'ledger-buf) buf)
-        (set (make-local-variable 'ledger-acct) account)))
+				(with-current-buffer (setq rbuf
+																	 (get-buffer-create ledger-recon-buffer-name))
+					(ledger-reconcile-open-windows buf rbuf)
+					(ledger-reconcile-mode)
+					(make-local-variable 'ledger-target)
+					(set (make-local-variable 'ledger-buf) buf)
+					(set (make-local-variable 'ledger-acct) account)))
 
-    ;; Narrow the ledger buffer
-    (with-current-buffer rbuf
-      (save-excursion
-        (if ledger-narrow-on-reconcile
-            (ledger-occur-mode account ledger-buf)))
-      (if (> (ledger-reconcile-refresh) 0)
-          (ledger-reconcile-change-target))
-      (ledger-display-balance))))
+			;; Narrow the ledger buffer
+			(with-current-buffer rbuf
+				(save-excursion
+					(if ledger-narrow-on-reconcile
+							(ledger-occur-mode account ledger-buf)))
+				(if (> (ledger-reconcile-refresh) 0)
+						(ledger-reconcile-change-target))
+				(ledger-display-balance)))))
 
 (defvar ledger-reconcile-mode-abbrev-table)
 

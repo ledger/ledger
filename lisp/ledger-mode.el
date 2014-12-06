@@ -100,7 +100,7 @@
   "Read an account from the minibuffer with PROMPT."
 	(let ((context (ledger-context-at-point)))
     (ledger-read-string-with-default prompt
-																		 (if (eq (ledger-context-line-type context) 'acct-transaction)
+																		 (if (eq (ledger-context-current-field context) 'account)
 																				 (regexp-quote (ledger-context-field-value context 'account))
 																			 nil))))
 
