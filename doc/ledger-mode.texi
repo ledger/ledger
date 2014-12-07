@@ -175,6 +175,13 @@ typing a close match to the payee. Ledger-mode will call @command{ledger
 xact} with the data you enter and place the transaction in the proper
 chronological place in the ledger.
 
+If you need to add a lot of transactions that are not near your current
+date you can set the current year and month so that using @samp{Add
+Transaction} will prompt you with a more convenient month and year.  To
+set the month type @kbd{C-c RET} and enter the month you want.  @kbd{C-c
+C-y} will prompt you for the year.  These settings only effect the
+@samp{Add Transaction} command.
+
 @node Reconciliation, Reports, Quick Add, Quick Demo
 @subsection Reconciliation
 @kindex C-c C-r
@@ -247,17 +254,12 @@ amount.
 * Copying Transactions::
 * Editing Amounts::
 * Marking Transactions::
+* Formatting Transactions::
 * Deleting Transactions::
 * Sorting Transactions::
 * Narrowing Transactions::
 @end menu
 
-@c TODO
-@c Describe also:
-@c - Align Region
-@c - Set effective date C-c C-t
-@c - Set Year           C-c C-t
-@c - Set Month          C-c RET
 
 @node Adding Transactions, Copying Transactions, The Ledger Buffer, The Ledger Buffer
 @section Adding Transactions
@@ -273,17 +275,32 @@ payees and accounts. Included files are not currently included in the
 completion scan. Repeatedly hitting @kbd{TAB} will cycle through the
 possible completions.
 
-Ledger-mode can also help you keep your amounts in alignment.  Setting
+Ledger-mode can also help you keep your amounts in aligned.  Setting
 @option{ledger-post-auto-adjust-amounts} to true tells Ledger-mode to
 automatically place any amounts such that their last digit is aligned to
 the column specified by @option{ledger-post-amount-alignment-column},
 which defaults to @samp{52}. @xref{Ledger Post Customization Group}.
 
 @menu
+* Setting a Transactions Effective Date::
 * Quick Balance Display::
 @end menu
 
-@node Quick Balance Display,  , Adding Transactions, Adding Transactions
+@node Setting a Transactions Effective Date, Quick Balance Display, Adding Transactions, Adding Transactions
+@subsection Setting a Transactions Effective Date
+
+Ledger provide for adding information to a transaction that add details
+to the dates.  For example, you can specify when the transaction was
+enter, when the transation clear, or when individual postings cleared.
+Ledger-mode referes to these additional dates as ``effective dates''.
+To set the effect date of a transaction place the point in the first
+line of a transaction and type @kbd{C-c C-t}.  The effective date will
+be added to the transacation.  To set the effective date for an
+inividual posting, place point in the posting and type @kbd{C-c C-t} and
+the effective date for that posting will be added at the end of the
+posting.
+
+@node Quick Balance Display,  , Setting a Transactions Effective Date, Adding Transactions
 @subsection Quick Balance Display
 @kindex C-c C-p
 @cindex balance
@@ -327,7 +344,7 @@ but it cannot intercept the value being yanked form the @command{Calc}
 stack, so decimal-comma users will have to manually replace the period
 with a comma.
 
-@node Marking Transactions, Deleting Transactions, Editing Amounts, The Ledger Buffer
+@node Marking Transactions, Formatting Transactions, Editing Amounts, The Ledger Buffer
 @section Marking Transactions
 @cindex transaction, marking
 @cindex uncleared
@@ -369,7 +386,18 @@ point in a transaction.  This places an asterisk @samp{*} after the
 date.  Clearing individual postings is done by typing @kbd{C-c C-c}
 while in a posting. This places an asterisk prior to the posting.
 
-@node Deleting Transactions, Sorting Transactions, Marking Transactions, The Ledger Buffer
+@node Formatting Transactions, Deleting Transactions, Marking Transactions, The Ledger Buffer
+@section Formatting Transactions
+When editing a transaction, liberal use of the TAB key can keep the
+transaction well formatted.  If you want to have ledger-mode cleanup the
+formatting of a trasnaction you can use Align Transaction or Align
+Region from the menu bar.
+
+The menu item ``Clean-up Buffer'' sorts all transactions in the buffer
+by date, removes extraneous empty lines and aligns every transaction.
+
+
+@node Deleting Transactions, Sorting Transactions, Formatting Transactions, The Ledger Buffer
 @section Deleting Transactions
 @kindex C-c C-d
 @cindex transaction, deleting
@@ -436,12 +464,11 @@ The regular expression can match on any part of the transaction.  If you
 want to find all transactions whose amount ends in @samp{.37}, you can
 do that (I don't know why, but hey, whatever ever floats you aerostat).
 
-Using @kbd{C-c C-f} or the @samp{Narrow to Regex} menu entry, enter
-a regular expression in the Minibuffer.  Ledger-mode will hide all other
-transactions.  For details of the regular expression syntax, see
-@ref{(emacs)Regexps, Syntax of Regular Expressions} or
-@ref{(elisp)Regular Expressions, Regular Expressions}.  A few examples
-using the @file{demo.ledger} are given here:
+Using @kbd{C-c C-f} or the @samp{Narrow to Regex} menu entry, enter a
+regular expression in the Minibuffer.  Ledger-mode will hide all other
+transactions.  For details of the regular expression syntax, see your
+Emacs documentation.  A few examples using the @file{demo.ledger} are
+given here:
 
 @table @samp
 
@@ -602,12 +629,6 @@ type @kbd{t} and enter the new target value.
 * Reversing Report Order::
 @end menu
 
-@c TODO Describe also:
-@c - Goto Report   C-c C-o C-g
-@c - Re-run Report C-c C-o C-a
-@c - Save Report   C-c C-o C-s
-@c - Kill Report   C-c C-o C-k
-
 @node Running Basic Reports, Adding and Editing Reports, The Report Buffer, The Report Buffer
 @section Running Reports
 @kindex C-c C-o C-r
@@ -617,7 +638,7 @@ The real power behind Ledger is in its amazing reporting capability.
 Ledger-mode provides easy facility to run reports directly from Emacs.
 It has four reports built-in and facilities for adding custom reports.
 
-Typing @kbd{C-c C-o C-r} or using menu @samp{Ledger Run Report} prompt
+Typing @kbd{C-c C-o C-r} or using menu @samp{Ledger Run Report} prompts
 for the name of a saved report.  The built-in reports are:
 
 @table @var
@@ -637,6 +658,18 @@ Prompt for an account, then produce a register report of all
 transactions involving that account.
 
 @end table
+
+While viewing reports you can easily swtich back and forth between the
+ledger buffer and the report buffer.  I ntransaction reports typing
+@kbd{RETURN} will take you to that transaction in the ledger buffer.
+While in theledger buffer @kbd{C-c C-o C-g} returns you to the report
+buffer.
+
+By default ledger-mode will refresh the report buffer when the ledger
+buffer is saved.  iF you want to rerun the report at another time time
+@kbd{C-c C-o C-a}.  This is useful if you have other programs altering
+your ledger file outside of emacs.
+
 
 @node Adding and Editing Reports, Reversing Report Order, Running Basic Reports, The Report Buffer
 @section Adding and Editing Reports
@@ -672,13 +705,15 @@ Deleting reports is accomplished by typing @kbd{C-c C-o C-e} or using
 customization window for the Ledger Reports variables.  Use the widgets
 to delete the report you want removed.
 
+Typing @kbd{C-c C-o C-s} will prompt for a name and save the current report.
+
 @node Expansion Formats, Make Report Transactions Active, Adding and Editing Reports, Adding and Editing Reports
 @subsection Expansion Formats
 @cindex report, custom variable
 
 It is sometimes convenient to leave room to customize a report without
 saving the command line every time.  For example running a register
-report for a specific account, enter at runtime by the user.  The
+report for a specific account entered at runtime by the user.  The
 built-in report @var{account} does exactly that, using a variable
 expansion to prompt the user for the account to use.  There are four
 variables that can be expanded to run a report:
@@ -694,9 +729,11 @@ Prompts for a payee.
 @item account
 Prompt for an account.
 
-@c FIXME : is it 'value' or 'tag' for '@item value' just below?
-@item value
-Prompt for a tag value.
+@item tagname
+Prompt for a meta-data tag name.
+
+@item tagvalue
+Prompt for a meta-data tag value.
 
 @end table
 
@@ -742,7 +779,7 @@ maintain the proper mathematical sense.
 @node Scheduling Transactions, Customizing Ledger-mode, The Report Buffer, Top
 @chapter Scheduling Transactions
 
-The Ledger program provide for automating transactions but these
+The Ledger program provides for automating transactions but these
 transaction aren't ``real'', they only exist inside a ledger session and
 are not reflected in the actual data file.  Many transactions are very
 repetitive, but may vary slightly in the date they occur on, or the
@@ -757,13 +794,66 @@ file.
 * Specifying Upcoming Transactions::
 @end menu
 
-@node Specifying Upcoming Transactions
+@node Specifying Upcoming Transactions,  , Scheduling Transactions, Scheduling Transactions
 @section Specifying Upcoming Transactions
 
 The format for specifying transactions is identical to Ledger's file
 format with the exception of the date field.  The data field is modified
-by surrounding it with brackets and using wild cards to specity free
-months or years.
+by surrounding it with brackets and using wild cards and special
+characters to specify when the transactions should appear.
+
+@menu
+* Transactions that occur on specific dates::
+* Transactions that occur on specific days::
+@end menu
+
+@node Transactions that occur on specific dates, Transactions that occur on specific days, Specifying Upcoming Transactions, Specifying Upcoming Transactions
+@subsection Transactions that occur on specific dates
+
+Many times you will repetitive transactions that occur on the same day
+of the month each month.  These can be specified using a wild card in
+the year and month with a fixed date in the day.  The following entry
+specifies a transaction that occurs on the first and fifteenth of every
+month in every year.
+@example
+[*/*/1,15] Paycheck
+      Income:Job  $1000.00
+      Assets:Checking
+@end example
+
+Some transactions do not occur every month.  Comma separated lists of
+the months, or E for even, or O for odd number months can also be
+specified.  The following entry specifies a bi-monthly exterminator bill that occurs
+in the even months:
+@example
+[*/E/01]  Exterminator
+      Expenses:Home  $100.00
+      Asset:Checking
+@end example
+
+@node Transactions that occur on specific days,  , Transactions that occur on specific dates, Specifying Upcoming Transactions
+@subsection Transactions that occur on specific days
+
+Some transactions occur every relative to the day of the week rather
+than the date of the month.  For example, many people are paid every two
+weeks without regard to the day of the month.  Other events may occur on
+specific days regaless of the date.  For example the following
+transactions creates a transaction every other Thursday:
+
+@example
+[2014/11/27+2Th]  Paycheck
+      Income:Job  $1000.00
+      Assets; Checking
+@end example
+
+It is necessary to specify a starting date in order for this type of
+recurrence relation to be specified.  The day names are two character
+codes that default to Mo, Tu, We, Th, Fr, Sa, Su, for Monday, Tuesday,
+Wednesday, Thursday, Friday, Saturday, Sunday respectively.  You can
+change the codes to something more convenient for your locale by
+customizing the ledger @code{ledger-schedule-week-days}. They must be 2
+character long.
+
 
 
 @node Customizing Ledger-mode, Generating Ledger Regression Tests, Scheduling Transactions, Top
@@ -1024,3 +1114,8 @@ Work in Progress.
 @printindex ky
 
 @bye
+
+@c Local Variables:
+@c mode: texinfo
+@c TeX-master: t
+@c End:
