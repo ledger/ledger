@@ -57,7 +57,7 @@ specifier."
   '(("ledger-file" . ledger-report-ledger-file-format-specifier)
     ("payee" . ledger-report-payee-format-specifier)
     ("account" . ledger-report-account-format-specifier)
-		("tagname") . ledger-report-tagname-format-specifier
+		("tagname" . ledger-report-tagname-format-specifier)
     ("tagvalue" . ledger-report-tagvalue-format-specifier))
   "An alist mapping ledger report format specifiers to implementing functions.
 
