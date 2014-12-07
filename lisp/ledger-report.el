@@ -57,7 +57,8 @@ specifier."
   '(("ledger-file" . ledger-report-ledger-file-format-specifier)
     ("payee" . ledger-report-payee-format-specifier)
     ("account" . ledger-report-account-format-specifier)
-    ("value" . ledger-report-value-format-specifier))
+		("tagname") . ledger-report-tagname-format-specifier
+    ("tagvalue" . ledger-report-tagvalue-format-specifier))
   "An alist mapping ledger report format specifiers to implementing functions.
 
 The function is called with no parameters and expected to return the
@@ -118,9 +119,9 @@ text that should replace the format specifier."
   "Ledger report menu"
   '("Reports"
     ["Save Report" ledger-report-save]
-    ["Edit Report" ledger-report-edit]
+    ["Edit Current Report" ledger-report-edit-report]
+    ["Edit All Reports" ledger-report-edit-reports]
     ["Re-run Report" ledger-report-redo]
-    ["Kill Report" ledger-report-kill]
     "---"
     ["Reverse report order" ledger-report-reverse-lines]
     "---"
@@ -134,11 +135,17 @@ text that should replace the format specifier."
 (define-derived-mode ledger-report-mode text-mode "Ledger-Report"
   "A mode for viewing ledger reports.")
 
-(defun ledger-report-value-format-specifier ()
+(defun ledger-report-tagname-format-specifier ()
   "Return a valid meta-data tag name"
   ;; It is intended completion should be available on existing account
   ;; names, but it remains to be implemented.
-  (ledger-read-string-with-default "Value: " nil))
+  (ledger-read-string-with-default "Tag Name: " nil))
+
+(defun ledger-report-tagvalue-format-specifier ()
+  "Return a valid meta-data tag name"
+  ;; It is intended completion should be available on existing account
+  ;; names, but it remains to be implemented.
+  (ledger-read-string-with-default "Tag Value: " nil))
 
 (defun ledger-report-read-name ()
   "Read the name of a ledger report to use, with completion.
@@ -387,12 +394,6 @@ Optional EDIT the command."
 	(ledger-report-goto)
 	(set-window-configuration ledger-original-window-cfg)
 	(kill-buffer (get-buffer ledger-report-buffer-name)))
-
-(defun ledger-report-kill ()
-  "Kill the ledger report buffer."
-  (interactive)
-  (ledger-report-quit)
-  (kill-buffer (get-buffer ledger-report-buffer-name)))
 
 (defun ledger-report-edit-reports ()
   "Edit the defined ledger reports."
