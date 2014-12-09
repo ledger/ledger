@@ -31,6 +31,7 @@
 ;; function without have to use funcall.
 
 (require 'ledger-init)
+(require 'cl)
 
 ;;; Code:
 
