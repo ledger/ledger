@@ -79,6 +79,8 @@
         (goto-char beg)
 				;; make sure point is at the beginning of a xact
         (ledger-navigate-next-xact)
+        (unless (looking-at ledger-payee-any-status-regex)
+          (ledger-navigate-next-xact))
         (setq new-beg (point))
         (goto-char end)
         (ledger-navigate-next-xact)
