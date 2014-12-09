@@ -91,7 +91,7 @@
   :group 'ledger-faces)
 
 (defface ledger-font-directive-face
-  `((t :foreground "#009900" :weight normal))
+  `((t :inherit font-lock-preprocessor-face))
   "Default face for other transactions"
   :group 'ledger-faces)
 
