@@ -68,10 +68,12 @@
 
 (defun ledger-state-from-string (state-string)
   "Get state from STATE-CHAR."
-  (cond ((string-match "\\!" state-string) 'pending)
-        ((string-match "\\*" state-string) 'cleared)
-        ((string-match ";" state-string) 'comment)
-        (t nil)))
+  (when state-string
+    (cond
+     ((string-match "\\!" state-string) 'pending)
+     ((string-match "\\*" state-string) 'cleared)
+     ((string-match ";" state-string) 'comment)
+     (t nil))))
 
 (defun ledger-toggle-current-posting (&optional style)
   "Toggle the cleared status of the transaction under point.
