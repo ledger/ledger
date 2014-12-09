@@ -28,7 +28,9 @@
 
 ;;; Code:
 
-(provide 'ledger-fontify)
+(require 'ledger-navigate)
+(require 'ledger-regex)
+(require 'ledger-state)
 
 (defcustom ledger-fontify-xact-state-overrides nil
   "If t the highlight entire xact with state."
@@ -50,7 +52,7 @@
 			(ledger-navigate-next-xact-or-directive))))
 
 (defun ledger-fontify-xact-at (position)
-  "Fontify the xact at POS."
+  "Fontify the xact at POSITION."
 	(interactive "d")
 	(save-excursion
 		(goto-char position)
@@ -190,5 +192,8 @@ Fontify the first line of an xact"
 (defun ledger-fontify-set-face (extents face)
 	"Set the text in EXTENTS to FACE."
 	(put-text-property (car extents) (cadr extents) 'face face))
+
+
+(provide 'ledger-fontify)
 
 ;;; ledger-fontify.el ends here

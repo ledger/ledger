@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'ledger-regex)
+(require 'cus-edit)
 (require 'esh-util)
 (require 'esh-arg)
 (require 'easymenu)

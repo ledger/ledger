@@ -44,9 +44,11 @@
 (defconst ledger-payee-string "\\(.*\\)")
 
 (defun ledger-get-regex-str (name)
+  "Get the ledger regex of type NAME."
   (symbol-value (intern (concat "ledger-" (symbol-name name) "-string"))))
 
 (defun ledger-line-regex (elements)
+  "Get a regex to match ELEMENTS on a single line."
   (concat (apply 'concat (mapcar 'ledger-get-regex-str elements)) "[ \t]*$"))
 
 (defmacro ledger-single-line-config (&rest elements)
@@ -195,4 +197,4 @@ specified line, returns nil."
 
 (provide 'ledger-context)
 
-;;; ledger-report.el ends here
+;;; ledger-context.el ends here
