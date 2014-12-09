@@ -326,13 +326,13 @@ With a prefix argument, remove the effective date."
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
   (ledger-check-version)
-  (if (boundp 'font-lock-defaults)
-      (setq-local font-lock-defaults
-									'(ledger-font-lock-keywords t t nil nil
-																							(font-lock-fontify-region-function . ledger-fontify-buffer-part))))
+  (when (boundp 'font-lock-defaults)
+    (setq font-lock-defaults
+          '(ledger-font-lock-keywords t t nil nil
+                                      (font-lock-fontify-region-function . ledger-fontify-buffer-part))))
 
-	(setq-local pcomplete-parse-arguments-function 'ledger-parse-arguments)
-	(setq-local pcomplete-command-completion-function 'ledger-complete-at-point)
+	(set (make-local-variable 'pcomplete-parse-arguments-function) 'ledger-parse-arguments)
+	(set (make-local-variable 'pcomplete-command-completion-function) 'ledger-complete-at-point)
   (add-hook 'completion-at-point-functions 'pcomplete-completions-at-point nil t)
 	(add-hook 'after-save-hook 'ledger-report-redo)
 
@@ -341,7 +341,7 @@ With a prefix argument, remove the effective date."
   (ledger-init-load-init-file)
   (setq comment-start ";")
 
-  (setq-local indent-region-function 'ledger-post-align-postings))
+  (set (make-local-variable 'indent-region-function) 'ledger-post-align-postings))
 
 
 
