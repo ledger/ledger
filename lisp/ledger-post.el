@@ -110,55 +110,48 @@ at beginning of account"
         (set-mark (point)))
 
     (let ((inhibit-modification-hooks t)
-           (mark-first (< (mark) (point)))
-           acct-start-column acct-end-column acct-adjust amt-width amt-adjust
-           (lines-left 1))
+          (mark-first (< (mark) (point)))
+          acct-start-column acct-end-column acct-adjust amt-width amt-adjust
+          (lines-left 1))
 
-			(unless beg (setq beg (if mark-first (mark) (point))))
-			(unless end (setq end (if mark-first (mark) (point))))
-		  ;; Condition point and mark to the beginning and end of lines
-      (goto-char end)
-      (setq end (line-end-position))
-      (goto-char beg)
-      (goto-char
-       (setq beg
-             (line-beginning-position)))
+      (unless beg (setq beg (if mark-first (mark) (point))))
+      (unless end (setq end (if mark-first (mark) (point))))
 
-			(untabify beg end)
+      ;; Extend region to whole lines
+      (let ((start-marker (set-marker (make-marker) (save-excursion
+                                                      (goto-char beg)
+                                                      (line-beginning-position))))
+            (end-marker (set-marker (make-marker) (save-excursion
+                                                    (goto-char end)
+                                                    (line-end-position)))))
+        (untabify start-marker end-marker)
+        (goto-char start-marker)
 
-			;; if untabify actually changed anything, then our begin and end are not correct.
-      (goto-char end)
-      (setq end (line-end-position))
-      (goto-char beg)
-      (goto-char
-       (setq beg
-             (line-beginning-position)))
-
-      ;; This is the guts of the alignment loop
-      (while (and (or (setq acct-start-column (ledger-next-account (line-end-position)))
-                      lines-left)
-                  (< (point) end))
-        (when acct-start-column
-          (setq acct-end-column (save-excursion
-                                  (goto-char (match-end 2))
-                                  (current-column)))
-          (when (/= (setq acct-adjust (- ledger-post-account-alignment-column acct-start-column)) 0)
-            (setq acct-end-column (+ acct-end-column acct-adjust))  ;;adjust the account ending column
-            (if (> acct-adjust 0)
-                (insert (make-string acct-adjust ? ))
-              (delete-char acct-adjust)))
-          (when (setq amt-width (ledger-next-amount (line-end-position)))
-            (if (/= 0 (setq amt-adjust (- (if (> (- ledger-post-amount-alignment-column amt-width)
-                                                 (+ 2 acct-end-column))
-                                              ledger-post-amount-alignment-column ;;we have room
-                                            (+ acct-end-column 2 amt-width))
-                                          amt-width
-                                          (current-column))))
-                (if (> amt-adjust 0)
-                    (insert (make-string amt-adjust ? ))
-                  (delete-char amt-adjust)))))
-        (forward-line)
-        (setq lines-left (not (eobp))))
+        ;; This is the guts of the alignment loop
+        (while (and (or (setq acct-start-column (ledger-next-account (line-end-position)))
+                        lines-left)
+                    (< (point) end-marker))
+          (when acct-start-column
+            (setq acct-end-column (save-excursion
+                                    (goto-char (match-end 2))
+                                    (current-column)))
+            (when (/= (setq acct-adjust (- ledger-post-account-alignment-column acct-start-column)) 0)
+              (setq acct-end-column (+ acct-end-column acct-adjust))  ;;adjust the account ending column
+              (if (> acct-adjust 0)
+                  (insert (make-string acct-adjust ? ))
+                (delete-char acct-adjust)))
+            (when (setq amt-width (ledger-next-amount (line-end-position)))
+              (if (/= 0 (setq amt-adjust (- (if (> (- ledger-post-amount-alignment-column amt-width)
+                                                   (+ 2 acct-end-column))
+                                                ledger-post-amount-alignment-column ;;we have room
+                                              (+ acct-end-column 2 amt-width))
+                                            amt-width
+                                            (current-column))))
+                  (if (> amt-adjust 0)
+                      (insert (make-string amt-adjust ? ))
+                    (delete-char amt-adjust)))))
+          (forward-line)
+          (setq lines-left (not (eobp)))))
       (setq inhibit-modification-hooks nil))))
 
 (defun ledger-post-edit-amount ()
