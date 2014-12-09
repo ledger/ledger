@@ -339,6 +339,7 @@ With a prefix argument, remove the effective date."
   (add-hook 'before-revert-hook 'ledger-occur-remove-all-overlays nil t)
 
   (ledger-init-load-init-file)
+  (setq comment-start ";")
 
   (setq-local indent-region-function 'ledger-post-align-postings))
 
