@@ -304,7 +304,7 @@ and exit reconcile mode"
         (with-current-buffer buf
           (remove-hook 'after-save-hook 'ledger-reconcile-refresh-after-save t)
           (when ledger-narrow-on-reconcile
-            (ledger-occur-quit-buffer buf)
+            (ledger-occur-mode -1)
             (ledger-highlight-xact-under-point))))))
 
 (defun ledger-marker-where-xact-is (emacs-xact posting)
@@ -481,7 +481,7 @@ moved and recentered.  If they aren't strange things happen."
 			(with-current-buffer rbuf
 				(save-excursion
 					(if ledger-narrow-on-reconcile
-							(ledger-occur-mode account ledger-buf)))
+							(ledger-occur account)))
 				(if (> (ledger-reconcile-refresh) 0)
 						(ledger-reconcile-change-target))
 				(ledger-display-balance)))))

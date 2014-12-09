@@ -29,6 +29,9 @@
 
 ;;; Code:
 
+(require 'cl)
+(require 'ledger-navigate)
+
 (defconst ledger-occur-overlay-property-name 'ledger-occur-custom-buffer-grep)
 
 (defcustom ledger-occur-use-face-shown t
@@ -38,79 +41,54 @@
 (make-variable-buffer-local 'ledger-occur-use-face-shown)
 
 
-(defvar ledger-occur-mode-name nil
-  "name of the minor mode, shown in the mode-line")
-
-(make-variable-buffer-local 'ledger-occur-mode-name)
-
-(or (assq 'ledger-occur-mode-name minor-mode-alist)
-    (nconc minor-mode-alist
-           (list '(ledger-occur-mode-name ledger-occur-mode-name))))
-
 (defvar ledger-occur-history nil
   "History of previously searched expressions for the prompt.")
 
+(defvar ledger-occur-current-regex nil
+  "Pattern currently applied to narrow the buffer.")
+(make-variable-buffer-local 'ledger-occur-current-regex)
 
-(defun ledger-occur-remove-all-overlays ()
-  "Remove all overlays from the ledger buffer."
-  (interactive)
-  (remove-overlays))
-
-(defun ledger-occur-mode (regex buffer)
-  "Highlight transactions that match REGEX in BUFFER, hiding others.
-
-When REGEX is nil, unhide everything, and remove higlight"
-  (set-buffer buffer)
-	(let (matches)
-		(if (or (not regex)
-						(zerop (length regex)))  ; empty regex, or already have narrowed, clear narrowing
-				(progn
-					(setq ledger-occur-mode-name nil)
-					(ledger-occur-remove-overlays))
-			(if (not (setq matches (ledger-occur-compress-matches (ledger-occur-find-matches regex))))
-					(progn  ; regex couldn't be found
-						(message "No matches found for '%s'" regex)
-						(setq ledger-occur-mode-name nil)
-						(ledger-occur-remove-overlays))
-				(setq ledger-occur-mode-name
-							(concat " Ledger-Narrowed: " regex))
-				(ledger-occur-create-overlays matches)
-				(if (get-buffer-window buffer)
-						(select-window (get-buffer-window buffer))))))
-	(force-mode-line-update)
-  (recenter))
-
+(define-minor-mode ledger-occur-mode
+  "A minor mode which display only transactions matching `ledger-occur-current-regex'."
+  nil (:eval (format " Ledger-Narrow(%s)" ledger-occur-current-regex)) nil
+  (if ledger-occur-mode
+      (let ((matches (ledger-occur-compress-matches
+                      (ledger-occur-find-matches ledger-occur-current-regex))))
+        (unless matches
+          (error "No matches found for '%s'" ledger-occur-current-regex))
+        (ledger-occur-create-overlays matches))
+    (ledger-occur-remove-overlays)))
 
 (defun ledger-occur (regex)
-  "Perform a simple grep in current buffer for the regular expression REGEX.
+  "Show only transactions in the current buffer which match REGEX.
 
-   This command hides all xact from the current buffer except
-   those containing the regular expression REGEX.  A second call
-   of the function unhides lines again"
+This command hides all xact in the current buffer except those
+matching REGEX.  When called interactively, a second call of the
+function redisplays the hidden transactions."
   (interactive
-   (if ledger-occur-mode-name
+   (if ledger-occur-mode
        (list nil)
-     (list (read-string (concat "Regexp<" (ledger-occur-prompt) ">: ")
-                        nil 'ledger-occur-history (ledger-occur-prompt)))))
-  (ledger-occur-mode regex (current-buffer)))
+     (list (read-regexp "Regexp" (ledger-occur-prompt) 'ledger-occur-history))))
+  (if (or (null regex)
+          (zerop (length regex)))  ; empty regex, or already have narrowed, clear narrowing
+      (ledger-occur-mode -1)
+    (setq ledger-occur-current-regex regex)
+    (ledger-occur-mode 1)))
 
 (defun ledger-occur-prompt ()
   "Return the default value of the prompt.
 
    Default value for prompt is a current word or active
    region(selection), if its size is 1 line"
-  (let ((prompt
-         (if (and transient-mark-mode
-                  mark-active)
-             (let ((pos1 (region-beginning))
-                   (pos2 (region-end)))
-               ;; Check if the start and the of an active region is on
-               ;; the same line
-               (if (= (line-number-at-pos pos1)
-                      (line-number-at-pos pos2))
-                   (buffer-substring-no-properties pos1 pos2)))
-           (current-word))))
-    prompt))
+  (if (use-region-p)
+      (let ((pos1 (region-beginning))
+            (pos2 (region-end)))
+        ;; Check if the start and the of an active region is on
+        ;; the same line
+        (if (= (line-number-at-pos pos1)
+               (line-number-at-pos pos2))
+            (buffer-substring-no-properties pos1 pos2)))
+    (current-word)))
 
 
 (defun ledger-occur-make-visible-overlay (beg end)
@@ -136,15 +114,6 @@ Argument OVL-BOUNDS contains bounds for the transactions to be left visible."
       (setq beg (car visible))
       (setq end (cadr visible)))
     (ledger-occur-make-invisible-overlay (1+ end) (point-max))))
-
-(defun ledger-occur-quit-buffer (buffer)
-  "Quits hidings transaction in the given BUFFER.
-Used for coordinating `ledger-occur' with other buffers, like reconcile."
-  (set-buffer buffer)
-  (setq ledger-occur-mode nil)
-  (force-mode-line-update)
-  (ledger-occur-remove-overlays)
-  (recenter))
 
 (defun ledger-occur-remove-overlays ()
   "Remove the transaction hiding overlays."
