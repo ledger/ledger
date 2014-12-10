@@ -48,27 +48,43 @@
   "Pattern currently applied to narrow the buffer.")
 (make-variable-buffer-local 'ledger-occur-current-regex)
 
+(defvar ledger-occur-mode-map (make-sparse-keymap))
+
 (define-minor-mode ledger-occur-mode
   "A minor mode which display only transactions matching `ledger-occur-current-regex'."
-  nil (:eval (format " Ledger-Narrow(%s)" ledger-occur-current-regex)) nil
+  nil
+  (:eval (format " Ledger-Narrow(%s)" ledger-occur-current-regex))
+  ledger-occur-mode-map
   (if ledger-occur-mode
-      (let ((matches (ledger-occur-compress-matches
-                      (ledger-occur-find-matches ledger-occur-current-regex))))
-        (unless matches
-          (error "No matches found for '%s'" ledger-occur-current-regex))
-        (ledger-occur-create-overlays matches))
+      (ledger-occur-refresh)
     (ledger-occur-remove-overlays)))
+
+(defun ledger-occur-quit ()
+  "Disable `ledger-occur-mode', turning off narrowing."
+  (interactive)
+  (ledger-occur-mode -1))
+
+(define-key ledger-occur-mode-map (kbd "C-c C-f") 'ledger-occur-quit)
+(define-key ledger-occur-mode-map (kbd "C-c C-g") 'ledger-occur-refresh)
+
+(defun ledger-occur-refresh ()
+  "Re-apply the current narrowing expression."
+  (interactive)
+  (let ((matches (ledger-occur-compress-matches
+                  (ledger-occur-find-matches ledger-occur-current-regex))))
+    (if matches
+        (ledger-occur-create-overlays matches)
+      (message "No matches found for '%s'" ledger-occur-current-regex)
+      (ledger-occur-mode -1))))
 
 (defun ledger-occur (regex)
   "Show only transactions in the current buffer which match REGEX.
 
 This command hides all xact in the current buffer except those
-matching REGEX.  When called interactively, a second call of the
-function redisplays the hidden transactions."
+matching REGEX.  If REGEX is nil or empty, turn off any narrowing
+currently active."
   (interactive
-   (if ledger-occur-mode
-       (list nil)
-     (list (read-regexp "Regexp" (ledger-occur-prompt) 'ledger-occur-history))))
+   (list (read-regexp "Regexp" (ledger-occur-prompt) 'ledger-occur-history)))
   (if (or (null regex)
           (zerop (length regex)))  ; empty regex, or already have narrowed, clear narrowing
       (ledger-occur-mode -1)
