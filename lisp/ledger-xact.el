@@ -25,6 +25,11 @@
 
 ;;; Code:
 
+(require 'eshell)
+(require 'ledger-regex)
+(require 'ledger-navigate)
+;; TODO: This file depends on code in ledger-mode.el, which depends on this.
+
 (defcustom ledger-highlight-xact-under-point t
   "If t highlight xact under point."
   :type 'boolean
@@ -142,7 +147,7 @@ MOMENT is an encoded date"
         (goto-char (match-beginning 0)))))
 
 (defun ledger-delete-current-transaction (pos)
-  "Delete the transaction surrounging point."
+  "Delete the transaction surrounging POS."
   (interactive "d")
   (let ((bounds (ledger-navigate-find-xact-extents pos)))
     (delete-region (car bounds) (cadr bounds))))

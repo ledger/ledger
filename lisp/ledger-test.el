@@ -19,6 +19,16 @@
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 ;; MA 02110-1301 USA.
 
+;;; Commentary:
+
+;;; Code:
+
+(declare-function ledger-mode "ledger-mode") ; TODO: fix this cyclic dependency
+(declare-function org-narrow-to-subtree "org")
+(declare-function org-entry-get "org")
+(declare-function outline-back-to-heading "outline")
+(declare-function outline-next-heading "outline")
+
 (defgroup ledger-test nil
   "Definitions for the Ledger testing framework"
   :group 'ledger)
@@ -125,3 +135,5 @@
             (cd prev-directory)))))))
 
 (provide 'ledger-test)
+
+;;; ledger-test.el ends here
