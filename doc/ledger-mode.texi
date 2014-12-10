@@ -238,13 +238,15 @@ will be shown.
 @node Narrowing,  , Reports, Quick Demo
 @subsection Narrowing
 @kindex C-c C-f
+@kindex C-c C-g
 
 A ledger file can get very large.  It can be helpful to collapse the
 buffer to display only the transactions you are interested in.
 Ledger-mode copies the @command{occur} mode functionality.  Typing
 @kbd{C-c C-f} and entering any regex in the Minibuffer will show only
 transactions that match the regex.  The regex can be on any field, or
-amount.
+amount.  Use @kbd{C-c C-g} after editing transactions to re-apply the
+current regex.  Cancel the narrowing by typing @kbd{C-c C-f} again.
 
 @node The Ledger Buffer, The Reconcile Buffer, Introduction to Ledger-mode, Top
 @chapter The Ledger Buffer
@@ -449,6 +451,7 @@ automatically delete old markers and put new new marker at point.
 @node Narrowing Transactions,  , Sorting Transactions, The Ledger Buffer
 @section Narrowing Transactions
 @kindex C-c C-f
+@kindex C-c C-g
 @cindex transaction, narrowing
 @cindex transaction, display filtering
 
@@ -493,6 +496,10 @@ Show only transactions with any line ending with @samp{harley}.
 
 To show back all transactions simply invoke @samp{Narrow to Regex} or
 @kbd{C-c C-f} again.
+
+If you've edited some transactions after narrowing such that they would
+no longer match the regular expression, you can refresh the narrowed
+view using @kbd{C-c C-g}.
 
 @node The Reconcile Buffer, The Report Buffer, The Ledger Buffer, Top
 @chapter The Reconcile Buffer
