@@ -1,0 +1,10 @@
+
+2014-01-01 c  ; x
+  a    1
+  b
+
+test reg
+14-Jan-01 c                     a                                 1            1
+                                b                                -1            0
+end test
+
