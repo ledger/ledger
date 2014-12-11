@@ -1816,7 +1816,7 @@ xact_t * instance_t::parse_xact(char *          line,
         char *q = p - 1;
         while (q > next && std::isspace(*q))
           --q;
-        if (q > next)
+        if (q >= next)
           *(q + 1) = '\0';
         break;
       }
