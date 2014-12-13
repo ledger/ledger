@@ -332,7 +332,6 @@ With a prefix argument, remove the effective date."
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
   (ledger-check-version)
-  (set-syntax-table ledger-mode-syntax-table)
   (when (boundp 'font-lock-defaults)
     (setq font-lock-defaults
           '(ledger-font-lock-keywords t t nil nil
