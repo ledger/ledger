@@ -57,9 +57,11 @@
   ledger-occur-mode-map
   (if ledger-occur-mode
       (ledger-occur-refresh)
-    (ledger-occur-remove-overlays)))
+    (ledger-occur-remove-overlays)
+    (message "Showing all transactions")))
 
 (define-key ledger-occur-mode-map (kbd "C-c C-g") 'ledger-occur-refresh)
+(define-key ledger-occur-mode-map (kbd "C-c C-f") 'ledger-occur-mode)
 
 (defun ledger-occur-refresh ()
   "Re-apply the current narrowing expression."
@@ -78,14 +80,10 @@ This command hides all xact in the current buffer except those
 matching REGEX.  If REGEX is nil or empty, turn off any narrowing
 currently active."
   (interactive
-   (if ledger-occur-mode
-       (list nil)
-     (list (read-regexp "Regexp" (ledger-occur-prompt) 'ledger-occur-history))))
+   (list (read-regexp "Regexp" (ledger-occur-prompt) 'ledger-occur-history)))
   (if (or (null regex)
           (zerop (length regex)))  ; empty regex, or already have narrowed, clear narrowing
-      (progn
-        (message "Showing all transactions")
-        (ledger-occur-mode -1))
+      (ledger-occur-mode -1)
     (setq ledger-occur-current-regex regex)
     (ledger-occur-mode 1)))
 

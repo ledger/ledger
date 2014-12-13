@@ -292,6 +292,7 @@ With a prefix argument, remove the effective date."
   "Ledger menu"
   '("Ledger"
     ["Narrow to REGEX" ledger-occur]
+    ["Show all transactions" ledger-occur-mode ledger-occur-mode]
     ["Ledger Statistics" ledger-display-ledger-stats ledger-works]
     "---"
     ["Show upcoming transactions" ledger-schedule-upcoming]
