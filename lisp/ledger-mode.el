@@ -244,6 +244,13 @@ With a prefix argument, remove the effective date."
       (goto-char start)
       (search-forward target))))
 
+(defvar ledger-mode-syntax-table
+  (let ((table (make-syntax-table text-mode-syntax-table)))
+    (modify-syntax-entry ?\; "<" table)
+    (modify-syntax-entry ?\n ">" table)
+    table)
+  "Syntax table in use in `ledger-mode' buffers.")
+
 (defvar ledger-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [(control ?c) (control ?a)] 'ledger-add-transaction)
@@ -322,10 +329,10 @@ With a prefix argument, remove the effective date."
     ["Kill Report" ledger-report-kill ledger-works]))
 
 ;;;###autoload
-
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
   (ledger-check-version)
+  (set-syntax-table ledger-mode-syntax-table)
   (when (boundp 'font-lock-defaults)
     (setq font-lock-defaults
           '(ledger-font-lock-keywords t t nil nil
