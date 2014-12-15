@@ -5252,7 +5252,7 @@ Say you currently have this posting in your ledger file:
     Liabilities:MasterCard             $-15.00
 @end smallexample
 
-Now it's @samp{2004/4/9}, and you've just eating at @samp{Viva Italiano}
+Now it's @samp{2004/4/9}, and you've just eaten at @samp{Viva Italiano}
 again.  The exact amounts are different, but the overall form is the
 same.  With the @command{xact} command you can type:
 
