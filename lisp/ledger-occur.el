@@ -1,4 +1,4 @@
-;;; ledger-mode.el --- Helper code for use with the "ledger" command-line tool
+;;; ledger-occur.el --- Helper code for use with the "ledger" command-line tool
 
 ;; Copyright (C) 2003-2014 John Wiegley (johnw AT gnu DOT org)
 
