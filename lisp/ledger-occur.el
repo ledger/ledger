@@ -55,7 +55,7 @@
   nil
   (:eval (format " Ledger-Narrow(%s)" ledger-occur-current-regex))
   ledger-occur-mode-map
-  (if ledger-occur-mode
+  (if (and ledger-occur-current-regex ledger-occur-mode)
       (ledger-occur-refresh)
     (ledger-occur-remove-overlays)
     (message "Showing all transactions")))
