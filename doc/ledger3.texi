@@ -7945,7 +7945,7 @@ text that occurs between parentheses before the payee).
 
 @end table
 
-The @samp{query} command can be used to see how Ledger interprets your query.
+The @command{query} command can be used to see how Ledger interprets your query.
 This can be useful if you are not getting the results you expect. See
 @pxref{Pre-Commands} for more.
 
