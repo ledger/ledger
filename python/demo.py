@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import sys
 from datetime import datetime
 
@@ -9,7 +11,7 @@ from datetime import datetime
 
 import ledger
 
-print "Welcome to the Ledger.Python demo!"
+print("Welcome to the Ledger.Python demo!")
 
 # Some quick helper functions to help us assert various types of truth
 # throughout the script.
@@ -290,4 +292,4 @@ assertEqual('$', val.to_amount().commodity.symbol)
 #journal.collect('-M food')
 #journal.collect_accounts('^assets ^liab ^equity')
 
-print 'Demo completed successfully.'
+print('Demo completed successfully.')
