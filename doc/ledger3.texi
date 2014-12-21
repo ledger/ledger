@@ -26,7 +26,7 @@
 @c tests when using ctest or acprep check.
 @c The script parses the texinfo file and looks for three kinds of
 @c specially marked @smallexamples, then it will run the ledger
-@c command from the exmaple, and compare the results with the output
+@c command from the example, and compare the results with the output
 @c from the documentation.
 @c
 @c To specially mark a @smallexample append @c command:UUID, where
