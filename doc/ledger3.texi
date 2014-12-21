@@ -14,7 +14,7 @@
 @c | @var      |          | Ledger CLI option Variable (like -f FILE) |
 @c |           |          | Ledger file Syntax                        |
 @c | @samp     |          | Valued example or single char             |
-@c | @file     |          | File                                      |
+@c | @file     |          | File, Buffer                              |
 @c | @file     |          | Program (like ledger, report, acprep)     |
 
 @c Restructuring manual ideas
