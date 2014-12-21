@@ -31,44 +31,44 @@
 @c
 @c To specially mark a @smallexample append @c command:UUID, where
 @c UUID is the first 7 digits from the commands sha1sum, e.g.:
-@c 
+@c
 @c @smallexample @c command:CDE330A
 @c $ ledger -f sample.dat reg expenses
 @c @end smallexample
-@c 
+@c
 @c Then DocTests.py will look for corresponding documented output,
 @c which may appear anywhere in the file, and is marked with
 @c @smallexample @c output:UUID where UUID is the UUID from the
 @c corresponding ledger command example, e.g.:
-@c 
+@c
 @c @smallexample @c output:CDE330A
 @c 04-May-27 Book Store            Expenses:Books               $20.00       $20.00
 @c                                 Expenses:Cards               $40.00       $60.00
 @c                                 Expenses:Docs                $30.00       $90.0
 @c @end smallexample
-@c 
+@c
 @c Now where does this data in sample.dat come from?
 @c DocTests.py is a bit smart about ledger's file argument, since
 @c it will check if the given filename exists in the test/input/
 @c directory.
-@c 
+@c
 @c Sometimes the journal data for an example is specified within
 @c the documentation itself, in that case the journal example data
 @c needs to be specially marked as well using @smallexample @c input:UUID,
 @c again with the UUID being the UUID of the corresponding ledger example
 @c command. If multiple inputs with the same UUID are found they will be
 @c concatenated together and given as one set of data to the example command.
-@c 
+@c
 @c @smallexample @c input:35CB2A3
 @c 2014/02/09 The Italian Place
 @c   Expenses:Food:Dining                    $ 36.84
 @c   Assets:Cash
 @c @end smallexample
-@c 
+@c
 @c @smallexample @c command:35CB2A3
 @c $ ledger -f inline.dat accounts
 @c @end smallexample
-@c 
+@c
 @c @smallexample @c output:35CB2A3
 @c Assets:Cash
 @c Expenses:Food:Dining
@@ -89,10 +89,10 @@
 @c Additionally DocTests.py will pass --init-file /dev/null to ledger to
 @c ignore any default arguments to ledger the user running the tests
 @c has configured.
-@c 
+@c
 @c To manually run the tests in this file run:
 @c $ ./test/DocTests.py -vv --ledger ./ledger --file ./doc/ledger3.texi
- 
+
 
 @copying
 
@@ -1995,8 +1995,8 @@ freeform text editor to enter transactions makes it easy to keep the
 data, but also easy to enter accounts or payees inconsistently or with
 spelling errors.
 
-In order to combat inconsistency you can define allowable accounts and 
-payees.  For simplicity, create a separate text file and define accounts 
+In order to combat inconsistency you can define allowable accounts and
+payees.  For simplicity, create a separate text file and define accounts
 and payees like
 
 @smallexample
@@ -2248,7 +2248,7 @@ $ ledger balance --no-total --recursive-aliases ^Exp
               $10.00  Expenses:Entertainment:Dining
 @end smallexample
 
-The option @option{--no-aliases} completely disables alias expansion. 
+The option @option{--no-aliases} completely disables alias expansion.
 All accounts are read verbatim as they are in the ledger file.
 
 @item assert
@@ -2268,7 +2268,7 @@ balance to zero.  Ledger allows you to leave one posting with no
 amount and automatically balance the transaction in the
 posting.  The @code{bucket} allows you to fill in all postings and
 automatically generate an additional posting to the bucket account
-balancing the transaction.  If any transaction is unbalanced, it 
+balancing the transaction.  If any transaction is unbalanced, it
 will automatically be balanced against the @code{bucket} account.
 The following example sets @samp{Assets:Checking} as the bucket:
 
@@ -2325,7 +2325,7 @@ commodity CAD
 @end smallexample
 
 The @code{commodity} directive supports several optional
-sub-directives, if they immediately follow the commodity directive 
+sub-directives, if they immediately follow the commodity directive
 and---if they are on successive lines---begin with whitespace:
 
 @smallexample @c input:validate
@@ -2529,8 +2529,8 @@ tag Receipt
 The @code{check} and @code{assert} sub-directives warn or error
 (respectively) if the given value expression evaluates to false within
 the context of any use of the related tag.  In such a context,
-``value'' is bound to the value of the tag (which may be something else 
-but a string if typed metadata is used!).  Such checks or assertions are 
+``value'' is bound to the value of the tag (which may be something else
+but a string if typed metadata is used!).  Such checks or assertions are
 not called if no value is given.
 
 @item test
@@ -3390,7 +3390,7 @@ buy and sell whole lots.  The @{@{$500.00@}@} is @emph{not} an
 attribute of the commodity, whereas @{$5.00@} is.  In fact, when you write
 @{@{$500.00@}@}, Ledger just divides that value by 10 and sees
 @{$50.00@}.  So if you use the print command to look at this
-transaction, you'll see the single braces form in the output.  
+transaction, you'll see the single braces form in the output.
 The double braces price form is a shorthand only.
 
 Plus, it comes with dangers.  This works fine:
@@ -3714,9 +3714,9 @@ This becomes:
 @node Referring to the matching posting's account, Applying metadata to every matched posting, Accessing the matching posting's amount, Automated Transactions
 @subsection Referring to the matching posting's account
 
-Sometimes you want to refer to the account that was matched 
-in some way within the automated transaction itself.  This is 
-done by using the string @samp{$account}, anywhere within the 
+Sometimes you want to refer to the account that was matched
+in some way within the automated transaction itself.  This is
+done by using the string @samp{$account}, anywhere within the
 account part of the automated posting:
 
 @smallexample @c input:validate
@@ -5531,7 +5531,7 @@ Accounts, tags or commodities not previously declared will cause errors.
 
 @item --check-payees
 Enable strict and pedantic checking for payees as well as accounts,
-commodities and tags. This only works in conjunction with 
+commodities and tags. This only works in conjunction with
 @option{--strict} or @option{--pedantic}.
 
 @item --immediate
@@ -5847,7 +5847,7 @@ a decimal separator, not the usual period.
 
 @item --download
 @itemx -Q
-Direct Ledger to download prices using the script defined via the option 
+Direct Ledger to download prices using the script defined via the option
 @option{--getquote @var{FILE}}.
 
 @item --explicit
@@ -6049,7 +6049,7 @@ $ ledger reg Expenses --begin Dec --bold-if "amount>100"
 @end smallexample
 
 @noindent
-list all transactions since the beginning of December and print in 
+list all transactions since the beginning of December and print in
 bold any posting greater than $100.
 
 @item --budget
@@ -6141,7 +6141,7 @@ Transform the date of the transaction using @var{EXPR}.
 
 @item --date-format @var{DATE_FORMAT}
 @itemx -y @var{DATE_FORMAT}
-Specify the format ledger should use to read and print dates 
+Specify the format ledger should use to read and print dates
 (@pxref{Date and Time Format Codes}).
 
 @item --date-width @var{INT}
@@ -6154,7 +6154,7 @@ FIX THIS ENTRY @c ASK JOHN
 @item --dc
 Display register or balance in debit/credit format If you use
 @option{--dc} with either the @command{register} (reg) or
-@command{balance} (bal) commands, you will now get extra columns.  
+@command{balance} (bal) commands, you will now get extra columns.
 The register goes from this:
 
 @smallexample
@@ -6449,7 +6449,7 @@ Only works for accounts that have a single commodity.
 Define a period expression that sets the time period during which
 transactions are to be accounted. For a @command{register} report only
 the transactions that satisfy the period expression with be displayed.
-For a @command{balance} report only those transactions will be accounted 
+For a @command{balance} report only those transactions will be accounted
 in the final balances.
 
 @item --pivot @var{TAG}
@@ -6907,8 +6907,8 @@ to see if weekend spending is more than on weekdays.
 @item --sort @var{VEXPR}
 @itemx -S @var{VEXPR}
 Sort a report by comparing the values determined using the value
-expression @var{VEXPR}.  For example, using @samp{-S "-abs(total)"} in the 
-@command{balance} report will sort account balances from greatest to least, 
+expression @var{VEXPR}.  For example, using @samp{-S "-abs(total)"} in the
+@command{balance} report will sort account balances from greatest to least,
 using the absolute value of the total.  For more on how to use value expressions,
 see @ref{Value Expressions}.
 
@@ -7296,7 +7296,7 @@ which allows you to report most everything in EUR if you use @samp{-X
 EUR}, except for certain accounts or postings which should always be
 valuated in another currency.  For example:
 
-@c TODO is this example missing the actual line to get the effect? 
+@c TODO is this example missing the actual line to get the effect?
 @c it looks like it only contains a match, but no effect
 @smallexample @c input:validate
 = /^Assets:Brokerage:CAD$/
@@ -7563,7 +7563,7 @@ This report continues outputting postings until the running total
 is greater than $-500.00.  A final posting is always shown, to
 inform you what the total afterwards would be.
 
-Forecasting can also be used with the @command{balance} report, 
+Forecasting can also be used with the @command{balance} report,
 but by date only, and not against the running total:
 
 @smallexample @c command:validate
@@ -7584,7 +7584,7 @@ o 2013/03/29 03:39:00
 This records a check-in to the given ACCOUNT, and a check-out.  You can
 be checked-in to multiple accounts at a time, if you wish, and they can
 span multiple days (use @option{--day-break} to break them up in the
-report).  The number of seconds between check-in and check-out is accumulated 
+report).  The number of seconds between check-in and check-out is accumulated
 as time to that ACCOUNT.  If the checkout uses a capital @samp{O}, the
 transaction is marked ``cleared''.  You can use an optional PAYEE for
 whatever meaning you like.
@@ -7596,8 +7596,8 @@ information.  Or you can use Org mode's time-clocking abilities and
 the @file{org2tc} script developed by John Wiegley.
 
 These timelog entries can appear in a separate file, or directly in
-your main ledger file.  The initial @samp{i} and @samp{o} characters 
-count as Ledger ``directives'', and are accepted anywhere that 
+your main ledger file.  The initial @samp{i} and @samp{o} characters
+count as Ledger ``directives'', and are accepted anywhere that
 ordinary transactions are valid.
 
 @node Value Expressions, Format Strings, Time Keeping, Top
@@ -7673,7 +7673,7 @@ $ ledger -b "this month" register checking
 @findex --total @var{VEXPR}
 
 Below are the one letter variables available in any value expression.
-For the @command{register} and @command{print} commands, these variables 
+For the @command{register} and @command{print} commands, these variables
 relate to individual postings, and sometimes the account affected by a
 posting.  For the @command{balance} command, these variables relate to
 accounts, often with a subtle difference in meaning.  The use of each

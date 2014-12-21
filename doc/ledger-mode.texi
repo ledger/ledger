@@ -290,8 +290,8 @@ which defaults to @samp{52}. @xref{Ledger Post Customization Group}.
 
 @node Setting a Transactions Effective Date, Quick Balance Display, Adding Transactions, Adding Transactions
 @subsection Setting a Transactions Effective Date
-@kindex C-c C-t        
-@cindex effective date 
+@kindex C-c C-t
+@cindex effective date
 
 Ledger provides for adding information to a transaction that add details
 to the dates.  For example, you can specify when the transaction was
