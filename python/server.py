@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 import ledger
 import cgi
 import sys
@@ -129,7 +131,7 @@ class LedgerHandler(BaseHTTPRequestHandler):
             self.wfile.write(html)
 
     def do_POST(self):
-        print "Saw a POST request!"
+        print("Saw a POST request!")
         try:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
             if ctype == 'multipart/form-data':
@@ -137,7 +139,7 @@ class LedgerHandler(BaseHTTPRequestHandler):
             self.send_response(301)
             self.end_headers()
         except Exception:
-            print "Saw exception in POST handler"
+            print("Saw exception in POST handler")
 
     # This code is straight from SimpleHTTPServer.py
     def copyfile(self, source, outputfile):
@@ -182,15 +184,15 @@ def main(*args):
     try:
         port   = 9000
         server = HTTPServer(('', port), LedgerHandler)
-        print "Local HTTP server listening on port %d... (Control-C to exit)" \
-            % port
+        print("Local HTTP server listening on port %d... (Control-C to exit)" \
+            % port)
         server.serve_forever()
     except KeyboardInterrupt:
-        print "Shutting down server"
+        print("Shutting down server")
         server.socket.close()
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:
-        print "usage: server.py <DATA-FILE> <REPORT-QUERY>"
+        print("usage: server.py <DATA-FILE> <REPORT-QUERY>")
         sys.exit(1)
     main()
