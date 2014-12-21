@@ -1858,7 +1858,7 @@ A valuation function receives three arguments:
 
 @table @code
 
-@item  source
+@item source
 A string identifying the commodity whose price is being asked for
 (example: @samp{EUR}).
 
@@ -5358,7 +5358,7 @@ There are many, many command options available with the @file{ledger}
 program, and it takes a while to master them.  However, none of them are
 required to use the basic reporting commands.
 
-@node  Command Line Quick Reference, Detailed Option Description, Basic Usage, Command-line Syntax
+@node Command Line Quick Reference, Detailed Option Description, Basic Usage, Command-line Syntax
 @section Command Line Quick Reference
 
 @menu
@@ -5371,7 +5371,7 @@ required to use the basic reporting commands.
 * Commodity Reporting::
 @end menu
 
-@node  Basic Reporting Commands, Basic Options, Command Line Quick Reference, Command Line Quick Reference
+@node Basic Reporting Commands, Basic Options, Command Line Quick Reference, Command Line Quick Reference
 @subsection Basic Reporting Commands
 
 @ftable @code
@@ -5717,7 +5717,7 @@ Report net gain or loss for commodities that have a price history.
 
 @end ftable
 
-@node  Detailed Option Description, Period Expressions, Command Line Quick Reference, Command-line Syntax
+@node Detailed Option Description, Period Expressions, Command Line Quick Reference, Command-line Syntax
 @section Detailed Option Description
 
 @menu
@@ -6460,7 +6460,7 @@ identifying which car the purchase was for @samp{; Car: Prius}, then the
 command:
 
 @smallexample
-$ ledger bal Fuel --pivot "Car"  --period "this year"
+$ ledger bal Fuel --pivot "Car" --period "this year"
            $ 3491.26  Car
            $ 1084.22    M3:Expenses:Auto:Fuel
             $ 149.65    MG V11:Expenses:Auto:Fuel
@@ -6856,7 +6856,7 @@ Set the value expression used for the ``totals'' column in the
 @c ledger reg food not dining expr 'payee =~ /chang/'
 @c @end smallexample
 
-@node  Output customization, Commodity reporting, Report filtering, Detailed Option Description
+@node Output customization, Commodity reporting, Report filtering, Detailed Option Description
 @subsection Output customization
 
 These options affect only the output, but not which postings are
@@ -7359,7 +7359,7 @@ situation, you can use the syntax
 @option{--exchange @var{COMMODITY1}:@var{COMMODITY2}} to request that
 ledger always display @var{COMMODITY1} in terms of @var{COMMODITY2},
 but you want no other commodities to be automatically displayed in terms of
-@var{COMMODITY2} without additional @option{--exchange} options.   For
+@var{COMMODITY2} without additional @option{--exchange} options.  For
 example, if you wanted to report EUR and BTC in terms of USD, but report
 all other commodities without conversion to USD, you could use:
 @option{--exchange EUR:USD --exchange BTC:USD}.
@@ -9505,7 +9505,7 @@ is now @env{LEDGER_PRICE_EXP}.
 
 @end itemize
 
-@node  Example Journal File, Miscellaneous Notes, Major Changes from version 2.6, Top
+@node Example Journal File, Miscellaneous Notes, Major Changes from version 2.6, Top
 @appendix Example Journal File
 
 The following journal file is included with the source distribution of
@@ -9604,7 +9604,7 @@ $ ledger --group-by "tag('trip')" bal
 $ legder reg --sort "tag('foo')" %foo
 $ ledger cleared VWCU NFCU Tithe Misentry
 $ ledger register Joint --uncleared
-$ ledger register Checking  --sort d  -d 'd>[2011/04/01]' until 2011/05/25
+$ ledger register Checking --sort d -d 'd>[2011/04/01]' until 2011/05/25
 @end smallexample
 
 @node Ledger Files,  , Invoking Ledger, Cookbook
