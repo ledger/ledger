@@ -2816,7 +2816,7 @@ you a place to put those codes:
 @findex --pending
 
 A transaction can have a ``state'': cleared, pending, or uncleared.
-The default is uncleared.  To mark a transaction cleared, put an asterisk (*)
+The default is uncleared.  To mark a transaction cleared, put an asterisk @samp{*}
 before the payee, after the date or code:
 
 @smallexample @c input:validate
@@ -7593,7 +7593,7 @@ Now, there are a few ways to generate this information.  You can use
 the @file{timeclock.el} package, which is part of Emacs.  Or you can
 write a simple script in whichever language you prefer to emit similar
 information.  Or you can use Org mode's time-clocking abilities and
-the @samp{org2tc} script developed by John Wiegley.
+the @file{org2tc} script developed by John Wiegley.
 
 These timelog entries can appear in a separate file, or directly in
 your main ledger file.  The initial @samp{i} and @samp{o} characters 
@@ -7882,7 +7882,7 @@ Useful for specifying a date in plain terms.  For example, you could say
 @item expr comment =~ /REGEX/
 A regular expression that matches against a posting's comment field. This
 searches only a posting's field, not the transaction's note or comment field.
-For example, @samp{ledger reg "expr" "comment =~ /landline/"} will match:
+For example, @code{ledger reg "expr" "comment =~ /landline/"} will match:
 
 @smallexample
 2014/1/29  Phone bill
