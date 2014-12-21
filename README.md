@@ -100,7 +100,7 @@ And for building the current `maint` branch:
 
 You can use [MacPorts](https://www.macports.org/) or [homebrew](http://brew.sh/) to install this very quickly on OS X. 
 
-#### brew
+#### 1. Homebrew
 
 You can see the parameters you can pass while installing with brew by the command `brew options ledger`. To install ledger, simply type the following command:
 
@@ -115,7 +115,7 @@ If you to want to startup python, use the following command:
     ledger python
 
 
-#### MacPorts
+#### 2. MacPorts
 
 If you build stuff using MacPorts on OS X, as I do, here is what you would
 run:
