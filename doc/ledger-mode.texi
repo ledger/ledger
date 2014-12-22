@@ -225,10 +225,10 @@ Emacs will prompt for a report name.  There are a few built-in reports,
 and you can add any report you need @xref{Adding and Editing Reports}.
 
 In the Minibuffer type @samp{account}.  When prompted for an account
-type @samp{checking}.  In a buffer named @file{*Ledger Report*}, you will see a Ledger register
-report. You can move around the buffer, with the point on a transaction,
-type @kbd{RET}.  Ledger-mode will take you directly to that
-transaction in the @file{demo.ledger} buffer.
+type @samp{checking}.  In a buffer named @file{*Ledger Report*}, you
+will see a Ledger register report. You can move around the buffer, with
+the point on a transaction, type @kbd{RET}.  Ledger-mode will take you
+directly to that transaction in the @file{demo.ledger} buffer.
 
 Another built-in report is the balance report.  In the
 @file{demo.ledger} buffer, type @kbd{C-c C-o C-r}.  When prompted for
@@ -395,10 +395,10 @@ while in a posting. This places an asterisk prior to the posting.
 @section Formatting Transactions
 @cindex transaction, formatting
 
-When editing a transaction, liberal use of the @kbd{TAB} key can keep the
-transaction well formatted.  If you want to have Ledger-mode cleanup the
-formatting of a transaction you can use @samp{Align Transaction} or @samp{Align
-Region} from the menu bar.
+When editing a transaction, liberal use of the @kbd{TAB} key can keep
+the transaction well formatted.  If you want to have Ledger-mode cleanup
+the formatting of a transaction you can use @samp{Align Transaction} or
+@samp{Align Region} from the menu bar.
 
 The menu item @samp{Clean-up Buffer} sorts all transactions in the buffer
 by date, removes extraneous empty lines and aligns every transaction.
@@ -674,10 +674,10 @@ transactions involving that account.
 @end table
 
 While viewing reports you can easily switch back and forth between the
-ledger buffer and the @file{*Ledger Report*} buffer.  In @file{*Ledger Report*} buffer, typing
-@kbd{RET} will take you to that transaction in the ledger buffer.
-While in the ledger buffer @kbd{C-c C-o C-g} returns you to the @file{*Ledger Report*}
-buffer.
+ledger buffer and the @file{*Ledger Report*} buffer.  In @file{*Ledger
+Report*} buffer, typing @kbd{RET} will take you to that transaction in
+the ledger buffer.  While in the ledger buffer @kbd{C-c C-o C-g} returns
+you to the @file{*Ledger Report*} buffer.
 
 By default Ledger-mode will refresh the report buffer when the ledger
 buffer is saved.  If you want to rerun the report at another time
@@ -719,7 +719,8 @@ Deleting reports is accomplished by typing @kbd{C-c C-o C-e} or using
 customization window for the Ledger Reports variables.  Use the widgets
 to delete the report you want removed.
 
-Typing @kbd{C-c C-o C-s} will prompt for a name and save the current report.
+Typing @kbd{C-c C-o C-s} will prompt for a name and save the current
+report.
 
 @node Expansion Formats, Make Report Transactions Active, Adding and Editing Reports, Adding and Editing Reports
 @subsection Expansion Formats
@@ -824,9 +825,9 @@ characters to specify when the transactions should appear.
 @node Transactions that occur on specific dates, Transactions that occur on specific days, Specifying Upcoming Transactions, Specifying Upcoming Transactions
 @subsection Transactions that occur on specific dates
 
-Many times you will enter repetitive transactions that occur on the same day
-of the month each month.  These can be specified using a wild card in
-the year and month with a fixed date in the day.  The following entry
+Many times you will enter repetitive transactions that occur on the same
+day of the month each month.  These can be specified using a wild card
+in the year and month with a fixed date in the day.  The following entry
 specifies a transaction that occurs on the first and fifteenth of every
 month in every year.
 @example
@@ -836,9 +837,9 @@ month in every year.
 @end example
 
 Some transactions do not occur every month.  Comma separated lists of
-the months, or @samp{E} for even, or @samp{O} for odd number months can also be
-specified.  The following entry specifies a bi-monthly exterminator bill that occurs
-in the even months:
+the months, or @samp{E} for even, or @samp{O} for odd number months can
+also be specified.  The following entry specifies a bi-monthly
+exterminator bill that occurs in the even months:
 @example
 [*/E/01]  Exterminator
     Expenses:Home   $100.00
@@ -1016,10 +1017,12 @@ Face for Ledger comments.
 Default face for uncleared transactions in the @file{*Reconcile*} buffer.
 
 @item ledger-font-reconciler-cleared-face
-Default face for cleared  @samp{*} transactions in the @file{*Reconcile*} buffer.
+Default face for cleared @samp{*} transactions in the @file{*Reconcile*}
+buffer.
 
 @item ledger-font-reconciler-pending-face
-Default face for pending  @samp{!} transactions in the @file{*Reconcile*} buffer.
+Default face for pending @samp{!} transactions in the @file{*Reconcile*}
+buffer.
 
 @item ledger-font-report-clickable-face
 FIXME
