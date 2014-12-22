@@ -225,10 +225,10 @@ Emacs will prompt for a report name.  There are a few built-in reports,
 and you can add any report you need @xref{Adding and Editing Reports}.
 
 In the Minibuffer type @samp{account}.  When prompted for an account
-type @samp{checking}.  In another buffer you will see a Ledger register
-report. You can move around the buffer, with the point on a transaction,
-type @kbd{C-c C-c}.  Ledger-mode will take you directly to that
-transaction in the @file{demo.ledger} buffer.
+type @samp{checking}.  In a buffer named @file{*Ledger Report*}, you
+will see a Ledger register report. You can move around the buffer, with
+the point on a transaction, type @kbd{RET}.  Ledger-mode will take you
+directly to that transaction in the @file{demo.ledger} buffer.
 
 Another built-in report is the balance report.  In the
 @file{demo.ledger} buffer, type @kbd{C-c C-o C-r}.  When prompted for
@@ -277,7 +277,7 @@ payees and accounts. Included files are not currently included in the
 completion scan. Repeatedly hitting @kbd{TAB} will cycle through the
 possible completions.
 
-Ledger-mode can also help you keep your amounts in aligned.  Setting
+Ledger-mode can also help you keep your amounts aligned.  Setting
 @option{ledger-post-auto-adjust-amounts} to true tells Ledger-mode to
 automatically place any amounts such that their last digit is aligned to
 the column specified by @option{ledger-post-amount-alignment-column},
@@ -290,15 +290,18 @@ which defaults to @samp{52}. @xref{Ledger Post Customization Group}.
 
 @node Setting a Transactions Effective Date, Quick Balance Display, Adding Transactions, Adding Transactions
 @subsection Setting a Transactions Effective Date
+@kindex C-c C-t
+@cindex effective date
 
-Ledger provide for adding information to a transaction that add details
+Ledger provides for adding information to a transaction that add details
 to the dates.  For example, you can specify when the transaction was
-enter, when the transation clear, or when individual postings cleared.
-Ledger-mode referes to these additional dates as ``effective dates''.
-To set the effect date of a transaction place the point in the first
+entered, when the transaction was cleared, or when individual postings
+were cleared.
+Ledger-mode refers to these additional dates as @emph{effective} dates.
+To set the effective date of a transaction, place the point in the first
 line of a transaction and type @kbd{C-c C-t}.  The effective date will
-be added to the transacation.  To set the effective date for an
-inividual posting, place point in the posting and type @kbd{C-c C-t} and
+be added to the transaction.  To set the effective date for an
+individual posting, place point in the posting and type @kbd{C-c C-t} and
 the effective date for that posting will be added at the end of the
 posting.
 
@@ -390,12 +393,14 @@ while in a posting. This places an asterisk prior to the posting.
 
 @node Formatting Transactions, Deleting Transactions, Marking Transactions, The Ledger Buffer
 @section Formatting Transactions
-When editing a transaction, liberal use of the TAB key can keep the
-transaction well formatted.  If you want to have ledger-mode cleanup the
-formatting of a trasnaction you can use Align Transaction or Align
-Region from the menu bar.
+@cindex transaction, formatting
 
-The menu item ``Clean-up Buffer'' sorts all transactions in the buffer
+When editing a transaction, liberal use of the @kbd{TAB} key can keep
+the transaction well formatted.  If you want to have Ledger-mode cleanup
+the formatting of a transaction you can use @samp{Align Transaction} or
+@samp{Align Region} from the menu bar.
+
+The menu item @samp{Clean-up Buffer} sorts all transactions in the buffer
 by date, removes extraneous empty lines and aligns every transaction.
 
 
@@ -639,13 +644,15 @@ type @kbd{t} and enter the new target value.
 @node Running Basic Reports, Adding and Editing Reports, The Report Buffer, The Report Buffer
 @section Running Reports
 @kindex C-c C-o C-r
+@kindex C-c C-o C-g
+@kindex C-c C-o C-a
 @cindex report, running
 
 The real power behind Ledger is in its amazing reporting capability.
 Ledger-mode provides easy facility to run reports directly from Emacs.
 It has four reports built-in and facilities for adding custom reports.
 
-Typing @kbd{C-c C-o C-r} or using menu @samp{Ledger Run Report} prompts
+Typing @kbd{C-c C-o C-r} or using menu @samp{Run Report} prompts
 for the name of a saved report.  The built-in reports are:
 
 @table @var
@@ -666,16 +673,16 @@ transactions involving that account.
 
 @end table
 
-While viewing reports you can easily swtich back and forth between the
-ledger buffer and the report buffer.  I ntransaction reports typing
-@kbd{RETURN} will take you to that transaction in the ledger buffer.
-While in theledger buffer @kbd{C-c C-o C-g} returns you to the report
-buffer.
+While viewing reports you can easily switch back and forth between the
+ledger buffer and the @file{*Ledger Report*} buffer.  In @file{*Ledger
+Report*} buffer, typing @kbd{RET} will take you to that transaction in
+the ledger buffer.  While in the ledger buffer @kbd{C-c C-o C-g} returns
+you to the @file{*Ledger Report*} buffer.
 
-By default ledger-mode will refresh the report buffer when the ledger
-buffer is saved.  iF you want to rerun the report at another time time
+By default Ledger-mode will refresh the report buffer when the ledger
+buffer is saved.  If you want to rerun the report at another time
 @kbd{C-c C-o C-a}.  This is useful if you have other programs altering
-your ledger file outside of emacs.
+your ledger file outside of Emacs.
 
 
 @node Adding and Editing Reports, Reversing Report Order, Running Basic Reports, The Report Buffer
@@ -707,12 +714,13 @@ buffer you will have the option to give it a new name, or overwrite the
 old report.
 
 Deleting reports is accomplished by typing @kbd{C-c C-o C-e} or using
-@samp{Edit Reports} menu in the ledger buffer, or typing @kbd{e} in the
+@samp{Edit Report} menu in the ledger buffer, or typing @kbd{e} in the
 @file{*Ledger Report*} buffer.  This takes you to the Emacs
 customization window for the Ledger Reports variables.  Use the widgets
 to delete the report you want removed.
 
-Typing @kbd{C-c C-o C-s} will prompt for a name and save the current report.
+Typing @kbd{C-c C-o C-s} will prompt for a name and save the current
+report.
 
 @node Expansion Formats, Make Report Transactions Active, Adding and Editing Reports, Adding and Editing Reports
 @subsection Expansion Formats
@@ -817,25 +825,25 @@ characters to specify when the transactions should appear.
 @node Transactions that occur on specific dates, Transactions that occur on specific days, Specifying Upcoming Transactions, Specifying Upcoming Transactions
 @subsection Transactions that occur on specific dates
 
-Many times you will repetitive transactions that occur on the same day
-of the month each month.  These can be specified using a wild card in
-the year and month with a fixed date in the day.  The following entry
+Many times you will enter repetitive transactions that occur on the same
+day of the month each month.  These can be specified using a wild card
+in the year and month with a fixed date in the day.  The following entry
 specifies a transaction that occurs on the first and fifteenth of every
 month in every year.
 @example
 [*/*/1,15] Paycheck
-      Income:Job  $1000.00
-      Assets:Checking
+    Income:Job       $1000.00
+    Assets:Checking
 @end example
 
 Some transactions do not occur every month.  Comma separated lists of
-the months, or E for even, or O for odd number months can also be
-specified.  The following entry specifies a bi-monthly exterminator bill that occurs
-in the even months:
+the months, or @samp{E} for even, or @samp{O} for odd number months can
+also be specified.  The following entry specifies a bi-monthly
+exterminator bill that occurs in the even months:
 @example
 [*/E/01]  Exterminator
-      Expenses:Home  $100.00
-      Asset:Checking
+    Expenses:Home   $100.00
+    Assets:Checking
 @end example
 
 @node Transactions that occur on specific days,  , Transactions that occur on specific dates, Specifying Upcoming Transactions
@@ -844,13 +852,13 @@ in the even months:
 Some transactions occur every relative to the day of the week rather
 than the date of the month.  For example, many people are paid every two
 weeks without regard to the day of the month.  Other events may occur on
-specific days regaless of the date.  For example the following
+specific days regardless of the date.  For example the following
 transactions creates a transaction every other Thursday:
 
 @example
 [2014/11/27+2Th]  Paycheck
-      Income:Job  $1000.00
-      Assets; Checking
+    Income:Job       $1000.00
+    Assets:Checking
 @end example
 
 It is necessary to specify a starting date in order for this type of
@@ -858,8 +866,8 @@ recurrence relation to be specified.  The day names are two character
 codes that default to Mo, Tu, We, Th, Fr, Sa, Su, for Monday, Tuesday,
 Wednesday, Thursday, Friday, Saturday, Sunday respectively.  You can
 change the codes to something more convenient for your locale by
-customizing the ledger @code{ledger-schedule-week-days}. They must be 2
-character long.
+customizing the ledger @var{ledger-schedule-week-days}. They must be two
+characters long.
 
 
 
@@ -934,11 +942,11 @@ the reconcile regex.
 
 @item ledger-buffer-tracks-reconcile-buffer
 If non-nil, then when the cursor is moved to a new transaction in the
-reconcile window.
+@file{*Reconcile*} window.
 
 @item ledger-reconcile-force-window-bottom
-If non-nil, make the reconcile window appear along the bottom of the
-register window and resize.
+If non-nil, make the @file{*Reconcile*} window appear along the bottom
+of the register window and resize.
 
 @item ledger-reconcile-toggle-to-pending
 If non-nil, then toggle between uncleared and pending @samp{!}. If
@@ -1006,13 +1014,15 @@ Default face for Ledger occur mode shown transactions.
 Face for Ledger comments.
 
 @item ledger-font-reconciler-uncleared-face
-Default face for uncleared transactions in the reconcile window.
+Default face for uncleared transactions in the @file{*Reconcile*} buffer.
 
 @item ledger-font-reconciler-cleared-face
-Default face for cleared  @samp{*} transactions in the reconcile window.
+Default face for cleared @samp{*} transactions in the @file{*Reconcile*}
+buffer.
 
 @item ledger-font-reconciler-pending-face
-Default face for pending  @samp{!} transactions in the reconcile window.
+Default face for pending @samp{!} transactions in the @file{*Reconcile*}
+buffer.
 
 @item ledger-font-report-clickable-face
 FIXME
