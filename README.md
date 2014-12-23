@@ -108,7 +108,7 @@ You can see the parameters you can pass while installing with brew by the comman
     
 If everything worked well, you should have ledger working now. If you want to install this with python bindings, you can use the following command:
 
-    brew install --with-python
+    brew install ledger --with-python
 
 If you to want to startup python, use the following command:
 
