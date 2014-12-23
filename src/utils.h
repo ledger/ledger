@@ -251,7 +251,7 @@ void logger_func(log_level_t level);
 
 #if TRACING_ON
 
-extern uint8_t _trace_level;
+extern uint16_t _trace_level;
 
 #define SHOW_TRACE(lvl) \
   (ledger::_log_level >= ledger::LOG_TRACE && lvl <= ledger::_trace_level)
