@@ -21,6 +21,11 @@ install:
 
 before_script:
   - export JOBS=2
+  - free
+  - sudo dd if=/dev/zero of=/var/swap.img bs=1024k count=1000
+  - sudo mkswap /var/swap.img
+  - sudo swapon /var/swap.img
+  - free
   - ./acprep opt make --jobs $JOBS --python
 
 script:
