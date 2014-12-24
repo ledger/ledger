@@ -24,4 +24,4 @@ EOF
 }
 
 ## MAIN
-add_ci_skip '\(^src\|^test\|^doc/ledger3.texi\|CMakeLists.txt\)' "$@"
+add_ci_skip '\(^src\|^test\|^doc/ledger3.texi\|^\.travis.yml\|CMakeLists.txt\)' "$@"
