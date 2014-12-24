@@ -7,6 +7,7 @@
 *.gcov
 *.l[oa]
 *.pyc
+*.sw[p-z]
 *~
 .timestamp
 *.tar.bz2
