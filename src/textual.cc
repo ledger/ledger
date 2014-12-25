@@ -1245,13 +1245,13 @@ void instance_t::python_directive(char * line)
 void instance_t::import_directive(char *)
 {
   throw_(parse_error,
-         _("'python' directive seen, but Python support is missing"));
+         _("'import' directive seen, but Python support is missing"));
 }
 
 void instance_t::python_directive(char *)
 {
   throw_(parse_error,
-         _("'import' directive seen, but Python support is missing"));
+         _("'python' directive seen, but Python support is missing"));
 }
 
 #endif // HAVE_BOOST_PYTHON
