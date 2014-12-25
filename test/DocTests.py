@@ -114,7 +114,7 @@ class DocTests:
     if command[0] == '$': command.remove('$')
     index = command.index('ledger')
     command[index] = self.ledger
-    for i,argument in enumerate('--init-file /dev/null --columns 80'.split()):
+    for i,argument in enumerate('--args-only --columns 80'.split()):
       command.insert(index+i+1, argument)
 
     try:
