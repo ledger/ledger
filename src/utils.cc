@@ -574,7 +574,7 @@ std::ostream *     _log_stream = &std::cerr;
 std::ostringstream _log_buffer;
 
 #if TRACING_ON
-uint8_t            _trace_level;
+uint16_t            _trace_level;
 #endif
 
 static bool  logger_has_run = false;

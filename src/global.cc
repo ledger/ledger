@@ -514,7 +514,7 @@ void handle_debug_options(int argc, char * argv[])
 #if TRACING_ON
         _log_level   = LOG_TRACE;
         try {
-          _trace_level = boost::lexical_cast<uint8_t>(argv[i + 1]);
+          _trace_level = boost::lexical_cast<uint16_t>(argv[i + 1]);
         }
         catch (const boost::bad_lexical_cast&) {
           throw std::logic_error(_("Argument to --trace must be an integer"));
