@@ -1,8 +1,5 @@
 # Since the Travis CI environment http://docs.travis-ci.com/user/ci-environment/
-# provides GNU GCC 4.6, which does not support -std=c++11 GNU GCC 4.8 is
-# installed. Additionally boost 1.55.0 is compiled from source, since in the
-# Travis CI environment only boost 1.46 is available and no backported package
-# was found on the net.
+# provides GNU GCC 4.6, which does not support -std=c++11 GNU GCC 4.8 is installed
 
 language: cpp
 compiler:
@@ -10,31 +7,24 @@ compiler:
   - gcc
 
 before_install:
-    # Add software package repository, containing updated build toochain, i.e. GNU GCC 4.8
+    # Add software package repositories with recent versions of gcc and boost
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test --yes
+  - sudo add-apt-repository ppa:boost-latest/ppa --yes
   - sudo apt-get update -qq
-    # Download boost 1.55 and extract the source archive
-  - wget --no-verbose --output-document=boost-trunk.tar.bz2 http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.bz2/download
-  - export BOOST_ROOT="$TRAVIS_BUILD_DIR/../boost-trunk"
-  - export CMAKE_MODULE_PATH="$BOOST_ROOT"
-  - mkdir -p $BOOST_ROOT
-  - tar jxf boost-trunk.tar.bz2 --strip-components=1 -C $BOOST_ROOT
 
 install: 
     # Install GNU GCC 4.8 required by use of C++11
   - sudo apt-get install -qq g++-4.8 gcc-4.8
   - export CXX="g++-4.8" CC="gcc-4.8"
-    # Build boost libraries required by ledger
-  - (cd $BOOST_ROOT; ./bootstrap.sh --with-libraries=date_time,filesystem,system,iostreams,regex,python,test)
-  - (cd $BOOST_ROOT; ./b2 threading=multi --prefix=$BOOST_ROOT -d0 install)
-    # Install further dependencies
-  - ./acprep dependencies
+    # Install Ledger dependencies
+  - sudo apt-get install -qq libboost1.55 libgmp-dev libmpfr-dev libeditline-dev
 
 before_script:
-  - ./acprep opt make --python --boost=$BOOST_ROOT
+  - export JOBS=2
+  - ./acprep opt make --jobs $JOBS --python
 
 script:
-  - ./acprep check -- --output-on-failure
+  - ./acprep check --jobs $JOBS -- --output-on-failure
   - PYTHONPATH=. python python/demo.py
 
 notifications:
