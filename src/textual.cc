@@ -285,6 +285,11 @@ void instance_t::parse()
     }
   }
 
+  if (apply_stack.front().value.type() == typeid(optional<datetime_t>))
+    epoch = boost::get<optional<datetime_t> >(apply_stack.front().value);
+
+  apply_stack.pop_front();
+
 #if defined(TIMELOG_SUPPORT)
   timelog.close();
 #endif // TIMELOG_SUPPORT
