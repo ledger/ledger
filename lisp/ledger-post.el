@@ -1,6 +1,6 @@
 ;;; ledger-post.el --- Helper code for use with the "ledger" command-line tool
 
-;; Copyright (C) 2003-2014 John Wiegley (johnw AT gnu DOT org)
+;; Copyright (C) 2003-2015 John Wiegley (johnw AT gnu DOT org)
 
 ;; This file is not part of GNU Emacs.
 
