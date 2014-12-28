@@ -419,7 +419,9 @@ void instance_t::read_next_directive(bool& error_flag)
         price_xact_directive(line);
         break;
       case 'Y':                 // set the current year
-        apply_year_directive(line + 1);
+        if (std::strlen(line+1) == 0)
+          throw_(parse_error, _f("Directive '%1%' requires an argument") % line[0]);
+        apply_year_directive(line+1);
         break;
       }
     }
@@ -863,14 +865,17 @@ void instance_t::apply_rate_directive(char * line)
 
 void instance_t::apply_year_directive(char * line)
 {
-  apply_stack.push_front(application_t("year", epoch));
-
-  // This must be set to the last day of the year, otherwise partial
-  // dates like "11/01" will refer to last year's november, not the
-  // current year.
-  unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));
-  DEBUG("times.epoch", "Setting current year to " << year);
-  epoch = datetime_t(date_t(year, 12, 31));
+  try {
+    unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));
+    apply_stack.push_front(application_t("year", epoch));
+    DEBUG("times.epoch", "Setting current year to " << year);
+    // This must be set to the last day of the year, otherwise partial
+    // dates like "11/01" will refer to last year's november, not the
+    // current year.
+    epoch = datetime_t(date_t(year, 12, 31));
+  } catch(bad_lexical_cast &) {
+    throw_(parse_error, _f("Argument '%1%' not a valid year") % skip_ws(line));
+  }
 }
 
 void instance_t::end_apply_directive(char * kind)
