@@ -1375,6 +1375,13 @@ bool instance_t::general_directive(char * line)
       return true;
     }
     break;
+
+  case 'y':
+    if (std::strcmp(p, "year") == 0) {
+      apply_year_directive(arg);
+      return true;
+    }
+    break;
   }
 
   if (expr_t::ptr_op_t op = lookup(symbol_t::DIRECTIVE, p)) {
