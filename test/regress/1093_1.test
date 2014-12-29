@@ -1,0 +1,17 @@
+test --now 2014/12/08 period 'this week'
+--- Period expression tokens ---
+TOK_THIS: this
+TOK_WEEK: week
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2014 month Dec day 7 to year 2014 month Dec day 14
+
+--- After stabilization ---
+   range: from year 2014 month Dec day 7 to year 2014 month Dec day 14
+   start: 14-Dec-07
+  finish: 14-Dec-14
+
+--- Sample dates in range (max. 20) ---
+ 1: 14-Dec-07
+end test

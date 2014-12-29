@@ -164,6 +164,7 @@ value_t period_command(call_scope_t& args)
     throw std::logic_error(_("Usage: period TEXT"));
 
   report_t& report(find_scope<report_t>(args));
+  report.normalize_options(arg);
   std::ostream& out(report.output_stream);
 
   show_period_tokens(out, arg);
