@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2014, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2015, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -285,6 +285,11 @@ void instance_t::parse()
     }
   }
 
+  if (apply_stack.front().value.type() == typeid(optional<datetime_t>))
+    epoch = boost::get<optional<datetime_t> >(apply_stack.front().value);
+
+  apply_stack.pop_front();
+
 #if defined(TIMELOG_SUPPORT)
   timelog.close();
 #endif // TIMELOG_SUPPORT
@@ -419,7 +424,9 @@ void instance_t::read_next_directive(bool& error_flag)
         price_xact_directive(line);
         break;
       case 'Y':                 // set the current year
-        apply_year_directive(line + 1);
+        if (std::strlen(line+1) == 0)
+          throw_(parse_error, _f("Directive '%1%' requires an argument") % line[0]);
+        apply_year_directive(line+1);
         break;
       }
     }
@@ -863,14 +870,17 @@ void instance_t::apply_rate_directive(char * line)
 
 void instance_t::apply_year_directive(char * line)
 {
-  apply_stack.push_front(application_t("year", epoch));
-
-  // This must be set to the last day of the year, otherwise partial
-  // dates like "11/01" will refer to last year's november, not the
-  // current year.
-  unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));
-  DEBUG("times.epoch", "Setting current year to " << year);
-  epoch = datetime_t(date_t(year, 12, 31));
+  try {
+    unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));
+    apply_stack.push_front(application_t("year", epoch));
+    DEBUG("times.epoch", "Setting current year to " << year);
+    // This must be set to the last day of the year, otherwise partial
+    // dates like "11/01" will refer to last year's november, not the
+    // current year.
+    epoch = datetime_t(date_t(year, 12, 31));
+  } catch(bad_lexical_cast &) {
+    throw_(parse_error, _f("Argument '%1%' not a valid year") % skip_ws(line));
+  }
 }
 
 void instance_t::end_apply_directive(char * kind)
@@ -1245,13 +1255,13 @@ void instance_t::python_directive(char * line)
 void instance_t::import_directive(char *)
 {
   throw_(parse_error,
-         _("'python' directive seen, but Python support is missing"));
+         _("'import' directive seen, but Python support is missing"));
 }
 
 void instance_t::python_directive(char *)
 {
   throw_(parse_error,
-         _("'import' directive seen, but Python support is missing"));
+         _("'python' directive seen, but Python support is missing"));
 }
 
 #endif // HAVE_BOOST_PYTHON
@@ -1372,6 +1382,13 @@ bool instance_t::general_directive(char * line)
   case 'v':
     if (std::strcmp(p, "value") == 0) {
       value_directive(arg);
+      return true;
+    }
+    break;
+
+  case 'y':
+    if (std::strcmp(p, "year") == 0) {
+      apply_year_directive(arg);
       return true;
     }
     break;

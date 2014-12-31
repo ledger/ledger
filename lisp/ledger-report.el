@@ -1,6 +1,6 @@
 ;;; ledger-report.el --- Helper code for use with the "ledger" command-line tool
 
-;; Copyright (C) 2003-2014 John Wiegley (johnw AT gnu DOT org)
+;; Copyright (C) 2003-2015 John Wiegley (johnw AT gnu DOT org)
 
 ;; This file is not part of GNU Emacs.
 
@@ -196,7 +196,7 @@ used to generate the buffer, navigating the buffer, etc."
       (setq buffer-read-only t)
       (message "q to quit; r to redo; e to edit; k to kill; s to save; SPC and DEL to scroll"))))
 
-(defun string-empty-p (s)
+(defun ledger-report-string-empty-p (s)
   "Check S for the empty string."
   (string-equal "" s))
 
@@ -205,7 +205,7 @@ used to generate the buffer, navigating the buffer, etc."
 
    If name exists, returns the object naming the report,
    otherwise returns nil."
-  (unless (string-empty-p name)
+  (unless (ledger-report-string-empty-p name)
     (car (assoc name ledger-reports))))
 
 (defun ledger-reports-add (name cmd)
@@ -296,7 +296,7 @@ Optional EDIT the command."
       (setq ledger-report-saved nil)) ;; this is a new report, or edited report
     (setq report-cmd (ledger-report-expand-format-specifiers report-cmd))
     (set (make-local-variable 'ledger-report-cmd) report-cmd)
-    (or (string-empty-p report-name)
+    (or (ledger-report-string-empty-p report-name)
         (ledger-report-name-exists report-name)
         (progn
           (ledger-reports-add report-name report-cmd)
@@ -409,7 +409,7 @@ Optional EDIT the command."
 (defun ledger-report-read-new-name ()
   "Read the name for a new report from the minibuffer."
   (let ((name ""))
-    (while (string-empty-p name)
+    (while (ledger-report-string-empty-p name)
       (setq name (read-from-minibuffer "Report name: " nil nil nil
                                        'ledger-report-name-prompt-history)))
     name))
@@ -419,7 +419,7 @@ Optional EDIT the command."
   (interactive)
   (ledger-report-goto)
   (let (existing-name)
-    (when (string-empty-p ledger-report-name)
+    (when (ledger-report-string-empty-p ledger-report-name)
       (setq ledger-report-name (ledger-report-read-new-name)))
 
     (if (setq existing-name (ledger-report-name-exists ledger-report-name))

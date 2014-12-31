@@ -1,0 +1,18 @@
+year 2014
+
+04/13 Bank
+    Expenses:Loan          $400
+    Assets:Cash
+
+05/13 Bug 1038 Test
+    Expenses:Some:Account  $500
+    Assets:Cash
+
+06/13 Landlord
+    Expenses:Rent          $600
+    Assets:Cash
+
+test reg --now 2014-05-14 -p 'this month'
+14-May-13 Bug 1038 Test         Expenses:Some:Account          $500         $500
+                                Assets:Cash                   $-500            0
+end test

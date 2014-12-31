@@ -96,7 +96,26 @@ And for building the current `maint` branch:
 <tr><td>libxml2</td><td>2.7.2</td><td><em>optional</em></td></tr>
 </table>
 
-### MacPorts
+### OS X
+
+You can use [MacPorts](https://www.macports.org/) or [homebrew](http://brew.sh/) to install this very quickly on OS X. 
+
+#### 1. Homebrew
+
+You can see the parameters you can pass while installing with brew by the command `brew options ledger`. To install ledger, simply type the following command:
+
+    brew install ledger
+    
+If everything worked well, you should have ledger working now. If you want to install this with python bindings, you can use the following command:
+
+    brew install ledger --with-python
+
+If you to want to startup python, use the following command:
+
+    ledger python
+
+
+#### 2. MacPorts
 
 If you build stuff using MacPorts on OS X, as I do, here is what you would
 run:

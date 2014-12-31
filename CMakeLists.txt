@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 2.8.5)
+if(POLICY CMP0042)
+  # CMP0042 is only known to CMake 3.0 and above
+  cmake_policy(SET CMP0042 OLD)
+endif(POLICY CMP0042)
 
 PROJECT(ledger)
 
