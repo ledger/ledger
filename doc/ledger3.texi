@@ -9287,6 +9287,7 @@ debug:
 @item @code{csv.mappings}                @tab @code{op.memory}                        @tab @code{xact.extend.fail}
 @item @code{csv.parse}                   @tab @code{option.args}                      @tab @code{xact.finalize}
 @end multitable
+@
 
 @item --trace @var{INT}
 Enable tracing. The @var{INT} specifies the level of trace desired:
@@ -9305,6 +9306,7 @@ Enable tracing. The @var{INT} specifies the level of trace desired:
 @item @code{LOG_TRACE} @tab 10
 @item @code{LOG_ALL} @tab 11
 @end multitable
+@
 
 @item --verbose
 Print detailed information on the execution of Ledger.
