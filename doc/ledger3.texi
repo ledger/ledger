@@ -22,8 +22,8 @@
 
 @c How to make documented ledger examples validate automatically.
 @c
-@c The test/DocTests.py script will be run along the with the other
-@c tests when using ctest or acprep check.
+@c The test/DocTests.py script will be run along with the other tests
+@c when using ctest or acprep check.
 @c The script parses the texinfo file and looks for three kinds of
 @c specially marked @smallexamples, then it will run the ledger
 @c command from the example, and compare the results with the output
@@ -86,9 +86,8 @@
 @c              $ 36.84  Expenses:Food:Dining
 @c @end smallexample
 @c
-@c Additionally DocTests.py will pass --init-file /dev/null to ledger to
-@c ignore any default arguments to ledger the user running the tests
-@c has configured.
+@c Additionally DocTests.py will pass --args-only and --columns 80 to ledger
+@c to ignore any default arguments from the environment or .ledgerrc.
 @c
 @c To manually run the tests in this file run:
 @c $ ./test/DocTests.py -vv --ledger ./ledger --file ./doc/ledger3.texi
