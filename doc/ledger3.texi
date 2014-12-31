@@ -9261,30 +9261,31 @@ data during the run. The following are the available @var{CODES} to
 debug:
 
 @multitable @columnfractions .32 .43 .27
-@item @code{account.display}             @tab @code{expr.calc.when}                   @tab @code{org.next_amount}
-@item @code{accounts.sorted}             @tab @code{expr.compile}                     @tab @code{org.next_total}
-@item @code{amount.convert}              @tab @code{filters.changed_value}            @tab @code{parser.error}
-@item @code{amount.is_zero}              @tab @code{filters.changed_value.rounding}   @tab @code{pool.commodities}
-@item @code{amount.parse}                @tab @code{filters.collapse}                 @tab @code{post.assign}
-@item @code{amount.price}                @tab @code{filters.forecast}                 @tab @code{python.init}
-@item @code{amount.truncate}             @tab @code{filters.revalued}                 @tab @code{python.interp}
-@item @code{amount.unround}              @tab @code{format.abbrev}                    @tab @code{query.mask}
-@item @code{amounts.commodities}         @tab @code{format.expr}                      @tab @code{report.predicate}
-@item @code{amounts.refs}                @tab @code{generate.post}                    @tab @code{scope.symbols}
-@item @code{archive.journal}             @tab @code{generate.post.string}             @tab @code{textual.include}
-@item @code{auto.columns}                @tab @code{item.meta}                        @tab @code{textual.parse}
-@item @code{budget.generate}             @tab @code{ledger.read}                      @tab @code{timelog}
-@item @code{commodity.annotated.strip}   @tab @code{ledger.validate}                  @tab @code{times.epoch}
-@item @code{commodity.annotations}       @tab @code{lookup}                           @tab @code{times.interval}
-@item @code{commodity.compare}           @tab @code{lookup.account}                   @tab @code{times.parse}
-@item @code{commodity.download}          @tab @code{mask.match}                       @tab @code{value.sort}
-@item @code{commodity.prices.add}        @tab @code{memory.counts}                    @tab @code{value.storage.refcount}
-@item @code{commodity.prices.find}       @tab @code{memory.counts.live}               @tab @code{xact.extend}
-@item @code{convert.csv}                 @tab @code{memory.debug}                     @tab @code{xact.extend.cleared}
-@item @code{csv.mappings}                @tab @code{op.cons}                          @tab @code{xact.extend.fail}
-@item @code{csv.parse}                   @tab @code{op.memory}                        @tab @code{xact.finalize}
-@item @code{draft.xact}                  @tab @code{option.args}
-@item @code{expr.calc}                   @tab @code{option.names}
+@item @code{account.display}             @tab @code{draft.xact}                       @tab @code{option.names}
+@item @code{account.sorted}              @tab @code{expr.calc}                        @tab @code{org.next_amount}
+@item @code{amount.commodities}          @tab @code{expr.compile}                     @tab @code{org.next_total}
+@item @code{amount.convert}              @tab @code{expr.merged.compile}              @tab @code{parser.error}
+@item @code{amount.is_zero}              @tab @code{filters.changed_value}            @tab @code{pool.commodities}
+@item @code{amount.parse}                @tab @code{filters.changed_value.rounding}   @tab @code{post.assign}
+@item @code{amount.price}                @tab @code{filters.collapse}                 @tab @code{python.init}
+@item @code{amount.refs}                 @tab @code{filters.forecast}                 @tab @code{python.interp}
+@item @code{amount.roundto}              @tab @code{filters.interval}                 @tab @code{query.mask}
+@item @code{amount.truncate}             @tab @code{filters.revalued}                 @tab @code{report.predicate}
+@item @code{amount.unround}              @tab @code{format.abbrev}                    @tab @code{scope.search}
+@item @code{annotate.less}               @tab @code{format.expr}                      @tab @code{scope.symbols}
+@item @code{archive.journal}             @tab @code{generate.post}                    @tab @code{select.parse}
+@item @code{auto.columns}                @tab @code{generate.post.string}             @tab @code{textual.include}
+@item @code{budget.generate}             @tab @code{history.find}                     @tab @code{textual.parse}
+@item @code{commodity.annotated.strip}   @tab @code{history.map}                      @tab @code{timelog}
+@item @code{commodity.annotations}       @tab @code{item.meta}                        @tab @code{times.epoch}
+@item @code{commodity.compare}           @tab @code{ledger.read}                      @tab @code{times.interval}
+@item @code{commodity.download}          @tab @code{ledger.validate}                  @tab @code{times.parse}
+@item @code{commodity.exchange}          @tab @code{lookup}                           @tab @code{value.sort}
+@item @code{commodity.price.find}        @tab @code{lookup.account}                   @tab @code{value.storage.refcount}
+@item @code{commodity.prices.add}        @tab @code{mask.match}                       @tab @code{xact.extend}
+@item @code{commodity.prices.find}       @tab @code{memory.debug}                     @tab @code{xact.extend.cleared}
+@item @code{csv.mappings}                @tab @code{op.memory}                        @tab @code{xact.extend.fail}
+@item @code{csv.parse}                   @tab @code{option.args}                      @tab @code{xact.finalize}
 @end multitable
 
 @item --trace @var{INT}
