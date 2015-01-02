@@ -16,6 +16,7 @@ class DocTests:
     self.ledger     = os.path.abspath(args.ledger)
     self.sourcepath = os.path.abspath(args.file)
     self.verbose    = args.verbose
+    self.tests      = args.examples
 
     self.examples      = dict()
     self.test_files    = list()
@@ -133,7 +134,14 @@ class DocTests:
 
   def test_examples(self):
     failed = set()
-    for test_id in self.examples:
+    tests = self.examples.keys()
+    if self.tests:
+      tests = list(set(self.tests).intersection(tests))
+      temp = list(set(self.tests).difference(tests))
+      if len(temp) > 0:
+        print >> sys.stderr, 'Skipping non-existent examples: %s' % ', '.join(temp)
+    
+    for test_id in tests:
       validation = False
       if "validate-data" in self.examples[test_id] or "validate-command" in self.examples[test_id]:
         validation = True
@@ -213,7 +221,7 @@ class DocTests:
 
 if __name__ == "__main__":
   def getargs():
-    parser = argparse.ArgumentParser(description='DocTests', prefix_chars='-')
+    parser = argparse.ArgumentParser(prog='DocTests', description='Test ledger examples from the documentation', prefix_chars='-')
     parser.add_argument('-v', '--verbose',
         dest='verbose',
         action='count',
@@ -230,6 +238,11 @@ if __name__ == "__main__":
         action='store',
         required=True,
         help='the texinfo documentation file to run the examples from')
+    parser.add_argument('examples',
+        metavar='EXAMPLE',
+        type=str,
+        nargs='*',
+        help='the examples to test')
     return parser.parse_args()
 
   args = getargs()
