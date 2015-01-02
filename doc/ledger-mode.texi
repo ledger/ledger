@@ -404,7 +404,7 @@ The menu item @samp{Clean-up Buffer} sorts all transactions in the buffer
 by date, removes extraneous empty lines and aligns every transaction.
 
 
-@node Deleting Transactions, Sorting Transactions, Formatting Transactions, The Ledger Buffer
+@node Deleting Transactions, Killing Transactions, Formatting Transactions, The Ledger Buffer
 @section Deleting Transactions
 @kindex C-c C-d
 @cindex transaction, deleting
@@ -414,7 +414,17 @@ provides an easy way to delete the transaction under point: @kbd{C-c
 C-d}.  The advantage to using this method is that the complete
 transaction operation is in the undo buffer.
 
-@node Sorting Transactions, Narrowing Transactions, Deleting Transactions, The Ledger Buffer
+@node Killing Transactions, Sorting Transactions, Deleting Transactions, The Ledger Buffer
+@section Killing Transactions
+@kindex C-c C-w
+@cindex transaction, killing
+
+Along with normal buffer editing methods to delete text, Ledger-mode
+provides an easy way to kill the transaction under point: @kbd{C-c
+C-w}.  The advantage to using this method is that the complete
+transaction operation is in the kill ring.
+
+@node Sorting Transactions, Narrowing Transactions, Killing Transactions, The Ledger Buffer
 @section Sorting Transactions
 @kindex C-c C-s
 @cindex transaction, sorting

@@ -153,6 +153,12 @@ MOMENT is an encoded date"
   (let ((bounds (ledger-navigate-find-xact-extents pos)))
     (delete-region (car bounds) (cadr bounds))))
 
+(defun ledger-kill-current-transaction (pos)
+  "Kill the transaction surrounging POS."
+  (interactive "d")
+  (let ((bounds (ledger-navigate-find-xact-extents pos)))
+    (kill-region (car bounds) (cadr bounds))))
+
 (defun ledger-add-transaction (transaction-text &optional insert-at-point)
   "Use ledger xact TRANSACTION-TEXT to add a transaction to the buffer.
 If INSERT-AT-POINT is non-nil insert the transaction there,
