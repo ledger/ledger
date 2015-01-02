@@ -32,3 +32,5 @@ notifications:
     on_success: change
     on_failure: change
   irc: "chat.freenode.net#ledger"
+    on_success: change
+    on_failure: change
