@@ -8809,7 +8809,7 @@ amount could be an expression, etc.
 
 @item Journal transactions
 
-Postings are owned by transactions, always.  This subclass of item_t
+Postings are owned by transactions, always.  This subclass of @code{item_t}
 knows about the date, the payee, etc.  If a date or metadata tag is
 requested from a posting and it doesn't have that information, the
 transaction is queried to see if it can provide it.
@@ -8824,7 +8824,7 @@ it, but contains relatively little information of its own.
 
 Finally, all transactions with their postings, and all accounts, are
 owned by a @code{journal_t} object.  This is the go-to object for
-querying ad reporting on your data.
+querying and reporting on your data.
 
 @item Textual journal parser
 
@@ -9467,7 +9467,7 @@ where the regex matches the name of the test you want to build.
 There are nearly 300 tests stored under the @file{test} subdirectory
 in the main source distribution.  They are broken into two broad
 categories, baseline and regression.  To run the @file{5FBF2ED8} test,
-for example, issue @samp{ctest -V -R "5FB"}.
+for example, issue @code{ctest -V -R "5FB"}.
 
 @node Writing Tests,  , Running Tests, Testing Framework
 @subsubsection Writing Tests
