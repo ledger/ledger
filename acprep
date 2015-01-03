@@ -644,6 +644,9 @@ class PrepareBuild(CommandLineApp):
                     ]
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
+        elif system.startswith('CYGWIN'):
+            self.log.info('Looks like you are using Cygwin')
+            self.log.info('Please install the dependencies manually, see https://github.com/ledger/ledger/wiki/Build-instructions-for-Cygwin.')        
 
     #########################################################################
     # Determine the system's basic configuration                            #
