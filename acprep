@@ -822,9 +822,6 @@ class PrepareBuild(CommandLineApp):
         if self.prefix_directory():
             conf_args.append('-DCMAKE_INSTALL_PREFIX=%s' % self.prefix_directory())
 
-        if self.is_cygwin:
-            
-            
         return (environ, conf_args + self.configure_args)
 
     def phase_configure(self, *args):
