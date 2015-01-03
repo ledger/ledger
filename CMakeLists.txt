@@ -15,6 +15,10 @@ enable_testing()
 
 add_definitions(-std=c++11)
 
+if (CYGWIN)
+  add_definitions(-U__STRICT_ANSI__)
+endif()
+
 ########################################################################
 
 option(USE_PYTHON "Build support for the Python scripting bridge" OFF)
