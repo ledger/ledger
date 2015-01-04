@@ -13,12 +13,7 @@ set(Ledger_VERSION_DATE  20141005)
 
 enable_testing()
 
-if (CYGWIN)
-  add_definitions(-std=c++11 -U__STRICT_ANSI__)
-else()
-  add_definitions(-std=c++11)
-endif()
-
+add_definitions(-std=c++11)
 if (CYGWIN)
   add_definitions(-U__STRICT_ANSI__)
 endif()
