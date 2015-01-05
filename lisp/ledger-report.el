@@ -71,6 +71,11 @@ text that should replace the format specifier."
 	:type 'boolean
 	:group 'ledger-report)
 
+(defcustom ledger-report-auto-refresh-sticky-cursor nil
+	"If t then try to place cursor at same relative position as it was before auto-refresh."
+	:type 'boolean
+	:group 'ledger-report)
+
 (defvar ledger-report-buffer-name "*Ledger Report*")
 
 (defvar ledger-report-name nil)
@@ -83,6 +88,7 @@ text that should replace the format specifier."
 (defvar ledger-report-mode-abbrev-table)
 
 (defvar ledger-report-is-reversed nil)
+(defvar ledger-report-cursor-line-number nil)
 
 (defun ledger-report-reverse-report ()
 	"Reverse the order of the report."
@@ -391,10 +397,12 @@ Optional EDIT the command."
 					(pop-to-buffer (get-buffer ledger-report-buffer-name))
 					(shrink-window-if-larger-than-buffer)
 					(setq buffer-read-only nil)
+					(setq ledger-report-cursor-line-number (line-number-at-pos))
 					(erase-buffer)
 					(ledger-do-report ledger-report-cmd)
 					(setq buffer-read-only nil)
 					(if ledger-report-is-reversed (ledger-report-reverse-lines))
+					(if ledger-report-auto-refresh-sticky-cursor (forward-line (- ledger-report-cursor-line-number 5)))
 					(pop-to-buffer cur-buf)))))
 
 (defun ledger-report-quit ()
