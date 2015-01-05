@@ -1,6 +1,10 @@
 # Since the Travis CI environment http://docs.travis-ci.com/user/ci-environment/
 # provides GNU GCC 4.6, which does not support -std=c++11 GNU GCC 4.8 is installed
 
+# NOTE: Please validate this file after editing it using
+#       Travis WebLint http://lint.travis-ci.org/
+#       or travis-yaml https://github.com/travis-ci/travis-yaml
+
 language: cpp
 compiler:
   - clang
@@ -31,6 +35,7 @@ notifications:
   email:
     on_success: change
     on_failure: change
-  irc: "chat.freenode.net#ledger"
+  irc:
+    channels: [ "chat.freenode.net#ledger" ]
     on_success: change
     on_failure: change
