@@ -71,6 +71,11 @@ text that should replace the format specifier."
 	:type 'boolean
 	:group 'ledger-report)
 
+(defcustom ledger-report-auto-refresh-sticky-cursor nil
+	"If t then try to place cursor at same relative position as it was before auto-refresh."
+	:type 'boolean
+	:group 'ledger-report)
+
 (defvar ledger-report-buffer-name "*Ledger Report*")
 
 (defvar ledger-report-name nil)
@@ -82,8 +87,16 @@ text that should replace the format specifier."
 (defvar ledger-minibuffer-history nil)
 (defvar ledger-report-mode-abbrev-table)
 
+(defvar ledger-report-is-reversed nil)
+(defvar ledger-report-cursor-line-number nil)
+
+(defun ledger-report-reverse-report ()
+	"Reverse the order of the report."
+	(interactive)
+	(ledger-report-reverse-lines)
+	(setq ledger-report-is-reversed (not ledger-report-is-reversed)))
+
 (defun ledger-report-reverse-lines ()
-  (interactive)
   (goto-char (point-min))
   (forward-paragraph)
   (forward-line)
@@ -96,7 +109,7 @@ text that should replace the format specifier."
     (define-key map [? ] 'scroll-up)
     (define-key map [backspace] 'scroll-down)
     (define-key map [?r] 'ledger-report-redo)
-    (define-key map [(shift ?r)] 'ledger-report-reverse-lines)
+    (define-key map [(shift ?r)] 'ledger-report-reverse-report)
     (define-key map [?s] 'ledger-report-save)
     (define-key map [?k] 'ledger-report-kill)
     (define-key map [?e] 'ledger-report-edit-report)
@@ -123,7 +136,7 @@ text that should replace the format specifier."
     ["Edit All Reports" ledger-report-edit-reports]
     ["Re-run Report" ledger-report-redo]
     "---"
-    ["Reverse report order" ledger-report-reverse-lines]
+    ["Reverse report order" ledger-report-reverse-report]
     "---"
     ["Scroll Up" scroll-up]
     ["Visit Source" ledger-report-visit-source]
@@ -190,6 +203,7 @@ used to generate the buffer, navigating the buffer, etc."
       (set (make-local-variable 'ledger-buf) buf)
       (set (make-local-variable 'ledger-report-name) report-name)
       (set (make-local-variable 'ledger-original-window-cfg) wcfg)
+			(set (make-local-variable 'ledger-report-is-reversed) nil)
       (ledger-do-report (ledger-report-cmd report-name edit))
       (shrink-window-if-larger-than-buffer)
       (set-buffer-modified-p nil)
@@ -386,9 +400,12 @@ Optional EDIT the command."
 					(pop-to-buffer (get-buffer ledger-report-buffer-name))
 					(shrink-window-if-larger-than-buffer)
 					(setq buffer-read-only nil)
+					(setq ledger-report-cursor-line-number (line-number-at-pos))
 					(erase-buffer)
 					(ledger-do-report ledger-report-cmd)
 					(setq buffer-read-only nil)
+					(if ledger-report-is-reversed (ledger-report-reverse-lines))
+					(if ledger-report-auto-refresh-sticky-cursor (forward-line (- ledger-report-cursor-line-number 5)))
 					(pop-to-buffer cur-buf)))))
 
 (defun ledger-report-quit ()

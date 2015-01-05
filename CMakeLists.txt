@@ -14,6 +14,9 @@ set(Ledger_VERSION_DATE  20141005)
 enable_testing()
 
 add_definitions(-std=c++11)
+if (CYGWIN)
+  add_definitions(-U__STRICT_ANSI__)
+endif()
 
 ########################################################################
 
