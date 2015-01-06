@@ -10,6 +10,9 @@ compiler:
   - clang
   - gcc
 
+env:
+  - JOBS=1
+
 before_install:
     # Add software package repositories with recent versions of gcc and boost
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test --yes
@@ -18,13 +21,12 @@ before_install:
 
 install: 
     # Install GNU GCC 4.8 required by use of C++11
-  - sudo apt-get install -qq g++-4.8 gcc-4.8
-  - export CXX="g++-4.8" CC="gcc-4.8"
+  - if [ "$CXX" == "g++" ]; sudo apt-get install -qq g++-4.8 gcc-4.8; fi
+  - if [ "$CXX" == "g++" ]; export CXX="g++-4.8" CC="gcc-4.8"; fi
     # Install Ledger dependencies
   - sudo apt-get install -qq libboost1.55 libgmp-dev libmpfr-dev libeditline-dev
 
 before_script:
-  - export JOBS=2
   - ./acprep opt make --jobs $JOBS --python
 
 script:
