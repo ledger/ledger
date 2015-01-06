@@ -52,6 +52,7 @@ endif()
 
 ########################################################################
 
+set(Python_ADDITIONAL_VERSIONS 2.7 2.6)
 find_package(PythonInterp)      # Used for running tests
 
 if (USE_PYTHON)
@@ -59,7 +60,6 @@ if (USE_PYTHON)
     message(ERROR "Building the python module requires BUILD_LIBRARY=ON.")
   endif()
 
-  set(Python_ADDITIONAL_VERSIONS 2.7 2.6)
   find_package(PythonLibs)
   if (PYTHONLIBS_FOUND)
     set(BOOST_PYTHON python)
