@@ -24,11 +24,10 @@ install:
   - sudo apt-get install -qq libboost1.55 libgmp-dev libmpfr-dev libeditline-dev
 
 before_script:
-  - export JOBS=1
-  - ./acprep opt make --jobs $JOBS --python
+  - ./acprep opt make --python
 
 script:
-  - ./acprep check --jobs $JOBS -- --output-on-failure
+  - ./acprep check --jobs $(nproc) -- --output-on-failure
   - PYTHONPATH=. python python/demo.py
 
 notifications:
