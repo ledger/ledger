@@ -5770,28 +5770,23 @@ Specify the location of the init file. The default is @file{~/.ledgerrc}.
 Display the options in effect for this Ledger invocation, along with
 their values and the source of those values, for example:
 
-@smallexample
-$ ledger --options bal --cleared -f ~/ledger/test/input/drewr3.dat
-===========================================================================
+@smallexample @c command:DEB4952
+$ ledger --options bal --cleared -f test/input/drewr3.dat
+@end smallexample
+
+@smallexample @c output:DEB4952
+===============================================================================
 [Global scope options]
+             --args-only                                             --args-only
 
 [Session scope options]
-                  --file = ~/ledger/test/input/drewr3.dat      -f
-              --price-db = ~/FinanceData/PriceDB               $price-db
+                  --file = test/input/drewr3.dat                     -f
 
 [Report scope options]
-               --cleared                                       --cleared
-                 --color                                       ?normalize
-           --date-format = %Y/%m/%d                            $date-format
-                 --limit = cleared                             --cleared
-         --prepend-width = 0                                   ?normalize
-            --meta-width = 0                                   ?normalize
-            --date-width = 10                                  ?normalize
-           --payee-width = 21                                  ?normalize
-         --account-width = 21                                  ?normalize
-          --amount-width = 12                                  ?normalize
-           --total-width = 12                                  ?normalize
-===========================================================================
+               --cleared                                             --cleared
+               --columns = 80                                        --columns
+                 --limit = cleared                                   --cleared
+===============================================================================
             $ 775.00  Assets:Checking
          $ -1,000.00  Equity:Opening Balances
             $ 225.00  Expenses:Food:Groceries
