@@ -14,7 +14,7 @@ used by *./python/server.py*.
 from source code.  It uses the *CMakeLists.txt* files.
 
 [**DOxygen**](http://doxygen.org): generates programming documentation from
-source code files.  Primarly used on C++ sources, but works on all.  Uses
+source code files.  Primarily used on C++ sources, but works on all.  Uses
 the *doc/Doxyfile.in* file.
 
 [**GCC**](http://gcc.gnu.org): Gnu Compiler Collection, which includes the
@@ -58,7 +58,7 @@ orientation:
   for more information.
 
 **./README.md**: user readme file in markdown format, also used as the project
-  discription on GitHub.
+  description on GitHub.
 
 **./contrib/**: contributed scripts of random quality and completion.  They
   usually require editing to run.

@@ -33,7 +33,7 @@ ACCOUNTING GLOSSARY
   This data of where money goes can be collated into reports.  This used to be
   done with a physical book, called a ledger, where each account was on one
   page.  Each debit or credit in the journal was transferred to the
-  appropriate account page and the pages were totalled to produce reports.
+  appropriate account page and the pages were totaled to produce reports.
   This process is now done with the Ledger software which creates reports from
   the journal.  A journal is sometimes called a register.
 
