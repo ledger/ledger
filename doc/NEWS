@@ -6,7 +6,7 @@
   when a gain or loss is made (if you bought 1 AAA for $10 and then sold
   it for $12, ledger would previously take $12 as the cost; the original
   cost of $10 is preserved as the cost basis now, which addresses strange
-  behaviour with -B after a capital gain or loss is made).
+  behavior with -B after a capital gain or loss is made).
 
 - Incorrect automatic Equity:Capital Gains and Equity:Capital Loss entries
   are no longer generated when a commodity is sold for loss or profit.
@@ -339,7 +339,7 @@ features, please see the manual.
       This flag limits computation to *only transactions whose amount
       is greater than 100 of a given commodity*.  It means that if you
       scan your dining expenses, for example, only individual bills
-      greater than $100 would be caculated by the report.
+      greater than $100 would be calculated by the report.
 
     --only "a>100"
 
@@ -581,7 +581,7 @@ features, please see the manual.
 
 * 2.4.1
 
-- Corrected an issue that had inadvertantly disabled Gnucash support.
+- Corrected an issue that had inadvertently disabled Gnucash support.
 
 * 2.4
 
