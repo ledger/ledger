@@ -494,6 +494,7 @@ class PrepareBuild(CommandLineApp):
         self.log.info('Executing phase: submodule')
         if self.git_working_tree():
             self.execute('git', 'submodule', 'init')
+            self.execute('git', 'submodule', 'sync')
             self.execute('git', 'submodule', 'update')
 
     def phase_pull(self, *args):
