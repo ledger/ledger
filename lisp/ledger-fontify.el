@@ -42,6 +42,7 @@
 	(save-excursion
 		(unless beg (setq beg (point-min)))
 		(unless end (setq end (point-max)))
+		(goto-char beg)
 		(beginning-of-line)
 		(while (< (point) end)
 			(cond ((or (looking-at ledger-xact-start-regex)
