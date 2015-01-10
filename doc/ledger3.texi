@@ -2081,6 +2081,7 @@ the syntax @code{[ACTUAL_DATE]} or @code{[=EFFECTIVE_DATE]} or
 
 @item P
 @findex --download
+@findex P
 Specifies a historical price for a commodity.  These are usually found
 in a pricing history file (see the @option{--download (-Q)} option).
 The syntax is:
@@ -2554,12 +2555,15 @@ alone, for backwards compatibility with older Ledger versions.
 @table @code
 
 @item A
+@findex A
 See @code{bucket}.
 
 @item Y
+@findex Y
 See @code{year}.
 
 @item N SYMBOL
+@findex N
 Indicates that pricing information is to be ignored for a given
 symbol, nor will quotes ever be downloaded for that symbol.  Useful
 with a home currency, such as the dollar @samp{$}.  It is recommended
@@ -2572,6 +2576,7 @@ N SYMBOL
 
 @item D AMOUNT
 @findex xact
+@findex D
 
 Specifies the default commodity to use, by specifying an amount in the
 expected format.  The @command{xact} command will use this commodity as
@@ -2586,6 +2591,7 @@ D $1,000.00
 @end smallexample
 
 @item C AMOUNT1 = AMOUNT2
+@findex C
 Specifies a commodity conversion, where the first amount is given to
 be equivalent to the second amount.  The first amount should use the
 decimal precision desired during reporting:
@@ -2595,6 +2601,12 @@ C 1.00 Kb = 1024 bytes
 @end smallexample
 
 @item I, i, O, o, b, h
+@findex I
+@findex i
+@findex O
+@findex o
+@findex b
+@findex h
 These four relate to timeclock support, which permits Ledger to read
 timelog files.  See timeclock's documentation for more info on the
 syntax of its timelog files.
