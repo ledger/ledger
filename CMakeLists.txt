@@ -267,7 +267,7 @@ add_subdirectory(test)
 # build a CPack driven installer package
 include (InstallRequiredSystemLibraries)
 
-set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/doc/LICENSE.rtf")
+set (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.md")
 set (CPACK_PACKAGE_VERSION_MAJOR "${Ledger_VERSION_MAJOR}")
 set (CPACK_PACKAGE_VERSION_MINOR "${Ledger_VERSION_MINOR}")
 set (CPACK_PACKAGE_VERSION_PATCH "${Ledger_VERSION_PATCH}")
