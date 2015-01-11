@@ -123,6 +123,8 @@ public:
     out <<
       "Ledger " << Ledger_VERSION_MAJOR << '.' << Ledger_VERSION_MINOR << '.'
                 << Ledger_VERSION_PATCH;
+    if (Ledger_VERSION_PRERELEASE != 0)
+      out << Ledger_VERSION_PRERELEASE;
     if (Ledger_VERSION_DATE != 0)
       out << '-' << Ledger_VERSION_DATE;
     out << _(", the command-line accounting tool");
