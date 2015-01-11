@@ -1,3 +1,7 @@
+set(LEDGER_CLI_SOURCES
+  global.cc
+  main.cc)
+
 set(LEDGER_SOURCES
   stats.cc
   generate.cc
@@ -255,7 +259,7 @@ else()
   endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
 endif()
 
-add_pch_rule(${PROJECT_BINARY_DIR}/system.hh LEDGER_SOURCES main.cc global.cc)
+add_pch_rule(${PROJECT_BINARY_DIR}/system.hh LEDGER_SOURCES LEDGER_CLI_SOURCES)
 
 include(GNUInstallDirs)
 
