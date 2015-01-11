@@ -178,7 +178,10 @@ BOOST_AUTO_TEST_CASE(testEqaulity)
 
   BOOST_CHECK(b4 == b5);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-value"
   BOOST_CHECK_THROW(b0 == a0, balance_error);
+#pragma GCC diagnostic pop
 
   BOOST_CHECK(b0.valid());
   BOOST_CHECK(b1.valid());
