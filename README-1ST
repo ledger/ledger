@@ -63,6 +63,20 @@ it's usually fairly obvious where things have gone astray.
 
    ----------------------------------------------------------------------
 
+ - Q: './acprep update' errors with something similar to the following:
+
+      Submodule 'svn2git/utfcpp' (https://github.com/svn2github/utfcpp.git) registered for path 'lib/utfcpp'
+      fatal: reference is not a tree: 63cd4984464e875546b4a91918be7355357a3a68
+      Unable to checkout '63cd4984464e875546b4a91918be7355357a3a68' in submodule path 'lib/utfcpp
+
+   A: The URL for git submodules may have changed, something like this
+      should fix it:
+
+        git submodules sync
+        git submodules update
+
+   ----------------------------------------------------------------------
+
  - Q: Configure fails saying it can't find boost_regex
 
    A: Look in config.log and search for "boost_regex", then scroll down a bit

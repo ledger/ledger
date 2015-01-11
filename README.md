@@ -177,6 +177,12 @@ see the `help` subcommand to `acprep`, which explains some of its many
 options.  It's pretty much the only command I run for configuring, building
 and testing Ledger.
 
+If you see errors related to a submodule being unable to checkout, it might
+be that the git submodule URL has changed, run the following commands and retry:
+
+    git submodule sync
+    git submodule update
+
 You can run `make check` to confirm the result, and `make install` to install.
 
 ## Resources
