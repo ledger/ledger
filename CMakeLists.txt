@@ -11,6 +11,9 @@ set(Ledger_VERSION_MINOR 1)
 set(Ledger_VERSION_PATCH 0)
 set(Ledger_VERSION_DATE  20141005)
 
+# Point CMake at any custom modules we may ship
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+
 enable_testing()
 
 add_definitions(-std=c++11)
@@ -236,13 +239,20 @@ endmacro(add_ledger_library_dependencies _target)
 
 ########################################################################
 
+include(FindUtfcpp)
+if (UTFCPP_FOUND)
+  include_directories("${UTFCPP_INCLUDE_DIR}")
+else()
+  message(FATAL_ERROR "Missing required header file: utf8.h\n"
+    "Define UTFCPP_PATH or install utfcpp locally into the source tree below lib/utfcpp/."
+    )
+endif()
+
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 # add the binary tree to the search path for include files so that we will
-# find TutorialConfig.h
-include_directories("${PROJECT_SOURCE_DIR}/lib")
-include_directories("${PROJECT_SOURCE_DIR}/lib/utfcpp/v2_0/source")
+# find system.hh
 include_directories("${PROJECT_BINARY_DIR}")
 
 configure_file(
