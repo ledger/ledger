@@ -512,7 +512,7 @@ Ledger will generate:
 
 @smallexample @c output:66E3A2C
 10-Dec-01 Checking balance      Assets:Checking          $ 1,000.00   $ 1,000.00
-                                Equit:Opening Balances  $ -1,000.00            0
+                                Equity:Opening Balances  $ -1,000.00            0
 10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
                                 Expense:Food:Groceries      $ 37.50      $ 75.00
                                 Expense:Food:Groceries      $ 37.50     $ 112.50
@@ -1075,10 +1075,10 @@ the left value's commodity.  The result of this command might be:
 
 @menu
 * Commodity price histories::
-* Commodity equivalencies::
+* Commodity equivalences::
 @end menu
 
-@node Commodity price histories, Commodity equivalencies, Commodities and Currencies, Commodities and Currencies
+@node Commodity price histories, Commodity equivalences, Commodities and Currencies, Commodities and Currencies
 @subsection Commodity price histories
 
 Whenever a commodity is purchased using a different commodity (such as
@@ -1100,13 +1100,13 @@ its various reports.  It will always report balances in terms of the
 commodity total, rather than the current value of those commodities.
 To enable pricing reports, use one of the commodity reporting options.
 
-@node Commodity equivalencies,  , Commodity price histories, Commodities and Currencies
-@subsection Commodity equivalencies
+@node Commodity equivalences,  , Commodity price histories, Commodities and Currencies
+@subsection Commodity equivalences
 
 Sometimes a commodity has several forms which are all equivalent.  An
 example of this is time.  Whether tracked in terms of minutes, hours
 or days, it should be possible to convert between the various forms.
-Doing this requires the use of commodity equivalencies.
+Doing this requires the use of commodity equivalences.
 
 For example, you might have the following two postings, one which
 transfers an hour of time into a @samp{Billable} account, and another
@@ -1136,8 +1136,8 @@ $ ledger --no-total balance Billable Project
 
 This example works because ledger already knows how to handle seconds,
 minutes and hours, as part of its time tracking support.  Defining
-other equivalencies is simple.  The following is an example that
-creates data equivalencies, helpful for tracking bytes, kilobytes,
+other equivalences is simple.  The following is an example that
+creates data equivalences, helpful for tracking bytes, kilobytes,
 megabytes, and more:
 
 @smallexample @c input:validate
@@ -1152,7 +1152,7 @@ and a default precision, with a certain quantity of another commodity.
 In the above example, kilobytes are reported with two decimal places
 of precision and each kilobyte is equal to 1024 bytes.
 
-Equivalency chains can be as long as desired.  Whenever a commodity
+Equivalence chains can be as long as desired.  Whenever a commodity
 would report as a decimal amount (less than @samp{1.00}), the next
 smallest commodity is used.  If a commodity could be reported in terms
 of a higher commodity without resulting to a partial fraction, then
@@ -2919,7 +2919,7 @@ after the amount, or on its own line preceded by whitespace:
 @c > Is there a way to produce a register report that lists all the transaction
 @c > that contain a certain tag, and sort them based on the value of the tag?
 @c ledger reg --sort "tag('foo')" %foo
-@c ledger reg --group-by "tag('Employer)" Remboursement:Employer and tag Employer
+@c ledger reg --group-by "tag('Employer)" Reimbursement:Employer and tag Employer
 @c > Is it possible to get subtotals for each tag value?
 @c ledger --group-by "tag('foo')" bal
 @c TODO https://groups.google.com/d/msg/ledger-cli/K9NBhNlVnYc/TDYDAWhOA5EJ
@@ -5770,27 +5770,31 @@ Specify the location of the init file. The default is @file{~/.ledgerrc}.
 Display the options in effect for this Ledger invocation, along with
 their values and the source of those values, for example:
 
-@smallexample @c command:A9349E4,with_input:03ACB97
-$ ledger --options bal --cleared
-@end smallexample
-
-@smallexample @c output:A9349E4
-===============================================================================
+@smallexample
+$ ledger --options bal --cleared -f ~/ledger/test/input/drewr3.dat
+===========================================================================
 [Global scope options]
-             --args-only                                             --args-only
 
 [Session scope options]
-                  --file = A9349E4.dat                               --file
+                  --file = ~/ledger/test/input/drewr3.dat      -f
+              --price-db = ~/FinanceData/PriceDB               $price-db
 
 [Report scope options]
-               --cleared                                             --cleared
-               --columns = 80                                        --columns
-                 --limit = cleared                                   --cleared
-===============================================================================
-              $15.00  Expenses
-              $12.45    Food
-               $2.55    Tips
-             $-15.00  Liabilities:MasterCard
+               --cleared                                       --cleared
+                 --color                                       ?normalize
+           --date-format = %Y/%m/%d                            $date-format
+                 --limit = cleared                             --cleared
+         --prepend-width = 0                                   ?normalize
+            --meta-width = 0                                   ?normalize
+            --date-width = 10                                  ?normalize
+           --payee-width = 21                                  ?normalize
+         --account-width = 21                                  ?normalize
+          --amount-width = 12                                  ?normalize
+           --total-width = 12                                  ?normalize
+===========================================================================
+            $ 775.00  Assets:Checking
+         $ -1,000.00  Equity:Opening Balances
+            $ 225.00  Expenses:Food:Groceries
 --------------------
                    0
 @end smallexample
