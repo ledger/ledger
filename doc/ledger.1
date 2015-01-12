@@ -405,10 +405,10 @@ Specify the format to use for the
 report
 .It Fl \-current Pq Fl c
 Shorthand for
-.Nm --limit 'date <= today' .
+.Fl \-limit Ar "'date <= today'" .
 .It Fl \-daily Pq Fl D
 Shorthand for
-.Nm --period Ar 'daily' .
+.Fl \-period Ar "daily" .
 .It Fl \-date Ar EXPR
 Transform the date of the transaction using
 .Ar EXPR .
@@ -621,7 +621,7 @@ Specify the width of the Meta column used for the
 options.
 .It Fl \-monthly Pq Fl M
 Shorthand for
-.Fl \-period Ar 'monthly' .
+.Fl \-period Ar "monthly" .
 .It Fl \-no-aliases
 Aliases are completely ignored.
 .It Fl \-no-color
@@ -728,8 +728,8 @@ Show primary dates for all calculations. Alias for
 .It Fl \-quantity Pq Fl O
 Report commodity totals (this is the default).
 .It Fl \-quarterly
-Synonym for
-\Fl \-period Ar 'quarterly' .
+Shorthand for
+.Fl \-period Ar "quarterly" .
 .It Fl \-raw
 In the
 .Nm print
@@ -851,13 +851,13 @@ ledger will produce memory trace information.
 .It Fl \-version
 Print version information and exit.
 .It Fl \-weekly Pq Fl W
-Synonym for
-.Fl \-period Ar 'weekly' .
+Shorthand for
+.Fl \-period Ar "weekly" .
 .It Fl \-wide Pq Fl w
 Assume 132 columns instead of 80.
 .It Fl \-yearly Pq Fl Y
-Synonym for
-.Fl \-period Ar 'yearly' .
+Shorthand for
+.Fl \-period Ar "yearly" .
 .El
 .Pp
 .Sh PRE-COMMANDS
