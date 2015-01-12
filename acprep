@@ -562,6 +562,7 @@ class PrepareBuild(CommandLineApp):
                             'libedit-dev',
                             'texinfo',
                             'lcov',
+                            'libutfcpp-dev',
                             'sloccount'
                         ] + BoostInfo().dependencies('ubuntu-trusty')
                     elif re.search('saucy', info):
@@ -599,6 +600,7 @@ class PrepareBuild(CommandLineApp):
                             'libedit-dev',
                             'texinfo',
                             'lcov',
+                            'libutfcpp-dev',
                             'sloccount'
                         ] + BoostInfo().dependencies('ubuntu-precise')
                     else:
