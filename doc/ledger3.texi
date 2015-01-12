@@ -8780,7 +8780,8 @@ and receive them from functions.
 Expressions can be onerous to type at the command-line, so there's
 a shorthand for reporting called ``query expressions''.  These add no
 functionality of their own, but are purely translated from the input
-string (cash) down to the corresponding value expression @samp{(account
+string  down to the corresponding value expression, for example the
+input string @samp{cash} is translated to @samp{(account
 =~ /cash/)}.  This is a convenience layer.
 
 @item Format strings
@@ -9471,6 +9472,81 @@ for example, issue @code{ctest -V -R "5FB"}.
 @node Writing Tests,  , Running Tests, Testing Framework
 @subsubsection Writing Tests
 
+To write a new test first decide to which broad category the test belongs:
+baseline or regression.  Depending on the category tests are named differently
+baseline tests are prefixed with their type, e.g. @samp{cmd}
+(@pxref{Baseline Test Types} for valid types), whereas regressions are either
+named after the bug id, e.g. @samp{1234.test} or uuid @samp{91416D62.test}.
+In case several test files belong to the same bug number the files by appending
+@code{_X} where @samp{X} is the number of the test, e.g. @samp{1234_1.test},
+@samp{1234_2.test}.
+
+A ledger test file contains three sections:
+
+@enumerate
+@item the journal data used for the test, this can be empty in certain
+scenarios
+@item the ledger commandline options used for the test
+@item the expected output
+@end enumerate
+
+Ledger has a special command directive for tests, everythin between
+@code{test} and @code{end test} is treated like a comment, so every
+Ledger test is automatically a valid Ledger file.
+The test scripts take the remainder of the @code{test} line and use
+it as commandline arguments for ledger, the text enclosed in @code{test}
+and @code{end test} is expected output, for example:
+
+@smallexample
+; This is the journal data
+year 2014
+12/24 (C0d3) Santa Claus
+  Assets:Bank         ¤ -150,00
+  Expenses:Presents
+
+; The following line specifies the ledger commandline options for this test and
+; everything between the next line and `end test` specifies the expected output
+test reg --payee=code
+14-Dec-24 C0d3                  Assets:Bank               ¤ -150,00    ¤ -150,00
+14-Dec-24 C0d3                  Expenses:Presents          ¤ 150,00            0
+end test
+@end smallexample
+
+When it is necessary to test for errors printed to @code{stderr} redirect
+the test output by adding @code{->} to the @code{test} line and match the
+expected error text in an @code{__ERROR__} section:
+
+@smallexample
+2014/01/01 * Acme Corporation
+  Assets:Bank:Checking      ¤  1.000,00
+  [Fund:Vacation]           ¤    300,00
+  [Fund:Studies]            ¤    600,00
+  Income:Salary             ¤ -2.000,00
+
+test reg ->
+__ERROR__
+While parsing file "$FILE", line 5:
+While balancing transaction from "$FILE", lines 1-5:
+> 2014/01/01 * Acme Corporation
+>   Assets:Bank:Checking      ¤  1.000,00
+>   [Fund:Vacation]           ¤    300,00
+>   [Fund:Studies]            ¤    600,00
+>   Income:Salary             ¤ -2.000,00
+Unbalanced remainder is:
+           ¤ -100,00
+Amount to balance against:
+          ¤ 1.900,00
+Error: Transaction does not balance
+end test
+@end smallexample
+
+A special @code{$FILE} variable can be used to match the journal filename
+used during the test.
+
+To add new tests to the test suite use the rebuild_cache option for the
+build tool you use, for example @code{make rebuild_cache}, now the
+new tests can be run as documented in @ref{Running Tests}.
+
 @node Major Changes from version 2.6, Example Journal File, Ledger for Developers, Top
 @chapter Major Changes from version 2.6
 
@@ -9635,6 +9711,21 @@ $ ledger register Checking --sort d -d 'd>[2011/04/01]' until 2011/05/25
 = /Tithe/
   (Liabilities:Tithe Owed)    -1.0
 @end smallexample
+
+@menu
+* Baseline Test Types::
+@end menu
+
+@node Baseline Test Types,  , Cookbook, Miscellaneous Notes
+@section Baseline Test Types
+
+@multitable @columnfractions .3 .7
+@headitem Type @tab Use
+@item @code{cmd} @tab Ledger commands like @code{register} or @code{balance}
+@item @code{dir} @tab ?
+@item @code{feat} @tab ?
+@item @code{opt} @tab Ledger options such as @option{--period} or @option{--format}
+@end multitable
 
 @node Concepts Index, Commands & Options Index, Miscellaneous Notes, Top
 @unnumbered Concepts Index
