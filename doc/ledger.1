@@ -50,7 +50,6 @@ Report in terms of cost basis, not amount or value.  This is the only form of
 report which is guaranteed to always balance to zero, when no
 .Ar report-query
 is specified.
-.It Fl \-collapse Pq Fl n
 Only show totals for the top-most accounts.
 .It Fl \-empty Pq Fl E
 Also show accounts whose total is zero.
@@ -330,7 +329,8 @@ report.
 .It Fl \-anon
 Anonymize registry output, mostly for sending in bug reports.
 .It Fl \-args-only
-.It Fl \-auto-match
+Ignore init files and environment variables for the ledger run.
+.\".It Fl \-auto-match
 .It Fl \-aux-date
 Show auxiliary dates for all calculations.
 Alias for
@@ -342,7 +342,7 @@ running totals.
 Specify the format to use for the
 .Nm balance
 report.
-.It Fl \-base
+.\".It Fl \-base
 .It Fl \-basis Pq Fl B
 Report the cost basis on all posting.
 Alias for
@@ -364,7 +364,7 @@ Specify the format to use for the
 report.
 .It Fl \-by-payee Pq Fl P
 Group postings in the register report by common payee names.
-.It Fl \-cache Ar FILE
+.\".It Fl \-cache Ar FILE
 .It Fl \-check-payees
 Enable strict and pedantic checking for payees as well as accounts,
 commodities and tags.
@@ -419,7 +419,7 @@ Specify the format ledger should use to print dates.
 Specify the width, in characters, of the date column in the
 .Nm register
 report.
-.It Fl \-day-break
+.\".It Fl \-day-break
 .It Fl \-dc
 Display register or balance in debit/credit format If you use
 .Fl \-dc
@@ -486,16 +486,17 @@ Related to the
 .Nm equity
 command.  Gives current account balances in the form of a register
 report.
-.It Fl \-exact
+.\".It Fl \-exact
 .It Fl \-exchange Ar COMMODITY Oo , COMM, ... Oc Pq Fl X
 Display values in terms of the given
 .Ar COMMODITY .
 The latest available price is used.
-.It Fl \-explicit
+.\".It Fl \-explicit
 .It Fl \-file Ar FILE
 Read
 .Ar FILE
 as a ledger file.
+.\".It Fl \-full-help
 .It Fl \-first Ar INT
 Print the first
 .Ar INT
@@ -559,8 +560,12 @@ Alias for
 Print a summary of all the options, and what they are used for.  This
 can be a handy way to remember which options do what.  This help screen
 is also printed if ledger is run without a command.
+.\".It Fl \-help-calc
+.\".It Fl \-help-comm
+.\".It Fl \-help-disp
 .It Fl \-immediate
 Instruct ledger to evaluate calculations immediately rather than lazily.
+.\".It Fl \-import
 .It Fl \-init-file Ar FILE
 Causes
 .Nm FILE
@@ -569,7 +574,11 @@ This file may not contain any postings, but it may contain option
 settings.  To specify options in the init file, use the same syntax as
 the command-line, but put each option on its own line.
 .It Fl \-inject Ar STR
-TODO
+Use
+.Ar STR
+amounts in calculations.  In case you know
+what amount a transaction should be, but the actual transaction has the
+wrong value you can use metadata STR to specify the expected amount.
 .It Fl \-input-date-format Ar DATEFMT
 Specify the input date format for journal entries.
 .It Fl \-invert
@@ -597,7 +606,7 @@ purchased.
 .It Fl \-lots
 Report the date and price at which each commodity was purchased in
 a balance report.
-.It Fl \-lots-actual
+.\".It Fl \-lots-actual
 .It Fl \-market Pq Fl V
 Use the latest market value for all commodities.
 .It Fl \-master-account Ar STR
@@ -616,6 +625,8 @@ Shorthand for
 .It Fl \-no-aliases
 Aliases are completely ignored.
 .It Fl \-no-color
+Suppress any color TTY output.
+.\".It Fl \-no-pager
 Suppress any color TTY output.
 .It Fl \-no-rounding
 Don't output
@@ -672,7 +683,7 @@ For a balance report only those transactions will be accounted in the
 final balances.
 .It Fl \-period-sort
 Sort the posting within transactions using the given value expression.
-.It Fl \-permissive
+.\".It Fl \-permissive
 .It Fl \-pivot Ar STR
 Produce a balance pivot report
 .Nm around
@@ -706,7 +717,11 @@ considered to be fresh enough.
 Alias for
 .Fl \-leeway Ar INT Pq Fl Z
 .It Fl \-prices-format Ar FMT
+Set the format for the
+.Nm prices
+report.
 .It Fl \-pricedb-format Ar FMT
+Set the format expected for the historical price file.
 .It Fl \-primary-date
 Show primary dates for all calculations. Alias for
 .Fl \-actual-dates
@@ -742,10 +757,10 @@ Show all postings in a transaction, similar to
 but show
 .Nm both sides
 of each transaction.
-.It Fl \-revalued
-.It Fl \-revalued-only
-.It Fl \-revalued-total Ar EXPR
-.It Fl \-rich-data
+.\".It Fl \-revalued
+.\".It Fl \-revalued-only
+.\".It Fl \-revalued-total Ar EXPR
+.\".It Fl \-rich-data
 .It Fl \-seed Ar INT
 Set the random seed to
 .Ar INT
@@ -756,7 +771,7 @@ command.  Used as part of development testing.
 Execute a ledger script.
 .It Fl \-sort Ar EXPR Pq Fl S
 Sort the register report based on the value expression given to sort.
-.It Fl \-sort-all
+.\".It Fl \-sort-all
 .It Fl \-sort-xacts
 Sort the posting within transactions using the given value expression.
 .It Fl \-start-of-week Ar STR
@@ -773,7 +788,10 @@ Report only the last
 .Ar INT
 entries. Only useful on a register report. Alias for
 .Fl \-last Ar INT
-.It Fl \-time-report
+.It Fl \-time-colon
+Display the value for a seconds based commodity as real hours and minutes,
+thus 8100 seconds will be displayed as 2:15h instead of 2.25h.
+.\".It Fl \-time-report
 .It Fl \-total Ar EXPR Pq Fl T
 Define a value expression used to calculate the total in reports.
 .It Fl \-total-data Pq Fl J
@@ -821,7 +839,7 @@ precision.
 Shows the values used by each tag when used in combination with the
 .Nm tags
 command.
-.It Fl \-value-expr Ar EXPR
+.\".It Fl \-value-expr Ar EXPR
 .It Fl \-verbose
 Print detailed information on the execution of Ledger.
 .It Fl \-verify
@@ -829,7 +847,7 @@ Enable additional assertions during run-time. This causes a significant
 slowdown.  When combined with
 .Fl \-debug Ar CODE
 ledger will produce memory trace information.
-.It Fl \-verify-memory
+.\".It Fl \-verify-memory
 .It Fl \-version
 Print version information and exit.
 .It Fl \-weekly Pq Fl W

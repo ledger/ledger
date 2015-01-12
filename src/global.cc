@@ -321,9 +321,6 @@ option_t<global_scope_t> * global_scope_t::lookup_option(const char * p)
     break;
   case 'h':
     OPT_(help);
-    else OPT(help_calc);
-    else OPT(help_comm);
-    else OPT(help_disp);
     break;
   case 'i':
     OPT(init_file_);

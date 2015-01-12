@@ -57,6 +57,9 @@ class RegressFile(object):
         in_error  = False
 
         line = self.fd.readline()
+        if not line:
+          print >>sys.stderr, "WARNING: Empty testfile detected: %s" % (self.filename)
+          return False
         #print "line =", line
         while line:
             if line.startswith("test "):

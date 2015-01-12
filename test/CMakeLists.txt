@@ -42,10 +42,15 @@ if (PYTHONINTERP_FOUND)
   foreach(TestFile ${${_class}_TESTS})
     get_filename_component(TestFile_Name ${TestFile} NAME_WE)
     add_test(NAME ${_class}Test_${TestFile_Name}
-      COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/DocTests.py
+      COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/${_class}.py
       --ledger $<TARGET_FILE:ledger> --file ${TestFile})
     set_target_properties(check PROPERTIES DEPENDS ${_class}Test_${TestFile_Name})
   endforeach()
+
+  set(_class CheckTests)
+  add_test(NAME ${_class}
+    COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/${_class}.py
+    --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR})
 endif()
 
 ### CMakeLists.txt ends here

@@ -79,6 +79,8 @@ def generation_test(seed):
     p_cout_bal.stdin.close()
 
     cout_lines = harness.readlines(p_cout_bal.stdout)
+    if len(cout_lines) == 0:
+      return False
     #norm_cout_lines = [normalize(line) for line in cout_lines]
 
     if not harness.wait(p_cout_bal, msg=("Stdout balance for seed %d failed:" % seed)):
@@ -89,6 +91,8 @@ def generation_test(seed):
     p_print_bal.stdin.close()
 
     print_lines = harness.readlines(p_print_bal.stdout)
+    if len(print_lines) == 0:
+      return False
 
     if not harness.wait(p_print_bal, msg=("Print balance for seed %d failed:" % seed)):
         return False
