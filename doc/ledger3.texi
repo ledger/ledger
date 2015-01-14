@@ -9617,7 +9617,7 @@ to the main body of the documentation.
 
 @smallexample
 $ ledger --group-by "tag('trip')" bal
-$ legder reg --sort "tag('foo')" %foo
+$ ledger reg --sort "tag('foo')" %foo
 $ ledger cleared VWCU NFCU Tithe Misentry
 $ ledger register Joint --uncleared
 $ ledger register Checking --sort d -d 'd>[2011/04/01]' until 2011/05/25
