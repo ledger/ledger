@@ -216,9 +216,9 @@ Group postings by common payee names.
 Group postings by day.
 .It Fl \-weekly Pq Fl W
 Group postings by week (starting on Sundays).
-.It Fl \-start-of-week Ar day-name
-Set the start of each grouped way to the given
-.Ar day-name .
+.It Fl \-start-of-week Ar day
+Set the start of each report grouped by week to the given
+.Ar day .
 .It Fl \-monthly Pq Fl M
 Group postings by month.
 .It Fl \-quarterly
@@ -777,8 +777,9 @@ Sort the posting within transactions using the given value expression.
 .It Fl \-start-of-week Ar STR
 Tell ledger to use a particular day of the week to start its "weekly"
 summary.
-.Fl \-start-of-week=1
-specifies Monday as the start of the week.
+.Ar STR
+can be day names, their abbreviations like "Mon", or the weekday number
+starting at 0 for Sunday.
 .It Fl \-strict
 Accounts, tags or commodities not previously declared will cause warnings.
 .It Fl \-subtotal Pq Fl s
