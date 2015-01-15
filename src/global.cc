@@ -130,7 +130,7 @@ void global_scope_t::read_init()
 {
   // if specified on the command line init_file_ is filled in 
   // global_scope_t::handle_debug_options.  If it was specified on the command line
-  // fail is the file doesn't exist. If no init file was specified
+  // fail if the file doesn't exist. If no init file was specified
   // on the command-line then try the default values, but don't fail if there
   // isn't one.
   path init_file;
