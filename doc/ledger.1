@@ -1,5 +1,6 @@
 .Dd March 23, 2012
-.Dt ledger 1
+.Dt LEDGER 1
+.Os
 .Sh NAME
 .Nm ledger
 .Nd Command-line, double-entry account reporting tool
@@ -13,7 +14,6 @@ Ledger is a command-line accounting tool based on the power and completeness
 of double-entry accounting.  It is only a reporting tool, which means it never
 modifies your data files, but it does offers a large selection of reports, and
 different ways to customize them to your liking.
-.Pp
 .Sh COMMANDS
 Ledger accepts several top-level commands, each of which generates a different
 kind of basic report.  Most of them accept a
@@ -37,13 +37,11 @@ The following is a complete list of reporting commands accepted by Ledger:
 Lists all accounts for postings matching the
 .Ar report-query .
 .El
-.Pp
 .Bl -tag -width balance
 .It Nm balance Oo Ar report-query Oc
 Produces a balance report showing totals for all matching accounts, and
 aggregate totals for parents of those accounts.  Options most commonly used
 with this command are:
-.Pp
 .Bl -tag -compact -width "--collapse (-n)"
 .It Fl \-basis Pq Fl B
 Report in terms of cost basis, not amount or value.  This is the only form of
@@ -275,9 +273,7 @@ Outputs data relating to the current report in XML format.  It includes all
 accounts and commodities involved in the report, plus the postings and the
 transactions they are contained in.  See the manual for more information.
 .El
-.Pp
 .Sh OPTIONS
-.Pp
 .Bl -tag -width -indent
 .It Fl \-abbrev-len Ar INT
 Set the minimum length an account can be abbreviated to if it doesn't
@@ -860,13 +856,11 @@ Assume 132 columns instead of 80.
 Shorthand for
 .Fl \-period Ar "yearly" .
 .El
-.Pp
 .Sh PRE-COMMANDS
 Pre-commands are useful when you aren't sure how a command or option
 will work. The difference between a pre-command and a regular command
 is that pre-commands ignore the journal data file completely, nor is
 the user's init file read.
-.Pp
 .Bl -tag -width -indent
 .It Nm args / query
 Evaluate the given arguments and report how Ledger interprets it against
@@ -890,7 +884,6 @@ Shows the insertion template that the
 .Nm xact
 sub-command generates.  This is a debugging command.
 .El
-.Pp
 .Sh QUERIES
 The syntax for reporting queries can get somewhat complex.  It is a series of
 query terms with an implicit OR operator between them.  The following terms
@@ -930,7 +923,6 @@ interpret parentheses, you should always escape them:
 .Pp
 .Dl ledger bal \e\\\&( assets or liab \e\\\&) and not food
 .El
-.Pp
 .Sh EXPRESSIONS
 .Bl -tag -width "partial_account"
 .It Nm account
@@ -1000,11 +992,8 @@ for example:
 .It Nm virtual
 .It Nm xact
 .El
-.Pp
 .Sh ENTRIES
-.Pp
 .Sh FORMATS
-.Pp
 .Sh DEBUG COMMANDS
 In addition to the regular reporting commands, Ledger also accepts several
 debug commands:
@@ -1050,9 +1039,7 @@ Accepts a
 and displays information about how it was parsed.  See the section on
 .Sx DRAFTS .
 .El
-.Pp
 .Sh FILES
-.TP 15
 ~/.ledgerrc
 Your personal ledger initializations.
 .Sh SEE ALSO
