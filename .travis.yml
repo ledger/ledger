@@ -24,7 +24,7 @@ install:
   - sudo apt-get install -qq libboost1.55 libgmp-dev libmpfr-dev libeditline-dev
 
 before_script:
-  - ./acprep opt make --python
+  - ./acprep debug make --python
 
 script:
   - ./acprep check --jobs $(nproc) -- --output-on-failure
