@@ -139,6 +139,7 @@ MOMENT is an encoded date"
                            (string-to-number (match-string 2 date)))))
     (ledger-xact-find-slot encoded-date)
     (insert transaction "\n")
+    (beginning-of-line -1)
     (ledger-navigate-beginning-of-xact)
     (re-search-forward ledger-iso-date-regexp)
     (replace-match date)
