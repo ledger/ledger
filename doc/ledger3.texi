@@ -9482,6 +9482,15 @@ In case several test files belong to the same bug number the files by appending
 @code{_X} where @samp{X} is the number of the test, e.g. @samp{1234_1.test},
 @samp{1234_2.test}.
 
+@anchor{Baseline Test Types}
+@multitable @columnfractions .3 .7
+@headitem Type @tab Use
+@item @code{cmd} @tab Ledger commands like @code{register} or @code{balance}
+@item @code{dir} @tab ?
+@item @code{feat} @tab ?
+@item @code{opt} @tab Ledger options such as @option{--period} or @option{--format}
+@end multitable
+
 A ledger test file contains three sections:
 
 @enumerate
@@ -9712,21 +9721,6 @@ $ ledger register Checking --sort d -d 'd>[2011/04/01]' until 2011/05/25
 = /Tithe/
   (Liabilities:Tithe Owed)    -1.0
 @end smallexample
-
-@menu
-* Baseline Test Types::
-@end menu
-
-@node Baseline Test Types,  , Cookbook, Miscellaneous Notes
-@section Baseline Test Types
-
-@multitable @columnfractions .3 .7
-@headitem Type @tab Use
-@item @code{cmd} @tab Ledger commands like @code{register} or @code{balance}
-@item @code{dir} @tab ?
-@item @code{feat} @tab ?
-@item @code{opt} @tab Ledger options such as @option{--period} or @option{--format}
-@end multitable
 
 @node Concepts Index, Commands & Options Index, Miscellaneous Notes, Top
 @unnumbered Concepts Index
