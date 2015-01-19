@@ -956,6 +956,7 @@ Character position where entry for posting begins.
 Return the transaction code, the string between the parenthesis after the date.
 .It Nm comment
 .It Nm commodity
+Return the commodity of the posting amount.
 .It Nm cost
 .It Nm count
 .It Nm date
@@ -970,7 +971,14 @@ Line number where entry for posting ends.
 Character position where entry for posting ends.
 .It Nm filename
 The name of the ledger data file from whence the posting came.
-.It Nm format_date
+.It Fn format_date date format
+Return the
+.Ar date
+as a string using
+.Ar format .
+See
+.Xr strftime 3
+for format string details.
 .It Nm get_at
 .It Nm has_meta
 .It Nm has_tag
@@ -983,11 +991,19 @@ The name of the ledger data file from whence the posting came.
 .It Nm options
 .It Nm partial_account
 .It Nm payee
+.It Fn percent value_a value_b
+Return the percentage of
+.Ar value_a
+in relation to
+.Ar value_b .
 .It Nm pending
 .It Nm post
 .It Nm print
 .It Nm quantity
-.It Nm quoted
+.It Fn quoted expression
+Surround
+.Ar expression
+with double-quotes.
 .It Nm real
 .It Nm rounded
 .It Nm scrub
