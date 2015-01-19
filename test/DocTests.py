@@ -4,6 +4,7 @@
 import os
 import re
 import sys
+import shlex
 import hashlib
 import argparse
 import subprocess
@@ -33,6 +34,7 @@ class DocTests:
       line = self.file.readline()
       self.current_line += 1
       if len(line) <= 0 or endexample.match(line): break
+      # Replace special texinfo character sequences with their ASCII counterpart
       example += line.replace("@@","@").replace("@{","{").replace("@}","}")
     return example
 
@@ -111,11 +113,11 @@ class DocTests:
       else:
         return None
 
-    command = command.rstrip().split()
+    command = shlex.split(command)
     if command[0] == '$': command.remove('$')
     index = command.index('ledger')
     command[index] = self.ledger
-    for i,argument in enumerate('--args-only --columns 80'.split()):
+    for i,argument in enumerate(shlex.split('--args-only --columns 80')):
       command.insert(index+i+1, argument)
 
     try:
