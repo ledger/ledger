@@ -2213,7 +2213,7 @@ until an @samp{end apply account} directive was found.
 Define an alias for an account name.  If you have a deeply nested tree
 of accounts, it may be convenient to define an alias, for example:
 
-@smallexample @c input:validate
+@smallexample @c input:94A99E8
 alias Dining=Expenses:Entertainment:Dining
 alias Checking=Assets:Credit Union:Joint Checking Account
 
@@ -2226,11 +2226,11 @@ The aliases are only in effect for transactions read in after the alias
 is defined and are affected by @code{account} directives that precede
 them.
 
-@smallexample @c command:validate
+@smallexample @c command:94A99E8
 $ ledger bal --no-total ^Exp
 @end smallexample
 
-@smallexample
+@smallexample @c output:94A99E8
               $10.00  Expenses:Entertainment:Dining
 @end smallexample
 
@@ -2238,7 +2238,7 @@ With the option @option{--recursive-aliases}, aliases can refer to other
 aliases, the following example produces exactly the same transactions
 and account names as the preceding one:
 
-@smallexample @c input:validate
+@smallexample @c input:83E1FB3
 alias Entertainment=Expenses:Entertainment
 alias Dining=Entertainment:Dining
 alias Checking=Assets:Credit Union:Joint Checking Account
@@ -2248,11 +2248,11 @@ alias Checking=Assets:Credit Union:Joint Checking Account
   Checking
 @end smallexample
 
-@smallexample @c command:validate
+@smallexample @c command:83E1FB3
 $ ledger balance --no-total --recursive-aliases ^Exp
 @end smallexample
 
-@smallexample
+@smallexample @c output:83E1FB3
               $10.00  Expenses:Entertainment:Dining
 @end smallexample
 
@@ -3418,10 +3418,10 @@ double braces price form is a shorthand only.
 
 Plus, it comes with dangers.  This works fine:
 
-@smallexample
+@smallexample @c input:validate
 2012-04-10 My Broker
     Assets:Brokerage            10 AAPL @@ $50.00
-    Assets:Brokerage:Cash       $750.00
+    Assets:Brokerage:Cash      $-500.00
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
@@ -7586,7 +7586,7 @@ makes this easy to do, using the same periodic transactions as are used
 for budgeting.  An example forecast report can be generated with:
 
 @smallexample @c command:validate
-$ ledger --forecast "T>@{\$-500.00@}" register ^assets ^liabilities
+$ ledger --file drewr3.dat --forecast "T>@{\$-500.00@}" register ^assets ^liabilities
 @end smallexample
 
 This report continues outputting postings until the running total
