@@ -9677,9 +9677,10 @@ to the main body of the documentation.
 
 @menu
 * Cookbook::
+* Baseline Test Types::
 @end menu
 
-@node Cookbook,  , Miscellaneous Notes, Miscellaneous Notes
+@node Cookbook, Baseline Test Types, Miscellaneous Notes, Miscellaneous Notes
 @section Cookbook
 
 @menu
