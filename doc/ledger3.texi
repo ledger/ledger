@@ -8541,7 +8541,7 @@ generated the posting.
 @table @code
 
 @item filename
-the name of ledger the data file from whence the posting came,
+the name of the ledger data file from whence the posting came,
 abbreviated @samp{S}.
 
 @item beg_pos
@@ -8557,7 +8557,7 @@ line number in @code{filename} where entry for posting begins,
 abbreviated @samp{b}.
 
 @item end_line
-line number in @code{filename} where posting's entry for posting ends,
+line number in @code{filename} where entry for posting ends,
 abbreviated @samp{e}.
 
 @end table
