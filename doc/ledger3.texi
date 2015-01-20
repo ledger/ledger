@@ -161,7 +161,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @node Top, Introduction to Ledger, (dir), (dir)
 @top Overview
 
-Ledger is a command line accounting tool that provides double-entry
+Ledger is a command-line accounting tool that provides double-entry
 accounting based on a text journal.  It provides no bells or whistles,
 and returns the user to the days before user interfaces were even a
 twinkling in their father's CRT.
@@ -176,7 +176,7 @@ twinkling in their father's CRT.
 * Transactions::
 * Building Reports::
 * Reporting Commands::
-* Command-line Syntax::
+* Command-Line Syntax::
 * Budgeting and Forecasting::
 * Time Keeping::
 * Value Expressions::
@@ -384,7 +384,7 @@ $ ./configure && make install
 @findex help
 
 Ledger has a complete online help system based on GNU Info.  This
-manual can be searched directly from the command line using the
+manual can be searched directly from the command-line using the
 following options: @code{ledger --help} brings up this entire manual in
 your TTY.
 
@@ -424,17 +424,17 @@ If you would rather start with your own journal right away please
 * Balance Report::
 * Register Report::
 * Cleared Report::
-* Using the Windows Command Line::
+* Using the Windows Command-Line::
 @end menu
 
-Please note that as a command line program, Ledger is controlled from
+Please note that as a command-line program, Ledger is controlled from
 your shell.  There are several different command shells that all
 behave slightly differently with respect to some special characters.
 In particular, the ``bash'' shell will interpret @samp{$} signs
 differently than ledger and they must be escaped to reach the actual
 program.  Another example is ``zsh'', which will interpret @samp{^}
 differently than ledger expects.  In all cases that follow you should
-take that into account when entering the command line arguments as given.
+take that into account when entering the command-line arguments as given.
 There are too many variations between shells to give concrete examples
 for each.
 
@@ -596,7 +596,7 @@ $ ledger -f drewr3.dat register payee "Organic"
                                 Assets:Checking           $ -225.00            0
 @end smallexample
 
-@node Cleared Report, Using the Windows Command Line, Register Report, Run a Few Reports
+@node Cleared Report, Using the Windows Command-Line, Register Report, Run a Few Reports
 @subsection Cleared Report
 @cindex cleared report
 @findex cleared
@@ -639,8 +639,8 @@ $ ledger -f drewr3.dat cleared
 The first column shows the outstanding balance, the second column
 shows the ``cleared'' balance.
 
-@node Using the Windows Command Line,  , Cleared Report, Run a Few Reports
-@subsection Using the Windows Command Line
+@node Using the Windows Command-Line,  , Cleared Report, Run a Few Reports
+@subsection Using the Windows Command-Line
 @cindex windows cmd.exe
 @cindex currency symbol display on windows
 
@@ -1076,10 +1076,10 @@ the left value's commodity.  The result of this command might be:
 
 @menu
 * Commodity price histories::
-* Commodity equivalencies::
+* Commodity equivalences::
 @end menu
 
-@node Commodity price histories, Commodity equivalencies, Commodities and Currencies, Commodities and Currencies
+@node Commodity price histories, Commodity equivalences, Commodities and Currencies, Commodities and Currencies
 @subsection Commodity price histories
 
 Whenever a commodity is purchased using a different commodity (such as
@@ -1101,13 +1101,13 @@ its various reports.  It will always report balances in terms of the
 commodity total, rather than the current value of those commodities.
 To enable pricing reports, use one of the commodity reporting options.
 
-@node Commodity equivalencies,  , Commodity price histories, Commodities and Currencies
-@subsection Commodity equivalencies
+@node Commodity equivalences,  , Commodity price histories, Commodities and Currencies
+@subsection Commodity equivalences
 
 Sometimes a commodity has several forms which are all equivalent.  An
 example of this is time.  Whether tracked in terms of minutes, hours
 or days, it should be possible to convert between the various forms.
-Doing this requires the use of commodity equivalencies.
+Doing this requires the use of commodity equivalences.
 
 For example, you might have the following two postings, one which
 transfers an hour of time into a @samp{Billable} account, and another
@@ -1137,8 +1137,8 @@ $ ledger --no-total balance Billable Project
 
 This example works because ledger already knows how to handle seconds,
 minutes and hours, as part of its time tracking support.  Defining
-other equivalencies is simple.  The following is an example that
-creates data equivalencies, helpful for tracking bytes, kilobytes,
+other equivalences is simple.  The following is an example that
+creates data equivalences, helpful for tracking bytes, kilobytes,
 megabytes, and more:
 
 @smallexample @c input:validate
@@ -1153,7 +1153,7 @@ and a default precision, with a certain quantity of another commodity.
 In the above example, kilobytes are reported with two decimal places
 of precision and each kilobyte is equal to 1024 bytes.
 
-Equivalency chains can be as long as desired.  Whenever a commodity
+Equivalence chains can be as long as desired.  Whenever a commodity
 would report as a decimal amount (less than @samp{1.00}), the next
 smallest commodity is used.  If a commodity could be reported in terms
 of a higher commodity without resulting to a partial fraction, then
@@ -3607,7 +3607,7 @@ after modifying them to suit your needs.
 An automated transaction is a special kind of transaction which adds
 its postings to other transactions any time one of that other
 transactions' postings matches its predicate.  The predicate uses the
-same query syntax as the Ledger command line.
+same query syntax as the Ledger command-line.
 
 Consider this posting:
 
@@ -4410,7 +4410,7 @@ transactions @emph{displayed} to just those since last February, even
 though those transactions from before will be computed as part of the
 balance.
 
-@node Reporting Commands, Command-line Syntax, Building Reports, Top
+@node Reporting Commands, Command-Line Syntax, Building Reports, Top
 @chapter Reporting Commands
 
 @menu
@@ -4665,7 +4665,7 @@ a very naive but still useful application of the Babel system:
 The following are some entries and I have requested that ledger be run
 to generate a balance on the accounts.  I could have asked for
 a register or, in fact, anything at all the ledger can do through
-command line options.
+command-line options.
 
 #+begin_src ledger :cmdline bal :results value
 2010/01/01 * Starting balance
@@ -4809,7 +4809,7 @@ evaluating this code block (@kbd{C-c C-c}) would be:
 
 If, instead, you wished to generate a register of all the transactions,
 you would change the @code{#+begin_src} line for the code block to
-include the required command line option:
+include the required command-line option:
 
 @smallexample
 #+begin_src ledger :cmdline reg
@@ -5311,17 +5311,17 @@ FIX THIS ENTRY @c FIXME thdox
 
 FIX THIS ENTRY @c FIXME thdox
 
-@node Command-line Syntax, Budgeting and Forecasting, Reporting Commands, Top
-@chapter Command-line Syntax
+@node Command-Line Syntax, Budgeting and Forecasting, Reporting Commands, Top
+@chapter Command-Line Syntax
 
 @menu
 * Basic Usage::
-* Command Line Quick Reference::
+* Command-Line Quick Reference::
 * Detailed Option Description::
 * Period Expressions::
 @end menu
 
-@node Basic Usage, Command Line Quick Reference, Command-line Syntax, Command-line Syntax
+@node Basic Usage, Command-Line Quick Reference, Command-Line Syntax, Command-Line Syntax
 @section Basic Usage
 
 This chapter describes Ledger's features and options. You may wish to
@@ -5365,8 +5365,8 @@ There are many, many command options available with the @file{ledger}
 program, and it takes a while to master them.  However, none of them are
 required to use the basic reporting commands.
 
-@node Command Line Quick Reference, Detailed Option Description, Basic Usage, Command-line Syntax
-@section Command Line Quick Reference
+@node Command-Line Quick Reference, Detailed Option Description, Basic Usage, Command-Line Syntax
+@section Command-Line Quick Reference
 
 @menu
 * Basic Reporting Commands::
@@ -5378,7 +5378,7 @@ required to use the basic reporting commands.
 * Commodity Reporting::
 @end menu
 
-@node Basic Reporting Commands, Basic Options, Command Line Quick Reference, Command Line Quick Reference
+@node Basic Reporting Commands, Basic Options, Command-Line Quick Reference, Command-Line Quick Reference
 @subsection Basic Reporting Commands
 
 @ftable @code
@@ -5420,7 +5420,7 @@ Generate transactions based on previous postings.
 
 @end ftable
 
-@node Basic Options, Report Filtering, Basic Reporting Commands, Command Line Quick Reference
+@node Basic Options, Report Filtering, Basic Reporting Commands, Command-Line Quick Reference
 @subsection Basic Options
 
 @ftable @code
@@ -5451,7 +5451,7 @@ Specify default account @var{STR} for QIF file postings.
 
 @end ftable
 
-@node Report Filtering, Error Checking and Calculation Options, Basic Options, Command Line Quick Reference
+@node Report Filtering, Error Checking and Calculation Options, Basic Options, Command-Line Quick Reference
 @subsection Report Filtering
 
 @ftable @code
@@ -5526,7 +5526,7 @@ Change the value expression used for ``totals'' column in
 
 @end ftable
 
-@node Error Checking and Calculation Options, Output Customization, Report Filtering, Command Line Quick Reference
+@node Error Checking and Calculation Options, Output Customization, Report Filtering, Command-Line Quick Reference
 @subsection Error Checking and Calculation Options
 
 @ftable @code
@@ -5548,7 +5548,7 @@ Instruct ledger to evaluate calculations immediately rather than lazily.
 
 @end ftable
 
-@node Output Customization, Grouping Options, Error Checking and Calculation Options, Command Line Quick Reference
+@node Output Customization, Grouping Options, Error Checking and Calculation Options, Command-Line Quick Reference
 @subsection Output Customization
 
 @ftable @code
@@ -5652,7 +5652,7 @@ for filing bug reports.
 
 @end ftable
 
-@node Grouping Options, Commodity Reporting, Output Customization, Command Line Quick Reference
+@node Grouping Options, Commodity Reporting, Output Customization, Command-Line Quick Reference
 @subsection Grouping Options
 
 @ftable @code
@@ -5689,7 +5689,7 @@ Group postings together, similar to the balance report.
 
 @end ftable
 
-@node Commodity Reporting,  , Grouping Options, Command Line Quick Reference
+@node Commodity Reporting,  , Grouping Options, Command-Line Quick Reference
 @subsection Commodity Reporting
 
 @ftable @code
@@ -5726,7 +5726,7 @@ Report net gain or loss for commodities that have a price history.
 
 @end ftable
 
-@node Detailed Option Description, Period Expressions, Command Line Quick Reference, Command-line Syntax
+@node Detailed Option Description, Period Expressions, Command-Line Quick Reference, Command-Line Syntax
 @section Detailed Option Description
 
 @menu
@@ -5799,7 +5799,7 @@ $ ledger --options bal --cleared
 
 @noindent
 For the source column, a value starting with a @samp{-} or @samp{--}
-indicated the source was a command line argument.  If the entry starts
+indicated the source was a command-line argument.  If the entry starts
 with a @samp{$}, the source was an environment variable. If the source
 is @code{?normalize} the value was set internally by ledger, in
 a function called @code{normalize_options}.
@@ -6274,7 +6274,7 @@ available price is used.  The syntax
 in terms of @var{COMMODITY2} using the latest available price, but
 will not automatically covert any other commodities to
 @var{COMMODITY2}.  Multiple @option{-X} arguments may be used on a
-single command line (as in
+single command-line (as in
 @option{-X COMMODITY1:COMMODITY2 -X COMMODITY3:COMMODITY2}),
 which is particularly useful for situations where many prices are
 available for reporting in terms of @var{COMMODITY2}, but only a few
@@ -7391,7 +7391,7 @@ option settings in the file @file{~/.ledgerrc}, for example:
 --pager /bin/cat
 @end smallexample
 
-@node Period Expressions,  , Detailed Option Description, Command-line Syntax
+@node Period Expressions,  , Detailed Option Description, Command-Line Syntax
 @section Period Expressions
 @c TODO use @var below
 
@@ -7479,7 +7479,7 @@ last oct
 weekly last august
 @end smallexample
 
-@node Budgeting and Forecasting, Time Keeping, Command-line Syntax, Top
+@node Budgeting and Forecasting, Time Keeping, Command-Line Syntax, Top
 @chapter Budgeting and Forecasting
 
 @menu
@@ -8056,7 +8056,7 @@ account or posting in custom ways.
 
 There are several additional flags that allow you to define formats
 for specific reports. These are useful to define in your configuration
-file and will allow you to run ledger reports from the command line
+file and will allow you to run ledger reports from the command-line
 without having to enter a new format for each command.
 
 @itemize
@@ -8244,7 +8244,7 @@ functions are described later):
 @subsection Field Widths
 
 The following codes return the width allocated for the specific fields.
-The defaults can be changed using the corresponding command line
+The defaults can be changed using the corresponding command-line
 options:
 
 @itemize
@@ -8492,7 +8492,7 @@ Surrounds the string representing value with ANSI codes to give it
 @item justify(value, first_width, latter_width, right_justify, colorize)
 Right or left justify the string representing @code{value}.  The width
 of the field in the first line is given by @code{first_width}.  For
-subsequent lines the width is given by @code{latterwidth}.  If
+subsequent lines the width is given by @code{latter_width}.  If
 @code{latter_width=-1}, then @code{first_width} is use for all lines.
 If @code{right_justify=true} then the field is right justify within
 the width of the field. If it is @code{false}, then the field is left
@@ -9233,7 +9233,7 @@ This command simply echoes its argument back to the output.
 
 Forces ledger to reload any journal files.  This function exists to
 support external programs controlling a running ledger process and does
-nothing for a command line user.
+nothing for a command-line user.
 
 @node @command{source}, Debug Options, @command{reload}, Developer Commands
 @subsection @command{source}
@@ -9487,15 +9487,15 @@ A ledger test file contains three sections:
 @enumerate
 @item the journal data used for the test, this can be empty in certain
 scenarios
-@item the ledger commandline options used for the test
+@item the ledger command-line options used for the test
 @item the expected output
 @end enumerate
 
-Ledger has a special command directive for tests, everythin between
+Ledger has a special command directive for tests, everything between
 @code{test} and @code{end test} is treated like a comment, so every
 Ledger test is automatically a valid Ledger file.
 The test scripts take the remainder of the @code{test} line and use
-it as commandline arguments for ledger, the text enclosed in @code{test}
+it as command-line arguments for ledger, the text enclosed in @code{test}
 and @code{end test} is expected output, for example:
 
 @smallexample
@@ -9505,7 +9505,7 @@ year 2014
   Assets:Bank         ¤ -150,00
   Expenses:Presents
 
-; The following line specifies the ledger commandline options for this test and
+; The following line specifies the ledger command-line options for this test and
 ; everything between the next line and `end test` specifies the expected output
 test reg --payee=code
 14-Dec-24 C0d3                  Assets:Bank               ¤ -150,00    ¤ -150,00
@@ -9678,9 +9678,10 @@ to the main body of the documentation.
 
 @menu
 * Cookbook::
+* Baseline Test Types::
 @end menu
 
-@node Cookbook,  , Miscellaneous Notes, Miscellaneous Notes
+@node Cookbook, Baseline Test Types, Miscellaneous Notes, Miscellaneous Notes
 @section Cookbook
 
 @menu
