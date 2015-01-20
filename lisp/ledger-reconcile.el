@@ -79,7 +79,7 @@ reconcile-finish will mark all pending posting cleared."
 	"Default header string for the reconcile buffer.
 
 If non-nil, the name of the account being reconciled will be substituted
-	into the '%s'.  If nil, no header willbe displayed."
+	into the '%s'.  If nil, no header will be displayed."
 	:type 'string
 	:group 'ledger-reconcile)
 
@@ -387,7 +387,8 @@ Return a count of the uncleared transactions."
 				 (fmt (ledger-reconcile-compile-format-string ledger-reconcile-buffer-line-format)))
     (if (and ledger-success (> (length xacts) 0))
         (progn
-					(insert (format ledger-reconcile-buffer-header account))
+					(if ledger-reconcile-buffer-header
+							(insert (format ledger-reconcile-buffer-header account)))
           (dolist (xact xacts)
             (ledger-reconcile-format-xact xact fmt))
           (goto-char (point-max))
