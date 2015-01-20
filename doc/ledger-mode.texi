@@ -367,7 +367,7 @@ some additional meaning to the states:
 No state.  This is equivalent to sticking a check in the mail.  It has
 been obligated, but not been cashed by the recipient.  It could also
 apply to credit/debit card transactions that have not been cleared into
-your account balance.  You bank may call these transactions ``pending'',
+your account balance.  You bank may call these transactions @emph{pending},
 but Ledger-mode uses a slightly different meaning.
 
 @item Pending.
@@ -550,7 +550,7 @@ about.  You can get this from a monthly statement, or from checking your
 on-line transaction history.  It also helps immensely to know the final
 cleared balance you are aiming for.
 
-Use menu @samp{Reconcile Account} or @kbd{C-c C-r} and enter the account
+Use menu @samp{Reconcile Account} or keyboard shortcut @kbd{C-c C-r} and enter the account
 you wish to reconcile in the Minibuffer.  Ledger-mode is not particular
 about what you enter for the account.  You can leave it blank and
 @file{*Reconcile*} buffer will show you @emph{all} uncleared
@@ -589,7 +589,7 @@ difference from your target is zero.
 If you find errors during reconciliation.  You can visit the transaction
 under point in the @file{*Reconcile*} buffer by hitting the @kbd{RET}
 key.  This will take you to the transaction in the Ledger buffer.  When
-you have finished editing the transaction saving the buffer will
+you have finished editing the transaction, saving the buffer will
 automatically return you to the @file{*Reconcile*} buffer and you can
 mark the transaction if appropriate.
 
@@ -599,7 +599,7 @@ mark the transaction if appropriate.
 
 Once you have marked all transactions as pending and the cleared balance
 is correct.  Finish the reconciliation by typing @kbd{C-c C-c}.  This
-marks all pending transaction as cleared and saves the ledger buffer.
+marks all pending transactions as cleared and saves the ledger buffer.
 
 @node Adding and Deleting Transactions during Reconciliation, Changing Reconciliation Account, Finalize Reconciliation, The Reconcile Buffer
 @section Adding and Deleting Transactions during Reconciliation
@@ -621,7 +621,7 @@ Typing @kbd{d} will delete the transaction under point in the
 
 You can conveniently switch the account being reconciled by typing
 @kbd{g}, and entering a new account to reconcile.  This simply restarts
-the reconcile process. Any transactions that were marked `pending' in
+the reconcile process. Any transactions that were marked @emph{pending} in
 the ledger buffer are left in that state when the account is switched.
 
 @node Changing Reconciliation Target,  , Changing Reconciliation Account, The Reconcile Buffer
@@ -795,7 +795,7 @@ maintain the proper mathematical sense.
 @chapter Scheduling Transactions
 
 The Ledger program provides for automating transactions but these
-transaction aren't ``real'', they only exist inside a ledger session and
+transaction aren't @emph{real}, they only exist inside a ledger session and
 are not reflected in the actual data file.  Many transactions are very
 repetitive, but may vary slightly in the date they occur on, or the
 amount.  Some transactions are weekly, monthly, quarterly or annually.
