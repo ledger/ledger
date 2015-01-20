@@ -88,9 +88,22 @@ If non-nil, the name of the account being reconciled will be substituted
 Available fields are date, status, code, payee, account,
 amount.  The format for each field is %WIDTH(FIELD), WIDTH can be
 preced by a minus sign which mean to left justify and pad the
-field."
-	:type 'string
-	:group 'ledger-reconcile)
+field.  WIDTH is the minimum number of characters to display;
+if string is longer, it is not truncated unless
+ledger-reconcile-buffer-payee-max-chars or
+ledger-reconcile-buffer-account-max-chars is defined."
+  :type 'string
+  :group 'ledger-reconcile)
+
+(defcustom ledger-reconcile-buffer-payee-max-chars -1
+  "If positive, truncate payee name right side to max number of characters."
+  :type 'integer
+  :group 'ledger-reconcile)
+
+(defcustom ledger-reconcile-buffer-account-max-chars -1
+  "If positive, truncate account name left side to max number of characters."
+  :type 'integer
+  :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-sort-key "(0)"
   "Default key for sorting reconcile buffer.
@@ -104,6 +117,41 @@ ledger file order, use '(0)'."
   "If t, prompt for effective date when clearing transactions during reconciliation."
   :type 'boolean
   :group 'ledger-reconcile)
+
+;; s-functions below are copied from Magnars' s.el
+(defun s-pad-left (len padding s)
+  "If S is shorter than LEN, pad it with PADDING on the left."
+  (let ((extra (max 0 (- len (length s)))))
+    (concat (make-string extra (string-to-char padding))
+	    s)))
+(defun s-pad-right (len padding s)
+  "If S is shorter than LEN, pad it with PADDING on the right."
+  (let ((extra (max 0 (- len (length s)))))
+    (concat s
+	    (make-string extra (string-to-char padding)))))
+(defun s-left (len s)
+  "Return up to the LEN first chars of S."
+  (if (> (length s) len)
+      (substring s 0 len)
+    s))
+(defun s-right (len s)
+  "Return up to the LEN last chars of S."
+  (let ((l (length s)))
+    (if (> l len)
+	(substring s (- l len) l)
+      s)))
+
+(defun ledger-reconcile-truncate-right (str len)
+  "Truncate STR right side with max LEN characters, and pad with '…' if truncated."
+  (if (and (>= len 0) (> (length str) len))
+      (s-pad-right len "…" (s-left (- len 1) str))
+    str))
+
+(defun ledger-reconcile-truncate-left (str len)
+  "Truncate STR left side with max LEN characters, and pad with '…' if truncated."
+  (if (and (>= len 0) (> (length str) len))
+      (s-pad-left len "…" (s-right (- len 1) str))
+    str))
 
 (defun ledger-reconcile-get-cleared-or-pending-balance (buffer account)
   "Use BUFFER to Calculate the cleared or pending balance of the ACCOUNT."
@@ -359,12 +407,16 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
 				(ledger-reconcile-format-posting beg
 																				 where
 																				 fmt
-																				 (format-time-string date-format (nth 2 xact))  ; date
-																				 (if (nth 3 xact) (nth 3 xact) "")  ; code
-																				 (nth 3 posting)  ; status
-																				 (nth 4 xact)  ; payee
-																				 (nth 1 posting)  ; account
-																				 (nth 2 posting))))))  ; amount
+																				 (format-time-string date-format (nth 2 xact))	; date
+																				 (if (nth 3 xact) (nth 3 xact) "")	; code
+																				 (nth 3 posting)	; status
+                                         (ledger-reconcile-truncate-right
+																					(nth 4 xact)  ; payee
+																					ledger-reconcile-buffer-payee-max-chars)
+                                         (ledger-reconcile-truncate-left
+																					(nth 1 posting)  ; account
+																					ledger-reconcile-buffer-account-max-chars)
+																				 (nth 2 posting))))))	 ; amount
 
 (defun ledger-do-reconcile (&optional sort)
   "SORT the uncleared transactions in the account and display them in the *Reconcile* buffer.
