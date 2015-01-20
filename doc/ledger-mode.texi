@@ -929,28 +929,62 @@ If non-nil, highlight transaction under point using
 
 @ftable @option
 
-@item ledger-reconcile-default-commodity
-The default commodity for use in target calculations in ledger
-reconcile.  Defaults to @samp{$} (USD).
-
 @item ledger-recon-buffer-name
 Name to use for reconciliation buffer. Defaults to @file{*Reconcile*}.
 
 @item ledger-narrow-on-reconcile
-If non-nil, limit transactions shown in main buffer to those matching
+If t, limit transactions shown in main buffer to those matching
 the reconcile regex.
 
 @item ledger-buffer-tracks-reconcile-buffer
-If non-nil, then when the cursor is moved to a new transaction in the
-@file{*Reconcile*} window.
+If t, then when the cursor is moved to a new transaction in the
+@file{*Reconcile*} buffer. Then that transaction will be shown in its
+source buffer.
 
 @item ledger-reconcile-force-window-bottom
-If non-nil, make the @file{*Reconcile*} window appear along the bottom
+If t, make the @file{*Reconcile*} window appear along the bottom
 of the register window and resize.
 
 @item ledger-reconcile-toggle-to-pending
-If non-nil, then toggle between uncleared and pending @samp{!}. If
+If t, then toggle between uncleared and pending @samp{!}. If
 false toggle between uncleared and cleared @samp{*}.
+
+@item ledger-reconcile-default-date-format
+Date format for the reconcile buffer. Defaults to
+ledger-default-date-format.
+
+@item ledger-reconcile-target-prompt-string
+Prompt for recon target. Defaults to "Target amount for reconciliation ".
+
+@item ledger-reconcile-buffer-header
+Header string for the reconcile buffer. If non-nil, the name of the
+account being reconciled will be substituted into the '%s'.  If nil, no
+header will be displayed.  Defaults to "Reconciling account %s\n\n".
+
+@item ledger-reconcile-buffer-line-format
+Format string for the ledger reconcile posting format.  Available fields
+are date, status, code, payee, account, amount.  The format for each
+field is %WIDTH(FIELD), WIDTH can be preced by a minus sign which mean
+to left justify and pad the field.  WIDTH is the minimum number of
+characters to display; if string is longer, it is not truncated unless
+ledger-reconcile-buffer-payee-max-chars or
+ledger-reconcile-buffer-account-max-chars is defined.  Defaults to
+"%(date)s %-4(code)s %-50(payee)s %-30(account)s %15(amount)s\n"
+
+@item ledger-reconcile-buffer-payee-max-chars
+If positive, truncate payee name right side to max number of characters.
+
+@item ledger-reconcile-buffer-account-max-chars
+If positive, truncate account name left side to max number of characters.
+
+@item ledger-reconcile-sort-key
+Key for sorting reconcile buffer. Possible values are '(date)',
+'(amount)', '(payee)' or '(0)' for no sorting, i.e. using
+ledger file order. Defaults to '(0)'.
+
+@item ledger-reconcile-insert-effective-date nil
+If t, prompt for effective date when clearing transactions during
+reconciliation.
 
 @end ftable
 
