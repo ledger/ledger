@@ -40,7 +40,7 @@
   :group 'ledger)
 
 (defcustom ledger-recon-buffer-name "*Reconcile*"
-  "Name to use for reconciliation window."
+  "Name to use for reconciliation buffer."
   :group 'ledger-reconcile)
 
 (defcustom ledger-narrow-on-reconcile t
@@ -49,29 +49,30 @@
   :group 'ledger-reconcile)
 
 (defcustom ledger-buffer-tracks-reconcile-buffer t
-  "If t, then when the cursor is moved to a new xact in the recon window.
+  "If t, then when the cursor is moved to a new transaction in the reconcile buffer.
 Then that transaction will be shown in its source buffer."
   :type 'boolean
   :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-force-window-bottom nil
-  "If t make the reconcile window appear along the bottom of the register window and resize."
+  "If t, make the reconcile window appear along the bottom of the register window and resize."
   :type 'boolean
   :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-toggle-to-pending t
-  "If true then toggle between uncleared and pending.
+  "If t, then toggle between uncleared and pending.
 reconcile-finish will mark all pending posting cleared."
   :type 'boolean
   :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-default-date-format ledger-default-date-format
-  "Default date format for the reconcile buffer."
+  "Date format for the reconcile buffer.
+Default is ledger-default-date-format."
   :type 'string
   :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-target-prompt-string "Target amount for reconciliation "
-  "Default prompt for recon target prompt."
+  "Prompt for recon target."
   :type 'string
   :group 'ledger-reconcile)
 
@@ -79,9 +80,9 @@ reconcile-finish will mark all pending posting cleared."
 	"Default header string for the reconcile buffer.
 
 If non-nil, the name of the account being reconciled will be substituted
-	into the '%s'.  If nil, no header willbe displayed."
-	:type 'string
-	:group 'ledger-reconcile)
+        into the '%s'.  If nil, no header will be displayed."
+  :type 'string
+  :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-buffer-line-format "%(date)s %-4(code)s %-50(payee)s %-30(account)s %15(amount)s\n"
 	"Format string for the ledger reconcile posting format.
@@ -106,10 +107,9 @@ ledger-reconcile-buffer-account-max-chars is defined."
   :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-sort-key "(0)"
-  "Default key for sorting reconcile buffer.
+  "Key for sorting reconcile buffer.
 
-Possible values are '(date)', '(amount)', '(payee)'.  For no sorting, i.e. using
-ledger file order, use '(0)'."
+Possible values are '(date)', '(amount)', '(payee)' or '(0)' for no sorting, i.e. using ledger file order."
   :type 'string
   :group 'ledger-reconcile)
 
