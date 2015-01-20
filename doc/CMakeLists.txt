@@ -5,6 +5,10 @@
 
 ########################################################################
 
+configure_file(
+  ${PROJECT_SOURCE_DIR}/doc/version.texi.in
+  ${PROJECT_BINARY_DIR}/doc/version.texi)
+
 if (USE_DOXYGEN)
   find_package(Doxygen)
   if (NOT DOXYGEN_FOUND)

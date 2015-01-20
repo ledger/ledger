@@ -1,6 +1,7 @@
 \input texinfo @c -*-texinfo-*-
 
 @setfilename ledger3.info
+@include version.texi
 @settitle Ledger: Command-Line Accounting
 
 @c Before release, run C-u C-c C-u C-a (texinfo-all-menus-update with
@@ -146,7 +147,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 @titlepage
 @title Ledger: Command-Line Accounting
-@subtitle For Version 3.1 of Ledger
+@subtitle For Version @value{VERSION} of Ledger
 @author John Wiegley
 @page
 @vskip 0pt plus 1filll
