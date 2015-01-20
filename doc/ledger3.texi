@@ -2262,6 +2262,7 @@ assert <VALUE EXPRESSION BOOLEAN RESULT>
 @end smallexample
 
 @item bucket
+@anchor{bucket}
 @c instance_t::default_account_directive
 Defines the default account to use for balancing transactions.
 Normally, each transaction has at least two postings, which must
@@ -2540,6 +2541,7 @@ This is a synonym for @code{comment} and must be closed by an
 @code{end} tag.
 
 @item year
+@anchor{year}
 @c instance_t::year_directive in textual.cc
 Denotes the year used for all subsequent transactions that give a date
 without a year.  The year should appear immediately after the
@@ -2556,11 +2558,11 @@ alone, for backwards compatibility with older Ledger versions.
 
 @item A
 @findex A
-See @code{bucket}.
+@xref{bucket}.
 
 @item Y
 @findex Y
-See @code{year}.
+@xref{year}.
 
 @item N SYMBOL
 @findex N
