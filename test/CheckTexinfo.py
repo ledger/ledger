@@ -20,6 +20,40 @@ class CheckTexinfo (CheckOptions):
     self.source_file = join(self.source, 'doc', 'ledger3.texi')
     self.source_type = 'texinfo'
 
+  def find_options(self, filename):
+    options = set()
+    state_normal = 0
+    state_option_table = 1
+    state = state_normal
+    option = None
+    opt_doc = str()
+    item_regex = re.compile('^@item --([-A-Za-z]+)')
+    itemx_regex = re.compile('^@itemx')
+    fix_regex = re.compile('FIX')
+    for line in open(filename):
+      line = line.strip()
+      if state == state_normal:
+        if line == '@ftable @option':
+            state = state_option_table
+      elif state == state_option_table:
+          if line == '@end ftable':
+              if option and len(opt_doc) and not fix_regex.search(opt_doc):
+                  options.add(option)
+              state = state_normal
+              option = None
+              continue
+          match = item_regex.match(line)
+          if match:
+              if option and len(opt_doc) and not fix_regex.search(opt_doc):
+                  options.add(option)
+              option = match.group(1)
+              opt_doc = str()
+          elif itemx_regex.match(line):
+              continue
+          else:
+              opt_doc += line
+    return options
+
 if __name__ == "__main__":
   def getargs():
     parser = argparse.ArgumentParser(prog='CheckTexinfo',
