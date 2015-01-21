@@ -47,10 +47,12 @@ if (PYTHONINTERP_FOUND)
     set_target_properties(check PROPERTIES DEPENDS ${_class}Test_${TestFile_Name})
   endforeach()
 
-  set(_class CheckTests)
-  add_test(NAME ${_class}
-    COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/${_class}.py
-    --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR})
+  list(APPEND CheckOptions CheckManpage CheckTexinfo CheckBaselineTests)
+  foreach(_class ${CheckOptions})
+    add_test(NAME ${_class}
+      COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/${_class}.py
+      --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR})
+  endforeach()
 endif()
 
 ### CMakeLists.txt ends here
