@@ -119,22 +119,23 @@ Possible values are '(date)', '(amount)', '(payee)' or '(0)' for no sorting, i.e
   :group 'ledger-reconcile)
 
 ;; s-functions below are copied from Magnars' s.el
-(defun s-pad-left (len padding s)
+;; prefix ledger-reconcile- is added to not conflict with s.el
+(defun ledger-reconcile-s-pad-left (len padding s)
   "If S is shorter than LEN, pad it with PADDING on the left."
   (let ((extra (max 0 (- len (length s)))))
     (concat (make-string extra (string-to-char padding))
 	    s)))
-(defun s-pad-right (len padding s)
+(defun ledger-reconcile-s-pad-right (len padding s)
   "If S is shorter than LEN, pad it with PADDING on the right."
   (let ((extra (max 0 (- len (length s)))))
     (concat s
 	    (make-string extra (string-to-char padding)))))
-(defun s-left (len s)
+(defun ledger-reconcile-s-left (len s)
   "Return up to the LEN first chars of S."
   (if (> (length s) len)
       (substring s 0 len)
     s))
-(defun s-right (len s)
+(defun ledger-reconcile-s-right (len s)
   "Return up to the LEN last chars of S."
   (let ((l (length s)))
     (if (> l len)
@@ -144,13 +145,13 @@ Possible values are '(date)', '(amount)', '(payee)' or '(0)' for no sorting, i.e
 (defun ledger-reconcile-truncate-right (str len)
   "Truncate STR right side with max LEN characters, and pad with '…' if truncated."
   (if (and (>= len 0) (> (length str) len))
-      (s-pad-right len "…" (s-left (- len 1) str))
+      (ledger-reconcile-s-pad-right len "…" (ledger-reconcile-s-left (- len 1) str))
     str))
 
 (defun ledger-reconcile-truncate-left (str len)
   "Truncate STR left side with max LEN characters, and pad with '…' if truncated."
   (if (and (>= len 0) (> (length str) len))
-      (s-pad-left len "…" (s-right (- len 1) str))
+      (ledger-reconcile-s-pad-left len "…" (ledger-reconcile-s-right (- len 1) str))
     str))
 
 (defun ledger-reconcile-get-cleared-or-pending-balance (buffer account)
