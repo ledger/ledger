@@ -184,7 +184,7 @@ class DocTests:
               command[findex] = test_input_dir + test_file
         error = False
         try:
-          verify = subprocess.check_output(command)
+          verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
         except:
           verify = str()
           error = True
