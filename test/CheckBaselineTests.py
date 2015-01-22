@@ -18,6 +18,35 @@ class CheckBaselineTests (CheckOptions):
     CheckOptions.__init__(self, args)
     self.missing_baseline_tests = set()
 
+    self.untested_options = [
+        'anon',
+        'args-only',
+        'cache',
+        'debug',
+        'download',
+        'file',
+        'force-color',
+        'force-pager',
+        'full-help',
+        'help',
+        'help-calc',
+        'help-comm',
+        'help-disp',
+        'import',
+        'init-file',
+        'no-color',
+        'options',
+        'price-db',
+        'price-exp',
+        'revalued-total',
+        'script',
+        'seed',
+        'trace',
+        'verbose',
+        'verify',
+        'version'
+    ]
+
   def main(self):
     for option in self.ledger_options():
       if option in self.untested_options: continue

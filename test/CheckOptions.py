@@ -24,35 +24,6 @@ class CheckOptions (object):
     self.missing_options = set()
     self.unknown_options = set()
 
-    self.untested_options = [
-        'anon',
-        'args-only',
-        'cache',
-        'debug',
-        'download',
-        'file',
-        'force-color',
-        'force-pager',
-        'full-help',
-        'help',
-        'help-calc',
-        'help-comm',
-        'help-disp',
-        'import',
-        'init-file',
-        'no-color',
-        'options',
-        'price-db',
-        'price-exp',
-        'revalued-total',
-        'script',
-        'seed',
-        'trace',
-        'verbose',
-        'verify',
-        'version'
-    ]
-
     self.known_alternates = [
         'cost',
         'first',
