@@ -367,7 +367,7 @@ some additional meaning to the states:
 No state.  This is equivalent to sticking a check in the mail.  It has
 been obligated, but not been cashed by the recipient.  It could also
 apply to credit/debit card transactions that have not been cleared into
-your account balance.  You bank may call these transactions ``pending'',
+your account balance.  You bank may call these transactions @emph{pending},
 but Ledger-mode uses a slightly different meaning.
 
 @item Pending.
@@ -550,7 +550,7 @@ about.  You can get this from a monthly statement, or from checking your
 on-line transaction history.  It also helps immensely to know the final
 cleared balance you are aiming for.
 
-Use menu @samp{Reconcile Account} or @kbd{C-c C-r} and enter the account
+Use menu @samp{Reconcile Account} or keyboard shortcut @kbd{C-c C-r} and enter the account
 you wish to reconcile in the Minibuffer.  Ledger-mode is not particular
 about what you enter for the account.  You can leave it blank and
 @file{*Reconcile*} buffer will show you @emph{all} uncleared
@@ -589,7 +589,7 @@ difference from your target is zero.
 If you find errors during reconciliation.  You can visit the transaction
 under point in the @file{*Reconcile*} buffer by hitting the @kbd{RET}
 key.  This will take you to the transaction in the Ledger buffer.  When
-you have finished editing the transaction saving the buffer will
+you have finished editing the transaction, saving the buffer will
 automatically return you to the @file{*Reconcile*} buffer and you can
 mark the transaction if appropriate.
 
@@ -599,7 +599,7 @@ mark the transaction if appropriate.
 
 Once you have marked all transactions as pending and the cleared balance
 is correct.  Finish the reconciliation by typing @kbd{C-c C-c}.  This
-marks all pending transaction as cleared and saves the ledger buffer.
+marks all pending transactions as cleared and saves the ledger buffer.
 
 @node Adding and Deleting Transactions during Reconciliation, Changing Reconciliation Account, Finalize Reconciliation, The Reconcile Buffer
 @section Adding and Deleting Transactions during Reconciliation
@@ -621,7 +621,7 @@ Typing @kbd{d} will delete the transaction under point in the
 
 You can conveniently switch the account being reconciled by typing
 @kbd{g}, and entering a new account to reconcile.  This simply restarts
-the reconcile process. Any transactions that were marked `pending' in
+the reconcile process. Any transactions that were marked @emph{pending} in
 the ledger buffer are left in that state when the account is switched.
 
 @node Changing Reconciliation Target,  , Changing Reconciliation Account, The Reconcile Buffer
@@ -795,7 +795,7 @@ maintain the proper mathematical sense.
 @chapter Scheduling Transactions
 
 The Ledger program provides for automating transactions but these
-transaction aren't ``real'', they only exist inside a ledger session and
+transaction aren't @emph{real}, they only exist inside a ledger session and
 are not reflected in the actual data file.  Many transactions are very
 repetitive, but may vary slightly in the date they occur on, or the
 amount.  Some transactions are weekly, monthly, quarterly or annually.
@@ -929,28 +929,62 @@ If non-nil, highlight transaction under point using
 
 @ftable @option
 
-@item ledger-reconcile-default-commodity
-The default commodity for use in target calculations in ledger
-reconcile.  Defaults to @samp{$} (USD).
-
 @item ledger-recon-buffer-name
 Name to use for reconciliation buffer. Defaults to @file{*Reconcile*}.
 
 @item ledger-narrow-on-reconcile
-If non-nil, limit transactions shown in main buffer to those matching
+If t, limit transactions shown in main buffer to those matching
 the reconcile regex.
 
 @item ledger-buffer-tracks-reconcile-buffer
-If non-nil, then when the cursor is moved to a new transaction in the
-@file{*Reconcile*} window.
+If t, then when the cursor is moved to a new transaction in the
+@file{*Reconcile*} buffer. Then that transaction will be shown in its
+source buffer.
 
 @item ledger-reconcile-force-window-bottom
-If non-nil, make the @file{*Reconcile*} window appear along the bottom
+If t, make the @file{*Reconcile*} window appear along the bottom
 of the register window and resize.
 
 @item ledger-reconcile-toggle-to-pending
-If non-nil, then toggle between uncleared and pending @samp{!}. If
+If t, then toggle between uncleared and pending @samp{!}. If
 false toggle between uncleared and cleared @samp{*}.
+
+@item ledger-reconcile-default-date-format
+Date format for the reconcile buffer. Defaults to
+ledger-default-date-format.
+
+@item ledger-reconcile-target-prompt-string
+Prompt for recon target. Defaults to "Target amount for reconciliation ".
+
+@item ledger-reconcile-buffer-header
+Header string for the reconcile buffer. If non-nil, the name of the
+account being reconciled will be substituted into the '%s'.  If nil, no
+header will be displayed.  Defaults to "Reconciling account %s\n\n".
+
+@item ledger-reconcile-buffer-line-format
+Format string for the ledger reconcile posting format.  Available fields
+are date, status, code, payee, account, amount.  The format for each
+field is %WIDTH(FIELD), WIDTH can be preced by a minus sign which mean
+to left justify and pad the field.  WIDTH is the minimum number of
+characters to display; if string is longer, it is not truncated unless
+ledger-reconcile-buffer-payee-max-chars or
+ledger-reconcile-buffer-account-max-chars is defined.  Defaults to
+"%(date)s %-4(code)s %-50(payee)s %-30(account)s %15(amount)s\n"
+
+@item ledger-reconcile-buffer-payee-max-chars
+If positive, truncate payee name right side to max number of characters.
+
+@item ledger-reconcile-buffer-account-max-chars
+If positive, truncate account name left side to max number of characters.
+
+@item ledger-reconcile-sort-key
+Key for sorting reconcile buffer. Possible values are '(date)',
+'(amount)', '(payee)' or '(0)' for no sorting, i.e. using
+ledger file order. Defaults to '(0)'.
+
+@item ledger-reconcile-insert-effective-date nil
+If t, prompt for effective date when clearing transactions during
+reconciliation.
 
 @end ftable
 

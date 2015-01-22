@@ -184,7 +184,7 @@ class DocTests:
               command[findex] = test_input_dir + test_file
         error = False
         try:
-          verify = subprocess.check_output(command)
+          verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
         except:
           verify = str()
           error = True
@@ -221,7 +221,8 @@ class DocTests:
 
 if __name__ == "__main__":
   def getargs():
-    parser = argparse.ArgumentParser(prog='DocTests', description='Test ledger examples from the documentation', prefix_chars='-')
+    parser = argparse.ArgumentParser(prog='DocTests',
+            description='Test and validate ledger examples from the texinfo manual')
     parser.add_argument('-v', '--verbose',
         dest='verbose',
         action='count',

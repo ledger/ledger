@@ -54,6 +54,7 @@
 #define Ledger_VERSION_MAJOR     @Ledger_VERSION_MAJOR@
 #define Ledger_VERSION_MINOR     @Ledger_VERSION_MINOR@
 #define Ledger_VERSION_PATCH     @Ledger_VERSION_PATCH@
+#define Ledger_VERSION_PRERELEASE "@Ledger_VERSION_PRERELEASE@"
 #define Ledger_VERSION_DATE      @Ledger_VERSION_DATE@
 
 #define HAVE_EDIT                @HAVE_EDIT@

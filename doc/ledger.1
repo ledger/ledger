@@ -173,7 +173,7 @@ Show any gains (or losses) in commodity values over time.
 Only show the top
 .Ar number
 postings.
-.It Fl \-historical Pq Fl H
+.\".It Fl \-historical Pq Fl H
 .It Fl \-invert
 Invert the value of amounts shown.
 .It Fl \-market Pq Fl V
@@ -410,7 +410,7 @@ Transform the date of the transaction using
 .Ar EXPR .
 .It Fl \-date-format Ar DATEFMT Pq Fl y
 Specify the format ledger should use to print dates.
-.It Fl \-datetime-format Ar FMT
+.\" .It Fl \-datetime-format Ar FMT
 .It Fl \-date-width Ar INT
 Specify the width, in characters, of the date column in the
 .Nm register
@@ -925,6 +925,9 @@ interpret parentheses, you should always escape them:
 .El
 .Sh EXPRESSIONS
 .Bl -tag -width "partial_account"
+.It Fn abs value
+Return the absolute value of the given
+.Ar value .
 .It Nm account
 .It Nm account_base
 .It Nm account_amount
@@ -943,22 +946,29 @@ is true.  It typically checks the value of the option
 for example:
 .Dl ansify_if(amount, "blue", options.color)
 .It Nm beg_line
+Line number where entry for posting begins.
 .It Nm beg_pos
+Character position where entry for posting begins.
 .It Nm calculated
 .It Nm cleared
 .It Nm code
+Return the transaction code, the string between the parenthesis after the date.
 .It Nm comment
 .It Nm commodity
 .It Nm cost
 .It Nm count
 .It Nm date
+Return the date of the posting.
 .It Nm depth
 .It Nm depth_spacer
 .It Nm display_amount
 .It Nm display_total
 .It Nm end_line
+Line number where entry for posting ends.
 .It Nm end_pos
+Character position where entry for posting ends.
 .It Nm filename
+The name of the ledger data file from whence the posting came.
 .It Nm format_date
 .It Nm get_at
 .It Nm has_meta
