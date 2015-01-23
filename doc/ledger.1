@@ -33,12 +33,12 @@ dataset without reparsing.
 .Pp
 The following is a complete list of reporting commands accepted by Ledger:
 .Bl -tag -width accounts
-.It Nm accounts Oo Ar report-query Oc
+.It Ic accounts Oo Ar report-query Oc
 Lists all accounts for postings matching the
 .Ar report-query .
 .El
 .Bl -tag -width balance
-.It Nm balance Oo Ar report-query Oc
+.It Ic balance Oo Ar report-query Oc
 Produces a balance report showing totals for all matching accounts, and
 aggregate totals for parents of those accounts.  Options most commonly used
 with this command are:
@@ -60,11 +60,11 @@ Suppress the summary total shown at the bottom of the report (when not zero).
 .El
 .Pp
 The synonyms
-.Nm bal
+.Ic bal
 and
-.Nm b
+.Ic b
 are also accepted.
-.It Nm budget Oo Ar report-query Oc
+.It Ic budget Oo Ar report-query Oc
 A special balance report which includes three extra columns: the amount
 budgeted during the reporting period, how spending differed from the budget,
 and the percentage of budget spent (exceeds 100% if you go over budget).
@@ -73,23 +73,23 @@ Note that budgeting requires one or more
 periodic transactions
 .Dc
 to be defined in your data file(s).  See the manual for more information.
-.It Nm cleared Oo Ar report-query Oc
+.It Ic cleared Oo Ar report-query Oc
 A special balance report which adds two extra columns: the cleared balance for
 each account, and the date of the most recent cleared posting in that account.
 For this accounting to be meaningful, the cleared flag must be set on at least
 one posting.  See the manual for more information.
-.It Nm commodities Oo Ar report-query Oc
+.It Ic commodities Oo Ar report-query Oc
 Lists all commodities for postings matching the
 .Ar report-query .
-.It Nm convert
+.It Ic convert
 Reads data from a CSV (comma-separated values) file and generates Ledger
 transactions.
-.It Nm csv Oo Ar report-query Oc
+.It Ic csv Oo Ar report-query Oc
 Report of postings matching the
 .Ar report-query
 in CSV format (comma-separated values).  Useful for exporting data to a
 spreadsheet for further analysis or charting.
-.It Nm entry Oo Ar entry-template Oc
+.It Ic entry Oo Ar entry-template Oc
 Generate and display a new, properly formatted Ledger transaction by comparing
 the
 .Ar entry-template
@@ -99,14 +99,14 @@ section
 .Sx ENTRIES .
 .Pp
 The synonym
-.Nm xact
+.Ic xact
 is also accepted.
-.It Nm emacs Oo Ar query Oc
+.It Ic emacs Oo Ar query Oc
 Outputs posting and transaction data in a format readily consumed by the Emacs
 editor, in a series of Lisp forms.  This is used by the
 .Li ledger.el
 Emacs mode to process reporting data from Ledger.
-.It Nm equity Oo Ar report-query Oc
+.It Ic equity Oo Ar report-query Oc
 Prints a series of transactions that balance current totals for
 accounts matching the
 .Ar report-query
@@ -114,38 +114,38 @@ in a special account called
 .Li Equity:Opening Balances .
 The purpose of this report is to close the books for a prior year, while using
 these equity transactions to carry forward those balances.
-.It Nm org
+.It Ic org
 Produces a journal file suitable for use in the Emacs org mode.
-.It Nm payees Oo Ar report-query Oc
+.It Ic payees Oo Ar report-query Oc
 Lists all payees for postings matching the
 .Ar report-query .
-.It Nm pricemap
+.It Ic pricemap
 Produces a file which can be used to generate a graph with graphviz showing
 the relationship of commodities in the Ledger file.
-.It Nm prices Oo Ar report-query Oc
+.It Ic prices Oo Ar report-query Oc
 Reports prices for all commodities in postings matching the
 .Ar report-query .
 The prices are reported with the granularity of a single day.
-.It Nm pricedb Oo Ar report-query Oc
+.It Ic pricedb Oo Ar report-query Oc
 Reports prices for all commodities in postings matching the
 .Ar report-query .
 Prices are reported down to the second, using the same format as the
 .Li ~/.pricedb
 file.
-.It Nm print Oo Ar report-query Oc
+.It Ic print Oo Ar report-query Oc
 Prints out the full transactions of any matching postings using the same
 format as they would appear in a data file.  This can be used to extract
 subsets from a Ledger file to transfer to other files.
-.It Nm push Oo Ar options Oc
+.It Ic push Oo Ar options Oc
 In the
 .Tn REPL ,
 this command pushes a set of command-line options, so that they will apply to
 all subsequent reports.
-.It Nm pop
+.It Ic pop
 In the
 .Tn REPL ,
 pops any option settings that have been pushed.
-.It Nm register Oo Ar report-query Oc
+.It Ic register Oo Ar report-query Oc
 List all postings matching the
 .Ar report-query .
 This is one of the most common commands, and can be used to provide a variety
@@ -162,10 +162,10 @@ Render all values in the given
 .Ar commodity ,
 if a price conversion rate can be determined.  Rates are always displayed
 relative to the date of the posting they are calculated for.  This means a
-.Nm register
+.Ic register
 report is a historical value report.  For current values, it may be preferable
 to use the
-.Nm balance
+.Ic balance
 report.
 .It Fl \-gain Pq Fl G
 Show any gains (or losses) in commodity values over time.
@@ -227,28 +227,28 @@ Group postings by year.
 Group postings by the day of the week on which they took place.
 .It Fl \-subtotal Pq Fl s
 Group all postings together.  This is very similar to the totals shown by the
-.Nm balance
+.Ic balance
 report.
 .El
 .Pp
 The synonyms
-.Nm reg
+.Ic reg
 and
-.Nm r
+.Ic r
 are also accepted.
-.It Nm server
+.It Ic server
 This command requires that Python support be active.  If so, it starts up an
 HTTP server listening for requests on port 9000.  This provides an alternate
 interface to creating and viewing reports.  Note that this is very much a
 work-in-progress, and will not be fully functional until a later version.
-.It Nm select Oo Ar sql-query Oc
+.It Ic select Oo Ar sql-query Oc
 List all postings matching the
 .Ar sql-query .
 This command allows to generate SQL-like queries.
-.It Nm source
+.It Ic source
 Parses a journal file and checks it for errors. Ledger will return success
 if no errors are found.
-.It Nm stats Oo Ar report-query Oc
+.It Ic stats Oo Ar report-query Oc
 Provides summary information about all the postings matching
 .Ar report-query .
 It provides information such as:
@@ -268,7 +268,7 @@ Days since last posting
 .It
 More...
 .El
-.It Nm xml Oo Ar report-query Oc
+.It Ic xml Oo Ar report-query Oc
 Outputs data relating to the current report in XML format.  It includes all
 accounts and commodities involved in the report, plus the postings and the
 transactions they are contained in.  See the manual for more information.
@@ -300,7 +300,7 @@ would tack
 to the beginning of every account reported in a balance report or register report.
 .It Fl \-account-width Ar INT
 Set the width of the account column in the
-.Nm register
+.Ic register
 report
 to
 .Ar INT
@@ -320,7 +320,7 @@ On a register report print only the dates and amount of postings.
 Useful for graphing and spreadsheet applications.
 .It Fl \-amount-width Ar INT
 Set the width in characters of the amount column in the
-.Nm register
+.Ic register
 report.
 .It Fl \-anon
 Anonymize registry output, mostly for sending in bug reports.
@@ -336,7 +336,7 @@ Print average values over the number of transactions instead of
 running totals.
 .It Fl \-balance-format Ar FMT
 Specify the format to use for the
-.Nm balance
+.Ic balance
 report.
 .\".It Fl \-base
 .It Fl \-basis Pq Fl B
@@ -351,12 +351,13 @@ that date will be ignored.
 .It Fl \-bold-if Ar EXPR
 Print the entire line in bold if the given value expression is true.
 .It Fl \-budget
-Only display budgeted items. In a register report this
-displays transaction in the budget, in a balance report this displays
-accounts in the budget.
+Only display budgeted items. In a
+.Ic register
+report this displays transaction in the budget, in a balance report this
+displays accounts in the budget.
 .It Fl \-budget-format Ar FMT
 Specify the format to use for the
-.Nm budget
+.Ic budget
 report.
 .It Fl \-by-payee Pq Fl P
 Group postings in the register report by common payee names.
@@ -368,7 +369,7 @@ commodities and tags.
 Display only cleared postings.
 .It Fl \-cleared-format Ar FMT
 Specify the format to use for the
-.Nm cleared
+.Ic cleared
 report
 .It Fl \-collapse Pq Fl n
 By default ledger prints all accounts in an account tree. With
@@ -382,7 +383,7 @@ Alias for
 .Fl \-ansi
 .It Fl \-columns Ar INT
 Specify the width of the
-.Nm register
+.Ic register
 report in characters.
 .It Fl \-cost
 Report the cost basis on all posting.
@@ -390,14 +391,14 @@ Alias for
 .Fl \-basis .
 .It Fl \-count
 Direct ledger to report the number of items when appended to the
-.Nm commodities ,
-.Nm accounts
+.Ic commodities ,
+.Ic accounts
 or
-.Nm payees
+.Ic payees
 commands.
 .It Fl \-csv-format Ar FMT
 Specify the format to use for the
-.Nm csv
+.Ic csv
 report
 .It Fl \-current Pq Fl c
 Shorthand for
@@ -413,14 +414,17 @@ Specify the format ledger should use to print dates.
 .\" .It Fl \-datetime-format Ar FMT
 .It Fl \-date-width Ar INT
 Specify the width, in characters, of the date column in the
-.Nm register
+.Ic register
 report.
 .\".It Fl \-day-break
 .It Fl \-dc
 Display register or balance in debit/credit format If you use
 .Fl \-dc
-with either the register (reg) or balance (bal) commands,
-you will now get separate columns for debits and credits.
+with either the
+.Ic register
+or
+.Ic balance
+commands, you will now get separate columns for debits and credits.
 .It Fl \-debug Ar STR
 If Ledger has been built with debug options this will provide extra
 data during the run.
@@ -479,7 +483,7 @@ for a transaction to be considered in the
 report.
 .It Fl \-equity
 Related to the
-.Nm equity
+.Ic equity
 command.  Gives current account balances in the form of a register
 report.
 .\".It Fl \-exact
@@ -530,7 +534,7 @@ transactions) in the report, in cases where you normally wouldn't want
 them.
 .It Fl \-group-by Ar EXPR
 Group transaction together in the
-.Nm register
+.Ic register
 report.
 .Ar EXPR
 can be anything, although most common would be
@@ -655,7 +659,7 @@ Specify the pager program to use as
 .Ar STR .
 .It Fl \-payee
 Sets a value expression for formatting the payee. In the
-.Nm register
+.Ic register
 report this prevents the second entry from having
 a date and payee for each transaction.
 .It Fl \-payee-width Ar INT
@@ -672,7 +676,7 @@ Only works for account that have a single commodity.
 .It Fl \-period Ar PERIOD Pq Fl p
 Define a period expression that sets the time period during which
 transactions are to be accounted. For a
-.Nm register
+.Ic register
 report only
 the transactions that satisfy the period expression with be displayed.
 For a balance report only those transactions will be accounted in the
@@ -715,7 +719,7 @@ Alias for
 .Fl \-leeway Ar INT Pq Fl Z
 .It Fl \-prices-format Ar FMT
 Set the format for the
-.Nm prices
+.Ic prices
 report.
 .It Fl \-pricedb-format Ar FMT
 Set the format expected for the historical price file.
@@ -729,7 +733,7 @@ Shorthand for
 .Fl \-period Ar "quarterly" .
 .It Fl \-raw
 In the
-.Nm print
+.Ic print
 report, show transactions using the exact same syntax as
 specified by the user in their data file.  Don't do any massaging or
 interpreting.  Can be useful for minor cleanups, like just aligning
@@ -742,7 +746,7 @@ Causes ledger to try to expand aliases recursively, i.e. try to expand
 the result of an earlier expansion again, until no more expansions apply.
 .It Fl \-register-format Ar FMT
 Define the output format for the
-.Nm register
+.Ic register
 report.
 .It Fl \-related Pq Fl r
 In a register report show the related account.  This is the other
@@ -762,7 +766,7 @@ of each transaction.
 Set the random seed to
 .Ar INT
 for the
-.Nm generate
+.Ic generate
 command.  Used as part of development testing.
 .It Fl \-script Ar FILE
 Execute a ledger script.
@@ -835,7 +839,7 @@ Perform all calculations without rounding and display results to full
 precision.
 .It Fl \-values
 Shows the values used by each tag when used in combination with the
-.Nm tags
+.Ic tags
 command.
 .\".It Fl \-value-expr Ar EXPR
 .It Fl \-verbose
@@ -863,26 +867,26 @@ will work. The difference between a pre-command and a regular command
 is that pre-commands ignore the journal data file completely, nor is
 the user's init file read.
 .Bl -tag -width -indent
-.It Nm args / query
+.It Ic args / query
 Evaluate the given arguments and report how Ledger interprets it against
 the following model transaction.
-.It Nm eval
+.It Ic eval
 Evaluate the given value expression against the model transaction.
-.It Nm format
+.It Ic format
 Print details of how ledger uses the given formatting description and
 apply it against a model transaction.
-.It Nm parse / expr
+.It Ic parse / expr
 Print details of how ledger uses the given value expression description
 and apply it against a model transaction.
-.It Nm generate
+.It Ic generate
 Randomly generates syntactically valid Ledger data from a seed.  Used
 by the GenerateTests harness for development testing.
-.It Nm period
+.It Ic period
 Evaluate the given period and report how Ledger interprets it.
-.It Nm script
-.It Nm template
+.It Ic script
+.It Ic template
 Shows the insertion template that the
-.Nm xact
+.Ic xact
 sub-command generates.  This is a debugging command.
 .El
 .Sh QUERIES
@@ -896,12 +900,12 @@ Thus, to report the current balance for all assets and liabilities, you would
 use:
 .Pp
 .Dl ledger bal asset liab
-.It Nm payee Ar regex Pq \&@ Ns Ar regex
+.It Ic payee Ar regex Pq \&@ Ns Ar regex
 Query on the payee, rather than the account.
-.It Nm tag Ar regex Pq \&% Ns Ar regex
-.It Nm note Ar regex Pq \&= Ns Ar regex
+.It Ic tag Ar regex Pq \&% Ns Ar regex
+.It Ic note Ar regex Pq \&= Ns Ar regex
 Query on anything found in an item's note.
-.It Nm code Ar regex Pq \&# Ns Ar regex
+.It Ic code Ar regex Pq \&# Ns Ar regex
 Query on the xact's optional code (which can be any string the user wishes).
 .It Ar term Nm and Ar term
 Query terms are joined by an implicit OR operator.  You can change this to AND
@@ -1025,42 +1029,42 @@ with double-quotes.
 In addition to the regular reporting commands, Ledger also accepts several
 debug commands:
 .Bl -tag -width balance
-.It Nm args Oo Ar report-query Oc
+.It Ic args Oo Ar report-query Oc
 Accepts a
 .Ar report-query
 as its argument and displays it back to the user along with a complete
 analysis of how Ledger interpreted it.  Useful if you want to understand how
 report queries are translated into value expressions.
-.It Nm eval Oo Ar value-expression Oc
+.It Ic eval Oo Ar value-expression Oc
 Evaluates the given
 .Ar value-expression
 and prints the result.  For more on value expressions, see the section
 .Sx EXPRESSIONS .
-.It Nm format Oo Ar format-string Oc
+.It Ic format Oo Ar format-string Oc
 Accepts a
 .Ar format-string
 and displays an analysis of how it was parsed, and what it would look like
 applied to a sample transaction.  For more on format strings, see the section
 .Sx FORMATS .
-.It Nm generate
+.It Ic generate
 Generates 50 randomly composed yet valid Ledger transactions.
-.It Nm parse Oo Ar value-expression Oc
+.It Ic parse Oo Ar value-expression Oc
 Parses the given
 .Ar value-expression
 and display an analysis of the expression tree and its evaluated value.  For
 more on value expressions, see the section
 .Sx EXPRESSIONS .
-.It Nm python Oo Ar file Oc
+.It Ic python Oo Ar file Oc
 Invokes a Python interpreter to read the given
 .Ar file .
 What is special about this is that the ledger module is builtin, not read from
 disk, so it doesn't require Ledger to be installed anywhere, or the shared
 library variants to be built.
-.It Nm reload
+.It Ic reload
 Used only in the
 .Tn REPL ,
 it causes an immediate reloading of all data files for the current session.
-.It Nm template Oo Ar draft-template Oc
+.It Ic template Oo Ar draft-template Oc
 Accepts a
 .Ar draft-template
 and displays information about how it was parsed.  See the section on
