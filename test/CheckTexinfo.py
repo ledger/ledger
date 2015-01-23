@@ -30,6 +30,7 @@ class CheckTexinfo (CheckOptions):
     item_regex = re.compile('^@item --([-A-Za-z]+)')
     itemx_regex = re.compile('^@itemx')
     fix_regex = re.compile('FIX')
+    comment_regex = re.compile('^\s*@c')
     for line in open(filename):
       line = line.strip()
       if state == state_normal:
@@ -50,7 +51,7 @@ class CheckTexinfo (CheckOptions):
               opt_doc = str()
           elif itemx_regex.match(line):
               continue
-          else:
+          elif not comment_regex.match(line):
               opt_doc += line
     return options
 
