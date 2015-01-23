@@ -186,9 +186,7 @@ Show postings only for the given
 .It Fl \-related Pq Fl r
 Show postings that are related to those that would have been shown.  It has
 the effect of displaying the
-.Do
-other side
-.Dc
+.Qq other side
 of the values.
 .It Fl \-sort Ar value-expression Pq Fl S
 Sort postings by evaluating the given
@@ -294,7 +292,7 @@ desired width.
 Prepend
 .Ar STR
 to all accounts reported. That is, the option
-.Nm --account Personal
+.Fl \-account Ar \*q'Personal'\*q
 would tack
 .Nm Personal:
 to the beginning of every account reported in a balance report or register report.
@@ -405,7 +403,7 @@ Shorthand for
 .Fl \-limit Ar "'date <= today'" .
 .It Fl \-daily Pq Fl D
 Shorthand for
-.Fl \-period Ar "daily" .
+.Fl \-period Ar daily .
 .It Fl \-date Ar EXPR
 Transform the date of the transaction using
 .Ar EXPR .
@@ -621,7 +619,7 @@ Specify the width of the Meta column used for the
 options.
 .It Fl \-monthly Pq Fl M
 Shorthand for
-.Fl \-period Ar "monthly" .
+.Fl \-period Ar monthly .
 .It Fl \-no-aliases
 Aliases are completely ignored.
 .It Fl \-no-color
@@ -687,7 +685,7 @@ Sort the posting within transactions using the given value expression.
 Quiet balance assertions.
 .It Fl \-pivot Ar STR
 Produce a balance pivot report
-.Nm around
+.Qq around
 the given
 .Ar TAG .
 .It Fl \-plot-amount-format Ar FMT
@@ -730,7 +728,7 @@ Show primary dates for all calculations. Alias for
 Report commodity totals (this is the default).
 .It Fl \-quarterly
 Shorthand for
-.Fl \-period Ar "quarterly" .
+.Fl \-period Ar quarterly .
 .It Fl \-raw
 In the
 .Ic print
@@ -776,10 +774,13 @@ Sort the register report based on the value expression given to sort.
 .It Fl \-sort-xacts
 Sort the posting within transactions using the given value expression.
 .It Fl \-start-of-week Ar STR
-Tell ledger to use a particular day of the week to start its "weekly"
+Tell ledger to use a particular day of the week to start its 
+.Qq weekly
 summary.
 .Ar STR
-can be day names, their abbreviations like "Mon", or the weekday number
+can be day names, their abbreviations like 
+.Qq Mon ,
+or the weekday number
 starting at 0 for Sunday.
 .It Fl \-strict
 Accounts, tags or commodities not previously declared will cause warnings.
@@ -812,7 +813,8 @@ and
 .Nm trailing .
 The default is smarter than any of these three,
 as it considers sub-names within the account name (that style is
-called "abbreviate").
+called
+.Qq abbreviate ) .
 .It Fl \-unbudgeted
 Show only un-budgeted postings.
 .It Fl \-uncleared Pq Fl U
@@ -854,12 +856,12 @@ ledger will produce memory trace information.
 Print version information and exit.
 .It Fl \-weekly Pq Fl W
 Shorthand for
-.Fl \-period Ar "weekly" .
+.Fl \-period Ar weekly .
 .It Fl \-wide Pq Fl w
 Assume 132 columns instead of 80.
 .It Fl \-yearly Pq Fl Y
 Shorthand for
-.Fl \-period Ar "yearly" .
+.Fl \-period Ar yearly .
 .El
 .Sh PRE-COMMANDS
 Pre-commands are useful when you aren't sure how a command or option
