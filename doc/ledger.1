@@ -294,7 +294,7 @@ Prepend
 to all accounts reported. That is, the option
 .Fl \-account Ar \*q'Personal'\*q
 would tack
-.Nm Personal:
+.Ar Personal:
 to the beginning of every account reported in a balance report or register report.
 .It Fl \-account-width Ar INT
 Set the width of the account column in the
@@ -310,7 +310,7 @@ transactions used.
 Show only un-budgeted postings.
 .It Fl \-amount Ar EXPR Pq Fl t
 Apply the given value expression to the posting amount. Using
-.Nm --amount Ar EXPR
+.Fl \-amount Ar EXPR
 you can apply an
 arbitrary transformation to the postings.
 .It Fl \-amount-data Pq Fl j
@@ -448,12 +448,12 @@ Display lines that satisfy the expression
 .Ar EXPR .
 .It Fl \-display-amount Ar EXPR
 Apply a transformation to the
-.Nm displayed
+.Em displayed
 amount.  This occurs after
 calculations occur.
 .It Fl \-display-total Ar EXPR
 Apply a transformation to the
-.Nm displayed
+.Em displayed
 total.  This occurs after
 calculations occur.
 .It Fl \-dow
@@ -463,15 +463,14 @@ Alias for
 .It Fl \-download
 Cause quotes to be automagically downloaded, as needed, by running
 a script named
-.Nm getquote
+.Em getquote
 and expecting that script to return
-a value understood by ledger.  A sample implementation of
-a
-.Nm getquote
+a value understood by ledger.  A sample implementation of a
+.Em getquote
 script, implemented in Perl, is provided in the
 distribution.  Downloaded quote price are then appended to the price
 database, usually specified using the environment variable
-.Nm LEDGER_PRICE_DB .
+.Ev LEDGER_PRICE_DB .
 .It Fl \-empty Pq Fl E
 Include empty accounts in report.
 .It Fl \-end Ar DATE Pq Fl e
@@ -536,11 +535,11 @@ Group transaction together in the
 report.
 .Ar EXPR
 can be anything, although most common would be
-.Nm payee
+.Ar payee
 or
-.Nm commodity .
+.Ar commodity .
 The
-.Nm tags()
+.Fn tags
 function is also useful here.
 .It Fl \-group-title-format Ar FMT
 Set the format for the headers that separate reports section of
@@ -566,7 +565,7 @@ Instruct ledger to evaluate calculations immediately rather than lazily.
 .\".It Fl \-import
 .It Fl \-init-file Ar FILE Pq Fl i
 Causes
-.Nm FILE
+.Ar FILE
 to be read by ledger before any other ledger file.
 This file may not contain any postings, but it may contain option
 settings.  To specify options in the init file, use the same syntax as
@@ -628,7 +627,7 @@ Suppress any color TTY output.
 Disables the pager on TTY output.
 .It Fl \-no-rounding
 Don't output
-.Nm <Rounding>
+.Li Qq <Rounding>
 postings.  Note that this will cause the
 running total to often not add up!  It's main use is for
 .Fl \-amount-data Pq Fl j
@@ -748,13 +747,13 @@ Define the output format for the
 report.
 .It Fl \-related Pq Fl r
 In a register report show the related account.  This is the other
-.Nm side
+.Em side
 of the transaction.
 .It Fl \-related-all
 Show all postings in a transaction, similar to
 .Fl \-related
 but show
-.Nm both sides
+.Em both sides
 of each transaction.
 .\".It Fl \-revalued
 .\".It Fl \-revalued-only
@@ -805,12 +804,13 @@ Set the width of the total field in the register report.
 Enable tracing. The
 .Ar INT
 specifies the level of trace desired.
-.It Fl \-truncate Ar CODE
+.It Fl \-truncate Ar STR
 Indicates how truncation should happen when the contents of columns
 exceed their width. Valid arguments are
-.Nm leading , Nm middle ,
+.Ar leading ,
+.Ar middle ,
 and
-.Nm trailing .
+.Ar trailing .
 The default is smarter than any of these three,
 as it considers sub-names within the account name (that style is
 called
