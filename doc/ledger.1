@@ -130,7 +130,7 @@ The prices are reported with the granularity of a single day.
 Reports prices for all commodities in postings matching the
 .Ar report-query .
 Prices are reported down to the second, using the same format as the
-.Li ~/.pricedb
+.Pa ~/.pricedb
 file.
 .It Ic print Oo Ar report-query Oc
 Prints out the full transactions of any matching postings using the same
@@ -276,7 +276,7 @@ transactions they are contained in.  See the manual for more information.
 .It Fl \-abbrev-len Ar INT
 Set the minimum length an account can be abbreviated to if it doesn't
 fit inside the
-.Nm account-width .
+.Sy account-width .
 If
 .Ar INT
 is zero, then the
@@ -284,7 +284,7 @@ account name will be truncated on the right. If
 .Ar INT
 is greater
 than
-.Nm account-width
+.Sy account-width
 then the account will be truncated on the
 left, with no shortening of the account names in order to fit into the
 desired width.
@@ -435,9 +435,9 @@ a
 .Fl \-depth 2
 statement will print balances only for account with
 two levels, i.e.
-.Nm Expenses:Entertainment
+.Sy Expenses:Entertainment
 but not
-.Nm Expenses:entertainment:Dining .
+.Sy Expenses:entertainment:Dining .
 This is a display predicate, which
 means it only affects display, not the total calculations.
 .It Fl \-deviation Pq Fl D
@@ -825,16 +825,16 @@ report.
 .It Fl \-unrealized-gains
 Allow the user to specify what account name should be used for
 unrealized gains. Defaults to
-.Nm "Equity:Unrealized Gains" .
+.Sy "Equity:Unrealized Gains" .
 Often set in one's
-.Nm ~/.ledgerrc
+.Pa ~/.ledgerrc
 file to change the default.
 .It Fl \-unrealized-losses
 Allow the user to specify what account name should be used for
 unrealized gains. Defaults to
-.Nm "Equity:Unrealized Losses" .
+.Sy "Equity:Unrealized Losses" .
 Often set in one's
-.Nm ~/.ledgerrc
+.Pa ~/.ledgerrc
 file to change the default.
 .It Fl \-unround
 Perform all calculations without rounding and display results to full
@@ -909,16 +909,16 @@ Query on the payee, rather than the account.
 Query on anything found in an item's note.
 .It Ic code Ar regex Pq \&# Ns Ar regex
 Query on the xact's optional code (which can be any string the user wishes).
-.It Ar term Nm and Ar term
+.It Ar term Cm and Ar term
 Query terms are joined by an implicit OR operator.  You can change this to AND
 by using that keyword.  For example, to show food expenditures occurring at
 Shakee's Pizza, you could say:
 .Pp
-.Dl ledger reg food and @Shakee
-.It Ar term Nm or Ar term
+.Dl Li ledger reg food and @Shakee
+.It Ar term Cm or Ar term
 When you wish to be more explicit, use the OR operator.
-.It Nm show
-.It Nm not Ar term
+.It Ic show
+.It Cm not Ar term
 Reverse the logical meaning of the following term.  This can be used with
 parentheses to great effect:
 .Pp
@@ -935,12 +935,12 @@ interpret parentheses, you should always escape them:
 .It Fn abs value
 Return the absolute value of the given
 .Ar value .
-.It Nm account
-.It Nm account_base
-.It Nm account_amount
-.It Nm actual
-.It Nm amount
-.It Nm amount_expr
+.It Sy account
+.It Sy account_base
+.It Sy account_amount
+.It Sy actual
+.It Sy amount
+.It Sy amount_expr
 .It Fn ansify_if value color bool
 Render the given
 .Ar value
@@ -949,33 +949,33 @@ as a string, applying the proper ANSI escape codes to display it in the given
 if
 .Ar bool
 is true.  It typically checks the value of the option
-.Nm Fl \-color ,
+.Fl \-color ,
 for example:
-.Dl ansify_if(amount, "blue", options.color)
-.It Nm beg_line
+.Dl Li ansify_if(amount, "blue", options.color)
+.It Sy beg_line
 Line number where entry for posting begins.
-.It Nm beg_pos
+.It Sy beg_pos
 Character position where entry for posting begins.
-.It Nm calculated
-.It Nm cleared
-.It Nm code
+.It Sy calculated
+.It Sy cleared
+.It Sy code
 Return the transaction code, the string between the parenthesis after the date.
-.It Nm comment
-.It Nm commodity
+.It Sy comment
+.It Sy commodity
 Return the commodity of the posting amount.
-.It Nm cost
-.It Nm count
-.It Nm date
+.It Sy cost
+.It Sy count
+.It Sy date
 Return the date of the posting.
-.It Nm depth
-.It Nm depth_spacer
-.It Nm display_amount
-.It Nm display_total
-.It Nm end_line
+.It Sy depth
+.It Sy depth_spacer
+.It Sy display_amount
+.It Sy display_total
+.It Sy end_line
 Line number where entry for posting ends.
-.It Nm end_pos
+.It Sy end_pos
 Character position where entry for posting ends.
-.It Nm filename
+.It Sy filename
 The name of the ledger data file from whence the posting came.
 .It Fn format_date date format
 Return the
@@ -985,45 +985,45 @@ as a string using
 See
 .Xr strftime 3
 for format string details.
-.It Nm get_at
-.It Nm has_meta
-.It Nm has_tag
-.It Nm is_seq
-.It Nm join
-.It Nm market
-.It Nm meta
-.It Nm note
-.It Nm null
-.It Nm options
-.It Nm partial_account
-.It Nm payee
+.It Sy get_at
+.It Sy has_meta
+.It Sy has_tag
+.It Sy is_seq
+.It Sy join
+.It Sy market
+.It Sy meta
+.It Sy note
+.It Sy null
+.It Sy options
+.It Sy partial_account
+.It Sy payee
+.It Sy pending
 .It Fn percent value_a value_b
 Return the percentage of
 .Ar value_a
 in relation to
 .Ar value_b .
-.It Nm pending
-.It Nm post
-.It Nm print
-.It Nm quantity
+.It Sy post
+.It Sy print
+.It Sy quantity
 .It Fn quoted expression
 Surround
 .Ar expression
 with double-quotes.
-.It Nm real
-.It Nm rounded
-.It Nm scrub
-.It Nm status
-.It Nm strip
-.It Nm subcount
-.It Nm tag
-.It Nm today
-.It Nm total
-.It Nm total_expr
-.It Nm truncate
-.It Nm uncleared
-.It Nm virtual
-.It Nm xact
+.It Sy real
+.It Sy rounded
+.It Sy scrub
+.It Sy status
+.It Sy strip
+.It Sy subcount
+.It Sy tag
+.It Sy today
+.It Sy total
+.It Sy total_expr
+.It Sy truncate
+.It Sy uncleared
+.It Sy virtual
+.It Sy xact
 .El
 .Sh ENTRIES
 .Sh FORMATS
