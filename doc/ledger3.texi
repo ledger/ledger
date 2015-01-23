@@ -7442,8 +7442,8 @@ BTC:USD}.
 @subsection Environment variables
 
 Every option to ledger may be set using an environment variable.  If
-an option has a long name such @option{--this-option}, setting the
-environment variable @env{LEDGER_THIS_OPTION} will have the same
+an option has a long name, for example @option{--account}, setting the
+environment variable @env{LEDGER_ACCOUNT} will have the same
 effect as specifying that option on the command-line.  Options on the
 command-line always take precedence over environment variable
 settings, however.
