@@ -5,17 +5,19 @@
 .Nm ledger
 .Nd Command-line, double-entry account reporting tool
 .Sh SYNOPSIS
-ledger
+.Nm
 .Op Ar command
 .Op Ar options
 .Op Ar arguments
 .Sh DESCRIPTION
-Ledger is a command-line accounting tool based on the power and completeness
+.Nm
+is a command-line accounting tool based on the power and completeness
 of double-entry accounting.  It is only a reporting tool, which means it never
 modifies your data files, but it does offers a large selection of reports, and
 different ways to customize them to your liking.
 .Sh COMMANDS
-Ledger accepts several top-level commands, each of which generates a different
+.Nm
+accepts several top-level commands, each of which generates a different
 kind of basic report.  Most of them accept a
 .Ar report-query
 argument, in order to determine what should be reported.  To understand the
@@ -26,12 +28,15 @@ see the section on
 In its most basic form, simply specifying one or more strings produces a
 report for all accounts containing those strings.
 .Pp
-If no command is given, Ledger enters a
+If no command is given,
+.Nm
+enters a
 .Tn REPL ,
 or command loop, allowing several commands to be executed against the same
 dataset without reparsing.
 .Pp
-The following is a complete list of reporting commands accepted by Ledger:
+The following is a complete list of reporting commands accepted by
+.Nm :
 .Bl -tag -width accounts
 .It Ic accounts Oo Ar report-query Oc
 Lists all accounts for postings matching the
@@ -82,7 +87,8 @@ one posting.  See the manual for more information.
 Lists all commodities for postings matching the
 .Ar report-query .
 .It Ic convert
-Reads data from a CSV (comma-separated values) file and generates Ledger
+Reads data from a CSV (comma-separated values) file and generates
+.Nm
 transactions.
 .It Ic csv Oo Ar report-query Oc
 Report of postings matching the
@@ -90,7 +96,9 @@ Report of postings matching the
 in CSV format (comma-separated values).  Useful for exporting data to a
 spreadsheet for further analysis or charting.
 .It Ic entry Oo Ar entry-template Oc
-Generate and display a new, properly formatted Ledger transaction by comparing
+Generate and display a new, properly formatted
+.Nm
+transaction by comparing
 the
 .Ar entry-template
 to the transactions in your data file(s).  For more information on draft
@@ -104,8 +112,9 @@ is also accepted.
 .It Ic emacs Oo Ar query Oc
 Outputs posting and transaction data in a format readily consumed by the Emacs
 editor, in a series of Lisp forms.  This is used by the
-.Li ledger.el
-Emacs mode to process reporting data from Ledger.
+.Pa ledger.el
+Emacs mode to process reporting data from
+.Nm .
 .It Ic equity Oo Ar report-query Oc
 Prints a series of transactions that balance current totals for
 accounts matching the
@@ -121,7 +130,9 @@ Lists all payees for postings matching the
 .Ar report-query .
 .It Ic pricemap
 Produces a file which can be used to generate a graph with graphviz showing
-the relationship of commodities in the Ledger file.
+the relationship of commodities in the
+.Nm
+file.
 .It Ic prices Oo Ar report-query Oc
 Reports prices for all commodities in postings matching the
 .Ar report-query .
@@ -135,7 +146,9 @@ file.
 .It Ic print Oo Ar report-query Oc
 Prints out the full transactions of any matching postings using the same
 format as they would appear in a data file.  This can be used to extract
-subsets from a Ledger file to transfer to other files.
+subsets from a
+.Nm
+file to transfer to other files.
 .It Ic push Oo Ar options Oc
 In the
 .Tn REPL ,
@@ -244,7 +257,9 @@ List all postings matching the
 .Ar sql-query .
 This command allows to generate SQL-like queries.
 .It Ic source
-Parses a journal file and checks it for errors. Ledger will return success
+Parses a journal file and checks it for errors.
+.Nm
+will return success
 if no errors are found.
 .It Ic stats Oo Ar report-query Oc
 Provides summary information about all the postings matching
@@ -323,7 +338,9 @@ report.
 .It Fl \-anon
 Anonymize registry output, mostly for sending in bug reports.
 .It Fl \-args-only
-Ignore init files and environment variables for the ledger run.
+Ignore init files and environment variables for the
+.Nm
+run.
 .\".It Fl \-auto-match
 .It Fl \-aux-date
 Show auxiliary dates for all calculations.
@@ -370,7 +387,9 @@ Specify the format to use for the
 .Ic cleared
 report
 .It Fl \-collapse Pq Fl n
-By default ledger prints all accounts in an account tree. With
+By default
+.Nm
+prints all accounts in an account tree. With
 .Fl \-collapse
 it prints only the top level account specified.
 .It Fl \-collapse-if-zero
@@ -388,7 +407,9 @@ Report the cost basis on all posting.
 Alias for
 .Fl \-basis .
 .It Fl \-count
-Direct ledger to report the number of items when appended to the
+Direct
+.Nm
+to report the number of items when appended to the
 .Ic commodities ,
 .Ic accounts
 or
@@ -408,7 +429,9 @@ Shorthand for
 Transform the date of the transaction using
 .Ar EXPR .
 .It Fl \-date-format Ar DATEFMT Pq Fl y
-Specify the format ledger should use to print dates.
+Specify the format
+.Nm
+should use to print dates.
 .\" .It Fl \-datetime-format Ar FMT
 .It Fl \-date-width Ar INT
 Specify the width, in characters, of the date column in the
@@ -424,10 +447,14 @@ or
 .Ic balance
 commands, you will now get separate columns for debits and credits.
 .It Fl \-debug Ar STR
-If Ledger has been built with debug options this will provide extra
+If
+.Nm
+has been built with debug options this will provide extra
 data during the run.
 .It Fl \-decimal-comma
-Direct Ledger to parse journals using the European standard comma as
+Direct
+.Nm
+to parse journals using the European standard comma as
 decimal separator, vice a period.
 .It Fl \-depth Ar INT
 Limit the depth of the account tree.  In a balance report, for example,
@@ -465,7 +492,9 @@ Cause quotes to be automagically downloaded, as needed, by running
 a script named
 .Em getquote
 and expecting that script to return
-a value understood by ledger.  A sample implementation of a
+a value understood by
+.Nm .
+A sample implementation of a
 .Em getquote
 script, implemented in Perl, is provided in the
 distribution.  Downloaded quote price are then appended to the price
@@ -492,7 +521,9 @@ The latest available price is used.
 .It Fl \-file Ar FILE
 Read
 .Ar FILE
-as a ledger file.
+as a
+.Nm
+file.
 .\".It Fl \-full-help
 .It Fl \-first Ar INT
 Print the first
@@ -508,7 +539,9 @@ balance report will not use an indented tree.
 Output TTY color codes even if the TTY doesn't support them. Useful
 for TTYs that don't advertise their capabilities correctly.
 .It Fl \-force-pager
-Force Ledger to paginate its output.
+Force
+.Nm
+to paginate its output.
 .It Fl \-forecast-while Ar EXPR
 Continue forecasting while
 .Ar VEXPR
@@ -556,17 +589,25 @@ Alias for
 .It Fl \-help
 Print a summary of all the options, and what they are used for.  This
 can be a handy way to remember which options do what.  This help screen
-is also printed if ledger is run without a command.
+is also printed if
+.Nm
+is run without a command.
 .\".It Fl \-help-calc
 .\".It Fl \-help-comm
 .\".It Fl \-help-disp
 .It Fl \-immediate
-Instruct ledger to evaluate calculations immediately rather than lazily.
+Instruct
+.Nm
+to evaluate calculations immediately rather than lazily.
 .\".It Fl \-import
 .It Fl \-init-file Ar FILE Pq Fl i
 Causes
 .Ar FILE
-to be read by ledger before any other ledger file.
+to be read by
+.Nm
+before any other
+.Nm
+file.
 This file may not contain any postings, but it may contain option
 settings.  To specify options in the init file, use the same syntax as
 the command-line, but put each option on its own line.
@@ -627,7 +668,7 @@ Suppress any color TTY output.
 Disables the pager on TTY output.
 .It Fl \-no-rounding
 Don't output
-.Li Qq <Rounding>
+.Qq Li <Rounding>
 postings.  Note that this will cause the
 running total to often not add up!  It's main use is for
 .Fl \-amount-data Pq Fl j
@@ -646,10 +687,14 @@ future using
 This is a postings predicate that applies after certain transforms have
 been executed, such as periodic gathering.
 .It Fl \-options
-Display the options in effect for this Ledger invocation, along with
+Display the options in effect for this
+.Nm
+invocation, along with
 their values and the source of those values.
 .It Fl \-output Ar FILE Pq Fl o
-Redirect the output of ledger to the file defined in
+Redirect the output of
+.Nm
+to the file defined in
 .Ar FILE .
 .It Fl \-pager Ar STR
 Specify the pager program to use as
@@ -739,7 +784,9 @@ amounts.
 Account using only real transactions ignoring virtual and automatic
 transactions.
 .It Fl \-recursive-aliases
-Causes ledger to try to expand aliases recursively, i.e. try to expand
+Causes
+.Nm
+to try to expand aliases recursively, i.e. try to expand
 the result of an earlier expansion again, until no more expansions apply.
 .It Fl \-register-format Ar FMT
 Define the output format for the
@@ -766,18 +813,22 @@ for the
 .Ic generate
 command.  Used as part of development testing.
 .It Fl \-script Ar FILE
-Execute a ledger script.
+Execute a
+.Nm
+script.
 .It Fl \-sort Ar EXPR Pq Fl S
 Sort the register report based on the value expression given to sort.
 .\".It Fl \-sort-all
 .It Fl \-sort-xacts
 Sort the posting within transactions using the given value expression.
 .It Fl \-start-of-week Ar STR
-Tell ledger to use a particular day of the week to start its 
+Tell
+.Nm
+to use a particular day of the week to start its
 .Qq weekly
 summary.
 .Ar STR
-can be day names, their abbreviations like 
+can be day names, their abbreviations like
 .Qq Mon ,
 or the weekday number
 starting at 0 for Sunday.
@@ -845,12 +896,14 @@ Shows the values used by each tag when used in combination with the
 command.
 .\".It Fl \-value-expr Ar EXPR
 .It Fl \-verbose
-Print detailed information on the execution of Ledger.
+Print detailed information on the execution of
+.Nm .
 .It Fl \-verify
 Enable additional assertions during run-time. This causes a significant
 slowdown.  When combined with
 .Fl \-debug Ar CODE
-ledger will produce memory trace information.
+.Nm
+will produce memory trace information.
 .\".It Fl \-verify-memory
 .It Fl \-version
 Print version information and exit.
@@ -870,21 +923,31 @@ is that pre-commands ignore the journal data file completely, nor is
 the user's init file read.
 .Bl -tag -width -indent
 .It Ic args / query
-Evaluate the given arguments and report how Ledger interprets it against
+Evaluate the given arguments and report how
+.Nm
+interprets it against
 the following model transaction.
 .It Ic eval
 Evaluate the given value expression against the model transaction.
 .It Ic format
-Print details of how ledger uses the given formatting description and
+Print details of how
+.Nm
+uses the given formatting description and
 apply it against a model transaction.
 .It Ic parse / expr
-Print details of how ledger uses the given value expression description
+Print details of how
+.Nm
+uses the given value expression description
 and apply it against a model transaction.
 .It Ic generate
-Randomly generates syntactically valid Ledger data from a seed.  Used
+Randomly generates syntactically valid
+.Nm
+data from a seed.  Used
 by the GenerateTests harness for development testing.
 .It Ic period
-Evaluate the given period and report how Ledger interprets it.
+Evaluate the given period and report how
+.Nm
+interprets it.
 .It Ic script
 .It Ic template
 Shows the insertion template that the
@@ -922,13 +985,13 @@ When you wish to be more explicit, use the OR operator.
 Reverse the logical meaning of the following term.  This can be used with
 parentheses to great effect:
 .Pp
-.Dl ledger reg food and @Shakee and not dining
+.Dl Li ledger reg food and @Shakee and not dining
 .It \&( Ar term No \&)
 If you wish to mix OR and AND operators, it is often helpful to surround
 logical units with parentheses.  \fBNOTE\fR: Because of the way some shells
 interpret parentheses, you should always escape them:
 .Pp
-.Dl ledger bal \e\\\&( assets or liab \e\\\&) and not food
+.Dl Li ledger bal \e\\\&( assets or liab \e\\\&) and not food
 .El
 .Sh EXPRESSIONS
 .Bl -tag -width "partial_account"
@@ -976,7 +1039,9 @@ Line number where entry for posting ends.
 .It Sy end_pos
 Character position where entry for posting ends.
 .It Sy filename
-The name of the ledger data file from whence the posting came.
+The name of the
+.Nm
+data file from whence the posting came.
 .It Fn format_date date format
 Return the
 .Ar date
@@ -1028,14 +1093,18 @@ with double-quotes.
 .Sh ENTRIES
 .Sh FORMATS
 .Sh DEBUG COMMANDS
-In addition to the regular reporting commands, Ledger also accepts several
+In addition to the regular reporting commands,
+.Nm
+also accepts several
 debug commands:
 .Bl -tag -width balance
 .It Ic args Oo Ar report-query Oc
 Accepts a
 .Ar report-query
 as its argument and displays it back to the user along with a complete
-analysis of how Ledger interpreted it.  Useful if you want to understand how
+analysis of how
+.Nm
+interpreted it.  Useful if you want to understand how
 report queries are translated into value expressions.
 .It Ic eval Oo Ar value-expression Oc
 Evaluates the given
@@ -1049,7 +1118,9 @@ and displays an analysis of how it was parsed, and what it would look like
 applied to a sample transaction.  For more on format strings, see the section
 .Sx FORMATS .
 .It Ic generate
-Generates 50 randomly composed yet valid Ledger transactions.
+Generates 50 randomly composed yet valid
+.Nm
+transactions.
 .It Ic parse Oo Ar value-expression Oc
 Parses the given
 .Ar value-expression
@@ -1059,8 +1130,12 @@ more on value expressions, see the section
 .It Ic python Oo Ar file Oc
 Invokes a Python interpreter to read the given
 .Ar file .
-What is special about this is that the ledger module is builtin, not read from
-disk, so it doesn't require Ledger to be installed anywhere, or the shared
+What is special about this is that the
+.Nm
+module is builtin, not read from
+disk, so it doesn't require
+.Nm
+to be installed anywhere, or the shared
 library variants to be built.
 .It Ic reload
 Used only in the
@@ -1072,10 +1147,23 @@ Accepts a
 and displays information about how it was parsed.  See the section on
 .Sx DRAFTS .
 .El
+.Sh ENVIRONMENT
+Every option to
+.Nm
+may be set using an environment variable.  If
+an option has a long name for example,
+.Fl \-account ,
+setting the environment variable
+.Ev LEDGER_ACCOUNT
+will have the same effect as specifying that option on the command-line.
+Options on the command-line always take precedence over environment variable
+settings, however.
 .Sh FILES
 .Bl -tag -width -indent
 .It Pa ~/.ledgerrc
-Your personal ledger initializations.
+Your personal
+.Nm
+initializations.
 .El
 .Sh SEE ALSO
 .Xr beancount 1 ,
