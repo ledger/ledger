@@ -13,8 +13,8 @@
 .Nm
 is a command-line accounting tool based on the power and completeness
 of double-entry accounting.  It is only a reporting tool, which means it never
-modifies your data files, but it does offers a large selection of reports, and
-different ways to customize them to your liking.
+modifies your data files, but it does offer a large selection of reports, and
+different ways to customize them to your needs.
 .Sh COMMANDS
 .Nm
 accepts several top-level commands, each of which generates a different
@@ -32,7 +32,7 @@ If no command is given,
 .Nm
 enters a
 .Tn REPL ,
-or command loop, allowing several commands to be executed against the same
+or command loop, allowing several commands to be executed on the same
 dataset without reparsing.
 .Pp
 The following is a complete list of reporting commands accepted by
@@ -116,13 +116,13 @@ editor, in a series of Lisp forms.  This is used by the
 Emacs mode to process reporting data from
 .Nm .
 .It Ic equity Oo Ar report-query Oc
-Prints a series of transactions that balance current totals for
+Prints a transaction with a series of postings that balance current totals for
 accounts matching the
 .Ar report-query
 in a special account called
 .Li Equity:Opening Balances .
 The purpose of this report is to close the books for a prior year, while using
-these equity transactions to carry forward those balances.
+these equity postings to carry forward those balances.
 .It Ic org
 Produces a journal file suitable for use in the Emacs org mode.
 .It Ic payees Oo Ar report-query Oc
@@ -200,7 +200,7 @@ Show postings only for the given
 Show postings that are related to those that would have been shown.  It has
 the effect of displaying the
 .Qq other side
-of the values.
+of the postings.
 .It Fl \-sort Ar value-expression Pq Fl S
 Sort postings by evaluating the given
 .Ar value-expression .
@@ -404,7 +404,9 @@ Alias for
 .It Fl \-columns Ar INT
 Specify the width of the
 .Ic register
-report in characters.
+report in characters. By default
+.Nm
+will use all available columns in your terminal.
 .It Fl \-cost
 Report the cost basis on all posting.
 Alias for
@@ -461,16 +463,14 @@ to parse journals using the European standard comma as
 decimal separator, vice a period.
 .It Fl \-depth Ar INT
 Limit the depth of the account tree.  In a balance report, for example,
-a
-.Fl \-depth 2
-statement will print balances only for account with
-two levels, i.e.
+.Fl \-depth Ar 2
+will print balances only for accounts with two levels, i.e.
 .Sy Expenses:Entertainment
 but not
-.Sy Expenses:entertainment:Dining .
-This is a display predicate, which
-means it only affects display, not the total calculations.
-.It Fl \-deviation Pq Fl D
+.Sy Expenses:Entertainment:Dining .
+This is a display predicate, which means it only affects display,
+not the total calculations.
+.It Fl \-deviation
 Report each posting's deviation from the average. It is only meaningful
 in the register and prices reports.
 .It Fl \-display Ar EXPR Pq Fl d
@@ -522,17 +522,14 @@ Display values in terms of the given
 The latest available price is used.
 .\".It Fl \-explicit
 .It Fl \-file Ar FILE
-Read
-.Ar FILE
-as a
-.Nm
-file.
+Read journal data from
+.Ar FILE .
 .\".It Fl \-full-help
 .It Fl \-first Ar INT
 Print the first
 .Ar INT
 entries. Opposite of
-.Fl \-tail Ar INT .
+.Fl \-last Ar INT .
 Alias for
 .Fl \-head .
 .It Fl \-flat
@@ -673,7 +670,7 @@ Disables the pager on TTY output.
 Don't output
 .Qq Li <Rounding>
 postings.  Note that this will cause the
-running total to often not add up!  It's main use is for
+running total to often not add up!  Its main use is for
 .Fl \-amount-data Pq Fl j
 and
 .Fl \-total-data Pq Fl J
@@ -683,9 +680,15 @@ Suppress the output of group titles.
 .It Fl \-no-total
 Suppress printing the final total line in a balance report.
 .It Fl \-now Ar DATE
-Define the current date in case to you to do calculate in the past or
-future using
-.Fl \-current .
+Use
+.Ar DATE
+as the current date. This affects the output when using
+.Fl \-period ,
+.Fl \-begin ,
+.Fl \-end ,
+or
+.Fl \-current
+to decide which dates lie in the past or future.
 .It Fl \-only Ar EXPR
 This is a postings predicate that applies after certain transforms have
 been executed, such as periodic gathering.
@@ -697,11 +700,12 @@ their values and the source of those values.
 .It Fl \-output Ar FILE Pq Fl o
 Redirect the output of
 .Nm
-to the file defined in
+to
 .Ar FILE .
 .It Fl \-pager Ar STR
-Specify the pager program to use as
-.Ar STR .
+Use
+.Ar STR
+as the pager program.
 .It Fl \-payee
 Sets a value expression for formatting the payee. In the
 .Ic register
@@ -845,8 +849,8 @@ Report only the last
 entries. Only useful on a register report. Alias for
 .Fl \-last Ar INT
 .It Fl \-time-colon
-Display the value for a seconds based commodity as real hours and minutes,
-thus 8100 seconds will be displayed as 2:15h instead of 2.25h.
+Display the value for commodities based on seconds as hours and minutes.
+Thus 8100s will be displayed as 2:15h instead of 2.25h.
 .\".It Fl \-time-report
 .It Fl \-total Ar EXPR Pq Fl T
 Define a value expression used to calculate the total in reports.
@@ -860,7 +864,9 @@ Enable tracing. The
 specifies the level of trace desired.
 .It Fl \-truncate Ar STR
 Indicates how truncation should happen when the contents of columns
-exceed their width. Valid arguments are
+exceed their width. Valid arguments for 
+.Ar STR
+are
 .Ar leading ,
 .Ar middle ,
 and
@@ -914,7 +920,7 @@ Print version information and exit.
 Shorthand for
 .Fl \-period Ar weekly .
 .It Fl \-wide Pq Fl w
-Assume 132 columns instead of 80.
+Assume 132 columns instead of the TTY width.
 .It Fl \-yearly Pq Fl Y
 Shorthand for
 .Fl \-period Ar yearly .
@@ -928,8 +934,17 @@ the user's init file read.
 .It Ic args / query
 Evaluate the given arguments and report how
 .Nm
-interprets it against
-the following model transaction.
+interprets it against the following model transaction:
+.Bd -literal -offset indent
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+.Ed
 .It Ic eval
 Evaluate the given value expression against the model transaction.
 .It Ic format
@@ -955,7 +970,7 @@ interprets it.
 .It Ic template
 Shows the insertion template that the
 .Ic xact
-sub-command generates.  This is a debugging command.
+command generates.  This is a debugging command.
 .El
 .Sh QUERIES
 The syntax for reporting queries can get somewhat complex.  It is a series of
@@ -1154,7 +1169,7 @@ and displays information about how it was parsed.  See the section on
 Every option to
 .Nm
 may be set using an environment variable.  If
-an option has a long name for example,
+an option has a long name, for example
 .Fl \-account ,
 setting the environment variable
 .Ev LEDGER_ACCOUNT
