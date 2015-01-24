@@ -35,17 +35,17 @@ enters a
 or command loop, allowing several commands to be executed on the same
 dataset without reparsing.
 .Pp
-The following is a complete list of reporting commands accepted by
-.Nm :
+The following is a complete list of accepted reporting commands:
 .Bl -tag -width accounts
 .It Ic accounts Oo Ar report-query Oc
-Lists all accounts for postings matching the
+List all accounts for postings that match the
 .Ar report-query .
 .El
 .Bl -tag -width balance
 .It Ic balance Oo Ar report-query Oc
-Produces a balance report showing totals for all matching accounts, and
-aggregate totals for parents of those accounts.  Options most commonly used
+Print a balance report showing totals for postings that match
+.Ar report-query ,
+and aggregate totals for parents of those accounts.  Options most commonly used
 with this command are:
 .Bl -tag -compact -width "--collapse (-n)"
 .It Fl \-basis Pq Fl B
@@ -55,13 +55,13 @@ report which is guaranteed to always balance to zero, when no
 is specified.
 Only show totals for the top-most accounts.
 .It Fl \-empty Pq Fl E
-Also show accounts whose total is zero.
+Show accounts whose total is zero.
 .It Fl \-flat
 Rather than display a hierarchical tree, flatten the report to show subtotals
 for only accounts matching
 .Ar report-query .
 .It Fl \-no-total
-Suppress the summary total shown at the bottom of the report (when not zero).
+Suppress the summary total shown at the bottom of the report.
 .El
 .Pp
 The synonyms
@@ -84,7 +84,7 @@ each account, and the date of the most recent cleared posting in that account.
 For this accounting to be meaningful, the cleared flag must be set on at least
 one posting.  See the manual for more information.
 .It Ic commodities Oo Ar report-query Oc
-Lists all commodities for postings matching the
+List all commodities for postings matching the
 .Ar report-query .
 .It Ic convert
 Reads data from a CSV (comma-separated values) file and generates
@@ -110,13 +110,13 @@ The synonym
 .Ic xact
 is also accepted.
 .It Ic emacs Oo Ar query Oc
-Outputs posting and transaction data in a format readily consumed by the Emacs
+Output posting and transaction data in a format readily consumed by the Emacs
 editor, in a series of Lisp forms.  This is used by the
 .Pa ledger.el
 Emacs mode to process reporting data from
 .Nm .
 .It Ic equity Oo Ar report-query Oc
-Prints a transaction with a series of postings that balance current totals for
+Print a transaction with a series of postings that balance current totals for
 accounts matching the
 .Ar report-query
 in a special account called
@@ -124,27 +124,27 @@ in a special account called
 The purpose of this report is to close the books for a prior year, while using
 these equity postings to carry forward those balances.
 .It Ic org
-Produces a journal file suitable for use in the Emacs org mode.
+Produce a journal file suitable for use in the Emacs org mode.
 .It Ic payees Oo Ar report-query Oc
-Lists all payees for postings matching the
+List all payees for postings matching the
 .Ar report-query .
 .It Ic pricemap
-Produces a file which can be used to generate a graph with graphviz showing
+Produce a file which can be used to generate a graph with graphviz showing
 the relationship of commodities in the
 .Nm
 file.
 .It Ic prices Oo Ar report-query Oc
-Reports prices for all commodities in postings matching the
+Report prices for all commodities in postings matching the
 .Ar report-query .
 The prices are reported with the granularity of a single day.
 .It Ic pricedb Oo Ar report-query Oc
-Reports prices for all commodities in postings matching the
+Report prices for all commodities in postings matching the
 .Ar report-query .
 Prices are reported down to the second, using the same format as the
 .Pa ~/.pricedb
 file.
 .It Ic print Oo Ar report-query Oc
-Prints out the full transactions of any matching postings using the same
+Print out the full transactions of any matching postings using the same
 format as they would appear in a data file.  This can be used to extract
 subsets from a
 .Nm
@@ -152,12 +152,17 @@ file to transfer to other files.
 .It Ic push Oo Ar options Oc
 In the
 .Tn REPL ,
-this command pushes a set of command-line options, so that they will apply to
-all subsequent reports.
+push a set of command-line
+.Ar options ,
+so that they will apply to all subsequent reports.
 .It Ic pop
 In the
 .Tn REPL ,
-pops any option settings that have been pushed.
+pop any option settings that have been
+.Sm off
+.Ic push
+ed.
+.Sm on
 .It Ic register Oo Ar report-query Oc
 List all postings matching the
 .Ar report-query .
@@ -258,14 +263,14 @@ work-in-progress, and will not be fully functional until a later version.
 List all postings matching the
 .Ar sql-query .
 This command allows to generate SQL-like queries, e.g.:
-.Dl Li ledger select 'date,amount where account==\*qIncome:Salary\*q'
+.Dl Li ledger select date,amount from posts where account=~/Income/
 .It Ic source
-Parses a journal file and checks it for errors.
+Parse a journal file and checks it for errors.
 .Nm
 will return success
 if no errors are found.
 .It Ic stats Oo Ar report-query Oc
-Provides summary information about all the postings matching
+Provide summary information about all the postings matching
 .Ar report-query .
 It provides information such as:
 .Bl -bullet -offset indent -compact
@@ -282,10 +287,10 @@ Uncleared postings
 .It
 Days since last posting
 .It
-More...
+Posts in the last 7 and 30 days and this month
 .El
 .It Ic xml Oo Ar report-query Oc
-Outputs data relating to the current report in
+Output data relating to the current report in
 .Tn XML
 format.  It includes all
 accounts and commodities involved in the report, plus the postings and the
@@ -308,14 +313,17 @@ than
 then the account will be truncated on the
 left, with no shortening of the account names in order to fit into the
 desired width.
-.It Fl \-account Ar STR
+.It Fl \-account Ar EXPR
 Prepend
-.Ar STR
+.Ar EXPR
 to all accounts reported. That is, the option
 .Fl \-account Ar \*q'Personal'\*q
 would tack
 .Ar Personal:
-to the beginning of every account reported in a balance report or register report.
+and
+.Fl \-account Ar \*qtag('VAT')\*q
+would tack the value of the VAT tag to the beginning of every account
+reported in a balance report or register report.
 .It Fl \-account-width Ar INT
 Set the width of the account column in the
 .Ic register
@@ -396,11 +404,7 @@ Specify the format to use for the
 .Ic cleared
 report
 .It Fl \-collapse Pq Fl n
-By default
-.Nm
-prints all accounts in an account tree. With
-.Fl \-collapse
-it prints only the top level account specified.
+Print only the top level accounts.
 .It Fl \-collapse-if-zero
 Collapse the account display only if it has a zero balance.
 .It Fl \-color
@@ -614,10 +618,8 @@ Instruct
 to evaluate calculations immediately rather than lazily.
 .\".It Fl \-import
 .It Fl \-init-file Ar FILE Pq Fl i
-Causes
+Read
 .Ar FILE
-to be read by
-.Nm
 before any other
 .Nm
 file.
@@ -822,9 +824,7 @@ of the transaction.
 .It Fl \-related-all
 Show all postings in a transaction, similar to
 .Fl \-related
-but show
-.Em both sides
-of each transaction.
+but show both sides of each transaction.
 .\".It Fl \-revalued
 .\".It Fl \-revalued-only
 .\".It Fl \-revalued-total Ar EXPR
@@ -845,11 +845,11 @@ Sort the register report based on the value expression given to sort.
 .It Fl \-sort-xacts
 Sort the posting within transactions using the given value expression.
 .It Fl \-start-of-week Ar STR
-Tell
-.Nm
-to use a particular day of the week to start its
-.Qq weekly
-summary.
+Use
+.Ar STR
+as the particular day of the week to start when using the
+.Fl \-weekly
+option.
 .Ar STR
 can be day names, their abbreviations like
 .Qq Mon ,
@@ -916,7 +916,7 @@ file to change the default.
 Perform all calculations without rounding and display results to full
 precision.
 .It Fl \-values
-Shows the values used by each tag when used in combination with the
+Show the values used by each tag when used in combination with the
 .Ic tags
 command.
 .\".It Fl \-value-expr Ar EXPR
@@ -1135,36 +1135,35 @@ also accepts several
 debug commands:
 .Bl -tag -width balance
 .It Ic args Oo Ar report-query Oc
-Accepts a
-.Ar report-query
-as its argument and displays it back to the user along with a complete
-analysis of how
+Display complete analysis of how
 .Nm
-interpreted it.  Useful if you want to understand how
-report queries are translated into value expressions.
+interpreted the given
+.Ar report-query .
+Useful if you want to understand how report queries are translated into value
+expressions.
 .It Ic eval Oo Ar value-expression Oc
-Evaluates the given
+Evaluate the given
 .Ar value-expression
 and prints the result.  For more on value expressions, see the section
 .Sx EXPRESSIONS .
 .It Ic format Oo Ar format-string Oc
-Accepts a
+Display an analysis of how
 .Ar format-string
-and displays an analysis of how it was parsed, and what it would look like
-applied to a sample transaction.  For more on format strings, see the section
+was parsed, and what it would look like applied to a sample transaction.  For
+more on format strings, see the section
 .Sx FORMATS .
 .It Ic generate
-Generates 50 randomly composed yet valid
+Generate 50 randomly composed yet valid
 .Nm
 transactions.
 .It Ic parse Oo Ar value-expression Oc
-Parses the given
+Parse the given
 .Ar value-expression
 and display an analysis of the expression tree and its evaluated value.  For
 more on value expressions, see the section
 .Sx EXPRESSIONS .
 .It Ic python Oo Ar file Oc
-Invokes a Python interpreter to read the given
+Invoke a Python interpreter to read the given
 .Ar file .
 What is special about this is that the
 .Nm
@@ -1174,13 +1173,13 @@ disk, so it doesn't require
 to be installed anywhere, or the shared
 library variants to be built.
 .It Ic reload
-Used only in the
-.Tn REPL ,
-it causes an immediate reloading of all data files for the current session.
+Reload all data files for the current session immediately.
+Can only be used in the
+.Tn REPL .
 .It Ic template Oo Ar draft-template Oc
-Accepts a
+Display information about how
 .Ar draft-template
-and displays information about how it was parsed.  See the section on
+was parsed.  See the section on
 .Sx DRAFTS .
 .El
 .Sh ENVIRONMENT
