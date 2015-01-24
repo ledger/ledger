@@ -1035,11 +1035,20 @@ interpret parentheses, you should always escape them:
 Return the absolute value of the given
 .Ar value .
 .It Sy account
+Return the posting's account.
 .It Sy account_base
-.It Sy account_amount
+Return the base account, i.e. everything after the last account delimiter ':'.
+.\".It Sy account_amount
 .It Sy actual
+.\" Is there a difference between real and actual?
+Return the true if the transaction is real, i.e not a automated or virtual
+transaction, false otherwise.
 .It Sy amount
+Return the amount of the posting.
 .It Sy amount_expr
+Return the calculated amount of the posting according to the
+.Fl \-amount
+option.
 .It Fn ansify_if value color bool
 Render the given
 .Ar value
@@ -1056,7 +1065,12 @@ Line number where entry for posting begins.
 .It Sy beg_pos
 Character position where entry for posting begins.
 .It Sy calculated
+.It Fn ceiling value
+Return the next integer of
+.Ar value
+toward +infinity.
 .It Sy cleared
+Return the true if the posting was cleared, false otherwise.
 .It Sy code
 Return the transaction code, the string between the parenthesis after the date.
 .It Sy comment
@@ -1083,48 +1097,92 @@ Return the
 .Ar date
 as a string using
 .Ar format .
-See
+Refer to
 .Xr strftime 3
 for format string details.
 .It Sy get_at
 .It Sy has_meta
-.It Sy has_tag
-.It Sy is_seq
-.It Sy join
-.It Sy market
+.It Fn has_tag tag
+Return the true if the posting has metadata named
+.Ar tag ,
+false otherwise.
+.It Fn is_seq
+.It Fn join value
+Replace all newlines in
+.Ar value
+with
+.Li \en .
+.It Fn market value datetime
+Return the price of
+.Ar value
+at
+.Ar datetime .
+Note that
+.Ar datetime
+must be surrounded by brackets in order to be parsed correctly, e.g.
+.Bq 2012/03/23 .
 .It Sy meta
 .It Sy note
 .It Sy null
 .It Sy options
-.It Sy partial_account
+A variable that allows access to the values of the given command-line options
+using the long option names, e.g. to see whether
+.Fl \-daily Pq Fl -D
+was given use
+.Sy option.daily .
+.\" .It Sy partial_account
 .It Sy payee
+Return the payee of the posting.
 .It Sy pending
+Return true if the posting is marked as pending, false otherwise.
 .It Fn percent value_a value_b
 Return the percentage of
 .Ar value_a
 in relation to
 .Ar value_b .
 .It Sy post
+.\" A variable scope
 .It Sy print
-.It Sy quantity
+.It Fn quantity value
+Return the quantity of
+.Ar value
+for values that have a per-unit cost.
 .It Fn quoted expression
 Surround
 .Ar expression
 with double-quotes.
 .It Sy real
+.\" Is there a difference between real and actual?
+Return the true if the transaction is real, i.e not a automated or virtual
+transaction, false otherwise.
 .It Sy rounded
+.It Fn roundto value n
+Return
+.Ar value
+rounded to
+.Ar n
+digits. Does not affect formatting.
 .It Sy scrub
 .It Sy status
 .It Sy strip
-.It Sy subcount
-.It Sy tag
+.\".It Sy subcount
+.It Fn tag name
+Return the value of tag named
+.Ar name .
 .It Sy today
+Return today’s date.
 .It Sy total
+Return the total of the posting.
 .It Sy total_expr
-.It Sy truncate
+Return the calculated total of the posting according to the
+.Fl \-total
+option.
+.It Fn truncate
 .It Sy uncleared
 .It Sy virtual
+Return the true if the transaction is virtual, e.g automated, false otherwise.
 .It Sy xact
+.\" A variable scope
 .El
 .\".Sh ENTRIES
 .\".Sh FORMATS
