@@ -489,7 +489,7 @@ calculations occur.
 .It Fl \-dow
 Group transactions by the days of the week.
 Alias for
-.Fl \-days-of-week
+.Fl \-days-of-week .
 .It Fl \-download
 Cause quotes to be automagically downloaded, as needed, by running
 a script named
@@ -516,7 +516,7 @@ Related to the
 command.  Gives current account balances in the form of a register
 report.
 .\".It Fl \-exact
-.It Fl \-exchange Ar COMMODITY Oo , COMM, ... Oc Pq Fl X
+.It Fl \-exchange Ar COMMODITY Oo , Ar COMMODITY, ... Oc Pq Fl X
 Display values in terms of the given
 .Ar COMMODITY .
 The latest available price is used.
@@ -616,7 +616,9 @@ Use
 .Ar STR
 amounts in calculations.  In case you know
 what amount a transaction should be, but the actual transaction has the
-wrong value you can use metadata STR to specify the expected amount.
+wrong value you can use metadata
+.Ar STR
+to specify the expected amount.
 .It Fl \-input-date-format Ar DATEFMT
 Specify the input date format for journal entries.
 .It Fl \-invert
@@ -650,9 +652,10 @@ Use the latest market value for all commodities.
 .It Fl \-master-account Ar STR
 Prepend all account names with
 .Ar STR
-.It Fl \-meta Ar EXPR
+.It Fl \-meta Ar STR
 In the register report, prepend the transaction with the value of the given
-.Ar TAG .
+tag
+.Ar STR .
 .It Fl \-meta-width Ar INT
 Specify the width of the Meta column used for the
 .Fl \-meta Ar TAG
@@ -719,7 +722,7 @@ report to
 Accounts, tags or commodities not previously declared will cause errors.
 .It Fl \-pending
 Use only postings that are marked pending.
-.It Fl \-percent Pq Fl \b'%'
+.It Fl \-percent Pq Fl %
 Calculate the percentage value of each account in a balance reports.
 Only works for account that have a single commodity.
 .It Fl \-period Ar PERIOD Pq Fl p
@@ -931,7 +934,7 @@ will work. The difference between a pre-command and a regular command
 is that pre-commands ignore the journal data file completely, nor is
 the user's init file read.
 .Bl -tag -width -indent
-.It Ic args / query
+.It Ic args No / Ic query
 Evaluate the given arguments and report how
 .Nm
 interprets it against the following model transaction:
@@ -952,7 +955,7 @@ Print details of how
 .Nm
 uses the given formatting description and
 apply it against a model transaction.
-.It Ic parse / expr
+.It Ic parse No / Ic expr
 Print details of how
 .Nm
 uses the given value expression description
@@ -983,16 +986,18 @@ Thus, to report the current balance for all assets and liabilities, you would
 use:
 .Pp
 .Dl ledger bal asset liab
-.It Ic payee Ar regex Pq \&@ Ns Ar regex
+.It Ic payee Ar regex Pq Ic \&@ Ns Ar regex
 Query on the payee, rather than the account.
-.It Ic tag Ar regex Pq \&% Ns Ar regex
-.It Ic note Ar regex Pq \&= Ns Ar regex
+.It Ic tag Ar regex Pq Ic \&% Ns Ar regex
+.It Ic note Ar regex Pq Ic \&= Ns Ar regex
 Query on anything found in an item's note.
-.It Ic code Ar regex Pq \&# Ns Ar regex
+.It Ic code Ar regex Pq Ic \&# Ns Ar regex
 Query on the xact's optional code (which can be any string the user wishes).
 .It Ar term Cm and Ar term
 Query terms are joined by an implicit OR operator.  You can change this to AND
-by using that keyword.  For example, to show food expenditures occurring at
+by using the
+.Cm and
+keyword.  For example, to show food expenditures occurring at
 Shakee's Pizza, you could say:
 .Pp
 .Dl Li ledger reg food and @Shakee
