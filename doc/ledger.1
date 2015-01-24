@@ -287,7 +287,11 @@ Uncleared postings
 .It
 Days since last posting
 .It
-Posts in the last 7 and 30 days and this month
+Posts in the last 7 days
+.It
+Posts in the last 30 days
+.It
+Posts this month
 .El
 .It Ic xml Oo Ar report-query Oc
 Output data relating to the current report in
@@ -323,7 +327,11 @@ would tack
 and
 .Fl \-account Ar \*qtag('VAT')\*q
 would tack the value of the VAT tag to the beginning of every account
-reported in a balance report or register report.
+reported in a
+.Ic balance
+or
+.Ic register
+report.
 .It Fl \-account-width Ar INT
 Set the width of the account column in the
 .Ic register
@@ -412,9 +420,11 @@ Use color if the terminal supports it.
 Alias for
 .Fl \-ansi
 .It Fl \-columns Ar INT
-Specify the width of the
+Make the
 .Ic register
-report in characters. By default
+report
+.Ar INT
+characters wide. By default
 .Nm
 will use all available columns in your terminal.
 .It Fl \-cost
@@ -431,9 +441,11 @@ or
 .Ic payees
 commands.
 .It Fl \-csv-format Ar FMT
-Specify the format to use for the
+Format
 .Ic csv
 report
+according to
+.Ar FMT .
 .It Fl \-current Pq Fl c
 Shorthand for
 .Fl \-limit Ar "'date <= today'" .
@@ -444,9 +456,11 @@ Shorthand for
 Transform the date of the transaction using
 .Ar EXPR .
 .It Fl \-date-format Ar DATEFMT Pq Fl y
-Specify the format
-.Nm
-should use to print dates.
+Print dates using
+.Ar DATEFMT .
+Refer to
+.Xr strftime 3
+for details on the format string syntax.
 .\" .It Fl \-datetime-format Ar FMT
 .It Fl \-date-width Ar INT
 Specify the width, in characters, of the date column in the
@@ -486,7 +500,9 @@ This is a display predicate, which means it only affects display,
 not the total calculations.
 .It Fl \-deviation
 Report each posting's deviation from the average. It is only meaningful
-in the register and prices reports.
+in the
+.Ic register No and Ic prices
+reports.
 .It Fl \-display Ar EXPR Pq Fl d
 Display lines that satisfy the expression
 .Ar EXPR .
@@ -613,9 +629,7 @@ is run without a command.
 .\".It Fl \-help-comm
 .\".It Fl \-help-disp
 .It Fl \-immediate
-Instruct
-.Nm
-to evaluate calculations immediately rather than lazily.
+Evaluate calculations immediately rather than lazily.
 .\".It Fl \-import
 .It Fl \-init-file Ar FILE Pq Fl i
 Read
@@ -638,11 +652,11 @@ to specify the expected amount.
 Specify the input date format for journal entries.
 .It Fl \-invert
 Change the sign of all reported values.
-.It Fl \-last Ar INT
+.It Fl \-last Ar INT .
 Report only the last
 .Ar INT
 entries. Opposite of
-.Fl \-first Ar Int .
+.Fl \-first Ar INT .
 Only useful on a register report. Alias for
 .Fl \-tail .
 .It Fl \-leeway Ar INT Pq Fl Z
