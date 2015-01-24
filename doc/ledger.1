@@ -208,7 +208,7 @@ Sort postings by evaluating the given
 Note that a comma-separated list of expressions is allowed, in which case each
 sorting term is used in order to determine the final ordering.  For example,
 to search by date and then amount, one would use:
-.Li -S 'date, amount' .
+.Dl ledger reg --sort 'date, amount'
 .It Fl \-tail Ar number
 Only show the last
 .Ar number
@@ -257,7 +257,8 @@ work-in-progress, and will not be fully functional until a later version.
 .It Ic select Oo Ar sql-query Oc
 List all postings matching the
 .Ar sql-query .
-This command allows to generate SQL-like queries.
+This command allows to generate SQL-like queries, e.g.:
+.Dl Li ledger select 'date,amount where account==\*qIncome:Salary\*q'
 .It Ic source
 Parses a journal file and checks it for errors.
 .Nm
@@ -1026,7 +1027,7 @@ If you wish to mix OR and AND operators, it is often helpful to surround
 logical units with parentheses.  \fBNOTE\fR: Because of the way some shells
 interpret parentheses, you should always escape them:
 .Pp
-.Dl Li ledger bal \e\\\&( assets or liab \e\\\&) and not food
+.Dl Li ledger bal \e( assets or liab \e) and not food
 .El
 .Sh EXPRESSIONS
 .Bl -tag -width "partial_account"
