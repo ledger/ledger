@@ -192,7 +192,8 @@ Invert the value of amounts shown.
 .It Fl \-market Pq Fl V
 Show current market values for all amounts.  This is determined in a somewhat
 magical fashion.  It is probably more straightforward to use
-.Fl \-exchange Ar commodity Pq Fl X .
+.Fl \-exchange
+option.
 .It Fl \-period Ar time-period Pq Fl p
 Show postings only for the given
 .Ar time-period .
@@ -234,7 +235,7 @@ Group postings by month.
 Group postings by fiscal quarter.
 .It Fl \-yearly Pq Fl Y
 Group postings by year.
-.It Fl \-dow
+.It Fl \-days-of-week
 Group postings by the day of the week on which they took place.
 .It Fl \-subtotal Pq Fl s
 Group all postings together.  This is very similar to the totals shown by the
@@ -340,6 +341,10 @@ Set the width in characters of the amount column in the
 report.
 .It Fl \-anon
 Anonymize registry output, mostly for sending in bug reports.
+.It Fl \-ansi
+Use color if the terminal supports it.
+Alias for
+.Fl \-color
 .It Fl \-args-only
 Ignore init files and environment variables for the
 .Nm
@@ -443,6 +448,10 @@ Specify the width, in characters, of the date column in the
 .Ic register
 report.
 .\".It Fl \-day-break
+.It Fl \-days-of-week
+Group transactions by the days of the week.
+Alias for
+.Fl \-dow .
 .It Fl \-dc
 Display register or balance in debit/credit format If you use
 .Fl \-dc
@@ -503,6 +512,9 @@ script, implemented in Perl, is provided in the
 distribution.  Downloaded quote price are then appended to the price
 database, usually specified using the environment variable
 .Ev LEDGER_PRICE_DB .
+.It Fl \-effective
+Show auxiliary dates for all calculations. Alias for
+.Fl \-aux-date .
 .It Fl \-empty Pq Fl E
 Include empty accounts in report.
 .It Fl \-end Ar DATE Pq Fl e
@@ -626,9 +638,9 @@ Change the sign of all reported values.
 .It Fl \-last Ar INT
 Report only the last
 .Ar INT
-entries. Only useful on a register
-report.
-Alias for
+entries. Opposite of
+.Fl \-first Ar Int .
+Only useful on a register report. Alias for
 .Fl \-tail .
 .It Fl \-leeway Ar INT Pq Fl Z
 Alias for
@@ -768,7 +780,7 @@ is being used, then the Internet will be
 consulted again for a newer price. Otherwise, the old price is still
 considered to be fresh enough.
 Alias for
-.Fl \-leeway Ar INT Pq Fl Z
+.Fl \-leeway .
 .It Fl \-prices-format Ar FMT
 Set the format for the
 .Ic prices
