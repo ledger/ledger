@@ -3,10 +3,12 @@
 
 from __future__ import print_function
 
-import sys
 import re
 import os
+import sys
+import shlex
 import argparse
+import subprocess
 
 from os.path import *
 from subprocess import Popen, PIPE
@@ -24,18 +26,21 @@ class CheckOptions (object):
     self.missing_options = set()
     self.unknown_options = set()
 
-    self.known_alternates = [
-        'cost',
-        'first',
-        'import',
-        'last',
-        'leeway',
-        'period-sort'
-    ]
-
   def find_options(self, filename):
     regex = re.compile(self.option_pattern)
     return {match.group(1) for match in {regex.match(line) for line in open(filename)} if match}
+
+  def find_alternates(self):
+    regex = re.compile(r'OPT_ALT\([^,]*,\s*([^)]+?)_?\)');
+    command = shlex.split('grep --no-filename OPT_ALT')
+    for source_file in ['session', 'report']:
+      command.append(os.path.join(self.source, 'src', '%s.cc' % source_file))
+    try:
+      output = subprocess.check_output(command).split('\n');
+    except subprocess.CalledProcessError:
+      output = ''
+    alternates = {match.group(1).replace('_', '-') for match in {regex.search(line) for line in output} if match}
+    return alternates
 
   def ledger_options(self):
     pipe   = Popen('%s --debug option.names parse true' %
@@ -53,7 +58,8 @@ class CheckOptions (object):
       else:
           options.remove(option)
 
-    self.unknown_options = {option for option in options if option not in self.known_alternates}
+    known_alternates = self.find_alternates()
+    self.unknown_options = {option for option in options if option not in known_alternates}
 
     if len(self.missing_options):
       print("Missing %s entries for:%s%s\n" % (self.source_type, self.sep, self.sep.join(sorted(list(self.missing_options)))))
