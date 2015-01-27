@@ -8020,13 +8020,13 @@ functions and variables below:
 @defun abs value
 @defunx U value
 Return the absolute value of the given @var{value}, e.g. @var{amount}.
-@end defun
 @smallexample @c command:3406FC1
 $ ledger -f expr.dat --format "%(account) %(abs(amount))\n" reg assets
 @end smallexample
 @smallexample @c output:3406FC1
 Assets:Cash ¤ 123,45
 @end smallexample
+@end defun
 
 @defun amount_expr
 @value{FIXME:UNDOCUMENTED}
@@ -8038,7 +8038,6 @@ codes to display it in the given @var{color} if @var{bool} is true.  It
 typically checks the value of the option @option{--color}. Since ANSI escape
 codes include non-printable character sequences, such as escape @kbd{^[}
 the following example may not appear as the final result on the commandline.
-@end defun
 @smallexample @c command:4D836EE,with_input:3406FC1
 $ ledger -f expr.dat --format "%(ansify_if(account, blue, options.color))\n" reg
 @end smallexample
@@ -8046,10 +8045,10 @@ $ ledger -f expr.dat --format "%(ansify_if(account, blue, options.color))\n" reg
 [34mAssets:Cash[0m
 [34mExpenses:Office Supplies[0m
 @end smallexample
+@end defun
 
 @defun ceiling value
 Return the next integer of @var{value} toward @math{+}infinity.
-@end defun
 @smallexample @c command:FF9C18C,with_input:3406FC1
 $ ledger -f expr.dat --format "%(account) %(ceiling(amount))\n" reg
 @end smallexample
@@ -8057,6 +8056,7 @@ $ ledger -f expr.dat --format "%(account) %(ceiling(amount))\n" reg
 Assets:Cash ¤ -123,00
 Expenses:Office Supplies ¤ 124,00
 @end smallexample
+@end defun
 
 @defvar code
 Return the transaction code, the string between the parenthesis after the date.
@@ -8102,7 +8102,6 @@ $ ledger -f expr.dat --format "%(date) %(account)\n" reg assets
 
 @defun floor value
 Return the next integer of @var{value} toward @math{-}infinity.
-@end defun
 @smallexample @c command:4FDC7C5,with_input:3406FC1
 $ ledger -f expr.dat --format "%(account) %(floor(amount))\n" reg
 @end smallexample
@@ -8110,6 +8109,7 @@ $ ledger -f expr.dat --format "%(account) %(floor(amount))\n" reg
 Assets:Cash ¤ -124,00
 Expenses:Office Supplies ¤ 123,00
 @end smallexample
+@end defun
 
 @defun format
 @value{FIXME:UNDOCUMENTED}
@@ -8118,13 +8118,13 @@ Expenses:Office Supplies ¤ 123,00
 @defun format_date date format
 Return the @var{date} as a string using @var{format}. See strftime (3)
 for format string details.
-@end defun
 @smallexample @c command:9605B13,with_input:3406FC1
 $ ledger -f expr.dat --format "%(format_date(date, '%A, %B %d. %Y'))\n" reg assets
 @end smallexample
 @smallexample @c output:9605B13
 Friday, January 16. 2015
 @end smallexample
+@end defun
 
 @defun format_datetime
 @value{FIXME:UNDOCUMENTED}
@@ -8151,7 +8151,6 @@ If @var{right_justify=true} then the field is right justify within
 the width of the field. If it is @var{false}, then the field is left
 justified and padded to the full width of the field.  If
 @var{colorize} is true, then ledger will honor color settings.
-@end defun
 @smallexample @c command:082FB27,with_input:3406FC1
 $ ledger -f expr.dat --format "»%(justify(account, 30, 30, true))«\n" reg
 @end smallexample
@@ -8159,6 +8158,7 @@ $ ledger -f expr.dat --format "»%(justify(account, 30, 30, true))«\n" reg
 »                   Assets:Cash«
 »      Expenses:Office Supplies«
 @end smallexample
+@end defun
 
 @defun market
 @defunx P
@@ -8189,7 +8189,6 @@ true $
 
 @defun percent value_a value_b
 Return the percentage of @var{value_a} in relation to @var{value_b} (used as 100%)
-@end defun
 @smallexample @c command:04959BF,with_input:3406FC1
 $ ledger -f expr.dat --format "%(percent(amount, 200))\n" reg
 @end smallexample
@@ -8197,6 +8196,7 @@ $ ledger -f expr.dat --format "%(percent(amount, 200))\n" reg
 -61.73%
 61.73%
 @end smallexample
+@end defun
 
 @defun print
 @value{FIXME:UNDOCUMENTED}
@@ -8208,7 +8208,6 @@ $ ledger -f expr.dat --format "%(percent(amount, 200))\n" reg
 
 @defun quoted expression
 Surround @var{expression} with double-quotes.
-@end defun
 @smallexample @c command:EAD8AA7,with_input:3406FC1
 $ ledger -f expr.dat --format "%(quoted(account)) %(quoted(amount))\n" reg
 @end smallexample
@@ -8216,6 +8215,7 @@ $ ledger -f expr.dat --format "%(quoted(account)) %(quoted(amount))\n" reg
 "Assets:Cash" "¤ -123,45"
 "Expenses:Office Supplies" "¤ 123,45"
 @end smallexample
+@end defun
 
 @defun round
 @value{FIXME:UNDOCUMENTED}
@@ -8227,7 +8227,6 @@ $ ledger -f expr.dat --format "%(quoted(account)) %(quoted(amount))\n" reg
 
 @defun roundto value n
 Return @var{value} rounded to @var{n} digits.  Does not affect formatting.
-@end defun
 @smallexample @c command:B4DFB9F,with_input:3406FC1
 $ ledger -f expr.dat --format "%(account) %(roundto(amount, 1))\n" reg
 @end smallexample
@@ -8235,6 +8234,7 @@ $ ledger -f expr.dat --format "%(account) %(roundto(amount, 1))\n" reg
 Assets:Cash ¤ -123,40
 Expenses:Office Supplies ¤ 123,50
 @end smallexample
+@end defun
 
 @defun scrub
 @value{FIXME:UNDOCUMENTED}
@@ -8272,7 +8272,6 @@ Expenses:Office Supplies ¤ 123,50
 @defun to_int value
 @defunx int value
 Return the integer value for @var{value}.
-@end defun
 @smallexample @c command:0B0CBA1,with_input:3406FC1
 $ ledger -f expr.dat --format "%(1 + to_int('1'))\n%(2,5 + int(2,5))\n" reg assets
 @end smallexample
@@ -8280,6 +8279,7 @@ $ ledger -f expr.dat --format "%(1 + to_int('1'))\n%(2,5 + int(2,5))\n" reg asse
 2
 4.5
 @end smallexample
+@end defun
 
 @defun to_mask
 @value{FIXME:UNDOCUMENTED}
@@ -8314,13 +8314,13 @@ $ ledger -f expr.dat --now 2015/01/01 --format "%(today)\n" reg assets
 
 @defun trim value
 Trim leading and trailing whitespace from @var{value}.
-@end defun
 @smallexample @c command:377BBAB,with_input:3406FC1
 $ ledger -f expr.dat --format "»%(trim(' 	Trimmed	 '))«\n" reg assets
 @end smallexample
 @smallexample @c output:377BBAB
 »Trimmed«
 @end smallexample
+@end defun
 
 @defun truncated
 @value{FIXME:UNDOCUMENTED}

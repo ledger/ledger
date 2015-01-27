@@ -22,16 +22,21 @@ class CheckOptions (object):
     self.ledger     = os.path.abspath(args.ledger)
     self.source     = os.path.abspath(args.source)
 
-    self.missing_baseline_tests = set()
     self.missing_options = set()
     self.unknown_options = set()
+    self.missing_functions = set()
+    self.unknown_functions = set()
 
-  def find_options(self, filename):
-    regex = re.compile(self.option_pattern)
+  def find_pattern(self, filename, pattern):
+    regex = re.compile(pattern)
     return {match.group(1) for match in {regex.match(line) for line in open(filename)} if match}
 
+  def find_options(self, filename):
+    return self.find_pattern(filename, self.option_pattern)
+
+  def find_functions(self, filename):
+    return self.find_pattern(filename, self.function_pattern)
   def find_alternates(self):
-    regex = re.compile(r'OPT_ALT\([^,]*,\s*([^)]+?)_?\)');
     command = shlex.split('grep --no-filename OPT_ALT')
     for source_file in ['session', 'report']:
       command.append(os.path.join(self.source, 'src', '%s.cc' % source_file))
@@ -39,6 +44,8 @@ class CheckOptions (object):
       output = subprocess.check_output(command).split('\n');
     except subprocess.CalledProcessError:
       output = ''
+
+    regex = re.compile(r'OPT_ALT\([^,]*,\s*([^)]+?)_?\)');
     alternates = {match.group(1).replace('_', '-') for match in {regex.search(line) for line in output} if match}
     return alternates
 
@@ -49,22 +56,43 @@ class CheckOptions (object):
     ledger_options = {match.group(1).replace('_', '-') for match in {regex.search(line.decode()) for line in pipe.stderr} if match}
     return ledger_options
 
+  def ledger_functions(self):
+    command = shlex.split('grep --no-filename fn_ %s' % (os.path.join(self.source, 'src', 'report.h')))
+    try:
+      output = subprocess.check_output(command).split('\n');
+    except subprocess.CalledProcessError:
+      output = ''
+
+    regex = re.compile(r'fn_([^(]+)\(');
+    functions = {match.group(1) for match in {regex.search(line) for line in output} if match}
+    return functions
+
   def main(self):
     options = self.find_options(self.source_file)
-
     for option in self.ledger_options():
       if option not in options:
           self.missing_options.add(option)
       else:
           options.remove(option)
-
     known_alternates = self.find_alternates()
     self.unknown_options = {option for option in options if option not in known_alternates}
 
-    if len(self.missing_options):
-      print("Missing %s entries for:%s%s\n" % (self.source_type, self.sep, self.sep.join(sorted(list(self.missing_options)))))
-    if len(self.unknown_options):
-      print("%s entry for unknown options:%s%s" % (self.source_type, self.sep, self.sep.join(sorted(list(self.unknown_options)))))
+    functions = self.find_functions(self.source_file)
+    for function in self.ledger_functions():
+      if function not in functions:
+          self.missing_functions.add(function)
+      else:
+          functions.remove(function)
+    known_functions = ['tag', 'has_tag']
+    self.unknown_functions = {function for function in functions if function not in known_functions}
 
-    errors = len(self.missing_options) + len(self.unknown_options)
+    if len(self.missing_options):
+      print("Missing %s option entries for:%s%s\n" % (self.source_type, self.sep, self.sep.join(sorted(list(self.missing_options)))))
+    if len(self.unknown_options):
+      print("%s entry for unknown options:%s%s\n" % (self.source_type, self.sep, self.sep.join(sorted(list(self.unknown_options)))))
+    if len(self.missing_functions):
+      print("Missing %s function entries for:%s%s\n" % (self.source_type, '\n  ', '\n  '.join(sorted(list(self.missing_functions)))))
+    if len(self.unknown_functions):
+      print("%s entry for unknown functions:%s%s\n" % (self.source_type, '\n  ', '\n  '.join(sorted(list(self.unknown_functions)))))
+    errors = len(self.missing_options) + len(self.unknown_options) + len(self.missing_functions) + len(self.unknown_functions)
     return errors
