@@ -5936,7 +5936,7 @@ Ledger does not expand any aliases if this option is specified.
 Accounts, tags or commodities not previously declared will cause errors.
 
 @item --permissive
-FIX THIS ENTRY @c FIXME thdox
+Quiet balance assertions.
 
 @item --price-db @var{FILE}
 Specify the location of the price entry data file.
