@@ -466,7 +466,10 @@ for details on the format string syntax.
 Specify the width, in characters, of the date column in the
 .Ic register
 report.
-.\".It Fl \-day-break
+.It Fl \-day-break
+Break up
+.Ic register
+report of timelog entries that span multiple days by day.
 .It Fl \-days-of-week
 Group transactions by the days of the week.
 Alias for
@@ -1055,7 +1058,7 @@ Return the base account, i.e. everything after the last account delimiter ':'.
 .\".It Sy account_amount
 .It Sy actual
 .\" Is there a difference between real and actual?
-Return the true if the transaction is real, i.e not a automated or virtual
+Return true if the transaction is real, i.e not a automated or virtual
 transaction, false otherwise.
 .It Sy amount
 Return the amount of the posting.
@@ -1078,30 +1081,38 @@ for example:
 Line number where entry for posting begins.
 .It Sy beg_pos
 Character position where entry for posting begins.
-.It Sy calculated
+.\".It Sy calculated
 .It Fn ceiling value
 Return the next integer of
 .Ar value
 toward +infinity.
 .It Sy cleared
-Return the true if the posting was cleared, false otherwise.
+Return true if the posting was cleared, false otherwise.
 .It Sy code
 Return the transaction code, the string between the parenthesis after the date.
-.It Sy comment
-.It Sy commodity
-Return the commodity of the posting amount.
-.It Sy cost
-.It Sy count
+.\".It Sy comment
+.It Fn commodity value
+Return the commodity of
+.Ar value
+or the posting amount when
+.Ar value
+was not specified.
+.\".It Sy cost
+.\".It Sy count
 .It Sy date
 Return the date of the posting.
-.It Sy depth
-.It Sy depth_spacer
-.It Sy display_amount
-.It Sy display_total
+.\".It Sy depth
+.\".It Sy depth_spacer
+.\".It Sy display_amount
+.\".It Sy display_total
 .It Sy end_line
 Line number where entry for posting ends.
 .It Sy end_pos
 Character position where entry for posting ends.
+.It Fn floor value
+Return the next integer of
+.Ar value
+toward -infinity.
 .It Sy filename
 The name of the
 .Nm
@@ -1114,13 +1125,13 @@ as a string using
 Refer to
 .Xr strftime 3
 for format string details.
-.It Sy get_at
-.It Sy has_meta
+.\".It Fn get_at
+.\".It Fn has_meta
 .It Fn has_tag tag
-Return the true if the posting has metadata named
+Return true if the posting has metadata named
 .Ar tag ,
 false otherwise.
-.It Fn is_seq
+.\".It Fn is_seq
 .It Fn join value
 Replace all newlines in
 .Ar value
@@ -1135,18 +1146,24 @@ Note that
 .Ar datetime
 must be surrounded by brackets in order to be parsed correctly, e.g.
 .Bq 2012/03/23 .
-.It Sy meta
-.It Sy note
-.It Sy null
+.\".It Sy meta
+.I.\"t Sy note
+.\".It Sy null
 .It Sy options
 A variable that allows access to the values of the given command-line options
 using the long option names, e.g. to see whether
-.Fl \-daily Pq Fl -D
+.Fl \-daily Pq Fl D
 was given use
 .Sy option.daily .
 .\" .It Sy partial_account
 .It Sy payee
 Return the payee of the posting.
+.It Fn percent value_a value_b
+Return the percentage of
+.Ar value_a
+in relation to
+.Ar value_b
+(used as 100%).
 .It Sy pending
 Return true if the posting is marked as pending, false otherwise.
 .It Fn percent value_a value_b
@@ -1154,9 +1171,9 @@ Return the percentage of
 .Ar value_a
 in relation to
 .Ar value_b .
-.It Sy post
+.\".It Sy post
 .\" A variable scope
-.It Sy print
+.\".It Sy print
 .It Fn quantity value
 Return the quantity of
 .Ar value
@@ -1167,22 +1184,36 @@ Surround
 with double-quotes.
 .It Sy real
 .\" Is there a difference between real and actual?
-Return the true if the transaction is real, i.e not a automated or virtual
+Return true if the transaction is real, i.e not a automated or virtual
 transaction, false otherwise.
-.It Sy rounded
+.\".It Sy rounded
 .It Fn roundto value n
 Return
 .Ar value
 rounded to
 .Ar n
 digits. Does not affect formatting.
-.It Sy scrub
-.It Sy status
-.It Sy strip
+.\".It Sy scrub
+.\".It Sy status
+.\".It Sy strip
 .\".It Sy subcount
 .It Fn tag name
 Return the value of tag named
 .Ar name .
+.\".It Fn to_amount value
+.\".It Fn to_balance value
+.\".It Fn to_boolean value
+.\".It Fn to_date value
+.\".It Fn to_datetime value
+.It Fn to_int value
+Return the integer value for
+.Ar value .
+.\".It Fn to_mask value
+.\".It Fn to_sequence value
+.It Fn to_string value
+Convert
+.Ar value
+to a character string.
 .It Sy today
 Return today’s date.
 .It Sy total
@@ -1191,11 +1222,14 @@ Return the total of the posting.
 Return the calculated total of the posting according to the
 .Fl \-total
 option.
-.It Fn truncate
-.It Sy uncleared
+.It Fn trim value
+Trim leading and trailing whitespace from
+.Ar value .
+.\".It Fn truncate
+.\".It Sy uncleared
 .It Sy virtual
-Return the true if the transaction is virtual, e.g automated, false otherwise.
-.It Sy xact
+Return true if the transaction is virtual, e.g automated, false otherwise.
+.\".It Sy xact
 .\" A variable scope
 .El
 .\".Sh ENTRIES
