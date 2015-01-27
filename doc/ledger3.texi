@@ -5620,6 +5620,9 @@ Report the last @var{INT} postings.
 @item --pager @var{FILE}
 Direct output to @var{FILE} pager program.
 
+@item --no-pager
+Direct output to stdout, avoiding pager program.
+
 @item --average
 @itemx -A
 Report the average posting value.
@@ -6430,6 +6433,9 @@ Aliases are completely ignored.
 @item --no-color
 Suppress any color TTY output.
 
+@item --no-pager
+Direct output to stdout, avoiding pager program.
+
 @item --no-rounding
 Don't output @samp{<Rounding>} postings.  Note that this will cause the
 running total to often not add up!  Its main use is for
@@ -6453,7 +6459,7 @@ been executed, such as periodic gathering.
 Redirect the output of ledger to the file defined in @file{FILE}.
 
 @item --pager @var{FILE}
-Specify the pager program to use.
+Direct output to @var{FILE} pager program.
 
 @item --payee @var{VEXPR}
 Sets a value expression for formatting the payee. In the
@@ -6960,9 +6966,13 @@ meaning of the flag (instead of the first five transactions being
 printed, for example, it would print all but the first five).
 
 @item --pager @var{FILE}
-Tell Ledger to pass its output to the given pager program; very useful
-when the output is especially long.  This behavior can be made the
-default by setting the @env{LEDGER_PAGER} environment variable.
+Tell Ledger to pass its output to the given @var{FILE} pager program;
+very useful when the output is especially long.  This behavior can be
+made the default by setting the @env{LEDGER_PAGER} environment variable.
+
+@item --no-pager
+Tell Ledger to @emph{not} pass its output to a pager program; useful
+when a pager is set by default.
 
 @item --average
 @itemx -A
