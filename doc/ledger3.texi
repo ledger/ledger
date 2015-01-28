@@ -3120,6 +3120,7 @@ the amount expression with parentheses:
 
 @node Balance verification, Posting cost, Expression amounts, Transactions
 @section Balance verification
+@findex --permissive
 
 @menu
 * Balance assertions::
@@ -3131,7 +3132,7 @@ the amount expression with parentheses:
 If at the end of a posting's amount (and after the cost too, if there
 is one) there is an equals sign, then Ledger will verify that the
 total value for that account as of that posting matches the amount
-specified.
+specified. See @option{--permissive} option to relax the balance assertions checks.
 
 There are two forms of this features: balance assertions, and balance
 assignments.
@@ -5957,7 +5958,7 @@ Ledger does not expand any aliases if this option is specified.
 Accounts, tags or commodities not previously declared will cause errors.
 
 @item --permissive
-Quiet @ref{Balance assertions, balance assertions}.
+Quiet balance assertions.
 
 @item --price-db @var{FILE}
 Specify the location of the price entry data file.
