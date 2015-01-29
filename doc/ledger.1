@@ -1291,14 +1291,13 @@ was parsed.  See the section on
 .Sh ENVIRONMENT
 Every option to
 .Nm
-may be set using an environment variable.  If
-an option has a long name, for example
-.Fl \-account ,
-setting the environment variable
-.Ev LEDGER_ACCOUNT
-will have the same effect as specifying that option on the command-line.
-Options on the command-line always take precedence over environment variable
-settings, however.
+may be set using an environment variable if the option has a long name.
+For example setting the environment variable
+.Ev LEDGER_DATE_FORMAT="%d.%m.%Y'
+will have the same effect as specifying
+.Fl \-date-format Ar '%d.%m.%Y'
+on the command-line.  Options on the command-line always take precedence over
+environment variable settings, however.
 .Sh FILES
 .Bl -tag -width -indent
 .It Pa ~/.ledgerrc

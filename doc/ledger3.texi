@@ -7442,15 +7442,14 @@ BTC:USD}.
 @node Environment variables,  , Commodity reporting, Detailed Option Description
 @subsection Environment variables
 
-Every option to ledger may be set using an environment variable.  If
-an option has a long name, for example @option{--account}, setting the
-environment variable @env{LEDGER_ACCOUNT} will have the same
-effect as specifying that option on the command-line.  Options on the
-command-line always take precedence over environment variable
-settings, however.
+Every option to ledger may be set using an environment variable if the
+option has a long name.  For example setting the environment variable
+@samp{@env{LEDGER_DATE_FORMAT}="%d.%m.%Y"} will have the same effect as specifying
+@samp{@option{--date-format} '%d.%m.%Y'} on the command-line.  Options on the
+command-line always take precedence over environment variable settings, however.
 
 Note that you may also permanently specify option values by placing
-option settings in the file @file{~/.ledgerrc}, for example:
+option settings in the file @file{~/.ledgerrc} one option per line, for example:
 
 @smallexample
 --pager /bin/cat
