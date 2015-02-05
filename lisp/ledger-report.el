@@ -31,8 +31,6 @@
 (declare-function ledger-navigate-to-line "ledger-navigate" (line-number))
 
 (require 'easymenu)
-(eval-when-compile
-  (require 'cl))
 
 (defvar ledger-buf)
 

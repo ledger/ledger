@@ -32,9 +32,8 @@
 
 
 (require 'ledger-init)
-;; TODO: replace this by (require 'cl-lib)
-(with-no-warnings
-	(require 'cl))
+(require 'cl-macs)
+
 (declare-function ledger-mode "ledger-mode")
 ;;; Code:
 
@@ -103,15 +102,15 @@ COUNT 0) means EVERY day-of-week (eg. every Saturday)"
       (cond ((zerop count) ;; Return true if day-of-week matches
              `(eq (nth 6 (decode-time date)) ,day-of-week))
             ((> count 0) ;; Positive count
-             (let ((decoded (gensym)))
+             (let ((decoded (cl-gensym)))
                `(let ((,decoded (decode-time date)))
                   (and (eq (nth 6 ,decoded) ,day-of-week)
                        (between  (nth 3 ,decoded)
                                  ,(* (1- count) 7)
                                  ,(* count 7))))))
             ((< count 0)
-             (let ((days-in-month (gensym))
-                   (decoded (gensym)))
+             (let ((days-in-month (cl-gensym))
+                   (decoded (cl-gensym)))
                `(let* ((,decoded (decode-time date))
                        (,days-in-month (ledger-schedule-days-in-month
                                         (nth 4 ,decoded)
@@ -136,9 +135,9 @@ For example every second Friday, regardless of month."
 
 (defun ledger-schedule-constrain-date-range (month1 day1 month2 day2)
   "Return a form of DATE that is true if DATE falls between MONTH1 DAY1 and MONTH2 DAY2."
-  (let ((decoded (gensym))
-        (target-month (gensym))
-        (target-day (gensym)))
+  (let ((decoded (cl-gensym))
+        (target-month (cl-gensym))
+        (target-day (cl-gensym)))
     `(let* ((,decoded (decode-time date))
             (,target-month (nth 4 decoded))
             (,target-day (nth 3 decoded)))
