@@ -127,6 +127,7 @@ MOMENT is an encoded date"
       (forward-line))))
 
 (defun ledger-year-and-month ()
+	"Return the current year and month, separated by / (or -, depending on LEDGER-USE-ISO-DATES)."
   (let ((sep (if ledger-use-iso-dates
                  "-"
                "/")))
