@@ -24,6 +24,7 @@
 
 (require 'pcomplete)
 
+(declare-function ledger-thing-at-point "ledger-context" nil)
 ;; In-place completion support
 
 ;;; Code:

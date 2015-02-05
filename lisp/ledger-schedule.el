@@ -30,9 +30,12 @@
 ;; function slot of the symbol VARNAME.  Then use VARNAME as the
 ;; function without have to use funcall.
 
-(require 'ledger-init)
-(require 'cl)
 
+(require 'ledger-init)
+;; TODO: replace this by (require 'cl-lib)
+(with-no-warnings
+	(require 'cl))
+(declare-function ledger-mode "ledger-mode")
 ;;; Code:
 
 (defgroup ledger-schedule nil

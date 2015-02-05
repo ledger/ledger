@@ -29,6 +29,8 @@
 (eval-when-compile
   (require 'cl))
 
+(defvar ledger-buf)
+
 (defgroup ledger-report nil
   "Customization option for the Report buffer"
   :group 'ledger)

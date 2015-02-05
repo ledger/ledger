@@ -34,6 +34,7 @@
 (defvar ledger-bufs nil)
 (defvar ledger-acct nil)
 (defvar ledger-target nil)
+(defvar ledger-clear-whole-transactions)
 
 (defgroup ledger-reconcile nil
   "Options for Ledger-mode reconciliation"
