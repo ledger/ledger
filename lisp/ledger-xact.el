@@ -28,6 +28,10 @@
 (require 'eshell)
 (require 'ledger-regex)
 (require 'ledger-navigate)
+
+(defvar ledger-year)
+(defvar ledger-month)
+
 ;; TODO: This file depends on code in ledger-mode.el, which depends on this.
 
 (defcustom ledger-highlight-xact-under-point t

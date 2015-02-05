@@ -25,20 +25,22 @@
 ;;
 
 ;;; Code:
-
+(defvar ledger-payee-any-status-regex)
+(declare-function ledger-navigate-find-xact-extents "ledger-navigate" (pos))
+(declare-function ledger-navigate-next-xact "ledger-navigate" nil)
 
 (defun ledger-sort-find-start ()
-	"Find the beginning of a sort region"
+	"Find the beginning of a sort region."
   (if (re-search-forward ";.*Ledger-mode:.*Start sort" nil t)
       (match-end 0)))
 
 (defun ledger-sort-find-end ()
-	"Find the end of a sort region"
+	"Find the end of a sort region."
   (if (re-search-forward ";.*Ledger-mode:.*End sort" nil t)
       (match-end 0)))
 
 (defun ledger-sort-insert-start-mark ()
-	"Insert a marker to start a sort region"
+	"Insert a marker to start a sort region."
   (interactive)
   (save-excursion
     (goto-char (point-min))
@@ -48,7 +50,7 @@
   (insert "\n; Ledger-mode: Start sort\n\n"))
 
 (defun ledger-sort-insert-end-mark ()
-	"Insert a marker to end a sort region"
+	"Insert a marker to end a sort region."
   (interactive)
   (save-excursion
     (goto-char (point-min))
@@ -58,7 +60,7 @@
   (insert "\n; Ledger-mode: End sort\n\n"))
 
 (defun ledger-sort-startkey ()
-  "Return the actual date so the sort-subr doesn't sort onthe entire first line."
+  "Return the actual date so the sort subroutine doesn't sort on the entire first line."
   (buffer-substring-no-properties (point) (+ 10 (point))))
 
 (defun ledger-sort-region (beg end)

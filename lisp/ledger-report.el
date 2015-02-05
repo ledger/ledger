@@ -25,6 +25,11 @@
 
 ;;; Code:
 
+(declare-function ledger-read-string-with-default "ledger-mode" (prompt default))
+(declare-function ledger-xact-payee "ledger-xact" nil)
+(declare-function ledger-read-account-with-prompt "ledger-mode" (prompt))
+(declare-function ledger-navigate-to-line "ledger-navigate" (line-number))
+
 (require 'easymenu)
 (eval-when-compile
   (require 'cl))
@@ -151,13 +156,13 @@ text that should replace the format specifier."
   "A mode for viewing ledger reports.")
 
 (defun ledger-report-tagname-format-specifier ()
-  "Return a valid meta-data tag name"
+  "Return a valid meta-data tag name."
   ;; It is intended completion should be available on existing account
   ;; names, but it remains to be implemented.
   (ledger-read-string-with-default "Tag Name: " nil))
 
 (defun ledger-report-tagvalue-format-specifier ()
-  "Return a valid meta-data tag name"
+  "Return a valid meta-data tag name."
   ;; It is intended completion should be available on existing account
   ;; names, but it remains to be implemented.
   (ledger-read-string-with-default "Tag Value: " nil))
@@ -420,8 +425,8 @@ Optional EDIT the command."
   (customize-variable 'ledger-reports))
 
 (defun ledger-report-edit-report ()
+	"Edit the current report command in the mini buffer and re-run the report."
 	(interactive)
-	"Edit the current report command in the mini buffer and re-run the report"
 	(setq ledger-report-cmd (ledger-report-read-command ledger-report-cmd))
 	(ledger-report-redo))
 
