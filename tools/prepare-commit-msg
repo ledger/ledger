@@ -11,7 +11,7 @@ add_ci_skip ()
   source="$1"
 
   # Don't add [ci skip] if it's already in the commit message source
-  grep '\[ci skip\]' "$source" 2>&1 >/dev/null
+  grep '\[ci skip\]' "$source" >/dev/null 2>&1
   [ $? -eq 0 ] && return
 
   if [ $(git diff --cached --name-only | grep --count "$pattern") -eq 0 ]; then
