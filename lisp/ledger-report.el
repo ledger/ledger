@@ -57,7 +57,7 @@ specifier."
   '(("ledger-file" . ledger-report-ledger-file-format-specifier)
     ("payee" . ledger-report-payee-format-specifier)
     ("account" . ledger-report-account-format-specifier)
-		("tagname" . ledger-report-tagname-format-specifier)
+    ("tagname" . ledger-report-tagname-format-specifier)
     ("tagvalue" . ledger-report-tagvalue-format-specifier))
   "An alist mapping ledger report format specifiers to implementing functions.
 
@@ -67,14 +67,14 @@ text that should replace the format specifier."
   :group 'ledger-report)
 
 (defcustom ledger-report-auto-refresh t
-	"If t then automatically rerun the report when the ledger buffer is saved."
-	:type 'boolean
-	:group 'ledger-report)
+  "If t then automatically rerun the report when the ledger buffer is saved."
+  :type 'boolean
+  :group 'ledger-report)
 
 (defcustom ledger-report-auto-refresh-sticky-cursor nil
-	"If t then try to place cursor at same relative position as it was before auto-refresh."
-	:type 'boolean
-	:group 'ledger-report)
+  "If t then try to place cursor at same relative position as it was before auto-refresh."
+  :type 'boolean
+  :group 'ledger-report)
 
 (defvar ledger-report-buffer-name "*Ledger Report*")
 
@@ -91,10 +91,10 @@ text that should replace the format specifier."
 (defvar ledger-report-cursor-line-number nil)
 
 (defun ledger-report-reverse-report ()
-	"Reverse the order of the report."
-	(interactive)
-	(ledger-report-reverse-lines)
-	(setq ledger-report-is-reversed (not ledger-report-is-reversed)))
+  "Reverse the order of the report."
+  (interactive)
+  (ledger-report-reverse-lines)
+  (setq ledger-report-is-reversed (not ledger-report-is-reversed)))
 
 (defun ledger-report-reverse-lines ()
   (goto-char (point-min))
@@ -203,7 +203,7 @@ used to generate the buffer, navigating the buffer, etc."
       (set (make-local-variable 'ledger-buf) buf)
       (set (make-local-variable 'ledger-report-name) report-name)
       (set (make-local-variable 'ledger-original-window-cfg) wcfg)
-			(set (make-local-variable 'ledger-report-is-reversed) nil)
+      (set (make-local-variable 'ledger-report-is-reversed) nil)
       (ledger-do-report (ledger-report-cmd report-name edit))
       (shrink-window-if-larger-than-buffer)
       (set-buffer-modified-p nil)
@@ -387,30 +387,30 @@ Optional EDIT the command."
 (defun ledger-report-redo ()
   "Redo the report in the current ledger report buffer."
   (interactive)
-	(let ((cur-buf (current-buffer)))
- 		(if (and ledger-report-auto-refresh
-						 (or (string= (format-mode-line 'mode-name) "Ledger")
-								 (string= (format-mode-line 'mode-name) "Ledger-Report"))
-						 (get-buffer ledger-report-buffer-name))
-				(progn
+  (let ((cur-buf (current-buffer)))
+    (if (and ledger-report-auto-refresh
+             (or (string= (format-mode-line 'mode-name) "Ledger")
+                 (string= (format-mode-line 'mode-name) "Ledger-Report"))
+             (get-buffer ledger-report-buffer-name))
+        (progn
 
-					(pop-to-buffer (get-buffer ledger-report-buffer-name))
-					(shrink-window-if-larger-than-buffer)
-					(setq buffer-read-only nil)
-					(setq ledger-report-cursor-line-number (line-number-at-pos))
-					(erase-buffer)
-					(ledger-do-report ledger-report-cmd)
-					(setq buffer-read-only nil)
-					(if ledger-report-is-reversed (ledger-report-reverse-lines))
-					(if ledger-report-auto-refresh-sticky-cursor (forward-line (- ledger-report-cursor-line-number 5)))
-					(pop-to-buffer cur-buf)))))
+          (pop-to-buffer (get-buffer ledger-report-buffer-name))
+          (shrink-window-if-larger-than-buffer)
+          (setq buffer-read-only nil)
+          (setq ledger-report-cursor-line-number (line-number-at-pos))
+          (erase-buffer)
+          (ledger-do-report ledger-report-cmd)
+          (setq buffer-read-only nil)
+          (if ledger-report-is-reversed (ledger-report-reverse-lines))
+          (if ledger-report-auto-refresh-sticky-cursor (forward-line (- ledger-report-cursor-line-number 5)))
+          (pop-to-buffer cur-buf)))))
 
 (defun ledger-report-quit ()
-	"Quit the ledger report buffer."
-	(interactive)
-	(ledger-report-goto)
-	(set-window-configuration ledger-original-window-cfg)
-	(kill-buffer (get-buffer ledger-report-buffer-name)))
+  "Quit the ledger report buffer."
+  (interactive)
+  (ledger-report-goto)
+  (set-window-configuration ledger-original-window-cfg)
+  (kill-buffer (get-buffer ledger-report-buffer-name)))
 
 (defun ledger-report-edit-reports ()
   "Edit the defined ledger reports."
@@ -418,10 +418,10 @@ Optional EDIT the command."
   (customize-variable 'ledger-reports))
 
 (defun ledger-report-edit-report ()
-	(interactive)
-	"Edit the current report command in the mini buffer and re-run the report"
-	(setq ledger-report-cmd (ledger-report-read-command ledger-report-cmd))
-	(ledger-report-redo))
+  (interactive)
+  "Edit the current report command in the mini buffer and re-run the report"
+  (setq ledger-report-cmd (ledger-report-read-command ledger-report-cmd))
+  (ledger-report-redo))
 
 (defun ledger-report-read-new-name ()
   "Read the name for a new report from the minibuffer."
