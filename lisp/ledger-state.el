@@ -114,8 +114,8 @@ dropped."
           (when (not (eq (ledger-state-from-char (char-after)) 'comment))
             (insert (ledger-char-from-state cur-status) " ")
             (if (and (search-forward "  " (line-end-position) t)
-										 (looking-at "  "))
-								(delete-char 2)))
+                     (looking-at "  "))
+                (delete-char 2)))
           (forward-line))
         (setq new-status nil)))
 

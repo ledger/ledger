@@ -38,45 +38,45 @@
   :group 'ledger)
 
 (defun ledger-fontify-buffer-part (&optional beg end len)
-"Fontify buffer from BEG to END, length LEN."
-	(save-excursion
-		(unless beg (setq beg (point-min)))
-		(unless end (setq end (point-max)))
-		(goto-char beg)
-		(beginning-of-line)
-		(while (< (point) end)
-			(cond ((or (looking-at ledger-xact-start-regex)
-								 (looking-at ledger-posting-regex))
-						 (ledger-fontify-xact-at (point)))
-						((looking-at ledger-directive-start-regex)
-						 (ledger-fontify-directive-at (point))))
-			(ledger-navigate-next-xact-or-directive))))
+  "Fontify buffer from BEG to END, length LEN."
+  (save-excursion
+    (unless beg (setq beg (point-min)))
+    (unless end (setq end (point-max)))
+    (goto-char beg)
+    (beginning-of-line)
+    (while (< (point) end)
+      (cond ((or (looking-at ledger-xact-start-regex)
+                 (looking-at ledger-posting-regex))
+             (ledger-fontify-xact-at (point)))
+            ((looking-at ledger-directive-start-regex)
+             (ledger-fontify-directive-at (point))))
+      (ledger-navigate-next-xact-or-directive))))
 
 (defun ledger-fontify-xact-at (position)
   "Fontify the xact at POSITION."
-	(interactive "d")
-	(save-excursion
-		(goto-char position)
-		(let ((extents (ledger-navigate-find-element-extents position))
-					(state (ledger-transaction-state)))
-			(if (and ledger-fontify-xact-state-overrides state)
-					(cond ((eq state 'cleared)
-								 (ledger-fontify-set-face extents 'ledger-font-xact-cleared-face))
-								((eq state 'pending)
-								 (ledger-fontify-set-face extents 'ledger-font-xact-pending-face)))
-				(ledger-fontify-xact-by-line extents)))))
+  (interactive "d")
+  (save-excursion
+    (goto-char position)
+    (let ((extents (ledger-navigate-find-element-extents position))
+          (state (ledger-transaction-state)))
+      (if (and ledger-fontify-xact-state-overrides state)
+          (cond ((eq state 'cleared)
+                 (ledger-fontify-set-face extents 'ledger-font-xact-cleared-face))
+                ((eq state 'pending)
+                 (ledger-fontify-set-face extents 'ledger-font-xact-pending-face)))
+        (ledger-fontify-xact-by-line extents)))))
 
 (defun ledger-fontify-xact-by-line (extents)
-	"Do line-by-line detailed fontification of xact in EXTENTS."
-	(save-excursion
-		(ledger-fontify-xact-start (car extents))
-		(while (< (point) (cadr extents))
-			(if (looking-at "[ \t]+;")
-					(ledger-fontify-set-face (list (point) (progn
-																									 (end-of-line)
-																									 (point))) 'ledger-font-comment-face)
-				(ledger-fontify-posting (point)))
-			(forward-line))))
+  "Do line-by-line detailed fontification of xact in EXTENTS."
+  (save-excursion
+    (ledger-fontify-xact-start (car extents))
+    (while (< (point) (cadr extents))
+      (if (looking-at "[ \t]+;")
+          (ledger-fontify-set-face (list (point) (progn
+                                                   (end-of-line)
+                                                   (point))) 'ledger-font-comment-face)
+        (ledger-fontify-posting (point)))
+      (forward-line))))
 
 (defun ledger-fontify-xact-start (pos)
   "POS should be at the beginning of a line starting an xact.
@@ -102,97 +102,97 @@ Fontify the first line of an xact"
     (forward-line)))
 
 (defun ledger-fontify-posting (pos)
-	"Fontify the posting at POS."
-	(let* ((state nil)
-				 (end-of-line-comment nil)
-				(end (progn (end-of-line)
-										(point)))
-				(start (progn (beginning-of-line)
-											(point))))
+  "Fontify the posting at POS."
+  (let* ((state nil)
+         (end-of-line-comment nil)
+         (end (progn (end-of-line)
+                     (point)))
+         (start (progn (beginning-of-line)
+                       (point))))
 
-		;; Look for a posting status flag
-		(set-match-data nil 'reseat)
-		(re-search-forward " \\([*!]\\) " end t)
-		(if (match-string 1)
-				(setq state (ledger-state-from-string  (match-string 1))))
-		(beginning-of-line)
-		(re-search-forward "[[:graph:]]\\([ \t][ \t]\\)" end 'end)  ;; find the end of the account, or end of line
+    ;; Look for a posting status flag
+    (set-match-data nil 'reseat)
+    (re-search-forward " \\([*!]\\) " end t)
+    (if (match-string 1)
+        (setq state (ledger-state-from-string  (match-string 1))))
+    (beginning-of-line)
+    (re-search-forward "[[:graph:]]\\([ \t][ \t]\\)" end 'end)  ;; find the end of the account, or end of line
 
-		(when (<= (point) end)  ;; we are still on the line
-		  (ledger-fontify-set-face (list start (point))
-															 (cond ((eq state 'cleared)
-																			'ledger-font-posting-account-cleared-face)
-																		 ((eq state 'pending)
-																			'ledger-font-posting-account-pending-face)
-																		 (t
-																			'ledger-font-posting-account-face)))
+    (when (<= (point) end)  ;; we are still on the line
+      (ledger-fontify-set-face (list start (point))
+                               (cond ((eq state 'cleared)
+                                      'ledger-font-posting-account-cleared-face)
+                                     ((eq state 'pending)
+                                      'ledger-font-posting-account-pending-face)
+                                     (t
+                                      'ledger-font-posting-account-face)))
 
 
-			(when (< (point) end)  ;; there is still more to fontify
-				(setq start (point))  ;; update start of next font region
-				(setq end-of-line-comment (re-search-forward ";" end 'end))  ;; find the end of the line, or start of a comment
-				(ledger-fontify-set-face (list start (point) )
-																 (cond ((eq state 'cleared)
-																				'ledger-font-posting-amount-cleared-face)
-																			 ((eq state 'pending)
-																				'ledger-font-posting-amount-pending-face)
-																			 (t
-																				'ledger-font-posting-amount-face)))
-				(when end-of-line-comment
-					(setq start (point))
-					(end-of-line)
-					(ledger-fontify-set-face (list (- start 1) (point)) ;; subtract 1 from start because we passed the semi-colon
-																	 'ledger-font-comment-face))))))
+      (when (< (point) end)  ;; there is still more to fontify
+        (setq start (point))  ;; update start of next font region
+        (setq end-of-line-comment (re-search-forward ";" end 'end))  ;; find the end of the line, or start of a comment
+        (ledger-fontify-set-face (list start (point) )
+                                 (cond ((eq state 'cleared)
+                                        'ledger-font-posting-amount-cleared-face)
+                                       ((eq state 'pending)
+                                        'ledger-font-posting-amount-pending-face)
+                                       (t
+                                        'ledger-font-posting-amount-face)))
+        (when end-of-line-comment
+          (setq start (point))
+          (end-of-line)
+          (ledger-fontify-set-face (list (- start 1) (point)) ;; subtract 1 from start because we passed the semi-colon
+                                   'ledger-font-comment-face))))))
 
 (defun ledger-fontify-directive-at (pos)
-	"Fontify the directive at POS."
-	(let ((extents (ledger-navigate-find-element-extents pos))
-				(face 'ledger-font-default-face))
-		(cond ((looking-at "=")
-					 (setq face 'ledger-font-auto-xact-face))
-					((looking-at "~")
-					 (setq face 'ledger-font-periodic-xact-face))
-					((looking-at "[;#%|\\*]")
-					 (setq face 'ledger-font-comment-face))
-					((looking-at "\\(year\\)\\|Y")
-					 (setq face 'ledger-font-year-directive-face))
-					((looking-at "account")
-					 (setq face 'ledger-font-account-directive-face))
-					((looking-at "apply")
-					 (setq face 'ledger-font-apply-directive-face))
-					((looking-at "alias")
-					 (setq face 'ledger-font-alias-directive-face))
-					((looking-at "assert")
-					 (setq face 'ledger-font-assert-directive-face))
-					((looking-at "\\(bucket\\)\\|A")
-					 (setq face 'ledger-font-bucket-directive-face))
-					((looking-at "capture")
-					 (setq face 'ledger-font-capture-directive-face))
-					((looking-at "check")
-					 (setq face 'ledger-font-check-directive-face))
-					((looking-at "commodity")
-					 (setq face 'ledger-font-commodity-directive-face))
-					((looking-at "define")
-					 (setq face 'ledger-font-define-directive-face))
-					((looking-at "end")
-					 (setq face 'ledger-font-end-directive-face))
-					((looking-at "expr")
-					 (setq face 'ledger-font-expr-directive-face))
-					((looking-at "fixed")
-					 (setq face 'ledger-font-fixed-directive-face))
-					((looking-at "include")
-					 (setq face 'ledger-font-include-directive-face))
-					((looking-at "payee")
-					 (setq face 'ledger-font-payee-directive-face))
-					((looking-at "P")
-					 (setq face 'ledger-font-price-directive-face))
-					((looking-at "tag")
-					 (setq face 'ledger-font-tag-directive-face)))
-		(ledger-fontify-set-face extents face)))
+  "Fontify the directive at POS."
+  (let ((extents (ledger-navigate-find-element-extents pos))
+        (face 'ledger-font-default-face))
+    (cond ((looking-at "=")
+           (setq face 'ledger-font-auto-xact-face))
+          ((looking-at "~")
+           (setq face 'ledger-font-periodic-xact-face))
+          ((looking-at "[;#%|\\*]")
+           (setq face 'ledger-font-comment-face))
+          ((looking-at "\\(year\\)\\|Y")
+           (setq face 'ledger-font-year-directive-face))
+          ((looking-at "account")
+           (setq face 'ledger-font-account-directive-face))
+          ((looking-at "apply")
+           (setq face 'ledger-font-apply-directive-face))
+          ((looking-at "alias")
+           (setq face 'ledger-font-alias-directive-face))
+          ((looking-at "assert")
+           (setq face 'ledger-font-assert-directive-face))
+          ((looking-at "\\(bucket\\)\\|A")
+           (setq face 'ledger-font-bucket-directive-face))
+          ((looking-at "capture")
+           (setq face 'ledger-font-capture-directive-face))
+          ((looking-at "check")
+           (setq face 'ledger-font-check-directive-face))
+          ((looking-at "commodity")
+           (setq face 'ledger-font-commodity-directive-face))
+          ((looking-at "define")
+           (setq face 'ledger-font-define-directive-face))
+          ((looking-at "end")
+           (setq face 'ledger-font-end-directive-face))
+          ((looking-at "expr")
+           (setq face 'ledger-font-expr-directive-face))
+          ((looking-at "fixed")
+           (setq face 'ledger-font-fixed-directive-face))
+          ((looking-at "include")
+           (setq face 'ledger-font-include-directive-face))
+          ((looking-at "payee")
+           (setq face 'ledger-font-payee-directive-face))
+          ((looking-at "P")
+           (setq face 'ledger-font-price-directive-face))
+          ((looking-at "tag")
+           (setq face 'ledger-font-tag-directive-face)))
+    (ledger-fontify-set-face extents face)))
 
 (defun ledger-fontify-set-face (extents face)
-	"Set the text in EXTENTS to FACE."
-	(put-text-property (car extents) (cadr extents) 'face face))
+  "Set the text in EXTENTS to FACE."
+  (put-text-property (car extents) (cadr extents) 'face face))
 
 
 (provide 'ledger-fontify)

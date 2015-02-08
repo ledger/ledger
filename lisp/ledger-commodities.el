@@ -91,8 +91,8 @@ Returns a list with (value commodity)."
     (error "Can't add different commodities, %S to %S" c1 c2)))
 
 (defun ledger-strip (str char)
-	"Return STR with CHAR removed."
-	(replace-regexp-in-string char "" str))
+  "Return STR with CHAR removed."
+  (replace-regexp-in-string char "" str))
 
 (defun ledger-string-to-number (str &optional decimal-comma)
   "improve builtin string-to-number by handling internationalization, and return nil if number can't be parsed"
@@ -105,7 +105,7 @@ Returns a list with (value commodity)."
     (string-to-number nstr)))
 
 (defun ledger-number-to-string (n &optional decimal-comma)
-	"number-to-string that handles comma as decimal."
+  "number-to-string that handles comma as decimal."
   (let ((str (number-to-string n)))
     (when (or decimal-comma
               (assoc "decimal-comma" ledger-environment-alist))
@@ -124,7 +124,7 @@ longer ones are after the value."
       (concat commodity " " str))))
 
 (defun ledger-read-commodity-string (prompt)
-	"Read an amount from mini-buffer using PROMPT."
+  "Read an amount from mini-buffer using PROMPT."
   (let ((str (read-from-minibuffer
               (concat prompt " (" ledger-reconcile-default-commodity "): ")))
         comm)
