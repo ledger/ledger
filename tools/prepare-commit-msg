@@ -5,7 +5,7 @@
 
 # Add [ci skip] to the commit message unless there are changes to files
 # that are relevant for testing such as src/*, test/*, ledger3.texi, ...
-function add_ci_skip()
+add_ci_skip ()
 {
   pattern="$1"; shift
   source="$1"
