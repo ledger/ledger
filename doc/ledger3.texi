@@ -2,6 +2,7 @@
 
 @setfilename ledger3.info
 @include version.texi
+@set FIXME:UNDOCUMENTED @sc{undocumented}! Please help by contributing documentation for this feature.
 @settitle Ledger: Command-Line Accounting
 
 @c Before release, run C-u C-c C-u C-a (texinfo-all-menus-update with
@@ -3119,6 +3120,7 @@ the amount expression with parentheses:
 
 @node Balance verification, Posting cost, Expression amounts, Transactions
 @section Balance verification
+@findex --permissive
 
 @menu
 * Balance assertions::
@@ -3130,7 +3132,7 @@ the amount expression with parentheses:
 If at the end of a posting's amount (and after the cost too, if there
 is one) there is an equals sign, then Ledger will verify that the
 total value for that account as of that posting matches the amount
-specified.
+specified. See @option{--permissive} option to relax the balance assertions checks.
 
 There are two forms of this features: balance assertions, and balance
 assignments.
@@ -5323,13 +5325,13 @@ with Ledger 2.X.
 @findex stats
 @findex stat
 
-FIX THIS ENTRY @c FIXME thdox
+@value{FIXME:UNDOCUMENTED}
 
 @node @command{select},  , @command{stats}, Reports about your Journals
 @subsection @command{select}
 @findex select
 
-FIX THIS ENTRY @c FIXME thdox
+@value{FIXME:UNDOCUMENTED}
 
 @node Command-Line Syntax, Budgeting and Forecasting, Reporting Commands, Top
 @chapter Command-Line Syntax
@@ -5464,6 +5466,9 @@ Redirect output to @file{FILE}.
 @item --init-file @var{FILE}
 @itemx -i @var{FILE}
 Specify an options file.
+
+@item --import @var{FILE}
+@value{FIXME:UNDOCUMENTED}
 
 @item --account @var{STR}
 @itemx -a @var{STR}
@@ -5619,6 +5624,9 @@ Report the last @var{INT} postings.
 
 @item --pager @var{FILE}
 Direct output to @var{FILE} pager program.
+
+@item --no-pager
+Direct output to stdout, avoiding pager program.
 
 @item --average
 @itemx -A
@@ -5779,7 +5787,7 @@ or testing small journal files not associated with your main financial
 database.
 
 @item --debug @var{CODE}
-FIX THIS ENTRY @c FIXME thdox
+@value{FIXME:UNDOCUMENTED}
 
 @item --help
 @itemx -h
@@ -5840,10 +5848,10 @@ slowdown.  When combined with @option{--debug @var{CODE}} ledger will
 produce memory trace information.
 
 @item --verify-memory
-FIX THIS ENTRY @c FIXME thdox
+@value{FIXME:UNDOCUMENTED}
 
 @item --version
-FIX THIS ENTRY @c FIXME thdox
+@value{FIXME:UNDOCUMENTED}
 
 @end ftable
 
@@ -5860,13 +5868,26 @@ sessions with multiple reports per session.
 @ftable @option
 
 @item --cache @var{FIXME}
-FIX THIS ENTRY @c FIXME thdox
+@value{FIXME:UNDOCUMENTED}
 
 @item --check-payees
-FIX THIS ENTRY @c FIXME thdox
+Enable strict and pedantic checking for payees as well as accounts,
+commodities and tags. This only works in conjunction with
+@option{--strict} or @option{--pedantic}.
 
 @item --day-break
-FIX THIS ENTRY @c FIXME thdox
+Break up @command{register} report of @ref{timelog} entries that span multiple
+days by day.
+@c see test/baseline/opt-day-break.dat
+@c @smallexample @c input:
+@c i 2015/
+@c @end smallexample
+@c @smallexample @c command:
+@c $ ledger reg --day-break
+@c @end smallexample
+@c @smallexample @c output:
+@c @end smallexample
+@value{FIXME:UNDOCUMENTED}
 
 @item --decimal-comma
 Direct Ledger to parse journals using the European standard comma as
@@ -5878,7 +5899,8 @@ Direct Ledger to download prices using the script defined via the option
 @option{--getquote @var{FILE}}.
 
 @item --explicit
-FIX THIS ENTRY @c FIXME thdox
+@c see test/baseline/opt-explicit.test
+@value{FIXME:UNDOCUMENTED}
 
 @item --file @var{FILE}
 @itemx -f @var{FILE}
@@ -5936,7 +5958,7 @@ Ledger does not expand any aliases if this option is specified.
 Accounts, tags or commodities not previously declared will cause errors.
 
 @item --permissive
-FIX THIS ENTRY @c FIXME thdox
+Quiet balance assertions.
 
 @item --price-db @var{FILE}
 Specify the location of the price entry data file.
@@ -5972,7 +5994,7 @@ For example 8100 seconds by default will be displayed as 2.25 whereas
 with the @option{--time-colon} option they will be displayed as 2:15.
 
 @item --value-expr @var{FIXME}
-FIX THIS ENTRY @c FIXME thdox
+@value{FIXME:UNDOCUMENTED}
 
 @end ftable
 
@@ -6032,7 +6054,9 @@ Set the width in characters of the amount column in the
 Anonymize registry output, mostly for sending in bug reports.
 
 @item --auto-match
-FIX THIS ENTRY @c FIXME thdox
+@c Automatically match accounts from ledger journal when using convert command
+@c see test/baseline/opt-auto-match.dat
+@value{FIXME:UNDOCUMENTED}
 
 @item --aux-date
 @itemx --effective
@@ -6056,7 +6080,10 @@ Strings}). The default is:
 @end smallexample
 
 @item --base
-FIX THIS ENTRY @c ASK JOHN
+@c Report commodity in the base commodity s instead of h
+@c Does this apply to other commodities too?
+@c see test/baseline/opt-base.test/
+@value{FIXME:UNDOCUMENTED}
 
 @item --basis
 @itemx -B
@@ -6106,7 +6133,7 @@ Consider only transactions that have been cleared for display and
 calculation.
 
 @item --cleared-format @var{FORMAT_STRING}
-FIX THIS ENTRY @c FIXME thdox: to keep?
+@c FIXME thdox: to keep?
 Specify the format to use for the @command{cleared} report (@pxref{Format
 Strings}). The default is:
 
@@ -6175,8 +6202,11 @@ Specify the format ledger should use to read and print dates
 Specify the width, in characters, of the date column in the
 @command{register} report.
 
-@item --datetime-format @var{FIXME}
-FIX THIS ENTRY @c ASK JOHN
+@item --datetime-format @var{DATETIME_FORMAT}
+@c Specify the format ledger should use to print datetimes in
+@c @command{balance} @option{--timelog-report} reports.
+@c see test/baseline/opt-datetime-format.test
+@value{FIXME:UNDOCUMENTED}
 
 @item --dc
 Display register or balance in debit/credit format If you use
@@ -6284,7 +6314,7 @@ command}).  Gives current account balances in the form of a register
 report.
 
 @item --exact
-FIX THIS ENTRY @c ASK JOHN
+@value{FIXME:UNDOCUMENTED}
 
 @item --exchange @var{COMMODITY}
 @itemx -X @var{COMMODITY}
@@ -6362,10 +6392,10 @@ Print the first @var{INT} entries. Opposite of @option{--tail
 
 @item --historical
 @itemx -H
-FIX THIS ENTRY @c FIXME thdox
+@value{FIXME:UNDOCUMENTED}
 
 @item --immediate
-FIX THIS ENTRY @c FIXME thdox
+@value{FIXME:UNDOCUMENTED}
 
 @item --inject
 Use @code{Expected} amounts in calculations.  In case you know
@@ -6406,7 +6436,8 @@ Report the date and price at which each commodity was purchased in
 a balance report.
 
 @item --lots-actual
-FIX THIS ENTRY
+@c see test/baseline/opt-lots-actual.test
+@value{FIXME:UNDOCUMENTED}
 
 @item --market
 @itemx -V
@@ -6429,6 +6460,9 @@ Aliases are completely ignored.
 
 @item --no-color
 Suppress any color TTY output.
+
+@item --no-pager
+Direct output to stdout, avoiding pager program.
 
 @item --no-rounding
 Don't output @samp{<Rounding>} postings.  Note that this will cause the
@@ -6453,7 +6487,7 @@ been executed, such as periodic gathering.
 Redirect the output of ledger to the file defined in @file{FILE}.
 
 @item --pager @var{FILE}
-Specify the pager program to use.
+Direct output to @var{FILE} pager program.
 
 @item --payee @var{VEXPR}
 Sets a value expression for formatting the payee. In the
@@ -6558,17 +6592,22 @@ Show all postings in a transaction, similar to @option{--related} but
 show both @emph{sides} of each transaction.
 
 @item --revalued
-FIX THIS ENTRY
+@c see test/baeline/opt-revalued.test
+@value{FIXME:UNDOCUMENTED}
 
 @item --revalued-only
-FIX THIS ENTRY
+@c see test/baeline/opt-revalued-only.test
+@value{FIXME:UNDOCUMENTED}
 
 @item --revalued-total @var{FIXME}
-FIX THIS ENTRY
+@value{FIXME:UNDOCUMENTED}
 
 @item --rich-data
 @itemx --detail
-FIX THIS ENTRY @c FIXME thdox
+@c When generating ledger transaction from csv using the convert command
+@c add CSV, Imported, and UUID meta-data.
+@c see test/baeline/opt-rich-data.test
+@value{FIXME:UNDOCUMENTED}
 
 @item --seed @var{INT}
 Set the random seed to @var{INT} for the @code{generate} command.
@@ -6579,8 +6618,8 @@ Used as part of development testing.
 Sort the @command{register} report based on the value expression given
 to sort.
 
-@c @item --sort-all @var{FIXME}
-@c FIX THIS ENTRY
+@item --sort-all @var{FIXME}
+@value{FIXME:UNDOCUMENTED}
 
 @item --sort-xacts @var{VEXPR}
 @itemx --period-sort @var{VEXPR}
@@ -6593,7 +6632,7 @@ week.
 
 @item --subtotal
 @itemx -s
-FIX THIS ENTRY
+@value{FIXME:UNDOCUMENTED}
 
 @item --tail @var{INT}
 @itemx --last @var{INT}
@@ -6601,7 +6640,9 @@ Report only the last @var{INT} entries. Only useful in
 a @command{register} report.
 
 @item --time-report
-FIX THIS ENTRY @c FIXME thdox
+@c Display begin and end time for each timelog entry in balance reports
+@c see test/baseline/opt-time-report.test
+@value{FIXME:UNDOCUMENTED}
 
 @item --total @var{VEXPR}
 @itemx -T @var{VEXPR}
@@ -6960,9 +7001,13 @@ meaning of the flag (instead of the first five transactions being
 printed, for example, it would print all but the first five).
 
 @item --pager @var{FILE}
-Tell Ledger to pass its output to the given pager program; very useful
-when the output is especially long.  This behavior can be made the
-default by setting the @env{LEDGER_PAGER} environment variable.
+Tell Ledger to pass its output to the given @var{FILE} pager program;
+very useful when the output is especially long.  This behavior can be
+made the default by setting the @env{LEDGER_PAGER} environment variable.
+
+@item --no-pager
+Tell Ledger to @emph{not} pass its output to a pager program; useful
+when a pager is set by default.
 
 @item --average
 @itemx -A
@@ -7397,15 +7442,14 @@ BTC:USD}.
 @node Environment variables,  , Commodity reporting, Detailed Option Description
 @subsection Environment variables
 
-Every option to ledger may be set using an environment variable.  If
-an option has a long name such @option{--this-option}, setting the
-environment variable @env{LEDGER_THIS_OPTION} will have the same
-effect as specifying that option on the command-line.  Options on the
-command-line always take precedence over environment variable
-settings, however.
+Every option to ledger may be set using an environment variable if the
+option has a long name.  For example setting the environment variable
+@samp{@env{LEDGER_DATE_FORMAT}="%d.%m.%Y"} will have the same effect as specifying
+@samp{@option{--date-format} '%d.%m.%Y'} on the command-line.  Options on the
+command-line always take precedence over environment variable settings, however.
 
 Note that you may also permanently specify option values by placing
-option settings in the file @file{~/.ledgerrc}, for example:
+option settings in the file @file{~/.ledgerrc} one option per line, for example:
 
 @smallexample
 --pager /bin/cat
@@ -7604,6 +7648,7 @@ $ ledger --forecast "d<[2010]" bal ^assets ^liabilities
 @chapter Time Keeping
 @findex --day-break
 
+@anchor{timelog}
 Ledger directly supports ``timelog'' entries, which have this form:
 
 @smallexample @c input:validate
@@ -7935,8 +7980,6 @@ will match both all the three examples below:
     Expenses:Phone                           $-50.00
 @end smallexample
 
-
-
 @item (EXPR)
 A sub-expression is nested in parenthesis.  This can be useful passing
 more complicated arguments to functions, or for overriding the natural
@@ -7964,61 +8007,337 @@ expect (@pxref{Pre-Commands}).
 @node Miscellaneous,  , Complex expressions, Complex expressions
 @subsection Miscellaneous
 
-@table @code
-@item abs--> U
-@item amount_expr
-@item ansify_if
-@item ceiling
-Return the next integer toward +infinity
-@item code
-Return the transaction code, the string between the parenthesis after
-the date.
-@item commodity
-@item date
-@item display_amount --> t
-@item display_total --> T
-@item floor
-Return the next integer toward -infinity
-@item format
-@item format_date
-@item format_datetime
-@item get_at
-@item is_seq
-@item join
-@item justify
-@item market --> P
-@item nail_down
-@item now --> d m
-@item options
-@item percent
-@item print
-@item quantity
-@item quoted
-@item round
-@item rounded
-@item roundto
-Return value rounded to n digits.  Does not affect formatting.
-@item scrub
-@item should_bold
-@item strip --> S
-@item to_amount
-@item to_balance
-@item to_boolean
-@item to_date
-@item to_datetime
-@item to_int
-@item to_mask
-@item to_sequence
-@item to_spring
-@item today
-@item top_amount
-@item total_expr
-@item trim
-@item truncated
-@item unround
-@item unrounded
-@item value_date
-@end table
+The following Ledger journal data (saved as @file{expr.dat}) is used to explain the behaviour of the
+functions and variables below:
+@anchor{expr.dat}
+@smallexample @c input:3406FC1
+2015/01/16 * (C0D3) Payee
+  Assets:Cash                 ¤ -123,45
+    ; Payee: PiggyBank
+  Expenses:Office Supplies
+@end smallexample
+
+@defun abs value
+@defunx U value
+Return the absolute value of the given @var{value}, e.g. @var{amount}.
+@smallexample @c command:3406FC1
+$ ledger -f expr.dat --format "%(account) %(abs(amount))\n" reg assets
+@end smallexample
+@smallexample @c output:3406FC1
+Assets:Cash ¤ 123,45
+@end smallexample
+@end defun
+
+@defun amount_expr
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun ansify_if value color bool
+Render the given @var{expression} as a string, applying the proper ANSI escape
+codes to display it in the given @var{color} if @var{bool} is true.  It
+typically checks the value of the option @option{--color}. Since ANSI escape
+codes include non-printable character sequences, such as escape @kbd{^[}
+the following example may not appear as the final result on the commandline.
+@smallexample @c command:4D836EE,with_input:3406FC1
+$ ledger -f expr.dat --format "%(ansify_if(account, blue, options.color))\n" reg
+@end smallexample
+@smallexample @c output:4D836EE
+[34mAssets:Cash[0m
+[34mExpenses:Office Supplies[0m
+@end smallexample
+@end defun
+
+@defun ceiling value
+Return the next integer of @var{value} toward @math{+}infinity.
+@smallexample @c command:FF9C18C,with_input:3406FC1
+$ ledger -f expr.dat --format "%(account) %(ceiling(amount))\n" reg
+@end smallexample
+@smallexample @c output:FF9C18C
+Assets:Cash ¤ -123,00
+Expenses:Office Supplies ¤ 124,00
+@end smallexample
+@end defun
+
+@defvar code
+Return the transaction code, the string between the parenthesis after the date.
+@smallexample @c command:46FCFD3,with_input:3406FC1
+$ ledger -f expr.dat --format "%(account) %(code)\n" reg assets
+@end smallexample
+@smallexample @c output:46FCFD3
+Assets:Cash C0D3
+@end smallexample
+@end defvar
+
+@defvar commodity
+Return the commodity of the posting amount.
+@end defvar
+@smallexample @c command:2CD27D7,with_input:3406FC1
+$ ledger -f expr.dat --format "%(account) %(commodity)\n" reg
+@end smallexample
+@smallexample @c output:2CD27D7
+Assets:Cash ¤
+Expenses:Office Supplies ¤
+@end smallexample
+
+@defvar date
+Return the date of the posting.
+@end defvar
+@smallexample @c command:67EBA45,with_input:3406FC1
+$ ledger -f expr.dat --format "%(date) %(account)\n" reg assets
+@end smallexample
+@smallexample @c output:67EBA45
+2015/01/16 Assets:Cash
+@end smallexample
+
+@defvar display_amount
+@defvarx t
+@value{FIXME:UNDOCUMENTED}
+@end defvar
+
+@c FIXME
+@defvar display_total
+@defvarx T
+@value{FIXME:UNDOCUMENTED}
+@end defvar
+
+@defun floor value
+Return the next integer of @var{value} toward @math{-}infinity.
+@smallexample @c command:4FDC7C5,with_input:3406FC1
+$ ledger -f expr.dat --format "%(account) %(floor(amount))\n" reg
+@end smallexample
+@smallexample @c output:4FDC7C5
+Assets:Cash ¤ -124,00
+Expenses:Office Supplies ¤ 123,00
+@end smallexample
+@end defun
+
+@defun format
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun format_date date format
+Return the @var{date} as a string using @var{format}. See strftime (3)
+for format string details.
+@smallexample @c command:9605B13,with_input:3406FC1
+$ ledger -f expr.dat --format "%(format_date(date, '%A, %B %d. %Y'))\n" reg assets
+@end smallexample
+@smallexample @c output:9605B13
+Friday, January 16. 2015
+@end smallexample
+@end defun
+
+@defun format_datetime
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun get_at
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun is_seq
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun join
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun justify value first_width latter_width right_justify colorize
+Right or left justify the string representing @var{value}.  The width
+of the field in the first line is given by @var{first_width}.  For
+subsequent lines the width is given by @var{latter_width}.  If
+@var{latter_width=-1}, then @var{first_width} is use for all lines.
+If @var{right_justify=true} then the field is right justify within
+the width of the field. If it is @var{false}, then the field is left
+justified and padded to the full width of the field.  If
+@var{colorize} is true, then ledger will honor color settings.
+@smallexample @c command:082FB27,with_input:3406FC1
+$ ledger -f expr.dat --format "»%(justify(account, 30, 30, true))«\n" reg
+@end smallexample
+@smallexample @c output:082FB27
+»                   Assets:Cash«
+»      Expenses:Office Supplies«
+@end smallexample
+@end defun
+
+@defun market
+@defunx P
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun nail_down
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defvar now
+@defvarx d
+@defvarx m
+@value{FIXME:UNDOCUMENTED}
+@end defvar
+
+@defvar options
+A variable that allows access to the values of the given command-line options
+using the long option names, e.g. to see whether @option{--daily} or @option{-D}
+was given use @code{option.daily}.
+@smallexample @c command:C1FC7A7,with_input:3406FC1
+$ ledger -f expr.dat -X $ -D --format "%(options.daily) %(options.exchange)\n" reg assets
+@end smallexample
+@smallexample @c output:C1FC7A7
+true $
+@end smallexample
+@end defvar
+
+@defun percent value_a value_b
+Return the percentage of @var{value_a} in relation to @var{value_b} (used as 100%)
+@smallexample @c command:04959BF,with_input:3406FC1
+$ ledger -f expr.dat --format "%(percent(amount, 200))\n" reg
+@end smallexample
+@smallexample @c output:04959BF
+-61.73%
+61.73%
+@end smallexample
+@end defun
+
+@defun print
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun quantity
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun quoted expression
+Surround @var{expression} with double-quotes.
+@smallexample @c command:EAD8AA7,with_input:3406FC1
+$ ledger -f expr.dat --format "%(quoted(account)) %(quoted(amount))\n" reg
+@end smallexample
+@smallexample @c output:EAD8AA7
+"Assets:Cash" "¤ -123,45"
+"Expenses:Office Supplies" "¤ 123,45"
+@end smallexample
+@end defun
+
+@defun round
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun rounded
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun roundto value n
+Return @var{value} rounded to @var{n} digits.  Does not affect formatting.
+@smallexample @c command:B4DFB9F,with_input:3406FC1
+$ ledger -f expr.dat --format "%(account) %(roundto(amount, 1))\n" reg
+@end smallexample
+@smallexample @c output:B4DFB9F
+Assets:Cash ¤ -123,40
+Expenses:Office Supplies ¤ 123,50
+@end smallexample
+@end defun
+
+@defun scrub
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun should_bold
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun strip
+@defunx S
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun to_amount
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun to_balance
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun to_boolean
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun to_date
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun to_datetime
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun to_int value
+@defunx int value
+Return the integer value for @var{value}.
+@smallexample @c command:0B0CBA1,with_input:3406FC1
+$ ledger -f expr.dat --format "%(1 + to_int('1'))\n%(2,5 + int(2,5))\n" reg assets
+@end smallexample
+@smallexample @c output:0B0CBA1
+2
+4.5
+@end smallexample
+@end defun
+
+@defun to_mask
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun to_sequence
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun to_string value
+@defunx str value
+Convert @var{value} to a character string.
+@end defun
+
+@defvar today
+Return today's date.
+@end defvar
+@smallexample @c command:F2FDF4B,with_input:3406FC1
+$ ledger -f expr.dat --now 2015/01/01 --format "%(today)\n" reg assets
+@end smallexample
+@smallexample @c output:F2FDF4B
+2015/01/01
+@end smallexample
+
+@defun top_amount
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun total_expr
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun trim value
+Trim leading and trailing whitespace from @var{value}.
+@smallexample @c command:377BBAB,with_input:3406FC1
+$ ledger -f expr.dat --format "»%(trim(' 	Trimmed	 '))«\n" reg assets
+@end smallexample
+@smallexample @c output:377BBAB
+»Trimmed«
+@end smallexample
+@end defun
+
+@defun truncated
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun unround
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun unrounded
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
+@defun value_date
+@value{FIXME:UNDOCUMENTED}
+@end defun
+
 
 @node Format Strings, Extending with Python, Value Expressions, Top
 @chapter Format Strings
@@ -8105,12 +8424,19 @@ or an expression enclosed in parentheses or brackets.
 @findex --amount @var{EXPR}
 @findex --total @var{VEXPR}
 
+For demonstration purposes the journal data from @ref{expr.dat} is used.
 The allowable expressions are:
 
 @table @code
 
 @item %
 Inserts a percent sign.
+@smallexample @c command:6F90EFC,with_input:3406FC1
+$ ledger -f expr.dat --format "%%\n" reg assets
+@end smallexample
+@smallexample @c output:6F90EFC
+%
+@end smallexample
 
 @item t
 Inserts the results of the value expression specified by
@@ -8128,6 +8454,12 @@ parentheses.  To insert five times the total value of an account, for
 example, one could say @samp{%12(5*O)}.  Note: It's important to put the
 five first in that expression, so that the commodity doesn't get
 stripped from the total.
+@smallexample @c command:494256E,with_input:3406FC1
+$ ledger -f expr.dat --format "%12(5*O)\n" reg assets
+@end smallexample
+@smallexample @c output:494256E
+   ¤ -617,25
+@end smallexample
 
 @item [DATEFMT]
 Inserts the result of formatting a posting's date with a date
@@ -8137,20 +8469,52 @@ example: @samp{%[%Y/%m/%d %H:%M:%S]}.
 @item S
 Insert the path name of the file from which the transaction's data was
 read.  Only sensible in a @command{register} report.
+@c Note: Unable to test this properly since the output depends on
+@c       where the ledger source tree resides in the filesystem.
+@smallexample
+$ ledger -f ~/journal.dat --format "%S\n" reg assets
+@end smallexample
+@smallexample
+/home/jwiegley/journal.dat
+@end smallexample
 
 @item B
 Inserts the beginning character position of that transaction within the
 file.
+@smallexample @c command:2B669C9,with_input:3406FC1
+$ ledger -f expr.dat --format "%B\n" reg assets
+@end smallexample
+@smallexample @c output:2B669C9
+26
+@end smallexample
 
 @item b
 Inserts the beginning line of that transaction within the file.
+@smallexample @c command:F6E356F,with_input:3406FC1
+$ ledger -f expr.dat --format "%b\n" reg assets
+@end smallexample
+@smallexample @c output:F6E356F
+2
+@end smallexample
 
 @item E
 Inserts the ending character position of that transaction within the
 file.
+@smallexample @c command:0E55246,with_input:3406FC1
+$ ledger -f expr.dat --format "%E\n" reg assets
+@end smallexample
+@smallexample @c output:0E55246
+90
+@end smallexample
 
 @item e
 Inserts the ending line of that transaction within the file.
+@smallexample @c command:A26F4C0,with_input:3406FC1
+$ ledger -f expr.dat --format "%e\n" reg assets
+@end smallexample
+@smallexample @c output:A26F4C0
+3
+@end smallexample
 
 @item D
 Returns the date according to the default format.
@@ -8169,9 +8533,23 @@ character if all of the member postings have the same state.
 @item C
 Inserts the transaction code.  This is the value specified between
 parentheses on the first line of the transaction.
+@smallexample @c command:C1CAAF3,with_input:3406FC1
+$ ledger -f expr.dat --format "%C\n" reg assets
+@end smallexample
+@c Note: The output needs a space character at the end
+@c       for this test to pass
+@smallexample @c output:C1CAAF3
+(C0D3) 
+@end smallexample
 
 @item P
 Inserts the payee related to a posting.
+@smallexample @c command:F41A9BB,with_input:3406FC1
+$ ledger -f expr.dat --format "%P\n" reg assets
+@end smallexample
+@smallexample @c output:F41A9BB
+PiggyBank
+@end smallexample
 
 @c @item a
 @c Inserts the optimal short name for an account.  This is normally
@@ -8181,6 +8559,13 @@ Inserts the payee related to a posting.
 
 @item A
 Inserts the full name of an account.
+@smallexample @c command:29A70DD,with_input:3406FC1
+$ ledger -f expr.dat --format "%A\n" reg
+@end smallexample
+@smallexample @c output:29A70DD
+Assets:Cash
+Expenses:Office Supplies
+@end smallexample
 
 @c @item W
 @c This is the same as @code{%A}, except that it first displays the
@@ -8197,12 +8582,25 @@ Inserts the full name of an account.
 
 @item N
 Inserts the note associated with a posting, if one exists.
+@smallexample @c command:E6DC93A,with_input:3406FC1
+$ ledger -f expr.dat --format "%N\n" reg assets
+@end smallexample
+@smallexample @c output:E6DC93A
+ Payee: PiggyBank
+@end smallexample
 
 @item /
 The @samp{%/} construct is special.  It separates a format string
 between what is printed for the first posting of a transaction, and
 what is printed for all subsequent postings.  If not used, the
 same format string is used for all postings.
+@smallexample @c command:E80897D,with_input:3406FC1
+$ ledger -f expr.dat --format "%P\n%/%A\n" reg
+@end smallexample
+@smallexample @c output:E80897D
+PiggyBank
+Expenses:Office Supplies
+@end smallexample
 
 @end table
 
@@ -9313,7 +9711,7 @@ slowdown.  When combined with @option{--debug @var{CODE}} ledger will
 produce memory trace information.
 
 @item --verify-memory
-FIX THIS ENTRY @c FIXME thdox
+@value{FIXME:UNDOCUMENTED}
 
 @item --version
 Print version information and exit.
@@ -9411,7 +9809,7 @@ true
 @end smallexample
 
 @item script
-FIX THIS ENTRY @c FIXME thdox
+@value{FIXME:UNDOCUMENTED}
 
 @item template
 Shows the insertion template that the @command{xact} sub-command
@@ -9696,11 +10094,23 @@ to the main body of the documentation.
 @node Invoking Ledger, Ledger Files, Cookbook, Cookbook
 @subsection Invoking Ledger
 
-@smallexample
+
+@smallexample @c command:validate
 $ ledger --group-by "tag('trip')" bal
-$ ledger reg --sort "tag('foo')" %foo
+@end smallexample
+@c FIXME: The following example fails to validate due to:
+@c While applying is_realzero to :
+@c Error: Cannot determine if an uninitialized value is really zero
+@c @smallexample @c command:validate
+@c $ ledger reg --sort "tag('foo')" %foo
+@c @end smallexample
+@smallexample @c command:validate
 $ ledger cleared VWCU NFCU Tithe Misentry
+@end smallexample
+@smallexample @c command:validate
 $ ledger register Joint --uncleared
+@end smallexample
+@smallexample @c command:validate
 $ ledger register Checking --sort d -d 'd>[2011/04/01]' until 2011/05/25
 @end smallexample
 
