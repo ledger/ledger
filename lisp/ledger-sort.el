@@ -28,17 +28,17 @@
 
 
 (defun ledger-sort-find-start ()
-	"Find the beginning of a sort region"
+  "Find the beginning of a sort region"
   (if (re-search-forward ";.*Ledger-mode:.*Start sort" nil t)
       (match-end 0)))
 
 (defun ledger-sort-find-end ()
-	"Find the end of a sort region"
+  "Find the end of a sort region"
   (if (re-search-forward ";.*Ledger-mode:.*End sort" nil t)
       (match-end 0)))
 
 (defun ledger-sort-insert-start-mark ()
-	"Insert a marker to start a sort region"
+  "Insert a marker to start a sort region"
   (interactive)
   (save-excursion
     (goto-char (point-min))
@@ -48,7 +48,7 @@
   (insert "\n; Ledger-mode: Start sort\n\n"))
 
 (defun ledger-sort-insert-end-mark ()
-	"Insert a marker to end a sort region"
+  "Insert a marker to end a sort region"
   (interactive)
   (save-excursion
     (goto-char (point-min))
@@ -64,7 +64,7 @@
 (defun ledger-sort-region (beg end)
   "Sort the region from BEG to END in chronological order."
   (interactive "r") ;; load beg and end from point and mark
-										;; automagically
+  ;; automagically
   (let ((new-beg beg)
         (new-end end)
         point-delta
@@ -77,14 +77,14 @@
     (save-excursion
       (save-restriction
         (goto-char beg)
-				;; make sure point is at the beginning of a xact
+        ;; make sure point is at the beginning of a xact
         (ledger-navigate-next-xact)
         (unless (looking-at ledger-payee-any-status-regex)
           (ledger-navigate-next-xact))
         (setq new-beg (point))
         (goto-char end)
         (ledger-navigate-next-xact)
-				;; make sure end of region is at the beginning of next record
+        ;; make sure end of region is at the beginning of next record
         ;; after the region
         (setq new-end (point))
         (narrow-to-region new-beg new-end)

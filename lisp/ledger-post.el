@@ -95,8 +95,8 @@ at beginning of account"
         (current-column))))
 
 (defun ledger-post-align-xact (pos)
-	"Align all the posting in the xact at POS."
-	(interactive "d")
+  "Align all the posting in the xact at POS."
+  (interactive "d")
   (let ((bounds (ledger-navigate-find-xact-extents pos)))
     (ledger-post-align-postings (car bounds) (cadr bounds))))
 

@@ -63,7 +63,7 @@
 
 (defun ledger-mode-dump-variable (var)
   "Format VAR for dump to buffer."
-	(if var
+  (if var
       (insert (format "         %s: %S\n" (symbol-name var) (eval var)))))
 
 (defun ledger-mode-dump-group (group)
@@ -78,7 +78,7 @@
 
 (defun ledger-mode-dump-configuration ()
   "Dump all customizations."
-	(interactive)
+  (interactive)
   (find-file "ledger-mode-dump")
   (ledger-mode-dump-group 'ledger))
 
@@ -99,11 +99,11 @@
 
 (defun ledger-read-account-with-prompt (prompt)
   "Read an account from the minibuffer with PROMPT."
-	(let ((context (ledger-context-at-point)))
+  (let ((context (ledger-context-at-point)))
     (ledger-read-string-with-default prompt
-																		 (if (eq (ledger-context-current-field context) 'account)
-																				 (regexp-quote (ledger-context-field-value context 'account))
-																			 nil))))
+                                     (if (eq (ledger-context-current-field context) 'account)
+                                         (regexp-quote (ledger-context-field-value context 'account))
+                                       nil))))
 
 (defun ledger-read-date (prompt)
   "Return user-supplied date after `PROMPT', defaults to today."
@@ -222,7 +222,7 @@ With a prefix argument, remove the effective date."
 
 (defun ledger-mode-remove-extra-lines ()
   "Get rid of multiple empty lines."
-	(goto-char (point-min))
+  (goto-char (point-min))
   (while (re-search-forward "\n\n\\(\n\\)+" nil t)
     (replace-match "\n\n")))
 
@@ -338,10 +338,10 @@ With a prefix argument, remove the effective date."
           '(ledger-font-lock-keywords t t nil nil
                                       (font-lock-fontify-region-function . ledger-fontify-buffer-part))))
 
-	(set (make-local-variable 'pcomplete-parse-arguments-function) 'ledger-parse-arguments)
-	(set (make-local-variable 'pcomplete-command-completion-function) 'ledger-complete-at-point)
+  (set (make-local-variable 'pcomplete-parse-arguments-function) 'ledger-parse-arguments)
+  (set (make-local-variable 'pcomplete-command-completion-function) 'ledger-complete-at-point)
   (add-hook 'completion-at-point-functions 'pcomplete-completions-at-point nil t)
-	(add-hook 'after-save-hook 'ledger-report-redo)
+  (add-hook 'after-save-hook 'ledger-report-redo)
 
   (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
 
