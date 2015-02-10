@@ -53,7 +53,7 @@
     (setq buffer-read-only t)))
 
 (defun ledger-exec-success-p (ledger-output-buffer)
-	"Return t if the ledger output in LEDGER-OUTPUT-BUFFER is successful."
+  "Return t if the ledger output in LEDGER-OUTPUT-BUFFER is successful."
   (with-current-buffer ledger-output-buffer
     (goto-char (point-min))
     (if (and (> (buffer-size) 1) (looking-at (regexp-quote "While")))

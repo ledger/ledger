@@ -108,8 +108,8 @@
            defs
            (list
             `(defmacro
-               ,(intern (concat "ledger-regex-" (symbol-name name)))
-               (&optional string)
+                 ,(intern (concat "ledger-regex-" (symbol-name name)))
+                 (&optional string)
                ,(format "Return the match string for the %s" name)
                (match-string
                 ,(intern (concat "ledger-regex-" (symbol-name name)
@@ -153,9 +153,9 @@
            defs
            (list
             `(defmacro
-               ,(intern (concat "ledger-regex-" (symbol-name name)
-                                "-" (symbol-name var)))
-               (&optional string)
+                 ,(intern (concat "ledger-regex-" (symbol-name name)
+                                  "-" (symbol-name var)))
+                 (&optional string)
                ,(format "Return the sub-group match for the %s %s."
                         name var)
                (match-string
@@ -333,8 +333,8 @@
           "\\)"))
 
 (defconst ledger-xact-start-regex
-	(concat "^" ledger-iso-date-regexp  ;; subexp 1
-					"\\(=" ledger-iso-date-regexp "\\)?"
+  (concat "^" ledger-iso-date-regexp  ;; subexp 1
+          "\\(=" ledger-iso-date-regexp "\\)?"
           ))
 
 (defconst ledger-xact-after-date-regex
@@ -345,17 +345,17 @@
           ))
 
 (defconst ledger-posting-regex
-	(concat "^[ \t]+ ?"  ;; initial white space
-					"\\([*!]\\)? ?" ;; state, subexpr 1
-					"\\([[:print:]]+\\([ \t][ \t]\\)\\)"  ;; account, subexpr 2
-					"\\([^;\n]*\\)"  ;; amount, subexpr 4
-					"\\(.*\\)" ;; comment, subexpr 5
-					))
+  (concat "^[ \t]+ ?"  ;; initial white space
+          "\\([*!]\\)? ?" ;; state, subexpr 1
+          "\\([[:print:]]+\\([ \t][ \t]\\)\\)"  ;; account, subexpr 2
+          "\\([^;\n]*\\)"  ;; amount, subexpr 4
+          "\\(.*\\)" ;; comment, subexpr 5
+          ))
 
 
 
 (defconst ledger-directive-start-regex
-	"[=~;#%|\\*[A-Za-z]")
+  "[=~;#%|\\*[A-Za-z]")
 
 
 (provide 'ledger-regex)
