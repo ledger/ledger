@@ -15,7 +15,7 @@ add_ci_skip ()
   [ $? -eq 0 ] && return
 
   if [ $(git diff --cached --name-only | grep --count "$pattern") -eq 0 ]; then
-    tempfile=$(mktemp "$0".XXXXXX)
+    tempfile=$(mktemp "${0}.XXXXXX")
     cat - "$1" <<EOF > "$tempfile"
 
 # It seems the changes to be committed are irrelevant for the continuous
