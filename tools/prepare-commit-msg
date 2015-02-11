@@ -5,17 +5,17 @@
 
 # Add [ci skip] to the commit message unless there are changes to files
 # that are relevant for testing such as src/*, test/*, ledger3.texi, ...
-function add_ci_skip()
+add_ci_skip ()
 {
   pattern="$1"; shift
   source="$1"
 
   # Don't add [ci skip] if it's already in the commit message source
-  grep '\[ci skip\]' "$source" 2>&1 >/dev/null
+  grep '\[ci skip\]' "$source" >/dev/null 2>&1
   [ $? -eq 0 ] && return
 
   if [ $(git diff --cached --name-only | grep --count "$pattern") -eq 0 ]; then
-    tempfile=$(mktemp $0.XXXXXX)
+    tempfile=$(mktemp "${0}.XXXXXX")
     cat - "$1" <<EOF > "$tempfile"
 
 # It seems the changes to be committed are irrelevant for the continuous
