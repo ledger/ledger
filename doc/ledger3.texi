@@ -6629,10 +6629,8 @@ to show unrealized capital in a gain/losses report.
 
 @item --rich-data
 @itemx --detail
-@c When generating ledger transaction from csv using the convert command
-@c add CSV, Imported, and UUID meta-data.
-@c see test/baeline/opt-rich-data.test
-@value{FIXME:UNDOCUMENTED}
+When generating ledger transaction from CSV file using the
+@command{convert} command, add CSV, Imported, and UUID meta-data.
 
 @item --seed @var{INT}
 Set the random seed to @var{INT} for the @code{generate} command.
