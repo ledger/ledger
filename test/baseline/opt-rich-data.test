@@ -1,3 +1,13 @@
+test -f /dev/null convert test/baseline/feat-convert-with-directives.dat --now '2014/08/01'
+2012/01/01 * KFC
+    Expenses:Unknown                             $10
+    Equity:Unknown
+
+2012/01/02 * REWE SAGT DANKE  123454321
+    Expenses:Unknown                             10€
+    Equity:Unknown
+end test
+
 test -f /dev/null convert test/baseline/feat-convert-with-directives.dat --detail --now '2014/08/01'
 2012/01/01 * KFC
     ; CSV: 2012/01/01,KFC,$10
