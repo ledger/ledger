@@ -4638,14 +4638,43 @@ from the file above.
 @findex --account @var{STR}
 @findex --rich-data
 
-The @command{convert} command accepts three options.  They are
-@option{--invert} which inverts the amount field,
-@option{--account @var{STR}} which you can use to specify the account to
-balance against, and @option{--rich-data} which stores
-additional metadata as tags.  There is, for example,
-a UUID field.  If an entry with the same UUID tag is already included in
-the normal ledger file (specified via @option{--file @var{FILE} (-f)} or
-via the environment variable @env{LEDGER_FILE}) this entry will not be
+The @command{convert} command accepts three options. They are
+@option{--invert} which inverts the amount field, @option{--account
+@var{STR}} which you can use to specify the account to balance against,
+and @option{--rich-data} which stores additional metadata as tags.
+
+Using following command on the two first lines of the above csv file,
+
+@smallexample
+$ ledger convert download.csv --input-date-format "%m/%d/%Y" \
+  --invert --account Assets:MyBank --rich-data
+@end smallexample
+
+you will get the result below:
+
+@smallexample
+2011/12/13 * Withdrawal  ;ACE HARDWARE 16335 S HOUGHTON RD
+    ; CSV: 767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-8.80,,00001640.04,,
+    ; Imported: 2012/01/13
+    ; UUID: dfdc3c3d5c54c6967dd39d5b4e4fd1ea76e87233
+    Expenses:Unknown                             8.8
+    Assets:MyBank
+
+2011/12/13 * Withdrawal  ;ACE HARDWARE 16335 S HOUGHTON RD
+    ; CSV: 767406,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-1.03,,00001648.84,,
+    ; Imported: 2012/01/13
+    ; UUID: 63086448b1f29f7fd6efb11ea40660185a213f9d
+    Expenses:Unknown                            1.03
+    Assets:MyBank
+@end smallexample
+
+The three added metadata are: @samp{CSV} as the original line from csv
+file, @samp{Imported} as the date when the csv file was imported into
+Ledger, and @samp{UUID} as a checksum of original csv line.
+
+If an entry with the same @samp{UUID} tag is already included in the
+normal ledger file (specified via @option{--file @var{FILE} (-f)} or via
+the environment variable @env{LEDGER_FILE}) this entry will not be
 printed again.
 
 You can also use @command{convert} with @code{payee} and @code{account}
