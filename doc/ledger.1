@@ -310,7 +310,7 @@ fit inside the
 If
 .Ar INT
 is zero, then the
-account name will be truncated on the right. If
+account name will be truncated on the right.  If
 .Ar INT
 is greater
 than
@@ -321,7 +321,7 @@ desired width.
 .It Fl \-account Ar EXPR
 Prepend
 .Ar EXPR
-to all accounts reported. That is, the option
+to all accounts reported.  That is, the option
 .Fl \-account Ar \*q'Personal'\*q
 would tack
 .Ar Personal:
@@ -346,7 +346,7 @@ transactions used.
 .It Fl \-add-budget
 Show only un-budgeted postings.
 .It Fl \-amount Ar EXPR Pq Fl t
-Apply the given value expression to the posting amount. Using
+Apply the given value expression to the posting amount.  Using
 .Fl \-amount Ar EXPR
 you can apply an
 arbitrary transformation to the postings.
@@ -391,12 +391,12 @@ Alias for
 .It Fl \-begin Ar DATE Pq Fl b
 Specify the start
 .Ar DATE
-of all calculations. Transactions before
+of all calculations.  Transactions before
 that date will be ignored.
 .It Fl \-bold-if Ar EXPR
 Print the entire line in bold if the given value expression is true.
 .It Fl \-budget
-Only display budgeted items. In a
+Only display budgeted items.  In a
 .Ic register
 report this displays transaction in the budget, in a balance report this
 displays accounts in the budget.
@@ -428,7 +428,7 @@ Make the
 .Ic register
 report
 .Ar INT
-characters wide. By default
+characters wide.  By default
 .Nm
 will use all available columns in your terminal.
 .It Fl \-cost
@@ -511,7 +511,7 @@ but not
 This is a display predicate, which means it only affects display,
 not the total calculations.
 .It Fl \-deviation
-Report each posting's deviation from the average. It is only meaningful
+Report each posting's deviation from the average.  It is only meaningful
 in the
 .Ic register No and Ic prices
 reports.
@@ -546,7 +546,7 @@ distribution.  Downloaded quote price are then appended to the price
 database, usually specified using the environment variable
 .Ev LEDGER_PRICE_DB .
 .It Fl \-effective
-Show auxiliary dates for all calculations. Alias for
+Show auxiliary dates for all calculations.  Alias for
 .Fl \-aux-date .
 .It Fl \-empty Pq Fl E
 Include empty accounts in report.
@@ -574,15 +574,15 @@ Read journal data from
 .It Fl \-first Ar INT
 Print the first
 .Ar INT
-entries. Opposite of
+entries.  Opposite of
 .Fl \-last Ar INT .
 Alias for
 .Fl \-head .
 .It Fl \-flat
-Force the full names of accounts to be used in the balance report. The
+Force the full names of accounts to be used in the balance report.  The
 balance report will not use an indented tree.
 .It Fl \-force-color
-Output TTY color codes even if the TTY doesn't support them. Useful
+Output TTY color codes even if the TTY doesn't support them.  Useful
 for TTYs that don't advertise their capabilities correctly.
 .It Fl \-force-pager
 Force
@@ -628,7 +628,7 @@ register report.
 .It Fl \-head Ar INT
 Print the first
 .Ar INT
-entries. Opposite of
+entries.  Opposite of
 .Fl \-tail Ar INT .
 Alias for
 .Fl \-first
@@ -668,9 +668,9 @@ Change the sign of all reported values.
 .It Fl \-last Ar INT .
 Report only the last
 .Ar INT
-entries. Opposite of
+entries.  Opposite of
 .Fl \-first Ar INT .
-Only useful on a register report. Alias for
+Only useful on a register report.  Alias for
 .Fl \-tail .
 .It Fl \-leeway Ar INT Pq Fl Z
 Alias for
@@ -729,7 +729,7 @@ Suppress printing the final total line in a balance report.
 .It Fl \-now Ar DATE
 Use
 .Ar DATE
-as the current date. This affects the output when using
+as the current date.  This affects the output when using
 .Fl \-period ,
 .Fl \-begin ,
 .Fl \-end ,
@@ -754,7 +754,7 @@ Use
 .Ar STR
 as the pager program.
 .It Fl \-payee
-Sets a value expression for formatting the payee. In the
+Sets a value expression for formatting the payee.  In the
 .Ic register
 report this prevents the second entry from having
 a date and payee for each transaction.
@@ -771,7 +771,7 @@ Calculate the percentage value of each account in a balance reports.
 Only works for account that have a single commodity.
 .It Fl \-period Ar PERIOD Pq Fl p
 Define a period expression that sets the time period during which
-transactions are to be accounted. For a
+transactions are to be accounted.  For a
 .Ic register
 report only
 the transactions that satisfy the period expression with be displayed.
@@ -804,12 +804,12 @@ Use the price of the commodity purchase for performing calculations.
 .It Fl \-price-exp Ar STR Pq Fl Z
 Set the expected freshness of price quotes, in
 .Ar INT
-minutes. That
+minutes.  That
 is, if the last known quote for any commodity is older than this value,
 and if
 .Fl \-download
 is being used, then the Internet will be
-consulted again for a newer price. Otherwise, the old price is still
+consulted again for a newer price.  Otherwise, the old price is still
 considered to be fresh enough.
 Alias for
 .Fl \-leeway .
@@ -820,7 +820,7 @@ report.
 .It Fl \-pricedb-format Ar FMT
 Set the format expected for the historical price file.
 .It Fl \-primary-date
-Show primary dates for all calculations. Alias for
+Show primary dates for all calculations.  Alias for
 .Fl \-actual-dates
 .It Fl \-quantity Pq Fl O
 Report commodity totals (this is the default).
@@ -906,7 +906,7 @@ Report register as a single subtotal.
 .It Fl \-tail Ar INT
 Report only the last
 .Ar INT
-entries. Only useful on a register report. Alias for
+entries.  Only useful on a register report.  Alias for
 .Fl \-last Ar INT
 .It Fl \-time-colon
 Display the value for commodities based on seconds as hours and minutes.
@@ -922,12 +922,12 @@ Show only dates and totals to format the output for plots.
 .It Fl \-total-width Ar INT
 Set the width of the total field in the register report.
 .It Fl \-trace Ar INT
-Enable tracing. The
+Enable tracing.  The
 .Ar INT
 specifies the level of trace desired.
 .It Fl \-truncate Ar STR
 Indicates how truncation should happen when the contents of columns
-exceed their width. Valid arguments for 
+exceed their width.  Valid arguments for
 .Ar STR
 are
 .Ar leading ,
@@ -947,14 +947,14 @@ Show generated unrealized gain and loss accounts in the balance
 report.
 .It Fl \-unrealized-gains
 Allow the user to specify what account name should be used for
-unrealized gains. Defaults to
+unrealized gains.  Defaults to
 .Sy "Equity:Unrealized Gains" .
 Often set in one's
 .Pa ~/.ledgerrc
 file to change the default.
 .It Fl \-unrealized-losses
 Allow the user to specify what account name should be used for
-unrealized gains. Defaults to
+unrealized gains.  Defaults to
 .Sy "Equity:Unrealized Losses" .
 Often set in one's
 .Pa ~/.ledgerrc
@@ -972,13 +972,13 @@ Set a global value expression annotation.
 Print detailed information on the execution of
 .Nm .
 .It Fl \-verify
-Enable additional assertions during run-time. This causes a significant
+Enable additional assertions during run-time.  This causes a significant
 slowdown.  When combined with
 .Fl \-debug Ar CODE
 .Nm
 will produce memory trace information.
 .It Fl \-verify-memory
-Verify that every constructed object is properly destructed. This is for
+Verify that every constructed object is properly destructed.  This is for
 debugging purposes only.
 .It Fl \-version
 Print version information and exit.
@@ -993,7 +993,7 @@ Shorthand for
 .El
 .Sh PRE-COMMANDS
 Pre-commands are useful when you aren't sure how a command or option
-will work. The difference between a pre-command and a regular command
+will work.  The difference between a pre-command and a regular command
 is that pre-commands ignore the journal data file completely, nor is
 the user's init file read.
 .Bl -tag -width -indent
@@ -1225,7 +1225,7 @@ Return
 .Ar value
 rounded to
 .Ar n
-digits. Does not affect formatting.
+digits.  Does not affect formatting.
 .\".It Sy scrub
 .\".It Sy status
 .\".It Sy strip
