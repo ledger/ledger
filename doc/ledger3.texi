@@ -5468,7 +5468,7 @@ Redirect output to @file{FILE}.
 Specify an options file.
 
 @item --import @var{FILE}
-@value{FIXME:UNDOCUMENTED}
+Import @var{FILE} as Python module.
 
 @item --account @var{STR}
 @itemx -a @var{STR}
@@ -5733,8 +5733,9 @@ Set expected freshness of prices in @var{INT} minutes.
 @itemx -Q
 Download quotes using the script named @file{getquote}.
 
-@item --getquote @var{FILE}
-Sets the path to a user-defined script to download commodity prices.
+@c FIXME: The option doesn't exist currently.
+@c @item --getquote @var{FILE}
+@c Sets the path to a user-defined script to download commodity prices.
 
 @item --quantity
 @itemx -O
@@ -5884,7 +5885,6 @@ days by day.
 @c @end smallexample
 @c @smallexample @c output:
 @c @end smallexample
-@value{FIXME:UNDOCUMENTED}
 
 @item --decimal-comma
 Direct Ledger to parse journals using the European standard comma as
@@ -5892,8 +5892,9 @@ a decimal separator, not the usual period.
 
 @item --download
 @itemx -Q
-Direct Ledger to download prices using the script defined via the option
-@option{--getquote @var{FILE}}.
+Direct Ledger to download prices.
+@c using the script defined via the option
+@c @option{--getquote @var{FILE}}.
 
 @item --explicit
 @c see test/baseline/opt-explicit.test
@@ -5903,11 +5904,12 @@ Direct Ledger to download prices using the script defined via the option
 @itemx -f @var{FILE}
 Specify the input @file{FILE} for this invocation.
 
-@item --getquote @var{FILE}
-@cindex getquote
-@cindex download prices
-Tell ledger where to find the user defined script to download prices
-information.
+@c FIXME: The option doesn't exist currently.
+@c @item --getquote @var{FILE}
+@c @cindex getquote
+@c @cindex download prices
+@c Tell ledger where to find the user defined script to download prices
+@c information.
 
 @item --input-date-format @var{DATE_FORMAT}
 Specify the input date format for journal entries. For example,
@@ -5990,8 +5992,9 @@ based commodity as real hours and minutes.
 For example 8100 seconds by default will be displayed as 2.25 whereas
 with the @option{--time-colon} option they will be displayed as 2:15.
 
-@item --value-expr @var{FIXME}
-@value{FIXME:UNDOCUMENTED}
+@item --value-expr @var{VEXPR}
+Set a global value expression annotation.
+@c needs example
 
 @end ftable
 
@@ -6051,9 +6054,8 @@ Set the width in characters of the amount column in the
 Anonymize registry output, mostly for sending in bug reports.
 
 @item --auto-match
-@c Automatically match accounts from ledger journal when using convert command
-@c see test/baseline/opt-auto-match.dat
-@value{FIXME:UNDOCUMENTED}
+Automatically match accounts from ledger journal for transactions
+during csv convert.
 
 @item --aux-date
 @itemx --effective
@@ -6077,10 +6079,8 @@ Strings}). The default is:
 @end smallexample
 
 @item --base
-@c Report commodity in the base commodity s instead of h
-@c Does this apply to other commodities too?
-@c see test/baseline/opt-base.test/
-@value{FIXME:UNDOCUMENTED}
+Reduce convertible commodities down the bottom of the conversion, e.g.
+display time in seconds. This also applies to custom commodity conversions.
 
 @item --basis
 @itemx -B
@@ -6200,10 +6200,7 @@ Specify the width, in characters, of the date column in the
 @command{register} report.
 
 @item --datetime-format @var{DATETIME_FORMAT}
-@c Specify the format ledger should use to print datetimes in
-@c @command{balance} @option{--timelog-report} reports.
-@c see test/baseline/opt-datetime-format.test
-@value{FIXME:UNDOCUMENTED}
+Specify the format ledger should use to print datetimes.
 
 @item --dc
 Display register or balance in debit/credit format If you use
@@ -6311,7 +6308,8 @@ command}).  Gives current account balances in the form of a register
 report.
 
 @item --exact
-@value{FIXME:UNDOCUMENTED}
+Report beginning and ending of periods by the date of the first and last
+posting occurring in that period.
 
 @item --exchange @var{COMMODITY}
 @itemx -X @var{COMMODITY}
@@ -6389,10 +6387,10 @@ Print the first @var{INT} entries. Opposite of @option{--tail
 
 @item --historical
 @itemx -H
-@value{FIXME:UNDOCUMENTED}
+Value commodities at the time of their acquisition.
 
 @item --immediate
-@value{FIXME:UNDOCUMENTED}
+Evaluate calculations immediately rather than lazily.
 
 @item --inject
 Use @code{Expected} amounts in calculations.  In case you know
@@ -6433,8 +6431,8 @@ Report the date and price at which each commodity was purchased in
 a balance report.
 
 @item --lots-actual
-@c see test/baseline/opt-lots-actual.test
-@value{FIXME:UNDOCUMENTED}
+Preserve the uniqueness of commodities so they aren't merged during
+reporting without printing the lot annotations.
 
 @item --market
 @itemx -V
@@ -6589,15 +6587,16 @@ Show all postings in a transaction, similar to @option{--related} but
 show both @emph{sides} of each transaction.
 
 @item --revalued
-@c see test/baeline/opt-revalued.test
-@value{FIXME:UNDOCUMENTED}
+Report discrepancy in values for manual reports by inserting @code{<Revalued>}
+postings.  This is implied when using the @option{--exchange} or
+@option{--market} option.
 
 @item --revalued-only
-@c see test/baeline/opt-revalued-only.test
-@value{FIXME:UNDOCUMENTED}
+Show only @code{<Revalued>} postings.
 
 @item --revalued-total @var{FIXME}
-@value{FIXME:UNDOCUMENTED}
+Display the sum of the revalued postings as the running total, which serves
+to show unrealized capital in a gain/losses report.
 
 @item --rich-data
 @itemx --detail
@@ -6637,9 +6636,8 @@ Report only the last @var{INT} entries. Only useful in
 a @command{register} report.
 
 @item --time-report
-@c Display begin and end time for each timelog entry in balance reports
-@c see test/baseline/opt-time-report.test
-@value{FIXME:UNDOCUMENTED}
+Add two columns to the balance report to show the earliest checkin and
+checkout times for timelog entries.
 
 @item --total @var{VEXPR}
 @itemx -T @var{VEXPR}
@@ -9708,7 +9706,8 @@ slowdown.  When combined with @option{--debug @var{CODE}} ledger will
 produce memory trace information.
 
 @item --verify-memory
-@value{FIXME:UNDOCUMENTED}
+Verify that every constructed object is properly destructed.  This is for
+debugging purposes only.
 
 @item --version
 Print version information and exit.

@@ -191,7 +191,8 @@ Show any gains (or losses) in commodity values over time.
 Only show the top
 .Ar number
 postings.
-.\".It Fl \-historical Pq Fl H
+.It Fl \-historical Pq Fl H
+Value commodities at the time of their acquisition.
 .It Fl \-invert
 Invert the value of amounts shown.
 .It Fl \-market Pq Fl V
@@ -366,7 +367,9 @@ Alias for
 Ignore init files and environment variables for the
 .Nm
 run.
-.\".It Fl \-auto-match
+.It Fl \-auto-match
+Automatically match accounts from ledger journal for transactions
+during csv convert.
 .It Fl \-aux-date
 Show auxiliary dates for all calculations.
 Alias for
@@ -378,7 +381,9 @@ running totals.
 Specify the format to use for the
 .Ic balance
 report.
-.\".It Fl \-base
+.It Fl \-base
+Reduce convertible commodities down the bottom of the conversion, e.g.
+display time in seconds.
 .It Fl \-basis Pq Fl B
 Report the cost basis on all posting.
 Alias for
@@ -460,7 +465,12 @@ Print dates using
 Refer to
 .Xr strftime 3
 for details on the format string syntax.
-.\" .It Fl \-datetime-format Ar FMT
+.It Fl \-datetime-format Ar DATETIMEFMT
+Print datetimes using
+.Ar DATETIMEFMT .
+Refer to
+.Xr strftime 3
+for details on the format string syntax.
 .It Fl \-date-width Ar INT
 Specify the width, in characters, of the date column in the
 .Ic register
@@ -550,7 +560,9 @@ Related to the
 .Ic equity
 command.  Gives current account balances in the form of a register
 report.
-.\".It Fl \-exact
+.It Fl \-exact
+Report beginning and ending of periods by the date of the first and last
+posting occurring in that period.
 .It Fl \-exchange Ar COMMODITY Oo , Ar COMMODITY, ... Oc Pq Fl X
 Display values in terms of the given
 .Ar COMMODITY .
@@ -628,7 +640,10 @@ is also printed if
 is run without a command.
 .It Fl \-immediate
 Evaluate calculations immediately rather than lazily.
-.\".It Fl \-import
+.It Fl \-import Ar FILE
+Import
+.Ar FILE
+as Python module.
 .It Fl \-init-file Ar FILE Pq Fl i
 Read
 .Ar FILE
@@ -673,7 +688,9 @@ purchased.
 .It Fl \-lots
 Report the date and price at which each commodity was purchased in
 a balance report.
-.\".It Fl \-lots-actual
+.It Fl \-lots-actual
+Preserve the uniqueness of commodities so they aren't merged during
+reporting without printing the lot annotations.
 .It Fl \-market Pq Fl V
 Use the latest market value for all commodities.
 .It Fl \-master-account Ar STR
@@ -837,9 +854,23 @@ of the transaction.
 Show all postings in a transaction, similar to
 .Fl \-related
 but show both sides of each transaction.
-.\".It Fl \-revalued
-.\".It Fl \-revalued-only
-.\".It Fl \-revalued-total Ar EXPR
+.It Fl \-revalued
+Report discrepancy in values for manual reports by inserting
+<Revalued>
+postings.
+This is implied when using
+the
+.Fl \-exchange Pq Fl X
+or
+.Fl \-market Pq Fl V
+option.
+.It Fl \-revalued-only
+Show only
+<Revalued>
+postings.
+.It Fl \-revalued-total
+Display the sum of the revalued postings as the running total, which serves
+to show unrealized capital in a gain/losses report.
 .\".It Fl \-rich-data
 .It Fl \-seed Ar INT
 Set the random seed to
@@ -852,8 +883,9 @@ Execute a
 .Nm
 script.
 .It Fl \-sort Ar EXPR Pq Fl S
-Sort the register report based on the value expression given to sort.
-.\".It Fl \-sort-all
+Sort the register report based on the value expression
+.Ar EXPR .
+.\".It Fl \-sort-all Ar EXPR
 .It Fl \-sort-xacts
 Sort the posting within transactions using the given value expression.
 .It Fl \-start-of-week Ar STR
@@ -879,7 +911,10 @@ entries. Only useful on a register report. Alias for
 .It Fl \-time-colon
 Display the value for commodities based on seconds as hours and minutes.
 Thus 8100s will be displayed as 2:15h instead of 2.25h.
-.\".It Fl \-time-report
+.It Fl \-time-report
+Add two columns to the
+.Ic balance
+report to show the earliest checkin and checkout times for timelog entries.
 .It Fl \-total Ar EXPR Pq Fl T
 Define a value expression used to calculate the total in reports.
 .It Fl \-total-data Pq Fl J
@@ -931,7 +966,8 @@ precision.
 Show the values used by each tag when used in combination with the
 .Ic tags
 command.
-.\".It Fl \-value-expr Ar EXPR
+.It Fl \-value-expr Ar EXPR
+Set a global value expression annotation.
 .It Fl \-verbose
 Print detailed information on the execution of
 .Nm .
@@ -941,7 +977,9 @@ slowdown.  When combined with
 .Fl \-debug Ar CODE
 .Nm
 will produce memory trace information.
-.\".It Fl \-verify-memory
+.It Fl \-verify-memory
+Verify that every constructed object is properly destructed. This is for
+debugging purposes only.
 .It Fl \-version
 Print version information and exit.
 .It Fl \-weekly Pq Fl W
