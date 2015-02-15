@@ -71,7 +71,6 @@
 
 #define HAVE_BOOST_PYTHON        @HAVE_BOOST_PYTHON@
 #define HAVE_BOOST_REGEX_UNICODE @HAVE_BOOST_REGEX_UNICODE@
-#define HAVE_BOOST_SERIALIZATION 0
 
 #define DEBUG_MODE               @DEBUG_MODE@
 #define NO_ASSERTS               @NO_ASSERTS@
@@ -239,85 +238,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #endif
 #define _f(str) boost::format(_(str))
 
-#if HAVE_BOOST_SERIALIZATION
-
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/binary_object.hpp>
-#include <boost/serialization/optional.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/variant.hpp>
-#include <boost/serialization/utility.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/level.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/deque.hpp>
-#include <boost/serialization/list.hpp>
-#include <boost/serialization/map.hpp>
-
-#include <boost/date_time/posix_time/time_serialize.hpp>
-#include <boost/date_time/gregorian/greg_serialize.hpp>
-#include <boost/ptr_container/serialize_ptr_deque.hpp>
-
-namespace boost {
-namespace serialization {
-
-template <class Archive>
-void serialize(Archive& ar, boost::filesystem::path& p, const unsigned int)
-{
-  std::string s;
-  if (Archive::is_saving::value)
-    s = p.string();
-
-  ar & s;
-
-  if (Archive::is_loading::value)
-    p = s;
-}
-
-template <class Archive, class T>
-void serialize(Archive& ar, boost::intrusive_ptr<T>& ptr, const unsigned int)
-{
-  if (Archive::is_saving::value) {
-    T * p = ptr.get();
-    ar & p;
-  }
-  else if (Archive::is_loading::value) {
-    T * p;
-    ar & p;
-    ptr.reset(p);
-  }
-}
-
-template <class Archive>
-void serialize(Archive&, boost::any&, const unsigned int) {
-  // jww (2012-03-29): Should we really ignore any fields entirely?
-  // These occur inside value_t::storage_t::data's variant.
-}
-
-template <class Archive>
-void serialize(Archive&, boost::blank&, const unsigned int) {}
-
-template <class Archive, class T>
-void serialize(Archive&, boost::function<T>&, const unsigned int) {}
-
-template <class Archive>
-void serialize(Archive& ar, istream_pos_type& pos, const unsigned int)
-{
-  ar & make_binary_object(&pos, sizeof(istream_pos_type));
-}
-
-} // namespace serialization
-} // namespace boost
-
-#else // HAVE_BOOST_SERIALIZATION
-
 #include <boost/ptr_container/ptr_deque.hpp>
-
-#endif // HAVE_BOOST_SERIALIZATION
 
 #if HAVE_BOOST_PYTHON
 

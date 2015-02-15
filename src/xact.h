@@ -87,20 +87,6 @@ public:
   virtual bool valid() const {
     return true;
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<item_t>(*this);
-    ar & journal;
-    ar & posts;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class xact_t : public xact_base_t
@@ -142,20 +128,6 @@ public:
                                   const string& name);
 
   virtual bool valid() const;
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<xact_base_t>(*this);
-    ar & code;
-    ar & payee;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class auto_xact_t : public xact_base_t
@@ -176,21 +148,6 @@ public:
                         bool   _overwrite_existing)
       : tag_data(_tag_data), overwrite_existing(_overwrite_existing),
         apply_to_post(NULL) {}
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-    /** Serialization. */
-    deferred_tag_data_t() : apply_to_post(NULL) {}
-
-    friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned int /* version */) {
-      ar & tag_data;
-      ar & overwrite_existing;
-      ar & apply_to_post;
-    }
-#endif // HAVE_BOOST_SERIALIZATION
   };
 
   typedef std::list<deferred_tag_data_t> deferred_notes_list;
@@ -236,21 +193,6 @@ private:
   }
 
   virtual void extend_xact(xact_base_t& xact, parse_context_t& context);
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<xact_base_t>(*this);
-    ar & predicate;
-    ar & check_exprs;
-    ar & deferred_notes;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class period_xact_t : public xact_base_t
@@ -284,20 +226,6 @@ class period_xact_t : public xact_base_t
       return string(_("generated periodic transaction"));
     }
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<xact_base_t>(*this);
-    ar & period;
-    ar & period_string;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 typedef std::list<xact_t *>        xacts_list;

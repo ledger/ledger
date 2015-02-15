@@ -289,26 +289,6 @@ public:
   }
   bool children_with_xdata() const;
   std::size_t children_with_flags(xdata_t::flags_t flags) const;
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<supports_flags<> >(*this);
-    ar & boost::serialization::base_object<scope_t>(*this);
-    ar & parent;
-    ar & name;
-    ar & note;
-    ar & depth;
-    ar & accounts;
-    ar & posts;
-    ar & _fullname;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 std::ostream& operator<<(std::ostream& out, const account_t& account);

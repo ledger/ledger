@@ -5867,9 +5867,6 @@ sessions with multiple reports per session.
 
 @ftable @option
 
-@item --cache @var{FIXME}
-@value{FIXME:UNDOCUMENTED}
-
 @item --check-payees
 Enable strict and pedantic checking for payees as well as accounts,
 commodities and tags. This only works in conjunction with

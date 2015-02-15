@@ -100,21 +100,6 @@ public:
     ~fileinfo_t() throw() {
       TRACE_DTOR(journal_t::fileinfo_t);
     }
-
-#if HAVE_BOOST_SERIALIZATION
-  private:
-    /** Serialization. */
-
-    friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned int /* version */) {
-      ar & filename;
-      ar & size;
-      ar & modtime;
-      ar & from_stream;
-    }
-#endif // HAVE_BOOST_SERIALIZATION
   };
 
   account_t *            master;
@@ -215,26 +200,6 @@ public:
 
 private:
   std::size_t read_textual(parse_context_stack_t& context);
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & master;
-    ar & bucket;
-    ar & xacts;
-    ar & auto_xacts;
-    ar & period_xacts;
-    ar & sources;
-    ar & payee_mappings;
-    ar & account_mappings;
-    ar & checksum_map;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 } // namespace ledger

@@ -255,24 +255,6 @@ public:
       }
     }
   };
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<item_t>(*this);
-    ar & xact;
-    ar & account;
-    ar & amount;
-    ar & amount_expr;
-    ar & cost;
-    ar & assigned_amount;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class journal_t;

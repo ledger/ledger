@@ -132,26 +132,6 @@ public:
   parse_price_expression(const std::string&          str,
                          const bool                  add_prices = true,
                          const optional<datetime_t>& moment     = none);
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & current_pool;
-    ar & commodities;
-    ar & annotated_commodities;
-    ar & null_commodity;
-    ar & default_commodity;
-    ar & keep_base;
-    ar & price_db;
-    ar & quote_leeway;
-    ar & get_quotes;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 } // namespace ledger

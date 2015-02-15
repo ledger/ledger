@@ -78,23 +78,6 @@ struct position_t
     }
     return *this;
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & pathname;
-    ar & beg_pos;
-    ar & beg_line;
-    ar & end_pos;
-    ar & end_line;
-    ar & sequence;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class item_t : public supports_flags<uint_least16_t>, public scope_t
@@ -226,25 +209,6 @@ public:
                                   const string& name);
 
   bool valid() const;
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<supports_flags<uint_least16_t> >(*this);
-    ar & boost::serialization::base_object<scope_t>(*this);
-    ar & _state;
-    ar & _date;
-    ar & _date_aux;
-    ar & note;
-    ar & pos;
-    ar & metadata;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 value_t get_comment(item_t& item);
