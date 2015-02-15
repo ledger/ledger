@@ -316,9 +316,6 @@ option_t<global_scope_t> * global_scope_t::lookup_option(const char * p)
   case 'd':
     OPT(debug_);
     break;
-  case 'f':
-    OPT(full_help);
-    break;
   case 'h':
     OPT_(help);
     break;
