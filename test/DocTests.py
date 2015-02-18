@@ -113,7 +113,7 @@ class DocTests:
       else:
         return None
 
-    command = shlex.split(command)
+    command = filter(lambda x: x != '\n', shlex.split(command))
     if command[0] == '$': command.remove('$')
     index = command.index('ledger')
     command[index] = self.ledger
