@@ -4643,17 +4643,23 @@ The @command{convert} command accepts three options. They are
 @var{STR}} which you can use to specify the account to balance against,
 and @option{--rich-data} which stores additional metadata as tags.
 
-Using following command on the two first lines of the above csv file,
+Using the two first lines of the above csv file,
 
-@c TODO: does not @c command:validate due to multiple lines
-@smallexample
+@smallexample @c input:DD85579
+767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-8.80,,00001640.04,,
+767406,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-1.03,,00001648.84,,
+@end smallexample
+
+and launching the below command,
+
+@smallexample @c command:DD85579
 $ ledger convert download.csv --input-date-format "%m/%d/%Y" \
   --invert --account Assets:MyBank --rich-data
 @end smallexample
 
-you will get the result below:
+you will get the result:
 
-@smallexample
+@smallexample @c result:DD85579
 2011/12/13 * Withdrawal  ;ACE HARDWARE 16335 S HOUGHTON RD
     ; CSV: 767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-8.80,,00001640.04,,
     ; Imported: 2012/01/13
