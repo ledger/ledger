@@ -616,8 +616,8 @@ class PrepareBuild(CommandLineApp):
                         self.execute(*packages)
 
             if exists('/etc/redhat-release'):
-                release = open('/etc/redhat-release')
-                if release.readline().startswith('CentOS'):
+                release = open('/etc/redhat-release').readline()
+                if release.startswith('CentOS'):
                     self.log.info('Looks like you are using YUM on CentOS')
                     packages = [
                         'sudo', 'yum', 'install',
@@ -647,6 +647,31 @@ class PrepareBuild(CommandLineApp):
         elif system.startswith('CYGWIN'):
             self.log.info('Looks like you are using Cygwin')
             self.log.info('Please install the dependencies manually.')        
+
+                elif release.startswith('Fedora release 20'):
+                    self.log.info('Looks like you are using YUM on Fedora 20')
+                    packages = [
+                        'sudo', 'yum', 'install',
+                        'boost-devel',
+                        'bzip2-devel',
+                        'cmake',
+                        'doxygen',
+                        'gcc',
+                        'gcc-c++',
+                        'gettext',
+                        'gettext-devel',
+                        'gmp-devel',
+                        'lcov',
+                        'libedit-devel',
+                        'mpfr-devel',
+                        'ninja-build',
+                        'python-devel',
+                        'sloccount',
+                        'texinfo',
+                        'zlib-devel'
+                    ]
+                    self.log.info('Executing: ' + ' '.join(packages))
+                    self.execute(*packages)
 
     #########################################################################
     # Determine the system's basic configuration                            #
