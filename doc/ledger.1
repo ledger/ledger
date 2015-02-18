@@ -1150,6 +1150,12 @@ toward -infinity.
 The name of the
 .Nm
 data file from whence the posting came.
+.It Fn format string
+Evaluate
+.Ar string
+as format just like the
+.Fl \-format
+option.
 .It Fn format_date date format
 Return the
 .Ar date
@@ -1158,18 +1164,56 @@ as a string using
 Refer to
 .Xr strftime 3
 for format string details.
-.\".It Fn get_at
-.\".It Fn has_meta
+.It Fn format_datetime datetime format
+Return the
+.Ar datetime
+as a string using
+.Ar format .
+Refer to
+.Xr strftime 3
+for format string details.
+.It Fn get_at seq index
+Return value at
+.Ar index
+from
+.Ar seq .
+Used internally to construct different reports.
+.It Fn has_meta
+Return true if the posting has metadata named
+.Ar tag ,
+false otherwise.
 .It Fn has_tag tag
 Return true if the posting has metadata named
 .Ar tag ,
 false otherwise.
-.\".It Fn is_seq
+.It Fn is_seq value
+Return true if
+.Ar value
+is a sequence. Used internally.
 .It Fn join value
 Replace all newlines in
 .Ar value
 with
 .Li \en .
+.It Fn justify value first_width latter_width right_justify colorize
+Right or left justify the string representing
+.Ar value .
+The width of the field in the first line is given by
+.Ar first_width .
+For subsequent lines the width is given by
+.Ar latter_width .
+If
+.Ar latter_width
+is -1,
+.Ar first_width
+is used for all lines.
+If
+.Ar right_justify
+is true then the field is right justified within the width of the field.  If it
+is false, then the field is left justified and padded to the full width of the
+field.  If
+.Ar colorize
+is true, then ledger will honor color settings.
 .It Fn market value datetime
 Return the price of
 .Ar value
@@ -1179,8 +1223,13 @@ Note that
 .Ar datetime
 must be surrounded by brackets in order to be parsed correctly, e.g.
 .Bq 2012/03/23 .
-.\".It Sy meta
-.I.\"t Sy note
+.It Fn meta
+Return the value of metadata named
+.Ar name .
+.It Sy note
+Return the note for the posting.
+.It Sy now
+Return the current datetime.
 .\".It Sy null
 .It Sy options
 A variable that allows access to the values of the given command-line options
@@ -1206,7 +1255,11 @@ in relation to
 .Ar value_b .
 .\".It Sy post
 .\" A variable scope
-.\".It Sy print
+.It Fn print value
+Print
+.Ar value
+to stdout.
+Used internally for debugging.
 .It Fn quantity value
 Return the quantity of
 .Ar value
@@ -1226,23 +1279,54 @@ Return
 rounded to
 .Ar n
 digits.  Does not affect formatting.
-.\".It Sy scrub
+.It Sy should_bold
+Return true if expression given to
+.Fl \-bold-if
+evaluates to true.  Internal use only!
+.It Fn scrub value
+Clean
+.Ar value
+using various transformations such as round,
+stripping value annotations, and more.
 .\".It Sy status
-.\".It Sy strip
+.It Fn strip value
+Strip value annotation from
+.Ar value .
 .\".It Sy subcount
 .It Fn tag name
 Return the value of tag named
 .Ar name .
-.\".It Fn to_amount value
-.\".It Fn to_balance value
-.\".It Fn to_boolean value
-.\".It Fn to_date value
-.\".It Fn to_datetime value
+.It Fn to_amount value
+Convert
+.Ar value
+to an amount.  Internal use only!
+.It Fn to_balance value
+Convert
+.Ar value
+to a balance.  Internal use only!
+.It Fn to_boolean value
+Convert
+.Ar value
+to a boolean.  Internal use only!
+.It Fn to_date value
+Convert
+.Ar value
+to a date.  Internal use only!
+.It Fn to_datetime value
+Convert
+.Ar value
+to a datetime.  Internal use only!
 .It Fn to_int value
 Return the integer value for
 .Ar value .
-.\".It Fn to_mask value
-.\".It Fn to_sequence value
+.It Fn to_mask value
+Convert
+.Ar value
+to a mask.  Internal use only!
+.It Fn to_sequence value
+Convert
+.Ar value
+to a sequence.  Internal use only!
 .It Fn to_string value
 Convert
 .Ar value
@@ -1258,7 +1342,14 @@ option.
 .It Fn trim value
 Trim leading and trailing whitespace from
 .Ar value .
-.\".It Fn truncate
+.It Fn truncated string, total_len, account_len
+Truncate
+.Ar string
+to
+.Ar total_len
+enusring that each account is at least
+.Ar account_len
+long.
 .\".It Sy uncleared
 .It Sy virtual
 Return true if the transaction is virtual, e.g automated, false otherwise.

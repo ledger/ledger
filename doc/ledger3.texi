@@ -8141,8 +8141,8 @@ Friday, January 16.  2015
 Right or left justify the string representing @var{value}.  The width
 of the field in the first line is given by @var{first_width}.  For
 subsequent lines the width is given by @var{latter_width}.  If
-@var{latter_width=-1}, then @var{first_width} is use for all lines.
-If @var{right_justify=true} then the field is right justify within
+@var{latter_width=-1}, then @var{first_width} is used for all lines.
+If @var{right_justify=true} then the field is right justified within
 the width of the field.  If it is @var{false}, then the field is left
 justified and padded to the full width of the field.  If
 @var{colorize} is true, then ledger will honor color settings.
