@@ -4622,6 +4622,7 @@ and @option{--rich-data} which stores additional metadata as tags.
 
 Using following command on the two first lines of the above csv file,
 
+@c TODO: does not @c command:validate due to multiple lines
 @smallexample
 $ ledger convert download.csv --input-date-format "%m/%d/%Y" \
   --invert --account Assets:MyBank --rich-data
