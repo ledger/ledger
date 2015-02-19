@@ -4283,11 +4283,11 @@ invested in equities, and partially invested in bonds and cash.  Below
 is the asset allocation for each of the instruments listed above:
 
 @multitable @columnfractions .2 .2 .3 .3
-@item @tab Domestic @tab Global @tab
-@item Symbol @tab Equity @tab Equity @tab bonds/cash
-@item VIFSX @tab 100% @tab @tab
-@item VTHRX @tab 24.0% @tab 56.3% @tab 19.7%
-@item VSGBX @tab @tab @tab 100%
+@item        @tab Domestic @tab Global @tab
+@item Symbol @tab Equity   @tab Equity @tab bonds/cash
+@item VIFSX  @tab 100%     @tab        @tab
+@item VTHRX  @tab 24.0%    @tab 56.3%  @tab 19.7%
+@item VSGBX  @tab          @tab        @tab 100%
 @end multitable
 
 These numbers are available from the prospectus of any publicly
@@ -4296,7 +4296,7 @@ and a single bond issue is 100% bonds.
 
 We track purchases of specific investments using the symbol of that
 investment as its commodity.  How do we tell Ledger that a share of
-VTHRX is 24% Global equity etc.?  Enter automatic transactions and
+VTHRX is 24% Domestic equity?  Enter automatic transactions and
 virtual accounts.
 
 At the top of our ledger we enter automatic transactions that describe
@@ -4307,12 +4307,9 @@ actual balances.
 For the three instruments listed above, those automatic transactions
 would look like:
 
-@smallexample @c input:validate
-;
-; automatic calculations for asset allocation tracking
-;
+@smallexample @c input:582C8C2
 = expr ( commodity == 'VIFSX' )
-    (Allocation:Equities:Domestic)                 1.000
+    (Allocation:Equities:Domestic)             1.000
 
 = expr ( commodity == 'VTHRX' )
     (Allocation:Equities:Global)               0.240
@@ -4321,6 +4318,18 @@ would look like:
 
 = expr ( commodity == 'VBMFX')
     (Allocation:Bonds/Cash)                    1.000
+
+2015-01-01 Buy VIFSX
+    Assets:Broker                                100 VIFSX
+    Assets:Cash                              $-10000
+
+2015-01-01 Buy VTHRX
+    Assets:Broker                                 10 VTHRX
+    Assets:Cash                              $-10000
+
+2015-01-01 Buy VBMFX
+    Assets:Broker                                  1 VBMFX
+    Assets:Cash                              $-10000
 @end smallexample
 
 How do these work? First the @samp{=} sign at the beginning of the
@@ -4339,23 +4348,21 @@ the various asset classes how do we get a report that tells us our
 current allocation?  Using the balance command and some tricky
 formatting!
 
-@c TODO: does not @c command:validate due to multiple lines
-@smallexample
+@smallexample @c command:582C8C2
 ledger bal Allocation --current --format "\
         %-17((depth_spacer)+(partial_account))\
         %10(percent(market(display_total), market(parent.total)))\
         %16(market(display_total))\n%/"
 @end smallexample
 
-@noindent
 Which yields:
 
-@smallexample
-Allocation          100.00%      $100000.00
-  Bonds/Cash         38.94%       $38940.00
-  Equities           61.06%       $61060.00
-    Domestic         95.31%       $58196.29
-    Global            4.69%        $2863.71
+@smallexample @c result:582C8C2
+        Allocation                  100.00%                  $30000
+          Bonds/Cash                 39.90%                  $11970
+          Equities                   60.10%                  $18030
+            Domestic                 86.69%                  $15630
+            Global                   13.31%                   $2400
 @end smallexample
 
 Let's look at the Ledger invocation a bit closer.  The command above is
