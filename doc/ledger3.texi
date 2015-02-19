@@ -1383,7 +1383,7 @@ $ ledger --real --no-total bal
 If more asset accounts are needed as the source of a posting, just
 list them as you would normally, for example:
 
-@smallexample
+@smallexample @c input:validate
 2004/03/25 Payment for books (paid from Checking)
     Expenses:Books                    $100.00
     Assets:Checking                   $-50.00
@@ -1599,7 +1599,7 @@ Beneath these top level accounts you can have any level of detail you
 desire.  For example, if you want to keep specific track of how much
 you spend on burgers and fries, you could have the following:
 
-@smallexample
+@smallexample @c input:validate
 Expenses:Food:Hamburgers and Fries
 @end smallexample
 
@@ -1885,14 +1885,14 @@ your function in Python, you can return something like
 that value is always used, regardless of the commodity, the date, or
 the desired target commodity.  For example,
 
-@smallexample
+@smallexample @c input:validate
 define myfunc_seven(s, d, t) = 7 EUR
 @end smallexample
 
 In order to specify a fixed price, but still valuate that price into
 the target commodity, use something like this:
 
-@smallexample
+@smallexample @c input:validate
 define myfunc_five(s, d, t) = market(5 EUR, d, t)
 @end smallexample
 
@@ -1900,14 +1900,14 @@ The @code{value} directive sets the valuation used for all commodities
 used in the rest of the data stream.  This is the fallback, if nothing
 more specific is found.
 
-@smallexample
+@smallexample @c input:validate
 value myfunc_seven
 @end smallexample
 
 You can set a specific valuation function on a per-commodity basis.
 Instead of defining a function, you can also pass a lambda.
 
-@smallexample
+@smallexample @c input:validate
 commodity $
     value s, d, t -> 6 EUR
 @end smallexample
@@ -1915,7 +1915,7 @@ commodity $
 Each account can also provide a default valuation function for any
 commodities transferred to that account.
 
-@smallexample
+@smallexample @c input:validate
 account Expenses:Food5
     value myfunc_five
 @end smallexample
@@ -1923,7 +1923,7 @@ account Expenses:Food5
 The metadata field @samp{Value}, if found, overrides the valuation
 function on a transaction-wide or per-posting basis.
 
-@smallexample
+@smallexample @c input:validate
 = @@XACT and Food
     ; Value:: 8 EUR
     (Equity)                     $1
@@ -2006,10 +2006,9 @@ In order to combat inconsistency you can define allowable accounts and
 payees.  For simplicity, create a separate text file and define accounts
 and payees like
 
-@smallexample
+@smallexample @c input:validate
 account Expenses
 account Expenses:Utilities
-...
 @end smallexample
 
 Using the @option{--strict} option will cause Ledger to complain if any
@@ -2025,7 +2024,7 @@ Warning: "FinanceData/Master.dat", line 15: Unknown account 'Allocation:Equities
 If you have a large Ledger register already created use the
 @command{accounts} command to get started:
 
-@smallexample
+@smallexample @c command:validate
 $ ledger accounts >> Accounts.dat
 @end smallexample
 
@@ -2444,15 +2443,14 @@ payee KFC
 The @code{alias} sub-directive provides a regex which, if it matches
 a parsed payee, the declared payee name is substituted:
 
-@smallexample
+@smallexample @c input:validate
 2012-02-27 KENTUCKY FRIED CHICKEN  ; will be read as being 'KFC'
-...
 @end smallexample
 
 The @code{uuid} sub-directive specifies that a transaction with exactly
 the uuid given should have the declared payee name substituted:
 
-@smallexample
+@smallexample @c input:validate
 2014-05-13 UNHELPFUL PAYEE  ; will be read as being 'KFC'
     ; UUID: 2a2e21d434356f886c84371eebac6e44f1337fda
 @end smallexample
@@ -2580,7 +2578,7 @@ with a home currency, such as the dollar @samp{$}.  It is recommended
 that these pricing options be set in the price database file, which
 defaults to @file{~/.pricedb}.  The syntax for this command is:
 
-@smallexample
+@smallexample @c input:validate
 N SYMBOL
 @end smallexample
 
@@ -3002,7 +3000,7 @@ bank.  On the bank statement, there is just one amount @samp{$400}, but
 you can specify from whom each check came from, as shown by example
 below:
 
-@smallexample @c input:validate
+@smallexample @c input:9B43E57
 2010-06-17 Sample
     Assets:Bank        $400.00
     Income:Check1     $-100.00  ; Payee: Person One
@@ -3011,14 +3009,20 @@ below:
     Income:Check4     $-100.00  ; Payee: Person Four
 @end smallexample
 
-When reporting this, it appears as:
+When reporting with
 
-@smallexample
-10-Jun-17 Sample             Assets:Bank             $400.00     $400.00
-          Person One         Income:Check1          $-100.00     $300.00
-          Person Two         Income:Check2          $-100.00     $200.00
-          Person Three       Income:Check3          $-100.00     $100.00
-          Person Four        Income:Check4          $-100.00           0
+@smallexample @c command:9B43E57
+$ ledger reg
+@end smallexample
+
+it appears as:
+
+@smallexample @c output:9B43E57
+10-Jun-17 Sample                Assets:Bank                 $400.00      $400.00
+          Person One            Income:Check1              $-100.00      $300.00
+          Person Two            Income:Check2              $-100.00      $200.00
+          Person Three          Income:Check3              $-100.00      $100.00
+          Person Four           Income:Check4              $-100.00            0
 @end smallexample
 
 This shows that they are all in the same transaction (which is why the
@@ -3572,13 +3576,13 @@ If you use the functional form, you can either specify a function
 name, or a lambda expression.  Here's a function that yields the price
 as $10 in whatever commodity is being requested:
 
-@smallexample
+@smallexample @c input:validate
 define ten_dollars(s, date, t) = market($10, date, t)
 @end smallexample
 
 I can now use that in a lot value expression as follows:
 
-@smallexample
+@smallexample @c input:validate
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
     Assets:Brokerage            -5 AAPL @{$50.00@} ((ten_dollars)) @@@@ $375.00
@@ -4190,8 +4194,7 @@ you want, or interface Ledger with other programs.
 A query such as the following shows all expenses since last
 October, sorted by total:
 
-@c TODO: does not validate with @c command:validate, because "last oct" is split at the space
-@smallexample
+@smallexample @c command:validate
 $ ledger -b "last oct" -S T bal ^expenses
 @end smallexample
 
@@ -5243,8 +5246,10 @@ journal.  Using the @option{--count} option will tell you how many
 entries use each payee.  To filter the payees displayed you must use the
 prefix @@:
 
-@smallexample
+@smallexample @c command:validate
 $ ledger payees @@Nic
+@end smallexample
+@smallexample
 Nicolas
 Nicolas BOILABUS
 Oudtshoorn Municipality
@@ -6374,8 +6379,10 @@ Set the format for the headers that separates the report sections of
 a grouped report.  Only has an effect with a @option{--group-by
 @var{EXPR}} register report.
 
-@smallexample
+@smallexample @c command:validate
 $ ledger reg Expenses --group-by "payee" --group-title-format "------------------------ %-20(value) ---------------------\n"
+@end smallexample
+@smallexample
 ------------------------ 7-Eleven             ---------------------
 2011/08/13 7-Eleven              Expenses:Auto:Misc          $ 5.80       $ 5.80
 
@@ -6522,8 +6529,10 @@ example, if you have multiple cars and track each fuel purchase in
 identifying which car the purchase was for @samp{; Car: Prius}, then the
 command:
 
-@smallexample
+@smallexample @c command:validate
 $ ledger bal Fuel --pivot "Car" --period "this year"
+@end smallexample
+@smallexample
            $ 3491.26  Car
            $ 1084.22    M3:Expenses:Auto:Fuel
             $ 149.65    MG V11:Expenses:Auto:Fuel
@@ -6746,7 +6755,7 @@ settings.  To specify options in the init file, use the same syntax as
 on the command-line, but put each option on its own line.  Here is an
 example init file:
 
-@smallexample
+@smallexample @c input:validate
 --price-db ~/finance/.pricedb
 --wide
 ; ~/.ledgerrc ends here
@@ -7049,8 +7058,7 @@ register report, for example, but they will not be displayed.  This is
 useful for seeing last month's checking postings, against a running
 balance which includes all posting values:
 
-@c TODO: does not @c command:validate due to space in "last month"
-@smallexample
+@smallexample @c command:validate
 $ ledger -d "d>=[last month]" reg checking
 @end smallexample
 
@@ -7058,8 +7066,7 @@ The output from this command is very different from the following,
 whose running total includes only postings from the last month
 onward:
 
-@c TODO: does not @c command:validate due to space in "last month"
-@smallexample
+@smallexample @c command:validate
 $ ledger -p "last month" reg checking
 @end smallexample
 
@@ -7215,7 +7222,7 @@ settings can be placed in this file manually, to prevent downloading
 quotes for a specific commodity, for example.  This is done by adding a
 line like the following:
 
-@smallexample
+@smallexample @c input:validate
 ; Don't download quotes for the dollar, or timelog values
 N $
 N h
@@ -7453,7 +7460,7 @@ command-line always take precedence over environment variable settings, however.
 Note that you may also permanently specify option values by placing
 option settings in the file @file{~/.ledgerrc} one option per line, for example:
 
-@smallexample
+@smallexample @c input:validate
 --pager /bin/cat
 @end smallexample
 
@@ -7591,7 +7598,7 @@ These two periodic transactions give the usual monthly expenses, as well
 as one typical yearly expense.  For help on finding out what your
 average monthly expenses are for any category, use a command like:
 
-@smallexample
+@smallexample @c command:validate
 $ ledger -p "this year" --monthly --average balance ^expenses
 @end smallexample
 
@@ -7724,7 +7731,7 @@ constrain which transactions are printed.  For example, the following
 command shows only transactions from the beginning of the current month,
 while still calculating the running balance based on all transactions:
 
-@smallexample
+@smallexample @c command:validate
 $ ledger -d "d>[this month]" register checking
 @end smallexample
 
@@ -7733,7 +7740,7 @@ running total in terms of all transactions in the register.  The
 following, simpler command is similar, but totals only the displayed
 postings:
 
-@smallexample
+@smallexample @c command:validate
 $ ledger -b "this month" register checking
 @end smallexample
 
@@ -7939,7 +7946,7 @@ field.  This searches only a posting's field, not the transaction's note
 or comment field.  For example, @code{ledger reg "expr" "comment =~
 /landline/"} will match:
 
-@smallexample
+@smallexample @c input:validate
 2014/1/29  Phone bill
     Assets:Checking                           $50.00
     Expenses:Phone                           $-50.00  ; landline bill
@@ -7947,7 +7954,7 @@ or comment field.  For example, @code{ledger reg "expr" "comment =~
 
 but will not match:
 
-@smallexample
+@smallexample @c input:validate
 2014/1/29  Phone bill  ; landline bill
     ; landline bill
     Assets:Checking                           $50.00
@@ -7963,19 +7970,19 @@ This searches all comments in the transaction, including comments on
 individual postings.  Thus, @samp{ledger reg "expr" "note =~ /landline/"}
 will match both all the three examples below:
 
-@smallexample
+@smallexample @c input:validate
 2014/1/29  Phone bill
     Assets:Checking                           $50.00
     Expenses:Phone                           $-50.00  ; landline bill
 @end smallexample
 
-@smallexample
+@smallexample @c input:validate
 2014/1/29  Phone bill  ; landline bill
     Assets:Checking                           $50.00
     Expenses:Phone                           $-50.00
 @end smallexample
 
-@smallexample
+@smallexample @c input:validate
 2014/1/29  Phone bill
     ; landline bill
     Assets:Checking                           $50.00
@@ -9751,8 +9758,10 @@ and apply it against a model transaction.
 @item period @var{PERIOD_EXPRESSION}
 Evaluate the given period and report how Ledger interprets it:
 
-@smallexample
-$ ledger period "this year"
+@smallexample @c command:51F6A2C
+$ ledger period "this year"  --now 2011-01-01
+@end smallexample
+@smallexample @c result:51F6A2C
 --- Period expression tokens ---
 TOK_THIS: this
 TOK_YEAR: year
@@ -9775,8 +9784,10 @@ END_REACHED: <EOF>
 Evaluate the given arguments and report how Ledger interprets it against
 the following model transaction:
 
-@smallexample
+@smallexample @c command:validate
 $ ledger query "/Book/"
+@end smallexample
+@smallexample
 --- Input arguments ---
 ("/Book/")
 
@@ -9904,7 +9915,7 @@ The test scripts take the remainder of the @code{test} line and use
 it as command-line arguments for ledger, the text enclosed in @code{test}
 and @code{end test} is expected output, for example:
 
-@smallexample
+@smallexample @c input:validate
 ; This is the journal data
 year 2014
 12/24 (C0d3) Santa Claus
