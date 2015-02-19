@@ -8117,7 +8117,7 @@ for format string details.
 $ ledger -f expr.dat --format "%(format_date(date, '%A, %B %d. %Y'))\n" reg assets
 @end smallexample
 @smallexample @c output:9605B13
-Friday, January 16.  2015
+Friday, January 16. 2015
 @end smallexample
 @end defun
 
