@@ -24,10 +24,12 @@ class DocTests:
     self.testin_token   = 'command'
     self.testout_token  = 'output'
     self.testdat_token  = 'input'
+    self.testfile_token = 'file'
     self.validate_token = 'validate'
     self.validate_cmd_token = 'validate-command'
     self.validate_dat_token = 'validate-data'
     self.testwithdat_token  = 'with_input'
+    self.testwithfile_token = 'with_file'
 
   def read_example(self):
     endexample = re.compile(r'^@end\s+smallexample\s*$')
@@ -44,8 +46,8 @@ class DocTests:
     return hashlib.sha1(example.rstrip()).hexdigest()[0:7].upper()
 
   def find_examples(self):
-    startexample = re.compile(r'^@smallexample\s+@c\s+(%s|%s|%s)(?::([\dA-Fa-f]+|validate))?(?:,(.*))?'
-        % (self.testin_token, self.testout_token, self.testdat_token))
+    startexample = re.compile(r'^@smallexample\s+@c\s+(%s|%s|%s|%s)(?::([\dA-Fa-f]+|validate))?(?:,(.*))?'
+        % (self.testin_token, self.testout_token, self.testdat_token, self.testfile_token))
     while True:
       line = self.file.readline()
       self.current_line += 1
@@ -187,6 +189,14 @@ class DocTests:
             elif os.path.exists(os.path.join(test_input_dir, test_file)):
               command[findex] = os.path.join(test_input_dir, test_file)
         try:
+          convert_idx  = command.index('convert')
+          convert_file = command[convert_idx+1]
+          convert_data = example[self.testfile_token][self.testfile_token]
+          if not os.path.exists(convert_file):
+              with open(convert_file, 'w') as f:
+                f.write(convert_data)
+        except ValueError:
+         pass
         error = None
         try:
           verify = subprocess.check_output(command, stderr=subprocess.STDOUT)

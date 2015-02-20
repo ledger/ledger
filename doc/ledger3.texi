@@ -88,6 +88,19 @@
 @c              $ 36.84  Expenses:Food:Dining
 @c @end smallexample
 @c
+@c To pass additional input to ledger for certain commands, e.g. convert add
+@c with_file:filename to the example command and add a file:UUID to an example
+@c that holds the additional input, where UUID is the UUID of the command,
+@c e.g.:
+@c
+@c @smallexample @c file:download.csv
+@c 767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-8.80,,00001640.04,,
+@c @end smallexample
+@c
+@c @smallexample @c command:94FD2B6,with_file:download.csv
+@c $ ledger -f sample.dat convert download.csv
+@c @end smallexample
+@c
 @c Additionally DocTests.py will pass --args-only and --columns 80 to ledger
 @c to ignore any default arguments from the environment or .ledgerrc.
 @c
