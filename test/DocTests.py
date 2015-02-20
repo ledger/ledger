@@ -173,7 +173,7 @@ class DocTests:
           except KeyError:
             input = None
 
-      if command and (output or validation):
+      if command and (output != None or validation):
         test_file_created = False
         if findex:
           scriptpath = os.path.dirname(os.path.realpath(__file__))
@@ -208,6 +208,12 @@ class DocTests:
               for line in unified_diff(output.split('\n'), verify.split('\n'), fromfile='generated', tofile='expected'):
                 print(line)
               print
+      else:
+        if self.verbose > 0:
+          print test_id, ':', 'Skipped'
+        else:
+          sys.stdout.write('X')
+
     if not self.verbose:
       print
     if len(failed) > 0:
