@@ -4373,7 +4373,7 @@ ledger bal Allocation --current --format "\
 
 Which yields:
 
-@smallexample @c result:582C8C2
+@smallexample @c output:582C8C2
         Allocation                  100.00%                  $30000
           Bonds/Cash                 39.90%                  $11970
           Equities                   60.10%                  $18030
@@ -9774,7 +9774,7 @@ Evaluate the given period and report how Ledger interprets it:
 @smallexample @c command:51F6A2C
 $ ledger period "this year"  --now 2011-01-01
 @end smallexample
-@smallexample @c result:51F6A2C
+@smallexample @c output:51F6A2C
 --- Period expression tokens ---
 TOK_THIS: this
 TOK_YEAR: year
