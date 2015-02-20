@@ -19,13 +19,15 @@ class DocTests:
     self.verbose    = args.verbose
     self.tests      = args.examples
 
-    self.examples      = dict()
-    self.test_files    = list()
-    self.testin_token  = 'command'
-    self.testout_token = 'output'
-    self.testdat_token = 'input'
+    self.examples       = dict()
+    self.test_files     = list()
+    self.testin_token   = 'command'
+    self.testout_token  = 'output'
+    self.testdat_token  = 'input'
     self.validate_token = 'validate'
-    self.testwithdat_token = 'with_input'
+    self.validate_cmd_token = 'validate-command'
+    self.validate_dat_token = 'validate-data'
+    self.testwithdat_token  = 'with_input'
 
   def read_example(self):
     endexample = re.compile(r'^@end\s+smallexample\s*$')
@@ -35,7 +37,7 @@ class DocTests:
       self.current_line += 1
       if len(line) <= 0 or endexample.match(line): break
       # Replace special texinfo character sequences with their ASCII counterpart
-      example += line.replace("@@","@").replace("@{","{").replace("@}","}")
+      example += re.sub(r'@([@{}])', r'\1', line)
     return example
 
   def test_id(self, example):
@@ -78,9 +80,9 @@ class DocTests:
         if test_id == self.validate_token:
           test_id = "Val-" + str(test_begin_line)
           if test_kind == self.testin_token:
-            test_kind = "validate-command"
+            test_kind = self.validate_cmd_token
           elif test_kind == self.testdat_token:
-            test_kind = "validate-data"
+            test_kind = self.validate_dat_token
         try:
           self.examples[test_id]
         except KeyError:
@@ -105,11 +107,11 @@ class DocTests:
     try:
       command = example[self.testin_token][self.testin_token]
     except KeyError:
-      if 'validate-data' in example:
+      if self.validate_dat_token in example:
         command = '$ ledger bal'
-      elif 'validate-command' in example:
+      elif self.validate_cmd_token in example:
         validate_command = True
-        command = example['validate-command']['validate-command']
+        command = example[self.validate_cmd_token][self.validate_cmd_token]
       else:
         return None
 
@@ -145,7 +147,7 @@ class DocTests:
     
     for test_id in tests:
       validation = False
-      if "validate-data" in self.examples[test_id] or "validate-command" in self.examples[test_id]:
+      if self.validate_dat_token in self.examples[test_id] or self.validate_cmd_token in self.examples[test_id]:
         validation = True
       example = self.examples[test_id]
       try:
@@ -167,7 +169,7 @@ class DocTests:
           input = self.examples[with_input][self.testdat_token][self.testdat_token]
         except KeyError:
           try:
-            input = example['validate-data']['validate-data']
+            input = example[self.validate_dat_token][self.validate_dat_token]
           except KeyError:
             input = None
 
@@ -175,16 +177,16 @@ class DocTests:
         test_file_created = False
         if findex:
           scriptpath = os.path.dirname(os.path.realpath(__file__))
-          test_input_dir = scriptpath + '/../test/input/'
+          test_input_dir = os.path.join(scriptpath, '..', 'test', 'input')
           test_file = command[findex]
           if not os.path.exists(test_file):
             if input:
               test_file_created = True
               with open(test_file, 'w') as f:
                 f.write(input)
-            elif os.path.exists(test_input_dir + test_file):
-              command[findex] = test_input_dir + test_file
         error = False
+            elif os.path.exists(os.path.join(test_input_dir, test_file)):
+              command[findex] = os.path.join(test_input_dir, test_file)
         try:
           verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
         except:
