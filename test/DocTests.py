@@ -184,23 +184,25 @@ class DocTests:
               test_file_created = True
               with open(test_file, 'w') as f:
                 f.write(input)
-        error = False
             elif os.path.exists(os.path.join(test_input_dir, test_file)):
               command[findex] = os.path.join(test_input_dir, test_file)
         try:
+        error = None
+        try:
           verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
-        except:
-          verify = str()
-          error = True
-        valid = (output == verify) or (not error and validation)
+          valid = (output == verify) or (not error and validation)
+        except subprocess.CalledProcessError, e:
+          error = e.output
+          valid = False
+          failed.add(test_id)
         if valid and test_file_created:
           os.remove(test_file)
         if self.verbose > 0:
-          print test_id, ':', 'Passed' if valid else 'FAILED'
+          print test_id, ':', 'Passed' if valid else 'FAILED: {}'.format(error) if error else 'FAILED'
         else:
           sys.stdout.write('.' if valid else 'E')
 
-        if not valid:
+        if not (valid or error):
           failed.add(test_id)
           if self.verbose > 1:
             print ' '.join(command)
