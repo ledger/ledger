@@ -158,22 +158,13 @@ class DocTests:
         failed.add(test_id)
         continue
 
-      try:
-        output = example[self.testout_token][self.testout_token]
-      except KeyError:
-        output = None
-
-      try:
-        input = example[self.testdat_token][self.testdat_token]
-      except KeyError:
-        try:
-          with_input = example[self.testin_token]['opts'][self.testwithdat_token]
-          input = self.examples[with_input][self.testdat_token][self.testdat_token]
-        except KeyError:
-          try:
-            input = example[self.validate_dat_token][self.validate_dat_token]
-          except KeyError:
-            input = None
+      output = example.get(self.testout_token, {}).get(self.testout_token)
+      input = example.get(self.testdat_token, {}).get(self.testdat_token)
+      if not input:
+        with_input = example.get(self.testin_token, {}).get('opts', {}).get(self.testwithdat_token)
+        input = self.examples.get(with_input, {}).get(self.testdat_token, {}).get(self.testdat_token)
+        if not input:
+          input = example.get(self.validate_dat_token, {}).get(self.validate_dat_token)
 
       if command and (output != None or validation):
         test_file_created = False
