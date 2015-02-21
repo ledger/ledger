@@ -4656,7 +4656,7 @@ and launching the below command,
 @smallexample @c command:B2EA7E8,with_file:download.csv
 $ ledger convert download.csv --input-date-format "%m/%d/%Y" \
   --invert --account Assets:MyBank --rich-data \
-  --file sample.dat --now=2012/01/13 \
+  --file sample.dat --now=2012/01/13
 @end smallexample
 
 you will get the result:
