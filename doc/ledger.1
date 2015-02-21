@@ -510,6 +510,12 @@ but not
 .Sy Expenses:Entertainment:Dining .
 This is a display predicate, which means it only affects display,
 not the total calculations.
+.It Fl \-detail
+Related to
+.Ic convert
+command. Synonym to 
+.Fl \-rich-data
+option.
 .It Fl \-deviation
 Report each posting's deviation from the average.  It is only meaningful
 in the
@@ -871,7 +877,10 @@ postings.
 .It Fl \-revalued-total
 Display the sum of the revalued postings as the running total, which serves
 to show unrealized capital in a gain/losses report.
-.\".It Fl \-rich-data
+.It Fl \-rich-data
+When generating ledger transaction from CSV file using the
+.Ic convert
+command, add CSV, Imported, and UUID meta-data.
 .It Fl \-seed Ar INT
 Set the random seed to
 .Ar INT
