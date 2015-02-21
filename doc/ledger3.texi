@@ -6668,7 +6668,7 @@ to show unrealized capital in a gain/losses report.
 @item --rich-data
 @itemx --detail
 When generating ledger transaction from CSV file using the
-@command{convert} command, add CSV, Imported, and UUID meta-data.
+@command{convert} command, add CSV, Imported, and UUID metadata.
 
 @item --seed @var{INT}
 Set the random seed to @var{INT} for the @code{generate} command.
