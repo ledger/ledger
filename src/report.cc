@@ -64,6 +64,9 @@ void report_t::normalize_options(const string& verb)
     if (HANDLED(color) && ! isatty(STDOUT_FILENO))
       HANDLER(color).off();
   }
+  else {
+    HANDLER(color).on("?normalize");
+  }
   if (! HANDLED(force_pager)) {
     if (HANDLED(pager_) && ! isatty(STDOUT_FILENO))
       HANDLER(pager_).off();
