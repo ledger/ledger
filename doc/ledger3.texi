@@ -4635,13 +4635,16 @@ Ledger will include @samp{; transid: 767718} in the first transaction
 from the file above.
 
 @findex --invert
+@findex --auto-match
 @findex --account @var{STR}
 @findex --rich-data
 
-The @command{convert} command accepts three options. They are
-@option{--invert} which inverts the amount field, @option{--account
-@var{STR}} which you can use to specify the account to balance against,
-and @option{--rich-data} which stores additional metadata as tags.
+The @command{convert} command accepts four options. They are
+@option{--invert} which inverts the amount field, @option{--auto-match}
+which automatically matches an account from the Ledger journal for every
+CSV line, @option{--account @var{STR}} which you can use to specify the
+account to balance against, and @option{--rich-data} which stores
+additional tag/value pairs.
 
 Using the two first lines of the above csv file,
 
@@ -4685,6 +4688,10 @@ If an entry with the same @samp{UUID} tag is already included in the
 normal ledger file (specified via @option{--file @var{FILE} (-f)} or via
 the environment variable @env{LEDGER_FILE}) this entry will not be
 printed again.
+
+In the output above, the account is @samp{Expenses:Unknown} for CSV
+lines. You can use the @option{--auto-match} option to automatically
+match an account from your Ledger journal.
 
 You can also use @command{convert} with @code{payee} and @code{account}
 directives.  First, you can use the @code{payee} and @code{alias}
@@ -6117,8 +6124,9 @@ Set the width in characters of the amount column in the
 Anonymize registry output, mostly for sending in bug reports.
 
 @item --auto-match
-Automatically match accounts from ledger journal for transactions
-during csv convert.
+When generating a ledger transaction from a CSV file using the
+@command{convert} command, automatically match an account from the
+Ledger journal.
 
 @item --aux-date
 @itemx --effective
@@ -6667,7 +6675,7 @@ to show unrealized capital in a gain/losses report.
 
 @item --rich-data
 @itemx --detail
-When generating ledger transaction from CSV file using the
+When generating a ledger transaction from a CSV file using the
 @command{convert} command, add CSV, Imported, and UUID metadata.
 
 @item --seed @var{INT}
