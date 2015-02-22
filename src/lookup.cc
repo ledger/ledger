@@ -54,7 +54,7 @@ namespace {
   struct usage_sorter {
     bool operator()(const account_use_pair& left,
                     const account_use_pair& right) const {
-      return left.second > right.second;
+      return left.second < right.second;
     }
   };
 }
