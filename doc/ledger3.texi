@@ -2859,7 +2859,7 @@ default is uncleared.  To mark a transaction cleared, put an asterisk
 @end smallexample
 
 @noindent
-To mark it pending, use a !:
+To mark it pending, use a @samp{!}:
 
 @smallexample @c input:validate
 2012-03-10 ! KFC
@@ -3503,7 +3503,7 @@ sensitive to this difference.
 If you buy a stock last year, and ask for its value today, Ledger will
 consult its price database to see what the most recent price for that
 stock is.  You can short-circuit this lookup by ``fixing'' the price
-at the time of a transaction.  This is done using @{=AMOUNT@}:
+at the time of a transaction.  This is done using @samp{@{=AMOUNT@}}:
 
 @smallexample
 2012-04-10 My Broker
