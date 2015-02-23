@@ -1155,6 +1155,8 @@ $ ledger --no-total balance Billable Project
               -50.0m  Project:XYZ
 @end smallexample
 
+@findex C
+
 This example works because ledger already knows how to handle seconds,
 minutes and hours, as part of its time tracking support.  Defining
 other equivalences is simple.  The following is an example that
@@ -2859,7 +2861,7 @@ default is uncleared.  To mark a transaction cleared, put an asterisk
 @end smallexample
 
 @noindent
-To mark it pending, use a !:
+To mark it pending, use a @samp{!}:
 
 @smallexample @c input:validate
 2012-03-10 ! KFC
@@ -3503,7 +3505,7 @@ sensitive to this difference.
 If you buy a stock last year, and ask for its value today, Ledger will
 consult its price database to see what the most recent price for that
 stock is.  You can short-circuit this lookup by ``fixing'' the price
-at the time of a transaction.  This is done using @{=AMOUNT@}:
+at the time of a transaction.  This is done using @samp{@{=AMOUNT@}}:
 
 @smallexample
 2012-04-10 My Broker
@@ -6143,7 +6145,8 @@ Strings}).  The default is:
 
 @item --base
 Reduce convertible commodities down the bottom of the conversion, e.g.
-display time in seconds.  This also applies to custom commodity conversions.
+display time in seconds.  This also applies to custom commodity
+conversions (@pxref{Commodity equivalences}).
 
 @item --basis
 @itemx -B
