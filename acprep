@@ -644,10 +644,6 @@ class PrepareBuild(CommandLineApp):
                     ]
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
-        elif system.startswith('CYGWIN'):
-            self.log.info('Looks like you are using Cygwin')
-            self.log.info('Please install the dependencies manually.')        
-
                 elif release.startswith('Fedora release 20'):
                     self.log.info('Looks like you are using YUM on Fedora 20')
                     packages = [
@@ -672,6 +668,10 @@ class PrepareBuild(CommandLineApp):
                     ]
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
+
+        elif system.startswith('CYGWIN'):
+            self.log.info('Looks like you are using Cygwin')
+            self.log.info('Please install the dependencies manually.')        
 
     #########################################################################
     # Determine the system's basic configuration                            #
