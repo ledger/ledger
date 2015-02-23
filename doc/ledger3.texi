@@ -4647,7 +4647,7 @@ and @option{--rich-data} which stores additional metadata as tags.
 
 Using the two first lines of the above csv file,
 
-@smallexample @c file:B2EA7E8
+@smallexample @c file:01B0350
 ,date,payee,note,amount,,,code,
 767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-8.80,,00001640.04,,
 767406,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-1.03,,00001648.84,,
@@ -4655,7 +4655,7 @@ Using the two first lines of the above csv file,
 
 and launching the below command,
 
-@smallexample @c command:B2EA7E8,with_file:download.csv
+@smallexample @c command:01B0350,with_file:download.csv
 $ ledger convert download.csv --input-date-format "%m/%d/%Y" \
   --invert --account Assets:MyBank --rich-data \
   --file sample.dat --now=2012/01/13
@@ -4663,7 +4663,7 @@ $ ledger convert download.csv --input-date-format "%m/%d/%Y" \
 
 you will get the result:
 
-@smallexample @c output:B2EA7E8
+@smallexample @c output:01B0350
 2011/12/13 * Withdrawal  ;ACE HARDWARE 16335 S HOUGHTON RD
     ; CSV: 767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-8.80,,00001640.04,,
     ; Imported: 2012/01/13
