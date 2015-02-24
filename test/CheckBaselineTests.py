@@ -21,7 +21,6 @@ class CheckBaselineTests (CheckOptions):
     self.untested_options = [
         'anon',
         'args-only',
-        'cache',
         'debug',
         'download',
         'file',
