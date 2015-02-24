@@ -403,10 +403,11 @@ install` to install.  If these intructions do not work for you can check the
 @section Getting help
 @findex help
 
-Ledger has a complete online help system based on GNU Info.  This
-manual can be searched directly from the command-line using the
-following options: @code{ledger --help} brings up this entire manual in
-your TTY.
+Ledger has a complete online help system based on GNU Info.  This manual
+can be searched directly from the command-line using @code{info ledger},
+which will bring up this entire manual in your TTY. Alternatively, the
+shorter man page can be accessed from the command-line either via
+@code{man ledger} or @code{ledger --help}
 
 If you need help on how to use Ledger, or run into problems, you can
 join the Ledger mailing list at
@@ -5521,10 +5522,9 @@ Generate transactions based on previous postings.
 
 @item --help
 @itemx -h
-Print summary of all options.
+Display the man page for @file{ledger}.
 
 @item --version
-@itemx -v
 Print version information and exit.
 
 @item --file @var{FILE}
@@ -5798,6 +5798,7 @@ Group postings together, similar to the balance report.
 Use @file{FILE} for retrieving stored commodity prices.
 
 @item --price-exp @var{INT}
+@itemx --leeway @var{INT}
 @itemx -Z @var{INT}
 Set expected freshness of prices in @var{INT} minutes.
 
@@ -5864,7 +5865,7 @@ database.
 
 @item --help
 @itemx -h
-Display the man page for ledger.
+Display the man page for @file{ledger}.
 
 @item --init-file @var{FILE}
 Specify the location of the init file.  The default is @file{~/.ledgerrc}.
@@ -5924,7 +5925,7 @@ produce memory trace information.
 @value{FIXME:UNDOCUMENTED}
 
 @item --version
-@value{FIXME:UNDOCUMENTED}
+Print version information and exit.
 
 @end ftable
 
@@ -6035,8 +6036,8 @@ Quiet balance assertions.
 Specify the location of the price entry data file.
 
 @item --price-exp @var{INT}
-@itemx -Z @var{INT}
 @itemx --leeway @var{INT}
+@itemx -Z @var{INT}
 Set the expected freshness of price quotes, in @var{INT} minutes.  That
 is, if the last known quote for any commodity is older than this value,
 and if @option{--download} is being used, then the Internet will be
@@ -6787,8 +6788,7 @@ variables}), instead of using actual command-line options:
 
 @item --help
 @itemx -h
-Print a summary of all the options, and what they are used for.  This
-can be a handy way to remember which options do what.
+Display the man page for @file{ledger}.
 
 @item --version
 Print the current version of ledger and exits.  This is useful for
@@ -7297,6 +7297,7 @@ The format of the file can be changed by telling ledger to use the
 @option{--pricedb-format @var{FORMAT_STRING}} you define.
 
 @item --price-exp @var{INT}
+@itemx --leeway @var{INT}
 @itemx -Z @var{INT}
 Set the expected freshness of price quotes, in @var{INT} minutes.  That
 is, if the last known quote for any commodity is older than this value,
@@ -9772,6 +9773,7 @@ Enable tracing.  The @var{INT} specifies the level of trace desired:
 @
 
 @item --verbose
+@itemx -v
 Print detailed information on the execution of Ledger.
 
 @item --verify
