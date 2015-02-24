@@ -5517,7 +5517,6 @@ Generate transactions based on previous postings.
 Print summary of all options.
 
 @item --version
-@itemx -v
 Print version information and exit.
 
 @item --file @var{FILE}
@@ -5917,7 +5916,7 @@ produce memory trace information.
 @value{FIXME:UNDOCUMENTED}
 
 @item --version
-@value{FIXME:UNDOCUMENTED}
+Print version information and exit.
 
 @end ftable
 
@@ -9764,6 +9763,7 @@ Enable tracing.  The @var{INT} specifies the level of trace desired:
 @
 
 @item --verbose
+@itemx -v
 Print detailed information on the execution of Ledger.
 
 @item --verify
