@@ -1,0 +1,10 @@
+2012-03-17 Quick
+    Expenses:Food                12,50 €
+    Assets:Cash
+
+test --init-file test/baseline/opt-init-file.dat bal
+            -12,50 €  Assets:Cash
+             12,50 €  Expenses:Food
+--------------------
+                   0
+end test

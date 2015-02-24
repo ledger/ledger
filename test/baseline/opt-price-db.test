@@ -1,0 +1,8 @@
+2012-03-17 KFC
+    Expenses:Food                20 CAD
+    Assets:Cash
+
+test pricedb --price-db test/baseline/opt-price-db.dat
+P 2012/03/16 06:47:12 CAD $2.5
+P 2012/03/17 06:47:12 CAD $3.5
+end test
