@@ -33,7 +33,6 @@ class CheckBaselineTests (CheckOptions):
         'help-comm',
         'help-disp',
         'import',
-        'init-file',
         'no-color',
         'options',
         'price-db',
