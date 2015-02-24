@@ -403,10 +403,11 @@ install` to install.  If these intructions do not work for you can check the
 @section Getting help
 @findex help
 
-Ledger has a complete online help system based on GNU Info.  This
-manual can be searched directly from the command-line using the
-following options: @code{ledger --help} brings up this entire manual in
-your TTY.
+Ledger has a complete online help system based on GNU Info.  This manual
+can be searched directly from the command-line using @code{info ledger},
+which will bring up this entire manual in your TTY. Alternatively, the
+shorter man page can be accessed from the command-line either via
+@code{man ledger} or @code{ledger --help}
 
 If you need help on how to use Ledger, or run into problems, you can
 join the Ledger mailing list at
@@ -5514,7 +5515,7 @@ Generate transactions based on previous postings.
 
 @item --help
 @itemx -h
-Print summary of all options.
+Display the man page for @file{ledger}.
 
 @item --version
 Print version information and exit.
@@ -5857,7 +5858,7 @@ database.
 
 @item --help
 @itemx -h
-Display the man page for ledger.
+Display the man page for @file{ledger}.
 
 @item --init-file @var{FILE}
 Specify the location of the init file.  The default is @file{~/.ledgerrc}.
@@ -6779,8 +6780,7 @@ variables}), instead of using actual command-line options:
 
 @item --help
 @itemx -h
-Print a summary of all the options, and what they are used for.  This
-can be a handy way to remember which options do what.
+Display the man page for @file{ledger}.
 
 @item --version
 Print the current version of ledger and exits.  This is useful for
