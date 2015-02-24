@@ -29,6 +29,7 @@ class CheckBaselineTests (CheckOptions):
         'help',
         'import',
         'no-color',
+        'no-pager'
         'options',
         'price-db',
         'price-exp',
