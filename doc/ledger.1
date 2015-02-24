@@ -368,8 +368,9 @@ Ignore init files and environment variables for the
 .Nm
 run.
 .It Fl \-auto-match
-Automatically match accounts from ledger journal for transactions
-during csv convert.
+When generating a ledger transaction from a CSV file using the
+.Ic convert
+command, automatically match an account from the Ledger journal.
 .It Fl \-aux-date
 Show auxiliary dates for all calculations.
 Alias for
@@ -878,7 +879,7 @@ postings.
 Display the sum of the revalued postings as the running total, which serves
 to show unrealized capital in a gain/losses report.
 .It Fl \-rich-data
-When generating ledger transaction from CSV file using the
+When generating a ledger transaction from a CSV file using the
 .Ic convert
 command, add CSV, Imported, and UUID meta-data.
 .It Fl \-seed Ar INT
