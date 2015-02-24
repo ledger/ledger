@@ -5790,6 +5790,7 @@ Group postings together, similar to the balance report.
 Use @file{FILE} for retrieving stored commodity prices.
 
 @item --price-exp @var{INT}
+@itemx --leeway @var{INT}
 @itemx -Z @var{INT}
 Set expected freshness of prices in @var{INT} minutes.
 
@@ -6027,8 +6028,8 @@ Quiet balance assertions.
 Specify the location of the price entry data file.
 
 @item --price-exp @var{INT}
-@itemx -Z @var{INT}
 @itemx --leeway @var{INT}
+@itemx -Z @var{INT}
 Set the expected freshness of price quotes, in @var{INT} minutes.  That
 is, if the last known quote for any commodity is older than this value,
 and if @option{--download} is being used, then the Internet will be
@@ -7288,6 +7289,7 @@ The format of the file can be changed by telling ledger to use the
 @option{--pricedb-format @var{FORMAT_STRING}} you define.
 
 @item --price-exp @var{INT}
+@itemx --leeway @var{INT}
 @itemx -Z @var{INT}
 Set the expected freshness of price quotes, in @var{INT} minutes.  That
 is, if the last known quote for any commodity is older than this value,
