@@ -651,7 +651,7 @@ $ ledger -f drewr3.dat cleared
         $ -20.00                   0                   MasterCard
         $ 200.00                   0                   Mortgage:Principal
        $ -243.60                   0                   Tithe
-----------------  ----------------    ---------
+----------------    ----------------    ---------
        $ -243.60                   0             
 @end smallexample
 
@@ -7172,7 +7172,7 @@ Define the format for the cleared report.  The default is:
       %-(ansify_if(partial_account(options.flat), blue if color))\n%/
       %$1  %$2    %$3\n%/
       %(prepend_width ? \" \" * int(prepend_width) : \"\")
-      ----------------  ----------------    ---------\n"
+      ----------------    ----------------    ---------\n"
 @end smallexample
 
 @item --register-format @var{FORMAT_STRING}
