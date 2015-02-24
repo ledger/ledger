@@ -34,7 +34,6 @@ class CheckBaselineTests (CheckOptions):
         'price-db',
         'price-exp',
         'revalued-total',
-        'script',
         'seed',
         'trace',
         'verbose',

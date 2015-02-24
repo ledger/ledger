@@ -1,0 +1,15 @@
+2012-03-17 KFC
+    Expenses:Food                20 CAD
+    Assets:Cash
+
+test --script test/baseline/opt-script.dat
+             -20 CAD  Assets:Cash
+              20 CAD  Expenses:Food
+--------------------
+                   0
+12-Mar-17 KFC                   Expenses:Food                20 CAD       20 CAD
+                                Assets:Cash                 -20 CAD            0
+2012/03/17 KFC
+    Expenses:Food                             20 CAD
+    Assets:Cash
+end test
