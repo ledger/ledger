@@ -23,7 +23,6 @@ class CheckBaselineTests (CheckOptions):
         'args-only',
         'debug',
         'download',
-        'file',
         'force-color',
         'force-pager',
         'generated',
