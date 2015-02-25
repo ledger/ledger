@@ -26,6 +26,7 @@ class CheckBaselineTests (CheckOptions):
         'file',
         'force-color',
         'force-pager',
+        'generated',
         'help',
         'import',
         'no-color',
