@@ -32,7 +32,6 @@ class CheckBaselineTests (CheckOptions):
         'no-pager',
         'options',
         'price-exp',
-        'revalued-total',
         'seed',
         'trace',
         'verbose',
