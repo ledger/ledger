@@ -36,6 +36,7 @@ class CheckBaselineTests (CheckOptions):
         'trace',
         'verbose',
         'verify',
+        'verify-memory',
         'version'
     ]
 
