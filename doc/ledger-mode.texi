@@ -868,7 +868,7 @@ recurrence relation to be specified.  The day names are two character
 codes that default to Mo, Tu, We, Th, Fr, Sa, Su, for Monday, Tuesday,
 Wednesday, Thursday, Friday, Saturday, Sunday respectively.  You can
 change the codes to something more convenient for your locale by
-customizing the ledger @var{ledger-schedule-week-days}. They must be two
+customizing the ledger @option{ledger-schedule-week-days}. They must be two
 characters long.
 
 
@@ -953,7 +953,7 @@ false toggle between uncleared and cleared @samp{*}.
 
 @item ledger-reconcile-default-date-format
 Date format for the reconcile buffer. Defaults to
-ledger-default-date-format.
+@option{ledger-default-date-format}.
 
 @item ledger-reconcile-target-prompt-string
 Prompt for recon target. Defaults to "Target amount for reconciliation ".
@@ -969,8 +969,8 @@ are date, status, code, payee, account, amount.  The format for each
 field is %WIDTH(FIELD), WIDTH can be preceded by a minus sign which mean
 to left justify and pad the field.  WIDTH is the minimum number of
 characters to display; if string is longer, it is not truncated unless
-ledger-reconcile-buffer-payee-max-chars or
-ledger-reconcile-buffer-account-max-chars is defined.  Defaults to
+@option{ledger-reconcile-buffer-payee-max-chars} or
+@option{ledger-reconcile-buffer-account-max-chars} is defined.  Defaults to
 "%(date)s %-4(code)s %-50(payee)s %-30(account)s %15(amount)s\n"
 
 @item ledger-reconcile-buffer-payee-max-chars
