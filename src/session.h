@@ -97,7 +97,6 @@ public:
 
   void report_options(std::ostream& out)
   {
-    HANDLER(cache_).report(out);
     HANDLER(check_payees).report(out);
     HANDLER(day_break).report(out);
     HANDLER(download).report(out);
@@ -126,7 +125,6 @@ public:
    * Option handlers
    */
 
-  OPTION(session_t, cache_);
   OPTION(session_t, check_payees);
   OPTION(session_t, day_break);
   OPTION(session_t, download); // -Q

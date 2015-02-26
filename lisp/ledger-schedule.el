@@ -60,21 +60,21 @@
   :group 'ledger-schedule)
 
 (defcustom ledger-schedule-week-days '(("Mo" 1)
-																			 ("Tu" 2)
-																			 ("We" 3)
-																			 ("Th" 4)
-																			 ("Fr" 5)
-																			 ("Sa" 6)
-																			 ("Su" 7))
-	"List of weekday abbreviations.  There must be exactly seven
+                                       ("Tu" 2)
+                                       ("We" 3)
+                                       ("Th" 4)
+                                       ("Fr" 5)
+                                       ("Sa" 6)
+                                       ("Su" 7))
+  "List of weekday abbreviations.  There must be exactly seven
 entries each with a two character abbreviation for a day and the
 number of that day in the week. "
-	:type '(alist :value-type (group integer))
-	:group 'ledger-schedule)
+  :type '(alist :value-type (group integer))
+  :group 'ledger-schedule)
 
 (defsubst between (val low high)
-	"Return TRUE if VAL > LOW and < HIGH."
-	(and (>= val low) (<= val high)))
+  "Return TRUE if VAL > LOW and < HIGH."
+  (and (>= val low) (<= val high)))
 
 (defun ledger-schedule-days-in-month (month year)
   "Return number of days in the MONTH, MONTH is from 1 to 12.
@@ -86,8 +86,8 @@ If YEAR is nil, assume it is not a leap year"
     (error "Month out of range, MONTH=%S" month)))
 
 (defun ledger-schedule-encode-day-of-week (day-string)
-	"Return the numerical day of week corresponding to DAY-STRING."
-	(cadr (assoc day-string ledger-schedule-week-days)))
+  "Return the numerical day of week corresponding to DAY-STRING."
+  (cadr (assoc day-string ledger-schedule-week-days)))
 
 ;; Macros to handle date expressions
 
@@ -173,10 +173,10 @@ the transaction should be logged for that day."
       xact-list)))
 
 (defun ledger-schedule-read-descriptor-tree (descriptor-string)
-	"Read DESCRIPTOR-STRING and return a form that evaluates dates."
-	(ledger-schedule-transform-auto-tree
-	 (split-string
-		(substring descriptor-string 1 (string-match "]" descriptor-string)) " ")))
+  "Read DESCRIPTOR-STRING and return a form that evaluates dates."
+  (ledger-schedule-transform-auto-tree
+   (split-string
+    (substring descriptor-string 1 (string-match "]" descriptor-string)) " ")))
 
 (defun ledger-schedule-transform-auto-tree (descriptor-string-list)
   "Take DESCRIPTOR-STRING-LIST, and return a string with a lambda function of date."
@@ -202,84 +202,84 @@ the transaction should be logged for that day."
 (defun ledger-schedule-compile-constraints (descriptor-string)
   "Return a list with the year, month and day fields split."
   (let ((fields (split-string descriptor-string "[/\\-]" t)))
-		(if (string-match "[A-Za-z]" descriptor-string)
-				(ledger-schedule-constrain-day (nth 0 fields) (nth 1 fields) (nth 2 fields))
-			(list 'and
-						(ledger-schedule-constrain-day (nth 0 fields) (nth 1 fields) (nth 2 fields))
-						(ledger-schedule-constrain-year (nth 0 fields) (nth 1 fields) (nth 2 fields))
-						(ledger-schedule-constrain-month (nth 0 fields) (nth 1 fields) (nth 2 fields))))))
+    (if (string-match "[A-Za-z]" descriptor-string)
+        (ledger-schedule-constrain-day (nth 0 fields) (nth 1 fields) (nth 2 fields))
+      (list 'and
+            (ledger-schedule-constrain-day (nth 0 fields) (nth 1 fields) (nth 2 fields))
+            (ledger-schedule-constrain-year (nth 0 fields) (nth 1 fields) (nth 2 fields))
+            (ledger-schedule-constrain-month (nth 0 fields) (nth 1 fields) (nth 2 fields))))))
 
 (defun ledger-schedule-constrain-year (year-desc month-desc day-desc)
-	"Return a form that constrains the year.
+  "Return a form that constrains the year.
 
 YEAR-DESC, MONT-DESC, and DAY-DESC are the string portions of the
 date descriptor."
-	(cond ((string= year-desc "*") t)
-				((/= 0 (string-to-number year-desc))
-				 `(memq (nth 5 (decode-time date)) ',(mapcar 'string-to-number (split-string year-desc ","))))
-				(t
-				 (error "Improperly specified year constraint: %s %s %s" year-desc month-desc day-desc))))
+  (cond ((string= year-desc "*") t)
+        ((/= 0 (string-to-number year-desc))
+         `(memq (nth 5 (decode-time date)) ',(mapcar 'string-to-number (split-string year-desc ","))))
+        (t
+         (error "Improperly specified year constraint: %s %s %s" year-desc month-desc day-desc))))
 
 (defun ledger-schedule-constrain-month (year-desc month-desc day-desc)
-	"Return a form that constrains the month.
+  "Return a form that constrains the month.
 
 YEAR-DESC, MONT-DESC, and DAY-DESC are the string portions of the
 date descriptor."
-	(cond ((string= month-desc "*")
-				 t)  ;; always match
-				((string= month-desc "E")  ;; Even
-				 `(evenp (nth 4 (decode-time date))))
-				((string= month-desc "O")  ;; Odd
-				 `(oddp (nth 4 (decode-time date))))
-				((/= 0 (string-to-number month-desc)) ;; Starts with number
-				 `(memq (nth 4 (decode-time date)) ',(mapcar 'string-to-number (split-string month-desc ","))))
-				(t
-				 (error "Improperly specified month constraint: %s %s %s" year-desc month-desc day-desc))))
+  (cond ((string= month-desc "*")
+         t)  ;; always match
+        ((string= month-desc "E")  ;; Even
+         `(evenp (nth 4 (decode-time date))))
+        ((string= month-desc "O")  ;; Odd
+         `(oddp (nth 4 (decode-time date))))
+        ((/= 0 (string-to-number month-desc)) ;; Starts with number
+         `(memq (nth 4 (decode-time date)) ',(mapcar 'string-to-number (split-string month-desc ","))))
+        (t
+         (error "Improperly specified month constraint: %s %s %s" year-desc month-desc day-desc))))
 
 (defun ledger-schedule-constrain-day (year-desc month-desc day-desc)
-	"Return a form that constrains the day.
+  "Return a form that constrains the day.
 
 YEAR-DESC, MONT-DESC, and DAY-DESC are the string portions of the
 date descriptor."
-	(cond ((string= day-desc "*")
-				 t)
-				((string-match "[A-Za-z]" day-desc)  ;; There is something other than digits and commas
-				 (ledger-schedule-parse-complex-date year-desc month-desc day-desc))
-				((/= 0 (string-to-number day-desc))
-				 `(memq (nth 3 (decode-time date)) ',(mapcar 'string-to-number (split-string day-desc ","))))
-				(t
-				 (error "Improperly specified day constraint: %s %s %s" year-desc month-desc day-desc))))
+  (cond ((string= day-desc "*")
+         t)
+        ((string-match "[A-Za-z]" day-desc)  ;; There is something other than digits and commas
+         (ledger-schedule-parse-complex-date year-desc month-desc day-desc))
+        ((/= 0 (string-to-number day-desc))
+         `(memq (nth 3 (decode-time date)) ',(mapcar 'string-to-number (split-string day-desc ","))))
+        (t
+         (error "Improperly specified day constraint: %s %s %s" year-desc month-desc day-desc))))
 
 
 
 (defun ledger-schedule-parse-complex-date (year-desc month-desc day-desc)
-	"Parse day descriptors that have repeats."
-	(let ((years (mapcar 'string-to-number (split-string year-desc ",")))
-				(months (mapcar 'string-to-number (split-string month-desc ",")))
-				(day-parts (split-string day-desc "+"))
-				(every-nth (string-match "+" day-desc)))
-		(if every-nth
-				(let ((base-day (string-to-number (car day-parts)))
-							(increment (string-to-number (substring (cadr day-parts) 0
-																											(string-match "[A-Za-z]" (cadr day-parts)))))
-							(day-of-week (ledger-schedule-encode-day-of-week
-														(substring (cadr day-parts) (string-match "[A-Za-z]" (cadr day-parts))))))
-					(ledger-schedule-constrain-every-count-day day-of-week increment (encode-time 0 0 0 base-day (car months) (car years))))
-			(let ((count (string-to-number (substring (car day-parts) 0 1)))
-						(day-of-week (ledger-schedule-encode-day-of-week
-													(substring (car day-parts) (string-match "[A-Za-z]" (car day-parts))))))
-				(ledger-schedule-constrain-day-in-month count day-of-week)))))
+  "Parse day descriptors that have repeats."
+  (let ((years (mapcar 'string-to-number (split-string year-desc ",")))
+        (months (mapcar 'string-to-number (split-string month-desc ",")))
+        (day-parts (split-string day-desc "+"))
+        (every-nth (string-match "+" day-desc)))
+    (if every-nth
+        (let ((base-day (string-to-number (car day-parts)))
+              (increment (string-to-number (substring (cadr day-parts) 0
+                                                      (string-match "[A-Za-z]" (cadr day-parts)))))
+              (day-of-week (ledger-schedule-encode-day-of-week
+                            (substring (cadr day-parts) (string-match "[A-Za-z]" (cadr day-parts))))))
+          (ledger-schedule-constrain-every-count-day day-of-week increment (encode-time 0 0 0 base-day (car months) (car years))))
+      (let ((count (string-to-number (substring (car day-parts) 0 1)))
+            (day-of-week (ledger-schedule-encode-day-of-week
+                          (substring (car day-parts) (string-match "[A-Za-z]" (car day-parts))))))
+        (ledger-schedule-constrain-day-in-month count day-of-week)))))
 
 (defun ledger-schedule-list-upcoming-xacts (candidate-items early horizon)
-	"Search CANDIDATE-ITEMS for xacts that occur within the period today - EARLY  to today + HORIZON."
-	(let ((start-date (time-subtract (current-time) (days-to-time early)))
-				test-date items)
-		(loop for day from 0 to (+ early horizon) by 1 do
-					(setq test-date (time-add start-date (days-to-time day)))
-					(dolist (candidate candidate-items items)
-						(if (funcall (car candidate) test-date)
-								(setq items (append items (list (list test-date (cadr candidate))))))))
-		items))
+  "Search CANDIDATE-ITEMS for xacts that occur within the period today - EARLY  to today + HORIZON."
+  (let ((start-date (time-subtract (current-time) (days-to-time early)))
+        test-date items)
+    (loop for day from 0 to (+ early horizon) by 1 do
+          (setq test-date (time-add start-date (days-to-time day)))
+          (dolist (candidate candidate-items items)
+            (if (funcall (car candidate) test-date)
+                (setq items (append items (list (list test-date (cadr candidate))))))))
+    items))
 
 (defun ledger-schedule-create-auto-buffer (candidate-items early horizon ledger-buf)
   "Format CANDIDATE-ITEMS for display."
@@ -290,7 +290,7 @@ date descriptor."
     (with-current-buffer schedule-buf
       (erase-buffer)
       (dolist (candidate candidates)
-				(insert (format-time-string date-format (car candidate) ) " " (cadr candidate) "\n"))
+        (insert (format-time-string date-format (car candidate) ) " " (cadr candidate) "\n"))
       (ledger-mode))
     (length candidates)))
 
@@ -311,15 +311,15 @@ Use a prefix arg to change the default value"
                          (read-number "Look forward: " ledger-schedule-look-forward))
                  (list ledger-schedule-file ledger-schedule-look-backward ledger-schedule-look-forward)))
   (if (and file
-				 (file-exists-p file))
-			(progn
-				(ledger-schedule-create-auto-buffer
-				 (ledger-schedule-scan-transactions file)
-				 look-backward
-				 look-forward
-				 (current-buffer))
-				(pop-to-buffer ledger-schedule-buffer-name))
-		(error "Could not find ledger schedule file at %s" file)))
+           (file-exists-p file))
+      (progn
+        (ledger-schedule-create-auto-buffer
+         (ledger-schedule-scan-transactions file)
+         look-backward
+         look-forward
+         (current-buffer))
+        (pop-to-buffer ledger-schedule-buffer-name))
+    (error "Could not find ledger schedule file at %s" file)))
 
 
 (provide 'ledger-schedule)

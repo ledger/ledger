@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; Ledger
+;; Ledger
 
 ;; Maybe later add this to the expense repo once it settles
 (add-to-list 'load-path "/home/adamsrl/.emacs.d/addons/ledger")
@@ -104,19 +104,19 @@
 
 (defun ledger-expense-shortcut ()
   "Updates the ER and Project metadata with the current values of the shortcut variables."
- (interactive)
- (when (eq major-mode 'ledger-mode)
-   (if (or (eql *ledger-expense-shortcut-ER* "")
-           (eql *ledger-expense-shortcut-Proj* ""))
-         (message "Run ledger-expense-shortcut-setup first.")
-     (save-excursion
-       (search-forward "; ER:")
-       (kill-line nil)
-       (insert " " *ledger-expense-shortcut-ER*))
-     (save-excursion
-       (search-forward "; PROJECT:")
-       (kill-line nil)
-       (insert " " *ledger-expense-shortcut-Proj*)))))
+  (interactive)
+  (when (eq major-mode 'ledger-mode)
+    (if (or (eql *ledger-expense-shortcut-ER* "")
+            (eql *ledger-expense-shortcut-Proj* ""))
+        (message "Run ledger-expense-shortcut-setup first.")
+      (save-excursion
+        (search-forward "; ER:")
+        (kill-line nil)
+        (insert " " *ledger-expense-shortcut-ER*))
+      (save-excursion
+        (search-forward "; PROJECT:")
+        (kill-line nil)
+        (insert " " *ledger-expense-shortcut-Proj*)))))
 
 (defun ledger-expense-split ()
   "Splits the current transaction between internal and projects."
@@ -158,33 +158,33 @@
 
 (defun ledger-expense-personal ()
   "Makes the expense an personal one, eliminating metadata and receipts."
- (interactive)
- (when (eq major-mode 'ledger-mode) ; I made this local now, should only trigger in ldg-mode
-   (save-excursion
-     (end-of-line)
-     (re-search-backward "^[0-9]\\{4\\}/")
-     (let ((begin (point))
-           (end (save-excursion (re-search-forward "^$"))))
-       (when (re-search-forward "^    Dest:Projects" end t)
-         (replace-match "    Other:Personal"))
-       (goto-char begin)
-       (save-excursion
-         (when (re-search-forward "^ +; ER:" end t)
-         (beginning-of-line)
-         (kill-line 1)))
-       (save-excursion
-         (when (re-search-forward "^ +; PROJECT:" end t)
-         (beginning-of-line)
-         (kill-line 1)))
-       (save-excursion
-         (when (re-search-forward "^ +; CATEGORY:" end t)
-         (beginning-of-line)
-         (kill-line 1)))
-       (save-excursion
-         (when (re-search-forward "^ +; RECEIPT:" end t)
-         (beginning-of-line)
-         (kill-line 1)))
-       (ledger-toggle-current-entry)))))
+  (interactive)
+  (when (eq major-mode 'ledger-mode) ; I made this local now, should only trigger in ldg-mode
+    (save-excursion
+      (end-of-line)
+      (re-search-backward "^[0-9]\\{4\\}/")
+      (let ((begin (point))
+            (end (save-excursion (re-search-forward "^$"))))
+        (when (re-search-forward "^    Dest:Projects" end t)
+          (replace-match "    Other:Personal"))
+        (goto-char begin)
+        (save-excursion
+          (when (re-search-forward "^ +; ER:" end t)
+            (beginning-of-line)
+            (kill-line 1)))
+        (save-excursion
+          (when (re-search-forward "^ +; PROJECT:" end t)
+            (beginning-of-line)
+            (kill-line 1)))
+        (save-excursion
+          (when (re-search-forward "^ +; CATEGORY:" end t)
+            (beginning-of-line)
+            (kill-line 1)))
+        (save-excursion
+          (when (re-search-forward "^ +; RECEIPT:" end t)
+            (beginning-of-line)
+            (kill-line 1)))
+        (ledger-toggle-current-entry)))))
 
 (defun ledger-expense-show-receipt ()
   "Uses the Receipt buffer to show the receipt of the txn we're on."

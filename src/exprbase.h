@@ -231,21 +231,6 @@ public:
     out << std::endl << _("--- Result value ---") << std::endl;
     return calc();
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & context;
-    ar & str;
-    if (Archive::is_loading::value)
-      compiled = false;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 template <typename ResultType>

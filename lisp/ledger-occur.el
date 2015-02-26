@@ -118,7 +118,7 @@ currently active."
 Argument OVL-BOUNDS contains bounds for the transactions to be left visible."
   (let* ((beg (caar ovl-bounds))
          (end (cadar ovl-bounds)))
-		(ledger-occur-remove-overlays)
+    (ledger-occur-remove-overlays)
     (ledger-occur-make-invisible-overlay (point-min) (1- beg))
     (dolist (visible (cdr ovl-bounds))
       (ledger-occur-make-visible-overlay beg end)
@@ -143,25 +143,25 @@ Argument OVL-BOUNDS contains bounds for the transactions to be left visible."
       (while (not (eobp))
         ;; if something found
         (when (setq endpoint (re-search-forward regex nil 'end))
-					(setq bounds (ledger-navigate-find-element-extents endpoint))
-					(push bounds lines)
-					;; move to the end of the xact, no need to search inside it more
+          (setq bounds (ledger-navigate-find-element-extents endpoint))
+          (push bounds lines)
+          ;; move to the end of the xact, no need to search inside it more
           (goto-char (cadr bounds))))
       (nreverse lines))))
 
 (defun ledger-occur-compress-matches (buffer-matches)
   "identify sequential xacts to reduce number of overlays required"
-	(if buffer-matches
-			(let ((points (list))
-						(current-beginning (caar buffer-matches))
-						(current-end (cadar buffer-matches)))
-				(dolist (match (cdr buffer-matches))
-					(if (< (- (car match) current-end) 2)
-							(setq current-end (cadr match))
-						(push (list current-beginning current-end) points)
-						(setq current-beginning (car match))
-						(setq current-end (cadr match))))
-				(nreverse (push (list current-beginning current-end) points)))))
+  (if buffer-matches
+      (let ((points (list))
+            (current-beginning (caar buffer-matches))
+            (current-end (cadar buffer-matches)))
+        (dolist (match (cdr buffer-matches))
+          (if (< (- (car match) current-end) 2)
+              (setq current-end (cadr match))
+            (push (list current-beginning current-end) points)
+            (setq current-beginning (car match))
+            (setq current-end (cadr match))))
+        (nreverse (push (list current-beginning current-end) points)))))
 
 (provide 'ledger-occur)
 

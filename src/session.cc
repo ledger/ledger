@@ -37,7 +37,6 @@
 #include "journal.h"
 #include "iterators.h"
 #include "filters.h"
-#include "archive.h"
 
 namespace ledger {
 
@@ -128,16 +127,6 @@ std::size_t session_t::read_data(const string& master_account)
 
   if (HANDLED(value_expr_))
     journal->value_expr = HANDLER(value_expr_).str();
-
-#if HAVE_BOOST_SERIALIZATION
-  optional<archive_t> cache;
-  if (HANDLED(cache_) && master_account.empty())
-    cache = archive_t(HANDLED(cache_).str());
-
-  if (! (cache &&
-         cache->should_load(HANDLER(file_).data_files) &&
-         cache->load(*journal.get()))) {
-#endif // HAVE_BOOST_SERIALIZATION
     if (price_db_path) {
       if (exists(*price_db_path)) {
         parsing_context.push(*price_db_path);
@@ -190,12 +179,6 @@ std::size_t session_t::read_data(const string& master_account)
     DEBUG("ledger.read", "xact_count [" << xact_count
           << "] == journal->xacts.size() [" << journal->xacts.size() << "]");
     assert(xact_count == journal->xacts.size());
-
-#if HAVE_BOOST_SERIALIZATION
-    if (cache && cache->should_save(*journal.get()))
-      cache->save(*journal.get());
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 
   if (populated_data_files)
     HANDLER(file_).data_files.clear();
@@ -333,8 +316,7 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     OPT_CH(price_exp_);
     break;
   case 'c':
-    OPT(cache_);
-    else OPT(check_payees);
+    OPT(check_payees);
     break;
   case 'd':
     OPT(download); // -Q

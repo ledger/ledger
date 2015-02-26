@@ -28,7 +28,6 @@ set(LEDGER_SOURCES
   textual.cc
   temps.cc
   journal.cc
-  archive.cc
   account.cc
   xact.cc
   post.cc
@@ -80,7 +79,6 @@ set(LEDGER_INCLUDES
   account.h
   amount.h
   annotate.h
-  archive.h
   balance.h
   chain.h
   commodity.h

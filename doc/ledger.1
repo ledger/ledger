@@ -191,7 +191,8 @@ Show any gains (or losses) in commodity values over time.
 Only show the top
 .Ar number
 postings.
-.\".It Fl \-historical Pq Fl H
+.It Fl \-historical Pq Fl H
+Value commodities at the time of their acquisition.
 .It Fl \-invert
 Invert the value of amounts shown.
 .It Fl \-market Pq Fl V
@@ -309,7 +310,7 @@ fit inside the
 If
 .Ar INT
 is zero, then the
-account name will be truncated on the right. If
+account name will be truncated on the right.  If
 .Ar INT
 is greater
 than
@@ -320,7 +321,7 @@ desired width.
 .It Fl \-account Ar EXPR
 Prepend
 .Ar EXPR
-to all accounts reported. That is, the option
+to all accounts reported.  That is, the option
 .Fl \-account Ar \*q'Personal'\*q
 would tack
 .Ar Personal:
@@ -345,7 +346,7 @@ transactions used.
 .It Fl \-add-budget
 Show only un-budgeted postings.
 .It Fl \-amount Ar EXPR Pq Fl t
-Apply the given value expression to the posting amount. Using
+Apply the given value expression to the posting amount.  Using
 .Fl \-amount Ar EXPR
 you can apply an
 arbitrary transformation to the postings.
@@ -366,7 +367,10 @@ Alias for
 Ignore init files and environment variables for the
 .Nm
 run.
-.\".It Fl \-auto-match
+.It Fl \-auto-match
+When generating a ledger transaction from a CSV file using the
+.Ic convert
+command, automatically match an account from the Ledger journal.
 .It Fl \-aux-date
 Show auxiliary dates for all calculations.
 Alias for
@@ -378,7 +382,9 @@ running totals.
 Specify the format to use for the
 .Ic balance
 report.
-.\".It Fl \-base
+.It Fl \-base
+Reduce convertible commodities down the bottom of the conversion, e.g.
+display time in seconds.
 .It Fl \-basis Pq Fl B
 Report the cost basis on all posting.
 Alias for
@@ -386,12 +392,12 @@ Alias for
 .It Fl \-begin Ar DATE Pq Fl b
 Specify the start
 .Ar DATE
-of all calculations. Transactions before
+of all calculations.  Transactions before
 that date will be ignored.
 .It Fl \-bold-if Ar EXPR
 Print the entire line in bold if the given value expression is true.
 .It Fl \-budget
-Only display budgeted items. In a
+Only display budgeted items.  In a
 .Ic register
 report this displays transaction in the budget, in a balance report this
 displays accounts in the budget.
@@ -401,7 +407,6 @@ Specify the format to use for the
 report.
 .It Fl \-by-payee Pq Fl P
 Group postings in the register report by common payee names.
-.\".It Fl \-cache Ar FILE
 .It Fl \-check-payees
 Enable strict and pedantic checking for payees as well as accounts,
 commodities and tags.
@@ -424,7 +429,7 @@ Make the
 .Ic register
 report
 .Ar INT
-characters wide. By default
+characters wide.  By default
 .Nm
 will use all available columns in your terminal.
 .It Fl \-cost
@@ -461,7 +466,12 @@ Print dates using
 Refer to
 .Xr strftime 3
 for details on the format string syntax.
-.\" .It Fl \-datetime-format Ar FMT
+.It Fl \-datetime-format Ar DATETIMEFMT
+Print datetimes using
+.Ar DATETIMEFMT .
+Refer to
+.Xr strftime 3
+for details on the format string syntax.
 .It Fl \-date-width Ar INT
 Specify the width, in characters, of the date column in the
 .Ic register
@@ -501,8 +511,14 @@ but not
 .Sy Expenses:Entertainment:Dining .
 This is a display predicate, which means it only affects display,
 not the total calculations.
+.It Fl \-detail
+Related to
+.Ic convert
+command. Synonym to 
+.Fl \-rich-data
+option.
 .It Fl \-deviation
-Report each posting's deviation from the average. It is only meaningful
+Report each posting's deviation from the average.  It is only meaningful
 in the
 .Ic register No and Ic prices
 reports.
@@ -537,7 +553,7 @@ distribution.  Downloaded quote price are then appended to the price
 database, usually specified using the environment variable
 .Ev LEDGER_PRICE_DB .
 .It Fl \-effective
-Show auxiliary dates for all calculations. Alias for
+Show auxiliary dates for all calculations.  Alias for
 .Fl \-aux-date .
 .It Fl \-empty Pq Fl E
 Include empty accounts in report.
@@ -551,7 +567,9 @@ Related to the
 .Ic equity
 command.  Gives current account balances in the form of a register
 report.
-.\".It Fl \-exact
+.It Fl \-exact
+Report beginning and ending of periods by the date of the first and last
+posting occurring in that period.
 .It Fl \-exchange Ar COMMODITY Oo , Ar COMMODITY, ... Oc Pq Fl X
 Display values in terms of the given
 .Ar COMMODITY .
@@ -560,19 +578,18 @@ The latest available price is used.
 .It Fl \-file Ar FILE
 Read journal data from
 .Ar FILE .
-.\".It Fl \-full-help
 .It Fl \-first Ar INT
 Print the first
 .Ar INT
-entries. Opposite of
+entries.  Opposite of
 .Fl \-last Ar INT .
 Alias for
 .Fl \-head .
 .It Fl \-flat
-Force the full names of accounts to be used in the balance report. The
+Force the full names of accounts to be used in the balance report.  The
 balance report will not use an indented tree.
 .It Fl \-force-color
-Output TTY color codes even if the TTY doesn't support them. Useful
+Output TTY color codes even if the TTY doesn't support them.  Useful
 for TTYs that don't advertise their capabilities correctly.
 .It Fl \-force-pager
 Force
@@ -618,22 +635,18 @@ register report.
 .It Fl \-head Ar INT
 Print the first
 .Ar INT
-entries. Opposite of
+entries.  Opposite of
 .Fl \-tail Ar INT .
 Alias for
 .Fl \-first
 .It Fl \-help
-Print a summary of all the options, and what they are used for.  This
-can be a handy way to remember which options do what.  This help screen
-is also printed if
-.Nm
-is run without a command.
-.\".It Fl \-help-calc
-.\".It Fl \-help-comm
-.\".It Fl \-help-disp
+Print this man page.
 .It Fl \-immediate
 Evaluate calculations immediately rather than lazily.
-.\".It Fl \-import
+.It Fl \-import Ar FILE
+Import
+.Ar FILE
+as Python module.
 .It Fl \-init-file Ar FILE Pq Fl i
 Read
 .Ar FILE
@@ -658,9 +671,9 @@ Change the sign of all reported values.
 .It Fl \-last Ar INT .
 Report only the last
 .Ar INT
-entries. Opposite of
+entries.  Opposite of
 .Fl \-first Ar INT .
-Only useful on a register report. Alias for
+Only useful on a register report.  Alias for
 .Fl \-tail .
 .It Fl \-leeway Ar INT Pq Fl Z
 Alias for
@@ -678,7 +691,9 @@ purchased.
 .It Fl \-lots
 Report the date and price at which each commodity was purchased in
 a balance report.
-.\".It Fl \-lots-actual
+.It Fl \-lots-actual
+Preserve the uniqueness of commodities so they aren't merged during
+reporting without printing the lot annotations.
 .It Fl \-market Pq Fl V
 Use the latest market value for all commodities.
 .It Fl \-master-account Ar STR
@@ -717,7 +732,7 @@ Suppress printing the final total line in a balance report.
 .It Fl \-now Ar DATE
 Use
 .Ar DATE
-as the current date. This affects the output when using
+as the current date.  This affects the output when using
 .Fl \-period ,
 .Fl \-begin ,
 .Fl \-end ,
@@ -742,7 +757,7 @@ Use
 .Ar STR
 as the pager program.
 .It Fl \-payee
-Sets a value expression for formatting the payee. In the
+Sets a value expression for formatting the payee.  In the
 .Ic register
 report this prevents the second entry from having
 a date and payee for each transaction.
@@ -759,7 +774,7 @@ Calculate the percentage value of each account in a balance reports.
 Only works for account that have a single commodity.
 .It Fl \-period Ar PERIOD Pq Fl p
 Define a period expression that sets the time period during which
-transactions are to be accounted. For a
+transactions are to be accounted.  For a
 .Ic register
 report only
 the transactions that satisfy the period expression with be displayed.
@@ -792,12 +807,12 @@ Use the price of the commodity purchase for performing calculations.
 .It Fl \-price-exp Ar STR Pq Fl Z
 Set the expected freshness of price quotes, in
 .Ar INT
-minutes. That
+minutes.  That
 is, if the last known quote for any commodity is older than this value,
 and if
 .Fl \-download
 is being used, then the Internet will be
-consulted again for a newer price. Otherwise, the old price is still
+consulted again for a newer price.  Otherwise, the old price is still
 considered to be fresh enough.
 Alias for
 .Fl \-leeway .
@@ -808,7 +823,7 @@ report.
 .It Fl \-pricedb-format Ar FMT
 Set the format expected for the historical price file.
 .It Fl \-primary-date
-Show primary dates for all calculations. Alias for
+Show primary dates for all calculations.  Alias for
 .Fl \-actual-dates
 .It Fl \-quantity Pq Fl O
 Report commodity totals (this is the default).
@@ -842,10 +857,27 @@ of the transaction.
 Show all postings in a transaction, similar to
 .Fl \-related
 but show both sides of each transaction.
-.\".It Fl \-revalued
-.\".It Fl \-revalued-only
-.\".It Fl \-revalued-total Ar EXPR
-.\".It Fl \-rich-data
+.It Fl \-revalued
+Report discrepancy in values for manual reports by inserting
+<Revalued>
+postings.
+This is implied when using
+the
+.Fl \-exchange Pq Fl X
+or
+.Fl \-market Pq Fl V
+option.
+.It Fl \-revalued-only
+Show only
+<Revalued>
+postings.
+.It Fl \-revalued-total
+Display the sum of the revalued postings as the running total, which serves
+to show unrealized capital in a gain/losses report.
+.It Fl \-rich-data
+When generating a ledger transaction from a CSV file using the
+.Ic convert
+command, add CSV, Imported, and UUID meta-data.
 .It Fl \-seed Ar INT
 Set the random seed to
 .Ar INT
@@ -857,8 +889,9 @@ Execute a
 .Nm
 script.
 .It Fl \-sort Ar EXPR Pq Fl S
-Sort the register report based on the value expression given to sort.
-.\".It Fl \-sort-all
+Sort the register report based on the value expression
+.Ar EXPR .
+.\".It Fl \-sort-all Ar EXPR
 .It Fl \-sort-xacts
 Sort the posting within transactions using the given value expression.
 .It Fl \-start-of-week Ar STR
@@ -879,12 +912,15 @@ Report register as a single subtotal.
 .It Fl \-tail Ar INT
 Report only the last
 .Ar INT
-entries. Only useful on a register report. Alias for
+entries.  Only useful on a register report.  Alias for
 .Fl \-last Ar INT
 .It Fl \-time-colon
 Display the value for commodities based on seconds as hours and minutes.
 Thus 8100s will be displayed as 2:15h instead of 2.25h.
-.\".It Fl \-time-report
+.It Fl \-time-report
+Add two columns to the
+.Ic balance
+report to show the earliest checkin and checkout times for timelog entries.
 .It Fl \-total Ar EXPR Pq Fl T
 Define a value expression used to calculate the total in reports.
 .It Fl \-total-data Pq Fl J
@@ -892,12 +928,12 @@ Show only dates and totals to format the output for plots.
 .It Fl \-total-width Ar INT
 Set the width of the total field in the register report.
 .It Fl \-trace Ar INT
-Enable tracing. The
+Enable tracing.  The
 .Ar INT
 specifies the level of trace desired.
 .It Fl \-truncate Ar STR
 Indicates how truncation should happen when the contents of columns
-exceed their width. Valid arguments for 
+exceed their width.  Valid arguments for
 .Ar STR
 are
 .Ar leading ,
@@ -917,14 +953,14 @@ Show generated unrealized gain and loss accounts in the balance
 report.
 .It Fl \-unrealized-gains
 Allow the user to specify what account name should be used for
-unrealized gains. Defaults to
+unrealized gains.  Defaults to
 .Sy "Equity:Unrealized Gains" .
 Often set in one's
 .Pa ~/.ledgerrc
 file to change the default.
 .It Fl \-unrealized-losses
 Allow the user to specify what account name should be used for
-unrealized gains. Defaults to
+unrealized gains.  Defaults to
 .Sy "Equity:Unrealized Losses" .
 Often set in one's
 .Pa ~/.ledgerrc
@@ -936,17 +972,20 @@ precision.
 Show the values used by each tag when used in combination with the
 .Ic tags
 command.
-.\".It Fl \-value-expr Ar EXPR
+.It Fl \-value-expr Ar EXPR
+Set a global value expression annotation.
 .It Fl \-verbose
 Print detailed information on the execution of
 .Nm .
 .It Fl \-verify
-Enable additional assertions during run-time. This causes a significant
+Enable additional assertions during run-time.  This causes a significant
 slowdown.  When combined with
 .Fl \-debug Ar CODE
 .Nm
 will produce memory trace information.
-.\".It Fl \-verify-memory
+.It Fl \-verify-memory
+Verify that every constructed object is properly destructed.  This is for
+debugging purposes only.
 .It Fl \-version
 Print version information and exit.
 .It Fl \-weekly Pq Fl W
@@ -960,7 +999,7 @@ Shorthand for
 .El
 .Sh PRE-COMMANDS
 Pre-commands are useful when you aren't sure how a command or option
-will work. The difference between a pre-command and a regular command
+will work.  The difference between a pre-command and a regular command
 is that pre-commands ignore the journal data file completely, nor is
 the user's init file read.
 .Bl -tag -width -indent
@@ -1117,6 +1156,12 @@ toward -infinity.
 The name of the
 .Nm
 data file from whence the posting came.
+.It Fn format string
+Evaluate
+.Ar string
+as format just like the
+.Fl \-format
+option.
 .It Fn format_date date format
 Return the
 .Ar date
@@ -1125,18 +1170,56 @@ as a string using
 Refer to
 .Xr strftime 3
 for format string details.
-.\".It Fn get_at
-.\".It Fn has_meta
+.It Fn format_datetime datetime format
+Return the
+.Ar datetime
+as a string using
+.Ar format .
+Refer to
+.Xr strftime 3
+for format string details.
+.It Fn get_at seq index
+Return value at
+.Ar index
+from
+.Ar seq .
+Used internally to construct different reports.
+.It Fn has_meta
+Return true if the posting has metadata named
+.Ar tag ,
+false otherwise.
 .It Fn has_tag tag
 Return true if the posting has metadata named
 .Ar tag ,
 false otherwise.
-.\".It Fn is_seq
+.It Fn is_seq value
+Return true if
+.Ar value
+is a sequence. Used internally.
 .It Fn join value
 Replace all newlines in
 .Ar value
 with
 .Li \en .
+.It Fn justify value first_width latter_width right_justify colorize
+Right or left justify the string representing
+.Ar value .
+The width of the field in the first line is given by
+.Ar first_width .
+For subsequent lines the width is given by
+.Ar latter_width .
+If
+.Ar latter_width
+is -1,
+.Ar first_width
+is used for all lines.
+If
+.Ar right_justify
+is true then the field is right justified within the width of the field.  If it
+is false, then the field is left justified and padded to the full width of the
+field.  If
+.Ar colorize
+is true, then ledger will honor color settings.
 .It Fn market value datetime
 Return the price of
 .Ar value
@@ -1146,8 +1229,13 @@ Note that
 .Ar datetime
 must be surrounded by brackets in order to be parsed correctly, e.g.
 .Bq 2012/03/23 .
-.\".It Sy meta
-.I.\"t Sy note
+.It Fn meta
+Return the value of metadata named
+.Ar name .
+.It Sy note
+Return the note for the posting.
+.It Sy now
+Return the current datetime.
 .\".It Sy null
 .It Sy options
 A variable that allows access to the values of the given command-line options
@@ -1173,7 +1261,11 @@ in relation to
 .Ar value_b .
 .\".It Sy post
 .\" A variable scope
-.\".It Sy print
+.It Fn print value
+Print
+.Ar value
+to stdout.
+Used internally for debugging.
 .It Fn quantity value
 Return the quantity of
 .Ar value
@@ -1192,30 +1284,61 @@ Return
 .Ar value
 rounded to
 .Ar n
-digits. Does not affect formatting.
-.\".It Sy scrub
+digits.  Does not affect formatting.
+.It Sy should_bold
+Return true if expression given to
+.Fl \-bold-if
+evaluates to true.  Internal use only!
+.It Fn scrub value
+Clean
+.Ar value
+using various transformations such as round,
+stripping value annotations, and more.
 .\".It Sy status
-.\".It Sy strip
+.It Fn strip value
+Strip value annotation from
+.Ar value .
 .\".It Sy subcount
 .It Fn tag name
 Return the value of tag named
 .Ar name .
-.\".It Fn to_amount value
-.\".It Fn to_balance value
-.\".It Fn to_boolean value
-.\".It Fn to_date value
-.\".It Fn to_datetime value
+.It Fn to_amount value
+Convert
+.Ar value
+to an amount.  Internal use only!
+.It Fn to_balance value
+Convert
+.Ar value
+to a balance.  Internal use only!
+.It Fn to_boolean value
+Convert
+.Ar value
+to a boolean.  Internal use only!
+.It Fn to_date value
+Convert
+.Ar value
+to a date.  Internal use only!
+.It Fn to_datetime value
+Convert
+.Ar value
+to a datetime.  Internal use only!
 .It Fn to_int value
 Return the integer value for
 .Ar value .
-.\".It Fn to_mask value
-.\".It Fn to_sequence value
+.It Fn to_mask value
+Convert
+.Ar value
+to a mask.  Internal use only!
+.It Fn to_sequence value
+Convert
+.Ar value
+to a sequence.  Internal use only!
 .It Fn to_string value
 Convert
 .Ar value
 to a character string.
 .It Sy today
-Return today’s date.
+Return today's date.
 .It Sy total
 Return the total of the posting.
 .It Sy total_expr
@@ -1225,7 +1348,14 @@ option.
 .It Fn trim value
 Trim leading and trailing whitespace from
 .Ar value .
-.\".It Fn truncate
+.It Fn truncated string, total_len, account_len
+Truncate
+.Ar string
+to
+.Ar total_len
+enusring that each account is at least
+.Ar account_len
+long.
 .\".It Sy uncleared
 .It Sy virtual
 Return true if the transaction is virtual, e.g automated, false otherwise.

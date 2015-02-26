@@ -147,7 +147,6 @@ See LICENSE file included with the distribution for details and disclaimer.");
 
   void visit_man_page() const;
 
-  OPTION_(global_scope_t, full_help, DO() { parent->visit_man_page(); }); // -H
   OPTION_(global_scope_t, help,      DO() { parent->visit_man_page(); }); // -h
 
   OPTION__
