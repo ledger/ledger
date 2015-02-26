@@ -118,6 +118,11 @@ Possible values are '(date)', '(amount)', '(payee)' or '(0)' for no sorting, i.e
   :type 'boolean
   :group 'ledger-reconcile)
 
+(defcustom ledger-reconcile-finish-force-quit nil
+  "If t, will force closing reconcile window after \\[ledger-reconcile-finish]."
+  :type 'boolean
+  :group 'ledger-reconcile)
+
 ;; s-functions below are copied from Magnars' s.el
 ;; prefix ledger-reconcile- is added to not conflict with s.el
 (defun ledger-reconcile-s-pad-left (len padding s)
@@ -314,7 +319,7 @@ Return the number of uncleared xacts found."
 (defun ledger-reconcile-finish ()
   "Mark all pending posting or transactions as cleared.
 Depends on ledger-reconcile-clear-whole-transactions, save the buffers
-and exit reconcile mode"
+and exit reconcile mode if `ledger-reconcile-finish-force-quit'"
   (interactive)
   (save-excursion
     (goto-char (point-min))
@@ -327,7 +332,8 @@ and exit reconcile mode"
               (ledger-toggle-current 'cleared))))
       (forward-line 1)))
   (ledger-reconcile-save)
-  (ledger-reconcile-quit))
+  (when ledger-reconcile-finish-force-quit
+    (ledger-reconcile-quit)))
 
 
 (defun ledger-reconcile-quit ()
