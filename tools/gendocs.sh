@@ -21,9 +21,12 @@ if [ $(uname -s) = 'Darwin' ]; then
     && export PATH="$(brew --prefix texinfo)/bin:$PATH"
 fi
 
-echo "===================================== Making Info..."
-makeinfo ledger3.texi
-echo "===================================== Making HTML..."
-makeinfo --html --no-split ledger3.texi
-echo "===================================== Making PDF..."
-texi2pdf --quiet --batch ${papersize} ledger3.texi
+for texi in ledger3.texi ledger-mode.texi; do
+    echo "==================== ${texi}"
+    echo "===================================== Making Info..."
+    makeinfo ${texi}
+    echo "===================================== Making HTML..."
+    makeinfo --html --no-split ${texi}
+    echo "===================================== Making PDF..."
+    texi2pdf --quiet --batch ${papersize} ${texi}
+done
