@@ -383,13 +383,15 @@ transaction.
 
 @end itemize
 
-@kindex C-c C-e
 @kindex C-c C-c
+@kindex C-c C-e
 
-Clearing complete transactions is done by typing @kbd{C-c C-e} with
-point in a transaction.  This places an asterisk @samp{*} after the
-date.  Clearing individual postings is done by typing @kbd{C-c C-c}
-while in a posting. This places an asterisk prior to the posting.
+Typing @kbd{C-c C-c}, depending where is the point, will clear the
+complete transaction, or an individual posting. This places an asterisk
+@samp{*} prior to the payee for the complete transaction, or prior to
+the account for an individual posting. When point is inside
+a transaction, specifically on an individual posting, you can still
+clear the complete transaction by typing @kbd{C-c C-e}.
 
 @node Formatting Transactions, Deleting Transactions, Marking Transactions, The Ledger Buffer
 @section Formatting Transactions
