@@ -142,9 +142,10 @@ class report_accounts : public item_handler<post_t>
 protected:
   report_t& report;
 
-  std::map<account_t *, std::size_t, account_compare> accounts;
-
   typedef std::map<account_t *, std::size_t>::value_type accounts_pair;
+  typedef std::map<account_t *, std::size_t, account_compare> accounts_report_map;
+
+  accounts_report_map accounts;
 
 public:
   report_accounts(report_t& _report) : report(_report) {
@@ -221,9 +222,10 @@ class report_commodities : public item_handler<post_t>
 protected:
   report_t& report;
 
-  std::map<commodity_t *, std::size_t, commodity_compare> commodities;
-
   typedef std::map<commodity_t *, std::size_t>::value_type commodities_pair;
+  typedef std::map<commodity_t *, std::size_t, commodity_compare> commodities_report_map;
+
+  commodities_report_map commodities;
 
 public:
   report_commodities(report_t& _report) : report(_report) {
