@@ -291,7 +291,7 @@ void report_accounts::flush()
 
 void report_accounts::operator()(post_t& post)
 {
-  std::map<account_t *, std::size_t>::iterator i = accounts.find(post.account);
+  accounts_report_map::iterator i = accounts.find(post.account);
   if (i == accounts.end())
     accounts.insert(accounts_pair(post.account, 1));
   else
@@ -362,7 +362,7 @@ void report_commodities::operator()(post_t& post)
   amount_t temp(post.amount.strip_annotations(report.what_to_keep()));
   commodity_t& comm(temp.commodity());
 
-  std::map<commodity_t *, std::size_t>::iterator i = commodities.find(&comm);
+  commodities_report_map::iterator i = commodities.find(&comm);
   if (i == commodities.end())
     commodities.insert(commodities_pair(&comm, 1));
   else
@@ -371,7 +371,7 @@ void report_commodities::operator()(post_t& post)
   if (comm.has_annotation()) {
     annotated_commodity_t& ann_comm(as_annotated_commodity(comm));
     if (ann_comm.details.price) {
-      std::map<commodity_t *, std::size_t>::iterator ii =
+      commodities_report_map::iterator ii =
         commodities.find(&ann_comm.details.price->commodity());
       if (ii == commodities.end())
         commodities.insert
