@@ -194,8 +194,10 @@ outside world.  This process is called reconciliation (@pxref{Basics of
 Reconciliation}) and can be quite onerous.  Ledger-mode attempts to make
 it as painless as possible.
 
-In the @file{demo.ledger} buffer type @kbd{C-c C-r}.  Emacs will prompt
-for an account to reconcile in the Minibuffer.  Enter @samp{Checking}.
+In the @file{demo.ledger} buffer type @kbd{C-c C-r}.  If cursor is on an
+account, Ledger-mode will propose this account, or in the Minibuffer,
+will prompt for an account to reconcile.  Hit @kbd{RET} if you are happy
+with proposed account, or enter @samp{Checking} as example.
 Emacs will then prompt for a target value.  The target value is the
 amount you want the cleared transactions in the buffer to total.
 Normally this would be the ending value from your bank statement, or the
@@ -383,13 +385,15 @@ transaction.
 
 @end itemize
 
-@kindex C-c C-e
 @kindex C-c C-c
+@kindex C-c C-e
 
-Clearing complete transactions is done by typing @kbd{C-c C-e} with
-point in a transaction.  This places an asterisk @samp{*} after the
-date.  Clearing individual postings is done by typing @kbd{C-c C-c}
-while in a posting. This places an asterisk prior to the posting.
+Typing @kbd{C-c C-c}, depending where is the point, will clear the
+complete transaction, or an individual posting. This places an asterisk
+@samp{*} prior to the payee for the complete transaction, or prior to
+the account for an individual posting. When point is inside
+a transaction, specifically on an individual posting, you can still
+clear the complete transaction by typing @kbd{C-c C-e}.
 
 @node Formatting Transactions, Deleting Transactions, Marking Transactions, The Ledger Buffer
 @section Formatting Transactions
@@ -550,17 +554,25 @@ about.  You can get this from a monthly statement, or from checking your
 on-line transaction history.  It also helps immensely to know the final
 cleared balance you are aiming for.
 
-Use menu @samp{Reconcile Account} or keyboard shortcut @kbd{C-c C-r} and enter the account
-you wish to reconcile in the Minibuffer.  Ledger-mode is not particular
-about what you enter for the account.  You can leave it blank and
-@file{*Reconcile*} buffer will show you @emph{all} uncleared
-transactions.  After you enter the account enter the target amount.
-Ledger expects you to enter an amount with a commodity.  It assumes
-initially that you are using @samp{$} (USD) as your default commodity.
-If you are working in a different currency you can change the default in
-variable @option{ledger-reconcile-default-commodity} to whatever you
-need.  If you work in multiple commodities simply enter the commoditized
-amount (for example @samp{340 VSDX}, for 340 shares of VSDX).
+Use menu @samp{Reconcile Account} or keyboard shortcut @kbd{C-c C-r} to
+start reconciliation.
+
+If cursor is on an account, Ledger-mode will propose this account, or in
+the Minibuffer, will prompt for an account to reconcile. Hit @kbd{RET}
+if you are happy with proposed account, or enter @samp{Checking} as
+example. Ledger-mode is not particular about what you enter for the
+account.  You can leave it blank and @file{*Reconcile*} buffer will show
+you @emph{all} uncleared transactions.
+
+After you enter the account enter the target amount. It is helpful to
+enter an amount with a commodity. You can also leave it blank, you will
+be able to clear transactions but not benefit from balance calculations.
+It assumes initially that you are using @samp{$} (USD) as your default
+commodity.  If you are working in a different currency you can change
+the default in variable @option{ledger-reconcile-default-commodity} to
+whatever you need.  If you work in multiple commodities simply enter the
+commoditized amount (for example @samp{340 VSDX}, for 340 shares of
+VSDX).
 
 Ledger-mode reconcile cannot currently reconcile accounts that have
 multiple commodities, such as brokerage accounts. You may use
@@ -596,10 +608,16 @@ mark the transaction if appropriate.
 @node Finalize Reconciliation, Adding and Deleting Transactions during Reconciliation, Edit Transactions During Reconciliation, The Reconcile Buffer
 @section Finalize Reconciliation
 @cindex reconciliation, finalizing
+@kindex C-c C-c
+@kindex q
 
 Once you have marked all transactions as pending and the cleared balance
 is correct.  Finish the reconciliation by typing @kbd{C-c C-c}.  This
 marks all pending transactions as cleared and saves the ledger buffer.
+
+Type @kbd{q} to close out the reconciliation buffer. If variable
+@var{ledger-reconcile-finish-force-quit} is set, the reconciliation
+buffer will be killed automatically after @kbd{C-c C-c}.
 
 @node Adding and Deleting Transactions during Reconciliation, Changing Reconciliation Account, Finalize Reconciliation, The Reconcile Buffer
 @section Adding and Deleting Transactions during Reconciliation
@@ -866,7 +884,7 @@ recurrence relation to be specified.  The day names are two character
 codes that default to Mo, Tu, We, Th, Fr, Sa, Su, for Monday, Tuesday,
 Wednesday, Thursday, Friday, Saturday, Sunday respectively.  You can
 change the codes to something more convenient for your locale by
-customizing the ledger @var{ledger-schedule-week-days}. They must be two
+customizing the ledger @option{ledger-schedule-week-days}. They must be two
 characters long.
 
 
@@ -951,7 +969,7 @@ false toggle between uncleared and cleared @samp{*}.
 
 @item ledger-reconcile-default-date-format
 Date format for the reconcile buffer. Defaults to
-ledger-default-date-format.
+@option{ledger-default-date-format}.
 
 @item ledger-reconcile-target-prompt-string
 Prompt for recon target. Defaults to "Target amount for reconciliation ".
@@ -964,11 +982,11 @@ header will be displayed.  Defaults to "Reconciling account %s\n\n".
 @item ledger-reconcile-buffer-line-format
 Format string for the ledger reconcile posting format.  Available fields
 are date, status, code, payee, account, amount.  The format for each
-field is %WIDTH(FIELD), WIDTH can be preced by a minus sign which mean
+field is %WIDTH(FIELD), WIDTH can be preceded by a minus sign which mean
 to left justify and pad the field.  WIDTH is the minimum number of
 characters to display; if string is longer, it is not truncated unless
-ledger-reconcile-buffer-payee-max-chars or
-ledger-reconcile-buffer-account-max-chars is defined.  Defaults to
+@option{ledger-reconcile-buffer-payee-max-chars} or
+@option{ledger-reconcile-buffer-account-max-chars} is defined.  Defaults to
 "%(date)s %-4(code)s %-50(payee)s %-30(account)s %15(amount)s\n"
 
 @item ledger-reconcile-buffer-payee-max-chars
@@ -985,6 +1003,9 @@ ledger file order. Defaults to '(0)'.
 @item ledger-reconcile-insert-effective-date nil
 If t, prompt for effective date when clearing transactions during
 reconciliation.
+
+@item ledger-reconcile-finish-force-quit nil
+If t, will force closing reconcile window after @kbd{C-c C-c}.
 
 @end ftable
 
