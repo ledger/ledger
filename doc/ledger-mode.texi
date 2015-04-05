@@ -606,10 +606,16 @@ mark the transaction if appropriate.
 @node Finalize Reconciliation, Adding and Deleting Transactions during Reconciliation, Edit Transactions During Reconciliation, The Reconcile Buffer
 @section Finalize Reconciliation
 @cindex reconciliation, finalizing
+@kindex C-c C-c
+@kindex q
 
 Once you have marked all transactions as pending and the cleared balance
 is correct.  Finish the reconciliation by typing @kbd{C-c C-c}.  This
 marks all pending transactions as cleared and saves the ledger buffer.
+
+Type @kbd{q} to close out the reconciliation buffer. If variable
+@var{ledger-reconcile-finish-force-quit} is set, the reconciliation
+buffer will be killed automatically after @kbd{C-c C-c}.
 
 @node Adding and Deleting Transactions during Reconciliation, Changing Reconciliation Account, Finalize Reconciliation, The Reconcile Buffer
 @section Adding and Deleting Transactions during Reconciliation
@@ -995,6 +1001,9 @@ ledger file order. Defaults to '(0)'.
 @item ledger-reconcile-insert-effective-date nil
 If t, prompt for effective date when clearing transactions during
 reconciliation.
+
+@item ledger-reconcile-finish-force-quit nil
+If t, will force closing reconcile window after @kbd{C-c C-c}.
 
 @end ftable
 
