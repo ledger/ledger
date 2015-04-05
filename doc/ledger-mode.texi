@@ -194,8 +194,10 @@ outside world.  This process is called reconciliation (@pxref{Basics of
 Reconciliation}) and can be quite onerous.  Ledger-mode attempts to make
 it as painless as possible.
 
-In the @file{demo.ledger} buffer type @kbd{C-c C-r}.  Emacs will prompt
-for an account to reconcile in the Minibuffer.  Enter @samp{Checking}.
+In the @file{demo.ledger} buffer type @kbd{C-c C-r}.  If cursor is on an
+account, Ledger-mode will propose this account, or in the Minibuffer,
+will prompt for an account to reconcile.  Hit @kbd{RET} if you are happy
+with proposed account, or enter @samp{Checking} as example.
 Emacs will then prompt for a target value.  The target value is the
 amount you want the cleared transactions in the buffer to total.
 Normally this would be the ending value from your bank statement, or the
@@ -550,17 +552,25 @@ about.  You can get this from a monthly statement, or from checking your
 on-line transaction history.  It also helps immensely to know the final
 cleared balance you are aiming for.
 
-Use menu @samp{Reconcile Account} or keyboard shortcut @kbd{C-c C-r} and enter the account
-you wish to reconcile in the Minibuffer.  Ledger-mode is not particular
-about what you enter for the account.  You can leave it blank and
-@file{*Reconcile*} buffer will show you @emph{all} uncleared
-transactions.  After you enter the account enter the target amount.
-Ledger expects you to enter an amount with a commodity.  It assumes
-initially that you are using @samp{$} (USD) as your default commodity.
-If you are working in a different currency you can change the default in
-variable @option{ledger-reconcile-default-commodity} to whatever you
-need.  If you work in multiple commodities simply enter the commoditized
-amount (for example @samp{340 VSDX}, for 340 shares of VSDX).
+Use menu @samp{Reconcile Account} or keyboard shortcut @kbd{C-c C-r} to
+start reconciliation.
+
+If cursor is on an account, Ledger-mode will propose this account, or in
+the Minibuffer, will prompt for an account to reconcile. Hit @kbd{RET}
+if you are happy with proposed account, or enter @samp{Checking} as
+example. Ledger-mode is not particular about what you enter for the
+account.  You can leave it blank and @file{*Reconcile*} buffer will show
+you @emph{all} uncleared transactions.
+
+After you enter the account enter the target amount. It is helpful to
+enter an amount with a commodity. You can also leave it blank, you will
+be able to clear transactions but not benefit from balance calculations.
+It assumes initially that you are using @samp{$} (USD) as your default
+commodity.  If you are working in a different currency you can change
+the default in variable @option{ledger-reconcile-default-commodity} to
+whatever you need.  If you work in multiple commodities simply enter the
+commoditized amount (for example @samp{340 VSDX}, for 340 shares of
+VSDX).
 
 Ledger-mode reconcile cannot currently reconcile accounts that have
 multiple commodities, such as brokerage accounts. You may use

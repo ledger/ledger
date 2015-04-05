@@ -32,9 +32,9 @@
 ;; `ledger-single-line-config' macro to form the regex and list of
 ;; elements
 (defconst ledger-indent-string "\\(^[ \t]+\\)")
-(defconst ledger-status-string "\\([*! ]?\\)")
+(defconst ledger-status-string "\\(* \\|! \\)?")
 (defconst ledger-account-string "[\\[(]?\\(.*?\\)[])]?")
-(defconst ledger-separator-string "\\s-\\s-")
+(defconst ledger-separator-string "\\s-\\s-+")
 (defconst ledger-amount-string "\\(-?[0-9]+[\\.,][0-9]*\\)")
 (defconst ledger-comment-string "[ \t]*;[ \t]*\\(.*?\\)")
 (defconst ledger-nil-string "\\([ \t]\\)")
