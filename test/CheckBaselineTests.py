@@ -26,17 +26,18 @@ class CheckBaselineTests (CheckOptions):
         'file',
         'force-color',
         'force-pager',
+        'generated',
         'help',
         'import',
         'no-color',
         'no-pager',
         'options',
         'price-exp',
-        'revalued-total',
         'seed',
         'trace',
         'verbose',
         'verify',
+        'verify-memory',
         'version'
     ]
 
