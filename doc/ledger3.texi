@@ -3986,8 +3986,8 @@ $ ledger --effective register Groceries
 @subsection Periodic Transactions
 @findex --budget
 
-A periodic transaction starts with a @samp{~} followed by a period
-expression.  Periodic transactions are used for budgeting and
+A periodic transaction starts with a tilde @samp{~} followed by a period
+expression (see @ref{Period Expressions}).  Periodic transactions are used for budgeting and
 forecasting only, they have no effect without the @option{--budget}
 option specified.  For examples and details, @pxref{Budgeting and
 Forecasting}.
