@@ -10008,9 +10008,9 @@ In case several test files belong to the same bug number the files by appending
 @anchor{Baseline Test Types}
 @multitable @columnfractions .3 .7
 @headitem Type @tab Use
-@item @code{cmd} @tab Ledger commands like @code{register} or @code{balance}
-@item @code{dir} @tab ?
-@item @code{feat} @tab ?
+@item @code{cmd} @tab Ledger commands like @command{register} or @command{balance}
+@item @code{dir} @tab Ledger directives like @code{account} or @code{alias}
+@item @code{feat} @tab Ledger features such as balance assertions in journal file.
 @item @code{opt} @tab Ledger options such as @option{--period} or @option{--format}
 @end multitable
 
