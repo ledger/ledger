@@ -10005,14 +10005,18 @@ In case several test files belong to the same bug number the files by appending
 @code{_X} where @samp{X} is the number of the test, e.g. @samp{1234_1.test},
 @samp{1234_2.test}.
 
+Baseline Test Types:
 @anchor{Baseline Test Types}
-@multitable @columnfractions .3 .7
-@headitem Type @tab Use
-@item @code{cmd} @tab Ledger commands like @command{register} or @command{balance}
-@item @code{dir} @tab Ledger directives like @code{account} or @code{alias}
-@item @code{feat} @tab Ledger features such as balance assertions in journal file.
-@item @code{opt} @tab Ledger options such as @option{--period} or @option{--format}
-@end multitable
+@table @code
+@item cmd
+Ledger commands like @command{register} or @command{balance}
+@item dir
+Ledger directives like @code{account} or @code{alias}
+@item feat
+Ledger features such as balance assertions in journal file
+@item opt
+Ledger options such as @option{--period} or @option{--format}
+@end table
 
 A ledger test file contains three sections:
 
