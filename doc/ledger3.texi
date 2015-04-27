@@ -5908,7 +5908,9 @@ database.
 Display the man page for @file{ledger}.
 
 @item --init-file @var{FILE}
-Specify the location of the init file.  The default is @file{~/.ledgerrc}.
+Specify the location of the init file.  The default is home directory
+@file{~/.ledgerrc}, or current directory @file{./.ledgerrc} if not found
+in home directory.
 
 @item --options
 Display the options in effect for this Ledger invocation, along with
