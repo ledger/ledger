@@ -6752,7 +6752,7 @@ Often set in one's @file{~/.ledgerrc} file to change the default.
 
 @item --unrealized-losses @var{STR}
 Allow the user to specify what account name should be used for
-unrealized gains.  Defaults to @samp{"Equity:Unrealized Losses"}.
+unrealized losses.  Defaults to @samp{"Equity:Unrealized Losses"}.
 Often set in one's @file{~/.ledgerrc} file to change the default.
 
 @item --unround
