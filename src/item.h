@@ -174,11 +174,7 @@ public:
   static bool use_aux_date;
 
   virtual bool has_date() const {
-#if BOOST_VERSION >= 105600
-    return _date != NULL;
-#else
-    return _date;
-#endif
+    return _date != boost::none;
   }
 
   virtual date_t date() const {

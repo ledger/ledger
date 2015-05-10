@@ -500,11 +500,7 @@ public:
   void   stabilize(const optional<date_t>& date = none);
 
   bool   is_valid() const {
-#if BOOST_VERSION >= 105600
-    return start != NULL;
-#else
-    return start;
-#endif
+    return start != boost::none;
   }
 
   /** Find the current or next period containing date.  Returns false if
