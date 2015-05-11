@@ -96,7 +96,7 @@ namespace {
       TRACE_DTOR(create_price_xact);
     }
 
-    void operator()(datetime_t& date, const amount_t& price) {
+    void operator()(const datetime_t& date, const amount_t& price) {
       xact_t * xact;
       string   symbol = price.commodity().symbol();
 

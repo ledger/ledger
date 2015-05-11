@@ -205,11 +205,7 @@ public:
   mutable optional<xdata_t> xdata_;
 
   bool has_xdata() const {
-#if BOOST_VERSION >= 105600
-    return xdata_ != NULL;
-#else
-    return xdata_;
-#endif
+    return xdata_ != boost::none;
   }
   void clear_xdata() {
     xdata_ = none;
