@@ -118,7 +118,7 @@ public:
 
   ptr_op_t parse(std::istream&           in,
                  const parse_flags_t&    flags           = PARSE_DEFAULT,
-                 const optional<string>& original_string = boost::none);
+                 const optional<string>& original_string = NULL);
 };
 
 } // namespace ledger
