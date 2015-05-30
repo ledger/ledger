@@ -100,22 +100,14 @@ at beginning of account"
   (let ((bounds (ledger-navigate-find-xact-extents pos)))
     (ledger-post-align-postings (car bounds) (cadr bounds))))
 
-(defun ledger-post-align-postings (&optional beg end)
-  "Align all accounts and amounts between BEG and END, or the current line."
-  (interactive)
+(defun ledger-post-align-postings (beg end)
+  "Align all accounts and amounts between BEG and END, or the current region, or, if no region, the current line."
+  (interactive "r")
 
   (save-excursion
-    (if (or (not (mark))
-            (not (use-region-p)))
-        (set-mark (point)))
-
     (let ((inhibit-modification-hooks t)
-          (mark-first (< (mark) (point)))
           acct-start-column acct-end-column acct-adjust amt-width amt-adjust
           (lines-left 1))
-
-      (unless beg (setq beg (if mark-first (mark) (point))))
-      (unless end (setq end (if mark-first (mark) (point))))
 
       ;; Extend region to whole lines
       (let ((start-marker (set-marker (make-marker) (save-excursion
