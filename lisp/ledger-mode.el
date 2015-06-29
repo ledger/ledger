@@ -159,7 +159,7 @@ Can indent, complete or align depending on context."
     (if (and (> (point) 1)
              (looking-back "\\([^ \t]\\)" 1))
         (ledger-pcomplete interactively)
-      (ledger-post-align-postings))))
+      (ledger-post-align-postings (line-beginning-position) (line-end-position)))))
 
 (defvar ledger-mode-abbrev-table)
 
