@@ -32,6 +32,7 @@
 #include <system.hh>
 
 #include "pyinterp.h"
+#include "pyutils.h"
 #include "scope.h"
 #include "mask.h"
 #include "item.h"
@@ -64,6 +65,13 @@ namespace {
     return item.get_tag(tag_mask, value_mask);
   }
 
+  std::string py_position_pathname(position_t const& pos) {
+    return pos.pathname.native();
+  }
+  void py_position_set_pathname(position_t& pos, string const& s) {
+    pos.pathname = s;
+  }
+
 } // unnamed namespace
 
 #if 0
@@ -79,8 +87,8 @@ void export_item()
 {
   class_< position_t > ("Position")
     .add_property("pathname",
-                  make_getter(&position_t::pathname),
-                  make_setter(&position_t::pathname))
+                  make_function(py_position_pathname),
+                  make_function(py_position_set_pathname))
     .add_property("beg_pos",
                   make_getter(&position_t::beg_pos),
                   make_setter(&position_t::beg_pos))
@@ -169,6 +177,8 @@ void export_item()
 
     .def("valid", &item_t::valid)
     ;
+
+  register_optional_to_python<position_t>();
 }
 
 } // namespace ledger

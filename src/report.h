@@ -764,6 +764,10 @@ public:
       OTHER(color).off();
     });
 
+  OPTION_(report_t, no_revalued, DO() {
+      OTHER(revalued).off();
+    });
+
   OPTION(report_t, no_rounding);
   OPTION(report_t, no_titles);
   OPTION(report_t, no_total);

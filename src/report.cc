@@ -1198,6 +1198,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT_CH(collapse);
     else OPT(no_color);
     else OPT(no_pager);
+    else OPT(no_revalued);
     else OPT(no_rounding);
     else OPT(no_titles);
     else OPT(no_total);
