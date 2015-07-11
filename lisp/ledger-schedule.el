@@ -202,12 +202,10 @@ the transaction should be logged for that day."
 (defun ledger-schedule-compile-constraints (descriptor-string)
   "Return a list with the year, month and day fields split."
   (let ((fields (split-string descriptor-string "[/\\-]" t)))
-    (if (string-match "[A-Za-z]" descriptor-string)
-        (ledger-schedule-constrain-day (nth 0 fields) (nth 1 fields) (nth 2 fields))
-      (list 'and
-            (ledger-schedule-constrain-day (nth 0 fields) (nth 1 fields) (nth 2 fields))
-            (ledger-schedule-constrain-year (nth 0 fields) (nth 1 fields) (nth 2 fields))
-            (ledger-schedule-constrain-month (nth 0 fields) (nth 1 fields) (nth 2 fields))))))
+    (list 'and
+          (ledger-schedule-constrain-day (nth 0 fields) (nth 1 fields) (nth 2 fields))
+          (ledger-schedule-constrain-year (nth 0 fields) (nth 1 fields) (nth 2 fields))
+          (ledger-schedule-constrain-month (nth 0 fields) (nth 1 fields) (nth 2 fields)))))
 
 (defun ledger-schedule-constrain-year (year-desc month-desc day-desc)
   "Return a form that constrains the year.
