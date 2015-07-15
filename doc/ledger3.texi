@@ -3432,7 +3432,7 @@ but is not required to be used with them:
 
 It should be noted that this is a convenience only for cases where you
 buy and sell whole lots.  The @{@{$500.00@}@} is @emph{not} an attribute
-of the commodity, whereas @{$5.00@} is.  In fact, when you write
+of the commodity, whereas @{$50.00@} is.  In fact, when you write
 @{@{$500.00@}@}, Ledger just divides that value by 10 and sees
 @{$50.00@}.  So if you use the print command to look at this
 transaction, you'll see the single braces form in the output.  The
