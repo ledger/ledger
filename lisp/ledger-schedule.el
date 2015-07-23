@@ -212,27 +212,31 @@ the transaction should be logged for that day."
 
 YEAR-DESC, MONT-DESC, and DAY-DESC are the string portions of the
 date descriptor."
-  (cond ((string= year-desc "*") t)
-        ((/= 0 (string-to-number year-desc))
-         `(memq (nth 5 (decode-time date)) ',(mapcar 'string-to-number (split-string year-desc ","))))
-        (t
-         (error "Improperly specified year constraint: %s %s %s" year-desc month-desc day-desc))))
+  (cond
+   ((string-match "[A-Za-z]" day-desc) t) ; there is an advanced day descriptor which overrides the year
+   ((string= year-desc "*") t)
+   ((/= 0 (string-to-number year-desc))
+    `(memq (nth 5 (decode-time date)) ',(mapcar 'string-to-number (split-string year-desc ","))))
+   (t
+    (error "Improperly specified year constraint: %s %s %s" year-desc month-desc day-desc))))
 
 (defun ledger-schedule-constrain-month (year-desc month-desc day-desc)
   "Return a form that constrains the month.
 
 YEAR-DESC, MONT-DESC, and DAY-DESC are the string portions of the
 date descriptor."
-  (cond ((string= month-desc "*")
-         t)  ;; always match
-        ((string= month-desc "E")  ;; Even
-         `(evenp (nth 4 (decode-time date))))
-        ((string= month-desc "O")  ;; Odd
-         `(oddp (nth 4 (decode-time date))))
-        ((/= 0 (string-to-number month-desc)) ;; Starts with number
-         `(memq (nth 4 (decode-time date)) ',(mapcar 'string-to-number (split-string month-desc ","))))
-        (t
-         (error "Improperly specified month constraint: %s %s %s" year-desc month-desc day-desc))))
+  (cond
+   ((string-match "[A-Za-z]" day-desc) t) ; there is an advanced day descriptor which overrides the month
+   ((string= month-desc "*")
+    t)  ;; always match
+   ((string= month-desc "E")  ;; Even
+    `(evenp (nth 4 (decode-time date))))
+   ((string= month-desc "O")  ;; Odd
+    `(oddp (nth 4 (decode-time date))))
+   ((/= 0 (string-to-number month-desc)) ;; Starts with number
+    `(memq (nth 4 (decode-time date)) ',(mapcar 'string-to-number (split-string month-desc ","))))
+   (t
+    (error "Improperly specified month constraint: %s %s %s" year-desc month-desc day-desc))))
 
 (defun ledger-schedule-constrain-day (year-desc month-desc day-desc)
   "Return a form that constrains the day.
