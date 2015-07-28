@@ -2,32 +2,60 @@
 # provides GNU GCC 4.6, which does not support -std=c++11 GNU GCC 4.8 is installed
 
 # NOTE: Please validate this file after editing it using
-#       Travis WebLint http://lint.travis-ci.org/
-#       or travis-yaml https://github.com/travis-ci/travis-yaml
+#       Travis WebLint https://lint.travis-ci.org/
+#       or travis-lint https://github.com/travis-ci/travis-lint
 
 language: cpp
 compiler:
   - clang
   - gcc
+sudo: false
+cache:
+  apt: true
+
+matrix:
+  include:
+    - os: linux
+      compiler: clang
+    - os: linux
+      compiler: g++-4.8
+    - os: osx
+      compiler: clang
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - boost-latest
+    packages:
+      - gcc-4.8
+      - g++-4.8
+      - libgmp-dev
+      - libmpfr-dev
+      - libedit-dev
+      - libboost1.55-dev
+      - libboost-test1.55-dev
+      - libboost-regex1.55-dev
+      - libboost-python1.55-dev
+      - libboost-system1.55-dev
+      - libboost-date-time1.55-dev
+      - libboost-iostreams1.55-dev
+      - libboost-filesystem1.55-dev
+      - libboost-serialization1.55-dev
 
 before_install:
-    # Add software package repositories with recent versions of gcc and boost
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test --yes
-  - sudo add-apt-repository ppa:boost-latest/ppa --yes
-  - sudo apt-get update -qq
+  - if [[ "${TRAVIS_OS_NAME}" == osx ]]; then brew update; fi
 
-install: 
-    # Install GNU GCC 4.8 required by use of C++11
-  - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8 gcc-4.8; fi
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
-    # Install Ledger dependencies
-  - sudo apt-get install -qq libboost1.55 libgmp-dev libmpfr-dev libeditline-dev
+install:
+  - if [[ "${TRAVIS_OS_NAME}" == osx ]]; then for formula in gmp mpfr boost boost-python; do brew outdated $formula || brew install $formula; done; fi
 
 before_script:
-  - ./acprep debug make --python
+  #- if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+  - cmake . -DUSE_PYTHON=ON
+  - make
 
 script:
-  - ./acprep check --jobs $(nproc) -- --output-on-failure
+  - make test
   - PYTHONPATH=. python python/demo.py
 
 notifications:
