@@ -225,7 +225,7 @@ macro(add_ledger_library_dependencies _target)
     target_link_libraries(${_target} ${INTL_LIB})
   endif()
   if (HAVE_BOOST_PYTHON)
-    if(APPLE)
+    if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
       # Don't link directly to a Python framework on OS X, to avoid segfaults
       # when the module is imported from a different interpreter
       target_link_libraries(${_target} ${Boost_LIBRARIES})

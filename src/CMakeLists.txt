@@ -273,7 +273,7 @@ if (BUILD_LIBRARY)
 
   add_executable(ledger main.cc global.cc)
   target_link_libraries(ledger libledger)
-  if (APPLE AND HAVE_BOOST_PYTHON)
+  if (CMAKE_SYSTEM_NAME STREQUAL Darwin AND HAVE_BOOST_PYTHON)
     target_link_libraries(ledger ${PYTHON_LIBRARIES})
   endif()
 
@@ -297,7 +297,7 @@ print(s.get_python_lib(True, prefix=''))"
   if (PYTHON_SITE_PACKAGES)
     if (WIN32 AND NOT CYGWIN)
       set(_ledger_python_module_name "ledger.pyd")
-    elseif(CMAKE_HOST_APPLE)
+    elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
       set(_ledger_python_module_name "ledger.so")
     else()
       set(_ledger_python_module_name "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
