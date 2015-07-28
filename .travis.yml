@@ -7,35 +7,75 @@
 
 language: cpp
 compiler:
-  - clang
   - gcc
+  - clang
+os:
+  - linux
+  - osx
 sudo: false
 cache:
   apt: true
+
+env:
+  global:
+      # Boost version to use.
+    - BOOST_VERSION="1.58.0"
+      # List of required boost libraries to build
+    - BOOST_LIBS="date_time,filesystem,iostreams,python,regex,system,test"
+      # List of required Homebrew formulae to install
+    - BREWS="gmp,mpfr"
+
+matrix:
+  exclude:
+    - os: linux
+      compiler: clang
+      # Compiling ledger on Linux with clang
+      # either crashes clang or results in a ledger binary that crashes with SIGSEGV.
+    - os: osx
+      compiler: gcc
+      # On Mac OS X building ledger with GNU GCC 4.8 fails due to
+      # undefined symbols, maybe because boost was not being built with g++-4.8.
+      # Undefined symbols for architecture x86_64:
+      # "boost::re_detail::perl_matcher<char const*, std::allocator<boost::sub_match<char const*> >, boost::regex_traits<char, boost::cpp_regex_traits<char> > >::construct_init(boost::basic_regex<char, boost::regex_traits<char, boost::cpp_regex_traits<char> > > const&, boost::regex_constants::_match_flags)", referenced from:
+      #     boost::re_detail::perl_matcher<char const*, std::allocator<boost::sub_match<char const*> >, boost::regex_traits<char, boost::cpp_regex_traits<char> > >::perl_matcher(char const*, char const*, boost::match_results<char const*, std::allocator<boost::sub_match<char const*> > >&, boost::basic_regex<char, boost::regex_traits<char, boost::cpp_regex_traits<char> > > const&, boost::regex_constants::_match_flags, char const*) in main.cc.o
+      #     boost::re_detail::perl_matcher<char const*, std::allocator<boost::sub_match<char const*> >, boost::regex_traits<char, boost::cpp_regex_traits<char> > >::perl_matcher(char const*, char const*, boost::match_results<char const*, std::allocator<boost::sub_match<char const*> > >&, boost::basic_regex<char, boost::regex_traits<char, boost::cpp_regex_traits<char> > > const&, boost::regex_constants::_match_flags, char const*) in global.cc.o
+      # "boost::re_detail::perl_matcher<char const*, std::allocator<boost::sub_match<char const*> >, boost::regex_traits<char, boost::cpp_regex_traits<char> > >::find()", referenced from:
+      #     bool boost::regex_search<char const*, char, boost::regex_traits<char, boost::cpp_regex_traits<char> > >(char const*, char const*, boost::basic_regex<char, boost::regex_traits<char, boost::cpp_regex_traits<char> > > const&, boost::regex_constants::_match_flags) in main.cc.o
+      #     bool boost::regex_search<char const*, char, boost::regex_traits<char, boost::cpp_regex_traits<char> > >(char const*, char const*, boost::basic_regex<char, boost::regex_traits<char, boost::cpp_regex_traits<char> > > const&, boost::regex_constants::_match_flags) in global.cc.o
 
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - boost-latest
+      #- boost-latest
     packages:
       - gcc-4.8
       - g++-4.8
       - libgmp-dev
       - libmpfr-dev
       - libedit-dev
-      - libboost1.55-dev
-      - libboost-test1.55-dev
-      - libboost-regex1.55-dev
-      - libboost-python1.55-dev
-      - libboost-system1.55-dev
-      - libboost-date-time1.55-dev
-      - libboost-iostreams1.55-dev
-      - libboost-filesystem1.55-dev
-      - libboost-serialization1.55-dev
+      #- libboost1.55-dev
+      #- libboost-test1.55-dev
+      #- libboost-regex1.55-dev
+      #- libboost-python1.55-dev
+      #- libboost-system1.55-dev
+      #- libboost-date-time1.55-dev
+      #- libboost-iostreams1.55-dev
+      #- libboost-filesystem1.55-dev
+      #- libboost-serialization1.55-dev
+
+before_install:
+  - if [ -n "${BOOST_VERSION}" ]; then export BOOST_ROOT="${TRAVIS_BUILD_DIR}/../boost-trunk"; export CMAKE_MODULE_PATH="${BOOST_ROOT}"; fi
+  - if [ "${CXX}" = "g++" ]; then export CXX="$(which g++-4.8)"; export CC="$(which gcc-4.8)"; fi
+  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then export DYLD_LIBRARY_PATH="${BOOST_ROOT}/lib"; fi
+    # c++ is a symlink to clang++, but the compiler behaves differently when invoked as c++
+  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${CXX}" = "clang++" ]; then export CXX="$(which c++)"; export CC="$(which cc)"; fi
+  - tools/travis-before_install.sh
+
+install:
+  - tools/travis-install.sh
 
 before_script:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
   - cmake . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON
   - make
 
@@ -44,6 +84,8 @@ script:
   - PYTHONPATH=. python python/demo.py
 
 after_script:
+  # These scripts are run for informational purposes and
+  # should be reintegrated into CTest once they reliably verify the documentation.
   - python test/CheckTexinfo.py -l ledger -s .
   - python test/CheckManpage.py -l ledger -s .
 
