@@ -273,6 +273,9 @@ if (BUILD_LIBRARY)
 
   add_executable(ledger main.cc global.cc)
   target_link_libraries(ledger libledger)
+  if (APPLE AND HAVE_BOOST_PYTHON)
+    target_link_libraries(ledger ${PYTHON_LIBRARIES})
+  endif()
 
   install(TARGETS libledger DESTINATION ${CMAKE_INSTALL_LIBDIR})
   install(FILES ${LEDGER_INCLUDES}
