@@ -8,6 +8,8 @@
 
 - Fixed parsing of transactions with single-character payees and comments
 
+- Fixed crash when using -M with empty result
+
 - Fixed sorting for option --auto-match
 
 - Fixed treatment of "year 2015" and "Y2014" directives
