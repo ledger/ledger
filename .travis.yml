@@ -13,15 +13,6 @@ sudo: false
 cache:
   apt: true
 
-matrix:
-  include:
-    - os: linux
-      compiler: clang
-    - os: linux
-      compiler: g++-4.8
-    - os: osx
-      compiler: clang
-
 addons:
   apt:
     sources:
@@ -43,14 +34,8 @@ addons:
       - libboost-filesystem1.55-dev
       - libboost-serialization1.55-dev
 
-before_install:
-  - if [[ "${TRAVIS_OS_NAME}" == osx ]]; then brew update; fi
-
-install:
-  - if [[ "${TRAVIS_OS_NAME}" == osx ]]; then for formula in gmp mpfr boost boost-python; do brew outdated $formula || brew install $formula; done; fi
-
 before_script:
-  #- if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
   - cmake . -DUSE_PYTHON=ON
   - make
 
