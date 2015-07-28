@@ -47,7 +47,9 @@ if (PYTHONINTERP_FOUND)
     set_target_properties(check PROPERTIES DEPENDS ${_class}Test_${TestFile_Name})
   endforeach()
 
-  list(APPEND CheckOptions CheckManpage CheckTexinfo CheckBaselineTests)
+  # CheckManpage and CheckTexinfo are disabled, since they do not work
+  # reliably yet, instead they are being run as a Travis CI report.
+  list(APPEND CheckOptions CheckBaselineTests) #CheckManpage CheckTexinfo
   foreach(_class ${CheckOptions})
     add_test(NAME ${_class}
       COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/${_class}.py

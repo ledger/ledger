@@ -36,12 +36,16 @@ addons:
 
 before_script:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
-  - cmake . -DUSE_PYTHON=ON
+  - cmake . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON
   - make
 
 script:
   - make test
   - PYTHONPATH=. python python/demo.py
+
+after_script:
+  - python test/CheckTexinfo.py -l ledger -s .
+  - python test/CheckManpage.py -l ledger -s .
 
 notifications:
   email:
