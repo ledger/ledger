@@ -6543,7 +6543,7 @@ Stop Ledger from showing @code{<Revalued>} postings.  This option is useful
 in combination with the @option{--exchange} or @option{--market} option.
 
 @item --no-rounding
-Don't output @samp{<Rounding>} postings.  Note that this will cause the
+Don't output @samp{<Adjustment>} postings.  Note that this will cause the
 running total to often not add up!  Its main use is for
 @option{--amount-data (-j)} and @option{--total-data (-J)} reports.
 
