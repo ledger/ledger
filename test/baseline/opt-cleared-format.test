@@ -1,4 +1,4 @@
-test tags --file test/input/drewr3.dat --cleared-format '%-30(account) %15(get_at(total_expr, 0)) %15(get_at(total_expr, 1))\n%/'
+test cleared --file test/input/drewr3.dat --cleared-format "%-30(account) %15(get_at(total_expr, 0)) %15(get_at(total_expr, 1))\n%/"
 Assets                             $ -3,804.00        $ 775.00
 Assets:Checking                     $ 1,396.00        $ 775.00
 Assets:Checking:Business               $ 30.00               0
