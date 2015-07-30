@@ -7,7 +7,7 @@ D 1000.00 DM
     Assets:Investments                             2 FOO @@ 20.00 EUR
     Assets:Cash                                            -20.00 EUR
 
-2015-05-01 * Buy 2 FOO
+2015-05-01 * Spend on food
     Expenses:Food                                           20.00 USD
     ; Just to be silly, always valuate *these* $20 as 30 DM, no matter what
     ; the user asks for with -V or -X
