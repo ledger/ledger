@@ -8113,7 +8113,7 @@ Render the given @var{expression} as a string, applying the proper ANSI escape
 codes to display it in the given @var{color} if @var{bool} is true.  It
 typically checks the value of the option @option{--color}.  Since ANSI escape
 codes include non-printable character sequences, such as escape @kbd{^[}
-the following example may not appear as the final result on the commandline.
+the following example may not appear as the final result on the command-line.
 @smallexample @c command:4D836EE,with_input:3406FC1
 $ ledger -f expr.dat --format "%(ansify_if(account, blue, options.color))\n" reg
 @end smallexample
