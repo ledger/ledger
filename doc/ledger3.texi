@@ -7874,7 +7874,7 @@ considering children.
 The cost of a posting; the cost of an account, without its
 children.
 
-@item l
+@item depth
 The depth (``level'') of an account.  If an account has one parent,
 its depth is one.
 

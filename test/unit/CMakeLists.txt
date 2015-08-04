@@ -12,7 +12,7 @@ if (BUILD_LIBRARY)
   endif()
   add_ledger_test(UtilTests)
 
-  add_executable(MathTests t_amount.cc t_commodity.cc t_balance.cc t_expr.cc)
+  add_executable(MathTests t_amount.cc t_commodity.cc t_balance.cc t_expr.cc t_value.cc)
   set_source_files_properties(t_amount.cc PROPERTIES COMPILE_FLAGS "-Wno-unused-comparison")
   if (CMAKE_SYSTEM_NAME STREQUAL Darwin AND HAVE_BOOST_PYTHON)
     target_link_libraries(MathTests ${PYTHON_LIBRARIES})
