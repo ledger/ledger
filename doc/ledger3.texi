@@ -7874,7 +7874,14 @@ considering children.
 The cost of a posting; the cost of an account, without its
 children.
 
-@item depth
+@item v
+The market value of a posting or an account, without its children.
+
+@item g
+The net gain (market value minus cost basis), for a posting or an
+account, without its children.  It is the same as @samp{v-b}.
+
+@item l
 The depth (``level'') of an account.  If an account has one parent,
 its depth is one.
 
