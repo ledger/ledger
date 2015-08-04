@@ -52,10 +52,10 @@ addons:
   coverity_scan:
     project:
       name: "ledger/ledger"
-      description: "Build submitted via Travis CI>"
+      description: "Build submitted via Travis CI"
     build_command_prepend: "cmake . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON -DCLANG_GCOV=ON"
     build_command: "make"
-    branch_pattern: coverity_scan
+    branch_pattern: coverity
   apt:
     sources:
       - ubuntu-toolchain-r-test
