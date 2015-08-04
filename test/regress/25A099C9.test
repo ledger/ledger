@@ -1,0 +1,61 @@
+test -f test/garbage-input.dat reg -> 29
+__ERROR__
+While parsing file "$sourcepath/test/garbage-input.dat", line 1:
+Error: Directive '/*' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 32:
+Error: Directive '/**' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 36:
+Error: Directive '/**' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 66:
+Error: No quantity specified for amount
+While parsing file "$sourcepath/test/garbage-input.dat", line 69:
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/test/garbage-input.dat", line 78:
+Error: Directive '};' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 82:
+Error: Directive '/**' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 93:
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/test/garbage-input.dat", line 97:
+Error: Directive '{' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 98:
+Error: Directive 'public:' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 120:
+Error: Directive 'protected:' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 131:
+Error: Directive 'public:' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 711:
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/test/garbage-input.dat", line 740:
+Error: Directive 'private:' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 749:
+Error: Unexpected whitespace at beginning of line
+While parsing file "$sourcepath/test/garbage-input.dat", line 750:
+Error: Directive '};' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 752:
+Error: Invalid date/time: line amount_t amoun
+While parsing file "$sourcepath/test/garbage-input.dat", line 756:
+Error: Directive '}' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 758:
+Error: Invalid date/time: line string amount_
+While parsing file "$sourcepath/test/garbage-input.dat", line 762:
+Error: Directive '}' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 764:
+Error: Invalid date/time: line string amount_
+While parsing file "$sourcepath/test/garbage-input.dat", line 768:
+Error: Directive '}' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 770:
+Error: Invalid date/time: line string amount_
+While parsing file "$sourcepath/test/garbage-input.dat", line 774:
+Error: Directive '}' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 776:
+Error: Invalid date/time: line std::ostream& 
+While parsing file "$sourcepath/test/garbage-input.dat", line 782:
+Error: Directive '}' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 783:
+Error: Invalid date/time: line std::istream& 
+While parsing file "$sourcepath/test/garbage-input.dat", line 786:
+Error: Directive '}' requires an argument
+While parsing file "$sourcepath/test/garbage-input.dat", line 789:
+Error: Unexpected whitespace at beginning of line
+end test
