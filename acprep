@@ -490,17 +490,10 @@ class PrepareBuild(CommandLineApp):
     # Update local files with the latest information                        #
     #########################################################################
 
-    def phase_submodule(self, *args):
-        self.log.info('Executing phase: submodule')
-        if self.git_working_tree():
-            self.execute('git', 'submodule', 'init')
-            self.execute('git', 'submodule', 'update')
-
     def phase_pull(self, *args):
         self.log.info('Executing phase: pull')
         if self.git_working_tree():
             self.execute('git', 'pull')
-            self.phase_submodule()
 
     #########################################################################
     # Automatic installation of build dependencies                          #
@@ -569,6 +562,7 @@ class PrepareBuild(CommandLineApp):
                             'libedit-dev',
                             'texinfo',
                             'lcov',
+                            'libutfcpp-dev',
                             'sloccount'
                         ] + BoostInfo().dependencies('ubuntu-trusty')
                     elif re.search('saucy', info):
@@ -606,6 +600,7 @@ class PrepareBuild(CommandLineApp):
                             'libedit-dev',
                             'texinfo',
                             'lcov',
+                            'libutfcpp-dev',
                             'sloccount'
                         ] + BoostInfo().dependencies('ubuntu-precise')
                     else:
@@ -885,7 +880,6 @@ class PrepareBuild(CommandLineApp):
 
     def phase_config(self, *args):
         self.log.info('Executing phase: config')
-        self.phase_submodule()
         self.phase_configure(*args)
         if self.should_clean:
             self.phase_clean()
