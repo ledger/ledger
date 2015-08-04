@@ -423,7 +423,7 @@ class collapse_posts : public item_handler<post_t>
 {
 
   typedef std::map<string,value_t> totals_map;
-  
+
   expr_t&             amount_expr;
   predicate_t         display_predicate;
   predicate_t         only_predicate;

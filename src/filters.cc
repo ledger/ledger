@@ -448,7 +448,7 @@ void collapse_posts::report_subtotal()
     DEBUG("filters.collapse", "Pseudo-xact date = " << *xact._date);
     DEBUG("filters.collapse", "earliest date    = " << earliest_date);
     DEBUG("filters.collapse", "latest date      = " << latest_date);
-		
+
 		foreach (totals_map::value_type& pat, totals) {
 			handle_value(/* value=      */ pat.second,
 									 /* account=    */ &temps.create_account(pat.first),
@@ -476,10 +476,10 @@ value_t& collapse_posts::find_totals(account_t* account)
 
 	if(depth==0)
 		return totals[_("<Total>")];
-	
+
   if(account->depth==depth)
     return totals[account->fullname()];
-	
+
   //else recurse
   return find_totals(account->parent);
 }

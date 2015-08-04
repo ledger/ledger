@@ -152,7 +152,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       -Wno-unused-parameter
       -Wno-c++98-compat
       -fno-limit-debug-info)
-  
+
     macro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
       set(_pch_filename "${_header_filename}.pch")
 
@@ -188,7 +188,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} ${_args}
         DEPENDS ${_header_filename})
     endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
-  
+
   elseif(CMAKE_CXX_COMPILER MATCHES "g\\+\\+")
     set(GXX_WARNING_FLAGS
       -pedantic
@@ -210,7 +210,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       -Wno-strict-aliasing)
 
     add_definitions(${GXX_WARNING_FLAGS})
-  
+
     macro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
       set(_gch_filename "${_header_filename}.gch")
 
@@ -247,7 +247,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} ${_args}
         DEPENDS ${_header_filename})
     endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
-  
+
   else()
     macro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
     endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
