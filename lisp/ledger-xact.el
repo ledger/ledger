@@ -128,8 +128,7 @@ MOMENT is an encoded date"
   "Ask for a new DATE and copy the transaction under point to that date.  Leave point on the first amount."
   (interactive  (list
                  (ledger-read-date "Copy to date: ")))
-  (let* ((here (point))
-         (extents (ledger-navigate-find-xact-extents (point)))
+  (let* ((extents (ledger-navigate-find-xact-extents (point)))
          (transaction (buffer-substring-no-properties (car extents) (cadr extents)))
          encoded-date)
     (if (string-match ledger-iso-date-regexp date)
@@ -138,19 +137,27 @@ MOMENT is an encoded date"
                            (string-to-number (match-string 3 date))
                            (string-to-number (match-string 2 date)))))
     (ledger-xact-find-slot encoded-date)
-    (insert transaction "\n")
-    (ledger-navigate-beginning-of-xact)
-    (re-search-forward ledger-iso-date-regexp)
-    (replace-match date)
-    (ledger-next-amount)
-    (if (re-search-forward "[-0-9]")
-        (goto-char (match-beginning 0)))))
+    (let ((here (point)))
+      (insert transaction "\n")
+      (goto-char here)
+      (ledger-navigate-beginning-of-xact)
+      (re-search-forward ledger-iso-date-regexp)
+      (replace-match date)
+      (ledger-next-amount)
+      (if (re-search-forward "[-0-9]")
+          (goto-char (match-beginning 0))))))
 
 (defun ledger-delete-current-transaction (pos)
   "Delete the transaction surrounging POS."
   (interactive "d")
   (let ((bounds (ledger-navigate-find-xact-extents pos)))
     (delete-region (car bounds) (cadr bounds))))
+
+(defun ledger-kill-current-transaction (pos)
+  "Kill the transaction surrounging POS."
+  (interactive "d")
+  (let ((bounds (ledger-navigate-find-xact-extents pos)))
+    (kill-region (car bounds) (cadr bounds))))
 
 (defun ledger-add-transaction (transaction-text &optional insert-at-point)
   "Use ledger xact TRANSACTION-TEXT to add a transaction to the buffer.

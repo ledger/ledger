@@ -269,6 +269,7 @@ With a prefix argument, remove the effective date."
     (define-key map [(control ?c) (control ?p)] 'ledger-display-balance-at-point)
     (define-key map [(control ?c) (control ?l)] 'ledger-display-ledger-stats)
     (define-key map [(control ?c) (control ?q)] 'ledger-post-align-xact)
+    (define-key map [(control ?c) (control ?w)] 'ledger-kill-current-transaction)
 
     (define-key map [tab] 'ledger-magic-tab)
     (define-key map [(control tab)] 'ledger-post-align-xact)
@@ -299,6 +300,7 @@ With a prefix argument, remove the effective date."
     ["Add Transaction (ledger xact)" ledger-add-transaction ledger-works]
     ["Complete Transaction" ledger-fully-complete-xact]
     ["Delete Transaction" ledger-delete-current-transaction]
+    ["Kill Transaction" ledger-kill-current-transaction]
     "---"
     ["Calc on Amount" ledger-post-edit-amount]
     "---"

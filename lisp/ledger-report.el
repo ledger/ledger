@@ -327,6 +327,9 @@ Optional EDIT the command."
   (let ((data-pos (point))
         (register-report (string-match " reg\\(ister\\)? " cmd))
         files-in-report)
+    ;; set journal-file to ledger-file if not specified in cmd
+    (if (and (not (string-match "-f " cmd)) (not (string-match "--file" cmd)))
+        (setq cmd (concat cmd " -f " ledger-file)))
     (shell-command
      ;; --subtotal does not produce identifiable transactions, so don't
      ;; prepend location information for them
