@@ -93,7 +93,7 @@ before_script:
   - make
 
 script:
-  - make test
+  - ctest --output-on-failure
   - PYTHONPATH=. python python/demo.py
 
 after_script:
