@@ -2105,6 +2105,7 @@ the syntax @code{[ACTUAL_DATE]} or @code{[=EFFECTIVE_DATE]} or
 @item P
 @findex --download
 @findex P
+@cindex historical prices
 Specifies a historical price for a commodity.  These are usually found
 in a pricing history file (see the @option{--download (-Q)} option).
 The syntax is:
@@ -2114,6 +2115,9 @@ P DATE SYMBOL PRICE
 @end smallexample
 
 @item =
+@findex =
+@cindex automated transaction
+@cindex transaction, automated
 An automated transaction.  A value expression must appear after the
 equal sign.
 
@@ -2124,17 +2128,23 @@ posting is matched by the value expression (@pxref{Automated
 Transactions}).
 
 @item ~
+@findex ~
+@cindex periodic transaction
+@cindex transaction, periodic
 A periodic transaction.  A period expression must appear after the tilde.
 
 After this initial line there should be a set of one or more
 postings, just as if it were a normal transaction.
 
 @item ; # % | *
+@findex comment
+@cindex comments
 A line beginning with a semicolon, pound, percent, bar or asterisk
 indicates a comment, and is ignored.  Comments will not be returned in
 a ``print'' response.
 
 @item indented ;
+@cindex tags
 If the semicolon is indented and occurs inside a transaction, it is
 parsed as a persistent note for its preceding category.  These notes or
 tags can be used to augment the reporting and filtering capabilities of
@@ -2154,6 +2164,8 @@ Command directives must occur at the beginning of a line.  Use of
 @samp{!} and @samp{@@} is deprecated.
 
 @item account
+@findex account
+@cindex pre-declare account
 Pre-declare valid account names.  This only has an effect if
 @option{--strict} or @option{--pedantic} is used (see below).  The
 @code{account} directive supports several optional sub-directives, if
@@ -2203,6 +2215,7 @@ used as the ``balancing account'' for any future transactions that
 contain only a single posting.
 
 @item apply account
+@findex apply account
 @c instance_t::master_account_directive
 Sets the root for all accounts following this directive.  Ledger
 supports a hierarchical tree of accounts.  It may be convenient to
@@ -2225,6 +2238,8 @@ Would result in all postings going into
 until an @samp{end apply account} directive was found.
 
 @item alias
+@findex alias
+@cindex account, alias
 @c instance_t::alias_directive
 Define an alias for an account name.  If you have a deeply nested tree
 of accounts, it may be convenient to define an alias, for example:
@@ -2276,6 +2291,8 @@ The option @option{--no-aliases} completely disables alias expansion.
 All accounts are read verbatim as they are in the ledger file.
 
 @item assert
+@findex assert
+@cindex assertions
 @c instance_t::assert_directive
 An assertion can throw an error if a condition is not met during
 Ledger's run.
@@ -2286,6 +2303,8 @@ assert <VALUE EXPRESSION BOOLEAN RESULT>
 
 @item bucket
 @anchor{bucket}
+@findex bucket
+@cindex bucket
 @c instance_t::default_account_directive
 Defines the default account to use for balancing transactions.
 Normally, each transaction has at least two postings, which must
@@ -2311,6 +2330,7 @@ bucket Assets:Checking
 
 @item capture
 @c instance_t::account_mapping_directive
+@findex capture
 @findex print
 @findex register
 
@@ -2328,6 +2348,8 @@ Ledger will display the mapped payees in @command{print} and
 @command{register} reports.
 
 @item check
+@findex check
+@cindex assertions
 @c instance_t::check_directive in textual.cc
 A check issues a warning if a condition is not met during Ledger's
 run.
@@ -2337,10 +2359,14 @@ check <VALUE EXPRESSION BOOLEAN RESULT>
 @end smallexample
 
 @item comment
+@findex comment
+@cindex comments
 @c instance_t::comment_directive in textual.cc
 Start a block comment, closed by @code{end comment}.
 
 @item commodity
+@findex commodity
+@cindex pre-declare commodity
 Pre-declare commodity names.  This only has an effect if
 @option{--strict} or @option{--pedantic} is used (see below).
 
@@ -2375,6 +2401,7 @@ should never be auto-downloaded.
 The @code{default} sub-directive marks this as the ``default'' commodity.
 
 @item define
+@findex define
 @c instance_t::define_directive in textual.cc
 Allows you to define value expressions for future use.  For example:
 
@@ -2389,13 +2416,17 @@ define var_name=$100
 The posting will have a cost of $400.
 
 @item end
+@findex end
 @c instance_t::end_directive in textual.cc
 Closes block commands like @code{tag} or @code{comment}.
 
 @item expr
+@findex expr
 @c instance_t::expr_directive in textual.cc
 
 @item fixed
+@findex fixed
+@cindex fixated prices
 @c instance_t::fixed_directive in textual.cc
 
 A fixed block is used to set fixated prices (@pxref{Fixated prices and
@@ -2437,10 +2468,12 @@ For the moment, users may wish to study
 before using the @code{fixed} directive in production.
 
 @item include
+@findex include
 @c instance_t::include_directive in textual.cc
 Include the stated file as if it were part of the current file.
 
 @item payee
+@findex payee
 @c instance_t::payee_alias_mapping_directive in textual.cc
 @c instance_t::payee_uuid_mapping_directive in textual.cc
 @findex print
@@ -2475,6 +2508,7 @@ Ledger will display the mapped payees in @command{print} and
 @command{register} reports.
 
 @item apply tag
+@findex apply tag
 @c instance_t::tag_directive in textual.cc
 Allows you to designate a block of transactions and assign the same
 tag to all.  Tags can have values and may be nested.
@@ -2532,6 +2566,8 @@ is the equivalent of:
 @c track.
 
 @item tag
+@findex tag
+@cindex pre-declare tag
 Pre-declares tag names.  This only has an effect if @option{--strict} or
 @option{--pedantic} is used (see below).
 
@@ -2558,11 +2594,14 @@ but a string if typed metadata is used!).  Such checks or assertions are
 not called if no value is given.
 
 @item test
+@findex test
+@cindex comments
 @c instance_t::comment_directive in textual.cc
 This is a synonym for @code{comment} and must be closed by an
 @code{end} tag.
 
 @item year
+@findex year
 @anchor{year}
 @c instance_t::year_directive in textual.cc
 Denotes the year used for all subsequent transactions that give a date
@@ -2580,10 +2619,12 @@ alone, for backwards compatibility with older Ledger versions.
 
 @item A
 @findex A
+@findex bucket
 @xref{bucket}.
 
 @item Y
 @findex Y
+@findex year
 @xref{year}.
 
 @item N SYMBOL
@@ -2601,7 +2642,6 @@ N SYMBOL
 @item D AMOUNT
 @findex xact
 @findex D
-
 Specifies the default commodity to use, by specifying an amount in the
 expected format.  The @command{xact} command will use this commodity as
 the default when none other can be determined.  This command may be used
