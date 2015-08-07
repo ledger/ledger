@@ -109,12 +109,11 @@ BOOST_AUTO_TEST_CASE(testEquality)
 {
   struct tm localtime;
   strptime("10 February 2010", "%d %b %Y", &localtime);
-  time_t time_var = mktime(&localtime);
   value_t::sequence_t s1;
 
   value_t v1;
   value_t v2(true);
-  value_t v3(boost::posix_time::from_time_t(time_var));
+  value_t v3(boost::posix_time::ptime_from_tm(localtime));
   value_t v4(date_t(parse_date("2014/08/14")));
   value_t v5(2L);
   value_t v6(2UL);
@@ -131,7 +130,7 @@ BOOST_AUTO_TEST_CASE(testEquality)
 
   BOOST_CHECK_EQUAL(v1, value_t());
   BOOST_CHECK_EQUAL(v2, value_t(true));
-  BOOST_CHECK_EQUAL(v3, value_t(boost::posix_time::from_time_t(time_var)));
+  BOOST_CHECK_EQUAL(v3, value_t(boost::posix_time::ptime_from_tm(localtime)));
   BOOST_CHECK(!(v4 == value_t(date_t(parse_date("2014/08/15")))));
 
   value_t v19(amount_t("2"));
@@ -209,12 +208,11 @@ BOOST_AUTO_TEST_CASE(testAddition)
 {
   struct tm localtime;
   strptime("10 February 2010 00:00:00", "%d %b %Y %H:%M:%S", &localtime);
-  time_t time_var = mktime(&localtime);
   value_t::sequence_t s1;
 
   value_t v1;
   value_t v2(true);
-  value_t v3(boost::posix_time::from_time_t(time_var));
+  value_t v3(boost::posix_time::ptime_from_tm(localtime));
   value_t v4(date_t(parse_date("2014/08/14")));
   value_t v5(2L);
   value_t v6(2UL);
@@ -234,12 +232,14 @@ BOOST_AUTO_TEST_CASE(testAddition)
   v14 += v12;
   BOOST_CHECK_EQUAL(v14, value_t(string("commentcomment$1.00"), true));
 
+  strptime("10 February 2010 00:00:00", "%d %b %Y %H:%M:%S", &localtime);
+  BOOST_CHECK_EQUAL(v3, value_t(boost::posix_time::ptime_from_tm(localtime)));
   v3 += value_t(2L);
   strptime("10 February 2010 00:00:02", "%d %b %Y %H:%M:%S", &localtime);
-  BOOST_CHECK_EQUAL(v3, value_t(boost::posix_time::from_time_t(mktime(&localtime))));
+  BOOST_CHECK_EQUAL(v3, value_t(boost::posix_time::ptime_from_tm(localtime)));
   v3 += value_t(amount_t("2"));
   strptime("10 February 2010 00:00:04", "%d %b %Y %H:%M:%S", &localtime);
-  BOOST_CHECK_EQUAL(v3, value_t(boost::posix_time::from_time_t(mktime(&localtime))));
+  BOOST_CHECK_EQUAL(v3, value_t(boost::posix_time::ptime_from_tm(localtime)));
 
   v4 += value_t(2L);
   BOOST_CHECK_EQUAL(v4, value_t(date_t(parse_date("2014/08/16"))));
@@ -315,12 +315,11 @@ BOOST_AUTO_TEST_CASE(testSubtraction)
 {
   struct tm localtime;
   strptime("10 February 2010 00:00:04", "%d %b %Y %H:%M:%S", &localtime);
-  time_t time_var = mktime(&localtime);
   value_t::sequence_t s1;
 
   value_t v1;
   value_t v2(true);
-  value_t v3(boost::posix_time::from_time_t(time_var));
+  value_t v3(boost::posix_time::ptime_from_tm(localtime));
   value_t v4(date_t(parse_date("2014/08/18")));
   value_t v5(6L);
   value_t v6(6UL);
@@ -337,10 +336,10 @@ BOOST_AUTO_TEST_CASE(testSubtraction)
 
   v3 -= value_t(2L);
   strptime("10 February 2010 00:00:02", "%d %b %Y %H:%M:%S", &localtime);
-  BOOST_CHECK_EQUAL(v3, value_t(boost::posix_time::from_time_t(mktime(&localtime))));
+  BOOST_CHECK_EQUAL(v3, value_t(boost::posix_time::ptime_from_tm(localtime)));
   v3 -= value_t(amount_t("2"));
   strptime("10 February 2010 00:00:00", "%d %b %Y %H:%M:%S", &localtime);
-  BOOST_CHECK_EQUAL(v3, value_t(boost::posix_time::from_time_t(mktime(&localtime))));
+  BOOST_CHECK_EQUAL(v3, value_t(boost::posix_time::ptime_from_tm(localtime)));
 
   v4 -= value_t(2L);
   BOOST_CHECK_EQUAL(v4, value_t(date_t(parse_date("2014/08/16"))));
@@ -419,12 +418,11 @@ BOOST_AUTO_TEST_CASE(testMultiplication)
 {
   struct tm localtime;
   strptime("10 February 2010 00:00:00", "%d %b %Y %H:%M:%S", &localtime);
-  time_t time_var = mktime(&localtime);
   value_t::sequence_t s1;
 
   value_t v1;
   value_t v2(true);
-  value_t v3(boost::posix_time::from_time_t(time_var));
+  value_t v3(boost::posix_time::ptime_from_tm(localtime));
   value_t v4(date_t(parse_date("2014/08/14")));
   value_t v5(2L);
   value_t v6(2UL);
@@ -496,12 +494,11 @@ BOOST_AUTO_TEST_CASE(testDivision)
 {
   struct tm localtime;
   strptime("10 February 2010 00:00:00", "%d %b %Y %H:%M:%S", &localtime);
-  time_t time_var = mktime(&localtime);
   value_t::sequence_t s1;
 
   value_t v1;
   value_t v2(true);
-  value_t v3(boost::posix_time::from_time_t(time_var));
+  value_t v3(boost::posix_time::ptime_from_tm(localtime));
   value_t v4(date_t(parse_date("2014/08/14")));
   value_t v5(8L);
   value_t v6(2UL);
