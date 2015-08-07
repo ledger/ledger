@@ -574,7 +574,12 @@ posting occurring in that period.
 Display values in terms of the given
 .Ar COMMODITY .
 The latest available price is used.
-.\".It Fl \-explicit
+.It Fl \-explicit
+Direct
+.Nm
+to require pre-declarations for entities (such as accounts,
+commodities and tags) rather than taking entities from cleared
+transactions as defined.
 .It Fl \-file Ar FILE
 Read journal data from
 .Ar FILE .
@@ -716,9 +721,15 @@ Aliases are completely ignored.
 Suppress any color TTY output.
 .It Fl \-no-pager
 Disables the pager on TTY output.
+.It Fl \-no-revalued
+Stop
+.Nm
+from showing
+<Revalued>
+postings.
 .It Fl \-no-rounding
 Don't output
-.Qq Li <Rounding>
+.Qq Li <Adjustment>
 postings.  Note that this will cause the
 running total to often not add up!  Its main use is for
 .Fl \-amount-data Pq Fl j

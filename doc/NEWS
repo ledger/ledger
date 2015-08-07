@@ -1,5 +1,29 @@
                              Ledger NEWS
 
+* 3.x.x
+
+- Added a --no-revalued option
+
+- Improved Embedded Python Support
+
+- Fixed parsing of transactions with single-character payees and comments
+
+- Fixed crash when using -M with empty result
+
+- Fixed sorting for option --auto-match
+
+- Fixed treatment of "year 2015" and "Y2014" directives
+
+- Fixed crash when using --trace 10 or above
+
+- Build fix for boost 1.56
+
+- Build fix for Cygwin
+
+- Fixed Util and Math tests on Mac OS X
+
+- Various documentation improvements
+
 * 3.1
 
 - Changed the definition of cost basis to preserve the original cost basis

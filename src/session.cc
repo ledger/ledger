@@ -127,47 +127,14 @@ std::size_t session_t::read_data(const string& master_account)
 
   if (HANDLED(value_expr_))
     journal->value_expr = HANDLER(value_expr_).str();
-    if (price_db_path) {
-      if (exists(*price_db_path)) {
-        parsing_context.push(*price_db_path);
-        parsing_context.get_current().journal = journal.get();
-        try {
-          if (journal->read(parsing_context) > 0)
-            throw_(parse_error, _("Transactions not allowed in price history file"));
-        }
-        catch (...) {
-          parsing_context.pop();
-          throw;
-        }
-        parsing_context.pop();
-      }
-    }
 
-    foreach (const path& pathname, HANDLER(file_).data_files) {
-      if (pathname == "-" || pathname == "/dev/stdin") {
-        // To avoid problems with stdin and pipes, etc., we read the entire
-        // file in beforehand into a memory buffer, and then parcel it out
-        // from there.
-        std::ostringstream buffer;
-
-        while (std::cin.good() && ! std::cin.eof()) {
-          char line[8192];
-          std::cin.read(line, 8192);
-          std::streamsize count = std::cin.gcount();
-          buffer.write(line, count);
-        }
-        buffer.flush();
-
-        shared_ptr<std::istream> stream(new std::istringstream(buffer.str()));
-        parsing_context.push(stream);
-      } else {
-        parsing_context.push(pathname);
-      }
-
+  if (price_db_path) {
+    if (exists(*price_db_path)) {
+      parsing_context.push(*price_db_path);
       parsing_context.get_current().journal = journal.get();
-      parsing_context.get_current().master  = acct;
       try {
-        xact_count += journal->read(parsing_context);
+        if (journal->read(parsing_context) > 0)
+          throw_(parse_error, _("Transactions not allowed in price history file"));
       }
       catch (...) {
         parsing_context.pop();
@@ -175,10 +142,44 @@ std::size_t session_t::read_data(const string& master_account)
       }
       parsing_context.pop();
     }
+  }
 
-    DEBUG("ledger.read", "xact_count [" << xact_count
-          << "] == journal->xacts.size() [" << journal->xacts.size() << "]");
-    assert(xact_count == journal->xacts.size());
+  foreach (const path& pathname, HANDLER(file_).data_files) {
+    if (pathname == "-" || pathname == "/dev/stdin") {
+      // To avoid problems with stdin and pipes, etc., we read the entire
+      // file in beforehand into a memory buffer, and then parcel it out
+      // from there.
+      std::ostringstream buffer;
+
+      while (std::cin.good() && ! std::cin.eof()) {
+        char line[8192];
+        std::cin.read(line, 8192);
+        std::streamsize count = std::cin.gcount();
+        buffer.write(line, count);
+      }
+      buffer.flush();
+
+      shared_ptr<std::istream> stream(new std::istringstream(buffer.str()));
+      parsing_context.push(stream);
+    } else {
+      parsing_context.push(pathname);
+    }
+
+    parsing_context.get_current().journal = journal.get();
+    parsing_context.get_current().master  = acct;
+    try {
+      xact_count += journal->read(parsing_context);
+    }
+    catch (...) {
+      parsing_context.pop();
+      throw;
+    }
+    parsing_context.pop();
+  }
+
+  DEBUG("ledger.read", "xact_count [" << xact_count
+        << "] == journal->xacts.size() [" << journal->xacts.size() << "]");
+  assert(xact_count == journal->xacts.size());
 
   if (populated_data_files)
     HANDLER(file_).data_files.clear();

@@ -85,7 +85,7 @@ static char* _strptime(const char *s, const char *format, struct tm *tm) {
         if (tm->tm_wday == -1) return NULL;
         s += len;
         break;
-      
+
       // month name.
       case 'b':
       case 'B':

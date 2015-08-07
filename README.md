@@ -1,7 +1,8 @@
-[![Build Status](https://img.shields.io/travis/ledger/ledger/master.svg?&style=flat)](https://travis-ci.org/ledger/ledger)
+[![Build Status master](https://img.shields.io/travis/ledger/ledger/master.svg?label=master&style=flat)](https://travis-ci.org/ledger/ledger)
+[![Build Status next](https://img.shields.io/travis/ledger/ledger/next.svg?label=next&style=flat)](https://travis-ci.org/ledger/ledger)
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg?style=flat)](https://github.com/ledger/ledger/pulse/monthly)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](http://opensource.org/licenses/BSD-3-Clause)
-[![GitHub tag](https://img.shields.io/github/tag/ledger/ledger.svg?style=flat)](https://github.com/ledger/ledger/releases)
+[![GitHub release](https://img.shields.io/github/release/ledger/ledger.svg?style=flat)](https://github.com/ledger/ledger/releases)
 
 
 # Ledger: Command-Line Accounting
@@ -147,9 +148,9 @@ Or, for Ubuntu 12.04:
 Debian squeeze (6.0): the version of boost in squeeze is too old
 for ledger and unfortunately no backport is available at the moment.
 
-Debian 7 (wheezy) and Debian 8 (jessie) contain all components needed to
-build ledger.  You can install all required build dependencies using the
-following command:
+Debian 7 (wheezy), Debian 8 (jessie), Debian testing (stretch) and Debian
+unstable (sid) contain all components needed to build ledger.  You can
+install all required build dependencies using the following command:
 
     $ sudo apt-get install build-essential cmake autopoint texinfo python-dev \
          zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \

@@ -707,7 +707,7 @@ namespace {
     insert_prices_in_map(price_map_t& _all_prices)
       : all_prices(_all_prices) {}
 
-    void operator()(datetime_t& date, const amount_t& price) {
+    void operator()(const datetime_t& date, const amount_t& price) {
       all_prices.insert(price_map_t::value_type(date, price));
     }
   };

@@ -396,7 +396,7 @@ value_t select_command(call_scope_t& args)
 #if 0
       query_t          query;
       keep_details_t   keeper(true, true, true);
-      expr_t::ptr_op_t expr = 
+      expr_t::ptr_op_t expr =
         query.parse_args(string_value(arg).to_sequence(), keeper, false, true);
       report.HANDLER(limit_).on("#select", query.get_query(query_t::QUERY_LIMIT));
 #else

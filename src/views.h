@@ -235,7 +235,7 @@ public:
   optional<string> note() const {
     return ptr()->note;
   }
-  
+
   bool has_tag(const string& tag) const {
     return ptr()->has_tag(tag);
   }

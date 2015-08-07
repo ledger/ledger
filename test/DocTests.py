@@ -108,6 +108,7 @@ class DocTests:
     validate_command = False
     try:
       command = example[self.testin_token][self.testin_token]
+      command = re.sub(r'\\\n', '', command)
     except KeyError:
       if self.validate_dat_token in example:
         command = '$ ledger bal'

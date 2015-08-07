@@ -83,7 +83,7 @@ class CheckOptions (object):
           self.missing_functions.add(function)
       else:
           functions.remove(function)
-    known_functions = ['tag', 'has_tag']
+    known_functions = ['tag', 'has_tag', 'meta', 'has_meta']
     self.unknown_functions = {function for function in functions if function not in known_functions}
 
     if len(self.missing_options):
