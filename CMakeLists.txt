@@ -12,6 +12,8 @@ set(Ledger_VERSION_PATCH 1)
 set(Ledger_VERSION_PRERELEASE "-alpha.1")
 set(Ledger_VERSION_DATE  20141005)
 
+set(Ledger_TEST_TIMEZONE "America/Chicago")
+
 # Point CMake at any custom modules we may ship
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 

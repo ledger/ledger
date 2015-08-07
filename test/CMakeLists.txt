@@ -25,6 +25,8 @@ macro(add_ledger_harness_tests _class)
           COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/RegressTests.py
           $<TARGET_FILE:ledger> ${PROJECT_SOURCE_DIR}
           ${TestFile} ${TEST_PYTHON_FLAGS})
+        set_tests_properties(${_class}Test_${TestFile_Name}
+          PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
         set_target_properties(check 
           PROPERTIES DEPENDS ${_class}Test_${TestFile_Name})
       endif()
@@ -44,7 +46,10 @@ if (PYTHONINTERP_FOUND)
     add_test(NAME ${_class}Test_${TestFile_Name}
       COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/${_class}.py
       --ledger $<TARGET_FILE:ledger> --file ${TestFile})
-    set_target_properties(check PROPERTIES DEPENDS ${_class}Test_${TestFile_Name})
+    set_tests_properties(${_class}Test_${TestFile_Name}
+      PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
+    set_target_properties(check
+      PROPERTIES DEPENDS ${_class}Test_${TestFile_Name})
   endforeach()
 
   # CheckManpage and CheckTexinfo are disabled, since they do not work
@@ -54,6 +59,8 @@ if (PYTHONINTERP_FOUND)
     add_test(NAME ${_class}
       COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/${_class}.py
       --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR})
+    set_tests_properties(${_class}
+      PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
   endforeach()
 endif()
 
