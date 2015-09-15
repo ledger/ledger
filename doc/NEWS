@@ -1,10 +1,12 @@
                              Ledger NEWS
 
-* 3.x.x
+* 3.1.1
 
 - Added a --no-revalued option
 
 - Improved Embedded Python Support
+
+- Use ./.ledgerrc if ~/.ledgerrc doesn't exist
 
 - Fixed parsing of transactions with single-character payees and comments
 
@@ -16,13 +18,17 @@
 
 - Fixed crash when using --trace 10 or above
 
-- Build fix for boost 1.56
+- Build fix for boost 1.56, 1.58, 1.59
 
 - Build fix for Cygwin
 
 - Fixed Util and Math tests on Mac OS X
 
 - Various documentation improvements
+
+- Examples in the documentation are tested just like unit tests
+
+- Add continuous integration (https://travis-ci.org/ledger/ledger)
 
 * 3.1
 
