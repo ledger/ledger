@@ -1085,7 +1085,6 @@ typical user:
   products          Report the products directory path
   rsync             Rsync a copy of the source tree into Products
   sloc              Report total Source Lines Of Code
-  submodule         Updates Git submodules (better to use 'pull')
   version           Output current HEAD version to version.m4
 
 NOTE: If you wish to pass options to CMake or make, add "--" followed by
