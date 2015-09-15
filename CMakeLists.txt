@@ -164,6 +164,32 @@ endif()
 
 cmake_pop_check_state()
 
+# Check if fix for https://github.com/boostorg/python/issues/39 is needed
+if (HAVE_BOOST_PYTHON)
+cmake_push_check_state()
+
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} ${PROFILE_LIBS})
+
+check_cxx_source_runs("
+#include <boost/python.hpp>
+
+struct X { int y; };
+
+int main()
+{
+  boost::python::make_setter(&X::y);
+}" BOOST_MAKE_SETTER_RUNS)
+
+if (BOOST_MAKE_SETTER_RUNS)
+  set(HAVE_BOOST_159_ISSUE_39 0)
+else()
+  set(HAVE_BOOST_159_ISSUE_39 1)
+endif()
+
+cmake_pop_check_state()
+endif()
+
 ########################################################################
 
 include_directories(${CMAKE_INCLUDE_PATH})
