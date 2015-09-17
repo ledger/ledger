@@ -8255,8 +8255,8 @@ Friday, January 16. 2015
 @value{FIXME:UNDOCUMENTED}
 @end defun
 
-@defun get_at
-@value{FIXME:UNDOCUMENTED}
+@defun get_at sequence index
+Return the value in @var{sequence} at @var{index}. The first element is @var{index} 0.
 @end defun
 
 @defun is_seq
