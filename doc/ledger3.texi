@@ -405,7 +405,7 @@ install` to install.  If these intructions do not work for you can check the
 
 Ledger has a complete online help system based on GNU Info.  This manual
 can be searched directly from the command-line using @code{info ledger},
-which will bring up this entire manual in your TTY. Alternatively, the
+which will bring up this entire manual in your TTY.  Alternatively, the
 shorter man page can be accessed from the command-line either via
 @code{man ledger} or @code{ledger --help}
 
@@ -4682,7 +4682,7 @@ from the file above.
 @findex --account @var{STR}
 @findex --rich-data
 
-The @command{convert} command accepts four options. They are
+The @command{convert} command accepts four options.  They are
 @option{--invert} which inverts the amount field, @option{--auto-match}
 which automatically matches an account from the Ledger journal for every
 CSV line, @option{--account @var{STR}} which you can use to specify the
@@ -4733,7 +4733,7 @@ the environment variable @env{LEDGER_FILE}) this entry will not be
 printed again.
 
 In the output above, the account is @samp{Expenses:Unknown} for CSV
-lines. You can use the @option{--auto-match} option to automatically
+lines.  You can use the @option{--auto-match} option to automatically
 match an account from your Ledger journal.
 
 You can also use @command{convert} with @code{payee} and @code{account}
@@ -8256,7 +8256,7 @@ Friday, January 16. 2015
 @end defun
 
 @defun get_at sequence index
-Return the value in @var{sequence} at @var{index}. The first element is @var{index} 0.
+Return the value in @var{sequence} at @var{index}.  The first element is @var{index} 0.
 @end defun
 
 @defun is_seq
