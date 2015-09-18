@@ -238,6 +238,22 @@
                       code
                       (note end-note))
 
+(ledger-define-regexp recurring-line
+                      (macroexpand
+                       `(rx (and line-start
+                                 (regexp "\\[.+/.+/.+\\]")
+                                 (? (and (+ blank) (regexp ,ledger-state-regexp)))
+                                 (? (and (+ blank) (regexp ,ledger-code-regexp)))
+                                 (+ blank) (+? nonl)
+                                 (? (regexp ,ledger-end-note-regexp))
+                                 line-end)))
+                      "Match a transaction's first line (and optional notes)."
+                      (actual-date full-date actual)
+                      (effective-date full-date effective)
+                      state
+                      code
+                      (note end-note))
+
 (ledger-define-regexp account
                       (rx (group (and (not (any blank ?\[ ?\( ?: ?\;)) (*? nonl))))
                       "")

@@ -158,7 +158,7 @@ Requires empty line separating xacts."
   (save-excursion
     (goto-char pos)
     (beginning-of-line)
-    (if (looking-at "[ =~0-9]")
+    (if (looking-at "[ =~0-9\\[]")
         (ledger-navigate-find-xact-extents pos)
       (ledger-navigate-find-directive-extents pos))))
 
