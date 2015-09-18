@@ -3,6 +3,7 @@
 @setfilename ledger3.info
 @include version.texi
 @set FIXME:UNDOCUMENTED @sc{undocumented}! Please help by contributing documentation for this feature.
+@set InternalUseOnly For internal use only.
 @settitle Ledger: Command-Line Accounting
 
 @c Before release, run C-u C-c C-u C-a (texinfo-all-menus-update with
@@ -405,7 +406,7 @@ install` to install.  If these intructions do not work for you can check the
 
 Ledger has a complete online help system based on GNU Info.  This manual
 can be searched directly from the command-line using @code{info ledger},
-which will bring up this entire manual in your TTY. Alternatively, the
+which will bring up this entire manual in your TTY.  Alternatively, the
 shorter man page can be accessed from the command-line either via
 @code{man ledger} or @code{ledger --help}
 
@@ -4682,7 +4683,7 @@ from the file above.
 @findex --account @var{STR}
 @findex --rich-data
 
-The @command{convert} command accepts four options. They are
+The @command{convert} command accepts four options.  They are
 @option{--invert} which inverts the amount field, @option{--auto-match}
 which automatically matches an account from the Ledger journal for every
 CSV line, @option{--account @var{STR}} which you can use to specify the
@@ -4733,7 +4734,7 @@ the environment variable @env{LEDGER_FILE}) this entry will not be
 printed again.
 
 In the output above, the account is @samp{Expenses:Unknown} for CSV
-lines. You can use the @option{--auto-match} option to automatically
+lines.  You can use the @option{--auto-match} option to automatically
 match an account from your Ledger journal.
 
 You can also use @command{convert} with @code{payee} and @code{account}
@@ -5901,7 +5902,8 @@ or testing small journal files not associated with your main financial
 database.
 
 @item --debug @var{CODE}
-@value{FIXME:UNDOCUMENTED}
+If ledger has been built with debug options this will provide extra data during
+the run.
 
 @item --help
 @itemx -h
@@ -5964,7 +5966,8 @@ slowdown.  When combined with @option{--debug @var{CODE}} ledger will
 produce memory trace information.
 
 @item --verify-memory
-@value{FIXME:UNDOCUMENTED}
+Verify that every constructed object is properly destructed.  This is for
+debugging purposes only.
 
 @item --version
 Print version information and exit.
@@ -6753,7 +6756,8 @@ week.
 
 @item --subtotal
 @itemx -s
-@value{FIXME:UNDOCUMENTED}
+Group all postings together.  This is very similar to the totals shown by
+the balance report.
 
 @item --tail @var{INT}
 @itemx --last @var{INT}
@@ -8154,7 +8158,8 @@ Assets:Cash ¤ 123,45
 @end defun
 
 @defun amount_expr
-@value{FIXME:UNDOCUMENTED}
+Return the calculated amount of the posting according to the @option{--amount}
+option.
 @end defun
 
 @defun ansify_if value color bool
@@ -8236,8 +8241,8 @@ Expenses:Office Supplies ¤ 123,00
 @end smallexample
 @end defun
 
-@defun format
-@value{FIXME:UNDOCUMENTED}
+@defun format string
+Evaluate @var{string} as format just like the @option{--format} option.
 @end defun
 
 @defun format_date date format
@@ -8251,20 +8256,22 @@ Friday, January 16. 2015
 @end smallexample
 @end defun
 
-@defun format_datetime
-@value{FIXME:UNDOCUMENTED}
+@defun format_datetime datetime format
+Return the @var{datetime} as a string using @var{format}.  Refer to strftime (3)
+for format string details.
 @end defun
 
-@defun get_at
-@value{FIXME:UNDOCUMENTED}
+@defun get_at sequence index
+Return the value in @var{sequence} at @var{index}.  The first element is @var{index} 0.
+@value{InternalUseOnly}
 @end defun
 
-@defun is_seq
-@value{FIXME:UNDOCUMENTED}
+@defun is_seq value
+Return true if @var{value} is a sequence.  @value{InternalUseOnly}
 @end defun
 
-@defun join
-@value{FIXME:UNDOCUMENTED}
+@defun join value
+Replace all newlines in @var{value} with @code{\n}.
 @end defun
 
 @defun justify value first_width latter_width right_justify colorize
@@ -8285,9 +8292,11 @@ $ ledger -f expr.dat --format "»%(justify(account, 30, 30, true))«\n" reg
 @end smallexample
 @end defun
 
-@defun market
+@defun market value datetime
 @defunx P
-@value{FIXME:UNDOCUMENTED}
+Return the price of @var{value} at @var{datetime}.  Note that @var{datetime}
+must be surrounded by brackets in order to be parsed correctly,
+e.g. @code{[2012/03/23]}.
 @end defun
 
 @defun nail_down
@@ -8297,7 +8306,7 @@ $ ledger -f expr.dat --format "»%(justify(account, 30, 30, true))«\n" reg
 @defvar now
 @defvarx d
 @defvarx m
-@value{FIXME:UNDOCUMENTED}
+Return the current datetime.
 @end defvar
 
 @defvar options
@@ -8323,12 +8332,12 @@ $ ledger -f expr.dat --format "%(percent(amount, 200))\n" reg
 @end smallexample
 @end defun
 
-@defun print
-@value{FIXME:UNDOCUMENTED}
+@defun print value
+Print @var{value} to stdout.  @value{InternalUseOnly}
 @end defun
 
-@defun quantity
-@value{FIXME:UNDOCUMENTED}
+@defun quantity value
+Return the quantity of @var{value} for values that have a per-unit cost.
 @end defun
 
 @defun quoted expression
@@ -8361,37 +8370,38 @@ Expenses:Office Supplies ¤ 123,50
 @end smallexample
 @end defun
 
-@defun scrub
-@value{FIXME:UNDOCUMENTED}
+@defun scrub value
+Clean @var{value} using various transformations such as @code{round}, stripping
+value annotations, and more.
 @end defun
 
 @defun should_bold
-@value{FIXME:UNDOCUMENTED}
+Return true if expression given to @option{--bold-if} evaluates to true.  @value{InternalUseOnly}
 @end defun
 
-@defun strip
+@defun strip value
 @defunx S
-@value{FIXME:UNDOCUMENTED}
+Strip value annotation from @var{value}.
 @end defun
 
-@defun to_amount
-@value{FIXME:UNDOCUMENTED}
+@defun to_amount value
+Convert @var{value} to an amount.  @value{InternalUseOnly}
 @end defun
 
-@defun to_balance
-@value{FIXME:UNDOCUMENTED}
+@defun to_balance value
+Convert @var{value} to a balance.  @value{InternalUseOnly}
 @end defun
 
-@defun to_boolean
-@value{FIXME:UNDOCUMENTED}
+@defun to_boolean value
+Convert @var{value} to a boolean.  @value{InternalUseOnly}
 @end defun
 
-@defun to_date
-@value{FIXME:UNDOCUMENTED}
+@defun to_date value
+Convert @var{value} to a date.  @value{InternalUseOnly}
 @end defun
 
-@defun to_datetime
-@value{FIXME:UNDOCUMENTED}
+@defun to_datetime value
+Convert @var{value} to a datetime.  @value{InternalUseOnly}
 @end defun
 
 @defun to_int value
@@ -8406,12 +8416,12 @@ $ ledger -f expr.dat --format "%(1 + to_int('1'))\n%(2,5 + int(2,5))\n" reg asse
 @end smallexample
 @end defun
 
-@defun to_mask
-@value{FIXME:UNDOCUMENTED}
+@defun to_mask value
+Convert @var{value} to a mask.  @value{InternalUseOnly}
 @end defun
 
-@defun to_sequence
-@value{FIXME:UNDOCUMENTED}
+@defun to_sequence value
+Convert @var{value} to a sequence.  @value{InternalUseOnly}
 @end defun
 
 @defun to_string value
@@ -8434,7 +8444,8 @@ $ ledger -f expr.dat --now 2015/01/01 --format "%(today)\n" reg assets
 @end defun
 
 @defun total_expr
-@value{FIXME:UNDOCUMENTED}
+Return the calculated total of the posting according to the @option{--total}
+option.
 @end defun
 
 @defun trim value
@@ -8447,8 +8458,9 @@ $ ledger -f expr.dat --format "»%(trim(' 	Trimmed	 '))«\n" reg assets
 @end smallexample
 @end defun
 
-@defun truncated
-@value{FIXME:UNDOCUMENTED}
+@defun truncatedstring total_len account_len
+Truncate @var{string} to @var{total_len} ensuring that each account is at least
+@var{account_len} long.
 @end defun
 
 @defun unround
@@ -8588,7 +8600,7 @@ $ ledger -f expr.dat --format "%12(5*O)\n" reg assets
 
 @item [DATEFMT]
 Inserts the result of formatting a posting's date with a date
-format string, exactly like those supported by @code{strftime}.  For
+format string, exactly like those supported by strftime (3).  For
 example: @samp{%[%Y/%m/%d %H:%M:%S]}.
 
 @item S

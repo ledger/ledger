@@ -9,8 +9,8 @@ PROJECT(ledger)
 set(Ledger_VERSION_MAJOR 3)
 set(Ledger_VERSION_MINOR 1)
 set(Ledger_VERSION_PATCH 1)
-set(Ledger_VERSION_PRERELEASE "-alpha.1")
-set(Ledger_VERSION_DATE  20141005)
+set(Ledger_VERSION_PRERELEASE "")
+set(Ledger_VERSION_DATE  20150915)
 
 set(Ledger_TEST_TIMEZONE "America/Chicago")
 
@@ -163,6 +163,32 @@ else()
 endif()
 
 cmake_pop_check_state()
+
+# Check if fix for https://github.com/boostorg/python/issues/39 is needed
+if (HAVE_BOOST_PYTHON)
+cmake_push_check_state()
+
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} ${PROFILE_LIBS})
+
+check_cxx_source_runs("
+#include <boost/python.hpp>
+
+struct X { int y; };
+
+int main()
+{
+  boost::python::make_setter(&X::y);
+}" BOOST_MAKE_SETTER_RUNS)
+
+if (BOOST_MAKE_SETTER_RUNS)
+  set(HAVE_BOOST_159_ISSUE_39 0)
+else()
+  set(HAVE_BOOST_159_ISSUE_39 1)
+endif()
+
+cmake_pop_check_state()
+endif()
 
 ########################################################################
 

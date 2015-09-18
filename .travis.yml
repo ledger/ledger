@@ -22,7 +22,7 @@ env:
       # _MIN is used when building the master branch
       # _MAX is used when building any other branch
     - BOOST_VERSION_MIN="1.49.0"
-    - BOOST_VERSION_MAX="1.58.0"
+    - BOOST_VERSION_MAX="1.59.0"
       # List of required boost libraries to build
     - BOOST_LIBS="date_time,filesystem,iostreams,python,regex,system,test"
       # List of required Homebrew formulae to install
