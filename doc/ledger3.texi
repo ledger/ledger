@@ -8247,8 +8247,8 @@ Evaluate @var{string} as format just like the @option{--format} option.
 @end defun
 
 @defun format_date date format
-Return the @var{date} as a string using @var{format}.  See strftime (3)
-for format string details.
+Return the @var{date} as a string using @var{format}.  See
+@code{strftime (3)} for format string details.
 @smallexample @c command:9605B13,with_input:3406FC1
 $ ledger -f expr.dat --format "%(format_date(date, '%A, %B %d. %Y'))\n" reg assets
 @end smallexample
@@ -8258,8 +8258,8 @@ Friday, January 16. 2015
 @end defun
 
 @defun format_datetime datetime format
-Return the @var{datetime} as a string using @var{format}.  Refer to strftime (3)
-for format string details.
+Return the @var{datetime} as a string using @var{format}.  Refer to
+@code{strftime (3)} for format string details.
 @end defun
 
 @defun get_at sequence index
@@ -8600,8 +8600,8 @@ $ ledger -f expr.dat --format "%12(5*O)\n" reg assets
 @end smallexample
 
 @item [DATEFMT]
-Inserts the result of formatting a posting's date with a date
-format string, exactly like those supported by strftime (3).  For
+Inserts the result of formatting a posting's date with a date format
+string, exactly like those supported by @code{strftime (3)}.  For
 example: @samp{%[%Y/%m/%d %H:%M:%S]}.
 
 @item S
