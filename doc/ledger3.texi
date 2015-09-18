@@ -6757,8 +6757,8 @@ week.
 
 @item --subtotal
 @itemx -s
-Group all postings together.  This is very similar to the totals shown by
-the balance report.
+Cause all transactions in a @command{register} report to be collapsed
+into a single, subtotaled transaction.
 
 @item --tail @var{INT}
 @itemx --last @var{INT}
