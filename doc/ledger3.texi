@@ -5902,6 +5902,7 @@ or testing small journal files not associated with your main financial
 database.
 
 @item --debug @var{CODE}
+@value{FIXME:UNDOCUMENTED}
 If ledger has been built with debug options this will provide extra data during
 the run.
 
