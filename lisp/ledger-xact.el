@@ -89,10 +89,8 @@ MOMENT is an encoded date"
     (when (and (eobp) last-xact-start)
       (let ((end (cadr (ledger-navigate-find-xact-extents last-xact-start))))
         (goto-char end)
-        (if (= (line-beginning-position) (line-end-position))
-            (insert "\n")
-          (insert "\n\n")
-          (forward-line))))))
+        (insert "\n")
+        (forward-line)))))
 
 (defun ledger-xact-iterate-transactions (callback)
   "Iterate through each transaction call CALLBACK for each."
