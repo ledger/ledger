@@ -146,6 +146,13 @@ at beginning of account"
           (setq lines-left (not (eobp)))))
       (setq inhibit-modification-hooks nil))))
 
+(defun ledger-post-align-dwim ()
+  "Align all the posting of the current xact the current region."
+  (interactive)
+  (if (use-region-p)
+      (call-interactively 'ledger-post-align-postings)
+    (call-interactively 'ledger-post-align-xact)))
+
 (defun ledger-post-edit-amount ()
   "Call 'calc-mode' and push the amount in the posting to the top of stack."
   (interactive)
