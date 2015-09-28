@@ -27,8 +27,14 @@
 (defconst ledger-amount-regex
   (concat "\\(  \\|\t\\| \t\\)[ \t]*-?"
           "\\([A-Z$€£₹_(]+ *\\)?"
-          "\\(-?[0-9,]+\\)"
-          "\\(\\.[0-9)]+\\)?"
+          ;; We either match just a number after the commodity with no
+          ;; decimal or thousand separators or a number with thousand
+          ;; separators.  If we have a decimal part starting with `,'
+          ;; or `.', because the match is non-greedy, it must leave at
+          ;; least one of those symbols for the following capture
+          ;; group, which then finishes the decimal part.
+          "\\(-?\\(?:[0-9]+\\|[0-9,.]+?\\)\\)"
+          "\\([,.][0-9)]+\\)?"
           "\\( *[[:word:]€£₹_\"]+\\)?"
           "\\([ \t]*[@={]@?[^\n;]+?\\)?"
           "\\([ \t]+;.+?\\|[ \t]*\\)?$"))

@@ -79,8 +79,7 @@ point at beginning of the commodity."
     (when (re-search-forward ledger-amount-regex end t)
       (goto-char (match-beginning 0))
       (skip-syntax-forward " ")
-      (- (or (match-end 4)
-             (match-end 3)) (point)))))
+      (- (match-end 3) (point)))))
 
 (defun ledger-next-account (&optional end)
   "Move to the beginning of the posting, or status marker, limit to END.
