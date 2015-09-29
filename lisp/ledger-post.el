@@ -79,8 +79,7 @@ point at beginning of the commodity."
     (when (re-search-forward ledger-amount-regex end t)
       (goto-char (match-beginning 0))
       (skip-syntax-forward " ")
-      (- (or (match-end 4)
-             (match-end 3)) (point)))))
+      (- (match-end 3) (point)))))
 
 (defun ledger-next-account (&optional end)
   "Move to the beginning of the posting, or status marker, limit to END.
@@ -145,6 +144,19 @@ at beginning of account"
           (forward-line)
           (setq lines-left (not (eobp)))))
       (setq inhibit-modification-hooks nil))))
+
+(defun ledger-post-align-dwim ()
+  "Align all the posting of the current xact or the current region.
+
+If the point is in a comment, fill the comment paragraph as
+regular text."
+  (interactive)
+  (cond
+   ((nth 4 (syntax-ppss))
+    (call-interactively 'ledger-post-align-postings)
+    (fill-paragraph))
+   ((use-region-p) (call-interactively 'ledger-post-align-postings))
+   (t (call-interactively 'ledger-post-align-xact))))
 
 (defun ledger-post-edit-amount ()
   "Call 'calc-mode' and push the amount in the posting to the top of stack."
