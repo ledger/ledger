@@ -125,14 +125,19 @@
                          ": "))
                nil 'ledger-minibuffer-history default))
 
-(defun ledger-display-balance-at-point ()
+(defun ledger-display-balance-at-point (&optional arg)
   "Display the cleared-or-pending balance.
-And calculate the target-delta of the account being reconciled."
-  (interactive)
+And calculate the target-delta of the account being reconciled.
+
+With prefix argument \\[universal-argument] ask for the target commodity and convert
+the balance into that."
+  (interactive "P")
   (let* ((account (ledger-read-account-with-prompt "Account balance to show"))
+         (target-commodity (when arg (ledger-read-commodity-with-prompt "Target commodity: ")))
          (buffer (current-buffer))
          (balance (with-temp-buffer
-                    (ledger-exec-ledger buffer (current-buffer) "cleared" account)
+                    (apply 'ledger-exec-ledger buffer (current-buffer) "cleared" account
+                            (when target-commodity (list "-X" target-commodity)))
                     (if (> (buffer-size) 0)
                         (buffer-substring-no-properties (point-min) (1- (point-max)))
                       (concat account " is empty.")))))

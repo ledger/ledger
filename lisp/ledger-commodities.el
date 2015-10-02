@@ -33,6 +33,16 @@
   :type 'string
   :group 'ledger-reconcile)
 
+(defun ledger-read-commodity-with-prompt (prompt)
+  "Read commodity name after PROMPT.
+
+Default value is `ledger-reconcile-default-commodity'."
+  (let* ((buffer (current-buffer))
+         (commodities (with-temp-buffer
+                        (ledger-exec-ledger buffer (current-buffer) "commodities")
+                        (split-string (buffer-string) "\n" t))))
+    (completing-read prompt commodities nil t nil nil ledger-reconcile-default-commodity)))
+
 (defun ledger-split-commodity-string (str)
   "Split a commoditized string, STR, into two parts.
 Returns a list with (value commodity)."
