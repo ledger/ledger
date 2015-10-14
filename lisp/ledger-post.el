@@ -41,6 +41,16 @@
   :type 'integer
   :group 'ledger-post)
 
+(defcustom ledger-post-amount-alignment-at :end
+  "Position at which the amount is ailgned.
+
+Can be :end to align on the last number of the amount (can be
+followed by unaligned commodity) or :decimal to align at the
+decimal separator."
+  :type '(radio (const :tag "align at the end of amount" :end)
+                (const :tag "align at the decimal separator" :decimal))
+  :group 'ledger-post)
+
 (defcustom ledger-post-use-completion-engine :built-in
   "Which completion engine to use, :iswitchb or :ido chose those engines.
 :built-in uses built-in Ledger-mode completion"
@@ -79,7 +89,11 @@ point at beginning of the commodity."
     (when (re-search-forward ledger-amount-regex end t)
       (goto-char (match-beginning 0))
       (skip-syntax-forward " ")
-      (- (match-end 3) (point)))))
+      (cond
+       ((eq ledger-post-amount-alignment-at :end)
+        (- (or (match-end 4) (match-end 3)) (point)))
+       ((eq ledger-post-amount-alignment-at :decimal)
+        (- (match-end 3) (point)))))))
 
 (defun ledger-next-account (&optional end)
   "Move to the beginning of the posting, or status marker, limit to END.
