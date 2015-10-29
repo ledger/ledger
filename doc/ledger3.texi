@@ -4226,7 +4226,7 @@ $ ledger balance --limit 'account=~/Fuel/' and 'payee=~/Chev/'
 
 @noindent
 will show you the amount expended on gasoline at Chevron.  The second
-example is the first example of the very power expression language
+example is the first example of the very powerful expression language
 available to shape reports.  The first example may be easier to
 remember, but learning to use the second will open up far more
 possibilities.
