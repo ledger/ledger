@@ -26,7 +26,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-xml_url="http://www.currency-iso.org/dam/downloads/table_a1.xml"
+xml_url="http://www.currency-iso.org/dam/downloads/lists/list_one.xml"
 xsl_file="$(dirname $0)/iso4217ledger.xsl"
 
 xsltproc="$(which xsltproc)"
