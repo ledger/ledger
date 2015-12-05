@@ -49,6 +49,7 @@
 (require 'ledger-texi)
 (require 'ledger-xact)
 (require 'ledger-schedule)
+(require 'ledger-check)
 
 ;;; Code:
 
@@ -316,6 +317,7 @@ With a prefix argument, remove the effective date."
     ["Copy Trans at Point" ledger-copy-transaction-at-point]
     "---"
     ["Clean-up Buffer" ledger-mode-clean-buffer]
+    ["Check Buffer" ledger-check-buffer ledger-works]
     ["Align Region" ledger-post-align-postings mark-active]
     ["Align Xact" ledger-post-align-xact]
     ["Sort Region" ledger-sort-region mark-active]

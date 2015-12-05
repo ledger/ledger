@@ -29,7 +29,8 @@
 
 ;;; Code:
 
-(require 'cl)
+(eval-when-compile
+  (require 'cl))
 (require 'ledger-navigate)
 
 (defconst ledger-occur-overlay-property-name 'ledger-occur-custom-buffer-grep)

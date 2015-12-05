@@ -31,7 +31,8 @@
 ;; function without have to use funcall.
 
 (require 'ledger-init)
-(require 'cl)
+(eval-when-compile
+  (require 'cl))
 
 ;;; Code:
 
