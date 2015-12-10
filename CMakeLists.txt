@@ -168,8 +168,10 @@ cmake_pop_check_state()
 if (HAVE_BOOST_PYTHON)
 cmake_push_check_state()
 
-set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
-set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} ${PROFILE_LIBS})
+set(CMAKE_REQUIRED_INCLUDES
+    ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES
+    ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${PROFILE_LIBS})
 
 check_cxx_source_runs("
 #include <boost/python.hpp>
