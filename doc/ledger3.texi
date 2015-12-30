@@ -1478,10 +1478,8 @@ you.
 
 The Ledger program aims at making journal transactions as simple as
 possible.  Since it is a command-line tool, it does not provide a user
-interface for keeping a journal.  If you like, you may use GnuCash to
-maintain your journal, in which case Ledger will read
-GnuCash's data files directly.  In that case, read the GnuCash manual
-now, and skip to the next chapter.
+interface for keeping a journal. If you require an user interface to
+maintain journal transactions GnuCash is a good alternative.
 
 If you are not using GnuCash, but a text editor to maintain your
 journal, read on.  Ledger has been designed to make data transactions
