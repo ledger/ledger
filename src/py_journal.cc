@@ -232,6 +232,9 @@ void export_journal()
           boost::noncopyable >("PostHandler")
     ;
 
+#if BOOST_VERSION >= 106000
+  python::register_ptr_to_python< shared_ptr<collector_wrapper> >();
+#endif
   class_< collector_wrapper, shared_ptr<collector_wrapper>,
           boost::noncopyable >("PostCollectorWrapper", no_init)
     .def("__len__", &collector_wrapper::length)
