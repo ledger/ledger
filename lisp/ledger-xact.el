@@ -57,10 +57,12 @@
       (setq ledger-xact-highlight-overlay (ledger-highlight-make-overlay)))
     (let ((exts (ledger-navigate-find-element-extents (point))))
       (let ((b (car exts))
-            (e (cadr exts)))
-	(if (> (- e b) 1)
-	    (move-overlay ledger-xact-highlight-overlay b (+ 1 e))
-	  (move-overlay ledger-xact-highlight-overlay 1 1))))))
+            (e (cadr exts))
+            (p (point)))
+        (if (and (> (- e b) 1)       ; not an empty line
+                 (<= p e) (>= p b))  ; point is within the boundaries
+            (move-overlay ledger-xact-highlight-overlay b (+ 1 e))
+          (move-overlay ledger-xact-highlight-overlay 1 1))))))
 
 (defun ledger-xact-payee ()
   "Return the payee of the transaction containing point or nil."
