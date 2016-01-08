@@ -44,20 +44,23 @@
 (defvar ledger-xact-highlight-overlay (list))
 (make-variable-buffer-local 'ledger-xact-highlight-overlay)
 
+(defun ledger-highlight-make-overlay ()
+  (let ((ovl (make-overlay 1 1)))
+    (overlay-put ovl 'face 'ledger-font-xact-highlight-face)
+    (overlay-put ovl 'priority '(nil . 99))
+    ovl))
+
 (defun ledger-highlight-xact-under-point ()
   "Move the highlight overlay to the current transaction."
-  (if ledger-highlight-xact-under-point
-      (let ((exts (ledger-navigate-find-element-extents (point)))
-            (ovl ledger-xact-highlight-overlay))
-        (if (not ledger-xact-highlight-overlay)
-            (setq ovl
-                  (setq ledger-xact-highlight-overlay
-                        (make-overlay (car exts)
-                                      (cadr exts)
-                                      (current-buffer) t nil)))
-          (move-overlay ovl (car exts) (cadr exts)))
-        (overlay-put ovl 'face 'ledger-font-xact-highlight-face)
-        (overlay-put ovl 'priority '(nil . 99)))))
+  (when ledger-highlight-xact-under-point
+    (unless ledger-xact-highlight-overlay
+      (setq ledger-xact-highlight-overlay (ledger-highlight-make-overlay)))
+    (let ((exts (ledger-navigate-find-element-extents (point))))
+      (let ((b (car exts))
+            (e (cadr exts)))
+	(if (> (- e b) 1)
+	    (move-overlay ledger-xact-highlight-overlay b (+ 1 e))
+	  (move-overlay ledger-xact-highlight-overlay 1 1))))))
 
 (defun ledger-xact-payee ()
   "Return the payee of the transaction containing point or nil."
