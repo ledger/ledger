@@ -403,6 +403,7 @@ public:
   OPTION(report_t, auto_match);
 
   OPTION_(report_t, average, DO() { // -A
+      OTHER(empty).on(whence);
       OTHER(display_total_)
         .on(whence, "count>0?(display_total/count):0");
     });
