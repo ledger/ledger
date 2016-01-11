@@ -18,7 +18,7 @@
 
 - Fixed crash when using --trace 10 or above
 
-- Build fix for boost 1.56, 1.58, 1.59
+- Build fix for boost 1.58, 1.59, 1.60
 
 - Build fix for Cygwin
 
