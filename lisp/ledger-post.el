@@ -27,6 +27,8 @@
 
 ;;; Code:
 
+(declare-function ledger-navigate-find-xact-extents "ledger-navigate" (pos))
+
 (defgroup ledger-post nil
   "Options for controlling how Ledger-mode deals with postings and completion"
   :group 'ledger)

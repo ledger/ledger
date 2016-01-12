@@ -28,6 +28,14 @@
 (require 'eshell)
 (require 'ledger-regex)
 (require 'ledger-navigate)
+
+(defvar ledger-year)
+(defvar ledger-month)
+(declare-function ledger-read-date "ledger-mode" (prompt))
+(declare-function ledger-next-amount "ledger-post" (&optional end))
+(declare-function ledger-exec-ledger "ledger-exec" (input-buffer &optional output-buffer &rest args))
+(declare-function ledger-post-align-postings "ledger-post" (&optional beg end))
+
 ;; TODO: This file depends on code in ledger-mode.el, which depends on this.
 
 (defcustom ledger-highlight-xact-under-point t
@@ -123,6 +131,7 @@ MOMENT is an encoded date"
       (forward-line))))
 
 (defun ledger-year-and-month ()
+	"Return the current year and month, separated by / (or -, depending on LEDGER-USE-ISO-DATES)."
   (let ((sep (if ledger-use-iso-dates
                  "-"
                "/")))

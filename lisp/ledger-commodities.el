@@ -28,6 +28,10 @@
 
 (require 'ledger-regex)
 
+;; These keep the byte-compiler from warning about them, but have no other
+;; effect:
+(defvar ledger-environment-alist)
+
 (defcustom ledger-reconcile-default-commodity "$"
   "The default commodity for use in target calculations in ledger reconcile."
   :type 'string

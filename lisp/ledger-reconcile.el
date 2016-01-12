@@ -34,7 +34,21 @@
 (defvar ledger-bufs nil)
 (defvar ledger-acct nil)
 (defvar ledger-target nil)
-
+(defvar ledger-clear-whole-transactions)
+(declare-function ledger-exec-ledger "ledger-exec" (input-buffer &optional output-buffer &rest args))
+(declare-function ledger-split-commodity-string "ledger-commodities" (str))
+(declare-function ledger-commodity-to-string "ledger-commodities" (c1))
+(declare-function -commodity "ledger-commodities" (c1 c2))
+(declare-function ledger-navigate-to-line "ledger-navigate" (line-number))
+(declare-function ledger-toggle-current "ledger-state" (&optional style))
+(declare-function ledger-insert-effective-date "ledger-mode" (&optional date))
+(declare-function ledger-add-transaction "ledger-xact" (transaction-text &optional insert-at-point))
+(declare-function ledger-delete-current-transaction "ledger-xact" (pos))
+(declare-function ledger-highlight-xact-under-point "ledger-xact" nil)
+(declare-function ledger-occur-mode "ledger-occur")
+(declare-function ledger-read-account-with-prompt "ledger-mode" (prompt))
+(declare-function ledger-occur "ledger-occur" (regex))
+(declare-function ledger-read-commodity-string "ledger-commodities" (prompt))
 (defgroup ledger-reconcile nil
   "Options for Ledger-mode reconciliation"
   :group 'ledger)

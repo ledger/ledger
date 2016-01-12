@@ -24,6 +24,8 @@
 ;; Utilities for dealing with transaction and posting status.
 
 ;;; Code:
+(declare-function ledger-navigate-find-xact-extents "ledger-navigate" (pos))
+(declare-function ledger-thing-at-point "ledger-context" ())
 
 (defcustom ledger-clear-whole-transactions nil
   "If non-nil, clear whole transactions, not individual postings."
@@ -67,7 +69,7 @@
 
 
 (defun ledger-state-from-string (state-string)
-  "Get state from STATE-CHAR."
+  "Get state from STATE-STRING."
   (when state-string
     (cond
      ((string-match "\\!" state-string) 'pending)

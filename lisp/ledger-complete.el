@@ -28,6 +28,10 @@
 
 ;;; Code:
 
+(declare-function ledger-thing-at-point "ledger-context" nil)
+(declare-function ledger-add-transaction "ledger-xact" (transaction-text &optional insert-at-point))
+(declare-function between "ledger-schedule" (val low high))
+
 (defun ledger-parse-arguments ()
   "Parse whitespace separated arguments in the current region."
   ;; this is more complex than it appears to need, so that it can work

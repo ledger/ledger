@@ -25,6 +25,8 @@
 
 ;;; Code:
 
+(defvar ledger-buf)
+
 (defconst ledger-version-needed "3.0.0"
   "The version of ledger executable needed for interactive features.")
 

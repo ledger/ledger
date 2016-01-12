@@ -29,8 +29,9 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl))
+;; TODO: replace this with (require 'cl-lib)
+(with-no-warnings
+	(require 'cl))
 (require 'ledger-navigate)
 
 (defconst ledger-occur-overlay-property-name 'ledger-occur-custom-buffer-grep)
