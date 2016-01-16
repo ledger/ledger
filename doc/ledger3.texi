@@ -6234,11 +6234,25 @@ Specify the format to use for the @command{budget} report (@pxref{Format
 Strings}).  The default is:
 
 @smallexample
-"%(justify(scrub(display_total), 20, -1, true, color))"
+"%(justify(scrub(get_at(display_total, 0)), 12, -1, true, color))"
+" %(justify(-scrub(get_at(display_total, 1)), 12, "
+"           12 + 1 + 12, true, color))"
+" %(justify(scrub(get_at(display_total, 1) + "
+"                 get_at(display_total, 0)), 12, "
+"           12 + 1 + 12 + 1 + 12, true, color))"
+" %(ansify_if("
+"   justify((get_at(display_total, 1) ? "
+"            (100% * quantity(scrub(get_at(display_total, 0)))) / "
+"             -quantity(scrub(get_at(display_total, 1))) : 0), "
+"           5, -1, true, false),"
+"   magenta if (color and get_at(display_total, 1) and "
+"               (abs(quantity(scrub(get_at(display_total, 0))) / "
+"                    quantity(scrub(get_at(display_total, 1)))) >= 1))))"
 "  %(!options.flat ? depth_spacer : \"\")"
-"%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
-"%$1\n%/"
-"--------------------\n"
+"%-(ansify_if(partial_account(options.flat), blue if color))\n"
+"%/%$1 %$2 %$3 %$4\n%/"
+"%(prepend_width ? \" \" * int(prepend_width) : \"\")"
+"------------ ------------ ------------ -----\n"
 @end smallexample
 
 @item --by-payee
