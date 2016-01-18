@@ -325,7 +325,6 @@ void export_value()
     .def("to_mask", &value_t::to_mask)
     .def("to_sequence", &value_t::to_sequence)
 
-    .def("__unicode__", py_dump_relaxed)
     .def("__repr__", py_dump)
 
     .def("casted", &value_t::casted)
