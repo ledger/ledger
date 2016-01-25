@@ -23,8 +23,8 @@ and easy to use.
 
 ## For the Impatient
 
-I know, you just want to build and play.  If you have all the dependencies
-installed (see below), then simply do this:
+I know, you just want to build and play.  If you have all the [dependencies](#dependencies)
+installed, then simply do this:
 
     $ git clone git://github.com/ledger/ledger.git
     $ cd ledger && ./acprep update  # Update to the latest, configure, make
