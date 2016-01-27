@@ -1,10 +1,12 @@
 ; Check that include directives are relative for "-f /dev/stdin"
 include non-existent-ledger-file-BF3C1F82
+
 test -f - reg -> 1
 __ERROR__
 While parsing file "", line 2:
 Error: File to include was not found: "./non-existent-ledger-file-BF3C1F82"
 end test
+
 test -f /dev/stdin reg -> 1
 __ERROR__
 While parsing file "", line 2:

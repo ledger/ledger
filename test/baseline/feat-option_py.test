@@ -1,9 +1,9 @@
 python
     def option_pyfirst(context):
-        print "In --pyfirst (from %s)" % context
+        print("In --pyfirst (from %s)" % context)
 
     def option_pysecond(context, val):
-        print "In --pysecond=%s (from %s)" % (val, context)
+        print("In --pysecond=%s (from %s)" % (val, context))
 
 --pyfirst
 --pysecond Hey

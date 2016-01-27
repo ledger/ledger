@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function, unicode_literals
 
 import sys
 import os
@@ -12,7 +15,6 @@ try:
 except:
     pass
 
-from string import join
 from difflib import unified_diff
 
 from LedgerHarness import LedgerHarness
@@ -57,7 +59,8 @@ class RegressFile(object):
         in_error  = False
 
         line = self.fd.readline()
-        #print "line =", line
+        if sys.version_info.major == 2 and type(line) is str:
+            line = unicode(line, 'utf-8')
         while line:
             if line.startswith("test "):
                 command = line[5:]
@@ -86,15 +89,17 @@ class RegressFile(object):
                         test['output'].append(self.transform_line(line))
 
             line = self.fd.readline()
-            #print "line =", line
+            if sys.version_info.major == 2 and type(line) is str:
+               line = unicode(line, 'utf-8')
+            #print("line =", line)
 
         return test['command'] and test
 
     def notify_user(self, msg, test):
-        print msg
-        print "--"
-        print self.transform_line(test['command']),
-        print "--"
+        print(msg)
+        print("--")
+        print(self.transform_line(test['command']),)
+        print("--")
 
     def run_test(self, test):
         use_stdin = False
@@ -120,7 +125,10 @@ class RegressFile(object):
         if use_stdin:
             fd = open(self.filename)
             try:
-                p.stdin.write(fd.read())
+                stdin = fd.read()
+                if sys.version_info.major > 2:
+                    stdin = stdin.encode('utf-8')
+                p.stdin.write(stdin)
             finally:
                 fd.close()
         p.stdin.close()
@@ -147,7 +155,9 @@ class RegressFile(object):
                     self.notify_user("FAILURE in output from %s:" % self.filename, test)
                     success = False
                     printed = True
-                print " ", line,
+                if sys.version_info.major == 2 and type(line) is str:
+                    line = unicode(line, 'utf-8')
+                print(' ', line,)
 
         printed = False
         index   = 0
@@ -168,15 +178,15 @@ class RegressFile(object):
                                      % self.filename, test)
                     success = False
                     printed = True
-                print " ", line,
+                print(" ", line,)
 
         if test['exitcode'] is None or test['exitcode'] == p.wait():
             if success:
                 harness.success()
             else:
                 harness.failure(os.path.basename(self.filename))
-                print "STDERR:"
-                print p.stderr.read()
+                print("STDERR:")
+                print(p.stderr.read())
         else:
             if success: print
             if test['exitcode']:
@@ -187,7 +197,7 @@ class RegressFile(object):
 
     def run_tests(self):
         if os.path.getsize(self.filename) == 0:
-          print >>sys.stderr, "WARNING: Empty testfile detected: %s" % (self.filename)
+          print("WARNING: Empty testfile detected: %s" % (self.filename), file=sys.stderr)
           harness.failure(os.path.basename(self.filename))
           return False
         test = self.read_test()

@@ -3,6 +3,7 @@
 2012/02/30 * Test
   a  1
   b
+
 test -f - reg -> 1
 __ERROR__
 While parsing file "", line 3:
@@ -10,6 +11,7 @@ While parsing transaction:
 <no source context>
 Error: Day of month is not valid for year
 end test
+
 test -f /dev/stdin reg -> 1
 __ERROR__
 While parsing file "", line 3:

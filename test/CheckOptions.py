@@ -36,6 +36,7 @@ class CheckOptions (object):
 
   def find_functions(self, filename):
     return self.find_pattern(filename, self.function_pattern)
+
   def find_alternates(self):
     command = shlex.split('grep --no-filename OPT_ALT')
     for source_file in ['session', 'report']:
@@ -53,7 +54,7 @@ class CheckOptions (object):
     pipe   = Popen('%s --debug option.names parse true' %
         self.ledger, shell=True, stdout=PIPE, stderr=PIPE)
     regex = re.compile('\[DEBUG\]\s+Option:\s+(.*?)_?$')
-    ledger_options = {match.group(1).replace('_', '-') for match in {regex.search(line.decode()) for line in pipe.stderr} if match}
+    ledger_options = {match.group(1).replace('_', '-') for match in {regex.search(line.decode()) for line in pipe.stderr.readlines()} if match}
     return ledger_options
 
   def ledger_functions(self):
