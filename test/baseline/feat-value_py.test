@@ -1,6 +1,7 @@
 python
+    from __future__ import print_function
     def print_type(val):
-        print type(val), val
+        print(type(val), val)
 
 eval print_type(true)
 eval print_type([2010/08/10])

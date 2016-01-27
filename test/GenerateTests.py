@@ -3,6 +3,8 @@
 # This script confirms both that the register report "adds up", and that its
 # final balance is the same as what the balance report shows.
 
+from __future__ import print_function
+
 import sys
 import re
 
@@ -68,8 +70,8 @@ def generation_test(seed):
     #cerr_lines = [normalize(line) for line in p_cerr_bal.stdout.readlines()]
     #
     #if p_cerr_bal.wait() != 0:
-    #    print "Stderr balance for seed %d failed due to error:" % seed
-    #    print p_cerr_bal.stderr.read()
+    #    print("Stderr balance for seed %d failed due to error:" % seed)
+    #    print(p_cerr_bal.stderr.read())
     #    del p_cerr_bal
     #    return False
     #del p_cerr_bal
@@ -103,23 +105,23 @@ def generation_test(seed):
     #    if line[:2] == "  ":
     #        continue
     #    if not printed:
-    #        if success: print
-    #        print "Generation failure in output from seed %d (cerr vs. cout):" % seed
+    #        if success: print()
+    #        print("Generation failure in output from seed %d (cerr vs. cout):" % seed)
     #        if success: failed += 1
     #        success = False
     #        printed = True
-    #    print " ", line
+    #    print(" ", line)
 
     printed = False
     for line in ndiff(cout_lines, print_lines, charjunk=None):
         if line[:2] == "  ":
             continue
         if not printed:
-            if success: print
-            print "Generation failure in output from seed %d (cout vs. print):" % seed
+            if success: print()
+            print("Generation failure in output from seed %d (cout vs. print):" % seed)
             success = False
             printed = True
-        print " ", line
+        print(" ", line)
 
     return success
 

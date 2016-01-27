@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, unicode_literals
+
 import os
 import re
 import sys
@@ -43,7 +45,10 @@ class DocTests:
     return example
 
   def test_id(self, example):
-    return hashlib.sha1(example.rstrip()).hexdigest()[0:7].upper()
+    example_id = example.rstrip()
+    if sys.version_info.major > 2:
+        example_id = example_id.encode('utf-8')
+    return hashlib.sha1(example_id).hexdigest()[0:7].upper()
 
   def find_examples(self):
     startexample = re.compile(r'^@smallexample\s+@c\s+(%s|%s|%s|%s)(?::([\dA-Fa-f]+|validate))?(?:,(.*))?'
@@ -71,13 +76,13 @@ class DocTests:
         test_end_line = self.current_line
 
         if not test_id:
-          print >> sys.stderr, 'Example', test_kind, 'in line', test_begin_line, 'is missing id.'
+          print('Example', test_kind, 'in line', test_begin_line, 'is missing id.', file=sys.stderr)
           test_id = self.test_id(example)
           if test_kind == self.testin_token:
-            print >> sys.stderr, 'Use', self.test_id(example)
+            print('Use', self.test_id(example), file=sys.stderr)
         elif test_kind == self.testin_token and test_id != self.validate_token and test_id != self.test_id(example):
-          print >> sys.stderr, 'Expected test id', test_id, 'for example' \
-              , test_kind, 'on line', test_begin_line, 'to be', self.test_id(example)
+          print('Expected test id', test_id, 'for example' \
+              , test_kind, 'on line', test_begin_line, 'to be', self.test_id(example), file=sys.stderr)
 
         if test_id == self.validate_token:
           test_id = "Val-" + str(test_begin_line)
@@ -118,7 +123,12 @@ class DocTests:
       else:
         return None
 
-    command = filter(lambda x: x != '\n', shlex.split(command))
+    command_parts = shlex.split(command)
+    if sys.version_info.major == 2:
+      command_parts = map(lambda x: unicode(x, 'utf-8'), command_parts)
+    command = filter(lambda x: x != '\n', command_parts)
+    if sys.version_info.major > 2:
+        command = list(command)
     if command[0] == '$': command.remove('$')
     index = command.index('ledger')
     command[index] = self.ledger
@@ -146,7 +156,7 @@ class DocTests:
       tests = list(set(self.tests).intersection(tests))
       temp = list(set(self.tests).difference(tests))
       if len(temp) > 0:
-        print >> sys.stderr, 'Skipping non-existent examples: %s' % ', '.join(temp)
+        print('Skipping non-existent examples: %s' % ', '.join(temp), file=sys.stderr)
     
     for test_id in tests:
       validation = False
@@ -181,7 +191,7 @@ class DocTests:
             elif os.path.exists(os.path.join(test_input_dir, test_file)):
               command[findex] = os.path.join(test_input_dir, test_file)
         try:
-          convert_idx  = command.index('convert')
+          convert_idx  = command.index(str('convert'))
           convert_file = command[convert_idx+1]
           convert_data = example[self.testfile_token][self.testfile_token]
           if not os.path.exists(convert_file):
@@ -194,37 +204,40 @@ class DocTests:
           verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
           if sys.platform == 'win32':
             verify = verify.replace('\r\n', '\n')
+          if sys.version_info.major > 2:
+              verify = verify.decode('utf-8')
           valid = (output == verify) or (not error and validation)
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
           error = e.output
           valid = False
           failed.add(test_id)
         if valid and test_file_created:
           os.remove(test_file)
         if self.verbose > 0:
-          print test_id, ':', 'Passed' if valid else 'FAILED: {}'.format(error) if error else 'FAILED'
+          print(test_id, ':', 'Passed' if valid else 'FAILED: {}'.format(error) if error else 'FAILED')
         else:
           sys.stdout.write('.' if valid else 'E')
+          sys.stdout.flush()
 
         if not (valid or error):
           failed.add(test_id)
           if self.verbose > 1:
-            print ' '.join(command)
+            print(' '.join(command))
             if not validation:
               for line in unified_diff(output.split('\n'), verify.split('\n'), fromfile='generated', tofile='expected'):
                 print(line)
-              print
+              print()
       else:
         if self.verbose > 0:
-          print test_id, ':', 'Skipped'
+          print(test_id, ':', 'Skipped')
         else:
           sys.stdout.write('X')
 
-    if not self.verbose:
-      print
+    if self.verbose == 0:
+      print()
     if len(failed) > 0:
-      print "\nThe following examples failed:"
-      print " ", "\n  ".join(failed)
+      print("\nThe following examples failed:")
+      print(" ", "\n  ".join(failed))
     return len(failed)
 
   def main(self):
@@ -242,6 +255,7 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--verbose',
         dest='verbose',
         action='count',
+        default=0,
         help='be verbose. Add -vv for more verbosity')
     parser.add_argument('-l', '--ledger',
         dest='ledger',
