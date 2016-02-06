@@ -70,6 +70,7 @@ public:
   std::size_t      errors;
   std::size_t      count;
   std::size_t      sequence;
+  std::string      last;
 
   explicit parse_context_t(const path& cwd)
     : current_directory(cwd), master(NULL), scope(NULL),
