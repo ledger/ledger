@@ -1,5 +1,9 @@
                              Ledger NEWS
 
+* 3.1.2
+
+- Increased maximum length for regex from 255 to 4095.
+
 * 3.1.1
 
 - Added a --no-revalued option
