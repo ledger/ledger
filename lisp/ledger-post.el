@@ -170,7 +170,7 @@ regular text."
   (cond
    ((nth 4 (syntax-ppss))
     (call-interactively 'ledger-post-align-postings)
-    (fill-paragraph))
+    (fill-paragraph 0))
    ((use-region-p) (call-interactively 'ledger-post-align-postings))
    (t (call-interactively 'ledger-post-align-xact))))
 

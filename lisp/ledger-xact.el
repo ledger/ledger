@@ -54,7 +54,7 @@
 
 (defun ledger-highlight-make-overlay ()
   (let ((ovl (make-overlay 1 1)))
-    (overlay-put ovl 'face 'ledger-font-xact-highlight-face)
+    (overlay-put ovl 'font-lock-face 'ledger-font-xact-highlight-face)
     (overlay-put ovl 'priority '(nil . 99))
     ovl))
 

@@ -236,19 +236,19 @@ And calculate the target-delta of the account being reconciled."
       ;; remove the existing face and add the new face
       (remove-text-properties (line-beginning-position)
                               (line-end-position)
-                              (list 'face))
+                              (list 'font-lock-face))
       (cond ((eq status 'pending)
              (add-text-properties (line-beginning-position)
                                   (line-end-position)
-                                  (list 'face 'ledger-font-reconciler-pending-face )))
+                                  (list 'font-lock-face 'ledger-font-reconciler-pending-face )))
             ((eq status 'cleared)
              (add-text-properties (line-beginning-position)
                                   (line-end-position)
-                                  (list 'face 'ledger-font-reconciler-cleared-face )))
+                                  (list 'font-lock-face 'ledger-font-reconciler-cleared-face )))
             (t
              (add-text-properties (line-beginning-position)
                                   (line-end-position)
-                                  (list 'face 'ledger-font-reconciler-uncleared-face )))))
+                                  (list 'font-lock-face 'ledger-font-reconciler-uncleared-face )))))
     (forward-line)
     (beginning-of-line)
     (ledger-display-balance)))
@@ -339,7 +339,7 @@ and exit reconcile mode if `ledger-reconcile-finish-force-quit'"
     (goto-char (point-min))
     (while (not (eobp))
       (let ((where (get-text-property (point) 'where))
-            (face  (get-text-property (point) 'face)))
+            (face  (get-text-property (point) 'font-lock-face)))
         (if (eq face 'ledger-font-reconciler-pending-face)
             (with-current-buffer (ledger-reconcile-get-buffer where)
               (ledger-navigate-to-line (cdr where))
@@ -409,13 +409,13 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
   (if status
       (if (eq status 'pending)
           (set-text-properties beg (1- (point))
-                               (list 'face 'ledger-font-reconciler-pending-face
+                               (list 'font-lock-face 'ledger-font-reconciler-pending-face
                                      'where where))
         (set-text-properties beg (1- (point))
-                             (list 'face 'ledger-font-reconciler-cleared-face
+                             (list 'font-lock-face 'ledger-font-reconciler-cleared-face
                                    'where where)))
     (set-text-properties beg (1- (point))
-                         (list 'face 'ledger-font-reconciler-uncleared-face
+                         (list 'font-lock-face 'ledger-font-reconciler-uncleared-face
                                'where where))))
 
 (defun ledger-reconcile-format-xact (xact fmt)
