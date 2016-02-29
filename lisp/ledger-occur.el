@@ -108,7 +108,7 @@ currently active."
 (defun ledger-occur-make-visible-overlay (beg end)
   (let ((ovl (make-overlay beg end (current-buffer))))
     (overlay-put ovl ledger-occur-overlay-property-name t)
-    (overlay-put ovl 'face 'ledger-occur-xact-face)))
+    (overlay-put ovl 'font-lock-face 'ledger-occur-xact-face)))
 
 (defun ledger-occur-make-invisible-overlay (beg end)
   (let ((ovl (make-overlay beg end (current-buffer))))

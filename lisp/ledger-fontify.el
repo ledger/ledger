@@ -193,7 +193,7 @@ Fontify the first line of an xact"
 
 (defun ledger-fontify-set-face (extents face)
   "Set the text in EXTENTS to FACE."
-  (put-text-property (car extents) (cadr extents) 'face face))
+  (put-text-property (car extents) (cadr extents) 'font-lock-face face))
 
 
 (provide 'ledger-fontify)
