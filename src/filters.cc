@@ -982,10 +982,12 @@ void interval_posts::flush()
   std::stable_sort(all_posts.begin(), all_posts.end(),
                    sort_posts_by_date());
 
-  // Determine the beginning interval by using the earliest post
-  if (all_posts.size() > 0 && all_posts.front() &&
-      ! interval.find_period(all_posts.front()->date()))
-    throw_(std::logic_error, _("Failed to find period for interval report"));
+  // only if the interval has no start use the earliest post
+  if (!(interval.begin() && interval.find_period(*interval.begin())))
+    // Determine the beginning interval by using the earliest post
+    if (all_posts.size() > 0 && all_posts.front()
+        && !interval.find_period(all_posts.front()->date()))
+      throw_(std::logic_error, _("Failed to find period for interval report"));
 
   // Walk the interval forward reporting all posts within each one
   // before moving on, until we reach the end of all_posts
