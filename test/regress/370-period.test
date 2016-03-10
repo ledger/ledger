@@ -1,0 +1,443 @@
+;period days should not be alligned
+
+test period 'every 14 days from 2011/10/03'
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 14
+TOK_DAYS: days
+TOK_SINCE: since
+TOK_DATE:  year 2011 month Oct day 3
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2011 month Oct day 3
+duration: 14 days
+
+--- After stabilization ---
+   range: from year 2011 month Oct day 3
+   start: 11-Oct-03
+duration: 14 days
+
+--- Sample dates in range (max. 20) ---
+ 1: 11-Oct-03 -- 11-Oct-16
+ 2: 11-Oct-17 -- 11-Oct-30
+ 3: 11-Oct-31 -- 11-Nov-13
+ 4: 11-Nov-14 -- 11-Nov-27
+ 5: 11-Nov-28 -- 11-Dec-11
+ 6: 11-Dec-12 -- 11-Dec-25
+ 7: 11-Dec-26 -- 12-Jan-08
+ 8: 12-Jan-09 -- 12-Jan-22
+ 9: 12-Jan-23 -- 12-Feb-05
+10: 12-Feb-06 -- 12-Feb-19
+11: 12-Feb-20 -- 12-Mar-04
+12: 12-Mar-05 -- 12-Mar-18
+13: 12-Mar-19 -- 12-Apr-01
+14: 12-Apr-02 -- 12-Apr-15
+15: 12-Apr-16 -- 12-Apr-29
+16: 12-Apr-30 -- 12-May-13
+17: 12-May-14 -- 12-May-27
+18: 12-May-28 -- 12-Jun-10
+19: 12-Jun-11 -- 12-Jun-24
+20: 12-Jun-25 -- 12-Jul-08
+end test
+;ensure weeks behave as before
+test period 'every 1 weeks from 2011/10/03'
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 1
+TOK_WEEKS: weeks
+TOK_SINCE: since
+TOK_DATE:  year 2011 month Oct day 3
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2011 month Oct day 3
+duration: 1 week
+
+--- After stabilization ---
+   range: from year 2011 month Oct day 3
+   start: 11-Oct-03
+duration: 1 week
+
+--- Sample dates in range (max. 20) ---
+ 1: 11-Oct-03 -- 11-Oct-08
+ 2: 11-Oct-09 -- 11-Oct-15
+ 3: 11-Oct-16 -- 11-Oct-22
+ 4: 11-Oct-23 -- 11-Oct-29
+ 5: 11-Oct-30 -- 11-Nov-05
+ 6: 11-Nov-06 -- 11-Nov-12
+ 7: 11-Nov-13 -- 11-Nov-19
+ 8: 11-Nov-20 -- 11-Nov-26
+ 9: 11-Nov-27 -- 11-Dec-03
+10: 11-Dec-04 -- 11-Dec-10
+11: 11-Dec-11 -- 11-Dec-17
+12: 11-Dec-18 -- 11-Dec-24
+13: 11-Dec-25 -- 11-Dec-31
+14: 12-Jan-01 -- 12-Jan-07
+15: 12-Jan-08 -- 12-Jan-14
+16: 12-Jan-15 -- 12-Jan-21
+17: 12-Jan-22 -- 12-Jan-28
+18: 12-Jan-29 -- 12-Feb-04
+19: 12-Feb-05 -- 12-Feb-11
+20: 12-Feb-12 -- 12-Feb-18
+end test
+test period 'every 2 weeks from 2011/10/03'
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 2
+TOK_WEEKS: weeks
+TOK_SINCE: since
+TOK_DATE:  year 2011 month Oct day 3
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2011 month Oct day 3
+duration: 2 weeks
+
+--- After stabilization ---
+   range: from year 2011 month Oct day 3
+   start: 11-Oct-03
+duration: 2 weeks
+
+--- Sample dates in range (max. 20) ---
+ 1: 11-Oct-03 -- 11-Oct-08
+ 2: 11-Oct-09 -- 11-Oct-22
+ 3: 11-Oct-23 -- 11-Nov-05
+ 4: 11-Nov-06 -- 11-Nov-19
+ 5: 11-Nov-20 -- 11-Dec-03
+ 6: 11-Dec-04 -- 11-Dec-17
+ 7: 11-Dec-18 -- 11-Dec-31
+ 8: 12-Jan-01 -- 12-Jan-14
+ 9: 12-Jan-15 -- 12-Jan-28
+10: 12-Jan-29 -- 12-Feb-11
+11: 12-Feb-12 -- 12-Feb-25
+12: 12-Feb-26 -- 12-Mar-10
+13: 12-Mar-11 -- 12-Mar-24
+14: 12-Mar-25 -- 12-Apr-07
+15: 12-Apr-08 -- 12-Apr-21
+16: 12-Apr-22 -- 12-May-05
+17: 12-May-06 -- 12-May-19
+18: 12-May-20 -- 12-Jun-02
+19: 12-Jun-03 -- 12-Jun-16
+20: 12-Jun-17 -- 12-Jun-30
+end test
+test period 'every 3 weeks from 2011/10/03'
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 3
+TOK_WEEKS: weeks
+TOK_SINCE: since
+TOK_DATE:  year 2011 month Oct day 3
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2011 month Oct day 3
+duration: 3 weeks
+
+--- After stabilization ---
+   range: from year 2011 month Oct day 3
+   start: 11-Oct-03
+duration: 3 weeks
+
+--- Sample dates in range (max. 20) ---
+ 1: 11-Oct-03 -- 11-Oct-22
+ 2: 11-Oct-23 -- 11-Nov-12
+ 3: 11-Nov-13 -- 11-Dec-03
+ 4: 11-Dec-04 -- 11-Dec-24
+ 5: 11-Dec-25 -- 12-Jan-14
+ 6: 12-Jan-15 -- 12-Feb-04
+ 7: 12-Feb-05 -- 12-Feb-25
+ 8: 12-Feb-26 -- 12-Mar-17
+ 9: 12-Mar-18 -- 12-Apr-07
+10: 12-Apr-08 -- 12-Apr-28
+11: 12-Apr-29 -- 12-May-19
+12: 12-May-20 -- 12-Jun-09
+13: 12-Jun-10 -- 12-Jun-30
+14: 12-Jul-01 -- 12-Jul-21
+15: 12-Jul-22 -- 12-Aug-11
+16: 12-Aug-12 -- 12-Sep-01
+17: 12-Sep-02 -- 12-Sep-22
+18: 12-Sep-23 -- 12-Oct-13
+19: 12-Oct-14 -- 12-Nov-03
+20: 12-Nov-04 -- 12-Nov-24
+end test
+test period 'every 4 weeks from 2011/10/03'
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 4
+TOK_WEEKS: weeks
+TOK_SINCE: since
+TOK_DATE:  year 2011 month Oct day 3
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2011 month Oct day 3
+duration: 4 weeks
+
+--- After stabilization ---
+   range: from year 2011 month Oct day 3
+   start: 11-Oct-03
+duration: 4 weeks
+
+--- Sample dates in range (max. 20) ---
+ 1: 11-Oct-03 -- 11-Oct-22
+ 2: 11-Oct-23 -- 11-Nov-19
+ 3: 11-Nov-20 -- 11-Dec-17
+ 4: 11-Dec-18 -- 12-Jan-14
+ 5: 12-Jan-15 -- 12-Feb-11
+ 6: 12-Feb-12 -- 12-Mar-10
+ 7: 12-Mar-11 -- 12-Apr-07
+ 8: 12-Apr-08 -- 12-May-05
+ 9: 12-May-06 -- 12-Jun-02
+10: 12-Jun-03 -- 12-Jun-30
+11: 12-Jul-01 -- 12-Jul-28
+12: 12-Jul-29 -- 12-Aug-25
+13: 12-Aug-26 -- 12-Sep-22
+14: 12-Sep-23 -- 12-Oct-20
+15: 12-Oct-21 -- 12-Nov-17
+16: 12-Nov-18 -- 12-Dec-15
+17: 12-Dec-16 -- 13-Jan-12
+18: 13-Jan-13 -- 13-Feb-09
+19: 13-Feb-10 -- 13-Mar-09
+20: 13-Mar-10 -- 13-Apr-06
+end test
+test period 'every 5 weeks from 2011/10/03'
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 5
+TOK_WEEKS: weeks
+TOK_SINCE: since
+TOK_DATE:  year 2011 month Oct day 3
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2011 month Oct day 3
+duration: 5 weeks
+
+--- After stabilization ---
+   range: from year 2011 month Oct day 3
+   start: 11-Oct-03
+duration: 5 weeks
+
+--- Sample dates in range (max. 20) ---
+ 1: 11-Oct-03 -- 11-Oct-22
+ 2: 11-Oct-23 -- 11-Nov-26
+ 3: 11-Nov-27 -- 11-Dec-31
+ 4: 12-Jan-01 -- 12-Feb-04
+ 5: 12-Feb-05 -- 12-Mar-10
+ 6: 12-Mar-11 -- 12-Apr-14
+ 7: 12-Apr-15 -- 12-May-19
+ 8: 12-May-20 -- 12-Jun-23
+ 9: 12-Jun-24 -- 12-Jul-28
+10: 12-Jul-29 -- 12-Sep-01
+11: 12-Sep-02 -- 12-Oct-06
+12: 12-Oct-07 -- 12-Nov-10
+13: 12-Nov-11 -- 12-Dec-15
+14: 12-Dec-16 -- 13-Jan-19
+15: 13-Jan-20 -- 13-Feb-23
+16: 13-Feb-24 -- 13-Mar-30
+17: 13-Mar-31 -- 13-May-04
+18: 13-May-05 -- 13-Jun-08
+19: 13-Jun-09 -- 13-Jul-13
+20: 13-Jul-14 -- 13-Aug-17
+end test
+test period 'every 6 weeks from 2011/10/03'
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 6
+TOK_WEEKS: weeks
+TOK_SINCE: since
+TOK_DATE:  year 2011 month Oct day 3
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2011 month Oct day 3
+duration: 6 weeks
+
+--- After stabilization ---
+   range: from year 2011 month Oct day 3
+   start: 11-Oct-03
+duration: 6 weeks
+
+--- Sample dates in range (max. 20) ---
+ 1: 11-Oct-03 -- 11-Oct-22
+ 2: 11-Oct-23 -- 11-Dec-03
+ 3: 11-Dec-04 -- 12-Jan-14
+ 4: 12-Jan-15 -- 12-Feb-25
+ 5: 12-Feb-26 -- 12-Apr-07
+ 6: 12-Apr-08 -- 12-May-19
+ 7: 12-May-20 -- 12-Jun-30
+ 8: 12-Jul-01 -- 12-Aug-11
+ 9: 12-Aug-12 -- 12-Sep-22
+10: 12-Sep-23 -- 12-Nov-03
+11: 12-Nov-04 -- 12-Dec-15
+12: 12-Dec-16 -- 13-Jan-26
+13: 13-Jan-27 -- 13-Mar-09
+14: 13-Mar-10 -- 13-Apr-20
+15: 13-Apr-21 -- 13-Jun-01
+16: 13-Jun-02 -- 13-Jul-13
+17: 13-Jul-14 -- 13-Aug-24
+18: 13-Aug-25 -- 13-Oct-05
+19: 13-Oct-06 -- 13-Nov-16
+20: 13-Nov-17 -- 13-Dec-28
+end test
+test period 'every 7 weeks from 2011/10/03'
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 7
+TOK_WEEKS: weeks
+TOK_SINCE: since
+TOK_DATE:  year 2011 month Oct day 3
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2011 month Oct day 3
+duration: 7 weeks
+
+--- After stabilization ---
+   range: from year 2011 month Oct day 3
+   start: 11-Oct-03
+duration: 7 weeks
+
+--- Sample dates in range (max. 20) ---
+ 1: 11-Oct-03 -- 11-Nov-12
+ 2: 11-Nov-13 -- 11-Dec-31
+ 3: 12-Jan-01 -- 12-Feb-18
+ 4: 12-Feb-19 -- 12-Apr-07
+ 5: 12-Apr-08 -- 12-May-26
+ 6: 12-May-27 -- 12-Jul-14
+ 7: 12-Jul-15 -- 12-Sep-01
+ 8: 12-Sep-02 -- 12-Oct-20
+ 9: 12-Oct-21 -- 12-Dec-08
+10: 12-Dec-09 -- 13-Jan-26
+11: 13-Jan-27 -- 13-Mar-16
+12: 13-Mar-17 -- 13-May-04
+13: 13-May-05 -- 13-Jun-22
+14: 13-Jun-23 -- 13-Aug-10
+15: 13-Aug-11 -- 13-Sep-28
+16: 13-Sep-29 -- 13-Nov-16
+17: 13-Nov-17 -- 14-Jan-04
+18: 14-Jan-05 -- 14-Feb-22
+19: 14-Feb-23 -- 14-Apr-12
+20: 14-Apr-13 -- 14-May-31
+end test
+test period 'every 8 weeks from 2011/10/03'
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 8
+TOK_WEEKS: weeks
+TOK_SINCE: since
+TOK_DATE:  year 2011 month Oct day 3
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2011 month Oct day 3
+duration: 8 weeks
+
+--- After stabilization ---
+   range: from year 2011 month Oct day 3
+   start: 11-Oct-03
+duration: 8 weeks
+
+--- Sample dates in range (max. 20) ---
+ 1: 11-Oct-03 -- 11-Nov-19
+ 2: 11-Nov-20 -- 12-Jan-14
+ 3: 12-Jan-15 -- 12-Mar-10
+ 4: 12-Mar-11 -- 12-May-05
+ 5: 12-May-06 -- 12-Jun-30
+ 6: 12-Jul-01 -- 12-Aug-25
+ 7: 12-Aug-26 -- 12-Oct-20
+ 8: 12-Oct-21 -- 12-Dec-15
+ 9: 12-Dec-16 -- 13-Feb-09
+10: 13-Feb-10 -- 13-Apr-06
+11: 13-Apr-07 -- 13-Jun-01
+12: 13-Jun-02 -- 13-Jul-27
+13: 13-Jul-28 -- 13-Sep-21
+14: 13-Sep-22 -- 13-Nov-16
+15: 13-Nov-17 -- 14-Jan-11
+16: 14-Jan-12 -- 14-Mar-08
+17: 14-Mar-09 -- 14-May-03
+18: 14-May-04 -- 14-Jun-28
+19: 14-Jun-29 -- 14-Aug-23
+20: 14-Aug-24 -- 14-Oct-18
+end test
+test period 'every 9 weeks from 2011/10/03'
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 9
+TOK_WEEKS: weeks
+TOK_SINCE: since
+TOK_DATE:  year 2011 month Oct day 3
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2011 month Oct day 3
+duration: 9 weeks
+
+--- After stabilization ---
+   range: from year 2011 month Oct day 3
+   start: 11-Oct-03
+duration: 9 weeks
+
+--- Sample dates in range (max. 20) ---
+ 1: 11-Oct-03 -- 11-Nov-12
+ 2: 11-Nov-13 -- 12-Jan-14
+ 3: 12-Jan-15 -- 12-Mar-17
+ 4: 12-Mar-18 -- 12-May-19
+ 5: 12-May-20 -- 12-Jul-21
+ 6: 12-Jul-22 -- 12-Sep-22
+ 7: 12-Sep-23 -- 12-Nov-24
+ 8: 12-Nov-25 -- 13-Jan-26
+ 9: 13-Jan-27 -- 13-Mar-30
+10: 13-Mar-31 -- 13-Jun-01
+11: 13-Jun-02 -- 13-Aug-03
+12: 13-Aug-04 -- 13-Oct-05
+13: 13-Oct-06 -- 13-Dec-07
+14: 13-Dec-08 -- 14-Feb-08
+15: 14-Feb-09 -- 14-Apr-12
+16: 14-Apr-13 -- 14-Jun-14
+17: 14-Jun-15 -- 14-Aug-16
+18: 14-Aug-17 -- 14-Oct-18
+19: 14-Oct-19 -- 14-Dec-20
+20: 14-Dec-21 -- 15-Feb-21
+end test
+test period 'every 10 weeks from 2011/10/03'
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 10
+TOK_WEEKS: weeks
+TOK_SINCE: since
+TOK_DATE:  year 2011 month Oct day 3
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2011 month Oct day 3
+duration: 10 weeks
+
+--- After stabilization ---
+   range: from year 2011 month Oct day 3
+   start: 11-Oct-03
+duration: 10 weeks
+
+--- Sample dates in range (max. 20) ---
+ 1: 11-Oct-03 -- 11-Oct-22
+ 2: 11-Oct-23 -- 11-Dec-31
+ 3: 12-Jan-01 -- 12-Mar-10
+ 4: 12-Mar-11 -- 12-May-19
+ 5: 12-May-20 -- 12-Jul-28
+ 6: 12-Jul-29 -- 12-Oct-06
+ 7: 12-Oct-07 -- 12-Dec-15
+ 8: 12-Dec-16 -- 13-Feb-23
+ 9: 13-Feb-24 -- 13-May-04
+10: 13-May-05 -- 13-Jul-13
+11: 13-Jul-14 -- 13-Sep-21
+12: 13-Sep-22 -- 13-Nov-30
+13: 13-Dec-01 -- 14-Feb-08
+14: 14-Feb-09 -- 14-Apr-19
+15: 14-Apr-20 -- 14-Jun-28
+16: 14-Jun-29 -- 14-Sep-06
+17: 14-Sep-07 -- 14-Nov-15
+18: 14-Nov-16 -- 15-Jan-24
+19: 15-Jan-25 -- 15-Apr-04
+20: 15-Apr-05 -- 15-Jun-13
+end test
