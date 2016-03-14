@@ -1,0 +1,29 @@
+2003/09/13 a payee ; sat
+    A  $100.00
+    B
+
+2003/09/14 a payee ; mon
+    A  $100.00
+    B
+    
+2004/10/15 a payee ; fri
+    A  $50.00
+    B
+
+2004/10/19 a payee ; tue
+    A  $50.00
+    B
+
+;sun first day of month
+test reg -p "every 12 months from 2001/04/01" 
+03-Apr-01 - 04-Mar-31           A                           $200.00      $200.00
+                                B                          $-200.00            0
+04-Apr-01 - 05-Mar-31           A                           $100.00      $100.00
+                                B                          $-100.00            0
+end test
+test reg -p 'every 12 months'
+03-Sep-01 - 04-Aug-31           A                           $200.00      $200.00
+                                B                          $-200.00            0
+04-Sep-01 - 05-Aug-31           A                           $100.00      $100.00
+                                B                          $-100.00            0
+end test
