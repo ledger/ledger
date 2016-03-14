@@ -1304,21 +1304,35 @@ void date_interval_t::stabilize(const optional<date_t>& date)
 #endif
 
       date_t when = start ? *start : *date;
-
-      if (duration->quantum == date_duration_t::MONTHS ||
-          duration->quantum == date_duration_t::QUARTERS ||
-          duration->quantum == date_duration_t::YEARS) {
+      switch (duration->quantum) {
+      case date_duration_t::MONTHS:
+      case date_duration_t::QUARTERS:
+      case date_duration_t::YEARS:
+        // These start on most recent period start quantum before when
         DEBUG("times.interval",
-              "stabilize: monthly, quarterly or yearly duration");
+            "stabilize: monthly, quarterly or yearly duration");
         start = date_duration_t::find_nearest(when, duration->quantum);
-      } else {
-        DEBUG("times.interval", "stabilize: daily or weekly duration");
-        start = date_duration_t::find_nearest(when - gregorian::days(400),
-                                              duration->quantum);
+        break;
+      case date_duration_t::WEEKS:
+        // Weeks start on the beginning of week prior to 400 remainder period length
+        // Either the first quanta of the period or the last quanta of the period seems more sensible
+        // implies period is never less than 400 days not too unreasonable
+        DEBUG("times.interval", "stabilize: weekly duration");
+        {
+          int period = duration->length * 7;
+          start = date_duration_t::find_nearest(
+              when - gregorian::days(period + 400 % period), duration->quantum);
+        }
+        break;
+      default:
+        // multiples of days have a quanta of 1 day so should not have the start date adjusted to a quanta
+        DEBUG("times.interval",
+            "stabilize: daily duration - stable by definition");
+        start = when;
+        break;
       }
 
-      DEBUG("times.interval",
-            "stabilize: beginning start date = " << *start);
+      DEBUG("times.interval", "stabilize: beginning start date = " << *start);
 
       while (*start < *date) {
         date_interval_t next_interval(*this);
@@ -1328,7 +1342,7 @@ void date_interval_t::stabilize(const optional<date_t>& date)
           *this = next_interval;
         } else {
           end_of_duration = none;
-          next            = none;
+          next = none;
           break;
         }
       }

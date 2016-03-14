@@ -1,0 +1,17 @@
+;does not care about start date
+~ every 14 days from 2010/02/23
+    Expenses:Bills:Housecleaning        $85.00
+    Assets:Bank:Checking
+
+;before Sun aug 01 2010
+;now is Mon jun 21 2010
+;a Tuesday?
+;forecasts period start is now first forecast transaction is now + 1 'tomorrow'
+test reg --forecast 'date <[2010/08/01]' --now=2010/06/13
+10-Jun-27 Forecast transaction  Ex:Bills:Housecleaning       $85.00       $85.00
+10-Jun-27 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Jul-11 Forecast transaction  Ex:Bills:Housecleaning       $85.00       $85.00
+10-Jul-11 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+10-Jul-25 Forecast transaction  Ex:Bills:Housecleaning       $85.00       $85.00
+10-Jul-25 Forecast transaction  Assets:Bank:Checking        $-85.00            0
+end test

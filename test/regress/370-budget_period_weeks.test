@@ -1,0 +1,29 @@
+;budgets care about start dates
+~ every 2 weeks from 2010/02/23
+    Expenses:Bills:Housecleaning        $85.00
+    Assets:Bank:Checking
+
+;before Sun aug 01 2010
+;now is Mon jun 21 2010
+;a Tuesday?
+;
+test reg --budget --now=2010/06/13
+10-Feb-23 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-Feb-23 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-Feb-28 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-Feb-28 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-Mar-14 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-Mar-14 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-Mar-28 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-Mar-28 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-Apr-11 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-Apr-11 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-Apr-25 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-Apr-25 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-May-09 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-May-09 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-May-23 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-May-23 Budget transaction    Assets:Bank:Checking         $85.00            0
+10-Jun-06 Budget transaction    Ex:Bills:Housecleaning      $-85.00      $-85.00
+10-Jun-06 Budget transaction    Assets:Bank:Checking         $85.00            0
+end test
