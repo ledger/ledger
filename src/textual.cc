@@ -1671,24 +1671,26 @@ post_t * instance_t::parse_post(char *          line,
         break;
       }
 
-      amount_t tot = amt - diff;
-
       DEBUG("post.assign",
             "line " << context.linenum << ": " << "diff = " << diff);
       DEBUG("textual.parse", "line " << context.linenum << ": "
             << "POST assign: diff = " << diff);
 
-      if (! diff.is_zero()) {
-        if (! post->amount.is_null()) {
-          diff -= post->amount;
-          if (! no_assertions && ! diff.is_zero())
-            throw_(parse_error,
-                   _f("Balance assertion off by %1% (expected to see %2%)")
-                   % diff % tot);
-        } else {
+      if (post->amount.is_null()) {
+        // balance assignment
+        if (! diff.is_zero()) {
           post->amount = diff;
           DEBUG("textual.parse", "line " << context.linenum << ": "
                 << "Overwrite null posting");
+        }
+      } else {
+        // balance assertion
+        diff -= post->amount;
+        if (! no_assertions && ! diff.is_zero()) {
+          amount_t tot = amt - diff;
+          throw_(parse_error,
+                  _f("Balance assertion off by %1% (expected to see %2%)")
+                  % diff % tot);
         }
       }
 
