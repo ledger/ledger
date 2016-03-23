@@ -13,6 +13,6 @@ While parsing file "$FILE", line 8:
 While parsing posting:
   Assets:Cash          -$10 = $80
                               ^^^
-Error: Balance assertion off by $-10 (expected to see $100)
+Error: Balance assertion off by $-10 (expected to see $90)
 end test
 

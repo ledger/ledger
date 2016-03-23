@@ -1,0 +1,12 @@
+2000/01/01 Pre-transaction balance
+    A  $5.00 = $0.00
+    B
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 2:
+While parsing posting:
+  A  $5.00 = $0.00
+             ^^^^^
+Error: Balance assertion off by $-5.00 (expected to see $5.00)
+end test
