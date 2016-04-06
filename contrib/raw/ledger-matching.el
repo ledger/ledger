@@ -1,6 +1,6 @@
 ;; This library is intended to allow me to view a receipt on one panel, and tie it to ledger transactions in another
 
-(require 'ldg-report)
+(require 'ledger-report)
 
 (defgroup ledger-matching nil
   "Ledger image matching")
