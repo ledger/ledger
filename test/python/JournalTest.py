@@ -22,6 +22,24 @@ class JournalTestCase(unittest.TestCase):
         for post in journal.query("food"):
             self.assertEqual(str(post.account), "Expenses:Food")
             self.assertEqual(post.amount, Amount("$21.34"))
+
+    def testParseError(self):
+        # TODO: ledger spits out parse errors to standard out.
+        # This should not happen, especially when the error
+        # has already been captured by a Python exception.
+        def fun():
+            read_journal_from_string("""
+2012-03-01 KFC
+    Expenses:Food  rsnetnirsnti
+    Assets:Cash
+""")
+        self.assertRaises(RuntimeError, fun)
+        try:
+            fun()
+        except RuntimeError as e:
+            self.assertEquals(str(e).splitlines()[-1],
+                              "No quantity specified for amount")
+
  
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(JournalTestCase)
