@@ -115,7 +115,9 @@
             (string= "" date))
         (format-time-string
          (or (cdr (assoc "date-format" ledger-environment-alist))
-             ledger-default-date-format))
+             (if ledger-use-iso-dates
+                 ledger-iso-date-format
+               ledger-default-date-format)))
       date)))
 
 (defun ledger-read-string-with-default (prompt default)

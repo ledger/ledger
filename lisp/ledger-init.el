@@ -34,6 +34,8 @@
 
 (defvar ledger-default-date-format "%Y/%m/%d")
 
+(defvar ledger-iso-date-format "%Y-%m-%d")
+
 (defun ledger-init-parse-initialization (buffer)
   "Parse the .ledgerrc file in BUFFER."
   (with-current-buffer buffer
