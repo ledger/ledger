@@ -15,7 +15,7 @@ The purpose of this article is not to offer an introduction to Unicode in genera
 
 To illustrate the use of the library, let's start with a small but complete program that opens a file containing UTF-8 encoded text, reads it line by line, checks each line for invalid UTF-8 byte sequences, and converts it to UTF-16 encoding and back to UTF-8:
 
-```
+```cpp
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -76,7 +76,7 @@ In the previous code sample, for each line we performed a detection of invalid U
 
 Here is a function that checks whether the content of a file is valid UTF-8 encoded text without reading the content into the memory:
 
-```
+```cpp
 bool valid_utf8_file(const char* file_name)
 {
     ifstream ifs(file_name);
@@ -94,7 +94,7 @@ Because the function `utf8::is_valid()` works with input iterators, we were able
 
 Note that other functions that take input iterator arguments can be used in a similar way. For instance, to read the content of a UTF-8 encoded text file and convert the text to UTF-16, just do something like:
 
-```
+```cpp
     utf8::utf8to16(it, eos, back_inserter(u16string));
 ```
 
@@ -102,7 +102,7 @@ Note that other functions that take input iterator arguments can be used in a si
 
 If we have some text that "probably" contains UTF-8 encoded text and we want to replace any invalid UTF-8 sequence with a replacement character, something like the following function may be used:
 
-```
+```cpp
 void fix_utf8_string(std::string& str)
 {
     std::string temp;
@@ -123,7 +123,7 @@ Available in version 1.0 and later.
 
 Encodes a 32 bit code point as a UTF-8 sequence of octets and appends the sequence to a UTF-8 string.
 
-```
+```cpp
 template <typename octet_iterator>
 octet_iterator append(uint32_t cp, octet_iterator result);
 ```
@@ -135,7 +135,7 @@ Return value: an iterator pointing to the place after the newly appended sequenc
 
 Example of use:
 
-```
+```cpp
 unsigned char u[5] = {0,0,0,0,0};
 unsigned char* end = append(0x0448, u);
 assert (u[0] == 0xd1 && u[1] == 0x88 && u[2] == 0 && u[3] == 0 && u[4] == 0);
@@ -151,7 +151,7 @@ Available in version 1.0 and later.
 
 Given the iterator to the beginning of the UTF-8 sequence, it returns the code point and moves the iterator to the next position.
 
-```
+```cpp
 template <typename octet_iterator> 
 uint32_t next(octet_iterator& it, octet_iterator end);
 ```
@@ -163,7 +163,7 @@ Return value: the 32 bit representation of the processed UTF-8 code point.
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 char* w = twochars;
 int cp = next(w, twochars + 6);
@@ -181,7 +181,7 @@ Available in version 2.1 and later.
 
 Given the iterator to the beginning of the UTF-8 sequence, it returns the code point for the following sequence without changing the value of the iterator.
 
-```
+```cpp
 template <typename octet_iterator> 
 uint32_t peek_next(octet_iterator it, octet_iterator end);
 ```
@@ -194,7 +194,7 @@ Return value: the 32 bit representation of the processed UTF-8 code point.
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 char* w = twochars;
 int cp = peek_next(w, twochars + 6);
@@ -210,7 +210,7 @@ Available in version 1.02 and later.
 
 Given a reference to an iterator pointing to an octet in a UTF-8 sequence, it decreases the iterator until it hits the beginning of the previous UTF-8 encoded code point and returns the 32 bits representation of the code point.
 
-```
+```cpp
 template <typename octet_iterator> 
 uint32_t prior(octet_iterator& it, octet_iterator start);
 ```
@@ -222,7 +222,7 @@ uint32_t prior(octet_iterator& it, octet_iterator start);
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 unsigned char* w = twochars + 3;
 int cp = prior (w, twochars);
@@ -244,7 +244,7 @@ Deprecated in version 1.02 and later.
 
 Given a reference to an iterator pointing to an octet in a UTF-8 seqence, it decreases the iterator until it hits the beginning of the previous UTF-8 encoded code point and returns the 32 bits representation of the code point.
 
-```
+```cpp
 template <typename octet_iterator> 
 uint32_t previous(octet_iterator& it, octet_iterator pass_start);
 ```
@@ -256,7 +256,7 @@ Return value: the 32 bit representation of the previous code point.
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 unsigned char* w = twochars + 3;
 int cp = previous (w, twochars - 1);
@@ -276,7 +276,7 @@ Available in version 1.0 and later.
 
 Advances an iterator by the specified number of code points within an UTF-8 sequence.
 
-```
+```cpp
 template <typename octet_iterator, typename distance_type> 
 void advance (octet_iterator& it, distance_type n, octet_iterator end);
 ```
@@ -289,7 +289,7 @@ void advance (octet_iterator& it, distance_type n, octet_iterator end);
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 unsigned char* w = twochars;
 advance (w, 2, twochars + 6);
@@ -306,7 +306,7 @@ Available in version 1.0 and later.
 
 Given the iterators to two UTF-8 encoded code points in a seqence, returns the number of code points between them.
 
-```
+```cpp
 template <typename octet_iterator> 
 typename std::iterator_traits<octet_iterator>::difference_type distance (octet_iterator first, octet_iterator last);
 ```
@@ -318,7 +318,7 @@ typename std::iterator_traits<octet_iterator>::difference_type distance (octet_i
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 size_t dist = utf8::distance(twochars, twochars + 5);
 assert (dist == 2);
@@ -334,7 +334,7 @@ Available in version 1.0 and later.
 
 Converts a UTF-16 encoded string to UTF-8.
 
-```
+```cpp
 template <typename u16bit_iterator, typename octet_iterator>
 octet_iterator utf16to8 (u16bit_iterator start, u16bit_iterator end, octet_iterator result);
 ```
@@ -348,7 +348,7 @@ Return value: An iterator pointing to the place after the appended UTF-8 string.
 
 Example of use:
 
-```
+```cpp
 unsigned short utf16string[] = {0x41, 0x0448, 0x65e5, 0xd834, 0xdd1e};
 vector<unsigned char> utf8result;
 utf16to8(utf16string, utf16string + 5, back_inserter(utf8result));
@@ -363,7 +363,7 @@ Available in version 1.0 and later.
 
 Converts an UTF-8 encoded string to UTF-16
 
-```
+```cpp
 template <typename u16bit_iterator, typename octet_iterator>
 u16bit_iterator utf8to16 (octet_iterator start, octet_iterator end, u16bit_iterator result);
 ```
@@ -376,7 +376,7 @@ Return value: An iterator pointing to the place after the appended UTF-16 string
 
 Example of use:
 
-```
+```cpp
 char utf8_with_surrogates[] = "\xe6\x97\xa5\xd1\x88\xf0\x9d\x84\x9e";
 vector <unsigned short> utf16result;
 utf8to16(utf8_with_surrogates, utf8_with_surrogates + 9, back_inserter(utf16result));
@@ -393,7 +393,7 @@ Available in version 1.0 and later.
 
 Converts a UTF-32 encoded string to UTF-8.
 
-```
+```cpp
 template <typename octet_iterator, typename u32bit_iterator>
 octet_iterator utf32to8 (u32bit_iterator start, u32bit_iterator end, octet_iterator result);
 ```
@@ -422,7 +422,7 @@ Available in version 1.0 and later.
 
 Converts a UTF-8 encoded string to UTF-32.
 
-```
+```cpp
 template <typename octet_iterator, typename u32bit_iterator>
 u32bit_iterator utf8to32 (octet_iterator start, octet_iterator end, u32bit_iterator result);
 ```
@@ -436,7 +436,7 @@ Return value: An iterator pointing to the place after the appended UTF-32 string
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 vector<int> utf32result;
 utf8to32(twochars, twochars + 5, back_inserter(utf32result));
@@ -451,7 +451,7 @@ Available in version 1.0 and later.
 
 Detects an invalid sequence within a UTF-8 string.
 
-```
+```cpp
 template <typename octet_iterator> 
 octet_iterator find_invalid(octet_iterator start, octet_iterator end);
 ```
@@ -463,7 +463,7 @@ Return value: an iterator pointing to the first invalid octet in the UTF-8 strin
 
 Example of use:
 
-```
+```cpp
 char utf_invalid[] = "\xe6\x97\xa5\xd1\x88\xfa";
 char* invalid = find_invalid(utf_invalid, utf_invalid + 6);
 assert (invalid == utf_invalid + 5);
@@ -477,7 +477,7 @@ Available in version 1.0 and later.
 
 Checks whether a sequence of octets is a valid UTF-8 string.
 
-```
+```cpp
 template <typename octet_iterator> 
 bool is_valid(octet_iterator start, octet_iterator end);
 ```
@@ -489,7 +489,7 @@ Return value: `true` if the sequence is a valid UTF-8 string; `false` if not.
 
 Example of use:
 
-```
+```cpp
 char utf_invalid[] = "\xe6\x97\xa5\xd1\x88\xfa";
 bool bvalid = is_valid(utf_invalid, utf_invalid + 6);
 assert (bvalid == false);
@@ -503,7 +503,7 @@ Available in version 2.0 and later.
 
 Replaces all invalid UTF-8 sequences within a string with a replacement marker.
 
-```
+```cpp
 template <typename octet_iterator, typename output_iterator>
 output_iterator replace_invalid(octet_iterator start, octet_iterator end, output_iterator out, uint32_t replacement);
 template <typename octet_iterator, typename output_iterator>
@@ -520,7 +520,7 @@ Return value: An iterator pointing to the place after the UTF-8 string with repl
 
 Example of use:
 
-```
+```cpp
 char invalid_sequence[] = "a\x80\xe0\xa0\xc0\xaf\xed\xa0\x80z";
 vector<char> replace_invalid_result;
 replace_invalid (invalid_sequence, invalid_sequence + sizeof(invalid_sequence), back_inserter(replace_invalid_result), '?');
@@ -540,7 +540,7 @@ Available in version 2.3 and later. Relaces deprecated `is_bom()` function.
 
 Checks whether an octet sequence starts with a UTF-8 byte order mark (BOM)
 
-```
+```cpp
 template <typename octet_iterator> 
 bool starts_with_bom (octet_iterator it, octet_iterator end);
 ```
@@ -552,7 +552,7 @@ Return value: `true` if the sequence starts with a UTF-8 byte order mark; `false
 
 Example of use:
 
-```
+```cpp
 unsigned char byte_order_mark[] = {0xef, 0xbb, 0xbf};
 bool bbom = starts_with_bom(byte_order_mark, byte_order_mark + sizeof(byte_order_mark));
 assert (bbom == true);
@@ -566,7 +566,7 @@ Available in version 1.0 and later. Deprecated in version 2.3\. `starts_with_bom
 
 Checks whether a sequence of three octets is a UTF-8 byte order mark (BOM)
 
-```
+```cpp
 template <typename octet_iterator> 
 bool is_bom (octet_iterator it);  // Deprecated
 ```
@@ -577,7 +577,7 @@ Return value: `true` if the sequence is UTF-8 byte order mark; `false` if not.
 
 Example of use:
 
-```
+```cpp
 unsigned char byte_order_mark[] = {0xef, 0xbb, 0xbf};
 bool bbom = is_bom(byte_order_mark);
 assert (bbom == true);
@@ -595,13 +595,13 @@ Available in version 2.3 and later.
 
 Base class for the exceptions thrown by UTF CPP library functions.
 
-```
+```cpp
 class exception : public std::exception {};
 ```
 
 Example of use:
 
-```
+```cpp
 try {
   code_that_uses_utf_cpp_library();
 }
@@ -616,7 +616,7 @@ Available in version 1.0 and later.
 
 Thrown by UTF8 CPP functions such as `advance` and `next` if an UTF-8 sequence represents and invalid code point.
 
-```
+```cpp
 class invalid_code_point : public exception {
 public: 
     uint32_t code_point() const;
@@ -631,7 +631,7 @@ Available in version 1.0 and later.
 
 Thrown by UTF8 CPP functions such as `next` and `prior` if an invalid UTF-8 sequence is detected during decoding.
 
-```
+```cpp
 class invalid_utf8 : public exception {
 public: 
     uint8_t utf8_octet() const;
@@ -646,7 +646,7 @@ Available in version 1.0 and later.
 
 Thrown by UTF8 CPP function `utf16to8` if an invalid UTF-16 sequence is detected during decoding.
 
-```
+```cpp
 class invalid_utf16 : public exception {
 public: 
     uint16_t utf16_word() const;
@@ -661,7 +661,7 @@ Available in version 1.0 and later.
 
 Thrown by UTF8 CPP functions such as `next` if the end of the decoded UTF-8 sequence was reached before the code point was decoded.
 
-```
+```cpp
 class not_enough_room : public exception {};
 ```
 
@@ -671,7 +671,7 @@ Available in version 2.0 and later.
 
 Adapts the underlying octet iterator to iterate over the sequence of code points, rather than raw octets.
 
-```
+```cpp
 template <typename octet_iterator>
 class iterator;
 ```
@@ -691,7 +691,7 @@ class iterator;
 
 Example of use:
 
-```
+```cpp
 char* threechars = "\xf0\x90\x8d\x86\xe6\x97\xa5\xd1\x88";
 utf8::iterator<char*> it(threechars, threechars, threechars + 9);
 utf8::iterator<char*> it2 = it;
@@ -714,7 +714,7 @@ The purpose of `utf8::iterator` adapter is to enable easy iteration as well as t
 
 Note that `utf8::iterator` adapter is a checked iterator. It operates on the range specified in the constructor; any attempt to go out of that range will result in an exception. Even the comparison operators require both iterator object to be constructed against the same range - otherwise an exception is thrown. Typically, the range will be determined by sequence container functions `begin` and `end`, i.e.:
 
-```
+```cpp
 std::string s = "example";
 utf8::iterator i (s.begin(), s.begin(), s.end());
 ```
@@ -727,7 +727,7 @@ Available in version 1.0 and later.
 
 Encodes a 32 bit code point as a UTF-8 sequence of octets and appends the sequence to a UTF-8 string.
 
-```
+```cpp
 template <typename octet_iterator>
 octet_iterator append(uint32_t cp, octet_iterator result);
 ```
@@ -738,7 +738,7 @@ Return value: An iterator pointing to the place after the newly appended sequenc
 
 Example of use:
 
-```
+```cpp
 unsigned char u[5] = {0,0,0,0,0};
 unsigned char* end = unchecked::append(0x0448, u);
 assert (u[0] == 0xd1 && u[1] == 0x88 && u[2] == 0 && u[3] == 0 && u[4] == 0);
@@ -752,7 +752,7 @@ Available in version 1.0 and later.
 
 Given the iterator to the beginning of a UTF-8 sequence, it returns the code point and moves the iterator to the next position.
 
-```
+```cpp
 template <typename octet_iterator>
 uint32_t next(octet_iterator& it);
 ```
@@ -762,7 +762,7 @@ uint32_t next(octet_iterator& it);
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 char* w = twochars;
 int cp = unchecked::next(w);
@@ -778,7 +778,7 @@ Available in version 2.1 and later.
 
 Given the iterator to the beginning of a UTF-8 sequence, it returns the code point.
 
-```
+```cpp
 template <typename octet_iterator>
 uint32_t peek_next(octet_iterator it);
 ```
@@ -788,7 +788,7 @@ Return value: the 32 bit representation of the processed UTF-8 code point.
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 char* w = twochars;
 int cp = unchecked::peek_next(w);
@@ -804,7 +804,7 @@ Available in version 1.02 and later.
 
 Given a reference to an iterator pointing to an octet in a UTF-8 seqence, it decreases the iterator until it hits the beginning of the previous UTF-8 encoded code point and returns the 32 bits representation of the code point.
 
-```
+```cpp
 template <typename octet_iterator>
 uint32_t prior(octet_iterator& it);
 ```
@@ -814,7 +814,7 @@ uint32_t prior(octet_iterator& it);
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 char* w = twochars + 3;
 int cp = unchecked::prior (w);
@@ -830,7 +830,7 @@ Deprecated in version 1.02 and later.
 
 Given a reference to an iterator pointing to an octet in a UTF-8 seqence, it decreases the iterator until it hits the beginning of the previous UTF-8 encoded code point and returns the 32 bits representation of the code point.
 
-```
+```cpp
 template <typename octet_iterator>
 uint32_t previous(octet_iterator& it);
 ```
@@ -840,7 +840,7 @@ Return value: the 32 bit representation of the previous code point.
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 char* w = twochars + 3;
 int cp = unchecked::previous (w);
@@ -858,7 +858,7 @@ Available in version 1.0 and later.
 
 Advances an iterator by the specified number of code points within an UTF-8 sequence.
 
-```
+```cpp
 template <typename octet_iterator, typename distance_type>
 void advance (octet_iterator& it, distance_type n);
 ```
@@ -868,7 +868,7 @@ void advance (octet_iterator& it, distance_type n);
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 char* w = twochars;
 unchecked::advance (w, 2);
@@ -885,7 +885,7 @@ Available in version 1.0 and later.
 
 Given the iterators to two UTF-8 encoded code points in a seqence, returns the number of code points between them.
 
-```
+```cpp
 template <typename octet_iterator>
 typename std::iterator_traits<octet_iterator>::difference_type distance (octet_iterator first, octet_iterator last);
 ```
@@ -896,7 +896,7 @@ Return value: the distance between the iterators, in code points.
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 size_t dist = utf8::unchecked::distance(twochars, twochars + 5);
 assert (dist == 2);
@@ -910,7 +910,7 @@ Available in version 1.0 and later.
 
 Converts a UTF-16 encoded string to UTF-8.
 
-```
+```cpp
 template <typename u16bit_iterator, typename octet_iterator>
 octet_iterator utf16to8 (u16bit_iterator start, u16bit_iterator end, octet_iterator result);
 ```
@@ -922,7 +922,7 @@ Return value: An iterator pointing to the place after the appended UTF-8 string.
 
 Example of use:
 
-```
+```cpp
 unsigned short utf16string[] = {0x41, 0x0448, 0x65e5, 0xd834, 0xdd1e};
 vector<unsigned char> utf8result;
 unchecked::utf16to8(utf16string, utf16string + 5, back_inserter(utf8result));
@@ -937,7 +937,7 @@ Available in version 1.0 and later.
 
 Converts an UTF-8 encoded string to UTF-16
 
-```
+```cpp
 template <typename u16bit_iterator, typename octet_iterator>
 u16bit_iterator utf8to16 (octet_iterator start, octet_iterator end, u16bit_iterator result);
 ```
@@ -948,7 +948,7 @@ Return value: An iterator pointing to the place after the appended UTF-16 string
 
 Example of use:
 
-```
+```cpp
 char utf8_with_surrogates[] = "\xe6\x97\xa5\xd1\x88\xf0\x9d\x84\x9e";
 vector <unsigned short> utf16result;
 unchecked::utf8to16(utf8_with_surrogates, utf8_with_surrogates + 9, back_inserter(utf16result));
@@ -965,7 +965,7 @@ Available in version 1.0 and later.
 
 Converts a UTF-32 encoded string to UTF-8.
 
-```
+```cpp
 template <typename octet_iterator, typename u32bit_iterator>
 octet_iterator utf32to8 (u32bit_iterator start, u32bit_iterator end, octet_iterator result);
 ```
@@ -977,7 +977,7 @@ Return value: An iterator pointing to the place after the appended UTF-8 string.
 
 Example of use:
 
-```
+```cpp
 int utf32string[] = {0x448, 0x65e5, 0x10346, 0};
 vector<unsigned char> utf8result;
 utf32to8(utf32string, utf32string + 3, back_inserter(utf8result));
@@ -992,7 +992,7 @@ Available in version 1.0 and later.
 
 Converts a UTF-8 encoded string to UTF-32.
 
-```
+```cpp
 template <typename octet_iterator, typename u32bit_iterator>
 u32bit_iterator utf8to32 (octet_iterator start, octet_iterator end, u32bit_iterator result);
 ```
@@ -1004,7 +1004,7 @@ Return value: An iterator pointing to the place after the appended UTF-32 string
 
 Example of use:
 
-```
+```cpp
 char* twochars = "\xe6\x97\xa5\xd1\x88";
 vector<int> utf32result;
 unchecked::utf8to32(twochars, twochars + 5, back_inserter(utf32result));
@@ -1021,7 +1021,7 @@ Available in version 2.0 and later.
 
 Adapts the underlying octet iterator to iterate over the sequence of code points, rather than raw octets.
 
-```
+```cpp
 template <typename octet_iterator>
 class iterator;
 ```
@@ -1041,7 +1041,7 @@ class iterator;
 
 Example of use:
 
-```
+```cpp
 char* threechars = "\xf0\x90\x8d\x86\xe6\x97\xa5\xd1\x88";
 utf8::unchecked::iterator<char*> un_it(threechars);
 utf8::unchecked::iterator<char*> un_it2 = un_it;
