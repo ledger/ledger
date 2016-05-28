@@ -48,7 +48,8 @@
 (defun ledger-exec-handle-error (ledger-output)
   "Deal with ledger errors contained in LEDGER-OUTPUT."
   (with-current-buffer (get-buffer-create "*Ledger Error*")
-    (insert-buffer-substring ledger-output)
+    (let ((inhibit-read-only t))
+      (insert-buffer-substring ledger-output))
     (view-mode)
     (setq buffer-read-only t)))
 
