@@ -451,7 +451,7 @@ expr_t::func_t global_scope_t::look_for_command(scope_t&      scope,
 
 void global_scope_t::visit_man_page() const
 {
-#ifndef WIN32
+#if !defined(_WIN32) && !defined(__WIN32__) && !defined(WIN32)
   int pid = fork();
   if (pid < 0) {
     throw std::logic_error(_("Failed to fork child process"));

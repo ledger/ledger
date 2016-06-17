@@ -144,7 +144,7 @@ typedef std::ostream::pos_type ostream_pos_type;
 #endif
 
 #include <sys/stat.h>
-#if defined(WIN32)
+#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
 #include <io.h>
 #else
 #include <unistd.h>
