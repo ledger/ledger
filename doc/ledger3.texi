@@ -2714,13 +2714,16 @@ that make it very simple: @command{print}, and @command{equity}.
 
 Let's take an example file, with data ranging from year 2000 until
 2004.  We want to archive years 2000 and 2001 to their own file,
-leaving just 2003 and 2004 in the current file.  So, use
-@command{print} to output all the earlier transactions to a file
-called @file{ledger-old.dat}:
+leaving 2002--2004 in the current file.  So, use @command{print} to
+output all the earlier transactions to a file called
+@file{ledger-old.dat}:
 
 @smallexample
-$ ledger -f ledger.dat -b 2000 -e 2001 print > ledger-old.dat
+$ ledger -f ledger.dat -b 2000 -e 2002 print > ledger-old.dat
 @end smallexample
+
+Note that @option{-e} limits output to transactions @emph{before} the
+date specified.
 
 To delete older data from the current ledger file, use @command{print}
 again, this time specifying year 2002 as the starting date:
