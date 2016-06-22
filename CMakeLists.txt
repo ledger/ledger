@@ -93,6 +93,7 @@ include(CheckIncludeFiles)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
 include(CheckCSourceCompiles)
+include(CheckCXXSourceCompiles)
 include(CheckCXXSourceRuns)
 include(CMakePushCheckState)
 
@@ -173,7 +174,7 @@ set(CMAKE_REQUIRED_INCLUDES
 set(CMAKE_REQUIRED_LIBRARIES
     ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${PROFILE_LIBS})
 
-check_cxx_source_runs("
+check_cxx_source_compiles("
 #include <boost/python.hpp>
 
 struct X { int y; };
@@ -181,9 +182,10 @@ struct X { int y; };
 int main()
 {
   boost::python::make_setter(&X::y);
-}" BOOST_MAKE_SETTER_RUNS)
+  return 0;
+}" BOOST_MAKE_SETTER_COMPILES)
 
-if (BOOST_MAKE_SETTER_RUNS)
+if (BOOST_MAKE_SETTER_COMPILES)
   set(HAVE_BOOST_159_ISSUE_39 0)
 else()
   set(HAVE_BOOST_159_ISSUE_39 1)
