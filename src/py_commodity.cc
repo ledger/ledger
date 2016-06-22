@@ -243,9 +243,6 @@ namespace {
 
 void export_commodity()
 {
-#if BOOST_VERSION >= 106000
-  python::register_ptr_to_python< shared_ptr<commodity_pool_t> >();
-#endif
   class_< commodity_pool_t, shared_ptr<commodity_pool_t>,
           boost::noncopyable > ("CommodityPool", no_init)
     .add_property("null_commodity",
