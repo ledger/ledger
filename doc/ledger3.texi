@@ -7598,7 +7598,9 @@ option settings in the file @file{~/.ledgerrc} one option per line, for example:
 @c TODO use @var below
 
 A period expression indicates a span of time, or a reporting interval,
-or both.  The full syntax is:
+or both. Ledger's end dates are always exclusive, imagine the date is
+followed by 00:00:00 time. They are instants in time not entire days.
+The full syntax is:
 
 @smallexample
 [INTERVAL] [BEGIN] [END]
