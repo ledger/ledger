@@ -39,10 +39,10 @@
   :group 'ledger)
 
 (defcustom ledger-reports
-  '(("bal" "ledger -f %(ledger-file) bal")
-    ("reg" "ledger -f %(ledger-file) reg")
-    ("payee" "ledger -f %(ledger-file) reg @%(payee)")
-    ("account" "ledger -f %(ledger-file) reg %(account)"))
+  '(("bal" "%(binary) -f %(ledger-file) bal")
+    ("reg" "%(binary) -f %(ledger-file) reg")
+    ("payee" "%(binary) -f %(ledger-file) reg @%(payee)")
+    ("account" "%(binary) -f %(ledger-file) reg %(account)"))
   "Definition of reports to run.
 
 Each element has the form (NAME CMDLINE).  The command line can
@@ -60,6 +60,7 @@ specifier."
 
 (defcustom ledger-report-format-specifiers
   '(("ledger-file" . ledger-report-ledger-file-format-specifier)
+    ("binary" . (lambda () ledger-binary-path))
     ("payee" . ledger-report-payee-format-specifier)
     ("account" . ledger-report-account-format-specifier)
     ("tagname" . ledger-report-tagname-format-specifier)
