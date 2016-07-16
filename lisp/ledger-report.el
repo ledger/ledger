@@ -82,6 +82,12 @@ text that should replace the format specifier."
   :type 'boolean
   :group 'ledger-report)
 
+(defcustom ledger-report-links-in-register t
+  "When non-nil, attempt to link transactions in \"register\"
+reports to their location in the currrent ledger file buffer."
+  :type 'boolean
+  :group 'ledger-report)
+
 (defvar ledger-report-buffer-name "*Ledger Report*")
 
 (defvar ledger-report-name nil)
@@ -337,11 +343,12 @@ Optional EDIT the command."
      ;; --subtotal does not produce identifiable transactions, so don't
      ;; prepend location information for them
      (if (and register-report
+              ledger-report-links-in-register
               (not (string-match "--subtotal" cmd)))
          (concat cmd " --prepend-format='%(filename):%(beg_line):'")
        cmd)
      t nil)
-    (when register-report
+    (when (and register-report ledger-report-links-in-register)
       (goto-char data-pos)
       (while (re-search-forward "^\\(/[^:]+\\)?:\\([0-9]+\\)?:" nil t)
         (let ((file (match-string 1))
