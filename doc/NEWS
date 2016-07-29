@@ -2,7 +2,26 @@
 
 * 3.1.2
 
-- Increased maximum length for regex from 255 to 4095.
+- Increased maximum length for regex from 255 to 4095 (bug #981).
+
+- Initialize periods from from/since clause rather than earliest
+  transaction date (bug #1159).
+
+- Check balance assertions against the amount after the posting (bug #1147).
+
+- Fixed period duration of "every X days" and similar statements (bug #370).
+
+- Python: Removed double quotes from Unicode values.
+
+- ledger.el: Made links in ledger-report "register" commands optional.
+
+- ledger.el: Added a "binary" format specifier to ledger-report.
+
+- ledger.el: Consider ISO dates in `ledger-read-date'.
+
+- ledger.el: Fixed compatibility problem with spacemacs.
+
+- Various documentation improvements
 
 * 3.1.1
 
