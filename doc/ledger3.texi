@@ -2953,7 +2953,7 @@ You can mark individual postings as cleared or pending, in case one
 @section Transaction notes
 
 After the payee, and after at least one tab or two spaces (or a space
-and a tab, which Ledger calls a ``hard separator''), you may
+and a tab), which Ledger calls a ``hard separator'', you may
 introduce a note about the transaction using the @samp{;} character:
 
 @smallexample @c input:validate
