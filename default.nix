@@ -1,15 +1,16 @@
-{ stdenv, fetchgit, cmake, boost, gmp, mpfr, libedit, python
-, texinfo, gnused }:
+{ stdenv, fetchgit, cmake, ninja, boost, gmp, mpfr, libedit, python
+, texinfo, doxygen, gnused, lcov }:
 
 let
-  rev = "20141005";
+  rev = "20160111";
 in
 
 stdenv.mkDerivation {
-  name = "ledger-3.1.0.${rev}";
+  name = "ledger-3.1.1.${rev}";
   src = builtins.filterSource (path: type: type != "unknown") ./.;
 
-  buildInputs = [ cmake boost gmp mpfr libedit python texinfo gnused ];
+  buildInputs = [ cmake ninja doxygen lcov boost gmp mpfr libedit
+                  python texinfo gnused ];
 
   enableParallelBuilding = true;
 
