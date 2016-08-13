@@ -60,12 +60,12 @@
 #define HAVE_EDIT                @HAVE_EDIT@
 #define HAVE_GETTEXT             @HAVE_GETTEXT@
 
-#define HAVE_ACCESS              @HAVE_ACCESS@
-#define HAVE_REALPATH            @HAVE_REALPATH@
-#define HAVE_GETPWUID            @HAVE_GETPWUID@
-#define HAVE_GETPWNAM            @HAVE_GETPWNAM@
-#define HAVE_IOCTL               @HAVE_IOCTL@
-#define HAVE_ISATTY              @HAVE_ISATTY@
+#cmakedefine HAVE_ACCESS
+#cmakedefine HAVE_REALPATH
+#cmakedefine HAVE_GETPWUID
+#cmakedefine HAVE_GETPWNAM
+#cmakedefine HAVE_IOCTL
+#cmakedefine HAVE_ISATTY
 
 #define HAVE_UNIX_PIPES          @HAVE_UNIX_PIPES@
 
@@ -144,16 +144,16 @@ typedef std::ostream::pos_type ostream_pos_type;
 #endif
 
 #include <sys/stat.h>
-#if defined(WIN32)
+#if defined(_WIN32)
 #include <io.h>
 #else
 #include <unistd.h>
 #endif
-#if HAVE_GETPWUID || HAVE_GETPWNAM
+#if defined(HAVE_GETPWUID) || defined(HAVE_GETPWNAM)
 #include <pwd.h>
 #endif
 
-#if HAVE_IOCTL
+#ifdef HAVE_IOCTL
 #include <sys/ioctl.h>
 #endif
 

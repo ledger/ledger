@@ -721,15 +721,12 @@ void instance_t::include_directive(char * line)
   if (line[0] != '/' && line[0] != '\\' && line[0] != '~') {
     DEBUG("textual.include", "received a relative path");
     DEBUG("textual.include", "parent file path: " << context.pathname);
-    string pathstr(context.pathname.string());
-    string::size_type pos = pathstr.rfind('/');
-    if (pos == string::npos)
-      pos = pathstr.rfind('\\');
-    if (pos != string::npos) {
-      filename = path(string(pathstr, 0, pos + 1)) / line;
-      DEBUG("textual.include", "normalized path: " << filename.string());
-    } else {
+    path parent_path = context.pathname.parent_path();
+    if (parent_path.empty()) {
       filename = path(string(".")) / line;
+    } else {
+      filename = parent_path / line;
+      DEBUG("textual.include", "normalized path: " << filename.string());
     }
   } else {
     filename = line;

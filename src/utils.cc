@@ -807,7 +807,7 @@ path expand_path(const path& pathname)
 
   if (path_string.length() == 1 || pos == 1) {
     pfx = std::getenv("HOME");
-#if HAVE_GETPWUID
+#ifdef HAVE_GETPWUID
     if (! pfx) {
       // Punt. We're trying to expand ~/, but HOME isn't set
       struct passwd * pw = getpwuid(getuid());
@@ -816,7 +816,7 @@ path expand_path(const path& pathname)
     }
 #endif
   }
-#if HAVE_GETPWNAM
+#ifdef HAVE_GETPWNAM
   else {
     string user(path_string, 1, pos == string::npos ?
                 string::npos : pos - 1);
