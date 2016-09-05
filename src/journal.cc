@@ -152,9 +152,6 @@ account_t * journal_t::register_account(const string& name, post_t * post,
           fixed_accounts = true;
         result->add_flags(ACCOUNT_KNOWN);
       }
-      else if (! fixed_accounts && post->_state != item_t::UNCLEARED) {
-        result->add_flags(ACCOUNT_KNOWN);
-      }
       else if (checking_style == CHECK_WARNING) {
         current_context->warning(_f("Unknown account '%1%'") % result->fullname());
       }
@@ -267,13 +264,6 @@ void journal_t::register_commodity(commodity_t& comm,
       if (context.which() == 0) {
         if (force_checking)
           fixed_commodities = true;
-        comm.add_flags(COMMODITY_KNOWN);
-      }
-      else if (! fixed_commodities &&
-               ((context.which() == 1 &&
-                 boost::get<xact_t *>(context)->_state != item_t::UNCLEARED) ||
-                (context.which() == 2 &&
-                 boost::get<post_t *>(context)->_state != item_t::UNCLEARED))) {
         comm.add_flags(COMMODITY_KNOWN);
       }
       else if (checking_style == CHECK_WARNING) {
