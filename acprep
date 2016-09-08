@@ -516,7 +516,7 @@ class PrepareBuild(CommandLineApp):
                     'libiconv', '+universal',
                     'zlib', '+universal',
                     'gmp' ,'+universal', 'mpfr', '+universal',
-                    'ncurses', '+universal', 'ncursesw', '+universal',
+                    'ncurses', '+universal',
                     'gettext' ,'+universal',
                     'libedit' ,'+universal',
                     'texlive-xetex', 'doxygen', 'graphviz', 'texinfo',
