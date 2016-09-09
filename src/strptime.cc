@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#ifdef WIN32
+#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
 // Implement strptime under windows
 
 #include "strptime.h"
