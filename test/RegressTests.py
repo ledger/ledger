@@ -98,12 +98,19 @@ class RegressFile(object):
 
     def run_test(self, test):
         use_stdin = False
+        if sys.platform == 'win32':
+            test['command'] = test['command'].replace('/dev/null', 'nul')
+            # There is no equivalent to /dev/stdout, /dev/stderr, /dev/stdin
+            # on Windows, so skip tests that require them.
+            if '/dev/std' in test['command']:
+                harness.success()
+                return
         if test['command'].find("-f ") != -1:
             test['command'] = '$ledger ' + test['command']
             if re.search("-f (-|/dev/stdin)(\s|$)", test['command']):
                 use_stdin = True
         else:
-            test['command'] = (('$ledger -f "%s" ' % 
+            test['command'] = (('$ledger -f "%s" ' %
                                 os.path.abspath(self.filename)) +
                                test['command'])
 
@@ -122,7 +129,17 @@ class RegressFile(object):
         printed = False
         index   = 0
         if test['output'] is not None:
-            for line in unified_diff(test['output'], harness.readlines(p.stdout)):
+            process_output = harness.readlines(p.stdout)
+            expected_output = test['output']
+            if sys.platform == 'win32':
+                process_output = [l.replace('\r\n', '\n').replace('\\', '/')
+                                  for l in process_output]
+                # Replace \ with / in the expected output because the line above
+                # makes it impossible for the process output to have a \.
+                expected_output = [l.replace('\\', '/')
+                                   for l in expected_output]
+
+            for line in unified_diff(expected_output, process_output):
                 index += 1
                 if index < 3:
                     continue
@@ -135,8 +152,14 @@ class RegressFile(object):
 
         printed = False
         index   = 0
-        if test['error'] is not None:
-            for line in unified_diff(test['error'], harness.readlines(p.stderr)):
+        process_error = harness.readlines(p.stderr)
+        if test['error'] is not None or process_error is not None:
+            if test['error'] is None:
+                test['error'] = []
+            if sys.platform == 'win32':
+                process_error = [l.replace('\r\n', '\n').replace('\\', '/')
+                                 for l in process_error]
+            for line in unified_diff(test['error'], process_error):
                 index += 1
                 if index < 3:
                     continue
@@ -189,8 +212,8 @@ if __name__ == '__main__':
 
     if os.path.isdir(tests):
         tests = [os.path.join(tests, x)
-                 for x in os.listdir(tests) 
-                 if (x.endswith('.test') and 
+                 for x in os.listdir(tests)
+                 if (x.endswith('.test') and
                      (not '_py.test' in x or (harness.python and
                                               not harness.verify)))]
         if pool:

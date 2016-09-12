@@ -793,7 +793,8 @@ public:
 
   OPTION(report_t, output_); // -o
 
-#if HAVE_ISATTY
+// setenv() is not available on WIN32
+#if defined(HAVE_ISATTY) and !defined(_WIN32)
   OPTION__
   (report_t, pager_,
    CTOR(report_t, pager_) {

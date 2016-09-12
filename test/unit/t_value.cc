@@ -6,6 +6,10 @@
 
 #include "value.h"
 
+#ifdef _WIN32
+#include "strptime.h"
+#endif
+
 using namespace ledger;
 
 struct value_fixture {

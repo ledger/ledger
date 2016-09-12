@@ -147,7 +147,6 @@ class DocTests:
       temp = list(set(self.tests).difference(tests))
       if len(temp) > 0:
         print >> sys.stderr, 'Skipping non-existent examples: %s' % ', '.join(temp)
-    
     for test_id in tests:
       validation = False
       if self.validate_dat_token in self.examples[test_id] or self.validate_cmd_token in self.examples[test_id]:
@@ -192,6 +191,8 @@ class DocTests:
         error = None
         try:
           verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
+          if sys.platform == 'win32':
+            verify = verify.replace('\r\n', '\n')
           valid = (output == verify) or (not error and validation)
         except subprocess.CalledProcessError, e:
           error = e.output
