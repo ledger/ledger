@@ -13,7 +13,7 @@
 // limitations under the License.
 
 
-#ifdef WIN32
+#ifdef _WIN32
 // Implement strptime under windows
 
 #include "strptime.h"
@@ -186,4 +186,4 @@ char* strptime(const char *buf, const char *fmt, struct tm *tm) {
   return _strptime(buf, fmt, tm);
 }
 
-#endif  // WIN32
+#endif  // _WIN32
