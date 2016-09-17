@@ -33,7 +33,7 @@
 
 #include "times.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include "strptime.h"
 #endif
 
