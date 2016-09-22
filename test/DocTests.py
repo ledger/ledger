@@ -192,6 +192,8 @@ class DocTests:
         error = None
         try:
           verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
+          if sys.platform == 'win32':
+            verify = verify.replace('\r\n', '\n')
           valid = (output == verify) or (not error and validation)
         except subprocess.CalledProcessError, e:
           error = e.output
