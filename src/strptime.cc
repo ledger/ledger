@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
 // Implement strptime under windows
 
 #include "strptime.h"
@@ -21,6 +20,20 @@
 #include <time.h>
 #include <ctype.h>
 #include <string.h>
+
+// Define strnicmp for Cygwin.
+#ifndef strcmpi
+#define strcmpi strcasecmp
+#endif
+#ifndef stricmp
+#define stricmp strcasecmp
+#endif
+#ifndef strncmpi
+#define strncmpi strncasecmp
+#endif
+#ifndef strnicmp
+#define strnicmp strncasecmp
+#endif
 
 static const char* kWeekFull[] = {
   "Sunday", "Monday", "Tuesday", "Wednesday",
