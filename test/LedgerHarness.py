@@ -86,6 +86,13 @@ class LedgerHarness:
         if os.path.isfile(valgrind) and '--verify' in insert:
             command = valgrind + ' -q ' + command
 
+        # If we are running under msys2, use bash to execute the test commands
+        if 'MSYSTEM' in os.environ:
+            bash_path = os.environ['MINGW_PREFIX'] + '/../usr/bin/bash.exe'
+            return Popen([bash_path, '-c', command], shell=False,
+                         close_fds=False, env=env, stdin=PIPE, stdout=PIPE,
+                         stderr=PIPE, cwd=self.sourcepath)
+
         return Popen(command, shell=True, close_fds=True, env=env,
                      stdin=PIPE, stdout=PIPE, stderr=PIPE, 
                      cwd=self.sourcepath)

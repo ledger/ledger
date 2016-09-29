@@ -24,5 +24,6 @@ Warning: "$FILE", line 15: Metadata check failed for (Project: foo): (value =~ /
 end test
 
 test reg --limit 'payee =~ /XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/'
+__ERROR__
+Warning: "$FILE", line 15: Metadata check failed for (Project: foo): (value =~ /^(0ad|ankur|aptosid|archlinux|chakra|debian|debconf14|debconf15|debconf16|drizzle|ffmpeg|ffmpeg|fluxbox|freedesktop|freedombox|gallery|texmacs|haskell|jenkins|libreoffice|madwifi|mingw|openvas|openwrt|openbioinformatics|openembedded|openvoting|osunix|path64|plan9|postgresql|privoxy|smc|helios|tidesdk|tux4kids|yafaray|spi)$/)
 end test
-
