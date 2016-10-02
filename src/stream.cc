@@ -58,7 +58,7 @@ namespace {
    */
   int do_fork(std::ostream ** os, const path& pager_path)
   {
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
     int pfd[2];
 
     int status = pipe(pfd);
@@ -115,7 +115,7 @@ void output_stream_t::initialize(const optional<path>& output_file,
 
 void output_stream_t::close()
 {
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
   if (os != &std::cout) {
     checked_delete(os);
     os = &std::cout;

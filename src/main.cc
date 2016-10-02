@@ -74,7 +74,7 @@ int main(int argc, char * argv[], char * envp[])
 #endif
 
   std::signal(SIGINT, sigint_handler);
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
   std::signal(SIGPIPE, sigpipe_handler);
 #endif
 

@@ -62,7 +62,7 @@ commodity_quote_from_script(commodity_t& commodity,
   DEBUG("commodity.download", "invoking command: " << getquote_cmd);
 
   bool success = true;
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
   if (FILE * fp = popen(getquote_cmd.c_str(), "r")) {
     if (std::feof(fp) || ! std::fgets(buf, 255, fp))
       success = false;
