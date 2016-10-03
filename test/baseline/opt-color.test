@@ -1,0 +1,11 @@
+2007/02/02 RD VMMXX
+    Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
+    Income:Dividends:Vanguard:VMMXX        $-0.35
+
+test bal --color
+         0.350 VMMXX  Assets:Investments:Vanguard:VMMXX
+              $-0.35  Income:Dividends:Vanguard:VMMXX
+--------------------
+              $-0.35
+         0.350 VMMXX
+end test
