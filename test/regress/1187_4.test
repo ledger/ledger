@@ -1,0 +1,32 @@
+2000/01/01 Multiple commodities
+    A  $5.00
+    A  32 F
+    B  $-12
+    C
+
+2000/01/02 Assertions
+    A  $1  = $6
+    A  1 F = 33 F
+    A  $1  = $7
+    A  1 F = 34 F
+    B  3 F = 3 F
+    B  $12 = $0
+    B  1 F = 4 F
+    C
+
+2000/01/03 Assignments
+    A       = $0
+    A  -4 F = 30 F
+    B  $-7  = $-7
+    B       = 0 F
+    C  $14
+    C  8 F
+
+test bal
+                30 F  A
+              $-7.00  B
+               $7.00
+               -30 F  C
+--------------------
+                   0
+end test
