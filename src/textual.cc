@@ -1655,7 +1655,8 @@ post_t * instance_t::parse_post(char *          line,
 
       switch (account_total.type()) {
       case value_t::AMOUNT:
-        diff -= account_total.as_amount();
+        if (account_total.as_amount().commodity_ptr() == diff.commodity_ptr())
+          diff -= account_total.as_amount();
         break;
 
       case value_t::BALANCE:
@@ -1672,6 +1673,16 @@ post_t * instance_t::parse_post(char *          line,
             "line " << context.linenum << ": " << "diff = " << diff);
       DEBUG("textual.parse", "line " << context.linenum << ": "
             << "POST assign: diff = " << diff);
+
+      // Subtract amounts from previous posts to this account in the xact.
+      for (post_t* p : xact->posts) {
+        if (p->account == post->account &&
+            p->amount.commodity_ptr() == diff.commodity_ptr()) {
+          diff -= p->amount;
+          DEBUG("textual.parse", "line " << context.linenum << ": "
+                << "Subtract " << p->amount << ", diff = " << diff);
+        }
+      }
 
       if (post->amount.is_null()) {
         // balance assignment
