@@ -35,8 +35,9 @@ Now try your first ledger command:
 
 For help on keeping your journal have a look at the
 [documentation] and the [wiki][] (Also see the “Resources” section at the
-end of this file). An emacs mode for ledger files can be found in the `lisp`
-directory and a vim plugin is located in the [ledger/vim-ledger repository].
+end of this file). An Emacs mode for Ledger files can be found in the
+[ledger/ledger-mode repository] and a vim plugin is located in the
+[ledger/vim-ledger repository].
 
 ## To the Rest
 
