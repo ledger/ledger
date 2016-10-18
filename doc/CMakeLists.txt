@@ -42,7 +42,7 @@ if (BUILD_DOCS)
   find_program(TEX tex)
   find_program(MAN2HTML man2html)
   find_program(GROFF groff)
-  set(ledger_info_files ledger3.texi ledger-mode.texi)
+  set(ledger_info_files ledger3.texi)
 
   if (NOT MAKEINFO)
     message(WARNING "Could not find makeinfo. Info version of documentation cannot be built.")
