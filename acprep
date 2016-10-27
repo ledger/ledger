@@ -484,7 +484,7 @@ class PrepareBuild(CommandLineApp):
 
     def phase_sloc(self, *args):
         self.log.info('Executing phase: sloc')
-        self.execute('sloccount', 'src', 'python', 'lisp', 'test')
+        self.execute('sloccount', 'src', 'python', 'test')
 
     #########################################################################
     # Update local files with the latest information                        #
