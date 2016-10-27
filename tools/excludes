@@ -24,7 +24,6 @@ data_tests
 depcomp
 doc/.dirstamp
 doc/ledger.info
-elisp-comp
 expr_tests
 install-sh
 intl/
