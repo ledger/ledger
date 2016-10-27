@@ -1490,13 +1490,14 @@ nature of your transactions.
 For example, you do not need to tell Ledger about the accounts you
 use.  Any time Ledger sees a posting involving an account it knows
 nothing about, it will create it@footnote{This also means if you
-misspell an account it will end up getting counted separately from what
-you intended.  The provided Emacs major mode provides for automatically
-filling in account names.}.  If you use a commodity that is new to
-Ledger, it will create that commodity, and determine its display
-characteristics (placement of the symbol before or after the amount,
-display precision, etc.) based on how you used the commodity in the
-posting.
+misspell an account it will end up getting counted separately from
+what you intended.  An Emacs major mode
+@uref{https://github.com/ledger/ledger-mode/, ledger-mode} provides
+tab completion for automatically filling in account names.}.  If you
+use a commodity that is new to Ledger, it will create that commodity,
+and determine its display characteristics (placement of the symbol
+before or after the amount, display precision, etc.) based on how you
+used the commodity in the posting.
 
 @menu
 * The Most Basic Entry::

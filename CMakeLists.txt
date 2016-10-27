@@ -35,7 +35,6 @@ option(BUILD_DEBUG "Build support for runtime debugging" OFF)
 option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
 option(BUILD_DOCS "Build and install documentation" OFF)
 option(BUILD_WEB_DOCS "Build version of documentation suitable for viewing online" OFF)
-option(BUILD_EMACSLISP "Build and install ledger-mode for Emacs" OFF)
 
 if (BUILD_DEBUG)
   set(CMAKE_BUILD_TYPE Debug)
@@ -307,9 +306,6 @@ endif()
 
 add_subdirectory(src)
 add_subdirectory(doc)
-if (BUILD_EMACSLISP)
-  add_subdirectory(lisp)
-endif()
 add_subdirectory(test)
 
 ########################################################################

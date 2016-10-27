@@ -4,7 +4,7 @@ Tips for contributors
 * Please **make pull requests against `next`, not `master`**.
   Ledger follows a [git-flow] branching model,
   in which development happens on the `next` branch and is subsequently merged into `master` for releases.
-* If you're making **changes to `ledger-mode`, or other files for which the Travis build is not
+* If you're making **changes to files for which the Travis build is not
   relevant**, please **add `[ci skip]` to the end of the commit message**.
 
 GLOSSARY
@@ -82,8 +82,6 @@ orientation:
 
 **./lib/**: a couple of libraries used in development.
 
-**./lisp/**: the [Emacs][] [ledger-mode] lisp code, under the [GPLv2] license.
-
 **./python/**:  samples using the Python ledger module.
 
 **./src/**:  the C++ header and source files in a flat directory.
@@ -110,7 +108,4 @@ orientation:
 [small badge]: https://img.shields.io/travis/ledger/ledger/master.svg?&style=flat
 [git-flow]: http://nvie.com/posts/a-successful-git-branching-model/
 [README.md]: https://github.com/ledger/ledger/blob/master/README.md
-[Emacs]: http://www.gnu.org/software/emacs/
-[ledger-mode]: http://ledger-cli.org/3.0/doc/ledger-mode.html
-[GPLv2]: http://www.gnu.org/licenses/gpl-2.0.html
 [clang]: http://clang.llvm.org
