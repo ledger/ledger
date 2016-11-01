@@ -32,5 +32,5 @@
     (c-special-indent-hook . c-gnu-impose-minimum)
     (c-block-comment-prefix . ""))))
  (emacs-lisp-mode
-  (indent-tabs-mode)))
+  (indent-tabs-mode . nil)))
 
