@@ -1,0 +1,26 @@
+2011-01-01 * Opening balance
+    Assets:Broker                           250.00 GBP = 250.00 GBP
+    Equity:Opening balance                 -250.00 GBP
+
+2011-02-01 * Buy 1 AAA for 10.00 GBP
+    Assets:Broker                                1 AAA = 1 AAA
+    Assets:Broker                           -10.00 GBP
+
+2011-03-01 * Buy 1 AAA for 10.00 GBP
+    Assets:Broker                                1 AAA = 2 AAA
+    Assets:Broker                           -10.00 GBP
+
+2011-04-01 * Buy 1 BBB for 15.00 GBP
+    Assets:Broker                                1 BBB = 1 BBB
+    Assets:Broker                           -15.00 GBP
+
+test bal
+               2 AAA
+               1 BBB
+          215.00 GBP  Assets:Broker
+         -250.00 GBP  Equity:Opening balance
+--------------------
+               2 AAA
+               1 BBB
+          -35.00 GBP
+end test
