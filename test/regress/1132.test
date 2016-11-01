@@ -1,0 +1,16 @@
+1994/09/02=1994/08/25 * Joe 
+    Actif:Courant:BnpCc                     126,00 F
+    Actif:Remboursement:Autre              -126,00 F = 0,00 F
+
+1994/10/20=1994/08/25 * (3551465) Bill 
+    Actif:Remboursement:Autre               126,00 F
+    Actif:Courant:BnpCc
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+While parsing posting:
+  Actif:Remboursement:Autre              -126,00 F = 0,00 F
+                                                     ^^^^^^
+Error: Balance assertion off by 126,00 F (expected to see -126,00 F)
+end test
