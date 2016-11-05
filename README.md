@@ -5,7 +5,7 @@
 
 Many C++ developers miss an easy and portable way of handling Unicode encoded strings. The original C++ Standard (known as C++98 or C++03) is Unicode agnostic. C++11 provides some support for Unicode on core language and library level: u8, u, and U character and string literals, char16_t and char32_t character types, u16string and u32string library classes, and codecvt support for conversions between Unicode encoding forms. In the meantime, developers use third party libraries like ICU, OS specific capabilities, or simply roll out their own solutions.
 
-In order to easily handle UTF-8 encoded Unicode strings, I came up with a small generic library. For anybody used to work with STL algorithms and iterators, it should be easy and natural to use. The code is freely available for any purpose - check out the license at the beginning of the utf8.h file. If you run into bugs or performance issues, please let me know and I'll do my best to address them.
+In order to easily handle UTF-8 encoded Unicode strings, I came up with a small, C++98 compatible generic library. For anybody used to work with STL algorithms and iterators, it should be easy and natural to use. The code is freely available for any purpose - check out the license at the beginning of the utf8.h file. The library has been used a lot in the past ten years both in commercial and open-source projects and is considered feature-complete now. If you run into bugs or performance issues, please let me know and I'll do my best to address them.
 
 The purpose of this article is not to offer an introduction to Unicode in general, and UTF-8 in particular. If you are not familiar with Unicode, be sure to check out [Unicode Home Page](http://www.unicode.org/) or some other source of information for Unicode. Also, it is not my aim to advocate the use of UTF-8 encoded strings in C++ programs; if you want to handle UTF-8 encoded strings from C++, I am sure you have good reasons for it.
 
@@ -1069,7 +1069,7 @@ This is an unchecked version of `utf8::iterator`. It is faster in many cases, bu
 The library was designed to be:
 
 1.  Generic: for better or worse, there are many C++ string classes out there, and the library should work with as many of them as possible.
-2.  Portable: the library should be portable both accross different platforms and compilers. The only non-portable code is a small section that declares unsigned integers of different sizes: three typedefs. They can be changed by the users of the library if they don't match their platform. The default setting should work for Windows (both 32 and 64 bit), and most 32 bit and 64 bit Unix derivatives.
+2.  Portable: the library should be portable both accross different platforms and compilers. The only non-portable code is a small section that declares unsigned integers of different sizes: three typedefs. They can be changed by the users of the library if they don't match their platform. The default setting should work for Windows (both 32 and 64 bit), and most 32 bit and 64 bit Unix derivatives. At this point I don't plan to use any post C++03 features, so the library should work even with pretty old compilers.
 3.  Lightweight: follow the "pay only for what you use" guideline.
 4.  Unintrusive: avoid forcing any particular design or even programming style on the user. This is a library, not a framework.
 
@@ -1078,7 +1078,7 @@ The library was designed to be:
 In case you want to look into other means of working with UTF-8 strings from C++, here is the list of solutions I am aware of:
 
 1.  [ICU Library](http://icu.sourceforge.net/). It is very powerful, complete, feature-rich, mature, and widely used. Also big, intrusive, non-generic, and doesn't play well with the Standard Library. I definitelly recommend looking at ICU even if you don't plan to use it.
-2.  C++11 language and library features. Still far from complete, and not widely supported by compiler vendors.
+2.  C++11 language and library features. Still far from complete, and not easy to use.
 3.  [Glib::ustring](http://www.gtkmm.org/gtkmm2/docs/tutorial/html/ch03s04.html). A class specifically made to work with UTF-8 strings, and also feel like `std::string`. If you prefer to have yet another string class in your code, it may be worth a look. Be aware of the licensing issues, though.
 4.  Platform dependent solutions: Windows and POSIX have functions to convert strings from one encoding to another. That is only a subset of what my library offers, but if that is all you need it may be good enough.
 
