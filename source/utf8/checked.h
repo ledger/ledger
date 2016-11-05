@@ -1,4 +1,4 @@
-// Copyright 2006 Nemanja Trifunovic
+// Copyright 2006-2016 Nemanja Trifunovic
 
 /*
 Permission is hereby granted, free of charge, to any person or organization
@@ -41,7 +41,7 @@ namespace utf8
     class invalid_code_point : public exception {
         uint32_t cp;
     public:
-        invalid_code_point(uint32_t cp) : cp(cp) {}
+        invalid_code_point(uint32_t codepoint) : cp(codepoint) {}
         virtual const char* what() const throw() { return "Invalid code point"; }
         uint32_t code_point() const {return cp;}
     };
@@ -272,9 +272,9 @@ namespace utf8
       public:
       iterator () {}
       explicit iterator (const octet_iterator& octet_it,
-                         const octet_iterator& range_start,
-                         const octet_iterator& range_end) :
-               it(octet_it), range_start(range_start), range_end(range_end)
+                         const octet_iterator& rangestart,
+                         const octet_iterator& rangeend) :
+               it(octet_it), range_start(rangestart), range_end(rangeend)
       {
           if (it < range_start || it > range_end)
               throw std::out_of_range("Invalid utf-8 iterator position");
