@@ -1,23 +1,35 @@
-{ stdenv, fetchgit, cmake, ninja, boost, gmp, mpfr, libedit, python
-, texinfo, doxygen, gnused, lcov }:
+{ stdenv, fetchgit, cmake, boost, gmp, mpfr, libedit, python
+, texinfo, gnused }:
 
 let
-  rev = "20160111";
+  version = "3.1.1";
+  rev = "20160906";
 in
 
 stdenv.mkDerivation {
-  name = "ledger-3.1.1.${rev}";
-  src = builtins.filterSource (path: type: type != "unknown") ./.;
+  name = "ledger-${version}-${rev}";
 
-  buildInputs = [ cmake ninja doxygen lcov boost gmp mpfr libedit
-                  python texinfo gnused ];
+  # NOTE: fetchgit because ledger has submodules not included in the
+  # default github tarball.
+  src = ./.;
+
+  buildInputs = [ cmake boost gmp mpfr libedit python texinfo gnused ];
 
   enableParallelBuilding = true;
+
+  # Skip byte-compiling of emacs-lisp files because this is currently
+  # broken in ledger...
+  postInstall = ''
+    mkdir -p $out/share/emacs/site-lisp/
+    cp -v "$src/lisp/"*.el $out/share/emacs/site-lisp/
+  '';
+
+  cmakeFlags = [ "-DCMAKE_INSTALL_LIBDIR=lib" ];
 
   meta = {
     homepage = "http://ledger-cli.org/";
     description = "A double-entry accounting system with a command-line reporting interface";
-    license = "BSD";
+    license = stdenv.lib.licenses.bsd3;
 
     longDescription = ''
       Ledger is a powerful, double-entry accounting system that is accessed
@@ -27,6 +39,6 @@ stdenv.mkDerivation {
     '';
 
     platforms = stdenv.lib.platforms.all;
-    maintainers = with stdenv.lib.maintainers; [ simons the-kenny jwiegley ];
+    maintainers = with stdenv.lib.maintainers; [ the-kenny jwiegley ];
   };
 }
