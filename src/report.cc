@@ -759,6 +759,23 @@ value_t report_t::fn_quoted(call_scope_t& args)
   return string_value(out.str());
 }
 
+value_t report_t::fn_quoted_rfc4180(call_scope_t& args)
+{
+  std::ostringstream out;
+
+  out << '"';
+  string arg(args.get<string>(0));
+  foreach (const char ch, arg) {
+    if (ch == '"')
+      out << '"' << '"';
+    else
+      out << ch;
+  }
+  out << '"';
+
+  return string_value(out.str());
+}
+
 value_t report_t::fn_join(call_scope_t& args)
 {
   std::ostringstream out;
@@ -1442,6 +1459,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'q':
       if (is_eq(p, "quoted"))
         return MAKE_FUNCTOR(report_t::fn_quoted);
+      else if (is_eq(p, "quoted_rfc4180"))
+        return MAKE_FUNCTOR(report_t::fn_quoted_rfc4180);
       else if (is_eq(p, "quantity"))
         return MAKE_FUNCTOR(report_t::fn_quantity);
       break;
