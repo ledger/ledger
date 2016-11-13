@@ -154,6 +154,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       # -Wno-unused-parameter
       # -Wno-c++98-compat
       # -fno-limit-debug-info
+      -Wno-\#pragma-messages
       --system-header-prefix=include/boost/
       --system-header-prefix=boost/)
 
