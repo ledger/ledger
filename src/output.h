@@ -51,6 +51,7 @@ namespace ledger {
 
 class xact_t;
 class post_t;
+class item_t;
 class report_t;
 
 class format_posts : public item_handler<post_t>
@@ -208,6 +209,7 @@ public:
   }
 
   virtual void flush();
+  virtual void gather_metadata(item_t& item);
   virtual void operator()(post_t& post);
 
   virtual void clear() {

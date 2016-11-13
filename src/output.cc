@@ -34,6 +34,7 @@
 #include "output.h"
 #include "xact.h"
 #include "post.h"
+#include "item.h"
 #include "account.h"
 #include "session.h"
 #include "report.h"
@@ -329,21 +330,26 @@ void report_tags::flush()
   }
 }
 
-void report_tags::operator()(post_t& post)
+void report_tags::gather_metadata(item_t& item)
 {
-  if (post.metadata) {
-    foreach (const item_t::string_map::value_type& data, *post.metadata) {
-      string tag=data.first;
-      if (report.HANDLED(values) && (data.second).first) {
-	tag+=": "+ (data.second).first.get().to_string();
-      }
+  if (item.metadata)
+    foreach (const item_t::string_map::value_type& data, *item.metadata) {
+      string tag(data.first);
+      if (report.HANDLED(values) && data.second.first)
+        tag += ": " + data.second.first.get().to_string();
+
       std::map<string, std::size_t>::iterator i = tags.find(tag);
       if (i == tags.end())
-	tags.insert(tags_pair(tag, 1));
+        tags.insert(tags_pair(tag, 1));
       else
-	(*i).second++;
+        (*i).second++;
     }
-  }
+}
+
+void report_tags::operator()(post_t& post)
+{
+  gather_metadata(*post.xact);
+  gather_metadata(post);
 }
 
 void report_commodities::flush()
