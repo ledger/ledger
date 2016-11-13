@@ -4,12 +4,12 @@ tag PATH
     check os.path.isfile(value)
 
 2012-02-29 KFC
-    ; PATH: test/baseline/feat-import_py.test
+    ; PATH: test/baseline/dir-import_py.test
     Expenses:Food                $20
     Assets:Cash
 
 2012-02-29 KFC
-    ; PATH: test/baseline/feat-import_noexist.test
+    ; PATH: test/baseline/dir-import_noexist.test
     Expenses:Food                $20
     Assets:Cash
 
@@ -19,5 +19,5 @@ test reg
 12-Feb-29 KFC                   Expenses:Food                   $20          $20
                                 Assets:Cash                    $-20            0
 __ERROR__
-Warning: "$sourcepath/test/baseline/dir-import_py.test", line 14: Metadata check failed for (PATH: test/baseline/feat-import_noexist.test): ((os.path).isfile(value))
+Warning: "$sourcepath/test/baseline/dir-import_py.test", line 14: Metadata check failed for (PATH: test/baseline/dir-import_noexist.test): ((os.path).isfile(value))
 end test
