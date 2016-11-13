@@ -33,6 +33,7 @@ a
 b
 bar
 foo
+xxx
 end test
 
 test tags --values
@@ -42,6 +43,7 @@ b
 b: bbb
 bar
 foo
+xxx
 end test
 
 test tags --values --count
@@ -51,5 +53,6 @@ test tags --values --count
 1 b: bbb
 1 bar
 1 foo
+2 xxx
 end test
 
