@@ -8360,7 +8360,18 @@ Return the quantity of @var{value} for values that have a per-unit cost.
 @end defun
 
 @defun quoted expression
-Surround @var{expression} with double-quotes.
+Surround @var{expression} with double-quotes.  If expression contains a double-quote, it will be escaped with a backslash.
+@smallexample @c command:EAD8AA7,with_input:3406FC1
+$ ledger -f expr.dat --format "%(quoted(account)) %(quoted(amount))\n" reg
+@end smallexample
+@smallexample @c output:EAD8AA7
+"Assets:Cash" "¤ -123,45"
+"Expenses:Office Supplies" "¤ 123,45"
+@end smallexample
+@end defun
+
+@defun quoted_rfc4180 expression
+Surround @var{expression} with double-quotes, compliant with rfc 4180.  If expression contains a double-quote, it will be represented with two double-quotes.
 @smallexample @c command:EAD8AA7,with_input:3406FC1
 $ ledger -f expr.dat --format "%(quoted(account)) %(quoted(amount))\n" reg
 @end smallexample
