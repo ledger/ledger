@@ -298,9 +298,8 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/src/system.hh.in
   ${PROJECT_BINARY_DIR}/system.hh)
 
-if (CMAKE_CXX_COMPILER MATCHES "clang")
-  set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
-elseif(CMAKE_CXX_COMPILER MATCHES "g\\+\\+")
+if((CMAKE_CXX_COMPILER MATCHES "clang") OR
+   (CMAKE_CXX_COMPILER MATCHES "clang++"))
   set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 endif()
 

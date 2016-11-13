@@ -242,7 +242,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 
       get_directory_property(DIRINC INCLUDE_DIRECTORIES)
       foreach(_inc ${DIRINC})
-        list(APPEND _args "-isystem " ${_inc})
+        list(APPEND _args "-I" ${_inc})
       endforeach(_inc ${DIRINC})
 
       separate_arguments(_args)
