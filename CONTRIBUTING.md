@@ -6,6 +6,7 @@ Tips for contributors
   in which development happens on the `next` branch and is subsequently merged into `master` for releases.
 * If you're making **changes to files for which the Travis build is not
   relevant**, please **add `[ci skip]` to the end of the commit message**.
+* Report bugs using [Bugzilla].  If you want, you can access the bug system using the lite (free) version of [Deskzilla]. 
 
 GLOSSARY
 ----
@@ -93,6 +94,8 @@ orientation:
 
 [Boost]: http://boost.org
 [Boost.Python]: http://www.boost.org/libs/python/
+[Bugzilla]: http://bugs.ledger-cli.org/
+[Deskzilla]: http://almworks.com/deskzilla/download.html
 [GMP]: http://gmplib.org/
 [MPFR]: http://www.mpfr.org/
 [Cheetah]: http://www.cheetahtemplate.org
