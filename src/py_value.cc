@@ -371,6 +371,7 @@ void export_value()
 
   register_optional_to_python<value_t>();
 
+  implicitly_convertible<bool, value_t>();
   implicitly_convertible<long, value_t>();
   implicitly_convertible<string, value_t>();
   implicitly_convertible<amount_t, value_t>();
