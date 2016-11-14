@@ -138,9 +138,7 @@ set(LEDGER_INCLUDES
   ${PROJECT_BINARY_DIR}/system.hh)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if ((CMAKE_CXX_COMPILER MATCHES "clang") OR
-      (CMAKE_CXX_COMPILER MATCHES "clang\\+\\+") OR
-      (CMAKE_CXX_COMPILER MATCHES "cxx"))
+  if (CMAKE_CXX_COMPILER MATCHES "clang\\+\\+")
     add_definitions(
       # -Weverything
       # -Wno-disabled-macro-expansion
@@ -155,6 +153,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       # -Wno-c++98-compat
       # -fno-limit-debug-info
       -Wno-\#pragma-messages
+      -Wno-unused-local-typedef
       --system-header-prefix=include/boost/
       --system-header-prefix=boost/)
 
@@ -194,8 +193,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         DEPENDS ${_header_filename})
     endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
 
-  elseif ((CMAKE_CXX_COMPILER MATCHES "g\\+\\+") OR
-          (CMAKE_CXX_COMPILER MATCHES "c\\+\\+"))
+  elseif (CMAKE_CXX_COMPILER MATCHES "g\\+\\+")
     set(GXX_WARNING_FLAGS
       -pedantic
       -Wall
