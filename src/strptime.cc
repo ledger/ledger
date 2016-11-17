@@ -21,6 +21,7 @@
 #include <ctype.h>
 #include <string.h>
 
+#if defined(__CYGWIN__)
 // Define strnicmp for Cygwin.
 #ifndef strcmpi
 #define strcmpi strcasecmp
@@ -33,6 +34,7 @@
 #endif
 #ifndef strnicmp
 #define strnicmp strncasecmp
+#endif
 #endif
 
 static const char* kWeekFull[] = {
