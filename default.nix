@@ -3,7 +3,7 @@
 
 let
   version = "3.1.1";
-  rev = "20160906";
+  rev = "20161114";
 in
 
 stdenv.mkDerivation {
