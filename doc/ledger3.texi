@@ -9126,7 +9126,7 @@ Even if you don't create a session manually, one is created for you by
 the top-level interface functions.  The Session is where objects live
 like the Commodities that Amounts refer to.
 
-The make a Session useful, you must read a Journal into it, using the
+To make a Session useful, you must read a Journal into it, using the
 function `@code{read_journal}`.  This reads Ledger data from the given
 file, populates a Journal object within the current Session, and
 returns a reference to that Journal object.
