@@ -37,6 +37,7 @@ endmacro(add_ledger_harness_tests _class)
 add_subdirectory(manual)
 add_subdirectory(baseline)
 add_subdirectory(regress)
+add_subdirectory(python)
 
 if (PYTHONINTERP_FOUND)
   set(_class DocTests)
