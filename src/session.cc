@@ -284,7 +284,7 @@ value_t session_t::fn_str(call_scope_t& args)
 
 value_t session_t::fn_lot_price(call_scope_t& args)
 {
-  amount_t amt(args.get<amount_t>(1, false));
+  amount_t amt(args.get<amount_t>(0, false));
   if (amt.has_annotation() && amt.annotation().price)
     return *amt.annotation().price;
   else
@@ -292,7 +292,7 @@ value_t session_t::fn_lot_price(call_scope_t& args)
 }
 value_t session_t::fn_lot_date(call_scope_t& args)
 {
-  amount_t amt(args.get<amount_t>(1, false));
+  amount_t amt(args.get<amount_t>(0, false));
   if (amt.has_annotation() && amt.annotation().date)
     return *amt.annotation().date;
   else
@@ -300,7 +300,7 @@ value_t session_t::fn_lot_date(call_scope_t& args)
 }
 value_t session_t::fn_lot_tag(call_scope_t& args)
 {
-  amount_t amt(args.get<amount_t>(1, false));
+  amount_t amt(args.get<amount_t>(0, false));
   if (amt.has_annotation() && amt.annotation().tag)
     return string_value(*amt.annotation().tag);
   else

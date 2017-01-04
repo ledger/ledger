@@ -201,7 +201,7 @@ void sorted_accounts_iterator::push_back(account_t& account)
 
     std::stable_sort(accounts_list.back().begin(),
                      accounts_list.back().end(),
-                     compare_items<account_t>(sort_cmp));
+                     compare_items<account_t>(sort_cmp, report));
 
 #if DEBUG_ON
     if (SHOW_DEBUG("account.sorted")) {
@@ -234,7 +234,7 @@ void sorted_accounts_iterator::sort_accounts(account_t& account,
     deque.push_back(pair.second);
 
   std::stable_sort(deque.begin(), deque.end(),
-                   compare_items<account_t>(sort_cmp));
+                   compare_items<account_t>(sort_cmp, report));
 
 #if DEBUG_ON
   if (SHOW_DEBUG("account.sorted")) {

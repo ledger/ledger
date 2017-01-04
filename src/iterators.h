@@ -50,6 +50,7 @@
 namespace ledger {
 
 class journal_t;
+class report_t;
 
 template <typename Derived, typename Value, typename CategoryOrTraversal>
 class iterator_facade_base
@@ -279,8 +280,9 @@ class sorted_accounts_iterator
   : public iterator_facade_base<sorted_accounts_iterator, account_t *,
                                 boost::forward_traversal_tag>
 {
-  expr_t sort_cmp;
-  bool   flatten_all;
+  expr_t    sort_cmp;
+  report_t& report;
+  bool      flatten_all;
 
   typedef std::deque<account_t *> accounts_deque_t;
 
@@ -290,16 +292,21 @@ class sorted_accounts_iterator
 
 public:
   sorted_accounts_iterator(account_t& account,
-                           const expr_t& _sort_cmp, bool _flatten_all)
-    : sort_cmp(_sort_cmp), flatten_all(_flatten_all) {
+                           const expr_t& _sort_cmp,
+                           report_t& _report,
+                           bool _flatten_all)
+    : sort_cmp(_sort_cmp), report(_report),
+      flatten_all(_flatten_all) {
     push_back(account);
     increment();
-    TRACE_CTOR(sorted_accounts_iterator, "account_t&, expr_t, bool");
+    TRACE_CTOR(sorted_accounts_iterator,
+               "account_t&, expr_t, report_t&, bool");
   }
   sorted_accounts_iterator(const sorted_accounts_iterator& i)
     : iterator_facade_base<sorted_accounts_iterator, account_t *,
                            boost::forward_traversal_tag>(i),
-      sort_cmp(i.sort_cmp), flatten_all(i.flatten_all),
+      sort_cmp(i.sort_cmp), report(i.report),
+      flatten_all(i.flatten_all),
       accounts_list(i.accounts_list),
       sorted_accounts_i(i.sorted_accounts_i),
       sorted_accounts_end(i.sorted_accounts_end) {

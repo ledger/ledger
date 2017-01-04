@@ -154,7 +154,7 @@ void truncate_xacts::operator()(post_t& post)
 void sort_posts::post_accumulated_posts()
 {
   std::stable_sort(posts.begin(), posts.end(),
-                   compare_items<post_t>(sort_order));
+                   compare_items<post_t>(sort_order, report));
 
   foreach (post_t * post, posts) {
     post->xdata().drop_flags(POST_EXT_SORT_CALC);

@@ -237,17 +237,20 @@ class sort_posts : public item_handler<post_t>
 
   posts_deque posts;
   expr_t      sort_order;
+  report_t&   report;
 
   sort_posts();
 
 public:
-  sort_posts(post_handler_ptr handler, const expr_t& _sort_order)
-    : item_handler<post_t>(handler), sort_order(_sort_order) {
-    TRACE_CTOR(sort_posts, "post_handler_ptr, const value_expr&");
+  sort_posts(post_handler_ptr handler, const expr_t& _sort_order,
+             report_t& _report)
+    : item_handler<post_t>(handler), sort_order(_sort_order), report(_report) {
+    TRACE_CTOR(sort_posts, "post_handler_ptr, const value_expr&, report_t&");
   }
-  sort_posts(post_handler_ptr handler, const string& _sort_order)
-    : item_handler<post_t>(handler), sort_order(_sort_order) {
-    TRACE_CTOR(sort_posts, "post_handler_ptr, const string&");
+  sort_posts(post_handler_ptr handler, const string& _sort_order,
+             report_t& _report)
+    : item_handler<post_t>(handler), sort_order(_sort_order), report(_report) {
+    TRACE_CTOR(sort_posts, "post_handler_ptr, const string&, report_t&");
   }
   virtual ~sort_posts() {
     TRACE_DTOR(sort_posts);
@@ -280,15 +283,17 @@ class sort_xacts : public item_handler<post_t>
   sort_xacts();
 
 public:
-  sort_xacts(post_handler_ptr handler, const expr_t& _sort_order)
-    : sorter(handler, _sort_order) {
+  sort_xacts(post_handler_ptr handler, const expr_t& _sort_order,
+             report_t& _report)
+    : sorter(handler, _sort_order, _report) {
     TRACE_CTOR(sort_xacts,
-               "post_handler_ptr, const value_expr&");
+               "post_handler_ptr, const value_expr&, report_t&");
   }
-  sort_xacts(post_handler_ptr handler, const string& _sort_order)
-    : sorter(handler, _sort_order) {
+  sort_xacts(post_handler_ptr handler, const string& _sort_order,
+             report_t& _report)
+    : sorter(handler, _sort_order, _report) {
     TRACE_CTOR(sort_xacts,
-               "post_handler_ptr, const string&");
+               "post_handler_ptr, const string&, report_t&");
   }
   virtual ~sort_xacts() {
     TRACE_DTOR(sort_xacts);

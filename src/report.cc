@@ -431,8 +431,9 @@ namespace {
         } else {
           expr_t sort_expr(report.HANDLER(sort_).str());
           sort_expr.set_context(&report);
-          sorted_accounts_iterator iter(*report.session.journal->master,
-                                        sort_expr, report.HANDLED(flat));
+          sorted_accounts_iterator iter(
+            *report.session.journal->master, sort_expr, report,
+            report.HANDLED(flat));
           pass_down_accounts<sorted_accounts_iterator>
             (handler, iter, predicate_t(report.HANDLER(display_).str(),
                                         report.what_to_keep()), report);
@@ -444,8 +445,9 @@ namespace {
         } else {
           expr_t sort_expr(report.HANDLER(sort_).str());
           sort_expr.set_context(&report);
-          sorted_accounts_iterator iter(*report.session.journal->master,
-                                        sort_expr, report.HANDLED(flat));
+          sorted_accounts_iterator iter(
+            *report.session.journal->master, sort_expr, report,
+            report.HANDLED(flat));
           pass_down_accounts<sorted_accounts_iterator>(handler, iter);
         }
       }

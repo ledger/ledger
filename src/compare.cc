@@ -33,8 +33,10 @@
 
 #include "compare.h"
 #include "op.h"
+#include "scope.h"
 #include "post.h"
 #include "account.h"
+#include "report.h"
 
 namespace ledger {
 
@@ -62,6 +64,20 @@ void push_sort_value(std::list<sort_value_t>& sort_values,
       throw_(calc_error,
              _("Could not determine sorting value based an expression"));
   }
+}
+
+template <>
+void compare_items<post_t>::find_sort_values(
+  std::list<sort_value_t>& sort_values, scope_t& scope) {
+  bind_scope_t bound_scope(report, scope);
+  push_sort_value(sort_values, sort_order.get_op(), bound_scope);
+}
+
+template <>
+void compare_items<account_t>::find_sort_values(
+  std::list<sort_value_t>& sort_values, scope_t& scope) {
+  bind_scope_t bound_scope(report, scope);
+  push_sort_value(sort_values, sort_order.get_op(), bound_scope);
 }
 
 template <>
