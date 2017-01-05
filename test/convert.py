@@ -3,7 +3,7 @@
 # convert.py: This script converts a Boost.Test unit test into an
 # equivalent Python unit test.
 #
-# Copyright (c) 2003-2016, John Wiegley.  All rights reserved.
+# Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
