@@ -53,3 +53,21 @@
   ; COM commodity has three spaces after
   Expenses:misc  1 COM   
   Assets:checking
+
+test payees
+test
+testcommodity
+end test
+
+test reg --group-by "tag('test')"
+spaces
+11-Nov-28 test                  Expenses:misc                    $1           $1
+11-Nov-28 test                  Expenses:misc                    $2           $3
+11-Nov-28 test                  Expenses:misc                    $4           $7
+11-Nov-28 test                  Expenses:misc                    $8          $15
+end test
+
+test commodities
+$
+COM
+end test
