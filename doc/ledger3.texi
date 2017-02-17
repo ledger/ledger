@@ -1255,7 +1255,7 @@ worth $5000, then you have $5000 in equity in that car.  In order to
 turn that car (a commodity) into a cash flow, or a credit to your bank
 account, you will have to debit the equity by selling it.
 
-When you start a ledger, you are probably already worth something.
+When you start a ledger, you are probably already have a net worth.
 Your net worth is your current equity.  By transferring the money in
 the ledger from your equity to your bank accounts, you are crediting
 the ledger account based on your prior equity.  That is why, when you
