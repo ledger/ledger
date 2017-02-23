@@ -212,6 +212,7 @@ twinkling in their father's CRT.
 * Fat-free Accounting::
 * Building the program::
 * Getting help::
+* Third-Party Ledger Tutorials::
 @end menu
 
 @node Fat-free Accounting, Building the program, Introduction to Ledger, Introduction to Ledger
@@ -400,7 +401,7 @@ options.  You can run `make check` to confirm the result, and `make
 install` to install.  If these intructions do not work for you can check the
 `INSTALL.md` in the source directory for more up do date build instructions.
 
-@node Getting help,  , Building the program, Introduction to Ledger
+@node Getting help, , Building the program, Introduction to Ledger
 @section Getting help
 @findex help
 
@@ -417,7 +418,7 @@ join the Ledger mailing list at
 You can also find help in the @code{#ledger} channel on the IRC server
 @code{irc.freenode.net}.
 
-@node 
+@node  Third-Party Ledger Tutorials,  , Getting help, Introduction to Ledger
 @section Third-Party Ledger Tutorials
 
 There are plenty of people using Ledger for accounting applications.
