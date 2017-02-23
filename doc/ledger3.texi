@@ -417,6 +417,23 @@ join the Ledger mailing list at
 You can also find help in the @code{#ledger} channel on the IRC server
 @code{irc.freenode.net}.
 
+@node 
+@section Third-Party Ledger Tutorials
+
+There are plenty of people using Ledger for accounting applications.
+Some have documented how they use Ledger's features to solve their
+accounting problems.
+
+Once such tutorial, specifically designed for non-profit charities that seek
+to use Ledger, can be found at
+@url{https://k.sfconservancy.org/npo-ledger-cli} (with a copy on GitHub also
+available at @url{https://github.com/conservancy/npo-ledger-cli/}).  If
+you're looking for information about how to use Ledger's tagging system to
+handle invoicing, track expenses by program targets, and other such concepts,
+you might find the tutorial useful.  (Some of the auditor reporting scripts
+that relate to the aformentioned Ledger setup can be found
+@var{contrib/non-profit-audit-reports/} in Ledger's own source repository.)
+
 @node Ledger Tutorial, Principles of Accounting with Ledger, Introduction to Ledger, Top
 @chapter Ledger Tutorial
 @cindex tutorial
