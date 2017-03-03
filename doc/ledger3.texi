@@ -535,7 +535,7 @@ Ledger will generate:
 
 @smallexample @c output:66E3A2C
 10-Dec-01 Checking balance      Assets:Checking          $ 1,000.00   $ 1,000.00
-                                Equit:Opening Balances  $ -1,000.00            0
+                                Equity:Opening Balances  $ -1,000.00            0
 10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
                                 Expense:Food:Groceries      $ 37.50      $ 75.00
                                 Expense:Food:Groceries      $ 37.50     $ 112.50
@@ -2998,7 +2998,7 @@ after the amount, or on its own line preceded by whitespace:
 @c > Is there a way to produce a register report that lists all the transaction
 @c > that contain a certain tag, and sort them based on the value of the tag?
 @c ledger reg --sort "tag('foo')" %foo
-@c ledger reg --group-by "tag('Employer)" Remboursement:Employer and tag Employer
+@c ledger reg --group-by "tag('Employer)" Reimbursement:Employer and tag Employer
 @c > Is it possible to get subtotals for each tag value?
 @c ledger --group-by "tag('foo')" bal
 @c TODO https://groups.google.com/d/msg/ledger-cli/K9NBhNlVnYc/TDYDAWhOA5EJ
@@ -5921,27 +5921,31 @@ in home directory.
 Display the options in effect for this Ledger invocation, along with
 their values and the source of those values, for example:
 
-@smallexample @c command:A9349E4,with_input:03ACB97
-$ ledger --options bal --cleared
-@end smallexample
-
-@smallexample @c output:A9349E4
-===============================================================================
+@smallexample
+$ ledger --options bal --cleared -f ~/ledger/test/input/drewr3.dat
+===========================================================================
 [Global scope options]
-             --args-only                                             --args-only
 
 [Session scope options]
-                  --file = A9349E4.dat                               --file
+                  --file = ~/ledger/test/input/drewr3.dat      -f
+              --price-db = ~/FinanceData/PriceDB               $price-db
 
 [Report scope options]
-               --cleared                                             --cleared
-               --columns = 80                                        --columns
-                 --limit = cleared                                   --cleared
-===============================================================================
-              $15.00  Expenses
-              $12.45    Food
-               $2.55    Tips
-             $-15.00  Liabilities:MasterCard
+               --cleared                                       --cleared
+                 --color                                       ?normalize
+           --date-format = %Y/%m/%d                            $date-format
+                 --limit = cleared                             --cleared
+         --prepend-width = 0                                   ?normalize
+            --meta-width = 0                                   ?normalize
+            --date-width = 10                                  ?normalize
+           --payee-width = 21                                  ?normalize
+         --account-width = 21                                  ?normalize
+          --amount-width = 12                                  ?normalize
+           --total-width = 12                                  ?normalize
+===========================================================================
+            $ 775.00  Assets:Checking
+         $ -1,000.00  Equity:Opening Balances
+            $ 225.00  Expenses:Food:Groceries
 --------------------
                    0
 @end smallexample
