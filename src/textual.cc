@@ -1293,7 +1293,10 @@ bool instance_t::general_directive(char * line)
   switch (*p) {
   case 'a':
     if (std::strcmp(p, "account") == 0) {
-      account_directive(arg);
+      if (line[-1] == '@' || line[-1] == '!')
+        apply_account_directive(arg);
+      else
+        account_directive(arg);
       return true;
     }
     else if (std::strcmp(p, "alias") == 0) {

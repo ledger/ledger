@@ -1,0 +1,28 @@
+account DeclareAccount
+
+@account At
+2014/12/30 At-Payee
+  Assets                     ¤ 1.000,00
+  Equity
+end @account
+
+!account Exclamation
+2014/12/30 Exclamation Payee
+  Assets                     ¤ 1.000,00
+  Equity
+end !account
+
+apply account Apply
+2014/12/30 Apply Payee
+  Assets                     ¤ 1.000,00
+  Equity
+end apply account
+
+test reg
+14-Dec-30 At-Payee              At:Assets                ¤ 1.000,00   ¤ 1.000,00
+                                At:Equity               ¤ -1.000,00            0
+14-Dec-30 Exclamation Payee     Exclamation:Assets       ¤ 1.000,00   ¤ 1.000,00
+                                Exclamation:Equity      ¤ -1.000,00            0
+14-Dec-30 Apply Payee           Apply:Assets             ¤ 1.000,00   ¤ 1.000,00
+                                Apply:Equity            ¤ -1.000,00            0
+end test
