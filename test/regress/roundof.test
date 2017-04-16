@@ -1,0 +1,20 @@
+2014/03/21 * Test Round off
+  Expenses:purchase:euro 	1 EUR @  $0.0086
+  Income:sale:cash 		1 CAD @  $0.0080
+  Income:checking:salary 	$0.0
+ 
+; non zero transaction
+2014/03/21 * Asset sold
+  Assets:computer  		-$200.0045
+  Income:checking
+  	      
+  
+test -V bal
+          $-200.0045  Assets:computer
+             $0.0086  Expenses:purchase:euro
+           $200.0125  Income
+           $200.0045    checking
+             $0.0080    sale:cash
+--------------------
+             $0.0166
+end test

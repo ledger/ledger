@@ -1,0 +1,23 @@
+; -*- ledger -*-
+; Time-stamp: <2014-03-21 >
+
+; Default precision is the maximum precision of the amount 
+; of commodity till the current transaction
+; price per lot is ignored
+
+; rounded off zero transaction
+
+2014/03/21 * Test Round off
+  Expenses:purchase:euro           1 EUR @  $0.0086
+  Income:sale:cash                 1 CAD @  $0.0080
+  Income:checking:salary          $0.0
+ 
+; non  zero transaction 
+2014/03/21 * Asset sold 
+  Assets:computer                  -$200.0045
+  Income:checking                   
+; no round off  will be done below
+2014/03/21 * Test Again
+  Expenses:purchase:euro           1 EUR @  $0.0086
+  Income:sale:cash                 1 CAD @  $0.0080
+  Income:checking:salary          $0.0
