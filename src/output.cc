@@ -332,18 +332,19 @@ void report_tags::flush()
 
 void report_tags::gather_metadata(item_t& item)
 {
-  if (item.metadata)
-    foreach (const item_t::string_map::value_type& data, *item.metadata) {
-      string tag(data.first);
-      if (report.HANDLED(values) && data.second.first)
-        tag += ": " + data.second.first.get().to_string();
+  if (! item.metadata)
+    return;
+  foreach (const item_t::string_map::value_type& data, *item.metadata) {
+    string tag(data.first);
+    if (report.HANDLED(values) && data.second.first)
+      tag += ": " + data.second.first.get().to_string();
 
-      std::map<string, std::size_t>::iterator i = tags.find(tag);
-      if (i == tags.end())
-        tags.insert(tags_pair(tag, 1));
-      else
-        (*i).second++;
-    }
+    std::map<string, std::size_t>::iterator i = tags.find(tag);
+    if (i == tags.end())
+      tags.insert(tags_pair(tag, 1));
+    else
+      (*i).second++;
+  }
 }
 
 void report_tags::operator()(post_t& post)
