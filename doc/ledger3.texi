@@ -3056,7 +3056,7 @@ used as the payee name for that posting.  This affects the
 
 This is useful when for example you deposit 4 checks at a time to the
 bank.  On the bank statement, there is just one amount @samp{$400}, but
-you can specify from whom each check came from, as shown by example
+you can specify from whom each check came, as shown by example
 below:
 
 @smallexample @c input:9B43E57
@@ -3505,7 +3505,7 @@ But this does not do what you might expect:
 @smallexample
 2012-04-10 My Broker
     Assets:Brokerage            10 AAPL @@ $50.00
-    Assets:Brokerage:Cash       $750.00
+    Assets:Brokerage:Cash      $-500.00
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
