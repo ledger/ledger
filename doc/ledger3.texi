@@ -3531,11 +3531,11 @@ following two transactions are equivalent:
 @smallexample
 2012-04-10 My Broker
     Assets:Brokerage            10 AAPL @@ $50.00
-    Assets:Brokerage:Cash       $750.00
+    Assets:Brokerage:Cash      $-500.00
 
 2012-04-10 My Broker
     Assets:Brokerage            10 AAPL @{$50.00@}
-    Assets:Brokerage:Cash       $750.00
+    Assets:Brokerage:Cash      $-500.00
 @end smallexample
 
 However, note that what you see in some reports may differ, for
@@ -3554,7 +3554,7 @@ at the time of a transaction.  This is done using @samp{@{=AMOUNT@}}:
 @smallexample
 2012-04-10 My Broker
     Assets:Brokerage            10 AAPL @{=$50.00@}
-    Assets:Brokerage:Cash       $750.00
+    Assets:Brokerage:Cash      $-500.00
 @end smallexample
 
 These 10 AAPL will now always be reported as being worth $50, no
@@ -3570,7 +3570,7 @@ fixated prices by way of the cost:
 @smallexample
 2012-04-10 My Broker
     Assets:Brokerage            10 AAPL @@ =$50.00
-    Assets:Brokerage:Cash       $750.00
+    Assets:Brokerage:Cash      $-500.00
 @end smallexample
 
 This is the same as the previous transaction, with the same caveats
