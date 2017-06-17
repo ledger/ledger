@@ -1,0 +1,31 @@
+
+--input-date-format %d/%m/%y
+--date-format %d/%m/%y
+
+1/1/14 * Test
+  A        $10
+  B
+
+12/1/14 * Test
+  A        $20
+  B
+
+test --input-date-format %d/%m/%y reg --begin 2/1/13
+01/01/14 Test                  A                                $10          $10
+                               B                               $-10            0
+12/01/14 Test                  A                                $20          $20
+                               B                               $-20            0
+end test
+
+test --input-date-format %d/%m/%y reg --begin 1/1/14
+01/01/14 Test                  A                                $10          $10
+                               B                               $-10            0
+12/01/14 Test                  A                                $20          $20
+                               B                               $-20            0
+end test
+
+test --input-date-format %d/%m/%y reg --begin 2/1/14
+12/01/14 Test                  A                                $20          $20
+                               B                               $-20            0
+end test
+

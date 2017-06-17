@@ -1,0 +1,8 @@
+2016/01/11 * Employer
+  Assets:Checking
+  Income:Salary                 € 1.500,00
+    ; Reference: Christmas bonus
+
+test python test/regress/B21BF389.py
+Christmas bonus
+end test

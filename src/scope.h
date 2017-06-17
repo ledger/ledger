@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -83,20 +83,6 @@ struct symbol_t
   bool operator==(const symbol_t& sym) const {
     return kind == sym.kind || name == sym.name;
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & kind;
-    ar & name;
-    ar & definition;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class empty_scope_t;
@@ -127,16 +113,6 @@ public:
   virtual bool type_required() const {
     return false;
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive&, const unsigned int /* version */) {}
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class empty_scope_t : public scope_t
@@ -184,19 +160,6 @@ public:
       return parent->lookup(kind, name);
     return NULL;
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<scope_t>(*this);
-    ar & parent;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class bind_scope_t : public child_scope_t
@@ -233,19 +196,6 @@ public:
       return def;
     return child_scope_t::lookup(kind, name);
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<child_scope_t>(*this);
-    ar & grandchild;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 template <typename T>
@@ -323,19 +273,6 @@ public:
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                   const string& name);
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<child_scope_t>(*this);
-    ar & symbols;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class context_scope_t : public child_scope_t
@@ -365,24 +302,6 @@ public:
   virtual bool type_required() const {
     return required;
   }
-
-#if HAVE_BOOST_SERIALIZATION
-protected:
-  explicit context_scope_t() {
-    TRACE_CTOR(context_scope_t, "");
-  }
-
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<child_scope_t>(*this);
-    ar & value_type_context;
-    ar & required;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class call_scope_t : public context_scope_t
@@ -480,24 +399,6 @@ public:
   bool empty() const {
     return args.size() == 0;
   }
-
-#if HAVE_BOOST_SERIALIZATION
-protected:
-  explicit call_scope_t() : depth(0) {
-    TRACE_CTOR(call_scope_t, "");
-  }
-
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<context_scope_t>(*this);
-    ar & args;
-    //ar & ptr;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 template <>

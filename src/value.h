@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -227,20 +227,6 @@ public:
       data = false;
       type = VOID;
     }
-
-#if HAVE_BOOST_SERIALIZATION
-  private:
-    /** Serialization. */
-
-    friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned int /* version */) {
-      ar & data;
-      ar & type;
-      ar & refc;
-    }
-#endif // HAVE_BOOST_SERIALIZATION
   };
 
 private:
@@ -449,7 +435,7 @@ public:
     return temp;
   }
   void in_place_roundto(int places);
-  
+
   value_t truncated() const {
     value_t temp(*this);
     temp.in_place_truncate();
@@ -965,20 +951,6 @@ public:
    * Debugging methods.
    */
   bool valid() const;
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & true_value;
-    ar & false_value;
-    ar & storage;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 #define NULL_VALUE (value_t())

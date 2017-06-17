@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -110,7 +110,7 @@ global_scope_t::~global_scope_t()
 void global_scope_t::parse_init(path init_file)
 {
   TRACE_START(init, 1, "Read initialization file");
-  
+
   parse_context_stack_t parsing_context;
   parsing_context.push(init_file);
   parsing_context.get_current().journal = session().journal.get();
@@ -122,15 +122,15 @@ void global_scope_t::parse_init(path init_file)
     throw_(parse_error, _f("Transactions found in initialization file '%1%'")
 	   % init_file);
   }
-  
+
   TRACE_FINISH(init, 1);
 }
 
 void global_scope_t::read_init()
 {
-  // if specified on the command line init_file_ is filled in 
+  // if specified on the command line init_file_ is filled in
   // global_scope_t::handle_debug_options.  If it was specified on the command line
-  // fail is the file doesn't exist. If no init file was specified
+  // fail if the file doesn't exist. If no init file was specified
   // on the command-line then try the default values, but don't fail if there
   // isn't one.
   path init_file;
@@ -142,13 +142,16 @@ void global_scope_t::read_init()
       throw_(parse_error, _f("Could not find specified init file %1%") % init_file);
     }
   } else {
-    if (const char * home_var = std::getenv("HOME")){
+    if (const char * home_var = std::getenv("HOME")) {
       init_file = (path(home_var) / ".ledgerrc");
+      if (! exists(init_file)) {
+        init_file = ("./.ledgerrc");
+      }
     } else {
       init_file = ("./.ledgerrc");
     }
   }
-  if(exists(init_file)){
+  if (exists(init_file)) {
     parse_init(init_file);
   }
 }
@@ -316,17 +319,11 @@ option_t<global_scope_t> * global_scope_t::lookup_option(const char * p)
   case 'd':
     OPT(debug_);
     break;
-  case 'f':
-    OPT(full_help);
-    break;
   case 'h':
     OPT_(help);
-    else OPT(help_calc);
-    else OPT(help_comm);
-    else OPT(help_disp);
     break;
   case 'i':
-    OPT(init_file_);
+    OPT_(init_file_);
     break;
   case 'o':
     OPT(options);
@@ -388,7 +385,7 @@ void global_scope_t::read_environment_settings(char * envp[])
   process_environment(const_cast<const char **>(envp), "LEDGER_", report());
 
 #if 1
-  // These are here for backwards compatability, but are deprecated.
+  // These are here for backwards compatibility, but are deprecated.
 
   if (const char * p = std::getenv("LEDGER")) {
     if (! std::getenv("LEDGER_FILE"))
@@ -399,11 +396,13 @@ void global_scope_t::read_environment_settings(char * envp[])
       process_option("environ", "init-file", report(), p, "LEDGER_INIT");
   }
   if (const char * p = std::getenv("PRICE_HIST")) {
-    if (! std::getenv("LEDGER_PRICEDB"))
+    if (! std::getenv("LEDGER_PRICE_DB"))
       process_option("environ", "price-db", report(), p, "PRICE_HIST");
   }
-  if (const char * p = std::getenv("PRICE_EXP"))
-    process_option("environ", "price-exp", report(), p, "PRICE_EXP");
+  if (const char * p = std::getenv("PRICE_EXP")) {
+    if (! std::getenv("LEDGER_PRICE_EXP"))
+			process_option("environ", "price-exp", report(), p, "PRICE_EXP");
+	}
 #endif
 
   TRACE_FINISH(environment, 1);
@@ -452,7 +451,7 @@ expr_t::func_t global_scope_t::look_for_command(scope_t&      scope,
 
 void global_scope_t::visit_man_page() const
 {
-#ifndef WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
   int pid = fork();
   if (pid < 0) {
     throw std::logic_error(_("Failed to fork child process"));
@@ -503,7 +502,7 @@ void handle_debug_options(int argc, char * argv[])
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--debug") == 0) {
 #if DEBUG_ON
-        _log_level    = LOG_DEBUG;  
+        _log_level    = LOG_DEBUG;
         _log_category = argv[i + 1];
         i++;
 #endif
@@ -512,7 +511,7 @@ void handle_debug_options(int argc, char * argv[])
 #if TRACING_ON
         _log_level   = LOG_TRACE;
         try {
-          _trace_level = boost::lexical_cast<uint8_t>(argv[i + 1]);
+          _trace_level = boost::lexical_cast<uint16_t>(argv[i + 1]);
         }
         catch (const boost::bad_lexical_cast&) {
           throw std::logic_error(_("Argument to --trace must be an integer"));

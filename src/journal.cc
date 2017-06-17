@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -95,7 +95,9 @@ void journal_t::initialize()
   force_checking    = false;
   check_payees      = false;
   day_break         = false;
-  checking_style    = CHECK_PERMISSIVE;
+  checking_style    = CHECK_NORMAL;
+  recursive_aliases = false;
+  no_aliases        = false;
 }
 
 void journal_t::add_account(account_t * acct)
@@ -121,26 +123,9 @@ account_t * journal_t::find_account_re(const string& regexp)
 account_t * journal_t::register_account(const string& name, post_t * post,
                                         account_t * master_account)
 {
-  account_t * result = NULL;
-
-  // If there any account aliases, substitute before creating an account
+  // If there are any account aliases, substitute before creating an account
   // object.
-  if (account_aliases.size() > 0) {
-    accounts_map::const_iterator i = account_aliases.find(name);
-    if (i != account_aliases.end()) {
-      result = (*i).second;
-    } else {
-      // only check the very first account for alias expansion, in case
-      // that can be expanded successfully
-      size_t colon = name.find(':');
-      if(colon != string::npos) {
-        accounts_map::const_iterator i = account_aliases.find(name.substr(0, colon));
-        if (i != account_aliases.end()) {
-          result = find_account((*i).second->fullname() + name.substr(colon));
-        }
-      }
-    }
-  }
+  account_t * result = expand_aliases(name);
 
   // Create the account object and associate it with the journal; this
   // is registering the account.
@@ -151,7 +136,7 @@ account_t * journal_t::register_account(const string& name, post_t * post,
   // the payee indicates an account that should be used.
   if (result->name == _("Unknown")) {
     foreach (account_mapping_t& value, payees_for_unknown_accounts) {
-      if (value.first.match(post->xact->payee)) {
+      if (post && value.first.match(post->xact->payee)) {
         result = value.second;
         break;
       }
@@ -178,7 +163,63 @@ account_t * journal_t::register_account(const string& name, post_t * post,
       }
     }
   }
+  return result;
+}
 
+account_t * journal_t::expand_aliases(string name) {
+  // Aliases are expanded recursively, so if both alias Foo=Bar:Foo and
+  // alias Bar=Baaz:Bar are in effect, first Foo will be expanded to Bar:Foo,
+  // then Bar:Foo will be expanded to Baaz:Bar:Foo.
+  // The expansion loop keeps a list of already expanded names in order to
+  // prevent infinite excursion. Each alias may only be expanded at most once.
+  account_t * result = NULL;
+
+  if (no_aliases)
+    return result;
+
+  bool keep_expanding = true;
+  std::list<string> already_seen;
+  // loop until no expansion can be found
+  do {
+    if (account_aliases.size() > 0) {
+      accounts_map::const_iterator i = account_aliases.find(name);
+      if (i != account_aliases.end()) {
+        if (std::find(already_seen.begin(), already_seen.end(), name) != already_seen.end()) {
+          throw_(std::runtime_error,
+                 _f("Infinite recursion on alias expansion for %1%")
+                 % name);
+        }
+        // there is an alias for the full account name, including colons
+        already_seen.push_back(name);
+        result = (*i).second;
+        name = result->fullname();
+      } else {
+        // only check the very first account for alias expansion, in case
+        // that can be expanded successfully
+        size_t colon = name.find(':');
+        if (colon != string::npos) {
+          string first_account_name = name.substr(0, colon);
+          accounts_map::const_iterator j = account_aliases.find(first_account_name);
+          if (j != account_aliases.end()) {
+            if (std::find(already_seen.begin(), already_seen.end(), first_account_name) != already_seen.end()) {
+              throw_(std::runtime_error,
+                     _f("Infinite recursion on alias expansion for %1%")
+                     % first_account_name);
+            }
+            already_seen.push_back(first_account_name);
+            result = find_account((*j).second->fullname() + name.substr(colon));
+            name = result->fullname();
+          } else {
+            keep_expanding = false;
+          }
+        } else {
+          keep_expanding = false;
+        }
+      }
+    } else {
+      keep_expanding = false;
+    }
+  } while(keep_expanding && recursive_aliases);
   return result;
 }
 
@@ -208,7 +249,7 @@ string journal_t::register_payee(const string& name, xact_t * xact)
     }
   }
 
-  foreach (payee_mapping_t& value, payee_mappings) {
+  foreach (payee_alias_mapping_t& value, payee_alias_mappings) {
     if (value.first.match(name)) {
       payee = value.second;
       break;
@@ -323,6 +364,21 @@ namespace {
   }
 }
 
+bool lt_posting_account(post_t * left, post_t * right) {
+  return left->account < right->account;
+}
+
+bool is_equivalent_posting(post_t * left, post_t * right)
+{
+  if (left->account != right->account)
+    return false;
+
+  if (left->amount != right->amount)
+    return false;
+
+  return true;
+}
+
 bool journal_t::add_xact(xact_t * xact)
 {
   xact->journal = this;
@@ -345,12 +401,54 @@ bool journal_t::add_xact(xact_t * xact)
   // will have been performed by extend_xact, so asserts can still be
   // applied to it.
   if (optional<value_t> ref = xact->get_tag(_("UUID"))) {
+    std::string uuid = ref->to_string();
     std::pair<checksum_map_t::iterator, bool> result
-      = checksum_map.insert(checksum_map_t::value_type(ref->to_string(), xact));
+      = checksum_map.insert(checksum_map_t::value_type(uuid, xact));
     if (! result.second) {
-      // jww (2012-02-27): Confirm that the xact in
-      // (*result.first).second is exact match in its significant
-      // details to xact.
+      // This UUID has been seen before; apply any postings which the
+      // earlier version may have deferred.
+      foreach (post_t * post, xact->posts) {
+        account_t * acct = post->account;
+        if (acct->deferred_posts) {
+          auto i = acct->deferred_posts->find(uuid);
+          if (i != acct->deferred_posts->end()) {
+            for (post_t * rpost : (*i).second)
+              if (acct == rpost->account)
+                acct->add_post(rpost);
+            acct->deferred_posts->erase(i);
+          }
+        }
+      }
+
+      xact_t * other = (*result.first).second;
+
+      // Copy the two lists of postings (which should be relatively
+      // short), and make sure that the intersection is the empty set
+      // (i.e., that they are the same list).
+      std::vector<post_t *> this_posts(xact->posts.begin(),
+                                       xact->posts.end());
+      std::sort(this_posts.begin(), this_posts.end(),
+                lt_posting_account);
+      std::vector<post_t *> other_posts(other->posts.begin(),
+                                        other->posts.end());
+      std::sort(other_posts.begin(), other_posts.end(),
+                lt_posting_account);
+      bool match = std::equal(this_posts.begin(), this_posts.end(),
+                              other_posts.begin(), is_equivalent_posting);
+
+      if (! match || this_posts.size() != other_posts.size()) {
+        add_error_context(_("While comparing this previously seen transaction:"));
+        add_error_context(source_context(other->pos->pathname,
+                                         other->pos->beg_pos,
+                                         other->pos->end_pos, "> "));
+        add_error_context(_("to this later transaction:"));
+        add_error_context(source_context(xact->pos->pathname,
+                                         xact->pos->beg_pos,
+                                         xact->pos->end_pos, "> "));
+        throw_(std::runtime_error,
+               _f("Transactions with the same UUID must have equivalent postings"));
+      }
+
       xact->journal = NULL;
       return false;
     }

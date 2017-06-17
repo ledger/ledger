@@ -1,0 +1,20 @@
+test cleared --file test/input/drewr3.dat --cleared-format "%-30(account) %15(get_at(total_expr, 0)) %15(get_at(total_expr, 1))\n%/"
+Assets                             $ -3,804.00        $ 775.00
+Assets:Checking                     $ 1,396.00        $ 775.00
+Assets:Checking:Business               $ 30.00               0
+Assets:Savings                     $ -5,200.00               0
+Equity:Opening Balances            $ -1,000.00     $ -1,000.00
+Expenses                            $ 6,654.00        $ 225.00
+Expenses:Auto                       $ 5,500.00               0
+Expenses:Books                         $ 20.00               0
+Expenses:Escrow                       $ 300.00               0
+Expenses:Food:Groceries               $ 334.00        $ 225.00
+Expenses:Interest:Mortgage            $ 500.00               0
+Income                             $ -2,030.00               0
+Income:Salary                      $ -2,000.00               0
+Income:Sales                          $ -30.00               0
+Liabilities                           $ -63.60               0
+Liabilities:MasterCard                $ -20.00               0
+Liabilities:Mortgage:Principal        $ 200.00               0
+Liabilities:Tithe                    $ -243.60               0
+end test

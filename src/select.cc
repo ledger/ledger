@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -145,10 +145,17 @@ value_t select_command(call_scope_t& args)
       string  thus_far = "";
 
       std::size_t cols = 0;
+#ifdef HAVE_IOCTL
+      struct winsize ws;
+#endif
       if (report.HANDLED(columns_))
         cols = lexical_cast<std::size_t>(report.HANDLER(columns_).value);
       else if (const char * columns_env = std::getenv("COLUMNS"))
         cols = lexical_cast<std::size_t>(columns_env);
+#ifdef HAVE_IOCTL
+      else if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1)
+          cols = ws.ws_col;
+#endif
       else
         cols = 80;
 
@@ -291,17 +298,17 @@ value_t select_command(call_scope_t& args)
             thus_far += "int(payee_width) + 1";
           }
           else if (ident == "account") {
-            formatter << "ansify_if("
-                      << "ansify_if(";
+            formatter << "ansify_if(";
 
             if (accounts_report) {
+              formatter << "ansify_if(";
               formatter << "partial_account(options.flat), blue if color),";
             } else {
               formatter << "justify(truncated(";
               as_expr(column)->print(formatter);
               formatter << ", int(account_width), int(abbrev_len)),"
-                        << "int(account_width)),";
-              formatter << "true, color),";
+                        << "int(account_width), -1, ";
+              formatter << "false, color),";
 
               if (! thus_far.empty())
                 thus_far += " + ";
@@ -358,10 +365,9 @@ value_t select_command(call_scope_t& args)
         formatter << ")";
       }
       formatter << "\\n";
+      DEBUG("select.parse", "formatter: " << formatter.str());
     }
     else if (keyword == "from") {
-      DEBUG("select.parse", "formatter: " << formatter.str());
-
       if (arg == "xacts" || arg == "txns" || arg == "transactions") {
         report_functor = expr_t::op_t::wrap_functor
           (reporter<>(post_handler_ptr(new print_xacts(report,
@@ -390,7 +396,7 @@ value_t select_command(call_scope_t& args)
 #if 0
       query_t          query;
       keep_details_t   keeper(true, true, true);
-      expr_t::ptr_op_t expr = 
+      expr_t::ptr_op_t expr =
         query.parse_args(string_value(arg).to_sequence(), keeper, false, true);
       report.HANDLER(limit_).on("#select", query.get_query(query_t::QUERY_LIMIT));
 #else

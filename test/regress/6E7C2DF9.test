@@ -1,0 +1,24 @@
+Y 2010 
+10/10 * TwentyTen
+    Account:Ten                         $ 10.10
+    Assets:Cash
+
+apply year 2011
+11/11 * TwentyEleven
+    Account:Eleven                      $ 11.11
+    Assets:Cash
+
+2012/12/12 * TwentyTwelve
+    Account:Twelve                      $ 12.12
+    Assets:Cash
+
+11/11 * TwentyEleven Again
+    Account:Eleven                      $ 11.11
+    Assets:Cash
+
+test reg --sort date account
+10-Oct-10 TwentyTen             Account:Ten                 $ 10.10      $ 10.10
+11-Nov-11 TwentyEleven          Account:Eleven              $ 11.11      $ 21.21
+11-Nov-11 TwentyEleven Again    Account:Eleven              $ 11.11      $ 32.32
+12-Dec-12 TwentyTwelve          Account:Twelve              $ 12.12      $ 44.44
+end test

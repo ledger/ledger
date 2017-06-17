@@ -1,0 +1,8 @@
+@set Ledger_VERSION_MAJOR @Ledger_VERSION_MAJOR@
+@set Ledger_VERSION_MINOR @Ledger_VERSION_MINOR@
+@set Ledger_VERSION_PATCH @Ledger_VERSION_PATCH@
+@set Ledger_VERSION_PRERELEASE @Ledger_VERSION_PRERELEASE@
+@set Ledger_VERSION_DATE @Ledger_VERSION_DATE@
+
+@set VERSION @value{Ledger_VERSION_MAJOR}.@value{Ledger_VERSION_MINOR}.@value{Ledger_VERSION_PATCH}@value{Ledger_VERSION_PRERELEASE}
+

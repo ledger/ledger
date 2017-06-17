@@ -1,0 +1,148 @@
+
+2014-01-01 * Opening balance
+    Assets:Cash                               25.00 GBP
+    Equity:Opening balance                   -25.00 GBP
+
+2014-05-01 * Sell to customer AAA
+    ; Customer: AAA
+    ; Invoice: 101
+    Assets:Receivables                        10.00 GBP
+    Income:Sale                              -10.00 GBP
+
+2014-05-02 * Sell to customer BBB
+    ; Customer: BBB
+    ; Invoice: 102
+    Assets:Receivables                        11.00 GBP
+    Income:Sale                              -11.00 GBP
+
+2014-05-03 * Sell to customer AAA
+    ; Customer: AAA
+    ; Invoice: 103
+    Assets:Receivables                        12.00 GBP
+    Income:Sale                              -12.00 GBP
+
+2014-05-04 * Sell to customer CCC
+    ; Customer: CCC
+    ; Invoice: 104
+    Assets:Receivables                        15.00 GBP
+    Income:Sale                              -15.00 GBP
+
+2014-05-05 * Money received from customer AAA for invoice 101
+    ; Customer: AAA
+    ; Invoice: 101
+    Assets:Cash                               10.00 GBP
+    Assets:Receivables                       -10.00 GBP
+
+2014-05-05 * Sell to customer DDD
+    ; Customer: DDD
+    ; Invoice: 105
+    Assets:Receivables                        20.00 GBP
+    Income:Sale                              -20.00 GBP
+
+2014-05-07 * Money received from customer CCC for invoice 104
+    ; Customer: CCC
+    ; Invoice: 104
+    Assets:Cash                               15.00 GBP
+    Assets:Receivables                       -15.00 GBP
+
+2014-05-08 * Partial payment received from customer DDD for invoice 105
+    ; Customer: DDD
+    ; Invoice: 105
+    Assets:Cash                               15.00 GBP
+    Assets:Receivables                       -15.00 GBP
+
+test bal assets:receivables --pivot Invoice
+           28.00 GBP  Invoice
+           11.00 GBP    102:Assets:Receivables
+           12.00 GBP    103:Assets:Receivables
+            5.00 GBP    105:Assets:Receivables
+--------------------
+           28.00 GBP
+end test
+
+test bal assets:receivables --pivot Invoice --flat
+           11.00 GBP  Invoice:102:Assets:Receivables
+           12.00 GBP  Invoice:103:Assets:Receivables
+            5.00 GBP  Invoice:105:Assets:Receivables
+--------------------
+           28.00 GBP
+end test
+
+test bal assets:receivables --pivot Invoice --empty
+           28.00 GBP  Invoice
+                   0    101:Assets:Receivables
+           11.00 GBP    102:Assets:Receivables
+           12.00 GBP    103:Assets:Receivables
+                   0    104:Assets:Receivables
+            5.00 GBP    105:Assets:Receivables
+--------------------
+           28.00 GBP
+end test
+
+test bal assets:receivables --pivot Invoice --empty -p "until 2014-05-05"
+           48.00 GBP  Invoice
+           10.00 GBP    101:Assets:Receivables
+           11.00 GBP    102:Assets:Receivables
+           12.00 GBP    103:Assets:Receivables
+           15.00 GBP    104:Assets:Receivables
+--------------------
+           48.00 GBP
+end test
+
+test bal assets:receivables --pivot Invoice --empty -p "until 2014-05-06"
+           58.00 GBP  Invoice
+                   0    101:Assets:Receivables
+           11.00 GBP    102:Assets:Receivables
+           12.00 GBP    103:Assets:Receivables
+           15.00 GBP    104:Assets:Receivables
+           20.00 GBP    105:Assets:Receivables
+--------------------
+           58.00 GBP
+end test
+
+test bal assets:receivables --pivot Customer
+           28.00 GBP  Customer
+           12.00 GBP    AAA:Assets:Receivables
+           11.00 GBP    BBB:Assets:Receivables
+            5.00 GBP    DDD:Assets:Receivables
+--------------------
+           28.00 GBP
+end test
+
+test bal assets:receivables --pivot Customer --flat
+           12.00 GBP  Customer:AAA:Assets:Receivables
+           11.00 GBP  Customer:BBB:Assets:Receivables
+            5.00 GBP  Customer:DDD:Assets:Receivables
+--------------------
+           28.00 GBP
+end test
+
+test bal assets:receivables --pivot Customer --empty
+           28.00 GBP  Customer
+           12.00 GBP    AAA:Assets:Receivables
+           11.00 GBP    BBB:Assets:Receivables
+                   0    CCC:Assets:Receivables
+            5.00 GBP    DDD:Assets:Receivables
+--------------------
+           28.00 GBP
+end test
+
+test bal assets:receivables --pivot Customer --empty -p "until 2014-05-05"
+           48.00 GBP  Customer
+           22.00 GBP    AAA:Assets:Receivables
+           11.00 GBP    BBB:Assets:Receivables
+           15.00 GBP    CCC:Assets:Receivables
+--------------------
+           48.00 GBP
+end test
+
+test bal assets:receivables --pivot Customer --empty -p "until 2014-05-06"
+           58.00 GBP  Customer
+           12.00 GBP    AAA:Assets:Receivables
+           11.00 GBP    BBB:Assets:Receivables
+           15.00 GBP    CCC:Assets:Receivables
+           20.00 GBP    DDD:Assets:Receivables
+--------------------
+           58.00 GBP
+end test
+

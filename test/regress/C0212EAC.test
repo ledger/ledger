@@ -27,7 +27,4 @@ test reg
                                                            -5.00 GBP {=1.40 EUR}
                                 Income:Gain               -0.50 EUR     5.00 GBP
                                                            -5.00 GBP {=1.40 EUR}
-                                Equity:Capital Gains       0.50 EUR     0.50 EUR
-                                                                        5.00 GBP
-                                                           -5.00 GBP {=1.40 EUR}
 end test

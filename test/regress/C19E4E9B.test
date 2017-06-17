@@ -6,7 +6,7 @@
     A         1 AAA @ 2.00 EUR
     B                -2.00 EUR
 
-test reg --format "%S: %d %P %t %T\n"
+test reg --format "%S: %D %P %t %T\n"
 $FILE: 2012/01/01 Buy AAA 1 AAA 1 AAA
 $FILE: 2012/01/01 Buy AAA -1.00 EUR 1 AAA
 -1.00 EUR

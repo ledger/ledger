@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -153,20 +153,6 @@ struct date_traits_t
             has_month == traits.has_month &&
             has_day     == traits.has_day);
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & has_year;
-    ar & has_month;
-    ar & has_day;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 struct date_duration_t
@@ -247,19 +233,6 @@ struct date_duration_t
   }
 
   static date_t find_nearest(const date_t& date, skip_quantum_t skip);
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & quantum;
-    ar & length;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class date_specifier_t
@@ -343,21 +316,6 @@ public:
 
     return out.str();
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & year;
-    ar & month;
-    ar & day;
-    ar & wday;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class date_range_t
@@ -420,20 +378,6 @@ public:
 
     return out.str();
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & range_begin;
-    ar & range_end;
-    ar & end_inclusive;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class date_specifier_or_range_t
@@ -490,18 +434,6 @@ public:
 
     return out.str();
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & specifier_or_range;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class date_interval_t : public equality_comparable<date_interval_t>
@@ -568,7 +500,7 @@ public:
   void   stabilize(const optional<date_t>& date = none);
 
   bool   is_valid() const {
-    return start;
+    return static_cast<bool>(start);
   }
 
   /** Find the current or next period containing date.  Returns false if
@@ -590,24 +522,6 @@ public:
   date_interval_t& operator++();
 
   void dump(std::ostream& out);
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & range;
-    ar & start;
-    ar & finish;
-    ar & aligned;
-    ar & next;
-    ar & duration;
-    ar & end_of_duration;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 void times_initialize();

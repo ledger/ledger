@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -325,7 +325,6 @@ void export_value()
     .def("to_mask", &value_t::to_mask)
     .def("to_sequence", &value_t::to_sequence)
 
-    .def("__unicode__", py_dump_relaxed)
     .def("__repr__", py_dump)
 
     .def("casted", &value_t::casted)
@@ -372,6 +371,7 @@ void export_value()
 
   register_optional_to_python<value_t>();
 
+  implicitly_convertible<bool, value_t>();
   implicitly_convertible<long, value_t>();
   implicitly_convertible<string, value_t>();
   implicitly_convertible<amount_t, value_t>();

@@ -26,7 +26,7 @@ P 2009/04/01 00:00:00 S 16 P
 ; 2010/01/01 Sample 1b
 ;     Assets:Brokerage:Cash               -100 P
 ;     Assets:Brokerage:Stocks              100 S
-; 
+;
 ; P 2010/01/01 00:00:00 S 2 P
 
 2010/02/01 Sample 2b
@@ -62,3 +62,12 @@ test reg --gain stocks
 10-Apr-01 Commodities revalued  <Revalued>                   3200 P       6000 P
 10-Apr-01 Sample 4b             Asset:Brokerage:Stocks      -1500 P       4500 P
 end test
+
+test bal --change
+              4500 P  Assets:Brokerage:Stocks
+end test
+
+test bal -G
+              4500 P  Assets:Brokerage:Stocks
+end test
+

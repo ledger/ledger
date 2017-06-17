@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -61,6 +61,8 @@ void export_session()
     .def("read_journal_files", &session_t::read_journal_files,
          return_internal_reference<>())
     .def("close_journal_files", &session_t::close_journal_files)
+    .def("journal", &session_t::get_journal,
+         return_internal_reference<>())
     ;
 
   scope().attr("session") =

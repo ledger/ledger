@@ -1,0 +1,58 @@
+
+2014-01-01 * Test 1
+    A          $10 ; :bar:
+    B              ; :foo:
+
+2014-01-02 * Test 2
+    A          $10 ; :a:
+    B
+
+2014-01-03 * Test 3
+    A          $10
+    B              ; :b:
+
+2014-01-03 * Test 4
+    ; :xxx:
+    A          $10
+    B
+
+2014-01-03 * Test 5
+    A          $10 ; a: aaa
+    B
+
+2014-02-04 * Test 6
+    A          $10 ; a: aaa
+    B
+
+2014-01-01 * Test 7
+    A          $10
+    B              ; b: bbb
+
+test tags
+a
+b
+bar
+foo
+xxx
+end test
+
+test tags --values
+a
+a: aaa
+b
+b: bbb
+bar
+foo
+xxx
+end test
+
+test tags --values --count
+1 a
+2 a: aaa
+1 b
+1 b: bbb
+1 bar
+1 foo
+2 xxx
+end test
+

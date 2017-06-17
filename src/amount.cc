@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -93,20 +93,6 @@ struct amount_t::bigint_t : public supports_flags<>
     }
     return true;
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
-  {
-    ar & boost::serialization::base_object<supports_flags<> >(*this);
-    ar & val;
-    ar & prec;
-    ar & refc;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 bool amount_t::is_initialized = false;
@@ -196,8 +182,8 @@ namespace {
 
         for (const char * p = buf; *p; p++) {
           if (*p == '.') {
-            if (commodity_t::time_colon_by_default ||
-                (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON)))
+            if (("h" == comm->symbol() || "m" == comm->symbol()) && (commodity_t::time_colon_by_default ||
+                (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON))))
               out << ':';
             else if (commodity_t::decimal_comma_by_default ||
                 (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
@@ -213,8 +199,8 @@ namespace {
             out << *p;
 
             if (integer_digits > 3 && --integer_digits % 3 == 0) {
-              if (commodity_t::time_colon_by_default ||
-                  (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON)))
+              if (("h" == comm->symbol() || "m" == comm->symbol()) && (commodity_t::time_colon_by_default ||
+                  (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON))))
                 out << ':';
               else if (commodity_t::decimal_comma_by_default ||
                   (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
@@ -301,7 +287,7 @@ void amount_t::_copy(const amount_t& amt)
       quantity = new bigint_t(*amt.quantity);
     } else {
       quantity = amt.quantity;
-      DEBUG("amounts.refs",
+      DEBUG("amount.refs",
              quantity << " refc++, now " << (quantity->refc + 1));
       quantity->refc++;
     }
@@ -339,7 +325,7 @@ void amount_t::_release()
 {
   VERIFY(valid());
 
-  DEBUG("amounts.refs", quantity << " refc--, now " << (quantity->refc - 1));
+  DEBUG("amount.refs", quantity << " refc--, now " << (quantity->refc - 1));
 
   if (--quantity->refc == 0) {
     if (quantity->has_flags(BIGINT_BULK_ALLOC))
@@ -744,7 +730,7 @@ void amount_t::in_place_unreduce()
   }
 
   if (shifted) {
-    if ("h" == comm->symbol() && commodity_t::time_colon_by_default) {
+    if (("h" == comm->symbol() || "m" == comm->symbol()) && commodity_t::time_colon_by_default) {
       amount_t floored = tmp.floored();
       amount_t precision = tmp - floored;
       if (precision < 0.0) {
@@ -928,7 +914,7 @@ void amount_t::annotate(const annotation_t& details)
   }
   assert(this_base);
 
-  DEBUG("amounts.commodities", "Annotating commodity for amount "
+  DEBUG("amount.commodities", "Annotating commodity for amount "
         << *this << std::endl << details);
 
   if (commodity_t * ann_comm =
@@ -939,7 +925,7 @@ void amount_t::annotate(const annotation_t& details)
     assert(false);
 #endif
 
-  DEBUG("amounts.commodities", "Annotated amount is " << *this);
+  DEBUG("amount.commodities", "Annotated amount is " << *this);
 }
 
 bool amount_t::has_annotation() const
@@ -1107,9 +1093,11 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
   bool decimal_comma_style
     = (commodity_t::decimal_comma_by_default ||
        commodity().has_flags(COMMODITY_STYLE_DECIMAL_COMMA));
+#if 0
   bool time_colon_style
     = (commodity_t::time_colon_by_default ||
        commodity().has_flags(COMMODITY_STYLE_TIME_COLON));
+#endif
 
   new_quantity->prec = 0;
 
@@ -1329,69 +1317,4 @@ void put_amount(property_tree::ptree& st, const amount_t& amt,
   st.put("quantity", amt.quantity_string());
 }
 
-#if HAVE_BOOST_SERIALIZATION
-
-template<class Archive>
-void amount_t::serialize(Archive& ar, const unsigned int /* version */)
-{
-  ar & is_initialized;
-  ar & quantity;
-  ar & commodity_;
-}
-
-#endif // HAVE_BOOST_SERIALIZATION
-
 } // namespace ledger
-
-#if HAVE_BOOST_SERIALIZATION
-namespace boost {
-namespace serialization {
-
-template <class Archive>
-void serialize(Archive& ar, MP_INT& mpz, const unsigned int /* version */)
-{
-  ar & mpz._mp_alloc;
-  ar & mpz._mp_size;
-  ar & mpz._mp_d;
-}
-
-template <class Archive>
-void serialize(Archive& ar, MP_RAT& mpq, const unsigned int /* version */)
-{
-  ar & mpq._mp_num;
-  ar & mpq._mp_den;
-}
-
-template <class Archive>
-void serialize(Archive& ar, long unsigned int& integer,
-               const unsigned int /* version */)
-{
-  ar & make_binary_object(&integer, sizeof(long unsigned int));
-}
-
-} // namespace serialization
-} // namespace boost
-
-BOOST_CLASS_EXPORT(ledger::annotated_commodity_t)
-
-template void boost::serialization::serialize(boost::archive::binary_iarchive&,
-                                              MP_INT&, const unsigned int);
-template void boost::serialization::serialize(boost::archive::binary_oarchive&,
-                                              MP_INT&, const unsigned int);
-template void boost::serialization::serialize(boost::archive::binary_iarchive&,
-                                              MP_RAT&, const unsigned int);
-template void boost::serialization::serialize(boost::archive::binary_oarchive&,
-                                              MP_RAT&, const unsigned int);
-template void boost::serialization::serialize(boost::archive::binary_iarchive&,
-                                              long unsigned int&,
-                                              const unsigned int);
-template void boost::serialization::serialize(boost::archive::binary_oarchive&,
-                                              long unsigned int&,
-                                              const unsigned int);
-
-template void ledger::amount_t::serialize(boost::archive::binary_iarchive&,
-                                          const unsigned int);
-template void ledger::amount_t::serialize(boost::archive::binary_oarchive&,
-                                          const unsigned int);
-
-#endif // HAVE_BOOST_SERIALIZATION

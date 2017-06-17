@@ -2,16 +2,18 @@ account Assets:Cash
 account Expenses:Phone
 account Expenses:Rent
 commodity GBP
+tag bar
 
-2012-03-20 Phone
+2012-03-20 * Phone
+    ; :bar:
     Expenses:Phone            20.00 GBP
     Assets:Cash
 
-2012-03-21 Rent
+2012-03-21 * Rent
     Expenses:Rent            550.00 GBP
     Assets:Cash
 
-2012-03-22 Food
+2012-03-22 * Food
     ; :food:
     Expenses:Food             20.00 EUR
     Assets:Cash
@@ -27,8 +29,8 @@ test bal --explicit --strict
 --------------------
                    0
 __ERROR__
-Warning: "$FILE", line 16: Unknown account 'Expenses:Food'
-Warning: "$FILE", line 16: Unknown commodity 'EUR'
-Warning: "$FILE", line 17: Unknown metadata tag 'food'
+Warning: "$FILE", line 18: Unknown account 'Expenses:Food'
+Warning: "$FILE", line 18: Unknown commodity 'EUR'
+Warning: "$FILE", line 19: Unknown metadata tag 'food'
 end test
 

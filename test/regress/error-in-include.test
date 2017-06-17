@@ -1,0 +1,17 @@
+
+!include error-in-include.dat
+
+test bal -> 1
+__ERROR__
+In file included from "$FILE", line 2:
+While parsing file "$sourcepath/test/regress/error-in-include.dat", line 4:
+While balancing transaction from "$sourcepath/test/regress/error-in-include.dat", lines 2-4:
+> 2014-05-13 * Does not balance
+>     A              $10.00
+>     B             -$11.00
+Unbalanced remainder is:
+              $-1.00
+Amount to balance against:
+              $10.00
+Error: Transaction does not balance
+end test

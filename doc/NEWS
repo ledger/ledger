@@ -1,5 +1,105 @@
                              Ledger NEWS
 
+* 3.1.2
+
+- Increased maximum length for regex from 255 to 4095 (bug #981).
+
+- Initialize periods from from/since clause rather than earliest
+  transaction date (bug #1159).
+
+- Check balance assertions against the amount after the posting (bug #1147).
+
+- Allow balance assertions with multiple posts to same account (bug #1187).
+
+- Fixed period duration of "every X days" and similar statements (bug #370).
+
+- Option --force-color does not require --color anymore (bug #1109).
+
+- Added quoted_rfc4180 to allow CVS output with RFC 4180 compliant quoting.
+
+- Python: Removed double quotes from Unicode values.
+
+- Emacs Lisp files have been moved to https://github.com/ledger/ledger-mode
+
+- Fixed build under MSYS (32-bit).
+
+- Fixed build under Cygwin.
+
+- Various documentation improvements
+
+* 3.1.1
+
+- Added a --no-revalued option
+
+- Improved Embedded Python Support
+
+- Use ./.ledgerrc if ~/.ledgerrc doesn't exist
+
+- Fixed parsing of transactions with single-character payees and comments
+
+- Fixed crash when using -M with empty result
+
+- Fixed sorting for option --auto-match
+
+- Fixed treatment of "year 2015" and "Y2014" directives
+
+- Fixed crash when using --trace 10 or above
+
+- Build fix for boost 1.58, 1.59, 1.60
+
+- Build fix for Cygwin
+
+- Fixed Util and Math tests on Mac OS X
+
+- Various documentation improvements
+
+- Examples in the documentation are tested just like unit tests
+
+- Add continuous integration (https://travis-ci.org/ledger/ledger)
+
+* 3.1
+
+- Changed the definition of cost basis to preserve the original cost basis
+  when a gain or loss is made (if you bought 1 AAA for $10 and then sold
+  it for $12, ledger would previously take $12 as the cost; the original
+  cost of $10 is preserved as the cost basis now, which addresses strange
+  behavior with -B after a capital gain or loss is made).
+
+- Incorrect automatic Equity:Capital Gains and Equity:Capital Loss entries
+  are no longer generated when a commodity is sold for loss or profit.
+
+- Support for virtual posting costs.
+
+- The option --permissive now quiets balance assertions
+
+- Removed SHA1 files due to license issues and use boost instead.
+
+- Added option --no-pager to disable the pager.
+
+- Added option --no-aliases to completely disable alias expansion
+
+- Added option --recursive-aliases to expand aliases recursively
+
+- Support payee "uuid" directive.
+
+- Bug fix: when a status flag (! or *) is explicitly specified for an
+  individual posting, it always has a priority over entire transaction
+  status.
+
+- Bug fix: don't lose commodity when cost is not separated by whitespace
+
+- Improved backwards compatibility with ledger 2.x
+
+- Build fix for GCC 4.9
+
+- Build fix for boost 1.56
+
+- Many improvements to ledger-mode, including fontification
+
+- More test cases and unit tests
+
+- Contrib: Added script to generate commodities from ISO 4217
+
 * 3.0
 
 Due to the magnitude of changes in 3.0, only changes that affect compatibility
@@ -296,7 +396,7 @@ features, please see the manual.
       This flag limits computation to *only transactions whose amount
       is greater than 100 of a given commodity*.  It means that if you
       scan your dining expenses, for example, only individual bills
-      greater than $100 would be caculated by the report.
+      greater than $100 would be calculated by the report.
 
     --only "a>100"
 
@@ -538,7 +638,7 @@ features, please see the manual.
 
 * 2.4.1
 
-- Corrected an issue that had inadvertantly disabled Gnucash support.
+- Corrected an issue that had inadvertently disabled Gnucash support.
 
 * 2.4
 

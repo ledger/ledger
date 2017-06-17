@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -58,15 +58,17 @@ class account_t;
 class parse_context_t;
 class parse_context_stack_t;
 
-typedef std::list<xact_t *>            xacts_list;
-typedef std::list<auto_xact_t *>       auto_xacts_list;
-typedef std::list<period_xact_t *>     period_xacts_list;
-typedef std::pair<mask_t, string>      payee_mapping_t;
-typedef std::list<payee_mapping_t>     payee_mappings_t;
-typedef std::pair<mask_t, account_t *> account_mapping_t;
-typedef std::list<account_mapping_t>   account_mappings_t;
-typedef std::map<string, account_t *>  accounts_map;
-typedef std::map<string, xact_t *>     checksum_map_t;
+typedef std::list<xact_t *>              xacts_list;
+typedef std::list<auto_xact_t *>         auto_xacts_list;
+typedef std::list<period_xact_t *>       period_xacts_list;
+typedef std::pair<mask_t, string>        payee_alias_mapping_t;
+typedef std::list<payee_alias_mapping_t> payee_alias_mappings_t;
+typedef std::pair<string, string>        payee_uuid_mapping_t;
+typedef std::list<payee_uuid_mapping_t>  payee_uuid_mappings_t;
+typedef std::pair<mask_t, account_t *>   account_mapping_t;
+typedef std::list<account_mapping_t>     account_mappings_t;
+typedef std::map<string, account_t *>    accounts_map;
+typedef std::map<string, xact_t *>       checksum_map_t;
 
 typedef std::multimap<string, expr_t::check_expr_pair> tag_check_exprs_map;
 
@@ -98,50 +100,39 @@ public:
     ~fileinfo_t() throw() {
       TRACE_DTOR(journal_t::fileinfo_t);
     }
-
-#if HAVE_BOOST_SERIALIZATION
-  private:
-    /** Serialization. */
-
-    friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned int /* version */) {
-      ar & filename;
-      ar & size;
-      ar & modtime;
-      ar & from_stream;
-    }
-#endif // HAVE_BOOST_SERIALIZATION
   };
 
-  account_t *           master;
-  account_t *           bucket;
-  xacts_list            xacts;
-  auto_xacts_list       auto_xacts;
-  period_xacts_list     period_xacts;
-  std::list<fileinfo_t> sources;
-  std::set<string>      known_payees;
-  std::set<string>      known_tags;
-  bool                  fixed_accounts;
-  bool                  fixed_payees;
-  bool                  fixed_commodities;
-  bool                  fixed_metadata;
-  bool                  was_loaded;
-  bool                  force_checking;
-  bool                  check_payees;
-  bool                  day_break;
-  payee_mappings_t      payee_mappings;
-  account_mappings_t    account_mappings;
-  accounts_map          account_aliases;
-  account_mappings_t    payees_for_unknown_accounts;
-  checksum_map_t        checksum_map;
-  tag_check_exprs_map   tag_check_exprs;
-  optional<expr_t>      value_expr;
-  parse_context_t *     current_context;
+  account_t *            master;
+  account_t *            bucket;
+  xacts_list             xacts;
+  auto_xacts_list        auto_xacts;
+  period_xacts_list      period_xacts;
+  std::list<fileinfo_t>  sources;
+  std::set<string>       known_payees;
+  std::set<string>       known_tags;
+  bool                   fixed_accounts;
+  bool                   fixed_payees;
+  bool                   fixed_commodities;
+  bool                   fixed_metadata;
+  bool                   was_loaded;
+  bool                   force_checking;
+  bool                   check_payees;
+  bool                   day_break;
+  bool                   recursive_aliases;
+  bool                   no_aliases;
+  payee_alias_mappings_t payee_alias_mappings;
+  payee_uuid_mappings_t  payee_uuid_mappings;
+  account_mappings_t     account_mappings;
+  accounts_map           account_aliases;
+  account_mappings_t     payees_for_unknown_accounts;
+  checksum_map_t         checksum_map;
+  tag_check_exprs_map    tag_check_exprs;
+  optional<expr_t>       value_expr;
+  parse_context_t *      current_context;
 
   enum checking_style_t {
     CHECK_PERMISSIVE,
+    CHECK_NORMAL,
     CHECK_WARNING,
     CHECK_ERROR
   } checking_style;
@@ -166,6 +157,8 @@ public:
   bool        remove_account(account_t * acct);
   account_t * find_account(const string& name, bool auto_create = true);
   account_t * find_account_re(const string& regexp);
+
+  account_t * expand_aliases(string name);
 
   account_t * register_account(const string& name, post_t * post,
                                account_t * master = NULL);
@@ -207,26 +200,6 @@ public:
 
 private:
   std::size_t read_textual(parse_context_stack_t& context);
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & master;
-    ar & bucket;
-    ar & xacts;
-    ar & auto_xacts;
-    ar & period_xacts;
-    ar & sources;
-    ar & payee_mappings;
-    ar & account_mappings;
-    ar & checksum_map;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 } // namespace ledger

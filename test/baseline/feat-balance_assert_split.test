@@ -1,0 +1,60 @@
+;; a.dat
+
+2012-01-01 Test
+    Expenses:Unknown        $100.00
+    Liabilities:MasterCard
+
+2012-01-02 Test
+    Expenses:Unknown        $100.00
+    Liabilities:MasterCard
+
+2012-01-03 Test
+    Expenses:Unknown        $100.00
+    Liabilities:MasterCard
+
+2012-01-04 Test
+    ; UUID: foo
+    Liabilities:MasterCard  $150.00 = $-150
+    <Assets:Checking>
+
+2012-01-04 Test
+    ; UUID: bar
+    Liabilities:MasterCard  $150.00 = $0
+    <Assets:Checking>
+
+2012-01-04 Test
+    ; UUID: baz
+    Liabilities:MasterCard  $150.00 = $150
+    <Assets:Checking>
+
+;; b.dat
+
+2012-01-01 Test
+    Assets:Checking         $150.00
+    Income
+
+2012-01-02 Test
+    Assets:Checking         $150.00
+    Income
+
+2012-01-03 Test
+    Assets:Checking         $150.00
+    Income
+
+2012-01-04 Test
+    ; UUID: foo
+    Liabilities:MasterCard  $150.00
+    Assets:Checking        $-150.00 = $300.00
+
+2012-01-04 Test
+    ; UUID: bar
+    Liabilities:MasterCard  $150.00
+    Assets:Checking        $-150.00 = $150.00
+
+test balance
+             $300.00  Expenses:Unknown
+            $-450.00  Income
+             $150.00  Liabilities:MasterCard
+--------------------
+                   0
+end test

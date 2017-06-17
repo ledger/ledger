@@ -1,0 +1,99 @@
+; primary-date display primary dates for all calculations
+2014/01/01=2014/01/13 Client invoice  ;  estimated date you'll be paid
+    Assets:Accounts Receivable            $100.00
+    Income: Client ABC
+
+2014/01/01=2014/01/15 Client invoice  ; actual date money received
+    Assets:Accounts Receivable            $100.00
+    Income: Client ABC
+
+; will not affect checking account
+2013/10/16 * (2090) Bountiful Blessings Farm
+    Expenses:Food:Groceries                  $ 37.50  ; [=2013/10/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2013/11/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2013/12/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2014/01/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2014/02/01]
+    Expenses:Food:Groceries                  $ 37.50  ; [=2014/03/01]
+    Assets:Checking
+
+
+test bal Income --begin 2014/01/01 --end 2014/01/14
+           $ -200.00  Income: Client ABC
+end test
+
+test bal Income --effective --begin 2014/01/01 --end 2014/01/14
+           $ -100.00  Income: Client ABC
+end test
+
+test bal Income --primary-date --effective --begin 2014/01/01 --end 2014/01/14
+           $ -200.00  Income: Client ABC
+end test
+
+test bal Income --actual-dates --effective --begin 2014/01/01 --end 2014/01/14
+           $ -200.00  Income: Client ABC
+end test
+
+test reg  Income --begin 2014/01/01 --end 2014/01/14
+14-Jan-01 Client invoice        Income: Client ABC        $ -100.00    $ -100.00
+14-Jan-01 Client invoice        Income: Client ABC        $ -100.00    $ -200.00
+end test
+
+test reg  Income --effective --begin 2014/01/01 --end 2014/01/14
+14-Jan-13 Client invoice        Income: Client ABC        $ -100.00    $ -100.00
+end test
+
+test reg  Income --primary-date --effective --begin 2014/01/01 --end 2014/01/14
+14-Jan-01 Client invoice        Income: Client ABC        $ -100.00    $ -100.00
+14-Jan-01 Client invoice        Income: Client ABC        $ -100.00    $ -200.00
+end test
+
+test reg  Income --actual-dates --effective --begin 2014/01/01 --end 2014/01/14
+14-Jan-01 Client invoice        Income: Client ABC        $ -100.00    $ -100.00
+14-Jan-01 Client invoice        Income: Client ABC        $ -100.00    $ -200.00
+end test
+
+test  reg checking
+13-Oct-16 Bountiful Blessings.. Assets:Checking           $ -225.00    $ -225.00
+end test
+
+test reg checking --primary-date --effective
+13-Oct-16 Bountiful Blessings.. Assets:Checking           $ -225.00    $ -225.00
+end test
+
+test register Groceries
+13-Oct-16 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50      $ 37.50
+                                Expense:Food:Groceries      $ 37.50      $ 75.00
+                                Expense:Food:Groceries      $ 37.50     $ 112.50
+                                Expense:Food:Groceries      $ 37.50     $ 150.00
+                                Expense:Food:Groceries      $ 37.50     $ 187.50
+                                Expense:Food:Groceries      $ 37.50     $ 225.00
+end test
+
+test register Groceries --effective
+13-Oct-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50      $ 37.50
+13-Nov-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50      $ 75.00
+13-Dec-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50     $ 112.50
+14-Jan-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50     $ 150.00
+14-Feb-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50     $ 187.50
+14-Mar-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50     $ 225.00
+end test
+
+test register Groceries --primary-date --effective
+13-Oct-16 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50      $ 37.50
+                                Expense:Food:Groceries      $ 37.50      $ 75.00
+                                Expense:Food:Groceries      $ 37.50     $ 112.50
+                                Expense:Food:Groceries      $ 37.50     $ 150.00
+                                Expense:Food:Groceries      $ 37.50     $ 187.50
+                                Expense:Food:Groceries      $ 37.50     $ 225.00
+end test
+
+test register Groceries --actual-dates --effective
+13-Oct-16 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50      $ 37.50
+                                Expense:Food:Groceries      $ 37.50      $ 75.00
+                                Expense:Food:Groceries      $ 37.50     $ 112.50
+                                Expense:Food:Groceries      $ 37.50     $ 150.00
+                                Expense:Food:Groceries      $ 37.50     $ 187.50
+                                Expense:Food:Groceries      $ 37.50     $ 225.00
+end test
+

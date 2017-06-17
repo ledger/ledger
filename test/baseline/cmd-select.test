@@ -16,32 +16,32 @@
     F
 
 test select "date, account, amount" from posts
-12-Feb-28 E                                                       [0m    20.00 EUR
-12-Feb-28 F                                                       [0m   -20.00 EUR
-12-Feb-29 Test                                                    [0m    10.01 EUR
-12-Feb-29 F                                                       [0m   -10.01 EUR
-12-Mar-24 C                                                       [0m    30.00 EUR
-12-Mar-24 D                                                       [0m   -30.00 EUR
-12-Mar-25 E                                                       [0m    40.00 GBP
-12-Mar-25 F                                                       [0m   -40.00 GBP
+12-Feb-28 E                                                           20.00 EUR
+12-Feb-28 F                                                          -20.00 EUR
+12-Feb-29 Test                                                        10.01 EUR
+12-Feb-29 F                                                          -10.01 EUR
+12-Mar-24 C                                                           30.00 EUR
+12-Mar-24 D                                                          -30.00 EUR
+12-Mar-25 E                                                           40.00 GBP
+12-Mar-25 F                                                          -40.00 GBP
 end test
 
 test select "date, account, amount from posts where account =~ /^e/"
-12-Feb-28 E                                                       [0m    20.00 EUR
-12-Mar-25 E                                                       [0m    40.00 GBP
+12-Feb-28 E                                                           20.00 EUR
+12-Mar-25 E                                                           40.00 GBP
 end test
 
 test select "date, account, amount from posts where account =~ /e/"
-12-Feb-28 E                                                       [0m    20.00 EUR
-12-Feb-29 Test                                                    [0m    10.01 EUR
-12-Mar-25 E                                                       [0m    40.00 GBP
+12-Feb-28 E                                                           20.00 EUR
+12-Feb-29 Test                                                        10.01 EUR
+12-Mar-25 E                                                           40.00 GBP
 end test
 
 ; leave out "from posts" since it is the default
 test select "date, account, amount where account =~ /e/"
-12-Feb-28 E                                                       [0m    20.00 EUR
-12-Feb-29 Test                                                    [0m    10.01 EUR
-12-Mar-25 E                                                       [0m    40.00 GBP
+12-Feb-28 E                                                           20.00 EUR
+12-Feb-29 Test                                                        10.01 EUR
+12-Mar-25 E                                                           40.00 GBP
 end test
 
 test select "date, payee, amount from posts where account =~ /e/ and commodity =~ /GBP/"

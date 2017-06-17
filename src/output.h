@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -51,6 +51,7 @@ namespace ledger {
 
 class xact_t;
 class post_t;
+class item_t;
 class report_t;
 
 class format_posts : public item_handler<post_t>
@@ -142,9 +143,10 @@ class report_accounts : public item_handler<post_t>
 protected:
   report_t& report;
 
-  std::map<account_t *, std::size_t, account_compare> accounts;
-
   typedef std::map<account_t *, std::size_t>::value_type accounts_pair;
+  typedef std::map<account_t *, std::size_t, account_compare> accounts_report_map;
+
+  accounts_report_map accounts;
 
 public:
   report_accounts(report_t& _report) : report(_report) {
@@ -207,6 +209,7 @@ public:
   }
 
   virtual void flush();
+  virtual void gather_metadata(item_t& item);
   virtual void operator()(post_t& post);
 
   virtual void clear() {
@@ -221,9 +224,10 @@ class report_commodities : public item_handler<post_t>
 protected:
   report_t& report;
 
-  std::map<commodity_t *, std::size_t, commodity_compare> commodities;
-
   typedef std::map<commodity_t *, std::size_t>::value_type commodities_pair;
+  typedef std::map<commodity_t *, std::size_t, commodity_compare> commodities_report_map;
+
+  commodities_report_map commodities;
 
 public:
   report_commodities(report_t& _report) : report(_report) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -57,12 +57,15 @@ void report_t::normalize_options(const string& verb)
   // Patch up some of the reporting options based on what kind of
   // command it was.
 
-#if HAVE_ISATTY
+#ifdef HAVE_ISATTY
   if (! HANDLED(force_color)) {
     if (! HANDLED(no_color) && isatty(STDOUT_FILENO))
       HANDLER(color).on("?normalize");
     if (HANDLED(color) && ! isatty(STDOUT_FILENO))
       HANDLER(color).off();
+  }
+  else {
+    HANDLER(color).on("?normalize");
   }
   if (! HANDLED(force_pager)) {
     if (HANDLED(pager_) && ! isatty(STDOUT_FILENO))
@@ -181,10 +184,17 @@ void report_t::normalize_options(const string& verb)
   }
 
   long cols = 0;
+#ifdef HAVE_IOCTL
+  struct winsize ws;
+#endif
   if (HANDLED(columns_))
     cols = lexical_cast<long>(HANDLER(columns_).value);
   else if (const char * columns = std::getenv("COLUMNS"))
     cols = lexical_cast<long>(columns);
+#ifdef HAVE_IOCTL
+  else if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1)
+      cols = ws.ws_col;
+#endif
   else
     cols = 80L;
 
@@ -421,8 +431,9 @@ namespace {
         } else {
           expr_t sort_expr(report.HANDLER(sort_).str());
           sort_expr.set_context(&report);
-          sorted_accounts_iterator iter(*report.session.journal->master,
-                                        sort_expr, report.HANDLED(flat));
+          sorted_accounts_iterator iter(
+            *report.session.journal->master, sort_expr, report,
+            report.HANDLED(flat));
           pass_down_accounts<sorted_accounts_iterator>
             (handler, iter, predicate_t(report.HANDLER(display_).str(),
                                         report.what_to_keep()), report);
@@ -434,8 +445,9 @@ namespace {
         } else {
           expr_t sort_expr(report.HANDLER(sort_).str());
           sort_expr.set_context(&report);
-          sorted_accounts_iterator iter(*report.session.journal->master,
-                                        sort_expr, report.HANDLED(flat));
+          sorted_accounts_iterator iter(
+            *report.session.journal->master, sort_expr, report,
+            report.HANDLED(flat));
           pass_down_accounts<sorted_accounts_iterator>(handler, iter);
         }
       }
@@ -624,7 +636,7 @@ value_t report_t::fn_trim(call_scope_t& args)
   while (*p && std::isspace(*p))
     p++;
 
-  const char * e = buf.get() + temp.length();
+  const char * e = buf.get() + temp.length() - 1;
   while (e > p && std::isspace(*e))
     e--;
 
@@ -636,7 +648,7 @@ value_t report_t::fn_trim(call_scope_t& args)
     return string_value(empty_string);
   }
   else {
-    return string_value(string(p, static_cast<std::string::size_type>(e - p)));
+    return string_value(string(p, static_cast<std::string::size_type>(e - p + 1)));
   }
 }
 
@@ -741,6 +753,23 @@ value_t report_t::fn_quoted(call_scope_t& args)
   foreach (const char ch, arg) {
     if (ch == '"')
       out << "\\\"";
+    else
+      out << ch;
+  }
+  out << '"';
+
+  return string_value(out.str());
+}
+
+value_t report_t::fn_quoted_rfc4180(call_scope_t& args)
+{
+  std::ostringstream out;
+
+  out << '"';
+  string arg(args.get<string>(0));
+  foreach (const char ch, arg) {
+    if (ch == '"')
+      out << '"' << '"';
     else
       out << ch;
   }
@@ -1113,6 +1142,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     OPT(csv_format_);
     else OPT_ALT(gain, change);
     else OPT(cleared);
+    else OPT(cleared_format_);
     else OPT(collapse);
     else OPT(collapse_if_zero);
     else OPT(color);
@@ -1189,6 +1219,8 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   case 'n':
     OPT_CH(collapse);
     else OPT(no_color);
+    else OPT(no_pager);
+    else OPT(no_revalued);
     else OPT(no_rounding);
     else OPT(no_titles);
     else OPT(no_total);
@@ -1429,6 +1461,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'q':
       if (is_eq(p, "quoted"))
         return MAKE_FUNCTOR(report_t::fn_quoted);
+      else if (is_eq(p, "quoted_rfc4180"))
+        return MAKE_FUNCTOR(report_t::fn_quoted_rfc4180);
       else if (is_eq(p, "quantity"))
         return MAKE_FUNCTOR(report_t::fn_quantity);
       break;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -55,7 +55,6 @@ class generate_posts_iterator
   session_t&   session;
   unsigned int seed;
   std::size_t  quantity;
-  bool         allow_invalid;
   date_t       next_date;
   date_t       next_aux_date;
 
@@ -100,8 +99,7 @@ class generate_posts_iterator
 public:
   generate_posts_iterator(session_t&   _session,
                           unsigned int _seed         = 0,
-                          std::size_t  _quantity     = 100,
-                          bool         _allow_invalid = false);
+                          std::size_t  _quantity     = 100);
 
   virtual ~generate_posts_iterator() throw() {
     TRACE_DTOR(generate_posts_iterator);

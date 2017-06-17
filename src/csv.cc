@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -186,7 +186,7 @@ xact_t * csv_reader::read_xact(bool rich_data)
 
     case FIELD_PAYEE: {
       bool found = false;
-      foreach (payee_mapping_t& value, context.journal->payee_mappings) {
+      foreach (payee_alias_mapping_t& value, context.journal->payee_alias_mappings) {
         DEBUG("csv.mappings", "Looking for payee mapping: " << value.first);
         if (value.first.match(field)) {
           xact->payee = value.second;

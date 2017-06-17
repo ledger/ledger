@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -314,33 +314,6 @@ private:
   value_t calc_call(scope_t& scope, ptr_op_t * locus, const int depth);
   value_t calc_cons(scope_t& scope, ptr_op_t * locus, const int depth);
   value_t calc_seq(scope_t& scope, ptr_op_t * locus, const int depth);
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & refc;
-    ar & kind;
-    if (Archive::is_loading::value || ! left_ || ! left_->is_function()) {
-      ar & left_;
-    } else {
-      ptr_op_t temp_op;
-      ar & temp_op;
-    }
-    if (Archive::is_loading::value || is_value() || is_ident() ||
-        (kind > UNARY_OPERATORS &&
-         (! has_right() || ! right()->is_function()))) {
-      ar & data;
-    } else {
-      variant<ptr_op_t, value_t, string, expr_t::func_t> temp_data;
-      ar & temp_data;
-    }
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 inline expr_t::ptr_op_t

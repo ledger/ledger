@@ -58,12 +58,11 @@ $formattedEndDate = $formattedEndDate->calc($oneDayLess);
 $formattedEndDate = $formattedEndDate->printf("%Y/%m/%d");
 
 my $formattedBeginDate = new Date::Manip::Date;
-die "badly formatted end date, $endDate" if $formattedBeginDate->parse($endDate);
+die "badly formatted end date, $beginDate" if $formattedBeginDate->parse($beginDate);
 $formattedBeginDate = $formattedBeginDate->printf("%Y/%m/%d");
 
 
-my(@chartOfAccountsOpts) = ('-V', '-F', "%150A\n",  '-w', '-s',
-                            '-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'reg');
+my(@chartOfAccountsOpts) = ('-b', $beginDate, '-e', $endDate, @otherLedgerOpts, 'accounts');
 
 open(CHART_DATA, "-|", $LEDGER_CMD, @chartOfAccountsOpts)
   or die "Unable to run $LEDGER_CMD @chartOfAccountsOpts: $!";

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -68,19 +68,6 @@ struct price_point_t
   bool operator==(const price_point_t& other) const {
     return when == other.when && price == other.price;
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & when;
-    ar & price;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class commodity_t
@@ -138,28 +125,6 @@ protected:
     virtual ~base_t() {
       TRACE_DTOR(commodity_t::base_t);
     }
-
-#if HAVE_BOOST_SERIALIZATION
-  private:
-    base_t() {
-      TRACE_CTOR(base_t, "");
-    }
-
-    /** Serialization. */
-
-    friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive& ar, const unsigned int /* version */) {
-      ar & boost::serialization::base_object<supports_flags<uint_least16_t> >(*this);
-      ar & symbol;
-      ar & precision;
-      ar & name;
-      ar & note;
-      ar & smaller;
-      ar & larger;
-    }
-#endif // HAVE_BOOST_SERIALIZATION
   };
 
   shared_ptr<base_t> base;
@@ -315,32 +280,6 @@ public:
   struct compare_by_commodity {
     bool operator()(const amount_t * left, const amount_t * right) const;
   };
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  supports_flags<uint_least16_t> temp_flags;
-
-protected:
-  explicit commodity_t()
-    : delegates_flags<uint_least16_t>(temp_flags), parent_(NULL),
-      annotated(false) {
-    TRACE_CTOR(commodity_t, "");
-  }
-
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<delegates_flags<uint_least16_t> >(*this);
-    ar & base;
-    ar & parent_;
-    ar & qualified_symbol;
-    ar & annotated;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 inline std::ostream& operator<<(std::ostream& out, const commodity_t& comm) {
@@ -353,7 +292,7 @@ void put_commodity(property_tree::ptree& pt, const commodity_t& comm,
 
 //simple struct to allow std::map to compare commodities names
 struct commodity_compare {
-  bool operator() (const commodity_t* lhs, const commodity_t* rhs){
+  bool operator() (const commodity_t* lhs, const commodity_t* rhs) const {
     return (lhs->symbol().compare(rhs->symbol()) < 0);
   }
 };

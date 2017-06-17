@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -77,16 +77,18 @@ namespace {
     std::istream&            in;
     instance_t *             parent;
     std::list<application_t> apply_stack;
+    bool                     no_assertions;
 #if defined(TIMELOG_SUPPORT)
     time_log_t               timelog;
 #endif
 
     instance_t(parse_context_stack_t& _context_stack,
                parse_context_t&       _context,
-               instance_t *           _parent = NULL)
+               instance_t *           _parent = NULL,
+               const bool             _no_assertions = false)
       : context_stack(_context_stack), context(_context),
         in(*context.stream.get()), parent(_parent),
-        timelog(context) {}
+        no_assertions(_no_assertions), timelog(context) {}
 
     virtual string description() {
       return _("textual parser");
@@ -153,6 +155,7 @@ namespace {
 
     void payee_directive(char * line);
     void payee_alias_directive(const string& payee, string alias);
+    void payee_uuid_directive(const string& payee, string uuid);
 
     void commodity_directive(char * line);
     void commodity_alias_directive(commodity_t& comm, string alias);
@@ -281,6 +284,11 @@ void instance_t::parse()
       context.errors++;
     }
   }
+
+  if (apply_stack.front().value.type() == typeid(optional<datetime_t>))
+    epoch = boost::get<optional<datetime_t> >(apply_stack.front().value);
+
+  apply_stack.pop_front();
 
 #if defined(TIMELOG_SUPPORT)
   timelog.close();
@@ -416,7 +424,9 @@ void instance_t::read_next_directive(bool& error_flag)
         price_xact_directive(line);
         break;
       case 'Y':                 // set the current year
-        apply_year_directive(line);
+        if (std::strlen(line+1) == 0)
+          throw_(parse_error, _f("Directive '%1%' requires an argument") % line[0]);
+        apply_year_directive(line+1);
         break;
       }
     }
@@ -711,15 +721,12 @@ void instance_t::include_directive(char * line)
   if (line[0] != '/' && line[0] != '\\' && line[0] != '~') {
     DEBUG("textual.include", "received a relative path");
     DEBUG("textual.include", "parent file path: " << context.pathname);
-    string pathstr(context.pathname.string());
-    string::size_type pos = pathstr.rfind('/');
-    if (pos == string::npos)
-      pos = pathstr.rfind('\\');
-    if (pos != string::npos) {
-      filename = path(string(pathstr, 0, pos + 1)) / line;
-      DEBUG("textual.include", "normalized path: " << filename.string());
-    } else {
+    path parent_path = context.pathname.parent_path();
+    if (parent_path.empty()) {
       filename = path(string(".")) / line;
+    } else {
+      filename = parent_path / line;
+      DEBUG("textual.include", "normalized path: " << filename.string());
     }
   } else {
     filename = line;
@@ -779,8 +786,8 @@ void instance_t::include_directive(char * line)
           context_stack.get_current().master  = master;
           context_stack.get_current().scope   = scope;
           try {
-            instance_t instance(context_stack,
-                                context_stack.get_current(), this);
+            instance_t instance(context_stack, context_stack.get_current(),
+                                this, no_assertions);
             instance.apply_stack.push_front(application_t("account", master));
             instance.parse();
           }
@@ -848,7 +855,8 @@ void instance_t::apply_tag_directive(char * line)
 void instance_t::apply_rate_directive(char * line)
 {
   if (optional<std::pair<commodity_t *, price_point_t> > price_point =
-      commodity_pool_t::current_pool->parse_price_directive(trim_ws(line), true)) {
+      commodity_pool_t::current_pool->parse_price_directive
+        (trim_ws(line), true, true)) {
     apply_stack.push_front
       (application_t("fixed", fixed_rate_t(price_point->first,
                                            price_point->second.price)));
@@ -859,14 +867,17 @@ void instance_t::apply_rate_directive(char * line)
 
 void instance_t::apply_year_directive(char * line)
 {
-  apply_stack.push_front(application_t("year", epoch));
-
-  // This must be set to the last day of the year, otherwise partial
-  // dates like "11/01" will refer to last year's november, not the
-  // current year.
-  unsigned short year(lexical_cast<unsigned short>(skip_ws(line + 1)));
-  DEBUG("times.epoch", "Setting current year to " << year);
-  epoch = datetime_t(date_t(year, 12, 31));
+  try {
+    unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));
+    apply_stack.push_front(application_t("year", epoch));
+    DEBUG("times.epoch", "Setting current year to " << year);
+    // This must be set to the last day of the year, otherwise partial
+    // dates like "11/01" will refer to last year's november, not the
+    // current year.
+    epoch = datetime_t(date_t(year, 12, 31));
+  } catch(bad_lexical_cast &) {
+    throw_(parse_error, _f("Argument '%1%' not a valid year") % skip_ws(line));
+  }
 }
 
 void instance_t::end_apply_directive(char * kind)
@@ -914,6 +925,10 @@ void instance_t::account_directive(char * line)
 
     char * b = next_element(q);
     string keyword(q);
+    // Ensure there's an argument for the directives that need one.
+    if (! b && keyword != "default")
+      throw_(parse_error, _f("Account directive '%1%' requires an argument") % keyword);
+
     if (keyword == "alias") {
       account_alias_directive(account, b);
     }
@@ -976,6 +991,11 @@ void instance_t::account_alias_directive(account_t * account, string alias)
   // (account), add a reference to the account in the `account_aliases'
   // map, which is used by the post parser to resolve alias references.
   trim(alias);
+  // Ensure that no alias like "alias Foo=Foo" is registered.
+  if ( alias == account->fullname()) {
+    throw_(parse_error, _f("Illegal alias %1%=%2%")
+           % alias % account->fullname());
+  }
   std::pair<accounts_map::iterator, bool> result =
     context.journal->account_aliases.insert
       (accounts_map::value_type(alias, account));
@@ -1025,16 +1045,28 @@ void instance_t::payee_directive(char * line)
 
     char * b = next_element(p);
     string keyword(p);
+    if (! b)
+      throw_(parse_error, _f("Payee directive '%1%' requires an argument") % keyword);
+
     if (keyword == "alias")
       payee_alias_directive(payee, b);
+    if (keyword == "uuid")
+      payee_uuid_directive(payee, b);
   }
 }
 
 void instance_t::payee_alias_directive(const string& payee, string alias)
 {
   trim(alias);
-  context.journal->payee_mappings
-    .push_back(payee_mapping_t(mask_t(alias), payee));
+  context.journal->payee_alias_mappings
+    .push_back(payee_alias_mapping_t(mask_t(alias), payee));
+}
+
+void instance_t::payee_uuid_directive(const string& payee, string uuid)
+{
+  trim(uuid);
+  context.journal->payee_uuid_mappings
+    .push_back(payee_uuid_mapping_t(uuid, payee));
 }
 
 void instance_t::commodity_directive(char * line)
@@ -1055,6 +1087,10 @@ void instance_t::commodity_directive(char * line)
 
       char * b = next_element(q);
       string keyword(q);
+      // Ensure there's an argument for the directives that need one.
+      if (! b && keyword != "nomarket" && keyword != "default")
+        throw_(parse_error, _f("Commodity directive '%1%' requires an argument") % keyword);
+
       if (keyword == "alias")
         commodity_alias_directive(*commodity, b);
       else if (keyword == "value")
@@ -1216,13 +1252,13 @@ void instance_t::python_directive(char * line)
 void instance_t::import_directive(char *)
 {
   throw_(parse_error,
-         _("'python' directive seen, but Python support is missing"));
+         _("'import' directive seen, but Python support is missing"));
 }
 
 void instance_t::python_directive(char *)
 {
   throw_(parse_error,
-         _("'import' directive seen, but Python support is missing"));
+         _("'python' directive seen, but Python support is missing"));
 }
 
 #endif // HAVE_BOOST_PYTHON
@@ -1238,6 +1274,14 @@ bool instance_t::general_directive(char * line)
 
   if (*p == '@' || *p == '!')
     p++;
+
+  // Ensure there's an argument for all directives that need one.
+  if (! arg &&
+      std::strcmp(p, "comment") != 0 && std::strcmp(p, "end") != 0
+      && std::strcmp(p, "python") != 0 && std::strcmp(p, "test") != 0 &&
+      *p != 'Y') {
+    throw_(parse_error, _f("Directive '%1%' requires an argument") % p);
+  }
 
   switch (*p) {
   case 'a':
@@ -1338,6 +1382,13 @@ bool instance_t::general_directive(char * line)
       return true;
     }
     break;
+
+  case 'y':
+    if (std::strcmp(p, "year") == 0) {
+      apply_year_directive(arg);
+      return true;
+    }
+    break;
   }
 
   if (expr_t::ptr_op_t op = lookup(symbol_t::DIRECTIVE, p)) {
@@ -1397,8 +1448,7 @@ post_t * instance_t::parse_post(char *          line,
   }
 
   if (xact &&
-      ((xact->_state == item_t::CLEARED && post->_state != item_t::CLEARED) ||
-       (xact->_state == item_t::PENDING && post->_state == item_t::UNCLEARED)))
+      (xact->_state != item_t::UNCLEARED && post->_state == item_t::UNCLEARED))
     post->set_state(xact->_state);
 
   // Parse the account name
@@ -1424,6 +1474,12 @@ post_t * instance_t::parse_post(char *          line,
     }
     p++; e--;
   }
+  else if (*p == '<' && *(e - 1) == '>') {
+    post->add_flags(POST_DEFERRED);
+    DEBUG("textual.parse", "line " << context.linenum << ": "
+          << "Parsed a deferred account name");
+    p++; e--;
+  }
 
   string name(p, static_cast<string::size_type>(e - p));
   DEBUG("textual.parse", "line " << context.linenum << ": "
@@ -1445,6 +1501,9 @@ post_t * instance_t::parse_post(char *          line,
                         PARSE_NO_REDUCE | PARSE_SINGLE | PARSE_NO_ASSIGN,
                         defer_expr, &post->amount_expr);
 
+    DEBUG("textual.parse", "line " << context.linenum << ": "
+          << "post amount = " << post->amount);
+
     if (! post->amount.is_null() && post->amount.has_commodity()) {
       context.journal->register_commodity(post->amount.commodity(), post.get());
 
@@ -1456,14 +1515,13 @@ post_t * instance_t::parse_post(char *          line,
             annotation_t details(rate.second);
             details.add_flags(ANNOTATION_PRICE_FIXATED);
             post->amount.annotate(details);
+            DEBUG("textual.parse", "line " << context.linenum << ": "
+                  << "applied rate = " << post->amount);
             break;
           }
         }
       }
     }
-
-    DEBUG("textual.parse", "line " << context.linenum << ": "
-          << "post amount = " << post->amount);
 
     if (stream.eof()) {
       next = NULL;
@@ -1487,12 +1545,11 @@ post_t * instance_t::parse_post(char *          line,
           post->add_flags(POST_COST_IN_FULL);
           DEBUG("textual.parse", "line " << context.linenum << ": "
                 << "And it's for a total price");
+          next++;
         }
 
-        if (post->has_flags(POST_COST_VIRTUAL) && *(next + 1) == ')')
+        if (post->has_flags(POST_COST_VIRTUAL) && *next == ')')
           ++next;
-
-        beg = static_cast<std::streamsize>(++next - line);
 
         p = skip_ws(next);
         if (*p) {
@@ -1534,6 +1591,8 @@ post_t * instance_t::parse_post(char *          line,
 
           if (fixed_cost)
             post->add_flags(POST_COST_FIXATED);
+
+          post->given_cost = post->cost;
 
           DEBUG("textual.parse", "line " << context.linenum << ": "
                 << "Total cost is " << *post->cost);
@@ -1596,7 +1655,8 @@ post_t * instance_t::parse_post(char *          line,
 
       switch (account_total.type()) {
       case value_t::AMOUNT:
-        diff -= account_total.as_amount();
+        if (account_total.as_amount().commodity_ptr() == diff.commodity_ptr())
+          diff -= account_total.as_amount();
         break;
 
       case value_t::BALANCE:
@@ -1614,15 +1674,31 @@ post_t * instance_t::parse_post(char *          line,
       DEBUG("textual.parse", "line " << context.linenum << ": "
             << "POST assign: diff = " << diff);
 
-      if (! diff.is_zero()) {
-        if (! post->amount.is_null()) {
-          diff -= post->amount;
-          if (! diff.is_zero())
-            throw_(parse_error, _f("Balance assertion off by %1%") % diff);
-        } else {
+      // Subtract amounts from previous posts to this account in the xact.
+      for (post_t* p : xact->posts) {
+        if (p->account == post->account &&
+            p->amount.commodity_ptr() == diff.commodity_ptr()) {
+          diff -= p->amount;
+          DEBUG("textual.parse", "line " << context.linenum << ": "
+                << "Subtract " << p->amount << ", diff = " << diff);
+        }
+      }
+
+      if (post->amount.is_null()) {
+        // balance assignment
+        if (! diff.is_zero()) {
           post->amount = diff;
           DEBUG("textual.parse", "line " << context.linenum << ": "
                 << "Overwrite null posting");
+        }
+      } else {
+        // balance assertion
+        diff -= post->amount;
+        if (! no_assertions && ! diff.is_zero()) {
+          amount_t tot = amt - diff;
+          throw_(parse_error,
+                  _f("Balance assertion off by %1% (expected to see %2%)")
+                  % diff % tot);
         }
       }
 
@@ -1767,7 +1843,7 @@ xact_t * instance_t::parse_xact(char *          line,
         char *q = p - 1;
         while (q > next && std::isspace(*q))
           --q;
-        if (q > next)
+        if (q >= next)
           *(q + 1) = '\0';
         break;
       }
@@ -1841,6 +1917,17 @@ xact_t * instance_t::parse_xact(char *          line,
     else {
       reveal_context = false;
 
+      if (!last_post) {
+        if (xact->has_tag(_("UUID"))) {
+          string uuid = xact->get_tag(_("UUID"))->to_string();
+          foreach (payee_uuid_mapping_t value, context.journal->payee_uuid_mappings) {
+            if (value.first.compare(uuid) == 0) {
+              xact->payee = value.second;
+            }
+          }
+        }
+      }
+
       if (post_t * post =
           parse_post(p, len - (p - line), account, xact.get())) {
         reveal_context = true;
@@ -1901,12 +1988,16 @@ std::size_t journal_t::read_textual(parse_context_stack_t& context_stack)
 {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
   {
-    instance_t instance(context_stack, context_stack.get_current());
+    instance_t instance(context_stack, context_stack.get_current(), NULL,
+                        checking_style == journal_t::CHECK_PERMISSIVE);
     instance.apply_stack.push_front
       (application_t("account", context_stack.get_current().master));
     instance.parse();
   }
   TRACE_STOP(parsing_total, 1);
+
+  // Apply any deferred postings at this time
+  master->apply_deferred_posts();
 
   // These tracers were started in textual.cc
   TRACE_FINISH(xact_text, 1);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -181,6 +181,7 @@ public:
   value_t fn_abs(call_scope_t& scope);
   value_t fn_justify(call_scope_t& scope);
   value_t fn_quoted(call_scope_t& scope);
+  value_t fn_quoted_rfc4180(call_scope_t& scope);
   value_t fn_join(call_scope_t& scope);
   value_t fn_format_date(call_scope_t& scope);
   value_t fn_format_datetime(call_scope_t& scope);
@@ -302,6 +303,7 @@ public:
     HANDLER(market).report(out);
     HANDLER(meta_).report(out);
     HANDLER(monthly).report(out);
+    HANDLER(no_pager).report(out);
     HANDLER(no_rounding).report(out);
     HANDLER(no_titles).report(out);
     HANDLER(no_total).report(out);
@@ -402,6 +404,7 @@ public:
   OPTION(report_t, auto_match);
 
   OPTION_(report_t, average, DO() { // -A
+      OTHER(empty).on(whence);
       OTHER(display_total_)
         .on(whence, "count>0?(display_total/count):0");
     });
@@ -464,8 +467,8 @@ public:
        "           12 + 1 + 12 + 1 + 12, true, color))"
        " %(ansify_if("
        "   justify((get_at(display_total, 1) ? "
-       "            (100% * scrub(get_at(display_total, 0))) / "
-       "             -scrub(get_at(display_total, 1)) : 0), "
+       "            (100% * quantity(scrub(get_at(display_total, 0)))) / "
+       "             -quantity(scrub(get_at(display_total, 1))) : 0), "
        "           5, -1, true, false),"
        "   magenta if (color and get_at(display_total, 1) and "
        "               (abs(quantity(scrub(get_at(display_total, 0))) / "
@@ -495,7 +498,7 @@ public:
        "%-(ansify_if(partial_account(options.flat), blue if color))\n%/"
        "%$1  %$2    %$3\n%/"
        "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-       "----------------  ----------------    ---------\n");
+       "----------------    ----------------    ---------\n");
   });
 
   OPTION(report_t, color);
@@ -521,7 +524,7 @@ public:
        "%(quoted(code)),"
        "%(quoted(payee)),"
        "%(quoted(display_account)),"
-       "%(quoted(commodity)),"
+       "%(quoted(commodity(scrub(display_amount)))),"
        "%(quoted(quantity(scrub(display_amount)))),"
        "%(quoted(cleared ? \"*\" : (pending ? \"!\" : \"\"))),"
        "%(quoted(join(note | xact.note)))\n");
@@ -763,6 +766,10 @@ public:
       OTHER(color).off();
     });
 
+  OPTION_(report_t, no_revalued, DO() {
+      OTHER(revalued).off();
+    });
+
   OPTION(report_t, no_rounding);
   OPTION(report_t, no_titles);
   OPTION(report_t, no_total);
@@ -787,7 +794,8 @@ public:
 
   OPTION(report_t, output_); // -o
 
-#if HAVE_ISATTY
+// setenv() is not available on WIN32
+#if defined(HAVE_ISATTY) and !defined(_WIN32) and !defined(__CYGWIN__)
   OPTION__
   (report_t, pager_,
    CTOR(report_t, pager_) {

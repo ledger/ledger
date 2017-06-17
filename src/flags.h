@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -90,17 +90,6 @@ public:
   void drop_flags(const flags_t arg) {
     _flags = static_cast<T>(static_cast<U>(_flags) & static_cast<U>(~arg));
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
-  {
-    ar & _flags;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 template <typename T = boost::uint_least8_t, typename U = T>
@@ -193,17 +182,6 @@ public:
   void drop_flags(const flags_t arg) {
     _flags.drop_flags(arg);
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */)
-  {
-    ar & _flags;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 #endif // _FLAGS_H

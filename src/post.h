@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -60,6 +60,7 @@ public:
 #define POST_COST_FIXATED    0x0200 // cost is fixed using = indicator
 #define POST_COST_VIRTUAL    0x0400 // cost is virtualized: (@)
 #define POST_ANONYMIZED      0x0800 // a temporary, anonymous posting
+#define POST_DEFERRED        0x1000 // the account was specified with <angles>
 
   xact_t *    xact;             // only set for posts of regular xacts
   account_t * account;
@@ -67,6 +68,7 @@ public:
   amount_t             amount;  // can be null until finalization
   optional<expr_t>     amount_expr;
   optional<amount_t>   cost;
+  optional<amount_t>   given_cost;
   optional<amount_t>   assigned_amount;
   optional<datetime_t> checkin;
   optional<datetime_t> checkout;
@@ -106,7 +108,7 @@ public:
   virtual string description() {
     if (pos) {
       std::ostringstream buf;
-      buf << _f("posting at line %1") << pos->beg_line;
+      buf << _f("posting at line %1%") % pos->beg_line;
       return buf.str();
     } else {
       return string(_("generated posting"));
@@ -203,7 +205,7 @@ public:
   mutable optional<xdata_t> xdata_;
 
   bool has_xdata() const {
-    return xdata_;
+    return static_cast<bool>(xdata_);
   }
   void clear_xdata() {
     xdata_ = none;
@@ -249,24 +251,6 @@ public:
       }
     }
   };
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<item_t>(*this);
-    ar & xact;
-    ar & account;
-    ar & amount;
-    ar & amount_expr;
-    ar & cost;
-    ar & assigned_amount;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class journal_t;

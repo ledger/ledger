@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -54,7 +54,7 @@ namespace {
   struct usage_sorter {
     bool operator()(const account_use_pair& left,
                     const account_use_pair& right) const {
-      return left.second > right.second;
+      return left.second < right.second;
     }
   };
 }

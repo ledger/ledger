@@ -1,0 +1,29 @@
+
+--input-date-format %Y:%m:%d
+
+D 1000.00 GBP
+
+2014:05:12 * Test
+    Assets:Investments       100 AA {2.00 GBP} [2014:01:01] @@ 200.00 GBP
+    Equity:Opening balance
+
+test bal Assets:Investments --lots --date-format %Y.%m.%d
+100 AA {2.00 GBP} [2014.01.01]  Assets:Investments
+end test
+
+test bal Assets:Investments --lots --date-format %Y/%m/%d
+100 AA {2.00 GBP} [2014/01/01]  Assets:Investments
+end test
+
+test bal Assets:Investments --lots --date-format %Y:%m:%d
+100 AA {2.00 GBP} [2014:01:01]  Assets:Investments
+end test
+
+test bal Assets:Investments --lots --date-format %Y-%m-%d
+100 AA {2.00 GBP} [2014-01-01]  Assets:Investments
+end test
+
+test bal Assets:Investments --lots --date-format %y-%b-%d
+100 AA {2.00 GBP} [14-Jan-01]  Assets:Investments
+end test
+

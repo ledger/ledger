@@ -1,0 +1,10 @@
+alias Foo=Foo
+
+2011-01-01 Test
+   Foo  10 EUR
+   Bar
+test source -> 1
+__ERROR__
+While parsing file "$FILE", line 1:
+Error: Illegal alias Foo=Foo
+end test

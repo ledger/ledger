@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -34,6 +34,7 @@
 #include "output.h"
 #include "xact.h"
 #include "post.h"
+#include "item.h"
 #include "account.h"
 #include "session.h"
 #include "report.h"
@@ -291,7 +292,7 @@ void report_accounts::flush()
 
 void report_accounts::operator()(post_t& post)
 {
-  std::map<account_t *, std::size_t>::iterator i = accounts.find(post.account);
+  accounts_report_map::iterator i = accounts.find(post.account);
   if (i == accounts.end())
     accounts.insert(accounts_pair(post.account, 1));
   else
@@ -329,21 +330,26 @@ void report_tags::flush()
   }
 }
 
-void report_tags::operator()(post_t& post)
+void report_tags::gather_metadata(item_t& item)
 {
-  if(post.metadata){
-    foreach (const item_t::string_map::value_type& data, *post.metadata){
-      string tag=data.first;
-      if(report.HANDLED(values) && (data.second).first){
-	tag+=": "+ (data.second).first.get().to_string();
-      }
+  if (item.metadata)
+    foreach (const item_t::string_map::value_type& data, *item.metadata) {
+      string tag(data.first);
+      if (report.HANDLED(values) && data.second.first)
+        tag += ": " + data.second.first.get().to_string();
+
       std::map<string, std::size_t>::iterator i = tags.find(tag);
       if (i == tags.end())
-	tags.insert(tags_pair(tag, 1));
+        tags.insert(tags_pair(tag, 1));
       else
-	(*i).second++;
+        (*i).second++;
     }
-  }
+}
+
+void report_tags::operator()(post_t& post)
+{
+  gather_metadata(*post.xact);
+  gather_metadata(post);
 }
 
 void report_commodities::flush()
@@ -362,7 +368,7 @@ void report_commodities::operator()(post_t& post)
   amount_t temp(post.amount.strip_annotations(report.what_to_keep()));
   commodity_t& comm(temp.commodity());
 
-  std::map<commodity_t *, std::size_t>::iterator i = commodities.find(&comm);
+  commodities_report_map::iterator i = commodities.find(&comm);
   if (i == commodities.end())
     commodities.insert(commodities_pair(&comm, 1));
   else
@@ -371,7 +377,7 @@ void report_commodities::operator()(post_t& post)
   if (comm.has_annotation()) {
     annotated_commodity_t& ann_comm(as_annotated_commodity(comm));
     if (ann_comm.details.price) {
-      std::map<commodity_t *, std::size_t>::iterator ii =
+      commodities_report_map::iterator ii =
         commodities.find(&ann_comm.details.price->commodity());
       if (ii == commodities.end())
         commodities.insert

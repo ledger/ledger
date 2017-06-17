@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -34,6 +34,7 @@
 #include "pyinterp.h"
 #include "pyutils.h"
 #include "account.h"
+#include "report.h"
 #include "xact.h"
 #include "post.h"
 
@@ -76,6 +77,12 @@ void initialize_for_python()
   export_xact();
   export_session();
   export_journal();
+
+  if (! scope_t::default_scope) {
+    python_session.reset(new ledger::python_interpreter_t);
+    shared_ptr<session_t> session_ptr = python_session;
+    scope_t::default_scope = new report_t(*session_ptr);
+  }
 }
 
 struct python_run
@@ -320,7 +327,7 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
   if (! is_initialized)
     initialize();
 
-  char ** argv(new char *[args.size() + 1]);
+  char ** argv = new char *[args.size() + 1];
 
   argv[0] = new char[std::strlen(argv0) + 1];
   std::strcpy(argv[0], argv0);

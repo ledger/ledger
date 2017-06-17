@@ -1,0 +1,29 @@
+
+; Test a regex longer than 255 char
+
+tag Project
+    check value =~ /^(0ad|ankur|aptosid|archlinux|chakra|debian|debconf14|debconf15|debconf16|drizzle|ffmpeg|ffmpeg|fluxbox|freedesktop|freedombox|gallery|texmacs|haskell|jenkins|libreoffice|madwifi|mingw|openvas|openwrt|openbioinformatics|openembedded|openvoting|osunix|path64|plan9|postgresql|privoxy|smc|helios|tidesdk|tux4kids|yafaray|spi)$/
+
+2016-01-01 * Test - correct tag
+    Expenses:Hosting                    20.00 USD
+        ; Project: debian
+    Assets:Cash                        -20.00 USD
+
+2016-02-01 * Test - wrong tag
+    Expenses:Hosting                    20.00 USD
+        ; Project: foo
+    Assets:Cash                        -20.00 USD
+
+test bal
+          -40.00 USD  Assets:Cash
+           40.00 USD  Expenses:Hosting
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 15: Metadata check failed for (Project: foo): (value =~ /^(0ad|ankur|aptosid|archlinux|chakra|debian|debconf14|debconf15|debconf16|drizzle|ffmpeg|ffmpeg|fluxbox|freedesktop|freedombox|gallery|texmacs|haskell|jenkins|libreoffice|madwifi|mingw|openvas|openwrt|openbioinformatics|openembedded|openvoting|osunix|path64|plan9|postgresql|privoxy|smc|helios|tidesdk|tux4kids|yafaray|spi)$/)
+end test
+
+test reg --limit 'payee =~ /XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/'
+__ERROR__
+Warning: "$FILE", line 15: Metadata check failed for (Project: foo): (value =~ /^(0ad|ankur|aptosid|archlinux|chakra|debian|debconf14|debconf15|debconf16|drizzle|ffmpeg|ffmpeg|fluxbox|freedesktop|freedombox|gallery|texmacs|haskell|jenkins|libreoffice|madwifi|mingw|openvas|openwrt|openbioinformatics|openembedded|openvoting|osunix|path64|plan9|postgresql|privoxy|smc|helios|tidesdk|tux4kids|yafaray|spi)$/)
+end test

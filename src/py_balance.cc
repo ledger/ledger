@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -56,6 +56,11 @@ namespace {
                                         const datetime_t& moment) {
     return balance.value(moment, in_terms_of);
   }
+  boost::optional<balance_t> py_value_2d(const balance_t& balance,
+                                         const commodity_t * in_terms_of,
+                                         const date_t& moment) {
+    return balance.value(datetime_t(moment), in_terms_of);
+  }
 
   boost::optional<amount_t>
   py_commodity_amount_0(const balance_t& balance) {
@@ -64,7 +69,7 @@ namespace {
 
   boost::optional<amount_t>
   py_commodity_amount_1(const balance_t& balance,
-                        const boost::optional<const commodity_t&>& commodity) {
+                        const commodity_t& commodity) {
     return balance.commodity_amount(commodity);
   }
 
@@ -200,6 +205,7 @@ void export_balance()
     .def("value", py_value_0)
     .def("value", py_value_1, args("in_terms_of"))
     .def("value", py_value_2, args("in_terms_of", "moment"))
+    .def("value", py_value_2d, args("in_terms_of", "moment"))
 
     .def("__nonzero__", &balance_t::is_nonzero)
     .def("is_nonzero", &balance_t::is_nonzero)

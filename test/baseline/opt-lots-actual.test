@@ -5,7 +5,7 @@ D 1.0000s
     Assets:Gruulmorg             248720c @ 10.051463493s
     Equity:Gold                -5000000s
 
-test reg --format '%(justify(scrub(total_expr), 40, 40, true))\n' --lots
+test reg --format '%(justify(scrub(total_expr), 40, 40, true))\n' --lots --date-format %Y/%m/%d
   1339829c {1.86590975416s} [2006/03/14]
   1339829c {1.86590975416s} [2006/03/14]
     248720c {10.051463493s} [2006/03/14]

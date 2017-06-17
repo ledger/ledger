@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -84,6 +84,8 @@ public:
   journal_t * read_journal_files();
   void close_journal_files();
 
+  journal_t * get_journal();
+
   value_t fn_account(call_scope_t& scope);
   value_t fn_min(call_scope_t& scope);
   value_t fn_max(call_scope_t& scope);
@@ -95,7 +97,6 @@ public:
 
   void report_options(std::ostream& out)
   {
-    HANDLER(cache_).report(out);
     HANDLER(check_payees).report(out);
     HANDLER(day_break).report(out);
     HANDLER(download).report(out);
@@ -109,6 +110,8 @@ public:
     HANDLER(permissive).report(out);
     HANDLER(price_db_).report(out);
     HANDLER(price_exp_).report(out);
+    HANDLER(recursive_aliases).report(out);
+    HANDLER(no_aliases).report(out);
     HANDLER(strict).report(out);
     HANDLER(value_expr_).report(out);
   }
@@ -122,7 +125,6 @@ public:
    * Option handlers
    */
 
-  OPTION(session_t, cache_);
   OPTION(session_t, check_payees);
   OPTION(session_t, day_break);
   OPTION(session_t, download); // -Q
@@ -164,6 +166,8 @@ public:
   OPTION(session_t, price_db_);
   OPTION(session_t, strict);
   OPTION(session_t, value_expr_);
+  OPTION(session_t, recursive_aliases);
+  OPTION(session_t, no_aliases);
 };
 
 /**

@@ -1,12 +1,22 @@
 payee KFC
     alias Kentucky Fried Chicken
 
+payee Foo Bar Inc
+    uuid 2a2e21d434356f886c84371eebac6e44f1337fda
+
 2012-03-25 * Kentucky Fried Chicken
     A            10
+    B
+
+2014-05-13 * UNHELPFUL PAYEE  ; will be read as being 'Foo Bar Inc'
+    ; UUID: 2a2e21d434356f886c84371eebac6e44f1337fda
+    A            20
     B
 
 test reg
 12-Mar-25 KFC                   A                                10           10
                                 B                               -10            0
+14-May-13 Foo Bar Inc           A                                20           20
+                                B                               -20            0
 end test
 

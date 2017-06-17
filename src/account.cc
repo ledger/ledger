@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -137,6 +137,36 @@ void account_t::add_post(post_t * post)
     xdata_->family_details.gathered   = false;
     xdata_->family_details.calculated = false;
   }
+}
+
+void account_t::add_deferred_post(const string& uuid, post_t * post)
+{
+  if (! deferred_posts)
+    deferred_posts = deferred_posts_map_t();
+
+  deferred_posts_map_t::iterator i = deferred_posts->find(uuid);
+  if (i == deferred_posts->end()) {
+    posts_list lst;
+    lst.push_back(post);
+    deferred_posts->insert(deferred_posts_map_t::value_type(uuid, lst));
+  } else {
+    (*i).second.push_back(post);
+  }
+}
+
+void account_t::apply_deferred_posts()
+{
+  if (deferred_posts) {
+    foreach (deferred_posts_map_t::value_type& pair, *deferred_posts) {
+      foreach (post_t * post, pair.second)
+        post->account->add_post(post);
+    }
+    deferred_posts = none;
+  }
+
+  // Also apply in child accounts
+  foreach (const accounts_map::value_type& pair, accounts)
+    pair.second->apply_deferred_posts();
 }
 
 bool account_t::remove_post(post_t * post)
@@ -380,9 +410,7 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
     break;
 
   case 'd':
-    if (fn_name == "date")
-      return WRAP_FUNCTOR(get_wrapper<&get_latest>);
-    else if (fn_name == "depth")
+    if (fn_name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_depth>);
     else if (fn_name == "depth_spacer")
       return WRAP_FUNCTOR(get_wrapper<&get_depth_spacer>);

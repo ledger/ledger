@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# Prepare git commit message:
+#   - Add [ci skip] if the changes seem irrelevant for continuous integration
+
+# Add [ci skip] to the commit message unless there are changes to files
+# that are relevant for testing such as src/*, test/*, ledger3.texi, ...
+add_ci_skip ()
+{
+  pattern="$1"; shift
+  source="$1"
+
+  # Don't add [ci skip] if it's already in the commit message source
+  grep '\[ci skip\]' "$source" >/dev/null 2>&1
+  [ $? -eq 0 ] && return
+
+  if [ $(git diff --cached --name-only | grep --count "$pattern") -eq 0 ]; then
+    tempfile=$(mktemp "${0}.XXXXXX")
+    cat - "$1" <<EOF > "$tempfile"
+
+# It seems the changes to be committed are irrelevant for the continuous
+# integration, therefore it will be skipped for this commit.
+#
+# If you still want continuous integration to run for this commit
+# comment or remove the next line.
+[ci skip]
+EOF
+    mv "$tempfile" "$source"
+  fi
+}
+
+## MAIN
+file="$1"
+source="$2"
+
+# Skip merge commits
+[ "$source" = "merge" ] && exit 0
+add_ci_skip '\(^src\|^test\|^doc/ledger3.texi\|^\.travis.yml\|CMakeLists.txt\)' "$file"

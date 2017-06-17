@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -77,7 +77,7 @@ public:
     if (name != "__main__")
       main_module->define_global(name, mod->module_object);
     return mod;
-  }    
+  }
 
   python_interpreter_t() : session_t(), is_initialized(false) {
     TRACE_CTOR(python_interpreter_t, "");

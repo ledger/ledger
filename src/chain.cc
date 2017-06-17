@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -186,9 +186,9 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
     // value expression.
     if (report.HANDLED(sort_)) {
       if (report.HANDLED(sort_xacts_))
-        handler.reset(new sort_xacts(handler, report.HANDLER(sort_).str()));
+        handler.reset(new sort_xacts(handler, expr_t(report.HANDLER(sort_).str()), report));
       else
-        handler.reset(new sort_posts(handler, report.HANDLER(sort_).str()));
+        handler.reset(new sort_posts(handler, report.HANDLER(sort_).str(), report));
     }
 
     // collapse_posts causes xacts with multiple posts to appear as xacts

@@ -1,0 +1,6 @@
+test tags -f test/input/drewr3.dat --values
+hastag: not block
+hastag: true
+nestedtag: true
+nobudget
+end test

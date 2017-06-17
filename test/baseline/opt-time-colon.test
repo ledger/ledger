@@ -1,0 +1,45 @@
+2013/04/05 () Meeting Tactical
+    (Internal:Meeting:Tactical)       1800s @ ($36/3600)
+
+2013/04/05 () Email
+    (CustomerA:Email)                           300s
+
+2013/04/05 () Config
+    (CustomerB:Config)                         5100s
+
+2013/04/05 () Walk
+    (Personal:Walk)                            1800s
+
+2013/04/05 () Lunch
+    (Personal:Lunch)                           5400s
+
+test bal
+                5.0m  CustomerA:Email
+               1.42h  CustomerB:Config
+               30.0m  Internal:Meeting:Tactical
+               2.00h  Personal
+               1.50h    Lunch
+               30.0m    Walk
+--------------------
+               4.00h
+end test
+
+test bal --time-colon
+                5:0m  CustomerA:Email
+               1:25h  CustomerB:Config
+               30:0m  Internal:Meeting:Tactical
+               2:00h  Personal
+               1:30h    Lunch
+               30:0m    Walk
+--------------------
+               4:00h
+end test
+
+test reg --time-colon
+13-Apr-05 Meeting Tactical      (Int:Meeting:Tactical)        30:0m        30:0m
+13-Apr-05 Email                 (CustomerA:Email)              5:0m        35:0m
+13-Apr-05 Config                (CustomerB:Config)            1:25h        2:00h
+13-Apr-05 Walk                  (Personal:Walk)               30:0m        2:30h
+13-Apr-05 Lunch                 (Personal:Lunch)              1:30h        4:00h
+end test
+

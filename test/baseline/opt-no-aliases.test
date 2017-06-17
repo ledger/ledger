@@ -1,0 +1,20 @@
+
+alias A=Foo
+
+account Bar
+    alias B
+
+2001-01-01 * Test
+  A   10 EUR
+  B
+
+test reg
+01-Jan-01 Test                  Foo                          10 EUR       10 EUR
+                                Bar                         -10 EUR            0
+end test
+
+test reg --no-aliases
+01-Jan-01 Test                  A                            10 EUR       10 EUR
+                                B                           -10 EUR            0
+end test
+

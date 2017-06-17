@@ -1,0 +1,22 @@
+alias A=B:A
+alias B=C:B
+alias C=D:C
+
+account Delta
+    alias D
+
+2001-01-01 Test
+  A  10 EUR
+  Foo
+
+2001-01-01 Test
+  D  20 EUR
+  Foo
+
+test reg
+01-Jan-01 Test                  B:A                          10 EUR       10 EUR
+                                Foo                         -10 EUR            0
+01-Jan-01 Test                  Delta                        20 EUR       20 EUR
+                                Foo                         -20 EUR            0
+end test
+

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -48,6 +48,7 @@ namespace ledger {
 
 class post_t;
 class account_t;
+class report_t;
 
 void push_sort_value(std::list<sort_value_t>& sort_values,
                      expr_t::ptr_op_t node, scope_t& scope);
@@ -56,23 +57,24 @@ template <typename T>
 class compare_items
 {
   expr_t sort_order;
+  report_t& report;
 
   compare_items();
 
 public:
-  compare_items(const compare_items& other) : sort_order(other.sort_order) {
-    TRACE_CTOR(compare_items, "copy");
+  compare_items(const expr_t& _sort_order, report_t& _report) :
+    sort_order(_sort_order), report(_report) {
+    TRACE_CTOR(compare_items, "const value_expr&, report_t&");
   }
-  compare_items(const expr_t& _sort_order) : sort_order(_sort_order) {
-    TRACE_CTOR(compare_items, "const value_expr&");
+  compare_items(const compare_items& other) :
+    sort_order(other.sort_order), report(other.report) {
+    TRACE_CTOR(compare_items, "copy");
   }
   ~compare_items() throw() {
     TRACE_DTOR(compare_items);
   }
 
-  void find_sort_values(std::list<sort_value_t>& sort_values, scope_t& scope) {
-    push_sort_value(sort_values, sort_order.get_op(), scope);
-  }
+  void find_sort_values(std::list<sort_value_t>& sort_values, scope_t& scope);
 
   bool operator()(T * left, T * right);
 };

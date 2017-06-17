@@ -1,0 +1,58 @@
+D 1000.00 GBP
+
+2011-03-04 Buy shares
+    Assets:Broker           2 AAA @ 0.90 GBP
+    Assets:Bank
+
+2011-03-05 Buy shares
+    Assets:Broker           2 AAA @ 1.00 GBP
+    Assets:Bank
+
+test equity
+2011/03/05 Opening Balances
+    Assets:Bank                            -3.80 GBP
+    Assets:Broker                              4 AAA
+    Equity:Opening Balances                   -4 AAA
+    Equity:Opening Balances                 3.80 GBP
+end test
+
+test equity assets
+2011/03/05 Opening Balances
+    Assets:Bank                            -3.80 GBP
+    Assets:Broker                              4 AAA
+    Equity:Opening Balances                   -4 AAA
+    Equity:Opening Balances                 3.80 GBP
+end test
+
+test equity assets:bank
+2011/03/05 Opening Balances
+    Assets:Bank                            -3.80 GBP
+    Equity:Opening Balances
+end test
+
+test equity assets:broker
+2011/03/05 Opening Balances
+    Assets:Broker                              4 AAA
+    Equity:Opening Balances
+end test
+
+test equity --lot-prices
+2011/03/05 Opening Balances
+    Assets:Bank                            -3.80 GBP
+    Assets:Broker                       2 AAA {0.90 GBP}
+    Assets:Broker                       2 AAA {1.00 GBP}
+    Equity:Opening Balances             -2 AAA {0.90 GBP}
+    Equity:Opening Balances             -2 AAA {1.00 GBP}
+    Equity:Opening Balances                 3.80 GBP
+end test
+
+test equity --lots --date-format %Y/%m/%d
+2011/03/05 Opening Balances
+    Assets:Bank                            -3.80 GBP
+    Assets:Broker                       2 AAA {0.90 GBP} [2011/03/04]
+    Assets:Broker                       2 AAA {1.00 GBP} [2011/03/05]
+    Equity:Opening Balances             -2 AAA {0.90 GBP} [2011/03/04]
+    Equity:Opening Balances             -2 AAA {1.00 GBP} [2011/03/05]
+    Equity:Opening Balances                 3.80 GBP
+end test
+

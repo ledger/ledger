@@ -1,0 +1,11 @@
+2015/01/20 Payee
+  Assets:Cash      ¤ 12,34
+  Expenses:Food
+
+test -F "»%(trim(' 	Trimmed 	 '))«\n" reg expenses
+»Trimmed«
+end test
+
+test -F "»%(trim('Trimmed'))«\n" reg expenses
+»Trimmed«
+end test

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -210,7 +210,7 @@ namespace {
         string amt;
         if (post->amount_expr) {
           std::ostringstream amt_str;
-          justify(amt_str, post->amount_expr->text(), amount_width, true);
+          justify(amt_str, post->amount_expr->text(), (int)amount_width, true);
           amt = amt_str.str();
         }
         else if (count == 2 && index == 2 &&
@@ -243,13 +243,21 @@ namespace {
           amtbuf << string(2 - (slip + amt_slip), ' ');
         amtbuf << amt;
 
-        if (post->cost &&
+        if (post->given_cost &&
             ! post->has_flags(POST_CALCULATED | POST_COST_CALCULATED)) {
+          std::string cost_op;
           if (post->has_flags(POST_COST_IN_FULL))
-            amtbuf << " @@ " << post->cost->abs();
+            cost_op = "@@";
           else
-            amtbuf << " @ "
-                   << (*post->cost / post->amount).abs();
+            cost_op = "@";
+          if (post->has_flags(POST_COST_VIRTUAL))
+            cost_op = "(" + cost_op + ")";
+
+          if (post->has_flags(POST_COST_IN_FULL))
+            amtbuf << " " << cost_op << " " << post->given_cost->abs();
+          else
+            amtbuf << " " << cost_op << " "
+                   << (*post->given_cost / post->amount).abs();
         }
 
         if (post->assigned_amount)

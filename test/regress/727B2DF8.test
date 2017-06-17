@@ -43,7 +43,7 @@ N $
     Assets:Bank:Checking
     ; :AnotherTag:
 
-test reg --color --force-color
+test reg --force-color
 04-May-01 Checking balance      [34mAssets:Bank:Checking  [0m    $1,000.00    $1,000.00
                                 [34mEquit:Opening Balances[0m   [31m$-1,000.00[0m            0
 04-May-03 Investment balance    [34mAssets:Brokerage      [0m      50 AAPL      50 AAPL

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -334,7 +334,7 @@ void commodity_history_impl_t::map_prices(
   FNameMap namemap(get(vertex_name, fg));
 
   graph_traits<FGraph>::adjacency_iterator f_vi, f_vend;
-  for (tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
+  for (boost::tuples::tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
     std::pair<Graph::edge_descriptor, bool> edgePair = edge(sv, *f_vi, fg);
     Graph::edge_descriptor edge = edgePair.first;
 
@@ -392,7 +392,7 @@ commodity_history_impl_t::find_price(const commodity_t& source,
   amount_t   price;
 
   graph_traits<FGraph>::adjacency_iterator f_vi, f_vend;
-  for (tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
+  for (boost::tuples::tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
     std::pair<Graph::edge_descriptor, bool> edgePair = edge(sv, *f_vi, fg);
     Graph::edge_descriptor edge = edgePair.first;
 
@@ -475,7 +475,7 @@ commodity_history_impl_t::find_price(const commodity_t& source,
 #endif
 
   vertex_descriptor v = tv;
-  for (vertex_descriptor u = predecessorMap[v]; 
+  for (vertex_descriptor u = predecessorMap[v];
        u != v;
        v = u, u = predecessorMap[v])
   {

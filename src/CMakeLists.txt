@@ -1,3 +1,7 @@
+set(LEDGER_CLI_SOURCES
+  global.cc
+  main.cc)
+
 set(LEDGER_SOURCES
   stats.cc
   generate.cc
@@ -24,7 +28,6 @@ set(LEDGER_SOURCES
   textual.cc
   temps.cc
   journal.cc
-  archive.cc
   account.cc
   xact.cc
   post.cc
@@ -48,9 +51,11 @@ set(LEDGER_SOURCES
   mask.cc
   times.cc
   error.cc
-  utils.cc)
+  utils.cc
+  strptime.cc
+  wcwidth.cc)
 
-if(HAVE_BOOST_PYTHON)
+if (HAVE_BOOST_PYTHON)
   list(APPEND LEDGER_SOURCES
     py_account.cc
     py_amount.cc
@@ -74,7 +79,6 @@ set(LEDGER_INCLUDES
   account.h
   amount.h
   annotate.h
-  archive.h
   balance.h
   chain.h
   commodity.h
@@ -130,29 +134,35 @@ set(LEDGER_INCLUDES
   value.h
   views.h
   xact.h
+  strptime.h
   ${PROJECT_BINARY_DIR}/system.hh)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if((CMAKE_CXX_COMPILER MATCHES "clang") OR (CMAKE_CXX_COMPILER MATCHES "cxx"))
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if (CMAKE_CXX_COMPILER MATCHES "clang\\+\\+")
     add_definitions(
-      -Weverything
-      -Wno-padded
-      -Wno-weak-vtables
-      -Wno-exit-time-destructors
-      -Wno-global-constructors
-      -Wno-switch-enum
-      -Wno-missing-prototypes
-      -Wno-missing-noreturn
-      -Wno-unused-parameter
-      -Wno-c++98-compat
-      -fno-limit-debug-info)
-  
+      # -Weverything
+      # -Wno-disabled-macro-expansion
+      # -Wno-padded
+      # -Wno-weak-vtables
+      # -Wno-exit-time-destructors
+      # -Wno-global-constructors
+      # -Wno-switch-enum
+      # -Wno-missing-prototypes
+      # -Wno-missing-noreturn
+      # -Wno-unused-parameter
+      # -Wno-c++98-compat
+      # -fno-limit-debug-info
+      -Wno-\#pragma-messages
+      -Wno-unused-local-typedef
+      --system-header-prefix=include/boost/
+      --system-header-prefix=boost/)
+
     macro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
       set(_pch_filename "${_header_filename}.pch")
 
       set_source_files_properties(
         ${${_src_list}} PROPERTIES COMPILE_FLAGS "-include ${_header_filename}")
-      if(_other_srcs)
+      if (_other_srcs)
         set_source_files_properties(
           ${_other_srcs} PROPERTIES COMPILE_FLAGS "-include ${_header_filename}")
       endif()
@@ -160,6 +170,13 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
       set(_args ${CMAKE_CXX_FLAGS})
       list(APPEND _args ${CMAKE_CXX_FLAGS_DEBUG})
+      if (BUILD_LIBRARY)
+        list(APPEND _args ${CMAKE_SHARED_LIBRARY_CXX_FLAGS})
+      endif()
+      list(APPEND _args "-std=c++11 ")
+      if (CYGWIN)
+        list(APPEND _args "-U__STRICT_ANSI__")
+      endif()
       list(APPEND _args "-x c++-header " ${_inc})
       list(APPEND _args -c ${_header_filename} -o ${_pch_filename})
 
@@ -175,10 +192,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} ${_args}
         DEPENDS ${_header_filename})
     endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
-  
-  elseif(CMAKE_CXX_COMPILER MATCHES "g\\+\\+")
+
+  elseif (CMAKE_CXX_COMPILER MATCHES "g\\+\\+")
     set(GXX_WARNING_FLAGS
-      -ansi
       -pedantic
       -Wall
       -Winvalid-pch
@@ -198,13 +214,13 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
       -Wno-strict-aliasing)
 
     add_definitions(${GXX_WARNING_FLAGS})
-  
+
     macro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
       set(_gch_filename "${_header_filename}.gch")
 
       set_source_files_properties(
         ${${_src_list}} PROPERTIES COMPILE_FLAGS "-Winvalid-pch")
-      if(_other_srcs)
+      if (_other_srcs)
         set_source_files_properties(
           ${_other_srcs} PROPERTIES COMPILE_FLAGS "-Winvalid-pch")
       endif()
@@ -212,13 +228,20 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
       set(_args ${CMAKE_CXX_FLAGS})
       list(APPEND _args ${CMAKE_CXX_FLAGS_DEBUG})
+      if (BUILD_LIBRARY)
+        list(APPEND _args ${CMAKE_SHARED_LIBRARY_CXX_FLAGS})
+      endif()
       list(APPEND _args ${GXX_WARNING_FLAGS})
+      list(APPEND _args "-std=c++11 ")
+      if (CYGWIN)
+        list(APPEND _args "-U__STRICT_ANSI__")
+      endif()
       list(APPEND _args "-x c++-header " ${_inc})
       list(APPEND _args -c ${_header_filename} -o ${_gch_filename})
 
       get_directory_property(DIRINC INCLUDE_DIRECTORIES)
       foreach(_inc ${DIRINC})
-        list(APPEND _args "-isystem " ${_inc})
+        list(APPEND _args "-I" ${_inc})
       endforeach(_inc ${DIRINC})
 
       separate_arguments(_args)
@@ -228,7 +251,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} ${_args}
         DEPENDS ${_header_filename})
     endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
-  
+
   else()
     macro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
     endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
@@ -238,23 +261,68 @@ else()
   endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
 endif()
 
-add_pch_rule(${PROJECT_BINARY_DIR}/system.hh LEDGER_SOURCES main.cc global.cc)
+add_pch_rule(${PROJECT_BINARY_DIR}/system.hh LEDGER_SOURCES LEDGER_CLI_SOURCES)
 
-if(BUILD_LIBRARY)
-  add_library(libledger ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp)
-  set_target_properties(libledger PROPERTIES OUTPUT_NAME ledger)
+include(GNUInstallDirs)
+
+if (BUILD_LIBRARY)
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+  add_library(libledger SHARED ${LEDGER_SOURCES})
+  add_ledger_library_dependencies(libledger)
+  set_target_properties(libledger PROPERTIES
+    PREFIX ""
+    INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
+    VERSION ${Ledger_VERSION_MAJOR}
+    SOVERSION ${Ledger_VERSION_MAJOR})
 
   add_executable(ledger main.cc global.cc)
+  target_link_libraries(ledger libledger)
+  if (CMAKE_SYSTEM_NAME STREQUAL Darwin AND HAVE_BOOST_PYTHON)
+    target_link_libraries(ledger ${PYTHON_LIBRARIES})
+  endif()
 
-  install(TARGETS libledger DESTINATION lib)
-  install(FILES ${LEDGER_INCLUDES} DESTINATION include/ledger)
+  install(TARGETS libledger DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  install(FILES ${LEDGER_INCLUDES}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
 else()
-  add_executable(ledger
-    ${LEDGER_SOURCES} ${PROJECT_SOURCE_DIR}/lib/sha1.cpp main.cc global.cc)
+  add_executable(ledger ${LEDGER_SOURCES} main.cc global.cc)
+  add_ledger_library_dependencies(ledger)
 endif()
 
-add_ledger_library_dependencies(ledger)
+if (USE_PYTHON)
+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
+    "from __future__ import print_function
+import distutils.sysconfig as s
+print(s.get_python_lib(True, prefix=''))"
+    OUTPUT_VARIABLE _TMP_PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(PYTHON_SITE_PACKAGES ${_TMP_PYTHON_SITE_PACKAGES}
+    CACHE PATH "python module directory (${_TMP_PYTHON_SITE_PACKAGES})")
 
-install(TARGETS ledger DESTINATION bin)
+  if (PYTHON_SITE_PACKAGES)
+    if (WIN32 AND NOT CYGWIN)
+      set(_ledger_python_module_name "ledger.pyd")
+    elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
+      set(_ledger_python_module_name "ledger.so")
+    else()
+      set(_ledger_python_module_name "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    endif()
+
+    # FIXME: symlink would be sufficient:
+    # maybe using install(CODE "...") and
+    # execute_process(COMMAND "${CMAKE_COMMAND}" -E create_symlink ...).
+    # Windows will need a special case due to not supporting symlinks.
+    add_custom_command(
+      TARGET libledger POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      $<TARGET_FILE:libledger> "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}")
+    install(
+      FILES "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}"
+      DESTINATION ${PYTHON_SITE_PACKAGES})
+  else()
+    message(WARNING "PYTHON_SITE_PACKAGES not set. Will not install python module.")
+  endif()
+endif()
+
+install(TARGETS ledger DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 ### CMakeLists.txt ends here

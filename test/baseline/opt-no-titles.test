@@ -1,0 +1,10 @@
+test reg -f test/input/drewr3.dat --no-titles --group-by payee reg food
+11-Jan-02 Grocery Store         Expense:Food:Groceries      $ 65.00      $ 65.00
+11-Jan-19 Grocery Store         Expense:Food:Groceries      $ 44.00     $ 109.00
+10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
+                                Expense:Food:Groceries      $ 37.50      $ 75.00
+                                Expense:Food:Groceries      $ 37.50     $ 112.50
+                                Expense:Food:Groceries      $ 37.50     $ 150.00
+                                Expense:Food:Groceries      $ 37.50     $ 187.50
+                                Expense:Food:Groceries      $ 37.50     $ 225.00
+end test

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -229,7 +229,11 @@ static void trace_delete_func(void * ptr, const char * which)
 
 //#if !defined(__has_feature) || !__has_feature(address_sanitizer)
 
+#ifdef _GLIBCXX_THROW
+void * operator new(std::size_t size) _GLIBCXX_THROW(std::bad_alloc) {
+#else
 void * operator new(std::size_t size) throw (std::bad_alloc) {
+#endif
   void * ptr = std::malloc(size);
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_new_func(ptr, "new", size);
@@ -241,7 +245,11 @@ void * operator new(std::size_t size, const std::nothrow_t&) throw() {
     ledger::trace_new_func(ptr, "new", size);
   return ptr;
 }
+#ifdef _GLIBCXX_THROW
+void * operator new[](std::size_t size) _GLIBCXX_THROW(std::bad_alloc) {
+#else
 void * operator new[](std::size_t size) throw (std::bad_alloc) {
+#endif
   void * ptr = std::malloc(size);
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_new_func(ptr, "new[]", size);
@@ -566,7 +574,7 @@ std::ostream *     _log_stream = &std::cerr;
 std::ostringstream _log_buffer;
 
 #if TRACING_ON
-uint8_t            _trace_level;
+uint16_t            _trace_level;
 #endif
 
 static bool  logger_has_run = false;
@@ -635,7 +643,7 @@ optional<boost::u32regex> _log_category_re;
 optional<boost::regex>    _log_category_re;
 #endif
 
-struct __maybe_enable_debugging {
+static struct __maybe_enable_debugging {
   __maybe_enable_debugging() {
     if (const char * p = std::getenv("LEDGER_DEBUG")) {
       _log_level    = LOG_DEBUG;
@@ -799,7 +807,7 @@ path expand_path(const path& pathname)
 
   if (path_string.length() == 1 || pos == 1) {
     pfx = std::getenv("HOME");
-#if HAVE_GETPWUID
+#ifdef HAVE_GETPWUID
     if (! pfx) {
       // Punt. We're trying to expand ~/, but HOME isn't set
       struct passwd * pw = getpwuid(getuid());
@@ -808,7 +816,7 @@ path expand_path(const path& pathname)
     }
 #endif
   }
-#if HAVE_GETPWNAM
+#ifdef HAVE_GETPWNAM
   else {
     string user(path_string, 1, pos == string::npos ?
                 string::npos : pos - 1);

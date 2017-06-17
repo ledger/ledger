@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -52,6 +52,7 @@ class post_t;
 
 typedef std::list<post_t *> posts_list;
 typedef std::map<string, account_t *> accounts_map;
+typedef std::map<string, posts_list> deferred_posts_map_t;
 
 class account_t : public supports_flags<>, public scope_t
 {
@@ -61,13 +62,14 @@ class account_t : public supports_flags<>, public scope_t
 #define ACCOUNT_GENERATED 0x04  // account never actually existed
 
 public:
-  account_t *      parent;
-  string           name;
-  optional<string> note;
-  unsigned short   depth;
-  accounts_map     accounts;
-  posts_list       posts;
-  optional<expr_t> value_expr;
+  account_t *                    parent;
+  string                         name;
+  optional<string>               note;
+  unsigned short                 depth;
+  accounts_map                   accounts;
+  posts_list                     posts;
+  optional<deferred_posts_map_t> deferred_posts;
+  optional<expr_t>               value_expr;
 
   mutable string   _fullname;
 #if DOCUMENT_MODEL
@@ -128,14 +130,16 @@ public:
 
   accounts_map_seconds_iterator accounts_begin() {
     return make_transform_iterator
-      (accounts.begin(), bind(&accounts_map::value_type::second, _1));
+      (accounts.begin(), boost::bind(&accounts_map::value_type::second, _1));
   }
   accounts_map_seconds_iterator accounts_end() {
     return make_transform_iterator
-      (accounts.end(), bind(&accounts_map::value_type::second, _1));
+      (accounts.end(), boost::bind(&accounts_map::value_type::second, _1));
   }
 
   void add_post(post_t * post);
+  void add_deferred_post(const string& uuid, post_t * post);
+  void apply_deferred_posts();
   bool remove_post(post_t * post);
 
   posts_list::iterator posts_begin() {
@@ -257,7 +261,7 @@ public:
   mutable optional<xdata_t> xdata_;
 
   bool has_xdata() const {
-    return xdata_;
+    return static_cast<bool>(xdata_);
   }
   void clear_xdata();
   xdata_t& xdata() {
@@ -281,26 +285,6 @@ public:
   }
   bool children_with_xdata() const;
   std::size_t children_with_flags(xdata_t::flags_t flags) const;
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<supports_flags<> >(*this);
-    ar & boost::serialization::base_object<scope_t>(*this);
-    ar & parent;
-    ar & name;
-    ar & note;
-    ar & depth;
-    ar & accounts;
-    ar & posts;
-    ar & _fullname;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 std::ostream& operator<<(std::ostream& out, const account_t& account);
@@ -310,7 +294,7 @@ void put_account(property_tree::ptree& pt, const account_t& acct,
 
 //simple struct added to allow std::map to compare accounts in the accounts report
 struct account_compare {
-  bool operator() (const account_t& lhs, const account_t& rhs){
+  bool operator() (const account_t& lhs, const account_t& rhs) const {
     return (lhs.fullname().compare(rhs.fullname()) < 0);
   }
 };

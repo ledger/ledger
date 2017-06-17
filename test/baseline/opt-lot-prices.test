@@ -853,247 +853,241 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
-                                        "Plans: Mithril Shield Spike" 1 {2.105G}
-                                         "Plans: Mithril Shield Spike" 1 {2.30G}
-                                               "Plans: Wildthorn Mail" 1 {1.25G}
-                                      "Recipe: Elixir of Giant Growth" 1 {1.00G}
-                                      "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 2 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 2 {2.105G}
                                          "Plans: Mithril Shield Spike" 2 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 2 {2.105G}
                                          "Plans: Mithril Shield Spike" 2 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 2 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 2 {2.105G}
                                          "Plans: Mithril Shield Spike" 2 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 2 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 2 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 2 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 2 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 2 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 2 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 2 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 2 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          50.42G
+                                                                          -4.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          59.83G
+                                                                           5.25G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.43G
+                                                                          -8.14G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.66G
+                                                                          -7.92G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.78G
+                                                                          -7.80G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.90G
+                                                                          -7.68G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.91G
+                                                                          -7.67G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.92G
+                                                                          -7.66G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.82G
+                                                                          -7.75G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          47.22G
+                                                                          -7.36G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.43G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          51.43G
+                                                                          -3.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          66.42G
+                                                                          11.85G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          46.42G
-                                        "Plans: Mithril Shield Spike" 1 {2.105G}
-                                         "Plans: Mithril Shield Spike" 1 {2.30G}
-                                               "Plans: Wildthorn Mail" 1 {1.25G}
-                                               "Pulsating Hydra Heart" 1 {1.00G}
-                                      "Recipe: Elixir of Giant Growth" 1 {1.00G}
-                                      "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          45.42G
+                                                                          -8.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          45.52G
+                                                                          -9.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          45.42G
+                                                                          -9.06G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          45.42G
+                                                                          -9.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          75.42G
+                                                                          -9.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
-                                                                          45.42G
+                                                                          20.85G
+                                        "Plans: Mithril Shield Spike" 1 {2.105G}
+                                         "Plans: Mithril Shield Spike" 1 {2.30G}
+                                               "Plans: Wildthorn Mail" 1 {1.25G}
+                                               "Pulsating Hydra Heart" 1 {1.00G}
+                                      "Recipe: Elixir of Giant Growth" 1 {1.00G}
+                                      "Recipe: Elixir of Giant Growth" 1 {1.50G}
+                                                                          -9.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1101,7 +1095,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          45.42G
+                                                                          -9.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1109,7 +1103,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.42G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1117,7 +1111,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 4 {15.00G}
-                                                                          15.42G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1125,7 +1119,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.42G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1133,7 +1127,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.43G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1141,7 +1135,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.42G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1149,7 +1143,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.43G
+                                                                         -39.14G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1157,7 +1151,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.42G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1165,7 +1159,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.63G
+                                                                         -38.94G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1173,7 +1167,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.42G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1181,7 +1175,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          16.17G
+                                                                         -38.40G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1189,7 +1183,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          16.92G
+                                                                         -37.65G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1197,7 +1191,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.42G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1205,7 +1199,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.42G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1213,7 +1207,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.42G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1221,7 +1215,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.43G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1229,7 +1223,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.42G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1237,7 +1231,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.43G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1245,7 +1239,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.42G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1253,7 +1247,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.43G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1261,7 +1255,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.42G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1269,7 +1263,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          16.42G
+                                                                         -38.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1277,7 +1271,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          15.42G
+                                                                         -39.15G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1285,7 +1279,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          33.48G
+                                                                         -21.10G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
@@ -1293,147 +1287,129 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.50G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          33.48G
+                                                                         -21.10G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          16.92G
+                                                                         -37.65G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          33.48G
+                                                                         -19.60G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                       "Recipe: Elixir of Giant Growth" 1 {1.00G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          51.54G
-                                        "Plans: Mithril Shield Spike" 1 {2.105G}
-                                         "Plans: Mithril Shield Spike" 1 {2.30G}
-                                               "Plans: Wildthorn Mail" 1 {1.25G}
-                                               "Pulsating Hydra Heart" 1 {1.00G}
-                                      "Recipe: Elixir of Giant Growth" 1 {1.00G}
-                                                    "Ace of Warlords" 2 {15.00G}
-                                                                          51.54G
+                                                                         -19.60G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          34.48G
+                                                                         -36.65G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          51.54G
+                                                                         -36.65G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          51.54G
+                                                                         -36.65G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                     "Ace of Warlords" 2 {15.00G}
-                                                                          51.54G
-                                        "Plans: Mithril Shield Spike" 1 {2.105G}
-                                         "Plans: Mithril Shield Spike" 1 {2.30G}
-                                               "Plans: Wildthorn Mail" 1 {1.25G}
-                                               "Pulsating Hydra Heart" 1 {1.00G}
-                                                    "Ace of Warlords" 2 {15.00G}
-                                                                          51.54G
+                                                                         -36.65G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                                          51.54G
+                                                                         -36.65G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                                          52.29G
+                                                                         -35.91G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                                          51.54G
+                                                                         -36.65G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                                          51.57G
+                                                                         -36.62G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                                          51.54G
+                                                                         -36.65G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                                          52.54G
+                                                                         -35.65G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Plans: Wildthorn Mail" 1 {1.25G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                                          52.54G
+                                                                         -35.65G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                                          52.79G
+                                                                         -35.40G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                                          52.54G
+                                                                         -32.62G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                                          55.33G
-                                        "Plans: Mithril Shield Spike" 1 {2.105G}
-                                         "Plans: Mithril Shield Spike" 1 {2.30G}
-                                               "Pulsating Hydra Heart" 1 {1.00G}
-                                                     "Wildheart Belt" 1 {30.00G}
-                                                                          52.54G
+                                                                         -35.40G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.00G}
-                                                                          52.54G
+                                                                         -35.40G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          52.54G
+                                                                         -35.40G
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
                                                "Pulsating Hydra Heart" 1 {1.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          52.54G
+                                                                         -35.40G
                                                         "Holy Bologna" 1 {2.00G}
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
@@ -1441,7 +1417,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          52.54G
+                                                                         -35.40G
                                                         "Holy Bologna" 1 {2.00G}
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
@@ -1450,7 +1426,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          52.54G
+                                                                         -35.40G
                                                         "Holy Bologna" 1 {2.00G}
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
                                          "Plans: Mithril Shield Spike" 1 {2.30G}
@@ -1460,7 +1436,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          52.54G
+                                                                         -35.40G
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
                                         "Plans: Mithril Shield Spike" 1 {2.105G}
@@ -1471,7 +1447,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          52.54G
+                                                                         -35.40G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1483,7 +1459,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          52.54G
+                                                                         -35.40G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1496,7 +1472,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          25.64G
+                                                                         -62.31G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1509,7 +1485,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          29.64G
+                                                                         -58.31G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1522,7 +1498,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          29.64G
+                                                                         -58.31G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1534,7 +1510,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          26.64G
+                                                                         -61.31G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1546,19 +1522,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          29.64G
-                                           "Garona: Book on Treachery" 1 {4.00G}
-                                                  "Harnessing Shadows" 1 {5.00G}
-                                                        "Holy Bologna" 1 {2.00G}
-                                        "Plans: Mithril Shield Spike" 1 {2.105G}
-                                         "Plans: Mithril Shield Spike" 1 {2.30G}
-                                                    "Preserved Holly" 5 {20.00s}
-                                             "The Arcanist's Cookbook" 1 {4.00G}
-                                                   "The Emerald Dream" 1 {4.00G}
-                                                     "Wildheart Belt" 1 {30.00G}
-                                                     "Ace of Warlords" 1 {3.00G}
-                                                     "Ace of Warlords" 1 {3.90G}
-                                                                          29.96G
+                                                                         -60.99G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1569,7 +1533,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          29.96G
+                                                                         -60.99G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1580,7 +1544,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          32.64G
+                                                                         -58.31G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1591,7 +1555,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          29.96G
+                                                                         -57.05G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1602,7 +1566,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          31.21G
+                                                                         -58.31G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1613,7 +1577,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          29.96G
+                                                                         -43.31G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1624,7 +1588,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          44.96G
+                                                                         -43.30G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1635,7 +1599,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          44.96G
+                                                                         -58.31G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1646,7 +1610,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          29.96G
+                                                                         -22.06G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1657,18 +1621,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          66.20G
-                                           "Garona: Book on Treachery" 1 {4.00G}
-                                                  "Harnessing Shadows" 1 {5.00G}
-                                                        "Holy Bologna" 1 {2.00G}
-                                        "Plans: Mithril Shield Spike" 1 {2.105G}
-                                         "Plans: Mithril Shield Spike" 1 {2.30G}
-                                                    "Preserved Holly" 5 {20.00s}
-                                             "The Arcanist's Cookbook" 1 {4.00G}
-                                                   "The Emerald Dream" 1 {4.00G}
-                                                     "Wildheart Belt" 1 {30.00G}
-                                                     "Ace of Warlords" 1 {3.90G}
-                                                                          66.20G
+                                                                         -22.06G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1678,7 +1631,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          66.20G
+                                                                         -22.06G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1687,7 +1640,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          34.36G
+                                                                         -53.90G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1696,7 +1649,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          50.38G
+                                                                          -3.94G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1705,7 +1658,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          66.20G
+                                                                          -2.94G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1714,7 +1667,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                         116.16G
+                                                                          -2.94G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1723,7 +1676,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                         117.16G
+                                                                         -53.90G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1732,7 +1685,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                         117.16G
+                                                                         -53.89G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1741,7 +1694,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          66.20G
+                                                                         -53.87G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1750,7 +1703,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          66.21G
+                                                                         -53.90G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1759,7 +1712,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          66.23G
+                                                                          -7.98G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1768,7 +1721,16 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          66.20G
+                                           "Garona: Book on Treachery" 1 {4.00G}
+                                                  "Harnessing Shadows" 1 {5.00G}
+                                                        "Holy Bologna" 1 {2.00G}
+                                                    "Preserved Holly" 5 {20.00s}
+                                             "The Arcanist's Cookbook" 1 {4.00G}
+                                                   "The Emerald Dream" 1 {4.00G}
+                                                     "Wildheart Belt" 1 {30.00G}
+                                                                          12.34s
+                                                     "Ace of Warlords" 1 {3.90G}
+                                                                         -53.90G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1777,7 +1739,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                         112.12G
+                                                                          12.35G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1786,7 +1748,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                         120.22G
+                                                                          12.35G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1795,7 +1757,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          66.20G
+                                                                         -53.90G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1804,7 +1766,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                         132.45G
+                                                                         -53.15G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1813,7 +1775,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                         132.45G
+                                                                         -53.15G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1822,7 +1784,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          66.20G
+                                                                         -53.90G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1831,7 +1793,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
                                                      "Ace of Warlords" 1 {3.90G}
-                                                                          66.95G
+                                                                         -38.90G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1839,8 +1801,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                              "The Arcanist's Cookbook" 1 {4.00G}
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                     "Ace of Warlords" 1 {3.90G}
-                                                                          66.95G
+                                                                         -38.90G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1848,8 +1809,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                              "The Arcanist's Cookbook" 1 {4.00G}
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                     "Ace of Warlords" 1 {3.90G}
-                                                                          66.20G
+                                                                         -50.00G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1857,8 +1817,7 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                              "The Arcanist's Cookbook" 1 {4.00G}
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                     "Ace of Warlords" 1 {3.90G}
-                                                                          81.20G
+                                                                          -6.55G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
@@ -1866,285 +1825,212 @@ test reg -F '%(justify(scrub(total_expr), 80, 80, true))\n' --lot-prices
                                              "The Arcanist's Cookbook" 1 {4.00G}
                                                    "The Emerald Dream" 1 {4.00G}
                                                      "Wildheart Belt" 1 {30.00G}
-                                                                          81.20G
+                                                                          -6.55G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
                                                     "Preserved Holly" 5 {20.00s}
                                              "The Arcanist's Cookbook" 1 {4.00G}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                     "Wildheart Belt" 1 {30.00G}
-                                                                          70.10G
+                                                                         -20.00G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
                                                     "Preserved Holly" 5 {20.00s}
                                              "The Arcanist's Cookbook" 1 {4.00G}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                     "Wildheart Belt" 1 {30.00G}
-                                                                          81.20G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                   "Harnessing Shadows" 1 {5.00G}
                                                         "Holy Bologna" 1 {2.00G}
                                                     "Preserved Holly" 5 {20.00s}
                                              "The Arcanist's Cookbook" 1 {4.00G}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                     "Wildheart Belt" 1 {30.00G}
-                                                                         124.65G
-                                           "Garona: Book on Treachery" 1 {4.00G}
-                                                  "Harnessing Shadows" 1 {5.00G}
-                                                        "Holy Bologna" 1 {2.00G}
-                                                    "Preserved Holly" 5 {20.00s}
-                                             "The Arcanist's Cookbook" 1 {4.00G}
-                                                   "The Emerald Dream" 1 {4.00G}
-                                                     "Wildheart Belt" 1 {30.00G}
-                                                                         124.65G
-                                           "Garona: Book on Treachery" 1 {4.00G}
-                                                  "Harnessing Shadows" 1 {5.00G}
-                                                        "Holy Bologna" 1 {2.00G}
-                                                    "Preserved Holly" 5 {20.00s}
-                                             "The Arcanist's Cookbook" 1 {4.00G}
-                                                   "The Emerald Dream" 1 {4.00G}
-                                                                         111.20G
-                                           "Garona: Book on Treachery" 1 {4.00G}
-                                                  "Harnessing Shadows" 1 {5.00G}
-                                                        "Holy Bologna" 1 {2.00G}
-                                                    "Preserved Holly" 5 {20.00s}
-                                             "The Arcanist's Cookbook" 1 {4.00G}
-                                                   "The Emerald Dream" 1 {4.00G}
-                                                                         124.65G
-                                           "Garona: Book on Treachery" 1 {4.00G}
-                                                  "Harnessing Shadows" 1 {5.00G}
-                                                        "Holy Bologna" 1 {2.00G}
-                                                    "Preserved Holly" 5 {20.00s}
-                                             "The Arcanist's Cookbook" 1 {4.00G}
-                                                   "The Emerald Dream" 1 {4.00G}
-                                                                         144.60G
-                                           "Garona: Book on Treachery" 1 {4.00G}
-                                                  "Harnessing Shadows" 1 {5.00G}
-                                                        "Holy Bologna" 1 {2.00G}
-                                                    "Preserved Holly" 5 {20.00s}
-                                             "The Arcanist's Cookbook" 1 {4.00G}
-                                                   "The Emerald Dream" 1 {4.00G}
-                                                                         144.60G
+                                                                          -5.00s
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                         "Holy Bologna" 1 {2.00G}
                                                     "Preserved Holly" 5 {20.00s}
                                              "The Arcanist's Cookbook" 1 {4.00G}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                                         129.65G
+                                                                          -5.00s
+                                                                         -15.00G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                         "Holy Bologna" 1 {2.00G}
                                                     "Preserved Holly" 5 {20.00s}
                                              "The Arcanist's Cookbook" 1 {4.00G}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                                         144.60G
+                                                                          13.50G
                                            "Garona: Book on Treachery" 1 {4.00G}
                                                         "Holy Bologna" 1 {2.00G}
                                                     "Preserved Holly" 5 {20.00s}
                                              "The Arcanist's Cookbook" 1 {4.00G}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                                         173.10G
-                                           "Garona: Book on Treachery" 1 {4.00G}
+                                                                          13.50G
                                                         "Holy Bologna" 1 {2.00G}
                                                     "Preserved Holly" 5 {20.00s}
                                              "The Arcanist's Cookbook" 1 {4.00G}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                                         173.10G
+                                                                         -11.00G
                                                         "Holy Bologna" 1 {2.00G}
                                                     "Preserved Holly" 5 {20.00s}
                                              "The Arcanist's Cookbook" 1 {4.00G}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                                         148.60G
+                                                                           6.10G
                                                         "Holy Bologna" 1 {2.00G}
                                                     "Preserved Holly" 5 {20.00s}
                                              "The Arcanist's Cookbook" 1 {4.00G}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                                         173.10G
-                                                        "Holy Bologna" 1 {2.00G}
-                                                    "Preserved Holly" 5 {20.00s}
-                                             "The Arcanist's Cookbook" 1 {4.00G}
-                                                   "The Emerald Dream" 1 {4.00G}
-                                                                         190.20G
-                                                        "Holy Bologna" 1 {2.00G}
-                                                    "Preserved Holly" 5 {20.00s}
-                                             "The Arcanist's Cookbook" 1 {4.00G}
-                                                   "The Emerald Dream" 1 {4.00G}
-                                                                         190.20G
+                                                                           6.10G
                                                         "Holy Bologna" 1 {2.00G}
                                                     "Preserved Holly" 5 {20.00s}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                                         177.10G
+                                                                          -7.00G
                                                         "Holy Bologna" 1 {2.00G}
                                                     "Preserved Holly" 5 {20.00s}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                                         190.20G
+                                                                          -2.35G
                                                         "Holy Bologna" 1 {2.00G}
                                                     "Preserved Holly" 5 {20.00s}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                                         194.85G
-                                                        "Holy Bologna" 1 {2.00G}
-                                                    "Preserved Holly" 5 {20.00s}
-                                                   "The Emerald Dream" 1 {4.00G}
-                                                                         194.85G
+                                                                          -2.35G
                                                         "Holy Bologna" 1 {2.00G}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                                         191.20G
+                                                                          -6.00G
                                                         "Holy Bologna" 1 {2.00G}
                                                    "The Emerald Dream" 1 {4.00G}
-                                                                         194.85G
-                                                        "Holy Bologna" 1 {2.00G}
-                                                   "The Emerald Dream" 1 {4.00G}
-                                                                         194.85G
+                                                                          -6.00G
                                                         "Holy Bologna" 1 {2.00G}
                                                    "The Emerald Dream" 1 {4.00G}
                                                       "Two of Portals" 1 {3.00G}
-                                                                         194.85G
+                                                                          -6.00G
                                                         "Holy Bologna" 1 {2.00G}
                                                    "The Emerald Dream" 1 {4.00G}
                                                       "Two of Portals" 1 {2.50G}
                                                       "Two of Portals" 1 {3.00G}
-                                                                         189.35G
+                                                                         -11.50G
                                                         "Holy Bologna" 1 {2.00G}
                                                    "The Emerald Dream" 1 {4.00G}
                                                       "Two of Portals" 1 {2.50G}
                                                       "Two of Portals" 1 {3.00G}
-                                                                         205.70G
+                                                                           4.84G
                                                         "Holy Bologna" 1 {2.00G}
                                                    "The Emerald Dream" 1 {4.00G}
                                                       "Two of Portals" 1 {2.50G}
                                                       "Two of Portals" 1 {3.00G}
-                                                                         205.70G
+                                                                           4.84G
                                                    "The Emerald Dream" 1 {4.00G}
                                                       "Two of Portals" 1 {2.50G}
                                                       "Two of Portals" 1 {3.00G}
-                                                                         191.35G
+                                                                          -9.50G
                                                    "The Emerald Dream" 1 {4.00G}
                                                       "Two of Portals" 1 {2.50G}
                                                       "Two of Portals" 1 {3.00G}
-                                                                         205.70G
+                                                                          -4.50G
                                                    "The Emerald Dream" 1 {4.00G}
                                                       "Two of Portals" 1 {2.50G}
                                                       "Two of Portals" 1 {3.00G}
-                                                                         210.70G
+                                                                          -4.50G
                                                    "The Emerald Dream" 1 {4.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                      "Two of Portals" 1 {3.00G}
-                                                                         210.70G
+                                                                          -6.50G
                                                    "The Emerald Dream" 1 {4.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                         208.70G
+                                                                           8.50G
                                                    "The Emerald Dream" 1 {4.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                         210.70G
-                                                   "The Emerald Dream" 1 {4.00G}
+                                                                           8.50G
                                                       "Two of Portals" 1 {2.50G}
-                                                                         225.70G
-                                                   "The Emerald Dream" 1 {4.00G}
+                                                                          -2.50G
                                                       "Two of Portals" 1 {2.50G}
-                                                                         225.70G
+                                                                          -2.49G
                                                       "Two of Portals" 1 {2.50G}
-                                                                         214.70G
+                                                                          -2.50G
                                                       "Two of Portals" 1 {2.50G}
-                                                                         225.70G
-                                                      "Two of Portals" 1 {2.50G}
-                                                                         225.70G
-                                                      "Two of Portals" 1 {2.50G}
-                                                                         225.70G
-                                                      "Two of Portals" 1 {2.50G}
-                                                                         225.70G
+                                                                          -2.50G
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                          55.70G
+                                                                        -172.50G
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                          55.97G
+                                                                        -172.22G
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                          56.25G
+                                                                        -171.95G
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                          55.70G
+                                                                        -172.50G
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                          55.70G
+                                                                        -172.50G
                                                           Nightblade 1 {200.00G}
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                        -144.30G
+                                                                        -372.50G
                                                           Nightblade 1 {200.00G}
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                        -142.53G
+                                                                        -370.73G
                                                           Nightblade 1 {200.00G}
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                        -140.76G
+                                                                        -368.96G
                                                           Nightblade 1 {200.00G}
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                        -138.99G
+                                                                        -367.19G
                                                           Nightblade 1 {200.00G}
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                        -137.22G
+                                                                        -365.42G
                                                           Nightblade 1 {200.00G}
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                        -136.47G
+                                                                        -364.67G
                                                           Nightblade 1 {200.00G}
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                        -144.30G
+                                                                        -372.50G
                                                           Nightblade 1 {200.00G}
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                          22.22G
+                                                                        -205.97G
                                                           Nightblade 1 {200.00G}
                                                   "Orb of Deception" 1 {170.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                          22.22G
+                                                                        -205.97G
                                                           Nightblade 1 {200.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                          25.70G
+                                                                        -202.50G
                                                           Nightblade 1 {200.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                          22.22G
+                                                                        -194.30G
                                                           Nightblade 1 {200.00G}
                                                       "Two of Portals" 1 {2.50G}
-                                                                          30.42G
+                                                                        -194.30G
                                                           Nightblade 1 {200.00G}
-                                                      "Two of Portals" 1 {2.50G}
-                                                                          30.42G
+                                                                        -200.00G
                                                           Nightblade 1 {200.00G}
-                                                                          24.72G
+                                                                        -198.50G
                                                           Nightblade 1 {200.00G}
-                                                                          30.42G
+                                                                        -198.50G
                                                           Nightblade 1 {200.00G}
-                                                                          31.92G
+                                                                        -198.49G
                                                           Nightblade 1 {200.00G}
-                                                                          31.92G
+                                                                        -200.00G
                                                           Nightblade 1 {200.00G}
-                                                                          31.93G
+                                                                         -40.00G
                                                           Nightblade 1 {200.00G}
-                                                                          30.42G
-                                                          Nightblade 1 {200.00G}
-                                                                         190.42G
-                                                          Nightblade 1 {200.00G}
-                                                                         190.42G
-                                                                         230.42G
-                                                                         190.42G
-                                                                         190.42G
-                                                                         190.42G
-                                                                         244.42G
-                                                                         254.42G
-                                                                         264.42G
-                                                                         264.48G
-                                                                         264.52G
-                                                                         264.52G
-                                                                         190.42G
-                                                                         190.42G
+                                                                         -40.00G
+                                                                               0
+                                                                             30c
+                                                                               0
+                                                                          54.00G
+                                                                          64.00G
+                                                                          74.00G
+                                                                          74.06G
+                                                                          74.10G
+                                                                          74.10G
+                                                                               0
                                                   "Orb of Deception" 1 {155.00G}
-                                                                          35.42G
+                                                                        -155.00G
                                                   "Orb of Deception" 1 {155.00G}
 end test

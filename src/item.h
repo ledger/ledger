@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -78,23 +78,6 @@ struct position_t
     }
     return *this;
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & pathname;
-    ar & beg_pos;
-    ar & beg_line;
-    ar & end_pos;
-    ar & end_line;
-    ar & sequence;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 class item_t : public supports_flags<uint_least16_t>, public scope_t
@@ -109,7 +92,7 @@ public:
 
   typedef std::pair<optional<value_t>, bool> tag_data_t;
   typedef std::map<string, tag_data_t,
-                   function<bool(string, string)> > string_map;
+                   std::function<bool(string, string)> > string_map;
 
   state_t              _state;
   optional<date_t>     _date;
@@ -191,7 +174,7 @@ public:
   static bool use_aux_date;
 
   virtual bool has_date() const {
-    return _date;
+    return static_cast<bool>(_date);
   }
 
   virtual date_t date() const {
@@ -222,25 +205,6 @@ public:
                                   const string& name);
 
   bool valid() const;
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<supports_flags<uint_least16_t> >(*this);
-    ar & boost::serialization::base_object<scope_t>(*this);
-    ar & _state;
-    ar & _date;
-    ar & _date_aux;
-    ar & note;
-    ar & pos;
-    ar & metadata;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 value_t get_comment(item_t& item);

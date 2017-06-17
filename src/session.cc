@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,7 +37,6 @@
 #include "journal.h"
 #include "iterators.h"
 #include "filters.h"
-#include "archive.h"
 
 namespace ledger {
 
@@ -93,25 +92,31 @@ std::size_t session_t::read_data(const string& master_account)
     acct = journal->find_account(master_account);
 
   optional<path> price_db_path;
-  if (HANDLED(price_db_)){
+  if (HANDLED(price_db_)) {
     price_db_path = resolve_path(HANDLER(price_db_).str());
-    if (!exists(price_db_path.get())){
+    if (!exists(price_db_path.get())) {
       throw_(parse_error, _f("Could not find specified price-db file %1%") % price_db_path);
     }
   } else {
-    if (const char * home_var = std::getenv("HOME")){
+    if (const char * home_var = std::getenv("HOME")) {
       price_db_path = (path(home_var) / ".pricedb");
     } else {
       price_db_path = ("./.ledgerrc");
     }
   }
 
+  if (HANDLED(day_break))
+    journal->day_break = true;
+
+  if (HANDLED(recursive_aliases))
+    journal->recursive_aliases = true;
+  if (HANDLED(no_aliases))
+    journal->no_aliases = true;
+
   if (HANDLED(explicit))
     journal->force_checking = true;
   if (HANDLED(check_payees))
     journal->check_payees = true;
-  if (HANDLED(day_break))
-    journal->day_break = true;
 
   if (HANDLED(permissive))
     journal->checking_style = journal_t::CHECK_PERMISSIVE;
@@ -119,59 +124,17 @@ std::size_t session_t::read_data(const string& master_account)
     journal->checking_style = journal_t::CHECK_ERROR;
   else if (HANDLED(strict))
     journal->checking_style = journal_t::CHECK_WARNING;
-  else if (HANDLED(value_expr_))
-    journal->value_expr     = HANDLER(value_expr_).str();
 
-#if HAVE_BOOST_SERIALIZATION
-  optional<archive_t> cache;
-  if (HANDLED(cache_) && master_account.empty())
-    cache = archive_t(HANDLED(cache_).str());
+  if (HANDLED(value_expr_))
+    journal->value_expr = HANDLER(value_expr_).str();
 
-  if (! (cache &&
-         cache->should_load(HANDLER(file_).data_files) &&
-         cache->load(*journal.get()))) {
-#endif // HAVE_BOOST_SERIALIZATION
-    if (price_db_path) {
-      if (exists(*price_db_path)) {
-        parsing_context.push(*price_db_path);
-        parsing_context.get_current().journal = journal.get();
-        try {
-          if (journal->read(parsing_context) > 0)
-            throw_(parse_error, _("Transactions not allowed in price history file"));
-        }
-        catch (...) {
-          parsing_context.pop();
-          throw;
-        }
-        parsing_context.pop();
-      }
-    }
-
-    foreach (const path& pathname, HANDLER(file_).data_files) {
-      if (pathname == "-" || pathname == "/dev/stdin") {
-        // To avoid problems with stdin and pipes, etc., we read the entire
-        // file in beforehand into a memory buffer, and then parcel it out
-        // from there.
-        std::ostringstream buffer;
-
-        while (std::cin.good() && ! std::cin.eof()) {
-          char line[8192];
-          std::cin.read(line, 8192);
-          std::streamsize count = std::cin.gcount();
-          buffer.write(line, count);
-        }
-        buffer.flush();
-
-        shared_ptr<std::istream> stream(new std::istringstream(buffer.str()));
-        parsing_context.push(stream);
-      } else {
-        parsing_context.push(pathname);
-      }
-
+  if (price_db_path) {
+    if (exists(*price_db_path)) {
+      parsing_context.push(*price_db_path);
       parsing_context.get_current().journal = journal.get();
-      parsing_context.get_current().master  = acct;
       try {
-        xact_count += journal->read(parsing_context);
+        if (journal->read(parsing_context) > 0)
+          throw_(parse_error, _("Transactions not allowed in price history file"));
       }
       catch (...) {
         parsing_context.pop();
@@ -179,16 +142,44 @@ std::size_t session_t::read_data(const string& master_account)
       }
       parsing_context.pop();
     }
-
-    DEBUG("ledger.read", "xact_count [" << xact_count
-          << "] == journal->xacts.size() [" << journal->xacts.size() << "]");
-    assert(xact_count == journal->xacts.size());
-
-#if HAVE_BOOST_SERIALIZATION
-    if (cache && cache->should_save(*journal.get()))
-      cache->save(*journal.get());
   }
-#endif // HAVE_BOOST_SERIALIZATION
+
+  foreach (const path& pathname, HANDLER(file_).data_files) {
+    if (pathname == "-" || pathname == "/dev/stdin") {
+      // To avoid problems with stdin and pipes, etc., we read the entire
+      // file in beforehand into a memory buffer, and then parcel it out
+      // from there.
+      std::ostringstream buffer;
+
+      while (std::cin.good() && ! std::cin.eof()) {
+        char line[8192];
+        std::cin.read(line, 8192);
+        std::streamsize count = std::cin.gcount();
+        buffer.write(line, count);
+      }
+      buffer.flush();
+
+      shared_ptr<std::istream> stream(new std::istringstream(buffer.str()));
+      parsing_context.push(stream);
+    } else {
+      parsing_context.push(pathname);
+    }
+
+    parsing_context.get_current().journal = journal.get();
+    parsing_context.get_current().master  = acct;
+    try {
+      xact_count += journal->read(parsing_context);
+    }
+    catch (...) {
+      parsing_context.pop();
+      throw;
+    }
+    parsing_context.pop();
+  }
+
+  DEBUG("ledger.read", "xact_count [" << xact_count
+        << "] == journal->xacts.size() [" << journal->xacts.size() << "]");
+  assert(xact_count == journal->xacts.size());
 
   if (populated_data_files)
     HANDLER(file_).data_files.clear();
@@ -258,6 +249,11 @@ void session_t::close_journal_files()
   amount_t::initialize();
 }
 
+journal_t * session_t::get_journal()
+{
+    return journal.get();
+}
+
 value_t session_t::fn_account(call_scope_t& args)
 {
   if (args[0].is_string())
@@ -288,7 +284,7 @@ value_t session_t::fn_str(call_scope_t& args)
 
 value_t session_t::fn_lot_price(call_scope_t& args)
 {
-  amount_t amt(args.get<amount_t>(1, false));
+  amount_t amt(args.get<amount_t>(0, false));
   if (amt.has_annotation() && amt.annotation().price)
     return *amt.annotation().price;
   else
@@ -296,7 +292,7 @@ value_t session_t::fn_lot_price(call_scope_t& args)
 }
 value_t session_t::fn_lot_date(call_scope_t& args)
 {
-  amount_t amt(args.get<amount_t>(1, false));
+  amount_t amt(args.get<amount_t>(0, false));
   if (amt.has_annotation() && amt.annotation().date)
     return *amt.annotation().date;
   else
@@ -304,7 +300,7 @@ value_t session_t::fn_lot_date(call_scope_t& args)
 }
 value_t session_t::fn_lot_tag(call_scope_t& args)
 {
-  amount_t amt(args.get<amount_t>(1, false));
+  amount_t amt(args.get<amount_t>(0, false));
   if (amt.has_annotation() && amt.annotation().tag)
     return string_value(*amt.annotation().tag);
   else
@@ -321,8 +317,7 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     OPT_CH(price_exp_);
     break;
   case 'c':
-    OPT(cache_);
-    else OPT(check_payees);
+    OPT(check_payees);
     break;
   case 'd':
     OPT(download); // -Q
@@ -344,11 +339,17 @@ option_t<session_t> * session_t::lookup_option(const char * p)
   case 'm':
     OPT(master_account_);
     break;
+  case 'n':
+    OPT(no_aliases);
+    break;
   case 'p':
     OPT(price_db_);
     else OPT(price_exp_);
     else OPT(pedantic);
     else OPT(permissive);
+    break;
+  case 'r':
+    OPT(recursive_aliases);
     break;
   case 's':
     OPT(strict);

@@ -1,0 +1,73 @@
+; this file contains spaces after the payee and tag values.  Ledger
+; should ignore the trailing spaces for the purposes of determining
+; unique values
+;
+; bug 584 and 550 reported trailing spaces being considered
+; significant in payee and tag values.
+;
+; running
+;     ledger -f test/spaces.dat payees
+; yielded two distinct payees, because utils.h/next_element() didn't
+; handle a single space followed by a null correctly.
+;
+; running 
+;     ledger -f test/spaces.dat reg --group-by "tag('test')"
+; yielded four groups.
+
+2011/11/28 * test
+  ; no space after payee or tag value
+  Expenses:misc  $1 ; test: spaces
+  Assets:checking
+
+2011/11/28 * test 
+  ; single space after payee and tag value
+  Expenses:misc  $2 ; test: spaces 
+  Assets:checking
+
+2011/11/28 test  
+  ; two spaces after payee and tag value
+  Expenses:misc  $4 ; test: spaces  
+  Assets:checking
+
+2011/11/28 test   
+  ; three spaces after payee and tag value
+  Expenses:misc  $8 ; test: spaces   
+  Assets:checking
+
+2011/11/28 testcommodity
+  ; COM commodity has no space after
+  Expenses:misc  1 COM
+  Assets:checking
+
+2011/11/28 testcommodity
+  ; COM commodity has one space after
+  Expenses:misc  1 COM 
+  Assets:checking
+
+2011/11/28 testcommodity
+  ; COM commodity has two spaces after
+  Expenses:misc  1 COM  
+  Assets:checking
+
+2011/11/28 testcommodity
+  ; COM commodity has three spaces after
+  Expenses:misc  1 COM   
+  Assets:checking
+
+test payees
+test
+testcommodity
+end test
+
+test reg --group-by "tag('test')"
+spaces
+11-Nov-28 test                  Expenses:misc                    $1           $1
+11-Nov-28 test                  Expenses:misc                    $2           $3
+11-Nov-28 test                  Expenses:misc                    $4           $7
+11-Nov-28 test                  Expenses:misc                    $8          $15
+end test
+
+test commodities
+$
+COM
+end test

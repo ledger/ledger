@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -43,7 +43,8 @@ namespace ledger {
 
 posts_to_org_table::posts_to_org_table(report_t&               _report,
                                        const optional<string>& _prepend_format)
-  : report(_report), last_xact(NULL), last_post(NULL)
+  : report(_report), last_xact(NULL), last_post(NULL),
+    header_printed(false), first_report_title(true)
 {
   first_line_format.parse_format
     ("|%(format_date(date))"

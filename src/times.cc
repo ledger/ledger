@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -32,6 +32,10 @@
 #include <system.hh>
 
 #include "times.h"
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+#include "strptime.h"
+#endif
 
 namespace ledger {
 
@@ -835,6 +839,16 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
     specifier.month =
       date_specifier_t::month_type
         (boost::get<date_time::months_of_year>(*tok.value));
+    tok = lexer.peek_token();
+    switch (tok.kind) {
+    case lexer_t::token_t::TOK_A_YEAR:
+      specifier.year = boost::get<date_specifier_t::year_type>(*tok.value);
+      break;
+    case lexer_t::token_t::END_REACHED:
+      break;
+    default:
+      break;
+    }
     break;
   case lexer_t::token_t::TOK_A_WDAY:
     specifier.wday  =
@@ -1290,21 +1304,35 @@ void date_interval_t::stabilize(const optional<date_t>& date)
 #endif
 
       date_t when = start ? *start : *date;
-
-      if (duration->quantum == date_duration_t::MONTHS ||
-          duration->quantum == date_duration_t::QUARTERS ||
-          duration->quantum == date_duration_t::YEARS) {
+      switch (duration->quantum) {
+      case date_duration_t::MONTHS:
+      case date_duration_t::QUARTERS:
+      case date_duration_t::YEARS:
+        // These start on most recent period start quantum before when
         DEBUG("times.interval",
-              "stabilize: monthly, quarterly or yearly duration");
+            "stabilize: monthly, quarterly or yearly duration");
         start = date_duration_t::find_nearest(when, duration->quantum);
-      } else {
-        DEBUG("times.interval", "stabilize: daily or weekly duration");
-        start = date_duration_t::find_nearest(when - gregorian::days(400),
-                                              duration->quantum);
+        break;
+      case date_duration_t::WEEKS:
+        // Weeks start on the beginning of week prior to 400 remainder period length
+        // Either the first quanta of the period or the last quanta of the period seems more sensible
+        // implies period is never less than 400 days not too unreasonable
+        DEBUG("times.interval", "stabilize: weekly duration");
+        {
+          int period = duration->length * 7;
+          start = date_duration_t::find_nearest(
+              when - gregorian::days(period + 400 % period), duration->quantum);
+        }
+        break;
+      default:
+        // multiples of days have a quanta of 1 day so should not have the start date adjusted to a quanta
+        DEBUG("times.interval",
+            "stabilize: daily duration - stable by definition");
+        start = when;
+        break;
       }
 
-      DEBUG("times.interval",
-            "stabilize: beginning start date = " << *start);
+      DEBUG("times.interval", "stabilize: beginning start date = " << *start);
 
       while (*start < *date) {
         date_interval_t next_interval(*this);
@@ -1314,7 +1342,7 @@ void date_interval_t::stabilize(const optional<date_t>& date)
           *this = next_interval;
         } else {
           end_of_duration = none;
-          next            = none;
+          next = none;
           break;
         }
       }
@@ -1798,6 +1826,7 @@ void times_initialize()
     readers.push_back(shared_ptr<date_io_t>(new date_io_t("%Y/%m/%d", true)));
     readers.push_back(shared_ptr<date_io_t>(new date_io_t("%Y/%m", true)));
     readers.push_back(shared_ptr<date_io_t>(new date_io_t("%y/%m/%d", true)));
+    readers.push_back(shared_ptr<date_io_t>(new date_io_t("%Y-%m-%d", true)));
 
     is_initialized = true;
   }

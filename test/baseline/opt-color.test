@@ -2,10 +2,10 @@
     Assets:Investments:Vanguard:VMMXX  0.350 VMMXX @ $1.00
     Income:Dividends:Vanguard:VMMXX        $-0.35
 
-test bal --color --force-color
-         0.350 VMMXX  [34mAssets:Investments:Vanguard:VMMXX[0m
-              [31m$-0.35[0m  [34mIncome:Dividends:Vanguard:VMMXX[0m
+test bal --color
+         0.350 VMMXX  Assets:Investments:Vanguard:VMMXX
+              $-0.35  Income:Dividends:Vanguard:VMMXX
 --------------------
-              [31m$-0.35[0m
+              $-0.35
          0.350 VMMXX
 end test

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -106,19 +106,6 @@ public:
   virtual string  context_to_str() const;
   virtual void    print(std::ostream& out) const;
   virtual void    dump(std::ostream& out) const;
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<base_type>(*this);
-    ar & ptr;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 /**

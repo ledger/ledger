@@ -1,0 +1,18 @@
+
+2014-05-01 * Opening balance
+    Assets:Cash          $100
+    Equity:Opening balance
+
+2014-05-10 * Spend money
+    Expenses:Foo          $10
+    Assets:Cash          -$10 = $80
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 8:
+While parsing posting:
+  Assets:Cash          -$10 = $80
+                              ^^^
+Error: Balance assertion off by $-10 (expected to see $90)
+end test
+

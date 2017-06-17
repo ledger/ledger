@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -237,17 +237,20 @@ class sort_posts : public item_handler<post_t>
 
   posts_deque posts;
   expr_t      sort_order;
+  report_t&   report;
 
   sort_posts();
 
 public:
-  sort_posts(post_handler_ptr handler, const expr_t& _sort_order)
-    : item_handler<post_t>(handler), sort_order(_sort_order) {
-    TRACE_CTOR(sort_posts, "post_handler_ptr, const value_expr&");
+  sort_posts(post_handler_ptr handler, const expr_t& _sort_order,
+             report_t& _report)
+    : item_handler<post_t>(handler), sort_order(_sort_order), report(_report) {
+    TRACE_CTOR(sort_posts, "post_handler_ptr, const value_expr&, report_t&");
   }
-  sort_posts(post_handler_ptr handler, const string& _sort_order)
-    : item_handler<post_t>(handler), sort_order(_sort_order) {
-    TRACE_CTOR(sort_posts, "post_handler_ptr, const string&");
+  sort_posts(post_handler_ptr handler, const string& _sort_order,
+             report_t& _report)
+    : item_handler<post_t>(handler), sort_order(_sort_order), report(_report) {
+    TRACE_CTOR(sort_posts, "post_handler_ptr, const string&, report_t&");
   }
   virtual ~sort_posts() {
     TRACE_DTOR(sort_posts);
@@ -280,15 +283,17 @@ class sort_xacts : public item_handler<post_t>
   sort_xacts();
 
 public:
-  sort_xacts(post_handler_ptr handler, const expr_t& _sort_order)
-    : sorter(handler, _sort_order) {
+  sort_xacts(post_handler_ptr handler, const expr_t& _sort_order,
+             report_t& _report)
+    : sorter(handler, _sort_order, _report) {
     TRACE_CTOR(sort_xacts,
-               "post_handler_ptr, const value_expr&");
+               "post_handler_ptr, const value_expr&, report_t&");
   }
-  sort_xacts(post_handler_ptr handler, const string& _sort_order)
-    : sorter(handler, _sort_order) {
+  sort_xacts(post_handler_ptr handler, const string& _sort_order,
+             report_t& _report)
+    : sorter(handler, _sort_order, _report) {
     TRACE_CTOR(sort_xacts,
-               "post_handler_ptr, const string&");
+               "post_handler_ptr, const string&, report_t&");
   }
   virtual ~sort_xacts() {
     TRACE_DTOR(sort_xacts);
@@ -655,7 +660,8 @@ protected:
       TRACE_CTOR(acct_value_t, "account_t *, value_t&, bool, bool");
     }
     acct_value_t(const acct_value_t& av)
-      : account(av.account), value(av.value), is_virtual(av.is_virtual) {
+      : account(av.account), value(av.value), is_virtual(av.is_virtual),
+        must_balance(av.must_balance) {
       TRACE_CTOR(acct_value_t, "copy");
     }
     ~acct_value_t() throw() {

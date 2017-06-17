@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -43,6 +43,8 @@
  */
 #ifndef _UTILS_H
 #define _UTILS_H
+
+#include <boost/uuid/sha1.hpp>
 
 /**
  * @name Default values
@@ -249,7 +251,7 @@ void logger_func(log_level_t level);
 
 #if TRACING_ON
 
-extern uint8_t _trace_level;
+extern uint16_t _trace_level;
 
 #define SHOW_TRACE(lvl) \
   (ledger::_log_level >= ledger::LOG_TRACE && lvl <= ledger::_trace_level)
@@ -483,11 +485,7 @@ inline void check_for_signal() {
 /*@{*/
 
 #define foreach BOOST_FOREACH
-#if HAVE_CXX11
 using std::unique_ptr;
-#else
-#define unique_ptr std::auto_ptr
-#endif
 
 namespace ledger {
 
@@ -498,7 +496,7 @@ inline T& downcast(U& object) {
 
 path resolve_path(const path& pathname);
 
-#if HAVE_REALPATH
+#ifdef HAVE_REALPATH
 extern "C" char * realpath(const char *, char resolved_path[]);
 #endif
 
@@ -625,11 +623,12 @@ inline string to_hex(unsigned int * message_digest, const int len = 1)
 
 inline string sha1sum(const string& str)
 {
-  SHA1 sha;
-  sha.Reset();
-  sha << str.c_str();
+	boost::uuids::detail::sha1 sha;
+
+  sha.process_bytes(str.c_str(), str.length());
+
   unsigned int message_digest[5];
-  sha.Result(message_digest);
+  sha.get_digest(message_digest);
   return to_hex(message_digest, 5);
 }
 

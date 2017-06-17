@@ -1,0 +1,37 @@
+; Using -M in combination with an empty result causes a segmentation fault
+; therefore this test case does not have or need any test data
+
+test -f /dev/null -M reg
+end test
+
+; Tests mentioned in #730
+test reg -M
+end test
+
+test reg -M .foo
+end test
+
+test reg -M -e 2012/01
+end test
+
+
+; Tests mentioned in #1080
+test reg '^Expenses' and expr 'any(account =~ /^Assets:Cash/)' --period 'every week this month'
+end test
+
+test bal '^Expenses' and expr 'any(account =~ /^Assets:Cash/)' --period 'every week this month'
+end test
+
+test bal reg foo and  expr 'any(account =~ /bar/)' --period 'every week'
+end test
+
+
+; Tests mentioned in #1084
+test b abc -M
+end test
+
+test reg foo -M 
+end test
+
+test bal foo -M 
+end test

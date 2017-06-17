@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -48,11 +48,6 @@ namespace {
    *
    * This function returns only for the process that is still Ledger.
    *
-   * @param out Pointer to a pointer to the output stream.  This The
-   * pointer to the output stream is changed so that the stream is
-   * connected to the stdin of the pager.  The caller is responsible for
-   * cleaning this up.
-   *
    * @param pager_path Path to the pager command.
    *
    * @return The file descriptor of the pipe to the pager.  The caller
@@ -63,7 +58,7 @@ namespace {
    */
   int do_fork(std::ostream ** os, const path& pager_path)
   {
-#ifndef WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
     int pfd[2];
 
     int status = pipe(pfd);
@@ -85,18 +80,10 @@ namespace {
       close(pfd[1]);
       close(pfd[0]);
 
-      // Find command name: its the substring starting right of the
-      // rightmost '/' character in the pager pathname.  See manpage for
-      // strrchr.
-#if BOOST_VERSION >= 103700
-      path basename(pager_path.filename());
-#else
-      path basename(pager_path.leaf());
-#endif
-      execlp(pager_path.string().c_str(), basename.string().c_str(), NULL);
+      execlp("/bin/sh", "/bin/sh", "-c", pager_path.string().c_str(), NULL);
 
       // We should never, ever reach here
-      perror((std::string("execlp: ") + pager_path.string()).c_str());
+      perror("execlp: /bin/sh");
       exit(1);
     }
     else {                      // parent
@@ -128,7 +115,7 @@ void output_stream_t::initialize(const optional<path>& output_file,
 
 void output_stream_t::close()
 {
-#ifndef WIN32
+#if !defined(_WIN32) && !defined(__CYGWIN__)
   if (os != &std::cout) {
     checked_delete(os);
     os = &std::cout;

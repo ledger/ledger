@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -74,17 +74,18 @@ namespace {
     char letter;
     const char * expr;
   } single_letter_mappings[] = {
-    { 'd', "date" },
+    { 'd', "aux_date ? format_date(date) + \"=\" + format_date(aux_date) : format_date(date)" },
+    { 'D', "date" },
     { 'S', "filename" },
     { 'B', "beg_pos" },
     { 'b', "beg_line" },
     { 'E', "end_pos" },
     { 'e', "end_line" },
-    { 'X', "cleared" },
-    { 'Y', "xact.cleared" },
-    { 'C', "code" },
+    { 'X', "\"* \" if cleared" },
+    { 'Y', "\"* \" if xact.cleared" },
+    { 'C', "\"(\" + code + \") \" if code" },
     { 'P', "payee" },
-    { 'a', "account.name" },
+    { 'a', "account" },
     { 'A', "account" },
     { 't', "justify(scrub(display_amount), $min, $max, $left, color)" },
     { 'T', "justify(scrub(display_total), $min, $max, $left, color)" },
@@ -206,7 +207,7 @@ format_t::element_t * format_t::parse_elements(const string& fmt,
                                    sizeof(format_mapping_t)); i++) {
         if (*p == single_letter_mappings[i].letter) {
           std::ostringstream expr;
-          for (const char * ptr = single_letter_mappings[i].expr; *ptr; ){
+          for (const char * ptr = single_letter_mappings[i].expr; *ptr;) {
             if (*ptr == '$') {
               const char * beg = ++ptr;
               while (*ptr && std::isalpha(*ptr))

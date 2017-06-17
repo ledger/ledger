@@ -1,3 +1,0 @@
-[submodule "lib/utfcpp"]
-	path = lib/utfcpp
-	url = http://github.com/ledger/utfcpp.git

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -101,10 +101,10 @@ public:
   }
 
   void warning(const string& what) const {
-    warning_func(location() + what);
+    warning_func(location() + " " + what);
   }
   void warning(const boost::format& what) const {
-    warning_func(location() + string(what.str()));
+    warning_func(location() + " " + string(what.str()));
   }
 };
 

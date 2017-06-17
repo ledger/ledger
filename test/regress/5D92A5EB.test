@@ -14,7 +14,7 @@
 
 test -J reg checking -> 1
 __ERROR__
-While parsing file "$FILE", line 13: 
+While parsing file "$FILE", line 13:
 While parsing periodic transaction:
 > ~ Monthly from 2010/7/1
 >     Expenses:Auto:Gas               $100.00
@@ -29,6 +29,6 @@ While parsing periodic transaction:
 >     Liabilities:Education:ULL       $100.00
 >     Liabilities:Mortgage            $100.00
 >     Assets:Bank:Checking
-Error: Posting with null amount's account may be mispelled:
+Error: Posting with null amount's account may be misspelled:
   "Expenses:Entertainment:Blizzard $100.00"
 end test

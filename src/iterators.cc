@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -96,7 +96,7 @@ namespace {
       TRACE_DTOR(create_price_xact);
     }
 
-    void operator()(datetime_t& date, const amount_t& price) {
+    void operator()(const datetime_t& date, const amount_t& price) {
       xact_t * xact;
       string   symbol = price.commodity().symbol();
 
@@ -201,12 +201,12 @@ void sorted_accounts_iterator::push_back(account_t& account)
 
     std::stable_sort(accounts_list.back().begin(),
                      accounts_list.back().end(),
-                     compare_items<account_t>(sort_cmp));
+                     compare_items<account_t>(sort_cmp, report));
 
 #if DEBUG_ON
-    if (SHOW_DEBUG("accounts.sorted")) {
+    if (SHOW_DEBUG("account.sorted")) {
       foreach (account_t * acct, accounts_list.back())
-        DEBUG("accounts.sorted",
+        DEBUG("account.sorted",
               "Account (flat): " << acct->fullname());
     }
 #endif
@@ -234,12 +234,12 @@ void sorted_accounts_iterator::sort_accounts(account_t& account,
     deque.push_back(pair.second);
 
   std::stable_sort(deque.begin(), deque.end(),
-                   compare_items<account_t>(sort_cmp));
+                   compare_items<account_t>(sort_cmp, report));
 
 #if DEBUG_ON
-  if (SHOW_DEBUG("accounts.sorted")) {
+  if (SHOW_DEBUG("account.sorted")) {
     foreach (account_t * acct, deque)
-      DEBUG("accounts.sorted", "Account: " << acct->fullname());
+      DEBUG("account.sorted", "Account: " << acct->fullname());
   }
 #endif
 }

@@ -1,0 +1,85 @@
+
+account AA
+    alias
+
+account BB
+    default
+
+account CC
+    note
+
+account DD
+    payee
+
+account EE
+    value
+
+account FF
+    assert
+
+account GG
+    check
+
+account HH
+    eval
+
+account II
+    expr
+
+commodity AAA
+    alias
+
+commodity BBB
+    default
+
+commodity CCC
+    nomarket
+
+commodity DDD
+    value
+
+commodity EEE
+    format
+
+commodity FFF
+    note
+
+payee FOO
+    alias
+    uuid fooo
+
+payee BAR
+    uuid
+
+test source -> 14
+__ERROR__
+While parsing file "$FILE", line 3:
+Error: Account directive 'alias' requires an argument
+While parsing file "$FILE", line 9:
+Error: Account directive 'note' requires an argument
+While parsing file "$FILE", line 12:
+Error: Account directive 'payee' requires an argument
+While parsing file "$FILE", line 15:
+Error: Account directive 'value' requires an argument
+While parsing file "$FILE", line 18:
+Error: Account directive 'assert' requires an argument
+While parsing file "$FILE", line 21:
+Error: Account directive 'check' requires an argument
+While parsing file "$FILE", line 24:
+Error: Account directive 'eval' requires an argument
+While parsing file "$FILE", line 27:
+Error: Account directive 'expr' requires an argument
+While parsing file "$FILE", line 30:
+Error: Commodity directive 'alias' requires an argument
+While parsing file "$FILE", line 39:
+Error: Commodity directive 'value' requires an argument
+While parsing file "$FILE", line 42:
+Error: Commodity directive 'format' requires an argument
+While parsing file "$FILE", line 45:
+Error: Commodity directive 'note' requires an argument
+While parsing file "$FILE", line 48:
+Error: Payee directive 'alias' requires an argument
+While parsing file "$FILE", line 52:
+Error: Payee directive 'uuid' requires an argument
+end test
+

@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
+ * modification, are permitted provided that the following conditions are
+ * met:
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
@@ -99,11 +99,11 @@ public:
 
   void report_error(const std::exception& err);
 
+  void execute_command(strings_list args, bool at_repl);
   /**
    * @return \c true if a command was actually executed; otherwise, it probably
    *         just resulted in setting some options.
    */
-  void execute_command(strings_list args, bool at_repl);
   int  execute_command_wrapper(strings_list args, bool at_repl);
 
   value_t push_command(call_scope_t&) {
@@ -123,11 +123,13 @@ public:
     out <<
       "Ledger " << Ledger_VERSION_MAJOR << '.' << Ledger_VERSION_MINOR << '.'
                 << Ledger_VERSION_PATCH;
+    if (Ledger_VERSION_PRERELEASE != 0)
+      out << Ledger_VERSION_PRERELEASE;
     if (Ledger_VERSION_DATE != 0)
       out << '-' << Ledger_VERSION_DATE;
     out << _(", the command-line accounting tool");
     out <<
-      _("\n\nCopyright (c) 2003-2013, John Wiegley.  All rights reserved.\n\n\
+      _("\n\nCopyright (c) 2003-2017, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.");
     out << std::endl;
@@ -145,11 +147,7 @@ See LICENSE file included with the distribution for details and disclaimer.");
 
   void visit_man_page() const;
 
-  OPTION_(global_scope_t, full_help, DO() { parent->visit_man_page(); }); // -H
   OPTION_(global_scope_t, help,      DO() { parent->visit_man_page(); }); // -h
-  OPTION_(global_scope_t, help_calc, DO() { parent->visit_man_page(); });
-  OPTION_(global_scope_t, help_comm, DO() { parent->visit_man_page(); });
-  OPTION_(global_scope_t, help_disp, DO() { parent->visit_man_page(); });
 
   OPTION__
   (global_scope_t, init_file_, // -i

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -185,7 +185,7 @@ bool xact_base_t::finalize()
 
       if (post_account_bad || null_post_account_bad)
         throw_(std::logic_error,
-               _f("Posting with null amount's account may be mispelled:\n  \"%1%\"")
+               _f("Posting with null amount's account may be misspelled:\n  \"%1%\"")
                % (post_account_bad ? post->account->fullname() :
                    null_post->account->fullname()));
       else
@@ -252,44 +252,15 @@ bool xact_base_t::finalize()
       const amount_t * x = &(*a++).second;
       const amount_t * y = &(*a++).second;
 
-      if (x->commodity() != top_post->amount.commodity()) {
-        const amount_t * t = x;
-        x = y;
-        y = t;
-      }
-
       if (*x && *y) {
+        if (x->commodity() != top_post->amount.commodity())
+          std::swap(x, y);
+
         DEBUG("xact.finalize", "primary   amount = " << *x);
         DEBUG("xact.finalize", "secondary amount = " << *y);
 
-        commodity_t&     comm(x->commodity());
-        amount_t         per_unit_cost;
-        amount_t         total_cost;
-        const amount_t * prev_y = y;
-
-        foreach (post_t * post, posts) {
-          if (post != top_post && post->must_balance() &&
-              ! post->amount.is_null() &&
-              post->amount.has_annotation() &&
-              post->amount.annotation().price) {
-            amount_t temp = *post->amount.annotation().price * post->amount;
-            if (total_cost.is_null()) {
-              total_cost = temp;
-              y = &total_cost;
-            }
-            else if (total_cost.commodity() == temp.commodity()) {
-              total_cost += temp;
-            }
-            else {
-              DEBUG("xact.finalize",
-                    "multiple price commodities, aborting price calc");
-              y = prev_y;
-              break;
-            }
-            DEBUG("xact.finalize", "total_cost = " << total_cost);
-          }
-        }
-        per_unit_cost = (*y / *x).abs().unrounded();
+        commodity_t& comm(x->commodity());
+        amount_t     per_unit_cost = (*y / *x).abs().unrounded();
 
         DEBUG("xact.finalize", "per_unit_cost = " << per_unit_cost);
 
@@ -321,9 +292,9 @@ bool xact_base_t::finalize()
                _("A posting's cost must be of a different commodity than its amount"));
 
       cost_breakdown_t breakdown =
-        commodity_pool_t::current_pool->exchange
-        (post->amount, *post->cost, false, ! post->has_flags(POST_COST_VIRTUAL),
-         datetime_t(date(), time_duration(0, 0, 0, 0)));
+        commodity_pool_t::current_pool->exchange(
+          post->amount, *post->cost, false, ! post->has_flags(POST_COST_VIRTUAL),
+          datetime_t(date(), time_duration(0, 0, 0, 0)));
 
       if (post->amount.has_annotation() && post->amount.annotation().price) {
         if (breakdown.basis_cost.commodity() == breakdown.final_cost.commodity()) {
@@ -333,10 +304,9 @@ bool xact_base_t::finalize()
             DEBUG("xact.finalize", "gain_loss = " << gain_loss);
             gain_loss.in_place_round();
             DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
-
             if (post->must_balance())
               add_or_set_value(balance, gain_loss.reduced());
-
+#if 0
             account_t * account;
             if (gain_loss.sign() > 0)
               account = journal->find_account(_("Equity:Capital Gains"));
@@ -350,6 +320,9 @@ bool xact_base_t::finalize()
               p->add_flags(post->flags() & (POST_VIRTUAL | POST_MUST_BALANCE));
             }
             add_post(p);
+#else
+            *post->cost += gain_loss;
+#endif
             DEBUG("xact.finalize", "added gain_loss, balance = " << balance);
           } else {
             DEBUG("xact.finalize", "gain_loss would have displayed as zero");
@@ -422,7 +395,10 @@ bool xact_base_t::finalize()
         some_null = true;
       }
 
-      post->account->add_post(post);
+      if (post->has_flags(POST_DEFERRED))
+          post->account->add_deferred_post(id(), post);
+        else
+          post->account->add_post(post);
 
       post->xdata().add_flags(POST_EXT_VISITED);
       post->account->xdata().add_flags(ACCOUNT_EXT_VISITED);

@@ -1,5 +1,3 @@
---explicit
---pedantic
 
 commodity $
     format $1,000.00
@@ -39,7 +37,7 @@ test reg
 12-Feb-29 KFC                   Expenses:Food                $25.00       $25.00
                                 Assets:Cash                 $-25.00            0
 __ERROR__
-Warning: "$FILE", line 26: Transaction check failed: (abs(amount) <= {20})
-Warning: "$FILE", line 30: Transaction check failed: (abs(amount) <= {20})
+Warning: "$FILE", line 24: Transaction check failed: (abs(amount) <= {20})
+Warning: "$FILE", line 28: Transaction check failed: (abs(amount) <= {20})
 end test
 

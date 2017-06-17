@@ -1,0 +1,48 @@
+
+D 1000.00 EUR
+D 1000.00 USD
+D 1000.00 DM
+
+2015-01-01 * Buy 2 FOO
+    Assets:Investments                             2 FOO @@ 20.00 EUR
+    Assets:Cash                                            -20.00 EUR
+
+2015-05-01 * Spend on food
+    Expenses:Food                                           20.00 USD
+    ; Just to be silly, always valuate *these* $20 as 30 DM, no matter what
+    ; the user asks for with -V or -X
+    ; VALUE:: 30 DM
+    Assets:Cash                                            -20.00 USD
+
+P 2015-05-01 USD 20 DM
+
+P 2015-06-01 USD 22 DM
+
+test bal assets:investments -V --value-expr "25.00 EUR"
+           50.00 EUR  Assets:Investments
+end test
+
+test bal assets:investments -G --value-expr "date < [March 2015] ? 22.00 EUR : 25.00 EUR" --now "2015-02-20"
+           24.00 EUR  Assets:Investments
+end test
+
+test bal assets:investments -G --value-expr "date < [March 2015] ? 22.00 EUR : 25.00 EUR" --now "2015-03-20"
+           30.00 EUR  Assets:Investments
+end test
+
+test bal expenses:food
+           20.00 USD  Expenses:Food
+end test
+
+test bal expenses:food -V
+           600.00 DM  Expenses:Food
+end test
+
+test bal expenses:food   -X "DM" --now "2015-05-02"
+           600.00 DM  Expenses:Food
+end test
+
+test bal expenses:food   -X "DM" --now "2015-06-02"
+           600.00 DM  Expenses:Food
+end test
+

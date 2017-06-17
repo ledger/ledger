@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -154,7 +154,7 @@ void truncate_xacts::operator()(post_t& post)
 void sort_posts::post_accumulated_posts()
 {
   std::stable_sort(posts.begin(), posts.end(),
-                   compare_items<post_t>(sort_order));
+                   compare_items<post_t>(sort_order, report));
 
   foreach (post_t * post, posts) {
     post->xdata().drop_flags(POST_EXT_SORT_CALC);
@@ -237,7 +237,7 @@ void anonymize_posts::render_commodity(amount_t& amt)
 
 void anonymize_posts::operator()(post_t& post)
 {
-  SHA1         sha;
+	boost::uuids::detail::sha1  sha;
   unsigned int message_digest[5];
   bool         copy_xact_details = false;
 
@@ -256,9 +256,9 @@ void anonymize_posts::operator()(post_t& post)
     buf << reinterpret_cast<uintmax_t>(post.xact->payee.c_str())
         << integer_gen() << post.xact->payee.c_str();
 
-    sha.Reset();
-    sha << buf.str().c_str();
-    sha.Result(message_digest);
+		sha.reset();
+    sha.process_bytes(buf.str().c_str(), buf.str().length());
+    sha.get_digest(message_digest);
 
     xact.payee = to_hex(message_digest);
     xact.note  = none;
@@ -274,9 +274,9 @@ void anonymize_posts::operator()(post_t& post)
     std::ostringstream buf;
     buf << integer_gen() << acct << acct->fullname();
 
-    sha.Reset();
-    sha << buf.str().c_str();
-    sha.Result(message_digest);
+    sha.reset();
+    sha.process_bytes(buf.str().c_str(), buf.str().length());
+    sha.get_digest(message_digest);
 
     account_names.push_front(to_hex(message_digest));
   }
@@ -707,7 +707,7 @@ namespace {
     insert_prices_in_map(price_map_t& _all_prices)
       : all_prices(_all_prices) {}
 
-    void operator()(datetime_t& date, const amount_t& price) {
+    void operator()(const datetime_t& date, const amount_t& price) {
       all_prices.insert(price_map_t::value_type(date, price));
     }
   };
@@ -982,10 +982,12 @@ void interval_posts::flush()
   std::stable_sort(all_posts.begin(), all_posts.end(),
                    sort_posts_by_date());
 
-  // Determine the beginning interval by using the earliest post
-  if (all_posts.front() &&
-      ! interval.find_period(all_posts.front()->date()))
-    throw_(std::logic_error, _("Failed to find period for interval report"));
+  // only if the interval has no start use the earliest post
+  if (!(interval.begin() && interval.find_period(*interval.begin())))
+    // Determine the beginning interval by using the earliest post
+    if (all_posts.size() > 0 && all_posts.front()
+        && !interval.find_period(all_posts.front()->date()))
+      throw_(std::logic_error, _("Failed to find period for interval report"));
 
   // Walk the interval forward reporting all posts within each one
   // before moving on, until we reach the end of all_posts
@@ -1040,7 +1042,7 @@ void interval_posts::flush()
           "Calling subtotal_posts::report_subtotal() at end");
     report_subtotal(interval);
   }
-    
+
   // Tell our parent class to flush
   subtotal_posts::flush();
 }
@@ -1075,7 +1077,7 @@ namespace {
       post_t& balance_post = temps.create_post(xact, &balance_account);
       balance_post.amount = - amount;
       (*handler)(balance_post);
-    }      
+    }
   };
 }
 

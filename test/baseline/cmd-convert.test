@@ -17,7 +17,7 @@ end test
 
 test -f /dev/null --input-date-format "%m/%d/%Y" convert test/baseline/cmd-convert3.dat -> 1
 __ERROR__
-While parsing file "$sourcepath/test/baseline/cmd-convert3.dat", line 1: 
+While parsing file "$sourcepath/test/baseline/cmd-convert3.dat", line 1:
 While parsing CSV line:
   01/01/2011,,
 
@@ -26,7 +26,7 @@ end test
 
 test -f /dev/null convert test/baseline/cmd-convert4.dat -> 1
 __ERROR__
-While parsing file "$sourcepath/test/baseline/cmd-convert4.dat", line 1: 
+While parsing file "$sourcepath/test/baseline/cmd-convert4.dat", line 1:
 While parsing CSV line:
   bogus,$10,
 

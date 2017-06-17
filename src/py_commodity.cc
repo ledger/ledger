@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -151,13 +151,13 @@ namespace {
   py_pool_commodities_keys_begin(commodity_pool_t& pool) {
     return make_transform_iterator
       (pool.commodities.begin(),
-       bind(&commodity_pool_t::commodities_map::value_type::first, _1));
+       boost::bind(&commodity_pool_t::commodities_map::value_type::first, _1));
   }
   commodities_map_firsts_iterator
   py_pool_commodities_keys_end(commodity_pool_t& pool) {
     return make_transform_iterator
       (pool.commodities.end(),
-       bind(&commodity_pool_t::commodities_map::value_type::first, _1));
+       boost::bind(&commodity_pool_t::commodities_map::value_type::first, _1));
   }
 
   typedef transform_iterator
@@ -169,15 +169,15 @@ namespace {
   py_pool_commodities_values_begin(commodity_pool_t& pool) {
     return make_transform_iterator
       (pool.commodities.begin(),
-       bind(&shared_ptr<commodity_t>::get,
-            bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
+       boost::bind(&shared_ptr<commodity_t>::get,
+            boost::bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
   }
   commodities_map_seconds_iterator
   py_pool_commodities_values_end(commodity_pool_t& pool) {
     return make_transform_iterator
       (pool.commodities.end(),
-       bind(&shared_ptr<commodity_t>::get,
-            bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
+       boost::bind(&shared_ptr<commodity_t>::get,
+            boost::bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
   }
 
   void py_add_price_2(commodity_t& commodity,
@@ -315,6 +315,7 @@ void export_commodity()
   scope().attr("COMMODITY_STYLE_SUFFIXED")      = COMMODITY_STYLE_SUFFIXED;
   scope().attr("COMMODITY_STYLE_SEPARATED")     = COMMODITY_STYLE_SEPARATED;
   scope().attr("COMMODITY_STYLE_DECIMAL_COMMA") = COMMODITY_STYLE_DECIMAL_COMMA;
+  scope().attr("COMMODITY_STYLE_TIME_COLON")    = COMMODITY_STYLE_TIME_COLON;
   scope().attr("COMMODITY_STYLE_THOUSANDS")     = COMMODITY_STYLE_THOUSANDS;
   scope().attr("COMMODITY_NOMARKET")            = COMMODITY_NOMARKET;
   scope().attr("COMMODITY_BUILTIN")             = COMMODITY_BUILTIN;

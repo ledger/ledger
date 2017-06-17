@@ -14,3 +14,25 @@
     Expenses:Food                $20
     Expenses:Food                $-5
     Assets:Cash
+
+test reg --dc
+12-Mar-10 Employer         Assets:Cash            $100            0         $100
+                           Incom:Employer            0         $100            0
+12-Mar-10 KFC              Expenses:Food           $20            0          $20
+                           Assets:Cash               0          $20            0
+12-Mar-10 KFC - Rebate     Assets:Cash              $5            0           $5
+                           Expenses:Food             0           $5            0
+12-Mar-10 KFC - Food & R.. Expenses:Food           $20            0          $20
+                           Expenses:Food             0           $5          $15
+                           Assets:Cash               0          $15            0
+end test
+
+test bal --dc
+          $105            $35            $70  Assets:Cash
+           $40            $10            $30  Expenses:Food
+             0           $100          $-100  Income:Employer
+--------------------------------------------
+          $145           $145              0
+end test
+
+

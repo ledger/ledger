@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -118,7 +118,7 @@ public:
 
   ptr_op_t parse(std::istream&           in,
                  const parse_flags_t&    flags           = PARSE_DEFAULT,
-                 const optional<string>& original_string = NULL);
+                 const optional<string>& original_string = boost::none);
 };
 
 } // namespace ledger

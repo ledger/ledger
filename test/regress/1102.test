@@ -1,0 +1,8 @@
+2015/01/15 * Grocery Store
+  Assets:Cash       ¤ -5,00
+  Expenses:Food
+
+test -i /dev/null reg
+15-Jan-15 Grocery Store         Assets:Cash                 ¤ -5,00      ¤ -5,00
+                                Expenses:Food                ¤ 5,00            0
+end test

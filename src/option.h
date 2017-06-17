@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -229,7 +229,7 @@ public:
 inline bool is_eq(const char * p, const char * n) {
   // Test whether p matches n, substituting - in p for _ in n.
   for (; *p && *n; p++, n++) {
-    if (! (*p == '-' && *n == '_' ) && *p != *n)
+    if (! (*p == '-' && *n == '_') && *p != *n)
       return false;
   }
   // Ignore any trailing underscore

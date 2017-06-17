@@ -1,0 +1,50 @@
+version: build-{build}
+
+image: Visual Studio 2013
+
+shallow_clone: true  # don't download repo history
+
+install:
+- time /t
+- tzutil /s "Eastern Standard Time_dstoff"
+- time /t
+
+branches:
+  only:
+    - master
+    - next
+
+build_script:
+- C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy pacman"
+- C:\msys64\usr\bin\bash -lc "pacman --needed --noconfirm -Sy pacman-mirrors"
+- C:\msys64\usr\bin\bash -lc "pacman --needed --noconfirm -Syu"
+- C:\msys64\usr\bin\bash -lc "pacman --needed --noconfirm -S mingw-w64-i686-boost"
+- C:\msys64\usr\bin\bash -lc "pacman --needed --noconfirm -S mingw-w64-i686-mpfr"
+- C:\msys64\usr\bin\bash -lc "pacman --needed --noconfirm -S mingw-w64-i686-cmake"
+- C:\msys64\usr\bin\bash -lc "export PATH=/mingw32/bin:$PATH && cd $APPVEYOR_BUILD_FOLDER &&
+  cmake -G 'MSYS Makefiles'"
+- C:\msys64\usr\bin\bash -lc "export PATH=/mingw32/bin:$PATH && cd $APPVEYOR_BUILD_FOLDER &&
+  make -j2"
+
+after_build:
+- set LIB_DIR=C:\msys64\mingw32\bin
+- 7z a ledger-win.zip %APPVEYOR_BUILD_FOLDER%\ledger.exe
+  %LIB_DIR%\libboost_filesystem-mt.dll
+  %LIB_DIR%\libboost_regex-mt.dll
+  %LIB_DIR%\libboost_system-mt.dll
+  %LIB_DIR%\libgcc_s_dw2-1.dll
+  %LIB_DIR%\libgmp-10.dll
+  %LIB_DIR%\libicudt57.dll
+  %LIB_DIR%\libicuuc57.dll
+  %LIB_DIR%\libstdc++-6.dll
+  %LIB_DIR%\libwinpthread-1.dll
+  %APPVEYOR_BUILD_FOLDER%\libledger.dll
+
+artifacts:
+  - path: ledger-win.zip
+    name: Ledger Win32 binaries
+
+test_script:
+- C:\msys64\usr\bin\bash -lc "export MINGW_PREFIX=C:/msys64/mingw32/ CTEST_OUTPUT_ON_FAILURE=1
+  PATH=/mingw32/bin:$PATH && cd $APPVEYOR_BUILD_FOLDER && 
+  make test || echo Errors from tests were ignored"

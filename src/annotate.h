@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2013, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -107,21 +107,6 @@ struct annotation_t : public supports_flags<>,
     assert(*this);
     return true;
   }
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<supports_flags<> >(*this);
-    ar & price;
-    ar & date;
-    ar & tag;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 void put_annotation(property_tree::ptree& pt, const annotation_t& details);
@@ -162,21 +147,6 @@ struct keep_details_t
     return keep_price || keep_date || keep_tag;
   }
   bool keep_any(const commodity_t& comm) const;
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & keep_price;
-    ar & keep_date;
-    ar & keep_tag;
-    ar & only_actuals;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 inline std::ostream& operator<<(std::ostream&       out,
@@ -250,24 +220,6 @@ public:
 
   virtual void write_annotations(std::ostream& out,
                                  bool no_computed_annotations = false) const;
-
-#if HAVE_BOOST_SERIALIZATION
-private:
-  explicit annotated_commodity_t() : ptr(NULL) {
-    TRACE_CTOR(annotated_commodity_t, "");
-  }
-
-  /** Serialization. */
-
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive& ar, const unsigned int /* version */) {
-    ar & boost::serialization::base_object<commodity_t>(*this);
-    ar & ptr;
-    ar & details;
-  }
-#endif // HAVE_BOOST_SERIALIZATION
 };
 
 inline annotated_commodity_t&

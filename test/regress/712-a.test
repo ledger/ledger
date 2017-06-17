@@ -1,0 +1,10 @@
+2012/09/27 PLN Payment
+    Accrued                 3,547.65 PLN {=$0.315786}
+    Accrued                 5,320.06 PLN {=$0.315786}
+    Assets:Checking                          $-2,800.30
+
+test -X $ -V  reg
+12-Sep-27 PLN Payment           Accrued                   $1,120.30    $1,120.30
+                                Accrued                   $1,680.00    $2,800.30
+                                Assets:Checking          $-2,800.30            0
+end test

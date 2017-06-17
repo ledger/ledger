@@ -1,0 +1,28 @@
+account Expenses:Food
+    payee KFC
+    payee REWE
+
+payee REWE
+    alias REWE SAGT DANKE
+
+# When reading csv file without directives:
+test -f /dev/null convert test/baseline/feat-convert-with-directives.dat
+2012/01/01 * KFC
+    Expenses:Unknown                             $10
+    Equity:Unknown
+
+2012/01/02 * REWE SAGT DANKE  123454321
+    Expenses:Unknown                             10€
+    Equity:Unknown
+end test
+
+# When reading csv file with directives:
+test --account "Assets:Cash" convert test/baseline/feat-convert-with-directives.dat
+2012/01/01 * KFC
+    Expenses:Food                                $10
+    Assets:Cash
+
+2012/01/02 * REWE
+    Expenses:Food                                10€
+    Assets:Cash
+end test
