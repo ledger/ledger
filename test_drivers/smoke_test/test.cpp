@@ -153,7 +153,7 @@ int main()
     
     //replace_invalid
     char invalid_sequence[] = "a\x80\xe0\xa0\xc0\xaf\xed\xa0\x80z";
-    vector<char> replace_invalid_result(50);
+    vector<char> replace_invalid_result;
     replace_invalid (invalid_sequence, invalid_sequence + sizeof(invalid_sequence), replace_invalid_result.begin(), '?');
     bvalid = is_valid(replace_invalid_result.begin(), replace_invalid_result.end());
     assert (bvalid);
