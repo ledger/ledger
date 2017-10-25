@@ -136,6 +136,19 @@ void account_t::add_post(post_t * post)
     xdata_->self_details.calculated   = false;
     xdata_->family_details.gathered   = false;
     xdata_->family_details.calculated = false;
+    if (! xdata_->family_details.total.is_null()) {
+      xdata_->family_details.total = ledger::value_t();
+    }
+    account_t *ancestor = this;
+    while (ancestor->parent) {
+      ancestor = ancestor->parent;
+      if (ancestor->has_xdata()) {
+        xdata_t &xdata = ancestor->xdata();
+        xdata.family_details.gathered   = false;
+        xdata.family_details.calculated = false;
+        xdata.family_details.total = ledger::value_t();
+      }
+    }
   }
 }
 
