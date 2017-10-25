@@ -2400,6 +2400,23 @@ should never be auto-downloaded.
 
 The @code{default} sub-directive marks this as the ``default'' commodity.
 
+@item debug
+@findex debug
+@c instance_t::debug_directive in textual.cc
+Prints to stderr the value of a value expression.  For example:
+
+@smallexample @c input:validate
+2011/12/01 Test
+    Assets:Savings  $100
+    Assets:Current Account
+
+debug account("Assets:Savings").total
+@end smallexample
+
+When ledger is run, this will output:
+
+debug: account("Assets:Savings").total $100.00
+
 @item define
 @findex define
 @c instance_t::define_directive in textual.cc
