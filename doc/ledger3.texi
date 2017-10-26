@@ -212,6 +212,7 @@ twinkling in their fathers' CRTs.
 * Fat-free Accounting::
 * Building the program::
 * Getting help::
+* Third-Party Ledger Tutorials::
 @end menu
 
 @node Fat-free Accounting, Building the program, Introduction to Ledger, Introduction to Ledger
@@ -400,7 +401,7 @@ options.  You can run `make check` to confirm the result, and `make
 install` to install.  If these intructions do not work for you can check the
 `INSTALL.md` in the source directory for more up do date build instructions.
 
-@node Getting help,  , Building the program, Introduction to Ledger
+@node Getting help, , Building the program, Introduction to Ledger
 @section Getting help
 @findex help
 
@@ -416,6 +417,23 @@ join the Ledger mailing list at
 
 You can also find help in the @code{#ledger} channel on the IRC server
 @code{irc.freenode.net}.
+
+@node  Third-Party Ledger Tutorials,  , Getting help, Introduction to Ledger
+@section Third-Party Ledger Tutorials
+
+There are plenty of people using Ledger for accounting applications.
+Some have documented how they use Ledger's features to solve their
+accounting problems.
+
+Once such tutorial, specifically designed for non-profit charities that seek
+to use Ledger, can be found at
+@url{https://k.sfconservancy.org/npo-ledger-cli} (with a copy on GitHub also
+available at @url{https://github.com/conservancy/npo-ledger-cli/}).  If
+you're looking for information about how to use Ledger's tagging system to
+handle invoicing, track expenses by program targets, and other such concepts,
+you might find the tutorial useful.  (Some of the auditor reporting scripts
+that relate to the aformentioned Ledger setup can be found
+@var{contrib/non-profit-audit-reports/} in Ledger's own source repository.)
 
 @node Ledger Tutorial, Principles of Accounting with Ledger, Introduction to Ledger, Top
 @chapter Ledger Tutorial
