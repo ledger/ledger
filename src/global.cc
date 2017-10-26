@@ -136,9 +136,7 @@ void global_scope_t::read_init()
   path init_file;
   if (HANDLED(init_file_)) {
     init_file=HANDLER(init_file_).str();
-    if (exists(init_file)) {
-      parse_init(init_file);
-    } else {
+    if (!exists(init_file)) {
       throw_(parse_error, _f("Could not find specified init file %1%") % init_file);
     }
   } else {
