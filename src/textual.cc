@@ -563,6 +563,9 @@ void instance_t::automated_xact_directive(char * line)
     expr_t::ptr_op_t expr =
       query.parse_args(string_value(skip_ws(line + 1)).to_sequence(),
                        keeper, false, true);
+    if (!expr) {
+      throw parse_error(_("Expected predicate after '='"));
+    }
 
     unique_ptr<auto_xact_t> ae(new auto_xact_t(predicate_t(expr, keeper)));
     ae->pos           = position_t();

@@ -1,0 +1,12 @@
+=
+2000/01/01 Test
+    A  $1.00
+	B
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 1:
+While parsing automated transaction:
+> =
+Error: Expected predicate after '='
+end test
