@@ -1357,7 +1357,7 @@ account point of view and from the fund point of view---yet both sets
 should reflect the same overall expenses and cash flow.  It's simply
 where the money resides that differs.
 
-This situation can be handled one of two ways.  The first is using
+This situation can be handled in one of two ways.  The first is using
 virtual postings to represent the fact that money is moving to and
 from two kind of accounts at the same time:
 
