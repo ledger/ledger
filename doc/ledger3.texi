@@ -1096,7 +1096,7 @@ $40880.00  Assets:Brokerage
 
 You can convert from any commodity to any other commodity.  Let's say
 you had $5000 in your checking account, and for whatever reason you
-wanted to know many ounces of gold that would buy, in terms of the
+wanted to know how many ounces of gold that would buy, in terms of the
 current price of gold:
 
 @smallexample
