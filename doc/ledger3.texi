@@ -3260,7 +3260,7 @@ adjustment transaction using balance assignments:
     Equity:Adjustments
 @end smallexample
 
-Since the second posting is also null, it's value will become the
+Since the second posting is also null, its value will become the
 inverse of whatever amount is generated for the first posting.
 
 This is the only time in ledger when more than one posting's amount
@@ -3564,10 +3564,11 @@ sensitive to this difference.
 @node Fixated prices and costs, Lot dates, Prices versus costs, Transactions
 @section Fixated prices and costs
 
-If you buy a stock last year, and ask for its value today, Ledger will
-consult its price database to see what the most recent price for that
-stock is.  You can short-circuit this lookup by ``fixing'' the price
-at the time of a transaction.  This is done using @samp{@{=AMOUNT@}}:
+If you bought a stock last year, and ask for its value today, Ledger
+will consult its price database to see what the most recent price for
+that stock is.  You can short-circuit this lookup by ``fixing'' the
+price at the time of a transaction.  This is done using
+@samp{@{=AMOUNT@}}:
 
 @smallexample
 2012-04-10 My Broker
