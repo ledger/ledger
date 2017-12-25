@@ -286,6 +286,10 @@ void export_journal()
          return_internal_reference<1,
              with_custodian_and_ward_postcall<1, 0> >())
 
+    .def("expand_aliases", &journal_t::expand_aliases,
+         return_internal_reference<1,
+             with_custodian_and_ward_postcall<1, 0> >())
+
     .def("add_xact", &journal_t::add_xact)
     .def("remove_xact", &journal_t::remove_xact)
 
