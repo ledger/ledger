@@ -143,14 +143,14 @@ public:
 
   OPTION__
   (session_t, file_, // -f
-   std::list<path> data_files;
+   std::set<path> data_files;
    CTOR(session_t, file_) {}
    DO_(str) {
      if (parent->flush_on_next_data_file) {
        data_files.clear();
        parent->flush_on_next_data_file = false;
      }
-     data_files.push_back(str);
+     data_files.insert(str);
    });
 
   OPTION_(session_t, input_date_format_, DO_(str) {
