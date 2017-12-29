@@ -52,6 +52,16 @@ namespace ledger {
 
 class xact_t;
 
+struct ComparePaths
+{
+  bool operator()(const path& p1, const path& p2) const
+  {
+    return p1 < p2 && !boost::filesystem::equivalent(p1, p2);
+  }
+};
+
+#define COMMA ,
+
 class session_t : public symbol_scope_t
 {
   friend void set_session_context(session_t * session);
@@ -143,7 +153,7 @@ public:
 
   OPTION__
   (session_t, file_, // -f
-   std::set<path> data_files;
+   std::set<path COMMA ComparePaths> data_files;
    CTOR(session_t, file_) {}
    DO_(str) {
      if (parent->flush_on_next_data_file) {
