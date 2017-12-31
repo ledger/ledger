@@ -13,6 +13,7 @@ os:
   - linux
   - osx
 sudo: false
+osx_image: xcode9.2
 cache:
   apt: true
 
