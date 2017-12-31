@@ -27,7 +27,7 @@ env:
       # List of required boost libraries to build
     - BOOST_LIBS="date_time,filesystem,iostreams,python,regex,system,test"
       # List of required Homebrew formulae to install
-    - BREWS="gmp,mpfr"
+    - BREWS="cmake,gmp,mpfr,boost,boost-python"
       # Encrypted COVERITY_SCAN_TOKEN
     - secure: "mYNxD1B8WNSvUeKzInehZ7syi2g1jH2ymeSQxoeKKD2duq3pvNWPdZdc4o9MlWQcAqcz58rhFZRIpuEWCnP0LbbJaG+MyuemMn9uAmg9Y4gFpMsBPHuTdf8pO3rDex+tkrr9puEJFgL+QV/TehxO6NDDpx7UdYvJb+4aZD/auYI="
 
