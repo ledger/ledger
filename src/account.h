@@ -205,7 +205,9 @@ public:
           posts_cleared_count(0),
           posts_last_7_count(0),
           posts_last_30_count(0),
-          posts_this_month_count(0) {
+          posts_this_month_count(0),
+          latest_checkout_cleared(false)
+      {
         TRACE_CTOR(account_t::xdata_t::details_t, "");
       }
       // A copy copies nothing
@@ -218,7 +220,8 @@ public:
           posts_cleared_count(0),
           posts_last_7_count(0),
           posts_last_30_count(0),
-          posts_this_month_count(0)
+          posts_this_month_count(0),
+          latest_checkout_cleared(false)
       {
         TRACE_CTOR(account_t::xdata_t::details_t, "copy");
       }
