@@ -95,6 +95,7 @@ protected:
 #define COMMODITY_SAW_ANN_PRICE_FLOAT    0x400
 #define COMMODITY_SAW_ANN_PRICE_FIXATED  0x800
 #define COMMODITY_STYLE_TIME_COLON       0x1000
+#define COMMODITY_STYLE_NO_MIGRATE       0x2000
 
     string                symbol;
     optional<std::size_t> graph_index;

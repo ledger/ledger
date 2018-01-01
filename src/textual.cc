@@ -1128,6 +1128,7 @@ void instance_t::commodity_format_directive(commodity_t&, string format)
   trim(format);
   amount_t amt;
   amt.parse(format);
+  amt.commodity().add_flags(COMMODITY_STYLE_NO_MIGRATE);
   VERIFY(amt.valid());
 }
 
