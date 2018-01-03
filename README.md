@@ -103,10 +103,6 @@ You can use [Homebrew] or [MacPorts] to install Ledger easily on OS X.
 You can see the parameters you can pass while installing with brew by the command `brew options ledger`. To install ledger, simply type the following command:
 
     $ brew install ledger
-    
-If everything worked well, you should have ledger working now. If you want to install this with python bindings, you can use the following command:
-
-    $ brew install ledger --with-python
 
 If you to want to startup python, use the following command:
 
