@@ -459,12 +459,12 @@ public:
   (report_t, budget_format_,
    CTOR(report_t, budget_format_) {
     on(none,
-       "%(justify(scrub(get_at(display_total, 0)), 12, -1, true, color))"
-       " %(justify(-scrub(get_at(display_total, 1)), 12, "
-       "           12 + 1 + 12, true, color))"
+       "%(justify(scrub(get_at(display_total, 0)), int(amount_width), -1, true, color))"
+       " %(justify(-scrub(get_at(display_total, 1)), int(amount_width), "
+       "           int(amount_width) + 1 + int(amount_width), true, color))"
        " %(justify(scrub((get_at(display_total, 1) || 0) + "
-       "                 (get_at(display_total, 0) || 0)), 12, "
-       "           12 + 1 + 12 + 1 + 12, true, color))"
+       "                 (get_at(display_total, 0) || 0)), int(amount_width), "
+       "           int(amount_width) + 1 + int(amount_width) + 1 + int(amount_width), true, color))"
        " %(ansify_if("
        "   justify((get_at(display_total, 1) ? "
        "            (100% * quantity(scrub(get_at(display_total, 0)))) / "
