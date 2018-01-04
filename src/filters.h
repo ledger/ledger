@@ -565,9 +565,9 @@ public:
     last_display_total = value_t();
 
     temps.clear();
-    create_accounts();
-
     item_handler<post_t>::clear();
+
+    create_accounts();
   }
 };
 
@@ -627,9 +627,9 @@ public:
     last_total = value_t();
 
     temps.clear();
-    create_accounts();
-
     item_handler<post_t>::clear();
+
+    create_accounts();
   }
 };
 
