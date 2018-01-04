@@ -1,0 +1,26 @@
+D 1000.00 EUR
+
+2008/04/15 * Paid expenses back from cie.
+   Expenses:Cie-Reimbursements    2000 CAD @ 1.10 EUR
+   Assets:Checking
+
+2008/04/15 * Paid expenses back from cie.
+   Expenses:Cie-Reimbursements    2000 USD @ 1.10 EUR
+   Assets:Checking
+
+P 2008/04/20 00:00:00 CAD 1.20 EUR
+P 2008/04/20 00:00:00 USD 1.20 EUR
+
+test reg -V --group-by commodity
+CAD
+08-Apr-15 Paid expenses back .. Exp:Cie-Reimbursements  2200.00 EUR  2200.00 EUR
+08-Apr-20 Commodities revalued  <Revalued>               200.00 EUR  2400.00 EUR
+
+EUR
+08-Apr-15 Paid expenses back .. Assets:Checking        -2200.00 EUR -2200.00 EUR
+08-Apr-15 Paid expenses back .. Assets:Checking        -2200.00 EUR -4400.00 EUR
+
+USD
+08-Apr-15 Paid expenses back .. Exp:Cie-Reimbursements  2200.00 EUR  2200.00 EUR
+08-Apr-20 Commodities revalued  <Revalued>               200.00 EUR  2400.00 EUR
+end test
