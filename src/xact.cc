@@ -145,7 +145,7 @@ namespace {
         first = false;
       } else {
         unique_ptr<post_t> p(new post_t(null_post->account, amount.negated(),
-                                        ITEM_GENERATED | POST_CALCULATED));
+                                        null_post->flags() | ITEM_GENERATED | POST_CALCULATED));
         p->set_state(null_post->state());
         xact.add_post(p.release());
       }
