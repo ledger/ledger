@@ -116,6 +116,7 @@ public:
   bool                   fixed_metadata;
   bool                   was_loaded;
   bool                   force_checking;
+  bool                   check_cleared;
   bool                   check_payees;
   bool                   day_break;
   bool                   recursive_aliases;

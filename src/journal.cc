@@ -93,6 +93,7 @@ void journal_t::initialize()
   current_context   = NULL;
   was_loaded        = false;
   force_checking    = false;
+  check_cleared     = false;
   check_payees      = false;
   day_break         = false;
   checking_style    = CHECK_NORMAL;
@@ -152,8 +153,9 @@ account_t * journal_t::register_account(const string& name, post_t * post,
           fixed_accounts = true;
         result->add_flags(ACCOUNT_KNOWN);
       }
-      else if (! fixed_accounts && post->_state != item_t::UNCLEARED) {
-        result->add_flags(ACCOUNT_KNOWN);
+      else if (! fixed_accounts
+              && (post->_state != item_t::UNCLEARED && ! check_cleared)) {
+          result->add_flags(ACCOUNT_KNOWN);
       }
       else if (checking_style == CHECK_WARNING) {
         current_context->warning(_f("Unknown account '%1%'") % result->fullname());

@@ -115,6 +115,8 @@ std::size_t session_t::read_data(const string& master_account)
 
   if (HANDLED(explicit))
     journal->force_checking = true;
+  if (HANDLED(check_cleared))
+    journal->check_cleared = true;
   if (HANDLED(check_payees))
     journal->check_payees = true;
 
@@ -317,6 +319,7 @@ option_t<session_t> * session_t::lookup_option(const char * p)
     OPT_CH(price_exp_);
     break;
   case 'c':
+    OPT(check_cleared);
     OPT(check_payees);
     break;
   case 'd':
