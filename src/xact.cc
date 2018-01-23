@@ -696,11 +696,19 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
             pair.first.calc(bound_scope);
           }
           else if (! pair.first.calc(bound_scope).to_boolean()) {
-            if (pair.second == expr_t::EXPR_ASSERTION)
+            if (pair.second == expr_t::EXPR_ASSERTION) {
               throw_(parse_error,
                      _f("Transaction assertion failed: %1%") % pair.first);
-            else
+            }
+            else if (pair.second == expr_t::EXPR_DEBUG) {
+              std::cerr << (_f("transaction debug: %1% %2%")
+                            % pair.first
+                            % pair.first.calc(bound_scope).to_string())
+                        << std::endl;
+            }
+            else {
               context.warning(_f("Transaction check failed: %1%") % pair.first);
+            }
           }
         }
       }

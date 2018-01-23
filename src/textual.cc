@@ -188,6 +188,7 @@ namespace {
 
     void eval_directive(char * line);
     void assert_directive(char * line);
+    void debug_directive(char * line);
     void check_directive(char * line);
     void value_directive(char * line);
 
@@ -601,11 +602,13 @@ void instance_t::automated_xact_directive(char * line)
                 std::strncmp(p, "assert", 6) == 0 && std::isspace(p[6])) ||
                (remlen > 6 && *p == 'c' &&
                 std::strncmp(p, "check", 5) == 0 && std::isspace(p[5])) ||
+               (remlen > 6 && *p == 'd' &&
+                std::strncmp(p, "debug", 5) == 0 && std::isspace(p[5])) ||
                (remlen > 5 && *p == 'e' &&
                 ((std::strncmp(p, "expr", 4) == 0 && std::isspace(p[4])) ||
                  (std::strncmp(p, "eval", 4) == 0 && std::isspace(p[4]))))) {
         const char c = *p;
-        p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
+        p = skip_ws(&p[*p == 'a' ? 6 : ((*p == 'c' || *p == 'd') ? 5 : 4)]);
         if (! ae->check_exprs)
           ae->check_exprs = expr_t::check_expr_list();
         ae->check_exprs->push_back
@@ -614,7 +617,9 @@ void instance_t::automated_xact_directive(char * line)
                                    expr_t::EXPR_ASSERTION :
                                    (c == 'c' ?
                                     expr_t::EXPR_CHECK :
-                                    expr_t::EXPR_GENERAL)));
+                                    (c == 'd' ?
+                                     expr_t::EXPR_DEBUG :
+                                     expr_t::EXPR_GENERAL))));
       }
       else {
         reveal_context = false;
@@ -944,7 +949,7 @@ void instance_t::account_directive(char * line)
     else if (keyword == "default") {
       account_default_directive(account);
     }
-    else if (keyword == "assert" || keyword == "check") {
+    else if (keyword == "assert" || keyword == "check" || keyword == "debug") {
       keep_details_t keeper(true, true, true);
       expr_t         expr(string("account == \"") + account->fullname() + "\"");
       predicate_t    pred(expr.get_op(), keeper);
@@ -964,7 +969,9 @@ void instance_t::account_directive(char * line)
         (expr_t::check_expr_pair(expr_t(b),
                                  keyword == "assert" ?
                                  expr_t::EXPR_ASSERTION :
-                                 expr_t::EXPR_CHECK));
+                                 (keyword == "debug" ?
+                                  expr_t::EXPR_DEBUG :
+                                  expr_t::EXPR_CHECK)));
     }
     else if (keyword == "eval" || keyword == "expr") {
       // jww (2012-02-27): Make account into symbol scopes so that this
@@ -1155,13 +1162,15 @@ void instance_t::tag_directive(char * line)
 
     char * b = next_element(q);
     string keyword(q);
-    if (keyword == "assert" || keyword == "check") {
+    if (keyword == "assert" || keyword == "check" || keyword == "debug") {
       context.journal->tag_check_exprs.insert
         (tag_check_exprs_map::value_type
          (string(p), expr_t::check_expr_pair(expr_t(b),
                                              keyword == "assert" ?
                                              expr_t::EXPR_ASSERTION :
-                                             expr_t::EXPR_CHECK)));
+                                             (keyword == "debug" ?
+                                              expr_t::EXPR_DEBUG :
+                                              expr_t::EXPR_CHECK))));
     }
   }
 }
@@ -1177,6 +1186,13 @@ void instance_t::assert_directive(char * line)
   expr_t expr(line);
   if (! expr.calc(*context.scope).to_boolean())
     throw_(parse_error, _f("Assertion failed: %1%") % line);
+}
+
+void instance_t::debug_directive(char * line)
+{
+  expr_t expr(line);
+  std::cerr << (_f("debug: %1% %2%")
+                % line % expr.calc(*context.scope).to_string()) << std::endl;
 }
 
 void instance_t::check_directive(char * line)
@@ -1330,7 +1346,11 @@ bool instance_t::general_directive(char * line)
     break;
 
   case 'd':
-    if (std::strcmp(p, "def") == 0 || std::strcmp(p, "define") == 0) {
+    if (std::strcmp(p, "debug") == 0) {
+      debug_directive(arg);
+      return true;
+    }
+    else if (std::strcmp(p, "def") == 0 || std::strcmp(p, "define") == 0) {
       eval_directive(arg);
       return true;
     }
@@ -1901,10 +1921,12 @@ xact_t * instance_t::parse_xact(char *          line,
               std::strncmp(p, "assert", 6) == 0 && std::isspace(p[6])) ||
              (remlen > 6 && *p == 'c' &&
               std::strncmp(p, "check", 5) == 0 && std::isspace(p[5])) ||
+             (remlen > 6 && *p == 'd' &&
+              std::strncmp(p, "debug", 5) == 0 && std::isspace(p[5])) ||
              (remlen > 5 && *p == 'e' &&
               std::strncmp(p, "expr", 4) == 0 && std::isspace(p[4]))) {
       const char c = *p;
-      p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
+      p = skip_ws(&p[*p == 'a' ? 6 : ((*p == 'c' || *p == 'd') ? 5 : 4)]);
       expr_t expr(p);
       bind_scope_t bound_scope(*context.scope, *item);
       if (c == 'e') {

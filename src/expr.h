@@ -61,7 +61,8 @@ public:
   enum check_expr_kind_t {
     EXPR_GENERAL,
     EXPR_ASSERTION,
-    EXPR_CHECK
+    EXPR_CHECK,
+    EXPR_DEBUG
   };
 
   typedef std::pair<expr_t, check_expr_kind_t> check_expr_pair;
