@@ -135,6 +135,11 @@ namespace {
     return journal.find_account(name, auto_create);
   }
 
+  account_t * py_register_account(journal_t& journal, const string& name, post_t* post)
+  {
+    return journal.register_account(name, post, journal.master);
+  }
+
 #if 0
   std::size_t py_read(journal_t& journal, const string& pathname)
   {
@@ -283,6 +288,10 @@ void export_journal()
          return_internal_reference<1,
              with_custodian_and_ward_postcall<1, 0> >())
     .def("find_account_re", &journal_t::find_account_re,
+         return_internal_reference<1,
+             with_custodian_and_ward_postcall<1, 0> >())
+
+    .def("register_account", py_register_account,
          return_internal_reference<1,
              with_custodian_and_ward_postcall<1, 0> >())
 
