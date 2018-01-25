@@ -633,18 +633,15 @@ value_t report_t::fn_trim(call_scope_t& args)
   std::strcpy(buf.get(), temp.c_str());
 
   const char * p = buf.get();
-  while (*p && std::isspace(*p))
+  const char * e = buf.get() + temp.length() - 1;
+
+  while (p <= e && std::isspace(*p))
     p++;
 
-  const char * e = buf.get() + temp.length() - 1;
   while (e > p && std::isspace(*e))
     e--;
 
-  if (e == p) {
-    return string_value(empty_string);
-  }
-  else if (e < p) {
-    assert(false);
+  if (p > e) {
     return string_value(empty_string);
   }
   else {
