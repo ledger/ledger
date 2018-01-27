@@ -282,8 +282,23 @@ void format_accounts::operator()(account_t& account)
 void report_accounts::flush()
 {
   std::ostream& out(report.output_stream);
+  format_t      prepend_format;
+  std::size_t   prepend_width;
+
+  if (report.HANDLED(prepend_format_)) {
+    prepend_format.parse_format(report.HANDLER(prepend_format_).str());
+    prepend_width = report.HANDLED(prepend_width_)
+      ? lexical_cast<std::size_t>(report.HANDLER(prepend_width_).str())
+      : 0;
+  }
 
   foreach (accounts_pair& entry, accounts) {
+    if (prepend_format) {
+      bind_scope_t bound_scope(report, *entry.first);
+      out.width(static_cast<std::streamsize>(prepend_width));
+      out << prepend_format(bound_scope);
+    }
+
     if (report.HANDLED(count))
       out << entry.second << ' ';
     out << *entry.first << '\n';

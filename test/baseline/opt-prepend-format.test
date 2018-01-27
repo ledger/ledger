@@ -15,3 +15,8 @@ VMMXX07-Feb-02 RD VMMXX              As:Inves:Vanguar:VMMXX  0.350 VMMXX  0.350 
 VMMXX                                In:Divid:Vanguar:VMMXX       $-0.35       $-0.35
                                                                      0.350 VMMXX
 end test
+
+test accounts --prepend-format "%(account_base) "
+VMMXX Assets:Investments:Vanguard:VMMXX
+VMMXX Income:Dividends:Vanguard:VMMXX
+end test
