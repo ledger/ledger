@@ -1,0 +1,33 @@
+2009-01-01 * Jan 09
+    A               100.00 EUR
+    B
+
+test reg --format '%(trim(""))\n'
+
+
+end test
+
+test reg --format '%(trim("a"))\n'
+a
+a
+end test
+
+test reg --format '%(trim(" a"))\n'
+a
+a
+end test
+
+test reg --format '%(trim("a "))\n'
+a
+a
+end test
+
+test reg --format '%(trim(" a "))\n'
+a
+a
+end test
+
+test reg --format '%(trim(" aa "))\n'
+aa
+aa
+end test
