@@ -1,9 +1,9 @@
+[![Join the chat at https://gitter.im/use-package/Lobby](https://badges.gitter.im/use-package/Lobby.svg)](https://gitter.im/use-package/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status master](https://img.shields.io/travis/ledger/ledger/master.svg?label=master&style=flat)](https://travis-ci.org/ledger/ledger)
 [![Build Status next](https://img.shields.io/travis/ledger/ledger/next.svg?label=next&style=flat)](https://travis-ci.org/ledger/ledger)
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg?style=flat)](https://github.com/ledger/ledger/pulse/monthly)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](http://opensource.org/licenses/BSD-3-Clause)
 [![GitHub release](https://img.shields.io/github/release/ledger/ledger.svg?style=flat)](https://github.com/ledger/ledger/releases)
-
 
 # Ledger: Command-Line Accounting
 
