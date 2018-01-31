@@ -12,11 +12,7 @@ import optparse
 import os
 import re
 import shutil
-import string
 import sys
-import time
-import tempfile
-import datetime
 
 try:
     import hashlib
