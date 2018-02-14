@@ -69,7 +69,7 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler,
   if (report.budget_flags != BUDGET_NO_BUDGET) {
     budget_posts * budget_handler =
       new budget_posts(handler, report.terminus.date(), report.budget_flags);
-    budget_handler->add_period_xacts(report.session.journal->period_xacts);
+    budget_handler->add_budgets(report.session.journal->period_xacts);
     handler.reset(budget_handler);
 
     // Apply this before the budget handler, so that only matching posts are

@@ -1243,6 +1243,15 @@ void generate_posts::add_post(const date_interval_t& period, post_t& post)
   pending_posts.push_back(pending_posts_pair(period, &post));
 }
 
+void budget_posts::add_budgets(period_xacts_list& period_xacts)
+{
+  foreach (period_xact_t * xact, period_xacts)
+    foreach (post_t * post, xact->posts) {
+      add_post(xact->period, *post);
+      budgeted_accounts.insert(post->reported_account());
+    }
+}
+
 void budget_posts::report_budget_items(const date_t& date)
 {
   if (pending_posts.size() == 0)
@@ -1321,18 +1330,20 @@ void budget_posts::report_budget_items(const date_t& date)
 void budget_posts::operator()(post_t& post)
 {
   bool post_in_budget = false;
-
-  foreach (pending_posts_list::value_type& pair, pending_posts) {
-    for (account_t * acct = post.reported_account();
-         acct;
-         acct = acct->parent) {
-      if (acct == (*pair.second).reported_account()) {
-        post_in_budget = true;
-        // Report the post as if it had occurred in the parent account.
-        if (post.reported_account() != acct)
-          post.set_reported_account(acct);
-        goto handle;
-      }
+  DEBUG("budget.generate", "in operator");
+  DEBUG("budget.generate", "budgeted accounts" << budgeted_accounts.size());
+  DEBUG("budget.generate", "pending posts " << pending_posts.size());
+  DEBUG("budget.generate", "post account " << post.reported_account()->fullname());
+  DEBUG("budget.generate", "amount" << post.amount);
+  for (account_t * acct = post.reported_account();
+       acct;
+       acct = acct->parent) {
+    if (budgeted_accounts.count(acct) > 0) {
+      post_in_budget = true;
+      // Report the post as if it had occurred in the parent account.
+      if (post.reported_account() != acct)
+        post.set_reported_account(acct);
+      goto handle;
     }
   }
 
@@ -1341,6 +1352,11 @@ void budget_posts::operator()(post_t& post)
     report_budget_items(post.date());
     item_handler<post_t>::operator()(post);
   }
+  // if I just make this else, it works for what I want but it breaks the
+  // --unbudgeted flag
+  // so something must be wrong in the above case computing post_in_budget
+  // we delete stuff from pending_posts, that has to be it
+  // but just keeping everything in pending_posts gives me date interval errors
   else if (! post_in_budget && flags & BUDGET_UNBUDGETED) {
     item_handler<post_t>::operator()(post);
   }

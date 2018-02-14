@@ -955,6 +955,8 @@ class budget_posts : public generate_posts
   uint_least8_t flags;
   date_t        terminus;
 
+  std::set<account_t *> budgeted_accounts;
+
   budget_posts();
 
 public:
@@ -969,6 +971,7 @@ public:
   }
 
   void report_budget_items(const date_t& date);
+  void add_budgets(period_xacts_list& period_xacts);
 
   virtual void flush();
   virtual void operator()(post_t& post);
