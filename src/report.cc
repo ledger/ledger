@@ -841,6 +841,13 @@ value_t report_t::fn_commodity(call_scope_t& args)
   return string_value(args.get<amount_t>(0).commodity().symbol());
 }
 
+value_t report_t::fn_clear_commodity(call_scope_t& args)
+{
+  amount_t amt(args.get<amount_t>(0));
+  amt.clear_commodity();
+  return amt;
+}
+
 value_t report_t::fn_nail_down(call_scope_t& args)
 {
   value_t arg0(args[0]);
@@ -1384,6 +1391,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return MAKE_FUNCTOR(report_t::fn_commodity);
       else if (is_eq(p, "ceiling"))
         return MAKE_FUNCTOR(report_t::fn_ceiling);
+      else if (is_eq(p, "clear_commodity"))
+        return MAKE_FUNCTOR(report_t::fn_clear_commodity);
       break;
 
     case 'd':
