@@ -75,9 +75,8 @@ mask_t& mask_t::assign_glob(const string& pat)
       if (i + 1 < len) {
         re_pat += pat[++i];
         break;
-      } else {
-        // fallthrough...
       }
+      // fallthrough...
     default:
       re_pat += pat[i];
       break;

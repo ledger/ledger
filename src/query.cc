@@ -155,6 +155,7 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context)
       case ')':
         if (! consume_next && tok_context == token_t::TOK_EXPR)
           goto test_ident;
+        // fall through...
       case '(':
       case '&':
       case '|':
