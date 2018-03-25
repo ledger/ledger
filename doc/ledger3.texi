@@ -2436,7 +2436,7 @@ The posting will have a cost of $400.
 @item end
 @findex end
 @c instance_t::end_directive in textual.cc
-Closes block commands like @code{tag} or @code{comment}.
+Closes block commands like @code{apply} or @code{comment}.
 
 @item expr
 @findex expr
