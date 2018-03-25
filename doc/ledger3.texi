@@ -9218,7 +9218,7 @@ looking at its @code{xact} member:
 last_xact = None
 for post in ledger.read_journal("sample.dat").query(""):
     if post.xact != last_xact:
-        for post in post.xact.posts:
+        for post in post.xact.posts():
             print "Transferring %s to/from %s" % (post.amount,
             post.account)
         last_xact = post.xact
