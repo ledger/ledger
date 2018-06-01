@@ -2255,6 +2255,41 @@ Would result in all postings going into
 @samp{Personal:Expenses:Groceries} and @samp{Personal:Assets:Checking}
 until an @samp{end apply account} directive was found.
 
+@item apply fixed
+@findex fixed
+@cindex fixated prices
+@c instance_t::fixed_directive in textual.cc
+
+A fixed block is used to set fixated prices (@pxref{Fixated prices and
+costs}) for a series of transactions.  It's purely a typing saver, for
+use when entering many transactions with fixated prices.
+
+Thus, the following:
+
+@smallexample @c input:validate
+apply fixed CAD $0.90
+2012-04-10 Lunch in Canada
+    Assets:Wallet            -15.50 CAD
+    Expenses:Food            15.50 CAD
+
+2012-04-11 Second day Dinner in Canada
+    Assets:Wallet            -25.75 CAD
+    Expenses:Food            25.75 CAD
+end apply fixed
+@end smallexample
+
+is equivalent to this:
+
+@smallexample @c input:validate
+2012-04-10 Lunch in Canada
+    Assets:Wallet            -15.50 CAD @{=$0.90@}
+    Expenses:Food            15.50 CAD  @{=$0.90@}
+
+2012-04-11 Second day Dinner in Canada
+    Assets:Wallet            -25.75 CAD  @{=$0.90@}
+    Expenses:Food            25.75 CAD   @{=$0.90@}
+@end smallexample
+
 @item alias
 @findex alias
 @cindex account, alias
@@ -2441,49 +2476,6 @@ Closes block commands like @code{apply} or @code{comment}.
 @item expr
 @findex expr
 @c instance_t::expr_directive in textual.cc
-
-@item fixed
-@findex fixed
-@cindex fixated prices
-@c instance_t::fixed_directive in textual.cc
-
-A fixed block is used to set fixated prices (@pxref{Fixated prices and
-costs}) for a series of transactions.  It's purely a typing saver, for
-use when entering many transactions with fixated prices.
-
-Thus, the following:
-
-@smallexample @c input:validate
-fixed CAD $0.90
-2012-04-10 Lunch in Canada
-    Assets:Wallet            -15.50 CAD
-    Expenses:Food            15.50 CAD
-
-2012-04-11 Second day Dinner in Canada
-    Assets:Wallet            -25.75 CAD
-    Expenses:Food            25.75 CAD
-endfixed CAD
-@end smallexample
-
-is equivalent to this:
-
-@smallexample @c input:validate
-2012-04-10 Lunch in Canada
-    Assets:Wallet            -15.50 CAD @{=$0.90@}
-    Expenses:Food            15.50 CAD  @{=$0.90@}
-
-2012-04-11 Second day Dinner in Canada
-    Assets:Wallet            -25.75 CAD  @{=$0.90@}
-    Expenses:Food            25.75 CAD   @{=$0.90@}
-@end smallexample
-
-Note that ending a @code{fixed} is done differently than other
-directives, as @code{fixed} is closed with an @code{endfixed} (i.e.,
-there is @emph{no space} between @code{end} and @code{fixed}).
-
-For the moment, users may wish to study
-@uref{https://github.com/ledger/ledger/issues/789, Bug Report 789}
-before using the @code{fixed} directive in production.
 
 @item include
 @findex include
