@@ -2482,7 +2482,7 @@ directives, as @code{fixed} is closed with an @code{endfixed} (i.e.,
 there is @emph{no space} between @code{end} and @code{fixed}).
 
 For the moment, users may wish to study
-@uref{http://bugs.ledger-cli.org/show_bug.cgi?id=789, Bug Report 789}
+@uref{https://github.com/ledger/ledger/issues/789, Bug Report 789}
 before using the @code{fixed} directive in production.
 
 @item include
