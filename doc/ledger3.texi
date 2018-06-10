@@ -2437,6 +2437,7 @@ commodity $
    note American Dollars
    format $1,000.00
    nomarket
+   alias USD
    default
 @end smallexample
 
@@ -2450,6 +2451,9 @@ provide the ``canonical'' representation.
 
 The @code{nomarket} sub-directive states that the commodity's price
 should never be auto-downloaded.
+
+The @code{alias} sub-directive states that any commodity matching this
+symbol is to use the commodity declared in this block.
 
 The @code{default} sub-directive marks this as the ``default'' commodity.
 
