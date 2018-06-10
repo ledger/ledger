@@ -2,7 +2,7 @@
 test period june 2008
 --- Period expression tokens ---
 TOK_A_MONTH: Jun
-TOK_A_YEAR: 2008
+TOK_INT: 2008
 END_REACHED: <EOF>
 
 --- Before stabilization ---
