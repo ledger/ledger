@@ -153,6 +153,11 @@ void export_post()
                               return_value_policy<return_by_value>()),
                   make_setter(&post_t::cost,
                               return_value_policy<return_by_value>()))
+    .add_property("given_cost",
+                  make_getter(&post_t::given_cost,
+                              return_value_policy<return_by_value>()),
+                  make_setter(&post_t::given_cost,
+                              return_value_policy<return_by_value>()))
     .add_property("assigned_amount",
                   make_getter(&post_t::assigned_amount,
                               return_value_policy<return_by_value>()),
