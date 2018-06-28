@@ -2484,7 +2484,9 @@ Closes block commands like @code{apply} or @code{comment}.
 @item include
 @findex include
 @c instance_t::include_directive in textual.cc
-Include the stated file as if it were part of the current file.
+Include the stated file as if it were part of the current file.  The file
+name can contain a wildcard (@samp{*}) to refer to multiple files (e.g.
+@samp{bank/*.ledger}).
 
 @item payee
 @findex payee
