@@ -8159,6 +8159,19 @@ posting.
 A regular expression that matches against the transaction code (the
 text that occurs between parentheses before the payee).
 
+@item expr any(KEYWORD =~ /REGEX/)
+The @command{any} keyword is used to specify that at least one posting of
+the transaction must match the expression in brackets.  For example,
+@samp{ledger -f d reg expr "any(account =~ /Assets:/)"} can be used to
+display all transactions which involve at least one @samp{Assets:}
+account.
+
+@item expr all(KEYWORD =~ /REGEX/)
+The @command{all} keyword is used to specify that all postings of a
+transactions must match the expression in brackets.  For example,
+@samp{ledger -f d reg expr "all(account =~ /Assets:/)"} can be used to
+display all transactions where all accounts are @samp{Assets:}.
+
 @end table
 
 The @command{query} command can be used to see how Ledger interprets
