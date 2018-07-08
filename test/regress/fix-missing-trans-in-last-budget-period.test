@@ -1,0 +1,79 @@
+= ~ ^A
+    [Balance]                                                 1
+    [Budget:$account]                                         -1
+
+~ Monthly from 2014/01 to 2014/12/31
+  [Budget:A]    100.00 USD
+  [Balance]
+
+~ Monthly from 2014/01 to 2014/12/31
+  [Budget:Z]    100.00 USD
+  [Balance]
+
+2014/10/01  toto0
+	    [Budget:A:B]  0.01 USD
+	    [Balance]
+
+2014/11/01  toto1
+   A:B      51.00 USD
+   Cash
+
+2014/11/02  toto2
+   A:B      52.00 USD
+   Cash
+
+2014/11/03  toto3
+   A:B      53.00 USD
+   Cash
+
+2014/11/04  toto4
+   A:B      54.00 USD
+   Cash
+
+2014/12/08  toto5
+   A:B      55.00 USD
+   Cash
+
+2014/12/09  toto6
+   A:B      56.00 USD
+   Cash
+
+2014/12/10  toto7
+   A:B      57.00 USD
+   Cash
+
+2014/12/11  toto8
+   A:B      58.00 USD
+   Cash
+
+2014/12/12  toto9
+   A:B      59.00 USD
+   Cash
+
+2014/12/12  toto9
+   C      59.00 USD
+   Cash
+
+2015/01/12  toto10
+   A:B     59.00 USD
+   Cash
+
+test reg --budget -b 2014/10 -e 2015/02 --columns 80 --date-format "%F" reg ^Bu
+2014-10-01 Budget transaction   [Budget:A]              -100.00 USD  -100.00 USD
+2014-10-01 Budget transaction   [Budget:Z]              -100.00 USD  -200.00 USD
+2014-10-01 toto0                [Budget:A]                 0.01 USD  -199.99 USD
+2014-11-01 Budget transaction   [Budget:A]              -100.00 USD  -299.99 USD
+2014-11-01 Budget transaction   [Budget:Z]              -100.00 USD  -399.99 USD
+2014-11-01 toto1                [Budget:A]               -51.00 USD  -450.99 USD
+2014-11-02 toto2                [Budget:A]               -52.00 USD  -502.99 USD
+2014-11-03 toto3                [Budget:A]               -53.00 USD  -555.99 USD
+2014-11-04 toto4                [Budget:A]               -54.00 USD  -609.99 USD
+2014-12-01 Budget transaction   [Budget:A]              -100.00 USD  -709.99 USD
+2014-12-01 Budget transaction   [Budget:Z]              -100.00 USD  -809.99 USD
+2014-12-08 toto5                [Budget:A]               -55.00 USD  -864.99 USD
+2014-12-09 toto6                [Budget:A]               -56.00 USD  -920.99 USD
+2014-12-10 toto7                [Budget:A]               -57.00 USD  -977.99 USD
+2014-12-11 toto8                [Budget:A]               -58.00 USD -1035.99 USD
+2014-12-12 toto9                [Budget:A]               -59.00 USD -1094.99 USD
+2015-01-12 toto10               [Budget:A]               -59.00 USD -1153.99 USD
+end test

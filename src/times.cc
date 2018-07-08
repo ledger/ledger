@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -420,7 +420,6 @@ class date_parser_t
         TOK_DASH,
         TOK_DOT,
 
-        TOK_A_YEAR,
         TOK_A_MONTH,
         TOK_A_WDAY,
 
@@ -512,9 +511,6 @@ class date_parser_t
         case TOK_SLASH:     return "/";
         case TOK_DASH:      return "-";
         case TOK_DOT:       return ".";
-        case TOK_A_YEAR:
-          out << boost::get<date_specifier_t::year_type>(*value);
-          break;
         case TOK_A_MONTH:
           out << date_specifier_t::month_type
             (boost::get<date_time::months_of_year>(*value));
@@ -566,7 +562,6 @@ class date_parser_t
         case TOK_SLASH:     out << "TOK_SLASH"; break;
         case TOK_DASH:      out << "TOK_DASH"; break;
         case TOK_DOT:       out << "TOK_DOT"; break;
-        case TOK_A_YEAR:    out << "TOK_A_YEAR"; break;
         case TOK_A_MONTH:   out << "TOK_A_MONTH"; break;
         case TOK_A_WDAY:    out << "TOK_A_WDAY"; break;
         case TOK_AGO:       out << "TOK_AGO"; break;
@@ -727,7 +722,11 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
       when += gregorian::days(amount * adjust);
       break;
     default:
-      specifier.day = date_specifier_t::day_type(amount);
+      if (amount > 31) {
+        specifier.year = date_specifier_t::year_type(amount);
+      } else {
+        specifier.day = date_specifier_t::day_type(amount);
+      }
       break;
     }
 
@@ -832,16 +831,13 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
     break;
   }
 
-  case lexer_t::token_t::TOK_A_YEAR:
-    specifier.year = boost::get<date_specifier_t::year_type>(*tok.value);
-    break;
   case lexer_t::token_t::TOK_A_MONTH:
     specifier.month =
       date_specifier_t::month_type
         (boost::get<date_time::months_of_year>(*tok.value));
     tok = lexer.peek_token();
     switch (tok.kind) {
-    case lexer_t::token_t::TOK_A_YEAR:
+    case lexer_t::token_t::TOK_INT:
       specifier.year = boost::get<date_specifier_t::year_type>(*tok.value);
       break;
     case lexer_t::token_t::END_REACHED:
@@ -893,12 +889,6 @@ date_interval_t date_parser_t::parse()
       break;
 
     case lexer_t::token_t::TOK_INT:
-      if (! inclusion_specifier)
-        inclusion_specifier = date_specifier_t();
-      determine_when(tok, *inclusion_specifier);
-      break;
-
-    case lexer_t::token_t::TOK_A_YEAR:
       if (! inclusion_specifier)
         inclusion_specifier = date_specifier_t();
       determine_when(tok, *inclusion_specifier);
@@ -1612,13 +1602,8 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token()
 
   if (! term.empty()) {
     if (std::isdigit(term[0])) {
-      if (term.length() == 4)
-        return token_t(token_t::TOK_A_YEAR,
-                       token_t::content_t
-                       (lexical_cast<date_specifier_t::year_type>(term)));
-      else
-        return token_t(token_t::TOK_INT,
-                       token_t::content_t(lexical_cast<unsigned short>(term)));
+      return token_t(token_t::TOK_INT,
+                     token_t::content_t(lexical_cast<unsigned short>(term)));
     }
     else if (std::isalpha(term[0])) {
       to_lower(term);

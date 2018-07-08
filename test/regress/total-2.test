@@ -1,0 +1,30 @@
+; Test that calling total does not affect future calls to that function via a
+; stale cache entry for the totalled account, because of a change to an
+; descendant (Assets:Current:Unallocated) of that account (Assets:Current)
+
+2017-10-01 * Opening entry
+    Assets:Current:Unallocated              $2000.00
+    Equity:Opening Balances
+
+2017-10-02 * Initial savings
+    Assets:Current:Savings                  $1000.00
+    Assets:Current:Unallocated
+
+assert account("Assets:Current").total == $2000.00
+
+2017-10-03 * Balance
+    Assets:Current:Unallocated                 $1.00
+    Equity:Adjustments
+
+assert account("Assets:Current").total == $2001.00
+
+test bal
+            $2001.00  Assets:Current
+            $1000.00    Savings
+            $1001.00    Unallocated
+           $-2001.00  Equity
+              $-1.00    Adjustments
+           $-2000.00    Opening Balances
+--------------------
+                   0
+end test

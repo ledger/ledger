@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -103,11 +103,13 @@ namespace {
   void print_xact(report_t& report, std::ostream& out, xact_t& xact)
   {
     format_type_t          format_type = FMT_WRITTEN;
+    string                 format_str;
     optional<const char *> format;
 
     if (report.HANDLED(date_format_)) {
       format_type = FMT_CUSTOM;
-      format      = report.HANDLER(date_format_).str().c_str();
+      format_str  = report.HANDLER(date_format_).str();
+      format      = format_str.c_str();
     }
 
     std::ostringstream buf;

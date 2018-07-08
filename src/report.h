@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -175,6 +175,7 @@ public:
   value_t fn_truncated(call_scope_t& scope);
   value_t fn_floor(call_scope_t& scope);
   value_t fn_ceiling(call_scope_t& scope);
+  value_t fn_clear_commodity(call_scope_t& scope);
   value_t fn_round(call_scope_t& scope);
   value_t fn_roundto(call_scope_t& scope);
   value_t fn_unround(call_scope_t& scope);
@@ -459,12 +460,12 @@ public:
   (report_t, budget_format_,
    CTOR(report_t, budget_format_) {
     on(none,
-       "%(justify(scrub(get_at(display_total, 0)), 12, -1, true, color))"
-       " %(justify(-scrub(get_at(display_total, 1)), 12, "
-       "           12 + 1 + 12, true, color))"
-       " %(justify(scrub(get_at(display_total, 1) + "
-       "                 get_at(display_total, 0)), 12, "
-       "           12 + 1 + 12 + 1 + 12, true, color))"
+       "%(justify(scrub(get_at(display_total, 0)), int(amount_width), -1, true, color))"
+       " %(justify(-scrub(get_at(display_total, 1)), int(amount_width), "
+       "           int(amount_width) + 1 + int(amount_width), true, color))"
+       " %(justify(scrub((get_at(display_total, 1) || 0) + "
+       "                 (get_at(display_total, 0) || 0)), int(amount_width), "
+       "           int(amount_width) + 1 + int(amount_width) + 1 + int(amount_width), true, color))"
        " %(ansify_if("
        "   justify((get_at(display_total, 1) ? "
        "            (100% * quantity(scrub(get_at(display_total, 0)))) / "

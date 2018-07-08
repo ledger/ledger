@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -136,6 +136,19 @@ void account_t::add_post(post_t * post)
     xdata_->self_details.calculated   = false;
     xdata_->family_details.gathered   = false;
     xdata_->family_details.calculated = false;
+    if (! xdata_->family_details.total.is_null()) {
+      xdata_->family_details.total = ledger::value_t();
+    }
+    account_t *ancestor = this;
+    while (ancestor->parent) {
+      ancestor = ancestor->parent;
+      if (ancestor->has_xdata()) {
+        xdata_t &xdata = ancestor->xdata();
+        xdata.family_details.gathered   = false;
+        xdata.family_details.calculated = false;
+        xdata.family_details.total = ledger::value_t();
+      }
+    }
   }
 }
 
@@ -296,6 +309,20 @@ namespace {
     return long(&account);
   }
 
+  value_t get_depth_parent(account_t& account)
+  {
+    std::size_t depth = 0;
+    for (const account_t * acct = account.parent;
+         acct && acct->parent;
+         acct = acct->parent) {
+      std::size_t count = acct->children_with_flags(ACCOUNT_EXT_TO_DISPLAY);
+      assert(count > 0);
+      if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
+        depth++;
+    }
+    return long(depth);
+  }
+
   value_t get_depth_spacer(account_t& account)
   {
     std::size_t depth = 0;
@@ -412,6 +439,8 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind,
   case 'd':
     if (fn_name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_depth>);
+    else if (fn_name == "depth_parent")
+      return WRAP_FUNCTOR(get_wrapper<&get_depth_parent>);
     else if (fn_name == "depth_spacer")
       return WRAP_FUNCTOR(get_wrapper<&get_depth_spacer>);
     break;

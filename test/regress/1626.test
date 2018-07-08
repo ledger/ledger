@@ -1,0 +1,28 @@
+test period every 1000 years from 1 Sep 2011 to 30 May 2012 --now=2018-06-10
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 1000
+TOK_YEARS: years
+TOK_SINCE: since
+TOK_INT: 1
+TOK_A_MONTH: Sep
+TOK_INT: 2011
+TOK_UNTIL: until
+TOK_INT: 30
+TOK_A_MONTH: May
+TOK_INT: 2012
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from day 1 to day 30
+duration: 1000 years
+
+--- After stabilization ---
+   range: from day 1 to day 30
+   start: 18-Jan-01
+  finish: 18-Jan-30
+duration: 1000 years
+
+--- Sample dates in range (max. 20) ---
+ 1: 18-Jan-01 -- 18-Jan-29
+end test

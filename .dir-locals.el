@@ -4,7 +4,7 @@
 ((nil
   (tab-width . 2)
   (sentence-end-double-space . t)
-  (bug-reference-url-format . "http://bugs.ledger-cli.org/show_bug.cgi?id=%s"))
+  (bug-reference-url-format . "https://github.com/ledger/ledger/issues/%s"))
  (c-mode
   (c-file-style . "ledger")
   (c-style-alist

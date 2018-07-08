@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -563,6 +563,9 @@ void instance_t::automated_xact_directive(char * line)
     expr_t::ptr_op_t expr =
       query.parse_args(string_value(skip_ws(line + 1)).to_sequence(),
                        keeper, false, true);
+    if (!expr) {
+      throw parse_error(_("Expected predicate after '='"));
+    }
 
     unique_ptr<auto_xact_t> ae(new auto_xact_t(predicate_t(expr, keeper)));
     ae->pos           = position_t();
@@ -1125,6 +1128,7 @@ void instance_t::commodity_format_directive(commodity_t&, string format)
   trim(format);
   amount_t amt;
   amt.parse(format);
+  amt.commodity().add_flags(COMMODITY_STYLE_NO_MIGRATE);
   VERIFY(amt.valid());
 }
 

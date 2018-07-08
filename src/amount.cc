@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -1090,6 +1090,8 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
 
   bool no_more_commas  = false;
   bool no_more_periods = false;
+  bool no_migrate_style
+    = commodity().has_flags(COMMODITY_STYLE_NO_MIGRATE);
   bool decimal_comma_style
     = (commodity_t::decimal_comma_by_default ||
        commodity().has_flags(COMMODITY_STYLE_DECIMAL_COMMA));
@@ -1173,7 +1175,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     // is non-NULL.
     new_quantity->add_flags(BIGINT_KEEP_PREC);
   }
-  else if (commodity_) {
+  else if (commodity_ && ! no_migrate_style) {
     commodity().add_flags(comm_flags);
 
     if (new_quantity->prec > commodity().precision())

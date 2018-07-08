@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -145,7 +145,7 @@ namespace {
         first = false;
       } else {
         unique_ptr<post_t> p(new post_t(null_post->account, amount.negated(),
-                                        ITEM_GENERATED | POST_CALCULATED));
+                                        null_post->flags() | ITEM_GENERATED | POST_CALCULATED));
         p->set_state(null_post->state());
         xact.add_post(p.release());
       }
@@ -396,9 +396,9 @@ bool xact_base_t::finalize()
       }
 
       if (post->has_flags(POST_DEFERRED))
-          post->account->add_deferred_post(id(), post);
-        else
-          post->account->add_post(post);
+        post->account->add_deferred_post(id(), post);
+      else
+        post->account->add_post(post);
 
       post->xdata().add_flags(POST_EXT_VISITED);
       post->account->xdata().add_flags(ACCOUNT_EXT_VISITED);
@@ -805,6 +805,10 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
 
         xact.add_post(new_post);
         new_post->account->add_post(new_post);
+
+        // Add flags so this post updates the account balance
+        new_post->xdata().add_flags(POST_EXT_VISITED);
+        new_post->account->xdata().add_flags(ACCOUNT_EXT_VISITED);
 
         if (new_post->must_balance())
           needs_further_verification = true;

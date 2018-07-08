@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -633,18 +633,15 @@ value_t report_t::fn_trim(call_scope_t& args)
   std::strcpy(buf.get(), temp.c_str());
 
   const char * p = buf.get();
-  while (*p && std::isspace(*p))
+  const char * e = buf.get() + temp.length() - 1;
+
+  while (p <= e && std::isspace(*p))
     p++;
 
-  const char * e = buf.get() + temp.length() - 1;
   while (e > p && std::isspace(*e))
     e--;
 
-  if (e == p) {
-    return string_value(empty_string);
-  }
-  else if (e < p) {
-    assert(false);
+  if (p > e) {
     return string_value(empty_string);
   }
   else {
@@ -842,6 +839,13 @@ value_t report_t::fn_percent(call_scope_t& args)
 value_t report_t::fn_commodity(call_scope_t& args)
 {
   return string_value(args.get<amount_t>(0).commodity().symbol());
+}
+
+value_t report_t::fn_clear_commodity(call_scope_t& args)
+{
+  amount_t amt(args.get<amount_t>(0));
+  amt.clear_commodity();
+  return amt;
 }
 
 value_t report_t::fn_nail_down(call_scope_t& args)
@@ -1387,6 +1391,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return MAKE_FUNCTOR(report_t::fn_commodity);
       else if (is_eq(p, "ceiling"))
         return MAKE_FUNCTOR(report_t::fn_ceiling);
+      else if (is_eq(p, "clear_commodity"))
+        return MAKE_FUNCTOR(report_t::fn_clear_commodity);
       break;
 
     case 'd':

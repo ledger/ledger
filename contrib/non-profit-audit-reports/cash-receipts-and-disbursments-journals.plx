@@ -127,7 +127,7 @@ foreach my $typeData ({ name => 'disbursements', query => 'a<=0' },
     # I thought '--sort', 'd', '--sort-xact', 'a',  should
     # have worked below for a good sort.  Then I tried
     # rather than '--sort', "d,n,a", which didn't work either.
-    #  I opened a bug: http://bugs.ledger-cli.org/show_bug.cgi?id=901
+    #  I opened a bug: https://github.com/ledger/ledger/issues/901
 
     my @csvRegLedgerOpts = ('-f', $tempFile, '-V', '-F', $formatString, '-w', '--sort', 'd',
                             '-b', $beginDate, '-e', $endDate, 'reg');

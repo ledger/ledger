@@ -96,10 +96,10 @@ A: Actually, the real segfault is in libstdc++'s facet code.  It's being
 
 Q: Something else fails, or Ledger crashes on startup
 
-A: This, I am most interested in hearing about.  Please file a bug
-  at the Ledger Bugzilla, http://bugs.ledger-cli.org/.  The more
-  details you can provide, the better.  Also, if Ledger is crashing,
-  try running it under gdb like so:
+A: This, I am most interested in hearing about.  Please file a bug at the
+  Ledger Issue Tracker, https://github.com/ledger/ledger/issues.  The more
+  details you can provide, the better.  Also, if Ledger is crashing, try
+  running it under gdb like so:
 
     $ gdb ledger
     (gdb) run <ARGS TO LEDGER>

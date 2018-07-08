@@ -1,9 +1,9 @@
+[![Join the chat at https://gitter.im/use-package/Lobby](https://badges.gitter.im/use-package/Lobby.svg)](https://gitter.im/use-package/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status master](https://img.shields.io/travis/ledger/ledger/master.svg?label=master&style=flat)](https://travis-ci.org/ledger/ledger)
 [![Build Status next](https://img.shields.io/travis/ledger/ledger/next.svg?label=next&style=flat)](https://travis-ci.org/ledger/ledger)
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg?style=flat)](https://github.com/ledger/ledger/pulse/monthly)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](http://opensource.org/licenses/BSD-3-Clause)
 [![GitHub release](https://img.shields.io/github/release/ledger/ledger.svg?style=flat)](https://github.com/ledger/ledger/releases)
-
 
 # Ledger: Command-Line Accounting
 
@@ -103,10 +103,6 @@ You can use [Homebrew] or [MacPorts] to install Ledger easily on OS X.
 You can see the parameters you can pass while installing with brew by the command `brew options ledger`. To install ledger, simply type the following command:
 
     $ brew install ledger
-    
-If everything worked well, you should have ledger working now. If you want to install this with python bindings, you can use the following command:
-
-    $ brew install ledger --with-python
 
 If you to want to startup python, use the following command:
 
@@ -149,9 +145,9 @@ Or, for Ubuntu 12.04:
 Debian squeeze (6.0): the version of boost in squeeze is too old
 for ledger and unfortunately no backport is available at the moment.
 
-Debian 7 (wheezy), Debian 8 (jessie), Debian testing (stretch) and Debian
-unstable (sid) contain all components needed to build ledger.  You can
-install all required build dependencies using the following command:
+Debian 7 (wheezy), Debian 8 (jessie), Debian 9 (stretch), Debian testing
+and Debian unstable (sid) contain all components needed to build ledger.
+You can install all required build dependencies using the following command:
 
     $ sudo apt-get install build-essential cmake autopoint texinfo python-dev \
          zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \

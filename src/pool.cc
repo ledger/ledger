@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -261,6 +261,9 @@ commodity_pool_t::exchange(const amount_t&             amount,
 
   if (! cost.has_commodity())
     per_unit_cost.clear_commodity();
+
+  if (cost.has_annotation())
+    per_unit_cost = per_unit_cost.strip_annotations(keep_details_t());
 
   DEBUG("commodity.prices.add", "exchange: per-unit-cost = " << per_unit_cost);
 

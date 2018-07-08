@@ -68,7 +68,7 @@ end test
 
 test period --now=2010/11/01 2009
 --- Period expression tokens ---
-TOK_A_YEAR: 2009
+TOK_INT: 2009
 END_REACHED: <EOF>
 
 --- Before stabilization ---

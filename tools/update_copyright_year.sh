@@ -30,7 +30,7 @@ YEAR=${1:-$(date +%Y)}
 # is not generally installed
 GREP=${2:-egrep}
 
-${GREP} -Rl 'Copyright.*Wiegley' . \
+${GREP} -Rl 'Copyright.*Wiegley' $(git ls-files | cut -d / -f1 | uniq) \
   | ${GREP} -v "(test/garbage-input.dat|$(basename $0))" \
   | xargs sed -i '' -e "s/\(Copyright.*\)-20[0-9]\{2\}/\1-${YEAR}/"
 

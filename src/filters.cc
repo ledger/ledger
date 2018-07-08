@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2017, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -1245,18 +1245,33 @@ void generate_posts::add_post(const date_interval_t& period, post_t& post)
 
 void budget_posts::report_budget_items(const date_t& date)
 {
+  { // Cleanup pending items that finished before date
+    // We have to keep them until the last day they apply because operator() needs them to see if a
+    // posting is budgeted or not
+    std::list<pending_posts_list::iterator> posts_to_erase;
+    for (pending_posts_list::iterator i = pending_posts.begin(); i != pending_posts.end(); i++) {
+      pending_posts_list::value_type& pair(*i);
+      if (pair.first.finish && ! pair.first.start && pair.first.finish < date) {
+        posts_to_erase.push_back(i);
+      }
+    }
+    foreach (pending_posts_list::iterator& i, posts_to_erase)
+      pending_posts.erase(i);
+  }
+  
   if (pending_posts.size() == 0)
     return;
 
   bool reported;
   do {
-    std::list<pending_posts_list::iterator> posts_to_erase;
-
     reported = false;
     for (pending_posts_list::iterator i = pending_posts.begin();
          i != pending_posts.end();
          i++) {
       pending_posts_list::value_type& pair(*i);
+
+      if (pair.first.finish && ! pair.first.start)
+        continue;               // skip expired posts
 
       optional<date_t> begin = pair.first.start;
       if (! begin) {
@@ -1285,9 +1300,6 @@ void budget_posts::report_budget_items(const date_t& date)
         post_t& post = *pair.second;
 
         ++pair.first;
-        if (! pair.first.start)
-          posts_to_erase.push_back(i);
-
         DEBUG("budget.generate", "Reporting budget for "
               << post.reported_account()->fullname());
 
@@ -1312,9 +1324,6 @@ void budget_posts::report_budget_items(const date_t& date)
         reported = true;
       }
     }
-
-    foreach (pending_posts_list::iterator& i, posts_to_erase)
-      pending_posts.erase(i);
   } while (reported);
 }
 
