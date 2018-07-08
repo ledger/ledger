@@ -2912,7 +2912,7 @@ you a place to put those codes:
 
 A transaction can have a ``state'': cleared, pending, or uncleared.  The
 default is uncleared.  To mark a transaction cleared, put an asterisk
-@samp{*} before the payee, after the date or code:
+@samp{*} after the date, before the code or payee:
 
 @smallexample @c input:validate
 2012-03-10 * KFC
