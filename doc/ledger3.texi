@@ -672,7 +672,7 @@ $ ledger -f drewr3.dat cleared
         $ 200.00                   0                   Mortgage:Principal
        $ -243.60                   0                   Tithe
 ----------------    ----------------    ---------
-       $ -243.60                   0             
+       $ -243.60                   0
 @end smallexample
 
 @noindent
@@ -8736,7 +8736,7 @@ $ ledger -f expr.dat --format "%C\n" reg assets
 @c Note: The output needs a space character at the end
 @c       for this test to pass
 @smallexample @c output:C1CAAF3
-(C0D3) 
+(C0D3)
 @end smallexample
 
 @item P
