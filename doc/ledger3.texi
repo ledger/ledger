@@ -672,7 +672,7 @@ $ ledger -f drewr3.dat cleared
         $ 200.00                   0                   Mortgage:Principal
        $ -243.60                   0                   Tithe
 ----------------    ----------------    ---------
-       $ -243.60                   0             
+       $ -243.60                   0
 @end smallexample
 
 @noindent
@@ -2912,7 +2912,7 @@ you a place to put those codes:
 
 A transaction can have a ``state'': cleared, pending, or uncleared.  The
 default is uncleared.  To mark a transaction cleared, put an asterisk
-@samp{*} before the payee, after the date or code:
+@samp{*} after the date, before the code or payee:
 
 @smallexample @c input:validate
 2012-03-10 * KFC
@@ -8736,7 +8736,7 @@ $ ledger -f expr.dat --format "%C\n" reg assets
 @c Note: The output needs a space character at the end
 @c       for this test to pass
 @smallexample @c output:C1CAAF3
-(C0D3) 
+(C0D3)
 @end smallexample
 
 @item P
