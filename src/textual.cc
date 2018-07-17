@@ -1652,8 +1652,8 @@ post_t * instance_t::parse_post(char *          line,
 
       DEBUG("post.assign", "line " << context.linenum << ": "
             << "account balance = " << account_total);
-      DEBUG("post.assign",
-            "line " << context.linenum << ": " << "post amount = " << amt);
+      DEBUG("post.assign", "line " << context.linenum << ": "
+            << "post amount = " << amt << " (is_zero = " << amt.is_zero() << ")");
 
       balance_t diff = amt;
 
@@ -1688,6 +1688,21 @@ post_t * instance_t::parse_post(char *          line,
         }
       }
 
+      // If amt has a commodity, restrict balancing to that. Otherwise, it's the blanket '0' and
+      // check that all of them are zero.
+      if (amt.has_commodity()) {
+        DEBUG("textual.parse", "line " << context.linenum << ": "
+              << "Finding commodity " << amt.commodity() << " (" << amt << ") in balance " << diff);
+        optional<amount_t> wanted_commodity = diff.commodity_amount(amt.commodity());
+        if (!wanted_commodity) {
+          diff = amt - amt;  // this is '0' with the correct commodity.
+        } else {
+          diff = *wanted_commodity;
+        }
+        DEBUG("textual.parse", "line " << context.linenum << ": "
+              << "Diff is now " << diff);
+      }
+
       if (post->amount.is_null()) {
         // balance assignment
         if (! diff.is_zero()) {
@@ -1700,26 +1715,12 @@ post_t * instance_t::parse_post(char *          line,
       } else {
         // balance assertion
         diff -= post->amount;
-        // If amt has a commodity, restrict balancing to that. Otherwise, it's the blanket '0' and
-        // check that all of them are zero.
-        if (amt.has_commodity()) {
-          DEBUG("textual.parse", "line " << context.linenum << ": "
-                << "Finding commodity " << amt.commodity() << " (" << amt << ") in balance " << diff);
-          optional<amount_t> wanted_commodity = diff.commodity_amount(amt.commodity());
-          if (!wanted_commodity) {
-            diff = amt - amt;  // this is '0' with the correct commodity.
-          } else {
-            diff = *wanted_commodity;
-          }
-          DEBUG("textual.parse", "line " << context.linenum << ": "
-                << "Diff is now " << diff);
-        }
         if (! no_assertions && ! diff.is_zero()) {
           balance_t tot = -diff + amt;
           DEBUG("textual.parse", "Balance assertion: off by " << diff << " (expected to see " << tot << ")");
           throw_(parse_error,
                   _f("Balance assertion off by %1% (expected to see %2%)")
-                  % diff % tot);
+                  % diff.to_string() % tot.to_string());
         }
       }
 
