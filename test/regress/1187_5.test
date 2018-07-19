@@ -1,0 +1,36 @@
+2013/12/01 * Initial State
+    Crédit:Viseca:MasterCard P1                        -618.50 CHF
+    Crédit:Viseca:MasterCard P2                         -52.10 CHF
+    Equity:Opening Balances
+
+2013/12/15 * Buy Some Chocolate
+    Dépenses:Nourriture                                  19.00 EUR ; #1
+    Crédit:Viseca:MasterCard P1
+
+2013/12/15 * Buy Some Chocolate
+    Crédit:Viseca:MasterCard P1                          18.00 EUR ; #2
+    Recettes:Erreurs
+
+2013/12/23 * Facture Viseca
+    Crédit:Viseca:MasterCard P2                          52.10 CHF = 0 ; #3
+    Crédit:Viseca:MasterCard P1                         618.50 CHF = 0 CHF ; #4
+    Dépenses:Frais:Gestion Comptes                        1.50 CHF
+    Crédit:Viseca                                      -672.10 CHF
+
+2014/01/03 * Facture Viseca
+    Crédit:Viseca                                       672.10 CHF = 0
+    Actif:Comptes:CP courant
+
+test bal
+         -672.10 CHF  Actif:Comptes:CP courant
+           -1.00 EUR  Crédit:Viseca
+           -1.00 EUR    MasterCard P1
+            1.50 CHF
+           19.00 EUR  Dépenses
+            1.50 CHF    Frais:Gestion Comptes
+           19.00 EUR    Nourriture
+          670.60 CHF  Equity:Opening Balances
+          -18.00 EUR  Recettes:Erreurs
+--------------------
+                   0
+end test

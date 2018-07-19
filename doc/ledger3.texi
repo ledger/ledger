@@ -3230,6 +3230,45 @@ A balance assertion has this general form:
 This simply asserts that after subtracting $20.00 from Assets:Cash,
 that the resulting total matches $500.00.  If not, it is an error.
 
+The assertion has an effect only on the specified commodity. If an account has
+multiple commodities, then only the one asserted is verified:
+
+@smallexample
+2012-03-10 KFC New York
+    Expenses:Food                $20.00
+    Assets:Cash                 $-20.00 = $500.00
+
+2012-03-11 KFC Montreal
+    Expenses:Food                 15.00 CAD
+    Assets:Cash                  -15.00 CAD = $500.00
+@end smallexample
+
+In this case, the amount in USD of cash (which has not changed) is validated.
+Nothing is asserted about the current amount of Canadian dollars in @samp{Asset:Cash}.
+
+@subsubsection Special assertion value 0
+
+The only value that can be asserted without a commodity is @samp{0}.
+This results in a cross-commodities assertion, which makes it possible to
+assert that an account is totally empty.
+
+@smallexample
+2012-03-09 Fill Wallet
+    Revenue                      $20.00
+    Revenue                       15.00 CAD
+    Assets:Cash
+
+2012-03-10 KFC New York
+    Expenses:Food                $20.00
+    Assets:Cash                 $-20.00
+
+2012-03-11 KFC Montreal
+    Expenses:Food                 15.00 CAD
+    Assets:Cash                  -15.00 CAD = 0
+@end smallexample
+
+The last transaction will assert that we are out of cash of any sort.
+
 @node Balance assignments, Resetting a balance, Balance assertions, Balance verification
 @subsection Balance assignments
 
