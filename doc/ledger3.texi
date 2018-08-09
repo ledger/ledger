@@ -3547,17 +3547,17 @@ Plus, it comes with dangers.  This works fine:
 
 @smallexample @c input:validate
 2012-04-10 My Broker
-    Assets:Brokerage            10 AAPL @@ $50.00
+    Assets:Brokerage            10 AAPL @@@@ $50.00
     Assets:Brokerage:Cash      $-500.00
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{$50.00@} @@ $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} @@@@ $375.00
     Income:Capital Gains       $-125.00
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{$50.00@} @@ $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} @@@@ $375.00
     Income:Capital Gains       $-125.00
 @end smallexample
 
@@ -3566,17 +3566,17 @@ But this does not do what you might expect:
 
 @smallexample
 2012-04-10 My Broker
-    Assets:Brokerage            10 AAPL @@ $50.00
+    Assets:Brokerage            10 AAPL @@@@ $50.00
     Assets:Brokerage:Cash      $-500.00
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@ $375.00
+    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@@@ $375.00
     Income:Capital Gains       $-125.00
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@ $375.00
+    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@@@ $375.00
     Income:Capital Gains       $-125.00
 @end smallexample
 
@@ -3652,7 +3652,7 @@ expressions):
 @smallexample
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] @@ $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] @@@@ $375.00
     Income:Capital Gains       $-125.00
 @end smallexample
 
@@ -3669,7 +3669,7 @@ indicate a virtual cost:
 @smallexample
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] (Oh my!) @@ $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] (Oh my!) @@@@ $375.00
     Income:Capital Gains       $-125.00
 @end smallexample
 
