@@ -154,10 +154,11 @@ int main()
     //replace_invalid
     char invalid_sequence[] = "a\x80\xe0\xa0\xc0\xaf\xed\xa0\x80z";
     vector<char> replace_invalid_result;
-    replace_invalid (invalid_sequence, invalid_sequence + sizeof(invalid_sequence), replace_invalid_result.begin(), '?');
+    replace_invalid (invalid_sequence, invalid_sequence + sizeof(invalid_sequence), std::back_inserter(replace_invalid_result), '?');
     bvalid = is_valid(replace_invalid_result.begin(), replace_invalid_result.end());
     assert (bvalid);
-    const char* fixed_invalid_sequence = "a????z";
+    const char fixed_invalid_sequence[] = "a????z";
+    assert (sizeof(fixed_invalid_sequence) == replace_invalid_result.size());
     assert (std::equal(replace_invalid_result.begin(), replace_invalid_result.begin() + sizeof(fixed_invalid_sequence), fixed_invalid_sequence));
 
     // iterator
