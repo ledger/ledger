@@ -8137,7 +8137,8 @@ A regular expression that matches against a transaction's payee name.
 @item %/REGEX/
 @itemx expr has_tag(/REGEX/)
 @itemx expr has_tag('TAG')
-A regular expression that checks for the tags of a transaction.
+A regular expression (REGEX) or string (TAG) that checks for the tags of
+a transaction.
 
 @item tag(REGEX) =~ /REGEX/
 A regular expression that matches a transaction's tags against its values.
