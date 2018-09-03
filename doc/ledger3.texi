@@ -3547,7 +3547,7 @@ Plus, it comes with dangers.  This works fine:
 
 @smallexample @c input:validate
 2012-04-10 My Broker
-    Assets:Brokerage            10 AAPL @@@@ $50.00
+    Assets:Brokerage            10 AAPL @@ $50.00
     Assets:Brokerage:Cash      $-500.00
 
 2012-04-10 My Broker
@@ -3566,7 +3566,7 @@ But this does not do what you might expect:
 
 @smallexample
 2012-04-10 My Broker
-    Assets:Brokerage            10 AAPL @@@@ $50.00
+    Assets:Brokerage            10 AAPL @@ $50.00
     Assets:Brokerage:Cash      $-500.00
 
 2012-04-10 My Broker
