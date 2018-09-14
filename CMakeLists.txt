@@ -14,6 +14,7 @@ add_library(utf8::cpp ALIAS utf8cpp)
 if(WIN32 AND NOT CYGWIN)
     set(DEF_INSTALL_CMAKE_DIR CMake)
 else()
+    include(GNUInstallDirs) # define CMAKE_INSTALL_*
     set(DEF_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/utf8cpp)
 endif()
 
