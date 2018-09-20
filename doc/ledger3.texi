@@ -3194,9 +3194,9 @@ look ``harder'') rather than parentheses:
 @node Expression amounts, Balance verification, Virtual postings, Transactions
 @section Expression amounts
 
-An amount is usually a numerical figure with an (optional) commodity,
-but it can also be any value expression.  To indicate this, surround
-the amount expression with parentheses:
+An amount is a numerical figure with a commodity, but it can also be
+any value expression.  To indicate this, surround the amount
+expression with parentheses:
 
 @smallexample @c input:validate
 2012-03-10 * KFC
