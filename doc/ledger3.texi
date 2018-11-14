@@ -427,7 +427,7 @@ accounting problems.
 
 Once such tutorial, specifically designed for non-profit charities that seek
 to use Ledger, can be found at
-@url{https://k.sfconservancy.org/npo-ledger-cli} (with a copy on GitHub also
+@url{https://k.sfconservancy.org/NPO-Accounting/npo-ledger-cli} (with a copy on GitHub also
 available at @url{https://github.com/conservancy/npo-ledger-cli/}).  If
 you're looking for information about how to use Ledger's tagging system to
 handle invoicing, track expenses by program targets, and other such concepts,
