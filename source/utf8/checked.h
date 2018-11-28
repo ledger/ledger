@@ -107,7 +107,9 @@ namespace utf8
                         *out++ = *it;
                     break;
                 case internal::NOT_ENOUGH_ROOM:
-                    throw not_enough_room();
+                    out = utf8::append (replacement, out);
+                    start = end;
+                    break;
                 case internal::INVALID_LEAD:
                     out = utf8::append (replacement, out);
                     ++start;
