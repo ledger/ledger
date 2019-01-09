@@ -94,9 +94,9 @@ Dependency | Version
 [expat] | 2.0.1 _optional_
 [libxml2] | 2.7.2 _optional_
 
-### Mac OS X
+### macOS
 
-You can use [Homebrew] or [MacPorts] to install Ledger easily on OS X.
+You can use [Homebrew] or [MacPorts] to install Ledger easily on macOS.
 
 #### 1. Homebrew
 
@@ -111,7 +111,7 @@ If you to want to startup python, use the following command:
 
 #### 2. MacPorts
 
-If you build stuff using MacPorts on OS X, as I do, here is what you would
+If you build stuff using MacPorts on macOS, as I do, here is what you would
 run:
 
     $ sudo port install -f cmake python26 \
