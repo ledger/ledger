@@ -96,7 +96,7 @@ Dependency | Version
 
 ### Mac OS X
 
-You can use [Homebrew] or [MacPorts] to install Ledger easily on OS X. 
+You can use [Homebrew] or [MacPorts] to install Ledger easily on OS X.
 
 #### 1. Homebrew
 
@@ -163,7 +163,7 @@ footwork for you:
     # $HOME/local and build with 2 processes in parallel
     $ ./acprep update --boost-suffix=-mt --prefix=$HOME/local -j2
 
-Please read the contents of `CMakeFiles/CMakeOutput.log` and 
+Please read the contents of `CMakeFiles/CMakeOutput.log` and
 `CMakeFiles/CMakeError.log` if the configure step fails.  Also,
 see the `help` subcommand to `acprep`, which explains some of its many
 options.  It's pretty much the only command I run for configuring, building

@@ -154,7 +154,7 @@ features, please see the manual.
     2008/07/27 Starting fresh
         Assets:Checking          $750.00
         Equity:Opening Balances
-  
+
     2008/07/27 Starting fresh
         Assets:Checking      = $1,000.00
         Equity:Adjustments
@@ -164,7 +164,7 @@ features, please see the manual.
     2008/07/27 Starting fresh
         Assets:Checking          $750.00
         Equity:Opening Balances
-  
+
     2008/07/27 Starting fresh
         Assets:Checking          $250.00
         Equity:Adjustments
@@ -183,7 +183,7 @@ features, please see the manual.
     2008/07/24 Opening Balance
         Assets:Checking        = $250.00            ; we force set it
         Equity:Opening Balances
-  
+
     2008/07/24 Opening Balance
         Assets:Checking      = EC 250.00          ; we force set it again
         Equity:Opening Balances
@@ -195,7 +195,7 @@ features, please see the manual.
         Assets:Checking        = $250.00          ; we force set it again
         Assets:Checking        EC 100.00          ; and add some EC's
         Equity:Opening Balances
-  
+
     2008/07/24 Opening Balance
         Assets:Checking      = EC 250.00          ; we force set the EC's
         Equity:Opening Balances
@@ -213,15 +213,15 @@ features, please see the manual.
     2008/07/24 Opening Balance
         Assets:Checking        = $100.00
         Equity:Opening Balances
-  
+
     2008/07/30 We spend money, with a known balance afterward
         Expenses:Food             $20.00
         Assets:Checking         = $80.00
-  
+
     2008/07/30 Again we spend money, but this time with all the info
         Expenses:Food             $20.00
         Assets:Checking          $-20.00 = $60.00
-  
+
     2008/07/30 This entry yield an 'unbalanced' error
         Expenses:Food             $20.00
         Assets:Checking          $-20.00 = $30.00

@@ -1384,10 +1384,10 @@ account:
     (Funds:School)                   $-100.00
 @end smallexample
 
-The use of round brackets creates a virtual posting without ensuring 
-a balance to zero. When reports are generated, by default they'll 
-appear in terms of the funds. In this case, you will likely want to 
-mask out your @samp{Assets} account, because otherwise the balance 
+The use of round brackets creates a virtual posting without ensuring
+a balance to zero. When reports are generated, by default they'll
+appear in terms of the funds. In this case, you will likely want to
+mask out your @samp{Assets} account, because otherwise the balance
 won't make much sense:
 
 @smallexample @c command:396F24E

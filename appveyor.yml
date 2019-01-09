@@ -46,5 +46,5 @@ artifacts:
 
 test_script:
 - C:\msys64\usr\bin\bash -lc "export MINGW_PREFIX=C:/msys64/mingw32/ CTEST_OUTPUT_ON_FAILURE=1
-  PATH=/mingw32/bin:$PATH && cd $APPVEYOR_BUILD_FOLDER && 
+  PATH=/mingw32/bin:$PATH && cd $APPVEYOR_BUILD_FOLDER &&
   make test || echo Errors from tests were ignored"
