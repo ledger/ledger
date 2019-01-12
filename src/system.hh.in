@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -151,10 +151,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 #endif
 #if defined(HAVE_GETPWUID) || defined(HAVE_GETPWNAM)
 #include <pwd.h>
-#endif
-
-#ifdef HAVE_IOCTL
-#include <sys/ioctl.h>
 #endif
 
 #if HAVE_UNIX_PIPES
