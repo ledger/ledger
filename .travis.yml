@@ -100,7 +100,7 @@ before_script:
   - make
 
 script:
-  - ctest --output-on-failure
+  - ctest --verbose
   - PYTHONPATH=. python python/demo.py
 
 after_script:
