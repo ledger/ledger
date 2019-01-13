@@ -282,6 +282,10 @@ void instance_t::parse()
 
       std::cerr << _("Error: ") << err.what() << std::endl;
       context.errors++;
+      if (! current_context.empty())
+          context.last = current_context + "\n" + err.what();
+      else
+          context.last = err.what();
     }
   }
 
@@ -1644,29 +1648,30 @@ post_t * instance_t::parse_post(char *          line,
       }
 
       DEBUG("textual.parse", "line " << context.linenum << ": "
-            << "POST assign: parsed amt = " << *post->assigned_amount);
+            << "POST assign: parsed balance amount = " << *post->assigned_amount);
 
-      amount_t& amt(*post->assigned_amount);
+      const amount_t& amt(*post->assigned_amount);
       value_t account_total
         (post->account->amount().strip_annotations(keep_details_t()));
 
       DEBUG("post.assign", "line " << context.linenum << ": "
             << "account balance = " << account_total);
-      DEBUG("post.assign",
-            "line " << context.linenum << ": " << "post amount = " << amt);
+      DEBUG("post.assign", "line " << context.linenum << ": "
+            << "post amount = " << amt << " (is_zero = " << amt.is_zero() << ")");
 
-      amount_t diff = amt;
+      balance_t diff = amt;
 
       switch (account_total.type()) {
       case value_t::AMOUNT:
-        if (account_total.as_amount().commodity_ptr() == diff.commodity_ptr())
-          diff -= account_total.as_amount();
+        diff -= account_total.as_amount();
+        DEBUG("textual.parse", "line " << context.linenum << ": "
+              << "Subtracting amount " << account_total.as_amount() << " from diff, yielding " << diff);
         break;
 
       case value_t::BALANCE:
-        if (optional<amount_t> comm_bal =
-            account_total.as_balance().commodity_amount(amt.commodity()))
-          diff -= *comm_bal;
+        diff -= account_total.as_balance();
+        DEBUG("textual.parse", "line " << context.linenum << ": "
+              << "Subtracting balance " << account_total.as_balance() << " from diff, yielding " << diff);
         break;
 
       default:
@@ -1680,18 +1685,34 @@ post_t * instance_t::parse_post(char *          line,
 
       // Subtract amounts from previous posts to this account in the xact.
       for (post_t* p : xact->posts) {
-        if (p->account == post->account &&
-            p->amount.commodity_ptr() == diff.commodity_ptr()) {
+        if (p->account == post->account) {
           diff -= p->amount;
           DEBUG("textual.parse", "line " << context.linenum << ": "
-                << "Subtract " << p->amount << ", diff = " << diff);
+                << "Subtracting " << p->amount << ", diff = " << diff);
         }
+      }
+
+      // If amt has a commodity, restrict balancing to that. Otherwise, it's the blanket '0' and
+      // check that all of them are zero.
+      if (amt.has_commodity()) {
+        DEBUG("textual.parse", "line " << context.linenum << ": "
+              << "Finding commodity " << amt.commodity() << " (" << amt << ") in balance " << diff);
+        optional<amount_t> wanted_commodity = diff.commodity_amount(amt.commodity());
+        if (!wanted_commodity) {
+          diff = amt - amt;  // this is '0' with the correct commodity.
+        } else {
+          diff = *wanted_commodity;
+        }
+        DEBUG("textual.parse", "line " << context.linenum << ": "
+              << "Diff is now " << diff);
       }
 
       if (post->amount.is_null()) {
         // balance assignment
         if (! diff.is_zero()) {
-          post->amount = diff;
+          // This will fail if there are more than 1 commodity in diff, which is wanted,
+          // as amount cannot store more than 1 commodity.
+          post->amount = diff.to_amount();
           DEBUG("textual.parse", "line " << context.linenum << ": "
                 << "Overwrite null posting");
         }
@@ -1699,10 +1720,11 @@ post_t * instance_t::parse_post(char *          line,
         // balance assertion
         diff -= post->amount;
         if (! no_assertions && ! diff.is_zero()) {
-          amount_t tot = amt - diff;
+          balance_t tot = -diff + amt;
+          DEBUG("textual.parse", "Balance assertion: off by " << diff << " (expected to see " << tot << ")");
           throw_(parse_error,
                   _f("Balance assertion off by %1% (expected to see %2%)")
-                  % diff % tot);
+                  % diff.to_string() % tot.to_string());
         }
       }
 
@@ -2012,7 +2034,8 @@ std::size_t journal_t::read_textual(parse_context_stack_t& context_stack)
   TRACE_FINISH(parsing_total, 1);
 
   if (context_stack.get_current().errors > 0)
-    throw error_count(context_stack.get_current().errors);
+    throw error_count(context_stack.get_current().errors,
+                      context_stack.get_current().last);
 
   return context_stack.get_current().count;
 }

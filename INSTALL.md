@@ -115,7 +115,7 @@ Q: Whenever I try to use the Python support, I get a segfault
 
 A: Make sure that the boost_python library you linked against is using the
   exact same Python as the Ledger executable.  In particular I see this
-  bug on OS X systems where boost_python is linked against the default
+  bug on macOS systems where boost_python is linked against the default
   Python, while Ledger is linked against the version provided by MacPorts.
   Or vice versa.
 

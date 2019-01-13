@@ -604,7 +604,9 @@ void amount_t::in_place_invert()
     throw_(amount_error, _("Cannot invert an uninitialized amount"));
 
   _dup();
-  mpq_inv(MP(quantity), MP(quantity));
+
+  if (sign() != 0)
+    mpq_inv(MP(quantity), MP(quantity));
 }
 
 void amount_t::in_place_round()

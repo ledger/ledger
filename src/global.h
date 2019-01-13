@@ -166,7 +166,7 @@ See LICENSE file included with the distribution for details and disclaimer.");
 
   OPTION_(global_scope_t, version, DO() { // -v
       parent->show_version_info(std::cout);
-      throw error_count(0);     // exit immediately
+      throw error_count(0, "");     // exit immediately
     });
 };
 

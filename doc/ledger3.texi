@@ -427,7 +427,7 @@ accounting problems.
 
 Once such tutorial, specifically designed for non-profit charities that seek
 to use Ledger, can be found at
-@url{https://k.sfconservancy.org/npo-ledger-cli} (with a copy on GitHub also
+@url{https://k.sfconservancy.org/NPO-Accounting/npo-ledger-cli} (with a copy on GitHub also
 available at @url{https://github.com/conservancy/npo-ledger-cli/}).  If
 you're looking for information about how to use Ledger's tagging system to
 handle invoicing, track expenses by program targets, and other such concepts,
@@ -1384,10 +1384,11 @@ account:
     (Funds:School)                   $-100.00
 @end smallexample
 
-When reports are generated, by default they'll appear in terms of the
-funds.  In this case, you will likely want to mask out your
-@samp{Assets} account, because otherwise the balance won't make much
-sense:
+The use of round brackets creates a virtual posting without ensuring
+a balance to zero. When reports are generated, by default they'll
+appear in terms of the funds. In this case, you will likely want to
+mask out your @samp{Assets} account, because otherwise the balance
+won't make much sense:
 
 @smallexample @c command:396F24E
 $ ledger --no-total bal not ^Assets
@@ -3103,6 +3104,13 @@ it appears as:
 This shows that they are all in the same transaction (which is why the
 date is not repeated), but they have different payees now.
 
+If using the @option{--strict} or @option{--pedantic} options, you must
+declare this tag to avoid warnings and errors.
+
+The payee name used with the tag is not enforced by the
+@option{--check-payees} option, due to a bug:
+@url{https://github.com/ledger/ledger/issues/556}.
+
 @node Metadata values, Typed metadata, Metadata tags, Metadata
 @subsection Metadata values
 
@@ -3187,9 +3195,9 @@ look ``harder'') rather than parentheses:
 @node Expression amounts, Balance verification, Virtual postings, Transactions
 @section Expression amounts
 
-An amount is usually a numerical figure with an (optional) commodity,
-but it can also be any value expression.  To indicate this, surround
-the amount expression with parentheses:
+An amount is a numerical figure with a commodity, but it can also be
+any value expression.  To indicate this, surround the amount
+expression with parentheses:
 
 @smallexample @c input:validate
 2012-03-10 * KFC
@@ -3229,6 +3237,45 @@ A balance assertion has this general form:
 
 This simply asserts that after subtracting $20.00 from Assets:Cash,
 that the resulting total matches $500.00.  If not, it is an error.
+
+The assertion has an effect only on the specified commodity. If an account has
+multiple commodities, then only the one asserted is verified:
+
+@smallexample
+2012-03-10 KFC New York
+    Expenses:Food                $20.00
+    Assets:Cash                 $-20.00 = $500.00
+
+2012-03-11 KFC Montreal
+    Expenses:Food                 15.00 CAD
+    Assets:Cash                  -15.00 CAD = $500.00
+@end smallexample
+
+In this case, the amount in USD of cash (which has not changed) is validated.
+Nothing is asserted about the current amount of Canadian dollars in @samp{Asset:Cash}.
+
+@subsubsection Special assertion value 0
+
+The only value that can be asserted without a commodity is @samp{0}.
+This results in a cross-commodities assertion, which makes it possible to
+assert that an account is totally empty.
+
+@smallexample
+2012-03-09 Fill Wallet
+    Revenue                      $20.00
+    Revenue                       15.00 CAD
+    Assets:Cash
+
+2012-03-10 KFC New York
+    Expenses:Food                $20.00
+    Assets:Cash                 $-20.00
+
+2012-03-11 KFC Montreal
+    Expenses:Food                 15.00 CAD
+    Assets:Cash                  -15.00 CAD = 0
+@end smallexample
+
+The last transaction will assert that we are out of cash of any sort.
 
 @node Balance assignments, Resetting a balance, Balance assertions, Balance verification
 @subsection Balance assignments
@@ -3506,12 +3553,12 @@ Plus, it comes with dangers.  This works fine:
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{$50.00@} @@ $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} @@@@ $375.00
     Income:Capital Gains       $-125.00
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{$50.00@} @@ $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} @@@@ $375.00
     Income:Capital Gains       $-125.00
 @end smallexample
 
@@ -3525,12 +3572,12 @@ But this does not do what you might expect:
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@ $375.00
+    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@@@ $375.00
     Income:Capital Gains       $-125.00
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@ $375.00
+    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@@@ $375.00
     Income:Capital Gains       $-125.00
 @end smallexample
 
@@ -3606,7 +3653,7 @@ expressions):
 @smallexample
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] @@ $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] @@@@ $375.00
     Income:Capital Gains       $-125.00
 @end smallexample
 
@@ -3623,7 +3670,7 @@ indicate a virtual cost:
 @smallexample
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] (Oh my!) @@ $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] (Oh my!) @@@@ $375.00
     Income:Capital Gains       $-125.00
 @end smallexample
 
@@ -8089,8 +8136,13 @@ posting.
 A regular expression that matches against a transaction's payee name.
 
 @item %/REGEX/
-@itemx tag(REGEX)
-A regular expression that matches against a transaction's tags.
+@itemx expr has_tag(/REGEX/)
+@itemx expr has_tag('TAG')
+A regular expression (REGEX) or string (TAG) that checks for the tags of
+a transaction.
+
+@item tag(REGEX) =~ /REGEX/
+A regular expression that matches a transaction's tags against its values.
 
 @item expr date =~ /REGEX/
 Useful for specifying a date in plain terms.  For example, you could say

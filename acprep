@@ -514,7 +514,7 @@ class PrepareBuild(CommandLineApp):
 
         if system == 'Darwin':
             if exists('/opt/local/bin/port'):
-                self.log.info('Looks like you are using MacPorts on OS X')
+                self.log.info('Looks like you are using MacPorts on macOS')
                 packages = [
                     'sudo', 'port', 'install', '-f',
                     'automake', 'autoconf', 'libtool',
@@ -531,7 +531,7 @@ class PrepareBuild(CommandLineApp):
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
             elif exists('/usr/local/bin/brew') or exists('/opt/local/bin/brew'):
-                self.log.info('Looks like you are using Homebrew on OS X')
+                self.log.info('Looks like you are using Homebrew on macOS')
                 packages = [
                     'brew', 'install',
                     'cmake', 'ninja',
@@ -540,7 +540,7 @@ class PrepareBuild(CommandLineApp):
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
             elif exists('/sw/bin/fink'):
-                self.log.info('Looks like you are using Fink on OS X')
+                self.log.info('Looks like you are using Fink on macOS')
                 self.log.error("I don't know the package names for Fink yet!")
                 sys.exit(1)
 
@@ -692,7 +692,7 @@ class PrepareBuild(CommandLineApp):
 
         elif system.startswith('CYGWIN'):
             self.log.info('Looks like you are using Cygwin')
-            self.log.info('Please install the dependencies manually.')        
+            self.log.info('Please install the dependencies manually.')
 
     #########################################################################
     # Determine the system's basic configuration                            #
@@ -1086,7 +1086,7 @@ being 'debug':
   debug             Debugging and --verify support (default)
   opt               Full optimizations
   gcov              Coverage analysis
-  gprof             Code profiling (for OS X, just use: 'shark -i ledger ...')
+  gprof             Code profiling (for macOS, just use: 'shark -i ledger ...')
 
 Next is the optional build PHASE, with 'config' being the default:
 

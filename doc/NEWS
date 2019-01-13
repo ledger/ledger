@@ -1,33 +1,66 @@
                              Ledger NEWS
 
-* 3.1.2
+* 3.1.2 (unreleased)
 
-- Increased maximum length for regex from 255 to 4095 (bug #981).
+- Increase maximum length for regex from 255 to 4095 (bug #981)
 
 - Initialize periods from from/since clause rather than earliest
-  transaction date (bug #1159).
+  transaction date (bug #1159)
 
-- Check balance assertions against the amount after the posting (bug #1147).
+- Check balance assertions against the amount after the posting (bug #1147)
 
-- Allow balance assertions with multiple posts to same account (bug #1187).
+- Allow balance assertions with multiple posts to same account (bug #1187)
 
-- Fixed period duration of "every X days" and similar statements (bug #370).
+- Fix period duration of "every X days" and similar statements (bug #370)
 
-- Option --force-color does not require --color anymore (bug #1109).
+- Make option --force-color not require --color anymore (bug #1109)
 
-- Added quoted_rfc4180 to allow CVS output with RFC 4180 compliant quoting.
+- Add quoted_rfc4180 to allow CVS output with RFC 4180 compliant quoting.
+
+- Add support for --prepend-format in accounts command
+
+- Fix handling of edge cases in trim function (bug #520)
+
+- Fix auto xact posts not getting applied to account total during
+  journal parse (bug #552)
+
+- Transfer null_post flags to generated postings
+
+- Fix segfault when using --market with --group-by
+
+- Use amount_width variable for budget report
+
+- Keep pending items in budgets until the last day they apply
+
+- Fixed bug where .total used in value expressions breaks totals
+
+- Make automated transactions work with assertions (bug #1127)
+
+- Improve parsing of date tokens (bug #1626)
+
+- Don't attempt to invert a value if it's already zero (bug #1703)
+
+- Do not parse user-specified init-file twice
 
 - Python: Removed double quotes from Unicode values.
 
+- Python: Ensure that parse errors produce useful RuntimeErrors
+
+- Python: Expose journal expand_aliases
+
+- Python: Expose journal_t::register_account
+
+- Improve bash completion
+
 - Emacs Lisp files have been moved to https://github.com/ledger/ledger-mode
 
-- Fixed build under MSYS (32-bit).
+- Fix build under MSYS (32-bit).
 
-- Fixed build under Cygwin.
+- Fix build under Cygwin.
 
 - Various documentation improvements
 
-* 3.1.1
+* 3.1.1 (2016-01-11)
 
 - Added a --no-revalued option
 
@@ -57,7 +90,7 @@
 
 - Add continuous integration (https://travis-ci.org/ledger/ledger)
 
-* 3.1
+* 3.1 (2014-10-05)
 
 - Changed the definition of cost basis to preserve the original cost basis
   when a gain or loss is made (if you bought 1 AAA for $10 and then sold
@@ -154,7 +187,7 @@ features, please see the manual.
     2008/07/27 Starting fresh
         Assets:Checking          $750.00
         Equity:Opening Balances
-  
+
     2008/07/27 Starting fresh
         Assets:Checking      = $1,000.00
         Equity:Adjustments
@@ -164,7 +197,7 @@ features, please see the manual.
     2008/07/27 Starting fresh
         Assets:Checking          $750.00
         Equity:Opening Balances
-  
+
     2008/07/27 Starting fresh
         Assets:Checking          $250.00
         Equity:Adjustments
@@ -183,7 +216,7 @@ features, please see the manual.
     2008/07/24 Opening Balance
         Assets:Checking        = $250.00            ; we force set it
         Equity:Opening Balances
-  
+
     2008/07/24 Opening Balance
         Assets:Checking      = EC 250.00          ; we force set it again
         Equity:Opening Balances
@@ -195,7 +228,7 @@ features, please see the manual.
         Assets:Checking        = $250.00          ; we force set it again
         Assets:Checking        EC 100.00          ; and add some EC's
         Equity:Opening Balances
-  
+
     2008/07/24 Opening Balance
         Assets:Checking      = EC 250.00          ; we force set the EC's
         Equity:Opening Balances
@@ -213,15 +246,15 @@ features, please see the manual.
     2008/07/24 Opening Balance
         Assets:Checking        = $100.00
         Equity:Opening Balances
-  
+
     2008/07/30 We spend money, with a known balance afterward
         Expenses:Food             $20.00
         Assets:Checking         = $80.00
-  
+
     2008/07/30 Again we spend money, but this time with all the info
         Expenses:Food             $20.00
         Assets:Checking          $-20.00 = $60.00
-  
+
     2008/07/30 This entry yield an 'unbalanced' error
         Expenses:Food             $20.00
         Assets:Checking          $-20.00 = $30.00

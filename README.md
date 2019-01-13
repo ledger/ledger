@@ -84,19 +84,9 @@ Dependency | Version (or greater)
 [lcov] | 1.6 _optional_, for `make report`, used with `/./acprep gcov`
 [sloccount] | 2.26 _optional_, for `make sloc`
 
-And for building the outdated `release/2.6.3` branch:
+### macOS
 
-Dependency | Version
------------|--------
-[GMP] | 4.2.2
-[pcre] | 7.7
-[libofx] | 0.8.3 _optional_
-[expat] | 2.0.1 _optional_
-[libxml2] | 2.7.2 _optional_
-
-### Mac OS X
-
-You can use [Homebrew] or [MacPorts] to install Ledger easily on OS X. 
+You can use [Homebrew] or [MacPorts] to install Ledger easily on macOS.
 
 #### 1. Homebrew
 
@@ -111,7 +101,7 @@ If you to want to startup python, use the following command:
 
 #### 2. MacPorts
 
-If you build stuff using MacPorts on OS X, as I do, here is what you would
+If you build stuff using MacPorts on macOS, as I do, here is what you would
 run:
 
     $ sudo port install -f cmake python26 \
@@ -142,12 +132,9 @@ Or, for Ubuntu 12.04:
 
 ### Debian
 
-Debian squeeze (6.0): the version of boost in squeeze is too old
-for ledger and unfortunately no backport is available at the moment.
-
-Debian 7 (wheezy), Debian 8 (jessie), Debian 9 (stretch), Debian testing
-and Debian unstable (sid) contain all components needed to build ledger.
-You can install all required build dependencies using the following command:
+Debian 9 (stretch), Debian 10 (buster), Debian testing and Debian unstable
+(sid) contain all components needed to build ledger.  You can install all
+required build dependencies using the following command:
 
     $ sudo apt-get install build-essential cmake autopoint texinfo python-dev \
          zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
@@ -166,7 +153,7 @@ footwork for you:
     # $HOME/local and build with 2 processes in parallel
     $ ./acprep update --boost-suffix=-mt --prefix=$HOME/local -j2
 
-Please read the contents of `CMakeFiles/CMakeOutput.log` and 
+Please read the contents of `CMakeFiles/CMakeOutput.log` and
 `CMakeFiles/CMakeError.log` if the configure step fails.  Also,
 see the `help` subcommand to `acprep`, which explains some of its many
 options.  It's pretty much the only command I run for configuring, building
