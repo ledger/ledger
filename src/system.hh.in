@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -66,8 +66,6 @@
 #cmakedefine HAVE_GETPWNAM
 #cmakedefine HAVE_IOCTL
 #cmakedefine HAVE_ISATTY
-
-#define HAVE_UNIX_PIPES          @HAVE_UNIX_PIPES@
 
 #define HAVE_BOOST_PYTHON        @HAVE_BOOST_PYTHON@
 #define HAVE_BOOST_REGEX_UNICODE @HAVE_BOOST_REGEX_UNICODE@
@@ -155,11 +153,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 
 #ifdef HAVE_IOCTL
 #include <sys/ioctl.h>
-#endif
-
-#if HAVE_UNIX_PIPES
-#include <sys/types.h>
-#include <sys/wait.h>
 #endif
 
 #include <cstddef> /* needed for gcc 4.9 */

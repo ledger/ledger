@@ -103,43 +103,6 @@ check_function_exists(getpwnam HAVE_GETPWNAM)
 check_function_exists(ioctl HAVE_IOCTL)
 check_function_exists(isatty HAVE_ISATTY)
 
-check_c_source_compiles("
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-
-int main() {
-  int status, pfd[2];
-  status = pipe(pfd);
-  status = fork();
-  if (status < 0) {
-    ;
-  } else if (status == 0) {
-    char *arg0 = NULL;
-
-    status = dup2(pfd[0], STDIN_FILENO);
-
-    close(pfd[1]);
-    close(pfd[0]);
-
-    execlp(\"\", arg0, (char *)0);
-    perror(\"execl\");
-    exit(1);
-  } else {
-    close(pfd[0]);
-  }
-  return 0;
-}" UNIX_PIPES_COMPILES)
-
-if (UNIX_PIPES_COMPILES)
-  set(HAVE_UNIX_PIPES 1)
-else()
-  set(HAVE_UNIX_PIPES 0)
-endif()
-
 cmake_push_check_state()
 
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
