@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,12 +30,14 @@
  */
 
 #include <system.hh>
-#include <math.h>
 
 #include "amount.h"
 #include "commodity.h"
 #include "annotate.h"
 #include "pool.h"
+
+#include <math.h>
+#include <mpfr.h>
 
 namespace ledger {
 
