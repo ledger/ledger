@@ -246,7 +246,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/python.hpp>
 
 #include <boost/python/detail/wrap_python.hpp>
-#include <datetime.h>
 #include <unicodeobject.h>
 
 #include <boost/python/module_init.hpp>

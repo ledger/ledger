@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -34,6 +34,8 @@
 #include "pyinterp.h"
 #include "pyutils.h"
 #include "times.h"
+
+#include <datetime.h>
 
 // jww (2007-05-04): Convert time duration objects to PyDelta
 
