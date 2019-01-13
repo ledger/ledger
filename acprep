@@ -62,17 +62,7 @@ class BoostInfo(object):
         if system == 'centos':
             return [ 'boost-devel' ]
 
-        elif system == 'ubuntu-xenial':
-            return [ 'libboost-dev',
-                     'libboost-date-time-dev',
-                     'libboost-filesystem-dev',
-                     'libboost-iostreams-dev',
-                     'libboost-python-dev',
-                     'libboost-regex-dev',
-                     'libboost-system-dev',
-                     'libboost-test-dev' ]
-
-        elif system == 'ubuntu-trusty':
+        elif system == 'ubuntu-bionic' or system == 'ubuntu-xenial' or system == 'ubuntu-trusty':
             return [ 'libboost-dev',
                      'libboost-date-time-dev',
                      'libboost-filesystem-dev',
@@ -548,14 +538,17 @@ class PrepareBuild(CommandLineApp):
             if exists('/etc/issue'):
                 issue = open('/etc/issue')
                 if issue.readline().startswith('Ubuntu'):
-                    release = open('/etc/lsb-release')
-                    info = release.read()
-                    release.close()
-                    if re.search('trusty', info):
-                        self.log.info('Looks like you are using APT on Ubuntu Trusty')
-                        packages = [
-                            'sudo', 'apt-get', 'install',
-                            'build-essential',
+                    info = dict([line.strip().split('=', 1)
+                                 for line in open('/etc/lsb-release')])
+                    release = info['DISTRIB_CODENAME']
+                    self.log.info('Looks like you are using APT on Ubuntu ' + release)
+                    packages = [
+                        'sudo', 'apt-get', 'install',
+                        'build-essential',
+                    ]
+
+                    if release == 'bionic':
+                        packages.extend([
                             'doxygen',
                             'cmake',
                             'ninja-build',
@@ -570,12 +563,9 @@ class PrepareBuild(CommandLineApp):
                             'lcov',
                             'libutfcpp-dev',
                             'sloccount'
-                        ] + BoostInfo().dependencies('ubuntu-trusty')
-                    elif re.search('xenial', info):
-                        self.log.info('Looks like you are using APT on Ubuntu Xenial')
-                        packages = [
-                            'sudo', 'apt-get', 'install',
-                            'build-essential',
+                        ])
+                    elif release == 'trusty':
+                        packages.extend([
                             'doxygen',
                             'cmake',
                             'ninja-build',
@@ -590,13 +580,27 @@ class PrepareBuild(CommandLineApp):
                             'lcov',
                             'libutfcpp-dev',
                             'sloccount'
-                        ] + BoostInfo().dependencies('ubuntu-xenial')
-                    elif re.search('saucy', info):
-                        self.log.info('Looks like you are using APT on Ubuntu Saucy')
-                        packages = [
-                            'sudo', 'apt-get', 'install',
-                            'build-essential',
-                            'libtool',
+                        ])
+                    elif release == 'xenial':
+                        packages.extend([
+                            'doxygen',
+                            'cmake',
+                            'ninja-build',
+                            'zlib1g-dev',
+                            'libbz2-dev',
+                            'python-dev',
+                            'libgmp3-dev',
+                            'libmpfr-dev',
+                            'gettext',
+                            'libedit-dev',
+                            'texinfo',
+                            'lcov',
+                            'libutfcpp-dev',
+                            'sloccount'
+                        ])
+                    elif release == 'saucy':
+                        packages.extend([
+                            'doxygen',
                             'cmake',
                             'ninja-build',
                             'zlib1g-dev',
@@ -609,12 +613,9 @@ class PrepareBuild(CommandLineApp):
                             'texinfo',
                             'lcov',
                             'sloccount'
-                        ] + BoostInfo().dependencies('ubuntu-saucy')
-                    elif re.search('precise', info):
-                        self.log.info('Looks like you are using APT on Ubuntu Precise')
-                        packages = [
-                            'sudo', 'apt-get', 'install',
-                            'build-essential',
+                        ])
+                    elif release == 'precise':
+                        packages.extend([
                             'libtool',
                             'cmake',
                             'zlib1g-dev',
@@ -628,11 +629,13 @@ class PrepareBuild(CommandLineApp):
                             'lcov',
                             'libutfcpp-dev',
                             'sloccount'
-                        ] + BoostInfo().dependencies('ubuntu-precise')
+                        ])
                     else:
                         self.log.info('I do not recognize your version of Ubuntu!')
                         packages = None
                     if packages:
+                        packages.extend(
+                            BoostInfo().dependencies('ubuntu-' + release))
                         self.log.info('Executing: ' + ' '.join(packages))
                         self.execute(*packages)
 
