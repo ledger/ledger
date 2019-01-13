@@ -1692,6 +1692,7 @@ void date_parser_t::lexer_t::token_t::unexpected()
   case END_REACHED:
     kind = UNKNOWN;
     throw_(date_error, _("Unexpected end of expression"));
+    break;
   default: {
     string desc = to_string();
     kind = UNKNOWN;

@@ -478,24 +478,31 @@ void expr_t::token_t::unexpected(const char wanted)
     switch (prev_kind) {
     case TOK_EOF:
       throw_(parse_error, _("Unexpected end of expression"));
+      break;
     case IDENT:
       throw_(parse_error, _f("Unexpected symbol '%1%'") % value);
+      break;
     case VALUE:
       throw_(parse_error, _f("Unexpected value '%1%'") % value);
+      break;
     default:
       throw_(parse_error, _f("Unexpected expression token '%1%'") % symbol);
+      break;
     }
   } else {
     switch (prev_kind) {
     case TOK_EOF:
       throw_(parse_error,
              _f("Unexpected end of expression (wanted '%1%')") % wanted);
+      break;
     case IDENT:
       throw_(parse_error,
              _f("Unexpected symbol '%1%' (wanted '%2%')") % value % wanted);
+      break;
     case VALUE:
       throw_(parse_error,
              _f("Unexpected value '%1%' (wanted '%2%')") % value % wanted);
+      break;
     default:
       throw_(parse_error, _f("Unexpected expression token '%1%' (wanted '%2%')")
              % symbol % wanted);

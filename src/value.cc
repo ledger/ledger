@@ -105,6 +105,7 @@ value_t::operator bool() const
     throw_(value_error,
            _f("Cannot determine truth of %1% (did you mean 'account =~ %2%'?)")
            % label() % out.str());
+    break;
   }
   case SEQUENCE:
     if (! as_sequence().empty()) {

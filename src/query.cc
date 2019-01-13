@@ -155,6 +155,7 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context)
       case ')':
         if (! consume_next && tok_context == token_t::TOK_EXPR)
           goto test_ident;
+        // fall through...
       case '(':
       case '&':
       case '|':
@@ -228,10 +229,13 @@ void query_t::lexer_t::token_t::unexpected()
   switch (prev_kind) {
   case END_REACHED:
     throw_(parse_error, _("Unexpected end of expression"));
+    break;
   case TERM:
     throw_(parse_error, _f("Unexpected string '%1%'") % *value);
+    break;
   default:
     throw_(parse_error, _f("Unexpected token '%1%'") % symbol());
+    break;
   }
 }
 

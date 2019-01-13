@@ -1343,21 +1343,26 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       case 'i':
         throw_(std::runtime_error,
                _("The i value expression variable is no longer supported"));
+        break;
       case 'A':
         throw_(std::runtime_error,
                _("The A value expression variable is no longer supported"));
+        break;
       case 'v':
       case 'V':
         throw_(std::runtime_error,
                _("The V and v value expression variables are no longer supported"));
+        break;
       case 'I':
       case 'B':
         throw_(std::runtime_error,
                _("The I and B value expression variables are no longer supported"));
+        break;
       case 'g':
       case 'G':
         throw_(std::runtime_error,
                _("The G and g value expression variables are no longer supported"));
+        break;
       default:
         return NULL;
       }
