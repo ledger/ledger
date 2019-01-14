@@ -96,7 +96,7 @@ void posts_to_org_table::operator()(post_t& post)
     bind_scope_t bound_scope(report, post);
 
     if (! header_printed) {
-      out << "|Date|Code|Payee|X|Account|Amount|Total|Note|\n"
+      out << "|BUG|Code|Payee|X|Account|Amount|Total|Note|\n"
           << "|-|\n"
           << "|||<20>|||<r>|<r>|<20>|\n";
       header_printed = true;
