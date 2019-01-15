@@ -57,9 +57,9 @@
 #define Ledger_VERSION_PRERELEASE "@Ledger_VERSION_PRERELEASE@"
 #define Ledger_VERSION_DATE      @Ledger_VERSION_DATE@
 
-#define HAVE_EDIT                @HAVE_EDIT@
 #define HAVE_GETTEXT             @HAVE_GETTEXT@
 
+#cmakedefine HAVE_EDIT
 #cmakedefine HAVE_GETPWUID
 #cmakedefine HAVE_GETPWNAM
 #cmakedefine HAVE_IOCTL
@@ -163,10 +163,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <gmp.h>
 #include <mpfr.h>
 #include "utf8.h"
-
-#if HAVE_EDIT
-#include <editline/readline.h>
-#endif
 
 #include <boost/algorithm/string.hpp>
 #include <boost/any.hpp>
