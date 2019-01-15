@@ -136,11 +136,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <cstring>
 #include <csignal>
 
-#if defined __FreeBSD__ && __FreeBSD__ <= 4
-// FreeBSD has a broken isspace macro, so don't use it
-#undef isspace(c)
-#endif
-
 #if defined(_WIN32) || defined(__CYGWIN__)
 #include <io.h>
 #else
