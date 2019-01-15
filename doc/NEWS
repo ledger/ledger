@@ -42,6 +42,9 @@
 
 - Do not parse user-specified init-file twice
 
+- Fix parsing issue of effective dates (bug #1722, TALOS-2017-0303,
+  CVE-2017-2807)
+
 - Python: Removed double quotes from Unicode values.
 
 - Python: Ensure that parse errors produce useful RuntimeErrors
