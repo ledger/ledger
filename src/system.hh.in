@@ -178,7 +178,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 #include <boost/filesystem/exception.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
