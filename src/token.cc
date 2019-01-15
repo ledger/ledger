@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -380,7 +380,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     break;
 
   default: {
-    istream_pos_type pos = in.tellg();
+    std::istream::pos_type pos = in.tellg();
 
     // First, check to see if it's a reserved word, such as: and or not
     int result = parse_reserved_word(in);
