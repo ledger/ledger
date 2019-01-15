@@ -59,9 +59,7 @@
 
 #define HAVE_GETTEXT             @HAVE_GETTEXT@
 
-#cmakedefine HAVE_ACCESS
 #cmakedefine HAVE_EDIT
-#cmakedefine HAVE_REALPATH
 #cmakedefine HAVE_GETPWUID
 #cmakedefine HAVE_GETPWNAM
 #cmakedefine HAVE_IOCTL
@@ -143,7 +141,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 #undef isspace(c)
 #endif
 
-#include <sys/stat.h>
 #if defined(_WIN32) || defined(__CYGWIN__)
 #include <io.h>
 #else
@@ -243,7 +240,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 
 #include <boost/python/detail/wrap_python.hpp>
 #include <datetime.h>
-#include <unicodeobject.h>
 
 #include <boost/python/module_init.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>

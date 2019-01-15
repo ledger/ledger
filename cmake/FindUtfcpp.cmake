@@ -10,7 +10,8 @@ set(UTFCPP_FOUND FALSE)
 
 find_path(UTFCPP_INCLUDE_DIR
     NAMES utf8.h
-    HINTS  "${UTFCPP_PATH}" "${PROJECT_SOURCE_DIR}/lib/utfcpp/v2_0/source"
+    HINTS "${UTFCPP_PATH}"
+    PATHS "${PROJECT_SOURCE_DIR}/lib/utfcpp/v2_0/source"
 )
 
 if (UTFCPP_INCLUDE_DIR)

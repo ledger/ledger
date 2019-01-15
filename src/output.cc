@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -284,8 +284,9 @@ void report_accounts::flush()
   std::ostream& out(report.output_stream);
   format_t      prepend_format;
   std::size_t   prepend_width;
+  bool          do_prepend_format;
 
-  if (report.HANDLED(prepend_format_)) {
+  if ((do_prepend_format = report.HANDLED(prepend_format_))) {
     prepend_format.parse_format(report.HANDLER(prepend_format_).str());
     prepend_width = report.HANDLED(prepend_width_)
       ? lexical_cast<std::size_t>(report.HANDLER(prepend_width_).str())
@@ -293,7 +294,7 @@ void report_accounts::flush()
   }
 
   foreach (accounts_pair& entry, accounts) {
-    if (prepend_format) {
+    if (do_prepend_format) {
       bind_scope_t bound_scope(report, *entry.first);
       out.width(static_cast<std::streamsize>(prepend_width));
       out << prepend_format(bound_scope);

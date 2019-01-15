@@ -84,16 +84,6 @@ Dependency | Version (or greater)
 [lcov] | 1.6 _optional_, for `make report`, used with `/./acprep gcov`
 [sloccount] | 2.26 _optional_, for `make sloc`
 
-And for building the outdated `release/2.6.3` branch:
-
-Dependency | Version
------------|--------
-[GMP] | 4.2.2
-[pcre] | 7.7
-[libofx] | 0.8.3 _optional_
-[expat] | 2.0.1 _optional_
-[libxml2] | 2.7.2 _optional_
-
 ### macOS
 
 You can use [Homebrew] or [MacPorts] to install Ledger easily on macOS.
