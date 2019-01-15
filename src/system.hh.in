@@ -141,7 +141,6 @@ typedef std::ostream::pos_type ostream_pos_type;
 #undef isspace(c)
 #endif
 
-#include <sys/stat.h>
 #if defined(_WIN32) || defined(__CYGWIN__)
 #include <io.h>
 #else
