@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -48,6 +48,8 @@
 #if defined(TIMELOG_SUPPORT)
 #include "timelog.h"
 #endif
+
+#include <utf8.h>
 
 namespace ledger {
 
