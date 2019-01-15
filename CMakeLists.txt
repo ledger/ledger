@@ -96,8 +96,6 @@ include(CheckCXXSourceCompiles)
 include(CheckCXXSourceRuns)
 include(CMakePushCheckState)
 
-check_function_exists(access HAVE_ACCESS)
-check_function_exists(realpath HAVE_REALPATH)
 check_function_exists(getpwuid HAVE_GETPWUID)
 check_function_exists(getpwnam HAVE_GETPWNAM)
 check_function_exists(ioctl HAVE_IOCTL)
