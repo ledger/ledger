@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -557,7 +557,7 @@ void instance_t::option_directive(char * line)
 
 void instance_t::automated_xact_directive(char * line)
 {
-  istream_pos_type pos = context.line_beg_pos;
+  std::istream::pos_type pos = context.line_beg_pos;
 
   bool reveal_context = true;
 
@@ -653,7 +653,7 @@ void instance_t::automated_xact_directive(char * line)
 
 void instance_t::period_xact_directive(char * line)
 {
-  istream_pos_type pos = context.line_beg_pos;
+  std::istream::pos_type pos = context.line_beg_pos;
 
   bool reveal_context = true;
 
@@ -916,8 +916,8 @@ void instance_t::end_apply_directive(char * kind)
 
 void instance_t::account_directive(char * line)
 {
-  istream_pos_type beg_pos     = context.line_beg_pos;
-  std::size_t      beg_linenum = context.linenum;
+  std::istream::pos_type beg_pos     = context.line_beg_pos;
+  std::size_t            beg_linenum = context.linenum;
 
   char * p = skip_ws(line);
   account_t * account =

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -48,12 +48,12 @@ namespace ledger {
 
 struct position_t
 {
-  path             pathname;
-  istream_pos_type beg_pos;
-  std::size_t      beg_line;
-  istream_pos_type end_pos;
-  std::size_t      end_line;
-  std::size_t      sequence;
+  path                   pathname;
+  std::istream::pos_type beg_pos;
+  std::size_t            beg_line;
+  std::istream::pos_type end_pos;
+  std::size_t            end_line;
+  std::size_t            sequence;
 
   position_t()
     : beg_pos(0), beg_line(0), end_pos(0), end_line(0), sequence(0) {
