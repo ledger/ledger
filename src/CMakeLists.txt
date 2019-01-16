@@ -52,7 +52,6 @@ set(LEDGER_SOURCES
   times.cc
   error.cc
   utils.cc
-  strptime.cc
   wcwidth.cc)
 
 if (HAVE_BOOST_PYTHON)
@@ -134,8 +133,15 @@ set(LEDGER_INCLUDES
   value.h
   views.h
   xact.h
-  strptime.h
   ${PROJECT_BINARY_DIR}/system.hh)
+
+# Windows provides no strptime(), so supply our own.
+if (WIN32 OR CYGWIN)
+  list(APPEND LEDGER_INCLUDES
+    strptime.h)
+  list(APPEND LEDGER_SOURCES
+    strptime.cc)
+endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   if (CMAKE_CXX_COMPILER MATCHES "clang\\+\\+")
