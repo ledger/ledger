@@ -510,7 +510,7 @@ class PrepareBuild(CommandLineApp):
 
         self.log.info("Installing Ledger's build dependencies ...")
 
-        system = self.get_stdout('uname', '-s')
+        system = self.get_stdout('uname', '-s').decode('utf8')
 
         if system == 'Darwin':
             if exists('/opt/local/bin/port'):
