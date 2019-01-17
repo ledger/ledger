@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -113,11 +113,7 @@ inline parse_context_t open_for_reading(const path& pathname,
                                         const path& cwd)
 {
   path filename = resolve_path(pathname);
-#if BOOST_VERSION >= 104600 && BOOST_FILESYSTEM_VERSION >= 3
   filename = filesystem::absolute(filename, cwd);
-#else
-  filename = filesystem::complete(filename, cwd);
-#endif
   if (! exists(filename) || is_directory(filename))
     throw_(std::runtime_error,
            _f("Cannot read journal file %1%") % filename);

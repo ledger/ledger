@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -89,11 +89,7 @@ namespace {
     else {                      // parent
       close(pfd[0]);
       typedef iostreams::stream<iostreams::file_descriptor_sink> fdstream;
-#if BOOST_VERSION >= 104400
       *os = new fdstream(pfd[1], iostreams::never_close_handle);
-#else // BOOST_VERSION >= 104400
-      *os = new fdstream(pfd[1]);
-#endif // BOOST_VERSION >= 104400
     }
     return pfd[1];
 #else

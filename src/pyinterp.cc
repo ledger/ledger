@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -222,27 +222,13 @@ object python_interpreter_t::import_option(const string& str)
   python::list paths(sys_dict["path"]);
 
   if (contains(str, ".py")) {
-#if BOOST_VERSION >= 103700
     path& cwd(parsing_context.get_current().current_directory);
-#if BOOST_VERSION >= 104600 && BOOST_FILESYSTEM_VERSION >= 3
     path parent(filesystem::absolute(file, cwd).parent_path());
-#else
-    path parent(filesystem::complete(file, cwd).parent_path());
-#endif
     DEBUG("python.interp", "Adding " << parent << " to PYTHONPATH");
     paths.insert(0, parent.string());
     sys_dict["path"] = paths;
 
-#if BOOST_VERSION >= 104600
     name = file.stem().string();
-#else
-    name = file.stem();
-#endif
-#else // BOOST_VERSION >= 103700
-    paths.insert(0, file.branch_path().string());
-    sys_dict["path"] = paths;
-    name = file.leaf();
-#endif // BOOST_VERSION >= 103700
   }
 
   try {
