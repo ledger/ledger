@@ -88,7 +88,6 @@
 #include <algorithm>
 #include <exception>
 #include <typeinfo>
-#include <locale>
 #include <stdexcept>
 #include <iostream>
 #include <streambuf>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -43,23 +43,11 @@ optional<datetime_t> epoch;
 
 date_time::weekdays start_of_week = gregorian::Sunday;
 
-//#define USE_BOOST_FACETS 1
-#if defined(USE_BOOST_FACETS)
-#error "Boost facets are not quite working yet"
-#endif
-
 namespace {
   template <typename T, typename InputFacetType, typename OutputFacetType>
   class temporal_io_t : public noncopyable
   {
-    string             fmt_str;
-#if defined(USE_BOOST_FACETS)
-    std::istringstream input_stream;
-    std::ostringstream output_stream;
-    InputFacetType *   input_facet;
-    OutputFacetType *  output_facet;
-    std::string        temp_string;
-#endif // USE_BOOST_FACETS
+    string fmt_str;
 
   public:
     date_traits_t traits;
@@ -71,15 +59,6 @@ namespace {
                icontains(fmt_str, "%m") || icontains(fmt_str, "%b"),
                icontains(fmt_str, "%d")),
         input(_input) {
-#if defined(USE_BOOST_FACETS)
-      if (input) {
-        input_facet  = new InputFacetType(fmt_str);
-        input_stream.imbue(std::locale(std::locale::classic(), input_facet));
-      } else {
-        output_facet = new OutputFacetType(fmt_str);
-        output_stream.imbue(std::locale(std::locale::classic(), output_facet));
-      }
-#endif // USE_BOOST_FACETS
     }
 
     void set_format(const char * fmt) {
@@ -88,29 +67,15 @@ namespace {
                                icontains(fmt_str, "%m") ||
                                icontains(fmt_str, "%b"),
                                icontains(fmt_str, "%d"));
-#if defined(USE_BOOST_FACETS)
-      if (input)
-        input_facet->format(fmt_str);
-      else
-        output_facet->format(fmt_str);
-#endif // USE_BOOST_FACETS
     }
 
     T parse(const char *) {}
 
     std::string format(const T& when) {
-#if defined(USE_BOOST_FACETS)
-      output_stream.str(temp_string);
-      output_stream.seekp(std::ios_base::beg);
-      output_stream.clear();
-      output_stream << when;
-      return output_stream.str();
-#else // USE_BOOST_FACETS
       std::tm data(to_tm(when));
       char buf[128];
       std::strftime(buf, 127, fmt_str.c_str(), &data);
       return buf;
-#endif // USE_BOOST_FACETS
     }
   };
 
@@ -119,34 +84,12 @@ namespace {
                            posix_time::time_facet>
     ::parse(const char * str)
   {
-#if defined(USE_BOOST_FACETS)
-      input_stream.seekg(std::ios_base::beg);
-      input_stream.clear();
-      input_stream.str(str);
-
-      datetime_t when;
-      input_stream >> when;
-#if DEBUG_ON
-      if (when.is_not_a_date_time())
-        DEBUG("times.parse", "Failed to parse date/time '" << str
-              << "' using pattern '" << fmt_str << "'");
-#endif
-
-      if (! when.is_not_a_date_time() &&
-          input_stream.good() && ! input_stream.eof() &&
-          input_stream.peek() != EOF) {
-        DEBUG("times.parse", "This string has leftovers: '" << str << "'");
-        return datetime_t();
-      }
-      return when;
-#else // USE_BOOST_FACETS
     std::tm data;
     std::memset(&data, 0, sizeof(std::tm));
     if (strptime(str, fmt_str.c_str(), &data))
       return posix_time::ptime_from_tm(data);
     else
       return datetime_t();
-#endif // USE_BOOST_FACETS
   }
 
   template <>
@@ -154,27 +97,6 @@ namespace {
                        gregorian::date_facet>
     ::parse(const char * str)
   {
-#if defined(USE_BOOST_FACETS)
-      input_stream.seekg(std::ios_base::beg);
-      input_stream.clear();
-      input_stream.str(str);
-
-      date_t when;
-      input_stream >> when;
-#if DEBUG_ON
-      if (when.is_not_a_date())
-        DEBUG("times.parse", "Failed to parse date '" << str
-              << "' using pattern '" << fmt_str << "'");
-#endif
-
-      if (! when.is_not_a_date() &&
-          input_stream.good() && ! input_stream.eof() &&
-          input_stream.peek() != EOF) {
-        DEBUG("times.parse", "This string has leftovers: '" << str << "'");
-        return date_t();
-      }
-      return when;
-#else // USE_BOOST_FACETS
     std::tm data;
     std::memset(&data, 0, sizeof(std::tm));
     data.tm_year = CURRENT_DATE().year() - 1900;
@@ -183,7 +105,6 @@ namespace {
       return gregorian::date_from_tm(data);
     else
       return date_t();
-#endif // USE_BOOST_FACETS
   }
 
   typedef temporal_io_t<datetime_t, posix_time::time_input_facet,
