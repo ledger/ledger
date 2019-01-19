@@ -1,6 +1,3 @@
-# Since the Travis CI environment http://docs.travis-ci.com/user/ci-environment/
-# provides GNU GCC 4.6, which does not support -std=c++11 GNU GCC 4.8 is installed
-
 # NOTE: Please validate this file after editing it using
 #       Travis WebLint https://lint.travis-ci.org/
 #       or travis-lint https://github.com/travis-ci/travis-lint
@@ -64,11 +61,8 @@ addons:
     branch_pattern: coverity
   apt:
     sources:
-      - ubuntu-toolchain-r-test
       #- boost-latest
     packages:
-      - gcc-4.8
-      - g++-4.8
       - libgmp-dev
       - libmpfr-dev
       - libedit-dev
@@ -86,7 +80,6 @@ before_install:
   # - if [ "${TRAVIS_BRANCH}" = "master" ]; then export BOOST_VERSION="${BOOST_VERSION_MIN}"; else export BOOST_VERSION="${BOOST_VERSION_MAX}"; fi
   - export BOOST_VERSION="${BOOST_VERSION_MAX}"
   - if [ -n "${BOOST_VERSION}" ]; then export BOOST_ROOT="${TRAVIS_BUILD_DIR}/../boost-trunk"; export CMAKE_MODULE_PATH="${BOOST_ROOT}"; fi
-  - if [ "${CXX}" = "g++" ]; then export CXX="$(which g++-4.8)"; export CC="$(which gcc-4.8)"; fi
   - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then export DYLD_LIBRARY_PATH="${BOOST_ROOT}/lib"; fi
     # c++ is a symlink to clang++, but the compiler behaves differently when invoked as c++
   - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${CXX}" = "clang++" ]; then export CXX="$(which c++)"; export CC="$(which cc)"; fi
