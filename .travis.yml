@@ -13,15 +13,14 @@ cache:
 
 env:
   global:
-      # Boost version to use:
-      # _MIN is used when building the master branch
-      # _MAX is used when building any other branch
-    - BOOST_VERSION_MIN="1.49.0"
-    - BOOST_VERSION_MAX="1.61.0"
       # List of required boost libraries to build
     - BOOST_LIBS="date_time,filesystem,iostreams,python,regex,system,test"
       # Encrypted COVERITY_SCAN_TOKEN
     - secure: "mYNxD1B8WNSvUeKzInehZ7syi2g1jH2ymeSQxoeKKD2duq3pvNWPdZdc4o9MlWQcAqcz58rhFZRIpuEWCnP0LbbJaG+MyuemMn9uAmg9Y4gFpMsBPHuTdf8pO3rDex+tkrr9puEJFgL+QV/TehxO6NDDpx7UdYvJb+4aZD/auYI="
+  matrix:
+    # Boost version to build against; an empty string means the
+    # distribution's default.
+    - BOOST_VERSION="1.61.0"
 
 addons:
   coverity_scan:
@@ -32,30 +31,39 @@ addons:
     build_command: "make"
     branch_pattern: coverity
   apt:
-    sources:
-      #- boost-latest
     packages:
       - libgmp-dev
       - libmpfr-dev
       - libedit-dev
-      #- libboost1.55-dev
-      #- libboost-test1.55-dev
-      #- libboost-regex1.55-dev
-      #- libboost-python1.55-dev
-      #- libboost-system1.55-dev
-      #- libboost-date-time1.55-dev
-      #- libboost-iostreams1.55-dev
-      #- libboost-filesystem1.55-dev
-      #- libboost-serialization1.55-dev
+      - libboost-dev
+      - libboost-test-dev
+      - libboost-regex-dev
+      - libboost-python-dev
+      - libboost-system-dev
+      - libboost-date-time-dev
+      - libboost-iostreams-dev
+      - libboost-filesystem-dev
+      - libboost-serialization-dev
 
 before_install:
-  # - if [ "${TRAVIS_BRANCH}" = "master" ]; then export BOOST_VERSION="${BOOST_VERSION_MIN}"; else export BOOST_VERSION="${BOOST_VERSION_MAX}"; fi
-  - export BOOST_VERSION="${BOOST_VERSION_MAX}"
-  - if [ -n "${BOOST_VERSION}" ]; then export BOOST_ROOT="${TRAVIS_BUILD_DIR}/../boost-trunk"; export CMAKE_MODULE_PATH="${BOOST_ROOT}"; fi
-  - tools/travis-before_install.sh
+  - |
+    if [ -n "${BOOST_VERSION}" ]; then
+        BOOST_SOURCE="$(mktemp -d)"
+        BOOST_SOURCE_URL="https://sourceforge.net/projects/boost/files/boost/${BOOST_VERSION}/boost_${BOOST_VERSION//./_}.tar.bz2/download"
+        curl -Ls "$BOOST_SOURCE_URL" |
+        tar jx -C "${BOOST_SOURCE}" --strip-components 1
+    fi
 
 install:
-  - tools/travis-install.sh
+  - |
+    if [ -n "${BOOST_VERSION}" ]; then
+        export BOOST_ROOT="${HOME}/boost"
+        pushd "${BOOST_SOURCE}"
+        ./bootstrap.sh --with-libraries="${BOOST_LIBS}"
+        ./b2 threading=multi -d0 --prefix="${BOOST_ROOT}" install
+        popd
+        rm -Rf "${BOOST_SOURCE}"
+    fi
 
 before_script:
   - cmake . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON
