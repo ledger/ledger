@@ -5,10 +5,8 @@
 language: cpp
 compiler:
   - gcc
-  - clang
 os:
   - linux
-  - osx
 sudo: false
 cache:
   apt: true
@@ -22,34 +20,8 @@ env:
     - BOOST_VERSION_MAX="1.61.0"
       # List of required boost libraries to build
     - BOOST_LIBS="date_time,filesystem,iostreams,python,regex,system,test"
-      # List of required Homebrew formulae to install
-    - BREWS="gmp,mpfr"
       # Encrypted COVERITY_SCAN_TOKEN
     - secure: "mYNxD1B8WNSvUeKzInehZ7syi2g1jH2ymeSQxoeKKD2duq3pvNWPdZdc4o9MlWQcAqcz58rhFZRIpuEWCnP0LbbJaG+MyuemMn9uAmg9Y4gFpMsBPHuTdf8pO3rDex+tkrr9puEJFgL+QV/TehxO6NDDpx7UdYvJb+4aZD/auYI="
-
-matrix:
-  exclude:
-    - os: linux
-      compiler: clang
-      # Compiling ledger on Linux with clang
-      # either crashes clang or results in a ledger binary that crashes with SIGSEGV.
-    - os: osx
-      compiler: gcc
-      # On macOS building ledger with GNU GCC 4.8 fails due to
-      # undefined symbols, maybe because boost was not being built with g++-4.8.
-      # Undefined symbols for architecture x86_64:
-      # "boost::re_detail::perl_matcher<char const*, std::allocator<boost::sub_match<char const*> >, boost::regex_traits<char, boost::cpp_regex_traits<char> > >::construct_init(boost::basic_regex<char, boost::regex_traits<char, boost::cpp_regex_traits<char> > > const&, boost::regex_constants::_match_flags)", referenced from:
-      #     boost::re_detail::perl_matcher<char const*, std::allocator<boost::sub_match<char const*> >, boost::regex_traits<char, boost::cpp_regex_traits<char> > >::perl_matcher(char const*, char const*, boost::match_results<char const*, std::allocator<boost::sub_match<char const*> > >&, boost::basic_regex<char, boost::regex_traits<char, boost::cpp_regex_traits<char> > > const&, boost::regex_constants::_match_flags, char const*) in main.cc.o
-      #     boost::re_detail::perl_matcher<char const*, std::allocator<boost::sub_match<char const*> >, boost::regex_traits<char, boost::cpp_regex_traits<char> > >::perl_matcher(char const*, char const*, boost::match_results<char const*, std::allocator<boost::sub_match<char const*> > >&, boost::basic_regex<char, boost::regex_traits<char, boost::cpp_regex_traits<char> > > const&, boost::regex_constants::_match_flags, char const*) in global.cc.o
-      # "boost::re_detail::perl_matcher<char const*, std::allocator<boost::sub_match<char const*> >, boost::regex_traits<char, boost::cpp_regex_traits<char> > >::find()", referenced from:
-      #     bool boost::regex_search<char const*, char, boost::regex_traits<char, boost::cpp_regex_traits<char> > >(char const*, char const*, boost::basic_regex<char, boost::regex_traits<char, boost::cpp_regex_traits<char> > > const&, boost::regex_constants::_match_flags) in main.cc.o
-      #     bool boost::regex_search<char const*, char, boost::regex_traits<char, boost::cpp_regex_traits<char> > >(char const*, char const*, boost::basic_regex<char, boost::regex_traits<char, boost::cpp_regex_traits<char> > > const&, boost::regex_constants::_match_flags) in global.cc.o
-    - os: osx
-      compiler: clang
-      # On macOS building ledger with clang fails due to
-      # dyld: Library not loaded: libboost_python.dylib
-      #   Referenced from: /Users/travis/build/ledger/ledger/ledger
-      #   Reason: image not found
 
 addons:
   coverity_scan:
@@ -80,9 +52,6 @@ before_install:
   # - if [ "${TRAVIS_BRANCH}" = "master" ]; then export BOOST_VERSION="${BOOST_VERSION_MIN}"; else export BOOST_VERSION="${BOOST_VERSION_MAX}"; fi
   - export BOOST_VERSION="${BOOST_VERSION_MAX}"
   - if [ -n "${BOOST_VERSION}" ]; then export BOOST_ROOT="${TRAVIS_BUILD_DIR}/../boost-trunk"; export CMAKE_MODULE_PATH="${BOOST_ROOT}"; fi
-  - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then export DYLD_LIBRARY_PATH="${BOOST_ROOT}/lib"; fi
-    # c++ is a symlink to clang++, but the compiler behaves differently when invoked as c++
-  - if [ "${TRAVIS_OS_NAME}" = "osx" -a "${CXX}" = "clang++" ]; then export CXX="$(which c++)"; export CC="$(which cc)"; fi
   - tools/travis-before_install.sh
 
 install:
@@ -95,12 +64,6 @@ before_script:
 script:
   - ctest --output-on-failure
   - PYTHONPATH=. python python/demo.py
-
-after_script:
-  # These scripts are run for informational purposes and
-  # should be reintegrated into CTest once they reliably verify the documentation.
-  - python test/CheckTexinfo.py -l ledger -s .
-  - python test/CheckManpage.py -l ledger -s .
 
 notifications:
   email:

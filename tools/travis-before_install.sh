@@ -4,10 +4,6 @@
 set -e
 set -o pipefail
 
-if [ "${TRAVIS_OS_NAME}" = "osx" ]; then
-  brew update
-fi
-
 if [ -n "${BOOST_VERSION}" ]; then
   mkdir -p $BOOST_ROOT
   wget --no-verbose --output-document=- \
