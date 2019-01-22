@@ -120,7 +120,7 @@ following packages (current as of Ubuntu 18.04):
          libboost-system-dev libboost-dev python-dev gettext git \
          libboost-date-time-dev libboost-filesystem-dev \
          libboost-iostreams-dev libboost-python-dev libboost-regex-dev \
-         libboost-test-dev libedit-dev libgmp3-dev libmpfr-dev texinfo
+         libboost-test-dev libedit-dev libgmp3-dev libmpfr-dev texinfo tzdata
 
 ### Debian
 
