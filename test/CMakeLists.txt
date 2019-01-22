@@ -27,8 +27,6 @@ macro(add_ledger_harness_tests _class)
           ${TestFile} ${TEST_PYTHON_FLAGS})
         set_tests_properties(${_class}Test_${TestFile_Name}
           PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
-        set_target_properties(check 
-          PROPERTIES DEPENDS ${_class}Test_${TestFile_Name})
       endif()
     endforeach()
   endif()
@@ -48,8 +46,6 @@ if (PYTHONINTERP_FOUND)
       --ledger $<TARGET_FILE:ledger> --file ${TestFile})
     set_tests_properties(${_class}Test_${TestFile_Name}
       PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
-    set_target_properties(check
-      PROPERTIES DEPENDS ${_class}Test_${TestFile_Name})
   endforeach()
 
   # CheckManpage and CheckTexinfo are disabled, since they do not work
