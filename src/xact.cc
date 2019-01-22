@@ -395,10 +395,12 @@ bool xact_base_t::finalize()
         some_null = true;
       }
 
-      if (post->has_flags(POST_DEFERRED))
-        post->account->add_deferred_post(id(), post);
-      else
+      if (post->has_flags(POST_DEFERRED)) {
+        if (!post->amount.is_null())
+            post->account->add_deferred_post(id(), post);
+      } else {
         post->account->add_post(post);
+      }
 
       post->xdata().add_flags(POST_EXT_VISITED);
       post->account->xdata().add_flags(ACCOUNT_EXT_VISITED);
