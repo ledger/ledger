@@ -53,16 +53,16 @@ def which(program):
 
 class BoostInfo(object):
     def dependencies(self, system):
-        if system == 'darwin-homebrew':
+        if system in ['darwin-homebrew']:
             return [ 'boost' ]
 
-        if system == 'darwin-macports':
+        if system in ['darwin-macports']:
             return [ 'boost-jam', 'boost', '+python27+universal' ]
 
-        if system == 'centos':
+        if system in ['centos']:
             return [ 'boost-devel' ]
 
-        elif system == 'ubuntu-bionic' or system == 'ubuntu-xenial' or system == 'ubuntu-trusty':
+        elif system in ['ubuntu-bionic', 'ubuntu-xenial', 'ubuntu-trusty']:
             return [ 'libboost-dev',
                      'libboost-date-time-dev',
                      'libboost-filesystem-dev',
@@ -72,7 +72,7 @@ class BoostInfo(object):
                      'libboost-system-dev',
                      'libboost-test-dev' ]
 
-        elif system == 'ubuntu-saucy' or system == 'ubuntu-precise':
+        elif system in [ 'ubuntu-saucy', 'ubuntu-precise']:
             return [ 'autopoint',
                      'libboost-dev',
                      'libboost-test-dev',
@@ -82,7 +82,7 @@ class BoostInfo(object):
                      'libboost-iostreams-dev',
                      'libboost-python-dev' ]
 
-        elif system == 'ubuntu-lucid':
+        elif system in ['ubuntu-lucid']:
             return [ 'bjam', 'autopoint',
                      'libboost-dev',
                      'libboost-regex-dev',
