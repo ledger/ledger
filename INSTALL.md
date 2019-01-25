@@ -57,7 +57,7 @@ A: You're probably missing some dependency libraries.  If you tried
         libboost-date-time-dev libboost-filesystem-dev \
         libboost-graph-dev libboost-iostreams-dev \
         libboost-python-dev libboost-regex-dev libboost-test-dev \
-        doxygen libedit-dev libmpc-dev
+        doxygen libedit-dev libmpc-dev tzdata
 
 ----------------------------------------------------------------------
 
