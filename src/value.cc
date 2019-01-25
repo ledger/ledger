@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -129,11 +129,7 @@ value_t::operator bool() const
 void value_t::set_type(type_t new_type)
 {
   if (new_type == VOID) {
-#if BOOST_VERSION >= 103700
     storage.reset();
-#else
-    storage = intrusive_ptr<storage_t>();
-#endif
   } else {
     if (! storage || storage->refc > 1)
       storage = new storage_t;

@@ -743,17 +743,8 @@ void instance_t::include_directive(char * line)
   DEBUG("textual.include", "resolved path: " << filename.string());
 
   mask_t glob;
-#if BOOST_VERSION >= 103700
   path   parent_path = filename.parent_path();
-#if BOOST_VERSION >= 104600
   glob.assign_glob('^' + filename.filename().string() + '$');
-#else
-  glob.assign_glob('^' + filename.filename() + '$');
-#endif
-#else // BOOST_VERSION >= 103700
-  path   parent_path = filename.branch_path();
-  glob.assign_glob('^' + filename.leaf() + '$');
-#endif // BOOST_VERSION >= 103700
 
   bool files_found = false;
   if (exists(parent_path)) {
@@ -761,21 +752,9 @@ void instance_t::include_directive(char * line)
     for (filesystem::directory_iterator iter(parent_path);
          iter != end;
          ++iter) {
-#if BOOST_VERSION <= 103500
-      if (is_regular(*iter))
-#else
       if (is_regular_file(*iter))
-#endif
         {
-#if BOOST_VERSION >= 103700
-#if BOOST_VERSION >= 104600
         string base = (*iter).path().filename().string();
-#else
-        string base = (*iter).filename();
-#endif
-#else // BOOST_VERSION >= 103700
-        string base = (*iter).leaf();
-#endif // BOOST_VERSION >= 103700
         if (glob.match(base)) {
           journal_t *  journal  = context.journal;
           account_t *  master   = top_account();
