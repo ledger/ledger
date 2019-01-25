@@ -45,6 +45,9 @@
 - Fix parsing issue of effective dates (bug #1722, TALOS-2017-0303,
   CVE-2017-2807)
 
+- Fix use-after-free issue with deferred postings (bug #1723, TALOS-2017-0304,
+  CVE-2017-2808)
+
 - Python: Removed double quotes from Unicode values.
 
 - Python: Ensure that parse errors produce useful RuntimeErrors
