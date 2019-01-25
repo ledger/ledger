@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if defined(_WIN32) || defined(__CYGWIN__)
+#if !(defined(_WIN32) || defined(__CYGWIN__))
+#error This file should only be compiled on Windows.
+#endif
+
 // Implement strptime under windows
 
 #include "strptime.h"
@@ -200,5 +203,3 @@ static char* _strptime(const char *s, const char *format, struct tm *tm) {
 char* strptime(const char *buf, const char *fmt, struct tm *tm) {
   return _strptime(buf, fmt, tm);
 }
-
-#endif  // _WIN32
