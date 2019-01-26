@@ -127,7 +127,9 @@ namespace {
   date_t parse_date_mask_routine(const char * date_str, date_io_t& io,
                                  date_traits_t * traits = NULL)
   {
-    VERIFY(std::strlen(date_str) < 127);
+    if (std::strlen(date_str) > 127) {
+        throw_(date_error, _f("Invalid date: %1%") % date_str);
+    }
 
     char buf[128];
     std::strcpy(buf, date_str);
