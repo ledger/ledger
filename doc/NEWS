@@ -48,6 +48,9 @@
 - Fix use-after-free issue with deferred postings (bug #1723, TALOS-2017-0304,
   CVE-2017-2808)
 
+- Fix possible stack overflow in option parsing routine (bug #1222,
+  CVE-2017-12481)
+
 - Fix possible stack overflow in date parsing routine (bug #1224,
   CVE-2017-12482)
 
