@@ -7,6 +7,7 @@ compiler:
   - gcc
 os:
   - linux
+  - osx
 sudo: false
 cache:
   apt: true
@@ -20,7 +21,17 @@ env:
   matrix:
     # Boost version to build against; an empty string means the
     # distribution's default.
+    - BOOST_VERSION=""
     - BOOST_VERSION="1.61.0"
+
+# The configuration for macOS only works with Boost installed by
+# homebrew, so exclude the other combinations.
+matrix:
+  exclude:
+    - os: linux
+      env: BOOST_VERSION=""
+    - os: osx
+      env: BOOST_VERSION="1.61.0"
 
 addons:
   coverity_scan:
@@ -44,6 +55,12 @@ addons:
       - libboost-iostreams-dev
       - libboost-filesystem-dev
       - libboost-serialization-dev
+  homebrew:
+    packages:
+      - boost
+      - boost-python
+      - gmp
+      - mpfr
 
 before_install:
   - |
@@ -66,8 +83,12 @@ install:
     fi
 
 before_script:
-  - cmake . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON
-  - make
+  # On macOS, CMake finds the Boost.Python installed by homebrew only
+  # with the component name "python27".  Also, precompiling system.hh
+  # does not work.
+  - if [ "$TRAVIS_OS_NAME" = osx -a -z "$BOOST_VERSION" ]; then EXTRA_CMAKE_ARGS="-DPRECOMPILE_SYSTEM_HH=OFF -DUSE_PYTHON27_COMPONENT=ON"; fi
+  - cmake . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON $EXTRA_CMAKE_ARGS
+  - make VERBOSE=1
 
 script:
   - ctest --output-on-failure
