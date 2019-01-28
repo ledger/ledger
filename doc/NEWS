@@ -54,6 +54,8 @@
 - Fix possible stack overflow in date parsing routine (bug #1224,
   CVE-2017-12482)
 
+- Fix use-after-free when using --gain (bug #541)
+
 - Python: Removed double quotes from Unicode values.
 
 - Python: Ensure that parse errors produce useful RuntimeErrors
