@@ -144,7 +144,7 @@ if (WIN32 OR CYGWIN)
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if (CMAKE_CXX_COMPILER MATCHES "clang\\+\\+")
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_definitions(
       # -Weverything
       # -Wno-disabled-macro-expansion
@@ -199,7 +199,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         DEPENDS ${_header_filename})
     endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
 
-  elseif (CMAKE_CXX_COMPILER MATCHES "g\\+\\+")
+  elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(GXX_WARNING_FLAGS
       -pedantic
       -Wall
