@@ -137,49 +137,42 @@ void posts_to_org_table::operator()(post_t& post)
 
     if (amt.type() == value_t::BALANCE || tot.type() == value_t::BALANCE) {
       balance_t amt_bal(amt.to_balance());
+      balance_t::amounts_array amt_sorted;
+      amt_bal.sorted_amounts(amt_sorted);
+
       balance_t tot_bal(tot.to_balance());
-      balance_t::amounts_map::const_iterator i = amt_bal.amounts.begin();
-      balance_t::amounts_map::const_iterator j = tot_bal.amounts.begin();
+      balance_t::amounts_array tot_sorted;
+      tot_bal.sorted_amounts(tot_sorted);
+
+      auto i = amt_sorted.begin();
+      auto j = tot_sorted.begin();
       bool first = true;
-      while (i != amt_bal.amounts.end() || j != tot_bal.amounts.end()) {
+
+      while (i != amt_sorted.end() || j != tot_sorted.end()) {
         if (first) {
           first = false;
-          if (i != amt_bal.amounts.end()) ++i;
-          if (j != tot_bal.amounts.end()) ++j;
+          if (i != amt_sorted.end()) ++i;
+          if (j != tot_sorted.end()) ++j;
         } else {
           symbol_scope_t call_scope(bound_scope);
           bool           assigned = false;
 
-          if (i != amt_bal.amounts.end()) {
-            if ((*i).second) {
-              DEBUG("org.next_amount", "next_amount = " << (*i).second);
-              call_scope.define(symbol_t::FUNCTION, "next_amount",
-                                expr_t::op_t::wrap_value((*i++).second));
-              assigned = true;
-            } else {
-              call_scope.define(symbol_t::FUNCTION, "next_amount",
-                                expr_t::op_t::wrap_value(string_value("")));
-              ++i;
-            }
+          if (i != amt_sorted.end()) {
+            DEBUG("org.next_amount", "next_amount = " << **i);
+            call_scope.define(symbol_t::FUNCTION, "next_amount",
+                              expr_t::op_t::wrap_value(**i++));
+            assigned = true;
           } else {
             call_scope.define(symbol_t::FUNCTION, "next_amount",
                               expr_t::op_t::wrap_value(string_value("")));
           }
 
-          if (j != tot_bal.amounts.end()) {
-            if ((*j).second) {
-              DEBUG("org.next_total", "next_total = " << (*j).second);
-              call_scope.define(symbol_t::FUNCTION, "next_total",
-                                expr_t::op_t::wrap_value((*j++).second));
-              DEBUG("org.next_total", "2.next_total = " <<
-                    call_scope.lookup(symbol_t::FUNCTION,
-                                      "next_total")->as_value());
-              assigned = true;
-            } else {
-              call_scope.define(symbol_t::FUNCTION, "next_total",
-                                expr_t::op_t::wrap_value(string_value("")));
-              ++j;
-            }
+          if (j != tot_sorted.end()) {
+            std::cerr << "next_total = " << **j << std::endl;
+            DEBUG("org.next_total", "next_total = " << **j);
+            call_scope.define(symbol_t::FUNCTION, "next_total",
+                              expr_t::op_t::wrap_value(**j++));
+            assigned = true;
           } else {
             call_scope.define(symbol_t::FUNCTION, "next_total",
                               expr_t::op_t::wrap_value(string_value("")));
