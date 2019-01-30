@@ -243,7 +243,7 @@ balance_t::strip_annotations(const keep_details_t& what_to_keep) const
 void balance_t::sorted_amounts(amounts_array& sorted) const
 {
   foreach (const amounts_map::value_type& pair, amounts)
-  sorted.push_back(&pair.second);
+    sorted.push_back(&pair.second);
   std::stable_sort(sorted.begin(), sorted.end(),
                    commodity_t::compare_by_commodity());
 }
