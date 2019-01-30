@@ -27,10 +27,12 @@ endif()
 ########################################################################
 
 option(USE_PYTHON "Build support for the Python scripting bridge" OFF)
+OPTION(USE_PYTHON27_COMPONENT "Use python27 as name of Boost.Python component" OFF)
 option(USE_DOXYGEN "Build reference documentation using Doxygen" OFF)
 
 option(DISABLE_ASSERTS "Build without any internal consistency checks" OFF)
 option(BUILD_DEBUG "Build support for runtime debugging" OFF)
+option(PRECOMPILE_SYSTEM_HH "Precompile system.hh" ON)
 
 option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
 option(BUILD_DOCS "Build and install documentation" OFF)
@@ -67,7 +69,11 @@ if (USE_PYTHON)
 
   find_package(PythonLibs)
   if (PYTHONLIBS_FOUND)
-    set(BOOST_PYTHON python)
+    if(USE_PYTHON27_COMPONENT)
+      set(BOOST_PYTHON "python27")
+    else()
+      set(BOOST_PYTHON "python")
+    endif()
     set(HAVE_BOOST_PYTHON 1)
     include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
   else()
