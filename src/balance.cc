@@ -240,6 +240,14 @@ balance_t::strip_annotations(const keep_details_t& what_to_keep) const
   return temp;
 }
 
+void balance_t::sorted_amounts(amounts_array& sorted) const
+{
+  foreach (const amounts_map::value_type& pair, amounts)
+    sorted.push_back(&pair.second);
+  std::stable_sort(sorted.begin(), sorted.end(),
+                   commodity_t::compare_by_commodity());
+}
+
 void balance_t::map_sorted_amounts(function<void(const amount_t&)> fn) const
 {
   if (! amounts.empty()) {
@@ -249,16 +257,8 @@ void balance_t::map_sorted_amounts(function<void(const amount_t&)> fn) const
         fn(amount);
     }
     else {
-      typedef std::vector<const amount_t *> amounts_array;
       amounts_array sorted;
-
-      foreach (const amounts_map::value_type& pair, amounts)
-        if (pair.second)
-          sorted.push_back(&pair.second);
-
-      std::stable_sort(sorted.begin(), sorted.end(),
-                       commodity_t::compare_by_commodity());
-
+      sorted_amounts(sorted);
       foreach (const amount_t * amount, sorted)
         fn(*amount);
     }

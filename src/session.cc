@@ -76,7 +76,7 @@ std::size_t session_t::read_data(const string& master_account)
       file = path(home_var) / ".ledger";
 
     if (! file.empty() && exists(file))
-      HANDLER(file_).data_files.insert(file);
+      HANDLER(file_).data_files.push_back(file);
     else
       throw_(parse_error, "No journal file was specified (please use -f)");
 
@@ -214,7 +214,7 @@ journal_t * session_t::read_journal_files()
 journal_t * session_t::read_journal(const path& pathname)
 {
   HANDLER(file_).data_files.clear();
-  HANDLER(file_).data_files.insert(pathname);
+  HANDLER(file_).data_files.push_back(pathname);
 
   return read_journal_files();
 }

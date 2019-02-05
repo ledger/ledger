@@ -111,7 +111,7 @@
 
 @copying
 
-Copyright @copyright{} 2003--2018, John Wiegley.  All rights reserved.
+Copyright @copyright{} 2003--2019, John Wiegley.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -427,7 +427,7 @@ accounting problems.
 
 Once such tutorial, specifically designed for non-profit charities that seek
 to use Ledger, can be found at
-@url{https://k.sfconservancy.org/npo-ledger-cli} (with a copy on GitHub also
+@url{https://k.sfconservancy.org/NPO-Accounting/npo-ledger-cli} (with a copy on GitHub also
 available at @url{https://github.com/conservancy/npo-ledger-cli/}).  If
 you're looking for information about how to use Ledger's tagging system to
 handle invoicing, track expenses by program targets, and other such concepts,
@@ -1384,10 +1384,11 @@ account:
     (Funds:School)                   $-100.00
 @end smallexample
 
-When reports are generated, by default they'll appear in terms of the
-funds.  In this case, you will likely want to mask out your
-@samp{Assets} account, because otherwise the balance won't make much
-sense:
+The use of round brackets creates a virtual posting without ensuring
+a balance to zero. When reports are generated, by default they'll
+appear in terms of the funds. In this case, you will likely want to
+mask out your @samp{Assets} account, because otherwise the balance
+won't make much sense:
 
 @smallexample @c command:396F24E
 $ ledger --no-total bal not ^Assets
@@ -2255,6 +2256,41 @@ Would result in all postings going into
 @samp{Personal:Expenses:Groceries} and @samp{Personal:Assets:Checking}
 until an @samp{end apply account} directive was found.
 
+@item apply fixed
+@findex fixed
+@cindex fixated prices
+@c instance_t::fixed_directive in textual.cc
+
+A fixed block is used to set fixated prices (@pxref{Fixated prices and
+costs}) for a series of transactions.  It's purely a typing saver, for
+use when entering many transactions with fixated prices.
+
+Thus, the following:
+
+@smallexample @c input:validate
+apply fixed CAD $0.90
+2012-04-10 Lunch in Canada
+    Assets:Wallet            -15.50 CAD
+    Expenses:Food            15.50 CAD
+
+2012-04-11 Second day Dinner in Canada
+    Assets:Wallet            -25.75 CAD
+    Expenses:Food            25.75 CAD
+end apply fixed
+@end smallexample
+
+is equivalent to this:
+
+@smallexample @c input:validate
+2012-04-10 Lunch in Canada
+    Assets:Wallet            -15.50 CAD @{=$0.90@}
+    Expenses:Food            15.50 CAD  @{=$0.90@}
+
+2012-04-11 Second day Dinner in Canada
+    Assets:Wallet            -25.75 CAD  @{=$0.90@}
+    Expenses:Food            25.75 CAD   @{=$0.90@}
+@end smallexample
+
 @item alias
 @findex alias
 @cindex account, alias
@@ -2402,6 +2438,7 @@ commodity $
    note American Dollars
    format $1,000.00
    nomarket
+   alias USD
    default
 @end smallexample
 
@@ -2415,6 +2452,9 @@ provide the ``canonical'' representation.
 
 The @code{nomarket} sub-directive states that the commodity's price
 should never be auto-downloaded.
+
+The @code{alias} sub-directive states that any commodity matching this
+symbol is to use the commodity declared in this block.
 
 The @code{default} sub-directive marks this as the ``default'' commodity.
 
@@ -2436,59 +2476,18 @@ The posting will have a cost of $400.
 @item end
 @findex end
 @c instance_t::end_directive in textual.cc
-Closes block commands like @code{tag} or @code{comment}.
+Closes block commands like @code{apply} or @code{comment}.
 
 @item expr
 @findex expr
 @c instance_t::expr_directive in textual.cc
 
-@item fixed
-@findex fixed
-@cindex fixated prices
-@c instance_t::fixed_directive in textual.cc
-
-A fixed block is used to set fixated prices (@pxref{Fixated prices and
-costs}) for a series of transactions.  It's purely a typing saver, for
-use when entering many transactions with fixated prices.
-
-Thus, the following:
-
-@smallexample @c input:validate
-fixed CAD $0.90
-2012-04-10 Lunch in Canada
-    Assets:Wallet            -15.50 CAD
-    Expenses:Food            15.50 CAD
-
-2012-04-11 Second day Dinner in Canada
-    Assets:Wallet            -25.75 CAD
-    Expenses:Food            25.75 CAD
-endfixed CAD
-@end smallexample
-
-is equivalent to this:
-
-@smallexample @c input:validate
-2012-04-10 Lunch in Canada
-    Assets:Wallet            -15.50 CAD @{=$0.90@}
-    Expenses:Food            15.50 CAD  @{=$0.90@}
-
-2012-04-11 Second day Dinner in Canada
-    Assets:Wallet            -25.75 CAD  @{=$0.90@}
-    Expenses:Food            25.75 CAD   @{=$0.90@}
-@end smallexample
-
-Note that ending a @code{fixed} is done differently than other
-directives, as @code{fixed} is closed with an @code{endfixed} (i.e.,
-there is @emph{no space} between @code{end} and @code{fixed}).
-
-For the moment, users may wish to study
-@uref{http://bugs.ledger-cli.org/show_bug.cgi?id=789, Bug Report 789}
-before using the @code{fixed} directive in production.
-
 @item include
 @findex include
 @c instance_t::include_directive in textual.cc
-Include the stated file as if it were part of the current file.
+Include the stated file as if it were part of the current file.  The file
+name can contain a wildcard (@samp{*}) to refer to multiple files (e.g.
+@samp{bank/*.ledger}).
 
 @item payee
 @findex payee
@@ -2914,7 +2913,7 @@ you a place to put those codes:
 
 A transaction can have a ``state'': cleared, pending, or uncleared.  The
 default is uncleared.  To mark a transaction cleared, put an asterisk
-@samp{*} before the payee, after the date or code:
+@samp{*} after the date, before the code or payee:
 
 @smallexample @c input:validate
 2012-03-10 * KFC
@@ -3105,6 +3104,13 @@ it appears as:
 This shows that they are all in the same transaction (which is why the
 date is not repeated), but they have different payees now.
 
+If using the @option{--strict} or @option{--pedantic} options, you must
+declare this tag to avoid warnings and errors.
+
+The payee name used with the tag is not enforced by the
+@option{--check-payees} option, due to a bug:
+@url{https://github.com/ledger/ledger/issues/556}.
+
 @node Metadata values, Typed metadata, Metadata tags, Metadata
 @subsection Metadata values
 
@@ -3189,9 +3195,9 @@ look ``harder'') rather than parentheses:
 @node Expression amounts, Balance verification, Virtual postings, Transactions
 @section Expression amounts
 
-An amount is usually a numerical figure with an (optional) commodity,
-but it can also be any value expression.  To indicate this, surround
-the amount expression with parentheses:
+An amount is a numerical figure with a commodity, but it can also be
+any value expression.  To indicate this, surround the amount
+expression with parentheses:
 
 @smallexample @c input:validate
 2012-03-10 * KFC
@@ -3231,6 +3237,45 @@ A balance assertion has this general form:
 
 This simply asserts that after subtracting $20.00 from Assets:Cash,
 that the resulting total matches $500.00.  If not, it is an error.
+
+The assertion has an effect only on the specified commodity. If an account has
+multiple commodities, then only the one asserted is verified:
+
+@smallexample
+2012-03-10 KFC New York
+    Expenses:Food                $20.00
+    Assets:Cash                 $-20.00 = $500.00
+
+2012-03-11 KFC Montreal
+    Expenses:Food                 15.00 CAD
+    Assets:Cash                  -15.00 CAD = $500.00
+@end smallexample
+
+In this case, the amount in USD of cash (which has not changed) is validated.
+Nothing is asserted about the current amount of Canadian dollars in @samp{Asset:Cash}.
+
+@subsubsection Special assertion value 0
+
+The only value that can be asserted without a commodity is @samp{0}.
+This results in a cross-commodities assertion, which makes it possible to
+assert that an account is totally empty.
+
+@smallexample
+2012-03-09 Fill Wallet
+    Revenue                      $20.00
+    Revenue                       15.00 CAD
+    Assets:Cash
+
+2012-03-10 KFC New York
+    Expenses:Food                $20.00
+    Assets:Cash                 $-20.00
+
+2012-03-11 KFC Montreal
+    Expenses:Food                 15.00 CAD
+    Assets:Cash                  -15.00 CAD = 0
+@end smallexample
+
+The last transaction will assert that we are out of cash of any sort.
 
 @node Balance assignments, Resetting a balance, Balance assertions, Balance verification
 @subsection Balance assignments
@@ -3508,12 +3553,12 @@ Plus, it comes with dangers.  This works fine:
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{$50.00@} @@ $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} @@@@ $375.00
     Income:Capital Gains       $-125.00
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{$50.00@} @@ $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} @@@@ $375.00
     Income:Capital Gains       $-125.00
 @end smallexample
 
@@ -3527,12 +3572,12 @@ But this does not do what you might expect:
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@ $375.00
+    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@@@ $375.00
     Income:Capital Gains       $-125.00
 
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@ $375.00
+    Assets:Brokerage            -5 AAPL @{@{$500.00@}@} @@@@ $375.00
     Income:Capital Gains       $-125.00
 @end smallexample
 
@@ -3608,7 +3653,7 @@ expressions):
 @smallexample
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] @@ $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] @@@@ $375.00
     Income:Capital Gains       $-125.00
 @end smallexample
 
@@ -3625,7 +3670,7 @@ indicate a virtual cost:
 @smallexample
 2012-04-10 My Broker
     Assets:Brokerage:Cash       $375.00
-    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] (Oh my!) @@ $375.00
+    Assets:Brokerage            -5 AAPL @{$50.00@} [2012-04-10] (Oh my!) @@@@ $375.00
     Income:Capital Gains       $-125.00
 @end smallexample
 
@@ -8091,8 +8136,13 @@ posting.
 A regular expression that matches against a transaction's payee name.
 
 @item %/REGEX/
-@itemx tag(REGEX)
-A regular expression that matches against a transaction's tags.
+@itemx expr has_tag(/REGEX/)
+@itemx expr has_tag('TAG')
+A regular expression (REGEX) or string (TAG) that checks for the tags of
+a transaction.
+
+@item tag(REGEX) =~ /REGEX/
+A regular expression that matches a transaction's tags against its values.
 
 @item expr date =~ /REGEX/
 Useful for specifying a date in plain terms.  For example, you could say
@@ -8160,6 +8210,19 @@ posting.
 @item expr code =~ /REGEX/
 A regular expression that matches against the transaction code (the
 text that occurs between parentheses before the payee).
+
+@item expr any(KEYWORD =~ /REGEX/)
+The @command{any} keyword is used to specify that at least one posting of
+the transaction must match the expression in brackets.  For example,
+@samp{ledger -f d reg expr "any(account =~ /Assets:/)"} can be used to
+display all transactions which involve at least one @samp{Assets:}
+account.
+
+@item expr all(KEYWORD =~ /REGEX/)
+The @command{all} keyword is used to specify that all postings of a
+transactions must match the expression in brackets.  For example,
+@samp{ledger -f d reg expr "all(account =~ /Assets:/)"} can be used to
+display all transactions where all accounts are @samp{Assets:}.
 
 @end table
 
@@ -9218,7 +9281,7 @@ looking at its @code{xact} member:
 last_xact = None
 for post in ledger.read_journal("sample.dat").query(""):
     if post.xact != last_xact:
-        for post in post.xact.posts:
+        for post in post.xact.posts():
             print "Transferring %s to/from %s" % (post.amount,
             post.account)
         last_xact = post.xact

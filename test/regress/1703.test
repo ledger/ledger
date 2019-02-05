@@ -1,0 +1,11 @@
+
+P 2018-10-31 MultifundosPlus R$0
+
+2017-05-03 * Test
+    Assets:A                     1 AAA @ R$ 3000
+    Assets:B
+
+test reg assets:a -V --now 2018-12-31
+17-May-03 Test                  Assets:A                     R$3000       R$3000
+end test
+

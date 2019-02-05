@@ -1,0 +1,15 @@
+; Test that automated transactions are added to accounts soon enough
+; for assertions to work.
+
+= expr account =~ /^Assets/
+    (Foo)                            1
+
+2018-06-09 Something
+    Assets                           $100
+    Equity
+
+2018-06-09 Assert amount added by automated transaction
+    [Foo]                            = $100
+test bal Foo
+                $100  Foo
+end test

@@ -20,7 +20,4 @@ if (BUILD_LIBRARY)
     target_link_libraries(MathTests ${PYTHON_LIBRARIES})
   endif()
   add_ledger_test(MathTests)
-
-  set_target_properties(check PROPERTIES DEPENDS LedgerUtilTests)
-  set_target_properties(check PROPERTIES DEPENDS LedgerMathTests)
 endif()

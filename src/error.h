@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -47,7 +47,7 @@ namespace ledger {
 extern std::ostringstream _desc_buffer;
 
 template <typename T>
-inline void throw_func(const string& message) {
+[[ noreturn ]] inline void throw_func(const string& message) {
   _desc_buffer.clear();
   _desc_buffer.str("");
   throw T(message);
@@ -81,10 +81,10 @@ string line_context(const string&           line,
                     const string::size_type pos     = 0,
                     const string::size_type end_pos = 0);
 
-string source_context(const path&            file,
-                      const istream_pos_type pos,
-                      const istream_pos_type end_pos,
-                      const string&          prefix = "");
+string source_context(const path&                  file,
+                      const std::istream::pos_type pos,
+                      const std::istream::pos_type end_pos,
+                      const string&                prefix = "");
 
 #define DECLARE_EXCEPTION(name, kind)                           \
   class name : public kind {                                    \
@@ -95,8 +95,9 @@ string source_context(const path&            file,
 
 struct error_count {
   std::size_t count;
-  explicit error_count(std::size_t _count) : count(_count) {}
-  const char * what() const { return ""; }
+  std::string message;
+  explicit error_count(std::size_t _count, std::string _msg) : count(_count), message(_msg) {}
+  const char * what() const { return message.c_str(); }
 };
 
 } // namespace ledger

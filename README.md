@@ -1,9 +1,9 @@
+[![Join the chat at https://gitter.im/use-package/Lobby](https://badges.gitter.im/use-package/Lobby.svg)](https://gitter.im/use-package/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status master](https://img.shields.io/travis/ledger/ledger/master.svg?label=master&style=flat)](https://travis-ci.org/ledger/ledger)
 [![Build Status next](https://img.shields.io/travis/ledger/ledger/next.svg?label=next&style=flat)](https://travis-ci.org/ledger/ledger)
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg?style=flat)](https://github.com/ledger/ledger/pulse/monthly)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](http://opensource.org/licenses/BSD-3-Clause)
 [![GitHub release](https://img.shields.io/github/release/ledger/ledger.svg?style=flat)](https://github.com/ledger/ledger/releases)
-
 
 # Ledger: Command-Line Accounting
 
@@ -84,19 +84,9 @@ Dependency | Version (or greater)
 [lcov] | 1.6 _optional_, for `make report`, used with `/./acprep gcov`
 [sloccount] | 2.26 _optional_, for `make sloc`
 
-And for building the outdated `release/2.6.3` branch:
+### macOS
 
-Dependency | Version
------------|--------
-[GMP] | 4.2.2
-[pcre] | 7.7
-[libofx] | 0.8.3 _optional_
-[expat] | 2.0.1 _optional_
-[libxml2] | 2.7.2 _optional_
-
-### Mac OS X
-
-You can use [Homebrew] or [MacPorts] to install Ledger easily on OS X. 
+You can use [Homebrew] or [MacPorts] to install Ledger easily on macOS.
 
 #### 1. Homebrew
 
@@ -111,7 +101,7 @@ If you to want to startup python, use the following command:
 
 #### 2. MacPorts
 
-If you build stuff using MacPorts on OS X, as I do, here is what you would
+If you build stuff using MacPorts on macOS, as I do, here is what you would
 run:
 
     $ sudo port install -f cmake python26 \
@@ -124,30 +114,19 @@ run:
 ### Ubuntu
 
 If you're going to build on Ubuntu, `sudo apt-get install ...` the
-following packages (current as of Ubuntu 14.04):
+following packages (current as of Ubuntu 18.04):
 
     $ sudo apt-get install build-essential cmake doxygen \
          libboost-system-dev libboost-dev python-dev gettext git \
          libboost-date-time-dev libboost-filesystem-dev \
          libboost-iostreams-dev libboost-python-dev libboost-regex-dev \
-         libboost-test-dev libedit-dev libgmp3-dev libmpfr-dev texinfo
-
-Or, for Ubuntu 12.04:
-
-    $ sudo apt-get install build-essential cmake zlib1g-dev libbz2-dev \
-         python-dev gettext libgmp3-dev libmpfr-dev libboost-dev \
-         libboost-regex-dev libboost-date-time-dev \
-         libboost-filesystem-dev libboost-python-dev texinfo lcov \
-         sloccount libboost-iostreams-dev libboost-test-dev
+         libboost-test-dev libedit-dev libgmp3-dev libmpfr-dev texinfo tzdata
 
 ### Debian
 
-Debian squeeze (6.0): the version of boost in squeeze is too old
-for ledger and unfortunately no backport is available at the moment.
-
-Debian 7 (wheezy), Debian 8 (jessie), Debian testing (stretch) and Debian
-unstable (sid) contain all components needed to build ledger.  You can
-install all required build dependencies using the following command:
+Debian 9 (stretch), Debian 10 (buster), Debian testing and Debian unstable
+(sid) contain all components needed to build ledger.  You can install all
+required build dependencies using the following command:
 
     $ sudo apt-get install build-essential cmake autopoint texinfo python-dev \
          zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
@@ -166,7 +145,7 @@ footwork for you:
     # $HOME/local and build with 2 processes in parallel
     $ ./acprep update --boost-suffix=-mt --prefix=$HOME/local -j2
 
-Please read the contents of `CMakeFiles/CMakeOutput.log` and 
+Please read the contents of `CMakeFiles/CMakeOutput.log` and
 `CMakeFiles/CMakeError.log` if the configure step fails.  Also,
 see the `help` subcommand to `acprep`, which explains some of its many
 options.  It's pretty much the only command I run for configuring, building

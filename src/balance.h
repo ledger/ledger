@@ -81,6 +81,7 @@ class balance_t
 {
 public:
   typedef std::map<commodity_t *, amount_t> amounts_map;
+  typedef std::vector<const amount_t *> amounts_array;
 
   amounts_map amounts;
 
@@ -527,6 +528,12 @@ public:
    * amount_t::strip_annotations for more details.
    */
   balance_t strip_annotations(const keep_details_t& what_to_keep) const;
+
+  /**
+   * Given a balance, insert a commodity-wise sort of the amounts into the
+   * given amounts_array.
+   */
+  void sorted_amounts(amounts_array& sorted) const;
 
   /**
    * Iteration primitives.  `map_sorted_amounts' allows one to visit

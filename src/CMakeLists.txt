@@ -52,7 +52,6 @@ set(LEDGER_SOURCES
   times.cc
   error.cc
   utils.cc
-  strptime.cc
   wcwidth.cc)
 
 if (HAVE_BOOST_PYTHON)
@@ -134,11 +133,18 @@ set(LEDGER_INCLUDES
   value.h
   views.h
   xact.h
-  strptime.h
   ${PROJECT_BINARY_DIR}/system.hh)
 
+# Windows provides no strptime(), so supply our own.
+if (WIN32 OR CYGWIN)
+  list(APPEND LEDGER_INCLUDES
+    strptime.h)
+  list(APPEND LEDGER_SOURCES
+    strptime.cc)
+endif()
+
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if (CMAKE_CXX_COMPILER MATCHES "clang\\+\\+")
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_definitions(
       # -Weverything
       # -Wno-disabled-macro-expansion
@@ -193,7 +199,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         DEPENDS ${_header_filename})
     endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
 
-  elseif (CMAKE_CXX_COMPILER MATCHES "g\\+\\+")
+  elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(GXX_WARNING_FLAGS
       -pedantic
       -Wall
@@ -261,7 +267,9 @@ else()
   endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
 endif()
 
-add_pch_rule(${PROJECT_BINARY_DIR}/system.hh LEDGER_SOURCES LEDGER_CLI_SOURCES)
+if(PRECOMPILE_SYSTEM_HH)
+  add_pch_rule(${PROJECT_BINARY_DIR}/system.hh LEDGER_SOURCES LEDGER_CLI_SOURCES)
+endif()
 
 include(GNUInstallDirs)
 

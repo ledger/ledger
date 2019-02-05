@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -294,7 +294,7 @@ bool commodity_t::symbol_needs_quotes(const string& symbol)
 
 void commodity_t::parse_symbol(std::istream& in, string& symbol)
 {
-  istream_pos_type pos = in.tellg();
+  std::istream::pos_type pos = in.tellg();
 
   char buf[256];
   char c = peek_next_nonws(in);

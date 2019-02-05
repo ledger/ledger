@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -58,18 +58,19 @@ public:
 
   shared_ptr<std::istream> stream;
 
-  path             pathname;
-  path             current_directory;
-  journal_t *      journal;
-  account_t *      master;
-  scope_t *        scope;
-  char             linebuf[MAX_LINE + 1];
-  istream_pos_type line_beg_pos;
-  istream_pos_type curr_pos;
-  std::size_t      linenum;
-  std::size_t      errors;
-  std::size_t      count;
-  std::size_t      sequence;
+  path                   pathname;
+  path                   current_directory;
+  journal_t *            journal;
+  account_t *            master;
+  scope_t *              scope;
+  char                   linebuf[MAX_LINE + 1];
+  std::istream::pos_type line_beg_pos;
+  std::istream::pos_type curr_pos;
+  std::size_t            linenum;
+  std::size_t            errors;
+  std::size_t            count;
+  std::size_t            sequence;
+  std::string            last;
 
   explicit parse_context_t(const path& cwd)
     : current_directory(cwd), master(NULL), scope(NULL),
@@ -112,11 +113,7 @@ inline parse_context_t open_for_reading(const path& pathname,
                                         const path& cwd)
 {
   path filename = resolve_path(pathname);
-#if BOOST_VERSION >= 104600 && BOOST_FILESYSTEM_VERSION >= 3
   filename = filesystem::absolute(filename, cwd);
-#else
-  filename = filesystem::complete(filename, cwd);
-#endif
   if (! exists(filename) || is_directory(filename))
     throw_(std::runtime_error,
            _f("Cannot read journal file %1%") % filename);

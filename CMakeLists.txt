@@ -27,10 +27,12 @@ endif()
 ########################################################################
 
 option(USE_PYTHON "Build support for the Python scripting bridge" OFF)
+OPTION(USE_PYTHON27_COMPONENT "Use python27 as name of Boost.Python component" OFF)
 option(USE_DOXYGEN "Build reference documentation using Doxygen" OFF)
 
 option(DISABLE_ASSERTS "Build without any internal consistency checks" OFF)
 option(BUILD_DEBUG "Build support for runtime debugging" OFF)
+option(PRECOMPILE_SYSTEM_HH "Precompile system.hh" ON)
 
 option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
 option(BUILD_DOCS "Build and install documentation" OFF)
@@ -67,7 +69,11 @@ if (USE_PYTHON)
 
   find_package(PythonLibs)
   if (PYTHONLIBS_FOUND)
-    set(BOOST_PYTHON python)
+    if(USE_PYTHON27_COMPONENT)
+      set(BOOST_PYTHON "python27")
+    else()
+      set(BOOST_PYTHON "python")
+    endif()
     set(HAVE_BOOST_PYTHON 1)
     include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
   else()
@@ -96,8 +102,6 @@ include(CheckCXXSourceCompiles)
 include(CheckCXXSourceRuns)
 include(CMakePushCheckState)
 
-check_function_exists(access HAVE_ACCESS)
-check_function_exists(realpath HAVE_REALPATH)
 check_function_exists(getpwuid HAVE_GETPWUID)
 check_function_exists(getpwnam HAVE_GETPWNAM)
 check_function_exists(ioctl HAVE_IOCTL)
@@ -260,7 +264,7 @@ macro(add_ledger_library_dependencies _target)
   endif()
   if (HAVE_BOOST_PYTHON)
     if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
-      # Don't link directly to a Python framework on OS X, to avoid segfaults
+      # Don't link directly to a Python framework on macOS, to avoid segfaults
       # when the module is imported from a different interpreter
       target_link_libraries(${_target} ${Boost_LIBRARIES})
       set_target_properties(${_target} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
@@ -298,8 +302,7 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/src/system.hh.in
   ${PROJECT_BINARY_DIR}/system.hh)
 
-if((CMAKE_CXX_COMPILER MATCHES "clang") OR
-   (CMAKE_CXX_COMPILER MATCHES "clang\\+\\+"))
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 endif()
 

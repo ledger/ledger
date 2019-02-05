@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -35,6 +35,10 @@
                                 // was moved there for the sake of clarity here
 #include "session.h"
 
+#ifdef HAVE_EDIT
+#include <editline/readline.h>
+#endif
+
 using namespace ledger;
 
 #if HAVE_BOOST_PYTHON
@@ -69,9 +73,6 @@ int main(int argc, char * argv[], char * envp[])
 
   // Initialize global Boost/C++ environment
   std::ios::sync_with_stdio(false);
-#if BOOST_VERSION < 104600
-  filesystem::path::default_name_check(filesystem::portable_posix_name);
-#endif
 
   std::signal(SIGINT, sigint_handler);
 #if !defined(_WIN32) && !defined(__CYGWIN__)
@@ -128,13 +129,9 @@ int main(int argc, char * argv[], char * envp[])
 
       bool exit_loop = false;
 
-#if HAVE_EDIT
-
+#ifdef HAVE_EDIT
       rl_readline_name = const_cast<char *>("Ledger");
-#if 0
-      // jww (2009-02-05): NYI
-      rl_attempted_completion_function = ledger_completion;
-#endif
+      // TODO: rl_attempted_completion_function = ledger_completion;
 
       while (char * p = readline(global_scope->prompt_string())) {
         char * expansion = NULL;
@@ -173,7 +170,7 @@ int main(int argc, char * argv[], char * envp[])
             global_scope->execute_command_wrapper(split_arguments(p), true);
         }
 
-#if HAVE_EDIT
+#ifdef HAVE_EDIT
         if (expansion)
           std::free(expansion);
         std::free(p);

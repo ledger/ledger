@@ -59,7 +59,7 @@ _ledger()
     accounts="Assets Liabilities Equity Revenue Expenses"
 
     case $prev in
-        --@(cache|file|init-file|output|pager|price-db|script))
+        --@(cache|file|init-file|output|pager|price-db|script)|-@(f|i|o))
             _filedir
             return 0
             ;;

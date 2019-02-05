@@ -42,6 +42,11 @@ namespace {
   {
     char buf[128];
     char * p = buf;
+
+    if (name.length() > 127) {
+        throw_(option_error, _f("Illegal option --%1%") % name);
+    }
+
     foreach (char ch, name) {
       if (ch == '-')
         *p++ = '_';

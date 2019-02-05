@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -79,13 +79,8 @@ commodity_quote_from_script(commodity_t& commodity,
     if (optional<std::pair<commodity_t *, price_point_t> > point =
         commodity_pool_t::current_pool->parse_price_directive(buf)) {
       if (commodity_pool_t::current_pool->price_db) {
-#if defined(__GNUG__) && __GNUG__ < 3
-        ofstream database(*commodity_pool_t::current_pool->price_db,
-                          ios::out | ios::app);
-#else
         ofstream database(*commodity_pool_t::current_pool->price_db,
                           std::ios_base::out | std::ios_base::app);
-#endif
         database << "P "
                  << format_datetime(point->second.when, FMT_WRITTEN)
                  << " " << commodity.symbol()

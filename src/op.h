@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -285,19 +285,19 @@ public:
 
   struct context_t
   {
-    ptr_op_t           expr_op;
-    ptr_op_t           op_to_find;
-    ostream_pos_type * start_pos;
-    ostream_pos_type * end_pos;
-    bool               relaxed;
+    ptr_op_t                 expr_op;
+    ptr_op_t                 op_to_find;
+    std::ostream::pos_type * start_pos;
+    std::ostream::pos_type * end_pos;
+    bool                     relaxed;
 
     context_t() : start_pos(NULL), end_pos(NULL), relaxed(false) {}
 
-    context_t(const ptr_op_t&          _expr_op,
-              const ptr_op_t&          _op_to_find,
-              ostream_pos_type * const _start_pos  = NULL,
-              ostream_pos_type * const _end_pos    = NULL,
-              const bool               _relaxed    = true)
+    context_t(const ptr_op_t&                _expr_op,
+              const ptr_op_t&                _op_to_find,
+              std::ostream::pos_type * const _start_pos  = NULL,
+              std::ostream::pos_type * const _end_pos    = NULL,
+              const bool                     _relaxed    = true)
       : expr_op(_expr_op), op_to_find(_op_to_find),
         start_pos(_start_pos), end_pos(_end_pos),
         relaxed(_relaxed) {}

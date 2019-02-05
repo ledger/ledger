@@ -57,7 +57,7 @@ A: You're probably missing some dependency libraries.  If you tried
         libboost-date-time-dev libboost-filesystem-dev \
         libboost-graph-dev libboost-iostreams-dev \
         libboost-python-dev libboost-regex-dev libboost-test-dev \
-        doxygen libedit-dev libmpc-dev
+        doxygen libedit-dev libmpc-dev tzdata
 
 ----------------------------------------------------------------------
 
@@ -96,10 +96,10 @@ A: Actually, the real segfault is in libstdc++'s facet code.  It's being
 
 Q: Something else fails, or Ledger crashes on startup
 
-A: This, I am most interested in hearing about.  Please file a bug
-  at the Ledger Bugzilla, http://bugs.ledger-cli.org/.  The more
-  details you can provide, the better.  Also, if Ledger is crashing,
-  try running it under gdb like so:
+A: This, I am most interested in hearing about.  Please file a bug at the
+  Ledger Issue Tracker, https://github.com/ledger/ledger/issues.  The more
+  details you can provide, the better.  Also, if Ledger is crashing, try
+  running it under gdb like so:
 
     $ gdb ledger
     (gdb) run <ARGS TO LEDGER>
@@ -115,7 +115,7 @@ Q: Whenever I try to use the Python support, I get a segfault
 
 A: Make sure that the boost_python library you linked against is using the
   exact same Python as the Ledger executable.  In particular I see this
-  bug on OS X systems where boost_python is linked against the default
+  bug on macOS systems where boost_python is linked against the default
   Python, while Ledger is linked against the version provided by MacPorts.
   Or vice versa.
 

@@ -26,6 +26,11 @@ stdenv.mkDerivation {
 
   cmakeFlags = [ "-DCMAKE_INSTALL_LIBDIR=lib" ];
 
+  buildPhase = "make -j$NIX_BUILD_CORES";
+  checkPhase = "ctest -j$NIX_BUILD_CORES";
+
+  doCheck = true;
+
   meta = {
     homepage = "http://ledger-cli.org/";
     description = "A double-entry accounting system with a command-line reporting interface";

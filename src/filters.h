@@ -604,6 +604,7 @@ public:
 
   virtual ~changed_value_posts() {
     TRACE_DTOR(changed_value_posts);
+    temps.clear();
     handler.reset();
   }
 

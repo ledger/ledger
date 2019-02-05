@@ -1,0 +1,12 @@
+
+2003/12/20 Organic Co-op
+  Expenses:Food:Groceries             $ 37.50  ; ] [=2004/01/01]
+  Assets:Cash                         $-37.50
+
+test bal
+            $ -37.50  Assets:Cash
+             $ 37.50  Expenses:Food:Groceries
+--------------------
+                   0
+end test
+

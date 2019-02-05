@@ -395,10 +395,12 @@ bool xact_base_t::finalize()
         some_null = true;
       }
 
-      if (post->has_flags(POST_DEFERRED))
-          post->account->add_deferred_post(id(), post);
-        else
-          post->account->add_post(post);
+      if (post->has_flags(POST_DEFERRED)) {
+        if (!post->amount.is_null())
+            post->account->add_deferred_post(id(), post);
+      } else {
+        post->account->add_post(post);
+      }
 
       post->xdata().add_flags(POST_EXT_VISITED);
       post->account->xdata().add_flags(ACCOUNT_EXT_VISITED);
@@ -805,6 +807,10 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
 
         xact.add_post(new_post);
         new_post->account->add_post(new_post);
+
+        // Add flags so this post updates the account balance
+        new_post->xdata().add_flags(POST_EXT_VISITED);
+        new_post->account->xdata().add_flags(ACCOUNT_EXT_VISITED);
 
         if (new_post->must_balance())
           needs_further_verification = true;

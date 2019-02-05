@@ -170,7 +170,7 @@ void time_log_t::close()
     foreach (account_t * account, accounts) {
       DEBUG("timelog", "Clocking out from account " << account->fullname());
       context.count += clock_out_from_timelog
-        (time_xacts, time_xact_t(none, CURRENT_TIME(), account), context);
+        (time_xacts, time_xact_t(none, CURRENT_TIME(), false, account), context);
     }
     assert(time_xacts.empty());
   }
