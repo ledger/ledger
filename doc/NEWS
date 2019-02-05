@@ -1,6 +1,6 @@
                              Ledger NEWS
 
-* 3.1.2 (unreleased)
+* 3.1.2 (2019-02-05)
 
 - Increase maximum length for regex from 255 to 4095 (bug #981)
 
@@ -32,7 +32,7 @@
 
 - Keep pending items in budgets until the last day they apply
 
-- Fixed bug where .total used in value expressions breaks totals
+- Fix bug where .total used in value expressions breaks totals
 
 - Make automated transactions work with assertions (bug #1127)
 
