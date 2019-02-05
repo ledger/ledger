@@ -39,25 +39,6 @@ end of this file). An Emacs mode for Ledger files can be found in the
 [ledger/ledger-mode repository] and a vim plugin is located in the
 [ledger/vim-ledger repository].
 
-## To the Rest
-
-If you're reading this file, you have in your hands the Bleeding Edge.  This
-may very well *not* be what you want, since it's not guaranteed to be in a
-functionally complete state.  It's under active development, and may change in
-any way at any time.  What you may prefer is the **CURRENT** stable release, or
-the **BETA** branch.
-
-Branch | Command
--------|--------
-**RELEASE**  | `git checkout -b stable v3.1` |
-**CURRENT**  | `git checkout -b master origin/master` |
-**BETA**     | `git checkout -b 3.1.1 release/3.1.1` |
-**ALPHA**    | `git checkout -b next origin/next` |
-
-There are also several topic branches which contain experimental features,
-though none of these are guaranteed to compile.  Best to chat with me on
-[IRC] or via the [mailing list] before going too much further with those.
-
 ## Dependencies
 
 If you wish to proceed in this venture, you'll need a few dependencies.  The

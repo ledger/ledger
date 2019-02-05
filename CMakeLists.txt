@@ -10,7 +10,7 @@ set(Ledger_VERSION_MAJOR 3)
 set(Ledger_VERSION_MINOR 1)
 set(Ledger_VERSION_PATCH 2)
 set(Ledger_VERSION_PRERELEASE "")
-set(Ledger_VERSION_DATE  20160801)
+set(Ledger_VERSION_DATE  20190205)
 
 set(Ledger_TEST_TIMEZONE "America/Chicago")
 
