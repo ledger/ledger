@@ -6,6 +6,8 @@
 
 - Make sorting order of lot information deterministic (bug #1747)
 
+- Fix bug in tag value parsing (bug #1702)
+
 - Remove the `org` command, which was always a hack to begin with (bug #1706)
 
 - Provide Docker information in README
