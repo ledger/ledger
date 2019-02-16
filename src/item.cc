@@ -198,7 +198,7 @@ void item_t::parse_tags(const char * p,
       tag = string(q, len - index);
 
       string_map::iterator i;
-      string field(p + len + index);
+      string field(p + (q - buf.get()) + len);
       trim(field);
       if (by_value) {
         bind_scope_t bound_scope(scope, *this);
