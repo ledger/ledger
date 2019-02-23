@@ -2,6 +2,8 @@
 
 ## 3.1.3 (unreleased)
 
+- Properly reject postings with a comment right after the flag (bug #1753)
+
 - Make sorting order of lot information deterministic (bug #1747)
 
 - Remove the `org` command, which was always a hack to begin with (bug #1706)
