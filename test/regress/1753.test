@@ -1,0 +1,12 @@
+2018-01-02 * Account name starting with semicolon
+    * ;A        10.00 EUR
+    B
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 2:
+While parsing posting:
+  * ;A        10.00 EUR
+
+Error: Posting has no account
+end test

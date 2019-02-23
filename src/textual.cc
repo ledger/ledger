@@ -1440,7 +1440,7 @@ post_t * instance_t::parse_post(char *          line,
 
   // Parse the account name
 
-  if (! *p)
+  if (! *p || *p == ';')
     throw parse_error(_("Posting has no account"));
 
   char * next = next_element(p, true);
