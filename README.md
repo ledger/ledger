@@ -39,6 +39,12 @@ end of this file). An Emacs mode for Ledger files can be found in the
 [ledger/ledger-mode repository] and a vim plugin is located in the
 [ledger/vim-ledger repository].
 
+## Docker version
+
+If you have Docker installed on your computer or server, you can use a [Docker version](https://hub.docker.com/r/dcycle/ledger/) of this software, without installing any further dependencies:
+
+    $ docker run --rm -v "$PWD"/test/input:/data dcycle/ledger:1 -f /data/sample.dat reg
+
 ## Dependencies
 
 If you wish to proceed in this venture, you'll need a few dependencies.  The
