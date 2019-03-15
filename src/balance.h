@@ -80,7 +80,7 @@ class balance_t
            multiplicative<balance_t, long> > > > > > > > > > > > > >
 {
 public:
-  typedef std::map<commodity_t *, amount_t> amounts_map;
+  typedef std::unordered_map<commodity_t *, amount_t> amounts_map;
   typedef std::vector<const amount_t *> amounts_array;
 
   amounts_map amounts;
