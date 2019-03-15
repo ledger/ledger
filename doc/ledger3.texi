@@ -4843,10 +4843,6 @@ directly by Emacs Lisp.  The format of the @code{sexp} is:
 @subsection Emacs @command{org} Mode
 @findex org
 
-The @command{org} command produces a journal file suitable for use in
-the Emacs Org mode.  More details on using Org mode can be found at
-@url{http://www.orgmode.org}.
-
 Org mode has a sub-system known as Babel which allows for literate
 programming.  This allows you to mix text and code within the same
 document and automatically execute code which may generate results

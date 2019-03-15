@@ -9,7 +9,6 @@ set(LEDGER_SOURCES
   convert.cc
   draft.cc
   emacs.cc
-  org.cc
   ptree.cc
   print.cc
   output.cc
@@ -103,7 +102,6 @@ set(LEDGER_INCLUDES
   mask.h
   op.h
   option.h
-  org.h
   output.h
   parser.h
   pool.h

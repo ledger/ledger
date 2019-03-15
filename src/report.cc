@@ -48,7 +48,6 @@
 #include "convert.h"
 #include "ptree.h"
 #include "emacs.h"
-#include "org.h"
 
 namespace ledger {
 
@@ -1671,11 +1670,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'l':
       if (is_eq(p, "lisp"))
         return POSTS_REPORTER(new format_emacs_posts(output_stream));
-      break;
-    case 'o':
-      if (is_eq(p, "org"))
-        return POSTS_REPORTER(new posts_to_org_table
-                            (*this, maybe_format(HANDLER(prepend_format_))));
       break;
 
     case 'p':

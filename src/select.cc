@@ -421,8 +421,6 @@ value_t select_command(call_scope_t& args)
       }
       else if (arg == "emacs") {
       }
-      else if (arg == "org") {
-      }
     }
 
     ++m1;
