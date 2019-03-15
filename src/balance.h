@@ -186,14 +186,7 @@ public:
    * in time.
    */
   bool operator==(const balance_t& bal) const {
-    amounts_map::const_iterator i, j;
-    for (i = amounts.begin(), j = bal.amounts.begin();
-         i != amounts.end() && j != bal.amounts.end();
-         i++, j++) {
-      if (! (i->first == j->first && i->second == j->second))
-        return false;
-    }
-    return i == amounts.end() && j == bal.amounts.end();
+    return amounts == bal.amounts;
   }
   bool operator==(const amount_t& amt) const {
     if (amt.is_null())
