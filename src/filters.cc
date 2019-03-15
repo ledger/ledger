@@ -1100,17 +1100,17 @@ void posts_as_equity::report_subtotal()
     value_t value(pair.second.value.strip_annotations(report.what_to_keep()));
     if (! value.is_zero()) {
       if (value.is_balance()) {
-        foreach (const balance_t::amounts_map::value_type& amount_pair,
-                 value.as_balance_lval().amounts) {
-          if (! amount_pair.second.is_zero())
-            handle_value(/* value=      */ amount_pair.second,
-                         /* account=    */ pair.second.account,
-                         /* xact=       */ &xact,
-                         /* temps=      */ temps,
-                         /* handler=    */ handler,
-                         /* date=       */ finish,
-                         /* act_date_p= */ false);
-        }
+        value.as_balance_lval().map_sorted_amounts
+          ([&](const amount_t& amt) {
+             if (! amt.is_zero())
+               handle_value(/* value=      */ amt,
+                            /* account=    */ pair.second.account,
+                            /* xact=       */ &xact,
+                            /* temps=      */ temps,
+                            /* handler=    */ handler,
+                            /* date=       */ finish,
+                            /* act_date_p= */ false);
+           });
       } else {
         handle_value(/* value=      */ value.to_amount(),
                      /* account=    */ pair.second.account,
