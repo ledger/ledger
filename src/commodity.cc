@@ -461,16 +461,18 @@ bool commodity_t::compare_by_commodity::operator()(const amount_t * left,
       amount_t rightprice(*arightcomm.details.price);
 
       if (leftprice.commodity() == rightprice.commodity()) {
-        DEBUG("commodity.compare", "lot commodities match, comparing on sign");
-        return (leftprice - rightprice).sign() < 0;
+        DEBUG("commodity.compare",
+              "both have price, commodities match, comparing amount");
+        return leftprice < rightprice;
       } else {
         // Since we have two different amounts, there's really no way
         // to establish a true sorting order; we'll just do it based
         // on the numerical values.
         leftprice.clear_commodity();
         rightprice.clear_commodity();
-        DEBUG("commodity.compare", "lot commodities don't match, comparing on sign");
-        return (leftprice - rightprice).sign() < 0;
+        DEBUG("commodity.compare",
+              "both have price, commodities don't match, recursing");
+        return commodity_t::compare_by_commodity()(&leftprice, &rightprice);
       }
     }
 
