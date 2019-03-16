@@ -420,8 +420,8 @@ bool commodity_t::valid() const
   return true;
 }
 
-bool commodity_t::compare_by_commodity::operator()(const amount_t * left,
-                                                   const amount_t * right) const
+int commodity_t::compare_by_commodity::operator()(const amount_t * left,
+                                                  const amount_t * right) const
 {
   commodity_t& leftcomm(left->commodity());
   commodity_t& rightcomm(right->commodity());
@@ -432,99 +432,124 @@ bool commodity_t::compare_by_commodity::operator()(const amount_t * left,
   int cmp = leftcomm.base_symbol().compare(rightcomm.base_symbol());
   if (cmp != 0) {
     DEBUG("commodity.compare", "symbol is <");
-    return cmp < 0;
+    return cmp;
   }
 
-  if (! leftcomm.has_annotation()) {
-    DEBUG("commodity.compare", "left has no annotation");
-    return true;
+  if (! leftcomm.has_annotation() && rightcomm.has_annotation()) {
+    DEBUG("commodity.compare", "left has no annotation, right does");
+    return -1;
   }
-  else if (! rightcomm.has_annotation()) {
-    DEBUG("commodity.compare", "right has no annotation");
-    return false;
+  else if (leftcomm.has_annotation() && ! rightcomm.has_annotation()) {
+    DEBUG("commodity.compare", "right has no annotation, left does");
+    return 1;
   }
-  else {
-    annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));
-    annotated_commodity_t& arightcomm(static_cast<annotated_commodity_t&>(rightcomm));
+  else if (! leftcomm.has_annotation() && ! rightcomm.has_annotation()) {
+    DEBUG("commodity.compare", "there are no annotations, commodities match");
+    return 0;
+  }
 
-    if (! aleftcomm.details.price && arightcomm.details.price) {
-      DEBUG("commodity.compare", "left has no price, right does");
-      return true;
-    }
-    if (aleftcomm.details.price && ! arightcomm.details.price) {
-      DEBUG("commodity.compare", "right has no price, left does");
-      return false;
-    }
+  annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));
+  annotated_commodity_t& arightcomm(static_cast<annotated_commodity_t&>(rightcomm));
 
-    if (aleftcomm.details.price && arightcomm.details.price) {
-      amount_t leftprice(*aleftcomm.details.price);
-      amount_t rightprice(*arightcomm.details.price);
+  if (! aleftcomm.details.price && arightcomm.details.price) {
+    DEBUG("commodity.compare", "left has no price, right does");
+    return -1;
+  }
+  if (aleftcomm.details.price && ! arightcomm.details.price) {
+    DEBUG("commodity.compare", "right has no price, left does");
+    return 1;
+  }
 
-      if (leftprice.commodity() == rightprice.commodity()) {
-        DEBUG("commodity.compare",
-              "both have price, commodities match, comparing amount");
-        return leftprice < rightprice;
-      } else {
-        // Since we have two different amounts, there's really no way
-        // to establish a true sorting order; we'll just do it based
-        // on the numerical values.
-        leftprice.clear_commodity();
-        rightprice.clear_commodity();
-        DEBUG("commodity.compare",
-              "both have price, commodities don't match, recursing");
-        return commodity_t::compare_by_commodity()(&leftprice, &rightprice);
+  if (aleftcomm.details.price && arightcomm.details.price) {
+    amount_t leftprice(*aleftcomm.details.price);
+    amount_t rightprice(*arightcomm.details.price);
+
+    if (leftprice.commodity() != rightprice.commodity()) {
+      // Since we have two different amounts, there's really no way
+      // to establish a true sorting order; we'll just do it based
+      // on the numerical values.
+      leftprice.clear_commodity();
+      rightprice.clear_commodity();
+      DEBUG("commodity.compare",
+            "both have price, commodities don't match, recursing");
+      int cmp2 = commodity_t::compare_by_commodity()(&leftprice, &rightprice);
+      if (cmp2 != 0) {
+        DEBUG("commodity.compare", "recursion found a disparity");
+        return cmp2;
+      }
+    } else {
+      if (leftprice < rightprice) {
+        DEBUG("commodity.compare", "left price is less");
+        return -1;
+      }
+      else if (leftprice > rightprice) {
+        DEBUG("commodity.compare", "left price is more");
+        return 1;
       }
     }
-
-    if (! aleftcomm.details.date && arightcomm.details.date) {
-      DEBUG("commodity.compare", "left has no date, right does");
-      return true;
-    }
-    if (aleftcomm.details.date && ! arightcomm.details.date) {
-      DEBUG("commodity.compare", "right has no date, left does");
-      return false;
-    }
-
-    if (aleftcomm.details.date && arightcomm.details.date) {
-      gregorian::date_duration diff =
-        *aleftcomm.details.date - *arightcomm.details.date;
-      DEBUG("commodity.compare", "both have dates, comparing on difference");
-      return diff.is_negative();
-    }
-
-    if (! aleftcomm.details.tag && arightcomm.details.tag) {
-      DEBUG("commodity.compare", "left has no tag, right does");
-      return true;
-    }
-    if (aleftcomm.details.tag && ! arightcomm.details.tag) {
-      DEBUG("commodity.compare", "right has no tag, left does");
-      return false;
-    }
-
-    if (aleftcomm.details.tag && arightcomm.details.tag) {
-      DEBUG("commodity.compare", "both have tags, comparing lexically");
-      return *aleftcomm.details.tag < *arightcomm.details.tag;
-    }
-
-    if (! aleftcomm.details.value_expr && arightcomm.details.value_expr) {
-      DEBUG("commodity.compare", "left has no value expr, right does");
-      return true;
-    }
-    if (aleftcomm.details.value_expr && ! arightcomm.details.value_expr) {
-      DEBUG("commodity.compare", "right has no value expr, left does");
-      return false;
-    }
-
-    if (aleftcomm.details.value_expr && arightcomm.details.value_expr) {
-      DEBUG("commodity.compare", "both have value exprs, comparing text reprs");
-      return (aleftcomm.details.value_expr->text() <
-              arightcomm.details.value_expr->text());
-    }
-
-    DEBUG("commodity.compare", "the two are incomparable, which should never happen");
-    assert(false);
-    return true;
   }
+
+  if (! aleftcomm.details.date && arightcomm.details.date) {
+    DEBUG("commodity.compare", "left has no date, right does");
+    return -1;
+  }
+  if (aleftcomm.details.date && ! arightcomm.details.date) {
+    DEBUG("commodity.compare", "right has no date, left does");
+    return 1;
+  }
+
+  if (aleftcomm.details.date && arightcomm.details.date) {
+    gregorian::date_duration diff =
+      *aleftcomm.details.date - *arightcomm.details.date;
+    DEBUG("commodity.compare", "both have dates, comparing on difference");
+    if (diff.is_negative()) {
+      DEBUG("commodity.compare", "dates differ");
+      return -1;
+    }
+
+    gregorian::date_duration diff2 =
+      *arightcomm.details.date - *aleftcomm.details.date;
+    if (diff2.is_negative()) {
+      DEBUG("commodity.compare", "dates differ");
+      return 1;
+    }
+  }
+
+  if (! aleftcomm.details.tag && arightcomm.details.tag) {
+    DEBUG("commodity.compare", "left has no tag, right does");
+    return -1;
+  }
+  if (aleftcomm.details.tag && ! arightcomm.details.tag) {
+    DEBUG("commodity.compare", "right has no tag, left does");
+    return 1;
+  }
+
+  if (aleftcomm.details.tag && arightcomm.details.tag) {
+    DEBUG("commodity.compare", "both have tags, comparing lexically");
+    if (*aleftcomm.details.tag < *arightcomm.details.tag)
+      return -1;
+    else if (*aleftcomm.details.tag > *arightcomm.details.tag)
+      return 1;
+  }
+
+  if (! aleftcomm.details.value_expr && arightcomm.details.value_expr) {
+    DEBUG("commodity.compare", "left has no value expr, right does");
+    return -1;
+  }
+  if (aleftcomm.details.value_expr && ! arightcomm.details.value_expr) {
+    DEBUG("commodity.compare", "right has no value expr, left does");
+    return 1;
+  }
+
+  if (aleftcomm.details.value_expr && arightcomm.details.value_expr) {
+    DEBUG("commodity.compare", "both have value exprs, comparing text reprs");
+    return (aleftcomm.details.value_expr->text() <
+            arightcomm.details.value_expr->text());
+  }
+
+  DEBUG("commodity.compare", "the two are incomparable, which should never happen");
+  assert(false);
+  return -1;
 }
 
 void put_commodity(property_tree::ptree& st, const commodity_t& comm,

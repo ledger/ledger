@@ -279,7 +279,7 @@ public:
   bool valid() const;
 
   struct compare_by_commodity {
-    bool operator()(const amount_t * left, const amount_t * right) const;
+    int operator()(const amount_t * left, const amount_t * right) const;
   };
 };
 

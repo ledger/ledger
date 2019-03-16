@@ -887,7 +887,7 @@ bool value_t::is_less_than(const value_t& val) const
           ! val.as_amount().has_commodity())
         return as_amount() < val.as_amount();
       else
-        return commodity_t::compare_by_commodity()(&as_amount(), &val.as_amount());
+        return commodity_t::compare_by_commodity()(&as_amount(), &val.as_amount()) < 0;
     case BALANCE:
       return val.to_amount() > as_amount();
     default:

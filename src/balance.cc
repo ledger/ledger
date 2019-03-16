@@ -244,8 +244,11 @@ void balance_t::sorted_amounts(amounts_array& sorted) const
 {
   foreach (const amounts_map::value_type& pair, amounts)
     sorted.push_back(&pair.second);
-  std::stable_sort(sorted.begin(), sorted.end(),
-                   commodity_t::compare_by_commodity());
+  std::stable_sort(
+    sorted.begin(), sorted.end(),
+    [](const amount_t * left, const amount_t * right) {
+      return commodity_t::compare_by_commodity()(left, right) < 0;
+    });
 }
 
 void balance_t::map_sorted_amounts(function<void(const amount_t&)> fn) const
