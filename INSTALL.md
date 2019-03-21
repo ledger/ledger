@@ -143,7 +143,7 @@ A: Here's commands that one user used to make this work, for Boost 1.51.0
   for other versions of Boost as well.  YMMV on other distributions and/or
   other Debian distribution versions, though.
 
-  - Preparing and building Boos
+  - Preparing and building Boost
 
         $ export BOOST_VERSION=1.57.0
         $ cd /somewhere/you/want/to/build/boost
