@@ -2,6 +2,7 @@
 
 To build this code after doing a Git clone, run:
 
+    $ ./acprep dependencies
     $ ./acprep update
 
 If anything goes wrong, see "COMMON CONFIGURE/BUILD PROBLEMS" below.
