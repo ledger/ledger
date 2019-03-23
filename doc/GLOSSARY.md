@@ -26,7 +26,7 @@ ACCOUNTING GLOSSARY
   determines if a debit represents an increase or decrease in an account.  For
   example, Inventory is an asset so a transaction debiting Inventory would
   increase its value.  Assets and Expenses increase with debits and decrease
-  with credits; Liabilities, Equity, and Expenses increase with credits and
+  with credits; Liabilities, Equity, and Income increase with credits and
   decrease with debits.
 
 **Journal**: A record of all the financial transactions of a person or firm.
