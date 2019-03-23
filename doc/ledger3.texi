@@ -425,7 +425,7 @@ There are plenty of people using Ledger for accounting applications.
 Some have documented how they use Ledger's features to solve their
 accounting problems.
 
-Once such tutorial, specifically designed for non-profit charities that seek
+One such tutorial, specifically designed for non-profit charities that seek
 to use Ledger, can be found at
 @url{https://k.sfconservancy.org/NPO-Accounting/npo-ledger-cli} (with a copy on GitHub also
 available at @url{https://github.com/conservancy/npo-ledger-cli/}).  If
