@@ -32,12 +32,15 @@ endif()
 
 if(UTF8_TESTS)
 	add_executable(smoke ${PROJECT_SOURCE_DIR}/test_drivers/smoke_test/test.cpp)
+	add_executable(cpp11 ${PROJECT_SOURCE_DIR}/test_drivers/smoke_test/cpp11.cpp)
 	add_executable(negative ${PROJECT_SOURCE_DIR}/test_drivers/negative/negative.cpp)
 
 	target_link_libraries(smoke PRIVATE utf8::cpp)
+	target_link_libraries(cpp11 PRIVATE utf8::cpp)
 	target_link_libraries(negative PRIVATE utf8::cpp)
 
 	enable_testing()
 	add_test(smoke_test smoke)
+	add_test(cpp11_test cpp11)
 	add_test(negative_test negative ${PROJECT_SOURCE_DIR}/test_data/negative/utf8_invalid.txt)
 endif()
