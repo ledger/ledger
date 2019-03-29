@@ -1,6 +1,6 @@
-                             Ledger NEWS
+# Ledger NEWS
 
-* 3.1.3 (unreleased)
+## 3.1.3 (unreleased)
 
 - Make sorting order of lot information deterministic (bug #1747)
 
@@ -10,7 +10,7 @@
 
 - Various small documentation improvements
 
-* 3.1.2 (2019-02-05)
+## 3.1.2 (2019-02-05)
 
 - Increase maximum length for regex from 255 to 4095 (bug #981)
 
@@ -23,26 +23,26 @@
 
 - Fix period duration of "every X days" and similar statements (bug #370)
 
-- Make option --force-color not require --color anymore (bug #1109)
+- Make option `--force-color` not require `--color` anymore (bug #1109)
 
-- Add quoted_rfc4180 to allow CVS output with RFC 4180 compliant quoting.
+- Add `quoted_rfc4180` to allow CVS output with RFC 4180 compliant quoting.
 
-- Add support for --prepend-format in accounts command
+- Add support for `--prepend-format` in accounts command
 
 - Fix handling of edge cases in trim function (bug #520)
 
 - Fix auto xact posts not getting applied to account total during
   journal parse (bug #552)
 
-- Transfer null_post flags to generated postings
+- Transfer `null_post` flags to generated postings
 
-- Fix segfault when using --market with --group-by
+- Fix segfault when using `--market` with `--group-by`
 
-- Use amount_width variable for budget report
+- Use `amount_width` variable for budget report
 
 - Keep pending items in budgets until the last day they apply
 
-- Fix bug where .total used in value expressions breaks totals
+- Fix bug where `.total` used in value expressions breaks totals
 
 - Make automated transactions work with assertions (bug #1127)
 
@@ -64,15 +64,15 @@
 - Fix possible stack overflow in date parsing routine (bug #1224,
   CVE-2017-12482)
 
-- Fix use-after-free when using --gain (bug #541)
+- Fix use-after-free when using `--gain` (bug #541)
 
 - Python: Removed double quotes from Unicode values.
 
-- Python: Ensure that parse errors produce useful RuntimeErrors
+- Python: Ensure that parse errors produce useful `RuntimeErrors`
 
-- Python: Expose journal expand_aliases
+- Python: Expose `journal expand_aliases`
 
-- Python: Expose journal_t::register_account
+- Python: Expose `journal_t::register_account`
 
 - Improve bash completion
 
@@ -84,23 +84,23 @@
 
 - Various documentation improvements
 
-* 3.1.1 (2016-01-11)
+## 3.1.1 (2016-01-11)
 
-- Added a --no-revalued option
+- Added a `--no-revalued` option
 
 - Improved Embedded Python Support
 
-- Use ./.ledgerrc if ~/.ledgerrc doesn't exist
+- Use `./.ledgerrc` if `~/.ledgerrc` doesn't exist
 
 - Fixed parsing of transactions with single-character payees and comments
 
-- Fixed crash when using -M with empty result
+- Fixed crash when using `-M` with empty result
 
-- Fixed sorting for option --auto-match
+- Fixed sorting for option `--auto-match`
 
-- Fixed treatment of "year 2015" and "Y2014" directives
+- Fixed treatment of `year 2015` and `Y2014` directives
 
-- Fixed crash when using --trace 10 or above
+- Fixed crash when using `--trace` 10 or above
 
 - Build fix for boost 1.58, 1.59, 1.60
 
@@ -114,7 +114,7 @@
 
 - Add continuous integration (https://travis-ci.org/ledger/ledger)
 
-* 3.1 (2014-10-05)
+## 3.1 (2014-10-05)
 
 - Changed the definition of cost basis to preserve the original cost basis
   when a gain or loss is made (if you bought 1 AAA for $10 and then sold
@@ -127,19 +127,19 @@
 
 - Support for virtual posting costs.
 
-- The option --permissive now quiets balance assertions
+- The option `--permissive` now quiets balance assertions
 
 - Removed SHA1 files due to license issues and use boost instead.
 
-- Added option --no-pager to disable the pager.
+- Added option `--no-pager` to disable the pager.
 
-- Added option --no-aliases to completely disable alias expansion
+- Added option `--no-aliases` to completely disable alias expansion
 
-- Added option --recursive-aliases to expand aliases recursively
+- Added option `--recursive-aliases` to expand aliases recursively
 
-- Support payee "uuid" directive.
+- Support payee `uuid` directive.
 
-- Bug fix: when a status flag (! or *) is explicitly specified for an
+- Bug fix: when a status flag (`!` or `*`) is explicitly specified for an
   individual posting, it always has a priority over entire transaction
   status.
 
@@ -157,24 +157,24 @@
 
 - Contrib: Added script to generate commodities from ISO 4217
 
-* 3.0
+## 3.0
 
 Due to the magnitude of changes in 3.0, only changes that affect compatibility
 with 2.x files and usage is mentioned here.  For a description of new
 features, please see the manual.
 
-- The option -g (--performance) was removed.
+- The option `-g` (`--performance`) was removed.
 
 - The balance report now defaults to showing all relevant accounts.  This is
-  the opposite of 2.x.  That is, "bal" in 3.0 does what "-s bal" did in 2.x.
-  To see 2.6 behavior, use "bal -n" in 3.0.  The -s option no longer has any
+  the opposite of 2.x.  That is, `bal` in 3.0 does what `-s bal` did in 2.x.
+  To see 2.6 behavior, use `bal -n` in 3.0.  The `-s` option no longer has any
   effect on balance reports.
 
-* 2.6.3
+## 2.6.3
 
 - Minor fixes to allow for compilation with gcc 4.4.
 
-* 2.6.2
+## 2.6.2
 
 - Bug fix: Command-line options, such as -O, now override init-file options
   such as -V.
@@ -187,19 +187,19 @@ features, please see the manual.
 - Bug fix: Using %.2X in a format string now outputs 2 spaces if the state is
   cleared.
 
-* 2.6.1
+## 2.6.1
 
 - Added the concept of "balance setting transactions":
 
-  # Setting an account's balance
+  Setting an account's balance
 
   You can now manually set an account's balance to whatever you want, at
   any time.  Here's how it might look at the beginning of your Ledger
   file:
 
-    2008/07/27 Starting fresh
-        Assets:Checking      = $1,000.00
-        Equity:Opening Balances
+      2008/07/27 Starting fresh
+          Assets:Checking      = $1,000.00
+          Equity:Opening Balances
 
   If Assets:Checking is empty, this is no different from omitting the
   "=".  However, if Assets:Checking did have a prior balance, the amount
@@ -208,23 +208,23 @@ features, please see the manual.
 
   Let me give an example of this.  Say you have this:
 
-    2008/07/27 Starting fresh
-        Assets:Checking          $750.00
-        Equity:Opening Balances
+      2008/07/27 Starting fresh
+          Assets:Checking          $750.00
+          Equity:Opening Balances
 
-    2008/07/27 Starting fresh
-        Assets:Checking      = $1,000.00
-        Equity:Adjustments
+      2008/07/27 Starting fresh
+          Assets:Checking      = $1,000.00
+          Equity:Adjustments
 
   These two entries are exactly equivalent to these two:
 
-    2008/07/27 Starting fresh
-        Assets:Checking          $750.00
-        Equity:Opening Balances
+      2008/07/27 Starting fresh
+          Assets:Checking          $750.00
+          Equity:Opening Balances
 
-    2008/07/27 Starting fresh
-        Assets:Checking          $250.00
-        Equity:Adjustments
+      2008/07/27 Starting fresh
+          Assets:Checking          $250.00
+          Equity:Adjustments
 
   The use of the "=" sign here is that it sets the transaction's amount
   to whatever is required to satisfy the assignment.  This is the
@@ -237,62 +237,62 @@ features, please see the manual.
   equals sign.  However, if the account has multiple commodities, only
   the matching commodity is affected.  Here's what I mean:
 
-    2008/07/24 Opening Balance
-        Assets:Checking        = $250.00            ; we force set it
-        Equity:Opening Balances
+      2008/07/24 Opening Balance
+          Assets:Checking        = $250.00          ; we force set it
+          Equity:Opening Balances
 
-    2008/07/24 Opening Balance
-        Assets:Checking      = EC 250.00          ; we force set it again
-        Equity:Opening Balances
+      2008/07/24 Opening Balance
+          Assets:Checking      = EC 250.00          ; we force set it again
+          Equity:Opening Balances
 
   This is an error, because $250.00 cannot be auto-balanced to match EC
   250.00.  However:
 
-    2008/07/24 Opening Balance
-        Assets:Checking        = $250.00          ; we force set it again
-        Assets:Checking        EC 100.00          ; and add some EC's
-        Equity:Opening Balances
+      2008/07/24 Opening Balance
+          Assets:Checking        = $250.00          ; we force set it again
+          Assets:Checking        EC 100.00          ; and add some EC's
+          Equity:Opening Balances
 
-    2008/07/24 Opening Balance
-        Assets:Checking      = EC 250.00          ; we force set the EC's
-        Equity:Opening Balances
+      2008/07/24 Opening Balance
+          Assets:Checking      = EC 250.00          ; we force set the EC's
+          Equity:Opening Balances
 
   This is *not* an error, because the latter auto-balancing transaction
   only affects the EC 100.00 part of the account's balance; the $250.00
   part is left alone.
 
-  # Checking statement balances
+  Checking statement balances
 
   When you reconcile a statement, there are typically one or more
   transactions which result in a known balance.  Here's how you specify
   that in your Ledger data:
 
-    2008/07/24 Opening Balance
-        Assets:Checking        = $100.00
-        Equity:Opening Balances
+      2008/07/24 Opening Balance
+          Assets:Checking        = $100.00
+          Equity:Opening Balances
 
-    2008/07/30 We spend money, with a known balance afterward
-        Expenses:Food             $20.00
-        Assets:Checking         = $80.00
+      2008/07/30 We spend money, with a known balance afterward
+          Expenses:Food             $20.00
+          Assets:Checking         = $80.00
 
-    2008/07/30 Again we spend money, but this time with all the info
-        Expenses:Food             $20.00
-        Assets:Checking          $-20.00 = $60.00
+      2008/07/30 Again we spend money, but this time with all the info
+          Expenses:Food             $20.00
+          Assets:Checking          $-20.00 = $60.00
 
-    2008/07/30 This entry yield an 'unbalanced' error
-        Expenses:Food             $20.00
-        Assets:Checking          $-20.00 = $30.00
+      2008/07/30 This entry yield an 'unbalanced' error
+          Expenses:Food             $20.00
+          Assets:Checking          $-20.00 = $30.00
 
   The last entry in this set fails to balance with an unbalanced
   remainder of $-10.00.  Either the entry must be corrected, or you can
   have Ledger deal with the remainder automatically:
 
-  2008/07/30 The fixed entry
-      Expenses:Food              $20.00
-      Assets:Checking           $-20.00 = $30.00
-      Equity:Adjustments
+      2008/07/30 The fixed entry
+          Expenses:Food              $20.00
+          Assets:Checking           $-20.00 = $30.00
+          Equity:Adjustments
 
-  # Conclusion
+  Conclusion
 
   This simple feature has all the utility of @check, plus auto-balancing
   to match known target balances, plus the ability to guarantee that an
@@ -305,7 +305,7 @@ features, please see the manual.
 - The rest of the changes in the version is all bug fixes (around 45 of
   them).
 
-* 2.6.0.90
+## 2.6.0.90
 
 - Gnucash parser is fixed.
 
@@ -318,9 +318,9 @@ features, please see the manual.
 
   For example, let's say you buy 50 shares of AAPL at $10 a share:
 
-    2007/01/14 Stock purchase
-      Assets:Brokerage         50 AAPL @ $10
-      Assets:Brokerage
+      2007/01/14 Stock purchase
+          Assets:Brokerage         50 AAPL @ $10
+          Assets:Brokerage
 
   Three months later, you sell this "lot".  Based on the original
   purchase information, Ledger remembers how much each share was
@@ -328,10 +328,10 @@ features, please see the manual.
   you can sell this specific lot by price, by date, or by both.  Let's
   sell it by price, this time for $20 a share.
 
-    2007/04/14 Stock purchase
-      Assets:Brokerage         $1000.00
-      Assets:Brokerage         -50 AAPL {$10} @ $20
-      Income:Capital Gains     $-500.00
+      2007/04/14 Stock purchase
+          Assets:Brokerage         $1000.00
+          Assets:Brokerage         -50 AAPL {$10} @ $20
+          Income:Capital Gains     $-500.00
 
   Note that the Income:Capital Gains line is now required to balance
   the transaction.  Because you sold 50 AAPL at $20/share, and because
@@ -342,10 +342,10 @@ features, please see the manual.
 
   Here's the same example, this time selling by date and price:
 
-    2007/04/14 Stock purchase
-      Assets:Brokerage         $1000.00
-      Assets:Brokerage         -50 AAPL {$10} [2007/01/14] @ $20
-      Income:Capital Gains     $-500.00
+      2007/04/14 Stock purchase
+          Assets:Brokerage         $1000.00
+          Assets:Brokerage         -50 AAPL {$10} [2007/01/14] @ $20
+          Income:Capital Gains     $-500.00
 
   If you attempt to sell shares for a date you did not buy them, note
   that Ledger will not complain (as it never complains about the
@@ -357,21 +357,21 @@ features, please see the manual.
 - To facilitate lot pricing reports, there are some new reporting
   options:
 
-    --lot-prices   Report commodities with different lot prices as if
+  * --lot-prices   Report commodities with different lot prices as if
                    they were different commodities.  Otherwise, Ledger
                    just gloms all the AAPL shares together.
 
-    --lot-dates    Separate commodities by lot date.  Every
+  * --lot-dates    Separate commodities by lot date.  Every
                    transaction that uses the '@' cost specifier will
                    have an implicit lot date and lot price.
 
-    --lot-tags     Separate commodities by their arbitrary note tag.
+  * --lot-tags     Separate commodities by their arbitrary note tag.
                    Note tags may be specified using (note) after the
                    commodity.
 
-    --lots         Separate commodities using all lot information.
+  * --lots         Separate commodities using all lot information.
 
-* 2.6
+## 2.6
 
 - The style for eliding long account names (for example, in the
   register report) has been changed.  Previously Ledger would elide
@@ -384,11 +384,11 @@ features, please see the manual.
   letters in length.  If this results in a string that is still too
   long, the front will be elided -- not the end.  For example:
 
-    Expenses:Cash           ; OK, not too long
-    Ex:Wednesday:Cash       ; "Expenses" was abbreviated to fit
-    Ex:We:Afternoon:Cash    ; "Expenses" and "Wednesday" abbreviated
-    ; Expenses:Wednesday:Afternoon:Lunch:Snack:Candy:Chocolate:Cash
-    ..:Af:Lu:Sn:Ca:Ch:Cash  ; Abbreviated and elided!
+      Expenses:Cash           ; OK, not too long
+      Ex:Wednesday:Cash       ; "Expenses" was abbreviated to fit
+      Ex:We:Afternoon:Cash    ; "Expenses" and "Wednesday" abbreviated
+      ; Expenses:Wednesday:Afternoon:Lunch:Snack:Candy:Chocolate:Cash
+      ..:Af:Lu:Sn:Ca:Ch:Cash  ; Abbreviated and elided!
 
   As you can see, it now takes a very deep account name before any
   elision will occur, whereas in 2.x elisions were fairly common.
@@ -396,12 +396,12 @@ features, please see the manual.
 - In addition to the new elision change mentioned above, the style is
   also configurable:
 
-    --truncate leading      ; elide at the beginning
-    --truncate middle       ; elide in the middle
-    --truncate trailing     ; elide at end (Ledger 2.x's behavior)
-    --truncate abbrev       ; the new behavior
+  * --truncate leading      ; elide at the beginning
+  * --truncate middle       ; elide in the middle
+  * --truncate trailing     ; elide at end (Ledger 2.x's behavior)
+  * --truncate abbrev       ; the new behavior
 
-    --abbrev-len 2          ; set length of abbreviations
+  * --abbrev-len 2          ; set length of abbreviations
 
   These elision styles affect all format strings which have a maximum
   width, so they will also affect the payee in a register report, for
@@ -422,10 +422,10 @@ features, please see the manual.
   Ledger for tracking quantities of data, where the most compact form
   is reported (unless --base is specified):
 
-    C 1.00 Kb = 1024 b
-    C 1.00 Mb = 1024 Kb
-    C 1.00 Gb = 1024 Mb
-    C 1.00 Tb = 1024 Gb
+      C 1.00 Kb = 1024 b
+      C 1.00 Mb = 1024 Kb
+      C 1.00 Gb = 1024 Mb
+      C 1.00 Tb = 1024 Gb
 
 - Added --ansi reporting option, which shows negative values in the
   running total column of the register report as red, using ANSI
@@ -436,7 +436,7 @@ features, please see the manual.
   for example the register reports uses the following for the total
   (last) column:
 
-    %!12.80T
+      %!12.80T
 
   At the moment neither the balance report nor any of the other
   reports make use of the ! modifier, and so will not change color
@@ -448,14 +448,14 @@ features, please see the manual.
   between --limit and --display.  Here is a summary of how the three
   supported predicates are used:
 
-    --limit "a>100"
+  * --limit "a>100"
 
       This flag limits computation to *only transactions whose amount
       is greater than 100 of a given commodity*.  It means that if you
       scan your dining expenses, for example, only individual bills
       greater than $100 would be calculated by the report.
 
-    --only "a>100"
+  * --only "a>100"
 
       This flag happens much later than --limit, and corresponding
       more directly to what one normally expects.  If --limit isn't
@@ -472,12 +472,12 @@ features, please see the manual.
       all individual dinner bills greater than 100 -- which is a very
       different thing.
 
-    --display "a>100"
+  * --display "a>100"
 
       This predicate does not constrain calculation, but only display.
       Consider the same command as above:
 
-        ledger -M --display "a>100" reg ^Expenses:Food
+          ledger -M --display "a>100" reg ^Expenses:Food
 
       This displays only lines whose amount is greater than 100, *yet
       the running total still includes amounts from all transactions*.
@@ -485,7 +485,7 @@ features, please see the manual.
       the current month's checking register while still giving a
       correct ending balance:
 
-        ledger --display "d>[this month]" reg Checking
+          ledger --display "d>[this month]" reg Checking
 
     Note that these predicates can be combined.  Here is a report that
     considers only food bills whose individual cost is greater than
@@ -494,8 +494,8 @@ features, please see the manual.
     retain an accurate running total with respect to the entire ledger
     file:
 
-        ledger -M --limit "a>20" --only "a>200" \
-          --display "year == yearof([last year])" reg ^Expenses:Food
+          ledger -M --limit "a>20" --only "a>200" \
+            --display "year == yearof([last year])" reg ^Expenses:Food
 
 - Added new "--descend AMOUNT" and "--descend-if VALEXPR" reporting
   options.  For any reports that display valued transactions (i.e.,
@@ -504,14 +504,14 @@ features, please see the manual.
 
   For example, say you request a --monthly expenses report:
 
-    $ ledger --monthly register ^Expenses
+      $ ledger --monthly register ^Expenses
 
   Now, in one of the reported months you see $500.00 spent on
   Expenses:Food.  You can ask Ledger to "descend" into, and show the
   component transactions of, that $500.00 by respecifying the query
   with the --descend option:
 
-    $ ledger --monthly --descend "\$500.00" register ^Expenses
+      $ ledger --monthly --descend "\$500.00" register ^Expenses
 
   The --descend-if option has the same effect, but takes a value
   expression which is evaluated as a boolean to locate the desired
@@ -520,8 +520,8 @@ features, please see the manual.
 - Added a "dump" command for creating binary files, which load much
   faster than their textual originals.  For example:
 
-    ledger -f huge.dat -o huge.cache dump
-    ledger -f huge.cache bal
+      ledger -f huge.dat -o huge.cache dump
+      ledger -f huge.cache bal
 
   The second command will load significantly faster (usually about six
   times on my machine).
@@ -597,13 +597,13 @@ features, please see the manual.
 - Value expression function may now be defined within your ledger file
   (or initialization file) using the following syntax:
 
-    @def foo(x)=x*1000
+      @def foo(x)=x*1000
 
   This line makes the function "foo" available to all subsequent value
   expressions, to all command-line options taking a value expression,
   and to the new "expr" command (see above).
 
-* 2.5
+## 2.5
 
 - Added a new value expression regexp command:
     C//  compare against a transaction amount's commodity symbol
@@ -615,9 +615,9 @@ features, please see the manual.
 
 - Effective dates may now be specified for entries:
 
-    2004/10/03=2004/09/30 Credit card company
-      Liabilities:MasterCard         $100.00
-      Assets:Checking
+      2004/10/03=2004/09/30 Credit card company
+          Liabilities:MasterCard         $100.00
+          Assets:Checking
 
   This entry says that although the actual transactions occurred on
   October 3rd, their effective date was September 30th.  This is
@@ -629,9 +629,9 @@ features, please see the manual.
 - Actual and effective dates may now be specified for individual
   transactions:
 
-    2004/10/03=2004/09/30 Credit card company
-      Liabilities:MasterCard         $100.00
-      Assets:Checking                         ; [2004/10/10=2004/09/15]
+      2004/10/03=2004/09/30 Credit card company
+          Liabilities:MasterCard         $100.00
+          Assets:Checking                         ; [2004/10/10=2004/09/15]
 
   This states that although the actual date of the entry is
   2004/10/03, and the effective date of the entry is 2004/09/30, the
@@ -653,19 +653,19 @@ features, please see the manual.
   whose component transactions have different dates.  For example,
   given the following entry:
 
-    2005/10/15=2005/09/01 iTunes
-      Expenses:Music                 $1.08 ; [2005/10/20=2005/08/01]
-      Liabilities:MasterCard
+      2005/10/15=2005/09/01 iTunes
+          Expenses:Music                 $1.08 ; [2005/10/20=2005/08/01]
+          Liabilities:MasterCard
 
   The command "ledger register" on this data file reports:
 
-    2005/10/20 iTunes   Expenses:Music            $1.08    $1.08
-    2005/10/15 iTunes   Liabilities:MasterCard   $-1.08        0
+      2005/10/20 iTunes   Expenses:Music            $1.08    $1.08
+      2005/10/15 iTunes   Liabilities:MasterCard   $-1.08        0
 
   While the command "ledger --effective register" reports:
 
-    2005/08/01 iTunes   Expenses:Music            $1.08    $1.08
-    2005/09/01 iTunes   Liabilities:MasterCard   $-1.08        0
+      2005/08/01 iTunes   Expenses:Music            $1.08    $1.08
+      2005/09/01 iTunes   Liabilities:MasterCard   $-1.08        0
 
   Although it appears as though two entries are being reported, both
   transactions belong to the same entry.
@@ -674,15 +674,15 @@ features, please see the manual.
   syntax, which is still supported, clears all transactions in an
   entry:
 
-    2004/05/27 * Book Store
-      Expenses:Dining                 $20.00
-      Liabilities:MasterCard
+      2004/05/27 * Book Store
+          Expenses:Dining                 $20.00
+          Liabilities:MasterCard
 
   The new syntax allows clearing of just the MasterCard transaction:
 
-    2004/05/27 Book Store
-      Expenses:Dining                 $20.00
-      * Liabilities:MasterCard
+      2004/05/27 Book Store
+          Expenses:Dining                 $20.00
+          * Liabilities:MasterCard
 
   NOTE: This changes the output format of both the "emacs" and "xml"
   reports.  ledger.el uses the new syntax unless the Lisp variable
@@ -693,20 +693,20 @@ features, please see the manual.
 - Did much internal restructuring to allow the use of libledger.so in
   non-command-line environments (such as GUI tools).
 
-* 2.4.1
+## 2.4.1
 
 - Corrected an issue that had inadvertently disabled Gnucash support.
 
-* 2.4
+## 2.4
 
-- Both "-$100.00" and "$-100.00" are now equivalent amounts.
+- Both `-$100.00` and `$-100.00` are now equivalent amounts.
 
 - Simple, inline math (using the operators +-/*, and/or parentheses)
   is supported in transactions.  For example:
 
-    2004/05/27 Book Store
-      Expenses:Dining                 $20.00 + $2.50
-      Liabilities:MasterCard
+      2004/05/27 Book Store
+          Expenses:Dining                 $20.00 + $2.50
+          Liabilities:MasterCard
 
   This won't register the tax/tip in its own account, but might make
   later reading of the ledger file easier.
@@ -716,10 +716,10 @@ features, please see the manual.
   is not used to balance all entries, as that would make locating
   unbalanced entries a nightmare.  Example:
 
-    A Liabilities:MasterCard
+      A Liabilities:MasterCard
 
-    2004/05/27 Book Store
-      Expenses:Dining                 $20.00 + $2.50
+      2004/05/27 Book Store
+          Expenses:Dining                 $20.00 + $2.50
 
   This is equivalent to the entry in the previous bullet.
 
@@ -727,11 +727,11 @@ features, please see the manual.
   balance, even if multiple commodities are involved.  This means that
   the following is now supported, which wasn't previously:
 
-    2004/06/21 Adjustment
-        Retirement          100 FUNDA
-        Retirement          200 FUNDB
-        Retirement          300 FUNDC
-        Equity:Adjustments
+      2004/06/21 Adjustment
+          Retirement          100 FUNDA
+          Retirement          200 FUNDB
+          Retirement          300 FUNDC
+          Equity:Adjustments
 
 - Fixed several bugs relating to QIF parsing, budgeting and
   forecasting.
@@ -739,7 +739,7 @@ features, please see the manual.
 - The configure process now looks for libexpat in addition to
   searching for libxmlparse+libxmltok (how expat used to be packaged).
 
-* 2.3
+## 2.3
 
 - The directive "!alias ALIAS = ACCOUNT" makes it possible to use
   "ALIAS" as an alternative name for ACCOUNT in a textual ledger file.
@@ -751,7 +751,7 @@ features, please see the manual.
 - Fixed several minor problems, plus a few major ones dealing with
   imprecise date parsing.
 
-* 2.2
+## 2.2
 
 - Ledger now compiles under gcc 2.95.
 
@@ -807,12 +807,14 @@ features, please see the manual.
   this could have a substantial impact.
 
 - In ledger.el's *Reconcile* mode ('C-c C-r' from a ledger-mode file):
-  . 'a' adds a missing transaction
-  . 'd' deletes the current transaction
-  . 'r' attempts to auto-reconcile (same as 'C-u C-c C-r')
-  . 's' or 'C-x C-s' will save the ledger data file and show the
+
+  * 'a' adds a missing transaction
+  * 'd' deletes the current transaction
+  * 'r' attempts to auto-reconcile (same as 'C-u C-c C-r')
+  * 's' or 'C-x C-s' will save the ledger data file and show the
     currently cleared balance
-  . 'C-c C-c' commits the pending transactions, marking them cleared.
+  * 'C-c C-c' commits the pending transactions, marking them cleared.
+
   This feature now works with Emacs 21.3.
   Also, the reconciler no longer needs to ask "how far back" to go.
 
@@ -820,21 +822,21 @@ features, please see the manual.
   (pending) after the date, instead of a "*" flag (cleared).
 
 - There are a new set of value expression regexp commands:
-    c//  entry code
-    p//  payee
-    w//  short account name
-    W//  full account name
-    e//  transaction note
+  * c//  entry code
+  * p//  payee
+  * w//  short account name
+  * W//  full account name
+  * e//  transaction note
 
   This makes it possible to display transactions whose comment field
   matches a particular text string.  For example:
 
-    ledger -l e/{tax}/ reg
+      ledger -l e/{tax}/ reg
 
   prints out all the transactions with the comment "{tax}", which
   might be used to identify items related to a tax report.
 
-* 2.1
+## 2.1
 
 - Improved the autoconf system to be smarter about finding XML libs
 
@@ -847,7 +849,7 @@ features, please see the manual.
 - New directive for text files: "D <COMM>" specifies the default commodity
   used by the entry command
 
-* 2.0
+## 2.0
 
 This version represents a full rewrite, while preserving much of the
 original data format and command-line syntax.  There are too many new
@@ -858,7 +860,7 @@ and display predicates, and two-way Python integration.  Ledger also
 uses autoconf now, and builds as a library in addition to a
 command-line driver.
 
-** Differences from 1.7
+### Differences from 1.7
 
 - changes in option syntax:
 
@@ -888,9 +890,12 @@ command-line driver.
   -p now specifies the reporting period.  You can convert commodities
   in a report using value expressions.  For example, to display hours
   at $10 per hour:
-    -T "O>={0.01h}?{\$10.00}*O:O"
+
+      -T "O>={0.01h}?{\$10.00}*O:O"
+
   Or, to reduce totals, so that every $417 becomes 1.0 AU:
-    -T "O>={\$0.01}?{1.0 AU}*(O/{\$417}):O"
+
+      -T "O>={\$0.01}?{1.0 AU}*(O/{\$417}):O"
 
 - The use of "+" and "-" in ledger files to specify permanent regexps
   has been removed.
@@ -898,7 +903,7 @@ command-line driver.
 - The "-from" argument is no longer used by the "entry" command.
   Simply remove it.
 
-** Features new to 2.0
+### Features new to 2.0
 
 - The most significant feature to be added is "value expressions".
   They are used in many places to indicate what to display, sorting
@@ -917,23 +922,29 @@ command-line driver.
   Ledger can also read as input the output from the "xml" report.  If
   the "xml" report did not contain balanced entries, they will be
   balanced by the "<Unknown>" account.  For example:
-    ledger reg rent
+
+      ledger reg rent
+
   displays the same results as:
-    ledger xml rent | ledger -f - reg rent
+
+      ledger xml rent | ledger -f - reg rent
 
 - Regexps given directly after the command name now apply only to
   account names.  To match on a payee, use "--" to separate the two
   kinds of regexps.  For example, to find a payee named "John" within
   all Expenses accounts, use:
-    ledger register expenses -- john
+
+      ledger register expenses -- john
 
   Note: This command is identical (and internally converted) to:
-    ledger -l "/expenses/|//john/" register
+
+      ledger -l "/expenses/|//john/" register
 
 - To include entries from another file into a specific account, use:
-    !account ACCOUNT
-    !include FILE
-    !end
+
+      !account ACCOUNT
+      !include FILE
+      !end
 
 - Register reports now show only matching account transactions.  Use
   "-r" to see "related accounts" -- the account the transfer came from
@@ -943,8 +954,9 @@ command-line driver.
 
 - Automated transactions now use value expressions for the predicate.
   The new syntax is:
-    = VALUE-EXPR
-      TRANSACTIONS...
+
+      = VALUE-EXPR
+        TRANSACTIONS...
 
   Only one VALUE-EXPR is supported (compared to multiple account
   regexps before).  However, since value expression allow for logic
@@ -965,49 +977,49 @@ command-line driver.
 
 - New reporting options:
 
-  "-o FILE" outputs data to FILE.  If "-", output goes to stdout (the
-  default).
+  * "-o FILE" outputs data to FILE.  If "-", output goes to stdout (the
+    default).
 
-  -O shows base commodity values (this is the old behavior)
-  -B shows basis cost of commodities
-  -V shows market value of commodities
-  -g reports gain/loss performance of each register item
-  -G reports net gain/loss over time
-  -A reports average transaction value (arithmetic mean)
-  -D reports each transaction's deviation from the average
+  * -O shows base commodity values (this is the old behavior)
+  * -B shows basis cost of commodities
+  * -V shows market value of commodities
+  * -g reports gain/loss performance of each register item
+  * -G reports net gain/loss over time
+  * -A reports average transaction value (arithmetic mean)
+  * -D reports each transaction's deviation from the average
 
-  -w uses 132 columns for the register report, rather than 80.  Set
+  * -w uses 132 columns for the register report, rather than 80.  Set
    the environment variable LEDGER_WIDE for this to be the default.
 
-  "-p INTERVAL" allows for more flexible period reporting, such as:
+  * "-p INTERVAL" allows for more flexible period reporting, such as:
 
-    monthly
-    every week
-    every 3 quarters
-    weekly from 12/20
-    monthly in 2003
-    weekly from last month until dec
+      monthly
+      every week
+      every 3 quarters
+      weekly from 12/20
+      monthly in 2003
+      weekly from last month until dec
 
-  "-y DATEFMT" changes the date format used in all reports.  The
-  default is "%Y/%m/%d".
+  * "-y DATEFMT" changes the date format used in all reports.  The
+    default is "%Y/%m/%d".
 
-  -Y and -W print yearly and weekly subtotals, just as -M prints
-  monthly subtotals.
+    -Y and -W print yearly and weekly subtotals, just as -M prints
+    monthly subtotals.
 
-  --dow shows cumulative totals for each day of the week.
+  * --dow shows cumulative totals for each day of the week.
 
-  -P reports transactions grouped by payee
+  * -P reports transactions grouped by payee
 
-  -x reports the payee as the commodity; useful in some cases
+  * -x reports the payee as the commodity; useful in some cases
 
-  -j and -J replace the previous -G (gnuplot) option.  -j reports the
-  amounts column in a way gnuplot can consume, and -J the totals
-  column.  An example is in "scripts/report".
+  * -j and -J replace the previous -G (gnuplot) option.  -j reports the
+    amounts column in a way gnuplot can consume, and -J the totals
+    column.  An example is in "scripts/report".
 
-  "--period-sort EXPR" sorts transactions within a reporting period.
-  The regular -S option sorts all reported transactions.
+  * "--period-sort EXPR" sorts transactions within a reporting period.
+    The regular -S option sorts all reported transactions.
 
-* 1.7
+## 1.7
 
 - Pricing histories are now supported, so that ledger remembers the
   historical prices of all commodities, and can present register
@@ -1015,7 +1027,7 @@ command-line driver.
   cost basis.  See the manual for more details on the new option
   switches.
 
-* 1.6
+## 1.6
 
 - Ledger can now parse timeclock files.  These are simple timelogs
   that track in/out events, which can be maintained using my timeclock
