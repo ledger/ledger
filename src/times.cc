@@ -114,7 +114,6 @@ namespace {
 
   shared_ptr<datetime_io_t> input_datetime_io;
   shared_ptr<datetime_io_t> timelog_datetime_io;
-  shared_ptr<date_io_t>     input_date_io;
   shared_ptr<datetime_io_t> written_datetime_io;
   shared_ptr<date_io_t>     written_date_io;
   shared_ptr<datetime_io_t> printed_datetime_io;
@@ -174,13 +173,6 @@ namespace {
 
   date_t parse_date_mask(const char * date_str, date_traits_t * traits = NULL)
   {
-    if (input_date_io.get()) {
-      date_t when = parse_date_mask_routine(date_str, *input_date_io.get(),
-                                            traits);
-      if (! when.is_not_a_date())
-        return when;
-    }
-
     foreach (shared_ptr<date_io_t>& reader, readers) {
       date_t when = parse_date_mask_routine(date_str, *reader.get(), traits);
       if (! when.is_not_a_date())
@@ -1745,7 +1737,6 @@ void times_shutdown()
   if (is_initialized) {
     input_datetime_io.reset();
     timelog_datetime_io.reset();
-    input_date_io.reset();
     written_datetime_io.reset();
     written_date_io.reset();
     printed_datetime_io.reset();
