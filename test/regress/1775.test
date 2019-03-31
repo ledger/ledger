@@ -1,0 +1,20 @@
+2017-02-28 * Test
+    Assets:A                10.00 EUR
+    Assets:B               -10.00 EUR
+
+2017-03-30 * Test
+    Assets:A                10.00 EUR
+    Assets:B               -10.00 EUR
+
+2018-03-30 * Test
+    Assets:A                10.00 EUR
+    Assets:B               -10.00 EUR
+
+test reg --input-date-format %F
+17-Feb-28 Test                  Assets:A                  10.00 EUR    10.00 EUR
+                                Assets:B                 -10.00 EUR            0
+17-Mar-30 Test                  Assets:A                  10.00 EUR    10.00 EUR
+                                Assets:B                 -10.00 EUR            0
+18-Mar-30 Test                  Assets:A                  10.00 EUR    10.00 EUR
+                                Assets:B                 -10.00 EUR            0
+end test
