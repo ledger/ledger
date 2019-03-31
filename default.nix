@@ -2,8 +2,8 @@
 , texinfo, gnused }:
 
 let
-  version = "3.1.2";
-  rev = "20190105";
+  version = "3.1.3";
+  rev = "20190331";
 in
 
 stdenv.mkDerivation {

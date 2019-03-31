@@ -1,6 +1,6 @@
 # Ledger NEWS
 
-## 3.1.3 (unreleased)
+## 3.1.3 (2019-03-31)
 
 - Properly reject postings with a comment right after the flag (bug #1753)
 
