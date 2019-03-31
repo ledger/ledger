@@ -55,18 +55,18 @@ namespace {
 
     temporal_io_t(const char * _fmt_str, bool _input)
       : fmt_str(_fmt_str),
-        traits(icontains(fmt_str, "%y"),
-               icontains(fmt_str, "%m") || icontains(fmt_str, "%b"),
-               icontains(fmt_str, "%d")),
+        traits(icontains(fmt_str, "%F") || icontains(fmt_str, "%y"),
+               icontains(fmt_str, "%F") || icontains(fmt_str, "%m") || icontains(fmt_str, "%b"),
+               icontains(fmt_str, "%F") || icontains(fmt_str, "%d")),
         input(_input) {
     }
 
     void set_format(const char * fmt) {
       fmt_str  = fmt;
-      traits   = date_traits_t(icontains(fmt_str, "%y"),
-                               icontains(fmt_str, "%m") ||
-                               icontains(fmt_str, "%b"),
-                               icontains(fmt_str, "%d"));
+      traits   = date_traits_t(icontains(fmt_str, "%F") || icontains(fmt_str, "%y"),
+                               icontains(fmt_str, "%F") ||
+                               icontains(fmt_str, "%m") || icontains(fmt_str, "%b"),
+                               icontains(fmt_str, "%F") || icontains(fmt_str, "%d"));
     }
 
     T parse(const char *) {}
