@@ -55,18 +55,18 @@ namespace {
 
     temporal_io_t(const char * _fmt_str, bool _input)
       : fmt_str(_fmt_str),
-        traits(icontains(fmt_str, "%y"),
-               icontains(fmt_str, "%m") || icontains(fmt_str, "%b"),
-               icontains(fmt_str, "%d")),
+        traits(icontains(fmt_str, "%F") || icontains(fmt_str, "%y"),
+               icontains(fmt_str, "%F") || icontains(fmt_str, "%m") || icontains(fmt_str, "%b"),
+               icontains(fmt_str, "%F") || icontains(fmt_str, "%d")),
         input(_input) {
     }
 
     void set_format(const char * fmt) {
       fmt_str  = fmt;
-      traits   = date_traits_t(icontains(fmt_str, "%y"),
-                               icontains(fmt_str, "%m") ||
-                               icontains(fmt_str, "%b"),
-                               icontains(fmt_str, "%d"));
+      traits   = date_traits_t(icontains(fmt_str, "%F") || icontains(fmt_str, "%y"),
+                               icontains(fmt_str, "%F") ||
+                               icontains(fmt_str, "%m") || icontains(fmt_str, "%b"),
+                               icontains(fmt_str, "%F") || icontains(fmt_str, "%d"));
     }
 
     T parse(const char *) {}
@@ -114,7 +114,6 @@ namespace {
 
   shared_ptr<datetime_io_t> input_datetime_io;
   shared_ptr<datetime_io_t> timelog_datetime_io;
-  shared_ptr<date_io_t>     input_date_io;
   shared_ptr<datetime_io_t> written_datetime_io;
   shared_ptr<date_io_t>     written_date_io;
   shared_ptr<datetime_io_t> printed_datetime_io;
@@ -174,13 +173,6 @@ namespace {
 
   date_t parse_date_mask(const char * date_str, date_traits_t * traits = NULL)
   {
-    if (input_date_io.get()) {
-      date_t when = parse_date_mask_routine(date_str, *input_date_io.get(),
-                                            traits);
-      if (! when.is_not_a_date())
-        return when;
-    }
-
     foreach (shared_ptr<date_io_t>& reader, readers) {
       date_t when = parse_date_mask_routine(date_str, *reader.get(), traits);
       if (! when.is_not_a_date())
@@ -1745,7 +1737,6 @@ void times_shutdown()
   if (is_initialized) {
     input_datetime_io.reset();
     timelog_datetime_io.reset();
-    input_date_io.reset();
     written_datetime_io.reset();
     written_date_io.reset();
     printed_datetime_io.reset();
