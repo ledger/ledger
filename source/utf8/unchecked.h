@@ -102,13 +102,6 @@ namespace utf8
             return utf8::unchecked::next(temp);
         }
 
-        // Deprecated in versions that include prior, but only for the sake of consistency (see utf8::previous)
-        template <typename octet_iterator>
-        inline uint32_t previous(octet_iterator& it)
-        {
-            return utf8::unchecked::prior(it);
-        }
-
         template <typename octet_iterator, typename distance_type>
         void advance (octet_iterator& it, distance_type n)
         {

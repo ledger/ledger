@@ -308,39 +308,6 @@ In case `start` is reached before a UTF-8 lead octet is hit, or if an invalid UT
 
 In case `start` equals `it`, a `not_enough_room` exception is thrown.
 
-#### utf8::previous
-
-Deprecated in version 1.02 and later.
-
-Given a reference to an iterator pointing to an octet in a UTF-8 seqence, it decreases the iterator until it hits the beginning of the previous UTF-8 encoded code point and returns the 32 bits representation of the code point.
-
-```cpp
-template <typename octet_iterator> 
-uint32_t previous(octet_iterator& it, octet_iterator pass_start);
-```
-
-`octet_iterator`: a random access iterator.  
-`it`: a reference pointing to an octet within a UTF-8 encoded string. After the function returns, it is decremented to point to the beginning of the previous code point.  
-`pass_start`: an iterator to the point in the sequence where the search for the beginning of a code point is aborted if no result was reached. It is a safety measure to prevent passing the beginning of the string in the search for a UTF-8 lead octet.  
-Return value: the 32 bit representation of the previous code point.
-
-Example of use:
-
-```cpp
-char* twochars = "\xe6\x97\xa5\xd1\x88";
-unsigned char* w = twochars + 3;
-int cp = previous (w, twochars - 1);
-assert (cp == 0x65e5);
-assert (w == twochars);
-```
-
-
-`utf8::previous` is deprecated, and `utf8::prior` should be used instead, although the existing code can continue using this function. The problem is the parameter `pass_start` that points to the position just before the beginning of the sequence. Standard containers don't have the concept of "pass start" and the function can not be used with their iterators.
-
-`it` will typically point to the beginning of a code point, and `pass_start` will point to the octet just before the beginning of the string to ensure we don't go backwards too far. `it` is decreased until it points to a lead UTF-8 octet, and then the UTF-8 sequence beginning with that octet is decoded to a 32 bit representation and returned.
-
-In case `pass_start` is reached before a UTF-8 lead octet is hit, or if an invalid UTF-8 sequence is started by the lead octet, an `invalid_utf8` exception is thrown
-
 #### utf8::advance
 Available in version 1.0 and later.
 
@@ -801,7 +768,7 @@ The typical use of this function is to check the first three bytes of a file. If
 
 #### utf8::starts_with_bom
 
-Available in version 2.3 and later. Replaces deprecated `is_bom()` function.
+Available in version 2.3 and later.
 
 Checks whether an octet sequence starts with a UTF-8 byte order mark (BOM)
 
@@ -824,33 +791,6 @@ assert (bbom == true);
 ```
 
 The typical use of this function is to check the first three bytes of a file. If they form the UTF-8 BOM, we want to skip them before processing the actual UTF-8 encoded text.
-
-#### utf8::is_bom
-
-Available in version 1.0 and later. Deprecated in version 2.3\. `starts_with_bom()` should be used instead.
-
-Checks whether a sequence of three octets is a UTF-8 byte order mark (BOM)
-
-```cpp
-template <typename octet_iterator> 
-bool is_bom (octet_iterator it);  // Deprecated
-```
-
-`octet_iterator`: an input iterator.  
-`it`: beginning of the 3-octet sequence to check  
-Return value: `true` if the sequence is UTF-8 byte order mark; `false` if not.
-
-Example of use:
-
-```cpp
-unsigned char byte_order_mark[] = {0xef, 0xbb, 0xbf};
-bool bbom = is_bom(byte_order_mark);
-assert (bbom == true);
-```
-
-The typical use of this function is to check the first three bytes of a file. If they form the UTF-8 BOM, we want to skip them before processing the actual UTF-8 encoded text.
-
-If a sequence is shorter than three bytes, an invalid iterator will be dereferenced. Therefore, this function is deprecated in favor of `starts_with_bom()`that takes the end of sequence as an argument.
 
 ### Types From utf8 Namespace
 
@@ -1097,34 +1037,6 @@ assert (w == twochars);
 ```
 
 This is a faster but less safe version of `utf8::prior`. It does not check for validity of the supplied UTF-8 sequence and offers no boundary checking.
-
-#### utf8::unchecked::previous (deprecated, see utf8::unchecked::prior)
-
-Deprecated in version 1.02 and later.
-
-Given a reference to an iterator pointing to an octet in a UTF-8 seqence, it decreases the iterator until it hits the beginning of the previous UTF-8 encoded code point and returns the 32 bits representation of the code point.
-
-```cpp
-template <typename octet_iterator>
-uint32_t previous(octet_iterator& it);
-```
-
-`it`: a reference pointing to an octet within a UTF-8 encoded string. After the function returns, it is decremented to point to the beginning of the previous code point.  
-Return value: the 32 bit representation of the previous code point.
-
-Example of use:
-
-```cpp
-char* twochars = "\xe6\x97\xa5\xd1\x88";
-char* w = twochars + 3;
-int cp = unchecked::previous (w);
-assert (cp == 0x65e5);
-assert (w == twochars);
-```
-
-The reason this function is deprecated is just the consistency with the "checked" versions, where `prior` should be used instead of `previous`. In fact, `unchecked::previous` behaves exactly the same as `unchecked::prior`
-
-This is a faster but less safe version of `utf8::previous`. It does not check for validity of the supplied UTF-8 sequence and offers no boundary checking.
 
 #### utf8::unchecked::advance
 

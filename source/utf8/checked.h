@@ -174,18 +174,6 @@ namespace utf8
         return utf8::peek_next(it, end);
     }
 
-    /// Deprecated in versions that include "prior"
-    template <typename octet_iterator>
-    uint32_t previous(octet_iterator& it, octet_iterator pass_start)
-    {
-        octet_iterator end = it;
-        while (utf8::internal::is_trail(*(--it)))
-            if (it == pass_start)
-                throw invalid_utf8(*it); // error - no lead byte in the sequence
-        octet_iterator temp = it;
-        return utf8::next(temp, end);
-    }
-
     template <typename octet_iterator, typename distance_type>
     void advance (octet_iterator& it, distance_type n, octet_iterator end)
     {

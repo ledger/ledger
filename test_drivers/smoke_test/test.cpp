@@ -65,23 +65,6 @@ int main()
     assert (cp == 0x10346);
     assert (w == threechars); 
 
-    //previous (deprecated)
-    w = twochars + 3;
-    cp = previous (w, twochars - 1);
-    assert (cp == 0x65e5);
-    assert (w == twochars);
-
-    w = threechars + 9;
-    cp = previous(w, threechars - 1);
-    assert (cp == 0x0448);
-    assert (w == threechars + 7);
-    cp = previous(w, threechars -1);
-    assert (cp == 0x65e5);
-    assert (w == threechars + 4);
-    cp = previous(w, threechars - 1);
-    assert (cp == 0x10346);
-    assert (w == threechars); 
-
     // advance
     w = twochars;
     advance (w, 2, twochars + 6);
@@ -145,11 +128,6 @@ int main()
     assert (bbom == true);
 	bool no_bbom = starts_with_bom(threechars, threechars + sizeof(threechars));
 	assert (no_bbom == false);
-
-    //is_bom
-	bool unsafe_bbom = is_bom(byte_order_mark);
-    assert (unsafe_bbom == true);
-
     
     //replace_invalid
     char invalid_sequence[] = "a\x80\xe0\xa0\xc0\xaf\xed\xa0\x80z";
@@ -214,25 +192,6 @@ int main()
     cp = unchecked::peek_next(cw);
     assert (cp == 0x65e5);
     assert (cw == twochars);
-
-
-    //previous (calls prior internally)
-
-    w = twochars + 3;
-    cp = unchecked::previous (w);
-    assert (cp == 0x65e5);
-    assert (w == twochars);
-
-    w = threechars + 9;
-    cp = unchecked::previous(w);
-    assert (cp == 0x0448);
-    assert (w == threechars + 7);
-    cp = unchecked::previous(w);
-    assert (cp == 0x65e5);
-    assert (w == threechars + 4);
-    cp = unchecked::previous(w);
-    assert (cp == 0x10346);
-    assert (w == threechars); 
 
     // advance
     w = twochars;

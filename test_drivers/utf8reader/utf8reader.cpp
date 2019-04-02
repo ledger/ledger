@@ -76,11 +76,11 @@ int main(int argc, char** argv)
             cout << "Line " << line_count << ": Error in distance function" << '\n';
 
         while (it != line_start) {
-            previous(it, line.rend().base());
+            prior(it, line.rend().base());
             char_count--;
         }
         if (char_count != 0)
-            cout << "Line " << line_count << ": Error in iterating with previous - wrong number of characters" << '\n';
+            cout << "Line " << line_count << ": Error in iterating with prior - wrong number of characters" << '\n';
 
         // Try utf8::iterator
         utf8::iterator<string::iterator> u8it(line_start, line_start, line_end);
@@ -140,11 +140,11 @@ int main(int argc, char** argv)
             cout << "Line " << line_count << ": Error in unchecked::distance function" << '\n';
 
         while (it != line_start) {
-            unchecked::previous(it);
+            unchecked::prior(it);
             char_count--;
         }
         if (char_count != 0)
-            cout << "Line " << line_count << ": Error in iterating with unchecked::previous - wrong number of characters" << '\n';
+            cout << "Line " << line_count << ": Error in iterating with unchecked::prior - wrong number of characters" << '\n';
 
         // Try utf8::unchecked::iterator
         utf8::unchecked::iterator<string::iterator> un_u8it(line_start);
