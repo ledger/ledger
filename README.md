@@ -532,8 +532,6 @@ assert (std::equal(replace_invalid_result.begin(), replace_invalid_result.end(),
 
 `replace_invalid` does not perform in-place replacement of invalid sequences. Rather, it produces a copy of the original string with the invalid sequences replaced with a replacement marker. Therefore, `out` must not be in the `[start, end]` range.
 
-If `end` does not point to the past-of-end of a UTF-8 sequence, a `utf8::not_enough_room` exception is thrown.
-
 #### utf8::starts_with_bom
 
 Available in version 2.3 and later. Relaces deprecated `is_bom()` function.
