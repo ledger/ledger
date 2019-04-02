@@ -23,10 +23,8 @@ install(TARGETS utf8cpp EXPORT utf8cppConfig)
 install(EXPORT utf8cppConfig DESTINATION ${DEF_INSTALL_CMAKE_DIR})
 
 if(UTF8_SAMPLES)
-	add_executable(utf8reader ${PROJECT_SOURCE_DIR}/test_drivers/utf8reader/utf8reader.cpp)
 	add_executable(docsample ${PROJECT_SOURCE_DIR}/samples/docsample.cpp)
 
-	target_link_libraries(utf8reader PRIVATE utf8::cpp)
 	target_link_libraries(docsample PRIVATE utf8::cpp)
 endif()
 
