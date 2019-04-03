@@ -38,7 +38,7 @@ namespace utf8
         octet_iterator append(uint32_t cp, octet_iterator result)
         {
             if (cp < 0x80)                        // one octet
-                *(result++) = static_cast<uint8_t>(cp);  
+                *(result++) = static_cast<uint8_t>(cp);
             else if (cp < 0x800) {                // two octets
                 *(result++) = static_cast<uint8_t>((cp >> 6)          | 0xc0);
                 *(result++) = static_cast<uint8_t>((cp & 0x3f)        | 0x80);
@@ -85,13 +85,13 @@ namespace utf8
                     break;
             }
             ++it;
-            return cp;        
+            return cp;
         }
 
         template <typename octet_iterator>
         uint32_t peek_next(octet_iterator it)
         {
-            return utf8::unchecked::next(it);    
+            return utf8::unchecked::next(it);
         }
 
         template <typename octet_iterator>
@@ -121,7 +121,7 @@ namespace utf8
 
         template <typename u16bit_iterator, typename octet_iterator>
         octet_iterator utf16to8 (u16bit_iterator start, u16bit_iterator end, octet_iterator result)
-        {       
+        {
             while (start != end) {
                 uint32_t cp = utf8::internal::mask16(*start++);
             // Take care of surrogate pairs first
@@ -131,7 +131,7 @@ namespace utf8
                 }
                 result = utf8::unchecked::append(cp, result);
             }
-            return result;         
+            return result;
         }
 
         template <typename u16bit_iterator, typename octet_iterator>
