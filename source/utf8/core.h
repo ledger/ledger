@@ -142,7 +142,7 @@ namespace internal
 
         if (!utf8::internal::is_trail(*it))
             return INCOMPLETE_SEQUENCE;
-        
+
         return UTF8_OK;
     }
 
@@ -165,7 +165,7 @@ namespace internal
     {
         if (it == end) 
             return NOT_ENOUGH_ROOM;
-        
+
         code_point = utf8::internal::mask8(*it);
 
         UTF8_CPP_INCREASE_AND_RETURN_ON_ERROR(it, end)
@@ -222,7 +222,7 @@ namespace internal
     template <typename octet_iterator>
     utf_error validate_next(octet_iterator& it, octet_iterator end, uint32_t& code_point)
     {
-	if (it == end)
+        if (it == end)
             return NOT_ENOUGH_ROOM;
 
         // Save the original value of it so we can go back in case of failure
@@ -237,7 +237,7 @@ namespace internal
         // Get trail octets and calculate the code point
         utf_error err = UTF8_OK;
         switch (length) {
-            case 0: 
+            case 0:
                 return INVALID_LEAD;
             case 1:
                 err = utf8::internal::get_sequence_1(it, end, cp);
@@ -313,18 +313,7 @@ namespace internal
             ((it != end) && (utf8::internal::mask8(*it++)) == bom[1]) &&
             ((it != end) && (utf8::internal::mask8(*it))   == bom[2])
            );
-    }
-	
-    //Deprecated in release 2.3 
-    template <typename octet_iterator>
-    inline bool is_bom (octet_iterator it)
-    {
-        return (
-            (utf8::internal::mask8(*it++)) == bom[0] &&
-            (utf8::internal::mask8(*it++)) == bom[1] &&
-            (utf8::internal::mask8(*it))   == bom[2]
-           );
-    }
+    }	
 } // namespace utf8
 
 #endif // header guard
