@@ -321,8 +321,8 @@ void advance (octet_iterator& it, distance_type n, octet_iterator end);
 `octet_iterator`: an input iterator.  
 `distance_type`: an integral type convertible to `octet_iterator`'s difference type.  
 `it`: a reference to an iterator pointing to the beginning of an UTF-8 encoded code point. After the function returns, it is incremented to point to the nth following code point.  
-`n`: a positive integer that shows how many code points we want to advance.  
-`end`: end of the UTF-8 sequence to be processed. If `it` gets equal to `end` during the extraction of a code point, an `utf8::not_enough_room` exception is thrown.  
+`n`: number of code points `it` should be advanced. A negative value means decrement.  
+`end`: limit of the UTF-8 sequence to be processed. If `n` is positive and `it` gets equal to `end` during the extraction of a code point, an `utf8::not_enough_room` exception is thrown. If `n` is negative and `it` reaches `end` while `it` points t a trail byte of a UTF-8 sequence, a `utf8::invalid_code_point` exception is thrown.
 
 Example of use:
 
@@ -331,9 +331,9 @@ char* twochars = "\xe6\x97\xa5\xd1\x88";
 unsigned char* w = twochars;
 advance (w, 2, twochars + 6);
 assert (w == twochars + 5);
+advance (w, -2, twochars);
+assert (w == twochars);
 ```
-
-This function works only "forward". In case of a negative `n`, there is no effect.
 
 In case of an invalid code point, a `utf8::invalid_code_point` exception is thrown.
 
@@ -1049,8 +1049,8 @@ template <typename octet_iterator, typename distance_type>
 void advance (octet_iterator& it, distance_type n);
 ```
 
-`it`: a reference to an iterator pointing to the beginning of an UTF-8 encoded code point. After the function returns, it is incremented to point to the nth following code point.  
-`n`: a positive integer that shows how many code points we want to advance.  
+`it`: a reference to an iterator pointing to the beginning of an UTF-8 encoded code point. After the function returns, it is incremented to point to the nth following code point.
+`n`: number of code points `it` should be advanced. A negative value means decrement.
 
 Example of use:
 
@@ -1060,8 +1060,6 @@ char* w = twochars;
 unchecked::advance (w, 2);
 assert (w == twochars + 5);
 ```
-
-This function works only "forward". In case of a negative `n`, there is no effect.
 
 This is a faster but less safe version of `utf8::advance`. It does not check for validity of the supplied UTF-8 sequence and offers no boundary checking.
 

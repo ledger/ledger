@@ -105,8 +105,16 @@ namespace utf8
         template <typename octet_iterator, typename distance_type>
         void advance (octet_iterator& it, distance_type n)
         {
-            for (distance_type i = 0; i < n; ++i)
-                utf8::unchecked::next(it);
+            const distance_type zero(0);
+            if (n < zero) {
+                // backward
+                for (distance_type i = n; i < zero; ++i)
+                    utf8::unchecked::prior(it);
+            } else {
+                // forward
+                for (distance_type i = zero; i < n; ++i)
+                    utf8::unchecked::next(it);
+            }
         }
 
         template <typename octet_iterator>

@@ -66,9 +66,17 @@ int main()
     assert (w == threechars); 
 
     // advance
-    w = twochars;
-    advance (w, 2, twochars + 6);
-    assert (w == twochars + 5);
+    w = threechars;
+    advance(w, 2, threechars + 9);
+    assert(w == threechars + 7);
+    advance(w, -2, threechars);
+    assert(w == threechars);
+    advance(w, 3, threechars + 9);
+    assert(w == threechars + 9);
+    advance(w, -2, threechars);
+    assert(w == threechars + 4);
+    advance(w, -1, threechars);
+    assert(w == threechars);
 
     // distance
     size_t dist = utf8::distance(twochars, twochars + 5);
@@ -194,9 +202,17 @@ int main()
     assert (cw == twochars);
 
     // advance
-    w = twochars;
-    unchecked::advance (w, 2);
-    assert (w == twochars + 5);
+    w = threechars;
+    unchecked::advance(w, 2);
+    assert(w == threechars + 7);
+    unchecked::advance(w, -2);
+    assert(w == threechars);
+    unchecked::advance(w, 3);
+    assert(w == threechars + 9);
+    unchecked::advance(w, -2);
+    assert(w == threechars + 4);
+    unchecked::advance(w, -1);
+    assert(w == threechars);
 
     // distance
     dist = unchecked::distance(twochars, twochars + 5);
