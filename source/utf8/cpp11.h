@@ -26,7 +26,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #ifndef UTF8_FOR_CPP_a184c22c_d012_11e8_a8d5_f2801f1b9fd1
-#define UTF8_FOR_CPP_a184c22_cd012_11e8_a8d5_f2801f1b9fd1 
+#define UTF8_FOR_CPP_a184c22c_d012_11e8_a8d5_f2801f1b9fd1
 
 #include "checked.h"
 #include <string>
