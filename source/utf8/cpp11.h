@@ -30,7 +30,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include "checked.h"
 #include <string>
-#include <cassert>
 
 namespace utf8
 {
