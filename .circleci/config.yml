@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: nemtrif/utf8cpp:3.0
+      - image: nemtrif/utf8cpp:3.0.1
     steps:
       - checkout
       - run: git submodule update --init --recursive --remote
