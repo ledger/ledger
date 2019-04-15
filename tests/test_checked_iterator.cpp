@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "utf8/checked.h"
+#include "utf8.h"
 
 using namespace utf8;
 

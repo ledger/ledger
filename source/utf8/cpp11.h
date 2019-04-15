@@ -34,65 +34,65 @@ DEALINGS IN THE SOFTWARE.
 namespace utf8
 {
 
-    void append(char32_t cp, std::string& s)
+    inline void append(char32_t cp, std::string& s)
     {
         append(uint32_t(cp), std::back_inserter(s));
     }
 
-    std::string utf16to8(const std::u16string& s)
+    inline std::string utf16to8(const std::u16string& s)
     {
         std::string result;
         utf16to8(s.begin(), s.end(), std::back_inserter(result));
         return result;
     }
 
-    std::u16string utf8to16(const std::string& s)
+    inline std::u16string utf8to16(const std::string& s)
     {
         std::u16string result;
         utf8to16(s.begin(), s.end(), std::back_inserter(result));
         return result;
     }
 
-    std::string utf32to8(const std::u32string& s)
+    inline std::string utf32to8(const std::u32string& s)
     {
         std::string result;
         utf32to8(s.begin(), s.end(), std::back_inserter(result));
         return result;
     }
 
-    std::u32string utf8to32(const std::string& s)
+    inline std::u32string utf8to32(const std::string& s)
     {
         std::u32string result;
         utf8to32(s.begin(), s.end(), std::back_inserter(result));
         return result;
     }
 
-    std::size_t find_invalid(const std::string& s)
+    inline std::size_t find_invalid(const std::string& s)
     {
         std::string::const_iterator invalid = find_invalid(s.begin(), s.end());
         return (invalid == s.end()) ? std::string::npos : (invalid - s.begin());
     }
 
-    bool is_valid(const std::string& s)
+    inline bool is_valid(const std::string& s)
     {
         return is_valid(s.begin(), s.end());
     }
 
-    std::string replace_invalid(const std::string& s, char32_t replacement)
+    inline std::string replace_invalid(const std::string& s, char32_t replacement)
     {
         std::string result;
         replace_invalid(s.begin(), s.end(), std::back_inserter(result), replacement);
         return result;
     }
 
-    std::string replace_invalid(const std::string& s)
+    inline std::string replace_invalid(const std::string& s)
     {
         std::string result;
         replace_invalid(s.begin(), s.end(), std::back_inserter(result));
         return result;
     }
 
-    bool starts_with_bom(const std::string& s)
+    inline bool starts_with_bom(const std::string& s)
     {
         return starts_with_bom(s.begin(), s.end());
     }
