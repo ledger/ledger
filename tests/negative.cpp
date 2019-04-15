@@ -1,4 +1,4 @@
-#include "../../source/utf8.h"
+#include "utf8.h"
 using namespace utf8;
 
 #include <string>
@@ -17,13 +17,13 @@ int main(int argc, char** argv)
         test_file_path = argv[1];
     else {
         cout << "Wrong number of arguments" << endl;
-        exit(0);
+        return 1;
     }
     // Open the test file
     ifstream fs8(test_file_path.c_str());
     if (!fs8.is_open()) {
         cout << "Could not open " << test_file_path << endl;
-        return 0;
+        return 1;
     }
 
     // Read it line by line
@@ -38,16 +38,22 @@ int main(int argc, char** argv)
         bool expected_valid = (find(INVALID_LINES, INVALID_LINES_END, line_count) == INVALID_LINES_END);
         // Print out lines that contain unexpected invalid UTF-8
         if (!is_valid(line.begin(), line.end())) {
-            if (expected_valid)    
+            if (expected_valid) {
                 cout << "Unexpected invalid utf-8 at line " << line_count << '\n';
+                return 1;
+            }
 
             // try fixing it:
             string fixed_line;
             replace_invalid(line.begin(), line.end(), back_inserter(fixed_line));
-            if (!is_valid(fixed_line.begin(), fixed_line.end()))
+            if (!is_valid(fixed_line.begin(), fixed_line.end())) {
                 cout << "replace_invalid() resulted in an invalid utf-8 at line " << line_count << '\n';
+                return 1;
+            }
         }
-        else if (!expected_valid)
+        else if (!expected_valid) {
             cout << "Invalid utf-8 NOT detected at line " << line_count << '\n';
+            return 1;
+        }
     }
 }
