@@ -44,6 +44,8 @@ If you have Docker installed on your computer or server, you can use a [Docker v
 
     $ docker run --rm -v "$PWD"/test/input:/data dcycle/ledger:1 -f /data/sample.dat reg
 
+A smaller image, based on Alpine Linux and weighing only 23MB, is available [here](https://hub.docker.com/r/cick0/ledger-docker-alpine). This is based on the binary packages available for the Alpine Linux distribution, which are currently in testing phase.
+
 ## Dependencies
 
 If you wish to proceed in this venture, you'll need a few dependencies.  The
