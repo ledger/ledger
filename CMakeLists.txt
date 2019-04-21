@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 3.0.2)
 project (utf8cpp VERSION 3.0.3 LANGUAGES CXX)
 
 option(UTF8_TESTS "Enable tests for UTF8-CPP" On)
+option(UTF8_INSTALL "Enable installation for UTF8-CPP" On)
 option(UTF8_SAMPLES "Enable building samples for UTF8-CPP" On)
 
 add_library(utf8cpp INTERFACE)
@@ -11,16 +12,18 @@ target_include_directories(utf8cpp INTERFACE
 )
 add_library(utf8::cpp ALIAS utf8cpp)
 
-if(WIN32 AND NOT CYGWIN)
-    set(DEF_INSTALL_CMAKE_DIR CMake)
-else()
-    include(GNUInstallDirs) # define CMAKE_INSTALL_*
-    set(DEF_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/utf8cpp)
-endif()
+if(UTF8_INSTALL)
+    if(WIN32 AND NOT CYGWIN)
+        set(DEF_INSTALL_CMAKE_DIR CMake)
+    else()
+        include(GNUInstallDirs) # define CMAKE_INSTALL_*
+        set(DEF_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/utf8cpp)
+    endif()
 
-install(DIRECTORY source/ DESTINATION include/utf8cpp)
-install(TARGETS utf8cpp EXPORT utf8cppConfig)
-install(EXPORT utf8cppConfig DESTINATION ${DEF_INSTALL_CMAKE_DIR})
+    install(DIRECTORY source/ DESTINATION include/utf8cpp)
+    install(TARGETS utf8cpp EXPORT utf8cppConfig)
+    install(EXPORT utf8cppConfig DESTINATION ${DEF_INSTALL_CMAKE_DIR})
+endif()
 
 if(UTF8_SAMPLES)
     add_executable(docsample ${PROJECT_SOURCE_DIR}/samples/docsample.cpp)
