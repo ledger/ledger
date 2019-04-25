@@ -146,3 +146,16 @@ TEST(UnCheckedAPITests, test_utf8to16)
     EXPECT_EQ (utf16result[2], 0xd834);
     EXPECT_EQ (utf16result[3], 0xdd1e);
 }
+
+TEST(UnCheckedAPITests, test_replace_invalid)
+{
+    char invalid_sequence[] = "a\x80\xe0\xa0\xc0\xaf\xed\xa0\x80z";
+    vector<char> replace_invalid_result;
+    replace_invalid (invalid_sequence, invalid_sequence + sizeof(invalid_sequence), std::back_inserter(replace_invalid_result), '?');
+    bool bvalid = utf8::is_valid(replace_invalid_result.begin(), replace_invalid_result.end());
+    EXPECT_TRUE (bvalid);
+    const char fixed_invalid_sequence[] = "a????z";
+    EXPECT_EQ (sizeof(fixed_invalid_sequence), replace_invalid_result.size());
+    EXPECT_TRUE (std::equal(replace_invalid_result.begin(), replace_invalid_result.begin() + sizeof(fixed_invalid_sequence), fixed_invalid_sequence));
+}
+

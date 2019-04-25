@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 
 namespace utf8
 {
-    namespace unchecked 
+    namespace unchecked
     {
         template <typename octet_iterator>
         octet_iterator append(uint32_t cp, octet_iterator result)
@@ -55,6 +55,46 @@ namespace utf8
                 *(result++) = static_cast<uint8_t>((cp & 0x3f)        | 0x80);
             }
             return result;
+        }
+
+        template <typename octet_iterator, typename output_iterator>
+        output_iterator replace_invalid(octet_iterator start, octet_iterator end, output_iterator out, uint32_t replacement)
+        {
+            while (start != end) {
+                octet_iterator sequence_start = start;
+                internal::utf_error err_code = utf8::internal::validate_next(start, end);
+                switch (err_code) {
+                    case internal::UTF8_OK :
+                        for (octet_iterator it = sequence_start; it != start; ++it)
+                            *out++ = *it;
+                        break;
+                    case internal::NOT_ENOUGH_ROOM:
+                        out = utf8::unchecked::append (replacement, out);
+                        start = end;
+                        break;
+                    case internal::INVALID_LEAD:
+                        out = utf8::unchecked::append (replacement, out);
+                        ++start;
+                        break;
+                    case internal::INCOMPLETE_SEQUENCE:
+                    case internal::OVERLONG_SEQUENCE:
+                    case internal::INVALID_CODE_POINT:
+                        out = utf8::unchecked::append (replacement, out);
+                        ++start;
+                        // just one replacement mark for the sequence
+                        while (start != end && utf8::internal::is_trail(*start))
+                            ++start;
+                        break;
+                }
+            }
+            return out;
+        }
+
+        template <typename octet_iterator, typename output_iterator>
+        inline output_iterator replace_invalid(octet_iterator start, octet_iterator end, output_iterator out)
+        {
+            static const uint32_t replacement_marker = utf8::internal::mask16(0xfffd);
+            return utf8::unchecked::replace_invalid(start, end, out, replacement_marker);
         }
 
         template <typename octet_iterator>
