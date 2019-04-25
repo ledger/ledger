@@ -1195,6 +1195,43 @@ assert (utf32result.size() == 2);
 
 This is a faster but less safe version of `utf8::utf8to32`. It does not check for validity of the supplied UTF-8 sequence.
 
+#### utf8::unchecked::replace_invalid
+
+Available in version 3.1 and later.
+
+Replaces all invalid UTF-8 sequences within a string with a replacement marker.
+
+```cpp
+template <typename octet_iterator, typename output_iterator>
+output_iterator replace_invalid(octet_iterator start, octet_iterator end, output_iterator out, uint32_t replacement);
+template <typename octet_iterator, typename output_iterator>
+output_iterator replace_invalid(octet_iterator start, octet_iterator end, output_iterator out);
+```
+
+`octet_iterator`: an input iterator.  
+`output_iterator`: an output iterator.  
+`start`: an iterator pointing to the beginning of the UTF-8 string to look for invalid UTF-8 sequences.  
+`end`: an iterator pointing to pass-the-end of the UTF-8 string to look for invalid UTF-8 sequences.  
+`out`: An output iterator to the range where the result of replacement is stored.  
+`replacement`: A Unicode code point for the replacement marker. The version without this parameter assumes the value `0xfffd`  
+Return value: An iterator pointing to the place after the UTF-8 string with replaced invalid sequences.
+
+Example of use:
+
+```cpp
+char invalid_sequence[] = "a\x80\xe0\xa0\xc0\xaf\xed\xa0\x80z";
+vector<char> replace_invalid_result;
+unchecked::replace_invalid (invalid_sequence, invalid_sequence + sizeof(invalid_sequence), back_inserter(replace_invalid_result), '?');
+bvalid = utf8::is_valid(replace_invalid_result.begin(), replace_invalid_result.end());
+assert (bvalid);
+char* fixed_invalid_sequence = "a????z";
+assert (std::equal(replace_invalid_result.begin(), replace_invalid_result.end(), fixed_invalid_sequence));
+```
+
+`replace_invalid` does not perform in-place replacement of invalid sequences. Rather, it produces a copy of the original string with the invalid sequences replaced with a replacement marker. Therefore, `out` must not be in the `[start, end]` range.
+
+Unlike `utf8::replace_invalid`, this function does not verify validity of the replacement marker.
+
 ### Types From utf8::unchecked Namespace
 
 #### utf8::iterator
@@ -1215,12 +1252,19 @@ class iterator;
 `explicit iterator (const octet_iterator& octet_it);` a constructor that initializes the underlying octet_iterator with `octet_it`.
 
 `octet_iterator base () const;` returns the underlying octet_iterator.
+
 `uint32_t operator * () const;` decodes the utf-8 sequence the underlying octet_iterator is pointing to and returns the code point.
+
 `bool operator == (const iterator& rhs) const;` returns `true` if the two underlaying iterators are equal.
+
 `bool operator != (const iterator& rhs) const;` returns `true` if the two underlaying iterators are not equal.
+
 `iterator& operator ++ ();` the prefix increment - moves the iterator to the next UTF-8 encoded code point.
+
 `iterator operator ++ (int);` the postfix increment - moves the iterator to the next UTF-8 encoded code point and returns the current one.
+
 `iterator& operator -- ();` the prefix decrement - moves the iterator to the previous UTF-8 encoded code point.
+
 `iterator operator -- (int);` the postfix decrement - moves the iterator to the previous UTF-8 encoded code point and returns the current one.
 
 Example of use:
