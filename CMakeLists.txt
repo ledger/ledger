@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.0.2)
-project (utf8cpp VERSION 3.0.3 LANGUAGES CXX)
+project (utf8cpp VERSION 3.1 LANGUAGES CXX)
 
 option(UTF8_TESTS "Enable tests for UTF8-CPP" On)
 option(UTF8_INSTALL "Enable installation for UTF8-CPP" On)
