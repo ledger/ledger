@@ -13,7 +13,7 @@ target_include_directories(utf8cpp INTERFACE
 add_library(utf8::cpp ALIAS utf8cpp)
 
 if(UTF8_INSTALL)
-    if(WIN32 AND NOT CYGWIN)
+    if(MSVC)
         set(DEF_INSTALL_CMAKE_DIR CMake)
     else()
         include(GNUInstallDirs) # define CMAKE_INSTALL_*
