@@ -95,7 +95,7 @@ namespace {
       if (name[0] == '-')
         add_error_context(_f("While parsing option '%1%'") % name);
       else
-        add_error_context(_f("While parsing environent variable '%1%'") % name);
+        add_error_context(_f("While parsing environment variable '%1%'") % name);
       throw;
     }
   }
