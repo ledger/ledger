@@ -94,7 +94,11 @@ With a more modern compiler, the same operation would look like:
 ```
 If `__cplusplus` macro points to a C++ 11 or later, the library exposes API that takes into 
 account C++ standard Unicode strings and move semantics. With an older compiler, it is still
-possible to use the same functionality, just in a little less convenient way.
+possible to use the same functionality, just in a little less convenient way
+
+In case you do not trust the `__cplusplus` macro or, for instance, do not want to include
+the C++ 11 helper functions even with a modern compiler, define `UTF_CPP_CPLUSPLUS` macro
+before including `utf8.h` and assign it a value for the standard you want to use - the values are the same as for the `__cplusplus` macro. This can be also useful with compilers that are conservative in setting the `__cplusplus` macro even if they have a good support for a recent standard edition - Microsoft's Visual C++ is one example.
 
 ### Checking if a file contains valid UTF-8 text
 
