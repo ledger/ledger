@@ -894,16 +894,7 @@ void subtotal_posts::operator()(post_t& post)
   account_t * acct = post.reported_account();
   assert(acct);
 
-#if 0
-  // jww (2012-04-06): The problem with doing this early is that
-  // fn_display_amount will recalculate this again.  For example, if you
-  // use --invert, it will invert both here and in the display amount,
-  // effectively negating it.
-  bind_scope_t bound_scope(*amount_expr.get_context(), post);
-  value_t amount(amount_expr.calc(bound_scope));
-#else
   value_t amount(post.amount);
-#endif
 
   post.xdata().compound_value = amount;
   post.xdata().add_flags(POST_EXT_COMPOUND);
