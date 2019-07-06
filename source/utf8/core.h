@@ -38,6 +38,12 @@ DEALINGS IN THE SOFTWARE.
     #define UTF_CPP_CPLUSPLUS __cplusplus
 #endif
 
+#if UTF_CPP_CPLUSPLUS >= 201103L // C++ 11 or later
+    #define OVERRIDE override
+#else // C++ 98/03
+    #define OVERRIDE
+#endif // C++ 11 or later
+
 
 namespace utf8
 {
