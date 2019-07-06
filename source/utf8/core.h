@@ -30,6 +30,15 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iterator>
 
+// Determine the C++ standard version.
+// If the user defines UTF_CPP_CPLUSPLUS, use that.
+// Otherwise, trust the unreliable predefined macro __cplusplus
+
+#if !defined UTF_CPP_CPLUSPLUS
+    #define UTF_CPP_CPLUSPLUS __cplusplus
+#endif
+
+
 namespace utf8
 {
     // The typedefs for 8-bit, 16-bit and 32-bit unsigned integers
