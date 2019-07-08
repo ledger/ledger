@@ -28,6 +28,12 @@ target_link_libraries(noexceptionstests PRIVATE
 )
 target_compile_options(noexceptionstests PUBLIC -fno-exceptions)
 
+set_target_properties(negative
+                      PROPERTIES
+                      CXX_STANDARD 98
+                      CXX_STANDARD_REQUIRED YES
+                      CXX_EXTENSIONS NO)
+
 add_test(negative_test negative ${PROJECT_SOURCE_DIR}/tests/test_data/utf8_invalid.txt)
 add_test(cpp11_test cpp11)
 add_test(api_test apitests)
