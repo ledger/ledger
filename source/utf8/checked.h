@@ -321,7 +321,7 @@ namespace utf8
 } // namespace utf8
 
 #if UTF_CPP_CPLUSPLUS >= 201103L // C++ 11 or later
-#include "utf8/cpp11.h"
+#include "cpp11.h"
 #endif // C++ 11 or later
 
 #endif //header guard
