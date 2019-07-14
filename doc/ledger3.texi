@@ -432,7 +432,7 @@ available at @url{https://github.com/conservancy/npo-ledger-cli/}).  If
 you're looking for information about how to use Ledger's tagging system to
 handle invoicing, track expenses by program targets, and other such concepts,
 you might find the tutorial useful.  (Some of the auditor reporting scripts
-that relate to the aformentioned Ledger setup can be found
+that relate to the aforementioned Ledger setup can be found
 @var{contrib/non-profit-audit-reports/} in Ledger's own source repository.)
 
 @node Ledger Tutorial, Principles of Accounting with Ledger, Introduction to Ledger, Top
