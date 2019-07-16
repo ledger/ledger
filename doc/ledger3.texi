@@ -7791,7 +7791,7 @@ as one typical yearly expense.  For help on finding out what your
 average monthly expenses are for any category, use a command like:
 
 @smallexample @c command:validate
-$ ledger -p "this year" --monthly --average balance ^expenses
+$ ledger -p "this year" --monthly --average register ^expenses
 @end smallexample
 
 The reported totals are the current year's average for each account.
