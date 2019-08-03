@@ -345,4 +345,63 @@ void put_balance(property_tree::ptree& st, const balance_t& bal)
     put_amount(st.add("amount", ""), pair.second);
 }
 
+balance_t average_lot_prices(const balance_t& bal)
+{
+  // First, we split the balance into multiple balances by underlying
+  // commodity.
+  typedef std::map<optional<std::string>,
+                   std::pair<amount_t, annotation_t> > balance_map;
+  balance_map bycomm;
+
+  foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
+    optional<std::string> sym(pair.first->symbol());
+    amount_t quant(pair.second.strip_annotations(keep_details_t()));
+
+    balance_map::iterator i = bycomm.find(sym);
+    if (i == bycomm.end()) {
+      bycomm.insert(
+        balance_map::value_type(sym, std::make_pair(quant, annotation_t())));
+      i = bycomm.find(sym);    // must succeed now
+    } else {
+      (*i).second.first += quant;
+    }
+
+    if (pair.first->has_annotation()) {
+      annotated_commodity_t& acomm(static_cast<annotated_commodity_t&>(*pair.first));
+      annotation_t& ann((*i).second.second);
+
+      if (acomm.details.price) {
+        if (ann.price)
+          ann.price = *ann.price + (*acomm.details.price * quant);
+        else
+          ann.price = *acomm.details.price * quant;
+      }
+
+      if (acomm.details.date) {
+        if (! ann.date || *acomm.details.date < *ann.date)
+          ann.date = *acomm.details.date;
+      }
+    }
+  }
+
+  balance_t result;
+
+  foreach (balance_map::value_type& pair, bycomm) {
+    amount_t amt(pair.second.first);
+    if (! amt.is_realzero()) {
+      if (pair.second.second.price)
+        pair.second.second.price = *pair.second.second.price / amt;
+
+      commodity_t * acomm =
+        commodity_pool_t::current_pool->find_or_create(
+          amt.commodity(), pair.second.second);
+      amt.set_commodity(*acomm);
+
+      result += amt;
+    }
+  }
+
+  return result;
+}
+
 } // namespace ledger

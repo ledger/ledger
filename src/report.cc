@@ -563,6 +563,14 @@ value_t report_t::fn_should_bold(call_scope_t& scope)
     return false;
 }
 
+value_t report_t::fn_averaged_lots(call_scope_t& args)
+{
+  if (args.has<balance_t>(0))
+    return average_lot_prices(args.get<balance_t>(0));
+  else
+    return args[0];
+}
+
 value_t report_t::fn_market(call_scope_t& args)
 {
   value_t result;
@@ -1130,6 +1138,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(average);
     else OPT(account_width_);
     else OPT(amount_width_);
+    else OPT(average_lot_prices);
     break;
   case 'b':
     OPT(balance_format_);
@@ -1370,6 +1379,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return MAKE_FUNCTOR(report_t::fn_ansify_if);
       else if (is_eq(p, "abs"))
         return MAKE_FUNCTOR(report_t::fn_abs);
+      else if (is_eq(p, "averaged_lots"))
+        return MAKE_FUNCTOR(report_t::fn_averaged_lots);
       break;
 
     case 'b':
