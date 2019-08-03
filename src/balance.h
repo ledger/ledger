@@ -603,6 +603,8 @@ inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {
 
 void put_balance(property_tree::ptree& pt, const balance_t& bal);
 
+balance_t average_lot_prices(const balance_t& bal);
+
 } // namespace ledger
 
 #endif // _BALANCE_H

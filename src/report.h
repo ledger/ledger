@@ -202,6 +202,7 @@ public:
   value_t fn_to_string(call_scope_t& scope);
   value_t fn_to_mask(call_scope_t& scope);
   value_t fn_to_sequence(call_scope_t& scope);
+  value_t fn_averaged_lots(call_scope_t& scope);
 
   value_t fn_now(call_scope_t&) {
     return terminus;
@@ -298,6 +299,7 @@ public:
     HANDLER(limit_).report(out);
     HANDLER(lot_dates).report(out);
     HANDLER(lot_prices).report(out);
+    HANDLER(average_lot_prices).report(out);
     HANDLER(lot_notes).report(out);
     HANDLER(lots).report(out);
     HANDLER(lots_actual).report(out);
@@ -745,6 +747,13 @@ public:
 
   OPTION(report_t, lot_dates);
   OPTION(report_t, lot_prices);
+  OPTION_(report_t, average_lot_prices, DO() {
+      OTHER(lot_prices).on(whence);
+      OTHER(display_amount_)
+        .on(whence, "averaged_lots(display_amount)");
+      OTHER(display_total_)
+        .on(whence, "averaged_lots(display_total)");
+    });
   OPTION(report_t, lot_notes);
   OPTION(report_t, lots);
   OPTION(report_t, lots_actual);
