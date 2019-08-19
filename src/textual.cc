@@ -319,7 +319,9 @@ std::streamsize instance_t::read_line(char *& line)
     context.curr_pos  = context.line_beg_pos;
     context.curr_pos += len;
 
-    if (context.linenum == 0 && utf8::is_bom(context.linebuf)) {
+    if (context.linenum == 0 &&
+        utf8::starts_with_bom(
+          context.linebuf, context.linebuf + sizeof(context.linebuf))) {
       line = &context.linebuf[3];
       len -= 3;
     } else {
