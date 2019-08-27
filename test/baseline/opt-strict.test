@@ -18,5 +18,13 @@ test reg --strict
 07-Feb-02 Baz                   Expenses:Foodx               $30.00       $30.00
                                 Assets:Cash                 $-30.00            0
 __ERROR__
+Warning: "$FILE", line 2: Unknown account 'Expenses:Food'
+Warning: "$FILE", line 2: Unknown commodity '$'
+Warning: "$FILE", line 3: Unknown account 'Assets:Cash'
+Warning: "$FILE", line 6: Unknown account 'Expenses:Food'
+Warning: "$FILE", line 6: Unknown commodity '$'
+Warning: "$FILE", line 7: Unknown account 'Assets:Cash'
 Warning: "$FILE", line 10: Unknown account 'Expenses:Foodx'
+Warning: "$FILE", line 10: Unknown commodity '$'
+Warning: "$FILE", line 11: Unknown account 'Assets:Cash'
 end test
