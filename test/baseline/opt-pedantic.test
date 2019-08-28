@@ -6,12 +6,16 @@
     Expenses:Phone            20.00 GBP
     Assets:Cash
 
-test bal --pedantic -> 1
+test bal --pedantic -> 2
 __ERROR__
 While parsing file "$FILE", line 2:
 While parsing posting:
   Expenses:Phone            20.00 GBP
 
 Error: Unknown account 'Expenses:Phone'
-end test
+While parsing file "$FILE", line 6:
+While parsing posting:
+  Expenses:Phone            20.00 GBP
 
+Error: Unknown account 'Expenses:Phone'
+end test
