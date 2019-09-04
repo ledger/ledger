@@ -1,5 +1,5 @@
 macro(add_ledger_test _name)
-  target_link_libraries(${_name} libledger)
+  target_link_libraries(${_name} libledger rt)
   add_test(Ledger${_name} ${PROJECT_BINARY_DIR}/${_name})
   set_tests_properties(Ledger${_name}
     PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
