@@ -87,7 +87,7 @@ install:
       mkdir "$CMAKE_ROOT"
       CMAKE_BIN_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz"
       curl -Ls "$CMAKE_BIN_URL" |
-      tar x -C "$CMAKE_ROOT" --strip-components 1
+      tar zx -C "$CMAKE_ROOT" --strip-components 1
     fi
 
 before_script:
@@ -96,6 +96,7 @@ before_script:
   # does not work.
   - if [ "$TRAVIS_OS_NAME" = osx -a -z "$BOOST_VERSION" ]; then EXTRA_CMAKE_ARGS="-DPRECOMPILE_SYSTEM_HH=OFF -DUSE_PYTHON27_COMPONENT=ON"; fi
   - if [ -n "${CMAKE_VERSION}" ]; then CMAKE="${CMAKE_ROOT}/bin/cmake"; else CMAKE="cmake"; fi
+  - echo "\$EXTRA_CMAKE_ARGS=\"${EXTRA_CMAKE_ARGS}\""
   - $CMAKE . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON $EXTRA_CMAKE_ARGS
   - make VERBOSE=1
 
