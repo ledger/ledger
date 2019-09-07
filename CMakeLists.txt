@@ -86,6 +86,7 @@ endif()
 
 # Set BOOST_ROOT to help CMake to find the right Boost version
 set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_NO_BOOST_CMAKE ON)
 message(STATUS "Boost.Python component name: ${BOOST_PYTHON}")
 find_package(Boost 1.49.0
   REQUIRED date_time filesystem system iostreams regex unit_test_framework
