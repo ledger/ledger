@@ -21,17 +21,15 @@ env:
   matrix:
     # Boost version to build against; an empty string means the
     # distribution's default.
-    - BOOST_VERSION=""
-    - BOOST_VERSION="1.61.0"
+    - BOOST_VERSION="" CMAKE_VERSION=""
+    - BOOST_VERSION="1.70.0" CMAKE_VERSION="3.15.3"
 
 # The configuration for macOS only works with Boost installed by
 # homebrew, so exclude the other combinations.
 matrix:
   exclude:
-    - os: linux
-      env: BOOST_VERSION=""
     - os: osx
-      env: BOOST_VERSION="1.61.0"
+      env: BOOST_VERSION="1.70.0" CMAKE_VERSION="3.15.3"
 
 addons:
   coverity_scan:
@@ -57,10 +55,12 @@ addons:
       - libboost-serialization-dev
   homebrew:
     packages:
+      - cmake
       - boost
       - boost-python
       - gmp
       - mpfr
+    update: true
 
 before_install:
   - |
@@ -81,17 +81,27 @@ install:
         popd
         rm -Rf "${BOOST_SOURCE}"
     fi
+  - |
+    if [ -n "${CMAKE_VERSION}" ]; then
+      export CMAKE_ROOT="${HOME}/cmake"
+      mkdir "$CMAKE_ROOT"
+      CMAKE_BIN_URL="https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-x86_64.tar.gz"
+      curl -Ls "$CMAKE_BIN_URL" |
+      tar x -C "$CMAKE_ROOT" --strip-components 1
+    fi
 
 before_script:
   # On macOS, CMake finds the Boost.Python installed by homebrew only
   # with the component name "python27".  Also, precompiling system.hh
   # does not work.
   - if [ "$TRAVIS_OS_NAME" = osx -a -z "$BOOST_VERSION" ]; then EXTRA_CMAKE_ARGS="-DPRECOMPILE_SYSTEM_HH=OFF -DUSE_PYTHON27_COMPONENT=ON"; fi
-  - cmake . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON $EXTRA_CMAKE_ARGS
+  - if [ -n "${CMAKE_VERSION}" ]; then CMAKE="${CMAKE_ROOT}/bin/cmake"; else CMAKE="cmake"; fi
+  - $CMAKE . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON $EXTRA_CMAKE_ARGS
   - make VERBOSE=1
 
 script:
-  - ctest --output-on-failure
+  - if [ -n "${CMAKE_VERSION}" ]; then CTEST="${CMAKE_ROOT}/bin/ctest"; else CTEST="ctest"; fi
+  - $CTEST --output-on-failure
   - PYTHONPATH=. python python/demo.py
 
 notifications:
