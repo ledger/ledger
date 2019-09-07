@@ -97,6 +97,13 @@ run:
          boost +st+python26+icu texlive doxygen graphviz \
          texinfo lcov sloccount
 
+### Conda
+
+Ledger is also available through [Conda](https://conda.io) from the
+[conda-forge](https://conda-forge.org) channel:
+
+    $ conda install -c conda-forge ledger
+
 ### Ubuntu
 
 If you're going to build on Ubuntu, `sudo apt-get install ...` the
