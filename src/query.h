@@ -223,6 +223,7 @@ public:
       TRACE_DTOR(query_t::lexer_t);
     }
 
+    bool    advance();
     token_t next_token(token_t::kind_t tok_context = token_t::UNKNOWN);
     void    push_token(token_t tok) {
       assert(token_cache.kind == token_t::UNKNOWN);
