@@ -36,7 +36,7 @@ int main(int argc, char** argv)
             cout << "This part is fine: " << string(line.begin(), end_it) << "\n";
         }
         // Get the line length (at least for the valid part)
-        int length = utf8::distance(line.begin(), end_it);
+        ptrdiff_t length = utf8::distance(line.begin(), end_it);
         cout << "Length of line " << line_count << " is " << length <<  "\n";
 
         // Convert it to utf-16
