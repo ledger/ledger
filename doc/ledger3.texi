@@ -4307,9 +4307,10 @@ $ ledger bal Expenses and not (Expenses:Drinks or Expenses:Candy or Expenses:Gif
 @node Controlling Formatting,  , Controlling the Accounts and Payees, Balance Reports
 @subsection Controlling Formatting
 
-These examples all use the default formatting for the balance
-report.  Customizing the formatting can easily allowing to see only what
-you want, or interface Ledger with other programs.
+These examples all use the default formatting for the balance report.
+Customizing the formatting allows you to see only what you want, or
+interface Ledger with other programs.  For examples and details,
+@pxref{Format Strings} and @ref{Asset Allocation}.
 
 @node Typical queries, Advanced Reports, Balance Reports, Building Reports
 @section Typical queries
