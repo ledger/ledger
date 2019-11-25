@@ -27,14 +27,14 @@ end test
 test -f /dev/null convert test/baseline/feat-convert-with-directives.dat --rich-data --date-format %d-%m-%Y --now '2014/08/01'
 01-01-2012 * KFC
     ; CSV: 2012/01/01,KFC,$10
-    ; Imported: 2014/08/01
+    ; Imported: 01-08-2014
     ; UUID: 4352cc5a03f882f6f159b90a518667bde7200351
     Expenses:Unknown                             $10
     Equity:Unknown
 
 02-01-2012 * REWE SAGT DANKE  123454321
     ; CSV: 2012/01/02,"REWE SAGT DANKE  123454321",10€
-    ; Imported: 2014/08/01
+    ; Imported: 01-08-2014
     ; UUID: 4d04439fba0c7336377d1191c545efd0cfa15437
     Expenses:Unknown                             10€
     Equity:Unknown

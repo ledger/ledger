@@ -1696,11 +1696,13 @@ namespace {
 
 void set_datetime_format(const char * format)
 {
+  written_datetime_io->set_format(format);
   printed_datetime_io->set_format(format);
 }
 
 void set_date_format(const char * format)
 {
+  written_date_io->set_format(format);
   printed_date_io->set_format(format);
 }
 
