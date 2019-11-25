@@ -3,6 +3,6 @@
     Income:Dividends:Vanguard:VMMXX        $-0.35
 
 test reg --register-format='%(amount)\n'
-0.350 VMMXX {$1.00} [07-Feb-02]
+0.350 VMMXX {$1.00} [2007/02/02]
 $-0.35
 end test
