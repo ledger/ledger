@@ -1,8 +1,4 @@
 cmake_minimum_required(VERSION 2.8.5)
-if(POLICY CMP0042)
-  # CMP0042 is only known to CMake 3.0 and above
-  cmake_policy(SET CMP0042 OLD)
-endif(POLICY CMP0042)
 
 PROJECT(ledger)
 
@@ -27,7 +23,6 @@ endif()
 ########################################################################
 
 option(USE_PYTHON "Build support for the Python scripting bridge" OFF)
-OPTION(USE_PYTHON27_COMPONENT "Use python27 as name of Boost.Python component" OFF)
 option(USE_DOXYGEN "Build reference documentation using Doxygen" OFF)
 
 option(DISABLE_ASSERTS "Build without any internal consistency checks" OFF)
@@ -59,23 +54,18 @@ endif()
 
 ########################################################################
 
-set(Python_ADDITIONAL_VERSIONS 2.7 2.6)
-find_package(PythonInterp)      # Used for running tests
+find_package(Python 2 COMPONENTS Interpreter) # Used for running tests
 
 if (USE_PYTHON)
   if (NOT BUILD_LIBRARY)
     message(ERROR "Building the python module requires BUILD_LIBRARY=ON.")
   endif()
 
-  find_package(PythonLibs)
-  if (PYTHONLIBS_FOUND)
-    if(USE_PYTHON27_COMPONENT)
-      set(BOOST_PYTHON "python27")
-    else()
-      set(BOOST_PYTHON "python")
-    endif()
+  find_package(Python 2 COMPONENTS Interpreter Development)
+  if (PYTHON_FOUND)
+    set(BOOST_PYTHON "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}")
     set(HAVE_BOOST_PYTHON 1)
-    include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
+    include_directories(SYSTEM ${Python_INCLUDE_DIR})
   else()
     set(HAVE_BOOST_PYTHON 0)
     message("Could not find a Python library to use with Boost.Python")
@@ -173,9 +163,9 @@ if (HAVE_BOOST_PYTHON)
 cmake_push_check_state()
 
 set(CMAKE_REQUIRED_INCLUDES
-    ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
+    ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${Python_INCLUDE_DIR})
 set(CMAKE_REQUIRED_LIBRARIES
-    ${Boost_LIBRARIES} ${PYTHON_LIBRARIES} ${PROFILE_LIBS})
+    ${Boost_LIBRARIES} ${Python_LIBRARIES} ${PROFILE_LIBS})
 
 check_cxx_source_compiles("
 #include <boost/python.hpp>
@@ -269,7 +259,7 @@ macro(add_ledger_library_dependencies _target)
       target_link_libraries(${_target} ${Boost_LIBRARIES})
       set_target_properties(${_target} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
     else()
-      target_link_libraries(${_target} ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
+      target_link_libraries(${_target} ${Boost_LIBRARIES} ${Python_LIBRARIES})
     endif()
   else()
     target_link_libraries(${_target} ${Boost_LIBRARIES})

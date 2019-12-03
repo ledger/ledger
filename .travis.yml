@@ -8,6 +8,9 @@ compiler:
 os:
   - linux
   - osx
+dist:
+  - bionic
+osx_image: xcode11.2
 sudo: false
 cache:
   apt: true
@@ -18,20 +21,6 @@ env:
     - BOOST_LIBS="date_time,filesystem,iostreams,python,regex,system,test"
       # Encrypted COVERITY_SCAN_TOKEN
     - secure: "mYNxD1B8WNSvUeKzInehZ7syi2g1jH2ymeSQxoeKKD2duq3pvNWPdZdc4o9MlWQcAqcz58rhFZRIpuEWCnP0LbbJaG+MyuemMn9uAmg9Y4gFpMsBPHuTdf8pO3rDex+tkrr9puEJFgL+QV/TehxO6NDDpx7UdYvJb+4aZD/auYI="
-  matrix:
-    # Boost version to build against; an empty string means the
-    # distribution's default.
-    - BOOST_VERSION=""
-    - BOOST_VERSION="1.61.0"
-
-# The configuration for macOS only works with Boost installed by
-# homebrew, so exclude the other combinations.
-matrix:
-  exclude:
-    - os: linux
-      env: BOOST_VERSION=""
-    - os: osx
-      env: BOOST_VERSION="1.61.0"
 
 addons:
   coverity_scan:
@@ -56,37 +45,16 @@ addons:
       - libboost-filesystem-dev
       - libboost-serialization-dev
   homebrew:
+    update: true
     packages:
       - boost
       - boost-python
       - gmp
       - mpfr
 
-before_install:
-  - |
-    if [ -n "${BOOST_VERSION}" ]; then
-        BOOST_SOURCE="$(mktemp -d)"
-        BOOST_SOURCE_URL="https://sourceforge.net/projects/boost/files/boost/${BOOST_VERSION}/boost_${BOOST_VERSION//./_}.tar.bz2/download"
-        curl -Ls "$BOOST_SOURCE_URL" |
-        tar jx -C "${BOOST_SOURCE}" --strip-components 1
-    fi
-
-install:
-  - |
-    if [ -n "${BOOST_VERSION}" ]; then
-        export BOOST_ROOT="${HOME}/boost"
-        pushd "${BOOST_SOURCE}"
-        ./bootstrap.sh --with-libraries="${BOOST_LIBS}"
-        ./b2 threading=multi -d0 --prefix="${BOOST_ROOT}" install
-        popd
-        rm -Rf "${BOOST_SOURCE}"
-    fi
-
 before_script:
-  # On macOS, CMake finds the Boost.Python installed by homebrew only
-  # with the component name "python27".  Also, precompiling system.hh
-  # does not work.
-  - if [ "$TRAVIS_OS_NAME" = osx -a -z "$BOOST_VERSION" ]; then EXTRA_CMAKE_ARGS="-DPRECOMPILE_SYSTEM_HH=OFF -DUSE_PYTHON27_COMPONENT=ON"; fi
+  # On macOS, precompiling system.hh does not work, and boost-python packaging is broken
+  - if [ "$TRAVIS_OS_NAME" = osx ]; then EXTRA_CMAKE_ARGS="-DPRECOMPILE_SYSTEM_HH=OFF -DBoost_NO_BOOST_CMAKE=ON"; fi
   - cmake . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON $EXTRA_CMAKE_ARGS
   - make VERBOSE=1
 
