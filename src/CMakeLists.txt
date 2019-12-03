@@ -272,7 +272,6 @@ endif()
 include(GNUInstallDirs)
 
 if (BUILD_LIBRARY)
-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
   add_library(libledger SHARED ${LEDGER_SOURCES})
   add_ledger_library_dependencies(libledger)
   set_target_properties(libledger PROPERTIES
@@ -283,8 +282,8 @@ if (BUILD_LIBRARY)
 
   add_executable(ledger main.cc global.cc)
   target_link_libraries(ledger libledger)
-  if (CMAKE_SYSTEM_NAME STREQUAL Darwin AND HAVE_BOOST_PYTHON)
-    target_link_libraries(ledger ${PYTHON_LIBRARIES})
+  if (HAVE_BOOST_PYTHON)
+    target_link_libraries(ledger ${Python_LIBRARIES})
   endif()
 
   install(TARGETS libledger DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -296,15 +295,7 @@ else()
 endif()
 
 if (USE_PYTHON)
-  execute_process(COMMAND ${PYTHON_EXECUTABLE} -c
-    "from __future__ import print_function
-import distutils.sysconfig as s
-print(s.get_python_lib(True, prefix=''))"
-    OUTPUT_VARIABLE _TMP_PYTHON_SITE_PACKAGES OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(PYTHON_SITE_PACKAGES ${_TMP_PYTHON_SITE_PACKAGES}
-    CACHE PATH "python module directory (${_TMP_PYTHON_SITE_PACKAGES})")
-
-  if (PYTHON_SITE_PACKAGES)
+  if (Python_SITEARCH)
     if (WIN32 AND NOT CYGWIN)
       set(_ledger_python_module_name "ledger.pyd")
     elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
@@ -323,9 +314,9 @@ print(s.get_python_lib(True, prefix=''))"
       $<TARGET_FILE:libledger> "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}")
     install(
       FILES "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}"
-      DESTINATION ${PYTHON_SITE_PACKAGES})
+      DESTINATION ${Python_SITEARCH})
   else()
-    message(WARNING "PYTHON_SITE_PACKAGES not set. Will not install python module.")
+    message(WARNING "Python_SITEARCH not set. Will not install python module.")
   endif()
 endif()
 
