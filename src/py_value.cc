@@ -71,7 +71,7 @@ namespace {
       return (PyObject *)&PyBool_Type;
     }
     else if (value.is_long()) {
-      return (PyObject *)&PyInt_Type;
+      return (PyObject *)&PyLong_Type;
     }
     else if (value.is_string()) {
       return (PyObject *)&PyUnicode_Type;

@@ -130,8 +130,12 @@ template <typename T>
 PyObject * str_to_py_unicode(const T& str)
 {
   using namespace boost::python;
+#if PY_MAJOR_VERSION >= 3
+  PyObject * uni = PyUnicode_FromString(str.c_str());
+#else
   PyObject * pstr = PyString_FromString(str.c_str());
   PyObject * uni  = PyUnicode_FromEncodedObject(pstr, "UTF-8", NULL);
+#endif
   return object(handle<>(borrowed(uni))).ptr();
 }
 

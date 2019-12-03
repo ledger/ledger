@@ -33,7 +33,9 @@
 
 #include "pyinterp.h"
 #include "pyutils.h"
+#if PY_MAJOR_VERSION < 3
 #include "pyfstream.h"
+#endif
 #include "commodity.h"
 #include "annotate.h"
 #include "balance.h"
