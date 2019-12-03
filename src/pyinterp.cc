@@ -153,7 +153,22 @@ void python_interpreter_t::initialize()
 
     main_module = import_module("__main__");
 
+#if PY_MAJOR_VERSION >= 3
+    static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "ledger",     /* m_name */
+        NULL,  /* m_doc */
+        -1,                  /* m_size */
+        NULL,    /* m_methods */
+        NULL,                /* m_reload */
+        NULL,                /* m_traverse */
+        NULL,                /* m_clear */
+        NULL,                /* m_free */
+    };
+    python::detail::init_module(moduledef, &initialize_for_python);
+#else
     python::detail::init_module("ledger", &initialize_for_python);
+#endif
 
     is_initialized = true;
   }
@@ -313,6 +328,18 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
   if (! is_initialized)
     initialize();
 
+#if PY_MAJOR_VERSION >= 3
+  wchar_t ** argv = new wchar_t *[args.size() + 1];
+
+  argv[0] = new wchar_t[std::strlen(argv0) + 1];
+  mbstowcs(argv[0], argv0, std::strlen(argv0));
+
+  for (std::size_t i = 0; i < args.size(); i++) {
+    string arg = args.get<string>(i);
+    argv[i + 1] = new wchar_t[arg.length() + 1];
+    mbstowcs(argv[0], arg.c_str(), std::strlen(arg.c_str()));
+  }
+#else
   char ** argv = new char *[args.size() + 1];
 
   argv[0] = new char[std::strlen(argv0) + 1];
@@ -323,6 +350,7 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
     argv[i + 1] = new char[arg.length() + 1];
     std::strcpy(argv[i + 1], arg.c_str());
   }
+#endif
 
   int status = 1;
 

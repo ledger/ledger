@@ -30,6 +30,7 @@
  */
 
 #include <system.hh>
+#include <datetime.h>
 
 #include "pyinterp.h"
 #include "pyutils.h"
@@ -41,16 +42,11 @@ namespace ledger {
 
 using namespace boost::python;
 
-#define MY_PyDateTime_IMPORT                            \
-  PyDateTimeAPI = (PyDateTime_CAPI*)                    \
-  PyCObject_Import(const_cast<char *>("datetime"),      \
-                   const_cast<char *>("datetime_CAPI"))
-
 struct date_to_python
 {
   static PyObject* convert(const date_t& dte)
   {
-    MY_PyDateTime_IMPORT;
+    PyDateTime_IMPORT;
     return PyDate_FromDate(dte.year(), dte.month(), dte.day());
   }
 };
@@ -59,7 +55,7 @@ struct date_from_python
 {
   static void* convertible(PyObject* obj_ptr)
   {
-    MY_PyDateTime_IMPORT;
+    PyDateTime_IMPORT;
     if (PyDate_Check(obj_ptr)) return obj_ptr;
     return 0;
   }
@@ -67,7 +63,7 @@ struct date_from_python
   static void construct(PyObject * obj_ptr,
                         converter::rvalue_from_python_stage1_data * data)
   {
-    MY_PyDateTime_IMPORT;
+    PyDateTime_IMPORT;
 
     int year = PyDateTime_GET_YEAR(obj_ptr);
     date::year_type y = gregorian::greg_year(static_cast<unsigned short>(year));
@@ -90,7 +86,7 @@ struct datetime_to_python
 {
   static PyObject* convert(const datetime_t& moment)
   {
-    MY_PyDateTime_IMPORT;
+    PyDateTime_IMPORT;
 
     date_t dte = moment.date();
     datetime_t::time_duration_type tod = moment.time_of_day();
@@ -107,7 +103,7 @@ struct datetime_from_python
 {
   static void* convertible(PyObject* obj_ptr)
   {
-    MY_PyDateTime_IMPORT;
+    PyDateTime_IMPORT;
     if (PyDateTime_Check(obj_ptr)) return obj_ptr;
     return 0;
   }
@@ -115,7 +111,7 @@ struct datetime_from_python
   static void construct(PyObject * obj_ptr,
                         converter::rvalue_from_python_stage1_data * data)
   {
-    MY_PyDateTime_IMPORT;
+    PyDateTime_IMPORT;
 
     int year = PyDateTime_GET_YEAR(obj_ptr);
     date::year_type y = gregorian::greg_year(static_cast<unsigned short>(year));

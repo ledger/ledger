@@ -33,7 +33,9 @@
 
 #include "pyinterp.h"
 #include "pyutils.h"
+#if PY_MAJOR_VERSION < 3
 #include "pyfstream.h"
+#endif
 
 namespace ledger {
 
@@ -88,14 +90,18 @@ struct string_from_python
 {
   static void* convertible(PyObject* obj_ptr)
   {
-    if (!PyUnicode_Check(obj_ptr) &&
-        !PyString_Check(obj_ptr)) return 0;
+    if (!PyUnicode_Check(obj_ptr)
+#if PY_MAJOR_VERSION < 3
+        && !PyString_Check(obj_ptr)
+#endif
+            ) return 0;
     return obj_ptr;
   }
 
   static void construct(PyObject* obj_ptr,
                         converter::rvalue_from_python_stage1_data* data)
   {
+#if PY_MAJOR_VERSION < 3
     if (PyString_Check(obj_ptr)) {
       const char* value = PyString_AsString(obj_ptr);
       if (value == 0) throw_error_already_set();
@@ -105,6 +111,7 @@ struct string_from_python
       new (storage) string(value);
       data->convertible = storage;
     } else {
+#endif
       VERIFY(PyUnicode_Check(obj_ptr));
 
       Py_ssize_t size = PyUnicode_GET_SIZE(obj_ptr);
@@ -125,14 +132,16 @@ struct string_from_python
                         (data)->storage.bytes;
       new (storage) string(str);
       data->convertible = storage;
+#if PY_MAJOR_VERSION < 3
     }
+#endif
   }
 };
 
 typedef register_python_conversion<string, string_to_python, string_from_python>
   string_python_conversion;
 
-
+#if PY_MAJOR_VERSION < 3
 struct istream_to_python
 {
   static PyObject* convert(const std::istream&)
@@ -195,7 +204,7 @@ struct ostream_from_python
 typedef register_python_conversion<std::ostream,
                                    ostream_to_python, ostream_from_python>
   ostream_python_conversion;
-
+#endif
 
 void export_utils()
 {
@@ -248,8 +257,10 @@ void export_utils()
 
   bool_python_conversion();
   string_python_conversion();
+#if PY_MAJOR_VERSION < 3
   istream_python_conversion();
   ostream_python_conversion();
+#endif
 }
 
 } // namespace ledger
