@@ -21,13 +21,16 @@ env:
     - BOOST_LIBS="date_time,filesystem,iostreams,python,regex,system,test"
       # Encrypted COVERITY_SCAN_TOKEN
     - secure: "mYNxD1B8WNSvUeKzInehZ7syi2g1jH2ymeSQxoeKKD2duq3pvNWPdZdc4o9MlWQcAqcz58rhFZRIpuEWCnP0LbbJaG+MyuemMn9uAmg9Y4gFpMsBPHuTdf8pO3rDex+tkrr9puEJFgL+QV/TehxO6NDDpx7UdYvJb+4aZD/auYI="
+  jobs:
+    - PY_MAJOR=2
+    - PY_MAJOR=3
 
 addons:
   coverity_scan:
     project:
       name: "ledger/ledger"
       description: "Build submitted via Travis CI"
-    build_command_prepend: "cmake . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON -DCLANG_GCOV=ON"
+    build_command_prepend: "cmake . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON -DCLANG_GCOV=ON -DPython_FIND_VERSION_MAJOR=${PY_MAJOR}"
     build_command: "make"
     branch_pattern: coverity
   apt:
@@ -49,18 +52,19 @@ addons:
     packages:
       - boost
       - boost-python
+      - boost-python3
       - gmp
       - mpfr
 
 before_script:
   # On macOS, precompiling system.hh does not work, and boost-python packaging is broken
   - if [ "$TRAVIS_OS_NAME" = osx ]; then EXTRA_CMAKE_ARGS="-DPRECOMPILE_SYSTEM_HH=OFF -DBoost_NO_BOOST_CMAKE=ON"; fi
-  - cmake . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON $EXTRA_CMAKE_ARGS
+  - cmake . -DUSE_PYTHON=ON -DPython_FIND_VERSION_MAJOR=${PY_MAJOR} -DBUILD_DEBUG=ON $EXTRA_CMAKE_ARGS
   - make VERBOSE=1
 
 script:
   - ctest --output-on-failure
-  - PYTHONPATH=. python python/demo.py
+  - PYTHONPATH=. python${PY_MAJOR} python/demo.py
 
 notifications:
   email:
