@@ -54,14 +54,14 @@ endif()
 
 ########################################################################
 
-find_package(Python 2 COMPONENTS Interpreter) # Used for running tests
+find_package(Python COMPONENTS Interpreter) # Used for running tests
 
 if (USE_PYTHON)
   if (NOT BUILD_LIBRARY)
     message(ERROR "Building the python module requires BUILD_LIBRARY=ON.")
   endif()
 
-  find_package(Python 2 COMPONENTS Interpreter Development)
+  find_package(Python COMPONENTS Interpreter Development)
   if (PYTHON_FOUND)
     set(BOOST_PYTHON "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}")
     set(HAVE_BOOST_PYTHON 1)
