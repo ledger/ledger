@@ -64,7 +64,7 @@ before_script:
 
 script:
   - ctest --output-on-failure
-  - PYTHONPATH=. python${PY_MAJOR} python/demo.py
+  - PYTHONPATH=. `cmake -LA . | sed -n 's/Python_EXECUTABLE:FILEPATH=//p'` python/demo.py
 
 notifications:
   email:
