@@ -4,7 +4,7 @@
     * Passif:Crédit:BanqueAccord           -171,63 €
 
 test --now=2014/06/27 emacs
-(("$sourcepath/test/regress/1057.test" 1 (21308 60112 0) nil "www.amazon.fr"
+(("$sourcepath/test/regress/1057.test" 1 (21308 38512 0) nil "www.amazon.fr"
   (2 "Dépense:Loisir:Ordi:Matériel" "101,50 €" nil " disque dur portable 2,5\" 2000 Go")
   (3 "Dépense:Maison:Service:Poste" "70,13 €" nil)
   (4 "Passif:Crédit:BanqueAccord" "-171,63 €" t)))
