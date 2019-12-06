@@ -21,6 +21,7 @@ class CheckBaselineTests (CheckOptions):
     self.untested_options = [
         'anon',
         'args-only',
+        'average-lot-prices',
         'debug',
         'download',
         'force-pager',
