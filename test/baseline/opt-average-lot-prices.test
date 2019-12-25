@@ -1,0 +1,16 @@
+2019-01-01 * Opening balance
+    Assets:Investments              1000.00 EUR
+    Equity:Opening balance         -1000.00 EUR
+
+2019-03-01 * Bought FOO
+    Assets:Investments       2 FOO @ 150.00 EUR
+    Assets:Investments              -300.00 EUR
+
+2019-06-01 * Bought FOO
+    Assets:Investments       1 FOO @ 180.00 EUR
+    Assets:Investments              -180.00 EUR
+
+test bal assets:investments --average-lot-prices
+          520.00 EUR
+  3 FOO {160.00 EUR}  Assets:Investments
+end test
