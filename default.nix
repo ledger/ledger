@@ -9,20 +9,11 @@ in
 stdenv.mkDerivation {
   name = "ledger-${version}-${rev}";
 
-  # NOTE: fetchgit because ledger has submodules not included in the
-  # default github tarball.
   src = ./.;
 
   buildInputs = [ cmake boost gmp mpfr libedit python texinfo gnused ];
 
   enableParallelBuilding = true;
-
-  # Skip byte-compiling of emacs-lisp files because this is currently
-  # broken in ledger...
-  postInstall = ''
-    mkdir -p $out/share/emacs/site-lisp/
-    cp -v "$src/lisp/"*.el $out/share/emacs/site-lisp/
-  '';
 
   cmakeFlags = [ "-DCMAKE_INSTALL_LIBDIR=lib" ];
 
