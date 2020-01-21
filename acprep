@@ -62,7 +62,7 @@ class BoostInfo(object):
         if system in ['centos']:
             return [ 'boost-devel' ]
 
-        elif system in ['ubuntu-bionic', 'ubuntu-xenial',
+        elif system in ['ubuntu-bionic', 'ubuntu-xenial', 'ubuntu-eoan',
                         'ubuntu-trusty', 'ubuntu-cosmic']:
             return [ 'libboost-dev',
                      'libboost-date-time-dev',
@@ -567,6 +567,23 @@ class PrepareBuild(CommandLineApp):
                             'sloccount'
                         ])
                     elif release == 'trusty':
+                        packages.extend([
+                            'doxygen',
+                            'cmake',
+                            'ninja-build',
+                            'zlib1g-dev',
+                            'libbz2-dev',
+                            'python-dev',
+                            'libgmp3-dev',
+                            'libmpfr-dev',
+                            'gettext',
+                            'libedit-dev',
+                            'texinfo',
+                            'lcov',
+                            'libutfcpp-dev',
+                            'sloccount'
+                        ])
+                    elif release == 'eoan':
                         packages.extend([
                             'doxygen',
                             'cmake',
