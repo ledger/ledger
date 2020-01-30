@@ -7,12 +7,16 @@
     [Assets:Budget:Food:Groceries]              $20.00
     [Assets:Budget:Food:Restaurants]            $80.00
 
-2018/01/02 * Assertion
-    [Assets:Checking]                           = $0.00
+2018/01/02 * Buy Groceries
+    [Assets:Budget:Food:Groceries]              -$20 = $0
+    [Assets:Checking]                           $20
+    Assets:Checking                             -$20 = $80
+    Expenses:Food:Groceries                     $20
 
-2018/01/02 * Assertion
-    Assets:Checking                             = $100.00
+test bal Assets
+              $80.00  Assets:Budget:Food:Restaurants
+end test
 
 test bal Assets -R
-             $100.00  Assets:Checking
+              $80.00  Assets:Checking
 end test

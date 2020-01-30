@@ -20,3 +20,7 @@ test bal Assets
 --------------------
              $100.00
 end test
+
+test bal Assets -R
+             $100.00  Assets:Checking
+end test
