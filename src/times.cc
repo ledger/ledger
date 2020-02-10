@@ -237,6 +237,10 @@ string_to_month_of_year(const std::string& str)
 
 datetime_t parse_datetime(const char * str)
 {
+  if (std::strlen(str) > 127) {
+    throw_(date_error, _f("Invalid date: %1%") % str);
+  }
+
   char buf[128];
   std::strcpy(buf, str);
 
