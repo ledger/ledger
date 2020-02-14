@@ -12,20 +12,21 @@
     Expenses:Groceries
 
 test bal
-             $100.00  Assets:Budget:Food
-              $20.00    Groceries
-              $80.00    Restaurants
-             -$80.00  Assets:Checking
-            -$100.00  Equity:Opening Balances
+              $80.00  Assets
+             $100.00    Budget:Food
+              $20.00      Groceries
+              $80.00      Restaurants
+             $-20.00    Checking
+            $-100.00  Equity:Opening Balances
               $20.00  Expenses:Groceries
 --------------------
-             $100.00
+                   0
 end test
 
 test bal -R
               $80.00  Assets:Checking
-            -$100.00  Equity:Opening Balances
+            $-100.00  Equity:Opening Balances
               $20.00  Expenses:Groceries
 --------------------
-             $100.00
+                   0
 end test
