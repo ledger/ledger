@@ -170,6 +170,7 @@ public:
     struct details_t
     {
       value_t            total;
+      value_t            real_total;
       bool               calculated;
       bool               gathered;
 

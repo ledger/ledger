@@ -622,21 +622,14 @@ value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&
       i = posts.begin();
 
     for (; i != posts.end(); i++) {
-      if (real_only == true) {
-        if (! (*i)->has_flags(POST_VIRTUAL)) {
-          if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
-            if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
-              (*i)->add_to_value(xdata_->self_details.total, expr);
-              (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
-            }
+      if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
+        if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
+          if (! (*i)->has_flags(POST_VIRTUAL)) {
+            (*i)->add_to_value(xdata_->self_details.real_total, expr);
           }
-        }
-      } else {
-        if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
-          if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
-            (*i)->add_to_value(xdata_->self_details.total, expr);
-            (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
-          }
+
+          (*i)->add_to_value(xdata_->self_details.total, expr);
+          (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
         }
       }
       xdata_->self_details.last_post = i;
@@ -648,27 +641,24 @@ value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&
       i = xdata_->reported_posts.begin();
 
     for (; i != xdata_->reported_posts.end(); i++) {
-      if (real_only == true) {
-        if (! (*i)->has_flags(POST_VIRTUAL)) {
-          if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
-            if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
-              (*i)->add_to_value(xdata_->self_details.total, expr);
-              (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
-            }
+      if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
+        if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
+          if (! (*i)->has_flags(POST_VIRTUAL)) {
+            (*i)->add_to_value(xdata_->self_details.real_total, expr);
           }
-        }
-      } else {
-        if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
-          if (! (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
-            (*i)->add_to_value(xdata_->self_details.total, expr);
-            (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
-          }
+
+          (*i)->add_to_value(xdata_->self_details.total, expr);
+          (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
         }
       }
       xdata_->self_details.last_reported_post = i;
     }
 
-    return xdata_->self_details.total;
+    if (real_only == true) {
+        return xdata_->self_details.real_total;
+    } else {
+        return xdata_->self_details.total;
+    }
   } else {
     return NULL_VALUE;
   }
