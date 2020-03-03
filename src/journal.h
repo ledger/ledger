@@ -77,10 +77,10 @@ class journal_t : public noncopyable
 public:
   struct fileinfo_t
   {
-    optional<path> filename;
-    uintmax_t      size;
-    datetime_t     modtime;
-    bool           from_stream;
+    optional<path>   filename;
+    boost::uintmax_t size;
+    datetime_t       modtime;
+    bool             from_stream;
 
     fileinfo_t() : size(0), from_stream(true) {
       TRACE_CTOR(journal_t::fileinfo_t, "");

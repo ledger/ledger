@@ -253,7 +253,7 @@ void anonymize_posts::operator()(post_t& post)
     xact.copy_details(*post.xact);
 
     std::ostringstream buf;
-    buf << reinterpret_cast<uintmax_t>(post.xact->payee.c_str())
+    buf << reinterpret_cast<boost::uintmax_t>(post.xact->payee.c_str())
         << integer_gen() << post.xact->payee.c_str();
 
 		sha.reset();

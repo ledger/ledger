@@ -371,7 +371,7 @@ class anonymize_posts : public item_handler<post_t>
 public:
   anonymize_posts(post_handler_ptr handler)
     : item_handler<post_t>(handler), next_comm_id(0), last_xact(NULL),
-      rnd_gen(static_cast<unsigned int>(static_cast<uintmax_t>(std::time(0)))),
+      rnd_gen(static_cast<unsigned int>(static_cast<boost::uintmax_t>(std::time(0)))),
       integer_range(1, 2000000000L),
       integer_gen(rnd_gen, integer_range) {
     TRACE_CTOR(anonymize_posts, "post_handler_ptr");
