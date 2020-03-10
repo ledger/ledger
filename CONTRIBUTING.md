@@ -1,9 +1,7 @@
 Tips for contributors
 ---------------------
 
-* Please **make pull requests against `next`, not `master`**.  Ledger follows
-  a [git-flow] branching model, in which development happens on the `next`
-  branch and is subsequently merged into `master` for releases.
+* Please **make pull requests against `master`**.
 * If you're making **changes to files for which the Travis build is not
   relevant**, please **add `[ci skip]` to the end of the commit message**.
 * Report bugs using [GitHub Issues].
