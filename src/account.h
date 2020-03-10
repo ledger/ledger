@@ -170,6 +170,7 @@ public:
     struct details_t
     {
       value_t            total;
+      value_t            real_total;
       bool               calculated;
       bool               gathered;
 
@@ -277,7 +278,7 @@ public:
     return *xdata_;
   }
 
-  value_t amount(const optional<expr_t&>& expr = none) const;
+  value_t amount(const optional<bool> real_only = false, const optional<expr_t&>& expr = none) const;
   value_t total(const optional<expr_t&>& expr = none) const;
 
   const xdata_t::details_t& self_details(bool gather_all = true) const;

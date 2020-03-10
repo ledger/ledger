@@ -1633,7 +1633,7 @@ post_t * instance_t::parse_post(char *          line,
 
       const amount_t& amt(*post->assigned_amount);
       value_t account_total
-        (post->account->amount().strip_annotations(keep_details_t()));
+        (post->account->amount(!post->has_flags(POST_VIRTUAL)).strip_annotations(keep_details_t()));
 
       DEBUG("post.assign", "line " << context.linenum << ": "
             << "account balance = " << account_total);
@@ -1666,7 +1666,7 @@ post_t * instance_t::parse_post(char *          line,
 
       // Subtract amounts from previous posts to this account in the xact.
       for (post_t* p : xact->posts) {
-        if (p->account == post->account) {
+        if (p->account == post->account && p->has_flags(POST_VIRTUAL) == post->has_flags(POST_VIRTUAL)) {
           diff -= p->amount;
           DEBUG("textual.parse", "line " << context.linenum << ": "
                 << "Subtracting " << p->amount << ", diff = " << diff);

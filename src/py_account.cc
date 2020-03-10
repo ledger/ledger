@@ -105,7 +105,7 @@ namespace {
 
   value_t py_amount_1(const account_t& account, const boost::optional<expr_t&>& expr)
   {
-      return account.amount(expr);
+      return account.amount(false, expr);
   }
 
   value_t py_total_0(const account_t& account)
@@ -133,6 +133,7 @@ void export_account()
 
   class_< account_t::xdata_t::details_t > ("AccountXDataDetails")
     .def_readonly("total", &account_t::xdata_t::details_t::total)
+    .def_readonly("real_total", &account_t::xdata_t::details_t::real_total)
     .def_readonly("calculated", &account_t::xdata_t::details_t::calculated)
     .def_readonly("gathered", &account_t::xdata_t::details_t::gathered)
 

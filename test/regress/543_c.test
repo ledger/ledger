@@ -1,0 +1,24 @@
+2018/01/01 * Opening Balance
+    Assets:Checking                             $100.00
+    Equity:Opening Balances
+
+2018/01/01 * Budget
+    [Assets:Checking]                           -$100.00
+    [Assets:Budget:Food:Groceries]              $20.00
+    [Assets:Budget:Food:Restaurants]            $80.00
+
+2018/01/02 * Budget Groceries
+    [Assets:Budget:Food:Groceries]              -$20 = $0
+    [Assets:Checking]                           $20
+
+2018/01/02 * Buy Groceries
+    Assets:Checking                             -$20 = $80
+    Expenses:Food:Groceries                     $20
+
+test bal Assets
+              $80.00  Assets:Budget:Food:Restaurants
+end test
+
+test bal Assets -R
+              $80.00  Assets:Checking
+end test
