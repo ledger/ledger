@@ -8090,7 +8090,7 @@ The operators, in order of precedence, are:
 @node Unary Operators, Binary Operators, Operators, Operators
 @subsection Unary Operators
 
-@code{not}
+@code{not} (@code{!})
 @code{neg}
 
 @node Binary Operators,  , Unary Operators, Operators
