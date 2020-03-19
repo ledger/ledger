@@ -8073,7 +8073,7 @@ is given, then the current moment is used.
 @node Operators, Complex expressions, Functions, Value Expressions
 @section Operators
 
-The binary and ternary operators, in order of precedence, are:
+The operators, in order of precedence, are:
 
 @enumerate
 @item @code{* /}
