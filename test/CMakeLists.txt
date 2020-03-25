@@ -34,7 +34,7 @@ macro(add_ledger_harness_tests _class)
           $<TARGET_FILE:ledger> ${PROJECT_SOURCE_DIR}
           ${TestFile} ${TEST_PYTHON_FLAGS})
         set_tests_properties(${_class}Test_${TestFile_Name}
-          PROPERTIES ENVIRONMENT "PYTHONUNBUFFERED=1 TZ=${Ledger_TEST_TIMEZONE}")
+          PROPERTIES ENVIRONMENT "PYTHONUNBUFFERED=1;TZ=${Ledger_TEST_TIMEZONE}")
       endif()
     endforeach()
   endif()
@@ -53,7 +53,7 @@ if (Python_EXECUTABLE)
       COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/${_class}.py
       --ledger $<TARGET_FILE:ledger> --file ${TestFile})
     set_tests_properties(${_class}Test_${TestFile_Name}
-      PROPERTIES ENVIRONMENT "PYTHONUNBUFFERED=1 TZ=${Ledger_TEST_TIMEZONE}")
+      PROPERTIES ENVIRONMENT "PYTHONUNBUFFERED=1;TZ=${Ledger_TEST_TIMEZONE}")
   endforeach()
 
   # CheckManpage and CheckTexinfo are disabled, since they do not work
@@ -64,7 +64,7 @@ if (Python_EXECUTABLE)
       COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/${_class}.py
       --ledger $<TARGET_FILE:ledger> --source ${PROJECT_SOURCE_DIR})
     set_tests_properties(${_class}
-      PROPERTIES ENVIRONMENT "PYTHONUNBUFFERED=1 TZ=${Ledger_TEST_TIMEZONE}")
+      PROPERTIES ENVIRONMENT "PYTHONUNBUFFERED=1;TZ=${Ledger_TEST_TIMEZONE}")
   endforeach()
 endif()
 
