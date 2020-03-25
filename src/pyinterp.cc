@@ -61,6 +61,10 @@ void export_utils();
 void export_value();
 void export_xact();
 
+#if PY_MAJOR_VERSION >= 3
+extern "C" PyObject* PyInit_ledger();
+#endif
+
 void initialize_for_python()
 {
   export_times();
@@ -146,26 +150,19 @@ void python_interpreter_t::initialize()
   try {
     DEBUG("python.interp", "Initializing Python");
 
+#if PY_MAJOR_VERSION >= 3
+    // PyImport_AppendInittab docs: "This should be called before Py_Initialize()".
+    PyImport_AppendInittab((char*)"ledger", PyInit_ledger);
+#endif
+
     Py_Initialize();
     assert(Py_IsInitialized());
 
     hack_system_paths();
 
     main_module = import_module("__main__");
-
 #if PY_MAJOR_VERSION >= 3
-    static struct PyModuleDef moduledef = {
-        PyModuleDef_HEAD_INIT,
-        "ledger",     /* m_name */
-        NULL,  /* m_doc */
-        -1,                  /* m_size */
-        NULL,    /* m_methods */
-        NULL,                /* m_reload */
-        NULL,                /* m_traverse */
-        NULL,                /* m_clear */
-        NULL,                /* m_free */
-    };
-    python::detail::init_module(moduledef, &initialize_for_python);
+    PyImport_ImportModule("ledger");
 #else
     python::detail::init_module("ledger", &initialize_for_python);
 #endif
