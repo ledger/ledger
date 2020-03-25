@@ -331,13 +331,15 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
 #if PY_MAJOR_VERSION >= 3
   wchar_t ** argv = new wchar_t *[args.size() + 1];
 
-  argv[0] = new wchar_t[std::strlen(argv0) + 1];
-  mbstowcs(argv[0], argv0, std::strlen(argv0));
+  std::size_t len = std::strlen(argv0) + 1;
+  argv[0] = new wchar_t[len];
+  mbstowcs(argv[0], argv0, len);
 
   for (std::size_t i = 0; i < args.size(); i++) {
     string arg = args.get<string>(i);
-    argv[i + 1] = new wchar_t[arg.length() + 1];
-    mbstowcs(argv[0], arg.c_str(), std::strlen(arg.c_str()));
+    std::size_t len = arg.length() + 1;
+    argv[i + 1] = new wchar_t[len];
+    mbstowcs(argv[i + 1], arg.c_str(), len);
   }
 #else
   char ** argv = new char *[args.size() + 1];
