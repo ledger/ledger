@@ -25,10 +25,6 @@ env:
     - PY_MAJOR=2
     - PY_MAJOR=3
 
-jobs:
-  allow_failures:
-    - env: PY_MAJOR=3
-
 addons:
   coverity_scan:
     project:
