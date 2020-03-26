@@ -151,6 +151,11 @@ void python_interpreter_t::initialize()
     DEBUG("python.interp", "Initializing Python");
 
 #if PY_MAJOR_VERSION >= 3
+    // Unbuffer stdio to avoid python output getting stuck in buffer when
+    // stdout is not a TTY. Normally buffers are flushed by Py_Finalize but
+    // Boost has a long-standing issue preventing proper shutdown of the
+    // interpreter with Py_Finalize when embedded.
+    Py_UnbufferedStdioFlag = 1;
     // PyImport_AppendInittab docs: "This should be called before Py_Initialize()".
     PyImport_AppendInittab((char*)"ledger", PyInit_ledger);
 #endif

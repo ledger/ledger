@@ -2,7 +2,7 @@ macro(add_ledger_test _name)
   target_link_libraries(${_name} libledger)
   add_test(Ledger${_name} ${PROJECT_BINARY_DIR}/${_name})
   set_tests_properties(Ledger${_name}
-    PROPERTIES ENVIRONMENT "PYTHONUNBUFFERED=1;TZ=${Ledger_TEST_TIMEZONE}")
+    PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
 endmacro(add_ledger_test _name)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
