@@ -4907,9 +4907,10 @@ Using Babel, it is possible to record financial transactions
 conveniently in an org file and subsequently generate the financial
 reports required.
 
-As of Org mode 7.01, Ledger support is provided.  Check the Babel
-documentation on Worg for instructions on how to achieve this but
-I currently do this directly as follows:
+As of Org mode 7.01, Ledger support is provided.  Check the
+@uref{https://orgmode.org/worg/org-contrib/babel/, Babel documentation
+on Worg} for instructions on how to achieve this but I currently do
+this directly as follows:
 
 @smallexample
 (org-babel-do-load-languages
