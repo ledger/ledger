@@ -76,7 +76,9 @@ balance_t& balance_t::operator+=(const amount_t& amt)
   if (amt.is_realzero())
     return *this;
 
-  amounts_map::iterator i = amounts.find(&amt.commodity());
+  amounts_map::iterator i =
+    amt.commodity().has_annotation() ?
+    find_by_name(amt.commodity()) : amounts.find(&amt.commodity());
   if (i != amounts.end())
     i->second += amt;
   else
@@ -101,7 +103,9 @@ balance_t& balance_t::operator-=(const amount_t& amt)
   if (amt.is_realzero())
     return *this;
 
-  amounts_map::iterator i = amounts.find(&amt.commodity());
+  amounts_map::iterator i =
+    amt.commodity().has_annotation() ?
+    find_by_name(amt.commodity()) : amounts.find(&amt.commodity());
   if (i != amounts.end()) {
     i->second -= amt;
     if (i->second.is_realzero())
@@ -202,6 +206,30 @@ balance_t::value(const datetime_t&   moment,
   return resolved ? temp : optional<balance_t>();
 }
 
+balance_t::amounts_map::iterator
+balance_t::find_by_name(const commodity_t& comm)
+{
+  for (amounts_map::iterator i = amounts.begin();
+       i != amounts.end();
+       i++) {
+    if (*(*i).first == comm)
+      return i;
+  }
+  return amounts.end();
+}
+
+balance_t::amounts_map::const_iterator
+balance_t::find_by_name(const commodity_t& comm) const
+{
+  for (amounts_map::const_iterator i = amounts.begin();
+       i != amounts.end();
+       i++) {
+    if (*(*i).first == comm)
+      return i;
+  }
+  return amounts.end();
+}
+
 optional<amount_t>
 balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
 {
@@ -222,6 +250,8 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
   }
   else if (amounts.size() > 0) {
     amounts_map::const_iterator i =
+      commodity->has_annotation() ?
+      find_by_name(*commodity) :
       amounts.find(const_cast<commodity_t *>(&*commodity));
     if (i != amounts.end())
       return i->second;
