@@ -1,31 +1,35 @@
-{ stdenv, fetchgit, cmake, boost, gmp, mpfr, libedit, python
-, texinfo, gnused }:
+{ stdenv, fetchFromGitHub, cmake, boost, gmp, mpfr, libedit, python
+, texinfo, gnused, usePython ? true }:
 
-let
+stdenv.mkDerivation rec {
+  name = "ledger-${version}";
   version = "3.1.3";
-  rev = "20190331";
-in
-
-stdenv.mkDerivation {
-  name = "ledger-${version}-${rev}";
 
   src = ./.;
 
-  buildInputs = [ cmake boost gmp mpfr libedit python texinfo gnused ];
+  buildInputs = [
+    (boost.override { enablePython = usePython; })
+    gmp mpfr libedit python texinfo gnused
+  ];
+
+  nativeBuildInputs = [ cmake ];
 
   enableParallelBuilding = true;
 
-  cmakeFlags = [ "-DCMAKE_INSTALL_LIBDIR=lib" ];
+  cmakeFlags = [
+    "-DCMAKE_INSTALL_LIBDIR=lib"
+    # "-DBUILD_DOCS:BOOL=ON"
+    (stdenv.lib.optionalString usePython "-DUSE_PYTHON=true")
+   ];
 
-  buildPhase = "make -j$NIX_BUILD_CORES";
-  checkPhase = "ctest -j$NIX_BUILD_CORES";
+  postBuild = ''
+    make doc
+  '';
 
-  doCheck = true;
-
-  meta = {
-    homepage = "http://ledger-cli.org/";
+  meta = with stdenv.lib; {
+    homepage = https://ledger-cli.org/;
     description = "A double-entry accounting system with a command-line reporting interface";
-    license = stdenv.lib.licenses.bsd3;
+    license = licenses.bsd3;
 
     longDescription = ''
       Ledger is a powerful, double-entry accounting system that is accessed
@@ -34,7 +38,7 @@ stdenv.mkDerivation {
       their data, there really is no alternative.
     '';
 
-    platforms = stdenv.lib.platforms.all;
-    maintainers = with stdenv.lib.maintainers; [ the-kenny jwiegley ];
+    platforms = platforms.all;
+    maintainers = with maintainers; [ the-kenny jwiegley ];
   };
 }
