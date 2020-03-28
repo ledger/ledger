@@ -110,7 +110,7 @@ If you're going to build on Ubuntu, `sudo apt-get install ...` the
 following packages (current as of Ubuntu 18.04):
 
     $ sudo apt-get install build-essential cmake doxygen \
-         libboost-system-dev libboost-dev python-dev gettext git \
+         libboost-system-dev libboost-dev python3-dev gettext git \
          libboost-date-time-dev libboost-filesystem-dev \
          libboost-iostreams-dev libboost-python-dev libboost-regex-dev \
          libboost-test-dev libedit-dev libgmp3-dev libmpfr-dev texinfo tzdata
@@ -121,7 +121,7 @@ Debian 9 (stretch), Debian 10 (buster), Debian testing and Debian unstable
 (sid) contain all components needed to build ledger.  You can install all
 required build dependencies using the following command:
 
-    $ sudo apt-get install build-essential cmake autopoint texinfo python-dev \
+    $ sudo apt-get install build-essential cmake autopoint texinfo python3-dev \
          zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
          libboost-date-time-dev libboost-filesystem-dev \
          libboost-graph-dev libboost-iostreams-dev \
