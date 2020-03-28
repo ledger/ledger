@@ -388,6 +388,8 @@ bool xact_base_t::finalize()
     bool some_null = false;
 
     foreach (post_t * post, posts) {
+      assert(post->account);
+
       if (! post->amount.is_null()) {
         all_null = false;
         post->amount.in_place_reduce();
