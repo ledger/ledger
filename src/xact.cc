@@ -397,7 +397,7 @@ bool xact_base_t::finalize()
 
       if (post->has_flags(POST_DEFERRED)) {
         if (!post->amount.is_null())
-            post->account->add_deferred_post(id(), post);
+          post->account->add_deferred_post(id(), post);
       } else {
         post->account->add_post(post);
       }
