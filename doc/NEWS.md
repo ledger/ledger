@@ -4,6 +4,10 @@
 
 - Add support for '%F' date format specifier (bug #1775)
 
+- Entities are no longer regarded as defined due to being part of a cleared
+  transaction. `--explicit` is effectively enabled by default and is now a
+  no-op.
+
 ## 3.1.3 (2019-03-31)
 
 - Properly reject postings with a comment right after the flag (bug #1753)

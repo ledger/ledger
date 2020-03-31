@@ -110,12 +110,7 @@ public:
   std::list<fileinfo_t>  sources;
   std::set<string>       known_payees;
   std::set<string>       known_tags;
-  bool                   fixed_accounts;
-  bool                   fixed_payees;
-  bool                   fixed_commodities;
-  bool                   fixed_metadata;
   bool                   was_loaded;
-  bool                   force_checking;
   bool                   check_payees;
   bool                   day_break;
   bool                   recursive_aliases;

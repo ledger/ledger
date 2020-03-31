@@ -20,7 +20,7 @@ tag food
     Expenses:Food             20.00 EUR
     Assets:Cash
 
-test bal --explicit --strict --check-payees
+test bal --strict --check-payees
           -20.00 EUR
          -570.00 GBP  Assets:Cash
            20.00 EUR
