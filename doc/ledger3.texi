@@ -6258,6 +6258,10 @@ Show auxiliary dates for all calculations (@pxref{Effective Dates}).
 Print average values over the number of transactions instead of
 running totals.
 
+@item --average-lot-prices
+Report the average price at which each commodity was purchased in
+a balance report.
+
 @item --balance-format @var{FORMAT_STRING}
 Specify the format to use for the @command{balance} report (@pxref{Format
 Strings}).  The default is:
