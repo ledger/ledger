@@ -86,13 +86,8 @@ void journal_t::initialize()
 {
   master            = new account_t;
   bucket            = NULL;
-  fixed_accounts    = false;
-  fixed_payees      = false;
-  fixed_commodities = false;
-  fixed_metadata    = false;
   current_context   = NULL;
   was_loaded        = false;
-  force_checking    = false;
   check_payees      = false;
   day_break         = false;
   checking_style    = CHECK_NORMAL;
@@ -148,8 +143,6 @@ account_t * journal_t::register_account(const string& name, post_t * post,
   if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
     if (! result->has_flags(ACCOUNT_KNOWN)) {
       if (! post) {
-        if (force_checking)
-          fixed_accounts = true;
         result->add_flags(ACCOUNT_KNOWN);
       }
       else if (checking_style == CHECK_WARNING) {
@@ -230,8 +223,6 @@ string journal_t::register_payee(const string& name, xact_t * xact)
 
     if (i == known_payees.end()) {
       if (! xact) {
-        if (force_checking)
-          fixed_payees = true;
         known_payees.insert(name);
       }
       else if (checking_style == CHECK_WARNING) {
@@ -259,8 +250,6 @@ void journal_t::register_commodity(commodity_t& comm,
   if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
     if (! comm.has_flags(COMMODITY_KNOWN)) {
       if (context.which() == 0) {
-        if (force_checking)
-          fixed_commodities = true;
         comm.add_flags(COMMODITY_KNOWN);
       }
       else if (checking_style == CHECK_WARNING) {
@@ -281,8 +270,6 @@ void journal_t::register_metadata(const string& key, const value_t& value,
 
     if (i == known_tags.end()) {
       if (context.which() == 0) {
-        if (force_checking)
-          fixed_metadata = true;
         known_tags.insert(key);
       }
       else if (checking_style == CHECK_WARNING) {

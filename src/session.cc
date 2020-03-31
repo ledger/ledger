@@ -113,8 +113,9 @@ std::size_t session_t::read_data(const string& master_account)
   if (HANDLED(no_aliases))
     journal->no_aliases = true;
 
-  if (HANDLED(explicit))
-    journal->force_checking = true;
+  if (HANDLED(explicit)) {
+      // No-op
+    }
   if (HANDLED(check_payees))
     journal->check_payees = true;
 

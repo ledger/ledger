@@ -6085,12 +6085,6 @@ Direct Ledger to download prices.
 @c using the script defined via the option
 @c @option{--getquote @var{FILE}}.
 
-@item --explicit
-Direct Ledger to require pre-declarations for entities (such as accounts,
-commodities and tags) rather than taking entities from cleared
-transactions as defined.  This option is useful in combination with
-@option{--strict} or @option{--pedantic}.
-
 @item --file @var{FILE}
 @itemx -f @var{FILE}
 Specify the input @file{FILE} for this invocation.
