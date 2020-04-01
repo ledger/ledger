@@ -265,7 +265,8 @@ else()
   endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
 endif()
 
-if(PRECOMPILE_SYSTEM_HH)
+if(PRECOMPILE_SYSTEM_HH AND NOT (COMMAND target_precompile_headers))
+  # enable fallback for CMake versions older than 3.16 without target_precompile_headers
   add_pch_rule(${PROJECT_BINARY_DIR}/system.hh LEDGER_SOURCES LEDGER_CLI_SOURCES)
 endif()
 
@@ -292,6 +293,15 @@ if (BUILD_LIBRARY)
 else()
   add_executable(ledger ${LEDGER_SOURCES} main.cc global.cc)
   add_ledger_library_dependencies(ledger)
+endif()
+
+if (PRECOMPILE_SYSTEM_HH AND (COMMAND target_precompile_headers) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+  if (BUILD_LIBRARY)
+    target_precompile_headers(libledger PRIVATE ${PROJECT_BINARY_DIR}/system.hh)
+    target_precompile_headers(ledger REUSE_FROM libledger)
+  else()
+    target_precompile_headers(ledger PRIVATE ${PROJECT_BINARY_DIR}/system.hh)
+  endif()
 endif()
 
 if (USE_PYTHON)
