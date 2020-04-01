@@ -57,7 +57,7 @@ class BoostInfo(object):
             return [ 'boost' ]
 
         if system in ['darwin-macports']:
-            return [ 'boost-jam', 'boost', '+python27+universal' ]
+            return [ 'boost-jam', 'boost', '+python27' ]
 
         if system in ['centos']:
             return [ 'boost-devel' ]
@@ -510,13 +510,13 @@ class PrepareBuild(CommandLineApp):
                 packages = [
                     'sudo', 'port', 'install', '-f',
                     'automake', 'autoconf', 'libtool',
-                    'python27', '+universal',
-                    'libiconv', '+universal',
-                    'zlib', '+universal',
-                    'gmp' ,'+universal', 'mpfr', '+universal',
-                    'ncurses', '+universal',
-                    'gettext' ,'+universal',
-                    'libedit' ,'+universal',
+                    'python27',
+                    'libiconv',
+                    'zlib',
+                    'gmp', 'mpfr',
+                    'ncurses',
+                    'gettext',
+                    'libedit',
                     'texlive-xetex', 'doxygen', 'graphviz', 'texinfo',
                     'lcov', 'sloccount'
                 ] + BoostInfo().dependencies('darwin-macports')
