@@ -57,8 +57,8 @@ addons:
       - mpfr
 
 before_script:
-  # On macOS, precompiling system.hh does not work, and boost-python packaging is broken
-  - if [ "$TRAVIS_OS_NAME" = osx ]; then EXTRA_CMAKE_ARGS="-DPRECOMPILE_SYSTEM_HH=OFF -DBoost_NO_BOOST_CMAKE=ON"; fi
+  # On macOS boost-python packaging is broken
+  - if [ "$TRAVIS_OS_NAME" = osx ]; then EXTRA_CMAKE_ARGS="-DBoost_NO_BOOST_CMAKE=ON"; fi
   - cmake . -DUSE_PYTHON=ON -DPython_FIND_VERSION_MAJOR=${PY_MAJOR} -DBUILD_DEBUG=ON $EXTRA_CMAKE_ARGS
   - make VERBOSE=1
 
