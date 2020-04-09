@@ -59,6 +59,8 @@ addons:
 before_script:
   # On macOS boost-python packaging is broken
   - if [ "$TRAVIS_OS_NAME" = osx ]; then EXTRA_CMAKE_ARGS="-DBoost_NO_BOOST_CMAKE=ON"; fi
+  # Ensure cmake locates python 3.8. Brew changed boost-python3 to use 3.8 but it isn't in the path by default
+  - if [ "$TRAVIS_OS_NAME" = osx ]; then export PATH="/usr/local/opt/python@3.8/bin:$PATH"; fi
   - cmake . -DUSE_PYTHON=ON -DPython_FIND_VERSION_MAJOR=${PY_MAJOR} -DBUILD_DEBUG=ON $EXTRA_CMAKE_ARGS
   - make VERBOSE=1
 
