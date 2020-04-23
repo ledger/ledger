@@ -848,6 +848,25 @@ value_t report_t::fn_commodity(call_scope_t& args)
   return string_value(args.get<amount_t>(0).commodity().symbol());
 }
 
+value_t report_t::fn_commodity_price(call_scope_t& args)
+{
+  optional<price_point_t> price_point
+    = commodity_pool_t::current_pool->commodity_price_history.find_price
+        (args.get<amount_t>(0).commodity(), args.get<datetime_t>(1));
+  if (price_point) {
+    return price_point->price;
+  } else {
+    return amount_t();
+  }
+}
+
+value_t report_t::fn_set_commodity_price(call_scope_t& args)
+{
+  args.get<amount_t>(0).commodity().add_price(
+    args.get<datetime_t>(1), args.get<amount_t>(2), true);
+  return NULL_VALUE;
+}
+
 value_t report_t::fn_clear_commodity(call_scope_t& args)
 {
   amount_t amt(args.get<amount_t>(0));
@@ -1399,6 +1418,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return WRAP_FUNCTOR(fn_cyan);
       else if (is_eq(p, "commodity"))
         return MAKE_FUNCTOR(report_t::fn_commodity);
+      else if (is_eq(p, "commodity_price"))
+        return MAKE_FUNCTOR(report_t::fn_commodity_price);
       else if (is_eq(p, "ceiling"))
         return MAKE_FUNCTOR(report_t::fn_ceiling);
       else if (is_eq(p, "clear_commodity"))
@@ -1501,6 +1522,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return MAKE_FUNCTOR(report_t::fn_strip);
       else if (is_eq(p, "should_bold"))
         return MAKE_FUNCTOR(report_t::fn_should_bold);
+      else if (is_eq(p, "set_commodity_price"))
+        return MAKE_FUNCTOR(report_t::fn_set_commodity_price);
       break;
 
     case 't':
