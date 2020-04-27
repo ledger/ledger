@@ -810,6 +810,8 @@ void instance_t::apply_directive(char * line)
 {
   char * b = next_element(line);
   string keyword(line);
+  if (! b)
+    throw_(parse_error, _f("Directive 'apply %1%' requires an argument") % keyword);
   if (keyword == "account")
     apply_account_directive(b);
   else if (keyword == "tag")
