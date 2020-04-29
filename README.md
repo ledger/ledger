@@ -90,11 +90,11 @@ If you to want to startup python, use the following command:
 If you build stuff using MacPorts on macOS, as I do, here is what you would
 run:
 
-    $ sudo port install -f cmake python26 \
+    $ sudo port install -f cmake python37 \
          libiconv zlib gmp \
          mpfr ncurses ncursesw \
          gettext libedit boost-jam \
-         boost +st+python26+icu texlive doxygen graphviz \
+         boost +st+python37+icu texlive doxygen graphviz \
          texinfo lcov sloccount
 
 ### Conda

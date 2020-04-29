@@ -57,7 +57,7 @@ class BoostInfo(object):
             return [ 'boost' ]
 
         if system in ['darwin-macports']:
-            return [ 'boost-jam', 'boost', '+python27' ]
+            return [ 'boost-jam', 'boost', '+python37' ]
 
         if system in ['centos']:
             return [ 'boost-devel' ]
@@ -510,7 +510,7 @@ class PrepareBuild(CommandLineApp):
                 packages = [
                     'sudo', 'port', 'install', '-f',
                     'automake', 'autoconf', 'libtool',
-                    'python27',
+                    'python37',
                     'libiconv',
                     'zlib',
                     'gmp', 'mpfr',
