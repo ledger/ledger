@@ -91,9 +91,9 @@ If you build stuff using MacPorts on macOS, as I do, here is what you would
 run:
 
     $ sudo port install -f cmake python26 \
-         libiconv +universal zlib +universal gmp +universal \
-         mpfr +universal ncurses +universal ncursesw +universal \
-         gettext +universal libedit +universal boost-jam \
+         libiconv zlib gmp \
+         mpfr ncurses ncursesw \
+         gettext libedit boost-jam \
          boost +st+python26+icu texlive doxygen graphviz \
          texinfo lcov sloccount
 
