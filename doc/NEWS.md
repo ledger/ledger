@@ -1,12 +1,42 @@
 # Ledger NEWS
 
-## 3.1.4 (unreleased)
+## 3.2.0 (unreleased)
 
-- Add support for '%F' date format specifier (bug #1775)
+- Port Python support to Python 3
 
-- Entities are no longer regarded as defined due to being part of a cleared
-  transaction. `--explicit` is effectively enabled by default and is now a
-  no-op.
+- Entities are no longer regarded as defined due to being part of a
+  cleared transaction. `--explicit` is effectively enabled by default
+  and is now a no-op (PR #1819)
+
+- Add `--average-lot-prices` to show the average of lot prices
+
+- Add support for `%F` date format specifier (bug #1775)
+
+- Add `commodity_price(NAME, DATE)` function
+
+- Add `set_commodity_price(NAME, DATE)` function
+
+- Fix buffer overflow when evaluating date
+
+- Fix balance assertions on accounts with virtual posts (bug #543)
+
+- Fix segfault with `ledger print` (bug #1850)
+
+- Ensure that `apply` directives (like `apply account`) have the
+  required argument (bug #553)
+
+- Format annotations using a date format that can be parsed
+
+- Change `--invert` to invert displayed amounts and totals, not amounts
+  (bug #1803)
+
+- Correct the way parens are parsed in query expressions
+
+- Compare price annotations using their textual rendering
+
+- Fix build failure with utfcpp 3.0 (bug #1816)
+
+- Fix build failure due to ambiguous type (bug #1833)
 
 ## 3.1.3 (2019-03-31)
 
