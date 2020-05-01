@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 2.8.5)
 PROJECT(ledger)
 
 set(Ledger_VERSION_MAJOR 3)
-set(Ledger_VERSION_MINOR 1)
-set(Ledger_VERSION_PATCH 3)
+set(Ledger_VERSION_MINOR 2)
+set(Ledger_VERSION_PATCH 0)
 set(Ledger_VERSION_PRERELEASE "")
-set(Ledger_VERSION_DATE  20190331)
+set(Ledger_VERSION_DATE  20200501)
 
 set(Ledger_TEST_TIMEZONE "America/Chicago")
 
