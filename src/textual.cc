@@ -1040,7 +1040,7 @@ void instance_t::payee_directive(char * line)
 
     if (keyword == "alias")
       payee_alias_directive(payee, b);
-    if (keyword == "uuid")
+    else if (keyword == "uuid")
       payee_uuid_directive(payee, b);
   }
 }
