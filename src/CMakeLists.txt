@@ -273,6 +273,7 @@ endif()
 include(GNUInstallDirs)
 
 if (BUILD_LIBRARY)
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
   add_library(libledger SHARED ${LEDGER_SOURCES})
   add_ledger_library_dependencies(libledger)
   set_target_properties(libledger PROPERTIES
