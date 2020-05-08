@@ -36,17 +36,6 @@
 
 namespace ledger {
 
-bool query_t::lexer_t::advance()
-{
-  if (begin == end || ++begin == end) {
-    return false;
-  } else {
-    arg_i   = (*begin).as_string().begin();
-    arg_end = (*begin).as_string().end();
-  }
-  return true;
-}
-
 query_t::lexer_t::token_t
 query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context)
 {
@@ -57,8 +46,12 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context)
   }
 
   if (arg_i == arg_end) {
-    if (! advance())
+    if (begin == end || ++begin == end) {
       return token_t(token_t::END_REACHED);
+    } else {
+      arg_i   = (*begin).as_string().begin();
+      arg_end = (*begin).as_string().end();
+    }
   }
 
  resume:
@@ -160,6 +153,9 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context)
         break;
 
       case ')':
+        if (! consume_next && tok_context == token_t::TOK_EXPR)
+          goto test_ident;
+        // fall through...
       case '(':
       case '&':
       case '|':
@@ -257,23 +253,6 @@ void query_t::lexer_t::token_t::expected(char wanted, char c)
   }
 }
 
-std::string& ltrim(std::string& str, const std::string& chars = "\t\n\v\f\r ")
-{
-  str.erase(0, str.find_first_not_of(chars));
-  return str;
-}
-
-std::string& rtrim(std::string& str, const std::string& chars = "\t\n\v\f\r ")
-{
-  str.erase(str.find_last_not_of(chars) + 1);
-  return str;
-}
-
-std::string& trim(std::string& str, const std::string& chars = "\t\n\v\f\r ")
-{
-  return ltrim(rtrim(str, chars), chars);
-}
-
 expr_t::ptr_op_t
 query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_context)
 {
@@ -296,28 +275,12 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
   case lexer_t::token_t::TOK_NOTE:
   case lexer_t::token_t::TOK_ACCOUNT:
   case lexer_t::token_t::TOK_META:
+  case lexer_t::token_t::TOK_EXPR:
     node = parse_query_term(tok.kind);
     if (! node)
       throw_(parse_error,
              _f("%1% operator not followed by argument") % tok.symbol());
     break;
-
-  case lexer_t::token_t::TOK_EXPR: {
-    string arg(lexer.arg_i, lexer.arg_end);
-    lexer.arg_i = lexer.arg_end;
-    trim(arg);
-
-    if (arg.length() == 0) {
-      if (lexer.advance()) {
-        arg = string(lexer.arg_i, lexer.arg_end);
-        lexer.arg_i = lexer.arg_end;
-        trim(arg);
-      }
-    }
-
-    node = expr_t(arg).get_op();
-    break;
-  }
 
   case lexer_t::token_t::TERM:
     assert(tok.value);
