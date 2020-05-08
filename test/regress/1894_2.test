@@ -1,0 +1,21 @@
+= ^Expenses and expr "any(account =~ /^A:Assets/ and R)"
+    [A:Assets:Split]              (amount / 2)
+    [B:Assets:Split]              (-amount / 2)
+
+= ^Expenses and expr "any(account =~ /^B:Assets/ and R)"
+    [B:Assets:Split]              (amount / 2)
+    [A:Assets:Split]              (-amount / 2)
+
+2020-05-08 * Test
+    Expenses:Transportation            200.00 EUR
+    A:Assets:Checking
+
+test bal
+         -100.00 EUR  A:Assets
+         -200.00 EUR    Checking
+          100.00 EUR    Split
+         -100.00 EUR  B:Assets:Split
+          200.00 EUR  Expenses:Transportation
+--------------------
+                   0
+end test
