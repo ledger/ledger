@@ -1191,7 +1191,7 @@ Return value at
 from
 .Ar seq .
 Used internally to construct different reports.
-.It Fn has_meta
+.It Fn has_meta tag
 Return true if the posting has metadata named
 .Ar tag ,
 false otherwise.
@@ -1236,7 +1236,7 @@ Note that
 .Ar datetime
 must be surrounded by brackets in order to be parsed correctly, e.g.
 .Bq 2012/03/23 .
-.It Fn meta
+.It Fn meta name
 Return the value of metadata named
 .Ar name .
 .It Sy note
