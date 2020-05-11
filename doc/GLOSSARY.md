@@ -79,7 +79,7 @@ The Ledger software also has its own terms.
   line begins with name of the directive and may have additional arguments or
   additional indented lines.  The single letters *AbCDhIiNOoY* are aliased to
   other command directives, providing compatibility with the ancient past.
-  The characters **'='** and **'-'** are command directives for a automatic
+  The characters **'='** and **'-'** are command directives for an automatic
   transactions and periodic transactions, respectively.
   [&sect; Command Directives](http://www.ledger-cli.org/3.0/doc/ledger3.html#Command-Directives)
 

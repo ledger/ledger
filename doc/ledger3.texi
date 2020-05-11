@@ -8178,7 +8178,7 @@ instead.
 A regular expression that matches against a transaction's note field.
 This searches all comments in the transaction, including comments on
 individual postings.  Thus, @samp{ledger reg "expr" "note =~ /landline/"}
-will match both all the three examples below:
+will match all the three examples below:
 
 @smallexample @c input:validate
 2014/1/29  Phone bill
