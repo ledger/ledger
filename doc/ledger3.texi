@@ -8318,6 +8318,7 @@ Expenses:Office Supplies ¤
 @end smallexample
 
 @defvar date
+@defvarx d
 Return the date of the posting.
 @end defvar
 @smallexample @c command:67EBA45,with_input:3406FC1
@@ -8412,7 +8413,6 @@ e.g. @code{[2012/03/23]}.
 @end defun
 
 @defvar now
-@defvarx d
 @defvarx m
 Return the current datetime.
 @end defvar
