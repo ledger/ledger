@@ -472,12 +472,10 @@ void collapse_posts::report_subtotal()
 
 value_t& collapse_posts::find_totals(account_t* account)
 {
-  unsigned short depth=3;
-
-  if (depth == 0)
+  if (collapse_depth == 0)
     return totals[_("<Total>")];
 
-  if (account->depth == depth)
+  if (account->depth == collapse_depth)
     return totals[account->fullname()];
 
   //else recurse

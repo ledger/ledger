@@ -439,6 +439,7 @@ class collapse_posts : public item_handler<post_t>
   temporaries_t       temps;
   totals_map          totals;
   bool                only_collapse_if_zero;
+  unsigned short      collapse_depth;
   std::list<post_t *> component_posts;
   report_t&           report;
 
@@ -450,12 +451,14 @@ public:
                  expr_t&          _amount_expr,
                  predicate_t      _display_predicate,
                  predicate_t      _only_predicate,
-                 bool             _only_collapse_if_zero = false)
+                 bool             _only_collapse_if_zero = false,
+                 unsigned short   _collapse_depth = 0)
     : item_handler<post_t>(handler), amount_expr(_amount_expr),
       display_predicate(_display_predicate),
       only_predicate(_only_predicate), count(0),
       last_xact(NULL), last_post(NULL),
-      only_collapse_if_zero(_only_collapse_if_zero), report(_report) {
+      only_collapse_if_zero(_only_collapse_if_zero),
+      collapse_depth(_collapse_depth), report(_report) {
     TRACE_CTOR(collapse_posts, "post_handler_ptr, ...");
   }
   virtual ~collapse_posts() {
