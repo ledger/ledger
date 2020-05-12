@@ -193,7 +193,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
 
     // collapse_posts causes xacts with multiple posts to appear as xacts
     // with a subtotaled post for each commodity used.
-    if (report.HANDLED(collapse)) {
+    if (report.HANDLED(collapse) || report.HANDLED(depth_)) {
       unsigned short collapse_depth = 0;
       if (report.HANDLED(depth_))
         collapse_depth = lexical_cast<int>(report.HANDLER(depth_).str());
