@@ -427,7 +427,7 @@ public:
 class collapse_posts : public item_handler<post_t>
 {
 
-  typedef std::map<string,value_t> totals_map;
+  typedef std::map<account_t *,value_t> totals_map;
 
   expr_t&             amount_expr;
   predicate_t         display_predicate;
@@ -437,6 +437,7 @@ class collapse_posts : public item_handler<post_t>
   xact_t *            last_xact;
   post_t *            last_post;
   temporaries_t       temps;
+  account_t *         global_totals_account;
   totals_map          totals;
   bool                only_collapse_if_zero;
   unsigned short      collapse_depth;
@@ -459,12 +460,18 @@ public:
       last_xact(NULL), last_post(NULL),
       only_collapse_if_zero(_only_collapse_if_zero),
       collapse_depth(_collapse_depth), report(_report) {
+    create_accounts();
     TRACE_CTOR(collapse_posts, "post_handler_ptr, ...");
   }
   virtual ~collapse_posts() {
     TRACE_DTOR(collapse_posts);
     handler.reset();
   }
+
+  void create_accounts() {
+    global_totals_account = &temps.create_account(_("<Total>"));
+  }
+
   value_t& find_totals(account_t* account);
 
   virtual void flush() {
@@ -487,6 +494,7 @@ public:
     last_post = NULL;
 
     temps.clear();
+    create_accounts();
     totals.clear();
     component_posts.clear();
 
