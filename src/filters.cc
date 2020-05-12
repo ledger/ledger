@@ -451,7 +451,7 @@ void collapse_posts::report_subtotal()
 
     foreach (totals_map::value_type& pat, totals) {
       handle_value(/* value=      */ pat.second,
-                   /* account=    */ &temps.create_account(pat.first),
+                   /* account=    */ pat.first,
                    /* xact=       */ &xact,
                    /* temps=      */ temps,
                    /* handler=    */ handler,
@@ -473,10 +473,10 @@ void collapse_posts::report_subtotal()
 value_t& collapse_posts::find_totals(account_t* account)
 {
   if (collapse_depth == 0)
-    return totals[_("<Total>")];
+    return totals[global_totals_account];
 
   if (account->depth <= collapse_depth)
-    return totals[account->fullname()];
+    return totals[account];
 
   //else recurse
   return find_totals(account->parent);
