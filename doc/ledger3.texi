@@ -8123,12 +8123,12 @@ More complicated expressions are possible using:
 
 @table @code
 
-@item "amount == COMMODITY AMOUNT"
+@item expr "amount == COMMODITY AMOUNT"
 The amount can be any kind of amount supported by ledger,
 with or without a commodity.  Use this for decimal values.
 
 @item /REGEX/
-@itemx account =~ /REGEX/
+@itemx expr account =~ /REGEX/
 A regular expression that matches against an account's full name.  If
 a posting, this will match against the account affected by the
 posting.
@@ -8148,7 +8148,7 @@ a transaction.
 A regular expression (REGEX) or string (TAG) that checks for the metadata
 key of a transaction.
 
-@item tag(REGEX) =~ /REGEX/
+@item expr tag(REGEX) =~ /REGEX/
 A regular expression that matches a transaction's tags against its values.
 
 @item expr date =~ /REGEX/
