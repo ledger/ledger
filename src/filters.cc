@@ -420,7 +420,7 @@ void collapse_posts::report_subtotal()
       displayed_count++;
   }
 
-  if (displayed_count == 1) {
+  if (collapse_depth == 0 && displayed_count == 1) {
     item_handler<post_t>::operator()(*last_post);
   }
   else if (only_collapse_if_zero && ! subtotal.is_zero()) {
