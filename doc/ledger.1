@@ -513,7 +513,10 @@ will print balances only for accounts with two levels, i.e.
 but not
 .Sy Expenses:Entertainment:Dining .
 This is a display predicate, which means it only affects display,
-not the total calculations.
+not the total calculations.  In register reports,
+.Fl \-depth
+will collapse postings of child accounts beyond the given level and add
+their balances to the parent account.
 .It Fl \-detail
 Related to
 .Ic convert

@@ -6468,7 +6468,9 @@ Limit the depth of the account tree.  In a balance report, for example,
 a @samp{--depth 2} statement will print balances only for accounts with
 two levels, i.e. @samp{Expenses:Entertainment} but not
 @samp{Expenses:Entertainment:Dining}.  This is a display predicate, which
-means it only affects display, not the total calculations.
+means it only affects display, not the total calculations.  In register
+reports, @samp{--depth} will collapse postings of child accounts beyond
+the given level and add their balances to the parent account.
 
 @item --deviation
 Report each posting’s deviation from the average.  It is only meaningful
