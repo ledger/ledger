@@ -1194,7 +1194,7 @@ void date_interval_t::stabilize(const optional<date_t>& date)
             "stabilize: aligning with a duration: " << *duration);
 
       // The interval object has not been seeded with a start date yet, so
-      // find the nearest period before on on date which fits, if possible.
+      // find the nearest period before or on date which fits, if possible.
       //
       // Find an efficient starting point for the upcoming while loop.  We
       // want a date early enough that the range will be correct, but late

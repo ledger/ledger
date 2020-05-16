@@ -326,7 +326,7 @@ class Meta:
 		  ['element', 'office:version', '1.0'],
 		  ['tag', 'office:meta',
 		    ['tag', 'meta:generator',             # Was: 'OpenOffice.org/2.0$Linux OpenOffice.org_project/680m5$Build-9011'
-		      ['data', self.meta_generator]],     # Generator is set the the ooolib-python version.
+		      ['data', self.meta_generator]],     # Generator is set the ooolib-python version.
 		    ['tag', 'dc:title',
 		      ['data', self.meta_title]],         # This data is the document title
 		    ['tag', 'dc:description',
