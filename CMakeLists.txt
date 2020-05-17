@@ -12,6 +12,10 @@ set(Ledger_TEST_TIMEZONE "America/Chicago")
 
 # Point CMake at any custom modules we may ship
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+if(${CMAKE_VERSION} VERSION_LESS "3.16.0")
+  # use backported module from 3.15 (introduced 3.12) to support older versions of cmake
+  list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/python-backport")
+endif()
 
 enable_testing()
 
@@ -65,7 +69,7 @@ if (USE_PYTHON)
   if (PYTHON_FOUND)
     set(BOOST_PYTHON "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}")
     set(HAVE_BOOST_PYTHON 1)
-    include_directories(SYSTEM ${Python_INCLUDE_DIR})
+    include_directories(SYSTEM ${Python_INCLUDE_DIRS})
   else()
     set(HAVE_BOOST_PYTHON 0)
     message("Could not find a Python library to use with Boost.Python")
@@ -163,7 +167,7 @@ if (HAVE_BOOST_PYTHON)
 cmake_push_check_state()
 
 set(CMAKE_REQUIRED_INCLUDES
-    ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${Python_INCLUDE_DIR})
+    ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${Python_INCLUDE_DIRS})
 set(CMAKE_REQUIRED_LIBRARIES
     ${Boost_LIBRARIES} ${Python_LIBRARIES} ${PROFILE_LIBS})
 
