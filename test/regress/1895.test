@@ -1,0 +1,31 @@
+
+2020-05-18 Test
+    Assets:foo    10.00 EUR
+    Assets:bar   -10.00 EUR
+
+test bal
+                   0  Assets
+          -10.00 EUR    bar
+           10.00 EUR    foo
+--------------------
+                   0
+end test
+
+test bal --invert
+                   0  Assets
+           10.00 EUR    bar
+          -10.00 EUR    foo
+--------------------
+                   0
+end test
+
+test reg --format="%(account) %10(amount) %10(amount_expr) %10(total)        %10(display_amount) %10(display_total)\n"
+Assets:foo  10.00 EUR  10.00 EUR  10.00 EUR         10.00 EUR  10.00 EUR
+Assets:bar -10.00 EUR -10.00 EUR          0        -10.00 EUR          0
+end test
+
+test reg --format="%(account) %10(amount) %10(amount_expr) %10(total)        %10(display_amount) %10(display_total)\n" --invert
+Assets:foo  10.00 EUR -10.00 EUR -10.00 EUR        -10.00 EUR -10.00 EUR
+Assets:bar -10.00 EUR  10.00 EUR          0         10.00 EUR          0
+end test
+
