@@ -818,6 +818,7 @@ class PrepareBuild(CommandLineApp):
         self.configure_args.append('-DBUILD_DEBUG=1')
 
     def setup_flavor_opt(self):
+        self.configure_args.append('-DBUILD_DEBUG=0')
         self.configure_args.append('-DNO_ASSERTS=1')
 
     def setup_flavor_gcov(self):
