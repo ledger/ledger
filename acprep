@@ -470,8 +470,7 @@ class PrepareBuild(CommandLineApp):
         self.log.debug('CMake environment =>')
 
         keys = environ.keys()
-        keys.sort()
-        for key in keys:
+        for key in sorted(keys):
             if key in ['PATH', 'CXX'] or key.endswith('FLAGS'):
                 self.log.debug('  %s=%s' % (key, environ[key]))
 
