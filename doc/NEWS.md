@@ -1,5 +1,22 @@
 # Ledger NEWS
 
+## 3.2.1 (2020-05-18)
+
+- Fix regression with expression evaluation by reverting commit
+  `Correction to the way parens are parsed in query expressions` (bug #1894)
+
+- Fix --invert breakage by reverting commit `Change --invert to invert
+  displayed amounts and totals, not amounts` (bug #1895)
+
+- Fix performance regression by reverting commit `Compare price
+  annotations using their textual rendering` (bug #1907)
+
+- Fix library path issue (bug #1885)
+
+- Allow specifying the Python version (bug #1893)
+
+- Some documentation fixes
+
 ## 3.2.0 (2020-05-01)
 
 - Port Python support to Python 3
