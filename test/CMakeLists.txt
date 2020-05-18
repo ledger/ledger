@@ -67,11 +67,13 @@ if (Python_EXECUTABLE)
       PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
   endforeach()
 
-  add_test(NAME demo
-    COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/demo.py
-    WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
-  set_tests_properties(demo
-    PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE};PYTHONPATH=.")
+  if (HAVE_BOOST_PYTHON)
+    add_test(NAME demo
+      COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/demo.py
+      WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+    set_tests_properties(demo
+      PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE};PYTHONPATH=.")
+  endif()
 endif()
 
 ### CMakeLists.txt ends here
