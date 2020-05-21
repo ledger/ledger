@@ -1497,7 +1497,7 @@ you.
 
 The Ledger program aims at making journal transactions as simple as
 possible.  Since it is a command-line tool, it does not provide a user
-interface for keeping a journal. If you require an user interface to
+interface for keeping a journal. If you require a user interface to
 maintain journal transactions GnuCash is a good alternative.
 
 If you are not using GnuCash, but a text editor to maintain your
@@ -9137,7 +9137,7 @@ The following format functions allow you limited formatting of text:
 
 @item ansify_if(value, color)
 Surrounds the string representing value with ANSI codes to give it
-@code{color} on an TTY display.  Has no effect if directed to a file.
+@code{color} on a TTY display.  Has no effect if directed to a file.
 
 @item justify(value, first_width, latter_width, right_justify, colorize)
 Right or left justify the string representing @code{value}.  The width
