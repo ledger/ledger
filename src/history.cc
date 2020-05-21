@@ -74,7 +74,7 @@ public:
              property<edge_price_ratio_t, price_map_t,
                       property<edge_price_point_t, price_point_t> > >,
 
-    // Graph itself has a std::string name
+    // Graph itself has an std::string name
     property<graph_name_t, std::string>
     > Graph;
 

@@ -202,7 +202,7 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
     // xact, which has one post for each commodity in each account.
     //
     // period_posts is like subtotal_posts, but it subtotals according to time
-    // periods rather than totalling everything.
+    // periods rather than totaling everything.
     //
     // day_of_week_posts is like period_posts, except that it reports
     // all the posts that fall on each subsequent day of the week.

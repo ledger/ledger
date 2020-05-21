@@ -75,7 +75,7 @@ namespace {
       if (status == -1)
         perror("dup2");
 
-      // Close unuseful file descriptors: the pipe's writing and reading
+      // Close unused file descriptors: the pipe's writing and reading
       // ends (the latter is not needed anymore, after the duplication).
       close(pfd[1]);
       close(pfd[0]);

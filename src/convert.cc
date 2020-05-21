@@ -129,7 +129,7 @@ value_t convert_command(call_scope_t& args)
 
   // If not, transform the payee according to regexps
 
-  // Set the account to a default vaule, then transform the account according
+  // Set the account to a default value, then transform the account according
   // to the payee
 
   // Print out the final form of the transaction

@@ -174,7 +174,7 @@ static char* _strptime(const char *s, const char *format, struct tm *tm) {
         }
         break;
 
-      // arbitray whitespace.
+      // arbitrary whitespace.
       case 't':
       case 'n':
         while (isspace(*s)) ++s;

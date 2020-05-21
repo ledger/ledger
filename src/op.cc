@@ -441,7 +441,7 @@ namespace {
                                    int recursion_depth = 0)
   {
     // If the object we are apply call notation to is a FUNCTION value
-    // or a O_LAMBDA expression, then this is the object we want to
+    // or an O_LAMBDA expression, then this is the object we want to
     // call.
     if (op->is_function() || op->kind == expr_t::op_t::O_LAMBDA)
       return op;

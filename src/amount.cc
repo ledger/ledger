@@ -236,7 +236,7 @@ void amount_t::initialize()
 
     commodity_pool_t::current_pool.reset(new commodity_pool_t);
 
-    // Add time commodity conversions, so that timelog's may be parsed
+    // Add time commodity conversions, so that timelogs may be parsed
     // in terms of seconds, but reported as minutes or hours.
     if (commodity_t * commodity = commodity_pool_t::current_pool->create("s"))
       commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
@@ -1051,7 +1051,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
   // Allocate memory for the amount's quantity value.  We have to
   // monitor the allocation in a unique_ptr because this function gets
   // called sometimes from amount_t's constructor; and if there is an
-  // exeception thrown by any of the function calls after this point,
+  // exception thrown by any of the function calls after this point,
   // the destructor will never be called and the memory never freed.
 
   unique_ptr<bigint_t> new_quantity;

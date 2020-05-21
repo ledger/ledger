@@ -862,7 +862,7 @@ void instance_t::apply_year_directive(char * line)
     apply_stack.push_front(application_t("year", epoch));
     DEBUG("times.epoch", "Setting current year to " << year);
     // This must be set to the last day of the year, otherwise partial
-    // dates like "11/01" will refer to last year's november, not the
+    // dates like "11/01" will refer to last year's November, not the
     // current year.
     epoch = datetime_t(date_t(year, 12, 31));
   } catch(bad_lexical_cast &) {
