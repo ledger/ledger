@@ -48,6 +48,6 @@ pkgs.stdenv.mkDerivation {
     '';
 
     platforms = pkgs.stdenv.lib.platforms.all;
-    maintainers = with pkgs.stdenv.lib.maintainers; [ the-kenny jwiegley ];
+    maintainers = with pkgs.stdenv.lib.maintainers; [ jwiegley ];
   };
 }
