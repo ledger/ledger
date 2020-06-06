@@ -478,7 +478,7 @@ string format_t::truncate(const unistring&  ustr,
 {
   assert(width < 4095);
 
-  const std::size_t len = ustr.length();
+  const std::size_t len = ustr.width();
   if (width == 0 || len <= width)
     return ustr.extract();
 
@@ -491,14 +491,14 @@ string format_t::truncate(const unistring&  ustr,
   switch (style) {
   case TRUNCATE_LEADING:
     // This method truncates at the beginning.
-    buf << ".." << ustr.extract(len - (width - 2), width - 2);
+    buf << ".." << ustr.extract_by_width(len - (width - 2), width - 2);
     break;
 
   case TRUNCATE_MIDDLE:
     // This method truncates in the middle.
-    buf << ustr.extract(0, (width - 2) / 2)
+    buf << ustr.extract_by_width(0, (width - 2) / 2)
         << ".."
-        << ustr.extract(len - ((width - 2) / 2 + (width - 2) % 2),
+        << ustr.extract_by_width(len - ((width - 2) / 2 + (width - 2) % 2),
                         (width - 2) / 2 + (width - 2) % 2);
     break;
 
@@ -545,7 +545,7 @@ string format_t::truncate(const unistring&  ustr,
       for (std::list<string>::iterator i = parts.begin();
            i != parts.end();
            i++) {
-        std::size_t l = unistring(*i).length();
+        std::size_t l = unistring(*i).width();
         DEBUG("format.abbrev",
               "Segment " << ++index << " is " << l << " chars wide");
         lens.push_back(l);
@@ -667,8 +667,8 @@ string format_t::truncate(const unistring&  ustr,
         }
 
         unistring temp(*i);
-        if (temp.length() > *l)
-          result << temp.extract(0, *l) << ":";
+        if (temp.width() > *l)
+          result << temp.extract_by_width(0, *l) << ":";
         else
           result << *i << ":";
       }
@@ -677,8 +677,8 @@ string format_t::truncate(const unistring&  ustr,
         // Even abbreviated its too big to show the last account, so
         // abbreviate all but the last and truncate at the beginning.
         unistring temp(result.str());
-        assert(temp.length() > width - 2);
-        buf << ".." << temp.extract(temp.length() - (width - 2), width - 2);
+        assert(temp.width() > width - 2);
+        buf << ".." << temp.extract_by_width(temp.width() - (width - 2), width - 2);
       } else {
         buf << result.str();
       }
@@ -688,7 +688,7 @@ string format_t::truncate(const unistring&  ustr,
 
   case TRUNCATE_TRAILING:
     // This method truncates at the end (the default).
-    buf << ustr.extract(0, width - 2) << "..";
+    buf << ustr.extract_by_width(0, width - 2) << "..";
     break;
   }
 

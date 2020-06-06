@@ -111,6 +111,54 @@ public:
     return utf8result;
   }
 
+  std::string extract_by_width(std::string::size_type begin,
+                               std::size_t            len) const
+  {
+    std::string utf8result;
+    std::size_t this_width = width();
+    std::string::size_type this_len = length();
+
+    assert(begin <= this_width);
+    if (begin + len > this_width)
+	len = this_width - begin;
+
+    std::size_t pos = 0;
+    std::size_t begin_idx = 0, end_idx = 0;
+    std::size_t head = 0, tail = 0;
+    for (std::size_t idx = 0; idx < this_len; ++idx) {
+      std::size_t w = mk_wcwidth(utf32chars[idx]);
+
+      if (pos < begin) {
+        if (pos + w >= begin) {
+          head = std::min(pos + w, begin + len) - begin;
+          begin_idx = idx + 1;
+        }
+      } else if (pos < begin + len) {
+        if (pos + w > begin + len) {
+          tail = begin + len - pos;
+          end_idx = idx;
+        }
+        if (pos + w == begin + len) {
+          tail = 0;
+          end_idx = idx + 1;
+        }
+      }
+      pos += w;
+    }
+
+    utf8result += std::string(head, '.');
+
+    if (begin_idx < end_idx)
+      utf8::unchecked::utf32to8
+        (utf32chars.begin() + static_cast<std::string::difference_type>(begin_idx),
+         utf32chars.begin() + static_cast<std::string::difference_type>(end_idx),
+         std::back_inserter(utf8result));
+
+    utf8result += std::string(tail, '.');
+
+    return utf8result;
+  }
+
   std::size_t find(const boost::uint32_t __s, std::size_t __pos = 0) const {
     std::size_t idx = 0;
     foreach (const boost::uint32_t& ch, utf32chars) {
