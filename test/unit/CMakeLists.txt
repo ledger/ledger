@@ -8,7 +8,7 @@ endmacro(add_ledger_test _name)
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
 if (BUILD_LIBRARY)
-  add_executable(UtilTests t_times.cc)
+  add_executable(UtilTests t_times.cc t_format.cc)
   if (HAVE_BOOST_PYTHON)
     target_link_libraries(UtilTests ${Python_LIBRARIES})
   endif()
