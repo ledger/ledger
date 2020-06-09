@@ -115,8 +115,10 @@ void csv_reader::read_index(std::istream& in)
       index.push_back(FIELD_CODE);
     else if (payee_mask.match(field))
       index.push_back(FIELD_PAYEE);
-    else if (amount_mask.match(field))
-      index.push_back(FIELD_AMOUNT);
+    else if (credit_mask.match(field))
+      index.push_back(FIELD_CREDIT);
+    else if (debit_mask.match(field))
+      index.push_back(FIELD_DEBIT);
     else if (cost_mask.match(field))
       index.push_back(FIELD_COST);
     else if (total_mask.match(field))
@@ -199,12 +201,19 @@ xact_t * csv_reader::read_xact(bool rich_data)
       break;
     }
 
-    case FIELD_AMOUNT: {
+    case FIELD_DEBIT:
+    case FIELD_CREDIT: {
+      if (field.length() == 0)
+        break;
       std::istringstream amount_str(field);
       amt.parse(amount_str, PARSE_NO_REDUCE);
       if (! amt.has_commodity() &&
           commodity_pool_t::current_pool->default_commodity)
         amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
+      if (index[n] == FIELD_DEBIT)
+        amt = -amt;
+      if (!post->amount.is_null())
+        throw_(csv_error, _("Cannot have two values for a single transaction"));
       post->amount = amt;
       break;
     }
@@ -214,8 +223,7 @@ xact_t * csv_reader::read_xact(bool rich_data)
       amt.parse(amount_str, PARSE_NO_REDUCE);
       if (! amt.has_commodity() &&
           commodity_pool_t::current_pool->default_commodity)
-        amt.set_commodity
-          (*commodity_pool_t::current_pool->default_commodity);
+        amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
       post->cost = amt;
       break;
     }
