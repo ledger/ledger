@@ -51,6 +51,8 @@ class xact_t;
 class journal_t;
 class account_t;
 
+DECLARE_EXCEPTION(csv_error, std::runtime_error);
+
 class csv_reader
 {
   parse_context_t context;
@@ -60,7 +62,8 @@ class csv_reader
     FIELD_DATE_AUX,
     FIELD_CODE,
     FIELD_PAYEE,
-    FIELD_AMOUNT,
+    FIELD_CREDIT,
+    FIELD_DEBIT,
     FIELD_COST,
     FIELD_TOTAL,
     FIELD_NOTE,
@@ -72,7 +75,8 @@ class csv_reader
   mask_t date_aux_mask;
   mask_t code_mask;
   mask_t payee_mask;
-  mask_t amount_mask;
+  mask_t credit_mask;
+  mask_t debit_mask;
   mask_t cost_mask;
   mask_t total_mask;
   mask_t note_mask;
@@ -87,7 +91,8 @@ public:
       date_aux_mask("posted( ?date)?"),
       code_mask("code"),
       payee_mask("(payee|desc(ription)?|title)"),
-      amount_mask("amount"),
+      credit_mask("credit|amount"),
+      debit_mask("debit"),
       cost_mask("cost"),
       total_mask("total"),
       note_mask("note") {

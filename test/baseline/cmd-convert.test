@@ -21,7 +21,7 @@ While parsing file "$sourcepath/test/baseline/cmd-convert3.dat", line 1:
 While parsing CSV line:
   01/01/2011,,
 
-Error: No quantity specified for amount
+Error: Only one posting with null amount allowed per transaction
 end test
 
 test -f /dev/null convert test/baseline/cmd-convert4.dat -> 1
@@ -33,3 +33,21 @@ While parsing CSV line:
 Error: Invalid date: bogus
 end test
 
+test -f /dev/null --input-date-format "%m/%d/%Y" convert test/baseline/cmd-convert5.dat
+2011/01/01 * test1
+    Expenses:Unknown                       20.00 EUR
+    Equity:Unknown
+
+2011/01/02 * test2
+    Expenses:Unknown                      -10.00 EUR
+    Equity:Unknown
+end test
+
+test -f /dev/null --input-date-format "%m/%d/%Y" convert test/baseline/cmd-convert6.dat -> 1
+__ERROR__
+While parsing file "$sourcepath/test/baseline/cmd-convert6.dat", line 1:
+While parsing CSV line:
+  01/01/2011,20.00 EUR,10.00 EUR,test1,
+
+Error: Cannot have two values for a single transaction
+end test
