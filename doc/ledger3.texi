@@ -4701,25 +4701,26 @@ Account Number: 71
 Date Range: 11/13/2011 - 12/13/2011
 
 Transaction Number,Date,Description,Memo,Amount Debit,Amount Credit,Balance,Check Number,Fees
-767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-8.80,,00001640.04,,
-767406,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-1.03,,00001648.84,,
-683342,12/13/2011,"Visa Checking","NetFlix Date 12/12/11 000326585896 5968",-21.85,,00001649.87,,
-639668,12/13/2011,"Withdrawal","ID: 1741472662 CO: XXAA.COM PAYMNT",-236.65,,00001671.72,,
-1113648,12/12/2011,"Withdrawal","Tuscan IT #00037657",-29.73,,00001908.37,,
+767406,12/13/2011,"Deposit","CASH DEPOSIT",,45.00,00001646.89,,
+767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",8.80,,00001640.04,,
+767406,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",1.03,,00001648.84,,
+683342,12/13/2011,"Visa Checking","NetFlix Date 12/12/11 000326585896 5968",21.85,,00001649.87,,
+639668,12/13/2011,"Withdrawal","ID: 1741472662 CO: XXAA.COM PAYMNT",236.65,,00001671.72,,
+1113648,12/12/2011,"Withdrawal","Tuscan IT #00037657",29.73,,00001908.37,,
 @end smallexample
 
 Unfortunately, as it stands Ledger cannot read it, but you can.  Ledger
 expects the first line to contain a description of the fields on each
 line of the file.  The fields ledger can recognize contain these
 case-insensitive strings @code{date}, @code{posted}, @code{code},
-@code{payee} or @code{desc} or @code{description}, @code{amount},
-@code{cost}, @code{total}, and @code{note}.
+@code{payee} or @code{desc} or @code{description}, @code{amount} or
+@code{credit}, @code{debit}, @code{cost}, @code{total}, and @code{note}.
 
 Delete the account description lines at the top, and replace the first
 line in the data above with:
 
 @smallexample
-,date,payee,note,amount,,,code,
+,date,payee,note,debit,credit,,code,
 @end smallexample
 
 Then execute ledger like this:
@@ -4742,7 +4743,7 @@ example, if you want to capture the bank transaction number and it
 occurs in the first column of the data use:
 
 @smallexample
-transid,date,payee,note,amount,,,code,
+transid,date,payee,note,debit,credit,,code,
 @end smallexample
 
 Ledger will include @samp{; transid: 767718} in the first transaction
@@ -4754,7 +4755,7 @@ from the file above.
 @findex --rich-data
 
 The @command{convert} command accepts four options.  They are
-@option{--invert} which inverts the amount field, @option{--auto-match}
+@option{--invert} which inverts the amount, @option{--auto-match}
 which automatically matches an account from the Ledger journal for every
 CSV line, @option{--account @var{STR}} which you can use to specify the
 account to balance against, and @option{--rich-data} which stores
@@ -4763,9 +4764,9 @@ additional tag/value pairs.
 Using the two first lines of the above csv file,
 
 @smallexample @c file:01B0350
-,date,payee,note,amount,,,code,
-767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-8.80,,00001640.04,,
-767406,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-1.03,,00001648.84,,
+,date,payee,note,debit,credit,balance,code,
+767406,12/13/2011,"Deposit","CASH DEPOSIT",,45.00,00001646.89,,
+767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",8.80,,00001640.04,,
 @end smallexample
 
 and launching the below command,
@@ -4779,18 +4780,20 @@ $ ledger convert download.csv --input-date-format "%m/%d/%Y" \
 you will get the result:
 
 @smallexample @c output:01B0350
-2011/12/13 * Withdrawal  ;ACE HARDWARE 16335 S HOUGHTON RD
-    ; CSV: 767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-8.80,,00001640.04,,
+2011/12/13 * Deposit  ;CASH DEPOSIT
+    ; balance: 00001646.89
+    ; CSV: 767406,12/13/2011,"Deposit","CASH DEPOSIT",,45.00,00001646.89,,
     ; Imported: 2012/01/13
-    ; UUID: dfdc3c3d5c54c6967dd39d5b4e4fd1ea76e87233
-    Expenses:Unknown                             8.8
+    ; UUID: ce0b7d42b02ce5eaf0d828c3b1028041fd09494c
+    Expenses:Unknown                             -45
     Assets:MyBank
 
 2011/12/13 * Withdrawal  ;ACE HARDWARE 16335 S HOUGHTON RD
-    ; CSV: 767406,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-1.03,,00001648.84,,
+    ; balance: 00001640.04
+    ; CSV: 767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",8.80,,00001640.04,,
     ; Imported: 2012/01/13
-    ; UUID: 63086448b1f29f7fd6efb11ea40660185a213f9d
-    Expenses:Unknown                            1.03
+    ; UUID: 0aaf85911adc447ea2d5377ff6a60d6b2940047f
+    Expenses:Unknown                             8.8
     Assets:MyBank
 @end smallexample
 
