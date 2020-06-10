@@ -107,28 +107,13 @@ void csv_reader::read_index(std::istream& in)
     string field = read_field(instr);
     names.push_back(field);
 
-    if (date_mask.match(field))
-      index.push_back(FIELD_DATE);
-    else if (date_aux_mask.match(field))
-      index.push_back(FIELD_DATE_AUX);
-    else if (code_mask.match(field))
-      index.push_back(FIELD_CODE);
-    else if (payee_mask.match(field))
-      index.push_back(FIELD_PAYEE);
-    else if (credit_mask.match(field))
-      index.push_back(FIELD_CREDIT);
-    else if (debit_mask.match(field))
-      index.push_back(FIELD_DEBIT);
-    else if (cost_mask.match(field))
-      index.push_back(FIELD_COST);
-    else if (total_mask.match(field))
-      index.push_back(FIELD_TOTAL);
-    else if (note_mask.match(field))
-      index.push_back(FIELD_NOTE);
-    else
-      index.push_back(FIELD_UNKNOWN);
-
     DEBUG("csv.parse", "Header field: " << field);
+    for (auto& mask : masks) {
+      if (mask.first.match(field)) {
+        index.push_back(mask.second);
+        break;
+      }
+    }
   }
 }
 
