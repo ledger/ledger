@@ -71,31 +71,24 @@ class csv_reader
     FIELD_UNKNOWN
   };
 
-  mask_t date_mask;
-  mask_t date_aux_mask;
-  mask_t code_mask;
-  mask_t payee_mask;
-  mask_t credit_mask;
-  mask_t debit_mask;
-  mask_t cost_mask;
-  mask_t total_mask;
-  mask_t note_mask;
+  std::array<std::pair<mask_t, headers_t>, 10> masks;
 
-  std::vector<int>    index;
+  std::vector<headers_t> index;
   std::vector<string> names;
 
 public:
   csv_reader(parse_context_t& _context)
     : context(_context),
-      date_mask("date"),
-      date_aux_mask("posted( ?date)?"),
-      code_mask("code"),
-      payee_mask("(payee|desc(ription)?|title)"),
-      credit_mask("credit|amount"),
-      debit_mask("debit"),
-      cost_mask("cost"),
-      total_mask("total"),
-      note_mask("note") {
+      masks{ std::make_pair(mask_t("date"), FIELD_DATE),
+             std::make_pair(mask_t("posted( ?date)?"), FIELD_DATE_AUX),
+             std::make_pair(mask_t("code"), FIELD_CODE),
+             std::make_pair(mask_t("(payee|desc(ription)?|title)"), FIELD_PAYEE),
+             std::make_pair(mask_t("credit|amount"), FIELD_CREDIT),
+             std::make_pair(mask_t("debit"), FIELD_DEBIT),
+             std::make_pair(mask_t("cost"), FIELD_COST),
+             std::make_pair(mask_t("total"), FIELD_TOTAL),
+             std::make_pair(mask_t("note"), FIELD_NOTE),
+             std::make_pair(mask_t(""), FIELD_UNKNOWN) } {
     read_index(*context.stream.get());
     TRACE_CTOR(csv_reader, "parse_context_t&");
   }
