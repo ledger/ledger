@@ -1,5 +1,9 @@
 # Ledger NEWS
 
+## 3.2.x (unreleased)
+
+- Use $PAGER when environment variable is set (bug #1674)
+
 ## 3.2.1 (2020-05-18)
 
 - Fix regression with expression evaluation by reverting commit
