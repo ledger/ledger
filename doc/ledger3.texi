@@ -6,6 +6,8 @@
 @set InternalUseOnly For internal use only.
 @settitle Ledger: Command-Line Accounting
 
+@codequoteundirected on
+
 @c Before release, run C-u C-c C-u C-a (texinfo-all-menus-update with
 @c a prefix arg).  This updates the node pointers, which texinfmt.el
 @c needs.
