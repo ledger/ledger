@@ -1102,7 +1102,7 @@ wanted to know how many ounces of gold that would buy, in terms of the
 current price of gold:
 
 @smallexample
-$ ledger -T "@{1 AU@}*(O/P@{1 AU@})" balance checking
+$ ledger -X AU balance checking
 @end smallexample
 
 Although the total expression appears complex, it is simply saying
