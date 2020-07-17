@@ -1105,15 +1105,10 @@ current price of gold:
 $ ledger -X AU balance checking
 @end smallexample
 
-Although the total expression appears complex, it is simply saying
-that the reported total should be in multiples of AU units, where the
-quantity is the account total divided by the price of one AU.  Without
-the initial multiplication, the reported total would still use the
-dollars commodity, since multiplying or dividing amounts always keeps
-the left value's commodity.  The result of this command might be:
+The result of this command might be:
 
 @smallexample
-14.01 AU  Assets:Checking
+12.5 AU  Assets:Checking
 @end smallexample
 
 @menu
