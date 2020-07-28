@@ -30,7 +30,7 @@ addons:
     project:
       name: "ledger/ledger"
       description: "Build submitted via Travis CI"
-    build_command_prepend: "cmake . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON -DCLANG_GCOV=ON -DPython_FIND_VERSION_MAJOR=${PY_MAJOR}"
+    build_command_prepend: "cmake . -DUSE_PYTHON=ON -DBUILD_DEBUG=ON -DUSE_GPGME=ON -DCLANG_GCOV=ON -DPython_FIND_VERSION_MAJOR=${PY_MAJOR}"
     build_command: "make"
     branch_pattern: coverity
   apt:
@@ -47,6 +47,9 @@ addons:
       - libboost-iostreams-dev
       - libboost-filesystem-dev
       - libboost-serialization-dev
+      - libgpgmepp-dev
+      - libgpg-error-dev
+      - libgpgme-dev
   homebrew:
     update: true
     packages:
@@ -55,13 +58,14 @@ addons:
       - boost-python3
       - gmp
       - mpfr
+      - gpgme
 
 before_script:
   # On macOS boost-python packaging is broken
   - if [ "$TRAVIS_OS_NAME" = osx ]; then EXTRA_CMAKE_ARGS="-DBoost_NO_BOOST_CMAKE=ON"; fi
   # Ensure cmake locates python 3.8. Brew changed boost-python3 to use 3.8 but it isn't in the path by default
   - if [ "$TRAVIS_OS_NAME" = osx ]; then export PATH="/usr/local/opt/python@3.8/bin:$PATH"; fi
-  - cmake . -DUSE_PYTHON=ON -DPython_FIND_VERSION_MAJOR=${PY_MAJOR} -DBUILD_DEBUG=ON $EXTRA_CMAKE_ARGS
+  - cmake . -DUSE_PYTHON=ON -DPython_FIND_VERSION_MAJOR=${PY_MAJOR} -DUSE_GPGME=ON -DBUILD_DEBUG=ON $EXTRA_CMAKE_ARGS
   - make VERBOSE=1
 
 script:
