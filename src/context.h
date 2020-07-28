@@ -45,6 +45,10 @@
 #include "utils.h"
 #include "times.h"
 
+#if HAVE_GPGME
+#include "gpgme.h"
+#endif
+
 namespace ledger {
 
 class journal_t;
@@ -119,7 +123,11 @@ inline parse_context_t open_for_reading(const path& pathname,
            _f("Cannot read journal file %1%") % filename);
 
   path parent(filename.parent_path());
+#if HAVE_GPGME
+  shared_ptr<std::istream> stream(decrypted_stream_t::open_stream(filename));
+#else
   shared_ptr<std::istream> stream(new ifstream(filename));
+#endif
   parse_context_t context(stream, parent);
   context.pathname = filename;
   return context;

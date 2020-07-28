@@ -33,6 +33,10 @@
 
 #include "utils.h"
 
+#if HAVE_GPGME
+#include "gpgme.h"
+#endif
+
 namespace ledger {
 
 std::ostringstream _ctxt_buffer;
@@ -92,12 +96,16 @@ string source_context(const path&                  file,
 
   std::ostringstream out;
 
-  ifstream in(file);
-  in.seekg(pos, std::ios::beg);
+#if HAVE_GPGME
+  std::istream* in(decrypted_stream_t::open_stream(file));
+#else
+  std::istream* in(new ifstream(file));
+#endif
+  in->seekg(pos, std::ios::beg);
 
   scoped_array<char> buf(new char[static_cast<std::size_t>(len) + 1]);
-  in.read(buf.get(), static_cast<std::streamsize>(len));
-  assert(in.gcount() == static_cast<std::streamsize>(len));
+  in->read(buf.get(), static_cast<std::streamsize>(len));
+  assert(in->gcount() == static_cast<std::streamsize>(len));
   buf[static_cast<std::ptrdiff_t>(len)] = '\0';
 
   bool first = true;
@@ -111,6 +119,7 @@ string source_context(const path&                  file,
     out << prefix << p;
   }
 
+  delete(in);
   return out.str();
 }
 

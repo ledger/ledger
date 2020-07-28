@@ -53,6 +53,11 @@ set(LEDGER_SOURCES
   utils.cc
   wcwidth.cc)
 
+if (HAVE_GPGME)
+  list(APPEND LEDGER_SOURCES
+    gpgme.cc)
+endif()
+
 if (HAVE_BOOST_PYTHON)
   list(APPEND LEDGER_SOURCES
     py_account.cc
@@ -94,6 +99,7 @@ set(LEDGER_INCLUDES
   format.h
   generate.h
   global.h
+  gpgme.h
   history.h
   item.h
   iterators.h
@@ -284,6 +290,10 @@ if (BUILD_LIBRARY)
 
   add_executable(ledger main.cc global.cc)
   target_link_libraries(ledger libledger)
+  if (HAVE_GPGME)
+    target_link_libraries(ledger Gpgmepp)
+  endif()
+
   if (HAVE_BOOST_PYTHON)
     target_link_libraries(ledger ${Python_LIBRARIES})
   endif()

@@ -33,6 +33,7 @@ option(DISABLE_ASSERTS "Build without any internal consistency checks" OFF)
 option(BUILD_DEBUG "Build support for runtime debugging" OFF)
 option(PRECOMPILE_SYSTEM_HH "Precompile system.hh" ON)
 
+option(USE_GPGME "Build with support for encrypted journals" OFF)
 option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
 option(BUILD_DOCS "Build and install documentation" OFF)
 option(BUILD_WEB_DOCS "Build version of documentation suitable for viewing online" OFF)
@@ -85,6 +86,16 @@ find_package(Boost 1.49.0
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
+
+# Crypto
+if (USE_GPGME)
+  find_package(Gpgmepp REQUIRED)
+  set(HAVE_GPGME 1)
+  include_directories(SYSTEM ${Gpgmepp_INCLUDE_DIRS})
+  link_directories(${Gpgmepp_LIBRARY_DIRS})
+else()
+  set(HAVE_GPGME 0)
+endif()
 
 ########################################################################
 
@@ -255,6 +266,9 @@ macro(add_ledger_library_dependencies _target)
   endif()
   if (HAVE_GETTEXT)
     target_link_libraries(${_target} ${INTL_LIB})
+  endif()
+  if (HAVE_GPGME)
+    target_link_libraries(${_target} Gpgmepp)
   endif()
   if (HAVE_BOOST_PYTHON)
     if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
