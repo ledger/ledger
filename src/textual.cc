@@ -40,6 +40,7 @@
 #include "query.h"
 #include "pstream.h"
 #include "pool.h"
+#include <algorithm>
 #if HAVE_BOOST_PYTHON
 #include "pyinterp.h"
 #endif
@@ -751,12 +752,19 @@ void instance_t::include_directive(char * line)
   bool files_found = false;
   if (exists(parent_path)) {
     filesystem::directory_iterator end;
-    for (filesystem::directory_iterator iter(parent_path);
-         iter != end;
-         ++iter) {
+
+		// Sort parent_path since on some file systems it is unsorted.
+		std::vector<path> sorted_parent_path;
+	  std::copy(filesystem::directory_iterator(parent_path),
+							filesystem::directory_iterator(),
+							std::back_inserter(sorted_parent_path));
+		std::sort(sorted_parent_path.begin(), sorted_parent_path.end());
+
+		for (std::vector<path>::const_iterator iter(sorted_parent_path.begin()),
+					 it_end(sorted_parent_path.end()); iter != it_end; ++iter) {
       if (is_regular_file(*iter))
         {
-        string base = (*iter).path().filename().string();
+        string base = (*iter).filename().string();
         if (glob.match(base)) {
           journal_t *  journal  = context.journal;
           account_t *  master   = top_account();
