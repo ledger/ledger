@@ -12,16 +12,17 @@
     [Assets:Budget:Emergency]                   = $400.00
     [Assets:Bank]                               -$500.00
 
-test bal Assets
+test bal Assets -> 1
+__ERROR__
 While parsing file "$FILE", line 13:
-While balancing transaction from "$sourcepath/test/regress/544_a.test", lines 10-13:
+While balancing transaction from "$FILE", lines 10-13:
 > 2018/01/01 * Budget
 >     [Assets:Budget:Rent]                        = $100.00
 >     [Assets:Budget:Emergency]                   = $400.00
 >     [Assets:Bank]                               -$500.00
 Unbalanced remainder is:
-            $-300.00
+            $-200.00
 Amount to balance against:
-             $200.00
+             $300.00
 Error: Transaction does not balance
 end test
