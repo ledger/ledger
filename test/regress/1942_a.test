@@ -21,8 +21,8 @@ While balancing transaction from "$FILE", lines 10-13:
 >     [Assets:Budget:Emergency]                   = $400.00
 >     [Assets:Bank]                               -$500.00
 Unbalanced remainder is:
-            $-200.00
+            $-300.00
 Amount to balance against:
-             $300.00
+             $200.00
 Error: Transaction does not balance
 end test
