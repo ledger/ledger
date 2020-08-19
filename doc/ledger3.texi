@@ -9908,7 +9908,7 @@ Ignore init files and environment variables for the ledger run.
 If Ledger has been built with debug options this will provide extra
 data during the run.  Listed below are the available @var{CODES} to
 debug. You can provide multiple using a regex expression like 
-"(@code{account.display}|@code{expr.calc})".
+"(@code{account.display|expr.calc})".
 
 @multitable @columnfractions .32 .43 .27
 @item @code{account.display}             @tab @code{draft.xact}                       @tab @code{option.names}
