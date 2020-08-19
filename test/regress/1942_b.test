@@ -12,9 +12,10 @@
     [Assets:Budget:Emergency]                   = $400.00
     [Assets:Bank]                               -$500.00
 
-test bal Assets
+test bal Assets -> 1
+__ERROR__
 While parsing file "$FILE", line 13:
-While balancing transaction from "$sourcepath/test/regress/544_b.test", lines 10-13:
+While balancing transaction from "$FILE", lines 10-13:
 > 2018/01/01 * Budget
 >     [Assets:Budget:Rent]                        $0 = $100.00
 >     [Assets:Budget:Emergency]                   = $400.00
