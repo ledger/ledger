@@ -965,16 +965,12 @@ report.
 Allow the user to specify what account name should be used for
 unrealized gains.  Defaults to
 .Sy "Equity:Unrealized Gains" .
-Often set in one's
-.Pa ~/.ledgerrc
-file to change the default.
+Often set in one's init file to change the default.
 .It Fl \-unrealized-losses
 Allow the user to specify what account name should be used for
 unrealized losses.  Defaults to
 .Sy "Equity:Unrealized Losses" .
-Often set in one's
-.Pa ~/.ledgerrc
-file to change the default.
+Often set in one's init file to change the default.
 .It Fl \-unround
 Perform all calculations without rounding and display results to full
 precision.
@@ -1445,6 +1441,8 @@ on the command-line.  Options on the command-line always take precedence over
 environment variable settings, however.
 .Sh FILES
 .Bl -tag -width -indent
+.It Pa $XDG_CONFIG_HOME/ledger/ledgerrc
+.It Pa ~/.config/local/ledgerrc
 .It Pa ~/.ledgerrc
 Your personal
 .Nm

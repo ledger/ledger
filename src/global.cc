@@ -136,17 +136,28 @@ void global_scope_t::read_init()
   path init_file;
   if (HANDLED(init_file_)) {
     init_file=HANDLER(init_file_).str();
-    if (!exists(init_file)) {
+    if (! exists(init_file)) {
       throw_(parse_error, _f("Could not find specified init file %1%") % init_file);
     }
   } else {
-    if (const char * home_var = std::getenv("HOME")) {
-      init_file = (path(home_var) / ".ledgerrc");
+    // in order, try to read the init file from:
+    // - $XDG_CONFIG_HOME/ledger/ledgerrc
+    // - $HOME/.config/ledger/ledgerrc
+    // - $HOME/.ledgerrc
+    // - ./.ledgerrc
+    if (const char * xdg_config_home = std::getenv("XDG_CONFIG_HOME")) {
+      init_file = (path(xdg_config_home) / "ledger" / "ledgerrc");
+    }
+    if (! exists(init_file)) {
+      if (const char * home_var = std::getenv("HOME")) {
+        init_file = (path(home_var) / ".config" / "ledger" / "ledgerrc");
+        if (! exists(init_file)) {
+          init_file = (path(home_var) / ".ledgerrc");
+        }
+      }
       if (! exists(init_file)) {
         init_file = ("./.ledgerrc");
       }
-    } else {
-      init_file = ("./.ledgerrc");
     }
   }
   if (exists(init_file)) {
