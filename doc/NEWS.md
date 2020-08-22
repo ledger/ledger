@@ -3,6 +3,8 @@
 ## 3.2.x (unreleased)
 
 - Use $PAGER when environment variable is set (bug #1674)
+- Try to use `$XDG_HOME_CONFIG/ledger/ledgerrc` or `~/.config/ledger/ledgerrc`
+  first
 
 ## 3.2.1 (2020-05-18)
 
