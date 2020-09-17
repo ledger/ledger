@@ -213,26 +213,42 @@ account_t * journal_t::expand_aliases(string name) {
   return result;
 }
 
-string journal_t::register_payee(const string& name, xact_t * xact)
+string journal_t::register_payee(const string& name)
 {
-  string payee;
+  if (should_check_payees() && payee_not_registered(name)) {
+    known_payees.insert(name);
+  }
 
-  if (check_payees &&
-      (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR)) {
-    std::set<string>::iterator i = known_payees.find(name);
+  return name;
+}
 
-    if (i == known_payees.end()) {
-      if (! xact) {
-        known_payees.insert(name);
-      }
-      else if (checking_style == CHECK_WARNING) {
-        current_context->warning(_f("Unknown payee '%1%'") % name);
-      }
-      else if (checking_style == CHECK_ERROR) {
-        throw_(parse_error, _f("Unknown payee '%1%'") % name);
-      }
+string journal_t::validate_payee(const string& name_or_alias)
+{
+  string payee = translate_payee_name(name_or_alias);
+
+  if (should_check_payees() && payee_not_registered(payee)) {
+    if (checking_style == CHECK_WARNING) {
+      current_context->warning(_f("Unknown payee '%1%'") % payee);
+    }
+    else if (checking_style == CHECK_ERROR) {
+      throw_(parse_error, _f("Unknown payee '%1%'") % payee);
     }
   }
+
+  return payee;
+}
+
+bool journal_t::should_check_payees() {
+  return check_payees &&
+      (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR);
+}
+
+bool journal_t::payee_not_registered(const string& name) {
+  return known_payees.find(name) == known_payees.end();
+}
+
+string journal_t::translate_payee_name(const string& name) {
+  string payee;
 
   foreach (payee_alias_mapping_t& value, payee_alias_mappings) {
     if (value.first.match(name)) {

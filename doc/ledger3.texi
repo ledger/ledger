@@ -3104,10 +3104,6 @@ date is not repeated), but they have different payees now.
 If using the @option{--strict} or @option{--pedantic} options, you must
 declare this tag to avoid warnings and errors.
 
-The payee name used with the tag is not enforced by the
-@option{--check-payees} option, due to a bug:
-@url{https://github.com/ledger/ledger/issues/556}.
-
 @node Metadata values, Typed metadata, Metadata tags, Metadata
 @subsection Metadata values
 

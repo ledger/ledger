@@ -1033,7 +1033,7 @@ void instance_t::account_value_directive(account_t * account, string expr_str)
 
 void instance_t::payee_directive(char * line)
 {
-  string payee = context.journal->register_payee(line, NULL);
+  string payee = context.journal->register_payee(line);
 
   while (peek_whitespace_line()) {
     read_line(line);
@@ -1756,6 +1756,10 @@ post_t * instance_t::parse_post(char *          line,
   foreach (string& tag, tags)
     post->parse_tags(tag.c_str(), *context.scope, true);
 
+  string post_payee = post->payee_from_tag();
+  if (post_payee != "")
+    post->set_payee(context.journal->validate_payee(post_payee));
+
   TRACE_STOP(post_details, 1);
 
   return post.release();
@@ -1874,7 +1878,7 @@ xact_t * instance_t::parse_xact(char *          line,
       }
       ++p;
     }
-    xact->payee = context.journal->register_payee(next, xact.get());
+    xact->payee = context.journal->validate_payee(next);
     next = p;
   } else {
     xact->payee = _("<Unspecified payee>");

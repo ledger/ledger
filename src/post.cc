@@ -120,12 +120,22 @@ optional<date_t> post_t::aux_date() const
   return date;
 }
 
-string post_t::payee() const
+string post_t::payee_from_tag() const
 {
   if (optional<value_t> post_payee = get_tag(_("Payee")))
     return post_payee->as_string();
   else
-    return xact->payee;
+    return "";
+}
+
+string post_t::payee() const
+{
+  if (_payee)
+    return *_payee;
+
+  string post_payee = payee_from_tag();
+
+  return post_payee != "" ? post_payee : xact->payee;
 }
 
 namespace {
