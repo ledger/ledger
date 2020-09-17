@@ -8,6 +8,10 @@ payee Foo Bar Inc
     A            10
     B
 
+2012-03-26 * KFC
+    A            10 ; Payee: Kentucky Fried Chicken
+    B
+
 2014-05-13 * UNHELPFUL PAYEE  ; will be read as being 'Foo Bar Inc'
     ; UUID: 2a2e21d434356f886c84371eebac6e44f1337fda
     A            20
@@ -15,6 +19,8 @@ payee Foo Bar Inc
 
 test reg
 12-Mar-25 KFC                   A                                10           10
+                                B                               -10            0
+12-Mar-26 KFC                   A                                10           10
                                 B                               -10            0
 14-May-13 Foo Bar Inc           A                                20           20
                                 B                               -20            0

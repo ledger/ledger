@@ -157,7 +157,8 @@ public:
 
   account_t * register_account(const string& name, post_t * post,
                                account_t * master = NULL);
-  string      register_payee(const string& name, xact_t * xact);
+  string      register_payee(const string& name);
+  string      validate_payee(const string& name_or_alias);
   void        register_commodity(commodity_t& comm,
                                  variant<int, xact_t *, post_t *> context);
   void        register_metadata(const string& key, const value_t& value,
@@ -194,7 +195,12 @@ public:
   bool valid() const;
 
 private:
+
   std::size_t read_textual(parse_context_stack_t& context);
+
+  bool        should_check_payees();
+  bool        payee_not_registered(const string& name);
+  string      translate_payee_name(const string& name);
 };
 
 } // namespace ledger

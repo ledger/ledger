@@ -73,6 +73,12 @@ public:
   optional<datetime_t> checkin;
   optional<datetime_t> checkout;
 
+private:
+
+  optional<string> _payee;
+
+public:
+
   post_t(account_t * _account = NULL,
          flags_t     _flags   = ITEM_NORMAL)
     : item_t(_flags), xact(NULL), account(_account)
@@ -132,7 +138,11 @@ public:
   virtual date_t primary_date() const;
   virtual optional<date_t> aux_date() const;
 
+  string payee_from_tag() const;
   string payee() const;
+  void set_payee(const string& payee) {
+    _payee = payee;
+  }
 
   bool must_balance() const {
     return ! has_flags(POST_VIRTUAL) || has_flags(POST_MUST_BALANCE);
