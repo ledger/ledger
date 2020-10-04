@@ -127,6 +127,16 @@ required build dependencies using the following command:
          libboost-graph-dev libboost-iostreams-dev \
          libboost-python-dev libboost-regex-dev libboost-test-dev
 
+### Fedora
+
+You can install all required build dependencies under Fedora using the
+following command (tested with Fedora 32):
+
+    $ sudo dnf install boost-date-time boost-devel boost-filesystem \
+        boost-iostreams boost-python3-devel boost-regex boost-system \
+        boost-test cmake doxygen gettext git gmp-devel libedit-devel \
+        mpfr-devel python3-devel texinfo tzdata
+
 ## Building
 
 The next step is preparing your environment for building.  While you can use
