@@ -8575,7 +8575,7 @@ $ ledger -f expr.dat --format "»%(trim(' 	Trimmed	 '))«\n" reg assets
 @end smallexample
 @end defun
 
-@defun truncatedstring total_len account_len
+@defun truncated string total_len account_len
 Truncate @var{string} to @var{total_len} ensuring that each account is at least
 @var{account_len} long.
 @end defun
