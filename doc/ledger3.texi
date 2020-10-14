@@ -5978,9 +5978,9 @@ the run.
 Display the man page for @file{ledger}.
 
 @item --init-file @var{FILE}
-Specify the location of the init file.  The default is home directory
-@file{~/.ledgerrc}, or current directory @file{./.ledgerrc} if not found
-in home directory.
+Specify the location of the init file.  By default, @file{$XDG_CONFIG_HOME},
+@file{~/.config/ledger/lederrc}, @file{~/.ledgerrc} and @file{./.ledgerrc} are
+tried in order.
 
 @item --options
 Display the options in effect for this Ledger invocation, along with
@@ -6882,12 +6882,12 @@ report.
 @item --unrealized-gains @var{STR}
 Allow the user to specify what account name should be used for
 unrealized gains.  Defaults to @samp{"Equity:Unrealized Gains"}.
-Often set in one's @file{~/.ledgerrc} file to change the default.
+Often set in one's init file to change the default.
 
 @item --unrealized-losses @var{STR}
 Allow the user to specify what account name should be used for
 unrealized losses.  Defaults to @samp{"Equity:Unrealized Losses"}.
-Often set in one's @file{~/.ledgerrc} file to change the default.
+Often set in one's init file to change the default.
 
 @item --unround
 Perform all calculations without rounding and display results to full
@@ -7275,8 +7275,7 @@ Change the basic date format used by reports.  The default uses a date
 like @samp{2004/08/01}, which represents the default date format of
 @code{%Y/%m/%d}.  To change the way dates are printed in general, the
 easiest way is to put @option{--date-format @var{DATE_FORMAT}} in the
-Ledger initialization file @file{~/.ledgerrc} (or the file referred to
-by @env{LEDGER_INIT}).
+Ledger init file (or the file referred to by @env{LEDGER_INIT}).
 
 @item --format @var{FORMAT_STRING}
 @itemx -F @var{FORMAT_STRING}
@@ -8576,7 +8575,7 @@ $ ledger -f expr.dat --format "»%(trim(' 	Trimmed	 '))«\n" reg assets
 @end smallexample
 @end defun
 
-@defun truncatedstring total_len account_len
+@defun truncated string total_len account_len
 Truncate @var{string} to @var{total_len} ensuring that each account is at least
 @var{account_len} long.
 @end defun
@@ -9906,8 +9905,9 @@ Ignore init files and environment variables for the ledger run.
 
 @item --debug @var{CODE}
 If Ledger has been built with debug options this will provide extra
-data during the run.  The following are the available @var{CODES} to
-debug:
+data during the run.  Listed below are the available @var{CODES} to
+debug. You can provide multiple using a regex expression like
+"@code{(account.display|expr.calc)}".
 
 @multitable @columnfractions .32 .43 .27
 @item @code{account.display}             @tab @code{draft.xact}                       @tab @code{option.names}
