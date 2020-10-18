@@ -25,14 +25,17 @@ pkgs.stdenv.mkDerivation {
   src = ./.;
 
   nativeBuildInputs = with pkgs; [ cmake ];
-  buildInputs = with pkgs; [ boost gmp mpfr libedit python texinfo gnused gpgme ];
+  buildInputs = with pkgs; [ boost gmp mpfr libedit python3 texinfo gnused gpgme ];
 
   enableParallelBuilding = true;
 
   cmakeFlags = [ "-DCMAKE_INSTALL_LIBDIR=lib" "-DUSE_GPGME=1" ];
 
   buildPhase = "make -j$NIX_BUILD_CORES";
-  checkPhase = "ctest -j$NIX_BUILD_CORES";
+  checkPhase = ''
+    export LD_LIBRARY_PATH=$PWD
+    ctest -j$NIX_BUILD_CORES
+  '';
 
   doCheck = true;
 
