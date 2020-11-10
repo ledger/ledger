@@ -5675,7 +5675,7 @@ Limit the processing to transactions before @var{DATE}.
 
 @item --period @var{PERIOD_EXPRESSION}
 @itemx -p @var{PERIOD_EXPRESSION}
-Limit the processing to transactions in @var{PERIOD_EXPRESSION}.
+Limit the processing to transactions in @var{PERIOD_EXPRESSION} (see @ref{Period Expressions}).
 
 @item --period-sort @var{VEXPR}
 Sort postings within each period according to @var{VEXPR}.
