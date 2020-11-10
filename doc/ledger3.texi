@@ -7656,6 +7656,7 @@ option settings in the file @file{~/.ledgerrc} one option per line, for example:
 
 @smallexample @c input:validate
 --pager /bin/cat
+--date-format %d.%m.%Y
 @end smallexample
 
 @node Period Expressions,  , Detailed Option Description, Command-Line Syntax
