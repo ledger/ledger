@@ -719,7 +719,7 @@ void put_post(property_tree::ptree& st, const post_t& post)
     std::ostringstream buf;
     buf.width(sizeof(unsigned long) * 2);
     buf.fill('0');
-    buf << std::hex << reinterpret_cast<unsigned long>(post.account);
+    buf << std::hex << reinterpret_cast<intptr_t>(post.account);
 
     t.put("<xmlattr>.ref", buf.str());
     t.put("name", post.account->fullname());

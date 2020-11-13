@@ -369,7 +369,7 @@ namespace {
   }
 
   value_t get_addr(item_t& item) {
-    return long(&item);
+    return long(reinterpret_cast<intptr_t>(&item));
   }
 
   value_t get_depth(item_t&) {
