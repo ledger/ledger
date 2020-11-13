@@ -306,7 +306,7 @@ namespace {
   }
 
   value_t get_addr(account_t& account) {
-    return long(&account);
+    return long(reinterpret_cast<intptr_t>(&account));
   }
 
   value_t get_depth_parent(account_t& account)
@@ -770,7 +770,7 @@ void put_account(property_tree::ptree& st, const account_t& acct,
     std::ostringstream buf;
     buf.width(sizeof(unsigned long) * 2);
     buf.fill('0');
-    buf << std::hex << reinterpret_cast<unsigned long>(&acct);
+    buf << std::hex << reinterpret_cast<intptr_t>(&acct);
 
     st.put("<xmlattr>.id", buf.str());
 
