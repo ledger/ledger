@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, unicode_literals
+from io import open
 
 import os
 import re
 import sys
 import shlex
+import locale
 import hashlib
 import argparse
 import subprocess
@@ -45,9 +47,7 @@ class DocTests:
     return example
 
   def test_id(self, example):
-    example_id = example.rstrip()
-    if sys.version_info.major > 2:
-        example_id = example_id.encode('utf-8')
+    example_id = example.rstrip().encode('utf-8')
     return hashlib.sha1(example_id).hexdigest()[0:7].upper()
 
   def find_examples(self):
@@ -123,9 +123,9 @@ class DocTests:
       else:
         return None
 
-    command_parts = shlex.split(command)
     if sys.version_info.major == 2:
-      command_parts = map(lambda x: unicode(x, 'utf-8'), command_parts)
+      command = command.encode(locale.getpreferredencoding())
+    command_parts = shlex.split(command)
     command = filter(lambda x: x != '\n', command_parts)
     if sys.version_info.major > 2:
         command = list(command)
@@ -157,7 +157,7 @@ class DocTests:
       temp = list(set(self.tests).difference(tests))
       if len(temp) > 0:
         print('Skipping non-existent examples: %s' % ', '.join(temp), file=sys.stderr)
-    
+
     for test_id in tests:
       validation = False
       if self.validate_dat_token in self.examples[test_id] or self.validate_cmd_token in self.examples[test_id]:
@@ -186,7 +186,7 @@ class DocTests:
           if not os.path.exists(test_file):
             if input:
               test_file_created = True
-              with open(test_file, 'w') as f:
+              with open(test_file, 'w', encoding='utf-8') as f:
                 f.write(input)
             elif os.path.exists(os.path.join(test_input_dir, test_file)):
               command[findex] = os.path.join(test_input_dir, test_file)
@@ -195,17 +195,16 @@ class DocTests:
           convert_file = command[convert_idx+1]
           convert_data = example[self.testfile_token][self.testfile_token]
           if not os.path.exists(convert_file):
-              with open(convert_file, 'w') as f:
+              with open(convert_file, 'w', encoding='utf-8') as f:
                 f.write(convert_data)
         except ValueError:
          pass
         error = None
         try:
           verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
+          verify = verify.decode('utf-8')
           if sys.platform == 'win32':
             verify = verify.replace('\r\n', '\n')
-          if sys.version_info.major > 2:
-              verify = verify.decode('utf-8')
           valid = (output == verify) or (not error and validation)
         except subprocess.CalledProcessError as e:
           error = e.output
@@ -241,7 +240,7 @@ class DocTests:
     return len(failed)
 
   def main(self):
-    self.file = open(self.sourcepath)
+    self.file = open(self.sourcepath, encoding='utf-8')
     self.current_line = 0
     self.find_examples()
     failed_examples = self.test_examples()

@@ -82,8 +82,8 @@ class LedgerHarness:
         if columns:
             insert += ' --columns=80'
 
-        command = re.sub('\$ledger', '%s%s %s' % \
-                         (self.ledger, insert, '--args-only'), command)
+        command = command.replace('$ledger', '"%s"%s %s' % \
+                         (self.ledger, insert, '--args-only'))
 
         valgrind = '/usr/bin/valgrind'
         if not os.path.isfile(valgrind):
