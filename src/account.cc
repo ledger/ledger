@@ -768,7 +768,7 @@ void put_account(property_tree::ptree& st, const account_t& acct,
 {
   if (pred(acct)) {
     std::ostringstream buf;
-    buf.width(sizeof(unsigned long) * 2);
+    buf.width(sizeof(intptr_t) * 2);
     buf.fill('0');
     buf << std::hex << reinterpret_cast<intptr_t>(&acct);
 

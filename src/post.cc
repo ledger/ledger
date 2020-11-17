@@ -727,7 +727,7 @@ void put_post(property_tree::ptree& st, const post_t& post)
     property_tree::ptree& t(st.put("account", ""));
 
     std::ostringstream buf;
-    buf.width(sizeof(unsigned long) * 2);
+    buf.width(sizeof(intptr_t) * 2);
     buf.fill('0');
     buf << std::hex << reinterpret_cast<intptr_t>(post.account);
 
