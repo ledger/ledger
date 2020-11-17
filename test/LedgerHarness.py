@@ -50,8 +50,8 @@ class LedgerHarness:
             print("Cannot find source path at '%s'" % argv[2])
             sys.exit(1)
 
-        self.ledger     = os.path.abspath(argv[1]).replace('\\', '/')
-        self.sourcepath = os.path.abspath(argv[2]).replace('\\', '/')
+        self.ledger     = os.path.abspath(argv[1])
+        self.sourcepath = os.path.abspath(argv[2])
         self.succeeded  = 0
         self.failed     = 0
         self.verify     = '--verify' in argv
@@ -82,8 +82,8 @@ class LedgerHarness:
         if columns:
             insert += ' --columns=80'
 
-        command = re.sub('\$ledger', '%s%s %s' % \
-                         (self.ledger, insert, '--args-only'), command)
+        command = command.replace('$ledger', '"%s"%s %s' % \
+                         (self.ledger, insert, '--args-only'))
 
         valgrind = '/usr/bin/valgrind'
         if not os.path.isfile(valgrind):

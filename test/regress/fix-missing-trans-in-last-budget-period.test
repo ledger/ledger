@@ -58,7 +58,7 @@
    A:B     59.00 USD
    Cash
 
-test reg --budget -b 2014/10 -e 2015/02 --columns 80 --date-format "%F" reg ^Bu
+test reg --budget -b 2014/10 -e 2015/02 --columns 80 --date-format "%Y-%m-%d" reg ^Bu
 2014-10-01 Budget transaction   [Budget:A]              -100.00 USD  -100.00 USD
 2014-10-01 Budget transaction   [Budget:Z]              -100.00 USD  -200.00 USD
 2014-10-01 toto0                [Budget:A]                 0.01 USD  -199.99 USD

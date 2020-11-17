@@ -43,9 +43,8 @@ class RegressFile(object):
         self.fd = open(self.filename, encoding='utf-8')
 
     def transform_line(self, line):
-        line = re.sub('\$sourcepath', harness.sourcepath, line)
-        line = re.sub('\$FILE',
-                      os.path.abspath(self.filename).replace('\\', '/'), line)
+        line = line.replace('$sourcepath', harness.sourcepath)
+        line = line.replace('$FILE', os.path.abspath(self.filename))
         return line
 
     def read_test(self):
@@ -169,6 +168,7 @@ class RegressFile(object):
             if sys.platform == 'win32':
                 process_error = [l.replace('\r\n', '\n').replace('\\', '/')
                                  for l in process_error]
+                test['error'] = [l.replace('\\', '/') for l in test['error']]
             for line in unified_diff(test['error'], process_error):
                 index += 1
                 if index < 3:
