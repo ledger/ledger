@@ -35,8 +35,6 @@
                                 // was moved there for the sake of clarity here
 #include "session.h"
 
-#include <boost/nowide/args.hpp>
-
 #ifdef HAVE_EDIT
 #include <editline/readline.h>
 #endif
@@ -52,8 +50,6 @@ namespace ledger {
 int main(int argc, char * argv[], char * envp[])
 {
   int status = 1;
-
-  boost::nowide::args a(argc,argv); // Fix arguments - make them UTF-8
 
 #if HAVE_BOOST_PYTHON
   argv0 = argv[0];
