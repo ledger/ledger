@@ -186,7 +186,7 @@ class DocTests:
           if not os.path.exists(test_file):
             if input:
               test_file_created = True
-              with open(test_file, 'w') as f:
+              with open(test_file, 'w', encoding='utf-8') as f:
                 f.write(input)
             elif os.path.exists(os.path.join(test_input_dir, test_file)):
               command[findex] = os.path.join(test_input_dir, test_file)
@@ -195,17 +195,17 @@ class DocTests:
           convert_file = command[convert_idx+1]
           convert_data = example[self.testfile_token][self.testfile_token]
           if not os.path.exists(convert_file):
-              with open(convert_file, 'w') as f:
+              with open(convert_file, 'w', encoding='utf-8') as f:
                 f.write(convert_data)
         except ValueError:
          pass
         error = None
         try:
           verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
-          if sys.platform == 'win32':
-            verify = verify.replace('\r\n', '\n')
           if sys.version_info.major > 2:
               verify = verify.decode('utf-8')
+          if sys.platform == 'win32':
+            verify = verify.replace('\r\n', '\n')
           valid = (output == verify) or (not error and validation)
         except subprocess.CalledProcessError as e:
           error = e.output
@@ -241,7 +241,7 @@ class DocTests:
     return len(failed)
 
   def main(self):
-    self.file = open(self.sourcepath)
+    self.file = open(self.sourcepath, encoding='utf-8')
     self.current_line = 0
     self.find_examples()
     failed_examples = self.test_examples()

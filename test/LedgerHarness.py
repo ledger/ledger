@@ -50,8 +50,8 @@ class LedgerHarness:
             print("Cannot find source path at '%s'" % argv[2])
             sys.exit(1)
 
-        self.ledger     = os.path.abspath(argv[1])
-        self.sourcepath = os.path.abspath(argv[2])
+        self.ledger     = os.path.abspath(argv[1]).replace('\\', '/')
+        self.sourcepath = os.path.abspath(argv[2]).replace('\\', '/')
         self.succeeded  = 0
         self.failed     = 0
         self.verify     = '--verify' in argv
