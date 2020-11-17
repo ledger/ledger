@@ -755,6 +755,9 @@ class PrepareBuild(CommandLineApp):
         if system.startswith('CYGWIN'):
             self.configure_args.append('-G')
             self.configure_args.append('Unix Makefiles')
+        elif system.startswith('MINGW'):
+            self.configure_args.append('-G')
+            self.configure_args.append('MSYS Makefiles')
         elif self.options.use_ninja:
             self.configure_args.append('-GNinja')
 
