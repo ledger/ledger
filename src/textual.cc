@@ -1705,7 +1705,11 @@ post_t * instance_t::parse_post(char *          line,
           // as amount cannot store more than 1 commodity.
           post->amount = diff.to_amount();
           DEBUG("textual.parse", "line " << context.linenum << ": "
-                << "Overwrite null posting");
+                << "Overwrite null posting with " << diff.to_amount());
+        } else {
+          post->amount = amt - amt;  // this is '0' with the correct commodity.
+          DEBUG("textual.parse", "line " << context.linenum << ": "
+                << "Overwrite null posting with zero diff with " << amt - amt);
         }
       } else {
         // balance assertion
