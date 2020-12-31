@@ -7993,10 +7993,15 @@ This is always the present moment/date.
 @table @code
 
 @item d
+@itemx date
 A posting's date, as the number of seconds past the epoch.  This
 is always ``today'' for an account.
 
+@item aux_date
+A posting's aux date
+
 @item a
+@itemx amount
 The posting's amount; the balance of an account, without
 considering children.
 
@@ -8020,7 +8025,14 @@ The index of a posting, or the count of postings affecting an
 account.
 
 @item X
+@itemx cleared
 @samp{1} if a posting's transaction has been cleared, @samp{0} otherwise.
+
+@item uncleared
+@samp{1} if a posting's transaction state is uncleared, @samp{0} otherwise.
+
+@item pending
+@samp{1} if a posting's transaction state is pending, @samp{0} otherwise.
 
 @item R
 @samp{1} if a posting is not virtual, @samp{0} otherwise.
