@@ -12,11 +12,9 @@ set(Ledger_TEST_TIMEZONE "America/Chicago")
 
 # Point CMake at any custom modules we may ship
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-if(${CMAKE_VERSION} VERSION_LESS "3.16.0")
-  if(NOT (${CMAKE_VERSION} VERSION_LESS "3.7"))
-    # use backported module from 3.15 (introduced 3.12) to support older versions of cmake
-    list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/python-backport")
-  endif()
+if ((${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.7.0") AND (${CMAKE_VERSION} VERSION_LESS "3.16.0"))
+  # use backported module from 3.15 (introduced 3.12) to support older versions of cmake
+  list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/python-backport")
 endif()
 
 enable_testing()
