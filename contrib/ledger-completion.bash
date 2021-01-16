@@ -23,7 +23,7 @@
 
 _ledger()
 {
-    local cur prev command options
+    local cur prev commands options
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
