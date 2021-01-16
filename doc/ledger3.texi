@@ -4735,6 +4735,16 @@ ledger how to interpret the dates.
 Importing csv files is a lot of work, but is very amenable to
 scripting.
 
+If your csv has only one amount column with opposite signs for credits
+and debits, this is also supported. For example, the first fiew lines
+of the above account could also be in the following format:
+
+@smallexample
+,date,payee,note,credit,,code,
+767406,12/13/2011,"Deposit","CASH DEPOSIT",45.00,00001646.89,,
+767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",-8.80,00001640.04,,
+@end smallexample
+
 If there are columns in the bank data you would like to keep in your
 ledger data, besides the primary fields described above, you can name
 them in the field descriptor list and Ledger will include them in the
