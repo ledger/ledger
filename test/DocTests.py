@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import shlex
+import locale
 import hashlib
 import argparse
 import subprocess
@@ -46,9 +47,7 @@ class DocTests:
     return example
 
   def test_id(self, example):
-    example_id = example.rstrip()
-    if sys.version_info.major > 2:
-        example_id = example_id.encode('utf-8')
+    example_id = example.rstrip().encode('utf-8')
     return hashlib.sha1(example_id).hexdigest()[0:7].upper()
 
   def find_examples(self):
@@ -124,9 +123,9 @@ class DocTests:
       else:
         return None
 
-    command_parts = shlex.split(command)
     if sys.version_info.major == 2:
-      command_parts = map(lambda x: unicode(x, 'utf-8'), command_parts)
+      command = command.encode(locale.getpreferredencoding(False))
+    command_parts = shlex.split(command)
     command = filter(lambda x: x != '\n', command_parts)
     if sys.version_info.major > 2:
         command = list(command)
@@ -158,7 +157,7 @@ class DocTests:
       temp = list(set(self.tests).difference(tests))
       if len(temp) > 0:
         print('Skipping non-existent examples: %s' % ', '.join(temp), file=sys.stderr)
-    
+
     for test_id in tests:
       validation = False
       if self.validate_dat_token in self.examples[test_id] or self.validate_cmd_token in self.examples[test_id]:
@@ -203,8 +202,7 @@ class DocTests:
         error = None
         try:
           verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
-          if sys.version_info.major > 2:
-              verify = verify.decode('utf-8')
+          verify = verify.decode(locale.getpreferredencoding(False))
           if sys.platform == 'win32':
             verify = verify.replace('\r\n', '\n')
           valid = (output == verify) or (not error and validation)
