@@ -124,7 +124,7 @@ class DocTests:
         return None
 
     if sys.version_info.major == 2:
-      command = command.encode(locale.getpreferredencoding(False))
+      command = command.encode(locale.getpreferredencoding())
     command_parts = shlex.split(command)
     command = filter(lambda x: x != '\n', command_parts)
     if sys.version_info.major > 2:
@@ -202,7 +202,7 @@ class DocTests:
         error = None
         try:
           verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
-          verify = verify.decode(locale.getpreferredencoding(False))
+          verify = verify.decode(locale.getpreferredencoding())
           if sys.platform == 'win32':
             verify = verify.replace('\r\n', '\n')
           valid = (output == verify) or (not error and validation)
