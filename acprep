@@ -13,6 +13,7 @@ import os
 import re
 import shutil
 import sys
+import locale
 
 try:
     import hashlib
@@ -501,7 +502,7 @@ class PrepareBuild(CommandLineApp):
 
         self.log.info("Installing Ledger's build dependencies ...")
 
-        system = self.get_stdout('uname', '-s').decode('utf8')
+        system = self.get_stdout('uname', '-s').decode(locale.getpreferredencoding())
 
         if system == 'Darwin':
             if exists('/opt/local/bin/port'):
@@ -744,7 +745,7 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append(self.source_dir)
 
     def setup_for_system(self):
-        system = str(self.get_stdout('uname', '-s'))
+        system = self.get_stdout('uname', '-s').decode(locale.getpreferredencoding())
         self.log.info('System type is => ' + system)
 
         if self.options.enable_doxygen:
