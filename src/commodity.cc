@@ -465,18 +465,23 @@ int commodity_t::compare_by_commodity::operator()(const amount_t * left,
     amount_t rightprice(*arightcomm.details.price);
 
     if (leftprice.commodity() != rightprice.commodity()) {
-      // Since we have two different amounts, there's really no way
-      // to establish a true sorting order; we'll just do it based
-      // on the numerical values.
-      leftprice.clear_commodity();
-      rightprice.clear_commodity();
+      // Since we have two different amounts, there's really no way to
+      // establish a true sorting order; we'll just do it based on the
+      // numerical values, before falling back to comparing the prices
+      // with their original commodity.
+      amount_t leftpricenumeric(leftprice);
+      amount_t rightpricenumeric(rightprice);
+      leftpricenumeric.clear_commodity();
+      rightpricenumeric.clear_commodity();
       DEBUG("commodity.compare",
             "both have price, commodities don't match, recursing");
-      int cmp2 = commodity_t::compare_by_commodity()(&leftprice, &rightprice);
+      int cmp2 = commodity_t::compare_by_commodity()(&leftpricenumeric, &rightpricenumeric);
       if (cmp2 != 0) {
         DEBUG("commodity.compare", "recursion found a disparity");
         return cmp2;
       }
+      DEBUG("commodity.compare", "recursion found no difference, comparing prices with commodity");
+      return commodity_t::compare_by_commodity()(&leftprice, &rightprice);
     } else {
       if (leftprice < rightprice) {
         DEBUG("commodity.compare", "left price is less");
