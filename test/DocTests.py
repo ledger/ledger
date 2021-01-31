@@ -202,7 +202,7 @@ class DocTests:
         error = None
         try:
           verify = subprocess.check_output(command, stderr=subprocess.STDOUT)
-          verify = verify.decode(locale.getpreferredencoding())
+          verify = verify.decode('utf-8')
           if sys.platform == 'win32':
             verify = verify.replace('\r\n', '\n')
           valid = (output == verify) or (not error and validation)
