@@ -35,6 +35,10 @@
                                 // was moved there for the sake of clarity here
 #include "session.h"
 
+#if HAVE_BOOST_NOWIDE
+#include <boost/nowide/args.hpp>
+#endif
+
 #ifdef HAVE_EDIT
 #include <editline/readline.h>
 #endif
@@ -50,6 +54,10 @@ namespace ledger {
 int main(int argc, char * argv[], char * envp[])
 {
   int status = 1;
+
+#if HAVE_BOOST_NOWIDE
+  boost::nowide::args a(argc, argv); // Fix command-line encoding on Windows
+#endif
 
 #if HAVE_BOOST_PYTHON
   argv0 = argv[0];
