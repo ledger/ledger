@@ -83,7 +83,12 @@ endif()
 # Set BOOST_ROOT to help CMake to find the right Boost version
 find_package(Boost 1.49.0
   REQUIRED date_time filesystem system iostreams regex unit_test_framework
-  ${BOOST_PYTHON})
+  ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide)
+
+# enable Boost::nowide library (for UTF8 command line args on Windows)
+if (Boost_NOWIDE_FOUND)
+  set(HAVE_BOOST_NOWIDE 1)
+endif()
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
