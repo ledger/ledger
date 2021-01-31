@@ -86,6 +86,7 @@ find_package(Boost 1.49.0
   ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide)
 
 # enable Boost::nowide library (for UTF8 command line args on Windows)
+set(HAVE_BOOST_NOWIDE 0)
 if (Boost_NOWIDE_FOUND)
   set(HAVE_BOOST_NOWIDE 1)
 endif()
