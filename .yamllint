@@ -1,2 +1,5 @@
-document-start: disable
-line-length: disable
+extends: default
+
+rules:
+  document-start: disable
+  line-length: disable
