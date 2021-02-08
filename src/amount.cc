@@ -976,7 +976,7 @@ namespace {
     char buf[256];
     char c = peek_next_nonws(in);
     READ_INTO(in, buf, 255, c,
-              std::isdigit(c) || c == '-' || c == '.' || c == ',');
+              std::isdigit(c) || c == '.' || c == ',');
 
     string::size_type len = std::strlen(buf);
     while (len > 0 && ! std::isdigit(buf[len - 1])) {
