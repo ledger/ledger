@@ -4559,7 +4559,7 @@ report -J -l "Ua>=@{\$0.01@}" -d "d>=[last feb]" reg ^assets ^liab
 The last report uses both a calculation predicate @option{--limit
 @var{EXPR} (-l)} and a display predicate @option{--display @var{EXPR}
 (-d)}.  The calculation predicate limits the report to postings whose
-amount is greater than or equal to $1 (which can only happen if the
+amount is greater than or equal to $0.01 (which can only happen if the
 posting amount is in dollars).  The display predicate limits the
 transactions @emph{displayed} to just those since last February, even
 though those transactions from before will be computed as part of the
