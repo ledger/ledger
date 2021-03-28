@@ -118,7 +118,7 @@ bool valid_utf8_file(const char* file_name)
 }
 ```
 
-Because the function `utf8::is_valid()` works with input iterators, we were able to pass an `istreambuf_iterator` to it and read the content of the file directly without loading it to the memory first.
+Because the function `utf8::is_valid()` works with input iterators, we were able to pass an `istreambuf_iterator` to `it` and read the content of the file directly without loading it to the memory first.
 
 Note that other functions that take input iterator arguments can be used in a similar way. For instance, to read the content of a UTF-8 encoded text file and convert the text to UTF-16, just do something like:
 
