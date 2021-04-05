@@ -18,8 +18,6 @@ Boost libraries consist of inline functions and templates in header files.
 **[Boost.Python]**:  C++ library which enables seamless interoperability
 between C++ and the Python programming language.
 
-**[Cheetah]**: a Python templating engine, used by `./python/server.py`.
-
 **[CMake]**: A cross platform system for building from source code.  It uses
 the `CMakeLists.txt` files.
 
@@ -120,7 +118,6 @@ cores:
 [GitHub Issues]: https://github.com/ledger/ledger/issues
 [GMP]: http://gmplib.org/
 [MPFR]: http://www.mpfr.org/
-[Cheetah]: http://www.cheetahtemplate.org
 [CMake]: http://www.cmake.org
 [Doxygen]: http://doxygen.org
 [Markdown]: https://daringfireball.net/projects/markdown/
