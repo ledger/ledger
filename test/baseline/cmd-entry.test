@@ -41,3 +41,26 @@ __ERROR__
 Error: No accounts, and no past transaction matching 'no:such:account'
 end test
 
+test entry --now 2012/03/25 thursday "Test 1"
+2012/03/22 Test 1
+    A                                         $10.00
+    B
+end test
+
+test --now 2012/03/25 entry tue at "Test 2"
+2012/03/20 Test 2
+    C                                      20.00 EUR
+    D
+end test
+
+test --now 2012/03/25 entry "Test 1" from D
+2012/03/25 Test 1
+    A                                         $10.00
+    D
+end test
+
+test --now 2012/03/25 entry "Test 1" from -> 1
+__ERROR__
+Error: Invalid xact command arguments
+end test
+
