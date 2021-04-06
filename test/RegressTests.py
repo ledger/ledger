@@ -182,7 +182,7 @@ class RegressFile(object):
                     printed = True
                 print(" ", line,)
 
-        if test['exitcode'] is None or test['exitcode'] == p.wait():
+        if test['exitcode'] == p.wait():
             if success:
                 harness.success()
             else:
@@ -191,10 +191,9 @@ class RegressFile(object):
                 print(p.stderr.read())
         else:
             if success: print
-            if test['exitcode']:
-                self.notify_user("FAILURE in exit code (%d != %d) from %s:"
-                                 % (test['exitcode'], p.returncode, self.filename),
-                                 test)
+            self.notify_user("FAILURE in exit code (%d != %d) from %s:"
+                             % (test['exitcode'], p.returncode, self.filename),
+                             test)
             harness.failure(os.path.basename(self.filename))
 
     def run_tests(self):
