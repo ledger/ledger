@@ -108,7 +108,7 @@ void draft_t::parse_args(const value_t& args)
       check_for_date = false;
     }
     else if (check_for_date &&
-             bool(weekday = string_to_day_of_week(what[0]))) {
+             bool(weekday = string_to_day_of_week((*begin).to_string()))) {
 #if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
@@ -127,35 +127,35 @@ void draft_t::parse_args(const value_t& args)
       string arg = (*begin).to_string();
 
       if (arg == "at") {
-        if (begin == end)
+        if (++begin == end)
           throw std::runtime_error(_("Invalid xact command arguments"));
-        tmpl->payee_mask = (*++begin).to_string();
+        tmpl->payee_mask = (*begin).to_string();
       }
       else if (arg == "to" || arg == "from") {
         if (! post || post->account_mask) {
           tmpl->posts.push_back(xact_template_t::post_template_t());
           post = &tmpl->posts.back();
         }
-        if (begin == end)
+        if (++begin == end)
           throw std::runtime_error(_("Invalid xact command arguments"));
-        post->account_mask = mask_t((*++begin).to_string());
+        post->account_mask = mask_t((*begin).to_string());
         post->from = arg == "from";
       }
       else if (arg == "on") {
-        if (begin == end)
+        if (++begin == end)
           throw std::runtime_error(_("Invalid xact command arguments"));
-        tmpl->date = parse_date((*++begin).to_string());
+        tmpl->date = parse_date((*begin).to_string());
         check_for_date = false;
       }
       else if (arg == "code") {
-        if (begin == end)
+        if (++begin == end)
           throw std::runtime_error(_("Invalid xact command arguments"));
-        tmpl->code = (*++begin).to_string();
+        tmpl->code = (*begin).to_string();
       }
       else if (arg == "note") {
-        if (begin == end)
+        if (++begin == end)
           throw std::runtime_error(_("Invalid xact command arguments"));
-        tmpl->note = (*++begin).to_string();
+        tmpl->note = (*begin).to_string();
       }
       else if (arg == "rest") {
         ;                       // just ignore this argument
@@ -163,9 +163,9 @@ void draft_t::parse_args(const value_t& args)
       else if (arg == "@" || arg == "@@") {
         amount_t cost;
         post->cost_operator = arg;
-        if (begin == end)
+        if (++begin == end)
           throw std::runtime_error(_("Invalid xact command arguments"));
-        arg = (*++begin).to_string();
+        arg = (*begin).to_string();
         if (! cost.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE))
           throw std::runtime_error(_("Invalid xact command arguments"));
         post->cost = cost;
