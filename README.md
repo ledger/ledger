@@ -162,7 +162,7 @@ Now that you're up and running, here are a few resources to keep in mind:
 
  - [Homepage]
  - [Documentation]
- - [IRC channel][IRC]
+ - [IRC channel][IRC]: #ledger channel on Freenode
  - [Mailing List / Forum][mailing list]
  - [GitHub project page][github]
  - [Code analysis][openhub]
