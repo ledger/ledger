@@ -38,6 +38,5 @@ endif()
 
 if(UTF8_TESTS)
     enable_testing()
-    add_subdirectory(extern/gtest)
     add_subdirectory(tests)
 endif()

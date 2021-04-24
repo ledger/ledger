@@ -13,24 +13,21 @@ add_executable(noexceptionstests
 )
 
 target_link_libraries(negative PRIVATE utf8::cpp)
-target_link_libraries(cpp11 PRIVATE
-    utf8::cpp
-    gtest_main
-    )
-target_link_libraries(apitests PRIVATE
-    utf8::cpp
-    gtest_main
-)
+target_link_libraries(cpp11 PRIVATE utf8::cpp)
+target_link_libraries(apitests PRIVATE utf8::cpp)
+target_link_libraries(noexceptionstests PRIVATE utf8::cpp)
 
-target_link_libraries(noexceptionstests PRIVATE
-    utf8::cpp
-    gtest_main
-)
 target_compile_options(noexceptionstests PUBLIC -fno-exceptions)
 
-set_target_properties(negative
+set_target_properties(negative apitests noexceptionstests
                       PROPERTIES
                       CXX_STANDARD 98
+                      CXX_STANDARD_REQUIRED YES
+                      CXX_EXTENSIONS NO)
+
+set_target_properties(cpp11
+                      PROPERTIES
+                      CXX_STANDARD 11
                       CXX_STANDARD_REQUIRED YES
                       CXX_EXTENSIONS NO)
 

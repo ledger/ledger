@@ -1,4 +1,5 @@
-#include "gtest/gtest.h"
+#define F_TEST_NO_MAIN
+#include "../extern/ftest/ftest.h"
 #include "utf8.h"
 
 #include <string>
