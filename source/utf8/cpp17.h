@@ -29,15 +29,11 @@ DEALINGS IN THE SOFTWARE.
 #define UTF8_FOR_CPP_7e906c01_03a3_4daf_b420_ea7ea952b3c9
 
 #include "checked.h"
+#include "cpp11.h"
 #include <string>
 
 namespace utf8
 {
-
-    inline void append(char32_t cp, std::string& s)
-    {
-        append(uint32_t(cp), std::back_inserter(s));
-    }
 
     inline std::string utf16to8(std::u16string_view s)
     {
