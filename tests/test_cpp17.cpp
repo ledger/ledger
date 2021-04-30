@@ -28,7 +28,7 @@ TEST(CPP17APITests, test_utf32to8)
 {
     u32string utf32string = {0x448, 0x65E5, 0x10346};
     u32string_view utf32stringview(utf32string);
-    string utf8result = utf32to8(utf32string);
+    string utf8result = utf32to8(utf32stringview);
     EXPECT_EQ (utf8result.size(), 9);
 }
 
