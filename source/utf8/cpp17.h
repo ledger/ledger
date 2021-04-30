@@ -66,7 +66,7 @@ namespace utf8
     inline std::size_t find_invalid(std::string_view s)
     {
         std::string_view::const_iterator invalid = find_invalid(s.begin(), s.end());
-        return (invalid == s.end()) ? std::string::npos : (invalid - s.begin());
+        return (invalid == s.end()) ? std::string_view::npos : (invalid - s.begin());
     }
 
     inline bool is_valid(std::string_view s)
