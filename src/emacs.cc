@@ -41,7 +41,7 @@ namespace ledger {
 	void format_emacs_posts::write_xact(xact_t& xact)
 	{
 		if (xact.pos)
-			out << "\"" << xact.pos->pathname.string() << "\" "
+			out << "\"" << escape_string(xact.pos->pathname.string()) << "\" "
 					<< xact.pos->beg_line << " ";
 		else
 			out << "\"\" " << -1 << " ";
@@ -52,14 +52,14 @@ namespace ledger {
 		out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
 
 		if (xact.code)
-			out << "\"" << *xact.code << "\" ";
+			out << "\"" << escape_string(*xact.code) << "\" ";
 		else
 			out << "nil ";
 
 		if (xact.payee.empty())
 			out << "nil";
 		else
-			out << "\"" << xact.payee << "\"";
+			out << "\"" << escape_string(xact.payee) << "\"";
 
 		out << "\n";
 	}
@@ -85,8 +85,8 @@ namespace ledger {
 			else
 				out << "  (" << -1 << " ";
 
-			out << "\"" << post.reported_account()->fullname() << "\" \""
-					<< post.amount << "\"";
+			out << "\"" << escape_string(post.reported_account()->fullname()) << "\" \""
+					<< escape_string(post.amount) << "\"";
 
 			switch (post.state()) {
 			case item_t::UNCLEARED:
@@ -101,7 +101,7 @@ namespace ledger {
 			}
 
 			if (post.cost)
-				out << " \"" << *post.cost << "\"";
+				out << " \"" << escape_string(*post.cost) << "\"";
 			if (post.note)
 				out << " \"" << escape_string(*post.note) << "\"";
 			out << ")";
