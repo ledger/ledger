@@ -176,7 +176,7 @@ hack as much as you like, then send me a pull request via GitHub.
 [documentation]: http://www.ledger-cli.org/docs.html
 [mailing list]: http://list.ledger-cli.org/
 [wiki]: http://wiki.ledger-cli.org/
-[IRC]: irc://irc.freenode.net/ledger
+[IRC]: irc://irc.libera.chat/ledger
 [github]: http://github.com/ledger/ledger
 [ledger/vim-ledger repository]: https://github.com/ledger/vim-ledger
 [Homebrew]: http://brew.sh/

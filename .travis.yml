@@ -76,7 +76,7 @@ notifications:
     on_success: change
     on_failure: change
   irc:
-    channels: [ "chat.freenode.net#ledger" ]
+    channels: [ "irc.libera.chat#ledger" ]
     on_success: change
     on_failure: change
   webhooks:

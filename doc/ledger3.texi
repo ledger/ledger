@@ -418,7 +418,7 @@ join the Ledger mailing list at
 @url{http://groups.google.com/group/ledger-cli}.
 
 You can also find help in the @code{#ledger} channel on the IRC server
-@code{irc.freenode.net}.
+@code{irc.libera.chat}.
 
 @node  Third-Party Ledger Tutorials,  , Getting help, Introduction to Ledger
 @section Third-Party Ledger Tutorials
