@@ -51,6 +51,9 @@ TEST(CPP11APITests, test_utf8to16)
     EXPECT_EQ (utf16result.size(), 4);
     EXPECT_EQ (utf16result[2], 0xd834);
     EXPECT_EQ (utf16result[3], 0xdd1e);
+    // Just to make sure it compiles with string literals
+    utf8to16(u8"simple");
+    utf8to16("simple");
 }
 
 TEST(CPP11APITests, test_utf32to8)

@@ -76,4 +76,13 @@ TEST(CPP17APITests, test_starts_with_bom)
     bool no_bbom = starts_with_bom(threechars);
     EXPECT_FALSE (no_bbom);
 }
+
+TEST(CPP17APITests, string_class_and_literals)
+{
+    const char* twochars = u8"ab";
+    EXPECT_TRUE (is_valid(twochars));
+    const string two_chars_string(twochars);
+    EXPECT_TRUE (is_valid(two_chars_string));
+}
+
 #endif  // C++ 11 or later
