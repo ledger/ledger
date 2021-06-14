@@ -35,6 +35,8 @@
 #include "parser.h"
 #include "scope.h"
 
+#include <boost/smart_ptr/scoped_ptr.hpp>
+
 namespace ledger {
 
 expr_t::expr_t() : base_type()
