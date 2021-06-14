@@ -45,6 +45,8 @@
 #include "expr.h"
 #include "unistring.h"
 
+#include <boost/smart_ptr/scoped_ptr.hpp>
+
 namespace ledger {
 
 class unistring;
