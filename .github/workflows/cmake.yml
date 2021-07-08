@@ -1,0 +1,65 @@
+name: CMake
+
+on:
+  push:
+    branches: master
+  pull_request:
+    branches: master
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # os: [ubuntu-latest,macos-latest]
+        config:
+          - {
+            os: ubuntu-latest,
+            name: Ubuntu,
+            PY_MAJOR: 3,
+            cmake_args: -DUSE_PYTHON=ON -DUSE_GPGME=ON
+          }
+          - {
+            os: macos-latest,
+            name: MacOS,
+            PY_MAJOR: 3,
+            cmake_args: -DUSE_PYTHON=ON -DUSE_GPGME=ON
+          }
+    steps:
+      - uses: actions/checkout@v2
+        name: Check out repository code
+
+      - if: runner.os == 'Linux'
+        name: Linux dependencies
+        run: |
+          sudo apt-get install libxml2-utils libgmp-dev libmpfr-dev libedit-dev libboost-dev libboost-test-dev libboost-regex-dev libboost-python-dev libboost-system-dev libboost-date-time-dev libboost-iostreams-dev libboost-filesystem-dev libboost-serialization-dev libgpgmepp-dev libgpg-error-dev libgpgme-dev
+
+      - if: runner.os == 'macOS'
+        name: Mac Dependencies
+        run: |
+          brew update
+          brew install boost boost-python3 gmp mpfr gpgme git
+
+      - name: Configure CMake
+        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{matrix.config.cmake_args}} -DBUILD_DEBUG=ON  -DPython_FIND_VERSION_MAJOR=${{matrix.config.PY_MAJOR}}
+        env:
+          BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
+
+      - name: Build
+        # Build your program with the given configuration
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        env:
+          BOOST_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
+
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        # Execute tests defined by the CMake configuration.
+        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+        run: ctest -C ${{env.BUILD_TYPE}}
