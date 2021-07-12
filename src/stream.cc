@@ -30,6 +30,7 @@
  */
 
 #include <system.hh>
+#include <sys/wait.h>
 
 #include "stream.h"
 
@@ -122,7 +123,7 @@ void output_stream_t::close()
     pipe_to_pager_fd = -1;
 
     int status;
-    wait(&status);
+    ::wait(&status);
     if (! WIFEXITED(status) || WEXITSTATUS(status) != 0)
       throw std::logic_error(_("Error in the pager"));
   }
