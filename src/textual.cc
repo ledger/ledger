@@ -312,6 +312,10 @@ std::streamsize instance_t::read_line(char *& line)
   check_for_signal();
 
   in.getline(context.linebuf, parse_context_t::MAX_LINE);
+
+  if (in.fail())
+      throw_(parse_error, _f("Line exceeds %1% characters") % parse_context_t::MAX_LINE);
+
   std::streamsize len = in.gcount();
 
   if (len > 0) {
@@ -329,7 +333,12 @@ std::streamsize instance_t::read_line(char *& line)
       line = context.linebuf;
     }
 
-    --len;
+    if (!in.eof()) {
+        // if we are not at the end of the file, len includes the new line character,
+        // even through it does not appear in linebuf
+        --len;
+    }
+
     while (len > 0 && std::isspace(line[len - 1])) // strip trailing whitespace
       line[--len] = '\0';
 
