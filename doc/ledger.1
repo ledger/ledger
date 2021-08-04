@@ -506,17 +506,16 @@ Direct
 to parse journals using the European standard comma as
 decimal separator, vice a period.
 .It Fl \-depth Ar INT
-Limit the depth of the account tree.  In a balance report, for example,
+Limit the depth of displayed accounts in balance and register reports.  Any
+accounts of greater depth are folded into their parent at the specified
+level.  For example with
 .Fl \-depth Ar 2
-will print balances only for accounts with two levels, i.e.
+the account
+.Sy Expenses:Entertainment:Dining
+would be folded into
 .Sy Expenses:Entertainment
-but not
-.Sy Expenses:Entertainment:Dining .
-This is a display predicate, which means it only affects display,
-not the total calculations.  In register reports,
-.Fl \-depth
-will collapse postings of child accounts beyond the given level and add
-their balances to the parent account.
+for display.  Importantly, this is a display predicate, which means it only
+affects display, not the total calculations.
 .It Fl \-detail
 Related to
 .Ic convert
