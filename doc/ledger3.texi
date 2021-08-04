@@ -6473,13 +6473,12 @@ And with @option{--dc} it becomes this:
 @end smallexample
 
 @item --depth @var{INT}
-Limit the depth of the account tree.  In a balance report, for example,
-a @samp{--depth 2} statement will print balances only for accounts with
-two levels, i.e. @samp{Expenses:Entertainment} but not
-@samp{Expenses:Entertainment:Dining}.  This is a display predicate, which
-means it only affects display, not the total calculations.  In register
-reports, @samp{--depth} will collapse postings of child accounts beyond
-the given level and add their balances to the parent account.
+Limit the depth of displayed accounts in balance and register reports.  Any
+accounts of greater depth are folded into their parent at the specified level.
+For example with @samp{--depth 2} the account @samp{Expenses:Entertainment}
+would be folded into @samp{Expenses:Entertainment:Dining} for display.
+Importantly, this is a display predicate, which means it only
+affects display, not the total calculations.
 
 @item --deviation
 Report each posting’s deviation from the average.  It is only meaningful
