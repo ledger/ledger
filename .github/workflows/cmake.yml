@@ -37,6 +37,7 @@ jobs:
       - if: runner.os == 'Linux'
         name: Linux dependencies
         run: |
+          sudo apt-get update -y
           sudo apt-get install libxml2-utils libgmp-dev libmpfr-dev libedit-dev libboost-dev libboost-test-dev libboost-regex-dev libboost-python-dev libboost-system-dev libboost-date-time-dev libboost-iostreams-dev libboost-filesystem-dev libboost-serialization-dev libgpgmepp-dev libgpg-error-dev libgpgme-dev
 
       - if: runner.os == 'macOS'
