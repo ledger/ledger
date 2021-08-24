@@ -2,6 +2,7 @@ Tips for contributors
 ---------------------
 
 * Please **make pull requests against `master`**.
+* Please add a **test case** under `test/regress` when possible.
 * If you're making **changes to files for which the CI build is not
   relevant**, please **add `[ci skip]` to the end of the commit message**.
 * Report bugs using [GitHub Issues].
