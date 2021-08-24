@@ -57,7 +57,7 @@ if (Python_EXECUTABLE)
   endforeach()
 
   # CheckManpage and CheckTexinfo are disabled, since they do not work
-  # reliably yet, instead they are being run as a Travis CI report.
+  # reliably yet
   list(APPEND CheckOptions CheckBaselineTests) #CheckManpage CheckTexinfo
   foreach(_class ${CheckOptions})
     add_test(NAME ${_class}
