@@ -239,7 +239,7 @@ class PrepareBuild(CommandLineApp):
         self.LDFLAGS         = []
 
         self.envvars = {
-            'CXX':      'g++',
+            'CXX':      '',
             'CXXFLAGS': '',
             'LDFLAGS':  '',
         }
