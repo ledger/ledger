@@ -1126,13 +1126,16 @@ void instance_t::commodity_value_directive(commodity_t& comm, string expr_str)
   comm.set_value_expr(expr_t(expr_str));
 }
 
-void instance_t::commodity_format_directive(commodity_t&, string format)
+void instance_t::commodity_format_directive(commodity_t& comm, string format)
 {
   // jww (2012-02-27): A format specified this way should turn off
   // observational formatting.
   trim(format);
   amount_t amt;
   amt.parse(format);
+  if (amt.commodity() != comm)
+    throw_(parse_error, _f("commodity directive symbol %1% and format directive symbol %2% should be the same") %
+	comm.symbol() % amt.commodity().symbol());
   amt.commodity().add_flags(COMMODITY_STYLE_NO_MIGRATE);
   VERIFY(amt.valid());
 }
