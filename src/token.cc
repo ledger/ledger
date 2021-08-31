@@ -148,7 +148,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
 
   char c = peek_next_nonws(in);
 
-  if (in.eof() || c == -1) {
+  if (in.eof()) {
     kind = TOK_EOF;
     return;
   }
@@ -199,7 +199,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     char buf[256];
     READ_INTO_(in, buf, 255, c, length, c != ']');
     if (c != ']')
-      expected(']', c);
+      expected(']', in.eof() ? -1 : (c && 0xff));
 
     in.get(c);
     length++;
@@ -221,7 +221,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     char buf[4096];
     READ_INTO_(in, buf, 4095, c, length, c != delim);
     if (c != delim)
-      expected(delim, c);
+      expected(delim, in.eof() ? -1 : (c && 0xff));
     in.get(c);
     length++;
     kind = VALUE;
@@ -233,9 +233,11 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     in.get(c);
     amount_t temp;
     temp.parse(in, PARSE_NO_MIGRATE);
-    in.get(c);
-    if (c != '}')
-      expected('}', c);
+    int i = in.get();
+    if (i != '}')
+      expected('}', i);
+    else
+      c = i & 0xff;
     length++;
     kind  = VALUE;
     value = temp;
@@ -306,7 +308,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
       char buf[4096];
       READ_INTO_(in, buf, 4095, c, length, c != '/');
       if (c != '/')
-        expected('/', c);
+        expected('/', in.eof() ? -1 : (c && 0xff));
       in.get(c);
       length++;
 
@@ -420,14 +422,15 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
         if (in.fail() || ! in.good())
           throw_(parse_error, _("Failed to reset input stream"));
 
-        c = static_cast<char>(in.peek());
-        if (c != -1) {
-          if (! std::isalpha(c) && c != '_')
-            expected('\0', c);
+        int peeked = in.peek();
+        if (peeked == -1) {
+          throw_(parse_error, _("Unexpected EOF"));
+        } else {
+          if (! std::isalpha(peeked) && peeked != '_')
+            expected('\0', peeked);
+	  c = static_cast<char>(peeked);
 
           parse_ident(in);
-        } else {
-          throw_(parse_error, _("Unexpected EOF"));
         }
 
         if (! value.is_string() || value.as_string().empty()) {
@@ -503,19 +506,20 @@ void expr_t::token_t::unexpected(const char wanted)
   }
 }
 
-void expr_t::token_t::expected(const char wanted, char c)
+void expr_t::token_t::expected(const char wanted, const int c)
 {
-  if (c == '\0' || c == -1) {
-    if (wanted == '\0' || wanted == -1)
+  if (c == -1) {
+    if (wanted == '\0')
       throw_(parse_error, _("Unexpected end"));
     else
       throw_(parse_error, _f("Missing '%1%'") % wanted);
   } else {
-    if (wanted == '\0' || wanted == -1)
-      throw_(parse_error, _f("Invalid char '%1%'") % c);
+    char ch = c & 0xff;
+    if (wanted == '\0')
+      throw_(parse_error, _f("Invalid char '%1%'") % ch);
     else
       throw_(parse_error,
-             _f("Invalid char '%1%' (wanted '%2%')") % c % wanted);
+             _f("Invalid char '%1%' (wanted '%2%')") % ch % wanted);
   }
 }
 
