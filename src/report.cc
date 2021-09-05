@@ -816,7 +816,7 @@ value_t report_t::fn_format_datetime(call_scope_t& args)
 
 value_t report_t::fn_ansify_if(call_scope_t& args)
 {
-  if (args.has<string>(1)) {
+  if (args.has<string>(1) && !getenv("NO_COLOR")) {
     string color = args.get<string>(1);
     std::ostringstream buf;
     if (color == "black")          buf << "\033[30m";
