@@ -974,13 +974,13 @@ namespace {
   void parse_quantity(std::istream& in, string& value)
   {
     char buf[256];
-    char c = peek_next_nonws(in);
+    int c = peek_next_nonws(in);
     int max = 255;
     char *p = buf;
     if (c == '-') {
       *p++ = c;
       max--;
-      in.get(c);
+      in.get();
     }
     READ_INTO(in, p, max, c,
               std::isdigit(c) || c == '.' || c == ',');
@@ -1009,10 +1009,10 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
 
   commodity_t::flags_t comm_flags = COMMODITY_STYLE_DEFAULTS;
 
-  char c = peek_next_nonws(in);
+  int c = peek_next_nonws(in);
   if (c == '-') {
     negative = true;
-    in.get(c);
+    in.get();
     c = peek_next_nonws(in);
   }
 

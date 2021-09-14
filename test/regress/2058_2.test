@@ -1,0 +1,11 @@
+2021/1/2 Test
+    A  $1.00
+    B
+
+test --limit 'date>=[2020/12/31' register A -> 1
+__ERROR__
+While parsing value expression:
+  (date>=[2020/12/31)&((account =~ /A/))
+
+Error: Missing ']'
+end test
