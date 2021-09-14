@@ -297,12 +297,12 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
   std::istream::pos_type pos = in.tellg();
 
   char buf[256];
-  char c = peek_next_nonws(in);
+  int c = peek_next_nonws(in);
   if (c == '"') {
-    in.get(c);
+    in.get();
     READ_INTO(in, buf, 255, c, c != '"');
     if (c == '"')
-      in.get(c);
+      in.get();
     else
       throw_(amount_error, _("Quoted commodity symbol lacks closing quote"));
   } else {
@@ -310,46 +310,45 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
     while (_p - buf < 255 && in.good() && ! in.eof() && c != '\n') {
       std::size_t    bytes = 0;
       std::ptrdiff_t size  = _p - buf;
-      unsigned char  d     = static_cast<unsigned char>(c);
 
       // Check for the start of a UTF-8 multi-byte encoded string
-      if (d >= 192 && d <= 223 && size < 254)
+      if (c >= 192 && c <= 223 && size < 254)
         bytes = 2;
-      else if (d >= 224 && d <= 239 && size < 253)
+      else if (c >= 224 && c <= 239 && size < 253)
         bytes = 3;
-      else if (d >= 240 && d <= 247 && size < 252)
+      else if (c >= 240 && c <= 247 && size < 252)
         bytes = 4;
-      else if (d >= 248 && d <= 251 && size < 251)
+      else if (c >= 248 && c <= 251 && size < 251)
         bytes = 5;
-      else if (d >= 252 && d <= 253 && size < 250)
+      else if (c >= 252 && c <= 253 && size < 250)
         bytes = 6;
-      else if (d >= 254) // UTF-8 encoding error
+      else if (c >= 254) // UTF-8 encoding error
         break;
 
       if (bytes > 0) {          // we're looking at a UTF-8 encoding
         for (std::size_t i = 0; i < bytes; i++) {
-          in.get(c);
+          c = in.get();
           if (in.bad() || in.eof())
             throw_(amount_error, _("Invalid UTF-8 encoding for commodity name"));
           *_p++ = c;
         }
       }
-      else if (invalid_chars[static_cast<unsigned char>(c)]) {
+      else if (invalid_chars[c]) {
         break;
       }
       else {
-        in.get(c);
+        c = in.get();
         if (in.eof())
           break;
         if (c == '\\') {
-          in.get(c);
+          c = in.get();
           if (in.eof())
             throw_(amount_error, _("Backslash at end of commodity name"));
         }
         *_p++ = c;
       }
 
-      c = static_cast<char>(in.peek());
+      c = in.peek();
     }
     *_p = '\0';
 

@@ -1621,17 +1621,10 @@ void date_parser_t::lexer_t::token_t::unexpected()
 
 void date_parser_t::lexer_t::token_t::expected(char wanted, char c)
 {
-  if (c == '\0' || c == -1) {
-    if (wanted == '\0' || wanted == -1)
-      throw_(date_error, _("Unexpected end"));
-    else
-      throw_(date_error, _f("Missing '%1%'") % wanted);
-  } else {
-    if (wanted == '\0' || wanted == -1)
-      throw_(date_error, _f("Invalid char '%1%'") % c);
-    else
-      throw_(date_error, _f("Invalid char '%1%' (wanted '%2%')") % c % wanted);
-  }
+  if (wanted == '\0')
+    throw_(date_error, _f("Invalid char '%1%'") % c);
+  else
+    throw_(date_error, _f("Invalid char '%1%' (wanted '%2%')") % c % wanted);
 }
 
 namespace {
