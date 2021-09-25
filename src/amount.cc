@@ -733,13 +733,9 @@ void amount_t::in_place_unreduce()
 
   if (shifted) {
     if (("h" == comm->symbol() || "m" == comm->symbol()) && commodity_t::time_colon_by_default) {
-      amount_t floored = tmp.floored();
-      amount_t precision = tmp - floored;
-      if (precision < 0.0) {
-        precision += 1.0;
-        floored -= 1.0;
-      }
-      tmp = floored + (precision * (comm->smaller()->number() / 100.0));
+      double truncated = trunc(tmp.to_double());
+      double precision = tmp.to_double() - truncated;
+      tmp = truncated + (precision * (comm->smaller()->number() / 100.0));
     }
 
     *this      = tmp;

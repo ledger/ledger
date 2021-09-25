@@ -1,0 +1,23 @@
+2016-01-01 Employer
+        Me   -5400s
+        Them  5400s
+2016-01-01 Employer
+        Me   -3600s
+        Them  3600s
+2016-01-02 Employer
+        Me   -1800s
+        Them  1800s
+2016-01-02 Employer
+        Me   -30s
+        Them  30s
+
+test reg --time-colon
+16-Jan-01 Employer              Me                           -1:30h       -1:30h
+                                Them                          1:30h            0
+16-Jan-01 Employer              Me                           -1:00h       -1:00h
+                                Them                          1:00h            0
+16-Jan-02 Employer              Me                           -30:0m       -30:0m
+                                Them                          30:0m            0
+16-Jan-02 Employer              Me                             -30s         -30s
+                                Them                            30s            0
+end test
