@@ -39,8 +39,8 @@
  *
  * @ingroup report
  */
-#ifndef _STATS_H
-#define _STATS_H
+#ifndef INCLUDED_STATS_H
+#define INCLUDED_STATS_H
 
 #include "value.h"
 
@@ -52,4 +52,4 @@ value_t report_statistics(call_scope_t& scope);
 
 } // namespace ledger
 
-#endif // _STATS_H
+#endif // INCLUDED_STATS_H

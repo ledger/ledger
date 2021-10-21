@@ -39,8 +39,8 @@
  *
  * @ingroup util
  */
-#ifndef _PSTREAM_H
-#define _PSTREAM_H
+#ifndef INCLUDED_PSTREAM_H
+#define INCLUDED_PSTREAM_H
 
 //#include <istream>
 //#include <streambuf>
@@ -111,4 +111,4 @@ public:
   }
 };
 
-#endif // _PSTREAM_H
+#endif // INCLUDED_PSTREAM_H

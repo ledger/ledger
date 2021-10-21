@@ -35,8 +35,8 @@
  *
  * @brief Contains the top-level functions used by main.cc
  */
-#ifndef _GLOBAL_H
-#define _GLOBAL_H
+#ifndef INCLUDED_GLOBAL_H
+#define INCLUDED_GLOBAL_H
 
 #include "option.h"
 #include "report.h"
@@ -174,4 +174,4 @@ void handle_debug_options(int argc, char * argv[]);
 
 } // namespace ledger
 
-#endif // _GLOBAL_H
+#endif // INCLUDED_GLOBAL_H

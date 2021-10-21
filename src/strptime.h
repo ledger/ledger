@@ -1,6 +1,6 @@
-#ifndef STRPTIME_H
-#define STRPTIME_H
+#ifndef INCLUDED_STRPTIME_H
+#define INCLUDED_STRPTIME_H
 
 char* strptime(const char *buf, const char *fmt, struct tm *tm);
 
-#endif
+#endif // INCLUDED_STRPTIME_H

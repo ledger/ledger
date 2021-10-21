@@ -39,8 +39,8 @@
  *
  * @ingroup data
  */
-#ifndef _CONVERT_H
-#define _CONVERT_H
+#ifndef INCLUDED_CONVERT_H
+#define INCLUDED_CONVERT_H
 
 #include "value.h"
 
@@ -52,4 +52,4 @@ value_t convert_command(call_scope_t& scope);
 
 } // namespace ledger
 
-#endif // _CONVERT_H
+#endif // INCLUDED_CONVERT_H

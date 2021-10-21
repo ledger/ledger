@@ -39,8 +39,8 @@
  *
  * @ingroup data
  */
-#ifndef _XACT_H
-#define _XACT_H
+#ifndef INCLUDED_XACT_H
+#define INCLUDED_XACT_H
 
 #include "item.h"
 #include "predicate.h"
@@ -236,4 +236,4 @@ void put_xact(property_tree::ptree& pt, const xact_t& xact);
 
 } // namespace ledger
 
-#endif // _XACT_H
+#endif // INCLUDED_XACT_H

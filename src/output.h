@@ -39,8 +39,8 @@
  *
  * @ingroup report
  */
-#ifndef _OUTPUT_H
-#define _OUTPUT_H
+#ifndef INCLUDED_OUTPUT_H
+#define INCLUDED_OUTPUT_H
 
 #include "chain.h"
 #include "predicate.h"
@@ -248,4 +248,4 @@ public:
 
 } // namespace ledger
 
-#endif // _OUTPUT_H
+#endif // INCLUDED_OUTPUT_H

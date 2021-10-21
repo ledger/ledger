@@ -39,8 +39,8 @@
  *
  * @ingroup expr
  */
-#ifndef _OP_H
-#define _OP_H
+#ifndef INCLUDED_OP_H
+#define INCLUDED_OP_H
 
 #include "expr.h"
 
@@ -348,4 +348,4 @@ value_t split_cons_expr(expr_t::ptr_op_t op);
 
 } // namespace ledger
 
-#endif // _OP_H
+#endif // INCLUDED_OP_H

@@ -39,8 +39,8 @@
  *
  * @ingroup report
  */
-#ifndef _EMACS_H
-#define _EMACS_H
+#ifndef INCLUDED_EMACS_H
+#define INCLUDED_EMACS_H
 
 #include "chain.h"
 
@@ -77,4 +77,4 @@ public:
 
 } // namespace ledger
 
-#endif // _REPORT_H
+#endif // INCLUDED_EMACS_H

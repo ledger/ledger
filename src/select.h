@@ -39,8 +39,8 @@
  *
  * @ingroup select
  */
-#ifndef _SELECT_H
-#define _SELECT_H
+#ifndef INCLUDED_SELECT_H
+#define INCLUDED_SELECT_H
 
 #include "utils.h"
 #include "value.h"
@@ -52,4 +52,4 @@ value_t select_command(call_scope_t& args);
 
 } // namespace ledger
 
-#endif // _SELECT_H
+#endif // INCLUDED_SELECT_H

@@ -39,8 +39,8 @@
  *
  * @ingroup report
  */
-#ifndef _TEMPS_H
-#define _TEMPS_H
+#ifndef INCLUDED_TEMPS_H
+#define INCLUDED_TEMPS_H
 
 namespace ledger {
 
@@ -82,4 +82,4 @@ public:
 
 } // namespace ledger
 
-#endif // _TEMPS_H
+#endif // INCLUDED_TEMPS_H

@@ -51,8 +51,8 @@
  * | draft_t     | Partially filled xacts     | xact_t *        |             |
  * | format_t    | Format strings             | string          |             |
  */
-#ifndef _EXPRBASE_H
-#define _EXPRBASE_H
+#ifndef INCLUDED_EXPRBASE_H
+#define INCLUDED_EXPRBASE_H
 
 #include "utils.h"
 #include "amount.h"
@@ -242,4 +242,4 @@ std::ostream& operator<<(std::ostream& out,
 
 } // namespace ledger
 
-#endif // _EXPRBASE_H
+#endif // INCLUDED_EXPRBASE_H

@@ -41,8 +41,8 @@
  *
  * @brief Regular expression masking.
  */
-#ifndef _MASK_H
-#define _MASK_H
+#ifndef INCLUDED_MASK_H
+#define INCLUDED_MASK_H
 
 #include "utils.h"
 #if HAVE_BOOST_REGEX_UNICODE
@@ -137,4 +137,4 @@ inline void put_mask(property_tree::ptree& pt, const mask_t& mask) {
 
 } // namespace ledger
 
-#endif // _MASK_H
+#endif // INCLUDED_MASK_H
