@@ -39,8 +39,8 @@
  *
  * @ingroup report
  */
-#ifndef _FILTERS_H
-#define _FILTERS_H
+#ifndef INCLUDED_FILTERS_H
+#define INCLUDED_FILTERS_H
 
 #include "chain.h"
 #include "xact.h"
@@ -1083,4 +1083,4 @@ public:
 
 } // namespace ledger
 
-#endif // _FILTERS_H
+#endif // INCLUDED_FILTERS_H

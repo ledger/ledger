@@ -39,8 +39,8 @@
  *
  * @ingroup data
  */
-#ifndef _PRINT_H
-#define _PRINT_H
+#ifndef INCLUDED_PRINT_H
+#define INCLUDED_PRINT_H
 
 #include "chain.h"
 #include "predicate.h"
@@ -88,4 +88,4 @@ public:
 
 } // namespace ledger
 
-#endif // _PRINT_H
+#endif // INCLUDED_PRINT_H

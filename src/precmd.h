@@ -39,8 +39,8 @@
  *
  * @ingroup report
  */
-#ifndef _PRECMD_H
-#define _PRECMD_H
+#ifndef INCLUDED_PRECMD_H
+#define INCLUDED_PRECMD_H
 
 #include "value.h"
 
@@ -56,4 +56,4 @@ value_t query_command(call_scope_t& args);
 
 } // namespace ledger
 
-#endif // _PRECMD_H
+#endif // INCLUDED_PRECMD_H

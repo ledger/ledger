@@ -39,8 +39,8 @@
  *
  * @ingroup utils
  */
-#ifndef _UNISTRING_H
-#define _UNISTRING_H
+#ifndef INCLUDED_UNISTRING_H
+#define INCLUDED_UNISTRING_H
 
 namespace ledger {
 
@@ -204,4 +204,4 @@ inline void justify(std::ostream&      out,
 
 } // namespace ledger
 
-#endif // _UNISTRING_H
+#endif // INCLUDED_UNISTRING_H

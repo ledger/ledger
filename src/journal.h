@@ -39,8 +39,8 @@
  *
  * @ingroup data
  */
-#ifndef _JOURNAL_H
-#define _JOURNAL_H
+#ifndef INCLUDED_JOURNAL_H
+#define INCLUDED_JOURNAL_H
 
 #include "utils.h"
 #include "times.h"
@@ -203,4 +203,4 @@ private:
 
 } // namespace ledger
 
-#endif // _JOURNAL_H
+#endif // INCLUDED_JOURNAL_H

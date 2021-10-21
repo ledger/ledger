@@ -39,8 +39,8 @@
  *
  * @ingroup expr
  */
-#ifndef _PARSER_H
-#define _PARSER_H
+#ifndef INCLUDED_PARSER_H
+#define INCLUDED_PARSER_H
 
 #include "token.h"
 #include "op.h"
@@ -123,4 +123,4 @@ public:
 
 } // namespace ledger
 
-#endif // _PARSER_H
+#endif // INCLUDED_PARSER_H

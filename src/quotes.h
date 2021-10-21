@@ -39,8 +39,8 @@
  *
  * @ingroup extra
  */
-#ifndef _QUOTES_H
-#define _QUOTES_H
+#ifndef INCLUDED_QUOTES_H
+#define INCLUDED_QUOTES_H
 
 namespace ledger {
 
@@ -50,4 +50,4 @@ commodity_quote_from_script(commodity_t& commodity,
 
 } // namespace ledger
 
-#endif // _QUOTES_H
+#endif // INCLUDED_QUOTES_H

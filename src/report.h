@@ -39,8 +39,8 @@
  *
  * @ingroup report
  */
-#ifndef _REPORT_H
-#define _REPORT_H
+#ifndef INCLUDED_REPORT_H
+#define INCLUDED_REPORT_H
 
 #include "expr.h"
 #include "query.h"
@@ -1111,4 +1111,4 @@ public:
 
 } // namespace ledger
 
-#endif // _REPORT_H
+#endif // INCLUDED_REPORT_H

@@ -42,8 +42,8 @@
  * configure is re-run) are expected to change.
  */
 
-#ifndef _SYSTEM_HH
-#define _SYSTEM_HH
+#ifndef INCLUDED_SYSTEM_HH
+#define INCLUDED_SYSTEM_HH
 
 //#warning("Loading system.hh.  This should occur only once!")
 
@@ -228,4 +228,4 @@ inline object make_setter(D const& x)
 
 #endif // HAVE_BOOST_PYTHON
 
-#endif // _SYSTEM_HH
+#endif // INCLUDED_SYSTEM_HH

@@ -39,8 +39,8 @@
  *
  * @ingroup data
  */
-#ifndef _ITERATORS_H
-#define _ITERATORS_H
+#ifndef INCLUDED_ITERATORS_H
+#define INCLUDED_ITERATORS_H
 
 #include "xact.h"
 #include "post.h"
@@ -326,4 +326,4 @@ private:
 
 } // namespace ledger
 
-#endif // _ITERATORS_H
+#endif // INCLUDED_ITERATORS_H

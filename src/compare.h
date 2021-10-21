@@ -39,8 +39,8 @@
  *
  * @ingroup data
  */
-#ifndef _COMPARE_H
-#define _COMPARE_H
+#ifndef INCLUDED_COMPARE_H
+#define INCLUDED_COMPARE_H
 
 #include "expr.h"
 
@@ -97,4 +97,4 @@ bool compare_items<account_t>::operator()(account_t * left,
 
 } // namespace ledger
 
-#endif // _COMPARE_H
+#endif // INCLUDED_COMPARE_H

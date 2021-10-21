@@ -41,8 +41,8 @@
  *
  * @brief datetime_t and date_t objects
  */
-#ifndef _TIMES_H
-#define _TIMES_H
+#ifndef INCLUDED_TIMES_H
+#define INCLUDED_TIMES_H
 
 #include "utils.h"
 
@@ -533,4 +533,4 @@ std::ostream& operator<<(std::ostream& out, const date_duration_t& duration);
 
 } // namespace ledger
 
-#endif // _TIMES_H
+#endif // INCLUDED_TIMES_H

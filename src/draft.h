@@ -39,8 +39,8 @@
  *
  * @ingroup report
  */
-#ifndef _DRAFT_H
-#define _DRAFT_H
+#ifndef INCLUDED_DRAFT_H
+#define INCLUDED_DRAFT_H
 
 #include "exprbase.h"
 #include "value.h"
@@ -129,4 +129,4 @@ value_t template_command(call_scope_t& args);
 
 } // namespace ledger
 
-#endif // _DRAFT_H
+#endif // INCLUDED_DRAFT_H

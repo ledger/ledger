@@ -39,8 +39,8 @@
  *
  * @ingroup expr
  */
-#ifndef _QUERY_H
-#define _QUERY_H
+#ifndef INCLUDED_QUERY_H
+#define INCLUDED_QUERY_H
 
 #include "predicate.h"
 
@@ -349,4 +349,4 @@ public:
 
 } // namespace ledger
 
-#endif // _QUERY_H
+#endif // INCLUDED_QUERY_H

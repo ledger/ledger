@@ -39,8 +39,8 @@
  *
  * @ingroup data
  */
-#ifndef _CSV_H
-#define _CSV_H
+#ifndef INCLUDED_CSV_H
+#define INCLUDED_CSV_H
 
 #include "value.h"
 #include "context.h"
@@ -115,4 +115,4 @@ public:
 
 } // namespace ledger
 
-#endif // _CSV_H
+#endif // INCLUDED_CSV_H

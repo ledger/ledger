@@ -43,8 +43,8 @@
  *
  * Long.
  */
-#ifndef _PTREE_H
-#define _PTREE_H
+#ifndef INCLUDED_PTREE_H
+#define INCLUDED_PTREE_H
 
 #include "chain.h"
 
@@ -100,4 +100,4 @@ public:
 
 } // namespace ledger
 
-#endif // _PTREE_H
+#endif // INCLUDED_PTREE_H

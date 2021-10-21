@@ -43,8 +43,8 @@
  *
  * Long.
  */
-#ifndef _POOL_H
-#define _POOL_H
+#ifndef INCLUDED_POOL_H
+#define INCLUDED_POOL_H
 
 #include "history.h"
 #include "annotate.h"
@@ -136,4 +136,4 @@ public:
 
 } // namespace ledger
 
-#endif // _POOL_H
+#endif // INCLUDED_POOL_H
