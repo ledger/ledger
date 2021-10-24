@@ -1,0 +1,8 @@
+ledger-cli xml2html XLST
+
+This XLST produces a browsable html page out of the xml files created by ledger xml.
+
+It might be used in the future to create a ledger html output.
+
+usage:
+  xsltproc ledger.xsl input.ledger.xml > output.ledger.html
