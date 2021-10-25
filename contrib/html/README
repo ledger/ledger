@@ -5,4 +5,11 @@ This XLST produces a browsable html page out of the xml files created by ledger 
 It might be used in the future to create a ledger html output.
 
 usage:
-  xsltproc ledger.xsl input.ledger.xml > output.ledger.html
+
+  from existing xml file:
+
+    xsltproc --output output-ledger.html ledger.xsl input-ledger.xml
+
+  from ledger file directly:
+
+    ledger -f input.ledger xml | xsltproc --output output-ledger.html ledger.xsl -
