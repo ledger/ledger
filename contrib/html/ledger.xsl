@@ -145,8 +145,8 @@
                         <xsl:value-of select="account"/>
                       </a>
                     </td>
-                    <td><xsl:apply-templates select="post-amount/amount"/></td>
-                    <td><xsl:apply-templates select="total/amount"/></td>
+                    <td class="amount-table-cell"><xsl:apply-templates select="post-amount/amount"/></td>
+                    <td class="amount-table-cell"><xsl:apply-templates select="total/amount"/></td>
                 </tr>
               </xsl:for-each>
           </xsl:for-each>
@@ -184,8 +184,8 @@
               </tr>
                 <xsl:for-each select="postings/posting[account/@ref = $id]">
                   <tr>
-                      <td><xsl:apply-templates select="post-amount/amount"/></td>
-                      <td><xsl:apply-templates select="total/amount"/></td>
+                      <td class="amount-table-cell"><xsl:apply-templates select="post-amount/amount"/></td>
+                      <td class="amount-table-cell"><xsl:apply-templates select="total/amount"/></td>
                   </tr>
                 </xsl:for-each>
             </xsl:for-each>
