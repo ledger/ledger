@@ -41,12 +41,20 @@
         <style>
           table, th, td {
             border: 1px solid black;
-            border-collapse: collapse;
+          }
+          table {
+            border-spacing: 0;
           }
           table th {
             position: sticky;
             top: 0;
             z-index: 1;
+            background: #fff;
+          }
+          #accounts table tr:nth-child(odd) {
+            background: #ccc;
+          }
+          #accounts table tr:nth-child(even) {
             background: #fff;
           }
           .amount-table-cell {
