@@ -29,6 +29,7 @@ if(UTF8_INSTALL)
     install(DIRECTORY source/ DESTINATION include/utf8cpp)
     install(TARGETS utf8cpp EXPORT utf8cppConfig)
     install(EXPORT utf8cppConfig DESTINATION ${DEF_INSTALL_CMAKE_DIR})
+    export(EXPORT utf8cppConfig)
 endif()
 
 if(UTF8_SAMPLES)
