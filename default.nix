@@ -42,7 +42,7 @@ pkgs.stdenv.mkDerivation {
   meta = {
     homepage = "http://ledger-cli.org/";
     description = "A double-entry accounting system with a command-line reporting interface";
-    license = pkgs.stdenv.lib.licenses.bsd3;
+    license = pkgs.lib.licenses.bsd3;
 
     longDescription = ''
       Ledger is a powerful, double-entry accounting system that is accessed
