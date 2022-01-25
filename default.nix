@@ -51,7 +51,7 @@ pkgs.stdenv.mkDerivation {
       their data, there really is no alternative.
     '';
 
-    platforms = pkgs.stdenv.lib.platforms.all;
-    maintainers = with pkgs.stdenv.lib.maintainers; [ jwiegley ];
+    platforms = pkgs.lib.platforms.all;
+    maintainers = with pkgs.lib.maintainers; [ jwiegley ];
   };
 }
