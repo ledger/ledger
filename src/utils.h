@@ -540,25 +540,25 @@ inline char * next_element(char * buf, bool variable = false) {
   return NULL;
 }
 
-inline char peek_next_nonws(std::istream& in) {
-  char c = static_cast<char>(in.peek());
+inline int peek_next_nonws(std::istream& in) {
+  int c = in.peek();
   while (in.good() && ! in.eof() && std::isspace(c)) {
-    in.get(c);
-    c = static_cast<char>(in.peek());
+    in.get();
+    c = in.peek();
   }
   return c;
 }
 
 #define READ_INTO(str, targ, size, var, cond) {         \
     char * _p = targ;                                   \
-    var = static_cast<char>(str.peek());                \
+    var = str.peek();                                   \
     while (str.good() && ! str.eof() && var != '\n' &&  \
            (cond) && _p - targ < size) {                \
-      str.get(var);                                     \
+      var = str.get();                                  \
       if (str.eof())                                    \
         break;                                          \
       if (var == '\\') {                                \
-        str.get(var);                                   \
+        var = str.get();                                \
         if (in.eof())                                   \
           break;                                        \
         switch (var) {                                  \
@@ -572,22 +572,22 @@ inline char peek_next_nonws(std::istream& in) {
         }                                               \
       }                                                 \
       *_p++ = var;                                      \
-      var = static_cast<char>(str.peek());              \
+      var = str.peek();                                 \
     }                                                   \
     *_p = '\0';                                         \
   }
 
 #define READ_INTO_(str, targ, size, var, idx, cond) {   \
     char * _p = targ;                                   \
-    var = static_cast<char>(str.peek());                \
+    var = str.peek();                                   \
     while (str.good() && ! str.eof() && var != '\n' &&  \
            (cond) && _p - targ < size) {                \
-      str.get(var);                                     \
+      var = str.get();                                  \
       if (str.eof())                                    \
         break;                                          \
       idx++;                                            \
       if (var == '\\') {                                \
-        str.get(var);                                   \
+        var = str.get();                                \
         if (in.eof())                                   \
           break;                                        \
         switch (var) {                                  \
@@ -602,7 +602,7 @@ inline char peek_next_nonws(std::istream& in) {
         idx++;                                          \
       }                                                 \
       *_p++ = var;                                      \
-      var = static_cast<char>(str.peek());              \
+      var = str.peek();                                 \
     }                                                   \
     *_p = '\0';                                         \
   }

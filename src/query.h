@@ -191,8 +191,7 @@ public:
 #endif
       }
 
-      void unexpected();
-      void expected(char wanted, char c = '\0');
+      void expected(char wanted);
     };
 
     token_t token_cache;

@@ -126,7 +126,7 @@ struct expr_t::token_t : public noncopyable
   void next(std::istream& in, const parse_flags_t& flags);
   void rewind(std::istream& in);
   void unexpected(const char wanted = '\0');
-  void expected(const char wanted, const char c = '\0');
+  void expected(const char wanted, const int c);
   void expected(const kind_t wanted);
 };
 

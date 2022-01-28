@@ -86,33 +86,33 @@ void annotation_t::parse(std::istream& in)
       return;
 
     char buf[256];
-    char c = peek_next_nonws(in);
+    int c = peek_next_nonws(in);
     if (c == '{') {
       if (price)
         throw_(amount_error, _("Commodity specifies more than one price"));
 
-      in.get(c);
-      c = static_cast<char>(in.peek());
+      in.get();
+      c = in.peek();
       if (c == '{') {
-        in.get(c);
+        in.get();
         add_flags(ANNOTATION_PRICE_NOT_PER_UNIT);
       }
 
       c = peek_next_nonws(in);
       if (c == '=') {
-        in.get(c);
+        in.get();
         add_flags(ANNOTATION_PRICE_FIXATED);
       }
 
       READ_INTO(in, buf, 255, c, c != '}');
       if (c == '}') {
-        in.get(c);
+        in.get();
         if (has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
-          c = static_cast<char>(in.peek());
+          c = in.peek();
           if (c != '}')
             throw_(amount_error, _("Commodity lot price lacks double closing brace"));
           else
-            in.get(c);
+            in.get();
         }
       } else {
         throw_(amount_error, _("Commodity lot price lacks closing brace"));
@@ -128,18 +128,18 @@ void annotation_t::parse(std::istream& in)
       if (date)
         throw_(amount_error, _("Commodity specifies more than one date"));
 
-      in.get(c);
+      in.get();
       READ_INTO(in, buf, 255, c, c != ']');
       if (c == ']')
-        in.get(c);
+        in.get();
       else
         throw_(amount_error, _("Commodity date lacks closing bracket"));
 
       date = parse_date(buf);
     }
     else if (c == '(') {
-      in.get(c);
-      c = static_cast<char>(in.peek());
+      in.get();
+      c = in.peek();
       if (c == '@') {
         in.clear();
         in.seekg(pos, std::ios::beg);
@@ -150,13 +150,13 @@ void annotation_t::parse(std::istream& in)
           throw_(amount_error,
                  _("Commodity specifies more than one valuation expresion"));
 
-        in.get(c);
+        in.get();
         READ_INTO(in, buf, 255, c, c != ')');
         if (c == ')') {
-          in.get(c);
-          c = static_cast<char>(in.peek());
+          in.get();
+          c = in.peek();
           if (c == ')')
-            in.get(c);
+            in.get();
           else
             throw_(amount_error,
                    _("Commodity valuation expression lacks closing parentheses"));
@@ -172,7 +172,7 @@ void annotation_t::parse(std::istream& in)
 
         READ_INTO(in, buf, 255, c, c != ')');
         if (c == ')')
-          in.get(c);
+          in.get();
         else
           throw_(amount_error, _("Commodity tag lacks closing parenthesis"));
 
