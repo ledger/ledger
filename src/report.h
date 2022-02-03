@@ -419,8 +419,8 @@ public:
    CTOR(report_t, balance_format_) {
     on(none,
        "%(ansify_if("
-       "  justify(scrub(display_total), int(amount_width),"
-       "          int(amount_width) + int(prepend_width), true, color),"
+       "  justify(scrub(display_total), 20,"
+       "          20 + int(prepend_width), true, color),"
        "            bold if should_bold))"
        "  %(!options.flat ? depth_spacer : \"\")"
        "%-(ansify_if("
@@ -428,7 +428,7 @@ public:
        "             bold if should_bold))\n%/"
        "%$1\n%/"
        "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-       "%(\"-\" * int(amount_width))\n");
+       "--------------------\n");
   });
 
   OPTION(report_t, base);
