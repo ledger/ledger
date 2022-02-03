@@ -91,9 +91,7 @@ struct annotation_t : public supports_flags<>,
 
   bool operator<(const annotation_t& rhs) const;
   bool operator==(const annotation_t& rhs) const {
-    return (((! price && ! rhs.price) ||
-             (price && rhs.price &&
-              (*price).to_string() == (*rhs.price).to_string())) &&
+    return (price == rhs.price &&
             date  == rhs.date  &&
             tag   == rhs.tag   &&
             (value_expr && rhs.value_expr ?
