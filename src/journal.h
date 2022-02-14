@@ -78,21 +78,19 @@ public:
   struct fileinfo_t
   {
     optional<path>   filename;
-    boost::uintmax_t size;
     datetime_t       modtime;
     bool             from_stream;
 
-    fileinfo_t() : size(0), from_stream(true) {
+    fileinfo_t() : from_stream(true) {
       TRACE_CTOR(journal_t::fileinfo_t, "");
     }
     fileinfo_t(const path& _filename)
       : filename(_filename), from_stream(false) {
-      size    = file_size(*filename);
       modtime = posix_time::from_time_t(last_write_time(*filename));
       TRACE_CTOR(journal_t::fileinfo_t, "const path&");
     }
     fileinfo_t(const fileinfo_t& info)
-      : filename(info.filename), size(info.size),
+      : filename(info.filename),
         modtime(info.modtime), from_stream(info.from_stream)
     {
       TRACE_CTOR(journal_t::fileinfo_t, "copy");
