@@ -251,9 +251,6 @@ void export_journal()
     .add_property("filename",
                   make_getter(&journal_t::fileinfo_t::filename),
                   make_setter(&journal_t::fileinfo_t::filename))
-    .add_property("size",
-                  make_getter(&journal_t::fileinfo_t::size),
-                  make_setter(&journal_t::fileinfo_t::size))
     .add_property("modtime",
                   make_getter(&journal_t::fileinfo_t::modtime),
                   make_setter(&journal_t::fileinfo_t::modtime))
