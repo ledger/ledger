@@ -1037,7 +1037,7 @@ specifiers:
 @smallexample
 $20.00         ; currency: twenty US dollars
 40 AAPL        ; commodity: 40 shares of Apple stock
-60 DM          ; currency: 60 Deutsch Mark
+60 DM          ; currency: 60 Deutsche Mark
 £50            ; currency: 50 British pounds
 50 EUR         ; currency: 50 Euros (or use appropriate symbol)
 @end smallexample
@@ -7530,7 +7530,7 @@ old European currencies in terms of the Euro after a certain date:
 
 This says: If @option{--now @var{DATE}} is some old date, use market
 prices as they were at that time; but if @option{--now @var{DATE}} is
-past June 2008, use a fixed price for converting Deutsch Mark to Euro.
+past June 2008, use a fixed price for converting Deutsche Mark to Euro.
 
 Or how about never re-valuating commodities used in Expenses, since
 they cannot have a different future value:
