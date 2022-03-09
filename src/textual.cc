@@ -743,7 +743,7 @@ void instance_t::include_directive(char * line)
     DEBUG("textual.include", "parent file path: " << context.pathname);
     path parent_path = context.pathname.parent_path();
     if (parent_path.empty()) {
-      filename = path(string(".")) / line;
+      filename = context.current_directory / line;
     } else {
       filename = parent_path / line;
       DEBUG("textual.include", "normalized path: " << filename.string());
