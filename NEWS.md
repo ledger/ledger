@@ -40,6 +40,10 @@
 
 - Fix unicode problems on Windows (bug #1986)
 
+- Fix the issue that with Boost >= 1.77 `include` directive cannot find the file
+  to include for stdin (`-f -`). Also for `-f -` when `include` cannot find the
+  file it reports the error with full path now. (bug #2057 & bug #2092)
+
 - Various documentation improvements
 
 ## 3.2.1 (2020-05-18)
