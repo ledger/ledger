@@ -20,7 +20,7 @@
 - Fix incorrect parsing of expressions containing a `-` without spaces (bug #2001)
 
 - Fix payee metadata on postings not being validated and payee aliases not
-  being honored (bug #566 & bug #1892)
+  being honored (bug #556 & bug #1892)
 
 - Fix ledger interpreting a posting with 0 difference as a null-posting,
   which leads to it auto-balancing the posting (bug #1942)
