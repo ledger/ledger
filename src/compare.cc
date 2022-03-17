@@ -88,15 +88,23 @@ bool compare_items<post_t>::operator()(post_t * left, post_t * right)
 
   post_t::xdata_t& lxdata(left->xdata());
   if (! lxdata.has_flags(POST_EXT_SORT_CALC)) {
-    bind_scope_t bound_scope(*sort_order.get_context(), *left);
-    find_sort_values(lxdata.sort_values, bound_scope);
+    if (sort_order.get_context()) {
+      bind_scope_t bound_scope(*sort_order.get_context(), *left);
+      find_sort_values(lxdata.sort_values, bound_scope);
+    } else {
+      find_sort_values(lxdata.sort_values, *left);
+    }
     lxdata.add_flags(POST_EXT_SORT_CALC);
   }
 
   post_t::xdata_t& rxdata(right->xdata());
   if (! rxdata.has_flags(POST_EXT_SORT_CALC)) {
-    bind_scope_t bound_scope(*sort_order.get_context(), *right);
-    find_sort_values(rxdata.sort_values, bound_scope);
+    if (sort_order.get_context()) {
+      bind_scope_t bound_scope(*sort_order.get_context(), *right);
+      find_sort_values(rxdata.sort_values, bound_scope);
+    } else {
+      find_sort_values(rxdata.sort_values, *right);
+    }
     rxdata.add_flags(POST_EXT_SORT_CALC);
   }
 
@@ -111,15 +119,23 @@ bool compare_items<account_t>::operator()(account_t * left, account_t * right)
 
   account_t::xdata_t& lxdata(left->xdata());
   if (! lxdata.has_flags(ACCOUNT_EXT_SORT_CALC)) {
-    bind_scope_t bound_scope(*sort_order.get_context(), *left);
-    find_sort_values(lxdata.sort_values, bound_scope);
+    if (sort_order.get_context()) {
+      bind_scope_t bound_scope(*sort_order.get_context(), *left);
+      find_sort_values(lxdata.sort_values, bound_scope);
+    } else {
+      find_sort_values(lxdata.sort_values, *left);
+    }
     lxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   }
 
   account_t::xdata_t& rxdata(right->xdata());
   if (! rxdata.has_flags(ACCOUNT_EXT_SORT_CALC)) {
-    bind_scope_t bound_scope(*sort_order.get_context(), *right);
-    find_sort_values(rxdata.sort_values, bound_scope);
+    if (sort_order.get_context()) {
+      bind_scope_t bound_scope(*sort_order.get_context(), *right);
+      find_sort_values(rxdata.sort_values, bound_scope);
+    } else {
+      find_sort_values(rxdata.sort_values, *right);
+    }
     rxdata.add_flags(ACCOUNT_EXT_SORT_CALC);
   }
 
