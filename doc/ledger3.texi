@@ -1773,6 +1773,12 @@ commodity name must be enclosed in double quotes @samp{"}:
     Actif:SG PEE STK    $-10742.54
 @end smallexample
 
+Please note that, for querying quoted commodities, the quotes need to be escaped, as follows:
+
+@smallexample @c command:15453B3
+$ ledger -f d reg -l 'commodity == "\"Arcancia Équilibre 454\""'
+@end smallexample
+
 @node Buying and Selling Stock, Fixing Lot Prices, Naming Commodities, Currency and Commodities
 @subsection Buying and Selling Stock
 @cindex buying stock
