@@ -307,47 +307,14 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
       throw_(amount_error, _("Quoted commodity symbol lacks closing quote"));
   } else {
     char * _p = buf;
-    while (_p - buf < 255 && in.good() && ! in.eof() && c != '\n') {
-      std::size_t    bytes = 0;
-      std::ptrdiff_t size  = _p - buf;
-
-      // Check for the start of a UTF-8 multi-byte encoded string
-      if (c >= 192 && c <= 223 && size < 254)
-        bytes = 2;
-      else if (c >= 224 && c <= 239 && size < 253)
-        bytes = 3;
-      else if (c >= 240 && c <= 247 && size < 252)
-        bytes = 4;
-      else if (c >= 248 && c <= 251 && size < 251)
-        bytes = 5;
-      else if (c >= 252 && c <= 253 && size < 250)
-        bytes = 6;
-      else if (c >= 254) // UTF-8 encoding error
-        break;
-
-      if (bytes > 0) {          // we're looking at a UTF-8 encoding
-        for (std::size_t i = 0; i < bytes; i++) {
-          c = in.get();
-          if (in.bad() || in.eof())
-            throw_(amount_error, _("Invalid UTF-8 encoding for commodity name"));
-          *_p++ = c;
-        }
-      }
-      else if (invalid_chars[c]) {
-        break;
-      }
-      else {
+    while (_p - buf < 255 && in.good() && ! in.eof() && ! invalid_chars[c]) {
+      c = in.get();
+      if (c == '\\') {
         c = in.get();
         if (in.eof())
-          break;
-        if (c == '\\') {
-          c = in.get();
-          if (in.eof())
-            throw_(amount_error, _("Backslash at end of commodity name"));
-        }
-        *_p++ = c;
+          throw_(amount_error, _("Backslash at end of commodity name"));
       }
-
+      *_p++ = c;
       c = in.peek();
     }
     *_p = '\0';
