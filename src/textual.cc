@@ -1666,18 +1666,20 @@ post_t * instance_t::parse_post(char *          line,
       balance_t diff = amt;
 
       switch (account_total.type()) {
-      case value_t::AMOUNT:
-        diff -= account_total.as_amount();
+      case value_t::AMOUNT: {
+        amount_t amt(account_total.as_amount().strip_annotations(keep_details_t()));
+        diff -= amt;
         DEBUG("textual.parse", "line " << context.linenum << ": "
-              << "Subtracting amount " << account_total.as_amount() << " from diff, yielding " << diff);
+              << "Subtracting amount " << amt << " from diff, yielding " << diff);
         break;
-
-      case value_t::BALANCE:
-        diff -= account_total.as_balance();
+      }
+      case value_t::BALANCE: {
+        balance_t bal(account_total.as_balance().strip_annotations(keep_details_t()));
+        diff -= bal;
         DEBUG("textual.parse", "line " << context.linenum << ": "
-              << "Subtracting balance " << account_total.as_balance() << " from diff, yielding " << diff);
+              << "Subtracting balance " << bal << " from diff, yielding " << diff);
         break;
-
+      }
       default:
         break;
       }
@@ -1690,9 +1692,10 @@ post_t * instance_t::parse_post(char *          line,
       // Subtract amounts from previous posts to this account in the xact.
       for (post_t* p : xact->posts) {
         if (p->account == post->account && p->has_flags(POST_VIRTUAL) == post->has_flags(POST_VIRTUAL)) {
-          diff -= p->amount;
+          amount_t amt(p->amount.strip_annotations(keep_details_t()));
+          diff -= amt;
           DEBUG("textual.parse", "line " << context.linenum << ": "
-                << "Subtracting " << p->amount << ", diff = " << diff);
+                << "Subtracting " << amt << ", diff = " << diff);
         }
       }
 
@@ -1726,9 +1729,9 @@ post_t * instance_t::parse_post(char *          line,
         }
       } else {
         // balance assertion
-        diff -= post->amount;
+        diff -= post->amount.strip_annotations(keep_details_t());
         if (! no_assertions && ! diff.is_zero()) {
-          balance_t tot = -diff + amt;
+          balance_t tot = (-diff + amt).strip_annotations(keep_details_t());
           DEBUG("textual.parse", "Balance assertion: off by " << diff << " (expected to see " << tot << ")");
           throw_(parse_error,
                   _f("Balance assertion off by %1% (expected to see %2%)")
