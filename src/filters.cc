@@ -1106,6 +1106,8 @@ void posts_as_equity::report_subtotal()
   value_t total = 0L;
   foreach (values_map::value_type& pair, values) {
     value_t value(pair.second.value.strip_annotations(report.what_to_keep()));
+    if (unround)
+      value.in_place_unround();
     if (! value.is_zero()) {
       if (value.is_balance()) {
         value.as_balance_lval().map_sorted_amounts
