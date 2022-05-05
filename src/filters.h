@@ -790,13 +790,14 @@ class posts_as_equity : public subtotal_posts
   post_t *    last_post;
   account_t * equity_account;
   account_t * balance_account;
+  bool        unround;
 
   posts_as_equity();
 
 public:
   posts_as_equity(post_handler_ptr _handler, report_t& _report,
-                  expr_t& amount_expr)
-    : subtotal_posts(_handler, amount_expr), report(_report) {
+                  expr_t& amount_expr, bool _unround)
+    : subtotal_posts(_handler, amount_expr), report(_report), unround(_unround) {
     create_accounts();
     TRACE_CTOR(posts_as_equity, "post_handler_ptr, expr_t&");
   }

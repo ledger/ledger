@@ -1,0 +1,30 @@
+commodity EUR
+    note Euro
+    format 1,000.00 EUR
+
+2022/05/04 * Test 1
+   Assets:Foo  1.0001 EUR
+   Income
+
+2022/05/04 * Test 2
+   Assets:Bar  0.0002 EUR
+   Income
+
+2022/05/04 * Test 3
+   Assets:Baz  3 EUR
+   Income
+
+test equity ^Assets: --unround
+2022/05/04 Opening Balances
+    Assets:Bar                            0.0002 EUR
+    Assets:Baz                              3.00 EUR
+    Assets:Foo                            1.0001 EUR
+    Equity:Opening Balances              -4.0003 EUR
+end test
+
+test reg --equity ^Assets: --unround
+22-May-04 Opening Balances      Assets:Bar               0.0002 EUR   0.0002 EUR
+                                Assets:Baz                 3.00 EUR   3.0002 EUR
+                                Assets:Foo               1.0001 EUR   4.0003 EUR
+                                Equit:Opening Balances  -4.0003 EUR            0
+end test
