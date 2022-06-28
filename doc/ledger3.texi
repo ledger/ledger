@@ -1877,7 +1877,7 @@ Assets:Checking because its amount is null.
 @node Complete control over commodity pricing,  , Fixing Lot Prices, Currency and Commodities
 @subsection Complete control over commodity pricing
 @findex --market
-@findex --exchange @var{COMMODITY}
+@findex --exchange "@var{COMMODITY} [, @var{COMMODITY}, ...]"
 
 Ledger allows you to have very detailed control over how your
 commodities are valued.  You can fine tune the results given using the
@@ -3382,7 +3382,7 @@ from the first posting's cost, you can elide the other amount:
 @node Primary and secondary commodities,  , Explicit posting costs, Explicit posting costs
 @subsection Primary and secondary commodities
 @findex --market
-@findex --exchange @var{COMMODITY}
+@findex --exchange "@var{COMMODITY} [, @var{COMMODITY}, ...]"
 
 It is a general convention within Ledger that the ``top'' postings in
 a transaction contain the target accounts, while the final posting
@@ -6529,10 +6529,54 @@ report.
 Report beginning and ending of periods by the date of the first and last
 posting occurring in that period.
 
-@item --exchange @var{COMMODITY}
-@itemx -X @var{COMMODITY}
-Display values in terms of the given @var{COMMODITY}.  The latest
-available price is used.  The syntax
+@item --exchange "@var{COMMODITY} [, @var{COMMODITY}, ...]"
+@itemx -X "@var{COMMODITY} [, @var{COMMODITY}, ...]"
+Display values in terms of the given @var{COMMODITY}.  If multiple
+commodities are given, values in a listed commodity will remain as-is,
+and others will be displayed in the first listed commodity they can be
+converted to.
+
+@smallexample
+$ ledger balance assets
+@end smallexample
+@smallexample
+             100 EUR
+             100 PHP
+             100 USD  Assets
+             100 EUR    EUR Bank
+             100 PHP    PHP Bank
+             100 USD    USD Bank
+--------------------
+             100 EUR
+             100 PHP
+             100 USD
+@end smallexample
+@smallexample
+$ ledger balance assets --exchange PHP
+@end smallexample
+@smallexample
+           11382 PHP  Assets
+            5801 PHP    EUR Bank
+             100 PHP    PHP Bank
+            5481 PHP    USD Bank
+--------------------
+           11382 PHP
+@end smallexample
+@smallexample
+$ ledger balance assets --exchange "PHP, EUR"
+@end smallexample
+@smallexample
+             100 EUR
+            5581 PHP  Assets
+             100 EUR    EUR Bank
+             100 PHP    PHP Bank
+            5481 PHP    USD Bank
+--------------------
+             100 EUR
+            5581 PHP
+@end smallexample
+
+The latest available price is used.  The syntax
 @option{-X @var{COMMODITY1}:@var{COMMODITY2}} displays values in @var{COMMODITY1}
 in terms of @var{COMMODITY2} using the latest available price, but
 will not automatically covert any other commodities to
@@ -7502,7 +7546,7 @@ etc.
 
 @findex --now @var{DATE}
 @findex --market
-@findex --exchange @var{COMMODITY}
+@findex --exchange "@var{COMMODITY} [, @var{COMMODITY}, ...]"
 
 When you specify @option{--market (-V)}, or @option{--exchange
 @var{COMMODITY} (-X)}, you are requesting that some or all of the
@@ -7600,7 +7644,7 @@ valuated in another currency.  For example:
 @cindex LIFO/FIFO
 @findex --lots
 @findex --lot-prices
-@findex --exchange @var{COMMODITY}
+@findex --exchange "@var{COMMODITY} [, @var{COMMODITY}, ...]"
 @findex --historical
 @findex --basis
 @findex --price

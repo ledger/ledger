@@ -172,11 +172,14 @@ with this command are:
 Show the running average, rather than a running total.
 .It Fl \-current Pq Fl c
 Don't show postings beyond the present day.
-.It Fl \-exchange Ar commodity Pq Fl X
+.It Fl \-exchange Qo Ar COMMODITY Oo , Ar COMMODITY, ... Oc Qc Pq Fl X
 Render all values in the given
 .Ar commodity ,
-if a price conversion rate can be determined.  Rates are always displayed
-relative to the date of the posting they are calculated for.  This means a
+if a price conversion rate can be determined.  If multiple commodities are
+given, values in a listed commodity will remain as-is, and others will be
+displayed in the first listed commodity they can be converted to.  Rates are
+always displayed relative to the date of the posting they are calculated for.
+This means a
 .Ic register
 report is a historical value report.  For current values, it may be preferable
 to use the
@@ -574,10 +577,12 @@ report.
 .It Fl \-exact
 Report beginning and ending of periods by the date of the first and last
 posting occurring in that period.
-.It Fl \-exchange Ar COMMODITY Oo , Ar COMMODITY, ... Oc Pq Fl X
+.It Fl \-exchange Qo Ar COMMODITY Oo , Ar COMMODITY, ... Oc Qc Pq Fl X
 Display values in terms of the given
 .Ar COMMODITY .
-The latest available price is used.
+If multiple commodities are given, values in a listed commodity will remain
+as-is, and others will be displayed in the first listed commodity they can be
+converted to.
 .It Fl \-file Ar FILE Pq Fl f
 Read journal data from
 .Ar FILE .
