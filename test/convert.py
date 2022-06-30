@@ -36,9 +36,9 @@ import re
 import sys
 import os
 
-source = os.path.abspath(sys.argv[1])
+source = os.path.realpath(sys.argv[1])
 base   = os.path.splitext(source)[0]
-target = os.path.abspath(sys.argv[2])
+target = os.path.realpath(sys.argv[2])
 
 dirname = os.path.dirname(target)
 if not os.path.isdir(dirname):
