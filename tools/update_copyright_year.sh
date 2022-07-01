@@ -26,11 +26,15 @@
 # SOFTWARE.
 
 YEAR=${1:-$(date +%Y)}
-# egrep is rather slow, but the much faster ag (the-silver-searcher)
-# is not generally installed
-GREP=${2:-egrep}
 
-${GREP} -Rl 'Copyright.*Wiegley' $(git ls-files | cut -d / -f1 | uniq) \
+# Use ag (the-silver-searcher) when available as it is much faster than
+# the venerable egrep
+GREP=$(command -v ag || command -v egrep)
+
+git ls-files -z \
+  | xargs -0 ${GREP} -Rl 'Copyright.*Wiegley' \
+  | uniq \
   | ${GREP} -v "(test/regress/25A099C9.dat|$(basename $0))" \
-  | xargs sed -i '' -e "s/\(Copyright.*\)-20[0-9]\{2\}/\1-${YEAR}/"
+  | xargs sed -i '' -e "s/\(Copyright.*\)-20[0-9]\{2\}/\1-${YEAR}/" \
+  # git ls-files | xargs grep | uniq | grep -v | xargs sed
 
