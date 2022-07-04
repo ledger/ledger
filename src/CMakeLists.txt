@@ -117,7 +117,6 @@ set(LEDGER_INCLUDES
   print.h
   pstream.h
   ptree.h
-  pyfstream.h
   pyinterp.h
   pyutils.h
   query.h

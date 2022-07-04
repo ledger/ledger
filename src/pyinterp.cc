@@ -61,9 +61,7 @@ void export_utils();
 void export_value();
 void export_xact();
 
-#if PY_MAJOR_VERSION >= 3
 extern "C" PyObject* PyInit_ledger();
-#endif
 
 void initialize_for_python()
 {
@@ -150,7 +148,6 @@ void python_interpreter_t::initialize()
   try {
     DEBUG("python.interp", "Initializing Python");
 
-#if PY_MAJOR_VERSION >= 3
     // Unbuffer stdio to avoid python output getting stuck in buffer when
     // stdout is not a TTY. Normally buffers are flushed by Py_Finalize but
     // Boost has a long-standing issue preventing proper shutdown of the
@@ -158,7 +155,6 @@ void python_interpreter_t::initialize()
     Py_UnbufferedStdioFlag = 1;
     // PyImport_AppendInittab docs: "This should be called before Py_Initialize()".
     PyImport_AppendInittab((const char*)"ledger", PyInit_ledger);
-#endif
 
     Py_Initialize();
     assert(Py_IsInitialized());
@@ -166,11 +162,7 @@ void python_interpreter_t::initialize()
     hack_system_paths();
 
     main_module = import_module("__main__");
-#if PY_MAJOR_VERSION >= 3
     PyImport_ImportModule("ledger");
-#else
-    python::detail::init_module("ledger", &initialize_for_python);
-#endif
 
     is_initialized = true;
   }
@@ -330,7 +322,6 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
   if (! is_initialized)
     initialize();
 
-#if PY_MAJOR_VERSION >= 3
   wchar_t ** argv = new wchar_t *[args.size() + 1];
 
   std::size_t len = std::strlen(argv0) + 1;
@@ -343,18 +334,6 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
     argv[i + 1] = new wchar_t[len];
     mbstowcs(argv[i + 1], arg.c_str(), len);
   }
-#else
-  char ** argv = new char *[args.size() + 1];
-
-  argv[0] = new char[std::strlen(argv0) + 1];
-  std::strcpy(argv[0], argv0);
-
-  for (std::size_t i = 0; i < args.size(); i++) {
-    string arg = args.get<string>(i);
-    argv[i + 1] = new char[arg.length() + 1];
-    std::strcpy(argv[i + 1], arg.c_str());
-  }
-#endif
 
   int status = 1;
 
