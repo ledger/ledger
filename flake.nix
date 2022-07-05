@@ -2,6 +2,7 @@
   description = "A double-entry accounting system with a command-line reporting interface";
 
   outputs = { self, nixpkgs }: let
+    useGpgme = true;
     forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
     nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
     systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -17,11 +18,16 @@
         src = self;
 
         nativeBuildInputs = with pkgs; [ cmake ];
-        buildInputs = with pkgs; [ boost gmp mpfr libedit python3 texinfo gnused gpgme ];
+        buildInputs = with pkgs; [
+          boost gmp mpfr libedit python3 texinfo gnused
+        ] ++ pkgs.lib.optional useGpgme gpgme;
 
         enableParallelBuilding = true;
 
-        cmakeFlags = [ "-DCMAKE_INSTALL_LIBDIR=lib" "-DUSE_GPGME=1" ];
+        cmakeFlags = [
+          "-DCMAKE_INSTALL_LIBDIR=lib"
+          (pkgs.lib.optionalString useGpgme "-DUSE_GPGME=1")
+        ];
 
         checkPhase = ''
           export LD_LIBRARY_PATH=$PWD
