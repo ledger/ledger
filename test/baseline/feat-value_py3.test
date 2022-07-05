@@ -1,5 +1,4 @@
 python
-    from __future__ import print_function
     def print_type(val):
         print(type(val), val)
 

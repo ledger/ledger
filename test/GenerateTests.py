@@ -3,8 +3,6 @@
 # This script confirms both that the register report "adds up", and that its
 # final balance is the same as what the balance report shows.
 
-from __future__ import print_function
-
 import sys
 import re
 
