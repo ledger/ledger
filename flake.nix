@@ -34,7 +34,7 @@
           (pkgs.lib.optionalString useGpgme "-DUSE_GPGME:BOOL=ON")
         ];
 
-        # by default, it will query the python interpreter for it's sitepackages location
+        # by default, it will query the python interpreter for its sitepackages location
         # however, that would write to a different nixstore path, pass our own sitePackages location
         prePatch = pkgs.lib.optionalString usePython ''
           substituteInPlace src/CMakeLists.txt \
