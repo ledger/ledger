@@ -376,8 +376,9 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
     delete[] argv[i];
   delete[] argv;
 
-  if (status != 0)
-    throw status;
+  if (status != 0) {
+    throw_(std::runtime_error, _("Failed to execute Python module"));
+  }
 
   return NULL_VALUE;
 }
