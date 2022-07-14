@@ -18,8 +18,8 @@ from difflib import unified_diff
 class DocTests:
   def __init__(self, args):
     scriptpath      = os.path.dirname(os.path.realpath(__file__))
-    self.ledger     = os.path.abspath(args.ledger)
-    self.sourcepath = os.path.abspath(args.file)
+    self.ledger     = os.path.realpath(args.ledger)
+    self.sourcepath = os.path.realpath(args.file)
     self.verbose    = args.verbose
     self.tests      = args.examples
 

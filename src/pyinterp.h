@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,8 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _PYINTERP_H
-#define _PYINTERP_H
+#ifndef INCLUDED_PYINTERP_H
+#define INCLUDED_PYINTERP_H
 
 #include "session.h"
 
@@ -147,4 +147,4 @@ extern shared_ptr<python_interpreter_t> python_session;
 
 #endif // HAVE_BOOST_PYTHON
 
-#endif // _PYINTERP_H
+#endif // INCLUDED_PYINTERP_H

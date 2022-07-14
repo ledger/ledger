@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,8 +39,8 @@
  *
  * @ingroup util
  */
-#ifndef _FLAGS_H
-#define _FLAGS_H
+#ifndef INCLUDED_FLAGS_H
+#define INCLUDED_FLAGS_H
 
 
 template <typename T = boost::uint_least8_t, typename U = T>
@@ -184,4 +184,4 @@ public:
   }
 };
 
-#endif // _FLAGS_H
+#endif // INCLUDED_FLAGS_H

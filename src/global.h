@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -35,8 +35,8 @@
  *
  * @brief Contains the top-level functions used by main.cc
  */
-#ifndef _GLOBAL_H
-#define _GLOBAL_H
+#ifndef INCLUDED_GLOBAL_H
+#define INCLUDED_GLOBAL_H
 
 #include "option.h"
 #include "report.h"
@@ -129,7 +129,7 @@ public:
       out << '-' << Ledger_VERSION_DATE;
     out << _(", the command-line accounting tool");
     out <<
-      _("\n\nCopyright (c) 2003-2019, John Wiegley.  All rights reserved.\n\n\
+      _("\n\nCopyright (c) 2003-2022, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.");
     out << std::endl;
@@ -174,4 +174,4 @@ void handle_debug_options(int argc, char * argv[]);
 
 } // namespace ledger
 
-#endif // _GLOBAL_H
+#endif // INCLUDED_GLOBAL_H

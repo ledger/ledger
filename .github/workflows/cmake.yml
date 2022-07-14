@@ -44,7 +44,7 @@ jobs:
         name: Mac Dependencies
         run: |
           brew update
-          brew install boost boost-python3 gmp mpfr gpgme git
+          brew install boost boost-python3 gmp mpfr gpgme
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.

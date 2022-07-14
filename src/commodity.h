@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -44,8 +44,8 @@
  * This file contains one of the most basic types in Ledger:
  * commodity_t, and its annotated cousin, annotated_commodity_t.
  */
-#ifndef _COMMODITY_H
-#define _COMMODITY_H
+#ifndef INCLUDED_COMMODITY_H
+#define INCLUDED_COMMODITY_H
 
 #include "expr.h"
 
@@ -300,4 +300,4 @@ struct commodity_compare {
 
 } // namespace ledger
 
-#endif // _COMMODITY_H
+#endif // INCLUDED_COMMODITY_H

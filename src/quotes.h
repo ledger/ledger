@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,8 +39,8 @@
  *
  * @ingroup extra
  */
-#ifndef _QUOTES_H
-#define _QUOTES_H
+#ifndef INCLUDED_QUOTES_H
+#define INCLUDED_QUOTES_H
 
 namespace ledger {
 
@@ -50,4 +50,4 @@ commodity_quote_from_script(commodity_t& commodity,
 
 } // namespace ledger
 
-#endif // _QUOTES_H
+#endif // INCLUDED_QUOTES_H

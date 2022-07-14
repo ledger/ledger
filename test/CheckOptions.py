@@ -19,8 +19,8 @@ class CheckOptions (object):
     self.source_file = None
     self.sep = "\n  --"
 
-    self.ledger     = os.path.abspath(args.ledger)
-    self.source     = os.path.abspath(args.source)
+    self.ledger     = os.path.realpath(args.ledger)
+    self.source     = os.path.realpath(args.source)
 
     self.missing_options = set()
     self.unknown_options = set()

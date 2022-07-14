@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -46,8 +46,8 @@
  * the number 10 to a value object, it's internal type will be
  * INTEGER.
  */
-#ifndef _VALUE_H
-#define _VALUE_H
+#ifndef INCLUDED_VALUE_H
+#define INCLUDED_VALUE_H
 
 #include "balance.h"            // includes amount.h
 #include "mask.h"
@@ -998,4 +998,4 @@ void put_value(property_tree::ptree& pt, const value_t& value);
 
 } // namespace ledger
 
-#endif // _VALUE_H
+#endif // INCLUDED_VALUE_H

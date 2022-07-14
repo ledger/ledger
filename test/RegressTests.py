@@ -45,7 +45,7 @@ class RegressFile(object):
 
     def transform_line(self, line):
         line = line.replace('$sourcepath', harness.sourcepath)
-        line = line.replace('$FILE', os.path.abspath(self.filename))
+        line = line.replace('$FILE', os.path.realpath(self.filename))
         return line
 
     def read_test(self):
@@ -117,7 +117,7 @@ class RegressFile(object):
                 use_stdin = True
         else:
             test['command'] = (('$ledger -f "%s" ' % 
-                                os.path.abspath(self.filename)) +
+                                os.path.realpath(self.filename)) +
                                test['command'])
 
         p = harness.run(test['command'],
