@@ -140,9 +140,7 @@ struct string_from_python
     switch (PyUnicode_KIND(obj_ptr)) {
       case PyUnicode_1BYTE_KIND:
         value = (const char*)PyUnicode_1BYTE_DATA(obj_ptr);
-        // FIXME: It seems wrong to use `utf16to8` on 1BYTE_DATA, yet without this call
-        // the tests fail with: libc++abi: terminating with uncaught exception of type int
-        utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
+        str = std::string(value);
         break;
 #if PY_MINOR_VERSION < 12 && Py_UNICODE_SIZE == 2
       case PyUnicode_WCHAR_KIND:
