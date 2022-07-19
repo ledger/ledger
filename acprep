@@ -138,7 +138,7 @@ class CommandLineApp(object):
         """Main body of your application.
 
         This is the main portion of the app, and is run after all of the
-        arguments are processed.  Override this method to implment the primary
+        arguments are processed.  Override this method to implement the primary
         processing section of your application."""
         pass
 

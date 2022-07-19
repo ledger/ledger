@@ -863,7 +863,7 @@ features, please see the manual.
 - Fixed several core engine bugs, and problems with Ledger's XML data
   format.
 
-- Erros in XML or Gnucash data now report the correct line number for
+- Errors in XML or Gnucash data now report the correct line number for
   the error, instead of always showing line 1.
 
 - 'configure' has been changed to always use a combination of both
