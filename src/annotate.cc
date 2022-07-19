@@ -148,7 +148,7 @@ void annotation_t::parse(std::istream& in)
       else if (c == '(') {
         if (value_expr)
           throw_(amount_error,
-                 _("Commodity specifies more than one valuation expresion"));
+                 _("Commodity specifies more than one valuation expression"));
 
         in.get();
         READ_INTO(in, buf, 255, c, c != ')');

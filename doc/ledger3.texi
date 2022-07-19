@@ -12,15 +12,15 @@
 @c a prefix arg).  This updates the node pointers, which texinfmt.el
 @c needs.
 
-@c | Formating | Indexing |                                           |
-@c |           | @cindex  | concept                                   |
-@c | @command  | @findex  | Ledger CLI Command (like balance)         |
-@c | @option   | @findex  | Ledger CLI Option (like --market)         |
-@c | @var      |          | Ledger CLI option Variable (like -f FILE) |
-@c |           |          | Ledger file Syntax                        |
-@c | @samp     |          | Valued example or single char             |
-@c | @file     |          | File, Buffer                              |
-@c | @file     |          | Program (like ledger, report, acprep)     |
+@c | Formatting | Indexing |                                           |
+@c |            | @cindex  | concept                                   |
+@c | @command   | @findex  | Ledger CLI Command (like balance)         |
+@c | @option    | @findex  | Ledger CLI Option (like --market)         |
+@c | @var       |          | Ledger CLI option Variable (like -f FILE) |
+@c |            |          | Ledger file Syntax                        |
+@c | @samp      |          | Valued example or single char             |
+@c | @file      |          | File, Buffer                              |
+@c | @file      |          | Program (like ledger, report, acprep)     |
 
 @c Restructuring manual ideas
 @c http://beyondgrep.com/documentation/ack-2.04-man.html
@@ -6579,7 +6579,7 @@ $ ledger balance assets --exchange "PHP, EUR"
 The latest available price is used.  The syntax
 @option{-X @var{COMMODITY1}:@var{COMMODITY2}} displays values in @var{COMMODITY1}
 in terms of @var{COMMODITY2} using the latest available price, but
-will not automatically covert any other commodities to
+will not automatically convert any other commodities to
 @var{COMMODITY2}.  Multiple @option{-X} arguments may be used on a
 single command-line (as in
 @option{-X COMMODITY1:COMMODITY2 -X COMMODITY3:COMMODITY2}),

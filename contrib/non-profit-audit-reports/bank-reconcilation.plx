@@ -217,7 +217,7 @@ while ($startDate ge $earliestStartDate) {
   last if ($solution[0]);
 }
 if ($solution[0]) {
-  print "\"title:$formattedEndDate: $title\"\n\"BANK RECONCILATION: $account\",\"ENDING\",\"$formattedEndDate\"\n";
+  print "\"title:$formattedEndDate: $title\"\n\"BANK RECONCILIATION: $account\",\"ENDING\",\"$formattedEndDate\"\n";
   print "\n\n\"DATE\",\"CHECK NUM\",\"PAYEE\",\"AMOUNT\"\n\n";
   print "\"$formattedEndDate\",\"\",\"BANK ACCOUNT BALANCE\",\"\$$bankBalance\"\n\n";
   foreach my $ee (sort { $a->{date} cmp $b->{date} } @{$solution[1]}) {

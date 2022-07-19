@@ -60,7 +60,7 @@ DECLARE_EXCEPTION(balance_error, std::runtime_error);
  *
  * @brief A wrapper around amount_t allowing addition of multiple commodities.
  *
- * The balance_t class is appopriate for keeping a running balance
+ * The balance_t class is appropriate for keeping a running balance
  * where amounts of multiple commodities may be involved.
  */
 class balance_t

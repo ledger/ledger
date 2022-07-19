@@ -213,7 +213,7 @@ die "Total net assets doesn't equal sum of restricted and unrestricted ones!"
 my %incomeGroups = ('INTEREST INCOME' => { args => ['/^Income.*Interest/' ] },
                     'DONATIONS' => { args => [ '/^Income.*Donation/' ] },
                     'BOOK ROYALTIES & AFFILIATE PROGRAMS' =>
-                    { args => [ '/^Income.*(Royalt|Affilate)/' ] },
+                    { args => [ '/^Income.*(Royalt|Affiliate)/' ] },
                     'CONFERENCES, REGISTRATION' => {args => [ '/^Income.*Reg/' ] },
                     'CONFERENCES, RELATED BUSINESS INCOME' => { args => [ '/^Income.*(Conferences?:.*Sponsor|Booth|RBI)/'] },
                     'LICENSE COMPLIANCE' => { args => [ '/^Income.*(Enforce|Compliance)/' ]},
