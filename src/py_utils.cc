@@ -140,7 +140,7 @@ struct string_from_python
       case PyUnicode_1BYTE_KIND: {
         Py_UCS1* value = PyUnicode_1BYTE_DATA(obj_ptr);
         if (value == 0) throw_error_already_set();
-        str = std::string(value);
+        utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
         } break;
 #if PY_MINOR_VERSION < 12 && Py_UNICODE_SIZE == 2
       case PyUnicode_WCHAR_KIND:
