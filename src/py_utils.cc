@@ -134,7 +134,8 @@ struct string_from_python
       PyUnicode_GET_SIZE(obj_ptr);
 #endif
 #if PY_MINOR_VERSION < 12
-    PyUnicode_READY(obj_ptr);
+    if (PyUnicode_READY(obj_ptr))
+      return;
 #endif
     switch (PyUnicode_KIND(obj_ptr)) {
       case PyUnicode_1BYTE_KIND: {
