@@ -58,6 +58,9 @@ usd = comms.find_or_create('$')
 eur = comms.find_or_create('EUR')
 xcd = comms.find_or_create('XCD')
 
+# Tests currency symbols encoded with UCS-1. For details see #2132.
+xxx = comms.find_or_create('¤')
+
 assert not comms.find('CAD')
 assert not comms.has_key('CAD')
 assert not 'CAD' in comms
@@ -79,7 +82,7 @@ comms.european_by_default = True
 # don't need to worry about them, but they'll show up if you examine all the
 # keys in the commodities dict.
 
-assertEqual([u'', u'$', u'%', u'EUR', u'XCD', u'h', u'm', u's'],
+assertEqual([u'', u'$', u'%', u'EUR', u'XCD', u'h', u'm', u's', u'¤'],
             sorted(comms.keys()))
 
 # All the styles of dict iteration are supported:
