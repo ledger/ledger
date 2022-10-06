@@ -1,0 +1,13 @@
+C 1.00000000 BTC = 100000000 sat
+
+2022/10/01 Sell
+    Wallet                                                  -1 BTC
+    Bank                                                $20000
+
+test bal
+              $20000  Bank
+     -1.00000000 BTC  Wallet
+--------------------
+              $20000
+     -1.00000000 BTC
+end test
