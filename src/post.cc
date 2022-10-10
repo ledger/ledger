@@ -723,6 +723,9 @@ void put_post(property_tree::ptree& st, const post_t& post)
   if (post._date_aux)
     put_date(st.put("aux-date", ""), *post._date_aux);
 
+  if (post.payee_from_tag() != "")
+    st.put("payee", post.payee_from_tag());
+
   if (post.account) {
     property_tree::ptree& t(st.put("account", ""));
 
