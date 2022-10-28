@@ -248,18 +248,21 @@ namespace {
         if (post->given_cost &&
             ! post->has_flags(POST_CALCULATED | POST_COST_CALCULATED)) {
           std::string cost_op;
-          if (post->has_flags(POST_COST_IN_FULL))
+	  amount_t cost_amt;
+          if (post->has_flags(POST_COST_IN_FULL)) {
             cost_op = "@@";
-          else
+	    cost_amt = *post->given_cost;
+          } else {
             cost_op = "@";
+	    cost_amt = *post->given_cost / post->amount;
+	  }
           if (post->has_flags(POST_COST_VIRTUAL))
             cost_op = "(" + cost_op + ")";
 
-          if (post->has_flags(POST_COST_IN_FULL))
-            amtbuf << " " << cost_op << " " << post->given_cost->abs();
+	  if (report.HANDLED(signed_costs_out))
+            amtbuf << " " << cost_op << " " << cost_amt.abs();
           else
-            amtbuf << " " << cost_op << " "
-                   << (*post->given_cost / post->amount).abs();
+            amtbuf << " " << cost_op << " " cost_amt;
         }
 
         if (post->assigned_amount)

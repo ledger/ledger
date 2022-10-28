@@ -341,6 +341,7 @@ public:
     HANDLER(revalued_total_).report(out);
     HANDLER(rich_data).report(out);
     HANDLER(seed_).report(out);
+    HANDLER(signed_costs_out).report(out);
     HANDLER(sort_).report(out);
     HANDLER(sort_all_).report(out);
     HANDLER(sort_xacts_).report(out);
@@ -970,6 +971,8 @@ public:
   OPTION(report_t, rich_data);
 
   OPTION(report_t, seed_);
+
+  OPTION(report_t, signed_costs_out);
 
   OPTION_(report_t, sort_, DO_(str) { // -S
       OTHER(sort_xacts_).off();

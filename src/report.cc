@@ -1301,6 +1301,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT_(subtotal);
     else OPT(start_of_week_);
     else OPT(seed_);
+    else OPT(signed_costs_out);
     break;
   case 't':
     OPT_CH(amount_);
