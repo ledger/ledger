@@ -260,9 +260,9 @@ namespace {
             cost_op = "(" + cost_op + ")";
 
 	  if (report.HANDLED(signed_costs_out))
-            amtbuf << " " << cost_op << " " << cost_amt.abs();
+            amtbuf << " " << cost_op << " " << cost_amt;
           else
-            amtbuf << " " << cost_op << " " cost_amt;
+            amtbuf << " " << cost_op << " " << cost_amt.abs();
         }
 
         if (post->assigned_amount)
