@@ -1,0 +1,18 @@
+2022-10-30 * Buy FOO
+    Assets:Cash              -100.00 EUR
+    Assets:Fubar                3.00 FOO @@ 100.00 EUR
+
+2022-10-31 * Sell FOO
+    Assets:Fubar              -3,00 FOO @@ 100.00 EUR
+    Assets:Cash              100,00 EUR
+
+test --signed-costs-out print
+2022/10/30 * Buy FOO
+    Assets:Cash                          -100,00 EUR
+    Assets:Fubar                            3,00 FOO @@ 100,00 EUR
+
+2022/10/31 * Sell FOO
+    Assets:Fubar                           -3,00 FOO @@ -100,00 EUR
+    Assets:Cash                           100,00 EUR
+end test
+
