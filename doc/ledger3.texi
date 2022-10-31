@@ -6877,6 +6877,10 @@ When generating a ledger transaction from a CSV file using the
 Set the random seed to @var{INT} for the @code{generate} command.
 Used as part of development testing.
 
+@item --signed-costs-out
+Show total costs as signed values, so that @code{AMOUNT} and @code{COST}
+are always output with the same sign in @code{AMOUNT@@@@ COST}.
+
 @item --sort @var{VEXPR}
 @itemx -S @var{VEXPR}
 Sort the @command{register} report based on the value expression given
