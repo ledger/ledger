@@ -1,0 +1,6 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/utf8cppTargets.cmake")
+check_required_components( "utf8cpp" )
+
+add_library(utf8::cpp ALIAS utf8cpp)

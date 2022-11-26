@@ -19,6 +19,7 @@ target_include_directories(utf8cpp INTERFACE
 add_library(utf8::cpp ALIAS utf8cpp)
 
 if(UTF8_INSTALL)
+    include(CMakePackageConfigHelpers)
     if(MSVC)
         set(DEF_INSTALL_CMAKE_DIR CMake)
     else()
@@ -26,10 +27,28 @@ if(UTF8_INSTALL)
         set(DEF_INSTALL_CMAKE_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/utf8cpp)
     endif()
 
+    write_basic_package_version_file(
+        ${CMAKE_CURRENT_BINARY_DIR}/utf8cppConfigVersion.cmake
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMajorVersion
+    )
+
+    configure_package_config_file(
+        ${PROJECT_SOURCE_DIR}/utf8cppConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/utf8cppConfig.cmake
+        INSTALL_DESTINATION ${DEF_INSTALL_CMAKE_DIR}
+    )
+
     install(DIRECTORY source/ DESTINATION include/utf8cpp)
-    install(TARGETS utf8cpp EXPORT utf8cppConfig)
-    install(EXPORT utf8cppConfig DESTINATION ${DEF_INSTALL_CMAKE_DIR})
-    export(EXPORT utf8cppConfig)
+    install(TARGETS utf8cpp EXPORT utf8cppTargets)
+    install(EXPORT utf8cppTargets DESTINATION ${DEF_INSTALL_CMAKE_DIR})
+    install(
+        FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/utf8cppConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/utf8cppConfigVersion.cmake
+        DESTINATION
+        ${DEF_INSTALL_CMAKE_DIR}
+    )
 endif()
 
 if(UTF8_SAMPLES)
