@@ -135,7 +135,7 @@ string post_t::payee() const
 
   string post_payee = payee_from_tag();
 
-  return post_payee != "" ? post_payee : xact->payee;
+  return post_payee != "" ? post_payee : xact ? xact->payee : "";
 }
 
 namespace {

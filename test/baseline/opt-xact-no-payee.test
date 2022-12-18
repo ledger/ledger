@@ -1,0 +1,28 @@
+define DDV=1.22
+define DDV_ONLY=0.22
+define MACH=€1.12
+P 2018/01/01 00:00:00 MACH_FULL_P €1
+
+P 2018/01/01 00:00:00 MACH_FULL €1
+P 2020/04/30 00:00:00 MACH_FULL €1
+P 2020/05/02 00:00:00 MACH_FULL €1
+P 2020/11/16 00:00:00 MACH_FULL €2
+
+P 2021/06/01 00:00:00 MACH_BASIC €5
+
+
+; Automated MACH handling. Match all purchases of MACH
+; TODO: 2 pairs, cleared, uncleared
+= expr account =~ /Assets:Inventory:MACH$/ & payee =~ /DADA D.O.O./ & comment =~ /.*Automate$/
+    Expenses:Products:MACH             (€1.0 * amount * P(1 MACH_FULL_P, date))
+    DDV                                (€1.0 * amount * P(1 MACH_FULL_P, date) * DDV_ONLY)
+    Liabilities:Payable:Dada  (-€1.0 * amount * P(1 MACH_FULL_P, date) * DDV)
+
+~every month from 2021/01/01
+    Sales:Hardware:MACH                                60 MACH_FULL
+    Assets:Inventory:MACH                              -60 MACH_FULL
+    Sales:Hardware:MACH                                -10.20€
+    DDV                                                -32.44€
+    Assets:Receivable:Duda
+test bal
+end test
