@@ -44,7 +44,7 @@ TEST(CheckedAPITests, test_next)
 {
     const char* twochars = "\xe6\x97\xa5\xd1\x88";
     const char* w = twochars;
-    int cp = next(w, twochars + 6);
+    unsigned int cp = next(w, twochars + 6);
     EXPECT_EQ (cp, 0x65e5);
     EXPECT_EQ (w, twochars + 3);
 
@@ -67,7 +67,7 @@ TEST(CheckedAPITests, test_next)
 TEST(CheckedAPITests, test_peek_next)
 {
     const char* const cw = "\xe6\x97\xa5\xd1\x88";
-    int cp = peek_next(cw, cw + 6);
+    unsigned int cp = peek_next(cw, cw + 6);
     EXPECT_EQ (cp, 0x65e5);
 }
 
@@ -75,7 +75,7 @@ TEST(CheckedAPITests, test_prior)
 {
     const char* twochars = "\xe6\x97\xa5\xd1\x88";
     const char* w = twochars + 3;
-    int cp = prior (w, twochars);
+    unsigned int cp = prior (w, twochars);
     EXPECT_EQ (cp, 0x65e5);
     EXPECT_EQ (w, twochars);
 
@@ -111,13 +111,13 @@ TEST(CheckedAPITests, test_advance)
 TEST(CheckedAPITests, test_distance)
 {
     const char* twochars = "\xe6\x97\xa5\xd1\x88";
-    size_t dist = utf8::distance(twochars, twochars + 5);
+    size_t dist = static_cast<size_t>(utf8::distance(twochars, twochars + 5));
     EXPECT_EQ (dist, 2);
 }
 
 TEST(CheckedAPITests, test_utf32to8)
 {
-    int utf32string[] = {0x448, 0x65E5, 0x10346, 0};
+    unsigned int utf32string[] = {0x448, 0x65E5, 0x10346, 0};
     string utf8result;
     utf32to8(utf32string, utf32string + 3, back_inserter(utf8result));
     EXPECT_EQ (utf8result.size(), 9);
@@ -126,7 +126,7 @@ TEST(CheckedAPITests, test_utf32to8)
 TEST(CheckedAPITests, test_utf8to32)
 {
     const char* twochars = "\xe6\x97\xa5\xd1\x88";
-    vector<int> utf32result;
+    vector<unsigned int> utf32result;
     utf8to32(twochars, twochars + 5, back_inserter(utf32result));
     EXPECT_EQ (utf32result.size(), 2);
 }
