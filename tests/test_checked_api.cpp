@@ -38,6 +38,12 @@ TEST(CheckedAPITests, test_append)
     EXPECT_EQ (u[2], 0x8d);
     EXPECT_EQ (u[3], 0x86);
     EXPECT_EQ (u[4], 0);
+
+    // Ensure no warnings with plain char
+    char c[2] = {0,0};
+    append('a', c);
+    EXPECT_EQ (u[0], 'a');
+    EXPECT_EQ (u[1], 0);
 }
 
 TEST(CheckedAPITests, test_next)
