@@ -1,6 +1,6 @@
 README
 
-This document provides backround on the enclosed example
+This document provides background on the enclosed example
 
 Demo
 ----
@@ -47,7 +47,7 @@ Compare the deltas to the current version with
 Note also that the csv2ods.py treats columns 4 and 5 (numbering from 1) of the csv 
 magically. If column 4 contains a non-empty string which is not 'Receipt'
 then it is interpreted as a relative path of an artifact to link to.
-Similary for column 5 and 'Invoice'.
+Similarly for column 5 and 'Invoice'.
 
 
 Sample PDF files

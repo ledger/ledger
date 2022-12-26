@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -33,6 +33,7 @@
 
 #include "pyinterp.h"
 #include "pyutils.h"
+#include "error.h"
 #include "session.h"
 
 namespace ledger {
@@ -49,6 +50,11 @@ namespace {
   {
     return python_session->read_journal_from_string(data);
   }
+
+  PyObject* py_error_context(const session_t& session)
+  {
+      return str_to_py_unicode(error_context());
+  }
 }
 
 void export_session()
@@ -63,6 +69,7 @@ void export_session()
     .def("close_journal_files", &session_t::close_journal_files)
     .def("journal", &session_t::get_journal,
          return_internal_reference<>())
+    .def("error_context", &py_error_context)
     ;
 
   scope().attr("session") =

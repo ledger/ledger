@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -732,7 +732,8 @@ void amount_t::in_place_unreduce()
   }
 
   if (shifted) {
-    if (("h" == comm->symbol() || "m" == comm->symbol()) && commodity_t::time_colon_by_default) {
+    if (comm && ("h" == comm->symbol() || "m" == comm->symbol())
+        && commodity_t::time_colon_by_default) {
       double truncated = trunc(tmp.to_double());
       double precision = tmp.to_double() - truncated;
       tmp = truncated + (precision * (comm->smaller()->number() / 100.0));

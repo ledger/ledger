@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -148,7 +148,7 @@ void annotation_t::parse(std::istream& in)
       else if (c == '(') {
         if (value_expr)
           throw_(amount_error,
-                 _("Commodity specifies more than one valuation expresion"));
+                 _("Commodity specifies more than one valuation expression"));
 
         in.get();
         READ_INTO(in, buf, 255, c, c != ')');

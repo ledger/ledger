@@ -12,15 +12,15 @@
 @c a prefix arg).  This updates the node pointers, which texinfmt.el
 @c needs.
 
-@c | Formating | Indexing |                                           |
-@c |           | @cindex  | concept                                   |
-@c | @command  | @findex  | Ledger CLI Command (like balance)         |
-@c | @option   | @findex  | Ledger CLI Option (like --market)         |
-@c | @var      |          | Ledger CLI option Variable (like -f FILE) |
-@c |           |          | Ledger file Syntax                        |
-@c | @samp     |          | Valued example or single char             |
-@c | @file     |          | File, Buffer                              |
-@c | @file     |          | Program (like ledger, report, acprep)     |
+@c | Formatting | Indexing |                                           |
+@c |            | @cindex  | concept                                   |
+@c | @command   | @findex  | Ledger CLI Command (like balance)         |
+@c | @option    | @findex  | Ledger CLI Option (like --market)         |
+@c | @var       |          | Ledger CLI option Variable (like -f FILE) |
+@c |            |          | Ledger file Syntax                        |
+@c | @samp      |          | Valued example or single char             |
+@c | @file      |          | File, Buffer                              |
+@c | @file      |          | Program (like ledger, report, acprep)     |
 
 @c Restructuring manual ideas
 @c http://beyondgrep.com/documentation/ack-2.04-man.html
@@ -113,7 +113,7 @@
 
 @copying
 
-Copyright @copyright{} 2003--2019, John Wiegley.  All rights reserved.
+Copyright @copyright{} 2003--2022, John Wiegley.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -1037,7 +1037,7 @@ specifiers:
 @smallexample
 $20.00         ; currency: twenty US dollars
 40 AAPL        ; commodity: 40 shares of Apple stock
-60 DM          ; currency: 60 Deutsch Mark
+60 DM          ; currency: 60 Deutsche Mark
 £50            ; currency: 50 British pounds
 50 EUR         ; currency: 50 Euros (or use appropriate symbol)
 @end smallexample
@@ -1773,6 +1773,12 @@ commodity name must be enclosed in double quotes @samp{"}:
     Actif:SG PEE STK    $-10742.54
 @end smallexample
 
+Please note that, for querying quoted commodities, the quotes need to be escaped, as follows:
+
+@smallexample @c command:15453B3
+$ ledger -f d reg -l 'commodity == "\"Arcancia Équilibre 454\""'
+@end smallexample
+
 @node Buying and Selling Stock, Fixing Lot Prices, Naming Commodities, Currency and Commodities
 @subsection Buying and Selling Stock
 @cindex buying stock
@@ -1871,7 +1877,7 @@ Assets:Checking because its amount is null.
 @node Complete control over commodity pricing,  , Fixing Lot Prices, Currency and Commodities
 @subsection Complete control over commodity pricing
 @findex --market
-@findex --exchange @var{COMMODITY}
+@findex --exchange "@var{COMMODITY} [, @var{COMMODITY}, ...]"
 
 Ledger allows you to have very detailed control over how your
 commodities are valued.  You can fine tune the results given using the
@@ -3376,7 +3382,7 @@ from the first posting's cost, you can elide the other amount:
 @node Primary and secondary commodities,  , Explicit posting costs, Explicit posting costs
 @subsection Primary and secondary commodities
 @findex --market
-@findex --exchange @var{COMMODITY}
+@findex --exchange "@var{COMMODITY} [, @var{COMMODITY}, ...]"
 
 It is a general convention within Ledger that the ``top'' postings in
 a transaction contain the target accounts, while the final posting
@@ -6523,13 +6529,57 @@ report.
 Report beginning and ending of periods by the date of the first and last
 posting occurring in that period.
 
-@item --exchange @var{COMMODITY}
-@itemx -X @var{COMMODITY}
-Display values in terms of the given @var{COMMODITY}.  The latest
-available price is used.  The syntax
+@item --exchange "@var{COMMODITY} [, @var{COMMODITY}, ...]"
+@itemx -X "@var{COMMODITY} [, @var{COMMODITY}, ...]"
+Display values in terms of the given @var{COMMODITY}.  If multiple
+commodities are given, values in a listed commodity will remain as-is,
+and others will be displayed in the first listed commodity they can be
+converted to.
+
+@smallexample
+$ ledger balance assets
+@end smallexample
+@smallexample
+             100 EUR
+             100 PHP
+             100 USD  Assets
+             100 EUR    EUR Bank
+             100 PHP    PHP Bank
+             100 USD    USD Bank
+--------------------
+             100 EUR
+             100 PHP
+             100 USD
+@end smallexample
+@smallexample
+$ ledger balance assets --exchange PHP
+@end smallexample
+@smallexample
+           11382 PHP  Assets
+            5801 PHP    EUR Bank
+             100 PHP    PHP Bank
+            5481 PHP    USD Bank
+--------------------
+           11382 PHP
+@end smallexample
+@smallexample
+$ ledger balance assets --exchange "PHP, EUR"
+@end smallexample
+@smallexample
+             100 EUR
+            5581 PHP  Assets
+             100 EUR    EUR Bank
+             100 PHP    PHP Bank
+            5481 PHP    USD Bank
+--------------------
+             100 EUR
+            5581 PHP
+@end smallexample
+
+The latest available price is used.  The syntax
 @option{-X @var{COMMODITY1}:@var{COMMODITY2}} displays values in @var{COMMODITY1}
 in terms of @var{COMMODITY2} using the latest available price, but
-will not automatically covert any other commodities to
+will not automatically convert any other commodities to
 @var{COMMODITY2}.  Multiple @option{-X} arguments may be used on a
 single command-line (as in
 @option{-X COMMODITY1:COMMODITY2 -X COMMODITY3:COMMODITY2}),
@@ -7496,7 +7546,7 @@ etc.
 
 @findex --now @var{DATE}
 @findex --market
-@findex --exchange @var{COMMODITY}
+@findex --exchange "@var{COMMODITY} [, @var{COMMODITY}, ...]"
 
 When you specify @option{--market (-V)}, or @option{--exchange
 @var{COMMODITY} (-X)}, you are requesting that some or all of the
@@ -7530,7 +7580,7 @@ old European currencies in terms of the Euro after a certain date:
 
 This says: If @option{--now @var{DATE}} is some old date, use market
 prices as they were at that time; but if @option{--now @var{DATE}} is
-past June 2008, use a fixed price for converting Deutsch Mark to Euro.
+past June 2008, use a fixed price for converting Deutsche Mark to Euro.
 
 Or how about never re-valuating commodities used in Expenses, since
 they cannot have a different future value:
@@ -7594,7 +7644,7 @@ valuated in another currency.  For example:
 @cindex LIFO/FIFO
 @findex --lots
 @findex --lot-prices
-@findex --exchange @var{COMMODITY}
+@findex --exchange "@var{COMMODITY} [, @var{COMMODITY}, ...]"
 @findex --historical
 @findex --basis
 @findex --price

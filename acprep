@@ -138,7 +138,7 @@ class CommandLineApp(object):
         """Main body of your application.
 
         This is the main portion of the app, and is run after all of the
-        arguments are processed.  Override this method to implment the primary
+        arguments are processed.  Override this method to implement the primary
         processing section of your application."""
         pass
 
@@ -539,7 +539,8 @@ class PrepareBuild(CommandLineApp):
         elif system == 'Linux':
             if exists('/etc/issue'):
                 issue = open('/etc/issue')
-                if issue.readline().startswith('Ubuntu'):
+                issue_name = issue.readline()
+                if issue_name.startswith('Ubuntu'):
                     info = dict([line.strip().split('=', 1)
                                  for line in open('/etc/lsb-release')])
                     release = info['DISTRIB_CODENAME']
@@ -673,6 +674,23 @@ class PrepareBuild(CommandLineApp):
                             BoostInfo().dependencies('ubuntu-' + release))
                         self.log.info('Executing: ' + ' '.join(packages))
                         self.execute(*packages)
+                elif issue_name.startswith('Arch Linux'):
+                    self.log.info('Looks like you are using Pacman on Arch Linux')
+                    packages = [
+                        'sudo', 'pacman', '-S', '--noconfirm',
+                        'base-devel',
+                        'boost',
+                        'doxygen',
+                        'gmp',
+                        'graphviz',
+                        'lcov',
+                        'libedit',
+                        'mpfr',
+                        'sloccount',
+                        'utf8cpp'
+                    ]
+                    self.log.info('Executing: ' + ' '.join(packages))
+                    self.execute(*packages)
 
             if exists('/etc/redhat-release'):
                 release = open('/etc/redhat-release').readline()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,8 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _PYFSTREAM_H
-#define _PYFSTREAM_H
+#ifndef INCLUDED_PYFSTREAM_H
+#define INCLUDED_PYFSTREAM_H
 
 // pyofstream
 // - a stream that writes on a Python file object
@@ -199,4 +199,4 @@ public:
   }
 };
 
-#endif // _PYFSTREAM_H
+#endif // INCLUDED_PYFSTREAM_H

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -110,31 +110,65 @@ struct string_from_python
                         (data)->storage.bytes;
       new (storage) string(value);
       data->convertible = storage;
-    } else {
-#endif
-      VERIFY(PyUnicode_Check(obj_ptr));
-
-      Py_ssize_t size = PyUnicode_GET_SIZE(obj_ptr);
-      const Py_UNICODE* value = PyUnicode_AS_UNICODE(obj_ptr);
-
-      string str;
-#if Py_UNICODE_SIZE == 2 // UTF-16
-        utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
-#elif Py_UNICODE_SIZE == 4 // UTF-32
-        utf8::unchecked::utf32to8(value, value + size, std::back_inserter(str));
-#else
-        assert("Py_UNICODE has an unexpected size" == NULL);
-#endif
-
-      if (value == 0) throw_error_already_set();
-      void* storage =
-        reinterpret_cast<converter::rvalue_from_python_storage<string> *>
-                        (data)->storage.bytes;
-      new (storage) string(str);
-      data->convertible = storage;
-#if PY_MAJOR_VERSION < 3
+      return;
     }
 #endif
+    VERIFY(PyUnicode_Check(obj_ptr));
+
+    string str;
+#if PY_MAJOR_VERSION < 3
+    Py_ssize_t size = PyUnicode_GET_SIZE(obj_ptr);
+    const Py_UNICODE* value = PyUnicode_AS_UNICODE(obj_ptr);
+#if Py_UNICODE_SIZE == 2 // UTF-16
+    utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
+#elif Py_UNICODE_SIZE == 4 // UTF-32
+    utf8::unchecked::utf32to8(value, value + size, std::back_inserter(str));
+#else
+    assert("Py_UNICODE has an unexpected size" == NULL);
+#endif // Py_UNICODE_SIZE
+#else // PY_MAJOR_VERSION >= 3
+    Py_ssize_t size =
+#if PY_MINOR_VERSION >= 3
+      PyUnicode_GET_LENGTH(obj_ptr);
+#else
+      PyUnicode_GET_SIZE(obj_ptr);
+#endif
+#if PY_MINOR_VERSION < 12
+    if (PyUnicode_READY(obj_ptr))
+      return;
+#endif
+    switch (PyUnicode_KIND(obj_ptr)) {
+      case PyUnicode_1BYTE_KIND: {
+        Py_UCS1* value = PyUnicode_1BYTE_DATA(obj_ptr);
+        if (value == 0) throw_error_already_set();
+        utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
+        } break;
+#if PY_MINOR_VERSION < 12 && Py_UNICODE_SIZE == 2
+      case PyUnicode_WCHAR_KIND:
+#endif
+      case PyUnicode_2BYTE_KIND: {
+        Py_UCS2* value = PyUnicode_2BYTE_DATA(obj_ptr);
+        if (value == 0) throw_error_already_set();
+        utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
+        } break;
+#if PY_MINOR_VERSION < 12 && Py_UNICODE_SIZE == 4
+      case PyUnicode_WCHAR_KIND:
+#endif
+      case PyUnicode_4BYTE_KIND: {
+        Py_UCS4* value = PyUnicode_4BYTE_DATA(obj_ptr);
+        if (value == 0) throw_error_already_set();
+        utf8::unchecked::utf32to8(value, value + size, std::back_inserter(str));
+        } break;
+      default:
+        assert("PyUnicode_KIND returned an unexpected kind" == NULL);
+    }
+#endif // PY_MAJOR_VERSION
+
+    void* storage =
+      reinterpret_cast<converter::rvalue_from_python_storage<string> *>
+                      (data)->storage.bytes;
+    new (storage) string(str);
+    data->convertible = storage;
   }
 };
 

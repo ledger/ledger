@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -265,7 +265,7 @@ bool xact_base_t::finalize()
         DEBUG("xact.finalize", "per_unit_cost = " << per_unit_cost);
 
         foreach (post_t * post, posts) {
-          const amount_t& amt(post->amount);
+          const amount_t& amt(post->amount.reduced());
 
           if (post->must_balance() && amt.commodity() == comm) {
             balance -= amt;

@@ -20,7 +20,7 @@
 - Fix incorrect parsing of expressions containing a `-` without spaces (bug #2001)
 
 - Fix payee metadata on postings not being validated and payee aliases not
-  being honored (bug #566 & bug #1892)
+  being honored (bug #556 & bug #1892)
 
 - Fix ledger interpreting a posting with 0 difference as a null-posting,
   which leads to it auto-balancing the posting (bug #1942)
@@ -39,6 +39,10 @@
 - Fix Msys2 MinGW build (bug #1905)
 
 - Fix unicode problems on Windows (bug #1986)
+
+- Fix the issue that with Boost >= 1.77 `include` directive cannot find the file
+  to include for stdin (`-f -`). Also for `-f -` when `include` cannot find the
+  file it reports the error with full path now. (bug #2057 & bug #2092)
 
 - Various documentation improvements
 
@@ -859,7 +863,7 @@ features, please see the manual.
 - Fixed several core engine bugs, and problems with Ledger's XML data
   format.
 
-- Erros in XML or Gnucash data now report the correct line number for
+- Errors in XML or Gnucash data now report the correct line number for
   the error, instead of always showing line 1.
 
 - 'configure' has been changed to always use a combination of both

@@ -1,4 +1,4 @@
-;period days should not be alligned
+;period days should not be aligned
 
 test period 'every 14 days from 2011/10/03'
 --- Period expression tokens ---
