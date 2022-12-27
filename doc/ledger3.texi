@@ -2483,7 +2483,7 @@ Closes block commands like @code{apply} or @code{comment}.
 
 @item expr
 @findex expr
-@c instance_t::expr_directive in textual.cc
+Same as @code{eval}.
 
 @item include
 @findex include
