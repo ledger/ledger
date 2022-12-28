@@ -13,7 +13,7 @@ target_link_libraries(noexceptionstests PRIVATE utf8::cpp)
 
 target_compile_options(${PROJECT_NAME} INTERFACE
   $<$<CXX_COMPILER_ID:MSVC>:/W4>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion>)
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wconversion>)
 
 target_compile_options(noexceptionstests PUBLIC -fno-exceptions)
 
