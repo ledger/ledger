@@ -1,5 +1,6 @@
-#define F_TEST_NO_MAIN
-#include "../extern/ftest/ftest.h"
+#ifndef UTF8_FOR_CPP_TEST_CHECKED_H_2675DCD0_9480_4c0c_B92A_CC14C027B731
+#define UTF8_FOR_CPP_TEST_CHECKED_H_2675DCD0_9480_4c0c_B92A_CC14C027B731
+
 #include "utf8.h"
 
 #include <string>
@@ -42,8 +43,8 @@ TEST(CheckedAPITests, test_append)
     // Ensure no warnings with plain char
     char c[2] = {0,0};
     append('a', c);
-    EXPECT_EQ (u[0], 'a');
-    EXPECT_EQ (u[1], 0);
+    EXPECT_EQ (c[0], 'a');
+    EXPECT_EQ (c[1], 0);
 }
 
 TEST(CheckedAPITests, test_next)
@@ -193,3 +194,5 @@ TEST(CheckedAPITests, test_starts_with_bom)
     bool no_bbom = starts_with_bom(threechars, threechars + sizeof(threechars));
     EXPECT_FALSE (no_bbom);
 }
+
+#endif
