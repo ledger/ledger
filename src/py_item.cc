@@ -130,8 +130,7 @@ void export_item()
     .add_property("note",
                   make_getter(&item_t::note,
                               return_value_policy<return_by_value>()),
-                  make_setter(&item_t::note,
-                              return_value_policy<return_by_value>()))
+                  make_setter(&item_t::note))
     .add_property("pos",
                   make_getter(&item_t::pos,
                               return_value_policy<return_by_value>()),

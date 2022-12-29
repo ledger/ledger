@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import exceptions
 import operator
 
 from ledger import *
-from StringIO import *
 from datetime import *
 
 class PostingTestCase(unittest.TestCase):
