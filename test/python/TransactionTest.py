@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import exceptions
 import operator
 
 from ledger import *
-from StringIO import *
 from datetime import *
 
 class JournalTestCase(unittest.TestCase):
@@ -13,7 +11,7 @@ class JournalTestCase(unittest.TestCase):
         pass
 
     def tearDown(self):
-        pass
+        close_journal_files()
 
     def test_(self):
         pass
