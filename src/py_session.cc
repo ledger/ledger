@@ -55,6 +55,9 @@ namespace {
   {
       return str_to_py_unicode(error_context());
   }
+  void py_close_journal_files() {
+    python_session->close_journal_files();
+  }
 }
 
 void export_session()
@@ -74,6 +77,8 @@ void export_session()
 
   scope().attr("session") =
     object(ptr(static_cast<session_t *>(python_session.get())));
+  scope().attr("close_journal_files") =
+    python::make_function(&py_close_journal_files);
   scope().attr("read_journal") =
     python::make_function(&py_read_journal,
                           return_internal_reference<>());
