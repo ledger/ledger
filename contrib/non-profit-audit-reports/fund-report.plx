@@ -133,7 +133,7 @@ my %tot;
 my %beforeEndings = ('Income' => 1, 'Expenses' => 1);
 my %afterEndings;
 
-# For other @possibleTypes, build up @fieldsList to just thoes that are present. 
+# For other @possibleTypes, build up @fieldsList to just those that are present. 
 
 foreach my $fund (keys %funds) {
   foreach my $type (@possibleTypes) {
@@ -216,7 +216,7 @@ foreach my $fund (sort {
     $tot{$type} += $funds{$fund}{$type};
   }
   print "\n";
-  # Santity check:
+  # Sanity check:
   if (abs($funds{$fund}{ending} -
       ($funds{$fund}{starting}
          - $funds{$fund}{Income} - $funds{$fund}{Expenses}))
