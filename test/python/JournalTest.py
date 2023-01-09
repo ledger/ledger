@@ -5,6 +5,8 @@ import unittest
 from ledger import *
 
 class JournalTestCase(unittest.TestCase):
+    def tearDown(self):
+        close_journal_files()
 
     def testBasicRead(self):
         journal = read_journal_from_string("""

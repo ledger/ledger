@@ -11,7 +11,7 @@ class PostingTestCase(unittest.TestCase):
         pass
 
     def tearDown(self):
-        pass
+        close_journal_files()
 
     def test_(self):
         pass

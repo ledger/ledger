@@ -21,7 +21,7 @@ class TransactionTestCase(unittest.TestCase):
 """)
 
     def tearDown(self):
-        pass
+        close_journal_files()
 
     def testAddRemovePosts(self):
         xacts = [xact for xact in self.journal]
