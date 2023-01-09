@@ -7,7 +7,7 @@
 !end
 
 test reg "^A:"
-94-Jan-02 Salary                A:Assset:Bank:Checking          200          200
+94-Jan-02 Salary                A:Assets:Bank:Checking          200          200
                                 A:Income:Salary                -200            0
 end test
 

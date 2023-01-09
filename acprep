@@ -193,7 +193,10 @@ class CommandLineApp(object):
             # not let us differentiate between application errors and a case
             # where the user has not passed us enough arguments.  So, we check
             # the argument count ourself.
-            argspec = inspect.getargspec(self.main)
+            if sys.version_info < (3, 10):
+                argspec = inspect.getargspec(self.main)
+            else:
+                argspec = inspect.getfullargspec(self.main)
             expected_arg_count = len(argspec[0]) - 1
 
             if len(main_args) >= expected_arg_count:
