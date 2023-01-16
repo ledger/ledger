@@ -1,0 +1,7 @@
+2023/01/09   John's Hardware - 2" rubber nails
+    Expenses:DIY    $1.00
+    Assets:Cash
+
+test csv --csv-format='%(quoted(payee))\n' expenses
+"John's Hardware - 2\" rubber nails"
+end test

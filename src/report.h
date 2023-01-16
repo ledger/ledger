@@ -182,7 +182,7 @@ public:
   value_t fn_abs(call_scope_t& scope);
   value_t fn_justify(call_scope_t& scope);
   value_t fn_quoted(call_scope_t& scope);
-  value_t fn_quoted_rfc4180(call_scope_t& scope);
+  value_t fn_quoted_rfc(call_scope_t& scope);
   value_t fn_join(call_scope_t& scope);
   value_t fn_format_date(call_scope_t& scope);
   value_t fn_format_datetime(call_scope_t& scope);
