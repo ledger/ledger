@@ -8528,10 +8528,10 @@ $ ledger -f expr.dat --format "%(quoted(account)) %(quoted(amount))\n" reg
 @end smallexample
 @end defun
 
-@c @defun quoted_rfc4180 expression
+@c @defun quoted_rfc expression
 @c Surround @var{expression} with double-quotes, compliant with RFC 4180.  If expression contains a double-quote, it will be represented with two double-quotes.
 @c @smallexample @c command:EAD8AA7,with_input:3406FC1
-@c $ ledger -f expr.dat --format "%(quoted_rfc4180(account)) %(quoted_rfc4180(amount))\n" reg
+@c $ ledger -f expr.dat --format "%(quoted_rfc(account)) %(quoted_rfc(amount))\n" reg
 @c @end smallexample
 @c @smallexample @c output:EAD8AA7
 @c "Assets:Cash" "¤ -123,45"

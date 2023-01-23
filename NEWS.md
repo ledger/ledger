@@ -44,6 +44,11 @@
   to include for stdin (`-f -`). Also for `-f -` when `include` cannot find the
   file it reports the error with full path now. (bug #2057 & bug #2092)
 
+- Rename `quoted_rfc4180` to `quoted_rfc`, as numbers used in function names
+  confuses the parser.
+
+- Numbers are no longer permitted in value expression function names.
+
 - Various documentation improvements
 
 ## 3.2.1 (2020-05-18)
