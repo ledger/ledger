@@ -137,7 +137,7 @@ A: This can happen for the same reason as above.  It can also happen if you
 Q: My distribution has versions of Boost and/or CMake that are too old for
   Ledger.  How do I build my own Boost and/or CMake binaries that will
   work properly with Ledger?  Thereafter, how do I configure Ledger
-  properly to use those newly built verisons of Boost and/or CMake?
+  properly to use those newly built versions of Boost and/or CMake?
 
 A: Here's commands that one user used to make this work, for Boost 1.51.0
   on Debian GNU/Linux 6.0.x (aka Debian squeeze).  It's likely to work ok

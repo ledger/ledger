@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,8 +39,8 @@
  *
  * @ingroup views
  */
-#ifndef _VIEWS_H
-#define _VIEWS_H
+#ifndef INCLUDED_VIEWS_H
+#define INCLUDED_VIEWS_H
 
 #include "utils.h"
 
@@ -454,4 +454,4 @@ void populate_journal(r_journal_ptr journal, report_t& report,
 
 #endif /* DOCUMENT_MODEL */
 
-#endif // _VIEWS_H
+#endif // INCLUDED_VIEWS_H

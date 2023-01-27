@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,7 +38,7 @@ namespace ledger {
 
 int expr_t::token_t::parse_reserved_word(std::istream& in)
 {
-  char c = static_cast<char>(in.peek());
+  int c = in.peek();
 
   if (c == 'a' || c == 'd' || c == 'e' || c == 'f' ||
       c == 'i' || c == 'o' || c == 'n' || c == 't') {
@@ -131,8 +131,9 @@ void expr_t::token_t::parse_ident(std::istream& in)
   kind   = IDENT;
   length = 0;
 
-  char c, buf[256];
-  READ_INTO_(in, buf, 255, c, length, std::isalnum(c) || c == '_');
+  int c;
+  char buf[256];
+  READ_INTO_(in, buf, 255, c, length, std::isalpha(c) || c == '_');
 
   value.set_string(buf);
 }
@@ -146,9 +147,9 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
   if (! in.good())
     throw_(parse_error, _("Input stream no longer valid"));
 
-  char c = peek_next_nonws(in);
+  int c = peek_next_nonws(in);
 
-  if (in.eof() || c == -1) {
+  if (in.eof()) {
     kind = TOK_EOF;
     return;
   }
@@ -162,10 +163,10 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
 
   switch (c) {
   case '&':
-    in.get(c);
-    c = static_cast<char>(in.peek());
+    in.get();
+    c = in.peek();
     if (c == '&') {
-      in.get(c);
+      in.get();
       kind = KW_AND;
       length = 2;
       break;
@@ -173,10 +174,10 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     kind = KW_AND;
     break;
   case '|':
-    in.get(c);
-    c = static_cast<char>(in.peek());
+    in.get();
+    c = in.peek();
     if (c == '|') {
-      in.get(c);
+      in.get();
       kind = KW_OR;
       length = 2;
       break;
@@ -185,23 +186,23 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     break;
 
   case '(':
-    in.get(c);
+    in.get();
     kind = LPAREN;
     break;
   case ')':
-    in.get(c);
+    in.get();
     kind = RPAREN;
     break;
 
   case '[': {
-    in.get(c);
+    in.get();
 
     char buf[256];
     READ_INTO_(in, buf, 255, c, length, c != ']');
     if (c != ']')
       expected(']', c);
 
-    in.get(c);
+    in.get();
     length++;
 
     date_interval_t timespan(buf);
@@ -222,7 +223,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     READ_INTO_(in, buf, 4095, c, length, c != delim);
     if (c != delim)
       expected(delim, c);
-    in.get(c);
+    in.get();
     length++;
     kind = VALUE;
     value.set_string(buf);
@@ -230,10 +231,10 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
   }
 
   case '{': {
-    in.get(c);
+    in.get();
     amount_t temp;
     temp.parse(in, PARSE_NO_MIGRATE);
-    in.get(c);
+    c = in.get();
     if (c != '}')
       expected('}', c);
     length++;
@@ -243,10 +244,10 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
   }
 
   case '!':
-    in.get(c);
-    c = static_cast<char>(in.peek());
+    in.get();
+    c = in.peek();
     if (c == '=') {
-      in.get(c);
+      in.get();
       symbol[1] = c;
       symbol[2] = '\0';
       kind = NEQUAL;
@@ -254,7 +255,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
       break;
     }
     else if (c == '~') {
-      in.get(c);
+      in.get();
       symbol[1] = c;
       symbol[2] = '\0';
       kind = NMATCH;
@@ -265,10 +266,10 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     break;
 
   case '-':
-    in.get(c);
-    c = static_cast<char>(in.peek());
+    in.get();
+    c = in.peek();
     if (c == '>') {
-      in.get(c);
+      in.get();
       symbol[1] = c;
       symbol[2] = '\0';
       kind = ARROW;
@@ -278,27 +279,26 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     kind = MINUS;
     break;
   case '+':
-    in.get(c);
+    in.get();
     kind = PLUS;
     break;
 
   case '*':
-    in.get(c);
+    in.get();
     kind = STAR;
     break;
 
   case '?':
-    in.get(c);
+    in.get();
     kind = QUERY;
     break;
   case ':':
-    in.get(c);
-    c = static_cast<char>(in.peek());
+    in.get();
     kind = COLON;
     break;
 
   case '/': {
-    in.get(c);
+    in.get();
     if (pflags.has_flags(PARSE_OP_CONTEXT)) { // operator context
       kind = SLASH;
     } else {                    // terminal context
@@ -307,7 +307,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
       READ_INTO_(in, buf, 4095, c, length, c != '/');
       if (c != '/')
         expected('/', c);
-      in.get(c);
+      in.get();
       length++;
 
       kind = VALUE;
@@ -317,10 +317,10 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
   }
 
   case '=':
-    in.get(c);
-    c = static_cast<char>(in.peek());
+    in.get();
+    c = in.peek();
     if (c == '~') {
-      in.get(c);
+      in.get();
       symbol[1] = c;
       symbol[2] = '\0';
       kind = MATCH;
@@ -328,7 +328,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
       break;
     }
     else if (c == '=') {
-      in.get(c);
+      in.get();
       symbol[1] = c;
       symbol[2] = '\0';
       kind = EQUAL;
@@ -339,10 +339,9 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     break;
 
   case '<':
-    in.get(c);
-    if (static_cast<char>(in.peek()) == '=') {
-      in.get(c);
-      symbol[1] = c;
+    in.get();
+    if (in.peek() == '=') {
+      symbol[1] = in.get();
       symbol[2] = '\0';
       kind = LESSEQ;
       length = 2;
@@ -352,10 +351,9 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     break;
 
   case '>':
-    in.get(c);
-    if (static_cast<char>(in.peek()) == '=') {
-      in.get(c);
-      symbol[1] = c;
+    in.get();
+    if (in.peek() == '=') {
+      symbol[1] = in.get();
       symbol[2] = '\0';
       kind = GREATEREQ;
       length = 2;
@@ -365,17 +363,17 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     break;
 
   case '.':
-    in.get(c);
+    in.get();
     kind = DOT;
     break;
 
   case ',':
-    in.get(c);
+    in.get();
     kind = COMMA;
     break;
 
   case ';':
-    in.get(c);
+    in.get();
     kind = SEMI;
     break;
 
@@ -420,7 +418,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
         if (in.fail() || ! in.good())
           throw_(parse_error, _("Failed to reset input stream"));
 
-        c = static_cast<char>(in.peek());
+        c = in.peek();
         if (c != -1) {
           if (! std::isalpha(c) && c != '_')
             expected('\0', c);
@@ -503,19 +501,20 @@ void expr_t::token_t::unexpected(const char wanted)
   }
 }
 
-void expr_t::token_t::expected(const char wanted, char c)
+void expr_t::token_t::expected(const char wanted, const int c)
 {
-  if (c == '\0' || c == -1) {
-    if (wanted == '\0' || wanted == -1)
+  if (c == -1) {
+    if (wanted == '\0')
       throw_(parse_error, _("Unexpected end"));
     else
       throw_(parse_error, _f("Missing '%1%'") % wanted);
   } else {
-    if (wanted == '\0' || wanted == -1)
-      throw_(parse_error, _f("Invalid char '%1%'") % c);
+    char ch = c;
+    if (wanted == '\0')
+      throw_(parse_error, _f("Invalid char '%1%'") % ch);
     else
       throw_(parse_error,
-             _f("Invalid char '%1%' (wanted '%2%')") % c % wanted);
+             _f("Invalid char '%1%' (wanted '%2%')") % ch % wanted);
   }
 }
 

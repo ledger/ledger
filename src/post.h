@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,8 +39,8 @@
  *
  * @ingroup data
  */
-#ifndef _POST_H
-#define _POST_H
+#ifndef INCLUDED_POST_H
+#define INCLUDED_POST_H
 
 #include "item.h"
 
@@ -269,4 +269,4 @@ void put_post(property_tree::ptree& pt, const post_t& post);
 
 } // namespace ledger
 
-#endif // _POST_H
+#endif // INCLUDED_POST_H

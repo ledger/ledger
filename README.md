@@ -1,5 +1,5 @@
 [![Join the chat at https://gitter.im/use-package/Lobby](https://badges.gitter.im/use-package/Lobby.svg)](https://gitter.im/use-package/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build Status master](https://img.shields.io/travis/ledger/ledger/master.svg?label=master&style=flat)](https://travis-ci.org/ledger/ledger)
+![Build Status master](https://github.com/ledger/ledger/actions/workflows/cmake.yml/badge.svg)
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg?style=flat)](https://github.com/ledger/ledger/pulse/monthly)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](http://opensource.org/licenses/BSD-3-Clause)
 [![GitHub release](https://img.shields.io/github/release/ledger/ledger.svg?style=flat)](https://github.com/ledger/ledger/releases)
@@ -25,7 +25,7 @@ and easy to use.
 I know, you just want to build and play.  If you have all the [dependencies](#dependencies)
 installed, then simply do this:
 
-    $ git clone git://github.com/ledger/ledger.git
+    $ git clone git@github.com:ledger/ledger.git
     $ cd ledger && ./acprep update  # Update to the latest, configure, make
 
 Now try your first ledger command:
@@ -72,18 +72,14 @@ Dependency | Version (or greater)
 
 ### macOS
 
-You can use [Homebrew] or [MacPorts] to install Ledger easily on macOS.
+You can use [Homebrew] or [MacPorts] to install build dependencies for Ledger
+easily on macOS.
 
 #### 1. Homebrew
 
-You can see the parameters you can pass while installing with brew by the command `brew options ledger`. To install ledger, simply type the following command:
+If you use Homebrew, to install the dependencies you would run:
 
-    $ brew install ledger
-
-If you to want to startup python, use the following command:
-
-    $ ledger python
-
+    $ brew install cmake boost boost-python3 gmp mpfr
 
 #### 2. MacPorts
 
@@ -99,10 +95,13 @@ run:
 
 ### Conda
 
-Ledger is also available through [Conda](https://conda.io) from the
-[conda-forge](https://conda-forge.org) channel:
+The dependencies for building Ledger are available from [conda-forge] on certain
+platforms (for example, `linux-64`), which can be used with [Conda] or [mamba].
 
-    $ conda install -c conda-forge ledger
+With Conda you could run:
+
+    $ conda install -c conda-forge python=3 cmake boost gmp mpfr \
+         gettext libedit texinfo doxygen graphviz
 
 ### Ubuntu
 
@@ -117,9 +116,9 @@ following packages (current as of Ubuntu 18.04):
 
 ### Debian
 
-Debian 9 (stretch), Debian 10 (buster), Debian testing and Debian unstable
-(sid) contain all components needed to build ledger.  You can install all
-required build dependencies using the following command:
+Debian 10 (bullseye), Debian 11 ("bullseye"), Debian testing and Debian
+unstable (sid) contain all components needed to build ledger.  You can
+install all required build dependencies using the following command:
 
     $ sudo apt-get install build-essential cmake autopoint texinfo python3-dev \
          zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
@@ -198,3 +197,6 @@ hack as much as you like, then send me a pull request via GitHub.
 [expat]: http://www.libexpat.org
 [libxml2]: http://xmlsoft.org
 [openhub]: https://www.openhub.net/p/ledger
+[conda-forge]: https://conda-forge.org
+[Conda]: https://conda.io
+[mamba]: https://github.com/mamba-org/mamba

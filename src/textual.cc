@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -311,8 +311,13 @@ std::streamsize instance_t::read_line(char *& line)
 
   check_for_signal();
 
-  in.getline(context.linebuf, parse_context_t::MAX_LINE);
+  const size_t maxLine = parse_context_t::MAX_LINE;
+  in.getline(context.linebuf, maxLine);
   std::streamsize len = in.gcount();
+
+  if (in.fail() && len == (parse_context_t::MAX_LINE - 1)) {
+      throw_(parse_error, _f("Line exceeds %1% characters") % maxLine);
+  }
 
   if (len > 0) {
     context.linenum++;
@@ -329,7 +334,12 @@ std::streamsize instance_t::read_line(char *& line)
       line = context.linebuf;
     }
 
-    --len;
+    if (!in.eof()) {
+        // if we are not at the end of the file, len includes the new line character,
+        // even through it does not appear in linebuf
+        --len;
+    }
+
     while (len > 0 && std::isspace(line[len - 1])) // strip trailing whitespace
       line[--len] = '\0';
 
@@ -733,7 +743,7 @@ void instance_t::include_directive(char * line)
     DEBUG("textual.include", "parent file path: " << context.pathname);
     path parent_path = context.pathname.parent_path();
     if (parent_path.empty()) {
-      filename = path(string(".")) / line;
+      filename = context.current_directory / line;
     } else {
       filename = parent_path / line;
       DEBUG("textual.include", "normalized path: " << filename.string());
@@ -1116,13 +1126,16 @@ void instance_t::commodity_value_directive(commodity_t& comm, string expr_str)
   comm.set_value_expr(expr_t(expr_str));
 }
 
-void instance_t::commodity_format_directive(commodity_t&, string format)
+void instance_t::commodity_format_directive(commodity_t& comm, string format)
 {
   // jww (2012-02-27): A format specified this way should turn off
   // observational formatting.
   trim(format);
   amount_t amt;
   amt.parse(format);
+  if (amt.commodity() != comm)
+    throw_(parse_error, _f("commodity directive symbol %1% and format directive symbol %2% should be the same") %
+	comm.symbol() % amt.commodity().symbol());
   amt.commodity().add_flags(COMMODITY_STYLE_NO_MIGRATE);
   VERIFY(amt.valid());
 }
@@ -1653,18 +1666,20 @@ post_t * instance_t::parse_post(char *          line,
       balance_t diff = amt;
 
       switch (account_total.type()) {
-      case value_t::AMOUNT:
-        diff -= account_total.as_amount();
+      case value_t::AMOUNT: {
+        amount_t amt(account_total.as_amount().strip_annotations(keep_details_t()));
+        diff -= amt;
         DEBUG("textual.parse", "line " << context.linenum << ": "
-              << "Subtracting amount " << account_total.as_amount() << " from diff, yielding " << diff);
+              << "Subtracting amount " << amt << " from diff, yielding " << diff);
         break;
-
-      case value_t::BALANCE:
-        diff -= account_total.as_balance();
+      }
+      case value_t::BALANCE: {
+        balance_t bal(account_total.as_balance().strip_annotations(keep_details_t()));
+        diff -= bal;
         DEBUG("textual.parse", "line " << context.linenum << ": "
-              << "Subtracting balance " << account_total.as_balance() << " from diff, yielding " << diff);
+              << "Subtracting balance " << bal << " from diff, yielding " << diff);
         break;
-
+      }
       default:
         break;
       }
@@ -1677,9 +1692,10 @@ post_t * instance_t::parse_post(char *          line,
       // Subtract amounts from previous posts to this account in the xact.
       for (post_t* p : xact->posts) {
         if (p->account == post->account && p->has_flags(POST_VIRTUAL) == post->has_flags(POST_VIRTUAL)) {
-          diff -= p->amount;
+          amount_t amt(p->amount.strip_annotations(keep_details_t()));
+          diff -= amt;
           DEBUG("textual.parse", "line " << context.linenum << ": "
-                << "Subtracting " << p->amount << ", diff = " << diff);
+                << "Subtracting " << amt << ", diff = " << diff);
         }
       }
 
@@ -1713,9 +1729,9 @@ post_t * instance_t::parse_post(char *          line,
         }
       } else {
         // balance assertion
-        diff -= post->amount;
+        diff -= post->amount.strip_annotations(keep_details_t());
         if (! no_assertions && ! diff.is_zero()) {
-          balance_t tot = -diff + amt;
+          balance_t tot = (-diff + amt).strip_annotations(keep_details_t());
           DEBUG("textual.parse", "Balance assertion: off by " << diff << " (expected to see " << tot << ")");
           throw_(parse_error,
                   _f("Balance assertion off by %1% (expected to see %2%)")

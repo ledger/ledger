@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -220,37 +220,9 @@ test_ident:
   return token_t(token_t::UNKNOWN);
 }
 
-void query_t::lexer_t::token_t::unexpected()
+void query_t::lexer_t::token_t::expected(char wanted)
 {
-  kind_t prev_kind = kind;
-
-  kind = UNKNOWN;
-
-  switch (prev_kind) {
-  case END_REACHED:
-    throw_(parse_error, _("Unexpected end of expression"));
-  case TERM:
-    throw_(parse_error, _f("Unexpected string '%1%'") % *value);
-  default:
-    throw_(parse_error, _f("Unexpected token '%1%'") % symbol());
-  }
-}
-
-void query_t::lexer_t::token_t::expected(char wanted, char c)
-{
-  kind = UNKNOWN;
-
-  if (c == '\0' || c == -1) {
-    if (wanted == '\0' || wanted == -1)
-      throw_(parse_error, _("Unexpected end"));
-    else
-      throw_(parse_error, _f("Missing '%1%'") % wanted);
-  } else {
-    if (wanted == '\0' || wanted == -1)
-      throw_(parse_error, _f("Invalid char '%1%'") % c);
-    else
-      throw_(parse_error, _f("Invalid char '%1%' (wanted '%2%')") % c % wanted);
-  }
+  throw_(parse_error, _f("Missing '%1%'") % wanted);
 }
 
 expr_t::ptr_op_t

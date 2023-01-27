@@ -1,10 +1,52 @@
 # Ledger NEWS
 
-## 3.2.x (unreleased)
+## 3.3 (unreleased)
 
-- Use $PAGER when environment variable is set (bug #1674)
+- Use `$PAGER` when environment variable is set (bug #1674)
+
+- Make `--depth` correctly fold postings to accounts of greater depth into the
+  parent at the specified level (bug #987)
+
+- When using wild-cards in the `include` directive, include matched files in
+  sorted order (bug #1659)
+
 - Try to use `$XDG_HOME_CONFIG/ledger/ledgerrc` or `~/.config/ledger/ledgerrc`
   first
+
+- Add support for automatically reading files encrypted with GPG (bug #1949)
+
+- Add support for a "debit" column in the `convert` command (bug #1120)
+
+- Fix incorrect parsing of expressions containing a `-` without spaces (bug #2001)
+
+- Fix payee metadata on postings not being validated and payee aliases not
+  being honored (bug #556 & bug #1892)
+
+- Fix ledger interpreting a posting with 0 difference as a null-posting,
+  which leads to it auto-balancing the posting (bug #1942)
+
+- Correctly escape all string values in lisp report (bug #2034)
+
+- Fix a regression where empty commodities were shown (bug #1969)
+
+- Fix a regression where using multiple commodities in one transaction triggers
+  an assertion (bug #1998)
+
+- Support building on older versions of CMAKE (less than 3.7)
+
+- Fix compilation with Boost 1.76 (bug #2030)
+
+- Fix Msys2 MinGW build (bug #1905)
+
+- Fix unicode problems on Windows (bug #1986)
+
+- Fix the issue that with Boost >= 1.77 `include` directive cannot find the file
+  to include for stdin (`-f -`). Also for `-f -` when `include` cannot find the
+  file it reports the error with full path now. (bug #2057 & bug #2092)
+
+- Numbers are no longer permitted in value expression function names.
+
+- Various documentation improvements
 
 ## 3.2.1 (2020-05-18)
 
@@ -823,7 +865,7 @@ features, please see the manual.
 - Fixed several core engine bugs, and problems with Ledger's XML data
   format.
 
-- Erros in XML or Gnucash data now report the correct line number for
+- Errors in XML or Gnucash data now report the correct line number for
   the error, instead of always showing line 1.
 
 - 'configure' has been changed to always use a combination of both

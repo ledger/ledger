@@ -2,7 +2,8 @@ Tips for contributors
 ---------------------
 
 * Please **make pull requests against `master`**.
-* If you're making **changes to files for which the Travis build is not
+* Please add a **test case** under `test/regress` when possible.
+* If you're making **changes to files for which the CI build is not
   relevant**, please **add `[ci skip]` to the end of the commit message**.
 * Report bugs using [GitHub Issues].
 
@@ -47,9 +48,9 @@ signing the license file.
 **[Texinfo]**: Gnu documentation
 typesetter that produces *html* and *pdf* files from the `doc/\*.texi` files.
 
-**[Travis CI]**: a hosted continuous integration
+**[GitHub Actions]**: a hosted continuous integration
   service that builds and runs tests each commit posted to GitHub.  Each
-  build creates a [log], updates a [small badge] at
+  build creates a log, updates a [small badge] at
   the top left of the main project's
   [README.md], and
   emails the author of the commit if any tests fail.
@@ -123,11 +124,10 @@ cores:
 [Markdown]: https://daringfireball.net/projects/markdown/
 [SHA1]: http://en.wikipedia.org/wiki/SHA-1
 [Texinfo]: http://www.gnu.org/software/texinfo/
-[Travis CI]: https://travis-ci.org
+[GitHub Actions]: https://github.com/features/actions
 [GCC]: http://gcc.gnu.org
 [utfcpp]: http://utfcpp.sourceforge.net
-[log]: https://travis-ci.org/ledger/ledger
-[small badge]: https://img.shields.io/travis/ledger/ledger/master.svg?&style=flat
+[small badge]: https://github.com/ledger/ledger/actions/workflows/cmake.yml/badge.svg
 [git-flow]: http://nvie.com/posts/a-successful-git-branching-model/
 [README.md]: https://github.com/ledger/ledger/blob/master/README.md
 [clang]: http://clang.llvm.org

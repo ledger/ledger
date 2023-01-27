@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -46,8 +46,8 @@
  * is designed to allow this, tracking the amounts of each component
  * commodity separately.
  */
-#ifndef _BALANCE_H
-#define _BALANCE_H
+#ifndef INCLUDED_BALANCE_H
+#define INCLUDED_BALANCE_H
 
 #include "amount.h"
 
@@ -60,7 +60,7 @@ DECLARE_EXCEPTION(balance_error, std::runtime_error);
  *
  * @brief A wrapper around amount_t allowing addition of multiple commodities.
  *
- * The balance_t class is appopriate for keeping a running balance
+ * The balance_t class is appropriate for keeping a running balance
  * where amounts of multiple commodities may be involved.
  */
 class balance_t
@@ -610,4 +610,4 @@ balance_t average_lot_prices(const balance_t& bal);
 
 } // namespace ledger
 
-#endif // _BALANCE_H
+#endif // INCLUDED_BALANCE_H

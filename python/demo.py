@@ -55,8 +55,11 @@ def assertEqual(pat, candidate):
 comms = ledger.commodities
 
 usd = comms.find_or_create('$')
-eur = comms.find_or_create('EUR')
 xcd = comms.find_or_create('XCD')
+
+# Tests currency symbols encoded using UCS. For details see #2132.
+eur = comms.find_or_create('€') # UCS-2 / UCS-4
+xxx = comms.find_or_create('¤') # UCS-1
 
 assert not comms.find('CAD')
 assert not comms.has_key('CAD')
@@ -79,7 +82,7 @@ comms.european_by_default = True
 # don't need to worry about them, but they'll show up if you examine all the
 # keys in the commodities dict.
 
-assertEqual([u'', u'$', u'%', u'EUR', u'XCD', u'h', u'm', u's'],
+assertEqual([u'', u'$', u'%', u'XCD', u'h', u'm', u's', u'¤', u'€'],
             sorted(comms.keys()))
 
 # All the styles of dict iteration are supported:
@@ -98,7 +101,7 @@ for commodity in comms.itervalues():
 # that date.  You can record specific conversion rates for any date using the
 # `exchange' method.
 
-comms.exchange(eur, ledger.Amount('$0.77')) # Trade 1 EUR for $0.77
+comms.exchange(eur, ledger.Amount('$0.77')) # Trade 1 € for $0.77
 comms.exchange(eur, ledger.Amount('$0.66'), datetime.now())
 
 # For the most part, however, you won't be interacting with commodities
@@ -133,7 +136,7 @@ assert one > zero
 
 # For addition and subtraction, only amounts of the same commodity may be
 # used, unless one of the amounts has no commodity at all -- in which case the
-# result uses the commodity of the other value.  Adding $10 to 10 EUR, for
+# result uses the commodity of the other value.  Adding $10 to 10 €, for
 # example, causes an ArithmeticError exception, but adding 10 to $10 gives
 # $20.
 
@@ -143,7 +146,7 @@ assertEqual(four, two + two)
 assertEqual(zero, one - one)
 
 try:
-    two += ledger.Amount("20 EUR")
+    two += ledger.Amount("20 €")
     assert False
 except ArithmeticError:
     pass
@@ -193,7 +196,7 @@ assertEqual(2, amt.display_precision)
 # There are several other supported math operations:
 
 amt    = ledger.Amount('$100.12')
-market = ((ledger.Amount('1 EUR') / ledger.Amount('$0.77')) * amt)
+market = ((ledger.Amount('1 €') / ledger.Amount('$0.77')) * amt)
 
 assertEqual(market, amt.value(eur))            # find present market value
 
@@ -222,19 +225,19 @@ assertEqual(100, amt.to_long())
 
 # Finally, amounts can be annotated to provide additional information about
 # "lots" of a given commodity.  This example shows $100.12 that was purchased
-# on 2009/10/01 for 140 EUR.  Lot information can be accessed through via the
+# on 2009/10/01 for 140 €.  Lot information can be accessed through via the
 # Amount's `annotation' property.  You can also strip away lot details to get
 # the underlying amount.  If you want the total price of any Amount, by
 # multiplying by its per-unit lot price, call the `Amount.price' method
 # instead of the `Annotation.price' property.
 
-amt2 = ledger.Amount('$100.12 {140 EUR} [2009/10/01]')
+amt2 = ledger.Amount('$100.12 {140 €} [2009/10/01]')
 
 assert amt2.has_annotation()
 assertEqual(amt, amt2.strip_annotations())
 
-assertEqual(ledger.Amount('140 EUR'), amt2.annotation.price)
-assertEqual(ledger.Amount('14016,8 EUR'), amt2.price()) # european amount!
+assertEqual(ledger.Amount('140 €'), amt2.annotation.price)
+assertEqual(ledger.Amount('14016,8 €'), amt2.price()) # european amount!
 
 ###############################################################################
 #

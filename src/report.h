@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,8 +39,8 @@
  *
  * @ingroup report
  */
-#ifndef _REPORT_H
-#define _REPORT_H
+#ifndef INCLUDED_REPORT_H
+#define INCLUDED_REPORT_H
 
 #include "expr.h"
 #include "query.h"
@@ -182,7 +182,7 @@ public:
   value_t fn_abs(call_scope_t& scope);
   value_t fn_justify(call_scope_t& scope);
   value_t fn_quoted(call_scope_t& scope);
-  value_t fn_quoted_rfc4180(call_scope_t& scope);
+  value_t fn_quoted_rfc(call_scope_t& scope);
   value_t fn_join(call_scope_t& scope);
   value_t fn_format_date(call_scope_t& scope);
   value_t fn_format_datetime(call_scope_t& scope);
@@ -1111,4 +1111,4 @@ public:
 
 } // namespace ledger
 
-#endif // _REPORT_H
+#endif // INCLUDED_REPORT_H

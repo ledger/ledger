@@ -9,7 +9,7 @@ D 1000.00 EUR
     Expenses:Banking:Fees                   USD 2.50
     Assets:Chequing                      CAD -203.42
     Epenses:Banking:Fees                    CAD 2.00
-    Assets:Chqeuing                        CAD -2.00
+    Assets:Chequing                        CAD -2.00
 
 test pricedb
 P 2011/02/27 00:00:00 AUD 0.746 EUR

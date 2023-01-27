@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -135,7 +135,7 @@ string post_t::payee() const
 
   string post_payee = payee_from_tag();
 
-  return post_payee != "" ? post_payee : xact->payee;
+  return post_payee != "" ? post_payee : xact ? xact->payee : "";
 }
 
 namespace {
@@ -722,6 +722,9 @@ void put_post(property_tree::ptree& st, const post_t& post)
     put_date(st.put("date", ""), *post._date);
   if (post._date_aux)
     put_date(st.put("aux-date", ""), *post._date_aux);
+
+  if (post.payee_from_tag() != "")
+    st.put("payee", post.payee_from_tag());
 
   if (post.account) {
     property_tree::ptree& t(st.put("account", ""));

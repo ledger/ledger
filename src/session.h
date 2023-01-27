@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,8 +39,8 @@
  *
  * @ingroup report
  */
-#ifndef _SESSION_H
-#define _SESSION_H
+#ifndef INCLUDED_SESSION_H
+#define INCLUDED_SESSION_H
 
 #include "account.h"
 #include "journal.h"
@@ -192,4 +192,4 @@ void set_session_context(session_t * session);
 
 } // namespace ledger
 
-#endif // _SESSION_H
+#endif // INCLUDED_SESSION_H

@@ -149,7 +149,7 @@ my @MainReport = `$CmdLine`;
 ### MainReport: @MainReport
 
 # Remove any project codes and linefeeds
-#map { chomp(); s/(:AISER[0-9][0-9][0-9][0-9])+://g; } @MainReport; # No need, thats now metadata
+#map { chomp(); s/(:AISER[0-9][0-9][0-9][0-9])+://g; } @MainReport; # No need, that's now metadata
 
 foreach my $line (@MainReport) {       ### Processing Main Report... done
 

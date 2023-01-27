@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2019, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -93,14 +93,14 @@ struct python_run
 {
   object result;
 
-  python_run(python_interpreter_t * intepreter,
+  python_run(python_interpreter_t * interpreter,
              const string& str, int input_mode)
     : result
       (handle<>
        (borrowed
         (PyRun_String(str.c_str(), input_mode,
-                      intepreter->main_module->module_globals.ptr(),
-                      intepreter->main_module->module_globals.ptr())))) {}
+                      interpreter->main_module->module_globals.ptr(),
+                      interpreter->main_module->module_globals.ptr())))) {}
   operator object() {
     return result;
   }
@@ -376,8 +376,9 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
     delete[] argv[i];
   delete[] argv;
 
-  if (status != 0)
-    throw status;
+  if (status != 0) {
+    throw_(std::runtime_error, _("Failed to execute Python module"));
+  }
 
   return NULL_VALUE;
 }

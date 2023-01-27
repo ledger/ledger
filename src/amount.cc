@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2018, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -732,14 +732,11 @@ void amount_t::in_place_unreduce()
   }
 
   if (shifted) {
-    if (("h" == comm->symbol() || "m" == comm->symbol()) && commodity_t::time_colon_by_default) {
-      amount_t floored = tmp.floored();
-      amount_t precision = tmp - floored;
-      if (precision < 0.0) {
-        precision += 1.0;
-        floored -= 1.0;
-      }
-      tmp = floored + (precision * (comm->smaller()->number() / 100.0));
+    if (comm && ("h" == comm->symbol() || "m" == comm->symbol())
+        && commodity_t::time_colon_by_default) {
+      double truncated = trunc(tmp.to_double());
+      double precision = tmp.to_double() - truncated;
+      tmp = truncated + (precision * (comm->smaller()->number() / 100.0));
     }
 
     *this      = tmp;
@@ -974,13 +971,13 @@ namespace {
   void parse_quantity(std::istream& in, string& value)
   {
     char buf[256];
-    char c = peek_next_nonws(in);
+    int c = peek_next_nonws(in);
     int max = 255;
     char *p = buf;
     if (c == '-') {
       *p++ = c;
       max--;
-      in.get(c);
+      in.get();
     }
     READ_INTO(in, p, max, c,
               std::isdigit(c) || c == '.' || c == ',');
@@ -1009,10 +1006,10 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
 
   commodity_t::flags_t comm_flags = COMMODITY_STYLE_DEFAULTS;
 
-  char c = peek_next_nonws(in);
+  int c = peek_next_nonws(in);
   if (c == '-') {
     negative = true;
-    in.get(c);
+    in.get();
     c = peek_next_nonws(in);
   }
 

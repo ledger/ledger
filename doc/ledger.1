@@ -172,11 +172,14 @@ with this command are:
 Show the running average, rather than a running total.
 .It Fl \-current Pq Fl c
 Don't show postings beyond the present day.
-.It Fl \-exchange Ar commodity Pq Fl X
+.It Fl \-exchange Qo Ar COMMODITY Oo , Ar COMMODITY, ... Oc Qc Pq Fl X
 Render all values in the given
 .Ar commodity ,
-if a price conversion rate can be determined.  Rates are always displayed
-relative to the date of the posting they are calculated for.  This means a
+if a price conversion rate can be determined.  If multiple commodities are
+given, values in a listed commodity will remain as-is, and others will be
+displayed in the first listed commodity they can be converted to.  Rates are
+always displayed relative to the date of the posting they are calculated for.
+This means a
 .Ic register
 report is a historical value report.  For current values, it may be preferable
 to use the
@@ -506,17 +509,16 @@ Direct
 to parse journals using the European standard comma as
 decimal separator, vice a period.
 .It Fl \-depth Ar INT
-Limit the depth of the account tree.  In a balance report, for example,
+Limit the depth of displayed accounts in balance and register reports.  Any
+accounts of greater depth are folded into their parent at the specified
+level.  For example with
 .Fl \-depth Ar 2
-will print balances only for accounts with two levels, i.e.
+the account
+.Sy Expenses:Entertainment:Dining
+would be folded into
 .Sy Expenses:Entertainment
-but not
-.Sy Expenses:Entertainment:Dining .
-This is a display predicate, which means it only affects display,
-not the total calculations.  In register reports,
-.Fl \-depth
-will collapse postings of child accounts beyond the given level and add
-their balances to the parent account.
+for display.  Importantly, this is a display predicate, which means it only
+affects display, not the total calculations.
 .It Fl \-detail
 Related to
 .Ic convert
@@ -575,10 +577,12 @@ report.
 .It Fl \-exact
 Report beginning and ending of periods by the date of the first and last
 posting occurring in that period.
-.It Fl \-exchange Ar COMMODITY Oo , Ar COMMODITY, ... Oc Pq Fl X
+.It Fl \-exchange Qo Ar COMMODITY Oo , Ar COMMODITY, ... Oc Qc Pq Fl X
 Display values in terms of the given
 .Ar COMMODITY .
-The latest available price is used.
+If multiple commodities are given, values in a listed commodity will remain
+as-is, and others will be displayed in the first listed commodity they can be
+converted to.
 .It Fl \-file Ar FILE Pq Fl f
 Read journal data from
 .Ar FILE .
@@ -1280,11 +1284,11 @@ for values that have a per-unit cost.
 .It Fn quoted expression
 Surround
 .Ar expression
-with double-quotes.
-.It Fn quoted_rfc4180 expression
+with double quotes.
+.It Fn quoted_rfc expression
 Surround
 .Ar expression
-with double-quotes, compatible with rfc 4180.
+with double quotes, compliant with rfc 4180.
 .It Sy real
 .\" Is there a difference between real and actual?
 Return true if the transaction is real, i.e not an automated or virtual
@@ -1442,7 +1446,7 @@ environment variable settings, however.
 .Sh FILES
 .Bl -tag -width -indent
 .It Pa $XDG_CONFIG_HOME/ledger/ledgerrc
-.It Pa ~/.config/local/ledgerrc
+.It Pa ~/.config/ledger/ledgerrc
 .It Pa ~/.ledgerrc
 Your personal
 .Nm
