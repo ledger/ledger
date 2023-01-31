@@ -111,8 +111,6 @@ struct string_from_python
 
     VERIFY(PyUnicode_Check(obj_ptr));
 
-    string str;
-    Py_ssize_t size = PyUnicode_GET_LENGTH(obj_ptr);
 #if PY_MINOR_VERSION < 12
     if (PyUnicode_READY(obj_ptr))
       return;
