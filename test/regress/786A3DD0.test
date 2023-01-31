@@ -11,7 +11,7 @@ D 1000.00 EUR
     Epenses:Banking:Fees                    CAD 2.00
     Assets:Chequing                        CAD -2.00
 
-test pricedb --sort -date
+test pricedb --sort date
 P 2011/02/27 00:00:00 AUD 0.746 EUR
 P 2012/03/12 00:00:00 USD CAD 1.00454320987654321
 end test
