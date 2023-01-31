@@ -44,6 +44,8 @@
   to include for stdin (`-f -`). Also for `-f -` when `include` cannot find the
   file it reports the error with full path now. (bug #2057 & bug #2092)
 
+- Numbers are no longer permitted in value expression function names.
+
 - Various documentation improvements
 
 ## 3.2.1 (2020-05-18)
@@ -863,7 +865,7 @@ features, please see the manual.
 - Fixed several core engine bugs, and problems with Ledger's XML data
   format.
 
-- Erros in XML or Gnucash data now report the correct line number for
+- Errors in XML or Gnucash data now report the correct line number for
   the error, instead of always showing line 1.
 
 - 'configure' has been changed to always use a combination of both

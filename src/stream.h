@@ -117,7 +117,7 @@ public:
                   const optional<path>& pager_path  = none);
 
   /**
-   * Convertor to a standard ostream.  This is used so that we can
+   * Converter to a standard ostream.  This is used so that we can
    * stream directly to an object of type output_stream_t.
    */
   operator std::ostream&() {

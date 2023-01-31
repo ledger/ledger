@@ -395,7 +395,7 @@ class CalcStyles:
 		self.property_cell_bg_color = 'default' # Cell Background Default
 		self.property_cell_bg_image = 'none'    # Cell Background Default
 		self.property_cell_fontsize = '10'      # Cell Font Size Default
-		self.property_cell_valign = 'default'	# Vertial Alignment Default
+		self.property_cell_valign = 'default'	# Vertical Alignment Default
 		self.property_cell_halign = 'default'	# Horizantal Alignment Default
 
 	def get_next_style(self, style):

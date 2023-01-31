@@ -213,12 +213,12 @@ die "Total net assets doesn't equal sum of restricted and unrestricted ones!"
 my %incomeGroups = ('INTEREST INCOME' => { args => ['/^Income.*Interest/' ] },
                     'DONATIONS' => { args => [ '/^Income.*Donation/' ] },
                     'BOOK ROYALTIES & AFFILIATE PROGRAMS' =>
-                    { args => [ '/^Income.*(Royalt|Affilate)/' ] },
+                    { args => [ '/^Income.*(Royalt|Affiliate)/' ] },
                     'CONFERENCES, REGISTRATION' => {args => [ '/^Income.*Reg/' ] },
                     'CONFERENCES, RELATED BUSINESS INCOME' => { args => [ '/^Income.*(Conferences?:.*Sponsor|Booth|RBI)/'] },
                     'LICENSE COMPLIANCE' => { args => [ '/^Income.*(Enforce|Compliance)/' ]},
                     'TRADEMARKS' => {args => [ '/^Income.*Trademark/' ]},
-                    'ADVERSITING' => {args => [ '/^Income.*Advertising/' ]});
+                    'ADVERTISING' => {args => [ '/^Income.*Advertising/' ]});
 
 my @otherArgs;
 foreach my $type (keys %incomeGroups) {
@@ -267,7 +267,7 @@ my $overallTotal = $ZERO;
 $formatStrTotal = "\"%-90s\",\"\$%14s\"\n";
 foreach my $type ('DONATIONS', 'LICENSE COMPLIANCE',
                   'CONFERENCES, REGISTRATION', 'CONFERENCES, RELATED BUSINESS INCOME',
-                  'BOOK ROYALTIES & AFFILIATE PROGRAMS', 'ADVERSITING',
+                  'BOOK ROYALTIES & AFFILIATE PROGRAMS', 'ADVERTISING',
                   'TRADEMARKS', 'INTEREST INCOME', 'OTHER') {
   next if ($incomeGroups{$type}{output} =~ /^\s*$/ and $incomeGroups{$type}{total} == $ZERO);
   print INCOME "\n\"$type\"\n",
@@ -296,7 +296,7 @@ my %expenseGroups = ('BANKING FEES' => { regex => '^Expenses.*(Banking Fees|Curr
                     'SOFTWARE DEVELOPMENT' => { regex =>  '^Expenses.*Development' },
                     'OTHER PROGRAM ACTIVITY' => {regex =>  '^Expenses.*Gould' },
                     'ADVOCACY AND PROMOTION' => {regex =>  '^Expenses.*(Slipstream|Advocacy Merchandise|Promotional)' },
-                    'ADVERSITING' => {regex =>  '^Expenses.*Advertising' });
+                    'ADVERTISING' => {regex =>  '^Expenses.*Advertising' });
 
 foreach my $type (keys %expenseGroups, 'TRAVEL') {
   $expenseGroups{$type}{total} = $ZERO;
@@ -360,7 +360,7 @@ foreach my $key (keys %expenseGroups) {
 foreach my $type ('PAYROLL', 'SOFTWARE DEVELOPMENT', 'LICENSE COMPLIANCE', 'CONFERENCES',
                   'DEVELOPER MENTORING', 'TRAVEL', 'BANKING FEES', 'ADVOCACY AND PROMOTION',
                   'COMPUTING, HOSTING AND EQUIPMENT', 'ACCOUNTING',
-                  'OFFICE', 'RENT', 'ADVERSITING', 'OTHER PROGRAM ACTIVITY', 'OTHER') {
+                  'OFFICE', 'RENT', 'ADVERTISING', 'OTHER PROGRAM ACTIVITY', 'OTHER') {
   delete $verifyAllGroups{$type};
 
   die "$type is not defined!" if not defined $expenseGroups{$type};

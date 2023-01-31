@@ -116,9 +116,9 @@ following packages (current as of Ubuntu 18.04):
 
 ### Debian
 
-Debian 9 (stretch), Debian 10 (buster), Debian testing and Debian unstable
-(sid) contain all components needed to build ledger.  You can install all
-required build dependencies using the following command:
+Debian 10 (bullseye), Debian 11 ("bullseye"), Debian testing and Debian
+unstable (sid) contain all components needed to build ledger.  You can
+install all required build dependencies using the following command:
 
     $ sudo apt-get install build-essential cmake autopoint texinfo python3-dev \
          zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
