@@ -1,23 +1,19 @@
 add_executable(negative ${PROJECT_SOURCE_DIR}/tests/negative.cpp)
 add_executable(cpp11 ${PROJECT_SOURCE_DIR}/tests/test_cpp11.cpp)
 add_executable(cpp17 ${PROJECT_SOURCE_DIR}/tests/test_cpp17.cpp)
-add_executable(apitests
-    ${PROJECT_SOURCE_DIR}/tests/test_checked_api.cpp
-    ${PROJECT_SOURCE_DIR}/tests/test_unchecked_api.cpp
-    ${PROJECT_SOURCE_DIR}/tests/test_checked_iterator.cpp
-    ${PROJECT_SOURCE_DIR}/tests/test_unchecked_iterator.cpp
-)
+add_executable(apitests ${PROJECT_SOURCE_DIR}/tests/apitests.cpp)
 
-add_executable(noexceptionstests
-    ${PROJECT_SOURCE_DIR}/tests/test_unchecked_api.cpp
-    ${PROJECT_SOURCE_DIR}/tests/test_unchecked_iterator.cpp
-)
+add_executable(noexceptionstests ${PROJECT_SOURCE_DIR}/tests/noexceptionstests.cpp)
 
 target_link_libraries(negative PRIVATE utf8::cpp)
 target_link_libraries(cpp11 PRIVATE utf8::cpp)
 target_link_libraries(cpp17 PRIVATE utf8::cpp)
 target_link_libraries(apitests PRIVATE utf8::cpp)
 target_link_libraries(noexceptionstests PRIVATE utf8::cpp)
+
+target_compile_options(${PROJECT_NAME} INTERFACE
+  $<$<CXX_COMPILER_ID:MSVC>:/W4>
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wconversion>)
 
 target_compile_options(noexceptionstests PUBLIC -fno-exceptions)
 
