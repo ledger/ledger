@@ -126,8 +126,8 @@ endif(CMAKE_INSTALL_MANDIR)
 foreach(file ${ledger_doc_files})
   get_filename_component(file_ext ${file} EXT)
 
-  if(file_ext STREQUAL ".info")
-    if(CMAKE_INSTALL_INFODIR)
+  if (file_ext STREQUAL ".info")
+    if (CMAKE_INSTALL_INFODIR)
       install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${file}
         DESTINATION ${CMAKE_INSTALL_INFODIR} COMPONENT doc)
     endif()

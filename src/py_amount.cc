@@ -33,9 +33,6 @@
 
 #include "pyinterp.h"
 #include "pyutils.h"
-#if PY_MAJOR_VERSION < 3
-#include "pyfstream.h"
-#endif
 #include "commodity.h"
 #include "annotate.h"
 #include "pool.h"
@@ -63,21 +60,6 @@ namespace {
                                         const date_t& moment) {
     return amount.value(datetime_t(moment), in_terms_of);
   }
-
-#if PY_MAJOR_VERSION < 3
-  void py_parse_2(amount_t& amount, object in, unsigned char flags) {
-    if (PyFile_Check(in.ptr())) {
-      pyifstream instr(reinterpret_cast<PyFileObject *>(in.ptr()));
-      amount.parse(instr, flags);
-    } else {
-      PyErr_SetString(PyExc_IOError,
-                      _("Argument to amount.parse(file) is not a file object"));
-    }
-  }
-  void py_parse_1(amount_t& amount, object in) {
-    py_parse_2(amount, in, 0);
-  }
-#endif
 
   void py_parse_str_1(amount_t& amount, const string& str) {
     amount.parse(str);
@@ -290,10 +272,6 @@ internal precision."))
     .def("strip_annotations", py_strip_annotations_0)
     .def("strip_annotations", py_strip_annotations_1)
 
-#if PY_MAJOR_VERSION < 3
-    .def("parse", py_parse_1)
-    .def("parse", py_parse_2)
-#endif
     .def("parse", py_parse_str_1)
     .def("parse", py_parse_str_2)
 

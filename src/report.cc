@@ -765,7 +765,7 @@ value_t report_t::fn_quoted(call_scope_t& args)
   return string_value(out.str());
 }
 
-value_t report_t::fn_quoted_rfc4180(call_scope_t& args)
+value_t report_t::fn_quoted_rfc(call_scope_t& args)
 {
   std::ostringstream out;
 
@@ -1498,8 +1498,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'q':
       if (is_eq(p, "quoted"))
         return MAKE_FUNCTOR(report_t::fn_quoted);
-      else if (is_eq(p, "quoted_rfc4180"))
-        return MAKE_FUNCTOR(report_t::fn_quoted_rfc4180);
+      else if (is_eq(p, "quoted_rfc"))
+        return MAKE_FUNCTOR(report_t::fn_quoted_rfc);
       else if (is_eq(p, "quantity"))
         return MAKE_FUNCTOR(report_t::fn_quantity);
       break;
@@ -1651,6 +1651,13 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
     case 'b':
       if (*(p + 1) == '\0' || is_eq(p, "bal") || is_eq(p, "balance")) {
+        // jww (2023-01-27): This next 'if' statement is a hack for historical
+        // purposes. Until this date, the balance report always used an amount
+        // width of 20. If the user has set the amount width, this should be
+        // used instead; but if they haven't, we need to use the old default
+        // in order for the tests to pass.
+        if (! HANDLED(amount_width_))
+          HANDLER(amount_width_).value = "20";
         return FORMATTED_ACCOUNTS_REPORTER(balance_format_);
       }
       else if (is_eq(p, "budget")) {

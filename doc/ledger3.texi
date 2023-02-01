@@ -12,15 +12,15 @@
 @c a prefix arg).  This updates the node pointers, which texinfmt.el
 @c needs.
 
-@c | Formating | Indexing |                                           |
-@c |           | @cindex  | concept                                   |
-@c | @command  | @findex  | Ledger CLI Command (like balance)         |
-@c | @option   | @findex  | Ledger CLI Option (like --market)         |
-@c | @var      |          | Ledger CLI option Variable (like -f FILE) |
-@c |           |          | Ledger file Syntax                        |
-@c | @samp     |          | Valued example or single char             |
-@c | @file     |          | File, Buffer                              |
-@c | @file     |          | Program (like ledger, report, acprep)     |
+@c | Formatting | Indexing |                                           |
+@c |            | @cindex  | concept                                   |
+@c | @command   | @findex  | Ledger CLI Command (like balance)         |
+@c | @option    | @findex  | Ledger CLI Option (like --market)         |
+@c | @var       |          | Ledger CLI option Variable (like -f FILE) |
+@c |            |          | Ledger file Syntax                        |
+@c | @samp      |          | Valued example or single char             |
+@c | @file      |          | File, Buffer                              |
+@c | @file      |          | Program (like ledger, report, acprep)     |
 
 @c Restructuring manual ideas
 @c http://beyondgrep.com/documentation/ack-2.04-man.html
@@ -2483,7 +2483,7 @@ Closes block commands like @code{apply} or @code{comment}.
 
 @item expr
 @findex expr
-@c instance_t::expr_directive in textual.cc
+Same as @code{eval}.
 
 @item include
 @findex include
@@ -6579,7 +6579,7 @@ $ ledger balance assets --exchange "PHP, EUR"
 The latest available price is used.  The syntax
 @option{-X @var{COMMODITY1}:@var{COMMODITY2}} displays values in @var{COMMODITY1}
 in terms of @var{COMMODITY2} using the latest available price, but
-will not automatically covert any other commodities to
+will not automatically convert any other commodities to
 @var{COMMODITY2}.  Multiple @option{-X} arguments may be used on a
 single command-line (as in
 @option{-X COMMODITY1:COMMODITY2 -X COMMODITY3:COMMODITY2}),
@@ -8518,7 +8518,8 @@ Return the quantity of @var{value} for values that have a per-unit cost.
 @end defun
 
 @defun quoted expression
-Surround @var{expression} with double-quotes.  If expression contains a double-quote, it will be escaped with a backslash.
+Surround @var{expression} with double quotes.  If expression contains
+a double quote, it will be escaped with a backslash.
 @smallexample @c command:EAD8AA7,with_input:3406FC1
 $ ledger -f expr.dat --format "%(quoted(account)) %(quoted(amount))\n" reg
 @end smallexample
@@ -8528,16 +8529,10 @@ $ ledger -f expr.dat --format "%(quoted(account)) %(quoted(amount))\n" reg
 @end smallexample
 @end defun
 
-@c @defun quoted_rfc4180 expression
-@c Surround @var{expression} with double-quotes, compliant with RFC 4180.  If expression contains a double-quote, it will be represented with two double-quotes.
-@c @smallexample @c command:EAD8AA7,with_input:3406FC1
-@c $ ledger -f expr.dat --format "%(quoted_rfc4180(account)) %(quoted_rfc4180(amount))\n" reg
-@c @end smallexample
-@c @smallexample @c output:EAD8AA7
-@c "Assets:Cash" "¤ -123,45"
-@c "Expenses:Office Supplies" "¤ 123,45"
-@c @end smallexample
-@c @end defun
+@defun quoted_rfc expression
+Similar, except an embedded double quote would be escaped by
+preceding it with another double quote, as prescribed by RFC 4180.
+@end defun
 
 @defun round
 @value{FIXME:UNDOCUMENTED}

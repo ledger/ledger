@@ -182,7 +182,7 @@ public:
   value_t fn_abs(call_scope_t& scope);
   value_t fn_justify(call_scope_t& scope);
   value_t fn_quoted(call_scope_t& scope);
-  value_t fn_quoted_rfc4180(call_scope_t& scope);
+  value_t fn_quoted_rfc(call_scope_t& scope);
   value_t fn_join(call_scope_t& scope);
   value_t fn_format_date(call_scope_t& scope);
   value_t fn_format_datetime(call_scope_t& scope);
@@ -419,8 +419,8 @@ public:
    CTOR(report_t, balance_format_) {
     on(none,
        "%(ansify_if("
-       "  justify(scrub(display_total), 20,"
-       "          20 + int(prepend_width), true, color),"
+       "  justify(scrub(display_total), max(int(amount_width),20),"
+       "          max(int(amount_width),20) + int(prepend_width), true, color),"
        "            bold if should_bold))"
        "  %(!options.flat ? depth_spacer : \"\")"
        "%-(ansify_if("
@@ -428,7 +428,7 @@ public:
        "             bold if should_bold))\n%/"
        "%$1\n%/"
        "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-       "--------------------\n");
+       "%(\"-\" * max(int(amount_width),20))\n");
   });
 
   OPTION(report_t, base);

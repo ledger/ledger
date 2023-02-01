@@ -88,13 +88,14 @@ struct register_optional_to_python : public boost::noncopyable
     {
       using namespace boost::python::converter;
 
-      void * const storage =
-        reinterpret_cast<rvalue_from_python_storage<T> *>(data)->storage.bytes;
+      const T value = typename boost::python::extract<T>(source);
 
-      if (data->convertible == source)      // == None
+      void * storage = ((rvalue_from_python_storage<boost::optional<T>>*) data)->storage.bytes;
+
+      if (source == Py_None)      // == None
         new (storage) boost::optional<T>(); // A Boost uninitialized value
       else
-        new (storage) boost::optional<T>(*reinterpret_cast<T *>(data->convertible));
+        new (storage) boost::optional<T>(value);
 
       data->convertible = storage;
     }
@@ -130,12 +131,7 @@ template <typename T>
 PyObject * str_to_py_unicode(const T& str)
 {
   using namespace boost::python;
-#if PY_MAJOR_VERSION >= 3
   PyObject * uni = PyUnicode_FromString(str.c_str());
-#else
-  PyObject * pstr = PyString_FromString(str.c_str());
-  PyObject * uni  = PyUnicode_FromEncodedObject(pstr, "UTF-8", NULL);
-#endif
   return object(handle<>(borrowed(uni))).ptr();
 }
 

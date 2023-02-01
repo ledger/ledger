@@ -138,7 +138,7 @@ class CommandLineApp(object):
         """Main body of your application.
 
         This is the main portion of the app, and is run after all of the
-        arguments are processed.  Override this method to implment the primary
+        arguments are processed.  Override this method to implement the primary
         processing section of your application."""
         pass
 
@@ -193,7 +193,10 @@ class CommandLineApp(object):
             # not let us differentiate between application errors and a case
             # where the user has not passed us enough arguments.  So, we check
             # the argument count ourself.
-            argspec = inspect.getargspec(self.main)
+            if sys.version_info < (3, 10):
+                argspec = inspect.getargspec(self.main)
+            else:
+                argspec = inspect.getfullargspec(self.main)
             expected_arg_count = len(argspec[0]) - 1
 
             if len(main_args) >= expected_arg_count:

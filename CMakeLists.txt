@@ -69,9 +69,14 @@ if (USE_PYTHON)
 
   find_package(Python COMPONENTS Interpreter Development)
   if (PYTHON_FOUND)
-    set(BOOST_PYTHON "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}")
-    set(HAVE_BOOST_PYTHON 1)
-    include_directories(SYSTEM ${Python_INCLUDE_DIRS})
+    if (${Python_VERSION_MAJOR} VERSION_GREATER_EQUAL "3")
+      set(BOOST_PYTHON "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}")
+      set(HAVE_BOOST_PYTHON 1)
+      include_directories(SYSTEM ${Python_INCLUDE_DIRS})
+    else()
+      set(HAVE_BOOST_PYTHON 0)
+      message("Ledger requires Python >= 3.x")
+    endif()
   else()
     set(HAVE_BOOST_PYTHON 0)
     message("Could not find a Python library to use with Boost.Python")
@@ -278,7 +283,7 @@ macro(add_ledger_library_dependencies _target)
     target_link_libraries(${_target} Gpgmepp)
   endif()
   if (HAVE_BOOST_PYTHON)
-    if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
+    if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
       # Don't link directly to a Python framework on macOS, to avoid segfaults
       # when the module is imported from a different interpreter
       target_link_libraries(${_target} ${Boost_LIBRARIES})
@@ -317,7 +322,7 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/src/system.hh.in
   ${PROJECT_BINARY_DIR}/system.hh)
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 endif()
 

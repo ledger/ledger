@@ -100,7 +100,7 @@ void export_xact()
          return_internal_reference<>())
 
     .def("add_post", &xact_base_t::add_post, with_custodian_and_ward<1, 2>())
-    .def("remove_post", &xact_base_t::add_post)
+    .def("remove_post", &xact_base_t::remove_post)
 
     .def("finalize", &xact_base_t::finalize)
 
