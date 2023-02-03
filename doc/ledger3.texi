@@ -3220,8 +3220,14 @@ is one) there is an equals sign, then Ledger will verify that the
 total value for that account as of that posting matches the amount
 specified.  See @option{--permissive} option to relax the balance assertions checks.
 
-There are two forms of this features: balance assertions, and balance
-assignments.
+There are two forms of this features: balance assertions, and balance assignments.
+Note that both of these are processed while parsing the given ledger files.
+Hence the order in which these are evaluated is the order in which they appear in
+the ledger file.
+The date or effective date of the transactions and postings that contain the
+balance assertions or balance assignments is therefore irrelevant for the
+the evaluation of the balance assertions and balance assignments.
+This may be confusing to people for whom a date order is more intuitive.
 
 @node Balance assertions, Balance assignments, Balance verification, Balance verification
 @subsection Balance assertions
