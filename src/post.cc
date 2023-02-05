@@ -106,8 +106,10 @@ date_t post_t::primary_date() const
     return xdata_->date;
 
   if (! _date) {
-    assert(xact);
-    return xact->date();
+    if (xact)
+      return xact->date();
+    else
+      return CURRENT_DATE();
   }
   return *_date;
 }
