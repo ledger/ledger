@@ -4264,7 +4264,7 @@ $ ledger balance -f drewr3.dat Income
          $ -2,030.00
 @end smallexample
 
-You can use general regular expressions in nearly any place Ledger
+You can use general regular expressions (PCRE) in nearly any place Ledger
 needs a string:
 
 @smallexample @c command:EAE389F
