@@ -3058,58 +3058,6 @@ You can gang up multiple tags by sharing colons:
       ; :TAG1:TAG2:TAG3:
 @end smallexample
 
-@menu
-* Payee metadata tag::
-@end menu
-
-@node Payee metadata tag,  , Metadata tags, Metadata tags
-@subsubsection Payee metadata tag
-@cindex Payee metadata tag
-@findex register
-@findex payees
-@findex --by-payee
-
-``Payee'' is a special metadata field.  If set on a posting, it will be
-used as the payee name for that posting.  This affects the
-@command{register} report, the @command{payees} report, and the
-@option{--by-payee} option.
-
-This is useful when for example you deposit 4 checks at a time to the
-bank.  On the bank statement, there is just one amount @samp{$400}, but
-you can specify from whom each check came, as shown by example
-below:
-
-@smallexample @c input:9B43E57
-2010-06-17 Sample
-    Assets:Bank        $400.00
-    Income:Check1     $-100.00  ; Payee: Person One
-    Income:Check2     $-100.00  ; Payee: Person Two
-    Income:Check3     $-100.00  ; Payee: Person Three
-    Income:Check4     $-100.00  ; Payee: Person Four
-@end smallexample
-
-When reporting with
-
-@smallexample @c command:9B43E57
-$ ledger reg
-@end smallexample
-
-it appears as:
-
-@smallexample @c output:9B43E57
-10-Jun-17 Sample                Assets:Bank                 $400.00      $400.00
-          Person One            Income:Check1              $-100.00      $300.00
-          Person Two            Income:Check2              $-100.00      $200.00
-          Person Three          Income:Check3              $-100.00      $100.00
-          Person Four           Income:Check4              $-100.00            0
-@end smallexample
-
-This shows that they are all in the same transaction (which is why the
-date is not repeated), but they have different payees now.
-
-If using the @option{--strict} or @option{--pedantic} options, you must
-declare this tag to avoid warnings and errors.
-
 @node Metadata values, Typed metadata, Metadata tags, Metadata
 @subsection Metadata values
 
@@ -3155,6 +3103,59 @@ the other hand I write this:
 Then it is parsed as a date only once, and during parsing of the
 journal file, which would let me know right away that it is an invalid
 date.
+
+@menu
+* Payee metadata::
+@end menu
+
+@node Payee metadata,  , Metadata payee, Metadata
+@subsection Payee metadata
+@cindex Payee metadata
+@findex register
+@findex payees
+@findex --by-payee
+
+``Payee'' is a special metadata field.  If set on a posting, it will be
+used as the payee name for that posting.  This affects the
+@command{register} report, the @command{payees} report, and the
+@option{--by-payee} option.
+
+This is useful when for example you deposit 4 checks at a time to the
+bank.  On the bank statement, there is just one amount @samp{$400}, but
+you can specify from whom each check came, as shown by example
+below:
+
+@smallexample @c input:9B43E57
+2010-06-17 Sample
+    Assets:Bank        $400.00
+    Income:Check1     $-100.00  ; Payee: Person One
+    Income:Check2     $-100.00  ; Payee: Person Two
+    Income:Check3     $-100.00  ; Payee: Person Three
+    Income:Check4     $-100.00  ; Payee: Person Four
+@end smallexample
+
+When reporting with
+
+@smallexample @c command:9B43E57
+$ ledger reg
+@end smallexample
+
+it appears as:
+
+@smallexample @c output:9B43E57
+10-Jun-17 Sample                Assets:Bank                 $400.00      $400.00
+          Person One            Income:Check1              $-100.00      $300.00
+          Person Two            Income:Check2              $-100.00      $200.00
+          Person Three          Income:Check3              $-100.00      $100.00
+          Person Four           Income:Check4              $-100.00            0
+@end smallexample
+
+This shows that they are all in the same transaction (which is why the
+date is not repeated), but they have different payees now.
+
+If using the @option{--strict} or @option{--pedantic} options, you must
+declare this tag to avoid warnings and errors.
+
 
 @node Virtual postings, Expression amounts, Metadata, Transactions
 @section Virtual postings
