@@ -1,6 +1,6 @@
 # Ledger NEWS
 
-## 3.3 (unreleased)
+## 3.3 (2023-02-08)
 
 - Use `$PAGER` when environment variable is set (bug #1674)
 

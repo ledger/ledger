@@ -14,7 +14,7 @@
       in {
       ledger = pkgs.stdenv.mkDerivation {
         pname = "ledger";
-        version = "3.2.1-${self.shortRev or "dirty"}";
+        version = "3.3.0-${self.shortRev or "dirty"}";
 
         src = self;
 
