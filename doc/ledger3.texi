@@ -2890,9 +2890,13 @@ primary date with an equals sign:
 @end smallexample
 
 What this auxiliary date means is entirely up to you.  The only use
-Ledger has for it is that if you specify @option{--aux-date}, then all
-reports and calculations (including pricing) will use the auxiliary
-date as if it were the primary date.
+Ledger has for it is that if you specify @option{--aux-date} (or
+@option{--effective}), then all reports and calculations (including
+pricing) will use the auxiliary date as if it were the primary date.
+
+Note that the @option{--aux-date} option is an alias for
+@option{--effective}; for more details on effective dates
+@pxref{Effective Dates}.
 
 @node Codes, Transaction state, Auxiliary dates, Transactions
 @section Codes
@@ -4045,8 +4049,8 @@ This entry accomplishes this.  Every month you'll see an
 automatic $37.50 deficit like you should, while your checking account
 really knows that it debited $225 this month.
 
-And using the @option{--effective} option, the initial date will be
-overridden by the effective dates.
+And using the @option{--effective} (or @option{--aux-date}) option,
+the initial date will be overridden by the effective dates.
 
 @smallexample @c command:6453542
 $ ledger --effective register Groceries
@@ -4060,6 +4064,10 @@ $ ledger --effective register Groceries
 09-Feb-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50     $ 187.50
 09-Mar-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50     $ 225.00
 @end smallexample
+
+Note that the @option{--aux-date} option is an alias for
+@option{--effective}; for a brief explanation of auxiliary date
+@pxref{Auxiliary dates}.
 
 @node Periodic Transactions, Concrete Example of Automated Transactions, Effective Dates, Automated Transactions
 @subsection Periodic Transactions
