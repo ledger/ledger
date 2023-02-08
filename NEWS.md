@@ -10,12 +10,18 @@
 - When using wild-cards in the `include` directive, include matched files in
   sorted order (bug #1659)
 
+- Ensure absolute path for include (bug #2075)
+
 - Try to use `$XDG_HOME_CONFIG/ledger/ledgerrc` or `~/.config/ledger/ledgerrc`
   first
+
+- Improve Python 3 support and drop support for Python 2
 
 - Add support for automatically reading files encrypted with GPG (bug #1949)
 
 - Add support for a "debit" column in the `convert` command (bug #1120)
+
+- Fix parsing of files without end of line (bug #516)
 
 - Fix incorrect parsing of expressions containing a `-` without spaces (bug #2001)
 
@@ -32,6 +38,20 @@
 - Fix a regression where using multiple commodities in one transaction triggers
   an assertion (bug #1998)
 
+- Fix --time-colon for negative time amounts
+
+- Use correct int return type for stream input operations (bug #2058)
+
+- Use amount_width for balance report
+
+- Remove some UTF-8 code that was having no effect (bug #2061)
+
+- Fix unrounding for equity
+
+- Fix SIGABRT when python subcommand raises an exception
+
+- Improve XML reports
+
 - Support building on older versions of CMAKE (less than 3.7)
 
 - Fix compilation with Boost 1.76 (bug #2030)
@@ -43,6 +63,11 @@
 - Fix the issue that with Boost >= 1.77 `include` directive cannot find the file
   to include for stdin (`-f -`). Also for `-f -` when `include` cannot find the
   file it reports the error with full path now. (bug #2057 & bug #2092)
+
+- Fix Nix build
+
+- Rename `quoted_rfc4180` to `quoted_rfc`, as numbers used in function names
+  confuses the parser (#2007).
 
 - Numbers are no longer permitted in value expression function names.
 
