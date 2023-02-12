@@ -119,14 +119,17 @@ public:
     return true;
   }
 
-  void show_version_info(std::ostream& out) {
-    out <<
-      "Ledger " << Ledger_VERSION_MAJOR << '.' << Ledger_VERSION_MINOR << '.'
+  static void show_version(std::ostream& out) {
+    out << Ledger_VERSION_MAJOR << '.' << Ledger_VERSION_MINOR << '.'
                 << Ledger_VERSION_PATCH;
     if (Ledger_VERSION_PRERELEASE != 0)
       out << Ledger_VERSION_PRERELEASE;
     if (Ledger_VERSION_DATE != 0)
       out << '-' << Ledger_VERSION_DATE;
+  }
+
+  void show_version_info(std::ostream& out) {
+    show_version(out);
     out << _(", the command-line accounting tool");
     out <<
       _("\n\nCopyright (c) 2003-2023, John Wiegley.  All rights reserved.\n\n\

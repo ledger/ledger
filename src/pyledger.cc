@@ -32,12 +32,23 @@
 #include <system.hh>
 
 #include "pyinterp.h"
+#include "global.h"
 
 using namespace boost::python;
 
 namespace ledger {
   extern void initialize_for_python();
 }
+
+struct PyLedger
+{
+  static std::string version()
+  {
+    std::stringstream out;
+    ledger::global_scope_t::show_version(out);
+    return out.str();
+  }
+};
 
 BOOST_PYTHON_MODULE(ledger)
 {
@@ -49,4 +60,5 @@ BOOST_PYTHON_MODULE(ledger)
   set_session_context(python_session.get());
 
   initialize_for_python();
+  scope().attr("__version__") = PyLedger::version();
 }
