@@ -55,19 +55,19 @@ script:
 If that doesn't completely work, here are the dependencies for building the
 current `master` branch:
 
-Dependency | Version (or greater)
------------|---------------------
-[Boost] | 1.49
-[GMP] | 4.2.2
-[MPFR] | 2.4.0
-[utfcpp] | 2.3.4
-[gettext] | 0.17 _optional_
-[libedit] | 20090111-3.0 _optional_
-[Python] | 2.4 _optional_
-[doxygen] | 1.5.7.1 _optional_, for `make docs`
-[graphviz] | 2.20.3 _optional_, for `make docs`
-[texinfo] | 4.13 _optional_, for `make docs`
-[lcov] | 1.6 _optional_, for `make report`, used with `/./acprep gcov`
+Dependency  | Version (or greater)
+------------|---------------------
+[Boost]     | 1.49
+[GMP]       | 4.2.2
+[MPFR]      | 2.4.0
+[utfcpp]    | 2.3.4
+[gettext]   | 0.17 _optional_
+[libedit]   | 20090111-3.0 _optional_
+[Python]    | 2.4 _optional_
+[doxygen]   | 1.5.7.1 _optional_, for `make docs`
+[graphviz]  | 2.20.3 _optional_, for `make docs`
+[texinfo]   | 4.13 _optional_, for `make docs`
+[lcov]      | 1.6 _optional_, for `make report`, used with `/./acprep gcov`
 [sloccount] | 2.26 _optional_, for `make sloc`
 
 ### macOS
