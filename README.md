@@ -63,7 +63,7 @@ Dependency  | Version (or greater)
 [utfcpp]    | 2.3.4
 [gettext]   | 0.17 _optional_
 [libedit]   | 20090111-3.0 _optional_
-[Python]    | 2.4 _optional_
+[Python]    | 3.9 _optional_
 [doxygen]   | 1.5.7.1 _optional_, for `make docs`
 [graphviz]  | 2.20.3 _optional_, for `make docs`
 [texinfo]   | 4.13 _optional_, for `make docs`
