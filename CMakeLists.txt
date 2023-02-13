@@ -1,20 +1,21 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.12)
 
-PROJECT(ledger)
+project(Ledger
+  VERSION 3.3.0
+  DESCRIPTION "A double-entry accounting system with a command-line reporting interface and Python module"
+  HOMEPAGE_URL https://www.ledger-cli.org
+  LANGUAGES CXX
+  )
 
-set(Ledger_VERSION_MAJOR 3)
-set(Ledger_VERSION_MINOR 3)
-set(Ledger_VERSION_PATCH 0)
 set(Ledger_VERSION_PRERELEASE "")
-set(Ledger_VERSION_DATE  20230208)
+set(Ledger_VERSION_DATE "20230208")
 
 set(Ledger_TEST_TIMEZONE "America/Chicago")
 
 # Point CMake at any custom modules we may ship
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-if ((${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.7.0") AND (${CMAKE_VERSION} VERSION_LESS "3.16.0"))
-  # use backported module from 3.15 (introduced 3.12) to support older versions of cmake.
-  # this only works with cmake 3.7 or higher.
+if (${CMAKE_VERSION} VERSION_LESS "3.16.0")
+  # Use backported module from 3.15 (introduced 3.12) to support older versions of cmake.
   list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/python-backport")
 endif()
 
@@ -37,6 +38,7 @@ option(PRECOMPILE_SYSTEM_HH "Precompile system.hh" ON)
 option(USE_GPGME "Build with support for encrypted journals" OFF)
 option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
 option(BUILD_DOCS "Build and install documentation" OFF)
+option(BUILD_A4_PDF "Build documentation for A4 papersize" OFF)
 option(BUILD_WEB_DOCS "Build version of documentation suitable for viewing online" OFF)
 
 if (BUILD_DEBUG)
