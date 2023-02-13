@@ -1,7 +1,7 @@
 [![Join the chat at https://gitter.im/use-package/Lobby](https://badges.gitter.im/use-package/Lobby.svg)](https://gitter.im/use-package/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![Build Status master](https://github.com/ledger/ledger/actions/workflows/cmake.yml/badge.svg)
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg?style=flat)](https://github.com/ledger/ledger/pulse/monthly)
-[![License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](http://opensource.org/licenses/BSD-3-Clause)
+[![License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](https://opensource.org/licenses/BSD-3-Clause)
 [![GitHub release](https://img.shields.io/github/release/ledger/ledger.svg?style=flat)](https://github.com/ledger/ledger/releases)
 
 # Ledger: Command-Line Accounting
@@ -171,30 +171,34 @@ patch (I prefer attachments over pasted text), or to get an account on GitHub.
 Once you do, fork the [Ledger project][github],
 hack as much as you like, then send me a pull request via GitHub.
 
-[Homepage]: http://ledger-cli.org/
-[documentation]: http://www.ledger-cli.org/docs.html
-[mailing list]: http://list.ledger-cli.org/
-[wiki]: http://wiki.ledger-cli.org/
+[Homepage]: https://ledger-cli.org/
+[documentation]: https://www.ledger-cli.org/docs.html
+[mailing list]: https://list.ledger-cli.org/
+[wiki]: https://wiki.ledger-cli.org/
 [IRC]: irc://irc.libera.chat/ledger
-[github]: http://github.com/ledger/ledger
+[github]: https://github.com/ledger/ledger
 [ledger/vim-ledger repository]: https://github.com/ledger/vim-ledger
-[Homebrew]: http://brew.sh/
+[Homebrew]: https://brew.sh/
 [MacPorts]: https://www.macports.org/
-[Boost]: http://boost.org
-[GMP]: http://gmplib.org/
-[MPFR]: http://www.mpfr.org/
-[utfcpp]: http://utfcpp.sourceforge.net
+[Boost]: https://boost.org
+[GMP]: https://gmplib.org/
+[MPFR]: https://www.mpfr.org/
+[utfcpp]: https://utfcpp.sourceforge.net
 [gettext]: https://www.gnu.org/software/gettext/
-[libedit]: http://thrysoee.dk/editline/
-[Python]: http://python.org
-[doxygen]: http://www.doxygen.org/
-[graphviz]: http://graphviz.org/
-[texinfo]: http://www.gnu.org/software/texinfo/
-[lcov]: http://ltp.sourceforge.net/coverage/lcov.php
-[sloccount]: http://www.dwheeler.com/sloccount/
-[pcre]: http://www.pcre.org/
-[libofx]: http://libofx.sourceforge.net
-[expat]: http://www.libexpat.org
+[libedit]: https://thrysoee.dk/editline/
+[Python]: https://python.org
+[doxygen]: https://www.doxygen.org/
+[graphviz]: https://graphviz.org/
+[texinfo]: https://www.gnu.org/software/texinfo/
+[lcov]: https://ltp.sourceforge.net/coverage/lcov.php
+[sloccount]: https://www.dwheeler.com/sloccount/
+[pcre]: https://www.pcre.org/
+[libofx]: https://libofx.sourceforge.net
+[expat]: https://libexpat.github.io
+<!--
+xmlsoft url kept as http since its TLS certificate setup is incorrect and browser show
+a "This Connection Is Not Private" message. [Last checked: 2023-03-13]
+-->
 [libxml2]: http://xmlsoft.org
 [openhub]: https://www.openhub.net/p/ledger
 [conda-forge]: https://conda-forge.org
