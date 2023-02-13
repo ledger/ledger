@@ -52,6 +52,9 @@ script:
 
     $ ./acprep dependencies
 
+Note that some features, e.g. `--import` require building Ledger with
+Python support.
+
 If that doesn't completely work, here are the dependencies for building the
 current `master` branch:
 
