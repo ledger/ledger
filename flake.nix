@@ -3,7 +3,7 @@
 
   nixConfig.bash-prompt = "ledger$ ";
   outputs = { self, nixpkgs }: let
-    usePython = true;
+    usePython = false;
     gpgmeSupport = true;
     forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
     nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
