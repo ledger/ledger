@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# SPDX-FileCopyrightText: 2023 John Wiegley
+
+# TODO: This maintains backwards compatibility but pollutes the ledger
+# namespace with all symbols from the native ledger.core._core
+#from .core import *
+
+# TODO: This breaks backwards compatibility but provides a cleaner API
+from . import core
+__all__        = [ 'core' ]
+
+__version__    = '@Ledger_VERSION_MAJOR@.@Ledger_VERSION_MINOR@.@Ledger_VERSION_PATCH@@Ledger_VERSION_PRERELEASE'
+__author__     = "John Wiegley"
+__copyright__  = "Copyright (c) 2003-2023, John Wiegley.  All rights reserved."
+__license__    = "BSD-3-Clause"
+__status__     = "Production"
+__doc__        = "A powerful, double-entry accounting system"
+
+def license():
+    return '''
+@Ledger_LICENSE@
+'''

@@ -7,7 +7,7 @@ from datetime import datetime
 # Ledger Python module to access your data and build custom reports using the
 # magic of Python.
 
-import ledger
+import ledger.core as ledger
 
 print("Welcome to the Ledger.Python demo!")
 
@@ -267,6 +267,15 @@ val = ledger.Value('$100.00')
 
 assert val.is_amount()
 assertEqual('$', val.to_amount().commodity.symbol)
+
+# It is possible to extend existing classes using Python.
+# For example the following code paragraph adds a
+# `symbol` method to the Value class as a shorthand.
+
+def value_symbol(self):
+    return self.to_amount().commodity.symbol
+ledger.Value.symbol = value_symbol
+assertEqual('$', val.symbol())
 
 # JOURNALS
 

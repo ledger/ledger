@@ -61,7 +61,7 @@ void export_utils();
 void export_value();
 void export_xact();
 
-extern "C" PyObject* PyInit_ledger();
+extern "C" PyObject* PyInit__core();
 
 void initialize_for_python()
 {
@@ -154,7 +154,7 @@ void python_interpreter_t::initialize()
     // interpreter with Py_Finalize when embedded.
     Py_UnbufferedStdioFlag = 1;
     // PyImport_AppendInittab docs: "This should be called before Py_Initialize()".
-    PyImport_AppendInittab((const char*)"ledger", PyInit_ledger);
+    PyImport_AppendInittab((const char*)"ledger", PyInit__core);
 
     Py_Initialize();
     assert(Py_IsInitialized());

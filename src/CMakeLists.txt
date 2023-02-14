@@ -316,13 +316,16 @@ endif()
 
 if (USE_PYTHON)
   if (Python_SITEARCH)
+    set(_ledger_shared_library_suffix ${CMAKE_SHARED_LIBRARY_SUFFIX})
     if (WIN32 AND NOT CYGWIN)
-      set(_ledger_python_module_name "ledger.pyd")
+      set(_ledger_shared_library_suffix ".pyd")
     elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
-      set(_ledger_python_module_name "ledger.so")
-    else()
-      set(_ledger_python_module_name "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
+      set(_ledger_shared_library_suffix ".so")
     endif()
+    set(_ledger_python_package "core")
+    # NOTA BENE: The underscore before the actual module name *is* significant.
+    # See https://www.boost.org/doc/libs/1_81_0/libs/python/doc/html/tutorial/tutorial/techniques.html#tutorial.techniques.creating_packages
+    set(_ledger_python_module_name "${_ledger_python_package}/_${_ledger_python_package}${_ledger_shared_library_suffix}")
 
     # FIXME: symlink would be sufficient:
     # maybe using install(CODE "...") and
@@ -331,10 +334,10 @@ if (USE_PYTHON)
     add_custom_command(
       TARGET libledger POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      $<TARGET_FILE:libledger> "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}")
+      $<TARGET_FILE:libledger> "${_ledger_python_module_dir}/${_ledger_python_module_name}")
     install(
-      FILES "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}"
-      DESTINATION ${Python_SITEARCH})
+      FILES "${_ledger_python_module_dir}/${_ledger_python_module_name}"
+      DESTINATION "${Python_SITEARCH}/${PROJECT_NAME}/${_ledger_python_package}")
   else()
     message(WARNING "Python_SITEARCH not set. Will not install python module.")
   endif()

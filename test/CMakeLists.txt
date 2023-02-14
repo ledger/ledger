@@ -69,10 +69,10 @@ if (Python_EXECUTABLE)
 
   if (HAVE_BOOST_PYTHON)
     add_test(NAME demo
-      COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/python/demo.py
+      COMMAND ${Python_EXECUTABLE} -m ledger.demo
       WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
     set_tests_properties(demo
-      PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE};PYTHONPATH=.")
+      PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE};PYTHONPATH=python")
   endif()
 endif()
 

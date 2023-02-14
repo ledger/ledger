@@ -67,6 +67,8 @@ if (USE_PYTHON)
     message(ERROR "Building the python module requires BUILD_LIBRARY=ON.")
   endif()
 
+  set(_ledger_python_module_dir "${CMAKE_BINARY_DIR}/python/${PROJECT_NAME}")
+
   find_package(Python COMPONENTS Interpreter Development)
   if (PYTHON_FOUND)
     if (${Python_VERSION_MAJOR} VERSION_GREATER_EQUAL "3")
@@ -329,6 +331,9 @@ endif()
 add_subdirectory(src)
 add_subdirectory(doc)
 add_subdirectory(test)
+if (USE_PYTHON)
+add_subdirectory(python)
+endif()
 
 ########################################################################
 
