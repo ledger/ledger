@@ -4,7 +4,7 @@ project(Ledger
   VERSION 3.3.0
   DESCRIPTION "A double-entry accounting system with a command-line reporting interface and Python module"
   HOMEPAGE_URL https://www.ledger-cli.org
-  LANGUAGES CXX
+  LANGUAGES CXX C
   )
 
 set(Ledger_VERSION_PRERELEASE "")
