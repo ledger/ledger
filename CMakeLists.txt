@@ -20,7 +20,10 @@ endif()
 
 enable_testing()
 
-add_definitions(-std=c++11)
+add_definitions(
+  -std=c++11
+  -DBOOST_FILESYSTEM_NO_DEPRECATED
+)
 if (CYGWIN)
   add_definitions(-U__STRICT_ANSI__)
 endif()
