@@ -849,7 +849,11 @@ path resolve_path(const path& pathname)
   path temp = pathname;
   if (temp.string()[0] == '~')
     temp = expand_path(temp);
+#if (BOOST_VERSION >= 106000)
+  temp.lexically_normal();
+#else
   temp.normalize();
+#endif
   return temp;
 }
 
