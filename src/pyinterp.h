@@ -106,7 +106,6 @@ public:
   }
 
   value_t python_command(call_scope_t& scope);
-  value_t server_command(call_scope_t& args);
 
   class functor_t {
     functor_t();
