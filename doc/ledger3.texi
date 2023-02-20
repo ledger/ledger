@@ -3112,7 +3112,7 @@ date.
 * Payee metadata::
 @end menu
 
-@node Payee metadata,  , Metadata payee, Metadata
+@node Payee metadata,  , Typed metadata, Metadata
 @subsection Payee metadata
 @cindex Payee metadata
 @findex register
