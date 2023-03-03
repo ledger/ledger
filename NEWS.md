@@ -1,6 +1,6 @@
 # Ledger NEWS
 
-## 3.3.1 (unreleased)
+## 3.3.1 (2023-03-03)
 
 - Fix regression leading to incorrect error about `format` directives (bug #2205)
 
