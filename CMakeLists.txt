@@ -1,17 +1,11 @@
 cmake_minimum_required(VERSION 3.0)
 
-PROJECT(ledger)
-
-set(Ledger_VERSION_MAJOR 3)
-set(Ledger_VERSION_MINOR 3)
-set(Ledger_VERSION_PATCH 1)
-set(Ledger_VERSION_PRERELEASE "")
-set(Ledger_VERSION_DATE  20230303)
+# Point CMake at any custom modules we may ship
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(LedgerVersion)
 
 set(Ledger_TEST_TIMEZONE "America/Chicago")
 
-# Point CMake at any custom modules we may ship
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 if ((${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.7.0") AND (${CMAKE_VERSION} VERSION_LESS "3.16.0"))
   # use backported module from 3.15 (introduced 3.12) to support older versions of cmake.
   # this only works with cmake 3.7 or higher.
