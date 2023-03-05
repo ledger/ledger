@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
+PROJECT(ledger)
+
 # Point CMake at any custom modules we may ship
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(LedgerVersion)
