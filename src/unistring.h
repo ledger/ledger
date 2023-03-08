@@ -69,7 +69,8 @@ public:
     const char * p   = input.c_str();
     std::size_t  len = input.length();
 
-    assert(len < 1024);
+    // This size should be at least as large as MAX_LINE in context.h
+    assert(len < 4096);
     VERIFY(utf8::is_valid(p, p + len));
     utf8::unchecked::utf8to32(p, p + len, std::back_inserter(utf32chars));
 
