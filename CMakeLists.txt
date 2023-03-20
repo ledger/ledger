@@ -2,9 +2,11 @@ cmake_minimum_required(VERSION 3.0)
 
 PROJECT(ledger)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/doc")
+include(LedgerVersion)
+
 # Point CMake at any custom modules we may ship
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-include(LedgerVersion)
 
 set(Ledger_TEST_TIMEZONE "America/Chicago")
 
