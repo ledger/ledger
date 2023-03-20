@@ -50,9 +50,11 @@
         installTargets = [ "doc" "install" ];
 
         checkPhase = ''
-          export LD_LIBRARY_PATH=$PWD
-          export DYLD_LIBRARY_PATH=$PWD
-          ctest -j$NIX_BUILD_CORES
+          runHook preCheck
+          env LD_LIBRARY_PATH=$PWD \
+            DYLD_LIBRARY_PATH=$PWD \
+            ctest -j$NIX_BUILD_CORES
+          runHook postCheck
         '';
 
         doCheck = true;
