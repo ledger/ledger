@@ -7,13 +7,15 @@
 
 cmake_minimum_required(VERSION 3.0)
 
+project(ledger NONE)
+
 # Point CMake at any custom modules we may ship
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 include(LedgerVersion)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/version.texi.in
-  ${PROJECT_BINARY_DIR}/doc/version.texi)
+  ${CMAKE_CURRENT_SOURCE_DIR}/version.texi)
 
 if (USE_DOXYGEN)
   find_package(Doxygen)
