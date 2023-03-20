@@ -29,7 +29,7 @@
               then [ python3 (boost.override { enablePython = true; python = python3; }) ]
               else [ boost ]);
 
-        nativeBuildInputs = [ cmake texinfo ];
+        nativeBuildInputs = [ cmake texinfo tzdata ];
 
         enableParallelBuilding = true;
 
