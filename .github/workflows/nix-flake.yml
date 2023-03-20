@@ -1,0 +1,22 @@
+name: "Nix Flake"
+on:
+  push:
+    branches: master
+  pull_request:
+    branches: master
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+    - uses: cachix/install-nix-action@v20
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+
+    - uses: actions/checkout@v3
+    - name: Ensure nix flake builds
+      run: "nix build ."
