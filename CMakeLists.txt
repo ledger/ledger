@@ -1,6 +1,7 @@
 set(Required_CMake_Version 3.16.2)
 set(Required_Boost_Version 1.72)
 set(Required_Gmp_Version 6.1.2)
+set(Required_Mpfr_Version 4.0.2)
 set(Required_Python_Version 3.9)
 set(Required_Gpgmepp_Version 1.13.1)
 
@@ -232,6 +233,18 @@ if (GMP_PATH AND EXISTS "${GMP_PATH}/gmp.h")
 endif()
 
 find_req_library_and_header(MPFR_PATH mpfr.h MPFR_LIB mpfr)
+if (MPFR_PATH AND EXISTS "${MPFR_PATH}/mpfr.h")
+  file(STRINGS "${MPFR_PATH}/mpfr.h" mpfr_header_str REGEX "^#define[\t ]+MPFR_VERSION_(MAJOR|MINOR|PATCHLEVEL)[\t ]+[0-9]+")
+  string(REGEX REPLACE ".*#define MPFR_VERSION_MAJOR[\t ]+([0-9]+).*" "\\1" MPFR_VERSION_MAJOR "${mpfr_header_str}")
+  string(REGEX REPLACE ".*#define MPFR_VERSION_MINOR[\t ]+([0-9]+).*" "\\1" MPFR_VERSION_MINOR "${mpfr_header_str}")
+  string(REGEX REPLACE ".*#define MPFR_VERSION_PATCHLEVEL[\t ]+([0-9]+).*" "\\1" MPFR_VERSION_PATCH "${mpfr_header_str}")
+  unset(mpfr_header_str)
+  set(MPFR_VERSION_STRING "${MPFR_VERSION_MAJOR}.${MPFR_VERSION_MINOR}.${MPFR_VERSION_PATCH}")
+  if ("${MPFR_VERSION_STRING}" VERSION_LESS ${Required_Mpfr_Version})
+    message(FATAL_ERROR "Ledger requires MPFR version ${Expected_Mpfr_Version} or greater, but only MPFR version ${MPFR_VERSION_STRING} was found")
+  endif()
+endif()
+
 
 check_library_exists(edit readline "" HAVE_EDIT)
 find_opt_library_and_header(EDIT_PATH histedit.h EDIT_LIB edit HAVE_EDIT)

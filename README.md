@@ -63,7 +63,7 @@ Dependency  | Version (or greater)
 [CMake]     | 3.16.2
 [Boost]     | 1.72
 [Gmp]       | 6.1.2
-[MPFR]      | 2.4.0
+[Mpfr]      | 4.0.2
 [utfcpp]    | 3.2.3
 [gettext]   | 0.17 _optional_
 [libedit]   | 20090111-3.0 _optional_
