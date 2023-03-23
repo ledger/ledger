@@ -44,11 +44,7 @@
 #ifndef INCLUDED_UTILS_H
 #define INCLUDED_UTILS_H
 
-#if (BOOST_VERSION >= 106600)
 #include <boost/uuid/detail/sha1.hpp>
-#else
-#include <boost/uuid/sha1.hpp>
-#endif
 
 /**
  * @name Default values

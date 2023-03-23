@@ -70,7 +70,6 @@
 #define HAVE_BOOST_PYTHON        @HAVE_BOOST_PYTHON@
 #define HAVE_GPGME               @HAVE_GPGME@
 #define HAVE_BOOST_REGEX_UNICODE @HAVE_BOOST_REGEX_UNICODE@
-#define HAVE_BOOST_159_ISSUE_39  @HAVE_BOOST_159_ISSUE_39@
 #define HAVE_BOOST_NOWIDE        @HAVE_BOOST_NOWIDE@
 
 #define DEBUG_MODE               @DEBUG_MODE@
@@ -215,17 +214,6 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include <boost/iterator/indirect_iterator.hpp>
-
-#if BOOST_VERSION == 105900 && HAVE_BOOST_159_ISSUE_39
-// Fix for https://github.com/boostorg/python/issues/39
-namespace boost { namespace python {
-template <class D>
-inline object make_setter(D const& x)
-{
-    return detail::make_setter(x, default_call_policies(), is_member_pointer<D>(), 0);
-}
-}}
-#endif
 
 #endif // HAVE_BOOST_PYTHON
 
