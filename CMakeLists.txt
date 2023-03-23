@@ -1,6 +1,7 @@
 set(Required_CMake_Version 3.16.2)
 set(Required_Boost_Version 1.72)
 set(Required_Python_Version 3.9)
+set(Required_Gpgmepp_Version 1.13.1)
 
 cmake_minimum_required(VERSION ${Required_CMake_Version})
 
@@ -96,7 +97,7 @@ link_directories(${Boost_LIBRARY_DIRS})
 
 # Crypto
 if (USE_GPGME)
-  find_package(Gpgmepp REQUIRED)
+  find_package(Gpgmepp ${Required_Gpgmepp_Version} REQUIRED)
   set(HAVE_GPGME 1)
   include_directories(SYSTEM ${Gpgmepp_INCLUDE_DIRS})
   link_directories(${Gpgmepp_LIBRARY_DIRS})

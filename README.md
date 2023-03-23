@@ -68,6 +68,7 @@ Dependency  | Version (or greater)
 [gettext]   | 0.17 _optional_
 [libedit]   | 20090111-3.0 _optional_
 [Python]    | 3.9 _optional_
+[Gpgmepp]   | 1.13.1 _optional_
 [doxygen]   | 1.5.7.1 _optional_, for `make docs`
 [graphviz]  | 2.20.3 _optional_, for `make docs`
 [texinfo]   | 4.13 _optional_, for `make docs`
@@ -192,6 +193,7 @@ hack as much as you like, then send me a pull request via GitHub.
 [gettext]: https://www.gnu.org/software/gettext/
 [libedit]: https://thrysoee.dk/editline/
 [Python]: https://python.org
+[Gpgmepp]: https://www.gnupg.org/related_software/gpgme/
 [doxygen]: https://www.doxygen.org/
 [graphviz]: https://graphviz.org/
 [texinfo]: https://www.gnu.org/software/texinfo/
