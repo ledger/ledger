@@ -72,7 +72,7 @@ Dependency  | Version (or greater)
 [doxygen]   | 1.5.7.1 _optional_, for `make docs`
 [graphviz]  | 2.20.3 _optional_, for `make docs`
 [texinfo]   | 4.13 _optional_, for `make docs`
-[lcov]      | 1.6 _optional_, for `make report`, used with `/./acprep gcov`
+[lcov]      | 1.6 _optional_, for `make report`, used with `./acprep gcov`
 [sloccount] | 2.26 _optional_, for `make sloc`
 
 ### macOS
