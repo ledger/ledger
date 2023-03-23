@@ -1,4 +1,5 @@
 set(Required_CMake_Version 3.16.2)
+set(Required_Boost_Version 1.72)
 
 cmake_minimum_required(VERSION ${Required_CMake_Version})
 
@@ -83,7 +84,7 @@ else()
 endif()
 
 # Set BOOST_ROOT to help CMake to find the right Boost version
-find_package(Boost 1.49.0
+find_package(Boost ${Required_Boost_Version}
   REQUIRED date_time filesystem system iostreams regex unit_test_framework
   ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide)
 
@@ -181,35 +182,6 @@ else()
 endif()
 
 cmake_pop_check_state()
-
-# Check if fix for https://github.com/boostorg/python/issues/39 is needed
-if (HAVE_BOOST_PYTHON)
-cmake_push_check_state()
-
-set(CMAKE_REQUIRED_INCLUDES
-    ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${Python_INCLUDE_DIRS})
-set(CMAKE_REQUIRED_LIBRARIES
-    ${Boost_LIBRARIES} ${Python_LIBRARIES} ${PROFILE_LIBS})
-
-check_cxx_source_compiles("
-#include <boost/python.hpp>
-
-struct X { int y; };
-
-int main()
-{
-  boost::python::make_setter(&X::y);
-  return 0;
-}" BOOST_MAKE_SETTER_COMPILES)
-
-if (BOOST_MAKE_SETTER_COMPILES)
-  set(HAVE_BOOST_159_ISSUE_39 0)
-else()
-  set(HAVE_BOOST_159_ISSUE_39 1)
-endif()
-
-cmake_pop_check_state()
-endif()
 
 ########################################################################
 

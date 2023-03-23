@@ -61,7 +61,7 @@ current `master` branch:
 Dependency  | Version (or greater)
 ------------|---------------------
 [CMake]     | 3.16.2
-[Boost]     | 1.49
+[Boost]     | 1.72
 [GMP]       | 4.2.2
 [MPFR]      | 2.4.0
 [utfcpp]    | 2.3.4
