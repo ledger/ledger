@@ -64,7 +64,7 @@ Dependency  | Version (or greater)
 [Boost]     | 1.72
 [GMP]       | 4.2.2
 [MPFR]      | 2.4.0
-[utfcpp]    | 2.3.4
+[utfcpp]    | 3.2.3
 [gettext]   | 0.17 _optional_
 [libedit]   | 20090111-3.0 _optional_
 [Python]    | 3.9 _optional_
