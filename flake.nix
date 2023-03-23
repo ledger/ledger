@@ -15,7 +15,7 @@
       in with pkgs; {
       ledger = stdenv.mkDerivation {
         pname = "ledger";
-        version = "3.3.0-${self.shortRev or "dirty"}";
+        version = "3.3.1-${self.shortRev or "dirty"}";
 
         src = self;
 
@@ -29,7 +29,7 @@
               then [ python3 (boost.override { enablePython = true; python = python3; }) ]
               else [ boost ]);
 
-        nativeBuildInputs = [ cmake texinfo ];
+        nativeBuildInputs = [ cmake texinfo tzdata ];
 
         enableParallelBuilding = true;
 
@@ -50,9 +50,11 @@
         installTargets = [ "doc" "install" ];
 
         checkPhase = ''
-          export LD_LIBRARY_PATH=$PWD
-          export DYLD_LIBRARY_PATH=$PWD
-          ctest -j$NIX_BUILD_CORES
+          runHook preCheck
+          env LD_LIBRARY_PATH=$PWD \
+            DYLD_LIBRARY_PATH=$PWD \
+            ctest -j$NIX_BUILD_CORES
+          runHook postCheck
         '';
 
         doCheck = true;

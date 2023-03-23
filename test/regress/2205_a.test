@@ -1,0 +1,15 @@
+
+commodity h
+    format 1,000.00 h
+    default
+
+2023-03-03 * Opening balance
+    Assets:Time              100 h
+    Equity:Opening balance
+
+test bal
+            100.00 h  Assets:Time
+           -100.00 h  Equity:Opening balance
+--------------------
+                   0
+end test

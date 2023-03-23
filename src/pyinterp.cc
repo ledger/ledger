@@ -362,44 +362,6 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
   return NULL_VALUE;
 }
 
-value_t python_interpreter_t::server_command(call_scope_t& args)
-{
-  if (! is_initialized)
-    initialize();
-
-  python::object server_module;
-
-  try {
-    server_module = python::import("ledger.server");
-    if (! server_module)
-      throw_(std::runtime_error,
-             _("Could not import ledger.server; please check your PYTHONPATH"));
-  }
-  catch (const error_already_set&) {
-    PyErr_Print();
-    throw_(std::runtime_error,
-           _("Could not import ledger.server; please check your PYTHONPATH"));
-  }
-
-  if (python::object main_function = server_module.attr("main")) {
-    functor_t func(main_function, "main");
-    try {
-      func(args);
-      return true;
-    }
-    catch (const error_already_set&) {
-      PyErr_Print();
-      throw_(std::runtime_error,
-             _("Error while invoking ledger.server's main() function"));
-    }
-  } else {
-      throw_(std::runtime_error,
-             _("The ledger.server module is missing its main() function!"));
-  }
-
-  return false;
-}
-
 option_t<python_interpreter_t> *
 python_interpreter_t::lookup_option(const char * p)
 {
@@ -473,11 +435,6 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
     case 'p':
       if (is_eq(p, "python"))
         return MAKE_FUNCTOR(python_interpreter_t::python_command);
-      break;
-
-    case 's':
-      if (is_eq(p, "server"))
-        return MAKE_FUNCTOR(python_interpreter_t::server_command);
       break;
     }
   }

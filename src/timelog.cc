@@ -55,7 +55,7 @@ namespace {
       curr->append_note(in_event.note.c_str(), *context.scope);
 
     char buf[32];
-    std::sprintf(buf, "%lds", long((out_event.checkin - in_event.checkin)
+    std::snprintf(buf, 32, "%lds", long((out_event.checkin - in_event.checkin)
                                    .total_seconds()));
     amount_t amt;
     amt.parse(buf);

@@ -1,5 +1,19 @@
 # Ledger NEWS
 
+## 3.3.1 (2023-03-03)
+
+- Fix regression leading to incorrect error about `format` directives (bug #2205)
+
+- Add information about compile features to `--version`
+
+- Fix compiler warnings by minimizing the use of deprecated APIs
+
+- Update flake.nix to match nixpkgs ledger/default.nix
+
+- Remove unused Python server related code
+
+- Various documentation improvements
+
 ## 3.3 (2023-02-08)
 
 - Use `$PAGER` when environment variable is set (bug #1674)

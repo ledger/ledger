@@ -1,27 +1,32 @@
 cmake_minimum_required(VERSION 3.12)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/doc")
+include(LedgerVersion)
+
 project(Ledger
-  VERSION 3.3.0
+  VERSION "${Ledger_VERSION_MAJOR}.${Ledger_VERSION_MINOR}.${Ledger_VERSION_PATCH}"
   DESCRIPTION "A double-entry accounting system with a command-line reporting interface and Python module"
   HOMEPAGE_URL https://www.ledger-cli.org
   LANGUAGES CXX C
   )
 
-set(Ledger_VERSION_PRERELEASE "")
-set(Ledger_VERSION_DATE "20230208")
+# Point CMake at any custom modules we may ship
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 set(Ledger_TEST_TIMEZONE "America/Chicago")
 
-# Point CMake at any custom modules we may ship
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 if (${CMAKE_VERSION} VERSION_LESS "3.16.0")
-  # Use backported module from 3.15 (introduced 3.12) to support older versions of cmake.
+  # use backported module from 3.15 (introduced 3.12) to support older versions of cmake.
+  # this only works with cmake 3.7 or higher.
   list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/python-backport")
 endif()
 
 enable_testing()
 
-add_definitions(-std=c++11)
+add_definitions(
+  -std=c++11
+  -DBOOST_FILESYSTEM_NO_DEPRECATED
+)
 if (CYGWIN)
   add_definitions(-U__STRICT_ANSI__)
 endif()

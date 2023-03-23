@@ -3112,7 +3112,7 @@ date.
 * Payee metadata::
 @end menu
 
-@node Payee metadata,  , Metadata payee, Metadata
+@node Payee metadata,  , Typed metadata, Metadata
 @subsection Payee metadata
 @cindex Payee metadata
 @findex register
@@ -4093,15 +4093,15 @@ automated posting at the top of your ledger file:
 @smallexample @c input:C371854
 ; This automated transaction will compute Huqúqu'lláh based on this
 ; journal's postings.  Any accounts that match will affect the
-; Liabilities:Huququ'llah account by 19% of the value of that posting.
+; Liabilities:Huqúqu'lláh account by 19% of the value of that posting.
 
 = /^(?:Income:|Expenses:(?:Business|Rent$|Furnishings|Taxes|Insurance))/
-  (Liabilities:Huququ'llah)               0.19
+  (Liabilities:Huqúqu'lláh)               0.19
 @end smallexample
 
 This automated posting works by looking at each posting in the
 ledger file.  If any match the given value expression, 19% of the
-posting's value is applied to the @samp{Liabilities:Huququ'llah}
+posting's value is applied to the @samp{Liabilities:Huqúqu'lláh}
 account.  So, if $1000 is earned from @samp{Income:Salary}, $190 is
 added to @samp{Liabilities:Huqúqu'lláh}; if $1000 is spent on Rent,
 $190 is subtracted.
@@ -4119,11 +4119,11 @@ $190 is subtracted.
 The ultimate balance of Huqúqu'lláh reflects how
 much is owed in order to fulfill one's obligation to Huqúqu'lláh.
 When ready to pay, just write a check to cover the amount shown in
-@samp{Liabilities:Huququ'llah}.  That transaction would look like:
+@samp{Liabilities:Huqúqu'lláh}.  That transaction would look like:
 
 @smallexample @c input:validate
-2003/01/01 (101) Baha'i Huqúqu'lláh Trust
-    Liabilities:Huququ'llah          $1,000.00
+2003/01/01 (101) Bahá'í Huqúqu'lláh Trust
+    Liabilities:Huqúqu'lláh          $1,000.00
     Assets:Checking
 @end smallexample
 
@@ -4131,11 +4131,11 @@ That's it.  To see how much Huqúq is currently owed based on your
 ledger transactions, use:
 
 @smallexample @c command:C371854
-$ ledger balance Liabilities:Huquq
+$ ledger balance Liabilities:Huqúq
 @end smallexample
 
 @smallexample @c output:C371854
-                $-95  Liabilities:Huququ'llah
+                $-95  Liabilities:Huqúqu'lláh
 @end smallexample
 
 This works fine, but omits one aspect of the law: that Huqúq is only

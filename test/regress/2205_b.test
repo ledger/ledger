@@ -1,0 +1,16 @@
+
+C 1.00000000 BTC = 100000000 sat
+
+commodity BTC
+    format 1.00000000 BTC
+
+2023-03-03 * Opening balance
+    Assets:Investments       1.00 BTC
+    Equity:Opening balance
+
+test bal
+      1.00000000 BTC  Assets:Investments
+     -1.00000000 BTC  Equity:Opening balance
+--------------------
+                   0
+end test

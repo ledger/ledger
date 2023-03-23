@@ -128,6 +128,15 @@ public:
     if (Ledger_VERSION_DATE != 0)
       out << '-' << Ledger_VERSION_DATE;
     out << _(", the command-line accounting tool");
+    out << _("\nwith");
+#if !HAVE_GPGME
+    out << _("out");
+#endif
+    out << _(" support for gpg encrypted journals and with");
+#if !HAVE_BOOST_PYTHON
+    out <<_("out");
+#endif
+    out << _(" Python support");
     out <<
       _("\n\nCopyright (c) 2003-2023, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
