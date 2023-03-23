@@ -60,6 +60,7 @@ current `master` branch:
 
 Dependency  | Version (or greater)
 ------------|---------------------
+[CMake]     | 3.16.2
 [Boost]     | 1.49
 [GMP]       | 4.2.2
 [MPFR]      | 2.4.0
@@ -183,6 +184,7 @@ hack as much as you like, then send me a pull request via GitHub.
 [ledger/vim-ledger repository]: https://github.com/ledger/vim-ledger
 [Homebrew]: https://brew.sh/
 [MacPorts]: https://www.macports.org/
+[CMake]: https://cmake.org
 [Boost]: https://boost.org
 [GMP]: https://gmplib.org/
 [MPFR]: https://www.mpfr.org/

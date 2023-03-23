@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.0)
+set(Required_CMake_Version 3.16.2)
+
+cmake_minimum_required(VERSION ${Required_CMake_Version})
 
 PROJECT(ledger)
 
@@ -9,12 +11,6 @@ include(LedgerVersion)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 set(Ledger_TEST_TIMEZONE "America/Chicago")
-
-if ((${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.7.0") AND (${CMAKE_VERSION} VERSION_LESS "3.16.0"))
-  # use backported module from 3.15 (introduced 3.12) to support older versions of cmake.
-  # this only works with cmake 3.7 or higher.
-  list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/python-backport")
-endif()
 
 enable_testing()
 
