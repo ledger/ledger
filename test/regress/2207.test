@@ -1,0 +1,14 @@
+
+commodity FOO
+    format 1,000.00 FOO
+
+commodity $
+    format $1,000.00
+
+2023/01/03 * Transaction
+    Assets:Brokerage   -0.003 FOO @ $16.79
+    Assets:Checking
+
+test bal
+               $0.05  Assets:Checking
+end test
