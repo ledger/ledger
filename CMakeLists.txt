@@ -71,7 +71,7 @@ if (USE_PYTHON)
 
   find_package(Python
     COMPONENTS Interpreter Development)
-  if (PYTHON_FOUND AND ${Python_VERSION} VERSION_LESS ${Required_Python_Version})
+  if (PYTHON_FOUND AND ${Python_VERSION} VERSION_GREATER_EQUAL ${Required_Python_Version})
     set(BOOST_PYTHON "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}")
     set(HAVE_BOOST_PYTHON 1)
     include_directories(SYSTEM ${Python_INCLUDE_DIRS})
