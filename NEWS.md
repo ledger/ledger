@@ -1,6 +1,6 @@
 # Ledger NEWS
 
-## 3.3.2 (unreleased)
+## 3.3.2 (2023-03-30)
 
 - Fix divide by zero (bugs #777 and #2207)
 
