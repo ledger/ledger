@@ -1,5 +1,11 @@
 # Ledger NEWS
 
+## 3.4.x (unreleased)
+
+- Update required versions of various dependencies
+
+- docs: Enable stand-alone building
+
 ## 3.3.2 (2023-03-30)
 
 - Fix divide by zero (bugs #777 and #2207)
