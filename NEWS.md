@@ -1,5 +1,13 @@
 # Ledger NEWS
 
+## 3.3.2 (unreleased)
+
+- Fix divide by zero (bugs #777 and #2207)
+
+- Increase string size limit in src/unistring.h assert (bug #2174)
+
+- Require tzdata for Nix flake build (bug #2213)
+
 ## 3.3.1 (2023-03-03)
 
 - Fix regression leading to incorrect error about `format` directives (bug #2205)
