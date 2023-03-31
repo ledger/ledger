@@ -6009,7 +6009,7 @@ Display the man page for @file{ledger}.
 
 @item --init-file @var{FILE}
 Specify the location of the init file.  By default, @file{$XDG_CONFIG_HOME},
-@file{~/.config/ledger/lederrc}, @file{~/.ledgerrc} and @file{./.ledgerrc} are
+@file{~/.config/ledger/ledgerrc}, @file{~/.ledgerrc} and @file{./.ledgerrc} are
 tried in order.
 
 @item --options
