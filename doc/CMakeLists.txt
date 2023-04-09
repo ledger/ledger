@@ -23,14 +23,15 @@ if (USE_DOXYGEN)
     message(FATAL_ERROR "Could not find doxygen. Reference documentation cannot be built.")
   endif()
 
-  configure_file(Doxyfile.in Doxyfile @ONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile @ONLY)
 
   # see INPUT/FILE_PATTERNS in Doxyfile.in
-  file(GLOB doxygen_input_files ${CMAKE_SOURCE_DIR}/src/*.h)
+  file(GLOB doxygen_input_files ${CMAKE_CURRENT_SOURCE_DIR}/../src/*.h)
 
   add_custom_command(OUTPUT html/index.html
-    COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
-    DEPENDS Doxyfile ${doxygen_input_files}
+    COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile ${doxygen_input_files}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building doxygen documentation")
   add_custom_target(doc.doxygen DEPENDS html/index.html)
 else()
