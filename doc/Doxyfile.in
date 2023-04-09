@@ -680,7 +680,7 @@ WARN_LOGFILE           =
 # with spaces.
 
 # please update dependencies in CMakeList.txt if you change this
-INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/../src
+INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/../src @CMAKE_CURRENT_SOURCE_DIR@/mainpage.txt
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is
