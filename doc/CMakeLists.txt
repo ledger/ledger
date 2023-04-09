@@ -9,6 +9,9 @@ cmake_minimum_required(VERSION 3.16.2)
 
 project(ledger NONE)
 
+set(DOXYGEN_EXTRA_CSS CACHE STRING
+  "Path to extra css file added to the generated API documentation")
+
 # Point CMake at any custom modules we may ship
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 include(LedgerVersion)
@@ -28,11 +31,13 @@ if (USE_DOXYGEN)
   # see INPUT/FILE_PATTERNS in Doxyfile.in
   file(GLOB doxygen_input_files ${CMAKE_CURRENT_SOURCE_DIR}/../src/*.h)
 
-  add_custom_command(OUTPUT html/index.html
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
     COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile ${doxygen_input_files}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building doxygen documentation")
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html
+    DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT doc)
   add_custom_target(doc.doxygen DEPENDS html/index.html)
 else()
   add_custom_target(doc.doxygen)
