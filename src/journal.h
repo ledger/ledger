@@ -39,8 +39,7 @@
  *
  * @ingroup data
  */
-#ifndef INCLUDED_JOURNAL_H
-#define INCLUDED_JOURNAL_H
+#pragma once
 
 #include "utils.h"
 #include "times.h"
@@ -202,5 +201,3 @@ private:
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_JOURNAL_H

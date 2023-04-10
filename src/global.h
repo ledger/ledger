@@ -35,8 +35,7 @@
  *
  * @brief Contains the top-level functions used by main.cc
  */
-#ifndef INCLUDED_GLOBAL_H
-#define INCLUDED_GLOBAL_H
+#pragma once
 
 #include "option.h"
 #include "report.h"
@@ -182,5 +181,3 @@ See LICENSE file included with the distribution for details and disclaimer.");
 void handle_debug_options(int argc, char * argv[]);
 
 } // namespace ledger
-
-#endif // INCLUDED_GLOBAL_H

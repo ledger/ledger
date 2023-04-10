@@ -46,8 +46,7 @@
  * is designed to allow this, tracking the amounts of each component
  * commodity separately.
  */
-#ifndef INCLUDED_BALANCE_H
-#define INCLUDED_BALANCE_H
+#pragma once
 
 #include "amount.h"
 
@@ -609,5 +608,3 @@ void put_balance(property_tree::ptree& pt, const balance_t& bal);
 balance_t average_lot_prices(const balance_t& bal);
 
 } // namespace ledger
-
-#endif // INCLUDED_BALANCE_H

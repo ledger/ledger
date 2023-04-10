@@ -46,8 +46,7 @@
  * the number 10 to a value object, it's internal type will be
  * INTEGER.
  */
-#ifndef INCLUDED_VALUE_H
-#define INCLUDED_VALUE_H
+#pragma once
 
 #include "balance.h"            // includes amount.h
 #include "mask.h"
@@ -997,5 +996,3 @@ bool sort_value_is_less_than(const std::list<sort_value_t>& left_values,
 void put_value(property_tree::ptree& pt, const value_t& value);
 
 } // namespace ledger
-
-#endif // INCLUDED_VALUE_H

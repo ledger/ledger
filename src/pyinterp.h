@@ -29,8 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef INCLUDED_PYINTERP_H
-#define INCLUDED_PYINTERP_H
+#pragma once
 
 #include "session.h"
 
@@ -145,5 +144,3 @@ extern shared_ptr<python_interpreter_t> python_session;
 } // namespace ledger
 
 #endif // HAVE_BOOST_PYTHON
-
-#endif // INCLUDED_PYINTERP_H

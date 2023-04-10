@@ -39,8 +39,7 @@
  *
  * @ingroup util
  */
-#ifndef INCLUDED_ERROR_H
-#define INCLUDED_ERROR_H
+#pragma once
 
 namespace ledger {
 
@@ -101,5 +100,3 @@ struct error_count {
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_ERROR_H

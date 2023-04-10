@@ -39,8 +39,7 @@
  *
  * @ingroup util
  */
-#ifndef INCLUDED_PSTREAM_H
-#define INCLUDED_PSTREAM_H
+#pragma once
 
 //#include <istream>
 //#include <streambuf>
@@ -110,5 +109,3 @@ public:
     rdbuf(&buf);
   }
 };
-
-#endif // INCLUDED_PSTREAM_H

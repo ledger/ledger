@@ -39,8 +39,7 @@
  *
  * @ingroup data
  */
-#ifndef INCLUDED_ITEM_H
-#define INCLUDED_ITEM_H
+#pragma once
 
 #include "scope.h"
 
@@ -214,5 +213,3 @@ string  item_context(const item_t& item, const string& desc);
 void    put_metadata(property_tree::ptree& pt, const item_t::string_map& metadata);
 
 } // namespace ledger
-
-#endif // INCLUDED_ITEM_H

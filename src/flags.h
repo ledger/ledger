@@ -39,8 +39,7 @@
  *
  * @ingroup util
  */
-#ifndef INCLUDED_FLAGS_H
-#define INCLUDED_FLAGS_H
+#pragma once
 
 
 template <typename T = boost::uint_least8_t, typename U = T>
@@ -183,5 +182,3 @@ public:
     _flags.drop_flags(arg);
   }
 };
-
-#endif // INCLUDED_FLAGS_H

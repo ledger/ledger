@@ -43,8 +43,7 @@
  *
  * Long.
  */
-#ifndef INCLUDED_ANNOTATE_H
-#define INCLUDED_ANNOTATE_H
+#pragma once
 
 #include "expr.h"
 
@@ -232,5 +231,3 @@ as_annotated_commodity(const commodity_t& commodity) {
 }
 
 } // namespace ledger
-
-#endif // INCLUDED_ANNOTATE_H

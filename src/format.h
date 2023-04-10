@@ -39,8 +39,7 @@
  *
  * @ingroup expr
  */
-#ifndef INCLUDED_FORMAT_H
-#define INCLUDED_FORMAT_H
+#pragma once
 
 #include "expr.h"
 #include "unistring.h"
@@ -165,5 +164,3 @@ public:
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_FORMAT_H

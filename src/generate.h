@@ -39,8 +39,7 @@
  *
  * @ingroup report
  */
-#ifndef INCLUDED_GENERATE_H
-#define INCLUDED_GENERATE_H
+#pragma once
 
 #include "iterators.h"
 
@@ -126,5 +125,3 @@ protected:
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_GENERATE_H

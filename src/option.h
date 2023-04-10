@@ -39,8 +39,7 @@
  *
  * @ingroup expr
  */
-#ifndef INCLUDED_OPTION_H
-#define INCLUDED_OPTION_H
+#pragma once
 
 #include "scope.h"
 
@@ -297,5 +296,3 @@ strings_list process_arguments(strings_list args, scope_t& scope);
 DECLARE_EXCEPTION(option_error, std::runtime_error);
 
 } // namespace ledger
-
-#endif // INCLUDED_OPTION_H

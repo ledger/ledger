@@ -39,8 +39,7 @@
  *
  * @ingroup extra
  */
-#ifndef INCLUDED_QUOTES_H
-#define INCLUDED_QUOTES_H
+#pragma once
 
 namespace ledger {
 
@@ -49,5 +48,3 @@ commodity_quote_from_script(commodity_t& commodity,
                             const commodity_t * exchange_commodity);
 
 } // namespace ledger
-
-#endif // INCLUDED_QUOTES_H

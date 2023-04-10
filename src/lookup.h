@@ -39,8 +39,7 @@
  *
  * @ingroup data
  */
-#ifndef INCLUDED_LOOKUP_H
-#define INCLUDED_LOOKUP_H
+#pragma once
 
 #include "iterators.h"
 
@@ -53,5 +52,3 @@ lookup_probable_account(const string& ident,
                         account_t * ref_account = NULL);
 
 } // namespace ledger
-
-#endif // INCLUDED_LOOKUP_H

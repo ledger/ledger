@@ -29,8 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef INCLUDED_PYUTILS_H
-#define INCLUDED_PYUTILS_H
+#pragma once
 
 template <typename T, typename TfromPy>
 struct object_from_python
@@ -183,5 +182,3 @@ namespace boost { namespace python {
 } } // namespace boost::python
 
 //boost::python::register_ptr_to_python< boost::shared_ptr<Base> >();
-
-#endif // INCLUDED_PYUTILS_H
