@@ -69,7 +69,7 @@ Dependency  | Version (or greater)
 [libedit]   | 20090111-3.0 _optional_
 [Python]    | 3.9 _optional_
 [Gpgmepp]   | 1.13.1 _optional_
-[doxygen]   | 1.5.7.1 _optional_, for `make docs`
+[doxygen]   | 1.9.5 _optional_, for `make docs`
 [graphviz]  | 2.20.3 _optional_, for `make docs`
 [texinfo]   | 4.13 _optional_, for `make docs`
 [lcov]      | 1.6 _optional_, for `make report`, used with `./acprep gcov`

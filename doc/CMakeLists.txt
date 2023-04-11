@@ -5,7 +5,10 @@
 
 ########################################################################
 
-cmake_minimum_required(VERSION 3.16.2)
+set(Required_CMake_Version 3.16.2)
+set(Required_Doxygen_Version 1.9.5)
+
+cmake_minimum_required(VERSION ${Required_CMake_Version})
 
 project(ledger NONE)
 
@@ -23,7 +26,7 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/version.texi)
 
 if (USE_DOXYGEN)
-  find_package(Doxygen)
+  find_package(Doxygen ${Required_Doxygen_Version})
   if (NOT DOXYGEN_FOUND)
     message(FATAL_ERROR "Could not find doxygen. Reference documentation cannot be built.")
   endif()
