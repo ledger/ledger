@@ -5,9 +5,14 @@
 
 ########################################################################
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.16.2)
 
 project(ledger NONE)
+
+set(DOXYGEN_EXTRA_CSS CACHE STRING
+  "Path to extra css file added to the generated API documentation")
+set(DOXYGEN_HTML_HEADER CACHE STRING
+  "Path to html file used as the generated API documentation header")
 
 # Point CMake at any custom modules we may ship
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -23,15 +28,18 @@ if (USE_DOXYGEN)
     message(FATAL_ERROR "Could not find doxygen. Reference documentation cannot be built.")
   endif()
 
-  configure_file(Doxyfile.in Doxyfile @ONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile @ONLY)
 
   # see INPUT/FILE_PATTERNS in Doxyfile.in
-  file(GLOB doxygen_input_files ${CMAKE_SOURCE_DIR}/src/*.h)
+  file(GLOB doxygen_input_files ${CMAKE_CURRENT_SOURCE_DIR}/../src/*.h)
 
-  add_custom_command(OUTPUT html/index.html
-    COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
-    DEPENDS Doxyfile ${doxygen_input_files}
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
+    COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile ${doxygen_input_files}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building doxygen documentation")
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html
+    DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT doc)
   add_custom_target(doc.doxygen DEPENDS html/index.html)
 else()
   add_custom_target(doc.doxygen)

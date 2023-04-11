@@ -29,6 +29,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   pyutils.h
+ * @author John Wiegley
+ *
+ * @ingroup python
+ *
+ * @brief Basic utilities for Python API.
+ */
+
 #ifndef INCLUDED_PYUTILS_H
 #define INCLUDED_PYUTILS_H
 

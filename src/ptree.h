@@ -39,9 +39,6 @@
  *
  * @ingroup report
  *
- * @brief Brief
- *
- * Long.
  */
 #ifndef INCLUDED_PTREE_H
 #define INCLUDED_PTREE_H

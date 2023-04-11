@@ -38,6 +38,8 @@
  * @author John Wiegley
  *
  * @ingroup expr
+ *
+ * @brief Basic type and macros for handling command-line options
  */
 #ifndef INCLUDED_OPTION_H
 #define INCLUDED_OPTION_H

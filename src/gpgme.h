@@ -29,6 +29,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @addtogroup extra
+ */
+
+/**
+ * @file   gpgme.h
+ * @author Michael Raitza
+ *
+ * @ingroup extra
+ *
+ * @brief A utility class for reading encrypted journal data
+ */
 #pragma once
 
 #include <system.hh>
@@ -123,4 +135,5 @@ namespace ledger {
        longer match with a standard ifstream. */
     static std::istream* open_stream(const path& filename);
   };
-}
+
+} // namespace ledger
