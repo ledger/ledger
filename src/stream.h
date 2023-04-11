@@ -45,8 +45,7 @@
  * child process, different cleanup is needed for each scenario.  This
  * file abstracts those various needs.
  */
-#ifndef INCLUDED_STREAM_H
-#define INCLUDED_STREAM_H
+#pragma once
 
 #include "utils.h"
 
@@ -138,5 +137,3 @@ public:
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_STREAM_H

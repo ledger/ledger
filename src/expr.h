@@ -39,8 +39,7 @@
  *
  * @ingroup expr
  */
-#ifndef INCLUDED_EXPR_H
-#define INCLUDED_EXPR_H
+#pragma once
 
 #include "exprbase.h"
 #include "value.h"
@@ -184,5 +183,3 @@ class call_scope_t;
 value_t source_command(call_scope_t& scope);
 
 } // namespace ledger
-
-#endif // INCLUDED_EXPR_H

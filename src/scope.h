@@ -39,8 +39,7 @@
  *
  * @ingroup expr
  */
-#ifndef INCLUDED_SCOPE_H
-#define INCLUDED_SCOPE_H
+#pragma once
 
 #include "op.h"
 
@@ -616,5 +615,3 @@ public:
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_SCOPE_H

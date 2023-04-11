@@ -41,9 +41,7 @@
  *
  * @brief Basic type for Python API.
  */
-
-#ifndef INCLUDED_PYINTERP_H
-#define INCLUDED_PYINTERP_H
+#pragma once
 
 #include "session.h"
 
@@ -158,5 +156,3 @@ extern shared_ptr<python_interpreter_t> python_session;
 } // namespace ledger
 
 #endif // HAVE_BOOST_PYTHON
-
-#endif // INCLUDED_PYINTERP_H

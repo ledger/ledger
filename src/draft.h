@@ -39,8 +39,7 @@
  *
  * @ingroup report
  */
-#ifndef INCLUDED_DRAFT_H
-#define INCLUDED_DRAFT_H
+#pragma once
 
 #include "exprbase.h"
 #include "value.h"
@@ -128,5 +127,3 @@ value_t xact_command(call_scope_t& args);
 value_t template_command(call_scope_t& args);
 
 } // namespace ledger
-
-#endif // INCLUDED_DRAFT_H

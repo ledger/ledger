@@ -44,8 +44,7 @@
  * This file contains one of the most basic types in Ledger:
  * commodity_t, and its annotated cousin, annotated_commodity_t.
  */
-#ifndef INCLUDED_COMMODITY_H
-#define INCLUDED_COMMODITY_H
+#pragma once
 
 #include "expr.h"
 
@@ -299,5 +298,3 @@ struct commodity_compare {
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_COMMODITY_H

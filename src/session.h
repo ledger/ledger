@@ -39,8 +39,7 @@
  *
  * @ingroup report
  */
-#ifndef INCLUDED_SESSION_H
-#define INCLUDED_SESSION_H
+#pragma once
 
 #include "account.h"
 #include "journal.h"
@@ -191,5 +190,3 @@ public:
 void set_session_context(session_t * session);
 
 } // namespace ledger
-
-#endif // INCLUDED_SESSION_H

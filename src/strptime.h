@@ -23,9 +23,6 @@
  *
  * @brief Implements strptime under Windows
  */
-#ifndef INCLUDED_STRPTIME_H
-#define INCLUDED_STRPTIME_H
+#pragma once
 
 char* strptime(const char *buf, const char *fmt, struct tm *tm);
-
-#endif // INCLUDED_STRPTIME_H

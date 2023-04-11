@@ -39,8 +39,7 @@
  *
  * @ingroup report
  */
-#ifndef INCLUDED_CHAIN_H
-#define INCLUDED_CHAIN_H
+#pragma once
 
 #include "utils.h"
 
@@ -112,5 +111,3 @@ chain_handlers(post_handler_ptr handler,
 }
 
 } // namespace ledger
-
-#endif // INCLUDED_CHAIN_H

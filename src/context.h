@@ -39,8 +39,7 @@
  *
  * @ingroup data
  */
-#ifndef INCLUDED_CONTEXT_H
-#define INCLUDED_CONTEXT_H
+#pragma once
 
 #include "utils.h"
 #include "times.h"
@@ -166,5 +165,3 @@ public:
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_CONTEXT_H

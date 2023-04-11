@@ -39,8 +39,7 @@
  *
  * @ingroup data
  */
-#ifndef INCLUDED_POST_H
-#define INCLUDED_POST_H
+#pragma once
 
 #include "item.h"
 
@@ -268,5 +267,3 @@ void extend_post(post_t& post, journal_t& journal);
 void put_post(property_tree::ptree& pt, const post_t& post);
 
 } // namespace ledger
-
-#endif // INCLUDED_POST_H

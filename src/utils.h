@@ -41,8 +41,7 @@
  *
  * @brief General utility facilities used by Ledger
  */
-#ifndef INCLUDED_UTILS_H
-#define INCLUDED_UTILS_H
+#pragma once
 
 #include <boost/uuid/detail/sha1.hpp>
 
@@ -633,5 +632,3 @@ extern const string version;
 } // namespace ledger
 
 /*@}*/
-
-#endif // INCLUDED_UTILS_H

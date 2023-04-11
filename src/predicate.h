@@ -39,8 +39,7 @@
  *
  * @ingroup expr
  */
-#ifndef INCLUDED_PREDICATE_H
-#define INCLUDED_PREDICATE_H
+#pragma once
 
 #include "expr.h"
 #include "commodity.h"
@@ -93,5 +92,3 @@ public:
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_PREDICATE_H

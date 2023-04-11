@@ -39,8 +39,7 @@
  *
  * @ingroup views
  */
-#ifndef INCLUDED_VIEWS_H
-#define INCLUDED_VIEWS_H
+#pragma once
 
 #include "utils.h"
 
@@ -453,5 +452,3 @@ void populate_journal(r_journal_ptr journal, report_t& report,
 } // namespace ledger
 
 #endif /* DOCUMENT_MODEL */
-
-#endif // INCLUDED_VIEWS_H

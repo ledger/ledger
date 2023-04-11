@@ -41,8 +41,7 @@
  *
  * @brief datetime_t and date_t objects
  */
-#ifndef INCLUDED_TIMES_H
-#define INCLUDED_TIMES_H
+#pragma once
 
 #include "utils.h"
 
@@ -532,5 +531,3 @@ void show_period_tokens(std::ostream& out, const string& arg);
 std::ostream& operator<<(std::ostream& out, const date_duration_t& duration);
 
 } // namespace ledger
-
-#endif // INCLUDED_TIMES_H

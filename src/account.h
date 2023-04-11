@@ -39,8 +39,7 @@
  *
  * @ingroup data
  */
-#ifndef INCLUDED_ACCOUNT_H
-#define INCLUDED_ACCOUNT_H
+#pragma once
 
 #include "scope.h"
 
@@ -304,5 +303,3 @@ struct account_compare {
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_ACCOUNT_H

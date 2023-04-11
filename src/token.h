@@ -39,8 +39,7 @@
  *
  * @ingroup expr
  */
-#ifndef INCLUDED_TOKEN_H
-#define INCLUDED_TOKEN_H
+#pragma once
 
 #include "expr.h"
 
@@ -134,5 +133,3 @@ std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind)
 std::ostream& operator<<(std::ostream& out, const expr_t::token_t& token);
 
 } // namespace ledger
-
-#endif // INCLUDED_TOKEN_H
