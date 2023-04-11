@@ -11,6 +11,8 @@ project(ledger NONE)
 
 set(DOXYGEN_EXTRA_CSS CACHE STRING
   "Path to extra css file added to the generated API documentation")
+set(DOXYGEN_HTML_HEADER CACHE STRING
+  "Path to html file used as the generated API documentation header")
 
 # Point CMake at any custom modules we may ship
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
