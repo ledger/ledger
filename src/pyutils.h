@@ -29,6 +29,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @file   pyutils.h
+ * @author John Wiegley
+ *
+ * @ingroup python
+ *
+ * @brief Basic utilities for Python API.
+ */
 #pragma once
 
 template <typename T, typename TfromPy>

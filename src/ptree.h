@@ -39,9 +39,6 @@
  *
  * @ingroup report
  *
- * @brief Brief
- *
- * Long.
  */
 #pragma once
 

@@ -2,6 +2,7 @@
   description = "A double-entry accounting system with a command-line reporting interface";
 
   nixConfig.bash-prompt = "ledger$ ";
+
   outputs = { self, nixpkgs }: let
     usePython = true;
     gpgmeSupport = true;

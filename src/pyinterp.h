@@ -29,6 +29,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @defgroup python Python API
+ */
+
+/**
+ * @file   pyinterp.h
+ * @author John Wiegley
+ *
+ * @ingroup python
+ *
+ * @brief Basic type for Python API.
+ */
 #pragma once
 
 #include "session.h"
