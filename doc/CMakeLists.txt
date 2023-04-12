@@ -5,7 +5,10 @@
 
 ########################################################################
 
-cmake_minimum_required(VERSION 3.16.2)
+set(Required_CMake_Version 3.16.2)
+set(Required_Doxygen_Version 1.9.5)
+
+cmake_minimum_required(VERSION ${Required_CMake_Version})
 
 project(ledger NONE)
 
@@ -23,24 +26,53 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/version.texi)
 
 if (USE_DOXYGEN)
-  find_package(Doxygen)
+  find_package(Doxygen ${Required_Doxygen_Version})
   if (NOT DOXYGEN_FOUND)
     message(FATAL_ERROR "Could not find doxygen. Reference documentation cannot be built.")
   endif()
 
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile @ONLY)
+  set(DOXYGEN_PROJECT_NUMBER "${Ledger_VERSION_MAJOR}.${Ledger_VERSION_MINOR}.${Ledger_VERSION_PATCH}")
+  set(DOXYGEN_DOT_IMAGE_FORMAT svg)
+  set(DOXYGEN_ALWAYS_DETAILED_SEC YES)
+  set(DOXYGEN_INLINE_INHERITED_MEMB YES)
+  set(DOXYGEN_FULL_PATH_NAMES NO)
+  set(DOXYGEN_FILE_PATTERNS "*.h")
+  set(DOXYGEN_SHORT_NAMES YES)
+  set(DOXYGEN_JAVADOC_AUTOBRIEF YES)
+  set(DOXYGEN_TAB_SIZE 8)
+  set(DOXYGEN_BUILTIN_STL_SUPPORT YES)
+  set(DOXYGEN_EXTRACT_ALL YES)
+  set(DOXYGEN_EXTRACT_LOCAL_CLASSES NO)
+  set(DOXYGEN_HIDE_UNDOC_CLASSES YES)
+  set(DOXYGEN_INTERNAL_DOCS YES)
+  set(DOXYGEN_CASE_SENSE_NAMES NO)
+  set(DOXYGEN_SORT_BRIEF_DOCS YES)
+  set(DOXYGEN_WARN_IF_UNDOCUMENTED NO) # TODO: set to YES
+  set(DOXYGEN_WARN_NO_PARAMDOC YES)
+  set(DOXYGEN_RECURSIVE NO)
+  set(DOXYGEN_MACRO_EXPANSION YES)
+  set(DOXYGEN_SOURCE_BROWSER YES)
+  set(DOXYGEN_GENERATE_TREEVIEW  YES)
+  set(DOXYGEN_REFERENCED_BY_RELATION YES)
+  set(DOXYGEN_REFERENCES_RELATION YES)
+  set(DOXYGEN_HTML_EXTRA_STYLESHEET "${CMAKE_CURRENT_SOURCE_DIR}/apidoc.css" "${DOXYGEN_EXTRA_CSS}")
+  set(DOXYGEN_STRIP_FROM_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../src/")
+  set(DOXYGEN_HTML_TIMESTAMP YES)
+  set(DOXYGEN_HTML_DYNAMIC_SECTIONS YES)
+  set(DOXYGEN_TEMPLATE_RELATIONS YES)
+  set(DOXYGEN_CALL_GRAPH YES)
+  set(DOXYGEN_CALLER_GRAPH YES)
+  set(DOXYGEN_MAX_DOT_GRAPH_DEPTH 1000)
+  set(DOXYGEN_DOT_MULTI_TARGETS NO)
 
-  # see INPUT/FILE_PATTERNS in Doxyfile.in
-  file(GLOB doxygen_input_files ${CMAKE_CURRENT_SOURCE_DIR}/../src/*.h)
+  doxygen_add_docs(doc.doxygen
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src" "${CMAKE_CURRENT_SOURCE_DIR}/mainpage.txt"
+    COMMENT "Generating API documentation")
 
-  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
-    COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile ${doxygen_input_files}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Building doxygen documentation")
-  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html
-    DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT doc)
-  add_custom_target(doc.doxygen DEPENDS html/index.html)
+  if(CMAKE_INSTALL_DOCDIR)
+    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html
+      DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT doc)
+  endif()
 else()
   add_custom_target(doc.doxygen)
 endif()
