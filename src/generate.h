@@ -30,7 +30,7 @@
  */
 
 /**
- * @addtogroup generate
+ * @addtogroup report
  */
 
 /**

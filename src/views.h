@@ -30,7 +30,7 @@
  */
 
 /**
- * @addtogroup views
+ * @defgroup views Views
  */
 
 /**
