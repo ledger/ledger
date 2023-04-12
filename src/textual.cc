@@ -1257,7 +1257,7 @@ void instance_t::python_directive(char * line)
     python_session->initialize();
 
   python_session->main_module->define_global
-    ("journal", python::object(python::ptr(context.journal)));
+    ("journal", boost::python::object(boost::python::ptr(context.journal)));
   python_session->eval(script.str(), python_interpreter_t::PY_EVAL_MULTI);
 }
 

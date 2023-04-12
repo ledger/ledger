@@ -241,7 +241,7 @@ void export_journal()
           boost::noncopyable >("PostCollectorWrapper", no_init)
     .def("__len__", &collector_wrapper::length)
     .def("__getitem__", posts_getitem, return_internal_reference<>())
-    .def("__iter__", python::range<return_internal_reference<> >
+    .def("__iter__", boost::python::range<return_internal_reference<> >
          (&collector_wrapper::begin, &collector_wrapper::end))
     ;
 
@@ -306,15 +306,15 @@ void export_journal()
              with_custodian_and_ward_postcall<1, 0> >())
 #endif
 
-    .def("__iter__", python::range<return_internal_reference<> >
+    .def("__iter__", boost::python::range<return_internal_reference<> >
          (&journal_t::xacts_begin, &journal_t::xacts_end))
-    .def("xacts", python::range<return_internal_reference<> >
+    .def("xacts", boost::python::range<return_internal_reference<> >
          (&journal_t::xacts_begin, &journal_t::xacts_end))
-    .def("auto_xacts", python::range<return_internal_reference<> >
+    .def("auto_xacts", boost::python::range<return_internal_reference<> >
          (&journal_t::auto_xacts_begin, &journal_t::auto_xacts_end))
-    .def("period_xacts", python::range<return_internal_reference<> >
+    .def("period_xacts", boost::python::range<return_internal_reference<> >
          (&journal_t::period_xacts_begin, &journal_t::period_xacts_end))
-    .def("sources", python::range<return_internal_reference<> >
+    .def("sources", boost::python::range<return_internal_reference<> >
          (&journal_t::sources_begin, &journal_t::sources_end))
 #if 0
     .def("read", py_read)

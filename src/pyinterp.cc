@@ -41,6 +41,7 @@
 namespace ledger {
 
 using namespace python;
+using namespace boost::python;
 
 shared_ptr<python_interpreter_t> python_session;
 
@@ -110,7 +111,7 @@ python_module_t::python_module_t(const string& name)
   import_module(name);
 }
 
-python_module_t::python_module_t(const string& name, python::object obj)
+python_module_t::python_module_t(const string& name, object obj)
   : scope_t(), module_name(name), module_globals()
 {
   module_object  = obj;
@@ -119,7 +120,7 @@ python_module_t::python_module_t(const string& name, python::object obj)
 
 void python_module_t::import_module(const string& name, bool import_direct)
 {
-  object mod = python::import(name.c_str());
+  object mod = import(name.c_str());
   if (! mod)
     throw_(std::runtime_error,
            _f("Module import failed (couldn't find %1%)") % name);
@@ -177,27 +178,27 @@ void python_interpreter_t::initialize()
 void python_interpreter_t::hack_system_paths()
 {
   // Hack ledger.__path__ so it points to a real location
-  python::object sys_module = python::import("sys");
-  python::object sys_dict   = sys_module.attr("__dict__");
+  object sys_module = import("sys");
+  object sys_dict   = sys_module.attr("__dict__");
 
-  python::list paths(sys_dict["path"]);
+  list paths(sys_dict["path"]);
 
 #if DEBUG_ON
   bool path_initialized = false;
 #endif
-  int n = python::extract<int>(paths.attr("__len__")());
+  int n = extract<int>(paths.attr("__len__")());
   for (int i = 0; i < n; i++) {
-    python::extract<std::string> str(paths[i]);
+    extract<std::string> str(paths[i]);
     path pathname(str());
     DEBUG("python.interp", "sys.path = " << pathname);
 
     if (exists(pathname / "ledger" / "__init__.py")) {
-      if (python::object module_ledger = python::import("ledger")) {
+      if (object module_ledger = import("ledger")) {
         DEBUG("python.interp",
               "Setting ledger.__path__ = " << (pathname / "ledger"));
 
-        python::object ledger_dict = module_ledger.attr("__dict__");
-        python::list temp_list;
+        object ledger_dict = module_ledger.attr("__dict__");
+        list temp_list;
         temp_list.append((pathname / "ledger").string());
 
         ledger_dict["__path__"] = temp_list;
@@ -223,12 +224,12 @@ object python_interpreter_t::import_option(const string& str)
   if (! is_initialized)
     initialize();
 
-  python::object sys_module = python::import("sys");
-  python::object sys_dict   = sys_module.attr("__dict__");
+  object sys_module = import("sys");
+  object sys_dict   = sys_module.attr("__dict__");
 
   path         file(str);
   string       name(str);
-  python::list paths(sys_dict["path"]);
+  list paths(sys_dict["path"]);
 
   if (contains(str, ".py")) {
     path& cwd(parsing_context.get_current().current_directory);
@@ -380,7 +381,7 @@ expr_t::ptr_op_t python_module_t::lookup(const symbol_t::kind_t kind,
   case symbol_t::FUNCTION:
     DEBUG("python.interp", "Python lookup: " << name);
     if (module_globals.has_key(name.c_str())) {
-      if (python::object obj = module_globals.get(name.c_str())) {
+      if (object obj = module_globals.get(name.c_str())) {
         if (PyModule_Check(obj.ptr())) {
           shared_ptr<python_module_t> mod;
           python_module_map_t::iterator i =
@@ -527,7 +528,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
         arglist.append(convert_value_to_python(args.value()));
 
       if (PyObject * val =
-          PyObject_CallObject(func.ptr(), python::tuple(arglist).ptr())) {
+          PyObject_CallObject(func.ptr(), boost::python::tuple(arglist).ptr())) {
         extract<value_t> xval(val);
         value_t result;
         if (xval.check()) {
