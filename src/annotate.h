@@ -49,7 +49,7 @@
 
 namespace ledger {
 
-struct annotation_t : public supports_flags<>,
+struct annotation_t : public flags::supports_flags<>,
                       public equality_comparable<annotation_t>
 {
 #define ANNOTATION_PRICE_CALCULATED      0x01

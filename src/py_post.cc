@@ -37,6 +37,7 @@
 
 namespace ledger {
 
+using namespace flags;
 using namespace boost::python;
 
 namespace {

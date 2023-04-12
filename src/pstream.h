@@ -44,6 +44,8 @@
 //#include <istream>
 //#include <streambuf>
 
+namespace ledger {
+
 class ptristream : public std::istream
 {
   class ptrinbuf : public std::streambuf
@@ -109,3 +111,5 @@ public:
     rdbuf(&buf);
   }
 };
+
+} // namespace ledger

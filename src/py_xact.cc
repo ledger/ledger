@@ -38,6 +38,7 @@
 
 namespace ledger {
 
+using namespace python;
 using namespace boost::python;
 
 namespace {
@@ -104,9 +105,9 @@ void export_xact()
 
     .def("finalize", &xact_base_t::finalize)
 
-    .def("__iter__", python::range<return_internal_reference<> >
+    .def("__iter__", boost::python::range<return_internal_reference<> >
          (&xact_t::posts_begin, &xact_t::posts_end))
-    .def("posts", python::range<return_internal_reference<> >
+    .def("posts", boost::python::range<return_internal_reference<> >
          (&xact_t::posts_begin, &xact_t::posts_end))
 
     .def("valid", &xact_base_t::valid)

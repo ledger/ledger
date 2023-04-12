@@ -40,6 +40,7 @@
 
 namespace ledger {
 
+using namespace python;
 using namespace boost::python;
 
 struct date_to_python
@@ -80,7 +81,6 @@ struct date_from_python
 
 typedef register_python_conversion<date_t, date_to_python, date_from_python>
   date_python_conversion;
-
 
 struct datetime_to_python
 {
@@ -145,7 +145,6 @@ typedef register_python_conversion<datetime_t,
                                    datetime_to_python, datetime_from_python>
   datetime_python_conversion;
 
-
 /* Convert time_duration to/from python */
 struct duration_to_python
 {
@@ -185,7 +184,7 @@ struct duration_from_python
   }
 
   static void construct(PyObject* obj_ptr,
-                        python::converter::rvalue_from_python_stage1_data * data)
+                        converter::rvalue_from_python_stage1_data * data)
   {
     PyDateTime_Delta const* pydelta
       = reinterpret_cast<PyDateTime_Delta*>(obj_ptr);
@@ -216,7 +215,6 @@ struct duration_from_python
 typedef register_python_conversion<time_duration_t,
                                    duration_to_python, duration_from_python>
   duration_python_conversion;
-
 
 datetime_t py_parse_datetime(const string& str) {
   return parse_datetime(str);

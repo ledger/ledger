@@ -39,6 +39,8 @@
 
 namespace ledger {
 
+using namespace flags;
+using namespace python;
 using namespace boost::python;
 
 namespace {
@@ -119,8 +121,8 @@ namespace {
     return (*i).second.get();
   }
 
-  python::list py_pool_keys(commodity_pool_t& pool) {
-    python::list keys;
+  list py_pool_keys(commodity_pool_t& pool) {
+    list keys;
     BOOST_REVERSE_FOREACH
       (const commodity_pool_t::commodities_map::value_type& pair,
        pool.commodities) {
@@ -295,15 +297,15 @@ void export_commodity()
     .def("has_key", py_pool_contains)
     .def("__contains__", py_pool_contains)
     .def("__iter__",
-         python::range<return_internal_reference<> >
+         boost::python::range<return_internal_reference<> >
          (py_pool_commodities_begin, py_pool_commodities_end))
     .def("iteritems",
-         python::range<return_internal_reference<> >
+         boost::python::range<return_internal_reference<> >
          (py_pool_commodities_begin, py_pool_commodities_end))
-    .def("iterkeys", python::range<>(py_pool_commodities_keys_begin,
+    .def("iterkeys", boost::python::range<>(py_pool_commodities_keys_begin,
                                      py_pool_commodities_keys_end))
     .def("itervalues",
-         python::range<return_internal_reference<> >
+         boost::python::range<return_internal_reference<> >
          (py_pool_commodities_values_begin, py_pool_commodities_values_end))
     ;
 

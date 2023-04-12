@@ -70,14 +70,14 @@ struct price_point_t
 };
 
 class commodity_t
-  : public delegates_flags<uint_least16_t>,
+  : public flags::delegates_flags<uint_least16_t>,
     public equality_comparable1<commodity_t, noncopyable>
 {
 protected:
   friend class commodity_pool_t;
   friend class annotated_commodity_t;
 
-  class base_t : public noncopyable, public supports_flags<uint_least16_t>
+  class base_t : public noncopyable, public flags::supports_flags<uint_least16_t>
   {
   public:
 #define COMMODITY_STYLE_DEFAULTS         0x000

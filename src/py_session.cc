@@ -38,6 +38,7 @@
 
 namespace ledger {
 
+using namespace python;
 using namespace boost::python;
 
 namespace {
@@ -78,12 +79,12 @@ void export_session()
   scope().attr("session") =
     object(ptr(static_cast<session_t *>(python_session.get())));
   scope().attr("close_journal_files") =
-    python::make_function(&py_close_journal_files);
+    boost::python::make_function(&py_close_journal_files);
   scope().attr("read_journal") =
-    python::make_function(&py_read_journal,
+    boost::python::make_function(&py_read_journal,
                           return_internal_reference<>());
   scope().attr("read_journal_from_string") =
-    python::make_function(&py_read_journal_from_string,
+    boost::python::make_function(&py_read_journal_from_string,
                           return_internal_reference<>());
 }
 

@@ -76,7 +76,7 @@ enum parse_flags_enum_t {
   PARSE_SOFT_FAIL  = 0x80
 };
 
-typedef basic_flags_t<parse_flags_enum_t, uint_least8_t> parse_flags_t;
+typedef flags::basic_t<parse_flags_enum_t, uint_least8_t> parse_flags_t;
 
 /**
  * @brief Encapsulate infinite-precision commoditized amounts

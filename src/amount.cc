@@ -52,7 +52,7 @@ static mpfr_t tempfnum;
 static mpfr_t tempfden;
 #endif
 
-struct amount_t::bigint_t : public supports_flags<>
+struct amount_t::bigint_t : public flags::supports_flags<>
 {
 #define BIGINT_BULK_ALLOC 0x01
 #define BIGINT_KEEP_PREC  0x02

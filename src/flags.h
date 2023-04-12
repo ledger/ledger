@@ -41,6 +41,7 @@
  */
 #pragma once
 
+namespace ledger { namespace flags {
 
 template <typename T = boost::uint_least8_t, typename U = T>
 class supports_flags
@@ -92,33 +93,33 @@ public:
 };
 
 template <typename T = boost::uint_least8_t, typename U = T>
-class basic_flags_t : public supports_flags<T, U>
+class basic_t : public supports_flags<T, U>
 {
 public:
-  basic_flags_t() {
-    TRACE_CTOR(basic_flags_t, "");
+  basic_t() {
+    TRACE_CTOR(basic_t, "");
   }
-  basic_flags_t(const T& bits) {
-    TRACE_CTOR(basic_flags_t, "const T&");
+  basic_t(const T& bits) {
+    TRACE_CTOR(basic_t, "const T&");
     supports_flags<T, U>::set_flags(bits);
   }
-  basic_flags_t(const U& bits) {
-    TRACE_CTOR(basic_flags_t, "const U&");
+  basic_t(const U& bits) {
+    TRACE_CTOR(basic_t, "const U&");
     supports_flags<T, U>::set_flags(static_cast<T>(bits));
   }
-  ~basic_flags_t() throw() {
-    TRACE_DTOR(basic_flags_t);
+  ~basic_t() throw() {
+    TRACE_DTOR(basic_t);
   }
 
-  basic_flags_t(const basic_flags_t& other)
+  basic_t(const basic_t& other)
     : supports_flags<T, U>(other) {
-    TRACE_CTOR(basic_flags_t, "copy");
+    TRACE_CTOR(basic_t, "copy");
   }
-  basic_flags_t& operator=(const basic_flags_t& other) {
+  basic_t& operator=(const basic_t& other) {
     set_flags(other.flags());
     return *this;
   }
-  basic_flags_t& operator=(const T& bits) {
+  basic_t& operator=(const T& bits) {
     set_flags(bits);
     return *this;
   }
@@ -130,13 +131,13 @@ public:
     return supports_flags<T, U>::flags();
   }
 
-  basic_flags_t plus_flags(const T& arg) const {
-    basic_flags_t temp(*this);
+  basic_t plus_flags(const T& arg) const {
+    basic_t temp(*this);
     temp.add_flags(arg);
     return temp;
   }
-  basic_flags_t minus_flags(const T& arg) const {
-    basic_flags_t temp(*this);
+  basic_t minus_flags(const T& arg) const {
+    basic_t temp(*this);
     temp.drop_flags(arg);
     return temp;
   }
@@ -182,3 +183,5 @@ public:
     _flags.drop_flags(arg);
   }
 };
+
+} } // namespace ledger::flags

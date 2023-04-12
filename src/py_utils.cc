@@ -36,6 +36,8 @@
 
 namespace ledger {
 
+using namespace flags;
+using namespace python;
 using namespace boost::python;
 
 struct bool_to_python
@@ -72,7 +74,6 @@ struct bool_from_python
 
 typedef register_python_conversion<bool, bool_to_python, bool_from_python>
   bool_python_conversion;
-
 
 struct string_to_python
 {

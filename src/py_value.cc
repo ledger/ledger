@@ -38,6 +38,7 @@
 
 namespace ledger {
 
+using namespace python;
 using namespace boost::python;
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(value_overloads, value, 0, 2)
