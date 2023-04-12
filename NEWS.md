@@ -3,6 +3,7 @@
 ## 3.4.x (unreleased)
 
 - Update required versions of various dependencies
+  (CMake 3.16.2, Boost 1.72.0, Gmp 6.1.2, Mpfr 4.0.2, Python 3.9, doxygen 1.9.5)
 
 - docs: Enable stand-alone building
 
