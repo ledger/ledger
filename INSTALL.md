@@ -5,7 +5,7 @@ To build this code after doing a Git clone, run:
     $ ./acprep dependencies
     $ ./acprep update
 
-If anything goes wrong, see "COMMON CONFIGURE/BUILD PROBLEMS" below.
+If anything goes wrong, see [COMMON CONFIGURE/BUILD PROBLEMS](#common-configure--build-problems)
 
 If you try to configure and build without running acprep first, you are
 almost certainly going to run into problems.  In future, you can run
@@ -97,10 +97,11 @@ A: Actually, the real segfault is in libstdc++'s facet code.  It's being
 
 Q: Something else fails, or Ledger crashes on startup
 
-A: This, I am most interested in hearing about.  Please file a bug at the
-  Ledger Issue Tracker, https://github.com/ledger/ledger/issues.  The more
+A: This, I am most interested in hearing about.  Please
+  [file a bug report](https://bugs.ledger-cli.org/new) at the
+  [Ledger Issue Tracker](https://bugs.ledger-cli.org).  The more
   details you can provide, the better.  Also, if Ledger is crashing, try
-  running it under gdb like so:
+  running it under a debugger, e.g. gdb or lldb, like so:
 
     $ gdb ledger
     (gdb) run <ARGS TO LEDGER>
@@ -139,16 +140,16 @@ Q: My distribution has versions of Boost and/or CMake that are too old for
   work properly with Ledger?  Thereafter, how do I configure Ledger
   properly to use those newly built versions of Boost and/or CMake?
 
-A: Here's commands that one user used to make this work, for Boost 1.51.0
-  on Debian GNU/Linux 6.0.x (aka Debian squeeze).  It's likely to work ok
-  for other versions of Boost as well.  YMMV on other distributions and/or
-  other Debian distribution versions, though.
+A: Here's commands that one user used to make this work, for Boost 1.72.0
+  on Debian GNU/Linux 11 (aka Debian bullseye).  It's likely to work ok
+  for other versions of Boost as well.  [YMMV] on other distributions and/or
+  other Debian versions, though.
 
   - Preparing and building Boost
 
-        $ export BOOST_VERSION=1.57.0
+        $ export BOOST_VERSION=1.72.0
         $ cd /somewhere/you/want/to/build/boost
-        $ wget -N http://iweb.dl.sourceforge.net/project/boost/boost/$BOOST_VERSION/boost_${BOOST_VERSION//./_}.tar.bz2
+        $ wget -N https://boostorg.jfrog.io/artifactory/main/release/$BOOST_VERSION/source/boost_${BOOST_VERSION//./_}.tar.gz
         $ tar xvf boost_${BOOST_VERSION//./_}.tar.bz2
         $ cd boost_${BOOST_VERSION//./_}
         $ ./bootstrap.sh
@@ -157,9 +158,9 @@ A: Here's commands that one user used to make this work, for Boost 1.51.0
 
   - Preparing and building CMake
 
-        $ export CMAKE_VERSION=3.1.0
+        $ export CMAKE_VERSION=3.16.2
         $ cd /somewhere/you/want/to/build/cmake
-        $ wget -N http://www.cmake.org/files/v${CMAKE_VERSION:0:3}/cmake-${CMAKE_VERSION}.tar.gz
+        $ wget -N https://cmake.org/files/v${CMAKE_VERSION:0:-2}/cmake-${CMAKE_VERSION}.tar.gz
         $ tar xvf cmake-${CMAKE_VERSION}.tar.gz
         $ cd cmake-${CMAKE_VERSION}
         $ ./configure --prefix=/where/you/want/cmake/installed/
@@ -173,3 +174,5 @@ A: Here's commands that one user used to make this work, for Boost 1.51.0
         $ ./acprep --prefix=$PREFIX --debug --python config
         $ ./acprep --prefix=$PREFIX --debug --python make
         $ ./acprep --prefix=$PREFIX --debug --python install
+
+[YMMV]: https://www.acronymfinder.com/Your-Mileage-May-Vary-(YMMV).html
