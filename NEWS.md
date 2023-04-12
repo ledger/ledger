@@ -8,15 +8,15 @@
 
 ## 3.3.2 (2023-03-30)
 
-- Fix divide by zero (bugs #777 and #2207)
+- Fix divide by zero (ledger/ledger#777, ledger/ledger#2207)
 
-- Increase string size limit in src/unistring.h assert (bug #2174)
+- Increase string size limit in src/unistring.h assert (ledger/ledger#2174)
 
-- Require tzdata for Nix flake build (bug #2213)
+- Require tzdata for Nix flake build (ledger/ledger#2213)
 
 ## 3.3.1 (2023-03-03)
 
-- Fix regression leading to incorrect error about `format` directives (bug #2205)
+- Fix regression leading to incorrect error about `format` directives (ledger/ledger#2205)
 
 - Add information about compile features to `--version`
 
@@ -30,49 +30,49 @@
 
 ## 3.3 (2023-02-08)
 
-- Use `$PAGER` when environment variable is set (bug #1674)
+- Use `$PAGER` when environment variable is set (ledger/ledger#1674)
 
 - Make `--depth` correctly fold postings to accounts of greater depth into the
-  parent at the specified level (bug #987)
+  parent at the specified level (ledger/ledger#987)
 
 - When using wild-cards in the `include` directive, include matched files in
-  sorted order (bug #1659)
+  sorted order (ledger/ledger#1659)
 
-- Ensure absolute path for include (bug #2075)
+- Ensure absolute path for include (ledger/ledger#2075)
 
 - Try to use `$XDG_HOME_CONFIG/ledger/ledgerrc` or `~/.config/ledger/ledgerrc`
   first
 
 - Improve Python 3 support and drop support for Python 2
 
-- Add support for automatically reading files encrypted with GPG (bug #1949)
+- Add support for automatically reading files encrypted with GPG (ledger/ledger#1949)
 
-- Add support for a "debit" column in the `convert` command (bug #1120)
+- Add support for a "debit" column in the `convert` command (ledger/ledger#1120)
 
-- Fix parsing of files without end of line (bug #516)
+- Fix parsing of files without end of line (ledger/ledger#516)
 
-- Fix incorrect parsing of expressions containing a `-` without spaces (bug #2001)
+- Fix incorrect parsing of expressions containing a `-` without spaces (ledger/ledger#2001)
 
 - Fix payee metadata on postings not being validated and payee aliases not
-  being honored (bug #556 & bug #1892)
+  being honored (ledger/ledger#556, ledger/ledger#1892)
 
 - Fix ledger interpreting a posting with 0 difference as a null-posting,
-  which leads to it auto-balancing the posting (bug #1942)
+  which leads to it auto-balancing the posting (ledger/ledger#1942)
 
-- Correctly escape all string values in lisp report (bug #2034)
+- Correctly escape all string values in lisp report (ledger/ledger#2034)
 
-- Fix a regression where empty commodities were shown (bug #1969)
+- Fix a regression where empty commodities were shown (ledger/ledger#1969)
 
 - Fix a regression where using multiple commodities in one transaction triggers
-  an assertion (bug #1998)
+  an assertion (ledger/ledger#1998)
 
 - Fix --time-colon for negative time amounts
 
-- Use correct int return type for stream input operations (bug #2058)
+- Use correct int return type for stream input operations (ledger/ledger#2058)
 
 - Use amount_width for balance report
 
-- Remove some UTF-8 code that was having no effect (bug #2061)
+- Remove some UTF-8 code that was having no effect (ledger/ledger#2061)
 
 - Fix unrounding for equity
 
@@ -82,20 +82,20 @@
 
 - Support building on older versions of CMAKE (less than 3.7)
 
-- Fix compilation with Boost 1.76 (bug #2030)
+- Fix compilation with Boost 1.76 (ledger/ledger#2030)
 
-- Fix Msys2 MinGW build (bug #1905)
+- Fix Msys2 MinGW build (ledger/ledger#1905)
 
-- Fix unicode problems on Windows (bug #1986)
+- Fix unicode problems on Windows (ledger/ledger#1986)
 
 - Fix the issue that with Boost >= 1.77 `include` directive cannot find the file
   to include for stdin (`-f -`). Also for `-f -` when `include` cannot find the
-  file it reports the error with full path now. (bug #2057 & bug #2092)
+  file it reports the error with full path now. (ledger/ledger#2057, ledger/ledger#2092)
 
 - Fix Nix build
 
 - Rename `quoted_rfc4180` to `quoted_rfc`, as numbers used in function names
-  confuses the parser (#2007).
+  confuses the parser (ledger/ledger#2007).
 
 - Numbers are no longer permitted in value expression function names.
 
@@ -104,17 +104,17 @@
 ## 3.2.1 (2020-05-18)
 
 - Fix regression with expression evaluation by reverting commit
-  `Correction to the way parens are parsed in query expressions` (bug #1894)
+  `Correction to the way parens are parsed in query expressions` (ledger/ledger#1894)
 
 - Fix --invert breakage by reverting commit `Change --invert to invert
-  displayed amounts and totals, not amounts` (bug #1895)
+  displayed amounts and totals, not amounts` (ledger/ledger#1895)
 
 - Fix performance regression by reverting commit `Compare price
-  annotations using their textual rendering` (bug #1907)
+  annotations using their textual rendering` (ledger/ledger#1907)
 
-- Fix library path issue (bug #1885)
+- Fix library path issue (ledger/ledger#1885)
 
-- Allow specifying the Python version (bug #1893)
+- Allow specifying the Python version (ledger/ledger#1893)
 
 - Some documentation fixes
 
@@ -124,11 +124,11 @@
 
 - Entities are no longer regarded as defined due to being part of a
   cleared transaction. `--explicit` is effectively enabled by default
-  and is now a no-op (PR #1819)
+  and is now a no-op (PR ledger/ledger#1819)
 
 - Add `--average-lot-prices` to show the average of lot prices
 
-- Add support for `%F` date format specifier (bug #1775)
+- Add support for `%F` date format specifier (ledger/ledger#1775)
 
 - Add `commodity_price(NAME, DATE)` function
 
@@ -136,35 +136,35 @@
 
 - Fix buffer overflow when evaluating date
 
-- Fix balance assertions on accounts with virtual posts (bug #543)
+- Fix balance assertions on accounts with virtual posts (ledger/ledger#543)
 
-- Fix segfault with `ledger print` (bug #1850)
+- Fix segfault with `ledger print` (ledger/ledger#1850)
 
 - Ensure that `apply` directives (like `apply account`) have the
-  required argument (bug #553)
+  required argument (ledger/ledger#553)
 
 - Format annotations using a date format that can be parsed
 
 - Change `--invert` to invert displayed amounts and totals, not amounts
-  (bug #1803)
+  (ledger/ledger#1803)
 
 - Correct the way parens are parsed in query expressions
 
 - Compare price annotations using their textual rendering
 
-- Fix build failure with utfcpp 3.0 (bug #1816)
+- Fix build failure with utfcpp 3.0 (ledger/ledger#1816)
 
-- Fix build failure due to ambiguous type (bug #1833)
+- Fix build failure due to ambiguous type (ledger/ledger#1833)
 
 ## 3.1.3 (2019-03-31)
 
-- Properly reject postings with a comment right after the flag (bug #1753)
+- Properly reject postings with a comment right after the flag (ledger/ledger#1753)
 
-- Make sorting order of lot information deterministic (bug #1747)
+- Make sorting order of lot information deterministic (ledger/ledger#1747)
 
-- Fix bug in tag value parsing (bug #1702)
+- Fix bug in tag value parsing (ledger/ledger#1702)
 
-- Remove the `org` command, which was always a hack to begin with (bug #1706)
+- Remove the `org` command, which was always a hack to begin with (ledger/ledger#1706)
 
 - Provide Docker information in README
 
@@ -172,27 +172,27 @@
 
 ## 3.1.2 (2019-02-05)
 
-- Increase maximum length for regex from 255 to 4095 (bug #981)
+- Increase maximum length for regex from 255 to 4095 (ledger/ledger#981)
 
 - Initialize periods from from/since clause rather than earliest
-  transaction date (bug #1159)
+  transaction date (ledger/ledger#1159)
 
-- Check balance assertions against the amount after the posting (bug #1147)
+- Check balance assertions against the amount after the posting (ledger/ledger#1147)
 
-- Allow balance assertions with multiple posts to same account (bug #1187)
+- Allow balance assertions with multiple posts to same account (ledger/ledger#1187)
 
-- Fix period duration of "every X days" and similar statements (bug #370)
+- Fix period duration of "every X days" and similar statements (ledger/ledger#370)
 
-- Make option `--force-color` not require `--color` anymore (bug #1109)
+- Make option `--force-color` not require `--color` anymore (ledger/ledger#1109)
 
 - Add `quoted_rfc4180` to allow CVS output with RFC 4180 compliant quoting.
 
 - Add support for `--prepend-format` in accounts command
 
-- Fix handling of edge cases in trim function (bug #520)
+- Fix handling of edge cases in trim function (ledger/ledger#520)
 
 - Fix auto xact posts not getting applied to account total during
-  journal parse (bug #552)
+  journal parse (ledger/ledger#552)
 
 - Transfer `null_post` flags to generated postings
 
@@ -204,27 +204,29 @@
 
 - Fix bug where `.total` used in value expressions breaks totals
 
-- Make automated transactions work with assertions (bug #1127)
+- Make automated transactions work with assertions (ledger/ledger#1127)
 
-- Improve parsing of date tokens (bug #1626)
+- Improve parsing of date tokens (ledger/ledger#1626)
 
-- Don't attempt to invert a value if it's already zero (bug #1703)
+- Don't attempt to invert a value if it's already zero (ledger/ledger#1703)
 
 - Do not parse user-specified init-file twice
 
-- Fix parsing issue of effective dates (bug #1722, TALOS-2017-0303,
-  CVE-2017-2807)
+- Fix parsing issue of effective dates (ledger/ledger#1722,
+  [TALOS-2017-0303](https://talosintelligence.com/vulnerability_reports/TALOS-2017-0303),
+  [CVE-2017-2807](https://www.cve.org/CVERecord?id=CVE-2017-2807))
 
-- Fix use-after-free issue with deferred postings (bug #1723, TALOS-2017-0304,
-  CVE-2017-2808)
+- Fix use-after-free issue with deferred postings (ledger/ledger#1723,
+  [TALOS-2017-0304](https://talosintelligence.com/vulnerability_reports/TALOS-2017-0304),
+  [CVE-2017-2808](https://www.cve.org/CVERecord?id=CVE-2017-2808))
 
-- Fix possible stack overflow in option parsing routine (bug #1222,
-  CVE-2017-12481)
+- Fix possible stack overflow in option parsing routine (ledger/ledger#1222,
+  [CVE-2017-12481](https://www.cve.org/CVERecord?id=CVE-2017-12481))
 
-- Fix possible stack overflow in date parsing routine (bug #1224,
-  CVE-2017-12482)
+- Fix possible stack overflow in date parsing routine (ledger/ledger#1224,
+  [CVE-2017-12482](https://www.cve.org/CVERecord?id=CVE-2017-12482))
 
-- Fix use-after-free when using `--gain` (bug #541)
+- Fix use-after-free when using `--gain` (ledger/ledger#541)
 
 - Python: Removed double quotes from Unicode values.
 
