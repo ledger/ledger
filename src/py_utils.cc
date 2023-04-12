@@ -36,6 +36,7 @@
 
 namespace ledger {
 
+using namespace flags;
 using namespace boost::python;
 
 struct bool_to_python

@@ -56,7 +56,7 @@ class format_t : public expr_base_t<string>, public noncopyable
 {
   typedef expr_base_t<string> base_type;
 
-  struct element_t : public supports_flags<>, public noncopyable
+  struct element_t : public flags::supports_flags<>, public noncopyable
   {
 #define ELEMENT_ALIGN_LEFT 0x01
 

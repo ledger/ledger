@@ -79,7 +79,7 @@ struct position_t
   }
 };
 
-class item_t : public supports_flags<uint_least16_t>, public scope_t
+class item_t : public flags::supports_flags<uint_least16_t>, public scope_t
 {
 public:
 #define ITEM_NORMAL            0x00 // no flags at all, a basic posting

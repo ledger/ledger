@@ -30,11 +30,12 @@
               then [ python3 (boost.override { enablePython = true; python = python3; }) ]
               else [ boost ]);
 
-        nativeBuildInputs = [ cmake texinfo tzdata ];
+        nativeBuildInputs = [ cmake texinfo tzdata doxygen graphviz ninja ];
 
         enableParallelBuilding = true;
 
         cmakeFlags = [
+          "-GNinja"
           "-DCMAKE_INSTALL_LIBDIR=lib"
           "-DBUILD_DOCS:BOOL=ON"
           "-DUSE_PYTHON:BOOL=${if usePython then "ON" else "OFF"}"
