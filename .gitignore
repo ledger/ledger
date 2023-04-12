@@ -110,3 +110,7 @@ rules.ninja
 test/Testing
 /MathTests
 /UtilTests
+# Files generated when building / developing via Nix
+/result*
+*/build
+/outputs
