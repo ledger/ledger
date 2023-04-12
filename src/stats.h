@@ -30,7 +30,7 @@
  */
 
 /**
- * @addtogroup stats
+ * @addtogroup report
  */
 
 /**

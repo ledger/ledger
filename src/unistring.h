@@ -30,7 +30,7 @@
  */
 
 /**
- * @addtogroup utils
+ * @addtogroup util
  */
 
 /**

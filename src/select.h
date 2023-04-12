@@ -30,14 +30,14 @@
  */
 
 /**
- * @addtogroup select
+ * @addtogroup util
  */
 
 /**
  * @file   select.h
  * @author John Wiegley
  *
- * @ingroup select
+ * @ingroup util
  */
 #pragma once
 

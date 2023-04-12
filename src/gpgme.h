@@ -30,7 +30,7 @@
  */
 
 /**
- * @addtogroup extra
+ * @defgroup extra Extra functionality
  */
 
 /**
