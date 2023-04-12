@@ -32,9 +32,9 @@ Now try your first ledger command:
 
     $ ./ledger -f test/input/sample.dat reg
 
-For help on keeping your journal have a look at the
-[documentation] and the [wiki][] (Also see the “Resources” section at the
-end of this file). An Emacs mode for Ledger files can be found in the
+For help on keeping your journal have a look at the [documentation], the [wiki],
+and the [Resources](#resources) section at the end of this file.
+An Emacs mode for Ledger files can be found in the
 [ledger/ledger-mode repository] and a vim plugin is located in the
 [ledger/vim-ledger repository].
 
@@ -46,14 +46,12 @@ If you have Docker installed on your computer or server, you can use a [Docker v
 
 ## Dependencies
 
-If you wish to proceed in this venture, you'll need a few dependencies.  The
-easiest way to get them for your platform is to run this handy Python
-script:
+If you wish to proceed in this venture, you'll need a few dependencies.
+Note that some features, e.g. `--import` require building Ledger with Python support.
+The easiest way to get them for your platform is to run this handy Python script:
 
     $ ./acprep dependencies
 
-Note that some features, e.g. `--import` require building Ledger with
-Python support.
 
 If that doesn't completely work, here are the dependencies for building the
 current `master` branch:
@@ -172,9 +170,9 @@ Now that you're up and running, here are a few resources to keep in mind:
  - [Code analysis][openhub]
 
 If you have ideas you'd like to share, the best way is either to e-mail me a
-patch (I prefer attachments over pasted text), or to get an account on GitHub.
+patch (I prefer attachments over pasted text), or to [get an account on GitHub](https://github.com/signup).
 Once you do, fork the [Ledger project][github],
-hack as much as you like, then send me a pull request via GitHub.
+hack as much as you like, then [open a pull request on GitHub](https://github.com/ledger/ledger/pulls).
 
 [Homepage]: https://ledger-cli.org/
 [documentation]: https://www.ledger-cli.org/docs.html
@@ -183,6 +181,7 @@ hack as much as you like, then send me a pull request via GitHub.
 [IRC]: irc://irc.libera.chat/ledger
 [github]: https://github.com/ledger/ledger
 [ledger/vim-ledger repository]: https://github.com/ledger/vim-ledger
+[ledger/ledger-mode repository]: https://github.com/ledger/ledger-mode
 [Homebrew]: https://brew.sh/
 [MacPorts]: https://www.macports.org/
 [CMake]: https://cmake.org
