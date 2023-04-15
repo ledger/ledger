@@ -41,9 +41,7 @@
  * None of these header files (with the exception of acconf.h, when
  * configure is re-run) are expected to change.
  */
-
-#ifndef INCLUDED_SYSTEM_HH
-#define INCLUDED_SYSTEM_HH
+#pragma once
 
 //#warning("Loading system.hh.  This should occur only once!")
 
@@ -216,5 +214,3 @@
 #include <boost/iterator/indirect_iterator.hpp>
 
 #endif // HAVE_BOOST_PYTHON
-
-#endif // INCLUDED_SYSTEM_HH
