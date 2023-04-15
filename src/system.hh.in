@@ -73,6 +73,29 @@
 #cmakedefine01 DEBUG_MODE
 #cmakedefine01 NO_ASSERTS
 
+/**
+ * @name Default values
+ */
+/*@{*/
+
+#if DEBUG_MODE
+#define DEBUG_ON    1
+#define VERIFY_ON   1
+#define TRACING_ON  1
+#elif NO_ASSERTS
+#define DEBUG_ON    0
+#define VERIFY_ON   0
+#define TRACING_ON  0
+#else
+#define DEBUG_ON    0
+#define VERIFY_ON   0
+#define TRACING_ON  1           // use --trace X to enable
+#endif
+
+#define LOGGING_ON 1
+
+/*@}*/
+
 #define DOCUMENT_MODEL           0
 #define REDUCE_TO_INTEGER        0
 
