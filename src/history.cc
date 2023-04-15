@@ -467,7 +467,7 @@ commodity_history_impl_t::find_price(const commodity_t& source,
 
   const commodity_t * last_target = &target;
 
-#if defined(REVERSE_PREDECESSOR_MAP)
+#if REVERSE_PREDECESSOR_MAP
   typedef tuple<const commodity_t *, const commodity_t *,
                 const price_point_t *> results_tuple;
   std::vector<results_tuple> results;
@@ -494,7 +494,7 @@ commodity_history_impl_t::find_price(const commodity_t& source,
     const commodity_t * u_comm = get(namemap, u);
     const commodity_t * v_comm = get(namemap, v);
 
-#if defined(REVERSE_PREDECESSOR_MAP)
+#if REVERSE_PREDECESSOR_MAP
     if (v == tv && u_comm != last_target && v_comm != last_target)
       results_reversed = true;
 
