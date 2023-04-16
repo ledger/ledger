@@ -7,6 +7,8 @@
 
 - docs: Enable stand-alone building
 
+- Include contrib files in distribution
+
 ## 3.3.2 (2023-03-30)
 
 - Fix divide by zero (ledger/ledger#777, ledger/ledger#2207)
