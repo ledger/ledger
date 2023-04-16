@@ -1,0 +1,2393 @@
+# German translations for Ledger package.
+# Copyright (C) 2023 John Wiegley
+# This file is distributed under the same license as the Ledger package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Ledger 3.3.2\n"
+"Report-Msgid-Bugs-To: https://bugs.ledger-cli.org\n"
+"POT-Creation-Date: 2023-04-16 15:36+0200\n"
+"PO-Revision-Date: 2023-04-15 10:04+0200\n"
+"Last-Translator: Alexis Hildebrandt\n"
+"Language-Team: none\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: times.cc:1410 times.cc:1429
+#, boost-format
+msgid "   range: %1%"
+msgstr "   Bereich: %1%"
+
+#: times.cc:1412 times.cc:1431
+#, boost-format
+msgid "   start: %1%"
+msgstr "   Beginn: %1%"
+
+#: times.cc:1414 times.cc:1433
+#, boost-format
+msgid "  finish: %1%"
+msgstr "  Ende: %1%"
+
+#: format.cc:256
+msgid "%$ field reference must be a digit from 1-9"
+msgstr "%# Feldverweis muss eine Zahl von 1-9 sein"
+
+#: format.cc:268
+msgid "%$ reference to a non-existent prior field"
+msgstr "%# verweist auf ein nicht-existents vorheriges Feld"
+
+#. TRANSLATORS:
+#. %1% signifies desc
+#. %2% signifies a filename
+#: item.cc:596
+#, boost-format
+msgid "%1% from \"%2%\""
+msgstr "%1% aus \"%2%\""
+
+#. TRANSLATORS: %1% signifies desc
+#: item.cc:588
+#, boost-format
+msgid "%1% from streamed input:"
+msgstr "%1% aus streamed Eingabe:"
+
+#: parser.cc:116 parser.cc:140 parser.cc:157 parser.cc:198 parser.cc:228
+#: parser.cc:295 parser.cc:327 parser.cc:354 parser.cc:380 parser.cc:389
+#: query.cc:254 query.cc:350 query.cc:379 query.cc:403
+#, boost-format
+msgid "%1% operator not followed by argument"
+msgstr "%1% Operator nicht von einem Argument gefolgt"
+
+#. TRANSLATORS: This is an error message when the gpgme encryption library
+#. could not be initialized.
+#. %1% refers to the source of the error
+#. %2% refers to the actual error as a string.
+#: gpgme.cc:170
+#, boost-format
+msgid "%1%: %2%"
+msgstr "%1%: %2%"
+
+#: parser.cc:402
+msgid "'else' keyword not followed by argument"
+msgstr "'else' Schlüsselwort nicht von einem Argument gefolgt"
+
+#: textual.cc:909
+#, boost-format
+msgid "'end apply %1%' directive does not match 'apply %2%' directive"
+msgstr ""
+"'end apply %1%' Direktive stimmt nicht mit 'apply %2%' Direktive überein"
+
+#: textual.cc:902
+#, boost-format
+msgid "'end apply %1%' found, but no enclosing 'apply' directive"
+msgstr "'end apply %1%' gefunden, jedoch keine umgebende 'apply' Direktive"
+
+#: textual.cc:899
+msgid "'end' or 'end apply' found, but no enclosing 'apply' directive"
+msgstr ""
+"'end' oder 'end apply' gefunden, jedoch keine umgebende 'apply' Direktive"
+
+#: filters.cc:934
+msgid ""
+"'equity' cannot accept virtual and non-virtual postings to the same account"
+msgstr ""
+"'Eigenkapital' kann keine virtuellen und nicht-virtuellen Postings auf "
+"demselben Konto akzeptieren"
+
+#: parser.cc:396
+msgid "'if' keyword not followed by argument"
+msgstr "'if' Schlüsselwort nicht von einem Argument gefolgt"
+
+#: textual.cc:1269
+msgid "'import' directive seen, but Python support is missing"
+msgstr "'import' Direktive gesehen, jedoch fehlt die Unterstützung für Python"
+
+#: textual.cc:1275
+msgid "'python' directive seen, but Python support is missing"
+msgstr "'python' Direktive entdeckt, jedoch fehlt die Unterstützung für Python"
+
+#: draft.cc:255
+msgid "'xact' command requires at least a payee"
+msgstr "'xact' Kommando erfordert mindestens einen Empfänger"
+
+#. TRANSLATORS: This is a regular expression to match numerical dates, e.g.
+#. 2003-09-29. In case you are unfamiliar with regular expressions please
+#. reach out to the Ledger developers and maintainers to work with them
+#. on writing a regular expression suitable for the date formats of the
+#. language you are translating.
+#: draft.cc:108
+msgid "([0-9]+(?:[-/.][0-9]+)?(?:[-/.][0-9]+))?"
+msgstr ""
+
+#: item.cc:604
+#, boost-format
+msgid ", line %1%:"
+msgstr ", Zeile %1%:"
+
+#. TRANSLATORS:
+#. %1% signifies the starting line
+#. %2% signifies the ending line
+#: item.cc:602
+#, boost-format
+msgid ", lines %1%-%2%:"
+msgstr ", Zeilen %1%-%2%:"
+
+#: times.cc:1426
+msgid "--- After stabilization ---"
+msgstr "--- Nach Stabilisierung ---"
+
+#: times.cc:1407
+msgid "--- Before stabilization ---"
+msgstr "--- Vor Stabilisierung ---"
+
+#: precmd.cc:113
+msgid "--- Calculated value ---"
+msgstr "--- Berechneter Wert ---"
+
+#: exprbase.h:226 precmd.cc:110
+msgid "--- Compiled tree ---"
+msgstr "--- Kompilierter Baum ---"
+
+#: precmd.cc:67
+msgid "--- Context is first posting of the following transaction ---"
+msgstr "--- Kontext ist das erste Posting der folgenden Transaktion ---"
+
+#: exprbase.h:223 precmd.cc:105
+msgid "--- Expression tree ---"
+msgstr "--- Ausdrucksbaum ---"
+
+#: precmd.cc:147
+msgid "--- Format elements ---"
+msgstr "--- Format Elemente ---"
+
+#: precmd.cc:151
+msgid "--- Formatted string ---"
+msgstr "Formatierter String"
+
+#: draft.cc:520 precmd.cc:183
+msgid "--- Input arguments ---"
+msgstr "--- Eingabe Argumente ---"
+
+#: exprbase.h:216 precmd.cc:97
+msgid "--- Input expression ---"
+msgstr "--- Eingabe Ausdruck ---"
+
+#: precmd.cc:144
+msgid "--- Input format string ---"
+msgstr "--- Eingabe Formatstring ---"
+
+#: times.cc:1762
+msgid "--- Period expression tokens ---"
+msgstr "--- Periodisches Ausdruckszeichen ---"
+
+#: exprbase.h:230
+msgid "--- Result value ---"
+msgstr "--- Ergebniswert ---"
+
+#: times.cc:1439
+msgid "--- Sample dates in range (max. 20) ---"
+msgstr "--- Beispiel Datan im Bereich (max. 20) ---"
+
+#: exprbase.h:219 precmd.cc:100
+msgid "--- Text as parsed ---"
+msgstr "--- Text wie geparst ---"
+
+#: draft.cc:525
+msgid "--- Transaction template ---"
+msgstr "--- Transaktions Vorlage ---"
+
+#: filters.h:562
+msgid "<Adjustment>"
+msgstr "<Anpassung>"
+
+#: filters.h:756
+msgid "<None>"
+msgstr "<Nichts>"
+
+#: draft.cc:66
+msgid "<Posting copied from last related transaction>"
+msgstr "<Postring von vorheriger dazugehöriger Transaktion kopiert"
+
+#: filters.h:563 filters.h:622
+msgid "<Revalued>"
+msgstr "<Aufgewertet>"
+
+#: filters.h:471
+msgid "<Total>"
+msgstr "<Gesamt>"
+
+#: textual.cc:1902
+msgid "<Unspecified payee>"
+msgstr "<Unspezifizierter Empfänger>"
+
+#: expr.cc:207
+msgid "<empty expression>"
+msgstr "<leerer Ausdruck>"
+
+#: scope.h:128
+msgid "<empty>"
+msgstr "<leer>"
+
+#: value.cc:1839
+msgid "<invalid>"
+msgstr "<ungültig>"
+
+#: error.cc:92
+msgid "<no source context>"
+msgstr "<kein Ursprungskontext>"
+
+#: precmd.cc:197
+msgid "====== Display predicate ======"
+msgstr "====== Ansichtsprädikat ======"
+
+#: draft.cc:468 textual.cc:1590
+msgid "A posting's cost may not be negative"
+msgstr "Die Kosten eines Postings dürfen nicht negativ sein"
+
+#: xact.cc:292 xact.cc:455
+msgid "A posting's cost must be of a different commodity than its amount"
+msgstr ""
+"Die Kosten eines Posting müssen eine andere Commidity als ihr Betrag haben"
+
+#: textual.cc:938
+#, boost-format
+msgid "Account directive '%1%' requires an argument"
+msgstr "Konto Direktive '%1%' erfordert ein Argument"
+
+#: draft.cc:78
+#, boost-format
+msgid "Account mask: %1%"
+msgstr "Kontomaske: %1%"
+
+#: draft.cc:84
+msgid "Account mask: <use first of last related accounts>"
+msgstr "Kontomaske: <Nutze erstes der letzten verwandten Konten>"
+
+#: draft.cc:81
+msgid "Account mask: <use last of last related accounts>"
+msgstr "Kontomaske: <Nutze letztes der letzten verwandten Konten>"
+
+#. TRANSLATORS: This is an error message when adding two amounts.
+#. %1% refers to this amount's commodity
+#. %2% refers to the other amount's commodity that is being compared
+#: amount.cc:437
+#, boost-format
+msgid "Adding amounts with different commodities: '%1%' != '%2%'"
+msgstr "Addiere Beträge mit unterschiedlichen Commodities: '%1%' != '%2%'"
+
+#: post.cc:570 xact.cc:725
+msgid "Amount expressions must result in a simple amount"
+msgstr "Werteausdruck muss in einen einfachen Wert resultieren"
+
+#: xact.cc:379 xact.cc:462
+msgid "Amount to balance against:"
+msgstr "Zu bilanziertender Betrag:"
+
+#: draft.cc:88
+#, boost-format
+msgid "Amount:       %1%"
+msgstr "Betrag:       %1%"
+
+#: account.cc:288
+msgid "An account does not have a 'cost' value"
+msgstr "Ein Konto hat keinen 'cost' Wert"
+
+#: textual.cc:887
+#, boost-format
+msgid "Argument '%1%' not a valid year"
+msgstr "Argument '%1%' ist kein gültiges Jahr"
+
+#: global.cc:528
+msgid "Argument to --trace must be an integer"
+msgstr "Die --trace Option erfordert ein ganzahliges Argument"
+
+#: py_amount.cc:79
+msgid "Argument to amount.print_(file) is not a file object"
+msgstr "Argument für amount.print_(datei) ist kein Datei-Objekt"
+
+#: py_balance.cc:83
+msgid "Argument to balance.print_(file) is not a file object"
+msgstr "Argument für balance.print_(datei) ist kein Datei-Objekt"
+
+#: textual.cc:1189
+#, boost-format
+msgid "Assertion failed: %1%"
+msgstr "Assert fehlgeschlagen: %1%"
+
+#: utils.cc:412
+#, boost-format
+msgid "Attempting to delete %1% a non-living %2%"
+msgstr "Versuch %1% zu Löschen ein nicht-aktives %2%"
+
+#. TRANSLATORS: This is an error message where
+#. %1% indicates the argument index
+#. %2% is the label of the source that is not a sequence as expected
+#: report.cc:616
+#, boost-format
+msgid "Attempting to get argument at index %1% from %2%"
+msgstr "Versuch Argument mit Index %1% aus %2% zu bekommen"
+
+#. TRANSLATORS: This is an error message where
+#. %1% indicates the argument index
+#. %2% is the label of the source that has fewer elements than the requested index
+#. %2% is the number of elements in the source
+#: report.cc:627
+#, boost-format
+msgid "Attempting to get index %1% from %2% with %3% elements"
+msgstr ""
+"Versuch Argument mit Index %1% aus %2% zu bekommen, welches %3% Element hat"
+
+#: report.cc:931
+#, boost-format
+msgid "Attempting to nail down %1%"
+msgstr "Versuch %1% festzunageln"
+
+#: xact.cc:717
+msgid "Automated transaction's posting has no amount"
+msgstr "Das Posting der automatisierten Transaktion hat keinen Betrag"
+
+#: commodity.cc:315
+msgid "Backslash at end of commodity name"
+msgstr "Rückwärtsschrägstrich am Ende des Commodity Namen"
+
+#: textual.cc:1653
+msgid "Balance assertion must evaluate to a constant"
+msgstr "Bilanzassert muss zu einer Konstanten evaluieren"
+
+#: textual.cc:1739
+#, boost-format
+msgid "Balance assertion off by %1% (expected to see %2%)"
+msgstr "Bilanzassert weicht mit %1% von Erwartung %2% ab"
+
+#: textual.cc:1651
+msgid "Balance assignment must evaluate to a constant"
+msgstr "Bilanzzuweisung muss zu einer Konstanten evaluieren"
+
+#: filters.cc:1317
+msgid "Budget transaction"
+msgstr "Budgettransaktion"
+
+#: csv.cc:236
+msgid "CSV"
+msgstr "CSV"
+
+#: value.cc:1345
+#, boost-format
+msgid "Cannot 'not' %1%"
+msgstr "Kann 'not' nicht auf %1% anwenden"
+
+#: value.cc:1600
+#, boost-format
+msgid "Cannot abs %1%"
+msgstr "%1% kann nicht in einen absoluten Wert gewandelt werden"
+
+#: value.cc:446
+#, boost-format
+msgid "Cannot add %1% to %2%"
+msgstr "Kann %1% nicht zu %2% addieren"
+
+#. TRANSLATORS: This is an error message when adding two amounts.
+#: amount.cc:426
+msgid "Cannot add an amount to an uninitialized amount"
+msgstr "Betrag kann nicht zu einem uninitialisierter Betrag addiert werden"
+
+#: balance.cc:74
+msgid "Cannot add an uninitialized amount to a balance"
+msgstr "Uninitialisierter Betrag kann nicht zu einer Balance addiert werden"
+
+#. TRANSLATORS: This is an error message when adding two amounts.
+#: amount.cc:423
+msgid "Cannot add an uninitialized amount to an amount"
+msgstr "Uninitialisierter Betrag kann nicht zu einem Betrag addiert werden"
+
+#: value.cc:331
+msgid "Cannot add sequences of different lengths"
+msgstr "Unterschiedlich lange Sequenzen können nicht addiert werden"
+
+#. TRANSLATORS: This is an error message when adding two amounts.
+#: amount.cc:429
+msgid "Cannot add two uninitialized amounts"
+msgstr "Zwei uninitialisierte Beträge können nicht addiert werden"
+
+#: value.cc:1746
+#, boost-format
+msgid "Cannot annotate %1%"
+msgstr "Kann %1% nicht annotieren"
+
+#: amount.cc:916
+msgid "Cannot annotate the commodity of an uninitialized amount"
+msgstr ""
+"Die Commodity eines uninitialisierten Betrags kann nicht mit Anmerkungen "
+"versehen werden"
+
+#: balance.h:156
+msgid "Cannot assign an uninitialized amount to a balance"
+msgstr ""
+"Ein uninitialisierter Betrag kann nicht einer Balance zugewiesen werden"
+
+#: op.cc:467
+#, boost-format
+msgid "Cannot call %1% as a function"
+msgstr "%1% kann nicht als Funktion aufgerufen werden"
+
+#: value.cc:1714
+#, boost-format
+msgid "Cannot ceiling %1%"
+msgstr "Kann %1% nicht aufrunden"
+
+#: value.cc:832 value.cc:958 value.cc:1079
+#, boost-format
+msgid "Cannot compare %1% to %2%"
+msgstr "Kann %1% nicht mit %2% vergleichen"
+
+#: balance.h:193
+msgid "Cannot compare a balance to an uninitialized amount"
+msgstr ""
+"Eine Balance kann nicht mit einem uninitialisiertem Betrag verglichen werden"
+
+#. TRANSLATORS: This is an error message when comparing two amounts.
+#. %1% refers to this amount's commodity
+#. %2% refers to the other amount's commodity that is being compared
+#: amount.cc:396
+#, boost-format
+msgid "Cannot compare amounts with different commodities: '%1%' and '%2%'"
+msgstr ""
+"Beträge mit unterschiedlichen Commodities können nicht verglichen werden: "
+"'%1%' und '%2%'"
+
+#: amount.cc:384
+msgid "Cannot compare an amount to an uninitialized amount"
+msgstr "Betrag kann nicht mit uninitialisiertem Betrag verglichen werden"
+
+#: amount.cc:386
+msgid "Cannot compare an uninitialized amount to an amount"
+msgstr "Uninitialisierter Betrag kann nicht mit Betrag verglichen werden"
+
+#: amount.cc:388
+msgid "Cannot compare two uninitialized amounts"
+msgstr "Zwei uninitialisierte Beträge können nicht verglichen werden"
+
+#: amount.cc:687
+msgid "Cannot compute ceiling on an uninitialized amount"
+msgstr "Uninitialisierter Betrag kann nicht aufgerundet werden"
+
+#: amount.cc:676
+msgid "Cannot compute floor on an uninitialized amount"
+msgstr "Uninitialisierter Betrag kann nicht abgerundet werden"
+
+#: value.cc:1280
+#, boost-format
+msgid "Cannot convert %1% to %2%"
+msgstr "Kann %1% nicht zu %2% konvertieren"
+
+#: value.cc:1221
+#, boost-format
+msgid "Cannot convert %1% with multiple commodities to %2%"
+msgstr "Kann %1% mit mehreren Commodities nicht zu %2% konvertieren"
+
+#: balance.h:484
+msgid "Cannot convert a balance with multiple commodities to an amount"
+msgstr ""
+"Eine Balance mit mehreren Gütern kann nicht in einen Betrag gewandelt werden"
+
+#: balance.h:479
+msgid "Cannot convert an empty balance to an amount"
+msgstr "Eine leere Balance kann nicht in einen Betrag gewandelt werden"
+
+#: amount.cc:878
+msgid "Cannot convert an uninitialized amount to a double"
+msgstr "Uninitialisierter Betrag kann nicht in ein 'double' konvertiert werden"
+
+#: amount.cc:887
+msgid "Cannot convert an uninitialized amount to a long"
+msgstr "Uninitialisierter Betrag kann nicht in ein 'long' konvertiert werden"
+
+#: amount.cc:593
+msgid "Cannot determine display precision of an uninitialized amount"
+msgstr ""
+"Anzeigepräzision eines uninitialisierten Betrags kann nicht bestimmt werden"
+
+#: value.cc:1375
+#, boost-format
+msgid "Cannot determine if %1% is really zero"
+msgstr "Kann nicht bestimmen, ob %1% wirklich Null ist"
+
+#: value.cc:1407
+#, boost-format
+msgid "Cannot determine if %1% is zero"
+msgstr "Kann nicht bestimmen, ob %1% Null ist"
+
+#: amount.cc:842
+msgid "Cannot determine if an uninitialized amount is zero"
+msgstr "Kann nicht bestimmen, ob ein uninitialisierter Betrag Null ist"
+
+#: amount.cc:946
+msgid "Cannot determine if an uninitialized amount's commodity is annotated"
+msgstr ""
+"Kann nicht bestimmen, ob die Commidity eines uninitialisierten Betrags mit "
+"Anmerkungen versehen ist"
+
+#: amount.cc:572
+msgid "Cannot determine if precision of an uninitialized amount is kept"
+msgstr ""
+"Kann nicht bestimmen, ob die Präzision eines uninitialisierten Betrags "
+"erhalten bleibt"
+
+#: value.cc:307
+#, boost-format
+msgid "Cannot determine numeric value of %1%"
+msgstr "Der numerische wert von %1% kann nicht bestimmt werden"
+
+#: amount.cc:563
+msgid "Cannot determine precision of an uninitialized amount"
+msgstr "Präzision eines uninitialisierten Betrags kann nicht bestimmt werden"
+
+#: amount.cc:834
+msgid "Cannot determine sign of an uninitialized amount"
+msgstr "Vorzeichen eines uninitialisierten Betrags kann nicht bestimmt werden"
+
+#: value.cc:124
+#, boost-format
+msgid "Cannot determine truth of %1%"
+msgstr "Die Wahrheit von %1% kann nicht bestimmt werden"
+
+#: value.cc:106
+#, boost-format
+msgid "Cannot determine truth of %1% (did you mean 'account =~ %2%'?)"
+msgstr ""
+"Die Wahrheit von %1% kann nicht bestimmt werden (war 'account =~ %2%' "
+"gemeint?)"
+
+#: amount.cc:814
+msgid "Cannot determine value of an uninitialized amount"
+msgstr "Wert eines uninitialisierten Betrags kann nicht bestimmt werden"
+
+#: value.cc:1757
+#, boost-format
+msgid "Cannot determine whether %1% is annotated"
+msgstr "Kann nicht bestimmen ob %1% Anmerkungen hat"
+
+#: value.cc:746
+#, boost-format
+msgid "Cannot divide %1% by %2%"
+msgstr "Kann %1% nicht durch %2% dividieren"
+
+#: balance.cc:159
+msgid "Cannot divide a balance by an uninitialized amount"
+msgstr ""
+"Eine Bilanz kann nicht durch einem uninitialisierten Betrag dividiert werden"
+
+#: balance.cc:181
+msgid ""
+"Cannot divide a balance with annotated commodities by a commoditized amount"
+msgstr ""
+"Eine Bilanz mit Commodities mit Anmerkungen kann nicht durch einem "
+"commoditized Betrag dividiert werden"
+
+#: balance.cc:186
+msgid "Cannot divide a multi-commodity balance by a commoditized amount"
+msgstr ""
+"Eine Bilanz mit mehreren Commodities kann nicht durch einem commoditized "
+"Betrag dividiert werden"
+
+#: amount.cc:522
+msgid "Cannot divide an amount by an uninitialized amount"
+msgstr ""
+"Betrag kann nicht durch einem uninitialisierter Betrag dividiert werden"
+
+#: amount.cc:524
+msgid "Cannot divide an uninitialized amount by an amount"
+msgstr ""
+"Uninitialisierter Betrag kann nicht durch einem Betrag dividiert werden"
+
+#: amount.cc:526
+msgid "Cannot divide two uninitialized amounts"
+msgstr "Zwei uninitialisierte Beträge können nicht dividiert werden"
+
+#: timelog.cc:184
+msgid "Cannot double check-in to the same account"
+msgstr "Doppeltes Einstempeln auf dasselbe Konto nicht möglich"
+
+#: pyinterp.cc:497
+msgid "Cannot downcast scoped object to specific type"
+msgstr "Das scoped Objekt kann nicht zu spezifischen Type umgewandelt werden"
+
+#: value.cc:1441
+#, boost-format
+msgid "Cannot find the value of %1%"
+msgstr "Kann der Wert von %1% nicht finden"
+
+#: value.cc:1691
+#, boost-format
+msgid "Cannot floor %1%"
+msgstr "Kann %1% nicht abrunden"
+
+#: py_journal.cc:184
+msgid "Cannot have more than one active journal query"
+msgstr "Mehrere aktive Journal-Anfragen sind nicht unterstützt"
+
+#: csv.cc:201
+msgid "Cannot have two values for a single transaction"
+msgstr "Zwei Werte für eine einzelne Transaktion sind nicht erlaubt"
+
+#: times.cc:1388
+msgid "Cannot increment a date interval without a duration"
+msgstr "Datumsinterval kann ohne Dauer nicht inkrementiert werden"
+
+#: times.cc:1382
+msgid "Cannot increment an unstarted date interval"
+msgstr ""
+"Ein noch nicht begonnenens Datumsinterval kann nicht inkrementiert werden"
+
+#: balance.h:113
+msgid "Cannot initialize a balance from an uninitialized amount"
+msgstr ""
+"Ein Balance kann nicht mit einem uninitialisierter Betrag initialisiert "
+"werden"
+
+#: amount.cc:616
+msgid "Cannot invert an uninitialized amount"
+msgstr "Uninitialisierter Betrag kann nicht invertiert werden"
+
+#: value.cc:668
+#, boost-format
+msgid "Cannot multiply %1% with %2%"
+msgstr "Kamm %1% nicht mit %2% multiplizieren"
+
+#: balance.cc:123
+msgid "Cannot multiply a balance by an uninitialized amount"
+msgstr "Balance kann nicht mit uninitialisiertem Betrag multipliziert werden"
+
+#: balance.cc:145
+msgid ""
+"Cannot multiply a balance with annotated commodities by a commoditized amount"
+msgstr ""
+"Eine Bilanz mit Commodities mit Anmerkungen kann nicht mit einem "
+"commoditized Betrag multipliziert werden"
+
+#: balance.cc:150
+msgid "Cannot multiply a multi-commodity balance by a commoditized amount"
+msgstr ""
+"Eine Bilanz mit mehreren Commodities kann nicht mit einem commoditized "
+"Betrag multipliziert werden"
+
+#: amount.cc:491
+msgid "Cannot multiply an amount by an uninitialized amount"
+msgstr ""
+"Betrag kann nicht mit einem uninitialisierter Betrag multipliziert werden"
+
+#: amount.cc:493
+msgid "Cannot multiply an uninitialized amount by an amount"
+msgstr ""
+"Uninitialisierter Betrag kann nicht mit einem Betrag multipliziert werden"
+
+#: amount.cc:495
+msgid "Cannot multiply two uninitialized amounts"
+msgstr "Zwei uninitialisierte Beträge können nicht multipliziert werden"
+
+#: value.cc:1311
+#, boost-format
+msgid "Cannot negate %1%"
+msgstr "Kann %1% nicht negieren"
+
+#: amount.cc:609
+msgid "Cannot negate an uninitialized amount"
+msgstr "Uninitialisierter Betrag kann nicht negiert werden"
+
+#: amount.cc:146
+msgid "Cannot output amount to a floating-point representation"
+msgstr "Betrag kann nicht in einer Fließkommarepräsentation ausgegeben werden"
+
+#: context.h:122
+#, boost-format
+msgid "Cannot read journal file %1%"
+msgstr "Die Journaldatei %1% konnte nicht gelesen werden"
+
+#: amount.cc:720
+msgid "Cannot reduce an uninitialized amount"
+msgstr "Uninitialisierter Betrag kann nicht reduziert werden"
+
+#: value.cc:1768
+#, boost-format
+msgid "Cannot request annotation of %1%"
+msgstr "Kann Anmerkungen von %1% nicht anfragen"
+
+#: amount.cc:957
+msgid "Cannot return commodity annotation details of an uninitialized amount"
+msgstr ""
+"Die Anmerkungsdetails der Commodity eines uninitialisierten Wertes konnte "
+"nicht zurückgegeben werden"
+
+#: amount.cc:698
+msgid "Cannot round an uninitialized amount"
+msgstr "Uninitialisierter Betrag kann nicht gerundet werden"
+
+#: value.cc:1624
+#, boost-format
+msgid "Cannot set rounding for %1%"
+msgstr "Kann die Rundung für %1% nicht setzen"
+
+#: amount.cc:627
+msgid "Cannot set rounding for an uninitialized amount"
+msgstr "Rundung für einen uninitialisierten Betrag kann nicht gesetzt werden"
+
+#: amount.cc:581
+msgid "Cannot set whether to keep the precision of an uninitialized amount"
+msgstr ""
+"Kann nicht Setzen, dass die Präzision eines uninitialisierten Betrags "
+"erhalten bleiben soll"
+
+#: amount.cc:971
+msgid "Cannot strip commodity annotations from an uninitialized amount"
+msgstr ""
+"Commodity Anmerkungen können nicht von einem uninitialisierten Betrag "
+"entfernt werden"
+
+#: value.cc:586
+#, boost-format
+msgid "Cannot subtract %1% from %2%"
+msgstr "Kann %1% nicht von %2% subtrahieren"
+
+#: amount.cc:458
+msgid "Cannot subtract an amount from an uninitialized amount"
+msgstr ""
+"Betrag kann nicht von einem uninitialisierter Betrag subtrahiert werden"
+
+#: balance.cc:101
+msgid "Cannot subtract an uninitialized amount from a balance"
+msgstr ""
+"Uninitialisierter Betrag kann nicht von einer Balance subtrahiert werden"
+
+#: amount.cc:460
+msgid "Cannot subtract an uninitialized amount from an amount"
+msgstr ""
+"Uninitialisierter Betrag kann nicht von einem Betrag subtrahiert werden"
+
+#: value.cc:465
+msgid "Cannot subtract sequences of different lengths"
+msgstr "Unterschiedlich lange Sequenzen können nicht subtrahiert werden"
+
+#: amount.cc:462
+msgid "Cannot subtract two uninitialized amounts"
+msgstr "Zwei uninitialisierte Beträge können nicht subtrahiert werden"
+
+#: value.cc:1668
+#, boost-format
+msgid "Cannot truncate %1%"
+msgstr "Kann %1% nicht kürzen"
+
+#: amount.cc:639
+msgid "Cannot truncate an uninitialized amount"
+msgstr "Uninitialisierter Betrag kann nicht gekürzt werden"
+
+#: amount.cc:731
+msgid "Cannot unreduce an uninitialized amount"
+msgstr "Uninitialisierter Betrag kann nicht unreduziert werden"
+
+#: value.cc:1737
+#, boost-format
+msgid "Cannot unround %1%"
+msgstr "Die Rundung von %1% kann nicht rückguangig gemacht werden"
+
+#: amount.cc:706
+msgid "Cannot unround an uninitialized amount"
+msgstr "Uninitialisierter Betrag kann nicht ungerundet werden"
+
+#: textual.cc:1196
+#, boost-format
+msgid "Check failed: %1%"
+msgstr "Überprüfung fehlgeschlagen: %1%"
+
+#: draft.cc:54
+#, boost-format
+msgid "Code:       %1%"
+msgstr "Code:       %1%"
+
+#: filters.cc:687 filters.cc:747
+msgid "Commodities revalued"
+msgstr "Commodities revaluiert"
+
+#: annotate.cc:136
+msgid "Commodity date lacks closing bracket"
+msgstr "Dem Commodity Datum fehlt eine schließende eckige Klammer"
+
+#: textual.cc:1100
+#, boost-format
+msgid "Commodity directive '%1%' requires an argument"
+msgstr "Commodity Direktive '%1%' erfordert ein Argument"
+
+#: annotate.cc:118
+msgid "Commodity lot price lacks closing brace"
+msgstr "Dem Commodity Lot-Preis fehlt eine schließende geschweifte Klammer"
+
+#: annotate.cc:113
+msgid "Commodity lot price lacks double closing brace"
+msgstr ""
+"Dem Commodity Lot-Preis fehlt die doppelte, schließende geschweifte Klammer"
+
+#: annotate.cc:129
+msgid "Commodity specifies more than one date"
+msgstr "Die Commodity spezifiziert mehr als ein Datum"
+
+#: annotate.cc:92
+msgid "Commodity specifies more than one price"
+msgstr "Commodity spezifierzt mehr als einen Preis"
+
+#: annotate.cc:171
+msgid "Commodity specifies more than one tag"
+msgstr "Die Commodity spezifiziert mehr als einen Tag"
+
+#: annotate.cc:151
+msgid "Commodity specifies more than one valuation expression"
+msgstr "Die Commodity spezifiziert mehr als einen Werte-Ausdruck"
+
+#: annotate.cc:177
+msgid "Commodity tag lacks closing parenthesis"
+msgstr "Dem Commodity Tag fehlt eine schließende runde Klammer"
+
+#: annotate.cc:162 annotate.cc:165
+msgid "Commodity valuation expression lacks closing parentheses"
+msgstr "Dem Commodity Werte-Ausdruck fehlt eine schließende runde Klammer"
+
+#: option.h:176 option.h:183
+#, boost-format
+msgid "Context argument for %1% not a string"
+msgstr "Kontextargument für %1% ist kein String"
+
+#: global.h:140
+#, boost-format
+msgid "Copyright (c) 2003-2023, %1%.  All rights reserved."
+msgstr "Copyright (c) 2003-2023, %1%.  Alle Rechte vorbehalten."
+
+#. TRANSLATORS:
+#. %1% signifies the cost operator of the post
+#. %2% signifies the cost the post
+#: draft.cc:94
+#, boost-format
+msgid "Cost:         %1% %2%"
+msgstr "Kosten:       %1% %2%"
+
+#: report.h:447 report.h:794
+#, boost-format
+msgid "Could not determine beginning of period '%1%'"
+msgstr "Der Anfag der Periode '%1%' konnte nicht bestimmt werden"
+
+#: report.h:664
+#, boost-format
+msgid "Could not determine end of period '%1%'"
+msgstr "Das Ende der Periode '%1%' konnte nicht bestimmt werden"
+
+#: compare.cc:65
+msgid "Could not determine sorting value based an expression"
+msgstr "Konnte den ausdrucksbasierten Sortierwert nicht bestimmen"
+
+#: post.cc:313
+#, boost-format
+msgid "Could not find an account matching '%1%'"
+msgstr "Ein passendes Konto für '%1%' konnte nicht gefunden werden"
+
+#: scope.h:229 scope.h:239
+msgid "Could not find scope"
+msgstr "Umfang nicht gefunden"
+
+#: global.cc:140
+#, boost-format
+msgid "Could not find specified init file %1%"
+msgstr "Spezifizierte Initalisierungsdatei %1% nicht gefunden"
+
+#: session.cc:98
+#, boost-format
+msgid "Could not find specified price-db file %1%"
+msgstr "Konnte die spezifizierte price-db Datei %1% nicht finden"
+
+#: gpgme.cc:104
+#, boost-format
+msgid "Could not open file: %1%"
+msgstr "Folgende Datei konnte nicht geöffnet werden: %1%"
+
+#: times.cc:1312
+msgid "Date interval is improperly initialized"
+msgstr "Datumsinterval ist unsachgemäß inititialisert"
+
+#: token.cc:212
+msgid "Date specifier does not refer to a starting date"
+msgstr "Datumsangabe referenziert kein Anfangsdatum"
+
+#: draft.cc:49
+#, boost-format
+msgid "Date:       %1%"
+msgstr "Datum:      %1%"
+
+#: draft.cc:51
+msgid "Date:       <today>"
+msgstr "Datum:      <heute>"
+
+#: stats.cc:97
+#, boost-format
+msgid "Days since last post:   %|1$6|"
+msgstr "Tage seit dem letzten Post:    %|1$6|"
+
+#: gpgme.cc:158
+#, boost-format
+msgid "Decryption error: %1%: %2%"
+msgstr "Entschlüsselungsfehler: %1%: %2%"
+
+#: textual.cc:445 textual.cc:1297
+#, boost-format
+msgid "Directive '%1%' requires an argument"
+msgstr "Die Direktive '%1%' erfordert ein Argument"
+
+#: textual.cc:832
+#, boost-format
+msgid "Directive 'apply %1%' requires an argument"
+msgstr "Die Direktive 'apply %1%' erfordert ein Argument"
+
+#: amount.cc:530 balance.cc:165
+msgid "Divide by zero"
+msgstr "Division durch Null"
+
+#: filters.h:808
+msgid "Equity"
+msgstr "Eigenkapital"
+
+#: xact.cc:312
+msgid "Equity:Capital Gains"
+msgstr "Eigenkapital:Kapitalgewinne"
+
+#: xact.cc:314
+msgid "Equity:Capital Losses"
+msgstr "Eigenkapital:Kapitaleinbuße"
+
+#: convert.cc:54
+msgid "Equity:Unknown"
+msgstr "Eigenkapital:Unbekannt"
+
+#: filters.cc:628
+msgid "Equity:Unrealized Gains"
+msgstr "Eigenkaptial:Nicht-Realisierte Gewinne"
+
+#: filters.cc:637
+msgid "Equity:Unrealized Losses"
+msgstr "Eigenkaptial:Nicht-Realisierte Verluste"
+
+#: textual.cc:872
+msgid "Error in fixed directive"
+msgstr "Fehler in der feststehenden Direktive"
+
+#: stream.cc:127
+msgid "Error in the pager"
+msgstr "Fehler im Pager"
+
+#: global.cc:192 textual.cc:284
+#, boost-format
+msgid "Error: %1%"
+msgstr "Fehler: %1%"
+
+#: scope.cc:91
+#, boost-format
+msgid "Expected %1% for argument %2%, but received %3%"
+msgstr "Erwartete %1% für Argument %2%, jedoch %3% erhalten"
+
+#: query.cc:82
+#, boost-format
+msgid "Expected '%1%' at end of pattern"
+msgstr "Unerwartetes '%1% am Ende des Musters"
+
+#: textual.cc:1621
+msgid "Expected a cost amount"
+msgstr "Ein cost Betrag wurde erwartet"
+
+#: textual.cc:1749
+msgid "Expected an balance assignment/assertion amount"
+msgstr "Erwarte einen Bilanzzuweisung/assertbetrag"
+
+#: item.cc:281 item.cc:313
+#, boost-format
+msgid "Expected masks for arguments 1 and 2, but received %1% and %2%"
+msgstr "Masken als Argumente für 1 und 2 erwartet, jedoch %1% und %2% erhalten"
+
+#: textual.cc:584
+msgid "Expected predicate after '='"
+msgstr "Prädikat nach '=' erwartet"
+
+#: op.cc:82
+#, boost-format
+msgid "Expected return of %1%, but received %2%"
+msgstr "Erwartete Rückgabe von %1%, jedoch %2% erhalten"
+
+#: item.cc:273 item.cc:305 post.cc:307
+#, boost-format
+msgid "Expected string or mask for argument 1, but received %1%"
+msgstr "String oder Maske als Argument für 1 erwartet, jedoch %1% erhalten"
+
+#: convert.cc:57 draft.cc:436
+msgid "Expenses:Unknown"
+msgstr "Ausgaben:Unbekannt"
+
+#: pyinterp.cc:550 pyinterp.cc:563
+#, boost-format
+msgid "Failed call to Python function '%1%'"
+msgstr "Fehler beim Aufrug der Python Funtion '%1%'"
+
+#: stream.cc:66
+msgid "Failed to create pipe"
+msgstr "Fehler beim Erzeugen einer Pipe"
+
+#: pyinterp.cc:296 pyinterp.cc:318
+msgid "Failed to evaluate Python code"
+msgstr "Fehler beim Evaluieren des Python code"
+
+#: pyinterp.cc:348 pyinterp.cc:362
+msgid "Failed to execute Python module"
+msgstr "Fehler beim Ausführen des Python Moduls"
+
+#: main.cc:158
+#, boost-format
+msgid "Failed to expand history reference '%1%'"
+msgstr "Fehler beim Expandieren der Verlaufsreferenz '%1%'"
+
+#: convert.cc:111 draft.cc:510
+msgid "Failed to finalize derived transaction (check commodities)"
+msgstr ""
+"Finalisierung der abgeleiteten Transaktion fehlgeschlagen (überprüfe die "
+"Commodities)"
+
+#: utils.cc:427
+#, boost-format
+msgid "Failed to find %1% in live object counts"
+msgstr "Das Finden von %1% in aktiven Objektzahlen ist fehlgeschlagen"
+
+#: filters.cc:998
+msgid "Failed to find period for interval report"
+msgstr "Finden der Periode für den Intervallreport fehlgeschlagen"
+
+#: filters.cc:1297
+msgid "Failed to find period for periodic transaction"
+msgstr "Fehler beim Finden der Periode für die periodische Transaktion"
+
+#: global.cc:468 stream.cc:70
+msgid "Failed to fork child process"
+msgstr "Subprozessabspaltung fehlgeschlagen"
+
+#: commodity.cc:350
+msgid "Failed to parse commodity"
+msgstr "Commodity konnte nicht geparst werden"
+
+#: token.cc:435
+msgid "Failed to parse identifier"
+msgstr "Fehler beim Parsen des Bezeichners"
+
+#: textual.cc:729
+msgid "Failed to parse transaction"
+msgstr "Fehler beim Parsen der Transaktion"
+
+#: timelog.cc:73
+msgid "Failed to record 'out' timelog transaction"
+msgstr "Fehler beim Aufzeichnen der 'out' Zeiterfassungs Transaktion"
+
+#: token.cc:395 token.cc:419 token.cc:442
+msgid "Failed to reset input stream"
+msgstr "Fehler beim Zurücksetzen des Eingabestroms"
+
+#: token.cc:465
+msgid "Failed to rewind input stream"
+msgstr "Fehler beim Zurückspulen des Eingabestroms"
+
+#: textual.cc:823
+#, boost-format
+msgid "File to include was not found: %1%"
+msgstr "Die zu inkludierende Datei %1% wurde nicht gefunden"
+
+#: stats.cc:72
+msgid "Files these postings came from:"
+msgstr "Dateien aus denen diese Posting stammen:"
+
+#: filters.cc:1460
+msgid "Forecast transaction"
+msgstr "Prognosetransaktion"
+
+#. TRANSLATORS: This is an error message where
+#. %1% refers of the maximum allowed recursion depth
+#: op.cc:452
+#, boost-format
+msgid "Function recursion_depth too deep (> %1%)"
+msgstr "Funktionsrekursionstiefe zu tief (> %1%)"
+
+#: textual.cc:1004
+#, boost-format
+msgid "Illegal alias %1%=%2%"
+msgstr "Ungültiges Alias %1%=%2%"
+
+#: option.cc:219 option.cc:230
+#, boost-format
+msgid "Illegal option -%1%"
+msgstr "Illegale Option -%1%"
+
+#: option.cc:47 option.cc:206 textual.cc:568
+#, boost-format
+msgid "Illegal option --%1%"
+msgstr "Illegale option --%1%"
+
+#: csv.cc:234
+msgid "Imported"
+msgstr "Importiert"
+
+#: textual.cc:269
+#, boost-format
+msgid "In file included from %1%"
+msgstr "In der inkludierten Datei von %1%"
+
+#: amount.cc:1157
+msgid "Incorrect use of decimal comma"
+msgstr "Inkorrekte Nutzung des Dezimlakomma"
+
+#: amount.cc:1167
+msgid "Incorrect use of thousand-mark comma"
+msgstr "Inkorrekte Nutzung des Tausendzeichntrennerkommas"
+
+#: amount.cc:1133 amount.cc:1140
+msgid "Incorrect use of thousand-mark period"
+msgstr "Inkorrekte Nutzung des Tausendzeichntrennerpunkts"
+
+#: py_account.cc:62 py_balance.cc:96 py_journal.cc:72 py_journal.cc:106
+#: py_xact.cc:60
+msgid "Index out of range"
+msgstr "Index ausserhalb des gültigen Bereichts"
+
+#: journal.cc:179 journal.cc:196
+#, boost-format
+msgid "Infinite recursion on alias expansion for %1%"
+msgstr "Unendliche Rekursion bei Alias Expansion für %1%"
+
+#: token.cc:148 token.cc:157
+msgid "Input stream no longer valid"
+msgstr "Eingabestrom ist nicht mehr gültig"
+
+#: utils.h:475
+msgid "Interrupted by user (use Control-D to quit)"
+msgstr "Durch Nutzer unterbrochen (nutze Control-D zum Beenden)"
+
+#: times.cc:1625 token.cc:514
+#, boost-format
+msgid "Invalid char '%1%'"
+msgstr "Ungültiges Zeich '%1%'"
+
+#: times.cc:1627 token.cc:517
+#, boost-format
+msgid "Invalid char '%1%' (wanted '%2%')"
+msgstr "Ungültiges Zeich '%1%' (erwartet '%2%')"
+
+#: times.cc:1294
+msgid "Invalid date interval: neither start, nor finish, nor duration"
+msgstr "Ungültiges Datumsinterval: Weder Start, noch Ende, noch Dauer"
+
+#: times.cc:255
+#, boost-format
+msgid "Invalid date/time: %1%"
+msgstr "Invalides Datum mit Uhrzeit: %1%"
+
+#: times.cc:130 times.cc:159 times.cc:182 times.cc:241
+#, boost-format
+msgid "Invalid date: %1%"
+msgstr "Ungültiges Datum: %1%"
+
+#: op.cc:168 op.cc:491
+msgid "Invalid function definition"
+msgstr "Ungültige Funktionsdefinition"
+
+#: op.cc:184
+#, boost-format
+msgid "Invalid function or lambda parameter: %1%"
+msgstr "Ungültige Funktions- or Lambda-Parameter: %1%"
+
+#: token.cc:526
+#, boost-format
+msgid "Invalid token '%1%'"
+msgstr "Ungültiges token '%1%'"
+
+#: token.cc:529
+#, boost-format
+msgid "Invalid token '%1%' (wanted '%2%')"
+msgstr "Ungültiges token '%1%' (erwartet '%2%')"
+
+#: utils.cc:529
+msgid "Invalid use of backslash"
+msgstr "Ungültige Nutzung eines Rückwärtsschrägstrich"
+
+#: draft.cc:146 draft.cc:155 draft.cc:161 draft.cc:167 draft.cc:172
+#: draft.cc:182 draft.cc:185
+msgid "Invalid xact command arguments"
+msgstr "Ungültige xact Kommandoargumente"
+
+#. This\ is\ a\ proper\ name.\ See\ the\ gettext\ manual,\ section\ Names.
+#: global.h:141
+msgid "John Wiegley"
+msgstr ""
+
+#: global.h:126
+#, boost-format
+msgid "Ledger %1%, the command-line accounting tool"
+msgstr "Ledger %1%, das kommandozeilenbasierte Buchführungsprogramm"
+
+#: op.cc:315
+msgid "Left operand does not evaluate to an object"
+msgstr "Der linke Operand evaluiert nicht zu einem Objekt"
+
+#: draft.cc:432
+msgid "Liabilities:Unknown"
+msgstr "Verbindlichkeite:Unbekannt"
+
+#: textual.cc:319
+#, boost-format
+msgid "Line exceeds %1% characters"
+msgstr "Die Zeile hat mehr als %1% Zeichen"
+
+#: query.cc:84
+msgid "Match pattern is empty"
+msgstr "Match-Muster ist leer"
+
+#. TRANSLATORS: This is an error message.
+#. %1% refers to the key of the metadata
+#. %2% refers to the value of the metadata
+#. %3% [Unknown]
+#: journal.cc:323
+#, boost-format
+msgid "Metadata assertion failed for (%1%: %2%): %3%"
+msgstr "Metadaten assertion fehlgeschlagen: (%1%: %2%): %3%"
+
+#. TRANSLATORS: This is an warning message.
+#. %1% refers to the key of the metadata
+#. %2% refers to the value of the metadata
+#. %3% [Unknown]
+#: journal.cc:332
+#, boost-format
+msgid "Metadata check failed for (%1%: %2%): %3%"
+msgstr "Metadaten check fehlgeschlagen: (%1%: %2%): %3%"
+
+#: query.cc:280
+msgid "Metadata equality operator not followed by term"
+msgstr "Metadaten Gleichheitsoperator nicht von Terminus gefolgt"
+
+#: query.cc:225 token.cc:510
+#, boost-format
+msgid "Missing '%1%'"
+msgstr "Fehlende '%1%'"
+
+#: option.cc:242
+#, boost-format
+msgid "Missing option argument for -%1%"
+msgstr "Fehlendes Argument für Option -%1%"
+
+#: option.cc:212
+#, boost-format
+msgid "Missing option argument for --%1%"
+msgstr "Fehlendes Optionsargument für --%1%"
+
+#: pyinterp.cc:126 pyinterp.cc:131
+#, boost-format
+msgid "Module import failed (couldn't find %1%)"
+msgstr "Der Modulimport ist fehlgeschlagen (%1% nicht gefunden)"
+
+#: draft.cc:325
+#, boost-format
+msgid "No accounts, and no past transaction matching '%1%'"
+msgstr "Keine Konten und keine vergangenen Transaktionen passen zu '%1%'"
+
+#: option.h:131 option.h:172 option.h:180
+#, boost-format
+msgid "No argument provided for %1%"
+msgstr "Kein angegebenes Argument für %1%"
+
+#: journal.cc:498
+#, boost-format
+msgid "No default scope in which to read journal file '%1%'"
+msgstr "Kein Standard-Scope in dem die Journaldatei '%1%' gelesen werden kann"
+
+#: session.cc:81
+msgid "No journal file was specified (please use -f)"
+msgstr "Eine Journaldatei wurde nicht angegeben (bitte nutze -f)"
+
+#: amount.cc:1064
+msgid "No quantity specified for amount"
+msgstr "Keine Menge für Betrag angegeben"
+
+#: draft.cc:56
+#, boost-format
+msgid "Note:       %1%"
+msgstr "Notiz:      %1%"
+
+#: stats.cc:86
+#, boost-format
+msgid "Number of postings:     %|1$6| (%|2$.2| per day)"
+msgstr "Anzahl der Postings:           %|1$6| (%|2$.2| pro Tag)"
+
+#: xact.cc:193
+msgid "Only one posting with null amount allowed per transaction"
+msgstr "Nur ein Posting mit einem leeren Wert ist pro Transaktion erlaubt"
+
+#: filters.cc:1103 filters.h:809
+msgid "Opening Balances"
+msgstr "Eröffnungsbilanz"
+
+#: post.cc:127 views.cc:140
+msgid "Payee"
+msgstr "Empfänger"
+
+#: textual.cc:1057
+#, boost-format
+msgid "Payee directive '%1%' requires an argument"
+msgstr "Empfänger Direktive '%1%' erfordert ein Argument"
+
+#: draft.cc:62
+#, boost-format
+msgid "Payee mask: %1%"
+msgstr "Empfänger Maske: %1%"
+
+#: draft.cc:59
+msgid "Payee mask: INVALID (template expression will cause an error)"
+msgstr "Empfänger Maske: Ungültig (Vorlagenausdruck führt zu Fehler)"
+
+#: textual.cc:699
+msgid "Period transaction failed to balance"
+msgstr "Periodische Transaktion konnte nicht bilanziert werden"
+
+#: utils.h:477
+msgid "Pipe terminated"
+msgstr "Pipe beendet"
+
+#: textual.cc:1471
+msgid "Posting has no account"
+msgstr "Posting hat kein Konto"
+
+#: textual.cc:1577
+msgid "Posting is missing a cost amount"
+msgstr "Dem Posting fehlt ein Kostenbetrag"
+
+#: xact.cc:188
+#, boost-format
+msgid ""
+"Posting with null amount's account may be misspelled:\n"
+"  \"%1%\""
+msgstr ""
+"Posting mit Null Wert Konto möglicherweise falsch geschrieben\n"
+"  \"%1%\""
+
+#: stats.cc:104
+#, boost-format
+msgid "Posts in last 30 days:  %|1$6|"
+msgstr "Posts der letzten 30 Tage:     %|1$6|"
+
+#: stats.cc:101
+#, boost-format
+msgid "Posts in last 7 days:   %|1$6|"
+msgstr "Posts der letzten 7 Tage:      %|1$6|"
+
+#: stats.cc:107
+#, boost-format
+msgid "Posts seen this month:  %|1$6|"
+msgstr "Posts in diesem Monat:         %|1$6|"
+
+#: textual.cc:543
+msgid "Pricing entry failed to parse"
+msgstr "Preiseintrag konnte nicht geparst werden"
+
+#: format.cc:250
+msgid "Prior field reference, but no template"
+msgstr "Vorherige Feldreferenze, jedoch keine Vorlage"
+
+#. TRANSLATORS: This is a Python API related error message.
+#. %1% indicates the name of the module that failed to import
+#: pyinterp.cc:254
+#, boost-format
+msgid "Python failed to import: %1%"
+msgstr "Fehler beim Importieren von Python: %1%"
+
+#: pyinterp.cc:172
+msgid "Python failed to initialize"
+msgstr "Fehler beim Initialisieren von Python"
+
+#: pyinterp.cc:207
+msgid "Python failed to initialize (couldn't find ledger)"
+msgstr "Fehler beim Initialisieren von Python (ledger wurde nicht gefunden)"
+
+#: commodity.cc:307 commodity.cc:338
+msgid "Quoted commodity symbol lacks closing quote"
+msgstr ""
+"Dem Commodity Symbol mit Anführungszeichen fehlt das schließende "
+"Anführungszeichen"
+
+#: gpgme.cc:66
+#, boost-format
+msgid "Reading decrypted data: GPGME: %1%"
+msgstr "Lesen verschlüsselter Daten: GPGME: %1%"
+
+#: scope.cc:61
+#, boost-format
+msgid "Redefinition of '%1%' in the same scope"
+msgstr "Erneute Definition von '%1%' im selben scope"
+
+#: amount.cc:961
+msgid "Request for annotation details from an unannotated amount"
+msgstr "Anfrage der Anmerkungdetails von einem Betrag ohne Anmerkungen"
+
+#: balance.cc:247
+#, boost-format
+msgid "Requested amount of a balance with multiple commodities: %1%"
+msgstr "Angeforderter Betrag für eine Bilanz mit mehreren Commodities: %1%"
+
+#. TRANSLATORS: This is an error message when subtracting two amounts.
+#. %1% refers to this amount's commodity
+#. %2% refers to the other amount's commodity that is being compared
+#: amount.cc:470
+#, boost-format
+msgid "Subtracting amounts with different commodities: '%1%' != '%2%'"
+msgstr "Subtrahiere Beträge mit unterschiedlichen Commodities: '%1%' != '%2%'"
+
+#: op.cc:202
+msgid "Syntax error"
+msgstr "Syntaxfehler"
+
+#: report.cc:1382
+msgid "The A value expression variable is no longer supported"
+msgstr "Der A Werteausdruck ist nicht länger unterstützt"
+
+#: report.cc:1394
+msgid "The G and g value expression variables are no longer supported"
+msgstr "Die G und g Werteausdrücke ist nicht länger unterstützt"
+
+#: report.cc:1390
+msgid "The I and B value expression variables are no longer supported"
+msgstr "Die I und B Werteausdrücke ist nicht länger unterstützt"
+
+#: report.cc:1386
+msgid "The V and v value expression variables are no longer supported"
+msgstr "Die V und v Werteausdrücke ist nicht länger unterstützt"
+
+#: report.cc:1379
+msgid "The i value expression variable is no longer supported"
+msgstr "Der i Werteausdruck ist nicht länger unterstützt"
+
+#: expr.cc:144
+msgid "The value expression tree was:"
+msgstr "Der Wertausdrucksbaum war:"
+
+#: xact.cc:415
+msgid "There cannot be null amounts after balancing a transaction"
+msgstr ""
+"Nach dem Bilanzieren einer Transaktion dürfen keine Null Beträge übrig "
+"bleiben"
+
+#: global.h:143
+msgid ""
+"This program is made available under the terms of the BSD Public License.\n"
+"See LICENSE file included with the distribution for details and disclaimer."
+msgstr ""
+"Dieses Programm wird unter den Bedinungen der BSD Public License zur "
+"Verfügung gestellt.\n"
+"Die in der Distribution enthaltente LICENSE Datei enthält weitere Details "
+"und die Ausschlussklausel."
+
+#. TRANSLATORS:
+#. %1% signifies the start date,
+#. %2% signifies the end date
+#. %3% signifies the number of days from start to end date.
+#: stats.cc:63
+#, boost-format
+msgid "Time period: %1% to %2% (%3% day)"
+msgid_plural "Time period: %1% to %2% (%3% days)"
+msgstr[0] "Zeitperiode: %1% bis %2% (%3% Tag)"
+msgstr[1] "Zeitperiode: %1% bis %2% (%3% Tage)"
+
+#: timelog.cc:114
+msgid "Timelog check-in has no corresponding check-out"
+msgstr "Zeiterfassungs check-in hat kein entsprechendes check-out"
+
+#: timelog.cc:120
+msgid "Timelog check-out date less than corresponding check-in"
+msgstr ""
+"Zeiterfassungs Ausstempeldatum liegt vor dem dazugehörigen Einstempeldatum"
+
+#: timelog.cc:110
+msgid "Timelog check-out event does not match any current check-ins"
+msgstr "Zeiterfassungs check-out Ereignis hat kein entsprechendes check-in"
+
+#: timelog.cc:89 timelog.cc:194
+msgid "Timelog check-out event without a check-in"
+msgstr "Zeiterfassungs check-out Ereignis ohne check-in"
+
+#: timelog.cc:116
+msgid "Timelog check-out has no corresponding check-in"
+msgstr "Zeiterfassungs check-out hat kein entsprechendes check-in"
+
+#: op.cc:509
+#, boost-format
+msgid "Too few arguments in function call (saw %1%, wanted %2%)"
+msgstr "Zu wenige Argument für Funktionsaufruf (bekommen %1%, erwartet %2%)"
+
+#: item.cc:285 item.cc:317 scope.cc:84
+msgid "Too few arguments to function"
+msgstr "Zu wenige Argument für Funktion"
+
+#: option.h:174
+#, boost-format
+msgid "Too many arguments provided for %1%"
+msgstr "Zu viele übergebene Argument für Funktion %1%"
+
+#: item.cc:288 item.cc:320
+msgid "Too many arguments to function"
+msgstr "Zu viele Argument für Funktion"
+
+#: amount.cc:1153
+msgid "Too many commas in amount"
+msgstr "Zu viele Kommata im Betrag"
+
+#: amount.cc:1129
+msgid "Too many periods in amount"
+msgstr "Zu viele Dezimalpunkte im Betrag"
+
+#: textual.cc:1954 xact.cc:705
+#, boost-format
+msgid "Transaction assertion failed: %1%"
+msgstr "Transaktion assert fehlgeschlagen: %1%"
+
+#: textual.cc:1956 xact.cc:707
+#, boost-format
+msgid "Transaction check failed: %1%"
+msgstr "Transaktion Überprüfung fehlgeschlagen: %1%"
+
+#: xact.cc:368 xact.cc:381 xact.cc:464
+msgid "Transaction does not balance"
+msgstr "Transaktion bilanziert nicht"
+
+#: global.cc:122
+#, boost-format
+msgid "Transactions found in initialization file '%1%'"
+msgstr "Transaktionen in der Initalisierungsdatei '%1%' gefunden"
+
+#: session.cc:138
+msgid "Transactions not allowed in price history file"
+msgstr "Transaktionen nicht erlaubt in der Preis-Historie-Datei"
+
+#: journal.cc:448
+msgid "Transactions with the same UUID must have equivalent postings"
+msgstr "Transaktionen mit derselben UUID müssen äquivalente Postings haben"
+
+#: convert.cc:81 convert.cc:82 convert.cc:94 convert.cc:95 item.h:137
+#: journal.cc:396 textual.cc:1964 textual.cc:1965
+msgid "UUID"
+msgstr ""
+
+#: xact.cc:377 xact.cc:460
+msgid "Unbalanced remainder is:"
+msgstr "Unbilanzierter Restbetrag:"
+
+#: stats.cc:91
+#, boost-format
+msgid "Uncleared postings:     %|1$6|"
+msgstr "Nicht-verrechnete Postings:    %|1$6|"
+
+#: query.cc:72
+msgid "Unexpected '\\' at end of pattern"
+msgstr "Unerwartetes '\\' am Ende des Musters"
+
+#: token.cc:428
+msgid "Unexpected EOF"
+msgstr "Unerwartetes Dateiende"
+
+#: textual.cc:1766
+#, boost-format
+msgid "Unexpected char '%1%' (Note: inline math requires parentheses)"
+msgstr ""
+"Unerwartetes Zeichen '%1%' (Anmerkung: inline Berechnungen erfordert "
+"Klammern)"
+
+#: times.cc:1617
+#, boost-format
+msgid "Unexpected date period token '%1%'"
+msgstr "Unerwartetes Datums token '%1%'"
+
+#: token.cc:508
+msgid "Unexpected end"
+msgstr "Unerwartetes Ende"
+
+#: times.cc:1613 token.cc:478
+msgid "Unexpected end of expression"
+msgstr "Unerwartetes Ende des Ausdrucks"
+
+#: token.cc:490
+#, boost-format
+msgid "Unexpected end of expression (wanted '%1%')"
+msgstr "Unerwartetes Ende des Ausdrucks (erwartet '%1%')"
+
+#: op.cc:415
+#, boost-format
+msgid "Unexpected expr node '%1%'"
+msgstr "Unerwarteter Knotenausdruck '%1%'"
+
+#: token.cc:484
+#, boost-format
+msgid "Unexpected expression token '%1%'"
+msgstr "Unerwartetes Ausdrucks token '%1%'"
+
+#: token.cc:498
+#, boost-format
+msgid "Unexpected expression token '%1%' (wanted '%2%')"
+msgstr "Unerwartetes Ausruckts token '%1%' (erwartet '%2%')"
+
+#: token.cc:480
+#, boost-format
+msgid "Unexpected symbol '%1%'"
+msgstr "Unerwartetes Symbol '%1%'"
+
+#: token.cc:493
+#, boost-format
+msgid "Unexpected symbol '%1%' (wanted '%2%')"
+msgstr "Unerwartetes Symbol '%1%' (erwartet '%2%')"
+
+#: token.cc:482
+#, boost-format
+msgid "Unexpected value '%1%'"
+msgstr "Unerwarteter Wert '%1%'"
+
+#: token.cc:496
+#, boost-format
+msgid "Unexpected value '%1%' (wanted '%2%')"
+msgstr "Unerwarteter Wert '%1%' (erwartet '%2%')"
+
+#: textual.cc:369
+msgid "Unexpected whitespace at beginning of line"
+msgstr "Unerwartete Leerzeichen am Anfag der Zeile"
+
+#: xact.cc:623
+msgid "Unhandled operator"
+msgstr "Unbehandelter Operator"
+
+#: stats.cc:81
+#, boost-format
+msgid "Unique accounts:        %|1$6|"
+msgstr "Eindeutige Konten:             %|1$6|"
+
+#: stats.cc:78
+#, boost-format
+msgid "Unique payees:          %|1$6|"
+msgstr "Eindeutige Empfänger:          %|1$6|"
+
+#: journal.cc:132
+msgid "Unknown"
+msgstr "Unbekannt"
+
+#: journal.cc:149 journal.cc:152
+#, boost-format
+msgid "Unknown account '%1%'"
+msgstr "Unbekanntes Konto '%1%'"
+
+#: journal.cc:272 journal.cc:275
+#, boost-format
+msgid "Unknown commodity '%1%'"
+msgstr "Unbekannte Commodity '%1%'"
+
+#: op.cc:245
+#, boost-format
+msgid "Unknown identifier '%1%'"
+msgstr "Unbekannter Bezeichner '%1%'"
+
+#: journal.cc:292 journal.cc:295
+#, boost-format
+msgid "Unknown metadata tag '%1%'"
+msgstr "Unbekanntes Metadaten Tag '%1%'"
+
+#: journal.cc:231 journal.cc:234
+#, boost-format
+msgid "Unknown payee '%1%'"
+msgstr "Unbekanntes Empfänger '%1%'"
+
+#: global.cc:244
+#, boost-format
+msgid "Unrecognized command '%1%'"
+msgstr "Unbekanntes Kommando '%1%'"
+
+#: format.cc:240 format.cc:379
+#, boost-format
+msgid "Unrecognized formatting character: %1%"
+msgstr "Nicht erkanntes Formatierungszeichen: %1%"
+
+#: report.h:1032
+#, boost-format
+msgid "Unrecognized truncation style: '%1%'"
+msgstr "Nicht erkannter Kürzungsstil: '%1%'"
+
+#: gpgme.cc:117
+#, boost-format
+msgid "Unsupported encryption type: %1%"
+msgstr "Folgender Veschlüsselungstyp nicht unterstützt: %1%"
+
+#: utils.cc:551
+#, boost-format
+msgid "Unterminated string, expected '%1%'"
+msgstr "Unterminierter Strin, erwartet '%1%'"
+
+#: precmd.cc:137
+msgid "Usage: format TEXT"
+msgstr "Verwendung: format TEXT"
+
+#: precmd.cc:90
+msgid "Usage: parse TEXT"
+msgstr "Verwendung: parse TEXT"
+
+#: precmd.cc:164
+msgid "Usage: period TEXT"
+msgstr "Verwendung: period TEXT"
+
+#: select.cc:102
+msgid "Usage: select TEXT"
+msgstr "Verwendung: select Text"
+
+#: post.cc:684
+msgid "Value"
+msgstr "Wert"
+
+#: timelog.cc:93
+msgid "When multiple check-ins are active, checking out requires an account"
+msgstr "Wenn mehrere check-ins aktive sind, erfordert check-out ein Konto"
+
+#: value.cc:330 value.cc:445
+#, boost-format
+msgid "While adding %1% to %2%:"
+msgstr "Beim Addieren von %1% zu %2%:"
+
+#: value.cc:1344
+#, boost-format
+msgid "While applying 'not' to %1%:"
+msgstr "Beim Anwenden von 'not' auf %1%:"
+
+#: xact.cc:828
+msgid "While applying automated transaction"
+msgstr "Beim Anwenden einer automatisierten Transaktion"
+
+#: value.cc:1374
+#, boost-format
+msgid "While applying is_realzero to %1%:"
+msgstr "Beim Anwenden von is_realzero auf '%1%:"
+
+#: value.cc:1406
+#, boost-format
+msgid "While applying is_zero to %1%:"
+msgstr "Beim Anwenden von is_zero auf %1%:"
+
+#: value.cc:1745
+#, boost-format
+msgid "While attempting to annotate %1%:"
+msgstr "Beim Versuch %1% anzunotieren:"
+
+#: xact.cc:376 xact.cc:459
+msgid "While balancing transaction"
+msgstr "Beim Bilanzieren einer Transaktion"
+
+#: format.cc:443
+msgid "While calculating format expression:"
+msgstr "Beim Berechnen des Formatausdrucks:"
+
+#: op.cc:560
+#, boost-format
+msgid "While calling function '%1% %2%':"
+msgstr "Beim Funktionsaufruf '%1% %2%':"
+
+#: value.cc:306
+#, boost-format
+msgid "While calling number() on %1%:"
+msgstr "Beim Aufruf von number() auf %1%:"
+
+#: value.cc:1713
+#, boost-format
+msgid "While ceiling %1%:"
+msgstr "Beim Aufrunden von %1%:"
+
+#: value.cc:1755
+#, boost-format
+msgid "While checking if %1% has annotations:"
+msgstr "Beim Prüfen, ob %1% Anmerkungen hat:"
+
+#: value.cc:831
+#, boost-format
+msgid "While comparing equality of %1% and %2%:"
+msgstr "Beim Gleichheitsvergleich von %1% und %2%:"
+
+#: value.cc:1078
+#, boost-format
+msgid "While comparing if %1% is greater than %2%:"
+msgstr "Beim Vergleichen ob %1% größer als %2% ist:"
+
+#: value.cc:957
+#, boost-format
+msgid "While comparing if %1% is less than %2%:"
+msgstr "Beim Vergleichen ob %1% kleiner als %2% ist:"
+
+#. TRANSLATORS: This is the beginning of a multipart error message.
+#. It is followed by context about a previous transaction.
+#: journal.cc:437
+msgid "While comparing this previously seen transaction:"
+msgstr "Beim Vergleichen dieser zuvor gesehenen Transaktion:"
+
+#: value.cc:1220
+#, boost-format
+msgid "While converting %1% to an amount:"
+msgstr "Beim Konvertieren von %1% zu einem Wert:"
+
+#: value.cc:1278
+#, boost-format
+msgid "While converting %1%:"
+msgstr "Beim Konvertieren von %1%:"
+
+#: value.cc:745
+#, boost-format
+msgid "While dividing %1% by %2%:"
+msgstr "Beim Dividieren von %1% durch %2%:"
+
+#: expr.cc:140
+msgid "While evaluating value expression:"
+msgstr "Beim Auswerten des Werteausdrucks:"
+
+#: xact.cc:829
+msgid "While extending transaction"
+msgstr "Beim Erweitern einer Transaktion"
+
+#: value.cc:1440
+#, boost-format
+msgid "While finding valuation of %1%:"
+msgstr "Beim Finden der Valuierung von %1%:"
+
+#: value.cc:1690
+#, boost-format
+msgid "While flooring %1%:"
+msgstr "Beim Abrunden von %1%:"
+
+#: filters.h:161
+msgid "While handling posting"
+msgstr "Beim Behandeln des Postings"
+
+#: value.cc:667
+#, boost-format
+msgid "While multiplying %1% with %2%:"
+msgstr "Beim Multiplizieren von %1% mit %2%:"
+
+#: value.cc:1310
+#, boost-format
+msgid "While negating %1%:"
+msgstr "Beim Negieren von %1%:"
+
+#: convert.cc:125
+msgid "While parsing CSV line:"
+msgstr "Beim Parsen der CSV Zeile:"
+
+#: textual.cc:659
+msgid "While parsing automated transaction:"
+msgstr "Beim Parsen der automatisierte Transaktion:"
+
+#: option.cc:98
+#, boost-format
+msgid "While parsing environment variable '%1%'"
+msgstr "Beim Parsen der Umgebungsvariable '%1%'"
+
+#: option.cc:145
+#, boost-format
+msgid "While parsing environment variable option '%1%':"
+msgstr "Beim Parsen des Umgebungsvariableoption '%1%':"
+
+#: convert.cc:122 textual.cc:272
+#, boost-format
+msgid "While parsing file %1%"
+msgstr "Beim Parsen Der Datei %1%"
+
+#: generate.cc:375 generate.cc:381
+#, boost-format
+msgid "While parsing generated transaction (seed %1%):"
+msgstr "Beim Parsen der generierte Transaktion (seed %1%)"
+
+#: option.cc:96
+#, boost-format
+msgid "While parsing option '%1%'"
+msgstr "Beim Parsen der Option '%1%'"
+
+#: textual.cc:706
+msgid "While parsing periodic transaction:"
+msgstr "Beim Parsen der periodischen Transaktion:"
+
+#: textual.cc:1787
+msgid "While parsing posting:"
+msgstr "Beim Parsen des Posting:"
+
+#: textual.cc:2015
+msgid "While parsing transaction:"
+msgstr "Beim Parsen der Transaktion:"
+
+#: expr.cc:311
+#, boost-format
+msgid "While parsing value expression on line %1%:"
+msgstr "Beim Parsen des Werteausdrucks in Zeile %1%:"
+
+#: parser.cc:569
+msgid "While parsing value expression:"
+msgstr "Beim Parsen des Werteausdrucks:"
+
+#: value.cc:1767
+#, boost-format
+msgid "While requesting the annotations of %1%:"
+msgstr "Beim Anfragen der Anmerkungen von %1%:"
+
+#: value.cc:1623
+#, boost-format
+msgid "While rounding %1%:"
+msgstr "Beim Runden von %1%:"
+
+#: value.cc:464 value.cc:585
+#, boost-format
+msgid "While subtracting %1% from %2%:"
+msgstr "Beim Subtrahieren von %1% von %2%:"
+
+#: value.cc:1599
+#, boost-format
+msgid "While taking abs of %1%:"
+msgstr "Beim Entnehmen des absoluten Wertes von %1%:"
+
+#: value.cc:123
+#, boost-format
+msgid "While taking boolean value of %1%:"
+msgstr "Beim Entnehmen des Boolschen Wertes von %1%:"
+
+#: value.cc:1667
+#, boost-format
+msgid "While truncating %1%:"
+msgstr "Beim Kürzen von %1%:"
+
+#: value.cc:1736
+#, boost-format
+msgid "While unrounding %1%:"
+msgstr "Beim rückguangig machen der Rundung von %1%:"
+
+#: draft.cc:73
+msgid "[Posting \"from\"]"
+msgstr "[Posting \"von\"]"
+
+#: draft.cc:74
+msgid "[Posting \"to\"]"
+msgstr "[Posting \"nach\"]"
+
+#: value.cc:1823
+msgid "a balance"
+msgstr "eine Bilanz"
+
+#: value.cc:1813
+msgid "a boolean"
+msgstr "ein Boolean"
+
+#: value.cc:1817
+msgid "a date"
+msgstr "ein Datum"
+
+#: value.cc:1815
+msgid "a date/time"
+msgstr "ein Datum mit Uhrzeit"
+
+#: value.cc:1827
+msgid "a regexp"
+msgstr "ein regulärer Ausdruck"
+
+#: value.cc:1831
+msgid "a scope"
+msgstr "ein Umfang"
+
+#: value.cc:1829
+msgid "a sequence"
+msgstr "eine Sequenz"
+
+#: value.cc:1825
+msgid "a string"
+msgstr "ein String"
+
+#. TRANSLATORS: %1% refers to the full name of the account
+#: account.h:107 views.cc:208
+#, boost-format
+msgid "account %1%"
+msgstr "Konto %1%"
+
+#: times.cc:1538
+msgid "ago"
+msgstr "vor"
+
+#: value.cc:1821
+msgid "an amount"
+msgstr "ein Betrag"
+
+#: value.cc:1834
+msgid "an expr"
+msgstr "ein Ausdruck"
+
+#: value.cc:1819
+msgid "an integer"
+msgstr "eine ganzzahlige Zahl"
+
+#: value.cc:1836
+msgid "an object"
+msgstr "ein Objekt"
+
+#: value.cc:1811
+msgid "an uninitialized value"
+msgstr "ein uninitialisierter Wert"
+
+#: global.h:135
+msgid "and with Python support"
+msgstr "und mit Unterstützung für Python"
+
+#: global.h:137
+msgid "and without Python support"
+msgstr "und ohne Unterstützung für Python"
+
+#: times.cc:216
+msgid "apr"
+msgstr "Apr"
+
+#: times.cc:216
+msgid "april"
+msgstr "April"
+
+#: times.cc:224
+msgid "aug"
+msgstr "Aug"
+
+#: times.cc:224
+msgid "august"
+msgstr "August"
+
+#: xact.h:179
+#, boost-format
+msgid "automated transaction at line %1%"
+msgstr "automatische Transaktion in Zeile %1%"
+
+#: times.cc:1576
+msgid "bimonthly"
+msgstr "halbmonatlich"
+
+#: times.cc:1580
+msgid "biweekly"
+msgstr "zweiwöchentlich"
+
+#: textual.cc:1138
+#, boost-format
+msgid ""
+"commodity directive symbol %1% and format directive symbol %2% should be the "
+"same"
+msgstr ""
+"Das commodity Direktive Symbol %1% und das format Direktive Symbol %2% "
+"sollten übereinstimmen"
+
+#: report.h:142
+msgid "current report"
+msgstr "aktueller Bericht"
+
+#: session.h:82
+msgid "current session"
+msgstr "aktuelle Sitzung"
+
+#: times.cc:1584
+msgid "daily"
+msgstr "täglich"
+
+#: times.cc:1570
+msgid "day"
+msgstr "Tag"
+
+#: times.cc:1594
+msgid "days"
+msgstr "Tage"
+
+#: times.cc:232
+msgid "dec"
+msgstr "Dez"
+
+#: times.cc:232
+msgid "december"
+msgstr "Dezember"
+
+#: times.cc:1417 times.cc:1436
+#, boost-format
+msgid "duration: %1%"
+msgstr "Dauer: %1%"
+
+#: times.cc:1554
+msgid "every"
+msgstr "jede"
+
+#: times.cc:212
+msgid "feb"
+msgstr "Feb"
+
+#: times.cc:212
+msgid "february"
+msgstr "Februar"
+
+#: times.cc:199
+msgid "fri"
+msgstr "Fr"
+
+#: times.cc:199
+msgid "friday"
+msgstr "Freitag"
+
+#: times.cc:1542
+msgid "from"
+msgstr "von"
+
+#: xact.h:182
+msgid "generated automated transaction"
+msgstr "generierte automatische Transaktion"
+
+#: xact.h:225
+msgid "generated periodic transaction"
+msgstr "generierte periodische Transaktion"
+
+#: post.h:119
+msgid "generated posting"
+msgstr "generiertes Posting"
+
+#: xact.h:120
+msgid "generated transaction"
+msgstr "generierte Transaktion"
+
+#: global.h:66
+msgid "global scope"
+msgstr "globaler Umfang"
+
+#: times.cc:1540
+msgid "hence"
+msgstr "daher"
+
+#: times.cc:1546
+msgid "in"
+msgstr "in"
+
+#: times.cc:210
+msgid "jan"
+msgstr "Jan"
+
+#: times.cc:210
+msgid "january"
+msgstr "Januar"
+
+#: times.cc:222
+msgid "jul"
+msgstr "Jul"
+
+#: times.cc:222
+msgid "july"
+msgstr "Juli"
+
+#: times.cc:220
+msgid "jun"
+msgstr "Jun"
+
+#: times.cc:220
+msgid "june"
+msgstr "Juni"
+
+#: times.cc:1552
+msgid "last"
+msgstr "letzte"
+
+#: times.cc:214
+msgid "mar"
+msgstr "Mär"
+
+#: times.cc:214
+msgid "march"
+msgstr "März"
+
+#: times.cc:218
+msgid "may"
+msgstr "Mai"
+
+#: times.cc:191
+msgid "mon"
+msgstr "Mo"
+
+#: times.cc:191
+msgid "monday"
+msgstr "Montag"
+
+#: times.cc:1566
+msgid "month"
+msgstr "Monat"
+
+#: times.cc:1578
+msgid "monthly"
+msgstr "monatlich"
+
+#: times.cc:1590
+msgid "months"
+msgstr "Monate"
+
+#: times.cc:1550
+msgid "next"
+msgstr "nächste"
+
+#: times.cc:230
+msgid "nov"
+msgstr "Nov"
+
+#: times.cc:230
+msgid "november"
+msgstr "November"
+
+#: times.cc:228
+msgid "oct"
+msgstr "Okt"
+
+#: times.cc:228
+msgid "october"
+msgstr "Oktober"
+
+#: xact.h:222
+#, boost-format
+msgid "periodic transaction at line %1%"
+msgstr "periodische Transaktion in Zeile %1%"
+
+#: post.h:116
+#, boost-format
+msgid "posting at line %1%"
+msgstr "Posting in Zeile %1%"
+
+#: times.cc:1564
+msgid "quarter"
+msgstr "Vierteljahr"
+
+#: times.cc:1574
+msgid "quarterly"
+msgstr "vierteljährlich"
+
+#: times.cc:1588
+msgid "quarters"
+msgstr "Vierteljahre"
+
+#: times.cc:201
+msgid "sat"
+msgstr "Sa"
+
+#: times.cc:201
+msgid "saturday"
+msgstr "Samstag"
+
+#: times.cc:226
+msgid "sep"
+msgstr "Sep"
+
+#: times.cc:226
+msgid "september"
+msgstr "September"
+
+#: times.cc:1542
+msgid "since"
+msgstr "seit"
+
+#: times.cc:189
+msgid "sun"
+msgstr "So"
+
+#: times.cc:189
+msgid "sunday"
+msgstr "Sonntag"
+
+#: textual.cc:95
+msgid "textual parser"
+msgstr "textueller Parse"
+
+#: times.cc:1548
+msgid "this"
+msgstr "diese"
+
+#: times.cc:197
+msgid "thu"
+msgstr "Do"
+
+#: times.cc:197
+msgid "thursday"
+msgstr "Donnerstag"
+
+#: times.cc:1544
+msgid "to"
+msgstr "für"
+
+#. TRANSLATORS: This is the end of a multipart error message.
+#. It is followed by context about following transaction.
+#: journal.cc:443
+msgid "to this later transaction:"
+msgstr "zu dieser nachfolgenden Transaktion:"
+
+#: times.cc:1556
+msgid "today"
+msgstr "heute"
+
+#: times.cc:1558
+msgid "tomorrow"
+msgstr "morgen"
+
+#: xact.h:117
+#, boost-format
+msgid "transaction at line %1%"
+msgstr "Transaktoni in Zeile %1%"
+
+#: times.cc:193
+msgid "tue"
+msgstr "Di"
+
+#: times.cc:193
+msgid "tuesday"
+msgstr "Dienstag"
+
+#: times.cc:1544
+msgid "until"
+msgstr "bis"
+
+#: times.cc:195
+msgid "wed"
+msgstr "Mi"
+
+#: times.cc:195
+msgid "wednesday"
+msgstr "Mittwoch"
+
+#: times.cc:1568
+msgid "week"
+msgstr "Woche"
+
+#: times.cc:1582
+msgid "weekly"
+msgstr "wöchentlich"
+
+#: times.cc:1592
+msgid "weeks"
+msgstr "wochen"
+
+#: global.h:129
+msgid "with support for gpg encrypted journals"
+msgstr "mit Unterstützung für gpg verschlüsselte Journale"
+
+#: global.h:131
+msgid "without support for gpg encrypted journals"
+msgstr "ohne Unterstützung für gpg verschlüsselte Journale"
+
+#: times.cc:1562
+msgid "year"
+msgstr "Jahr"
+
+#: times.cc:1572
+msgid "yearly"
+msgstr "jährlich"
+
+#: times.cc:1586
+msgid "years"
+msgstr "Jahre"
+
+#: times.cc:1560
+msgid "yesterday"
+msgstr "gestern"
