@@ -249,6 +249,8 @@ object python_interpreter_t::import_option(const string& str)
   }
   catch (const error_already_set&) {
     PyErr_Print();
+    // TRANSLATORS: This is a Python API related error message.
+    // %1% indicates the name of the module that failed to import
     throw_(std::runtime_error, _f("Python failed to import: %1%") % str);
   }
   catch (...) {

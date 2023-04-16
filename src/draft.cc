@@ -46,50 +46,65 @@ namespace ledger {
 void draft_t::xact_template_t::dump(std::ostream& out) const
 {
   if (date)
-    out << _("Date:       ") << *date << std::endl;
+    out << _f("Date:       %1%") % *date << std::endl;
   else
     out << _("Date:       <today>") << std::endl;
 
   if (code)
-    out << _("Code:       ") << *code << std::endl;
+    out << _f("Code:       %1%") % *code << std::endl;
   if (note)
-    out << _("Note:       ") << *note << std::endl;
+    out << _f("Note:       %1%") % *note << std::endl;
 
   if (payee_mask.empty())
     out << _("Payee mask: INVALID (template expression will cause an error)")
         << std::endl;
   else
-    out << _("Payee mask: ") << payee_mask << std::endl;
+    out << _f("Payee mask: %1%") % payee_mask << std::endl;
 
   if (posts.empty()) {
     out << std::endl
         << _("<Posting copied from last related transaction>")
         << std::endl;
   } else {
+    const char* indent = "  ";
     foreach (const post_template_t& post, posts) {
       out << std::endl
-          << _f("[Posting \"%1%\"]") % (post.from ? _("from") : _("to"))
+          << (post.from
+              ? _("[Posting \"from\"]")
+              : _("[Posting \"to\"]"))
           << std::endl;
 
       if (post.account_mask)
-        out << _("  Account mask: ") << *post.account_mask << std::endl;
+        out << indent << _f("Account mask: %1%") % *post.account_mask
+            << std::endl;
       else if (post.from)
-        out << _("  Account mask: <use last of last related accounts>") << std::endl;
+        out << indent << _("Account mask: <use last of last related accounts>")
+            << std::endl;
       else
-        out << _("  Account mask: <use first of last related accounts>") << std::endl;
+        out << indent << _("Account mask: <use first of last related accounts>")
+            << std::endl;
 
       if (post.amount)
-        out << _("  Amount:       ") << *post.amount << std::endl;
+        out << indent << _f("Amount:       %1%") % *post.amount << std::endl;
 
       if (post.cost)
-        out << _("  Cost:         ") << *post.cost_operator
-            << " " << *post.cost << std::endl;
+        // TRANSLATORS:
+        // %1% signifies the cost operator of the post
+        // %2% signifies the cost the post
+        out << indent << _f("Cost:         %1% %2%")
+                          % *post.cost_operator % *post.cost
+            << std::endl;
     }
   }
 }
 
 void draft_t::parse_args(const value_t& args)
 {
+  // TRANSLATORS: This is a regular expression to match numerical dates, e.g.
+  // 2003-09-29. In case you are unfamiliar with regular expressions please
+  // reach out to the Ledger developers and maintainers to work with them
+  // on writing a regular expression suitable for the date formats of the
+  // language you are translating.
   regex  date_mask(_("([0-9]+(?:[-/.][0-9]+)?(?:[-/.][0-9]+))?"));
   smatch what;
   bool   check_for_date = true;

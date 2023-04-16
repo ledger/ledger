@@ -390,8 +390,11 @@ int amount_t::compare(const amount_t& amt) const
 
   if (has_commodity() && amt.has_commodity() && commodity() != amt.commodity()) {
     throw_(amount_error,
-           _f("Cannot compare amounts with different commodities: '%1%' and '%2%'")
-           % commodity() % amt.commodity());
+        // TRANSLATORS: This is an error message when comparing two amounts.
+        // %1% refers to this amount's commodity
+        // %2% refers to the other amount's commodity that is being compared
+        _f("Cannot compare amounts with different commodities: '%1%' and '%2%'")
+         % commodity() % amt.commodity());
   }
 
   return mpq_cmp(MP(quantity), MP(amt.quantity));
@@ -416,17 +419,23 @@ amount_t& amount_t::operator+=(const amount_t& amt)
 
   if (! quantity || ! amt.quantity) {
     if (quantity)
+      // TRANSLATORS: This is an error message when adding two amounts.
       throw_(amount_error, _("Cannot add an uninitialized amount to an amount"));
     else if (amt.quantity)
+      // TRANSLATORS: This is an error message when adding two amounts.
       throw_(amount_error, _("Cannot add an amount to an uninitialized amount"));
     else
+      // TRANSLATORS: This is an error message when adding two amounts.
       throw_(amount_error, _("Cannot add two uninitialized amounts"));
   }
 
   if (has_commodity() && amt.has_commodity() && commodity() != amt.commodity()) {
     throw_(amount_error,
-           _f("Adding amounts with different commodities: '%1%' != '%2%'")
-           % commodity() % amt.commodity());
+        // TRANSLATORS: This is an error message when adding two amounts.
+        // %1% refers to this amount's commodity
+        // %2% refers to the other amount's commodity that is being compared
+        _f("Adding amounts with different commodities: '%1%' != '%2%'")
+         % commodity() % amt.commodity());
   }
 
   _dup();
@@ -455,8 +464,11 @@ amount_t& amount_t::operator-=(const amount_t& amt)
 
   if (has_commodity() && amt.has_commodity() && commodity() != amt.commodity()) {
     throw_(amount_error,
-           _f("Subtracting amounts with different commodities: '%1%' != '%2%'")
-           % commodity() % amt.commodity());
+        // TRANSLATORS: This is an error message when subtracting two amounts.
+        // %1% refers to this amount's commodity
+        // %2% refers to the other amount's commodity that is being compared
+        _f("Subtracting amounts with different commodities: '%1%' != '%2%'")
+         % commodity() % amt.commodity());
   }
 
   _dup();

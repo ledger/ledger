@@ -575,7 +575,7 @@ string item_context(const item_t& item, const string& desc)
     return empty_string;
 
   std::streamoff len = item.pos->end_pos - item.pos->beg_pos;
-  if (! (len > 0))
+  if (len <= 0)
     return empty_string;
 
   assert(len < 1024 * 1024);
@@ -583,17 +583,26 @@ string item_context(const item_t& item, const string& desc)
   std::ostringstream out;
 
   if (item.pos->pathname.empty()) {
-    out << desc << _(" from streamed input:");
+    // FIXME: Find out what `desc` represents and update comment for translators
+    // TRANSLATORS: %1% signifies desc
+    out << _f("%1% from streamed input:") % desc;
     return out.str();
   }
 
-  out << desc << _(" from \"") << item.pos->pathname.string() << "\"";
+  // FIXME: Find out what `desc` represents and update comment for translators
+  // TRANSLATORS:
+  // %1% signifies desc
+  // %2% signifies a filename
+  out << _f("%1% from \"%2%\"") % desc % item.pos->pathname.string();
 
   if (item.pos->beg_line != item.pos->end_line)
-    out << _(", lines ") << item.pos->beg_line << "-"
-        << item.pos->end_line << ":\n";
+    // TRANSLATORS:
+    // %1% signifies the starting line
+    // %2% signifies the ending line
+    out << _f(", lines %1%-%2%:") % item.pos->beg_line % item.pos->end_line;
   else
-    out << _(", line ") << item.pos->beg_line << ":\n";
+    out << _f(", line %1%:") % item.pos->beg_line;
+  out << std::endl;
 
   print_item(out, item, "> ");
 

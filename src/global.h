@@ -119,28 +119,30 @@ public:
   }
 
   void show_version_info(std::ostream& out) {
-    out <<
-      "Ledger " << Ledger_VERSION_MAJOR << '.' << Ledger_VERSION_MINOR << '.'
-                << Ledger_VERSION_PATCH;
-    if (Ledger_VERSION_PRERELEASE != 0)
-      out << Ledger_VERSION_PRERELEASE;
-    if (Ledger_VERSION_DATE != 0)
-      out << '-' << Ledger_VERSION_DATE;
-    out << _(", the command-line accounting tool");
-    out << _("\nwith");
-#if !HAVE_GPGME
-    out << _("out");
+    std::string version  = Ledger_VERSION;
+    if (strlen(Ledger_VERSION_PRERELEASE))
+      version += "-" Ledger_VERSION_PRERELEASE;
+    out
+      << _f("Ledger %1%, the command-line accounting tool") % version
+      << std::endl
+#if HAVE_GPGME
+      << _("with support for gpg encrypted journals")
+#else
+      << _("without support for gpg encrypted journals")
 #endif
-    out << _(" support for gpg encrypted journals and with");
-#if !HAVE_BOOST_PYTHON
-    out <<_("out");
+      << " "
+#if HAVE_BOOST_PYTHON
+      << _("and with Python support")
+#else
+      << _("and without Python support")
 #endif
-    out << _(" Python support");
-    out <<
-      _("\n\nCopyright (c) 2003-2023, John Wiegley.  All rights reserved.\n\n\
-This program is made available under the terms of the BSD Public License.\n\
-See LICENSE file included with the distribution for details and disclaimer.");
-    out << std::endl;
+      << std::endl << std::endl
+      << _f("Copyright (c) 2003-2023, %1%.  All rights reserved.")
+         % proper_name("John Wiegley")
+      << std::endl << std::endl
+      << _("This program is made available under the terms of the BSD Public License.\n"
+           "See LICENSE file included with the distribution for details and disclaimer.")
+      << std::endl;
   }
 
   void report_options(report_t& report, std::ostream& out);

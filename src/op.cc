@@ -447,7 +447,9 @@ namespace {
       return op;
 
     if (recursion_depth > 256)
-      throw_(value_error, _("Function recursion_depth too deep (> 256)"));
+      // TRANSLATORS: This is an error message where
+      // %1% refers of the maximum allowed recursion depth
+      throw_(value_error, _f("Function recursion_depth too deep (> %1%)") % 256);
 
     // If it's an identifier, look up its definition and see if it's a
     // function.

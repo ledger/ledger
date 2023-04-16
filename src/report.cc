@@ -610,15 +610,22 @@ value_t report_t::fn_get_at(call_scope_t& args)
   }
   else if (! args[0].is_sequence()) {
     throw_(std::runtime_error,
-           _f("Attempting to get argument at index %1% from %2%")
-           % index % args[0].label());
+        // TRANSLATORS: This is an error message where
+        // %1% indicates the argument index
+        // %2% is the label of the source that is not a sequence as expected
+        _f("Attempting to get argument at index %1% from %2%")
+         % index % args[0].label());
   }
 
   value_t::sequence_t& seq(args[0].as_sequence_lval());
   if (index >= seq.size())
     throw_(std::runtime_error,
-           _f("Attempting to get index %1% from %2% with %3% elements")
-           % index % args[0].label() % seq.size());
+        // TRANSLATORS: This is an error message where
+        // %1% indicates the argument index
+        // %2% is the label of the source that has fewer elements than the requested index
+        // %2% is the number of elements in the source
+         _f("Attempting to get index %1% from %2% with %3% elements")
+         % index % args[0].label() % seq.size());
 
   return seq[index];
 }

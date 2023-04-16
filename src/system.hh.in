@@ -56,6 +56,7 @@
 #define Ledger_VERSION_PATCH     @Ledger_VERSION_PATCH@
 #define Ledger_VERSION_PRERELEASE "@Ledger_VERSION_PRERELEASE@"
 #define Ledger_VERSION_DATE      @Ledger_VERSION_DATE@
+#define Ledger_VERSION           "@Ledger_VERSION@"
 
 #define HAVE_GETTEXT             @HAVE_GETTEXT@
 
@@ -197,10 +198,17 @@
 #if HAVE_GETTEXT
 #include <libintl.h>
 #define _(str) gettext(str)
+#define _n(str1, str2, n) ngettext(str1, str2, n)
+// See the gettext manual, section Names for details about proper_name
+// (https://www.gnu.org/software/gettext/manual/gettext.html#Names)
+#define proper_name(str) _(str)
 #else
 #define _(str) str
+#define _n(str1, str2, n) (n==1 ? str1 : str2)
+#define proper_name(str) str
 #endif
 #define _f(str) boost::format(_(str))
+#define _fn(str1, str2, n) boost::format(_n(str1, str2, n))
 
 #include <boost/ptr_container/ptr_deque.hpp>
 

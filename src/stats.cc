@@ -55,61 +55,58 @@ value_t report_statistics(call_scope_t& args)
   assert(is_valid(statistics.earliest_post));
   assert(is_valid(statistics.latest_post));
 
-  out << format(_f("Time period: %1% to %2% (%3% days)")
-                % format_date(statistics.earliest_post)
-                % format_date(statistics.latest_post)
-                % (statistics.latest_post -
-                   statistics.earliest_post).days())
+  const int days = (statistics.latest_post - statistics.earliest_post).days();
+  // TRANSLATORS:
+  // %1% signifies the start date,
+  // %2% signifies the end date
+  // %3% signifies the number of days from start to end date.
+  out << _fn("Time period: %1% to %2% (%3% day)",
+             "Time period: %1% to %2% (%3% days)",
+             days)
+             % format_date(statistics.earliest_post)
+             % format_date(statistics.latest_post)
+             % days
       << std::endl << std::endl;
 
-  out << _("  Files these postings came from:") << std::endl;
-
+  const char* indent = "  ";
+  out << indent << _("Files these postings came from:") << std::endl;
   foreach (const path& pathname, statistics.filenames)
     if (! pathname.empty())
-      out << "    " << pathname.string() << std::endl;
+      out << indent << indent << pathname.string() << std::endl;
   out << std::endl;
 
-  out << _("  Unique payees:          ");
-  out.width(6);
-  out << statistics.payees_referenced.size() << std::endl;
+  out << indent << _f("Unique payees:          %|1$6|")
+          % statistics.payees_referenced.size() << std::endl;
 
-  out << _("  Unique accounts:        ");
-  out.width(6);
-  out << statistics.accounts_referenced.size() << std::endl;
-
-  out << std::endl;
-
-  out << _("  Number of postings:     ");
-  out.width(6);
-  out << statistics.posts_count;
-
-  out << " (";
-  out.precision(2);
-  out << (double(statistics.posts_count)/
-          double((statistics.latest_post - statistics.earliest_post).days()))
-      << _(" per day)") << std::endl;
-
-  out << _("  Uncleared postings:     ");
-  out.width(6);
-  out << (statistics.posts_count -
-                        statistics.posts_cleared_count) << std::endl;
+  out << indent << _f("Unique accounts:        %|1$6|")
+          % statistics.accounts_referenced.size() << std::endl;
 
   out << std::endl;
 
-  out << _("  Days since last post:   ");
-  out.width(6);
-  out << (CURRENT_DATE() - statistics.latest_post).days()
+  out << indent << _f("Number of postings:     %|1$6| (%|2$.2| per day)")
+    % statistics.posts_count
+    % (double(statistics.posts_count)/double(days))
+    << std::endl;
+
+  out << indent << _f("Uncleared postings:     %|1$6|")
+          % (statistics.posts_count - statistics.posts_cleared_count)
       << std::endl;
 
-  out << _("  Posts in last 7 days:   ");
-  out.width(6);
-  out << statistics.posts_last_7_count << std::endl;
-  out << _("  Posts in last 30 days:  ");
-  out.width(6);
-  out << statistics.posts_last_30_count << std::endl;
-  out << _("  Posts seen this month:  ");
-  out.width(6);
-  out << statistics.posts_this_month_count << std::endl;
+  out << std::endl;
+
+  out << indent << _f("Days since last post:   %|1$6|")
+          % (CURRENT_DATE() - statistics.latest_post).days()
+      << std::endl;
+
+  out << indent << _f("Posts in last 7 days:   %|1$6|") % statistics.posts_last_7_count
+      << std::endl;
+
+  out << indent << _f("Posts in last 30 days:  %|1$6|") % statistics.posts_last_30_count
+      << std::endl;
+
+  out << indent << _f("Posts seen this month:  %|1$6|")
+          % statistics.posts_this_month_count
+      << std::endl;
 
   out.flush();
 

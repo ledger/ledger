@@ -103,7 +103,8 @@ public:
   virtual ~account_t();
 
   virtual string description() {
-    return string(_("account ")) + fullname();
+    // TRANSLATORS: %1% refers to the full name of the account
+    return (_f("account %1%") % fullname()).str();
   }
 
   operator string() const {

@@ -315,10 +315,20 @@ void journal_t::register_metadata(const string& key, const value_t& value,
       if (! (*i).second.first.calc(val_scope).to_boolean()) {
         if ((*i).second.second == expr_t::EXPR_ASSERTION)
           throw_(parse_error,
-                 _f("Metadata assertion failed for (%1%: %2%): %3%")
-                 % key % value % (*i).second.first);
+              // FIXME: Find out what `(*i).second.first` represents and update comment for translators
+              // TRANSLATORS: This is an error message.
+              // %1% refers to the key of the metadata
+              // %2% refers to the value of the metadata
+              // %3% [Unknown]
+              _f("Metadata assertion failed for (%1%: %2%): %3%")
+               % key % value % (*i).second.first);
         else
           current_context->warning
+              // FIXME: Find out what `(*i).second.first` represents and update comment for translators
+              // TRANSLATORS: This is an warning message.
+              // %1% refers to the key of the metadata
+              // %2% refers to the value of the metadata
+              // %3% [Unknown]
             (_f("Metadata check failed for (%1%: %2%): %3%")
              % key % value % (*i).second.first);
       }
@@ -420,16 +430,22 @@ bool journal_t::add_xact(xact_t * xact)
                               other_posts.begin(), is_equivalent_posting);
 
       if (! match || this_posts.size() != other_posts.size()) {
+        // TOODO: Can this be refactored, so that the following can be used?
+        // _f("While comparing…: %1% to this later transaction: %2%") % …
+        // TRANSLATORS: This is the beginning of a multipart error message.
+        // It is followed by context about a previous transaction.
         add_error_context(_("While comparing this previously seen transaction:"));
         add_error_context(source_context(other->pos->pathname,
                                          other->pos->beg_pos,
                                          other->pos->end_pos, "> "));
+        // TRANSLATORS: This is the end of a multipart error message.
+        // It is followed by context about following transaction.
         add_error_context(_("to this later transaction:"));
         add_error_context(source_context(xact->pos->pathname,
                                          xact->pos->beg_pos,
                                          xact->pos->end_pos, "> "));
         throw_(std::runtime_error,
-               _f("Transactions with the same UUID must have equivalent postings"));
+               _("Transactions with the same UUID must have equivalent postings"));
       }
 
       xact->journal = NULL;

@@ -1407,14 +1407,14 @@ void date_interval_t::dump(std::ostream& out)
   out << _("--- Before stabilization ---") << std::endl;
 
   if (range)
-    out << _("   range: ") << range->to_string() << std::endl;
+    out << _f("   range: %1%") % range->to_string() << std::endl;
   if (start)
-    out << _("   start: ") << format_date(*start) << std::endl;
+    out << _f("   start: %1%") % format_date(*start) << std::endl;
   if (finish)
-    out << _("  finish: ") << format_date(*finish) << std::endl;
+    out << _f("  finish: %1%") % format_date(*finish) << std::endl;
 
   if (duration)
-    out << _("duration: ") << duration->to_string() << std::endl;
+    out << _f("duration: %1%") % duration->to_string() << std::endl;
 
   optional<date_t> when(begin());
   if (! when)
@@ -1426,14 +1426,14 @@ void date_interval_t::dump(std::ostream& out)
       << _("--- After stabilization ---") << std::endl;
 
   if (range)
-    out << _("   range: ") << range->to_string() << std::endl;
+    out << _f("   range: %1%") % range->to_string() << std::endl;
   if (start)
-    out << _("   start: ") << format_date(*start) << std::endl;
+    out << _f("   start: %1%") % format_date(*start) << std::endl;
   if (finish)
-    out << _("  finish: ") << format_date(*finish) << std::endl;
+    out << _f("  finish: %1%") % format_date(*finish) << std::endl;
 
   if (duration)
-    out << _("duration: ") << duration->to_string() << std::endl;
+    out << _f("duration: %1%") % duration->to_string() << std::endl;
 
   out << std::endl
       << _("--- Sample dates in range (max. 20) ---") << std::endl;
