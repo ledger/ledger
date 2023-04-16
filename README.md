@@ -63,7 +63,7 @@ Dependency  | Version (or greater)
 [Gmp]       | 6.1.2
 [Mpfr]      | 4.0.2
 [utfcpp]    | 3.2.3
-[gettext]   | 0.17 _optional_
+[gettext]   | 0.20.1 _optional_
 [libedit]   | 20090111-3.0 _optional_
 [Python]    | 3.9 _optional_
 [Gpgmepp]   | 1.13.1 _optional_
