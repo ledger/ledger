@@ -136,15 +136,9 @@ shared_ptr<Data> decrypted_stream_t::decrypt(shared_ptr<Data> enc_d) {
     ctx = nullptr;
     dec_d = enc_d;
   } else {
-#if GPGME_VERSION_NUMBER < 0x010d00
-    ctx = unique_ptr<Context>(Context::createForProtocol(enc_d->type() == Data::PGPEncrypted
-                                                          ? Protocol::OpenPGP
-                                                          : Protocol::CMS));
-#else
     ctx = Context::create(enc_d->type() == Data::PGPEncrypted
                           ? Protocol::OpenPGP
                           : Protocol::CMS);
-#endif
     if (!ctx)
       throw runtime_error("Unable to establish decryption context");
 
@@ -167,11 +161,7 @@ static inline void init_lib() {
 }
 
 static inline void rewind(Data * d) {
-#if GPGME_VERSION_NUMBER < 0x010c00
-  d->seek(0, SEEK_SET);
-#else
   d->rewind();
-#endif
 }
 
 istream* decrypted_stream_t::open_stream(const path& filename) {
