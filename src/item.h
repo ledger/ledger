@@ -134,9 +134,11 @@ public:
   }
 
   string id() const {
-    if (optional<value_t> ref = get_tag(_("UUID"))) {
+    if (optional<value_t> ref = get_tag(_("UUID")))
       return ref->to_string();
-    } else {
+    else if (optional<value_t> ref = get_tag("UUID"))
+      return ref->to_string();
+    else {
       std::ostringstream buf;
       buf << seq();
       return buf.str();

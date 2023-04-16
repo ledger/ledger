@@ -1961,8 +1961,12 @@ xact_t * instance_t::parse_xact(char *          line,
       reveal_context = false;
 
       if (!last_post) {
-        if (xact->has_tag(_("UUID"))) {
-          string uuid = xact->get_tag(_("UUID"))->to_string();
+        string uuid;
+        if (xact->has_tag(_("UUID")))
+          uuid = xact->get_tag(_("UUID"))->to_string();
+        else if (xact->has_tag("UUID"))
+          uuid = xact->get_tag("UUID")->to_string();
+        if (!uuid.empty()) {
           foreach (payee_uuid_mapping_t value, context.journal->payee_uuid_mappings) {
             if (value.first.compare(uuid) == 0) {
               xact->payee = value.second;
