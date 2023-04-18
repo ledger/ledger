@@ -160,10 +160,6 @@ static inline void init_lib() {
     throw_(runtime_error, _f("%1%: %2%") % err.source() % err.asString());
 }
 
-static inline void rewind(Data * d) {
-  d->rewind();
-}
-
 istream* decrypted_stream_t::open_stream(const path& filename) {
   init_lib();
 
@@ -171,7 +167,7 @@ istream* decrypted_stream_t::open_stream(const path& filename) {
   auto enc_d = setup_cipher_buffer(file.get());
   if (is_encrypted(enc_d)) {
     auto dec_d = decrypt(enc_d);
-    rewind(dec_d.get());
+    dec_d.get()->rewind();
     return new decrypted_stream_t(dec_d);
   }
   return new ifstream(filename);
@@ -184,7 +180,7 @@ decrypted_stream_t::decrypted_stream_t(path& filename)
   file = open_file(filename);
   auto enc_d = setup_cipher_buffer(file);
   dec_d = decrypt(enc_d);
-  rewind(dec_d.get());
+  dec_d.get()->rewind();
 
   if (is_encrypted(enc_d)) {
     fclose(file);
