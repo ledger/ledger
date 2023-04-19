@@ -68,6 +68,8 @@
 /* System includes                                                        */
 /*------------------------------------------------------------------------*/
 
+#include "utf8.h"
+
 #include <algorithm>
 #include <exception>
 #include <typeinfo>
@@ -95,12 +97,14 @@
 #include <cstdlib>
 #include <cstring>
 #include <csignal>
+#include <cstddef> /* needed for gcc 4.9 */
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 #include <io.h>
 #else
 #include <unistd.h>
 #endif
+
 #if HAVE_GETPWUID || HAVE_GETPWNAM
 #include <pwd.h>
 #endif
@@ -114,10 +118,16 @@
 #include <sys/wait.h>
 #endif
 
-#include <cstddef> /* needed for gcc 4.9 */
+#if HAVE_GETTEXT
+#include <libintl.h>
+#define _(str) gettext(str)
+#else
+#define _(str) str
+#endif
+#define _f(str) boost::format(_(str))
+
 #include <gmp.h>
 #include <mpfr.h>
-#include "utf8.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/any.hpp>
@@ -180,25 +190,12 @@
 #include <boost/variant.hpp>
 #include <boost/version.hpp>
 
-#if HAVE_GETTEXT
-#include <libintl.h>
-#define _(str) gettext(str)
-#else
-#define _(str) str
-#endif
-#define _f(str) boost::format(_(str))
-
 #include <boost/ptr_container/ptr_deque.hpp>
 
 #if HAVE_BOOST_PYTHON
-
 #include <boost/python.hpp>
-
 #include <boost/python/detail/wrap_python.hpp>
-
 #include <boost/python/module_init.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-
 #include <boost/iterator/indirect_iterator.hpp>
-
 #endif // HAVE_BOOST_PYTHON
