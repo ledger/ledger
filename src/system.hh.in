@@ -64,9 +64,6 @@
 #cmakedefine01 HAVE_BOOST_REGEX_UNICODE
 #cmakedefine01 HAVE_BOOST_NOWIDE
 
-#cmakedefine01 DEBUG_MODE
-#cmakedefine01 NO_ASSERTS
-
 /*------------------------------------------------------------------------*/
 /* System includes                                                        */
 /*------------------------------------------------------------------------*/

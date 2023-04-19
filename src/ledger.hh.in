@@ -50,6 +50,9 @@
  */
 /*@{*/
 
+#cmakedefine01 DEBUG_MODE
+#cmakedefine01 NO_ASSERTS
+
 #if DEBUG_MODE
 #define DEBUG_ON    1
 #define VERIFY_ON   1
