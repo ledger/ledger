@@ -56,7 +56,7 @@ void report_t::normalize_options(const string& verb)
   // Patch up some of the reporting options based on what kind of
   // command it was.
 
-#ifdef HAVE_ISATTY
+#if HAVE_ISATTY
   if (! HANDLED(force_color)) {
     if (! HANDLED(no_color) && isatty(STDOUT_FILENO))
       HANDLER(color).on("?normalize");
@@ -183,14 +183,14 @@ void report_t::normalize_options(const string& verb)
   }
 
   long cols = 0;
-#ifdef HAVE_IOCTL
+#if HAVE_IOCTL
   struct winsize ws;
 #endif
   if (HANDLED(columns_))
     cols = lexical_cast<long>(HANDLER(columns_).value);
   else if (const char * columns = std::getenv("COLUMNS"))
     cols = lexical_cast<long>(columns);
-#ifdef HAVE_IOCTL
+#if HAVE_IOCTL
   else if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1)
       cols = ws.ws_col;
 #endif

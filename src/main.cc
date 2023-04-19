@@ -39,7 +39,7 @@
 #include <boost/nowide/args.hpp>
 #endif
 
-#ifdef HAVE_EDIT
+#if HAVE_EDIT
 #include <editline/readline.h>
 #endif
 
@@ -137,7 +137,7 @@ int main(int argc, char * argv[], char * envp[])
 
       bool exit_loop = false;
 
-#ifdef HAVE_EDIT
+#if HAVE_EDIT
       rl_readline_name = const_cast<char *>("Ledger");
       // TODO: rl_attempted_completion_function = ledger_completion;
 
@@ -178,7 +178,7 @@ int main(int argc, char * argv[], char * envp[])
             global_scope->execute_command_wrapper(split_arguments(p), true);
         }
 
-#ifdef HAVE_EDIT
+#if HAVE_EDIT
         if (expansion)
           std::free(expansion);
         std::free(p);

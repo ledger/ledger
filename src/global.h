@@ -37,6 +37,7 @@
  */
 #pragma once
 
+#include <ledger.hh>
 #include "option.h"
 #include "report.h"
 

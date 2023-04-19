@@ -806,7 +806,7 @@ public:
   OPTION(report_t, output_); // -o
 
 // setenv() is not available on WIN32
-#if defined(HAVE_ISATTY) and !defined(_WIN32) and !defined(__CYGWIN__)
+#if HAVE_ISATTY and !defined(_WIN32) and !defined(__CYGWIN__)
   OPTION__
   (report_t, pager_,
    CTOR(report_t, pager_) {
