@@ -31,7 +31,7 @@
 
 #if DOCUMENT_MODEL
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "views.h"
 #include "report.h"

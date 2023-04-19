@@ -41,9 +41,7 @@
  * None of these header files (with the exception of acconf.h, when
  * configure is re-run) are expected to change.
  */
-
-#ifndef INCLUDED_SYSTEM_HH
-#define INCLUDED_SYSTEM_HH
+#pragma once
 
 //#warning("Loading system.hh.  This should occur only once!")
 
@@ -51,37 +49,25 @@
 /* Application configuration                                              */
 /*------------------------------------------------------------------------*/
 
-#define Ledger_VERSION_MAJOR     @Ledger_VERSION_MAJOR@
-#define Ledger_VERSION_MINOR     @Ledger_VERSION_MINOR@
-#define Ledger_VERSION_PATCH     @Ledger_VERSION_PATCH@
-#define Ledger_VERSION_PRERELEASE "@Ledger_VERSION_PRERELEASE@"
-#define Ledger_VERSION_DATE      @Ledger_VERSION_DATE@
-#define Ledger_VERSION           "@Ledger_VERSION@"
+#cmakedefine01 HAVE_EDIT
+#cmakedefine01 HAVE_GETPWUID
+#cmakedefine01 HAVE_GETPWNAM
+#cmakedefine01 HAVE_GETTEXT
+#cmakedefine01 HAVE_IOCTL
+#cmakedefine01 HAVE_ISATTY
 
-#define HAVE_GETTEXT             @HAVE_GETTEXT@
+#cmakedefine01 HAVE_UNIX_PIPES
 
-#cmakedefine HAVE_EDIT
-#cmakedefine HAVE_GETPWUID
-#cmakedefine HAVE_GETPWNAM
-#cmakedefine HAVE_IOCTL
-#cmakedefine HAVE_ISATTY
-
-#define HAVE_UNIX_PIPES          @HAVE_UNIX_PIPES@
-
-#define HAVE_BOOST_PYTHON        @HAVE_BOOST_PYTHON@
-#define HAVE_GPGME               @HAVE_GPGME@
-#define HAVE_BOOST_REGEX_UNICODE @HAVE_BOOST_REGEX_UNICODE@
-#define HAVE_BOOST_NOWIDE        @HAVE_BOOST_NOWIDE@
-
-#define DEBUG_MODE               @DEBUG_MODE@
-#define NO_ASSERTS               @NO_ASSERTS@
-
-#define DOCUMENT_MODEL           0
-#define REDUCE_TO_INTEGER        0
+#cmakedefine01 HAVE_BOOST_PYTHON
+#cmakedefine01 HAVE_GPGME
+#cmakedefine01 HAVE_BOOST_REGEX_UNICODE
+#cmakedefine01 HAVE_BOOST_NOWIDE
 
 /*------------------------------------------------------------------------*/
 /* System includes                                                        */
 /*------------------------------------------------------------------------*/
+
+#include "utf8.h"
 
 #include <algorithm>
 #include <exception>
@@ -110,17 +96,19 @@
 #include <cstdlib>
 #include <cstring>
 #include <csignal>
+#include <cstddef> /* needed for gcc 4.9 */
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 #include <io.h>
 #else
 #include <unistd.h>
 #endif
-#if defined(HAVE_GETPWUID) || defined(HAVE_GETPWNAM)
+
+#if HAVE_GETPWUID || HAVE_GETPWNAM
 #include <pwd.h>
 #endif
 
-#ifdef HAVE_IOCTL
+#if HAVE_IOCTL
 #include <sys/ioctl.h>
 #endif
 
@@ -129,10 +117,12 @@
 #include <sys/wait.h>
 #endif
 
-#include <cstddef> /* needed for gcc 4.9 */
+#if HAVE_GETTEXT
+#include <libintl.h>
+#endif
+
 #include <gmp.h>
 #include <mpfr.h>
-#include "utf8.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/any.hpp>
@@ -195,38 +185,12 @@
 #include <boost/variant.hpp>
 #include <boost/version.hpp>
 
-#if HAVE_GETTEXT
-#include <libintl.h>
-#define _(str) gettext(str)
-#define _n(str1, str2, n) ngettext(str1, str2, n)
-// See the gettext manual, section Names for details about proper_name
-// (https://www.gnu.org/software/gettext/manual/gettext.html#Names)
-#define proper_name(str) _(str)
-#define GETTEXT_DOMAIN           "@GETTEXT_DOMAIN@"
-#define GETTEXT_LOCALE_DIR       "@GETTEXT_LOCALE_DIR@"
-#else
-#define _(str) str
-#define _n(str1, str2, n) (n==1 ? str1 : str2)
-#define proper_name(str) str
-#define GETTEXT_DOMAIN           "ledger"
-#define GETTEXT_LOCALE_DIR       "locale"
-#endif
-#define _f(str) boost::format(_(str))
-#define _fn(str1, str2, n) boost::format(_n(str1, str2, n))
-
 #include <boost/ptr_container/ptr_deque.hpp>
 
 #if HAVE_BOOST_PYTHON
-
 #include <boost/python.hpp>
-
 #include <boost/python/detail/wrap_python.hpp>
-
 #include <boost/python/module_init.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-
 #include <boost/iterator/indirect_iterator.hpp>
-
 #endif // HAVE_BOOST_PYTHON
-
-#endif // INCLUDED_SYSTEM_HH

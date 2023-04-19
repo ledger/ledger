@@ -29,40 +29,67 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ledger.hh>
+/**
+ * @addtogroup util
+ *
+ * @file   ledger.hh
+ * @author John Wiegley
+ */
+#pragma once
 
-#include "pyinterp.h"
+#include <system.hh>
 
-namespace ledger {
+#define Ledger_VERSION_MAJOR     @Ledger_VERSION_MAJOR@
+#define Ledger_VERSION_MINOR     @Ledger_VERSION_MINOR@
+#define Ledger_VERSION_PATCH     @Ledger_VERSION_PATCH@
+#define Ledger_VERSION_PRERELEASE "@Ledger_VERSION_PRERELEASE@"
+#define Ledger_VERSION_DATE      @Ledger_VERSION_DATE@
+#define Ledger_VERSION           "@Ledger_VERSION@"
 
-using namespace boost::python;
+/**
+ * @name Default values
+ */
+/*@{*/
 
-#if 0
-#define EXC_TRANSLATOR(type)                            \
-  void exc_translate_ ## type(const type& err) {        \
-    PyErr_SetString(PyExc_ArithmeticError, err.what()); \
-  }
+#cmakedefine01 DEBUG_MODE
+#cmakedefine01 NO_ASSERTS
 
-//EXC_TRANSLATOR(format_error)
+#if HAVE_GETTEXT
+#define _(str) gettext(str)
+#define _n(str1, str2, n) ngettext(str1, str2, n)
+// See the gettext manual, section Names for details about proper_name
+// (https://www.gnu.org/software/gettext/manual/gettext.html#Names)
+#define proper_name(str) _(str)
+#define GETTEXT_DOMAIN           "@GETTEXT_DOMAIN@"
+#define GETTEXT_LOCALE_DIR       "@GETTEXT_LOCALE_DIR@"
+#else
+#define _(str) str
+#define _n(str1, str2, n) (n==1 ? str1 : str2)
+#define proper_name(str) str
+#define GETTEXT_DOMAIN           "ledger"
+#define GETTEXT_LOCALE_DIR       "locale"
+#endif
+#define _f(str) boost::format(_(str))
+#define _fn(str1, str2, n) boost::format(_n(str1, str2, n))
+
+#if DEBUG_MODE
+#define DEBUG_ON    1
+#define VERIFY_ON   1
+#define TRACING_ON  1
+#elif NO_ASSERTS
+#define DEBUG_ON    0
+#define VERIFY_ON   0
+#define TRACING_ON  0
+#else
+#define DEBUG_ON    0
+#define VERIFY_ON   0
+#define TRACING_ON  1           // use --trace X to enable
 #endif
 
-void export_format()
-{
-#if 0
-  class_< format_t > ("Format")
-    ;
-#endif
+#define LOGGING_ON 1
 
-  //register_optional_to_python<amount_t>();
+#define DOCUMENT_MODEL           0
+#define REDUCE_TO_INTEGER        0
 
-  //implicitly_convertible<string, amount_t>();
+/*@}*/
 
-#if 0
-#define EXC_TRANSLATE(type) \
-  register_exception_translator<type>(&exc_translate_ ## type);
-
-  //EXC_TRANSLATE(format_error);
-#endif
-}
-
-} // namespace ledger

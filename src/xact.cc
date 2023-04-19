@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "xact.h"
 #include "post.h"
@@ -210,7 +210,7 @@ bool xact_base_t::finalize()
   // been set.
 
   if (journal && journal->bucket && posts.size() == 1 && ! balance.is_null()) {
-    null_post = new post_t(journal->bucket, ITEM_GENERATED);
+    null_post = new post_t(journal->bucket, ITEM_INFERRED);
     null_post->_state = (*posts.begin())->_state;
     add_post(null_post);
   }

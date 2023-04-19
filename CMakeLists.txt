@@ -324,12 +324,17 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/src/system.hh.in
   ${PROJECT_BINARY_DIR}/system.hh)
 
+configure_file(
+  ${PROJECT_SOURCE_DIR}/src/ledger.hh.in
+  ${PROJECT_BINARY_DIR}/ledger.hh)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ")
 endif()
 
 add_subdirectory(src)
 add_subdirectory(doc)
+add_subdirectory(contrib)
 add_subdirectory(test)
 
 ########################################################################
