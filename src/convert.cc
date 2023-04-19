@@ -78,9 +78,13 @@ value_t convert_command(call_scope_t& args)
           post->amount.in_place_negate();
       }
 
-      string ref = (xact->has_tag(_("UUID")) ?
-                    xact->get_tag(_("UUID"))->to_string() :
-                    sha1sum(reader.get_last_line()));
+      string ref;
+      if (xact->has_tag(_("UUID")))
+          ref = xact->get_tag(_("UUID"))->to_string();
+      else if (xact->has_tag("UUID"))
+          ref = xact->get_tag("UUID")->to_string();
+      else
+          ref = sha1sum(reader.get_last_line());
 
       checksum_map_t::const_iterator entry = journal.checksum_map.find(ref);
       if (entry != journal.checksum_map.end()) {
@@ -91,8 +95,12 @@ value_t convert_command(call_scope_t& args)
         continue;
       }
 
-      if (report.HANDLED(rich_data) && ! xact->has_tag(_("UUID")))
-        xact->set_tag(_("UUID"), string_value(ref));
+      if (report.HANDLED(rich_data)) {
+        if (! xact->has_tag(_("UUID")))
+          xact->set_tag(_("UUID"), string_value(ref));
+        if (! xact->has_tag("UUID"))
+          xact->set_tag("UUID", string_value(ref));
+      }
 
       if (xact->posts.front()->account == NULL) {
         if (account_t * acct =

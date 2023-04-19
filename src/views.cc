@@ -139,6 +139,8 @@ string r_item_t::payee() const
 {
   if (optional<value_t> desc = get_tag(_("Payee")))
     return desc->as_string();
+  else if (optional<value_t> desc = get_tag("Payee"))
+    return desc->as_string();
   else
     return empty_string;
 }

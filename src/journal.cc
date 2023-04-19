@@ -393,8 +393,12 @@ bool journal_t::add_xact(xact_t * xact)
   // not add this one to the journal.  However, all automated checks
   // will have been performed by extend_xact, so asserts can still be
   // applied to it.
-  if (optional<value_t> ref = xact->get_tag(_("UUID"))) {
-    std::string uuid = ref->to_string();
+  std::string uuid;
+  if (xact->has_tag(_("UUID")))
+      uuid = xact->get_tag(_("UUID"))->to_string();
+  else if (xact->has_tag("UUID"))
+      uuid = xact->get_tag("UUID")->to_string();
+  if (!uuid.empty()) {
     std::pair<checksum_map_t::iterator, bool> result
       = checksum_map.insert(checksum_map_t::value_type(uuid, xact));
     if (! result.second) {

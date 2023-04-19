@@ -126,6 +126,8 @@ string post_t::payee_from_tag() const
 {
   if (optional<value_t> post_payee = get_tag(_("Payee")))
     return post_payee->as_string();
+  else if (optional<value_t> post_payee = get_tag("Payee"))
+    return post_payee->as_string();
   else
     return "";
 }

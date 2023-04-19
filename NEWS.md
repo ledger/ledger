@@ -7,6 +7,8 @@
 
 - docs: Enable stand-alone building
 
+- Add support for Ledger messages in German
+
 - Include contrib files in distribution
 
 - Fix related reports when using bucket transactions (ledger/ledger#2220)
