@@ -86,6 +86,7 @@ public:
 #define ITEM_GENERATED         0x01 // posting was not found in a journal
 #define ITEM_TEMP              0x02 // posting is a managed temporary
 #define ITEM_NOTE_ON_NEXT_LINE 0x04 // did we see a note on the next line?
+#define ITEM_INFERRED          0x08 // bucketed item
 
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 

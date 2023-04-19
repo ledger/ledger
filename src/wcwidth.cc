@@ -63,7 +63,7 @@
  * characters in uint32_t type.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 namespace ledger {
 

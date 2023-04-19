@@ -7,6 +7,10 @@
 
 - docs: Enable stand-alone building
 
+- Include contrib files in distribution
+
+- Fix related reports when using bucket transactions (ledger/ledger#2220)
+
 ## 3.3.2 (2023-03-30)
 
 - Fix divide by zero (ledger/ledger#777, ledger/ledger#2207)

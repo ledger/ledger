@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "journal.h"
 #include "context.h"
@@ -46,7 +46,7 @@
 #endif
 
 #define TIMELOG_SUPPORT 1
-#if defined(TIMELOG_SUPPORT)
+#if TIMELOG_SUPPORT
 #include "timelog.h"
 #endif
 
@@ -79,7 +79,7 @@ namespace {
     instance_t *             parent;
     std::list<application_t> apply_stack;
     bool                     no_assertions;
-#if defined(TIMELOG_SUPPORT)
+#if TIMELOG_SUPPORT
     time_log_t               timelog;
 #endif
 
@@ -138,7 +138,7 @@ namespace {
 
     void read_next_directive(bool& error_flag);
 
-#if defined(TIMELOG_SUPPORT)
+#if TIMELOG_SUPPORT
     void clock_in_directive(char * line, bool capitalized);
     void clock_out_directive(char * line, bool capitalized);
 #endif
@@ -295,7 +295,7 @@ void instance_t::parse()
 
   apply_stack.pop_front();
 
-#if defined(TIMELOG_SUPPORT)
+#if TIMELOG_SUPPORT
   timelog.close();
 #endif // TIMELOG_SUPPORT
 
@@ -405,7 +405,7 @@ void instance_t::read_next_directive(bool& error_flag)
   default:                      // some other directive
     if (! general_directive(line)) {
       switch (line[0]) {
-#if defined(TIMELOG_SUPPORT)
+#if TIMELOG_SUPPORT
       case 'i':
         clock_in_directive(line, false);
         break;
@@ -451,7 +451,7 @@ void instance_t::read_next_directive(bool& error_flag)
   }
 }
 
-#if defined(TIMELOG_SUPPORT)
+#if TIMELOG_SUPPORT
 
 void instance_t::clock_in_directive(char * line, bool capitalized)
 {

@@ -45,29 +45,9 @@
 
 #include <boost/uuid/detail/sha1.hpp>
 
-/**
- * @name Default values
- */
-/*@{*/
+#include <ledger.hh>
 
 #define TIMERS_ON   1
-
-#if DEBUG_MODE
-#define DEBUG_ON    1
-#define VERIFY_ON   1
-#define TRACING_ON  1
-#elif NO_ASSERTS
-#define DEBUG_ON    0
-#define VERIFY_ON   0
-#define TRACING_ON  0
-//#define NO_LOGGING  1
-#else
-#define DEBUG_ON    0
-#define VERIFY_ON   0
-#define TRACING_ON  1           // use --trace X to enable
-#endif
-
-/*@}*/
 
 /**
  * @name Forward declarations
@@ -217,9 +197,6 @@ inline string operator+(const char * left, const string& right) {
  */
 /*@{*/
 
-#if ! defined(NO_LOGGING)
-#define LOGGING_ON 1
-#endif
 #if LOGGING_ON
 
 namespace ledger {
