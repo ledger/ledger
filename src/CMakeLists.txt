@@ -277,7 +277,10 @@ endif()
 
 include(GNUInstallDirs)
 
-if (BUILD_LIBRARY)
+if (SKBUILD)
+  Python_add_library(_${SKBUILD_PROJECT_NAME} MODULE ${LEDGER_SOURCES} WITH_SOABI)
+  add_ledger_library_dependencies(_${SKBUILD_PROJECT_NAME})
+elseif (BUILD_LIBRARY)
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
   add_library(libledger SHARED ${LEDGER_SOURCES})
   add_ledger_library_dependencies(libledger)
@@ -297,9 +300,11 @@ if (BUILD_LIBRARY)
     target_link_libraries(ledger ${Python_LIBRARIES})
   endif()
 
-  install(TARGETS libledger DESTINATION ${CMAKE_INSTALL_LIBDIR})
-  install(FILES ${LEDGER_INCLUDES}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
+  if (NOT SKBUILD)
+    install(TARGETS libledger DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(FILES ${LEDGER_INCLUDES}
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
+  endif()
 else()
   add_executable(ledger ${LEDGER_SOURCES} ${LEDGER_CLI_SOURCES})
   add_ledger_library_dependencies(ledger)
@@ -315,7 +320,9 @@ if (PRECOMPILE_SYSTEM_HH AND (COMMAND target_precompile_headers) AND (CMAKE_BUIL
 endif()
 
 if (USE_PYTHON)
-  if (Python_SITEARCH)
+  if (SKBUILD)
+    install(TARGETS _${SKBUILD_PROJECT_NAME} DESTINATION ${SKBUILD_PROJECT_NAME})
+  elseif (Python_SITEARCH)
     if (WIN32 AND NOT CYGWIN)
       set(_ledger_python_module_name "ledger.pyd")
     elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
@@ -323,7 +330,6 @@ if (USE_PYTHON)
     else()
       set(_ledger_python_module_name "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
     endif()
-
     # FIXME: symlink would be sufficient:
     # maybe using install(CODE "...") and
     # execute_process(COMMAND "${CMAKE_COMMAND}" -E create_symlink ...).
@@ -331,15 +337,18 @@ if (USE_PYTHON)
     add_custom_command(
       TARGET libledger POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      $<TARGET_FILE:libledger> "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}")
+      $<TARGET_FILE:libledger>
+      "${CMAKE_BINARY_DIR}/python/${SKBUILD_PROJECT_NAME}/_${_ledger_python_module_name}")
     install(
-      FILES "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}"
-      DESTINATION ${Python_SITEARCH})
+      FILES "${CMAKE_BINARY_DIR}/python/${SKBUILD_PROJECT_NAME}/_${_ledger_python_module_name}"
+      DESTINATION ${Python_SITEARCH}/${SKBUILD_PROJECT_NAME})
   else()
     message(WARNING "Python_SITEARCH not set. Will not install python module.")
   endif()
 endif()
 
-install(TARGETS ledger DESTINATION ${CMAKE_INSTALL_BINDIR})
+if (NOT SKBUILD)
+  install(TARGETS ledger DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 ### CMakeLists.txt ends here

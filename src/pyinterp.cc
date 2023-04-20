@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "pyinterp.h"
 #include "pyutils.h"
@@ -37,6 +37,8 @@
 #include "report.h"
 #include "xact.h"
 #include "post.h"
+
+extern "C" PyObject* PYINIT_LEDGER();
 
 namespace ledger {
 
@@ -61,8 +63,6 @@ void export_times();
 void export_utils();
 void export_value();
 void export_xact();
-
-extern "C" PyObject* PyInit_ledger();
 
 void initialize_for_python()
 {
@@ -155,7 +155,7 @@ void python_interpreter_t::initialize()
     // interpreter with Py_Finalize when embedded.
     Py_UnbufferedStdioFlag = 1;
     // PyImport_AppendInittab docs: "This should be called before Py_Initialize()".
-    PyImport_AppendInittab((const char*)"ledger", PyInit_ledger);
+    PyImport_AppendInittab((const char*)LEDGER_PYTHON_MODULE_NAME, PYINIT_LEDGER);
 
     Py_Initialize();
     assert(Py_IsInitialized());
@@ -163,7 +163,7 @@ void python_interpreter_t::initialize()
     hack_system_paths();
 
     main_module = import_module("__main__");
-    PyImport_ImportModule("ledger");
+    PyImport_ImportModule(LEDGER_PYTHON_MODULE_NAME);
 
     is_initialized = true;
   }
@@ -192,19 +192,20 @@ void python_interpreter_t::hack_system_paths()
     path pathname(str());
     DEBUG("python.interp", "sys.path = " << pathname);
 
-    if (exists(pathname / "ledger" / "__init__.py")) {
-      if (object module_ledger = import("ledger")) {
+    if (exists(pathname / LEDGER_PYTHON_MODULE_NAME / "__init__.py")) {
+      if (object module_ledger = import(LEDGER_PYTHON_MODULE_NAME)) {
         DEBUG("python.interp",
-              "Setting ledger.__path__ = " << (pathname / "ledger"));
+              "Setting " << std::string(LEDGER_PYTHON_MODULE_NAME) << ".__path__ = "
+              << (pathname / LEDGER_PYTHON_MODULE_NAME));
 
         object ledger_dict = module_ledger.attr("__dict__");
         list temp_list;
-        temp_list.append((pathname / "ledger").string());
+        temp_list.append((pathname / LEDGER_PYTHON_MODULE_NAME).string());
 
         ledger_dict["__path__"] = temp_list;
       } else {
         throw_(std::runtime_error,
-               _("Python failed to initialize (couldn't find ledger)"));
+               _f("Python failed to initialize (couldn't find %1%)") % LEDGER_PYTHON_MODULE_NAME);
       }
 #if DEBUG_ON
       path_initialized = true;

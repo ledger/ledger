@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "pyinterp.h"
 
@@ -39,7 +39,7 @@ namespace ledger {
   extern void initialize_for_python();
 }
 
-BOOST_PYTHON_MODULE(ledger)
+BOOST_PYTHON_MODULE(LEDGER_PYTHON_MODULE)
 {
   using namespace ledger;
 

@@ -7,7 +7,16 @@ set(Required_Gpgmepp_Version 1.13.1)
 
 cmake_minimum_required(VERSION ${Required_CMake_Version})
 
-PROJECT(ledger)
+if (NOT SKBUILD)
+  set(SKBUILD_PROJECT_NAME ledger)
+  set(SKBUILD_PROJECT_VERSION 3.3.2)
+endif()
+
+project(
+  ${SKBUILD_PROJECT_NAME}
+  VERSION ${SKBUILD_PROJECT_VERSION}
+  LANGUAGES C CXX
+  )
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/doc")
 include(LedgerVersion)
@@ -70,7 +79,7 @@ if (USE_PYTHON)
   endif()
 
   find_package(Python
-    COMPONENTS Interpreter Development)
+    COMPONENTS Interpreter Development Development.Module REQUIRED)
   if (PYTHON_FOUND AND ${Python_VERSION} VERSION_GREATER_EQUAL ${Required_Python_Version})
     set(BOOST_PYTHON "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}")
     set(HAVE_BOOST_PYTHON 1)
@@ -264,33 +273,32 @@ find_opt_library_and_header(EDIT_PATH histedit.h EDIT_LIB edit HAVE_EDIT)
 ########################################################################
 
 macro(add_ledger_library_dependencies _target)
-  target_link_libraries(${_target} ${MPFR_LIB})
-  target_link_libraries(${_target} ${GMP_LIB})
+  target_link_libraries(${_target} PRIVATE ${MPFR_LIB} ${GMP_LIB})
   if (HAVE_EDIT)
-    target_link_libraries(${_target} ${EDIT_LIB})
+    target_link_libraries(${_target} PUBLIC ${EDIT_LIB})
   endif()
   if (HAVE_GETTEXT)
-    target_link_libraries(${_target} ${INTL_LIB})
+    target_link_libraries(${_target} PRIVATE ${INTL_LIB})
   endif()
   if (HAVE_GPGME)
-    target_link_libraries(${_target} Gpgmepp)
+    target_link_libraries(${_target} PRIVATE Gpgmepp)
   endif()
   if (HAVE_BOOST_PYTHON)
     if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
       # Don't link directly to a Python framework on macOS, to avoid segfaults
       # when the module is imported from a different interpreter
-      target_link_libraries(${_target} ${Boost_LIBRARIES})
+      target_link_libraries(${_target} PUBLIC ${Boost_LIBRARIES})
       set_target_properties(${_target} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
     else()
-      target_link_libraries(${_target} ${Boost_LIBRARIES} ${Python_LIBRARIES})
+      target_link_libraries(${_target} PUBLIC ${Boost_LIBRARIES} ${Python_LIBRARIES})
     endif()
   else()
-    target_link_libraries(${_target} ${Boost_LIBRARIES})
+    target_link_libraries(${_target} PRIVATE ${Boost_LIBRARIES})
   endif()
   if (HAVE_BOOST_REGEX_UNICODE)
-    target_link_libraries(${_target} icuuc)
+    target_link_libraries(${_target} PRIVATE icuuc)
   endif()
-  target_link_libraries(${_target} ${PROFILE_LIBS})
+  target_link_libraries(${_target} PRIVATE ${PROFILE_LIBS})
 endmacro(add_ledger_library_dependencies _target)
 
 ########################################################################
@@ -324,9 +332,14 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 add_subdirectory(src)
+if (SKBUILD OR USE_PYTHON)
+add_subdirectory(python)
+endif()
+if (NOT SKBUILD)
 add_subdirectory(doc)
 add_subdirectory(contrib)
 add_subdirectory(test)
+endif()
 
 ########################################################################
 

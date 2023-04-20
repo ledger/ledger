@@ -1,0 +1,63 @@
+[project]
+name = "ledger"
+version = "3.3.2"
+requires-python = ">=3.9"
+description = "double-entry accounting system with a command-line reporting interface"
+readme = "README.md"
+authors = [
+  { name = "John Wiegley", email="jwiegley@gmail.com" },
+]
+maintainers = [
+  { name = "John Wiegley", email="jwiegley@gmail.com" },
+  { name = "Alexis Hildebrandt", email="surryhill@gmail.com" },
+]
+license = { file = "LICENSE.md" }
+keywords = ["finance", "double-entry accounting", "command-line"]
+
+# See https://pypi.org/classifiers/
+classifiers = [
+  "Private :: Do Not Upload", # FIXME: Remove prior merging
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Topic :: Office/Business :: Financial :: Accounting",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: C++",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: POSIX :: BSD",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: Microsoft :: Windows",
+]
+
+[project.urls]
+homepage = "https://ledger-cli.org"
+documentation = "https://ledger-cli.org/docs.html"
+repository = "https://git.ledger-cli.org/ledger"
+
+[build-system]
+requires = ["scikit-build-core"]
+build-backend = "scikit_build_core.build"
+
+[tool.scikit-build]
+cmake.minimum-version = "3.16.2"
+sdist.reproducible = true
+#cmake.args = []
+cmake.verbose = false
+#logging.level = "DEBUG"
+ninja.make-fallback = true
+#wheel.py-api = "cp39"
+wheel.expand-macos-universal-tags = true
+wheel.packages = ["python/lpy"]
+strict-config = true
+#build-dir = "__skbuild"
+
+#sdist.include = ["src/some_generated_file.txt"]
+sdist.exclude = [ "*.nix", "*.lock", "contrib", "tools", "build*", "dist" ]
+
+[tool.scikit-build.cmake.define]
+USE_PYTHON = "ON"
+USE_GPGME = "ON"
