@@ -160,6 +160,11 @@ if (BUILD_WEB_DOCS)
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
       VERBATIM)
     list(APPEND ledger_doc_files ledger.1.html)
+    add_custom_command(OUTPUT ledger.1.pdf
+      COMMAND ${BASH} -c "${_cmd} -mandoc -Tpdf ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 > ledger.1.pdf"
+      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
+      VERBATIM)
+    list(APPEND ledger_doc_files ledger.1.pdf)
   else()
     message(FATAL_ERROR "Could not find man2html or groff. HTML version of man page cannot be built.")
   endif()
