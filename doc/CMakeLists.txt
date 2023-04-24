@@ -108,7 +108,7 @@ foreach(file ${ledger_info_files})
 
   if (MAKEINFO)
     add_custom_command(OUTPUT ${file_base}.info
-      COMMAND makeinfo --force --no-split -o ${file_base}.info ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      COMMAND ${MAKEINFO} --force --no-split -o ${file_base}.info ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.info)
@@ -116,7 +116,7 @@ foreach(file ${ledger_info_files})
 
   if (BUILD_WEB_DOCS AND MAKEINFO)
     add_custom_command(OUTPUT ${file_base}.html
-      COMMAND makeinfo --force --html --no-split -o ${file_base}.html ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      COMMAND ${MAKEINFO} --force --html --no-split -o ${file_base}.html ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.html)
@@ -127,7 +127,7 @@ foreach(file ${ledger_info_files})
       set(papersize --texinfo=@afourpaper)
     endif()
     add_custom_command(OUTPUT ${file_base}.pdf
-      COMMAND texi2pdf ${papersize} -b -q -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      COMMAND ${TEXI2PDF} ${papersize} -b -q -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.pdf)
@@ -143,13 +143,13 @@ if (BUILD_WEB_DOCS)
   endif()
   if (MAN2HTML)
     add_custom_command(OUTPUT ledger.1.html
-      COMMAND ${BASH} -c "man2html ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 | tail -n+3 > ledger.1.html"
+      COMMAND ${BASH} -c "${MAN2HTML} ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 | tail -n+3 > ledger.1.html"
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
       VERBATIM)
     list(APPEND ledger_doc_files ledger.1.html)
   elseif(GROFF)
     add_custom_command(OUTPUT ledger.1.html
-      COMMAND ${BASH} -c "groff -mandoc -Thtml ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 > ledger.1.html"
+      COMMAND ${BASH} -c "${GROFF} -mandoc -Thtml ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 > ledger.1.html"
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
       VERBATIM)
     list(APPEND ledger_doc_files ledger.1.html)
