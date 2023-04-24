@@ -113,14 +113,18 @@ foreach(file ${ledger_info_files})
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.info)
-  endif()
-
-  if (BUILD_WEB_DOCS AND MAKEINFO)
-    add_custom_command(OUTPUT ${file_base}.html
-      COMMAND ${MAKEINFO} --force --html --no-split -o ${file_base}.html ${CMAKE_CURRENT_SOURCE_DIR}/${file}
-      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
-      VERBATIM)
-    list(APPEND ledger_doc_files ${file_base}.html)
+    if (BUILD_WEB_DOCS)
+      add_custom_command(OUTPUT ${file_base}.html
+        COMMAND ${MAKEINFO} --force --html --no-split -o ${file_base}.html ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+        VERBATIM)
+      list(APPEND ledger_doc_files ${file_base}.html)
+      add_custom_command(OUTPUT ${file_base}.txt
+        COMMAND ${MAKEINFO} --force --plaintext --no-split -o ${file_base}.txt ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+        VERBATIM)
+      list(APPEND ledger_doc_files ${file_base}.txt)
+    endif()
   endif()
 
   if (TEXI2PDF AND TEX)
