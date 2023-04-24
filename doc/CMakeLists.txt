@@ -89,6 +89,7 @@ if (BUILD_DOCS)
   find_program(TEXI2PDF texi2pdf)
   find_program(TEX tex)
   find_program(MAN2HTML man2html)
+  find_program(MANDOC mandoc)
   find_program(GROFF groff)
   set(ledger_info_files ledger3.texi)
 
@@ -147,9 +148,15 @@ if (BUILD_WEB_DOCS)
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
       VERBATIM)
     list(APPEND ledger_doc_files ledger.1.html)
-  elseif(GROFF)
+  elseif (MANDOC OR GROFF)
+    set(_cmd ${MANDOC})
+    if (NOT _cmd)
+      # HTML produced by mandoc is much nicer looking, use groff only as a last resort.
+      message(WARNING "Using ${GROFF} to generate ledger1.html, as mandoc could not be found.")
+      set(_cmd ${GROFF})
+    endif()
     add_custom_command(OUTPUT ledger.1.html
-      COMMAND ${BASH} -c "${GROFF} -mandoc -Thtml ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 > ledger.1.html"
+      COMMAND ${BASH} -c "${_cmd} -mandoc -Thtml ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 > ledger.1.html"
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
       VERBATIM)
     list(APPEND ledger_doc_files ledger.1.html)
