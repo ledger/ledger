@@ -1,9 +1,9 @@
 /**
-\mainpage API Documentation
+\mainpage C++ API Documentation
 
 \section intro_sec Introduction
 
-Documentation of the Ledger API is an ongoing process and you are invited
+Documentation of the Ledger C++ API is an ongoing process and you are invited
 to help out and contribute. In case you find this documentation incorrect,
 incomplete, unclear, or lacking please
 [open a pull request](https://git.ledger-cli.org/ledger/pulls).

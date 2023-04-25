@@ -136,6 +136,7 @@ set(LEDGER_INCLUDES
   value.h
   views.h
   xact.h
+  ${PROJECT_BINARY_DIR}/ledger.hh
   ${PROJECT_BINARY_DIR}/system.hh)
 
 # Windows provides no strptime(), so supply our own.
