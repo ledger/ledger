@@ -33,7 +33,7 @@
  * @addtogroup util
  *
  * @file   ledger.hh
- * @author John Wiegley
+ * @author Alexis Hildebrandt
  */
 #pragma once
 
@@ -74,3 +74,13 @@
 
 /*@}*/
 
+/**
+ * @name Defines for the Ledger Python module
+ */
+/*@{*/
+
+#define LEDGER_PYTHON_MODULE_NAME "@SKBUILD_PROJECT_NAME@"
+#define LEDGER_PYTHON_MODULE _@SKBUILD_PROJECT_NAME@
+#define PYINIT_LEDGER PyInit__@SKBUILD_PROJECT_NAME@
+
+/*@}*/

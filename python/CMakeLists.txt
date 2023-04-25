@@ -1,0 +1,14 @@
+
+configure_file(
+  __init__.py.in
+  ${CMAKE_CURRENT_BINARY_DIR}/${SKBUILD_PROJECT_NAME}/__init__.py)
+
+if (SKBUILD)
+  install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/${SKBUILD_PROJECT_NAME}/__init__.py
+    DESTINATION ${SKBUILD_PROJECT_NAME})
+else()
+  install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/${SKBUILD_PROJECT_NAME}/__init__.py
+    DESTINATION ${Python_SITEARCH}/${SKBUILD_PROJECT_NAME})
+endif()
