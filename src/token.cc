@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "token.h"
 #include "parser.h"

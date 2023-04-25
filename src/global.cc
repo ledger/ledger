@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "global.h"
 #if HAVE_BOOST_PYTHON
@@ -187,7 +187,9 @@ void global_scope_t::report_error(const std::exception& err)
     if (! context.empty())
       std::cerr << context << std::endl;
 
-    std::cerr << _("Error: ") << err.what() << std::endl;
+    // TRANSLATORS This prefixes errors with the `Error` keyword
+    // %1% refers to the actual error being reported
+    std::cerr << _f("Error: %1%") % err.what() << std::endl;
   } else {
     caught_signal = NONE_CAUGHT;
   }

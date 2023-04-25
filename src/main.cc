@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "global.h"             // This is where the meat of main() is, which
                                 // was moved there for the sake of clarity here
@@ -88,7 +88,10 @@ int main(int argc, char * argv[], char * envp[])
 #endif
 
 #if HAVE_GETTEXT
-  ::textdomain("ledger");
+  ::setlocale(LC_MESSAGES, "");
+  ::bindtextdomain(GETTEXT_DOMAIN, GETTEXT_LOCALE_DIR);
+  ::bind_textdomain_codeset(GETTEXT_DOMAIN, "UTF-8");
+  ::textdomain(GETTEXT_DOMAIN);
 #endif
 
   global_scope_t * global_scope = NULL;

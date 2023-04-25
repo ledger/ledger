@@ -31,7 +31,7 @@
 
 #if DOCUMENT_MODEL
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "views.h"
 #include "report.h"
@@ -204,7 +204,8 @@ string r_post_t::payee() const
 
 string r_account_t::description()
 {
-  return string(_("account ")) + fullname();
+  // TRANSLATORS: %1% refers to the full name of the account
+  return (_f("account %1%") % fullname()).str();
 }
 
 void r_account_t::add_post(r_post_ptr post)

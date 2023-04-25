@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "gpgme.h"
 #include "utils.h"
@@ -156,8 +156,13 @@ shared_ptr<Data> decrypted_stream_t::decrypt(shared_ptr<Data> enc_d) {
 
 static inline void init_lib() {
   auto err = GpgME::initializeLibrary(0);
-  if (err.code() != GPG_ERR_NO_ERROR)
+  if (err.code() != GPG_ERR_NO_ERROR) {
+    // TRANSLATORS: This is an error message when the gpgme encryption library
+    // could not be initialized.
+    // %1% refers to the source of the error
+    // %2% refers to the actual error as a string.
     throw_(runtime_error, _f("%1%: %2%") % err.source() % err.asString());
+  }
 }
 
 istream* decrypted_stream_t::open_stream(const path& filename) {

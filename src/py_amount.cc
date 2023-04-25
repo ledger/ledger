@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "pyinterp.h"
 #include "pyutils.h"
@@ -124,14 +124,14 @@ void export_amount()
     .def(init<std::string>())
 
     .def("exact", &amount_t::exact, args("value"),
-         _("Construct an amount object whose display precision is always equal to its\n\
-internal precision."))
+         "Construct an amount object whose display precision is always equal"
+         "to its\ninternal precision.")
     .staticmethod("exact")
 
     .def(init<amount_t>())
 
     .def("compare", &amount_t::compare, args("amount"),
-         _("Compare two amounts for equality, returning <0, 0 or >0."))
+         "Compare two amounts for equality, returning <0, 0 or >0.")
 
     .def(self == self)
     .def(self == long())

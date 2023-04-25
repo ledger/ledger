@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "journal.h"
 #include "context.h"
@@ -281,7 +281,7 @@ void instance_t::parse()
       if (! current_context.empty())
         std::cerr << current_context << std::endl;
 
-      std::cerr << _("Error: ") << err.what() << std::endl;
+      std::cerr << _f("Error: %1%") % err.what() << std::endl;
       context.errors++;
       if (! current_context.empty())
           context.last = current_context + "\n" + err.what();

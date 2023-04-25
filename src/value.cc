@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "value.h"
 #include "commodity.h"
@@ -1341,7 +1341,7 @@ void value_t::in_place_not()
     break;
   }
 
-  add_error_context(_f("While applying not to %1%:") % *this);
+  add_error_context(_f("While applying 'not' to %1%:") % *this);
   throw_(value_error, _f("Cannot 'not' %1%") % label());
 }
 

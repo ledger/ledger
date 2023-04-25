@@ -49,11 +49,10 @@
 /* Application configuration                                              */
 /*------------------------------------------------------------------------*/
 
-#cmakedefine01 HAVE_GETTEXT
-
 #cmakedefine01 HAVE_EDIT
 #cmakedefine01 HAVE_GETPWUID
 #cmakedefine01 HAVE_GETPWNAM
+#cmakedefine01 HAVE_GETTEXT
 #cmakedefine01 HAVE_IOCTL
 #cmakedefine01 HAVE_ISATTY
 
@@ -120,11 +119,7 @@
 
 #if HAVE_GETTEXT
 #include <libintl.h>
-#define _(str) gettext(str)
-#else
-#define _(str) str
 #endif
-#define _f(str) boost::format(_(str))
 
 #include <gmp.h>
 #include <mpfr.h>

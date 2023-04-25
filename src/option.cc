@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "option.h"
 
@@ -216,7 +216,7 @@ strings_list process_arguments(strings_list args, scope_t& scope)
                      string("--") + name);
     }
     else if ((*i)[1] == '\0') {
-      throw_(option_error, _f("illegal option -%1%") % (*i)[0]);
+      throw_(option_error, _f("Illegal option -%1%") % (*i)[0]);
     }
     else {
       DEBUG("option.args", "  single-char option");

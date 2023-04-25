@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "session.h"
 #include "xact.h"
@@ -78,7 +78,7 @@ std::size_t session_t::read_data(const string& master_account)
     if (! file.empty() && exists(file))
       HANDLER(file_).data_files.push_back(file);
     else
-      throw_(parse_error, "No journal file was specified (please use -f)");
+      throw_(parse_error, _("No journal file was specified (please use -f)"));
 
     populated_data_files = true;
   }

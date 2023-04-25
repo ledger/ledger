@@ -45,6 +45,8 @@
 
 #include <boost/uuid/detail/sha1.hpp>
 
+#include <ledger.hh>
+
 #define TIMERS_ON   1
 
 /**

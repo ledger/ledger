@@ -23,7 +23,7 @@
         outputs = [ "out" "dev" ] ++ lib.optionals usePython [ "py" ];
 
         buildInputs = [
-          gmp mpfr libedit gnused
+          gmp mpfr libedit gettext gnused
         ] ++ lib.optionals gpgmeSupport [
           gpgme
         ] ++ (if usePython
