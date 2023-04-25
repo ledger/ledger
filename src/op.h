@@ -45,6 +45,8 @@
 
 namespace ledger {
 
+using namespace boost::placeholders;
+
 class expr_t::op_t : public noncopyable
 {
   friend class expr_t;

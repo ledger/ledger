@@ -45,6 +45,8 @@
 
 namespace ledger {
 
+using namespace boost::placeholders;
+
 class account_t;
 class xact_t;
 class post_t;

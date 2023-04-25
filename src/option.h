@@ -47,6 +47,8 @@
 
 namespace ledger {
 
+using namespace boost::placeholders;
+
 class call_scope_t;
 
 template <typename T>
