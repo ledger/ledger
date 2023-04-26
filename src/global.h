@@ -125,7 +125,7 @@ public:
                 << Ledger_VERSION_PATCH;
     if (Ledger_VERSION_PRERELEASE != 0)
       out << Ledger_VERSION_PRERELEASE;
-    if (Ledger_VERSION_DATE != 0)
+    if (std::strlen(Ledger_VERSION_DATE) > 0)
       out << '-' << Ledger_VERSION_DATE;
     out << _(", the command-line accounting tool");
     out << _("\nwith");

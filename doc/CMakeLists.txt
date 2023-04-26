@@ -89,6 +89,7 @@ if (BUILD_DOCS)
   find_program(TEXI2PDF texi2pdf)
   find_program(TEX tex)
   find_program(MAN2HTML man2html)
+  find_program(MANDOC mandoc)
   find_program(GROFF groff)
   set(ledger_info_files ledger3.texi)
 
@@ -108,18 +109,22 @@ foreach(file ${ledger_info_files})
 
   if (MAKEINFO)
     add_custom_command(OUTPUT ${file_base}.info
-      COMMAND makeinfo --force --no-split -o ${file_base}.info ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      COMMAND ${MAKEINFO} --force --no-split -o ${file_base}.info ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.info)
-  endif()
-
-  if (BUILD_WEB_DOCS AND MAKEINFO)
-    add_custom_command(OUTPUT ${file_base}.html
-      COMMAND makeinfo --force --html --no-split -o ${file_base}.html ${CMAKE_CURRENT_SOURCE_DIR}/${file}
-      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
-      VERBATIM)
-    list(APPEND ledger_doc_files ${file_base}.html)
+    if (BUILD_WEB_DOCS)
+      add_custom_command(OUTPUT ${file_base}.html
+        COMMAND ${MAKEINFO} --force --html --no-split -o ${file_base}.html ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+        VERBATIM)
+      list(APPEND ledger_doc_files ${file_base}.html)
+      add_custom_command(OUTPUT ${file_base}.txt
+        COMMAND ${MAKEINFO} --force --plaintext --no-split -o ${file_base}.txt ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+        VERBATIM)
+      list(APPEND ledger_doc_files ${file_base}.txt)
+    endif()
   endif()
 
   if (TEXI2PDF AND TEX)
@@ -127,7 +132,7 @@ foreach(file ${ledger_info_files})
       set(papersize --texinfo=@afourpaper)
     endif()
     add_custom_command(OUTPUT ${file_base}.pdf
-      COMMAND texi2pdf ${papersize} -b -q -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+      COMMAND ${TEXI2PDF} ${papersize} -b -q -o ${file_base}.pdf ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.pdf)
@@ -143,18 +148,39 @@ if (BUILD_WEB_DOCS)
   endif()
   if (MAN2HTML)
     add_custom_command(OUTPUT ledger.1.html
-      COMMAND ${BASH} -c "man2html ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 | tail -n+3 > ledger.1.html"
+      COMMAND ${BASH} -c "${MAN2HTML} ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 | tail -n+3 > ledger.1.html"
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
       VERBATIM)
     list(APPEND ledger_doc_files ledger.1.html)
-  elseif(GROFF)
+  elseif (MANDOC OR GROFF)
+    set(_cmd ${MANDOC})
+    if (NOT _cmd)
+      # HTML produced by mandoc is much nicer looking, use groff only as a last resort.
+      message(WARNING "Using ${GROFF} to generate ledger1.html, as mandoc could not be found.")
+      set(_cmd ${GROFF})
+    endif()
     add_custom_command(OUTPUT ledger.1.html
-      COMMAND ${BASH} -c "groff -mandoc -Thtml ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 > ledger.1.html"
+      COMMAND ${BASH} -c "${_cmd} -mandoc -Thtml ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 > ledger.1.html"
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
       VERBATIM)
     list(APPEND ledger_doc_files ledger.1.html)
+    add_custom_command(OUTPUT ledger.1.pdf
+      COMMAND ${BASH} -c "${_cmd} -mandoc -Tpdf ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 > ledger.1.pdf"
+      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
+      VERBATIM)
+    list(APPEND ledger_doc_files ledger.1.pdf)
   else()
-    message(FATAL_ERROR "Could not find man2html or groff. HTML version of man page cannot be built.")
+    message(WARNING "Could not find man2html or groff. HTML version of man page will not be built.")
+  endif()
+
+  if (USE_PYTHON AND Python_EXECUTABLE)
+    add_custom_command(OUTPUT ledger.html
+      COMMAND ${CMAKE_COMMAND} -E env
+        PYTHONPATH=${CMAKE_BINARY_DIR}
+        ${Python_EXECUTABLE} -m pydoc -w ledger
+      DEPENDS ${CMAKE_BINARY_DIR}/${_ledger_python_module_name}
+      VERBATIM)
+    list(APPEND ledger_doc_files ledger.html)
   endif()
 endif(BUILD_WEB_DOCS)
 
