@@ -195,8 +195,7 @@ class CommandLineApp(object):
             # the argument count ourself.
 
             # argspec = inspect.getargspec(self.main)
-            # Since Python 3.3:
-            # argspec = inspect.signature(self.main)
+            # Since Python 3.2:
             argspec = inspect.getfullargspec(self.main)
 
             expected_arg_count = len(argspec[0]) - 1
