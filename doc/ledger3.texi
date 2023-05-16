@@ -4303,11 +4303,11 @@ If you want to know exactly how much you have spent in a particular
 account on a particular payee, the following are equivalent:
 
 @smallexample @c command:validate
-$ ledger balance Auto:Fuel and Chevron
+$ ledger balance Expenses:Auto:Fuel and @Chevron
 @end smallexample
 
 @smallexample @c command:validate
-$ ledger balance --limit 'account=~/Fuel/' and 'payee=~/Chev/'
+$ ledger balance --limit 'account=~/Expenses:Auto:Fuel/ and payee=~/Chevron/'
 @end smallexample
 
 @noindent
