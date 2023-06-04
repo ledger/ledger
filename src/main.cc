@@ -40,7 +40,12 @@
 #endif
 
 #if HAVE_EDIT
-#include <editline/readline.h>
+  #ifdef __OpenBSD__
+    #include <readline/readline.h>
+    #include <readline/history.h>
+  #else
+    #include <editline/readline.h>
+  #endif
 #endif
 
 using namespace ledger;
