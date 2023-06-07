@@ -149,7 +149,7 @@ endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    add_definitions(
+    add_compile_options(
       # -Weverything
       # -Wno-disabled-macro-expansion
       # -Wno-padded
@@ -223,7 +223,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       -Wno-deprecated
       -Wno-strict-aliasing)
 
-    add_definitions(${GXX_WARNING_FLAGS})
+    add_compile_options(${GXX_WARNING_FLAGS})
 
     macro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
       set(_gch_filename "${_header_filename}.gch")
@@ -288,7 +288,7 @@ if (BUILD_LIBRARY)
     VERSION ${Ledger_VERSION_MAJOR}
     SOVERSION ${Ledger_VERSION_MAJOR})
 
-  add_executable(ledger main.cc global.cc)
+  add_executable(ledger ${LEDGER_CLI_SOURCES})
   target_link_libraries(ledger libledger)
   if (HAVE_GPGME)
     target_link_libraries(ledger Gpgmepp)

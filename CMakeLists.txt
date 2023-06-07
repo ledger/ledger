@@ -19,12 +19,10 @@ set(Ledger_TEST_TIMEZONE "America/Chicago")
 
 enable_testing()
 
-add_definitions(
-  -std=c++11
-  -DBOOST_FILESYSTEM_NO_DEPRECATED
-)
+add_compile_definitions(BOOST_FILESYSTEM_NO_DEPRECATED)
+add_compile_options(-std=c++11)
 if (CYGWIN)
-  add_definitions(-U__STRICT_ANSI__)
+  add_compile_options(-U__STRICT_ANSI__)
 endif()
 
 ########################################################################
