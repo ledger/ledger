@@ -287,6 +287,8 @@ if (BUILD_LIBRARY)
     INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
     VERSION ${Ledger_VERSION_MAJOR}
     SOVERSION ${Ledger_VERSION_MAJOR})
+  set_source_files_properties(
+    ${LEDGER_CLI_SOURCES} PROPERTIES COMPILE_FLAGS "-fPIC")
 
   add_executable(ledger main.cc global.cc)
   target_link_libraries(ledger libledger)
