@@ -6,6 +6,8 @@
   outputs = { self, nixpkgs }: let
     usePython = true;
     gpgmeSupport = true;
+    useLibedit = true;
+    useReadline = false;
     forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
     nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
     systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -23,14 +25,24 @@
         outputs = [ "out" "dev" ] ++ lib.optionals usePython [ "py" ];
 
         buildInputs = [
-          gmp mpfr libedit gnused
+          gmp mpfr gnused
+        ] ++ lib.optionals useLibedit [
+          libedit
+        ] ++ lib.optionals useReadline [
+          readline
         ] ++ lib.optionals gpgmeSupport [
           gpgme
         ] ++ (if usePython
               then [ python3 (boost.override { enablePython = true; python = python3; }) ]
               else [ boost ]);
 
-        nativeBuildInputs = [ cmake texinfo tzdata ];
+        nativeBuildInputs = [
+          cmake texinfo tzdata
+        ] ++ lib.optionals useLibedit [
+          libedit.dev
+        ] ++ lib.optionals useReadline [
+          readline.dev
+        ];
 
         enableParallelBuilding = true;
 
