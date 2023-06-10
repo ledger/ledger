@@ -4181,7 +4181,7 @@ may be excluded from reports by using @option{--real}.
 Credit cards sometimes provide a cashback percentage of purchases. This
 can be setup with the following:
 
-@smallexample @c input:C371854
+@smallexample @c input:7D1589F
 ; This automated transaction will add to "Assets:Credit Card Cashback"
 ; the amount of the transaction multiplied by the "cashback" tag.
 
