@@ -4199,6 +4199,19 @@ To add a transaction that gives 2% cashback:
   Liabilities:Credit Card
 @end smallexample
 
+Now when a report is generated, e.g.
+@smallexample @c command:7D1589F
+$ ledger -f cashback.dat reg
+@end smallexample
+
+The cashback postings appear with the transaction.
+
+@smallexample @c output:7D1589F
+23-Jun-06 McDonalds             Expen:Food:Restaurants       $23.98       $23.98
+                                Liabilitie:Credit Card      $-23.98            0
+                                ..Credit Card Cashback        $0.48        $0.48
+                                In:Credit Card Rewards       $-0.48            0
+@end smallexample
 @node Building Reports, Reporting Commands, Transactions, Top
 @chapter Building Reports
 
