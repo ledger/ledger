@@ -4082,6 +4082,8 @@ Forecasting}.
 @node Concrete Example of Automated Transactions,  , Periodic Transactions, Automated Transactions
 @subsection Concrete Example of Automated Transactions
 
+@subsubsection Tithing
+
 As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
 It is similar to tithing for Jews and Christians, or to Zakát for
 Muslims.  The exact details of computing Huqúqu'lláh are somewhat
@@ -4173,6 +4175,29 @@ the special account name @samp{$account}:
 This example causes 10% of the matching account's total to be deferred
 to the @samp{Savings} account---as a balanced virtual posting, which
 may be excluded from reports by using @option{--real}.
+
+@subsubsection Credit Card Cashback
+
+Credit cards sometimes provide a cashback percentage of purchases. This
+can be setup with the following:
+
+@smallexample @c input:C371854
+; This automated transaction will add to "Assets:Credit Card Cashback"
+; the amount of the transaction multiplied by the "cashback" tag.
+
+= "Liabilities:Credit Card" and %cashback
+    Assets:Credit Card Cashback  (-tag("cashback"))
+    Income:Credit Card Rewards    (tag("cashback"))
+@end smallexample
+
+To add a transaction that gives 2% cashback:
+
+@smallexample @c input:C371854
+2023/06/06 McDonalds
+  ; cashback:: 0.02
+  Expenses:Food:Restaurants  $23.98
+  Liabilities:Credit Card
+@end smallexample
 
 @node Building Reports, Reporting Commands, Transactions, Top
 @chapter Building Reports
