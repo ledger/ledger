@@ -4194,7 +4194,7 @@ To add a transaction that gives 2% cashback:
 
 @smallexample @c input:7D1589F
 2023/06/06 McDonalds
-  ; cashback:: 0.02
+  ; cashback:: 2%
   Expenses:Food:Restaurants  $23.98
   Liabilities:Credit Card
 @end smallexample
