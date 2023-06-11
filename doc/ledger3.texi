@@ -4082,6 +4082,8 @@ Forecasting}.
 @node Concrete Example of Automated Transactions,  , Periodic Transactions, Automated Transactions
 @subsection Concrete Example of Automated Transactions
 
+@subsubsection Tithing
+
 As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
 It is similar to tithing for Jews and Christians, or to Zakát for
 Muslims.  The exact details of computing Huqúqu'lláh are somewhat
@@ -4174,6 +4176,42 @@ This example causes 10% of the matching account's total to be deferred
 to the @samp{Savings} account---as a balanced virtual posting, which
 may be excluded from reports by using @option{--real}.
 
+@subsubsection Credit Card Cashback
+
+Credit cards sometimes provide a cashback percentage of purchases. This
+can be setup with the following:
+
+@smallexample @c input:7D1589F
+; This automated transaction will add to "Assets:Credit Card Cashback"
+; the amount of the transaction multiplied by the "cashback" tag.
+
+= "Liabilities:Credit Card" and %cashback
+    Assets:Credit Card Cashback  (-amount * tag("cashback") * 0.01)
+    Income:Credit Card Rewards    (amount * tag("cashback") * 0.01)
+@end smallexample
+
+To add a transaction that gives 2% cashback:
+
+@smallexample @c input:7D1589F
+2023/06/06 McDonalds
+  ; cashback:: 2%
+  Expenses:Food:Restaurants  $23.98
+  Liabilities:Credit Card
+@end smallexample
+
+Now when a report is generated, e.g.
+@smallexample @c command:7D1589F
+$ ledger -f cashback.dat reg
+@end smallexample
+
+The cashback postings appear with the transaction.
+
+@smallexample @c output:7D1589F
+23-Jun-06 McDonalds             Expen:Food:Restaurants       $23.98       $23.98
+                                Liabilitie:Credit Card      $-23.98            0
+                                ..Credit Card Cashback        $0.48        $0.48
+                                In:Credit Card Rewards       $-0.48            0
+@end smallexample
 @node Building Reports, Reporting Commands, Transactions, Top
 @chapter Building Reports
 
