@@ -13,7 +13,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
 
     steps:
-    - uses: cachix/install-nix-action@v20
+    - uses: cachix/install-nix-action@v22
       with:
         nix_path: nixpkgs=channel:nixos-unstable
 
