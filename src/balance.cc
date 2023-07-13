@@ -273,7 +273,7 @@ balance_t::strip_annotations(const keep_details_t& what_to_keep) const
 void balance_t::sorted_amounts(amounts_array& sorted) const
 {
   foreach (const amounts_map::value_type& pair, amounts)
-    if (pair.second)
+    if (! pair.second.is_null())
       sorted.push_back(&pair.second);
   std::stable_sort(
     sorted.begin(), sorted.end(),
@@ -287,7 +287,7 @@ void balance_t::map_sorted_amounts(function<void(const amount_t&)> fn) const
   if (! amounts.empty()) {
     if (amounts.size() == 1) {
       const amount_t& amount((*amounts.begin()).second);
-      if (amount)
+      if (! amount.is_null())
         fn(amount);
     }
     else {
@@ -327,6 +327,8 @@ namespace {
     }
 
     void operator()(const amount_t& amount) {
+      if(amount.is_zero()) return;
+
       int width;
       if (! first) {
         out << std::endl;
