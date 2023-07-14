@@ -1712,8 +1712,8 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         // Subtract amounts from previous posts to this account in the xact.
         for (post_t* p : xact->posts) {
           if (p->account == post->account &&
-              ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==
-               (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {
+              (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG) ||
+              post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))) {
             amount_t amt(p->amount.strip_annotations(keep_details_t()));
             diff -= amt;
             DEBUG("textual.parse", "line " << context.linenum << ": "
