@@ -836,7 +836,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
         // the automated xact's one.
         post_t * new_post = new post_t(account, amt);
         new_post->copy_details(*post);
-        if(post->cost)
+        if(! post->cost.is_null())
           new_post->cost = post->cost;
 
         // A Cleared transaction implies all of its automatic posting are cleared
