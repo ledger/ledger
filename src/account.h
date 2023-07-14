@@ -279,7 +279,8 @@ public:
     return *xdata_;
   }
 
-  value_t amount(const optional<bool> real_only = false, const optional<expr_t&>& expr = none) const;
+  value_t amount(const optional<bool> real_only = false) const;
+  value_t amount(const optional<bool> real_only, const optional<expr_t&>& expr) const;
   value_t total(const optional<expr_t&>& expr = none) const;
 
   const xdata_t::details_t& self_details(bool gather_all = true) const;
