@@ -1657,8 +1657,28 @@ post_t * instance_t::parse_post(char *          line,
             << "POST assign: parsed balance amount = " << *post->assigned_amount);
 
       const amount_t& amt(*post->assigned_amount);
-      value_t account_total
-        (post->account->amount(!post->has_flags(POST_VIRTUAL)).strip_annotations(keep_details_t()));
+      
+      optional<expr_t&> account_post_filter;
+      expr_t filter_expr;
+      if (post->account->xdata_ &&
+        post->account->self_details().latest_post > post->date()
+      ) {
+        filter_expr = expr_t(WRAP_FUNCTOR([&post](call_scope_t &scope) {
+          if (scope.lookup(symbol_t::FUNCTION, "date")
+            ->as_function()(scope).as_date() <= post->date()
+          ) {
+            return scope.lookup(symbol_t::FUNCTION, "amount")
+              ->as_function()(scope).as_amount();
+          }
+          else {
+            return amount_t(0.);
+          }
+        }), NULL);
+        account_post_filter = filter_expr;
+      }
+      value_t account_total(post->account->
+        amount(!post->has_flags(POST_VIRTUAL), account_post_filter)
+        .strip_annotations(keep_details_t()));
 
       DEBUG("post.assign", "line " << context.linenum << ": "
             << "account balance = " << account_total);
