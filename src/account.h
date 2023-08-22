@@ -42,6 +42,7 @@
 #pragma once
 
 #include "scope.h"
+#include "accounts_map.h"
 
 namespace ledger {
 
@@ -52,8 +53,8 @@ class xact_t;
 class post_t;
 
 typedef std::list<post_t *> posts_list;
-typedef std::map<string, account_t *> accounts_map;
 typedef std::map<string, posts_list> deferred_posts_map_t;
+
 
 class account_t : public flags::supports_flags<>, public scope_t
 {

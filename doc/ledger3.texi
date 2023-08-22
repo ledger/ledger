@@ -674,7 +674,7 @@ $ ledger -f drewr3.dat cleared
         $ 200.00                   0                   Mortgage:Principal
        $ -243.60                   0                   Tithe
 ----------------    ----------------    ---------
-       $ -243.60                   0             
+       $ -243.60                   0
 @end smallexample
 
 @noindent
@@ -2304,9 +2304,13 @@ of accounts, it may be convenient to define an alias, for example:
 @smallexample @c input:94A99E8
 alias Dining=Expenses:Entertainment:Dining
 alias Checking=Assets:Credit Union:Joint Checking Account
+;; regex supported
+alias Starbucks.*=Expenses:Entertainment:Drinks
 
 2011/11/28 YummyPalace
-    Dining        $10.00
+    Dining                      $10.00
+    Starbucks NY                 $5.00
+    Starbucks LA                 $5.50
     Checking
 @end smallexample
 
@@ -2384,25 +2388,6 @@ bucket Assets:Checking
 2011/12/01 Sale
     Assets:Checking:Business            $ 30.00
 @end smallexample
-
-@item capture
-@c instance_t::account_mapping_directive
-@findex capture
-@findex print
-@findex register
-
-Directs Ledger to replace any account matching a regex with the given
-account.  For example:
-
-@smallexample @c input:validate
-capture  Expenses:Deductible:Medical  Medical
-@end smallexample
-
-Would cause any posting with @samp{Medical} in its name to be replaced
-with @samp{Expenses:Deductible:Medical}.
-
-Ledger will display the mapped payees in @command{print} and
-@command{register} reports.
 
 @item check
 @findex check
@@ -8912,7 +8897,7 @@ $ ledger -f expr.dat --format "%C\n" reg assets
 @c Note: The output needs a space character at the end
 @c       for this test to pass
 @smallexample @c output:C1CAAF3
-(C0D3) 
+(C0D3)
 @end smallexample
 
 @item P
