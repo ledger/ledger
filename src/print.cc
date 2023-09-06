@@ -100,6 +100,33 @@ namespace {
     }
   }
 
+  std::ostringstream format_account_name(xact_t& xact, post_t * post)
+  {
+    std::ostringstream pbuf;
+
+    if (xact.state() == item_t::UNCLEARED)
+      pbuf << (post->state() == item_t::CLEARED ? "* " :
+              (post->state() == item_t::PENDING ? "! " : ""));
+
+    if (post->has_flags(POST_VIRTUAL)) {
+      if (post->has_flags(POST_MUST_BALANCE))
+        pbuf << '[';
+      else
+        pbuf << '(';
+    }
+
+    pbuf << post->account->fullname();
+
+    if (post->has_flags(POST_VIRTUAL)) {
+      if (post->has_flags(POST_MUST_BALANCE))
+        pbuf << ']';
+      else
+        pbuf << ')';
+    }
+
+    return pbuf;
+  }
+
   void print_xact(report_t& report, std::ostream& out, xact_t& xact)
   {
     format_type_t          format_type = FMT_WRITTEN;
@@ -158,6 +185,18 @@ namespace {
     std::size_t count = xact.posts.size();
     std::size_t index = 0;
 
+    std::size_t account_width =
+      (report.HANDLED(account_width_) ?
+       lexical_cast<std::size_t>(report.HANDLER(account_width_).str()) : 36);
+
+    // Find the longest account name to line up all amounts when account names
+    // are long
+    foreach (post_t * post, xact.posts) {
+      unistring name = format_account_name(xact, post).str();
+      if (account_width < name.length())
+        account_width = name.length();
+    }
+
     foreach (post_t * post, xact.posts) {
       index++;
 
@@ -168,36 +207,9 @@ namespace {
 
       out << "    ";
 
-      std::ostringstream pbuf;
-
-      if (xact.state() == item_t::UNCLEARED)
-        pbuf << (post->state() == item_t::CLEARED ? "* " :
-                (post->state() == item_t::PENDING ? "! " : ""));
-
-      if (post->has_flags(POST_VIRTUAL)) {
-        if (post->has_flags(POST_MUST_BALANCE))
-          pbuf << '[';
-        else
-          pbuf << '(';
-      }
-
-      pbuf << post->account->fullname();
-
-      if (post->has_flags(POST_VIRTUAL)) {
-        if (post->has_flags(POST_MUST_BALANCE))
-          pbuf << ']';
-        else
-          pbuf << ')';
-      }
+      std::ostringstream pbuf = format_account_name(xact, post);
 
       unistring name(pbuf.str());
-
-      std::size_t account_width =
-        (report.HANDLED(account_width_) ?
-         lexical_cast<std::size_t>(report.HANDLER(account_width_).str()) : 36);
-
-      if (account_width < name.length())
-        account_width = name.length();
 
       if (! post->has_flags(POST_CALCULATED) || report.HANDLED(generated)) {
         out << name.extract();
@@ -272,8 +284,6 @@ namespace {
             out << ' ';
           }
           out << trailer;
-
-          account_width += unistring(trailer).length();
         }
       } else {
         out << pbuf.str();
