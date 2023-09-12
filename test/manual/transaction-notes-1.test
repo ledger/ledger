@@ -2,14 +2,14 @@
     Expenses:Food               $4.50
     Assets:Checking
 
-2009/11/01 Panera Bread
+2009/11/02 Panera Bread
     ; Type: Coffee
     ; Let’s see, I ate a whole bunch of stuff, drank some coffee,
     ; pondered a bagel, then decided against the donut.
     Expenses:Food               $4.50
     Assets:Checking
 
-2009/11/01 Panera Bread
+2009/11/03 Panera Bread
     ; Type: Dining
     ; :Eating:
     ; This is another long note, after the metadata.
@@ -18,5 +18,10 @@
 
 test reg --columns=60 food and note eat
 09-Nov-01 Panera Bread   Expenses:Food       $4.50     $4.50
-09-Nov-01 Panera Bread   Expenses:Food       $4.50     $9.00
+09-Nov-03 Panera Bread   Expenses:Food       $4.50     $9.00
+end test
+
+test reg --columns=60 food and =eat
+09-Nov-01 Panera Bread   Expenses:Food       $4.50     $4.50
+09-Nov-03 Panera Bread   Expenses:Food       $4.50     $9.00
 end test

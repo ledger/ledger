@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer6)
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_EQ, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_NOTE, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_AND, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(testPredicateTokenizer7)
 #ifndef NOT_FOR_PYTHON
   query_t::lexer_t tokens(args.begin(), args.end());
 
-  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_EQ, tokens.next_token().kind);
+  BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TOK_NOTE, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::TERM, tokens.next_token().kind);
   BOOST_CHECK_EQUAL(query_t::lexer_t::token_t::END_REACHED, tokens.next_token().kind);
 #endif
