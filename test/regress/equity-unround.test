@@ -26,5 +26,5 @@ test reg --equity ^Assets: --unround
 22-May-04 Opening Balances      Assets:Bar               0.0002 EUR   0.0002 EUR
                                 Assets:Baz                 3.00 EUR   3.0002 EUR
                                 Assets:Foo               1.0001 EUR   4.0003 EUR
-                                Equit:Opening Balances  -4.0003 EUR            0
+                                Equity:Opening Balances -4.0003 EUR            0
 end test

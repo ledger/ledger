@@ -555,7 +555,7 @@ Ledger will generate:
 
 @smallexample @c output:66E3A2C
 10-Dec-01 Checking balance      Assets:Checking          $ 1,000.00   $ 1,000.00
-                                Equit:Opening Balances  $ -1,000.00            0
+                                Equity:Opening Balances $ -1,000.00            0
 10-Dec-20 Organic Co-op         Expense:Food:Groceries      $ 37.50      $ 37.50
                                 Expense:Food:Groceries      $ 37.50      $ 75.00
                                 Expense:Food:Groceries      $ 37.50     $ 112.50
