@@ -79,6 +79,7 @@ namespace {
     instance_t *             parent;
     std::list<application_t> apply_stack;
     bool                     no_assertions;
+    bool                     store_hashes;
 #if TIMELOG_SUPPORT
     time_log_t               timelog;
 #endif
@@ -86,10 +87,12 @@ namespace {
     instance_t(parse_context_stack_t& _context_stack,
                parse_context_t&       _context,
                instance_t *           _parent = NULL,
-               const bool             _no_assertions = false)
+               const bool             _no_assertions = false,
+               const bool             _store_hashes = false)
       : context_stack(_context_stack), context(_context),
         in(*context.stream.get()), parent(_parent),
-        no_assertions(_no_assertions), timelog(context) {}
+        no_assertions(_no_assertions), store_hashes(_store_hashes),
+        timelog(context) {}
 
     virtual string description() {
       return _("textual parser");
@@ -136,7 +139,7 @@ namespace {
     }
 #endif
 
-    void read_next_directive(bool& error_flag);
+    xact_t * read_next_directive(bool& error_flag, xact_t * previous_xact);
 
 #if TIMELOG_SUPPORT
     void clock_in_directive(char * line, bool capitalized);
@@ -176,7 +179,8 @@ namespace {
     void apply_year_directive(char * line);
     void end_apply_directive(char * line);
 
-    void xact_directive(char * line, std::streamsize len);
+    xact_t * xact_directive(char * line, std::streamsize len,
+                            xact_t * previous_xact);
     void period_xact_directive(char * line);
     void automated_xact_directive(char * line);
     void price_xact_directive(char * line);
@@ -207,7 +211,8 @@ namespace {
 
     xact_t * parse_xact(char *          line,
                         std::streamsize len,
-                        account_t *     account);
+                        account_t *     account,
+                        xact_t *        previous_xact);
 
     virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                     const string& name);
@@ -247,10 +252,13 @@ void instance_t::parse()
   context.curr_pos = in.tellg();
 
   bool error_flag = false;
+  xact_t * previous_xact = NULL;
 
   while (in.good() && ! in.eof()) {
     try {
-      read_next_directive(error_flag);
+      if (xact_t * xact = read_next_directive(error_flag, previous_xact)) {
+        previous_xact = xact;
+      }
     }
     catch (const std::exception& err) {
       error_flag = true;
@@ -348,12 +356,12 @@ std::streamsize instance_t::read_line(char *& line)
   return 0;
 }
 
-void instance_t::read_next_directive(bool& error_flag)
+xact_t * instance_t::read_next_directive(bool& error_flag, xact_t * previous_xact)
 {
   char * line;
   std::streamsize len = read_line(line);
   if (len == 0 || line == NULL)
-    return;
+    return NULL;
 
   if (! std::isspace(line[0]))
     error_flag = false;
@@ -389,8 +397,7 @@ void instance_t::read_next_directive(bool& error_flag)
   case '7':
   case '8':
   case '9':
-    xact_directive(line, len);
-    break;
+    return xact_directive(line, len, previous_xact);
   case '=':                     // automated xact
     automated_xact_directive(line);
     break;
@@ -449,6 +456,8 @@ void instance_t::read_next_directive(bool& error_flag)
     }
     break;
   }
+
+  return NULL;
 }
 
 #if TIMELOG_SUPPORT
@@ -711,16 +720,17 @@ void instance_t::period_xact_directive(char * line)
   }
 }
 
-void instance_t::xact_directive(char * line, std::streamsize len)
+xact_t * instance_t::xact_directive(char * line, std::streamsize len,
+                                    xact_t * previous_xact)
 {
   TRACE_START(xacts, 1, "Time spent handling transactions:");
 
-  if (xact_t * xact = parse_xact(line, len, top_account())) {
+  if (xact_t * xact = parse_xact(line, len, top_account(), previous_xact)) {
     unique_ptr<xact_t> manager(xact);
 
     if (context.journal->add_xact(xact)) {
-      manager.release();        // it's owned by the journal now
       context.count++;
+      return manager.release(); // it's owned by the journal now
     }
     // It's perfectly valid for the journal to reject the xact, which it
     // will do if the xact has no substantive effect (for example, a
@@ -730,6 +740,8 @@ void instance_t::xact_directive(char * line, std::streamsize len)
   }
 
   TRACE_STOP(xacts, 1);
+
+  return NULL;
 }
 
 void instance_t::include_directive(char * line)
@@ -793,7 +805,7 @@ void instance_t::include_directive(char * line)
           context_stack.get_current().scope   = scope;
           try {
             instance_t instance(context_stack, context_stack.get_current(),
-                                this, no_assertions);
+                                this, no_assertions, store_hashes);
             instance.apply_stack.push_front(application_t("account", master));
             instance.parse();
           }
@@ -1818,7 +1830,8 @@ bool instance_t::parse_posts(account_t *  account,
 
 xact_t * instance_t::parse_xact(char *          line,
                                 std::streamsize len,
-                                account_t *     account)
+                                account_t *     account,
+                                xact_t *        previous_xact)
 {
   TRACE_START(xact_text, 1, "Time spent parsing transaction text:");
 
@@ -2007,6 +2020,22 @@ xact_t * instance_t::parse_xact(char *          line,
 
   TRACE_STOP(xact_details, 1);
 
+  if (store_hashes) {
+    string expected_hash =
+      xact->hash(previous_xact &&
+                 previous_xact->has_tag("Hash") ?
+                 previous_xact->get_tag("Hash")->to_string() : "");
+    if (xact->has_tag("Hash")) {
+      string current_hash = xact->get_tag("Hash")->to_string();
+      if (expected_hash != current_hash) {
+        throw_(parse_error, _f("Expected hash %1% != %2%") %
+               expected_hash % current_hash);
+      }
+    } else {
+      xact->set_tag("Hash", string_value(expected_hash));
+    }
+  }
+
   return xact.release();
 
   }
@@ -2027,12 +2056,14 @@ expr_t::ptr_op_t instance_t::lookup(const symbol_t::kind_t kind,
   return context.scope->lookup(kind, name);
 }
 
-std::size_t journal_t::read_textual(parse_context_stack_t& context_stack)
+std::size_t journal_t::read_textual(parse_context_stack_t& context_stack,
+                                    bool store_hashes)
 {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
   {
     instance_t instance(context_stack, context_stack.get_current(), NULL,
-                        checking_style == journal_t::CHECK_PERMISSIVE);
+                        checking_style == journal_t::CHECK_PERMISSIVE,
+                        store_hashes);
     instance.apply_stack.push_front
       (application_t("account", context_stack.get_current().master));
     instance.parse();

@@ -466,7 +466,7 @@ bool journal_t::remove_xact(xact_t * xact)
   return true;
 }
 
-std::size_t journal_t::read(parse_context_stack_t& context)
+std::size_t journal_t::read(parse_context_stack_t& context, bool store_hashes)
 {
   std::size_t count = 0;
   try {
@@ -485,7 +485,7 @@ std::size_t journal_t::read(parse_context_stack_t& context)
     if (! current.master)
       current.master = master;
 
-    count = read_textual(context);
+    count = read_textual(context, store_hashes);
     if (count > 0) {
       if (! current.pathname.empty())
         sources.push_back(fileinfo_t(current.pathname));

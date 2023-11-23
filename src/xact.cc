@@ -581,6 +581,21 @@ bool xact_t::valid() const
   return true;
 }
 
+string xact_t::hash(string nonce) const {
+  std::ostringstream repr;
+  repr << nonce;
+  repr << date();
+  repr << aux_date();
+  repr << code;
+  repr << payee;
+  string hash(repr.str());
+  posts_list all_posts(posts.begin(), posts.end());
+  foreach (post_t * post, all_posts) {
+    hash = post->hash(hash);
+  }
+  return hash;
+}
+
 namespace {
   bool post_pred(expr_t::ptr_op_t op, post_t& post)
   {
