@@ -112,6 +112,7 @@ public:
     HANDLER(decimal_comma).report(out);
     HANDLER(time_colon).report(out);
     HANDLER(file_).report(out);
+    HANDLER(hashes).report(out);
     HANDLER(input_date_format_).report(out);
     HANDLER(explicit).report(out);
     HANDLER(master_account_).report(out);
@@ -161,6 +162,8 @@ public:
      }
      data_files.push_back(str);
    });
+
+  OPTION(session_t, hashes);
 
   OPTION_(session_t, input_date_format_, DO_(str) {
       // This changes static variables inside times.h, which affects the

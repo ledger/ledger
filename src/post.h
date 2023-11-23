@@ -245,6 +245,8 @@ public:
     return const_cast<post_t *>(this)->reported_account();
   }
 
+  virtual string hash(string nonce) const;
+
   friend class xact_t;
 
   struct compare_by_date_and_sequence

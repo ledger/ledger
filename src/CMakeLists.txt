@@ -51,7 +51,8 @@ set(LEDGER_SOURCES
   times.cc
   error.cc
   utils.cc
-  wcwidth.cc)
+  wcwidth.cc
+  sha512.cc)
 
 if (HAVE_GPGME)
   list(APPEND LEDGER_SOURCES
