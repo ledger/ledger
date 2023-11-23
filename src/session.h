@@ -112,7 +112,7 @@ public:
     HANDLER(decimal_comma).report(out);
     HANDLER(time_colon).report(out);
     HANDLER(file_).report(out);
-    HANDLER(hashes).report(out);
+    HANDLER(hashes_).report(out);
     HANDLER(input_date_format_).report(out);
     HANDLER(explicit).report(out);
     HANDLER(master_account_).report(out);
@@ -163,7 +163,22 @@ public:
      data_files.push_back(str);
    });
 
-  OPTION(session_t, hashes);
+  enum hash_type_t {
+    NO_HASHES = 0,
+    HASH_SHA512 = 1
+  };
+
+  OPTION__
+  (session_t, hashes_,
+   hash_type_t hash_type = NO_HASHES;
+   CTOR(session_t, hashes_) {}
+   DO_(str) {
+     if (str == "sha512" || str == "SHA512") {
+       hash_type = HASH_SHA512;
+     } else {
+        throw_(std::invalid_argument, _f("Unrecognized hash type"));
+     }
+   });
 
   OPTION_(session_t, input_date_format_, DO_(str) {
       // This changes static variables inside times.h, which affects the
