@@ -6755,6 +6755,15 @@ $ ledger reg Expenses --group-by "payee" --group-title-format "-----------------
 ...
 @end smallexample
 
+@item --hashes @var{ALGO}
+Record the hash of each transaction in a @var{Hash} metadata value,
+according to the hashing algorithm given by the @var{ALGO}
+argument. Note that if a @var{Hash} metadata value is explicitly
+provided and does not match what would have been generated, an error is
+reported. Hashes depend on previous entries, such that setting a single
+hash value is sufficient to guarantee the shape of the entire history
+leading up to that entry.
+
 @item --head @var{INT}
 @itemx --first @var{INT}
 Print the first @var{INT} entries.  Opposite of @option{--tail
