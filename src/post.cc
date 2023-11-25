@@ -670,30 +670,6 @@ void post_t::set_reported_account(account_t * acct)
   acct->xdata().reported_posts.push_back(this);
 }
 
-extern "C" unsigned char *SHA512(
-  void *data, unsigned int data_len, unsigned char *digest);
-
-namespace {
-  std::string bufferToHex(const unsigned char* buffer, std::size_t size) {
-      std::ostringstream oss;
-      oss << std::hex << std::setfill('0');
-      for(std::size_t i = 0; i < size; ++i)
-          oss << std::setw(2) << static_cast<int>(buffer[i]);
-      return oss.str();
-  }
-}
-
-string post_t::hash(string nonce) const {
-  unsigned char data[128];
-  std::ostringstream repr;
-  repr << nonce;
-  repr << account->fullname();
-  repr << amount.to_string();
-  string repr_str(repr.str());
-  SHA512((void *)repr_str.c_str(), repr_str.length(), data);
-  return bufferToHex(data, 64 /*SHA512_DIGEST_LENGTH*/);
-}
-
 void extend_post(post_t& post, journal_t& journal)
 {
   commodity_t& comm(post.amount.commodity());
