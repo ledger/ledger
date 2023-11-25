@@ -581,6 +581,19 @@ bool xact_t::valid() const
   return true;
 }
 
+extern "C" unsigned char *SHA512(
+  void *data, unsigned int data_len, unsigned char *digest);
+
+namespace {
+  std::string bufferToHex(const unsigned char* buffer, std::size_t size) {
+      std::ostringstream oss;
+      oss << std::hex << std::setfill('0');
+      for(std::size_t i = 0; i < size; ++i)
+          oss << std::setw(2) << static_cast<int>(buffer[i]);
+      return oss.str();
+  }
+}
+
 string xact_t::hash(string nonce) const {
   std::ostringstream repr;
   repr << nonce;
@@ -588,12 +601,27 @@ string xact_t::hash(string nonce) const {
   repr << aux_date();
   repr << code;
   repr << payee;
-  string hash(repr.str());
   posts_list all_posts(posts.begin(), posts.end());
+  std::vector<std::string> strings;
   foreach (post_t * post, all_posts) {
-    hash = post->hash(hash);
+    std::ostringstream posting;
+    posting << post->account->fullname();
+    if (! post->amount.is_null())
+      posting << post->amount.to_fullstring();
+    if (post->cost)
+      posting << post->cost->to_fullstring();
+    posting << post->checkin;
+    posting << post->checkout;
+    strings.push_back(posting.str());
   }
-  return hash;
+  std::sort(strings.begin(), strings.end());
+  foreach (string& str, strings) {
+    repr << str;
+  }
+  unsigned char data[128];
+  string repr_str(repr.str());
+  SHA512((void *)repr_str.c_str(), repr_str.length(), data);
+  return bufferToHex(data, 64 /*SHA512_DIGEST_LENGTH*/);
 }
 
 namespace {

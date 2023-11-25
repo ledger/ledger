@@ -6760,9 +6760,15 @@ Record the hash of each transaction in a @var{Hash} metadata value,
 according to the hashing algorithm given by the @var{ALGO}
 argument. Note that if a @var{Hash} metadata value is explicitly
 provided and does not match what would have been generated, an error is
-reported. Hashes depend on previous entries, such that setting a single
-hash value is sufficient to guarantee the shape of the entire history
-leading up to that entry.
+reported. This provided value can also just be a prefix, at whatever
+length the user wishes, in which case only this amount of text is
+compared to the generated hash. Printing the entry with hashes enabled
+will display both this explicit metadata setting and the internally
+generated hash value.
+
+Hashes depend on previous entries, such that setting a single hash value
+is sufficient to guarantee the shape of the entire history leading up to
+that entry.
 
 @item --head @var{INT}
 @itemx --first @var{INT}

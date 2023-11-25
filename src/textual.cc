@@ -2027,10 +2027,12 @@ xact_t * instance_t::parse_xact(char *          line,
                  previous_xact->get_tag("Hash")->to_string() : "");
     if (xact->has_tag("Hash")) {
       string current_hash = xact->get_tag("Hash")->to_string();
-      if (expected_hash != current_hash) {
+      if (! std::equal(expected_hash.begin(),
+                       expected_hash.begin() +
+                       std::min(expected_hash.size(), current_hash.size()),
+                       current_hash.begin()))
         throw_(parse_error, _f("Expected hash %1% != %2%") %
                expected_hash % current_hash);
-      }
     } else {
       xact->set_tag("Hash", string_value(expected_hash));
     }
