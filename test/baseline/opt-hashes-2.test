@@ -7,8 +7,10 @@
     Assets:Cash
 
 2008/02/01 February
-    Expenses:Books          $20.00
+    ; Some other comment
     Assets:Cash
+    ; Some other comment
+    Expenses:Books          $20.00
 
 test print --hashes=sha512
 2008/01/01 January
@@ -22,7 +24,9 @@ test print --hashes=sha512
     Assets:Cash
 
 2008/02/01 February
+    ; Some other comment
     ; Hash: f8b26ea0259aafe4c8ab280348b2954856cc089470275f2fbcdc33ac09dc9dae1b944c02647fd603d5347a4b17af3ebd034c74e90eb784a5255229be49c8f2fe
-    Expenses:Books                            $20.00
     Assets:Cash
+    ; Some other comment
+    Expenses:Books                            $20.00
 end test
