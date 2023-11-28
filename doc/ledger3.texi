@@ -6756,19 +6756,46 @@ $ ledger reg Expenses --group-by "payee" --group-title-format "-----------------
 @end smallexample
 
 @item --hashes @var{ALGO}
-Record the hash of each transaction in a @var{Hash} metadata value,
-according to the hashing algorithm given by the @var{ALGO}
-argument. Note that if a @var{Hash} metadata value is explicitly
-provided and does not match what would have been generated, an error is
-reported. This provided value can also just be a prefix, at whatever
-length the user wishes, in which case only this amount of text is
-compared to the generated hash. Printing the entry with hashes enabled
-will display both this explicit metadata setting and the internally
-generated hash value.
+Records the chained hash of each transaction in a @var{Hash} metadata
+value, according to the hashing algorithm given by the @var{ALGO}
+argument (at the moment, only @code{sha512} is supported). To use this,
+record the @var{Hash} metadata explicitly in some of your transactions;
+these will be checked against the hashes calculated internally, and if
+they do not match, an error is reported. You may also write just a
+prefix of the @var{Hash}, which is less verbose but still gives quite
+good assurance.
 
-Hashes depend on previous entries, such that setting a single hash value
-is sufficient to guarantee the shape of the entire history leading up to
-that entry.
+Somewhat like balance assertions, which give assurance that previous
+posting amounts are correct, these @var{Hash} tags give assurance that
+all previous journal entries (in parse order) are unchanged (or at
+least, their combined hash matches the Hash tag currently appearing in
+the journal).
+
+These hashes depend on the hashes of previous transactions, such that
+the single hash value of the final transaction is sufficient to
+guarantee the shape of the entire history leading up to it.
+
+The other details that the hash depends on are the following details
+from each posting in the transaction:
+
+@itemize
+@item fullname of the account
+@item amount value
+@end itemize
+
+In addition, these details are hashed from the transaction itself:
+
+@itemize
+@item actual date
+@item auxiliary date (if provided)
+@item code (if provided)
+@item payee
+@end itemize
+
+This list also means that changes in the comments of postings or
+transactions, or in the ordering of the postings within a transaction,
+will not affect the hash. The ordering of the transactions does matter,
+however, the same way as it does for balance assertions.
 
 @item --head @var{INT}
 @itemx --first @var{INT}
