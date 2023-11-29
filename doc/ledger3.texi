@@ -6285,6 +6285,13 @@ transactions.
 @item --add-budget
 Show only unbudgeted postings.
 
+@item --align-intervals
+@findex --start-of-week @var{INT}
+Use the begin time of a period expression as the start of its intervals, if
+specified (@pxref{Period Expressions}).  For example with a period expression of
+"weekly from 2009/01/10" then the begin time of "2009/01/10 will be used as the
+start of the weekly intervals. Overrides @samp{--start-of-week @var{INT}}.
+
 @item --amount @var{EXPR}
 @itemx -t @var{EXPR}
 Apply the given value expression to the posting amount (@pxref{Value
@@ -6943,9 +6950,10 @@ to sort.
 Sort the postings within transactions using the given value expression.
 
 @item --start-of-week @var{INT}
+@findex --align-intervals
 Tell ledger to use a particular day of the week to start its ``weekly''
 summary.  @samp{--start-of-week=1} specifies Monday as the start of the
-week.
+week. Can be overriden by @samp{--align-intervals}.
 
 @item --subtotal
 @itemx -s
@@ -7844,6 +7852,11 @@ October.  The possible forms are:
 in <SPEC>
 @end smallexample
 
+@findex --align-intervals
+Intervals begin at the start of the week, first day of the month,
+quarter or year.  This can be overridden by specifying @option{--align-intervals}
+which will instead use the begin time if specified.
+
 Here are a few examples of period expressions:
 
 @smallexample
@@ -7854,6 +7867,7 @@ weekly from last month
 from sep to oct
 from 10/1 to 10/5
 monthly until 2005
+monthly from 2005/04/06
 from apr
 until nov
 last oct

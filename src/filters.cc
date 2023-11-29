@@ -974,7 +974,7 @@ void interval_posts::operator()(post_t& post)
   if (interval.duration) {
     all_posts.push_back(&post);
   }
-  else if (interval.find_period(post.date())) {
+  else if (interval.find_period(post.date(), align_intervals)) {
     item_handler<post_t>::operator()(post);
   }
 }
@@ -991,10 +991,10 @@ void interval_posts::flush()
                    sort_posts_by_date());
 
   // only if the interval has no start use the earliest post
-  if (!(interval.begin() && interval.find_period(*interval.begin())))
+  if (!(interval.begin() && interval.find_period(*interval.begin(), align_intervals)))
     // Determine the beginning interval by using the earliest post
     if (all_posts.size() > 0 && all_posts.front()
-        && !interval.find_period(all_posts.front()->date()))
+        && !interval.find_period(all_posts.front()->date(), align_intervals))
       throw_(std::logic_error, _("Failed to find period for interval report"));
 
   // Walk the interval forward reporting all posts within each one

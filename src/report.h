@@ -246,6 +246,7 @@ public:
     HANDLER(account_).report(out);
     HANDLER(actual).report(out);
     HANDLER(add_budget).report(out);
+    HANDLER(align_intervals).report(out);
     HANDLER(amount_).report(out);
     HANDLER(amount_data).report(out);
     HANDLER(anon).report(out);
@@ -395,6 +396,8 @@ public:
   OPTION_(report_t, add_budget, DO() {
       parent->budget_flags |= BUDGET_BUDGETED | BUDGET_UNBUDGETED;
     });
+
+  OPTION(report_t, align_intervals);
 
   OPTION__
   (report_t, amount_, // -t

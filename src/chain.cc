@@ -229,7 +229,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
     handler.reset(new interval_posts(handler, expr,
                                      report.HANDLER(period_).str(),
                                      report.HANDLED(exact),
-                                     report.HANDLED(empty)));
+                                     report.HANDLED(empty),
+                                     report.HANDLED(align_intervals)));
 
   if (report.HANDLED(date_))
     handler.reset(new transfer_details(handler, transfer_details::SET_DATE,

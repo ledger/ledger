@@ -451,6 +451,7 @@ public:
   optional<date_t>          next;
   optional<date_duration_t> duration;
   optional<date_t>          end_of_duration;
+  bool                      since_specified = false;
 
   explicit date_interval_t() : aligned(false) {
     TRACE_CTOR(date_interval_t, "");
@@ -466,7 +467,8 @@ public:
       aligned(other.aligned),
       next(other.next),
       duration(other.duration),
-      end_of_duration(other.end_of_duration) {
+      end_of_duration(other.end_of_duration),
+      since_specified(other.since_specified) {
     TRACE_CTOR(date_interval_t, "copy");
   }
   ~date_interval_t() throw() {
@@ -496,7 +498,7 @@ public:
   void   parse(const string& str);
 
   void   resolve_end();
-  void   stabilize(const optional<date_t>& date = none);
+  void   stabilize(const optional<date_t>& date = none, bool align_intervals = false);
 
   bool   is_valid() const {
     return static_cast<bool>(start);
@@ -505,10 +507,11 @@ public:
   /** Find the current or next period containing date.  Returns false if
       no such period can be found.  If allow_shift is true, the default,
       then the interval may be shifted in time to find the period. */
-  bool find_period(const date_t& date        = CURRENT_DATE(),
-                   const bool    allow_shift = true);
+  bool find_period(const date_t& date            = CURRENT_DATE(),
+                   const bool    align_intervals = false,
+                   const bool    allow_shift     = true);
   bool within_period(const date_t& date = CURRENT_DATE()) {
-    return find_period(date, false);
+    return find_period(date, false, false);
   }
 
   optional<date_t> inclusive_end() const {
