@@ -1150,6 +1150,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(amount_);
     else OPT(amount_data);
     else OPT_ALT(primary_date, actual_dates);
+    else OPT(align_intervals);
     else OPT(anon);
     else OPT_ALT(color, ansi);
     else OPT(auto_match);
