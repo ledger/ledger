@@ -134,7 +134,7 @@ std::size_t session_t::read_data(const string& master_account)
       parsing_context.push(*price_db_path);
       parsing_context.get_current().journal = journal.get();
       try {
-        if (journal->read(parsing_context, HANDLED(hashes_)) > 0)
+        if (journal->read(parsing_context, HANDLER(hashes_).hash_type) > 0)
           throw_(parse_error, _("Transactions not allowed in price history file"));
       }
       catch (...) {
@@ -169,7 +169,7 @@ std::size_t session_t::read_data(const string& master_account)
     parsing_context.get_current().journal = journal.get();
     parsing_context.get_current().master  = acct;
     try {
-      xact_count += journal->read(parsing_context, HANDLED(hashes_));
+      xact_count += journal->read(parsing_context, HANDLER(hashes_).hash_type);
     }
     catch (...) {
       parsing_context.pop();
@@ -230,7 +230,7 @@ journal_t * session_t::read_journal_from_string(const string& data)
   parsing_context.get_current().journal = journal.get();
   parsing_context.get_current().master  = journal->master;
   try {
-    journal->read(parsing_context, HANDLED(hashes_));
+    journal->read(parsing_context, HANDLER(hashes_).hash_type);
   }
   catch (...) {
     parsing_context.pop();

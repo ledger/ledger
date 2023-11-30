@@ -594,7 +594,7 @@ namespace {
   }
 }
 
-string xact_t::hash(string nonce) const {
+string xact_t::hash(string nonce, hash_type_t hash_type) const {
   std::ostringstream repr;
   repr << nonce;
   repr << date();
@@ -621,7 +621,8 @@ string xact_t::hash(string nonce) const {
   unsigned char data[128];
   string repr_str(repr.str());
   SHA512((void *)repr_str.c_str(), repr_str.length(), data);
-  return bufferToHex(data, 64 /*SHA512_DIGEST_LENGTH*/);
+  return bufferToHex(
+    data, hash_type == HASH_SHA512 ? 64 : 32 /*SHA512_DIGEST_LENGTH*/);
 }
 
 namespace {

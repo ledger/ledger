@@ -605,6 +605,12 @@ inline string sha1sum(const string& str)
 
 extern const string version;
 
+enum hash_type_t {
+  NO_HASHES = 0,
+  HASH_SHA512 = 1,
+  HASH_SHA512_256 = 2
+};
+
 } // namespace ledger
 
 /*@}*/

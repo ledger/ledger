@@ -163,11 +163,6 @@ public:
      data_files.push_back(str);
    });
 
-  enum hash_type_t {
-    NO_HASHES = 0,
-    HASH_SHA512 = 1
-  };
-
   OPTION__
   (session_t, hashes_,
    hash_type_t hash_type = NO_HASHES;
@@ -175,6 +170,8 @@ public:
    DO_(str) {
      if (str == "sha512" || str == "SHA512") {
        hash_type = HASH_SHA512;
+     } else if (str == "sha512_256" || str == "SHA512_256") {
+       hash_type = HASH_SHA512_256;
      } else {
         throw_(std::invalid_argument, _f("Unrecognized hash type"));
      }
