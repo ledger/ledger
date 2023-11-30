@@ -6765,6 +6765,15 @@ they do not match, an error is reported. You may also write just a
 prefix of the @var{Hash}, which is less verbose but still gives quite
 good assurance.
 
+The support algorithms are:
+
+@table @code
+@item sha512
+Use the SHA512 hashing algorithm.
+@item sha512_256
+Same as SHA512, but record only the first 256 bits.
+@end table
+
 Somewhat like balance assertions, which give assurance that previous
 posting amounts are correct, these @var{Hash} tags give assurance that
 all previous journal entries (in parse order) are unchanged (or at

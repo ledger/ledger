@@ -40,6 +40,7 @@
 #include "query.h"
 #include "pstream.h"
 #include "pool.h"
+#include "session.h"
 #include <algorithm>
 #if HAVE_BOOST_PYTHON
 #include "pyinterp.h"
@@ -79,7 +80,7 @@ namespace {
     instance_t *             parent;
     std::list<application_t> apply_stack;
     bool                     no_assertions;
-    bool                     store_hashes;
+    hash_type_t              hash_type;
 #if TIMELOG_SUPPORT
     time_log_t               timelog;
 #endif
@@ -88,10 +89,10 @@ namespace {
                parse_context_t&       _context,
                instance_t *           _parent = NULL,
                const bool             _no_assertions = false,
-               const bool             _store_hashes = false)
+               const hash_type_t      _hash_type = NO_HASHES)
       : context_stack(_context_stack), context(_context),
         in(*context.stream.get()), parent(_parent),
-        no_assertions(_no_assertions), store_hashes(_store_hashes),
+        no_assertions(_no_assertions), hash_type(_hash_type),
         timelog(context) {}
 
     virtual string description() {
@@ -805,7 +806,7 @@ void instance_t::include_directive(char * line)
           context_stack.get_current().scope   = scope;
           try {
             instance_t instance(context_stack, context_stack.get_current(),
-                                this, no_assertions, store_hashes);
+                                this, no_assertions, hash_type);
             instance.apply_stack.push_front(application_t("account", master));
             instance.parse();
           }
@@ -2020,11 +2021,12 @@ xact_t * instance_t::parse_xact(char *          line,
 
   TRACE_STOP(xact_details, 1);
 
-  if (store_hashes) {
+  if (hash_type != NO_HASHES) {
     string expected_hash =
       xact->hash(previous_xact &&
                  previous_xact->has_tag("Hash") ?
-                 previous_xact->get_tag("Hash")->to_string() : "");
+                 previous_xact->get_tag("Hash")->to_string() : "",
+                 hash_type);
     if (xact->has_tag("Hash")) {
       string current_hash = xact->get_tag("Hash")->to_string();
       if (! std::equal(expected_hash.begin(),
@@ -2059,13 +2061,13 @@ expr_t::ptr_op_t instance_t::lookup(const symbol_t::kind_t kind,
 }
 
 std::size_t journal_t::read_textual(parse_context_stack_t& context_stack,
-                                    bool store_hashes)
+                                    hash_type_t hash_type)
 {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
   {
     instance_t instance(context_stack, context_stack.get_current(), NULL,
                         checking_style == journal_t::CHECK_PERMISSIVE,
-                        store_hashes);
+                        hash_type);
     instance.apply_stack.push_front
       (application_t("account", context_stack.get_current().master));
     instance.parse();

@@ -1,4 +1,4 @@
-.Dd November 23, 2023
+.Dd November 30, 2023
 .Dt LEDGER 1
 .Os
 .Sh NAME
@@ -639,7 +639,14 @@ Record the hash of each transaction in a
 .Ar Hash
 metadata value, according to the hashing algorithm given by the
 .Ar ALGO
-argument. Note that if a
+argument. Support algorithms are
+.Ar sha512
+or
+.Ar sh512_256
+where both use SHA512, but the latter only stores the first half of
+the hash value.
+.Pp
+If a
 .Ar Hash
 metadata value is explicitly provided and does not match what would
 have been generated, an error is reported. Hashes depend on previous
