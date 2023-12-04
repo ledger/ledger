@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import string
 import sys
@@ -9,28 +9,28 @@ from stat import *
 from os.path import *
 
 def report_file(path):
-    dir_elems = string.split(dirname(path), os.sep)
+    dir_elems = dirname(path).split(os.sep)
     if dir_elems[0] == "." or dir_elems[0] == "":
-	dir_elems = dir_elems[1 :]
-    account = string.join(dir_elems, ":")
+      dir_elems = dir_elems[1 :]
+    account = ":".join(dir_elems)
 
     info = os.stat(path)
-    print time.strftime("%Y/%m/%d", time.localtime(info[ST_MTIME])),
+    print(time.strftime("%Y/%m/%d", time.localtime(info[ST_MTIME])))
 
-    print basename(path)
-    print "   ", account, "  ", info[ST_SIZE], "b"
-    print "    Equity:Files"
-    print
+    print(f'''{basename(path)}
+    \t{account}  {info[ST_SIZE]}b
+    \tEquity:Files
+    ''')
 
 def find_files(path):
     xacts = os.listdir(path)
     for xact in xacts:
         xact = join(path, xact)
-	if not islink(xact):
-	    if isdir(xact) and xact != "/proc":
-		find_files(xact)
-	    else:
-		report_file(xact)
+    if not islink(xact):
+        if isdir(xact) and xact != "/proc":
+          find_files(xact)
+        else:
+          report_file(xact)
 
 args = sys.argv[1:]
 if len(args):
@@ -38,12 +38,12 @@ if len(args):
 else:
     paths = ["."]
 
-print """
+print("""
 C 1.00 Kb = 1024 b
 C 1.00 Mb = 1024 Kb
 C 1.00 Gb = 1024 Mb
 C 1.00 Tb = 1024 Gb
-"""
+""")
 
 for path in paths:
     find_files(path)

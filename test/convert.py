@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # convert.py: This script converts a Boost.Test unit test into an
 # equivalent Python unit test.

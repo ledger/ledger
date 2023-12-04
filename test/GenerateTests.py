@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # This script confirms both that the register report "adds up", and that its
 # final balance is the same as what the balance report shows.

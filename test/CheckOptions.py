@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import re
 import os
@@ -40,7 +39,7 @@ class CheckOptions (object):
     for source_file in ['session', 'report']:
       command.append(os.path.join(self.source, 'src', '%s.cc' % source_file))
     try:
-      output = subprocess.check_output(command).split('\n');
+      output = subprocess.check_output(command, universal_newlines=True).split('\n')
     except subprocess.CalledProcessError:
       output = ''
 
@@ -58,7 +57,7 @@ class CheckOptions (object):
   def ledger_functions(self):
     command = shlex.split('grep --no-filename fn_ %s' % (os.path.join(self.source, 'src', 'report.h')))
     try:
-      output = subprocess.check_output(command).split('\n');
+      output = subprocess.check_output(command, universal_newlines=True).split('\n');
     except subprocess.CalledProcessError:
       output = ''
 
@@ -74,7 +73,13 @@ class CheckOptions (object):
       else:
           options.remove(option)
     known_alternates = self.find_alternates()
-    self.unknown_options = {option for option in options if option not in known_alternates}
+    self.unknown_options = options - known_alternates
+    self.missing_options -= {
+        # The option --explicit is a no-op as of March 2020 and is
+        # therefore intentionally undocumented.
+        # For details see commit 43b07fbab3b4c144eca4a771524e59c531ffa074
+        'explicit'
+        }
 
     functions = self.find_functions(self.source_file)
     for function in self.ledger_functions():
@@ -82,8 +87,8 @@ class CheckOptions (object):
           self.missing_functions.add(function)
       else:
           functions.remove(function)
-    known_functions = ['tag', 'has_tag', 'meta', 'has_meta']
-    self.unknown_functions = {function for function in functions if function not in known_functions}
+    known_functions = {'tag', 'has_tag', 'meta', 'has_meta'}
+    self.unknown_functions = functions - known_functions
 
     if len(self.missing_options):
       print("Missing %s option entries for:%s%s\n" % (self.source_type, self.sep, self.sep.join(sorted(list(self.missing_options)))))
