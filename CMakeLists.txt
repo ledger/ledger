@@ -107,6 +107,9 @@ endif()
 
 ########################################################################
 
+include(FindICU)
+find_package(ICU 63 OPTIONAL_COMPONENTS uc i18n)
+
 include(CheckIncludeFiles)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
@@ -159,8 +162,8 @@ endif()
 
 cmake_push_check_state()
 
-set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
-set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} icuuc ${PROFILE_LIBS})
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${ICUE_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} ${ICU_LIBRARIES} ${PROFILE_LIBS})
 
 check_cxx_source_runs("
 #include <boost/regex/icu.hpp>
@@ -298,7 +301,7 @@ macro(add_ledger_library_dependencies _target)
     target_link_libraries(${_target} ${Boost_LIBRARIES})
   endif()
   if (HAVE_BOOST_REGEX_UNICODE)
-    target_link_libraries(${_target} icuuc)
+    target_link_libraries(${_target} ${ICU_LIBRARIES})
   endif()
   target_link_libraries(${_target} ${PROFILE_LIBS})
 endmacro(add_ledger_library_dependencies _target)
