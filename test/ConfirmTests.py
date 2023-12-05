@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # This script confirms both that the register report "adds up", and that its
 # final balance is the same as what the balance report shows.
@@ -56,8 +56,8 @@ def confirm_report(command):
         if re.search(' -[VGB] ', command) and diff < 0.015:
             diff = 0.0
         if diff > 0.001:
-            print("DISCREPANCY: %.3f (%.3f - %.3f) at line %d:" % \)
-                  (running_total - total, running_total, total, index)
+            print("DISCREPANCY: %.3f (%.3f - %.3f) at line %d:" % \
+                  (running_total - total, running_total, total, index))
             print(line,)
             running_total = total
             failure = True
@@ -78,8 +78,8 @@ def confirm_report(command):
         diff = 0.0
     if diff > 0.001:
         print()
-        print("DISCREPANCY: %.3f (%.3f - %.3f) between register and balance" % \)
-                  (balance_total - running_total, balance_total, running_total)
+        print("DISCREPANCY: %.3f (%.3f - %.3f) between register and balance" % \
+                  (balance_total - running_total, balance_total, running_total))
         print(last_line,)
         failure = True
 
