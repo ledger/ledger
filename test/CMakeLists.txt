@@ -31,7 +31,7 @@ macro(add_ledger_harness_tests _class)
       if ((TestFile_IsPythonTest EQUAL -1) OR HAVE_BOOST_PYTHON)
         add_test(NAME ${_class}Test_${TestFile_Name}
           COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/RegressTests.py
-          $<TARGET_FILE:ledger> ${PROJECT_SOURCE_DIR}
+          --ledger $<TARGET_FILE:ledger> --sourcepath ${PROJECT_SOURCE_DIR}
           ${TestFile} ${TEST_PYTHON_FLAGS})
         set_tests_properties(${_class}Test_${TestFile_Name}
           PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
