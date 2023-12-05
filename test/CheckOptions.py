@@ -13,6 +13,7 @@ from subprocess import Popen, PIPE
 class CheckOptions (object):
   def __init__(self, args):
     self.option_pattern = None
+    self.symbol_pattern = None
     self.source_file = None
     self.sep = "\n  --"
 
@@ -33,6 +34,10 @@ class CheckOptions (object):
 
   def find_functions(self, filename):
     return self.find_pattern(filename, self.function_pattern)
+
+  def find_symbols(self, filename):
+    return self.find_pattern(filename, self.symbol_pattern) \
+          if self.symbol_pattern else set()
 
   def find_alternates(self):
     command = shlex.split('grep --no-filename OPT_ALT')
@@ -89,6 +94,10 @@ class CheckOptions (object):
           functions.remove(function)
     known_functions = {'tag', 'has_tag', 'meta', 'has_meta'}
     self.unknown_functions = functions - known_functions
+
+    symbols = self.find_symbols(self.source_file)
+    # NOTA BENE: Some "functions" are actually symbols and documented as such
+    self.missing_functions -= symbols
 
     if len(self.missing_options):
       print("Missing %s option entries for:%s%s\n" % (self.source_type, self.sep, self.sep.join(sorted(list(self.missing_options)))))
