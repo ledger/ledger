@@ -4,6 +4,7 @@ import re
 import os
 import sys
 import shlex
+import pathlib
 import argparse
 import subprocess
 
@@ -11,6 +12,15 @@ from os.path import *
 from subprocess import Popen, PIPE
 
 class CheckOptions (object):
+  @staticmethod
+  def parser():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('-l', '--ledger', type=pathlib.Path, required=True,
+        help='the path to the ledger executable to test with')
+    parser.add_argument('-s', '--source', type=pathlib.Path, required=True,
+        help='the path to the top level ledger source directory')
+    return parser
+
   def __init__(self, args):
     self.option_pattern = None
     self.source_file = None
