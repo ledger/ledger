@@ -515,6 +515,13 @@ class PrepareBuild(CommandLineApp):
                 self.log.info('Looks like you are using Fink on macOS')
                 self.log.error("I don't know the package names for Fink yet!")
                 sys.exit(1)
+            elif shutil.which('nix'):
+                self.log.info('Looks like you are using Nixpkgs on macOS')
+                packages = [
+                    'nix', 'develop',
+                ]
+                self.log.info('Executing: ' + ' '.join(packages))
+                self.execute(*packages)
 
         elif system == 'Linux':
             if exists('/etc/issue'):
