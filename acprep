@@ -63,7 +63,7 @@ class BoostInfo(object):
         if system in ['centos']:
             return [ 'boost-devel' ]
 
-        elif system in ['ubuntu-focal', 'ubuntu-bionic', 'ubuntu-xenial',
+        elif system in ['ubuntu-jammy', 'ubuntu-focal', 'ubuntu-bionic', 'ubuntu-xenial',
                         'ubuntu-eoan', 'ubuntu-trusty', 'ubuntu-cosmic']:
             return [ 'libboost-dev',
                      'libboost-date-time-dev',
@@ -549,7 +549,24 @@ class PrepareBuild(CommandLineApp):
                         'sudo', 'apt-get', 'install',
                         'build-essential',
                     ]
-                    if release == 'focal':
+                    if release == 'jammy':
+                        packages.extend([
+                            'doxygen',
+                            'cmake',
+                            'ninja-build',
+                            'zlib1g-dev',
+                            'libbz2-dev',
+                            'python-dev',
+                            'libgmp3-dev',
+                            'libmpfr-dev',
+                            'gettext',
+                            'libedit-dev',
+                            'texinfo',
+                            'lcov',
+                            'libutfcpp-dev',
+                            'sloccount'
+                        ])
+                    elif release == 'focal':
                         packages.extend([
                             'doxygen',
                             'cmake',
