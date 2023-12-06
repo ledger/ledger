@@ -485,7 +485,7 @@ class PrepareBuild(CommandLineApp):
         system = os.uname().sysname
 
         if system == 'Darwin':
-            if exists('/opt/local/bin/port'):
+            if shutil.which('port'):
                 self.log.info('Looks like you are using MacPorts on macOS')
                 packages = [
                     'sudo', 'port', 'install', '-f',
@@ -502,7 +502,7 @@ class PrepareBuild(CommandLineApp):
                 ] + BoostInfo().dependencies('darwin-macports')
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
-            elif exists('/usr/local/bin/brew') or exists('/opt/local/bin/brew'):
+            elif shutil.which('brew'):
                 self.log.info('Looks like you are using Homebrew on macOS')
                 packages = [
                     'brew', 'install',
@@ -511,7 +511,7 @@ class PrepareBuild(CommandLineApp):
                 ] + BoostInfo().dependencies('darwin-homebrew')
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
-            elif exists('/sw/bin/fink'):
+            elif shutil.which('fink'):
                 self.log.info('Looks like you are using Fink on macOS')
                 self.log.error("I don't know the package names for Fink yet!")
                 sys.exit(1)
