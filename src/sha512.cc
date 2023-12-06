@@ -59,7 +59,7 @@ typedef struct _SHA512_CTX {
 
 void SHA512_Init(SHA512_CTX*);
 void SHA512_Update(SHA512_CTX*, void*, size_t);
-void SHA512_Final(uint8_t[SHA512_DIGEST_LENGTH], SHA512_CTX*);
+void SHA512_Final(sha2_byte[SHA512_DIGEST_LENGTH], SHA512_CTX*);
 unsigned char *SHA512(void *data, unsigned int data_len, unsigned char *digest);
 
 
