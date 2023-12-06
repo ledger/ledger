@@ -358,25 +358,6 @@ class PrepareBuild(CommandLineApp):
             self.log.error("Execution failed: " + e)
             sys.exit(1)
 
-    def get_stdout(self, *args):
-        try:
-            self.log.debug('Executing command: ' + ' '.join(args))
-
-            proc    = Popen(args, shell=False, stdout=PIPE)
-            stdout  = proc.stdout.read()
-            retcode = proc.wait()
-            if retcode < 0:
-                self.log.error("Child was terminated by signal",
-                               -retcode)
-                sys.exit(1)
-            elif retcode != 0:
-                self.log.error("Execution failed: " + ' '.join(args))
-                sys.exit(1)
-            return stdout[:-1]
-        except OSError as e:
-            self.log.error("Execution failed:" + e)
-            sys.exit(1)
-
     def isnewer(self, file1, file2):
         "Check if file1 is newer than file2."
         if not exists(file2):
@@ -502,7 +483,7 @@ class PrepareBuild(CommandLineApp):
 
         self.log.info("Installing Ledger's build dependencies ...")
 
-        system = self.get_stdout('uname', '-s').decode(locale.getpreferredencoding())
+        system = os.uname().sysname
 
         if system == 'Darwin':
             if exists('/opt/local/bin/port'):
@@ -823,7 +804,7 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append(self.source_dir)
 
     def setup_for_system(self):
-        system = self.get_stdout('uname', '-s').decode(locale.getpreferredencoding())
+        system = os.uname().sysname
         self.log.info('System type is => ' + system)
 
         if self.options.enable_doxygen:
