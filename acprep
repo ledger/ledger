@@ -100,7 +100,6 @@ class CommandLineApp(object):
 
     force_exit    = True           # If true, always ends run() with sys.exit()
     log_handler   = None
-    boost_major   = "1_52"
 
     def __init__(self):
         "Initialize CommandLineApp."
@@ -519,8 +518,7 @@ class PrepareBuild(CommandLineApp):
 
         elif system == 'Linux':
             if exists('/etc/issue'):
-                issue = open('/etc/issue')
-                issue_name = issue.readline()
+                issue_name = open('/etc/issue').readline()
                 if issue_name.startswith('Ubuntu'):
                     info = dict([line.strip().split('=', 1)
                                  for line in open('/etc/lsb-release')])
