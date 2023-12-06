@@ -709,6 +709,33 @@ class PrepareBuild(CommandLineApp):
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
 
+            if exists('/etc/debian_version'):
+                release = open('/etc/debian_version').readline()
+                if release.startswith('trixie'):
+                    self.log.info(f'Looks like you are using APT on Debian {release}')
+                    packages = [
+                        'sudo', 'apt', 'install', '-y', '--no-install-recommends',
+                        'clang',
+                        'cmake',
+                        'ninja',
+                        'libboost-dev',
+                        'libmpfr-dev',
+                        'libgmp-dev',
+                        'libicu-dev',
+                        'libedit-dev',
+                        'libutfcpp-dev',
+                        'gettext',
+                        'texinfo',
+                        'doxygen',
+                        'graphviz',
+                        'lcov',
+                        'sloccount',
+                    ]
+                    self.log.info('Executing: ' + ' '.join(packages))
+                    self.execute(*packages)
+                else:
+                    self.log.info(f"I do not recognize your version '{release}' of Debian!")
+
             if exists('/etc/redhat-release'):
                 release = open('/etc/redhat-release').readline()
                 if release.startswith('CentOS'):
