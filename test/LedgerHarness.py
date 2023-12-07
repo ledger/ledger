@@ -55,10 +55,10 @@ class LedgerHarness:
 
     def __init__(self, ledger, sourcepath, verify=False, gmalloc=False, python=False):
         if not ledger.is_file():
-            print("Cannot find ledger at '{ledger}'", file=sys.stderr)
+            print(f"Cannot find ledger at '{ledger}'", file=sys.stderr)
             sys.exit(1)
         if not sourcepath.is_dir():
-            print("Cannot find source path at '{sourcepath}'", file=sys.stderr)
+            print(f"Cannot find source path at '{sourcepath}'", file=sys.stderr)
             sys.exit(1)
 
         self.ledger     = ledger.resolve()

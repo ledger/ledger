@@ -169,7 +169,7 @@ def csv2ods(csvname, odsname, encoding='', singleFileDirectory=None, knownChecks
                             print(f'WARNING: link {val} DOES NOT EXIST at {linkpath}')
                         if verbose:
                             if os.path.exists(linkpath):
-                                print('relative link {val} EXISTS at {linkpath}')
+                                print(f'relative link {val} EXISTS at {linkpath}')
                     else:
                         if val == "pagebreak":
                             doc.sheets[doc.sheet_index].set_sheet_config(('row', row), style_pagebreak)
