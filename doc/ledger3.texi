@@ -2123,7 +2123,7 @@ posting cost with @code{@@@@ AMOUNT}.  The @code{NOTE} may
 specify an actual and/or effective date for the posting by using
 the syntax @code{[ACTUAL_DATE]} or @code{[=EFFECTIVE_DATE]} or
 @code{[ACTUAL_DATE=EFFECTIVE_DATE]} (@pxref{Virtual postings}). Lastly,
-note that both the @code{AMOUNT} and @code{NOTE} must be preceded by
+note that the @code{AMOUNT} must be preceded by
 at least two whitespace characters.
 
 @item P
