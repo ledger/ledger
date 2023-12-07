@@ -10,8 +10,8 @@ using namespace std;
 TEST(CPP17APITests, test_utf16to8)
 {
     u16string utf16string = {0x41, 0x0448, 0x65e5, 0xd834, 0xdd1e};
-    u16string_view utf16stringview(u16string);
-    string u = utf16to8(utf16string);
+    u16string_view utf16stringview(utf16string);
+    string u = utf16to8(utf16stringview);
     EXPECT_EQ (u.size(), 10);
 }
 
