@@ -1082,6 +1082,7 @@ namespace {
     }
 
     void operator()(const amount_t& amount) {
+      if(amount.is_zero()) return;
       post_t& balance_post = temps.create_post(xact, &balance_account);
       balance_post.amount = - amount;
       (*handler)(balance_post);

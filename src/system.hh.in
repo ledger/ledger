@@ -52,6 +52,7 @@
 #cmakedefine01 HAVE_GETTEXT
 
 #cmakedefine01 HAVE_EDIT
+#cmakedefine01 HAVE_READLINE
 #cmakedefine01 HAVE_GETPWUID
 #cmakedefine01 HAVE_GETPWNAM
 #cmakedefine01 HAVE_IOCTL

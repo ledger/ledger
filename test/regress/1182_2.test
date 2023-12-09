@@ -13,5 +13,5 @@ __ERROR__
 While parsing file "$FILE", line 5:
 While parsing automated transaction:
 > ============
-Error: Expected predicate after '='
+Error: note operator not followed by argument
 end test

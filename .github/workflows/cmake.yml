@@ -31,7 +31,7 @@ jobs:
             cmake_args: -DUSE_PYTHON=ON -DUSE_GPGME=ON
           }
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Check out repository code
 
       - if: runner.os == 'Linux'
@@ -53,7 +53,7 @@ jobs:
           brew list -1 | grep python | while read formula; do brew unlink $formula; brew link --overwrite $formula; done
 
           brew update
-          brew install boost boost-python3 gmp mpfr gpgme
+          brew install --force --overwrite boost boost-python3 gmp mpfr icu4c gpgme
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.

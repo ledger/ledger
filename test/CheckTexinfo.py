@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import sys
 import re
@@ -91,24 +90,9 @@ class CheckTexinfo (CheckOptions):
     return options
 
 if __name__ == "__main__":
-  def getargs():
-    parser = argparse.ArgumentParser(prog='CheckTexinfo',
-            description='Check that ledger options are documented in the texinfo manual')
-    parser.add_argument('-l', '--ledger',
-        dest='ledger',
-        type=str,
-        action='store',
-        required=True,
-        help='the path to the ledger executable to test with')
-    parser.add_argument('-s', '--source',
-        dest='source',
-        type=str,
-        action='store',
-        required=True,
-        help='the path to the top level ledger source directory')
-    return parser.parse_args()
-
-  args = getargs()
+  args = argparse.ArgumentParser(prog='CheckTexinfo',
+                                 description='Check that ledger options are documented in the texinfo manual',
+                                 parents=[CheckOptions.parser()]).parse_args()
   script = CheckTexinfo(args)
   status = script.main()
   sys.exit(status)
