@@ -8,21 +8,21 @@ payee REWE
 # When reading csv file without directives:
 test -f /dev/null convert test/baseline/feat-convert-with-directives.dat
 2012/01/01 * KFC
-    Expenses:Unknown                             $10
-    Equity:Unknown
+    Expenses:Unknown
+    Equity:Unknown                              $-10
 
 2012/01/02 * REWE SAGT DANKE  123454321
-    Expenses:Unknown                             10€
-    Equity:Unknown
+    Expenses:Unknown
+    Equity:Unknown                              -10€
 end test
 
 # When reading csv file with directives:
 test --account "Assets:Cash" convert test/baseline/feat-convert-with-directives.dat
 2012/01/01 * KFC
-    Expenses:Food                                $10
-    Assets:Cash
+    Expenses:Food
+    Assets:Cash                                 $-10
 
 2012/01/02 * REWE
-    Expenses:Food                                10€
-    Assets:Cash
+    Expenses:Food
+    Assets:Cash                                 -10€
 end test
