@@ -44,6 +44,7 @@
 #pragma once
 
 #include <boost/uuid/detail/sha1.hpp>
+#include <ledger.hh>
 
 #define TIMERS_ON   1
 
@@ -94,7 +95,7 @@ namespace ledger {
 
 #else // !NO_ASSERTS
 
-#define assert(x)
+#define assert(x) ((void)(x))
 
 #endif // !NO_ASSERTS
 

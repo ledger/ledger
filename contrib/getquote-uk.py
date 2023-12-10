@@ -1,7 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
-import urllib, string, sys
+import urllib, string, sys, os
 
 def download(sym):
    url	 = "http://uk.old.finance.yahoo.com/d/quotes.csv?s="
@@ -13,11 +12,13 @@ def download(sym):
    result = float(fields[1])/100
    return result
 
-
+if len(sys.argv) == 1:
+  print(f'USAGE: {os.path.basename(__file__)} SYMBOL', file=sys.stderr)
+  sys.exit(-1)
 sym = sys.argv[1]
 sym = sym.replace('_', '.')
 if sym == '£':
-   print '£1.00'
+   print('£1.00')
 else:
-   try: print "£" +str(download(sym))
+   try: print(f'£ {str(download(sym))}')
    except: pass

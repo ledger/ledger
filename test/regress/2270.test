@@ -1,0 +1,13 @@
+2023-07-10 * tx
+  A   1 USD
+  B  -1 USD
+  C   1 BTC
+  D  -1 BTC
+  E
+
+test register --columns 80
+23-Jul-10 tx                    A                             1 USD        1 USD
+                                B                            -1 USD            0
+                                C                             1 BTC        1 BTC
+                                D                            -1 BTC            0
+end test

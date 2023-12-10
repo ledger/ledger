@@ -1672,7 +1672,7 @@ There are several forms of comments within a transaction, for example:
 2011/12/11  Something Sweet
     ; German Chocolate Cake
     ; :Broke Diet:
-    Expenses:Food                  $10.00 ; Friends: The gang
+    Expenses:Food                  $10.00  ; Friends: The gang
     Assets:Credit Union:Checking
 @end smallexample
 
@@ -1775,7 +1775,7 @@ commodity name must be enclosed in double quotes @samp{"}:
 
 Please note that, for querying quoted commodities, the quotes need to be escaped, as follows:
 
-@smallexample @c command:15453B3
+@smallexample @c command:9FB8B7E
 $ ledger -f d reg -l 'commodity == "\"Arcancia Équilibre 454\""'
 @end smallexample
 
@@ -2119,10 +2119,12 @@ The @code{ACCOUNT} may be surrounded by parentheses if it is a virtual
 posting, or square brackets if it is a virtual posting that
 must balance.  The @code{AMOUNT} can be followed by a per-unit
 posting cost, by specifying @code{@@ AMOUNT}, or a complete
-posting cost with @code{@@@@ AMOUNT}.  Lastly, the @code{NOTE} may
+posting cost with @code{@@@@ AMOUNT}.  The @code{NOTE} may
 specify an actual and/or effective date for the posting by using
 the syntax @code{[ACTUAL_DATE]} or @code{[=EFFECTIVE_DATE]} or
-@code{[ACTUAL_DATE=EFFECTIVE_DATE]} (@pxref{Virtual postings}).
+@code{[ACTUAL_DATE=EFFECTIVE_DATE]} (@pxref{Virtual postings}). Lastly,
+note that the @code{AMOUNT} must be preceded by
+at least two whitespace characters.
 
 @item P
 @findex --download
@@ -3987,7 +3989,7 @@ something like
 @cindex effective date of invoice
 
 @smallexample @c input:validate
-2008/01/01=2008/01/14 Client invoice  ;  estimated date you'll be paid
+2008/01/01=2008/01/14 Client invoice  ; estimated date you'll be paid
     Assets:Accounts Receivable            $100.00
     Income: Client name
 @end smallexample
@@ -3995,7 +3997,7 @@ something like
 Then, when you receive the payment, you change it to
 
 @smallexample @c input:validate
-2008/01/01=2008/01/15 Client invoice ;  actual date money received
+2008/01/01=2008/01/15 Client invoice  ; actual date money received
     Assets:Accounts Receivable            $100.00
     Income: Client name
 @end smallexample
@@ -4082,6 +4084,8 @@ Forecasting}.
 @node Concrete Example of Automated Transactions,  , Periodic Transactions, Automated Transactions
 @subsection Concrete Example of Automated Transactions
 
+@subsubsection Tithing
+
 As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
 It is similar to tithing for Jews and Christians, or to Zakát for
 Muslims.  The exact details of computing Huqúqu'lláh are somewhat
@@ -4090,7 +4094,7 @@ complex, but if you have further interest, please consult the Web.
 Ledger makes this otherwise difficult law very easy.  Just set up an
 automated posting at the top of your ledger file:
 
-@smallexample @c input:C371854
+@smallexample @c input:EFFC310
 ; This automated transaction will compute Huqúqu'lláh based on this
 ; journal's postings.  Any accounts that match will affect the
 ; Liabilities:Huqúqu'lláh account by 19% of the value of that posting.
@@ -4106,7 +4110,7 @@ account.  So, if $1000 is earned from @samp{Income:Salary}, $190 is
 added to @samp{Liabilities:Huqúqu'lláh}; if $1000 is spent on Rent,
 $190 is subtracted.
 
-@smallexample @c input:C371854
+@smallexample @c input:EFFC310
 2003/01/01 (99) Salary
   Income:Salary  -$1000
   Assets:Checking
@@ -4130,11 +4134,11 @@ When ready to pay, just write a check to cover the amount shown in
 That's it.  To see how much Huqúq is currently owed based on your
 ledger transactions, use:
 
-@smallexample @c command:C371854
+@smallexample @c command:EFFC310
 $ ledger balance Liabilities:Huqúq
 @end smallexample
 
-@smallexample @c output:C371854
+@smallexample @c output:EFFC310
                 $-95  Liabilities:Huqúqu'lláh
 @end smallexample
 
@@ -4174,6 +4178,42 @@ This example causes 10% of the matching account's total to be deferred
 to the @samp{Savings} account---as a balanced virtual posting, which
 may be excluded from reports by using @option{--real}.
 
+@subsubsection Credit Card Cashback
+
+Credit cards sometimes provide a cashback percentage of purchases. This
+can be setup with the following:
+
+@smallexample @c input:B03E97E
+; This automated transaction will add to "Assets:Credit Card Cashback"
+; the amount of the transaction multiplied by the "cashback" tag.
+
+= "Liabilities:Credit Card" and %cashback
+    Assets:Credit Card Cashback  (-amount * tag("cashback") * 0.01)
+    Income:Credit Card Rewards    (amount * tag("cashback") * 0.01)
+@end smallexample
+
+To add a transaction that gives 2% cashback:
+
+@smallexample @c input:B03E97E
+2023/06/06 McDonalds
+  ; cashback:: 2%
+  Expenses:Food:Restaurants  $23.98
+  Liabilities:Credit Card
+@end smallexample
+
+Now when a report is generated, e.g.
+@smallexample @c command:B03E97E
+$ ledger -f cashback.dat reg
+@end smallexample
+
+The cashback postings appear with the transaction.
+
+@smallexample @c output:B03E97E
+23-Jun-06 McDonalds             Expen:Food:Restaurants       $23.98       $23.98
+                                Liabilitie:Credit Card      $-23.98            0
+                                ..Credit Card Cashback        $0.48        $0.48
+                                In:Credit Card Rewards       $-0.48            0
+@end smallexample
 @node Building Reports, Reporting Commands, Transactions, Top
 @chapter Building Reports
 
@@ -4812,16 +4852,16 @@ you will get the result:
     ; CSV: 767406,12/13/2011,"Deposit","CASH DEPOSIT",,45.00,00001646.89,,
     ; Imported: 2012/01/13
     ; UUID: ce0b7d42b02ce5eaf0d828c3b1028041fd09494c
-    Expenses:Unknown                             -45
-    Assets:MyBank
+    Expenses:Unknown
+    Assets:MyBank                                 45
 
 2011/12/13 * Withdrawal  ;ACE HARDWARE 16335 S HOUGHTON RD
     ; balance: 00001640.04
     ; CSV: 767718,12/13/2011,"Withdrawal","ACE HARDWARE 16335 S HOUGHTON RD",8.80,,00001640.04,,
     ; Imported: 2012/01/13
     ; UUID: 0aaf85911adc447ea2d5377ff6a60d6b2940047f
-    Expenses:Unknown                             8.8
-    Assets:MyBank
+    Expenses:Unknown
+    Assets:MyBank                               -8.8
 @end smallexample
 
 The three added metadata are: @samp{CSV} as the original line from csv
@@ -6678,7 +6718,7 @@ wrong value you can use metadata to specify the expected amount:
 
 @smallexample @c input:validate
 2012-03-12  Paycheck
-    Income  $-990;  Expected:: $-1000.00
+    Income  $-990  ; Expected:: $-1000.00
     Checking
 @end smallexample
 
@@ -10400,7 +10440,7 @@ features, include automatic and virtual transactions,
   Assets:Checking
 
 2011/01/19 Grocery Store
-  Expenses:Food:Groceries             $ 44.00 ; hastag: not block
+  Expenses:Food:Groceries             $ 44.00  ; hastag: not block
   Assets:Checking
 
 2011/01/25 Bank

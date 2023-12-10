@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import getopt
 import time
@@ -18,9 +18,9 @@ length = 0.0
 i = 0
 while i < count:
     begin = time.time()
-    cmd = '"' + string.join(args, '" "') + '"';
+    cmd = '"' + '" "'.join(args) + '"';
     os.system(cmd)
     length += time.time() - begin
     i += 1
 
-print >> sys.stderr, length / count
+print(length / count, file=sys.stderr)

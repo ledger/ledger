@@ -19,12 +19,10 @@ set(Ledger_TEST_TIMEZONE "America/Chicago")
 
 enable_testing()
 
-add_definitions(
-  -std=c++11
-  -DBOOST_FILESYSTEM_NO_DEPRECATED
-)
+add_compile_definitions(BOOST_FILESYSTEM_NO_DEPRECATED)
+add_compile_options(-std=c++11)
 if (CYGWIN)
-  add_definitions(-U__STRICT_ANSI__)
+  add_compile_options(-U__STRICT_ANSI__)
 endif()
 
 ########################################################################
@@ -109,6 +107,9 @@ endif()
 
 ########################################################################
 
+include(FindICU)
+find_package(ICU 63 OPTIONAL_COMPONENTS uc i18n)
+
 include(CheckIncludeFiles)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
@@ -161,8 +162,8 @@ endif()
 
 cmake_push_check_state()
 
-set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
-set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} icuuc ${PROFILE_LIBS})
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${ICUE_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} ${ICU_LIBRARIES} ${PROFILE_LIBS})
 
 check_cxx_source_runs("
 #include <boost/regex/icu.hpp>
@@ -189,14 +190,18 @@ include_directories(${CMAKE_INCLUDE_PATH})
 
 macro(find_opt_library_and_header _header_var _header _lib_var _lib _have_var)
   if (${_have_var})
+    message("-- Looking for ${_header} in ${_lib}")
     find_path(${_header_var} ${_header})
     if (NOT ${_header_var})
+      message("-- Looking for ${_header} in ${_lib} - not found")
       set(${_have_var} 0)
     else()
       find_library(${_lib_var} ${_lib})
       if (NOT ${_lib_var})
+        message("-- Looking for ${_header} in ${_lib} - not found")
         set(${_have_var} 0)
       else()
+        message("-- Looking for ${_header} in ${_lib} - found")
         include_directories(SYSTEM "${${_header_var}}")
         set(${_have_var} 1)
       endif()
@@ -246,8 +251,13 @@ if (MPFR_PATH AND EXISTS "${MPFR_PATH}/mpfr.h")
 endif()
 
 
-check_library_exists(edit readline "" HAVE_EDIT)
-find_opt_library_and_header(EDIT_PATH histedit.h EDIT_LIB edit HAVE_EDIT)
+check_library_exists(edit add_history "" HAVE_EDIT)
+find_opt_library_and_header(EDIT_PATH editline/readline.h EDIT_LIB edit HAVE_EDIT)
+if (NOT HAVE_EDIT)
+check_library_exists(readline add_history "" HAVE_READLINE)
+find_opt_library_and_header(READLINE_PATH readline/history.h READLINE_LIB readline HAVE_READLINE)
+endif (NOT HAVE_EDIT)
+
 
 #find_package(Gettext)           # Used for running tests
 
@@ -269,6 +279,9 @@ macro(add_ledger_library_dependencies _target)
   if (HAVE_EDIT)
     target_link_libraries(${_target} ${EDIT_LIB})
   endif()
+  if (HAVE_READLINE)
+    target_link_libraries(${_target} ${READLINE_LIB})
+  endif()
   if (HAVE_GETTEXT)
     target_link_libraries(${_target} ${INTL_LIB})
   endif()
@@ -288,7 +301,7 @@ macro(add_ledger_library_dependencies _target)
     target_link_libraries(${_target} ${Boost_LIBRARIES})
   endif()
   if (HAVE_BOOST_REGEX_UNICODE)
-    target_link_libraries(${_target} icuuc)
+    target_link_libraries(${_target} ${ICU_LIBRARIES})
   endif()
   target_link_libraries(${_target} ${PROFILE_LIBS})
 endmacro(add_ledger_library_dependencies _target)

@@ -63,6 +63,7 @@ Dependency  | Version (or greater)
 [Gmp]       | 6.1.2
 [Mpfr]      | 4.0.2
 [utfcpp]    | 3.2.3
+[ICU]       | 63 _optional_
 [gettext]   | 0.17 _optional_
 [libedit]   | 20090111-3.0 _optional_
 [Python]    | 3.9 _optional_
@@ -189,6 +190,7 @@ hack as much as you like, then [open a pull request on GitHub](https://github.co
 [GMP]: https://gmplib.org/
 [MPFR]: https://www.mpfr.org/
 [utfcpp]: https://utfcpp.sourceforge.net
+[ICU]: https://icu.unicode.org
 [gettext]: https://www.gnu.org/software/gettext/
 [libedit]: https://thrysoee.dk/editline/
 [Python]: https://python.org
