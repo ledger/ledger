@@ -6796,7 +6796,7 @@ In addition, these details are hashed from the transaction itself:
 
 @itemize
 @item actual date
-@item auxiliary date (if provided)
+@item auxiliary date (if provided; also called effective date)
 @item code (if provided)
 @item payee
 @end itemize
