@@ -460,7 +460,7 @@ void SHA512_Final(uint8_t digest[], SHA512_CTX* context) {
 	MEMSET_BZERO(context, sizeof(SHA512_CTX));
 }
 
-unsigned char *
+uint8_t *
 SHA512(void *data, unsigned int data_len, uint8_t *digest)
 {
     SHA512_CTX ctx;
