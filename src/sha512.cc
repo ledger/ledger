@@ -57,12 +57,6 @@ typedef struct _SHA512_CTX {
 } SHA512_CTX;
 #endif /* do we have sha512 header defs */
 
-void SHA512_Init(SHA512_CTX*);
-void SHA512_Update(SHA512_CTX*, void*, size_t);
-void SHA512_Final(uint8_t[], SHA512_CTX*);
-unsigned char *SHA512(void *data, unsigned int data_len, unsigned char *digest);
-
-
 /*** SHA-256/384/512 Machine Architecture Definitions *****************/
 /*
  * BYTE_ORDER NOTE:
@@ -467,7 +461,7 @@ void SHA512_Final(uint8_t digest[], SHA512_CTX* context) {
 }
 
 unsigned char *
-SHA512(void *data, unsigned int data_len, unsigned char *digest)
+SHA512(void *data, unsigned int data_len, uint8_t *digest)
 {
     SHA512_CTX ctx;
     SHA512_Init(&ctx);
