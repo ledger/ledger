@@ -27,6 +27,10 @@ args = parser.parse_args()
 multiproc &= (args.jobs >= 1)
 harness = LedgerHarness(args.ledger, args.sourcepath, args.verify, args.gmalloc, args.python)
 
+match = re.match(r'(Baseline|Regress|Manual)Test_(.*)', str(args.tests))
+if match:
+  args.tests = pathlib.Path('test') / match.group(1).lower() / (match.group(2) + '.test')
+
 if not args.tests.is_dir() and not args.tests.is_file():
     print(f'{args.tests} is not a directory or file (cwd: {os.getcwd()})'
           , file=sys.stderr)
