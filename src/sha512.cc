@@ -43,6 +43,7 @@
 #include <string.h>	/* memcpy()/memset() or bcopy()/bzero() */
 #include <stdint.h>	/* memcpy()/memset() or bcopy()/bzero() */
 #include <assert.h>	/* assert() */
+#include <sys/types.h>
 
 extern "C" {
 
