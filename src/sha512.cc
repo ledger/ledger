@@ -1,3 +1,5 @@
+#define uint8_t unsigned char   // <-- added by John Wiegley for compilation
+
 /*
  * FILE:	sha2.c
  * AUTHOR:	Aaron D. Gifford - http://www.aarongifford.com/
@@ -41,9 +43,7 @@
  * $Id: sha2.c,v 1.1 2001/11/08 00:01:51 adg Exp adg $
  */
 #include <string.h>	/* memcpy()/memset() or bcopy()/bzero() */
-#include <stdint.h>	/* memcpy()/memset() or bcopy()/bzero() */
 #include <assert.h>	/* assert() */
-#include <sys/types.h>
 
 extern "C" {
 
@@ -58,6 +58,12 @@ typedef struct _SHA512_CTX {
 	uint8_t	buffer[SHA512_BLOCK_LENGTH];
 } SHA512_CTX;
 #endif /* do we have sha512 header defs */
+
+void SHA512_Init(SHA512_CTX*);
+void SHA512_Update(SHA512_CTX*, void*, size_t);
+void SHA512_Final(uint8_t[SHA512_DIGEST_LENGTH], SHA512_CTX*);
+unsigned char *SHA512(void *data, unsigned int data_len, unsigned char *digest);
+
 
 /*** SHA-256/384/512 Machine Architecture Definitions *****************/
 /*
@@ -433,7 +439,7 @@ static void SHA512_Last(SHA512_CTX* context) {
 	SHA512_Transform(context, (sha2_word64*)context->buffer);
 }
 
-void SHA512_Final(uint8_t digest[], SHA512_CTX* context) {
+void SHA512_Final(sha2_byte digest[], SHA512_CTX* context) {
 	sha2_word64	*d = (sha2_word64*)digest;
 
 	/* Sanity check: */
@@ -462,8 +468,8 @@ void SHA512_Final(uint8_t digest[], SHA512_CTX* context) {
 	MEMSET_BZERO(context, sizeof(SHA512_CTX));
 }
 
-uint8_t *
-SHA512(void *data, unsigned int data_len, uint8_t *digest)
+unsigned char *
+SHA512(void *data, unsigned int data_len, unsigned char *digest)
 {
     SHA512_CTX ctx;
     SHA512_Init(&ctx);
