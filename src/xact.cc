@@ -596,13 +596,16 @@ namespace {
 
 string xact_t::hash(string nonce, hash_type_t hash_type) const {
   std::ostringstream repr;
+
   repr << nonce;
   repr << date();
   repr << aux_date();
   repr << code;
   repr << payee;
+
   posts_list all_posts(posts.begin(), posts.end());
   std::vector<std::string> strings;
+
   foreach (post_t * post, all_posts) {
     std::ostringstream posting;
     posting << post->account->fullname();
@@ -614,13 +617,18 @@ string xact_t::hash(string nonce, hash_type_t hash_type) const {
     posting << post->checkout;
     strings.push_back(posting.str());
   }
+
   std::sort(strings.begin(), strings.end());
+
   foreach (string& str, strings) {
     repr << str;
   }
+
   unsigned char data[128];
   string repr_str(repr.str());
+
   SHA512((void *)repr_str.c_str(), repr_str.length(), data);
+
   return bufferToHex(
     data, hash_type == HASH_SHA512 ? 64 : 32 /*SHA512_DIGEST_LENGTH*/);
 }
