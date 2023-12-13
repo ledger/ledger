@@ -170,8 +170,8 @@ public:
    DO_(str) {
      if (str == "sha512" || str == "SHA512") {
        hash_type = HASH_SHA512;
-     } else if (str == "sha512_256" || str == "SHA512_256") {
-       hash_type = HASH_SHA512_256;
+     } else if (str == "sha512_half" || str == "SHA512_Half") {
+       hash_type = HASH_SHA512_Half;
      } else {
         throw_(std::invalid_argument, _f("Unrecognized hash type"));
      }

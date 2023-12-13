@@ -10,7 +10,7 @@
     Assets:Cash
     Expenses:Books          $20.00
 
-test print --hashes=sha512_256
+test print --hashes=sha512_half
 2008/01/01 January
     ; Hash: c0f3322857def0d32bd2c9398e0785aacc8206f9ba64ef923978cbdcea13f59c
     Expenses:Books                            $10.00

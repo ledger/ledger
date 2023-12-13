@@ -6712,7 +6712,7 @@ The support algorithms are:
 @table @code
 @item sha512
 Use the SHA512 hashing algorithm.
-@item sha512_256
+@item sha512_half
 Same as SHA512, but record only the first 256 bits.
 @end table
 
