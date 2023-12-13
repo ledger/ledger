@@ -603,9 +603,9 @@ string xact_t::hash(string nonce, hash_type_t hash_type) const {
   repr << code;
   repr << payee;
 
-  posts_list all_posts(posts.begin(), posts.end());
   std::vector<std::string> strings;
 
+  posts_list all_posts(posts.begin(), posts.end());
   foreach (post_t * post, all_posts) {
     std::ostringstream posting;
     posting << post->account->fullname();
