@@ -608,7 +608,7 @@ extern const string version;
 enum hash_type_t {
   NO_HASHES = 0,
   HASH_SHA512 = 1,
-  HASH_SHA512_256 = 2
+  HASH_SHA512_Half = 2
 };
 
 } // namespace ledger
