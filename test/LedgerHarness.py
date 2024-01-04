@@ -1,6 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
+import argparse
+import pathlib
+import shlex
 import sys
 import os
 import re
@@ -34,27 +36,36 @@ copyreg.pickle(types.MethodType, _pickle_method, _unpickle_method)
 class LedgerHarness:
     ledger     = None
     sourcepath = None
+    skipped    = 0
     succeeded  = 0
     failed     = 0
     verify     = False
     gmalloc    = False
     python     = False
 
-    def __init__(self, argv):
-        if not os.path.isfile(argv[1]):
-            print("Cannot find ledger at '%s'" % argv[1])
+    @staticmethod
+    def parser():
+      parser = argparse.ArgumentParser(add_help=False)
+      parser.add_argument('-l', '--ledger', type=pathlib.Path, required=True)
+      parser.add_argument('-s', '--sourcepath', type=pathlib.Path, required=True)
+      parser.add_argument('--verify', action='store_true')
+      parser.add_argument('--gmalloc', action='store_true')
+      parser.add_argument('--python', action='store_true')
+      return parser
+
+    def __init__(self, ledger, sourcepath, verify=False, gmalloc=False, python=False):
+        if not ledger.is_file():
+            print(f"Cannot find ledger at '{ledger}'", file=sys.stderr)
             sys.exit(1)
-        if not os.path.isdir(argv[2]):
-            print("Cannot find source path at '%s'" % argv[2])
+        if not sourcepath.is_dir():
+            print(f"Cannot find source path at '{sourcepath}'", file=sys.stderr)
             sys.exit(1)
 
-        self.ledger     = os.path.realpath(argv[1])
-        self.sourcepath = os.path.realpath(argv[2])
-        self.succeeded  = 0
-        self.failed     = 0
-        self.verify     = '--verify' in argv
-        self.gmalloc    = '--gmalloc' in argv
-        self.python     = '--python' in argv
+        self.ledger     = ledger.resolve()
+        self.sourcepath = sourcepath.resolve()
+        self.verify     = verify
+        self.gmalloc    = gmalloc
+        self.python     = python
 
     def run(self, command, verify=None, gmalloc=None, columns=True):
         env = os.environ.copy()
@@ -71,34 +82,29 @@ class LedgerHarness:
             env['MALLOC_FILL_SPACE']     = '1'
             env['MALLOC_STRICT_SIZE']    = '1'
 
+        cmd = [str(self.ledger), '--args-only']
         if (verify is not None and verify) or \
            (verify is None and self.verify):
-            insert = ' --verify'
-        else:
-            insert = ''
-
+            cmd.append('--verify')
         if columns:
-            insert += ' --columns=80'
-
-        command = command.replace('$ledger', '"%s"%s %s' % \
-                         (self.ledger, insert, '--args-only'))
+            cmd.append('--columns=80')
+        command = command.replace('$ledger', shlex.join(cmd))
 
         valgrind = '/usr/bin/valgrind'
         if not os.path.isfile(valgrind):
             valgrind = '/opt/local/bin/valgrind'
 
-        if os.path.isfile(valgrind) and '--verify' in insert:
-            command = valgrind + ' -q ' + command
+        if os.path.isfile(valgrind) and '--verify' in cmd:
+            command = shlex.join([valgrind, '-q', command])
 
-        # If we are running under msys2, use bash to execute the test commands
-        if 'MSYSTEM' in os.environ:
+        ismsys2 = 'MSYSTEM' in os.environ
+        if ismsys2:
+            # If we are running under msys2, use bash to execute the test commands
             bash_path = os.environ['MINGW_PREFIX'] + '/../usr/bin/bash.exe'
-            return Popen([bash_path, '-c', command], shell=False,
-                         close_fds=False, env=env, stdin=PIPE, stdout=PIPE,
-                         stderr=PIPE, cwd=self.sourcepath)
+            command = shlex.join([bash_path, '-c', command])
 
-        return Popen(command, shell=True, close_fds=True, env=env,
-                     stdin=PIPE, stdout=PIPE, stderr=PIPE, 
+        return Popen(command, shell=not ismsys2, close_fds=not ismsys2,
+                     env=env, stdin=PIPE, stdout=PIPE, stderr=PIPE,
                      cwd=self.sourcepath)
 
     def read(self, fd):
@@ -113,10 +119,7 @@ class LedgerHarness:
     def readlines(self, fd):
         lines = []
         for line in fd.readlines():
-            if sys.version_info.major == 2:
-                line = unicode(line, 'utf-8')
-            else:
-                line = line.decode('utf-8')
+            line = line.decode('utf-8')
             if not line.startswith('GuardMalloc'):
                 lines.append(line)
         return lines
@@ -134,6 +137,11 @@ class LedgerHarness:
         sys.stdout.flush()
         self.succeeded += 1
 
+    def skip(self):
+        sys.stdout.write("S")
+        sys.stdout.flush()
+        self.skipped += 1
+
     def failure(self, name=None):
         sys.stdout.write("E")
         if name:
@@ -144,16 +152,20 @@ class LedgerHarness:
     def exit(self):
         print()
         if self.succeeded > 0:
-            print("OK (%d) " % self.succeeded,)
+            print(f"OK ({self.succeeded})")
+        if self.skipped > 0:
+            print(f"SKIPPED ({self.skipped})")
         if self.failed > 0:
-            print("FAILED (%d)" % self.failed,)
+            print(f"FAILED ({self.failed})")
         print()
 
         sys.exit(self.failed)
 
 if __name__ == '__main__':
-    harness = LedgerHarness(sys.argv)
-    proc = harness.run('$ledger -f doc/sample.dat reg')
+    parser = argparse.ArgumentParser(prog='LedgerHarness', parents=[LedgerHarness.parser()])
+    args = LedgerHarness.parser().parse_args()
+    harness = LedgerHarness(args.ledger, args.sourcepath, args.verify, args.gmalloc, args.python)
+    proc = harness.run('$ledger -f test/input/sample.dat reg')
     print('STDOUT:')
     print(proc.stdout.read())
     print('STDERR:')

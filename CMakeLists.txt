@@ -2,6 +2,7 @@ set(Required_CMake_Version 3.16.2)
 set(Required_Boost_Version 1.72)
 set(Required_Gmp_Version 6.1.2)
 set(Required_Mpfr_Version 4.0.2)
+set(Required_Icu_Version 63)
 set(Required_Python_Version 3.9)
 set(Required_Gpgmepp_Version 1.13.1)
 
@@ -107,6 +108,9 @@ endif()
 
 ########################################################################
 
+include(FindICU)
+find_package(ICU ${Required_Icu_Version} OPTIONAL_COMPONENTS uc i18n)
+
 include(CheckIncludeFiles)
 include(CheckLibraryExists)
 include(CheckFunctionExists)
@@ -159,8 +163,8 @@ endif()
 
 cmake_push_check_state()
 
-set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS})
-set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} icuuc ${PROFILE_LIBS})
+set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${ICUE_INCLUDE_DIRS})
+set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} ${ICU_LIBRARIES} ${PROFILE_LIBS})
 
 check_cxx_source_runs("
 #include <boost/regex/icu.hpp>
@@ -298,7 +302,7 @@ macro(add_ledger_library_dependencies _target)
     target_link_libraries(${_target} ${Boost_LIBRARIES})
   endif()
   if (HAVE_BOOST_REGEX_UNICODE)
-    target_link_libraries(${_target} icuuc)
+    target_link_libraries(${_target} ${ICU_LIBRARIES})
   endif()
   target_link_libraries(${_target} ${PROFILE_LIBS})
 endmacro(add_ledger_library_dependencies _target)

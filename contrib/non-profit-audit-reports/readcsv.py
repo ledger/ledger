@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # readcsv.py
 # CSV reading technical study
 #
@@ -23,9 +23,9 @@ import csv
 
 dialects = csv.list_dialects()
 for dialect in dialects:
-    print 'dialect %s' % str(dialect)
+    print(f'dialect {dialect}')
 
-csvfile = open('tests/general-ledger.csv', 'rb')
+csvfile = open('test/general-ledger.csv', 'rb')
 reader = csv.reader(csvfile, delimiter=',', quotechar='"')
 for row in reader:
-    print row
+    print(row)

@@ -1672,7 +1672,7 @@ There are several forms of comments within a transaction, for example:
 2011/12/11  Something Sweet
     ; German Chocolate Cake
     ; :Broke Diet:
-    Expenses:Food                  $10.00 ; Friends: The gang
+    Expenses:Food                  $10.00  ; Friends: The gang
     Assets:Credit Union:Checking
 @end smallexample
 
@@ -2119,10 +2119,12 @@ The @code{ACCOUNT} may be surrounded by parentheses if it is a virtual
 posting, or square brackets if it is a virtual posting that
 must balance.  The @code{AMOUNT} can be followed by a per-unit
 posting cost, by specifying @code{@@ AMOUNT}, or a complete
-posting cost with @code{@@@@ AMOUNT}.  Lastly, the @code{NOTE} may
+posting cost with @code{@@@@ AMOUNT}.  The @code{NOTE} may
 specify an actual and/or effective date for the posting by using
 the syntax @code{[ACTUAL_DATE]} or @code{[=EFFECTIVE_DATE]} or
-@code{[ACTUAL_DATE=EFFECTIVE_DATE]} (@pxref{Virtual postings}).
+@code{[ACTUAL_DATE=EFFECTIVE_DATE]} (@pxref{Virtual postings}). Lastly,
+note that the @code{AMOUNT} must be preceded by
+at least two whitespace characters.
 
 @item P
 @findex --download
@@ -3987,7 +3989,7 @@ something like
 @cindex effective date of invoice
 
 @smallexample @c input:validate
-2008/01/01=2008/01/14 Client invoice  ;  estimated date you'll be paid
+2008/01/01=2008/01/14 Client invoice  ; estimated date you'll be paid
     Assets:Accounts Receivable            $100.00
     Income: Client name
 @end smallexample
@@ -3995,7 +3997,7 @@ something like
 Then, when you receive the payment, you change it to
 
 @smallexample @c input:validate
-2008/01/01=2008/01/15 Client invoice ;  actual date money received
+2008/01/01=2008/01/15 Client invoice  ; actual date money received
     Assets:Accounts Receivable            $100.00
     Income: Client name
 @end smallexample
@@ -6767,7 +6769,7 @@ wrong value you can use metadata to specify the expected amount:
 
 @smallexample @c input:validate
 2012-03-12  Paycheck
-    Income  $-990;  Expected:: $-1000.00
+    Income  $-990  ; Expected:: $-1000.00
     Checking
 @end smallexample
 
@@ -10489,7 +10491,7 @@ features, include automatic and virtual transactions,
   Assets:Checking
 
 2011/01/19 Grocery Store
-  Expenses:Food:Groceries             $ 44.00 ; hastag: not block
+  Expenses:Food:Groceries             $ 44.00  ; hastag: not block
   Assets:Checking
 
 2011/01/25 Bank

@@ -39,7 +39,11 @@
 #include "history.h"
 
 template <typename T>
-struct f_max : public std::binary_function<T, T, bool> {
+struct f_max
+#if __cplusplus < 201103L
+: public std::binary_function<T, T, bool>
+#endif
+{
   T operator()(const T& x, const T& y) const {
     return std::max(x, y);
   }
