@@ -61,8 +61,6 @@ endif()
 
 ########################################################################
 
-find_package(Python COMPONENTS Interpreter) # Used for running tests
-
 if (USE_PYTHON)
   if (NOT BUILD_LIBRARY)
     message(ERROR "Building the python module requires BUILD_LIBRARY=ON.")
