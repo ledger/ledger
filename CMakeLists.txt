@@ -162,7 +162,7 @@ endif()
 cmake_push_check_state()
 
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${ICUE_INCLUDE_DIRS})
-set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} ${ICU_LIBRARIES} ${PROFILE_LIBS})
+set(CMAKE_REQUIRED_LIBRARIES Boost::regex ${ICU_LIBRARIES} ${PROFILE_LIBS})
 
 check_cxx_source_runs("
 #include <boost/regex/icu.hpp>
