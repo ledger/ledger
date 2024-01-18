@@ -438,7 +438,8 @@ commodity_history_impl_t::find_price(const commodity_t& source,
                                      const datetime_t&  moment,
                                      const datetime_t&  oldest)
 {
-  assert(source != target);
+  if (source == target)
+    return none;
 
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
