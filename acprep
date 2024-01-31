@@ -100,7 +100,6 @@ class CommandLineApp(object):
 
     force_exit    = True           # If true, always ends run() with sys.exit()
     log_handler   = None
-    boost_major   = "1_52"
 
     def __init__(self):
         "Initialize CommandLineApp."
@@ -358,25 +357,6 @@ class PrepareBuild(CommandLineApp):
             self.log.error("Execution failed: " + e)
             sys.exit(1)
 
-    def get_stdout(self, *args):
-        try:
-            self.log.debug('Executing command: ' + ' '.join(args))
-
-            proc    = Popen(args, shell=False, stdout=PIPE)
-            stdout  = proc.stdout.read()
-            retcode = proc.wait()
-            if retcode < 0:
-                self.log.error("Child was terminated by signal",
-                               -retcode)
-                sys.exit(1)
-            elif retcode != 0:
-                self.log.error("Execution failed: " + ' '.join(args))
-                sys.exit(1)
-            return stdout[:-1]
-        except OSError as e:
-            self.log.error("Execution failed:" + e)
-            sys.exit(1)
-
     def isnewer(self, file1, file2):
         "Check if file1 is newer than file2."
         if not exists(file2):
@@ -502,10 +482,10 @@ class PrepareBuild(CommandLineApp):
 
         self.log.info("Installing Ledger's build dependencies ...")
 
-        system = self.get_stdout('uname', '-s').decode(locale.getpreferredencoding())
+        system = os.uname().sysname
 
         if system == 'Darwin':
-            if exists('/opt/local/bin/port'):
+            if shutil.which('port'):
                 self.log.info('Looks like you are using MacPorts on macOS')
                 packages = [
                     'sudo', 'port', 'install', '-f',
@@ -522,7 +502,7 @@ class PrepareBuild(CommandLineApp):
                 ] + BoostInfo().dependencies('darwin-macports')
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
-            elif exists('/usr/local/bin/brew') or exists('/opt/local/bin/brew'):
+            elif shutil.which('brew'):
                 self.log.info('Looks like you are using Homebrew on macOS')
                 packages = [
                     'brew', 'install',
@@ -531,15 +511,21 @@ class PrepareBuild(CommandLineApp):
                 ] + BoostInfo().dependencies('darwin-homebrew')
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
-            elif exists('/sw/bin/fink'):
+            elif shutil.which('fink'):
                 self.log.info('Looks like you are using Fink on macOS')
                 self.log.error("I don't know the package names for Fink yet!")
                 sys.exit(1)
+            elif shutil.which('nix'):
+                self.log.info('Looks like you are using Nixpkgs on macOS')
+                packages = [
+                    'nix', 'develop',
+                ]
+                self.log.info('Executing: ' + ' '.join(packages))
+                self.execute(*packages)
 
         elif system == 'Linux':
             if exists('/etc/issue'):
-                issue = open('/etc/issue')
-                issue_name = issue.readline()
+                issue_name = open('/etc/issue').readline()
                 if issue_name.startswith('Ubuntu'):
                     info = dict([line.strip().split('=', 1)
                                  for line in open('/etc/lsb-release')])
@@ -709,6 +695,33 @@ class PrepareBuild(CommandLineApp):
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
 
+            if exists('/etc/debian_version'):
+                release = open('/etc/debian_version').readline()
+                if release.startswith('trixie'):
+                    self.log.info(f'Looks like you are using APT on Debian {release}')
+                    packages = [
+                        'sudo', 'apt', 'install', '-y', '--no-install-recommends',
+                        'clang',
+                        'cmake',
+                        'ninja',
+                        'libboost-dev',
+                        'libmpfr-dev',
+                        'libgmp-dev',
+                        'libicu-dev',
+                        'libedit-dev',
+                        'libutfcpp-dev',
+                        'gettext',
+                        'texinfo',
+                        'doxygen',
+                        'graphviz',
+                        'lcov',
+                        'sloccount',
+                    ]
+                    self.log.info('Executing: ' + ' '.join(packages))
+                    self.execute(*packages)
+                else:
+                    self.log.info(f"I do not recognize your version '{release}' of Debian!")
+
             if exists('/etc/redhat-release'):
                 release = open('/etc/redhat-release').readline()
                 if release.startswith('CentOS'):
@@ -796,7 +809,7 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append(self.source_dir)
 
     def setup_for_system(self):
-        system = self.get_stdout('uname', '-s').decode(locale.getpreferredencoding())
+        system = os.uname().sysname
         self.log.info('System type is => ' + system)
 
         if self.options.enable_doxygen:
