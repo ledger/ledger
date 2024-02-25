@@ -28,10 +28,10 @@ class CheckTexinfo (CheckOptions):
     fun_doc = str()
     fun_example = False
     item_regex = re.compile(self.function_pattern)
-    itemx_regex = re.compile('^@defunx')
-    example_regex = re.compile('^@smallexample\s+@c\s+command:')
-    fix_regex = re.compile('FIX')
-    comment_regex = re.compile('^\s*@c')
+    itemx_regex = re.compile(r'^@defunx')
+    example_regex = re.compile(r'^@smallexample\s+@c\s+command:')
+    fix_regex = re.compile(r'FIX')
+    comment_regex = re.compile(r'^\s*@c')
     for line in open(filename):
         line = line.strip()
         if state == state_normal:
@@ -62,9 +62,9 @@ class CheckTexinfo (CheckOptions):
     option = None
     opt_doc = str()
     item_regex = re.compile(self.option_pattern)
-    itemx_regex = re.compile('^@itemx')
-    fix_regex = re.compile('FIX')
-    comment_regex = re.compile('^\s*@c')
+    itemx_regex = re.compile(r'^@itemx')
+    fix_regex = re.compile(r'FIX')
+    comment_regex = re.compile(r'^\s*@c')
     for line in open(filename):
       line = line.strip()
       if state == state_normal:
