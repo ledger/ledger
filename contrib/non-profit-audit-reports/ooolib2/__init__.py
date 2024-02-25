@@ -437,11 +437,11 @@ class CalcStyles(object):
                 self.property_cell_hyphenate = value
             elif name == 'color':
                 self.property_cell_fg_color = 'default'
-                redata = re.search("^(#[\da-fA-F]{6})$", value)
+                redata = re.search(r'^(#[\da-fA-F]{6})$', value)
                 if redata: self.property_cell_fg_color = value.lower()
             elif name == 'background':
                 self.property_cell_bg_color = 'default'
-                redata = re.search("^(#[\da-fA-F]{6})$", value)
+                redata = re.search(r'^(#[\da-fA-F]{6})$', value)
                 if redata: self.property_cell_bg_color = value.lower()
             elif name == 'backgroundimage':
                 self.property_cell_bg_image = value
@@ -460,7 +460,7 @@ class CalcStyles(object):
         property = getattr(self, 'property_cell_%s' % key)
         if name == key:
             setattr(self, 'property_cell_%s' % key, [value] * 4)
-        match = re.match('%s-(top|right|bottom|left)' % key, name)
+        match = re.match(r'%s-(top|right|bottom|left)' % key, name)
         if match:
             property[self.cardinal.index(match.group(1))] = value
 
@@ -606,9 +606,9 @@ class CalcStyles(object):
                             tagline.append(['element', 'style:repeat-content', 'false'])
                     elif name == 'wrap-option':
                         tagline.append(['element', 'fo:wrap-option', value])
-                    elif re.match('border', name):
+                    elif re.match(r'border', name):
                         tagline.append(['element', 'fo:%s' % name, value])
-                    elif re.match('padding', name):
+                    elif re.match(r'padding', name):
                         tagline.append(['element', 'fo:%s' % name, value])
 
                 # Add any additional internal tags
@@ -691,11 +691,11 @@ class CalcSheet(object):
         # '=IF((A5>A4);A4;"")'
         # datavalue = 'oooc:=IF(([.A5]&gt;[.A4]);[.A4];&quot;&quot;)'
         data = clean_string(data)
-        redata = re.search('^=([A-Z]+)(\(.*)$', data)
+        redata = re.search(r'^=([A-Z]+)(\(.*)$', data)
         if redata:
             # funct is the function name.  The rest if the string will be the funct_args
             funct = redata.group(1)
-            funct_args = re.sub('([A-Z]+\d+)', '[.\\1]', redata.group(2))
+            funct_args = re.sub(r'([A-Z]+\d+)', '[.\\1]', redata.group(2))
             data = 'oooc:=%s%s' % (funct, funct_args)
         return data
 

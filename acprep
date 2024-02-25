@@ -413,16 +413,16 @@ class PrepareBuild(CommandLineApp):
 
             version_m4 = open('CMakeLists.txt', 'r')
             for line in version_m4.readlines():
-                match = re.match('^set\(Ledger_VERSION_MAJOR ([0-9]+)\)', line)
+                match = re.match(r'^set\(Ledger_VERSION_MAJOR ([0-9]+)\)', line)
                 if match:
                     major = match.group(1)
-                match = re.match('^set\(Ledger_VERSION_MINOR ([0-9]+)\)', line)
+                match = re.match(r'^set\(Ledger_VERSION_MINOR ([0-9]+)\)', line)
                 if match:
                     minor = match.group(1)
-                match = re.match('^set\(Ledger_VERSION_PATCH ([0-9]+)\)', line)
+                match = re.match(r'^set\(Ledger_VERSION_PATCH ([0-9]+)\)', line)
                 if match:
                     patch = match.group(1)
-                match = re.match('^set\(Ledger_VERSION_DATE ([0-9]+)\)', line)
+                match = re.match(r'^set\(Ledger_VERSION_DATE ([0-9]+)\)', line)
                 if match:
                     date = match.group(1)
                     break
@@ -840,7 +840,7 @@ class PrepareBuild(CommandLineApp):
         PrepareBuild.__dict__['setup_flavor_' + self.current_flavor](self)
 
     def escape_string(self, data):
-        return re.sub('(["\\\\])', '\\\\\\1', data)
+        return re.sub(r'(['\\\\])', '\\\\\\1', data)
 
     def finalize_config(self):
         self.setup_flavor()
