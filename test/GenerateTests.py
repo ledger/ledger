@@ -35,7 +35,7 @@ if not os.path.isdir(args.tests) and not os.path.isfile(args.tests):
     sys.exit(1)
 
 #def normalize(line):
-#    match = re.match("((\s*)([A-Za-z]+)?(\s*)([-0-9.]+)(\s*)([A-Za-z]+)?)(  (.+))?$", line)
+#    match = re.match(r'((\s*)([A-Za-z]+)?(\s*)([-0-9.]+)(\s*)([A-Za-z]+)?)(  (.+))?$', line)
 #    if match:
 #        if match.group(3):
 #            prefix = match.group(3) + " " + match.group(5)

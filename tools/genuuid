@@ -8,15 +8,15 @@ def scan_path(path):
     try:
         with open(path, 'r') as fd:
             for line in fd:
-                match = re.match('\*', line)
+                match = re.match(r'\*', line)
                 if match:
                     bug = uuid = None
 
-                match = re.search('\[\[bug:([0-9]+)\]\[#[0-9]+\]\]', line)
+                match = re.search(r'\[\[bug:([0-9]+)\]\[#[0-9]+\]\]', line)
                 if match:
                     bug = match.group(1)
                 elif bug:
-                    match = re.search(':ID:\s+(.+?)\s*$', line)
+                    match = re.search(r':ID:\s+(.+?)\s*$', line)
                     if match:
                         uuid = match.group(1)
                         print(f"UPDATE bugs SET cf_uuid='{uuid}' WHERE bug_id={bug};")

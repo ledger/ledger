@@ -60,7 +60,7 @@ class CheckOptions (object):
   def ledger_options(self):
     pipe   = Popen('%s --debug option.names parse true' %
         self.ledger, shell=True, stdout=PIPE, stderr=PIPE)
-    regex = re.compile('\[DEBUG\]\s+Option:\s+(.*?)_?$')
+    regex = re.compile(r'\[DEBUG\]\s+Option:\s+(.*?)_?$')
     ledger_options = {match.group(1).replace('_', '-') for match in {regex.search(line.decode()) for line in pipe.stderr.readlines()} if match}
     return ledger_options
 
