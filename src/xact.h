@@ -127,6 +127,8 @@ public:
                                   const string& name);
 
   virtual bool valid() const;
+
+  string hash(string nonce, hash_type_t hash_type) const;
 };
 
 class auto_xact_t : public xact_base_t

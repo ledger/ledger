@@ -135,13 +135,17 @@ item_t::set_tag(const string&            tag,
 
   string_map::iterator i = metadata->find(tag);
   if (i == metadata->end()) {
+    DEBUG("item.meta", "Setting new metadata value");
     std::pair<string_map::iterator, bool> result
       = metadata->insert(string_map::value_type(tag, tag_data_t(data, false)));
     assert(result.second);
     return result.first;
   } else {
-    if (overwrite_existing)
+    DEBUG("item.meta", "Found old metadata value");
+    if (overwrite_existing) {
+      DEBUG("item.meta", "Overwriting old metadata value");
       (*i).second = tag_data_t(data, false);
+    }
     return i;
   }
 }

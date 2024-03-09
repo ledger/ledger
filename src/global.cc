@@ -116,7 +116,7 @@ void global_scope_t::parse_init(path init_file)
   parsing_context.get_current().journal = session().journal.get();
   parsing_context.get_current().scope   = &report();
 
-  if (session().journal->read(parsing_context) > 0 ||
+  if (session().journal->read(parsing_context, NO_HASHES) > 0 ||
       session().journal->auto_xacts.size() > 0 ||
       session().journal->period_xacts.size() > 0) {
     throw_(parse_error, _f("Transactions found in initialization file '%1%'")

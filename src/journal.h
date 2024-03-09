@@ -184,7 +184,8 @@ public:
     return period_xacts.end();
   }
 
-  std::size_t read(parse_context_stack_t& context);
+  std::size_t read(parse_context_stack_t& context,
+                   hash_type_t hash_type);
 
   bool has_xdata();
   void clear_xdata();
@@ -193,7 +194,8 @@ public:
 
 private:
 
-  std::size_t read_textual(parse_context_stack_t& context);
+  std::size_t read_textual(parse_context_stack_t& context,
+                           hash_type_t hash_type);
 
   bool        should_check_payees();
   bool        payee_not_registered(const string& name);
