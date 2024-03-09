@@ -15,6 +15,7 @@ class CheckManpage (CheckOptions):
     CheckOptions.__init__(self, args)
     self.option_pattern = '\.It Fl \\\\-([-A-Za-z]+)'
     self.function_pattern = '\.It Fn ([-A-Za-z_]+)'
+    self.symbol_pattern = '\.It Sy ([-A-Za-z_]+)'
     self.source_file = join(self.source, 'doc', 'ledger.1')
     self.source_type = 'manpage'
 
