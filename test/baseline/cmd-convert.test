@@ -1,18 +1,18 @@
 
 test -f /dev/null --input-date-format "%m/%d/%Y" convert test/baseline/cmd-convert1.dat
 2011/12/12=2011/12/13 * (100) Test  ;test
-    Expenses:Unknown                             $10
+    Expenses:Unknown
     Equity:Unknown                              $-10 = $20
 
 2011/12/12=2011/12/12 * 
-    Expenses:Unknown                             $10
-    Equity:Unknown
+    Expenses:Unknown
+    Equity:Unknown                              $-10
 end test
 
 test -f /dev/null --input-date-format "%m/%d/%Y" convert test/baseline/cmd-convert2.dat
 2011/01/01 * test
-    Expenses:Unknown                       20.00 EUR
-    Equity:Unknown
+    Expenses:Unknown
+    Equity:Unknown                        -20.00 EUR
 end test
 
 test -f /dev/null --input-date-format "%m/%d/%Y" convert test/baseline/cmd-convert3.dat -> 1
@@ -35,12 +35,12 @@ end test
 
 test -f /dev/null --input-date-format "%m/%d/%Y" convert test/baseline/cmd-convert5.dat
 2011/01/01 * test1
-    Expenses:Unknown                       20.00 EUR
-    Equity:Unknown
+    Expenses:Unknown
+    Equity:Unknown                        -20.00 EUR
 
 2011/01/02 * test2
-    Expenses:Unknown                      -10.00 EUR
-    Equity:Unknown
+    Expenses:Unknown
+    Equity:Unknown                         10.00 EUR
 end test
 
 test -f /dev/null --input-date-format "%m/%d/%Y" convert test/baseline/cmd-convert6.dat -> 1
