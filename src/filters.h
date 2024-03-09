@@ -731,6 +731,7 @@ class interval_posts : public subtotal_posts
   account_t *     empty_account;
   bool            exact_periods;
   bool            generate_empty_posts;
+  bool            align_intervals;
 
   std::deque<post_t *> all_posts;
 
@@ -742,10 +743,12 @@ public:
                  expr_t&                amount_expr,
                  const date_interval_t& _interval,
                  bool                   _exact_periods        = false,
-                 bool                   _generate_empty_posts = false)
+                 bool                   _generate_empty_posts = false,
+                 bool                   _align_intervals      = false)
     : subtotal_posts(_handler, amount_expr), start_interval(_interval),
       interval(start_interval), exact_periods(_exact_periods),
-      generate_empty_posts(_generate_empty_posts) {
+      generate_empty_posts(_generate_empty_posts),
+      align_intervals(_align_intervals) {
     create_accounts();
     TRACE_CTOR(interval_posts,
                "post_handler_ptr, expr_t&, date_interval_t, bool, bool");
