@@ -1,0 +1,13 @@
+= expr 'has_tag("FOO")'
+  A  1 BTC @ $30000
+  A  $-30000
+
+2010/05/31 tx
+  A  1 BTC @ $30000
+  A  $-30000
+  ; :FOO:
+
+test balance
+             $-60000
+               2 BTC  A
+end test
