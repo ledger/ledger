@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,8 +39,7 @@
  *
  * @ingroup report
  */
-#ifndef INCLUDED_REPORT_H
-#define INCLUDED_REPORT_H
+#pragma once
 
 #include "expr.h"
 #include "query.h"
@@ -182,7 +181,7 @@ public:
   value_t fn_abs(call_scope_t& scope);
   value_t fn_justify(call_scope_t& scope);
   value_t fn_quoted(call_scope_t& scope);
-  value_t fn_quoted_rfc4180(call_scope_t& scope);
+  value_t fn_quoted_rfc(call_scope_t& scope);
   value_t fn_join(call_scope_t& scope);
   value_t fn_format_date(call_scope_t& scope);
   value_t fn_format_datetime(call_scope_t& scope);
@@ -419,8 +418,8 @@ public:
    CTOR(report_t, balance_format_) {
     on(none,
        "%(ansify_if("
-       "  justify(scrub(display_total), 20,"
-       "          20 + int(prepend_width), true, color),"
+       "  justify(scrub(display_total), max(int(amount_width),20),"
+       "          max(int(amount_width),20) + int(prepend_width), true, color),"
        "            bold if should_bold))"
        "  %(!options.flat ? depth_spacer : \"\")"
        "%-(ansify_if("
@@ -428,7 +427,7 @@ public:
        "             bold if should_bold))\n%/"
        "%$1\n%/"
        "%(prepend_width ? \" \" * int(prepend_width) : \"\")"
-       "--------------------\n");
+       "%(\"-\" * max(int(amount_width),20))\n");
   });
 
   OPTION(report_t, base);
@@ -807,7 +806,7 @@ public:
   OPTION(report_t, output_); // -o
 
 // setenv() is not available on WIN32
-#if defined(HAVE_ISATTY) and !defined(_WIN32) and !defined(__CYGWIN__)
+#if HAVE_ISATTY and !defined(_WIN32) and !defined(__CYGWIN__)
   OPTION__
   (report_t, pager_,
    CTOR(report_t, pager_) {
@@ -1110,5 +1109,3 @@ public:
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_REPORT_H

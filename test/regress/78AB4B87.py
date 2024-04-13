@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import ledger
 
 eur = ledger.commodities.find_or_create('EUR')

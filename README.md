@@ -1,7 +1,7 @@
 [![Join the chat at https://gitter.im/use-package/Lobby](https://badges.gitter.im/use-package/Lobby.svg)](https://gitter.im/use-package/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![Build Status master](https://github.com/ledger/ledger/actions/workflows/cmake.yml/badge.svg)
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg?style=flat)](https://github.com/ledger/ledger/pulse/monthly)
-[![License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](http://opensource.org/licenses/BSD-3-Clause)
+[![License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](https://opensource.org/licenses/BSD-3-Clause)
 [![GitHub release](https://img.shields.io/github/release/ledger/ledger.svg?style=flat)](https://github.com/ledger/ledger/releases)
 
 # Ledger: Command-Line Accounting
@@ -32,9 +32,9 @@ Now try your first ledger command:
 
     $ ./ledger -f test/input/sample.dat reg
 
-For help on keeping your journal have a look at the
-[documentation] and the [wiki][] (Also see the “Resources” section at the
-end of this file). An Emacs mode for Ledger files can be found in the
+For help on keeping your journal have a look at the [documentation], the [wiki],
+and the [Resources](#resources) section at the end of this file.
+An Emacs mode for Ledger files can be found in the
 [ledger/ledger-mode repository] and a vim plugin is located in the
 [ledger/vim-ledger repository].
 
@@ -46,28 +46,32 @@ If you have Docker installed on your computer or server, you can use a [Docker v
 
 ## Dependencies
 
-If you wish to proceed in this venture, you'll need a few dependencies.  The
-easiest way to get them for your platform is to run this handy Python
-script:
+If you wish to proceed in this venture, you'll need a few dependencies.
+Note that some features, e.g. `--import` require building Ledger with Python support.
+The easiest way to get them for your platform is to run this handy Python script:
 
     $ ./acprep dependencies
+
 
 If that doesn't completely work, here are the dependencies for building the
 current `master` branch:
 
-Dependency | Version (or greater)
------------|---------------------
-[Boost] | 1.49
-[GMP] | 4.2.2
-[MPFR] | 2.4.0
-[utfcpp] | 2.3.4
-[gettext] | 0.17 _optional_
-[libedit] | 20090111-3.0 _optional_
-[Python] | 2.4 _optional_
-[doxygen] | 1.5.7.1 _optional_, for `make docs`
-[graphviz] | 2.20.3 _optional_, for `make docs`
-[texinfo] | 4.13 _optional_, for `make docs`
-[lcov] | 1.6 _optional_, for `make report`, used with `/./acprep gcov`
+Dependency  | Version (or greater)
+------------|---------------------
+[CMake]     | 3.16.2
+[Boost]     | 1.72
+[Gmp]       | 6.1.2
+[Mpfr]      | 4.0.2
+[utfcpp]    | 3.2.3
+[ICU]       | 63 _optional_
+[gettext]   | 0.17 _optional_
+[libedit]   | 20090111-3.0 _optional_
+[Python]    | 3.9 _optional_
+[Gpgmepp]   | 1.13.1 _optional_
+[doxygen]   | 1.9.5 _optional_, for `make docs`
+[graphviz]  | 2.20.3 _optional_, for `make docs`
+[texinfo]   | 4.13 _optional_, for `make docs`
+[lcov]      | 1.6 _optional_, for `make report`, used with `./acprep gcov`
 [sloccount] | 2.26 _optional_, for `make sloc`
 
 ### macOS
@@ -116,9 +120,9 @@ following packages (current as of Ubuntu 18.04):
 
 ### Debian
 
-Debian 9 (stretch), Debian 10 (buster), Debian testing and Debian unstable
-(sid) contain all components needed to build ledger.  You can install all
-required build dependencies using the following command:
+Debian 10 (bullseye), Debian 11 ("bullseye"), Debian testing and Debian
+unstable (sid) contain all components needed to build ledger.  You can
+install all required build dependencies using the following command:
 
     $ sudo apt-get install build-essential cmake autopoint texinfo python3-dev \
          zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
@@ -167,34 +171,42 @@ Now that you're up and running, here are a few resources to keep in mind:
  - [Code analysis][openhub]
 
 If you have ideas you'd like to share, the best way is either to e-mail me a
-patch (I prefer attachments over pasted text), or to get an account on GitHub.
+patch (I prefer attachments over pasted text), or to [get an account on GitHub](https://github.com/signup).
 Once you do, fork the [Ledger project][github],
-hack as much as you like, then send me a pull request via GitHub.
+hack as much as you like, then [open a pull request on GitHub](https://github.com/ledger/ledger/pulls).
 
-[Homepage]: http://ledger-cli.org/
-[documentation]: http://www.ledger-cli.org/docs.html
-[mailing list]: http://list.ledger-cli.org/
-[wiki]: http://wiki.ledger-cli.org/
+[Homepage]: https://ledger-cli.org/
+[documentation]: https://www.ledger-cli.org/docs.html
+[mailing list]: https://list.ledger-cli.org/
+[wiki]: https://wiki.ledger-cli.org/
 [IRC]: irc://irc.libera.chat/ledger
-[github]: http://github.com/ledger/ledger
+[github]: https://github.com/ledger/ledger
 [ledger/vim-ledger repository]: https://github.com/ledger/vim-ledger
-[Homebrew]: http://brew.sh/
+[ledger/ledger-mode repository]: https://github.com/ledger/ledger-mode
+[Homebrew]: https://brew.sh/
 [MacPorts]: https://www.macports.org/
-[Boost]: http://boost.org
-[GMP]: http://gmplib.org/
-[MPFR]: http://www.mpfr.org/
-[utfcpp]: http://utfcpp.sourceforge.net
+[CMake]: https://cmake.org
+[Boost]: https://boost.org
+[GMP]: https://gmplib.org/
+[MPFR]: https://www.mpfr.org/
+[utfcpp]: https://utfcpp.sourceforge.net
+[ICU]: https://icu.unicode.org
 [gettext]: https://www.gnu.org/software/gettext/
-[libedit]: http://thrysoee.dk/editline/
-[Python]: http://python.org
-[doxygen]: http://www.doxygen.org/
-[graphviz]: http://graphviz.org/
-[texinfo]: http://www.gnu.org/software/texinfo/
-[lcov]: http://ltp.sourceforge.net/coverage/lcov.php
-[sloccount]: http://www.dwheeler.com/sloccount/
-[pcre]: http://www.pcre.org/
-[libofx]: http://libofx.sourceforge.net
-[expat]: http://www.libexpat.org
+[libedit]: https://thrysoee.dk/editline/
+[Python]: https://python.org
+[Gpgmepp]: https://www.gnupg.org/related_software/gpgme/
+[doxygen]: https://www.doxygen.org/
+[graphviz]: https://graphviz.org/
+[texinfo]: https://www.gnu.org/software/texinfo/
+[lcov]: https://ltp.sourceforge.net/coverage/lcov.php
+[sloccount]: https://www.dwheeler.com/sloccount/
+[pcre]: https://www.pcre.org/
+[libofx]: https://libofx.sourceforge.net
+[expat]: https://libexpat.github.io
+<!--
+xmlsoft url kept as http since its TLS certificate setup is incorrect and browser show
+a "This Connection Is Not Private" message. [Last checked: 2023-03-13]
+-->
 [libxml2]: http://xmlsoft.org
 [openhub]: https://www.openhub.net/p/ledger
 [conda-forge]: https://conda-forge.org

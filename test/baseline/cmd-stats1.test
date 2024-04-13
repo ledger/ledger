@@ -1,0 +1,24 @@
+= /^Income:/
+    (Liabilities:Tithe)                   0.10
+
+~ Monthly
+    Income:Interest:Bank Interest     -$960.00
+    Equity
+
+test stats --now "2023-02-06"
+Time period: 23-Feb-06 to 23-Feb-06 (0 days)
+
+  Files these postings came from:
+    $FILE
+
+  Unique payees:               1
+  Unique accounts:             1
+
+  Number of postings:          1 (inf per day)
+  Uncleared postings:          1
+
+  Days since last post:        0
+  Posts in last 7 days:        1
+  Posts in last 30 days:       1
+  Posts seen this month:       1
+end test

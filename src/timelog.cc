@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -55,7 +55,7 @@ namespace {
       curr->append_note(in_event.note.c_str(), *context.scope);
 
     char buf[32];
-    std::sprintf(buf, "%lds", long((out_event.checkin - in_event.checkin)
+    std::snprintf(buf, 32, "%lds", long((out_event.checkin - in_event.checkin)
                                    .total_seconds()));
     amount_t amt;
     amt.parse(buf);

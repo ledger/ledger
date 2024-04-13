@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,17 +30,16 @@
  */
 
 /**
- * @addtogroup select
+ * @addtogroup util
  */
 
 /**
  * @file   select.h
  * @author John Wiegley
  *
- * @ingroup select
+ * @ingroup util
  */
-#ifndef INCLUDED_SELECT_H
-#define INCLUDED_SELECT_H
+#pragma once
 
 #include "utils.h"
 #include "value.h"
@@ -51,5 +50,3 @@ class call_scope_t;
 value_t select_command(call_scope_t& args);
 
 } // namespace ledger
-
-#endif // INCLUDED_SELECT_H

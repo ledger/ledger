@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -35,9 +35,9 @@
  *
  * @brief Contains the top-level functions used by main.cc
  */
-#ifndef INCLUDED_GLOBAL_H
-#define INCLUDED_GLOBAL_H
+#pragma once
 
+#include <ledger.hh>
 #include "option.h"
 #include "report.h"
 
@@ -125,11 +125,20 @@ public:
                 << Ledger_VERSION_PATCH;
     if (Ledger_VERSION_PRERELEASE != 0)
       out << Ledger_VERSION_PRERELEASE;
-    if (Ledger_VERSION_DATE != 0)
+    if (std::strlen(Ledger_VERSION_DATE) > 0)
       out << '-' << Ledger_VERSION_DATE;
     out << _(", the command-line accounting tool");
+    out << _("\nwith");
+#if !HAVE_GPGME
+    out << _("out");
+#endif
+    out << _(" support for gpg encrypted journals and with");
+#if !HAVE_BOOST_PYTHON
+    out <<_("out");
+#endif
+    out << _(" Python support");
     out <<
-      _("\n\nCopyright (c) 2003-2022, John Wiegley.  All rights reserved.\n\n\
+      _("\n\nCopyright (c) 2003-2023, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.");
     out << std::endl;
@@ -173,5 +182,3 @@ See LICENSE file included with the distribution for details and disclaimer.");
 void handle_debug_options(int argc, char * argv[]);
 
 } // namespace ledger
-
-#endif // INCLUDED_GLOBAL_H

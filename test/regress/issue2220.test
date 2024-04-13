@@ -1,0 +1,8 @@
+bucket Liabilities:CreditCard
+
+2023/01/01 * Payment
+    Assets:Checking     $-34.86
+
+test reg --monthly --related ^Assets:Checking
+23-Jan-01 - 23-Jan-31           Liabilities:CreditCard       $34.86       $34.86
+end test

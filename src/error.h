@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,8 +39,7 @@
  *
  * @ingroup util
  */
-#ifndef INCLUDED_ERROR_H
-#define INCLUDED_ERROR_H
+#pragma once
 
 namespace ledger {
 
@@ -101,5 +100,3 @@ struct error_count {
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_ERROR_H

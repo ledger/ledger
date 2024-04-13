@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -33,10 +33,12 @@
 
 #include "pyinterp.h"
 #include "pyutils.h"
+#include "error.h"
 #include "session.h"
 
 namespace ledger {
 
+using namespace python;
 using namespace boost::python;
 
 namespace {
@@ -48,6 +50,14 @@ namespace {
   journal_t * py_read_journal_from_string(const string& data)
   {
     return python_session->read_journal_from_string(data);
+  }
+
+  PyObject* py_error_context(const session_t& session)
+  {
+      return str_to_py_unicode(error_context());
+  }
+  void py_close_journal_files() {
+    python_session->close_journal_files();
   }
 }
 
@@ -63,15 +73,18 @@ void export_session()
     .def("close_journal_files", &session_t::close_journal_files)
     .def("journal", &session_t::get_journal,
          return_internal_reference<>())
+    .def("error_context", &py_error_context)
     ;
 
   scope().attr("session") =
     object(ptr(static_cast<session_t *>(python_session.get())));
+  scope().attr("close_journal_files") =
+    boost::python::make_function(&py_close_journal_files);
   scope().attr("read_journal") =
-    python::make_function(&py_read_journal,
+    boost::python::make_function(&py_read_journal,
                           return_internal_reference<>());
   scope().attr("read_journal_from_string") =
-    python::make_function(&py_read_journal_from_string,
+    boost::python::make_function(&py_read_journal_from_string,
                           return_internal_reference<>());
 }
 

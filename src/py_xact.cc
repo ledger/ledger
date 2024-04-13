@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,6 +38,7 @@
 
 namespace ledger {
 
+using namespace python;
 using namespace boost::python;
 
 namespace {
@@ -100,13 +101,13 @@ void export_xact()
          return_internal_reference<>())
 
     .def("add_post", &xact_base_t::add_post, with_custodian_and_ward<1, 2>())
-    .def("remove_post", &xact_base_t::add_post)
+    .def("remove_post", &xact_base_t::remove_post)
 
     .def("finalize", &xact_base_t::finalize)
 
-    .def("__iter__", python::range<return_internal_reference<> >
+    .def("__iter__", boost::python::range<return_internal_reference<> >
          (&xact_t::posts_begin, &xact_t::posts_end))
-    .def("posts", python::range<return_internal_reference<> >
+    .def("posts", boost::python::range<return_internal_reference<> >
          (&xact_t::posts_begin, &xact_t::posts_end))
 
     .def("valid", &xact_base_t::valid)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,8 +39,7 @@
  *
  * @ingroup report
  */
-#ifndef INCLUDED_FILTERS_H
-#define INCLUDED_FILTERS_H
+#pragma once
 
 #include "chain.h"
 #include "xact.h"
@@ -49,6 +48,8 @@
 #include "temps.h"
 
 namespace ledger {
+
+using namespace boost::placeholders;
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -1083,5 +1084,3 @@ public:
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_FILTERS_H

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -44,8 +44,7 @@
  * This file contains one of the most basic types in Ledger:
  * commodity_t, and its annotated cousin, annotated_commodity_t.
  */
-#ifndef INCLUDED_COMMODITY_H
-#define INCLUDED_COMMODITY_H
+#pragma once
 
 #include "expr.h"
 
@@ -71,14 +70,14 @@ struct price_point_t
 };
 
 class commodity_t
-  : public delegates_flags<uint_least16_t>,
+  : public flags::delegates_flags<uint_least16_t>,
     public equality_comparable1<commodity_t, noncopyable>
 {
 protected:
   friend class commodity_pool_t;
   friend class annotated_commodity_t;
 
-  class base_t : public noncopyable, public supports_flags<uint_least16_t>
+  class base_t : public noncopyable, public flags::supports_flags<uint_least16_t>
   {
   public:
 #define COMMODITY_STYLE_DEFAULTS         0x000
@@ -299,5 +298,3 @@ struct commodity_compare {
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_COMMODITY_H

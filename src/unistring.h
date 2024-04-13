@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,7 +30,7 @@
  */
 
 /**
- * @addtogroup utils
+ * @addtogroup util
  */
 
 /**
@@ -39,8 +39,7 @@
  *
  * @ingroup utils
  */
-#ifndef INCLUDED_UNISTRING_H
-#define INCLUDED_UNISTRING_H
+#pragma once
 
 namespace ledger {
 
@@ -69,7 +68,8 @@ public:
     const char * p   = input.c_str();
     std::size_t  len = input.length();
 
-    assert(len < 1024);
+    // This size should be at least as large as MAX_LINE in context.h
+    assert(len < 4096);
     VERIFY(utf8::is_valid(p, p + len));
     utf8::unchecked::utf8to32(p, p + len, std::back_inserter(utf32chars));
 
@@ -203,5 +203,3 @@ inline void justify(std::ostream&      out,
 }
 
 } // namespace ledger
-
-#endif // INCLUDED_UNISTRING_H

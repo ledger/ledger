@@ -12,15 +12,15 @@
 @c a prefix arg).  This updates the node pointers, which texinfmt.el
 @c needs.
 
-@c | Formating | Indexing |                                           |
-@c |           | @cindex  | concept                                   |
-@c | @command  | @findex  | Ledger CLI Command (like balance)         |
-@c | @option   | @findex  | Ledger CLI Option (like --market)         |
-@c | @var      |          | Ledger CLI option Variable (like -f FILE) |
-@c |           |          | Ledger file Syntax                        |
-@c | @samp     |          | Valued example or single char             |
-@c | @file     |          | File, Buffer                              |
-@c | @file     |          | Program (like ledger, report, acprep)     |
+@c | Formatting | Indexing |                                           |
+@c |            | @cindex  | concept                                   |
+@c | @command   | @findex  | Ledger CLI Command (like balance)         |
+@c | @option    | @findex  | Ledger CLI Option (like --market)         |
+@c | @var       |          | Ledger CLI option Variable (like -f FILE) |
+@c |            |          | Ledger file Syntax                        |
+@c | @samp      |          | Valued example or single char             |
+@c | @file      |          | File, Buffer                              |
+@c | @file      |          | Program (like ledger, report, acprep)     |
 
 @c Restructuring manual ideas
 @c http://beyondgrep.com/documentation/ack-2.04-man.html
@@ -113,7 +113,7 @@
 
 @copying
 
-Copyright @copyright{} 2003--2022, John Wiegley.  All rights reserved.
+Copyright @copyright{} 2003--2023, John Wiegley.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -1672,7 +1672,7 @@ There are several forms of comments within a transaction, for example:
 2011/12/11  Something Sweet
     ; German Chocolate Cake
     ; :Broke Diet:
-    Expenses:Food                  $10.00 ; Friends: The gang
+    Expenses:Food                  $10.00  ; Friends: The gang
     Assets:Credit Union:Checking
 @end smallexample
 
@@ -2119,10 +2119,12 @@ The @code{ACCOUNT} may be surrounded by parentheses if it is a virtual
 posting, or square brackets if it is a virtual posting that
 must balance.  The @code{AMOUNT} can be followed by a per-unit
 posting cost, by specifying @code{@@ AMOUNT}, or a complete
-posting cost with @code{@@@@ AMOUNT}.  Lastly, the @code{NOTE} may
+posting cost with @code{@@@@ AMOUNT}.  The @code{NOTE} may
 specify an actual and/or effective date for the posting by using
 the syntax @code{[ACTUAL_DATE]} or @code{[=EFFECTIVE_DATE]} or
-@code{[ACTUAL_DATE=EFFECTIVE_DATE]} (@pxref{Virtual postings}).
+@code{[ACTUAL_DATE=EFFECTIVE_DATE]} (@pxref{Virtual postings}). Lastly,
+note that the @code{AMOUNT} must be preceded by
+at least two whitespace characters.
 
 @item P
 @findex --download
@@ -2483,7 +2485,7 @@ Closes block commands like @code{apply} or @code{comment}.
 
 @item expr
 @findex expr
-@c instance_t::expr_directive in textual.cc
+Same as @code{eval}.
 
 @item include
 @findex include
@@ -2890,9 +2892,13 @@ primary date with an equals sign:
 @end smallexample
 
 What this auxiliary date means is entirely up to you.  The only use
-Ledger has for it is that if you specify @option{--aux-date}, then all
-reports and calculations (including pricing) will use the auxiliary
-date as if it were the primary date.
+Ledger has for it is that if you specify @option{--aux-date} (or
+@option{--effective}), then all reports and calculations (including
+pricing) will use the auxiliary date as if it were the primary date.
+
+Note that the @option{--aux-date} option is an alias for
+@option{--effective}; for more details on effective dates
+@pxref{Effective Dates}.
 
 @node Codes, Transaction state, Auxiliary dates, Transactions
 @section Codes
@@ -3058,58 +3064,6 @@ You can gang up multiple tags by sharing colons:
       ; :TAG1:TAG2:TAG3:
 @end smallexample
 
-@menu
-* Payee metadata tag::
-@end menu
-
-@node Payee metadata tag,  , Metadata tags, Metadata tags
-@subsubsection Payee metadata tag
-@cindex Payee metadata tag
-@findex register
-@findex payees
-@findex --by-payee
-
-``Payee'' is a special metadata field.  If set on a posting, it will be
-used as the payee name for that posting.  This affects the
-@command{register} report, the @command{payees} report, and the
-@option{--by-payee} option.
-
-This is useful when for example you deposit 4 checks at a time to the
-bank.  On the bank statement, there is just one amount @samp{$400}, but
-you can specify from whom each check came, as shown by example
-below:
-
-@smallexample @c input:9B43E57
-2010-06-17 Sample
-    Assets:Bank        $400.00
-    Income:Check1     $-100.00  ; Payee: Person One
-    Income:Check2     $-100.00  ; Payee: Person Two
-    Income:Check3     $-100.00  ; Payee: Person Three
-    Income:Check4     $-100.00  ; Payee: Person Four
-@end smallexample
-
-When reporting with
-
-@smallexample @c command:9B43E57
-$ ledger reg
-@end smallexample
-
-it appears as:
-
-@smallexample @c output:9B43E57
-10-Jun-17 Sample                Assets:Bank                 $400.00      $400.00
-          Person One            Income:Check1              $-100.00      $300.00
-          Person Two            Income:Check2              $-100.00      $200.00
-          Person Three          Income:Check3              $-100.00      $100.00
-          Person Four           Income:Check4              $-100.00            0
-@end smallexample
-
-This shows that they are all in the same transaction (which is why the
-date is not repeated), but they have different payees now.
-
-If using the @option{--strict} or @option{--pedantic} options, you must
-declare this tag to avoid warnings and errors.
-
 @node Metadata values, Typed metadata, Metadata tags, Metadata
 @subsection Metadata values
 
@@ -3155,6 +3109,59 @@ the other hand I write this:
 Then it is parsed as a date only once, and during parsing of the
 journal file, which would let me know right away that it is an invalid
 date.
+
+@menu
+* Payee metadata::
+@end menu
+
+@node Payee metadata,  , Typed metadata, Metadata
+@subsection Payee metadata
+@cindex Payee metadata
+@findex register
+@findex payees
+@findex --by-payee
+
+``Payee'' is a special metadata field.  If set on a posting, it will be
+used as the payee name for that posting.  This affects the
+@command{register} report, the @command{payees} report, and the
+@option{--by-payee} option.
+
+This is useful when for example you deposit 4 checks at a time to the
+bank.  On the bank statement, there is just one amount @samp{$400}, but
+you can specify from whom each check came, as shown by example
+below:
+
+@smallexample @c input:9B43E57
+2010-06-17 Sample
+    Assets:Bank        $400.00
+    Income:Check1     $-100.00  ; Payee: Person One
+    Income:Check2     $-100.00  ; Payee: Person Two
+    Income:Check3     $-100.00  ; Payee: Person Three
+    Income:Check4     $-100.00  ; Payee: Person Four
+@end smallexample
+
+When reporting with
+
+@smallexample @c command:9B43E57
+$ ledger reg
+@end smallexample
+
+it appears as:
+
+@smallexample @c output:9B43E57
+10-Jun-17 Sample                Assets:Bank                 $400.00      $400.00
+          Person One            Income:Check1              $-100.00      $300.00
+          Person Two            Income:Check2              $-100.00      $200.00
+          Person Three          Income:Check3              $-100.00      $100.00
+          Person Four           Income:Check4              $-100.00            0
+@end smallexample
+
+This shows that they are all in the same transaction (which is why the
+date is not repeated), but they have different payees now.
+
+If using the @option{--strict} or @option{--pedantic} options, you must
+declare this tag to avoid warnings and errors.
+
 
 @node Virtual postings, Expression amounts, Metadata, Transactions
 @section Virtual postings
@@ -3220,8 +3227,14 @@ is one) there is an equals sign, then Ledger will verify that the
 total value for that account as of that posting matches the amount
 specified.  See @option{--permissive} option to relax the balance assertions checks.
 
-There are two forms of this features: balance assertions, and balance
-assignments.
+There are two forms of this features: balance assertions, and balance assignments.
+Note that both of these are processed while parsing the given ledger files.
+Hence the order in which these are evaluated is the order in which they appear in
+the ledger file.
+The date or effective date of the transactions and postings that contain the
+balance assertions or balance assignments is therefore irrelevant for the
+the evaluation of the balance assertions and balance assignments.
+This may be confusing to people for whom a date order is more intuitive.
 
 @node Balance assertions, Balance assignments, Balance verification, Balance verification
 @subsection Balance assertions
@@ -3976,7 +3989,7 @@ something like
 @cindex effective date of invoice
 
 @smallexample @c input:validate
-2008/01/01=2008/01/14 Client invoice  ;  estimated date you'll be paid
+2008/01/01=2008/01/14 Client invoice  ; estimated date you'll be paid
     Assets:Accounts Receivable            $100.00
     Income: Client name
 @end smallexample
@@ -3984,7 +3997,7 @@ something like
 Then, when you receive the payment, you change it to
 
 @smallexample @c input:validate
-2008/01/01=2008/01/15 Client invoice ;  actual date money received
+2008/01/01=2008/01/15 Client invoice  ; actual date money received
     Assets:Accounts Receivable            $100.00
     Income: Client name
 @end smallexample
@@ -4038,8 +4051,8 @@ This entry accomplishes this.  Every month you'll see an
 automatic $37.50 deficit like you should, while your checking account
 really knows that it debited $225 this month.
 
-And using the @option{--effective} option, the initial date will be
-overridden by the effective dates.
+And using the @option{--effective} (or @option{--aux-date}) option,
+the initial date will be overridden by the effective dates.
 
 @smallexample @c command:6453542
 $ ledger --effective register Groceries
@@ -4054,6 +4067,10 @@ $ ledger --effective register Groceries
 09-Mar-01 Bountiful Blessings.. Expense:Food:Groceries      $ 37.50     $ 225.00
 @end smallexample
 
+Note that the @option{--aux-date} option is an alias for
+@option{--effective}; for a brief explanation of auxiliary date
+@pxref{Auxiliary dates}.
+
 @node Periodic Transactions, Concrete Example of Automated Transactions, Effective Dates, Automated Transactions
 @subsection Periodic Transactions
 @findex --budget
@@ -4067,6 +4084,8 @@ Forecasting}.
 @node Concrete Example of Automated Transactions,  , Periodic Transactions, Automated Transactions
 @subsection Concrete Example of Automated Transactions
 
+@subsubsection Tithing
+
 As a Bahá'í, I need to compute Huqúqu'lláh whenever I acquire assets.
 It is similar to tithing for Jews and Christians, or to Zakát for
 Muslims.  The exact details of computing Huqúqu'lláh are somewhat
@@ -4078,15 +4097,15 @@ automated posting at the top of your ledger file:
 @smallexample @c input:C371854
 ; This automated transaction will compute Huqúqu'lláh based on this
 ; journal's postings.  Any accounts that match will affect the
-; Liabilities:Huququ'llah account by 19% of the value of that posting.
+; Liabilities:Huqúqu'lláh account by 19% of the value of that posting.
 
 = /^(?:Income:|Expenses:(?:Business|Rent$|Furnishings|Taxes|Insurance))/
-  (Liabilities:Huququ'llah)               0.19
+  (Liabilities:Huqúqu'lláh)               0.19
 @end smallexample
 
 This automated posting works by looking at each posting in the
 ledger file.  If any match the given value expression, 19% of the
-posting's value is applied to the @samp{Liabilities:Huququ'llah}
+posting's value is applied to the @samp{Liabilities:Huqúqu'lláh}
 account.  So, if $1000 is earned from @samp{Income:Salary}, $190 is
 added to @samp{Liabilities:Huqúqu'lláh}; if $1000 is spent on Rent,
 $190 is subtracted.
@@ -4104,11 +4123,11 @@ $190 is subtracted.
 The ultimate balance of Huqúqu'lláh reflects how
 much is owed in order to fulfill one's obligation to Huqúqu'lláh.
 When ready to pay, just write a check to cover the amount shown in
-@samp{Liabilities:Huququ'llah}.  That transaction would look like:
+@samp{Liabilities:Huqúqu'lláh}.  That transaction would look like:
 
 @smallexample @c input:validate
-2003/01/01 (101) Baha'i Huqúqu'lláh Trust
-    Liabilities:Huququ'llah          $1,000.00
+2003/01/01 (101) Bahá'í Huqúqu'lláh Trust
+    Liabilities:Huqúqu'lláh          $1,000.00
     Assets:Checking
 @end smallexample
 
@@ -4116,11 +4135,11 @@ That's it.  To see how much Huqúq is currently owed based on your
 ledger transactions, use:
 
 @smallexample @c command:C371854
-$ ledger balance Liabilities:Huquq
+$ ledger balance Liabilities:Huqúq
 @end smallexample
 
 @smallexample @c output:C371854
-                $-95  Liabilities:Huququ'llah
+                $-95  Liabilities:Huqúqu'lláh
 @end smallexample
 
 This works fine, but omits one aspect of the law: that Huqúq is only
@@ -4159,6 +4178,42 @@ This example causes 10% of the matching account's total to be deferred
 to the @samp{Savings} account---as a balanced virtual posting, which
 may be excluded from reports by using @option{--real}.
 
+@subsubsection Credit Card Cashback
+
+Credit cards sometimes provide a cashback percentage of purchases. This
+can be setup with the following:
+
+@smallexample @c input:7D1589F
+; This automated transaction will add to "Assets:Credit Card Cashback"
+; the amount of the transaction multiplied by the "cashback" tag.
+
+= "Liabilities:Credit Card" and %cashback
+    Assets:Credit Card Cashback  (-amount * tag("cashback") * 0.01)
+    Income:Credit Card Rewards    (amount * tag("cashback") * 0.01)
+@end smallexample
+
+To add a transaction that gives 2% cashback:
+
+@smallexample @c input:7D1589F
+2023/06/06 McDonalds
+  ; cashback:: 2%
+  Expenses:Food:Restaurants  $23.98
+  Liabilities:Credit Card
+@end smallexample
+
+Now when a report is generated, e.g.
+@smallexample @c command:7D1589F
+$ ledger -f cashback.dat reg
+@end smallexample
+
+The cashback postings appear with the transaction.
+
+@smallexample @c output:7D1589F
+23-Jun-06 McDonalds             Expen:Food:Restaurants       $23.98       $23.98
+                                Liabilitie:Credit Card      $-23.98            0
+                                ..Credit Card Cashback        $0.48        $0.48
+                                In:Credit Card Rewards       $-0.48            0
+@end smallexample
 @node Building Reports, Reporting Commands, Transactions, Top
 @chapter Building Reports
 
@@ -4258,7 +4313,7 @@ $ ledger balance -f drewr3.dat Income
          $ -2,030.00
 @end smallexample
 
-You can use general regular expressions in nearly any place Ledger
+You can use general regular expressions (PCRE) in nearly any place Ledger
 needs a string:
 
 @smallexample @c command:EAE389F
@@ -4288,11 +4343,11 @@ If you want to know exactly how much you have spent in a particular
 account on a particular payee, the following are equivalent:
 
 @smallexample @c command:validate
-$ ledger balance Auto:Fuel and Chevron
+$ ledger balance Expenses:Auto:Fuel and @@Chevron
 @end smallexample
 
 @smallexample @c command:validate
-$ ledger balance --limit 'account=~/Fuel/' and 'payee=~/Chev/'
+$ ledger balance --limit 'account=~/Expenses:Auto:Fuel/ and payee=~/Chevron/'
 @end smallexample
 
 @noindent
@@ -5994,7 +6049,7 @@ Display the man page for @file{ledger}.
 
 @item --init-file @var{FILE}
 Specify the location of the init file.  By default, @file{$XDG_CONFIG_HOME},
-@file{~/.config/ledger/lederrc}, @file{~/.ledgerrc} and @file{./.ledgerrc} are
+@file{~/.config/ledger/ledgerrc}, @file{~/.ledgerrc} and @file{./.ledgerrc} are
 tried in order.
 
 @item --options
@@ -6579,7 +6634,7 @@ $ ledger balance assets --exchange "PHP, EUR"
 The latest available price is used.  The syntax
 @option{-X @var{COMMODITY1}:@var{COMMODITY2}} displays values in @var{COMMODITY1}
 in terms of @var{COMMODITY2} using the latest available price, but
-will not automatically covert any other commodities to
+will not automatically convert any other commodities to
 @var{COMMODITY2}.  Multiple @option{-X} arguments may be used on a
 single command-line (as in
 @option{-X COMMODITY1:COMMODITY2 -X COMMODITY3:COMMODITY2}),
@@ -6663,7 +6718,7 @@ wrong value you can use metadata to specify the expected amount:
 
 @smallexample @c input:validate
 2012-03-12  Paycheck
-    Income  $-990;  Expected:: $-1000.00
+    Income  $-990  ; Expected:: $-1000.00
     Checking
 @end smallexample
 
@@ -8518,7 +8573,8 @@ Return the quantity of @var{value} for values that have a per-unit cost.
 @end defun
 
 @defun quoted expression
-Surround @var{expression} with double-quotes.  If expression contains a double-quote, it will be escaped with a backslash.
+Surround @var{expression} with double quotes.  If expression contains
+a double quote, it will be escaped with a backslash.
 @smallexample @c command:EAD8AA7,with_input:3406FC1
 $ ledger -f expr.dat --format "%(quoted(account)) %(quoted(amount))\n" reg
 @end smallexample
@@ -8528,16 +8584,10 @@ $ ledger -f expr.dat --format "%(quoted(account)) %(quoted(amount))\n" reg
 @end smallexample
 @end defun
 
-@c @defun quoted_rfc4180 expression
-@c Surround @var{expression} with double-quotes, compliant with RFC 4180.  If expression contains a double-quote, it will be represented with two double-quotes.
-@c @smallexample @c command:EAD8AA7,with_input:3406FC1
-@c $ ledger -f expr.dat --format "%(quoted_rfc4180(account)) %(quoted_rfc4180(amount))\n" reg
-@c @end smallexample
-@c @smallexample @c output:EAD8AA7
-@c "Assets:Cash" "¤ -123,45"
-@c "Expenses:Office Supplies" "¤ 123,45"
-@c @end smallexample
-@c @end defun
+@defun quoted_rfc expression
+Similar, except an embedded double quote would be escaped by
+preceding it with another double quote, as prescribed by RFC 4180.
+@end defun
 
 @defun round
 @value{FIXME:UNDOCUMENTED}
@@ -10390,7 +10440,7 @@ features, include automatic and virtual transactions,
   Assets:Checking
 
 2011/01/19 Grocery Store
-  Expenses:Food:Groceries             $ 44.00 ; hastag: not block
+  Expenses:Food:Groceries             $ 44.00  ; hastag: not block
   Assets:Checking
 
 2011/01/25 Bank

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -41,6 +41,7 @@
 namespace ledger {
 
 using namespace python;
+using namespace boost::python;
 
 shared_ptr<python_interpreter_t> python_session;
 
@@ -61,9 +62,7 @@ void export_utils();
 void export_value();
 void export_xact();
 
-#if PY_MAJOR_VERSION >= 3
 extern "C" PyObject* PyInit_ledger();
-#endif
 
 void initialize_for_python()
 {
@@ -93,14 +92,14 @@ struct python_run
 {
   object result;
 
-  python_run(python_interpreter_t * intepreter,
+  python_run(python_interpreter_t * interpreter,
              const string& str, int input_mode)
     : result
       (handle<>
        (borrowed
         (PyRun_String(str.c_str(), input_mode,
-                      intepreter->main_module->module_globals.ptr(),
-                      intepreter->main_module->module_globals.ptr())))) {}
+                      interpreter->main_module->module_globals.ptr(),
+                      interpreter->main_module->module_globals.ptr())))) {}
   operator object() {
     return result;
   }
@@ -112,7 +111,7 @@ python_module_t::python_module_t(const string& name)
   import_module(name);
 }
 
-python_module_t::python_module_t(const string& name, python::object obj)
+python_module_t::python_module_t(const string& name, object obj)
   : scope_t(), module_name(name), module_globals()
 {
   module_object  = obj;
@@ -121,7 +120,7 @@ python_module_t::python_module_t(const string& name, python::object obj)
 
 void python_module_t::import_module(const string& name, bool import_direct)
 {
-  object mod = python::import(name.c_str());
+  object mod = import(name.c_str());
   if (! mod)
     throw_(std::runtime_error,
            _f("Module import failed (couldn't find %1%)") % name);
@@ -150,7 +149,6 @@ void python_interpreter_t::initialize()
   try {
     DEBUG("python.interp", "Initializing Python");
 
-#if PY_MAJOR_VERSION >= 3
     // Unbuffer stdio to avoid python output getting stuck in buffer when
     // stdout is not a TTY. Normally buffers are flushed by Py_Finalize but
     // Boost has a long-standing issue preventing proper shutdown of the
@@ -158,7 +156,6 @@ void python_interpreter_t::initialize()
     Py_UnbufferedStdioFlag = 1;
     // PyImport_AppendInittab docs: "This should be called before Py_Initialize()".
     PyImport_AppendInittab((const char*)"ledger", PyInit_ledger);
-#endif
 
     Py_Initialize();
     assert(Py_IsInitialized());
@@ -166,11 +163,7 @@ void python_interpreter_t::initialize()
     hack_system_paths();
 
     main_module = import_module("__main__");
-#if PY_MAJOR_VERSION >= 3
     PyImport_ImportModule("ledger");
-#else
-    python::detail::init_module("ledger", &initialize_for_python);
-#endif
 
     is_initialized = true;
   }
@@ -185,27 +178,27 @@ void python_interpreter_t::initialize()
 void python_interpreter_t::hack_system_paths()
 {
   // Hack ledger.__path__ so it points to a real location
-  python::object sys_module = python::import("sys");
-  python::object sys_dict   = sys_module.attr("__dict__");
+  object sys_module = import("sys");
+  object sys_dict   = sys_module.attr("__dict__");
 
-  python::list paths(sys_dict["path"]);
+  list paths(sys_dict["path"]);
 
 #if DEBUG_ON
   bool path_initialized = false;
 #endif
-  int n = python::extract<int>(paths.attr("__len__")());
+  int n = extract<int>(paths.attr("__len__")());
   for (int i = 0; i < n; i++) {
-    python::extract<std::string> str(paths[i]);
+    extract<std::string> str(paths[i]);
     path pathname(str());
     DEBUG("python.interp", "sys.path = " << pathname);
 
     if (exists(pathname / "ledger" / "__init__.py")) {
-      if (python::object module_ledger = python::import("ledger")) {
+      if (object module_ledger = import("ledger")) {
         DEBUG("python.interp",
               "Setting ledger.__path__ = " << (pathname / "ledger"));
 
-        python::object ledger_dict = module_ledger.attr("__dict__");
-        python::list temp_list;
+        object ledger_dict = module_ledger.attr("__dict__");
+        list temp_list;
         temp_list.append((pathname / "ledger").string());
 
         ledger_dict["__path__"] = temp_list;
@@ -231,12 +224,12 @@ object python_interpreter_t::import_option(const string& str)
   if (! is_initialized)
     initialize();
 
-  python::object sys_module = python::import("sys");
-  python::object sys_dict   = sys_module.attr("__dict__");
+  object sys_module = import("sys");
+  object sys_dict   = sys_module.attr("__dict__");
 
   path         file(str);
   string       name(str);
-  python::list paths(sys_dict["path"]);
+  list paths(sys_dict["path"]);
 
   if (contains(str, ".py")) {
     path& cwd(parsing_context.get_current().current_directory);
@@ -330,7 +323,6 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
   if (! is_initialized)
     initialize();
 
-#if PY_MAJOR_VERSION >= 3
   wchar_t ** argv = new wchar_t *[args.size() + 1];
 
   std::size_t len = std::strlen(argv0) + 1;
@@ -343,18 +335,6 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
     argv[i + 1] = new wchar_t[len];
     mbstowcs(argv[i + 1], arg.c_str(), len);
   }
-#else
-  char ** argv = new char *[args.size() + 1];
-
-  argv[0] = new char[std::strlen(argv0) + 1];
-  std::strcpy(argv[0], argv0);
-
-  for (std::size_t i = 0; i < args.size(); i++) {
-    string arg = args.get<string>(i);
-    argv[i + 1] = new char[arg.length() + 1];
-    std::strcpy(argv[i + 1], arg.c_str());
-  }
-#endif
 
   int status = 1;
 
@@ -383,44 +363,6 @@ value_t python_interpreter_t::python_command(call_scope_t& args)
   return NULL_VALUE;
 }
 
-value_t python_interpreter_t::server_command(call_scope_t& args)
-{
-  if (! is_initialized)
-    initialize();
-
-  python::object server_module;
-
-  try {
-    server_module = python::import("ledger.server");
-    if (! server_module)
-      throw_(std::runtime_error,
-             _("Could not import ledger.server; please check your PYTHONPATH"));
-  }
-  catch (const error_already_set&) {
-    PyErr_Print();
-    throw_(std::runtime_error,
-           _("Could not import ledger.server; please check your PYTHONPATH"));
-  }
-
-  if (python::object main_function = server_module.attr("main")) {
-    functor_t func(main_function, "main");
-    try {
-      func(args);
-      return true;
-    }
-    catch (const error_already_set&) {
-      PyErr_Print();
-      throw_(std::runtime_error,
-             _("Error while invoking ledger.server's main() function"));
-    }
-  } else {
-      throw_(std::runtime_error,
-             _("The ledger.server module is missing its main() function!"));
-  }
-
-  return false;
-}
-
 option_t<python_interpreter_t> *
 python_interpreter_t::lookup_option(const char * p)
 {
@@ -439,7 +381,7 @@ expr_t::ptr_op_t python_module_t::lookup(const symbol_t::kind_t kind,
   case symbol_t::FUNCTION:
     DEBUG("python.interp", "Python lookup: " << name);
     if (module_globals.has_key(name.c_str())) {
-      if (python::object obj = module_globals.get(name.c_str())) {
+      if (object obj = module_globals.get(name.c_str())) {
         if (PyModule_Check(obj.ptr())) {
           shared_ptr<python_module_t> mod;
           python_module_map_t::iterator i =
@@ -494,11 +436,6 @@ expr_t::ptr_op_t python_interpreter_t::lookup(const symbol_t::kind_t kind,
     case 'p':
       if (is_eq(p, "python"))
         return MAKE_FUNCTOR(python_interpreter_t::python_command);
-      break;
-
-    case 's':
-      if (is_eq(p, "server"))
-        return MAKE_FUNCTOR(python_interpreter_t::server_command);
       break;
     }
   }
@@ -591,7 +528,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args)
         arglist.append(convert_value_to_python(args.value()));
 
       if (PyObject * val =
-          PyObject_CallObject(func.ptr(), python::tuple(arglist).ptr())) {
+          PyObject_CallObject(func.ptr(), boost::python::tuple(arglist).ptr())) {
         extract<value_t> xval(val);
         value_t result;
         if (xval.check()) {

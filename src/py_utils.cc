@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -33,12 +33,11 @@
 
 #include "pyinterp.h"
 #include "pyutils.h"
-#if PY_MAJOR_VERSION < 3
-#include "pyfstream.h"
-#endif
 
 namespace ledger {
 
+using namespace flags;
+using namespace python;
 using namespace boost::python;
 
 struct bool_to_python
@@ -76,7 +75,6 @@ struct bool_from_python
 typedef register_python_conversion<bool, bool_to_python, bool_from_python>
   bool_python_conversion;
 
-
 struct string_to_python
 {
   static PyObject* convert(const string& str)
@@ -90,121 +88,74 @@ struct string_from_python
 {
   static void* convertible(PyObject* obj_ptr)
   {
-    if (!PyUnicode_Check(obj_ptr)
-#if PY_MAJOR_VERSION < 3
-        && !PyString_Check(obj_ptr)
-#endif
-            ) return 0;
+    if (!PyUnicode_Check(obj_ptr))
+      return 0;
     return obj_ptr;
   }
 
   static void construct(PyObject* obj_ptr,
                         converter::rvalue_from_python_stage1_data* data)
   {
-#if PY_MAJOR_VERSION < 3
-    if (PyString_Check(obj_ptr)) {
-      const char* value = PyString_AsString(obj_ptr);
-      if (value == 0) throw_error_already_set();
-      void* storage =
-        reinterpret_cast<converter::rvalue_from_python_storage<string> *>
-                        (data)->storage.bytes;
-      new (storage) string(value);
-      data->convertible = storage;
-    } else {
+    VERIFY(PyUnicode_Check(obj_ptr));
+
+#if PY_MINOR_VERSION < 12
+    if (PyUnicode_READY(obj_ptr))
+      return;
 #endif
-      VERIFY(PyUnicode_Check(obj_ptr));
 
-      Py_ssize_t size = PyUnicode_GET_SIZE(obj_ptr);
-      const Py_UNICODE* value = PyUnicode_AS_UNICODE(obj_ptr);
+    const Py_UNICODE* value;
+    Py_ssize_t size;
+    string str;
 
-      string str;
-#if Py_UNICODE_SIZE == 2 // UTF-16
+#if PY_MINOR_VERSION >= 3
+    size = PyUnicode_GET_LENGTH(obj_ptr);
+    switch (PyUnicode_KIND(obj_ptr)) {
+      case PyUnicode_1BYTE_KIND: {
+        Py_UCS1* value = PyUnicode_1BYTE_DATA(obj_ptr);
+        if (value == 0) throw_error_already_set();
         utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
-#elif Py_UNICODE_SIZE == 4 // UTF-32
+        } break;
+#if PY_MINOR_VERSION < 12 && Py_UNICODE_SIZE == 2
+      case PyUnicode_WCHAR_KIND:
+#endif
+      case PyUnicode_2BYTE_KIND: {
+        Py_UCS2* value = PyUnicode_2BYTE_DATA(obj_ptr);
+        if (value == 0) throw_error_already_set();
+        utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
+        } break;
+#if PY_MINOR_VERSION < 12 && Py_UNICODE_SIZE == 4
+      case PyUnicode_WCHAR_KIND:
+#endif
+      case PyUnicode_4BYTE_KIND: {
+        Py_UCS4* value = PyUnicode_4BYTE_DATA(obj_ptr);
+        if (value == 0) throw_error_already_set();
         utf8::unchecked::utf32to8(value, value + size, std::back_inserter(str));
+        } break;
+      default:
+        assert("PyUnicode_KIND returned an unexpected kind" == NULL);
+    }
 #else
-        assert("Py_UNICODE has an unexpected size" == NULL);
+    size = PyUnicode_GET_SIZE(obj_ptr);
+    value = PyUnicode_AS_UNICODE(obj_ptr);
+#if Py_UNICODE_SIZE == 2 // UTF-16
+    utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
+#elif Py_UNICODE_SIZE == 4 // UTF-32
+    utf8::unchecked::utf32to8(value, value + size, std::back_inserter(str));
+#else
+    assert("Py_UNICODE has an unexpected size" == NULL);
+#endif
 #endif
 
-      if (value == 0) throw_error_already_set();
-      void* storage =
-        reinterpret_cast<converter::rvalue_from_python_storage<string> *>
-                        (data)->storage.bytes;
-      new (storage) string(str);
-      data->convertible = storage;
-#if PY_MAJOR_VERSION < 3
-    }
-#endif
+    void* storage =
+      reinterpret_cast<converter::rvalue_from_python_storage<string> *>
+                      (data)->storage.bytes;
+    new (storage) string(str);
+    data->convertible = storage;
   }
 };
 
 typedef register_python_conversion<string, string_to_python, string_from_python>
   string_python_conversion;
-
-#if PY_MAJOR_VERSION < 3
-struct istream_to_python
-{
-  static PyObject* convert(const std::istream&)
-  {
-    return incref(boost::python::detail::none());
-  }
-};
-
-struct istream_from_python
-{
-  static void* convertible(PyObject* obj_ptr)
-  {
-    if (!PyFile_Check(obj_ptr)) return 0;
-    return obj_ptr;
-  }
-
-  static void construct(PyObject* obj_ptr,
-                        converter::rvalue_from_python_stage1_data* data)
-  {
-    void* storage =
-      reinterpret_cast<converter::rvalue_from_python_storage<pyifstream> *>
-                      (data)->storage.bytes;
-    new (storage) pyifstream(reinterpret_cast<PyFileObject *>(obj_ptr));
-    data->convertible = storage;
-  }
-};
-
-typedef register_python_conversion<std::istream,
-                                   istream_to_python, istream_from_python>
-  istream_python_conversion;
-
-
-struct ostream_to_python
-{
-  static PyObject* convert(const std::ostream&)
-  {
-    return incref(boost::python::detail::none());
-  }
-};
-
-struct ostream_from_python
-{
-  static void* convertible(PyObject* obj_ptr)
-  {
-    if (!PyFile_Check(obj_ptr)) return 0;
-    return obj_ptr;
-  }
-
-  static void construct(PyObject* obj_ptr,
-                        converter::rvalue_from_python_stage1_data* data)
-  {
-    void* storage =
-      reinterpret_cast<converter::rvalue_from_python_storage<pyofstream> *>
-                      (data)->storage.bytes;
-    new (storage) pyofstream(reinterpret_cast<PyFileObject *>(obj_ptr));
-    data->convertible = storage;
-  }
-};
-
-typedef register_python_conversion<std::ostream,
-                                   ostream_to_python, ostream_from_python>
-  ostream_python_conversion;
-#endif
 
 void export_utils()
 {
@@ -257,10 +208,6 @@ void export_utils()
 
   bool_python_conversion();
   string_python_conversion();
-#if PY_MAJOR_VERSION < 3
-  istream_python_conversion();
-  ostream_python_conversion();
-#endif
 }
 
 } // namespace ledger

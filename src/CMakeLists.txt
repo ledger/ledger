@@ -117,7 +117,6 @@ set(LEDGER_INCLUDES
   print.h
   pstream.h
   ptree.h
-  pyfstream.h
   pyinterp.h
   pyutils.h
   query.h
@@ -137,6 +136,7 @@ set(LEDGER_INCLUDES
   value.h
   views.h
   xact.h
+  ${PROJECT_BINARY_DIR}/ledger.hh
   ${PROJECT_BINARY_DIR}/system.hh)
 
 # Windows provides no strptime(), so supply our own.
@@ -149,7 +149,7 @@ endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    add_definitions(
+    add_compile_options(
       # -Weverything
       # -Wno-disabled-macro-expansion
       # -Wno-padded
@@ -183,7 +183,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       if (BUILD_LIBRARY)
         list(APPEND _args ${CMAKE_SHARED_LIBRARY_CXX_FLAGS})
       endif()
-      list(APPEND _args "-std=c++11 ")
+      list(APPEND _args "-std=c++11")
       if (CYGWIN)
         list(APPEND _args "-U__STRICT_ANSI__")
       endif()
@@ -223,7 +223,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       -Wno-deprecated
       -Wno-strict-aliasing)
 
-    add_definitions(${GXX_WARNING_FLAGS})
+    add_compile_options(${GXX_WARNING_FLAGS})
 
     macro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
       set(_gch_filename "${_header_filename}.gch")
@@ -287,8 +287,10 @@ if (BUILD_LIBRARY)
     INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
     VERSION ${Ledger_VERSION_MAJOR}
     SOVERSION ${Ledger_VERSION_MAJOR})
+  set_source_files_properties(
+    ${LEDGER_CLI_SOURCES} PROPERTIES COMPILE_FLAGS "-fPIC")
 
-  add_executable(ledger main.cc global.cc)
+  add_executable(ledger ${LEDGER_CLI_SOURCES})
   target_link_libraries(ledger libledger)
   if (HAVE_GPGME)
     target_link_libraries(ledger Gpgmepp)

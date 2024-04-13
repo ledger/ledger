@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -41,8 +41,7 @@
  *
  * @brief Regular expression masking.
  */
-#ifndef INCLUDED_MASK_H
-#define INCLUDED_MASK_H
+#pragma once
 
 #include "utils.h"
 #if HAVE_BOOST_REGEX_UNICODE
@@ -136,5 +135,3 @@ inline void put_mask(property_tree::ptree& pt, const mask_t& mask) {
 }
 
 } // namespace ledger
-
-#endif // INCLUDED_MASK_H

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,8 +39,7 @@
  *
  * @ingroup expr
  */
-#ifndef INCLUDED_TOKEN_H
-#define INCLUDED_TOKEN_H
+#pragma once
 
 #include "expr.h"
 
@@ -51,7 +50,7 @@ struct expr_t::token_t : public noncopyable
   enum kind_t {
     ERROR,                      // an error occurred while tokenizing
     VALUE,                      // any kind of literal value
-    IDENT,                      // [A-Za-z_][-A-Za-z0-9_:]*
+    IDENT,                      // [A-Za-z_]+
     MASK,                       // /regexp/
 
     LPAREN,                     // (
@@ -134,5 +133,3 @@ std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind)
 std::ostream& operator<<(std::ostream& out, const expr_t::token_t& token);
 
 } // namespace ledger
-
-#endif // INCLUDED_TOKEN_H

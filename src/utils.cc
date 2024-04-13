@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "times.h"
 
@@ -662,7 +662,7 @@ static struct __maybe_enable_debugging {
  * Timers (allows log xacts to specify cumulative time spent)
  */
 
-#if LOGGING_ON && defined(TIMERS_ON)
+#if LOGGING_ON && TIMERS_ON
 
 namespace ledger {
 
@@ -807,7 +807,7 @@ path expand_path(const path& pathname)
 
   if (path_string.length() == 1 || pos == 1) {
     pfx = std::getenv("HOME");
-#ifdef HAVE_GETPWUID
+#if HAVE_GETPWUID
     if (! pfx) {
       // Punt. We're trying to expand ~/, but HOME isn't set
       struct passwd * pw = getpwuid(getuid());
@@ -816,7 +816,7 @@ path expand_path(const path& pathname)
     }
 #endif
   }
-#ifdef HAVE_GETPWNAM
+#if HAVE_GETPWNAM
   else {
     string user(path_string, 1, pos == string::npos ?
                 string::npos : pos - 1);
@@ -849,7 +849,7 @@ path resolve_path(const path& pathname)
   path temp = pathname;
   if (temp.string()[0] == '~')
     temp = expand_path(temp);
-  temp.normalize();
+  temp.lexically_normal();
   return temp;
 }
 

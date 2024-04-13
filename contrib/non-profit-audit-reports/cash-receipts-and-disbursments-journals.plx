@@ -145,7 +145,7 @@ foreach my $typeData ({ name => 'disbursements', query => 'a<=0' },
          /^\s*"[^"]*","[^"]*","[^"]*","(\s*\<\s*Adjustment\s*\>\s*|Equity:)/;
 
       #  Note that we don't do our usual "$TWO_CENTS" check on Adjustment
-      #  here.  That's by design: if we consistently ignore Adjustements in
+      #  here.  That's by design: if we consistently ignore Adjustments in
       #  the same way, it might have the appearance that a Superman
       #  III/Office Space -style movement of funds is going on.  By just
       #  straight "ignoring" them here, and not doing the TWO_CENTS test, it

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,13 +38,16 @@
  * @author John Wiegley
  *
  * @ingroup expr
+ *
+ * @brief Basic type and macros for handling command-line options
  */
-#ifndef INCLUDED_OPTION_H
-#define INCLUDED_OPTION_H
+#pragma once
 
 #include "scope.h"
 
 namespace ledger {
+
+using namespace boost::placeholders;
 
 class call_scope_t;
 
@@ -170,7 +173,7 @@ public:
       if (args.size() < 2)
         throw_(std::runtime_error, _f("No argument provided for %1%") % desc());
       else if (args.size() > 2)
-        throw_(std::runtime_error, _f("To many arguments provided for %1%") % desc());
+        throw_(std::runtime_error, _f("Too many arguments provided for %1%") % desc());
       else if (! args[0].is_string())
         throw_(std::runtime_error, _f("Context argument for %1% not a string") % desc());
       on(args.get<string>(0), args.get<string>(1));
@@ -297,5 +300,3 @@ strings_list process_arguments(strings_list args, scope_t& scope);
 DECLARE_EXCEPTION(option_error, std::runtime_error);
 
 } // namespace ledger
-
-#endif // INCLUDED_OPTION_H

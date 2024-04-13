@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -43,14 +43,13 @@
  *
  * Long.
  */
-#ifndef INCLUDED_ANNOTATE_H
-#define INCLUDED_ANNOTATE_H
+#pragma once
 
 #include "expr.h"
 
 namespace ledger {
 
-struct annotation_t : public supports_flags<>,
+struct annotation_t : public flags::supports_flags<>,
                       public equality_comparable<annotation_t>
 {
 #define ANNOTATION_PRICE_CALCULATED      0x01
@@ -232,5 +231,3 @@ as_annotated_commodity(const commodity_t& commodity) {
 }
 
 } // namespace ledger
-
-#endif // INCLUDED_ANNOTATE_H

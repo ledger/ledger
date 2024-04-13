@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -145,14 +145,14 @@ value_t select_command(call_scope_t& args)
       string  thus_far = "";
 
       std::size_t cols = 0;
-#ifdef HAVE_IOCTL
+#if HAVE_IOCTL
       struct winsize ws;
 #endif
       if (report.HANDLED(columns_))
         cols = lexical_cast<std::size_t>(report.HANDLER(columns_).value);
       else if (const char * columns_env = std::getenv("COLUMNS"))
         cols = lexical_cast<std::size_t>(columns_env);
-#ifdef HAVE_IOCTL
+#if HAVE_IOCTL
       else if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1)
           cols = ws.ws_col;
 #endif

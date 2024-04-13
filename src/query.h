@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,8 +39,7 @@
  *
  * @ingroup expr
  */
-#ifndef INCLUDED_QUERY_H
-#define INCLUDED_QUERY_H
+#pragma once
 
 #include "predicate.h"
 
@@ -348,5 +347,3 @@ public:
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_QUERY_H

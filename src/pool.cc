@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -257,7 +257,7 @@ commodity_pool_t::exchange(const amount_t&             amount,
     current_annotation = &as_annotated_commodity(commodity).details;
 
   amount_t per_unit_cost =
-    (is_per_unit || amount.is_realzero()) ? cost.abs() : (cost / amount).abs();
+    (is_per_unit || amount.is_zero()) ? cost.abs() : (cost / amount).abs();
 
   if (! cost.has_commodity())
     per_unit_cost.clear_commodity();

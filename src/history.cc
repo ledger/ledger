@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,7 +39,11 @@
 #include "history.h"
 
 template <typename T>
-struct f_max : public std::binary_function<T, T, bool> {
+struct f_max
+#if __cplusplus < 201103L
+: public std::binary_function<T, T, bool>
+#endif
+{
   T operator()(const T& x, const T& y) const {
     return std::max(x, y);
   }
@@ -434,7 +438,8 @@ commodity_history_impl_t::find_price(const commodity_t& source,
                                      const datetime_t&  moment,
                                      const datetime_t&  oldest)
 {
-  assert(source != target);
+  if (source == target)
+    return none;
 
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
@@ -467,13 +472,6 @@ commodity_history_impl_t::find_price(const commodity_t& source,
 
   const commodity_t * last_target = &target;
 
-#if defined(REVERSE_PREDECESSOR_MAP)
-  typedef tuple<const commodity_t *, const commodity_t *,
-                const price_point_t *> results_tuple;
-  std::vector<results_tuple> results;
-  bool results_reversed = false;
-#endif
-
   vertex_descriptor v = tv;
   for (vertex_descriptor u = predecessorMap[v];
        u != v;
@@ -494,23 +492,7 @@ commodity_history_impl_t::find_price(const commodity_t& source,
     const commodity_t * u_comm = get(namemap, u);
     const commodity_t * v_comm = get(namemap, v);
 
-#if defined(REVERSE_PREDECESSOR_MAP)
-    if (v == tv && u_comm != last_target && v_comm != last_target)
-      results_reversed = true;
-
-    results.push_back(results_tuple(u_comm, v_comm, &point));
-  }
-
-  if (results_reversed)
-    std::reverse(results.begin(), results.end());
-
-  foreach (const results_tuple& edge, results) {
-    const commodity_t *  u_comm = edge.get<0>();
-    const commodity_t *  v_comm = edge.get<1>();
-    const price_point_t& point(*edge.get<2>());
-#else
     assert(u_comm == last_target || v_comm == last_target);
-#endif
 
     bool first_run = false;
     if (price.is_null()) {

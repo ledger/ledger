@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -29,7 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <system.hh>
+#include <ledger.hh>
 
 #include "ptree.h"
 #include "xact.h"
@@ -80,12 +80,7 @@ void format_ptree::flush()
 
   switch (format) {
   case FORMAT_XML:
-#if BOOST_VERSION >= 105600
     auto indented = property_tree::xml_writer_make_settings<std::string> (' ', 2);
-#else
-    property_tree::xml_writer_settings<char> indented(' ', 2);
-#endif
-
     property_tree::write_xml(out, pt, indented);
     out << std::endl;
     break;

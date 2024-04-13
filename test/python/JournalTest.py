@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 import unittest
 
@@ -6,7 +6,7 @@ from ledger import *
 
 class JournalTestCase(unittest.TestCase):
     def tearDown(self):
-        session.close_journal_files()
+        close_journal_files()
 
     def testBasicRead(self):
         journal = read_journal_from_string("""
@@ -37,7 +37,7 @@ class JournalTestCase(unittest.TestCase):
         try:
             fun()
         except RuntimeError as e:
-            self.assertEquals(str(e).splitlines()[-1],
+            self.assertEqual(str(e).splitlines()[-1],
                               "No quantity specified for amount")
 
  

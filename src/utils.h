@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -41,38 +41,12 @@
  *
  * @brief General utility facilities used by Ledger
  */
-#ifndef INCLUDED_UTILS_H
-#define INCLUDED_UTILS_H
+#pragma once
 
-#if (BOOST_VERSION >= 106600)
 #include <boost/uuid/detail/sha1.hpp>
-#else
-#include <boost/uuid/sha1.hpp>
-#endif
-
-/**
- * @name Default values
- */
-/*@{*/
+#include <ledger.hh>
 
 #define TIMERS_ON   1
-
-#if DEBUG_MODE
-#define DEBUG_ON    1
-#define VERIFY_ON   1
-#define TRACING_ON  1
-#elif NO_ASSERTS
-#define DEBUG_ON    0
-#define VERIFY_ON   0
-#define TRACING_ON  0
-//#define NO_LOGGING  1
-#else
-#define DEBUG_ON    0
-#define VERIFY_ON   0
-#define TRACING_ON  1           // use --trace X to enable
-#endif
-
-/*@}*/
 
 /**
  * @name Forward declarations
@@ -121,7 +95,7 @@ namespace ledger {
 
 #else // !NO_ASSERTS
 
-#define assert(x)
+#define assert(x) ((void)(x))
 
 #endif // !NO_ASSERTS
 
@@ -222,9 +196,6 @@ inline string operator+(const char * left, const string& right) {
  */
 /*@{*/
 
-#if ! defined(NO_LOGGING)
-#define LOGGING_ON 1
-#endif
 #if LOGGING_ON
 
 namespace ledger {
@@ -637,5 +608,3 @@ extern const string version;
 } // namespace ledger
 
 /*@}*/
-
-#endif // INCLUDED_UTILS_H

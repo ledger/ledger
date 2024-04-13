@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,7 +30,7 @@
  */
 
 /**
- * @addtogroup stats
+ * @addtogroup report
  */
 
 /**
@@ -39,8 +39,7 @@
  *
  * @ingroup report
  */
-#ifndef INCLUDED_STATS_H
-#define INCLUDED_STATS_H
+#pragma once
 
 #include "value.h"
 
@@ -51,5 +50,3 @@ class call_scope_t;
 value_t report_statistics(call_scope_t& scope);
 
 } // namespace ledger
-
-#endif // INCLUDED_STATS_H

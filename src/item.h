@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,8 +39,7 @@
  *
  * @ingroup data
  */
-#ifndef INCLUDED_ITEM_H
-#define INCLUDED_ITEM_H
+#pragma once
 
 #include "scope.h"
 
@@ -80,13 +79,14 @@ struct position_t
   }
 };
 
-class item_t : public supports_flags<uint_least16_t>, public scope_t
+class item_t : public flags::supports_flags<uint_least16_t>, public scope_t
 {
 public:
 #define ITEM_NORMAL            0x00 // no flags at all, a basic posting
 #define ITEM_GENERATED         0x01 // posting was not found in a journal
 #define ITEM_TEMP              0x02 // posting is a managed temporary
 #define ITEM_NOTE_ON_NEXT_LINE 0x04 // did we see a note on the next line?
+#define ITEM_INFERRED          0x08 // bucketed item
 
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
@@ -214,5 +214,3 @@ string  item_context(const item_t& item, const string& desc);
 void    put_metadata(property_tree::ptree& pt, const item_t::string_map& metadata);
 
 } // namespace ledger
-
-#endif // INCLUDED_ITEM_H

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -45,8 +45,7 @@
  * child process, different cleanup is needed for each scenario.  This
  * file abstracts those various needs.
  */
-#ifndef INCLUDED_STREAM_H
-#define INCLUDED_STREAM_H
+#pragma once
 
 #include "utils.h"
 
@@ -117,7 +116,7 @@ public:
                   const optional<path>& pager_path  = none);
 
   /**
-   * Convertor to a standard ostream.  This is used so that we can
+   * Converter to a standard ostream.  This is used so that we can
    * stream directly to an object of type output_stream_t.
    */
   operator std::ostream&() {
@@ -138,5 +137,3 @@ public:
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_STREAM_H

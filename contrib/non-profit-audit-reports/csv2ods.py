@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # csv2ods.py
 # Convert example csv file to ods
 #
@@ -25,10 +25,15 @@ import csv
 import ooolib2
 import shutil
 import string
-from Crypto.Hash import SHA256
+try:
+    from Crypto.Hash import SHA256
+except ModuleNotFoundError:
+    print("Missing pycrypto")
+    #sys.exit(-1)
+
 
 def err(msg):
-    print 'error: %s' % msg
+    print(f'error: {msg}')
     sys.exit(1)
 
 def ReadChecksums(inputFile):
@@ -57,7 +62,7 @@ def ChecksumFile(filename):
 def main():
     program = os.path.basename(sys.argv[0])
 
-    print get_file_checksum(sys.argv[1])
+    print(get_file_checksum(sys.argv[1]))
 
 def csv2ods(csvname, odsname, encoding='', singleFileDirectory=None, knownChecksums={}, verbose = False):
     filesSavedinManifest = {}
@@ -66,7 +71,7 @@ def csv2ods(csvname, odsname, encoding='', singleFileDirectory=None, knownChecks
         checksumCache = {}
 
     if verbose:
-        print 'converting from %s to %s' % (csvname, odsname)
+        print(f'converting from {csvname} to {odsname}')
 
     if singleFileDirectory:
         if not os.path.isdir(os.path.join(os.getcwd(),singleFileDirectory)):
@@ -88,14 +93,14 @@ def csv2ods(csvname, odsname, encoding='', singleFileDirectory=None, knownChecks
     csvdir = os.path.dirname(csvname)
     if len(csvdir) == 0:
         csvdir = '.'
-    csvfile = open(csvname, 'rb')
+    csvfile = open(csvname, 'r')
     reader = csv.reader(csvfile, delimiter=',', quotechar='"')
     for fields in reader:
         if len(fields) > 0:
             for col in range(len(fields)):
                 val = fields[col]
                 if encoding != '' and val[0:5] != "link:":  # Only utf8 encode if it's not a filename
-                    val = unicode(val, 'utf8')
+                    val = val.encode('utf-8')
                 if len(val) > 0 and val[0] == '$':
                     doc.set_cell_value(col + 1, row, 'currency', val[1:])
                 else:
@@ -116,7 +121,7 @@ def csv2ods(csvname, odsname, encoding='', singleFileDirectory=None, knownChecks
 
                             if knownChecksums.has_key(checksum):
                                 newFile = knownChecksums[checksum]
-                                print "FOUND new file in known: " + newFile
+                                print(f'FOUND new file in known: {newFile}')
 
                         if not newFile:
                             relativeFileWithPath = os.path.basename(val)
@@ -161,10 +166,10 @@ def csv2ods(csvname, odsname, encoding='', singleFileDirectory=None, knownChecks
                             filesSavedinManifest[newFile] = val
 
                         if not os.path.exists(linkpath):
-                            print "WARNING: link %s DOES NOT EXIST at %s" % (val, linkpath)
+                            print(f'WARNING: link {val} DOES NOT EXIST at {linkpath}')
                         if verbose:
                             if os.path.exists(linkpath):
-                                print 'relative link %s EXISTS at %s' % (val, linkpath)
+                                print(f'relative link {val} EXISTS at {linkpath}')
                     else:
                         if val == "pagebreak":
                             doc.sheets[doc.sheet_index].set_sheet_config(('row', row), style_pagebreak)
@@ -210,16 +215,19 @@ def main():
 
     if len(args) != 0:
         parser.error("not expecting extra args")  
+    if not options.csv:
+      parser.error('Missing required --csv option')
     if not os.path.exists(options.csv):
-        err('csv does not exist: %s' % options.csv)
+        err(f'csv does not exist: {options.csv}')
     if not options.ods:
         (root, ext) = os.path.splitext(options.csv)
         options.ods = root + '.ods'
     if options.verbose:
-        print '%s: verbose mode on' % program
-        print 'csv:', options.csv
-        print 'ods:', options.ods
-        print 'ods:', options.encoding
+        print(f'''{program}: verbose mode on
+        csv: {options.csv}
+        ods: {options.ods}
+        ods: {options.encoding}
+        ''')
     if options.known_checksum_list and not options.single_file_directory:
         err(program + ": --known-checksum-list option is completely useless without --single-file-directory")
     knownChecksums = {}

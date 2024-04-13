@@ -99,7 +99,7 @@ or `g++` as follows:
 
     mkdir build
     ./acprep --compiler=clang++
-    cd build
+    cd build/ledger/debug
     make
 
 This will set up a debug build using clang++ (and pre-compiled headers, which
@@ -111,7 +111,7 @@ cores:
 
     mkdir build
     ./acprep --compiler=clang++ --ninja
-    cd build
+    cd build/ledger/debug
     ninja
 
 [Boost]: http://boost.org

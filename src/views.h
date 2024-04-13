@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,7 +30,7 @@
  */
 
 /**
- * @addtogroup views
+ * @defgroup views Views
  */
 
 /**
@@ -39,8 +39,7 @@
  *
  * @ingroup views
  */
-#ifndef INCLUDED_VIEWS_H
-#define INCLUDED_VIEWS_H
+#pragma once
 
 #include "utils.h"
 
@@ -453,5 +452,3 @@ void populate_journal(r_journal_ptr journal, report_t& report,
 } // namespace ledger
 
 #endif /* DOCUMENT_MODEL */
-
-#endif // INCLUDED_VIEWS_H

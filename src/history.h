@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2022, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -43,8 +43,7 @@
  *
  * Long.
  */
-#ifndef INCLUDED_HISTORY_H
-#define INCLUDED_HISTORY_H
+#pragma once
 
 #include "amount.h"
 #include "commodity.h"
@@ -92,5 +91,3 @@ public:
 };
 
 } // namespace ledger
-
-#endif // INCLUDED_HISTORY_H
