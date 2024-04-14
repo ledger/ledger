@@ -60,6 +60,7 @@ public:
 #define POST_COST_VIRTUAL    0x0400 // cost is virtualized: (@)
 #define POST_ANONYMIZED      0x0800 // a temporary, anonymous posting
 #define POST_DEFERRED        0x1000 // the account was specified with <angles>
+#define POST_IS_TIMELOG      0x1200 // the posting is a timelog entry
 
   xact_t *    xact;             // only set for posts of regular xacts
   account_t * account;
@@ -144,7 +145,7 @@ public:
   }
 
   bool must_balance() const {
-    return ! has_flags(POST_VIRTUAL) || has_flags(POST_MUST_BALANCE);
+    return ! (has_flags(POST_VIRTUAL) || has_flags(POST_IS_TIMELOG)) || has_flags(POST_MUST_BALANCE);
   }
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
