@@ -116,8 +116,10 @@ value_t xact_base_t::magnitude() const
 namespace {
   inline bool account_ends_with_special_char(const string& name) {
     string::size_type len(name.length());
-    return (std::isdigit(name[len - 1]) || name[len - 1] == ')' ||
-            name[len - 1] == '}' || name[len - 1] == ']');
+    return (std::isdigit(static_cast<unsigned char>(name[len - 1])) ||
+            name[len - 1] == ')' ||
+            name[len - 1] == '}' ||
+            name[len - 1] == ']');
   }
 
   struct add_balancing_post
