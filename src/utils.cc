@@ -516,7 +516,7 @@ strings_list split_arguments(const char * line)
   char in_quoted_string = '\0';
 
   for (const char * p = line; *p; p++) {
-    if (! in_quoted_string && std::isspace(*p)) {
+    if (! in_quoted_string && std::isspace(static_cast<unsigned char>(*p))) {
       if (q != buf) {
         *q = '\0';
         args.push_back(buf);
