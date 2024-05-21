@@ -5600,13 +5600,45 @@ with Ledger 2.X.
 @findex stats
 @findex stat
 
-@value{FIXME:UNDOCUMENTED}
+@command{stats query}
+Provide summary information about all the postings matching query.
+
+@smallexample
+$ ledger stats
+@end smallexample
+
+@itemize @bullet
+@item
+Time range of all matching postings
+@item
+Unique accounts
+@item
+Postings total
+@item
+Uncleared postings
+@item
+Days since last posting
+@item
+Posts in the last 7 days
+@item
+Posts in the last 30 days
+@item
+Posts this month
+@end itemize
 
 @node @command{select},  , @command{stats}, Reports about your Journals
 @subsection @command{select}
 @findex select
 
-@value{FIXME:UNDOCUMENTED}
+@command{select query}
+The Command @command{select query} allows generation of SQL-like queries, e.g.,
+
+List all postings matching the qurty.
+This command allows to generate SQL-like queries, e.g.:
+
+@smallexample
+ledger select date,amount from posts where account=~/Income/
+@end smallexample
 
 @node Command-Line Syntax, Budgeting and Forecasting, Reporting Commands, Top
 @chapter Command-Line Syntax
