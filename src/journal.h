@@ -45,6 +45,7 @@
 #include "times.h"
 #include "mask.h"
 #include "expr.h"
+#include "accounts_map.h"
 
 namespace ledger {
 
@@ -66,7 +67,6 @@ typedef std::pair<string, string>        payee_uuid_mapping_t;
 typedef std::list<payee_uuid_mapping_t>  payee_uuid_mappings_t;
 typedef std::pair<mask_t, account_t *>   account_mapping_t;
 typedef std::list<account_mapping_t>     account_mappings_t;
-typedef std::map<string, account_t *>    accounts_map;
 typedef std::map<string, xact_t *>       checksum_map_t;
 
 typedef std::multimap<string, expr_t::check_expr_pair> tag_check_exprs_map;
