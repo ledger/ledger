@@ -1,0 +1,24 @@
+; Amounts should still align even though the account names are much longer than
+; the default --account-width.
+
+2023/01/01 Transaction with short account names
+    Assets:Short  -10 ABC
+    Assets:Short  -10 ABC
+    Expenses:Short  20 ABC
+
+2023/01/01 Transaction with long account names
+    Assets:Very:Long:Account:Name:That:Will:Push:The:Amount   -10 ABC
+    Assets:Another:Long:Account:Name:That:Will:Push:The:Amount   -10 ABC
+    Expenses:Short  20 ABC
+
+test print
+2023/01/01 Transaction with short account names
+    Assets:Short                             -10 ABC
+    Assets:Short                             -10 ABC
+    Expenses:Short                            20 ABC
+
+2023/01/01 Transaction with long account names
+    Assets:Very:Long:Account:Name:That:Will:Push:The:Amount        -10 ABC
+    Assets:Another:Long:Account:Name:That:Will:Push:The:Amount     -10 ABC
+    Expenses:Short                                                  20 ABC
+end test
