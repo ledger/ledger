@@ -1626,6 +1626,7 @@ post_t * instance_t::parse_post(char *          line,
 
   // Parse the optional balance assignment
 
+  size_t balance_linenum;
   if (xact && next && *next == '=') {
     DEBUG("textual.parse", "line " << context.linenum << ": "
           << "Found a balance assignment indicator");
@@ -1655,91 +1656,8 @@ post_t * instance_t::parse_post(char *          line,
 
       DEBUG("textual.parse", "line " << context.linenum << ": "
             << "POST assign: parsed balance amount = " << *post->assigned_amount);
-
-      const amount_t& amt(*post->assigned_amount);
-      value_t account_total
-        (post->account->amount(!post->has_flags(POST_VIRTUAL)).strip_annotations(keep_details_t()));
-
-      DEBUG("post.assign", "line " << context.linenum << ": "
-            << "account balance = " << account_total);
-      DEBUG("post.assign", "line " << context.linenum << ": "
-            << "post amount = " << amt << " (is_zero = " << amt.is_zero() << ")");
-
-      balance_t diff = amt;
-
-      switch (account_total.type()) {
-      case value_t::AMOUNT: {
-        amount_t amt(account_total.as_amount().strip_annotations(keep_details_t()));
-        diff -= amt;
-        DEBUG("textual.parse", "line " << context.linenum << ": "
-              << "Subtracting amount " << amt << " from diff, yielding " << diff);
-        break;
-      }
-      case value_t::BALANCE: {
-        balance_t bal(account_total.as_balance().strip_annotations(keep_details_t()));
-        diff -= bal;
-        DEBUG("textual.parse", "line " << context.linenum << ": "
-              << "Subtracting balance " << bal << " from diff, yielding " << diff);
-        break;
-      }
-      default:
-        break;
-      }
-
-      DEBUG("post.assign",
-            "line " << context.linenum << ": " << "diff = " << diff);
-      DEBUG("textual.parse", "line " << context.linenum << ": "
-            << "POST assign: diff = " << diff);
-
-      // Subtract amounts from previous posts to this account in the xact.
-      for (post_t* p : xact->posts) {
-        if (p->account == post->account && p->has_flags(POST_VIRTUAL) == post->has_flags(POST_VIRTUAL)) {
-          amount_t amt(p->amount.strip_annotations(keep_details_t()));
-          diff -= amt;
-          DEBUG("textual.parse", "line " << context.linenum << ": "
-                << "Subtracting " << amt << ", diff = " << diff);
-        }
-      }
-
-      // If amt has a commodity, restrict balancing to that. Otherwise, it's the blanket '0' and
-      // check that all of them are zero.
-      if (amt.has_commodity()) {
-        DEBUG("textual.parse", "line " << context.linenum << ": "
-              << "Finding commodity " << amt.commodity() << " (" << amt << ") in balance " << diff);
-        optional<amount_t> wanted_commodity = diff.commodity_amount(amt.commodity());
-        if (!wanted_commodity) {
-          diff = amt - amt;  // this is '0' with the correct commodity.
-        } else {
-          diff = *wanted_commodity;
-        }
-        DEBUG("textual.parse", "line " << context.linenum << ": "
-              << "Diff is now " << diff);
-      }
-
-      if (post->amount.is_null()) {
-        // balance assignment
-        if (! diff.is_zero()) {
-          // This will fail if there are more than 1 commodity in diff, which is wanted,
-          // as amount cannot store more than 1 commodity.
-          post->amount = diff.to_amount();
-          DEBUG("textual.parse", "line " << context.linenum << ": "
-                << "Overwrite null posting with " << diff.to_amount());
-        } else {
-          post->amount = amt - amt;  // this is '0' with the correct commodity.
-          DEBUG("textual.parse", "line " << context.linenum << ": "
-                << "Overwrite null posting with zero diff with " << amt - amt);
-        }
-      } else {
-        // balance assertion
-        diff -= post->amount.strip_annotations(keep_details_t());
-        if (! no_assertions && ! diff.is_zero()) {
-          balance_t tot = (-diff + amt).strip_annotations(keep_details_t());
-          DEBUG("textual.parse", "Balance assertion: off by " << diff << " (expected to see " << tot << ")");
-          throw_(parse_error,
-                  _f("Balance assertion off by %1% (expected to see %2%)")
-                  % diff.to_string() % tot.to_string());
-        }
-      }
+      
+      balance_linenum = context.linenum;
 
       if (stream.eof())
         next = NULL;
@@ -1765,6 +1683,120 @@ post_t * instance_t::parse_post(char *          line,
     throw_(parse_error,
            _f("Unexpected char '%1%' (Note: inline math requires parentheses)")
            % *next);
+
+  // compute optional balance assignment
+
+  // must do this after the optional note is parsed so we have the date
+  if(post->assigned_amount) {
+
+    const amount_t& amt(*post->assigned_amount);
+
+    optional<expr_t&> account_post_filter;
+    expr_t filter_expr;
+    if (post->account->xdata_ &&
+      post->account->self_details().latest_post > post->date()
+    ) {
+      filter_expr = expr_t(WRAP_FUNCTOR([&post](call_scope_t &scope) {
+        if (scope.lookup(symbol_t::FUNCTION, "date")
+          ->as_function()(scope).as_date() <= post->date()
+        ) {
+          return scope.lookup(symbol_t::FUNCTION, "amount")
+            ->as_function()(scope).as_amount();
+        }
+        else {
+          return amount_t(0.);
+        }
+      }), NULL);
+      account_post_filter = filter_expr;
+    }
+    value_t account_total(post->account->
+      amount(!post->has_flags(POST_VIRTUAL), account_post_filter)
+      .strip_annotations(keep_details_t()));
+
+    DEBUG("post.assign", "line " << balance_linenum << ": "
+          << "account balance = " << account_total);
+    DEBUG("post.assign", "line " << balance_linenum << ": "
+          << "post amount = " << amt << " (is_zero = " << amt.is_zero() << ")");
+
+    balance_t diff = amt;
+
+    switch (account_total.type()) {
+    case value_t::AMOUNT: {
+      amount_t amt(account_total.as_amount().strip_annotations(keep_details_t()));
+      diff -= amt;
+      DEBUG("textual.parse", "line " << balance_linenum << ": "
+            << "Subtracting amount " << amt << " from diff, yielding " << diff);
+      break;
+    }
+    case value_t::BALANCE: {
+      balance_t bal(account_total.as_balance().strip_annotations(keep_details_t()));
+      diff -= bal;
+      DEBUG("textual.parse", "line " << balance_linenum << ": "
+            << "Subtracting balance " << bal << " from diff, yielding " << diff);
+      break;
+    }
+    default:
+      break;
+    }
+
+    DEBUG("post.assign",
+          "line " << balance_linenum << ": " << "diff = " << diff);
+    DEBUG("textual.parse", "line " << balance_linenum << ": "
+          << "POST assign: diff = " << diff);
+
+    // Subtract amounts from previous posts to this account in the xact.
+    for (post_t* p : xact->posts) {
+      if (p->account == post->account &&
+        (! p->has_flags(POST_VIRTUAL) || post->has_flags(POST_VIRTUAL)) &&
+        p->date() <= post->date()
+      ) {
+        amount_t amt(p->amount.strip_annotations(keep_details_t()));
+        diff -= amt;
+        DEBUG("textual.parse", "line " << balance_linenum << ": "
+              << "Subtracting " << amt << ", diff = " << diff);
+      }
+    }
+
+    // If amt has a commodity, restrict balancing to that. Otherwise, it's the blanket '0' and
+    // check that all of them are zero.
+    if (amt.has_commodity()) {
+      DEBUG("textual.parse", "line " << balance_linenum << ": "
+            << "Finding commodity " << amt.commodity() << " (" << amt << ") in balance " << diff);
+      optional<amount_t> wanted_commodity = diff.commodity_amount(amt.commodity());
+      if (!wanted_commodity) {
+        diff = amt - amt;  // this is '0' with the correct commodity.
+      } else {
+        diff = *wanted_commodity;
+      }
+      DEBUG("textual.parse", "line " << balance_linenum << ": "
+            << "Diff is now " << diff);
+    }
+
+    if (post->amount.is_null()) {
+      // balance assignment
+      if (! diff.is_zero()) {
+        // This will fail if there are more than 1 commodity in diff, which is wanted,
+        // as amount cannot store more than 1 commodity.
+        post->amount = diff.to_amount();
+        DEBUG("textual.parse", "line " << balance_linenum << ": "
+              << "Overwrite null posting with " << diff.to_amount());
+      } else {
+        post->amount = amt - amt;  // this is '0' with the correct commodity.
+        DEBUG("textual.parse", "line " << balance_linenum << ": "
+              << "Overwrite null posting with zero diff with " << amt - amt);
+      }
+    } else {
+      // balance assertion
+      diff -= post->amount.strip_annotations(keep_details_t());
+      if (! no_assertions && ! diff.is_zero()) {
+        balance_t tot = (-diff + amt).strip_annotations(keep_details_t());
+        DEBUG("textual.parse", "Balance assertion: off by " << diff << " (expected to see " << tot << ")");
+        throw_(parse_error,
+                _f("Balance assertion off by %1% (expected to see %2%)")
+                % diff.to_string() % tot.to_string());
+      }
+    }
+  }
 
   post->pos->end_pos  = context.curr_pos;
   post->pos->end_line = context.linenum;
