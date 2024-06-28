@@ -61,8 +61,6 @@ endif()
 
 ########################################################################
 
-find_package(Python COMPONENTS Interpreter) # Used for running tests
-
 if (USE_PYTHON)
   if (NOT BUILD_LIBRARY)
     message(ERROR "Building the python module requires BUILD_LIBRARY=ON.")
@@ -164,7 +162,7 @@ endif()
 cmake_push_check_state()
 
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${ICUE_INCLUDE_DIRS})
-set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} ${ICU_LIBRARIES} ${PROFILE_LIBS})
+set(CMAKE_REQUIRED_LIBRARIES Boost::regex ${ICU_LIBRARIES} ${PROFILE_LIBS})
 
 check_cxx_source_runs("
 #include <boost/regex/icu.hpp>
@@ -275,8 +273,10 @@ endif (NOT HAVE_EDIT)
 ########################################################################
 
 macro(add_ledger_library_dependencies _target)
-  target_link_libraries(${_target} ${MPFR_LIB})
+  target_link_libraries(${_target} ${Boost_LIBRARIES})
   target_link_libraries(${_target} ${GMP_LIB})
+  target_link_libraries(${_target} ${MPFR_LIB})
+  target_link_libraries(${_target} ${PROFILE_LIBS})
   if (HAVE_EDIT)
     target_link_libraries(${_target} ${EDIT_LIB})
   endif()
@@ -289,22 +289,18 @@ macro(add_ledger_library_dependencies _target)
   if (HAVE_GPGME)
     target_link_libraries(${_target} Gpgmepp)
   endif()
+  if (HAVE_BOOST_REGEX_UNICODE)
+    target_link_libraries(${_target} ${ICU_LIBRARIES})
+  endif()
   if (HAVE_BOOST_PYTHON)
     if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
       # Don't link directly to a Python framework on macOS, to avoid segfaults
       # when the module is imported from a different interpreter
-      target_link_libraries(${_target} ${Boost_LIBRARIES})
       set_target_properties(${_target} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
     else()
-      target_link_libraries(${_target} ${Boost_LIBRARIES} ${Python_LIBRARIES})
+      target_link_libraries(${_target} ${Python_LIBRARIES})
     endif()
-  else()
-    target_link_libraries(${_target} ${Boost_LIBRARIES})
   endif()
-  if (HAVE_BOOST_REGEX_UNICODE)
-    target_link_libraries(${_target} ${ICU_LIBRARIES})
-  endif()
-  target_link_libraries(${_target} ${PROFILE_LIBS})
 endmacro(add_ledger_library_dependencies _target)
 
 ########################################################################
