@@ -983,7 +983,8 @@ namespace {
               std::isdigit(c) || c == '.' || c == ',');
 
     string::size_type len = std::strlen(buf);
-    while (len > 0 && ! std::isdigit(buf[len - 1])) {
+    while (len > 0 &&
+           ! std::isdigit(static_cast<unsigned char>(buf[len - 1]))) {
       buf[--len] = '\0';
       in.unget();
     }
@@ -1018,7 +1019,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     parse_quantity(in, quant);
 
     if (! in.eof() && ((n = static_cast<char>(in.peek())) != '\n')) {
-      if (std::isspace(n))
+      if (std::isspace(static_cast<unsigned char>(n)))
         comm_flags |= COMMODITY_STYLE_SEPARATED;
 
       commodity_t::parse_symbol(in, symbol);
@@ -1034,7 +1035,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     commodity_t::parse_symbol(in, symbol);
 
     if (! in.eof() && ((n = static_cast<char>(in.peek())) != '\n')) {
-      if (std::isspace(static_cast<char>(in.peek())))
+      if (std::isspace(in.peek()))
         comm_flags |= COMMODITY_STYLE_SEPARATED;
 
       parse_quantity(in, quant);
