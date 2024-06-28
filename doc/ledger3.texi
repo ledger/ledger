@@ -1816,6 +1816,8 @@ The @samp{@{$30.00@}} is a lot price.  You can also use a lot date,
 same price/date and your taxation model is based on
 longest-held-first.
 
+The lot price and sale price must include an explicit commodity name.
+
 @node Fixing Lot Prices, Complete control over commodity pricing, Buying and Selling Stock, Currency and Commodities
 @subsection Fixing Lot Prices
 @cindex fixing lot prices
