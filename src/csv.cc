@@ -244,6 +244,7 @@ xact_t * csv_reader::read_xact(bool rich_data)
       break;
     }
   }
+  post->add_flags(POST_CALCULATED);
 
   xact->add_post(post.release());
 

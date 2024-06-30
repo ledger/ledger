@@ -16,56 +16,56 @@
 
 test --input-date-format "%Y-%m-%d" convert test/baseline/opt-auto-match.dat
 2012/03/01 * Food
-    Expenses:Unknown                              10
-    Equity:Unknown
+    Expenses:Unknown
+    Equity:Unknown                               -10
 
 2012/03/02 * Phone
-    Expenses:Unknown                              10
-    Equity:Unknown
+    Expenses:Unknown
+    Equity:Unknown                               -10
 
 2012/03/02 * Dining
-    Expenses:Unknown                              10
-    Equity:Unknown
+    Expenses:Unknown
+    Equity:Unknown                               -10
 end test
 
 test --input-date-format "%Y-%m-%d" --auto-match convert test/baseline/opt-auto-match.dat
 2012/03/01 * Food
-    Expenses:Food                                 10
-    Equity:Unknown
+    Expenses:Food
+    Equity:Unknown                               -10
 
 2012/03/02 * Phone
-    Expenses:Phone                                10
-    Equity:Unknown
+    Expenses:Phone
+    Equity:Unknown                               -10
 
 2012/03/02 * Dining
-    Expenses:Food                                 10
-    Equity:Unknown
+    Expenses:Food
+    Equity:Unknown                               -10
 end test
 
 test --input-date-format "%Y-%m-%d" --account Assets:Bank convert test/baseline/opt-auto-match.dat
 2012/03/01 * Food
-    Expenses:Unknown                              10
-    Assets:Bank
+    Expenses:Unknown
+    Assets:Bank                                  -10
 
 2012/03/02 * Phone
-    Expenses:Unknown                              10
-    Assets:Bank
+    Expenses:Unknown
+    Assets:Bank                                  -10
 
 2012/03/02 * Dining
-    Expenses:Unknown                              10
-    Assets:Bank
+    Expenses:Unknown
+    Assets:Bank                                  -10
 end test
 
 test --input-date-format "%Y-%m-%d" --auto-match --account Assets:Bank convert test/baseline/opt-auto-match.dat
 2012/03/01 * Food
-    Expenses:Food                                 10
-    Assets:Bank
+    Expenses:Food
+    Assets:Bank                                  -10
 
 2012/03/02 * Phone
-    Expenses:Phone                                10
-    Assets:Bank
+    Expenses:Phone
+    Assets:Bank                                  -10
 
 2012/03/02 * Dining
-    Expenses:Food                                 10
-    Assets:Bank
+    Expenses:Food
+    Assets:Bank                                  -10
 end test
