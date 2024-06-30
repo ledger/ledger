@@ -642,11 +642,12 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const
       add_or_set_value(value, xdata_->compound_value);
   }
   else if (expr) {
-    bind_scope_t bound_scope(*expr->get_context(),
-                             const_cast<post_t&>(*this));
+    scope_t *ctx = expr->get_context();
+    bind_scope_t bound_scope(*ctx, const_cast<post_t&>(*this));
 #if 1
     value_t temp(expr->calc(bound_scope));
     add_or_set_value(value, temp);
+    expr->set_context(ctx);
 #else
     if (! xdata_) xdata_ = xdata_t();
     xdata_->value = expr->calc(bound_scope);

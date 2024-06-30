@@ -1,0 +1,14 @@
+2024/01/01 * Test1
+    Expenses:Test                            $1.00
+    Assets:Checking
+2024/01/01 * Test2
+    Expenses:Test                            $1.00
+    Assets:Checking
+
+test bal --group-by 'payee' --invert ^Expenses:
+Test1
+              $-1.00  Expenses:Test
+
+Test2
+              $-1.00  Expenses:Test
+end test
