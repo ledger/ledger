@@ -1,0 +1,23 @@
+2008/01/01 January
+    Expenses:Books                            $10.00
+    Assets:Cash
+
+2008/01/31 End of January
+    Expenses:Books                            $10.00
+    Assets:Cash
+
+2008/02/01 February
+    ; Hash: f80797304b8d9acb2084772364ee717f0b724cddb1a9ccb6a3fb8d9cb803fe3b9b7a458211a7fe818578b6ec75a1a31acbcf8e2926ea349141568252966189aa
+    Expenses:Books                            $20.00
+    Assets:Cash
+
+test print --hashes=sha512 -> 1
+__ERROR__
+While parsing file "$FILE", line 12:
+While parsing transaction:
+> 2008/02/01 February
+>     ; Hash: f80797304b8d9acb2084772364ee717f0b724cddb1a9ccb6a3fb8d9cb803fe3b9b7a458211a7fe818578b6ec75a1a31acbcf8e2926ea349141568252966189aa
+>     Expenses:Books                            $20.00
+>     Assets:Cash
+Error: Expected hash f8b26ea0259aafe4c8ab280348b2954856cc089470275f2fbcdc33ac09dc9dae1b944c02647fd603d5347a4b17af3ebd034c74e90eb784a5255229be49c8f2fe != f80797304b8d9acb2084772364ee717f0b724cddb1a9ccb6a3fb8d9cb803fe3b9b7a458211a7fe818578b6ec75a1a31acbcf8e2926ea349141568252966189aa
+end test

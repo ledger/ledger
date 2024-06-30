@@ -74,7 +74,7 @@ namespace {
         parsing_context.get_current().journal = report.session.journal.get();
         parsing_context.get_current().scope   = &report.session;
 
-        report.session.journal->read(parsing_context);
+        report.session.journal->read(parsing_context, NO_HASHES);
         report.session.journal->clear_xdata();
       }
     }

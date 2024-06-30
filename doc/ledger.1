@@ -1,4 +1,4 @@
-.Dd March 15, 2019
+.Dd December 13, 2023
 .Dt LEDGER 1
 .Os
 .Sh NAME
@@ -634,6 +634,24 @@ Set the format for the headers that separate reports section of
 a grouped report.  Only has effect with a
 .Fl \-group-by Ar EXPR
 register report.
+.It Fl \-hashes Ar ALGO
+Record the hash of each transaction in a
+.Ar Hash
+metadata value, according to the hashing algorithm given by the
+.Ar ALGO
+argument. Supported algorithms are
+.Ar sha512
+or
+.Ar sha512_half
+where both use SHA512, but the latter only stores the first half of
+the hash value.
+.Pp
+If a
+.Ar Hash
+metadata value is explicitly provided and does not match what would
+have been generated, an error is reported. Hashes depend on previous
+entries, such that setting a single hash value is sufficient to
+guarantee the shape of the entire history leading up to that entry.
 .It Fl \-head Ar INT
 Print the first
 .Ar INT

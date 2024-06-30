@@ -1,0 +1,32 @@
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/01/31 End of January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+2008/02/01 February
+    ; Some other comment
+    Assets:Cash
+    ; Some other comment
+    Expenses:Books          $20.00
+
+test print --hashes=sha512
+2008/01/01 January
+    ; Hash: c0f3322857def0d32bd2c9398e0785aacc8206f9ba64ef923978cbdcea13f59ccd44c1b245943ad9402fb1b82060de271d13d9ec48ad3ecae08af1f6755a0b65
+    Expenses:Books                            $10.00
+    Assets:Cash
+
+2008/01/31 End of January
+    ; Hash: 0b28fde8242881a4e7311a57d46c972d2fcbafe9358e9f26fcd27169941d4c21dffcebc92ea27004659a663b9b2eb88ff050a2f37088bd6dabe732f5d8427293
+    Expenses:Books                            $10.00
+    Assets:Cash
+
+2008/02/01 February
+    ; Some other comment
+    ; Hash: f8b26ea0259aafe4c8ab280348b2954856cc089470275f2fbcdc33ac09dc9dae1b944c02647fd603d5347a4b17af3ebd034c74e90eb784a5255229be49c8f2fe
+    Assets:Cash
+    ; Some other comment
+    Expenses:Books                            $20.00
+end test

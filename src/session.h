@@ -112,6 +112,7 @@ public:
     HANDLER(decimal_comma).report(out);
     HANDLER(time_colon).report(out);
     HANDLER(file_).report(out);
+    HANDLER(hashes_).report(out);
     HANDLER(input_date_format_).report(out);
     HANDLER(explicit).report(out);
     HANDLER(master_account_).report(out);
@@ -160,6 +161,20 @@ public:
        parent->flush_on_next_data_file = false;
      }
      data_files.push_back(str);
+   });
+
+  OPTION__
+  (session_t, hashes_,
+   hash_type_t hash_type = NO_HASHES;
+   CTOR(session_t, hashes_) {}
+   DO_(str) {
+     if (str == "sha512" || str == "SHA512") {
+       hash_type = HASH_SHA512;
+     } else if (str == "sha512_half" || str == "SHA512_Half") {
+       hash_type = HASH_SHA512_Half;
+     } else {
+        throw_(std::invalid_argument, _f("Unrecognized hash type"));
+     }
    });
 
   OPTION_(session_t, input_date_format_, DO_(str) {

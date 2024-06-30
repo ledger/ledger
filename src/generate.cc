@@ -365,7 +365,7 @@ void generate_posts_iterator::increment()
       parsing_context.get_current().journal = session.journal.get();
       parsing_context.get_current().scope   = &session;
 
-      if (session.journal->read(parsing_context) != 0) {
+      if (session.journal->read(parsing_context, NO_HASHES) != 0) {
         VERIFY(session.journal->xacts.back()->valid());
         posts.reset(*session.journal->xacts.back());
         post = *posts++;
