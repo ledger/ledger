@@ -3901,7 +3901,31 @@ Becomes:
     Assets:Cash                 $-20.00
 @end smallexample
 
-Keep in mind that if you are using @option{--strict} or @option{--pedantic} you will have to explicitly define an account @samp{$account} to avoid errors.
+It is possible to refer to information within the posting using a @var{VEXPR}.  Note that the syntax for using a @var{VEXPR} is "%(@var{VEXPR})".
+
+@smallexample @c input:validate
+= ^Income
+    Liabilities:Tax:%(tag(/Tax/))  (20/120)
+    $account                       (-20/120)
+
+2024-07-04 * Sale
+    ; Tax: General
+    Assets                         10 USD
+    Income:Customer A
+@end @smallexample
+
+Becomes:
+
+@smallexample @c input:validate
+2024/07/04 * Sale
+    ; Tax: General
+    Assets                                    10 USD
+    Income:Customer A                        -10 USD
+    Liabilities:Tax:General                   -2 USD
+    Income:Customer A                          2 USD
+@end @smallexample
+
+Keep in mind that if you are using @option{--strict} or @option{--pedantic} you will have to explicitly define an account to avoid errors. When using @samp{$account}, such definition can be done thus:
 
 @smallexample @c input:validate
 account $account
