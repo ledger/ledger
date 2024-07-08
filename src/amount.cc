@@ -684,8 +684,45 @@ void amount_t::in_place_roundto(int places)
 {
   if (! quantity)
     throw_(amount_error, _("Cannot round an uninitialized amount"));
-    double x=ceil(mpq_get_d(MP(quantity))*pow(10, places) - 0.49999999) / pow(10, places);
-    mpq_set_d(MP(quantity), x);
+
+  // <https://github.com/ledger/ledger/issues/2362>
+  // _dup() call (see in_place_ceiling and in_place_floor)
+  // leads to 2 failures in the balance/testRound test,
+  // however in its absence this method affects copies of amount_t instances.
+  // Remove expected_failures from amount/testRound
+  // and update balance/testRound
+  // when uncommenting the following line.
+  // _dup();
+
+  mpz_t& scale(temp);
+  if (places)
+    mpz_ui_pow_ui(scale, 10, labs(places));
+
+  if (places > 0) {
+    mpz_mul(mpq_numref(MP(quantity)), mpq_numref(MP(quantity)), scale);
+  } else if (places < 0) {
+    mpz_mul(mpq_denref(MP(quantity)), mpq_denref(MP(quantity)), scale);
+  }
+
+  auto whole(mpq_numref(tempq));
+  auto reminder(mpq_denref(tempq));
+  mpz_fdiv_qr(whole, reminder, mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
+  mpz_mul_2exp(reminder, reminder, 1);
+  const int rem_denom_cmp = mpz_cmp(reminder, mpq_denref(MP(quantity)));
+  if (rem_denom_cmp > 0
+      || (rem_denom_cmp == 0 && mpz_odd_p(whole)))
+    mpz_add_ui(whole, whole, 1);
+
+  if (places > 0) {
+    mpq_set_num(MP(quantity), whole);
+    mpq_set_den(MP(quantity), scale);
+    mpq_canonicalize(MP(quantity));
+  } else if (places == 0)
+    mpq_set_z(MP(quantity), whole);
+  else {
+    mpq_set_ui(MP(quantity), 0, 1);
+    mpz_mul(mpq_numref(MP(quantity)), whole, scale);
+  }
 }
 
 void amount_t::in_place_unround()
