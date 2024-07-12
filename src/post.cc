@@ -338,6 +338,12 @@ namespace {
     }
     return acct;
   }
+  value_t get_display_account_note(call_scope_t& args)
+  {
+    post_t&    post(args.context<post_t>());
+    account_t& account(*post.reported_account());
+    return account.note ? string_value(*account.note) : NULL_VALUE;
+  }
 
   value_t get_account_id(post_t& post) {
     return static_cast<long>(post.account_id());
@@ -469,6 +475,8 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind,
   case 'd':
     if (name == "display_account")
       return WRAP_FUNCTOR(get_display_account);
+    if (name == "display_account_note")
+      return WRAP_FUNCTOR(get_display_account_note);
     else if (name == "depth")
       return WRAP_FUNCTOR(get_wrapper<&get_account_depth>);
     else if (name == "datetime")
