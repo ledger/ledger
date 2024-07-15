@@ -8445,6 +8445,19 @@ Assets:Cash ¤ 123,45
 @end smallexample
 @end defun
 
+@defvar account
+@defvarx a
+@defvarx A
+Return the concerned account.
+
+It may be appended with @code{.note} or @code{.depth} to get either the note
+or the depth of the account
+@end defvar
+
+@defvar account_base
+Return the last part of the account hierarchy.
+@end defvar
+
 @defun amount_expr
 Return the calculated amount of the posting according to the @option{--amount}
 option.
@@ -8507,6 +8520,14 @@ $ ledger -f expr.dat --format "%(date) %(account)\n" reg assets
 @smallexample @c output:67EBA45
 2015/01/16 Assets:Cash
 @end smallexample
+
+@defvar display_account
+Return the concerned account, surrounded with @code{[]} or @code{()} for
+virtual postings.
+
+It may be appended with @code{.note} or @code{.depth} to get either the note
+or the depth of the account
+@end defvar
 
 @defvar display_amount
 @defvarx t
