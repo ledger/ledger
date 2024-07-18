@@ -74,3 +74,112 @@ jobs:
         # Execute tests defined by the CMake configuration.
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
         run: ctest -C ${{env.BUILD_TYPE}} || ctest -C ${{env.BUILD_TYPE}} --rerun-failed --output-on-failure
+
+  emscripten:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+        name: Check out repository code
+      - name: Cache Emscripten
+        uses: actions/cache@v4
+        with:
+          path: 'emsdk-cache'
+          key: ${{ runner.os }}-emsdk
+      - uses: mymindstorm/setup-emsdk@v14
+        name: Emscripten setup
+        with:
+          version: 3.1.61
+          actions-cache-folder: 'emsdk-cache'
+      - name: Build Boost
+        run: |
+          mkdir -p build
+          cd build
+          export BOOST_VER=1_85_0
+          wget https://archives.boost.io/release/${BOOST_VER//_/.}/source/boost_${BOOST_VER}.tar.gz
+          tar -zxf boost_${BOOST_VER}.tar.gz
+          mv boost_${BOOST_VER} boost
+          cd boost
+          ./bootstrap.sh
+          ./b2 --prefix=dist \
+               --with-date_time --with-filesystem \
+               --with-system --with-iostreams \
+               --with-nowide --with-regex --with-test \
+               toolset=emscripten link=static variant=release threading=single install
+      - name: Build GMP
+        run: |
+          cd build
+          export GMP_VER=6.3.0
+          wget https://ftp.gnu.org/gnu/gmp/gmp-${GMP_VER}.tar.xz
+          tar -Jxf gmp-${GMP_VER}.tar.xz
+          mv gmp-${GMP_VER} gmp
+          cd gmp
+          emconfigure ./configure --disable-assembly --host none --enable-cxx --prefix=$(realpath dist)
+          emmake make
+          emmake make install
+      - name: Build MPFR
+        run: |
+          cd build
+          export MPFR_VER=4.2.1
+          wget https://ftp.gnu.org/gnu/mpfr/mpfr-${MPFR_VER}.tar.xz
+          tar -Jxf mpfr-${MPFR_VER}.tar.xz
+          mv mpfr-${MPFR_VER} mpfr
+          cd mpfr
+          emconfigure ./configure --host none --prefix=$(realpath dist) --with-gmp=$(realpath ../gmp/dist)
+          emmake make
+          emmake make install
+      - name: Build Ledger
+        run: |
+          cd build
+          export BOOST="$(realpath boost/dist)"
+          # -lnodefs.js -lnoderawfs.js flags are for testing purposes.
+          emcmake cmake \
+            -DBUILD_LIBRARY=ON \
+            -DPRECOMPILE_SYSTEM_HH=OFF \
+            -DCMAKE_CXX_FLAGS=' -lnodefs.js -lnoderawfs.js ' \
+            -DCMAKE_INSTALL_PREFIX="$PWD"/dist \
+            -DBoost_ROOT="$BOOST" \
+            -DBoost_INCLUDE_DIR="$BOOST"/include \
+            -DBOOST_LIBRARYDIR="$BOOST"/lib \
+            -DBoost_DATE_TIME_LIBRARY_RELEASE="$BOOST"/lib/libboost_date_time.a \
+            -DBoost_FILESYSTEM_LIBRARY_RELEASE="$BOOST"/lib/libboost_filesystem.a \
+            -DBoost_IOSTREAMS_LIBRARY_RELEASE="$BOOST"/lib/libboost_iostreams.a \
+            -DBoost_NOWIDE_LIBRARY_RELEASE="$BOOST"/lib/libboost_nowide.a \
+            -DBoost_REGEX_LIBRARY_RELEASE="$BOOST"/lib/libboost_regex.a \
+            -DBoost_SYSTEM_LIBRARY_RELEASE="$BOOST"/lib/libboost_system.a \
+            -DGMP_PATH="$PWD"/gmp/dist/include \
+            -DGMP_LIB="$PWD"/gmp/dist/lib/libgmp.a \
+            -DMPFR_PATH="$PWD"/mpfr/dist/include \
+            -DMPFR_LIB="$PWD"/mpfr/dist/lib/libmpfr.a \
+            -DUTFCPP_INCLUDE_DIR="$PWD"/../lib/utfcpp/v4/source \
+            ..
+          emmake make -j4
+      - name: Fix Emscripten build
+        run: |
+          cd build
+          # https://github.com/emscripten-core/emscripten/issues/22264
+          sed 's/if(!stream.tty)/if(!stream.tty||!stream.tty.ops)/g' ledger.js > ledger.js.ioctl_fix
+          sed 's/,tty:true,/,tty:false,/g' ledger.js.ioctl_fix > ledger.js.fs_fix
+          # Enable testing from python scripts.
+          echo '#!'"$(which node)" > ledger.js
+          cat ledger.js.fs_fix >> ledger.js
+          chmod a+x ledger.js
+          node ledger.js --version
+      - name: Test Ledger (DocTest)
+        run: |
+          cd build
+          # One test fails when run from ctest. Could be due to malfunctioning Emscripten TTY/IO API.
+          python ../test/DocTests.py \
+            --ledger "$PWD/ledger.js" \
+            --file "$PWD/../doc/ledger3.texi" \
+            --verbose
+      - name: Test Ledger
+        run: |
+          cd build
+          # _py$ : Python tests are not supported.
+          # DocTestsTest_ledger3 : See above.
+          # RegressTest_BF3C1F82 : Emscripten treats 2012/02/30 as a valid date.
+          # BaselineTest_opt-output : Outputing to /dev/stderr, probably unsupported by Emscripten.
+          ctest --force-new-ctest-process --output-on-failure \
+            -E '_py$|DocTestsTest_ledger3|RegressTest_BF3C1F82|BaselineTest_opt-output'
