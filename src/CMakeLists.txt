@@ -258,10 +258,10 @@ endif()
 # See: https://emscripten.org/docs/porting/exceptions.html
 if (EMSCRIPTEN)
   if (BUILD_LIBRARY)
-    target_compile_options(libledger PRIVATE -fexceptions)
+    target_compile_options(libledger PRIVATE -fwasm-exceptions)
   endif()
-  target_compile_options(ledger PRIVATE -fexceptions)
-  target_link_options(ledger PRIVATE -fexceptions)
+  target_compile_options(ledger PRIVATE -fwasm-exceptions)
+  target_link_options(ledger PRIVATE -fwasm-exceptions)
 endif()
 
 install(TARGETS ledger DESTINATION ${CMAKE_INSTALL_BINDIR})
