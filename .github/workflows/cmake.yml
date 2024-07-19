@@ -79,6 +79,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      matrix:
+        version:
+          - emsdk: 3.1.40
+            emsdk-ext: bc
+            boost: 1_84_0
+          - emsdk: 3.1.61
+            emsdk-ext: a
+            boost: 1_85_0
+            test: true
     steps:
       - uses: actions/checkout@v4
         name: Check out repository code
@@ -86,17 +95,18 @@ jobs:
         uses: actions/cache@v4
         with:
           path: 'emsdk-cache'
-          key: ${{ runner.os }}-emsdk
+          key: ${{ runner.os }}-emsdk-${{ matrix.version.emsdk }}
       - uses: mymindstorm/setup-emsdk@v14
         name: Emscripten setup
         with:
-          version: 3.1.61
+          version: ${{ matrix.version.emsdk }}
           actions-cache-folder: 'emsdk-cache'
       - name: Build Boost
+        env:
+          BOOST_VER: ${{ matrix.version.boost }}
         run: |
           mkdir -p build
           cd build
-          export BOOST_VER=1_85_0
           wget https://archives.boost.io/release/${BOOST_VER//_/.}/source/boost_${BOOST_VER}.tar.gz
           tar -zxf boost_${BOOST_VER}.tar.gz
           mv boost_${BOOST_VER} boost
@@ -130,6 +140,8 @@ jobs:
           emmake make
           emmake make install
       - name: Build Ledger
+        env:
+          EXT: ${{ matrix.version.emsdk-ext }}
         run: |
           cd build
           export BOOST="$(realpath boost/dist)"
@@ -142,12 +154,12 @@ jobs:
             -DBoost_ROOT="$BOOST" \
             -DBoost_INCLUDE_DIR="$BOOST"/include \
             -DBOOST_LIBRARYDIR="$BOOST"/lib \
-            -DBoost_DATE_TIME_LIBRARY_RELEASE="$BOOST"/lib/libboost_date_time.a \
-            -DBoost_FILESYSTEM_LIBRARY_RELEASE="$BOOST"/lib/libboost_filesystem.a \
-            -DBoost_IOSTREAMS_LIBRARY_RELEASE="$BOOST"/lib/libboost_iostreams.a \
-            -DBoost_NOWIDE_LIBRARY_RELEASE="$BOOST"/lib/libboost_nowide.a \
-            -DBoost_REGEX_LIBRARY_RELEASE="$BOOST"/lib/libboost_regex.a \
-            -DBoost_SYSTEM_LIBRARY_RELEASE="$BOOST"/lib/libboost_system.a \
+            -DBoost_DATE_TIME_LIBRARY_RELEASE="$BOOST"/lib/libboost_date_time.$EXT \
+            -DBoost_FILESYSTEM_LIBRARY_RELEASE="$BOOST"/lib/libboost_filesystem.$EXT \
+            -DBoost_IOSTREAMS_LIBRARY_RELEASE="$BOOST"/lib/libboost_iostreams.$EXT \
+            -DBoost_NOWIDE_LIBRARY_RELEASE="$BOOST"/lib/libboost_nowide.$EXT \
+            -DBoost_REGEX_LIBRARY_RELEASE="$BOOST"/lib/libboost_regex.$EXT \
+            -DBoost_SYSTEM_LIBRARY_RELEASE="$BOOST"/lib/libboost_system.$EXT \
             -DGMP_PATH="$PWD"/gmp/dist/include \
             -DGMP_LIB="$PWD"/gmp/dist/lib/libgmp.a \
             -DMPFR_PATH="$PWD"/mpfr/dist/include \
@@ -175,6 +187,7 @@ jobs:
             --file "$PWD/../doc/ledger3.texi" \
             --verbose
       - name: Test Ledger
+        if: ${{ matrix.version.test }}
         run: |
           cd build
           # _py$ : Python tests are not supported.
