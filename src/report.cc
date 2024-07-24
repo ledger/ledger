@@ -68,10 +68,6 @@ void report_t::normalize_options(const string& verb) {
     if (HANDLED(pager_) && !isatty(STDOUT_FILENO))
       HANDLER(pager_).off();
   }
-#else
-  if (HANDLED(force_color)) {
-    HANDLER(color).on("?normalize");
-  }
 #endif
 
   if (HANDLED(output_)) {

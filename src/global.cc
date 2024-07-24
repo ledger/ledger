@@ -449,7 +449,7 @@ void global_scope_t::visit_man_page() const {
   int status = -1;
   wait(&status);
 #endif
-  throw error_count(0, ""); // parent
+  exit(0); // parent
 }
 
 void handle_debug_options(int argc, char* argv[]) {
