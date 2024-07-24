@@ -125,7 +125,7 @@ jobs:
           tar -Jxf gmp-${GMP_VER}.tar.xz
           mv gmp-${GMP_VER} gmp
           cd gmp
-          emconfigure ./configure --disable-assembly --host none --enable-cxx --prefix=$(realpath dist)
+          emconfigure ./configure --disable-assembly --host wasm32 --enable-cxx --prefix=$(realpath dist)
           emmake make
           emmake make install
       - name: Build MPFR
@@ -136,7 +136,7 @@ jobs:
           tar -Jxf mpfr-${MPFR_VER}.tar.xz
           mv mpfr-${MPFR_VER} mpfr
           cd mpfr
-          emconfigure ./configure --host none --prefix=$(realpath dist) --with-gmp=$(realpath ../gmp/dist)
+          emconfigure ./configure --host wasm32 --prefix=$(realpath dist) --with-gmp=$(realpath ../gmp/dist)
           emmake make
           emmake make install
       - name: Build Ledger
@@ -149,9 +149,9 @@ jobs:
           emcmake cmake \
             -DBUILD_LIBRARY=ON \
             -DPRECOMPILE_SYSTEM_HH=OFF \
-            -DCMAKE_CXX_FLAGS=' -lnodefs.js -lnoderawfs.js ' \
+            -DCMAKE_EXE_LINKER_FLAGS='-lnodefs.js -lnoderawfs.js' \
             -DCMAKE_INSTALL_PREFIX="$PWD"/dist \
-            -DBoost_ROOT="$BOOST" \
+            -DBOOST_ROOT="$BOOST" \
             -DBoost_INCLUDE_DIR="$BOOST"/include \
             -DBOOST_LIBRARYDIR="$BOOST"/lib \
             -DBoost_DATE_TIME_LIBRARY_RELEASE="$BOOST"/lib/libboost_date_time.$EXT \
@@ -171,16 +171,17 @@ jobs:
         run: |
           cd build
           # https://github.com/emscripten-core/emscripten/issues/22264
-          sed 's/if(!stream.tty)/if(!stream.tty||!stream.tty.ops)/g' ledger.js > ledger.js.ioctl_fix
-          sed 's/,tty:true,/,tty:false,/g' ledger.js.ioctl_fix > ledger.js.fs_fix
+          sed -i.bak \
+              -e '1i #!'"$(which node)" \
+              -e 's/if(!stream.tty)/if(!stream.tty||!stream.tty.ops)/g' \
+              -e 's/,tty:true,/,tty:false,/g' \
+              ledger.js
           # Enable testing from python scripts.
-          echo '#!'"$(which node)" > ledger.js
-          cat ledger.js.fs_fix >> ledger.js
           chmod a+x ledger.js
-          node ledger.js --version
       - name: Test Ledger (DocTest)
         run: |
           cd build
+          node ledger.js --version
           # One test fails when run from ctest. Could be due to malfunctioning Emscripten TTY/IO API.
           python ../test/DocTests.py \
             --ledger "$PWD/ledger.js" \
