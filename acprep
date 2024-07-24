@@ -840,7 +840,7 @@ class PrepareBuild(CommandLineApp):
         PrepareBuild.__dict__['setup_flavor_' + self.current_flavor](self)
 
     def escape_string(self, data):
-        return re.sub(r'(['\\\\])', '\\\\\\1', data)
+        return re.sub(r'(["\\\\])', '\\\\\\1', data)
 
     def finalize_config(self):
         self.setup_flavor()
