@@ -685,14 +685,7 @@ void amount_t::in_place_roundto(int places)
   if (! quantity)
     throw_(amount_error, _("Cannot round an uninitialized amount"));
 
-  // <https://github.com/ledger/ledger/issues/2362>
-  // _dup() call (see in_place_ceiling and in_place_floor)
-  // leads to 2 failures in the balance/testRound test,
-  // however in its absence this method affects copies of amount_t instances.
-  // Remove expected_failures from amount/testRound
-  // and update balance/testRound
-  // when uncommenting the following line.
-  // _dup();
+  _dup();
 
   mpz_t& scale(temp);
   if (places)

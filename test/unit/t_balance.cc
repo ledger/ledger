@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(testFloor)
   BOOST_CHECK(b4.valid());
 }
 
-BOOST_AUTO_TEST_CASE(testRound)
+BOOST_AUTO_TEST_CASE(testRoundto)
 {
   amount_t a1("0.00");
   amount_t a2("$ 123.123");
@@ -451,9 +451,6 @@ BOOST_AUTO_TEST_CASE(testRound)
   b2 += a5;
   b2 += a6;
 
-  // <https://github.com/ledger/ledger/issues/2362>
-  // This block modifies b1 and b2, likely it is a bug,
-  // but otherwise some assertions fails.
   a1.in_place_roundto(2);
   a2.in_place_roundto(2);
   a3.in_place_roundto(2);
@@ -468,18 +465,11 @@ BOOST_AUTO_TEST_CASE(testRound)
   b4 += a5;
   b4 += a6;
 
-  // After fix of #2362 rounded() and in_place_round()
-  // likely should be replaced with roundto(2) and
-  // in_place_roundto(2).
-  // It looks like rounded() and in_place_round()
-  // need some other tests, perhaps with unround().
-  BOOST_CHECK_EQUAL(b0.rounded(), b0);
-  BOOST_CHECK_EQUAL(b2.rounded(), b4);
-  // Relies on b1 modified by amount_t::in_place_roundto(int).
-  BOOST_CHECK_EQUAL(b1.rounded(), b4);
+  BOOST_CHECK_EQUAL(b0.roundto(2), b0);
+  BOOST_CHECK_EQUAL(b2.roundto(2), b4);
+  BOOST_CHECK_EQUAL(b1.roundto(2), b4);
 
-  b1.in_place_round();
-  // Relies on b1 modified by amount_t::in_place_roundto(int).
+  b1.in_place_roundto(2);
   BOOST_CHECK_EQUAL(b1, b3);
 
   BOOST_CHECK(b0.valid());

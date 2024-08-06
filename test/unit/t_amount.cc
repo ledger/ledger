@@ -1163,16 +1163,15 @@ BOOST_AUTO_TEST_CASE(testCommodityCeiling)
   BOOST_CHECK(x2.valid());
 }
 
-BOOST_AUTO_TEST_CASE(testRound, * boost::unit_test::expected_failures(1))
+BOOST_AUTO_TEST_CASE(testRound)
 {
   amount_t a1("$ 123.123");
   amount_t a2(a1);
   a2.in_place_roundto(2);
-  // Fails due to missing _dup() call in amount_t::in_place_roundto(int).
-  // <https://github.com/ledger/ledger/issues/2362>
   BOOST_CHECK_EQUAL(amount_t("$ 123.123"), a1);
   // Should it be "$ 123.12"?
   BOOST_CHECK_EQUAL(amount_t("$ 123.120"), a2);
+  BOOST_CHECK_EQUAL(amount_t("$ 123.120"), a1.roundto(2));
 }
 
 #ifndef NOT_FOR_PYTHON
