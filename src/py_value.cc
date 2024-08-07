@@ -251,6 +251,8 @@ void export_value()
 
     .def("rounded", &value_t::rounded)
     .def("in_place_round", &value_t::in_place_round)
+    .def("__round__", &value_t::roundto)
+    .def("in_place_roundto", &value_t::in_place_roundto)
     .def("truncated", &value_t::truncated)
     .def("in_place_truncate", &value_t::in_place_truncate)
     .def("floored", &value_t::floored)

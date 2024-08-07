@@ -207,6 +207,10 @@ internal precision."))
     .def("in_place_round", &amount_t::in_place_round,
          return_internal_reference<>())
 
+    .def("__round__", &amount_t::roundto)
+    .def("in_place_roundto", &amount_t::in_place_roundto,
+         return_internal_reference<>())
+
     .def("truncated", &amount_t::truncated)
     .def("in_place_truncate", &amount_t::in_place_truncate,
          return_internal_reference<>())
