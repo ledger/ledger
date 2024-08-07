@@ -6,10 +6,10 @@ assert roundto(-1.1, 1) == -1.1
 
 ; positive places
 assert roundto(1.13, 1) == 1.1
-assert roundto(1,17, 1) == 1.2
+assert roundto(1.17, 1) == 1.2
 assert roundto(1.10, 1) == 1.1
 assert roundto(-1.13, 1) == -1.1
-assert roundto(-1,17, 1) == -1.2
+assert roundto(-1.17, 1) == -1.2
 assert roundto(-1.10, 1) == -1.1
 
 ; zero places
