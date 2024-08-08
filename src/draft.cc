@@ -242,6 +242,9 @@ xact_t * draft_t::insert(journal_t& journal)
   xact_t *              matching = NULL;
   unique_ptr<xact_t> added(new xact_t);
 
+  // There is no need to check drafts for errors, because we generated them.
+  journal.checking_style = journal_t::CHECK_PERMISSIVE;
+
   if (xact_t * xact =
       lookup_probable_account(tmpl->payee_mask.str(), journal.xacts.rbegin(),
                               journal.xacts.rend()).first) {
