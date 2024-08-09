@@ -626,10 +626,16 @@ void amount_t::in_place_truncate()
   if (! quantity)
     throw_(amount_error, _("Cannot truncate an uninitialized amount"));
 
-  _dup();
-
   DEBUG("amount.truncate",
         "Truncating " << *this << " to precision " << display_precision());
+
+#if 2
+  in_place_roundto(display_precision());
+#else
+  // This implementation requires serialization to string,
+  // so it ensures consistent rounding.
+  // Since in_place_roundto has been fixed, that one should be more efficient.
+  _dup();
 
   std::ostringstream out;
   stream_out_mpq(out, MP(quantity), display_precision());
@@ -649,6 +655,7 @@ void amount_t::in_place_truncate()
   mpz_ui_pow_ui(temp, 10, display_precision());
   mpq_set_z(tempq, temp);
   mpq_div(MP(quantity), MP(quantity), tempq);
+#endif // 2
 
   DEBUG("amount.truncate", "Truncated = " << *this);
 #else
