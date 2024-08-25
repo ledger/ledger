@@ -162,11 +162,16 @@ bool xact_base_t::finalize()
   // price of unpriced commodities.
 
   value_t  balance;
-  post_t * null_post = NULL;
+  value_t  balance_real;
+  value_t  balance_virtual;
+  post_t * null_post_real = NULL;
+  post_t * null_post_virtual = NULL;
 
   foreach (post_t * post, posts) {
     if (! post->must_balance())
       continue;
+
+    bool is_virtual = post->has_flags(POST_VIRTUAL);
 
     amount_t& p(post->cost ? *post->cost : post->amount);
     if (! p.is_null()) {
@@ -176,26 +181,34 @@ bool xact_base_t::finalize()
       // is ignored when displaying the amount.  We never want this set
       // for the balance, so we must clear the flag in a temporary to
       // avoid it propagating into the balance.
-      add_or_set_value(balance, p.keep_precision() ?
-                       p.rounded().reduced() : p.reduced());
+      amount_t amt = p.keep_precision() ? p.rounded().reduced() : p.reduced();
+      add_or_set_value(balance, amt);
+      if (is_virtual)
+        add_or_set_value(balance_virtual, amt);
+      else
+        add_or_set_value(balance_real, amt);
     }
-    else if (null_post) {
+    else if (!is_virtual && !null_post_real) {
+      null_post_real = post;
+    }
+    else if (is_virtual && !null_post_virtual) {
+      null_post_virtual = post;
+    }
+    else {
+      // TODO: this assumes real
       bool post_account_bad =
         account_ends_with_special_char(post->account->fullname());
       bool null_post_account_bad =
-        account_ends_with_special_char(null_post->account->fullname());
+        account_ends_with_special_char(null_post_real->account->fullname());
 
       if (post_account_bad || null_post_account_bad)
         throw_(std::logic_error,
                _f("Posting with null amount's account may be misspelled:\n  \"%1%\"")
                % (post_account_bad ? post->account->fullname() :
-                   null_post->account->fullname()));
+                   null_post_real->account->fullname()));
       else
         throw_(std::logic_error,
                _("Only one posting with null amount allowed per transaction"));
-    }
-    else {
-      null_post = post;
     }
   }
   VERIFY(balance.valid());
@@ -211,13 +224,22 @@ bool xact_base_t::finalize()
   // If there is only one post, balance against the default account if one has
   // been set.
 
-  if (journal && journal->bucket && posts.size() == 1 && ! balance.is_null()) {
-    null_post = new post_t(journal->bucket, ITEM_INFERRED);
-    null_post->_state = (*posts.begin())->_state;
-    add_post(null_post);
+  if (journal && journal->bucket && posts.size() == 1) {
+    if (! balance_real.is_null()) {
+      null_post_real = new post_t(journal->bucket, ITEM_INFERRED);
+      null_post_real->_state = (*posts.begin())->_state;
+      add_post(null_post_real);
+    }
+    // TODO: does this need to set POST_VIRTUAL | POST_MUST_BALANCE ?
+    else if (! balance_virtual.is_null()) {
+      null_post_virtual = new post_t(journal->bucket, ITEM_INFERRED);
+      null_post_virtual->_state = (*posts.begin())->_state;
+      add_post(null_post_virtual);
+    }
   }
 
-  if (! null_post && balance.is_balance() &&
+  // TODO: How do we want handle virtual postings here?
+  if (! null_post_real && ! null_post_virtual && balance.is_balance() &&
       balance.as_balance().amounts.size() == 2) {
     // When an xact involves two different commodities (regardless of how
     // many posts there are) determine the conversion ratio by dividing the
@@ -270,10 +292,19 @@ bool xact_base_t::finalize()
           const amount_t& amt(post->amount.reduced());
 
           if (post->must_balance() && amt.commodity() == comm) {
-            balance -= amt;
             post->cost = per_unit_cost * amt;
             post->add_flags(POST_COST_CALCULATED);
+
+            balance -= amt;
             balance += *post->cost;
+            if (! post->has_flags(POST_VIRTUAL)) {
+              balance_real -= amt;
+              balance_real += *post->cost;
+            }
+            else {
+              balance_virtual -= amt;
+              balance_virtual += *post->cost;
+            }
 
             DEBUG("xact.finalize", "set post->cost to = " << *post->cost);
           }
@@ -306,8 +337,13 @@ bool xact_base_t::finalize()
             DEBUG("xact.finalize", "gain_loss = " << gain_loss);
             gain_loss.in_place_round();
             DEBUG("xact.finalize", "gain_loss rounds to = " << gain_loss);
-            if (post->must_balance())
+            if (post->must_balance()) {
               add_or_set_value(balance, gain_loss.reduced());
+              if (post->has_flags(POST_VIRTUAL))
+                add_or_set_value(balance_virtual, gain_loss.reduced());
+              else
+                add_or_set_value(balance_real, gain_loss.reduced());
+            }
 #if 0
             account_t * account;
             if (gain_loss.sign() > 0)
@@ -352,32 +388,61 @@ bool xact_base_t::finalize()
     }
   }
 
-  if (null_post != NULL) {
+  if (null_post_virtual != NULL) {
+    // If one virtual post has no value at all, its value will become the
+    // inverse of the rest.  If multiple commodities are involved, multiple
+    // posts are generated to balance them all.
+
+    add_balancing_post post_adder(*this, null_post_virtual);
+
+    if (balance_virtual.is_balance())
+      balance_virtual.as_balance_lval().map_sorted_amounts(post_adder);
+    else if (balance_virtual.is_amount())
+      post_adder(balance_virtual.as_amount_lval());
+    else if (balance_virtual.is_long())
+      post_adder(balance_virtual.to_amount());
+    else if (! balance_virtual.is_null() && ! balance_virtual.is_realzero())
+      throw_(balance_error, _("Transaction does not balance"));
+
+    balance_virtual = NULL_VALUE;
+  }
+
+  if (null_post_real != NULL) {
     // If one post has no value at all, its value will become the inverse of
     // the rest.  If multiple commodities are involved, multiple posts are
     // generated to balance them all.
 
     DEBUG("xact.finalize", "there was a null posting");
-    add_balancing_post post_adder(*this, null_post);
+    add_balancing_post post_adder(*this, null_post_real);
 
-    if (balance.is_balance())
-      balance.as_balance_lval().map_sorted_amounts(post_adder);
-    else if (balance.is_amount())
-      post_adder(balance.as_amount_lval());
-    else if (balance.is_long())
-      post_adder(balance.to_amount());
-    else if (! balance.is_null() && ! balance.is_realzero())
+    if (balance_real.is_balance())
+      balance_real.as_balance_lval().map_sorted_amounts(post_adder);
+    else if (balance_real.is_amount())
+      post_adder(balance_real.as_amount_lval());
+    else if (balance_real.is_long())
+      post_adder(balance_real.to_amount());
+    else if (! balance_real.is_null() && ! balance_real.is_realzero())
       throw_(balance_error, _("Transaction does not balance"));
 
-    balance = NULL_VALUE;
+    balance_real = NULL_VALUE;
 
   }
   DEBUG("xact.finalize", "resolved balance = " << balance);
 
-  if (! balance.is_null() && ! balance.is_zero()) {
+  if (! balance_real.is_null() && ! balance_real.is_zero()) {
     add_error_context(item_context(*this, _("While balancing transaction")));
     add_error_context(_("Unbalanced remainder is:"));
     add_error_context(value_context(balance));
+    add_error_context(_("Amount to balance against:"));
+    add_error_context(value_context(magnitude()));
+    throw_(balance_error, _("Transaction does not balance"));
+  }
+
+  if (! balance_virtual.is_null() && ! balance_virtual.is_zero()) {
+    // TODO: wrong magnitude
+    add_error_context(item_context(*this, _("While balancing transaction")));
+    add_error_context(_("Unbalanced virtual remainder is:"));
+    add_error_context(value_context(balance_virtual));
     add_error_context(_("Amount to balance against:"));
     add_error_context(value_context(magnitude()));
     throw_(balance_error, _("Transaction does not balance"));
@@ -422,6 +487,7 @@ bool xact_base_t::finalize()
   return true;
 }
 
+// TODO: fix for virtual post balancing.
 bool xact_base_t::verify()
 {
   // Scan through and compute the total balance for the xact.

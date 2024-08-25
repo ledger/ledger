@@ -1,0 +1,33 @@
+2024/08/11 Example
+    Income                                     $1.00
+    [Expenses]                                $-1.00
+
+2024/08/12 Example
+    Income                                     $1.00
+    Income                                    $-1.00
+    [Expenses]                                $-1.00
+
+test bal -> 2
+__ERROR__
+While parsing file "/home/phil/local/src/ledger/test/regress/2105.test", line 3:
+While balancing transaction from "/home/phil/local/src/ledger/test/regress/2105.test", lines 1-3:
+> 2024/08/11 Example
+>     Income                                     $1.00
+>     [Expenses]                                $-1.00
+Unbalanced remainder is:
+                   0
+Amount to balance against:
+               $1.00
+Error: Transaction does not balance
+While parsing file "/home/phil/local/src/ledger/test/regress/2105.test", line 8:
+While balancing transaction from "/home/phil/local/src/ledger/test/regress/2105.test", lines 5-8:
+> 2024/08/12 Example
+>     Income                                     $1.00
+>     Income                                    $-1.00
+>     [Expenses]                                $-1.00
+Unbalanced virtual remainder is:
+              $-1.00
+Amount to balance against:
+               $1.00
+Error: Transaction does not balance
+end test
