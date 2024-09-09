@@ -116,8 +116,10 @@ value_t xact_base_t::magnitude() const
 namespace {
   inline bool account_ends_with_special_char(const string& name) {
     string::size_type len(name.length());
-    return (std::isdigit(name[len - 1]) || name[len - 1] == ')' ||
-            name[len - 1] == '}' || name[len - 1] == ']');
+    return (std::isdigit(static_cast<unsigned char>(name[len - 1])) ||
+            name[len - 1] == ')' ||
+            name[len - 1] == '}' ||
+            name[len - 1] == ']');
   }
 
   struct add_balancing_post
@@ -581,6 +583,58 @@ bool xact_t::valid() const
   return true;
 }
 
+extern "C" unsigned char *SHA512(
+  void *data, unsigned int data_len, unsigned char *digest);
+
+namespace {
+  std::string bufferToHex(const unsigned char* buffer, std::size_t size) {
+      std::ostringstream oss;
+      oss << std::hex << std::setfill('0');
+      for(std::size_t i = 0; i < size; ++i)
+          oss << std::setw(2) << static_cast<int>(buffer[i]);
+      return oss.str();
+  }
+}
+
+string xact_t::hash(string nonce, hash_type_t hash_type) const {
+  std::ostringstream repr;
+
+  repr << nonce;
+  repr << date();
+  repr << aux_date();
+  repr << code;
+  repr << payee;
+
+  std::vector<std::string> strings;
+
+  posts_list all_posts(posts.begin(), posts.end());
+  foreach (post_t * post, all_posts) {
+    std::ostringstream posting;
+    posting << post->account->fullname();
+    if (! post->amount.is_null())
+      posting << post->amount.to_fullstring();
+    if (post->cost)
+      posting << post->cost->to_fullstring();
+    posting << post->checkin;
+    posting << post->checkout;
+    strings.push_back(posting.str());
+  }
+
+  std::sort(strings.begin(), strings.end());
+
+  foreach (string& str, strings) {
+    repr << str;
+  }
+
+  unsigned char data[128];
+  string repr_str(repr.str());
+
+  SHA512((void *)repr_str.c_str(), repr_str.length(), data);
+
+  return bufferToHex(
+    data, hash_type == HASH_SHA512 ? 64 : 32 /*SHA512_DIGEST_LENGTH*/);
+}
+
 namespace {
   bool post_pred(expr_t::ptr_op_t op, post_t& post)
   {
@@ -782,6 +836,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
         // the automated xact's one.
         post_t * new_post = new post_t(account, amt);
         new_post->copy_details(*post);
+        if(post->cost)
+          new_post->cost = post->cost;
 
         // A Cleared transaction implies all of its automatic posting are cleared
         // CPR 2012/10/23

@@ -222,7 +222,7 @@ bool merged_expr_t::check_for_single_identifier(const string& expr)
 {
   bool single_identifier = true;
   for (const char * p = expr.c_str(); *p; ++p)
-    if (! std::isalnum(*p) || *p == '_') {
+    if (! std::isalnum(static_cast<unsigned char>(*p)) || *p == '_') {
       single_identifier = false;
       break;
     }

@@ -61,7 +61,7 @@ class RegressFile(object):
         while line:
             if line.startswith("test "):
                 command = line[5:]
-                match = re.match('(.*) -> ([0-9]+)', command)
+                match = re.match(r'(.*) -> ([0-9]+)', command)
                 if match:
                     test.command = self.transform_line(match.group(1))
                     test.exitcode = int(match.group(2))
@@ -106,13 +106,13 @@ class RegressFile(object):
                 return
         if test.command.find('-f ') != -1:
             test.command = '$ledger ' + test.command
-            if re.search('-f (-|/dev/stdin)(\s|$)', test.command):
+            if re.search(r'-f (-|/dev/stdin)(\s|$)', test.command):
                 use_stdin = True
         else:
             test.command = f'$ledger -f "{str(self.filename.resolve())}" {test.command}'
 
         p = harness.run(test.command,
-                        columns=(not re.search('--columns', test.command)))
+                        columns=(not re.search(r'--columns', test.command)))
 
         if use_stdin:
             fd = open(self.filename, encoding='utf-8')

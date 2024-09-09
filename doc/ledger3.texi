@@ -3901,7 +3901,31 @@ Becomes:
     Assets:Cash                 $-20.00
 @end smallexample
 
-Keep in mind that if you are using @option{--strict} or @option{--pedantic} you will have to explicitly define an account @samp{$account} to avoid errors.
+It is possible to refer to information within the posting using a @var{VEXPR}.  Note that the syntax for using a @var{VEXPR} is "%(@var{VEXPR})".
+
+@smallexample
+= ^Income
+    Liabilities:Tax:%(tag(/Tax/))  (20/120)
+    $account                       (-20/120)
+
+2024-07-04 * Sale
+    ; Tax: General
+    Assets                         10 USD
+    Income:Customer A
+@end smallexample
+
+Becomes:
+
+@smallexample
+2024/07/04 * Sale
+    ; Tax: General
+    Assets                                    10 USD
+    Income:Customer A                        -10 USD
+    Liabilities:Tax:General                   -2 USD
+    Income:Customer A                          2 USD
+@end smallexample
+
+Keep in mind that if you are using @option{--strict} or @option{--pedantic} you will have to explicitly define an account to avoid errors. When using @samp{$account}, such definition can be done thus:
 
 @smallexample @c input:validate
 account $account
@@ -6319,6 +6343,13 @@ transactions.
 @item --add-budget
 Show only unbudgeted postings.
 
+@item --align-intervals
+@findex --start-of-week @var{INT}
+Use the begin time of a period expression as the start of its intervals, if
+specified (@pxref{Period Expressions}).  For example with a period expression of
+"weekly from 2009/01/10" then the begin time of "2009/01/10 will be used as the
+start of the weekly intervals. Overrides @samp{--start-of-week @var{INT}}.
+
 @item --amount @var{EXPR}
 @itemx -t @var{EXPR}
 Apply the given value expression to the posting amount (@pxref{Value
@@ -6731,6 +6762,57 @@ $ ledger reg Expenses --group-by "payee" --group-title-format "-----------------
 ...
 @end smallexample
 
+@item --hashes @var{ALGO}
+Records the chained hash of each transaction in a @var{Hash} metadata
+value, according to the hashing algorithm given by the @var{ALGO}
+argument (at the moment, only @code{sha512} is supported). To use this,
+record the @var{Hash} metadata explicitly in some of your transactions;
+these will be checked against the hashes calculated internally, and if
+they do not match, an error is reported. You may also write just a
+prefix of the @var{Hash}, which is less verbose but still gives quite
+good assurance.
+
+The support algorithms are:
+
+@table @code
+@item sha512
+Use the SHA512 hashing algorithm.
+@item sha512_half
+Same as SHA512, but record only the first 256 bits.
+@end table
+
+Somewhat like balance assertions, which give assurance that previous
+posting amounts are correct, these @var{Hash} tags give assurance that
+all previous journal entries (in parse order) are unchanged (or at
+least, their combined hash matches the Hash tag currently appearing in
+the journal).
+
+These hashes depend on the hashes of previous transactions, such that
+the single hash value of the final transaction is sufficient to
+guarantee the shape of the entire history leading up to it.
+
+The other details that the hash depends on are the following details
+from each posting in the transaction:
+
+@itemize
+@item fullname of the account
+@item amount value
+@end itemize
+
+In addition, these details are hashed from the transaction itself:
+
+@itemize
+@item actual date
+@item auxiliary date (if provided; also called effective date)
+@item code (if provided)
+@item payee
+@end itemize
+
+This list also means that changes in the comments of postings or
+transactions, or in the ordering of the postings within a transaction,
+will not affect the hash. The ordering of the transactions does matter,
+however, the same way as it does for balance assertions.
+
 @item --head @var{INT}
 @itemx --first @var{INT}
 Print the first @var{INT} entries.  Opposite of @option{--tail
@@ -6977,9 +7059,10 @@ to sort.
 Sort the postings within transactions using the given value expression.
 
 @item --start-of-week @var{INT}
+@findex --align-intervals
 Tell ledger to use a particular day of the week to start its ``weekly''
 summary.  @samp{--start-of-week=1} specifies Monday as the start of the
-week.
+week. Can be overriden by @samp{--align-intervals}.
 
 @item --subtotal
 @itemx -s
@@ -7878,6 +7961,11 @@ October.  The possible forms are:
 in <SPEC>
 @end smallexample
 
+@findex --align-intervals
+Intervals begin at the start of the week, first day of the month,
+quarter or year.  This can be overridden by specifying @option{--align-intervals}
+which will instead use the begin time if specified.
+
 Here are a few examples of period expressions:
 
 @smallexample
@@ -7888,6 +7976,7 @@ weekly from last month
 from sep to oct
 from 10/1 to 10/5
 monthly until 2005
+monthly from 2005/04/06
 from apr
 until nov
 last oct
@@ -8421,6 +8510,19 @@ Assets:Cash ¤ 123,45
 @end smallexample
 @end defun
 
+@defvar account
+@defvarx a
+@defvarx A
+Return the concerned account.
+
+It may be appended with @code{.note} or @code{.depth} to get either the note
+or the depth of the account
+@end defvar
+
+@defvar account_base
+Return the last part of the account hierarchy.
+@end defvar
+
 @defun amount_expr
 Return the calculated amount of the posting according to the @option{--amount}
 option.
@@ -8483,6 +8585,14 @@ $ ledger -f expr.dat --format "%(date) %(account)\n" reg assets
 @smallexample @c output:67EBA45
 2015/01/16 Assets:Cash
 @end smallexample
+
+@defvar display_account
+Return the concerned account, surrounded with @code{[]} or @code{()} for
+virtual postings.
+
+It may be appended with @code{.note} or @code{.depth} to get either the note
+or the depth of the account
+@end defvar
 
 @defvar display_amount
 @defvarx t
@@ -8636,7 +8746,7 @@ $ ledger -f expr.dat --format "%(account) %(roundto(amount, 1))\n" reg
 @end smallexample
 @smallexample @c output:B4DFB9F
 Assets:Cash ¤ -123,40
-Expenses:Office Supplies ¤ 123,50
+Expenses:Office Supplies ¤ 123,40
 @end smallexample
 @end defun
 
