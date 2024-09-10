@@ -36,6 +36,17 @@
 
 namespace ledger {
 
+// TODO: Extend this to handle all characters which define enclosures
+bool query_t::lexer_t::unbalanced_braces(string str) {
+  int balance = 0;
+  for (char& c : str) {
+    if (c == '(') ++balance;
+    else if (c == ')')
+      if (--balance < 0) return true;
+  }
+  return balance != 0;
+}
+
 query_t::lexer_t::token_t
 query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context)
 {
@@ -126,6 +137,10 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context)
   case '#': ++arg_i; return token_t(token_t::TOK_CODE);
   case '%': ++arg_i; return token_t(token_t::TOK_META);
   case '=':
+    if (arg_i == (*begin).as_string().begin()) {
+      ++arg_i;
+      return token_t(token_t::TOK_NOTE);
+    }
     ++arg_i;
     consume_next = true;
     return token_t(token_t::TOK_EQ);
@@ -153,6 +168,8 @@ query_t::lexer_t::next_token(query_t::lexer_t::token_t::kind_t tok_context)
         break;
 
       case ')':
+        if (unbalanced_braces(ident))
+          consume_next = true;
         if (! consume_next && tok_context == token_t::TOK_EXPR)
           goto test_ident;
         // fall through...

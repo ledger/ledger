@@ -102,13 +102,15 @@ void draft_t::parse_args(const value_t& args)
   value_t::sequence_t::const_iterator end   = args.end();
 
   for (; begin != end; begin++) {
+    string arg = (*begin).to_string();
+
     if (check_for_date &&
-        regex_match((*begin).to_string(), what, date_mask)) {
+        regex_match(arg, what, date_mask)) {
       tmpl->date = parse_date(what[0]);
       check_for_date = false;
     }
     else if (check_for_date &&
-             bool(weekday = string_to_day_of_week((*begin).to_string()))) {
+             bool(weekday = string_to_day_of_week(arg))) {
 #if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
@@ -124,8 +126,6 @@ void draft_t::parse_args(const value_t& args)
       check_for_date = false;
     }
     else {
-      string arg = (*begin).to_string();
-
       if (arg == "at") {
         if (++begin == end)
           throw std::runtime_error(_("Invalid xact command arguments"));
@@ -241,6 +241,9 @@ xact_t * draft_t::insert(journal_t& journal)
 
   xact_t *              matching = NULL;
   unique_ptr<xact_t> added(new xact_t);
+
+  // There is no need to check drafts for errors, because we generated them.
+  journal.checking_style = journal_t::CHECK_PERMISSIVE;
 
   if (xact_t * xact =
       lookup_probable_account(tmpl->payee_mask.str(), journal.xacts.rbegin(),

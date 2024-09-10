@@ -51,7 +51,8 @@ set(LEDGER_SOURCES
   times.cc
   error.cc
   utils.cc
-  wcwidth.cc)
+  wcwidth.cc
+  sha512.cc)
 
 if (HAVE_GPGME)
   list(APPEND LEDGER_SOURCES
@@ -183,7 +184,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       if (BUILD_LIBRARY)
         list(APPEND _args ${CMAKE_SHARED_LIBRARY_CXX_FLAGS})
       endif()
-      list(APPEND _args "-std=c++11 ")
+      list(APPEND _args "-std=c++11")
       if (CYGWIN)
         list(APPEND _args "-U__STRICT_ANSI__")
       endif()

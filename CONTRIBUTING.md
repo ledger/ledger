@@ -99,7 +99,7 @@ or `g++` as follows:
 
     mkdir build
     ./acprep --compiler=clang++
-    cd build
+    cd build/ledger/debug
     make
 
 This will set up a debug build using clang++ (and pre-compiled headers, which
@@ -111,23 +111,23 @@ cores:
 
     mkdir build
     ./acprep --compiler=clang++ --ninja
-    cd build
+    cd build/ledger/debug
     ninja
 
-[Boost]: http://boost.org
-[Boost.Python]: http://www.boost.org/libs/python/
+[Boost]: https://boost.org
+[Boost.Python]: https://www.boost.org/libs/python/
 [GitHub Issues]: https://github.com/ledger/ledger/issues
-[GMP]: http://gmplib.org/
-[MPFR]: http://www.mpfr.org/
-[CMake]: http://www.cmake.org
-[Doxygen]: http://doxygen.org
+[GMP]: https://gmplib.org/
+[MPFR]: https://www.mpfr.org/
+[CMake]: https://www.cmake.org
+[Doxygen]: https://doxygen.org
 [Markdown]: https://daringfireball.net/projects/markdown/
-[SHA1]: http://en.wikipedia.org/wiki/SHA-1
-[Texinfo]: http://www.gnu.org/software/texinfo/
+[SHA1]: https://en.wikipedia.org/wiki/SHA-1
+[Texinfo]: https://www.gnu.org/software/texinfo/
 [GitHub Actions]: https://github.com/features/actions
-[GCC]: http://gcc.gnu.org
-[utfcpp]: http://utfcpp.sourceforge.net
+[GCC]: https://gcc.gnu.org
+[utfcpp]: https://utfcpp.sourceforge.net
 [small badge]: https://github.com/ledger/ledger/actions/workflows/cmake.yml/badge.svg
-[git-flow]: http://nvie.com/posts/a-successful-git-branching-model/
+[git-flow]: https://nvie.com/posts/a-successful-git-branching-model/
 [README.md]: https://github.com/ledger/ledger/blob/master/README.md
-[clang]: http://clang.llvm.org
+[clang]: https://clang.llvm.org

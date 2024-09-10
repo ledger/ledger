@@ -1,8 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 
 from io import open
 
+import argparse
+import pathlib
 import sys
 import os
 import re
@@ -19,22 +20,20 @@ from difflib import unified_diff
 
 from LedgerHarness import LedgerHarness
 
-args = sys.argv
-jobs = 1
-match = re.match('-j([0-9]+)?', args[1])
+parser = argparse.ArgumentParser(prog='RegressTests', parents=[LedgerHarness.parser()])
+parser.add_argument('-j', '--jobs', type=int, default=1)
+parser.add_argument('tests', type=pathlib.Path)
+args = parser.parse_args()
+multiproc &= (args.jobs >= 1)
+harness = LedgerHarness(args.ledger, args.sourcepath, args.verify, args.gmalloc, args.python)
+
+match = re.match(r'(Baseline|Regress|Manual)Test_(.*)', str(args.tests))
 if match:
-    args = [args[0]] + args[2:]
-    if match.group(1):
-        jobs = int(match.group(1))
-if jobs == 1:
-    multiproc = False
+  args.tests = pathlib.Path('test') / match.group(1).lower() / (match.group(2) + '.test')
 
-harness = LedgerHarness(args)
-tests   = args[3]
-
-if not os.path.isdir(tests) and not os.path.isfile(tests):
-    sys.stderr.write("'%s' is not a directory or file (cwd %s)" %
-                     (tests, os.getcwd()))
+if not args.tests.is_dir() and not args.tests.is_file():
+    print(f'{args.tests} is not a directory or file (cwd: {os.getcwd()})'
+          , file=sys.stderr)
     sys.exit(1)
 
 class RegressFile(object):
@@ -43,33 +42,31 @@ class RegressFile(object):
         self.fd = open(self.filename, encoding='utf-8')
 
     def transform_line(self, line):
-        line = line.replace('$sourcepath', harness.sourcepath)
-        line = line.replace('$FILE', os.path.realpath(self.filename))
-        return line
+        return line\
+            .replace('$sourcepath', str(harness.sourcepath))\
+            .replace('$FILE', str(self.filename.resolve()))
 
     def read_test(self):
-        test = {
-            'command':  None,
-            'output':   None,
-            'error':    None,
-            'exitcode': 0
-        }
+        class Test:
+            command =  None
+            output =   None
+            error =    None
+            exitcode = 0
 
         in_output = False
         in_error  = False
 
         line = self.fd.readline()
-        if sys.version_info.major == 2 and type(line) is str:
-            line = unicode(line, 'utf-8')
+        test = Test()
         while line:
             if line.startswith("test "):
                 command = line[5:]
-                match = re.match('(.*) -> ([0-9]+)', command)
+                match = re.match(r'(.*) -> ([0-9]+)', command)
                 if match:
-                    test['command'] = self.transform_line(match.group(1))
-                    test['exitcode'] = int(match.group(2))
+                    test.command = self.transform_line(match.group(1))
+                    test.exitcode = int(match.group(2))
                 else:
-                    test['command'] = command
+                    test.command = command
                 in_output = True
 
             elif in_output:
@@ -77,57 +74,50 @@ class RegressFile(object):
                     in_output = in_error = False
                     break
                 elif in_error:
-                    if test['error'] is None:
-                        test['error'] = []
-                    test['error'].append(self.transform_line(line))
+                    if test.error is None:
+                        test.error = []
+                    test.error.append(self.transform_line(line))
                 else:
                     if line.startswith("__ERROR__"):
                         in_error = True
                     else:
-                        if test['output'] is None:
-                            test['output'] = []
-                        test['output'].append(self.transform_line(line))
-
+                        if test.output is None:
+                            test.output = []
+                        test.output.append(self.transform_line(line))
             line = self.fd.readline()
-            if sys.version_info.major == 2 and type(line) is str:
-               line = unicode(line, 'utf-8')
             #print("line =", line)
 
-        return test['command'] and test
+        return test.command and test
 
     def notify_user(self, msg, test):
         print(msg)
         print("--")
-        print(self.transform_line(test['command']),)
+        print(self.transform_line(test.command),)
         print("--")
 
     def run_test(self, test):
         use_stdin = False
         if sys.platform == 'win32':
-            test['command'] = test['command'].replace('/dev/null', 'nul')
+            test.command = test.command.replace('/dev/null', 'nul')
             # There is no equivalent to /dev/stdout, /dev/stderr, /dev/stdin
             # on Windows, so skip tests that require them.
-            if '/dev/std' in test['command']:
-                harness.success()
+            if '/dev/std' in test.command:
+                harness.skipped()
                 return
-        if test['command'].find("-f ") != -1:
-            test['command'] = '$ledger ' + test['command']
-            if re.search("-f (-|/dev/stdin)(\s|$)", test['command']):
+        if test.command.find('-f ') != -1:
+            test.command = '$ledger ' + test.command
+            if re.search(r'-f (-|/dev/stdin)(\s|$)', test.command):
                 use_stdin = True
         else:
-            test['command'] = (('$ledger -f "%s" ' % 
-                                os.path.realpath(self.filename)) +
-                               test['command'])
+            test.command = f'$ledger -f "{str(self.filename.resolve())}" {test.command}'
 
-        p = harness.run(test['command'],
-                        columns=(not re.search('--columns', test['command'])))
+        p = harness.run(test.command,
+                        columns=(not re.search(r'--columns', test.command)))
 
         if use_stdin:
             fd = open(self.filename, encoding='utf-8')
             try:
-                stdin = fd.read()
-                if sys.version_info.major > 2:
-                    stdin = stdin.encode('utf-8')
+                stdin = fd.read().encode('utf-8')
                 p.stdin.write(stdin)
             finally:
                 fd.close()
@@ -136,9 +126,9 @@ class RegressFile(object):
         success = True
         printed = False
         index   = 0
-        if test['output'] is not None:
+        if test.output is not None:
             process_output = harness.readlines(p.stdout)
-            expected_output = test['output']
+            expected_output = test.output
             if sys.platform == 'win32':
                 process_output = [l.replace('\r\n', '\n').replace('\\', '/')
                                   for l in process_output]
@@ -155,21 +145,19 @@ class RegressFile(object):
                     self.notify_user("FAILURE in output from %s:" % self.filename, test)
                     success = False
                     printed = True
-                if sys.version_info.major == 2 and type(line) is str:
-                    line = unicode(line, 'utf-8')
                 print(' ', line,)
 
         printed = False
         index   = 0
         process_error = harness.readlines(p.stderr)
-        if test['error'] is not None or process_error is not None:
-            if test['error'] is None:
-                test['error'] = []
+        if test.error is not None or process_error is not None:
+            if test.error is None:
+                test.error = []
             if sys.platform == 'win32':
                 process_error = [l.replace('\r\n', '\n').replace('\\', '/')
                                  for l in process_error]
-                test['error'] = [l.replace('\\', '/') for l in test['error']]
-            for line in unified_diff(test['error'], process_error):
+                test.error = [l.replace('\\', '/') for l in test.error]
+            for line in unified_diff(test.error, process_error):
                 index += 1
                 if index < 3:
                     continue
@@ -181,24 +169,24 @@ class RegressFile(object):
                     printed = True
                 print(" ", line,)
 
-        if test['exitcode'] == p.wait():
+        if test.exitcode == p.wait():
             if success:
                 harness.success()
             else:
-                harness.failure(os.path.basename(self.filename))
+                harness.failure(self.filename.name)
                 print("STDERR:")
                 print(p.stderr.read())
         else:
             if success: print
             self.notify_user("FAILURE in exit code (%d != %d) from %s:"
-                             % (test['exitcode'], p.returncode, self.filename),
+                             % (test.exitcode, p.returncode, self.filename),
                              test)
-            harness.failure(os.path.basename(self.filename))
+            harness.failure(self.filename.name)
 
     def run_tests(self):
         if os.path.getsize(self.filename) == 0:
           print("WARNING: Empty testfile detected: %s" % (self.filename), file=sys.stderr)
-          harness.failure(os.path.basename(self.filename))
+          harness.failure(self.filename.name)
           return False
         test = self.read_test()
         while test:
@@ -215,22 +203,21 @@ def do_test(path):
 
 if __name__ == '__main__':
     if multiproc:
-        pool = Pool(jobs*2)
+        pool = Pool(args.jobs*2)
     else:
         pool = None
 
-    if os.path.isdir(tests):
-        tests = [os.path.join(tests, x)
-                 for x in os.listdir(tests) 
-                 if (x.endswith('.test') and 
-                     (not '_py.test' in x or (harness.python and
-                                              not harness.verify)))]
+    if args.tests.is_dir():
+        tests = [p for p in args.tests.iterdir()
+                if (p.suffix == '.test' and
+                    (not p.match('*_py.test') or (harness.python and
+                                             not harness.verify)))]
         if pool:
             pool.map(do_test, tests, 1)
         else:
             map(do_test, tests)
     else:
-        entry = RegressFile(tests)
+        entry = RegressFile(args.tests)
         entry.run_tests()
         entry.close()
 

@@ -231,6 +231,8 @@ public:
         token_cache = next_token(tok_context);
       return token_cache;
     }
+
+    bool unbalanced_braces(const string str);
   };
 
   enum kind_t {

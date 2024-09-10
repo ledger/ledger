@@ -25,7 +25,7 @@
         outputs = [ "out" "dev" ] ++ lib.optionals usePython [ "py" ];
 
         buildInputs = [
-          gmp mpfr gnused
+          gmp mpfr gnused icu
         ] ++ lib.optionals useLibedit [
           libedit
         ] ++ lib.optionals useReadline [

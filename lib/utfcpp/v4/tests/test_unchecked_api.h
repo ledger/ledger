@@ -40,6 +40,22 @@ TEST(UnCheckedAPITests, test_append)
     EXPECT_EQ (u[4], 0);
 }
 
+TEST(UnCheckedAPITests, test_append16)
+{
+    unsigned short u[5] = {0,0};
+    utf8::unchecked::append16(0x0448, u);
+    EXPECT_EQ (u[0], 0x0448);
+    EXPECT_EQ (u[1], 0x0000);
+
+    utf8::unchecked::append16(0x65e5, u);
+    EXPECT_EQ (u[0], 0x65e5);
+    EXPECT_EQ (u[1], 0x0000);
+
+    utf8::unchecked::append16(0x10346, u);
+    EXPECT_EQ (u[0], 0xd800);
+    EXPECT_EQ (u[1], 0xdf46);
+}
+
 TEST(UnCheckedAPITests, test_next)
 {
     const char* twochars = "\xe6\x97\xa5\xd1\x88";
@@ -62,6 +78,19 @@ TEST(UnCheckedAPITests, test_next)
     cp = utf8::unchecked::next(w);
     EXPECT_EQ (cp, 0x0448);
     EXPECT_EQ (w, threechars + 9);
+}
+
+TEST(UnCheckedAPITests, test_next16)
+{
+    const utf8::utfchar16_t u[3] = {0x65e5, 0xd800, 0xdf46};
+    const utf8::utfchar16_t* w = u;
+    utf8::utfchar32_t cp = utf8::unchecked::next16(w);
+    EXPECT_EQ (cp, 0x65e5);
+    EXPECT_EQ (w, u + 1);
+
+    cp = utf8::unchecked::next16(w);
+    EXPECT_EQ (cp, 0x10346);
+    EXPECT_EQ (w, u + 3);
 }
 
 TEST(UnCheckedAPITests, test_peek_next)
@@ -137,6 +166,11 @@ TEST(UnCheckedAPITests, test_utf16to8)
     string utf8result;
     utf8::unchecked::utf16to8(utf16string, utf16string + 5, back_inserter(utf8result));
     EXPECT_EQ (utf8result.size(), 10);
+
+    utf8result.clear();
+    unsigned short highsurrogateonly[] = {0xd800};
+    utf8::unchecked::utf16to8(highsurrogateonly, highsurrogateonly + 1, back_inserter(utf8result));
+    EXPECT_TRUE(true); // we didn't crash
 }
 
 TEST(UnCheckedAPITests, test_utf8to16)

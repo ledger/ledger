@@ -1,20 +1,24 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # This script confirms both that the register report "adds up", and that its
 # final balance is the same as what the balance report shows.
 
+import argparse
+import pathlib
 import sys
 import os
 import re
 
 from LedgerHarness import LedgerHarness
 
-harness = LedgerHarness(sys.argv)
-tests   = sys.argv[3]
+parser = argparse.ArgumentParser(prog='ConfirmTests', parents=[LedgerHarness.parser()])
+parser.add_argument('tests', type=pathlib.Path)
+args = parser.parse_args()
+harness = LedgerHarness(args.ledger, args.sourcepath, args.verify, args.gmalloc, args.python)
 
-if not os.path.isdir(tests) and not os.path.isfile(tests):
-    sys.stderr.write("'%s' is not a directory or file (cwd %s)" %
-                     (tests, os.getcwd()))
+if not os.path.isdir(args.tests) and not os.path.isfile(args.tests):
+    print(f'{args.tests} is not a directory or file (cwd: {os.getcwd()})'
+          , file=sys.stderr)
     sys.exit(1)
 
 commands = [
@@ -28,8 +32,8 @@ commands = [
 ]
 
 def clean(num):
-    num = re.sub("(\s+|\$|,)","", num)
-    m = re.search("([-0-9.]+)", num)
+    num = re.sub(r'(\s+|\$|,)',"", num)
+    m = re.search(r'([-0-9.]+)', num)
     if m:
         return float(m.group(1))
     else:
@@ -41,10 +45,10 @@ def confirm_report(command):
     failure       = False
     running_total = 0.0
 
-    p = harness.run(re.sub('\$cmd', 'reg', command))
+    p = harness.run(re.sub(r'\$cmd', 'reg', command))
 
     for line in harness.readlines(p.stdout):
-        match = re.match("\\s*([-$,0-9.]+)\\s+([-$,0-9.]+)", line[54:])
+        match = re.match(r'\\s*([-$,0-9.]+)\\s+([-$,0-9.]+)', line[54:])
         if not match:
             continue
 
@@ -53,11 +57,11 @@ def confirm_report(command):
         running_total += value
 
         diff = abs(running_total - total)
-        if re.search(' -[VGB] ', command) and diff < 0.015:
+        if re.search(r' -[VGB] ', command) and diff < 0.015:
             diff = 0.0
         if diff > 0.001:
-            print("DISCREPANCY: %.3f (%.3f - %.3f) at line %d:" % \)
-                  (running_total - total, running_total, total, index)
+            print("DISCREPANCY: %.3f (%.3f - %.3f) at line %d:" % \
+                  (running_total - total, running_total, total, index))
             print(line,)
             running_total = total
             failure = True
@@ -67,26 +71,26 @@ def confirm_report(command):
 
     balance_total = 0.0
 
-    p = harness.run(re.sub('\$cmd', 'bal', command))
+    p = harness.run(re.sub(r'\$cmd', 'bal', command))
 
     for line in harness.readlines(p.stdout):
         if line[0] != '-':
             balance_total = clean(line[:20])
 
     diff = abs(balance_total - running_total)
-    if re.search(' -[VGB] ', command) and diff < 0.015:
+    if re.search(r' -[VGB] ', command) and diff < 0.015:
         diff = 0.0
     if diff > 0.001:
         print()
-        print("DISCREPANCY: %.3f (%.3f - %.3f) between register and balance" % \)
-                  (balance_total - running_total, balance_total, running_total)
+        print("DISCREPANCY: %.3f (%.3f - %.3f) between register and balance" % \
+                  (balance_total - running_total, balance_total, running_total))
         print(last_line,)
         failure = True
 
     return not failure
 
 for cmd in commands:
-    if confirm_report('$ledger --rounding $cmd ' + re.sub('\$tests', tests, cmd)):
+    if confirm_report('$ledger --rounding $cmd ' + re.sub(r'\$tests', str(args.tests), cmd)):
         harness.success()
     else:
         harness.failure()

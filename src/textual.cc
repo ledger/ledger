@@ -40,6 +40,7 @@
 #include "query.h"
 #include "pstream.h"
 #include "pool.h"
+#include "session.h"
 #include <algorithm>
 #if HAVE_BOOST_PYTHON
 #include "pyinterp.h"
@@ -79,6 +80,7 @@ namespace {
     instance_t *             parent;
     std::list<application_t> apply_stack;
     bool                     no_assertions;
+    hash_type_t              hash_type;
 #if TIMELOG_SUPPORT
     time_log_t               timelog;
 #endif
@@ -86,10 +88,12 @@ namespace {
     instance_t(parse_context_stack_t& _context_stack,
                parse_context_t&       _context,
                instance_t *           _parent = NULL,
-               const bool             _no_assertions = false)
+               const bool             _no_assertions = false,
+               const hash_type_t      _hash_type = NO_HASHES)
       : context_stack(_context_stack), context(_context),
         in(*context.stream.get()), parent(_parent),
-        no_assertions(_no_assertions), timelog(context) {}
+        no_assertions(_no_assertions), hash_type(_hash_type),
+        timelog(context) {}
 
     virtual string description() {
       return _("textual parser");
@@ -136,7 +140,7 @@ namespace {
     }
 #endif
 
-    void read_next_directive(bool& error_flag);
+    xact_t * read_next_directive(bool& error_flag, xact_t * previous_xact);
 
 #if TIMELOG_SUPPORT
     void clock_in_directive(char * line, bool capitalized);
@@ -176,7 +180,8 @@ namespace {
     void apply_year_directive(char * line);
     void end_apply_directive(char * line);
 
-    void xact_directive(char * line, std::streamsize len);
+    xact_t * xact_directive(char * line, std::streamsize len,
+                            xact_t * previous_xact);
     void period_xact_directive(char * line);
     void automated_xact_directive(char * line);
     void price_xact_directive(char * line);
@@ -207,7 +212,8 @@ namespace {
 
     xact_t * parse_xact(char *          line,
                         std::streamsize len,
-                        account_t *     account);
+                        account_t *     account,
+                        xact_t *        previous_xact);
 
     virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
                                     const string& name);
@@ -247,10 +253,13 @@ void instance_t::parse()
   context.curr_pos = in.tellg();
 
   bool error_flag = false;
+  xact_t * previous_xact = NULL;
 
   while (in.good() && ! in.eof()) {
     try {
-      read_next_directive(error_flag);
+      if (xact_t * xact = read_next_directive(error_flag, previous_xact)) {
+        previous_xact = xact;
+      }
     }
     catch (const std::exception& err) {
       error_flag = true;
@@ -340,7 +349,8 @@ std::streamsize instance_t::read_line(char *& line)
         --len;
     }
 
-    while (len > 0 && std::isspace(line[len - 1])) // strip trailing whitespace
+    // strip trailing whitespace
+    while (len > 0 && std::isspace(static_cast<unsigned char>(line[len - 1])))
       line[--len] = '\0';
 
     return len;
@@ -348,14 +358,14 @@ std::streamsize instance_t::read_line(char *& line)
   return 0;
 }
 
-void instance_t::read_next_directive(bool& error_flag)
+xact_t * instance_t::read_next_directive(bool& error_flag, xact_t * previous_xact)
 {
   char * line;
   std::streamsize len = read_line(line);
   if (len == 0 || line == NULL)
-    return;
+    return NULL;
 
-  if (! std::isspace(line[0]))
+  if (! std::isspace(static_cast<unsigned char>(line[0])))
     error_flag = false;
 
   switch (line[0]) {
@@ -389,8 +399,7 @@ void instance_t::read_next_directive(bool& error_flag)
   case '7':
   case '8':
   case '9':
-    xact_directive(line, len);
-    break;
+    return xact_directive(line, len, previous_xact);
   case '=':                     // automated xact
     automated_xact_directive(line);
     break;
@@ -449,6 +458,8 @@ void instance_t::read_next_directive(bool& error_flag)
     }
     break;
   }
+
+  return NULL;
 }
 
 #if TIMELOG_SUPPORT
@@ -615,12 +626,16 @@ void instance_t::automated_xact_directive(char * line)
         item->pos->end_line++;
       }
       else if ((remlen > 7 && *p == 'a' &&
-                std::strncmp(p, "assert", 6) == 0 && std::isspace(p[6])) ||
+                std::strncmp(p, "assert", 6) == 0 &&
+                std::isspace(static_cast<unsigned char>(p[6]))) ||
                (remlen > 6 && *p == 'c' &&
-                std::strncmp(p, "check", 5) == 0 && std::isspace(p[5])) ||
+                std::strncmp(p, "check", 5) == 0 &&
+                std::isspace(static_cast<unsigned char>(p[5]))) ||
                (remlen > 5 && *p == 'e' &&
-                ((std::strncmp(p, "expr", 4) == 0 && std::isspace(p[4])) ||
-                 (std::strncmp(p, "eval", 4) == 0 && std::isspace(p[4]))))) {
+                ((std::strncmp(p, "expr", 4) == 0 &&
+                  std::isspace(static_cast<unsigned char>(p[4]))) ||
+                 (std::strncmp(p, "eval", 4) == 0 &&
+                  std::isspace(static_cast<unsigned char>(p[4])))))) {
         const char c = *p;
         p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
         if (! ae->check_exprs)
@@ -711,16 +726,17 @@ void instance_t::period_xact_directive(char * line)
   }
 }
 
-void instance_t::xact_directive(char * line, std::streamsize len)
+xact_t * instance_t::xact_directive(char * line, std::streamsize len,
+                                    xact_t * previous_xact)
 {
   TRACE_START(xacts, 1, "Time spent handling transactions:");
 
-  if (xact_t * xact = parse_xact(line, len, top_account())) {
+  if (xact_t * xact = parse_xact(line, len, top_account(), previous_xact)) {
     unique_ptr<xact_t> manager(xact);
 
     if (context.journal->add_xact(xact)) {
-      manager.release();        // it's owned by the journal now
       context.count++;
+      return manager.release(); // it's owned by the journal now
     }
     // It's perfectly valid for the journal to reject the xact, which it
     // will do if the xact has no substantive effect (for example, a
@@ -730,6 +746,8 @@ void instance_t::xact_directive(char * line, std::streamsize len)
   }
 
   TRACE_STOP(xacts, 1);
+
+  return NULL;
 }
 
 void instance_t::include_directive(char * line)
@@ -793,7 +811,7 @@ void instance_t::include_directive(char * line)
           context_stack.get_current().scope   = scope;
           try {
             instance_t instance(context_stack, context_stack.get_current(),
-                                this, no_assertions);
+                                this, no_assertions, hash_type);
             instance.apply_stack.push_front(application_t("account", master));
             instance.parse();
           }
@@ -1015,7 +1033,7 @@ void instance_t::alias_directive(char * line)
 {
   if (char * e = std::strchr(line, '=')) {
     char * z = e - 1;
-    while (std::isspace(*z))
+    while (std::isspace(static_cast<unsigned char>(*z)))
       *z-- = '\0';
     *e++ = '\0';
     e = skip_ws(e);
@@ -1234,7 +1252,7 @@ void instance_t::python_directive(char * line)
     if (read_line(line) > 0) {
       if (! indent) {
         const char * p = line;
-        while (*p && std::isspace(*p)) {
+        while (*p && std::isspace(static_cast<unsigned char>(*p))) {
           ++indent;
           ++p;
         }
@@ -1242,7 +1260,7 @@ void instance_t::python_directive(char * line)
 
       const char * p = line;
       for (std::size_t i = 0; i < indent; i++) {
-        if (std::isspace(*p))
+        if (std::isspace(static_cast<unsigned char>(*p)))
           ++p;
         else
           break;
@@ -1473,7 +1491,7 @@ post_t * instance_t::parse_post(char *          line,
   char * next = next_element(p, true);
   char * e = p + std::strlen(p);
 
-  while (e > p && std::isspace(*(e - 1)))
+  while (e > p && std::isspace(static_cast<unsigned char>(*(e - 1))))
     e--;
 
   if ((*p == '[' && *(e - 1) == ']') || (*p == '(' && *(e - 1) == ')')) {
@@ -1871,7 +1889,8 @@ bool instance_t::parse_posts(account_t *  account,
 
 xact_t * instance_t::parse_xact(char *          line,
                                 std::streamsize len,
-                                account_t *     account)
+                                account_t *     account,
+                                xact_t *        previous_xact)
 {
   TRACE_START(xact_text, 1, "Time spent parsing transaction text:");
 
@@ -1937,7 +1956,7 @@ xact_t * instance_t::parse_xact(char *          line,
       }
       else if (*p == ';' && (tabs > 0 || spaces > 1)) {
         char *q = p - 1;
-        while (q > next && std::isspace(*q))
+        while (q > next && std::isspace(static_cast<unsigned char>(*q)))
           --q;
         if (q >= next)
           *(q + 1) = '\0';
@@ -1990,11 +2009,14 @@ xact_t * instance_t::parse_xact(char *          line,
       item->pos->end_line++;
     }
     else if ((remlen > 7 && *p == 'a' &&
-              std::strncmp(p, "assert", 6) == 0 && std::isspace(p[6])) ||
+              std::strncmp(p, "assert", 6) == 0 &&
+              std::isspace(static_cast<unsigned char>(p[6]))) ||
              (remlen > 6 && *p == 'c' &&
-              std::strncmp(p, "check", 5) == 0 && std::isspace(p[5])) ||
+              std::strncmp(p, "check", 5) == 0 &&
+              std::isspace(static_cast<unsigned char>(p[5]))) ||
              (remlen > 5 && *p == 'e' &&
-              std::strncmp(p, "expr", 4) == 0 && std::isspace(p[4]))) {
+              std::strncmp(p, "expr", 4) == 0 &&
+              std::isspace(static_cast<unsigned char>(p[4])))) {
       const char c = *p;
       p = skip_ws(&p[*p == 'a' ? 6 : (*p == 'c' ? 5 : 4)]);
       expr_t expr(p);
@@ -2060,6 +2082,25 @@ xact_t * instance_t::parse_xact(char *          line,
 
   TRACE_STOP(xact_details, 1);
 
+  if (hash_type != NO_HASHES) {
+    string expected_hash =
+      xact->hash(previous_xact &&
+                 previous_xact->has_tag("Hash") ?
+                 previous_xact->get_tag("Hash")->to_string() : "",
+                 hash_type);
+    if (xact->has_tag("Hash")) {
+      string current_hash = xact->get_tag("Hash")->to_string();
+      if (! std::equal(expected_hash.begin(),
+                       expected_hash.begin() +
+                       std::min(expected_hash.size(), current_hash.size()),
+                       current_hash.begin()))
+        throw_(parse_error, _f("Expected hash %1% != %2%") %
+               expected_hash % current_hash);
+    } else {
+      xact->set_tag("Hash", string_value(expected_hash));
+    }
+  }
+
   return xact.release();
 
   }
@@ -2080,12 +2121,14 @@ expr_t::ptr_op_t instance_t::lookup(const symbol_t::kind_t kind,
   return context.scope->lookup(kind, name);
 }
 
-std::size_t journal_t::read_textual(parse_context_stack_t& context_stack)
+std::size_t journal_t::read_textual(parse_context_stack_t& context_stack,
+                                    hash_type_t hash_type)
 {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
   {
     instance_t instance(context_stack, context_stack.get_current(), NULL,
-                        checking_style == journal_t::CHECK_PERMISSIVE);
+                        checking_style == journal_t::CHECK_PERMISSIVE,
+                        hash_type);
     instance.apply_stack.push_front
       (application_t("account", context_stack.get_current().master));
     instance.parse();

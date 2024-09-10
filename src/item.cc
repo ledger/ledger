@@ -105,7 +105,9 @@ optional<value_t> item_t::get_tag(const mask_t& tag_mask,
 
 namespace {
   struct CaseInsensitiveKeyCompare
+#if __cplusplus < 201103L
     : public std::binary_function<string, string, bool>
+#endif
   {
     bool operator()(const string& s1, const string& s2) const {
       return boost::algorithm::ilexicographical_compare(s1, s2);
@@ -133,13 +135,17 @@ item_t::set_tag(const string&            tag,
 
   string_map::iterator i = metadata->find(tag);
   if (i == metadata->end()) {
+    DEBUG("item.meta", "Setting new metadata value");
     std::pair<string_map::iterator, bool> result
       = metadata->insert(string_map::value_type(tag, tag_data_t(data, false)));
     assert(result.second);
     return result.first;
   } else {
-    if (overwrite_existing)
+    DEBUG("item.meta", "Found old metadata value");
+    if (overwrite_existing) {
+      DEBUG("item.meta", "Overwriting old metadata value");
       (*i).second = tag_data_t(data, false);
+    }
     return i;
   }
 }
@@ -151,7 +157,8 @@ void item_t::parse_tags(const char * p,
   if (! std::strchr(p, ':')) {
     if (const char * b = std::strchr(p, '[')) {
       if (*(b + 1) != '\0' &&
-          (std::isdigit(*(b + 1)) || *(b + 1) == '=')) {
+          (std::isdigit(static_cast<unsigned char>(*(b + 1))) ||
+           *(b + 1) == '=')) {
         if (const char * e = std::strchr(b, ']')) {
           char buf[256];
           std::strncpy(buf, b + 1, static_cast<std::size_t>(e - b - 1));

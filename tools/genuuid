@@ -1,24 +1,27 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import re
 import sys
 
 def scan_path(path):
     bug = uuid = None
-    with open(path, 'r') as fd:
-        for line in fd:
-            match = re.match('\*', line)
-            if match:
-                bug = uuid = None
-
-            match = re.search('\[\[bug:([0-9]+)\]\[#[0-9]+\]\]', line)
-            if match:
-                bug = match.group(1)
-            elif bug:
-                match = re.search(':ID:\s+(.+?)\s*$', line)
+    try:
+        with open(path, 'r') as fd:
+            for line in fd:
+                match = re.match(r'\*', line)
                 if match:
-                    uuid = match.group(1)
-                    print "UPDATE bugs SET cf_uuid='%s' WHERE bug_id=%s;" % (uuid, bug)
+                    bug = uuid = None
+
+                match = re.search(r'\[\[bug:([0-9]+)\]\[#[0-9]+\]\]', line)
+                if match:
+                    bug = match.group(1)
+                elif bug:
+                    match = re.search(r':ID:\s+(.+?)\s*$', line)
+                    if match:
+                        uuid = match.group(1)
+                        print(f"UPDATE bugs SET cf_uuid='{uuid}' WHERE bug_id={bug};")
+    except FileNotFoundError:
+      print(f'{path}: No such file or directory')
 
 scan_path('/Users/johnw/src/ledger/plan/TODO')
 scan_path('/Users/johnw/src/ledger/plan/TODO-3.0')

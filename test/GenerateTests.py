@@ -1,9 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # This script confirms both that the register report "adds up", and that its
 # final balance is the same as what the balance report shows.
 
+import argparse
+import pathlib
 import sys
+import os
 import re
 
 from difflib import ndiff
@@ -15,22 +18,24 @@ try:
 except:
     pass
 
-args = sys.argv
-jobs = 1
-match = re.match('-j([0-9]+)?', args[1])
-if match:
-    args = [args[0]] + args[2:]
-    if match.group(1):
-        jobs = int(match.group(1))
-if jobs == 1:
-    multiproc = False
-
 from LedgerHarness import LedgerHarness
 
-harness = LedgerHarness(args)
+parser = argparse.ArgumentParser(prog='GenerateTests', parents=[LedgerHarness.parser()])
+parser.add_argument('-j', '--jobs', type=int, default=1)
+parser.add_argument('tests', type=pathlib.Path)
+parser.add_argument('beg_range', nargs='?', type=int, default=1)
+parser.add_argument('end_range', nargs='?', type=int, default=20)
+args = parser.parse_args()
+multiproc &= (args.jobs >= 1)
+harness = LedgerHarness(args.ledger, args.sourcepath, args.verify, args.gmalloc, args.python)
+
+if not os.path.isdir(args.tests) and not os.path.isfile(args.tests):
+    print(f'{args.tests} is not a directory or file (cwd: {os.getcwd()})'
+          , file=sys.stderr)
+    sys.exit(1)
 
 #def normalize(line):
-#    match = re.match("((\s*)([A-Za-z]+)?(\s*)([-0-9.]+)(\s*)([A-Za-z]+)?)(  (.+))?$", line)
+#    match = re.match(r'((\s*)([A-Za-z]+)?(\s*)([-0-9.]+)(\s*)([A-Za-z]+)?)(  (.+))?$', line)
 #    if match:
 #        if match.group(3):
 #            prefix = match.group(3) + " " + match.group(5)
@@ -123,12 +128,6 @@ def generation_test(seed):
 
     return success
 
-beg_range = 1
-end_range = 20
-if len(args) > 4:
-    beg_range = int(args[3])
-    end_range = int(args[4])
-
 def run_gen_test(i):
     if generation_test(i):
         harness.success()
@@ -137,14 +136,14 @@ def run_gen_test(i):
     return harness.failed
 
 if multiproc:
-    pool = Pool(jobs*2)
+    pool = Pool(args.jobs*2)
 else:
     pool = None
 
 if pool:
-    pool.map(run_gen_test, range(beg_range, end_range))
+    pool.map(run_gen_test, range(args.beg_range, args.end_range))
 else:
-    for i in range(beg_range, end_range):
+    for i in range(args.beg_range, args.end_range):
         run_gen_test(i)
 
 if pool:

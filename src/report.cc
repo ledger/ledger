@@ -642,10 +642,10 @@ value_t report_t::fn_trim(call_scope_t& args)
   const char * p = buf.get();
   const char * e = buf.get() + temp.length() - 1;
 
-  while (p <= e && std::isspace(*p))
+  while (p <= e && std::isspace(static_cast<unsigned char>(*p)))
     p++;
 
-  while (e > p && std::isspace(*e))
+  while (e > p && std::isspace(static_cast<unsigned char>(*e)))
     e--;
 
   if (p > e) {
@@ -1150,6 +1150,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(amount_);
     else OPT(amount_data);
     else OPT_ALT(primary_date, actual_dates);
+    else OPT(align_intervals);
     else OPT(anon);
     else OPT_ALT(color, ansi);
     else OPT(auto_match);

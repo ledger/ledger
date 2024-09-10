@@ -1112,6 +1112,7 @@ date_interval_t date_parser_t::parse()
     range.end_inclusive = end_inclusive;
 
     period.range = date_specifier_or_range_t(range);
+    period.since_specified = static_cast<bool>(since_specifier);
   }
   else if (inclusion_specifier) {
     period.range = date_specifier_or_range_t(*inclusion_specifier);
@@ -1180,7 +1181,7 @@ date_t date_duration_t::find_nearest(const date_t& date, skip_quantum_t skip)
   return result;
 }
 
-void date_interval_t::stabilize(const optional<date_t>& date)
+void date_interval_t::stabilize(const optional<date_t>& date, bool align_intervals)
 {
 #if DEBUG_ON
   if (date)
@@ -1220,7 +1221,11 @@ void date_interval_t::stabilize(const optional<date_t>& date)
         // These start on most recent period start quantum before when
         DEBUG("times.interval",
             "stabilize: monthly, quarterly or yearly duration");
-        start = date_duration_t::find_nearest(when, duration->quantum);
+        if (align_intervals && since_specified) {
+          start = when;
+        } else {
+          start = date_duration_t::find_nearest(when, duration->quantum);
+        }
         break;
       case date_duration_t::WEEKS:
         // Weeks start on the beginning of week prior to 400 remainder period length
@@ -1228,9 +1233,13 @@ void date_interval_t::stabilize(const optional<date_t>& date)
         // implies period is never less than 400 days not too unreasonable
         DEBUG("times.interval", "stabilize: weekly duration");
         {
-          int period = duration->length * 7;
-          start = date_duration_t::find_nearest(
-              when - gregorian::days(period + 400 % period), duration->quantum);
+          if (align_intervals && since_specified) {
+            start = when;
+          } else {
+            int period = duration->length * 7;
+            start = date_duration_t::find_nearest(
+                when - gregorian::days(period + 400 % period), duration->quantum);
+          }
         }
         break;
       default:
@@ -1298,9 +1307,10 @@ void date_interval_t::stabilize(const optional<date_t>& date)
 }
 
 bool date_interval_t::find_period(const date_t& date,
+                                  const bool    align_intervals,
                                   const bool    allow_shift)
 {
-  stabilize(date);
+  stabilize(date, align_intervals);
 
   if (finish && date > *finish) {
     DEBUG("times.interval",
@@ -1467,7 +1477,7 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token()
     return tok;
   }
 
-  while (begin != end && std::isspace(*begin))
+  while (begin != end && std::isspace(static_cast<unsigned char>(*begin)))
     begin++;
 
   if (begin == end)
@@ -1486,9 +1496,11 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token()
   // date using the typical date formats.  This allows not only dates like
   // "2009/08/01", but also dates that fit the user's --input-date-format,
   // assuming their format fits in one argument and begins with a digit.
-  if (std::isdigit(*begin)) {
+  if (std::isdigit(static_cast<unsigned char>(*begin))) {
     string::const_iterator i = begin;
-    for (i = begin; i != end && ! std::isspace(*i); i++) {}
+    for (i = begin;
+         i != end && ! std::isspace(static_cast<unsigned char>(*i));
+         i++) {}
     assert(i != begin);
 
     string possible_date(start, i);
@@ -1513,18 +1525,20 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token()
   start = begin;
 
   string term;
-  bool alnum = std::isalnum(*begin);
-  for (; (begin != end && ! std::isspace(*begin) &&
-          ((alnum && static_cast<bool>(std::isalnum(*begin))) ||
-           (! alnum && ! static_cast<bool>(std::isalnum(*begin))))); begin++)
+  bool alnum = std::isalnum(static_cast<unsigned char>(*begin));
+  for (; (begin != end && ! std::isspace(static_cast<unsigned char>(*begin)) &&
+          ((alnum && static_cast<bool>(std::isalnum(
+             static_cast<unsigned char>(*begin)))) ||
+           (! alnum && ! static_cast<bool>(std::isalnum(
+             static_cast<unsigned char>(*begin)))))); begin++)
     term.push_back(*begin);
 
   if (! term.empty()) {
-    if (std::isdigit(term[0])) {
+    if (std::isdigit(static_cast<unsigned char>(term[0]))) {
       return token_t(token_t::TOK_INT,
                      token_t::content_t(lexical_cast<unsigned short>(term)));
     }
-    else if (std::isalpha(term[0])) {
+    else if (std::isalpha(static_cast<unsigned char>(term[0]))) {
       to_lower(term);
 
       if (optional<date_time::months_of_year> month =

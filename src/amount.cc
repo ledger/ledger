@@ -622,40 +622,15 @@ void amount_t::in_place_round()
 
 void amount_t::in_place_truncate()
 {
-#if 1
   if (! quantity)
     throw_(amount_error, _("Cannot truncate an uninitialized amount"));
-
-  _dup();
 
   DEBUG("amount.truncate",
         "Truncating " << *this << " to precision " << display_precision());
 
-  std::ostringstream out;
-  stream_out_mpq(out, MP(quantity), display_precision());
-
-  scoped_array<char> buf(new char [out.str().length() + 1]);
-  std::strcpy(buf.get(), out.str().c_str());
-
-  char * q = buf.get();
-  for (char * p = q; *p != '\0'; p++, q++) {
-    if (*p == '.') p++;
-    if (p != q) *q = *p;
-  }
-  *q = '\0';
-
-  mpq_set_str(MP(quantity), buf.get(), 10);
-
-  mpz_ui_pow_ui(temp, 10, display_precision());
-  mpq_set_z(tempq, temp);
-  mpq_div(MP(quantity), MP(quantity), tempq);
+  in_place_roundto(display_precision());
 
   DEBUG("amount.truncate", "Truncated = " << *this);
-#else
-  // This naive implementation is straightforward, but extremely inefficient
-  // as it requires parsing the commodity too, which might be fully annotated.
-  *this = amount_t(to_string());
-#endif
 }
 
 void amount_t::in_place_floor()
@@ -684,8 +659,38 @@ void amount_t::in_place_roundto(int places)
 {
   if (! quantity)
     throw_(amount_error, _("Cannot round an uninitialized amount"));
-    double x=ceil(mpq_get_d(MP(quantity))*pow(10, places) - 0.49999999) / pow(10, places);
-    mpq_set_d(MP(quantity), x);
+
+  _dup();
+
+  mpz_t& scale(temp);
+  if (places)
+    mpz_ui_pow_ui(scale, 10, labs(places));
+
+  if (places > 0) {
+    mpz_mul(mpq_numref(MP(quantity)), mpq_numref(MP(quantity)), scale);
+  } else if (places < 0) {
+    mpz_mul(mpq_denref(MP(quantity)), mpq_denref(MP(quantity)), scale);
+  }
+
+  auto whole(mpq_numref(tempq));
+  auto reminder(mpq_denref(tempq));
+  mpz_fdiv_qr(whole, reminder, mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
+  mpz_mul_2exp(reminder, reminder, 1);
+  const int rem_denom_cmp = mpz_cmp(reminder, mpq_denref(MP(quantity)));
+  if (rem_denom_cmp > 0
+      || (rem_denom_cmp == 0 && mpz_odd_p(whole)))
+    mpz_add_ui(whole, whole, 1);
+
+  if (places > 0) {
+    mpq_set_num(MP(quantity), whole);
+    mpq_set_den(MP(quantity), scale);
+    mpq_canonicalize(MP(quantity));
+  } else if (places == 0)
+    mpq_set_z(MP(quantity), whole);
+  else {
+    mpq_set_ui(MP(quantity), 0, 1);
+    mpz_mul(mpq_numref(MP(quantity)), whole, scale);
+  }
 }
 
 void amount_t::in_place_unround()
@@ -983,7 +988,8 @@ namespace {
               std::isdigit(c) || c == '.' || c == ',');
 
     string::size_type len = std::strlen(buf);
-    while (len > 0 && ! std::isdigit(buf[len - 1])) {
+    while (len > 0 &&
+           ! std::isdigit(static_cast<unsigned char>(buf[len - 1]))) {
       buf[--len] = '\0';
       in.unget();
     }
@@ -1018,7 +1024,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     parse_quantity(in, quant);
 
     if (! in.eof() && ((n = static_cast<char>(in.peek())) != '\n')) {
-      if (std::isspace(n))
+      if (std::isspace(static_cast<unsigned char>(n)))
         comm_flags |= COMMODITY_STYLE_SEPARATED;
 
       commodity_t::parse_symbol(in, symbol);
@@ -1034,7 +1040,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags)
     commodity_t::parse_symbol(in, symbol);
 
     if (! in.eof() && ((n = static_cast<char>(in.peek())) != '\n')) {
-      if (std::isspace(static_cast<char>(in.peek())))
+      if (std::isspace(in.peek()))
         comm_flags |= COMMODITY_STYLE_SEPARATED;
 
       parse_quantity(in, quant);

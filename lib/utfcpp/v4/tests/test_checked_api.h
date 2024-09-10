@@ -47,6 +47,22 @@ TEST(CheckedAPITests, test_append)
     EXPECT_EQ (c[1], 0);
 }
 
+TEST(CheckedAPITests, test_append16)
+{
+    utfchar16_t u[5] = {0,0};
+    append16(0x0448, u);
+    EXPECT_EQ (u[0], 0x0448);
+    EXPECT_EQ (u[1], 0x0000);
+
+    append16(0x65e5, u);
+    EXPECT_EQ (u[0], 0x65e5);
+    EXPECT_EQ (u[1], 0x0000);
+
+    append16(0x10346, u);
+    EXPECT_EQ (u[0], 0xd800);
+    EXPECT_EQ (u[1], 0xdf46);
+}
+
 TEST(CheckedAPITests, test_next)
 {
     const char* twochars = "\xe6\x97\xa5\xd1\x88";
@@ -69,6 +85,19 @@ TEST(CheckedAPITests, test_next)
     cp = next(w, threechars + 9);
     EXPECT_EQ (cp, 0x0448);
     EXPECT_EQ (w, threechars + 9);
+}
+
+TEST(CheckedAPITests, test_next16)
+{
+    const utfchar16_t u[3] = {0x65e5, 0xd800, 0xdf46};
+    const utfchar16_t* w = u;
+    utf8::utfchar32_t cp = next16(w, w + 3);
+    EXPECT_EQ (cp, 0x65e5);
+    EXPECT_EQ (w, u + 1);
+
+    cp = next16(w, w + 2);
+    EXPECT_EQ (cp, 0x10346);
+    EXPECT_EQ (w, u + 3);
 }
 
 TEST(CheckedAPITests, test_peek_next)
@@ -171,7 +200,9 @@ TEST(CheckedAPITests, test_replace_invalid)
 TEST(CheckedAPITests, test_find_invalid)
 {
     char utf_invalid[] = "\xe6\x97\xa5\xd1\x88\xfa";
-    char* invalid = find_invalid(utf_invalid, utf_invalid + 6);
+    const char* invalid = find_invalid(utf_invalid, utf_invalid + 6);
+    EXPECT_EQ (invalid, utf_invalid + 5);
+    invalid = find_invalid(utf_invalid);
     EXPECT_EQ (invalid, utf_invalid + 5);
 }
 
@@ -180,8 +211,12 @@ TEST(CheckedAPITests, test_is_valid)
     char utf_invalid[] = "\xe6\x97\xa5\xd1\x88\xfa";
     bool bvalid = is_valid(utf_invalid, utf_invalid + 6);
     EXPECT_FALSE (bvalid);
+    bvalid = is_valid(utf_invalid);
+    EXPECT_FALSE (bvalid);
     char utf8_with_surrogates[] = "\xe6\x97\xa5\xd1\x88\xf0\x9d\x84\x9e";
     bvalid = is_valid(utf8_with_surrogates, utf8_with_surrogates + 9);
+    EXPECT_TRUE (bvalid);
+    bvalid = is_valid(utf8_with_surrogates);
     EXPECT_TRUE (bvalid);
 }
 
