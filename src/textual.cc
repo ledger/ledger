@@ -1656,7 +1656,7 @@ post_t * instance_t::parse_post(char *          line,
 
       DEBUG("textual.parse", "line " << context.linenum << ": "
             << "POST assign: parsed balance amount = " << *post->assigned_amount);
-      
+
       balance_linenum = context.linenum;
 
       if (stream.eof())
@@ -1690,35 +1690,69 @@ post_t * instance_t::parse_post(char *          line,
   if(post->assigned_amount) {
 
     const amount_t& amt(*post->assigned_amount);
+    balance_t diff = amt;
 
-    optional<expr_t&> account_post_filter;
-    expr_t filter_expr;
-    if (post->account->xdata_ &&
-      post->account->self_details().latest_post > post->date()
-    ) {
-      filter_expr = expr_t(WRAP_FUNCTOR([&post](call_scope_t &scope) {
-        if (scope.lookup(symbol_t::FUNCTION, "date")
-          ->as_function()(scope).as_date() <= post->date()
+    // apply balance_filter tag
+    value_t account_total;
+    if(optional<value_t> filter_tag = post->get_tag(_("balance_filter"))) {
+      // add "balance_post" to the scope so the user can reference is
+      symbol_scope_t filter_scope(*context.scope);
+      filter_scope.define(symbol_t::FUNCTION, "balance_post",
+        expr_t::op_t::wrap_value(scope_value(&*post)));
+      // create an identifier for the target post amount
+      expr_t::ptr_op_t amount_ident =
+        expr_t::op_t::new_node(expr_t::op_t::IDENT);
+      amount_ident->set_ident("amount");
+      // create the if-then-else expression to include the post amount iff the
+      // user-defined filter passes
+      expr_t::ptr_op_t filter_op = expr_t::op_t::new_node(expr_t::op_t::O_QUERY,
+        expr_t(filter_tag->to_string()).get_op(),
+        expr_t::op_t::new_node(expr_t::op_t::O_COLON,
+          amount_ident,
+          expr_t::op_t::wrap_value(amount_t(0.))
+        )
+      );
+      expr_t filter_expr(filter_op, &filter_scope);
+      account_total =
+        post->account->amount(!post->has_flags(POST_VIRTUAL), filter_expr)
+          .strip_annotations(keep_details_t());
+
+      // Subtract amounts from previous posts to this account in the xact.
+      for (post_t* p : xact->posts) {
+        if (p->account == post->account &&
+          (! p->has_flags(POST_VIRTUAL) || post->has_flags(POST_VIRTUAL))
         ) {
-          return scope.lookup(symbol_t::FUNCTION, "amount")
-            ->as_function()(scope).as_amount();
+          value_t tmp;
+          p->add_to_value(tmp, filter_expr);
+          diff -= tmp.as_amount();
+          DEBUG("textual.parse", "line " << balance_linenum << ": "
+                << "Subtracting " << amt << ", diff = " << diff);
         }
-        else {
-          return amount_t(0.);
-        }
-      }), NULL);
-      account_post_filter = filter_expr;
+      }
     }
-    value_t account_total(post->account->
-      amount(!post->has_flags(POST_VIRTUAL), account_post_filter)
-      .strip_annotations(keep_details_t()));
+    else {
+      account_total =
+        post->account->amount(!post->has_flags(POST_VIRTUAL))
+          .strip_annotations(keep_details_t());
+
+      // Subtract amounts from previous posts to this account in the xact.
+      for (post_t* p : xact->posts) {
+        if (p->account == post->account &&
+          (! p->has_flags(POST_VIRTUAL) || post->has_flags(POST_VIRTUAL))
+        ) {
+          value_t tmp;
+          p->add_to_value(tmp);
+          diff -= tmp.as_amount();
+          DEBUG("textual.parse", "line " << balance_linenum << ": "
+                << "Subtracting " << amt << ", diff = " << diff);
+        }
+      }
+    }
 
     DEBUG("post.assign", "line " << balance_linenum << ": "
           << "account balance = " << account_total);
     DEBUG("post.assign", "line " << balance_linenum << ": "
           << "post amount = " << amt << " (is_zero = " << amt.is_zero() << ")");
-
-    balance_t diff = amt;
 
     switch (account_total.type()) {
     case value_t::AMOUNT: {
@@ -1743,19 +1777,6 @@ post_t * instance_t::parse_post(char *          line,
           "line " << balance_linenum << ": " << "diff = " << diff);
     DEBUG("textual.parse", "line " << balance_linenum << ": "
           << "POST assign: diff = " << diff);
-
-    // Subtract amounts from previous posts to this account in the xact.
-    for (post_t* p : xact->posts) {
-      if (p->account == post->account &&
-        (! p->has_flags(POST_VIRTUAL) || post->has_flags(POST_VIRTUAL)) &&
-        p->date() <= post->date()
-      ) {
-        amount_t amt(p->amount.strip_annotations(keep_details_t()));
-        diff -= amt;
-        DEBUG("textual.parse", "line " << balance_linenum << ": "
-              << "Subtracting " << amt << ", diff = " << diff);
-      }
-    }
 
     // If amt has a commodity, restrict balancing to that. Otherwise, it's the blanket '0' and
     // check that all of them are zero.
