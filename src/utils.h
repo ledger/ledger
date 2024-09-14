@@ -604,7 +604,7 @@ inline string sha1sum(
   const string& str,
   size_t len = sizeof(boost::uuids::detail::sha1::digest_type) * 2
 ) {
-	boost::uuids::detail::sha1 sha;
+	static boost::uuids::detail::sha1 sha;
   boost::uuids::detail::sha1::digest_type message_digest;
 
 	sha.reset();
