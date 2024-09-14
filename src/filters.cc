@@ -238,7 +238,7 @@ void anonymize_posts::render_commodity(amount_t& amt)
 void anonymize_posts::operator()(post_t& post)
 {
 	boost::uuids::detail::sha1  sha;
-  unsigned char message_digest[20];
+  boost::uuids::detail::sha1::digest_type message_digest;
   bool         copy_xact_details = false;
 
   if (last_xact != post.xact) {
@@ -260,7 +260,7 @@ void anonymize_posts::operator()(post_t& post)
     sha.process_bytes(buf.str().c_str(), buf.str().length());
     sha.get_digest(message_digest);
 
-    xact.payee = to_hex(message_digest);
+    xact.payee = digest_to_hex(message_digest, 8);
     xact.note  = none;
   } else {
     xact.journal = post.xact->journal;
@@ -278,7 +278,7 @@ void anonymize_posts::operator()(post_t& post)
     sha.process_bytes(buf.str().c_str(), buf.str().length());
     sha.get_digest(message_digest);
 
-    account_names.push_front(to_hex(message_digest));
+    account_names.push_front(digest_to_hex(message_digest, 8));
   }
 
   account_t * new_account =
