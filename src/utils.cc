@@ -229,54 +229,24 @@ static void trace_delete_func(void * ptr, const char * which)
 
 //#if !defined(__has_feature) || !__has_feature(address_sanitizer)
 
-#ifdef _GLIBCXX_THROW
-void * operator new(std::size_t size) _GLIBCXX_THROW(std::bad_alloc) {
-#else
-void * operator new(std::size_t size) throw (std::bad_alloc) {
-#endif
+void * operator new(std::size_t size) {
   void * ptr = std::malloc(size);
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_new_func(ptr, "new", size);
   return ptr;
 }
-void * operator new(std::size_t size, const std::nothrow_t&) throw() {
-  void * ptr = std::malloc(size);
-  if (DO_VERIFY() && ledger::memory_tracing_active)
-    ledger::trace_new_func(ptr, "new", size);
-  return ptr;
-}
-#ifdef _GLIBCXX_THROW
-void * operator new[](std::size_t size) _GLIBCXX_THROW(std::bad_alloc) {
-#else
-void * operator new[](std::size_t size) throw (std::bad_alloc) {
-#endif
+void * operator new[](std::size_t size) {
   void * ptr = std::malloc(size);
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_new_func(ptr, "new[]", size);
   return ptr;
 }
-void * operator new[](std::size_t size, const std::nothrow_t&) throw() {
-  void * ptr = std::malloc(size);
-  if (DO_VERIFY() && ledger::memory_tracing_active)
-    ledger::trace_new_func(ptr, "new[]", size);
-  return ptr;
-}
-void   operator delete(void * ptr) throw() {
+void   operator delete(void * ptr) {
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_delete_func(ptr, "new");
   std::free(ptr);
 }
-void   operator delete(void * ptr, const std::nothrow_t&) throw() {
-  if (DO_VERIFY() && ledger::memory_tracing_active)
-    ledger::trace_delete_func(ptr, "new");
-  std::free(ptr);
-}
-void   operator delete[](void * ptr) throw() {
-  if (DO_VERIFY() && ledger::memory_tracing_active)
-    ledger::trace_delete_func(ptr, "new[]");
-  std::free(ptr);
-}
-void   operator delete[](void * ptr, const std::nothrow_t&) throw() {
+void   operator delete[](void * ptr) {
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_delete_func(ptr, "new[]");
   std::free(ptr);
