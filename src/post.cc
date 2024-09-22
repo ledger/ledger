@@ -382,9 +382,7 @@ namespace {
 
     foreach (post_t * p, post.xact->posts) {
       bind_scope_t bound_scope(args, *p);
-      if (p == &post && args.has<expr_t::ptr_op_t>(1) &&
-          ! args.get<expr_t::ptr_op_t>(1)
-            ->calc(bound_scope, args.locus, args.depth).to_boolean()) {
+      if (p == &post && args.has(1) && !args.get<bool>(1)) {
         // If the user specifies any(EXPR, false), and the context is a
         // posting, then that posting isn't considered by the test.
         ;                       // skip it
@@ -404,9 +402,7 @@ namespace {
 
     foreach (post_t * p, post.xact->posts) {
       bind_scope_t bound_scope(args, *p);
-      if (p == &post && args.has<expr_t::ptr_op_t>(1) &&
-          ! args.get<expr_t::ptr_op_t>(1)
-            ->calc(bound_scope, args.locus, args.depth).to_boolean()) {
+      if (p == &post && args.has(1) && !args.get<bool>(1)) {
         // If the user specifies any(EXPR, false), and the context is a
         // posting, then that posting isn't considered by the test.
         ;                       // skip it
