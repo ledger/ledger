@@ -20,7 +20,7 @@ While balancing transaction from "$FILE", lines 10-13:
 >     [Assets:Budget:Rent]                    $0 = $100.00
 >     [Assets:Budget:Emergency]                  = $400.00
 >     [Assets:Bank]                               -$500.00
-Unbalanced remainder is:
+Unbalanced virtual remainder is:
             $-300.00
 Amount to balance against:
              $200.00
