@@ -82,7 +82,7 @@ endif()
 
 # Set BOOST_ROOT to help CMake to find the right Boost version
 find_package(Boost ${Required_Boost_Version}
-  REQUIRED date_time filesystem system iostreams regex unit_test_framework
+  REQUIRED date_time filesystem system iostreams regex
   ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide)
 
 # enable Boost::nowide library (for UTF8 command line args on Windows)
@@ -161,6 +161,7 @@ endif()
 
 cmake_push_check_state()
 
+set(CMAKE_REQUIRED_FLAGS -std=c++11)
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${ICUE_INCLUDE_DIRS})
 set(CMAKE_REQUIRED_LIBRARIES Boost::regex ${ICU_LIBRARIES} ${PROFILE_LIBS})
 
