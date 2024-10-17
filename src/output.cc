@@ -223,6 +223,7 @@ format_accounts::mark_accounts(account_t& account, const bool flat)
     bind_scope_t bound_scope(report, account);
     call_scope_t call_scope(bound_scope);
     if ((! flat && to_display > 1) ||
+        (! flat && to_display == 1 && ! account.posts.empty()) ||
         ((flat || to_display != 1 ||
           account.has_xflags(ACCOUNT_EXT_VISITED)) &&
          (report.HANDLED(empty) ||
