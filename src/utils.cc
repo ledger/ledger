@@ -535,8 +535,6 @@ strings_list split_arguments(const char * line)
  * Logging
  */
 
-#if LOGGING_ON
-
 namespace ledger {
 
 log_level_t        _log_level  = LOG_WARN;
@@ -623,14 +621,13 @@ static struct __maybe_enable_debugging {
 } // namespace ledger
 
 #endif // DEBUG_ON
-#endif // LOGGING_ON
 
 /**********************************************************************
  *
  * Timers (allows log xacts to specify cumulative time spent)
  */
 
-#if LOGGING_ON && TIMERS_ON
+#if TIMERS_ON
 
 namespace ledger {
 
@@ -738,7 +735,7 @@ void finish_timer(const char * name)
 
 } // namespace ledger
 
-#endif // LOGGING_ON && TIMERS_ON
+#endif // TIMERS_ON
 
 /**********************************************************************
  *
