@@ -73,9 +73,6 @@ public:
   optional<expr_t>               value_expr;
 
   mutable string   _fullname;
-#if DOCUMENT_MODEL
-  mutable void * data;
-#endif
 
   account_t(account_t *             _parent = NULL,
             const string&           _name   = "",
@@ -83,9 +80,6 @@ public:
     : supports_flags<>(), scope_t(), parent(_parent),
       name(_name), note(_note),
       depth(static_cast<unsigned short>(parent ? parent->depth + 1 : 0))
-#if DOCUMENT_MODEL
-      , data(NULL)
-#endif
   {
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
@@ -96,9 +90,6 @@ public:
       note(other.note),
       depth(other.depth),
       accounts(other.accounts)
-#if DOCUMENT_MODEL
-      , data(NULL)
-#endif
   {
     TRACE_CTOR(account_t, "copy");
   }
