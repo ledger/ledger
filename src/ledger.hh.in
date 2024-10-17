@@ -68,7 +68,5 @@
 #define TRACING_ON  1           // use --trace X to enable
 #endif
 
-#define REDUCE_TO_INTEGER        0
-
 /*@}*/
 
