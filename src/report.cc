@@ -491,13 +491,11 @@ void report_t::commodities_report(post_handler_ptr handler)
     pass_down_posts<posts_commodities_iterator>(handler, *walker);
   }
   catch (...) {
-#if VERIFY_ON
     IF_VERIFY() {
       // If --verify was used, clean up the posts_commodities_iterator.
       // Otherwise, just leak like a sieve.
       checked_delete(walker);
     }
-#endif
     throw;
   }
 
