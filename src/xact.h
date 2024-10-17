@@ -94,14 +94,7 @@ public:
   optional<string> code;
   string           payee;
 
-#if DOCUMENT_MODEL
-  mutable void * data;
-#endif
-
   xact_t()
-#if DOCUMENT_MODEL
-    : data(NULL)
-#endif
   {
     TRACE_CTOR(xact_t, "");
   }

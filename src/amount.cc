@@ -240,18 +240,14 @@ void amount_t::initialize()
     // in terms of seconds, but reported as minutes or hours.
     if (commodity_t * commodity = commodity_pool_t::current_pool->create("s"))
       commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
-#if !NO_ASSERTS
     else
       assert(false);
-#endif
 
     // Add a "percentile" commodity
     if (commodity_t * commodity = commodity_pool_t::current_pool->create("%"))
       commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
-#if !NO_ASSERTS
     else
       assert(false);
-#endif
 
     is_initialized = true;
   }
@@ -924,10 +920,8 @@ void amount_t::annotate(const annotation_t& details)
   if (commodity_t * ann_comm =
       this_base->pool().find_or_create(*this_base, details))
     set_commodity(*ann_comm);
-#if !NO_ASSERTS
   else
     assert(false);
-#endif
 
   DEBUG("amount.commodities", "Annotated amount is " << *this);
 }
