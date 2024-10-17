@@ -66,12 +66,10 @@ xact_base_t::~xact_base_t()
 
 void xact_base_t::add_post(post_t * post)
 {
-#if !NO_ASSERTS
   // You can add temporary postings to transactions, but not real postings to
   // temporary transactions.
   if (! post->has_flags(ITEM_TEMP))
     assert(! has_flags(ITEM_TEMP));
-#endif
 
   posts.push_back(post);
 }
