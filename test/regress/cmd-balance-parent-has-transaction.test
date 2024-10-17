@@ -1,0 +1,17 @@
+2021/01/01 Test
+	Left Column:Account A:Sub-Account    100
+	Right Column:Account 1:Sub-Account  -100
+
+2021/01/02 Test
+	Left Column:Account A               -100
+	Right Column:Account 2               100
+
+test bal
+                   0  Left Column:Account A
+                 100    Sub-Account
+                   0  Right Column
+                -100    Account 1:Sub-Account
+                 100    Account 2
+--------------------
+                   0
+end test
