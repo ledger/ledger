@@ -260,10 +260,8 @@ public:
   virtual string description() {
     if (parent)
       return parent->description();
-#if !NO_ASSERTS
     else
       assert(false);
-#endif
     return empty_string;
   }
 
