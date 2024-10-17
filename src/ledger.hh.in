@@ -68,7 +68,6 @@
 #define TRACING_ON  1           // use --trace X to enable
 #endif
 
-#define DOCUMENT_MODEL           0
 #define REDUCE_TO_INTEGER        0
 
 /*@}*/
