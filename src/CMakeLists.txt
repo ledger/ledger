@@ -167,43 +167,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       -Wno-unused-local-typedef
       --system-header-prefix=include/boost/
       --system-header-prefix=boost/)
-
-    macro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
-      set(_pch_filename "${_header_filename}.pch")
-
-      set_source_files_properties(
-        ${${_src_list}} PROPERTIES COMPILE_FLAGS "-include ${_header_filename}")
-      if (_other_srcs)
-        set_source_files_properties(
-          ${_other_srcs} PROPERTIES COMPILE_FLAGS "-include ${_header_filename}")
-      endif()
-      list(APPEND ${_src_list} ${_pch_filename})
-
-      set(_args ${CMAKE_CXX_FLAGS})
-      list(APPEND _args ${CMAKE_CXX_FLAGS_DEBUG})
-      if (BUILD_LIBRARY)
-        list(APPEND _args ${CMAKE_SHARED_LIBRARY_CXX_FLAGS})
-      endif()
-      list(APPEND _args "-std=c++11")
-      if (CYGWIN)
-        list(APPEND _args "-U__STRICT_ANSI__")
-      endif()
-      list(APPEND _args "-x c++-header " ${_inc})
-      list(APPEND _args -c ${_header_filename} -o ${_pch_filename})
-
-      get_directory_property(DIRINC INCLUDE_DIRECTORIES)
-      foreach(_inc ${DIRINC})
-        list(APPEND _args "-isystem " ${_inc})
-      endforeach(_inc ${DIRINC})
-
-      separate_arguments(_args)
-
-      add_custom_command(OUTPUT ${_pch_filename}
-        COMMAND rm -f ${_pch_filename}
-        COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} ${_args}
-        DEPENDS ${_header_filename})
-    endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
-
   elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(GXX_WARNING_FLAGS
       -pedantic
@@ -225,56 +188,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       -Wno-strict-aliasing)
 
     add_compile_options(${GXX_WARNING_FLAGS})
-
-    macro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
-      set(_gch_filename "${_header_filename}.gch")
-
-      set_source_files_properties(
-        ${${_src_list}} PROPERTIES COMPILE_FLAGS "-Winvalid-pch")
-      if (_other_srcs)
-        set_source_files_properties(
-          ${_other_srcs} PROPERTIES COMPILE_FLAGS "-Winvalid-pch")
-      endif()
-      list(APPEND ${_src_list} ${_gch_filename})
-
-      set(_args ${CMAKE_CXX_FLAGS})
-      list(APPEND _args ${CMAKE_CXX_FLAGS_DEBUG})
-      if (BUILD_LIBRARY)
-        list(APPEND _args ${CMAKE_SHARED_LIBRARY_CXX_FLAGS})
-      endif()
-      list(APPEND _args ${GXX_WARNING_FLAGS})
-      list(APPEND _args "-std=c++11 ")
-      if (CYGWIN)
-        list(APPEND _args "-U__STRICT_ANSI__")
-      endif()
-      list(APPEND _args "-x c++-header " ${_inc})
-      list(APPEND _args -c ${_header_filename} -o ${_gch_filename})
-
-      get_directory_property(DIRINC INCLUDE_DIRECTORIES)
-      foreach(_inc ${DIRINC})
-        list(APPEND _args "-I" ${_inc})
-      endforeach(_inc ${DIRINC})
-
-      separate_arguments(_args)
-
-      add_custom_command(OUTPUT ${_gch_filename}
-        COMMAND rm -f ${_gch_filename}
-        COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} ${_args}
-        DEPENDS ${_header_filename})
-    endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
-
-  else()
-    macro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
-    endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
   endif()
-else()
-  macro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
-  endmacro(ADD_PCH_RULE _header_filename _src_list _other_srcs)
-endif()
-
-if(PRECOMPILE_SYSTEM_HH AND NOT (COMMAND target_precompile_headers))
-  # enable fallback for CMake versions older than 3.16 without target_precompile_headers
-  add_pch_rule(${PROJECT_BINARY_DIR}/system.hh LEDGER_SOURCES LEDGER_CLI_SOURCES)
 endif()
 
 include(GNUInstallDirs)
@@ -309,7 +223,7 @@ else()
   add_ledger_library_dependencies(ledger)
 endif()
 
-if (PRECOMPILE_SYSTEM_HH AND (COMMAND target_precompile_headers) AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+if (PRECOMPILE_SYSTEM_HH AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
   if (BUILD_LIBRARY)
     target_precompile_headers(libledger PRIVATE ${PROJECT_BINARY_DIR}/system.hh)
     target_precompile_headers(ledger REUSE_FROM libledger)
