@@ -223,7 +223,7 @@ else()
   add_ledger_library_dependencies(ledger)
 endif()
 
-if (PRECOMPILE_SYSTEM_HH AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+if (PRECOMPILE_SYSTEM_HH)
   if (BUILD_LIBRARY)
     target_precompile_headers(libledger PRIVATE ${PROJECT_BINARY_DIR}/system.hh)
     target_precompile_headers(ledger REUSE_FROM libledger)
