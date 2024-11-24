@@ -697,7 +697,7 @@ Only useful on a register report.  Alias for
 .Fl \-tail .
 .It Fl \-leeway Ar INT Pq Fl Z
 Alias for
-.Fl \-price-expr .
+.Fl \-price-exp .
 .It Fl \-limit Ar EXPR Pq Fl l
 Limit postings in calculations.
 .It Fl \-lot-dates
@@ -830,10 +830,10 @@ spaces at the beginning of each line of the output.
 .It Fl \-price Pq Fl I
 Use the price of the commodity purchase for performing calculations.
 .It Fl \-price-db Ar FILE
-.It Fl \-price-exp Ar STR Pq Fl Z
+.It Fl \-price-exp Ar INT Pq Fl Z
 Set the expected freshness of price quotes, in
 .Ar INT
-minutes.  That
+hours.  That
 is, if the last known quote for any commodity is older than this value,
 and if
 .Fl \-download
