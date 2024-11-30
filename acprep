@@ -542,7 +542,7 @@ class PrepareBuild(CommandLineApp):
                             'ninja-build',
                             'zlib1g-dev',
                             'libbz2-dev',
-                            'python-dev',
+                            'python3-dev',
                             'libgmp3-dev',
                             'libmpfr-dev',
                             'gettext',
