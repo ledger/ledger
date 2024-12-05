@@ -1,0 +1,12 @@
+2024-10-10 foo
+    expenses  ; :bar:
+    assets:first   -5 USD
+    assets:second  -3 USD
+    assets:third  -10 EUR
+
+test reg %bar
+24-Oct-10 foo                   expenses                     10 EUR       10 EUR
+                                expenses                      8 USD       10 EUR
+                                                                           8 USD
+end test
+
