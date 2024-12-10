@@ -862,10 +862,8 @@ void instance_t::apply_account_directive(char * line)
 {
   if (account_t * acct = top_account()->find_account(line))
     apply_stack.push_front(application_t("account", acct));
-#if !NO_ASSERTS
   else
     assert("Failed to create account" == NULL);
-#endif
 }
 
 void instance_t::apply_tag_directive(char * line)
