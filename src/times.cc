@@ -1569,7 +1569,7 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token()
         return token_t(token_t::TOK_TODAY);
       else if (term == _("tomorrow"))
         return token_t(token_t::TOK_TOMORROW);
-      else if (term == _("yesterday"))
+      else if (term == _("yesterday") or term == _("yday"))
         return token_t(token_t::TOK_YESTERDAY);
       else if (term == _("year"))
         return token_t(token_t::TOK_YEAR);
