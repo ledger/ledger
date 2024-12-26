@@ -55,6 +55,7 @@ namespace ledger {
 
 DECLARE_EXCEPTION(value_error, std::runtime_error);
 
+class commodity_t;
 class scope_t;
 
 /**
@@ -76,10 +77,11 @@ class value_t
            equality_comparable<value_t, balance_t,
            additive<value_t, balance_t,
            multiplicative<value_t, balance_t,
+           equality_comparable<value_t, commodity_t,
            ordered_field_operators<value_t, amount_t,
            ordered_field_operators<value_t, double,
            ordered_field_operators<value_t, unsigned long,
-           ordered_field_operators<value_t, long> > > > > > > >
+           ordered_field_operators<value_t, long> > > > > > > > >
 {
 public:
   /**
@@ -104,6 +106,7 @@ public:
     INTEGER,                    // a signed integer value
     AMOUNT,                     // a ledger::amount_t
     BALANCE,                    // a ledger::balance_t
+    COMMODITY,                  // a ledger::commodity_t
     STRING,                     // a string object
     MASK,                       // a regular expression mask
     SEQUENCE,                   // a vector of value_t objects
@@ -131,6 +134,7 @@ public:
             long,               // INTEGER
             amount_t,           // AMOUNT
             balance_t *,        // BALANCE
+            commodity_t *,      // COMMODITY
             string,             // STRING
             mask_t,             // MASK
             sequence_t *,       // SEQUENCE
@@ -307,6 +311,10 @@ public:
   value_t(const balance_t& val) {
     set_balance(val);
     TRACE_CTOR(value_t, "const balance_t&");
+  }
+  value_t(const commodity_t& val) {
+    set_commodity(val);
+    TRACE_CTOR(value_t, "const commodity_t&");
   }
   value_t(const mask_t& val) {
     set_mask(val);
@@ -650,6 +658,15 @@ public:
     storage->data = new balance_t(val);
   }
 
+  bool is_commodity() const {
+    return is_type(COMMODITY);
+  }
+  const commodity_t& as_commodity() const {
+    VERIFY(is_commodity());
+    return *boost::get<commodity_t *>(storage->data);
+  }
+  void set_commodity(const commodity_t& val);
+
   bool is_string() const {
     return is_type(STRING);
   }
@@ -782,6 +799,7 @@ public:
   date_t      to_date() const;
   amount_t    to_amount() const;
   balance_t   to_balance() const;
+  const commodity_t& to_commodity() const;
   string      to_string() const;
   mask_t      to_mask() const;
   sequence_t  to_sequence() const;
