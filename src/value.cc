@@ -97,6 +97,8 @@ value_t::operator bool() const
     return as_amount();
   case BALANCE:
     return as_balance();
+  case COMMODITY:
+    return as_commodity();
   case STRING:
     return ! as_string().empty();
   case MASK: {
@@ -137,6 +139,13 @@ void value_t::set_type(type_t new_type)
       storage->destroy();
     storage->type = new_type;
   }
+}
+
+void value_t::set_commodity(const commodity_t& val)
+{
+  VERIFY(val.valid());
+  set_type(COMMODITY);
+  storage->data = &val;
 }
 
 bool value_t::to_boolean() const
@@ -216,11 +225,26 @@ balance_t value_t::to_balance() const
   }
 }
 
+const commodity_t& value_t::to_commodity() const
+{
+  if (is_commodity()) {
+    return as_commodity();
+  } else {
+    value_t temp(*this);
+    temp.in_place_cast(COMMODITY);
+    return temp.as_commodity();
+  }
+}
+
 string value_t::to_string() const
 {
   if (is_string()) {
     return as_string();
-  } else {
+  }
+  else if (is_commodity()) {
+    return as_commodity().symbol();
+  }
+  else {
     value_t temp(*this);
     temp.in_place_cast(STRING);
     return temp.as_string();
@@ -317,6 +341,10 @@ value_t& value_t::operator+=(const value_t& val)
     else
       as_string_lval() += val.to_string();
     return *this;
+  }
+  else if (is_commodity()) {
+    in_place_cast(STRING);
+    return *this += val;
   }
   else if (is_sequence()) {
     if (val.is_sequence()) {
@@ -598,6 +626,10 @@ value_t& value_t::operator*=(const value_t& val)
     set_string(temp);
     return *this;
   }
+  else if (is_commodity()) {
+    in_place_cast(STRING);
+    return *this *= val;
+  }
   else if (is_sequence()) {
     value_t temp;
     long count = val.to_long();
@@ -809,6 +841,25 @@ bool value_t::is_equal_to(const value_t& val) const
     }
     break;
 
+  case COMMODITY:
+    switch (val.type()) {
+    case COMMODITY:
+      return as_commodity() == val.as_commodity();
+    case STRING: {
+      const auto* otherCommodity = as_commodity().pool().find(val.as_string());
+
+      if (otherCommodity) {
+        return as_commodity() == *otherCommodity;
+      }
+      else {
+        return false;
+      }
+    }
+    default:
+      break;
+    }
+    break;
+
   case STRING:
     if (val.is_string())
       return as_string() == val.as_string();
@@ -913,6 +964,11 @@ bool value_t::is_less_than(const value_t& val) const
     default:
       break;
     }
+    break;
+
+  case COMMODITY:
+    if (val.is_string())
+      return to_string() < val.as_string();
     break;
 
   case STRING:
@@ -1034,6 +1090,11 @@ bool value_t::is_greater_than(const value_t& val) const
     default:
       break;
     }
+    break;
+
+  case COMMODITY:
+    if (val.is_string())
+      return to_string() > val.as_string();
     break;
 
   case STRING:
@@ -1235,6 +1296,16 @@ void value_t::in_place_cast(type_t cast_type)
     break;
   }
 
+  case COMMODITY:
+    switch (cast_type) {
+    case STRING:
+      set_string(to_string());
+      return;
+    default:
+      break;
+    }
+    break;
+
   case STRING:
     switch (cast_type) {
     case INTEGER: {
@@ -1247,6 +1318,12 @@ void value_t::in_place_cast(type_t cast_type)
     case AMOUNT:
       set_amount(amount_t(as_string()));
       return;
+    case COMMODITY:
+      if (const auto* commodity = commodity_pool_t::current_pool->find(as_string())) {
+        set_commodity(*commodity);
+        return;
+      }
+      break;
     case DATE:
       set_date(parse_date(as_string()));
       return;
@@ -1330,6 +1407,9 @@ void value_t::in_place_not()
   case BALANCE:
     set_boolean(! as_balance());
     return;
+  case COMMODITY:
+    set_boolean(! as_commodity());
+    return;
   case STRING:
     set_boolean(as_string().empty());
     return;
@@ -1360,6 +1440,8 @@ bool value_t::is_realzero() const
     return as_amount().is_realzero();
   case BALANCE:
     return as_balance().is_realzero();
+  case COMMODITY:
+    return ! as_commodity();
   case STRING:
     return as_string().empty();
   case SEQUENCE:
@@ -1392,6 +1474,8 @@ bool value_t::is_zero() const
     return as_amount().is_zero();
   case BALANCE:
     return as_balance().is_zero();
+  case COMMODITY:
+    return ! as_commodity();
   case STRING:
     return as_string().empty();
   case SEQUENCE:
@@ -1781,6 +1865,7 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const
   case INTEGER:
   case DATETIME:
   case DATE:
+  case COMMODITY:
   case STRING:
   case MASK:
   case SCOPE:
@@ -1821,6 +1906,8 @@ string value_t::label(optional<type_t> the_type) const
     return _("an amount");
   case BALANCE:
     return _("a balance");
+  case COMMODITY:
+    return _("a commodity");
   case STRING:
     return _("a string");
   case MASK:
@@ -1898,6 +1985,9 @@ void value_t::print(std::ostream&       _out,
     as_balance().print(out, first_width, latter_width, flags);
     break;
 
+  case COMMODITY:
+    justify(out, to_string(), first_width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY);
+    break;
   case STRING:
     if (first_width > 0)
       justify(out, as_string(), first_width, flags & AMOUNT_PRINT_RIGHT_JUSTIFY);
@@ -1978,6 +2068,10 @@ void value_t::dump(std::ostream& out, const bool relaxed) const
     out << as_balance();
     break;
 
+  case COMMODITY:
+    out << as_commodity();
+    break;
+
   case STRING:
     out << '"';
     foreach (const char& ch, as_string()) {
@@ -2034,6 +2128,8 @@ bool value_t::valid() const
     return as_amount().valid();
   case BALANCE:
     return as_balance().valid();
+  case COMMODITY:
+    return as_commodity().valid();
   default:
     break;
   }
@@ -2087,6 +2183,9 @@ void put_value(property_tree::ptree& pt, const value_t& value)
     break;
   case value_t::BALANCE:
     put_balance(pt.add("balance", ""), value.as_balance());
+    break;
+  case value_t::COMMODITY:
+    put_commodity(pt.add("commodity", ""), value.as_commodity());
     break;
   case value_t::DATETIME:
     put_datetime(pt.add("datetime", ""), value.as_datetime());
