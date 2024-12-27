@@ -480,6 +480,8 @@ namespace {
       return object(val.as_amount());
     case value_t::BALANCE:      // a ledger::balance_t
       return object(val.as_balance());
+    case value_t::COMMODITY:    // a ledger::commodity_t
+      return object(val.as_commodity());
     case value_t::STRING:       // a string object
       return object(handle<>(borrowed(str_to_py_unicode(val.as_string()))));
     case value_t::MASK:         // a regular expression mask
