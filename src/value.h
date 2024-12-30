@@ -128,18 +128,18 @@ public:
      * The `type' member holds the value_t::type_t value representing
      * the type of the object stored.
      */
-    variant<bool,               // BOOLEAN
-            datetime_t,         // DATETIME
-            date_t,             // DATE
-            long,               // INTEGER
-            amount_t,           // AMOUNT
-            balance_t *,        // BALANCE
-            commodity_t *,      // COMMODITY
-            string,             // STRING
-            mask_t,             // MASK
-            sequence_t *,       // SEQUENCE
-            scope_t *,          // SCOPE
-            boost::any          // ANY
+    variant<bool,                // BOOLEAN
+            datetime_t,          // DATETIME
+            date_t,              // DATE
+            long,                // INTEGER
+            amount_t,            // AMOUNT
+            balance_t *,         // BALANCE
+            commodity_t const *, // COMMODITY
+            string,              // STRING
+            mask_t,              // MASK
+            sequence_t *,        // SEQUENCE
+            scope_t *,           // SCOPE
+            boost::any           // ANY
             > data;
 
     type_t type;
@@ -663,7 +663,7 @@ public:
   }
   const commodity_t& as_commodity() const {
     VERIFY(is_commodity());
-    return *boost::get<commodity_t *>(storage->data);
+    return *boost::get<commodity_t const *>(storage->data);
   }
   void set_commodity(const commodity_t& val);
 
