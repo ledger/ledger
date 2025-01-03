@@ -4,6 +4,8 @@
 
 #include <system.hh>
 
+#include "commodity.h"
+#include "pool.h"
 #include "value.h"
 
 #if defined(_WIN32) || defined(__CYGWIN__)
@@ -55,6 +57,8 @@ BOOST_AUTO_TEST_CASE(testConstructors)
   value_t v13("2 CAD");
   value_t v14("comment", true);
   value_t v15(string("tag"), true);
+  value_t v16(amount_t("$1").commodity());
+  value_t v17(v16);
 
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
@@ -71,6 +75,8 @@ BOOST_AUTO_TEST_CASE(testConstructors)
   BOOST_CHECK(v13.valid());
   BOOST_CHECK(v14.valid());
   BOOST_CHECK(v15.valid());
+  BOOST_CHECK(v16.valid());
+  BOOST_CHECK(v17.valid());
 }
 
 BOOST_AUTO_TEST_CASE(testAssignment)
@@ -91,6 +97,7 @@ BOOST_AUTO_TEST_CASE(testAssignment)
   value_t v13 = value_t("2 CAD");
   value_t v14 = value_t("comment", true);
   value_t v15 = value_t(string("tag"), true);
+  value_t v16 = value_t(amount_t("$1").commodity());
 
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
@@ -107,6 +114,7 @@ BOOST_AUTO_TEST_CASE(testAssignment)
   BOOST_CHECK(v13.valid());
   BOOST_CHECK(v14.valid());
   BOOST_CHECK(v15.valid());
+  BOOST_CHECK(v16.valid());
 }
 
 BOOST_AUTO_TEST_CASE(testEquality)
@@ -132,6 +140,10 @@ BOOST_AUTO_TEST_CASE(testEquality)
   value_t v15(string("comment"), true);
   value_t v16;
 
+  auto& usd = amount_t("$1").commodity();
+  usd.pool().alias("USD", usd);
+  value_t v17(usd);
+
   BOOST_CHECK_EQUAL(v1, value_t());
   BOOST_CHECK_EQUAL(v2, value_t(true));
   BOOST_CHECK_EQUAL(v3, value_t(boost::posix_time::ptime_from_tm(localtime)));
@@ -151,8 +163,25 @@ BOOST_AUTO_TEST_CASE(testEquality)
   BOOST_CHECK(v14 == v15);
   BOOST_CHECK(v10 == value_t(mask_t("regex")));
   BOOST_CHECK(v11 == value_t(s1));
+  BOOST_CHECK(v17 == value_t(amount_t("$2").commodity()));
+  BOOST_CHECK(v17 == value_t(amount_t("USD2").commodity()));
+  BOOST_CHECK(value_t(amount_t("$2").commodity()) == v17);
+  BOOST_CHECK(v17 != value_t(amount_t("EUR1").commodity()));
+  BOOST_CHECK(value_t(amount_t("EUR1").commodity()) != v17);
+  BOOST_CHECK(v17 == amount_t("$2").commodity());
+  BOOST_CHECK(v17 == amount_t("USD2").commodity());
+  BOOST_CHECK(amount_t("$2").commodity() == v17);
+  BOOST_CHECK(v17 != amount_t("EUR1").commodity());
+  BOOST_CHECK(amount_t("EUR1").commodity() != v17);
+  BOOST_CHECK(v17 == string_value("$"));
+  BOOST_CHECK(v17 == string_value("USD"));
+  BOOST_CHECK(string_value("$") == v17);
+  BOOST_CHECK(v17 != string_value("EUR"));
+  BOOST_CHECK(string_value("EUR") != v17);
 
   BOOST_CHECK_THROW(v8 == v10, value_error);
+  BOOST_CHECK_THROW(v17 == v8, value_error);
+  BOOST_CHECK_THROW(v8 == v17, value_error);
 
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
@@ -169,6 +198,7 @@ BOOST_AUTO_TEST_CASE(testEquality)
   BOOST_CHECK(v13.valid());
   BOOST_CHECK(v14.valid());
   BOOST_CHECK(v15.valid());
+  BOOST_CHECK(v17.valid());
   BOOST_CHECK(v19.valid());
   BOOST_CHECK(v20.valid());
 }
