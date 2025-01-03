@@ -861,8 +861,14 @@ bool value_t::is_equal_to(const value_t& val) const
     break;
 
   case STRING:
-    if (val.is_string())
+    switch (val.type()) {
+    case COMMODITY:
+      return val.is_equal_to(*this);
+    case STRING:
       return as_string() == val.as_string();
+    default:
+      break;
+    }
     break;
 
   case MASK:
