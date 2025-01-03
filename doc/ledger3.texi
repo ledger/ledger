@@ -6037,7 +6037,7 @@ Use @file{FILE} for retrieving stored commodity prices.
 @item --price-exp @var{INT}
 @itemx --leeway @var{INT}
 @itemx -Z @var{INT}
-Set expected freshness of prices in @var{INT} minutes.
+Set expected freshness of prices in @var{INT} hours.
 
 @item --download
 @itemx -Q
@@ -6276,7 +6276,7 @@ Specify the location of the price entry data file.
 @item --price-exp @var{INT}
 @itemx --leeway @var{INT}
 @itemx -Z @var{INT}
-Set the expected freshness of price quotes, in @var{INT} minutes.  That
+Set the expected freshness of price quotes, in @var{INT} hours.  That
 is, if the last known quote for any commodity is older than this value,
 and if @option{--download} is being used, then the Internet will be
 consulted again for a newer price.  Otherwise, the old price is still
@@ -7663,7 +7663,7 @@ The format of the file can be changed by telling ledger to use the
 @item --price-exp @var{INT}
 @itemx --leeway @var{INT}
 @itemx -Z @var{INT}
-Set the expected freshness of price quotes, in @var{INT} minutes.  That
+Set the expected freshness of price quotes, in @var{INT} hours.  That
 is, if the last known quote for any commodity is older than this value,
 and if @option{--download} is being used, then the Internet will be
 consulted again for a newer price.  Otherwise, the old price is still
