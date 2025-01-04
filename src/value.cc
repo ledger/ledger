@@ -978,8 +978,14 @@ bool value_t::is_less_than(const value_t& val) const
     break;
 
   case STRING:
-    if (val.is_string())
+    switch (val.type()) {
+    case COMMODITY:
+      return as_string() < val.to_string();
+    case STRING:
       return as_string() < val.as_string();
+    default:
+      break;
+    }
     break;
 
   case SEQUENCE:
@@ -1104,8 +1110,14 @@ bool value_t::is_greater_than(const value_t& val) const
     break;
 
   case STRING:
-    if (val.is_string())
+    switch (val.type()) {
+    case COMMODITY:
+      return as_string() > val.to_string();
+    case STRING:
       return as_string() > val.as_string();
+    default:
+      break;
+    }
     break;
 
   case SEQUENCE:
