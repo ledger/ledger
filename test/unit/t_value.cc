@@ -375,10 +375,24 @@ BOOST_AUTO_TEST_CASE(testAddition)
   v20 += v20;
   BOOST_CHECK_EQUAL(v11, v20);
 
-  value_t v21(amount_t("$1").commodity());
-  BOOST_CHECK_THROW(v21 + value_t(amount_t("$2").commodity()), value_error);
-  BOOST_CHECK(v21 + string_value("A") == "$A");
-  BOOST_CHECK(string_value("A") + v21 == "A$");
+  auto& usd = amount_t("$1").commodity();
+  usd.pool().alias("USD", usd);
+  value_t v21(usd);
+  value_t v22(usd);
+  v22 += string_value("A");
+
+  BOOST_CHECK(v22.is_string() && v22 == string_value("$A"));
+  BOOST_CHECK(v21 + value_t(amount_t("$2").commodity()) == string_value("$$"));
+  BOOST_CHECK(v21 + value_t(amount_t("USD2").commodity()) == string_value("$$"));
+  BOOST_CHECK(v21 + amount_t("$2").commodity() == string_value("$$"));
+  BOOST_CHECK(v21 + amount_t("USD2").commodity() == string_value("$$"));
+  BOOST_CHECK(amount_t("$2").commodity() + v21 == string_value("$$"));
+  BOOST_CHECK(v21 + string_value("A") == string_value("$A"));
+  BOOST_CHECK(v21 + string_value("USD") == string_value("$USD"));
+  BOOST_CHECK(string_value("A") + v21 == string_value("A$"));
+  BOOST_CHECK(v21 + value_t(amount_t("USD1")) == string_value("$$1.00"));
+  BOOST_CHECK_THROW(value_t(amount_t("USD1")) + v21, value_error);
+  BOOST_CHECK(v21.is_commodity());
 
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
@@ -401,6 +415,7 @@ BOOST_AUTO_TEST_CASE(testAddition)
   BOOST_CHECK(v19.valid());
   BOOST_CHECK(v20.valid());
   BOOST_CHECK(v21.valid());
+  BOOST_CHECK(v22.valid());
 }
 
 BOOST_AUTO_TEST_CASE(testSubtraction)
