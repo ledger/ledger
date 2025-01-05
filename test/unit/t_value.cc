@@ -203,23 +203,56 @@ BOOST_AUTO_TEST_CASE(testEquality)
 
 BOOST_AUTO_TEST_CASE(testOrder)
 {
-  value_t v1(amount_t("USD1").commodity());
+  auto& usd = amount_t("USD1").commodity();
+  usd.pool().alias("VDollar", usd);
+  usd.pool().alias("TDollar", usd);
+  value_t v1(usd);
 
-  BOOST_CHECK_THROW(v1 < value_t(amount_t("USD2").commodity()), value_error);
+  BOOST_CHECK(v1 < value_t(amount_t("V2").commodity()));
+  BOOST_CHECK((v1 < value_t(amount_t("VDollar2").commodity())) == false);
+  BOOST_CHECK(v1 < amount_t("V2").commodity());
+  BOOST_CHECK((v1 < amount_t("VDollar2").commodity()) == false);
+  BOOST_CHECK(amount_t("T2").commodity() < v1);
   BOOST_CHECK(v1 < string_value("V"));
+  BOOST_CHECK((v1 < string_value("VDollar")) == false);
   BOOST_CHECK(string_value("T") < v1);
+  BOOST_CHECK_THROW(v1 < value_t(amount_t("USD1")), value_error);
+  BOOST_CHECK_THROW(value_t(amount_t("USD1")) < v1, value_error);
 
-  BOOST_CHECK_THROW(v1 <= value_t(amount_t("USD2").commodity()), value_error);
+  BOOST_CHECK(v1 <= value_t(amount_t("V2").commodity()));
+  BOOST_CHECK(v1 <= value_t(amount_t("VDollar2").commodity()));
+  BOOST_CHECK(v1 <= amount_t("V2").commodity());
+  BOOST_CHECK(v1 <= amount_t("VDollar2").commodity());
+  BOOST_CHECK(amount_t("T2").commodity() <= v1);
   BOOST_CHECK(v1 <= string_value("V"));
+  BOOST_CHECK(v1 <= string_value("VDollar"));
   BOOST_CHECK(string_value("T") <= v1);
+  BOOST_CHECK_THROW(v1 <= value_t(amount_t("USD1")), value_error);
+  BOOST_CHECK_THROW(value_t(amount_t("USD1")) <= v1, value_error);
 
-  BOOST_CHECK_THROW(v1 > value_t(amount_t("USD2").commodity()), value_error);
+  BOOST_CHECK(v1 > value_t(amount_t("T2").commodity()));
+  BOOST_CHECK((v1 > value_t(amount_t("TDollar2").commodity())) == false);
+  BOOST_CHECK(v1 > amount_t("T2").commodity());
+  BOOST_CHECK((v1 > amount_t("TDollar2").commodity()) == false);
+  BOOST_CHECK(amount_t("V2").commodity() > v1);
   BOOST_CHECK(v1 > string_value("T"));
+  BOOST_CHECK((v1 > string_value("TDollar")) == false);
   BOOST_CHECK(string_value("V") > v1);
+  BOOST_CHECK_THROW(v1 > value_t(amount_t("USD1")), value_error);
+  BOOST_CHECK_THROW(value_t(amount_t("USD1")) > v1, value_error);
 
-  BOOST_CHECK_THROW(v1 >= value_t(amount_t("USD2").commodity()), value_error);
+  BOOST_CHECK(v1 >= value_t(amount_t("T2").commodity()));
+  BOOST_CHECK(v1 >= value_t(amount_t("TDollar2").commodity()));
+  BOOST_CHECK(v1 >= amount_t("T2").commodity());
+  BOOST_CHECK(v1 >= amount_t("TDollar2").commodity());
+  BOOST_CHECK(amount_t("V2").commodity() >= v1);
   BOOST_CHECK(v1 >= string_value("T"));
+  BOOST_CHECK(v1 >= string_value("TDollar"));
   BOOST_CHECK(string_value("V") >= v1);
+  BOOST_CHECK_THROW(v1 >= value_t(amount_t("USD1")), value_error);
+  BOOST_CHECK_THROW(value_t(amount_t("USD1")) >= v1, value_error);
+
+  BOOST_CHECK(v1.valid());
 }
 
 BOOST_AUTO_TEST_CASE(testSequence)
@@ -342,6 +375,11 @@ BOOST_AUTO_TEST_CASE(testAddition)
   v20 += v20;
   BOOST_CHECK_EQUAL(v11, v20);
 
+  value_t v21(amount_t("$1").commodity());
+  BOOST_CHECK_THROW(v21 + value_t(amount_t("$2").commodity()), value_error);
+  BOOST_CHECK(v21 + string_value("A") == "$A");
+  BOOST_CHECK(string_value("A") + v21 == "A$");
+
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
   BOOST_CHECK(v3.valid());
@@ -362,6 +400,7 @@ BOOST_AUTO_TEST_CASE(testAddition)
   BOOST_CHECK(v18.valid());
   BOOST_CHECK(v19.valid());
   BOOST_CHECK(v20.valid());
+  BOOST_CHECK(v21.valid());
 }
 
 BOOST_AUTO_TEST_CASE(testSubtraction)

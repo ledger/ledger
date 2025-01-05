@@ -973,14 +973,28 @@ bool value_t::is_less_than(const value_t& val) const
     break;
 
   case COMMODITY:
-    if (val.is_string())
-      return to_string() < val.as_string();
+    switch (val.type()) {
+    case COMMODITY:
+      return to_string() < val.to_string();
+    case STRING: {
+      const auto* otherCommodity = as_commodity().pool().find(val.as_string());
+
+      if (otherCommodity) {
+        return to_string() < otherCommodity->symbol();
+      }
+      else {
+        return to_string() < val.as_string();
+      }
+    }
+    default:
+      break;
+    }
     break;
 
   case STRING:
     switch (val.type()) {
     case COMMODITY:
-      return as_string() < val.to_string();
+      return val.is_greater_than(*this);
     case STRING:
       return as_string() < val.as_string();
     default:
@@ -1105,14 +1119,28 @@ bool value_t::is_greater_than(const value_t& val) const
     break;
 
   case COMMODITY:
-    if (val.is_string())
-      return to_string() > val.as_string();
+    switch (val.type()) {
+    case COMMODITY:
+      return to_string() > val.to_string();
+    case STRING: {
+      const auto* otherCommodity = as_commodity().pool().find(val.as_string());
+
+      if (otherCommodity) {
+        return to_string() > otherCommodity->symbol();
+      }
+      else {
+        return to_string() > val.as_string();
+      }
+    }
+    default:
+      break;
+    }
     break;
 
   case STRING:
     switch (val.type()) {
     case COMMODITY:
-      return as_string() > val.to_string();
+      return val.is_less_than(*this);
     case STRING:
       return as_string() > val.as_string();
     default:
