@@ -77,11 +77,12 @@ class value_t
            equality_comparable<value_t, balance_t,
            additive<value_t, balance_t,
            multiplicative<value_t, balance_t,
-           equality_comparable<value_t, commodity_t,
+           totally_ordered<value_t, commodity_t,
+           addable<value_t, commodity_t,
            ordered_field_operators<value_t, amount_t,
            ordered_field_operators<value_t, double,
            ordered_field_operators<value_t, unsigned long,
-           ordered_field_operators<value_t, long> > > > > > > > >
+           ordered_field_operators<value_t, long> > > > > > > > > >
 {
 public:
   /**
