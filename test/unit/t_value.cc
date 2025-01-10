@@ -876,5 +876,15 @@ BOOST_AUTO_TEST_CASE(testRounding)
   BOOST_CHECK(v1.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testValuation)
+{
+  value_t v1(amount_t("$1").commodity());
+
+  BOOST_CHECK_THROW(v1.value(datetime_t(), amount_t("EUR1").commodity_ptr()), value_error);
+  BOOST_CHECK_THROW(v1.exchange_commodities("EUR"), value_error);
+
+  BOOST_CHECK(v1.valid());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
