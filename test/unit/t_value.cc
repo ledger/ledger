@@ -661,6 +661,9 @@ BOOST_AUTO_TEST_CASE(testDivision)
   v17 /= value_t("2");
   BOOST_CHECK_EQUAL(v17, value_t(balance_t("1 GBP")));
 
+  value_t v18(amount_t("$1").commodity());
+  BOOST_CHECK_THROW(v18 / value_t(amount_t("$2").commodity()), value_error);
+
   BOOST_CHECK_THROW(v10 /= v8, value_error);
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
@@ -679,6 +682,7 @@ BOOST_AUTO_TEST_CASE(testDivision)
   BOOST_CHECK(v15.valid());
   BOOST_CHECK(v16.valid());
   BOOST_CHECK(v17.valid());
+  BOOST_CHECK(v18.valid());
 }
 
 BOOST_AUTO_TEST_CASE(testType)
@@ -806,6 +810,10 @@ BOOST_AUTO_TEST_CASE(testNegation)
   value_t v13("$-1");
   value_t v14("comment", true);
   value_t v15(string("comment"), true);
+  const auto& usd = amount_t("$1").commodity();
+  value_t v16(usd);
+  value_t v17(usd);
+  value_t v18(*usd.pool().null_commodity);
 
   BOOST_CHECK_THROW(v1.negated(), value_error);
   BOOST_CHECK_EQUAL(v2.negated(), value_t(false));
@@ -817,6 +825,11 @@ BOOST_AUTO_TEST_CASE(testNegation)
   BOOST_CHECK_THROW(v10.negated(), value_error);
   BOOST_CHECK_EQUAL(-v12, v13);
   BOOST_CHECK_THROW(-v14, value_error);
+  BOOST_CHECK_THROW(-v16, value_error);
+  v17.in_place_not();
+  v18.in_place_not();
+  BOOST_CHECK(v17.is_boolean() && v17 == value_t(false));
+  BOOST_CHECK(v18.is_boolean() && v18 == value_t(true));
 
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
@@ -833,6 +846,9 @@ BOOST_AUTO_TEST_CASE(testNegation)
   BOOST_CHECK(v13.valid());
   BOOST_CHECK(v14.valid());
   BOOST_CHECK(v15.valid());
+  BOOST_CHECK(v16.valid());
+  BOOST_CHECK(v17.valid());
+  BOOST_CHECK(v18.valid());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
