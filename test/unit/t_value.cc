@@ -851,5 +851,30 @@ BOOST_AUTO_TEST_CASE(testNegation)
   BOOST_CHECK(v18.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testAbsoluteValue)
+{
+  value_t v1(amount_t("$1").commodity());
+
+  BOOST_CHECK_THROW(v1.abs(), value_error);
+
+  BOOST_CHECK(v1.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testRounding)
+{
+  value_t v1(amount_t("$1").commodity());
+
+  BOOST_CHECK_THROW(v1.rounded(), value_error);
+  BOOST_CHECK(v1.roundto(2) == v1);
+  BOOST_CHECK_THROW(v1.truncated(), value_error);
+  BOOST_CHECK_THROW(v1.floored(), value_error);
+  BOOST_CHECK_THROW(v1.ceilinged(), value_error);
+  BOOST_CHECK_THROW(v1.unrounded(), value_error);
+  BOOST_CHECK(v1.reduced() == v1);
+  BOOST_CHECK(v1.unreduced() == v1);
+
+  BOOST_CHECK(v1.valid());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
