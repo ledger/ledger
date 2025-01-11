@@ -703,6 +703,7 @@ BOOST_AUTO_TEST_CASE(testType)
   value_t v13("2 CAD");
   value_t v14("comment", true);
   value_t v15(string("tag"), true);
+  value_t v16(amount_t("$1").commodity());
 
   BOOST_CHECK(v1.is_null());
   BOOST_CHECK(v2.is_boolean());
@@ -719,6 +720,11 @@ BOOST_AUTO_TEST_CASE(testType)
   BOOST_CHECK(v13.is_amount());
   BOOST_CHECK(v14.is_string());
   BOOST_CHECK(v15.is_string());
+  BOOST_CHECK(v16.type() == value_t::type_t::COMMODITY && v16.is_commodity());
+  BOOST_CHECK(!(
+    v16.is_null() || v16.is_boolean() || v16.is_datetime() || v16.is_date() || v16.is_long() ||
+    v16.is_amount() || v16.is_balance() || v16.is_string() || v16.is_mask() || v16.is_sequence() ||
+    v16.is_scope() || v16.is_any()));
 
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
@@ -735,6 +741,7 @@ BOOST_AUTO_TEST_CASE(testType)
   BOOST_CHECK(v13.valid());
   BOOST_CHECK(v14.valid());
   BOOST_CHECK(v15.valid());
+  BOOST_CHECK(v16.valid());
 }
 
 BOOST_AUTO_TEST_CASE(testForZero)
@@ -755,6 +762,9 @@ BOOST_AUTO_TEST_CASE(testForZero)
   value_t v13("2 CAD");
   value_t v14("comment", true);
   value_t v15(string(""), true);
+  const auto& usd = amount_t("$1").commodity();
+  value_t v16(usd);
+  value_t v17(*usd.pool().null_commodity);
 
   BOOST_CHECK(v1.is_null());
   BOOST_CHECK(v2.is_nonzero());
@@ -771,6 +781,10 @@ BOOST_AUTO_TEST_CASE(testForZero)
   BOOST_CHECK(v13.is_nonzero());
   BOOST_CHECK(v14.is_nonzero());
   BOOST_CHECK(v15.is_zero());
+  BOOST_CHECK(static_cast<bool>(v16) && !v17);
+  BOOST_CHECK(v16.is_nonzero() && v17.is_zero());
+  BOOST_CHECK(!v16.is_realzero() && v17.is_realzero());
+  BOOST_CHECK(!v16.is_null() && !v17.is_null());
 
   v11.push_back(v6);
   BOOST_CHECK(v11.is_nonzero());
@@ -790,6 +804,8 @@ BOOST_AUTO_TEST_CASE(testForZero)
   BOOST_CHECK(v13.valid());
   BOOST_CHECK(v14.valid());
   BOOST_CHECK(v15.valid());
+  BOOST_CHECK(v16.valid());
+  BOOST_CHECK(v17.valid());
 }
 
 BOOST_AUTO_TEST_CASE(testNegation)
@@ -884,6 +900,10 @@ BOOST_AUTO_TEST_CASE(testValuation)
   BOOST_CHECK_THROW(v1.exchange_commodities("EUR"), value_error);
 
   BOOST_CHECK(v1.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testConversion)
+{
 }
 
 BOOST_AUTO_TEST_SUITE_END()
