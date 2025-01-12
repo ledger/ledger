@@ -904,6 +904,27 @@ BOOST_AUTO_TEST_CASE(testValuation)
 
 BOOST_AUTO_TEST_CASE(testConversion)
 {
+  auto& usd = amount_t("$1").commodity();
+  usd.pool().alias("USD", usd);
+  value_t v1(usd);
+
+  BOOST_CHECK(v1.as_commodity() == usd && v1.to_commodity() == usd);
+  BOOST_CHECK(value_t(amount_t("USD1").commodity()).to_commodity() == usd);
+  BOOST_CHECK(v1.to_string() == "$");
+  BOOST_CHECK(value_t(amount_t("USD1").commodity()).to_string() == "$");
+  BOOST_CHECK(string_value("$").to_commodity() == usd);
+  BOOST_CHECK(string_value("USD").to_commodity() == usd);
+  BOOST_CHECK_THROW(string_value("A").to_commodity(), value_error);
+
+  BOOST_CHECK(v1.casted(value_t::type_t::COMMODITY) == v1);
+  BOOST_CHECK(value_t(amount_t("USD1").commodity()).casted(value_t::type_t::COMMODITY) == v1);
+  BOOST_CHECK(v1.casted(value_t::type_t::STRING) == string_value("$"));
+  BOOST_CHECK(value_t(amount_t("USD1").commodity()).casted(value_t::type_t::STRING) == string_value("$"));
+  BOOST_CHECK(string_value("$").casted(value_t::type_t::COMMODITY) == v1);
+  BOOST_CHECK(string_value("USD").casted(value_t::type_t::COMMODITY) == v1);
+  BOOST_CHECK_THROW(string_value("A").casted(value_t::type_t::COMMODITY), value_error);
+
+  BOOST_CHECK(v1.valid());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
