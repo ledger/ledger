@@ -924,6 +924,60 @@ BOOST_AUTO_TEST_CASE(testConversion)
   BOOST_CHECK(string_value("USD").casted(value_t::type_t::COMMODITY) == v1);
   BOOST_CHECK_THROW(string_value("A").casted(value_t::type_t::COMMODITY), value_error);
 
+  BOOST_CHECK(v1.simplified() == v1);
+
+  BOOST_CHECK_THROW(v1.number(), value_error);
+
+  BOOST_CHECK(v1.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testAnnotation)
+{
+  value_t v1(amount_t("$1").commodity());
+
+  BOOST_CHECK_THROW(v1.annotate(annotation_t{}), value_error);
+  BOOST_CHECK_THROW(v1.has_annotation(), value_error);
+  BOOST_CHECK_THROW(v1.annotation(), value_error);
+  BOOST_CHECK(v1.strip_annotations(keep_details_t{}) == v1);
+
+  BOOST_CHECK(v1.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testLogging)
+{
+  auto& usd = amount_t("$1").commodity();
+  usd.pool().alias("USD", usd);
+  value_t v1(usd);
+
+  BOOST_CHECK(v1.label() == "a commodity");
+
+  std::ostringstream log{};
+  v1.print(log);
+  BOOST_CHECK(log.str() == "$");
+  log.str("");
+  value_t(amount_t("USD1").commodity()).print(log);
+  BOOST_CHECK(log.str() == "$");
+  log.str("");
+
+  v1.dump(log);
+  BOOST_CHECK(log.str() == "$");
+  log.str("");
+  value_t(amount_t("USD1").commodity()).dump(log);
+  BOOST_CHECK(log.str() == "$");
+  log.str("");
+
+  log << v1;
+  BOOST_CHECK(log.str() == "$");
+  log.str("");
+  log << value_t(amount_t("USD1").commodity());
+  BOOST_CHECK(log.str() == "$");
+  log.str("");
+
+  BOOST_CHECK(value_context(v1) ==
+    "                                      $");
+  BOOST_CHECK(value_context(value_t(amount_t("USD1").commodity())) ==
+    "                                      $");
+
   BOOST_CHECK(v1.valid());
 }
 
