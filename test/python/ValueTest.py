@@ -42,6 +42,66 @@ class ValueTestCase(unittest.TestCase):
 
         self.assertTrue(v1.valid())
 
+    def testOrder(self):
+        commodity = Amount("B1").commodity
+        commodity.pool().alias("Cbis", commodity)
+        commodity.pool().alias("Abis", commodity)
+        v1 = Value(commodity)
+
+        self.assertTrue(v1 < Value(Amount("C2").commodity))
+        self.assertFalse(v1 < Value(Amount("Cbis2").commodity))
+        self.assertTrue(v1 < Amount("C2").commodity)
+        self.assertFalse(v1 < Amount("Cbis2").commodity)
+        self.assertTrue(Amount("A2").commodity < v1)
+        self.assertTrue(v1 < string_value("C"))
+        self.assertFalse(v1 < string_value("Cbis"))
+        self.assertTrue(string_value("A") < v1)
+        with self.assertRaises(ArithmeticError):
+            v1 < Value(Amount("C1"))
+        with self.assertRaises(ArithmeticError):
+            Value(Amount("A1")) < v1
+
+        self.assertTrue(v1 <= Value(Amount("C2").commodity))
+        self.assertTrue(v1 <= Value(Amount("Cbis2").commodity))
+        self.assertTrue(v1 <= Amount("C2").commodity)
+        self.assertTrue(v1 <= Amount("Cbis2").commodity)
+        self.assertTrue(Amount("A2").commodity <= v1)
+        self.assertTrue(v1 <= string_value("C"))
+        self.assertTrue(v1 <= string_value("Cbis"))
+        self.assertTrue(string_value("A") <= v1)
+        with self.assertRaises(ArithmeticError):
+            v1 <= Value(Amount("C1"))
+        with self.assertRaises(ArithmeticError):
+            Value(Amount("A1")) <= v1
+
+        self.assertTrue(v1 > Value(Amount("A2").commodity))
+        self.assertFalse(v1 > Value(Amount("Abis2").commodity))
+        self.assertTrue(v1 > Amount("A2").commodity)
+        self.assertFalse(v1 > Amount("Abis2").commodity)
+        self.assertTrue(Amount("C2").commodity > v1)
+        self.assertTrue(v1 > string_value("A"))
+        self.assertFalse(v1 > string_value("Abis"))
+        self.assertTrue(string_value("C") > v1)
+        with self.assertRaises(ArithmeticError):
+            v1 > Value(Amount("A1"))
+        with self.assertRaises(ArithmeticError):
+            Value(Amount("C1")) > v1
+
+        self.assertTrue(v1 >= Value(Amount("A2").commodity))
+        self.assertTrue(v1 >= Value(Amount("Abis2").commodity))
+        self.assertTrue(v1 >= Amount("A2").commodity)
+        self.assertTrue(v1 >= Amount("Abis2").commodity)
+        self.assertTrue(Amount("C2").commodity >= v1)
+        self.assertTrue(v1 >= string_value("A"))
+        self.assertTrue(v1 >= string_value("Abis"))
+        self.assertTrue(string_value("C") >= v1)
+        with self.assertRaises(ArithmeticError):
+            v1 >= Value(Amount("A1"))
+        with self.assertRaises(ArithmeticError):
+            Value(Amount("C1")) >= v1
+
+        self.assertTrue(v1.valid());
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ValueTestCase)
 
