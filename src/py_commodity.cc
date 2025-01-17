@@ -110,6 +110,13 @@ namespace {
     return pool.exchange(amount, cost, is_per_unit, add_prices, moment, tag);
   }
 
+  commodity_t * py_alias_2(commodity_pool_t& pool,
+                           const string&     name,
+                           commodity_t&      referent)
+  {
+    return pool.alias(name, referent);
+  }
+
   commodity_t * py_pool_getitem(commodity_pool_t& pool, const string& symbol)
   {
     commodity_pool_t::commodities_map::iterator i =
@@ -287,6 +294,8 @@ void export_commodity()
     .def("exchange", py_exchange_2, with_custodian_and_ward<1, 2>())
     .def("exchange", py_exchange_3, with_custodian_and_ward<1, 2>())
     .def("exchange", py_exchange_7)
+
+    .def("alias", py_alias_2, return_internal_reference<>())
 
     .def("parse_price_directive", &commodity_pool_t::parse_price_directive)
     .def("parse_price_expression", &commodity_pool_t::parse_price_expression,
