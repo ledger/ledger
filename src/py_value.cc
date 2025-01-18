@@ -215,6 +215,7 @@ void export_value()
     .def(self += long())
     .def(self += other<amount_t>())
     .def(self += other<balance_t>())
+    .def(self += other<commodity_t>())
 
     .def(self   + self)
     .def(self   + long())
@@ -222,6 +223,8 @@ void export_value()
     .def(self + other<amount_t>())
     .def(other<amount_t>() + self)
     .def(self + other<balance_t>())
+    .def(self + other<commodity_t>())
+    .def(other<commodity_t>() + self)
 
     .def(self -= self)
     .def(self -= long())
@@ -313,6 +316,8 @@ void export_value()
 
     .def("is_balance", &value_t::is_balance)
     .def("is_balance", &value_t::is_balance)
+
+    .def("is_commodity", &value_t::is_commodity)
 
     .def("is_string", &value_t::is_string)
     .def("set_string", py_set_string)

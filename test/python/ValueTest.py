@@ -100,7 +100,59 @@ class ValueTestCase(unittest.TestCase):
         with self.assertRaises(ArithmeticError):
             Value(Amount("C1")) >= v1
 
-        self.assertTrue(v1.valid());
+        self.assertTrue(v1.valid())
+
+    def testAddition(self):
+        v1 = Value(self.usd)
+        v2 = Value(self.usd)
+        v2 += string_value("A")
+
+        self.assertTrue(v2.is_string() and v2 == string_value("$A"))
+        self.assertTrue(v1 + Value(Amount("$2").commodity) == string_value("$$"))
+        self.assertTrue(v1 + Value(Amount("USD2").commodity) == string_value("$$"))
+        self.assertTrue(v1 + Amount("$2").commodity == string_value("$$"))
+        self.assertTrue(v1 + Amount("USD2").commodity == string_value("$$"))
+        self.assertTrue(Amount("$2").commodity + v1 == string_value("$$"))
+        self.assertTrue(v1 + string_value("A") == string_value("$A"))
+        self.assertTrue(v1 + string_value("USD") == string_value("$USD"))
+        self.assertTrue(string_value("A") + v1 == string_value("A$"))
+        self.assertTrue(v1 + Value(Amount("USD1")) == string_value("$$1"))
+        with self.assertRaises(ArithmeticError):
+            Value(Amount("USD1")) + v1
+        self.assertTrue(v1.is_commodity())
+
+        self.assertTrue(v1.valid())
+        self.assertTrue(v2.valid())
+
+    def testSubtraction(self):
+        v1 = Value(self.usd)
+
+        with self.assertRaises(ArithmeticError):
+            v1 - Value(Amount("$2").commodity)
+
+        self.assertTrue(v1.valid())
+
+    def testMultiplication(self):
+        v1 = Value(self.usd)
+        v2 = Value(self.usd)
+        two = Value()
+        two.set_long(2)
+        v2 *= two
+
+        self.assertTrue(v2.is_string() and v2 == string_value("$$"))
+        with self.assertRaises(ArithmeticError):
+            v1 * Value(Amount("$2").commodity)
+        self.assertTrue(v1 * two == string_value("$$"))
+        self.assertTrue(Value(Amount("USD1").commodity) * two == string_value("$$"))
+        with self.assertRaises(ArithmeticError):
+            two * v1
+        self.assertTrue(v1 * Value(Amount("$2.5")) == string_value("$$"))
+        with self.assertRaises(ArithmeticError):
+            Value(Amount("$2.5")) * v1
+        self.assertTrue(v1.is_commodity())
+
+        self.assertTrue(v1.valid())
+        self.assertTrue(v2.valid())
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ValueTestCase)
