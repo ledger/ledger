@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from datetime import datetime
 import unittest
 
 from ledger import *
@@ -153,6 +154,118 @@ class ValueTestCase(unittest.TestCase):
 
         self.assertTrue(v1.valid())
         self.assertTrue(v2.valid())
+
+    def testDivision(self):
+        v1 = Value(self.usd)
+
+        with self.assertRaises(ArithmeticError):
+            v1 / Value(Amount("$2").commodity)
+
+        self.assertTrue(v1.valid())
+
+    def testType(self):
+        v1 = Value(self.usd)
+
+        self.assertTrue(v1.type() == ValueType.Commodity and v1.is_commodity())
+        self.assertFalse(
+            v1.is_null() or v1.is_boolean() or v1.is_datetime() or v1.is_date() or v1.is_long() or
+            v1.is_amount() or v1.is_balance() or v1.is_string() or v1.is_mask() or
+            v1.is_sequence() or v1.is_scope())
+
+        self.assertTrue(v1.valid())
+
+    def testForZero(self):
+        v1 = Value(self.usd)
+        v2 = Value(self.usd.pool().null_commodity)
+
+        self.assertTrue(bool(v1) and not v2)
+        self.assertTrue(v1.is_nonzero() and v2.is_zero())
+        self.assertTrue(not v1.is_realzero() and v2.is_realzero())
+        self.assertTrue(not v1.is_null() and not v2.is_null())
+
+        self.assertTrue(v1.valid())
+        self.assertTrue(v2.valid())
+
+    def testNegation(self):
+        v1 = Value(self.usd)
+        v2 = Value(self.usd)
+        v3 = Value(self.usd.pool().null_commodity)
+
+        with self.assertRaises(ArithmeticError):
+            -v1
+        v2.in_place_not()
+        v3.in_place_not()
+        self.assertTrue(v2.is_boolean() and v2 == Value(False))
+        self.assertTrue(v3.is_boolean() and v3 == Value(True))
+
+        self.assertTrue(v1.valid())
+        self.assertTrue(v2.valid())
+        self.assertTrue(v3.valid())
+
+    def testAbsoluteValue(self):
+        v1 = Value(self.usd)
+
+        with self.assertRaises(ArithmeticError):
+            v1.abs()
+
+        self.assertTrue(v1.valid())
+
+    def testRounding(self):
+        v1 = Value(self.usd)
+
+        with self.assertRaises(ArithmeticError):
+            v1.rounded()
+        self.assertTrue(v1.__round__(2) == v1);
+        with self.assertRaises(ArithmeticError):
+            v1.truncated()
+        with self.assertRaises(ArithmeticError):
+            v1.floored()
+        with self.assertRaises(ArithmeticError):
+            v1.ceilinged()
+        with self.assertRaises(ArithmeticError):
+            v1.unrounded()
+        self.assertTrue(v1.reduced() == v1);
+        self.assertTrue(v1.unreduced() == v1);
+
+        self.assertTrue(v1.valid())
+
+    def testValuation(self):
+        v1 = Value(self.usd)
+
+        with self.assertRaises(ArithmeticError):
+            v1.value(Amount("EUR1").commodity, datetime(2025, 1, 1))
+        with self.assertRaises(ArithmeticError):
+            v1.exchange_commodities("EUR")
+
+        self.assertTrue(v1.valid())
+
+    def testConversion(self):
+        v1 = Value(self.usd)
+
+        self.assertTrue(v1.to_commodity() == self.usd)
+        self.assertTrue(Value(Amount("USD1").commodity).to_commodity() == self.usd)
+        self.assertTrue(v1.to_string() == "$")
+        self.assertTrue(Value(Amount("USD1").commodity).to_string() == "$")
+        self.assertTrue(string_value("$").to_commodity() == self.usd)
+        self.assertTrue(string_value("USD").to_commodity() == self.usd)
+        with self.assertRaises(ArithmeticError):
+            string_value("Z").to_commodity()
+
+        self.assertTrue(v1.casted(ValueType.Commodity) == v1)
+        self.assertTrue(Value(Amount("USD1").commodity).casted(ValueType.Commodity) == v1)
+        self.assertTrue(v1.casted(ValueType.String) == string_value("$"))
+        self.assertTrue(Value(Amount("USD1").commodity).casted(ValueType.String) == string_value("$"))
+        self.assertTrue(string_value("$").casted(ValueType.Commodity) == v1)
+        self.assertTrue(string_value("USD").casted(ValueType.Commodity) == v1)
+        with self.assertRaises(ArithmeticError):
+            string_value("Z").casted(ValueType.Commodity)
+
+        self.assertTrue(v1.simplified() == v1)
+
+        with self.assertRaises(ArithmeticError):
+            v1.number()
+
+        self.assertTrue(v1.valid())
 
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(ValueTestCase)
