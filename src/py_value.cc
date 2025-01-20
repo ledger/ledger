@@ -89,6 +89,13 @@ namespace {
     return buf.str();
   }
 
+  string py_label_0(const value_t& value) {
+    return value.label();
+  }
+  string py_label_1(const value_t& value, const value_t::type_t& type) {
+    return value.label(type);
+  }
+
   void py_set_string(value_t& value, const string& str) {
     return value.set_string(str);
   }
@@ -369,7 +376,8 @@ void export_value()
     .def("pop_back", &value_t::pop_back)
     .def("size", &value_t::size)
 
-    .def("label", &value_t::label)
+    .def("label", py_label_0)
+    .def("label", py_label_1)
 
     .def("valid", &value_t::valid)
 
