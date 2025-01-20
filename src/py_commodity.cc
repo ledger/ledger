@@ -393,7 +393,7 @@ void export_commodity()
     .def("valid", &commodity_t::valid)
     ;
 
-  class_< annotation_t > ("Annotation", no_init)
+  class_< annotation_t > ("Annotation")
 #if 1
     .add_property("flags", &supports_flags<>::flags,
                   &supports_flags<>::set_flags)

@@ -224,8 +224,8 @@ class ValueTestCase(unittest.TestCase):
             v1.ceilinged()
         with self.assertRaises(ArithmeticError):
             v1.unrounded()
-        self.assertTrue(v1.reduced() == v1);
-        self.assertTrue(v1.unreduced() == v1);
+        self.assertTrue(v1.reduced() == v1)
+        self.assertTrue(v1.unreduced() == v1)
 
         self.assertTrue(v1.valid())
 
@@ -264,6 +264,33 @@ class ValueTestCase(unittest.TestCase):
 
         with self.assertRaises(ArithmeticError):
             v1.number()
+
+        self.assertTrue(v1.valid())
+
+    def testAnnotation(self):
+        v1 = Value(self.usd)
+
+        with self.assertRaises(ArithmeticError):
+            v1.annotate(Annotation())
+        with self.assertRaises(ArithmeticError):
+            v1.has_annotation()
+        with self.assertRaises(ArithmeticError):
+            v1.annotation()
+        self.assertTrue(v1.strip_annotations(KeepDetails()) == v1)
+
+        self.assertTrue(v1.valid())
+
+    def testLogging(self):
+        v1 = Value(self.usd)
+
+        self.assertTrue(v1.label() == "a commodity")
+        self.assertTrue(v1.label(ValueType.Commodity) == "a commodity")
+        self.assertTrue(v1.__repr__() == "$")
+        self.assertTrue(Value(Amount("USD1").commodity).__repr__() == "$")
+        self.assertTrue(value_context(v1) ==
+            "                                      $")
+        self.assertTrue(value_context(Value(Amount("USD1").commodity)) ==
+            "                                      $")
 
         self.assertTrue(v1.valid())
 
