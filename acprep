@@ -535,157 +535,46 @@ class PrepareBuild(CommandLineApp):
                         'sudo', 'apt-get', 'install',
                         'build-essential',
                     ]
-                    if release == 'noble':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python3-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'jammy':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python3-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'focal':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'bionic':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'trusty':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'eoan':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'xenial':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'saucy':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'sloccount'
-                        ])
-                    elif release == 'precise':
-                        packages.extend([
-                            'libtool',
-                            'cmake',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
+                    release_list = [
+                        "noble",   # 24.04
+                        "jammy",   # 22.04
+                        "focal",   # 20.04
+                        "eoan",    # 19.10
+                        "bionic",  # 18.04
+                        "xenial",  # 16.04
+                        "trusty",  # 14.04
+                        "saucy",   # 13.10
+                        "precise", # 12.04
+                    ]
+                    if release in release_list:
+                        # Common Ubuntu packages
+                        packages.extend(
+                            [
+                                "cmake",
+                                "libgmp-dev" "libmpfr-dev",
+                                "gettext",
+                                "zlib1g-dev",
+                                "libbz2-dev",
+                                "libedit-dev",
+                                "texinfo",
+                                "lcov",
+                                "sloccount",
+                                (
+                                    "python3-dev"
+                                    if release in ["noble", "jammy"]
+                                    else "python-dev"
+                                ),
+                            ]
+                        )
+                        # doxygen & ninja build
+                        if release != 'precise':
+                            packages.extend(['doxygen','ninja-build'])
+                        # libutfcpp-dev
+                        if release != 'saucy':
+                            packages.extend(['libutfcpp-dev'])
+                        # Precise (Ubuntu 12.04) need GNU libtool
+                        if release == 'precise':
+                            packages.extend(['libtool'])
                     else:
                         self.log.info('I do not recognize your version of Ubuntu!')
                         packages = None
