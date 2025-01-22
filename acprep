@@ -551,7 +551,8 @@ class PrepareBuild(CommandLineApp):
                         packages.extend(
                             [
                                 "cmake",
-                                "libgmp-dev" "libmpfr-dev",
+                                "libgmp-dev",
+                                "libmpfr-dev",
                                 "gettext",
                                 "zlib1g-dev",
                                 "libbz2-dev",
