@@ -1,0 +1,10 @@
+i 2025-01-21 08:00:00 dev:abc  payee
+o 2025-01-21 08:45:00
+i 2025-01-21 12:00:00 dev:xyz  payee
+o 2025-01-21 12:30:00
+
+test bal --percent
+             100.00%  dev
+              60.00%    abc
+              40.00%    xyz
+end test
