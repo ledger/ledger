@@ -268,14 +268,6 @@ void value_t::in_place_simplify()
     in_place_cast(AMOUNT);
     DEBUG_("as an amount it looks like: " << *this);
   }
-
-#if REDUCE_TO_INTEGER        // this is off by default
-  if (is_amount() && ! as_amount().has_commodity() &&
-      as_amount().fits_in_long()) {
-    DEBUG_("Reducing amount to integer");
-    in_place_cast(INTEGER);
-  }
-#endif
 }
 
 value_t value_t::number() const
