@@ -25,12 +25,17 @@ and easy to use.
 I know, you just want to build and play.  If you have all the [dependencies](#dependencies)
 installed, then simply do this:
 
-    $ git clone git@github.com:ledger/ledger.git
-    $ cd ledger && ./acprep update  # Update to the latest, configure, make
+```
+git clone git@github.com:ledger/ledger.git
+cd ledger && ./acprep update  # Update to the latest, configure, make
+```
+> On MacOS, you may need to open acprep and change the top line to have `python3` instead of `python`
 
 Now try your first ledger command:
 
-    $ ./ledger -f test/input/sample.dat reg
+```
+./ledger -f test/input/sample.dat reg
+```
 
 For help on keeping your journal have a look at the [documentation], the [wiki],
 and the [Resources](#resources) section at the end of this file.
@@ -42,7 +47,9 @@ An Emacs mode for Ledger files can be found in the
 
 If you have Docker installed on your computer or server, you can use a [Docker version](https://hub.docker.com/r/dcycle/ledger/) of this software, without installing any further dependencies:
 
-    $ docker run --rm -v "$PWD"/test/input:/data dcycle/ledger:1 -f /data/sample.dat reg
+```
+docker run --rm -v "$PWD"/test/input:/data dcycle/ledger:1 -f /data/sample.dat reg
+```
 
 ## Dependencies
 
@@ -50,8 +57,9 @@ If you wish to proceed in this venture, you'll need a few dependencies.
 Note that some features, e.g. `--import` require building Ledger with Python support.
 The easiest way to get them for your platform is to run this handy Python script:
 
-    $ ./acprep dependencies
-
+```
+./acprep dependencies
+```
 
 If that doesn't completely work, here are the dependencies for building the
 current `master` branch:
@@ -83,19 +91,23 @@ easily on macOS.
 
 If you use Homebrew, to install the dependencies you would run:
 
-    $ brew install cmake boost boost-python3 gmp mpfr
+```
+brew install cmake boost boost-python3 gmp mpfr
+```
 
 #### 2. MacPorts
 
 If you build stuff using MacPorts on macOS, as I do, here is what you would
 run:
 
-    $ sudo port install -f cmake python37 \
+```
+sudo port install -f cmake python37 \
          libiconv zlib gmp \
          mpfr ncurses ncursesw \
          gettext libedit boost-jam \
          boost +st+python37+icu texlive doxygen graphviz \
          texinfo lcov sloccount
+```
 
 ### Conda
 
@@ -104,19 +116,22 @@ platforms (for example, `linux-64`), which can be used with [Conda] or [mamba].
 
 With Conda you could run:
 
-    $ conda install -c conda-forge python=3 cmake boost gmp mpfr \
+```
+conda install -c conda-forge python=3 cmake boost gmp mpfr \
          gettext libedit texinfo doxygen graphviz
-
+```
 ### Ubuntu
 
 If you're going to build on Ubuntu, `sudo apt-get install ...` the
 following packages (current as of Ubuntu 18.04):
 
-    $ sudo apt-get install build-essential cmake doxygen \
-         libboost-system-dev libboost-dev python3-dev gettext git \
-         libboost-date-time-dev libboost-filesystem-dev \
-         libboost-iostreams-dev libboost-python-dev libboost-regex-dev \
-         libboost-test-dev libedit-dev libgmp3-dev libmpfr-dev texinfo tzdata
+```
+sudo apt-get install build-essential cmake doxygen \
+    libboost-system-dev libboost-dev python3-dev gettext git \
+    libboost-date-time-dev libboost-filesystem-dev \
+    libboost-iostreams-dev libboost-python-dev libboost-regex-dev \
+    libboost-test-dev libedit-dev libgmp3-dev libmpfr-dev texinfo tzdata
+```
 
 ### Debian
 
@@ -124,32 +139,40 @@ Debian 10 (bullseye), Debian 11 ("bullseye"), Debian testing and Debian
 unstable (sid) contain all components needed to build ledger.  You can
 install all required build dependencies using the following command:
 
-    $ sudo apt-get install build-essential cmake autopoint texinfo python3-dev \
-         zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
-         libboost-date-time-dev libboost-filesystem-dev \
-         libboost-graph-dev libboost-iostreams-dev \
-         libboost-python-dev libboost-regex-dev libboost-test-dev
+```
+sudo apt-get install build-essential cmake autopoint texinfo python3-dev \
+    zlib1g-dev libbz2-dev libgmp3-dev gettext libmpfr-dev \
+    libboost-date-time-dev libboost-filesystem-dev \
+    libboost-graph-dev libboost-iostreams-dev \
+    libboost-python-dev libboost-regex-dev libboost-test-dev
+```
 
 ### Fedora
 
 You can install all required build dependencies under Fedora using the
 following command (tested with Fedora 32):
 
-    $ sudo dnf install boost-date-time boost-devel boost-filesystem \
-        boost-iostreams boost-python3-devel boost-regex boost-system \
-        boost-test cmake doxygen gettext git gmp-devel libedit-devel \
-        mpfr-devel python3-devel texinfo tzdata
-
+ ```
+sudo dnf install boost-date-time boost-devel boost-filesystem \
+    boost-iostreams boost-python3-devel boost-regex boost-system \
+    boost-test cmake doxygen gettext git gmp-devel libedit-devel \
+    mpfr-devel python3-devel texinfo tzdata
+```
 ## Building
 
 The next step is preparing your environment for building.  While you can use
 `cmake .` and make, I've prepared a script that does a lot more of the
 footwork for you:
 
-    $ ./acprep update
+```
+./acprep update
+```
     # or, if you want to use the Boost libraries with suffix -mt, install in
     # $HOME/local and build with 2 processes in parallel
-    $ ./acprep update --boost-suffix=-mt --prefix=$HOME/local -j2
+    
+```
+./acprep update --boost-suffix=-mt --prefix=$HOME/local -j2
+```
 
 Please read the contents of `CMakeFiles/CMakeOutput.log` and
 `CMakeFiles/CMakeError.log` if the configure step fails.  Also,
