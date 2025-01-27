@@ -13,6 +13,8 @@
 
 - Add support to build ledger with readline
 
+- Add commodity value type in value expressions to resolve aliases
+
 ## 3.3.2 (2023-03-30)
 
 - Fix divide by zero (ledger/ledger#777, ledger/ledger#2207)
