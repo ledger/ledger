@@ -840,7 +840,7 @@ value_t report_t::fn_ansify_if(call_scope_t& args)
 value_t report_t::fn_percent(call_scope_t& args)
 {
   return (amount_t("100.00%") *
-          (args.get<amount_t>(0) / args.get<amount_t>(1)).number());
+          (args.get<amount_t>(0).reduced() / args.get<amount_t>(1).reduced()).number());
 }
 
 value_t report_t::fn_commodity(call_scope_t& args)
