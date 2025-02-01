@@ -212,13 +212,13 @@ namespace {
   value_t get_commodity(call_scope_t& args)
   {
     if (args.has<amount_t>(0)) {
-      return args.get<amount_t>(0).commodity();
+      return args.get<amount_t>(0).commodity().strip_annotations(keep_details_t{});
     } else {
       post_t& post(args.context<post_t>());
       if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
-        return post.xdata().compound_value.to_amount().commodity();
+        return post.xdata().compound_value.to_amount().commodity().strip_annotations(keep_details_t{});
       else
-        return post.amount.commodity();
+        return post.amount.commodity().strip_annotations(keep_details_t{});
     }
   }
 
