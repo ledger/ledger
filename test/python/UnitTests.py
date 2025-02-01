@@ -8,7 +8,7 @@ import ValueTest
 suites = [
     JournalTest.suite(),
     TransactionTest.suite(),
-    PostingTest.suite()
+    PostingTest.suite(),
     ValueTest.suite()
 ]
 TextTestRunner().run(TestSuite(suites))
