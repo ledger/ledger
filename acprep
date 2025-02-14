@@ -542,7 +542,7 @@ class PrepareBuild(CommandLineApp):
                             'ninja-build',
                             'zlib1g-dev',
                             'libbz2-dev',
-                            'python-dev',
+                            'python3-dev',
                             'libgmp3-dev',
                             'libmpfr-dev',
                             'gettext',
@@ -883,16 +883,16 @@ class PrepareBuild(CommandLineApp):
         pass
 
     def setup_flavor_debug(self):
-        self.configure_args.append('-DBUILD_DEBUG=1')
+        self.configure_args.append('-DCMAKE_BUILD_TYPE=Debug')
 
     def setup_flavor_opt(self):
-        self.configure_args.append('-DBUILD_DEBUG=0')
+        self.configure_args.append('-DCMAKE_BUILD_TYPE=Release')
         self.configure_args.append('-DNO_ASSERTS=1')
 
     def setup_flavor_gcov(self):
         # NO_ASSERTS is set so that branch coverage ignores the never-taken
         # else branch inside assert statements.
-        self.configure_args.append('-DBUILD_DEBUG=1')
+        self.configure_args.append('-DCMAKE_BUILD_TYPE=Debug')
         self.configure_args.append('-DNO_ASSERTS=1')
         self.configure_args.append('-DCLANG_GCOV=1')
 
@@ -905,7 +905,7 @@ class PrepareBuild(CommandLineApp):
             self.LDFLAGS.append('-lgcov')
 
     def setup_flavor_gprof(self):
-        self.configure_args.append('-DBUILD_DEBUG=1')
+        self.configure_args.append('-DCMAKE_BUILD_TYPE=Debug')
 
         self.CXXFLAGS.append('-pg')
         self.LDFLAGS.append('-pg')

@@ -783,7 +783,7 @@ account, such as when you get paid.  Here is a typical transaction:
 @smallexample @c input:6B43DD4
 2004/09/29  My Employer
     Assets:Checking               $500.00
-    Income:Salary
+    Income:Salary                $-500.00
 @end smallexample
 
 Money, here, comes from an Income account belonging to @samp{My
@@ -798,7 +798,7 @@ it:
 @smallexample @c input:6B43DD4
 2004/09/30  Restaurant
     Expenses:Dining                $25.00
-    Liabilities:MasterCard
+    Liabilities:MasterCard        $-25.00
 @end smallexample
 
 The Dining account balance now shows $25 spent on Dining, and
@@ -880,9 +880,12 @@ each person or business that you spend money for.  For example:
 @end smallexample
 
 This shows $100.00 spent on a MasterCard at Circuit City, with the
-expense was made on behalf of Company XYZ.  Later, when Company XYZ
-pays the amount back, the money will transfer from that reimbursement
-account back to a regular asset account:
+expense was made on behalf of Company XYZ@footnote{Note that there
+is no negative amount. If left blank, Ledger will assume that the
+balanced amount is the same as the first line. For more information,
+@pxref{Eliding amounts}.}. Later, when Company XYZ pays the
+amount back, the money will transfer from that reimbursement account
+back to a regular asset account:
 
 @smallexample @c input:validate
 2004/09/29  Company XYZ
@@ -6034,7 +6037,7 @@ Use @file{FILE} for retrieving stored commodity prices.
 @item --price-exp @var{INT}
 @itemx --leeway @var{INT}
 @itemx -Z @var{INT}
-Set expected freshness of prices in @var{INT} minutes.
+Set expected freshness of prices in @var{INT} hours.
 
 @item --download
 @itemx -Q
@@ -6273,7 +6276,7 @@ Specify the location of the price entry data file.
 @item --price-exp @var{INT}
 @itemx --leeway @var{INT}
 @itemx -Z @var{INT}
-Set the expected freshness of price quotes, in @var{INT} minutes.  That
+Set the expected freshness of price quotes, in @var{INT} hours.  That
 is, if the last known quote for any commodity is older than this value,
 and if @option{--download} is being used, then the Internet will be
 consulted again for a newer price.  Otherwise, the old price is still
@@ -7660,7 +7663,7 @@ The format of the file can be changed by telling ledger to use the
 @item --price-exp @var{INT}
 @itemx --leeway @var{INT}
 @itemx -Z @var{INT}
-Set the expected freshness of price quotes, in @var{INT} minutes.  That
+Set the expected freshness of price quotes, in @var{INT} hours.  That
 is, if the last known quote for any commodity is older than this value,
 and if @option{--download} is being used, then the Internet will be
 consulted again for a newer price.  Otherwise, the old price is still

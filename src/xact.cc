@@ -146,9 +146,9 @@ namespace {
         null_post->add_flags(POST_CALCULATED);
         first = false;
       } else {
-        unique_ptr<post_t> p(new post_t(null_post->account, amount.negated(),
-                                        null_post->flags() | ITEM_GENERATED | POST_CALCULATED));
-        p->set_state(null_post->state());
+        unique_ptr<post_t> p(new post_t(null_post->account, amount.negated()));
+        p->copy_details(*null_post);
+        p->set_flags(null_post->flags() | ITEM_GENERATED | POST_CALCULATED);
         xact.add_post(p.release());
       }
     }

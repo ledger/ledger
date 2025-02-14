@@ -1659,7 +1659,7 @@ post_t * instance_t::parse_post(char *          line,
       ptristream stream(p, static_cast<std::size_t>(len - beg));
 
       if (*p != '(')            // indicates a value expression
-        post->assigned_amount->parse(stream, PARSE_NO_MIGRATE);
+        post->assigned_amount->parse(stream);
       else
         parse_amount_expr(stream, *context.scope, *post.get(),
                           *post->assigned_amount,

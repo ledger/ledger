@@ -8,6 +8,13 @@ set(Required_Gpgmepp_Version 1.13.1)
 
 cmake_minimum_required(VERSION ${Required_CMake_Version})
 
+option(CMAKE_BUILD_TYPE "CMake Build type" "Release")
+if (BUILD_DEBUG)
+  message(DEPRECATION "BUILD_DEBUG is deprecated! Set CMAKE_BUILD_TYPE to Debug instead!")
+  set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "CMake Build type" FORCE)
+  unset(BUILD_DEBUG CACHE)
+endif()
+
 PROJECT(ledger)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/doc")
@@ -21,7 +28,7 @@ set(Ledger_TEST_TIMEZONE "America/Chicago")
 enable_testing()
 
 add_compile_definitions(BOOST_FILESYSTEM_NO_DEPRECATED)
-add_compile_options(-std=c++11)
+set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard")
 if (CYGWIN)
   add_compile_options(-U__STRICT_ANSI__)
 endif()
@@ -40,11 +47,9 @@ option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
 option(BUILD_DOCS "Build and install documentation" OFF)
 option(BUILD_WEB_DOCS "Build version of documentation suitable for viewing online" OFF)
 
-if (BUILD_DEBUG)
-  set(CMAKE_BUILD_TYPE Debug)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(DEBUG_MODE 1)
 else()
-  set(CMAKE_BUILD_TYPE Release)
   set(DEBUG_MODE 0)
 endif()
 
@@ -83,7 +88,8 @@ endif()
 # Set BOOST_ROOT to help CMake to find the right Boost version
 find_package(Boost ${Required_Boost_Version}
   REQUIRED date_time filesystem system iostreams regex unit_test_framework
-  ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide)
+  ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide
+  CONFIG)
 
 # enable Boost::nowide library (for UTF8 command line args on Windows)
 set(HAVE_BOOST_NOWIDE 0)

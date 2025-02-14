@@ -1,3 +1,6 @@
+commodity $
+  alias USD
+
 2008/01/01 January
     Expenses:Books          $10.00
     Assets:Cash
@@ -190,6 +193,14 @@
     Expenses:Books         $120.00
     Assets:Cash
 
+2010/01/01 January
+    Expenses:Books         USD100.00
+    Assets:Cash
+
+2010/01/31 End of January
+    Expenses:Books         B100.00
+    Assets:Cash
+
 test reg --limit='account =~ /Books/ and amount < 50'
 08-Jan-01 January               Expenses:Books               $10.00       $10.00
 08-Jan-31 End of January        Expenses:Books               $10.00       $20.00
@@ -207,4 +218,24 @@ test reg --limit='account =~ /Books/ and amount < 50'
 09-Mar-31 End of March          Expenses:Books               $30.00      $320.00
 09-Apr-01 April                 Expenses:Books               $40.00      $360.00
 09-Apr-30 End of April          Expenses:Books               $40.00      $400.00
+end test
+
+test bal Expenses:Books --limit='commodity == "$"'
+            $3220.00  Expenses:Books
+end test
+
+test bal Expenses:Books --limit='commodity == "USD"'
+            $3220.00  Expenses:Books
+end test
+
+test bal Expenses:Books --limit='commodity > "A"'
+             B100.00  Expenses:Books
+end test
+
+test bal Expenses:Books --limit='commodity + "A" == "BA"'
+             B100.00  Expenses:Books
+end test
+
+test bal Expenses:Books --limit='commodity * 2 == "BB"'
+             B100.00  Expenses:Books
 end test

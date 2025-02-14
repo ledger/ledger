@@ -1,0 +1,10 @@
+2018/01/01 foo
+        Account  = 10 USD
+        Equity
+
+test balance
+              10 USD  Account
+             -10 USD  Equity
+--------------------
+                   0
+end test

@@ -89,6 +89,13 @@ namespace {
     return buf.str();
   }
 
+  string py_label_0(const value_t& value) {
+    return value.label();
+  }
+  string py_label_1(const value_t& value, const value_t::type_t& type) {
+    return value.label(type);
+  }
+
   void py_set_string(value_t& value, const string& str) {
     return value.set_string(str);
   }
@@ -127,6 +134,7 @@ void export_value()
     .value("Integer",      value_t::INTEGER)
     .value("Amount",       value_t::AMOUNT)
     .value("Balance",      value_t::BALANCE)
+    .value("Commodity",    value_t::COMMODITY)
     .value("String",       value_t::STRING)
     .value("Sequence",     value_t::SEQUENCE)
     .value("Scope",        value_t::SCOPE)
@@ -145,6 +153,7 @@ void export_value()
     .def(init<double>())
     .def(init<amount_t>())
     .def(init<balance_t>())
+    .def(init<const commodity_t&>())
     .def(init<mask_t>())
     .def(init<std::string>())
     // jww (2009-11-02): Need to support conversion of value_t::sequence_t
@@ -162,6 +171,8 @@ void export_value()
     .def(other<amount_t>() == self)
     .def(self == other<balance_t>())
     .def(other<balance_t>() == self)
+    .def(self == other<commodity_t>())
+    .def(other<commodity_t>() == self)
 
     .def(self != self)
     .def(self != long())
@@ -170,6 +181,8 @@ void export_value()
     .def(other<amount_t>() != self)
     .def(self != other<balance_t>())
     .def(other<balance_t>() != self)
+    .def(self != other<commodity_t>())
+    .def(other<commodity_t>() != self)
 
     .def(! self)
 
@@ -178,29 +191,38 @@ void export_value()
     .def(long() < self)
     .def(self < other<amount_t>())
     .def(other<amount_t>() < self)
+    .def(self < other<commodity_t>())
+    .def(other<commodity_t>() < self)
 
     .def(self <= self)
     .def(self <= long())
     .def(long() <= self)
     .def(self <= other<amount_t>())
     .def(other<amount_t>() <= self)
+    .def(self <= other<commodity_t>())
+    .def(other<commodity_t>() <= self)
 
     .def(self >  self)
     .def(self >  long())
     .def(long() > self)
     .def(self > other<amount_t>())
     .def(other<amount_t>() > self)
+    .def(self > other<commodity_t>())
+    .def(other<commodity_t>() > self)
 
     .def(self >= self)
     .def(self >= long())
     .def(long() >= self)
     .def(self >= other<amount_t>())
     .def(other<amount_t>() >= self)
+    .def(self >= other<commodity_t>())
+    .def(other<commodity_t>() >= self)
 
     .def(self += self)
     .def(self += long())
     .def(self += other<amount_t>())
     .def(self += other<balance_t>())
+    .def(self += other<commodity_t>())
 
     .def(self   + self)
     .def(self   + long())
@@ -208,6 +230,8 @@ void export_value()
     .def(self + other<amount_t>())
     .def(other<amount_t>() + self)
     .def(self + other<balance_t>())
+    .def(self + other<commodity_t>())
+    .def(other<commodity_t>() + self)
 
     .def(self -= self)
     .def(self -= long())
@@ -255,6 +279,7 @@ void export_value()
     .def("in_place_roundto", &value_t::in_place_roundto)
     .def("truncated", &value_t::truncated)
     .def("in_place_truncate", &value_t::in_place_truncate)
+    .def("ceilinged", &value_t::ceilinged)
     .def("floored", &value_t::floored)
     .def("in_place_floor", &value_t::in_place_floor)
     .def("unrounded", &value_t::unrounded)
@@ -300,6 +325,8 @@ void export_value()
     .def("is_balance", &value_t::is_balance)
     .def("is_balance", &value_t::is_balance)
 
+    .def("is_commodity", &value_t::is_commodity)
+
     .def("is_string", &value_t::is_string)
     .def("set_string", py_set_string)
 
@@ -309,6 +336,8 @@ void export_value()
     .def("is_sequence", &value_t::is_sequence)
     .def("set_sequence", &value_t::set_sequence)
 
+    .def("is_scope", &value_t::is_scope)
+
     .def("to_boolean", &value_t::to_boolean)
     .def("to_long", &value_t::to_long)
     .def("__int__", &value_t::to_long)
@@ -316,6 +345,7 @@ void export_value()
     .def("to_date", &value_t::to_date)
     .def("to_amount", &value_t::to_amount)
     .def("to_balance", &value_t::to_balance)
+    .def("to_commodity", &value_t::to_commodity, return_internal_reference<>())
     .def("__str__", &value_t::to_string)
     .def("__unicode__", py_value_unicode)
     .def("to_string", &value_t::to_string)
@@ -346,7 +376,8 @@ void export_value()
     .def("pop_back", &value_t::pop_back)
     .def("size", &value_t::size)
 
-    .def("label", &value_t::label)
+    .def("label", py_label_0)
+    .def("label", py_label_1)
 
     .def("valid", &value_t::valid)
 
