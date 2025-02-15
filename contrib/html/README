@@ -13,3 +13,9 @@ usage:
   from ledger file directly:
 
     ledger -f input.ledger xml | xsltproc --output output-ledger.html ledger.xsl -
+
+parameters:
+
+  - `quantityFormat`: format for quantities, default is '#.00' (2 decimal
+    places). If you want no decimals, use `xsltproc --param quantityFormat "'#'"
+    ...`

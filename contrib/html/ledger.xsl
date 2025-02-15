@@ -35,6 +35,8 @@
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <xsl:output method="html" encoding="UTF-8" indent="yes" doctype-system="about:legacy-compat"/>
 
+  <xsl:param name="quantityFormat" select="'#.00'"/>
+
   <xsl:template match="/">
     <html>
       <head>
@@ -232,10 +234,10 @@
         <xsl:choose>
           <xsl:when test="not(contains(commodity/@flags,'D') or contains(commodity/@flags,'E'))">
             <!-- TODO Thousands markers -->
-            <xsl:value-of select="quantity"/>
+            <xsl:value-of select="format-number(quantity, $quantityFormat)"/>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="translate(quantity,'.',',')"/>
+            <xsl:value-of select="format-number(translate(quantity,'.',','), $quantityFormat)"/>
           </xsl:otherwise>
         </xsl:choose>
       </span>
