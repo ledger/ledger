@@ -63,8 +63,8 @@ class BoostInfo(object):
         if system in ['centos']:
             return [ 'boost-devel' ]
 
-        elif system in ['ubuntu-jammy', 'ubuntu-focal', 'ubuntu-bionic', 'ubuntu-xenial',
-                        'ubuntu-eoan', 'ubuntu-trusty', 'ubuntu-cosmic']:
+        elif system in ['ubuntu-noble', 'ubuntu-jammy', 'ubuntu-focal', 'ubuntu-bionic',
+                        'ubuntu-xenial', 'ubuntu-eoan', 'ubuntu-trusty', 'ubuntu-cosmic']:
             return [ 'libboost-dev',
                      'libboost-date-time-dev',
                      'libboost-filesystem-dev',
@@ -535,7 +535,7 @@ class PrepareBuild(CommandLineApp):
                         'sudo', 'apt-get', 'install',
                         'build-essential',
                     ]
-                    if release == 'jammy':
+                    if release in ('noble', 'jammy'):
                         packages.extend([
                             'doxygen',
                             'cmake',
@@ -695,7 +695,7 @@ class PrepareBuild(CommandLineApp):
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
 
-            if exists('/etc/debian_version'):
+            if exists('/etc/debian_version') and not release:
                 release = open('/etc/debian_version').readline()
                 if release.startswith('trixie'):
                     self.log.info(f'Looks like you are using APT on Debian {release}')
