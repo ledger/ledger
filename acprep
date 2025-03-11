@@ -524,12 +524,14 @@ class PrepareBuild(CommandLineApp):
                 self.execute(*packages)
 
         elif system == 'Linux':
+            is_ubuntu = False
             if exists('/etc/issue'):
                 issue_name = open('/etc/issue').readline()
                 if issue_name.startswith('Ubuntu'):
                     info = dict([line.strip().split('=', 1)
                                  for line in open('/etc/lsb-release')])
                     release = info['DISTRIB_CODENAME']
+                    is_ubuntu = True
                     self.log.info('Looks like you are using APT on Ubuntu ' + release)
                     packages = [
                         'sudo', 'apt-get', 'install',
@@ -602,7 +604,8 @@ class PrepareBuild(CommandLineApp):
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
 
-            if exists('/etc/debian_version'):
+            # Since Ubuntu also contains '/etc/debian_version', Ubuntu should skip it
+            if not is_ubuntu and exists('/etc/debian_version'):
                 release = open('/etc/debian_version').readline()
                 if release.startswith('trixie'):
                     self.log.info(f'Looks like you are using APT on Debian {release}')
