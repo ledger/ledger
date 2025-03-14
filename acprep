@@ -536,6 +536,9 @@ class PrepareBuild(CommandLineApp):
                     packages = [
                         'sudo', 'apt-get', 'install',
                         'build-essential',
+                        'libgpgme-dev',
+                        'libgpgmepp-dev',
+                        'libgpg-error-dev',
                     ]
                     release_list = [
                         "noble",   # 24.04

@@ -38,7 +38,7 @@ jobs:
         name: Linux dependencies
         run: |
           sudo apt-get update -y
-          sudo ./acprep dependencies
+          sudo ./acprep dependencies --python
 
       - if: runner.os == 'macOS'
         name: Mac Dependencies
@@ -53,7 +53,7 @@ jobs:
           brew list -1 | grep python | while read formula; do brew unlink $formula; brew link --overwrite $formula; done
 
           brew update
-          ./acprep dependencies
+          ./acprep dependencies --python
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
