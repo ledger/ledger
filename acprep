@@ -53,27 +53,26 @@ def which(program):
     return None
 
 class BoostInfo(object):
-    def dependencies(self, system):
+    def dependencies(self, system, python):
         if system in ['darwin-homebrew']:
-            return [ 'boost' ]
+            return [ 'boost' ] + ([ 'boost-python3' ] if python else [])
 
         if system in ['darwin-macports']:
-            return [ 'boost-jam', 'boost', '+python37' ]
+            return [ 'boost-jam', 'boost' ] + ([ '+python37' ] if python else [])
 
         if system in ['centos']:
             return [ 'boost-devel' ]
 
-        elif system in ['ubuntu-jammy', 'ubuntu-focal', 'ubuntu-bionic', 'ubuntu-xenial',
-                        'ubuntu-eoan', 'ubuntu-trusty', 'ubuntu-cosmic']:
+        elif system in ['ubuntu-noble', 'ubuntu-jammy', 'ubuntu-focal', 'ubuntu-bionic',
+                        'ubuntu-xenial', 'ubuntu-eoan', 'ubuntu-trusty', 'ubuntu-cosmic']:
             return [ 'libboost-dev',
                      'libboost-date-time-dev',
                      'libboost-filesystem-dev',
                      'libboost-iostreams-dev',
-                     'libboost-python-dev',
                      'libboost-regex-dev',
                      'libboost-system-dev',
                      'libboost-test-dev',
-                     'tzdata' ]
+                     'tzdata' ] + ([ 'libboost-python-dev' ] if python else [])
 
         elif system in [ 'ubuntu-saucy', 'ubuntu-precise']:
             return [ 'autopoint',
@@ -83,7 +82,7 @@ class BoostInfo(object):
                      'libboost-date-time-dev',
                      'libboost-filesystem-dev',
                      'libboost-iostreams-dev',
-                     'libboost-python-dev' ]
+                     ] + ([ 'libboost-python-dev' ] if withPython else [])
 
         elif system in ['ubuntu-lucid']:
             return [ 'bjam', 'autopoint',
@@ -92,7 +91,7 @@ class BoostInfo(object):
                      'libboost-date-time-dev',
                      'libboost-filesystem-dev',
                      'libboost-iostreams-dev',
-                     'libboost-python-dev' ]
+                     ] + ([ 'libboost-python-dev' ] if withPython else [])
 
 
 class CommandLineApp(object):
@@ -499,7 +498,7 @@ class PrepareBuild(CommandLineApp):
                     'libedit',
                     'texlive-xetex', 'doxygen', 'graphviz', 'texinfo',
                     'lcov', 'sloccount'
-                ] + BoostInfo().dependencies('darwin-macports')
+                ] + BoostInfo().dependencies('darwin-macports', self.options.python)
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
             elif shutil.which('brew'):
@@ -508,7 +507,8 @@ class PrepareBuild(CommandLineApp):
                     'brew', 'install',
                     'cmake', 'ninja',
                     'mpfr', 'gmp',
-                ] + BoostInfo().dependencies('darwin-homebrew')
+                    'gpgme',
+                ] + BoostInfo().dependencies('darwin-homebrew', self.options.python)
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
             elif shutil.which('fink'):
@@ -524,157 +524,71 @@ class PrepareBuild(CommandLineApp):
                 self.execute(*packages)
 
         elif system == 'Linux':
+            is_ubuntu = False
             if exists('/etc/issue'):
                 issue_name = open('/etc/issue').readline()
                 if issue_name.startswith('Ubuntu'):
                     info = dict([line.strip().split('=', 1)
                                  for line in open('/etc/lsb-release')])
                     release = info['DISTRIB_CODENAME']
+                    is_ubuntu = True
                     self.log.info('Looks like you are using APT on Ubuntu ' + release)
                     packages = [
                         'sudo', 'apt-get', 'install',
                         'build-essential',
+                        'libgpgme-dev',
+                        'libgpgmepp-dev',
+                        'libgpg-error-dev',
                     ]
-                    if release == 'jammy':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python3-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'focal':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'bionic':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'trusty':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'eoan':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'xenial':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'saucy':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'sloccount'
-                        ])
-                    elif release == 'precise':
-                        packages.extend([
-                            'libtool',
-                            'cmake',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
+                    release_list = [
+                        "noble",   # 24.04
+                        "jammy",   # 22.04
+                        "focal",   # 20.04
+                        "eoan",    # 19.10
+                        "bionic",  # 18.04
+                        "xenial",  # 16.04
+                        "trusty",  # 14.04
+                        "saucy",   # 13.10
+                        "precise", # 12.04
+                    ]
+                    if release in release_list:
+                        # Common Ubuntu packages
+                        packages.extend(
+                            [
+                                "cmake",
+                                "libgmp-dev",
+                                "libmpfr-dev",
+                                "libgpgmepp-dev",
+                                "gettext",
+                                "zlib1g-dev",
+                                "libbz2-dev",
+                                "libedit-dev",
+                                "texinfo",
+                                "lcov",
+                                "sloccount",
+                                (
+                                    "python3-dev"
+                                    if release in ["noble", "jammy"]
+                                    else "python-dev"
+                                ),
+                            ]
+                        )
+                        # doxygen & ninja build
+                        if release != 'precise':
+                            packages.extend(['doxygen','ninja-build'])
+                        # libutfcpp-dev
+                        if release != 'saucy':
+                            packages.extend(['libutfcpp-dev'])
+                        # Precise (Ubuntu 12.04) need GNU libtool
+                        if release == 'precise':
+                            packages.extend(['libtool'])
                     else:
                         self.log.info('I do not recognize your version of Ubuntu!')
                         packages = None
                     if packages:
                         packages.extend(
-                            BoostInfo().dependencies('ubuntu-' + release))
+                            BoostInfo().dependencies('ubuntu-' + release, self.options.python)
+                        )
                         self.log.info('Executing: ' + ' '.join(packages))
                         self.execute(*packages)
                 elif issue_name.startswith('Arch Linux'):
@@ -695,7 +609,8 @@ class PrepareBuild(CommandLineApp):
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
 
-            if exists('/etc/debian_version'):
+            # Since Ubuntu also contains '/etc/debian_version', Ubuntu should skip it
+            if not is_ubuntu and exists('/etc/debian_version'):
                 release = open('/etc/debian_version').readline()
                 if release.startswith('trixie'):
                     self.log.info(f'Looks like you are using APT on Debian {release}')
