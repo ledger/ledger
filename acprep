@@ -557,6 +557,7 @@ class PrepareBuild(CommandLineApp):
                                 "cmake",
                                 "libgmp-dev",
                                 "libmpfr-dev",
+                                "libgpgmepp-dev",
                                 "gettext",
                                 "zlib1g-dev",
                                 "libbz2-dev",
