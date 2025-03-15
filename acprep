@@ -53,12 +53,12 @@ def which(program):
     return None
 
 class BoostInfo(object):
-    def dependencies(self, system):
+    def dependencies(self, system, python):
         if system in ['darwin-homebrew']:
-            return [ 'boost' ]
+            return [ 'boost' ] + ([ 'boost-python3' ] if python else [])
 
         if system in ['darwin-macports']:
-            return [ 'boost-jam', 'boost', '+python37' ]
+            return [ 'boost-jam', 'boost' ] + ([ '+python37' ] if python else [])
 
         if system in ['centos']:
             return [ 'boost-devel' ]
@@ -69,11 +69,10 @@ class BoostInfo(object):
                      'libboost-date-time-dev',
                      'libboost-filesystem-dev',
                      'libboost-iostreams-dev',
-                     'libboost-python-dev',
                      'libboost-regex-dev',
                      'libboost-system-dev',
                      'libboost-test-dev',
-                     'tzdata' ]
+                     'tzdata' ] + ([ 'libboost-python-dev' ] if python else [])
 
         elif system in [ 'ubuntu-saucy', 'ubuntu-precise']:
             return [ 'autopoint',
@@ -83,7 +82,7 @@ class BoostInfo(object):
                      'libboost-date-time-dev',
                      'libboost-filesystem-dev',
                      'libboost-iostreams-dev',
-                     'libboost-python-dev' ]
+                     ] + ([ 'libboost-python-dev' ] if withPython else [])
 
         elif system in ['ubuntu-lucid']:
             return [ 'bjam', 'autopoint',
@@ -92,7 +91,7 @@ class BoostInfo(object):
                      'libboost-date-time-dev',
                      'libboost-filesystem-dev',
                      'libboost-iostreams-dev',
-                     'libboost-python-dev' ]
+                     ] + ([ 'libboost-python-dev' ] if withPython else [])
 
 
 class CommandLineApp(object):
@@ -499,7 +498,7 @@ class PrepareBuild(CommandLineApp):
                     'libedit',
                     'texlive-xetex', 'doxygen', 'graphviz', 'texinfo',
                     'lcov', 'sloccount'
-                ] + BoostInfo().dependencies('darwin-macports')
+                ] + BoostInfo().dependencies('darwin-macports', self.options.python)
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
             elif shutil.which('brew'):
@@ -508,7 +507,7 @@ class PrepareBuild(CommandLineApp):
                     'brew', 'install',
                     'cmake', 'ninja',
                     'mpfr', 'gmp',
-                ] + BoostInfo().dependencies('darwin-homebrew')
+                ] + BoostInfo().dependencies('darwin-homebrew', self.options.python)
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
             elif shutil.which('fink'):
@@ -586,7 +585,8 @@ class PrepareBuild(CommandLineApp):
                         packages = None
                     if packages:
                         packages.extend(
-                            BoostInfo().dependencies('ubuntu-' + release))
+                            BoostInfo().dependencies('ubuntu-' + release, self.options.python)
+                        )
                         self.log.info('Executing: ' + ' '.join(packages))
                         self.execute(*packages)
                 elif issue_name.startswith('Arch Linux'):
