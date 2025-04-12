@@ -329,6 +329,43 @@ bool xact_base_t::finalize()
           } else {
             DEBUG("xact.finalize", "gain_loss would have displayed as zero");
           }
+        } else if (post->cost->has_annotation()) {
+          DEBUG("xact.finalize", "checking if cost has price annotation");
+
+          // Handle commodity swap over a common base currency
+          // Check if price annotation is an amount that also has a cost
+          const annotation_t& cost_annot = post->cost->annotation();
+          if (cost_annot.price) {
+            DEBUG("xact.finalize", "yes, checking if price commodities match");
+
+            // Get the common base currency costs for both commodities
+            amount_t from_cost = breakdown.basis_cost;
+
+            // Both costs must be in the same commodity for comparison
+            if (from_cost.commodity() == (*cost_annot.price).commodity()) {
+              amount_t to_cost = *cost_annot.price * *post->cost;
+
+              DEBUG("xact.finalize", "Commodity swap from_cost = " << from_cost);
+              DEBUG("xact.finalize", "Commodity swap to_cost = " << to_cost);
+
+              // Calculate gain/loss in the base commodity
+              if (amount_t gain_loss = from_cost - to_cost) {
+                DEBUG("xact.finalize", "Commodity swap gain_loss = " << gain_loss);
+                gain_loss.in_place_round();
+                DEBUG("xact.finalize", "Commodity swap gain_loss rounds to = " << gain_loss);
+
+                if (post->must_balance())
+                  add_or_set_value(balance, gain_loss.reduced());
+
+                // Modify the post->cost to reflect the adjusted value
+                *post->cost = to_cost + gain_loss;
+
+                DEBUG("xact.finalize", "added commodity swap gain_loss, balance = " << balance);
+              } else {
+                DEBUG("xact.finalize", "Commodity swap gain_loss would have displayed as zero");
+              }
+            }
+          }
         }
       } else {
         post->amount =
