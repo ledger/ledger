@@ -1,0 +1,30 @@
+;; swap.ledger
+
+2025-04-10 Coinbase
+    Assets:Coinbase                              100 BTC @ $100
+    Assets:Coinbase                      -$10,000.00
+
+2025-04-11 Coinbase
+    Assets:Coinbase                             -100 BTC {$100} @ $40
+    Assets:Coinbase                        $4,000.00
+    Expenses:Capital Loss                  $6,000.00
+
+2025-04-12 Coinbase
+    Assets:Coinbase                             -100 BTC {$100} @ 2 ETH {$40} [2025-04-12]
+    Assets:Coinbase                              200 ETH {$40} [2025-04-12]
+    Expenses:Capital Loss                  $2,000.00
+
+2025-04-13 Coinbase
+    Assets:Coinbase                             -200 ETH {$40} [2025-04-12] @ $50
+    Assets:Coinbase                          $10,000
+    Income:Capital Gain                   $-2,000.00
+
+test balance
+           $4,000.00
+            -100 BTC  Assets:Coinbase
+           $8,000.00  Expenses:Capital Loss
+          $-2,000.00  Income:Capital Gain
+--------------------
+          $10,000.00
+            -100 BTC
+end test
