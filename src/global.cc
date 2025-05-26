@@ -431,13 +431,11 @@ global_scope_t::read_command_arguments(scope_t& scope, strings_list args)
 
 void global_scope_t::normalize_session_options()
 {
-#if LOGGING_ON
   INFO("Initialization file is " << HANDLER(init_file_).str());
   INFO("Price database is " << session().HANDLER(price_db_).str());
 
   foreach (const path& pathname, session().HANDLER(file_).data_files)
     INFO("Journal file is " << pathname.string());
-#endif // LOGGING_ON
 }
 
 expr_t::func_t global_scope_t::look_for_precommand(scope_t&      scope,
@@ -501,9 +499,7 @@ void handle_debug_options(int argc, char * argv[])
       }
       else if (std::strcmp(argv[i], "--verbose") == 0 ||
                std::strcmp(argv[i], "-v") == 0) {
-#if LOGGING_ON
         _log_level = LOG_INFO;
-#endif
       }
       else if (i + 1 < argc && std::strcmp(argv[i], "--init-file") == 0) {
         _init_file = argv[i + 1];

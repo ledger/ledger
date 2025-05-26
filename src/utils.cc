@@ -535,8 +535,6 @@ strings_list split_arguments(const char * line)
  * Logging
  */
 
-#if LOGGING_ON
-
 namespace ledger {
 
 log_level_t        _log_level  = LOG_WARN;
@@ -556,10 +554,8 @@ void logger_func(log_level_t level)
     logger_has_run = true;
     logger_start   = TRUE_CURRENT_TIME();
 
-#if VERIFY_ON
     IF_VERIFY()
       *_log_stream << "   TIME  OBJSZ  MEMSZ" << std::endl;
-#endif
   }
 
   *_log_stream << std::right << std::setw(5)
@@ -625,14 +621,13 @@ static struct __maybe_enable_debugging {
 } // namespace ledger
 
 #endif // DEBUG_ON
-#endif // LOGGING_ON
 
 /**********************************************************************
  *
  * Timers (allows log xacts to specify cumulative time spent)
  */
 
-#if LOGGING_ON && TIMERS_ON
+#if TIMERS_ON
 
 namespace ledger {
 
@@ -740,7 +735,7 @@ void finish_timer(const char * name)
 
 } // namespace ledger
 
-#endif // LOGGING_ON && TIMERS_ON
+#endif // TIMERS_ON
 
 /**********************************************************************
  *

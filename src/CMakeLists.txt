@@ -16,7 +16,6 @@ set(LEDGER_SOURCES
   chain.cc
   filters.cc
   report.cc
-  views.cc
   select.cc
   session.cc
   option.cc
@@ -135,7 +134,6 @@ set(LEDGER_INCLUDES
   unistring.h
   utils.h
   value.h
-  views.h
   xact.h
   ${PROJECT_BINARY_DIR}/ledger.hh
   ${PROJECT_BINARY_DIR}/system.hh)

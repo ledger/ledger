@@ -211,7 +211,6 @@ int main(int argc, char * argv[], char * envp[])
   // up everything by closing the session and deleting the session object, and
   // then shutting down the memory tracing subsystem.  Otherwise, let it all
   // leak because we're about to exit anyway.
-#if VERIFY_ON
   IF_VERIFY() {
     checked_delete(global_scope);
 
@@ -219,9 +218,8 @@ int main(int argc, char * argv[], char * envp[])
 #if VERIFY_ON
     shutdown_memory_tracing();
 #endif
-  } else
-#endif
-  {
+  }
+  else {
     if (global_scope)
       global_scope->quick_close();
     INFO("Ledger ended");       // let global_scope leak!
