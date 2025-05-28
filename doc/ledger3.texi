@@ -2809,6 +2809,7 @@ doing it.
 * Commodity prices::
 * Prices versus costs::
 * Fixated prices and costs::
+* Commodity swaps over common base currency::
 * Lot dates::
 * Lot notes::
 * Lot value expressions::
@@ -3043,6 +3044,7 @@ The are two forms of metadata: plain tags, and tag/value pairs.
 * Metadata tags::
 * Metadata values::
 * Typed metadata::
+* Payee metadata::
 @end menu
 
 @node Metadata tags, Metadata values, Metadata, Metadata
@@ -3081,7 +3083,7 @@ the colon, and cannot appear in the Key:
       ; MyTag: This is just a bogus value for MyTag
 @end smallexample
 
-@node Typed metadata,  , Metadata values, Metadata
+@node Typed metadata, Payee metadata, Metadata values, Metadata
 @subsection Typed metadata
 
 If a metadata tag ends in ::, its value will be parsed as a value
@@ -3621,7 +3623,7 @@ example in the print report.  Functionally, however, there is no
 difference, and neither the register nor the balance report are
 sensitive to this difference.
 
-@node Fixated prices and costs, Lot dates, Prices versus costs, Transactions
+@node Fixated prices and costs, Commodity swaps over common base currency, Prices versus costs, Transactions
 @section Fixated prices and costs
 
 If you bought a stock last year, and ask for its value today, Ledger
@@ -3655,7 +3657,61 @@ fixated prices by way of the cost:
 This is the same as the previous transaction, with the same caveats
 found in @ref{Prices versus costs}.
 
-@node Lot dates, Lot notes, Fixated prices and costs, Transactions
+@node Commodity swaps over common base currency, Lot dates, Fixated prices and costs, Transactions
+@section Commodity swaps over common base currency
+
+When exchanging one commodity for another, Ledger allows tracking gain
+or loss through a common base currency. This is useful for situations
+where you trade between two non-base commodities that both have known
+prices in terms of a third currency.
+
+For example, if you exchange Bitcoin (BTC) for Ethereum (ETH), and both
+have known dollar values, Ledger can calculate and track the gain or
+loss in dollar terms automatically.
+
+To use this feature, you need to specify price annotations for both the
+source commodity and the destination commodity:
+
+@smallexample
+2025-04-12 Coinbase
+    Assets:Coinbase       -100 BTC {$100} @ 2 ETH {$40} [2025-04-12]
+    Assets:Coinbase        200 ETH {$40} [2025-04-12]
+    Expenses:Capital Loss  $2,000.00
+@end smallexample
+
+In this example:
+
+@itemize
+@item
+You're selling 100 BTC that originally cost $100 each (total basis:
+$10,000)
+@item
+You're receiving 200 ETH worth $40 each (total value: $8,000)
+@item
+The transaction includes an automatically calculated capital loss of
+$2,000 (the difference between the basis of BTC and the value of ETH in
+the common currency)
+@end itemize
+
+The price annotation in braces @{$40@} on the ETH receiving side
+indicates the per-unit price of the ETH in the common base
+currency. Ledger will use this to calculate the gain or loss
+automatically.
+
+You can also sell the second commodity later and track its gain/loss:
+
+@smallexample
+2025-04-13 Coinbase
+    Assets:Coinbase       -200 ETH {$40} [2025-04-12] @ $50
+    Assets:Coinbase          $10,000
+    Income:Capital Gain   $-2,000.00
+@end smallexample
+
+This approach provides full end-to-end tracking of your investments
+across different commodities while maintaining accurate gain/loss
+records in a common base currency.
+
+@node Lot dates, Lot notes, Commodity swaps over common base currency, Transactions
 @section Lot dates
 @findex --lot-dates
 
