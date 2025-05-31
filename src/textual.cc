@@ -255,7 +255,7 @@ void instance_t::parse()
   bool error_flag = false;
   xact_t * previous_xact = NULL;
 
-  while (in.good() && ! in.eof()) {
+  while (in.good() && ! in.eof() && in.peek() != '^' && in.good()) {
     try {
       if (xact_t * xact = read_next_directive(error_flag, previous_xact)) {
         previous_xact = xact;
