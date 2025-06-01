@@ -1,0 +1,12 @@
+2024/08/11 Example
+    Income                                     $1.00
+    Expenses
+    [Income]                                   $1.00
+    [Expenses]
+
+test bal
+              $-2.00  Expenses
+               $2.00  Income
+--------------------
+                   0
+end test
