@@ -255,7 +255,7 @@ void instance_t::parse()
   bool error_flag = false;
   xact_t * previous_xact = NULL;
 
-  while (in.good() && ! in.eof()) {
+  while (in.good() && ! in.eof() && in.peek() != '^' && in.good()) {
     try {
       if (xact_t * xact = read_next_directive(error_flag, previous_xact)) {
         previous_xact = xact;
@@ -862,10 +862,8 @@ void instance_t::apply_account_directive(char * line)
 {
   if (account_t * acct = top_account()->find_account(line))
     apply_stack.push_front(application_t("account", acct));
-#if !NO_ASSERTS
   else
     assert("Failed to create account" == NULL);
-#endif
 }
 
 void instance_t::apply_tag_directive(char * line)

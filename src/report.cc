@@ -491,13 +491,11 @@ void report_t::commodities_report(post_handler_ptr handler)
     pass_down_posts<posts_commodities_iterator>(handler, *walker);
   }
   catch (...) {
-#if VERIFY_ON
     IF_VERIFY() {
       // If --verify was used, clean up the posts_commodities_iterator.
       // Otherwise, just leak like a sieve.
       checked_delete(walker);
     }
-#endif
     throw;
   }
 
@@ -840,7 +838,7 @@ value_t report_t::fn_ansify_if(call_scope_t& args)
 value_t report_t::fn_percent(call_scope_t& args)
 {
   return (amount_t("100.00%") *
-          (args.get<amount_t>(0) / args.get<amount_t>(1)).number());
+          (args.get<amount_t>(0).reduced() / args.get<amount_t>(1).reduced()).number());
 }
 
 value_t report_t::fn_commodity(call_scope_t& args)

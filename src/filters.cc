@@ -1421,10 +1421,8 @@ void forecast_posts::flush()
         least = i;
     }
 
-#if !NO_ASSERTS
     if ((*least).first.finish)
       assert(*(*least).first.start < *(*least).first.finish);
-#endif
 
     // If the next date in the series for this periodic posting is more than 5
     // years beyond the last valid post we generated, drop it from further

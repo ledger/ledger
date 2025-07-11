@@ -196,8 +196,6 @@ inline string operator+(const char * left, const string& right) {
  */
 /*@{*/
 
-#if LOGGING_ON
-
 namespace ledger {
 
 enum log_level_t {
@@ -310,30 +308,6 @@ inline bool category_matches(const char * cat) {
 
 } // namespace ledger
 
-#else // ! LOGGING_ON
-
-#define LOGGER(cat)
-
-#define SHOW_TRACE(lvl) false
-#define SHOW_DEBUG(cat) false
-#define SHOW_DEBUG_()   false
-#define SHOW_INFO()     false
-#define SHOW_WARN()     false
-#define SHOW_ERROR()    false
-#define SHOW_FATAL()    false
-#define SHOW_CRITICAL() false
-
-#define TRACE(lvl, msg)
-#define DEBUG(cat, msg)
-#define DEBUG_(msg)
-#define INFO(msg)
-#define WARN(msg)
-#define ERROR(msg)
-#define FATAL(msg)
-#define CRITICAL(msg)
-
-#endif // LOGGING_ON
-
 #define IF_TRACE(lvl) if (SHOW_TRACE(lvl))
 #define IF_DEBUG(cat) if (SHOW_DEBUG(cat))
 #define IF_DEBUG_()   if (SHOW_DEBUG_())
@@ -351,7 +325,7 @@ inline bool category_matches(const char * cat) {
  */
 /*@{*/
 
-#if LOGGING_ON && TIMERS_ON
+#if TIMERS_ON
 
 namespace ledger {
 
@@ -407,7 +381,7 @@ void finish_timer(const char * name);
 
 } // namespace ledger
 
-#else // ! (LOGGING_ON && TIMERS_ON)
+#else // !TIMERS_ON
 
 #define TRACE_START(lvl, msg, name)
 #define TRACE_STOP(name, lvl)
