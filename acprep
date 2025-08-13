@@ -507,7 +507,7 @@ class PrepareBuild(CommandLineApp):
                     'brew', 'install',
                     'cmake', 'ninja',
                     'mpfr', 'gmp',
-                    'gpgme',
+                    'gpgme', 'gpgmepp',
                 ] + BoostInfo().dependencies('darwin-homebrew', self.options.python)
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
