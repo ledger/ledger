@@ -87,7 +87,7 @@ endif()
 
 # Set BOOST_ROOT to help CMake to find the right Boost version
 find_package(Boost ${Required_Boost_Version}
-  REQUIRED date_time filesystem system iostreams regex unit_test_framework
+  REQUIRED date_time filesystem iostreams regex unit_test_framework
   ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide
   CONFIG)
 
