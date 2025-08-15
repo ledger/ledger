@@ -3,6 +3,10 @@
 
   nixConfig.bash-prompt = "ledger$ ";
 
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  };
+
   outputs = { self, nixpkgs }: let
     usePython = true;
     gpgmeSupport = true;
