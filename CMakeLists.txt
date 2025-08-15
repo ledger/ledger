@@ -177,6 +177,7 @@ using namespace boost;
 
 int main() {
   std::string text = \"Активы\";
+  std::basic_string<boost::uint32_t> expr_str = \"Активы\";
   u32regex r = make_u32regex(\"активы\", regex::perl | regex::icase);
   return u32regex_search(text, r) ? 0 : 1;
 }" BOOST_REGEX_UNICODE_RUNS)
