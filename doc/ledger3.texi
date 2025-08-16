@@ -1778,7 +1778,7 @@ commodity name must be enclosed in double quotes @samp{"}:
 
 Please note that, for querying quoted commodities, the quotes need to be escaped, as follows:
 
-@smallexample @c command:15453B3
+@smallexample @c command:9FB8B7E
 $ ledger -f d reg -l 'commodity == "\"Arcancia Équilibre 454\""'
 @end smallexample
 
@@ -4177,7 +4177,7 @@ complex, but if you have further interest, please consult the Web.
 Ledger makes this otherwise difficult law very easy.  Just set up an
 automated posting at the top of your ledger file:
 
-@smallexample @c input:C371854
+@smallexample @c input:EFFC310
 ; This automated transaction will compute Huqúqu'lláh based on this
 ; journal's postings.  Any accounts that match will affect the
 ; Liabilities:Huqúqu'lláh account by 19% of the value of that posting.
@@ -4193,7 +4193,7 @@ account.  So, if $1000 is earned from @samp{Income:Salary}, $190 is
 added to @samp{Liabilities:Huqúqu'lláh}; if $1000 is spent on Rent,
 $190 is subtracted.
 
-@smallexample @c input:C371854
+@smallexample @c input:EFFC310
 2003/01/01 (99) Salary
   Income:Salary  -$1000
   Assets:Checking
@@ -4217,11 +4217,11 @@ When ready to pay, just write a check to cover the amount shown in
 That's it.  To see how much Huqúq is currently owed based on your
 ledger transactions, use:
 
-@smallexample @c command:C371854
+@smallexample @c command:EFFC310
 $ ledger balance Liabilities:Huqúq
 @end smallexample
 
-@smallexample @c output:C371854
+@smallexample @c output:EFFC310
                 $-95  Liabilities:Huqúqu'lláh
 @end smallexample
 
@@ -4266,7 +4266,7 @@ may be excluded from reports by using @option{--real}.
 Credit cards sometimes provide a cashback percentage of purchases. This
 can be setup with the following:
 
-@smallexample @c input:7D1589F
+@smallexample @c input:B03E97E
 ; This automated transaction will add to "Assets:Credit Card Cashback"
 ; the amount of the transaction multiplied by the "cashback" tag.
 
@@ -4277,7 +4277,7 @@ can be setup with the following:
 
 To add a transaction that gives 2% cashback:
 
-@smallexample @c input:7D1589F
+@smallexample @c input:B03E97E
 2023/06/06 McDonalds
   ; cashback:: 2%
   Expenses:Food:Restaurants  $23.98
@@ -4285,13 +4285,13 @@ To add a transaction that gives 2% cashback:
 @end smallexample
 
 Now when a report is generated, e.g.
-@smallexample @c command:7D1589F
+@smallexample @c command:B03E97E
 $ ledger -f cashback.dat reg
 @end smallexample
 
 The cashback postings appear with the transaction.
 
-@smallexample @c output:7D1589F
+@smallexample @c output:B03E97E
 23-Jun-06 McDonalds             Expen:Food:Restaurants       $23.98       $23.98
                                 Liabilitie:Credit Card      $-23.98            0
                                 ..Credit Card Cashback        $0.48        $0.48
@@ -7337,7 +7337,7 @@ this transaction:
 And the register command was:
 
 @smallexample @c command:94C5675
-$ ledger -f example.dat -r register food
+$ ledger -f safeway.dat -r register food
 @end smallexample
 
 The following would be printed, showing the postings related to the
