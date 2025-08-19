@@ -1,0 +1,14 @@
+; This test checks that invalid UTF-8 filenames in directories
+; don't crash ledger when using include directives.
+; The fix skips files with invalid UTF-8 names rather than throwing an error.
+
+2024-01-01 Test Transaction
+    Assets:Checking    $100
+    Income:Salary
+
+test bal
+                $100  Assets:Checking
+               $-100  Income:Salary
+--------------------
+                   0
+end test

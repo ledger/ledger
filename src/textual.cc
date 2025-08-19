@@ -793,6 +793,11 @@ void instance_t::include_directive(char * line)
       if (is_regular_file(*iter))
         {
         string base = (*iter).filename().string();
+        // Skip files with invalid UTF-8 in their names to avoid encoding errors
+        if (!utf8::is_valid(base.begin(), base.end())) {
+          DEBUG("textual.include", "Skipping file with invalid UTF-8 name: " << base);
+          continue;
+        }
         if (glob.match(base)) {
           journal_t *  journal  = context.journal;
           account_t *  master   = top_account();
