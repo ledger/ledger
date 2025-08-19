@@ -809,6 +809,10 @@ void instance_t::include_directive(char * line)
           context_stack.get_current().journal = journal;
           context_stack.get_current().master  = master;
           context_stack.get_current().scope   = scope;
+          
+          parse_context_t * save_current_context = journal->current_context;
+          journal->current_context = &context_stack.get_current();
+          
           try {
             instance_t instance(context_stack, context_stack.get_current(),
                                 this, no_assertions, hash_type);
@@ -820,6 +824,7 @@ void instance_t::include_directive(char * line)
             count    += context_stack.get_current().count;
             sequence += context_stack.get_current().sequence;
 
+            journal->current_context = save_current_context;
             context_stack.pop();
             throw;
           }
@@ -828,6 +833,7 @@ void instance_t::include_directive(char * line)
           count    += context_stack.get_current().count;
           sequence += context_stack.get_current().sequence;
 
+          journal->current_context = save_current_context;
           context_stack.pop();
 
           files_found = true;

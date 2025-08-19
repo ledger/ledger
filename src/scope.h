@@ -582,11 +582,10 @@ class value_scope_t : public child_scope_t
 {
   value_t value;
 
+public:
   value_t get_value(call_scope_t&) {
     return value;
   }
-
-public:
   value_scope_t(scope_t& _parent, const value_t& _value)
     : child_scope_t(_parent), value(_value) {
     TRACE_CTOR(value_scope_t, "scope_t&, value_t");
