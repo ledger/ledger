@@ -35,6 +35,8 @@
 #include "xact.h"
 #include "post.h"
 #include "account.h"
+#include "report.h"
+#include "times.h"
 
 namespace ledger {
 
@@ -46,10 +48,20 @@ namespace ledger {
 		else
 			out << "\"\" " << -1 << " ";
 
-		tm          when = gregorian::to_tm(xact.date());
-		std::time_t date = std::mktime(&when);
-
-		out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
+		if (report.HANDLED(lisp_date_format_)) {
+			string date_format = report.HANDLER(lisp_date_format_).str();
+			if (date_format == "epoch" || date_format == "seconds") {
+				tm          when = gregorian::to_tm(xact.date());
+				std::time_t date = std::mktime(&when);
+				out << date << " ";
+			} else {
+				out << "\"" << format_date(xact.date(), FMT_CUSTOM, date_format.c_str()) << "\" ";
+			}
+		} else {
+			tm          when = gregorian::to_tm(xact.date());
+			std::time_t date = std::mktime(&when);
+			out << "(" << (date / 65536) << " " << (date % 65536) << " 0) ";
+		}
 
 		if (xact.code)
 			out << "\"" << escape_string(*xact.code) << "\" ";

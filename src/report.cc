@@ -1233,6 +1233,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'l':
     OPT_(limit_);
+    else OPT(lisp_date_format_);
     else OPT(lot_dates);
     else OPT(lot_prices);
     else OPT_ALT(lot_notes, lot_tags);
@@ -1700,7 +1701,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return WRAP_FUNCTOR(xact_command);
       }
       else if (is_eq(p, "emacs")) {
-        return POSTS_REPORTER(new format_emacs_posts(output_stream));
+        return POSTS_REPORTER(new format_emacs_posts(*this, output_stream));
       }
       else if (is_eq(p, "echo")) {
         return MAKE_FUNCTOR(report_t::echo_command);
@@ -1709,7 +1710,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
     case 'l':
       if (is_eq(p, "lisp"))
-        return POSTS_REPORTER(new format_emacs_posts(output_stream));
+        return POSTS_REPORTER(new format_emacs_posts(*this, output_stream));
       break;
 
     case 'p':
