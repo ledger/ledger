@@ -1,0 +1,26 @@
+= /Expenses:Subscriptions:Netflix/ & expr date =~ /\/(02|06|10)\//
+    Assets:Savings                       $5
+    Expenses:Tax                         $-5
+
+2020/02/15 Netflix
+    Expenses:Subscriptions:Netflix       $10
+    Assets:Checking                     $-10
+
+2020/03/15 Netflix
+    Expenses:Subscriptions:Netflix       $10
+    Assets:Checking                     $-10
+
+2020/06/15 Netflix
+    Expenses:Subscriptions:Netflix       $10
+    Assets:Checking                     $-10
+
+test bal
+                $-20  Assets
+                $-30    Checking
+                 $10    Savings
+                 $20  Expenses
+                 $30    Subscriptions:Netflix
+                $-10    Tax
+--------------------
+                   0
+end test
