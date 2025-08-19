@@ -1,0 +1,40 @@
+; Test for post.any() and post.all() with multiple parameters
+; This test verifies that the second parameter (false) correctly excludes
+; the current posting from the test.
+
+2024-01-01 * Test Transaction
+    Assets:Cash                       $100
+    Liabilities:MasterCard           -$100
+
+test reg --limit "post.any(account =~ /MasterCard/, false)"
+24-Jan-01 Test Transaction      Assets:Cash                    $100         $100
+end test
+
+test reg --limit "post.all(account =~ /Assets/, false)"
+end test
+
+test reg --limit "post.any(account =~ /Assets/, false)"
+24-Jan-01 Test Transaction      Liabilities:MasterCard        $-100        $-100
+24-Jan-02 Multi-posting Trans.. Assets:Checking                 $50         $-50
+                                Assets:Savings                  $30         $-20
+                                Expenses:Food                   $20            0
+                                Liabilities:CreditCard        $-100        $-100
+end test
+
+test reg --limit "post.all(account =~ /MasterCard/, false)"
+24-Jan-01 Test Transaction      Assets:Cash                    $100         $100
+end test
+
+; Test with more complex expressions - second transaction only
+2024-01-02 * Multi-posting Transaction
+    Assets:Checking                    $50
+    Assets:Savings                     $30
+    Expenses:Food                      $20
+    Liabilities:CreditCard           -$100
+test reg Assets:Checking --limit "post.any(account =~ /Expenses/, false)"
+24-Jan-02 Multi-posting Trans.. Assets:Checking                 $50          $50
+end test
+
+test reg Liabilities:CreditCard --limit "post.all(amount > 0, false)"
+24-Jan-02 Multi-posting Trans.. Liabilities:CreditCard        $-100        $-100
+end test

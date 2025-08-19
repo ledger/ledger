@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebSearch",
+      "WebFetch(domain:api.github.com)",
+      "Bash(gh issue view:*)",
+      "Bash(gh api:*)",
+      "Bash(./build/ledger/debug/ledger -f /tmp/test.ledger --price-db /tmp/prices.db -V bal)",
+      "Bash(./build/ledger:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr checkout:*)",
+      "Bash(make:*)",
+      "Bash(ctest:*)",
+      "Bash(cat:*)",
+      "Bash(./acprep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(cmake:*)",
+      "Bash(touch:*)",
+      "Bash(nix develop -c make:*)",
+      "Bash(nix develop:*)",
+      "Bash(/Users/johnw/src/ledger/build/ledger -f 2031_a.test --price-db 2031_a.dat -V bal)",
+      "Bash(nix build:*)",
+      "Bash(nix log:*)",
+      "Bash(/nix/store/9834aa1rrbvw73pl4yfx197lxgrva2zl-ledger-3.3.2-dirty/bin/ledger:*)",
+      "Bash(git push:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
