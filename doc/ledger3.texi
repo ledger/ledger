@@ -8042,6 +8042,93 @@ last oct
 weekly last august
 @end smallexample
 
+@subsection Date Expressions
+
+Date expressions can be used in various contexts, such as with the @option{--display} (@option{-d}) option to filter transactions by date, or within square brackets to specify relative dates. Date expressions support a rich set of keywords for specifying both absolute and relative dates.
+
+@subsubsection Basic Date Keywords
+
+The following keywords can be used to specify common dates:
+
+@table @code
+@item today
+The current date.
+
+@item tomorrow
+The day after today.
+
+@item yesterday
+@itemx yday
+The day before today (both @code{yesterday} and @code{yday} can be used).
+@end table
+
+@subsubsection Relative Date Expressions
+
+You can specify dates relative to the current date using various time units:
+
+@table @code
+@item N days ago
+A specific number of days before today (e.g., @code{3 days ago}).
+
+@item N days hence
+A specific number of days after today (e.g., @code{60 days hence}).
+
+@item N weeks ago/hence
+A specific number of weeks before or after today.
+
+@item N months ago/hence
+A specific number of months before or after today.
+
+@item N quarters ago/hence
+A specific number of quarters before or after today.
+
+@item N years ago/hence
+A specific number of years before or after today.
+@end table
+
+@subsubsection Period-based Expressions
+
+You can refer to time periods using @code{this}, @code{last}, and @code{next}:
+
+@table @code
+@item this day/week/month/quarter/year
+The current day, week, month, quarter, or year.
+
+@item last day/week/month/quarter/year
+The previous day, week, month, quarter, or year.
+
+@item next day/week/month/quarter/year
+The upcoming day, week, month, quarter, or year.
+@end table
+
+@subsubsection Using Date Expressions
+
+Date expressions are typically used within square brackets @code{[...]} in filtering expressions. Here are some examples:
+
+@smallexample
+# Show transactions from this month
+$ ledger -d "d>[this month]" register checking
+
+# Show transactions from the last 60 days
+$ ledger -d "d>[60 days ago]" register
+
+# Show transactions until 30 days from now
+$ ledger -d "d<[30 days hence]" register
+
+# Show transactions from last quarter
+$ ledger -d "d>=[last quarter] and d<[this quarter]" register
+@end smallexample
+
+Date expressions can also be used with the @option{--begin} and @option{--end} options:
+
+@smallexample
+# Transactions from 90 days ago until today
+$ ledger --begin "[90 days ago]" --end "[today]" register
+
+# Forecast 6 months into the future
+$ ledger --forecast "d<[6 months hence]" register
+@end smallexample
+
 @node Budgeting and Forecasting, Time Keeping, Command-Line Syntax, Top
 @chapter Budgeting and Forecasting
 
@@ -8457,7 +8544,10 @@ A regular expression that matches a transaction's tags against its values.
 
 @item expr date =~ /REGEX/
 Useful for specifying a date in plain terms.  For example, you could say
-@samp{expr date =~ /2014/}.
+@samp{expr date =~ /2014/}.  You can also use date expressions within square
+brackets for more sophisticated date filtering.  For example,
+@samp{date > [last month]} or @samp{date < [60 days hence]}.  See
+@ref{Period Expressions} for a complete list of available date keywords.
 
 @item expr comment =~ /REGEX/
 A regular expression that matches against a posting's comment
