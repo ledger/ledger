@@ -14,7 +14,7 @@ account TVA:$account
     Expenses:Accessories                     €100.00
 
 test --pedantic reg
-2025/04/10 Apple                Assets:Bank                €-100.00     €-100.00
+25-Apr-10 Apple                 Assets:Bank                €-100.00     €-100.00
                                 Expenses:Accessories        €100.00            0
                                 (T:Expens:Accessories)       €20.00       €20.00
 end test
