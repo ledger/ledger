@@ -6927,30 +6927,12 @@ Any strftime format string - Use custom date formatting (e.g.,
 
 Examples:
 
-@smallexample @c command:B8F1C2A
+@smallexample @c command:71F9578
 $ ledger -f sample.dat --lisp-date-format seconds lisp
 @end smallexample
 
-@smallexample @c output:B8F1C2A
-(("sample.dat" 1 1490338800 nil "Test transaction"
-  (2 "Expenses:Food" "$10.00" nil)
-  (3 "Assets:Checking" "$-10.00" nil)))
-@end smallexample
-
-@smallexample @c command:3D4E5F6
+@smallexample @c command:A4F8A94
 $ ledger -f sample.dat --lisp-date-format '%Y-%m-%d' lisp
-@end smallexample
-
-@smallexample @c output:3D4E5F6
-(("sample.dat" 1 "2017-03-24" nil "Test transaction"
-  (2 "Expenses:Food" "$10.00" nil)
-  (3 "Assets:Checking" "$-10.00" nil)))
-@end smallexample
-
-@smallexample @c input:B8F1C2A,3D4E5F6
-2017/03/24 Test transaction
-    Expenses:Food  $10.00
-    Assets:Checking  $-10.00
 @end smallexample
 
 @item --lot-dates
@@ -7374,7 +7356,7 @@ In the balance report, it shows all the accounts affected by
 transactions having a related posting.  For example, if a file had
 this transaction:
 
-@smallexample @c input:94C5675
+@smallexample @c input:1242E1E
 2004/03/20 Safeway
     Expenses:Food                       $65.00
     Expenses:Cash                       $20.00
@@ -7383,14 +7365,14 @@ this transaction:
 
 And the register command was:
 
-@smallexample @c command:94C5675
+@smallexample @c command:1242E1E
 $ ledger -f safeway.dat -r register food
 @end smallexample
 
 The following would be printed, showing the postings related to the
 posting that matched:
 
-@smallexample @c output:94C5675
+@smallexample @c output:1242E1E
 04-Mar-20 Safeway               Expenses:Cash                $20.00       $20.00
                                 Assets:Checking             $-85.00      $-65.00
 @end smallexample
