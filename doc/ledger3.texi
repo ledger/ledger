@@ -4993,6 +4993,10 @@ directly by Emacs Lisp.  The format of the @code{sexp} is:
  ...)                   ; list of transactions
 @end smallexample
 
+By default, the @var{DATE} field uses the Emacs Lisp time format (a list
+of integers representing the time).  You can control the date format
+using the @option{--lisp-date-format} option (@pxref{Report Options}).
+
 @noindent
 @command{emacs} can also be used as a synonym for @command{lisp}.
 
@@ -6905,6 +6909,49 @@ Change the sign of all reported values.
 @itemx -l @var{EXPR}
 Only transactions that satisfy @var{EXPR} are considered in
 calculations and for display.
+
+@item --lisp-date-format @var{FORMAT}
+@findex lisp-date-format
+Specify the format for dates in @command{lisp} output.  By default,
+dates are formatted using the Emacs Lisp time format (a list of integers).
+This option allows you to use different formats:
+
+@itemize @bullet
+@item
+@samp{seconds} or @samp{epoch} - Output dates as Unix timestamps (seconds
+since 1970-01-01)
+@item
+Any strftime format string - Use custom date formatting (e.g.,
+@samp{%Y-%m-%d} for ISO format)
+@end itemize
+
+Examples:
+
+@smallexample @c command:B8F1C2A
+$ ledger -f sample.dat --lisp-date-format seconds lisp
+@end smallexample
+
+@smallexample @c output:B8F1C2A
+(("sample.dat" 1 1490338800 nil "Test transaction"
+  (2 "Expenses:Food" "$10.00" nil)
+  (3 "Assets:Checking" "$-10.00" nil)))
+@end smallexample
+
+@smallexample @c command:3D4E5F6
+$ ledger -f sample.dat --lisp-date-format '%Y-%m-%d' lisp
+@end smallexample
+
+@smallexample @c output:3D4E5F6
+(("sample.dat" 1 "2017-03-24" nil "Test transaction"
+  (2 "Expenses:Food" "$10.00" nil)
+  (3 "Assets:Checking" "$-10.00" nil)))
+@end smallexample
+
+@smallexample @c input:B8F1C2A,3D4E5F6
+2017/03/24 Test transaction
+    Expenses:Food  $10.00
+    Assets:Checking  $-10.00
+@end smallexample
 
 @item --lot-dates
 Report the date on which each commodity in a balance report was
