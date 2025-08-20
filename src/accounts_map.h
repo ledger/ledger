@@ -40,6 +40,19 @@ namespace ledger {
 
 class account_t;
 
+/**
+ * An optimized map for account aliases that supports both exact string
+ * matches and regex pattern matching.
+ * 
+ * Performance optimizations:
+ * - Exact string matches are handled by the underlying std::map (O(log n))
+ * - Regex patterns are identified and compiled only once
+ * - Regex patterns are stored separately to avoid checking them for exact matches
+ * - The regex list is rebuilt lazily only when the map changes
+ * 
+ * This design minimizes the performance impact of regex aliases, especially
+ * for users who primarily use simple string aliases.
+ */
 class accounts_map : public std::map<string, account_t *>
 {
 private:
