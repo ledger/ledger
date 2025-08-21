@@ -342,6 +342,9 @@ Report only real transactions, with no automated or virtual
 transactions used.
 .It Fl \-add-budget
 Show only un-budgeted postings.
+.It Fl \-align-intervals
+Use the beginning of the reporting period as the start of intervals, rather
+than the beginning of the week, month, quarter or year.
 .It Fl \-amount Ar EXPR Pq Fl t
 Apply the given value expression to the posting amount.  Using
 .Fl \-amount Ar EXPR
@@ -700,6 +703,12 @@ Alias for
 .Fl \-price-exp .
 .It Fl \-limit Ar EXPR Pq Fl l
 Limit postings in calculations.
+.It Fl \-lisp-date-format Ar FORMAT
+Specify the format for dates in lisp output. The default uses the Emacs Lisp
+time format. Other options are
+.Ql seconds
+(Unix epoch seconds) or a strftime format string like
+.Ql %Y-%m-%d .
 .It Fl \-lot-dates
 Report the date on which each commodity in a balance report was
 purchased.
