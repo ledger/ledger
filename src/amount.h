@@ -347,7 +347,7 @@ public:
 
   amount_t roundto(int places) const {
     amount_t temp(*this);
-    temp.in_place_round();
+    temp.in_place_roundto(places);
     return temp;
   }
   void in_place_roundto(int places);

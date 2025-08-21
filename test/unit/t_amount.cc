@@ -1163,6 +1163,29 @@ BOOST_AUTO_TEST_CASE(testCommodityCeiling)
   BOOST_CHECK(x2.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testRoundto)
+{
+  amount_t a1("$ 123.123");
+  amount_t a2(a1);
+  a2.in_place_roundto(2);
+  BOOST_CHECK_EQUAL(amount_t("$ 123.123"), a1);
+  // Should it be "$ 123.12"?
+  BOOST_CHECK_EQUAL(amount_t("$ 123.120"), a2);
+  BOOST_CHECK_EQUAL(amount_t("$ 123.120"), a1.roundto(2));
+
+  // `in_place_roundto` code based on conversion to double
+  // had an issue with values close to halves
+  // due to 0.49999999 constant.
+  BOOST_CHECK_EQUAL(amount_t("1.1499999999").roundto(1), amount_t("1.1"));
+  BOOST_CHECK_EQUAL(amount_t("1.1499000").roundto(1), amount_t("1.1"));
+  BOOST_CHECK_EQUAL(amount_t("2.2499999999").roundto(1), amount_t("2.2"));
+  BOOST_CHECK_EQUAL(amount_t("2.2499000").roundto(1), amount_t("2.2"));
+  BOOST_CHECK_EQUAL(amount_t("-2.1500000001").roundto(1), amount_t("-2.2"));
+  BOOST_CHECK_EQUAL(amount_t("-2.15001").roundto(1), amount_t("-2.2"));
+  BOOST_CHECK_EQUAL(amount_t("-3.2500000001").roundto(1), amount_t("-3.3"));
+  BOOST_CHECK_EQUAL(amount_t("-3.25001").roundto(1), amount_t("-3.3"));
+}
+
 #ifndef NOT_FOR_PYTHON
 #if 0
 BOOST_AUTO_TEST_CASE(testReduction)

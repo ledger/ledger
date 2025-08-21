@@ -103,7 +103,6 @@ struct string_from_python
       return;
 #endif
 
-    const Py_UNICODE* value;
     Py_ssize_t size;
     string str;
 
@@ -134,9 +133,9 @@ struct string_from_python
       default:
         assert("PyUnicode_KIND returned an unexpected kind" == NULL);
     }
-#else
+#else // PY_MINOR_VERSION >= 3
     size = PyUnicode_GET_SIZE(obj_ptr);
-    value = PyUnicode_AS_UNICODE(obj_ptr);
+    const Py_UNICODE* value = PyUnicode_AS_UNICODE(obj_ptr);
 #if Py_UNICODE_SIZE == 2 // UTF-16
     utf8::unchecked::utf16to8(value, value + size, std::back_inserter(str));
 #elif Py_UNICODE_SIZE == 4 // UTF-32
@@ -144,7 +143,7 @@ struct string_from_python
 #else
     assert("Py_UNICODE has an unexpected size" == NULL);
 #endif
-#endif
+#endif // PY_MINOR_VERSION >= 3
 
     void* storage =
       reinterpret_cast<converter::rvalue_from_python_storage<string> *>

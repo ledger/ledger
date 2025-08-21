@@ -94,14 +94,7 @@ public:
   optional<string> code;
   string           payee;
 
-#if DOCUMENT_MODEL
-  mutable void * data;
-#endif
-
   xact_t()
-#if DOCUMENT_MODEL
-    : data(NULL)
-#endif
   {
     TRACE_CTOR(xact_t, "");
   }
@@ -127,6 +120,8 @@ public:
                                   const string& name);
 
   virtual bool valid() const;
+
+  string hash(string nonce, hash_type_t hash_type) const;
 };
 
 class auto_xact_t : public xact_base_t

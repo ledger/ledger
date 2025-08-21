@@ -2,10 +2,18 @@ set(Required_CMake_Version 3.16.2)
 set(Required_Boost_Version 1.72)
 set(Required_Gmp_Version 6.1.2)
 set(Required_Mpfr_Version 4.0.2)
+set(Required_Icu_Version 63)
 set(Required_Python_Version 3.9)
 set(Required_Gpgmepp_Version 1.13.1)
 
 cmake_minimum_required(VERSION ${Required_CMake_Version})
+
+option(CMAKE_BUILD_TYPE "CMake Build type" "Release")
+if (BUILD_DEBUG)
+  message(DEPRECATION "BUILD_DEBUG is deprecated! Set CMAKE_BUILD_TYPE to Debug instead!")
+  set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "CMake Build type" FORCE)
+  unset(BUILD_DEBUG CACHE)
+endif()
 
 PROJECT(ledger)
 
@@ -20,7 +28,7 @@ set(Ledger_TEST_TIMEZONE "America/Chicago")
 enable_testing()
 
 add_compile_definitions(BOOST_FILESYSTEM_NO_DEPRECATED)
-add_compile_options(-std=c++11)
+set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard")
 if (CYGWIN)
   add_compile_options(-U__STRICT_ANSI__)
 endif()
@@ -39,11 +47,9 @@ option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
 option(BUILD_DOCS "Build and install documentation" OFF)
 option(BUILD_WEB_DOCS "Build version of documentation suitable for viewing online" OFF)
 
-if (BUILD_DEBUG)
-  set(CMAKE_BUILD_TYPE Debug)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(DEBUG_MODE 1)
 else()
-  set(CMAKE_BUILD_TYPE Release)
   set(DEBUG_MODE 0)
 endif()
 
@@ -59,8 +65,6 @@ if (CLANG_GCOV)
 endif()
 
 ########################################################################
-
-find_package(Python COMPONENTS Interpreter) # Used for running tests
 
 if (USE_PYTHON)
   if (NOT BUILD_LIBRARY)
@@ -83,8 +87,9 @@ endif()
 
 # Set BOOST_ROOT to help CMake to find the right Boost version
 find_package(Boost ${Required_Boost_Version}
-  REQUIRED date_time filesystem system iostreams regex unit_test_framework
-  ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide)
+  REQUIRED date_time filesystem iostreams regex unit_test_framework
+  ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide
+  CONFIG)
 
 # enable Boost::nowide library (for UTF8 command line args on Windows)
 set(HAVE_BOOST_NOWIDE 0)
@@ -108,7 +113,7 @@ endif()
 ########################################################################
 
 include(FindICU)
-find_package(ICU 63 OPTIONAL_COMPONENTS uc i18n)
+find_package(ICU ${Required_Icu_Version} OPTIONAL_COMPONENTS uc i18n)
 
 include(CheckIncludeFiles)
 include(CheckLibraryExists)
@@ -163,7 +168,7 @@ endif()
 cmake_push_check_state()
 
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${ICUE_INCLUDE_DIRS})
-set(CMAKE_REQUIRED_LIBRARIES ${Boost_LIBRARIES} ${ICU_LIBRARIES} ${PROFILE_LIBS})
+set(CMAKE_REQUIRED_LIBRARIES Boost::regex ${ICU_LIBRARIES} ${PROFILE_LIBS})
 
 check_cxx_source_runs("
 #include <boost/regex/icu.hpp>
@@ -172,6 +177,7 @@ using namespace boost;
 
 int main() {
   std::string text = \"Активы\";
+  std::basic_string<boost::uint32_t> expr_str = \"Активы\";
   u32regex r = make_u32regex(\"активы\", regex::perl | regex::icase);
   return u32regex_search(text, r) ? 0 : 1;
 }" BOOST_REGEX_UNICODE_RUNS)
@@ -274,8 +280,10 @@ endif (NOT HAVE_EDIT)
 ########################################################################
 
 macro(add_ledger_library_dependencies _target)
-  target_link_libraries(${_target} ${MPFR_LIB})
+  target_link_libraries(${_target} ${Boost_LIBRARIES})
   target_link_libraries(${_target} ${GMP_LIB})
+  target_link_libraries(${_target} ${MPFR_LIB})
+  target_link_libraries(${_target} ${PROFILE_LIBS})
   if (HAVE_EDIT)
     target_link_libraries(${_target} ${EDIT_LIB})
   endif()
@@ -288,22 +296,18 @@ macro(add_ledger_library_dependencies _target)
   if (HAVE_GPGME)
     target_link_libraries(${_target} Gpgmepp)
   endif()
+  if (HAVE_BOOST_REGEX_UNICODE)
+    target_link_libraries(${_target} ${ICU_LIBRARIES})
+  endif()
   if (HAVE_BOOST_PYTHON)
     if (CMAKE_SYSTEM_NAME STREQUAL Darwin)
       # Don't link directly to a Python framework on macOS, to avoid segfaults
       # when the module is imported from a different interpreter
-      target_link_libraries(${_target} ${Boost_LIBRARIES})
       set_target_properties(${_target} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
     else()
-      target_link_libraries(${_target} ${Boost_LIBRARIES} ${Python_LIBRARIES})
+      target_link_libraries(${_target} ${Python_LIBRARIES})
     endif()
-  else()
-    target_link_libraries(${_target} ${Boost_LIBRARIES})
   endif()
-  if (HAVE_BOOST_REGEX_UNICODE)
-    target_link_libraries(${_target} ${ICU_LIBRARIES})
-  endif()
-  target_link_libraries(${_target} ${PROFILE_LIBS})
 endmacro(add_ledger_library_dependencies _target)
 
 ########################################################################

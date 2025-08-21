@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(testFloor)
   BOOST_CHECK(b4.valid());
 }
 
-BOOST_AUTO_TEST_CASE(testRound)
+BOOST_AUTO_TEST_CASE(testRoundto)
 {
   amount_t a1("0.00");
   amount_t a2("$ 123.123");
@@ -465,11 +465,11 @@ BOOST_AUTO_TEST_CASE(testRound)
   b4 += a5;
   b4 += a6;
 
-  BOOST_CHECK_EQUAL(b0.rounded(), b0);
-  BOOST_CHECK_EQUAL(b2.rounded(), b4);
-  BOOST_CHECK_EQUAL(b1.rounded(), b4);
+  BOOST_CHECK_EQUAL(b0.roundto(2), b0);
+  BOOST_CHECK_EQUAL(b2.roundto(2), b4);
+  BOOST_CHECK_EQUAL(b1.roundto(2), b4);
 
-  b1.in_place_round();
+  b1.in_place_roundto(2);
   BOOST_CHECK_EQUAL(b1, b3);
 
   BOOST_CHECK(b0.valid());

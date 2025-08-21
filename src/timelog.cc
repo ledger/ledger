@@ -61,7 +61,7 @@ namespace {
     amt.parse(buf);
     VERIFY(amt.valid());
 
-    post_t * post = new post_t(in_event.account, amt, POST_VIRTUAL);
+    post_t * post = new post_t(in_event.account, amt, POST_IS_TIMELOG);
     post->set_state(out_event.completed ? item_t::CLEARED : item_t::UNCLEARED);
     post->pos = in_event.position;
     post->checkin = in_event.checkin;

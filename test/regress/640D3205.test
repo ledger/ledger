@@ -14,7 +14,7 @@ test print
     Income:Somewhere
 
 2008/12/31 * Interest
-    Assets:Brokerage                         $200.00 = $1000.00
+    Assets:Brokerage                         $200.00 = $1,000.00
     Income:Somewhere
 end test
 

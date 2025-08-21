@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+check_required_components("@PROJECT_NAME@")
+
+if(NOT TARGET utf8::cpp)
+    add_library(utf8::cpp ALIAS utf8cpp::utf8cpp)
+endif()

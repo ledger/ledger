@@ -196,8 +196,6 @@ inline string operator+(const char * left, const string& right) {
  */
 /*@{*/
 
-#if LOGGING_ON
-
 namespace ledger {
 
 enum log_level_t {
@@ -310,30 +308,6 @@ inline bool category_matches(const char * cat) {
 
 } // namespace ledger
 
-#else // ! LOGGING_ON
-
-#define LOGGER(cat)
-
-#define SHOW_TRACE(lvl) false
-#define SHOW_DEBUG(cat) false
-#define SHOW_DEBUG_()   false
-#define SHOW_INFO()     false
-#define SHOW_WARN()     false
-#define SHOW_ERROR()    false
-#define SHOW_FATAL()    false
-#define SHOW_CRITICAL() false
-
-#define TRACE(lvl, msg)
-#define DEBUG(cat, msg)
-#define DEBUG_(msg)
-#define INFO(msg)
-#define WARN(msg)
-#define ERROR(msg)
-#define FATAL(msg)
-#define CRITICAL(msg)
-
-#endif // LOGGING_ON
-
 #define IF_TRACE(lvl) if (SHOW_TRACE(lvl))
 #define IF_DEBUG(cat) if (SHOW_DEBUG(cat))
 #define IF_DEBUG_()   if (SHOW_DEBUG_())
@@ -351,7 +325,7 @@ inline bool category_matches(const char * cat) {
  */
 /*@{*/
 
-#if LOGGING_ON && TIMERS_ON
+#if TIMERS_ON
 
 namespace ledger {
 
@@ -407,7 +381,7 @@ void finish_timer(const char * name);
 
 } // namespace ledger
 
-#else // ! (LOGGING_ON && TIMERS_ON)
+#else // !TIMERS_ON
 
 #define TRACE_START(lvl, msg, name)
 #define TRACE_STOP(name, lvl)
@@ -578,32 +552,48 @@ inline int peek_next_nonws(std::istream& in) {
     *_p = '\0';                                         \
   }
 
-inline string to_hex(unsigned int * message_digest, const int len = 1)
-{
+inline string digest_to_hex(
+  const boost::uuids::detail::sha1::digest_type& message_digest,
+  size_t len = sizeof(boost::uuids::detail::sha1::digest_type) * 2
+) {
   std::ostringstream buf;
+  buf.setf(std::ios_base::hex, std::ios_base::basefield);
+  buf.fill('0');
 
-  for(int i = 0; i < 5 ; i++) {
-    buf.width(8);
-    buf.fill('0');
-    buf << std::hex << message_digest[i];
-    if (i + 1 >= len)
-      break;                    // only output the first LEN dwords
+  // sha1::digest_type is an array type and may change between Boost versions
+  const size_t count = std::min(
+    sizeof(message_digest) / sizeof(message_digest[0]),
+    (len - 1) / (sizeof(message_digest[0]) * 2) + 1
+  );
+  for(size_t i = 0; i < count; i++) {
+    buf.width(sizeof(message_digest[i]) * 2);
+    buf << (unsigned int)message_digest[i];
   }
-  return buf.str();
+  string hex = buf.str();
+  hex.resize(len, '0'); // in case a partial element is requested
+  return hex;
 }
 
-inline string sha1sum(const string& str)
-{
-	boost::uuids::detail::sha1 sha;
+inline string sha1sum(
+  const string& str,
+  size_t len = sizeof(boost::uuids::detail::sha1::digest_type) * 2
+) {
+	static boost::uuids::detail::sha1 sha;
+  boost::uuids::detail::sha1::digest_type message_digest;
 
+	sha.reset();
   sha.process_bytes(str.c_str(), str.length());
-
-  unsigned int message_digest[5];
   sha.get_digest(message_digest);
-  return to_hex(message_digest, 5);
+  return digest_to_hex(message_digest, len);
 }
 
 extern const string version;
+
+enum hash_type_t {
+  NO_HASHES = 0,
+  HASH_SHA512 = 1,
+  HASH_SHA512_Half = 2
+};
 
 } // namespace ledger
 

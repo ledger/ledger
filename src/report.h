@@ -246,6 +246,7 @@ public:
     HANDLER(account_).report(out);
     HANDLER(actual).report(out);
     HANDLER(add_budget).report(out);
+    HANDLER(align_intervals).report(out);
     HANDLER(amount_).report(out);
     HANDLER(amount_data).report(out);
     HANDLER(anon).report(out);
@@ -298,6 +299,7 @@ public:
     HANDLER(inject_).report(out);
     HANDLER(invert).report(out);
     HANDLER(limit_).report(out);
+    HANDLER(lisp_date_format_).report(out);
     HANDLER(lot_dates).report(out);
     HANDLER(lot_prices).report(out);
     HANDLER(average_lot_prices).report(out);
@@ -395,6 +397,8 @@ public:
   OPTION_(report_t, add_budget, DO() {
       parent->budget_flags |= BUDGET_BUDGETED | BUDGET_UNBUDGETED;
     });
+
+  OPTION(report_t, align_intervals);
 
   OPTION__
   (report_t, amount_, // -t
@@ -545,6 +549,7 @@ public:
   OPTION(report_t, date_);
   OPTION(report_t, date_format_);
   OPTION(report_t, datetime_format_);
+  OPTION(report_t, lisp_date_format_);
 
   OPTION_(report_t, dc, DO() {
       OTHER(amount_).expr.set_base_expr

@@ -182,6 +182,10 @@ void export_balance()
     .def("in_place_round", &balance_t::in_place_round,
          return_internal_reference<>())
 
+    .def("__round__", &balance_t::roundto)
+    .def("in_place_roundto", &balance_t::in_place_roundto,
+            return_internal_reference<>())
+
     .def("truncated", &balance_t::truncated)
     .def("in_place_truncate", &balance_t::in_place_truncate,
          return_internal_reference<>())

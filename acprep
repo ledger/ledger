@@ -53,27 +53,26 @@ def which(program):
     return None
 
 class BoostInfo(object):
-    def dependencies(self, system):
+    def dependencies(self, system, python):
         if system in ['darwin-homebrew']:
-            return [ 'boost' ]
+            return [ 'boost' ] + ([ 'boost-python3' ] if python else [])
 
         if system in ['darwin-macports']:
-            return [ 'boost-jam', 'boost', '+python37' ]
+            return [ 'boost-jam', 'boost' ] + ([ '+python37' ] if python else [])
 
         if system in ['centos']:
             return [ 'boost-devel' ]
 
-        elif system in ['ubuntu-focal', 'ubuntu-bionic', 'ubuntu-xenial',
-                        'ubuntu-eoan', 'ubuntu-trusty', 'ubuntu-cosmic']:
+        elif system in ['ubuntu-noble', 'ubuntu-jammy', 'ubuntu-focal', 'ubuntu-bionic',
+                        'ubuntu-xenial', 'ubuntu-eoan', 'ubuntu-trusty', 'ubuntu-cosmic']:
             return [ 'libboost-dev',
                      'libboost-date-time-dev',
                      'libboost-filesystem-dev',
                      'libboost-iostreams-dev',
-                     'libboost-python-dev',
                      'libboost-regex-dev',
                      'libboost-system-dev',
                      'libboost-test-dev',
-                     'tzdata' ]
+                     'tzdata' ] + ([ 'libboost-python-dev' ] if python else [])
 
         elif system in [ 'ubuntu-saucy', 'ubuntu-precise']:
             return [ 'autopoint',
@@ -83,7 +82,7 @@ class BoostInfo(object):
                      'libboost-date-time-dev',
                      'libboost-filesystem-dev',
                      'libboost-iostreams-dev',
-                     'libboost-python-dev' ]
+                     ] + ([ 'libboost-python-dev' ] if withPython else [])
 
         elif system in ['ubuntu-lucid']:
             return [ 'bjam', 'autopoint',
@@ -92,7 +91,7 @@ class BoostInfo(object):
                      'libboost-date-time-dev',
                      'libboost-filesystem-dev',
                      'libboost-iostreams-dev',
-                     'libboost-python-dev' ]
+                     ] + ([ 'libboost-python-dev' ] if withPython else [])
 
 
 class CommandLineApp(object):
@@ -100,7 +99,6 @@ class CommandLineApp(object):
 
     force_exit    = True           # If true, always ends run() with sys.exit()
     log_handler   = None
-    boost_major   = "1_52"
 
     def __init__(self):
         "Initialize CommandLineApp."
@@ -358,25 +356,6 @@ class PrepareBuild(CommandLineApp):
             self.log.error("Execution failed: " + e)
             sys.exit(1)
 
-    def get_stdout(self, *args):
-        try:
-            self.log.debug('Executing command: ' + ' '.join(args))
-
-            proc    = Popen(args, shell=False, stdout=PIPE)
-            stdout  = proc.stdout.read()
-            retcode = proc.wait()
-            if retcode < 0:
-                self.log.error("Child was terminated by signal",
-                               -retcode)
-                sys.exit(1)
-            elif retcode != 0:
-                self.log.error("Execution failed: " + ' '.join(args))
-                sys.exit(1)
-            return stdout[:-1]
-        except OSError as e:
-            self.log.error("Execution failed:" + e)
-            sys.exit(1)
-
     def isnewer(self, file1, file2):
         "Check if file1 is newer than file2."
         if not exists(file2):
@@ -433,16 +412,16 @@ class PrepareBuild(CommandLineApp):
 
             version_m4 = open('CMakeLists.txt', 'r')
             for line in version_m4.readlines():
-                match = re.match('^set\(Ledger_VERSION_MAJOR ([0-9]+)\)', line)
+                match = re.match(r'^set\(Ledger_VERSION_MAJOR ([0-9]+)\)', line)
                 if match:
                     major = match.group(1)
-                match = re.match('^set\(Ledger_VERSION_MINOR ([0-9]+)\)', line)
+                match = re.match(r'^set\(Ledger_VERSION_MINOR ([0-9]+)\)', line)
                 if match:
                     minor = match.group(1)
-                match = re.match('^set\(Ledger_VERSION_PATCH ([0-9]+)\)', line)
+                match = re.match(r'^set\(Ledger_VERSION_PATCH ([0-9]+)\)', line)
                 if match:
                     patch = match.group(1)
-                match = re.match('^set\(Ledger_VERSION_DATE ([0-9]+)\)', line)
+                match = re.match(r'^set\(Ledger_VERSION_DATE ([0-9]+)\)', line)
                 if match:
                     date = match.group(1)
                     break
@@ -502,10 +481,10 @@ class PrepareBuild(CommandLineApp):
 
         self.log.info("Installing Ledger's build dependencies ...")
 
-        system = self.get_stdout('uname', '-s').decode(locale.getpreferredencoding())
+        system = os.uname().sysname
 
         if system == 'Darwin':
-            if exists('/opt/local/bin/port'):
+            if shutil.which('port'):
                 self.log.info('Looks like you are using MacPorts on macOS')
                 packages = [
                     'sudo', 'port', 'install', '-f',
@@ -519,159 +498,97 @@ class PrepareBuild(CommandLineApp):
                     'libedit',
                     'texlive-xetex', 'doxygen', 'graphviz', 'texinfo',
                     'lcov', 'sloccount'
-                ] + BoostInfo().dependencies('darwin-macports')
+                ] + BoostInfo().dependencies('darwin-macports', self.options.python)
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
-            elif exists('/usr/local/bin/brew') or exists('/opt/local/bin/brew'):
+            elif shutil.which('brew'):
                 self.log.info('Looks like you are using Homebrew on macOS')
                 packages = [
                     'brew', 'install',
                     'cmake', 'ninja',
                     'mpfr', 'gmp',
-                ] + BoostInfo().dependencies('darwin-homebrew')
+                    'gpgme', 'gpgmepp',
+                ] + BoostInfo().dependencies('darwin-homebrew', self.options.python)
                 self.log.info('Executing: ' + ' '.join(packages))
                 self.execute(*packages)
-            elif exists('/sw/bin/fink'):
+            elif shutil.which('fink'):
                 self.log.info('Looks like you are using Fink on macOS')
                 self.log.error("I don't know the package names for Fink yet!")
                 sys.exit(1)
+            elif shutil.which('nix'):
+                self.log.info('Looks like you are using Nixpkgs on macOS')
+                packages = [
+                    'nix', 'develop',
+                ]
+                self.log.info('Executing: ' + ' '.join(packages))
+                self.execute(*packages)
 
         elif system == 'Linux':
+            is_ubuntu = False
             if exists('/etc/issue'):
-                issue = open('/etc/issue')
-                issue_name = issue.readline()
+                issue_name = open('/etc/issue').readline()
                 if issue_name.startswith('Ubuntu'):
                     info = dict([line.strip().split('=', 1)
                                  for line in open('/etc/lsb-release')])
                     release = info['DISTRIB_CODENAME']
+                    is_ubuntu = True
                     self.log.info('Looks like you are using APT on Ubuntu ' + release)
                     packages = [
                         'sudo', 'apt-get', 'install',
                         'build-essential',
+                        'libgpgme-dev',
+                        'libgpgmepp-dev',
+                        'libgpg-error-dev',
                     ]
-                    if release == 'focal':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'bionic':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'trusty':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'eoan':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'xenial':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp3-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
-                    elif release == 'saucy':
-                        packages.extend([
-                            'doxygen',
-                            'cmake',
-                            'ninja-build',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'sloccount'
-                        ])
-                    elif release == 'precise':
-                        packages.extend([
-                            'libtool',
-                            'cmake',
-                            'zlib1g-dev',
-                            'libbz2-dev',
-                            'python-dev',
-                            'libgmp-dev',
-                            'libmpfr-dev',
-                            'gettext',
-                            'libedit-dev',
-                            'texinfo',
-                            'lcov',
-                            'libutfcpp-dev',
-                            'sloccount'
-                        ])
+                    release_list = [
+                        "noble",   # 24.04
+                        "jammy",   # 22.04
+                        "focal",   # 20.04
+                        "eoan",    # 19.10
+                        "bionic",  # 18.04
+                        "xenial",  # 16.04
+                        "trusty",  # 14.04
+                        "saucy",   # 13.10
+                        "precise", # 12.04
+                    ]
+                    if release in release_list:
+                        # Common Ubuntu packages
+                        packages.extend(
+                            [
+                                "cmake",
+                                "libgmp-dev",
+                                "libmpfr-dev",
+                                "libgpgmepp-dev",
+                                "gettext",
+                                "zlib1g-dev",
+                                "libbz2-dev",
+                                "libedit-dev",
+                                "texinfo",
+                                "lcov",
+                                "sloccount",
+                                (
+                                    "python3-dev"
+                                    if release in ["noble", "jammy"]
+                                    else "python-dev"
+                                ),
+                            ]
+                        )
+                        # doxygen & ninja build
+                        if release != 'precise':
+                            packages.extend(['doxygen','ninja-build'])
+                        # libutfcpp-dev
+                        if release != 'saucy':
+                            packages.extend(['libutfcpp-dev'])
+                        # Precise (Ubuntu 12.04) need GNU libtool
+                        if release == 'precise':
+                            packages.extend(['libtool'])
                     else:
                         self.log.info('I do not recognize your version of Ubuntu!')
                         packages = None
                     if packages:
                         packages.extend(
-                            BoostInfo().dependencies('ubuntu-' + release))
+                            BoostInfo().dependencies('ubuntu-' + release, self.options.python)
+                        )
                         self.log.info('Executing: ' + ' '.join(packages))
                         self.execute(*packages)
                 elif issue_name.startswith('Arch Linux'):
@@ -691,6 +608,34 @@ class PrepareBuild(CommandLineApp):
                     ]
                     self.log.info('Executing: ' + ' '.join(packages))
                     self.execute(*packages)
+
+            # Since Ubuntu also contains '/etc/debian_version', Ubuntu should skip it
+            if not is_ubuntu and exists('/etc/debian_version'):
+                release = open('/etc/debian_version').readline()
+                if release.startswith('trixie'):
+                    self.log.info(f'Looks like you are using APT on Debian {release}')
+                    packages = [
+                        'sudo', 'apt', 'install', '-y', '--no-install-recommends',
+                        'clang',
+                        'cmake',
+                        'ninja',
+                        'libboost-dev',
+                        'libmpfr-dev',
+                        'libgmp-dev',
+                        'libicu-dev',
+                        'libedit-dev',
+                        'libutfcpp-dev',
+                        'gettext',
+                        'texinfo',
+                        'doxygen',
+                        'graphviz',
+                        'lcov',
+                        'sloccount',
+                    ]
+                    self.log.info('Executing: ' + ' '.join(packages))
+                    self.execute(*packages)
+                else:
+                    self.log.info(f"I do not recognize your version '{release}' of Debian!")
 
             if exists('/etc/redhat-release'):
                 release = open('/etc/redhat-release').readline()
@@ -779,7 +724,7 @@ class PrepareBuild(CommandLineApp):
             self.configure_args.append(self.source_dir)
 
     def setup_for_system(self):
-        system = self.get_stdout('uname', '-s').decode(locale.getpreferredencoding())
+        system = os.uname().sysname
         self.log.info('System type is => ' + system)
 
         if self.options.enable_doxygen:
@@ -810,7 +755,7 @@ class PrepareBuild(CommandLineApp):
         PrepareBuild.__dict__['setup_flavor_' + self.current_flavor](self)
 
     def escape_string(self, data):
-        return re.sub('(["\\\\])', '\\\\\\1', data)
+        return re.sub(r'(["\\\\])', '\\\\\\1', data)
 
     def finalize_config(self):
         self.setup_flavor()
@@ -853,16 +798,16 @@ class PrepareBuild(CommandLineApp):
         pass
 
     def setup_flavor_debug(self):
-        self.configure_args.append('-DBUILD_DEBUG=1')
+        self.configure_args.append('-DCMAKE_BUILD_TYPE=Debug')
 
     def setup_flavor_opt(self):
-        self.configure_args.append('-DBUILD_DEBUG=0')
+        self.configure_args.append('-DCMAKE_BUILD_TYPE=Release')
         self.configure_args.append('-DNO_ASSERTS=1')
 
     def setup_flavor_gcov(self):
         # NO_ASSERTS is set so that branch coverage ignores the never-taken
         # else branch inside assert statements.
-        self.configure_args.append('-DBUILD_DEBUG=1')
+        self.configure_args.append('-DCMAKE_BUILD_TYPE=Debug')
         self.configure_args.append('-DNO_ASSERTS=1')
         self.configure_args.append('-DCLANG_GCOV=1')
 
@@ -875,7 +820,7 @@ class PrepareBuild(CommandLineApp):
             self.LDFLAGS.append('-lgcov')
 
     def setup_flavor_gprof(self):
-        self.configure_args.append('-DBUILD_DEBUG=1')
+        self.configure_args.append('-DCMAKE_BUILD_TYPE=Debug')
 
         self.CXXFLAGS.append('-pg')
         self.LDFLAGS.append('-pg')

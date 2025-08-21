@@ -66,12 +66,10 @@ xact_base_t::~xact_base_t()
 
 void xact_base_t::add_post(post_t * post)
 {
-#if !NO_ASSERTS
   // You can add temporary postings to transactions, but not real postings to
   // temporary transactions.
   if (! post->has_flags(ITEM_TEMP))
     assert(! has_flags(ITEM_TEMP));
-#endif
 
   posts.push_back(post);
 }
@@ -116,8 +114,10 @@ value_t xact_base_t::magnitude() const
 namespace {
   inline bool account_ends_with_special_char(const string& name) {
     string::size_type len(name.length());
-    return (std::isdigit(name[len - 1]) || name[len - 1] == ')' ||
-            name[len - 1] == '}' || name[len - 1] == ']');
+    return (std::isdigit(static_cast<unsigned char>(name[len - 1])) ||
+            name[len - 1] == ')' ||
+            name[len - 1] == '}' ||
+            name[len - 1] == ']');
   }
 
   struct add_balancing_post
@@ -144,9 +144,9 @@ namespace {
         null_post->add_flags(POST_CALCULATED);
         first = false;
       } else {
-        unique_ptr<post_t> p(new post_t(null_post->account, amount.negated(),
-                                        null_post->flags() | ITEM_GENERATED | POST_CALCULATED));
-        p->set_state(null_post->state());
+        unique_ptr<post_t> p(new post_t(null_post->account, amount.negated()));
+        p->copy_details(*null_post);
+        p->set_flags(null_post->flags() | ITEM_GENERATED | POST_CALCULATED);
         xact.add_post(p.release());
       }
     }
@@ -327,6 +327,43 @@ bool xact_base_t::finalize()
           } else {
             DEBUG("xact.finalize", "gain_loss would have displayed as zero");
           }
+        } else if (post->cost->has_annotation()) {
+          DEBUG("xact.finalize", "checking if cost has price annotation");
+
+          // Handle commodity swap over a common base currency
+          // Check if price annotation is an amount that also has a cost
+          const annotation_t& cost_annot = post->cost->annotation();
+          if (cost_annot.price) {
+            DEBUG("xact.finalize", "yes, checking if price commodities match");
+
+            // Get the common base currency costs for both commodities
+            amount_t from_cost = breakdown.basis_cost;
+
+            // Both costs must be in the same commodity for comparison
+            if (from_cost.commodity() == (*cost_annot.price).commodity()) {
+              amount_t to_cost = *cost_annot.price * *post->cost;
+
+              DEBUG("xact.finalize", "Commodity swap from_cost = " << from_cost);
+              DEBUG("xact.finalize", "Commodity swap to_cost = " << to_cost);
+
+              // Calculate gain/loss in the base commodity
+              if (amount_t gain_loss = from_cost - to_cost) {
+                DEBUG("xact.finalize", "Commodity swap gain_loss = " << gain_loss);
+                gain_loss.in_place_round();
+                DEBUG("xact.finalize", "Commodity swap gain_loss rounds to = " << gain_loss);
+
+                if (post->must_balance())
+                  add_or_set_value(balance, gain_loss.reduced());
+
+                // Modify the post->cost to reflect the adjusted value
+                *post->cost = to_cost + gain_loss;
+
+                DEBUG("xact.finalize", "added commodity swap gain_loss, balance = " << balance);
+              } else {
+                DEBUG("xact.finalize", "Commodity swap gain_loss would have displayed as zero");
+              }
+            }
+          }
         }
       } else {
         post->amount =
@@ -471,9 +508,6 @@ bool xact_base_t::verify()
 
 xact_t::xact_t(const xact_t& e)
   : xact_base_t(e), code(e.code), payee(e.payee)
-#if DOCUMENT_MODEL
-    , data(NULL)
-#endif
 {
   TRACE_CTOR(xact_t, "copy");
 }
@@ -579,6 +613,58 @@ bool xact_t::valid() const
     }
 
   return true;
+}
+
+extern "C" unsigned char *SHA512(
+  void *data, unsigned int data_len, unsigned char *digest);
+
+namespace {
+  std::string bufferToHex(const unsigned char* buffer, std::size_t size) {
+      std::ostringstream oss;
+      oss << std::hex << std::setfill('0');
+      for(std::size_t i = 0; i < size; ++i)
+          oss << std::setw(2) << static_cast<int>(buffer[i]);
+      return oss.str();
+  }
+}
+
+string xact_t::hash(string nonce, hash_type_t hash_type) const {
+  std::ostringstream repr;
+
+  repr << nonce;
+  repr << date();
+  repr << aux_date();
+  repr << code;
+  repr << payee;
+
+  std::vector<std::string> strings;
+
+  posts_list all_posts(posts.begin(), posts.end());
+  foreach (post_t * post, all_posts) {
+    std::ostringstream posting;
+    posting << post->account->fullname();
+    if (! post->amount.is_null())
+      posting << post->amount.to_fullstring();
+    if (post->cost)
+      posting << post->cost->to_fullstring();
+    posting << post->checkin;
+    posting << post->checkout;
+    strings.push_back(posting.str());
+  }
+
+  std::sort(strings.begin(), strings.end());
+
+  foreach (string& str, strings) {
+    repr << str;
+  }
+
+  unsigned char data[128];
+  string repr_str(repr.str());
+
+  SHA512((void *)repr_str.c_str(), repr_str.length(), data);
+
+  return bufferToHex(
+    data, hash_type == HASH_SHA512 ? 64 : 32 /*SHA512_DIGEST_LENGTH*/);
 }
 
 namespace {
@@ -782,6 +868,8 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context)
         // the automated xact's one.
         post_t * new_post = new post_t(account, amt);
         new_post->copy_details(*post);
+        if(post->cost)
+          new_post->cost = post->cost;
 
         // A Cleared transaction implies all of its automatic posting are cleared
         // CPR 2012/10/23

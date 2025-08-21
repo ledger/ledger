@@ -1,0 +1,83 @@
+
+; roundto() result should not have large power 2 denominator.
+; Pairs to test positive/negative value symmetry.
+assert roundto(1.1, 1) == 1.1
+assert roundto(-1.1, 1) == -1.1
+
+; positive places
+assert roundto(1.13, 1) == 1.1
+assert roundto(1.17, 1) == 1.2
+assert roundto(1.10, 1) == 1.1
+assert roundto(-1.13, 1) == -1.1
+assert roundto(-1.17, 1) == -1.2
+assert roundto(-1.10, 1) == -1.1
+
+; zero places
+assert roundto(0.12, 0) == 0
+assert roundto(123.89, 0) == 124
+assert roundto(-0.12, 0) == 0
+assert roundto(-123.89, 0) == -124
+
+; negative places
+assert roundto(123.45, -1) == 120
+assert roundto(98765, -3) == 99000
+assert roundto(24500, -2) == 24500
+assert roundto(-123.45, -1) == -120
+assert roundto(-98765, -3) == -99000
+assert roundto(-24500, -2) == -24500
+
+; round to even
+assert roundto(0.5, 1) + roundto(1.5, 1) + roundto(2.5, 1) + roundto(3.5, 1) + roundto(4.5, 1) == roundto(0.5 + 1.5 + 2.5 + 3.5 + 4.5, 1)
+assert roundto(-0.5, 1) + roundto(-1.5, 1) + roundto(-2.5, 1) + roundto(-3.5, 1) + roundto(-4.5, 1) == roundto(-0.5 - 1.5 - 2.5 - 3.5 - 4.5, 1)
+
+assert roundto(0.12345, 4) == 0.1234
+assert roundto(0.9875, 3) == 0.988
+assert roundto(-0.12345, 4) == -0.1234
+assert roundto(-0.9875, 3) == -0.988
+assert roundto(1234.5, 0) == 1234
+assert roundto(367.5, 0) == 368
+assert roundto(-1234.5, 0) == -1234
+assert roundto(-367.5, 0) == -368
+assert roundto(29500.00, -3) == 30000
+assert roundto(72250, -2) == 72200
+assert roundto(-29500.00, -3) == -30000
+assert roundto(-72250, -2) == -72200
+
+; Assertion in transactions, no error:
+comment
+
+While parsing posting:
+  Account:NOK  0  = -700.67 NOK
+                    ^^^^^^^^^^^
+Error: Balance assertion off by -0.00 NOK (expected to see -700.67 NOK)
+end comment
+
+2024-02-01 Regular precision
+    Account:NOK   (-roundto(12.34 NOK * 56.78, 2))
+    Expenses:NOK  700.67 NOK
+2024-02-02 Assertion
+    Account:NOK  0  = -700.67 NOK
+
+; Transaction balance, no error:
+comment
+
+> 2024-02-01 Excessive precision
+>     Account:USD   (-roundto($12.34 * 56.78, 2))
+>     Expenses:USD  $700.67
+Unbalanced remainder is:
+    $0.0000000000000
+Amount to balance against:
+  $700.6700000000000
+Error: Transaction does not balance
+end comment
+
+commodity $
+    format $1000.0000000000000
+2024-02-01 Excessive precision
+    Account:USD   (-roundto($12.34 * 56.78, 2))
+    Expenses:USD  $700.67
+
+test bal --flat --no-total Account
+         -700.67 NOK  Account:NOK
+ $-700.6700000000000  Account:USD
+end test

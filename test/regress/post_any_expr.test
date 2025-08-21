@@ -1,0 +1,56 @@
+2023/01/01 * Payment
+    Expenses:Books                $200.00
+    Liabilities:MasterCard
+2023/01/01 * Payment
+    Expenses:Books                $100.00
+    Liabilities:Visa
+
+test bal expr "false"
+end test
+
+test bal expr "true"
+             $300.00  Expenses:Books
+            $-300.00  Liabilities
+            $-200.00    MasterCard
+            $-100.00    Visa
+--------------------
+                   0
+end test
+
+test bal expr "post.any(account =~ /MasterCard/)"
+             $200.00  Expenses:Books
+            $-200.00  Liabilities:MasterCard
+--------------------
+                   0
+end test
+
+test bal expr "post.all(account =~ /MasterCard/)"
+end test
+
+test bal expr "post.any(account =~ /MasterCard/)"
+             $200.00  Expenses:Books
+            $-200.00  Liabilities:MasterCard
+--------------------
+                   0
+end test
+
+test bal expr "post.all(account !~ /MasterCard/)"
+             $100.00  Expenses:Books
+            $-100.00  Liabilities:Visa
+--------------------
+                   0
+end test
+
+test bal expr "post.all(account =~ /MasterCard/, true)"
+end test
+
+test bal expr "post.any(account =~ /MasterCard/, true)"
+             $200.00  Expenses:Books
+            $-200.00  Liabilities:MasterCard
+--------------------
+                   0
+end test
+
+test bal expr "post.all(account =~ /MasterCard/, false)"
+             $200.00  Expenses:Books
+end test

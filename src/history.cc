@@ -39,7 +39,11 @@
 #include "history.h"
 
 template <typename T>
-struct f_max : public std::binary_function<T, T, bool> {
+struct f_max
+#if __cplusplus < 201103L
+: public std::binary_function<T, T, bool>
+#endif
+{
   T operator()(const T& x, const T& y) const {
     return std::max(x, y);
   }
@@ -434,7 +438,8 @@ commodity_history_impl_t::find_price(const commodity_t& source,
                                      const datetime_t&  moment,
                                      const datetime_t&  oldest)
 {
-  assert(source != target);
+  if (source == target)
+    return none;
 
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*target.graph_index(), price_graph);

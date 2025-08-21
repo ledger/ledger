@@ -1,0 +1,16 @@
+2024/04/24 Foobar
+    Expenses:Fournitures                                              25.00 EUR
+    ; Tag: Hello
+    Assets:Cash
+
+test xact --strict 2024/05/12 Foobar -> 0
+2024/05/12 Foobar
+    Expenses:Fournitures                   25.00 EUR
+    ; Tag: Hello
+    Assets:Cash
+__ERROR__
+Warning: "$FILE", line 2: Unknown account 'Expenses:Fournitures'
+Warning: "$FILE", line 2: Unknown commodity 'EUR'
+Warning: "$FILE", line 4: Unknown account 'Assets:Cash'
+Warning: "$FILE", line 4: Unknown metadata tag 'Tag'
+end test

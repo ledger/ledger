@@ -1,0 +1,34 @@
+2017/03/24 Foo bar
+    ;some food
+    Expenses:Food  9
+    Assets:Checking  -9
+
+test lisp --now=2017/03/24
+(("$sourcepath/test/baseline/opt-lisp-date-format.test" 1 (22740 42960 0) nil "Foo bar"
+  (3 "Expenses:Food" "9" nil)
+  (4 "Assets:Checking" "-9" nil)))
+end test
+
+test --lisp-date-format seconds lisp --now=2017/03/24
+(("$sourcepath/test/baseline/opt-lisp-date-format.test" 1 1490331600 nil "Foo bar"
+  (3 "Expenses:Food" "9" nil)
+  (4 "Assets:Checking" "-9" nil)))
+end test
+
+test --lisp-date-format epoch lisp --now=2017/03/24
+(("$sourcepath/test/baseline/opt-lisp-date-format.test" 1 1490331600 nil "Foo bar"
+  (3 "Expenses:Food" "9" nil)
+  (4 "Assets:Checking" "-9" nil)))
+end test
+
+test --lisp-date-format '%Y-%m-%d' lisp --now=2017/03/24
+(("$sourcepath/test/baseline/opt-lisp-date-format.test" 1 "2017-03-24" nil "Foo bar"
+  (3 "Expenses:Food" "9" nil)
+  (4 "Assets:Checking" "-9" nil)))
+end test
+
+test --lisp-date-format '%Y/%m/%d' lisp --now=2017/03/24
+(("$sourcepath/test/baseline/opt-lisp-date-format.test" 1 "2017/03/24" nil "Foo bar"
+  (3 "Expenses:Food" "9" nil)
+  (4 "Assets:Checking" "-9" nil)))
+end test

@@ -212,14 +212,13 @@ namespace {
   value_t get_commodity(call_scope_t& args)
   {
     if (args.has<amount_t>(0)) {
-      return string_value(args.get<amount_t>(0).commodity().symbol());
+      return args.get<amount_t>(0).commodity().strip_annotations(keep_details_t{});
     } else {
       post_t& post(args.context<post_t>());
       if (post.has_xdata() && post.xdata().has_flags(POST_EXT_COMPOUND))
-        return string_value(post.xdata().compound_value.to_amount()
-                            .commodity().symbol());
+        return post.xdata().compound_value.to_amount().commodity().strip_annotations(keep_details_t{});
       else
-        return string_value(post.amount.commodity().symbol());
+        return post.amount.commodity().strip_annotations(keep_details_t{});
     }
   }
 
@@ -382,9 +381,7 @@ namespace {
 
     foreach (post_t * p, post.xact->posts) {
       bind_scope_t bound_scope(args, *p);
-      if (p == &post && args.has<expr_t::ptr_op_t>(1) &&
-          ! args.get<expr_t::ptr_op_t>(1)
-            ->calc(bound_scope, args.locus, args.depth).to_boolean()) {
+      if (p == &post && args.has(1) && !args.get<bool>(1)) {
         // If the user specifies any(EXPR, false), and the context is a
         // posting, then that posting isn't considered by the test.
         ;                       // skip it
@@ -404,9 +401,7 @@ namespace {
 
     foreach (post_t * p, post.xact->posts) {
       bind_scope_t bound_scope(args, *p);
-      if (p == &post && args.has<expr_t::ptr_op_t>(1) &&
-          ! args.get<expr_t::ptr_op_t>(1)
-            ->calc(bound_scope, args.locus, args.depth).to_boolean()) {
+      if (p == &post && args.has(1) && !args.get<bool>(1)) {
         // If the user specifies any(EXPR, false), and the context is a
         // posting, then that posting isn't considered by the test.
         ;                       // skip it
@@ -642,11 +637,12 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const
       add_or_set_value(value, xdata_->compound_value);
   }
   else if (expr) {
-    bind_scope_t bound_scope(*expr->get_context(),
-                             const_cast<post_t&>(*this));
+    scope_t *ctx = expr->get_context();
+    bind_scope_t bound_scope(*ctx, const_cast<post_t&>(*this));
 #if 1
     value_t temp(expr->calc(bound_scope));
     add_or_set_value(value, temp);
+    expr->set_context(ctx);
 #else
     if (! xdata_) xdata_ = xdata_t();
     xdata_->value = expr->calc(bound_scope);

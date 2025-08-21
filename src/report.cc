@@ -491,13 +491,11 @@ void report_t::commodities_report(post_handler_ptr handler)
     pass_down_posts<posts_commodities_iterator>(handler, *walker);
   }
   catch (...) {
-#if VERIFY_ON
     IF_VERIFY() {
       // If --verify was used, clean up the posts_commodities_iterator.
       // Otherwise, just leak like a sieve.
       checked_delete(walker);
     }
-#endif
     throw;
   }
 
@@ -642,10 +640,10 @@ value_t report_t::fn_trim(call_scope_t& args)
   const char * p = buf.get();
   const char * e = buf.get() + temp.length() - 1;
 
-  while (p <= e && std::isspace(*p))
+  while (p <= e && std::isspace(static_cast<unsigned char>(*p)))
     p++;
 
-  while (e > p && std::isspace(*e))
+  while (e > p && std::isspace(static_cast<unsigned char>(*e)))
     e--;
 
   if (p > e) {
@@ -840,7 +838,7 @@ value_t report_t::fn_ansify_if(call_scope_t& args)
 value_t report_t::fn_percent(call_scope_t& args)
 {
   return (amount_t("100.00%") *
-          (args.get<amount_t>(0) / args.get<amount_t>(1)).number());
+          (args.get<amount_t>(0).reduced() / args.get<amount_t>(1).reduced()).number());
 }
 
 value_t report_t::fn_commodity(call_scope_t& args)
@@ -1150,6 +1148,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     else OPT(amount_);
     else OPT(amount_data);
     else OPT_ALT(primary_date, actual_dates);
+    else OPT(align_intervals);
     else OPT(anon);
     else OPT_ALT(color, ansi);
     else OPT(auto_match);
@@ -1234,6 +1233,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'l':
     OPT_(limit_);
+    else OPT(lisp_date_format_);
     else OPT(lot_dates);
     else OPT(lot_prices);
     else OPT_ALT(lot_notes, lot_tags);
@@ -1701,7 +1701,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return WRAP_FUNCTOR(xact_command);
       }
       else if (is_eq(p, "emacs")) {
-        return POSTS_REPORTER(new format_emacs_posts(output_stream));
+        return POSTS_REPORTER(new format_emacs_posts(*this, output_stream));
       }
       else if (is_eq(p, "echo")) {
         return MAKE_FUNCTOR(report_t::echo_command);
@@ -1710,7 +1710,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
     case 'l':
       if (is_eq(p, "lisp"))
-        return POSTS_REPORTER(new format_emacs_posts(output_stream));
+        return POSTS_REPORTER(new format_emacs_posts(*this, output_stream));
       break;
 
     case 'p':

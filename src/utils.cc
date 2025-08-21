@@ -229,54 +229,24 @@ static void trace_delete_func(void * ptr, const char * which)
 
 //#if !defined(__has_feature) || !__has_feature(address_sanitizer)
 
-#ifdef _GLIBCXX_THROW
-void * operator new(std::size_t size) _GLIBCXX_THROW(std::bad_alloc) {
-#else
-void * operator new(std::size_t size) throw (std::bad_alloc) {
-#endif
+void * operator new(std::size_t size) {
   void * ptr = std::malloc(size);
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_new_func(ptr, "new", size);
   return ptr;
 }
-void * operator new(std::size_t size, const std::nothrow_t&) throw() {
-  void * ptr = std::malloc(size);
-  if (DO_VERIFY() && ledger::memory_tracing_active)
-    ledger::trace_new_func(ptr, "new", size);
-  return ptr;
-}
-#ifdef _GLIBCXX_THROW
-void * operator new[](std::size_t size) _GLIBCXX_THROW(std::bad_alloc) {
-#else
-void * operator new[](std::size_t size) throw (std::bad_alloc) {
-#endif
+void * operator new[](std::size_t size) {
   void * ptr = std::malloc(size);
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_new_func(ptr, "new[]", size);
   return ptr;
 }
-void * operator new[](std::size_t size, const std::nothrow_t&) throw() {
-  void * ptr = std::malloc(size);
-  if (DO_VERIFY() && ledger::memory_tracing_active)
-    ledger::trace_new_func(ptr, "new[]", size);
-  return ptr;
-}
-void   operator delete(void * ptr) throw() {
+void   operator delete(void * ptr) {
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_delete_func(ptr, "new");
   std::free(ptr);
 }
-void   operator delete(void * ptr, const std::nothrow_t&) throw() {
-  if (DO_VERIFY() && ledger::memory_tracing_active)
-    ledger::trace_delete_func(ptr, "new");
-  std::free(ptr);
-}
-void   operator delete[](void * ptr) throw() {
-  if (DO_VERIFY() && ledger::memory_tracing_active)
-    ledger::trace_delete_func(ptr, "new[]");
-  std::free(ptr);
-}
-void   operator delete[](void * ptr, const std::nothrow_t&) throw() {
+void   operator delete[](void * ptr) {
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_delete_func(ptr, "new[]");
   std::free(ptr);
@@ -516,7 +486,7 @@ strings_list split_arguments(const char * line)
   char in_quoted_string = '\0';
 
   for (const char * p = line; *p; p++) {
-    if (! in_quoted_string && std::isspace(*p)) {
+    if (! in_quoted_string && std::isspace(static_cast<unsigned char>(*p))) {
       if (q != buf) {
         *q = '\0';
         args.push_back(buf);
@@ -565,8 +535,6 @@ strings_list split_arguments(const char * line)
  * Logging
  */
 
-#if LOGGING_ON
-
 namespace ledger {
 
 log_level_t        _log_level  = LOG_WARN;
@@ -586,10 +554,8 @@ void logger_func(log_level_t level)
     logger_has_run = true;
     logger_start   = TRUE_CURRENT_TIME();
 
-#if VERIFY_ON
     IF_VERIFY()
       *_log_stream << "   TIME  OBJSZ  MEMSZ" << std::endl;
-#endif
   }
 
   *_log_stream << std::right << std::setw(5)
@@ -655,14 +621,13 @@ static struct __maybe_enable_debugging {
 } // namespace ledger
 
 #endif // DEBUG_ON
-#endif // LOGGING_ON
 
 /**********************************************************************
  *
  * Timers (allows log xacts to specify cumulative time spent)
  */
 
-#if LOGGING_ON && TIMERS_ON
+#if TIMERS_ON
 
 namespace ledger {
 
@@ -770,7 +735,7 @@ void finish_timer(const char * name)
 
 } // namespace ledger
 
-#endif // LOGGING_ON && TIMERS_ON
+#endif // TIMERS_ON
 
 /**********************************************************************
  *

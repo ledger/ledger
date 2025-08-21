@@ -69,9 +69,9 @@ class CheckTexinfo (CheckOptions):
     option = None
     opt_doc = str()
     item_regex = re.compile(self.option_pattern)
-    itemx_regex = re.compile('^@itemx')
-    fix_regex = re.compile('FIX')
-    comment_regex = re.compile('^\s*@c')
+    itemx_regex = re.compile(r'^@itemx')
+    fix_regex = re.compile(r'FIX')
+    comment_regex = re.compile(r'^\s*@c')
     for line in open(filename):
       line = line.strip()
       if state == state_normal:
@@ -97,24 +97,9 @@ class CheckTexinfo (CheckOptions):
     return options
 
 if __name__ == "__main__":
-  def getargs():
-    parser = argparse.ArgumentParser(prog='CheckTexinfo',
-            description='Check that ledger options are documented in the texinfo manual')
-    parser.add_argument('-l', '--ledger',
-        dest='ledger',
-        type=str,
-        action='store',
-        required=True,
-        help='the path to the ledger executable to test with')
-    parser.add_argument('-s', '--source',
-        dest='source',
-        type=str,
-        action='store',
-        required=True,
-        help='the path to the top level ledger source directory')
-    return parser.parse_args()
-
-  args = getargs()
+  args = argparse.ArgumentParser(prog='CheckTexinfo',
+                                 description='Check that ledger options are documented in the texinfo manual',
+                                 parents=[CheckOptions.parser()]).parse_args()
   script = CheckTexinfo(args)
   status = script.main()
   sys.exit(status)

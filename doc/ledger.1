@@ -1,4 +1,4 @@
-.Dd March 15, 2019
+.Dd December 13, 2023
 .Dt LEDGER 1
 .Os
 .Sh NAME
@@ -138,7 +138,7 @@ The prices are reported with the granularity of a single day.
 Report prices for all commodities in postings matching the
 .Ar report-query .
 Prices are reported down to the second, using the same format as the
-.Pa ~/.pricedb
+.Pa \[ti]/.pricedb
 file.
 .It Ic print Oo Ar report-query Oc
 Print out the full transactions of any matching postings using the same
@@ -214,10 +214,10 @@ Sort postings by evaluating the given
 Note that a comma-separated list of expressions is allowed, in which case each
 sorting term is used in order to determine the final ordering.  For example,
 to search by date and then amount, one would use:
-.Dl ledger reg --sort 'date, amount'
+.Dl ledger reg --sort \[aq]date, amount\[aq]
 The sort order may be controlled with the '-' sign. For example, to sort in
 reverse chronological order:
-.Dl ledger reg --sort '-date'
+.Dl ledger reg --sort \[aq]-date\[aq]
 .It Fl \-tail Ar number
 Only show the last
 .Ar number
@@ -261,7 +261,7 @@ are also accepted.
 List all postings matching the
 .Ar sql-query .
 This command allows to generate SQL-like queries, e.g.:
-.Dl Li ledger select date,amount from posts where account=~/Income/
+.Dl Li ledger select date,amount from posts where account=\[ti]/Income/
 .It Ic source
 Parse a journal file and checks it for errors.
 .Nm
@@ -319,11 +319,11 @@ desired width.
 Prepend
 .Ar EXPR
 to all accounts reported.  That is, the option
-.Fl \-account Ar \*q'Personal'\*q
+.Fl \-account Ar \*q\[aq]Personal\[aq]\*q
 would tack
 .Ar Personal:
 and
-.Fl \-account Ar \*qtag('VAT')\*q
+.Fl \-account Ar \*qtag(\[aq]VAT\[aq])\*q
 would tack the value of the VAT tag to the beginning of every account
 reported in a
 .Ic balance
@@ -453,7 +453,7 @@ according to
 .Ar FMT .
 .It Fl \-current Pq Fl c
 Shorthand for
-.Fl \-limit Ar "'date <= today'" .
+.Fl \-limit Ar "\[aq]date <= today\[aq]" .
 .It Fl \-daily Pq Fl D
 Shorthand for
 .Fl \-period Ar daily .
@@ -634,6 +634,24 @@ Set the format for the headers that separate reports section of
 a grouped report.  Only has effect with a
 .Fl \-group-by Ar EXPR
 register report.
+.It Fl \-hashes Ar ALGO
+Record the hash of each transaction in a
+.Ar Hash
+metadata value, according to the hashing algorithm given by the
+.Ar ALGO
+argument. Supported algorithms are
+.Ar sha512
+or
+.Ar sha512_half
+where both use SHA512, but the latter only stores the first half of
+the hash value.
+.Pp
+If a
+.Ar Hash
+metadata value is explicitly provided and does not match what would
+have been generated, an error is reported. Hashes depend on previous
+entries, such that setting a single hash value is sufficient to
+guarantee the shape of the entire history leading up to that entry.
 .It Fl \-head Ar INT
 Print the first
 .Ar INT
@@ -679,7 +697,7 @@ Only useful on a register report.  Alias for
 .Fl \-tail .
 .It Fl \-leeway Ar INT Pq Fl Z
 Alias for
-.Fl \-price-expr .
+.Fl \-price-exp .
 .It Fl \-limit Ar EXPR Pq Fl l
 Limit postings in calculations.
 .It Fl \-lot-dates
@@ -812,10 +830,10 @@ spaces at the beginning of each line of the output.
 .It Fl \-price Pq Fl I
 Use the price of the commodity purchase for performing calculations.
 .It Fl \-price-db Ar FILE
-.It Fl \-price-exp Ar STR Pq Fl Z
+.It Fl \-price-exp Ar INT Pq Fl Z
 Set the expected freshness of price quotes, in
 .Ar INT
-minutes.  That
+hours.  That
 is, if the last known quote for any commodity is older than this value,
 and if
 .Fl \-download
@@ -1466,14 +1484,14 @@ may be set using an environment variable if the option has a long name.
 For example setting the environment variable
 .Ev LEDGER_DATE_FORMAT="%d.%m.%Y"
 will have the same effect as specifying
-.Fl \-date-format Ar '%d.%m.%Y'
+.Fl \-date-format Ar \[aq]%d.%m.%Y\[aq]
 on the command-line.  Options on the command-line always take precedence over
 environment variable settings, however.
 .Sh FILES
 .Bl -tag -width -indent
 .It Pa $XDG_CONFIG_HOME/ledger/ledgerrc
-.It Pa ~/.config/ledger/ledgerrc
-.It Pa ~/.ledgerrc
+.It Pa \[ti]/.config/ledger/ledgerrc
+.It Pa \[ti]/.ledgerrc
 Your personal
 .Nm
 initializations.

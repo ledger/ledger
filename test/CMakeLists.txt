@@ -1,6 +1,11 @@
 include(ProcessorCount)
 ProcessorCount(PROCESSORS)
 
+find_package(Python COMPONENTS Interpreter) # Used for running tests
+if (NOT Python_FOUND)
+  message(WARNING "Could not find Python. Tests will not be run.")
+endif()
+
 if (NOT PROCESSORS EQUAL 0)
   math(EXPR JOBS "${PROCESSORS} * 2")
   set(CTEST_BUILD_FLAGS -j${JOBS})
@@ -19,11 +24,11 @@ macro(add_ledger_harness_tests _class)
     file(GLOB ${_class}_TESTS *.test)
     foreach(TestFile ${${_class}_TESTS})
       get_filename_component(TestFile_Name ${TestFile} NAME_WE)
-      string(FIND ${TestFile_Name} "_py.test" TestFile_IsPythonTest)
+      string(FIND ${TestFile} "_py.test" TestFile_IsPythonTest)
       if ((TestFile_IsPythonTest EQUAL -1) OR HAVE_BOOST_PYTHON)
         add_test(NAME ${_class}Test_${TestFile_Name}
           COMMAND ${Python_EXECUTABLE} ${PROJECT_SOURCE_DIR}/test/RegressTests.py
-          $<TARGET_FILE:ledger> ${PROJECT_SOURCE_DIR}
+          --ledger $<TARGET_FILE:ledger> --sourcepath ${PROJECT_SOURCE_DIR}
           ${TestFile} ${TEST_PYTHON_FLAGS})
         set_tests_properties(${_class}Test_${TestFile_Name}
           PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
