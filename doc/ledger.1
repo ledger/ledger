@@ -913,6 +913,8 @@ can be day names, their abbreviations like
 .Qq Mon ,
 or the weekday number
 starting at 0 for Sunday.
+.It Fl \-sort-all
+Sort all accounts and commodities.
 .It Fl \-strict
 Accounts, tags or commodities not previously declared will cause warnings.
 .It Fl \-subtotal Pq Fl s
@@ -1370,6 +1372,36 @@ long.
 Return true if the transaction is virtual, e.g automated, false otherwise.
 .\".It Sy xact
 .\" A variable scope
+.It Fn averaged_lots
+Return lots with averaged prices.
+.It Fn clear_commodity
+Clear commodity pricing information.
+.It Fn commodity_price commodity
+Return the price of the given commodity.
+.It Fn display_amount amount
+Format amount for display.
+.It Fn display_total total
+Format total for display.
+.It Fn lot_date posting
+Return the lot date of a posting.
+.It Fn lot_price posting
+Return the lot price of a posting.
+.It Fn lot_tag posting
+Return the lot tag of a posting.
+.It Fn nail_down amount
+Fix the precision of an amount.
+.It Fn round amount
+Round an amount to standard precision.
+.It Fn rounded amount
+Return rounded version of amount.
+.It Fn set_commodity_price commodity price
+Set the price for a commodity.
+.It Fn top_amount amount
+Return the top-level amount.
+.It Fn unround amount
+Remove rounding from an amount.
+.It Fn unrounded amount
+Return unrounded version of amount.
 .El
 .\".Sh ENTRIES
 .\".Sh FORMATS
