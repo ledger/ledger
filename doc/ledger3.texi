@@ -6103,7 +6103,7 @@ Set expected freshness of prices in @var{INT} hours.
 @itemx -Q
 Download quotes using the script named @file{getquote}.
 
-@item --getquote-prog @var{PATH}
+@item --getquote @var{PATH}
 Specify the path or command name for the price quote retrieval script.
 The default value is @file{getquote}.  This option allows you to use
 a custom script or specify an absolute path to the quote retrieval
@@ -6272,7 +6272,7 @@ a decimal separator, not the usual period.
 @item --download
 @itemx -Q
 Direct Ledger to download prices using the script defined via the option
-@option{--getquote-prog @var{PATH}} (defaults to @file{getquote}).
+@option{--getquote @var{PATH}} (defaults to @file{getquote}).
 
 @item --file @var{FILE}
 @itemx -f @var{FILE}
@@ -7767,14 +7767,14 @@ distribution.  Downloaded quote price are then appended to the price
 database, usually specified using the environment variable
 @env{LEDGER_PRICE_DB}.
 
-@item --getquote-prog @var{PATH}
+@item --getquote @var{PATH}
 Specify the path or command name for the price quote retrieval script.
 The default value is @file{getquote}.  This option allows you to use
 a custom script or specify an absolute path to the quote retrieval
 program.  For example:
 
 @example
-ledger --getquote-prog /usr/local/bin/myquotes --download bal
+ledger --getquote /usr/local/bin/myquotes --download bal
 @end example
 
 The script will be called with the commodity symbol as the first argument

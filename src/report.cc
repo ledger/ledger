@@ -84,8 +84,8 @@ void report_t::normalize_options(const string& verb)
   commodity_pool_t::current_pool->keep_base  = HANDLED(base);
   commodity_pool_t::current_pool->get_quotes = session.HANDLED(download);
 
-  if (session.HANDLED(getquote_prog))
-    commodity_pool_t::current_pool->getquote_prog = session.HANDLER(getquote_prog).str();
+  if (session.HANDLED(getquote))
+    commodity_pool_t::current_pool->getquote = session.HANDLER(getquote).str();
 
   if (session.HANDLED(price_exp_))
     commodity_pool_t::current_pool->quote_leeway =

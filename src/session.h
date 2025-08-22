@@ -140,8 +140,8 @@ public:
   OPTION(session_t, download); // -Q
   
   OPTION__
-  (session_t, getquote_prog,
-   CTOR(session_t, getquote_prog) { value = "getquote"; });
+  (session_t, getquote,
+   CTOR(session_t, getquote) { value = "getquote"; });
 
   OPTION_(session_t, decimal_comma, DO() {
       commodity_t::decimal_comma_by_default = true;
