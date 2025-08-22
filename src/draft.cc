@@ -40,6 +40,7 @@
 #include "report.h"
 #include "lookup.h"
 #include "print.h"
+#include "times.h"
 
 namespace ledger {
 
@@ -106,7 +107,7 @@ void draft_t::parse_args(const value_t& args)
 
     if (check_for_date &&
         regex_match(arg, what, date_mask)) {
-      tmpl->date = parse_date(what[0]);
+      tmpl->date_string = what[0];
       check_for_date = false;
     }
     else if (check_for_date &&
@@ -144,7 +145,7 @@ void draft_t::parse_args(const value_t& args)
       else if (arg == "on") {
         if (++begin == end)
           throw std::runtime_error(_("Invalid xact command arguments"));
-        tmpl->date = parse_date((*begin).to_string());
+        tmpl->date_string = (*begin).to_string();
         check_for_date = false;
       }
       else if (arg == "code") {
@@ -264,12 +265,38 @@ xact_t * draft_t::insert(journal_t& journal)
     }
   }
 
-  if (! tmpl->date) {
+  if (! tmpl->date && ! tmpl->date_string) {
     added->_date = CURRENT_DATE();
     DEBUG("draft.xact", "Setting date to current date");
-  } else {
+  } else if (tmpl->date) {
     added->_date = tmpl->date;
     DEBUG("draft.xact", "Setting date to template date: " << *tmpl->date);
+  } else if (tmpl->date_string) {
+    // Convert separators to slashes for consistent parsing
+    string date_str = *tmpl->date_string;
+    for (char& c : date_str) {
+      if (c == '-' || c == '.')
+        c = '/';
+    }
+    
+    // Check if the date string contains a year (has at least 2 slashes or a 4-digit year)
+    size_t slash_count = std::count(date_str.begin(), date_str.end(), '/');
+    bool has_year = slash_count >= 2 || date_str.find_first_of("0123456789") != string::npos && 
+                    date_str.length() > 5; // Rough check for year presence
+    
+    added->_date = parse_date(date_str);
+    
+    // If no explicit year in the date and we have a year directive,
+    // ensure we use the year directive's year
+    if (!has_year && added->_date && year_directive_year) {
+      // Only adjust if the year differs
+      if (added->_date->year() != *year_directive_year) {
+        added->_date = date_t(*year_directive_year, added->_date->month(), added->_date->day());
+        DEBUG("draft.xact", "Adjusted xact date to use year from year directive: " << *added->_date);
+      }
+    }
+    
+    DEBUG("draft.xact", "Setting date to parsed date string: " << *tmpl->date_string << " -> " << added->_date);
   }
 
   added->set_state(item_t::UNCLEARED);
