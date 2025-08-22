@@ -177,7 +177,7 @@ namespace {
     void apply_account_directive(char * line);
     void apply_tag_directive(char * line);
     void apply_rate_directive(char * line);
-    void apply_year_directive(char * line);
+    void apply_year_directive(char * line, bool use_apply_stack = false);
     void end_apply_directive(char * line);
 
     xact_t * xact_directive(char * line, std::streamsize len,
@@ -860,7 +860,7 @@ void instance_t::apply_directive(char * line)
   else if (keyword == "fixed" || keyword == "rate")
     apply_rate_directive(b);
   else if (keyword == "year")
-    apply_year_directive(b);
+    apply_year_directive(b, true);  // "apply year" uses apply_stack
 }
 
 void instance_t::apply_account_directive(char * line)
@@ -894,11 +894,15 @@ void instance_t::apply_rate_directive(char * line)
   }
 }
 
-void instance_t::apply_year_directive(char * line)
+void instance_t::apply_year_directive(char * line, bool use_apply_stack)
 {
   try {
     unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));
-    apply_stack.push_front(application_t("year", epoch));
+    if (use_apply_stack) {
+      // Used for "apply year" which needs "end apply"
+      apply_stack.push_front(application_t("year", epoch));
+    }
+    // Otherwise for plain "year" directive, don't use apply_stack - it's a permanent change
     DEBUG("times.epoch", "Setting current year to " << year);
     // This must be set to the last day of the year, otherwise partial
     // dates like "11/01" will refer to last year's November, not the

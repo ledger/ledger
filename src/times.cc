@@ -162,10 +162,16 @@ namespace {
         *traits = io.traits;
 
       if (! io.traits.has_year) {
-        when = date_t(CURRENT_DATE().year(), when.month(), when.day());
-
-        if (when.month() > CURRENT_DATE().month())
-          when -= gregorian::years(1);
+        if (epoch) {
+          // When using the epoch from year directives, use it directly
+          DEBUG("times.parse", "Using epoch year: " << epoch->date().year());
+          when = date_t(epoch->date().year(), when.month(), when.day());
+        } else {
+          // When no epoch, use current date and handle month rollback
+          when = date_t(CURRENT_DATE().year(), when.month(), when.day());
+          if (when.month() > CURRENT_DATE().month())
+            when -= gregorian::years(1);
+        }
       }
     }
     return when;

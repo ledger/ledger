@@ -56,6 +56,7 @@ class draft_t : public expr_base_t<value_t>
   struct xact_template_t
   {
     optional<date_t> date;
+    optional<string> date_string;
     optional<string> code;
     optional<string> note;
     mask_t           payee_mask;
@@ -82,6 +83,7 @@ class draft_t : public expr_base_t<value_t>
     }
     xact_template_t(const xact_template_t& other)
       : date(other.date),
+        date_string(other.date_string),
         code(other.code),
         note(other.note),
         payee_mask(other.payee_mask),

@@ -1,0 +1,21 @@
+year 2021
+year 2022
+year 2023
+year 2024
+year 2025
+
+2025-03-02 Shop
+    Expenses:Food  $5.40
+    Account
+
+test xact 03-03 Shop 10
+2025/03/03 Shop
+    Expenses:Food                             $10.00
+    Account
+end test
+
+test xact 03/03 Shop 10
+2025/03/03 Shop
+    Expenses:Food                             $10.00
+    Account
+end test
