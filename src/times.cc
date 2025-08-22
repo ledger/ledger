@@ -40,6 +40,7 @@
 namespace ledger {
 
 optional<datetime_t> epoch;
+optional<int> year_directive_year;  // Track year from year directives separately
 
 date_time::weekdays start_of_week = gregorian::Sunday;
 
@@ -162,18 +163,19 @@ namespace {
         *traits = io.traits;
 
       if (! io.traits.has_year) {
-        if (epoch) {
-          // When using the epoch from year directives, use it for the year
+        // First check if we have a year directive year to use
+        if (year_directive_year) {
+          // Use the year from the year directive
+          when = date_t(*year_directive_year, when.month(), when.day());
+          DEBUG("times.parse", "Using year directive year: " << *year_directive_year);
+        } else if (epoch) {
+          // When using the epoch (e.g., from --now), use it for the year
           date_t reference_date = epoch->date();
           when = date_t(reference_date.year(), when.month(), when.day());
           
-          // Only apply month rollback if epoch is not Dec 31 (year directive marker)
-          // Year directives set epoch to Dec 31 to indicate we want that year explicitly
-          if (reference_date.month() != 12 || reference_date.day() != 31) {
-            // Apply month rollback for other epoch uses
-            if (when.month() > reference_date.month())
-              when -= gregorian::years(1);
-          }
+          // Apply month rollback if the parsed month is after the epoch's month
+          if (when.month() > reference_date.month())
+            when -= gregorian::years(1);
           
           DEBUG("times.parse", "Using epoch year: " << reference_date.year() 
                 << ", epoch month: " << reference_date.month()

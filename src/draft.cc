@@ -40,6 +40,7 @@
 #include "report.h"
 #include "lookup.h"
 #include "print.h"
+#include "times.h"
 
 namespace ledger {
 
@@ -277,7 +278,24 @@ xact_t * draft_t::insert(journal_t& journal)
       if (c == '-' || c == '.')
         c = '/';
     }
+    
+    // Check if the date string contains a year (has at least 2 slashes or a 4-digit year)
+    size_t slash_count = std::count(date_str.begin(), date_str.end(), '/');
+    bool has_year = slash_count >= 2 || date_str.find_first_of("0123456789") != string::npos && 
+                    date_str.length() > 5; // Rough check for year presence
+    
     added->_date = parse_date(date_str);
+    
+    // If no explicit year in the date and we have a year directive,
+    // ensure we use the year directive's year
+    if (!has_year && added->_date && year_directive_year) {
+      // Only adjust if the year differs
+      if (added->_date->year() != *year_directive_year) {
+        added->_date = date_t(*year_directive_year, added->_date->month(), added->_date->day());
+        DEBUG("draft.xact", "Adjusted xact date to use year from year directive: " << *added->_date);
+      }
+    }
+    
     DEBUG("draft.xact", "Setting date to parsed date string: " << *tmpl->date_string << " -> " << added->_date);
   }
 

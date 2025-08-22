@@ -904,10 +904,17 @@ void instance_t::apply_year_directive(char * line, bool use_apply_stack)
     }
     // Otherwise for plain "year" directive, don't use apply_stack - it's a permanent change
     DEBUG("times.epoch", "Setting current year to " << year);
-    // This must be set to the last day of the year, otherwise partial
-    // dates like "11/01" will refer to last year's November, not the
-    // current year.
-    epoch = datetime_t(date_t(year, 12, 31));
+    
+    // Track the year directive separately
+    year_directive_year = year;
+    
+    // Only set epoch if it's not already set (e.g., by --now)
+    if (!epoch) {
+      // This must be set to the last day of the year, otherwise partial
+      // dates like "11/01" will refer to last year's November, not the
+      // current year.
+      epoch = datetime_t(date_t(year, 12, 31));
+    }
   } catch(bad_lexical_cast &) {
     throw_(parse_error, _f("Argument '%1%' not a valid year") % skip_ws(line));
   }
