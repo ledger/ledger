@@ -633,11 +633,16 @@ void amount_t::in_place_roundto(int places) {
 
   auto whole(mpq_numref(tempq));
   auto reminder(mpq_denref(tempq));
-  mpz_fdiv_qr(whole, reminder, mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
+  mpz_tdiv_qr(whole, reminder, mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
   mpz_mul_2exp(reminder, reminder, 1);
+  mpz_abs(reminder, reminder);
   const int rem_denom_cmp = mpz_cmp(reminder, mpq_denref(MP(quantity)));
-  if (rem_denom_cmp > 0 || (rem_denom_cmp == 0 && mpz_odd_p(whole)))
-    mpz_add_ui(whole, whole, 1);
+  if (rem_denom_cmp >= 0) {
+    if (mpz_sgn(mpq_numref(MP(quantity))) >= 0)
+      mpz_add_ui(whole, whole, 1);
+    else
+      mpz_sub_ui(whole, whole, 1);
+  }
 
   if (places > 0) {
     mpq_set_num(MP(quantity), whole);
