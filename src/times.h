@@ -65,6 +65,7 @@ inline bool is_valid(const date_t& moment) {
 }
 
 extern optional<datetime_t> epoch;
+extern optional<int> year_directive_year;
 
 #ifdef BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK
 #define TRUE_CURRENT_TIME() (boost::posix_time::microsec_clock::local_time())
