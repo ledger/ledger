@@ -9,12 +9,23 @@
 year 2021
 year 2022
 year 2023
-year 2024
-year 2025
 
-2025-03-02 Shop
-    Expenses:Food  $5.40
+year 2024
+2024-03-03=03-07 * Shop  ; for =2024-03-07
+    Expenses:Food                                 $9.00
     Account
+
+year 2025
+2025-03-03=03-06 Shop    ; for =2025-03-06
+    Expenses:Food                                $10.00
+    Account
+
+test reg --effective
+24-Mar-07 Shop                  Expenses:Food                 $9.00        $9.00
+                                Account                      $-9.00            0
+25-Mar-06 Shop                  Expenses:Food                $10.00       $10.00
+                                Account                     $-10.00            0
+end test
 
 # The issue author expected 2025 for both 03-03 and 03/03 formats
 test xact 03-03 Shop 10
