@@ -1,3 +1,11 @@
+# Test case from issue #2413
+# The xact command should use the last year directive (2025) when creating
+# a new transaction with a partial date like "03-03"
+#
+# This test reproduces the exact examples from the issue report:
+# https://github.com/ledger/ledger/issues/2413
+
+# First example from the issue: multiple year directives
 year 2021
 year 2022
 year 2023
@@ -8,6 +16,7 @@ year 2025
     Expenses:Food  $5.40
     Account
 
+# The issue author expected 2025 for both 03-03 and 03/03 formats
 test xact 03-03 Shop 10
 2025/03/03 Shop
     Expenses:Food                             $10.00
