@@ -52,7 +52,8 @@ commodity_quote_from_script(commodity_t& commodity,
   char buf[256];
   buf[0] = '\0';
 
-  string getquote_cmd("getquote \"");
+  string getquote_cmd(commodity_pool_t::current_pool->getquote_prog);
+  getquote_cmd += " \"";
   getquote_cmd += commodity.symbol();
   getquote_cmd += "\" \"";
   if (exchange_commodity)
@@ -92,7 +93,7 @@ commodity_quote_from_script(commodity_t& commodity,
   } else {
     DEBUG("commodity.download",
           "Failed to download price for '" << commodity.symbol() <<
-          "' (command: \"getquote " << commodity.symbol() <<
+          "' (command: \"" << commodity_pool_t::current_pool->getquote_prog << " " << commodity.symbol() <<
           " " << (exchange_commodity ?
                   exchange_commodity->symbol() : "''") << "\")");
 

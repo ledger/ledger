@@ -80,6 +80,7 @@ public:
   optional<path> price_db;      // --price-db=
   long           quote_leeway;  // --leeway=
   bool           get_quotes;    // --download
+  string         getquote_prog; // --getquote-prog=
 
   function<optional<price_point_t>
            (commodity_t& commodity, const commodity_t * in_terms_of)>

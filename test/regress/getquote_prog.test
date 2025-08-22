@@ -1,0 +1,9 @@
+test --getquote-prog=/usr/local/bin/myquote bal
+2010/01/01 Test
+    Assets:Cash   $100
+    Equity
+
+2010/01/02 Purchase
+    Assets:Stocks   10 AAPL
+    Assets:Cash    -$1000
+end test
