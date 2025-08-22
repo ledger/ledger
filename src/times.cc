@@ -163,9 +163,22 @@ namespace {
 
       if (! io.traits.has_year) {
         if (epoch) {
-          // When using the epoch from year directives, use it directly
-          DEBUG("times.parse", "Using epoch year: " << epoch->date().year());
-          when = date_t(epoch->date().year(), when.month(), when.day());
+          // When using the epoch from year directives, use it for the year
+          date_t reference_date = epoch->date();
+          when = date_t(reference_date.year(), when.month(), when.day());
+          
+          // Only apply month rollback if epoch is not Dec 31 (year directive marker)
+          // Year directives set epoch to Dec 31 to indicate we want that year explicitly
+          if (reference_date.month() != 12 || reference_date.day() != 31) {
+            // Apply month rollback for other epoch uses
+            if (when.month() > reference_date.month())
+              when -= gregorian::years(1);
+          }
+          
+          DEBUG("times.parse", "Using epoch year: " << reference_date.year() 
+                << ", epoch month: " << reference_date.month()
+                << ", parsed month: " << when.month()
+                << ", final year: " << when.year());
         } else {
           // When no epoch, use current date and handle month rollback
           when = date_t(CURRENT_DATE().year(), when.month(), when.day());
