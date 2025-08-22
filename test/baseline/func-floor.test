@@ -1,6 +1,14 @@
+D $1,000.000
+assert floor($12.345 + $0.5) == $12
+assert floor($12.345 * 10 + $0.5)/10 == $12.3
+assert floor($12.345 * 100 + $0.5)/100 == $12.35
+
 2012-01-01 Test floor function
     Assets:Test                       $100.00
     Equity:Opening
+
+test bal
+end test
 
 test eval "floor(100.75)"
 100
