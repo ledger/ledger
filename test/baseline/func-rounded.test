@@ -2,6 +2,14 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "rounded(100.75)"
+100.75
+end test
+
+test eval "rounded(-25.3)"
+-25.3
+end test
+
 test reg --display-amount "rounded()" -> 1
 __ERROR__
 While rounding :

@@ -2,6 +2,10 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "to_balance(100)"
+100
+end test
+
 test reg --display-amount "to_balance()" -> 1
 __ERROR__
 While calling function 'to_balance ':

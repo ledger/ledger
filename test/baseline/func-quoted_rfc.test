@@ -2,6 +2,14 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "quoted_rfc('hello')"
+"hello"
+end test
+
+test eval "quoted_rfc('test')"
+"test"
+end test
+
 test reg --display-amount "quoted_rfc()" -> 1
 __ERROR__
 While calling function 'quoted_rfc ':

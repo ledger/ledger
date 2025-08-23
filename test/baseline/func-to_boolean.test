@@ -2,6 +2,18 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "to_boolean(1)"
+1
+end test
+
+test eval "to_boolean(0)"
+0
+end test
+
+test eval "to_boolean(100)"
+1
+end test
+
 test reg --display-amount "to_boolean()" -> 1
 __ERROR__
 While calling function 'to_boolean ':

@@ -2,6 +2,14 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "floor(100.75)"
+100
+end test
+
+test eval "floor(-25.3)"
+-26
+end test
+
 test reg --display-amount "floor()" -> 1
 __ERROR__
 While calling function 'floor ':

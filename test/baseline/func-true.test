@@ -2,6 +2,10 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "true"
+1
+end test
+
 test reg --display-amount "true()" -> 1
 __ERROR__
 While handling posting from "/Users/johnw/src/ledger/work/more-tests/test/baseline/func-true.test", line 2:

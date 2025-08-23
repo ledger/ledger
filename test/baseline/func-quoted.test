@@ -2,6 +2,14 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "quoted('hello')"
+"hello"
+end test
+
+test eval "quoted('test')"
+"test"
+end test
+
 test reg --display-amount "quoted()" -> 1
 __ERROR__
 While calling function 'quoted ':

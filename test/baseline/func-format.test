@@ -2,6 +2,10 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval --now=2025/08/22 "format('Date: %(date)')"
+Date: 2025/08/22
+end test
+
 test reg --display-amount "format()" -> 1
 __ERROR__
 While calling function 'format ':

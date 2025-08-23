@@ -2,6 +2,18 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "to_sequence(100)"
+(100)
+end test
+
+test eval "to_sequence(42)"
+(42)
+end test
+
+test eval "to_sequence(100)"
+(100)
+end test
+
 test reg --display-amount "to_sequence()" -> 1
 __ERROR__
 While calling function 'to_sequence ':

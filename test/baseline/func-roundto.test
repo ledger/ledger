@@ -2,6 +2,14 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "roundto(123.456, 2)"
+123.46
+end test
+
+test eval "roundto(100.99, 0)"
+101
+end test
+
 test reg --display-amount "roundto()" -> 1
 __ERROR__
 While calling function 'roundto ':

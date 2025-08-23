@@ -2,6 +2,18 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "P(100)"
+100
+end test
+
+test eval "P(42)"
+42
+end test
+
+test eval "P(100)"
+100
+end test
+
 test reg --display-amount "P()" -> 1
 __ERROR__
 While calling function 'P ':

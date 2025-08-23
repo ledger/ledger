@@ -2,6 +2,14 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "min(100, 200)"
+100
+end test
+
+test eval "min(-50, 75)"
+-50
+end test
+
 test reg --display-amount "min()" -> 1
 __ERROR__
 While calling function 'min ':

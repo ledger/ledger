@@ -2,6 +2,15 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "join('foo\nbar')"
+foo\nbar
+end test
+
+test eval "'foo\nbar'"
+foo
+bar
+end test
+
 test reg --display-amount "join()" -> 1
 __ERROR__
 While calling function 'join ':

@@ -2,6 +2,18 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "top_amount(100)"
+100
+end test
+
+test eval "top_amount(42)"
+42
+end test
+
+test eval "top_amount(100)"
+100
+end test
+
 test reg --display-amount "top_amount()" -> 1
 __ERROR__
 While calling function 'top_amount ':

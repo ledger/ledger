@@ -2,6 +2,14 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "quantity(100)"
+100
+end test
+
+test eval "quantity(1)"
+1
+end test
+
 test reg --display-amount "quantity()" -> 1
 __ERROR__
 While calling function 'quantity ':

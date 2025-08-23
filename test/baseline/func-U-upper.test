@@ -2,6 +2,10 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "U(100)"
+100
+end test
+
 test reg --display-amount "U()" -> 1
 __ERROR__
 While calling function 'U ':

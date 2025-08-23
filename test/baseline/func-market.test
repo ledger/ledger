@@ -2,6 +2,18 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "market(100)"
+100
+end test
+
+test eval "market(42)"
+42
+end test
+
+test eval "market(100)"
+100
+end test
+
 test reg --display-amount "market()" -> 1
 __ERROR__
 While calling function 'market ':

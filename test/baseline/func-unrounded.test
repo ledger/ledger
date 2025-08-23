@@ -2,6 +2,14 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "unrounded(100)"
+100
+end test
+
+test eval "unrounded(-50.75)"
+-50.75
+end test
+
 test reg --display-amount "unrounded()" -> 1
 __ERROR__
 While unrounding :

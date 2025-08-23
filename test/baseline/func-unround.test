@@ -2,6 +2,14 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "unround(100.75)"
+100.75
+end test
+
+test eval "unround(-25.3)"
+-25.3
+end test
+
 test reg --display-amount "unround()" -> 1
 __ERROR__
 While calling function 'unround ':

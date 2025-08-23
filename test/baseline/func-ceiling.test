@@ -2,6 +2,14 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "ceiling(100.75)"
+101
+end test
+
+test eval "ceiling(-25.3)"
+-25
+end test
+
 test reg --display-amount "ceiling()" -> 1
 __ERROR__
 While calling function 'ceiling ':

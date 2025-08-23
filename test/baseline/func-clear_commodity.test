@@ -2,6 +2,14 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "clear_commodity(100)"
+100
+end test
+
+test eval "clear_commodity(1)"
+1
+end test
+
 test reg --display-amount "clear_commodity()" -> 1
 __ERROR__
 While calling function 'clear_commodity ':

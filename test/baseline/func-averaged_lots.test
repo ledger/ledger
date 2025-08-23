@@ -2,6 +2,10 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "averaged_lots(100)"
+100
+end test
+
 test reg --display-amount "averaged_lots()" -> 1
 __ERROR__
 While calling function 'averaged_lots ':

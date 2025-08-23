@@ -2,6 +2,14 @@
     Assets:Test                       $100.00
     Equity:Opening
 
+test eval "str('hello')"
+hello
+end test
+
+test eval "str('test')"
+test
+end test
+
 test reg --display-amount "str()" -> 1
 __ERROR__
 While calling function 'str ':
