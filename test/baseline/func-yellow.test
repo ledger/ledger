@@ -1,0 +1,7 @@
+2012-01-01 Test yellow function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "yellow()"
+yellow
+end test

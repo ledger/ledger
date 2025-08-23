@@ -1,0 +1,7 @@
+2012-01-01 Test cost function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "cost()"
+0
+end test
