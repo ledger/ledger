@@ -1,0 +1,11 @@
+2012-01-01 Test quoted_rfc function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test reg --display-amount "quoted_rfc()" -> 1
+__ERROR__
+While calling function 'quoted_rfc ':
+While handling posting from "/Users/johnw/src/ledger/work/more-tests/test/baseline/func-quoted_rfc.test", line 2:
+>     Assets:Test                       $100.00
+Error: Too few arguments to function
+end test

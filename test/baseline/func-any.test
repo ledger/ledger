@@ -1,0 +1,11 @@
+2012-01-01 Test any function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "any()" -> 1
+__ERROR__
+While evaluating value expression:
+  any()
+  ^^^^^
+Error: Unknown identifier 'any'
+end test

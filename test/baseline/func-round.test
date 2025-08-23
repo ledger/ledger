@@ -1,0 +1,11 @@
+2012-01-01 Test round function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test reg --display-amount "round()" -> 1
+__ERROR__
+While calling function 'round ':
+While handling posting from "/Users/johnw/src/ledger/work/more-tests/test/baseline/func-round.test", line 2:
+>     Assets:Test                       $100.00
+Error: Too few arguments to function
+end test

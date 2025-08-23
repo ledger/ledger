@@ -1,0 +1,12 @@
+2012-01-01 Test account function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "account()" -> 1
+__ERROR__
+While evaluating value expression:
+  account()
+  ^^^^^^^^^
+While calling function 'account ':
+Error: Too few arguments to function
+end test

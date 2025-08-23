@@ -1,0 +1,6 @@
+2012-01-01 Test scrub function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test reg --display-amount "scrub()"
+end test

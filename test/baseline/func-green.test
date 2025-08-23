@@ -1,0 +1,7 @@
+2012-01-01 Test green function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "green()"
+green
+end test

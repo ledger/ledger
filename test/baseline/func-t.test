@@ -1,0 +1,6 @@
+2012-01-01 Test t function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "t()"
+end test

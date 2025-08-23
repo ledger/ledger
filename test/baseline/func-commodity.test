@@ -1,0 +1,12 @@
+2012-01-01 Test commodity function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "commodity()" -> 1
+__ERROR__
+While evaluating value expression:
+  commodity()
+  ^^^^^^^^^^^
+While calling function 'commodity ':
+Error: Too few arguments to function
+end test

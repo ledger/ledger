@@ -1,0 +1,11 @@
+2012-01-01 Test O function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "O()" -> 1
+__ERROR__
+While evaluating value expression:
+  O()
+  ^^^
+Error: Unknown identifier 'O'
+end test

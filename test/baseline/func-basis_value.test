@@ -1,0 +1,10 @@
+2012-01-01 Test basis_value function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test reg --display-amount "basis_value(amount)" -> 1
+__ERROR__
+While handling posting from "/Users/johnw/src/ledger/work/more-tests/test/baseline/func-basis_value.test", line 2:
+>     Assets:Test                       $100.00
+Error: Unknown identifier 'basis_value'
+end test

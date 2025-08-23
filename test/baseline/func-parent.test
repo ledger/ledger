@@ -1,0 +1,11 @@
+2012-01-01 Test parent function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "parent()" -> 1
+__ERROR__
+While evaluating value expression:
+  parent()
+  ^^^^^^^^
+Error: Unknown identifier 'parent'
+end test
