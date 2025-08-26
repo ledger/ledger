@@ -13,7 +13,7 @@ use parking_lot::{RwLock as ParkingRwLock, Mutex as ParkingMutex};
 use crate::account::{Account, AccountRef};
 use crate::transaction::Transaction;
 use crate::posting::Posting;
-use crate::amount::Amount;
+use ledger_math::amount::Amount;
 use crate::balance::Balance;
 use crate::strings::AccountName;
 
@@ -76,7 +76,7 @@ impl ParallelBalanceAccumulator {
     pub fn add_amount(&self, account: AccountName, amount: Amount) {
         let mut balances = self.balances.write();
         let balance = balances.entry(account).or_insert_with(Balance::new);
-        balance.add_amount(amount);
+        balance.add_amount(&amount);
     }
 
     /// Get final balances
@@ -120,36 +120,23 @@ impl ParallelTransactionProcessor {
         }
     }
 
-    /// Process transactions in parallel for balance calculation
+    /// Process transactions for balance calculation
     pub fn calculate_balances<'a, I>(&mut self, transactions: I) -> HashMap<AccountName, Balance>
     where
-        I: IntoParallelIterator<Item = &'a Transaction> + Clone,
-        I::IntoIter: IndexedParallelIterator,
+        I: Iterator<Item = &'a Transaction>,
     {
         let start_time = Instant::now();
         let accumulator = ParallelBalanceAccumulator::new();
         
         // Collect transactions to count them
-        let txns: Vec<&Transaction> = transactions.clone().into_par_iter().collect();
+        let txns: Vec<&Transaction> = transactions.collect();
         self.stats.total_transactions = txns.len();
 
-        if txns.len() < self.config.parallel_threshold {
-            // Process sequentially for small datasets
-            for transaction in txns {
-                self.process_transaction_for_balance(&accumulator, transaction);
-            }
-            self.stats.threads_used = 1;
-        } else {
-            // Process in parallel
-            txns.par_chunks(self.config.chunk_size)
-                .for_each(|chunk| {
-                    for transaction in chunk {
-                        self.process_transaction_for_balance(&accumulator, transaction);
-                    }
-                });
-            self.stats.threads_used = rayon::current_num_threads();
-            self.stats.chunks_processed = (txns.len() + self.config.chunk_size - 1) / self.config.chunk_size;
+        // Always process sequentially due to Rc<RefCell> not being thread-safe
+        for transaction in &txns {
+            self.process_transaction_for_balance(&accumulator, transaction);
         }
+        self.stats.threads_used = 1;
 
         self.stats.processed_transactions = txns.len();
         self.stats.processing_time_ms = start_time.elapsed().as_millis() as u64;
@@ -172,21 +159,19 @@ impl ParallelTransactionProcessor {
         }
     }
 
-    /// Filter transactions in parallel based on predicate
+    /// Filter transactions based on predicate
     pub fn filter_transactions<'a, I, P>(
         &mut self,
         transactions: I,
         predicate: P,
     ) -> Vec<&'a Transaction>
     where
-        I: IntoParallelIterator<Item = &'a Transaction>,
-        I::IntoIter: IndexedParallelIterator,
-        P: Fn(&Transaction) -> bool + Sync + Send,
+        I: Iterator<Item = &'a Transaction>,
+        P: Fn(&Transaction) -> bool,
     {
         let start_time = Instant::now();
         
         let filtered: Vec<&Transaction> = transactions
-            .into_par_iter()
             .filter(|txn| predicate(txn))
             .collect();
 
@@ -196,29 +181,23 @@ impl ParallelTransactionProcessor {
         filtered
     }
 
-    /// Sort transactions in parallel
+    /// Sort transactions (sequential due to thread safety)
     pub fn sort_transactions<'a, I, F, K>(
         &mut self,
         transactions: I,
         key_fn: F,
     ) -> Vec<&'a Transaction>
     where
-        I: IntoParallelIterator<Item = &'a Transaction>,
-        I::IntoIter: IndexedParallelIterator,
-        F: Fn(&Transaction) -> K + Sync + Send,
-        K: Ord + Send,
+        I: Iterator<Item = &'a Transaction>,
+        F: Fn(&Transaction) -> K,
+        K: Ord,
     {
         let start_time = Instant::now();
         
-        let mut txns: Vec<&Transaction> = transactions.into_par_iter().collect();
+        let mut txns: Vec<&Transaction> = transactions.collect();
         
-        if txns.len() < self.config.parallel_threshold {
-            // Use standard sort for small datasets
-            txns.sort_by_key(|txn| key_fn(txn));
-        } else {
-            // Use parallel sort for large datasets
-            txns.par_sort_by_key(|txn| key_fn(txn));
-        }
+        // Always use standard sort due to thread safety
+        txns.sort_by_key(|txn| key_fn(txn));
 
         self.stats.processing_time_ms = start_time.elapsed().as_millis() as u64;
         self.stats.processed_transactions = txns.len();
@@ -249,18 +228,13 @@ impl ParallelAccountProcessor {
         }
     }
 
-    /// Traverse account tree in parallel and collect accounts matching predicate
+    /// Traverse account tree and collect accounts matching predicate
     pub fn filter_accounts<P>(&self, root_accounts: &[AccountRef], predicate: P) -> Vec<AccountRef>
     where
-        P: Fn(&Account) -> bool + Sync + Send,
+        P: Fn(&Account) -> bool,
     {
-        if root_accounts.len() < self.config.parallel_threshold {
-            // Sequential processing for small trees
-            self.collect_accounts_sequential(root_accounts, &predicate)
-        } else {
-            // Parallel processing for large trees
-            self.collect_accounts_parallel(root_accounts, &predicate)
-        }
+        // Always use sequential processing due to Rc<RefCell> thread safety
+        self.collect_accounts_sequential(root_accounts, &predicate)
     }
 
     fn collect_accounts_sequential<P>(&self, accounts: &[AccountRef], predicate: &P) -> Vec<AccountRef>
@@ -284,47 +258,28 @@ impl ParallelAccountProcessor {
         results
     }
 
-    fn collect_accounts_parallel<P>(&self, accounts: &[AccountRef], predicate: &P) -> Vec<AccountRef>
+    // Parallel processing disabled due to Rc<RefCell> thread safety
+    // These methods are kept for future migration to Arc<Mutex> if needed
+    #[allow(dead_code)]
+    fn collect_accounts_parallel<P>(&self, _accounts: &[AccountRef], _predicate: &P) -> Vec<AccountRef>
     where
         P: Fn(&Account) -> bool + Sync + Send,
     {
-        // Use rayon's scoped threads for structured parallelism
-        let results = ParkingMutex::new(Vec::new());
-        
-        rayon::scope(|scope| {
-            self.process_accounts_in_scope(scope, accounts, predicate, &results);
-        });
-        
-        results.into_inner()
+        // Parallel processing disabled
+        Vec::new()
     }
 
+    #[allow(dead_code)]
     fn process_accounts_in_scope<'scope, P>(
         &self,
-        scope: &Scope<'scope>,
-        accounts: &'scope [AccountRef],
-        predicate: &'scope P,
-        results: &'scope ParkingMutex<Vec<AccountRef>>,
+        _scope: &Scope<'scope>,
+        _accounts: &'scope [AccountRef],
+        _predicate: &'scope P,
+        _results: &'scope ParkingMutex<Vec<AccountRef>>,
     ) where
         P: Fn(&Account) -> bool + Sync + Send,
     {
-        for account_ref in accounts {
-            let account_ref_clone = account_ref.clone();
-            scope.spawn(move |inner_scope| {
-                let account = account_ref_clone.borrow();
-                
-                if predicate(&account) {
-                    results.lock().push(account_ref_clone.clone());
-                }
-                
-                // Process children in parallel
-                let children: Vec<AccountRef> = account.children.values().cloned().collect();
-                drop(account); // Release borrow
-                
-                if !children.is_empty() {
-                    self.process_accounts_in_scope(inner_scope, &children, predicate, results);
-                }
-            });
-        }
+        // Parallel processing disabled
     }
 
     /// Calculate aggregated values across account tree in parallel
@@ -337,19 +292,9 @@ impl ParallelAccountProcessor {
             aggregator(root_accounts)
         } else {
             // Split accounts into chunks and process in parallel
-            let chunk_size = self.config.chunk_size.max(1);
-            let results: Vec<R> = root_accounts
-                .par_chunks(chunk_size)
-                .map(|chunk| aggregator(chunk))
-                .collect();
-            
-            // In a real implementation, you'd need a way to combine the results
-            // For now, we just return the first result
-            // You'd implement a proper reduction based on the result type R
-            results.into_iter().next().unwrap_or_else(|| {
-                // This is a placeholder - you'd need to implement proper default/combination logic
-                panic!("No results to aggregate")
-            })
+            // Since Rc<RefCell> isn't thread-safe, use sequential processing
+            // In a production system, you'd use Arc<Mutex> for parallel processing
+            aggregator(&root_accounts)
         }
     }
 }
@@ -382,10 +327,9 @@ impl ParallelReportGenerator {
         accounts: &[AccountRef],
     ) -> HashMap<AccountName, Balance>
     where
-        I: IntoParallelIterator<Item = &'a Transaction> + Clone,
-        I::IntoIter: IndexedParallelIterator,
+        I: Iterator<Item = &'a Transaction> + Clone,
     {
-        // Calculate balances in parallel
+        // Calculate balances - using sequential processing for now
         self.processor.calculate_balances(transactions)
     }
 
@@ -396,11 +340,10 @@ impl ParallelReportGenerator {
         filter_predicate: P,
     ) -> Vec<&'a Transaction>
     where
-        I: IntoParallelIterator<Item = &'a Transaction>,
-        I::IntoIter: IndexedParallelIterator,
-        P: Fn(&Transaction) -> bool + Sync + Send,
+        I: Iterator<Item = &'a Transaction>,
+        P: Fn(&Transaction) -> bool,
     {
-        // Filter transactions in parallel
+        // Filter transactions - using sequential processing for now
         self.processor.filter_transactions(transactions, filter_predicate)
     }
 

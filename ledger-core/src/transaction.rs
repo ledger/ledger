@@ -3,9 +3,10 @@
 use chrono::{NaiveDate, NaiveDateTime};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Arc;
 use rust_decimal::Decimal;
 use crate::posting::{Posting, PostingFlags};
-use crate::amount::Amount;
+use ledger_math::amount::Amount;
 
 /// Position information for source tracking
 #[derive(Debug, Clone)]
@@ -98,6 +99,25 @@ impl Default for TransactionFlags {
     }
 }
 
+impl Default for Transaction {
+    fn default() -> Self {
+        Transaction {
+            date: chrono::Local::now().date_naive(),
+            aux_date: None,
+            status: TransactionStatus::Uncleared,
+            code: None,
+            payee: String::new(),
+            note: None,
+            postings: Vec::new(),
+            flags: TransactionFlags::default(),
+            transaction_type: TransactionType::Normal,
+            pos: None,
+            metadata: HashMap::new(),
+            sequence: 0,
+        }
+    }
+}
+
 impl Default for TransactionType {
     fn default() -> Self {
         TransactionType::Normal
@@ -126,6 +146,21 @@ impl Transaction {
     /// Add a posting to this transaction
     pub fn add_posting(&mut self, posting: Posting) {
         self.postings.push(posting);
+    }
+    
+    /// Set the auxiliary date
+    pub fn set_aux_date(&mut self, date: Option<NaiveDate>) {
+        self.aux_date = date;
+    }
+    
+    /// Set the transaction status
+    pub fn set_status(&mut self, status: TransactionStatus) {
+        self.status = status;
+    }
+    
+    /// Set the transaction code
+    pub fn set_code(&mut self, code: Option<String>) {
+        self.code = code;
     }
 
     /// Remove a posting from this transaction
@@ -189,7 +224,7 @@ impl Transaction {
 
     /// Verify double-entry balance - all postings must sum to zero
     pub fn verify_balance(&self) -> Result<(), String> {
-        let mut balances: HashMap<String, Decimal> = HashMap::new();
+        let mut balances: HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> = HashMap::new();
         let mut has_amount_postings = false;
         
         // Collect all postings that must balance
@@ -205,9 +240,7 @@ impl Transaction {
         for posting in &balancing_postings {
             if let Some(ref amount) = posting.amount {
                 has_amount_postings = true;
-                let commodity = amount.commodity()
-                    .map(|c| c.clone())
-                    .unwrap_or_else(|| String::from(""));
+                let commodity = amount.commodity().cloned();
                 
                 let current_balance = balances.get(&commodity).unwrap_or(&Decimal::ZERO);
                 balances.insert(commodity, current_balance + amount.value());
@@ -221,10 +254,13 @@ impl Transaction {
         // Check that each commodity sums to zero
         for (commodity, balance) in &balances {
             if !balance.is_zero() {
+                let commodity_str = commodity.as_ref()
+                    .map(|c| c.symbol())
+                    .unwrap_or("(none)");
                 return Err(format!(
                     "Transaction does not balance: {} commodity '{}' has balance {}",
                     self.description(),
-                    commodity,
+                    commodity_str,
                     balance
                 ));
             }
@@ -234,15 +270,13 @@ impl Transaction {
     }
 
     /// Calculate the magnitude (total absolute value) of this transaction
-    pub fn magnitude(&self) -> HashMap<String, Decimal> {
-        let mut magnitudes: HashMap<String, Decimal> = HashMap::new();
+    pub fn magnitude(&self) -> HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> {
+        let mut magnitudes: HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> = HashMap::new();
         
         for posting in &self.postings {
             if let Some(ref amount) = posting.amount {
                 if posting.must_balance() {
-                    let commodity = amount.commodity()
-                        .map(|c| c.clone())
-                        .unwrap_or_else(|| String::from(""));
+                    let commodity = amount.commodity().cloned();
                     
                     let current_magnitude = magnitudes.get(&commodity).unwrap_or(&Decimal::ZERO);
                     magnitudes.insert(commodity, current_magnitude + amount.value().abs());
@@ -273,16 +307,14 @@ impl Transaction {
     pub fn auto_balance(&mut self) -> Result<(), String> {
         // Find postings without amounts that must balance
         let mut null_amount_indices: Vec<usize> = Vec::new();
-        let mut balances: HashMap<String, Decimal> = HashMap::new();
+        let mut balances: HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> = HashMap::new();
         
         for (i, posting) in self.postings.iter().enumerate() {
             if posting.must_balance() {
                 if posting.amount.is_none() {
                     null_amount_indices.push(i);
                 } else if let Some(ref amount) = posting.amount {
-                    let commodity = amount.commodity()
-                        .map(|c| c.clone())
-                        .unwrap_or_else(|| String::from(""));
+                    let commodity = amount.commodity().cloned();
                     
                     let current_balance = balances.get(&commodity).unwrap_or(&Decimal::ZERO);
                     balances.insert(commodity, current_balance + amount.value());
@@ -309,7 +341,7 @@ impl Transaction {
                 let missing_amount = -balance;
                 
                 // Set the calculated amount
-                let amount = if commodity.is_empty() {
+                let amount = if commodity.is_none() {
                     Amount::new(missing_amount)
                 } else {
                     Amount::with_commodity(missing_amount, commodity.clone())
@@ -708,14 +740,12 @@ impl Transaction {
     }
 
     /// Get transaction total value for virtual postings (separate from balance)
-    pub fn virtual_balance(&self) -> HashMap<String, Decimal> {
-        let mut balances: HashMap<String, Decimal> = HashMap::new();
+    pub fn virtual_balance(&self) -> HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> {
+        let mut balances: HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> = HashMap::new();
         
         for posting in self.virtual_postings() {
             if let Some(ref amount) = posting.amount {
-                let commodity = amount.commodity()
-                    .map(|c| c.clone())
-                    .unwrap_or_else(|| String::from(""));
+                let commodity = amount.commodity().cloned();
                 
                 let current_balance = balances.get(&commodity).unwrap_or(&Decimal::ZERO);
                 balances.insert(commodity, current_balance + amount.value());
@@ -726,15 +756,18 @@ impl Transaction {
     }
 
     /// Create a virtual posting balance assertion
-    pub fn assert_virtual_balance(&self, expected_balances: &HashMap<String, Decimal>) -> Result<(), String> {
+    pub fn assert_virtual_balance(&self, expected_balances: &HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal>) -> Result<(), String> {
         let actual_balances = self.virtual_balance();
         
         for (commodity, expected) in expected_balances {
             let actual = actual_balances.get(commodity).unwrap_or(&Decimal::ZERO);
             if actual != expected {
+                let commodity_str = commodity.as_ref()
+                    .map(|c| c.symbol())
+                    .unwrap_or("(none)");
                 return Err(format!(
                     "Virtual balance assertion failed for commodity '{}': expected {}, got {}",
-                    commodity, expected, actual
+                    commodity_str, expected, actual
                 ));
             }
         }

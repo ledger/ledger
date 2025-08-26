@@ -1,0 +1,21 @@
+; Test ledger file for development
+
+2024/01/01 Opening Balance
+    Assets:Checking     $1000.00
+    Equity:OpeningBalance
+
+2024/01/15 Grocery Store
+    Expenses:Food       $45.67
+    Assets:Checking
+
+2024/01/20 Salary
+    Assets:Checking     $2500.00
+    Income:Salary
+
+2024/01/25 Rent Payment
+    Expenses:Rent       $1200.00
+    Assets:Checking
+
+2024/01/30 Utility Bill
+    Expenses:Utilities  $150.00
+    Assets:Checking

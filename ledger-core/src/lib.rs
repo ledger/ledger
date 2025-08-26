@@ -7,14 +7,14 @@
 #![warn(clippy::all)]
 #![warn(missing_docs)]
 
-/// Module for amount arithmetic with commodity support
-pub mod amount;
+/// Re-export amount types from ledger-math
+pub use ledger_math::amount;
 
-/// Module for multi-commodity balance management
-pub mod balance;
+/// Re-export balance types from ledger-math
+pub use ledger_math::balance;
 
-/// Module for commodity definitions and handling
-pub mod commodity;
+/// Re-export commodity types from ledger-math
+pub use ledger_math::commodity;
 
 /// Module for hierarchical account structure
 pub mod account;

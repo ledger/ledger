@@ -30,6 +30,9 @@ pub struct Session {
     
     /// Current working directory when started
     pub initial_cwd: PathBuf,
+    
+    /// Parsed journal (loaded on demand)
+    pub parsed_journal: Option<ledger_core::journal::Journal>,
 }
 
 /// Configuration loaded from init files and environment variables
@@ -100,6 +103,7 @@ impl Session {
             debug_enabled: cli.debug.is_some() || cli.verbose,
             verbose_enabled: cli.verbose,
             initial_cwd,
+            parsed_journal: None,
         };
         
         // Load configuration if not in args-only mode

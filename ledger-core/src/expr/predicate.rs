@@ -220,7 +220,7 @@ impl QueryPredicate {
             context.set_variable("value".to_string(), Value::Decimal(amount.value()));
             
             if let Some(commodity) = amount.commodity() {
-                context.set_variable("commodity".to_string(), Value::String(commodity.clone()));
+                context.set_variable("commodity".to_string(), Value::String(commodity.symbol().to_string()));
             }
         }
         
@@ -231,11 +231,11 @@ impl QueryPredicate {
         
         // Posting-specific payee and note
         if let Some(ref payee) = posting.payee {
-            context.set_variable("posting_payee".to_string(), Value::String(payee.clone()));
+            context.set_variable("posting_payee".to_string(), Value::String(payee.to_string()));
         }
         
         if let Some(ref note) = posting.note {
-            context.set_variable("posting_note".to_string(), Value::String(note.clone()));
+            context.set_variable("posting_note".to_string(), Value::String(note.to_string()));
         }
         
         // Status flags

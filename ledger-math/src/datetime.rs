@@ -3,10 +3,11 @@
 //! This module provides date and time functionality compatible with the C++ Ledger
 //! implementation, including timezone support and various date formats.
 
-use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc, Datelike, Timelike, Days, Months};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc, Datelike, Timelike, Days, Months, TimeDelta};
 use chrono_tz::{Tz, America};
 use std::fmt;
 use thiserror::Error;
+use serde::{Serialize, Deserialize};
 
 /// Errors that can occur during date/time operations
 #[derive(Error, Debug, Clone, PartialEq)]
@@ -27,7 +28,7 @@ pub type DateTimeResult<T> = Result<T, DateTimeError>;
 pub static DEFAULT_TIMEZONE: Tz = America::Chicago;
 
 /// Date type compatible with C++ date_t
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Date(pub NaiveDate);
 
 impl Date {
@@ -78,11 +79,49 @@ impl Date {
     pub fn day(&self) -> u32 {
         self.0.day()
     }
+    
+    /// Format the date using a format string
+    pub fn format<'a>(&self, fmt: &'a str) -> impl fmt::Display + 'a {
+        self.0.format(fmt)
+    }
 }
 
 impl fmt::Display for Date {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0.format("%Y-%m-%d"))
+    }
+}
+
+// Arithmetic operations for Date
+impl std::ops::Add<TimeDelta> for Date {
+    type Output = Date;
+    
+    fn add(self, rhs: TimeDelta) -> Self::Output {
+        Date(self.0 + rhs)
+    }
+}
+
+impl std::ops::Sub<TimeDelta> for Date {
+    type Output = Date;
+    
+    fn sub(self, rhs: TimeDelta) -> Self::Output {
+        Date(self.0 - rhs)
+    }
+}
+
+impl std::ops::Sub<Date> for Date {
+    type Output = TimeDelta;
+    
+    fn sub(self, rhs: Date) -> Self::Output {
+        self.0 - rhs.0
+    }
+}
+
+impl std::ops::Sub<Date> for NaiveDate {
+    type Output = TimeDelta;
+    
+    fn sub(self, rhs: Date) -> Self::Output {
+        self - rhs.0
     }
 }
 

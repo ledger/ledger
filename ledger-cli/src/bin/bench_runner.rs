@@ -99,8 +99,8 @@ fn main() -> Result<()> {
         timeout_seconds: 120,
         profile_memory: args.profile_memory,
         compare_with_cpp: args.compare_cpp,
-        cpp_ledger_path: args.cpp_ledger,
-        results_dir: args.results_dir,
+        cpp_ledger_path: args.cpp_ledger.clone(),
+        results_dir: args.results_dir.clone(),
         regression_threshold: args.regression_threshold,
     };
 
@@ -147,9 +147,9 @@ fn main() -> Result<()> {
 
     // Generate report
     let report_path = if args.html_report {
-        args.output.with_extension("html")
+        args.output.clone().with_extension("html")
     } else {
-        args.output
+        args.output.clone()
     };
 
     runner.generate_report(&all_results, &report_path)?;

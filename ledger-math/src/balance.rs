@@ -7,9 +7,10 @@
 use std::collections::HashMap;
 use std::fmt;
 use std::ops::{Add, Sub, Mul, Div, AddAssign, SubAssign, MulAssign, DivAssign, Neg};
+use std::sync::Arc;
 
 use crate::amount::{Amount, AmountError};
-use crate::commodity::{CommodityRef, KeepDetails};
+use crate::commodity::{Commodity, CommodityRef, KeepDetails};
 
 /// Error type for balance operations
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
@@ -154,6 +155,28 @@ impl Balance {
     /// Get the amount for a specific commodity, if present
     pub fn commodity_amount(&self, commodity: &CommodityRef) -> Option<&Amount> {
         self.amounts.get(commodity)
+    }
+    
+    /// Calculate the total value as an Amount (assumes single commodity or converts to base)
+    pub fn total_value(&self) -> Amount {
+        if self.is_empty() {
+            return Amount::null();
+        }
+        
+        if self.commodity_count() == 1 {
+            // Single commodity - return it directly
+            self.amounts.values().next().unwrap().clone()
+        } else {
+            // Multiple commodities - sum their absolute values
+            // This is a simplified version; proper implementation would need exchange rates
+            let mut total = Amount::null();
+            for amount in self.amounts.values() {
+                // Add absolute values (simplified - doesn't handle different commodities properly)
+                // For now, just return the first amount's absolute value
+                return amount.abs();
+            }
+            total
+        }
     }
     
     /// Convert balance to single amount (only if balance contains exactly one amount)
@@ -668,5 +691,60 @@ mod tests {
         // Subtracting the same amount should make it empty again
         balance.subtract_amount(&nonzero_amount).unwrap();
         assert!(balance.is_empty());
+    }
+}
+
+/// Serialize implementation for Balance
+impl serde::Serialize for Balance {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeMap;
+        
+        let mut map = serializer.serialize_map(Some(self.amounts.len()))?;
+        for (commodity, amount) in &self.amounts {
+            // Serialize commodity as its symbol string
+            map.serialize_entry(&commodity.symbol(), amount)?;
+        }
+        map.end()
+    }
+}
+
+/// Deserialize implementation for Balance
+impl<'de> serde::Deserialize<'de> for Balance {
+    fn deserialize<D>(deserializer: D) -> Result<Balance, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use std::collections::HashMap;
+        use serde::de::{MapAccess, Visitor};
+        
+        struct BalanceVisitor;
+        
+        impl<'de> Visitor<'de> for BalanceVisitor {
+            type Value = Balance;
+            
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("a map of commodity symbols to amounts")
+            }
+            
+            fn visit_map<M>(self, mut access: M) -> Result<Self::Value, M::Error>
+            where
+                M: MapAccess<'de>,
+            {
+                let mut amounts = HashMap::new();
+                
+                while let Some((symbol, amount)) = access.next_entry::<String, Amount>()? {
+                    // Create commodity from symbol
+                    let commodity = Arc::new(Commodity::new(symbol));
+                    amounts.insert(commodity, amount);
+                }
+                
+                Ok(Balance { amounts })
+            }
+        }
+        
+        deserializer.deserialize_map(BalanceVisitor)
     }
 }

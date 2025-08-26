@@ -4,7 +4,7 @@
 //! balance reports, register reports, and other financial summaries.
 
 use crate::account::AccountRef;
-use crate::balance::Balance;
+use ledger_math::balance::Balance;
 use crate::filters::{FilterChain, PostingFilter, TransactionFilter};
 use crate::journal::Journal;
 use crate::posting::Posting;
@@ -171,8 +171,8 @@ impl BalanceReport {
     /// Collect and aggregate account balances
     fn collect_balances(&mut self, options: &ReportOptions) -> ReportResult<BTreeMap<String, AccountBalance>> {
         // Try cache first if available
+        let journal_hash = self.compute_journal_hash();
         if let Some(ref mut cache_manager) = self.cache_manager {
-            let journal_hash = self.compute_journal_hash();
             cache_manager.update_journal_hash(journal_hash);
             
             let cache_key = CacheKey::from_report_options("balance", options, journal_hash);
@@ -201,22 +201,18 @@ impl BalanceReport {
                 }
                 
                 // Get account name
-                let account_name = if let Some(account) = posting.account.upgrade() {
-                    account.borrow().full_name()
-                } else {
-                    continue; // Skip if account reference is dead
-                };
+                let account_name = posting.account.borrow().fullname_immutable();
                 
                 // Get posting amount
                 if let Some(ref amount) = posting.amount {
                     // Add to account balance
-                    let balance = account_balances.entry(account_name.clone()).or_default();
-                    balance.add_amount(amount.clone()).map_err(|e| {
+                    let balance = account_balances.entry(account_name.to_string()).or_default();
+                    balance.add_amount(&amount).map_err(|e| {
                         ReportError::InvalidConfig(format!("Failed to add amount: {}", e))
                     })?;
                     
                     // Update count
-                    *account_counts.entry(account_name.clone()).or_insert(0) += 1;
+                    *account_counts.entry(account_name.to_string()).or_insert(0) += 1;
                     
                     // Also update parent accounts if not flat display
                     if !options.flat {
@@ -229,7 +225,7 @@ impl BalanceReport {
                             
                             if parent_path != account_name {
                                 let parent_balance = account_balances.entry(parent_path.clone()).or_default();
-                                parent_balance.add_amount(amount.clone()).map_err(|e| {
+                                parent_balance.add_amount(&amount).map_err(|e| {
                                     ReportError::InvalidConfig(format!("Failed to add parent amount: {}", e))
                                 })?;
                                 *account_counts.entry(parent_path.clone()).or_insert(0) += 1;
@@ -242,7 +238,7 @@ impl BalanceReport {
         
         // Convert to AccountBalance structures
         let mut result = BTreeMap::new();
-        for (account_name, balance) in account_balances {
+        for (account_name, balance) in &account_balances {
             // Skip zero balances if not showing empty accounts
             if !options.empty && balance.is_zero() {
                 continue;
@@ -264,19 +260,19 @@ impl BalanceReport {
                 let account_balance = AccountBalance {
                     account: account_ref,
                     balance: balance.clone(),
-                    count: *account_counts.get(&account_name).unwrap_or(&0),
+                    count: *account_counts.get(account_name).unwrap_or(&0),
                     depth,
                     has_children,
-                    total_balance: balance, // For now, same as balance - would need recursive calculation
+                    total_balance: balance.clone(), // For now, same as balance - would need recursive calculation
                 };
                 
-                result.insert(account_name, account_balance);
+                result.insert(account_name.clone(), account_balance);
             }
         }
         
         // Cache the result if caching is enabled
+        let journal_hash = self.compute_journal_hash();
         if let Some(ref mut cache_manager) = self.cache_manager {
-            let journal_hash = self.compute_journal_hash();
             let cache_key = CacheKey::from_report_options("balance", options, journal_hash);
             let cached_data: HashMap<String, Balance> = account_balances.clone();
             let _ = cache_manager.cache_balance_data(cache_key, cached_data);
@@ -298,8 +294,8 @@ impl BalanceReport {
     fn convert_cached_balances(&self, cached_data: HashMap<String, Balance>) -> ReportResult<BTreeMap<String, AccountBalance>> {
         let mut result = BTreeMap::new();
         
-        for (account_name, balance) in cached_data {
-            if let Ok(account_ref) = self.journal.find_account(&account_name) {
+        for (account_name, balance) in &cached_data {
+            if let Ok(account_ref) = self.journal.find_account(account_name) {
                 let depth = account_name.matches(':').count();
                 let has_children = account_name.contains(':') || 
                     cached_data.keys().any(|k| k.starts_with(&format!("{}:", account_name)));
@@ -310,10 +306,10 @@ impl BalanceReport {
                     count: 0, // We don't cache count information
                     depth,
                     has_children,
-                    total_balance: balance,
+                    total_balance: balance.clone(),
                 };
                 
-                result.insert(account_name, account_balance);
+                result.insert(account_name.clone(), account_balance);
             }
         }
         
@@ -353,15 +349,17 @@ impl BalanceReport {
     
     /// Format account name with proper indentation
     fn format_account_name(&self, account_balance: &AccountBalance, options: &ReportOptions) -> String {
-        let account = account_balance.account.upgrade().unwrap();
+        let account = account_balance.account.clone();
         let account_ref = account.borrow();
         let name = if options.flat {
-            account_ref.full_name()
+            account_ref.fullname_immutable()
         } else {
             // Show only the last segment with proper indentation
-            let segments: Vec<&str> = account_ref.full_name().split(':').collect();
+            let full_name = account_ref.fullname_immutable();
+            let segments: Vec<&str> = full_name.split(':').collect();
             let indent = "  ".repeat(account_balance.depth);
-            format!("{}{}", indent, segments.last().unwrap_or(&account_ref.full_name()))
+            let last_segment = segments.last().map(|s| *s).unwrap_or(&full_name);
+            format!("{}{}", indent, last_segment)
         };
         
         if let Some(width) = options.account_width {
@@ -435,7 +433,7 @@ pub struct RegisterEntry {
     /// Account name for this posting
     pub account: String,
     /// Amount for this posting
-    pub amount: crate::amount::Amount,
+    pub amount: ledger_math::amount::Amount,
     /// Running balance after this posting
     pub balance: crate::balance::Balance,
     /// Transaction code (if any)
@@ -583,23 +581,19 @@ impl RegisterReport {
             for posting in matching_postings {
                 if let Some(ref amount) = posting.amount {
                     // Update running balance
-                    running_balance.add_amount(amount.clone()).map_err(|e| {
+                    running_balance.add_amount(&amount).map_err(|e| {
                         ReportError::InvalidConfig(format!("Failed to update running balance: {}", e))
                     })?;
                     
                     // Get account name
-                    let account_name = if let Some(account) = posting.account.upgrade() {
-                        account.borrow().full_name()
-                    } else {
-                        continue;
-                    };
+                    let account_name = posting.account.borrow().fullname_immutable();
                     
                     // Determine related accounts for split transactions
                     let related_accounts = if self.show_related && transaction.postings.len() > 2 {
                         transaction.postings.iter()
-                            .filter(|p| std::ptr::ne(*p, posting))
+                            .filter(|p| !std::ptr::eq(*p, posting))
                             .filter_map(|p| {
-                                p.account.upgrade().map(|acc| acc.borrow().full_name())
+                                Some(p.account.borrow().fullname_immutable())
                             })
                             .collect()
                     } else {
@@ -609,15 +603,15 @@ impl RegisterReport {
                     let entry = RegisterEntry {
                         date: transaction.date,
                         payee: posting.payee.as_ref()
-                            .unwrap_or(&transaction.payee)
-                            .clone(),
-                        account: account_name,
+                            .map(|p| p.to_string())
+                            .unwrap_or_else(|| transaction.payee.clone()),
+                        account: account_name.to_string(),
                         amount: amount.clone(),
                         balance: running_balance.clone(),
                         code: transaction.code.clone(),
                         note: posting.note.as_ref()
-                            .or(transaction.note.as_ref())
-                            .cloned(),
+                            .map(|n| n.to_string())
+                            .or_else(|| transaction.note.as_ref().map(|n| n.clone())),
                         is_split: transaction.postings.len() > 2,
                         related_accounts,
                     };
@@ -887,8 +881,8 @@ impl ReportGenerator for PrintReport {
             
             // Write postings
             for posting in &transaction.postings {
-                if let Some(account) = posting.account.upgrade() {
-                    let account_name = account.borrow().full_name();
+                {
+                    let account_name = posting.account.borrow().fullname_immutable();
                     
                     if let Some(ref amount) = posting.amount {
                         writeln!(writer, "    {}    {}", account_name, amount)
@@ -1072,9 +1066,9 @@ impl ReportGenerator for StatsReport {
             
             // Count accounts by top-level category
             let mut account_categories: HashMap<String, usize> = HashMap::new();
-            for account in &self.journal.accounts {
+            for (_name, account) in &self.journal.accounts {
                 let account_ref = account.borrow();
-                let full_name = account_ref.full_name();
+                let full_name = account_ref.fullname_immutable();
                 let category = full_name.split(':').next().unwrap_or("Unknown").to_string();
                 *account_categories.entry(category).or_insert(0) += 1;
             }
@@ -1178,10 +1172,10 @@ impl ReportGenerator for ClearedReport {
             for posting in &transaction.postings {
                 if let Some(ref amount) = posting.amount {
                     if is_cleared {
-                        cleared_total.add_amount(amount.clone())
+                        cleared_total.add_amount(&amount)
                             .map_err(|e| ReportError::InvalidConfig(e.to_string()))?;
                     } else {
-                        uncleared_total.add_amount(amount.clone())
+                        uncleared_total.add_amount(&amount)
                             .map_err(|e| ReportError::InvalidConfig(e.to_string()))?;
                     }
                 }
@@ -1215,7 +1209,7 @@ impl ReportGenerator for ClearedReport {
 mod tests {
     use super::*;
     use crate::account::Account;
-    use crate::amount::Amount;
+    use ledger_math::amount::Amount;
     use crate::commodity::Commodity;
     use chrono::NaiveDate;
     use std::rc::Rc;

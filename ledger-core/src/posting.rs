@@ -6,7 +6,7 @@ use std::rc::{Rc, Weak};
 use std::path::PathBuf;
 use smallvec::SmallVec;
 
-use crate::amount::Amount;
+use ledger_math::amount::Amount;
 use crate::account::AccountRef;
 use crate::transaction::{Position, TagData};
 use crate::strings::{PayeeName, AccountName};
@@ -115,7 +115,7 @@ impl Default for PostingExtData {
             value_date: None,
             datetime: None,
             reported_account: None,
-            sort_values: Vec::new(),
+            sort_values: SmallVec::new(),
             flags: 0,
         }
     }

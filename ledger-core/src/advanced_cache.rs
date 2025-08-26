@@ -11,7 +11,7 @@ use lru::LruCache;
 use moka::sync::Cache as MokaCache;
 use once_cell::sync::{Lazy, OnceCell};
 use crate::data_structures::FastHashMap;
-use crate::amount::Amount;
+use ledger_math::amount::Amount;
 use crate::balance::Balance;
 use rust_decimal::Decimal;
 use std::fmt;

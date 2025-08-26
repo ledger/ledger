@@ -34,6 +34,11 @@ impl LedgerHarness {
         })
     }
     
+    /// Get the test configuration
+    pub fn config(&self) -> &TestConfig {
+        &self.config
+    }
+    
     /// Run all configured tests
     pub async fn run_all_tests(&self) -> Result<TestReport, TestError> {
         let start_time = Instant::now();

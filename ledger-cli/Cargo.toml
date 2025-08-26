@@ -9,8 +9,8 @@ homepage.workspace = true
 description = "Command-line interface for Ledger - a powerful double-entry accounting system"
 
 [dependencies]
-# ledger-core = { path = "../ledger-core" }
-# ledger-math = { path = "../ledger-math" }
+ledger-core = { path = "../ledger-core" }
+ledger-math = { path = "../ledger-math" }
 clap = { workspace = true }
 anyhow = { workspace = true }
 chrono = { workspace = true }
@@ -23,6 +23,7 @@ log = "0.4"
 atty = "0.2"
 clap_complete = "4.5"
 regex = "1.11"
+compact_str = { workspace = true }
 
 # Test framework dependencies
 similar = "2.5"

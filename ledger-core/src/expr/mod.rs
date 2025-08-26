@@ -11,17 +11,20 @@
 //! - Sequences and lists
 
 use ledger_math::{Amount, Date, BigRational, Decimal};
+use num_bigint::BigInt;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::fmt;
 use chrono::{DateTime, Local};
 use serde::{Deserialize, Serialize};
+use num_traits::Zero;
 
 pub mod parser;
 pub mod op;
 pub mod functions;
 pub mod predicate;
 pub mod format;
+
 
 /// Value type that expressions can evaluate to
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -107,6 +110,287 @@ impl fmt::Display for Value {
                 write!(f, "]")
             },
             Value::Regex(r) => write!(f, "/{}/", r),
+        }
+    }
+}
+
+// Arithmetic operations for Value
+impl std::ops::Add for Value {
+    type Output = Result<Value, ExprError>;
+    
+    fn add(self, rhs: Value) -> Self::Output {
+        use Value::*;
+        match (self, rhs) {
+            (Integer(a), Integer(b)) => Ok(Integer(a + b)),
+            (Rational(a), Rational(b)) => Ok(Rational(a + b)),
+            (Decimal(a), Decimal(b)) => Ok(Decimal(a + b)),
+            (Amount(a), Amount(b)) => {
+                match a.add(&b) {
+                    Ok(result) => Ok(Amount(result)),
+                    Err(_) => Err(ExprError::RuntimeError("Amount addition failed".to_string())),
+                }
+            },
+            (Integer(a), Rational(b)) => Ok(Rational(BigRational::new(BigInt::from(a), BigInt::from(1)) + b)),
+            (Rational(a), Integer(b)) => Ok(Rational(a + BigRational::new(BigInt::from(b), BigInt::from(1)))),
+            (String(a), String(b)) => Ok(String(a + &b)),
+            (Sequence(mut a), Sequence(b)) => {
+                a.extend(b);
+                Ok(Sequence(a))
+            },
+            (a, b) => Err(ExprError::TypeMismatch {
+                expected: a.type_name().to_string(),
+                found: b.type_name().to_string(),
+                operation: "addition".to_string(),
+            })
+        }
+    }
+}
+
+impl std::ops::Sub for Value {
+    type Output = Result<Value, ExprError>;
+    
+    fn sub(self, rhs: Value) -> Self::Output {
+        use Value::*;
+        match (self, rhs) {
+            (Integer(a), Integer(b)) => Ok(Integer(a - b)),
+            (Rational(a), Rational(b)) => Ok(Rational(a - b)),
+            (Decimal(a), Decimal(b)) => Ok(Decimal(a - b)),
+            (Amount(a), Amount(b)) => {
+                match a - &b {
+                    Ok(result) => Ok(Amount(result)),
+                    Err(_) => Err(ExprError::RuntimeError("Amount subtraction failed".to_string())),
+                }
+            },
+            (Integer(a), Rational(b)) => Ok(Rational(BigRational::new(BigInt::from(a), BigInt::from(1)) - b)),
+            (Rational(a), Integer(b)) => Ok(Rational(a - BigRational::new(BigInt::from(b), BigInt::from(1)))),
+            (a, b) => Err(ExprError::TypeMismatch {
+                expected: a.type_name().to_string(),
+                found: b.type_name().to_string(),
+                operation: "subtraction".to_string(),
+            })
+        }
+    }
+}
+
+impl std::ops::Mul for Value {
+    type Output = Result<Value, ExprError>;
+    
+    fn mul(self, rhs: Value) -> Self::Output {
+        use Value::*;
+        match (self, rhs) {
+            (Integer(a), Integer(b)) => Ok(Integer(a * b)),
+            (Rational(a), Rational(b)) => Ok(Rational(a * b)),
+            (Decimal(a), Decimal(b)) => Ok(Decimal(a * b)),
+            (Amount(a), Amount(b)) => {
+                match a * &b {
+                    Ok(result) => Ok(Amount(result)),
+                    Err(_) => Err(ExprError::RuntimeError("Amount multiplication failed".to_string())),
+                }
+            },
+            (Amount(a), Integer(b)) => {
+                let amount_b = ledger_math::Amount::from_i64(b);
+                match a * &amount_b {
+                    Ok(result) => Ok(Amount(result)),
+                    Err(_) => Err(ExprError::RuntimeError("Amount multiplication failed".to_string())),
+                }
+            },
+            (Integer(a), Amount(b)) => {
+                let amount_a = ledger_math::Amount::from_i64(a);
+                match amount_a * &b {
+                    Ok(result) => Ok(Amount(result)),
+                    Err(_) => Err(ExprError::RuntimeError("Amount multiplication failed".to_string())),
+                }
+            },
+            (Integer(a), Rational(b)) => Ok(Rational(BigRational::new(BigInt::from(a), BigInt::from(1)) * b)),
+            (Rational(a), Integer(b)) => Ok(Rational(a * BigRational::new(BigInt::from(b), BigInt::from(1)))),
+            (a, b) => Err(ExprError::TypeMismatch {
+                expected: a.type_name().to_string(),
+                found: b.type_name().to_string(),
+                operation: "multiplication".to_string(),
+            })
+        }
+    }
+}
+
+impl std::ops::Div for Value {
+    type Output = Result<Value, ExprError>;
+    
+    fn div(self, rhs: Value) -> Self::Output {
+        use Value::*;
+        match (self, rhs) {
+            (Integer(a), Integer(b)) => {
+                if b == 0 {
+                    Err(ExprError::DivisionByZero)
+                } else {
+                    Ok(Rational(BigRational::new(a.into(), b.into())))
+                }
+            },
+            (Rational(a), Rational(b)) => {
+                if b.is_zero() {
+                    Err(ExprError::DivisionByZero)
+                } else {
+                    Ok(Rational(a / b))
+                }
+            },
+            (Decimal(a), Decimal(b)) => {
+                if b.is_zero() {
+                    Err(ExprError::DivisionByZero)
+                } else {
+                    Ok(Decimal(a / b))
+                }
+            },
+            (Amount(a), Amount(b)) => {
+                if b.is_zero() {
+                    Err(ExprError::DivisionByZero)
+                } else {
+                    match a / &b {
+                        Ok(result) => Ok(Amount(result)),
+                        Err(_) => Err(ExprError::RuntimeError("Amount division failed".to_string())),
+                    }
+                }
+            },
+            (Amount(a), Integer(b)) => {
+                if b == 0 {
+                    Err(ExprError::DivisionByZero)
+                } else {
+                    let amount_b = ledger_math::Amount::from_i64(b);
+                    match a / &amount_b {
+                        Ok(result) => Ok(Amount(result)),
+                        Err(_) => Err(ExprError::RuntimeError("Amount division failed".to_string())),
+                    }
+                }
+            },
+            (Integer(a), Rational(b)) => {
+                if b.is_zero() {
+                    Err(ExprError::DivisionByZero)
+                } else {
+                    Ok(Rational(BigRational::new(BigInt::from(a), BigInt::from(1)) / b))
+                }
+            },
+            (Rational(a), Integer(b)) => {
+                if b == 0 {
+                    Err(ExprError::DivisionByZero)
+                } else {
+                    Ok(Rational(a / BigRational::new(BigInt::from(b), BigInt::from(1))))
+                }
+            },
+            (a, b) => Err(ExprError::TypeMismatch {
+                expected: a.type_name().to_string(),
+                found: b.type_name().to_string(),
+                operation: "division".to_string(),
+            })
+        }
+    }
+}
+
+impl std::ops::Neg for Value {
+    type Output = Result<Value, ExprError>;
+    
+    fn neg(self) -> Self::Output {
+        use Value::*;
+        match self {
+            Integer(i) => Ok(Integer(-i)),
+            Rational(r) => Ok(Rational(-r)),
+            Decimal(d) => Ok(Decimal(-d)),
+            Amount(a) => Ok(Amount(a.negated())),
+            _ => Err(ExprError::TypeMismatch {
+                expected: "numeric type".to_string(),
+                found: self.type_name().to_string(),
+                operation: "negation".to_string(),
+            })
+        }
+    }
+}
+
+// Additional helper methods for Value arithmetic
+impl Value {
+    /// Perform addition that can fail
+    pub fn add(&self, other: &Value) -> Result<Value, ExprError> {
+        self.clone() + other.clone()
+    }
+
+    /// Perform subtraction that can fail
+    pub fn subtract(&self, other: &Value) -> Result<Value, ExprError> {
+        self.clone() - other.clone()
+    }
+
+    /// Perform multiplication that can fail
+    pub fn multiply(&self, other: &Value) -> Result<Value, ExprError> {
+        self.clone() * other.clone()
+    }
+
+    /// Perform division that can fail
+    pub fn divide(&self, other: &Value) -> Result<Value, ExprError> {
+        self.clone() / other.clone()
+    }
+
+    /// Perform negation that can fail
+    pub fn negate(&self) -> Result<Value, ExprError> {
+        -self.clone()
+    }
+
+    /// Compare two values (for ordering operations)
+    pub fn compare(&self, other: &Value) -> Result<std::cmp::Ordering, ExprError> {
+        use Value::*;
+        use std::cmp::Ordering;
+        
+        match (self, other) {
+            (Integer(a), Integer(b)) => Ok(a.cmp(b)),
+            (Rational(a), Rational(b)) => Ok(a.cmp(b)),
+            (Decimal(a), Decimal(b)) => Ok(a.cmp(b)),
+            (Amount(a), Amount(b)) => {
+                // Amounts need special comparison handling due to commodities
+                if a == b {
+                    Ok(Ordering::Equal)
+                } else if a < b {
+                    Ok(Ordering::Less)
+                } else {
+                    Ok(Ordering::Greater)
+                }
+            },
+            (String(a), String(b)) => Ok(a.cmp(b)),
+            (Date(a), Date(b)) => Ok(a.cmp(b)),
+            (DateTime(a), DateTime(b)) => Ok(a.cmp(b)),
+            (Bool(a), Bool(b)) => Ok(a.cmp(b)),
+            
+            // Cross-type numeric comparisons
+            (Integer(a), Rational(b)) => Ok(BigRational::new(BigInt::from(*a), BigInt::from(1)).cmp(b)),
+            (Rational(a), Integer(b)) => Ok(a.cmp(&BigRational::new(BigInt::from(*b), BigInt::from(1)))),
+            
+            // Null comparisons
+            (Null, Null) => Ok(Ordering::Equal),
+            (Null, _) => Ok(Ordering::Less),
+            (_, Null) => Ok(Ordering::Greater),
+            
+            (a, b) => Err(ExprError::TypeMismatch {
+                expected: a.type_name().to_string(),
+                found: b.type_name().to_string(),
+                operation: "comparison".to_string(),
+            })
+        }
+    }
+
+    /// Check if two values are equal
+    pub fn equals(&self, other: &Value) -> bool {
+        use Value::*;
+        match (self, other) {
+            (Null, Null) => true,
+            (Bool(a), Bool(b)) => a == b,
+            (Integer(a), Integer(b)) => a == b,
+            (Rational(a), Rational(b)) => a == b,
+            (Decimal(a), Decimal(b)) => a == b,
+            (Amount(a), Amount(b)) => a == b,
+            (String(a), String(b)) => a == b,
+            (Date(a), Date(b)) => a == b,
+            (DateTime(a), DateTime(b)) => a == b,
+            (Sequence(a), Sequence(b)) => a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| x.equals(y)),
+            (Regex(a), Regex(b)) => a == b,
+            
+            // Cross-type numeric equality
+            (Integer(a), Rational(b)) => &BigRational::new(BigInt::from(*a), BigInt::from(1)) == b,
+            (Rational(a), Integer(b)) => a == &BigRational::new(BigInt::from(*b), BigInt::from(1)),
+            
+            _ => false,
         }
     }
 }

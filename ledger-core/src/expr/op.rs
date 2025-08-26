@@ -7,6 +7,7 @@ use crate::expr::{
     ExprNode, BinaryOp, UnaryOp, Value, ExprContext, ExprError, ExprResult
 };
 use ledger_math::{Amount, BigRational, Decimal};
+use num_bigint::BigInt;
 use num_traits::{Zero, One};
 use std::cmp::Ordering;
 use chrono::{DateTime, Local, Utc};
@@ -109,18 +110,22 @@ fn add_values(left: &Value, right: &Value) -> ExprResult<Value> {
         // Type coercion
         (Value::Integer(a), Value::Decimal(b)) => Ok(Value::Decimal(Decimal::from(*a) + b)),
         (Value::Decimal(a), Value::Integer(b)) => Ok(Value::Decimal(a + Decimal::from(*b))),
-        (Value::Integer(a), Value::Rational(b)) => Ok(Value::Rational(BigRational::from(*a) + b)),
-        (Value::Rational(a), Value::Integer(b)) => Ok(Value::Rational(a + BigRational::from(*b))),
+        (Value::Integer(a), Value::Rational(b)) => {
+            Ok(Value::Rational(BigRational::from(BigInt::from(*a)) + b))
+        },
+        (Value::Rational(a), Value::Integer(b)) => {
+            Ok(Value::Rational(a + BigRational::from(BigInt::from(*b))))
+        },
         
         // Date arithmetic
         (Value::Date(date), Value::Integer(days)) => {
-            use chrono::Duration;
-            let new_date = *date + Duration::days(*days);
+            use chrono::TimeDelta;
+            let new_date = *date + TimeDelta::days(*days);
             Ok(Value::Date(new_date))
         }
         (Value::Integer(days), Value::Date(date)) => {
-            use chrono::Duration;
-            let new_date = *date + Duration::days(*days);
+            use chrono::TimeDelta;
+            let new_date = *date + TimeDelta::days(*days);
             Ok(Value::Date(new_date))
         }
         
@@ -147,8 +152,8 @@ fn subtract_values(left: &Value, right: &Value) -> ExprResult<Value> {
         // Type coercion
         (Value::Integer(a), Value::Decimal(b)) => Ok(Value::Decimal(Decimal::from(*a) - b)),
         (Value::Decimal(a), Value::Integer(b)) => Ok(Value::Decimal(a - Decimal::from(*b))),
-        (Value::Integer(a), Value::Rational(b)) => Ok(Value::Rational(BigRational::from(*a) - b)),
-        (Value::Rational(a), Value::Integer(b)) => Ok(Value::Rational(a - BigRational::from(*b))),
+        (Value::Integer(a), Value::Rational(b)) => Ok(Value::Rational(BigRational::from(BigInt::from(*a)) - b)),
+        (Value::Rational(a), Value::Integer(b)) => Ok(Value::Rational(a - BigRational::from(BigInt::from(*b)))),
         
         // Date arithmetic
         (Value::Date(a), Value::Date(b)) => {
@@ -156,8 +161,8 @@ fn subtract_values(left: &Value, right: &Value) -> ExprResult<Value> {
             Ok(Value::Integer(diff.num_days()))
         }
         (Value::Date(date), Value::Integer(days)) => {
-            use chrono::Duration;
-            let new_date = *date - Duration::days(*days);
+            use chrono::TimeDelta;
+            let new_date = *date - TimeDelta::days(*days);
             Ok(Value::Date(new_date))
         }
         
@@ -176,24 +181,40 @@ fn multiply_values(left: &Value, right: &Value) -> ExprResult<Value> {
         (Value::Decimal(a), Value::Decimal(b)) => Ok(Value::Decimal(a * b)),
         (Value::Rational(a), Value::Rational(b)) => Ok(Value::Rational(a * b)),
         (Value::Amount(a), Value::Integer(b)) => {
-            (a * BigRational::from(*b))
-                .map(Value::Amount)
-                .map_err(|e| ExprError::RuntimeError(e.to_string()))
+            // Convert amount to rational, multiply, convert back
+            if let Some(rational) = a.to_rational() {
+                let result_rational = rational * BigRational::from(BigInt::from(*b));
+                Ok(Value::Amount(Amount::from_rational(result_rational)))
+            } else {
+                Err(ExprError::RuntimeError("Cannot multiply amount without quantity".to_string()))
+            }
         }
         (Value::Integer(a), Value::Amount(b)) => {
-            (b * BigRational::from(*a))
-                .map(Value::Amount)
-                .map_err(|e| ExprError::RuntimeError(e.to_string()))
+            // Convert amount to rational, multiply, convert back
+            if let Some(rational) = b.to_rational() {
+                let result_rational = rational * BigRational::from(BigInt::from(*a));
+                Ok(Value::Amount(Amount::from_rational(result_rational)))
+            } else {
+                Err(ExprError::RuntimeError("Cannot multiply amount without quantity".to_string()))
+            }
         }
         (Value::Amount(a), Value::Rational(b)) => {
-            (a * b.clone())
-                .map(Value::Amount)
-                .map_err(|e| ExprError::RuntimeError(e.to_string()))
+            // Convert amount to rational, multiply, convert back
+            if let Some(rational) = a.to_rational() {
+                let result_rational = rational * b;
+                Ok(Value::Amount(Amount::from_rational(result_rational)))
+            } else {
+                Err(ExprError::RuntimeError("Cannot multiply amount without quantity".to_string()))
+            }
         }
         (Value::Rational(a), Value::Amount(b)) => {
-            (b * a.clone())
-                .map(Value::Amount)
-                .map_err(|e| ExprError::RuntimeError(e.to_string()))
+            // Convert amount to rational, multiply, convert back
+            if let Some(rational) = b.to_rational() {
+                let result_rational = rational * a;
+                Ok(Value::Amount(Amount::from_rational(result_rational)))
+            } else {
+                Err(ExprError::RuntimeError("Cannot multiply amount without quantity".to_string()))
+            }
         }
         
         // String repetition
@@ -215,8 +236,8 @@ fn multiply_values(left: &Value, right: &Value) -> ExprResult<Value> {
         // Type coercion
         (Value::Integer(a), Value::Decimal(b)) => Ok(Value::Decimal(Decimal::from(*a) * b)),
         (Value::Decimal(a), Value::Integer(b)) => Ok(Value::Decimal(a * Decimal::from(*b))),
-        (Value::Integer(a), Value::Rational(b)) => Ok(Value::Rational(BigRational::from(*a) * b)),
-        (Value::Rational(a), Value::Integer(b)) => Ok(Value::Rational(a * BigRational::from(*b))),
+        (Value::Integer(a), Value::Rational(b)) => Ok(Value::Rational(BigRational::from(BigInt::from(*a)) * b)),
+        (Value::Rational(a), Value::Integer(b)) => Ok(Value::Rational(a * BigRational::from(BigInt::from(*b)))),
         
         _ => Err(ExprError::TypeMismatch {
             expected: format!("compatible types for multiplication"),
@@ -245,14 +266,22 @@ fn divide_values(left: &Value, right: &Value) -> ExprResult<Value> {
         (Value::Decimal(a), Value::Decimal(b)) => Ok(Value::Decimal(a / b)),
         (Value::Rational(a), Value::Rational(b)) => Ok(Value::Rational(a / b)),
         (Value::Amount(a), Value::Integer(b)) => {
-            (a / BigRational::from(*b))
-                .map(Value::Amount)
-                .map_err(|e| ExprError::RuntimeError(e.to_string()))
+            // Convert amount to rational, divide, convert back
+            if let Some(rational) = a.to_rational() {
+                let result_rational = rational / BigRational::from(BigInt::from(*b));
+                Ok(Value::Amount(Amount::from_rational(result_rational)))
+            } else {
+                Err(ExprError::RuntimeError("Cannot divide amount without quantity".to_string()))
+            }
         }
         (Value::Amount(a), Value::Rational(b)) => {
-            (a / b.clone())
-                .map(Value::Amount)
-                .map_err(|e| ExprError::RuntimeError(e.to_string()))
+            // Convert amount to rational, divide, convert back
+            if let Some(rational) = a.to_rational() {
+                let result_rational = rational / b;
+                Ok(Value::Amount(Amount::from_rational(result_rational)))
+            } else {
+                Err(ExprError::RuntimeError("Cannot divide amount without quantity".to_string()))
+            }
         }
         (Value::Amount(a), Value::Amount(b)) => {
             // Amount divided by amount returns a ratio (rational number)
@@ -265,8 +294,8 @@ fn divide_values(left: &Value, right: &Value) -> ExprResult<Value> {
         // Type coercion
         (Value::Integer(a), Value::Decimal(b)) => Ok(Value::Decimal(Decimal::from(*a) / b)),
         (Value::Decimal(a), Value::Integer(b)) => Ok(Value::Decimal(a / Decimal::from(*b))),
-        (Value::Integer(a), Value::Rational(b)) => Ok(Value::Rational(BigRational::from(*a) / b)),
-        (Value::Rational(a), Value::Integer(b)) => Ok(Value::Rational(a / BigRational::from(*b))),
+        (Value::Integer(a), Value::Rational(b)) => Ok(Value::Rational(BigRational::from(BigInt::from(*a)) / b)),
+        (Value::Rational(a), Value::Integer(b)) => Ok(Value::Rational(a / BigRational::from(BigInt::from(*b)))),
         
         _ => Err(ExprError::TypeMismatch {
             expected: format!("compatible types for division"),
@@ -327,8 +356,8 @@ fn values_equal(left: &Value, right: &Value) -> bool {
         // Type coercion for numeric comparisons
         (Value::Integer(a), Value::Decimal(b)) => Decimal::from(*a) == *b,
         (Value::Decimal(a), Value::Integer(b)) => *a == Decimal::from(*b),
-        (Value::Integer(a), Value::Rational(b)) => BigRational::from(*a) == *b,
-        (Value::Rational(a), Value::Integer(b)) => *a == BigRational::from(*b),
+        (Value::Integer(a), Value::Rational(b)) => BigRational::from(BigInt::from(*a)) == *b,
+        (Value::Rational(a), Value::Integer(b)) => *a == BigRational::from(BigInt::from(*b)),
         (Value::Decimal(a), Value::Rational(b)) => {
             // Convert decimal to rational for comparison
             // This is approximate due to decimal representation limits
@@ -367,8 +396,8 @@ fn compare_values(left: &Value, right: &Value) -> ExprResult<Ordering> {
         // Type coercion for numeric comparisons
         (Value::Integer(a), Value::Decimal(b)) => Ok(Decimal::from(*a).cmp(b)),
         (Value::Decimal(a), Value::Integer(b)) => Ok(a.cmp(&Decimal::from(*b))),
-        (Value::Integer(a), Value::Rational(b)) => Ok(BigRational::from(*a).cmp(b)),
-        (Value::Rational(a), Value::Integer(b)) => Ok(a.cmp(&BigRational::from(*b))),
+        (Value::Integer(a), Value::Rational(b)) => Ok(BigRational::from(BigInt::from(*a)).cmp(b)),
+        (Value::Rational(a), Value::Integer(b)) => Ok(a.cmp(&BigRational::from(BigInt::from(*b)))),
         
         _ => Err(ExprError::TypeMismatch {
             expected: "comparable types".to_string(),
@@ -429,7 +458,7 @@ fn decimal_to_rational(decimal: Decimal) -> Option<BigRational> {
         Some(BigRational::new((integer * denominator + fractional).into(), denominator.into()))
     } else {
         let integer: i64 = s.parse().ok()?;
-        Some(BigRational::from(integer))
+        Some(BigRational::from(BigInt::from(integer)))
     }
 }
 

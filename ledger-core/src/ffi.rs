@@ -13,7 +13,9 @@ use crate::{
     journal::Journal,
     transaction::{Transaction, TransactionStatus},
     amount::Amount,
+    commodity::Commodity,
 };
+use std::sync::Arc;
 
 /// FFI error codes for cross-boundary error handling
 /// 
@@ -491,7 +493,7 @@ pub extern "C" fn ledger_amount_copy_commodity(amount: *const CAmount) -> *mut c
     unsafe {
         let amount_ref = &*(amount as *const Amount);
         match amount_ref.commodity() {
-            Some(commodity) => rust_string_to_c(commodity.as_str()),
+            Some(commodity) => rust_string_to_c(commodity.symbol()),
             None => null_mut()
         }
     }
@@ -751,7 +753,12 @@ pub extern "C" fn ledger_amount_new_with_commodity(value: c_double, commodity: *
         }
     };
     
-    let amount = Box::new(Amount::with_commodity(decimal_value, commodity_str));
+    let commodity = if commodity_str.is_empty() {
+        None
+    } else {
+        Some(Arc::new(Commodity::new(&commodity_str)))
+    };
+    let amount = Box::new(Amount::with_commodity(decimal_value, commodity));
     Box::into_raw(amount) as *mut CAmount
 }
 
@@ -794,7 +801,7 @@ pub extern "C" fn ledger_amount_get_commodity(amount: *const CAmount) -> *const 
         let amount_ref = &*(amount as *const Amount);
         match amount_ref.commodity() {
             Some(commodity) => {
-                match CString::new(commodity.as_str()) {
+                match CString::new(commodity.symbol()) {
                     Ok(c_string) => {
                         // Memory leak for FFI safety - same issue as transaction payee
                         let ptr = c_string.into_raw();
@@ -1122,8 +1129,6 @@ pub extern "C" fn ledger_journal_process_in_batches(
 // ===========================================================================
 // Reference Counting Wrapper (for shared ownership scenarios)
 // ===========================================================================
-
-use std::sync::Arc;
 
 /// Reference counted journal handle
 pub struct RcJournal {

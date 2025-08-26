@@ -34,6 +34,18 @@ impl fmt::Display for OutputError {
 
 impl Error for OutputError {}
 
+impl From<std::fmt::Error> for OutputError {
+    fn from(err: std::fmt::Error) -> Self {
+        OutputError::FormatError(err.to_string())
+    }
+}
+
+impl From<std::io::Error> for OutputError {
+    fn from(err: std::io::Error) -> Self {
+        OutputError::IoError(err.to_string())
+    }
+}
+
 /// Output format types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OutputFormat {
@@ -47,8 +59,6 @@ pub enum OutputFormat {
     Xml,
     /// HTML format
     Html,
-    /// XML format
-    Xml,
 }
 
 impl OutputFormat {
@@ -79,7 +89,7 @@ impl OutputFormat {
 /// Trait for output formatters
 pub trait Formatter {
     /// Write formatted output to the writer
-    fn format<W: Write>(&self, writer: &mut W) -> OutputResult<()>;
+    fn format(&self, writer: &mut dyn Write) -> OutputResult<()>;
     
     /// Get the preferred output format
     fn output_format(&self) -> OutputFormat;
@@ -166,7 +176,7 @@ impl TextFormatter {
 }
 
 impl Formatter for TextFormatter {
-    fn format<W: Write>(&self, writer: &mut W) -> OutputResult<()> {
+    fn format(&self, writer: &mut dyn Write) -> OutputResult<()> {
         for line in &self.content {
             writeln!(writer, "{}", line)
                 .map_err(|e| OutputError::IoError(e.to_string()))?;
@@ -225,7 +235,7 @@ impl CsvFormatter {
 }
 
 impl Formatter for CsvFormatter {
-    fn format<W: Write>(&self, writer: &mut W) -> OutputResult<()> {
+    fn format(&self, writer: &mut dyn Write) -> OutputResult<()> {
         for row in &self.rows {
             let escaped_row: Vec<String> = row.iter().map(|field| self.escape_field(field)).collect();
             writeln!(writer, "{}", escaped_row.join(&self.delimiter.to_string()))
@@ -285,7 +295,7 @@ impl JsonFormatter {
 }
 
 impl Formatter for JsonFormatter {
-    fn format<W: Write>(&self, writer: &mut W) -> OutputResult<()> {
+    fn format(&self, writer: &mut dyn Write) -> OutputResult<()> {
         let json_string = if self.pretty {
             serde_json::to_string_pretty(&self.data)
         } else {
@@ -379,7 +389,7 @@ impl XmlFormatter {
 }
 
 impl Formatter for XmlFormatter {
-    fn format<W: Write>(&self, writer: &mut W) -> OutputResult<()> {
+    fn format(&self, writer: &mut dyn Write) -> OutputResult<()> {
         let indent = if self.pretty { "  " } else { "" };
         let newline = if self.pretty { "\n" } else { "" };
         
@@ -494,7 +504,7 @@ impl HtmlFormatter {
 }
 
 impl Formatter for HtmlFormatter {
-    fn format<W: Write>(&self, writer: &mut W) -> OutputResult<()> {
+    fn format(&self, writer: &mut dyn Write) -> OutputResult<()> {
         if self.full_document {
             writeln!(writer, "<!DOCTYPE html>")?;
             writeln!(writer, "<html>")?;

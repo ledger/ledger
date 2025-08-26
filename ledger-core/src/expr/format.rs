@@ -5,7 +5,7 @@
 
 use crate::posting::Posting;
 use crate::transaction::Transaction;
-use crate::amount::Amount;
+use ledger_math::amount::Amount;
 use crate::balance::Balance;
 use std::collections::HashMap;
 use std::fmt;
@@ -62,11 +62,13 @@ impl FormatSpec {
         let mut left_align = false;
         let mut zero_pad = false;
         let mut show_plus = false;
+        let mut position = 0;
         
         // Skip the % character
         if chars.next() != Some('%') {
             return Err(FormatError::InvalidDirective(format!("Format spec must start with %: {}", spec)));
         }
+        position += 1;
         
         // Parse flags
         while let Some(&ch) = chars.peek() {
@@ -100,21 +102,19 @@ impl FormatSpec {
         }
         
         // Parse width
-        let width_start = chars.as_str();
-        let mut width_end = 0;
+        let mut width_digits = String::new();
         while let Some(&ch) = chars.peek() {
             if ch.is_ascii_digit() {
+                width_digits.push(ch);
                 chars.next();
-                width_end += 1;
             } else {
                 break;
             }
         }
         
-        if width_end > 0 {
-            let width_str = &width_start[..width_end];
-            width = Some(width_str.parse::<usize>()
-                .map_err(|_| FormatError::InvalidSpecification(format!("Invalid width: {}", width_str)))?);
+        if !width_digits.is_empty() {
+            width = Some(width_digits.parse::<usize>()
+                .map_err(|_| FormatError::InvalidSpecification(format!("Invalid width: {}", width_digits)))?);
         }
         
         // Rest is the field name
@@ -280,11 +280,11 @@ impl FormatProcessor {
             "p" | "payee" => {
                 if let Some(posting) = context.posting {
                     Ok(posting.payee.as_ref()
-                        .or(context.transaction.map(|tx| &tx.payee))
-                        .unwrap_or(&String::new())
-                        .clone())
+                        .map(|s| s.to_string())
+                        .or(context.transaction.map(|tx| tx.payee.to_string()))
+                        .unwrap_or_else(|| String::new()))
                 } else if let Some(tx) = context.transaction {
-                    Ok(tx.payee.clone())
+                    Ok(tx.payee.to_string())
                 } else {
                     Err(FormatError::MissingField("payee".to_string()))
                 }
@@ -293,23 +293,17 @@ impl FormatProcessor {
             // Account fields
             "a" | "account" => {
                 if let Some(posting) = context.posting {
-                    if let Some(account) = posting.account.upgrade() {
-                        Ok(account.borrow().full_name())
-                    } else {
-                        Err(FormatError::MissingField("account".to_string()))
-                    }
+                    let account = posting.account.borrow();
+                    Ok(account.fullname_immutable())
                 } else {
                     Err(FormatError::MissingField("posting".to_string()))
                 }
             }
             "A" => {
                 if let Some(posting) = context.posting {
-                    if let Some(account) = posting.account.upgrade() {
-                        let full_name = account.borrow().full_name();
-                        Ok(full_name.split(':').last().unwrap_or(&full_name).to_string())
-                    } else {
-                        Err(FormatError::MissingField("account".to_string()))
-                    }
+                    let account = posting.account.borrow();
+                    let full_name = account.fullname_immutable();
+                    Ok(full_name.split(':').last().unwrap_or(&full_name).to_string())
                 } else {
                     Err(FormatError::MissingField("posting".to_string()))
                 }
@@ -348,11 +342,11 @@ impl FormatProcessor {
             "n" | "note" => {
                 if let Some(posting) = context.posting {
                     Ok(posting.note.as_ref()
-                        .or(context.transaction.and_then(|tx| tx.note.as_ref()))
-                        .unwrap_or(&String::new())
-                        .clone())
+                        .map(|s| s.to_string())
+                        .or(context.transaction.and_then(|tx| tx.note.as_ref().map(|s| s.to_string())))
+                        .unwrap_or_else(|| String::new()))
                 } else if let Some(tx) = context.transaction {
-                    Ok(tx.note.as_ref().unwrap_or(&String::new()).clone())
+                    Ok(tx.note.as_ref().map(|s| s.to_string()).unwrap_or_else(|| String::new()))
                 } else {
                     Err(FormatError::MissingField("note".to_string()))
                 }
@@ -429,7 +423,7 @@ mod tests {
     use crate::transaction::Transaction;
     use crate::posting::Posting;
     use crate::account::Account;
-    use crate::amount::Amount;
+    use ledger_math::amount::Amount;
     use chrono::NaiveDate;
     use std::rc::Rc;
     use std::cell::RefCell;

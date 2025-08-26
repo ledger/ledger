@@ -5,6 +5,7 @@ members = [
     "ledger-cli",
     "ledger-math",
     "ledger-tests",
+    "parser-test",
 ]
 
 [workspace.package]
@@ -30,8 +31,8 @@ anyhow = "1.0"
 clap = { version = "4.4", features = ["derive"] }
 
 # Math dependencies
-num-bigint = "0.4"
-num-rational = "0.4"
+num-bigint = { version = "0.4", features = ["serde"] }
+num-rational = { version = "0.4", features = ["serde"] }
 num-traits = "0.2"
 bitflags = "2.4"
 

@@ -3,7 +3,7 @@
 //! This module provides high-performance string types and utilities optimized for
 //! the most common string usage patterns in Ledger accounting operations.
 
-use compact_str::CompactStr;
+use compact_str::CompactString as CompactStr;
 use smallvec::{SmallVec, smallvec};
 use bumpalo::Bump;
 use std::collections::HashMap;

@@ -242,7 +242,8 @@ fn fn_now(args: &[Value]) -> ExprResult<Value> {
 
 fn fn_today(args: &[Value]) -> ExprResult<Value> {
     check_arg_count(args, 0, "today")?;
-    Ok(Value::Date(Local::now().naive_local().date()))
+    use ledger_math::Date;
+    Ok(Value::Date(Date::from_naive_date(Local::now().naive_local().date())))
 }
 
 fn fn_age(args: &[Value]) -> ExprResult<Value> {
@@ -486,7 +487,7 @@ fn fn_average(args: &[Value]) -> ExprResult<Value> {
             match sum_val {
                 Value::Integer(s) => Ok(Value::Rational(BigRational::new(s.into(), n.into()))),
                 Value::Decimal(s) => Ok(Value::Decimal(s / Decimal::from(n))),
-                Value::Rational(s) => Ok(Value::Rational(s / BigRational::from(n))),
+                Value::Rational(s) => Ok(Value::Rational(s / BigRational::from(BigInt::from(n)))),
                 _ => Ok(Value::Null),
             }
         }

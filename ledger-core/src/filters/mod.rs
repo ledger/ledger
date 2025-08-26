@@ -6,7 +6,7 @@
 
 use crate::posting::Posting;
 use crate::transaction::{Transaction, TransactionStatus};
-use crate::amount::Amount;
+use ledger_math::amount::Amount;
 use chrono::NaiveDate;
 use regex::Regex;
 use std::error::Error;
@@ -60,7 +60,6 @@ pub trait PostingFilter: Filter<Posting> {}
 pub trait TransactionFilter: Filter<Transaction> {}
 
 /// Composite filter chain that applies multiple filters
-#[derive(Debug)]
 pub struct FilterChain<T> {
     filters: Vec<Box<dyn Filter<T>>>,
 }
@@ -234,12 +233,8 @@ impl AccountFilter {
 
 impl Filter<Posting> for AccountFilter {
     fn matches(&self, posting: &Posting) -> bool {
-        if let Some(account) = posting.account.upgrade() {
-            let account_name = account.borrow().full_name();
-            self.pattern.is_match(&account_name)
-        } else {
-            false
-        }
+        let account_name = posting.account.borrow().fullname_immutable();
+        self.pattern.is_match(&account_name)
     }
     
     fn description(&self) -> String {

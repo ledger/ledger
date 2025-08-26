@@ -10,21 +10,27 @@
 
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_until, take_while, take_while1},
+    bytes::complete::{take_until, take_while, take_while1},
     character::complete::{
-        alpha1, char, digit1, line_ending, space0, space1,
+        alpha1, digit1, line_ending, space0, space1, char,
     },
     combinator::{map, opt, recognize, value},
-    error::context,
+    error::{context, ParseError},
     multi::many0,
     sequence::{delimited, preceded, terminated, tuple},
     IResult,
 };
 
+// We need to use bytes for tag with byte strings
+use nom::bytes::complete::tag as bytes_tag;
+
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::io::{BufRead, BufReader};
 use std::fs::File;
+use std::rc::Rc;
+use std::cell::RefCell;
+use std::sync::Arc;
 
 use crate::{
     account::Account,
@@ -84,6 +90,17 @@ pub type VerboseError<I> = nom::error::VerboseError<I>;
 
 /// Result type for parsing operations
 type ParseResult<'a, T> = IResult<&'a str, T, VerboseError<&'a str>>;
+
+// Helper function for string tags that works with VerboseError
+fn tag<'a>(s: &'a str) -> impl Fn(&'a str) -> ParseResult<'a, &'a str> + 'a {
+    move |input: &'a str| {
+        if input.starts_with(s) {
+            Ok((&input[s.len()..], &input[..s.len()]))
+        } else {
+            Err(nom::Err::Error(VerboseError::from_error_kind(input, nom::error::ErrorKind::Tag)))
+        }
+    }
+}
 
 /// Parser state structure for context management
 #[derive(Debug, Clone)]
@@ -358,6 +375,9 @@ impl JournalParser {
         for entry in entries {
             match entry {
                 JournalEntry::Transaction(transaction) => {
+                    // Register accounts and commodities from transaction before adding
+                    self.register_transaction_accounts_and_commodities(&mut journal, &transaction);
+                    
                     // Validate transaction before adding
                     match self.validate_transaction(&transaction) {
                         Ok(_) => journal.add_transaction(transaction),
@@ -383,11 +403,39 @@ impl JournalParser {
         Ok(journal)
     }
     
+    /// Register accounts and commodities from a transaction
+    fn register_transaction_accounts_and_commodities(&mut self, journal: &mut Journal, transaction: &Transaction) {
+        for posting in &transaction.postings {
+            // Get the account name from the posting
+            let account_name = {
+                let account = posting.account.borrow();
+                account.name().to_string()
+            };
+            
+            // Ensure the account exists in the journal
+            // This will create it if it doesn't exist
+            let _ = journal.get_or_create_account(&account_name);
+            
+            // Register commodity from the amount if present
+            if let Some(amount) = &posting.amount {
+                if let Some(commodity_ref) = amount.commodity() {
+                    let commodity = commodity_ref.clone();
+                    let symbol = commodity.symbol().to_string();
+                    
+                    // Add commodity if it doesn't exist in the journal
+                    if !journal.commodities.contains_key(&symbol) {
+                        journal.commodities.insert(symbol.clone(), commodity.clone());
+                    }
+                }
+            }
+        }
+    }
+
     /// Process a parsed directive with include handling
     fn process_directive(&mut self, journal: &mut Journal, directive: Directive) -> Result<(), JournalParseError> {
         match directive {
             Directive::Account { name, declarations } => {
-                let mut account = Account::new(&name);
+                let account = Account::new(name.clone().into(), None, 0);
                 for decl in declarations {
                     match decl {
                         AccountDeclaration::Alias(alias) => {
@@ -400,14 +448,14 @@ impl JournalParser {
                         _ => {}
                     }
                 }
-                journal.add_account(account);
+                journal.add_account(Rc::new(RefCell::new(account)));
             }
             Directive::Commodity { symbol, declarations } => {
                 let mut commodity = Commodity::new(&symbol);
                 for decl in declarations {
                     match decl {
                         CommodityDeclaration::Format(format) => {
-                            commodity.set_format(&format);
+                            commodity.set_format(format.clone());
                         }
                         CommodityDeclaration::NoMarket => {
                             commodity.set_no_market(true);
@@ -416,7 +464,7 @@ impl JournalParser {
                         _ => {}
                     }
                 }
-                journal.add_commodity(commodity);
+                journal.add_commodity(Arc::new(commodity));
             }
             Directive::Include { path } => {
                 self.process_include_file(journal, &path)?;
@@ -654,7 +702,7 @@ impl StreamingJournalParser {
     }
     
     /// Parse a file in streaming fashion, yielding entries as they're parsed
-    pub fn parse_file_streaming<P: AsRef<Path>>(&mut self, path: P) -> Result<JournalEntryIterator, JournalParseError> {
+    pub fn parse_file_streaming<P: AsRef<Path>>(&mut self, path: P) -> Result<JournalEntryIterator<BufReader<File>>, JournalParseError> {
         let file = File::open(&path)
             .map_err(|e| JournalParseError::IoError {
                 path: path.as_ref().to_path_buf(),
@@ -876,7 +924,7 @@ fn journal_entries(input: &str) -> ParseResult<Vec<JournalEntry>> {
 }
 
 /// Parse complete journal entries with error recovery
-fn journal_entries_with_recovery(input: &str, context: &mut ParseContext) -> ParseResult<Vec<JournalEntry>> {
+fn journal_entries_with_recovery<'a>(input: &'a str, context: &mut ParseContext) -> ParseResult<'a, Vec<JournalEntry>> {
     let mut entries = Vec::new();
     let mut remaining = input;
     
@@ -948,7 +996,7 @@ fn empty_line(input: &str) -> ParseResult<&str> {
 fn comment_line(input: &str) -> ParseResult<String> {
     map(
         preceded(
-            alt((char(';'), char('#'), char('*'), char('|'))),
+            alt((tag(";"), tag("#"), tag("*"), tag("|"))),
             take_until("\n")
         ),
         |s: &str| s.to_string()
@@ -1017,7 +1065,7 @@ fn parse_metadata_tags(comment: &str) -> HashMap<String, String> {
 fn enhanced_comment_line(input: &str) -> ParseResult<(String, HashMap<String, String>)> {
     map(
         preceded(
-            alt((char(';'), char('#'), char('*'), char('|'))),
+            alt((tag(";"), tag("#"), tag("*"), tag("|"))),
             take_until("\n")
         ),
         |s: &str| {
@@ -1042,9 +1090,9 @@ fn parse_transaction(input: &str) -> ParseResult<Transaction> {
     map(
         tuple((
             date_field,
-            opt(preceded(char('='), date_field)),  // aux date
-            opt(alt((char('*'), char('!')))),      // cleared flag
-            opt(delimited(char('('), take_until(")"), char(')'))), // code
+            opt(preceded(tag("="), date_field)),  // aux date
+            opt(alt((tag("*"), tag("!")))),      // cleared flag
+            opt(delimited(tag("("), take_until(")"), tag(")"))), // code
             opt(payee_description),
             opt(preceded(space0, simple_comment_field)), // transaction comment
             line_ending,
@@ -1060,8 +1108,8 @@ fn parse_transaction(input: &str) -> ParseResult<Transaction> {
             
             if let Some(cleared) = cleared {
                 match cleared {
-                    '*' => transaction.set_status(crate::transaction::TransactionStatus::Cleared),
-                    '!' => transaction.set_status(crate::transaction::TransactionStatus::Pending),
+                    "*" => transaction.set_status(crate::transaction::TransactionStatus::Cleared),
+                    "!" => transaction.set_status(crate::transaction::TransactionStatus::Pending),
                     _ => {}
                 }
             }
@@ -1089,21 +1137,66 @@ fn parse_transaction(input: &str) -> ParseResult<Transaction> {
 
 /// Parse a date field
 fn date_field(input: &str) -> ParseResult<NaiveDate> {
-    // This is a simplified date parser - should support multiple formats
-    map(
-        recognize(tuple((
-            digit1,
-            char('/'),
-            digit1,
-            opt(tuple((char('/'), digit1))),
-        ))),
-        |date_str: &str| {
-            // Parse date string into NaiveDate
-            // This should handle multiple date formats
-            // For now, return a default date - proper implementation needed
-            NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
-        }
-    )(input)
+    // Parse date in various formats
+    alt((
+        // ISO date format: 2021-01-01  
+        map(
+            recognize(tuple((
+                digit1,
+                tag("-"),
+                digit1,
+                tag("-"),
+                digit1,
+            ))),
+            |date_str: &str| {
+                // Parse YYYY-MM-DD format
+                let parts: Vec<&str> = date_str.split('-').collect();
+                if parts.len() == 3 {
+                    let year = parts[0].parse::<i32>().unwrap_or(2024);
+                    let month = parts[1].parse::<u32>().unwrap_or(1);
+                    let day = parts[2].parse::<u32>().unwrap_or(1);
+                    NaiveDate::from_ymd_opt(year, month, day).unwrap_or_else(|| {
+                        NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
+                    })
+                } else {
+                    NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
+                }
+            }
+        ),
+        // Slash format: 2021/01/01 or 01/01
+        map(
+            recognize(tuple((
+                digit1,
+                tag("/"),
+                digit1,
+                opt(tuple((tag("/"), digit1))),
+            ))),
+            |date_str: &str| {
+                // Parse date string with slashes
+                let parts: Vec<&str> = date_str.split('/').collect();
+                if parts.len() == 3 {
+                    // YYYY/MM/DD format
+                    let year = parts[0].parse::<i32>().unwrap_or(2024);
+                    let month = parts[1].parse::<u32>().unwrap_or(1);
+                    let day = parts[2].parse::<u32>().unwrap_or(1);
+                    NaiveDate::from_ymd_opt(year, month, day).unwrap_or_else(|| {
+                        NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
+                    })
+                } else if parts.len() == 2 {
+                    // MM/DD format - assume current year
+                    use chrono::{Local, Datelike};
+                    let current_year = Local::now().year();
+                    let month = parts[0].parse::<u32>().unwrap_or(1);
+                    let day = parts[1].parse::<u32>().unwrap_or(1);
+                    NaiveDate::from_ymd_opt(current_year, month, day).unwrap_or_else(|| {
+                        NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
+                    })
+                } else {
+                    NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
+                }
+            }
+        )
+    ))(input)
 }
 
 /// Parse payee description
@@ -1119,7 +1212,7 @@ fn posting_line(input: &str) -> ParseResult<Posting> {
     context(
         "posting",
         preceded(
-            alt((space1, char('\t'))),
+            alt((space1, tag("\t"))),
             parse_posting
         )
     )(input)
@@ -1134,13 +1227,18 @@ fn parse_posting(input: &str) -> ParseResult<Posting> {
             account_name,
             opt(preceded(space1, simple_amount_field)),
             opt(preceded(space1, simple_comment_field)),
-            line_ending,
+            opt(line_ending),
         )),
         |(account, amount, comment, _)| {
             // Create a dummy account reference for now
             // TODO: Proper account management
+            use compact_str::CompactString;
             let account_ref = std::rc::Rc::new(std::cell::RefCell::new(
-                crate::account::Account::new(&account)
+                crate::account::Account::new(
+                    CompactString::from(account),
+                    None,
+                    0
+                )
             ));
             let mut posting = Posting::new(account_ref);
             
@@ -1149,7 +1247,8 @@ fn parse_posting(input: &str) -> ParseResult<Posting> {
             }
             
             if let Some(comment) = comment {
-                posting.note = Some(comment);
+                use compact_str::CompactString;
+                posting.note = Some(CompactString::from(comment));
             }
             
             posting
@@ -1168,33 +1267,120 @@ fn account_name(input: &str) -> ParseResult<String> {
 /// Parse an amount field (simplified)
 fn simple_amount_field(input: &str) -> ParseResult<Amount> {
     // Simplified amount parser - should handle currencies, expressions, etc.
-    map(
-        recognize(tuple((
-            opt(char('-')),
-            digit1,
-            opt(tuple((char('.'), digit1))),
-            opt(preceded(space0, alpha1)), // commodity
-        ))),
-        |amount_str: &str| {
-            // For now, create a simple amount from parsed decimal
-            // TODO: Proper amount parsing with commodities
-            use rust_decimal::Decimal;
-            use std::str::FromStr;
-            
-            let decimal_str = amount_str.chars()
-                .take_while(|c| c.is_ascii_digit() || *c == '.' || *c == '-')
-                .collect::<String>();
-            
-            let decimal = Decimal::from_str(&decimal_str).unwrap_or_default();
-            Amount::new(decimal)
-        }
-    )(input)
+    alt((
+        // Negative amount with currency symbol: -$1000.00, -€500.50
+        map(
+            recognize(tuple((
+                tag("-"),
+                alt((tag("$"), tag("€"), tag("£"), tag("¥"))), // currency symbol
+                digit1,
+                opt(tuple((tag("."), digit1))),
+            ))),
+            |amount_str: &str| {
+                // Extract decimal part including the negative sign and currency symbol
+                use rust_decimal::Decimal;
+                use std::str::FromStr;
+                use std::sync::Arc;
+                use ledger_math::commodity::Commodity;
+                
+                // Extract the currency symbol
+                let currency_symbol = if amount_str.contains("$") {
+                    "USD"
+                } else if amount_str.contains("€") {
+                    "EUR"
+                } else if amount_str.contains("£") {
+                    "GBP"
+                } else if amount_str.contains("¥") {
+                    "JPY"
+                } else {
+                    ""
+                };
+                
+                let decimal_str = amount_str.chars()
+                    .filter(|c| c.is_ascii_digit() || *c == '.' || *c == '-')
+                    .collect::<String>();
+                
+                let decimal = Decimal::from_str(&decimal_str).unwrap_or_default();
+                
+                // Create amount with commodity
+                if !currency_symbol.is_empty() {
+                    let commodity = Arc::new(Commodity::new(currency_symbol));
+                    Amount::with_commodity(decimal, Some(commodity))
+                } else {
+                    Amount::new(decimal)
+                }
+            }
+        ),
+        // Positive amount with currency symbol before: $1000.00, €500.50
+        map(
+            recognize(tuple((
+                alt((tag("$"), tag("€"), tag("£"), tag("¥"))), // currency symbol
+                digit1,
+                opt(tuple((tag("."), digit1))),
+            ))),
+            |amount_str: &str| {
+                // Extract decimal part and currency symbol
+                use rust_decimal::Decimal;
+                use std::str::FromStr;
+                use std::sync::Arc;
+                use ledger_math::commodity::Commodity;
+                
+                // Extract the currency symbol
+                let currency_symbol = if amount_str.contains("$") {
+                    "USD"
+                } else if amount_str.contains("€") {
+                    "EUR"
+                } else if amount_str.contains("£") {
+                    "GBP"
+                } else if amount_str.contains("¥") {
+                    "JPY"
+                } else {
+                    ""
+                };
+                
+                let decimal_str = amount_str.chars()
+                    .skip_while(|c| !c.is_ascii_digit())
+                    .collect::<String>();
+                
+                let decimal = Decimal::from_str(&decimal_str).unwrap_or_default();
+                
+                // Create amount with commodity
+                if !currency_symbol.is_empty() {
+                    let commodity = Arc::new(Commodity::new(currency_symbol));
+                    Amount::with_commodity(decimal, Some(commodity))
+                } else {
+                    Amount::new(decimal)
+                }
+            }
+        ),
+        // Amount followed by commodity: 1000.00 USD, -1000.00 USD
+        map(
+            recognize(tuple((
+                opt(tag("-")),
+                digit1,
+                opt(tuple((tag("."), digit1))),
+                opt(preceded(space0, alpha1)), // commodity
+            ))),
+            |amount_str: &str| {
+                // For now, create a simple amount from parsed decimal
+                use rust_decimal::Decimal;
+                use std::str::FromStr;
+                
+                let decimal_str = amount_str.chars()
+                    .take_while(|c| c.is_ascii_digit() || *c == '.' || *c == '-')
+                    .collect::<String>();
+                
+                let decimal = Decimal::from_str(&decimal_str).unwrap_or_default();
+                Amount::new(decimal)
+            }
+        ),
+    ))(input)
 }
 
 /// Parse a comment field with metadata extraction
 fn comment_field(input: &str) -> ParseResult<(String, HashMap<String, String>)> {
     map(
-        preceded(char(';'), take_until("\n")),
+        preceded(tag(";"), take_until("\n")),
         |s: &str| {
             let comment = s.trim().to_string();
             let metadata = parse_metadata_tags(&comment);
@@ -1206,7 +1392,7 @@ fn comment_field(input: &str) -> ParseResult<(String, HashMap<String, String>)> 
 /// Simple comment field parser (for backward compatibility)
 fn simple_comment_field(input: &str) -> ParseResult<String> {
     map(
-        preceded(char(';'), take_until("\n")),
+        preceded(tag(";"), take_until("\n")),
         |s: &str| s.trim().to_string()
     )(input)
 }
@@ -1263,7 +1449,7 @@ fn account_directive(input: &str) -> ParseResult<Directive> {
 /// Parse account declarations
 fn account_declaration(input: &str) -> ParseResult<AccountDeclaration> {
     preceded(
-        alt((space1, char('\t'))),
+        alt((space1, tag("\t"))),
         alt((
             map(
                 preceded(tag("alias"), preceded(space1, take_until("\n"))),
@@ -1300,7 +1486,7 @@ fn commodity_directive(input: &str) -> ParseResult<Directive> {
 /// Parse commodity declarations
 fn commodity_declaration(input: &str) -> ParseResult<CommodityDeclaration> {
     preceded(
-        alt((space1, char('\t'))),
+        alt((space1, tag("\t"))),
         alt((
             map(
                 preceded(tag("alias"), preceded(space1, take_until("\n"))),
@@ -1345,7 +1531,7 @@ fn conditional_include_directive(input: &str) -> ParseResult<Directive> {
         tuple((
             tag("include"),
             space1,
-            delimited(char('['), take_until("]"), char(']')),
+            delimited(tag("["), take_until("]"), tag("]")),
             space1,
             take_until("\n"),
         )),
@@ -1368,7 +1554,7 @@ fn price_directive(input: &str) -> ParseResult<Directive> {
             space1,
             take_until(" "),
             space1,
-            amount_field,
+            simple_amount_field,
         )),
         |(_, _, date, _, commodity, _, price)| {
             Directive::Price {
@@ -1387,7 +1573,7 @@ fn alias_directive(input: &str) -> ParseResult<Directive> {
             tag("alias"),
             space1,
             take_until("="),
-            char('='),
+            tag("="),
             take_until("\n"),
         )),
         |(_, _, account, _, alias)| {
@@ -1441,7 +1627,7 @@ fn payee_directive(input: &str) -> ParseResult<Directive> {
 /// Parse payee declarations
 fn payee_declaration(input: &str) -> ParseResult<PayeeDeclaration> {
     preceded(
-        alt((space1, char('\t'))),
+        alt((space1, tag("\t"))),
         alt((
             map(
                 preceded(tag("alias"), preceded(space1, take_until("\n"))),
@@ -1511,7 +1697,7 @@ fn define_directive(input: &str) -> ParseResult<Directive> {
             tag("define"),
             space1,
             take_until("="),
-            char('='),
+            tag("="),
             take_until("\n"),
         )),
         |(_, _, name, _, expression)| {
@@ -1587,7 +1773,7 @@ fn check_directive(input: &str) -> ParseResult<Directive> {
 fn periodic_transaction(input: &str) -> ParseResult<Directive> {
     map(
         tuple((
-            char('~'),
+            tag("~"),
             space0,
             take_until("\n"),
             line_ending,
@@ -1607,7 +1793,7 @@ fn periodic_transaction(input: &str) -> ParseResult<Directive> {
 fn automated_transaction(input: &str) -> ParseResult<Directive> {
     map(
         tuple((
-            char('='),
+            tag("="),
             space0,
             take_until("\n"),
             line_ending,

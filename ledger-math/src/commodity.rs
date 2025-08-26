@@ -114,6 +114,21 @@ impl Commodity {
     pub fn drop_flags(&mut self, flags: CommodityFlags) {
         self.flags &= !flags;
     }
+    
+    /// Set display format for this commodity
+    pub fn set_format(&mut self, _format: String) {
+        // TODO: Implement format parsing and storage
+        // For now, this is a placeholder
+    }
+    
+    /// Set the no-market flag for this commodity
+    pub fn set_no_market(&mut self, no_market: bool) {
+        if no_market {
+            self.add_flags(CommodityFlags::NOMARKET);
+        } else {
+            self.drop_flags(CommodityFlags::NOMARKET);
+        }
+    }
 }
 
 impl fmt::Display for Commodity {

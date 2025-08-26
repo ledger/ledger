@@ -431,6 +431,7 @@ impl TestExecutor {
 }
 
 /// Batch test executor for running multiple tests
+#[derive(Clone)]
 pub struct BatchTestExecutor {
     executor: TestExecutor,
 }

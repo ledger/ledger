@@ -7,6 +7,7 @@ use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::rc::{Rc, Weak};
+use compact_str::CompactString;
 use serde_json::Value;
 use regex::Regex;
 
@@ -103,7 +104,7 @@ pub struct Account {
 
 impl Account {
     /// Create a new account with the specified name and parent
-    pub fn new(name: String, parent: Option<WeakAccountRef>, account_id: usize) -> Self {
+    pub fn new(name: CompactString, parent: Option<WeakAccountRef>, account_id: usize) -> Self {
         let account_name = intern_string(&name);
         let depth = if let Some(parent_weak) = &parent {
             if let Some(parent_rc) = parent_weak.upgrade() {
@@ -131,7 +132,7 @@ impl Account {
     }
 
     /// Create a root account (no parent)
-    pub fn new_root(name: String, account_id: usize) -> Self {
+    pub fn new_root(name: CompactString, account_id: usize) -> Self {
         Self::new(name, None, account_id)
     }
 
@@ -210,6 +211,16 @@ impl Account {
         } else {
             self.fullname()
         }
+    }
+
+    /// Alias for fullname() to match legacy API
+    pub fn full_name(&mut self) -> AccountName {
+        self.fullname()
+    }
+
+    /// Get the account's simple name (without path)
+    pub fn name(&self) -> AccountName {
+        self.name.clone()
     }
 
     /// Parse a colon-separated account path (e.g., "Assets:Bank:Checking") - optimized
@@ -328,22 +339,22 @@ impl Account {
     /// Get fullname without mutable borrow (for use in iterators)
     pub fn fullname_immutable(&self) -> String {
         if let Some(ref cached) = self.cached_fullname {
-            return cached.clone();
+            return cached.to_string();
         }
 
         if let Some(parent_weak) = &self.parent {
             if let Some(parent_rc) = parent_weak.upgrade() {
                 let parent_name = parent_rc.borrow().fullname_immutable();
                 if parent_name.is_empty() {
-                    self.name.clone()
+                    self.name.to_string()
                 } else {
                     format!("{}:{}", parent_name, self.name)
                 }
             } else {
-                self.name.clone()
+                self.name.to_string()
             }
         } else {
-            self.name.clone()
+            self.name.to_string()
         }
     }
 
@@ -369,7 +380,7 @@ impl Account {
     pub fn get_default_payee(&self) -> Option<String> {
         for directive in &self.directives {
             if let AccountDirective::Payee(payee) = directive {
-                return Some(payee.clone());
+                return Some(payee.to_string());
             }
         }
         None
@@ -379,7 +390,7 @@ impl Account {
     pub fn get_default_commodity(&self) -> Option<String> {
         for directive in &self.directives {
             if let AccountDirective::Default(commodity) = directive {
-                return Some(commodity.clone());
+                return Some(commodity.to_string());
             }
         }
         None
@@ -390,7 +401,7 @@ impl Account {
         self.directives.iter()
             .filter_map(|directive| {
                 if let AccountDirective::Assert(assertion) = directive {
-                    Some(assertion.clone())
+                    Some(assertion.to_string())
                 } else {
                     None
                 }
@@ -403,7 +414,7 @@ impl Account {
         self.directives.iter()
             .filter_map(|directive| {
                 if let AccountDirective::Tag(tag) = directive {
-                    Some(tag.clone())
+                    Some(tag.to_string())
                 } else {
                     None
                 }
@@ -415,7 +426,7 @@ impl Account {
     pub fn has_tag(&self, tag: &str) -> bool {
         self.directives.iter().any(|directive| {
             if let AccountDirective::Tag(account_tag) = directive {
-                account_tag == tag
+                account_tag.as_str() == tag
             } else {
                 false
             }
@@ -423,7 +434,7 @@ impl Account {
     }
 
     /// Get account format specification
-    pub fn get_format(&self) -> Option<String> {
+    pub fn get_format(&self) -> Option<CompactString> {
         for directive in &self.directives {
             if let AccountDirective::Format(format) = directive {
                 return Some(format.clone());
@@ -517,7 +528,7 @@ pub trait AccountVisitor {
 
 /// Depth-first iterator for account traversal
 pub struct DepthFirstIterator {
-    stack: Vec<(String, AccountRef)>,
+    stack: Vec<(CompactString, AccountRef)>,
     visited: std::collections::HashSet<usize>,
 }
 
@@ -635,24 +646,24 @@ pub struct AccountTree {
     /// Root account (typically unnamed or named "")
     root: AccountRef,
     /// Path-based index for fast lookups
-    path_index: HashMap<String, AccountRef>,
+    path_index: HashMap<CompactString, AccountRef>,
     /// ID-based index for lookups by account ID
     id_index: HashMap<usize, AccountRef>,
     /// Account ID counter for generating unique IDs
     next_account_id: usize,
     /// Alias registry mapping alias names to canonical account paths
-    alias_registry: HashMap<String, String>,
+    alias_registry: HashMap<CompactString, CompactString>,
 }
 
 impl AccountTree {
     /// Create a new AccountTree with an empty root account
     pub fn new() -> Self {
-        let root = Rc::new(RefCell::new(Account::new_root("".to_string(), 0)));
+        let root = Rc::new(RefCell::new(Account::new_root(CompactString::from(""), 0)));
         let mut path_index = HashMap::new();
         let mut id_index = HashMap::new();
         
         // Index the root account
-        path_index.insert("".to_string(), root.clone());
+        path_index.insert(CompactString::from(""), root.clone());
         id_index.insert(0, root.clone());
         
         Self {
@@ -667,7 +678,8 @@ impl AccountTree {
     /// Find an account by path, optionally creating it if it doesn't exist
     pub fn find_account(&mut self, path: &str, auto_create: bool) -> Option<AccountRef> {
         // Check if we already have this account in our index
-        if let Some(account_ref) = self.path_index.get(path) {
+        let path_key = CompactString::from(path);
+        if let Some(account_ref) = self.path_index.get(&path_key) {
             return Some(account_ref.clone());
         }
 
@@ -687,7 +699,7 @@ impl AccountTree {
 
         // Build the account path step by step, creating accounts as needed
         let mut current_parent = self.root.clone();
-        let mut built_path = String::new();
+        let mut built_path = CompactString::new("");
 
         for (i, component) in components.iter().enumerate() {
             if i > 0 {
@@ -740,7 +752,7 @@ impl AccountTree {
     }
 
     /// Get all account paths
-    pub fn all_paths(&self) -> Vec<String> {
+    pub fn all_paths(&self) -> Vec<CompactString> {
         self.path_index.keys().cloned().collect()
     }
 
@@ -756,7 +768,8 @@ impl AccountTree {
             return Err("Cannot remove root account".to_string());
         }
 
-        let account_ref = self.path_index.get(path)
+        let path_key = CompactString::from(path);
+        let account_ref = self.path_index.get(&path_key)
             .ok_or_else(|| format!("Account '{}' not found", path))?
             .clone();
 
@@ -775,7 +788,7 @@ impl AccountTree {
         }
 
         // Remove from indices
-        self.path_index.remove(path);
+        self.path_index.remove(&path_key);
         self.id_index.remove(&account_id);
 
         Ok(account_ref)
@@ -785,11 +798,11 @@ impl AccountTree {
     pub fn rebuild_index(&mut self) {
         self.path_index.clear();
         self.id_index.clear();
-        self._index_account_recursive(&self.root.clone(), String::new());
+        self._index_account_recursive(&self.root.clone(), CompactString::new(""));
     }
 
     /// Recursively index an account and its children
-    fn _index_account_recursive(&mut self, account_ref: &AccountRef, path: String) {
+    fn _index_account_recursive(&mut self, account_ref: &AccountRef, path: CompactString) {
         let account_id = account_ref.borrow().account_id;
         
         // Index this account
@@ -797,7 +810,7 @@ impl AccountTree {
         self.id_index.insert(account_id, account_ref.clone());
 
         // Collect children first to avoid borrowing issues
-        let children: Vec<(String, AccountRef)> = account_ref
+        let children: Vec<(CompactString, AccountRef)> = account_ref
             .borrow()
             .children
             .iter()
@@ -805,7 +818,7 @@ impl AccountTree {
                 let child_path = if path.is_empty() {
                     name.clone()
                 } else {
-                    format!("{}:{}", path, name)
+                    CompactString::from(format!("{}:{}", path, name))
                 };
                 (child_path, child_ref.clone())
             })
@@ -818,7 +831,7 @@ impl AccountTree {
     }
 
     /// Register an alias for an account path
-    pub fn register_alias(&mut self, alias: String, canonical_path: String) -> Result<(), String> {
+    pub fn register_alias(&mut self, alias: CompactString, canonical_path: CompactString) -> Result<(), String> {
         // Validate that the canonical path exists or can be created
         if self.find_account(&canonical_path, false).is_none() {
             return Err(format!("Canonical path '{}' does not exist", canonical_path));
@@ -840,20 +853,20 @@ impl AccountTree {
     }
 
     /// Remove an alias
-    pub fn remove_alias(&mut self, alias: &str) -> Result<String, String> {
+    pub fn remove_alias(&mut self, alias: &str) -> Result<CompactString, String> {
         self.alias_registry.remove(alias)
             .ok_or_else(|| format!("Alias '{}' not found", alias))
     }
 
     /// Resolve an alias to its canonical path
-    pub fn resolve_alias(&self, alias: &str) -> Option<&String> {
+    pub fn resolve_alias(&self, alias: &str) -> Option<&CompactString> {
         self.alias_registry.get(alias)
     }
 
     /// Resolve an alias chain to prevent circular references
-    fn resolve_alias_chain(&self, alias: &str) -> Vec<String> {
+    fn resolve_alias_chain(&self, alias: &str) -> Vec<CompactString> {
         let mut chain = Vec::new();
-        let mut current = alias.to_string();
+        let mut current = CompactString::from(alias);
         
         while let Some(resolved) = self.alias_registry.get(&current) {
             if chain.contains(resolved) {
@@ -887,7 +900,7 @@ impl AccountTree {
     }
 
     /// Get all aliases
-    pub fn all_aliases(&self) -> Vec<(String, String)> {
+    pub fn all_aliases(&self) -> Vec<(CompactString, CompactString)> {
         self.alias_registry.iter()
             .map(|(alias, path)| (alias.clone(), path.clone()))
             .collect()
@@ -1002,7 +1015,7 @@ impl AccountTree {
                 Ok(())
             },
             AccountDirective::Alias(alias_name) => {
-                self.register_alias(alias_name.clone(), path.to_string())
+                self.register_alias(alias_name.clone(), CompactString::from(path))
                     .map_err(|e| format!("Failed to register alias '{}': {}", alias_name, e))?;
                 
                 if let Some(account_ref) = self.find_account(path, false) {
@@ -1061,7 +1074,7 @@ impl AccountTree {
                 } else {
                     None
                 };
-                let directive = AccountDirective::Account(account_path.to_string(), account_type);
+                let directive = AccountDirective::Account(CompactString::from(account_path), account_type);
                 self.apply_directive(account_path, directive)
             },
             "alias" => {
@@ -1070,7 +1083,7 @@ impl AccountTree {
                 }
                 let alias_name = parts[1];
                 let account_path = parts[2];
-                let directive = AccountDirective::Alias(alias_name.to_string());
+                let directive = AccountDirective::Alias(CompactString::from(alias_name));
                 self.apply_directive(account_path, directive)
             },
             "payee" => {
@@ -1079,7 +1092,7 @@ impl AccountTree {
                 }
                 let account_path = parts[1];
                 let payee_name = parts[2..].join(" ");
-                let directive = AccountDirective::Payee(payee_name);
+                let directive = AccountDirective::Payee(CompactString::from(payee_name));
                 self.apply_directive(account_path, directive)
             },
             "note" => {
@@ -1088,7 +1101,7 @@ impl AccountTree {
                 }
                 let account_path = parts[1];
                 let note_text = parts[2..].join(" ");
-                let directive = AccountDirective::Note(note_text);
+                let directive = AccountDirective::Note(CompactString::from(note_text));
                 self.apply_directive(account_path, directive)
             },
             "tag" => {
@@ -1097,7 +1110,7 @@ impl AccountTree {
                 }
                 let account_path = parts[1];
                 let tag_name = parts[2];
-                let directive = AccountDirective::Tag(tag_name.to_string());
+                let directive = AccountDirective::Tag(CompactString::from(tag_name));
                 self.apply_directive(account_path, directive)
             },
             "assert" => {
@@ -1106,7 +1119,7 @@ impl AccountTree {
                 }
                 let account_path = parts[1];
                 let assertion = parts[2..].join(" ");
-                let directive = AccountDirective::Assert(assertion);
+                let directive = AccountDirective::Assert(CompactString::from(assertion));
                 self.apply_directive(account_path, directive)
             },
             "default" => {
@@ -1115,7 +1128,7 @@ impl AccountTree {
                 }
                 let account_path = parts[1];
                 let commodity = parts[2];
-                let directive = AccountDirective::Default(commodity.to_string());
+                let directive = AccountDirective::Default(CompactString::from(commodity));
                 self.apply_directive(account_path, directive)
             },
             "format" => {
@@ -1124,7 +1137,7 @@ impl AccountTree {
                 }
                 let account_path = parts[1];
                 let format_spec = parts[2..].join(" ");
-                let directive = AccountDirective::Format(format_spec);
+                let directive = AccountDirective::Format(CompactString::from(format_spec));
                 self.apply_directive(account_path, directive)
             },
             _ => {

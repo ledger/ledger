@@ -37,6 +37,7 @@ ahash = { workspace = true }
 bumpalo = { workspace = true }
 memmap2 = { workspace = true }
 rayon = "1.8"
+parking_lot = { workspace = true }
 
 [dev-dependencies]
 proptest = { workspace = true }

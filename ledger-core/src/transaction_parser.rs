@@ -9,7 +9,7 @@
 
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_until, take_while, take_while1},
+    bytes::complete::{take, take_until, take_while, take_while1},
     character::complete::{
         alpha1, char, digit1, line_ending, space0, space1, not_line_ending
     },
@@ -26,6 +26,17 @@ use std::collections::HashMap;
 
 /// Transaction parsing result type
 type ParseResult<'a, T> = IResult<&'a str, T>;
+
+// Helper function for string tags
+fn tag<'a>(s: &'a str) -> impl Fn(&'a str) -> IResult<&'a str, &'a str> + 'a {
+    move |input: &'a str| {
+        if input.starts_with(s) {
+            Ok((&input[s.len()..], &input[..s.len()]))
+        } else {
+            Err(nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Tag)))
+        }
+    }
+}
 
 /// Simplified transaction structure for parsing
 #[derive(Debug, Clone, PartialEq)]
@@ -115,11 +126,11 @@ fn parse_iso_date(input: &str) -> ParseResult<NaiveDate> {
 fn parse_slash_date(input: &str) -> ParseResult<NaiveDate> {
     map(
         tuple((
-            digit1,      // year
+            digit1::<&str, nom::error::Error<&str>>,      // year
             char('/'),
-            digit1,      // month
+            digit1::<&str, nom::error::Error<&str>>,      // month
             char('/'),
-            digit1,      // day
+            digit1::<&str, nom::error::Error<&str>>,      // day
         )),
         |(year, _, month, _, day)| {
             let y: i32 = year.parse().unwrap_or(2024);
@@ -136,11 +147,11 @@ fn parse_slash_date(input: &str) -> ParseResult<NaiveDate> {
 fn parse_dot_date(input: &str) -> ParseResult<NaiveDate> {
     map(
         tuple((
-            digit1,      // year
+            digit1::<&str, nom::error::Error<&str>>,      // year
             char('.'),
-            digit1,      // month
+            digit1::<&str, nom::error::Error<&str>>,      // month
             char('.'),
-            digit1,      // day
+            digit1::<&str, nom::error::Error<&str>>,      // day
         )),
         |(year, _, month, _, day)| {
             let y: i32 = year.parse().unwrap_or(2024);
@@ -157,11 +168,11 @@ fn parse_dot_date(input: &str) -> ParseResult<NaiveDate> {
 fn parse_short_date(input: &str) -> ParseResult<NaiveDate> {
     map(
         tuple((
-            digit1,      // month
+            digit1::<&str, nom::error::Error<&str>>,      // month
             char('/'),
-            digit1,      // day
+            digit1::<&str, nom::error::Error<&str>>,      // day
         )),
-        |(month, _, day)| {
+        |(month, _, day): (&str, char, &str)| {
             let m: u32 = month.parse().unwrap_or(1);
             let d: u32 = day.parse().unwrap_or(1);
             // Default to 2024 for now - should use current year
@@ -181,9 +192,10 @@ pub fn parse_transaction(input: &str) -> ParseResult<ParsedTransaction> {
     context("transaction", map(
         tuple((
             parse_transaction_header,
-            many0(preceded(line_ending, parse_posting_line)),
+            line_ending,
+            many0(parse_posting_line),
         )),
-        |(mut transaction, postings)| {
+        |(mut transaction, _, postings)| {
             transaction.postings = postings;
             transaction
         }
@@ -244,11 +256,14 @@ fn parse_payee_and_note(input: &str) -> ParseResult<(String, Option<String>)> {
 
 /// Parse a posting line (must start with whitespace)  
 fn parse_posting_line(input: &str) -> ParseResult<ParsedPosting> {
-    let (input, _) = alt((
-        map(space1, |_| ' '), 
-        char('\t')
-    ))(input)?; // consume whitespace
-    parse_posting(input)
+    context("posting_line", map(
+        tuple((
+            alt((space1, recognize(char('\t')))), // consume indentation
+            parse_posting,
+            opt(line_ending), // consume line ending if present
+        )),
+        |(_, posting, _)| posting
+    ))(input)
 }
 
 /// Parse posting content

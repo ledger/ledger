@@ -1,0 +1,20 @@
+[package]
+name = "parser-test"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "test_parser"
+path = "src/main.rs"
+
+[[bin]]
+name = "simple_test"
+path = "src/simple_test.rs"
+
+[dependencies]
+ledger-core = { path = "../ledger-core" }
+ledger-math = { path = "../ledger-math" }
+chrono.workspace = true
+anyhow.workspace = true

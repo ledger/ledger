@@ -8,6 +8,7 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, Sub, Mul, Div, Neg};
 use std::str::FromStr;
+use std::sync::Arc;
 
 use num_bigint::BigInt;
 use num_rational::BigRational;
@@ -92,6 +93,20 @@ impl Amount {
     /// Create an amount from an integer
     pub fn from_i64(value: i64) -> Self {
         Self::from_rational(BigRational::from_integer(BigInt::from(value)))
+    }
+    
+    /// Create a new amount from a Decimal value
+    pub fn new(value: Decimal) -> Self {
+        Self::from_decimal(value).unwrap_or_else(|_| Self::null())
+    }
+    
+    /// Create a new amount with a specific commodity
+    pub fn with_commodity(value: Decimal, commodity: Option<Arc<Commodity>>) -> Self {
+        let mut amount = Self::new(value);
+        if let Some(c) = commodity {
+            amount.set_commodity(c);
+        }
+        amount
     }
     
     /// Create an amount from a double with appropriate precision
@@ -336,6 +351,23 @@ impl Amount {
     /// Convert to i64, alias for compatibility with C++ interface
     pub fn to_long(&self) -> AmountResult<i64> {
         self.to_i64()
+    }
+    
+    /// Get the value as a Decimal (for use in calculations)
+    pub fn value(&self) -> Decimal {
+        match &self.quantity {
+            None => Decimal::ZERO,
+            Some(q) => {
+                // Convert BigRational to Decimal
+                // This may lose precision for very large or very precise numbers
+                if let (Some(numer), Some(denom)) = (q.numer().to_i128(), q.denom().to_i128()) {
+                    Decimal::from_i128_with_scale(numer, 0) / Decimal::from_i128_with_scale(denom, 0)
+                } else {
+                    // Fallback for values that don't fit in i128
+                    self.to_f64().unwrap_or(0.0).try_into().unwrap_or(Decimal::ZERO)
+                }
+            }
+        }
     }
     
     /// Convert to i32 if possible
@@ -803,6 +835,9 @@ impl PartialOrd for Amount {
         }
     }
 }
+
+// Note: We can't implement Ord because Amount comparison can fail for different commodities
+// Ord requires that comparison always succeeds, but PartialOrd allows returning None
 
 impl fmt::Display for Amount {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

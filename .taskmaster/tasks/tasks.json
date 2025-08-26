@@ -334,7 +334,7 @@
           14,
           15
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -342,7 +342,7 @@
             "description": "Implement robust date parsing using nom combinators with proper error recovery and context",
             "dependencies": [],
             "details": "Create date parser that handles various formats (YYYY/MM/DD, YYYY-MM-DD, MM/DD/YYYY). Implement ParsedDate struct with validation. Add error recovery to continue parsing after invalid dates. Use nom's error handling features to provide context about where parsing failed. Support relative dates and date expressions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -351,7 +351,7 @@
             "description": "Create amount parser handling currencies, commodities, and precision tracking",
             "dependencies": [],
             "details": "Parse amounts with prefix/suffix commodity symbols ($100, 100 USD). Handle decimal precision preservation. Support commodity directives for default formatting. Parse negative amounts and parentheses notation. Implement lot pricing syntax ({=price}). Handle commodity conversions and exchange rates.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -360,7 +360,7 @@
             "description": "Implement account name parsing with proper hierarchy and validation",
             "dependencies": [],
             "details": "Parse account names with colon separators (Assets:Bank:Checking). Handle quoted account names with special characters. Support account aliases and virtual accounts. Validate account hierarchy consistency. Implement account directive parsing for metadata. Handle UTF-8 account names properly.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -373,7 +373,7 @@
               "17.3"
             ],
             "details": "Parse transaction headers with date, status, code, and payee. Handle transaction metadata tags and key-value pairs. Support auxiliary dates and effective dates. Parse transaction notes and comments. Implement state tracking for multi-line transactions. Handle cleared (*) and pending (!) status markers.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -470,103 +470,7 @@
           17
         ],
         "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Implement base Filter trait and chain composition",
-            "description": "Create the foundational Filter trait with support for chain of responsibility pattern using trait objects",
-            "dependencies": [],
-            "details": "Define Filter trait in filters/mod.rs with process() method that takes and returns transaction iterators. Implement FilterChain struct to compose multiple filters using Vec<Box<dyn Filter>>. Add methods for adding filters to chain and executing them in sequence. Ensure proper lifetime management and error propagation through Result types.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 2,
-            "title": "Implement DateRangeFilter for temporal filtering",
-            "description": "Create filter for begin/end date range filtering of transactions",
-            "dependencies": [
-              "18.1"
-            ],
-            "details": "Implement DateRangeFilter struct with optional begin_date and end_date fields using NaiveDate. Override Filter trait to check transaction dates against range. Support inclusive/exclusive date boundaries. Handle edge cases like missing dates or invalid ranges. Add builder pattern for easy configuration.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 3,
-            "title": "Create AccountFilter with pattern matching",
-            "description": "Implement account filtering with regex support and hierarchy awareness",
-            "dependencies": [
-              "18.1"
-            ],
-            "details": "Build AccountFilter supporting both exact matches and regex patterns using regex crate. Implement hierarchy matching (e.g., 'Assets:*' matches all sub-accounts). Support include/exclude patterns. Cache compiled regex patterns for performance. Handle account aliases and virtual accounts properly.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 4,
-            "title": "Implement AmountFilter for value comparisons",
-            "description": "Create filter for amount-based filtering with comparison operators and ranges",
-            "dependencies": [
-              "18.1"
-            ],
-            "details": "Develop AmountFilter supporting operations like greater than, less than, equals, and range checks. Handle multi-commodity amounts correctly. Support both posting-level and transaction-level amount filtering. Implement proper decimal comparison using rust_decimal. Add support for absolute value comparisons.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 5,
-            "title": "Add StatusFilter for transaction states",
-            "description": "Implement filtering based on transaction status (cleared, pending, etc.)",
-            "dependencies": [
-              "18.1"
-            ],
-            "details": "Create StatusFilter to check transaction status flags (cleared '*', pending '!', etc.). Support filtering by multiple statuses simultaneously. Handle both transaction-level and posting-level status. Ensure compatibility with C++ Ledger status semantics.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 6,
-            "title": "Create balance report formatter",
-            "description": "Implement output formatter for balance reports with account tree structure",
-            "dependencies": [
-              "18.1",
-              "18.2",
-              "18.3",
-              "18.4",
-              "18.5"
-            ],
-            "details": "Build BalanceFormatter that generates hierarchical account balance reports. Implement tree rendering with proper indentation and alignment. Support various display options (flat vs tree, elided accounts, depth limiting). Calculate and display totals correctly. Format amounts with proper commodity symbols and precision.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 7,
-            "title": "Implement register output formatter",
-            "description": "Create register report formatter with running balances and column alignment",
-            "dependencies": [
-              "18.1",
-              "18.2",
-              "18.3",
-              "18.4",
-              "18.5"
-            ],
-            "details": "Develop RegisterFormatter for chronological transaction listings. Calculate and display running balances per posting. Implement proper column alignment and width management. Support various register formats (wide, narrow, CSV). Handle multi-line descriptions and metadata display. Ensure date formatting matches locale settings.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 8,
-            "title": "Add print formatter and lazy evaluation",
-            "description": "Implement transaction reconstruction formatter and optimize filter chain with lazy evaluation",
-            "dependencies": [
-              "18.6",
-              "18.7"
-            ],
-            "details": "Create PrintFormatter to reconstruct transaction text in canonical ledger format. Preserve original formatting where possible while normalizing amounts and dates. Implement lazy evaluation throughout filter chain using iterators instead of collecting. Add benchmarks to verify performance improvements. Ensure all formatters properly handle edge cases and errors.",
-            "status": "pending",
-            "testStrategy": ""
-          }
-        ]
+        "subtasks": []
       },
       {
         "id": 19,
@@ -581,115 +485,7 @@
           15
         ],
         "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Define complete AST node types",
-            "description": "Create comprehensive AST node definitions for all expression variants including arithmetic, logical, conditional, and function call nodes",
-            "dependencies": [],
-            "details": "Define enum variants in expr/ast.rs for BinaryOp (Add, Subtract, Multiply, Divide, Modulo), UnaryOp (Negate, Not), ComparisonOp (Equal, NotEqual, Less, Greater, LessEqual, GreaterEqual), LogicalOp (And, Or), ConditionalExpr, FunctionCall, Variable, and Literal nodes. Ensure each node type has proper fields for operands and can represent the full expression grammar.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 2,
-            "title": "Implement expression parser using nom",
-            "description": "Create nom-based parser combinators for parsing expression syntax from text into AST nodes",
-            "dependencies": [
-              "19.1"
-            ],
-            "details": "Implement parser in expr/parser.rs using nom combinators. Handle operator precedence (multiplication before addition, etc.), parenthesized expressions, function call syntax with arguments, variable references, and literal values (numbers, strings, dates). Use precedence climbing or Pratt parsing for correct operator precedence. Add proper error recovery and position tracking.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 3,
-            "title": "Create visitor pattern for expression evaluation",
-            "description": "Implement visitor pattern infrastructure for traversing and evaluating AST nodes with proper type coercion",
-            "dependencies": [
-              "19.1"
-            ],
-            "details": "Create ExprVisitor trait in expr/visitor.rs with visit methods for each AST node type. Implement Evaluator struct that implements ExprVisitor and maintains evaluation context. Handle type coercion between Amount, Balance, and numeric types. Implement short-circuit evaluation for logical operators. Add error handling for type mismatches and division by zero.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 4,
-            "title": "Implement core built-in functions",
-            "description": "Create implementations for ledger-specific built-in functions like amount(), balance(), date(), and account()",
-            "dependencies": [
-              "19.3"
-            ],
-            "details": "In expr/functions.rs, implement function registry and core functions: amount() to extract posting amounts, balance() for account balances, date() for date manipulation, account() for account name matching, commodity() for commodity operations, tag() for metadata access. Each function should validate argument count and types, returning appropriate Value types.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 5,
-            "title": "Add variable resolution and scoping",
-            "description": "Implement variable lookup mechanism with proper scoping rules for expression evaluation context",
-            "dependencies": [
-              "19.3"
-            ],
-            "details": "Create VariableScope struct in expr/scope.rs to manage variable bindings. Support predefined variables like 'amount', 'account', 'payee', 'date'. Implement scope chaining for nested contexts. Add methods to push/pop scopes during evaluation. Handle undefined variable references with clear error messages.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 6,
-            "title": "Implement query predicates for filtering",
-            "description": "Create predicate evaluation system for transaction and posting filtering based on expressions",
-            "dependencies": [
-              "19.3",
-              "19.5"
-            ],
-            "details": "In expr/predicate.rs, implement Predicate trait with evaluate method. Create predicate builders for common filters: date ranges, account patterns, amount comparisons, metadata matches. Ensure predicates can be combined with logical operators. Optimize predicate evaluation order for performance.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 7,
-            "title": "Add format string interpolation support",
-            "description": "Implement expression interpolation within format strings for report output customization",
-            "dependencies": [
-              "19.2",
-              "19.3"
-            ],
-            "details": "Parse format strings containing expression placeholders like '%(account)' or '%(amount * 2)'. Extract and parse embedded expressions. Evaluate expressions in current context and format results. Support format specifiers for alignment, width, and precision. Handle escaping of special characters.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 8,
-            "title": "Create expression optimizer",
-            "description": "Implement optimization passes for common expression patterns to improve evaluation performance",
-            "dependencies": [
-              "19.1",
-              "19.3"
-            ],
-            "details": "In expr/optimizer.rs, implement constant folding for literal operations. Detect and optimize common subexpressions. Simplify boolean expressions (dead code elimination). Cache frequently evaluated expressions. Add statistics tracking for optimization effectiveness. Ensure optimizations preserve expression semantics.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 9,
-            "title": "Write comprehensive expression tests",
-            "description": "Create extensive test suite comparing expression evaluation results with C++ implementation",
-            "dependencies": [
-              "19.1",
-              "19.2",
-              "19.3",
-              "19.4",
-              "19.5",
-              "19.6",
-              "19.7",
-              "19.8"
-            ],
-            "details": "Create test files in expr/tests/ covering: arithmetic expressions with all operators, logical and comparison operations, function calls with various arguments, variable resolution, predicate matching, format string interpolation, error cases (type mismatches, undefined variables). Generate test cases from C++ ledger output for compatibility verification. Add property-based tests for expression evaluation invariants.",
-            "status": "pending",
-            "testStrategy": ""
-          }
-        ]
+        "subtasks": []
       },
       {
         "id": 20,
@@ -703,91 +499,7 @@
           18
         ],
         "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Fix clap v4 derive API usage in cli.rs",
-            "description": "Update the CLI argument parser to use clap v4's derive API correctly with proper struct definitions and attributes",
-            "dependencies": [],
-            "details": "Migrate from clap v3 to v4 derive syntax. Define Args, Parser, and Subcommand structs with proper attributes. Fix any compilation errors related to clap macros. Ensure all command-line options are properly typed and have help text. Add value parsers for custom types like dates and amounts.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 2,
-            "title": "Implement balance command with account hierarchy",
-            "description": "Create the balance command that displays account balances in a hierarchical tree structure",
-            "dependencies": [
-              "20.1"
-            ],
-            "details": "Implement balance command in dispatch.rs. Build account hierarchy from journal data. Calculate balances recursively through account tree. Format output with proper indentation for hierarchy levels. Support --flat option for non-hierarchical display. Handle multi-commodity balances correctly.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 3,
-            "title": "Create register command with customizable format",
-            "description": "Implement the register command to display transaction postings in a ledger format",
-            "dependencies": [
-              "20.1"
-            ],
-            "details": "Create register command handler in dispatch.rs. Implement chronological sorting of postings. Support format strings for customizable output. Display running balance column. Handle --wide and --narrow display options. Implement date range and account filtering options.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 4,
-            "title": "Add print command for transaction output",
-            "description": "Implement the print command to output transactions in ledger file format",
-            "dependencies": [
-              "20.1"
-            ],
-            "details": "Create print command to output transactions in canonical ledger format. Preserve original formatting where possible. Support --raw option for exact reproduction. Handle transaction metadata and tags correctly. Ensure output can be parsed back by ledger.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 5,
-            "title": "Implement accounts and payees listing commands",
-            "description": "Create commands to list all accounts and payees found in the journal",
-            "dependencies": [
-              "20.1"
-            ],
-            "details": "Implement accounts command to list all account names alphabetically. Create payees command to list unique payees. Support --count option to show usage frequency. Add pattern matching for filtering results. Implement --used and --declared options for account filtering.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 6,
-            "title": "Add session management for configuration",
-            "description": "Implement session handling to manage configuration and runtime state across commands",
-            "dependencies": [
-              "20.1",
-              "20.2",
-              "20.3",
-              "20.4",
-              "20.5"
-            ],
-            "details": "Complete Session struct in session.rs with configuration fields. Load settings from environment variables and config files. Implement default values for common options. Handle --init-file and --file options. Store parsed journal in session for reuse. Manage output stream configuration.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 7,
-            "title": "Implement shell completion and error handling",
-            "description": "Add shell completion generation and implement comprehensive error handling with user-friendly messages",
-            "dependencies": [
-              "20.1",
-              "20.2",
-              "20.3",
-              "20.4",
-              "20.5"
-            ],
-            "details": "Use clap_complete to generate completions for bash, zsh, and fish. Add completion subcommand to output shell scripts. Implement Display trait for error types with helpful messages. Add context to errors using anyhow. Create user-friendly error messages for common mistakes. Add --debug flag for detailed error traces.",
-            "status": "pending",
-            "testStrategy": ""
-          }
-        ]
+        "subtasks": []
       },
       {
         "id": 21,
@@ -800,72 +512,7 @@
           20
         ],
         "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Implement baseline_runner.rs with test discovery",
-            "description": "Complete the baseline_runner module to execute core functionality tests with automatic test discovery from the filesystem",
-            "dependencies": [],
-            "details": "Implement test discovery logic using glob patterns to find baseline test files in test/baseline/. Parse test directives from test files (commands, expected output). Execute ledger commands and capture output. Support test filtering by name or pattern. Handle test timeouts and resource cleanup. Integrate with existing TestCase and TestResult structures.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 2,
-            "title": "Complete regression_runner.rs for C++ compatibility",
-            "description": "Finish the regression_runner module to ensure full compatibility with the existing C++ test suite format and expectations",
-            "dependencies": [],
-            "details": "Parse Python-based regression test format from test/regress/. Handle test setup/teardown functions. Support environment variable configuration. Implement compatibility layer for C++ test assertions. Handle multi-file test scenarios. Support conditional test execution based on features.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 3,
-            "title": "Enhance output_validator.rs with intelligent diff comparison",
-            "description": "Improve the output validator to perform smart comparisons that ignore insignificant whitespace variations and formatting differences",
-            "dependencies": [],
-            "details": "Implement normalized comparison ignoring trailing whitespace and blank lines. Add support for regex-based expected output patterns. Handle floating-point comparison with epsilon tolerance. Support partial output matching with wildcards. Implement line-by-line and token-by-token comparison modes. Add special handling for date/time formats.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 4,
-            "title": "Add filesystem test discovery with glob patterns",
-            "description": "Implement comprehensive test discovery mechanism that finds and categorizes all test files using configurable glob patterns",
-            "dependencies": [
-              "21.1",
-              "21.2"
-            ],
-            "details": "Create TestDiscovery module to scan test directories recursively. Support multiple test roots (baseline/, regress/, manual/). Parse test metadata from filenames and headers. Build test registry with categorization by type and tags. Support exclusion patterns for skipping tests. Cache discovered tests for faster subsequent runs.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 5,
-            "title": "Implement parallel test execution with isolation",
-            "description": "Add support for running multiple tests concurrently while ensuring proper isolation and preventing race conditions",
-            "dependencies": [
-              "21.1",
-              "21.2",
-              "21.4"
-            ],
-            "details": "Use rayon or tokio for parallel test execution. Create isolated temporary directories for each test. Implement test scheduling based on historical runtime. Handle shared resource locking (e.g., test data files). Aggregate results from parallel workers. Support configurable parallelism level. Ensure deterministic test ordering in reports.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 6,
-            "title": "Create detailed reporting with failure diffs",
-            "description": "Build comprehensive test reporting system that provides detailed failure information with diffs and actionable suggestions",
-            "dependencies": [
-              "21.3",
-              "21.5"
-            ],
-            "details": "Generate HTML and terminal reports with syntax highlighting. Show side-by-side diffs for failed assertions. Include test execution times and performance metrics. Add failure categorization (output mismatch, crash, timeout). Generate JUnit XML for CI integration. Provide fix suggestions based on failure patterns. Support report filtering and sorting options.",
-            "status": "pending",
-            "testStrategy": ""
-          }
-        ]
+        "subtasks": []
       },
       {
         "id": 22,
@@ -883,107 +530,12 @@
           18
         ],
         "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Profile baseline performance and establish benchmarks",
-            "description": "Profile current implementation to identify performance bottlenecks and establish baseline metrics for comparison",
-            "dependencies": [],
-            "details": "Use cargo-flamegraph, perf, and valgrind to profile CPU usage and memory allocation patterns. Run existing benchmarks in performance_suite.rs to establish baseline metrics. Identify hot paths in Amount/Balance arithmetic operations, transaction parsing, and report generation. Create detailed performance report documenting current bottlenecks, memory usage patterns, and areas with highest optimization potential. Compare initial metrics with C++ implementation performance.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 2,
-            "title": "Replace Vec with SmallVec for transaction postings",
-            "description": "Optimize memory allocation by using SmallVec for postings collection since most transactions have 2-4 postings",
-            "dependencies": [
-              "22.1"
-            ],
-            "details": "Replace Vec<Posting> with SmallVec<[Posting; 4]> in Transaction struct and related code. Update transaction builders and parsers to work with SmallVec. Ensure iterators and collection methods work correctly. Benchmark memory usage reduction and allocation improvements. Verify that transactions with more than 4 postings still work correctly with heap allocation fallback. Update all transaction processing code to handle SmallVec efficiently.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 3,
-            "title": "Apply CompactStr for string fields throughout codebase",
-            "description": "Replace String with CompactStr for short strings like account names, payees, and commodity symbols",
-            "dependencies": [
-              "22.1"
-            ],
-            "details": "Identify all String fields that typically contain short values (< 24 bytes). Replace with CompactStr in Account (name field), Transaction (payee field), Commodity (symbol field), and Posting (account name references). Update parsers to produce CompactStr directly. Ensure serialization/deserialization works correctly. Measure memory reduction and string operation performance improvements. Handle edge cases where strings might exceed inline capacity.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 4,
-            "title": "Implement parallel transaction processing with rayon",
-            "description": "Add parallel processing capabilities for large journal files using rayon's parallel iterators",
-            "dependencies": [
-              "22.2",
-              "22.3"
-            ],
-            "details": "Implement parallel transaction parsing using rayon's par_iter for independent transaction blocks. Add parallel balance calculation for non-dependent accounts. Implement parallel report generation where transactions can be processed independently. Ensure thread-safe access to shared state like commodity pool and account hierarchy. Add configuration option to control parallelism degree. Verify deterministic results despite parallel execution order.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 5,
-            "title": "Add memory-mapped file support for large journals",
-            "description": "Implement memory mapping with memmap2 for efficient handling of large journal files",
-            "dependencies": [
-              "22.1"
-            ],
-            "details": "Add memmap2-based file reader for journal files larger than configurable threshold (e.g., 10MB). Implement streaming parser that works with memory-mapped regions. Add fallback to regular file reading for small files or when mmap fails. Ensure proper error handling for file access issues. Benchmark parsing performance and memory usage with large files (100MB+). Handle file modifications during reading gracefully.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 6,
-            "title": "Implement caching layer with moka",
-            "description": "Add intelligent caching for expensive computations like expression evaluation and balance calculations",
-            "dependencies": [
-              "22.4"
-            ],
-            "details": "Implement moka-based cache for expression evaluation results with appropriate cache keys. Add balance calculation cache for frequently accessed accounts. Cache compiled expressions to avoid re-parsing. Implement cache invalidation strategy when transactions are modified. Configure appropriate cache sizes and TTL based on memory constraints. Add cache hit/miss metrics for monitoring. Ensure thread-safe cache access in parallel processing scenarios.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 7,
-            "title": "Optimize arithmetic operations in Amount and Balance",
-            "description": "Profile and optimize hot paths in arithmetic operations, potentially using SIMD instructions",
-            "dependencies": [
-              "22.1",
-              "22.2",
-              "22.3"
-            ],
-            "details": "Profile Amount and Balance arithmetic operations to identify bottlenecks. Optimize BigRational operations by caching common denominators. Investigate SIMD opportunities for bulk amount operations using packed_simd or std::simd. Optimize commodity price lookups and conversions. Reduce allocations in arithmetic operations by reusing buffers. Consider specialized fast paths for common cases (integer amounts, same-commodity operations). Ensure precision is maintained while improving performance.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 8,
-            "title": "Create comprehensive performance comparison suite",
-            "description": "Develop benchmarks comparing optimized Rust implementation with C++ version across various scenarios",
-            "dependencies": [
-              "22.2",
-              "22.3",
-              "22.4",
-              "22.5",
-              "22.6",
-              "22.7"
-            ],
-            "details": "Expand performance_suite.rs with comprehensive benchmarks covering all optimization areas. Create test journals of varying sizes (1KB to 1GB) with different transaction patterns. Benchmark parsing speed, memory usage, report generation time, and query performance. Compare results with C++ implementation using identical test data. Generate detailed performance report showing improvements and remaining gaps. Create regression benchmarks to prevent performance degradation. Document optimization gains and trade-offs for each technique applied.",
-            "status": "pending",
-            "testStrategy": ""
-          }
-        ]
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-08-23T19:29:50.696Z",
-      "updated": "2025-08-24T22:22:08.853Z",
+      "updated": "2025-08-26T01:19:30.479Z",
       "description": "Tasks for master context"
     }
   }

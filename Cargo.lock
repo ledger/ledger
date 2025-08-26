@@ -1108,9 +1108,12 @@ dependencies = [
  "clap 4.5.45",
  "clap_complete",
  "colored",
+ "compact_str",
  "criterion",
  "dirs",
  "env_logger 0.10.2",
+ "ledger-core",
+ "ledger-math",
  "log",
  "num_cpus",
  "predicates",
@@ -1145,6 +1148,7 @@ dependencies = [
  "num-rational",
  "num-traits",
  "once_cell",
+ "parking_lot",
  "proptest",
  "quickcheck",
  "rayon",
@@ -1372,6 +1376,7 @@ checksum = "a5e44f723f1133c9deac646763579fdb3ac745e418f2a7af9cd0c431da1f20b9"
 dependencies = [
  "num-integer",
  "num-traits",
+ "serde",
 ]
 
 [[package]]
@@ -1392,6 +1397,7 @@ dependencies = [
  "num-bigint",
  "num-integer",
  "num-traits",
+ "serde",
 ]
 
 [[package]]
@@ -1494,6 +1500,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f2a05b18d44e2957b88f96ba460715e295bc1d7510468a2f3d3b44535d26c24"
 dependencies = [
  "regex",
+]
+
+[[package]]
+name = "parser-test"
+version = "3.0.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "ledger-core",
+ "ledger-math",
 ]
 
 [[package]]
