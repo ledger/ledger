@@ -1927,7 +1927,7 @@ mod tests {
         let result = parser.parse_file("main.dat");
         assert!(result.is_err());
         
-        if let Err(JournalParseError::IncludeCycle { path }) = result {
+        if let Err(JournalParseError::IncludeCycle { path, include_stack: _ }) = result {
             assert_eq!(path, PathBuf::from("main.dat"));
         } else {
             panic!("Expected IncludeCycle error");

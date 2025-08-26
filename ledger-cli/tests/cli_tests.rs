@@ -128,21 +128,30 @@ fn test_option_formats() {
 
 /// Test command-specific options
 #[test]
-fn test_command_specific_options() {
+fn test_command_specific_options() -> Result<(), Box<dyn std::error::Error>> {
+    let temp_dir = TempDir::new()?;
+    let ledger_file = temp_dir.path().join("test.ledger");
+    
+    fs::write(&ledger_file, 
+        "2023-01-01 Opening Balance\n  Assets:Bank  $1000\n  Equity:Opening Balance\n\n2023-01-15 Grocery Store\n  Expenses:Food  $45.67\n  Assets:Bank\n"
+    )?;
+    
     // Balance command options
     let mut cmd = Command::cargo_bin("ledger").unwrap();
-    cmd.args(&["balance", "--empty", "--flat", "--depth", "2", "assets"]);
+    cmd.args(&["-f", ledger_file.to_str().unwrap(), "balance", "--empty", "--flat", "--depth", "2", "assets"]);
     cmd.assert().success();
     
     // Register command options
     let mut cmd = Command::cargo_bin("ledger").unwrap(); 
-    cmd.args(&["register", "--subtotal", "--wide", "expenses"]);
+    cmd.args(&["-f", ledger_file.to_str().unwrap(), "register", "--subtotal", "--wide", "expenses"]);
     cmd.assert().success();
     
     // Print command options
     let mut cmd = Command::cargo_bin("ledger").unwrap();
-    cmd.args(&["print", "--raw", "--head", "5"]);
+    cmd.args(&["-f", ledger_file.to_str().unwrap(), "print", "--raw", "--head", "5"]);
     cmd.assert().success();
+    
+    Ok(())
 }
 
 /// Test error handling for invalid options
@@ -280,14 +289,24 @@ fn test_option_precedence() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Test REPL mode entry when no command is specified
 #[test] 
-fn test_repl_mode_entry() {
+fn test_repl_mode_entry() -> Result<(), Box<dyn std::error::Error>> {
+    let temp_dir = TempDir::new()?;
+    let ledger_file = temp_dir.path().join("test.ledger");
+    
+    fs::write(&ledger_file, 
+        "2023-01-01 Opening Balance\n  Assets:Bank  $1000\n  Equity:Opening Balance\n"
+    )?;
+    
     // This test is tricky as REPL mode waits for input
     // For now, just test that version info is shown
     let mut cmd = Command::cargo_bin("ledger").unwrap();
+    cmd.args(&["-f", ledger_file.to_str().unwrap()]);
     cmd.write_stdin("quit\n");
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("Ledger"));
+        
+    Ok(())
 }
 
 /// Test that all documented aliases work

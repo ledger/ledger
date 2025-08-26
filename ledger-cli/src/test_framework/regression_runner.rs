@@ -329,7 +329,7 @@ mod tests {
         let ledger_path = temp_dir.path().join("ledger");
         std::fs::write(&ledger_path, "#!/bin/bash\necho 'test'").unwrap();
         
-        let harness = TestHarness::new(&ledger_path, temp_dir.path()).unwrap();
+        let harness = TestHarness::new(&ledger_path, &temp_dir.path().to_path_buf()).unwrap();
         let runner = RegressionRunner::new(&harness);
         
         assert_eq!(runner.config.parallel_jobs, num_cpus::get());
@@ -351,7 +351,7 @@ mod tests {
         let ledger_path = temp_dir.path().join("ledger");
         std::fs::write(&ledger_path, "#!/bin/bash\necho 'test'").unwrap();
         
-        let harness = TestHarness::new(&ledger_path, temp_dir.path()).unwrap();
+        let harness = TestHarness::new(&ledger_path, &temp_dir.path().to_path_buf()).unwrap();
         let runner = RegressionRunner::new(&harness);
         
         let test_files = runner.find_test_files(temp_dir.path()).unwrap();

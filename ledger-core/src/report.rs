@@ -1214,6 +1214,7 @@ mod tests {
     use chrono::NaiveDate;
     use std::rc::Rc;
     use std::cell::RefCell;
+    use std::str::FromStr;
     
     fn create_test_journal() -> Journal {
         Journal::new()

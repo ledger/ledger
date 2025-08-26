@@ -427,22 +427,22 @@ mod tests {
     use chrono::NaiveDate;
     use std::rc::Rc;
     use std::cell::RefCell;
+    use std::str::FromStr;
     
     fn create_test_transaction() -> Transaction {
-        let mut tx = Transaction::new();
-        tx.date = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
-        tx.payee = "Test Store".to_string();
+        let date = NaiveDate::from_ymd_opt(2024, 3, 15).unwrap();
+        let mut tx = Transaction::new(date, "Test Store".to_string());
         tx.code = Some("123".to_string());
         tx.note = Some("Test transaction".to_string());
         tx
     }
     
     fn create_test_posting() -> Posting {
-        let account = Account::new("Assets:Checking");
-        let account_ref = Rc::new(RefCell::new(account));
-        let mut posting = Posting::new(Rc::downgrade(&account_ref));
+        let mut tree = crate::account::AccountTree::new();
+        let account_ref = tree.find_account("Assets:Checking", true).unwrap();
+        let mut posting = Posting::new(account_ref);
         posting.amount = Some(Amount::from_str("100.00 USD").unwrap_or_default());
-        posting.note = Some("Test posting".to_string());
+        posting.note = Some("Test posting".into());
         posting
     }
     

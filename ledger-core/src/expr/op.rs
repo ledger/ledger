@@ -504,7 +504,7 @@ mod tests {
         let context = ExprContext::new();
         
         let result = evaluate_binary_op(BinaryOp::Div, &left, &right, &context).unwrap();
-        assert_eq!(result, Value::Rational(BigRational::from(5)));
+        assert_eq!(result, Value::Rational(BigRational::from(BigInt::from(5))));
     }
     
     #[test]

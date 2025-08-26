@@ -462,9 +462,14 @@ mod tests {
     use crate::transaction::{Transaction, TransactionBuilder};
     use crate::posting::{Posting, PostingFlags};
     use crate::account::AccountTree;
-    use ledger_math::{Amount, Decimal};
+    use ledger_math::{Amount, Decimal, commodity::Commodity};
     use chrono::NaiveDate;
+    use std::sync::Arc;
 
+    fn usd_commodity() -> Option<Arc<Commodity>> {
+        Some(Arc::new(Commodity::new("USD")))
+    }
+    
     fn create_test_transaction() -> Transaction {
         let mut account_tree = AccountTree::new();
         let checking = account_tree.find_account("Assets:Checking", true).unwrap();
@@ -476,8 +481,8 @@ mod tests {
             .code("DEBIT001")
             .tag("category", Some("groceries"))
             .tag("receipt", Some("12345"))
-            .post_to(checking, Amount::with_commodity(Decimal::from(-4250), "USD".to_string()))
-            .post_to(groceries, Amount::with_commodity(Decimal::from(4250), "USD".to_string()))
+            .post_to(checking, Amount::with_commodity(Decimal::from(-4250), usd_commodity()))
+            .post_to(groceries, Amount::with_commodity(Decimal::from(4250), usd_commodity()))
             .build()
             .unwrap()
     }

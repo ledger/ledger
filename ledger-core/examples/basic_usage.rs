@@ -2,17 +2,21 @@
 
 use ledger_core::amount::Amount;
 use ledger_core::balance::Balance;
+use ledger_math::commodity::Commodity;
 use rust_decimal::Decimal;
+use std::sync::Arc;
 
 fn main() {
     // Create some amounts with different commodities
-    let usd_amount = Amount::with_commodity(Decimal::from(100), "USD".to_string());
-    let eur_amount = Amount::with_commodity(Decimal::from(50), "EUR".to_string());
+    let usd_commodity = Some(Arc::new(Commodity::new("USD")));
+    let eur_commodity = Some(Arc::new(Commodity::new("EUR")));
+    let usd_amount = Amount::with_commodity(Decimal::from(100), usd_commodity);
+    let eur_amount = Amount::with_commodity(Decimal::from(50), eur_commodity);
     
     // Add them to a balance
     let mut balance = Balance::new();
-    balance.add_amount(usd_amount.clone());
-    balance.add_amount(eur_amount.clone());
+    balance.add_amount(&usd_amount);
+    balance.add_amount(&eur_amount);
     
     println!("Created balance with {} commodities", balance.commodity_count());
     println!("USD amount: {}", usd_amount);

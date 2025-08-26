@@ -403,7 +403,7 @@ mod tests {
         
         // Add amounts from multiple threads (simulated)
         for _ in 0..10 {
-            let amount = Amount::from_integer(100);
+            let amount = Amount::from_i64(100);
             accumulator.add_amount(account.clone(), amount);
         }
 
@@ -429,7 +429,7 @@ mod tests {
         // Filter for even-indexed transactions (placeholder logic)
         let counter = AtomicUsize::new(0);
         let filtered = processor.filter_transactions(
-            transaction_refs,
+            transaction_refs.into_iter(),
             |_txn| {
                 let count = counter.fetch_add(1, Ordering::SeqCst);
                 count % 2 == 0

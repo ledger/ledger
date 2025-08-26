@@ -872,11 +872,21 @@ impl Transaction {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::account::AccountTree;
+    use crate::account::{AccountTree, AccountRef};
+    use ledger_math::commodity::Commodity;
     use rust_decimal::Decimal;
     use std::rc::Rc;
     use std::cell::RefCell;
+    use std::sync::Arc;
 
+    fn usd_commodity() -> Option<Arc<Commodity>> {
+        Some(Arc::new(Commodity::new("USD")))
+    }
+    
+    fn eur_commodity() -> Option<Arc<Commodity>> {
+        Some(Arc::new(Commodity::new("EUR")))
+    }
+    
     fn create_test_accounts() -> (AccountRef, AccountRef) {
         let mut tree = AccountTree::new();
         let assets = tree.find_account("Assets:Checking", true).unwrap();
@@ -904,8 +914,8 @@ mod tests {
         let result = Transaction::builder(date, "Grocery Store".to_string())
             .code("CHECK123")
             .status(TransactionStatus::Cleared)
-            .post_to(assets, Amount::with_commodity(Decimal::from(-50), "USD".to_string()))
-            .post_to(expenses, Amount::with_commodity(Decimal::from(50), "USD".to_string()))
+            .post_to(assets, Amount::with_commodity(Decimal::from(-50), usd_commodity()))
+            .post_to(expenses, Amount::with_commodity(Decimal::from(50), usd_commodity()))
             .build();
         
         assert!(result.is_ok());
@@ -922,7 +932,7 @@ mod tests {
         let (assets, expenses) = create_test_accounts();
         
         let result = Transaction::builder(date, "Auto Balance Test".to_string())
-            .post_to(assets, Amount::with_commodity(Decimal::from(-75), "USD".to_string()))
+            .post_to(assets, Amount::with_commodity(Decimal::from(-75), usd_commodity()))
             .post_to_account(expenses) // No amount - should be calculated
             .build();
         
@@ -944,8 +954,8 @@ mod tests {
         
         // Unbalanced transaction should fail
         let result = Transaction::builder(date, "Unbalanced".to_string())
-            .post_to(assets, Amount::with_commodity(Decimal::from(-50), "USD".to_string()))
-            .post_to(expenses, Amount::with_commodity(Decimal::from(60), "USD".to_string())) // Wrong amount
+            .post_to(assets, Amount::with_commodity(Decimal::from(-50), usd_commodity()))
+            .post_to(expenses, Amount::with_commodity(Decimal::from(60), usd_commodity())) // Wrong amount
             .build();
         
         assert!(result.is_err());
@@ -959,9 +969,9 @@ mod tests {
         let virtual_account = create_test_accounts().0; // Use as virtual
         
         let result = Transaction::builder(date, "Virtual Test".to_string())
-            .post_to(assets, Amount::with_commodity(Decimal::from(-100), "USD".to_string()))
-            .post_to(expenses, Amount::with_commodity(Decimal::from(100), "USD".to_string()))
-            .virtual_post_to(virtual_account, Amount::with_commodity(Decimal::from(25), "USD".to_string()))
+            .post_to(assets, Amount::with_commodity(Decimal::from(-100), usd_commodity()))
+            .post_to(expenses, Amount::with_commodity(Decimal::from(100), usd_commodity()))
+            .virtual_post_to(virtual_account, Amount::with_commodity(Decimal::from(25), usd_commodity()))
             .build();
         
         assert!(result.is_ok());
@@ -980,8 +990,8 @@ mod tests {
             .tag("category", Some("groceries"))
             .tag("project", Some("household"))
             .tag("important", None::<String>)
-            .post_to(assets, Amount::with_commodity(Decimal::from(-50), "USD".to_string()))
-            .post_to(expenses, Amount::with_commodity(Decimal::from(50), "USD".to_string()))
+            .post_to(assets, Amount::with_commodity(Decimal::from(-50), usd_commodity()))
+            .post_to(expenses, Amount::with_commodity(Decimal::from(50), usd_commodity()))
             .build();
         
         assert!(result.is_ok());
@@ -1002,11 +1012,11 @@ mod tests {
         let mut transaction = Transaction::new(date, "Balance Test".to_string());
         transaction.add_posting(Posting::with_amount(
             assets,
-            Amount::with_commodity(Decimal::from(-100), "USD".to_string())
+            Amount::with_commodity(Decimal::from(-100), usd_commodity())
         ));
         transaction.add_posting(Posting::with_amount(
             expenses,
-            Amount::with_commodity(Decimal::from(100), "USD".to_string())
+            Amount::with_commodity(Decimal::from(100), usd_commodity())
         ));
         
         assert!(transaction.verify_balance().is_ok());
@@ -1014,7 +1024,7 @@ mod tests {
         // Add unbalancing posting
         transaction.add_posting(Posting::with_amount(
             create_test_accounts().0,
-            Amount::with_commodity(Decimal::from(10), "USD".to_string())
+            Amount::with_commodity(Decimal::from(10), usd_commodity())
         ));
         
         assert!(transaction.verify_balance().is_err());
@@ -1027,18 +1037,18 @@ mod tests {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
         
         let result = Transaction::builder(date, "Multi-Currency".to_string())
-            .post_to(assets_usd, Amount::with_commodity(Decimal::from(-100), "USD".to_string()))
-            .post_to(expenses, Amount::with_commodity(Decimal::from(100), "USD".to_string()))
-            .post_to(assets_eur, Amount::with_commodity(Decimal::from(-50), "EUR".to_string()))
-            .post_to(create_test_accounts().1, Amount::with_commodity(Decimal::from(50), "EUR".to_string()))
+            .post_to(assets_usd, Amount::with_commodity(Decimal::from(-100), usd_commodity()))
+            .post_to(expenses, Amount::with_commodity(Decimal::from(100), usd_commodity()))
+            .post_to(assets_eur, Amount::with_commodity(Decimal::from(-50), eur_commodity()))
+            .post_to(create_test_accounts().1, Amount::with_commodity(Decimal::from(50), eur_commodity()))
             .build();
         
         assert!(result.is_ok());
         let transaction = result.unwrap();
         
         let magnitude = transaction.magnitude();
-        assert_eq!(magnitude.get("USD"), Some(&Decimal::from(200))); // 100 + 100
-        assert_eq!(magnitude.get("EUR"), Some(&Decimal::from(100))); // 50 + 50
+        assert_eq!(magnitude.get(&usd_commodity()), Some(&Decimal::from(200))); // 100 + 100
+        assert_eq!(magnitude.get(&eur_commodity()), Some(&Decimal::from(100))); // 50 + 50
     }
 
     #[test]
@@ -1049,7 +1059,7 @@ mod tests {
         let mut transaction = Transaction::new(date, "Finalize Test".to_string());
         transaction.add_posting(Posting::with_amount(
             assets,
-            Amount::with_commodity(Decimal::from(-80), "USD".to_string())
+            Amount::with_commodity(Decimal::from(-80), usd_commodity())
         ));
         transaction.add_posting(Posting::new(expenses)); // No amount
         
@@ -1074,7 +1084,7 @@ mod tests {
         let mut single = Transaction::new(date, "Single".to_string());
         single.add_posting(Posting::with_amount(
             assets,
-            Amount::with_commodity(Decimal::from(100), "USD".to_string())
+            Amount::with_commodity(Decimal::from(100), usd_commodity())
         ));
         assert!(single.finalize().is_err());
     }
@@ -1156,17 +1166,17 @@ mod tests {
         let virtual_account = create_test_accounts().0;
         
         let result = Transaction::builder(date, "Virtual Balance Test".to_string())
-            .post_to(assets, Amount::with_commodity(Decimal::from(-100), "USD".to_string()))
-            .post_to(expenses, Amount::with_commodity(Decimal::from(100), "USD".to_string()))
-            .virtual_post_to(virtual_account.clone(), Amount::with_commodity(Decimal::from(25), "USD".to_string()))
-            .virtual_post_to(virtual_account, Amount::with_commodity(Decimal::from(-10), "USD".to_string()))
+            .post_to(assets, Amount::with_commodity(Decimal::from(-100), usd_commodity()))
+            .post_to(expenses, Amount::with_commodity(Decimal::from(100), usd_commodity()))
+            .virtual_post_to(virtual_account.clone(), Amount::with_commodity(Decimal::from(25), usd_commodity()))
+            .virtual_post_to(virtual_account, Amount::with_commodity(Decimal::from(-10), usd_commodity()))
             .build();
         
         assert!(result.is_ok());
         let transaction = result.unwrap();
         
         let virtual_balance = transaction.virtual_balance();
-        assert_eq!(virtual_balance.get("USD"), Some(&Decimal::from(15))); // 25 - 10
+        assert_eq!(virtual_balance.get(&usd_commodity()), Some(&Decimal::from(15))); // 25 - 10
     }
 
     #[test]
@@ -1176,9 +1186,9 @@ mod tests {
         let (income, _) = create_test_accounts();
         
         let result = Transaction::builder(date, "Sorting Test".to_string())
-            .post_to(expenses.clone(), Amount::with_commodity(Decimal::from(50), "USD".to_string()))
-            .post_to(assets.clone(), Amount::with_commodity(Decimal::from(-100), "USD".to_string()))
-            .post_to(income, Amount::with_commodity(Decimal::from(50), "USD".to_string()))
+            .post_to(expenses.clone(), Amount::with_commodity(Decimal::from(50), usd_commodity()))
+            .post_to(assets.clone(), Amount::with_commodity(Decimal::from(-100), usd_commodity()))
+            .post_to(income, Amount::with_commodity(Decimal::from(50), usd_commodity()))
             .build();
         
         assert!(result.is_ok());
@@ -1199,9 +1209,9 @@ mod tests {
         let virtual_account = create_test_accounts().0;
         
         let result = Transaction::builder(date, "Clone Test".to_string())
-            .post_to(assets, Amount::with_commodity(Decimal::from(-100), "USD".to_string()))
-            .post_to(expenses, Amount::with_commodity(Decimal::from(100), "USD".to_string()))
-            .virtual_post_to(virtual_account, Amount::with_commodity(Decimal::from(25), "USD".to_string()))
+            .post_to(assets, Amount::with_commodity(Decimal::from(-100), usd_commodity()))
+            .post_to(expenses, Amount::with_commodity(Decimal::from(100), usd_commodity()))
+            .virtual_post_to(virtual_account, Amount::with_commodity(Decimal::from(25), usd_commodity()))
             .build();
         
         assert!(result.is_ok());
@@ -1223,8 +1233,8 @@ mod tests {
         let (assets, expenses) = create_test_accounts();
         
         let mut builder = Transaction::builder(date, "Validation Test".to_string())
-            .post_to(assets, Amount::with_commodity(Decimal::from(-100), "USD".to_string()))
-            .post_to(expenses, Amount::with_commodity(Decimal::from(100), "USD".to_string()));
+            .post_to(assets, Amount::with_commodity(Decimal::from(-100), usd_commodity()))
+            .post_to(expenses, Amount::with_commodity(Decimal::from(100), usd_commodity()));
         
         assert!(builder.is_balanced());
         assert_eq!(builder.posting_count(), 2);
@@ -1232,7 +1242,7 @@ mod tests {
         
         // Add unbalancing posting
         builder = builder.post_to(create_test_accounts().0, 
-            Amount::with_commodity(Decimal::from(10), "USD".to_string()));
+            Amount::with_commodity(Decimal::from(10), usd_commodity()));
         
         assert!(!builder.is_balanced());
         assert!(builder.validate().is_err());
@@ -1253,11 +1263,11 @@ mod tests {
             .tag("receipt", Some("rest_001"))
             .aux_date(NaiveDate::from_ymd_opt(2024, 1, 16).unwrap())
             .note("Dinner with clients")
-            .post_to(checking, Amount::with_commodity(Decimal::from(-5425), "USD".to_string())) // $54.25
-            .post_to(food, Amount::with_commodity(Decimal::from(5000), "USD".to_string()))  // $50.00
-            .post_to(tax, Amount::with_commodity(Decimal::from(425), "USD".to_string()))   // $4.25 tax
-            .virtual_post_to(budget_virtual.clone(), Amount::with_commodity(Decimal::from(-5425), "USD".to_string()))
-            .virtual_post_to(budget_virtual, Amount::with_commodity(Decimal::from(5425), "USD".to_string()))
+            .post_to(checking, Amount::with_commodity(Decimal::from(-5425), usd_commodity())) // $54.25
+            .post_to(food, Amount::with_commodity(Decimal::from(5000), usd_commodity()))  // $50.00
+            .post_to(tax, Amount::with_commodity(Decimal::from(425), usd_commodity()))   // $4.25 tax
+            .virtual_post_to(budget_virtual.clone(), Amount::with_commodity(Decimal::from(-5425), usd_commodity()))
+            .virtual_post_to(budget_virtual, Amount::with_commodity(Decimal::from(5425), usd_commodity()))
             .build();
         
         assert!(result.is_ok());
@@ -1273,7 +1283,7 @@ mod tests {
         // Verify balances
         assert!(transaction.verify_balance().is_ok());
         let virtual_balance = transaction.virtual_balance();
-        assert_eq!(virtual_balance.get("USD"), Some(&Decimal::from(0))); // Virtual postings balance
+        assert_eq!(virtual_balance.get(&usd_commodity()), Some(&Decimal::from(0))); // Virtual postings balance
         
         // Verify postings
         assert_eq!(transaction.postings.len(), 5);

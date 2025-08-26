@@ -43,6 +43,7 @@ parking_lot = { workspace = true }
 proptest = { workspace = true }
 quickcheck = { workspace = true }
 criterion = { workspace = true }
+tempfile = "3.8"
 
 [build-dependencies]
 cbindgen = "0.26"

@@ -367,7 +367,7 @@ mod tests {
         let ledger_path = temp_dir.path().join("ledger");
         std::fs::write(&ledger_path, "#!/bin/bash\necho 'test'").unwrap();
         
-        let harness = TestHarness::new(&ledger_path, temp_dir.path()).unwrap();
+        let harness = TestHarness::new(&ledger_path, &temp_dir.path().to_path_buf()).unwrap();
         let runner = BaselineRunner::new(&harness);
         
         assert!(!runner.config.update_expected);
@@ -392,7 +392,7 @@ mod tests {
         let ledger_path = temp_dir.path().join("ledger");
         std::fs::write(&ledger_path, "#!/bin/bash\necho 'test'").unwrap();
         
-        let harness = TestHarness::new(&ledger_path, temp_dir.path()).unwrap();
+        let harness = TestHarness::new(&ledger_path, &temp_dir.path().to_path_buf()).unwrap();
         let runner = BaselineRunner::new(&harness);
         
         let data_file = runner.find_test_data_file(&test_file).unwrap();

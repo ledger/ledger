@@ -201,7 +201,10 @@ impl Account {
                 parent_rc.borrow().build_path_recursive(path_builder);
             }
         }
-        path_builder.push_compact(self.name.clone());
+        // Skip empty names (root account)
+        if !self.name.is_empty() {
+            path_builder.push_compact(self.name.clone());
+        }
     }
 
     /// Get the partial name based on the specified depth
@@ -765,7 +768,7 @@ impl AccountTree {
     pub fn remove_account(&mut self, path: &str) -> Result<AccountRef, String> {
         // Don't allow removal of root account
         if path.is_empty() {
-            return Err("Cannot remove root account".to_string());
+            return Err("Cannot remove root account".into());
         }
 
         let path_key = CompactString::from(path);
@@ -1059,7 +1062,7 @@ impl AccountTree {
         match directive_type.as_str() {
             "account" => {
                 if parts.len() < 2 {
-                    return Err("Account directive requires account path".to_string());
+                    return Err("Account directive requires account path".into());
                 }
                 let account_path = parts[1];
                 let account_type = if parts.len() > 2 {
@@ -1079,7 +1082,7 @@ impl AccountTree {
             },
             "alias" => {
                 if parts.len() < 3 {
-                    return Err("Alias directive requires alias name and account path".to_string());
+                    return Err("Alias directive requires alias name and account path".into());
                 }
                 let alias_name = parts[1];
                 let account_path = parts[2];
@@ -1088,7 +1091,7 @@ impl AccountTree {
             },
             "payee" => {
                 if parts.len() < 3 {
-                    return Err("Payee directive requires account path and payee name".to_string());
+                    return Err("Payee directive requires account path and payee name".into());
                 }
                 let account_path = parts[1];
                 let payee_name = parts[2..].join(" ");
@@ -1097,7 +1100,7 @@ impl AccountTree {
             },
             "note" => {
                 if parts.len() < 3 {
-                    return Err("Note directive requires account path and note text".to_string());
+                    return Err("Note directive requires account path and note text".into());
                 }
                 let account_path = parts[1];
                 let note_text = parts[2..].join(" ");
@@ -1106,7 +1109,7 @@ impl AccountTree {
             },
             "tag" => {
                 if parts.len() < 3 {
-                    return Err("Tag directive requires account path and tag name".to_string());
+                    return Err("Tag directive requires account path and tag name".into());
                 }
                 let account_path = parts[1];
                 let tag_name = parts[2];
@@ -1115,7 +1118,7 @@ impl AccountTree {
             },
             "assert" => {
                 if parts.len() < 3 {
-                    return Err("Assert directive requires account path and assertion".to_string());
+                    return Err("Assert directive requires account path and assertion".into());
                 }
                 let account_path = parts[1];
                 let assertion = parts[2..].join(" ");
@@ -1124,7 +1127,7 @@ impl AccountTree {
             },
             "default" => {
                 if parts.len() < 3 {
-                    return Err("Default directive requires account path and commodity".to_string());
+                    return Err("Default directive requires account path and commodity".into());
                 }
                 let account_path = parts[1];
                 let commodity = parts[2];
@@ -1133,7 +1136,7 @@ impl AccountTree {
             },
             "format" => {
                 if parts.len() < 3 {
-                    return Err("Format directive requires account path and format spec".to_string());
+                    return Err("Format directive requires account path and format spec".into());
                 }
                 let account_path = parts[1];
                 let format_spec = parts[2..].join(" ");
@@ -1199,7 +1202,7 @@ impl AccountTree {
                     AccountDirective::Eval(_) => "eval",
                 };
                 
-                directives_map.entry(directive_type.to_string())
+                directives_map.entry(directive_type.into())
                     .or_insert_with(Vec::new)
                     .push((account_path.clone(), directive.clone()));
             }
@@ -1236,7 +1239,7 @@ mod tests {
 
     #[test]
     fn test_account_creation() {
-        let account = Account::new_root("Assets".to_string(), 1);
+        let account = Account::new_root("Assets".into(), 1);
         assert_eq!(account.name, "Assets");
         assert_eq!(account.depth, 0);
         assert_eq!(account.account_id, 1);
@@ -1259,7 +1262,7 @@ mod tests {
 
     #[test]
     fn test_account_flags() {
-        let mut account = Account::new_root("Test".to_string(), 1);
+        let mut account = Account::new_root("Test".into(), 1);
         assert!(!account.has_flag(AccountFlags::Known));
         
         account.add_flag(AccountFlags::Known);
@@ -1271,25 +1274,25 @@ mod tests {
 
     #[test]
     fn test_account_metadata() {
-        let mut account = Account::new_root("Test".to_string(), 1);
+        let mut account = Account::new_root("Test".into(), 1);
         
         account.set_metadata("description".to_string(), "Test account");
         assert_eq!(
             account.get_metadata("description"),
-            Some(&Value::String("Test account".to_string()))
+            Some(&Value::String("Test account".into()))
         );
     }
 
     #[test]
     fn test_parent_child_relationships() {
-        let assets_rc = Rc::new(RefCell::new(Account::new_root("Assets".to_string(), 1)));
+        let assets_rc = Rc::new(RefCell::new(Account::new_root("Assets".into(), 1)));
         let bank_rc = Rc::new(RefCell::new(Account::new(
-            "Bank".to_string(),
+            "Bank".into(),
             Some(Rc::downgrade(&assets_rc)),
             2
         )));
         let checking_rc = Rc::new(RefCell::new(Account::new(
-            "Checking".to_string(),
+            "Checking".into(),
             Some(Rc::downgrade(&bank_rc)),
             3
         )));
@@ -1414,13 +1417,13 @@ mod tests {
         assert_eq!(all_accounts.len(), 8); // root + 7 accounts created (Assets, Assets:Bank, Assets:Bank:Checking, Expenses, Expenses:Food, Income, Income:Salary)
 
         let all_paths = tree.all_paths();
-        assert!(all_paths.contains(&"Assets".to_string()));
-        assert!(all_paths.contains(&"Assets:Bank".to_string()));
-        assert!(all_paths.contains(&"Assets:Bank:Checking".to_string()));
-        assert!(all_paths.contains(&"Expenses".to_string()));
-        assert!(all_paths.contains(&"Expenses:Food".to_string()));
-        assert!(all_paths.contains(&"Income".to_string()));
-        assert!(all_paths.contains(&"Income:Salary".to_string()));
+        assert!(all_paths.contains(&"Assets".into()));
+        assert!(all_paths.contains(&"Assets:Bank".into()));
+        assert!(all_paths.contains(&"Assets:Bank:Checking".into()));
+        assert!(all_paths.contains(&"Expenses".into()));
+        assert!(all_paths.contains(&"Expenses:Food".into()));
+        assert!(all_paths.contains(&"Income".into()));
+        assert!(all_paths.contains(&"Income:Salary".into()));
     }
 
     #[test]
@@ -1450,8 +1453,8 @@ mod tests {
         tree.find_account("Expenses:Food", true);
 
         // Register aliases
-        assert!(tree.register_alias("Checking".to_string(), "Assets:Bank:Checking".to_string()).is_ok());
-        assert!(tree.register_alias("Food".to_string(), "Expenses:Food".to_string()).is_ok());
+        assert!(tree.register_alias("Checking".into(), "Assets:Bank:Checking".into()).is_ok());
+        assert!(tree.register_alias("Food".into(), "Expenses:Food".into()).is_ok());
 
         // Verify aliases exist
         assert!(tree.is_alias("Checking"));
@@ -1459,8 +1462,8 @@ mod tests {
         assert!(!tree.is_alias("NonExistent"));
 
         // Test alias resolution
-        assert_eq!(tree.resolve_alias("Checking"), Some(&"Assets:Bank:Checking".to_string()));
-        assert_eq!(tree.resolve_alias("Food"), Some(&"Expenses:Food".to_string()));
+        assert_eq!(tree.resolve_alias("Checking"), Some(&CompactString::from("Assets:Bank:Checking")));
+        assert_eq!(tree.resolve_alias("Food"), Some(&CompactString::from("Expenses:Food")));
         assert_eq!(tree.resolve_alias("NonExistent"), None);
 
         // Test alias count
@@ -1472,17 +1475,17 @@ mod tests {
         let mut tree = AccountTree::new();
 
         // Try to create alias for non-existent account
-        let result = tree.register_alias("Bad".to_string(), "NonExistent".to_string());
+        let result = tree.register_alias("Bad".into(), "NonExistent".into());
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("does not exist"));
 
         // Create account and alias
         tree.find_account("Assets:Bank:Checking", true);
         tree.find_account("Assets:Bank:Savings", true);
-        assert!(tree.register_alias("Checking".to_string(), "Assets:Bank:Checking".to_string()).is_ok());
+        assert!(tree.register_alias("Checking".into(), "Assets:Bank:Checking".into()).is_ok());
 
         // Try to register same alias again
-        let result = tree.register_alias("Checking".to_string(), "Assets:Bank:Savings".to_string());
+        let result = tree.register_alias("Checking".into(), "Assets:Bank:Savings".into());
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("already exists"));
     }
@@ -1493,7 +1496,7 @@ mod tests {
 
         // Create account and alias
         tree.find_account("Assets:Bank:Checking", true);
-        tree.register_alias("Checking".to_string(), "Assets:Bank:Checking".to_string()).unwrap();
+        tree.register_alias("Checking".into(), "Assets:Bank:Checking".into()).unwrap();
 
         assert_eq!(tree.alias_count(), 1);
 
@@ -1514,7 +1517,7 @@ mod tests {
 
         // Create accounts and aliases
         let checking = tree.find_account("Assets:Bank:Checking", true).unwrap();
-        tree.register_alias("Checking".to_string(), "Assets:Bank:Checking".to_string()).unwrap();
+        tree.register_alias("Checking".into(), "Assets:Bank:Checking".into()).unwrap();
 
         // Find by alias
         let found = tree.find_account_or_alias("Checking", false).unwrap();
@@ -1534,20 +1537,22 @@ mod tests {
         tree.find_account("Assets:Bank:Checking", true);
         tree.find_account("Expenses:Food", true);
         
-        tree.register_alias("Checking".to_string(), "Assets:Bank:Checking".to_string()).unwrap();
-        tree.register_alias("Food".to_string(), "Expenses:Food".to_string()).unwrap();
+        tree.register_alias("Checking".into(), "Assets:Bank:Checking".into()).unwrap();
+        tree.register_alias("Food".into(), "Expenses:Food".into()).unwrap();
 
         let aliases = tree.all_aliases();
         assert_eq!(aliases.len(), 2);
         
-        let alias_map: HashMap<String, String> = aliases.into_iter().collect();
-        assert_eq!(alias_map.get("Checking"), Some(&"Assets:Bank:Checking".to_string()));
-        assert_eq!(alias_map.get("Food"), Some(&"Expenses:Food".to_string()));
+        let alias_map: HashMap<String, String> = aliases.into_iter()
+            .map(|(k, v)| (k.to_string(), v.into()))
+            .collect();
+        assert_eq!(alias_map.get("Checking"), Some(&"Assets:Bank:Checking".into()));
+        assert_eq!(alias_map.get("Food"), Some(&"Expenses:Food".into()));
     }
 
     #[test] 
     fn test_account_metadata_comprehensive() {
-        let mut account = Account::new_root("Test".to_string(), 1);
+        let mut account = Account::new_root("Test".into(), 1);
         
         // Test different metadata types
         account.set_metadata("description".to_string(), "Test account description");
@@ -1558,11 +1563,11 @@ mod tests {
         // Test retrieval
         assert_eq!(
             account.get_metadata("description"),
-            Some(&Value::String("Test account description".to_string()))
+            Some(&Value::String("Test account description".into()))
         );
         assert_eq!(
             account.get_metadata("code"),
-            Some(&Value::String("001".to_string()))
+            Some(&Value::String("001".into()))
         );
         assert_eq!(
             account.get_metadata("priority"),
@@ -1602,7 +1607,7 @@ mod tests {
 
     #[test]
     fn test_account_virtual_flag() {
-        let mut account = Account::new_root("Test".to_string(), 1);
+        let mut account = Account::new_root("Test".into(), 1);
         
         assert!(!account.is_virtual());
         
@@ -1616,12 +1621,12 @@ mod tests {
 
     #[test]
     fn test_account_directives() {
-        let mut account = Account::new_root("Test".to_string(), 1);
+        let mut account = Account::new_root("Test".into(), 1);
         
         // Add various directives
-        account.add_directive(AccountDirective::Payee("Default Payee".to_string()));
-        account.add_directive(AccountDirective::Note("Account notes".to_string()));
-        account.add_directive(AccountDirective::Tag("important".to_string()));
+        account.add_directive(AccountDirective::Payee("Default Payee".into()));
+        account.add_directive(AccountDirective::Note("Account notes".into()));
+        account.add_directive(AccountDirective::Tag("important".into()));
         
         let directives = account.get_directives();
         assert_eq!(directives.len(), 3);
@@ -1630,7 +1635,7 @@ mod tests {
         let payee_directives = account.get_directives_by_type("payee");
         assert_eq!(payee_directives.len(), 1);
         match payee_directives[0] {
-            AccountDirective::Payee(ref payee) => assert_eq!(payee, "Default Payee"),
+            AccountDirective::Payee(ref payee) => assert_eq!(payee, &CompactString::from("Default Payee")),
             _ => panic!("Expected Payee directive"),
         }
         
@@ -1647,7 +1652,7 @@ mod tests {
 
     #[test]
     fn test_account_type_setting() {
-        let mut account = Account::new_root("Assets".to_string(), 1);
+        let mut account = Account::new_root("Assets".into(), 1);
         
         assert_eq!(account.get_account_type(), AccountType::Unknown);
         
@@ -1676,11 +1681,11 @@ mod tests {
         
         // Should visit in depth-first order
         // Note: exact order depends on HashMap iteration, but should visit children before siblings
-        assert!(visited_paths.contains(&"A:B".to_string()));
-        assert!(visited_paths.contains(&"A:C".to_string()));
-        assert!(visited_paths.contains(&"A:B:D".to_string()));
-        assert!(visited_paths.contains(&"A:B:E".to_string()));
-        assert!(visited_paths.contains(&"A:C:F".to_string()));
+        assert!(visited_paths.contains(&"A:B".into()));
+        assert!(visited_paths.contains(&"A:C".into()));
+        assert!(visited_paths.contains(&"A:B:D".into()));
+        assert!(visited_paths.contains(&"A:B:E".into()));
+        assert!(visited_paths.contains(&"A:C:F".into()));
         assert_eq!(visited_paths.len(), 5);
     }
 
@@ -1704,11 +1709,11 @@ mod tests {
         }
         
         // Should visit in breadth-first order
-        assert!(visited_paths.contains(&"A:B".to_string()));
-        assert!(visited_paths.contains(&"A:C".to_string()));
-        assert!(visited_paths.contains(&"A:B:D".to_string()));
-        assert!(visited_paths.contains(&"A:B:E".to_string()));
-        assert!(visited_paths.contains(&"A:C:F".to_string()));
+        assert!(visited_paths.contains(&"A:B".into()));
+        assert!(visited_paths.contains(&"A:C".into()));
+        assert!(visited_paths.contains(&"A:B:D".into()));
+        assert!(visited_paths.contains(&"A:B:E".into()));
+        assert!(visited_paths.contains(&"A:C:F".into()));
         assert_eq!(visited_paths.len(), 5);
     }
 
@@ -1837,8 +1842,8 @@ mod tests {
         let names: Vec<_> = depth_range_accounts.iter()
             .map(|acc| acc.borrow().fullname_immutable())
             .collect();
-        assert!(names.contains(&"A:B".to_string()));
-        assert!(names.contains(&"A:B:C".to_string()));
+        assert!(names.contains(&"A:B".into()));
+        assert!(names.contains(&"A:B:C".into()));
     }
 
     #[test]
@@ -1889,7 +1894,7 @@ mod tests {
         
         // Test account directive
         let account_directive = AccountDirective::Account(
-            "Assets:Bank".to_string(), 
+            "Assets:Bank".into(), 
             Some(AccountType::Asset)
         );
         tree.apply_directive("Assets:Bank", account_directive).unwrap();
@@ -1899,21 +1904,21 @@ mod tests {
         assert_eq!(account.borrow().get_account_type(), AccountType::Asset);
         
         // Test alias directive
-        let alias_directive = AccountDirective::Alias("Bank".to_string());
+        let alias_directive = AccountDirective::Alias("Bank".into());
         tree.apply_directive("Assets:Bank", alias_directive).unwrap();
         
         assert!(tree.is_alias("Bank"));
-        assert_eq!(tree.resolve_alias("Bank"), Some(&"Assets:Bank".to_string()));
+        assert_eq!(tree.resolve_alias("Bank"), Some(&CompactString::from("Assets:Bank")));
         
         // Test payee directive
-        let payee_directive = AccountDirective::Payee("Default Bank".to_string());
+        let payee_directive = AccountDirective::Payee("Default Bank".into());
         tree.apply_directive("Assets:Bank", payee_directive).unwrap();
         
         {
             let account_borrowed = account.borrow();
             let payee_directives = account_borrowed.get_directives_by_type("payee");
             assert_eq!(payee_directives.len(), 1);
-            assert_eq!(account_borrowed.get_default_payee(), Some("Default Bank".to_string()));
+            assert_eq!(account_borrowed.get_default_payee(), Some("Default Bank".into()));
         }
     }
 
@@ -1934,11 +1939,11 @@ mod tests {
             .map(|acc| acc.borrow().fullname_immutable())
             .collect();
         
-        assert!(leaf_names.contains(&"Assets:Bank:Checking".to_string()));
-        assert!(leaf_names.contains(&"Expenses:Food".to_string()));
+        assert!(leaf_names.contains(&"Assets:Bank:Checking".into()));
+        assert!(leaf_names.contains(&"Expenses:Food".into()));
         // Should not contain intermediate accounts
-        assert!(!leaf_names.contains(&"Assets".to_string()));
-        assert!(!leaf_names.contains(&"Assets:Bank".to_string()));
+        assert!(!leaf_names.contains(&"Assets".into()));
+        assert!(!leaf_names.contains(&"Assets:Bank".into()));
         
         // Test root account finding (excludes tree root "")
         let root_accounts = tree.find_root_accounts();
@@ -1946,9 +1951,9 @@ mod tests {
             .map(|acc| acc.borrow().fullname_immutable())
             .collect();
         
-        assert!(root_names.contains(&"Assets".to_string()));
-        assert!(root_names.contains(&"Expenses".to_string()));
-        assert!(!root_names.contains(&"".to_string())); // Tree root should be excluded
+        assert!(root_names.contains(&"Assets".into()));
+        assert!(root_names.contains(&"Expenses".into()));
+        assert!(!root_names.contains(&"".into())); // Tree root should be excluded
     }
 
     // Test visitor pattern implementation
@@ -2001,37 +2006,37 @@ mod tests {
         tree.find_account("Assets:Test", true).unwrap();
 
         // Test note directive with automatic note setting
-        let note_directive = AccountDirective::Note("This is a test account".to_string());
+        let note_directive = AccountDirective::Note("This is a test account".into());
         tree.apply_directive("Assets:Test", note_directive).unwrap();
         
         let account = tree.find_account("Assets:Test", false).unwrap();
         {
             let account_borrowed = account.borrow();
-            assert_eq!(account_borrowed.note, Some("This is a test account".to_string()));
+            assert_eq!(account_borrowed.note, Some("This is a test account".into()));
             let note_directives = account_borrowed.get_directives_by_type("note");
             assert_eq!(note_directives.len(), 1);
         }
 
         // Test default commodity directive
-        let default_directive = AccountDirective::Default("USD".to_string());
+        let default_directive = AccountDirective::Default("USD".into());
         tree.apply_directive("Assets:Test", default_directive).unwrap();
         
         {
             let account_borrowed = account.borrow();
-            assert_eq!(account_borrowed.get_default_commodity(), Some("USD".to_string()));
+            assert_eq!(account_borrowed.get_default_commodity(), Some("USD".into()));
         }
 
         // Test format directive
-        let format_directive = AccountDirective::Format("$%.2f".to_string());
+        let format_directive = AccountDirective::Format("$%.2f".into());
         tree.apply_directive("Assets:Test", format_directive).unwrap();
         
         {
             let account_borrowed = account.borrow();
-            assert_eq!(account_borrowed.get_format(), Some("$%.2f".to_string()));
+            assert_eq!(account_borrowed.get_format(), Some("$%.2f".into()));
         }
 
         // Test assertion directive
-        let assert_directive = AccountDirective::Assert("balance >= $1000".to_string());
+        let assert_directive = AccountDirective::Assert("balance >= $1000".into());
         tree.apply_directive("Assets:Test", assert_directive).unwrap();
         
         {
@@ -2042,7 +2047,7 @@ mod tests {
         }
 
         // Test tag directive
-        let tag_directive = AccountDirective::Tag("important".to_string());
+        let tag_directive = AccountDirective::Tag("important".into());
         tree.apply_directive("Assets:Test", tag_directive).unwrap();
         
         {
@@ -2068,14 +2073,14 @@ mod tests {
         tree.parse_and_apply_directive("payee Assets:Bank First National Bank").unwrap();
         {
             let account_borrowed = account.borrow();
-            assert_eq!(account_borrowed.get_default_payee(), Some("First National Bank".to_string()));
+            assert_eq!(account_borrowed.get_default_payee(), Some("First National Bank".into()));
         }
 
         // Test note directive parsing
         tree.parse_and_apply_directive("note Assets:Bank Primary checking account").unwrap();
         {
             let account_borrowed = account.borrow();
-            assert_eq!(account_borrowed.note, Some("Primary checking account".to_string()));
+            assert_eq!(account_borrowed.note, Some("Primary checking account".into()));
         }
 
         // Test tag directive parsing
@@ -2086,13 +2091,13 @@ mod tests {
         tree.parse_and_apply_directive("default Assets:Bank USD").unwrap();
         {
             let account_borrowed = account.borrow();
-            assert_eq!(account_borrowed.get_default_commodity(), Some("USD".to_string()));
+            assert_eq!(account_borrowed.get_default_commodity(), Some("USD".into()));
         }
 
         // Test alias parsing
         tree.parse_and_apply_directive("alias Bank Assets:Bank").unwrap();
         assert!(tree.is_alias("Bank"));
-        assert_eq!(tree.resolve_alias("Bank"), Some(&"Assets:Bank".to_string()));
+        assert_eq!(tree.resolve_alias("Bank"), Some(&CompactString::from("Assets:Bank")));
 
         // Test comment and empty line handling
         assert!(tree.parse_and_apply_directive("# This is a comment").is_ok());
@@ -2130,14 +2135,14 @@ mod tests {
 
         // Create accounts with different tags
         let account1 = tree.find_account("Account1", true).unwrap();
-        account1.borrow_mut().add_directive(AccountDirective::Tag("important".to_string()));
-        account1.borrow_mut().add_directive(AccountDirective::Tag("primary".to_string()));
+        account1.borrow_mut().add_directive(AccountDirective::Tag("important".into()));
+        account1.borrow_mut().add_directive(AccountDirective::Tag("primary".into()));
 
         let account2 = tree.find_account("Account2", true).unwrap();
-        account2.borrow_mut().add_directive(AccountDirective::Tag("important".to_string()));
+        account2.borrow_mut().add_directive(AccountDirective::Tag("important".into()));
 
         let account3 = tree.find_account("Account3", true).unwrap();
-        account3.borrow_mut().add_directive(AccountDirective::Tag("secondary".to_string()));
+        account3.borrow_mut().add_directive(AccountDirective::Tag("secondary".into()));
 
         // Test tag queries
         assert!(account1.borrow().has_tag("important"));
@@ -2146,8 +2151,8 @@ mod tests {
 
         let tags1 = account1.borrow().get_tags();
         assert_eq!(tags1.len(), 2);
-        assert!(tags1.contains(&"important".to_string()));
-        assert!(tags1.contains(&"primary".to_string()));
+        assert!(tags1.contains(&"important".into()));
+        assert!(tags1.contains(&"primary".into()));
 
         // Test finding accounts by tags
         let important_accounts = tree.find_accounts_by_tags(&[String::from("important")]);
@@ -2169,17 +2174,17 @@ mod tests {
 
         // Create accounts with assertions
         let account1 = tree.find_account("Assets:Bank", true).unwrap();
-        account1.borrow_mut().add_directive(AccountDirective::Assert("balance >= $1000".to_string()));
-        account1.borrow_mut().add_directive(AccountDirective::Assert("balance <= $50000".to_string()));
+        account1.borrow_mut().add_directive(AccountDirective::Assert("balance >= $1000".into()));
+        account1.borrow_mut().add_directive(AccountDirective::Assert("balance <= $50000".into()));
 
         let account2 = tree.find_account("Expenses:Food", true).unwrap();
-        account2.borrow_mut().add_directive(AccountDirective::Assert("monthly_total <= $500".to_string()));
+        account2.borrow_mut().add_directive(AccountDirective::Assert("monthly_total <= $500".into()));
 
         // Test assertion retrieval
         let assertions1 = account1.borrow().get_assertions();
         assert_eq!(assertions1.len(), 2);
-        assert!(assertions1.contains(&"balance >= $1000".to_string()));
-        assert!(assertions1.contains(&"balance <= $50000".to_string()));
+        assert!(assertions1.contains(&"balance >= $1000".into()));
+        assert!(assertions1.contains(&"balance <= $50000".into()));
 
         let assertions2 = account2.borrow().get_assertions();
         assert_eq!(assertions2.len(), 1);
