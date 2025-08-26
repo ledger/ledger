@@ -7,7 +7,7 @@
 use super::{Expression, ExprContext, Value, ExprResult, ExprError};
 use crate::transaction::{Transaction, TransactionStatus};
 use crate::posting::Posting;
-use ledger_math::{Amount, Date};
+use ledger_math::Amount;
 use std::collections::HashMap;
 use regex::Regex;
 use chrono::NaiveDate;
@@ -167,10 +167,10 @@ impl QueryPredicate {
         let mut context = ExprContext::new();
         
         // Transaction-specific variables
-        context.set_variable("date".to_string(), Value::Date(Date::from_naive_date(transaction.date)));
+        context.set_variable("date".to_string(), Value::Date(transaction.date));
         
         if let Some(aux_date) = transaction.aux_date {
-            context.set_variable("aux_date".to_string(), Value::Date(Date::from_naive_date(aux_date)));
+            context.set_variable("aux_date".to_string(), Value::Date(aux_date));
         }
         
         context.set_variable("payee".to_string(), Value::String(transaction.payee.clone()));
@@ -481,8 +481,8 @@ mod tests {
             .code("DEBIT001")
             .tag("category", Some("groceries"))
             .tag("receipt", Some("12345"))
-            .post_to(checking, Amount::with_commodity(Decimal::from(-4250), usd_commodity()))
-            .post_to(groceries, Amount::with_commodity(Decimal::from(4250), usd_commodity()))
+            .post_to(checking, Amount::with_commodity(Decimal::new(-4250, 2), usd_commodity()))
+            .post_to(groceries, Amount::with_commodity(Decimal::new(4250, 2), usd_commodity()))
             .build()
             .unwrap()
     }

@@ -10,7 +10,8 @@
 //! - Conditional expressions (ternary operator)
 //! - Sequences and lists
 
-use ledger_math::{Amount, Date, BigRational, Decimal};
+use ledger_math::{Amount, BigRational, Decimal};
+use chrono::NaiveDate as Date;
 use num_bigint::BigInt;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -931,9 +932,17 @@ fn evaluate_node(node: &ExprNode, context: &ExprContext) -> ExprResult<Value> {
         ExprNode::Value(v) => Ok(v.clone()),
         
         ExprNode::Identifier(name) => {
-            context.get_variable(name)
-                .cloned()
-                .ok_or_else(|| ExprError::UnknownVariable(name.clone()))
+            match context.get_variable(name) {
+                Some(value) => Ok(value.clone()),
+                None => {
+                    // Handle tag variables specially - return Null if tag doesn't exist
+                    if name.starts_with("tag_") || name.starts_with("posting_tag_") {
+                        Ok(Value::Null)
+                    } else {
+                        Err(ExprError::UnknownVariable(name.clone()))
+                    }
+                }
+            }
         },
         
         ExprNode::Binary { op, left, right } => {

@@ -437,14 +437,6 @@ mod tests {
         tx
     }
     
-    fn create_test_posting() -> Posting {
-        let mut tree = crate::account::AccountTree::new();
-        let account_ref = tree.find_account("Assets:Checking", true).unwrap();
-        let mut posting = Posting::new(account_ref);
-        posting.amount = Some(Amount::from_str("100.00 USD").unwrap_or_default());
-        posting.note = Some("Test posting".into());
-        posting
-    }
     
     #[test]
     fn test_format_spec_parsing() {
@@ -490,7 +482,12 @@ mod tests {
     #[test]
     fn test_posting_fields() {
         let tx = create_test_transaction();
-        let posting = create_test_posting();
+        let mut tree = crate::account::AccountTree::new();
+        let account_ref = tree.find_account("Assets:Checking", true).unwrap();
+        let mut posting = Posting::new(account_ref);
+        posting.amount = Some(Amount::from_str("100.00 USD").unwrap_or_default());
+        posting.note = Some("Test posting".into());
+        
         let context = FormatContext::new()
             .with_transaction(&tx)
             .with_posting(&posting);

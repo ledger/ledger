@@ -242,8 +242,7 @@ fn fn_now(args: &[Value]) -> ExprResult<Value> {
 
 fn fn_today(args: &[Value]) -> ExprResult<Value> {
     check_arg_count(args, 0, "today")?;
-    use ledger_math::Date;
-    Ok(Value::Date(Date::from_naive_date(Local::now().naive_local().date())))
+    Ok(Value::Date(Local::now().naive_local().date()))
 }
 
 fn fn_age(args: &[Value]) -> ExprResult<Value> {

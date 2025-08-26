@@ -282,7 +282,7 @@ pub struct PoolStats {
 /// Custom B-tree implementation optimized for account hierarchies
 #[derive(Debug, Clone)]
 pub struct AccountTree<T> {
-    root: Option<Box<AccountNode<T>>>,
+    roots: FastHashMap<String, Box<AccountNode<T>>>,
     size: usize,
 }
 
@@ -303,7 +303,7 @@ impl<T> AccountTree<T> {
     /// Create a new account tree
     pub fn new() -> Self {
         Self {
-            root: None,
+            roots: FastHashMap::default(),
             size: 0,
         }
     }
@@ -315,39 +315,42 @@ impl<T> AccountTree<T> {
             return;
         }
 
-        if self.root.is_none() {
-            self.root = Some(Box::new(AccountNode {
-                name: parts[0].to_string(),
+        let root_name = parts[0].to_string();
+        
+        // Create root node if it doesn't exist
+        if !self.roots.contains_key(&root_name) {
+            self.roots.insert(root_name.clone(), Box::new(AccountNode {
+                name: root_name.clone(),
                 value: None,
                 children: FastHashMap::default(),
             }));
         }
 
-        let mut current = self.root.as_mut().unwrap();
-        let mut depth = 0;
-
-        // Navigate to the correct position
-        for part in &parts {
-            if depth == 0 {
-                if current.name != *part {
-                    // Need to adjust root
-                    return;
-                }
-            } else if !current.children.contains_key(*part) {
+        let mut current = self.roots.get_mut(&root_name).unwrap();
+        
+        // If we only have one part, set the value on the root
+        if parts.len() == 1 {
+            if current.value.is_none() {
+                self.size += 1;
+            }
+            current.value = Some(value);
+            return;
+        }
+        
+        // Navigate through the path starting from the second part
+        for part in &parts[1..] {
+            // Create child node if it doesn't exist
+            if !current.children.contains_key(*part) {
                 current.children.insert(part.to_string(), Box::new(AccountNode {
                     name: part.to_string(),
                     value: None,
                     children: FastHashMap::default(),
                 }));
             }
-
-            if depth > 0 {
-                current = current.children.get_mut(*part).unwrap();
-            }
-            depth += 1;
+            current = current.children.get_mut(*part).unwrap();
         }
 
-        // Insert the value
+        // Insert the value at the final node
         if current.value.is_none() {
             self.size += 1;
         }
@@ -357,15 +360,20 @@ impl<T> AccountTree<T> {
     /// Get a value at the given account path
     pub fn get(&self, path: &str) -> Option<&T> {
         let parts: Vec<&str> = path.split(':').collect();
-        if parts.is_empty() || self.root.is_none() {
+        if parts.is_empty() {
             return None;
         }
 
-        let mut current = self.root.as_ref().unwrap();
-        if current.name != parts[0] {
-            return None;
+        let root_name = parts[0];
+        let current = self.roots.get(root_name)?;
+        
+        // If we only have one part, return the root's value
+        if parts.len() == 1 {
+            return current.value.as_ref();
         }
-
+        
+        // Navigate through the path
+        let mut current = current.as_ref();
         for part in &parts[1..] {
             if let Some(child) = current.children.get(*part) {
                 current = child;
@@ -389,18 +397,16 @@ impl<T> AccountTree<T> {
 
     /// Iterate over all account paths and their values
     pub fn iter(&self) -> AccountTreeIter<'_, T> {
-        AccountTreeIter::new(self.root.as_ref())
+        AccountTreeIter::new(&self.roots)
     }
 
     /// Get tree statistics
     pub fn stats(&self) -> TreeStats {
-        if let Some(ref root) = self.root {
-            let mut stats = TreeStats::default();
+        let mut stats = TreeStats::default();
+        for root in self.roots.values() {
             self.collect_stats(root, 0, &mut stats);
-            stats
-        } else {
-            TreeStats::default()
         }
+        stats
     }
 
     fn collect_stats(&self, node: &AccountNode<T>, depth: usize, stats: &mut TreeStats) {
@@ -443,12 +449,13 @@ pub struct AccountTreeIter<'a, T> {
 }
 
 impl<'a, T> AccountTreeIter<'a, T> {
-    fn new(root: Option<&'a Box<AccountNode<T>>>) -> Self {
+    fn new(roots: &'a FastHashMap<String, Box<AccountNode<T>>>) -> Self {
         let mut iter = Self {
             stack: Vec::new(),
         };
 
-        if let Some(root) = root {
+        // Add all roots to the stack
+        for root in roots.values() {
             iter.stack.push((root, root.name.clone()));
         }
 

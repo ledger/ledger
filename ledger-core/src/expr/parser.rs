@@ -18,6 +18,7 @@ pub enum Token {
     Integer(i64),
     Decimal(Decimal),
     String(String),
+    Regex(String),
     Boolean(bool),
     Null,
     
@@ -118,6 +119,7 @@ pub struct Lexer<'a> {
     input: Peekable<Chars<'a>>,
     position: Position,
     functions: HashMap<String, BuiltinFunction>,
+    last_token: Option<Token>,
 }
 
 impl<'a> Lexer<'a> {
@@ -155,6 +157,7 @@ impl<'a> Lexer<'a> {
             input: input.chars().peekable(),
             position: Position::new(),
             functions,
+            last_token: None,
         }
     }
     
@@ -253,9 +256,7 @@ impl<'a> Lexer<'a> {
     fn read_string(&mut self) -> ExprResult<Token> {
         let mut string = String::new();
         
-        // Skip opening quote
-        self.next_char();
-        
+        // Opening quote was already consumed by next_token
         while let Some(ch) = self.next_char() {
             if ch == '"' {
                 return Ok(Token::String(string));
@@ -282,8 +283,96 @@ impl<'a> Lexer<'a> {
         Err(ExprError::ParseError("Unterminated string".to_string()))
     }
     
+    /// Read a regex pattern between slashes
+    fn read_regex(&mut self) -> ExprResult<Token> {
+        let mut pattern = String::new();
+        
+        // Opening slash was already consumed by next_token
+        while let Some(ch) = self.next_char() {
+            if ch == '/' {
+                return Ok(Token::Regex(pattern));
+            } else if ch == '\\' {
+                // Handle escape sequences
+                if let Some(escaped) = self.next_char() {
+                    match escaped {
+                        'n' => pattern.push('\n'),
+                        't' => pattern.push('\t'),
+                        'r' => pattern.push('\r'),
+                        '\\' => pattern.push('\\'),
+                        '/' => pattern.push('/'),
+                        _ => {
+                            pattern.push('\\');
+                            pattern.push(escaped);
+                        }
+                    }
+                }
+            } else {
+                pattern.push(ch);
+            }
+        }
+        
+        Err(ExprError::ParseError("Unterminated regex".to_string()))
+    }
+    
+    /// Read a single-quoted string
+    fn read_single_quoted_string(&mut self) -> ExprResult<Token> {
+        let mut string = String::new();
+        
+        // Opening quote was already consumed by next_token
+        while let Some(ch) = self.next_char() {
+            if ch == '\'' {
+                return Ok(Token::String(string));
+            } else if ch == '\\' {
+                // Handle escape sequences
+                if let Some(escaped) = self.next_char() {
+                    match escaped {
+                        'n' => string.push('\n'),
+                        't' => string.push('\t'),
+                        'r' => string.push('\r'),
+                        '\\' => string.push('\\'),
+                        '\'' => string.push('\''),
+                        _ => {
+                            string.push('\\');
+                            string.push(escaped);
+                        }
+                    }
+                }
+            } else {
+                string.push(ch);
+            }
+        }
+        
+        Err(ExprError::ParseError("Unterminated string".to_string()))
+    }
+    
+    /// Determine if slash should be parsed as regex start based on context
+    fn expect_regex(&self) -> bool {
+        match &self.last_token {
+            Some(Token::Match) => true,  // =~ operator
+            Some(Token::NotEqual) => true,  // != operator (though not regex)
+            Some(Token::LeftParen) => true,  // ( - start of expression
+            Some(Token::Comma) => true,  // , - function argument
+            Some(Token::And) => true,  // && - logical operator
+            Some(Token::Or) => true,  // || - logical operator
+            None => true, // Start of input
+            _ => false,
+        }
+    }
+    
     /// Get the next token
     pub fn next_token(&mut self) -> ExprResult<Token> {
+        let token = self.next_token_impl()?;
+        
+        // Store the token for context-sensitive parsing (except EndOfInput)
+        if token != Token::EndOfInput {
+            self.last_token = Some(token.clone());
+        }
+        
+        Ok(token)
+    }
+    
+    /// Implementation of next_token without last_token tracking
+    fn next_token_impl(&mut self) -> ExprResult<Token> {
         self.skip_whitespace();
         
         match self.next_char() {
@@ -292,7 +381,13 @@ impl<'a> Lexer<'a> {
                 '+' => Ok(Token::Plus),
                 '-' => Ok(Token::Minus),
                 '*' => Ok(Token::Star),
-                '/' => Ok(Token::Slash),
+                '/' => {
+                    if self.expect_regex() {
+                        self.read_regex()
+                    } else {
+                        Ok(Token::Slash)
+                    }
+                },
                 '%' => Ok(Token::Percent),
                 '(' => Ok(Token::LeftParen),
                 ')' => Ok(Token::RightParen),
@@ -354,6 +449,7 @@ impl<'a> Lexer<'a> {
                     }
                 }
                 '"' => self.read_string(),
+                '\'' => self.read_single_quoted_string(),
                 ch if ch.is_ascii_digit() => self.read_number(ch),
                 ch if ch.is_alphabetic() || ch == '_' => Ok(self.read_identifier(ch)),
                 _ => Err(ExprError::ParseError(format!("Unexpected character: '{}'", ch))),
@@ -465,6 +561,10 @@ impl<'a> ExprParser<'a> {
             Token::String(s) => {
                 self.advance()?;
                 Ok(ExprNode::Value(Value::String(s)))
+            }
+            Token::Regex(pattern) => {
+                self.advance()?;
+                Ok(ExprNode::Value(Value::Regex(pattern)))
             }
             Token::Boolean(b) => {
                 self.advance()?;

@@ -399,6 +399,38 @@ fn compare_values(left: &Value, right: &Value) -> ExprResult<Ordering> {
         (Value::Integer(a), Value::Rational(b)) => Ok(BigRational::from(BigInt::from(*a)).cmp(b)),
         (Value::Rational(a), Value::Integer(b)) => Ok(a.cmp(&BigRational::from(BigInt::from(*b)))),
         
+        // Amount comparisons with numeric values (compare numeric part only)
+        (Value::Amount(a), Value::Decimal(b)) => {
+            Ok(a.value().cmp(b))
+        }
+        (Value::Decimal(a), Value::Amount(b)) => {
+            Ok(a.cmp(&b.value()))
+        }
+        (Value::Amount(a), Value::Integer(b)) => {
+            Ok(a.value().cmp(&Decimal::from(*b)))
+        }
+        (Value::Integer(a), Value::Amount(b)) => {
+            Ok(Decimal::from(*a).cmp(&b.value()))
+        }
+        
+        // Date comparisons with string values (parse string as date)
+        (Value::Date(a), Value::String(b)) => {
+            // Try to parse the string as a date
+            use chrono::NaiveDate;
+            match NaiveDate::parse_from_str(b, "%Y-%m-%d") {
+                Ok(date_b) => Ok(a.cmp(&date_b)),
+                Err(_) => Err(ExprError::RuntimeError(format!("Cannot parse '{}' as date", b))),
+            }
+        }
+        (Value::String(a), Value::Date(b)) => {
+            // Try to parse the string as a date
+            use chrono::NaiveDate;
+            match NaiveDate::parse_from_str(a, "%Y-%m-%d") {
+                Ok(date_a) => Ok(date_a.cmp(b)),
+                Err(_) => Err(ExprError::RuntimeError(format!("Cannot parse '{}' as date", a))),
+            }
+        }
+        
         _ => Err(ExprError::TypeMismatch {
             expected: "comparable types".to_string(),
             found: format!("{} and {}", left.type_name(), right.type_name()),
