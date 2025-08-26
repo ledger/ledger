@@ -1,0 +1,13 @@
+# Benchmark result files
+*.json
+*.svg
+*.txt
+*.out
+flamegraphs/
+memory_profiles/
+reports/
+baseline/
+
+# Keep structure
+!.gitignore
+!config.json

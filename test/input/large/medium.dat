@@ -1,0 +1,2508 @@
+; Medium-sized test journal for performance testing
+; Contains 500 transactions across multiple accounts
+
+2023-01-01 Opening Balances
+    Assets:Checking        $5,000.00
+    Assets:Savings         $10,000.00
+    Equity:Opening-Balances
+
+
+2023-01-02 Transaction 1
+    Expenses:Random        $.01
+    Assets:Checking
+
+
+2023-01-03 Transaction 2
+    Expenses:Random        $.27
+    Assets:Checking
+
+
+2023-01-04 Transaction 3
+    Expenses:Random        $.53
+    Assets:Checking
+
+
+2023-01-05 Transaction 4
+    Expenses:Random        $.78
+    Assets:Checking
+
+
+2023-01-06 Transaction 5
+    Expenses:Random        $.04
+    Assets:Checking
+
+
+2023-01-07 Transaction 6
+    Expenses:Random        $.30
+    Assets:Checking
+
+
+2023-01-08 Transaction 7
+    Expenses:Random        $.88
+    Assets:Checking
+
+
+2023-01-09 Transaction 8
+    Expenses:Random        $.14
+    Assets:Checking
+
+
+2023-01-10 Transaction 9
+    Expenses:Random        $.40
+    Assets:Checking
+
+
+2023-01-11 Transaction 10
+    Expenses:Random        $.65
+    Assets:Checking
+
+
+2023-01-12 Transaction 11
+    Expenses:Random        $.91
+    Assets:Checking
+
+
+2023-01-13 Transaction 12
+    Expenses:Random        $.17
+    Assets:Checking
+
+
+2023-01-14 Transaction 13
+    Expenses:Random        $.43
+    Assets:Checking
+
+
+2023-01-15 Transaction 14
+    Expenses:Random        $.69
+    Assets:Checking
+
+
+2023-01-16 Transaction 15
+    Expenses:Random        $.95
+    Assets:Checking
+
+
+2023-01-17 Transaction 16
+    Expenses:Random        $.21
+    Assets:Checking
+
+
+2023-01-18 Transaction 17
+    Expenses:Random        $.46
+    Assets:Checking
+
+
+2023-01-19 Transaction 18
+    Expenses:Random        $.72
+    Assets:Checking
+
+
+2023-01-20 Transaction 19
+    Expenses:Random        $.30
+    Assets:Checking
+
+
+2023-01-21 Transaction 20
+    Expenses:Random        $.56
+    Assets:Checking
+
+
+2023-01-22 Transaction 21
+    Expenses:Random        $.82
+    Assets:Checking
+
+
+2023-01-23 Transaction 22
+    Expenses:Random        $.08
+    Assets:Checking
+
+
+2023-01-24 Transaction 23
+    Expenses:Random        $.33
+    Assets:Checking
+
+
+2023-01-25 Transaction 24
+    Expenses:Random        $.59
+    Assets:Checking
+
+
+2023-01-26 Transaction 25
+    Expenses:Random        $.85
+    Assets:Checking
+
+
+2023-01-27 Transaction 26
+    Expenses:Random        $.11
+    Assets:Checking
+
+
+2023-01-28 Transaction 27
+    Expenses:Random        $.37
+    Assets:Checking
+
+
+2023-01-29 Transaction 28
+    Expenses:Random        $.63
+    Assets:Checking
+
+
+2023-01-30 Transaction 29
+    Expenses:Random        $.88
+    Assets:Checking
+
+
+2023-01-31 Transaction 30
+    Expenses:Random        $.14
+    Assets:Checking
+
+
+2023-02-01 Transaction 31
+    Expenses:Random        $.72
+    Assets:Checking
+
+
+2023-02-02 Transaction 32
+    Expenses:Random        $.98
+    Assets:Checking
+
+
+2023-02-03 Transaction 33
+    Expenses:Random        $.24
+    Assets:Checking
+
+
+2023-02-04 Transaction 34
+    Expenses:Random        $.50
+    Assets:Checking
+
+
+2023-02-05 Transaction 35
+    Expenses:Random        $.75
+    Assets:Checking
+
+
+2023-02-06 Transaction 36
+    Expenses:Random        $.01
+    Assets:Checking
+
+
+2023-02-07 Transaction 37
+    Expenses:Random        $.27
+    Assets:Checking
+
+
+2023-02-08 Transaction 38
+    Expenses:Random        $.53
+    Assets:Checking
+
+
+2023-02-09 Transaction 39
+    Expenses:Random        $.79
+    Assets:Checking
+
+
+2023-02-10 Transaction 40
+    Expenses:Random        $.05
+    Assets:Checking
+
+
+2023-02-11 Transaction 41
+    Expenses:Random        $.30
+    Assets:Checking
+
+
+2023-02-12 Transaction 42
+    Expenses:Random        $.56
+    Assets:Checking
+
+
+2023-02-13 Transaction 43
+    Expenses:Random        $.14
+    Assets:Checking
+
+
+2023-02-14 Transaction 44
+    Expenses:Random        $.40
+    Assets:Checking
+
+
+2023-02-15 Transaction 45
+    Expenses:Random        $.66
+    Assets:Checking
+
+
+2023-02-16 Transaction 46
+    Expenses:Random        $.92
+    Assets:Checking
+
+
+2023-02-17 Transaction 47
+    Expenses:Random        $.17
+    Assets:Checking
+
+
+2023-02-18 Transaction 48
+    Expenses:Random        $.43
+    Assets:Checking
+
+
+2023-02-19 Transaction 49
+    Expenses:Random        $.69
+    Assets:Checking
+
+
+2023-02-20 Transaction 50
+    Expenses:Random        $.95
+    Assets:Checking
+
+
+2023-02-21 Transaction 51
+    Expenses:Random        $.21
+    Assets:Checking
+
+
+2023-02-22 Transaction 52
+    Expenses:Random        $.47
+    Assets:Checking
+
+
+2023-02-23 Transaction 53
+    Expenses:Random        $.73
+    Assets:Checking
+
+
+2023-02-24 Transaction 54
+    Expenses:Random        $.69
+    Assets:Checking
+
+
+2023-02-25 Transaction 55
+    Expenses:Random        $.65
+    Assets:Checking
+
+
+2023-02-26 Transaction 56
+    Expenses:Random        $.91
+    Assets:Checking
+
+
+2023-02-27 Transaction 57
+    Expenses:Random        $.16
+    Assets:Checking
+
+
+2023-02-28 Transaction 58
+    Expenses:Random        $.81
+    Assets:Checking
+
+
+2023-03-01 Transaction 59
+    Expenses:Random        $.06
+    Assets:Checking
+
+
+2023-03-02 Transaction 60
+    Expenses:Random        $.64
+    Assets:Checking
+
+
+2023-03-03 Transaction 61
+    Expenses:Random        $.90
+    Assets:Checking
+
+
+2023-03-04 Transaction 62
+    Expenses:Random        $.16
+    Assets:Checking
+
+
+2023-03-05 Transaction 63
+    Expenses:Random        $.42
+    Assets:Checking
+
+
+2023-03-06 Transaction 64
+    Expenses:Random        $.68
+    Assets:Checking
+
+
+2023-03-07 Transaction 65
+    Expenses:Random        $.93
+    Assets:Checking
+
+
+2023-03-08 Transaction 66
+    Expenses:Random        $.19
+    Assets:Checking
+
+
+2023-03-09 Transaction 67
+    Expenses:Random        $.45
+    Assets:Checking
+
+
+2023-03-10 Transaction 68
+    Expenses:Random        $.71
+    Assets:Checking
+
+
+2023-03-11 Transaction 69
+    Expenses:Random        $.97
+    Assets:Checking
+
+
+2023-03-12 Transaction 70
+    Expenses:Random        $.23
+    Assets:Checking
+
+
+2023-03-13 Transaction 71
+    Expenses:Random        $.49
+    Assets:Checking
+
+
+2023-03-14 Transaction 72
+    Expenses:Random        $.06
+    Assets:Checking
+
+
+2023-03-15 Transaction 73
+    Expenses:Random        $.32
+    Assets:Checking
+
+
+2023-03-16 Transaction 74
+    Expenses:Random        $.58
+    Assets:Checking
+
+
+2023-03-17 Transaction 75
+    Expenses:Random        $.84
+    Assets:Checking
+
+
+2023-03-18 Transaction 76
+    Expenses:Random        $.10
+    Assets:Checking
+
+
+2023-03-19 Transaction 77
+    Expenses:Random        $.36
+    Assets:Checking
+
+
+2023-03-20 Transaction 78
+    Expenses:Random        $.61
+    Assets:Checking
+
+
+2023-03-21 Transaction 79
+    Expenses:Random        $.87
+    Assets:Checking
+
+
+2023-03-22 Transaction 80
+    Expenses:Random        $.13
+    Assets:Checking
+
+
+2023-03-23 Transaction 81
+    Expenses:Random        $.39
+    Assets:Checking
+
+
+2023-03-24 Transaction 82
+    Expenses:Random        $.65
+    Assets:Checking
+
+
+2023-03-25 Transaction 83
+    Expenses:Random        $.91
+    Assets:Checking
+
+
+2023-03-26 Transaction 84
+    Expenses:Random        $.48
+    Assets:Checking
+
+
+2023-03-27 Transaction 85
+    Expenses:Random        $.74
+    Assets:Checking
+
+
+2023-03-28 Transaction 86
+    Expenses:Random        $0
+    Assets:Checking
+
+
+2023-03-29 Transaction 87
+    Expenses:Random        $.26
+    Assets:Checking
+
+
+2023-03-30 Transaction 88
+    Expenses:Random        $.52
+    Assets:Checking
+
+
+2023-03-31 Transaction 89
+    Expenses:Random        $.78
+    Assets:Checking
+
+
+2023-04-01 Transaction 90
+    Expenses:Random        $.03
+    Assets:Checking
+
+
+2023-04-02 Transaction 91
+    Expenses:Random        $.29
+    Assets:Checking
+
+
+2023-04-03 Transaction 92
+    Expenses:Random        $.55
+    Assets:Checking
+
+
+2023-04-04 Transaction 93
+    Expenses:Random        $.81
+    Assets:Checking
+
+
+2023-04-05 Transaction 94
+    Expenses:Random        $.07
+    Assets:Checking
+
+
+2023-04-06 Transaction 95
+    Expenses:Random        $.33
+    Assets:Checking
+
+
+2023-04-07 Transaction 96
+    Expenses:Random        $.90
+    Assets:Checking
+
+
+2023-04-08 Transaction 97
+    Expenses:Random        $.16
+    Assets:Checking
+
+
+2023-04-09 Transaction 98
+    Expenses:Random        $.42
+    Assets:Checking
+
+
+2023-04-10 Transaction 99
+    Expenses:Random        $.68
+    Assets:Checking
+
+
+2023-04-11 Transaction 100
+    Expenses:Random        $.94
+    Assets:Checking
+
+
+2023-04-12 Transaction 101
+    Expenses:Random        $.20
+    Assets:Checking
+
+
+2023-04-13 Transaction 102
+    Expenses:Random        $.45
+    Assets:Checking
+
+
+2023-04-14 Transaction 103
+    Expenses:Random        $.71
+    Assets:Checking
+
+
+2023-04-15 Transaction 104
+    Expenses:Random        $.97
+    Assets:Checking
+
+
+2023-04-16 Transaction 105
+    Expenses:Random        $.23
+    Assets:Checking
+
+
+2023-04-17 Transaction 106
+    Expenses:Random        $.49
+    Assets:Checking
+
+
+2023-04-18 Transaction 107
+    Expenses:Random        $.75
+    Assets:Checking
+
+
+2023-04-19 Transaction 108
+    Expenses:Random        $.33
+    Assets:Checking
+
+
+2023-04-20 Transaction 109
+    Expenses:Random        $.58
+    Assets:Checking
+
+
+2023-04-21 Transaction 110
+    Expenses:Random        $.84
+    Assets:Checking
+
+
+2023-04-22 Transaction 111
+    Expenses:Random        $.10
+    Assets:Checking
+
+
+2023-04-23 Transaction 112
+    Expenses:Random        $.36
+    Assets:Checking
+
+
+2023-04-24 Transaction 113
+    Expenses:Random        $.62
+    Assets:Checking
+
+
+2023-04-25 Transaction 114
+    Expenses:Random        $.88
+    Assets:Checking
+
+
+2023-04-26 Transaction 115
+    Expenses:Random        $.13
+    Assets:Checking
+
+
+2023-04-27 Transaction 116
+    Expenses:Random        $.39
+    Assets:Checking
+
+
+2023-04-28 Transaction 117
+    Expenses:Random        $.65
+    Assets:Checking
+
+
+2023-04-29 Transaction 118
+    Expenses:Random        $.91
+    Assets:Checking
+
+
+2023-04-30 Transaction 119
+    Expenses:Random        $.17
+    Assets:Checking
+
+
+2023-05-01 Transaction 120
+    Expenses:Random        $.75
+    Assets:Checking
+
+
+2023-05-02 Transaction 121
+    Expenses:Random        $0
+    Assets:Checking
+
+
+2023-05-03 Transaction 122
+    Expenses:Random        $.26
+    Assets:Checking
+
+
+2023-05-04 Transaction 123
+    Expenses:Random        $.52
+    Assets:Checking
+
+
+2023-05-05 Transaction 124
+    Expenses:Random        $.78
+    Assets:Checking
+
+
+2023-05-06 Transaction 125
+    Expenses:Random        $.04
+    Assets:Checking
+
+
+2023-05-07 Transaction 126
+    Expenses:Random        $.30
+    Assets:Checking
+
+
+2023-05-08 Transaction 127
+    Expenses:Random        $.55
+    Assets:Checking
+
+
+2023-05-09 Transaction 128
+    Expenses:Random        $.81
+    Assets:Checking
+
+
+2023-05-10 Transaction 129
+    Expenses:Random        $.07
+    Assets:Checking
+
+
+2023-05-11 Transaction 130
+    Expenses:Random        $.33
+    Assets:Checking
+
+
+2023-05-12 Transaction 131
+    Expenses:Random        $.59
+    Assets:Checking
+
+
+2023-05-13 Transaction 132
+    Expenses:Random        $.17
+    Assets:Checking
+
+
+2023-05-14 Transaction 133
+    Expenses:Random        $.42
+    Assets:Checking
+
+
+2023-05-15 Transaction 134
+    Expenses:Random        $.68
+    Assets:Checking
+
+
+2023-05-16 Transaction 135
+    Expenses:Random        $.94
+    Assets:Checking
+
+
+2023-05-17 Transaction 136
+    Expenses:Random        $.20
+    Assets:Checking
+
+
+2023-05-18 Transaction 137
+    Expenses:Random        $.46
+    Assets:Checking
+
+
+2023-05-19 Transaction 138
+    Expenses:Random        $.72
+    Assets:Checking
+
+
+2023-05-20 Transaction 139
+    Expenses:Random        $.98
+    Assets:Checking
+
+
+2023-05-21 Transaction 140
+    Expenses:Random        $.23
+    Assets:Checking
+
+
+2023-05-22 Transaction 141
+    Expenses:Random        $.49
+    Assets:Checking
+
+
+2023-05-23 Transaction 142
+    Expenses:Random        $.75
+    Assets:Checking
+
+
+2023-05-24 Transaction 143
+    Expenses:Random        $.01
+    Assets:Checking
+
+
+2023-05-25 Transaction 144
+    Expenses:Random        $.59
+    Assets:Checking
+
+
+2023-05-26 Transaction 145
+    Expenses:Random        $.85
+    Assets:Checking
+
+
+2023-05-27 Transaction 146
+    Expenses:Random        $.10
+    Assets:Checking
+
+
+2023-05-28 Transaction 147
+    Expenses:Random        $.36
+    Assets:Checking
+
+
+2023-05-29 Transaction 148
+    Expenses:Random        $.62
+    Assets:Checking
+
+
+2023-05-30 Transaction 149
+    Expenses:Random        $.88
+    Assets:Checking
+
+
+2023-05-31 Transaction 150
+    Expenses:Random        $.14
+    Assets:Checking
+
+
+2023-06-01 Transaction 151
+    Expenses:Random        $.40
+    Assets:Checking
+
+
+2023-06-02 Transaction 152
+    Expenses:Random        $.65
+    Assets:Checking
+
+
+2023-06-03 Transaction 153
+    Expenses:Random        $0
+    Assets:Checking
+
+
+2023-06-04 Transaction 154
+    Expenses:Random        $.26
+    Assets:Checking
+
+
+2023-06-05 Transaction 155
+    Expenses:Random        $.52
+    Assets:Checking
+
+
+2023-06-06 Transaction 156
+    Expenses:Random        $.09
+    Assets:Checking
+
+
+2023-06-07 Transaction 157
+    Expenses:Random        $.35
+    Assets:Checking
+
+
+2023-06-08 Transaction 158
+    Expenses:Random        $.61
+    Assets:Checking
+
+
+2023-06-09 Transaction 159
+    Expenses:Random        $.87
+    Assets:Checking
+
+
+2023-06-10 Transaction 160
+    Expenses:Random        $.13
+    Assets:Checking
+
+
+2023-06-11 Transaction 161
+    Expenses:Random        $.39
+    Assets:Checking
+
+
+2023-06-12 Transaction 162
+    Expenses:Random        $.64
+    Assets:Checking
+
+
+2023-06-13 Transaction 163
+    Expenses:Random        $.90
+    Assets:Checking
+
+
+2023-06-14 Transaction 164
+    Expenses:Random        $.16
+    Assets:Checking
+
+
+2023-06-15 Transaction 165
+    Expenses:Random        $.42
+    Assets:Checking
+
+
+2023-06-16 Transaction 166
+    Expenses:Random        $.68
+    Assets:Checking
+
+
+2023-06-17 Transaction 167
+    Expenses:Random        $.94
+    Assets:Checking
+
+
+2023-06-18 Transaction 168
+    Expenses:Random        $.51
+    Assets:Checking
+
+
+2023-06-19 Transaction 169
+    Expenses:Random        $.77
+    Assets:Checking
+
+
+2023-06-20 Transaction 170
+    Expenses:Random        $.03
+    Assets:Checking
+
+
+2023-06-21 Transaction 171
+    Expenses:Random        $.29
+    Assets:Checking
+
+
+2023-06-22 Transaction 172
+    Expenses:Random        $.55
+    Assets:Checking
+
+
+2023-06-23 Transaction 173
+    Expenses:Random        $.81
+    Assets:Checking
+
+
+2023-06-24 Transaction 174
+    Expenses:Random        $.06
+    Assets:Checking
+
+
+2023-06-25 Transaction 175
+    Expenses:Random        $.32
+    Assets:Checking
+
+
+2023-06-26 Transaction 176
+    Expenses:Random        $.58
+    Assets:Checking
+
+
+2023-06-27 Transaction 177
+    Expenses:Random        $.84
+    Assets:Checking
+
+
+2023-06-28 Transaction 178
+    Expenses:Random        $.10
+    Assets:Checking
+
+
+2023-06-29 Transaction 179
+    Expenses:Random        $.36
+    Assets:Checking
+
+
+2023-06-30 Transaction 180
+    Expenses:Random        $.93
+    Assets:Checking
+
+
+2023-07-01 Transaction 181
+    Expenses:Random        $.58
+    Assets:Checking
+
+
+2023-07-02 Transaction 182
+    Expenses:Random        $.83
+    Assets:Checking
+
+
+2023-07-03 Transaction 183
+    Expenses:Random        $.09
+    Assets:Checking
+
+
+2023-07-04 Transaction 184
+    Expenses:Random        $.35
+    Assets:Checking
+
+
+2023-07-05 Transaction 185
+    Expenses:Random        $.61
+    Assets:Checking
+
+
+2023-07-06 Transaction 186
+    Expenses:Random        $.19
+    Assets:Checking
+
+
+2023-07-07 Transaction 187
+    Expenses:Random        $.45
+    Assets:Checking
+
+
+2023-07-08 Transaction 188
+    Expenses:Random        $.70
+    Assets:Checking
+
+
+2023-07-09 Transaction 189
+    Expenses:Random        $.96
+    Assets:Checking
+
+
+2023-07-10 Transaction 190
+    Expenses:Random        $.22
+    Assets:Checking
+
+
+2023-07-11 Transaction 191
+    Expenses:Random        $.48
+    Assets:Checking
+
+
+2023-07-12 Transaction 192
+    Expenses:Random        $.74
+    Assets:Checking
+
+
+2023-07-13 Transaction 193
+    Expenses:Random        $0
+    Assets:Checking
+
+
+2023-07-14 Transaction 194
+    Expenses:Random        $.26
+    Assets:Checking
+
+
+2023-07-15 Transaction 195
+    Expenses:Random        $.51
+    Assets:Checking
+
+
+2023-07-16 Transaction 196
+    Expenses:Random        $.77
+    Assets:Checking
+
+
+2023-07-17 Transaction 197
+    Expenses:Random        $.03
+    Assets:Checking
+
+
+2023-07-18 Transaction 198
+    Expenses:Random        $.61
+    Assets:Checking
+
+
+2023-07-19 Transaction 199
+    Expenses:Random        $.87
+    Assets:Checking
+
+
+2023-07-20 Transaction 200
+    Expenses:Random        $.13
+    Assets:Checking
+
+
+2023-07-21 Transaction 201
+    Expenses:Random        $.38
+    Assets:Checking
+
+
+2023-07-22 Transaction 202
+    Expenses:Random        $.64
+    Assets:Checking
+
+
+2023-07-23 Transaction 203
+    Expenses:Random        $.90
+    Assets:Checking
+
+
+2023-07-24 Transaction 204
+    Expenses:Random        $.16
+    Assets:Checking
+
+
+2023-07-25 Transaction 205
+    Expenses:Random        $.42
+    Assets:Checking
+
+
+2023-07-26 Transaction 206
+    Expenses:Random        $.68
+    Assets:Checking
+
+
+2023-07-27 Transaction 207
+    Expenses:Random        $.93
+    Assets:Checking
+
+
+2023-07-28 Transaction 208
+    Expenses:Random        $.19
+    Assets:Checking
+
+
+2023-07-29 Transaction 209
+    Expenses:Random        $.45
+    Assets:Checking
+
+
+2023-07-30 Transaction 210
+    Expenses:Random        $.03
+    Assets:Checking
+
+
+2023-07-31 Transaction 211
+    Expenses:Random        $.29
+    Assets:Checking
+
+
+2023-08-01 Transaction 212
+    Expenses:Random        $.55
+    Assets:Checking
+
+
+2023-08-02 Transaction 213
+    Expenses:Random        $.80
+    Assets:Checking
+
+
+2023-08-03 Transaction 214
+    Expenses:Random        $.06
+    Assets:Checking
+
+
+2023-08-04 Transaction 215
+    Expenses:Random        $.32
+    Assets:Checking
+
+
+2023-08-05 Transaction 216
+    Expenses:Random        $.58
+    Assets:Checking
+
+
+2023-08-06 Transaction 217
+    Expenses:Random        $.84
+    Assets:Checking
+
+
+2023-08-07 Transaction 218
+    Expenses:Random        $.10
+    Assets:Checking
+
+
+2023-08-08 Transaction 219
+    Expenses:Random        $.35
+    Assets:Checking
+
+
+2023-08-09 Transaction 220
+    Expenses:Random        $.61
+    Assets:Checking
+
+
+2023-08-10 Transaction 221
+    Expenses:Random        $.87
+    Assets:Checking
+
+
+2023-08-11 Transaction 222
+    Expenses:Random        $.45
+    Assets:Checking
+
+
+2023-08-12 Transaction 223
+    Expenses:Random        $.71
+    Assets:Checking
+
+
+2023-08-13 Transaction 224
+    Expenses:Random        $.97
+    Assets:Checking
+
+
+2023-08-14 Transaction 225
+    Expenses:Random        $.23
+    Assets:Checking
+
+
+2023-08-15 Transaction 226
+    Expenses:Random        $.48
+    Assets:Checking
+
+
+2023-08-16 Transaction 227
+    Expenses:Random        $.74
+    Assets:Checking
+
+
+2023-08-17 Transaction 228
+    Expenses:Random        $0
+    Assets:Checking
+
+
+2023-08-18 Transaction 229
+    Expenses:Random        $.26
+    Assets:Checking
+
+
+2023-08-19 Transaction 230
+    Expenses:Random        $.52
+    Assets:Checking
+
+
+2023-08-20 Transaction 231
+    Expenses:Random        $.78
+    Assets:Checking
+
+
+2023-08-21 Transaction 232
+    Expenses:Random        $.03
+    Assets:Checking
+
+
+2023-08-22 Transaction 233
+    Expenses:Random        $.29
+    Assets:Checking
+
+
+2023-08-23 Transaction 234
+    Expenses:Random        $.87
+    Assets:Checking
+
+
+2023-08-24 Transaction 235
+    Expenses:Random        $.13
+    Assets:Checking
+
+
+2023-08-25 Transaction 236
+    Expenses:Random        $.39
+    Assets:Checking
+
+
+2023-08-26 Transaction 237
+    Expenses:Random        $.65
+    Assets:Checking
+
+
+2023-08-27 Transaction 238
+    Expenses:Random        $.90
+    Assets:Checking
+
+
+2023-08-28 Transaction 239
+    Expenses:Random        $.16
+    Assets:Checking
+
+
+2023-08-29 Transaction 240
+    Expenses:Random        $.42
+    Assets:Checking
+
+
+2023-08-30 Transaction 241
+    Expenses:Random        $.68
+    Assets:Checking
+
+
+2023-08-31 Transaction 242
+    Expenses:Random        $.94
+    Assets:Checking
+
+
+2023-09-01 Transaction 243
+    Expenses:Random        $.20
+    Assets:Checking
+
+
+2023-09-02 Transaction 244
+    Expenses:Random        $.45
+    Assets:Checking
+
+
+2023-09-03 Transaction 245
+    Expenses:Random        $.71
+    Assets:Checking
+
+
+2023-09-04 Transaction 246
+    Expenses:Random        $.29
+    Assets:Checking
+
+
+2023-09-05 Transaction 247
+    Expenses:Random        $.55
+    Assets:Checking
+
+
+2023-09-06 Transaction 248
+    Expenses:Random        $.81
+    Assets:Checking
+
+
+2023-09-07 Transaction 249
+    Expenses:Random        $.07
+    Assets:Checking
+
+
+2023-09-08 Transaction 250
+    Expenses:Random        $.32
+    Assets:Checking
+
+
+2023-09-09 Transaction 251
+    Expenses:Random        $.58
+    Assets:Checking
+
+
+2023-09-10 Transaction 252
+    Expenses:Random        $.84
+    Assets:Checking
+
+
+2023-09-11 Transaction 253
+    Expenses:Random        $.10
+    Assets:Checking
+
+
+2023-09-12 Transaction 254
+    Expenses:Random        $.36
+    Assets:Checking
+
+
+2023-09-13 Transaction 255
+    Expenses:Random        $.62
+    Assets:Checking
+
+
+2023-09-14 Transaction 256
+    Expenses:Random        $.87
+    Assets:Checking
+
+
+2023-09-15 Transaction 257
+    Expenses:Random        $.13
+    Assets:Checking
+
+
+2023-09-16 Transaction 258
+    Expenses:Random        $.71
+    Assets:Checking
+
+
+2023-09-17 Transaction 259
+    Expenses:Random        $.97
+    Assets:Checking
+
+
+2023-09-18 Transaction 260
+    Expenses:Random        $.23
+    Assets:Checking
+
+
+2023-09-19 Transaction 261
+    Expenses:Random        $.49
+    Assets:Checking
+
+
+2023-09-20 Transaction 262
+    Expenses:Random        $.75
+    Assets:Checking
+
+
+2023-09-21 Transaction 263
+    Expenses:Random        $0
+    Assets:Checking
+
+
+2023-09-22 Transaction 264
+    Expenses:Random        $.26
+    Assets:Checking
+
+
+2023-09-23 Transaction 265
+    Expenses:Random        $.52
+    Assets:Checking
+
+
+2023-09-24 Transaction 266
+    Expenses:Random        $.78
+    Assets:Checking
+
+
+2023-09-25 Transaction 267
+    Expenses:Random        $.04
+    Assets:Checking
+
+
+2023-09-26 Transaction 268
+    Expenses:Random        $.30
+    Assets:Checking
+
+
+2023-09-27 Transaction 269
+    Expenses:Random        $.55
+    Assets:Checking
+
+
+2023-09-28 Transaction 270
+    Expenses:Random        $.13
+    Assets:Checking
+
+
+2023-09-29 Transaction 271
+    Expenses:Random        $.39
+    Assets:Checking
+
+
+2023-09-30 Transaction 272
+    Expenses:Random        $.65
+    Assets:Checking
+
+
+2023-10-01 Transaction 273
+    Expenses:Random        $.91
+    Assets:Checking
+
+
+2023-10-02 Transaction 274
+    Expenses:Random        $.17
+    Assets:Checking
+
+
+2023-10-03 Transaction 275
+    Expenses:Random        $.42
+    Assets:Checking
+
+
+2023-10-04 Transaction 276
+    Expenses:Random        $.68
+    Assets:Checking
+
+
+2023-10-05 Transaction 277
+    Expenses:Random        $.94
+    Assets:Checking
+
+
+2023-10-06 Transaction 278
+    Expenses:Random        $.20
+    Assets:Checking
+
+
+2023-10-07 Transaction 279
+    Expenses:Random        $.46
+    Assets:Checking
+
+
+2023-10-08 Transaction 280
+    Expenses:Random        $.72
+    Assets:Checking
+
+
+2023-10-09 Transaction 281
+    Expenses:Random        $.97
+    Assets:Checking
+
+
+2023-10-10 Transaction 282
+    Expenses:Random        $.55
+    Assets:Checking
+
+
+2023-10-11 Transaction 283
+    Expenses:Random        $.81
+    Assets:Checking
+
+
+2023-10-12 Transaction 284
+    Expenses:Random        $.07
+    Assets:Checking
+
+
+2023-10-13 Transaction 285
+    Expenses:Random        $.33
+    Assets:Checking
+
+
+2023-10-14 Transaction 286
+    Expenses:Random        $.59
+    Assets:Checking
+
+
+2023-10-15 Transaction 287
+    Expenses:Random        $.84
+    Assets:Checking
+
+
+2023-10-16 Transaction 288
+    Expenses:Random        $.10
+    Assets:Checking
+
+
+2023-10-17 Transaction 289
+    Expenses:Random        $.36
+    Assets:Checking
+
+
+2023-10-18 Transaction 290
+    Expenses:Random        $.62
+    Assets:Checking
+
+
+2023-10-19 Transaction 291
+    Expenses:Random        $.88
+    Assets:Checking
+
+
+2023-10-20 Transaction 292
+    Expenses:Random        $.14
+    Assets:Checking
+
+
+2023-10-21 Transaction 293
+    Expenses:Random        $.39
+    Assets:Checking
+
+
+2023-10-22 Transaction 294
+    Expenses:Random        $.97
+    Assets:Checking
+
+
+2023-10-23 Transaction 295
+    Expenses:Random        $.23
+    Assets:Checking
+
+
+2023-10-24 Transaction 296
+    Expenses:Random        $.49
+    Assets:Checking
+
+
+2023-10-25 Transaction 297
+    Expenses:Random        $.75
+    Assets:Checking
+
+
+2023-10-26 Transaction 298
+    Expenses:Random        $.01
+    Assets:Checking
+
+
+2023-10-27 Transaction 299
+    Expenses:Random        $.27
+    Assets:Checking
+
+
+2023-10-28 Transaction 300
+    Expenses:Random        $.52
+    Assets:Checking
+
+
+2023-10-29 Transaction 301
+    Expenses:Random        $.78
+    Assets:Checking
+
+
+2023-10-30 Transaction 302
+    Expenses:Random        $.04
+    Assets:Checking
+
+
+2023-10-31 Transaction 303
+    Expenses:Random        $.30
+    Assets:Checking
+
+
+2023-11-01 Transaction 304
+    Expenses:Random        $.56
+    Assets:Checking
+
+
+2023-11-02 Transaction 305
+    Expenses:Random        $.82
+    Assets:Checking
+
+
+2023-11-03 Transaction 306
+    Expenses:Random        $.39
+    Assets:Checking
+
+
+2023-11-04 Transaction 307
+    Expenses:Random        $.65
+    Assets:Checking
+
+
+2023-11-05 Transaction 308
+    Expenses:Random        $.29
+    Assets:Checking
+
+
+2023-11-06 Transaction 309
+    Expenses:Random        $.55
+    Assets:Checking
+
+
+2023-11-07 Transaction 310
+    Expenses:Random        $.81
+    Assets:Checking
+
+
+2023-11-08 Transaction 311
+    Expenses:Random        $.07
+    Assets:Checking
+
+
+2023-11-09 Transaction 312
+    Expenses:Random        $.65
+    Assets:Checking
+
+
+2023-11-10 Transaction 313
+    Expenses:Random        $.91
+    Assets:Checking
+
+
+2023-11-11 Transaction 314
+    Expenses:Random        $.16
+    Assets:Checking
+
+
+2023-11-12 Transaction 315
+    Expenses:Random        $.42
+    Assets:Checking
+
+
+2023-11-13 Transaction 316
+    Expenses:Random        $.68
+    Assets:Checking
+
+
+2023-11-14 Transaction 317
+    Expenses:Random        $.94
+    Assets:Checking
+
+
+2023-11-15 Transaction 318
+    Expenses:Random        $.20
+    Assets:Checking
+
+
+2023-11-16 Transaction 319
+    Expenses:Random        $.46
+    Assets:Checking
+
+
+2023-11-17 Transaction 320
+    Expenses:Random        $.71
+    Assets:Checking
+
+
+2023-11-18 Transaction 321
+    Expenses:Random        $.97
+    Assets:Checking
+
+
+2023-11-19 Transaction 322
+    Expenses:Random        $.23
+    Assets:Checking
+
+
+2023-11-20 Transaction 323
+    Expenses:Random        $.49
+    Assets:Checking
+
+
+2023-11-21 Transaction 324
+    Expenses:Random        $.07
+    Assets:Checking
+
+
+2023-11-22 Transaction 325
+    Expenses:Random        $.33
+    Assets:Checking
+
+
+2023-11-23 Transaction 326
+    Expenses:Random        $.58
+    Assets:Checking
+
+
+2023-11-24 Transaction 327
+    Expenses:Random        $.23
+    Assets:Checking
+
+
+2023-11-25 Transaction 328
+    Expenses:Random        $.48
+    Assets:Checking
+
+
+2023-11-26 Transaction 329
+    Expenses:Random        $.74
+    Assets:Checking
+
+
+2023-11-27 Transaction 330
+    Expenses:Random        $.32
+    Assets:Checking
+
+
+2023-11-28 Transaction 331
+    Expenses:Random        $.58
+    Assets:Checking
+
+
+2023-11-29 Transaction 332
+    Expenses:Random        $.84
+    Assets:Checking
+
+
+2023-11-30 Transaction 333
+    Expenses:Random        $.10
+    Assets:Checking
+
+
+2023-12-01 Transaction 334
+    Expenses:Random        $.35
+    Assets:Checking
+
+
+2023-12-02 Transaction 335
+    Expenses:Random        $.61
+    Assets:Checking
+
+
+2023-12-03 Transaction 336
+    Expenses:Random        $.87
+    Assets:Checking
+
+
+2023-12-04 Transaction 337
+    Expenses:Random        $.83
+    Assets:Checking
+
+
+2023-12-05 Transaction 338
+    Expenses:Random        $.09
+    Assets:Checking
+
+
+2023-12-06 Transaction 339
+    Expenses:Random        $.35
+    Assets:Checking
+
+
+2023-12-07 Transaction 340
+    Expenses:Random        $.61
+    Assets:Checking
+
+
+2023-12-08 Transaction 341
+    Expenses:Random        $.87
+    Assets:Checking
+
+
+2023-12-09 Transaction 342
+    Expenses:Random        $.12
+    Assets:Checking
+
+
+2023-12-10 Transaction 343
+    Expenses:Random        $.38
+    Assets:Checking
+
+
+2023-12-11 Transaction 344
+    Expenses:Random        $.64
+    Assets:Checking
+
+
+2023-12-12 Transaction 345
+    Expenses:Random        $.90
+    Assets:Checking
+
+
+2023-12-13 Transaction 346
+    Expenses:Random        $.16
+    Assets:Checking
+
+
+2023-12-14 Transaction 347
+    Expenses:Random        $.42
+    Assets:Checking
+
+
+2023-12-15 Transaction 348
+    Expenses:Random        $0
+    Assets:Checking
+
+
+2023-12-16 Transaction 349
+    Expenses:Random        $.25
+    Assets:Checking
+
+
+2023-12-17 Transaction 350
+    Expenses:Random        $.51
+    Assets:Checking
+
+
+2023-12-18 Transaction 351
+    Expenses:Random        $.77
+    Assets:Checking
+
+
+2023-12-19 Transaction 352
+    Expenses:Random        $.03
+    Assets:Checking
+
+
+2023-12-20 Transaction 353
+    Expenses:Random        $.29
+    Assets:Checking
+
+
+2023-12-21 Transaction 354
+    Expenses:Random        $.55
+    Assets:Checking
+
+
+2023-12-22 Transaction 355
+    Expenses:Random        $.80
+    Assets:Checking
+
+
+2023-12-23 Transaction 356
+    Expenses:Random        $.06
+    Assets:Checking
+
+
+2023-12-24 Transaction 357
+    Expenses:Random        $.32
+    Assets:Checking
+
+
+2023-12-25 Transaction 358
+    Expenses:Random        $.58
+    Assets:Checking
+
+
+2023-12-26 Transaction 359
+    Expenses:Random        $.84
+    Assets:Checking
+
+
+2023-12-27 Transaction 360
+    Expenses:Random        $.42
+    Assets:Checking
+
+
+2023-12-28 Transaction 361
+    Expenses:Random        $.67
+    Assets:Checking
+
+
+2023-12-29 Transaction 362
+    Expenses:Random        $.93
+    Assets:Checking
+
+
+2023-12-30 Transaction 363
+    Expenses:Random        $.19
+    Assets:Checking
+
+
+2023-12-31 Transaction 364
+    Expenses:Random        $.45
+    Assets:Checking
+
+
+2024-01-01 Transaction 365
+    Expenses:Random        $.71
+    Assets:Checking
+
+
+2024-01-02 Transaction 366
+    Expenses:Random        $.97
+    Assets:Checking
+
+
+2024-01-03 Transaction 367
+    Expenses:Random        $.22
+    Assets:Checking
+
+
+2024-01-04 Transaction 368
+    Expenses:Random        $.48
+    Assets:Checking
+
+
+2024-01-05 Transaction 369
+    Expenses:Random        $.74
+    Assets:Checking
+
+
+2024-01-06 Transaction 370
+    Expenses:Random        $0
+    Assets:Checking
+
+
+2024-01-07 Transaction 371
+    Expenses:Random        $.26
+    Assets:Checking
+
+
+2024-01-08 Transaction 372
+    Expenses:Random        $.84
+    Assets:Checking
+
+
+2024-01-09 Transaction 373
+    Expenses:Random        $.09
+    Assets:Checking
+
+
+2024-01-10 Transaction 374
+    Expenses:Random        $.35
+    Assets:Checking
+
+
+2024-01-11 Transaction 375
+    Expenses:Random        $.61
+    Assets:Checking
+
+
+2024-01-12 Transaction 376
+    Expenses:Random        $.87
+    Assets:Checking
+
+
+2024-01-13 Transaction 377
+    Expenses:Random        $.13
+    Assets:Checking
+
+
+2024-01-14 Transaction 378
+    Expenses:Random        $.39
+    Assets:Checking
+
+
+2024-01-15 Transaction 379
+    Expenses:Random        $.64
+    Assets:Checking
+
+
+2024-01-16 Transaction 380
+    Expenses:Random        $.90
+    Assets:Checking
+
+
+2024-01-17 Transaction 381
+    Expenses:Random        $.16
+    Assets:Checking
+
+
+2024-01-18 Transaction 382
+    Expenses:Random        $.42
+    Assets:Checking
+
+
+2024-01-19 Transaction 383
+    Expenses:Random        $.68
+    Assets:Checking
+
+
+2024-01-20 Transaction 384
+    Expenses:Random        $.26
+    Assets:Checking
+
+
+2024-01-21 Transaction 385
+    Expenses:Random        $.52
+    Assets:Checking
+
+
+2024-01-22 Transaction 386
+    Expenses:Random        $.77
+    Assets:Checking
+
+
+2024-01-23 Transaction 387
+    Expenses:Random        $.03
+    Assets:Checking
+
+
+2024-01-24 Transaction 388
+    Expenses:Random        $.29
+    Assets:Checking
+
+
+2024-01-25 Transaction 389
+    Expenses:Random        $.55
+    Assets:Checking
+
+
+2024-01-26 Transaction 390
+    Expenses:Random        $.81
+    Assets:Checking
+
+
+2024-01-27 Transaction 391
+    Expenses:Random        $.07
+    Assets:Checking
+
+
+2024-01-28 Transaction 392
+    Expenses:Random        $.32
+    Assets:Checking
+
+
+2024-01-29 Transaction 393
+    Expenses:Random        $.58
+    Assets:Checking
+
+
+2024-01-30 Transaction 394
+    Expenses:Random        $.84
+    Assets:Checking
+
+
+2024-01-31 Transaction 395
+    Expenses:Random        $.80
+    Assets:Checking
+
+
+2024-02-01 Transaction 396
+    Expenses:Random        $.06
+    Assets:Checking
+
+
+2024-02-02 Transaction 397
+    Expenses:Random        $.32
+    Assets:Checking
+
+
+2024-02-03 Transaction 398
+    Expenses:Random        $.58
+    Assets:Checking
+
+
+2024-02-04 Transaction 399
+    Expenses:Random        $.84
+    Assets:Checking
+
+
+2024-02-05 Transaction 400
+    Expenses:Random        $.09
+    Assets:Checking
+
+
+2024-02-06 Transaction 401
+    Expenses:Random        $.35
+    Assets:Checking
+
+
+2024-02-07 Transaction 402
+    Expenses:Random        $.93
+    Assets:Checking
+
+
+2024-02-08 Transaction 403
+    Expenses:Random        $.19
+    Assets:Checking
+
+
+2024-02-09 Transaction 404
+    Expenses:Random        $.45
+    Assets:Checking
+
+
+2024-02-10 Transaction 405
+    Expenses:Random        $.71
+    Assets:Checking
+
+
+2024-02-11 Transaction 406
+    Expenses:Random        $.96
+    Assets:Checking
+
+
+2024-02-12 Transaction 407
+    Expenses:Random        $.22
+    Assets:Checking
+
+
+2024-02-13 Transaction 408
+    Expenses:Random        $.18
+    Assets:Checking
+
+
+2024-02-14 Transaction 409
+    Expenses:Random        $.44
+    Assets:Checking
+
+
+2024-02-15 Transaction 410
+    Expenses:Random        $.70
+    Assets:Checking
+
+
+2024-02-16 Transaction 411
+    Expenses:Random        $.96
+    Assets:Checking
+
+
+2024-02-17 Transaction 412
+    Expenses:Random        $.22
+    Assets:Checking
+
+
+2024-02-18 Transaction 413
+    Expenses:Random        $.48
+    Assets:Checking
+
+
+2024-02-19 Transaction 414
+    Expenses:Random        $.73
+    Assets:Checking
+
+
+2024-02-20 Transaction 415
+    Expenses:Random        $.99
+    Assets:Checking
+
+
+2024-02-21 Transaction 416
+    Expenses:Random        $.25
+    Assets:Checking
+
+
+2024-02-22 Transaction 417
+    Expenses:Random        $.51
+    Assets:Checking
+
+
+2024-02-23 Transaction 418
+    Expenses:Random        $.77
+    Assets:Checking
+
+
+2024-02-24 Transaction 419
+    Expenses:Random        $.35
+    Assets:Checking
+
+
+2024-02-25 Transaction 420
+    Expenses:Random        $.60
+    Assets:Checking
+
+
+2024-02-26 Transaction 421
+    Expenses:Random        $.86
+    Assets:Checking
+
+
+2024-02-27 Transaction 422
+    Expenses:Random        $.12
+    Assets:Checking
+
+
+2024-02-28 Transaction 423
+    Expenses:Random        $.38
+    Assets:Checking
+
+
+2024-02-29 Transaction 424
+    Expenses:Random        $.64
+    Assets:Checking
+
+
+2024-03-01 Transaction 425
+    Expenses:Random        $.90
+    Assets:Checking
+
+
+2024-03-02 Transaction 426
+    Expenses:Random        $.15
+    Assets:Checking
+
+
+2024-03-03 Transaction 427
+    Expenses:Random        $.41
+    Assets:Checking
+
+
+2024-03-04 Transaction 428
+    Expenses:Random        $.67
+    Assets:Checking
+
+
+2024-03-05 Transaction 429
+    Expenses:Random        $.93
+    Assets:Checking
+
+
+2024-03-06 Transaction 430
+    Expenses:Random        $.19
+    Assets:Checking
+
+
+2024-03-07 Transaction 431
+    Expenses:Random        $.77
+    Assets:Checking
+
+
+2024-03-08 Transaction 432
+    Expenses:Random        $.03
+    Assets:Checking
+
+
+2024-03-09 Transaction 433
+    Expenses:Random        $.28
+    Assets:Checking
+
+
+2024-03-10 Transaction 434
+    Expenses:Random        $.54
+    Assets:Checking
+
+
+2024-03-11 Transaction 435
+    Expenses:Random        $.18
+    Assets:Checking
+
+
+2024-03-12 Transaction 436
+    Expenses:Random        $.44
+    Assets:Checking
+
+
+2024-03-13 Transaction 437
+    Expenses:Random        $.02
+    Assets:Checking
+
+
+2024-03-14 Transaction 438
+    Expenses:Random        $.28
+    Assets:Checking
+
+
+2024-03-15 Transaction 439
+    Expenses:Random        $.54
+    Assets:Checking
+
+
+2024-03-16 Transaction 440
+    Expenses:Random        $.80
+    Assets:Checking
+
+
+2024-03-17 Transaction 441
+    Expenses:Random        $.05
+    Assets:Checking
+
+
+2024-03-18 Transaction 442
+    Expenses:Random        $.31
+    Assets:Checking
+
+
+2024-03-19 Transaction 443
+    Expenses:Random        $.57
+    Assets:Checking
+
+
+2024-03-20 Transaction 444
+    Expenses:Random        $.83
+    Assets:Checking
+
+
+2024-03-21 Transaction 445
+    Expenses:Random        $.09
+    Assets:Checking
+
+
+2024-03-22 Transaction 446
+    Expenses:Random        $.35
+    Assets:Checking
+
+
+2024-03-23 Transaction 447
+    Expenses:Random        $.60
+    Assets:Checking
+
+
+2024-03-24 Transaction 448
+    Expenses:Random        $.86
+    Assets:Checking
+
+
+2024-03-25 Transaction 449
+    Expenses:Random        $.44
+    Assets:Checking
+
+
+2024-03-26 Transaction 450
+    Expenses:Random        $.70
+    Assets:Checking
+
+
+2024-03-27 Transaction 451
+    Expenses:Random        $.96
+    Assets:Checking
+
+
+2024-03-28 Transaction 452
+    Expenses:Random        $.22
+    Assets:Checking
+
+
+2024-03-29 Transaction 453
+    Expenses:Random        $.47
+    Assets:Checking
+
+
+2024-03-30 Transaction 454
+    Expenses:Random        $.73
+    Assets:Checking
+
+
+2024-03-31 Transaction 455
+    Expenses:Random        $.99
+    Assets:Checking
+
+
+2024-04-01 Transaction 456
+    Expenses:Random        $.25
+    Assets:Checking
+
+
+2024-04-02 Transaction 457
+    Expenses:Random        $.51
+    Assets:Checking
+
+
+2024-04-03 Transaction 458
+    Expenses:Random        $.77
+    Assets:Checking
+
+
+2024-04-04 Transaction 459
+    Expenses:Random        $.02
+    Assets:Checking
+
+
+2024-04-05 Transaction 460
+    Expenses:Random        $.28
+    Assets:Checking
+
+
+2024-04-06 Transaction 461
+    Expenses:Random        $.86
+    Assets:Checking
+
+
+2024-04-07 Transaction 462
+    Expenses:Random        $.12
+    Assets:Checking
+
+
+2024-04-08 Transaction 463
+    Expenses:Random        $.38
+    Assets:Checking
+
+
+2024-04-09 Transaction 464
+    Expenses:Random        $.64
+    Assets:Checking
+
+
+2024-04-10 Transaction 465
+    Expenses:Random        $.89
+    Assets:Checking
+
+
+2024-04-11 Transaction 466
+    Expenses:Random        $.15
+    Assets:Checking
+
+
+2024-04-12 Transaction 467
+    Expenses:Random        $.41
+    Assets:Checking
+
+
+2024-04-13 Transaction 468
+    Expenses:Random        $.67
+    Assets:Checking
+
+
+2024-04-14 Transaction 469
+    Expenses:Random        $.93
+    Assets:Checking
+
+
+2024-04-15 Transaction 470
+    Expenses:Random        $.19
+    Assets:Checking
+
+
+2024-04-16 Transaction 471
+    Expenses:Random        $.45
+    Assets:Checking
+
+
+2024-04-17 Transaction 472
+    Expenses:Random        $.70
+    Assets:Checking
+
+
+2024-04-18 Transaction 473
+    Expenses:Random        $.28
+    Assets:Checking
+
+
+2024-04-19 Transaction 474
+    Expenses:Random        $.54
+    Assets:Checking
+
+
+2024-04-20 Transaction 475
+    Expenses:Random        $.80
+    Assets:Checking
+
+
+2024-04-21 Transaction 476
+    Expenses:Random        $.06
+    Assets:Checking
+
+
+2024-04-22 Transaction 477
+    Expenses:Random        $.32
+    Assets:Checking
+
+
+2024-04-23 Transaction 478
+    Expenses:Random        $.57
+    Assets:Checking
+
+
+2024-04-24 Transaction 479
+    Expenses:Random        $.83
+    Assets:Checking
+
+
+2024-04-25 Transaction 480
+    Expenses:Random        $.09
+    Assets:Checking
+
+
+2024-04-26 Transaction 481
+    Expenses:Random        $.35
+    Assets:Checking
+
+
+2024-04-27 Transaction 482
+    Expenses:Random        $.61
+    Assets:Checking
+
+
+2024-04-28 Transaction 483
+    Expenses:Random        $.87
+    Assets:Checking
+
+
+2024-04-29 Transaction 484
+    Expenses:Random        $.12
+    Assets:Checking
+
+
+2024-04-30 Transaction 485
+    Expenses:Random        $.70
+    Assets:Checking
+
+
+2024-05-01 Transaction 486
+    Expenses:Random        $.96
+    Assets:Checking
+
+
+2024-05-02 Transaction 487
+    Expenses:Random        $.22
+    Assets:Checking
+
+
+2024-05-03 Transaction 488
+    Expenses:Random        $.48
+    Assets:Checking
+
+
+2024-05-04 Transaction 489
+    Expenses:Random        $.74
+    Assets:Checking
+
+
+2024-05-05 Transaction 490
+    Expenses:Random        $.99
+    Assets:Checking
+
+
+2024-05-06 Transaction 491
+    Expenses:Random        $.25
+    Assets:Checking
+
+
+2024-05-07 Transaction 492
+    Expenses:Random        $.51
+    Assets:Checking
+
+
+2024-05-08 Transaction 493
+    Expenses:Random        $.77
+    Assets:Checking
+
+
+2024-05-09 Transaction 494
+    Expenses:Random        $.03
+    Assets:Checking
+
+
+2024-05-10 Transaction 495
+    Expenses:Random        $.29
+    Assets:Checking
+
+
+2024-05-11 Transaction 496
+    Expenses:Random        $.54
+    Assets:Checking
+
+
+2024-05-12 Transaction 497
+    Expenses:Random        $.12
+    Assets:Checking
+
+
+2024-05-13 Transaction 498
+    Expenses:Random        $.38
+    Assets:Checking
+
+
+2024-05-14 Transaction 499
+    Expenses:Random        $.64
+    Assets:Checking
+
+
+2024-05-15 Transaction 500
+    Expenses:Random        $.90
+    Assets:Checking
+

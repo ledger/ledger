@@ -1,0 +1,33 @@
+[package]
+name = "ledger-math"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Arbitrary precision mathematical operations for Ledger accounting system"
+
+[dependencies]
+num-bigint = { workspace = true }
+num-rational = { workspace = true }
+num-traits = { workspace = true }
+rust_decimal = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+chrono = { workspace = true }
+chrono-tz = { workspace = true }
+bitflags = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+quickcheck = { workspace = true }
+criterion = { workspace = true }
+
+[lib]
+name = "ledger_math"
+path = "src/lib.rs"
+
+[[bench]]
+name = "precision_bench"
+harness = false

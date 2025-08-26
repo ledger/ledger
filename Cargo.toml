@@ -1,0 +1,86 @@
+[workspace]
+resolver = "2"
+members = [
+    "ledger-core",
+    "ledger-cli",
+    "ledger-math",
+    "ledger-tests",
+]
+
+[workspace.package]
+version = "3.0.0"
+authors = ["Ledger Contributors"]
+edition = "2021"
+license = "BSD-3-Clause"
+repository = "https://github.com/ledger/ledger"
+homepage = "https://ledger-cli.org"
+
+[workspace.dependencies]
+# Core dependencies
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.8"
+regex = "1.10"
+rust_decimal = "1.33"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+anyhow = "1.0"
+
+# CLI dependencies
+clap = { version = "4.4", features = ["derive"] }
+
+# Math dependencies
+num-bigint = "0.4"
+num-rational = "0.4"
+num-traits = "0.2"
+bitflags = "2.4"
+
+# Parsing dependencies
+nom = "7.1"
+
+# Testing dependencies
+proptest = "1.4"
+quickcheck = "1.0"
+criterion = "0.5"
+
+# Performance optimization dependencies
+smallvec = "1.13"
+compact_str = "0.7"
+rayon = "1.8"
+parking_lot = "0.12"
+bumpalo = "3.14"
+ahash = "0.8"
+memmap2 = "0.9"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+debug = true
+
+[profile.dev]
+opt-level = 0
+
+[profile.test]
+opt-level = 2
+
+[profile.bench]
+opt-level = 3
+
+# Size-optimized release profile
+[profile.min-size]
+inherits = "release"
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+# Performance-optimized release profile
+[profile.max-perf]
+inherits = "release"
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+target-cpu = "native"

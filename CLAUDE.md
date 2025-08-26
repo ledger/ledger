@@ -1,105 +1,159 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with
-code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-Ledger is a powerful command-line double-entry accounting system written in
-C++. It uses plain text files for input and generates financial reports
-without requiring a database.
+This is the Rust implementation of Ledger, a command-line double-entry accounting system. The project is organized as a Cargo workspace with four main crates:
+- `ledger-core`: Core accounting engine with data structures and algorithms
+- `ledger-cli`: Command-line interface and application logic
+- `ledger-math`: Mathematical operations and precision arithmetic
+- `ledger-tests`: Comprehensive test framework compatible with original Python tests
 
-## Key Commands
-
-### Building the Project
+## Build Commands
 
 ```bash
-# Initial setup and build
-./acprep dependencies  # Install dependencies (platform-specific)
-./acprep update --output=build # Configure and build in one step
+# Standard build
+cargo build --workspace
 
-# Alternative configuration commands
-./acprep opt --output=build   # Optimized build
-./acprep debug --output=build # Debug build
-./acprep gcov --output=build  # Build with code coverage
+# Release build with optimizations
+cargo build --release --workspace
 
-# Once the project is configured using the opt, debug or gcov commands, then
-# it may be built using make:
-cd build && make -j$(nproc)
+# Build with specific profile
+cargo build --profile=max-perf  # Maximum performance
+cargo build --profile=min-size  # Minimum binary size
 
-# Or a manual CMake build can be used:
-mkdir build && cd build
-cmake ..
-make -j$(nproc)
+# Clean build
+cargo clean
 ```
 
-### Running Tests
+## Testing Commands
 
 ```bash
 # Run all tests
-cd build && ctest
+cargo test --workspace
 
-# Run specific test categories
-cd build && ctest -R baseline     # Run baseline tests
-cd build && ctest -R regress      # Run regression tests
-cd build && ctest -R manual       # Run manual tests
+# Run tests with output
+cargo test --workspace -- --nocapture
 
-# Run a single test file
-./build/ledger -f test/input/sample.dat reg
+# Run specific test
+cargo test --workspace test_name
+
+# Run tests for specific crate
+cargo test -p ledger-core
+cargo test -p ledger-cli
+
+# Run benchmarks
+cargo bench --workspace
+
+# Run with code coverage (requires cargo-tarpaulin)
+cargo tarpaulin --workspace --timeout 300
 ```
 
-### Development Commands
+## Development Commands
 
 ```bash
-# Run ledger from build directory
-./build/ledger -f test/input/sample.dat balance
-./build/ledger -f test/input/sample.dat register
+# Format code
+cargo fmt --all
 
-# Clean build
-cd build && make clean
+# Check formatting
+cargo fmt --all -- --check
+
+# Run clippy linter
+cargo clippy --workspace -- -D warnings
+
+# Fix clippy warnings
+cargo clippy --workspace --fix
+
+# Check for compile errors without building
+cargo check --workspace
+
+# Update dependencies
+cargo update
+
+# Build documentation
+cargo doc --workspace --no-deps --open
+
+# Run example programs
+cargo run --example cli_demo
+cargo run --example performance_demo
+```
+
+## Performance Analysis
+
+```bash
+# CPU profiling
+./scripts/profile-cpu.sh
+
+# Memory profiling
+./scripts/profile-memory.sh
+
+# Run all benchmarks
+./scripts/run-benchmarks.sh
+
+# Compare performance with C++ version
+./scripts/run-performance-comparison.sh
 ```
 
 ## Architecture Overview
 
-### Core Components
+### Core Module Structure (`ledger-core`)
 
-The codebase is organized around these key abstractions:
+The core library implements fundamental accounting concepts:
 
-- **Journal** (`src/journal.h/cc`): Central data structure holding all transactions and accounts
-- **Transaction/Xact** (`src/xact.h/cc`): Individual dated transactions containing postings
-- **Posting/Post** (`src/post.h/cc`): Line items within transactions affecting accounts
-- **Account** (`src/account.h/cc`): Hierarchical chart of accounts structure
-- **Amount** (`src/amount.h/cc`): Precise arithmetic for monetary values with commodity support
-- **Value** (`src/value.h/cc`): Polymorphic container for amounts, balances, and expressions
-- **Expression Engine** (`src/expr.h/cc`, `src/op.h/cc`): Query and calculation language
+- **Amount** (`amount.rs`): Precise arithmetic with commodity support using `rust_decimal`
+- **Balance** (`balance.rs`): Multi-commodity balance management
+- **Transaction** (`transaction.rs`): Individual dated transactions with metadata
+- **Posting** (`posting.rs`): Line items within transactions affecting accounts
+- **Account** (`account.rs`): Hierarchical chart of accounts using tree structure
+- **Journal** (`journal.rs`): Central container holding all financial data
+- **Commodity** (`commodity.rs`): Currency and commodity definitions with symbols
+- **Parser** (`parser.rs`, `transaction_parser.rs`): Nom-based parsers for journal files
+- **Expression** (`expr.rs`): Expression evaluation engine for queries and calculations
+- **Filters** (`filters.rs`): Chain of responsibility pattern for transaction processing
+- **Output** (`output.rs`): Report formatters and output generation
 
-### Data Flow
+### CLI Architecture (`ledger-cli`)
 
-1. **Parsing**: Text files are parsed by `src/textual.cc` into the journal structure
-2. **Processing**: Transactions flow through filters (`src/filters.h/cc`) for transformation
-3. **Reporting**: Output formatters (`src/output.h/cc`, `src/print.h/cc`) generate reports
-4. **Commands**: User commands are implemented in `src/report.cc` and related files
+The CLI crate provides the user interface:
+
+- **Session** (`session.rs`): Configuration and runtime state management
+- **Dispatcher** (`dispatch.rs`): Command routing and execution
+- **Test Framework** (`test_framework/`): Compatibility layer for Python test suite
+  - `baseline_runner.rs`: Core functionality tests
+  - `regression_runner.rs`: Regression test execution
+  - `test_harness.rs`: Test orchestration
+  - `output_validator.rs`: Output comparison logic
 
 ### Key Design Patterns
 
-- **Chain of Responsibility**: Filters process transactions in a pipeline
-- **Visitor Pattern**: Used for traversing account hierarchies and transactions
-- **Expression Trees**: Mathematical and logical expressions are AST-based
-- **Value Semantics**: Most objects use value semantics with careful memory management
+1. **Value Semantics**: Most types use `Clone` and owned data for simplicity
+2. **Error Handling**: Pervasive use of `Result<T, anyhow::Error>` with `thiserror`
+3. **Parser Combinators**: Nom library for parsing journal files
+4. **Builder Pattern**: Used for complex object construction (transactions, reports)
+5. **Iterator Chains**: Extensive use of iterator adaptors for data processing
 
-## Testing Approach
+### Performance Optimizations
 
-- **Unit Tests**: C++ tests in `test/unit/` using Boost.Test
-- **Regression Tests**: Python-based tests in `test/regress/` comparing output
-- **Baseline Tests**: Core functionality tests in `test/baseline/`
-- **DocTests**: Examples extracted from documentation in `doc/`
+- **Small String Optimization**: `compact_str` for account names and descriptions
+- **Small Vector Optimization**: `smallvec` for postings (most transactions have 2-4)
+- **Parallel Processing**: `rayon` for parallel iteration where beneficial
+- **Lock-Free Data Structures**: `parking_lot` mutexes for better performance
+- **Arena Allocation**: `bumpalo` for temporary allocations during parsing
+- **Fast Hashing**: `ahash` for hash maps and sets
+- **Memory Mapped Files**: `memmap2` for large journal files
 
-Run tests after any code changes to ensure compatibility.
+## Known Issues and Current Status
 
-## Important Notes
+**IMPORTANT**: This Rust implementation is currently **non-functional** with 279 compilation errors. Major issues include:
 
-- The project uses CMake 3.16.2+ and requires Boost 1.72+
-- Python bindings are optional but enable additional features
-- The `acprep` script automates most build configurations
-- Timezone for tests is set to America/Chicago by default
-- Use `./acprep --help` to see all build options
+1. **Type System Issues**: Widespread lifetime and borrowing problems
+2. **Missing Implementations**: Many core types lack required trait implementations
+3. **Parser Errors**: Transaction and journal parsers have unresolved type conflicts
+4. **Test Framework**: Cannot run due to compilation failures
+
+The codebase requires significant refactoring to compile and run properly
+
+## Task Master AI Instructions
+**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
+@./.taskmaster/CLAUDE.md

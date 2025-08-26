@@ -1,0 +1,58 @@
+[package]
+name = "ledger-cli"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Command-line interface for Ledger - a powerful double-entry accounting system"
+
+[dependencies]
+# ledger-core = { path = "../ledger-core" }
+# ledger-math = { path = "../ledger-math" }
+clap = { workspace = true }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+
+# Additional CLI dependencies
+colored = "2.1"
+dirs = "5.0"
+env_logger = "0.10"
+log = "0.4"
+atty = "0.2"
+clap_complete = "4.5"
+regex = "1.11"
+
+# Test framework dependencies
+similar = "2.5"
+num_cpus = "1.16"
+rayon = "1.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.1"
+tempfile = "3.10"
+criterion = { version = "0.5", features = ["html_reports", "cargo_bench_support"] }
+
+[[bin]]
+name = "ledger"
+path = "src/main.rs"
+
+[[bin]]
+name = "regression_runner"
+path = "src/bin/regression_runner.rs"
+
+[[bin]]
+name = "manual_runner"
+path = "src/bin/manual_runner.rs"
+
+[[bin]]
+name = "bench_runner"
+path = "src/bin/bench_runner.rs"
+
+[[bench]]
+name = "ledger_benchmarks"
+harness = false

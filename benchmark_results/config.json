@@ -1,0 +1,20 @@
+{
+  "warmup_iterations": 3,
+  "benchmark_iterations": 10,
+  "timeout_seconds": 60,
+  "profile_memory": true,
+  "compare_with_cpp": false,
+  "regression_threshold": 10.0,
+  "test_files": {
+    "small": "test/input/sample.dat",
+    "medium": "test/input/large/medium.dat", 
+    "large": "test/input/large/large.dat"
+  },
+  "commands": [
+    "balance",
+    "register",
+    "print",
+    "balance --depth 3",
+    "register expenses"
+  ]
+}

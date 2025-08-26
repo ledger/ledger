@@ -1,0 +1,658 @@
+# Comprehensive PRD for Ledger C++ to Rust Migration
+
+## Executive Summary
+
+This Product Requirements Document outlines a systematic migration strategy for porting the Ledger double-entry accounting system from C++ to Rust, ensuring **100% feature parity, improved memory safety, and enhanced performance** while maintaining the application's core philosophy of stateless, text-based financial computation. The migration will follow an incremental "sandwich" approach over 12-18 months, utilizing Task Master AI's orchestration capabilities to manage **parallel subtasks across 5 major phases and 30+ core components**.
+
+## 1. Introduction
+
+### 1.1 Document Purpose
+
+This PRD defines the comprehensive requirements, technical specifications, and implementation strategy for migrating Ledger's 20+ year C++ codebase to Rust, leveraging modern safety guarantees while preserving the application's proven functionality and performance characteristics.
+
+### 1.2 Project Context
+
+Ledger is a powerful command-line accounting system processing plain text journal files through a sophisticated parsing and computation pipeline. The migration aims to eliminate memory safety vulnerabilities (targeting **70% reduction**), reduce maintenance complexity by **2x**, and establish a foundation for next-generation financial computation features.
+
+## 2. Product Overview
+
+### 2.1 Migration Scope
+
+The complete migration encompasses:
+
+- **Core Components**: 15+ major modules including parser, expression engine, reporting framework
+- **Mathematical Libraries**: GMP/MPFR integration for arbitrary precision arithmetic
+- **Test Infrastructure**: Python test harness with 500+ test cases
+- **Build System**: CMake to Cargo transition with cross-platform support
+- **Documentation**: Complete API documentation and user guides
+
+### 2.2 Technical Architecture Transformation
+
+**Current State (C++)**:
+- Stateless command-line processing pipeline
+- Text input → Parser → AST → Computation → Formatter → Output
+- Heavy Boost library dependencies
+- CMake build system with acprep automation
+
+**Target State (Rust)**:
+- Equivalent stateless architecture with enhanced safety
+- Zero-cost abstractions replacing Boost functionality
+- Cargo-based build with improved dependency management
+- Native async support for future enhancements
+
+## 3. Goals and Objectives
+
+### 3.1 Primary Goals
+
+- **Safety**: Eliminate memory-related vulnerabilities through Rust's ownership model
+- **Performance**: Maintain or improve processing speed (target: 10-20% improvement)
+- **Maintainability**: Reduce codebase complexity by 30% through idiomatic Rust patterns
+- **Compatibility**: Ensure 100% backward compatibility with existing journal files
+
+### 3.2 Success Metrics
+
+| Metric | Current (C++) | Target (Rust) | Measurement Method |
+|--------|---------------|---------------|-------------------|
+| Memory safety bugs | Baseline | -70% | Static analysis + runtime monitoring |
+| Processing speed (1MB journal) | 150ms | ≤135ms | Automated benchmarks |
+| Code size | 100k LOC | 65-70k LOC | sloccount analysis |
+| Test coverage | 85% | >95% | Coverage tools |
+| Build time (clean) | 3-5 min | <2 min | CI/CD metrics |
+| Memory usage | Baseline | -30% | Profiling tools |
+
+## 4. Target Audience
+
+### 4.1 End Users
+
+- **Power Users**: Command-line accounting professionals requiring speed and reliability
+- **Developers**: Extensions and integrations developers needing stable APIs
+- **System Administrators**: Deployment and maintenance teams
+
+### 4.2 Development Stakeholders
+
+- **Migration Team**: 8-10 developers with C++ and Rust expertise
+- **QA Team**: Testing and validation specialists
+- **Documentation Team**: Technical writers and API documenters
+- **Community Contributors**: Open-source maintainers and contributors
+
+## 5. Features and Requirements
+
+### 5.1 Core Functional Requirements
+
+#### FR-101: Transaction Processing Engine
+
+- **Description**: Complete reimplementation of double-entry transaction processing
+- **Components**: Parser, validator, balancer, state manager
+- **Acceptance Criteria**:
+  - Parse all existing journal formats
+  - Validate double-entry balance to zero
+  - Support virtual and balanced virtual postings
+  - Maintain precision for all decimal operations
+
+#### FR-102: Multi-Currency and Commodity System
+
+- **Description**: Full commodity tracking with lot management
+- **Components**: Currency engine, price database, lot tracker, valuation system
+- **Acceptance Criteria**:
+  - Handle unlimited currencies/commodities
+  - Historical price tracking with interpolation
+  - Lot-specific cost basis tracking
+  - Market valuation with customizable functions
+
+#### FR-103: Expression Evaluation Engine
+
+- **Description**: Value expression language for calculations and queries
+- **Components**: Parser, AST builder, evaluator, function library
+- **Acceptance Criteria**:
+  - Support all existing expression syntax
+  - Mathematical operations with arbitrary precision
+  - Query predicates for filtering
+  - Automated transaction rules
+
+#### FR-104: Reporting Framework
+
+- **Description**: Comprehensive reporting system with multiple output formats
+- **Components**: Report generator, formatters, filters, aggregators
+- **Acceptance Criteria**:
+  - Balance reports with customizable grouping
+  - Register reports with running balances
+  - Custom format strings
+  - CSV, HTML, XML, JSON output
+
+#### FR-105: Command-Line Interface
+
+- **Description**: Full CLI compatibility with existing Ledger commands
+- **Components**: Argument parser, command dispatcher, help system
+- **Acceptance Criteria**:
+  - Support all existing command-line options
+  - Maintain backward compatibility
+  - Enhanced error messages
+  - Shell completion support
+
+### 5.2 Non-Functional Requirements
+
+#### NFR-201: Performance Requirements
+
+- **Processing Speed**: ≤10ms per 1000 transactions
+- **Memory Usage**: Linear scaling with journal size
+- **Startup Time**: <50ms for typical use cases
+- **Concurrency**: Leverage multi-core for report generation
+
+#### NFR-202: Security Requirements
+
+- **Memory Safety**: Zero unsafe blocks in business logic
+- **Input Validation**: Robust against malformed input
+- **Decimal Precision**: No floating-point for monetary values
+- **Audit Trail**: Maintain calculation transparency
+
+#### NFR-203: Platform Support
+
+- **Operating Systems**: Linux, macOS, Windows, BSD variants
+- **Architectures**: x86_64, ARM64, WASM (future)
+- **Package Managers**: Cargo, Homebrew, apt, rpm
+- **Container Support**: Docker, Kubernetes-ready
+
+## 6. User Stories and Acceptance Criteria
+
+### 6.1 Core User Stories
+
+#### ST-301: Basic Transaction Entry
+
+**As a** user
+**I want to** record financial transactions in plain text
+**So that** I can track my finances without proprietary software
+
+**Acceptance Criteria**:
+- Parse standard transaction format
+- Support Unicode payees and descriptions
+- Handle multiple date formats
+- Validate transaction balance
+- Provide clear error messages for malformed entries
+
+#### ST-302: Multi-Currency Reporting
+
+**As a** international user
+**I want to** track multiple currencies with automatic conversion
+**So that** I can manage global finances
+
+**Acceptance Criteria**:
+- Track unlimited currencies simultaneously
+- Automatic conversion using price database
+- Historical rate lookup
+- Configurable display precision
+- Currency-specific formatting rules
+
+#### ST-303: Complex Query Filtering
+
+**As a** power user
+**I want to** filter transactions using expressions
+**So that** I can generate specific reports
+
+**Acceptance Criteria**:
+- Support regex patterns for accounts/payees
+- Date range expressions
+- Amount comparisons
+- Metadata queries
+- Combining filters with AND/OR logic
+
+#### ST-304: Budget Tracking
+
+**As a** budget-conscious user
+**I want to** compare actual vs budgeted amounts
+**So that** I can monitor spending
+
+**Acceptance Criteria**:
+- Virtual account support for budgets
+- Period-based comparisons
+- Variance calculations
+- Percentage analysis
+- Forecast projections
+
+#### ST-305: Investment Tracking
+
+**As an** investor
+**I want to** track lots and cost basis
+**So that** I can calculate capital gains
+
+**Acceptance Criteria**:
+- Lot identification methods (FIFO, LIFO, specific)
+- Basis tracking across transactions
+- Gain/loss calculations
+- Dividend reinvestment handling
+- Split/merger adjustments
+
+### 6.2 Migration-Specific User Stories
+
+#### ST-401: Backward Compatibility
+
+**As an** existing user
+**I want** my journal files to work unchanged
+**So that** migration is seamless
+
+**Acceptance Criteria**:
+- 100% compatibility with existing formats
+- Identical output for same queries
+- No data migration required
+- Preserve all metadata
+- Support legacy date formats
+
+#### ST-402: Performance Parity
+
+**As a** performance-sensitive user
+**I want** equal or better performance
+**So that** large journals remain usable
+
+**Acceptance Criteria**:
+- Benchmark suite showing improvements
+- Memory usage reduction
+- Faster startup times
+- Efficient large file handling
+- Progress indicators for long operations
+
+## 7. Technical Architecture
+
+### 7.1 Module Decomposition Strategy
+
+#### Phase 1: Foundation Modules (Parallel Tasks)
+
+1. **Math Module** (Task 1.1)
+   - Decimal arithmetic using rust_decimal
+   - GMP/MPFR bindings for compatibility
+   - Precision management
+
+2. **Date/Time Module** (Task 1.2)
+   - chrono crate integration
+   - Period expressions
+   - Timezone handling
+
+3. **String Processing** (Task 1.3)
+   - Unicode normalization
+   - Regex patterns using regex crate
+   - Format string parsing
+
+#### Phase 2: Core Data Structures (Sequential)
+
+1. **Account Hierarchy** (Task 2.1)
+   - Tree structure implementation
+   - Path parsing and validation
+   - Aliasing system
+
+2. **Transaction Model** (Task 2.2)
+   - Posting structures
+   - Metadata handling
+   - State management
+
+3. **Commodity System** (Task 2.3)
+   - Currency definitions
+   - Price history
+   - Lot tracking
+
+#### Phase 3: Processing Pipeline (Parallel)
+
+1. **Parser Module** (Task 3.1)
+   - nom parser combinators
+   - Error recovery
+   - Include file handling
+
+2. **Validation Engine** (Task 3.2)
+   - Balance checking
+   - Constraint validation
+   - Warning generation
+
+3. **Expression Evaluator** (Task 3.3)
+   - AST construction
+   - Function library
+   - Variable binding
+
+#### Phase 4: Reporting System (Parallel)
+
+1. **Report Generators** (Task 4.1)
+   - Balance calculations
+   - Register formatting
+   - Custom reports
+
+2. **Output Formatters** (Task 4.2)
+   - Text alignment
+   - CSV generation
+   - JSON/XML serialization
+
+3. **Query Engine** (Task 4.3)
+   - Filter application
+   - Sorting logic
+   - Aggregation functions
+
+#### Phase 5: Integration and Polish (Sequential)
+
+1. **CLI Implementation** (Task 5.1)
+   - clap argument parsing
+   - Command dispatch
+   - Configuration loading
+
+2. **Test Migration** (Task 5.2)
+   - Python test harness port
+   - Baseline validation
+   - Performance benchmarks
+
+3. **Documentation** (Task 5.3)
+   - API documentation
+   - Migration guide
+   - User manual updates
+
+### 7.2 Dependency Management
+
+#### External Crate Dependencies
+
+```toml
+[dependencies]
+# Core functionality
+chrono = "0.4"          # Date/time handling
+regex = "1.10"          # Pattern matching
+rust_decimal = "1.33"   # Decimal arithmetic
+serde = "1.0"          # Serialization
+clap = "4.4"           # CLI parsing
+
+# Performance
+rayon = "1.8"          # Parallel processing
+dashmap = "5.5"        # Concurrent collections
+ahash = "0.8"          # Fast hashing
+
+# Integration
+libc = "0.2"           # System interfaces
+num-bigint = "0.4"     # Big integer support
+encoding_rs = "0.8"    # Text encoding
+
+# Development
+thiserror = "1.0"      # Error handling
+anyhow = "1.0"        # Error propagation
+tracing = "0.4"       # Logging/debugging
+```
+
+### 7.3 Testing Strategy
+
+#### Test Categories and Coverage
+
+1. **Unit Tests** (Target: 95% coverage)
+   - Module-level testing
+   - Edge case validation
+   - Property-based testing with proptest
+
+2. **Integration Tests** (500+ scenarios)
+   - Transaction processing flows
+   - Report generation validation
+   - Multi-file include handling
+
+3. **Regression Tests** (100% baseline match)
+   - Python harness migration
+   - Output comparison with C++ version
+   - Performance benchmarks
+
+4. **Fuzzing Tests** (Security validation)
+   - Input parsing robustness
+   - Memory safety verification
+   - Crash resistance
+
+## 8. Migration Execution Plan
+
+### 8.1 Phase Timeline
+
+| Phase | Duration | Tasks | Dependencies | Team Size |
+|-------|----------|-------|--------------|-----------|
+| **Phase 1: Foundation** | Months 1-3 | Math, Date, String modules | None | 3 developers |
+| **Phase 2: Data Models** | Months 3-5 | Account, Transaction, Commodity | Phase 1 | 4 developers |
+| **Phase 3: Processing** | Months 5-9 | Parser, Validator, Expression | Phase 2 | 5 developers |
+| **Phase 4: Reporting** | Months 9-12 | Reports, Formatters, Query | Phase 3 | 4 developers |
+| **Phase 5: Integration** | Months 12-15 | CLI, Tests, Documentation | Phase 4 | 6 developers |
+| **Phase 6: Optimization** | Months 15-18 | Performance, Polish, Release | Phase 5 | 4 developers |
+
+### 8.2 Parallel Task Orchestration
+
+#### Task Dependency Graph
+
+```
+Foundation Modules (Parallel)
+├── Math Module ──────┐
+├── Date Module ──────┼─→ Data Structures (Sequential)
+└── String Module ────┘   ├── Account Hierarchy
+                          ├── Transaction Model
+                          └── Commodity System
+                                    ↓
+                          Processing Pipeline (Parallel)
+                          ├── Parser Module ─────┐
+                          ├── Validation Engine ─┼─→ Reporting System
+                          └── Expression Eval ───┘   ├── Generators
+                                                     ├── Formatters
+                                                     └── Query Engine
+                                                            ↓
+                                                     Integration Phase
+```
+
+### 8.3 Risk Mitigation Strategy
+
+| Risk | Probability | Impact | Mitigation |
+|------|------------|--------|------------|
+| Performance regression | Medium | High | Continuous benchmarking, profiling |
+| Parsing incompatibilities | Low | High | Extensive test coverage, fuzzing |
+| Decimal precision issues | Medium | Critical | Formal verification, property testing |
+| Team skill gaps | Medium | Medium | Training program, pair programming |
+| Schedule slippage | Medium | Medium | Buffer time, incremental releases |
+
+## 9. Quality Assurance Plan
+
+### 9.1 Testing Phases
+
+#### Phase A: Component Testing (Continuous)
+
+- Unit tests for each module
+- Integration tests for module interactions
+- Performance microbenchmarks
+- Memory leak detection
+
+#### Phase B: System Testing (Monthly)
+
+- End-to-end transaction flows
+- Report generation validation
+- Cross-platform compatibility
+- Stress testing with large datasets
+
+#### Phase C: Acceptance Testing (Quarterly)
+
+- User acceptance scenarios
+- Performance benchmarks vs C++ version
+- Security vulnerability scanning
+- Documentation review
+
+### 9.2 Validation Criteria
+
+#### Functional Validation
+
+- **Test Coverage**: >95% line coverage, >90% branch coverage
+- **Regression Tests**: 100% pass rate against baseline
+- **Fuzzing**: 72 hours without crashes
+- **Memory Safety**: Zero unsafe blocks in business logic
+
+#### Performance Validation
+
+- **Benchmark Suite**: 20+ representative workloads
+- **Performance Targets**: Within 10% of C++ version
+- **Memory Usage**: 30% reduction from baseline
+- **Startup Time**: <50ms for typical usage
+
+## 10. Deliverables and Milestones
+
+### 10.1 Major Milestones
+
+| Milestone | Date | Deliverables | Success Criteria |
+|-----------|------|--------------|------------------|
+| **M1: Foundation Complete** | Month 3 | Core libraries integrated | All math/date/string tests pass |
+| **M2: Data Models Ready** | Month 5 | Transaction structures | Can represent all journal entries |
+| **M3: Parser Functional** | Month 7 | Working parser | Parse 95% of test files |
+| **M4: MVP Release** | Month 9 | Basic functionality | Simple reports working |
+| **M5: Feature Complete** | Month 12 | All features ported | Feature parity achieved |
+| **M6: Performance Optimized** | Month 15 | Optimized build | Performance targets met |
+| **M7: Production Ready** | Month 18 | Final release | All criteria satisfied |
+
+### 10.2 Documentation Deliverables
+
+1. **Technical Documentation**
+   - Architecture design document
+   - API reference (generated from code)
+   - Migration guide for developers
+   - Performance tuning guide
+
+2. **User Documentation**
+   - Updated user manual
+   - Command reference
+   - Tutorial updates
+   - FAQ and troubleshooting
+
+3. **Process Documentation**
+   - Migration lessons learned
+   - Best practices guide
+   - Maintenance procedures
+   - Community contribution guide
+
+## 11. Task Master AI Integration
+
+### 11.1 Task Structure for Orchestration
+
+```json
+{
+  "project": "ledger-rust-migration",
+  "version": "1.0.0",
+  "phases": [
+    {
+      "id": 1,
+      "name": "Foundation",
+      "parallel": true,
+      "tasks": [
+        {
+          "id": "1.1",
+          "title": "Implement Math Module",
+          "complexity": 7,
+          "dependencies": [],
+          "subtasks": [
+            "1.1.1: Integrate rust_decimal",
+            "1.1.2: Create GMP bindings",
+            "1.1.3: Implement precision management",
+            "1.1.4: Add arithmetic operations",
+            "1.1.5: Create unit tests"
+          ]
+        },
+        {
+          "id": "1.2",
+          "title": "Implement Date/Time Module",
+          "complexity": 5,
+          "dependencies": [],
+          "subtasks": [
+            "1.2.1: Integrate chrono crate",
+            "1.2.2: Parse date expressions",
+            "1.2.3: Handle periods",
+            "1.2.4: Timezone support",
+            "1.2.5: Create unit tests"
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 11.2 Execution Commands
+
+```bash
+# Initialize Task Master AI
+task-master init
+task-master parse-prd ledger-migration-prd.txt
+
+# Analyze complexity
+task-master analyze-complexity --research
+task-master complexity-report
+
+# Execute phases
+task-master expand --all
+task-master next  # Get next available task
+
+# Track progress
+task-master list --status=pending
+task-master set-status --id=1.1,1.2 --status=done
+
+# Generate reports
+task-master validate-dependencies
+task-master complexity-report
+```
+
+## 12. Success Criteria and Acceptance
+
+### 12.1 Technical Acceptance Criteria
+
+| Criterion | Measurement | Target | Validation Method |
+|-----------|------------|--------|-------------------|
+| **Functional Completeness** | Feature coverage | 100% | Test suite execution |
+| **Performance** | Benchmark suite | ≥C++ baseline | Automated benchmarks |
+| **Memory Safety** | Static analysis | Zero critical issues | Clippy + Miri |
+| **Code Quality** | Rust idioms | >90% idiomatic | Code review |
+| **Documentation** | Coverage | 100% public APIs | Doc tests |
+| **Platform Support** | OS compatibility | Linux/Mac/Windows | CI/CD validation |
+
+### 12.2 Business Acceptance Criteria
+
+- **User Adoption**: No breaking changes for existing users
+- **Community Approval**: Positive feedback from core contributors
+- **Maintenance Improvement**: 50% reduction in bug reports
+- **Development Velocity**: 2x faster feature development
+- **Security Enhancement**: Formal verification of critical paths
+
+## 13. Post-Migration Roadmap
+
+### 13.1 Immediate Enhancements (Months 19-24)
+
+- **Async I/O**: Implement async file operations
+- **Web Assembly**: Browser-based Ledger
+- **REST API**: HTTP server mode
+- **Plugin System**: Dynamic loading of extensions
+
+### 13.2 Long-term Vision (Year 2+)
+
+- **Distributed Ledger**: Multi-user collaboration
+- **Real-time Sync**: Cloud synchronization
+- **Mobile Support**: iOS/Android applications
+- **AI Integration**: Smart categorization and insights
+
+## Appendix A: Technical Risk Analysis
+
+### High-Risk Components
+
+1. **Decimal Arithmetic**: Ensuring bit-exact compatibility
+2. **Parser Complexity**: Handling all edge cases
+3. **Performance Critical Paths**: Query evaluation, report generation
+4. **Platform-Specific Code**: File system operations, terminal handling
+
+### Mitigation Strategies
+
+1. **Formal Verification**: Use SAW/Crux for critical components
+2. **Extensive Testing**: Property-based, fuzzing, regression
+3. **Incremental Migration**: Validate each component independently
+4. **Performance Monitoring**: Continuous benchmarking in CI/CD
+
+## Appendix B: Resource Requirements
+
+### Team Composition
+
+- **Lead Architect**: 1 FTE (18 months)
+- **Senior Rust Developers**: 3 FTE (18 months)
+- **C++ Migration Specialists**: 2 FTE (12 months)
+- **QA Engineers**: 2 FTE (15 months)
+- **Technical Writer**: 1 FTE (6 months)
+- **DevOps Engineer**: 0.5 FTE (18 months)
+
+### Infrastructure Requirements
+
+- **Development Environment**: 10 high-performance workstations
+- **CI/CD Infrastructure**: GitHub Actions or GitLab CI
+- **Testing Infrastructure**: Cross-platform test matrix
+- **Documentation Platform**: Generated from source code
+- **Community Platform**: Discord/Slack for coordination
+
+## Conclusion
+
+This comprehensive PRD provides a complete roadmap for migrating Ledger from C++ to Rust, with clear phases, parallel task opportunities, and measurable success criteria. The migration will deliver a safer, more maintainable, and equally performant application while preserving the core philosophy that has made Ledger successful for over 20 years. By following this structured approach with Task Master AI orchestration, the project can be completed within 18 months with minimal risk and maximum benefit to the user community.

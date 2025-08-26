@@ -1,0 +1,26 @@
+[build]
+# Target directory for build artifacts
+# Show warnings from all crates, not just the one being compiled
+target-dir = "target"
+
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+# For Linux builds with C++ interop
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-C", "link-arg=-Wl,-rpath,$ORIGIN"]
+
+[target.aarch64-unknown-linux-gnu]
+rustflags = ["-C", "link-arg=-Wl,-rpath,$ORIGIN"]
+
+[registries.crates-io]
+protocol = "sparse"
+
+[profile.dev]
+split-debuginfo = "unpacked"
+
+[profile.release]
+strip = false

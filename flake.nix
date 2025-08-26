@@ -5,22 +5,23 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    rust-overlay.url = "github:oxalica/rust-overlay";
+    flake-utils.url  = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs }: let
-    usePython = true;
-    gpgmeSupport = true;
-    useLibedit = true;
-    useReadline = false;
-    forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
-    nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
-    systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
-  in {
-
-    packages = forAllSystems (system: let
-        pkgs = nixpkgsFor.${system};
-      in with pkgs; {
-      ledger = stdenv.mkDerivation {
+  outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
+    let
+      usePython = true;
+      gpgmeSupport = true;
+      useLibedit = true;
+      useReadline = false;
+      overlays = [ (import rust-overlay) ];
+      pkgs = import nixpkgs {
+        inherit system overlays;
+      };
+    in with pkgs; rec {
+      packages.default = stdenv.mkDerivation {
         pname = "ledger";
         version = "3.3.2-${self.shortRev or "dirty"}";
 
@@ -37,8 +38,8 @@
         ] ++ lib.optionals gpgmeSupport [
           gpgme
         ] ++ (if usePython
-              then [ python3 (boost.override { enablePython = true; python = python3; }) ]
-              else [ boost ]);
+        then [ python3 (boost.override { enablePython = true; python = python3; }) ]
+        else [ boost ]);
 
         nativeBuildInputs = [
           cmake texinfo tzdata
@@ -61,7 +62,7 @@
         # however, that would write to a different nixstore path, pass our own sitePackages location
         prePatch = lib.optionalString usePython ''
           substituteInPlace src/CMakeLists.txt \
-            --replace 'DESTINATION ''${Python_SITEARCH}' 'DESTINATION "${placeholder "py"}/${python3.sitePackages}"'
+          --replace 'DESTINATION ''${Python_SITEARCH}' 'DESTINATION "${placeholder "py"}/${python3.sitePackages}"'
         '';
 
         installTargets = [ "doc" "install" ];
@@ -69,8 +70,8 @@
         checkPhase = ''
           runHook preCheck
           env LD_LIBRARY_PATH=$PWD \
-            DYLD_LIBRARY_PATH=$PWD \
-            ctest -j$NIX_BUILD_CORES
+          DYLD_LIBRARY_PATH=$PWD \
+          ctest -j$NIX_BUILD_CORES
           runHook postCheck
         '';
 
@@ -91,9 +92,21 @@
           maintainers = with maintainers; [ jwiegley ];
         };
       };
+
+      devShells.default = mkShell {
+        buildInputs = packages.default.buildInputs ++ [
+          openssl
+          pkg-config
+          eza
+          fd
+          rust-bin.beta.latest.default
+          # darwin.apple_sdk.frameworks.Security
+        ];
+
+        shellHook = ''
+          alias ls=eza
+          alias find=fd
+        '';
+      };
     });
-
-    defaultPackage = forAllSystems (system: self.packages.${system}.ledger);
-
-  };
 }
