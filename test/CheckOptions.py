@@ -40,10 +40,16 @@ class CheckOptions (object):
     return {match.group(1) for match in {regex.match(line) for line in open(filename)} if match}
 
   def find_options(self, filename):
-    return self.find_pattern(filename, self.option_pattern)
+    return self.find_pattern(filename, self.option_pattern) \
+          if self.option_pattern else set()
 
   def find_functions(self, filename):
-    return self.find_pattern(filename, self.function_pattern)
+    return self.find_pattern(filename, self.function_pattern) \
+          if self.function_pattern else set()
+
+  def find_symbols(self, filename):
+    return self.find_pattern(filename, self.symbol_pattern) \
+          if self.symbol_pattern else set()
 
   def find_symbols(self, filename):
     return self.find_pattern(filename, self.symbol_pattern) \

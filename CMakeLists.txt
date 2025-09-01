@@ -3,7 +3,7 @@ set(Required_Boost_Version 1.72)
 set(Required_Gmp_Version 6.1.2)
 set(Required_Mpfr_Version 4.0.2)
 set(Required_Icu_Version 63)
-set(Required_Python_Version 3.9)
+set(Required_Python_Version 3.10)
 set(Required_Gpgmepp_Version 1.13.1)
 
 cmake_minimum_required(VERSION ${Required_CMake_Version})
