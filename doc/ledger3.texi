@@ -7139,8 +7139,8 @@ Used as part of development testing.
 Sort the @command{register} report based on the value expression given
 to sort.
 
-@item --sort-all @var{FIXME}
-@value{FIXME:UNDOCUMENTED}
+@item --sort-all
+Sort all accounts and commodities.
 
 @item --sort-xacts @var{VEXPR}
 @itemx --period-sort @var{VEXPR}
@@ -8721,6 +8721,10 @@ $ ledger -f expr.dat --format "%(ansify_if(account, blue, options.color))\n" reg
 @end smallexample
 @end defun
 
+@defun averaged_lots
+Return lots with averaged prices.
+@end defun
+
 @defun ceiling value
 Return the next integer of @var{value} toward @math{+}infinity.
 @smallexample @c command:FF9C18C,with_input:3406FC1
@@ -8730,6 +8734,14 @@ $ ledger -f expr.dat --format "%(account) %(ceiling(amount))\n" reg
 Assets:Cash ¤ -123,00
 Expenses:Office Supplies ¤ 124,00
 @end smallexample
+@end defun
+
+@defun clear_commodity
+Clear commodity pricing information.
+@end defun
+
+@defun commodity_price commodity
+Return the price of the given commodity.
 @end defun
 
 @defvar code
@@ -8777,11 +8789,19 @@ or the depth of the account
 @value{FIXME:UNDOCUMENTED}
 @end defvar
 
+@defun display_amount amount
+Format amount for display.
+@end defun
+
 @c FIXME
 @defvar display_total
 @defvarx T
 @value{FIXME:UNDOCUMENTED}
 @end defvar
+
+@defun display_total total
+Format total for display.
+@end defun
 
 @defun floor value
 Return the next integer of @var{value} toward @math{-}infinity.
@@ -8845,6 +8865,18 @@ $ ledger -f expr.dat --format "»%(justify(account, 30, 30, true))«\n" reg
 @end smallexample
 @end defun
 
+@defun lot_date posting
+Return the lot date of a posting.
+@end defun
+
+@defun lot_price posting
+Return the lot price of a posting.
+@end defun
+
+@defun lot_tag posting
+Return the lot tag of a posting.
+@end defun
+
 @defun market value datetime
 @defunx P
 Return the price of @var{value} at @var{datetime}.  Note that @var{datetime}
@@ -8853,7 +8885,7 @@ e.g. @code{[2012/03/23]}.
 @end defun
 
 @defun nail_down
-@value{FIXME:UNDOCUMENTED}
+Fix the precision of an amount.
 @end defun
 
 @defvar now
@@ -8910,11 +8942,11 @@ preceding it with another double quote, as prescribed by RFC 4180.
 @end defun
 
 @defun round
-@value{FIXME:UNDOCUMENTED}
+Round an amount to standard precision.
 @end defun
 
 @defun rounded
-@value{FIXME:UNDOCUMENTED}
+Return rounded version of amount.
 @end defun
 
 @defun roundto value n
@@ -8931,6 +8963,10 @@ Expenses:Office Supplies ¤ 123,40
 @defun scrub value
 Clean @var{value} using various transformations such as @code{round}, stripping
 value annotations, and more.
+@end defun
+
+@defun set_commodity_price commodity price
+Set the price for a commodity.
 @end defun
 
 @defun should_bold
@@ -8998,7 +9034,7 @@ $ ledger -f expr.dat --now 2015/01/01 --format "%(today)\n" reg assets
 @end smallexample
 
 @defun top_amount
-@value{FIXME:UNDOCUMENTED}
+Return the top-level amount.
 @end defun
 
 @defun total_expr
@@ -9022,11 +9058,11 @@ Truncate @var{string} to @var{total_len} ensuring that each account is at least
 @end defun
 
 @defun unround
-@value{FIXME:UNDOCUMENTED}
+Remove rounding from an amount.
 @end defun
 
 @defun unrounded
-@value{FIXME:UNDOCUMENTED}
+Return unrounded version of amount.
 @end defun
 
 @defun value_date
