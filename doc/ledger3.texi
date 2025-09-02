@@ -3119,7 +3119,7 @@ date.
 * Payee metadata::
 @end menu
 
-@node Payee metadata,  , Typed metadata, Metadata
+@node Payee metadata,  ,  , Typed metadata
 @subsection Payee metadata
 @cindex Payee metadata
 @findex register
@@ -9456,7 +9456,7 @@ Convert a string to date value.
 * Date and Time Format Codes::
 @end menu
 
-@node Date and Time Format Codes, Text Formatting, Date Functions, Formatting Functions and Codes
+@node Date and Time Format Codes, Text Formatting, Date Functions, Date Functions
 @subsection Date and Time Format Codes
 
 Date and time format are specified as strings of single letter codes
