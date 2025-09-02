@@ -1,0 +1,7 @@
+2012-01-01 Test magenta function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "magenta()"
+magenta
+end test
