@@ -85,7 +85,7 @@ int main(int argc, char* argv[], char* envp[]) {
   std::ios::sync_with_stdio(false);
 
   std::signal(SIGINT, sigint_handler);
-#if !defined(_WIN32) && !defined(__CYGWIN__)
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(__EMSCRIPTEN__)
   std::signal(SIGPIPE, sigpipe_handler);
 #endif
 
