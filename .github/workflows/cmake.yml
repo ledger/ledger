@@ -165,7 +165,7 @@ jobs:
           emcmake cmake \
             -DBUILD_LIBRARY=ON \
             -DPRECOMPILE_SYSTEM_HH=OFF \
-            -DCMAKE_EXE_LINKER_FLAGS='-lnodefs.js -lnoderawfs.js' \
+            -DCMAKE_EXE_LINKER_FLAGS='-lnodefs.js -lnoderawfs.js -sSTACK_SIZE=1048576' \
             -DCMAKE_INSTALL_PREFIX="$PWD"/dist \
             -DCMAKE_PREFIX_PATH="$BOOST" \
             -DGMP_PATH="$PWD"/gmp/dist/include \
@@ -178,30 +178,22 @@ jobs:
       - name: Fix Emscripten build
         run: |
           cd build
-          # https://github.com/emscripten-core/emscripten/issues/22264
+          # Emscripten TTY issue: https://github.com/emscripten-core/emscripten/issues/22264
           sed -i.bak \
               -e '1i #!'"$(which node)" \
               -e 's/if\s*(!stream.tty)/if(!stream.tty||!stream.tty.ops)/g' \
-              -e 's/,tty:\s*true,/,tty:false,/g' \
+              -e 's/,\s*tty:\s*true,/,tty:false,/g' \
               ledger.js
           # Enable testing from python scripts.
           chmod a+x ledger.js
-      - name: Test Ledger (DocTest)
-        run: |
-          cd build
-          node ledger.js --version
-          # One test fails when run from ctest. Could be due to malfunctioning Emscripten TTY/IO API.
-          python ../test/DocTests.py \
-            --ledger "$PWD/ledger.js" \
-            --file "$PWD/../doc/ledger3.texi" \
-            --verbose
       - name: Test Ledger
         if: ${{ matrix.version.test }}
         run: |
           cd build
+          node ledger.js --version
           # _py$ : Python tests are not supported.
-          # DocTestsTest_ledger3 : See above.
           # RegressTest_BF3C1F82 : Emscripten treats 2012/02/30 as a valid date.
+          #     See https://github.com/emscripten-core/emscripten/issues/21024
           # BaselineTest_opt-output : Outputing to /dev/stderr, probably unsupported by Emscripten.
           ctest --force-new-ctest-process --output-on-failure \
-            -E '_py$|DocTestsTest_ledger3|RegressTest_BF3C1F82|BaselineTest_opt-output'
+            -E '_py$|RegressTest_BF3C1F82|BaselineTest_opt-output'
