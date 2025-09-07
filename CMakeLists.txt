@@ -87,7 +87,11 @@ else()
   set(HAVE_BOOST_PYTHON 0)
 endif()
 
-# Set BOOST_ROOT to help CMake to find the right Boost version
+# emcmake breaks CMAKE_PREFIX_PATH: https://github.com/emscripten-core/emscripten/issues/19243
+if (EMSCRIPTEN)
+  set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE "BOTH")
+endif()
+# Set CMAKE_PREFIX_PATH to help CMake to find the right Boost version
 find_package(Boost ${Required_Boost_Version}
   REQUIRED date_time filesystem iostreams regex
   ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide
@@ -169,7 +173,6 @@ endif()
 
 cmake_push_check_state()
 
-set(CMAKE_REQUIRED_FLAGS -std=c++11)
 set(CMAKE_REQUIRED_INCLUDES ${CMAKE_INCLUDE_PATH} ${Boost_INCLUDE_DIRS} ${ICU_INCLUDE_DIRS})
 set(CMAKE_REQUIRED_LIBRARIES Boost::regex ${ICU_LIBRARIES} ${PROFILE_LIBS})
 

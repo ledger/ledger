@@ -81,13 +81,10 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - emsdk: 3.1.40
-            emsdk-ext: bc
-            boost: 1_84_0
-          - emsdk: 3.1.61
-            emsdk-ext: a
-            boost: 1_85_0
-            test: true
+          - emsdk: 4.0.13
+            boost: 1_89_0
+            gmp: 6.3.0
+            mpfr: 4.2.2
     steps:
       - uses: actions/checkout@v4
         name: Check out repository code
@@ -101,7 +98,19 @@ jobs:
         with:
           version: ${{ matrix.version.emsdk }}
           actions-cache-folder: 'emsdk-cache'
+
+      - name: Restore cached libraries
+        id: cache-wasm-lib-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: build/*/dist/
+          key: >-
+            ${{ runner.os }}-wasm-lib-{{ matrix.version.emsdk }}
+            -{{ matrix.version.boost }}
+            -{{ matrix.version.gmp }}
+            -{{ matrix.version.mpfr }}
       - name: Build Boost
+        if: steps.cache-wasm-lib-restore.outputs.cache-hit != 'true'
         env:
           BOOST_VER: ${{ matrix.version.boost }}
         run: |
@@ -113,14 +122,15 @@ jobs:
           cd boost
           ./bootstrap.sh
           ./b2 --prefix=dist \
-               --with-date_time --with-filesystem \
-               --with-system --with-iostreams \
+               --with-date_time --with-filesystem --with-iostreams \
                --with-nowide --with-regex --with-test \
-               toolset=emscripten link=static variant=release threading=single install
+               toolset=emscripten address-model=32 link=static variant=release threading=single install
       - name: Build GMP
+        if: steps.cache-wasm-lib-restore.outputs.cache-hit != 'true'
+        env:
+          GMP_VER: ${{ matrix.version.gmp }}
         run: |
           cd build
-          export GMP_VER=6.3.0
           wget https://ftp.gnu.org/gnu/gmp/gmp-${GMP_VER}.tar.xz
           tar -Jxf gmp-${GMP_VER}.tar.xz
           mv gmp-${GMP_VER} gmp
@@ -129,9 +139,11 @@ jobs:
           emmake make
           emmake make install
       - name: Build MPFR
+        if: steps.cache-wasm-lib-restore.outputs.cache-hit != 'true'
+        env:
+          MPFR_VER: ${{ matrix.version.mpfr }}
         run: |
           cd build
-          export MPFR_VER=4.2.1
           wget https://ftp.gnu.org/gnu/mpfr/mpfr-${MPFR_VER}.tar.xz
           tar -Jxf mpfr-${MPFR_VER}.tar.xz
           mv mpfr-${MPFR_VER} mpfr
@@ -139,9 +151,13 @@ jobs:
           emconfigure ./configure --host wasm32 --prefix=$(realpath dist) --with-gmp=$(realpath ../gmp/dist)
           emmake make
           emmake make install
+      - name: Save library build results
+        uses: actions/cache/save@v4
+        with:
+          path: build/*/dist/
+          key: ${{ steps.cache-wasm-lib-restore.outputs.cache-primary-key }}
+
       - name: Build Ledger
-        env:
-          EXT: ${{ matrix.version.emsdk-ext }}
         run: |
           cd build
           export BOOST="$(realpath boost/dist)"
@@ -151,15 +167,7 @@ jobs:
             -DPRECOMPILE_SYSTEM_HH=OFF \
             -DCMAKE_EXE_LINKER_FLAGS='-lnodefs.js -lnoderawfs.js' \
             -DCMAKE_INSTALL_PREFIX="$PWD"/dist \
-            -DBOOST_ROOT="$BOOST" \
-            -DBoost_INCLUDE_DIR="$BOOST"/include \
-            -DBOOST_LIBRARYDIR="$BOOST"/lib \
-            -DBoost_DATE_TIME_LIBRARY_RELEASE="$BOOST"/lib/libboost_date_time.$EXT \
-            -DBoost_FILESYSTEM_LIBRARY_RELEASE="$BOOST"/lib/libboost_filesystem.$EXT \
-            -DBoost_IOSTREAMS_LIBRARY_RELEASE="$BOOST"/lib/libboost_iostreams.$EXT \
-            -DBoost_NOWIDE_LIBRARY_RELEASE="$BOOST"/lib/libboost_nowide.$EXT \
-            -DBoost_REGEX_LIBRARY_RELEASE="$BOOST"/lib/libboost_regex.$EXT \
-            -DBoost_SYSTEM_LIBRARY_RELEASE="$BOOST"/lib/libboost_system.$EXT \
+            -DCMAKE_PREFIX_PATH="$BOOST" \
             -DGMP_PATH="$PWD"/gmp/dist/include \
             -DGMP_LIB="$PWD"/gmp/dist/lib/libgmp.a \
             -DMPFR_PATH="$PWD"/mpfr/dist/include \
@@ -173,8 +181,8 @@ jobs:
           # https://github.com/emscripten-core/emscripten/issues/22264
           sed -i.bak \
               -e '1i #!'"$(which node)" \
-              -e 's/if(!stream.tty)/if(!stream.tty||!stream.tty.ops)/g' \
-              -e 's/,tty:true,/,tty:false,/g' \
+              -e 's/if\s*(!stream.tty)/if(!stream.tty||!stream.tty.ops)/g' \
+              -e 's/,tty:\s*true,/,tty:false,/g' \
               ledger.js
           # Enable testing from python scripts.
           chmod a+x ledger.js

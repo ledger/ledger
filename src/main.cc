@@ -54,7 +54,9 @@ extern char* argv0;
 }
 #endif
 
-int main(int argc, char* argv[], char* envp[]) {
+extern char** environ;
+
+int main(int argc, char* argv[]) {
   int status = 1;
 
 #if HAVE_BOOST_NOWIDE
@@ -98,7 +100,7 @@ int main(int argc, char* argv[], char* envp[]) {
   try {
     // Create the session object, which maintains nearly all state relating to
     // this invocation of Ledger; and register all known journal parsers.
-    global_scope = new global_scope_t(envp);
+    global_scope = new global_scope_t(environ);
     global_scope->session().set_flush_on_next_data_file(true);
 
     // Construct an STL-style argument list from the process command arguments
