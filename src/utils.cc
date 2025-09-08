@@ -241,12 +241,12 @@ void * operator new[](std::size_t size) {
     ledger::trace_new_func(ptr, "new[]", size);
   return ptr;
 }
-void   operator delete(void * ptr) {
+void   operator delete(void * ptr) noexcept {
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_delete_func(ptr, "new");
   std::free(ptr);
 }
-void   operator delete[](void * ptr) {
+void   operator delete[](void * ptr) noexcept {
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_delete_func(ptr, "new[]");
   std::free(ptr);
