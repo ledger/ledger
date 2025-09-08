@@ -798,6 +798,10 @@ void instance_t::include_directive(char * line)
           DEBUG("textual.include", "Skipping file with invalid UTF-8 name: " << base);
           continue;
         }
+        if (context.pathname == *iter) {
+          DEBUG("textual.include", "Avoiding recursive include of: " << *iter);
+          continue;
+        }
         if (glob.match(base)) {
           journal_t *  journal  = context.journal;
           account_t *  master   = top_account();
