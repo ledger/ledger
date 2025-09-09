@@ -166,7 +166,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       --system-header-prefix=include/boost/
       --system-header-prefix=boost/)
   elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(GXX_WARNING_FLAGS
+    add_compile_options(
       -pedantic
       -Wall
       -Winvalid-pch
@@ -184,8 +184,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       -Wno-old-style-cast
       -Wno-deprecated
       -Wno-strict-aliasing)
-
-    add_compile_options(${GXX_WARNING_FLAGS})
   endif()
 endif()
 
