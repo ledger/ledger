@@ -259,6 +259,11 @@ endif()
 if (EMSCRIPTEN)
   if (BUILD_LIBRARY)
     target_compile_options(libledger PRIVATE -fwasm-exceptions)
+    if (PRECOMPILE_SYSTEM_HH)
+      # The ledger executable will be built with +mutable-globals,
+      # requiring a PIC precompiled header from libledger.
+      set_property(TARGET libledger PROPERTY POSITION_INDEPENDENT_CODE ON)
+    endif()
   endif()
   target_compile_options(ledger PRIVATE -fwasm-exceptions)
   target_link_options(ledger PRIVATE -fwasm-exceptions)

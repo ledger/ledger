@@ -87,8 +87,12 @@ else()
   set(HAVE_BOOST_PYTHON 0)
 endif()
 
-# emcmake breaks CMAKE_PREFIX_PATH: https://github.com/emscripten-core/emscripten/issues/19243
+# emcmake breaks CMAKE_PREFIX_PATH:
+#   https://github.com/emscripten-core/emscripten/issues/13310
+#   https://github.com/emscripten-core/emscripten/issues/19243
 if (EMSCRIPTEN)
+  set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE "BOTH")
+  set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY "BOTH")
   set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE "BOTH")
 endif()
 # Set CMAKE_PREFIX_PATH to help CMake to find the right Boost version

@@ -103,12 +103,12 @@ jobs:
         id: cache-wasm-lib-restore
         uses: actions/cache/restore@v4
         with:
-          path: build/*/dist/
+          path: build/dist/
           key: >-
-            ${{ runner.os }}-wasm-lib-{{ matrix.version.emsdk }}
-            -{{ matrix.version.boost }}
-            -{{ matrix.version.gmp }}
-            -{{ matrix.version.mpfr }}
+            ${{ runner.os }}-wasm-libs-${{ matrix.version.emsdk }}
+            -${{ matrix.version.boost }}
+            -${{ matrix.version.gmp }}
+            -${{ matrix.version.mpfr }}
       - name: Build Boost
         if: steps.cache-wasm-lib-restore.outputs.cache-hit != 'true'
         env:
@@ -121,7 +121,7 @@ jobs:
           mv boost_${BOOST_VER} boost
           cd boost
           ./bootstrap.sh
-          ./b2 --prefix=dist \
+          ./b2 --prefix=../dist \
                --with-date_time --with-filesystem --with-iostreams \
                --with-nowide --with-regex --with-test \
                toolset=emscripten address-model=32 link=static variant=release threading=single install
@@ -135,7 +135,7 @@ jobs:
           tar -Jxf gmp-${GMP_VER}.tar.xz
           mv gmp-${GMP_VER} gmp
           cd gmp
-          emconfigure ./configure --disable-assembly --host wasm32 --enable-cxx --prefix=$(realpath dist)
+          emconfigure ./configure --disable-assembly --host wasm32 --enable-cxx --prefix=$(realpath ../dist)
           emmake make
           emmake make install
       - name: Build MPFR
@@ -148,33 +148,21 @@ jobs:
           tar -Jxf mpfr-${MPFR_VER}.tar.xz
           mv mpfr-${MPFR_VER} mpfr
           cd mpfr
-          emconfigure ./configure --host wasm32 --prefix=$(realpath dist) --with-gmp=$(realpath ../gmp/dist)
+          emconfigure ./configure --host wasm32 --prefix=$(realpath ../dist) --with-gmp=$(realpath ../dist)
           emmake make
           emmake make install
       - name: Save library build results
         uses: actions/cache/save@v4
         with:
-          path: build/*/dist/
+          path: build/dist/
           key: ${{ steps.cache-wasm-lib-restore.outputs.cache-primary-key }}
 
       - name: Build Ledger
         run: |
-          cd build
-          export BOOST="$(realpath boost/dist)"
-          # -lnodefs.js -lnoderawfs.js flags are for testing purposes.
-          emcmake cmake \
-            -DBUILD_LIBRARY=ON \
-            -DPRECOMPILE_SYSTEM_HH=OFF \
-            -DCMAKE_EXE_LINKER_FLAGS='-lnodefs.js -lnoderawfs.js -sSTACK_SIZE=1048576' \
-            -DCMAKE_INSTALL_PREFIX="$PWD"/dist \
-            -DCMAKE_PREFIX_PATH="$BOOST" \
-            -DGMP_PATH="$PWD"/gmp/dist/include \
-            -DGMP_LIB="$PWD"/gmp/dist/lib/libgmp.a \
-            -DMPFR_PATH="$PWD"/mpfr/dist/include \
-            -DMPFR_LIB="$PWD"/mpfr/dist/lib/libmpfr.a \
-            -DUTFCPP_INCLUDE_DIR="$PWD"/../lib/utfcpp/v4/source \
-            ..
-          emmake make -j4
+          export BOOST="$(realpath build/dist)"
+          # -lnodefs.js -lnoderawfs.js flags are for testing purposes to support reading from the filesystem.
+          export LDFLAGS='-lnodefs.js -lnoderawfs.js -sSTACK_SIZE=1048576'
+          ./acprep --emscripten --boost="$BOOST" --output=build/ make
       - name: Fix Emscripten build
         run: |
           cd build
@@ -187,7 +175,6 @@ jobs:
           # Enable testing from python scripts.
           chmod a+x ledger.js
       - name: Test Ledger
-        if: ${{ matrix.version.test }}
         run: |
           cd build
           node ledger.js --version
