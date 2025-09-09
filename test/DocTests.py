@@ -121,12 +121,8 @@ class DocTests:
       else:
         return None
 
-    if sys.version_info.major == 2:
-      command = command.encode(locale.getpreferredencoding())
     command_parts = shlex.split(command)
-    command = filter(lambda x: x != '\n', command_parts)
-    if sys.version_info.major > 2:
-        command = list(command)
+    command = list(filter(lambda x: x != '\n', command_parts))
     if command[0] == '$': command.remove('$')
     index = command.index('ledger')
     command[index] = self.ledger
