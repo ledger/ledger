@@ -121,10 +121,14 @@ namespace {
 
 using namespace boost::python;
 
+static ledger::raw_posts_iterator& iter_self(ledger::raw_posts_iterator& it) {
+    return it;
+}
+
 void export_xact()
 {
   class_< raw_posts_iterator >("RawPostsIterator", no_init)
-    .def("__iter__", boost::python::self)
+    .def("__iter__", &iter_self, return_internal_reference<>())
     .def("__next__", &raw_posts_iterator::next, return_internal_reference<>())
     .def("next", &raw_posts_iterator::next, return_internal_reference<>())
     ;
