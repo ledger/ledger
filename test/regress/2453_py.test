@@ -10,8 +10,7 @@
     Expenses:Food    $100
     Assets:Credit
 
-test reg
-        2012-03-01 KFC        Expenses:Food          $100         $100
-                              Assets:Credit         $-100            0
-                              (Assets:Cash)          $100         $100
+test python test/regress/2453.py
+2012-03-01 KFC Expenses:Food $100
+2012-03-01 KFC Assets:Credit $-100
 end test
