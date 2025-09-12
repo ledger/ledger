@@ -54,7 +54,12 @@ namespace ledger {
 }
 #endif
 
-int main(int argc, char * argv[], char * envp[])
+#if defined(__EMSCRIPTEN__)
+extern char **environ;
+int main(int argc, char *argv[]) // envp not supported in emscripten
+#else
+int main(int argc, char *argv[], char **environ)
+#endif
 {
   int status = 1;
 
@@ -86,7 +91,7 @@ int main(int argc, char * argv[], char * envp[])
   std::ios::sync_with_stdio(false);
 
   std::signal(SIGINT, sigint_handler);
-#if !defined(_WIN32) && !defined(__CYGWIN__)
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(__EMSCRIPTEN__)
   std::signal(SIGPIPE, sigpipe_handler);
 #endif
 
@@ -99,7 +104,7 @@ int main(int argc, char * argv[], char * envp[])
   try {
     // Create the session object, which maintains nearly all state relating to
     // this invocation of Ledger; and register all known journal parsers.
-    global_scope = new global_scope_t(envp);
+    global_scope = new global_scope_t(environ);
     global_scope->session().set_flush_on_next_data_file(true);
 
     // Construct an STL-style argument list from the process command arguments
