@@ -1,0 +1,12 @@
+2010/01/01 Test
+    Assets:Cash   $100
+    Equity
+
+2010/01/02 Purchase
+    Assets:Stocks   10 AAPL
+    Assets:Cash    -$1000
+
+test --getquote /custom/path/to/getquote bal -> 1
+__ERROR__
+Error: Unrecognized command '/custom/path/to/getquote'
+end test
