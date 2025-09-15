@@ -1,4 +1,4 @@
-#include "../extern/ftest/ftest.h"
+#include "ftest.h"
 #include "utf8.h"
 #include <string>
 using namespace utf8;
