@@ -6,6 +6,14 @@ add_library(${PROJECT_NAME} INTERFACE)
 
 include_directories("${PROJECT_SOURCE_DIR}/../source")
 
+if (MSVC)
+    # warning level 4
+    add_compile_options(/W4)
+else()
+    # additional warnings
+    add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion)
+endif()
+
 add_executable(negative negative.cpp)
 add_executable(cpp11 test_cpp11.cpp)
 add_executable(cpp17 test_cpp17.cpp)
@@ -13,12 +21,6 @@ add_executable(cpp20 test_cpp20.cpp)
 add_executable(apitests apitests.cpp)
 
 add_executable(noexceptionstests noexceptionstests.cpp)
-
-
-
-target_compile_options(${PROJECT_NAME} INTERFACE
-  $<$<CXX_COMPILER_ID:MSVC>:/W4>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Wconversion>)
 
 target_compile_options(noexceptionstests PUBLIC -fno-exceptions)
 
