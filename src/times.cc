@@ -100,7 +100,13 @@ namespace {
   {
     std::tm data;
     std::memset(&data, 0, sizeof(std::tm));
-    data.tm_year = CURRENT_DATE().year() - 1900;
+    // When year_directive_year is set (from "apply year" or "year" directive),
+    // use that instead of CURRENT_DATE() to avoid issues with leap year dates
+    if (year_directive_year) {
+      data.tm_year = *year_directive_year - 1900;
+    } else {
+      data.tm_year = CURRENT_DATE().year() - 1900;
+    }
     data.tm_mday = 1;           // some formats have no day
     if (strptime(str, fmt_str.c_str(), &data))
       return gregorian::date_from_tm(data);

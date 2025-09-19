@@ -1,0 +1,29 @@
+# Test leap year date handling with apply year directive
+
+apply year 2024
+
+02/29 * Leap Year Test
+  Expenses:Cash    $100.00
+  Income
+
+03/15 * Regular Transaction
+  Expenses:Food    $50.00
+  Income
+
+end apply year
+
+test reg
+2024/02/29 Leap Year Test       Expenses:Cash             $100.00      $100.00
+                                Income                   $-100.00            0
+2024/03/15 Regular Transaction  Expenses:Food              $50.00       $50.00
+                                Income                    $-50.00            0
+end test
+
+test bal
+             $150.00  Expenses
+             $100.00    Cash
+              $50.00    Food
+            $-150.00  Income
+--------------------
+                   0
+end test
