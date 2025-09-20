@@ -13,10 +13,10 @@ apply year 2024
 end apply year
 
 test reg
-2024/02/29 Leap Year Test       Expenses:Cash             $100.00      $100.00
-                                Income                   $-100.00            0
-2024/03/15 Regular Transaction  Expenses:Food              $50.00       $50.00
-                                Income                    $-50.00            0
+24-Feb-29 Leap Year Test        Expenses:Cash               $100.00      $100.00
+                                Income                     $-100.00            0
+24-Mar-15 Regular Transaction   Expenses:Food                $50.00       $50.00
+                                Income                      $-50.00            0
 end test
 
 test bal

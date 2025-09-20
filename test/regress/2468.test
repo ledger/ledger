@@ -15,8 +15,8 @@ apply year 2024
 end apply year
 
 test reg
-2024/02/29 Leap Year Transaction  Expenses:Cash           $123.45      $123.45
-                                  Expenses:Misc          $-123.45            0
-2024/03/01 Regular March Transaction  Expenses:Food        $50.00       $50.00
-                                  Income                  $-50.00            0
+24-Feb-29 Leap Year Transaction Expenses:Cash               $123.45      $123.45
+                                Expenses:Misc              $-123.45            0
+24-Mar-01 Regular March Trans.. Expenses:Food                $50.00       $50.00
+                                Income                      $-50.00            0
 end test
