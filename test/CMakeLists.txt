@@ -1,5 +1,5 @@
 include(ProcessorCount)
-ProcessorCount(PROCESSORS)
+processorcount(PROCESSORS)
 
 find_package(Python COMPONENTS Interpreter) # Used for running tests
 if(NOT Python_FOUND)

@@ -15,7 +15,7 @@ if(BUILD_DEBUG)
   unset(BUILD_DEBUG CACHE)
 endif()
 
-PROJECT(ledger)
+project(ledger)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/doc")
 include(LedgerVersion)
