@@ -25,9 +25,9 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/version.texi.in
   ${CMAKE_CURRENT_SOURCE_DIR}/version.texi)
 
-if (USE_DOXYGEN)
+if(USE_DOXYGEN)
   find_package(Doxygen ${Required_Doxygen_Version})
-  if (NOT DOXYGEN_FOUND)
+  if(NOT DOXYGEN_FOUND)
     message(FATAL_ERROR "Could not find doxygen. Reference documentation cannot be built.")
   endif()
 
@@ -81,11 +81,11 @@ endif()
 ########################################################################
 
 # BUILD_WEB_DOCS implies BUILD_DOCS
-if (BUILD_WEB_DOCS)
+if(BUILD_WEB_DOCS)
   set(BUILD_DOCS 1)
 endif()
 
-if (BUILD_DOCS)
+if(BUILD_DOCS)
   find_program(MAKEINFO makeinfo)
   find_program(TEXI2PDF texi2pdf)
   find_program(TEX tex)
@@ -94,11 +94,11 @@ if (BUILD_DOCS)
   find_program(GROFF groff)
   set(ledger_info_files ledger3.texi)
 
-  if (NOT MAKEINFO)
+  if(NOT MAKEINFO)
     message(WARNING "Could not find makeinfo. Info version of documentation cannot be built.")
   endif()
 
-  if (NOT TEXI2PDF OR NOT TEX)
+  if(NOT TEXI2PDF OR NOT TEX)
     message(WARNING "Could not find texi2pdf or tex. PDF version of documentation will not be built.")
   endif()
 endif()
@@ -108,13 +108,13 @@ endif()
 foreach(file ${ledger_info_files})
   get_filename_component(file_base ${file} NAME_WE)
 
-  if (MAKEINFO)
+  if(MAKEINFO)
     add_custom_command(OUTPUT ${file_base}.info
       COMMAND ${MAKEINFO} --force --no-split -o ${file_base}.info ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
       VERBATIM)
     list(APPEND ledger_doc_files ${file_base}.info)
-    if (BUILD_WEB_DOCS)
+    if(BUILD_WEB_DOCS)
       add_custom_command(OUTPUT ${file_base}.html
         COMMAND ${MAKEINFO} --force --html --no-split -o ${file_base}.html ${CMAKE_CURRENT_SOURCE_DIR}/${file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
@@ -128,8 +128,8 @@ foreach(file ${ledger_info_files})
     endif()
   endif()
 
-  if (TEXI2PDF AND TEX)
-    if (BUILD_A4_PDF)
+  if(TEXI2PDF AND TEX)
+    if(BUILD_A4_PDF)
       set(papersize --texinfo=@afourpaper)
     endif()
     add_custom_command(OUTPUT ${file_base}.pdf
@@ -142,20 +142,20 @@ endforeach()
 
 ########################################################################
 
-if (BUILD_WEB_DOCS)
+if(BUILD_WEB_DOCS)
   include(FindUnixCommands)
-  if (NOT BASH)
+  if(NOT BASH)
     message(FATAL_ERROR "Could not find bash. Unable to build documentation.")
   endif()
-  if (MAN2HTML)
+  if(MAN2HTML)
     add_custom_command(OUTPUT ledger.1.html
       COMMAND ${BASH} -c "${MAN2HTML} ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1 | tail -n+3 > ledger.1.html"
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
       VERBATIM)
     list(APPEND ledger_doc_files ledger.1.html)
-  elseif (MANDOC OR GROFF)
+  elseif(MANDOC OR GROFF)
     set(_cmd ${MANDOC})
-    if (NOT _cmd)
+    if(NOT _cmd)
       # HTML produced by mandoc is much nicer looking, use groff only as a last resort.
       message(WARNING "Using ${GROFF} to generate ledger1.html, as mandoc could not be found.")
       set(_cmd ${GROFF})
@@ -174,7 +174,7 @@ if (BUILD_WEB_DOCS)
     message(WARNING "Could not find man2html or groff. HTML version of man page will not be built.")
   endif()
 
-  if (USE_PYTHON AND Python_EXECUTABLE)
+  if(USE_PYTHON AND Python_EXECUTABLE)
     add_custom_command(OUTPUT ledger.html
       COMMAND ${CMAKE_COMMAND} -E env
         PYTHONPATH=${CMAKE_BINARY_DIR}
@@ -193,7 +193,7 @@ add_custom_target(doc DEPENDS ${ledger_doc_files} doc.doxygen)
 
 include(GNUInstallDirs)
 
-if (CMAKE_INSTALL_MANDIR)
+if(CMAKE_INSTALL_MANDIR)
   install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/ledger.1
     DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 COMPONENT doc)
 endif(CMAKE_INSTALL_MANDIR)
@@ -201,8 +201,8 @@ endif(CMAKE_INSTALL_MANDIR)
 foreach(file ${ledger_doc_files})
   get_filename_component(file_ext ${file} EXT)
 
-  if (file_ext STREQUAL ".info")
-    if (CMAKE_INSTALL_INFODIR)
+  if(file_ext STREQUAL ".info")
+    if(CMAKE_INSTALL_INFODIR)
       install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${file}
         DESTINATION ${CMAKE_INSTALL_INFODIR} COMPONENT doc)
     endif()
