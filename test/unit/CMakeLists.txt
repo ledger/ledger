@@ -3,7 +3,7 @@ macro(add_ledger_test _name)
   add_test(Ledger${_name} ${PROJECT_BINARY_DIR}/${_name})
   set_tests_properties(Ledger${_name}
     PROPERTIES ENVIRONMENT "TZ=${Ledger_TEST_TIMEZONE}")
-endmacro(add_ledger_test _name)
+endmacro()
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 

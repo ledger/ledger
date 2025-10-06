@@ -215,7 +215,7 @@ macro(find_opt_library_and_header _header_var _header _lib_var _lib _have_var)
   else()
     set(${_have_var} 0)
   endif()
-endmacro(find_opt_library_and_header _header_var _header _lib_var _lib _have_var)
+endmacro()
 
 macro(find_req_library_and_header _header_var _header _lib_var _lib)
   find_path(${_header_var} ${_header})
@@ -228,7 +228,7 @@ macro(find_req_library_and_header _header_var _header _lib_var _lib)
       message(SEND_ERROR "Could not find library ${_lib} on your system")
     endif()
   endif()
-endmacro(find_req_library_and_header _header_var _header _lib_var _lib)
+endmacro()
 
 find_req_library_and_header(GMP_PATH gmp.h GMP_LIB gmp)
 if(GMP_PATH AND EXISTS "${GMP_PATH}/gmp.h")
@@ -308,7 +308,7 @@ macro(add_ledger_library_dependencies _target)
       target_link_libraries(${_target} ${Python_LIBRARIES})
     endif()
   endif()
-endmacro(add_ledger_library_dependencies _target)
+endmacro()
 
 ########################################################################
 

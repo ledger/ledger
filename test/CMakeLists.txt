@@ -35,7 +35,7 @@ macro(add_ledger_harness_tests _class)
       endif()
     endforeach()
   endif()
-endmacro(add_ledger_harness_tests _class)
+endmacro()
 
 add_subdirectory(manual)
 add_subdirectory(baseline)
