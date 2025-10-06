@@ -262,7 +262,7 @@ find_opt_library_and_header(EDIT_PATH editline/readline.h EDIT_LIB edit HAVE_EDI
 if(NOT HAVE_EDIT)
 check_library_exists(readline add_history "" HAVE_READLINE)
 find_opt_library_and_header(READLINE_PATH readline/history.h READLINE_LIB readline HAVE_READLINE)
-endif(NOT HAVE_EDIT)
+endif()
 
 
 #find_package(Gettext)           # Used for running tests
