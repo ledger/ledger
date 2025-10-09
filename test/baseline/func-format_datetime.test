@@ -1,0 +1,11 @@
+2012-01-01 Test format_datetime function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test reg --display-amount "format_datetime()" -> 1
+__ERROR__
+While calling function 'format_datetime ':
+While handling posting from "/Users/johnw/src/ledger/work/more-tests/test/baseline/func-format_datetime.test", line 2:
+>     Assets:Test                       $100.00
+Error: Too few arguments to function
+end test
