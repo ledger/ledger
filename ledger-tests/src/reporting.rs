@@ -268,9 +268,24 @@ impl TestReport {
             println!("    Error: {}", style(error).red());
         }
         
-        if let Some(comparison) = &test.comparison {
+        if let Some(comparison) = &test.output_comparison {
             if !comparison.diff().is_empty() {
-                println!("    Diff:");
+                println!("    Output diff:");
+                for line in comparison.diff().lines() {
+                    if line.starts_with('+') {
+                        println!("      {}", style(line).green());
+                    } else if line.starts_with('-') {
+                        println!("      {}", style(line).red());
+                    } else {
+                        println!("      {}", style(line).dim());
+                    }
+                }
+            }
+        }
+        
+        if let Some(comparison) = &test.error_comparison {
+            if !comparison.diff().is_empty() {
+                println!("    Error diff:");
                 for line in comparison.diff().lines() {
                     if line.starts_with('+') {
                         println!("      {}", style(line).green());
