@@ -114,6 +114,8 @@ test/Testing
 /result*
 */build
 /outputs
+# Files generated when building / developing with Rust
+target
 
 # Logs
 logs
@@ -139,4 +141,4 @@ node_modules/
 
 # Task files
 # tasks.json
-# tasks/ 
+# tasks/
