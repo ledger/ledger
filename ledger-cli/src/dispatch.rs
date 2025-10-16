@@ -4,6 +4,7 @@
 //! handlers and managing the execution flow.
 
 use anyhow::{Result, Context};
+use ledger_core::parser::JournalParser;
 use std::io::{self, Write};
 use crate::cli::{Cli, Commands};
 use crate::session::Session;
@@ -191,15 +192,6 @@ impl Dispatcher {
             return Err(anyhow::anyhow!("No journal files specified"));
         }
         
-        use ledger_core::journal::Journal;
-        use ledger_core::transaction::Transaction;
-        use ledger_core::posting::Posting;
-        use ledger_math::amount::Amount;
-        use ledger_math::Decimal;
-        use std::str::FromStr;
-        use chrono::NaiveDate;
-        use compact_str::CompactString;
-        
         for file in &self.session.journal_files {
             if self.session.verbose_enabled {
                 eprintln!("Loading journal file: {}", file.display());
@@ -208,68 +200,15 @@ impl Dispatcher {
             if !file.exists() {
                 return Err(anyhow::anyhow!("Journal file not found: {}", file.display()));
             }
+            
+            let contents = std::fs::read_to_string(file)?;
+            let mut parser = JournalParser::new();
+            let journal = parser.parse_journal(&contents)?;
+            
+            // FIXME: this only supports 1 journal file
+            // TODO: combine all input journal files into one journal
+            self.session.parsed_journal = Some(journal);
         }
-        
-        // For now, create a simple demo journal instead of parsing
-        let mut main_journal = Journal::new();
-        
-        // Create some test accounts
-        let checking_account = main_journal.get_or_create_account("Assets:Checking");
-        let expenses_food = main_journal.get_or_create_account("Expenses:Food");
-        let equity_opening = main_journal.get_or_create_account("Equity:OpeningBalance");
-        let income_salary = main_journal.get_or_create_account("Income:Salary");
-        
-        // Create first transaction - Opening Balance
-        let mut tx1 = Transaction::new(
-            NaiveDate::from_ymd_opt(2024, 1, 1).unwrap(),
-            "Opening Balance".to_string()
-        );
-        
-        // Add postings to opening balance transaction
-        let mut posting1 = Posting::new(checking_account.clone());
-        posting1.amount = Some(Amount::new(Decimal::from_str("1000.00").unwrap()));
-        tx1.add_posting(posting1);
-        
-        let mut posting2 = Posting::new(equity_opening.clone());
-        posting2.amount = Some(Amount::new(Decimal::from_str("-1000.00").unwrap()));
-        tx1.add_posting(posting2);
-        
-        main_journal.add_transaction(tx1);
-        
-        // Create second transaction - Grocery Store
-        let mut tx2 = Transaction::new(
-            NaiveDate::from_ymd_opt(2024, 1, 15).unwrap(),
-            "Grocery Store".to_string()
-        );
-        
-        let mut posting3 = Posting::new(expenses_food.clone());
-        posting3.amount = Some(Amount::new(Decimal::from_str("45.67").unwrap()));
-        tx2.add_posting(posting3);
-        
-        let mut posting4 = Posting::new(checking_account.clone());
-        posting4.amount = Some(Amount::new(Decimal::from_str("-45.67").unwrap()));
-        tx2.add_posting(posting4);
-        
-        main_journal.add_transaction(tx2);
-        
-        // Create third transaction - Salary
-        let mut tx3 = Transaction::new(
-            NaiveDate::from_ymd_opt(2024, 1, 20).unwrap(),
-            "Salary".to_string()
-        );
-        
-        let mut posting5 = Posting::new(checking_account.clone());
-        posting5.amount = Some(Amount::new(Decimal::from_str("2500.00").unwrap()));
-        tx3.add_posting(posting5);
-        
-        let mut posting6 = Posting::new(income_salary.clone());
-        posting6.amount = Some(Amount::new(Decimal::from_str("-2500.00").unwrap()));
-        tx3.add_posting(posting6);
-        
-        main_journal.add_transaction(tx3);
-        
-        // Store the demo journal in the session for use by commands
-        self.session.parsed_journal = Some(main_journal);
         
         Ok(())
     }
