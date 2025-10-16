@@ -8,6 +8,7 @@
 //! - Include file resolution with cycle detection
 //! - Streaming parser for large files
 
+use ledger_math::CommodityFlags;
 use nom::{
     branch::alt,
     bytes::complete::{take_until, take_while, take_while1},
@@ -1355,23 +1356,34 @@ fn simple_amount_field(input: &str) -> ParseResult<Amount> {
         ),
         // Amount followed by commodity: 1000.00 USD, -1000.00 USD
         map(
-            recognize(tuple((
-                opt(tag("-")),
-                digit1,
-                opt(tuple((tag("."), digit1))),
+            tuple((
+                tuple((
+                    opt(tag("-")),
+                    digit1,
+                    opt(tuple((tag("."), digit1)))
+                )),
                 opt(preceded(space0, alpha1)), // commodity
-            ))),
-            |amount_str: &str| {
+            )),
+            |(amount, commodity)| {
                 // For now, create a simple amount from parsed decimal
                 use rust_decimal::Decimal;
                 use std::str::FromStr;
                 
-                let decimal_str = amount_str.chars()
-                    .take_while(|c| c.is_ascii_digit() || *c == '.' || *c == '-')
-                    .collect::<String>();
                 
+                let decimal_str = format!(
+                    "{}{}{}", 
+                    amount.0.unwrap_or(""),
+                    amount.1,
+                    amount.2.map(|a| format!("{}{}", a.0, a.1)).unwrap_or(String::new())
+                );
+                 
                 let decimal = Decimal::from_str(&decimal_str).unwrap_or_default();
-                Amount::new(decimal)
+                let commodity = commodity.map(|s| {
+                    let mut commodity = Commodity::new(s);
+                    commodity.add_flags(CommodityFlags::STYLE_SUFFIXED);
+                    Arc::new(commodity)
+                });
+                Amount::with_commodity(decimal, commodity)
             }
         ),
     ))(input)
