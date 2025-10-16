@@ -49,7 +49,9 @@ pub struct TestResult {
     /// Error message if test failed
     pub error_message: Option<String>,
     /// Output comparison results
-    pub comparison: Option<OutputComparison>,
+    pub output_comparison: Option<OutputComparison>,
+    /// Error comparison results
+    pub error_comparison: Option<OutputComparison>,
 }
 
 impl TestResult {
@@ -71,7 +73,8 @@ impl TestResult {
             actual_exit_code,
             duration,
             error_message: None,
-            comparison: None,
+            output_comparison: None,
+            error_comparison: None,
         }
     }
     
@@ -84,7 +87,8 @@ impl TestResult {
         actual_exit_code: i32,
         duration: Duration,
         error_message: String,
-        comparison: Option<OutputComparison>,
+        output_comparison: Option<OutputComparison>,
+        error_comparison: Option<OutputComparison>,
     ) -> Self {
         Self {
             test_case,
@@ -95,7 +99,8 @@ impl TestResult {
             actual_exit_code,
             duration,
             error_message: Some(error_message),
-            comparison,
+            output_comparison,
+            error_comparison,
         }
     }
     
@@ -110,7 +115,8 @@ impl TestResult {
             actual_exit_code: 0,
             duration: Duration::ZERO,
             error_message: Some(reason),
-            comparison: None,
+            output_comparison: None,
+            error_comparison: None,
         }
     }
     
@@ -125,7 +131,8 @@ impl TestResult {
             actual_exit_code: -1,
             duration: Duration::ZERO,
             error_message: Some(error_message),
-            comparison: None,
+            output_comparison: None,
+            error_comparison: None,
         }
     }
     
@@ -140,7 +147,8 @@ impl TestResult {
             actual_exit_code: -1,
             duration,
             error_message: Some("Test timed out".to_string()),
-            comparison: None,
+            output_comparison: None,
+            error_comparison: None,
         }
     }
 }
@@ -379,6 +387,7 @@ impl TestExecutor {
                 duration,
                 error_msg,
                 None,
+                None,
             );
         }
         
@@ -415,7 +424,8 @@ impl TestExecutor {
                 actual_exit_code,
                 duration,
                 error_msg,
-                Some(output_comparison),
+                output_comparison.has_differences().then(|| output_comparison),
+                error_comparison.has_differences().then(|| error_comparison),
             );
         }
         
