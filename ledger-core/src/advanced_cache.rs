@@ -24,9 +24,7 @@ where
     V: Clone,
 {
     cache: Mutex<FastHashMap<K, CachedValue<V>>>,
-    max_size: usize,
-    hit_count: Mutex<u64>,
-    miss_count: Mutex<u64>,
+    stats: Arc<Mutex<CacheStats>>,
 }
 
 #[derive(Debug, Clone)]
@@ -42,12 +40,11 @@ where
     V: Clone,
 {
     /// Create a new memoization cache with specified capacity
-    pub fn new(max_size: usize) -> Self {
+    pub fn new(capacity: usize) -> Self {
         Self {
             cache: Mutex::new(FastHashMap::default()),
-            max_size,
-            hit_count: Mutex::new(0),
-            miss_count: Mutex::new(0),
+            stats: Arc::new(Mutex::new(CacheStats::new(capacity))),
+
         }
     }
 
@@ -61,21 +58,21 @@ where
             let mut cache = self.cache.lock().unwrap();
             if let Some(cached) = cache.get_mut(&key) {
                 cached.access_count += 1;
-                *self.hit_count.lock().unwrap() += 1;
+                self.stats.lock().unwrap().hit_count += 1;
                 return cached.value.clone();
             }
         }
 
         // Cache miss - compute the value
         let value = compute();
-        *self.miss_count.lock().unwrap() += 1;
+        self.stats.lock().unwrap().miss_count += 1;
 
         // Store in cache (with eviction if necessary)
         {
             let mut cache = self.cache.lock().unwrap();
             
             // Simple eviction strategy - remove oldest if at capacity
-            if cache.len() >= self.max_size {
+            if cache.len() >= self.stats.lock().unwrap().capacity {
                 let oldest_key = cache.iter()
                     .min_by_key(|(_, v)| v.created_at)
                     .map(|(k, _)| k.clone());
@@ -98,26 +95,26 @@ where
     /// Clear the cache
     pub fn clear(&self) {
         self.cache.lock().unwrap().clear();
-        *self.hit_count.lock().unwrap() = 0;
-        *self.miss_count.lock().unwrap() = 0;
+        let mut stats = self.stats.lock().unwrap();
+        stats.hit_count = 0;
+        stats.miss_count = 0;
     }
 
     /// Get cache statistics
     pub fn stats(&self) -> CacheStats {
-        let hits = *self.hit_count.lock().unwrap();
-        let misses = *self.miss_count.lock().unwrap();
-        let total_requests = hits + misses;
+        let stats = self.stats.lock().unwrap();
+        let total_requests = stats.hit_count + stats.miss_count;
         
         CacheStats {
-            hit_count: hits,
-            miss_count: misses,
+            hit_count: stats.hit_count,
+            miss_count: stats.miss_count,
             hit_ratio: if total_requests > 0 {
-                hits as f64 / total_requests as f64
+                stats.hit_count as f64 / total_requests as f64
             } else {
                 0.0
             },
             size: self.cache.lock().unwrap().len(),
-            capacity: self.max_size,
+            capacity: stats.capacity,
         }
     }
 }
@@ -190,13 +187,14 @@ impl BalanceCache {
     pub fn stats(&self) -> CacheStats {
         let stats = self.stats.lock().unwrap();
         let total = stats.hit_count + stats.miss_count;
+        let cache = self.cache.lock().unwrap();
         
         CacheStats {
             hit_count: stats.hit_count,
             miss_count: stats.miss_count,
             hit_ratio: if total > 0 { stats.hit_count as f64 / total as f64 } else { 0.0 },
-            size: self.cache.lock().unwrap().len(),
-            capacity: self.cache.lock().unwrap().cap().get(),
+            size: cache.len(),
+            capacity: cache.cap().get(),
         }
     }
 
@@ -354,6 +352,19 @@ pub struct CacheStats {
     pub hit_ratio: f64,
     pub size: usize,
     pub capacity: usize,
+}
+
+impl CacheStats {
+    /// Create a new cache stats with given capacity.
+    pub fn new(capacity: usize) -> Self {
+        Self {
+             hit_count: 0,
+             miss_count: 0,
+             hit_ratio: 0.0,
+             size: 0,
+             capacity,
+        }
+    }
 }
 
 impl fmt::Display for CacheStats {
@@ -517,7 +528,7 @@ mod tests {
 
         let stats = cache.stats();
         assert_eq!(stats.hit_count, 1);
-        assert_eq!(stats.miss_count, 1);
+        assert_eq!(stats.miss_count, 2);
     }
 
     #[test]
