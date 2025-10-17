@@ -23,11 +23,13 @@ pub mod harness;
 pub mod reporting;
 pub mod baseline;
 
-#[cfg(feature = "python-bindings")]
-pub mod python;
+// FIXME: failed to resolve mod `python`: .../python.rs does not exist
+// #[cfg(feature = "python-bindings")]
+// pub mod python;
 
-#[cfg(feature = "fuzzing")]
-pub mod fuzzing;
+// FIXME: Error writing files: failed to resolve mod `fuzzing`: .../fuzzing.rs does not exist
+// #[cfg(feature = "fuzzing")]
+// pub mod fuzzing;
 
 // Re-exports for easier access
 pub use harness::{LedgerHarness, TestRunner};

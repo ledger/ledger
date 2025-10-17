@@ -132,7 +132,7 @@ fn test_command_specific_options() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = TempDir::new()?;
     let ledger_file = temp_dir.path().join("test.ledger");
     
-    fs::write(&ledger_file, 
+    fs::write(&ledger_file,
         "2023-01-01 Opening Balance\n  Assets:Bank  $1000\n  Equity:Opening Balance\n\n2023-01-15 Grocery Store\n  Expenses:Food  $45.67\n  Assets:Bank\n"
     )?;
     
