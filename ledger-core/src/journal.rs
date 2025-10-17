@@ -77,16 +77,12 @@ impl Journal {
 
         // Merge accounts
         for (name, account) in other.accounts {
-            if !self.accounts.contains_key(&name) {
-                self.accounts.insert(name, account);
-            }
+            self.accounts.entry(name).or_insert(account);
         }
 
         // Merge commodities
         for (symbol, commodity) in other.commodities {
-            if !self.commodities.contains_key(&symbol) {
-                self.commodities.insert(symbol, commodity);
-            }
+            self.commodities.entry(symbol).or_insert(commodity);
         }
 
         Ok(())

@@ -4,11 +4,9 @@
 //! the most common string usage patterns in Ledger accounting operations.
 
 use ahash::AHashMap;
-use bumpalo::Bump;
 use compact_str::CompactString as CompactStr;
 use once_cell::sync::Lazy;
-use smallvec::{smallvec, SmallVec};
-use std::collections::HashMap;
+use smallvec::SmallVec;
 use std::sync::Mutex;
 
 /// A string type optimized for short strings commonly found in account names
@@ -50,6 +48,12 @@ pub struct InternerStats {
     pub cache_hits: usize,
     /// Estimated memory saved by interning
     pub memory_saved_bytes: usize,
+}
+
+impl Default for StringInterner {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl StringInterner {

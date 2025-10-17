@@ -1,7 +1,7 @@
 //! Transaction representation
 
 use crate::posting::{Posting, PostingFlags};
-use chrono::{NaiveDate, NaiveDateTime};
+use chrono::NaiveDate;
 use ledger_math::amount::Amount;
 use rust_decimal::Decimal;
 use std::collections::HashMap;
@@ -30,9 +30,10 @@ bitflags::bitflags! {
 }
 
 /// Transaction status (state)
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum TransactionStatus {
     /// Uncleared
+    #[default]
     Uncleared,
     /// Cleared (*)
     Cleared,
@@ -41,9 +42,10 @@ pub enum TransactionStatus {
 }
 
 /// Transaction types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum TransactionType {
     /// Regular transaction
+    #[default]
     Normal,
     /// Automated transaction
     Automated,
@@ -87,12 +89,6 @@ pub struct Transaction {
     pub sequence: usize,
 }
 
-impl Default for TransactionStatus {
-    fn default() -> Self {
-        TransactionStatus::Uncleared
-    }
-}
-
 impl Default for TransactionFlags {
     fn default() -> Self {
         TransactionFlags::NORMAL
@@ -115,12 +111,6 @@ impl Default for Transaction {
             metadata: HashMap::new(),
             sequence: 0,
         }
-    }
-}
-
-impl Default for TransactionType {
-    fn default() -> Self {
-        TransactionType::Normal
     }
 }
 
@@ -694,10 +684,8 @@ impl Transaction {
                 if overwrite_existing || !self.metadata.contains_key(tag) {
                     self.set_tag(tag.to_string(), Some(value.to_string()), false);
                 }
-            } else {
-                if overwrite_existing || !self.metadata.contains_key(tag_pair) {
-                    self.set_tag(tag_pair.to_string(), None, false);
-                }
+            } else if overwrite_existing || !self.metadata.contains_key(tag_pair) {
+                self.set_tag(tag_pair.to_string(), None, false);
             }
         }
     }
@@ -788,7 +776,7 @@ impl Transaction {
     /// Get postings sorted by account name
     pub fn postings_sorted_by_account(&self) -> Vec<&Posting> {
         let mut postings: Vec<&Posting> = self.postings.iter().collect();
-        postings.sort_by(|a, b| a.account_name().cmp(&b.account_name()));
+        postings.sort_by_key(|a| a.account_name());
         postings
     }
 

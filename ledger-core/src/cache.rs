@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::hash::{Hash, Hasher};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 /// Errors that can occur during cache operations
 #[derive(Debug, Clone)]
@@ -490,7 +490,7 @@ impl Default for CacheManager {
 pub struct CacheManagerStats {
     /// Balance cache statistics
     pub balance_cache: CacheStats,
-    /// Report cache statistics  
+    /// Report cache statistics
     pub report_cache: CacheStats,
     /// Running total cache statistics
     pub running_total_cache: CacheStats,

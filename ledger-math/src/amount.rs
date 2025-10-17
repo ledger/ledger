@@ -1013,10 +1013,7 @@ impl Serialize for Amount {
         let mut state = serializer.serialize_struct("Amount", 4)?;
 
         // Serialize quantity as string to preserve precision
-        let quantity_str = match &self.quantity {
-            None => None,
-            Some(q) => Some(q.to_string()),
-        };
+        let quantity_str = self.quantity.as_ref().map(|q| q.to_string());
         state.serialize_field("quantity", &quantity_str)?;
 
         // Serialize commodity as None for now (complex to handle Arc properly)
@@ -1101,8 +1098,7 @@ impl<'de> Deserialize<'de> for Amount {
             }
         }
 
-        const FIELDS: &'static [&'static str] =
-            &["quantity", "commodity", "precision", "keep_precision"];
+        const FIELDS: &[&str] = &["quantity", "commodity", "precision", "keep_precision"];
         deserializer.deserialize_struct("Amount", FIELDS, AmountVisitor)
     }
 }

@@ -18,6 +18,12 @@ pub struct TestCase {
     pub line_number: usize,
 }
 
+impl Default for TestCase {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TestCase {
     pub fn new() -> Self {
         Self {
@@ -63,7 +69,7 @@ impl RegressionTestParser {
                 continue;
             }
 
-            if line.starts_with("test ") {
+            if let Some(command_part) = line.strip_prefix("test ") {
                 // Start of a new test case
                 if let Some(test) = current_test.take() {
                     test_cases.push(test);
@@ -74,7 +80,7 @@ impl RegressionTestParser {
                 in_error = false;
 
                 // Parse command and expected exit code
-                let command_part = &line[5..]; // Remove "test "
+                // Remove "test "
                 if let Some(arrow_pos) = command_part.find(" -> ") {
                     let (command, exit_code_str) = command_part.split_at(arrow_pos);
                     let exit_code_str = &exit_code_str[4..]; // Remove " -> "
@@ -84,11 +90,9 @@ impl RegressionTestParser {
                         test.expected_exit_code = exit_code_str.trim().parse().unwrap_or(0);
                         test.line_number = line_number;
                     }
-                } else {
-                    if let Some(test) = &mut current_test {
-                        test.command = self.transform_line(command_part);
-                        test.line_number = line_number;
-                    }
+                } else if let Some(test) = &mut current_test {
+                    test.command = self.transform_line(command_part);
+                    test.line_number = line_number;
                 }
             } else if line.starts_with("end test") {
                 // End of current test case
@@ -104,10 +108,8 @@ impl RegressionTestParser {
                     if let Some(test) = &mut current_test {
                         test.expected_error.push(self.transform_line(&line));
                     }
-                } else {
-                    if let Some(test) = &mut current_test {
-                        test.expected_output.push(self.transform_line(&line));
-                    }
+                } else if let Some(test) = &mut current_test {
+                    test.expected_output.push(self.transform_line(&line));
                 }
             }
         }
@@ -158,13 +160,13 @@ impl ManualTestParser {
                 format!("Failed to read line {} from {}", line_number, self.file_path.display())
             })?;
 
-            if line.starts_with("test ") {
+            if let Some(command_part) = line.strip_prefix("test ") {
                 // Start of test section
                 in_test_section = true;
                 in_output_section = true;
                 in_error_section = false;
 
-                let command_part = &line[5..]; // Remove "test "
+                // Remove "test "
                 if let Some(arrow_pos) = command_part.find(" -> ") {
                     let (command, exit_code_str) = command_part.split_at(arrow_pos);
                     let exit_code_str = &exit_code_str[4..]; // Remove " -> "
@@ -250,10 +252,9 @@ impl BaselineTestParser {
             }
 
             // Look for specific baseline test patterns
-            if line.starts_with("test ") {
+            if let Some(command_part) = line.strip_prefix("test ") {
                 // Regression-style test in baseline directory
                 in_command = true;
-                let command_part = &line[5..];
                 if let Some(arrow_pos) = command_part.find(" -> ") {
                     let (command, exit_code_str) = command_part.split_at(arrow_pos);
                     let exit_code_str = &exit_code_str[4..];

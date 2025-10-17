@@ -119,6 +119,12 @@ pub enum TextAlignment {
     Center,
 }
 
+impl Default for TextFormatter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TextFormatter {
     /// Create a new text formatter
     pub fn new() -> Self {
@@ -196,6 +202,12 @@ pub struct CsvFormatter {
     pub include_headers: bool,
     /// Custom delimiter (default is comma)
     pub delimiter: char,
+}
+
+impl Default for CsvFormatter {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl CsvFormatter {
@@ -317,6 +329,12 @@ pub struct XmlFormatter {
     pub rows: Vec<Vec<String>>,
     /// Pretty print flag
     pub pretty: bool,
+}
+
+impl Default for XmlFormatter {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl XmlFormatter {
@@ -456,6 +474,12 @@ pub struct HtmlFormatter {
     pub full_document: bool,
     /// Page title (if full document)
     pub title: String,
+}
+
+impl Default for HtmlFormatter {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl HtmlFormatter {

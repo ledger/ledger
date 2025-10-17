@@ -7,11 +7,10 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
-use tokio::fs;
 use walkdir::WalkDir;
 
 use crate::config::{TestCategory, TestConfig};
-use crate::discovery::{TestCase, TestDiscovery, TestSuite};
+use crate::discovery::{TestDiscovery, TestSuite};
 use crate::execution::{TestExecutor, TestResult, TestStatus};
 use crate::reporting::TestReport;
 use crate::TestError;

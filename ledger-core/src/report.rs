@@ -210,7 +210,7 @@ impl BalanceReport {
                 if let Some(ref amount) = posting.amount {
                     // Add to account balance
                     let balance = account_balances.entry(account_name.to_string()).or_default();
-                    balance.add_amount(&amount).map_err(|e| {
+                    balance.add_amount(amount).map_err(|e| {
                         ReportError::InvalidConfig(format!("Failed to add amount: {}", e))
                     })?;
 
@@ -229,7 +229,7 @@ impl BalanceReport {
                             if parent_path != account_name {
                                 let parent_balance =
                                     account_balances.entry(parent_path.clone()).or_default();
-                                parent_balance.add_amount(&amount).map_err(|e| {
+                                parent_balance.add_amount(amount).map_err(|e| {
                                     ReportError::InvalidConfig(format!(
                                         "Failed to add parent amount: {}",
                                         e
@@ -260,7 +260,7 @@ impl BalanceReport {
             }
 
             // Try to get account reference
-            if let Ok(account_ref) = self.journal.find_account(&account_name) {
+            if let Ok(account_ref) = self.journal.find_account(account_name) {
                 let has_children = account_name.contains(':')
                     || account_balances
                         .keys()
@@ -373,7 +373,7 @@ impl BalanceReport {
             let full_name = account_ref.fullname_immutable();
             let segments: Vec<&str> = full_name.split(':').collect();
             let indent = "  ".repeat(account_balance.depth);
-            let last_segment = segments.last().map(|s| *s).unwrap_or(&full_name);
+            let last_segment = segments.last().copied().unwrap_or(&full_name);
             format!("{}{}", indent, last_segment)
         };
 
@@ -596,7 +596,7 @@ impl RegisterReport {
             for posting in matching_postings {
                 if let Some(ref amount) = posting.amount {
                     // Update running balance
-                    running_balance.add_amount(&amount).map_err(|e| {
+                    running_balance.add_amount(amount).map_err(|e| {
                         ReportError::InvalidConfig(format!(
                             "Failed to update running balance: {}",
                             e
@@ -633,7 +633,7 @@ impl RegisterReport {
                             .note
                             .as_ref()
                             .map(|n| n.to_string())
-                            .or_else(|| transaction.note.as_ref().map(|n| n.clone())),
+                            .or_else(|| transaction.note.clone()),
                         is_split: transaction.postings.len() > 2,
                         related_accounts,
                     };
@@ -682,7 +682,7 @@ impl RegisterReport {
 
         // Code column
         if self.columns.code {
-            let code_str = entry.code.as_ref().map(|s| s.as_str()).unwrap_or("");
+            let code_str = entry.code.as_deref().unwrap_or("");
             let code_width = self.columns.widths.get("code").copied().unwrap_or(6);
             parts.push(format!("{:<width$}", code_str, width = code_width));
         }
@@ -1080,7 +1080,7 @@ impl ReportGenerator for StatsReport {
 
             // Count accounts by top-level category
             let mut account_categories: HashMap<String, usize> = HashMap::new();
-            for (_name, account) in &self.journal.accounts {
+            for account in self.journal.accounts.values() {
                 let account_ref = account.borrow();
                 let full_name = account_ref.fullname_immutable();
                 let category = full_name.split(':').next().unwrap_or("Unknown").to_string();
@@ -1196,11 +1196,11 @@ impl ReportGenerator for ClearedReport {
                 if let Some(ref amount) = posting.amount {
                     if is_cleared {
                         cleared_total
-                            .add_amount(&amount)
+                            .add_amount(amount)
                             .map_err(|e| ReportError::InvalidConfig(e.to_string()))?;
                     } else {
                         uncleared_total
-                            .add_amount(&amount)
+                            .add_amount(amount)
                             .map_err(|e| ReportError::InvalidConfig(e.to_string()))?;
                     }
                 }

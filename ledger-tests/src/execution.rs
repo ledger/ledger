@@ -306,7 +306,7 @@ impl TestExecutor {
                     if let Ok(mingw_prefix) = std::env::var("MINGW_PREFIX") {
                         let bash_path = format!("{}/../usr/bin/bash.exe", mingw_prefix);
                         cmd = TokioCommand::new(bash_path);
-                        cmd.args(&["-c", &command_str]);
+                        cmd.args(["-c", &command_str]);
                     }
                 }
             }
@@ -418,8 +418,8 @@ impl TestExecutor {
                 actual_exit_code,
                 duration,
                 error_msg,
-                output_comparison.has_differences().then(|| output_comparison),
-                error_comparison.has_differences().then(|| error_comparison),
+                output_comparison.has_differences().then_some(output_comparison),
+                error_comparison.has_differences().then_some(error_comparison),
             );
         }
 

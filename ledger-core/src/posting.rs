@@ -3,8 +3,6 @@
 use chrono::{NaiveDate, NaiveDateTime};
 use smallvec::SmallVec;
 use std::collections::HashMap;
-use std::path::PathBuf;
-use std::rc::{Rc, Weak};
 
 use crate::account::AccountRef;
 use crate::strings::{AccountName, PayeeName};
@@ -30,9 +28,10 @@ bitflags::bitflags! {
 }
 
 /// Posting status
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum PostingStatus {
     /// Uncleared
+    #[default]
     Uncleared,
     /// Cleared (*)
     Cleared,
@@ -95,12 +94,6 @@ pub struct Posting {
 impl Default for PostingFlags {
     fn default() -> Self {
         PostingFlags::NORMAL
-    }
-}
-
-impl Default for PostingStatus {
-    fn default() -> Self {
-        PostingStatus::Uncleared
     }
 }
 
@@ -364,10 +357,8 @@ impl Posting {
                 if overwrite_existing || !self.metadata.contains_key(tag) {
                     self.set_tag(tag.to_string(), Some(value.to_string()), false);
                 }
-            } else {
-                if overwrite_existing || !self.metadata.contains_key(tag_pair) {
-                    self.set_tag(tag_pair.to_string(), None, false);
-                }
+            } else if overwrite_existing || !self.metadata.contains_key(tag_pair) {
+                self.set_tag(tag_pair.to_string(), None, false);
             }
         }
     }

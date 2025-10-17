@@ -7,21 +7,18 @@
 use memmap2::Mmap;
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_until, take_while, take_while1},
+    bytes::complete::{take_while, take_while1},
     character::complete::{
-        alpha1, char, digit1, line_ending, multispace0, multispace1, not_line_ending, space0,
-        space1,
+        char, digit1, line_ending, multispace0, multispace1, not_line_ending, space0, space1,
     },
-    combinator::{consumed, map, opt, recognize, value},
-    error::{context, ParseError},
-    multi::{many0, many1, separated_list1},
-    sequence::{delimited, pair, preceded, terminated, tuple},
-    IResult, InputLength, Parser,
+    combinator::{map, opt, recognize, value},
+    multi::many0,
+    sequence::{delimited, pair, tuple},
+    IResult, Parser,
 };
 
-use crate::strings::{intern_string, AccountName, CommoditySymbol, FastParser, PayeeName};
+use crate::strings::intern_string;
 use smallvec::SmallVec;
-use std::borrow::Cow;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};

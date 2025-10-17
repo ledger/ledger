@@ -237,7 +237,7 @@ impl Account {
         }
 
         use crate::strings::FastParser;
-        FastParser::split_account_path(path).into_iter().map(|s| intern_string(s)).collect()
+        FastParser::split_account_path(path).into_iter().map(intern_string).collect()
     }
 
     /// Check if this account has the specified flag

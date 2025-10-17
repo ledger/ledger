@@ -9,7 +9,6 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fs;
 use std::path::Path;
-use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
 /// Performance metrics for a single benchmark run
@@ -331,7 +330,7 @@ impl BenchmarkSuite {
 
         for i in 0..iterations {
             let val = rust_decimal::Decimal::from(i);
-            total = total + val * rust_decimal::Decimal::from(2);
+            total += val * rust_decimal::Decimal::from(2);
         }
 
         metrics.duration = start.elapsed();

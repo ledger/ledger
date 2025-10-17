@@ -5,8 +5,7 @@
 //! and cross-platform normalization.
 
 use anyhow::{Context, Result};
-use chrono::{DateTime, NaiveDateTime, Utc};
-use log::{debug, warn};
+use log::debug;
 use regex::Regex;
 use std::collections::HashMap;
 
@@ -242,7 +241,7 @@ impl OutputValidator {
                 error_details: if is_line_valid {
                     None
                 } else {
-                    Some(format!("Exact match failed"))
+                    Some("Exact match failed".to_string())
                 },
             });
         }
@@ -345,7 +344,7 @@ impl OutputValidator {
             error_message: if all_valid {
                 None
             } else {
-                Some(format!("Numerical tolerance validation failed"))
+                Some("Numerical tolerance validation failed".to_string())
             },
             line_results,
         })
@@ -417,7 +416,7 @@ impl OutputValidator {
             error_message: if all_valid {
                 None
             } else {
-                Some(format!("DateTime tolerance validation failed"))
+                Some("DateTime tolerance validation failed".to_string())
             },
             line_results,
         })

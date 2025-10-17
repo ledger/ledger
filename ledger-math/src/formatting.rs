@@ -7,7 +7,6 @@
 use num_bigint::BigInt;
 use num_rational::BigRational;
 use num_traits::{Signed, Zero};
-use std::fmt;
 
 use crate::amount::{Amount, Precision};
 use crate::balance::Balance;
@@ -45,7 +44,7 @@ impl Default for FormatFlags {
 }
 
 /// Format configuration for displaying amounts and balances
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct FormatConfig {
     /// Display precision override (None uses commodity/amount precision)
     pub precision: Option<Precision>,
@@ -67,20 +66,6 @@ pub struct FormatConfig {
 
     /// Format flags
     pub flags: FormatFlags,
-}
-
-impl Default for FormatConfig {
-    fn default() -> Self {
-        Self {
-            precision: None,
-            min_width: None,
-            max_width: None,
-            thousands_sep: false,
-            decimal_comma: false,
-            time_colon: false,
-            flags: FormatFlags::default(),
-        }
-    }
 }
 
 impl FormatConfig {
@@ -175,14 +160,13 @@ pub fn format_rational(
             formatted_integer = "0".to_string();
         }
 
-        let decimal_point =
-            if config.time_colon && commodity.map_or(false, |c| is_time_commodity(c)) {
-                ":"
-            } else if config.decimal_comma {
-                ","
-            } else {
-                "."
-            };
+        let decimal_point = if config.time_colon && commodity.is_some_and(is_time_commodity) {
+            ":"
+        } else if config.decimal_comma {
+            ","
+        } else {
+            "."
+        };
 
         format!("{}{}{}", formatted_integer, decimal_point, decimal_part)
     } else {
@@ -206,7 +190,7 @@ fn format_integer_with_separators(
         return digits.to_string();
     }
 
-    let separator = if config.time_colon && commodity.map_or(false, |c| is_time_commodity(c)) {
+    let separator = if config.time_colon && commodity.is_some_and(is_time_commodity) {
         ":"
     } else if config.decimal_comma {
         "."
@@ -231,7 +215,7 @@ fn format_integer_with_separators(
 /// Check if a commodity represents time (hours, minutes, seconds)
 fn is_time_commodity(commodity: &CommodityRef) -> bool {
     let symbol = commodity.symbol();
-    matches!(symbol.as_ref(), "h" | "m" | "s")
+    matches!(symbol, "h" | "m" | "s")
 }
 
 /// Apply width formatting and justification
@@ -341,7 +325,7 @@ pub fn format_balance(balance: &Balance, config: &FormatConfig) -> String {
     let mut amounts: Vec<_> = balance.amounts().collect();
 
     // Sort by commodity symbol for consistent output
-    amounts.sort_by(|a, b| a.0.symbol().cmp(&b.0.symbol()));
+    amounts.sort_by(|a, b| a.0.symbol().cmp(b.0.symbol()));
 
     for (_, amount) in amounts {
         lines.push(format_amount(amount, config));

@@ -1,7 +1,6 @@
 //! Main test harness orchestrating the test framework
 
 use rayon::prelude::*;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 use std::time::Instant;

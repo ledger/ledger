@@ -7,12 +7,10 @@ use parking_lot::{Mutex as ParkingMutex, RwLock as ParkingRwLock};
 use rayon::prelude::*;
 use rayon::{Scope, ThreadPoolBuilder};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex, RwLock};
 use std::time::Instant;
 
 use crate::account::{Account, AccountRef};
 use crate::balance::Balance;
-use crate::posting::Posting;
 use crate::strings::AccountName;
 use crate::transaction::Transaction;
 use ledger_math::amount::Amount;
@@ -65,6 +63,12 @@ pub struct ParallelBalanceAccumulator {
     balances: ParkingRwLock<HashMap<AccountName, Balance>>,
 }
 
+impl Default for ParallelBalanceAccumulator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ParallelBalanceAccumulator {
     pub fn new() -> Self {
         Self { balances: ParkingRwLock::new(HashMap::new()) }
@@ -73,7 +77,7 @@ impl ParallelBalanceAccumulator {
     /// Add an amount to an account balance (thread-safe)
     pub fn add_amount(&self, account: AccountName, amount: Amount) {
         let mut balances = self.balances.write();
-        let balance = balances.entry(account).or_insert_with(Balance::new);
+        let balance = balances.entry(account).or_default();
         balance.add_amount(&amount);
     }
 
@@ -101,6 +105,12 @@ pub struct ProcessingStats {
     pub processing_time_ms: u64,
     pub threads_used: usize,
     pub chunks_processed: usize,
+}
+
+impl Default for ParallelTransactionProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ParallelTransactionProcessor {
@@ -211,6 +221,12 @@ pub struct ParallelAccountProcessor {
     config: ParallelConfig,
 }
 
+impl Default for ParallelAccountProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ParallelAccountProcessor {
     pub fn new() -> Self {
         Self { config: get_parallel_config() }
@@ -290,7 +306,7 @@ impl ParallelAccountProcessor {
             // Split accounts into chunks and process in parallel
             // Since Rc<RefCell> isn't thread-safe, use sequential processing
             // In a production system, you'd use Arc<Mutex> for parallel processing
-            aggregator(&root_accounts)
+            aggregator(root_accounts)
         }
     }
 }
@@ -299,6 +315,12 @@ impl ParallelAccountProcessor {
 pub struct ParallelReportGenerator {
     processor: ParallelTransactionProcessor,
     account_processor: ParallelAccountProcessor,
+}
+
+impl Default for ParallelReportGenerator {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ParallelReportGenerator {

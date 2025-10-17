@@ -3,7 +3,7 @@
 use clap::Parser;
 use std::process;
 
-use ledger_tests::{config::TestConfig, harness::LedgerHarness, TestError};
+use ledger_tests::{config::TestConfig, harness::LedgerHarness};
 
 #[tokio::main]
 async fn main() {

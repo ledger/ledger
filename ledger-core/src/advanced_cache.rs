@@ -5,15 +5,13 @@
 
 use crate::balance::Balance;
 use crate::data_structures::FastHashMap;
-use ledger_math::amount::Amount;
 use lru::LruCache;
 use moka::sync::Cache as MokaCache;
 use once_cell::sync::{Lazy, OnceCell};
 use rust_decimal::Decimal;
-use std::collections::HashMap;
 use std::fmt;
-use std::hash::{Hash, Hasher};
-use std::sync::{Arc, Mutex, RwLock};
+use std::hash::Hash;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 /// Memoization cache for expensive function results
@@ -453,7 +451,7 @@ impl Default for CacheManager {
 }
 
 /// Global cache instance using lazy initialization
-pub static GLOBAL_CACHE: Lazy<CacheManager> = Lazy::new(|| CacheManager::new());
+pub static GLOBAL_CACHE: Lazy<CacheManager> = Lazy::new(CacheManager::new);
 
 /// Convenience macros for memoization
 #[macro_export]

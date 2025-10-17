@@ -8,7 +8,7 @@ use crate::completion;
 use crate::help::{show_man_page, HelpTopic};
 use crate::session::Session;
 use anyhow::{Context, Result};
-use clap::{Command, CommandFactory};
+use clap::CommandFactory;
 use ledger_core::parser::JournalParser;
 use std::io::{self, Write};
 use std::ops::Add;
@@ -287,7 +287,7 @@ impl Dispatcher {
         // Show accounts if --empty specified
         if args.empty {
             println!("\nAccounts:");
-            for (name, _) in &journal.accounts {
+            for name in journal.accounts.keys() {
                 println!("  {}", name);
             }
         }

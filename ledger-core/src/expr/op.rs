@@ -4,10 +4,9 @@
 //! handling type coercion, arithmetic operations, and value conversions.
 
 use crate::expr::{BinaryOp, ExprContext, ExprError, ExprNode, ExprResult, UnaryOp, Value};
-use chrono::{DateTime, Local, Utc};
 use ledger_math::{Amount, BigRational, Decimal};
 use num_bigint::BigInt;
-use num_traits::{One, Zero};
+use num_traits::Zero;
 use std::cmp::Ordering;
 
 /// Evaluate a binary operation
@@ -134,7 +133,7 @@ fn add_values(left: &Value, right: &Value) -> ExprResult<Value> {
         }
 
         _ => Err(ExprError::TypeMismatch {
-            expected: format!("compatible types for addition"),
+            expected: "compatible types for addition".to_string(),
             found: format!("{} + {}", left.type_name(), right.type_name()),
             operation: "addition".to_string(),
         }),
@@ -173,7 +172,7 @@ fn subtract_values(left: &Value, right: &Value) -> ExprResult<Value> {
         }
 
         _ => Err(ExprError::TypeMismatch {
-            expected: format!("compatible types for subtraction"),
+            expected: "compatible types for subtraction".to_string(),
             found: format!("{} - {}", left.type_name(), right.type_name()),
             operation: "subtraction".to_string(),
         }),
@@ -250,7 +249,7 @@ fn multiply_values(left: &Value, right: &Value) -> ExprResult<Value> {
         }
 
         _ => Err(ExprError::TypeMismatch {
-            expected: format!("compatible types for multiplication"),
+            expected: "compatible types for multiplication".to_string(),
             found: format!("{} * {}", left.type_name(), right.type_name()),
             operation: "multiplication".to_string(),
         }),
@@ -310,7 +309,7 @@ fn divide_values(left: &Value, right: &Value) -> ExprResult<Value> {
         }
 
         _ => Err(ExprError::TypeMismatch {
-            expected: format!("compatible types for division"),
+            expected: "compatible types for division".to_string(),
             found: format!("{} / {}", left.type_name(), right.type_name()),
             operation: "division".to_string(),
         }),

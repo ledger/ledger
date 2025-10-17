@@ -5,7 +5,7 @@
 //! test execution state.
 
 use anyhow::{Context, Result};
-use log::{debug, info, warn};
+use log::{debug, warn};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};

@@ -3,15 +3,15 @@
 //! This module provides comprehensive performance benchmarking for the Rust ledger implementation,
 //! including comparison against C++ baseline, memory profiling, and regression detection.
 
-use anyhow::{Context, Result};
-use log::{debug, error, info, warn};
+use anyhow::Result;
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, Instant};
 
-use super::test_harness::{ProcessResult, TestHarness};
+use super::test_harness::TestHarness;
 
 /// Benchmark configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -455,7 +455,7 @@ impl<'a> BenchmarkRunner<'a> {
         for result in results {
             report.push_str(&format!("### {}\n\n", result.rust_result.name));
             report.push_str(&format!("**Command:** `{}`\n\n", result.rust_result.command));
-            report.push_str(&format!("**Rust Results:**\n"));
+            report.push_str("**Rust Results:**\n");
             report.push_str(&format!(
                 "- Mean time: {:.2}ms\n",
                 result.rust_result.mean_time.as_millis()
@@ -478,7 +478,7 @@ impl<'a> BenchmarkRunner<'a> {
             ));
 
             if let Some(cpp) = &result.cpp_result {
-                report.push_str(&format!("\n**C++ Results:**\n"));
+                report.push_str("\n**C++ Results:**\n");
                 report.push_str(&format!("- Mean time: {:.2}ms\n", cpp.mean_time.as_millis()));
                 report.push_str(&format!(
                     "- Performance ratio: {:.2}x\n",
@@ -487,7 +487,7 @@ impl<'a> BenchmarkRunner<'a> {
             }
 
             if let Some(memory) = &result.rust_result.memory_usage {
-                report.push_str(&format!("\n**Memory Usage:**\n"));
+                report.push_str("\n**Memory Usage:**\n");
                 report.push_str(&format!("- Peak memory: {}KB\n", memory.peak_memory_kb));
                 report.push_str(&format!("- Average memory: {}KB\n", memory.average_memory_kb));
             }

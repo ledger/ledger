@@ -9,7 +9,6 @@ use log::{error, info};
 use std::path::PathBuf;
 
 use ledger_cli::test_framework::regression_runner::{RegressionConfig, RegressionRunner};
-use ledger_cli::test_framework::TestRunner;
 
 #[derive(Parser)]
 #[command(name = "regression_runner")]
@@ -104,10 +103,8 @@ fn main() -> Result<()> {
             info!("Resolved test pattern to: {}", resolved_path.display());
             if resolved_path.is_dir() {
                 runner.run_tests(&resolved_path)?;
-            } else {
-                if !runner.run_test_file(&resolved_path)? {
-                    error!("Test file failed: {}", resolved_path.display());
-                }
+            } else if !runner.run_test_file(&resolved_path)? {
+                error!("Test file failed: {}", resolved_path.display());
             }
         } else {
             anyhow::bail!("Test path does not exist: {}", args.tests.display());

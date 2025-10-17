@@ -167,8 +167,8 @@ impl Balance {
         } else {
             // Multiple commodities - sum their absolute values
             // This is a simplified version; proper implementation would need exchange rates
-            let mut total = Amount::null();
-            for amount in self.amounts.values() {
+            let total = Amount::null();
+            if let Some(amount) = self.amounts.values().next() {
                 // Add absolute values (simplified - doesn't handle different commodities properly)
                 // For now, just return the first amount's absolute value
                 return amount.abs();
@@ -199,7 +199,7 @@ impl Balance {
         }
 
         let commodity =
-            amount.commodity().cloned().unwrap_or_else(|| crate::commodity::null_commodity());
+            amount.commodity().cloned().unwrap_or_else(crate::commodity::null_commodity);
 
         if let Some(existing) = self.amounts.get_mut(&commodity) {
             *existing = (existing.clone() + amount.clone())?;
@@ -226,7 +226,7 @@ impl Balance {
         }
 
         let commodity =
-            amount.commodity().cloned().unwrap_or_else(|| crate::commodity::null_commodity());
+            amount.commodity().cloned().unwrap_or_else(crate::commodity::null_commodity);
 
         if let Some(existing) = self.amounts.get_mut(&commodity) {
             *existing = (existing.clone() - amount.clone())?;
@@ -307,7 +307,7 @@ impl Balance {
     /// Strip annotations from all amounts based on keep rules
     pub fn strip_annotations(&self, _keep_details: &KeepDetails) -> Balance {
         let mut result = Self::new();
-        for (_, amount) in &self.amounts {
+        for amount in self.amounts.values() {
             // For now, amounts don't have annotations - this will be enhanced
             // when Amount type is integrated with the annotation system
             result.add_amount(amount).unwrap(); // Safe because we're cloning valid amounts

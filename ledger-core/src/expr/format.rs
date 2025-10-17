@@ -6,7 +6,6 @@
 use crate::balance::Balance;
 use crate::posting::Posting;
 use crate::transaction::Transaction;
-use ledger_math::amount::Amount;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -144,6 +143,12 @@ pub struct FormatContext<'a> {
     pub balance: Option<&'a Balance>,
 }
 
+impl<'a> Default for FormatContext<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a> FormatContext<'a> {
     /// Create a new format context
     pub fn new() -> Self {
@@ -277,7 +282,7 @@ impl FormatProcessor {
                         .as_ref()
                         .map(|s| s.to_string())
                         .or(context.transaction.map(|tx| tx.payee.to_string()))
-                        .unwrap_or_else(|| String::new()))
+                        .unwrap_or_else(String::new))
                 } else if let Some(tx) = context.transaction {
                     Ok(tx.payee.to_string())
                 } else {
@@ -298,7 +303,7 @@ impl FormatProcessor {
                 if let Some(posting) = context.posting {
                     let account = posting.account.borrow();
                     let full_name = account.fullname_immutable();
-                    Ok(full_name.split(':').last().unwrap_or(&full_name).to_string())
+                    Ok(full_name.split(':').next_back().unwrap_or(&full_name).to_string())
                 } else {
                     Err(FormatError::MissingField("posting".to_string()))
                 }
@@ -343,9 +348,9 @@ impl FormatProcessor {
                         .or(context
                             .transaction
                             .and_then(|tx| tx.note.as_ref().map(|s| s.to_string())))
-                        .unwrap_or_else(|| String::new()))
+                        .unwrap_or_else(String::new))
                 } else if let Some(tx) = context.transaction {
-                    Ok(tx.note.as_ref().map(|s| s.to_string()).unwrap_or_else(|| String::new()))
+                    Ok(tx.note.as_ref().map(|s| s.to_string()).unwrap_or_else(String::new))
                 } else {
                     Err(FormatError::MissingField("note".to_string()))
                 }

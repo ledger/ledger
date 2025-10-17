@@ -25,17 +25,11 @@ pub enum DateParseError {
 }
 
 /// Traits detected during date parsing
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct DateTraits {
     pub has_year: bool,
     pub has_month: bool,
     pub has_day: bool,
-}
-
-impl Default for DateTraits {
-    fn default() -> Self {
-        Self { has_year: false, has_month: false, has_day: false }
-    }
 }
 
 /// Result of parsing a date string
@@ -183,7 +177,7 @@ fn expand_two_digit_year(year_2d: u32) -> i32 {
 
 /// Normalize date string by converting separators
 fn normalize_separators(input: &str) -> String {
-    input.replace('-', "/").replace('.', "/")
+    input.replace(['-', '.'], "/")
 }
 
 /// Parse relative date keywords
@@ -1519,7 +1513,7 @@ impl DateDuration {
 
         // Finally days
         if self.days != 0 {
-            result = result + chrono::Duration::days(self.days);
+            result += chrono::Duration::days(self.days);
         }
 
         result
@@ -1531,7 +1525,7 @@ impl DateDuration {
 
         // Subtract in reverse order
         if self.days != 0 {
-            result = result - chrono::Duration::days(self.days);
+            result -= chrono::Duration::days(self.days);
         }
 
         if self.months != 0 {

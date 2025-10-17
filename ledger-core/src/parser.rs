@@ -12,7 +12,7 @@ use ledger_math::CommodityFlags;
 use nom::{
     branch::alt,
     bytes::complete::{take_until, take_while, take_while1},
-    character::complete::{alpha1, char, digit1, line_ending, space0, space1},
+    character::complete::{alpha1, digit1, line_ending, space0, space1},
     combinator::{map, opt, recognize, value},
     error::{context, ParseError},
     multi::many0,
@@ -21,7 +21,6 @@ use nom::{
 };
 
 // We need to use bytes for tag with byte strings
-use nom::bytes::complete::tag as bytes_tag;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -501,7 +500,7 @@ impl JournalParser {
         let include_path = if path.is_absolute() {
             path.clone()
         } else {
-            self.context.filename.parent().unwrap_or_else(|| Path::new("")).join(&path)
+            self.context.filename.parent().unwrap_or_else(|| Path::new("")).join(path)
         };
 
         // Parse included file and merge
@@ -539,7 +538,7 @@ impl JournalParser {
     fn extract_error_context(&self, input: &str, error: &VerboseError<&str>) -> ErrorContext {
         // Get line and column information
         let (line, column) =
-            self.get_line_column(input, error.errors.get(0).map(|(s, _)| s).unwrap_or(&input));
+            self.get_line_column(input, error.errors.first().map(|(s, _)| s).unwrap_or(&input));
 
         // Extract context around the error
         let context = self.get_error_context_string(input, line, column);
@@ -682,6 +681,12 @@ impl Default for JournalParser {
 pub struct StreamingJournalParser {
     parser: JournalParser,
     buffer_size: usize,
+}
+
+impl Default for StreamingJournalParser {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl StreamingJournalParser {
@@ -857,7 +862,7 @@ impl<R: BufRead> JournalEntryIterator<R> {
         let trimmed = line.trim();
 
         // Check for date pattern (transaction start)
-        if trimmed.chars().next().map_or(false, |c| c.is_ascii_digit()) {
+        if trimmed.chars().next().is_some_and(|c| c.is_ascii_digit()) {
             return true;
         }
 
@@ -1107,7 +1112,7 @@ fn parse_transaction(input: &str) -> ParseResult<Transaction> {
             many0(posting_line),
         )),
         |(date, aux_date, cleared, code, payee, tx_comment, _, postings)| {
-            let payee_str = payee.unwrap_or_else(|| String::new());
+            let payee_str = payee.unwrap_or_else(String::new);
             let mut transaction = Transaction::new(date, payee_str);
 
             if let Some(aux_date) = aux_date {

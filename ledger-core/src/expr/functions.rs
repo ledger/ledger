@@ -4,12 +4,11 @@
 //! including mathematical, string, date/time, and utility functions.
 
 use crate::expr::{BuiltinFunction, ExprContext, ExprError, ExprNode, ExprResult, Value};
-use chrono::{Datelike, Duration, Local, NaiveDate};
+use chrono::Local;
 use ledger_math::{Amount, BigRational};
 use num_bigint::BigInt;
-use num_traits::{One, Signed, Zero};
+use num_traits::{Signed, Zero};
 use rust_decimal::{prelude::*, Decimal};
-use std::cmp::{max, min};
 
 /// Evaluate a built-in function call
 pub fn evaluate_builtin_function(
@@ -272,7 +271,7 @@ fn fn_age(args: &[Value]) -> ExprResult<Value> {
 }
 
 fn fn_format_date(args: &[Value]) -> ExprResult<Value> {
-    if args.len() < 1 || args.len() > 2 {
+    if args.is_empty() || args.len() > 2 {
         return Err(ExprError::InvalidArgCount {
             function: "format_date".to_string(),
             expected: 2,

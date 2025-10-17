@@ -4,9 +4,7 @@
 //! on amounts and balances, with fallback implementations for compatibility.
 
 use crate::balance::Balance;
-use ledger_math::amount::Amount;
 use once_cell::sync::Lazy;
-use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
 
 /// CPU feature detection for optimal SIMD instruction set selection
@@ -160,7 +158,7 @@ impl SimdArithmetic {
 
     /// Scalar fallback for balance aggregation
     fn aggregate_balances_scalar(&self, balances: &[Balance]) -> Balance {
-        let mut result = Balance::new();
+        let result = Balance::new();
         for balance in balances {
             // TODO: Implement proper balance addition
             // result += balance;

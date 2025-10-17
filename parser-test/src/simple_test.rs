@@ -36,13 +36,13 @@ commodity EUR
 
             // List accounts
             println!("\nAccounts:");
-            for (name, _) in &journal.accounts {
+            for name in journal.accounts.keys() {
                 println!("  {}", name);
             }
 
             // List commodities
             println!("\nCommodities:");
-            for (symbol, _) in &journal.commodities {
+            for symbol in journal.commodities.keys() {
                 println!("  {}", symbol);
             }
 

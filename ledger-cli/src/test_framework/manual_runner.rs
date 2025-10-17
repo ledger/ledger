@@ -326,7 +326,7 @@ impl<'a> ManualRunner<'a> {
             let entry = entry?;
             let path = entry.path();
 
-            if path.is_file() && path.extension().map_or(false, |ext| ext == "test") {
+            if path.is_file() && path.extension().is_some_and(|ext| ext == "test") {
                 // Apply test filter if configured
                 if let Some(filter) = &self.config.test_filter {
                     let filename = path.file_name().unwrap().to_string_lossy();

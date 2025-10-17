@@ -318,7 +318,7 @@ impl<'a> BaselineRunner<'a> {
             let entry = entry?;
             let path = entry.path();
 
-            if path.is_file() && path.extension().map_or(false, |ext| ext == "test") {
+            if path.is_file() && path.extension().is_some_and(|ext| ext == "test") {
                 // Skip Python tests unless Python support is enabled
                 if path.file_name().unwrap().to_string_lossy().contains("_py.test")
                     && !self.harness.python_support

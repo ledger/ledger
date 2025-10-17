@@ -9,7 +9,7 @@
 
 use nom::{
     branch::alt,
-    bytes::complete::{take, take_until, take_while, take_while1},
+    bytes::complete::{take_until, take_while, take_while1},
     character::complete::{alpha1, char, digit1, line_ending, not_line_ending, space0, space1},
     combinator::{map, opt, recognize},
     error::context,
@@ -435,7 +435,7 @@ fn parse_number(input: &str) -> ParseResult<Decimal> {
         |s: &str| {
             // Handle comma as decimal separator
             let normalized = s.replace(',', ".");
-            normalized.parse::<Decimal>().unwrap_or_else(|_| Decimal::ZERO)
+            normalized.parse::<Decimal>().unwrap_or(Decimal::ZERO)
         },
     )(input)
 }

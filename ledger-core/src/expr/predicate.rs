@@ -8,7 +8,6 @@ use super::{ExprContext, ExprError, ExprResult, Expression, Value};
 use crate::posting::Posting;
 use crate::transaction::{Transaction, TransactionStatus};
 use chrono::NaiveDate;
-use ledger_math::Amount;
 use regex::Regex;
 use std::collections::HashMap;
 

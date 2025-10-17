@@ -194,7 +194,7 @@ unsafe fn cast_amount_ptr(ptr: *mut CAmount) -> Option<*mut Amount> {
 // ===========================================================================
 
 use std::cell::RefCell;
-use std::panic::{self, RefUnwindSafe, UnwindSafe};
+use std::panic::{self, UnwindSafe};
 
 /// Enhanced error information with context
 #[derive(Debug, Clone)]
@@ -223,7 +223,7 @@ impl ErrorInfo {
 
 /// Thread-local error storage for better error handling
 thread_local! {
-    static LAST_ERROR: RefCell<Option<ErrorInfo>> = RefCell::new(None);
+    static LAST_ERROR: RefCell<Option<ErrorInfo>> = const { RefCell::new(None) };
     static ERROR_CALLBACK: RefCell<Option<Box<dyn Fn(&ErrorInfo)>>> = RefCell::new(None);
 }
 
