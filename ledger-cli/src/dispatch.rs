@@ -413,27 +413,32 @@ impl Dispatcher {
             }
         };
         
-        println!("Demo Print Report (Raw Journal)");
-        println!("===============================");
-        
         let transactions = &journal.transactions;
         
-        for transaction in transactions {
+        for (i, transaction) in transactions.iter().enumerate() {
+            if i != 0 {
+                println!(); // Empty line between transactions
+            }
+            
             println!("{} {}", 
                     transaction.date.format("%Y/%m/%d"),
                     &transaction.payee);
             
             let postings = &transaction.postings;
+            let width = postings.iter()
+                .map(|p| p.account.borrow_mut().fullname())
+                .max_by(|a, b| a.len().cmp(&b.len()))
+                .map(|name| name.len().add(4).max(40))
+                .unwrap_or(40);
             for posting in postings {
-                let account_name = "Demo Account"; // placeholder
+                let account_name = posting.account.borrow().fullname_immutable();
                 
                 if let Some(amount) = &posting.amount {
-                    println!("    {:40} {:>15}", account_name, amount);
+                    println!("    {:width$} {}", account_name, amount, width = width);
                 } else {
-                    println!("    {:40}", account_name);
+                    println!("    {:width$}", account_name, width = width);
                 }
             }
-            println!(); // Empty line between transactions
         }
         
         if !args.pattern.is_empty() && self.session.verbose_enabled {
