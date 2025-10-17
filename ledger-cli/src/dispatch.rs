@@ -383,19 +383,27 @@ impl Dispatcher {
             println!("{} {}", transaction.date.format("%Y/%m/%d"), &transaction.payee);
 
             let postings = &transaction.postings;
-            let width = postings
-                .iter()
-                .map(|p| p.account.borrow_mut().fullname())
-                .max_by(|a, b| a.len().cmp(&b.len()))
-                .map(|name| name.len().add(4).max(40))
-                .unwrap_or(40);
+            let mut width = 40;
+            let mut any_amount_negated = false;
+            for posting in postings {
+                let account_name = posting.account.borrow_mut().fullname();
+                // use 4 spaces of padding
+                width = width.max(account_name.len() + 4);
+
+                if let Some(ref amount) = posting.amount {
+                    any_amount_negated |= amount.sign() == -1;
+                }
+            }
+
             for posting in postings {
                 let account_name = posting.account.borrow().fullname_immutable();
 
                 if let Some(amount) = &posting.amount {
-                    println!("    {:width$} {}", account_name, amount, width = width);
+                    let amount_padding =
+                        if amount.sign() != -1 && any_amount_negated { " " } else { "" };
+                    println!("    {account_name:width$} {amount_padding}{amount}", width = width);
                 } else {
-                    println!("    {:width$}", account_name, width = width);
+                    println!("    {account_name:width$}", width = width);
                 }
             }
         }

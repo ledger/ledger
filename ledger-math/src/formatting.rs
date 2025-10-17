@@ -176,7 +176,7 @@ pub fn format_rational(
     if negative {
         format!("-{}", result)
     } else {
-        format!("{}", result)
+        result
     }
 }
 

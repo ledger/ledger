@@ -1376,7 +1376,7 @@ fn simple_amount_field(input: &str) -> ParseResult<'_, Amount> {
         map(
             tuple((
                 tuple((opt(tag("-")), digit1, opt(tuple((tag("."), digit1))))),
-                opt(preceded(space0, alpha1)), // commodity
+                opt(tuple((space0, alpha1))), // commodity
             )),
             |(amount, commodity)| {
                 // For now, create a simple amount from parsed decimal
@@ -1391,9 +1391,12 @@ fn simple_amount_field(input: &str) -> ParseResult<'_, Amount> {
                 );
 
                 let decimal = Decimal::from_str(&decimal_str).unwrap_or_default();
-                let commodity = commodity.map(|s| {
-                    let mut commodity = Commodity::new(s);
+                let commodity = commodity.map(|(sep, symbol)| {
+                    let mut commodity = Commodity::new(symbol);
                     commodity.add_flags(CommodityFlags::STYLE_SUFFIXED);
+                    if !sep.is_empty() {
+                        commodity.add_flags(CommodityFlags::STYLE_SEPARATED);
+                    }
                     Arc::new(commodity)
                 });
                 Amount::with_commodity(decimal, commodity)
