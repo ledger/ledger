@@ -120,7 +120,7 @@ pub struct ZeroCopyParser<'a> {
     /// Input buffer being parsed
     input: &'a str,
     /// Current position for error reporting
-    current_line: usize,
+    _current_line: usize,
     /// Statistics for monitoring performance
     stats: ParserStats,
 }
@@ -140,7 +140,7 @@ pub struct ParserStats {
 impl<'a> ZeroCopyParser<'a> {
     /// Create a new zero-copy parser for the given input
     pub fn new(input: &'a str) -> Self {
-        Self { input, current_line: 1, stats: ParserStats::default() }
+        Self { input, _current_line: 1, stats: ParserStats::default() }
     }
 
     /// Parse the entire journal content

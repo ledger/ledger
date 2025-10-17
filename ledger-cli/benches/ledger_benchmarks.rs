@@ -90,7 +90,7 @@ fn benchmark_output_processing(c: &mut Criterion) {
     let mut group = c.benchmark_group("output_processing");
 
     for (name, output) in [
-        ("small", small_output.as_str()),
+        ("small", small_output),
         ("medium", medium_output.as_str()),
         ("large", large_output.as_str()),
     ] {

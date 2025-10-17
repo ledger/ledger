@@ -15,7 +15,7 @@ pub struct TestCase {
     pub command: String,
     /// Expected stdout output lines
     pub expected_output: Vec<String>,
-    /// Expected stderr output lines  
+    /// Expected stderr output lines
     pub expected_error: Vec<String>,
     /// Expected exit code (0 if not specified)
     pub expected_exit_code: i32,
@@ -55,7 +55,7 @@ pub struct TestParser {
     /// Regex for parsing test commands with exit codes
     command_regex: Regex,
     /// Regex for variable substitution patterns
-    substitution_regex: Regex,
+    _substitution_regex: Regex,
 }
 
 impl TestParser {
@@ -64,10 +64,10 @@ impl TestParser {
         let command_regex = Regex::new(r"^test\s+(.+?)(?:\s+->\s+(\d+))?$")
             .map_err(|e| TestError::Parse(format!("Invalid command regex: {}", e)))?;
 
-        let substitution_regex = Regex::new(r"\$(\w+)")
+        let _substitution_regex = Regex::new(r"\$(\w+)")
             .map_err(|e| TestError::Parse(format!("Invalid substitution regex: {}", e)))?;
 
-        Ok(Self { command_regex, substitution_regex })
+        Ok(Self { command_regex, _substitution_regex })
     }
 
     /// Parse a .test file into a TestSuite
@@ -320,10 +320,10 @@ impl TestDiscovery {
         variables.insert(
             "ledger".to_string(),
             format!(
-                "{} --args-only{}{}",
+                "{} --args-only{} --columns={}",
                 config.ledger_path.to_string_lossy(),
                 if config.verify { " --verify" } else { "" },
-                format!(" --columns={}", config.columns)
+                config.columns
             ),
         );
 

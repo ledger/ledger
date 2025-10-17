@@ -123,7 +123,7 @@ pub struct BalanceCache {
 #[derive(Debug, Clone)]
 struct CachedBalance {
     balance: Balance,
-    computed_at: Instant,
+    _computed_at: Instant,
     dependencies: Vec<String>, // Account names this balance depends on
 }
 
@@ -156,7 +156,7 @@ impl BalanceCache {
 
         cache.put(
             account_path,
-            CachedBalance { balance, computed_at: Instant::now(), dependencies },
+            CachedBalance { balance, _computed_at: Instant::now(), dependencies },
         );
     }
 
@@ -285,7 +285,7 @@ impl<T> LazyComputed<T> {
 
 /// Lazy account totals that compute on first access
 pub struct LazyAccountTotal {
-    account_path: String,
+    _account_path: String,
     total: LazyComputed<Balance>,
     dependencies: Vec<String>,
     last_invalidated: Instant,
@@ -298,7 +298,7 @@ impl LazyAccountTotal {
         F: Fn() -> Balance + Send + Sync + 'static,
     {
         Self {
-            account_path: account_path.clone(),
+            _account_path: account_path.clone(),
             total: LazyComputed::new(compute),
             dependencies: vec![account_path],
             last_invalidated: Instant::now(),

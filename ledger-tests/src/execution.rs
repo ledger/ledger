@@ -79,6 +79,7 @@ impl TestResult {
     }
 
     /// Create a new failed test result
+    #[allow(clippy::too_many_arguments)]
     pub fn failure(
         test_case: TestCase,
         suite_name: String,

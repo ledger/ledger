@@ -59,22 +59,22 @@ pub enum SimdVariant {
 /// SIMD-accelerated arithmetic operations
 pub struct SimdArithmetic {
     variant: SimdVariant,
-    features: CpuFeatures,
+    _features: CpuFeatures,
 }
 
 impl SimdArithmetic {
     /// Create new SIMD arithmetic processor with auto-detection
     pub fn new() -> Self {
-        let features = CpuFeatures::detect();
-        let variant = features.best_simd_variant();
+        let _features = CpuFeatures::detect();
+        let variant = _features.best_simd_variant();
 
-        Self { variant, features }
+        Self { variant, _features }
     }
 
     /// Create SIMD arithmetic processor with specific variant
     pub fn with_variant(variant: SimdVariant) -> Self {
-        let features = CpuFeatures::detect();
-        Self { variant, features }
+        let _features = CpuFeatures::detect();
+        Self { variant, _features }
     }
 
     /// Get the SIMD variant in use

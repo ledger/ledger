@@ -4,7 +4,7 @@
 //! on large datasets by caching intermediate calculations and final results.
 
 use crate::balance::Balance;
-use crate::report::{ReportOptions, SortCriteria};
+use crate::report::ReportOptions;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
@@ -522,6 +522,8 @@ impl CacheManagerStats {
 
 #[cfg(test)]
 mod tests {
+    use crate::report::SortCriteria;
+
     use super::*;
     use std::thread;
     use std::time::Duration;

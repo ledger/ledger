@@ -41,7 +41,7 @@ pub mod report;
 /// Module for expression evaluation
 pub mod expr;
 
-/// Module for date/time parsing and handling  
+/// Module for date/time parsing and handling
 pub mod datetime;
 
 /// Module for journal file parsing using nom combinators
@@ -51,6 +51,8 @@ pub mod parser;
 pub mod transaction_parser;
 
 /// Module for C Foreign Function Interface
+// FIXME: temporarily allow dead code in ffi
+#[allow(dead_code)]
 pub mod ffi;
 
 /// Module for report caching system

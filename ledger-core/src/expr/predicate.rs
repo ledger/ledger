@@ -37,6 +37,7 @@ pub struct OptimizationHints {
 
 /// Context for evaluating predicates against specific data
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct PredicateContext {
     /// Base expression context
     base_context: ExprContext,
@@ -378,6 +379,7 @@ impl QueryPredicate {
     }
 
     /// Get cached regex or compile new one
+    #[allow(dead_code)]
     fn get_regex(&mut self, pattern: &str) -> Result<&Regex, ExprError> {
         if !self.regex_cache.contains_key(pattern) {
             let regex = Regex::new(pattern).map_err(|e| {
@@ -494,7 +496,6 @@ impl PredicateBuilder {
 mod tests {
     use super::*;
     use crate::account::AccountTree;
-    use crate::posting::{Posting, PostingFlags};
     use crate::transaction::{Transaction, TransactionBuilder};
     use chrono::NaiveDate;
     use ledger_math::{commodity::Commodity, Amount, Decimal};

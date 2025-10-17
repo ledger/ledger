@@ -215,7 +215,7 @@ impl<'a> RegressionRunner<'a> {
     }
 
     /// Run command with stdin input from file
-    fn run_command_with_stdin(&self, command: &str, input_file: &Path) -> Result<ProcessResult> {
+    fn run_command_with_stdin(&self, command: &str, _input_file: &Path) -> Result<ProcessResult> {
         // For commands that use stdin, we need to handle them specially
         // This is a simplified implementation - a full implementation would
         // properly handle process pipes

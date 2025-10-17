@@ -578,6 +578,7 @@ impl Cli {
     }
 
     /// Get the command name as a string
+    #[allow(dead_code)]
     pub fn command_name(&self) -> Option<&'static str> {
         match &self.command {
             Some(Commands::Balance(_)) => Some("balance"),

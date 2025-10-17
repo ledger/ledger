@@ -29,7 +29,7 @@ pub struct Session {
     pub verbose_enabled: bool,
 
     /// Current working directory when started
-    pub initial_cwd: PathBuf,
+    pub _initial_cwd: PathBuf,
 
     /// Parsed journal (loaded on demand)
     pub parsed_journal: Option<ledger_core::journal::Journal>,
@@ -37,6 +37,7 @@ pub struct Session {
 
 /// Configuration loaded from init files and environment variables
 #[derive(Default)]
+#[allow(dead_code)]
 pub struct Config {
     /// Key-value configuration options
     pub options: HashMap<String, String>,
@@ -55,6 +56,7 @@ pub struct Config {
 }
 
 /// Runtime options derived from command-line arguments
+#[allow(dead_code)]
 pub struct RuntimeOptions {
     /// Begin date filter
     pub begin_date: Option<NaiveDate>,
@@ -90,10 +92,11 @@ pub struct RuntimeOptions {
     pub account_patterns: Vec<String>,
 }
 
+#[allow(dead_code)]
 impl Session {
     /// Create a new session from command-line arguments
     pub fn new(cli: &Cli) -> Result<Self> {
-        let initial_cwd = env::current_dir().context("Failed to get current working directory")?;
+        let _initial_cwd = env::current_dir().context("Failed to get current working directory")?;
 
         let mut session = Session {
             config: Config::default(),
@@ -101,7 +104,7 @@ impl Session {
             journal_files: Vec::new(),
             debug_enabled: cli.debug.is_some() || cli.verbose,
             verbose_enabled: cli.verbose,
-            initial_cwd,
+            _initial_cwd,
             parsed_journal: None,
         };
 

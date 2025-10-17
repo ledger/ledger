@@ -432,7 +432,7 @@ impl JournalParser {
                 let account = Account::new(name.clone().into(), None, 0);
                 for decl in declarations {
                     match decl {
-                        AccountDeclaration::Alias(alias) => {
+                        AccountDeclaration::Alias(_alias) => {
                             // journal.add_account_alias(alias, name.clone());
                         }
                         AccountDeclaration::Default => {
@@ -939,6 +939,7 @@ struct TransactionBalanceError {
 }
 
 /// Parse complete journal entries
+#[allow(dead_code)]
 fn journal_entries(input: &str) -> ParseResult<'_, Vec<JournalEntry>> {
     many0(journal_entry)(input)
 }
@@ -1016,6 +1017,7 @@ fn empty_line(input: &str) -> ParseResult<'_, &str> {
 }
 
 /// Parse a comment line with optional metadata extraction
+#[allow(dead_code)]
 fn comment_line(input: &str) -> ParseResult<'_, String> {
     map(preceded(alt((tag(";"), tag("#"), tag("*"), tag("|"))), take_until("\n")), |s: &str| {
         s.to_string()
@@ -1366,6 +1368,7 @@ fn simple_amount_field(input: &str) -> ParseResult<'_, Amount> {
 }
 
 /// Parse a comment field with metadata extraction
+#[allow(dead_code)]
 fn comment_field(input: &str) -> ParseResult<'_, (String, HashMap<String, String>)> {
     map(preceded(tag(";"), take_until("\n")), |s: &str| {
         let comment = s.trim().to_string();

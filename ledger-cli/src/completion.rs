@@ -12,6 +12,7 @@ pub fn generate_completion<G: Generator>(gen: G, cmd: &mut Command) {
 }
 
 /// Print completion scripts for all supported shells
+#[allow(dead_code)]
 pub fn print_all_completions(cmd: &mut Command) {
     println!("# Bash completion");
     generate_completion(Shell::Bash, cmd);
@@ -52,6 +53,7 @@ pub fn save_completions(
 
 /// Custom completion logic for account names and payees
 /// This would integrate with the journal parser to provide dynamic completions
+#[allow(dead_code)]
 pub fn get_dynamic_completions(_current_input: &str) -> Vec<String> {
     // TODO: Implement dynamic completion by parsing journal files
     // This would provide completions for:

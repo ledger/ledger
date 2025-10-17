@@ -257,7 +257,7 @@ impl OutputValidator {
     /// Regex pattern validation
     fn regex_validation(
         &mut self,
-        expected: &[String],
+        _expected: &[String],
         actual: &[String],
         pattern: &str,
         strategy: ValidationStrategy,
@@ -423,7 +423,12 @@ impl OutputValidator {
     }
 
     /// Compare lines containing dates/times with tolerance
-    fn compare_datetime_lines(&self, expected: &str, actual: &str, tolerance_seconds: i64) -> bool {
+    fn compare_datetime_lines(
+        &self,
+        expected: &str,
+        actual: &str,
+        _tolerance_seconds: i64,
+    ) -> bool {
         // Try to extract and parse dates from both lines
         // This is a simplified implementation - real implementation would handle various date formats
 

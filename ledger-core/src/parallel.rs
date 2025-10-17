@@ -314,7 +314,7 @@ impl ParallelAccountProcessor {
 /// Parallel report generation utilities
 pub struct ParallelReportGenerator {
     processor: ParallelTransactionProcessor,
-    account_processor: ParallelAccountProcessor,
+    _account_processor: ParallelAccountProcessor,
 }
 
 impl Default for ParallelReportGenerator {
@@ -327,14 +327,14 @@ impl ParallelReportGenerator {
     pub fn new() -> Self {
         Self {
             processor: ParallelTransactionProcessor::new(),
-            account_processor: ParallelAccountProcessor::new(),
+            _account_processor: ParallelAccountProcessor::new(),
         }
     }
 
     pub fn with_config(config: ParallelConfig) -> Self {
         Self {
             processor: ParallelTransactionProcessor::with_config(config.clone()),
-            account_processor: ParallelAccountProcessor::new(),
+            _account_processor: ParallelAccountProcessor::new(),
         }
     }
 
@@ -342,7 +342,7 @@ impl ParallelReportGenerator {
     pub fn generate_balance_report<'a, I>(
         &mut self,
         transactions: I,
-        accounts: &[AccountRef],
+        _accounts: &[AccountRef],
     ) -> HashMap<AccountName, Balance>
     where
         I: Iterator<Item = &'a Transaction> + Clone,
