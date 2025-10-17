@@ -554,6 +554,7 @@ pub struct CompletionArgs {
 #[derive(Args)]
 pub struct HelpTopicArgs {
     /// Help topic to display
+    #[arg(default_value = "general")]
     pub topic: String,
 }
 

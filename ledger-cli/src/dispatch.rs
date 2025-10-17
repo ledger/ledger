@@ -595,6 +595,10 @@ impl Dispatcher {
     /// Execute help topic command to show detailed help
     fn execute_help_topic_command(&mut self, args: &crate::cli::HelpTopicArgs) -> Result<i32> {
         let topic = match args.topic.to_lowercase().as_str() {
+            // FIXME(help): not sure how this message is significantly
+            // different/better than `ledger -h`; this one seems like it should
+            // be more about "help topic", but it doesn't really mention them
+            "general" => HelpTopic::General,
             "options" => HelpTopic::Options,
             "expressions" | "expr" => HelpTopic::Expressions,
             "periods" | "period" => HelpTopic::Periods,
