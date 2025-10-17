@@ -3,11 +3,13 @@
 //! This module provides date and time functionality compatible with the C++ Ledger
 //! implementation, including timezone support and various date formats.
 
-use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc, Datelike, Timelike, Days, Months, TimeDelta};
-use chrono_tz::{Tz, America};
+use chrono::{
+    DateTime, Datelike, Days, Months, NaiveDate, NaiveDateTime, TimeDelta, TimeZone, Timelike, Utc,
+};
+use chrono_tz::{America, Tz};
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use thiserror::Error;
-use serde::{Serialize, Deserialize};
 
 /// Errors that can occur during date/time operations
 #[derive(Error, Debug, Clone, PartialEq)]
@@ -79,7 +81,7 @@ impl Date {
     pub fn day(&self) -> u32 {
         self.0.day()
     }
-    
+
     /// Format the date using a format string
     pub fn format<'a>(&self, fmt: &'a str) -> impl fmt::Display + 'a {
         self.0.format(fmt)
@@ -95,7 +97,7 @@ impl fmt::Display for Date {
 // Arithmetic operations for Date
 impl std::ops::Add<TimeDelta> for Date {
     type Output = Date;
-    
+
     fn add(self, rhs: TimeDelta) -> Self::Output {
         Date(self.0 + rhs)
     }
@@ -103,7 +105,7 @@ impl std::ops::Add<TimeDelta> for Date {
 
 impl std::ops::Sub<TimeDelta> for Date {
     type Output = Date;
-    
+
     fn sub(self, rhs: TimeDelta) -> Self::Output {
         Date(self.0 - rhs)
     }
@@ -111,7 +113,7 @@ impl std::ops::Sub<TimeDelta> for Date {
 
 impl std::ops::Sub<Date> for Date {
     type Output = TimeDelta;
-    
+
     fn sub(self, rhs: Date) -> Self::Output {
         self.0 - rhs.0
     }
@@ -119,7 +121,7 @@ impl std::ops::Sub<Date> for Date {
 
 impl std::ops::Sub<Date> for NaiveDate {
     type Output = TimeDelta;
-    
+
     fn sub(self, rhs: Date) -> Self::Output {
         self - rhs.0
     }
@@ -133,12 +135,22 @@ pub struct LocalDateTime {
 
 impl LocalDateTime {
     /// Create a new LocalDateTime in the default timezone
-    pub fn new(year: i32, month: u32, day: u32, hour: u32, min: u32, sec: u32) -> DateTimeResult<Self> {
+    pub fn new(
+        year: i32,
+        month: u32,
+        day: u32,
+        hour: u32,
+        min: u32,
+        sec: u32,
+    ) -> DateTimeResult<Self> {
         let naive_dt = NaiveDate::from_ymd_opt(year, month, day)
             .and_then(|d| d.and_hms_opt(hour, min, sec))
-            .ok_or_else(|| DateTimeError::OutOfRange(
-                format!("{}-{:02}-{:02} {:02}:{:02}:{:02}", year, month, day, hour, min, sec)
-            ))?;
+            .ok_or_else(|| {
+                DateTimeError::OutOfRange(format!(
+                    "{}-{:02}-{:02} {:02}:{:02}:{:02}",
+                    year, month, day, hour, min, sec
+                ))
+            })?;
 
         let datetime = DEFAULT_TIMEZONE
             .from_local_datetime(&naive_dt)
@@ -166,9 +178,7 @@ impl LocalDateTime {
 
     /// Convert to a different timezone
     pub fn with_timezone(&self, tz: Tz) -> LocalDateTime {
-        LocalDateTime {
-            datetime: self.datetime.with_timezone(&tz),
-        }
+        LocalDateTime { datetime: self.datetime.with_timezone(&tz) }
     }
 
     /// Get the date part
@@ -224,27 +234,27 @@ pub enum FormatType {
 /// Date parsing function compatible with C++ parse_date
 pub fn parse_date(date_str: &str) -> DateTimeResult<Date> {
     let trimmed = date_str.trim();
-    
+
     // Try various date formats in order of preference
     let formats = [
-        "%Y/%m/%d",     // 1990/01/01
-        "%Y-%m-%d",     // 2006-12-25
-        "%Y.%m.%d",     // 2006.12.25
-        "%m/%d/%Y",     // 02/02/2002 (US format)
-        "%m-%d-%Y",     // 02-02-2002 (US format)
-        "%m.%d.%Y",     // 02.02.2002 (US format)
-        "%y/%m/%d",     // 02/02/02 (two digit year)
-        "%m/%d/%y",     // 02/02/02 (US format, two digit year)
-        "%m-%d-%y",     // 02-02-02 (US format, two digit year)
-        "%m.%d.%y",     // 02.02.02 (US format, two digit year)
-        "%Y%m%d",       // 20020202 (compact format)
-        "%m/%d",        // 12/25 (current year assumed)
-        "%m-%d",        // 12-25 (current year assumed)
-        "%m.%d",        // 12.25 (current year assumed)
-        "%Y/%m",        // 1990/01 (day 1 assumed)
-        "%Y-%m",        // 1990-01 (day 1 assumed)
-        "%Y.%m",        // 1990.01 (day 1 assumed)
-        "%Y",           // 1990 (Jan 1 assumed)
+        "%Y/%m/%d", // 1990/01/01
+        "%Y-%m-%d", // 2006-12-25
+        "%Y.%m.%d", // 2006.12.25
+        "%m/%d/%Y", // 02/02/2002 (US format)
+        "%m-%d-%Y", // 02-02-2002 (US format)
+        "%m.%d.%Y", // 02.02.2002 (US format)
+        "%y/%m/%d", // 02/02/02 (two digit year)
+        "%m/%d/%y", // 02/02/02 (US format, two digit year)
+        "%m-%d-%y", // 02-02-02 (US format, two digit year)
+        "%m.%d.%y", // 02.02.02 (US format, two digit year)
+        "%Y%m%d",   // 20020202 (compact format)
+        "%m/%d",    // 12/25 (current year assumed)
+        "%m-%d",    // 12-25 (current year assumed)
+        "%m.%d",    // 12.25 (current year assumed)
+        "%Y/%m",    // 1990/01 (day 1 assumed)
+        "%Y-%m",    // 1990-01 (day 1 assumed)
+        "%Y.%m",    // 1990.01 (day 1 assumed)
+        "%Y",       // 1990 (Jan 1 assumed)
     ];
 
     // Get current year for formats that don't specify year
@@ -285,24 +295,20 @@ fn parse_date_with_format(date_str: &str, format: &str, current_year: i32) -> Da
 fn parse_relative_date(date_str: &str) -> DateTimeResult<Date> {
     let lower = date_str.to_lowercase();
     let current = Date::current();
-    
+
     // Handle simple cases for now
     match lower.as_str() {
         "today" => Ok(current),
-        "yesterday" => Ok(Date::from_naive_date(
-            current.naive_date() - chrono::Duration::days(1)
-        )),
-        "tomorrow" => Ok(Date::from_naive_date(
-            current.naive_date() + chrono::Duration::days(1)
-        )),
-        _ => Err(DateTimeError::InvalidFormat(date_str.to_string()))
+        "yesterday" => Ok(Date::from_naive_date(current.naive_date() - chrono::Duration::days(1))),
+        "tomorrow" => Ok(Date::from_naive_date(current.naive_date() + chrono::Duration::days(1))),
+        _ => Err(DateTimeError::InvalidFormat(date_str.to_string())),
     }
 }
 
 /// DateTime parsing function compatible with C++ parse_datetime
 pub fn parse_datetime(datetime_str: &str) -> DateTimeResult<LocalDateTime> {
     let trimmed = datetime_str.trim();
-    
+
     // Try various datetime formats
     let formats = [
         "%Y-%m-%d %H:%M:%S",
@@ -342,7 +348,11 @@ pub fn format_date(date: &Date, format_type: FormatType, custom_format: Option<&
 }
 
 /// Format a datetime according to the specified format type
-pub fn format_datetime(datetime: &LocalDateTime, format_type: FormatType, custom_format: Option<&str>) -> String {
+pub fn format_datetime(
+    datetime: &LocalDateTime,
+    format_type: FormatType,
+    custom_format: Option<&str>,
+) -> String {
     match format_type {
         FormatType::Written => datetime.datetime.format("%Y-%m-%d %H:%M:%S %Z").to_string(),
         FormatType::Printed => datetime.datetime.format("%Y/%m/%d %H:%M:%S").to_string(),
@@ -370,36 +380,20 @@ impl DateDuration {
     /// Add this duration to a date
     pub fn add_to_date(&self, date: Date) -> Date {
         match *self {
-            DateDuration::Days(n) if n >= 0 => {
-                Date(date.naive_date() + Days::new(n as u64))
-            },
-            DateDuration::Days(n) => {
-                Date(date.naive_date() - Days::new((-n) as u64))
-            },
-            DateDuration::Weeks(n) if n >= 0 => {
-                Date(date.naive_date() + Days::new((n * 7) as u64))
-            },
-            DateDuration::Weeks(n) => {
-                Date(date.naive_date() - Days::new(((-n) * 7) as u64))
-            },
-            DateDuration::Months(n) if n >= 0 => {
-                Date(date.naive_date() + Months::new(n as u32))
-            },
-            DateDuration::Months(n) => {
-                Date(date.naive_date() - Months::new((-n) as u32))
-            },
+            DateDuration::Days(n) if n >= 0 => Date(date.naive_date() + Days::new(n as u64)),
+            DateDuration::Days(n) => Date(date.naive_date() - Days::new((-n) as u64)),
+            DateDuration::Weeks(n) if n >= 0 => Date(date.naive_date() + Days::new((n * 7) as u64)),
+            DateDuration::Weeks(n) => Date(date.naive_date() - Days::new(((-n) * 7) as u64)),
+            DateDuration::Months(n) if n >= 0 => Date(date.naive_date() + Months::new(n as u32)),
+            DateDuration::Months(n) => Date(date.naive_date() - Months::new((-n) as u32)),
             DateDuration::Quarters(n) if n >= 0 => {
                 Date(date.naive_date() + Months::new((n * 3) as u32))
-            },
-            DateDuration::Quarters(n) => {
-                Date(date.naive_date() - Months::new(((-n) * 3) as u32))
-            },
+            }
+            DateDuration::Quarters(n) => Date(date.naive_date() - Months::new(((-n) * 3) as u32)),
             DateDuration::Years(n) if n >= 0 => {
                 Date(date.naive_date() + Months::new((n * 12) as u32))
-            },
-            DateDuration::Years(n) => {
-                Date(date.naive_date() - Months::new(((-n) * 12) as u32))
-            },
+            }
+            DateDuration::Years(n) => Date(date.naive_date() - Months::new(((-n) * 12) as u32)),
         }
     }
 }
@@ -414,15 +408,14 @@ pub mod timezone {
         // Handle common timezone abbreviations
         let normalized = match tz_str.to_uppercase().as_str() {
             "EST" => "America/New_York",
-            "CST" => "America/Chicago", 
+            "CST" => "America/Chicago",
             "MST" => "America/Denver",
             "PST" => "America/Los_Angeles",
             "UTC" | "GMT" => "UTC",
             _ => tz_str,
         };
 
-        Tz::from_str(normalized)
-            .map_err(|_| DateTimeError::TimezoneError(tz_str.to_string()))
+        Tz::from_str(normalized).map_err(|_| DateTimeError::TimezoneError(tz_str.to_string()))
     }
 
     /// Convert a datetime to a different timezone

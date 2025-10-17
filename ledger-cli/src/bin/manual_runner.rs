@@ -3,13 +3,13 @@
 //! This binary provides a command-line interface for running manual tests,
 //! which can contain embedded test data and require interactive verification.
 
-use clap::Parser;
 use anyhow::Result;
+use clap::Parser;
+use log::{error, info};
 use std::path::PathBuf;
-use log::{info, error};
 
+use ledger_cli::test_framework::manual_runner::{ManualConfig, ManualRunner};
 use ledger_cli::test_framework::test_harness::TestHarness;
-use ledger_cli::test_framework::manual_runner::{ManualRunner, ManualConfig};
 
 #[derive(Parser)]
 #[command(name = "manual_runner")]
@@ -134,7 +134,7 @@ fn resolve_test_pattern(pattern: &str) -> Result<Option<PathBuf>> {
         } else {
             pattern.strip_prefix("Manual_").unwrap()
         };
-        
+
         let test_path = PathBuf::from("test/manual").join(format!("{}.test", test_name));
         if test_path.exists() {
             return Ok(Some(test_path));

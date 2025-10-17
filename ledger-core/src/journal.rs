@@ -1,12 +1,12 @@
 //! Journal data structure for storing transactions
 
+use crate::account::{Account, AccountRef};
+use crate::transaction::Transaction;
+use ledger_math::commodity::Commodity;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::cell::RefCell;
 use std::sync::Arc;
-use crate::transaction::Transaction;
-use crate::account::{Account, AccountRef};
-use ledger_math::commodity::Commodity;
 
 /// Main journal containing all transactions
 #[derive(Debug, Default, Clone)]
@@ -31,14 +31,12 @@ impl Journal {
     pub fn add_transaction(&mut self, transaction: Transaction) {
         self.transactions.push(transaction);
     }
-    
+
     /// Find an account by name
     pub fn find_account(&self, name: &str) -> Result<AccountRef, String> {
-        self.accounts.get(name)
-            .cloned()
-            .ok_or_else(|| format!("Account not found: {}", name))
+        self.accounts.get(name).cloned().ok_or_else(|| format!("Account not found: {}", name))
     }
-    
+
     /// Get or create an account by name
     pub fn get_or_create_account(&mut self, name: &str) -> AccountRef {
         if let Some(account) = self.accounts.get(name) {
@@ -76,21 +74,21 @@ impl Journal {
     pub fn merge(&mut self, other: Journal) -> Result<(), String> {
         // Merge transactions
         self.transactions.extend(other.transactions);
-        
+
         // Merge accounts
         for (name, account) in other.accounts {
             if !self.accounts.contains_key(&name) {
                 self.accounts.insert(name, account);
             }
         }
-        
+
         // Merge commodities
         for (symbol, commodity) in other.commodities {
             if !self.commodities.contains_key(&symbol) {
                 self.commodities.insert(symbol, commodity);
             }
         }
-        
+
         Ok(())
     }
 }

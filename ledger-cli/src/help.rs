@@ -1,5 +1,5 @@
 //! Help system for ledger CLI
-//! 
+//!
 //! This module provides comprehensive help documentation matching the C++ version
 
 use std::fmt;
@@ -333,7 +333,7 @@ COMBINING QUERIES:
 pub fn get_command_help(command: &str) -> String {
     match command.to_lowercase().as_str() {
         "balance" | "bal" | "b" => BALANCE_HELP.to_string(),
-        "register" | "reg" | "r" => REGISTER_HELP.to_string(), 
+        "register" | "reg" | "r" => REGISTER_HELP.to_string(),
         "print" | "p" => PRINT_HELP.to_string(),
         "accounts" => ACCOUNTS_HELP.to_string(),
         "payees" => PAYEES_HELP.to_string(),

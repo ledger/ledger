@@ -1,15 +1,15 @@
 //! Posting/entry representation within transactions
 
 use chrono::{NaiveDate, NaiveDateTime};
-use std::collections::HashMap;
-use std::rc::{Rc, Weak};
-use std::path::PathBuf;
 use smallvec::SmallVec;
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::rc::{Rc, Weak};
 
-use ledger_math::amount::Amount;
 use crate::account::AccountRef;
+use crate::strings::{AccountName, PayeeName};
 use crate::transaction::{Position, TagData};
-use crate::strings::{PayeeName, AccountName};
+use ledger_math::amount::Amount;
 
 /// Posting flags matching C++ post_t flags
 bitflags::bitflags! {
@@ -153,7 +153,7 @@ impl Posting {
 
     /// Check if posting must balance in the transaction
     pub fn must_balance(&self) -> bool {
-        !self.flags.intersects(PostingFlags::VIRTUAL | PostingFlags::IS_TIMELOG) 
+        !self.flags.intersects(PostingFlags::VIRTUAL | PostingFlags::IS_TIMELOG)
             || self.flags.contains(PostingFlags::MUST_BALANCE)
     }
 
@@ -196,13 +196,13 @@ impl Posting {
                 }
             }
         }
-        
+
         if let Some(ref xdata) = self.xdata {
             if let Some(date) = xdata.date {
                 return date;
             }
         }
-        
+
         transaction_date
     }
 
@@ -216,7 +216,7 @@ impl Posting {
         if self.metadata.contains_key(tag) {
             return true;
         }
-        
+
         if inherit_from_account {
             // Would need to check account metadata - simplified for now
             false
@@ -230,7 +230,7 @@ impl Posting {
         if let Some(tag_data) = self.metadata.get(tag) {
             return Some(tag_data);
         }
-        
+
         if inherit_from_account {
             // Would need to check account metadata - simplified for now
             None
@@ -373,10 +373,14 @@ impl Posting {
     }
 
     /// Compare postings by date and sequence for sorting
-    pub fn compare_by_date_and_sequence(&self, other: &Posting, base_date: NaiveDate) -> std::cmp::Ordering {
+    pub fn compare_by_date_and_sequence(
+        &self,
+        other: &Posting,
+        base_date: NaiveDate,
+    ) -> std::cmp::Ordering {
         let self_date = self.date(base_date, false);
         let other_date = other.date(base_date, false);
-        
+
         match self_date.cmp(&other_date) {
             std::cmp::Ordering::Equal => self.sequence.cmp(&other.sequence),
             other_ord => other_ord,

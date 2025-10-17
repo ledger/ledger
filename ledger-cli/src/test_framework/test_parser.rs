@@ -3,10 +3,10 @@
 //! This module provides parsing functionality for different test file formats,
 //! including regression test files and baseline test files.
 
+use anyhow::{Context, Result};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
-use anyhow::{Context, Result};
 
 /// Represents a single test case within a test file
 #[derive(Debug, Clone)]
@@ -37,16 +37,14 @@ pub struct RegressionTestParser {
 
 impl RegressionTestParser {
     pub fn new<P: AsRef<Path>>(file_path: P) -> Self {
-        Self {
-            file_path: file_path.as_ref().to_path_buf(),
-        }
+        Self { file_path: file_path.as_ref().to_path_buf() }
     }
 
     /// Parse a regression test file and return all test cases
     pub fn parse(&self) -> Result<Vec<TestCase>> {
         let file = File::open(&self.file_path)
             .with_context(|| format!("Failed to open test file: {}", self.file_path.display()))?;
-        
+
         let reader = BufReader::new(file);
         let mut test_cases = Vec::new();
         let mut current_test: Option<TestCase> = None;
@@ -56,8 +54,9 @@ impl RegressionTestParser {
 
         for line_result in reader.lines() {
             line_number += 1;
-            let line = line_result
-                .with_context(|| format!("Failed to read line {} from {}", line_number, self.file_path.display()))?;
+            let line = line_result.with_context(|| {
+                format!("Failed to read line {} from {}", line_number, self.file_path.display())
+            })?;
 
             // Skip empty lines and comments at the top level
             if !in_output && (line.trim().is_empty() || line.starts_with('#')) {
@@ -79,7 +78,7 @@ impl RegressionTestParser {
                 if let Some(arrow_pos) = command_part.find(" -> ") {
                     let (command, exit_code_str) = command_part.split_at(arrow_pos);
                     let exit_code_str = &exit_code_str[4..]; // Remove " -> "
-                    
+
                     if let Some(test) = &mut current_test {
                         test.command = self.transform_line(command);
                         test.expected_exit_code = exit_code_str.trim().parse().unwrap_or(0);
@@ -135,17 +134,16 @@ pub struct ManualTestParser {
 
 impl ManualTestParser {
     pub fn new<P: AsRef<Path>>(file_path: P) -> Self {
-        Self {
-            file_path: file_path.as_ref().to_path_buf(),
-        }
+        Self { file_path: file_path.as_ref().to_path_buf() }
     }
 
     /// Parse a manual test file and return test data and test case
     /// Manual tests can contain embedded ledger data followed by test commands
     pub fn parse(&self) -> Result<(String, TestCase)> {
-        let file = File::open(&self.file_path)
-            .with_context(|| format!("Failed to open manual test file: {}", self.file_path.display()))?;
-        
+        let file = File::open(&self.file_path).with_context(|| {
+            format!("Failed to open manual test file: {}", self.file_path.display())
+        })?;
+
         let reader = BufReader::new(file);
         let mut test_data = String::new();
         let mut test_case = TestCase::new();
@@ -156,8 +154,9 @@ impl ManualTestParser {
 
         for line_result in reader.lines() {
             line_number += 1;
-            let line = line_result
-                .with_context(|| format!("Failed to read line {} from {}", line_number, self.file_path.display()))?;
+            let line = line_result.with_context(|| {
+                format!("Failed to read line {} from {}", line_number, self.file_path.display())
+            })?;
 
             if line.starts_with("test ") {
                 // Start of test section
@@ -216,17 +215,16 @@ pub struct BaselineTestParser {
 
 impl BaselineTestParser {
     pub fn new<P: AsRef<Path>>(file_path: P) -> Self {
-        Self {
-            file_path: file_path.as_ref().to_path_buf(),
-        }
+        Self { file_path: file_path.as_ref().to_path_buf() }
     }
 
     /// Parse a baseline test file and return test case
     /// Baseline tests typically have a simpler format than regression tests
     pub fn parse(&self) -> Result<TestCase> {
-        let file = File::open(&self.file_path)
-            .with_context(|| format!("Failed to open baseline test file: {}", self.file_path.display()))?;
-        
+        let file = File::open(&self.file_path).with_context(|| {
+            format!("Failed to open baseline test file: {}", self.file_path.display())
+        })?;
+
         let reader = BufReader::new(file);
         let mut test_case = TestCase::new();
         let mut in_command = false;
@@ -235,11 +233,12 @@ impl BaselineTestParser {
 
         // For baseline tests, we need to determine the format
         // Some might be simple command files, others might have expected output
-        
+
         for line_result in reader.lines() {
             line_number += 1;
-            let line = line_result
-                .with_context(|| format!("Failed to read line {} from {}", line_number, self.file_path.display()))?;
+            let line = line_result.with_context(|| {
+                format!("Failed to read line {} from {}", line_number, self.file_path.display())
+            })?;
 
             if line_number == 1 {
                 test_case.line_number = line_number;
@@ -296,9 +295,7 @@ impl BaselineTestParser {
 
     /// Infer command from filename for simple baseline tests
     fn infer_command_from_filename(&self, _first_line: &str) -> String {
-        let filename = self.file_path.file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or("balance");
+        let filename = self.file_path.file_stem().and_then(|s| s.to_str()).unwrap_or("balance");
 
         // Parse filename patterns like "cmd-balance.test" -> "balance"
         if let Some(cmd_part) = filename.strip_prefix("cmd-") {
@@ -349,7 +346,8 @@ mod tests {
     fn test_baseline_parser() {
         let mut temp_file = NamedTempFile::new().unwrap();
         writeln!(temp_file, "test register").unwrap();
-        writeln!(temp_file, "2023/01/01 Opening Balance    Assets:Checking         $1000.00").unwrap();
+        writeln!(temp_file, "2023/01/01 Opening Balance    Assets:Checking         $1000.00")
+            .unwrap();
         writeln!(temp_file, "end test").unwrap();
 
         let parser = BaselineTestParser::new(temp_file.path());

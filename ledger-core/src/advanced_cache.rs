@@ -3,18 +3,18 @@
 //! This module provides sophisticated caching mechanisms including memoization,
 //! LRU caches, and lazy evaluation patterns optimized for accounting operations.
 
-use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
-use std::sync::{Arc, Mutex, RwLock};
-use std::time::{Duration, Instant};
+use crate::balance::Balance;
+use crate::data_structures::FastHashMap;
+use ledger_math::amount::Amount;
 use lru::LruCache;
 use moka::sync::Cache as MokaCache;
 use once_cell::sync::{Lazy, OnceCell};
-use crate::data_structures::FastHashMap;
-use ledger_math::amount::Amount;
-use crate::balance::Balance;
 use rust_decimal::Decimal;
+use std::collections::HashMap;
 use std::fmt;
+use std::hash::{Hash, Hasher};
+use std::sync::{Arc, Mutex, RwLock};
+use std::time::{Duration, Instant};
 
 /// Memoization cache for expensive function results
 #[derive(Debug)]
@@ -44,7 +44,6 @@ where
         Self {
             cache: Mutex::new(FastHashMap::default()),
             stats: Arc::new(Mutex::new(CacheStats::new(capacity))),
-
         }
     }
 
@@ -70,23 +69,21 @@ where
         // Store in cache (with eviction if necessary)
         {
             let mut cache = self.cache.lock().unwrap();
-            
+
             // Simple eviction strategy - remove oldest if at capacity
             if cache.len() >= self.stats.lock().unwrap().capacity {
-                let oldest_key = cache.iter()
-                    .min_by_key(|(_, v)| v.created_at)
-                    .map(|(k, _)| k.clone());
-                
+                let oldest_key =
+                    cache.iter().min_by_key(|(_, v)| v.created_at).map(|(k, _)| k.clone());
+
                 if let Some(oldest_key) = oldest_key {
                     cache.remove(&oldest_key);
                 }
             }
 
-            cache.insert(key, CachedValue {
-                value: value.clone(),
-                created_at: Instant::now(),
-                access_count: 1,
-            });
+            cache.insert(
+                key,
+                CachedValue { value: value.clone(), created_at: Instant::now(), access_count: 1 },
+            );
         }
 
         value
@@ -104,7 +101,7 @@ where
     pub fn stats(&self) -> CacheStats {
         let stats = self.stats.lock().unwrap();
         let total_requests = stats.hit_count + stats.miss_count;
-        
+
         CacheStats {
             hit_count: stats.hit_count,
             miss_count: stats.miss_count,
@@ -158,22 +155,22 @@ impl BalanceCache {
     /// Store a balance in the cache
     pub fn put(&self, account_path: String, balance: Balance, dependencies: Vec<String>) {
         let mut cache = self.cache.lock().unwrap();
-        
-        cache.put(account_path, CachedBalance {
-            balance,
-            computed_at: Instant::now(),
-            dependencies,
-        });
+
+        cache.put(
+            account_path,
+            CachedBalance { balance, computed_at: Instant::now(), dependencies },
+        );
     }
 
     /// Invalidate entries that depend on the given account
     pub fn invalidate_dependent(&self, changed_account: &str) {
         let mut cache = self.cache.lock().unwrap();
-        let keys_to_remove: Vec<String> = cache.iter()
+        let keys_to_remove: Vec<String> = cache
+            .iter()
             .filter(|(_, cached)| {
-                cached.dependencies.iter().any(|dep| 
+                cached.dependencies.iter().any(|dep| {
                     dep == changed_account || dep.starts_with(&format!("{}:", changed_account))
-                )
+                })
             })
             .map(|(k, _)| k.clone())
             .collect();
@@ -188,7 +185,7 @@ impl BalanceCache {
         let stats = self.stats.lock().unwrap();
         let total = stats.hit_count + stats.miss_count;
         let cache = self.cache.lock().unwrap();
-        
+
         CacheStats {
             hit_count: stats.hit_count,
             miss_count: stats.miss_count,
@@ -219,10 +216,7 @@ where
 {
     /// Create a new frequency-based cache
     pub fn new(max_capacity: u64, ttl: Duration) -> Self {
-        let cache = MokaCache::builder()
-            .max_capacity(max_capacity)
-            .time_to_live(ttl)
-            .build();
+        let cache = MokaCache::builder().max_capacity(max_capacity).time_to_live(ttl).build();
 
         Self { cache }
     }
@@ -272,10 +266,7 @@ impl<T> LazyComputed<T> {
     where
         F: Fn() -> T + Send + Sync + 'static,
     {
-        Self {
-            cell: OnceCell::new(),
-            compute: Box::new(compute),
-        }
+        Self { cell: OnceCell::new(), compute: Box::new(compute) }
     }
 
     /// Get the computed value, computing it if necessary
@@ -329,9 +320,9 @@ impl LazyAccountTotal {
     /// Invalidate if any dependencies changed
     pub fn maybe_invalidate(&mut self, changed_accounts: &[String]) -> bool {
         let should_invalidate = changed_accounts.iter().any(|account| {
-            self.dependencies.iter().any(|dep| {
-                account == dep || account.starts_with(&format!("{}:", dep))
-            })
+            self.dependencies
+                .iter()
+                .any(|dep| account == dep || account.starts_with(&format!("{}:", dep)))
         });
 
         if should_invalidate {
@@ -357,19 +348,14 @@ pub struct CacheStats {
 impl CacheStats {
     /// Create a new cache stats with given capacity.
     pub fn new(capacity: usize) -> Self {
-        Self {
-             hit_count: 0,
-             miss_count: 0,
-             hit_ratio: 0.0,
-             size: 0,
-             capacity,
-        }
+        Self { hit_count: 0, miss_count: 0, hit_ratio: 0.0, size: 0, capacity }
     }
 }
 
 impl fmt::Display for CacheStats {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, 
+        write!(
+            f,
             "Cache Stats: {}/{} hits ({:.1}% hit rate), size: {}/{}",
             self.hit_count,
             self.hit_count + self.miss_count,
@@ -533,7 +519,10 @@ mod tests {
 
     #[test]
     fn test_lazy_computed() {
-        use std::sync::{atomic::{AtomicU32, Ordering}, Arc};
+        use std::sync::{
+            atomic::{AtomicU32, Ordering},
+            Arc,
+        };
         let counter = Arc::new(AtomicU32::new(0));
         let counter_clone = counter.clone();
         let lazy = LazyComputed::new(move || {
@@ -553,13 +542,10 @@ mod tests {
 
     #[test]
     fn test_lazy_account_total() {
-        let mut total = LazyAccountTotal::new(
-            "Assets:Cash".to_string(),
-            || Balance::new()
-        );
+        let mut total = LazyAccountTotal::new("Assets:Cash".to_string(), || Balance::new());
 
         assert!(total.needs_computation());
-        
+
         // First access computes
         let _balance = total.get();
         assert!(!total.needs_computation());
@@ -586,7 +572,7 @@ mod tests {
 
         // Test invalidation
         manager.invalidate_all();
-        
+
         // Should still be empty after invalidation
         let stats = manager.all_stats();
         assert_eq!(stats.balance_cache.size, 0);
@@ -599,10 +585,10 @@ mod tests {
         // Test basic operations
         cache.insert("key1", "value1");
         assert_eq!(cache.get(&"key1"), Some("value1"));
-        
+
         cache.remove(&"key1");
         assert_eq!(cache.get(&"key1"), None);
-        
+
         // Test clear
         cache.insert("key2", "value2");
         cache.clear();

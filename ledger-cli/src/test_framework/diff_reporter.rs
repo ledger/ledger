@@ -3,9 +3,9 @@
 //! This module provides sophisticated diff reporting for comparing expected vs actual
 //! test output, with support for multiple output formats and colored display.
 
-use std::fmt;
 use colored::*;
-use similar::{ChangeTag, TextDiff, Algorithm};
+use similar::{Algorithm, ChangeTag, TextDiff};
+use std::fmt;
 
 /// Diff output format options
 #[derive(Debug, Clone)]
@@ -65,9 +65,7 @@ pub struct DiffReporter {
 impl DiffReporter {
     /// Create a new diff reporter with default configuration
     pub fn new() -> Self {
-        Self {
-            config: DiffConfig::default(),
-        }
+        Self { config: DiffConfig::default() }
     }
 
     /// Create a diff reporter with custom configuration
@@ -109,15 +107,12 @@ impl DiffReporter {
         removed_lines -= paired_changes;
 
         let has_differences = added_lines > 0 || removed_lines > 0 || modified_lines > 0;
-        
+
         // Calculate similarity score
         let total_lines = expected.len().max(actual.len());
         let unchanged_lines = total_lines - added_lines - removed_lines - modified_lines;
-        let similarity_score = if total_lines > 0 {
-            unchanged_lines as f64 / total_lines as f64
-        } else {
-            1.0
-        };
+        let similarity_score =
+            if total_lines > 0 { unchanged_lines as f64 / total_lines as f64 } else { 1.0 };
 
         // Generate diff output based on format
         let diff_output = match self.config.format {
@@ -153,10 +148,7 @@ impl DiffReporter {
         let mut result = text.to_string();
 
         if self.config.ignore_whitespace {
-            result = result.lines()
-                .map(|line| line.trim())
-                .collect::<Vec<_>>()
-                .join("\n");
+            result = result.lines().map(|line| line.trim()).collect::<Vec<_>>().join("\n");
         }
 
         // Normalize tabs
@@ -169,10 +161,11 @@ impl DiffReporter {
 
     /// Normalize numbers with floating point tolerance
     fn normalize_numbers(&self, lines: &[String], tolerance: f64) -> Vec<String> {
-        lines.iter()
+        lines
+            .iter()
             .map(|line| {
                 let mut result = line.clone();
-                
+
                 // Simple regex-like approach to find numbers
                 // In a real implementation, you'd use a proper regex crate
                 let words: Vec<&str> = line.split_whitespace().collect();
@@ -182,7 +175,7 @@ impl DiffReporter {
                         result = result.replace(word, &format!("{:.10}", rounded));
                     }
                 }
-                
+
                 result
             })
             .collect()
@@ -191,7 +184,7 @@ impl DiffReporter {
     /// Format unified diff output
     fn format_unified_diff<'a>(&self, diff: &TextDiff<'a, 'a, 'a, str>) -> String {
         let mut output = String::new();
-        
+
         output.push_str("--- expected\n");
         output.push_str("+++ actual\n");
 
@@ -201,9 +194,11 @@ impl DiffReporter {
                 let old_len = first_op.old_range().len();
                 let new_start = first_op.new_range().start + 1;
                 let new_len = first_op.new_range().len();
-                
-                output.push_str(&format!("@@ -{},{} +{},{} @@\n", 
-                    old_start, old_len, new_start, new_len));
+
+                output.push_str(&format!(
+                    "@@ -{},{} +{},{} @@\n",
+                    old_start, old_len, new_start, new_len
+                ));
             }
 
             for op in group {
@@ -213,7 +208,7 @@ impl DiffReporter {
                         ChangeTag::Delete => "-",
                         ChangeTag::Insert => "+",
                     };
-                    
+
                     let line = if self.config.use_color {
                         match change.tag() {
                             ChangeTag::Equal => format!(" {}", change.value()),
@@ -223,7 +218,7 @@ impl DiffReporter {
                     } else {
                         format!("{}{}", sign, change.value())
                     };
-                    
+
                     output.push_str(&line);
                     if !change.value().ends_with('\n') {
                         output.push('\n');
@@ -281,7 +276,7 @@ impl DiffReporter {
     /// Format inline diff with character-level highlighting
     fn format_inline_diff<'a>(&self, diff: &TextDiff<'a, 'a, 'a, str>) -> String {
         let mut output = String::new();
-        
+
         for change in diff.iter_all_changes() {
             let prefix = match change.tag() {
                 ChangeTag::Equal => "  ",

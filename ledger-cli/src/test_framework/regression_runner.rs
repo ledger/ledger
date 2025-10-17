@@ -4,16 +4,16 @@
 //! the test/regress directory, comparing output against expected results with
 //! detailed diff reporting.
 
-use std::path::{Path, PathBuf};
-use std::fs;
 use anyhow::{Context, Result};
-use log::{info, debug, warn, error};
 use colored::*;
+use log::{debug, error, info, warn};
 use rayon::prelude::*;
+use std::fs;
+use std::path::{Path, PathBuf};
 
-use super::test_harness::{TestHarness, ProcessResult};
+use super::diff_reporter::{DiffConfig, DiffFormat, DiffReporter};
+use super::test_harness::{ProcessResult, TestHarness};
 use super::test_parser::{RegressionTestParser, TestCase};
-use super::diff_reporter::{DiffReporter, DiffConfig, DiffFormat};
 
 /// Configuration for regression test execution
 #[derive(Debug, Clone)]
@@ -80,22 +80,18 @@ impl<'a> RegressionRunner<'a> {
             ..Default::default()
         };
 
-        Self {
-            harness,
-            config,
-            diff_reporter: DiffReporter::with_config(diff_config),
-        }
+        Self { harness, config, diff_reporter: DiffReporter::with_config(diff_config) }
     }
 
     /// Run all regression tests in the specified directory
     pub fn run_tests<P: AsRef<Path>>(&self, test_dir: P) -> Result<()> {
         let test_dir = test_dir.as_ref();
-        
+
         info!("Running regression tests from: {}", test_dir.display());
-        
+
         // Find all test files
         let test_files = self.find_test_files(test_dir)?;
-        
+
         if test_files.is_empty() {
             warn!("No test files found in: {}", test_dir.display());
             return Ok(());
@@ -116,7 +112,7 @@ impl<'a> RegressionRunner<'a> {
     /// Run a single regression test file
     pub fn run_test_file<P: AsRef<Path>>(&self, test_file: P) -> Result<bool> {
         let test_file = test_file.as_ref();
-        
+
         debug!("Running test file: {}", test_file.display());
 
         // Check if test file is empty
@@ -128,7 +124,8 @@ impl<'a> RegressionRunner<'a> {
 
         // Parse test file
         let parser = RegressionTestParser::new(test_file);
-        let test_cases = parser.parse()
+        let test_cases = parser
+            .parse()
             .with_context(|| format!("Failed to parse test file: {}", test_file.display()))?;
 
         if test_cases.is_empty() {
@@ -159,9 +156,8 @@ impl<'a> RegressionRunner<'a> {
 
     /// Run tests in parallel
     fn run_tests_parallel(&self, test_files: &[PathBuf]) -> Result<()> {
-        let pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(self.config.parallel_jobs)
-            .build()?;
+        let pool =
+            rayon::ThreadPoolBuilder::new().num_threads(self.config.parallel_jobs).build()?;
 
         pool.install(|| {
             test_files.par_iter().for_each(|test_file| {
@@ -175,15 +171,20 @@ impl<'a> RegressionRunner<'a> {
     }
 
     /// Run a single test case
-    fn run_test_case(&self, test_name: &str, test_case: &TestCase, test_file: &Path) -> Result<bool> {
+    fn run_test_case(
+        &self,
+        test_name: &str,
+        test_case: &TestCase,
+        test_file: &Path,
+    ) -> Result<bool> {
         debug!("Running test case: {}", test_name);
 
         // Prepare command with file context
         let mut command = test_case.command.clone();
-        
+
         // Check if command needs file input
         let use_stdin = command.contains("-f -") || command.contains("-f /dev/stdin");
-        
+
         // Add file argument if not present and not using stdin
         if !command.contains("-f ") && !use_stdin {
             command = format!("{} -f \"{}\"", command, test_file.display());
@@ -222,22 +223,34 @@ impl<'a> RegressionRunner<'a> {
     }
 
     /// Compare test results against expected output
-    fn compare_results(&self, test_name: &str, test_case: &TestCase, result: &ProcessResult) -> Result<bool> {
+    fn compare_results(
+        &self,
+        test_name: &str,
+        test_case: &TestCase,
+        result: &ProcessResult,
+    ) -> Result<bool> {
         let mut success = true;
 
         // Compare exit code
         if result.exit_code != test_case.expected_exit_code {
             success = false;
             self.print_failure_header(test_name, test_case);
-            println!("{}", format!("FAILURE in exit code ({} != {})", 
-                result.exit_code, test_case.expected_exit_code).red());
+            println!(
+                "{}",
+                format!(
+                    "FAILURE in exit code ({} != {})",
+                    result.exit_code, test_case.expected_exit_code
+                )
+                .red()
+            );
         }
 
         // Compare stdout
         if !test_case.expected_output.is_empty() || !result.stdout.trim().is_empty() {
             let actual_output = self.harness.normalize_output(&result.stdout);
             let diff_result = if self.config.fp_tolerance.is_some() {
-                self.diff_reporter.compare_with_tolerance(&test_case.expected_output, &actual_output)
+                self.diff_reporter
+                    .compare_with_tolerance(&test_case.expected_output, &actual_output)
             } else {
                 self.diff_reporter.compare(&test_case.expected_output, &actual_output)
             };
@@ -301,8 +314,9 @@ impl<'a> RegressionRunner<'a> {
                 }
 
                 // Skip Python tests unless Python support is enabled
-                if path.file_name().unwrap().to_string_lossy().contains("_py.test") 
-                   && !self.harness.python_support {
+                if path.file_name().unwrap().to_string_lossy().contains("_py.test")
+                    && !self.harness.python_support
+                {
                     continue;
                 }
 
@@ -320,40 +334,40 @@ impl<'a> RegressionRunner<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::{TempDir, NamedTempFile};
     use std::io::Write;
+    use tempfile::{NamedTempFile, TempDir};
 
     #[test]
     fn test_regression_runner_creation() {
         let temp_dir = TempDir::new().unwrap();
         let ledger_path = temp_dir.path().join("ledger");
         std::fs::write(&ledger_path, "#!/bin/bash\necho 'test'").unwrap();
-        
+
         let harness = TestHarness::new(&ledger_path, &temp_dir.path().to_path_buf()).unwrap();
         let runner = RegressionRunner::new(&harness);
-        
+
         assert_eq!(runner.config.parallel_jobs, num_cpus::get());
     }
 
     #[test]
     fn test_find_test_files() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         // Create test files
         let test1 = temp_dir.path().join("test1.test");
         let test2 = temp_dir.path().join("test2.test");
         let not_test = temp_dir.path().join("readme.txt");
-        
+
         std::fs::write(&test1, "test content").unwrap();
         std::fs::write(&test2, "test content").unwrap();
         std::fs::write(&not_test, "readme").unwrap();
 
         let ledger_path = temp_dir.path().join("ledger");
         std::fs::write(&ledger_path, "#!/bin/bash\necho 'test'").unwrap();
-        
+
         let harness = TestHarness::new(&ledger_path, &temp_dir.path().to_path_buf()).unwrap();
         let runner = RegressionRunner::new(&harness);
-        
+
         let test_files = runner.find_test_files(temp_dir.path()).unwrap();
         assert_eq!(test_files.len(), 2);
         assert!(test_files.contains(&test1));

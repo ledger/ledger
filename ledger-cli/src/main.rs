@@ -1,5 +1,5 @@
 //! Command-line interface for Ledger accounting system
-//! 
+//!
 //! This is the main entry point for the Rust implementation of Ledger,
 //! a powerful command-line double-entry accounting system.
 
@@ -9,26 +9,26 @@ use std::env;
 use std::process;
 
 mod cli;
-mod session;
-mod dispatch;
 mod completion;
+mod dispatch;
 mod help;
+mod session;
 mod test_framework;
 
 use cli::Cli;
-use session::Session;
 use dispatch::Dispatcher;
+use session::Session;
 
 fn main() -> Result<()> {
     // Initialize logging
     env_logger::init();
-    
+
     // Handle debug options early (similar to C++ version)
     handle_debug_options();
-    
+
     // Parse command-line arguments
     let cli = Cli::parse();
-    
+
     // Create session with configuration
     let session = match Session::new(&cli) {
         Ok(session) => session,
@@ -37,15 +37,15 @@ fn main() -> Result<()> {
             process::exit(1);
         }
     };
-    
+
     // Create dispatcher and execute command
     let mut dispatcher = Dispatcher::new(session);
-    
+
     match dispatcher.execute(&cli) {
         Ok(exit_code) => process::exit(exit_code),
         Err(e) => {
             eprintln!("Error: {}", e);
-            
+
             // Show error chain if in verbose mode
             if cli.verbose {
                 let mut cause = e.source();
@@ -54,7 +54,7 @@ fn main() -> Result<()> {
                     cause = err.source();
                 }
             }
-            
+
             process::exit(1);
         }
     }
@@ -64,7 +64,7 @@ fn main() -> Result<()> {
 /// This mirrors the handle_debug_options function in the C++ version
 fn handle_debug_options() {
     let args: Vec<String> = env::args().collect();
-    
+
     for (i, arg) in args.iter().enumerate() {
         match arg.as_str() {
             "--verify-memory" => {

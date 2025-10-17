@@ -8,28 +8,25 @@
 #![warn(missing_docs)]
 
 pub mod amount;
-pub mod commodity;
 pub mod balance;
+pub mod commodity;
 pub mod datetime;
 pub mod formatting;
 
 // Re-export main types
 pub use amount::{Amount, AmountError, AmountResult, Precision, EXTEND_BY_DIGITS};
-pub use commodity::{
-    Commodity, CommodityRef, CommodityFlags, CommodityPool,
-    Annotation, AnnotationFlags, AnnotatedCommodity, 
-    KeepDetails, Expression, Date as CommodityDate,
-    null_commodity
-};
 pub use balance::{Balance, BalanceError, BalanceResult};
+pub use commodity::{
+    null_commodity, AnnotatedCommodity, Annotation, AnnotationFlags, Commodity, CommodityFlags,
+    CommodityPool, CommodityRef, Date as CommodityDate, Expression, KeepDetails,
+};
 pub use datetime::{
-    Date, LocalDateTime, DateTimeError, DateTimeResult, FormatType,
-    DateDuration, parse_date, parse_datetime, format_date, format_datetime,
-    timezone, DEFAULT_TIMEZONE
+    format_date, format_datetime, parse_date, parse_datetime, timezone, Date, DateDuration,
+    DateTimeError, DateTimeResult, FormatType, LocalDateTime, DEFAULT_TIMEZONE,
 };
 pub use formatting::{
-    FormatConfig, FormatFlags, format_amount, format_balance, format_rational, 
-    apply_width_formatting
+    apply_width_formatting, format_amount, format_balance, format_rational, FormatConfig,
+    FormatFlags,
 };
 
 // Re-export for convenience

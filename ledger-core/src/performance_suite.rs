@@ -3,14 +3,14 @@
 //! This module provides tools for measuring and comparing performance
 //! against C++ Ledger implementation and tracking optimization progress.
 
+use num_traits::ToPrimitive;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 use std::fs;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
-use serde::{Deserialize, Serialize};
-use num_traits::ToPrimitive;
 
 /// Performance metrics for a single benchmark run
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,7 +60,11 @@ impl PerformanceMetrics {
     pub fn memory_efficiency(&self) -> Option<f64> {
         self.throughput_ops_sec.map(|ops| {
             let memory_mb = self.memory_rss as f64 / 1_000_000.0;
-            if memory_mb > 0.0 { ops / memory_mb } else { 0.0 }
+            if memory_mb > 0.0 {
+                ops / memory_mb
+            } else {
+                0.0
+            }
         })
     }
 
@@ -87,7 +91,11 @@ impl PerformanceMetrics {
             weight_total += 0.3;
         }
 
-        if weight_total > 0.0 { score / weight_total } else { 0.0 }
+        if weight_total > 0.0 {
+            score / weight_total
+        } else {
+            0.0
+        }
     }
 }
 
@@ -98,27 +106,27 @@ impl fmt::Display for PerformanceMetrics {
         writeln!(f, "  Memory RSS: {:.2} MB", self.memory_rss as f64 / 1_000_000.0)?;
         writeln!(f, "  Memory Heap: {:.2} MB", self.memory_heap as f64 / 1_000_000.0)?;
         writeln!(f, "  CPU Usage: {:.1}%", self.cpu_usage)?;
-        
+
         if let Some(throughput) = self.throughput_ops_sec {
             writeln!(f, "  Throughput: {:.0} ops/sec", throughput)?;
         }
-        
+
         if let Some(lines_sec) = self.lines_per_sec {
             writeln!(f, "  Parsing Speed: {:.0} lines/sec", lines_sec)?;
         }
-        
+
         writeln!(f, "  Binary Size: {:.2} MB", self.binary_size as f64 / 1_000_000.0)?;
-        
+
         if let Some(efficiency) = self.memory_efficiency() {
             writeln!(f, "  Memory Efficiency: {:.2} ops/MB", efficiency)?;
         }
-        
+
         writeln!(f, "  Performance Score: {:.2}", self.performance_score())?;
-        
+
         for (key, value) in &self.custom_metrics {
             writeln!(f, "  {}: {:.2}", key, value)?;
         }
-        
+
         Ok(())
     }
 }
@@ -134,22 +142,18 @@ pub struct ImplementationComparison {
 impl ImplementationComparison {
     /// Create new comparison
     pub fn new(rust_metrics: PerformanceMetrics) -> Self {
-        Self {
-            rust_metrics,
-            cpp_metrics: None,
-            improvement_ratios: HashMap::new(),
-        }
+        Self { rust_metrics, cpp_metrics: None, improvement_ratios: HashMap::new() }
     }
 
     /// Add C++ metrics for comparison
     pub fn with_cpp_metrics(mut self, cpp_metrics: PerformanceMetrics) -> Self {
         // Calculate improvement ratios
         let mut ratios = HashMap::new();
-        
+
         // Duration improvement (lower is better)
         if cpp_metrics.duration.as_nanos() > 0 {
-            let ratio = cpp_metrics.duration.as_nanos() as f64 / 
-                       self.rust_metrics.duration.as_nanos() as f64;
+            let ratio = cpp_metrics.duration.as_nanos() as f64
+                / self.rust_metrics.duration.as_nanos() as f64;
             ratios.insert("duration_improvement".to_string(), ratio);
         }
 
@@ -160,8 +164,9 @@ impl ImplementationComparison {
         }
 
         // Throughput improvement (higher is better for Rust)
-        if let (Some(rust_throughput), Some(cpp_throughput)) = 
-           (self.rust_metrics.throughput_ops_sec, cpp_metrics.throughput_ops_sec) {
+        if let (Some(rust_throughput), Some(cpp_throughput)) =
+            (self.rust_metrics.throughput_ops_sec, cpp_metrics.throughput_ops_sec)
+        {
             let ratio = rust_throughput / cpp_throughput;
             ratios.insert("throughput_improvement".to_string(), ratio);
         }
@@ -217,21 +222,35 @@ impl fmt::Display for ImplementationComparison {
             for (metric, ratio) in &self.improvement_ratios {
                 let status = match metric.as_str() {
                     "memory_improvement" => {
-                        if *ratio >= 1.3 { "✓ EXCELLENT" }
-                        else if *ratio >= 1.1 { "✓ GOOD" }
-                        else if *ratio >= 0.9 { "~ ACCEPTABLE" }
-                        else { "✗ NEEDS WORK" }
-                    },
+                        if *ratio >= 1.3 {
+                            "✓ EXCELLENT"
+                        } else if *ratio >= 1.1 {
+                            "✓ GOOD"
+                        } else if *ratio >= 0.9 {
+                            "~ ACCEPTABLE"
+                        } else {
+                            "✗ NEEDS WORK"
+                        }
+                    }
                     "duration_improvement" => {
-                        if *ratio >= 1.2 { "✓ EXCELLENT" }
-                        else if *ratio >= 1.0 { "✓ GOOD" }
-                        else if *ratio >= 0.9 { "~ ACCEPTABLE" }
-                        else { "✗ REGRESSION" }
-                    },
+                        if *ratio >= 1.2 {
+                            "✓ EXCELLENT"
+                        } else if *ratio >= 1.0 {
+                            "✓ GOOD"
+                        } else if *ratio >= 0.9 {
+                            "~ ACCEPTABLE"
+                        } else {
+                            "✗ REGRESSION"
+                        }
+                    }
                     _ => {
-                        if *ratio >= 1.1 { "✓ GOOD" }
-                        else if *ratio >= 0.9 { "~ ACCEPTABLE" }
-                        else { "✗ NEEDS WORK" }
+                        if *ratio >= 1.1 {
+                            "✓ GOOD"
+                        } else if *ratio >= 0.9 {
+                            "~ ACCEPTABLE"
+                        } else {
+                            "✗ NEEDS WORK"
+                        }
                     }
                 };
                 writeln!(f, "  {}: {:.2}x {}", metric, ratio, status)?;
@@ -239,12 +258,21 @@ impl fmt::Display for ImplementationComparison {
 
             let targets = self.meets_targets();
             writeln!(f, "\n=== Target Achievement ===")?;
-            writeln!(f, "  Memory Target (30% reduction): {}", 
-                     if targets.memory_target_met { "✓ MET" } else { "✗ NOT MET" })?;
-            writeln!(f, "  Performance Target (no regression): {}", 
-                     if targets.performance_target_met { "✓ MET" } else { "✗ NOT MET" })?;
-            writeln!(f, "  Binary Size Target (comparable): {}", 
-                     if targets.binary_size_target_met { "✓ MET" } else { "✗ NOT MET" })?;
+            writeln!(
+                f,
+                "  Memory Target (30% reduction): {}",
+                if targets.memory_target_met { "✓ MET" } else { "✗ NOT MET" }
+            )?;
+            writeln!(
+                f,
+                "  Performance Target (no regression): {}",
+                if targets.performance_target_met { "✓ MET" } else { "✗ NOT MET" }
+            )?;
+            writeln!(
+                f,
+                "  Binary Size Target (comparable): {}",
+                if targets.binary_size_target_met { "✓ MET" } else { "✗ NOT MET" }
+            )?;
         }
 
         Ok(())
@@ -270,21 +298,22 @@ pub struct BenchmarkSuite {
 impl BenchmarkSuite {
     /// Create new benchmark suite
     pub fn new() -> Self {
-        Self {
-            results: Vec::new(),
-        }
+        Self { results: Vec::new() }
     }
 
     /// Run parsing benchmarks
-    pub fn benchmark_parsing(&mut self, test_file: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn benchmark_parsing(
+        &mut self,
+        test_file: &Path,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         println!("Running parsing benchmark on {:?}", test_file);
 
         let rust_metrics = self.benchmark_rust_parsing(test_file)?;
         let comparison = ImplementationComparison::new(rust_metrics);
-        
+
         // TODO: Add C++ parsing benchmark if available
         self.results.push(comparison);
-        
+
         Ok(())
     }
 
@@ -293,25 +322,25 @@ impl BenchmarkSuite {
         println!("Running arithmetic benchmarks");
 
         let mut metrics = PerformanceMetrics::new("Arithmetic Operations".to_string());
-        
+
         let start = Instant::now();
-        
+
         // Run intensive arithmetic operations
         let iterations = 1_000_000;
         let mut total = rust_decimal::Decimal::ZERO;
-        
+
         for i in 0..iterations {
             let val = rust_decimal::Decimal::from(i);
             total = total + val * rust_decimal::Decimal::from(2);
         }
-        
+
         metrics.duration = start.elapsed();
         metrics.throughput_ops_sec = Some(iterations as f64 / metrics.duration.as_secs_f64());
         metrics.add_custom_metric("result".to_string(), total.to_f64().unwrap_or(0.0));
 
         let comparison = ImplementationComparison::new(metrics);
         self.results.push(comparison);
-        
+
         Ok(())
     }
 
@@ -320,79 +349,86 @@ impl BenchmarkSuite {
         println!("Running report generation benchmarks");
 
         let mut metrics = PerformanceMetrics::new("Report Generation".to_string());
-        
+
         let start = Instant::now();
-        
+
         // Simulate report generation
         let iterations = 10_000;
         let mut lines_generated = 0;
-        
+
         for i in 0..iterations {
             // Simulate formatting operations
-            let _formatted = format!("2024-01-{:02} Account:Subaccount    ${:.2}", 
-                                    (i % 28) + 1, (i as f64) * 1.23);
+            let _formatted = format!(
+                "2024-01-{:02} Account:Subaccount    ${:.2}",
+                (i % 28) + 1,
+                (i as f64) * 1.23
+            );
             lines_generated += 1;
         }
-        
+
         metrics.duration = start.elapsed();
         metrics.lines_per_sec = Some(lines_generated as f64 / metrics.duration.as_secs_f64());
 
         let comparison = ImplementationComparison::new(metrics);
         self.results.push(comparison);
-        
+
         Ok(())
     }
 
     /// Benchmark Rust parsing implementation
-    fn benchmark_rust_parsing(&self, _test_file: &Path) -> Result<PerformanceMetrics, Box<dyn std::error::Error>> {
+    fn benchmark_rust_parsing(
+        &self,
+        _test_file: &Path,
+    ) -> Result<PerformanceMetrics, Box<dyn std::error::Error>> {
         let mut metrics = PerformanceMetrics::new("Rust Parsing".to_string());
-        
+
         let start = Instant::now();
-        
+
         // Simulate parsing operations
         let lines = 50_000;
         for i in 0..lines {
             // Simulate line parsing
             let _parsed = format!("2024-01-01 * Transaction {}", i);
         }
-        
+
         metrics.duration = start.elapsed();
         metrics.lines_per_sec = Some(lines as f64 / metrics.duration.as_secs_f64());
         metrics.memory_rss = 50_000_000; // Simulated RSS
         metrics.memory_heap = 30_000_000; // Simulated heap
-        
+
         Ok(metrics)
     }
 
     /// Get binary size
     pub fn measure_binary_size(&self, binary_path: &Path) -> u64 {
-        fs::metadata(binary_path)
-            .map(|metadata| metadata.len())
-            .unwrap_or(0)
+        fs::metadata(binary_path).map(|metadata| metadata.len()).unwrap_or(0)
     }
 
     /// Generate comprehensive report
     pub fn generate_report(&self) -> String {
         let mut report = String::new();
-        
+
         report.push_str("# Ledger Rust Implementation Performance Report\n\n");
-        report.push_str(&format!("Generated: {}\n", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC")));
+        report.push_str(&format!(
+            "Generated: {}\n",
+            chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC")
+        ));
         report.push_str(&format!("Total benchmarks: {}\n\n", self.results.len()));
 
         for (i, comparison) in self.results.iter().enumerate() {
-            report.push_str(&format!("## Benchmark {} - {}\n\n", i + 1, comparison.rust_metrics.test_name));
+            report.push_str(&format!(
+                "## Benchmark {} - {}\n\n",
+                i + 1,
+                comparison.rust_metrics.test_name
+            ));
             report.push_str(&format!("{}\n", comparison));
         }
 
         // Summary statistics
-        let total_score: f64 = self.results.iter()
-            .map(|r| r.rust_metrics.performance_score())
-            .sum();
-        let avg_score = if !self.results.is_empty() { 
-            total_score / self.results.len() as f64 
-        } else { 
-            0.0 
-        };
+        let total_score: f64 =
+            self.results.iter().map(|r| r.rust_metrics.performance_score()).sum();
+        let avg_score =
+            if !self.results.is_empty() { total_score / self.results.len() as f64 } else { 0.0 };
 
         report.push_str("\n## Summary\n\n");
         report.push_str(&format!("Average Performance Score: {:.2}\n", avg_score));
@@ -400,21 +436,30 @@ impl BenchmarkSuite {
         // Check if any targets were measured
         let mut targets_met = 0;
         let mut targets_total = 0;
-        
+
         for comparison in &self.results {
             if comparison.cpp_metrics.is_some() {
                 let targets = comparison.meets_targets();
-                if targets.memory_target_met { targets_met += 1; }
-                if targets.performance_target_met { targets_met += 1; }
-                if targets.binary_size_target_met { targets_met += 1; }
+                if targets.memory_target_met {
+                    targets_met += 1;
+                }
+                if targets.performance_target_met {
+                    targets_met += 1;
+                }
+                if targets.binary_size_target_met {
+                    targets_met += 1;
+                }
                 targets_total += 3;
             }
         }
 
         if targets_total > 0 {
-            report.push_str(&format!("Targets Met: {}/{} ({:.1}%)\n", 
-                                   targets_met, targets_total, 
-                                   targets_met as f64 / targets_total as f64 * 100.0));
+            report.push_str(&format!(
+                "Targets Met: {}/{} ({:.1}%)\n",
+                targets_met,
+                targets_total,
+                targets_met as f64 / targets_total as f64 * 100.0
+            ));
         }
 
         report
@@ -454,12 +499,12 @@ impl MemoryProfiler {
     {
         // Start memory tracking (simplified version)
         let start_memory = Self::get_current_memory();
-        
+
         let result = f();
-        
+
         let end_memory = Self::get_current_memory();
         let peak_memory = end_memory.saturating_sub(start_memory);
-        
+
         (result, peak_memory)
     }
 
@@ -476,14 +521,16 @@ pub struct SizeOptimizer;
 
 impl SizeOptimizer {
     /// Analyze binary sections and suggest optimizations
-    pub fn analyze_binary_size(binary_path: &Path) -> Result<SizeAnalysis, Box<dyn std::error::Error>> {
+    pub fn analyze_binary_size(
+        binary_path: &Path,
+    ) -> Result<SizeAnalysis, Box<dyn std::error::Error>> {
         let total_size = fs::metadata(binary_path)?.len();
-        
+
         // This would use tools like `nm`, `objdump`, or `cargo bloat` in practice
         let analysis = SizeAnalysis {
             total_size,
-            text_size: total_size * 60 / 100, // Estimated
-            data_size: total_size * 20 / 100, // Estimated  
+            text_size: total_size * 60 / 100,  // Estimated
+            data_size: total_size * 20 / 100,  // Estimated
             debug_size: total_size * 10 / 100, // Estimated
             other_size: total_size * 10 / 100, // Estimated
             suggestions: vec![
@@ -512,18 +559,30 @@ impl fmt::Display for SizeAnalysis {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Binary Size Analysis:")?;
         writeln!(f, "  Total: {:.2} MB", self.total_size as f64 / 1_000_000.0)?;
-        writeln!(f, "  Text (code): {:.2} MB ({:.1}%)", 
-                 self.text_size as f64 / 1_000_000.0,
-                 self.text_size as f64 / self.total_size as f64 * 100.0)?;
-        writeln!(f, "  Data: {:.2} MB ({:.1}%)", 
-                 self.data_size as f64 / 1_000_000.0,
-                 self.data_size as f64 / self.total_size as f64 * 100.0)?;
-        writeln!(f, "  Debug: {:.2} MB ({:.1}%)", 
-                 self.debug_size as f64 / 1_000_000.0,
-                 self.debug_size as f64 / self.total_size as f64 * 100.0)?;
-        writeln!(f, "  Other: {:.2} MB ({:.1}%)", 
-                 self.other_size as f64 / 1_000_000.0,
-                 self.other_size as f64 / self.total_size as f64 * 100.0)?;
+        writeln!(
+            f,
+            "  Text (code): {:.2} MB ({:.1}%)",
+            self.text_size as f64 / 1_000_000.0,
+            self.text_size as f64 / self.total_size as f64 * 100.0
+        )?;
+        writeln!(
+            f,
+            "  Data: {:.2} MB ({:.1}%)",
+            self.data_size as f64 / 1_000_000.0,
+            self.data_size as f64 / self.total_size as f64 * 100.0
+        )?;
+        writeln!(
+            f,
+            "  Debug: {:.2} MB ({:.1}%)",
+            self.debug_size as f64 / 1_000_000.0,
+            self.debug_size as f64 / self.total_size as f64 * 100.0
+        )?;
+        writeln!(
+            f,
+            "  Other: {:.2} MB ({:.1}%)",
+            self.other_size as f64 / 1_000_000.0,
+            self.other_size as f64 / self.total_size as f64 * 100.0
+        )?;
 
         writeln!(f, "\nOptimization Suggestions:")?;
         for (i, suggestion) in self.suggestions.iter().enumerate() {
@@ -552,7 +611,7 @@ mod tests {
     #[test]
     fn test_benchmark_suite() {
         let mut suite = BenchmarkSuite::new();
-        
+
         // Test arithmetic benchmark
         suite.benchmark_arithmetic().unwrap();
         assert!(!suite.results.is_empty());
@@ -581,16 +640,15 @@ mod tests {
     fn test_implementation_comparison() {
         let rust_metrics = PerformanceMetrics::new("test".to_string());
         let mut cpp_metrics = PerformanceMetrics::new("test".to_string());
-        
+
         // Make Rust look better for testing
         cpp_metrics.duration = Duration::from_millis(200);
         cpp_metrics.memory_rss = 2_000_000;
-        
-        let comparison = ImplementationComparison::new(rust_metrics)
-            .with_cpp_metrics(cpp_metrics);
+
+        let comparison = ImplementationComparison::new(rust_metrics).with_cpp_metrics(cpp_metrics);
 
         assert!(!comparison.improvement_ratios.is_empty());
-        
+
         let targets = comparison.meets_targets();
         // Should show some improvements
         assert!(targets.memory_improvement.unwrap_or(0.0) > 0.0);

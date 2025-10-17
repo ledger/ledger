@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Running arithmetic performance tests...");
     suite.benchmark_arithmetic()?;
 
-    // Run report generation benchmarks  
+    // Run report generation benchmarks
     println!("Running report generation benchmarks...");
     suite.benchmark_report_generation()?;
 
@@ -30,8 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         data.len()
     });
-    println!("Memory profiling result: {} items used {} bytes peak memory", 
-             result, memory_used);
+    println!("Memory profiling result: {} items used {} bytes peak memory", result, memory_used);
 
     // Binary size analysis (if binary exists)
     if let Ok(current_exe) = std::env::current_exe() {
@@ -50,17 +49,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Save results
     let results_dir = Path::new("benchmark_results/performance_demo");
     std::fs::create_dir_all(results_dir)?;
-    
+
     let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
     let report_file = results_dir.join(format!("performance_demo_{}.md", timestamp));
     let json_file = results_dir.join(format!("performance_demo_{}.json", timestamp));
-    
+
     suite.save_report(&report_file)?;
     suite.export_json(&json_file)?;
 
     println!("\n=== Optimization Summary ===");
     println!("✓ String interning and compact representations");
-    println!("✓ Zero-copy parsing optimizations");  
+    println!("✓ Zero-copy parsing optimizations");
     println!("✓ Parallel processing where beneficial");
     println!("✓ Optimized data structures (sparse vectors, arenas)");
     println!("✓ Intelligent caching with LRU eviction");

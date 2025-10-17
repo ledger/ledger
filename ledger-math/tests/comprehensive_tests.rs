@@ -192,7 +192,7 @@ mod amount_conversion_tests {
     #[test]
     fn test_to_conversions() {
         let amt = Amount::from_i64(100);
-        
+
         assert_eq!(amt.to_i64().unwrap(), 100);
         assert_eq!(amt.to_u64().unwrap(), 100);
         assert_eq!(amt.to_i32().unwrap(), 100);
@@ -230,7 +230,7 @@ mod balance_basic_tests {
     fn test_balance_from_amount() {
         let amt = Amount::from_i64(100);
         let balance = Balance::from_amount(amt).unwrap();
-        
+
         assert!(!balance.is_empty());
         assert!(!balance.is_zero());
         assert!(balance.single_amount());
@@ -243,13 +243,13 @@ mod balance_basic_tests {
     #[test]
     fn test_balance_arithmetic() {
         let mut balance = Balance::new();
-        
+
         let a = Amount::from_i64(100);
         balance.add_amount(&a).unwrap();
-        
+
         let b = Amount::from_i64(50);
         balance.add_amount(&b).unwrap();
-        
+
         let result = balance.to_amount().unwrap();
         assert_eq!(result.to_i64().unwrap(), 150);
     }
@@ -257,13 +257,13 @@ mod balance_basic_tests {
     #[test]
     fn test_balance_subtraction() {
         let mut balance = Balance::new();
-        
+
         let a = Amount::from_i64(100);
         balance.add_amount(&a).unwrap();
-        
+
         let b = Amount::from_i64(30);
         balance.subtract_amount(&b).unwrap();
-        
+
         let result = balance.to_amount().unwrap();
         assert_eq!(result.to_i64().unwrap(), 70);
     }
@@ -273,7 +273,7 @@ mod balance_basic_tests {
         let amt = Amount::from_i64(100);
         let balance = Balance::from_amount(amt).unwrap();
         let negated = balance.negated();
-        
+
         let result = negated.to_amount().unwrap();
         assert_eq!(result.to_i64().unwrap(), -100);
     }
@@ -282,7 +282,7 @@ mod balance_basic_tests {
     fn test_balance_operators() {
         let balance1 = Balance::from_amount(Amount::from_i64(100)).unwrap();
         let balance2 = Balance::from_amount(Amount::from_i64(50)).unwrap();
-        
+
         let sum = (balance1.clone() + balance2.clone()).unwrap();
         let result = sum.to_amount().unwrap();
         assert_eq!(result.to_i64().unwrap(), 150);
@@ -296,7 +296,7 @@ mod balance_basic_tests {
     fn test_balance_multiplication() {
         let balance = Balance::from_amount(Amount::from_i64(100)).unwrap();
         let multiplier = Amount::from_i64(3);
-        
+
         let result = (balance.clone() * multiplier).unwrap();
         let amt = result.to_amount().unwrap();
         assert_eq!(amt.to_i64().unwrap(), 300);
@@ -306,7 +306,7 @@ mod balance_basic_tests {
     fn test_balance_division() {
         let balance = Balance::from_amount(Amount::from_i64(100)).unwrap();
         let divisor = Amount::from_i64(4);
-        
+
         let result = (balance.clone() / divisor).unwrap();
         let amt = result.to_amount().unwrap();
         assert_eq!(amt.to_i64().unwrap(), 25);
@@ -321,7 +321,7 @@ mod property_tests {
 
     proptest! {
         // Amount property tests
-        
+
         #[test]
         fn prop_addition_commutative(a in -100000i64..100000, b in -100000i64..100000) {
             let amt_a = Amount::from_i64(a);
@@ -387,7 +387,7 @@ mod property_tests {
             let amt_a = Amount::from_i64(a);
             let amt_b = Amount::from_i64(b);
             let amt_c = Amount::from_i64(c);
-            
+
             // a * (b + c) = a * b + a * c
             let left = (&amt_a * &(&amt_b + &amt_c).unwrap()).unwrap();
             let right = ((&amt_a * &amt_b).unwrap() + &(&amt_a * &amt_c).unwrap()).unwrap();
@@ -413,7 +413,7 @@ mod property_tests {
         fn prop_sign_consistency(a in -100000i64..100000) {
             let amt = Amount::from_i64(a);
             let sign = amt.sign();
-            
+
             if a > 0 {
                 prop_assert_eq!(sign, 1);
                 prop_assert!(!amt.sign() < 0);
@@ -427,7 +427,7 @@ mod property_tests {
         }
 
         // Balance property tests
-        
+
         #[test]
         fn prop_balance_addition_commutative(a in -10000i64..10000, b in -10000i64..10000) {
             let balance1 = Balance::from_amount(Amount::from_i64(a)).unwrap_or(Balance::new());
@@ -471,11 +471,11 @@ mod edge_case_tests {
     fn test_very_large_numbers() {
         let large = Amount::from_i64(i64::MAX);
         let small = Amount::from_i64(1);
-        
+
         // This should handle overflow gracefully
         let sum = (&large + &small).unwrap();
         assert!(!sum.is_null());
-        
+
         // Division by very small number
         let divisor = Amount::exact("0.000000001").unwrap();
         let result = (&small / &divisor).unwrap();
@@ -487,7 +487,7 @@ mod edge_case_tests {
         let tiny = Amount::exact("0.000000000000001").unwrap();
         assert!(!tiny.is_zero());
         assert!(tiny.is_nonzero());
-        
+
         let doubled = (&tiny + &tiny).unwrap();
         assert!(!doubled.is_zero());
     }
@@ -518,7 +518,7 @@ mod cpp_compat_tests {
         // Based on testParser from t_amount.cc
         let x4 = Amount::exact("123.456").unwrap();
         assert_eq!(x4.to_string(), "123.456");
-        
+
         let x12 = Amount::exact("100").unwrap();
         assert_eq!(x12.to_i64().unwrap(), 100);
     }
@@ -528,10 +528,10 @@ mod cpp_compat_tests {
         // Based on testArithmetic from t_amount.cc
         let x1 = Amount::exact("1234.56").unwrap();
         let x2 = Amount::exact("11111.11").unwrap();
-        
+
         let sum = (&x1 + &x2).unwrap();
         assert_eq!(sum.to_string(), "12345.67");
-        
+
         let x3 = Amount::exact("1234.56").unwrap();
         let x4 = Amount::exact("1234.56").unwrap();
         let diff = (&x3 - &x4).unwrap();
@@ -545,7 +545,7 @@ mod cpp_compat_tests {
         let x1 = Amount::exact("0.00").unwrap();
         let x2 = Amount::exact("-123.45").unwrap();
         let x3 = Amount::exact("123.45").unwrap();
-        
+
         assert!(x0.is_zero());
         assert!(x1.is_zero());
         assert!(x2 < x3);
@@ -558,10 +558,10 @@ mod cpp_compat_tests {
     fn test_rounding_compatibility() {
         // Based on testRound from t_amount.cc
         let x1 = Amount::exact("1234.567890").unwrap();
-        
+
         let rounded = x1.roundto(2);
         assert_eq!(rounded.to_string(), "1234.57");
-        
+
         // truncated() truncates to display precision in the Rust implementation
         let truncated = x1.truncated();
         assert_eq!(truncated.to_string(), "1234.567890");
@@ -573,11 +573,11 @@ mod cpp_compat_tests {
         let x1 = Amount::exact("1234.56").unwrap();
         let x2 = Amount::exact("-1234.56").unwrap();
         let x3 = Amount::exact("0.00").unwrap();
-        
+
         assert_eq!(x1.sign(), 1);
         assert_eq!(x2.sign(), -1);
         assert_eq!(x3.sign(), 0);
-        
+
         assert!(!x1.sign() < 0);
         assert!(x2.sign() < 0);
         assert!(!x3.sign() < 0);
@@ -588,7 +588,7 @@ mod cpp_compat_tests {
         // Based on testAbs from t_amount.cc
         let x1 = Amount::exact("-1234.56").unwrap();
         let x2 = x1.abs();
-        
+
         assert!(x1.sign() < 0);
         assert!(!x2.sign() < 0);
         assert_eq!(x2.to_string(), "1234.56");

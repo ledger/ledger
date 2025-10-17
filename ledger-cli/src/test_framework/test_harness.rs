@@ -4,12 +4,12 @@
 //! LedgerHarness.py. It handles running ledger commands, capturing output, and managing
 //! test execution state.
 
+use anyhow::{Context, Result};
+use log::{debug, info, warn};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
-use anyhow::{Context, Result};
-use log::{debug, info, warn};
 
 /// Test execution statistics
 #[derive(Debug, Default)]
@@ -35,10 +35,7 @@ impl Clone for TestStats {
 
 impl TestStats {
     pub fn new() -> Self {
-        Self {
-            start_time: Some(Instant::now()),
-            ..Default::default()
-        }
+        Self { start_time: Some(Instant::now()), ..Default::default() }
     }
 
     pub fn success(&self) {
@@ -63,9 +60,8 @@ impl TestStats {
         let failed = self.failed.load(Ordering::SeqCst);
         let skipped = self.skipped.load(Ordering::SeqCst);
 
-        let elapsed = self.start_time
-            .map(|start| start.elapsed())
-            .unwrap_or_else(|| Duration::from_secs(0));
+        let elapsed =
+            self.start_time.map(|start| start.elapsed()).unwrap_or_else(|| Duration::from_secs(0));
 
         println!("\nTest Summary:");
         println!("=============");
@@ -142,20 +138,17 @@ impl TestHarness {
     /// Run a ledger command with given arguments
     pub fn run_command(&self, command: &str, add_columns: bool) -> Result<ProcessResult> {
         let start_time = Instant::now();
-        
+
         // Replace variables in command
         let command = self.substitute_variables(command);
-        
+
         debug!("Running command: {}", command);
-        
+
         // Parse command into arguments
         let args = self.parse_command(&command)?;
-        
+
         let mut cmd = Command::new(&self.ledger_path);
-        cmd.args(&args)
-           .stdout(Stdio::piped())
-           .stderr(Stdio::piped())
-           .stdin(Stdio::piped());
+        cmd.args(&args).stdout(Stdio::piped()).stderr(Stdio::piped()).stdin(Stdio::piped());
 
         // Add columns option if requested and not already present
         if add_columns && !command.contains("--columns") {
@@ -165,8 +158,9 @@ impl TestHarness {
         // Set environment for consistent test runs
         cmd.env("TZ", "America/Chicago");
         cmd.env("LC_ALL", "C");
-        
-        let output = cmd.output()
+
+        let output = cmd
+            .output()
             .with_context(|| format!("Failed to execute ledger command: {}", command))?;
 
         let duration = start_time.elapsed();
@@ -228,7 +222,7 @@ impl TestHarness {
                 let line = line.replace('\r', "");
                 #[cfg(windows)]
                 let line = line.replace('\\', "/");
-                
+
                 line.to_string()
             })
             .collect()
