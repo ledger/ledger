@@ -735,7 +735,9 @@ mod tests {
         formatter.set_alignments(vec![TextAlignment::Left, TextAlignment::Right]);
 
         let result = formatter.format_columns(&["Account", "100.00"]);
-        assert_eq!(result, "Account    100.00");
+        // col 1 is 10, col 2 is 8, plus 1 in between
+        assert_eq!(result.len(), 10 + 8 + 1);
+        assert_eq!(result, "Account      100.00");
     }
 
     #[test]

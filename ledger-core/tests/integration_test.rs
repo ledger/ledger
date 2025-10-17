@@ -3,6 +3,7 @@
 use ledger_core::amount::Amount;
 use ledger_core::balance::Balance;
 use ledger_math::commodity::Commodity;
+use ledger_math::CommodityFlags;
 use rust_decimal::Decimal;
 use std::sync::Arc;
 
@@ -22,7 +23,11 @@ fn test_amount_balance_integration() {
 
 #[test]
 fn test_amount_display() {
-    let usd_commodity = Some(Arc::new(Commodity::new("USD")));
+    let usd_commodity = {
+        let mut usd_commodity = Commodity::new("USD");
+        usd_commodity.add_flags(CommodityFlags::STYLE_SEPARATED);
+        Some(Arc::new(usd_commodity))
+    };
     let amount = Amount::with_commodity(Decimal::from(100), usd_commodity);
     let display = format!("{}", amount);
     assert_eq!(display, "USD 100");

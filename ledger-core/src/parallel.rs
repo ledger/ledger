@@ -102,7 +102,7 @@ pub struct ParallelTransactionProcessor {
 pub struct ProcessingStats {
     pub total_transactions: usize,
     pub processed_transactions: usize,
-    pub processing_time_ms: u64,
+    pub processing_time_us: u64,
     pub threads_used: usize,
     pub chunks_processed: usize,
 }
@@ -141,7 +141,7 @@ impl ParallelTransactionProcessor {
         self.stats.threads_used = 1;
 
         self.stats.processed_transactions = txns.len();
-        self.stats.processing_time_ms = start_time.elapsed().as_millis() as u64;
+        self.stats.processing_time_us = start_time.elapsed().as_micros() as u64;
 
         accumulator.into_balances()
     }
@@ -175,7 +175,7 @@ impl ParallelTransactionProcessor {
 
         let filtered: Vec<&Transaction> = transactions.filter(|txn| predicate(txn)).collect();
 
-        self.stats.processing_time_ms = start_time.elapsed().as_millis() as u64;
+        self.stats.processing_time_us = start_time.elapsed().as_micros() as u64;
         self.stats.processed_transactions = filtered.len();
 
         filtered
@@ -199,7 +199,7 @@ impl ParallelTransactionProcessor {
         // Always use standard sort due to thread safety
         txns.sort_by_key(|txn| key_fn(txn));
 
-        self.stats.processing_time_ms = start_time.elapsed().as_millis() as u64;
+        self.stats.processing_time_us = start_time.elapsed().as_micros() as u64;
         self.stats.processed_transactions = txns.len();
 
         txns
@@ -456,7 +456,8 @@ mod tests {
 
         let stats = processor.stats();
         assert_eq!(stats.processed_transactions, filtered.len());
-        assert!(stats.processing_time_ms > 0 || filtered.is_empty());
+        dbg!(stats.processing_time_us, filtered.is_empty());
+        assert!(stats.processing_time_us > 0 || filtered.is_empty());
     }
 
     #[test]
