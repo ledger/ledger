@@ -603,7 +603,6 @@ mod tests {
     fn test_compound_predicates() {
         let payee_pred = PredicateBuilder::payee_matches("Whole Foods").unwrap();
         let tag_pred = PredicateBuilder::has_tag("category").unwrap();
-        let amount_pred = PredicateBuilder::amount_greater_than("40.00").unwrap();
 
         // Test AND combination
         let mut and_predicate =

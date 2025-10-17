@@ -1859,10 +1859,20 @@ mod tests {
     fn test_entry_boundary_detection() {
         let mut streaming_parser = StreamingJournalParser::new();
         let buffer = "2024/01/01 Transaction 1\n    Assets:Cash   $100\n\n2024/01/02 Transaction 2\n    Assets:Cash   $200";
+        let mut journal_iter = streaming_parser.parse_reader_streaming(buffer.as_bytes());
 
-        // This is a simplified test - in practice we'd need to set up the full iterator
-        // The key is that the streaming parser can identify transaction boundaries
-        assert!(buffer.contains("2024/01/01"));
-        assert!(buffer.contains("2024/01/02"));
+        if let Some(Ok(JournalEntry::Transaction(Transaction { date, .. }))) = journal_iter.next() {
+            assert_eq!(date.format("%Y/%m/%d").to_string(), "2024/01/01");
+        } else {
+            panic!("date did not match");
+        }
+
+        if let Some(Ok(JournalEntry::Transaction(Transaction { date, .. }))) = journal_iter.next() {
+            assert_eq!(date.format("%Y/%m/%d").to_string(), "2024/01/02");
+        } else {
+            panic!("date did not match");
+        }
+
+        assert!(journal_iter.next().is_none());
     }
 }
