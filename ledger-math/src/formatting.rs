@@ -176,7 +176,7 @@ pub fn format_rational(
     if negative {
         format!("-{}", result)
     } else {
-        format!(" {}", result)
+        format!("{}", result)
     }
 }
 
@@ -290,19 +290,26 @@ fn format_amount_with_commodity(
     if symbol.is_empty() {
         quantity_str.to_string()
     } else {
-        let formatted_commodity = if config.flags.has_flag(FormatFlags::ELIDE_COMMODITY_QUOTES)
-            || symbol.chars().all(|c| c.is_alphabetic())
-        {
-            symbol.to_string()
-        } else {
-            // Add quotes if symbol contains special characters
-            format!("\"{}\"", symbol)
+        let (formatted_commodity, maybe_sep) = {
+            let mut formatted_commodity = symbol.to_string();
+
+            if formatted_commodity.chars().any(|c| !c.is_alphabetic())
+                && !config.flags.has_flag(FormatFlags::ELIDE_COMMODITY_QUOTES)
+            {
+                // Add quotes if symbol contains special characters
+                formatted_commodity = format!("\"{}\"", formatted_commodity);
+            }
+
+            let maybe_sep =
+                if commodity.has_flags(CommodityFlags::STYLE_SEPARATED) { " " } else { "" };
+
+            (formatted_commodity, maybe_sep.to_string())
         };
 
         if commodity.has_flags(CommodityFlags::STYLE_SUFFIXED) {
-            format!("{} {}", quantity_str, formatted_commodity)
+            format!("{quantity_str}{maybe_sep}{formatted_commodity}")
         } else {
-            format!("{}{}", formatted_commodity, quantity_str)
+            format!("{formatted_commodity}{maybe_sep}{quantity_str}")
         }
     }
 }
