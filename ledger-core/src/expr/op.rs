@@ -3,14 +3,11 @@
 //! This module implements the evaluation logic for all expression operators,
 //! handling type coercion, arithmetic operations, and value conversions.
 
-use crate::expr::{
-    ExprNode, BinaryOp, UnaryOp, Value, ExprContext, ExprError, ExprResult
-};
+use crate::expr::{BinaryOp, ExprContext, ExprError, ExprNode, ExprResult, UnaryOp, Value};
 use ledger_math::{Amount, BigRational, Decimal};
 use num_bigint::BigInt;
-use num_traits::{Zero, One};
+use num_traits::Zero;
 use std::cmp::Ordering;
-use chrono::{DateTime, Local, Utc};
 
 /// Evaluate a binary operation
 pub fn evaluate_binary_op(
@@ -23,11 +20,11 @@ pub fn evaluate_binary_op(
     if matches!(op, BinaryOp::And | BinaryOp::Or) {
         return evaluate_logical_op(op, left, right, context);
     }
-    
+
     // Evaluate both operands
     let left_val = super::evaluate_node(left, context)?;
     let right_val = super::evaluate_node(right, context)?;
-    
+
     match op {
         BinaryOp::Add => add_values(&left_val, &right_val),
         BinaryOp::Sub => subtract_values(&left_val, &right_val),
@@ -36,10 +33,18 @@ pub fn evaluate_binary_op(
         BinaryOp::Mod => modulo_values(&left_val, &right_val),
         BinaryOp::Eq => Ok(Value::Bool(values_equal(&left_val, &right_val))),
         BinaryOp::Ne => Ok(Value::Bool(!values_equal(&left_val, &right_val))),
-        BinaryOp::Lt => compare_values(&left_val, &right_val).map(|cmp| Value::Bool(cmp == Ordering::Less)),
-        BinaryOp::Gt => compare_values(&left_val, &right_val).map(|cmp| Value::Bool(cmp == Ordering::Greater)),
-        BinaryOp::Le => compare_values(&left_val, &right_val).map(|cmp| Value::Bool(cmp != Ordering::Greater)),
-        BinaryOp::Ge => compare_values(&left_val, &right_val).map(|cmp| Value::Bool(cmp != Ordering::Less)),
+        BinaryOp::Lt => {
+            compare_values(&left_val, &right_val).map(|cmp| Value::Bool(cmp == Ordering::Less))
+        }
+        BinaryOp::Gt => {
+            compare_values(&left_val, &right_val).map(|cmp| Value::Bool(cmp == Ordering::Greater))
+        }
+        BinaryOp::Le => {
+            compare_values(&left_val, &right_val).map(|cmp| Value::Bool(cmp != Ordering::Greater))
+        }
+        BinaryOp::Ge => {
+            compare_values(&left_val, &right_val).map(|cmp| Value::Bool(cmp != Ordering::Less))
+        }
         BinaryOp::Match => match_values(&left_val, &right_val),
         BinaryOp::Cons => cons_values(&left_val, &right_val),
         BinaryOp::Seq => Ok(right_val), // Sequence operator returns the right value
@@ -58,7 +63,7 @@ fn evaluate_logical_op(
     context: &ExprContext,
 ) -> ExprResult<Value> {
     let left_val = super::evaluate_node(left, context)?;
-    
+
     match op {
         BinaryOp::And => {
             if !left_val.is_truthy() {
@@ -87,7 +92,7 @@ pub fn evaluate_unary_op(
     context: &ExprContext,
 ) -> ExprResult<Value> {
     let val = super::evaluate_node(operand, context)?;
-    
+
     match op {
         UnaryOp::Neg => negate_value(&val),
         UnaryOp::Not => Ok(Value::Bool(!val.is_truthy())),
@@ -101,22 +106,20 @@ fn add_values(left: &Value, right: &Value) -> ExprResult<Value> {
         (Value::Decimal(a), Value::Decimal(b)) => Ok(Value::Decimal(a + b)),
         (Value::Rational(a), Value::Rational(b)) => Ok(Value::Rational(a + b)),
         (Value::Amount(a), Value::Amount(b)) => {
-            (a + b)
-                .map(Value::Amount)
-                .map_err(|e| ExprError::RuntimeError(e.to_string()))
+            (a + b).map(Value::Amount).map_err(|e| ExprError::RuntimeError(e.to_string()))
         }
         (Value::String(a), Value::String(b)) => Ok(Value::String(format!("{}{}", a, b))),
-        
+
         // Type coercion
         (Value::Integer(a), Value::Decimal(b)) => Ok(Value::Decimal(Decimal::from(*a) + b)),
         (Value::Decimal(a), Value::Integer(b)) => Ok(Value::Decimal(a + Decimal::from(*b))),
         (Value::Integer(a), Value::Rational(b)) => {
             Ok(Value::Rational(BigRational::from(BigInt::from(*a)) + b))
-        },
+        }
         (Value::Rational(a), Value::Integer(b)) => {
             Ok(Value::Rational(a + BigRational::from(BigInt::from(*b))))
-        },
-        
+        }
+
         // Date arithmetic
         (Value::Date(date), Value::Integer(days)) => {
             use chrono::TimeDelta;
@@ -128,9 +131,9 @@ fn add_values(left: &Value, right: &Value) -> ExprResult<Value> {
             let new_date = *date + TimeDelta::days(*days);
             Ok(Value::Date(new_date))
         }
-        
+
         _ => Err(ExprError::TypeMismatch {
-            expected: format!("compatible types for addition"),
+            expected: "compatible types for addition".to_string(),
             found: format!("{} + {}", left.type_name(), right.type_name()),
             operation: "addition".to_string(),
         }),
@@ -144,17 +147,19 @@ fn subtract_values(left: &Value, right: &Value) -> ExprResult<Value> {
         (Value::Decimal(a), Value::Decimal(b)) => Ok(Value::Decimal(a - b)),
         (Value::Rational(a), Value::Rational(b)) => Ok(Value::Rational(a - b)),
         (Value::Amount(a), Value::Amount(b)) => {
-            (a - b)
-                .map(Value::Amount)
-                .map_err(|e| ExprError::RuntimeError(e.to_string()))
+            (a - b).map(Value::Amount).map_err(|e| ExprError::RuntimeError(e.to_string()))
         }
-        
+
         // Type coercion
         (Value::Integer(a), Value::Decimal(b)) => Ok(Value::Decimal(Decimal::from(*a) - b)),
         (Value::Decimal(a), Value::Integer(b)) => Ok(Value::Decimal(a - Decimal::from(*b))),
-        (Value::Integer(a), Value::Rational(b)) => Ok(Value::Rational(BigRational::from(BigInt::from(*a)) - b)),
-        (Value::Rational(a), Value::Integer(b)) => Ok(Value::Rational(a - BigRational::from(BigInt::from(*b)))),
-        
+        (Value::Integer(a), Value::Rational(b)) => {
+            Ok(Value::Rational(BigRational::from(BigInt::from(*a)) - b))
+        }
+        (Value::Rational(a), Value::Integer(b)) => {
+            Ok(Value::Rational(a - BigRational::from(BigInt::from(*b))))
+        }
+
         // Date arithmetic
         (Value::Date(a), Value::Date(b)) => {
             let diff = *a - *b;
@@ -165,9 +170,9 @@ fn subtract_values(left: &Value, right: &Value) -> ExprResult<Value> {
             let new_date = *date - TimeDelta::days(*days);
             Ok(Value::Date(new_date))
         }
-        
+
         _ => Err(ExprError::TypeMismatch {
-            expected: format!("compatible types for subtraction"),
+            expected: "compatible types for subtraction".to_string(),
             found: format!("{} - {}", left.type_name(), right.type_name()),
             operation: "subtraction".to_string(),
         }),
@@ -216,7 +221,7 @@ fn multiply_values(left: &Value, right: &Value) -> ExprResult<Value> {
                 Err(ExprError::RuntimeError("Cannot multiply amount without quantity".to_string()))
             }
         }
-        
+
         // String repetition
         (Value::String(s), Value::Integer(n)) => {
             if *n < 0 {
@@ -232,15 +237,19 @@ fn multiply_values(left: &Value, right: &Value) -> ExprResult<Value> {
                 Ok(Value::String(s.repeat(*n as usize)))
             }
         }
-        
+
         // Type coercion
         (Value::Integer(a), Value::Decimal(b)) => Ok(Value::Decimal(Decimal::from(*a) * b)),
         (Value::Decimal(a), Value::Integer(b)) => Ok(Value::Decimal(a * Decimal::from(*b))),
-        (Value::Integer(a), Value::Rational(b)) => Ok(Value::Rational(BigRational::from(BigInt::from(*a)) * b)),
-        (Value::Rational(a), Value::Integer(b)) => Ok(Value::Rational(a * BigRational::from(BigInt::from(*b)))),
-        
+        (Value::Integer(a), Value::Rational(b)) => {
+            Ok(Value::Rational(BigRational::from(BigInt::from(*a)) * b))
+        }
+        (Value::Rational(a), Value::Integer(b)) => {
+            Ok(Value::Rational(a * BigRational::from(BigInt::from(*b))))
+        }
+
         _ => Err(ExprError::TypeMismatch {
-            expected: format!("compatible types for multiplication"),
+            expected: "compatible types for multiplication".to_string(),
             found: format!("{} * {}", left.type_name(), right.type_name()),
             operation: "multiplication".to_string(),
         }),
@@ -257,7 +266,7 @@ fn divide_values(left: &Value, right: &Value) -> ExprResult<Value> {
         Value::Amount(a) if a.is_zero() => return Err(ExprError::DivisionByZero),
         _ => {}
     }
-    
+
     match (left, right) {
         (Value::Integer(a), Value::Integer(b)) => {
             // Integer division returns rational to preserve precision
@@ -286,19 +295,21 @@ fn divide_values(left: &Value, right: &Value) -> ExprResult<Value> {
         (Value::Amount(a), Value::Amount(b)) => {
             // Amount divided by amount returns a ratio (rational number)
             // For now, just try division and handle the error
-            (a / b)
-                .map(Value::Amount)
-                .map_err(|e| ExprError::RuntimeError(e.to_string()))
+            (a / b).map(Value::Amount).map_err(|e| ExprError::RuntimeError(e.to_string()))
         }
-        
+
         // Type coercion
         (Value::Integer(a), Value::Decimal(b)) => Ok(Value::Decimal(Decimal::from(*a) / b)),
         (Value::Decimal(a), Value::Integer(b)) => Ok(Value::Decimal(a / Decimal::from(*b))),
-        (Value::Integer(a), Value::Rational(b)) => Ok(Value::Rational(BigRational::from(BigInt::from(*a)) / b)),
-        (Value::Rational(a), Value::Integer(b)) => Ok(Value::Rational(a / BigRational::from(BigInt::from(*b)))),
-        
+        (Value::Integer(a), Value::Rational(b)) => {
+            Ok(Value::Rational(BigRational::from(BigInt::from(*a)) / b))
+        }
+        (Value::Rational(a), Value::Integer(b)) => {
+            Ok(Value::Rational(a / BigRational::from(BigInt::from(*b))))
+        }
+
         _ => Err(ExprError::TypeMismatch {
-            expected: format!("compatible types for division"),
+            expected: "compatible types for division".to_string(),
             found: format!("{} / {}", left.type_name(), right.type_name()),
             operation: "division".to_string(),
         }),
@@ -352,7 +363,7 @@ fn values_equal(left: &Value, right: &Value) -> bool {
         (Value::DateTime(a), Value::DateTime(b)) => a == b,
         (Value::Sequence(a), Value::Sequence(b)) => a == b,
         (Value::Regex(a), Value::Regex(b)) => a == b,
-        
+
         // Type coercion for numeric comparisons
         (Value::Integer(a), Value::Decimal(b)) => Decimal::from(*a) == *b,
         (Value::Decimal(a), Value::Integer(b)) => *a == Decimal::from(*b),
@@ -374,7 +385,7 @@ fn values_equal(left: &Value, right: &Value) -> bool {
                 false
             }
         }
-        
+
         _ => false, // Different types are not equal
     }
 }
@@ -385,34 +396,25 @@ fn compare_values(left: &Value, right: &Value) -> ExprResult<Ordering> {
         (Value::Integer(a), Value::Integer(b)) => Ok(a.cmp(b)),
         (Value::Decimal(a), Value::Decimal(b)) => Ok(a.cmp(b)),
         (Value::Rational(a), Value::Rational(b)) => Ok(a.cmp(b)),
-        (Value::Amount(a), Value::Amount(b)) => {
-            a.partial_cmp(b)
-                .ok_or_else(|| ExprError::RuntimeError("Cannot compare amounts with different commodities".to_string()))
-        }
+        (Value::Amount(a), Value::Amount(b)) => a.partial_cmp(b).ok_or_else(|| {
+            ExprError::RuntimeError("Cannot compare amounts with different commodities".to_string())
+        }),
         (Value::String(a), Value::String(b)) => Ok(a.cmp(b)),
         (Value::Date(a), Value::Date(b)) => Ok(a.cmp(b)),
         (Value::DateTime(a), Value::DateTime(b)) => Ok(a.cmp(b)),
-        
+
         // Type coercion for numeric comparisons
         (Value::Integer(a), Value::Decimal(b)) => Ok(Decimal::from(*a).cmp(b)),
         (Value::Decimal(a), Value::Integer(b)) => Ok(a.cmp(&Decimal::from(*b))),
         (Value::Integer(a), Value::Rational(b)) => Ok(BigRational::from(BigInt::from(*a)).cmp(b)),
         (Value::Rational(a), Value::Integer(b)) => Ok(a.cmp(&BigRational::from(BigInt::from(*b)))),
-        
+
         // Amount comparisons with numeric values (compare numeric part only)
-        (Value::Amount(a), Value::Decimal(b)) => {
-            Ok(a.value().cmp(b))
-        }
-        (Value::Decimal(a), Value::Amount(b)) => {
-            Ok(a.cmp(&b.value()))
-        }
-        (Value::Amount(a), Value::Integer(b)) => {
-            Ok(a.value().cmp(&Decimal::from(*b)))
-        }
-        (Value::Integer(a), Value::Amount(b)) => {
-            Ok(Decimal::from(*a).cmp(&b.value()))
-        }
-        
+        (Value::Amount(a), Value::Decimal(b)) => Ok(a.value().cmp(b)),
+        (Value::Decimal(a), Value::Amount(b)) => Ok(a.cmp(&b.value())),
+        (Value::Amount(a), Value::Integer(b)) => Ok(a.value().cmp(&Decimal::from(*b))),
+        (Value::Integer(a), Value::Amount(b)) => Ok(Decimal::from(*a).cmp(&b.value())),
+
         // Date comparisons with string values (parse string as date)
         (Value::Date(a), Value::String(b)) => {
             // Try to parse the string as a date
@@ -430,7 +432,7 @@ fn compare_values(left: &Value, right: &Value) -> ExprResult<Ordering> {
                 Err(_) => Err(ExprError::RuntimeError(format!("Cannot parse '{}' as date", a))),
             }
         }
-        
+
         _ => Err(ExprError::TypeMismatch {
             expected: "comparable types".to_string(),
             found: format!("{} and {}", left.type_name(), right.type_name()),
@@ -442,12 +444,10 @@ fn compare_values(left: &Value, right: &Value) -> ExprResult<Ordering> {
 /// Pattern matching operation
 fn match_values(left: &Value, right: &Value) -> ExprResult<Value> {
     match (left, right) {
-        (Value::String(text), Value::Regex(pattern)) => {
-            match regex::Regex::new(pattern) {
-                Ok(re) => Ok(Value::Bool(re.is_match(text))),
-                Err(_) => Err(ExprError::RuntimeError(format!("Invalid regex pattern: {}", pattern))),
-            }
-        }
+        (Value::String(text), Value::Regex(pattern)) => match regex::Regex::new(pattern) {
+            Ok(re) => Ok(Value::Bool(re.is_match(text))),
+            Err(_) => Err(ExprError::RuntimeError(format!("Invalid regex pattern: {}", pattern))),
+        },
         (Value::String(text), Value::String(pattern)) => {
             // Simple string contains match
             Ok(Value::Bool(text.contains(pattern)))
@@ -482,11 +482,11 @@ fn decimal_to_rational(decimal: Decimal) -> Option<BigRational> {
     if let Some(dot_pos) = s.find('.') {
         let integer_part = &s[..dot_pos];
         let fractional_part = &s[dot_pos + 1..];
-        
+
         let integer: i64 = integer_part.parse().ok()?;
         let fractional: i64 = fractional_part.parse().ok()?;
         let denominator = 10_i64.pow(fractional_part.len() as u32);
-        
+
         Some(BigRational::new((integer * denominator + fractional).into(), denominator.into()))
     } else {
         let integer: i64 = s.parse().ok()?;
@@ -498,101 +498,101 @@ fn decimal_to_rational(decimal: Decimal) -> Option<BigRational> {
 mod tests {
     use super::*;
     use crate::expr::{ExprNode, Value};
-    
+
     #[test]
     fn test_add_integers() {
         let left = ExprNode::Value(Value::Integer(5));
         let right = ExprNode::Value(Value::Integer(3));
         let context = ExprContext::new();
-        
+
         let result = evaluate_binary_op(BinaryOp::Add, &left, &right, &context).unwrap();
         assert_eq!(result, Value::Integer(8));
     }
-    
+
     #[test]
     fn test_subtract_integers() {
         let left = ExprNode::Value(Value::Integer(10));
         let right = ExprNode::Value(Value::Integer(4));
         let context = ExprContext::new();
-        
+
         let result = evaluate_binary_op(BinaryOp::Sub, &left, &right, &context).unwrap();
         assert_eq!(result, Value::Integer(6));
     }
-    
+
     #[test]
     fn test_multiply_integers() {
         let left = ExprNode::Value(Value::Integer(6));
         let right = ExprNode::Value(Value::Integer(7));
         let context = ExprContext::new();
-        
+
         let result = evaluate_binary_op(BinaryOp::Mul, &left, &right, &context).unwrap();
         assert_eq!(result, Value::Integer(42));
     }
-    
+
     #[test]
     fn test_divide_integers() {
         let left = ExprNode::Value(Value::Integer(15));
         let right = ExprNode::Value(Value::Integer(3));
         let context = ExprContext::new();
-        
+
         let result = evaluate_binary_op(BinaryOp::Div, &left, &right, &context).unwrap();
         assert_eq!(result, Value::Rational(BigRational::from(BigInt::from(5))));
     }
-    
+
     #[test]
     fn test_division_by_zero() {
         let left = ExprNode::Value(Value::Integer(10));
         let right = ExprNode::Value(Value::Integer(0));
         let context = ExprContext::new();
-        
+
         let result = evaluate_binary_op(BinaryOp::Div, &left, &right, &context);
         assert!(matches!(result, Err(ExprError::DivisionByZero)));
     }
-    
+
     #[test]
     fn test_negate_integer() {
         let operand = ExprNode::Value(Value::Integer(42));
         let context = ExprContext::new();
-        
+
         let result = evaluate_unary_op(UnaryOp::Neg, &operand, &context).unwrap();
         assert_eq!(result, Value::Integer(-42));
     }
-    
+
     #[test]
     fn test_logical_not() {
         let operand = ExprNode::Value(Value::Bool(true));
         let context = ExprContext::new();
-        
+
         let result = evaluate_unary_op(UnaryOp::Not, &operand, &context).unwrap();
         assert_eq!(result, Value::Bool(false));
     }
-    
+
     #[test]
     fn test_string_concatenation() {
         let left = ExprNode::Value(Value::String("Hello, ".to_string()));
         let right = ExprNode::Value(Value::String("World!".to_string()));
         let context = ExprContext::new();
-        
+
         let result = evaluate_binary_op(BinaryOp::Add, &left, &right, &context).unwrap();
         assert_eq!(result, Value::String("Hello, World!".to_string()));
     }
-    
+
     #[test]
     fn test_equality_comparison() {
         let left = ExprNode::Value(Value::Integer(42));
         let right = ExprNode::Value(Value::Integer(42));
         let context = ExprContext::new();
-        
+
         let result = evaluate_binary_op(BinaryOp::Eq, &left, &right, &context).unwrap();
         assert_eq!(result, Value::Bool(true));
     }
-    
+
     #[test]
     fn test_less_than_comparison() {
         let left = ExprNode::Value(Value::Integer(5));
         let right = ExprNode::Value(Value::Integer(10));
         let context = ExprContext::new();
-        
+
         let result = evaluate_binary_op(BinaryOp::Lt, &left, &right, &context).unwrap();
         assert_eq!(result, Value::Bool(true));
     }

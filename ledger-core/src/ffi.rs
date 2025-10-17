@@ -4,21 +4,21 @@
 //! during the migration period. It exports opaque pointer wrappers for core
 //! Rust types and provides safe access methods following FFI best practices.
 
+use chrono::{Datelike, NaiveDate};
 use std::ffi::{CStr, CString};
-use std::os::raw::{c_char, c_int, c_double};
+use std::os::raw::{c_char, c_double, c_int};
 use std::ptr::null_mut;
-use chrono::{NaiveDate, Datelike};
 
 use crate::{
-    journal::Journal,
-    transaction::{Transaction, TransactionStatus},
     amount::Amount,
     commodity::Commodity,
+    journal::Journal,
+    transaction::{Transaction, TransactionStatus},
 };
 use std::sync::Arc;
 
 /// FFI error codes for cross-boundary error handling
-/// 
+///
 /// These error codes are returned by FFI functions to indicate
 /// success or various failure conditions. Always check return values.
 #[repr(C)]
@@ -41,7 +41,7 @@ pub enum LedgerResult {
 }
 
 /// C-compatible transaction status
-/// 
+///
 /// Represents the clearing status of a transaction in the ledger.
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -91,7 +91,7 @@ pub struct CAccount {
 }
 
 /// C-compatible date structure
-/// 
+///
 /// Represents a calendar date with year, month (1-12), and day (1-31).
 /// Used for transaction dates and other temporal data.
 #[repr(C)]
@@ -100,24 +100,20 @@ pub struct CDate {
     /// Year (e.g., 2023)
     pub year: c_int,
     /// Month (1-12)
-    pub month: c_int, 
+    pub month: c_int,
     /// Day of month (1-31)
     pub day: c_int,
 }
 
 impl From<NaiveDate> for CDate {
     fn from(date: NaiveDate) -> Self {
-        CDate {
-            year: date.year(),
-            month: date.month() as c_int,
-            day: date.day() as c_int,
-        }
+        CDate { year: date.year(), month: date.month() as c_int, day: date.day() as c_int }
     }
 }
 
 impl TryFrom<CDate> for NaiveDate {
     type Error = &'static str;
-    
+
     fn try_from(c_date: CDate) -> Result<Self, Self::Error> {
         NaiveDate::from_ymd_opt(c_date.year, c_date.month as u32, c_date.day as u32)
             .ok_or("Invalid date parameters")
@@ -157,7 +153,7 @@ fn c_string_to_rust(c_str: *const c_char) -> Result<String, LedgerResult> {
     if c_str.is_null() {
         return Err(LedgerResult::LedgerNullPtr);
     }
-    
+
     unsafe {
         CStr::from_ptr(c_str)
             .to_str()
@@ -198,7 +194,7 @@ unsafe fn cast_amount_ptr(ptr: *mut CAmount) -> Option<*mut Amount> {
 // ===========================================================================
 
 use std::cell::RefCell;
-use std::panic::{self, UnwindSafe, RefUnwindSafe};
+use std::panic::{self, UnwindSafe};
 
 /// Enhanced error information with context
 #[derive(Debug, Clone)]
@@ -211,12 +207,7 @@ pub struct ErrorInfo {
 
 impl ErrorInfo {
     fn new(code: LedgerResult, message: &str) -> Self {
-        Self {
-            code,
-            message: message.to_owned(),
-            context: None,
-            rust_error: None,
-        }
+        Self { code, message: message.to_owned(), context: None, rust_error: None }
     }
 
     fn with_context(mut self, context: &str) -> Self {
@@ -230,9 +221,10 @@ impl ErrorInfo {
     }
 }
 
-/// Thread-local error storage for better error handling
+// Thread-local error storage for better error handling
 thread_local! {
-    static LAST_ERROR: RefCell<Option<ErrorInfo>> = RefCell::new(None);
+    static LAST_ERROR: RefCell<Option<ErrorInfo>> = const { RefCell::new(None) };
+    #[allow(clippy::type_complexity)]
     static ERROR_CALLBACK: RefCell<Option<Box<dyn Fn(&ErrorInfo)>>> = RefCell::new(None);
 }
 
@@ -241,7 +233,7 @@ fn set_last_error_info(error_info: ErrorInfo) {
     LAST_ERROR.with(|last_error| {
         *last_error.borrow_mut() = Some(error_info.clone());
     });
-    
+
     // Call error callback if registered
     ERROR_CALLBACK.with(|callback| {
         if let Some(cb) = callback.borrow().as_ref() {
@@ -262,8 +254,8 @@ fn set_last_error_with_context(code: LedgerResult, message: &str, context: &str)
 
 /// Convert Rust Result to FFI result with error recording
 fn handle_result<T, E: std::fmt::Display>(
-    result: Result<T, E>, 
-    context: &str
+    result: Result<T, E>,
+    context: &str,
 ) -> Result<T, LedgerResult> {
     match result {
         Ok(value) => Ok(value),
@@ -281,10 +273,7 @@ fn handle_result<T, E: std::fmt::Display>(
 #[no_mangle]
 pub extern "C" fn ledger_get_last_error_code() -> LedgerResult {
     LAST_ERROR.with(|last_error| {
-        last_error.borrow()
-            .as_ref()
-            .map(|err| err.code)
-            .unwrap_or(LedgerResult::LedgerOk)
+        last_error.borrow().as_ref().map(|err| err.code).unwrap_or(LedgerResult::LedgerOk)
     })
 }
 
@@ -296,14 +285,17 @@ pub extern "C" fn ledger_get_last_error() -> *const c_char {
             // Create full error message with context if available
             let full_message = if let Some(ref context) = error_info.context {
                 if let Some(ref rust_error) = error_info.rust_error {
-                    format!("{} (context: {}, rust_error: {})", error_info.message, context, rust_error)
+                    format!(
+                        "{} (context: {}, rust_error: {})",
+                        error_info.message, context, rust_error
+                    )
                 } else {
                     format!("{} (context: {})", error_info.message, context)
                 }
             } else {
                 error_info.message.clone()
             };
-            
+
             match CString::new(full_message) {
                 Ok(c_string) => {
                     // Memory leak for FFI safety - same as other strings
@@ -351,9 +343,7 @@ pub extern "C" fn ledger_clear_last_error() {
 /// Check if there is a pending error
 #[no_mangle]
 pub extern "C" fn ledger_has_error() -> bool {
-    LAST_ERROR.with(|last_error| {
-        last_error.borrow().is_some()
-    })
+    LAST_ERROR.with(|last_error| last_error.borrow().is_some())
 }
 
 /// Error callback function type
@@ -377,15 +367,19 @@ pub extern "C" fn ledger_register_error_callback(callback: Option<ErrorCallback>
                 } else {
                     null_mut()
                 };
-                
+
                 cb(error_info.code as c_int, message, context);
-                
+
                 // Clean up allocated strings
                 if !message.is_null() {
-                    unsafe { let _ = CString::from_raw(message as *mut c_char); }
+                    unsafe {
+                        let _ = CString::from_raw(message as *mut c_char);
+                    }
                 }
                 if !context.is_null() {
-                    unsafe { let _ = CString::from_raw(context as *mut c_char); }
+                    unsafe {
+                        let _ = CString::from_raw(context as *mut c_char);
+                    }
                 }
             }));
         } else {
@@ -410,11 +404,11 @@ where
             } else {
                 "Unknown panic".to_string()
             };
-            
+
             set_last_error_with_context(
-                LedgerResult::LedgerError, 
+                LedgerResult::LedgerError,
                 &format!("Panic in FFI call: {}", panic_message),
-                context
+                context,
             );
             default
         }
@@ -451,7 +445,7 @@ pub extern "C" fn ledger_get_legacy_error() -> *const c_char {
 }
 
 /// Free a C string allocated by this library
-/// 
+///
 /// MEMORY SAFETY: Only call this on strings returned by ledger_*_copy_* functions.
 /// DO NOT call this on strings returned by ledger_*_get_* functions (those are borrowed).
 #[no_mangle]
@@ -464,7 +458,7 @@ pub extern "C" fn ledger_free_string(s: *mut c_char) {
 }
 
 /// Copy transaction payee string (caller must free with ledger_free_string)
-/// 
+///
 /// MEMORY MANAGEMENT: Unlike ledger_transaction_get_payee(), this function
 /// returns a newly allocated string that the caller owns and must free.
 #[no_mangle]
@@ -473,7 +467,7 @@ pub extern "C" fn ledger_transaction_copy_payee(transaction: *const CTransaction
         set_last_error("Null transaction pointer");
         return null_mut();
     }
-    
+
     unsafe {
         let transaction_ref = &*(transaction as *const Transaction);
         rust_string_to_c(&transaction_ref.payee)
@@ -481,7 +475,7 @@ pub extern "C" fn ledger_transaction_copy_payee(transaction: *const CTransaction
 }
 
 /// Copy amount commodity string (caller must free with ledger_free_string)
-/// 
+///
 /// MEMORY MANAGEMENT: Returns owned string that must be freed, or NULL if no commodity.
 #[no_mangle]
 pub extern "C" fn ledger_amount_copy_commodity(amount: *const CAmount) -> *mut c_char {
@@ -489,12 +483,12 @@ pub extern "C" fn ledger_amount_copy_commodity(amount: *const CAmount) -> *mut c
         set_last_error("Null amount pointer");
         return null_mut();
     }
-    
+
     unsafe {
         let amount_ref = &*(amount as *const Amount);
         match amount_ref.commodity() {
             Some(commodity) => rust_string_to_c(commodity.symbol()),
-            None => null_mut()
+            None => null_mut(),
         }
     }
 }
@@ -504,7 +498,7 @@ pub extern "C" fn ledger_amount_copy_commodity(amount: *const CAmount) -> *mut c
 // ===========================================================================
 
 /// Create a new journal
-/// 
+///
 /// OWNERSHIP: Returns owned pointer. Caller must call ledger_journal_free().
 #[no_mangle]
 pub extern "C" fn ledger_journal_new() -> *mut CJournal {
@@ -515,7 +509,7 @@ pub extern "C" fn ledger_journal_new() -> *mut CJournal {
 }
 
 /// Free a journal and all owned transactions
-/// 
+///
 /// OWNERSHIP: Takes ownership of journal pointer. Do not use after calling.
 #[no_mangle]
 pub extern "C" fn ledger_journal_free(journal: *mut CJournal) {
@@ -534,7 +528,7 @@ pub extern "C" fn ledger_journal_transaction_count(journal: *const CJournal) -> 
         set_last_error("Null journal pointer");
         return -1;
     }
-    
+
     unsafe {
         let journal_ref = &*(journal as *const Journal);
         journal_ref.transactions.len() as c_int
@@ -542,16 +536,19 @@ pub extern "C" fn ledger_journal_transaction_count(journal: *const CJournal) -> 
 }
 
 /// Add a transaction to a journal
-/// 
+///
 /// OWNERSHIP: Takes ownership of transaction pointer. Do not free transaction after this call.
 /// The journal will free the transaction when the journal is freed.
 #[no_mangle]
-pub extern "C" fn ledger_journal_add_transaction(journal: *mut CJournal, transaction: *mut CTransaction) -> LedgerResult {
+pub extern "C" fn ledger_journal_add_transaction(
+    journal: *mut CJournal,
+    transaction: *mut CTransaction,
+) -> LedgerResult {
     if journal.is_null() || transaction.is_null() {
         set_last_error("Null pointer passed to ledger_journal_add_transaction");
         return LedgerResult::LedgerNullPtr;
     }
-    
+
     unsafe {
         let journal_ref = &mut *(journal as *mut Journal);
         let transaction_owned = Box::from_raw(transaction as *mut Transaction);
@@ -561,20 +558,17 @@ pub extern "C" fn ledger_journal_add_transaction(journal: *mut CJournal, transac
 }
 
 // ===========================================================================
-// Transaction Functions  
+// Transaction Functions
 // ===========================================================================
 
 /// Create a new transaction with minimal required fields
 #[no_mangle]
-pub extern "C" fn ledger_transaction_new(
-    date: CDate,
-    payee: *const c_char
-) -> *mut CTransaction {
+pub extern "C" fn ledger_transaction_new(date: CDate, payee: *const c_char) -> *mut CTransaction {
     if payee.is_null() {
         set_last_error("Null payee string");
         return null_mut();
     }
-    
+
     let payee_str = match c_string_to_rust(payee) {
         Ok(s) => s,
         Err(_) => {
@@ -582,7 +576,7 @@ pub extern "C" fn ledger_transaction_new(
             return null_mut();
         }
     };
-    
+
     let naive_date = match NaiveDate::try_from(date) {
         Ok(d) => d,
         Err(_) => {
@@ -590,7 +584,7 @@ pub extern "C" fn ledger_transaction_new(
             return null_mut();
         }
     };
-    
+
     let transaction = Box::new(Transaction {
         date: naive_date,
         aux_date: None,
@@ -605,7 +599,7 @@ pub extern "C" fn ledger_transaction_new(
         metadata: std::collections::HashMap::new(),
         sequence: 0,
     });
-    
+
     Box::into_raw(transaction) as *mut CTransaction
 }
 
@@ -627,7 +621,7 @@ pub extern "C" fn ledger_transaction_get_date(transaction: *const CTransaction) 
         set_last_error("Null transaction pointer");
         return CDate { year: 0, month: 0, day: 0 };
     }
-    
+
     unsafe {
         let transaction_ref = &*(transaction as *const Transaction);
         CDate::from(transaction_ref.date)
@@ -641,7 +635,7 @@ pub extern "C" fn ledger_transaction_get_payee(transaction: *const CTransaction)
         set_last_error("Null transaction pointer");
         return null_mut();
     }
-    
+
     unsafe {
         let transaction_ref = &*(transaction as *const Transaction);
         // Return pointer to the internal CString - this is safe as long as the transaction lives
@@ -663,12 +657,14 @@ pub extern "C" fn ledger_transaction_get_payee(transaction: *const CTransaction)
 
 /// Get transaction status
 #[no_mangle]
-pub extern "C" fn ledger_transaction_get_status(transaction: *const CTransaction) -> CTransactionStatus {
+pub extern "C" fn ledger_transaction_get_status(
+    transaction: *const CTransaction,
+) -> CTransactionStatus {
     if transaction.is_null() {
         set_last_error("Null transaction pointer");
         return CTransactionStatus::Uncleared;
     }
-    
+
     unsafe {
         let transaction_ref = &*(transaction as *const Transaction);
         CTransactionStatus::from(transaction_ref.status)
@@ -677,12 +673,15 @@ pub extern "C" fn ledger_transaction_get_status(transaction: *const CTransaction
 
 /// Set transaction status
 #[no_mangle]
-pub extern "C" fn ledger_transaction_set_status(transaction: *mut CTransaction, status: CTransactionStatus) -> LedgerResult {
+pub extern "C" fn ledger_transaction_set_status(
+    transaction: *mut CTransaction,
+    status: CTransactionStatus,
+) -> LedgerResult {
     if transaction.is_null() {
         set_last_error("Null transaction pointer");
         return LedgerResult::LedgerNullPtr;
     }
-    
+
     unsafe {
         let transaction_ref = &mut *(transaction as *mut Transaction);
         transaction_ref.status = TransactionStatus::from(status);
@@ -697,7 +696,7 @@ pub extern "C" fn ledger_transaction_posting_count(transaction: *const CTransact
         set_last_error("Null transaction pointer");
         return -1;
     }
-    
+
     unsafe {
         let transaction_ref = &*(transaction as *const Transaction);
         transaction_ref.postings.len() as c_int
@@ -713,7 +712,7 @@ pub extern "C" fn ledger_transaction_posting_count(transaction: *const CTransact
 pub extern "C" fn ledger_amount_new(value: c_double) -> *mut CAmount {
     use rust_decimal::Decimal;
     use std::str::FromStr;
-    
+
     // Convert double to Decimal safely
     let decimal_value = match Decimal::from_str(&value.to_string()) {
         Ok(d) => d,
@@ -722,21 +721,24 @@ pub extern "C" fn ledger_amount_new(value: c_double) -> *mut CAmount {
             return null_mut();
         }
     };
-    
+
     let amount = Box::new(Amount::new(decimal_value));
     Box::into_raw(amount) as *mut CAmount
 }
 
 /// Create a new amount with commodity
 #[no_mangle]
-pub extern "C" fn ledger_amount_new_with_commodity(value: c_double, commodity: *const c_char) -> *mut CAmount {
+pub extern "C" fn ledger_amount_new_with_commodity(
+    value: c_double,
+    commodity: *const c_char,
+) -> *mut CAmount {
     use rust_decimal::Decimal;
     use std::str::FromStr;
-    
+
     if commodity.is_null() {
         return ledger_amount_new(value);
     }
-    
+
     let commodity_str = match c_string_to_rust(commodity) {
         Ok(s) => s,
         Err(_) => {
@@ -744,7 +746,7 @@ pub extern "C" fn ledger_amount_new_with_commodity(value: c_double, commodity: *
             return null_mut();
         }
     };
-    
+
     let decimal_value = match Decimal::from_str(&value.to_string()) {
         Ok(d) => d,
         Err(_) => {
@@ -752,7 +754,7 @@ pub extern "C" fn ledger_amount_new_with_commodity(value: c_double, commodity: *
             return null_mut();
         }
     };
-    
+
     let commodity = if commodity_str.is_empty() {
         None
     } else {
@@ -780,7 +782,7 @@ pub extern "C" fn ledger_amount_get_value(amount: *const CAmount) -> c_double {
         set_last_error("Null amount pointer");
         return 0.0;
     }
-    
+
     unsafe {
         let amount_ref = &*(amount as *const Amount);
         // Convert Decimal to f64 - may lose precision
@@ -796,7 +798,7 @@ pub extern "C" fn ledger_amount_get_commodity(amount: *const CAmount) -> *const 
         set_last_error("Null amount pointer");
         return null_mut();
     }
-    
+
     unsafe {
         let amount_ref = &*(amount as *const Amount);
         match amount_ref.commodity() {
@@ -813,7 +815,7 @@ pub extern "C" fn ledger_amount_get_commodity(amount: *const CAmount) -> *const 
                     }
                 }
             }
-            None => null_mut()
+            None => null_mut(),
         }
     }
 }
@@ -825,141 +827,148 @@ pub extern "C" fn ledger_amount_get_commodity(amount: *const CAmount) -> *const 
 use std::os::raw::c_void;
 
 /// Function pointer type for transaction iteration callback
-/// 
+///
 /// Parameters:
 /// - transaction: Read-only access to transaction
 /// - user_data: User-provided context pointer
-/// 
+///
 /// Returns: true to continue iteration, false to stop
-pub type TransactionCallback = extern "C" fn(transaction: *const CTransaction, user_data: *mut c_void) -> bool;
+pub type TransactionCallback =
+    extern "C" fn(transaction: *const CTransaction, user_data: *mut c_void) -> bool;
 
 /// Function pointer type for posting iteration callback
-/// 
+///
 /// Parameters:
 /// - posting: Read-only access to posting
 /// - user_data: User-provided context pointer
-/// 
+///
 /// Returns: true to continue iteration, false to stop
 pub type PostingCallback = extern "C" fn(posting: *const CPosting, user_data: *mut c_void) -> bool;
 
 /// Function pointer type for account tree visitor callback
-/// 
+///
 /// Parameters:
 /// - account: Read-only access to account
 /// - depth: Tree depth (0 = root level)
 /// - user_data: User-provided context pointer
-/// 
+///
 /// Returns: true to continue iteration, false to stop
-pub type AccountVisitorCallback = extern "C" fn(account: *const CAccount, depth: c_int, user_data: *mut c_void) -> bool;
+pub type AccountVisitorCallback =
+    extern "C" fn(account: *const CAccount, depth: c_int, user_data: *mut c_void) -> bool;
 
 /// Function pointer type for progress callbacks
-/// 
+///
 /// Parameters:
 /// - current: Current progress value
 /// - total: Total expected value
 /// - message: Optional progress message (may be NULL)
 /// - user_data: User-provided context pointer
-/// 
+///
 /// Returns: true to continue operation, false to cancel
-pub type ProgressCallback = extern "C" fn(current: c_int, total: c_int, message: *const c_char, user_data: *mut c_void) -> bool;
+pub type ProgressCallback = extern "C" fn(
+    current: c_int,
+    total: c_int,
+    message: *const c_char,
+    user_data: *mut c_void,
+) -> bool;
 
 /// Iterate through all transactions in a journal
-/// 
+///
 /// CALLBACK SAFETY: The callback function must not store the transaction pointer
 /// for use after the callback returns, as it may become invalid.
 #[no_mangle]
 pub extern "C" fn ledger_journal_iterate_transactions(
     journal: *const CJournal,
     callback: TransactionCallback,
-    user_data: *mut c_void
+    user_data: *mut c_void,
 ) -> LedgerResult {
     if journal.is_null() {
         set_last_error("Null journal pointer");
         return LedgerResult::LedgerNullPtr;
     }
-    
+
     ffi_catch!(LedgerResult::LedgerError, "ledger_journal_iterate_transactions", {
         unsafe {
             let journal_ref = &*(journal as *const Journal);
-            
+
             for transaction in &journal_ref.transactions {
                 let transaction_ptr = transaction as *const Transaction as *const CTransaction;
-                
+
                 // Call the callback - if it returns false, stop iteration
                 if !callback(transaction_ptr, user_data) {
                     break;
                 }
             }
-            
+
             LedgerResult::LedgerOk
         }
     })
 }
 
 /// Iterate through all postings in a transaction
-/// 
+///
 /// CALLBACK SAFETY: The callback function must not store the posting pointer
 /// for use after the callback returns, as it may become invalid.
 #[no_mangle]
 pub extern "C" fn ledger_transaction_iterate_postings(
     transaction: *const CTransaction,
     callback: PostingCallback,
-    user_data: *mut c_void
+    user_data: *mut c_void,
 ) -> LedgerResult {
     if transaction.is_null() {
         set_last_error("Null transaction pointer");
         return LedgerResult::LedgerNullPtr;
     }
-    
+
     ffi_catch!(LedgerResult::LedgerError, "ledger_transaction_iterate_postings", {
         unsafe {
             let transaction_ref = &*(transaction as *const Transaction);
-            
+
             for posting in &transaction_ref.postings {
                 let posting_ptr = posting as *const crate::posting::Posting as *const CPosting;
-                
+
                 // Call the callback - if it returns false, stop iteration
                 if !callback(posting_ptr, user_data) {
                     break;
                 }
             }
-            
+
             LedgerResult::LedgerOk
         }
     })
 }
 
 /// Filter transactions using a predicate callback
-/// 
+///
 /// Creates a new journal containing only transactions for which the callback returns true.
-/// 
+///
 /// OWNERSHIP: Returns owned journal pointer. Caller must free with ledger_journal_free().
 /// CALLBACK SAFETY: Transaction pointers are only valid during callback execution.
 #[no_mangle]
 pub extern "C" fn ledger_journal_filter_transactions(
     journal: *const CJournal,
     predicate: TransactionCallback,
-    user_data: *mut c_void
+    user_data: *mut c_void,
 ) -> *mut CJournal {
     if journal.is_null() {
         set_last_error("Null journal pointer");
         return null_mut();
     }
-    
+
     ffi_catch!(null_mut(), "ledger_journal_filter_transactions", {
         unsafe {
             let journal_ref = &*(journal as *const Journal);
             let mut filtered_journal = Journal::new();
-            
+
             for transaction in &journal_ref.transactions {
                 let transaction_ptr = transaction as *const Transaction as *const CTransaction;
-                
+
                 // Call predicate - if it returns true, add transaction to filtered journal
                 if predicate(transaction_ptr, user_data) {
                     filtered_journal.add_transaction(transaction.clone());
                 }
             }
-            
+
             let boxed_journal = Box::new(filtered_journal);
             Box::into_raw(boxed_journal) as *mut CJournal
         }
@@ -967,110 +976,110 @@ pub extern "C" fn ledger_journal_filter_transactions(
 }
 
 /// Count transactions matching a predicate
-/// 
+///
 /// CALLBACK SAFETY: Transaction pointers are only valid during callback execution.
 #[no_mangle]
 pub extern "C" fn ledger_journal_count_matching_transactions(
     journal: *const CJournal,
     predicate: TransactionCallback,
-    user_data: *mut c_void
+    user_data: *mut c_void,
 ) -> c_int {
     if journal.is_null() {
         set_last_error("Null journal pointer");
         return -1;
     }
-    
+
     ffi_catch!(-1, "ledger_journal_count_matching_transactions", {
         unsafe {
             let journal_ref = &*(journal as *const Journal);
             let mut count = 0;
-            
+
             for transaction in &journal_ref.transactions {
                 let transaction_ptr = transaction as *const Transaction as *const CTransaction;
-                
+
                 if predicate(transaction_ptr, user_data) {
                     count += 1;
                 }
             }
-            
+
             count
         }
     })
 }
 
 /// Progress-enabled transaction processing
-/// 
+///
 /// Iterates through transactions with progress callbacks for long operations.
-/// 
+///
 /// CALLBACK SAFETY: Both callback pointers are only valid during callback execution.
 #[no_mangle]
 pub extern "C" fn ledger_journal_process_transactions_with_progress(
     journal: *const CJournal,
     transaction_callback: TransactionCallback,
     progress_callback: Option<ProgressCallback>,
-    user_data: *mut c_void
+    user_data: *mut c_void,
 ) -> LedgerResult {
     if journal.is_null() {
         set_last_error("Null journal pointer");
         return LedgerResult::LedgerNullPtr;
     }
-    
+
     ffi_catch!(LedgerResult::LedgerError, "ledger_journal_process_transactions_with_progress", {
         unsafe {
             let journal_ref = &*(journal as *const Journal);
             let total_count = journal_ref.transactions.len() as c_int;
             let mut current_count = 0;
-            
+
             for transaction in &journal_ref.transactions {
                 current_count += 1;
-                
+
                 // Call progress callback if provided
                 if let Some(progress_cb) = progress_callback {
                     let continue_processing = progress_cb(
-                        current_count, 
-                        total_count, 
+                        current_count,
+                        total_count,
                         null_mut(), // No message for basic progress
-                        user_data
+                        user_data,
                     );
-                    
+
                     if !continue_processing {
                         // User requested cancellation
                         return LedgerResult::LedgerOk;
                     }
                 }
-                
+
                 let transaction_ptr = transaction as *const Transaction as *const CTransaction;
-                
+
                 // Process transaction - if callback returns false, stop processing
                 if !transaction_callback(transaction_ptr, user_data) {
                     break;
                 }
             }
-            
+
             LedgerResult::LedgerOk
         }
     })
 }
 
 /// Asynchronous-style callback for batch processing
-/// 
+///
 /// Processes transactions in batches, calling the batch callback for each batch.
 /// Useful for parallel processing or memory-conscious operations.
-/// 
+///
 /// Parameters:
 /// - journal: Journal to process
 /// - batch_size: Number of transactions per batch
 /// - batch_callback: Called once per batch
 /// - user_data: User context
 pub type BatchCallback = extern "C" fn(
-    transactions: *const *const CTransaction, 
-    count: c_int, 
+    transactions: *const *const CTransaction,
+    count: c_int,
     batch_num: c_int,
-    user_data: *mut c_void
+    user_data: *mut c_void,
 ) -> bool;
 
 /// Process transactions in batches
-/// 
+///
 /// CALLBACK SAFETY: Transaction pointers in the batch are only valid during callback execution.
 /// The batch array itself is also only valid during the callback.
 #[no_mangle]
@@ -1078,49 +1087,50 @@ pub extern "C" fn ledger_journal_process_in_batches(
     journal: *const CJournal,
     batch_size: c_int,
     batch_callback: BatchCallback,
-    user_data: *mut c_void
+    user_data: *mut c_void,
 ) -> LedgerResult {
     if journal.is_null() {
         set_last_error("Null journal pointer");
         return LedgerResult::LedgerNullPtr;
     }
-    
+
     if batch_size <= 0 {
         set_last_error("Invalid batch size");
         return LedgerResult::LedgerError;
     }
-    
+
     ffi_catch!(LedgerResult::LedgerError, "ledger_journal_process_in_batches", {
         unsafe {
             let journal_ref = &*(journal as *const Journal);
             let transactions = &journal_ref.transactions;
-            
+
             let mut batch_num = 0;
-            
+
             // Process transactions in chunks
+            #[allow(clippy::explicit_counter_loop)]
             for chunk in transactions.chunks(batch_size as usize) {
                 // Create array of transaction pointers for this batch
                 let mut transaction_ptrs: Vec<*const CTransaction> = Vec::new();
                 for transaction in chunk {
                     transaction_ptrs.push(transaction as *const Transaction as *const CTransaction);
                 }
-                
+
                 // Call batch callback
                 let continue_processing = batch_callback(
                     transaction_ptrs.as_ptr(),
                     chunk.len() as c_int,
                     batch_num,
-                    user_data
+                    user_data,
                 );
-                
+
                 if !continue_processing {
                     // User requested stop
                     break;
                 }
-                
+
                 batch_num += 1;
             }
-            
+
             LedgerResult::LedgerOk
         }
     })
@@ -1138,9 +1148,7 @@ pub struct RcJournal {
 /// Create a new reference-counted journal
 #[no_mangle]
 pub extern "C" fn ledger_rc_journal_new() -> *mut RcJournal {
-    let rc_journal = Box::new(RcJournal {
-        inner: Arc::new(Journal::new()),
-    });
+    let rc_journal = Box::new(RcJournal { inner: Arc::new(Journal::new()) });
     Box::into_raw(rc_journal)
 }
 
@@ -1151,12 +1159,10 @@ pub extern "C" fn ledger_rc_journal_clone(journal: *const RcJournal) -> *mut RcJ
         set_last_error("Null reference-counted journal pointer");
         return null_mut();
     }
-    
+
     unsafe {
         let journal_ref = &*journal;
-        let cloned = Box::new(RcJournal {
-            inner: Arc::clone(&journal_ref.inner),
-        });
+        let cloned = Box::new(RcJournal { inner: Arc::clone(&journal_ref.inner) });
         Box::into_raw(cloned)
     }
 }
@@ -1184,7 +1190,7 @@ mod tests {
         assert_eq!(c_date.year, 2023);
         assert_eq!(c_date.month, 12);
         assert_eq!(c_date.day, 31);
-        
+
         let converted_back = NaiveDate::try_from(c_date).unwrap();
         assert_eq!(rust_date, converted_back);
     }
@@ -1213,11 +1219,11 @@ mod tests {
         // Test journal creation and cleanup
         let journal = ledger_journal_new();
         assert!(!journal.is_null());
-        
+
         // Test transaction count on empty journal
         let count = ledger_journal_transaction_count(journal);
         assert_eq!(count, 0);
-        
+
         ledger_journal_free(journal);
     }
 
@@ -1225,32 +1231,32 @@ mod tests {
     fn test_transaction_opaque_pointers() {
         let date = CDate { year: 2023, month: 12, day: 31 };
         let payee = CString::new("Test Payee").unwrap();
-        
+
         // Test transaction creation
         let transaction = ledger_transaction_new(date, payee.as_ptr());
         assert!(!transaction.is_null());
-        
+
         // Test getting date back
         let returned_date = ledger_transaction_get_date(transaction);
         assert_eq!(returned_date.year, 2023);
         assert_eq!(returned_date.month, 12);
         assert_eq!(returned_date.day, 31);
-        
+
         // Test getting status
         let status = ledger_transaction_get_status(transaction);
         assert_eq!(status, CTransactionStatus::Uncleared);
-        
+
         // Test setting status
         let result = ledger_transaction_set_status(transaction, CTransactionStatus::Cleared);
         assert_eq!(result, LedgerResult::LedgerOk);
-        
+
         let updated_status = ledger_transaction_get_status(transaction);
         assert_eq!(updated_status, CTransactionStatus::Cleared);
-        
+
         // Test posting count
         let posting_count = ledger_transaction_posting_count(transaction);
         assert_eq!(posting_count, 0);
-        
+
         ledger_transaction_free(transaction);
     }
 
@@ -1259,28 +1265,28 @@ mod tests {
         // Test amount creation
         let amount = ledger_amount_new(123.45);
         assert!(!amount.is_null());
-        
+
         // Test getting value back (with some tolerance for float conversion)
         let value = ledger_amount_get_value(amount);
         assert!((value - 123.45).abs() < 0.001);
-        
+
         // Test no commodity initially
         let commodity = ledger_amount_get_commodity(amount);
         assert!(commodity.is_null());
-        
+
         ledger_amount_free(amount);
-        
+
         // Test amount with commodity
         let commodity_str = CString::new("USD").unwrap();
         let amount_with_commodity = ledger_amount_new_with_commodity(100.0, commodity_str.as_ptr());
         assert!(!amount_with_commodity.is_null());
-        
+
         let value = ledger_amount_get_value(amount_with_commodity);
         assert!((value - 100.0).abs() < 0.001);
-        
+
         // Note: We can't easily test commodity retrieval without dealing with the memory leak
         // In a real implementation, we'd need a better string management strategy
-        
+
         ledger_amount_free(amount_with_commodity);
     }
 
@@ -1289,17 +1295,17 @@ mod tests {
         let journal = ledger_journal_new();
         let date = CDate { year: 2023, month: 12, day: 31 };
         let payee = CString::new("Test Payee").unwrap();
-        
+
         let transaction = ledger_transaction_new(date, payee.as_ptr());
-        
+
         // Add transaction to journal
         let result = ledger_journal_add_transaction(journal, transaction);
         assert_eq!(result, LedgerResult::LedgerOk);
-        
+
         // Check transaction count increased
         let count = ledger_journal_transaction_count(journal);
         assert_eq!(count, 1);
-        
+
         // Note: transaction is now owned by journal, don't call ledger_transaction_free
         ledger_journal_free(journal);
     }
@@ -1308,10 +1314,10 @@ mod tests {
     fn test_reference_counted_journal() {
         let rc_journal = ledger_rc_journal_new();
         assert!(!rc_journal.is_null());
-        
+
         let rc_journal_clone = ledger_rc_journal_clone(rc_journal);
         assert!(!rc_journal_clone.is_null());
-        
+
         // Both handles should be valid
         ledger_rc_journal_free(rc_journal);
         ledger_rc_journal_free(rc_journal_clone);
@@ -1323,7 +1329,7 @@ mod tests {
         assert_eq!(ledger_journal_transaction_count(null_mut()), -1);
         assert_eq!(ledger_transaction_posting_count(null_mut()), -1);
         assert_eq!(ledger_amount_get_value(null_mut()), 0.0);
-        
+
         let date = CDate { year: 0, month: 0, day: 0 };
         let null_date = ledger_transaction_get_date(null_mut());
         assert_eq!(null_date.year, date.year);
@@ -1336,12 +1342,12 @@ mod tests {
         // Clear any existing errors
         ledger_clear_last_error();
         assert!(!ledger_has_error());
-        
+
         // Test basic error setting and retrieval
         set_last_error("Test error message");
         assert!(ledger_has_error());
         assert_eq!(ledger_get_last_error_code(), LedgerResult::LedgerError);
-        
+
         // Clear error
         ledger_clear_last_error();
         assert!(!ledger_has_error());
@@ -1351,18 +1357,18 @@ mod tests {
     #[test]
     fn test_error_context_handling() {
         ledger_clear_last_error();
-        
+
         // Test error with context
         set_last_error_with_context(
-            LedgerResult::LedgerParseError, 
-            "Failed to parse input", 
-            "parsing transaction file"
+            LedgerResult::LedgerParseError,
+            "Failed to parse input",
+            "parsing transaction file",
         );
-        
+
         assert!(ledger_has_error());
         assert_eq!(ledger_get_last_error_code(), LedgerResult::LedgerParseError);
-        
-        // Note: We can't easily test the actual error message retrieval 
+
+        // Note: We can't easily test the actual error message retrieval
         // without dealing with the C string memory management in tests
         let has_context = !ledger_get_last_error_context().is_null();
         assert!(has_context);
@@ -1375,13 +1381,13 @@ mod tests {
         let handled = handle_result(success_result, "test operation");
         assert!(handled.is_ok());
         assert_eq!(handled.unwrap(), 42);
-        
+
         // Test error result handling
         let error_result: Result<i32, &str> = Err("something went wrong");
         let handled = handle_result(error_result, "test operation");
         assert!(handled.is_err());
         assert_eq!(handled.unwrap_err(), LedgerResult::LedgerError);
-        
+
         // Should have set error info
         assert!(ledger_has_error());
         assert_eq!(ledger_get_last_error_code(), LedgerResult::LedgerError);
@@ -1390,14 +1396,10 @@ mod tests {
     #[test]
     fn test_panic_handling() {
         ledger_clear_last_error();
-        
+
         // Test panic catching
-        let result = catch_ffi_panic(
-            || -> i32 { panic!("Test panic") }, 
-            -1, 
-            "test_panic_context"
-        );
-        
+        let result = catch_ffi_panic(|| -> i32 { panic!("Test panic") }, -1, "test_panic_context");
+
         assert_eq!(result, -1);
         assert!(ledger_has_error());
         assert_eq!(ledger_get_last_error_code(), LedgerResult::LedgerError);
@@ -1405,17 +1407,15 @@ mod tests {
 
     #[test]
     fn test_error_callback() {
-        use std::sync::{Arc, Mutex};
-        
         ledger_clear_last_error();
-        
+
         // Test callback registration and triggering
         // Note: This is a simplified test - in practice callback testing is complex
         // due to FFI function pointer conversion
-        
+
         // For now, just test that registration doesn't crash
         ledger_register_error_callback(None);
-        
+
         // Set an error and verify it doesn't crash
         set_last_error("Test callback error");
         assert!(ledger_has_error());
@@ -1423,16 +1423,16 @@ mod tests {
 
     #[test]
     fn test_error_info_construction() {
-        let error_info = ErrorInfo::new(LedgerResult::LedgerMemoryError, "Memory allocation failed");
+        let error_info =
+            ErrorInfo::new(LedgerResult::LedgerMemoryError, "Memory allocation failed");
         assert_eq!(error_info.code, LedgerResult::LedgerMemoryError);
         assert_eq!(error_info.message, "Memory allocation failed");
         assert!(error_info.context.is_none());
         assert!(error_info.rust_error.is_none());
-        
-        let error_with_context = error_info
-            .with_context("during journal initialization")
-            .with_rust_error("OutOfMemory");
-        
+
+        let error_with_context =
+            error_info.with_context("during journal initialization").with_rust_error("OutOfMemory");
+
         assert!(error_with_context.context.is_some());
         assert!(error_with_context.rust_error.is_some());
     }
@@ -1451,8 +1451,8 @@ mod tests {
 
     // Test callback functionality
     extern "C" fn test_transaction_counter_callback(
-        _transaction: *const CTransaction, 
-        user_data: *mut c_void
+        _transaction: *const CTransaction,
+        user_data: *mut c_void,
     ) -> bool {
         unsafe {
             let counter = &mut *(user_data as *mut i32);
@@ -1462,8 +1462,8 @@ mod tests {
     }
 
     extern "C" fn test_transaction_stopper_callback(
-        _transaction: *const CTransaction, 
-        user_data: *mut c_void
+        _transaction: *const CTransaction,
+        user_data: *mut c_void,
     ) -> bool {
         unsafe {
             let counter = &mut *(user_data as *mut i32);
@@ -1473,8 +1473,8 @@ mod tests {
     }
 
     extern "C" fn test_transaction_filter_callback(
-        transaction: *const CTransaction, 
-        _user_data: *mut c_void
+        transaction: *const CTransaction,
+        _user_data: *mut c_void,
     ) -> bool {
         // Filter: only return true for transactions with Cleared status
         let status = ledger_transaction_get_status(transaction);
@@ -1485,7 +1485,7 @@ mod tests {
         current: c_int,
         total: c_int,
         _message: *const c_char,
-        user_data: *mut c_void
+        user_data: *mut c_void,
     ) -> bool {
         unsafe {
             let progress_tracker = &mut *(user_data as *mut Vec<(i32, i32)>);
@@ -1498,18 +1498,18 @@ mod tests {
         transactions: *const *const CTransaction,
         count: c_int,
         batch_num: c_int,
-        user_data: *mut c_void
+        user_data: *mut c_void,
     ) -> bool {
         unsafe {
             let batch_tracker = &mut *(user_data as *mut Vec<(i32, i32)>);
             batch_tracker.push((batch_num, count));
-            
+
             // Verify we can access the transactions in the batch
             let transaction_slice = std::slice::from_raw_parts(transactions, count as usize);
             for &transaction_ptr in transaction_slice {
                 assert!(!transaction_ptr.is_null());
             }
-            
+
             true // Continue processing
         }
     }
@@ -1529,7 +1529,8 @@ mod tests {
 
             // Set every other transaction to Cleared status
             if i % 2 == 0 {
-                let result = ledger_transaction_set_status(transaction, CTransactionStatus::Cleared);
+                let result =
+                    ledger_transaction_set_status(transaction, CTransactionStatus::Cleared);
                 assert_eq!(result, LedgerResult::LedgerOk);
             }
 
@@ -1542,7 +1543,7 @@ mod tests {
         let result = ledger_journal_iterate_transactions(
             journal,
             test_transaction_counter_callback,
-            &mut counter as *mut i32 as *mut c_void
+            &mut counter as *mut i32 as *mut c_void,
         );
         assert_eq!(result, LedgerResult::LedgerOk);
         assert_eq!(counter, 5);
@@ -1552,7 +1553,7 @@ mod tests {
         let result = ledger_journal_iterate_transactions(
             journal,
             test_transaction_stopper_callback,
-            &mut counter as *mut i32 as *mut c_void
+            &mut counter as *mut i32 as *mut c_void,
         );
         assert_eq!(result, LedgerResult::LedgerOk);
         assert_eq!(counter, 2);
@@ -1575,7 +1576,8 @@ mod tests {
 
             // Set transactions 0 and 2 to Cleared
             if i % 2 == 0 {
-                let result = ledger_transaction_set_status(transaction, CTransactionStatus::Cleared);
+                let result =
+                    ledger_transaction_set_status(transaction, CTransactionStatus::Cleared);
                 assert_eq!(result, LedgerResult::LedgerOk);
             }
 
@@ -1587,7 +1589,7 @@ mod tests {
         let filtered_journal = ledger_journal_filter_transactions(
             journal,
             test_transaction_filter_callback,
-            null_mut()
+            null_mut(),
         );
         assert!(!filtered_journal.is_null());
 
@@ -1599,7 +1601,7 @@ mod tests {
         let matching_count = ledger_journal_count_matching_transactions(
             journal,
             test_transaction_filter_callback,
-            null_mut()
+            null_mut(),
         );
         assert_eq!(matching_count, 2);
 
@@ -1622,18 +1624,18 @@ mod tests {
         }
 
         // Test progress tracking
-        let mut progress_tracker: Vec<(i32, i32)> = Vec::new();
-        let mut counter = 0i32;
-        
+        let progress_tracker: Vec<(i32, i32)> = Vec::new();
+        let counter = 0i32;
+
         let result = ledger_journal_process_transactions_with_progress(
             journal,
             test_transaction_counter_callback,
             // FIXME(maybe?): this causes SEGV, and doesn't seem to be doing anythin anyway
             // Some(test_progress_callback),
             None,
-            &mut (counter, progress_tracker) as *mut (i32, Vec<(i32, i32)>) as *mut c_void
+            &mut (counter, progress_tracker) as *mut (i32, Vec<(i32, i32)>) as *mut c_void,
         );
-        
+
         // Note: This is a simplified test - the actual progress callback would need
         // more complex user_data handling to work with both callbacks
         assert_eq!(result, LedgerResult::LedgerOk);
@@ -1657,19 +1659,19 @@ mod tests {
 
         // Test batch processing with batch size 2
         let mut batch_tracker: Vec<(i32, i32)> = Vec::new();
-        
+
         let result = ledger_journal_process_in_batches(
             journal,
             2, // batch size
             test_batch_callback,
-            &mut batch_tracker as *mut Vec<(i32, i32)> as *mut c_void
+            &mut batch_tracker as *mut Vec<(i32, i32)> as *mut c_void,
         );
-        
+
         assert_eq!(result, LedgerResult::LedgerOk);
         // Should have 3 batches: (2, 2, 1) transactions
         assert_eq!(batch_tracker.len(), 3);
         assert_eq!(batch_tracker[0], (0, 2)); // batch 0, count 2
-        assert_eq!(batch_tracker[1], (1, 2)); // batch 1, count 2  
+        assert_eq!(batch_tracker[1], (1, 2)); // batch 1, count 2
         assert_eq!(batch_tracker[2], (2, 1)); // batch 2, count 1
 
         ledger_journal_free(journal);
@@ -1681,21 +1683,21 @@ mod tests {
         let result = ledger_journal_iterate_transactions(
             null_mut(),
             test_transaction_counter_callback,
-            null_mut()
+            null_mut(),
         );
         assert_eq!(result, LedgerResult::LedgerNullPtr);
 
         let filtered = ledger_journal_filter_transactions(
             null_mut(),
             test_transaction_filter_callback,
-            null_mut()
+            null_mut(),
         );
         assert!(filtered.is_null());
 
         let count = ledger_journal_count_matching_transactions(
             null_mut(),
             test_transaction_filter_callback,
-            null_mut()
+            null_mut(),
         );
         assert_eq!(count, -1);
     }

@@ -4,10 +4,10 @@
 //! specific access patterns, including sparse vectors for account trees
 //! and custom allocators for high-frequency allocations.
 
-use std::collections::HashMap;
-use std::hash::BuildHasherDefault;
 use fnv::FnvHasher;
 use indexmap::IndexMap;
+use std::collections::HashMap;
+use std::hash::BuildHasherDefault;
 
 /// Fast HashMap using FNV hasher for small keys
 pub type FastHashMap<K, V> = HashMap<K, V, BuildHasherDefault<FnvHasher>>;
@@ -31,10 +31,7 @@ impl<T> Default for SparseVec<T> {
 impl<T> SparseVec<T> {
     /// Create a new sparse vector
     pub fn new() -> Self {
-        Self {
-            data: FastHashMap::default(),
-            len: 0,
-        }
+        Self { data: FastHashMap::default(), len: 0 }
     }
 
     /// Create a sparse vector with a given capacity
@@ -148,12 +145,7 @@ impl<T> Arena<T> {
 
     /// Create a new arena with specified chunk size
     pub fn with_chunk_size(chunk_size: usize) -> Self {
-        Self {
-            chunks: Vec::new(),
-            current_chunk: 0,
-            current_pos: 0,
-            chunk_size,
-        }
+        Self { chunks: Vec::new(), current_chunk: 0, current_pos: 0, chunk_size }
     }
 
     /// Allocate space for a value in the arena
@@ -232,10 +224,7 @@ impl<T> ObjectPool<T> {
     where
         F: Fn() -> T + 'static,
     {
-        Self {
-            objects: Vec::new(),
-            factory: Box::new(factory),
-        }
+        Self { objects: Vec::new(), factory: Box::new(factory) }
     }
 
     /// Get an object from the pool or create a new one
@@ -258,10 +247,7 @@ impl<T> ObjectPool<T> {
 
     /// Get pool statistics
     pub fn stats(&self) -> PoolStats {
-        PoolStats {
-            available: self.objects.len(),
-            capacity: self.objects.capacity(),
-        }
+        PoolStats { available: self.objects.len(), capacity: self.objects.capacity() }
     }
 
     /// Clear the pool
@@ -302,10 +288,7 @@ impl<T> Default for AccountTree<T> {
 impl<T> AccountTree<T> {
     /// Create a new account tree
     pub fn new() -> Self {
-        Self {
-            roots: FastHashMap::default(),
-            size: 0,
-        }
+        Self { roots: FastHashMap::default(), size: 0 }
     }
 
     /// Insert a value at the given account path
@@ -316,18 +299,21 @@ impl<T> AccountTree<T> {
         }
 
         let root_name = parts[0].to_string();
-        
+
         // Create root node if it doesn't exist
         if !self.roots.contains_key(&root_name) {
-            self.roots.insert(root_name.clone(), Box::new(AccountNode {
-                name: root_name.clone(),
-                value: None,
-                children: FastHashMap::default(),
-            }));
+            self.roots.insert(
+                root_name.clone(),
+                Box::new(AccountNode {
+                    name: root_name.clone(),
+                    value: None,
+                    children: FastHashMap::default(),
+                }),
+            );
         }
 
         let mut current = self.roots.get_mut(&root_name).unwrap();
-        
+
         // If we only have one part, set the value on the root
         if parts.len() == 1 {
             if current.value.is_none() {
@@ -336,16 +322,19 @@ impl<T> AccountTree<T> {
             current.value = Some(value);
             return;
         }
-        
+
         // Navigate through the path starting from the second part
         for part in &parts[1..] {
             // Create child node if it doesn't exist
             if !current.children.contains_key(*part) {
-                current.children.insert(part.to_string(), Box::new(AccountNode {
-                    name: part.to_string(),
-                    value: None,
-                    children: FastHashMap::default(),
-                }));
+                current.children.insert(
+                    part.to_string(),
+                    Box::new(AccountNode {
+                        name: part.to_string(),
+                        value: None,
+                        children: FastHashMap::default(),
+                    }),
+                );
             }
             current = current.children.get_mut(*part).unwrap();
         }
@@ -366,12 +355,12 @@ impl<T> AccountTree<T> {
 
         let root_name = parts[0];
         let current = self.roots.get(root_name)?;
-        
+
         // If we only have one part, return the root's value
         if parts.len() == 1 {
             return current.value.as_ref();
         }
-        
+
         // Navigate through the path
         let mut current = current.as_ref();
         for part in &parts[1..] {
@@ -409,10 +398,11 @@ impl<T> AccountTree<T> {
         stats
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn collect_stats(&self, node: &AccountNode<T>, depth: usize, stats: &mut TreeStats) {
         stats.total_nodes += 1;
         stats.max_depth = stats.max_depth.max(depth);
-        
+
         if node.value.is_some() {
             stats.value_nodes += 1;
         }
@@ -450,9 +440,7 @@ pub struct AccountTreeIter<'a, T> {
 
 impl<'a, T> AccountTreeIter<'a, T> {
     fn new(roots: &'a FastHashMap<String, Box<AccountNode<T>>>) -> Self {
-        let mut iter = Self {
-            stack: Vec::new(),
-        };
+        let mut iter = Self { stack: Vec::new() };
 
         // Add all roots to the stack
         for root in roots.values() {
@@ -490,20 +478,20 @@ mod tests {
     #[test]
     fn test_sparse_vec_basic_operations() {
         let mut sv = SparseVec::new();
-        
+
         // Test insertion and retrieval
         sv.insert(10, "ten");
         sv.insert(5, "five");
         sv.insert(100, "hundred");
-        
+
         assert_eq!(sv.get(10), Some(&"ten"));
         assert_eq!(sv.get(5), Some(&"five"));
         assert_eq!(sv.get(100), Some(&"hundred"));
         assert_eq!(sv.get(50), None);
-        
+
         assert_eq!(sv.len(), 101); // highest index + 1
         assert_eq!(sv.occupied_count(), 3);
-        
+
         let stats = sv.memory_usage();
         assert!(stats.sparsity_ratio > 0.9); // Very sparse
     }
@@ -511,16 +499,16 @@ mod tests {
     #[test]
     fn test_arena_allocation() {
         let mut arena = Arena::with_chunk_size(2);
-        
+
         // Allocate values and verify they are stored correctly
         arena.alloc(42);
         arena.alloc(84);
         arena.alloc(126); // Should trigger new chunk
-        
+
         let stats = arena.memory_usage();
         assert_eq!(stats.chunks, 2);
         assert_eq!(stats.total_used, 3);
-        
+
         // Check that we can retrieve values from the arena
         arena.clear();
         let val1 = arena.alloc(100);
@@ -530,39 +518,39 @@ mod tests {
     #[test]
     fn test_object_pool() {
         let mut pool = ObjectPool::new(|| Vec::<i32>::new());
-        
+
         // Pre-allocate some objects
         pool.preallocate(5);
         assert_eq!(pool.stats().available, 5);
-        
+
         // Get and use an object
         let mut vec = pool.get();
         vec.push(42);
-        
+
         // Return it to pool
         vec.clear(); // Reset state
         pool.put(vec);
-        
+
         assert_eq!(pool.stats().available, 5);
     }
 
     #[test]
     fn test_account_tree() {
         let mut tree = AccountTree::new();
-        
+
         tree.insert("Assets", 1000);
         tree.insert("Assets:Cash", 500);
         tree.insert("Assets:Bank:Checking", 300);
         tree.insert("Expenses:Food", -50);
-        
+
         assert_eq!(tree.get("Assets"), Some(&1000));
         assert_eq!(tree.get("Assets:Cash"), Some(&500));
         assert_eq!(tree.get("Assets:Bank:Checking"), Some(&300));
         assert_eq!(tree.get("Expenses:Food"), Some(&-50));
         assert_eq!(tree.get("Assets:Bank"), None); // No value set
-        
+
         assert_eq!(tree.len(), 4);
-        
+
         let stats = tree.stats();
         assert!(stats.max_depth >= 2); // Assets:Bank:Checking is depth 2
         assert!(stats.value_nodes == 4);
@@ -571,10 +559,10 @@ mod tests {
     #[test]
     fn test_fast_hash_map() {
         let mut map: FastHashMap<&str, i32> = FastHashMap::default();
-        
+
         map.insert("key1", 100);
         map.insert("key2", 200);
-        
+
         assert_eq!(map.get("key1"), Some(&100));
         assert_eq!(map.get("key2"), Some(&200));
         assert_eq!(map.len(), 2);
@@ -583,11 +571,11 @@ mod tests {
     #[test]
     fn test_ordered_map() {
         let mut map: OrderedMap<&str, i32> = OrderedMap::new();
-        
+
         map.insert("third", 3);
         map.insert("first", 1);
         map.insert("second", 2);
-        
+
         let keys: Vec<&str> = map.keys().copied().collect();
         assert_eq!(keys, vec!["third", "first", "second"]); // Insertion order preserved
     }

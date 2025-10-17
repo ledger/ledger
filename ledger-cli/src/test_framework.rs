@@ -4,16 +4,16 @@
 //! including baseline tests, regression tests, manual tests, and performance benchmarks.
 
 pub mod baseline_runner;
-pub mod regression_runner;
-pub mod manual_runner;
-pub mod test_harness;
-pub mod diff_reporter;
-pub mod test_parser;
-pub mod output_validator;
 pub mod bench_framework;
+pub mod diff_reporter;
+pub mod manual_runner;
+pub mod output_validator;
+pub mod regression_runner;
+pub mod test_harness;
+pub mod test_parser;
 
-use std::path::Path;
 use anyhow::Result;
+use std::path::Path;
 
 /// Main test runner orchestrator
 pub struct TestRunner {
@@ -23,9 +23,7 @@ pub struct TestRunner {
 impl TestRunner {
     /// Create a new test runner
     pub fn new<P: AsRef<Path>>(ledger_path: P, source_path: P) -> Result<Self> {
-        Ok(TestRunner {
-            harness: test_harness::TestHarness::new(ledger_path, source_path)?,
-        })
+        Ok(TestRunner { harness: test_harness::TestHarness::new(ledger_path, source_path)? })
     }
 
     /// Run baseline tests

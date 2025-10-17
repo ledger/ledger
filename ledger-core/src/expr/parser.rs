@@ -4,12 +4,12 @@
 //! Supports all operators, function calls, and special syntax from the C++ ledger.
 
 use crate::expr::{
-    ExprNode, BinaryOp, UnaryOp, BuiltinFunction, Value, Expression, ExprError, ExprResult
+    BinaryOp, BuiltinFunction, ExprError, ExprNode, ExprResult, Expression, UnaryOp, Value,
 };
 use rust_decimal::Decimal;
 use std::collections::HashMap;
-use std::str::Chars;
 use std::iter::Peekable;
+use std::str::Chars;
 
 /// Token types for lexical analysis
 #[derive(Debug, Clone, PartialEq)]
@@ -21,11 +21,11 @@ pub enum Token {
     Regex(String),
     Boolean(bool),
     Null,
-    
+
     // Identifiers and functions
     Identifier(String),
     Function(BuiltinFunction),
-    
+
     // Operators
     Plus,
     Minus,
@@ -44,7 +44,7 @@ pub enum Token {
     Question,
     Colon,
     Match,
-    
+
     // Delimiters
     LeftParen,
     RightParen,
@@ -52,7 +52,7 @@ pub enum Token {
     RightBracket,
     Comma,
     Semicolon,
-    
+
     // Special
     EndOfInput,
 }
@@ -81,7 +81,7 @@ impl Token {
             _ => None,
         }
     }
-    
+
     /// Convert token to unary operator if possible
     pub fn to_unary_op(&self) -> Option<UnaryOp> {
         match self {
@@ -99,11 +99,17 @@ pub struct Position {
     pub column: usize,
 }
 
+impl Default for Position {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Position {
     pub fn new() -> Self {
         Position { line: 1, column: 1 }
     }
-    
+
     pub fn advance(&mut self, ch: char) {
         if ch == '\n' {
             self.line += 1;
@@ -125,7 +131,7 @@ pub struct Lexer<'a> {
 impl<'a> Lexer<'a> {
     pub fn new(input: &'a str) -> Self {
         let mut functions = HashMap::new();
-        
+
         // Register built-in functions
         functions.insert("abs".to_string(), BuiltinFunction::Abs);
         functions.insert("floor".to_string(), BuiltinFunction::Floor);
@@ -152,7 +158,7 @@ impl<'a> Lexer<'a> {
         functions.insert("is_empty".to_string(), BuiltinFunction::IsEmpty);
         functions.insert("length".to_string(), BuiltinFunction::Length);
         functions.insert("type".to_string(), BuiltinFunction::Type);
-        
+
         Lexer {
             input: input.chars().peekable(),
             position: Position::new(),
@@ -160,16 +166,16 @@ impl<'a> Lexer<'a> {
             last_token: None,
         }
     }
-    
+
     pub fn position(&self) -> Position {
         self.position
     }
-    
+
     /// Peek at the next character without consuming it
     fn peek(&mut self) -> Option<char> {
         self.input.peek().cloned()
     }
-    
+
     /// Consume and return the next character
     fn next_char(&mut self) -> Option<char> {
         if let Some(ch) = self.input.next() {
@@ -179,7 +185,7 @@ impl<'a> Lexer<'a> {
             None
         }
     }
-    
+
     /// Skip whitespace characters
     fn skip_whitespace(&mut self) {
         while let Some(&ch) = self.input.peek() {
@@ -190,14 +196,14 @@ impl<'a> Lexer<'a> {
             }
         }
     }
-    
+
     /// Read a number (integer or decimal)
     fn read_number(&mut self, first_digit: char) -> ExprResult<Token> {
         let mut number = String::new();
         number.push(first_digit);
-        
+
         let mut has_decimal = false;
-        
+
         while let Some(&ch) = self.input.peek() {
             if ch.is_ascii_digit() {
                 number.push(ch);
@@ -210,23 +216,25 @@ impl<'a> Lexer<'a> {
                 break;
             }
         }
-        
+
         if has_decimal {
-            number.parse::<Decimal>()
+            number
+                .parse::<Decimal>()
                 .map(Token::Decimal)
                 .map_err(|_| ExprError::ParseError(format!("Invalid decimal number: {}", number)))
         } else {
-            number.parse::<i64>()
+            number
+                .parse::<i64>()
                 .map(Token::Integer)
                 .map_err(|_| ExprError::ParseError(format!("Invalid integer: {}", number)))
         }
     }
-    
+
     /// Read an identifier or keyword
     fn read_identifier(&mut self, first_char: char) -> Token {
         let mut identifier = String::new();
         identifier.push(first_char);
-        
+
         while let Some(&ch) = self.input.peek() {
             if ch.is_alphanumeric() || ch == '_' {
                 identifier.push(ch);
@@ -235,7 +243,7 @@ impl<'a> Lexer<'a> {
                 break;
             }
         }
-        
+
         // Check for keywords
         match identifier.as_str() {
             "true" => Token::Boolean(true),
@@ -251,11 +259,11 @@ impl<'a> Lexer<'a> {
             }
         }
     }
-    
+
     /// Read a quoted string
     fn read_string(&mut self) -> ExprResult<Token> {
         let mut string = String::new();
-        
+
         // Opening quote was already consumed by next_token
         while let Some(ch) = self.next_char() {
             if ch == '"' {
@@ -279,14 +287,14 @@ impl<'a> Lexer<'a> {
                 string.push(ch);
             }
         }
-        
+
         Err(ExprError::ParseError("Unterminated string".to_string()))
     }
-    
+
     /// Read a regex pattern between slashes
     fn read_regex(&mut self) -> ExprResult<Token> {
         let mut pattern = String::new();
-        
+
         // Opening slash was already consumed by next_token
         while let Some(ch) = self.next_char() {
             if ch == '/' {
@@ -310,14 +318,14 @@ impl<'a> Lexer<'a> {
                 pattern.push(ch);
             }
         }
-        
+
         Err(ExprError::ParseError("Unterminated regex".to_string()))
     }
-    
+
     /// Read a single-quoted string
     fn read_single_quoted_string(&mut self) -> ExprResult<Token> {
         let mut string = String::new();
-        
+
         // Opening quote was already consumed by next_token
         while let Some(ch) = self.next_char() {
             if ch == '\'' {
@@ -341,40 +349,40 @@ impl<'a> Lexer<'a> {
                 string.push(ch);
             }
         }
-        
+
         Err(ExprError::ParseError("Unterminated string".to_string()))
     }
-    
+
     /// Determine if slash should be parsed as regex start based on context
     fn expect_regex(&self) -> bool {
         match &self.last_token {
-            Some(Token::Match) => true,  // =~ operator
+            Some(Token::Match) => true,     // =~ operator
             Some(Token::NotEqual) => true,  // != operator (though not regex)
-            Some(Token::LeftParen) => true,  // ( - start of expression
-            Some(Token::Comma) => true,  // , - function argument
-            Some(Token::And) => true,  // && - logical operator
-            Some(Token::Or) => true,  // || - logical operator
-            None => true, // Start of input
+            Some(Token::LeftParen) => true, // ( - start of expression
+            Some(Token::Comma) => true,     // , - function argument
+            Some(Token::And) => true,       // && - logical operator
+            Some(Token::Or) => true,        // || - logical operator
+            None => true,                   // Start of input
             _ => false,
         }
     }
-    
+
     /// Get the next token
     pub fn next_token(&mut self) -> ExprResult<Token> {
         let token = self.next_token_impl()?;
-        
+
         // Store the token for context-sensitive parsing (except EndOfInput)
         if token != Token::EndOfInput {
             self.last_token = Some(token.clone());
         }
-        
+
         Ok(token)
     }
-    
+
     /// Implementation of next_token without last_token tracking
     fn next_token_impl(&mut self) -> ExprResult<Token> {
         self.skip_whitespace();
-        
+
         match self.next_char() {
             None => Ok(Token::EndOfInput),
             Some(ch) => match ch {
@@ -387,7 +395,7 @@ impl<'a> Lexer<'a> {
                     } else {
                         Ok(Token::Slash)
                     }
-                },
+                }
                 '%' => Ok(Token::Percent),
                 '(' => Ok(Token::LeftParen),
                 ')' => Ok(Token::RightParen),
@@ -453,7 +461,7 @@ impl<'a> Lexer<'a> {
                 ch if ch.is_ascii_digit() => self.read_number(ch),
                 ch if ch.is_alphabetic() || ch == '_' => Ok(self.read_identifier(ch)),
                 _ => Err(ExprError::ParseError(format!("Unexpected character: '{}'", ch))),
-            }
+            },
         }
     }
 }
@@ -468,19 +476,16 @@ impl<'a> ExprParser<'a> {
     pub fn new(input: &'a str) -> ExprResult<Self> {
         let mut lexer = Lexer::new(input);
         let current_token = lexer.next_token()?;
-        
-        Ok(ExprParser {
-            lexer,
-            current_token,
-        })
+
+        Ok(ExprParser { lexer, current_token })
     }
-    
+
     /// Advance to the next token
     fn advance(&mut self) -> ExprResult<()> {
         self.current_token = self.lexer.next_token()?;
         Ok(())
     }
-    
+
     /// Check if current token matches expected token
     fn expect(&mut self, expected: Token) -> ExprResult<()> {
         if std::mem::discriminant(&self.current_token) == std::mem::discriminant(&expected) {
@@ -492,40 +497,35 @@ impl<'a> ExprParser<'a> {
             )))
         }
     }
-    
+
     /// Parse a complete expression
     pub fn parse(&mut self) -> ExprResult<Expression> {
         let root = self.parse_expression(0)?;
-        
+
         if self.current_token != Token::EndOfInput {
-            return Err(ExprError::ParseError(
-                "Unexpected token after expression".to_string()
-            ));
+            return Err(ExprError::ParseError("Unexpected token after expression".to_string()));
         }
-        
+
         Ok(Expression::new(root))
     }
-    
+
     /// Parse expression with given minimum precedence (Pratt parsing)
     fn parse_expression(&mut self, min_precedence: u8) -> ExprResult<ExprNode> {
         let mut left = self.parse_primary()?;
-        
+
         while let Some(op) = self.current_token.to_binary_op() {
             let precedence = op.precedence();
             if precedence < min_precedence {
                 break;
             }
-            
+
             self.advance()?; // consume operator
-            
-            let next_min_precedence = if op.is_right_associative() {
-                precedence
-            } else {
-                precedence + 1
-            };
-            
+
+            let next_min_precedence =
+                if op.is_right_associative() { precedence } else { precedence + 1 };
+
             let right = self.parse_expression(next_min_precedence)?;
-            
+
             // Handle ternary operator specially
             if matches!(op, BinaryOp::Query) {
                 self.expect(Token::Colon)?;
@@ -536,17 +536,13 @@ impl<'a> ExprParser<'a> {
                     if_false: Box::new(else_expr),
                 };
             } else {
-                left = ExprNode::Binary {
-                    op,
-                    left: Box::new(left),
-                    right: Box::new(right),
-                };
+                left = ExprNode::Binary { op, left: Box::new(left), right: Box::new(right) };
             }
         }
-        
+
         Ok(left)
     }
-    
+
     /// Parse primary expressions (literals, identifiers, parenthesized expressions)
     fn parse_primary(&mut self) -> ExprResult<ExprNode> {
         match self.current_token.clone() {
@@ -599,10 +595,7 @@ impl<'a> ExprParser<'a> {
                 let op = self.current_token.to_unary_op().unwrap();
                 self.advance()?;
                 let operand = self.parse_primary()?;
-                Ok(ExprNode::Unary {
-                    op,
-                    operand: Box::new(operand),
-                })
+                Ok(ExprNode::Unary { op, operand: Box::new(operand) })
             }
             _ => Err(ExprError::ParseError(format!(
                 "Unexpected token in primary expression: {:?}",
@@ -610,17 +603,17 @@ impl<'a> ExprParser<'a> {
             ))),
         }
     }
-    
+
     /// Parse function argument list
     fn parse_argument_list(&mut self) -> ExprResult<Vec<ExprNode>> {
         self.expect(Token::LeftParen)?;
-        
+
         let mut args = Vec::new();
-        
+
         if self.current_token != Token::RightParen {
             loop {
                 args.push(self.parse_expression(0)?);
-                
+
                 if self.current_token == Token::Comma {
                     self.advance()?;
                 } else {
@@ -628,7 +621,7 @@ impl<'a> ExprParser<'a> {
                 }
             }
         }
-        
+
         self.expect(Token::RightParen)?;
         Ok(args)
     }
@@ -643,38 +636,38 @@ pub fn parse_expression(input: &str) -> ExprResult<Expression> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_parse_integer() {
         let expr = parse_expression("42").unwrap();
         assert_eq!(expr.root, ExprNode::Value(Value::Integer(42)));
     }
-    
+
     #[test]
     fn test_parse_decimal() {
         use std::str::FromStr;
         let expr = parse_expression("3.14").unwrap();
         assert_eq!(expr.root, ExprNode::Value(Value::Decimal(Decimal::from_str("3.14").unwrap())));
     }
-    
+
     #[test]
     fn test_parse_string() {
         let expr = parse_expression("\"hello\"").unwrap();
         assert_eq!(expr.root, ExprNode::Value(Value::String("hello".to_string())));
     }
-    
+
     #[test]
     fn test_parse_boolean() {
         let expr = parse_expression("true").unwrap();
         assert_eq!(expr.root, ExprNode::Value(Value::Bool(true)));
     }
-    
+
     #[test]
     fn test_parse_identifier() {
         let expr = parse_expression("foo").unwrap();
         assert_eq!(expr.root, ExprNode::Identifier("foo".to_string()));
     }
-    
+
     #[test]
     fn test_parse_binary_add() {
         let expr = parse_expression("1 + 2").unwrap();
@@ -686,7 +679,7 @@ mod tests {
             _ => panic!("Expected binary addition"),
         }
     }
-    
+
     #[test]
     fn test_parse_function_call() {
         let expr = parse_expression("abs(-5)").unwrap();
@@ -703,7 +696,7 @@ mod tests {
             _ => panic!("Expected function call"),
         }
     }
-    
+
     #[test]
     fn test_parse_precedence() {
         let expr = parse_expression("1 + 2 * 3").unwrap();
@@ -721,7 +714,7 @@ mod tests {
             _ => panic!("Expected binary addition"),
         }
     }
-    
+
     #[test]
     fn test_parse_parentheses() {
         let expr = parse_expression("(1 + 2) * 3").unwrap();

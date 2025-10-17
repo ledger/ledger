@@ -3,19 +3,16 @@
 //! This module provides parallel implementations of compute-intensive operations
 //! using rayon for work-stealing parallelism and optimal CPU utilization.
 
-use rayon::prelude::*;
+use parking_lot::{Mutex as ParkingMutex, RwLock as ParkingRwLock};
 use rayon::{Scope, ThreadPoolBuilder};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex, RwLock};
 use std::time::Instant;
-use parking_lot::{RwLock as ParkingRwLock, Mutex as ParkingMutex};
 
 use crate::account::{Account, AccountRef};
-use crate::transaction::Transaction;
-use crate::posting::Posting;
-use ledger_math::amount::Amount;
 use crate::balance::Balance;
 use crate::strings::AccountName;
+use crate::transaction::Transaction;
+use ledger_math::amount::Amount;
 
 /// Configuration for parallel processing
 #[derive(Debug, Clone)]
@@ -65,18 +62,23 @@ pub struct ParallelBalanceAccumulator {
     balances: ParkingRwLock<HashMap<AccountName, Balance>>,
 }
 
+impl Default for ParallelBalanceAccumulator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ParallelBalanceAccumulator {
     pub fn new() -> Self {
-        Self {
-            balances: ParkingRwLock::new(HashMap::new()),
-        }
+        Self { balances: ParkingRwLock::new(HashMap::new()) }
     }
 
     /// Add an amount to an account balance (thread-safe)
     pub fn add_amount(&self, account: AccountName, amount: Amount) {
         let mut balances = self.balances.write();
-        let balance = balances.entry(account).or_insert_with(Balance::new);
-        balance.add_amount(&amount);
+        let balance = balances.entry(account).or_default();
+        // TODO: error logging
+        let _ = balance.add_amount(&amount);
     }
 
     /// Get final balances
@@ -92,7 +94,7 @@ impl ParallelBalanceAccumulator {
 
 /// Parallel transaction filter and processor
 pub struct ParallelTransactionProcessor {
-    config: ParallelConfig,
+    _config: ParallelConfig,
     stats: ProcessingStats,
 }
 
@@ -105,19 +107,19 @@ pub struct ProcessingStats {
     pub chunks_processed: usize,
 }
 
+impl Default for ParallelTransactionProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ParallelTransactionProcessor {
     pub fn new() -> Self {
-        Self {
-            config: get_parallel_config(),
-            stats: ProcessingStats::default(),
-        }
+        Self { _config: get_parallel_config(), stats: ProcessingStats::default() }
     }
 
-    pub fn with_config(config: ParallelConfig) -> Self {
-        Self {
-            config,
-            stats: ProcessingStats::default(),
-        }
+    pub fn with_config(_config: ParallelConfig) -> Self {
+        Self { _config, stats: ProcessingStats::default() }
     }
 
     /// Process transactions for balance calculation
@@ -127,7 +129,7 @@ impl ParallelTransactionProcessor {
     {
         let start_time = Instant::now();
         let accumulator = ParallelBalanceAccumulator::new();
-        
+
         // Collect transactions to count them
         let txns: Vec<&Transaction> = transactions.collect();
         self.stats.total_transactions = txns.len();
@@ -140,7 +142,7 @@ impl ParallelTransactionProcessor {
 
         self.stats.processed_transactions = txns.len();
         self.stats.processing_time_ms = start_time.elapsed().as_millis() as u64;
-        
+
         accumulator.into_balances()
     }
 
@@ -170,14 +172,12 @@ impl ParallelTransactionProcessor {
         P: Fn(&Transaction) -> bool,
     {
         let start_time = Instant::now();
-        
-        let filtered: Vec<&Transaction> = transactions
-            .filter(|txn| predicate(txn))
-            .collect();
+
+        let filtered: Vec<&Transaction> = transactions.filter(|txn| predicate(txn)).collect();
 
         self.stats.processing_time_ms = start_time.elapsed().as_millis() as u64;
         self.stats.processed_transactions = filtered.len();
-        
+
         filtered
     }
 
@@ -193,15 +193,15 @@ impl ParallelTransactionProcessor {
         K: Ord,
     {
         let start_time = Instant::now();
-        
+
         let mut txns: Vec<&Transaction> = transactions.collect();
-        
+
         // Always use standard sort due to thread safety
         txns.sort_by_key(|txn| key_fn(txn));
 
         self.stats.processing_time_ms = start_time.elapsed().as_millis() as u64;
         self.stats.processed_transactions = txns.len();
-        
+
         txns
     }
 
@@ -221,11 +221,15 @@ pub struct ParallelAccountProcessor {
     config: ParallelConfig,
 }
 
+impl Default for ParallelAccountProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ParallelAccountProcessor {
     pub fn new() -> Self {
-        Self {
-            config: get_parallel_config(),
-        }
+        Self { config: get_parallel_config() }
     }
 
     /// Traverse account tree and collect accounts matching predicate
@@ -237,31 +241,40 @@ impl ParallelAccountProcessor {
         self.collect_accounts_sequential(root_accounts, &predicate)
     }
 
-    fn collect_accounts_sequential<P>(&self, accounts: &[AccountRef], predicate: &P) -> Vec<AccountRef>
+    #[allow(clippy::only_used_in_recursion)]
+    fn collect_accounts_sequential<P>(
+        &self,
+        accounts: &[AccountRef],
+        predicate: &P,
+    ) -> Vec<AccountRef>
     where
         P: Fn(&Account) -> bool,
     {
         let mut results = Vec::new();
-        
+
         for account_ref in accounts {
             let account = account_ref.borrow();
             if predicate(&account) {
                 results.push(account_ref.clone());
             }
-            
+
             // Recursively process children
             let children: Vec<AccountRef> = account.children.values().cloned().collect();
             drop(account); // Release borrow before recursion
             results.extend(self.collect_accounts_sequential(&children, predicate));
         }
-        
+
         results
     }
 
     // Parallel processing disabled due to Rc<RefCell> thread safety
     // These methods are kept for future migration to Arc<Mutex> if needed
     #[allow(dead_code)]
-    fn collect_accounts_parallel<P>(&self, _accounts: &[AccountRef], _predicate: &P) -> Vec<AccountRef>
+    fn collect_accounts_parallel<P>(
+        &self,
+        _accounts: &[AccountRef],
+        _predicate: &P,
+    ) -> Vec<AccountRef>
     where
         P: Fn(&Account) -> bool + Sync + Send,
     {
@@ -294,7 +307,7 @@ impl ParallelAccountProcessor {
             // Split accounts into chunks and process in parallel
             // Since Rc<RefCell> isn't thread-safe, use sequential processing
             // In a production system, you'd use Arc<Mutex> for parallel processing
-            aggregator(&root_accounts)
+            aggregator(root_accounts)
         }
     }
 }
@@ -302,21 +315,27 @@ impl ParallelAccountProcessor {
 /// Parallel report generation utilities
 pub struct ParallelReportGenerator {
     processor: ParallelTransactionProcessor,
-    account_processor: ParallelAccountProcessor,
+    _account_processor: ParallelAccountProcessor,
+}
+
+impl Default for ParallelReportGenerator {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ParallelReportGenerator {
     pub fn new() -> Self {
         Self {
             processor: ParallelTransactionProcessor::new(),
-            account_processor: ParallelAccountProcessor::new(),
+            _account_processor: ParallelAccountProcessor::new(),
         }
     }
 
     pub fn with_config(config: ParallelConfig) -> Self {
         Self {
             processor: ParallelTransactionProcessor::with_config(config.clone()),
-            account_processor: ParallelAccountProcessor::new(),
+            _account_processor: ParallelAccountProcessor::new(),
         }
     }
 
@@ -324,7 +343,7 @@ impl ParallelReportGenerator {
     pub fn generate_balance_report<'a, I>(
         &mut self,
         transactions: I,
-        accounts: &[AccountRef],
+        _accounts: &[AccountRef],
     ) -> HashMap<AccountName, Balance>
     where
         I: Iterator<Item = &'a Transaction> + Clone,
@@ -354,12 +373,15 @@ impl ParallelReportGenerator {
 }
 
 /// Initialize global thread pool for parallel processing
-pub fn init_parallel_processing(config: Option<ParallelConfig>) -> Result<(), rayon::ThreadPoolBuildError> {
+#[allow(deprecated)]
+pub fn init_parallel_processing(
+    config: Option<ParallelConfig>,
+) -> Result<(), rayon::ThreadPoolBuildError> {
     let config = config.unwrap_or_default();
     set_parallel_config(config.clone());
 
     let mut builder = ThreadPoolBuilder::new();
-    
+
     if config.num_threads > 0 {
         builder = builder.num_threads(config.num_threads);
     }
@@ -374,6 +396,8 @@ pub fn init_parallel_processing(config: Option<ParallelConfig>) -> Result<(), ra
 
 #[cfg(test)]
 mod tests {
+    use rayon::iter::*;
+
     use super::*;
     use crate::transaction::Transaction;
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -400,7 +424,7 @@ mod tests {
     fn test_balance_accumulator() {
         let accumulator = ParallelBalanceAccumulator::new();
         let account = AccountName::new("Assets:Test");
-        
+
         // Add amounts from multiple threads (simulated)
         for _ in 0..10 {
             let amount = Amount::from_i64(100);
@@ -414,31 +438,22 @@ mod tests {
     #[test]
     fn test_parallel_transaction_filtering() {
         let mut processor = ParallelTransactionProcessor::new();
-        
+
         // Create test transactions
-        let transactions: Vec<Transaction> = (0..1000)
-            .map(|i| {
-                let mut txn = Transaction::default();
-                // Set some test data that we can filter on
-                txn
-            })
-            .collect();
+        let transactions: Vec<Transaction> = (0..1000).map(|_| Transaction::default()).collect();
 
         let transaction_refs: Vec<&Transaction> = transactions.iter().collect();
-        
+
         // Filter for even-indexed transactions (placeholder logic)
         let counter = AtomicUsize::new(0);
-        let filtered = processor.filter_transactions(
-            transaction_refs.into_iter(),
-            |_txn| {
-                let count = counter.fetch_add(1, Ordering::SeqCst);
-                count % 2 == 0
-            }
-        );
+        let filtered = processor.filter_transactions(transaction_refs.into_iter(), |_txn| {
+            let count = counter.fetch_add(1, Ordering::SeqCst);
+            count % 2 == 0
+        });
 
         // Should have roughly half the transactions
         assert!(filtered.len() >= 400 && filtered.len() <= 600);
-        
+
         let stats = processor.stats();
         assert_eq!(stats.processed_transactions, filtered.len());
         assert!(stats.processing_time_ms > 0 || filtered.is_empty());

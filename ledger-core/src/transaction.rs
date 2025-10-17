@@ -1,12 +1,12 @@
 //! Transaction representation
 
-use chrono::{NaiveDate, NaiveDateTime};
+use crate::posting::{Posting, PostingFlags};
+use chrono::NaiveDate;
+use ledger_math::amount::Amount;
+use rust_decimal::Decimal;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
-use rust_decimal::Decimal;
-use crate::posting::{Posting, PostingFlags};
-use ledger_math::amount::Amount;
 
 /// Position information for source tracking
 #[derive(Debug, Clone)]
@@ -17,7 +17,7 @@ pub struct Position {
     pub sequence: usize,
 }
 
-/// Transaction flags
+// Transaction flags
 bitflags::bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct TransactionFlags: u16 {
@@ -30,9 +30,10 @@ bitflags::bitflags! {
 }
 
 /// Transaction status (state)
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum TransactionStatus {
     /// Uncleared
+    #[default]
     Uncleared,
     /// Cleared (*)
     Cleared,
@@ -41,9 +42,10 @@ pub enum TransactionStatus {
 }
 
 /// Transaction types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum TransactionType {
     /// Regular transaction
+    #[default]
     Normal,
     /// Automated transaction
     Automated,
@@ -87,12 +89,6 @@ pub struct Transaction {
     pub sequence: usize,
 }
 
-impl Default for TransactionStatus {
-    fn default() -> Self {
-        TransactionStatus::Uncleared
-    }
-}
-
 impl Default for TransactionFlags {
     fn default() -> Self {
         TransactionFlags::NORMAL
@@ -115,12 +111,6 @@ impl Default for Transaction {
             metadata: HashMap::new(),
             sequence: 0,
         }
-    }
-}
-
-impl Default for TransactionType {
-    fn default() -> Self {
-        TransactionType::Normal
     }
 }
 
@@ -147,17 +137,17 @@ impl Transaction {
     pub fn add_posting(&mut self, posting: Posting) {
         self.postings.push(posting);
     }
-    
+
     /// Set the auxiliary date
     pub fn set_aux_date(&mut self, date: Option<NaiveDate>) {
         self.aux_date = date;
     }
-    
+
     /// Set the transaction status
     pub fn set_status(&mut self, status: TransactionStatus) {
         self.status = status;
     }
-    
+
     /// Set the transaction code
     pub fn set_code(&mut self, code: Option<String>) {
         self.code = code;
@@ -217,46 +207,44 @@ impl Transaction {
         if self.postings.is_empty() {
             return false;
         }
-        
+
         // Validate double-entry balancing
         self.verify_balance().is_ok()
     }
 
     /// Verify double-entry balance - all postings must sum to zero
     pub fn verify_balance(&self) -> Result<(), String> {
-        let mut balances: HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> = HashMap::new();
+        let mut balances: HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> =
+            HashMap::new();
         let mut has_amount_postings = false;
-        
+
         // Collect all postings that must balance
-        let balancing_postings: Vec<&Posting> = self.postings.iter()
-            .filter(|p| p.must_balance())
-            .collect();
-        
+        let balancing_postings: Vec<&Posting> =
+            self.postings.iter().filter(|p| p.must_balance()).collect();
+
         if balancing_postings.is_empty() {
             return Ok(()); // All postings are virtual or non-balancing
         }
-        
+
         // Calculate balance per commodity
         for posting in &balancing_postings {
             if let Some(ref amount) = posting.amount {
                 has_amount_postings = true;
                 let commodity = amount.commodity().cloned();
-                
+
                 let current_balance = balances.get(&commodity).unwrap_or(&Decimal::ZERO);
                 balances.insert(commodity, current_balance + amount.value());
             }
         }
-        
+
         if !has_amount_postings {
             return Ok(()); // No amounts to balance (yet)
         }
-        
+
         // Check that each commodity sums to zero
         for (commodity, balance) in &balances {
             if !balance.is_zero() {
-                let commodity_str = commodity.as_ref()
-                    .map(|c| c.symbol())
-                    .unwrap_or("(none)");
+                let commodity_str = commodity.as_ref().map(|c| c.symbol()).unwrap_or("(none)");
                 return Err(format!(
                     "Transaction does not balance: {} commodity '{}' has balance {}",
                     self.description(),
@@ -265,25 +253,26 @@ impl Transaction {
                 ));
             }
         }
-        
+
         Ok(())
     }
 
     /// Calculate the magnitude (total absolute value) of this transaction
     pub fn magnitude(&self) -> HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> {
-        let mut magnitudes: HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> = HashMap::new();
-        
+        let mut magnitudes: HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> =
+            HashMap::new();
+
         for posting in &self.postings {
             if let Some(ref amount) = posting.amount {
                 if posting.must_balance() {
                     let commodity = amount.commodity().cloned();
-                    
+
                     let current_magnitude = magnitudes.get(&commodity).unwrap_or(&Decimal::ZERO);
                     magnitudes.insert(commodity, current_magnitude + amount.value().abs());
                 }
             }
         }
-        
+
         magnitudes
     }
 
@@ -291,15 +280,15 @@ impl Transaction {
     pub fn finalize(&mut self) -> Result<(), String> {
         // First, try to auto-balance by calculating missing amounts
         self.auto_balance()?;
-        
+
         // Then verify the transaction balances
         self.verify_balance()?;
-        
+
         // Additional validation
         if self.postings.len() < 2 {
             return Err("Transaction must have at least two postings for double-entry".to_string());
         }
-        
+
         Ok(())
     }
 
@@ -307,53 +296,55 @@ impl Transaction {
     pub fn auto_balance(&mut self) -> Result<(), String> {
         // Find postings without amounts that must balance
         let mut null_amount_indices: Vec<usize> = Vec::new();
-        let mut balances: HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> = HashMap::new();
-        
+        let mut balances: HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> =
+            HashMap::new();
+
         for (i, posting) in self.postings.iter().enumerate() {
             if posting.must_balance() {
                 if posting.amount.is_none() {
                     null_amount_indices.push(i);
                 } else if let Some(ref amount) = posting.amount {
                     let commodity = amount.commodity().cloned();
-                    
+
                     let current_balance = balances.get(&commodity).unwrap_or(&Decimal::ZERO);
                     balances.insert(commodity, current_balance + amount.value());
                 }
             }
         }
-        
+
         // Can only auto-balance if exactly one posting per commodity is missing
         if null_amount_indices.len() > 1 {
             // Check if they're all the same commodity or can be inferred
             return Err("Cannot auto-balance: multiple postings without amounts".to_string());
         }
-        
+
         if null_amount_indices.len() == 1 {
             let posting_index = null_amount_indices[0];
-            
+
             // For now, assume single commodity transactions
             if balances.len() > 1 {
-                return Err("Cannot auto-balance multi-commodity transaction with missing amount".to_string());
+                return Err("Cannot auto-balance multi-commodity transaction with missing amount"
+                    .to_string());
             }
-            
+
             if balances.len() == 1 {
                 let (commodity, balance) = balances.iter().next().unwrap();
                 let missing_amount = -balance;
-                
+
                 // Set the calculated amount
                 let amount = if commodity.is_none() {
                     Amount::new(missing_amount)
                 } else {
                     Amount::with_commodity(missing_amount, commodity.clone())
                 };
-                
+
                 self.postings[posting_index].set_calculated_amount(amount);
             } else if balances.is_empty() {
                 // No amounts set yet - this is ok for now
                 return Ok(());
             }
         }
-        
+
         Ok(())
     }
 
@@ -368,7 +359,7 @@ impl Transaction {
         self.postings.iter().any(|p| p.is_virtual())
     }
 
-    /// Check if transaction has any deferred postings  
+    /// Check if transaction has any deferred postings
     pub fn has_deferred_postings(&self) -> bool {
         self.postings.iter().any(|p| p.is_deferred())
     }
@@ -393,25 +384,24 @@ impl Transaction {
         if self.postings.is_empty() {
             return Err("Transaction must have at least one posting".to_string());
         }
-        
+
         let balancing_postings = self.balancing_postings();
         if balancing_postings.len() < 2 && !self.has_virtual_postings() {
             return Err("Transaction must have at least two balancing postings".to_string());
         }
-        
+
         // Validate each posting
         for (i, posting) in self.postings.iter().enumerate() {
             if !posting.valid() {
                 return Err(format!("Posting {} is invalid: {}", i, posting.description()));
             }
-            
+
             // Check for duplicate accounts in balancing postings
             if posting.must_balance() {
                 let account_name = posting.account_name();
-                let duplicate_count = balancing_postings.iter()
-                    .filter(|p| p.account_name() == account_name)
-                    .count();
-                
+                let duplicate_count =
+                    balancing_postings.iter().filter(|p| p.account_name() == account_name).count();
+
                 if duplicate_count > 1 {
                     return Err(format!(
                         "Multiple balancing postings for account '{}' in transaction",
@@ -420,7 +410,7 @@ impl Transaction {
                 }
             }
         }
-        
+
         Ok(())
     }
 
@@ -522,15 +512,12 @@ impl TransactionBuilder {
     }
 
     /// Add metadata tag
-    pub fn tag<K, V>(mut self, key: K, value: Option<V>) -> Self 
+    pub fn tag<K, V>(mut self, key: K, value: Option<V>) -> Self
     where
         K: Into<String>,
         V: Into<String>,
     {
-        let tag_data = TagData {
-            value: value.map(|v| v.into()),
-            inherited: false,
-        };
+        let tag_data = TagData { value: value.map(|v| v.into()), inherited: false };
         self.metadata.insert(key.into(), tag_data);
         self
     }
@@ -548,8 +535,8 @@ impl TransactionBuilder {
     }
 
     /// Add a posting with account and amount
-    pub fn post_to<A>(mut self, account: A, amount: Amount) -> Self 
-    where 
+    pub fn post_to<A>(mut self, account: A, amount: Amount) -> Self
+    where
         A: Into<crate::account::AccountRef>,
     {
         let posting = Posting::with_amount(account.into(), amount);
@@ -558,8 +545,8 @@ impl TransactionBuilder {
     }
 
     /// Add a posting with account but no amount (to be calculated)
-    pub fn post_to_account<A>(mut self, account: A) -> Self 
-    where 
+    pub fn post_to_account<A>(mut self, account: A) -> Self
+    where
         A: Into<crate::account::AccountRef>,
     {
         let posting = Posting::new(account.into());
@@ -568,8 +555,8 @@ impl TransactionBuilder {
     }
 
     /// Add a virtual posting (enclosed in parentheses)
-    pub fn virtual_post_to<A>(mut self, account: A, amount: Amount) -> Self 
-    where 
+    pub fn virtual_post_to<A>(mut self, account: A, amount: Amount) -> Self
+    where
         A: Into<crate::account::AccountRef>,
     {
         let mut posting = Posting::with_amount(account.into(), amount);
@@ -579,8 +566,8 @@ impl TransactionBuilder {
     }
 
     /// Add a deferred posting (enclosed in angle brackets)
-    pub fn deferred_post_to<A>(mut self, account: A, amount: Amount) -> Self 
-    where 
+    pub fn deferred_post_to<A>(mut self, account: A, amount: Amount) -> Self
+    where
         A: Into<crate::account::AccountRef>,
     {
         let mut posting = Posting::with_amount(account.into(), amount);
@@ -697,10 +684,8 @@ impl Transaction {
                 if overwrite_existing || !self.metadata.contains_key(tag) {
                     self.set_tag(tag.to_string(), Some(value.to_string()), false);
                 }
-            } else {
-                if overwrite_existing || !self.metadata.contains_key(tag_pair) {
-                    self.set_tag(tag_pair.to_string(), None, false);
-                }
+            } else if overwrite_existing || !self.metadata.contains_key(tag_pair) {
+                self.set_tag(tag_pair.to_string(), None, false);
             }
         }
     }
@@ -715,7 +700,7 @@ impl Transaction {
         if self.metadata.is_empty() {
             return String::new();
         }
-        
+
         let mut parts: Vec<String> = Vec::new();
         for (key, tag_data) in &self.metadata {
             if let Some(ref value) = tag_data.value {
@@ -729,9 +714,7 @@ impl Transaction {
 
     /// Filter postings by metadata tag
     pub fn postings_with_tag(&self, tag: &str) -> Vec<&Posting> {
-        self.postings.iter()
-            .filter(|p| p.has_tag(tag, false))
-            .collect()
+        self.postings.iter().filter(|p| p.has_tag(tag, false)).collect()
     }
 
     /// Check if transaction has any posting with a specific tag
@@ -740,44 +723,49 @@ impl Transaction {
     }
 
     /// Get transaction total value for virtual postings (separate from balance)
-    pub fn virtual_balance(&self) -> HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> {
-        let mut balances: HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> = HashMap::new();
-        
+    pub fn virtual_balance(
+        &self,
+    ) -> HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> {
+        let mut balances: HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal> =
+            HashMap::new();
+
         for posting in self.virtual_postings() {
             if let Some(ref amount) = posting.amount {
                 let commodity = amount.commodity().cloned();
-                
+
                 let current_balance = balances.get(&commodity).unwrap_or(&Decimal::ZERO);
                 balances.insert(commodity, current_balance + amount.value());
             }
         }
-        
+
         balances
     }
 
     /// Create a virtual posting balance assertion
-    pub fn assert_virtual_balance(&self, expected_balances: &HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal>) -> Result<(), String> {
+    pub fn assert_virtual_balance(
+        &self,
+        expected_balances: &HashMap<Option<Arc<ledger_math::commodity::Commodity>>, Decimal>,
+    ) -> Result<(), String> {
         let actual_balances = self.virtual_balance();
-        
+
         for (commodity, expected) in expected_balances {
             let actual = actual_balances.get(commodity).unwrap_or(&Decimal::ZERO);
             if actual != expected {
-                let commodity_str = commodity.as_ref()
-                    .map(|c| c.symbol())
-                    .unwrap_or("(none)");
+                let commodity_str = commodity.as_ref().map(|c| c.symbol()).unwrap_or("(none)");
                 return Err(format!(
                     "Virtual balance assertion failed for commodity '{}': expected {}, got {}",
                     commodity_str, expected, actual
                 ));
             }
         }
-        
+
         Ok(())
     }
 
     /// Find postings by account pattern
     pub fn postings_for_account_pattern(&self, pattern: &str) -> Vec<&Posting> {
-        self.postings.iter()
+        self.postings
+            .iter()
             .filter(|p| {
                 let account_name = p.account_name();
                 account_name.contains(pattern) || account_name.starts_with(pattern)
@@ -788,7 +776,7 @@ impl Transaction {
     /// Get postings sorted by account name
     pub fn postings_sorted_by_account(&self) -> Vec<&Posting> {
         let mut postings: Vec<&Posting> = self.postings.iter().collect();
-        postings.sort_by(|a, b| a.account_name().cmp(&b.account_name()));
+        postings.sort_by_key(|a| a.account_name());
         postings
     }
 
@@ -824,11 +812,9 @@ impl Transaction {
 
     /// Clone transaction with only virtual postings
     pub fn virtual_only_clone(&self) -> Transaction {
-        let virtual_postings: Vec<Posting> = self.postings.iter()
-            .filter(|p| p.is_virtual())
-            .cloned()
-            .collect();
-        
+        let virtual_postings: Vec<Posting> =
+            self.postings.iter().filter(|p| p.is_virtual()).cloned().collect();
+
         Transaction {
             date: self.date,
             aux_date: self.aux_date,
@@ -847,11 +833,9 @@ impl Transaction {
 
     /// Clone transaction with only balancing postings
     pub fn balancing_only_clone(&self) -> Transaction {
-        let balancing_postings: Vec<Posting> = self.postings.iter()
-            .filter(|p| p.must_balance())
-            .cloned()
-            .collect();
-        
+        let balancing_postings: Vec<Posting> =
+            self.postings.iter().filter(|p| p.must_balance()).cloned().collect();
+
         Transaction {
             date: self.date,
             aux_date: self.aux_date,
@@ -872,21 +856,19 @@ impl Transaction {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::account::{AccountTree, AccountRef};
+    use crate::account::{AccountRef, AccountTree};
     use ledger_math::commodity::Commodity;
     use rust_decimal::Decimal;
-    use std::rc::Rc;
-    use std::cell::RefCell;
     use std::sync::Arc;
 
     fn usd_commodity() -> Option<Arc<Commodity>> {
         Some(Arc::new(Commodity::new("USD")))
     }
-    
+
     fn eur_commodity() -> Option<Arc<Commodity>> {
         Some(Arc::new(Commodity::new("EUR")))
     }
-    
+
     fn create_test_accounts() -> (AccountRef, AccountRef) {
         let mut tree = AccountTree::new();
         let assets = tree.find_account("Assets:Checking", true).unwrap();
@@ -898,7 +880,7 @@ mod tests {
     fn test_transaction_creation() {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
         let transaction = Transaction::new(date, "Test Payee".to_string());
-        
+
         assert_eq!(transaction.date, date);
         assert_eq!(transaction.payee, "Test Payee");
         assert_eq!(transaction.status, TransactionStatus::Uncleared);
@@ -910,14 +892,14 @@ mod tests {
     fn test_transaction_builder_basic() {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
         let (assets, expenses) = create_test_accounts();
-        
+
         let result = Transaction::builder(date, "Grocery Store".to_string())
             .code("CHECK123")
             .status(TransactionStatus::Cleared)
             .post_to(assets, Amount::with_commodity(Decimal::from(-50), usd_commodity()))
             .post_to(expenses, Amount::with_commodity(Decimal::from(50), usd_commodity()))
             .build();
-        
+
         assert!(result.is_ok());
         let transaction = result.unwrap();
         assert_eq!(transaction.payee, "Grocery Store");
@@ -930,16 +912,16 @@ mod tests {
     fn test_transaction_builder_auto_balance() {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
         let (assets, expenses) = create_test_accounts();
-        
+
         let result = Transaction::builder(date, "Auto Balance Test".to_string())
             .post_to(assets, Amount::with_commodity(Decimal::from(-75), usd_commodity()))
             .post_to_account(expenses) // No amount - should be calculated
             .build();
-        
+
         assert!(result.is_ok());
         let transaction = result.unwrap();
         assert_eq!(transaction.postings.len(), 2);
-        
+
         // Second posting should have calculated amount
         assert!(transaction.postings[1].is_calculated());
         if let Some(ref amount) = transaction.postings[1].amount {
@@ -951,13 +933,13 @@ mod tests {
     fn test_transaction_balance_validation() {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
         let (assets, expenses) = create_test_accounts();
-        
+
         // Unbalanced transaction should fail
         let result = Transaction::builder(date, "Unbalanced".to_string())
             .post_to(assets, Amount::with_commodity(Decimal::from(-50), usd_commodity()))
             .post_to(expenses, Amount::with_commodity(Decimal::from(60), usd_commodity())) // Wrong amount
             .build();
-        
+
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("does not balance"));
     }
@@ -967,13 +949,16 @@ mod tests {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
         let (assets, expenses) = create_test_accounts();
         let virtual_account = create_test_accounts().0; // Use as virtual
-        
+
         let result = Transaction::builder(date, "Virtual Test".to_string())
             .post_to(assets, Amount::with_commodity(Decimal::from(-100), usd_commodity()))
             .post_to(expenses, Amount::with_commodity(Decimal::from(100), usd_commodity()))
-            .virtual_post_to(virtual_account, Amount::with_commodity(Decimal::from(25), usd_commodity()))
+            .virtual_post_to(
+                virtual_account,
+                Amount::with_commodity(Decimal::from(25), usd_commodity()),
+            )
             .build();
-        
+
         assert!(result.is_ok());
         let transaction = result.unwrap();
         assert!(transaction.has_virtual_postings());
@@ -985,7 +970,7 @@ mod tests {
     fn test_transaction_metadata() {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
         let (assets, expenses) = create_test_accounts();
-        
+
         let result = Transaction::builder(date, "Metadata Test".to_string())
             .tag("category", Some("groceries"))
             .tag("project", Some("household"))
@@ -993,13 +978,13 @@ mod tests {
             .post_to(assets, Amount::with_commodity(Decimal::from(-50), usd_commodity()))
             .post_to(expenses, Amount::with_commodity(Decimal::from(50), usd_commodity()))
             .build();
-        
+
         assert!(result.is_ok());
         let transaction = result.unwrap();
         assert!(transaction.has_tag("category"));
         assert!(transaction.has_tag("project"));
         assert!(transaction.has_tag("important"));
-        
+
         let category = transaction.get_tag("category").unwrap();
         assert_eq!(category.value, Some("groceries".to_string()));
     }
@@ -1008,25 +993,25 @@ mod tests {
     fn test_transaction_verify_balance() {
         let (assets, expenses) = create_test_accounts();
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
-        
+
         let mut transaction = Transaction::new(date, "Balance Test".to_string());
         transaction.add_posting(Posting::with_amount(
             assets,
-            Amount::with_commodity(Decimal::from(-100), usd_commodity())
+            Amount::with_commodity(Decimal::from(-100), usd_commodity()),
         ));
         transaction.add_posting(Posting::with_amount(
             expenses,
-            Amount::with_commodity(Decimal::from(100), usd_commodity())
+            Amount::with_commodity(Decimal::from(100), usd_commodity()),
         ));
-        
+
         assert!(transaction.verify_balance().is_ok());
-        
+
         // Add unbalancing posting
         transaction.add_posting(Posting::with_amount(
             create_test_accounts().0,
-            Amount::with_commodity(Decimal::from(10), usd_commodity())
+            Amount::with_commodity(Decimal::from(10), usd_commodity()),
         ));
-        
+
         assert!(transaction.verify_balance().is_err());
     }
 
@@ -1035,17 +1020,20 @@ mod tests {
         let (assets_usd, assets_eur) = create_test_accounts();
         let (expenses, _) = create_test_accounts();
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
-        
+
         let result = Transaction::builder(date, "Multi-Currency".to_string())
             .post_to(assets_usd, Amount::with_commodity(Decimal::from(-100), usd_commodity()))
             .post_to(expenses, Amount::with_commodity(Decimal::from(100), usd_commodity()))
             .post_to(assets_eur, Amount::with_commodity(Decimal::from(-50), eur_commodity()))
-            .post_to(create_test_accounts().1, Amount::with_commodity(Decimal::from(50), eur_commodity()))
+            .post_to(
+                create_test_accounts().1,
+                Amount::with_commodity(Decimal::from(50), eur_commodity()),
+            )
             .build();
-        
+
         assert!(result.is_ok());
         let transaction = result.unwrap();
-        
+
         let magnitude = transaction.magnitude();
         assert_eq!(magnitude.get(&usd_commodity()), Some(&Decimal::from(200))); // 100 + 100
         assert_eq!(magnitude.get(&eur_commodity()), Some(&Decimal::from(100))); // 50 + 50
@@ -1055,16 +1043,16 @@ mod tests {
     fn test_transaction_finalize() {
         let (assets, expenses) = create_test_accounts();
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
-        
+
         let mut transaction = Transaction::new(date, "Finalize Test".to_string());
         transaction.add_posting(Posting::with_amount(
             assets,
-            Amount::with_commodity(Decimal::from(-80), usd_commodity())
+            Amount::with_commodity(Decimal::from(-80), usd_commodity()),
         ));
         transaction.add_posting(Posting::new(expenses)); // No amount
-        
+
         assert!(transaction.finalize().is_ok());
-        
+
         // Should have auto-calculated the missing amount
         if let Some(ref amount) = transaction.postings[1].amount {
             assert_eq!(amount.value(), Decimal::from(80));
@@ -1074,17 +1062,17 @@ mod tests {
     #[test]
     fn test_transaction_validation_failures() {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
-        
+
         // Empty transaction should fail
         let mut empty = Transaction::new(date, "Empty".to_string());
         assert!(empty.finalize().is_err());
-        
+
         // Single posting should fail
         let (assets, _) = create_test_accounts();
         let mut single = Transaction::new(date, "Single".to_string());
         single.add_posting(Posting::with_amount(
             assets,
-            Amount::with_commodity(Decimal::from(100), usd_commodity())
+            Amount::with_commodity(Decimal::from(100), usd_commodity()),
         ));
         assert!(single.finalize().is_err());
     }
@@ -1093,18 +1081,18 @@ mod tests {
     fn test_posting_flags() {
         let (account, _) = create_test_accounts();
         let mut posting = Posting::new(account);
-        
+
         assert!(!posting.is_virtual());
         assert!(!posting.is_calculated());
         assert!(posting.must_balance());
-        
+
         posting.add_flags(PostingFlags::VIRTUAL);
         assert!(posting.is_virtual());
         assert!(!posting.must_balance()); // Virtual postings don't balance by default
-        
+
         posting.add_flags(PostingFlags::MUST_BALANCE);
         assert!(posting.must_balance()); // Now it must balance
-        
+
         posting.add_flags(PostingFlags::CALCULATED);
         assert!(posting.is_calculated());
     }
@@ -1113,16 +1101,16 @@ mod tests {
     fn test_posting_metadata() {
         let (account, _) = create_test_accounts();
         let mut posting = Posting::new(account);
-        
+
         posting.set_tag("receipt".to_string(), Some("12345".to_string()), false);
         posting.set_tag("category".to_string(), Some("food".to_string()), false);
         posting.set_tag("verified".to_string(), None, false);
-        
+
         assert!(posting.has_tag("receipt", false));
         assert!(posting.has_tag("category", false));
         assert!(posting.has_tag("verified", false));
         assert!(!posting.has_tag("nonexistent", false));
-        
+
         let receipt = posting.get_tag("receipt", false).unwrap();
         assert_eq!(receipt.value, Some("12345".to_string()));
     }
@@ -1131,12 +1119,12 @@ mod tests {
     fn test_posting_extended_data() {
         let (account, _) = create_test_accounts();
         let mut posting = Posting::new(account);
-        
+
         assert!(!posting.has_xdata());
-        
+
         posting.ensure_xdata();
         assert!(posting.has_xdata());
-        
+
         posting.clear_xdata();
         assert!(!posting.has_xdata());
     }
@@ -1145,16 +1133,16 @@ mod tests {
     fn test_transaction_tag_parsing() {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
         let mut transaction = Transaction::new(date, "Tag Parse Test".to_string());
-        
+
         transaction.parse_and_add_tags("category:food,project:home,urgent", false);
-        
+
         assert!(transaction.has_tag("category"));
         assert!(transaction.has_tag("project"));
         assert!(transaction.has_tag("urgent"));
-        
+
         let category = transaction.get_tag("category").unwrap();
         assert_eq!(category.value, Some("food".to_string()));
-        
+
         let urgent = transaction.get_tag("urgent").unwrap();
         assert_eq!(urgent.value, None);
     }
@@ -1164,19 +1152,26 @@ mod tests {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
         let (assets, expenses) = create_test_accounts();
         let virtual_account = create_test_accounts().0;
-        
+
         let result = Transaction::builder(date, "Virtual Balance Test".to_string())
             .post_to(assets, Amount::with_commodity(Decimal::from(-100), usd_commodity()))
             .post_to(expenses, Amount::with_commodity(Decimal::from(100), usd_commodity()))
-            .virtual_post_to(virtual_account.clone(), Amount::with_commodity(Decimal::from(25), usd_commodity()))
-            .virtual_post_to(virtual_account, Amount::with_commodity(Decimal::from(-10), usd_commodity()))
+            .virtual_post_to(
+                virtual_account.clone(),
+                Amount::with_commodity(Decimal::from(25), usd_commodity()),
+            )
+            .virtual_post_to(
+                virtual_account,
+                Amount::with_commodity(Decimal::from(-10), usd_commodity()),
+            )
             .build();
-        
+
         assert!(result.is_ok());
         let transaction = result.unwrap();
-        
+
         let virtual_balance = transaction.virtual_balance();
-        assert_eq!(virtual_balance.get(&usd_commodity()), Some(&Decimal::from(15))); // 25 - 10
+        assert_eq!(virtual_balance.get(&usd_commodity()), Some(&Decimal::from(15)));
+        // 25 - 10
     }
 
     #[test]
@@ -1184,19 +1179,19 @@ mod tests {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
         let (assets, expenses) = create_test_accounts();
         let (income, _) = create_test_accounts();
-        
+
         let result = Transaction::builder(date, "Sorting Test".to_string())
             .post_to(expenses.clone(), Amount::with_commodity(Decimal::from(50), usd_commodity()))
             .post_to(assets.clone(), Amount::with_commodity(Decimal::from(-100), usd_commodity()))
             .post_to(income, Amount::with_commodity(Decimal::from(50), usd_commodity()))
             .build();
-        
+
         assert!(result.is_ok());
         let transaction = result.unwrap();
-        
+
         let sorted_by_account = transaction.postings_sorted_by_account();
         assert_eq!(sorted_by_account.len(), 3);
-        
+
         let sorted_by_amount = transaction.postings_sorted_by_amount();
         assert_eq!(sorted_by_amount.len(), 3);
         // Should be sorted in descending order by absolute value
@@ -1207,20 +1202,23 @@ mod tests {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
         let (assets, expenses) = create_test_accounts();
         let virtual_account = create_test_accounts().0;
-        
+
         let result = Transaction::builder(date, "Clone Test".to_string())
             .post_to(assets, Amount::with_commodity(Decimal::from(-100), usd_commodity()))
             .post_to(expenses, Amount::with_commodity(Decimal::from(100), usd_commodity()))
-            .virtual_post_to(virtual_account, Amount::with_commodity(Decimal::from(25), usd_commodity()))
+            .virtual_post_to(
+                virtual_account,
+                Amount::with_commodity(Decimal::from(25), usd_commodity()),
+            )
             .build();
-        
+
         assert!(result.is_ok());
         let transaction = result.unwrap();
-        
+
         let virtual_only = transaction.virtual_only_clone();
         assert_eq!(virtual_only.postings.len(), 1);
         assert!(virtual_only.postings[0].is_virtual());
-        
+
         let balancing_only = transaction.balancing_only_clone();
         assert_eq!(balancing_only.postings.len(), 2);
         assert!(!balancing_only.postings[0].is_virtual());
@@ -1231,19 +1229,21 @@ mod tests {
     fn test_builder_validation_methods() {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
         let (assets, expenses) = create_test_accounts();
-        
+
         let mut builder = Transaction::builder(date, "Validation Test".to_string())
             .post_to(assets, Amount::with_commodity(Decimal::from(-100), usd_commodity()))
             .post_to(expenses, Amount::with_commodity(Decimal::from(100), usd_commodity()));
-        
+
         assert!(builder.is_balanced());
         assert_eq!(builder.posting_count(), 2);
         assert!(builder.validate().is_ok());
-        
+
         // Add unbalancing posting
-        builder = builder.post_to(create_test_accounts().0, 
-            Amount::with_commodity(Decimal::from(10), usd_commodity()));
-        
+        builder = builder.post_to(
+            create_test_accounts().0,
+            Amount::with_commodity(Decimal::from(10), usd_commodity()),
+        );
+
         assert!(!builder.is_balanced());
         assert!(builder.validate().is_err());
     }
@@ -1255,7 +1255,7 @@ mod tests {
         let (food, _) = create_test_accounts();
         let (tax, _) = create_test_accounts();
         let (budget_virtual, _) = create_test_accounts();
-        
+
         let result = Transaction::builder(date, "Restaurant with tax and budget tracking".to_string())
             .code("VISA4567")
             .status(TransactionStatus::Pending)
@@ -1269,22 +1269,22 @@ mod tests {
             .virtual_post_to(budget_virtual.clone(), Amount::with_commodity(Decimal::from(-5425), usd_commodity()))
             .virtual_post_to(budget_virtual, Amount::with_commodity(Decimal::from(5425), usd_commodity()))
             .build();
-        
+
         assert!(result.is_ok());
         let transaction = result.unwrap();
-        
+
         // Verify transaction properties
         assert_eq!(transaction.code, Some("VISA4567".to_string()));
         assert_eq!(transaction.status, TransactionStatus::Pending);
         assert_eq!(transaction.aux_date, Some(NaiveDate::from_ymd_opt(2024, 1, 16).unwrap()));
         assert!(transaction.has_tag("category"));
         assert!(transaction.has_virtual_postings());
-        
+
         // Verify balances
         assert!(transaction.verify_balance().is_ok());
         let virtual_balance = transaction.virtual_balance();
         assert_eq!(virtual_balance.get(&usd_commodity()), Some(&Decimal::from(0))); // Virtual postings balance
-        
+
         // Verify postings
         assert_eq!(transaction.postings.len(), 5);
         assert_eq!(transaction.balancing_postings().len(), 3);

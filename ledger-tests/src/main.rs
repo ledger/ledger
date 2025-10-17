@@ -3,11 +3,7 @@
 use clap::Parser;
 use std::process;
 
-use ledger_tests::{
-    config::TestConfig,
-    harness::LedgerHarness,
-    TestError,
-};
+use ledger_tests::{config::TestConfig, harness::LedgerHarness};
 
 #[tokio::main]
 async fn main() {
@@ -32,11 +28,11 @@ async fn main() {
             if !harness.config().quiet {
                 report.print_summary();
             }
-            
+
             if harness.config().verbose {
                 report.print_detailed();
             }
-            
+
             // Exit with non-zero if tests failed
             if !report.statistics.all_passed() {
                 process::exit(1);

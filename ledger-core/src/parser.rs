@@ -12,9 +12,7 @@ use ledger_math::CommodityFlags;
 use nom::{
     branch::alt,
     bytes::complete::{take_until, take_while, take_while1},
-    character::complete::{
-        alpha1, digit1, line_ending, space0, space1, char,
-    },
+    character::complete::{alpha1, digit1, line_ending, space0, space1},
     combinator::{map, opt, recognize, value},
     error::{context, ParseError},
     multi::many0,
@@ -23,22 +21,17 @@ use nom::{
 };
 
 // We need to use bytes for tag with byte strings
-use nom::bytes::complete::tag as bytes_tag;
 
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use std::io::{BufRead, BufReader};
-use std::fs::File;
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::collections::HashMap;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::{
-    account::Account,
-    amount::Amount, 
-    commodity::Commodity,
-    journal::Journal,
-    posting::Posting,
+    account::Account, amount::Amount, commodity::Commodity, journal::Journal, posting::Posting,
     transaction::Transaction,
 };
 
@@ -51,16 +44,13 @@ pub enum JournalParseError {
     ParseError {
         filename: PathBuf,
         line: usize,
-        column: usize, 
+        column: usize,
         message: String,
         context: Option<String>,
         suggestion: Option<String>,
     },
     #[error("Include cycle detected: {path}\nInclude stack: {}", include_stack.iter().map(|p| p.display().to_string()).collect::<Vec<_>>().join(" -> "))]
-    IncludeCycle { 
-        path: PathBuf,
-        include_stack: Vec<PathBuf>, 
-    },
+    IncludeCycle { path: PathBuf, include_stack: Vec<PathBuf> },
     #[error("File not found: {path}")]
     FileNotFound { path: PathBuf },
     #[error("IO error reading {path}: {source}")]
@@ -86,7 +76,7 @@ pub enum JournalParseError {
     },
 }
 
-/// Custom error type for detailed error reporting  
+/// Custom error type for detailed error reporting
 pub type VerboseError<I> = nom::error::VerboseError<I>;
 
 /// Result type for parsing operations
@@ -95,8 +85,8 @@ type ParseResult<'a, T> = IResult<&'a str, T, VerboseError<&'a str>>;
 // Helper function for string tags that works with VerboseError
 fn tag<'a>(s: &'a str) -> impl Fn(&'a str) -> ParseResult<'a, &'a str> + 'a {
     move |input: &'a str| {
-        if input.starts_with(s) {
-            Ok((&input[s.len()..], &input[..s.len()]))
+        if let Some(stripped) = input.strip_prefix(s) {
+            Ok((stripped, s))
         } else {
             Err(nom::Err::Error(VerboseError::from_error_kind(input, nom::error::ErrorKind::Tag)))
         }
@@ -110,7 +100,7 @@ pub struct ParseContext {
     pub filename: PathBuf,
     /// Current line number
     pub line: usize,
-    /// Current column number  
+    /// Current column number
     pub column: usize,
     /// Include stack for cycle detection
     pub include_stack: Vec<PathBuf>,
@@ -133,7 +123,7 @@ impl Default for ParseContext {
             line: 1,
             column: 1,
             include_stack: Vec::new(),
-            apply_stack: Vec::new(), 
+            apply_stack: Vec::new(),
             current_year: None,
             default_account: None,
             commodity_aliases: HashMap::new(),
@@ -157,10 +147,7 @@ pub enum JournalEntry {
     Transaction(Transaction),
     Directive(Directive),
     Comment(String),
-    MetadataComment {
-        comment: String,
-        metadata: HashMap<String, String>,
-    },
+    MetadataComment { comment: String, metadata: HashMap<String, String> },
     EmptyLine,
 }
 
@@ -186,7 +173,7 @@ pub enum Directive {
     Check {
         condition: String,
     },
-    
+
     // Commodity directives
     Commodity {
         symbol: String,
@@ -195,14 +182,14 @@ pub enum Directive {
     DefaultCommodity {
         symbol: String,
     },
-    
+
     // Price directives
     Price {
         date: NaiveDate,
         commodity: String,
         price: Amount,
     },
-    
+
     // Include directives
     Include {
         path: PathBuf,
@@ -211,24 +198,24 @@ pub enum Directive {
         condition: String,
         path: PathBuf,
     },
-    
+
     // Payee directives
     Payee {
         name: String,
         declarations: Vec<PayeeDeclaration>,
     },
-    
+
     // Tag directives
     Tag {
         name: String,
     },
-    
+
     // Option directives
     Option {
         name: String,
         value: String,
     },
-    
+
     // Evaluation directives
     Eval {
         expression: String,
@@ -237,12 +224,12 @@ pub enum Directive {
         name: String,
         expression: String,
     },
-    
+
     // Year directive
     Year {
         year: i32,
     },
-    
+
     // Periodic and automated transactions
     PeriodicTransaction {
         period: String,
@@ -267,7 +254,7 @@ pub enum AccountDeclaration {
     Default,
 }
 
-/// Commodity declaration sub-directives  
+/// Commodity declaration sub-directives
 #[derive(Debug, Clone)]
 pub enum CommodityDeclaration {
     Alias(String),
@@ -291,56 +278,54 @@ pub struct JournalParser {
 impl JournalParser {
     /// Create a new parser with default context
     pub fn new() -> Self {
-        JournalParser {
-            context: ParseContext::default(),
-        }
+        JournalParser { context: ParseContext::default() }
     }
-    
+
     /// Create a parser with specified filename
     pub fn with_file<P: AsRef<Path>>(filename: P) -> Self {
         let mut parser = Self::new();
         parser.context.filename = filename.as_ref().to_path_buf();
         parser
     }
-    
+
     /// Parse a file with include resolution
     pub fn parse_file<P: AsRef<Path>>(&mut self, path: P) -> Result<Journal, JournalParseError> {
         let path_buf = path.as_ref().to_path_buf();
-        
+
         // Check for include cycles
         if self.context.include_stack.contains(&path_buf) {
-            return Err(JournalParseError::IncludeCycle { 
+            return Err(JournalParseError::IncludeCycle {
                 path: path_buf,
                 include_stack: self.context.include_stack.clone(),
             });
         }
-        
+
         // Read file contents
         let contents = std::fs::read_to_string(&path_buf)
             .map_err(|e| JournalParseError::IoError { path: path_buf.clone(), source: e })?;
-        
+
         // Update context
         let old_filename = self.context.filename.clone();
         self.context.filename = path_buf.clone();
         self.context.include_stack.push(path_buf);
-        
+
         // Parse the file
         let result = self.parse_journal(&contents);
-        
+
         // Restore context
         self.context.filename = old_filename;
         self.context.include_stack.pop();
-        
+
         result
     }
-    
+
     /// Parse a complete journal from a string
     pub fn parse_journal(&mut self, input: &str) -> Result<Journal, JournalParseError> {
         let entries = self.parse_entries(input)?;
         let journal = self.build_journal(entries)?;
         Ok(journal)
     }
-    
+
     /// Parse entries from input string with enhanced error reporting
     pub fn parse_entries(&mut self, input: &str) -> Result<Vec<JournalEntry>, JournalParseError> {
         match journal_entries_with_recovery(input, &mut self.context) {
@@ -356,29 +341,29 @@ impl JournalParser {
                     suggestion: error_info.suggestion,
                 })
             }
-            Err(nom::Err::Incomplete(_)) => {
-                Err(JournalParseError::ParseError {
-                    filename: self.context.filename.clone(),
-                    line: self.context.line,
-                    column: self.context.column,
-                    message: "Incomplete input - possibly missing data".to_string(),
-                    context: None,
-                    suggestion: Some("Check if the file is complete and properly formatted".to_string()),
-                })
-            }
+            Err(nom::Err::Incomplete(_)) => Err(JournalParseError::ParseError {
+                filename: self.context.filename.clone(),
+                line: self.context.line,
+                column: self.context.column,
+                message: "Incomplete input - possibly missing data".to_string(),
+                context: None,
+                suggestion: Some(
+                    "Check if the file is complete and properly formatted".to_string(),
+                ),
+            }),
         }
     }
-    
+
     /// Build journal from parsed entries
     fn build_journal(&mut self, entries: Vec<JournalEntry>) -> Result<Journal, JournalParseError> {
         let mut journal = Journal::new();
-        
+
         for entry in entries {
             match entry {
                 JournalEntry::Transaction(transaction) => {
                     // Register accounts and commodities from transaction before adding
                     self.register_transaction_accounts_and_commodities(&mut journal, &transaction);
-                    
+
                     // Validate transaction before adding
                     match self.validate_transaction(&transaction) {
                         Ok(_) => journal.add_transaction(transaction),
@@ -400,29 +385,33 @@ impl JournalParser {
                 }
             }
         }
-        
+
         Ok(journal)
     }
-    
+
     /// Register accounts and commodities from a transaction
-    fn register_transaction_accounts_and_commodities(&mut self, journal: &mut Journal, transaction: &Transaction) {
+    fn register_transaction_accounts_and_commodities(
+        &mut self,
+        journal: &mut Journal,
+        transaction: &Transaction,
+    ) {
         for posting in &transaction.postings {
             // Get the account name from the posting
             let account_name = {
                 let account = posting.account.borrow();
                 account.name().to_string()
             };
-            
+
             // Ensure the account exists in the journal
             // This will create it if it doesn't exist
             let _ = journal.get_or_create_account(&account_name);
-            
+
             // Register commodity from the amount if present
             if let Some(amount) = &posting.amount {
                 if let Some(commodity_ref) = amount.commodity() {
                     let commodity = commodity_ref.clone();
                     let symbol = commodity.symbol().to_string();
-                    
+
                     // Add commodity if it doesn't exist in the journal
                     if !journal.commodities.contains_key(&symbol) {
                         journal.commodities.insert(symbol.clone(), commodity.clone());
@@ -433,13 +422,17 @@ impl JournalParser {
     }
 
     /// Process a parsed directive with include handling
-    fn process_directive(&mut self, journal: &mut Journal, directive: Directive) -> Result<(), JournalParseError> {
+    fn process_directive(
+        &mut self,
+        journal: &mut Journal,
+        directive: Directive,
+    ) -> Result<(), JournalParseError> {
         match directive {
             Directive::Account { name, declarations } => {
                 let account = Account::new(name.clone().into(), None, 0);
                 for decl in declarations {
                     match decl {
-                        AccountDeclaration::Alias(alias) => {
+                        AccountDeclaration::Alias(_alias) => {
                             // journal.add_account_alias(alias, name.clone());
                         }
                         AccountDeclaration::Default => {
@@ -449,7 +442,8 @@ impl JournalParser {
                         _ => {}
                     }
                 }
-                journal.add_account(Rc::new(RefCell::new(account)));
+                // TODO: error logging
+                let _ = journal.add_account(Rc::new(RefCell::new(account)));
             }
             Directive::Commodity { symbol, declarations } => {
                 let mut commodity = Commodity::new(&symbol);
@@ -465,7 +459,8 @@ impl JournalParser {
                         _ => {}
                     }
                 }
-                journal.add_commodity(Arc::new(commodity));
+                // TODO: error logging
+                let _ = journal.add_commodity(Arc::new(commodity));
             }
             Directive::Include { path } => {
                 self.process_include_file(journal, &path)?;
@@ -476,87 +471,87 @@ impl JournalParser {
                     self.process_include_file(journal, &path)?;
                 }
             }
-            Directive::PeriodicTransaction { period, postings, metadata } => {
+            Directive::PeriodicTransaction { period, postings, metadata: _ } => {
                 // TODO: Process periodic transaction
                 // For now, just log that we found one
                 println!("Found periodic transaction: {} with {} postings", period, postings.len());
             }
-            Directive::AutomatedTransaction { condition, postings, metadata } => {
-                // TODO: Process automated transaction  
+            Directive::AutomatedTransaction { condition, postings, metadata: _ } => {
+                // TODO: Process automated transaction
                 // For now, just log that we found one
-                println!("Found automated transaction: {} with {} postings", condition, postings.len());
+                println!(
+                    "Found automated transaction: {} with {} postings",
+                    condition,
+                    postings.len()
+                );
             }
             // Handle other directives
             _ => {}
         }
-        
+
         Ok(())
     }
-    
+
     /// Process an include file with path resolution
-    fn process_include_file(&mut self, journal: &mut Journal, path: &PathBuf) -> Result<(), JournalParseError> {
+    fn process_include_file(
+        &mut self,
+        journal: &mut Journal,
+        path: &PathBuf,
+    ) -> Result<(), JournalParseError> {
         // Resolve relative paths
         let include_path = if path.is_absolute() {
             path.clone()
         } else {
-            self.context.filename.parent()
-                .unwrap_or_else(|| Path::new(""))
-                .join(&path)
+            self.context.filename.parent().unwrap_or_else(|| Path::new("")).join(path)
         };
-        
+
         // Parse included file and merge
         let included_journal = self.parse_file(&include_path)?;
-        
+
         // Merge the included journal into the current one
-        journal.merge(included_journal);
-        
+        // TODO: error logging
+        let _ = journal.merge(included_journal);
+
         Ok(())
     }
-    
+
     /// Check if a conditional include should be processed
     fn should_include_conditional(&self, condition: &str) -> bool {
         // TODO: Implement proper condition evaluation
         // For now, evaluate simple conditions like file existence
-        
+
         if condition.starts_with("exists(") && condition.ends_with(")") {
-            let file_path = &condition[7..condition.len()-1];
+            let file_path = &condition[7..condition.len() - 1];
             let path = PathBuf::from(file_path.trim_matches('"'));
-            
+
             let resolved_path = if path.is_absolute() {
                 path
             } else {
-                self.context.filename.parent()
-                    .unwrap_or_else(|| Path::new(""))
-                    .join(&path)
+                self.context.filename.parent().unwrap_or_else(|| Path::new("")).join(&path)
             };
-            
+
             return resolved_path.exists();
         }
-        
+
         // Default to true for unknown conditions
         true
     }
-    
+
     /// Extract detailed error context from parse failure
     fn extract_error_context(&self, input: &str, error: &VerboseError<&str>) -> ErrorContext {
         // Get line and column information
-        let (line, column) = self.get_line_column(input, error.errors.get(0).map(|(s, _)| s).unwrap_or(&input));
-        
+        let (line, column) =
+            self.get_line_column(input, error.errors.first().map(|(s, _)| s).unwrap_or(&input));
+
         // Extract context around the error
         let context = self.get_error_context_string(input, line, column);
-        
+
         // Generate helpful error message and suggestions
         let (message, suggestion) = self.generate_error_message_and_suggestion(error);
-        
-        ErrorContext {
-            line,
-            column,
-            message,
-            context: Some(context),
-            suggestion,
-        }
+
+        ErrorContext { line, column, message, context: Some(context), suggestion }
     }
-    
+
     /// Get line and column from input position
     fn get_line_column(&self, input: &str, error_pos: &str) -> (usize, usize) {
         let error_offset = input.len() - error_pos.len();
@@ -565,19 +560,19 @@ impl JournalParser {
         let column = lines.last().map(|l| l.len()).unwrap_or(0) + 1;
         (line, column)
     }
-    
+
     /// Get context string around error position
     fn get_error_context_string(&self, input: &str, line: usize, column: usize) -> String {
         let lines: Vec<&str> = input.lines().collect();
         let mut context = Vec::new();
-        
+
         // Show 2 lines before error
         for i in (line.saturating_sub(3))..line.saturating_sub(1) {
             if i < lines.len() {
                 context.push(format!("{:4} | {}", i + 1, lines[i]));
             }
         }
-        
+
         // Show error line with pointer
         if line <= lines.len() {
             let error_line = lines.get(line.saturating_sub(1)).unwrap_or(&"");
@@ -585,23 +580,26 @@ impl JournalParser {
             let pointer = format!("{:4} | {}^", "", " ".repeat(column.saturating_sub(1)));
             context.push(pointer);
         }
-        
+
         // Show 1 line after error
         if line < lines.len() {
             context.push(format!("{:4} | {}", line + 1, lines[line]));
         }
-        
+
         context.join("\n")
     }
-    
+
     /// Generate helpful error messages and suggestions
-    fn generate_error_message_and_suggestion(&self, error: &VerboseError<&str>) -> (String, Option<String>) {
+    fn generate_error_message_and_suggestion(
+        &self,
+        error: &VerboseError<&str>,
+    ) -> (String, Option<String>) {
         if let Some((_, kind)) = error.errors.first() {
             match kind {
-                nom::error::VerboseErrorKind::Char(c) => {
-                    (format!("Expected character '{}'", c), 
-                     Some("Check for missing punctuation or incorrect syntax".to_string()))
-                }
+                nom::error::VerboseErrorKind::Char(c) => (
+                    format!("Expected character '{}'", c),
+                    Some("Check for missing punctuation or incorrect syntax".to_string()),
+                ),
                 nom::error::VerboseErrorKind::Context(ctx) => {
                     let suggestion = match *ctx {
                         "transaction" => Some("Ensure transaction starts with a valid date and has proper indentation for postings".to_string()),
@@ -611,16 +609,16 @@ impl JournalParser {
                     };
                     (format!("Error in {}", ctx), suggestion)
                 }
-                nom::error::VerboseErrorKind::Nom(nom_error) => {
-                    (format!("Parse error: {:?}", nom_error),
-                     Some("Check the input format and syntax".to_string()))
-                }
+                nom::error::VerboseErrorKind::Nom(nom_error) => (
+                    format!("Parse error: {:?}", nom_error),
+                    Some("Check the input format and syntax".to_string()),
+                ),
             }
         } else {
             ("Unknown parse error".to_string(), None)
         }
     }
-    
+
     /// Validate a transaction for common errors
     fn validate_transaction(&self, transaction: &Transaction) -> Result<(), JournalParseError> {
         // Check for empty transaction
@@ -632,7 +630,7 @@ impl JournalParser {
                 transaction_description: transaction.payee.clone(),
             });
         }
-        
+
         // Check for unbalanced transaction (simplified check)
         if let Err(balance_error) = self.check_transaction_balance(transaction) {
             return Err(JournalParseError::UnbalancedTransaction {
@@ -643,32 +641,35 @@ impl JournalParser {
                 difference: balance_error.difference,
             });
         }
-        
+
         Ok(())
     }
-    
+
     /// Check transaction balance (simplified implementation)
-    fn check_transaction_balance(&self, transaction: &Transaction) -> Result<(), TransactionBalanceError> {
+    fn check_transaction_balance(
+        &self,
+        transaction: &Transaction,
+    ) -> Result<(), TransactionBalanceError> {
         // TODO: Implement proper balance checking with commodities
         // For now, just check if there are at least 2 postings or one with no amount
-        
+
         let posting_count = transaction.postings.len();
-        let postings_with_amounts = transaction.postings.iter()
-            .filter(|p| p.amount.is_some())
-            .count();
-        
+        let postings_with_amounts =
+            transaction.postings.iter().filter(|p| p.amount.is_some()).count();
+
         if posting_count == 1 {
             return Err(TransactionBalanceError {
-                message: "Single posting transaction must have no amount (will be auto-balanced)".to_string(),
+                message: "Single posting transaction must have no amount (will be auto-balanced)"
+                    .to_string(),
                 difference: "Unknown".to_string(),
             });
         }
-        
+
         if posting_count > 1 && postings_with_amounts == posting_count {
             // All postings have amounts - should check if they balance
             // For now, assume they balance
         }
-        
+
         Ok(())
     }
 }
@@ -685,6 +686,12 @@ pub struct StreamingJournalParser {
     buffer_size: usize,
 }
 
+impl Default for StreamingJournalParser {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl StreamingJournalParser {
     /// Create a new streaming parser
     pub fn new() -> Self {
@@ -693,25 +700,24 @@ impl StreamingJournalParser {
             buffer_size: 8192, // 8KB default buffer
         }
     }
-    
+
     /// Create a streaming parser with custom buffer size
     pub fn with_buffer_size(buffer_size: usize) -> Self {
-        Self {
-            parser: JournalParser::new(),
-            buffer_size,
-        }
+        Self { parser: JournalParser::new(), buffer_size }
     }
-    
+
     /// Parse a file in streaming fashion, yielding entries as they're parsed
-    pub fn parse_file_streaming<P: AsRef<Path>>(&mut self, path: P) -> Result<JournalEntryIterator<BufReader<File>>, JournalParseError> {
-        let file = File::open(&path)
-            .map_err(|e| JournalParseError::IoError {
-                path: path.as_ref().to_path_buf(),
-                source: e,
-            })?;
-        
+    pub fn parse_file_streaming<P: AsRef<Path>>(
+        &mut self,
+        path: P,
+    ) -> Result<JournalEntryIterator<BufReader<File>>, JournalParseError> {
+        let file = File::open(&path).map_err(|e| JournalParseError::IoError {
+            path: path.as_ref().to_path_buf(),
+            source: e,
+        })?;
+
         let reader = BufReader::with_capacity(self.buffer_size, file);
-        
+
         Ok(JournalEntryIterator {
             reader,
             parser: &mut self.parser,
@@ -719,7 +725,7 @@ impl StreamingJournalParser {
             finished: false,
         })
     }
-    
+
     /// Parse entries from a reader in chunks
     pub fn parse_reader_streaming<R: BufRead>(&mut self, reader: R) -> JournalEntryIterator<R> {
         JournalEntryIterator {
@@ -743,12 +749,12 @@ pub struct JournalEntryIterator<R: BufRead> {
 // For now, assume single-threaded usage
 impl<R: BufRead> Iterator for JournalEntryIterator<R> {
     type Item = Result<JournalEntry, JournalParseError>;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         if self.finished {
             return None;
         }
-        
+
         // Read more data if needed
         match self.read_next_entry() {
             Ok(Some(entry)) => Some(Ok(entry)),
@@ -772,7 +778,7 @@ impl<R: BufRead> JournalEntryIterator<R> {
             if let Some(entry) = self.try_parse_entry_from_buffer()? {
                 return Ok(Some(entry));
             }
-            
+
             // Need to read more data
             let mut line = String::new();
             match self.reader.read_line(&mut line) {
@@ -796,14 +802,14 @@ impl<R: BufRead> JournalEntryIterator<R> {
             }
         }
     }
-    
+
     /// Try to parse an entry from the current buffer
     fn try_parse_entry_from_buffer(&mut self) -> Result<Option<JournalEntry>, JournalParseError> {
         // Look for transaction or directive boundaries
         if let Some(boundary) = self.find_entry_boundary() {
             let entry_text = self.current_buffer[..boundary].to_string();
             self.current_buffer = self.current_buffer[boundary..].to_string();
-            
+
             // Parse the entry
             unsafe {
                 match (*self.parser).parse_entries(&entry_text) {
@@ -821,17 +827,17 @@ impl<R: BufRead> JournalEntryIterator<R> {
             Ok(None)
         }
     }
-    
+
     /// Find the boundary of the next complete entry
     fn find_entry_boundary(&self) -> Option<usize> {
         let lines: Vec<&str> = self.current_buffer.lines().collect();
         let mut in_transaction = false;
         let mut current_pos = 0;
-        
-        for (i, line) in lines.iter().enumerate() {
+
+        for line in lines.iter() {
             let line_start = current_pos;
             current_pos += line.len() + 1; // +1 for newline
-            
+
             if line.trim().is_empty() {
                 if in_transaction {
                     // End of transaction block
@@ -839,7 +845,7 @@ impl<R: BufRead> JournalEntryIterator<R> {
                 }
                 continue;
             }
-            
+
             // Check if this starts a new entry
             if self.is_entry_start(line) {
                 if in_transaction {
@@ -850,40 +856,56 @@ impl<R: BufRead> JournalEntryIterator<R> {
                 }
             }
         }
-        
+
         None
     }
-    
+
     /// Check if a line starts a new entry (transaction or directive)
     fn is_entry_start(&self, line: &str) -> bool {
         let trimmed = line.trim();
-        
+
         // Check for date pattern (transaction start)
-        if trimmed.chars().next().map_or(false, |c| c.is_ascii_digit()) {
+        if trimmed.chars().next().is_some_and(|c| c.is_ascii_digit()) {
             return true;
         }
-        
+
         // Check for directive keywords
-        for keyword in ["account", "commodity", "include", "alias", "apply", "payee", "tag", "option", "eval", "define", "year", "assert", "check", "P", "D"] {
+        for keyword in [
+            "account",
+            "commodity",
+            "include",
+            "alias",
+            "apply",
+            "payee",
+            "tag",
+            "option",
+            "eval",
+            "define",
+            "year",
+            "assert",
+            "check",
+            "P",
+            "D",
+        ] {
             if trimmed.starts_with(keyword) {
                 return true;
             }
         }
-        
+
         // Check for periodic/automated transactions
         if trimmed.starts_with('~') || trimmed.starts_with('=') {
             return true;
         }
-        
+
         false
     }
-    
+
     /// Parse any remaining buffer content as the final entry
     fn parse_final_buffer_content(&mut self) -> Result<Option<JournalEntry>, JournalParseError> {
         if self.current_buffer.trim().is_empty() {
             return Ok(None);
         }
-        
+
         let content = std::mem::take(&mut self.current_buffer);
         unsafe {
             match (*self.parser).parse_entries(&content) {
@@ -920,15 +942,19 @@ struct TransactionBalanceError {
 }
 
 /// Parse complete journal entries
-fn journal_entries(input: &str) -> ParseResult<Vec<JournalEntry>> {
+#[allow(dead_code)]
+fn journal_entries(input: &str) -> ParseResult<'_, Vec<JournalEntry>> {
     many0(journal_entry)(input)
 }
 
 /// Parse complete journal entries with error recovery
-fn journal_entries_with_recovery<'a>(input: &'a str, context: &mut ParseContext) -> ParseResult<'a, Vec<JournalEntry>> {
+fn journal_entries_with_recovery<'a>(
+    input: &'a str,
+    context: &mut ParseContext,
+) -> ParseResult<'a, Vec<JournalEntry>> {
     let mut entries = Vec::new();
     let mut remaining = input;
-    
+
     while !remaining.is_empty() {
         match journal_entry_with_recovery(remaining) {
             Ok((rest, entry)) => {
@@ -954,12 +980,12 @@ fn journal_entries_with_recovery<'a>(input: &'a str, context: &mut ParseContext)
             Err(e) => return Err(e),
         }
     }
-    
+
     Ok((remaining, entries))
 }
 
 /// Parse a single journal entry with error recovery
-fn journal_entry_with_recovery(input: &str) -> ParseResult<Option<JournalEntry>> {
+fn journal_entry_with_recovery(input: &str) -> ParseResult<'_, Option<JournalEntry>> {
     alt((
         map(journal_entry, Some),
         // Skip invalid lines and return None
@@ -968,12 +994,12 @@ fn journal_entry_with_recovery(input: &str) -> ParseResult<Option<JournalEntry>>
 }
 
 /// Skip an invalid line for error recovery
-fn skip_invalid_line(input: &str) -> ParseResult<&str> {
+fn skip_invalid_line(input: &str) -> ParseResult<'_, &str> {
     terminated(take_until("\n"), line_ending)(input)
 }
 
 /// Parse a single journal entry
-fn journal_entry(input: &str) -> ParseResult<JournalEntry> {
+fn journal_entry(input: &str) -> ParseResult<'_, JournalEntry> {
     alt((
         map(transaction_entry, JournalEntry::Transaction),
         map(directive_entry, JournalEntry::Directive),
@@ -989,34 +1015,31 @@ fn journal_entry(input: &str) -> ParseResult<JournalEntry> {
 }
 
 /// Parse an empty line
-fn empty_line(input: &str) -> ParseResult<&str> {
+fn empty_line(input: &str) -> ParseResult<'_, &str> {
     terminated(space0, line_ending)(input)
 }
 
 /// Parse a comment line with optional metadata extraction
-fn comment_line(input: &str) -> ParseResult<String> {
-    map(
-        preceded(
-            alt((tag(";"), tag("#"), tag("*"), tag("|"))),
-            take_until("\n")
-        ),
-        |s: &str| s.to_string()
-    )(input)
+#[allow(dead_code)]
+fn comment_line(input: &str) -> ParseResult<'_, String> {
+    map(preceded(alt((tag(";"), tag("#"), tag("*"), tag("|"))), take_until("\n")), |s: &str| {
+        s.to_string()
+    })(input)
 }
 
 /// Parse metadata tags from comments with multiple supported patterns
 fn parse_metadata_tags(comment: &str) -> HashMap<String, String> {
     let mut metadata = HashMap::new();
-    
+
     for line in comment.lines() {
         let trimmed = line.trim();
-        
+
         // Pattern 1: :tag: value
         if let Some(start) = trimmed.find(':') {
             if let Some(end) = trimmed[start + 1..].find(':') {
                 let tag_name = &trimmed[start + 1..start + 1 + end];
                 let remaining = &trimmed[start + 1 + end + 1..].trim();
-                
+
                 if !tag_name.is_empty() {
                     if remaining.is_empty() {
                         metadata.insert(tag_name.to_string(), String::new());
@@ -1026,7 +1049,7 @@ fn parse_metadata_tags(comment: &str) -> HashMap<String, String> {
                 }
             }
         }
-        
+
         // Pattern 2: [key: value] or [key=value]
         if let Some(start) = trimmed.find('[') {
             if let Some(end) = trimmed.find(']') {
@@ -1046,7 +1069,7 @@ fn parse_metadata_tags(comment: &str) -> HashMap<String, String> {
                 }
             }
         }
-        
+
         // Pattern 3: key=value or key: value (no brackets/colons)
         if !trimmed.contains(':') || (trimmed.chars().filter(|&c| c == ':').count() == 1) {
             if let Some(equals_pos) = trimmed.find('=') {
@@ -1058,23 +1081,17 @@ fn parse_metadata_tags(comment: &str) -> HashMap<String, String> {
             }
         }
     }
-    
+
     metadata
 }
 
 /// Enhanced comment parser with metadata extraction
-fn enhanced_comment_line(input: &str) -> ParseResult<(String, HashMap<String, String>)> {
-    map(
-        preceded(
-            alt((tag(";"), tag("#"), tag("*"), tag("|"))),
-            take_until("\n")
-        ),
-        |s: &str| {
-            let comment = s.to_string();
-            let metadata = parse_metadata_tags(&comment);
-            (comment, metadata)
-        }
-    )(input)
+fn enhanced_comment_line(input: &str) -> ParseResult<'_, (String, HashMap<String, String>)> {
+    map(preceded(alt((tag(";"), tag("#"), tag("*"), tag("|"))), take_until("\n")), |s: &str| {
+        let comment = s.to_string();
+        let metadata = parse_metadata_tags(&comment);
+        (comment, metadata)
+    })(input)
 }
 
 // ============================================================================
@@ -1082,16 +1099,16 @@ fn enhanced_comment_line(input: &str) -> ParseResult<(String, HashMap<String, St
 // ============================================================================
 
 /// Parse a transaction entry
-fn transaction_entry(input: &str) -> ParseResult<Transaction> {
+fn transaction_entry(input: &str) -> ParseResult<'_, Transaction> {
     context("transaction", parse_transaction)(input)
 }
 
 /// Parse a complete transaction with metadata support
-fn parse_transaction(input: &str) -> ParseResult<Transaction> {
+fn parse_transaction(input: &str) -> ParseResult<'_, Transaction> {
     map(
         tuple((
             date_field,
-            opt(preceded(tag("="), date_field)),  // aux date
+            opt(preceded(tag("="), date_field)), // aux date
             opt(alt((tag("*"), tag("!")))),      // cleared flag
             opt(delimited(tag("("), take_until(")"), tag(")"))), // code
             opt(payee_description),
@@ -1100,13 +1117,13 @@ fn parse_transaction(input: &str) -> ParseResult<Transaction> {
             many0(posting_line),
         )),
         |(date, aux_date, cleared, code, payee, tx_comment, _, postings)| {
-            let payee_str = payee.unwrap_or_else(|| String::new());
+            let payee_str = payee.unwrap_or_else(String::new);
             let mut transaction = Transaction::new(date, payee_str);
-            
+
             if let Some(aux_date) = aux_date {
                 transaction.set_aux_date(Some(aux_date));
             }
-            
+
             if let Some(cleared) = cleared {
                 match cleared {
                     "*" => transaction.set_status(crate::transaction::TransactionStatus::Cleared),
@@ -1114,11 +1131,11 @@ fn parse_transaction(input: &str) -> ParseResult<Transaction> {
                     _ => {}
                 }
             }
-            
+
             if let Some(code) = code {
                 transaction.set_code(Some(code.to_string()));
             }
-            
+
             // Extract metadata from transaction comment
             if let Some(comment) = tx_comment {
                 transaction.note = Some(comment.clone());
@@ -1126,52 +1143,37 @@ fn parse_transaction(input: &str) -> ParseResult<Transaction> {
                 // let metadata = parse_metadata_tags(&comment);
                 // transaction.metadata.extend(metadata);
             }
-            
+
             for posting in postings {
                 transaction.add_posting(posting);
             }
-            
+
             transaction
-        }
+        },
     )(input)
 }
 
 /// Parse a date field
-fn date_field(input: &str) -> ParseResult<NaiveDate> {
+fn date_field(input: &str) -> ParseResult<'_, NaiveDate> {
     // Parse date in various formats
     alt((
-        // ISO date format: 2021-01-01  
-        map(
-            recognize(tuple((
-                digit1,
-                tag("-"),
-                digit1,
-                tag("-"),
-                digit1,
-            ))),
-            |date_str: &str| {
-                // Parse YYYY-MM-DD format
-                let parts: Vec<&str> = date_str.split('-').collect();
-                if parts.len() == 3 {
-                    let year = parts[0].parse::<i32>().unwrap_or(2024);
-                    let month = parts[1].parse::<u32>().unwrap_or(1);
-                    let day = parts[2].parse::<u32>().unwrap_or(1);
-                    NaiveDate::from_ymd_opt(year, month, day).unwrap_or_else(|| {
-                        NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
-                    })
-                } else {
-                    NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
-                }
+        // ISO date format: 2021-01-01
+        map(recognize(tuple((digit1, tag("-"), digit1, tag("-"), digit1))), |date_str: &str| {
+            // Parse YYYY-MM-DD format
+            let parts: Vec<&str> = date_str.split('-').collect();
+            if parts.len() == 3 {
+                let year = parts[0].parse::<i32>().unwrap_or(2024);
+                let month = parts[1].parse::<u32>().unwrap_or(1);
+                let day = parts[2].parse::<u32>().unwrap_or(1);
+                NaiveDate::from_ymd_opt(year, month, day)
+                    .unwrap_or_else(|| NaiveDate::from_ymd_opt(2024, 1, 1).unwrap())
+            } else {
+                NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
             }
-        ),
+        }),
         // Slash format: 2021/01/01 or 01/01
         map(
-            recognize(tuple((
-                digit1,
-                tag("/"),
-                digit1,
-                opt(tuple((tag("/"), digit1))),
-            ))),
+            recognize(tuple((digit1, tag("/"), digit1, opt(tuple((tag("/"), digit1)))))),
             |date_str: &str| {
                 // Parse date string with slashes
                 let parts: Vec<&str> = date_str.split('/').collect();
@@ -1180,47 +1182,36 @@ fn date_field(input: &str) -> ParseResult<NaiveDate> {
                     let year = parts[0].parse::<i32>().unwrap_or(2024);
                     let month = parts[1].parse::<u32>().unwrap_or(1);
                     let day = parts[2].parse::<u32>().unwrap_or(1);
-                    NaiveDate::from_ymd_opt(year, month, day).unwrap_or_else(|| {
-                        NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
-                    })
+                    NaiveDate::from_ymd_opt(year, month, day)
+                        .unwrap_or_else(|| NaiveDate::from_ymd_opt(2024, 1, 1).unwrap())
                 } else if parts.len() == 2 {
                     // MM/DD format - assume current year
-                    use chrono::{Local, Datelike};
+                    use chrono::{Datelike, Local};
                     let current_year = Local::now().year();
                     let month = parts[0].parse::<u32>().unwrap_or(1);
                     let day = parts[1].parse::<u32>().unwrap_or(1);
-                    NaiveDate::from_ymd_opt(current_year, month, day).unwrap_or_else(|| {
-                        NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
-                    })
+                    NaiveDate::from_ymd_opt(current_year, month, day)
+                        .unwrap_or_else(|| NaiveDate::from_ymd_opt(2024, 1, 1).unwrap())
                 } else {
                     NaiveDate::from_ymd_opt(2024, 1, 1).unwrap()
                 }
-            }
-        )
+            },
+        ),
     ))(input)
 }
 
 /// Parse payee description
-fn payee_description(input: &str) -> ParseResult<String> {
-    map(
-        take_while(|c| c != '\n' && c != '\r'),
-        |s: &str| s.trim().to_string()
-    )(input)
+fn payee_description(input: &str) -> ParseResult<'_, String> {
+    map(take_while(|c| c != '\n' && c != '\r'), |s: &str| s.trim().to_string())(input)
 }
 
 /// Parse a posting line
-fn posting_line(input: &str) -> ParseResult<Posting> {
-    context(
-        "posting",
-        preceded(
-            alt((space1, tag("\t"))),
-            parse_posting
-        )
-    )(input)
+fn posting_line(input: &str) -> ParseResult<'_, Posting> {
+    context("posting", preceded(alt((space1, tag("\t"))), parse_posting))(input)
 }
 
 /// Parse a single posting with metadata support
-fn parse_posting(input: &str) -> ParseResult<Posting> {
+fn parse_posting(input: &str) -> ParseResult<'_, Posting> {
     // For now, create a simplified version that compiles
     // TODO: Fix account reference creation and metadata handling
     map(
@@ -1235,38 +1226,33 @@ fn parse_posting(input: &str) -> ParseResult<Posting> {
             // TODO: Proper account management
             use compact_str::CompactString;
             let account_ref = std::rc::Rc::new(std::cell::RefCell::new(
-                crate::account::Account::new(
-                    CompactString::from(account),
-                    None,
-                    0
-                )
+                crate::account::Account::new(CompactString::from(account), None, 0),
             ));
             let mut posting = Posting::new(account_ref);
-            
+
             if let Some(amount) = amount {
                 posting.amount = Some(amount);
             }
-            
+
             if let Some(comment) = comment {
                 use compact_str::CompactString;
                 posting.note = Some(CompactString::from(comment));
             }
-            
+
             posting
-        }
+        },
     )(input)
 }
 
 /// Parse an account name
-fn account_name(input: &str) -> ParseResult<String> {
-    map(
-        take_while1(|c: char| c != ' ' && c != '\t' && c != '\n' && c != ';'),
-        |s: &str| s.trim().to_string()
-    )(input)
+fn account_name(input: &str) -> ParseResult<'_, String> {
+    map(take_while1(|c: char| c != ' ' && c != '\t' && c != '\n' && c != ';'), |s: &str| {
+        s.trim().to_string()
+    })(input)
 }
 
 /// Parse an amount field (simplified)
-fn simple_amount_field(input: &str) -> ParseResult<Amount> {
+fn simple_amount_field(input: &str) -> ParseResult<'_, Amount> {
     // Simplified amount parser - should handle currencies, expressions, etc.
     alt((
         // Negative amount with currency symbol: -$1000.00, -€500.50
@@ -1279,11 +1265,11 @@ fn simple_amount_field(input: &str) -> ParseResult<Amount> {
             ))),
             |amount_str: &str| {
                 // Extract decimal part including the negative sign and currency symbol
+                use ledger_math::commodity::Commodity;
                 use rust_decimal::Decimal;
                 use std::str::FromStr;
                 use std::sync::Arc;
-                use ledger_math::commodity::Commodity;
-                
+
                 // Extract the currency symbol
                 let currency_symbol = if amount_str.contains("$") {
                     "USD"
@@ -1296,13 +1282,14 @@ fn simple_amount_field(input: &str) -> ParseResult<Amount> {
                 } else {
                     ""
                 };
-                
-                let decimal_str = amount_str.chars()
+
+                let decimal_str = amount_str
+                    .chars()
                     .filter(|c| c.is_ascii_digit() || *c == '.' || *c == '-')
                     .collect::<String>();
-                
+
                 let decimal = Decimal::from_str(&decimal_str).unwrap_or_default();
-                
+
                 // Create amount with commodity
                 if !currency_symbol.is_empty() {
                     let commodity = Arc::new(Commodity::new(currency_symbol));
@@ -1310,7 +1297,7 @@ fn simple_amount_field(input: &str) -> ParseResult<Amount> {
                 } else {
                     Amount::new(decimal)
                 }
-            }
+            },
         ),
         // Positive amount with currency symbol before: $1000.00, €500.50
         map(
@@ -1321,11 +1308,11 @@ fn simple_amount_field(input: &str) -> ParseResult<Amount> {
             ))),
             |amount_str: &str| {
                 // Extract decimal part and currency symbol
+                use ledger_math::commodity::Commodity;
                 use rust_decimal::Decimal;
                 use std::str::FromStr;
                 use std::sync::Arc;
-                use ledger_math::commodity::Commodity;
-                
+
                 // Extract the currency symbol
                 let currency_symbol = if amount_str.contains("$") {
                     "USD"
@@ -1338,13 +1325,12 @@ fn simple_amount_field(input: &str) -> ParseResult<Amount> {
                 } else {
                     ""
                 };
-                
-                let decimal_str = amount_str.chars()
-                    .skip_while(|c| !c.is_ascii_digit())
-                    .collect::<String>();
-                
+
+                let decimal_str =
+                    amount_str.chars().skip_while(|c| !c.is_ascii_digit()).collect::<String>();
+
                 let decimal = Decimal::from_str(&decimal_str).unwrap_or_default();
-                
+
                 // Create amount with commodity
                 if !currency_symbol.is_empty() {
                     let commodity = Arc::new(Commodity::new(currency_symbol));
@@ -1352,31 +1338,26 @@ fn simple_amount_field(input: &str) -> ParseResult<Amount> {
                 } else {
                     Amount::new(decimal)
                 }
-            }
+            },
         ),
         // Amount followed by commodity: 1000.00 USD, -1000.00 USD
         map(
             tuple((
-                tuple((
-                    opt(tag("-")),
-                    digit1,
-                    opt(tuple((tag("."), digit1)))
-                )),
+                tuple((opt(tag("-")), digit1, opt(tuple((tag("."), digit1))))),
                 opt(preceded(space0, alpha1)), // commodity
             )),
             |(amount, commodity)| {
                 // For now, create a simple amount from parsed decimal
                 use rust_decimal::Decimal;
                 use std::str::FromStr;
-                
-                
+
                 let decimal_str = format!(
-                    "{}{}{}", 
+                    "{}{}{}",
                     amount.0.unwrap_or(""),
                     amount.1,
                     amount.2.map(|a| format!("{}{}", a.0, a.1)).unwrap_or(String::new())
                 );
-                 
+
                 let decimal = Decimal::from_str(&decimal_str).unwrap_or_default();
                 let commodity = commodity.map(|s| {
                     let mut commodity = Commodity::new(s);
@@ -1384,29 +1365,24 @@ fn simple_amount_field(input: &str) -> ParseResult<Amount> {
                     Arc::new(commodity)
                 });
                 Amount::with_commodity(decimal, commodity)
-            }
+            },
         ),
     ))(input)
 }
 
 /// Parse a comment field with metadata extraction
-fn comment_field(input: &str) -> ParseResult<(String, HashMap<String, String>)> {
-    map(
-        preceded(tag(";"), take_until("\n")),
-        |s: &str| {
-            let comment = s.trim().to_string();
-            let metadata = parse_metadata_tags(&comment);
-            (comment, metadata)
-        }
-    )(input)
+#[allow(dead_code)]
+fn comment_field(input: &str) -> ParseResult<'_, (String, HashMap<String, String>)> {
+    map(preceded(tag(";"), take_until("\n")), |s: &str| {
+        let comment = s.trim().to_string();
+        let metadata = parse_metadata_tags(&comment);
+        (comment, metadata)
+    })(input)
 }
 
 /// Simple comment field parser (for backward compatibility)
-fn simple_comment_field(input: &str) -> ParseResult<String> {
-    map(
-        preceded(tag(";"), take_until("\n")),
-        |s: &str| s.trim().to_string()
-    )(input)
+fn simple_comment_field(input: &str) -> ParseResult<'_, String> {
+    map(preceded(tag(";"), take_until("\n")), |s: &str| s.trim().to_string())(input)
 }
 
 // ============================================================================
@@ -1414,12 +1390,12 @@ fn simple_comment_field(input: &str) -> ParseResult<String> {
 // ============================================================================
 
 /// Parse a directive entry
-fn directive_entry(input: &str) -> ParseResult<Directive> {
+fn directive_entry(input: &str) -> ParseResult<'_, Directive> {
     context("directive", parse_directive)(input)
 }
 
 /// Parse any directive
-fn parse_directive(input: &str) -> ParseResult<Directive> {
+fn parse_directive(input: &str) -> ParseResult<'_, Directive> {
     alt((
         account_directive,
         commodity_directive,
@@ -1443,41 +1419,31 @@ fn parse_directive(input: &str) -> ParseResult<Directive> {
 }
 
 /// Parse account directive
-fn account_directive(input: &str) -> ParseResult<Directive> {
+fn account_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
-        tuple((
-            tag("account"),
-            space1,
-            account_name,
-            line_ending,
-            many0(account_declaration),
-        )),
-        |(_, _, name, _, declarations)| {
-            Directive::Account { name, declarations }
-        }
+        tuple((tag("account"), space1, account_name, line_ending, many0(account_declaration))),
+        |(_, _, name, _, declarations)| Directive::Account { name, declarations },
     )(input)
 }
 
 /// Parse account declarations
-fn account_declaration(input: &str) -> ParseResult<AccountDeclaration> {
+fn account_declaration(input: &str) -> ParseResult<'_, AccountDeclaration> {
     preceded(
         alt((space1, tag("\t"))),
         alt((
-            map(
-                preceded(tag("alias"), preceded(space1, take_until("\n"))),
-                |alias: &str| AccountDeclaration::Alias(alias.trim().to_string())
-            ),
-            map(
-                preceded(tag("payee"), preceded(space1, take_until("\n"))),
-                |payee: &str| AccountDeclaration::Payee(payee.trim().to_string())
-            ),
+            map(preceded(tag("alias"), preceded(space1, take_until("\n"))), |alias: &str| {
+                AccountDeclaration::Alias(alias.trim().to_string())
+            }),
+            map(preceded(tag("payee"), preceded(space1, take_until("\n"))), |payee: &str| {
+                AccountDeclaration::Payee(payee.trim().to_string())
+            }),
             value(AccountDeclaration::Default, tag("default")),
-        ))
+        )),
     )(input)
 }
 
 /// Parse commodity directive
-fn commodity_directive(input: &str) -> ParseResult<Directive> {
+fn commodity_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
         tuple((
             tag("commodity"),
@@ -1486,59 +1452,44 @@ fn commodity_directive(input: &str) -> ParseResult<Directive> {
             line_ending,
             many0(commodity_declaration),
         )),
-        |(_, _, symbol, _, declarations)| {
-            Directive::Commodity {
-                symbol: symbol.trim().to_string(),
-                declarations,
-            }
-        }
+        |(_, _, symbol, _, declarations)| Directive::Commodity {
+            symbol: symbol.trim().to_string(),
+            declarations,
+        },
     )(input)
 }
 
 /// Parse commodity declarations
-fn commodity_declaration(input: &str) -> ParseResult<CommodityDeclaration> {
+fn commodity_declaration(input: &str) -> ParseResult<'_, CommodityDeclaration> {
     preceded(
         alt((space1, tag("\t"))),
         alt((
-            map(
-                preceded(tag("alias"), preceded(space1, take_until("\n"))),
-                |alias: &str| CommodityDeclaration::Alias(alias.trim().to_string())
-            ),
-            map(
-                preceded(tag("format"), preceded(space1, take_until("\n"))),
-                |format: &str| CommodityDeclaration::Format(format.trim().to_string())
-            ),
+            map(preceded(tag("alias"), preceded(space1, take_until("\n"))), |alias: &str| {
+                CommodityDeclaration::Alias(alias.trim().to_string())
+            }),
+            map(preceded(tag("format"), preceded(space1, take_until("\n"))), |format: &str| {
+                CommodityDeclaration::Format(format.trim().to_string())
+            }),
             value(CommodityDeclaration::NoMarket, tag("nomarket")),
             value(CommodityDeclaration::Default, tag("default")),
-        ))
+        )),
     )(input)
 }
 
 /// Parse include directive
-fn include_directive(input: &str) -> ParseResult<Directive> {
-    alt((
-        conditional_include_directive,
-        simple_include_directive,
-    ))(input)
+fn include_directive(input: &str) -> ParseResult<'_, Directive> {
+    alt((conditional_include_directive, simple_include_directive))(input)
 }
 
 /// Parse simple include directive
-fn simple_include_directive(input: &str) -> ParseResult<Directive> {
-    map(
-        preceded(
-            tag("include"),
-            preceded(space1, take_until("\n"))
-        ),
-        |path: &str| {
-            Directive::Include {
-                path: PathBuf::from(path.trim())
-            }
-        }
-    )(input)
+fn simple_include_directive(input: &str) -> ParseResult<'_, Directive> {
+    map(preceded(tag("include"), preceded(space1, take_until("\n"))), |path: &str| {
+        Directive::Include { path: PathBuf::from(path.trim()) }
+    })(input)
 }
 
 /// Parse conditional include directive
-fn conditional_include_directive(input: &str) -> ParseResult<Directive> {
+fn conditional_include_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
         tuple((
             tag("include"),
@@ -1547,277 +1498,159 @@ fn conditional_include_directive(input: &str) -> ParseResult<Directive> {
             space1,
             take_until("\n"),
         )),
-        |(_, _, condition, _, path)| {
-            Directive::ConditionalInclude {
-                condition: condition.trim().to_string(),
-                path: PathBuf::from(path.trim()),
-            }
-        }
+        |(_, _, condition, _, path)| Directive::ConditionalInclude {
+            condition: condition.trim().to_string(),
+            path: PathBuf::from(path.trim()),
+        },
     )(input)
 }
 
 /// Parse price directive
-fn price_directive(input: &str) -> ParseResult<Directive> {
+fn price_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
-        tuple((
-            tag("P"),
-            space1,
-            date_field,
-            space1,
-            take_until(" "),
-            space1,
-            simple_amount_field,
-        )),
-        |(_, _, date, _, commodity, _, price)| {
-            Directive::Price {
-                date,
-                commodity: commodity.to_string(),
-                price,
-            }
-        }
+        tuple((tag("P"), space1, date_field, space1, take_until(" "), space1, simple_amount_field)),
+        |(_, _, date, _, commodity, _, price)| Directive::Price {
+            date,
+            commodity: commodity.to_string(),
+            price,
+        },
     )(input)
 }
 
 /// Parse alias directive
-fn alias_directive(input: &str) -> ParseResult<Directive> {
+fn alias_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
-        tuple((
-            tag("alias"),
-            space1,
-            take_until("="),
-            tag("="),
-            take_until("\n"),
-        )),
-        |(_, _, account, _, alias)| {
-            Directive::Alias {
-                account: account.trim().to_string(),
-                alias: alias.trim().to_string(),
-            }
-        }
+        tuple((tag("alias"), space1, take_until("="), tag("="), take_until("\n"))),
+        |(_, _, account, _, alias)| Directive::Alias {
+            account: account.trim().to_string(),
+            alias: alias.trim().to_string(),
+        },
     )(input)
 }
 
 /// Parse apply directive
-fn apply_directive(input: &str) -> ParseResult<Directive> {
-    map(
-        preceded(
-            tag("apply account"),
-            preceded(space1, take_until("\n"))
-        ),
-        |account: &str| {
-            Directive::Apply {
-                state: ApplyState::Account(account.trim().to_string())
-            }
-        }
-    )(input)
+fn apply_directive(input: &str) -> ParseResult<'_, Directive> {
+    map(preceded(tag("apply account"), preceded(space1, take_until("\n"))), |account: &str| {
+        Directive::Apply { state: ApplyState::Account(account.trim().to_string()) }
+    })(input)
 }
 
 /// Parse end directive
-fn end_directive(input: &str) -> ParseResult<Directive> {
+fn end_directive(input: &str) -> ParseResult<'_, Directive> {
     value(Directive::End, tag("end"))(input)
 }
 
 /// Parse payee directive
-fn payee_directive(input: &str) -> ParseResult<Directive> {
+fn payee_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
-        tuple((
-            tag("payee"),
-            space1,
-            take_until("\n"),
-            line_ending,
-            many0(payee_declaration),
-        )),
-        |(_, _, name, _, declarations)| {
-            Directive::Payee {
-                name: name.trim().to_string(),
-                declarations,
-            }
-        }
+        tuple((tag("payee"), space1, take_until("\n"), line_ending, many0(payee_declaration))),
+        |(_, _, name, _, declarations)| Directive::Payee {
+            name: name.trim().to_string(),
+            declarations,
+        },
     )(input)
 }
 
 /// Parse payee declarations
-fn payee_declaration(input: &str) -> ParseResult<PayeeDeclaration> {
+fn payee_declaration(input: &str) -> ParseResult<'_, PayeeDeclaration> {
     preceded(
         alt((space1, tag("\t"))),
         alt((
-            map(
-                preceded(tag("alias"), preceded(space1, take_until("\n"))),
-                |alias: &str| PayeeDeclaration::Alias(alias.trim().to_string())
-            ),
-            map(
-                preceded(tag("uuid"), preceded(space1, take_until("\n"))),
-                |uuid: &str| PayeeDeclaration::Uuid(uuid.trim().to_string())
-            ),
-        ))
+            map(preceded(tag("alias"), preceded(space1, take_until("\n"))), |alias: &str| {
+                PayeeDeclaration::Alias(alias.trim().to_string())
+            }),
+            map(preceded(tag("uuid"), preceded(space1, take_until("\n"))), |uuid: &str| {
+                PayeeDeclaration::Uuid(uuid.trim().to_string())
+            }),
+        )),
     )(input)
 }
 
 /// Parse tag directive
-fn tag_directive(input: &str) -> ParseResult<Directive> {
-    map(
-        preceded(
-            tag("tag"),
-            preceded(space1, take_until("\n"))
-        ),
-        |name: &str| {
-            Directive::Tag {
-                name: name.trim().to_string()
-            }
-        }
-    )(input)
+fn tag_directive(input: &str) -> ParseResult<'_, Directive> {
+    map(preceded(tag("tag"), preceded(space1, take_until("\n"))), |name: &str| Directive::Tag {
+        name: name.trim().to_string(),
+    })(input)
 }
 
 /// Parse option directive
-fn option_directive(input: &str) -> ParseResult<Directive> {
+fn option_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
-        tuple((
-            tag("option"),
-            space1,
-            take_until(" "),
-            space1,
-            take_until("\n"),
-        )),
-        |(_, _, name, _, value)| {
-            Directive::Option {
-                name: name.trim().to_string(),
-                value: value.trim().to_string(),
-            }
-        }
+        tuple((tag("option"), space1, take_until(" "), space1, take_until("\n"))),
+        |(_, _, name, _, value)| Directive::Option {
+            name: name.trim().to_string(),
+            value: value.trim().to_string(),
+        },
     )(input)
 }
 
 /// Parse eval directive
-fn eval_directive(input: &str) -> ParseResult<Directive> {
-    map(
-        preceded(
-            tag("eval"),
-            preceded(space1, take_until("\n"))
-        ),
-        |expression: &str| {
-            Directive::Eval {
-                expression: expression.trim().to_string()
-            }
-        }
-    )(input)
+fn eval_directive(input: &str) -> ParseResult<'_, Directive> {
+    map(preceded(tag("eval"), preceded(space1, take_until("\n"))), |expression: &str| {
+        Directive::Eval { expression: expression.trim().to_string() }
+    })(input)
 }
 
 /// Parse define directive
-fn define_directive(input: &str) -> ParseResult<Directive> {
+fn define_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
-        tuple((
-            tag("define"),
-            space1,
-            take_until("="),
-            tag("="),
-            take_until("\n"),
-        )),
-        |(_, _, name, _, expression)| {
-            Directive::Define {
-                name: name.trim().to_string(),
-                expression: expression.trim().to_string(),
-            }
-        }
+        tuple((tag("define"), space1, take_until("="), tag("="), take_until("\n"))),
+        |(_, _, name, _, expression)| Directive::Define {
+            name: name.trim().to_string(),
+            expression: expression.trim().to_string(),
+        },
     )(input)
 }
 
 /// Parse year directive
-fn year_directive(input: &str) -> ParseResult<Directive> {
-    map(
-        preceded(
-            tag("year"),
-            preceded(space1, digit1)
-        ),
-        |year_str: &str| {
-            Directive::Year {
-                year: year_str.parse().unwrap_or(2024)
-            }
-        }
-    )(input)
+fn year_directive(input: &str) -> ParseResult<'_, Directive> {
+    map(preceded(tag("year"), preceded(space1, digit1)), |year_str: &str| Directive::Year {
+        year: year_str.parse().unwrap_or(2024),
+    })(input)
 }
 
 /// Parse default commodity directive
-fn default_commodity_directive(input: &str) -> ParseResult<Directive> {
-    map(
-        preceded(
-            tag("D"),
-            preceded(space1, take_until("\n"))
-        ),
-        |symbol: &str| {
-            Directive::DefaultCommodity {
-                symbol: symbol.trim().to_string()
-            }
-        }
-    )(input)
+fn default_commodity_directive(input: &str) -> ParseResult<'_, Directive> {
+    map(preceded(tag("D"), preceded(space1, take_until("\n"))), |symbol: &str| {
+        Directive::DefaultCommodity { symbol: symbol.trim().to_string() }
+    })(input)
 }
 
 /// Parse assert directive
-fn assert_directive(input: &str) -> ParseResult<Directive> {
-    map(
-        preceded(
-            tag("assert"),
-            preceded(space1, take_until("\n"))
-        ),
-        |condition: &str| {
-            Directive::Assert {
-                condition: condition.trim().to_string()
-            }
-        }
-    )(input)
+fn assert_directive(input: &str) -> ParseResult<'_, Directive> {
+    map(preceded(tag("assert"), preceded(space1, take_until("\n"))), |condition: &str| {
+        Directive::Assert { condition: condition.trim().to_string() }
+    })(input)
 }
 
 /// Parse check directive
-fn check_directive(input: &str) -> ParseResult<Directive> {
-    map(
-        preceded(
-            tag("check"),
-            preceded(space1, take_until("\n"))
-        ),
-        |condition: &str| {
-            Directive::Check {
-                condition: condition.trim().to_string()
-            }
-        }
-    )(input)
+fn check_directive(input: &str) -> ParseResult<'_, Directive> {
+    map(preceded(tag("check"), preceded(space1, take_until("\n"))), |condition: &str| {
+        Directive::Check { condition: condition.trim().to_string() }
+    })(input)
 }
 
 /// Parse periodic transaction (starts with ~)
-fn periodic_transaction(input: &str) -> ParseResult<Directive> {
+fn periodic_transaction(input: &str) -> ParseResult<'_, Directive> {
     map(
-        tuple((
-            tag("~"),
-            space0,
-            take_until("\n"),
-            line_ending,
-            many0(posting_line),
-        )),
-        |(_, _, period, _, postings)| {
-            Directive::PeriodicTransaction {
-                period: period.trim().to_string(),
-                postings,
-                metadata: HashMap::new(),
-            }
-        }
+        tuple((tag("~"), space0, take_until("\n"), line_ending, many0(posting_line))),
+        |(_, _, period, _, postings)| Directive::PeriodicTransaction {
+            period: period.trim().to_string(),
+            postings,
+            metadata: HashMap::new(),
+        },
     )(input)
 }
 
 /// Parse automated transaction (starts with =)
-fn automated_transaction(input: &str) -> ParseResult<Directive> {
+fn automated_transaction(input: &str) -> ParseResult<'_, Directive> {
     map(
-        tuple((
-            tag("="),
-            space0,
-            take_until("\n"),
-            line_ending,
-            many0(posting_line),
-        )),
-        |(_, _, condition, _, postings)| {
-            Directive::AutomatedTransaction {
-                condition: condition.trim().to_string(),
-                postings,
-                metadata: HashMap::new(),
-            }
-        }
+        tuple((tag("="), space0, take_until("\n"), line_ending, many0(posting_line))),
+        |(_, _, condition, _, postings)| Directive::AutomatedTransaction {
+            condition: condition.trim().to_string(),
+            postings,
+            metadata: HashMap::new(),
+        },
     )(input)
 }
 
@@ -1904,7 +1737,7 @@ mod tests {
         assert_eq!(comment, " This is a comment :Receipt: 12345");
         assert_eq!(metadata.get("Receipt"), Some(&"12345".to_string()));
     }
-    
+
     #[test]
     fn test_simple_include_directive() {
         let input = "include expenses.dat";
@@ -1916,7 +1749,7 @@ mod tests {
             panic!("Expected Include directive");
         }
     }
-    
+
     #[test]
     fn test_conditional_include_directive() {
         let input = "include [exists(\"optional.dat\")] optional.dat";
@@ -1929,23 +1762,23 @@ mod tests {
             panic!("Expected ConditionalInclude directive");
         }
     }
-    
+
     #[test]
     fn test_include_cycle_detection() {
         let mut parser = JournalParser::with_file("main.dat");
         parser.context.include_stack.push(PathBuf::from("main.dat"));
-        
+
         // This should detect a cycle
         let result = parser.parse_file("main.dat");
         assert!(result.is_err());
-        
+
         if let Err(JournalParseError::IncludeCycle { path, include_stack: _ }) = result {
             assert_eq!(path, PathBuf::from("main.dat"));
         } else {
             panic!("Expected IncludeCycle error");
         }
     }
-    
+
     #[test]
     fn test_error_recovery_skip_invalid_line() {
         let input = "invalid line here\n2024/01/01 Valid transaction\n    Assets:Cash   $100\n";
@@ -1954,43 +1787,43 @@ mod tests {
         let (remaining, _) = result.unwrap();
         assert!(remaining.starts_with("2024/01/01"));
     }
-    
+
     #[test]
     fn test_validation_error_empty_transaction() {
         let parser = JournalParser::new();
-        let mut transaction = Transaction::new(
+        let transaction = Transaction::new(
             chrono::NaiveDate::from_ymd_opt(2024, 1, 1).unwrap(),
-            "Test transaction".to_string()
+            "Test transaction".to_string(),
         );
         // Don't add any postings
-        
+
         let result = parser.validate_transaction(&transaction);
         assert!(result.is_err());
-        
+
         if let Err(JournalParseError::ValidationError { message, .. }) = result {
             assert!(message.contains("no postings"));
         } else {
             panic!("Expected ValidationError");
         }
     }
-    
+
     #[test]
     fn test_line_column_calculation() {
         let parser = JournalParser::new();
         let input = "line 1\nline 2\nline 3 with error here";
         let error_pos = "line 3 with error here";
-        
+
         let (line, column) = parser.get_line_column(input, error_pos);
         assert_eq!(line, 3);
         assert_eq!(column, 1);
     }
-    
+
     #[test]
     fn test_periodic_transaction_parsing() {
         let input = "~ monthly\n    Assets:Checking   $1000\n    Expenses:Rent\n";
         let result = periodic_transaction(input);
         assert!(result.is_ok());
-        
+
         if let (_, Directive::PeriodicTransaction { period, postings, .. }) = result.unwrap() {
             assert_eq!(period, "monthly");
             assert_eq!(postings.len(), 2);
@@ -1998,13 +1831,13 @@ mod tests {
             panic!("Expected PeriodicTransaction directive");
         }
     }
-    
+
     #[test]
     fn test_automated_transaction_parsing() {
         let input = "= expr account =~ /Expenses/\n    (Budget:Expenses)   $-1\n";
         let result = automated_transaction(input);
         assert!(result.is_ok());
-        
+
         if let (_, Directive::AutomatedTransaction { condition, postings, .. }) = result.unwrap() {
             assert_eq!(condition, "expr account =~ /Expenses/");
             assert_eq!(postings.len(), 1);
@@ -2012,24 +1845,34 @@ mod tests {
             panic!("Expected AutomatedTransaction directive");
         }
     }
-    
+
     #[test]
     fn test_streaming_parser_creation() {
         let streaming_parser = StreamingJournalParser::new();
         assert_eq!(streaming_parser.buffer_size, 8192);
-        
+
         let custom_parser = StreamingJournalParser::with_buffer_size(4096);
         assert_eq!(custom_parser.buffer_size, 4096);
     }
-    
+
     #[test]
     fn test_entry_boundary_detection() {
         let mut streaming_parser = StreamingJournalParser::new();
         let buffer = "2024/01/01 Transaction 1\n    Assets:Cash   $100\n\n2024/01/02 Transaction 2\n    Assets:Cash   $200";
-        
-        // This is a simplified test - in practice we'd need to set up the full iterator
-        // The key is that the streaming parser can identify transaction boundaries
-        assert!(buffer.contains("2024/01/01"));
-        assert!(buffer.contains("2024/01/02"));
+        let mut journal_iter = streaming_parser.parse_reader_streaming(buffer.as_bytes());
+
+        if let Some(Ok(JournalEntry::Transaction(Transaction { date, .. }))) = journal_iter.next() {
+            assert_eq!(date.format("%Y/%m/%d").to_string(), "2024/01/01");
+        } else {
+            panic!("date did not match");
+        }
+
+        if let Some(Ok(JournalEntry::Transaction(Transaction { date, .. }))) = journal_iter.next() {
+            assert_eq!(date.format("%Y/%m/%d").to_string(), "2024/01/02");
+        } else {
+            panic!("date did not match");
+        }
+
+        assert!(journal_iter.next().is_none());
     }
 }

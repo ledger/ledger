@@ -13,10 +13,10 @@ fn test_amount_balance_integration() {
     let eur_commodity = Some(Arc::new(Commodity::new("EUR")));
     let amount1 = Amount::with_commodity(Decimal::from(100), usd_commodity);
     let amount2 = Amount::with_commodity(Decimal::from(50), eur_commodity);
-    
-    balance.add_amount(&amount1);
-    balance.add_amount(&amount2);
-    
+
+    balance.add_amount(&amount1).unwrap();
+    balance.add_amount(&amount2).unwrap();
+
     assert_eq!(balance.commodity_count(), 2);
 }
 

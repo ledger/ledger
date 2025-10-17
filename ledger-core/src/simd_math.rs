@@ -3,11 +3,9 @@
 //! This module provides SIMD optimizations for bulk arithmetic operations
 //! on amounts and balances, with fallback implementations for compatibility.
 
-use rust_decimal::Decimal;
-use rust_decimal::prelude::ToPrimitive;
-use once_cell::sync::Lazy;
-use ledger_math::amount::Amount;
 use crate::balance::Balance;
+use once_cell::sync::Lazy;
+use rust_decimal::Decimal;
 
 /// CPU feature detection for optimal SIMD instruction set selection
 #[derive(Debug, Clone, Copy)]
@@ -28,17 +26,13 @@ impl CpuFeatures {
                 has_avx512: is_x86_feature_detected!("avx512f"),
             }
         }
-        
+
         #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
         {
-            Self {
-                has_sse2: false,
-                has_avx2: false,
-                has_avx512: false,
-            }
+            Self { has_sse2: false, has_avx2: false, has_avx512: false }
         }
     }
-    
+
     /// Get the best available SIMD variant
     pub fn best_simd_variant(&self) -> SimdVariant {
         if self.has_avx512 {
@@ -65,22 +59,22 @@ pub enum SimdVariant {
 /// SIMD-accelerated arithmetic operations
 pub struct SimdArithmetic {
     variant: SimdVariant,
-    features: CpuFeatures,
+    _features: CpuFeatures,
 }
 
 impl SimdArithmetic {
     /// Create new SIMD arithmetic processor with auto-detection
     pub fn new() -> Self {
-        let features = CpuFeatures::detect();
-        let variant = features.best_simd_variant();
-        
-        Self { variant, features }
+        let _features = CpuFeatures::detect();
+        let variant = _features.best_simd_variant();
+
+        Self { variant, _features }
     }
 
     /// Create SIMD arithmetic processor with specific variant
     pub fn with_variant(variant: SimdVariant) -> Self {
-        let features = CpuFeatures::detect();
-        Self { variant, features }
+        let _features = CpuFeatures::detect();
+        Self { variant, _features }
     }
 
     /// Get the SIMD variant in use
@@ -164,8 +158,8 @@ impl SimdArithmetic {
 
     /// Scalar fallback for balance aggregation
     fn aggregate_balances_scalar(&self, balances: &[Balance]) -> Balance {
-        let mut result = Balance::new();
-        for balance in balances {
+        let result = Balance::new();
+        for _balance in balances {
             // TODO: Implement proper balance addition
             // result += balance;
         }
@@ -242,35 +236,35 @@ impl SimdBenchmark {
     /// Benchmark decimal addition performance
     pub fn benchmark_add_decimals(size: usize) -> std::time::Duration {
         use std::time::Instant;
-        
+
         let a: Vec<Decimal> = (0..size).map(|i| Decimal::from(i as i32)).collect();
         let b: Vec<Decimal> = (0..size).map(|i| Decimal::from((i * 2) as i32)).collect();
         let mut result = vec![Decimal::from(0); size];
-        
+
         let simd = SimdArithmetic::new();
         let start = Instant::now();
         simd.add_decimal_arrays(&a, &b, &mut result);
         start.elapsed()
     }
-    
+
     /// Benchmark balance aggregation performance
     pub fn benchmark_aggregate_balances(size: usize) -> std::time::Duration {
         use std::time::Instant;
-        
+
         let balances: Vec<Balance> = (0..size).map(|_| Balance::new()).collect();
-        
+
         let simd = SimdArithmetic::new();
         let start = Instant::now();
         let _ = simd.aggregate_balances(&balances);
         start.elapsed()
     }
-    
+
     /// Compare SIMD variant performance
     pub fn compare_variants(size: usize) {
         let a: Vec<Decimal> = (0..size).map(|i| Decimal::from(i as i32)).collect();
         let b: Vec<Decimal> = (0..size).map(|i| Decimal::from((i * 2) as i32)).collect();
         let mut result = vec![Decimal::from(0); size];
-        
+
         // Test scalar
         let scalar = SimdArithmetic::with_variant(SimdVariant::Scalar);
         let scalar_time = {
@@ -279,7 +273,7 @@ impl SimdBenchmark {
             scalar.add_decimal_arrays(&a, &b, &mut result);
             start.elapsed()
         };
-        
+
         // Test best available SIMD
         let simd = SimdArithmetic::new();
         let simd_time = {
@@ -288,10 +282,10 @@ impl SimdBenchmark {
             simd.add_decimal_arrays(&a, &b, &mut result);
             start.elapsed()
         };
-        
+
         println!("Scalar: {:?}", scalar_time);
         println!("SIMD ({:?}): {:?}", simd.variant(), simd_time);
-        
+
         if simd_time < scalar_time {
             let speedup = scalar_time.as_nanos() as f64 / simd_time.as_nanos() as f64;
             println!("Speedup: {:.2}x", speedup);
@@ -318,14 +312,14 @@ pub fn simd_sum_decimals(values: &[Decimal]) -> Decimal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_cpu_feature_detection() {
         let features = CpuFeatures::detect();
         println!("CPU Features: {:?}", features);
         println!("Best SIMD: {:?}", features.best_simd_variant());
     }
-    
+
     #[test]
     fn test_decimal_addition() {
         let a = vec![Decimal::from(1), Decimal::from(2), Decimal::from(3)];
@@ -333,7 +327,7 @@ mod tests {
         let result = simd_add_decimals(&a, &b);
         assert_eq!(result, vec![Decimal::from(5), Decimal::from(7), Decimal::from(9)]);
     }
-    
+
     #[test]
     fn test_decimal_sum() {
         let values = vec![Decimal::from(1), Decimal::from(2), Decimal::from(3)];

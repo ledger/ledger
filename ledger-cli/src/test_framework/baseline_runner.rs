@@ -4,15 +4,15 @@
 //! the test/baseline directory. These tests verify core functionality and
 //! serve as acceptance criteria for the Rust implementation.
 
-use std::path::{Path, PathBuf};
-use std::fs;
 use anyhow::{Context, Result};
-use log::{info, debug, warn, error};
 use colored::*;
+use log::{debug, error, info, warn};
+use std::fs;
+use std::path::{Path, PathBuf};
 
-use super::test_harness::{TestHarness, ProcessResult};
+use super::diff_reporter::{DiffConfig, DiffFormat, DiffReporter};
+use super::test_harness::{ProcessResult, TestHarness};
 use super::test_parser::{BaselineTestParser, TestCase};
-use super::diff_reporter::{DiffReporter, DiffConfig, DiffFormat};
 
 /// Configuration for baseline test execution
 #[derive(Debug, Clone)]
@@ -73,22 +73,18 @@ impl<'a> BaselineRunner<'a> {
             ..Default::default()
         };
 
-        Self {
-            harness,
-            config,
-            diff_reporter: DiffReporter::with_config(diff_config),
-        }
+        Self { harness, config, diff_reporter: DiffReporter::with_config(diff_config) }
     }
 
     /// Run all baseline tests in the specified directory
     pub fn run_tests<P: AsRef<Path>>(&self, test_dir: P) -> Result<()> {
         let test_dir = test_dir.as_ref();
-        
+
         info!("Running baseline tests from: {}", test_dir.display());
-        
+
         // Find all test files
         let test_files = self.find_test_files(test_dir)?;
-        
+
         if test_files.is_empty() {
             warn!("No test files found in: {}", test_dir.display());
             return Ok(());
@@ -107,7 +103,7 @@ impl<'a> BaselineRunner<'a> {
     /// Run a single baseline test file
     pub fn run_test_file<P: AsRef<Path>>(&self, test_file: P) -> Result<bool> {
         let test_file = test_file.as_ref();
-        
+
         debug!("Running baseline test: {}", test_file.display());
 
         // Check if test file is empty
@@ -119,8 +115,9 @@ impl<'a> BaselineRunner<'a> {
 
         // Parse test file
         let parser = BaselineTestParser::new(test_file);
-        let test_case = parser.parse()
-            .with_context(|| format!("Failed to parse baseline test file: {}", test_file.display()))?;
+        let test_case = parser.parse().with_context(|| {
+            format!("Failed to parse baseline test file: {}", test_file.display())
+        })?;
 
         // Run the test case
         self.run_test_case(test_file, &test_case)
@@ -129,7 +126,7 @@ impl<'a> BaselineRunner<'a> {
     /// Run a single baseline test case
     fn run_test_case(&self, test_file: &Path, test_case: &TestCase) -> Result<bool> {
         let test_name = test_file.file_name().unwrap().to_string_lossy();
-        
+
         info!("Running baseline test: {}", test_name);
 
         // For baseline tests, we often need to use the sample data
@@ -163,7 +160,7 @@ impl<'a> BaselineRunner<'a> {
 
         // Many baseline tests use the standard test data
         let test_data_file = self.find_test_data_file(test_file)?;
-        
+
         // Add file argument if not present
         if !command.contains("-f ") {
             command = format!("{} -f \"{}\"", command, test_data_file.display());
@@ -184,7 +181,7 @@ impl<'a> BaselineRunner<'a> {
 
         // Common test data files in order of preference
         let data_files = ["sample.dat", "standard.dat", "demo.ledger"];
-        
+
         for data_file in &data_files {
             let path = input_dir.join(data_file);
             if path.exists() {
@@ -204,13 +201,19 @@ impl<'a> BaselineRunner<'a> {
     }
 
     /// Handle baseline tests without expected output (create or compare against stored baseline)
-    fn handle_baseline_without_expected(&self, test_file: &Path, test_case: &TestCase, result: &ProcessResult) -> Result<bool> {
+    fn handle_baseline_without_expected(
+        &self,
+        test_file: &Path,
+        _test_case: &TestCase,
+        result: &ProcessResult,
+    ) -> Result<bool> {
         let expected_file = self.get_expected_output_file(test_file);
 
         if expected_file.exists() {
             // Compare against stored expected output
             let expected_content = fs::read_to_string(&expected_file)?;
-            let expected_lines: Vec<String> = expected_content.lines().map(|s| s.to_string()).collect();
+            let expected_lines: Vec<String> =
+                expected_content.lines().map(|s| s.to_string()).collect();
             let actual_lines = self.harness.normalize_output(&result.stdout);
 
             let diff_result = if self.config.fp_tolerance.is_some() {
@@ -244,14 +247,27 @@ impl<'a> BaselineRunner<'a> {
     }
 
     /// Compare test results against expected output embedded in test file
-    fn compare_against_expected(&self, test_file: &Path, test_case: &TestCase, result: &ProcessResult) -> Result<bool> {
+    fn compare_against_expected(
+        &self,
+        test_file: &Path,
+        test_case: &TestCase,
+        result: &ProcessResult,
+    ) -> Result<bool> {
         let mut success = true;
 
         // Compare exit code
         if result.exit_code != test_case.expected_exit_code {
             success = false;
-            println!("{}", format!("FAILURE in exit code for {}: {} != {}", 
-                test_file.display(), result.exit_code, test_case.expected_exit_code).red());
+            println!(
+                "{}",
+                format!(
+                    "FAILURE in exit code for {}: {} != {}",
+                    test_file.display(),
+                    result.exit_code,
+                    test_case.expected_exit_code
+                )
+                .red()
+            );
         }
 
         // Compare stdout
@@ -275,7 +291,10 @@ impl<'a> BaselineRunner<'a> {
 
             if diff_result.has_differences {
                 success = false;
-                println!("{}", format!("FAILURE in error output for {}: ", test_file.display()).red());
+                println!(
+                    "{}",
+                    format!("FAILURE in error output for {}: ", test_file.display()).red()
+                );
                 println!("{}", diff_result.diff_output);
             }
         }
@@ -299,10 +318,11 @@ impl<'a> BaselineRunner<'a> {
             let entry = entry?;
             let path = entry.path();
 
-            if path.is_file() && path.extension().map_or(false, |ext| ext == "test") {
+            if path.is_file() && path.extension().is_some_and(|ext| ext == "test") {
                 // Skip Python tests unless Python support is enabled
-                if path.file_name().unwrap().to_string_lossy().contains("_py.test") 
-                   && !self.harness.python_support {
+                if path.file_name().unwrap().to_string_lossy().contains("_py.test")
+                    && !self.harness.python_support
+                {
                     continue;
                 }
 
@@ -319,7 +339,7 @@ impl<'a> BaselineRunner<'a> {
     /// Generate baseline report showing test coverage and results
     pub fn generate_report<P: AsRef<Path>>(&self, test_dir: P) -> Result<()> {
         let test_files = self.find_test_files(test_dir)?;
-        
+
         println!("{}", "Baseline Test Coverage Report".cyan().bold());
         println!("{}", "=============================".cyan());
         println!();
@@ -358,18 +378,17 @@ impl<'a> BaselineRunner<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::{TempDir, NamedTempFile};
-    use std::io::Write;
+    use tempfile::TempDir;
 
     #[test]
     fn test_baseline_runner_creation() {
         let temp_dir = TempDir::new().unwrap();
         let ledger_path = temp_dir.path().join("ledger");
         std::fs::write(&ledger_path, "#!/bin/bash\necho 'test'").unwrap();
-        
+
         let harness = TestHarness::new(&ledger_path, &temp_dir.path().to_path_buf()).unwrap();
         let runner = BaselineRunner::new(&harness);
-        
+
         assert!(!runner.config.update_expected);
         assert!(runner.config.colored_output);
     }
@@ -377,13 +396,13 @@ mod tests {
     #[test]
     fn test_find_test_data_file() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         // Create test structure
         let input_dir = temp_dir.path().join("input");
         fs::create_dir_all(&input_dir).unwrap();
         let sample_file = input_dir.join("sample.dat");
         fs::write(&sample_file, "test data").unwrap();
-        
+
         let baseline_dir = temp_dir.path().join("baseline");
         fs::create_dir_all(&baseline_dir).unwrap();
         let test_file = baseline_dir.join("cmd-balance.test");
@@ -391,10 +410,10 @@ mod tests {
 
         let ledger_path = temp_dir.path().join("ledger");
         std::fs::write(&ledger_path, "#!/bin/bash\necho 'test'").unwrap();
-        
+
         let harness = TestHarness::new(&ledger_path, &temp_dir.path().to_path_buf()).unwrap();
         let runner = BaselineRunner::new(&harness);
-        
+
         let data_file = runner.find_test_data_file(&test_file).unwrap();
         assert_eq!(data_file, sample_file);
     }

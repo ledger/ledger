@@ -7,38 +7,31 @@
 use memmap2::Mmap;
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_until, take_while, take_while1},
+    bytes::complete::{take_while, take_while1},
     character::complete::{
-        alpha1, char, digit1, line_ending, space0, space1, 
-        multispace0, multispace1, not_line_ending,
+        char, digit1, line_ending, multispace0, multispace1, not_line_ending, space0, space1,
     },
-    combinator::{map, opt, recognize, value, consumed},
-    error::{context, ParseError},
-    multi::{many0, many1, separated_list1},
-    sequence::{delimited, preceded, terminated, tuple, pair},
-    IResult, Parser, InputLength,
+    combinator::{map, opt, recognize, value},
+    multi::many0,
+    sequence::{delimited, pair, tuple},
+    IResult,
 };
 
-use std::fs::File;
-use std::path::{Path, PathBuf};
-use std::io::{BufRead, BufReader};
-use std::borrow::Cow;
-use crate::strings::{AccountName, PayeeName, CommoditySymbol, intern_string, FastParser};
+use crate::strings::intern_string;
 use smallvec::SmallVec;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::path::{Path, PathBuf};
 
 /// Zero-copy parser error type
 #[derive(Debug, thiserror::Error)]
 pub enum ZeroCopyParseError {
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
-    
+
     #[error("Parse error at line {line}, column {column}: {message}")]
-    ParseError {
-        line: usize,
-        column: usize,
-        message: String,
-    },
-    
+    ParseError { line: usize, column: usize, message: String },
+
     #[error("Memory mapping failed: {0}")]
     MmapError(String),
 }
@@ -58,26 +51,25 @@ impl MappedJournal {
     /// Create a new memory-mapped journal from a file path
     pub fn from_path(path: &Path) -> ZeroCopyResult<Self> {
         let file = File::open(path)?;
-        let mmap = unsafe { 
+        let mmap = unsafe {
             Mmap::map(&file).map_err(|e| {
-                ZeroCopyParseError::MmapError(format!("Failed to map file {}: {}", path.display(), e))
+                ZeroCopyParseError::MmapError(format!(
+                    "Failed to map file {}: {}",
+                    path.display(),
+                    e
+                ))
             })?
         };
 
-        Ok(Self {
-            mmap,
-            path: path.to_path_buf(),
-        })
+        Ok(Self { mmap, path: path.to_path_buf() })
     }
 
     /// Get the raw content as a string slice
     pub fn content(&self) -> Result<&str, ZeroCopyParseError> {
-        std::str::from_utf8(&self.mmap).map_err(|e| {
-            ZeroCopyParseError::ParseError {
-                line: 0,
-                column: 0,
-                message: format!("Invalid UTF-8 in file {}: {}", self.path.display(), e),
-            }
+        std::str::from_utf8(&self.mmap).map_err(|e| ZeroCopyParseError::ParseError {
+            line: 0,
+            column: 0,
+            message: format!("Invalid UTF-8 in file {}: {}", self.path.display(), e),
         })
     }
 
@@ -92,7 +84,7 @@ impl MappedJournal {
 pub struct ZeroCopyTransaction<'a> {
     /// Transaction date as string slice
     pub date_str: &'a str,
-    /// Description/payee as string slice  
+    /// Description/payee as string slice
     pub description: &'a str,
     /// Optional code as string slice
     pub code: Option<&'a str>,
@@ -128,7 +120,7 @@ pub struct ZeroCopyParser<'a> {
     /// Input buffer being parsed
     input: &'a str,
     /// Current position for error reporting
-    current_line: usize,
+    _current_line: usize,
     /// Statistics for monitoring performance
     stats: ParserStats,
 }
@@ -148,17 +140,13 @@ pub struct ParserStats {
 impl<'a> ZeroCopyParser<'a> {
     /// Create a new zero-copy parser for the given input
     pub fn new(input: &'a str) -> Self {
-        Self {
-            input,
-            current_line: 1,
-            stats: ParserStats::default(),
-        }
+        Self { input, _current_line: 1, stats: ParserStats::default() }
     }
 
     /// Parse the entire journal content
     pub fn parse_journal(&mut self) -> ZeroCopyResult<Vec<ZeroCopyTransaction<'a>>> {
         let start_time = std::time::Instant::now();
-        
+
         let mut transactions = Vec::new();
         let mut remaining = self.input;
         let mut line_number = 1;
@@ -179,7 +167,7 @@ impl<'a> ZeroCopyParser<'a> {
                     transactions.push(transaction);
                     remaining = rest;
                     self.stats.transactions_parsed += 1;
-                    
+
                     // Update line number
                     line_number += remaining.len() - rest.len();
                 }
@@ -209,7 +197,7 @@ impl<'a> ZeroCopyParser<'a> {
             // Just whitespace
             value((), multispace1),
         )))(input)?;
-        
+
         Ok((input, ()))
     }
 
@@ -220,47 +208,53 @@ impl<'a> ZeroCopyParser<'a> {
         let (input, postings) = self.parse_postings(input)?;
 
         self.stats.postings_parsed += postings.len();
-        
-        Ok((input, ZeroCopyTransaction {
-            date_str,
-            description,
-            code,
-            postings,
-            line_number: 0, // Will be set by caller
-        }))
+
+        Ok((
+            input,
+            ZeroCopyTransaction {
+                date_str,
+                description,
+                code,
+                postings,
+                line_number: 0, // Will be set by caller
+            },
+        ))
     }
 
     /// Parse transaction header (date, description, optional code)
-    fn parse_transaction_header(&self, input: &'a str) -> IResult<&'a str, (&'a str, &'a str, Option<&'a str>)> {
+    fn parse_transaction_header(
+        &self,
+        input: &'a str,
+    ) -> IResult<&'a str, (&'a str, &'a str, Option<&'a str>)> {
         // Parse date - simple YYYY-MM-DD format
         let (input, date_str) = recognize(tuple((
-            digit1,           // Year
+            digit1, // Year
             char('-'),
-            digit1,           // Month  
+            digit1, // Month
             char('-'),
-            digit1,           // Day
+            digit1, // Day
         )))(input)?;
-        
+
         let (input, _) = space1(input)?;
-        
+
         // Optional code in parentheses
-        let (input, code) = opt(delimited(
-            char('('),
-            take_while(|c: char| c != ')'),
-            char(')')
-        ))(input)?;
-        
+        let (input, code) =
+            opt(delimited(char('('), take_while(|c: char| c != ')'), char(')')))(input)?;
+
         let (input, _) = if code.is_some() { space1(input)? } else { (input, "") };
-        
+
         // Description/payee (rest of line)
         let (input, description) = take_while(|c: char| c != '\n' && c != '\r')(input)?;
         let description = description.trim(); // Remove trailing whitespace
-        
+
         Ok((input, (date_str, description, code)))
     }
 
     /// Parse postings for a transaction
-    fn parse_postings(&mut self, input: &'a str) -> IResult<&'a str, SmallVec<[ZeroCopyPosting<'a>; 4]>> {
+    fn parse_postings(
+        &mut self,
+        input: &'a str,
+    ) -> IResult<&'a str, SmallVec<[ZeroCopyPosting<'a>; 4]>> {
         let mut postings = SmallVec::new();
         let mut remaining = input;
 
@@ -298,56 +292,62 @@ impl<'a> ZeroCopyParser<'a> {
     /// Parse a single posting
     fn parse_posting(&self, input: &'a str) -> IResult<&'a str, ZeroCopyPosting<'a>> {
         let (input, _) = space1(input)?; // Required indentation
-        
+
         // Check for virtual posting markers
         let (input, (is_virtual, account_content)) = alt((
             // Virtual posting: (Account Name)
-            map(delimited(char('('), take_while(|c: char| c != ')'), char(')')), 
-                |acc: &str| (true, acc)),
+            map(delimited(char('('), take_while(|c: char| c != ')'), char(')')), |acc: &str| {
+                (true, acc)
+            }),
             // Normal posting
-            map(take_while1(|c: char| c != ' ' && c != '\t' && c != '\n' && c != '\r'), 
-                |acc: &str| (false, acc)),
+            map(
+                take_while1(|c: char| c != ' ' && c != '\t' && c != '\n' && c != '\r'),
+                |acc: &str| (false, acc),
+            ),
         ))(input)?;
 
         let account = account_content.trim();
-        
+
         // Optional amount and comment
         let (input, _) = space0(input)?;
         let (input, amount_and_comment) = take_while(|c: char| c != '\n' && c != '\r')(input)?;
-        
+
         // Split amount and comment if present
         let (amount_str, note) = if amount_and_comment.is_empty() {
             (None, None)
         } else if let Some(semicolon_pos) = amount_and_comment.find(';') {
             let amount_part = amount_and_comment[..semicolon_pos].trim();
             let note_part = amount_and_comment[semicolon_pos + 1..].trim();
-            
+
             let amount = if amount_part.is_empty() { None } else { Some(amount_part) };
             let note = if note_part.is_empty() { None } else { Some(note_part) };
             (amount, note)
         } else {
             let trimmed = amount_and_comment.trim();
             // Check if it looks like an amount (starts with digit, $, or -)
-            if trimmed.chars().next()
+            if trimmed
+                .chars()
+                .next()
                 .map(|c| c.is_ascii_digit() || c == '$' || c == '-' || c == '+')
-                .unwrap_or(false) {
+                .unwrap_or(false)
+            {
                 (Some(trimmed), None)
             } else {
                 (None, Some(trimmed))
             }
         };
-        
+
         let (input, _) = opt(line_ending)(input)?;
-        
-        Ok((input, ZeroCopyPosting {
-            account,
-            amount_str,
-            note,
-            flags: PostingFlags {
-                is_virtual,
-                must_balance: !is_virtual,
+
+        Ok((
+            input,
+            ZeroCopyPosting {
+                account,
+                amount_str,
+                note,
+                flags: PostingFlags { is_virtual, must_balance: !is_virtual },
             },
-        }))
+        ))
     }
 
     /// Check if the current line starts a new transaction
@@ -356,16 +356,17 @@ impl<'a> ZeroCopyParser<'a> {
         if input.len() < 10 {
             return false;
         }
-        
+
         let chars: Vec<char> = input.chars().take(10).collect();
         if chars.len() != 10 {
             return false;
         }
-        
-        chars[4] == '-' && chars[7] == '-' && 
-        chars[0..4].iter().all(|c| c.is_ascii_digit()) &&
-        chars[5..7].iter().all(|c| c.is_ascii_digit()) &&
-        chars[8..10].iter().all(|c| c.is_ascii_digit())
+
+        chars[4] == '-'
+            && chars[7] == '-'
+            && chars[0..4].iter().all(|c| c.is_ascii_digit())
+            && chars[5..7].iter().all(|c| c.is_ascii_digit())
+            && chars[8..10].iter().all(|c| c.is_ascii_digit())
     }
 
     /// Get parsing statistics
@@ -376,15 +377,15 @@ impl<'a> ZeroCopyParser<'a> {
 
 /// Convert zero-copy transaction to owned data structures
 pub fn materialize_transaction<'a>(
-    zc_transaction: &ZeroCopyTransaction<'a>
+    zc_transaction: &ZeroCopyTransaction<'a>,
 ) -> crate::transaction::Transaction {
     use crate::transaction::Transaction;
-    
+
     // For this example, we'll create a simplified conversion
     // In practice, you'd need to parse dates, amounts, etc.
-    let description = intern_string(zc_transaction.description);
-    let date_str = zc_transaction.date_str;
-    
+    let _description = intern_string(zc_transaction.description);
+    let _date_str = zc_transaction.date_str;
+
     // This is a simplified conversion - you'd need full implementation
     Transaction {
         // Initialize with placeholder values
@@ -407,7 +408,7 @@ impl StreamingParser {
     pub fn new(path: &Path) -> ZeroCopyResult<Self> {
         let file = File::open(path)?;
         let reader = BufReader::new(file);
-        
+
         Ok(Self {
             reader,
             line_buffer: String::with_capacity(1024),
@@ -426,11 +427,11 @@ impl StreamingParser {
                 _ => {
                     self.current_line += 1;
                     let line = self.line_buffer.trim();
-                    
+
                     if line.is_empty() || line.starts_with(';') {
                         continue; // Skip empty lines and comments
                     }
-                    
+
                     // This line should be a transaction header
                     return self.parse_streaming_transaction();
                 }
@@ -439,12 +440,14 @@ impl StreamingParser {
     }
 
     /// Parse a transaction from the streaming reader
-    fn parse_streaming_transaction(&mut self) -> ZeroCopyResult<Option<crate::transaction::Transaction>> {
+    fn parse_streaming_transaction(
+        &mut self,
+    ) -> ZeroCopyResult<Option<crate::transaction::Transaction>> {
         // Simplified streaming transaction parsing
         // In practice, you'd implement full transaction parsing here
-        
+
         self.stats.transactions_parsed += 1;
-        
+
         // Create a placeholder transaction
         // You'd implement the actual parsing logic here
         Ok(Some(crate::transaction::Transaction::default()))
@@ -479,18 +482,18 @@ mod tests {
 
         let mut parser = ZeroCopyParser::new(journal_content);
         let transactions = parser.parse_journal().unwrap();
-        
+
         assert_eq!(transactions.len(), 3);
-        
+
         let first_txn = &transactions[0];
         assert_eq!(first_txn.date_str, "2023-01-01");
         assert_eq!(first_txn.description, "Opening Balance");
         assert_eq!(first_txn.postings.len(), 2);
-        
+
         let third_txn = &transactions[2];
         assert_eq!(third_txn.code, Some("123"));
         assert_eq!(third_txn.description, "Paycheck");
-        
+
         let stats = parser.stats();
         assert_eq!(stats.transactions_parsed, 3);
         assert!(stats.postings_parsed > 0);
@@ -499,17 +502,21 @@ mod tests {
     #[test]
     fn test_memory_mapped_journal() {
         let mut temp_file = NamedTempFile::new().unwrap();
-        write!(temp_file, r#"2023-01-01 Test Transaction
+        write!(
+            temp_file,
+            r#"2023-01-01 Test Transaction
     Assets:Test     $100.00
     Equity:Test
-"#).unwrap();
+"#
+        )
+        .unwrap();
 
         let mapped = MappedJournal::from_path(temp_file.path()).unwrap();
         let content = mapped.content().unwrap();
-        
+
         let mut parser = ZeroCopyParser::new(content);
         let transactions = parser.parse_journal().unwrap();
-        
+
         assert_eq!(transactions.len(), 1);
         assert_eq!(transactions[0].date_str, "2023-01-01");
     }
@@ -524,10 +531,10 @@ mod tests {
 
         let mut parser = ZeroCopyParser::new(journal_content);
         let transactions = parser.parse_journal().unwrap();
-        
+
         assert_eq!(transactions.len(), 1);
         let postings = &transactions[0].postings;
-        
+
         assert_eq!(postings.len(), 3);
         assert!(postings[0].flags.is_virtual);
         assert!(!postings[1].flags.is_virtual);

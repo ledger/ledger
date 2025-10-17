@@ -3,13 +3,12 @@
 //! This binary provides a command-line interface for running regression tests,
 //! equivalent to the Python RegressTests.py script.
 
-use clap::Parser;
 use anyhow::Result;
+use clap::Parser;
+use log::{error, info};
 use std::path::PathBuf;
-use log::{info, error};
 
-use ledger_cli::test_framework::{TestRunner};
-use ledger_cli::test_framework::regression_runner::{RegressionRunner, RegressionConfig};
+use ledger_cli::test_framework::regression_runner::{RegressionConfig, RegressionRunner};
 
 #[derive(Parser)]
 #[command(name = "regression_runner")]
@@ -70,10 +69,11 @@ fn main() -> Result<()> {
     info!("Tests path: {}", args.tests.display());
 
     // Create test harness
-    let harness = ledger_cli::test_framework::test_harness::TestHarness::new(&args.ledger, &args.sourcepath)?
-        .with_verify(args.verify)
-        .with_gmalloc(args.gmalloc)
-        .with_python(args.python);
+    let harness =
+        ledger_cli::test_framework::test_harness::TestHarness::new(&args.ledger, &args.sourcepath)?
+            .with_verify(args.verify)
+            .with_gmalloc(args.gmalloc)
+            .with_python(args.python);
 
     // Configure regression runner
     let config = RegressionConfig {
@@ -103,10 +103,8 @@ fn main() -> Result<()> {
             info!("Resolved test pattern to: {}", resolved_path.display());
             if resolved_path.is_dir() {
                 runner.run_tests(&resolved_path)?;
-            } else {
-                if !runner.run_test_file(&resolved_path)? {
-                    error!("Test file failed: {}", resolved_path.display());
-                }
+            } else if !runner.run_test_file(&resolved_path)? {
+                error!("Test file failed: {}", resolved_path.display());
             }
         } else {
             anyhow::bail!("Test path does not exist: {}", args.tests.display());
@@ -125,7 +123,7 @@ fn resolve_test_pattern(pattern: &str) -> Result<Option<PathBuf>> {
         } else {
             pattern.strip_prefix("Regress_").unwrap()
         };
-        
+
         let test_path = PathBuf::from("test/regress").join(format!("{}.test", test_name));
         if test_path.exists() {
             return Ok(Some(test_path));
@@ -136,7 +134,7 @@ fn resolve_test_pattern(pattern: &str) -> Result<Option<PathBuf>> {
         } else {
             pattern.strip_prefix("Baseline_").unwrap()
         };
-        
+
         let test_path = PathBuf::from("test/baseline").join(format!("{}.test", test_name));
         if test_path.exists() {
             return Ok(Some(test_path));
@@ -147,7 +145,7 @@ fn resolve_test_pattern(pattern: &str) -> Result<Option<PathBuf>> {
         } else {
             pattern.strip_prefix("Manual_").unwrap()
         };
-        
+
         let test_path = PathBuf::from("test/manual").join(format!("{}.test", test_name));
         if test_path.exists() {
             return Ok(Some(test_path));

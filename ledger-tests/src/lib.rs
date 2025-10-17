@@ -1,5 +1,5 @@
 //! # Ledger Test Framework
-//! 
+//!
 //! A comprehensive test framework for the Ledger Rust implementation,
 //! designed to be compatible with the original Python test harness.
 //!
@@ -15,28 +15,30 @@
 //! - `python`: PyO3 bindings for Python compatibility (optional)
 //! - `fuzzing`: Fuzzing infrastructure (optional)
 
-pub mod config;
+pub mod baseline;
 pub mod comparison;
+pub mod config;
 pub mod discovery;
 pub mod execution;
 pub mod harness;
 pub mod reporting;
-pub mod baseline;
 
-#[cfg(feature = "python-bindings")]
-pub mod python;
+// FIXME: failed to resolve mod `python`: .../python.rs does not exist
+// #[cfg(feature = "python-bindings")]
+// pub mod python;
 
-#[cfg(feature = "fuzzing")]
-pub mod fuzzing;
+// FIXME: Error writing files: failed to resolve mod `fuzzing`: .../fuzzing.rs does not exist
+// #[cfg(feature = "fuzzing")]
+// pub mod fuzzing;
 
 // Re-exports for easier access
-pub use harness::{LedgerHarness, TestRunner};
-pub use config::{TestConfig, TestCategory};
+pub use baseline::{BaselineCoverage, BaselineRunner};
+pub use comparison::OutputComparison;
+pub use config::{TestCategory, TestConfig};
 pub use discovery::{TestCase, TestSuite};
 pub use execution::{TestResult, TestStatus};
-pub use comparison::OutputComparison;
+pub use harness::{LedgerHarness, TestRunner};
 pub use reporting::TestReport;
-pub use baseline::{BaselineRunner, BaselineCoverage};
 
 /// Current version of the test framework
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -46,22 +48,22 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub enum TestError {
     #[error("Test discovery failed: {0}")]
     Discovery(String),
-    
+
     #[error("Test execution failed: {0}")]
     Execution(String),
-    
+
     #[error("Output comparison failed: {0}")]
     Comparison(String),
-    
+
     #[error("Configuration error: {0}")]
     Config(String),
-    
+
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-    
+
     #[error("Parse error: {0}")]
     Parse(String),
-    
+
     #[error("Template error: {0}")]
     Template(#[from] indicatif::style::TemplateError),
 }

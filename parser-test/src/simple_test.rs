@@ -20,40 +20,42 @@ commodity USD
 commodity EUR
     format 1.000,00 €
 "#;
-    
+
     println!("Testing ledger with accounts and commodities:");
     println!("{}", test_ledger);
     println!("{}", "=".repeat(60));
-    
+
     let mut parser = JournalParser::new();
-    
+
     match parser.parse_journal(test_ledger) {
         Ok(journal) => {
             println!("✓ Parsed successfully!");
             println!("Transactions: {}", journal.transactions.len());
             println!("Accounts found: {}", journal.accounts.len());
             println!("Commodities found: {}", journal.commodities.len());
-            
+
             // List accounts
             println!("\nAccounts:");
-            for (name, _) in &journal.accounts {
+            for name in journal.accounts.keys() {
                 println!("  {}", name);
             }
-            
-            // List commodities  
+
+            // List commodities
             println!("\nCommodities:");
-            for (symbol, _) in &journal.commodities {
+            for symbol in journal.commodities.keys() {
                 println!("  {}", symbol);
             }
-            
+
             // Show transaction details
             println!("\nTransaction details:");
             for (i, transaction) in journal.transactions.iter().enumerate() {
-                println!("Transaction {}: {} - {}", 
-                         i + 1,
-                         transaction.date.format("%Y-%m-%d"),
-                         transaction.payee);
-                
+                println!(
+                    "Transaction {}: {} - {}",
+                    i + 1,
+                    transaction.date.format("%Y-%m-%d"),
+                    transaction.payee
+                );
+
                 for posting in &transaction.postings {
                     let account = posting.account.borrow();
                     println!("  Account: {}", account.name);

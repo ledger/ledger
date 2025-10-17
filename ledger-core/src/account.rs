@@ -3,15 +3,15 @@
 //! This module provides the core Account struct that forms a tree structure
 //! supporting hierarchical accounts with efficient lookups, aliasing, and metadata storage.
 
+use compact_str::CompactString;
+use regex::Regex;
+use serde_json::Value;
 use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
 use std::rc::{Rc, Weak};
-use compact_str::CompactString;
-use serde_json::Value;
-use regex::Regex;
 
-use crate::strings::{AccountName, intern_string, AccountPathBuilder};
+use crate::strings::{intern_string, AccountName, AccountPathBuilder};
 
 /// Account flags indicating various states
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -137,7 +137,11 @@ impl Account {
     }
 
     /// Create a new account with optimized string interning
-    pub fn new_interned(name: AccountName, parent: Option<WeakAccountRef>, account_id: usize) -> Self {
+    pub fn new_interned(
+        name: AccountName,
+        parent: Option<WeakAccountRef>,
+        account_id: usize,
+    ) -> Self {
         let depth = if let Some(parent_weak) = &parent {
             if let Some(parent_rc) = parent_weak.upgrade() {
                 parent_rc.borrow().depth + 1
@@ -231,12 +235,9 @@ impl Account {
         if path.is_empty() {
             return Vec::new();
         }
-        
+
         use crate::strings::FastParser;
-        FastParser::split_account_path(path)
-            .into_iter()
-            .map(|s| intern_string(s))
-            .collect()
+        FastParser::split_account_path(path).into_iter().map(intern_string).collect()
     }
 
     /// Check if this account has the specified flag
@@ -306,20 +307,19 @@ impl Account {
 
     /// Get directives of a specific type
     pub fn get_directives_by_type(&self, directive_type: &str) -> Vec<&AccountDirective> {
-        self.directives.iter()
-            .filter(|directive| {
-                match directive {
-                    AccountDirective::Account(_, _) => directive_type == "account",
-                    AccountDirective::Alias(_) => directive_type == "alias",
-                    AccountDirective::Payee(_) => directive_type == "payee",
-                    AccountDirective::Check(_) => directive_type == "check",
-                    AccountDirective::Assert(_) => directive_type == "assert",
-                    AccountDirective::Note(_) => directive_type == "note",
-                    AccountDirective::Tag(_) => directive_type == "tag",
-                    AccountDirective::Default(_) => directive_type == "default",
-                    AccountDirective::Format(_) => directive_type == "format",
-                    AccountDirective::Eval(_) => directive_type == "eval",
-                }
+        self.directives
+            .iter()
+            .filter(|directive| match directive {
+                AccountDirective::Account(_, _) => directive_type == "account",
+                AccountDirective::Alias(_) => directive_type == "alias",
+                AccountDirective::Payee(_) => directive_type == "payee",
+                AccountDirective::Check(_) => directive_type == "check",
+                AccountDirective::Assert(_) => directive_type == "assert",
+                AccountDirective::Note(_) => directive_type == "note",
+                AccountDirective::Tag(_) => directive_type == "tag",
+                AccountDirective::Default(_) => directive_type == "default",
+                AccountDirective::Format(_) => directive_type == "format",
+                AccountDirective::Eval(_) => directive_type == "eval",
             })
             .collect()
     }
@@ -401,7 +401,8 @@ impl Account {
 
     /// Get account assertions (from directives)
     pub fn get_assertions(&self) -> Vec<String> {
-        self.directives.iter()
+        self.directives
+            .iter()
             .filter_map(|directive| {
                 if let AccountDirective::Assert(assertion) = directive {
                     Some(assertion.to_string())
@@ -414,7 +415,8 @@ impl Account {
 
     /// Get account tags (from directives)
     pub fn get_tags(&self) -> Vec<String> {
-        self.directives.iter()
+        self.directives
+            .iter()
             .filter_map(|directive| {
                 if let AccountDirective::Tag(tag) = directive {
                     Some(tag.to_string())
@@ -538,42 +540,44 @@ pub struct DepthFirstIterator {
 impl DepthFirstIterator {
     fn new(root_account: &Account) -> Self {
         let mut stack = Vec::new();
-        
+
         // Add children to stack in reverse order for correct traversal order
-        let mut children: Vec<_> = root_account.children.iter()
+        let mut children: Vec<_> = root_account
+            .children
+            .iter()
             .map(|(name, account_ref)| (name.clone(), account_ref.clone()))
             .collect();
         children.reverse();
         stack.extend(children);
-        
-        Self {
-            stack,
-            visited: std::collections::HashSet::new(),
-        }
+
+        Self { stack, visited: std::collections::HashSet::new() }
     }
 }
 
 impl Iterator for DepthFirstIterator {
     type Item = AccountRef;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         while let Some((_, account_ref)) = self.stack.pop() {
             let account_id = account_ref.borrow().account_id;
-            
+
             // Skip if already visited (prevent cycles)
             if self.visited.contains(&account_id) {
                 continue;
             }
-            
+
             self.visited.insert(account_id);
-            
+
             // Add children to stack in reverse order
-            let mut children: Vec<_> = account_ref.borrow().children.iter()
+            let mut children: Vec<_> = account_ref
+                .borrow()
+                .children
+                .iter()
                 .map(|(name, child_ref)| (name.clone(), child_ref.clone()))
                 .collect();
             children.reverse();
             self.stack.extend(children);
-            
+
             return Some(account_ref);
         }
         None
@@ -589,38 +593,35 @@ pub struct BreadthFirstIterator {
 impl BreadthFirstIterator {
     fn new(root_account: &Account) -> Self {
         let mut queue = VecDeque::new();
-        
+
         // Add children to queue
         for child_ref in root_account.children.values() {
             queue.push_back(child_ref.clone());
         }
-        
-        Self {
-            queue,
-            visited: std::collections::HashSet::new(),
-        }
+
+        Self { queue, visited: std::collections::HashSet::new() }
     }
 }
 
 impl Iterator for BreadthFirstIterator {
     type Item = AccountRef;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(account_ref) = self.queue.pop_front() {
             let account_id = account_ref.borrow().account_id;
-            
+
             // Skip if already visited (prevent cycles)
             if self.visited.contains(&account_id) {
                 continue;
             }
-            
+
             self.visited.insert(account_id);
-            
+
             // Add children to queue
             for child_ref in account_ref.borrow().children.values() {
                 self.queue.push_back(child_ref.clone());
             }
-            
+
             return Some(account_ref);
         }
         None
@@ -664,18 +665,12 @@ impl AccountTree {
         let root = Rc::new(RefCell::new(Account::new_root(CompactString::from(""), 0)));
         let mut path_index = HashMap::new();
         let mut id_index = HashMap::new();
-        
+
         // Index the root account
         path_index.insert(CompactString::from(""), root.clone());
         id_index.insert(0, root.clone());
-        
-        Self {
-            root,
-            path_index,
-            id_index,
-            next_account_id: 1,
-            alias_registry: HashMap::new(),
-        }
+
+        Self { root, path_index, id_index, next_account_id: 1, alias_registry: HashMap::new() }
     }
 
     /// Find an account by path, optionally creating it if it doesn't exist
@@ -772,7 +767,9 @@ impl AccountTree {
         }
 
         let path_key = CompactString::from(path);
-        let account_ref = self.path_index.get(&path_key)
+        let account_ref = self
+            .path_index
+            .get(&path_key)
             .ok_or_else(|| format!("Account '{}' not found", path))?
             .clone();
 
@@ -807,7 +804,7 @@ impl AccountTree {
     /// Recursively index an account and its children
     fn _index_account_recursive(&mut self, account_ref: &AccountRef, path: CompactString) {
         let account_id = account_ref.borrow().account_id;
-        
+
         // Index this account
         self.path_index.insert(path.clone(), account_ref.clone());
         self.id_index.insert(account_id, account_ref.clone());
@@ -834,7 +831,11 @@ impl AccountTree {
     }
 
     /// Register an alias for an account path
-    pub fn register_alias(&mut self, alias: CompactString, canonical_path: CompactString) -> Result<(), String> {
+    pub fn register_alias(
+        &mut self,
+        alias: CompactString,
+        canonical_path: CompactString,
+    ) -> Result<(), String> {
         // Validate that the canonical path exists or can be created
         if self.find_account(&canonical_path, false).is_none() {
             return Err(format!("Canonical path '{}' does not exist", canonical_path));
@@ -857,8 +858,7 @@ impl AccountTree {
 
     /// Remove an alias
     pub fn remove_alias(&mut self, alias: &str) -> Result<CompactString, String> {
-        self.alias_registry.remove(alias)
-            .ok_or_else(|| format!("Alias '{}' not found", alias))
+        self.alias_registry.remove(alias).ok_or_else(|| format!("Alias '{}' not found", alias))
     }
 
     /// Resolve an alias to its canonical path
@@ -870,7 +870,7 @@ impl AccountTree {
     fn resolve_alias_chain(&self, alias: &str) -> Vec<CompactString> {
         let mut chain = Vec::new();
         let mut current = CompactString::from(alias);
-        
+
         while let Some(resolved) = self.alias_registry.get(&current) {
             if chain.contains(resolved) {
                 break; // Circular reference detected
@@ -883,7 +883,11 @@ impl AccountTree {
     }
 
     /// Find an account by path or alias
-    pub fn find_account_or_alias(&mut self, path_or_alias: &str, auto_create: bool) -> Option<AccountRef> {
+    pub fn find_account_or_alias(
+        &mut self,
+        path_or_alias: &str,
+        auto_create: bool,
+    ) -> Option<AccountRef> {
         // First try direct path lookup
         if let Some(account) = self.find_account(path_or_alias, false) {
             return Some(account);
@@ -904,9 +908,7 @@ impl AccountTree {
 
     /// Get all aliases
     pub fn all_aliases(&self) -> Vec<(CompactString, CompactString)> {
-        self.alias_registry.iter()
-            .map(|(alias, path)| (alias.clone(), path.clone()))
-            .collect()
+        self.alias_registry.iter().map(|(alias, path)| (alias.clone(), path.clone())).collect()
     }
 
     /// Check if a string is an alias
@@ -923,9 +925,7 @@ impl AccountTree {
     pub fn find_accounts_by_pattern(&mut self, pattern: &Regex) -> Vec<AccountRef> {
         self.all_accounts()
             .into_iter()
-            .filter(|account_ref| {
-                account_ref.borrow_mut().matches_pattern(pattern)
-            })
+            .filter(|account_ref| account_ref.borrow_mut().matches_pattern(pattern))
             .collect()
     }
 
@@ -936,9 +936,7 @@ impl AccountTree {
     {
         self.all_accounts()
             .into_iter()
-            .filter(|account_ref| {
-                account_ref.borrow().matches_predicate(&predicate)
-            })
+            .filter(|account_ref| account_ref.borrow().matches_predicate(&predicate))
             .collect()
     }
 
@@ -962,9 +960,7 @@ impl AccountTree {
     /// Filter accounts by metadata key existence
     pub fn find_accounts_by_metadata_key(&self, key: &str) -> Vec<AccountRef> {
         let key = key.to_string();
-        self.find_accounts_by_predicate(move |account| {
-            account.metadata.contains_key(&key)
-        })
+        self.find_accounts_by_predicate(move |account| account.metadata.contains_key(&key))
     }
 
     /// Find virtual accounts
@@ -979,13 +975,15 @@ impl AccountTree {
 
     /// Find root accounts (accounts with no parent, excluding the tree root)
     pub fn find_root_accounts(&self) -> Vec<AccountRef> {
-        self.find_accounts_by_predicate(|account| {
-            account.depth == 1 && !account.name.is_empty()
-        })
+        self.find_accounts_by_predicate(|account| account.depth == 1 && !account.name.is_empty())
     }
 
     /// Create a temporary/virtual account
-    pub fn create_virtual_account(&mut self, path: &str, account_type: Option<AccountType>) -> AccountRef {
+    pub fn create_virtual_account(
+        &mut self,
+        path: &str,
+        account_type: Option<AccountType>,
+    ) -> AccountRef {
         let account_ref = self.find_account(path, true).unwrap();
         {
             let mut account = account_ref.borrow_mut();
@@ -1001,12 +999,17 @@ impl AccountTree {
     }
 
     /// Apply account directives from parsing
-    pub fn apply_directive(&mut self, path: &str, directive: AccountDirective) -> Result<(), String> {
+    pub fn apply_directive(
+        &mut self,
+        path: &str,
+        directive: AccountDirective,
+    ) -> Result<(), String> {
         match directive {
             AccountDirective::Account(account_path, account_type) => {
-                let account_ref = self.find_account(&account_path, true)
+                let account_ref = self
+                    .find_account(&account_path, true)
                     .ok_or_else(|| format!("Failed to create account: {}", account_path))?;
-                
+
                 let mut account = account_ref.borrow_mut();
                 if let Some(account_type) = account_type {
                     account.set_account_type(account_type);
@@ -1016,30 +1019,32 @@ impl AccountTree {
                 account.add_directive(AccountDirective::Account(account_path, account_type));
                 account.mark_as_known();
                 Ok(())
-            },
+            }
             AccountDirective::Alias(alias_name) => {
                 self.register_alias(alias_name.clone(), CompactString::from(path))
                     .map_err(|e| format!("Failed to register alias '{}': {}", alias_name, e))?;
-                
+
                 if let Some(account_ref) = self.find_account(path, false) {
                     account_ref.borrow_mut().add_directive(AccountDirective::Alias(alias_name));
                 }
                 Ok(())
-            },
+            }
             AccountDirective::Note(note_text) => {
-                let account_ref = self.find_account(path, false)
+                let account_ref = self
+                    .find_account(path, false)
                     .ok_or_else(|| format!("Account '{}' not found for note directive", path))?;
-                
+
                 let mut account = account_ref.borrow_mut();
                 account.note = Some(note_text.clone());
                 account.add_directive(AccountDirective::Note(note_text));
                 Ok(())
-            },
+            }
             _ => {
                 // For other directives, ensure account exists and add the directive
-                let account_ref = self.find_account(path, false)
+                let account_ref = self
+                    .find_account(path, false)
                     .ok_or_else(|| format!("Account '{}' not found for directive", path))?;
-                
+
                 account_ref.borrow_mut().add_directive(directive);
                 Ok(())
             }
@@ -1049,7 +1054,10 @@ impl AccountTree {
     /// Parse and apply account directive from a directive line
     pub fn parse_and_apply_directive(&mut self, directive_line: &str) -> Result<(), String> {
         let directive_line = directive_line.trim();
-        if directive_line.is_empty() || directive_line.starts_with(';') || directive_line.starts_with('#') {
+        if directive_line.is_empty()
+            || directive_line.starts_with(';')
+            || directive_line.starts_with('#')
+        {
             return Ok(()); // Skip empty lines and comments
         }
 
@@ -1077,9 +1085,10 @@ impl AccountTree {
                 } else {
                     None
                 };
-                let directive = AccountDirective::Account(CompactString::from(account_path), account_type);
+                let directive =
+                    AccountDirective::Account(CompactString::from(account_path), account_type);
                 self.apply_directive(account_path, directive)
-            },
+            }
             "alias" => {
                 if parts.len() < 3 {
                     return Err("Alias directive requires alias name and account path".into());
@@ -1088,7 +1097,7 @@ impl AccountTree {
                 let account_path = parts[2];
                 let directive = AccountDirective::Alias(CompactString::from(alias_name));
                 self.apply_directive(account_path, directive)
-            },
+            }
             "payee" => {
                 if parts.len() < 3 {
                     return Err("Payee directive requires account path and payee name".into());
@@ -1097,7 +1106,7 @@ impl AccountTree {
                 let payee_name = parts[2..].join(" ");
                 let directive = AccountDirective::Payee(CompactString::from(payee_name));
                 self.apply_directive(account_path, directive)
-            },
+            }
             "note" => {
                 if parts.len() < 3 {
                     return Err("Note directive requires account path and note text".into());
@@ -1106,7 +1115,7 @@ impl AccountTree {
                 let note_text = parts[2..].join(" ");
                 let directive = AccountDirective::Note(CompactString::from(note_text));
                 self.apply_directive(account_path, directive)
-            },
+            }
             "tag" => {
                 if parts.len() < 3 {
                     return Err("Tag directive requires account path and tag name".into());
@@ -1115,7 +1124,7 @@ impl AccountTree {
                 let tag_name = parts[2];
                 let directive = AccountDirective::Tag(CompactString::from(tag_name));
                 self.apply_directive(account_path, directive)
-            },
+            }
             "assert" => {
                 if parts.len() < 3 {
                     return Err("Assert directive requires account path and assertion".into());
@@ -1124,7 +1133,7 @@ impl AccountTree {
                 let assertion = parts[2..].join(" ");
                 let directive = AccountDirective::Assert(CompactString::from(assertion));
                 self.apply_directive(account_path, directive)
-            },
+            }
             "default" => {
                 if parts.len() < 3 {
                     return Err("Default directive requires account path and commodity".into());
@@ -1133,7 +1142,7 @@ impl AccountTree {
                 let commodity = parts[2];
                 let directive = AccountDirective::Default(CompactString::from(commodity));
                 self.apply_directive(account_path, directive)
-            },
+            }
             "format" => {
                 if parts.len() < 3 {
                     return Err("Format directive requires account path and format spec".into());
@@ -1142,15 +1151,17 @@ impl AccountTree {
                 let format_spec = parts[2..].join(" ");
                 let directive = AccountDirective::Format(CompactString::from(format_spec));
                 self.apply_directive(account_path, directive)
-            },
-            _ => {
-                Err(format!("Unknown directive type: {}", directive_type))
             }
+            _ => Err(format!("Unknown directive type: {}", directive_type)),
         }
     }
 
     /// Create temporary account for calculations
-    pub fn create_temp_account(&mut self, path: &str, account_type: Option<AccountType>) -> AccountRef {
+    pub fn create_temp_account(
+        &mut self,
+        path: &str,
+        account_type: Option<AccountType>,
+    ) -> AccountRef {
         let account_ref = self.find_account(path, true).unwrap();
         {
             let mut account = account_ref.borrow_mut();
@@ -1175,19 +1186,19 @@ impl AccountTree {
 
     /// Find accounts with assertions
     pub fn find_accounts_with_assertions(&self) -> Vec<AccountRef> {
-        self.find_accounts_by_predicate(|account| {
-            !account.get_assertions().is_empty()
-        })
+        self.find_accounts_by_predicate(|account| !account.get_assertions().is_empty())
     }
 
     /// Get all account directives grouped by type
-    pub fn get_all_directives(&self) -> std::collections::HashMap<String, Vec<(String, AccountDirective)>> {
+    pub fn get_all_directives(
+        &self,
+    ) -> std::collections::HashMap<String, Vec<(String, AccountDirective)>> {
         let mut directives_map = std::collections::HashMap::new();
-        
+
         for account_ref in self.all_accounts() {
             let account = account_ref.borrow();
             let account_path = account.fullname_immutable();
-            
+
             for directive in account.get_directives() {
                 let directive_type = match directive {
                     AccountDirective::Account(_, _) => "account",
@@ -1201,13 +1212,14 @@ impl AccountTree {
                     AccountDirective::Format(_) => "format",
                     AccountDirective::Eval(_) => "eval",
                 };
-                
-                directives_map.entry(directive_type.into())
+
+                directives_map
+                    .entry(directive_type.into())
                     .or_insert_with(Vec::new)
                     .push((account_path.clone(), directive.clone()));
             }
         }
-        
+
         directives_map
     }
 
@@ -1264,10 +1276,10 @@ mod tests {
     fn test_account_flags() {
         let mut account = Account::new_root("Test".into(), 1);
         assert!(!account.has_flag(AccountFlags::Known));
-        
+
         account.add_flag(AccountFlags::Known);
         assert!(account.has_flag(AccountFlags::Known));
-        
+
         account.remove_flag(AccountFlags::Known);
         assert!(!account.has_flag(AccountFlags::Known));
     }
@@ -1275,7 +1287,7 @@ mod tests {
     #[test]
     fn test_account_metadata() {
         let mut account = Account::new_root("Test".into(), 1);
-        
+
         account.set_metadata("description".to_string(), "Test account");
         assert_eq!(
             account.get_metadata("description"),
@@ -1286,15 +1298,12 @@ mod tests {
     #[test]
     fn test_parent_child_relationships() {
         let assets_rc = Rc::new(RefCell::new(Account::new_root("Assets".into(), 1)));
-        let bank_rc = Rc::new(RefCell::new(Account::new(
-            "Bank".into(),
-            Some(Rc::downgrade(&assets_rc)),
-            2
-        )));
+        let bank_rc =
+            Rc::new(RefCell::new(Account::new("Bank".into(), Some(Rc::downgrade(&assets_rc)), 2)));
         let checking_rc = Rc::new(RefCell::new(Account::new(
             "Checking".into(),
             Some(Rc::downgrade(&bank_rc)),
-            3
+            3,
         )));
 
         // Test hierarchy depths
@@ -1462,7 +1471,10 @@ mod tests {
         assert!(!tree.is_alias("NonExistent"));
 
         // Test alias resolution
-        assert_eq!(tree.resolve_alias("Checking"), Some(&CompactString::from("Assets:Bank:Checking")));
+        assert_eq!(
+            tree.resolve_alias("Checking"),
+            Some(&CompactString::from("Assets:Bank:Checking"))
+        );
         assert_eq!(tree.resolve_alias("Food"), Some(&CompactString::from("Expenses:Food")));
         assert_eq!(tree.resolve_alias("NonExistent"), None);
 
@@ -1536,51 +1548,41 @@ mod tests {
         // Create accounts and aliases
         tree.find_account("Assets:Bank:Checking", true);
         tree.find_account("Expenses:Food", true);
-        
+
         tree.register_alias("Checking".into(), "Assets:Bank:Checking".into()).unwrap();
         tree.register_alias("Food".into(), "Expenses:Food".into()).unwrap();
 
         let aliases = tree.all_aliases();
         assert_eq!(aliases.len(), 2);
-        
-        let alias_map: HashMap<String, String> = aliases.into_iter()
-            .map(|(k, v)| (k.to_string(), v.into()))
-            .collect();
+
+        let alias_map: HashMap<String, String> =
+            aliases.into_iter().map(|(k, v)| (k.to_string(), v.into())).collect();
         assert_eq!(alias_map.get("Checking"), Some(&"Assets:Bank:Checking".into()));
         assert_eq!(alias_map.get("Food"), Some(&"Expenses:Food".into()));
     }
 
-    #[test] 
+    #[test]
     fn test_account_metadata_comprehensive() {
         let mut account = Account::new_root("Test".into(), 1);
-        
+
         // Test different metadata types
         account.set_metadata("description".to_string(), "Test account description");
         account.set_metadata("code".to_string(), "001");
         account.set_metadata("priority".to_string(), 5);
         account.set_metadata("active".to_string(), true);
-        
+
         // Test retrieval
         assert_eq!(
             account.get_metadata("description"),
             Some(&Value::String("Test account description".into()))
         );
-        assert_eq!(
-            account.get_metadata("code"),
-            Some(&Value::String("001".into()))
-        );
-        assert_eq!(
-            account.get_metadata("priority"),
-            Some(&Value::Number(5.into()))
-        );
-        assert_eq!(
-            account.get_metadata("active"),
-            Some(&Value::Bool(true))
-        );
-        
+        assert_eq!(account.get_metadata("code"), Some(&Value::String("001".into())));
+        assert_eq!(account.get_metadata("priority"), Some(&Value::Number(5.into())));
+        assert_eq!(account.get_metadata("active"), Some(&Value::Bool(true)));
+
         // Test non-existent metadata
         assert_eq!(account.get_metadata("nonexistent"), None);
-        
+
         // Test metadata count
         assert_eq!(account.metadata.len(), 4);
     }
@@ -1595,7 +1597,7 @@ mod tests {
         assert_eq!(AccountType::from_path("Expenses:Food"), AccountType::Expense);
         assert_eq!(AccountType::from_path("Equity:OpeningBalance"), AccountType::Equity);
         assert_eq!(AccountType::from_path("Unknown:Account"), AccountType::Unknown);
-        
+
         // Test normal balance sides
         assert_eq!(AccountType::Asset.normal_balance_side(), "debit");
         assert_eq!(AccountType::Expense.normal_balance_side(), "debit");
@@ -1608,13 +1610,13 @@ mod tests {
     #[test]
     fn test_account_virtual_flag() {
         let mut account = Account::new_root("Test".into(), 1);
-        
+
         assert!(!account.is_virtual());
-        
+
         account.add_flag(AccountFlags::Virtual);
         assert!(account.is_virtual());
         assert!(account.has_flag(AccountFlags::Virtual));
-        
+
         account.remove_flag(AccountFlags::Virtual);
         assert!(!account.is_virtual());
     }
@@ -1622,29 +1624,31 @@ mod tests {
     #[test]
     fn test_account_directives() {
         let mut account = Account::new_root("Test".into(), 1);
-        
+
         // Add various directives
         account.add_directive(AccountDirective::Payee("Default Payee".into()));
         account.add_directive(AccountDirective::Note("Account notes".into()));
         account.add_directive(AccountDirective::Tag("important".into()));
-        
+
         let directives = account.get_directives();
         assert_eq!(directives.len(), 3);
-        
+
         // Test filtering by type
         let payee_directives = account.get_directives_by_type("payee");
         assert_eq!(payee_directives.len(), 1);
         match payee_directives[0] {
-            AccountDirective::Payee(ref payee) => assert_eq!(payee, &CompactString::from("Default Payee")),
+            AccountDirective::Payee(ref payee) => {
+                assert_eq!(payee, &CompactString::from("Default Payee"))
+            }
             _ => panic!("Expected Payee directive"),
         }
-        
+
         let note_directives = account.get_directives_by_type("note");
         assert_eq!(note_directives.len(), 1);
-        
+
         let tag_directives = account.get_directives_by_type("tag");
         assert_eq!(tag_directives.len(), 1);
-        
+
         // Test non-existent directive type
         let check_directives = account.get_directives_by_type("check");
         assert_eq!(check_directives.len(), 0);
@@ -1653,9 +1657,9 @@ mod tests {
     #[test]
     fn test_account_type_setting() {
         let mut account = Account::new_root("Assets".into(), 1);
-        
+
         assert_eq!(account.get_account_type(), AccountType::Unknown);
-        
+
         account.set_account_type(AccountType::Asset);
         assert_eq!(account.get_account_type(), AccountType::Asset);
     }
@@ -1663,7 +1667,7 @@ mod tests {
     #[test]
     fn test_depth_first_traversal() {
         let mut tree = AccountTree::new();
-        
+
         // Create a tree structure
         tree.find_account("A", true);
         tree.find_account("A:B", true);
@@ -1671,14 +1675,14 @@ mod tests {
         tree.find_account("A:B:D", true);
         tree.find_account("A:B:E", true);
         tree.find_account("A:C:F", true);
-        
+
         let root_a = tree.find_account("A", false).unwrap();
         let mut visited_paths = Vec::new();
-        
+
         for account_ref in root_a.borrow().depth_first_iter() {
             visited_paths.push(account_ref.borrow().fullname_immutable());
         }
-        
+
         // Should visit in depth-first order
         // Note: exact order depends on HashMap iteration, but should visit children before siblings
         assert!(visited_paths.contains(&"A:B".into()));
@@ -1692,7 +1696,7 @@ mod tests {
     #[test]
     fn test_breadth_first_traversal() {
         let mut tree = AccountTree::new();
-        
+
         // Create a tree structure
         tree.find_account("A", true);
         tree.find_account("A:B", true);
@@ -1700,14 +1704,14 @@ mod tests {
         tree.find_account("A:B:D", true);
         tree.find_account("A:B:E", true);
         tree.find_account("A:C:F", true);
-        
+
         let root_a = tree.find_account("A", false).unwrap();
         let mut visited_paths = Vec::new();
-        
+
         for account_ref in root_a.borrow().breadth_first_iter() {
             visited_paths.push(account_ref.borrow().fullname_immutable());
         }
-        
+
         // Should visit in breadth-first order
         assert!(visited_paths.contains(&"A:B".into()));
         assert!(visited_paths.contains(&"A:C".into()));
@@ -1720,28 +1724,28 @@ mod tests {
     #[test]
     fn test_tree_traversal_iterators() {
         let mut tree = AccountTree::new();
-        
+
         // Create accounts
         tree.find_account("Assets:Bank:Checking", true);
         tree.find_account("Assets:Bank:Savings", true);
         tree.find_account("Expenses:Food", true);
         tree.find_account("Income:Salary", true);
-        
+
         // Test tree-level depth-first traversal
         let mut df_visited = Vec::new();
         for account_ref in tree.depth_first_iter() {
             df_visited.push(account_ref.borrow().fullname_immutable());
         }
-        
+
         assert!(df_visited.len() > 0);
         assert!(df_visited.iter().any(|path| path.contains("Assets:Bank:Checking")));
-        
+
         // Test tree-level breadth-first traversal
         let mut bf_visited = Vec::new();
         for account_ref in tree.breadth_first_iter() {
             bf_visited.push(account_ref.borrow().fullname_immutable());
         }
-        
+
         assert!(bf_visited.len() > 0);
         assert!(bf_visited.iter().any(|path| path.contains("Income:Salary")));
     }
@@ -1749,7 +1753,7 @@ mod tests {
     #[test]
     fn test_regex_pattern_matching() {
         let mut tree = AccountTree::new();
-        
+
         // Create various accounts
         tree.find_account("Assets:Bank:Checking", true);
         tree.find_account("Assets:Bank:Savings", true);
@@ -1757,12 +1761,12 @@ mod tests {
         tree.find_account("Expenses:Food:Restaurant", true);
         tree.find_account("Expenses:Transportation", true);
         tree.find_account("Income:Salary", true);
-        
+
         // Test pattern matching
         let bank_pattern = Regex::new(r".*Bank.*").unwrap();
         let bank_accounts = tree.find_accounts_by_pattern(&bank_pattern);
         assert_eq!(bank_accounts.len(), 3); // Assets:Bank, Assets:Bank:Checking, Assets:Bank:Savings
-        
+
         let expense_pattern = Regex::new(r"^Expenses:.*").unwrap();
         let expense_accounts = tree.find_accounts_by_pattern(&expense_pattern);
         assert_eq!(expense_accounts.len(), 3); // Expenses, Expenses:Food:Restaurant, Expenses:Transportation
@@ -1771,27 +1775,27 @@ mod tests {
     #[test]
     fn test_account_filtering_by_type() {
         let mut tree = AccountTree::new();
-        
+
         // Create accounts with different types
         let assets = tree.find_account("Assets:Bank", true).unwrap();
         assets.borrow_mut().set_account_type(AccountType::Asset);
-        
+
         let expenses = tree.find_account("Expenses:Food", true).unwrap();
         expenses.borrow_mut().set_account_type(AccountType::Expense);
-        
+
         let income = tree.find_account("Income:Salary", true).unwrap();
         income.borrow_mut().set_account_type(AccountType::Income);
-        
+
         // Test filtering by type
         let asset_accounts = tree.find_accounts_by_type(AccountType::Asset);
         assert_eq!(asset_accounts.len(), 1);
-        
+
         let expense_accounts = tree.find_accounts_by_type(AccountType::Expense);
         assert_eq!(expense_accounts.len(), 1);
-        
+
         let income_accounts = tree.find_accounts_by_type(AccountType::Income);
         assert_eq!(income_accounts.len(), 1);
-        
+
         let unknown_accounts = tree.find_accounts_by_type(AccountType::Unknown);
         assert!(unknown_accounts.len() > 0); // Should include intermediate accounts and root
     }
@@ -1799,24 +1803,24 @@ mod tests {
     #[test]
     fn test_account_filtering_by_flags() {
         let mut tree = AccountTree::new();
-        
+
         // Create accounts with different flags
         let known_account = tree.find_account("Assets:Bank", true).unwrap();
         known_account.borrow_mut().add_flag(AccountFlags::Known);
-        
+
         let virtual_account = tree.find_account("Virtual:Account", true).unwrap();
         virtual_account.borrow_mut().add_flag(AccountFlags::Virtual);
-        
+
         let temp_account = tree.find_account("Temp:Account", true).unwrap();
         temp_account.borrow_mut().add_flag(AccountFlags::Temp);
-        
+
         // Test filtering by flags
         let known_accounts = tree.find_accounts_by_flag(AccountFlags::Known);
         assert_eq!(known_accounts.len(), 1);
-        
+
         let virtual_accounts = tree.find_accounts_by_flag(AccountFlags::Virtual);
         assert_eq!(virtual_accounts.len(), 1);
-        
+
         let temp_accounts = tree.find_accounts_by_flag(AccountFlags::Temp);
         assert_eq!(temp_accounts.len(), 1);
     }
@@ -1824,24 +1828,23 @@ mod tests {
     #[test]
     fn test_account_filtering_by_depth() {
         let mut tree = AccountTree::new();
-        
+
         // Create accounts at different depths
-        tree.find_account("A", true);           // depth 1
-        tree.find_account("A:B", true);         // depth 2
-        tree.find_account("A:B:C", true);       // depth 3
-        tree.find_account("A:B:C:D", true);     // depth 4
-        
+        tree.find_account("A", true); // depth 1
+        tree.find_account("A:B", true); // depth 2
+        tree.find_account("A:B:C", true); // depth 3
+        tree.find_account("A:B:C:D", true); // depth 4
+
         // Test depth filtering
         let depth_1_accounts = tree.find_accounts_by_depth(1, 1);
         assert!(depth_1_accounts.iter().any(|acc| acc.borrow().fullname_immutable() == "A"));
-        
+
         let depth_2_accounts = tree.find_accounts_by_depth(2, 2);
         assert!(depth_2_accounts.iter().any(|acc| acc.borrow().fullname_immutable() == "A:B"));
-        
+
         let depth_range_accounts = tree.find_accounts_by_depth(2, 3);
-        let names: Vec<_> = depth_range_accounts.iter()
-            .map(|acc| acc.borrow().fullname_immutable())
-            .collect();
+        let names: Vec<_> =
+            depth_range_accounts.iter().map(|acc| acc.borrow().fullname_immutable()).collect();
         assert!(names.contains(&"A:B".into()));
         assert!(names.contains(&"A:B:C".into()));
     }
@@ -1849,24 +1852,24 @@ mod tests {
     #[test]
     fn test_account_filtering_by_metadata() {
         let mut tree = AccountTree::new();
-        
+
         // Create accounts with metadata
         let account1 = tree.find_account("Account1", true).unwrap();
         account1.borrow_mut().set_metadata("category".to_string(), "important");
-        
+
         let account2 = tree.find_account("Account2", true).unwrap();
         account2.borrow_mut().set_metadata("priority".to_string(), 5);
-        
+
         let account3 = tree.find_account("Account3", true).unwrap();
         account3.borrow_mut().set_metadata("category".to_string(), "normal");
-        
+
         // Test metadata key filtering
         let category_accounts = tree.find_accounts_by_metadata_key("category");
         assert_eq!(category_accounts.len(), 2);
-        
+
         let priority_accounts = tree.find_accounts_by_metadata_key("priority");
         assert_eq!(priority_accounts.len(), 1);
-        
+
         let nonexistent_accounts = tree.find_accounts_by_metadata_key("nonexistent");
         assert_eq!(nonexistent_accounts.len(), 0);
     }
@@ -1874,15 +1877,15 @@ mod tests {
     #[test]
     fn test_virtual_account_creation() {
         let mut tree = AccountTree::new();
-        
+
         // Create virtual account
         let virtual_account = tree.create_virtual_account("Virtual:Test", Some(AccountType::Asset));
-        
+
         assert!(virtual_account.borrow().is_virtual());
         assert!(virtual_account.borrow().has_flag(AccountFlags::Virtual));
         assert!(virtual_account.borrow().has_flag(AccountFlags::Temp));
         assert_eq!(virtual_account.borrow().get_account_type(), AccountType::Asset);
-        
+
         // Test auto-type detection
         let auto_virtual = tree.create_virtual_account("Expenses:Virtual", None);
         assert_eq!(auto_virtual.borrow().get_account_type(), AccountType::Expense);
@@ -1891,29 +1894,27 @@ mod tests {
     #[test]
     fn test_account_directive_application() {
         let mut tree = AccountTree::new();
-        
+
         // Test account directive
-        let account_directive = AccountDirective::Account(
-            "Assets:Bank".into(), 
-            Some(AccountType::Asset)
-        );
+        let account_directive =
+            AccountDirective::Account("Assets:Bank".into(), Some(AccountType::Asset));
         tree.apply_directive("Assets:Bank", account_directive).unwrap();
-        
+
         let account = tree.find_account("Assets:Bank", false).unwrap();
         assert!(account.borrow().is_known());
         assert_eq!(account.borrow().get_account_type(), AccountType::Asset);
-        
+
         // Test alias directive
         let alias_directive = AccountDirective::Alias("Bank".into());
         tree.apply_directive("Assets:Bank", alias_directive).unwrap();
-        
+
         assert!(tree.is_alias("Bank"));
         assert_eq!(tree.resolve_alias("Bank"), Some(&CompactString::from("Assets:Bank")));
-        
+
         // Test payee directive
         let payee_directive = AccountDirective::Payee("Default Bank".into());
         tree.apply_directive("Assets:Bank", payee_directive).unwrap();
-        
+
         {
             let account_borrowed = account.borrow();
             let payee_directives = account_borrowed.get_directives_by_type("payee");
@@ -1925,32 +1926,30 @@ mod tests {
     #[test]
     fn test_leaf_and_root_account_finding() {
         let mut tree = AccountTree::new();
-        
+
         // Create account structure
         tree.find_account("Assets", true);
         tree.find_account("Assets:Bank", true);
         tree.find_account("Assets:Bank:Checking", true);
         tree.find_account("Expenses", true);
         tree.find_account("Expenses:Food", true);
-        
+
         // Test leaf account finding
         let leaf_accounts = tree.find_leaf_accounts();
-        let leaf_names: Vec<_> = leaf_accounts.iter()
-            .map(|acc| acc.borrow().fullname_immutable())
-            .collect();
-        
+        let leaf_names: Vec<_> =
+            leaf_accounts.iter().map(|acc| acc.borrow().fullname_immutable()).collect();
+
         assert!(leaf_names.contains(&"Assets:Bank:Checking".into()));
         assert!(leaf_names.contains(&"Expenses:Food".into()));
         // Should not contain intermediate accounts
         assert!(!leaf_names.contains(&"Assets".into()));
         assert!(!leaf_names.contains(&"Assets:Bank".into()));
-        
+
         // Test root account finding (excludes tree root "")
         let root_accounts = tree.find_root_accounts();
-        let root_names: Vec<_> = root_accounts.iter()
-            .map(|acc| acc.borrow().fullname_immutable())
-            .collect();
-        
+        let root_names: Vec<_> =
+            root_accounts.iter().map(|acc| acc.borrow().fullname_immutable()).collect();
+
         assert!(root_names.contains(&"Assets".into()));
         assert!(root_names.contains(&"Expenses".into()));
         assert!(!root_names.contains(&"".into())); // Tree root should be excluded
@@ -1974,23 +1973,23 @@ mod tests {
     #[test]
     fn test_visitor_pattern() {
         let mut tree = AccountTree::new();
-        
+
         // Create accounts with different types
         let assets = tree.find_account("Assets", true).unwrap();
         assets.borrow_mut().set_account_type(AccountType::Asset);
-        
+
         let checking = tree.find_account("Assets:Checking", true).unwrap();
         checking.borrow_mut().set_account_type(AccountType::Asset);
-        
+
         let expenses = tree.find_account("Expenses", true).unwrap();
         expenses.borrow_mut().set_account_type(AccountType::Expense);
-        
+
         // Test visitor on single account (non-recursive)
         let mut visitor = CountingVisitor { count: 0, asset_count: 0 };
         assets.borrow_mut().accept(&mut visitor, false);
         assert_eq!(visitor.count, 1);
         assert_eq!(visitor.asset_count, 1);
-        
+
         // Test visitor on tree (recursive)
         let mut visitor_recursive = CountingVisitor { count: 0, asset_count: 0 };
         tree.accept_all(&mut visitor_recursive);
@@ -2008,7 +2007,7 @@ mod tests {
         // Test note directive with automatic note setting
         let note_directive = AccountDirective::Note("This is a test account".into());
         tree.apply_directive("Assets:Test", note_directive).unwrap();
-        
+
         let account = tree.find_account("Assets:Test", false).unwrap();
         {
             let account_borrowed = account.borrow();
@@ -2020,7 +2019,7 @@ mod tests {
         // Test default commodity directive
         let default_directive = AccountDirective::Default("USD".into());
         tree.apply_directive("Assets:Test", default_directive).unwrap();
-        
+
         {
             let account_borrowed = account.borrow();
             assert_eq!(account_borrowed.get_default_commodity(), Some("USD".into()));
@@ -2029,7 +2028,7 @@ mod tests {
         // Test format directive
         let format_directive = AccountDirective::Format("$%.2f".into());
         tree.apply_directive("Assets:Test", format_directive).unwrap();
-        
+
         {
             let account_borrowed = account.borrow();
             assert_eq!(account_borrowed.get_format(), Some("$%.2f".into()));
@@ -2038,7 +2037,7 @@ mod tests {
         // Test assertion directive
         let assert_directive = AccountDirective::Assert("balance >= $1000".into());
         tree.apply_directive("Assets:Test", assert_directive).unwrap();
-        
+
         {
             let account_borrowed = account.borrow();
             let assertions = account_borrowed.get_assertions();
@@ -2049,7 +2048,7 @@ mod tests {
         // Test tag directive
         let tag_directive = AccountDirective::Tag("important".into());
         tree.apply_directive("Assets:Test", tag_directive).unwrap();
-        
+
         {
             let account_borrowed = account.borrow();
             assert!(account_borrowed.has_tag("important"));
@@ -2118,7 +2117,7 @@ mod tests {
 
         // Test temp account creation with explicit type
         let temp_account = tree.create_temp_account("Temp:Calculation", Some(AccountType::Asset));
-        
+
         assert!(temp_account.borrow().is_temp());
         assert!(temp_account.borrow().is_generated());
         assert!(!temp_account.borrow().is_virtual());
@@ -2161,7 +2160,8 @@ mod tests {
         let primary_accounts = tree.find_accounts_by_tags(&[String::from("primary")]);
         assert_eq!(primary_accounts.len(), 1); // only account1
 
-        let both_tags = tree.find_accounts_by_tags(&[String::from("important"), String::from("primary")]);
+        let both_tags =
+            tree.find_accounts_by_tags(&[String::from("important"), String::from("primary")]);
         assert_eq!(both_tags.len(), 1); // only account1 has both
 
         let nonexistent_tags = tree.find_accounts_by_tags(&[String::from("nonexistent")]);
@@ -2178,7 +2178,9 @@ mod tests {
         account1.borrow_mut().add_directive(AccountDirective::Assert("balance <= $50000".into()));
 
         let account2 = tree.find_account("Expenses:Food", true).unwrap();
-        account2.borrow_mut().add_directive(AccountDirective::Assert("monthly_total <= $500".into()));
+        account2
+            .borrow_mut()
+            .add_directive(AccountDirective::Assert("monthly_total <= $500".into()));
 
         // Test assertion retrieval
         let assertions1 = account1.borrow().get_assertions();

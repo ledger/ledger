@@ -3,13 +3,11 @@
 //! This module provides high-performance string types and utilities optimized for
 //! the most common string usage patterns in Ledger accounting operations.
 
-use compact_str::CompactString as CompactStr;
-use smallvec::{SmallVec, smallvec};
-use bumpalo::Bump;
-use std::collections::HashMap;
-use std::sync::Mutex;
 use ahash::AHashMap;
+use compact_str::CompactString as CompactStr;
 use once_cell::sync::Lazy;
+use smallvec::SmallVec;
+use std::sync::Mutex;
 
 /// A string type optimized for short strings commonly found in account names
 /// Uses inline storage for strings up to 24 bytes on 64-bit platforms
@@ -28,9 +26,8 @@ pub type StringBuffer = SmallVec<[u8; 128]>;
 pub type SmallBuffer = SmallVec<[u8; 32]>;
 
 /// String interning pool for frequently used strings
-static STRING_INTERNER: Lazy<Mutex<StringInterner>> = Lazy::new(|| {
-    Mutex::new(StringInterner::new())
-});
+static STRING_INTERNER: Lazy<Mutex<StringInterner>> =
+    Lazy::new(|| Mutex::new(StringInterner::new()));
 
 /// String interner for deduplicating commonly used strings
 #[derive(Debug)]
@@ -51,6 +48,12 @@ pub struct InternerStats {
     pub cache_hits: usize,
     /// Estimated memory saved by interning
     pub memory_saved_bytes: usize,
+}
+
+impl Default for StringInterner {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl StringInterner {
@@ -75,10 +78,10 @@ impl StringInterner {
             } else {
                 0
             };
-            
+
             self.stats.memory_saved_bytes += memory_saved;
             self.stats.interned_count += 1;
-            
+
             self.strings.insert(s.to_owned(), compact.clone());
             compact
         }
@@ -113,40 +116,38 @@ pub struct FastFormatter {
 
 impl FastFormatter {
     pub fn new() -> Self {
-        Self {
-            buffer: SmallVec::new(),
-        }
+        Self { buffer: SmallVec::new() }
     }
 
     /// Format a number with optional decimal places
     pub fn format_number(&mut self, number: i64, decimals: Option<u8>) -> &str {
         self.buffer.clear();
-        
+
         // Handle negative numbers
         if number < 0 {
             self.buffer.push(b'-');
         }
-        
+
         let abs_number = number.unsigned_abs();
-        
+
         match decimals {
             Some(decimals) if decimals > 0 => {
                 let divisor = 10_u64.pow(decimals as u32);
                 let integer_part = abs_number / divisor;
                 let fractional_part = abs_number % divisor;
-                
+
                 self.write_integer(integer_part);
                 self.buffer.push(b'.');
-                
+
                 // Write fractional part with leading zeros
                 let mut temp = fractional_part;
                 let mut digits = SmallVec::<[u8; 8]>::new();
-                
+
                 for _ in 0..decimals {
                     digits.push((temp % 10) as u8 + b'0');
                     temp /= 10;
                 }
-                
+
                 // Reverse to get correct order
                 digits.reverse();
                 self.buffer.extend_from_slice(&digits);
@@ -155,7 +156,7 @@ impl FastFormatter {
                 self.write_integer(abs_number);
             }
         }
-        
+
         // Safe because we only wrote valid UTF-8
         unsafe { std::str::from_utf8_unchecked(&self.buffer) }
     }
@@ -166,14 +167,14 @@ impl FastFormatter {
             self.buffer.push(b'0');
             return;
         }
-        
+
         let mut digits = SmallVec::<[u8; 20]>::new(); // u64 max is 20 digits
-        
+
         while number > 0 {
             digits.push((number % 10) as u8 + b'0');
             number /= 10;
         }
-        
+
         // Reverse to get correct order
         digits.reverse();
         self.buffer.extend_from_slice(&digits);
@@ -182,14 +183,14 @@ impl FastFormatter {
     /// Format a path by joining components with '/'
     pub fn format_path(&mut self, components: &[&str]) -> &str {
         self.buffer.clear();
-        
+
         for (i, component) in components.iter().enumerate() {
             if i > 0 {
                 self.buffer.push(b':');
             }
             self.buffer.extend_from_slice(component.as_bytes());
         }
-        
+
         // Safe because we only wrote valid UTF-8
         unsafe { std::str::from_utf8_unchecked(&self.buffer) }
     }
@@ -221,17 +222,11 @@ pub struct AccountPathBuilder {
 
 impl AccountPathBuilder {
     pub fn new() -> Self {
-        Self {
-            components: SmallVec::new(),
-            separator: ':',
-        }
+        Self { components: SmallVec::new(), separator: ':' }
     }
 
     pub fn with_separator(separator: char) -> Self {
-        Self {
-            components: SmallVec::new(),
-            separator,
-        }
+        Self { components: SmallVec::new(), separator }
     }
 
     /// Add a component to the path
@@ -262,12 +257,11 @@ impl AccountPathBuilder {
         }
 
         // Estimate capacity needed
-        let capacity: usize = self.components.iter()
-            .map(|c| c.len())
-            .sum::<usize>() + (self.components.len() - 1);
+        let capacity: usize =
+            self.components.iter().map(|c| c.len()).sum::<usize>() + (self.components.len() - 1);
 
         let mut result = String::with_capacity(capacity);
-        
+
         for (i, component) in self.components.iter().enumerate() {
             if i > 0 {
                 result.push(self.separator);
@@ -325,13 +319,13 @@ impl FastParser {
         if let Some(first) = chars.next() {
             match first {
                 '-' => negative = true,
-                '+' => {},
+                '+' => {}
                 '0'..='9' => {
                     result = (first as u8 - b'0') as i64;
-                },
+                }
                 '.' => {
                     found_decimal = true;
-                },
+                }
                 _ => return Err("Invalid character"),
             }
         }
@@ -341,27 +335,29 @@ impl FastParser {
             match ch {
                 '0'..='9' => {
                     let digit = (ch as u8 - b'0') as i64;
-                    
+
                     if found_decimal {
                         decimal_places += 1;
-                        if decimal_places > 6 { // Limit precision
+                        if decimal_places > 6 {
+                            // Limit precision
                             break;
                         }
                     }
-                    
-                    result = result.checked_mul(10)
+
+                    result = result
+                        .checked_mul(10)
                         .and_then(|r| r.checked_add(digit))
                         .ok_or("Number overflow")?;
-                },
+                }
                 '.' => {
                     if found_decimal {
                         return Err("Multiple decimal points");
                     }
                     found_decimal = true;
-                },
+                }
                 ',' => {
                     // Ignore thousands separator
-                },
+                }
                 _ => return Err("Invalid character"),
             }
         }
@@ -389,7 +385,7 @@ impl FastParser {
             match ch {
                 'a'..='z' | 'A'..='Z' | '0'..='9' | ':' | ' ' | '-' | '_' | '.' => {
                     // Valid characters
-                },
+                }
                 _ => return false,
             }
         }
@@ -431,14 +427,14 @@ mod tests {
     #[test]
     fn test_string_interning() {
         let mut interner = StringInterner::new();
-        
+
         let s1 = interner.intern("Assets:Checking");
         let s2 = interner.intern("Assets:Checking");
         let s3 = interner.intern("Assets:Savings");
-        
+
         assert_eq!(s1, s2);
         assert_ne!(s1, s3);
-        
+
         let stats = interner.stats();
         assert_eq!(stats.interned_count, 2);
         assert_eq!(stats.cache_hits, 1);
@@ -447,25 +443,27 @@ mod tests {
     #[test]
     fn test_fast_formatter() {
         let mut formatter = FastFormatter::new();
-        
+
         assert_eq!(formatter.format_number(12345, Some(2)), "123.45");
         assert_eq!(formatter.format_number(-12345, Some(2)), "-123.45");
         assert_eq!(formatter.format_number(100, None), "100");
-        
+
         assert_eq!(formatter.format_path(&["Assets", "Checking"]), "Assets:Checking");
-        assert_eq!(formatter.format_path(&["Expenses", "Food", "Groceries"]), "Expenses:Food:Groceries");
+        assert_eq!(
+            formatter.format_path(&["Expenses", "Food", "Groceries"]),
+            "Expenses:Food:Groceries"
+        );
     }
 
     #[test]
     fn test_account_path_builder() {
         let mut builder = AccountPathBuilder::new();
-        
-        builder.push("Assets")
-               .push("Checking");
-               
+
+        builder.push("Assets").push("Checking");
+
         assert_eq!(builder.build(), "Assets:Checking");
         assert_eq!(builder.depth(), 2);
-        
+
         builder.pop();
         assert_eq!(builder.build(), "Assets");
     }
@@ -475,11 +473,11 @@ mod tests {
         assert_eq!(FastParser::parse_decimal("123.45"), Ok((12345, 2)));
         assert_eq!(FastParser::parse_decimal("-123.45"), Ok((-12345, 2)));
         assert_eq!(FastParser::parse_decimal("100"), Ok((100, 0)));
-        
+
         assert!(FastParser::validate_account_name("Assets:Checking"));
         assert!(!FastParser::validate_account_name(":Assets"));
         assert!(!FastParser::validate_account_name("Assets:"));
-        
+
         let components = FastParser::split_account_path("Assets:Checking:Main");
         assert_eq!(components.as_slice(), &["Assets", "Checking", "Main"]);
     }
@@ -489,7 +487,7 @@ mod tests {
         let account_name = AccountName::new("Assets:Checking");
         let commodity_symbol = CommoditySymbol::new("USD");
         let payee_name = PayeeName::new("Grocery Store");
-        
+
         assert_eq!(account_name.len(), 15);
         assert_eq!(commodity_symbol.len(), 3);
         assert_eq!(payee_name.len(), 13);

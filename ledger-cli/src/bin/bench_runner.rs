@@ -3,13 +3,15 @@
 //! This binary provides a command-line interface for running performance benchmarks
 //! against the Rust ledger implementation, with optional comparison to C++ baseline.
 
-use clap::Parser;
 use anyhow::Result;
+use clap::Parser;
+use log::{error, info};
 use std::path::PathBuf;
-use log::{info, error};
 
+use ledger_cli::test_framework::bench_framework::{
+    BenchmarkCategory, BenchmarkConfig, BenchmarkRunner,
+};
 use ledger_cli::test_framework::test_harness::TestHarness;
-use ledger_cli::test_framework::bench_framework::{BenchmarkRunner, BenchmarkConfig, BenchmarkCategory};
 
 #[derive(Parser)]
 #[command(name = "bench_runner")]
@@ -158,9 +160,7 @@ fn main() -> Result<()> {
     // Save as baseline if requested
     if args.save_baseline {
         let baseline_path = args.results_dir.join("baseline.json");
-        let rust_results: Vec<_> = all_results.iter()
-            .map(|r| r.rust_result.clone())
-            .collect();
+        let rust_results: Vec<_> = all_results.iter().map(|r| r.rust_result.clone()).collect();
         runner.save_baseline(&rust_results, &baseline_path)?;
     }
 
@@ -190,52 +190,51 @@ fn parse_category(category: &str) -> Result<BenchmarkCategory> {
 
 fn generate_flamegraph(args: &Args) -> Result<()> {
     info!("Generating flamegraph...");
-    
+
     // This is a simplified implementation. In practice, you would:
     // 1. Run the benchmark with perf record
     // 2. Convert perf data to flamegraph format
     // 3. Generate SVG flamegraph
-    
+
     let flamegraph_path = args.results_dir.join("flamegraph.svg");
     std::fs::create_dir_all(&args.results_dir)?;
-    
+
     // Mock flamegraph generation
     let mock_svg = r#"<svg>
         <text x="10" y="20">Flamegraph generation requires perf and flamegraph tools</text>
         <text x="10" y="40">Install with: cargo install flamegraph</text>
         <text x="10" y="60">Then run: cargo flamegraph --bin ledger -- [args]</text>
     </svg>"#;
-    
+
     std::fs::write(&flamegraph_path, mock_svg)?;
     info!("Generated flamegraph placeholder: {}", flamegraph_path.display());
-    
+
     Ok(())
 }
 
 fn print_summary(results: &[ledger_cli::test_framework::bench_framework::ComparisonResult]) {
     println!("\n🚀 Benchmark Summary");
     println!("====================");
-    
+
     let total_benchmarks = results.len();
     let regressions = results.iter().filter(|r| r.regression_detected).count();
     let with_cpp_comparison = results.iter().filter(|r| r.cpp_result.is_some()).count();
-    
+
     println!("Total benchmarks: {}", total_benchmarks);
     println!("Regressions detected: {}", regressions);
     println!("C++ comparisons: {}", with_cpp_comparison);
-    
+
     if !results.is_empty() {
-        let avg_time = results.iter()
-            .map(|r| r.rust_result.mean_time.as_millis() as f64)
-            .sum::<f64>() / results.len() as f64;
+        let avg_time =
+            results.iter().map(|r| r.rust_result.mean_time.as_millis() as f64).sum::<f64>()
+                / results.len() as f64;
         println!("Average execution time: {:.2}ms", avg_time);
-        
+
         if with_cpp_comparison > 0 {
-            let avg_ratio = results.iter()
-                .filter_map(|r| r.performance_ratio)
-                .sum::<f64>() / with_cpp_comparison as f64;
+            let avg_ratio = results.iter().filter_map(|r| r.performance_ratio).sum::<f64>()
+                / with_cpp_comparison as f64;
             println!("Average performance ratio (Rust/C++): {:.2}x", avg_ratio);
-            
+
             if avg_ratio < 1.0 {
                 println!("🎉 Rust is {:.1}% faster on average!", (1.0 - avg_ratio) * 100.0);
             } else if avg_ratio > 1.0 {
@@ -243,7 +242,7 @@ fn print_summary(results: &[ledger_cli::test_framework::bench_framework::Compari
             }
         }
     }
-    
+
     if regressions > 0 {
         println!("\n⚠️  Performance Regressions Detected:");
         for result in results.iter().filter(|r| r.regression_detected) {
