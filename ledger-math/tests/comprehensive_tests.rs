@@ -3,8 +3,6 @@
 
 use ledger_math::amount::Amount;
 use ledger_math::balance::Balance;
-use num_bigint::BigInt;
-use num_rational::BigRational;
 
 #[cfg(test)]
 mod amount_basic_tests {

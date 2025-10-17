@@ -14,7 +14,7 @@ use nom::{
     combinator::{map, opt, recognize, value},
     multi::many0,
     sequence::{delimited, pair, tuple},
-    IResult, Parser,
+    IResult,
 };
 
 use crate::strings::intern_string;
@@ -84,7 +84,7 @@ impl MappedJournal {
 pub struct ZeroCopyTransaction<'a> {
     /// Transaction date as string slice
     pub date_str: &'a str,
-    /// Description/payee as string slice  
+    /// Description/payee as string slice
     pub description: &'a str,
     /// Optional code as string slice
     pub code: Option<&'a str>,
@@ -383,8 +383,8 @@ pub fn materialize_transaction<'a>(
 
     // For this example, we'll create a simplified conversion
     // In practice, you'd need to parse dates, amounts, etc.
-    let description = intern_string(zc_transaction.description);
-    let date_str = zc_transaction.date_str;
+    let _description = intern_string(zc_transaction.description);
+    let _date_str = zc_transaction.date_str;
 
     // This is a simplified conversion - you'd need full implementation
     Transaction {

@@ -94,7 +94,7 @@ impl ParallelBalanceAccumulator {
 
 /// Parallel transaction filter and processor
 pub struct ParallelTransactionProcessor {
-    config: ParallelConfig,
+    _config: ParallelConfig,
     stats: ProcessingStats,
 }
 
@@ -115,11 +115,11 @@ impl Default for ParallelTransactionProcessor {
 
 impl ParallelTransactionProcessor {
     pub fn new() -> Self {
-        Self { config: get_parallel_config(), stats: ProcessingStats::default() }
+        Self { _config: get_parallel_config(), stats: ProcessingStats::default() }
     }
 
-    pub fn with_config(config: ParallelConfig) -> Self {
-        Self { config, stats: ProcessingStats::default() }
+    pub fn with_config(_config: ParallelConfig) -> Self {
+        Self { _config, stats: ProcessingStats::default() }
     }
 
     /// Process transactions for balance calculation
@@ -436,13 +436,7 @@ mod tests {
         let mut processor = ParallelTransactionProcessor::new();
 
         // Create test transactions
-        let transactions: Vec<Transaction> = (0..1000)
-            .map(|i| {
-                let mut txn = Transaction::default();
-                // Set some test data that we can filter on
-                txn
-            })
-            .collect();
+        let transactions: Vec<Transaction> = (0..1000).map(|_| Transaction::default()).collect();
 
         let transaction_refs: Vec<&Transaction> = transactions.iter().collect();
 

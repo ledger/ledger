@@ -79,7 +79,6 @@ pub mod performance_suite;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_placeholder() {

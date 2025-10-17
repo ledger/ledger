@@ -221,7 +221,7 @@ impl ErrorInfo {
     }
 }
 
-/// Thread-local error storage for better error handling
+// Thread-local error storage for better error handling
 thread_local! {
     static LAST_ERROR: RefCell<Option<ErrorInfo>> = const { RefCell::new(None) };
     static ERROR_CALLBACK: RefCell<Option<Box<dyn Fn(&ErrorInfo)>>> = RefCell::new(None);
@@ -1405,8 +1405,6 @@ mod tests {
 
     #[test]
     fn test_error_callback() {
-        use std::sync::{Arc, Mutex};
-
         ledger_clear_last_error();
 
         // Test callback registration and triggering
@@ -1624,8 +1622,8 @@ mod tests {
         }
 
         // Test progress tracking
-        let mut progress_tracker: Vec<(i32, i32)> = Vec::new();
-        let mut counter = 0i32;
+        let progress_tracker: Vec<(i32, i32)> = Vec::new();
+        let counter = 0i32;
 
         let result = ledger_journal_process_transactions_with_progress(
             journal,

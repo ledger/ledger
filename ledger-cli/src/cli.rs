@@ -52,7 +52,7 @@ pub struct Cli {
     #[arg(long = "real", short = 'R', global = true)]
     pub real: bool,
 
-    /// Show only actual (non-forecasted) postings  
+    /// Show only actual (non-forecasted) postings
     #[arg(long = "actual", short = 'L', global = true)]
     pub actual: bool,
 
@@ -248,7 +248,7 @@ pub enum Commands {
     #[command(name = "emacs", aliases = &["lisp"])]
     Emacs(EmacsArgs),
 
-    /// Output in XML format  
+    /// Output in XML format
     #[command(name = "xml")]
     Xml(XmlArgs),
 
@@ -329,7 +329,7 @@ pub struct BalanceArgs {
 
 #[derive(Args)]
 pub struct RegisterArgs {
-    /// Account pattern to match  
+    /// Account pattern to match
     pub pattern: Vec<String>,
 
     /// Show account totals
@@ -340,7 +340,7 @@ pub struct RegisterArgs {
     #[arg(long = "head")]
     pub head: Option<usize>,
 
-    /// Show only last N entries  
+    /// Show only last N entries
     #[arg(long = "tail")]
     pub tail: Option<usize>,
 
@@ -385,7 +385,7 @@ pub struct CommoditiesArgs {
 
 #[derive(Args)]
 pub struct PayeesArgs {
-    /// Payee pattern to match  
+    /// Payee pattern to match
     pub pattern: Vec<String>,
 }
 
@@ -560,19 +560,21 @@ pub struct HelpTopicArgs {
 impl Cli {
     /// Check if the command is a pre-command that doesn't require journal files
     pub fn is_precommand(&self) -> bool {
-        match &self.command {
-            Some(Commands::Parse(_))
-            | Some(Commands::Eval(_))
-            | Some(Commands::Format(_))
-            | Some(Commands::Period(_))
-            | Some(Commands::Query(_))
-            | Some(Commands::Source(_))
-            | Some(Commands::Generate(_))
-            | Some(Commands::Template(_))
-            | Some(Commands::Completion(_))
-            | Some(Commands::HelpTopic(_)) => true,
-            _ => false,
-        }
+        matches!(
+            &self.command,
+            Some(
+                Commands::Parse(_)
+                    | Commands::Eval(_)
+                    | Commands::Format(_)
+                    | Commands::Period(_)
+                    | Commands::Query(_)
+                    | Commands::Source(_)
+                    | Commands::Generate(_)
+                    | Commands::Template(_)
+                    | Commands::Completion(_)
+                    | Commands::HelpTopic(_)
+            )
+        )
     }
 
     /// Get the command name as a string

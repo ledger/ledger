@@ -25,7 +25,7 @@ pub struct Session {
     /// Whether debug mode is enabled
     pub debug_enabled: bool,
 
-    /// Whether verbose mode is enabled  
+    /// Whether verbose mode is enabled
     pub verbose_enabled: bool,
 
     /// Current working directory when started
@@ -59,7 +59,7 @@ pub struct RuntimeOptions {
     /// Begin date filter
     pub begin_date: Option<NaiveDate>,
 
-    /// End date filter  
+    /// End date filter
     pub end_date: Option<NaiveDate>,
 
     /// Sort expression
@@ -229,7 +229,7 @@ impl Session {
     }
 
     /// Parse a single option line from init file
-    fn parse_init_option(&mut self, line: &str, line_num: usize) -> Result<()> {
+    fn parse_init_option(&mut self, line: &str, _line_num: usize) -> Result<()> {
         let parts: Vec<&str> = line.splitn(2, ' ').collect();
         if parts.is_empty() {
             return Ok(());
@@ -418,6 +418,3 @@ fn parse_date(date_str: &str) -> Result<NaiveDate> {
         _ => Err(anyhow::anyhow!("Could not parse date: {}", date_str)),
     }
 }
-
-/// Add external dependency for terminal detection
-use atty;

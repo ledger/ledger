@@ -173,7 +173,6 @@ impl TestExecutor {
         test_suite: &TestSuite,
         variables: &HashMap<String, String>,
     ) -> TestResult {
-        let start_time = Instant::now();
         let suite_name = test_suite.name();
 
         // Check for platform-specific skips
@@ -225,7 +224,7 @@ impl TestExecutor {
     fn prepare_command(
         &self,
         test_case: &TestCase,
-        test_suite: &TestSuite,
+        _test_suite: &TestSuite,
         variables: &HashMap<String, String>,
     ) -> String {
         let mut command = test_case.command.clone();
@@ -470,7 +469,6 @@ impl BatchTestExecutor {
     ) -> Vec<TestResult> {
         use rayon::prelude::*;
 
-        let executor = &self.executor;
         let rt = tokio::runtime::Handle::current();
 
         if self.executor.config.execution_mode == crate::config::ExecutionMode::Sequential {

@@ -466,8 +466,11 @@ impl OutputValidator {
             let strategy = strategies.get(i).cloned().unwrap_or(ValidationStrategy::ExactMatch);
 
             // Validate single line with specific strategy
-            let single_line_result =
-                self.validate(&[expected_line.clone()], &[actual_line.clone()], strategy.clone())?;
+            let single_line_result = self.validate(
+                std::slice::from_ref(&expected_line),
+                std::slice::from_ref(&actual_line),
+                strategy.clone(),
+            )?;
 
             let is_valid = single_line_result.is_valid;
             all_valid &= is_valid;

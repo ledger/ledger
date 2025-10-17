@@ -334,8 +334,7 @@ impl<'a> RegressionRunner<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
-    use tempfile::{NamedTempFile, TempDir};
+    use tempfile::TempDir;
 
     #[test]
     fn test_regression_runner_creation() {

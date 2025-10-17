@@ -70,7 +70,6 @@ impl OutputFormat {
             OutputFormat::Json => "json",
             OutputFormat::Xml => "xml",
             OutputFormat::Html => "html",
-            OutputFormat::Xml => "xml",
         }
     }
 
@@ -398,7 +397,6 @@ impl XmlFormatter {
 impl Formatter for XmlFormatter {
     fn format(&self, writer: &mut dyn Write) -> OutputResult<()> {
         let indent = if self.pretty { "  " } else { "" };
-        let newline = if self.pretty { "\n" } else { "" };
 
         // XML declaration
         writeln!(writer, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
@@ -820,7 +818,6 @@ mod tests {
 
     #[test]
     fn test_xml_escaping() {
-        let formatter = XmlFormatter::new();
         assert_eq!(XmlFormatter::escape_xml("normal text"), "normal text");
         assert_eq!(XmlFormatter::escape_xml("text & more"), "text &amp; more");
         assert_eq!(XmlFormatter::escape_xml("<tag>"), "&lt;tag&gt;");
@@ -829,7 +826,6 @@ mod tests {
 
     #[test]
     fn test_html_escaping() {
-        let formatter = HtmlFormatter::new();
         assert_eq!(HtmlFormatter::escape_html("normal text"), "normal text");
         assert_eq!(HtmlFormatter::escape_html("text & more"), "text &amp; more");
         assert_eq!(HtmlFormatter::escape_html("<script>"), "&lt;script&gt;");

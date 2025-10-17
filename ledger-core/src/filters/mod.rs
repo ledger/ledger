@@ -445,10 +445,7 @@ impl PostingFilter for NoteFilter {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::account::Account;
     use chrono::NaiveDate;
-    use std::cell::RefCell;
-    use std::rc::Rc;
 
     fn create_test_transaction() -> Transaction {
         Transaction {

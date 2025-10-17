@@ -86,7 +86,7 @@ fn handle_debug_options() {
             }
             "--trace" => {
                 if i + 1 < args.len() {
-                    env::set_var("RUST_LOG", "trace");
+                    env::set_var("RUST_LOG", format!("trace,ledger_cli={}", &args[i + 1]));
                 } else {
                     env::set_var("RUST_LOG", "trace");
                 }

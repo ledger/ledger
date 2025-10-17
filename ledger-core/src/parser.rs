@@ -76,7 +76,7 @@ pub enum JournalParseError {
     },
 }
 
-/// Custom error type for detailed error reporting  
+/// Custom error type for detailed error reporting
 pub type VerboseError<I> = nom::error::VerboseError<I>;
 
 /// Result type for parsing operations
@@ -100,7 +100,7 @@ pub struct ParseContext {
     pub filename: PathBuf,
     /// Current line number
     pub line: usize,
-    /// Current column number  
+    /// Current column number
     pub column: usize,
     /// Include stack for cycle detection
     pub include_stack: Vec<PathBuf>,
@@ -254,7 +254,7 @@ pub enum AccountDeclaration {
     Default,
 }
 
-/// Commodity declaration sub-directives  
+/// Commodity declaration sub-directives
 #[derive(Debug, Clone)]
 pub enum CommodityDeclaration {
     Alias(String),
@@ -469,12 +469,12 @@ impl JournalParser {
                     self.process_include_file(journal, &path)?;
                 }
             }
-            Directive::PeriodicTransaction { period, postings, metadata } => {
+            Directive::PeriodicTransaction { period, postings, metadata: _ } => {
                 // TODO: Process periodic transaction
                 // For now, just log that we found one
                 println!("Found periodic transaction: {} with {} postings", period, postings.len());
             }
-            Directive::AutomatedTransaction { condition, postings, metadata } => {
+            Directive::AutomatedTransaction { condition, postings, metadata: _ } => {
                 // TODO: Process automated transaction
                 // For now, just log that we found one
                 println!(
@@ -831,7 +831,7 @@ impl<R: BufRead> JournalEntryIterator<R> {
         let mut in_transaction = false;
         let mut current_pos = 0;
 
-        for (i, line) in lines.iter().enumerate() {
+        for line in lines.iter() {
             let line_start = current_pos;
             current_pos += line.len() + 1; // +1 for newline
 
@@ -939,7 +939,7 @@ struct TransactionBalanceError {
 }
 
 /// Parse complete journal entries
-fn journal_entries(input: &str) -> ParseResult<Vec<JournalEntry>> {
+fn journal_entries(input: &str) -> ParseResult<'_, Vec<JournalEntry>> {
     many0(journal_entry)(input)
 }
 
@@ -981,7 +981,7 @@ fn journal_entries_with_recovery<'a>(
 }
 
 /// Parse a single journal entry with error recovery
-fn journal_entry_with_recovery(input: &str) -> ParseResult<Option<JournalEntry>> {
+fn journal_entry_with_recovery(input: &str) -> ParseResult<'_, Option<JournalEntry>> {
     alt((
         map(journal_entry, Some),
         // Skip invalid lines and return None
@@ -990,12 +990,12 @@ fn journal_entry_with_recovery(input: &str) -> ParseResult<Option<JournalEntry>>
 }
 
 /// Skip an invalid line for error recovery
-fn skip_invalid_line(input: &str) -> ParseResult<&str> {
+fn skip_invalid_line(input: &str) -> ParseResult<'_, &str> {
     terminated(take_until("\n"), line_ending)(input)
 }
 
 /// Parse a single journal entry
-fn journal_entry(input: &str) -> ParseResult<JournalEntry> {
+fn journal_entry(input: &str) -> ParseResult<'_, JournalEntry> {
     alt((
         map(transaction_entry, JournalEntry::Transaction),
         map(directive_entry, JournalEntry::Directive),
@@ -1011,12 +1011,12 @@ fn journal_entry(input: &str) -> ParseResult<JournalEntry> {
 }
 
 /// Parse an empty line
-fn empty_line(input: &str) -> ParseResult<&str> {
+fn empty_line(input: &str) -> ParseResult<'_, &str> {
     terminated(space0, line_ending)(input)
 }
 
 /// Parse a comment line with optional metadata extraction
-fn comment_line(input: &str) -> ParseResult<String> {
+fn comment_line(input: &str) -> ParseResult<'_, String> {
     map(preceded(alt((tag(";"), tag("#"), tag("*"), tag("|"))), take_until("\n")), |s: &str| {
         s.to_string()
     })(input)
@@ -1081,7 +1081,7 @@ fn parse_metadata_tags(comment: &str) -> HashMap<String, String> {
 }
 
 /// Enhanced comment parser with metadata extraction
-fn enhanced_comment_line(input: &str) -> ParseResult<(String, HashMap<String, String>)> {
+fn enhanced_comment_line(input: &str) -> ParseResult<'_, (String, HashMap<String, String>)> {
     map(preceded(alt((tag(";"), tag("#"), tag("*"), tag("|"))), take_until("\n")), |s: &str| {
         let comment = s.to_string();
         let metadata = parse_metadata_tags(&comment);
@@ -1094,12 +1094,12 @@ fn enhanced_comment_line(input: &str) -> ParseResult<(String, HashMap<String, St
 // ============================================================================
 
 /// Parse a transaction entry
-fn transaction_entry(input: &str) -> ParseResult<Transaction> {
+fn transaction_entry(input: &str) -> ParseResult<'_, Transaction> {
     context("transaction", parse_transaction)(input)
 }
 
 /// Parse a complete transaction with metadata support
-fn parse_transaction(input: &str) -> ParseResult<Transaction> {
+fn parse_transaction(input: &str) -> ParseResult<'_, Transaction> {
     map(
         tuple((
             date_field,
@@ -1149,7 +1149,7 @@ fn parse_transaction(input: &str) -> ParseResult<Transaction> {
 }
 
 /// Parse a date field
-fn date_field(input: &str) -> ParseResult<NaiveDate> {
+fn date_field(input: &str) -> ParseResult<'_, NaiveDate> {
     // Parse date in various formats
     alt((
         // ISO date format: 2021-01-01
@@ -1196,17 +1196,17 @@ fn date_field(input: &str) -> ParseResult<NaiveDate> {
 }
 
 /// Parse payee description
-fn payee_description(input: &str) -> ParseResult<String> {
+fn payee_description(input: &str) -> ParseResult<'_, String> {
     map(take_while(|c| c != '\n' && c != '\r'), |s: &str| s.trim().to_string())(input)
 }
 
 /// Parse a posting line
-fn posting_line(input: &str) -> ParseResult<Posting> {
+fn posting_line(input: &str) -> ParseResult<'_, Posting> {
     context("posting", preceded(alt((space1, tag("\t"))), parse_posting))(input)
 }
 
 /// Parse a single posting with metadata support
-fn parse_posting(input: &str) -> ParseResult<Posting> {
+fn parse_posting(input: &str) -> ParseResult<'_, Posting> {
     // For now, create a simplified version that compiles
     // TODO: Fix account reference creation and metadata handling
     map(
@@ -1240,14 +1240,14 @@ fn parse_posting(input: &str) -> ParseResult<Posting> {
 }
 
 /// Parse an account name
-fn account_name(input: &str) -> ParseResult<String> {
+fn account_name(input: &str) -> ParseResult<'_, String> {
     map(take_while1(|c: char| c != ' ' && c != '\t' && c != '\n' && c != ';'), |s: &str| {
         s.trim().to_string()
     })(input)
 }
 
 /// Parse an amount field (simplified)
-fn simple_amount_field(input: &str) -> ParseResult<Amount> {
+fn simple_amount_field(input: &str) -> ParseResult<'_, Amount> {
     // Simplified amount parser - should handle currencies, expressions, etc.
     alt((
         // Negative amount with currency symbol: -$1000.00, -€500.50
@@ -1366,7 +1366,7 @@ fn simple_amount_field(input: &str) -> ParseResult<Amount> {
 }
 
 /// Parse a comment field with metadata extraction
-fn comment_field(input: &str) -> ParseResult<(String, HashMap<String, String>)> {
+fn comment_field(input: &str) -> ParseResult<'_, (String, HashMap<String, String>)> {
     map(preceded(tag(";"), take_until("\n")), |s: &str| {
         let comment = s.trim().to_string();
         let metadata = parse_metadata_tags(&comment);
@@ -1375,7 +1375,7 @@ fn comment_field(input: &str) -> ParseResult<(String, HashMap<String, String>)> 
 }
 
 /// Simple comment field parser (for backward compatibility)
-fn simple_comment_field(input: &str) -> ParseResult<String> {
+fn simple_comment_field(input: &str) -> ParseResult<'_, String> {
     map(preceded(tag(";"), take_until("\n")), |s: &str| s.trim().to_string())(input)
 }
 
@@ -1384,12 +1384,12 @@ fn simple_comment_field(input: &str) -> ParseResult<String> {
 // ============================================================================
 
 /// Parse a directive entry
-fn directive_entry(input: &str) -> ParseResult<Directive> {
+fn directive_entry(input: &str) -> ParseResult<'_, Directive> {
     context("directive", parse_directive)(input)
 }
 
 /// Parse any directive
-fn parse_directive(input: &str) -> ParseResult<Directive> {
+fn parse_directive(input: &str) -> ParseResult<'_, Directive> {
     alt((
         account_directive,
         commodity_directive,
@@ -1413,7 +1413,7 @@ fn parse_directive(input: &str) -> ParseResult<Directive> {
 }
 
 /// Parse account directive
-fn account_directive(input: &str) -> ParseResult<Directive> {
+fn account_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
         tuple((tag("account"), space1, account_name, line_ending, many0(account_declaration))),
         |(_, _, name, _, declarations)| Directive::Account { name, declarations },
@@ -1421,7 +1421,7 @@ fn account_directive(input: &str) -> ParseResult<Directive> {
 }
 
 /// Parse account declarations
-fn account_declaration(input: &str) -> ParseResult<AccountDeclaration> {
+fn account_declaration(input: &str) -> ParseResult<'_, AccountDeclaration> {
     preceded(
         alt((space1, tag("\t"))),
         alt((
@@ -1437,7 +1437,7 @@ fn account_declaration(input: &str) -> ParseResult<AccountDeclaration> {
 }
 
 /// Parse commodity directive
-fn commodity_directive(input: &str) -> ParseResult<Directive> {
+fn commodity_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
         tuple((
             tag("commodity"),
@@ -1454,7 +1454,7 @@ fn commodity_directive(input: &str) -> ParseResult<Directive> {
 }
 
 /// Parse commodity declarations
-fn commodity_declaration(input: &str) -> ParseResult<CommodityDeclaration> {
+fn commodity_declaration(input: &str) -> ParseResult<'_, CommodityDeclaration> {
     preceded(
         alt((space1, tag("\t"))),
         alt((
@@ -1471,19 +1471,19 @@ fn commodity_declaration(input: &str) -> ParseResult<CommodityDeclaration> {
 }
 
 /// Parse include directive
-fn include_directive(input: &str) -> ParseResult<Directive> {
+fn include_directive(input: &str) -> ParseResult<'_, Directive> {
     alt((conditional_include_directive, simple_include_directive))(input)
 }
 
 /// Parse simple include directive
-fn simple_include_directive(input: &str) -> ParseResult<Directive> {
+fn simple_include_directive(input: &str) -> ParseResult<'_, Directive> {
     map(preceded(tag("include"), preceded(space1, take_until("\n"))), |path: &str| {
         Directive::Include { path: PathBuf::from(path.trim()) }
     })(input)
 }
 
 /// Parse conditional include directive
-fn conditional_include_directive(input: &str) -> ParseResult<Directive> {
+fn conditional_include_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
         tuple((
             tag("include"),
@@ -1500,7 +1500,7 @@ fn conditional_include_directive(input: &str) -> ParseResult<Directive> {
 }
 
 /// Parse price directive
-fn price_directive(input: &str) -> ParseResult<Directive> {
+fn price_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
         tuple((tag("P"), space1, date_field, space1, take_until(" "), space1, simple_amount_field)),
         |(_, _, date, _, commodity, _, price)| Directive::Price {
@@ -1512,7 +1512,7 @@ fn price_directive(input: &str) -> ParseResult<Directive> {
 }
 
 /// Parse alias directive
-fn alias_directive(input: &str) -> ParseResult<Directive> {
+fn alias_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
         tuple((tag("alias"), space1, take_until("="), tag("="), take_until("\n"))),
         |(_, _, account, _, alias)| Directive::Alias {
@@ -1523,19 +1523,19 @@ fn alias_directive(input: &str) -> ParseResult<Directive> {
 }
 
 /// Parse apply directive
-fn apply_directive(input: &str) -> ParseResult<Directive> {
+fn apply_directive(input: &str) -> ParseResult<'_, Directive> {
     map(preceded(tag("apply account"), preceded(space1, take_until("\n"))), |account: &str| {
         Directive::Apply { state: ApplyState::Account(account.trim().to_string()) }
     })(input)
 }
 
 /// Parse end directive
-fn end_directive(input: &str) -> ParseResult<Directive> {
+fn end_directive(input: &str) -> ParseResult<'_, Directive> {
     value(Directive::End, tag("end"))(input)
 }
 
 /// Parse payee directive
-fn payee_directive(input: &str) -> ParseResult<Directive> {
+fn payee_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
         tuple((tag("payee"), space1, take_until("\n"), line_ending, many0(payee_declaration))),
         |(_, _, name, _, declarations)| Directive::Payee {
@@ -1546,7 +1546,7 @@ fn payee_directive(input: &str) -> ParseResult<Directive> {
 }
 
 /// Parse payee declarations
-fn payee_declaration(input: &str) -> ParseResult<PayeeDeclaration> {
+fn payee_declaration(input: &str) -> ParseResult<'_, PayeeDeclaration> {
     preceded(
         alt((space1, tag("\t"))),
         alt((
@@ -1561,14 +1561,14 @@ fn payee_declaration(input: &str) -> ParseResult<PayeeDeclaration> {
 }
 
 /// Parse tag directive
-fn tag_directive(input: &str) -> ParseResult<Directive> {
+fn tag_directive(input: &str) -> ParseResult<'_, Directive> {
     map(preceded(tag("tag"), preceded(space1, take_until("\n"))), |name: &str| Directive::Tag {
         name: name.trim().to_string(),
     })(input)
 }
 
 /// Parse option directive
-fn option_directive(input: &str) -> ParseResult<Directive> {
+fn option_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
         tuple((tag("option"), space1, take_until(" "), space1, take_until("\n"))),
         |(_, _, name, _, value)| Directive::Option {
@@ -1579,14 +1579,14 @@ fn option_directive(input: &str) -> ParseResult<Directive> {
 }
 
 /// Parse eval directive
-fn eval_directive(input: &str) -> ParseResult<Directive> {
+fn eval_directive(input: &str) -> ParseResult<'_, Directive> {
     map(preceded(tag("eval"), preceded(space1, take_until("\n"))), |expression: &str| {
         Directive::Eval { expression: expression.trim().to_string() }
     })(input)
 }
 
 /// Parse define directive
-fn define_directive(input: &str) -> ParseResult<Directive> {
+fn define_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
         tuple((tag("define"), space1, take_until("="), tag("="), take_until("\n"))),
         |(_, _, name, _, expression)| Directive::Define {
@@ -1597,35 +1597,35 @@ fn define_directive(input: &str) -> ParseResult<Directive> {
 }
 
 /// Parse year directive
-fn year_directive(input: &str) -> ParseResult<Directive> {
+fn year_directive(input: &str) -> ParseResult<'_, Directive> {
     map(preceded(tag("year"), preceded(space1, digit1)), |year_str: &str| Directive::Year {
         year: year_str.parse().unwrap_or(2024),
     })(input)
 }
 
 /// Parse default commodity directive
-fn default_commodity_directive(input: &str) -> ParseResult<Directive> {
+fn default_commodity_directive(input: &str) -> ParseResult<'_, Directive> {
     map(preceded(tag("D"), preceded(space1, take_until("\n"))), |symbol: &str| {
         Directive::DefaultCommodity { symbol: symbol.trim().to_string() }
     })(input)
 }
 
 /// Parse assert directive
-fn assert_directive(input: &str) -> ParseResult<Directive> {
+fn assert_directive(input: &str) -> ParseResult<'_, Directive> {
     map(preceded(tag("assert"), preceded(space1, take_until("\n"))), |condition: &str| {
         Directive::Assert { condition: condition.trim().to_string() }
     })(input)
 }
 
 /// Parse check directive
-fn check_directive(input: &str) -> ParseResult<Directive> {
+fn check_directive(input: &str) -> ParseResult<'_, Directive> {
     map(preceded(tag("check"), preceded(space1, take_until("\n"))), |condition: &str| {
         Directive::Check { condition: condition.trim().to_string() }
     })(input)
 }
 
 /// Parse periodic transaction (starts with ~)
-fn periodic_transaction(input: &str) -> ParseResult<Directive> {
+fn periodic_transaction(input: &str) -> ParseResult<'_, Directive> {
     map(
         tuple((tag("~"), space0, take_until("\n"), line_ending, many0(posting_line))),
         |(_, _, period, _, postings)| Directive::PeriodicTransaction {
@@ -1637,7 +1637,7 @@ fn periodic_transaction(input: &str) -> ParseResult<Directive> {
 }
 
 /// Parse automated transaction (starts with =)
-fn automated_transaction(input: &str) -> ParseResult<Directive> {
+fn automated_transaction(input: &str) -> ParseResult<'_, Directive> {
     map(
         tuple((tag("="), space0, take_until("\n"), line_ending, many0(posting_line))),
         |(_, _, condition, _, postings)| Directive::AutomatedTransaction {
@@ -1785,7 +1785,7 @@ mod tests {
     #[test]
     fn test_validation_error_empty_transaction() {
         let parser = JournalParser::new();
-        let mut transaction = Transaction::new(
+        let transaction = Transaction::new(
             chrono::NaiveDate::from_ymd_opt(2024, 1, 1).unwrap(),
             "Test transaction".to_string(),
         );

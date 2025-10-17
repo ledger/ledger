@@ -90,7 +90,7 @@ pub enum CommodityPosition {
 // ============================================================================
 
 /// Parse various date formats supported by Ledger
-pub fn parse_date(input: &str) -> ParseResult<NaiveDate> {
+pub fn parse_date(input: &str) -> ParseResult<'_, NaiveDate> {
     context(
         "date",
         alt((
@@ -103,7 +103,7 @@ pub fn parse_date(input: &str) -> ParseResult<NaiveDate> {
 }
 
 /// Parse ISO date format: YYYY-MM-DD
-fn parse_iso_date(input: &str) -> ParseResult<NaiveDate> {
+fn parse_iso_date(input: &str) -> ParseResult<'_, NaiveDate> {
     map(
         tuple((
             digit1, // year
@@ -123,7 +123,7 @@ fn parse_iso_date(input: &str) -> ParseResult<NaiveDate> {
 }
 
 /// Parse slash date format: YYYY/MM/DD
-fn parse_slash_date(input: &str) -> ParseResult<NaiveDate> {
+fn parse_slash_date(input: &str) -> ParseResult<'_, NaiveDate> {
     map(
         tuple((
             digit1::<&str, nom::error::Error<&str>>, // year
@@ -143,7 +143,7 @@ fn parse_slash_date(input: &str) -> ParseResult<NaiveDate> {
 }
 
 /// Parse dot date format: YYYY.MM.DD
-fn parse_dot_date(input: &str) -> ParseResult<NaiveDate> {
+fn parse_dot_date(input: &str) -> ParseResult<'_, NaiveDate> {
     map(
         tuple((
             digit1::<&str, nom::error::Error<&str>>, // year
@@ -163,7 +163,7 @@ fn parse_dot_date(input: &str) -> ParseResult<NaiveDate> {
 }
 
 /// Parse short date format: MM/DD (assumes current year)
-fn parse_short_date(input: &str) -> ParseResult<NaiveDate> {
+fn parse_short_date(input: &str) -> ParseResult<'_, NaiveDate> {
     map(
         tuple((
             digit1::<&str, nom::error::Error<&str>>, // month
@@ -185,7 +185,7 @@ fn parse_short_date(input: &str) -> ParseResult<NaiveDate> {
 // ============================================================================
 
 /// Parse complete transaction including header and postings
-pub fn parse_transaction(input: &str) -> ParseResult<ParsedTransaction> {
+pub fn parse_transaction(input: &str) -> ParseResult<'_, ParsedTransaction> {
     context(
         "transaction",
         map(
@@ -199,7 +199,7 @@ pub fn parse_transaction(input: &str) -> ParseResult<ParsedTransaction> {
 }
 
 /// Parse transaction header line
-fn parse_transaction_header(input: &str) -> ParseResult<ParsedTransaction> {
+fn parse_transaction_header(input: &str) -> ParseResult<'_, ParsedTransaction> {
     map(
         tuple((
             parse_date,
@@ -229,7 +229,7 @@ fn parse_transaction_header(input: &str) -> ParseResult<ParsedTransaction> {
 }
 
 /// Parse payee and optional note
-fn parse_payee_and_note(input: &str) -> ParseResult<(String, Option<String>)> {
+fn parse_payee_and_note(input: &str) -> ParseResult<'_, (String, Option<String>)> {
     map(
         pair(
             take_while(|c| c != ';' && c != '\n' && c != '\r'),
@@ -245,8 +245,8 @@ fn parse_payee_and_note(input: &str) -> ParseResult<(String, Option<String>)> {
 // Posting Parsing
 // ============================================================================
 
-/// Parse a posting line (must start with whitespace)  
-fn parse_posting_line(input: &str) -> ParseResult<ParsedPosting> {
+/// Parse a posting line (must start with whitespace)
+fn parse_posting_line(input: &str) -> ParseResult<'_, ParsedPosting> {
     context(
         "posting_line",
         map(
@@ -261,7 +261,7 @@ fn parse_posting_line(input: &str) -> ParseResult<ParsedPosting> {
 }
 
 /// Parse posting content
-fn parse_posting(input: &str) -> ParseResult<ParsedPosting> {
+fn parse_posting(input: &str) -> ParseResult<'_, ParsedPosting> {
     context(
         "posting",
         map(
@@ -304,19 +304,22 @@ fn parse_posting(input: &str) -> ParseResult<ParsedPosting> {
 }
 
 /// Parse account name
-fn parse_account_name(input: &str) -> ParseResult<String> {
+fn parse_account_name(input: &str) -> ParseResult<'_, String> {
     map(take_while1(|c: char| !c.is_whitespace() && c != ';'), |s: &str| s.to_string())(input)
 }
 
 /// Parse amount specification (amount + optional assertions/assignments/lot info)
 fn parse_amount_spec(
     input: &str,
-) -> ParseResult<(
-    Option<ParsedAmount>,
-    Option<ParsedAmount>, // balance assertion
-    Option<ParsedAmount>, // balance assignment
-    Option<(Option<ParsedAmount>, Option<NaiveDate>, Option<String>)>, // lot info
-)> {
+) -> ParseResult<
+    '_,
+    (
+        Option<ParsedAmount>,
+        Option<ParsedAmount>, // balance assertion
+        Option<ParsedAmount>, // balance assignment
+        Option<(Option<ParsedAmount>, Option<NaiveDate>, Option<String>)>, // lot info
+    ),
+> {
     map(
         tuple((
             opt(parse_amount),
@@ -334,19 +337,19 @@ fn parse_amount_spec(
 }
 
 /// Parse balance assertion: = amount
-fn parse_balance_assertion(input: &str) -> ParseResult<ParsedAmount> {
+fn parse_balance_assertion(input: &str) -> ParseResult<'_, ParsedAmount> {
     preceded(char('='), preceded(space0, parse_amount))(input)
 }
 
-/// Parse balance assignment: := amount  
-fn parse_balance_assignment(input: &str) -> ParseResult<ParsedAmount> {
+/// Parse balance assignment: := amount
+fn parse_balance_assignment(input: &str) -> ParseResult<'_, ParsedAmount> {
     preceded(tag(":="), preceded(space0, parse_amount))(input)
 }
 
 /// Parse lot information: {price} [date] (note)
 fn parse_lot_info(
     input: &str,
-) -> ParseResult<(Option<ParsedAmount>, Option<NaiveDate>, Option<String>)> {
+) -> ParseResult<'_, (Option<ParsedAmount>, Option<NaiveDate>, Option<String>)> {
     map(
         tuple((
             opt(delimited(char('{'), parse_amount, char('}'))), // lot price
@@ -364,7 +367,7 @@ fn parse_lot_info(
 // ============================================================================
 
 /// Parse monetary amount with optional commodity
-pub fn parse_amount(input: &str) -> ParseResult<ParsedAmount> {
+pub fn parse_amount(input: &str) -> ParseResult<'_, ParsedAmount> {
     context(
         "amount",
         alt((
@@ -376,7 +379,7 @@ pub fn parse_amount(input: &str) -> ParseResult<ParsedAmount> {
 }
 
 /// Parse amount with commodity before: $100.50
-fn parse_amount_commodity_before(input: &str) -> ParseResult<ParsedAmount> {
+fn parse_amount_commodity_before(input: &str) -> ParseResult<'_, ParsedAmount> {
     map(tuple((parse_commodity_symbol, space0, parse_number)), |(commodity, _, value)| {
         ParsedAmount {
             value,
@@ -387,7 +390,7 @@ fn parse_amount_commodity_before(input: &str) -> ParseResult<ParsedAmount> {
 }
 
 /// Parse amount with commodity after: 100.50 USD
-fn parse_amount_commodity_after(input: &str) -> ParseResult<ParsedAmount> {
+fn parse_amount_commodity_after(input: &str) -> ParseResult<'_, ParsedAmount> {
     map(tuple((parse_number, space1, parse_commodity_symbol)), |(value, _, commodity)| {
         ParsedAmount {
             value,
@@ -398,7 +401,7 @@ fn parse_amount_commodity_after(input: &str) -> ParseResult<ParsedAmount> {
 }
 
 /// Parse amount without commodity: 100.50
-fn parse_amount_no_commodity(input: &str) -> ParseResult<ParsedAmount> {
+fn parse_amount_no_commodity(input: &str) -> ParseResult<'_, ParsedAmount> {
     map(parse_number, |value| ParsedAmount {
         value,
         commodity: None,
@@ -407,7 +410,7 @@ fn parse_amount_no_commodity(input: &str) -> ParseResult<ParsedAmount> {
 }
 
 /// Parse commodity symbol (letters or special symbols)
-fn parse_commodity_symbol(input: &str) -> ParseResult<String> {
+fn parse_commodity_symbol(input: &str) -> ParseResult<'_, String> {
     alt((
         // Special symbols like $, €, £, etc.
         map(char('$'), |_| "$".to_string()),
@@ -422,7 +425,7 @@ fn parse_commodity_symbol(input: &str) -> ParseResult<String> {
 }
 
 /// Parse numeric value with optional decimal places
-fn parse_number(input: &str) -> ParseResult<Decimal> {
+fn parse_number(input: &str) -> ParseResult<'_, Decimal> {
     map(
         recognize(tuple((
             opt(char('-')),

@@ -17,7 +17,7 @@ pub struct Position {
     pub sequence: usize,
 }
 
-/// Transaction flags
+// Transaction flags
 bitflags::bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct TransactionFlags: u16 {
@@ -359,7 +359,7 @@ impl Transaction {
         self.postings.iter().any(|p| p.is_virtual())
     }
 
-    /// Check if transaction has any deferred postings  
+    /// Check if transaction has any deferred postings
     pub fn has_deferred_postings(&self) -> bool {
         self.postings.iter().any(|p| p.is_deferred())
     }
@@ -859,8 +859,6 @@ mod tests {
     use crate::account::{AccountRef, AccountTree};
     use ledger_math::commodity::Commodity;
     use rust_decimal::Decimal;
-    use std::cell::RefCell;
-    use std::rc::Rc;
     use std::sync::Arc;
 
     fn usd_commodity() -> Option<Arc<Commodity>> {

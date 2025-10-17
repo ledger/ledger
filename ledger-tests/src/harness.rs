@@ -1,6 +1,5 @@
 //! Main test harness orchestrating the test framework
 
-use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::Path;
 use std::time::Instant;
@@ -172,7 +171,7 @@ impl LedgerHarness {
         Ok(all_results)
     }
 
-    /// Execute tests in parallel  
+    /// Execute tests in parallel
     async fn execute_parallel(
         &self,
         test_suites: &[TestSuite],

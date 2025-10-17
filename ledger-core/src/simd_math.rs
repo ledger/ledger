@@ -159,7 +159,7 @@ impl SimdArithmetic {
     /// Scalar fallback for balance aggregation
     fn aggregate_balances_scalar(&self, balances: &[Balance]) -> Balance {
         let result = Balance::new();
-        for balance in balances {
+        for _balance in balances {
             // TODO: Implement proper balance addition
             // result += balance;
         }

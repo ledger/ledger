@@ -77,7 +77,7 @@ fn main() -> anyhow::Result<()> {
                 println!("Sample accounts (first 10):");
                 println!("{}", "-".repeat(28));
 
-                for (i, (name, account)) in journal.accounts.iter().take(10).enumerate() {
+                for (i, account) in journal.accounts.values().take(10).enumerate() {
                     let acc = account.borrow();
                     println!("{}: {}", i + 1, acc.name.as_str());
                 }
@@ -89,7 +89,7 @@ fn main() -> anyhow::Result<()> {
                 println!("Commodities found:");
                 println!("------------------");
 
-                for (symbol, commodity) in &journal.commodities {
+                for commodity in journal.commodities.values() {
                     println!("- {}", commodity.symbol());
                 }
             }

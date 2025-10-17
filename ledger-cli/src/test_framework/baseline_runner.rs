@@ -204,7 +204,7 @@ impl<'a> BaselineRunner<'a> {
     fn handle_baseline_without_expected(
         &self,
         test_file: &Path,
-        test_case: &TestCase,
+        _test_case: &TestCase,
         result: &ProcessResult,
     ) -> Result<bool> {
         let expected_file = self.get_expected_output_file(test_file);

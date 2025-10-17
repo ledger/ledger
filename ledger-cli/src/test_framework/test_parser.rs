@@ -302,7 +302,7 @@ impl BaselineTestParser {
         if let Some(cmd_part) = filename.strip_prefix("cmd-") {
             cmd_part.to_string()
         } else if let Some(opt_part) = filename.strip_prefix("opt-") {
-            format!("balance --{}", opt_part.replace('-', "-"))
+            format!("balance --{}", opt_part)
         } else {
             "balance".to_string()
         }

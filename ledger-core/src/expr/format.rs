@@ -61,7 +61,6 @@ impl FormatSpec {
         let mut left_align = false;
         let mut zero_pad = false;
         let mut show_plus = false;
-        let mut position = 0;
 
         // Skip the % character
         if chars.next() != Some('%') {
@@ -70,7 +69,6 @@ impl FormatSpec {
                 spec
             )));
         }
-        position += 1;
 
         // Parse flags
         while let Some(&ch) = chars.peek() {
@@ -424,13 +422,10 @@ impl FormatProcessor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::account::Account;
     use crate::posting::Posting;
     use crate::transaction::Transaction;
     use chrono::NaiveDate;
     use ledger_math::amount::Amount;
-    use std::cell::RefCell;
-    use std::rc::Rc;
     use std::str::FromStr;
 
     fn create_test_transaction() -> Transaction {

@@ -9,7 +9,7 @@ use crate::strings::{AccountName, PayeeName};
 use crate::transaction::{Position, TagData};
 use ledger_math::amount::Amount;
 
-/// Posting flags matching C++ post_t flags
+// Posting flags matching C++ post_t flags
 bitflags::bitflags! {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct PostingFlags: u16 {

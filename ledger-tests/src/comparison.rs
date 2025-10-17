@@ -12,7 +12,7 @@ pub struct OutputComparison {
     pub diff: String,
     /// Number of added lines
     pub added_lines: usize,
-    /// Number of removed lines  
+    /// Number of removed lines
     pub removed_lines: usize,
     /// Number of changed lines
     pub changed_lines: usize,
@@ -56,7 +56,7 @@ impl OutputComparison {
     }
 }
 
-/// Output comparison engine  
+/// Output comparison engine
 #[derive(Clone)]
 pub struct OutputComparator {
     /// Whether to normalize whitespace
@@ -125,14 +125,13 @@ impl OutputComparator {
         let mut diff_output = String::new();
         let mut added_lines = 0;
         let mut removed_lines = 0;
-        let mut changed_lines = 0;
 
         // Generate unified diff format
         diff_output.push_str("--- expected\n");
         diff_output.push_str("+++ actual\n");
 
         for group in diff.grouped_ops(3) {
-            if let Some((first, last)) = group.first().zip(group.last()) {
+            if let Some((first, _last)) = group.first().zip(group.last()) {
                 diff_output.push_str(&format!(
                     "@@ -{},{} +{},{} @@\n",
                     first.old_range().start + 1,
@@ -162,7 +161,7 @@ impl OutputComparator {
         }
 
         // Count changed lines as max of added/removed for line-level changes
-        changed_lines = added_lines.min(removed_lines);
+        let changed_lines = added_lines.min(removed_lines);
 
         OutputComparison::with_differences(diff_output, added_lines, removed_lines, changed_lines)
     }

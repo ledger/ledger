@@ -60,7 +60,7 @@ pub struct ReportOptions {
     pub running_total: bool,
     /// Column width for account names
     pub account_width: Option<usize>,
-    /// Column width for amounts  
+    /// Column width for amounts
     pub amount_width: Option<usize>,
     /// Show account codes
     pub show_codes: bool,
@@ -133,7 +133,7 @@ pub struct BalanceReport {
     pub journal: Journal,
     /// Posting filter chain
     pub posting_filters: FilterChain<Posting>,
-    /// Transaction filter chain  
+    /// Transaction filter chain
     pub transaction_filters: FilterChain<Transaction>,
     /// Cache manager for performance optimization
     pub cache_manager: Option<CacheManager>,
@@ -386,9 +386,9 @@ impl BalanceReport {
 
     /// Format balance amount with proper alignment
     fn format_amount(&self, balance: &Balance, options: &ReportOptions) -> String {
-        let formatted = if let Some(ref currency) = options.currency {
+        let formatted = if let Some(ref _currency) = options.currency {
             // Filter by specific currency
-            balance.to_string() // Would need currency filtering in Balance
+            balance.to_string() // FIXME: Would need currency filtering in Balance
         } else {
             balance.to_string()
         };
@@ -670,7 +670,7 @@ impl RegisterReport {
     }
 
     /// Format a register entry for display
-    fn format_entry(&self, entry: &RegisterEntry, options: &ReportOptions) -> String {
+    fn format_entry(&self, entry: &RegisterEntry, _options: &ReportOptions) -> String {
         let mut parts = Vec::new();
 
         // Date column
@@ -1230,12 +1230,8 @@ impl ReportGenerator for ClearedReport {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::account::Account;
-    use crate::commodity::Commodity;
     use chrono::NaiveDate;
     use ledger_math::amount::Amount;
-    use std::cell::RefCell;
-    use std::rc::Rc;
     use std::str::FromStr;
 
     fn create_test_journal() -> Journal {

@@ -90,7 +90,6 @@ impl DiffReporter {
         // Calculate statistics
         let mut added_lines = 0;
         let mut removed_lines = 0;
-        let mut modified_lines = 0;
 
         for change in diff.iter_all_changes() {
             match change.tag() {
@@ -102,7 +101,7 @@ impl DiffReporter {
 
         // Count modified lines as pairs of add/delete
         let paired_changes = added_lines.min(removed_lines);
-        modified_lines = paired_changes;
+        let modified_lines = paired_changes;
         added_lines -= paired_changes;
         removed_lines -= paired_changes;
 

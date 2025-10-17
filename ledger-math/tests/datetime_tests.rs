@@ -3,7 +3,7 @@
 //! This module ports tests from the C++ t_times.cc file and adds additional
 //! property-based tests for robustness.
 
-use chrono::{Datelike, Timelike};
+use chrono::Timelike;
 use ledger_math::datetime::*;
 use proptest::prelude::*;
 
@@ -116,7 +116,7 @@ mod date_parsing_tests {
 
     #[test]
     fn test_month_name_formats() {
-        let expected = Date::new(2002, 2, 2).unwrap();
+        let _expected = Date::new(2002, 2, 2).unwrap();
 
         // These formats are not yet implemented but should be supported
         // Commented out until month name parsing is implemented
@@ -153,7 +153,7 @@ mod date_parsing_tests {
     #[test]
     fn test_datetime_with_time_components() {
         // These should extract just the date part
-        let expected = Date::new(2002, 2, 2).unwrap();
+        let _expected = Date::new(2002, 2, 2).unwrap();
 
         // These formats need datetime parsing implemented first
         // Commented out for now
