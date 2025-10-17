@@ -13,6 +13,7 @@ mod completion;
 mod dispatch;
 mod help;
 mod session;
+#[allow(dead_code)]
 mod test_framework;
 
 use cli::Cli;

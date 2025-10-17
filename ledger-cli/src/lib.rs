@@ -9,6 +9,7 @@ pub mod completion;
 pub mod dispatch;
 pub mod help;
 pub mod session;
+#[allow(dead_code)]
 pub mod test_framework;
 
 pub use cli::Cli;

@@ -5,7 +5,8 @@
 //! core mathematical types: Amount and Balance.
 
 #![warn(clippy::all)]
-#![warn(missing_docs)]
+// FIXME: temporarily allow missing docs
+// #![warn(missing_docs)]
 
 pub mod amount;
 pub mod balance;
