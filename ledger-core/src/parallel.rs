@@ -372,6 +372,7 @@ impl ParallelReportGenerator {
 }
 
 /// Initialize global thread pool for parallel processing
+#[allow(deprecated)]
 pub fn init_parallel_processing(
     config: Option<ParallelConfig>,
 ) -> Result<(), rayon::ThreadPoolBuildError> {
