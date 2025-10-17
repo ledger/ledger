@@ -241,6 +241,7 @@ impl ParallelAccountProcessor {
         self.collect_accounts_sequential(root_accounts, &predicate)
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn collect_accounts_sequential<P>(
         &self,
         accounts: &[AccountRef],

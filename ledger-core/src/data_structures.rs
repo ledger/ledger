@@ -398,6 +398,7 @@ impl<T> AccountTree<T> {
         stats
     }
 
+    #[allow(clippy::only_used_in_recursion)]
     fn collect_stats(&self, node: &AccountNode<T>, depth: usize, stats: &mut TreeStats) {
         stats.total_nodes += 1;
         stats.max_depth = stats.max_depth.max(depth);
