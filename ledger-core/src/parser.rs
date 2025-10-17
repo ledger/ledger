@@ -556,8 +556,12 @@ impl JournalParser {
     fn get_line_column(&self, input: &str, error_pos: &str) -> (usize, usize) {
         let error_offset = input.len() - error_pos.len();
         let lines: Vec<&str> = input[..error_offset].lines().collect();
-        let line = lines.len();
-        let column = lines.last().map(|l| l.len()).unwrap_or(0) + 1;
+        let error_at_start_of_line =
+            error_offset > 0 && &input[(error_offset - 1)..(error_offset)] == "\n";
+
+        let line = lines.len() + if error_at_start_of_line { 1 } else { 0 };
+        let column =
+            if error_at_start_of_line { 0 } else { lines.last().map(|l| l.len()).unwrap_or(0) } + 1;
         (line, column)
     }
 
@@ -1028,57 +1032,83 @@ fn comment_line(input: &str) -> ParseResult<'_, String> {
 }
 
 /// Parse metadata tags from comments with multiple supported patterns
-fn parse_metadata_tags(comment: &str) -> HashMap<String, String> {
-    let mut metadata = HashMap::new();
+fn parse_metadata_tags(
+    comment: &str,
+    metadata: Option<HashMap<String, String>>,
+) -> HashMap<String, String> {
+    let mut metadata = metadata.unwrap_or_default();
 
     for line in comment.lines() {
-        let trimmed = line.trim();
+        let mut trimmed = line.trim();
 
-        // Pattern 1: :tag: value
-        if let Some(start) = trimmed.find(':') {
-            if let Some(end) = trimmed[start + 1..].find(':') {
-                let tag_name = &trimmed[start + 1..start + 1 + end];
-                let remaining = &trimmed[start + 1 + end + 1..].trim();
+        while !trimmed.is_empty() {
+            // Pattern 1: :tag: value
+            if let Some(start) = trimmed.find(':') {
+                if let Some(end) = trimmed[start + 1..].find(':') {
+                    let tag_name = &trimmed[start + 1..start + 1 + end];
+                    // +2 because of the leading/trailing colons
+                    let remaining = &trimmed[tag_name.len() + 2..].trim();
 
-                if !tag_name.is_empty() {
-                    if remaining.is_empty() {
-                        metadata.insert(tag_name.to_string(), String::new());
-                    } else {
-                        metadata.insert(tag_name.to_string(), remaining.to_string());
+                    let value_end_pos = remaining.find(' ').unwrap_or_else(|| remaining.len());
+
+                    let value = remaining[..value_end_pos].trim();
+
+                    if !tag_name.is_empty() {
+                        if value.is_empty() {
+                            metadata.insert(tag_name.to_string(), String::new());
+                        } else {
+                            metadata.insert(tag_name.to_string(), value.to_string());
+                        }
                     }
+
+                    trimmed = &remaining[value_end_pos..].trim();
+                    continue;
                 }
             }
-        }
 
-        // Pattern 2: [key: value] or [key=value]
-        if let Some(start) = trimmed.find('[') {
-            if let Some(end) = trimmed.find(']') {
-                let bracket_content = &trimmed[start + 1..end];
-                if let Some(colon_pos) = bracket_content.find(':') {
-                    let key = bracket_content[..colon_pos].trim();
-                    let value = bracket_content[colon_pos + 1..].trim();
-                    if !key.is_empty() {
+            // Pattern 2: [key: value] or [key=value]
+            if let Some(start) = trimmed.find('[') {
+                if let Some(end) = trimmed.find(']') {
+                    let bracket_content = &trimmed[start + 1..end];
+                    metadata = parse_metadata_tags(bracket_content, Some(metadata));
+
+                    trimmed = &trimmed[bracket_content.len() + 2..].trim();
+                    continue;
+                }
+            }
+
+            // Pattern 3: key: value
+            if trimmed.chars().filter(|&c| c == ':').count() == 1 {
+                if let Some(equals_pos) = trimmed.find(": ") {
+                    let key = trimmed[..equals_pos].trim();
+                    let remaining = &trimmed[equals_pos + 2..];
+                    let value_end_pos = remaining.find(' ').unwrap_or_else(|| remaining.len());
+
+                    let value = remaining[..value_end_pos].trim();
+                    if !key.is_empty() && !key.contains(' ') {
                         metadata.insert(key.to_string(), value.to_string());
                     }
-                } else if let Some(equals_pos) = bracket_content.find('=') {
-                    let key = bracket_content[..equals_pos].trim();
-                    let value = bracket_content[equals_pos + 1..].trim();
-                    if !key.is_empty() {
+                    trimmed = &remaining[value_end_pos..].trim();
+                    continue;
+                }
+            }
+
+            // Pattern 4: key=value (no brackets/colons)
+            if trimmed.contains('=') {
+                if let Some(equals_pos) = trimmed.find('=') {
+                    let key = trimmed[..equals_pos].trim();
+                    let value_end_pos = trimmed.find(' ').unwrap_or_else(|| trimmed.len());
+
+                    let value = trimmed[equals_pos + 1..value_end_pos].trim();
+                    if !key.is_empty() && !key.contains(' ') {
                         metadata.insert(key.to_string(), value.to_string());
                     }
+                    trimmed = &trimmed[value_end_pos..].trim();
+                    continue;
                 }
             }
-        }
 
-        // Pattern 3: key=value or key: value (no brackets/colons)
-        if !trimmed.contains(':') || (trimmed.chars().filter(|&c| c == ':').count() == 1) {
-            if let Some(equals_pos) = trimmed.find('=') {
-                let key = trimmed[..equals_pos].trim();
-                let value = trimmed[equals_pos + 1..].trim();
-                if !key.is_empty() && !key.contains(' ') {
-                    metadata.insert(key.to_string(), value.to_string());
-                }
-            }
+            break;
         }
     }
 
@@ -1089,7 +1119,7 @@ fn parse_metadata_tags(comment: &str) -> HashMap<String, String> {
 fn enhanced_comment_line(input: &str) -> ParseResult<'_, (String, HashMap<String, String>)> {
     map(preceded(alt((tag(";"), tag("#"), tag("*"), tag("|"))), take_until("\n")), |s: &str| {
         let comment = s.to_string();
-        let metadata = parse_metadata_tags(&comment);
+        let metadata = parse_metadata_tags(&comment, None);
         (comment, metadata)
     })(input)
 }
@@ -1255,11 +1285,13 @@ fn account_name(input: &str) -> ParseResult<'_, String> {
 fn simple_amount_field(input: &str) -> ParseResult<'_, Amount> {
     // Simplified amount parser - should handle currencies, expressions, etc.
     alt((
-        // Negative amount with currency symbol: -$1000.00, -€500.50
+        // Negative amount with currency symbol: -$1000.00, €-500.50
         map(
             recognize(tuple((
-                tag("-"),
-                alt((tag("$"), tag("€"), tag("£"), tag("¥"))), // currency symbol
+                alt((
+                    tuple((tag("-"), alt((tag("$"), tag("€"), tag("£"), tag("¥"))))),
+                    tuple((alt((tag("$"), tag("€"), tag("£"), tag("¥"))), tag("-"))),
+                )),
                 digit1,
                 opt(tuple((tag("."), digit1))),
             ))),
@@ -1375,7 +1407,7 @@ fn simple_amount_field(input: &str) -> ParseResult<'_, Amount> {
 fn comment_field(input: &str) -> ParseResult<'_, (String, HashMap<String, String>)> {
     map(preceded(tag(";"), take_until("\n")), |s: &str| {
         let comment = s.trim().to_string();
-        let metadata = parse_metadata_tags(&comment);
+        let metadata = parse_metadata_tags(&comment, None);
         (comment, metadata)
     })(input)
 }
@@ -1695,19 +1727,9 @@ mod tests {
     }
 
     #[test]
-    fn test_include_directive() {
-        let input = "include expenses.ledger";
-        let result = include_directive(input);
-        assert!(result.is_ok());
-        if let (_, Directive::Include { path }) = result.unwrap() {
-            assert_eq!(path, PathBuf::from("expenses.ledger"));
-        }
-    }
-
-    #[test]
     fn test_metadata_parsing_colon_style() {
         let comment = " :Receipt: 12345 :Project: ABC";
-        let metadata = parse_metadata_tags(comment);
+        let metadata = parse_metadata_tags(comment, None);
         assert_eq!(metadata.get("Receipt"), Some(&"12345".to_string()));
         assert_eq!(metadata.get("Project"), Some(&"ABC".to_string()));
     }
@@ -1715,7 +1737,7 @@ mod tests {
     #[test]
     fn test_metadata_parsing_bracket_style() {
         let comment = " [Receipt: 12345] [Project=ABC]";
-        let metadata = parse_metadata_tags(comment);
+        let metadata = parse_metadata_tags(comment, None);
         assert_eq!(metadata.get("Receipt"), Some(&"12345".to_string()));
         assert_eq!(metadata.get("Project"), Some(&"ABC".to_string()));
     }
@@ -1723,7 +1745,7 @@ mod tests {
     #[test]
     fn test_metadata_parsing_equals_style() {
         let comment = " Receipt=12345 Project=ABC";
-        let metadata = parse_metadata_tags(comment);
+        let metadata = parse_metadata_tags(comment, None);
         assert_eq!(metadata.get("Receipt"), Some(&"12345".to_string()));
         assert_eq!(metadata.get("Project"), Some(&"ABC".to_string()));
     }
@@ -1739,8 +1761,20 @@ mod tests {
     }
 
     #[test]
+    fn test_include_directive() {
+        let input = "include expenses.ledger\n";
+        let result = include_directive(input).unwrap();
+
+        if let (_, Directive::Include { path }) = result {
+            assert_eq!(path, PathBuf::from("expenses.ledger"));
+        } else {
+            panic!("include result did not parse correctly: {result:?}");
+        }
+    }
+
+    #[test]
     fn test_simple_include_directive() {
-        let input = "include expenses.dat";
+        let input = "include expenses.dat\n";
         let result = simple_include_directive(input);
         assert!(result.is_ok());
         if let (_, Directive::Include { path }) = result.unwrap() {
@@ -1752,7 +1786,7 @@ mod tests {
 
     #[test]
     fn test_conditional_include_directive() {
-        let input = "include [exists(\"optional.dat\")] optional.dat";
+        let input = "include [exists(\"optional.dat\")] optional.dat\n";
         let result = conditional_include_directive(input);
         assert!(result.is_ok());
         if let (_, Directive::ConditionalInclude { condition, path }) = result.unwrap() {
