@@ -4,7 +4,6 @@
 //! using rayon for work-stealing parallelism and optimal CPU utilization.
 
 use parking_lot::{Mutex as ParkingMutex, RwLock as ParkingRwLock};
-use rayon::prelude::*;
 use rayon::{Scope, ThreadPoolBuilder};
 use std::collections::HashMap;
 use std::time::Instant;
@@ -78,7 +77,8 @@ impl ParallelBalanceAccumulator {
     pub fn add_amount(&self, account: AccountName, amount: Amount) {
         let mut balances = self.balances.write();
         let balance = balances.entry(account).or_default();
-        balance.add_amount(&amount);
+        // TODO: error logging
+        let _ = balance.add_amount(&amount);
     }
 
     /// Get final balances
@@ -394,6 +394,8 @@ pub fn init_parallel_processing(
 
 #[cfg(test)]
 mod tests {
+    use rayon::iter::*;
+
     use super::*;
     use crate::transaction::Transaction;
     use std::sync::atomic::{AtomicUsize, Ordering};

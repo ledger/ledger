@@ -85,8 +85,8 @@ type ParseResult<'a, T> = IResult<&'a str, T, VerboseError<&'a str>>;
 // Helper function for string tags that works with VerboseError
 fn tag<'a>(s: &'a str) -> impl Fn(&'a str) -> ParseResult<'a, &'a str> + 'a {
     move |input: &'a str| {
-        if input.starts_with(s) {
-            Ok((&input[s.len()..], &input[..s.len()]))
+        if let Some(stripped) = input.strip_prefix(s) {
+            Ok((stripped, s))
         } else {
             Err(nom::Err::Error(VerboseError::from_error_kind(input, nom::error::ErrorKind::Tag)))
         }
@@ -442,7 +442,8 @@ impl JournalParser {
                         _ => {}
                     }
                 }
-                journal.add_account(Rc::new(RefCell::new(account)));
+                // TODO: error logging
+                let _ = journal.add_account(Rc::new(RefCell::new(account)));
             }
             Directive::Commodity { symbol, declarations } => {
                 let mut commodity = Commodity::new(&symbol);
@@ -458,7 +459,8 @@ impl JournalParser {
                         _ => {}
                     }
                 }
-                journal.add_commodity(Arc::new(commodity));
+                // TODO: error logging
+                let _ = journal.add_commodity(Arc::new(commodity));
             }
             Directive::Include { path } => {
                 self.process_include_file(journal, &path)?;
@@ -507,7 +509,8 @@ impl JournalParser {
         let included_journal = self.parse_file(&include_path)?;
 
         // Merge the included journal into the current one
-        journal.merge(included_journal);
+        // TODO: error logging
+        let _ = journal.merge(included_journal);
 
         Ok(())
     }

@@ -54,7 +54,8 @@ fn create_test_data() -> (TempDir, PathBuf, PathBuf) {
 /// Benchmark command parsing and execution
 fn benchmark_command_execution(c: &mut Criterion) {
     let (_temp_dir, ledger_path, journal_path) = create_test_data();
-    let harness = TestHarness::new(&ledger_path, &ledger_path.parent().unwrap()).unwrap();
+    let harness =
+        TestHarness::new(&ledger_path, &ledger_path.parent().unwrap().to_path_buf()).unwrap();
 
     let mut group = c.benchmark_group("command_execution");
 
@@ -80,7 +81,8 @@ fn benchmark_command_execution(c: &mut Criterion) {
 /// Benchmark output parsing and normalization
 fn benchmark_output_processing(c: &mut Criterion) {
     let (_temp_dir, ledger_path, _journal_path) = create_test_data();
-    let harness = TestHarness::new(&ledger_path, &ledger_path.parent().unwrap()).unwrap();
+    let harness =
+        TestHarness::new(&ledger_path, &ledger_path.parent().unwrap().to_path_buf()).unwrap();
 
     // Create sample outputs of different sizes
     let small_output = "Assets:Checking  $1,000.00\nIncome:Salary   $-2,500.00\n";
@@ -113,13 +115,16 @@ fn benchmark_harness_setup(c: &mut Criterion) {
 
     c.bench_function("harness_creation", |b| {
         b.iter(|| {
-            let harness = TestHarness::new(black_box(&ledger_path), black_box(temp_dir.path()));
+            let harness = TestHarness::new(
+                black_box(&ledger_path),
+                black_box(&temp_dir.path().to_path_buf()),
+            );
             black_box(harness)
         })
     });
 
     // Benchmark harness configuration
-    let harness = TestHarness::new(&ledger_path, temp_dir.path()).unwrap();
+    let harness = TestHarness::new(&ledger_path, &temp_dir.path().to_path_buf()).unwrap();
 
     c.bench_function("harness_configuration", |b| {
         b.iter(|| {
@@ -135,7 +140,8 @@ fn benchmark_harness_setup(c: &mut Criterion) {
 /// Benchmark command parsing
 fn benchmark_command_parsing(c: &mut Criterion) {
     let (_temp_dir, ledger_path, _journal_path) = create_test_data();
-    let harness = TestHarness::new(&ledger_path, &ledger_path.parent().unwrap()).unwrap();
+    let harness =
+        TestHarness::new(&ledger_path, &ledger_path.parent().unwrap().to_path_buf()).unwrap();
 
     let mut group = c.benchmark_group("command_parsing");
 
@@ -166,7 +172,8 @@ fn benchmark_journal_sizes(c: &mut Criterion) {
     let ledger_path = temp_dir.path().join("ledger");
     std::fs::write(&ledger_path, "#!/bin/bash\necho 'mock output'").unwrap();
 
-    let harness = TestHarness::new(&ledger_path, &ledger_path.parent().unwrap()).unwrap();
+    let harness =
+        TestHarness::new(&ledger_path, &ledger_path.parent().unwrap().to_path_buf()).unwrap();
 
     let mut group = c.benchmark_group("journal_sizes");
     group.measurement_time(Duration::from_secs(30)); // Longer measurement time for large data
@@ -201,7 +208,8 @@ fn benchmark_journal_sizes(c: &mut Criterion) {
 /// Benchmark memory usage patterns
 fn benchmark_memory_patterns(c: &mut Criterion) {
     let (_temp_dir, ledger_path, journal_path) = create_test_data();
-    let harness = TestHarness::new(&ledger_path, &ledger_path.parent().unwrap()).unwrap();
+    let harness =
+        TestHarness::new(&ledger_path, &ledger_path.parent().unwrap().to_path_buf()).unwrap();
 
     let mut group = c.benchmark_group("memory_patterns");
 

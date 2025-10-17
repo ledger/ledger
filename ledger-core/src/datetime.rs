@@ -105,6 +105,7 @@ static MONTH_NAMES: Lazy<Vec<(&str, u32)>> = Lazy::new(|| {
 });
 
 /// Weekday name mapping
+#[allow(dead_code)]
 static WEEKDAY_NAMES: Lazy<Vec<(&str, u32)>> = Lazy::new(|| {
     vec![
         ("sunday", 0),
@@ -810,7 +811,7 @@ pub enum DateFormatType {
 pub enum Period {
     /// Daily intervals
     Daily(u32),
-    /// Weekly intervals  
+    /// Weekly intervals
     Weekly(u32),
     /// Bi-weekly (every 2 weeks)
     Biweekly,
@@ -893,7 +894,7 @@ impl Period {
         }
     }
 
-    /// Subtract this period from a date  
+    /// Subtract this period from a date
     pub fn subtract_from_date(&self, date: NaiveDate) -> NaiveDate {
         match self {
             Period::Daily(n) => date - chrono::Duration::days(*n as i64),
@@ -949,7 +950,7 @@ impl DateInterval {
         Self { start, end, period, end_inclusive: false }
     }
 
-    /// Create an interval from a period expression  
+    /// Create an interval from a period expression
     pub fn from_period(period: Period) -> Self {
         Self { start: None, end: None, period: Some(period), end_inclusive: false }
     }
@@ -1195,8 +1196,8 @@ pub fn parse_period(input: &str) -> Result<DateInterval, PeriodParseError> {
     }
 
     // Handle "every N period" format
-    if input.starts_with("every ") {
-        return parse_every_period(&input[6..]);
+    if let Some(period) = input.strip_prefix("every ") {
+        return parse_every_period(period);
     }
 
     // Handle date ranges like "from 2024/01 to 2024/12"
@@ -1261,7 +1262,8 @@ fn parse_period_range(input: &str) -> Result<DateInterval, PeriodParseError> {
     let end_str = parts[1].trim();
 
     // Remove "from" prefix if present
-    let start_str = if start_str.starts_with("from ") { &start_str[5..] } else { start_str };
+    let start_str =
+        if let Some(stripped) = start_str.strip_prefix("from ") { stripped } else { start_str };
 
     let start_date = parse_date(start_str)
         .map_err(|_| PeriodParseError::InvalidFormat(start_str.to_string()))?

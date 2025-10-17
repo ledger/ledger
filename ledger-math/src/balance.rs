@@ -523,14 +523,9 @@ impl fmt::Display for Balance {
             config.min_width = Some(width);
         }
 
-        // Check alignment
-        if let Some(align) = f.align() {
-            match align {
-                fmt::Alignment::Right => {
-                    config.flags.set_flag(FormatFlags::RIGHT_JUSTIFY);
-                }
-                _ => {} // Left align is default
-            }
+        // Check alignment; Left align is default
+        if let Some(fmt::Alignment::Right) = f.align() {
+            config.flags.set_flag(FormatFlags::RIGHT_JUSTIFY);
         }
 
         let formatted = format_balance(self, &config);

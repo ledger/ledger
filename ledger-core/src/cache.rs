@@ -96,20 +96,18 @@ impl CacheKey {
 
         key
     }
-
-    /// Generate a string representation for debugging
-    pub fn to_string(&self) -> String {
-        let mut parts = vec![format!("{}:{}", self.key_type, self.journal_hash)];
-        for (k, v) in &self.params {
-            parts.push(format!("{}={}", k, v));
-        }
-        parts.join("|")
-    }
 }
 
 impl fmt::Display for CacheKey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_string())
+        let s = {
+            let mut parts = vec![format!("{}:{}", self.key_type, self.journal_hash)];
+            for (k, v) in &self.params {
+                parts.push(format!("{}={}", k, v));
+            }
+            parts.join("|")
+        };
+        write!(f, "{}", s)
     }
 }
 

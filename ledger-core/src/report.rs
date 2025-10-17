@@ -612,7 +612,7 @@ impl RegisterReport {
                             .postings
                             .iter()
                             .filter(|p| !std::ptr::eq(*p, posting))
-                            .filter_map(|p| Some(p.account.borrow().fullname_immutable()))
+                            .map(|p| p.account.borrow().fullname_immutable())
                             .collect()
                     } else {
                         Vec::new()

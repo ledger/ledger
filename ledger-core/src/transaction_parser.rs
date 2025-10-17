@@ -28,8 +28,8 @@ type ParseResult<'a, T> = IResult<&'a str, T>;
 // Helper function for string tags
 fn tag<'a>(s: &'a str) -> impl Fn(&'a str) -> IResult<&'a str, &'a str> + 'a {
     move |input: &'a str| {
-        if input.starts_with(s) {
-            Ok((&input[s.len()..], &input[..s.len()]))
+        if let Some(stripped) = input.strip_prefix(s) {
+            Ok((stripped, s))
         } else {
             Err(nom::Err::Error(nom::error::Error::new(input, nom::error::ErrorKind::Tag)))
         }
@@ -309,6 +309,7 @@ fn parse_account_name(input: &str) -> ParseResult<'_, String> {
 }
 
 /// Parse amount specification (amount + optional assertions/assignments/lot info)
+#[allow(clippy::type_complexity)]
 fn parse_amount_spec(
     input: &str,
 ) -> ParseResult<

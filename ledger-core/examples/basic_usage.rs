@@ -15,8 +15,8 @@ fn main() {
 
     // Add them to a balance
     let mut balance = Balance::new();
-    balance.add_amount(&usd_amount);
-    balance.add_amount(&eur_amount);
+    balance.add_amount(&usd_amount).unwrap();
+    balance.add_amount(&eur_amount).unwrap();
 
     println!("Created balance with {} commodities", balance.commodity_count());
     println!("USD amount: {}", usd_amount);

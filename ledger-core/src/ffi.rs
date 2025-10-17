@@ -224,6 +224,7 @@ impl ErrorInfo {
 // Thread-local error storage for better error handling
 thread_local! {
     static LAST_ERROR: RefCell<Option<ErrorInfo>> = const { RefCell::new(None) };
+    #[allow(clippy::type_complexity)]
     static ERROR_CALLBACK: RefCell<Option<Box<dyn Fn(&ErrorInfo)>>> = RefCell::new(None);
 }
 
@@ -1106,6 +1107,7 @@ pub extern "C" fn ledger_journal_process_in_batches(
             let mut batch_num = 0;
 
             // Process transactions in chunks
+            #[allow(clippy::explicit_counter_loop)]
             for chunk in transactions.chunks(batch_size as usize) {
                 // Create array of transaction pointers for this batch
                 let mut transaction_ptrs: Vec<*const CTransaction> = Vec::new();

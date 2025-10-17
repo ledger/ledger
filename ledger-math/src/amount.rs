@@ -708,14 +708,8 @@ impl Amount {
         write!(writer, "{}", formatted)
     }
 
-    /// Convert amount to string with default formatting
-    /// Equivalent to C++ to_string() method
-    pub fn to_string(&self) -> String {
-        format!("{}", self)
-    }
-
     /// Convert amount to string with full precision
-    /// Equivalent to C++ to_fullstring() method  
+    /// Equivalent to C++ to_fullstring() method
     pub fn to_fullstring(&self) -> String {
         use crate::formatting::{format_amount, FormatConfig};
 
@@ -840,14 +834,9 @@ impl fmt::Display for Amount {
             config.min_width = Some(width);
         }
 
-        // Check alignment
-        if let Some(align) = f.align() {
-            match align {
-                fmt::Alignment::Right => {
-                    config.flags.set_flag(FormatFlags::RIGHT_JUSTIFY);
-                }
-                _ => {} // Left align is default
-            }
+        // Check alignment; Left align is default
+        if let Some(fmt::Alignment::Right) = f.align() {
+            config.flags.set_flag(FormatFlags::RIGHT_JUSTIFY);
         }
 
         let formatted = format_amount(self, &config);
