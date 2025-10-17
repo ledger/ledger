@@ -12,6 +12,7 @@ use num_traits::{Zero, Signed};
 use crate::amount::{Amount, Precision};
 use crate::balance::Balance;
 use crate::commodity::CommodityRef;
+use crate::CommodityFlags;
 
 /// Formatting flags matching C++ AMOUNT_PRINT_* constants
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -191,7 +192,7 @@ pub fn format_rational(
     if negative {
         format!("-{}", result)
     } else {
-        result
+        format!(" {}", result)
     }
 }
 
@@ -306,16 +307,18 @@ fn format_amount_with_commodity(
     if symbol.is_empty() {
         quantity_str.to_string()
     } else {
-        // Simple prefixed formatting for now
-        if config.flags.has_flag(FormatFlags::ELIDE_COMMODITY_QUOTES) {
-            format!("{}{}", symbol, quantity_str)
+        let formatted_commodity = if config.flags.has_flag(FormatFlags::ELIDE_COMMODITY_QUOTES) ||
+           symbol.chars().all(|c| c.is_alphabetic()) {
+            symbol.to_string()
         } else {
             // Add quotes if symbol contains special characters
-            if symbol.chars().any(|c| !c.is_alphabetic()) {
-                format!("\"{}\"{}", symbol, quantity_str)
-            } else {
-                format!("{}{}", symbol, quantity_str)
-            }
+            format!("\"{}\"", symbol)
+        };
+        
+        if commodity.has_flags(CommodityFlags::STYLE_SUFFIXED) {
+            format!("{} {}", quantity_str, formatted_commodity)
+        } else {
+            format!("{}{}", formatted_commodity, quantity_str)
         }
     }
 }
