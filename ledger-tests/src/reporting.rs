@@ -136,20 +136,20 @@ impl TestReport {
     /// Print a summary to stdout
     pub fn print_summary(&self) {
         self.print_header();
-        self.print_statistics();
 
         if !self.statistics.all_passed() {
             self.print_failures();
         }
 
+        self.print_statistics();
         self.print_footer();
     }
 
     /// Print detailed report to stdout
     pub fn print_detailed(&self) {
         self.print_header();
-        self.print_statistics();
         self.print_all_results();
+        self.print_statistics();
         self.print_footer();
     }
 
@@ -188,10 +188,10 @@ impl TestReport {
             style(format!("Run at: {}", self.timestamp.format("%Y-%m-%d %H:%M:%S UTC"))).dim()
         );
         println!("{}", style(format!("Duration: {:.2?}", self.duration)).dim());
-        println!();
     }
 
     fn print_statistics(&self) {
+        println!();
         let stats = &self.statistics;
 
         println!("{}", style("SUMMARY").bold());
@@ -220,6 +220,7 @@ impl TestReport {
     }
 
     fn print_all_results(&self) {
+        println!();
         println!("{}", style("ALL RESULTS").bold());
 
         for result in &self.results {
@@ -236,8 +237,6 @@ impl TestReport {
                 status_icon, result.suite_name, result.test_case.line_number, result.duration
             );
         }
-
-        println!();
     }
 
     fn print_test_failure(&self, test: &TestResult) {
