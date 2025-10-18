@@ -10,6 +10,7 @@ use crate::session::Session;
 use anyhow::{Context, Result};
 use clap::CommandFactory;
 use ledger_core::parser::JournalParser;
+use regex::Regex;
 use std::io::{self, Write};
 use std::ops::Add;
 
@@ -420,11 +421,33 @@ impl Dispatcher {
     }
 
     fn execute_accounts_command(&mut self, args: &crate::cli::AccountsArgs) -> Result<i32> {
-        println!("Accounts command");
-        if !args.pattern.is_empty() {
-            println!("Account patterns: {:?}", args.pattern);
+        let journal = match &self.session.parsed_journal {
+            Some(journal) => journal,
+            None => {
+                return Err(anyhow::anyhow!("No journal loaded"));
+            }
+        };
+
+        let pattern = if !args.pattern.is_empty() {
+            let pattern = args.pattern.join("|");
+            let pattern = format!(".*(?i:{pattern}).*");
+            Some(Regex::new(&pattern).unwrap())
+        } else {
+            None
+        };
+
+        let mut accounts: Vec<_> = journal
+            .accounts
+            .values()
+            .filter(|a| {
+                pattern.as_ref().map(|pat| a.borrow_mut().matches_pattern(pat)).unwrap_or(true)
+            })
+            .collect();
+        accounts.sort_by_key(|a| a.borrow().name());
+        for account in accounts {
+            println!("{}", account.borrow().name());
         }
-        // TODO: Implement actual accounts listing
+
         Ok(0)
     }
 
