@@ -1049,7 +1049,7 @@ fn parse_metadata_tags(
                     // +2 because of the leading/trailing colons
                     let remaining = &trimmed[tag_name.len() + 2..].trim();
 
-                    let value_end_pos = remaining.find(' ').unwrap_or_else(|| remaining.len());
+                    let value_end_pos = remaining.find(' ').unwrap_or(remaining.len());
 
                     let value = remaining[..value_end_pos].trim();
 
@@ -1061,7 +1061,7 @@ fn parse_metadata_tags(
                         }
                     }
 
-                    trimmed = &remaining[value_end_pos..].trim();
+                    trimmed = remaining[value_end_pos..].trim();
                     continue;
                 }
             }
@@ -1072,7 +1072,7 @@ fn parse_metadata_tags(
                     let bracket_content = &trimmed[start + 1..end];
                     metadata = parse_metadata_tags(bracket_content, Some(metadata));
 
-                    trimmed = &trimmed[bracket_content.len() + 2..].trim();
+                    trimmed = trimmed[bracket_content.len() + 2..].trim();
                     continue;
                 }
             }
@@ -1082,13 +1082,13 @@ fn parse_metadata_tags(
                 if let Some(equals_pos) = trimmed.find(": ") {
                     let key = trimmed[..equals_pos].trim();
                     let remaining = &trimmed[equals_pos + 2..];
-                    let value_end_pos = remaining.find(' ').unwrap_or_else(|| remaining.len());
+                    let value_end_pos = remaining.find(' ').unwrap_or(remaining.len());
 
                     let value = remaining[..value_end_pos].trim();
                     if !key.is_empty() && !key.contains(' ') {
                         metadata.insert(key.to_string(), value.to_string());
                     }
-                    trimmed = &remaining[value_end_pos..].trim();
+                    trimmed = remaining[value_end_pos..].trim();
                     continue;
                 }
             }
@@ -1097,13 +1097,13 @@ fn parse_metadata_tags(
             if trimmed.contains('=') {
                 if let Some(equals_pos) = trimmed.find('=') {
                     let key = trimmed[..equals_pos].trim();
-                    let value_end_pos = trimmed.find(' ').unwrap_or_else(|| trimmed.len());
+                    let value_end_pos = trimmed.find(' ').unwrap_or(trimmed.len());
 
                     let value = trimmed[equals_pos + 1..value_end_pos].trim();
                     if !key.is_empty() && !key.contains(' ') {
                         metadata.insert(key.to_string(), value.to_string());
                     }
-                    trimmed = &trimmed[value_end_pos..].trim();
+                    trimmed = trimmed[value_end_pos..].trim();
                     continue;
                 }
             }
