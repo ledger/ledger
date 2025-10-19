@@ -29,7 +29,7 @@ fn test_version_output() {
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("ledger"))
-        .stdout(predicate::str::contains("3.0.0"));
+        .stdout(predicate::str::contains("3.5.0"));
 }
 
 /// Test all main commands are recognized
