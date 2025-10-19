@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -302,7 +302,7 @@ void journal_t::register_metadata(const string& key, const value_t& value,
     }
   }
 
-  if (! value.is_null()) {
+  if (! value.is_null() && context.which() != 0) {
     std::pair<tag_check_exprs_map::iterator,
               tag_check_exprs_map::iterator> range =
       tag_check_exprs.equal_range(key);
@@ -338,12 +338,13 @@ namespace {
     xact_t * xact = context.which() == 1 ? boost::get<xact_t *>(context) : NULL;
     post_t * post = context.which() == 2 ? boost::get<post_t *>(context) : NULL;
 
-    if ((xact || post) && xact ? xact->metadata : post->metadata) {
+    if ((xact || post) && (xact ? xact->metadata : post->metadata)) {
       foreach (const item_t::string_map::value_type& pair,
                xact ? *xact->metadata : *post->metadata) {
         const string& key(pair.first);
 
-        if (optional<value_t> value = pair.second.first)
+        const optional<value_t>& value = pair.second.first;
+        if (value)
           journal.register_metadata(key, *value, context);
         else
           journal.register_metadata(key, NULL_VALUE, context);

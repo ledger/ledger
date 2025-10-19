@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -138,7 +138,12 @@ void posts_commodities_iterator::reset(journal_t& journal)
 {
   journal_posts.reset(journal);
 
-  std::set<commodity_t *> commodities;
+  struct commodity_symbol_compare {
+    bool operator()(const commodity_t* a, const commodity_t* b) const {
+      return a->symbol() < b->symbol();
+    }
+  };
+  std::set<commodity_t *, commodity_symbol_compare> commodities;
 
   while (const post_t * post = *journal_posts++) {
     commodity_t& comm(post->amount.commodity());
@@ -151,6 +156,11 @@ void posts_commodities_iterator::reset(journal_t& journal)
     comm->map_prices
       (create_price_xact(journal, journal.master->find_account(comm->symbol()),
                          temps, xact_temps));
+
+  // Sort transactions by date to ensure deterministic output
+  xact_temps.sort([](const xact_t* a, const xact_t* b) {
+    return a->date() < b->date();
+  });
 
   xacts.reset(xact_temps.begin(), xact_temps.end());
 
