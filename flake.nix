@@ -21,6 +21,13 @@
         inherit system overlays;
       };
     in with pkgs; rec {
+      packages.rledger = pkgs.rustPlatform.buildRustPackage {
+        pname = "rledger";
+        version = "3.5.0-${self.shortRev or "dirty"}";
+        src = self;
+        cargoHash = "sha256-YwSF08stNaZJ44vucXtjFe2UuJ8XxYD4roXOGbYVD80=";
+      };
+
       packages.default = stdenv.mkDerivation {
         pname = "ledger";
         version = "3.3.2-${self.shortRev or "dirty"}";
