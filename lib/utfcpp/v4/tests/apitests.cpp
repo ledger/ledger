@@ -1,4 +1,6 @@
-#include "../extern/ftest/ftest.h"
+#include "ftest.h"
+
+#include <cassert>
 
 #include "test_checked_api.h"
 #include "test_checked_iterator.h"

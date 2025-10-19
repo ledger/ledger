@@ -38,6 +38,7 @@
 #include <sstream>
 #include <cerrno>
 
+#include <gpgme.h>
 #include <gpgme++/context.h>
 #include <gpgme++/decryptionresult.h>
 

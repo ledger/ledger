@@ -10,10 +10,7 @@ import re
 from subprocess import Popen, PIPE
 
 import types
-if sys.version_info.major == 2:
-    import copy_reg as copyreg
-else:
-    import copyreg
+import copyreg
 
 def _pickle_method(method):
     func_name = method.im_func.__name__

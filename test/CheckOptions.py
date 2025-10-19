@@ -51,6 +51,10 @@ class CheckOptions (object):
     return self.find_pattern(filename, self.symbol_pattern) \
           if self.symbol_pattern else set()
 
+  def find_symbols(self, filename):
+    return self.find_pattern(filename, self.symbol_pattern) \
+          if self.symbol_pattern else set()
+
   def find_alternates(self):
     command = shlex.split('grep --no-filename OPT_ALT')
     for source_file in ['session', 'report']:

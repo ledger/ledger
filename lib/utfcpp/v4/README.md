@@ -118,7 +118,7 @@ This is a header-only library and the supported way of deploying it is:
 - Copy the content of utfcpp/source file into the directory where you keep include files for your project
 
 
-The CMakeList.txt file was originally made for testing purposes only, but unfortunatelly over time I accepted contributions that added install target. *This is not a supported way of installing the utfcpp library* and I am considering removing the CMakeList.txt in a future release.
+The CMakeList.txt file was originally made for testing purposes only, but unfortunately over time I accepted contributions that added install target. *This is not a supported way of installing the utfcpp library* and I am considering removing the CMakeList.txt in a future release.
 
 <!-- TOC --><a name="examples-of-use"></a>
 ## Examples of use
@@ -839,7 +839,7 @@ assert (utf16result[2] == 0xd834);
 assert (utf16result[3] == 0xdd1e);
 ```
 
-In case of an invalid UTF-8 seqence, a `utf8::invalid_utf8` exception is thrown.
+In case of an invalid UTF-8 sequence, a `utf8::invalid_utf8` exception is thrown.
 
 
 <!-- TOC --><a name="stdu16string-utf8to16stdu8string_view-s"></a>
@@ -867,7 +867,7 @@ assert (utf16result[2] == 0xd834);
 assert (utf16result[3] == 0xdd1e);
 ```
 
-In case of an invalid UTF-8 seqence, a `utf8::invalid_utf8` exception is thrown.
+In case of an invalid UTF-8 sequence, a `utf8::invalid_utf8` exception is thrown.
 
 <!-- TOC --><a name="utf8utf32to8"></a>
 #### utf8::utf32to8
@@ -1083,7 +1083,7 @@ u32string utf32result = utf8to32(twochars);
 assert (utf32result.size() == 2);
 ```
 
-In case of an invalid UTF-8 seqence, a `utf8::invalid_utf8` exception is thrown.
+In case of an invalid UTF-8 sequence, a `utf8::invalid_utf8` exception is thrown.
 
 
 <!-- TOC --><a name="stdu32string-utf8to32const-stdu8string_view-s"></a>
@@ -1109,7 +1109,7 @@ u32string utf32result = utf8to32(stringview);
 assert (utf32result.size() == 2);
 ```
 
-In case of an invalid UTF-8 seqence, a `utf8::invalid_utf8` exception is thrown.
+In case of an invalid UTF-8 sequence, a `utf8::invalid_utf8` exception is thrown.
 
 
 <!-- TOC --><a name="stdu32string-utf8to32const-stdstring-s"></a>
@@ -1644,7 +1644,7 @@ class iterator;
 <!-- TOC --><a name="member-functions"></a>
 ##### Member functions
 
-`iterator();` the deafult constructor; the underlying octet_iterator is constructed with its default constructor.
+`iterator();` the default constructor; the underlying octet_iterator is constructed with its default constructor.
 
 `explicit iterator (const octet_iterator& octet_it, const octet_iterator& range_start, const octet_iterator& range_end);` a constructor that initializes the underlying octet_iterator with octet_it and sets the range in which the iterator is considered valid.
 
@@ -2086,7 +2086,7 @@ class iterator;
 <!-- TOC --><a name="member-functions-1"></a>
 ##### Member functions
 
-`iterator();` the deafult constructor; the underlying octet_iterator is constructed with its default constructor.
+`iterator();` the default constructor; the underlying octet_iterator is constructed with its default constructor.
 
 `explicit iterator (const octet_iterator& octet_it);` a constructor that initializes the underlying octet_iterator with `octet_it`.
 
