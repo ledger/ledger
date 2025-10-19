@@ -293,7 +293,7 @@ fn format_amount_with_commodity(
         let (formatted_commodity, maybe_sep) = {
             let mut formatted_commodity = symbol.to_string();
 
-            if formatted_commodity.chars().any(|c| !c.is_alphabetic())
+            if formatted_commodity.chars().any(|c| c.is_whitespace())
                 && !config.flags.has_flag(FormatFlags::ELIDE_COMMODITY_QUOTES)
             {
                 // Add quotes if symbol contains special characters
