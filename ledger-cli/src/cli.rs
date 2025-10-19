@@ -166,12 +166,12 @@ pub struct Cli {
 
     /// The command to execute (or REPL if none)
     #[command(subcommand)]
-    pub command: Option<Commands>,
+    pub command: Option<Command>,
 }
 
 /// Available commands
 #[derive(Subcommand)]
-pub enum Commands {
+pub enum Command {
     /// Show account balances (aliases: bal, b)
     #[command(name = "balance", aliases = &["bal", "b"])]
     Balance(BalanceArgs),
@@ -293,6 +293,62 @@ pub enum Commands {
     /// Show help for various topics
     #[command(name = "help-topic")]
     HelpTopic(HelpTopicArgs),
+}
+
+impl Command {
+    /// Check if the command is a pre-command that doesn't require journal files
+    pub fn is_precommand(&self) -> bool {
+        matches!(
+            &self,
+            Command::Parse(_)
+                | Command::Eval(_)
+                | Command::Format(_)
+                | Command::Period(_)
+                | Command::Query(_)
+                | Command::Source(_)
+                | Command::Generate(_)
+                | Command::Template(_)
+                | Command::Completion(_)
+                | Command::HelpTopic(_)
+        )
+    }
+
+    /// Get the command name as a string
+    #[allow(dead_code)]
+    pub fn command_name(&self) -> &'static str {
+        match &self {
+            Command::Balance(_) => "balance",
+            Command::Register(_) => "register",
+            Command::Print(_) => "print",
+            Command::Accounts(_) => "accounts",
+            Command::Commodities(_) => "commodities",
+            Command::Payees(_) => "payees",
+            Command::Tags(_) => "tags",
+            Command::Csv(_) => "csv",
+            Command::Cleared(_) => "cleared",
+            Command::Budget(_) => "budget",
+            Command::Equity(_) => "equity",
+            Command::Prices(_) => "prices",
+            Command::Pricedb(_) => "pricedb",
+            Command::Pricemap(_) => "pricemap",
+            Command::Stats(_) => "stats",
+            Command::Xact(_) => "xact",
+            Command::Select(_) => "select",
+            Command::Convert(_) => "convert",
+            Command::Emacs(_) => "emacs",
+            Command::Xml(_) => "xml",
+            Command::Parse(_) => "parse",
+            Command::Eval(_) => "eval",
+            Command::Format(_) => "format",
+            Command::Period(_) => "period",
+            Command::Query(_) => "query",
+            Command::Source(_) => "source",
+            Command::Generate(_) => "generate",
+            Command::Template(_) => "template",
+            Command::Completion(_) => "completion",
+            Command::HelpTopic(_) => "help-topic",
+        }
+    }
 }
 
 // Command-specific argument structures
@@ -556,63 +612,4 @@ pub struct HelpTopicArgs {
     /// Help topic to display
     #[arg(default_value = "general")]
     pub topic: String,
-}
-
-impl Cli {
-    /// Check if the command is a pre-command that doesn't require journal files
-    pub fn is_precommand(&self) -> bool {
-        matches!(
-            &self.command,
-            Some(
-                Commands::Parse(_)
-                    | Commands::Eval(_)
-                    | Commands::Format(_)
-                    | Commands::Period(_)
-                    | Commands::Query(_)
-                    | Commands::Source(_)
-                    | Commands::Generate(_)
-                    | Commands::Template(_)
-                    | Commands::Completion(_)
-                    | Commands::HelpTopic(_)
-            )
-        )
-    }
-
-    /// Get the command name as a string
-    #[allow(dead_code)]
-    pub fn command_name(&self) -> Option<&'static str> {
-        match &self.command {
-            Some(Commands::Balance(_)) => Some("balance"),
-            Some(Commands::Register(_)) => Some("register"),
-            Some(Commands::Print(_)) => Some("print"),
-            Some(Commands::Accounts(_)) => Some("accounts"),
-            Some(Commands::Commodities(_)) => Some("commodities"),
-            Some(Commands::Payees(_)) => Some("payees"),
-            Some(Commands::Tags(_)) => Some("tags"),
-            Some(Commands::Csv(_)) => Some("csv"),
-            Some(Commands::Cleared(_)) => Some("cleared"),
-            Some(Commands::Budget(_)) => Some("budget"),
-            Some(Commands::Equity(_)) => Some("equity"),
-            Some(Commands::Prices(_)) => Some("prices"),
-            Some(Commands::Pricedb(_)) => Some("pricedb"),
-            Some(Commands::Pricemap(_)) => Some("pricemap"),
-            Some(Commands::Stats(_)) => Some("stats"),
-            Some(Commands::Xact(_)) => Some("xact"),
-            Some(Commands::Select(_)) => Some("select"),
-            Some(Commands::Convert(_)) => Some("convert"),
-            Some(Commands::Emacs(_)) => Some("emacs"),
-            Some(Commands::Xml(_)) => Some("xml"),
-            Some(Commands::Parse(_)) => Some("parse"),
-            Some(Commands::Eval(_)) => Some("eval"),
-            Some(Commands::Format(_)) => Some("format"),
-            Some(Commands::Period(_)) => Some("period"),
-            Some(Commands::Query(_)) => Some("query"),
-            Some(Commands::Source(_)) => Some("source"),
-            Some(Commands::Generate(_)) => Some("generate"),
-            Some(Commands::Template(_)) => Some("template"),
-            Some(Commands::Completion(_)) => Some("completion"),
-            Some(Commands::HelpTopic(_)) => Some("help-topic"),
-            None => None,
-        }
-    }
 }
