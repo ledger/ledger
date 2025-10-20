@@ -116,6 +116,7 @@ test/Testing
 /outputs
 # Files generated when building / developing with Rust
 target
+*.pending-snap
 
 # Logs
 logs

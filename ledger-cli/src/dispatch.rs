@@ -3,15 +3,20 @@
 //! This module provides the framework for dispatching commands to their appropriate
 //! handlers and managing the execution flow.
 
-use crate::cli::{Cli, Commands};
+use crate::cli::{Cli, Command};
 use crate::completion;
 use crate::help::{show_man_page, HelpTopic};
 use crate::session::Session;
 use anyhow::{Context, Result};
 use clap::CommandFactory;
 use ledger_core::parser::JournalParser;
+use ledger_core::posting::Posting;
+use ledger_math::Commodity;
+use regex::Regex;
+use std::collections::HashSet;
 use std::io::{self, Write};
 use std::ops::Add;
+use std::sync::Arc;
 
 /// Main command dispatcher
 pub struct Dispatcher {
@@ -37,7 +42,7 @@ impl Dispatcher {
         }
 
         // Handle pre-commands that don't require journal files
-        if cli.is_precommand() {
+        if cli.command.as_ref().is_some_and(|c| c.is_precommand()) {
             return self.execute_precommand(cli);
         }
 
@@ -61,37 +66,37 @@ impl Dispatcher {
     /// Execute a pre-command that doesn't require journal files
     fn execute_precommand(&mut self, cli: &Cli) -> Result<i32> {
         match &cli.command {
-            Some(Commands::Parse(args)) => {
+            Some(Command::Parse(args)) => {
                 println!("Parsing expression: {}", args.expression);
                 // TODO: Implement expression parsing
                 Ok(0)
             }
-            Some(Commands::Eval(args)) => {
+            Some(Command::Eval(args)) => {
                 println!("Evaluating expression: {}", args.expression);
                 // TODO: Implement expression evaluation
                 Ok(0)
             }
-            Some(Commands::Format(args)) => {
+            Some(Command::Format(args)) => {
                 println!("Parsing format string: {}", args.format_string);
                 // TODO: Implement format parsing
                 Ok(0)
             }
-            Some(Commands::Period(args)) => {
+            Some(Command::Period(args)) => {
                 println!("Parsing period: {}", args.period);
                 // TODO: Implement period parsing
                 Ok(0)
             }
-            Some(Commands::Query(args)) => {
+            Some(Command::Query(args)) => {
                 println!("Parsing query: {}", args.query);
                 // TODO: Implement query parsing
                 Ok(0)
             }
-            Some(Commands::Source(args)) => {
+            Some(Command::Source(args)) => {
                 println!("Running script: {}", args.script_file);
                 // TODO: Implement script execution
                 Ok(0)
             }
-            Some(Commands::Generate(args)) => {
+            Some(Command::Generate(args)) => {
                 println!("Generating {} sample transactions", args.count);
                 if let Some(seed) = args.seed {
                     println!("Using seed: {}", seed);
@@ -99,13 +104,13 @@ impl Dispatcher {
                 // TODO: Implement transaction generation
                 Ok(0)
             }
-            Some(Commands::Template(args)) => {
+            Some(Command::Template(args)) => {
                 println!("Processing template: {}", args.template_file);
                 // TODO: Implement template processing
                 Ok(0)
             }
-            Some(Commands::Completion(args)) => self.execute_completion_command(args),
-            Some(Commands::HelpTopic(args)) => self.execute_help_topic_command(args),
+            Some(Command::Completion(args)) => self.execute_completion_command(args),
+            Some(Command::HelpTopic(args)) => self.execute_help_topic_command(args),
             _ => {
                 unreachable!("Non-precommand passed to execute_precommand")
             }
@@ -113,28 +118,28 @@ impl Dispatcher {
     }
 
     /// Execute a main command that requires journal files
-    fn execute_command(&mut self, command: &Commands) -> Result<i32> {
+    fn execute_command(&mut self, command: &Command) -> Result<i32> {
         match command {
-            Commands::Balance(args) => self.execute_balance_command(args),
-            Commands::Register(args) => self.execute_register_command(args),
-            Commands::Print(args) => self.execute_print_command(args),
-            Commands::Accounts(args) => self.execute_accounts_command(args),
-            Commands::Commodities(args) => self.execute_commodities_command(args),
-            Commands::Payees(args) => self.execute_payees_command(args),
-            Commands::Tags(args) => self.execute_tags_command(args),
-            Commands::Csv(args) => self.execute_csv_command(args),
-            Commands::Cleared(args) => self.execute_cleared_command(args),
-            Commands::Budget(args) => self.execute_budget_command(args),
-            Commands::Equity(args) => self.execute_equity_command(args),
-            Commands::Prices(args) => self.execute_prices_command(args),
-            Commands::Pricedb(args) => self.execute_pricedb_command(args),
-            Commands::Pricemap(args) => self.execute_pricemap_command(args),
-            Commands::Stats(args) => self.execute_stats_command(args),
-            Commands::Xact(args) => self.execute_xact_command(args),
-            Commands::Select(args) => self.execute_select_command(args),
-            Commands::Convert(args) => self.execute_convert_command(args),
-            Commands::Emacs(args) => self.execute_emacs_command(args),
-            Commands::Xml(args) => self.execute_xml_command(args),
+            Command::Balance(args) => self.execute_balance_command(args),
+            Command::Register(args) => self.execute_register_command(args),
+            Command::Print(args) => self.execute_print_command(args),
+            Command::Accounts(args) => self.execute_accounts_command(args),
+            Command::Commodities(args) => self.execute_commodities_command(args),
+            Command::Payees(args) => self.execute_payees_command(args),
+            Command::Tags(args) => self.execute_tags_command(args),
+            Command::Csv(args) => self.execute_csv_command(args),
+            Command::Cleared(args) => self.execute_cleared_command(args),
+            Command::Budget(args) => self.execute_budget_command(args),
+            Command::Equity(args) => self.execute_equity_command(args),
+            Command::Prices(args) => self.execute_prices_command(args),
+            Command::Pricedb(args) => self.execute_pricedb_command(args),
+            Command::Pricemap(args) => self.execute_pricemap_command(args),
+            Command::Stats(args) => self.execute_stats_command(args),
+            Command::Xact(args) => self.execute_xact_command(args),
+            Command::Select(args) => self.execute_select_command(args),
+            Command::Convert(args) => self.execute_convert_command(args),
+            Command::Emacs(args) => self.execute_emacs_command(args),
+            Command::Xml(args) => self.execute_xml_command(args),
             _ => {
                 // This should not happen as pre-commands are handled separately
                 Err(anyhow::anyhow!("Unexpected command type"))
@@ -420,29 +425,116 @@ impl Dispatcher {
     }
 
     fn execute_accounts_command(&mut self, args: &crate::cli::AccountsArgs) -> Result<i32> {
-        println!("Accounts command");
-        if !args.pattern.is_empty() {
-            println!("Account patterns: {:?}", args.pattern);
+        let journal = match &self.session.parsed_journal {
+            Some(journal) => journal,
+            None => {
+                return Err(anyhow::anyhow!("No journal loaded"));
+            }
+        };
+
+        let pattern = if !args.pattern.is_empty() {
+            let pattern = args.pattern.join("|");
+            let pattern = format!(".*(?i:{pattern}).*");
+            Some(Regex::new(&pattern).unwrap())
+        } else {
+            None
+        };
+
+        let mut accounts: Vec<_> = journal
+            .accounts
+            .values()
+            .filter(|a| {
+                pattern.as_ref().map(|pat| a.borrow_mut().matches_pattern(pat)).unwrap_or(true)
+            })
+            .collect();
+        accounts.sort_by_key(|a| a.borrow().name());
+        for account in accounts {
+            println!("{}", account.borrow().name());
         }
-        // TODO: Implement actual accounts listing
+
         Ok(0)
     }
 
     fn execute_commodities_command(&mut self, args: &crate::cli::CommoditiesArgs) -> Result<i32> {
-        println!("Commodities command");
-        if !args.pattern.is_empty() {
-            println!("Commodity patterns: {:?}", args.pattern);
+        let journal = match &self.session.parsed_journal {
+            Some(journal) => journal,
+            None => {
+                return Err(anyhow::anyhow!("No journal loaded"));
+            }
+        };
+
+        let mut commodities: Vec<&Arc<Commodity>> = if !args.pattern.is_empty() {
+            let pattern = {
+                let pattern = args.pattern.join("|");
+                let pattern = format!(".*(?i:{pattern}).*");
+                Regex::new(&pattern).unwrap()
+            };
+
+            let commodities: HashSet<_> = journal
+                .transactions
+                .iter()
+                .flat_map(|t| {
+                    t.postings.iter().filter_map(|p: &Posting| {
+                        if p.account.borrow_mut().matches_pattern(&pattern) {
+                            p.amount.as_ref().and_then(|a| a.commodity())
+                        } else {
+                            None
+                        }
+                    })
+                })
+                .collect();
+
+            commodities.into_iter().collect()
+        } else {
+            journal.commodities.values().collect()
+        };
+
+        commodities.sort_by_key(|a| a.symbol());
+        for commodity in commodities {
+            println!("{commodity}");
         }
-        // TODO: Implement actual commodities listing
+
         Ok(0)
     }
 
     fn execute_payees_command(&mut self, args: &crate::cli::PayeesArgs) -> Result<i32> {
-        println!("Payees command");
-        if !args.pattern.is_empty() {
-            println!("Payee patterns: {:?}", args.pattern);
+        let journal = match &self.session.parsed_journal {
+            Some(journal) => journal,
+            None => {
+                return Err(anyhow::anyhow!("No journal loaded"));
+            }
+        };
+
+        let pattern = if !args.pattern.is_empty() {
+            let pattern = args.pattern.join("|");
+            let pattern = format!(".*(?i:{pattern}).*");
+            Some(Regex::new(&pattern).unwrap())
+        } else {
+            None
+        };
+
+        let mut payees: Vec<_> = journal
+            .transactions
+            .iter()
+            .filter_map(|t| {
+                if t.postings.iter().any(|p| {
+                    pattern
+                        .as_ref()
+                        .map(|pat| p.account.borrow_mut().matches_pattern(pat))
+                        .unwrap_or(true)
+                }) {
+                    Some(&t.payee)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        payees.sort();
+        for payee in payees {
+            println!("{payee}");
         }
-        // TODO: Implement actual payees listing
+
         Ok(0)
     }
 

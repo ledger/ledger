@@ -44,6 +44,7 @@ proptest = { workspace = true }
 quickcheck = { workspace = true }
 criterion = { workspace = true }
 tempfile = "3.8"
+insta = "1.43.2"
 
 [build-dependencies]
 cbindgen = "0.26"

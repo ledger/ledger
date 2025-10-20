@@ -11,12 +11,12 @@
 use ledger_math::CommodityFlags;
 use nom::{
     branch::alt,
-    bytes::complete::{take_until, take_while, take_while1},
-    character::complete::{alpha1, digit1, line_ending, space0, space1},
+    bytes::complete::{is_not, take_until},
+    character::complete::{char, digit1, line_ending, space0, space1},
     combinator::{map, opt, recognize, value},
     error::{context, ParseError},
     multi::many0,
-    sequence::{delimited, preceded, terminated, tuple},
+    sequence::{delimited, pair, preceded, terminated, tuple},
     IResult,
 };
 
@@ -28,14 +28,20 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::{
-    account::Account, amount::Amount, commodity::Commodity, journal::Journal, posting::Posting,
-    transaction::Transaction,
+    account::Account,
+    amount::Amount,
+    commodity::Commodity,
+    journal::Journal,
+    posting::Posting,
+    transaction::{TagData, Transaction},
 };
 
 use chrono::NaiveDate;
+use rust_decimal::Decimal;
 
 /// Custom error type for parser errors with source location tracking
 #[derive(Debug, thiserror::Error)]
@@ -1049,7 +1055,7 @@ fn parse_metadata_tags(
                     // +2 because of the leading/trailing colons
                     let remaining = &trimmed[tag_name.len() + 2..].trim();
 
-                    let value_end_pos = remaining.find(' ').unwrap_or_else(|| remaining.len());
+                    let value_end_pos = remaining.find(' ').unwrap_or(remaining.len());
 
                     let value = remaining[..value_end_pos].trim();
 
@@ -1061,7 +1067,7 @@ fn parse_metadata_tags(
                         }
                     }
 
-                    trimmed = &remaining[value_end_pos..].trim();
+                    trimmed = remaining[value_end_pos..].trim();
                     continue;
                 }
             }
@@ -1072,7 +1078,7 @@ fn parse_metadata_tags(
                     let bracket_content = &trimmed[start + 1..end];
                     metadata = parse_metadata_tags(bracket_content, Some(metadata));
 
-                    trimmed = &trimmed[bracket_content.len() + 2..].trim();
+                    trimmed = trimmed[bracket_content.len() + 2..].trim();
                     continue;
                 }
             }
@@ -1082,13 +1088,13 @@ fn parse_metadata_tags(
                 if let Some(equals_pos) = trimmed.find(": ") {
                     let key = trimmed[..equals_pos].trim();
                     let remaining = &trimmed[equals_pos + 2..];
-                    let value_end_pos = remaining.find(' ').unwrap_or_else(|| remaining.len());
+                    let value_end_pos = remaining.find(' ').unwrap_or(remaining.len());
 
                     let value = remaining[..value_end_pos].trim();
                     if !key.is_empty() && !key.contains(' ') {
                         metadata.insert(key.to_string(), value.to_string());
                     }
-                    trimmed = &remaining[value_end_pos..].trim();
+                    trimmed = remaining[value_end_pos..].trim();
                     continue;
                 }
             }
@@ -1097,13 +1103,13 @@ fn parse_metadata_tags(
             if trimmed.contains('=') {
                 if let Some(equals_pos) = trimmed.find('=') {
                     let key = trimmed[..equals_pos].trim();
-                    let value_end_pos = trimmed.find(' ').unwrap_or_else(|| trimmed.len());
+                    let value_end_pos = trimmed.find(' ').unwrap_or(trimmed.len());
 
                     let value = trimmed[equals_pos + 1..value_end_pos].trim();
                     if !key.is_empty() && !key.contains(' ') {
                         metadata.insert(key.to_string(), value.to_string());
                     }
-                    trimmed = &trimmed[value_end_pos..].trim();
+                    trimmed = trimmed[value_end_pos..].trim();
                     continue;
                 }
             }
@@ -1139,14 +1145,21 @@ fn parse_transaction(input: &str) -> ParseResult<'_, Transaction> {
         tuple((
             date_field,
             opt(preceded(tag("="), date_field)), // aux date
-            opt(alt((tag("*"), tag("!")))),      // cleared flag
+            space0,
+            opt(alt((tag("*"), tag("!")))), // cleared flag
+            space0,
             opt(delimited(tag("("), take_until(")"), tag(")"))), // code
+            space0,
             opt(payee_description),
-            opt(preceded(space0, simple_comment_field)), // transaction comment
+            space0,
+            // transaction comment on payee line
+            opt(simple_comment_field),
             line_ending,
+            // transaction comments between payees and postings
+            many0(delimited(alt((space1, tag("\t"))), simple_comment_field, line_ending)),
             many0(posting_line),
         )),
-        |(date, aux_date, cleared, code, payee, tx_comment, _, postings)| {
+        |(date, aux_date, _, cleared, _, code, _, payee, _, comment1, _, comment2, postings)| {
             let payee_str = payee.unwrap_or_else(String::new);
             let mut transaction = Transaction::new(date, payee_str);
 
@@ -1167,11 +1180,19 @@ fn parse_transaction(input: &str) -> ParseResult<'_, Transaction> {
             }
 
             // Extract metadata from transaction comment
-            if let Some(comment) = tx_comment {
-                transaction.note = Some(comment.clone());
-                // TODO: Add metadata extraction to transaction
-                // let metadata = parse_metadata_tags(&comment);
-                // transaction.metadata.extend(metadata);
+            if comment1.is_some() || !comment2.is_empty() {
+                let comment = [comment1.unwrap_or_default(), comment2.join("\n")].join("\n");
+                let metadata = parse_metadata_tags(&comment, None);
+
+                transaction.note = Some(comment);
+
+                if let Some(payee) = metadata.get("Payee") {
+                    transaction.payee = payee.clone();
+                }
+
+                let metadata: HashMap<String, TagData> =
+                    metadata.into_iter().map(|(key, value)| (key, TagData::new(value))).collect();
+                transaction.metadata.extend(metadata);
             }
 
             for posting in postings {
@@ -1232,7 +1253,7 @@ fn date_field(input: &str) -> ParseResult<'_, NaiveDate> {
 
 /// Parse payee description
 fn payee_description(input: &str) -> ParseResult<'_, String> {
-    map(take_while(|c| c != '\n' && c != '\r'), |s: &str| s.trim().to_string())(input)
+    map(is_not("\r\n;"), |s: &str| s.trim().to_string())(input)
 }
 
 /// Parse a posting line
@@ -1247,7 +1268,7 @@ fn parse_posting(input: &str) -> ParseResult<'_, Posting> {
     map(
         tuple((
             account_name,
-            opt(preceded(space1, simple_amount_field)),
+            opt(preceded(space1, parse_amount)),
             opt(preceded(space1, simple_comment_field)),
             opt(line_ending),
         )),
@@ -1276,130 +1297,97 @@ fn parse_posting(input: &str) -> ParseResult<'_, Posting> {
 
 /// Parse an account name
 fn account_name(input: &str) -> ParseResult<'_, String> {
-    map(take_while1(|c: char| c != ' ' && c != '\t' && c != '\n' && c != ';'), |s: &str| {
-        s.trim().to_string()
-    })(input)
+    fn parse_account_name(input: &str) -> IResult<&str, &str, VerboseError<&str>> {
+        let mut last_char_was_space = false;
+        for (i, char) in input.char_indices() {
+            match char {
+                '\t' | '\n' | ';' if i == 0 => {
+                    return Err(nom::Err::Incomplete(nom::Needed::new(1)));
+                }
+                '\t' | '\n' | ';' | ' ' if last_char_was_space => {
+                    let (parsed, rest) = input.split_at(i - 1);
+                    return Ok((rest, parsed));
+                }
+                '\t' | '\n' | ';' => {
+                    let (parsed, rest) = input.split_at(i);
+                    return Ok((rest, parsed));
+                }
+                _ => {
+                    last_char_was_space = char == ' ';
+                }
+            }
+        }
+
+        Ok(("", input))
+    }
+
+    map(parse_account_name, |s: &str| s.trim().to_string())(input)
+}
+
+/// Parse a commodity
+fn parse_commodity(input: &str) -> ParseResult<'_, String> {
+    // Ref invalid_chars in commodity.cc
+    let invalid_commodity_chars = " \t\r\n0123456789.,;:?!-+*/^&|=<>{}[]()@";
+
+    alt((
+        map(tuple((char('"'), is_not("\""), char('"'))), |(_, c, _)| format!(r#""{c}""#)),
+        map(is_not(invalid_commodity_chars), str::to_string),
+    ))(input)
+}
+
+fn parse_quantity(input: &str) -> IResult<&str, Decimal, VerboseError<&str>> {
+    // TODO: thousands separators like 1,234
+    map(
+        tuple((opt(tag("-")), space0, digit1, opt(tuple((tag("."), digit1))))),
+        |(maybe_sign, _, integer, fraction)| {
+            let mut decimal_str = format!("{sign}{integer}", sign = maybe_sign.unwrap_or(""));
+
+            if let Some((point, fraction)) = fraction {
+                decimal_str.push_str(point);
+                decimal_str.push_str(fraction);
+            }
+
+            Decimal::from_str(&decimal_str).unwrap_or_default()
+        },
+    )(input)
 }
 
 /// Parse an amount field (simplified)
-fn simple_amount_field(input: &str) -> ParseResult<'_, Amount> {
-    // Simplified amount parser - should handle currencies, expressions, etc.
+fn parse_amount(input: &str) -> ParseResult<'_, Amount> {
     alt((
-        // Negative amount with currency symbol: -$1000.00, €-500.50
+        // Commodity before quantity: GBP1, -$1000.00, €-500.50
+        // FIXME: what about -$-1?
         map(
-            recognize(tuple((
-                alt((
-                    tuple((tag("-"), alt((tag("$"), tag("€"), tag("£"), tag("¥"))))),
-                    tuple((alt((tag("$"), tag("€"), tag("£"), tag("¥"))), tag("-"))),
-                )),
-                digit1,
-                opt(tuple((tag("."), digit1))),
-            ))),
-            |amount_str: &str| {
-                // Extract decimal part including the negative sign and currency symbol
-                use ledger_math::commodity::Commodity;
-                use rust_decimal::Decimal;
-                use std::str::FromStr;
-                use std::sync::Arc;
-
-                // Extract the currency symbol
-                let currency_symbol = if amount_str.contains("$") {
-                    "USD"
-                } else if amount_str.contains("€") {
-                    "EUR"
-                } else if amount_str.contains("£") {
-                    "GBP"
-                } else if amount_str.contains("¥") {
-                    "JPY"
-                } else {
-                    ""
+            tuple((opt(terminated(char('-'), space0)), parse_commodity, space0, parse_quantity)),
+            |(maybe_sign, commodity, maybe_sep, mut quantity)| {
+                let commodity = {
+                    let mut commodity = Commodity::new(commodity);
+                    if !maybe_sep.is_empty() {
+                        commodity.add_flags(CommodityFlags::STYLE_SEPARATED);
+                    }
+                    Some(Arc::new(commodity))
                 };
 
-                let decimal_str = amount_str
-                    .chars()
-                    .filter(|c| c.is_ascii_digit() || *c == '.' || *c == '-')
-                    .collect::<String>();
-
-                let decimal = Decimal::from_str(&decimal_str).unwrap_or_default();
-
-                // Create amount with commodity
-                if !currency_symbol.is_empty() {
-                    let commodity = Arc::new(Commodity::new(currency_symbol));
-                    Amount::with_commodity(decimal, Some(commodity))
-                } else {
-                    Amount::new(decimal)
+                if maybe_sign.is_some() {
+                    quantity.set_sign_negative(true);
                 }
+
+                Amount::with_commodity(quantity, commodity)
             },
         ),
-        // Positive amount with currency symbol before: $1000.00, €500.50
+        // Commodity after quantity, and no commodity at all: 10.00 USD, -10.00, 1$
         map(
-            recognize(tuple((
-                alt((tag("$"), tag("€"), tag("£"), tag("¥"))), // currency symbol
-                digit1,
-                opt(tuple((tag("."), digit1))),
-            ))),
-            |amount_str: &str| {
-                // Extract decimal part and currency symbol
-                use ledger_math::commodity::Commodity;
-                use rust_decimal::Decimal;
-                use std::str::FromStr;
-                use std::sync::Arc;
-
-                // Extract the currency symbol
-                let currency_symbol = if amount_str.contains("$") {
-                    "USD"
-                } else if amount_str.contains("€") {
-                    "EUR"
-                } else if amount_str.contains("£") {
-                    "GBP"
-                } else if amount_str.contains("¥") {
-                    "JPY"
-                } else {
-                    ""
-                };
-
-                let decimal_str =
-                    amount_str.chars().skip_while(|c| !c.is_ascii_digit()).collect::<String>();
-
-                let decimal = Decimal::from_str(&decimal_str).unwrap_or_default();
-
-                // Create amount with commodity
-                if !currency_symbol.is_empty() {
-                    let commodity = Arc::new(Commodity::new(currency_symbol));
-                    Amount::with_commodity(decimal, Some(commodity))
-                } else {
-                    Amount::new(decimal)
-                }
-            },
-        ),
-        // Amount followed by commodity: 1000.00 USD, -1000.00 USD
-        map(
-            tuple((
-                tuple((opt(tag("-")), digit1, opt(tuple((tag("."), digit1))))),
-                opt(tuple((space0, alpha1))), // commodity
-            )),
-            |(amount, commodity)| {
-                // For now, create a simple amount from parsed decimal
-                use rust_decimal::Decimal;
-                use std::str::FromStr;
-
-                let decimal_str = format!(
-                    "{}{}{}",
-                    amount.0.unwrap_or(""),
-                    amount.1,
-                    amount.2.map(|a| format!("{}{}", a.0, a.1)).unwrap_or(String::new())
-                );
-
-                let decimal = Decimal::from_str(&decimal_str).unwrap_or_default();
-                let commodity = commodity.map(|(sep, symbol)| {
-                    let mut commodity = Commodity::new(symbol);
+            tuple((parse_quantity, opt(pair(space0, parse_commodity)))),
+            |(quantity, commodity)| {
+                let commodity = commodity.map(|(sep, commodity)| {
+                    let mut commodity = Commodity::new(commodity);
                     commodity.add_flags(CommodityFlags::STYLE_SUFFIXED);
                     if !sep.is_empty() {
                         commodity.add_flags(CommodityFlags::STYLE_SEPARATED);
                     }
                     Arc::new(commodity)
                 });
-                Amount::with_commodity(decimal, commodity)
+                Amount::with_commodity(quantity, commodity)
             },
         ),
     ))(input)
@@ -1543,7 +1531,7 @@ fn conditional_include_directive(input: &str) -> ParseResult<'_, Directive> {
 /// Parse price directive
 fn price_directive(input: &str) -> ParseResult<'_, Directive> {
     map(
-        tuple((tag("P"), space1, date_field, space1, take_until(" "), space1, simple_amount_field)),
+        tuple((tag("P"), space1, date_field, space1, take_until(" "), space1, parse_amount)),
         |(_, _, date, _, commodity, _, price)| Directive::Price {
             date,
             commodity: commodity.to_string(),
@@ -1695,6 +1683,8 @@ fn automated_transaction(input: &str) -> ParseResult<'_, Directive> {
 
 #[cfg(test)]
 mod tests {
+    use crate::transaction::TransactionStatus;
+
     use super::*;
 
     #[test]
@@ -1715,18 +1705,29 @@ mod tests {
 
     #[test]
     fn test_account_name() {
-        let input = "Assets:Checking";
-        let result = account_name(input);
-        assert!(result.is_ok());
-        let (_, name) = result.unwrap();
+        let (_, name) = account_name("Assets:Checking").unwrap();
         assert_eq!(name, "Assets:Checking");
+
+        let (_, name) = account_name("Assets:Savings Account").unwrap();
+        assert_eq!(name, "Assets:Savings Account");
+
+        let (_, name) = account_name("Assets:Savings  USD1").unwrap();
+        assert_eq!(name, "Assets:Savings");
+
+        let (_, name) = account_name("Assets:Savings 1  USD1").unwrap();
+        assert_eq!(name, "Assets:Savings 1");
     }
 
     #[test]
     fn test_account_directive() {
         let input = "account Assets:Checking\n";
-        let result = account_directive(input);
-        assert!(result.is_ok());
+        let (_, directive) = account_directive(input).unwrap();
+
+        if let Directive::Account { name, .. } = directive {
+            assert_eq!(name, "Assets:Checking");
+        } else {
+            panic!("did not parse account directive: {directive:?}");
+        }
     }
 
     #[test]
@@ -1853,6 +1854,147 @@ mod tests {
         let (line, column) = parser.get_line_column(input, error_pos);
         assert_eq!(line, 3);
         assert_eq!(column, 1);
+    }
+
+    #[test]
+    fn test_parse_commodity() {
+        let (_, commodity) = parse_commodity("USD").unwrap();
+        assert_eq!("USD", commodity);
+
+        let (_, commodity) = parse_commodity("$1").unwrap();
+        assert_eq!("$", commodity);
+
+        let (_, commodity) = parse_commodity("€1").unwrap();
+        assert_eq!("€", commodity);
+
+        let (_, commodity) = parse_commodity("€").unwrap();
+        assert_eq!("€", commodity);
+
+        let (_, commodity) = parse_commodity(r#""M&M""#).unwrap();
+        assert_eq!(r#""M&M""#, commodity);
+    }
+
+    #[test]
+    fn test_parse_quantity() {
+        assert_eq!(parse_quantity("1000"), Ok(("", Decimal::new(1000, 0))));
+        assert_eq!(parse_quantity("2.02"), Ok(("", Decimal::new(202, 2))));
+        assert_eq!(parse_quantity("-12.13"), Ok(("", Decimal::new(-1213, 2))));
+        assert_eq!(parse_quantity("0.1"), Ok(("", Decimal::new(1, 1))));
+        assert_eq!(parse_quantity("3"), Ok(("", Decimal::new(3, 0))));
+        assert_eq!(parse_quantity("1"), Ok(("", Decimal::new(1, 0))));
+        assert_eq!(parse_quantity("1 ABC"), Ok((" ABC", Decimal::new(1, 0))));
+        // TODO: assert_eq!(parse_quantity("1,000"), Ok(("", Decimal::new(1000, 0))));
+        // TODO: assert_eq!(parse_quantity("12,456,132.14"), Ok(("", Decimal::new(1245613214, 2))));
+    }
+
+    #[test]
+    fn test_parse_amount() {
+        let (_, amount) = parse_amount("1").unwrap();
+        insta::assert_debug_snapshot!(amount, @r#"
+            AMOUNT(1) [prec:0, keep:false, raw:1]
+        "#);
+
+        let (_, amount) = parse_amount("-1").unwrap();
+        insta::assert_debug_snapshot!(amount, @r#"
+            AMOUNT(-1) [prec:0, keep:false, raw:-1]
+        "#);
+
+        let (_, amount) = parse_amount("$1").unwrap();
+        insta::assert_debug_snapshot!(amount, @r#"
+            AMOUNT($1) [prec:0, keep:false, comm:$, raw:1]
+        "#);
+        assert_eq!(CommodityFlags::empty(), amount.commodity().unwrap().flags());
+
+        let (_, amount) = parse_amount("1$").unwrap();
+        insta::assert_debug_snapshot!(amount, @r#"
+            AMOUNT(1$) [prec:0, keep:false, comm:$, raw:1]
+        "#);
+        assert_eq!(CommodityFlags::STYLE_SUFFIXED, amount.commodity().unwrap().flags());
+
+        let (_, amount) = parse_amount("-$1").unwrap();
+        insta::assert_debug_snapshot!(amount, @r#"
+            AMOUNT($-1) [prec:0, keep:false, comm:$, raw:-1]
+        "#);
+        assert_eq!(CommodityFlags::empty(), amount.commodity().unwrap().flags());
+
+        let (_, amount) = parse_amount("$-1").unwrap();
+        insta::assert_debug_snapshot!(amount, @r#"
+            AMOUNT($-1) [prec:0, keep:false, comm:$, raw:-1]
+        "#);
+        assert_eq!(CommodityFlags::empty(), amount.commodity().unwrap().flags());
+
+        let (_, amount) = parse_amount("$- 1").unwrap();
+        insta::assert_debug_snapshot!(amount, @r#"
+            AMOUNT($-1) [prec:0, keep:false, comm:$, raw:-1]
+        "#);
+        assert_eq!(CommodityFlags::empty(), amount.commodity().unwrap().flags());
+
+        let (_, amount) = parse_amount("$ -1").unwrap();
+        insta::assert_debug_snapshot!(amount, @r#"
+            AMOUNT($ -1) [prec:0, keep:false, comm:$, raw:-1]
+        "#);
+        assert_eq!(CommodityFlags::STYLE_SEPARATED, amount.commodity().unwrap().flags());
+
+        let (_, amount) = parse_amount("$ 1").unwrap();
+        insta::assert_debug_snapshot!(amount, @r#"
+            AMOUNT($ 1) [prec:0, keep:false, comm:$, raw:1]
+        "#);
+        assert_eq!(CommodityFlags::STYLE_SEPARATED, amount.commodity().unwrap().flags());
+
+        let (_, amount) = parse_amount("1 USD").unwrap();
+        insta::assert_debug_snapshot!(amount, @r#"
+            AMOUNT(1 USD) [prec:0, keep:false, comm:USD, raw:1]
+        "#);
+        assert_eq!(
+            CommodityFlags::STYLE_SEPARATED | CommodityFlags::STYLE_SUFFIXED,
+            amount.commodity().unwrap().flags()
+        );
+
+        let (_, amount) = parse_amount("1USD").unwrap();
+        insta::assert_debug_snapshot!(amount, @r#"
+            AMOUNT(1USD) [prec:0, keep:false, comm:USD, raw:1]
+        "#);
+        assert_eq!(CommodityFlags::STYLE_SUFFIXED, amount.commodity().unwrap().flags());
+
+        let (_, amount) = parse_amount(r#"1000 "M&M""#).unwrap();
+        insta::assert_debug_snapshot!(amount, @r#"
+            AMOUNT(1000 "M&M") [prec:0, keep:false, comm:"M&M", raw:1000]
+        "#);
+        assert_eq!(
+            CommodityFlags::STYLE_SEPARATED | CommodityFlags::STYLE_SUFFIXED,
+            amount.commodity().unwrap().flags()
+        );
+    }
+
+    #[test]
+    fn test_parse_transaction() {
+        let input = "2011-03-01 * Z\n    A  10\n    B\n";
+        let (_, Transaction { date, status, payee, postings, .. }) =
+            parse_transaction(input).unwrap();
+
+        assert_eq!(date.format("%Y/%m/%d").to_string(), "2011/03/01");
+        assert_eq!(status, TransactionStatus::Cleared);
+        assert_eq!(payee, "Z".to_string());
+        assert_eq!(postings.len(), 2);
+    }
+
+    #[test]
+    fn test_parse_transaction_with_comment() {
+        let input = "2011-03-06 ! 2 ; note line 1\n    ; note line 2\n    E  10\n    F\n";
+        let (_, Transaction { date, status, payee, note, .. }) = parse_transaction(input).unwrap();
+
+        assert_eq!(date.format("%Y/%m/%d").to_string(), "2011/03/06");
+        assert_eq!(status, TransactionStatus::Pending);
+        assert_eq!(payee, "2".to_string());
+        assert_eq!(note, Some("note line 1\nnote line 2".to_string()));
+    }
+
+    #[test]
+    fn test_parse_transaction_with_comment_overide_payee() {
+        let input = "2011-03-06 Foo\n    ; Payee: Bar\n    Act1  1\n    Act2\n";
+        let (_, Transaction { payee, .. }) = parse_transaction(input).unwrap();
+
+        assert_eq!(payee, "Bar".to_string());
     }
 
     #[test]
