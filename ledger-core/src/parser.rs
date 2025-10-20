@@ -11,13 +11,13 @@
 use ledger_math::CommodityFlags;
 use nom::{
     branch::alt,
-    bytes::complete::{take_until, take_while, take_while1},
+    bytes::complete::{take_until, take_while},
     character::complete::{alpha1, digit1, line_ending, space0, space1},
     combinator::{map, opt, recognize, value},
     error::{context, ParseError},
     multi::many0,
     sequence::{delimited, preceded, terminated, tuple},
-    IResult,
+    AsChar, IResult,
 };
 
 // We need to use bytes for tag with byte strings
@@ -1276,9 +1276,31 @@ fn parse_posting(input: &str) -> ParseResult<'_, Posting> {
 
 /// Parse an account name
 fn account_name(input: &str) -> ParseResult<'_, String> {
-    map(take_while1(|c: char| c != ' ' && c != '\t' && c != '\n' && c != ';'), |s: &str| {
-        s.trim().to_string()
-    })(input)
+    fn parse_account_name(input: &str) -> IResult<&str, &str, VerboseError<&str>> {
+        let mut last_char_was_space = false;
+        for (i, char) in input.char_indices() {
+            match char {
+                '\t' | '\n' | ';' if i == 0 => {
+                    return Err(nom::Err::Incomplete(nom::Needed::new(1)));
+                }
+                '\t' | '\n' | ';' | ' ' if last_char_was_space => {
+                    let (parsed, rest) = input.split_at(i - 1);
+                    return Ok((rest, parsed));
+                }
+                '\t' | '\n' | ';' => {
+                    let (parsed, rest) = input.split_at(i);
+                    return Ok((rest, parsed));
+                }
+                _ => {
+                    last_char_was_space = char == ' ';
+                }
+            }
+        }
+
+        Ok(("", input))
+    }
+
+    map(parse_account_name, |s: &str| s.trim().to_string())(input)
 }
 
 /// Parse an amount field (simplified)
@@ -1715,18 +1737,29 @@ mod tests {
 
     #[test]
     fn test_account_name() {
-        let input = "Assets:Checking";
-        let result = account_name(input);
-        assert!(result.is_ok());
-        let (_, name) = result.unwrap();
+        let (_, name) = account_name("Assets:Checking").unwrap();
         assert_eq!(name, "Assets:Checking");
+
+        let (_, name) = account_name("Assets:Savings Account").unwrap();
+        assert_eq!(name, "Assets:Savings Account");
+
+        let (_, name) = account_name("Assets:Savings  USD1").unwrap();
+        assert_eq!(name, "Assets:Savings");
+
+        let (_, name) = account_name("Assets:Savings 1  USD1").unwrap();
+        assert_eq!(name, "Assets:Savings 1");
     }
 
     #[test]
     fn test_account_directive() {
         let input = "account Assets:Checking\n";
-        let result = account_directive(input);
-        assert!(result.is_ok());
+        let (_, directive) = account_directive(input).unwrap();
+
+        if let Directive::Account { name, .. } = directive {
+            assert_eq!(name, "Assets:Checking");
+        } else {
+            panic!("did not parse account directive: {directive:?}");
+        }
     }
 
     #[test]
