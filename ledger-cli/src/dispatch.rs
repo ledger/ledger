@@ -10,9 +10,13 @@ use crate::session::Session;
 use anyhow::{Context, Result};
 use clap::CommandFactory;
 use ledger_core::parser::JournalParser;
+use ledger_core::posting::Posting;
+use ledger_math::Commodity;
 use regex::Regex;
+use std::collections::HashSet;
 use std::io::{self, Write};
 use std::ops::Add;
+use std::sync::Arc;
 
 /// Main command dispatcher
 pub struct Dispatcher {
@@ -452,11 +456,44 @@ impl Dispatcher {
     }
 
     fn execute_commodities_command(&mut self, args: &crate::cli::CommoditiesArgs) -> Result<i32> {
-        println!("Commodities command");
-        if !args.pattern.is_empty() {
-            println!("Commodity patterns: {:?}", args.pattern);
+        let journal = match &self.session.parsed_journal {
+            Some(journal) => journal,
+            None => {
+                return Err(anyhow::anyhow!("No journal loaded"));
+            }
+        };
+
+        let mut commodities: Vec<&Arc<Commodity>> = if !args.pattern.is_empty() {
+            let pattern = {
+                let pattern = args.pattern.join("|");
+                let pattern = format!(".*(?i:{pattern}).*");
+                Regex::new(&pattern).unwrap()
+            };
+
+            let commodities: HashSet<_> = journal
+                .transactions
+                .iter()
+                .flat_map(|t| {
+                    t.postings.iter().filter_map(|p: &Posting| {
+                        if p.account.borrow_mut().matches_pattern(&pattern) {
+                            p.amount.as_ref().and_then(|a| a.commodity())
+                        } else {
+                            None
+                        }
+                    })
+                })
+                .collect();
+
+            commodities.into_iter().collect()
+        } else {
+            journal.commodities.values().collect()
+        };
+
+        commodities.sort_by_key(|a| a.symbol());
+        for commodity in commodities {
+            println!("{commodity}");
         }
-        // TODO: Implement actual commodities listing
+
         Ok(0)
     }
 
