@@ -11,7 +11,7 @@
 use ledger_math::CommodityFlags;
 use nom::{
     branch::alt,
-    bytes::complete::{is_not, take_until, take_while},
+    bytes::complete::{is_not, take_until},
     character::complete::{char, digit1, line_ending, space0, space1},
     combinator::{map, opt, recognize, value},
     error::{context, ParseError},
@@ -1141,14 +1141,21 @@ fn parse_transaction(input: &str) -> ParseResult<'_, Transaction> {
         tuple((
             date_field,
             opt(preceded(tag("="), date_field)), // aux date
-            opt(alt((tag("*"), tag("!")))),      // cleared flag
+            space0,
+            opt(alt((tag("*"), tag("!")))), // cleared flag
+            space0,
             opt(delimited(tag("("), take_until(")"), tag(")"))), // code
+            space0,
             opt(payee_description),
-            opt(preceded(space0, simple_comment_field)), // transaction comment
+            space0,
+            // transaction comment on payee line
+            opt(simple_comment_field),
             line_ending,
+            // transaction comments between payees and postings
+            many0(delimited(alt((space1, tag("\t"))), simple_comment_field, line_ending)),
             many0(posting_line),
         )),
-        |(date, aux_date, cleared, code, payee, tx_comment, _, postings)| {
+        |(date, aux_date, _, cleared, _, code, _, payee, _, comment1, _, comment2, postings)| {
             let payee_str = payee.unwrap_or_else(String::new);
             let mut transaction = Transaction::new(date, payee_str);
 
@@ -1169,8 +1176,9 @@ fn parse_transaction(input: &str) -> ParseResult<'_, Transaction> {
             }
 
             // Extract metadata from transaction comment
-            if let Some(comment) = tx_comment {
-                transaction.note = Some(comment.clone());
+            if comment1.is_some() || !comment2.is_empty() {
+                transaction.note =
+                    Some([comment1.unwrap_or_default(), comment2.join("\n")].join("\n"));
                 // TODO: Add metadata extraction to transaction
                 // let metadata = parse_metadata_tags(&comment);
                 // transaction.metadata.extend(metadata);
@@ -1234,7 +1242,7 @@ fn date_field(input: &str) -> ParseResult<'_, NaiveDate> {
 
 /// Parse payee description
 fn payee_description(input: &str) -> ParseResult<'_, String> {
-    map(take_while(|c| c != '\n' && c != '\r'), |s: &str| s.trim().to_string())(input)
+    map(is_not("\r\n;"), |s: &str| s.trim().to_string())(input)
 }
 
 /// Parse a posting line
@@ -1664,6 +1672,8 @@ fn automated_transaction(input: &str) -> ParseResult<'_, Directive> {
 
 #[cfg(test)]
 mod tests {
+    use crate::transaction::TransactionStatus;
+
     use super::*;
 
     #[test]
@@ -1943,6 +1953,29 @@ mod tests {
             CommodityFlags::STYLE_SEPARATED | CommodityFlags::STYLE_SUFFIXED,
             amount.commodity().unwrap().flags()
         );
+    }
+
+    #[test]
+    fn test_parse_transaction() {
+        let input = "2011-03-01 * Z\n    A  10\n    B\n";
+        let (_, Transaction { date, status, payee, postings, .. }) =
+            parse_transaction(input).unwrap();
+
+        assert_eq!(date.format("%Y/%m/%d").to_string(), "2011/03/01");
+        assert_eq!(status, TransactionStatus::Cleared);
+        assert_eq!(payee, "Z".to_string());
+        assert_eq!(postings.len(), 2);
+    }
+
+    #[test]
+    fn test_parse_transaction_with_comment() {
+        let input = "2011-03-06 ! 2 ; note line 1\n    ; note line 2\n    E  10\n    F\n";
+        let (_, Transaction { date, status, payee, note, .. }) = parse_transaction(input).unwrap();
+
+        assert_eq!(date.format("%Y/%m/%d").to_string(), "2011/03/06");
+        assert_eq!(status, TransactionStatus::Pending);
+        assert_eq!(payee, "2".to_string());
+        assert_eq!(note, Some("note line 1\nnote line 2".to_string()));
     }
 
     #[test]
