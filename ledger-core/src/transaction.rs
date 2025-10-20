@@ -60,6 +60,12 @@ pub struct TagData {
     pub inherited: bool,
 }
 
+impl TagData {
+    pub fn new(value: String) -> Self {
+        Self { value: Some(value), inherited: false }
+    }
+}
+
 /// Represents a transaction (xact in C++)
 #[derive(Debug, Clone)]
 pub struct Transaction {

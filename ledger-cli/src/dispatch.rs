@@ -498,11 +498,43 @@ impl Dispatcher {
     }
 
     fn execute_payees_command(&mut self, args: &crate::cli::PayeesArgs) -> Result<i32> {
-        println!("Payees command");
-        if !args.pattern.is_empty() {
-            println!("Payee patterns: {:?}", args.pattern);
+        let journal = match &self.session.parsed_journal {
+            Some(journal) => journal,
+            None => {
+                return Err(anyhow::anyhow!("No journal loaded"));
+            }
+        };
+
+        let pattern = if !args.pattern.is_empty() {
+            let pattern = args.pattern.join("|");
+            let pattern = format!(".*(?i:{pattern}).*");
+            Some(Regex::new(&pattern).unwrap())
+        } else {
+            None
+        };
+
+        let mut payees: Vec<_> = journal
+            .transactions
+            .iter()
+            .filter_map(|t| {
+                if t.postings.iter().any(|p| {
+                    pattern
+                        .as_ref()
+                        .map(|pat| p.account.borrow_mut().matches_pattern(pat))
+                        .unwrap_or(true)
+                }) {
+                    Some(&t.payee)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        payees.sort();
+        for payee in payees {
+            println!("{payee}");
         }
-        // TODO: Implement actual payees listing
+
         Ok(0)
     }
 

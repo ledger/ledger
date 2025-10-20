@@ -32,8 +32,12 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use crate::{
-    account::Account, amount::Amount, commodity::Commodity, journal::Journal, posting::Posting,
-    transaction::Transaction,
+    account::Account,
+    amount::Amount,
+    commodity::Commodity,
+    journal::Journal,
+    posting::Posting,
+    transaction::{TagData, Transaction},
 };
 
 use chrono::NaiveDate;
@@ -1177,11 +1181,18 @@ fn parse_transaction(input: &str) -> ParseResult<'_, Transaction> {
 
             // Extract metadata from transaction comment
             if comment1.is_some() || !comment2.is_empty() {
-                transaction.note =
-                    Some([comment1.unwrap_or_default(), comment2.join("\n")].join("\n"));
-                // TODO: Add metadata extraction to transaction
-                // let metadata = parse_metadata_tags(&comment);
-                // transaction.metadata.extend(metadata);
+                let comment = [comment1.unwrap_or_default(), comment2.join("\n")].join("\n");
+                let metadata = parse_metadata_tags(&comment, None);
+
+                transaction.note = Some(comment);
+
+                if let Some(payee) = metadata.get("Payee") {
+                    transaction.payee = payee.clone();
+                }
+
+                let metadata: HashMap<String, TagData> =
+                    metadata.into_iter().map(|(key, value)| (key, TagData::new(value))).collect();
+                transaction.metadata.extend(metadata);
             }
 
             for posting in postings {
@@ -1976,6 +1987,14 @@ mod tests {
         assert_eq!(status, TransactionStatus::Pending);
         assert_eq!(payee, "2".to_string());
         assert_eq!(note, Some("note line 1\nnote line 2".to_string()));
+    }
+
+    #[test]
+    fn test_parse_transaction_with_comment_overide_payee() {
+        let input = "2011-03-06 Foo\n    ; Payee: Bar\n    Act1  1\n    Act2\n";
+        let (_, Transaction { payee, .. }) = parse_transaction(input).unwrap();
+
+        assert_eq!(payee, "Bar".to_string());
     }
 
     #[test]
