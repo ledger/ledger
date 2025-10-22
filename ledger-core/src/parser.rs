@@ -1262,7 +1262,7 @@ fn posting_line(input: &str) -> ParseResult<'_, Posting> {
 }
 
 /// Parse a single posting with metadata support
-fn parse_posting(input: &str) -> ParseResult<'_, Posting> {
+pub(crate) fn parse_posting(input: &str) -> ParseResult<'_, Posting> {
     // For now, create a simplified version that compiles
     // TODO: Fix account reference creation and metadata handling
     map(
@@ -1480,8 +1480,8 @@ fn quantity(input: &str) -> IResult<&str, (Decimal, Option<CommodityFlags>), Ver
                 number_with_separator_and_decimal(DecimalFormat::Euro),
                 number_with_separator_and_no_decimal(DecimalFormat::US),
                 number_with_separator_and_no_decimal(DecimalFormat::Euro),
-                number_without_separator_with_decimal(DecimalFormat::Euro),
                 number_without_separator_with_decimal(DecimalFormat::US),
+                number_without_separator_with_decimal(DecimalFormat::Euro),
                 number_without_separator_or_decimal,
             )),
         )),

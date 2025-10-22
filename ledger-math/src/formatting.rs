@@ -78,6 +78,7 @@ impl FormatConfig {
 
         let config = if let Some(commodity) = amount.commodity() {
             config
+                .with_precision(amount.precision())
                 .with_thousands_sep(commodity.has_flags(CommodityFlags::STYLE_THOUSANDS))
                 .with_decimal_comma(commodity.has_flags(CommodityFlags::STYLE_DECIMAL_COMMA))
         } else {
@@ -320,11 +321,13 @@ fn format_amount_with_commodity(
             (formatted_commodity, maybe_sep.to_string())
         };
 
-        if commodity.has_flags(CommodityFlags::STYLE_SUFFIXED) {
+        let amount_with_commodity = if commodity.has_flags(CommodityFlags::STYLE_SUFFIXED) {
             format!("{quantity_str}{maybe_sep}{formatted_commodity}")
         } else {
             format!("{formatted_commodity}{maybe_sep}{quantity_str}")
-        }
+        };
+
+        amount_with_commodity
     }
 }
 

@@ -2,6 +2,7 @@
 
 use chrono::{NaiveDate, NaiveDateTime};
 use compact_str::CompactString;
+use ledger_math::{format_amount, FormatConfig};
 use smallvec::SmallVec;
 use std::collections::HashMap;
 
@@ -377,5 +378,59 @@ impl Posting {
             std::cmp::Ordering::Equal => self.sequence.cmp(&other.sequence),
             other_ord => other_ord,
         }
+    }
+
+    /// Format a posting for display within a transaction
+    pub fn format(&self, pad_sign: bool, account_width: usize) -> String {
+        let account_name = self.account.borrow().fullname_immutable();
+
+        if let Some(amount) = &self.amount {
+            let amount_padding = if amount.sign() != -1 && pad_sign { " " } else { "" };
+
+            let price = amount
+                .commodity()
+                .and_then(|c| {
+                    c.annotation().price().as_ref().map(|price| {
+                        let config = FormatConfig::from_amount(price);
+                        format!(" {{{}}}", format_amount(price, &config))
+                    })
+                })
+                .unwrap_or_default();
+
+            let cost = self
+                .cost
+                .as_ref()
+                .map(|cost| {
+                    let config = FormatConfig::from_amount(cost);
+                    format!(" @ {}", format_amount(cost, &config))
+                })
+                .unwrap_or_default();
+
+            let amount = {
+                let config = FormatConfig::from_amount(amount);
+                format_amount(amount, &config)
+            };
+
+            format!(
+                "    {account_name:width$}  {amount_padding}{amount}{price}{cost}",
+                width = account_width
+            )
+        } else {
+            format!("    {account_name:width$}", width = account_width)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parser::parse_posting;
+
+    #[test]
+    fn test_parse_and_format_posting() {
+        let (_, posting) = parse_posting("Actif:SV  1,0204 MFE @ 333,20 €").unwrap();
+        insta::assert_snapshot!(
+            posting.format(false, 8),
+            @r#"    Actif:SV  1,0204 MFE @ 333,20 €"#
+        );
     }
 }

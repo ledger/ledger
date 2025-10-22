@@ -11,6 +11,7 @@ use anyhow::{Context, Result};
 use clap::CommandFactory;
 use ledger_core::parser::JournalParser;
 use ledger_core::posting::Posting;
+use ledger_core::transaction::TransactionStatus;
 use ledger_math::Commodity;
 use regex::Regex;
 use std::collections::HashSet;
@@ -385,15 +386,22 @@ impl Dispatcher {
                 println!(); // Empty line between transactions
             }
 
-            println!("{} {}", transaction.date.format("%Y/%m/%d"), &transaction.payee);
+            let cleared = match transaction.status {
+                TransactionStatus::Uncleared => "",
+                TransactionStatus::Cleared => " *",
+                TransactionStatus::Pending => " !",
+            };
+
+            println!("{}{cleared} {}", transaction.date.format("%Y/%m/%d"), &transaction.payee);
 
             let postings = &transaction.postings;
-            let mut width = 40;
+            // TODO: use --account-width?
+            let mut width = 36;
             let mut any_amount_negated = false;
             for posting in postings {
                 let account_name = posting.account.borrow_mut().fullname();
-                // use 4 spaces of padding
-                width = width.max(account_name.len() + 4);
+                // use 4 spaces of padding ???
+                width = width.max(account_name.len() + 3);
 
                 if let Some(ref amount) = posting.amount {
                     any_amount_negated |= amount.sign() == -1;
@@ -401,15 +409,7 @@ impl Dispatcher {
             }
 
             for posting in postings {
-                let account_name = posting.account.borrow().fullname_immutable();
-
-                if let Some(amount) = &posting.amount {
-                    let amount_padding =
-                        if amount.sign() != -1 && any_amount_negated { " " } else { "" };
-                    println!("    {account_name:width$} {amount_padding}{amount}", width = width);
-                } else {
-                    println!("    {account_name:width$}", width = width);
-                }
+                println!("{}", posting.format(any_amount_negated, width));
             }
         }
 
