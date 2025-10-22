@@ -11,13 +11,13 @@
 use ledger_math::CommodityFlags;
 use nom::{
     branch::alt,
-    bytes::complete::{is_not, take_until},
+    bytes::complete::{is_not, take_until, take_while_m_n},
     character::complete::{char, digit1, line_ending, space0, space1},
-    combinator::{map, opt, recognize, value},
+    combinator::{map, not, opt, recognize, success, value},
     error::{context, ParseError},
-    multi::many0,
+    multi::{many0, many1},
     sequence::{delimited, pair, preceded, terminated, tuple},
-    IResult,
+    AsChar, IResult,
 };
 
 // We need to use bytes for tag with byte strings
@@ -1335,19 +1335,117 @@ fn commodity_symbol(input: &str) -> ParseResult<'_, String> {
     ))(input)
 }
 
-fn quantity(input: &str) -> IResult<&str, Decimal, VerboseError<&str>> {
-    // TODO: thousands separators like 1,234
+fn quantity(input: &str) -> IResult<&str, (Decimal, Option<CommodityFlags>), VerboseError<&str>> {
+    enum DecimalFormat {
+        Euro,
+        US,
+    }
+
+    let number_with_separator_and_decimal = |format| {
+        let (separator, decimal) = match format {
+            DecimalFormat::US => (',', '.'),
+            DecimalFormat::Euro => ('.', ','),
+        };
+        pair(
+            map(
+                pair(
+                    take_while_m_n(1, 3, AsChar::is_dec_digit),
+                    many1(preceded(char(separator), take_while_m_n(3, 3, AsChar::is_dec_digit))),
+                ),
+                move |(leading, rest)| {
+                    (
+                        format!("{}{}", leading, rest.join("")),
+                        match format {
+                            DecimalFormat::Euro => Some(
+                                CommodityFlags::STYLE_DECIMAL_COMMA
+                                    | CommodityFlags::STYLE_THOUSANDS,
+                            ),
+                            DecimalFormat::US => Some(CommodityFlags::STYLE_THOUSANDS),
+                        },
+                    )
+                },
+            ),
+            preceded(char(decimal), digit1),
+        )
+    };
+    let number_with_separator_and_no_decimal = |format| {
+        let separator = match format {
+            DecimalFormat::US => ',',
+            DecimalFormat::Euro => '.',
+        };
+        terminated(
+            pair(
+                map(
+                    pair(
+                        take_while_m_n(1, 3, AsChar::is_dec_digit),
+                        many1(preceded(
+                            char(separator),
+                            take_while_m_n(3, 3, AsChar::is_dec_digit),
+                        )),
+                    ),
+                    move |(leading, rest)| {
+                        (
+                            format!("{}{}", leading, rest.join("")),
+                            match format {
+                                DecimalFormat::Euro => Some(
+                                    CommodityFlags::STYLE_DECIMAL_COMMA
+                                        | CommodityFlags::STYLE_THOUSANDS,
+                                ),
+                                DecimalFormat::US => Some(CommodityFlags::STYLE_THOUSANDS),
+                            },
+                        )
+                    },
+                ),
+                success(""),
+            ),
+            // ensure we don't stop matching 1,2345 at the 4
+            not(digit1),
+        )
+    };
+    let number_without_separator_with_decimal = |format| {
+        let decimal = match format {
+            DecimalFormat::US => '.',
+            DecimalFormat::Euro => ',',
+        };
+        pair(
+            map(digit1, move |s: &str| {
+                (
+                    s.to_string(),
+                    match format {
+                        DecimalFormat::Euro => Some(CommodityFlags::STYLE_DECIMAL_COMMA),
+                        DecimalFormat::US => None,
+                    },
+                )
+            }),
+            preceded(char(decimal), digit1),
+        )
+    };
+    let number_without_separator_or_decimal =
+        pair(map(digit1, |s: &str| (s.to_string(), None)), success(""));
+
     map(
-        tuple((opt(tag("-")), space0, digit1, opt(tuple((tag("."), digit1))))),
-        |(maybe_sign, _, integer, fraction)| {
+        tuple((
+            opt(tag("-")),
+            space0,
+            alt((
+                number_with_separator_and_decimal(DecimalFormat::US),
+                number_with_separator_and_decimal(DecimalFormat::Euro),
+                number_with_separator_and_no_decimal(DecimalFormat::US),
+                number_with_separator_and_no_decimal(DecimalFormat::Euro),
+                number_without_separator_with_decimal(DecimalFormat::Euro),
+                number_without_separator_with_decimal(DecimalFormat::US),
+                number_without_separator_or_decimal,
+            )),
+        )),
+        |(maybe_sign, _, ((integer, flags), fraction))| {
             let mut decimal_str = format!("{sign}{integer}", sign = maybe_sign.unwrap_or(""));
 
-            if let Some((point, fraction)) = fraction {
-                decimal_str.push_str(point);
+            if !fraction.is_empty() {
+                decimal_str.push('.');
                 decimal_str.push_str(fraction);
             }
 
-            Decimal::from_str(&decimal_str).unwrap_or_default()
+            (Decimal::from_str(&decimal_str).unwrap_or_default(), flags)
         },
     )(input)
 }
@@ -1359,11 +1457,14 @@ fn simple_amount_field(input: &str) -> ParseResult<'_, Amount> {
         // FIXME: what about -$-1?
         map(
             tuple((opt(terminated(char('-'), space0)), commodity_symbol, space0, quantity)),
-            |(maybe_sign, commodity, maybe_sep, mut quantity)| {
+            |(maybe_sign, commodity, maybe_sep, (mut quantity, maybe_flags))| {
                 let commodity = {
                     let mut commodity = Commodity::new(commodity);
                     if !maybe_sep.is_empty() {
                         commodity.add_flags(CommodityFlags::STYLE_SEPARATED);
+                    }
+                    if let Some(flags) = maybe_flags {
+                        commodity.add_flags(flags);
                     }
                     Some(Arc::new(commodity))
                 };
@@ -1376,17 +1477,23 @@ fn simple_amount_field(input: &str) -> ParseResult<'_, Amount> {
             },
         ),
         // Commodity after quantity, and no commodity at all: 10.00 USD, -10.00, 1$
-        map(tuple((quantity, opt(pair(space0, commodity_symbol)))), |(quantity, commodity)| {
-            let commodity = commodity.map(|(sep, commodity)| {
-                let mut commodity = Commodity::new(commodity);
-                commodity.add_flags(CommodityFlags::STYLE_SUFFIXED);
-                if !sep.is_empty() {
-                    commodity.add_flags(CommodityFlags::STYLE_SEPARATED);
-                }
-                Arc::new(commodity)
-            });
-            Amount::with_commodity(quantity, commodity)
-        }),
+        map(
+            tuple((quantity, opt(pair(space0, commodity_symbol)))),
+            |((quantity, maybe_flags), commodity)| {
+                let commodity = commodity.map(|(sep, commodity)| {
+                    let mut commodity = Commodity::new(commodity);
+                    commodity.add_flags(CommodityFlags::STYLE_SUFFIXED);
+                    if !sep.is_empty() {
+                        commodity.add_flags(CommodityFlags::STYLE_SEPARATED);
+                    }
+                    if let Some(flags) = maybe_flags {
+                        commodity.add_flags(flags);
+                    }
+                    Arc::new(commodity)
+                });
+                Amount::with_commodity(quantity, commodity)
+            },
+        ),
     ))(input)
 }
 
@@ -1680,6 +1787,8 @@ fn automated_transaction(input: &str) -> ParseResult<'_, Directive> {
 
 #[cfg(test)]
 mod tests {
+    use insta::assert_debug_snapshot;
+
     use crate::transaction::TransactionStatus;
 
     use super::*;
@@ -1873,15 +1982,78 @@ mod tests {
 
     #[test]
     fn test_parse_quantity() {
-        assert_eq!(quantity("1000"), Ok(("", Decimal::new(1000, 0))));
-        assert_eq!(quantity("2.02"), Ok(("", Decimal::new(202, 2))));
-        assert_eq!(quantity("-12.13"), Ok(("", Decimal::new(-1213, 2))));
-        assert_eq!(quantity("0.1"), Ok(("", Decimal::new(1, 1))));
-        assert_eq!(quantity("3"), Ok(("", Decimal::new(3, 0))));
-        assert_eq!(quantity("1"), Ok(("", Decimal::new(1, 0))));
-        assert_eq!(quantity("1 ABC"), Ok((" ABC", Decimal::new(1, 0))));
-        // TODO: assert_eq!(parse_quantity("1,000"), Ok(("", Decimal::new(1000, 0))));
-        // TODO: assert_eq!(parse_quantity("12,456,132.14"), Ok(("", Decimal::new(1245613214, 2))));
+        assert_eq!(quantity("1000"), Ok(("", (Decimal::new(1000, 0), None))));
+        assert_eq!(quantity("2.02"), Ok(("", (Decimal::new(202, 2), None))));
+        assert_eq!(quantity("-12.13"), Ok(("", (Decimal::new(-1213, 2), None))));
+        assert_eq!(quantity("0.1"), Ok(("", (Decimal::new(1, 1), None))));
+        assert_eq!(quantity("3"), Ok(("", (Decimal::new(3, 0), None))));
+        assert_eq!(quantity("1"), Ok(("", (Decimal::new(1, 0), None))));
+        assert_eq!(quantity("1 ABC"), Ok((" ABC", (Decimal::new(1, 0), None))));
+
+        assert_debug_snapshot!(
+            quantity("1,000").unwrap(),
+            @r#"
+                (
+                    "",
+                    (
+                        1000,
+                        Some(
+                            CommodityFlags(
+                                STYLE_THOUSANDS,
+                            ),
+                        ),
+                    ),
+                )
+            "#
+        );
+        assert_debug_snapshot!(
+            quantity("-188,7974").unwrap(),
+            @r#"
+                (
+                    "",
+                    (
+                        -188.7974,
+                        Some(
+                            CommodityFlags(
+                                STYLE_DECIMAL_COMMA,
+                            ),
+                        ),
+                    ),
+                )
+            "#
+        );
+        assert_debug_snapshot!(
+            quantity("12,456,132.14").unwrap(),
+            @r#"
+                (
+                    "",
+                    (
+                        12456132.14,
+                        Some(
+                            CommodityFlags(
+                                STYLE_THOUSANDS,
+                            ),
+                        ),
+                    ),
+                )
+            "#
+        );
+        assert_debug_snapshot!(
+            quantity("12.456,14").unwrap(),
+            @r#"
+                (
+                    "",
+                    (
+                        12456.14,
+                        Some(
+                            CommodityFlags(
+                                STYLE_DECIMAL_COMMA | STYLE_THOUSANDS,
+                            ),
+                        ),
+                    ),
+                )
+            "#
+        );
     }
 
     #[test]
@@ -1959,6 +2131,18 @@ mod tests {
         "#);
         assert_eq!(
             CommodityFlags::STYLE_SEPARATED | CommodityFlags::STYLE_SUFFIXED,
+            amount.commodity().unwrap().flags()
+        );
+
+        let (rem, amount) = simple_amount_field("-188,7974 STK @ 14,200 $").unwrap();
+        assert_eq!(rem, " @ 14,200 $");
+        insta::assert_debug_snapshot!(amount, @r#"
+            AMOUNT(-188.7974 STK) [prec:4, keep:false, comm:STK, raw:-943987/5000]
+        "#);
+        assert_eq!(
+            CommodityFlags::STYLE_SUFFIXED
+                | CommodityFlags::STYLE_SEPARATED
+                | CommodityFlags::STYLE_DECIMAL_COMMA,
             amount.commodity().unwrap().flags()
         );
     }

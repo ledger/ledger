@@ -73,6 +73,20 @@ impl FormatConfig {
         Default::default()
     }
 
+    pub fn from_amount(amount: &Amount) -> Self {
+        let config = Self::default().with_precision(amount.precision());
+
+        let config = if let Some(commodity) = amount.commodity() {
+            config
+                .with_thousands_sep(commodity.has_flags(CommodityFlags::STYLE_THOUSANDS))
+                .with_decimal_comma(commodity.has_flags(CommodityFlags::STYLE_DECIMAL_COMMA))
+        } else {
+            config
+        };
+
+        config
+    }
+
     pub fn with_precision(mut self, precision: Precision) -> Self {
         self.precision = Some(precision);
         self
@@ -343,9 +357,12 @@ pub fn format_balance(balance: &Balance, config: &FormatConfig) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use super::*;
     use crate::amount::Amount;
     use crate::balance::Balance;
+    use crate::Commodity;
 
     #[test]
     fn test_format_rational_zero() {
@@ -433,6 +450,30 @@ mod tests {
         let config = FormatConfig::default();
 
         assert_eq!(format_amount(&amount, &config), "12345");
+    }
+
+    #[test]
+    fn test_format_amount_with_thousands_separator() {
+        let mut amount = Amount::from_i64(12345);
+        let mut commodity = Commodity::new("");
+        commodity.add_flags(CommodityFlags::STYLE_THOUSANDS);
+        amount.set_commodity(Arc::new(commodity));
+
+        let config = FormatConfig::from_amount(&amount);
+
+        assert_eq!(format_amount(&amount, &config), "12,345");
+    }
+
+    #[test]
+    fn test_format_amount_with_decimal_comma_separator() {
+        let mut amount = Amount::from_i64(12345);
+        let mut commodity = Commodity::new("");
+        commodity.add_flags(CommodityFlags::STYLE_THOUSANDS | CommodityFlags::STYLE_DECIMAL_COMMA);
+        amount.set_commodity(Arc::new(commodity));
+
+        let config = FormatConfig::from_amount(&amount);
+
+        assert_eq!(format_amount(&amount, &config), "12.345");
     }
 
     #[test]
