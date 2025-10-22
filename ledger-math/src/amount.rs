@@ -255,6 +255,11 @@ impl Amount {
         self.commodity.as_ref()
     }
 
+    /// Get the commodity reference
+    pub fn commodity_mut(&mut self) -> Option<&mut CommodityRef> {
+        self.commodity.as_mut()
+    }
+
     /// Check if this amount has a commodity
     pub fn has_commodity(&self) -> bool {
         self.commodity.is_some()
@@ -528,8 +533,10 @@ impl Amount {
             return Err(AmountError::DivisionByZero);
         }
 
-        if self.has_commodity() && other.has_commodity() {
-            return Err(AmountError::CommodityMismatch);
+        if let (Some(this), Some(other)) = (self.commodity(), other.commodity()) {
+            if this.symbol() == other.symbol() {
+                return Err(AmountError::CommodityMismatch);
+            }
         }
 
         // Handle null amounts

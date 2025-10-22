@@ -1,8 +1,11 @@
 //! Posting/entry representation within transactions
 
 use chrono::{NaiveDate, NaiveDateTime};
+use compact_str::CompactString;
+use ledger_math::{format_amount, Commodity, FormatConfig, FormatFlags};
 use smallvec::SmallVec;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use crate::account::AccountRef;
 use crate::strings::{AccountName, PayeeName};
@@ -62,7 +65,7 @@ pub struct Posting {
     /// Amount posted (can be None until finalization)
     pub amount: Option<Amount>,
     /// Optional amount expression (for calculated amounts) - optimized for short expressions
-    pub amount_expr: Option<AccountName>,
+    pub amount_expr: Option<CompactString>,
     /// Optional cost (for commodity conversions)
     pub cost: Option<Amount>,
     /// Original cost as given (before any calculations)
@@ -76,7 +79,7 @@ pub struct Posting {
     /// Optional payee override (different from transaction payee) - optimized memory usage
     pub payee: Option<PayeeName>,
     /// Optional note/comment - optimized memory usage
-    pub note: Option<AccountName>,
+    pub note: Option<CompactString>,
     /// Posting flags
     pub flags: PostingFlags,
     /// Posting status
@@ -376,5 +379,126 @@ impl Posting {
             std::cmp::Ordering::Equal => self.sequence.cmp(&other.sequence),
             other_ord => other_ord,
         }
+    }
+
+    /// Format a posting into the given writer, for display within a transaction.
+    pub fn write(
+        &self,
+        writer: &mut impl std::io::Write,
+        max_account_width: usize,
+        journal_commodities: &HashMap<String, Arc<Commodity>>,
+    ) -> Result<(), std::io::Error> {
+        let account_name = self.account.borrow().fullname_immutable();
+
+        let status = match self.status {
+            PostingStatus::Uncleared => "",
+            PostingStatus::Cleared => " *",
+            PostingStatus::Pending => " !",
+        };
+
+        // align status + account name to 36 chars + 2 for the account/amount separator
+        let account_width =
+            max_account_width.max(36).max(account_name.len()).saturating_sub(status.len()) + 2;
+
+        if let Some(amount) = &self.amount {
+            let price = amount
+                .commodity()
+                .and_then(|c| {
+                    c.annotation().price().as_ref().map(|price| {
+                        let commodity =
+                            price.commodity().and_then(|c| journal_commodities.get(c.symbol()));
+                        let config = FormatConfig::from_amount(price, &commodity);
+                        format!(" {{{}}}", format_amount(price, &config))
+                    })
+                })
+                .unwrap_or_default();
+
+            let cost = self
+                .cost
+                .as_ref()
+                .map(|cost| {
+                    let commodity =
+                        cost.commodity().and_then(|c| journal_commodities.get(c.symbol()));
+                    let config = FormatConfig::from_amount(cost, &commodity);
+                    let a = format!(" @ {}", format_amount(cost, &config));
+                    a
+                })
+                .unwrap_or_default();
+
+            let default_amount_width = 10;
+            let amount = {
+                let commodity =
+                    amount.commodity().and_then(|c| journal_commodities.get(c.symbol()));
+                let precision = commodity.map(|c| c.precision()).unwrap_or(amount.precision());
+
+                let config = FormatConfig::from_amount(amount, &commodity)
+                    .with_flags(FormatFlags::RIGHT_JUSTIFY)
+                    .with_precision(precision)
+                    .with_width(default_amount_width, None);
+                format_amount(amount, &config) + price.as_str() + cost.as_str()
+            };
+
+            // FIXME: what is this +2 about?
+            if amount.len() > (default_amount_width + 2) {
+                write!(writer, "    {status}{account_name:account_width$}{amount}")?
+            } else {
+                write!(
+                    writer,
+                    "    {status}{account_name:account_width$}{amount:>default_amount_width$}",
+                )?
+            }
+        } else {
+            write!(writer, "    {status}{account_name}")?
+        }
+
+        Ok(())
+    }
+
+    /// Format a posting into a String, for display within a transaction
+    pub fn format(
+        &self,
+        max_account_width: usize,
+        journal_commodities: &HashMap<String, Arc<Commodity>>,
+    ) -> String {
+        let mut buffer = Vec::new();
+        self.write(&mut buffer, max_account_width, journal_commodities).expect("writing to string");
+        String::from_utf8(buffer).unwrap()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use crate::parser::parse_posting;
+
+    #[test]
+    fn test_parse_and_format_posting() {
+        let (_, posting) =
+            parse_posting("Actif:BC                               -340,00 €").unwrap();
+        insta::assert_snapshot!(
+            posting.format(0, &HashMap::default()),
+            @r#"    Actif:BC                               -340,00 €"#
+        );
+    }
+
+    #[test]
+    fn test_parse_and_format_posting_with_extra_precision() {
+        let (_, posting) =
+            parse_posting("Actif:SSB                           125,0000 STK").unwrap();
+        insta::assert_snapshot!(
+            posting.format(0, &HashMap::default()),
+            @r#"    Actif:SSB                             125,0000 STK"#
+        );
+    }
+
+    #[test]
+    fn test_parse_and_format_posting_with_cost() {
+        let (_, posting) =
+            parse_posting("Actif:SV                              1,0204 MFE @ 333,20 €").unwrap();
+        insta::assert_snapshot!(
+            posting.format(0, &HashMap::default()),
+            @r#"    Actif:SV                              1,0204 MFE @ 333,20 €"#
+        );
     }
 }

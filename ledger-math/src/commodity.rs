@@ -12,10 +12,12 @@ use std::sync::Arc;
 use bitflags::bitflags;
 use chrono::NaiveDate;
 
+use crate::Amount;
+
 /// Precision type for commodity display settings
 pub type Precision = u16;
 
-/// Date type for annotations  
+/// Date type for annotations
 pub type Date = NaiveDate;
 
 /// Placeholder for expression type - will be implemented later
@@ -34,13 +36,6 @@ impl Expression {
     }
 }
 
-/// Forward declaration for Amount type to avoid circular dependency
-/// This will be properly integrated once Amount supports annotations
-#[derive(Debug, Clone, PartialEq, Hash)]
-pub struct AmountPlaceholder {
-    // Placeholder fields - will be replaced with actual Amount reference
-}
-
 /// Reference-counted commodity for safe sharing
 pub type CommodityRef = Arc<Commodity>;
 
@@ -54,6 +49,9 @@ pub struct Commodity {
     /// The symbol or name of this commodity (e.g., "$", "USD", "AAPL")
     symbol: String,
 
+    /// Annotation details for this instance
+    annotation: Annotation,
+
     /// Display precision for this commodity (number of decimal places)
     precision: Precision,
 
@@ -64,17 +62,57 @@ pub struct Commodity {
 impl Commodity {
     /// Create a new commodity with the given symbol
     pub fn new(symbol: impl Into<String>) -> Self {
-        Self { symbol: symbol.into(), precision: 0, flags: CommodityFlags::STYLE_DEFAULTS }
+        Self {
+            symbol: symbol.into(),
+            annotation: Annotation::default(),
+            precision: 0,
+            flags: CommodityFlags::STYLE_DEFAULTS,
+        }
+    }
+
+    /// Create a new commodity with symbol and annotation
+    pub fn with_annotation(symbol: impl Into<String>, annotation: Annotation) -> Self {
+        Self {
+            symbol: symbol.into(),
+            annotation,
+            precision: 0,
+            flags: CommodityFlags::STYLE_DEFAULTS,
+        }
     }
 
     /// Create a new commodity with symbol and precision
     pub fn with_precision(symbol: impl Into<String>, precision: Precision) -> Self {
-        Self { symbol: symbol.into(), precision, flags: CommodityFlags::STYLE_DEFAULTS }
+        Self {
+            symbol: symbol.into(),
+            annotation: Annotation::default(),
+            precision,
+            flags: CommodityFlags::STYLE_DEFAULTS,
+        }
     }
 
     /// Get the symbol of this commodity
     pub fn symbol(&self) -> &str {
         &self.symbol
+    }
+
+    /// Get the annotation of this commodity
+    pub fn annotation(&self) -> &Annotation {
+        &self.annotation
+    }
+
+    /// Get the mutable annotation of this commodity
+    pub fn annotation_mut(&mut self) -> &mut Annotation {
+        &mut self.annotation
+    }
+
+    /// Check if this commodity has annotations
+    pub fn has_annotation(&self) -> bool {
+        !self.annotation.is_empty()
+    }
+
+    /// Set the annotation for this commodity
+    pub fn set_annotation(&mut self, annotation: Annotation) {
+        self.annotation = annotation;
     }
 
     /// Get the display precision of this commodity
@@ -125,7 +163,40 @@ impl Commodity {
 
 impl fmt::Display for Commodity {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.symbol)
+        write!(f, "{}", self.symbol)?;
+
+        // Write annotation details
+        if !self.annotation.is_empty() {
+            write!(f, " {{")?;
+            let mut first = true;
+
+            if let Some(ref _price) = self.annotation.price {
+                if !first {
+                    write!(f, ", ")?;
+                }
+                write!(f, "price")?; // TODO: Display actual price when Amount is available
+                first = false;
+            }
+
+            if let Some(ref date) = self.annotation.date {
+                if !first {
+                    write!(f, ", ")?;
+                }
+                write!(f, "{}", date.format("%Y-%m-%d"))?;
+                first = false;
+            }
+
+            if let Some(ref tag) = self.annotation.tag {
+                if !first {
+                    write!(f, ", ")?;
+                }
+                write!(f, "({})", tag)?;
+            }
+
+            write!(f, "}}")?;
+        }
+
+        Ok(())
     }
 }
 
@@ -171,7 +242,7 @@ bitflags! {
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub struct Annotation {
     /// Lot price annotation (price paid for this lot)
-    price: Option<AmountPlaceholder>,
+    price: Option<Amount>,
 
     /// Date annotation (acquisition date)
     date: Option<Date>,
@@ -199,7 +270,7 @@ impl Annotation {
     }
 
     /// Create annotation with price
-    pub fn with_price(price: AmountPlaceholder) -> Self {
+    pub fn with_price(price: Amount) -> Self {
         Self {
             price: Some(price),
             date: None,
@@ -233,7 +304,7 @@ impl Annotation {
 
     /// Create full annotation
     pub fn with_all(
-        price: Option<AmountPlaceholder>,
+        price: Option<Amount>,
         date: Option<Date>,
         tag: Option<String>,
         value_expr: Option<Expression>,
@@ -250,8 +321,13 @@ impl Annotation {
     }
 
     /// Get price annotation
-    pub fn price(&self) -> &Option<AmountPlaceholder> {
+    pub fn price(&self) -> &Option<Amount> {
         &self.price
+    }
+
+    /// Set price annotation
+    pub fn set_price(&mut self, price: Amount) {
+        self.price = Some(price);
     }
 
     /// Get date annotation
@@ -305,9 +381,10 @@ impl Ord for Annotation {
         match (&self.price, &other.price) {
             (Some(_), None) => return Ordering::Greater,
             (None, Some(_)) => return Ordering::Less,
-            (Some(_), Some(_)) => {
-                // For now, consider all prices equal since we can't compare AmountPlaceholder
-                // This will be improved once we integrate with real Amount type
+            (Some(a), Some(b)) => {
+                if let Some(ord) = a.partial_cmp(b) {
+                    return ord;
+                }
             }
             (None, None) => {}
         }

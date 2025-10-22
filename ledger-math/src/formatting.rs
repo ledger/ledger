@@ -4,6 +4,8 @@
 //! C++ ledger implementation, including precision control, commodity formatting,
 //! width/padding control, and columnar alignment.
 
+use std::sync::Arc;
+
 use num_bigint::BigInt;
 use num_rational::BigRational;
 use num_traits::{Signed, Zero};
@@ -11,7 +13,7 @@ use num_traits::{Signed, Zero};
 use crate::amount::{Amount, Precision};
 use crate::balance::Balance;
 use crate::commodity::CommodityRef;
-use crate::CommodityFlags;
+use crate::{Commodity, CommodityFlags};
 
 /// Formatting flags matching C++ AMOUNT_PRINT_* constants
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -71,6 +73,21 @@ pub struct FormatConfig {
 impl FormatConfig {
     pub fn new() -> Self {
         Default::default()
+    }
+
+    pub fn from_amount(amount: &Amount, commodity: &Option<&Arc<Commodity>>) -> Self {
+        let precision = amount.precision().max(commodity.map(|c| c.precision()).unwrap_or(0));
+        let config = Self::default().with_precision(precision);
+
+        let config = if let Some(commodity) = commodity.or(amount.commodity()) {
+            config
+                .with_thousands_sep(commodity.has_flags(CommodityFlags::STYLE_THOUSANDS))
+                .with_decimal_comma(commodity.has_flags(CommodityFlags::STYLE_DECIMAL_COMMA))
+        } else {
+            config
+        };
+
+        config
     }
 
     pub fn with_precision(mut self, precision: Precision) -> Self {
@@ -306,11 +323,13 @@ fn format_amount_with_commodity(
             (formatted_commodity, maybe_sep.to_string())
         };
 
-        if commodity.has_flags(CommodityFlags::STYLE_SUFFIXED) {
+        let amount_with_commodity = if commodity.has_flags(CommodityFlags::STYLE_SUFFIXED) {
             format!("{quantity_str}{maybe_sep}{formatted_commodity}")
         } else {
             format!("{formatted_commodity}{maybe_sep}{quantity_str}")
-        }
+        };
+
+        amount_with_commodity
     }
 }
 
@@ -343,9 +362,12 @@ pub fn format_balance(balance: &Balance, config: &FormatConfig) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use super::*;
     use crate::amount::Amount;
     use crate::balance::Balance;
+    use crate::Commodity;
 
     #[test]
     fn test_format_rational_zero() {
@@ -433,6 +455,30 @@ mod tests {
         let config = FormatConfig::default();
 
         assert_eq!(format_amount(&amount, &config), "12345");
+    }
+
+    #[test]
+    fn test_format_amount_with_thousands_separator() {
+        let mut amount = Amount::from_i64(12345);
+        let mut commodity = Commodity::new("");
+        commodity.add_flags(CommodityFlags::STYLE_THOUSANDS);
+        amount.set_commodity(Arc::new(commodity));
+
+        let config = FormatConfig::from_amount(&amount, &None);
+
+        assert_eq!(format_amount(&amount, &config), "12,345");
+    }
+
+    #[test]
+    fn test_format_amount_with_decimal_comma_separator() {
+        let mut amount = Amount::from_i64(12345);
+        let mut commodity = Commodity::new("");
+        commodity.add_flags(CommodityFlags::STYLE_THOUSANDS | CommodityFlags::STYLE_DECIMAL_COMMA);
+        amount.set_commodity(Arc::new(commodity));
+
+        let config = FormatConfig::from_amount(&amount, &None);
+
+        assert_eq!(format_amount(&amount, &config), "12.345");
     }
 
     #[test]
