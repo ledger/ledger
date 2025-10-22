@@ -1,7 +1,7 @@
 //! Journal data structure for storing transactions
 
 use crate::account::{Account, AccountRef};
-use crate::transaction::Transaction;
+use crate::transaction::{Transaction, TransactionStatus};
 use ledger_math::commodity::Commodity;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -86,5 +86,92 @@ impl Journal {
         }
 
         Ok(())
+    }
+
+    /// Format all transactions and write them to the given writer.
+    pub fn write_transactions(
+        &self,
+        writer: &mut impl std::io::Write,
+    ) -> Result<(), std::io::Error> {
+        let transactions = &self.transactions;
+
+        for (i, transaction) in transactions.iter().enumerate() {
+            if i != 0 {
+                writeln!(writer)?; // Empty line between transactions
+            }
+
+            let status = match transaction.status {
+                TransactionStatus::Uncleared => "",
+                TransactionStatus::Cleared => " *",
+                TransactionStatus::Pending => " !",
+            };
+
+            writeln!(
+                writer,
+                "{}{status} {}",
+                transaction.date.format("%Y/%m/%d"),
+                &transaction.payee
+            )?;
+
+            let postings = &transaction.postings;
+            // TODO: use --account-width?
+            let longest_account_name = transaction
+                .postings
+                .iter()
+                .map(|p| p.account.borrow_mut().fullname().len())
+                .max()
+                .unwrap_or(0);
+
+            for posting in postings {
+                posting.write(writer, longest_account_name, &self.commodities)?;
+                writeln!(writer)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Format all transactions and return them as a String
+    pub fn format_transactions(&self) -> String {
+        let mut buffer = Vec::new();
+        self.write_transactions(&mut buffer).expect("writing to string");
+        String::from_utf8(buffer).unwrap()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use insta::assert_snapshot;
+
+    use crate::parser::JournalParser;
+
+    #[test]
+    fn test_parse_and_format_journal() {
+        let input = textwrap::dedent(
+            "
+            1999/11/01 * Achat
+                Actif:SSB      125 STK
+                Actif:SSB            -1672,42 $
+
+            1999/11/04 * Vente
+                Actif:SSB        -125 STK
+                Dépense:SSB:Commissions       55,07 $
+                Actif:SSB             1821,54 $
+            ",
+        );
+        let mut parser = JournalParser::new();
+        let journal = parser.parse_journal(&input).unwrap();
+
+        assert_snapshot!(journal.format_transactions(), @r#"
+            1999/11/01 * Achat
+                Actif:SSB                                125 STK
+                Actif:SSB                             -1672,42 $
+
+            1999/11/04 * Vente
+                Actif:SSB                               -125 STK
+                Dépense:SSB:Commissions                  55,07 $
+                Actif:SSB                              1821,54 $
+        "#);
     }
 }

@@ -4,6 +4,8 @@
 //! C++ ledger implementation, including precision control, commodity formatting,
 //! width/padding control, and columnar alignment.
 
+use std::sync::Arc;
+
 use num_bigint::BigInt;
 use num_rational::BigRational;
 use num_traits::{Signed, Zero};
@@ -11,7 +13,7 @@ use num_traits::{Signed, Zero};
 use crate::amount::{Amount, Precision};
 use crate::balance::Balance;
 use crate::commodity::CommodityRef;
-use crate::CommodityFlags;
+use crate::{Commodity, CommodityFlags};
 
 /// Formatting flags matching C++ AMOUNT_PRINT_* constants
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -73,12 +75,12 @@ impl FormatConfig {
         Default::default()
     }
 
-    pub fn from_amount(amount: &Amount) -> Self {
-        let config = Self::default().with_precision(amount.precision());
+    pub fn from_amount(amount: &Amount, commodity: &Option<&Arc<Commodity>>) -> Self {
+        let precision = amount.precision().max(commodity.map(|c| c.precision()).unwrap_or(0));
+        let config = Self::default().with_precision(precision);
 
-        let config = if let Some(commodity) = amount.commodity() {
+        let config = if let Some(commodity) = commodity.or(amount.commodity()) {
             config
-                .with_precision(amount.precision())
                 .with_thousands_sep(commodity.has_flags(CommodityFlags::STYLE_THOUSANDS))
                 .with_decimal_comma(commodity.has_flags(CommodityFlags::STYLE_DECIMAL_COMMA))
         } else {
@@ -462,7 +464,7 @@ mod tests {
         commodity.add_flags(CommodityFlags::STYLE_THOUSANDS);
         amount.set_commodity(Arc::new(commodity));
 
-        let config = FormatConfig::from_amount(&amount);
+        let config = FormatConfig::from_amount(&amount, &None);
 
         assert_eq!(format_amount(&amount, &config), "12,345");
     }
@@ -474,7 +476,7 @@ mod tests {
         commodity.add_flags(CommodityFlags::STYLE_THOUSANDS | CommodityFlags::STYLE_DECIMAL_COMMA);
         amount.set_commodity(Arc::new(commodity));
 
-        let config = FormatConfig::from_amount(&amount);
+        let config = FormatConfig::from_amount(&amount, &None);
 
         assert_eq!(format_amount(&amount, &config), "12.345");
     }

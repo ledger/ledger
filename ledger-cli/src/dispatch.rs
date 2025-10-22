@@ -11,11 +11,10 @@ use anyhow::{Context, Result};
 use clap::CommandFactory;
 use ledger_core::parser::JournalParser;
 use ledger_core::posting::Posting;
-use ledger_core::transaction::TransactionStatus;
 use ledger_math::Commodity;
 use regex::Regex;
 use std::collections::HashSet;
-use std::io::{self, Write};
+use std::io::{self, BufWriter, Write};
 use std::ops::Add;
 use std::sync::Arc;
 
@@ -379,39 +378,8 @@ impl Dispatcher {
             }
         };
 
-        let transactions = &journal.transactions;
-
-        for (i, transaction) in transactions.iter().enumerate() {
-            if i != 0 {
-                println!(); // Empty line between transactions
-            }
-
-            let cleared = match transaction.status {
-                TransactionStatus::Uncleared => "",
-                TransactionStatus::Cleared => " *",
-                TransactionStatus::Pending => " !",
-            };
-
-            println!("{}{cleared} {}", transaction.date.format("%Y/%m/%d"), &transaction.payee);
-
-            let postings = &transaction.postings;
-            // TODO: use --account-width?
-            let mut width = 36;
-            let mut any_amount_negated = false;
-            for posting in postings {
-                let account_name = posting.account.borrow_mut().fullname();
-                // use 4 spaces of padding ???
-                width = width.max(account_name.len() + 3);
-
-                if let Some(ref amount) = posting.amount {
-                    any_amount_negated |= amount.sign() == -1;
-                }
-            }
-
-            for posting in postings {
-                println!("{}", posting.format(any_amount_negated, width));
-            }
-        }
+        let mut writer = BufWriter::new(io::stdout());
+        journal.write_transactions(&mut writer)?;
 
         if !args.pattern.is_empty() && self.session.verbose_enabled {
             eprintln!("Account patterns: {:?}", args.pattern);

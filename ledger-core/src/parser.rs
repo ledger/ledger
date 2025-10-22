@@ -8,7 +8,7 @@
 //! - Include file resolution with cycle detection
 //! - Streaming parser for large files
 
-use ledger_math::{Annotation, CommodityFlags};
+use ledger_math::{commodity::Precision, Annotation, CommodityFlags};
 use nom::{
     branch::alt,
     bytes::complete::{is_not, take_until, take_while_m_n},
@@ -414,15 +414,63 @@ impl JournalParser {
 
             // Register commodity from the amount if present
             if let Some(amount) = &posting.amount {
-                if let Some(commodity_ref) = amount.commodity() {
-                    let commodity = commodity_ref.clone();
-                    let symbol = commodity.symbol().to_string();
-
-                    // Add commodity if it doesn't exist in the journal
-                    if !journal.commodities.contains_key(&symbol) {
-                        journal.commodities.insert(symbol.clone(), commodity.clone());
-                    }
+                self.register_commodity_for_amount(amount, journal);
+                if let Some(price) =
+                    amount.commodity().and_then(|c| c.annotation().price().as_ref())
+                {
+                    self.register_commodity_for_amount(price, journal);
                 }
+            }
+            if let Some(cost) = &posting.given_cost {
+                self.register_commodity_for_amount(cost, journal);
+                // NOTE: technically, the commodity of a cost could have a
+                // price, but I don't believe it ever does in practice
+            }
+        }
+    }
+
+    fn register_commodity_for_amount(&mut self, amount: &Amount, journal: &mut Journal) {
+        if let Some(commodity_ref) = amount.commodity() {
+            let new_commodity = commodity_ref.clone();
+            let symbol = new_commodity.symbol().to_string();
+
+            // Add commodity if it doesn't exist in the journal
+            if let Some(previous_commodity) = journal.commodities.get(&symbol) {
+                if previous_commodity.precision() < new_commodity.precision()
+                    || previous_commodity.flags() != new_commodity.flags()
+                    || previous_commodity.annotation() != new_commodity.annotation()
+                {
+                    // FIXME: this seems messy
+                    let mut new_commodity = Arc::unwrap_or_clone(new_commodity);
+
+                    if new_commodity.precision() < previous_commodity.precision() {
+                        new_commodity.set_precision(previous_commodity.precision());
+                    }
+                    new_commodity.add_flags(previous_commodity.flags());
+
+                    match (
+                        new_commodity.annotation().price(),
+                        previous_commodity.annotation().price(),
+                    ) {
+                        (Some(new_commodity_price), Some(previous_commodity_price))
+                            if new_commodity_price < previous_commodity_price =>
+                        {
+                            new_commodity
+                                .annotation_mut()
+                                .set_price(previous_commodity_price.clone());
+                        }
+                        (None, Some(previous_commodity_price)) => {
+                            new_commodity
+                                .annotation_mut()
+                                .set_price(previous_commodity_price.clone());
+                        }
+                        (Some(_), Some(_)) | (Some(_), None) | (None, None) => {}
+                    }
+
+                    journal.commodities.insert(symbol.clone(), Arc::new(new_commodity));
+                }
+            } else {
+                journal.commodities.insert(symbol.clone(), new_commodity.clone());
             }
         }
     }
@@ -1507,7 +1555,8 @@ fn simple_amount_field(input: &str) -> ParseResult<'_, Amount> {
             tuple((opt(terminated(char('-'), space0)), commodity_symbol, space0, quantity)),
             |(maybe_sign, commodity, maybe_sep, (mut quantity, maybe_flags))| {
                 let commodity = {
-                    let mut commodity = Commodity::new(commodity);
+                    let mut commodity =
+                        Commodity::with_precision(commodity, quantity.scale() as Precision);
                     if !maybe_sep.is_empty() {
                         commodity.add_flags(CommodityFlags::STYLE_SEPARATED);
                     }
@@ -1529,7 +1578,8 @@ fn simple_amount_field(input: &str) -> ParseResult<'_, Amount> {
             tuple((quantity, opt(pair(space0, commodity_symbol)))),
             |((quantity, maybe_flags), commodity)| {
                 let commodity = commodity.map(|(sep, commodity)| {
-                    let mut commodity = Commodity::new(commodity);
+                    let mut commodity =
+                        Commodity::with_precision(commodity, quantity.scale() as Precision);
                     commodity.add_flags(CommodityFlags::STYLE_SUFFIXED);
                     if !sep.is_empty() {
                         commodity.add_flags(CommodityFlags::STYLE_SEPARATED);
@@ -2252,7 +2302,7 @@ mod tests {
         insta::assert_debug_snapshot!(posting.amount.as_ref().unwrap(), @r#"
             AMOUNT(3) [prec:0, keep:false, comm:, raw:3]
         "#);
-        insta::assert_debug_snapshot!(posting.amount.expect("unwrapping amount").commodity().expect("unwrapping commodity").annotation().price(), @r#"
+        insta::assert_debug_snapshot!(posting.amount.unwrap().commodity().unwrap().annotation().price(), @r#"
             Some(
                 AMOUNT($2) [prec:0, keep:false, comm:$, raw:2],
             )
@@ -2263,14 +2313,14 @@ mod tests {
             )
         "#);
 
-        let (_, posting) = parse_posting("A  $1.20 {{£5.00}} @@6.00£ ").unwrap();
+        let (_, posting) = parse_posting("A  $1.20 {{£5.00}} @@6.00£").unwrap();
         // AMOUNT($1.20) [prec:2, keep:false, comm:$, raw:1.20]
         // amount, as given
         insta::assert_debug_snapshot!(posting.amount.as_ref().unwrap(), @r#"
             AMOUNT($1.20) [prec:2, keep:false, comm:$, raw:6/5]
         "#);
         // price should be 5/1.2
-        insta::assert_debug_snapshot!(posting.amount.expect("unwrapping amount").commodity().expect("unwrapping commodity").annotation().price(), @r#"
+        insta::assert_debug_snapshot!(posting.amount.unwrap().commodity().unwrap().annotation().price(), @r#"
             Some(
                 AMOUNT(£4.16666667) [prec:8, keep:false, comm:£, raw:25/6],
             )
@@ -2281,6 +2331,25 @@ mod tests {
                 AMOUNT(5.00000000£) [prec:8, keep:false, comm:£, raw:5],
             )
         "#);
+
+        let (_, posting) = parse_posting("Actif:SV  -0,0415 MFE @ 358,80 €").unwrap();
+        insta::assert_debug_snapshot!(posting.amount.as_ref().unwrap(), @r#"
+            AMOUNT(-0.0415 MFE) [prec:4, keep:false, comm:MFE, raw:-83/2000]
+        "#);
+        insta::assert_debug_snapshot!(posting.amount.as_ref().unwrap().commodity().unwrap().annotation().price(), @r#"
+            None
+        "#);
+        insta::assert_debug_snapshot!(posting.cost, @r#"
+            Some(
+                AMOUNT(358.80 €) [prec:2, keep:false, comm:€, raw:1794/5],
+            )
+        "#);
+        assert_eq!(
+            CommodityFlags::STYLE_SUFFIXED
+                | CommodityFlags::STYLE_SEPARATED
+                | CommodityFlags::STYLE_DECIMAL_COMMA,
+            posting.amount.unwrap().commodity().unwrap().flags()
+        );
     }
 
     #[test]
