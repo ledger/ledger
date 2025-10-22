@@ -15,7 +15,7 @@ use nom::{
     character::complete::{char, digit1, line_ending, space0, space1},
     combinator::{map, not, opt, recognize, success, value},
     error::{context, ParseError},
-    multi::{many0, many1},
+    multi::{many0, many1, many_m_n},
     sequence::{delimited, pair, preceded, terminated, tuple},
     AsChar, IResult,
 };
@@ -1268,11 +1268,15 @@ fn parse_posting(input: &str) -> ParseResult<'_, Posting> {
     map(
         tuple((
             account_name,
-            opt(preceded(space1, simple_amount_field)),
-            opt(preceded(space1, simple_comment_field)),
+            opt(preceded(pair(alt((tag("  "), tag("\t"))), space0), simple_amount_field)),
+            opt(pair(
+                delimited(space0, map(many_m_n(1, 2, char('@')), |r| r.len() == 2), space0),
+                simple_amount_field,
+            )),
+            opt(preceded(space0, simple_comment_field)),
             opt(line_ending),
         )),
-        |(account, amount, comment, _)| {
+        |(account, amount, cost, comment, _)| {
             // Create a dummy account reference for now
             // TODO: Proper account management
             use compact_str::CompactString;
@@ -1281,9 +1285,20 @@ fn parse_posting(input: &str) -> ParseResult<'_, Posting> {
             ));
             let mut posting = Posting::new(account_ref);
 
-            if let Some(amount) = amount {
-                posting.amount = Some(amount);
+            posting.amount = amount;
+            if let Some((calculate_cost, mut cost)) = cost {
+                if calculate_cost {
+                    cost.div_amount(posting.amount.as_ref().unwrap())
+                        .expect("dividing total cost by qty");
+                    posting.cost = Some(cost);
+                    posting.given_cost = None;
+                } else {
+                    posting.cost = Some(cost.clone());
+                    posting.given_cost = Some(cost);
+                }
             }
+
+            // TODO: confirm that amount.commodity != given_cost.commodity
 
             if let Some(comment) = comment {
                 use compact_str::CompactString;
@@ -2145,6 +2160,60 @@ mod tests {
                 | CommodityFlags::STYLE_DECIMAL_COMMA,
             amount.commodity().unwrap().flags()
         );
+    }
+
+    #[test]
+    fn test_parse_posting() {
+        let (_, posting) = parse_posting("A  $12").unwrap();
+        assert_eq!(posting.account_name(), "A".to_string());
+        insta::assert_debug_snapshot!(posting.amount.unwrap(), @r#"
+            AMOUNT($12) [prec:0, keep:false, comm:$, raw:12]
+        "#);
+
+        let (_, posting) = parse_posting("A\t$12").unwrap();
+        assert_eq!(posting.account_name(), "A".to_string());
+        insta::assert_debug_snapshot!(posting.amount.unwrap(), @r#"
+            AMOUNT($12) [prec:0, keep:false, comm:$, raw:12]
+        "#);
+
+        // not enough spaces between account and price
+        let (_, posting) = parse_posting("A $12").unwrap();
+        assert_eq!(posting.account_name(), "A $12".to_string());
+        assert!(posting.amount.is_none());
+
+        let (_, posting) = parse_posting("A  12 USD").unwrap();
+        assert_eq!(posting.account_name(), "A".to_string());
+        insta::assert_debug_snapshot!(posting.amount.unwrap(), @r#"
+            AMOUNT(12 USD) [prec:0, keep:false, comm:USD, raw:12]
+        "#);
+
+        let (_, posting) = parse_posting("A  3 @ $4").unwrap();
+        insta::assert_debug_snapshot!(posting.amount.unwrap(), @r#"
+            AMOUNT(3) [prec:0, keep:false, raw:3]
+        "#);
+        insta::assert_debug_snapshot!(posting.cost, @r#"
+            Some(
+                AMOUNT($4) [prec:0, keep:false, comm:$, raw:4],
+            )
+        "#);
+        assert_eq!(posting.cost, posting.given_cost);
+
+        let (_, posting) = parse_posting("A  6@@$12").unwrap();
+        insta::assert_debug_snapshot!(posting.amount.unwrap(), @r#"
+            AMOUNT(6) [prec:0, keep:false, raw:6]
+        "#);
+        insta::assert_debug_snapshot!(posting.cost, @r#"
+            Some(
+                AMOUNT($2.000000) [prec:6, keep:false, comm:$, raw:2],
+            )
+        "#);
+        insta::assert_debug_snapshot!(posting.given_cost, @r#"
+            None
+        "#);
+
+        // TODO: qty is required w/ cost or total cost
+        // TODO: qty and cost different commodities
+        // TODO: virtual cost
     }
 
     #[test]

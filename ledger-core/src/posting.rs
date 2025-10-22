@@ -1,6 +1,7 @@
 //! Posting/entry representation within transactions
 
 use chrono::{NaiveDate, NaiveDateTime};
+use compact_str::CompactString;
 use smallvec::SmallVec;
 use std::collections::HashMap;
 
@@ -62,7 +63,7 @@ pub struct Posting {
     /// Amount posted (can be None until finalization)
     pub amount: Option<Amount>,
     /// Optional amount expression (for calculated amounts) - optimized for short expressions
-    pub amount_expr: Option<AccountName>,
+    pub amount_expr: Option<CompactString>,
     /// Optional cost (for commodity conversions)
     pub cost: Option<Amount>,
     /// Original cost as given (before any calculations)
@@ -76,7 +77,7 @@ pub struct Posting {
     /// Optional payee override (different from transaction payee) - optimized memory usage
     pub payee: Option<PayeeName>,
     /// Optional note/comment - optimized memory usage
-    pub note: Option<AccountName>,
+    pub note: Option<CompactString>,
     /// Posting flags
     pub flags: PostingFlags,
     /// Posting status
