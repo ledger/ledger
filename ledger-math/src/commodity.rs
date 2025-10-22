@@ -70,12 +70,12 @@ impl Commodity {
         }
     }
 
-    /// Create a new commodity with symbol and precision
-    pub fn with_annotation(symbol: impl Into<String>, precision: Precision) -> Self {
+    /// Create a new commodity with symbol and annotation
+    pub fn with_annotation(symbol: impl Into<String>, annotation: Annotation) -> Self {
         Self {
             symbol: symbol.into(),
-            annotation: Annotation::default(),
-            precision,
+            annotation,
+            precision: 0,
             flags: CommodityFlags::STYLE_DEFAULTS,
         }
     }
@@ -100,9 +100,19 @@ impl Commodity {
         &self.annotation
     }
 
+    /// Get the mutable annotation of this commodity
+    pub fn annotation_mut(&mut self) -> &mut Annotation {
+        &mut self.annotation
+    }
+
     /// Check if this commodity has annotations
     pub fn has_annotation(&self) -> bool {
         !self.annotation.is_empty()
+    }
+
+    /// Set the annotation for this commodity
+    pub fn set_annotation(&mut self, annotation: Annotation) {
+        self.annotation = annotation;
     }
 
     /// Get the display precision of this commodity
@@ -313,6 +323,11 @@ impl Annotation {
     /// Get price annotation
     pub fn price(&self) -> &Option<Amount> {
         &self.price
+    }
+
+    /// Set price annotation
+    pub fn set_price(&mut self, price: Amount) {
+        self.price = Some(price);
     }
 
     /// Get date annotation

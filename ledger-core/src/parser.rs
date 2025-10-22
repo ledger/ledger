@@ -8,7 +8,7 @@
 //! - Include file resolution with cycle detection
 //! - Streaming parser for large files
 
-use ledger_math::CommodityFlags;
+use ledger_math::{Annotation, CommodityFlags};
 use nom::{
     branch::alt,
     bytes::complete::{is_not, take_until, take_while_m_n},
@@ -1268,7 +1268,18 @@ fn parse_posting(input: &str) -> ParseResult<'_, Posting> {
     map(
         tuple((
             account_name,
+            // amount
             opt(preceded(pair(alt((tag("  "), tag("\t"))), space0), simple_amount_field)),
+            // lot price
+            opt(delimited(
+                space0,
+                alt((
+                    map(delimited(char('{'), simple_amount_field, char('}')), |a| (false, a)),
+                    map(delimited(tag("{{"), simple_amount_field, tag("}}")), |a| (true, a)),
+                )),
+                space0,
+            )),
+            // cost
             opt(pair(
                 delimited(space0, map(many_m_n(1, 2, char('@')), |r| r.len() == 2), space0),
                 simple_amount_field,
@@ -1276,7 +1287,7 @@ fn parse_posting(input: &str) -> ParseResult<'_, Posting> {
             opt(preceded(space0, simple_comment_field)),
             opt(line_ending),
         )),
-        |(account, amount, cost, comment, _)| {
+        |(account, mut amount, lot_price, cost, comment, _)| {
             // Create a dummy account reference for now
             // TODO: Proper account management
             use compact_str::CompactString;
@@ -1285,7 +1296,29 @@ fn parse_posting(input: &str) -> ParseResult<'_, Posting> {
             ));
             let mut posting = Posting::new(account_ref);
 
+            if let Some(ref mut amount) = amount {
+                if let Some((calculate_price, mut price)) = lot_price {
+                    if calculate_price {
+                        price.div_amount(amount).expect("dividing total price by qty");
+                    }
+
+                    if amount.has_commodity() {
+                        let mut commodity =
+                            Arc::unwrap_or_clone(amount.commodity().unwrap().clone());
+                        let mut annotation = commodity.annotation().clone();
+                        annotation.set_price(price);
+                        commodity.set_annotation(annotation);
+                        amount.set_commodity(Arc::new(commodity.clone()));
+                    } else {
+                        let annotation = Annotation::with_price(price);
+                        let commodity = Commodity::with_annotation("", annotation);
+                        amount.set_commodity(Arc::new(commodity));
+                    }
+                }
+            }
+
             posting.amount = amount;
+
             if let Some((calculate_cost, mut cost)) = cost {
                 if calculate_cost {
                     cost.div_amount(posting.amount.as_ref().unwrap())
@@ -2212,8 +2245,42 @@ mod tests {
         "#);
 
         // TODO: qty is required w/ cost or total cost
-        // TODO: qty and cost different commodities
+        // TODO: qty and cost different commodities, but only if price not included
         // TODO: virtual cost
+
+        let (_, posting) = parse_posting("A  3 {$2} @ $4").unwrap();
+        insta::assert_debug_snapshot!(posting.amount.as_ref().unwrap(), @r#"
+            AMOUNT(3) [prec:0, keep:false, comm:, raw:3]
+        "#);
+        insta::assert_debug_snapshot!(posting.amount.expect("unwrapping amount").commodity().expect("unwrapping commodity").annotation().price(), @r#"
+            Some(
+                AMOUNT($2) [prec:0, keep:false, comm:$, raw:2],
+            )
+        "#);
+        insta::assert_debug_snapshot!(posting.cost, @r#"
+            Some(
+                AMOUNT($4) [prec:0, keep:false, comm:$, raw:4],
+            )
+        "#);
+
+        let (_, posting) = parse_posting("A  $1.20 {{£5.00}} @@6.00£ ").unwrap();
+        // AMOUNT($1.20) [prec:2, keep:false, comm:$, raw:1.20]
+        // amount, as given
+        insta::assert_debug_snapshot!(posting.amount.as_ref().unwrap(), @r#"
+            AMOUNT($1.20) [prec:2, keep:false, comm:$, raw:6/5]
+        "#);
+        // price should be 5/1.2
+        insta::assert_debug_snapshot!(posting.amount.expect("unwrapping amount").commodity().expect("unwrapping commodity").annotation().price(), @r#"
+            Some(
+                AMOUNT(£4.16666667) [prec:8, keep:false, comm:£, raw:25/6],
+            )
+        "#);
+        // cost should be 6/1.2
+        insta::assert_debug_snapshot!(posting.cost, @r#"
+            Some(
+                AMOUNT(5.00000000£) [prec:8, keep:false, comm:£, raw:5],
+            )
+        "#);
     }
 
     #[test]
