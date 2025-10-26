@@ -1,19 +1,80 @@
 # Ledger NEWS
 
-## 3.4.x (unreleased)
+## 3.4.1
 
-- Update required versions of various dependencies
-  (CMake 3.16.2, Boost 1.72.0, Gmp 6.1.2, Mpfr 4.0.2, Python 3.9, doxygen 1.9.5)
+- Fix version number in binary
 
-- docs: Enable stand-alone building
+## 3.4.0
 
-- Include contrib files in distribution
+### Critical Bug Fixes
 
-- Fix related reports when using bucket transactions (ledger/ledger#2220)
+- Fix segfault in metadata validation (issue #1800)
 
-- Add support to build ledger with readline
+- Fix divide by zero (bugs #777 and #2207)
 
-- Add commodity value type in value expressions to resolve aliases
+- Fix use-after-free with regex_match()
+
+- Fix bucket transactions ignored with reg --related (bug #2220)
+
+- Restore expr context after calc (bugs #2330 and #2343)
+
+### Date and Year Handling
+
+- Fix leap year dates with apply year directive (bug #2468)
+
+- Fix xact command to properly respect last year directive (bug #2413)
+
+- Fix timelog balance assertions with value conversion
+
+### New Features
+
+- Add support for hash chaining with --hashes option for transaction integrity verification
+
+- Add commodity swaps feature over a base commodity
+
+- Add --align-intervals option for reporting
+
+- Add --lisp-date-format option for lisp output (bug #1206)
+
+- Add yday shortcut for "yesterday"
+
+### File Handling
+
+- Skip files with invalid UTF-8 names in include directive (bug #2421)
+
+- Allow automatic transactions to create accounts with --pedantic (bug #2417)
+
+- Make pricedb output deterministic (bug #1783)
+
+### Python Support
+
+- Update required Python version to 3.10 (minimum 3.9)
+
+- Fix Python 3.12 deprecation warnings
+
+- Add Python bindings for commodity value_t and roundto function
+
+- Remove Python 2 support from tests
+
+### Build System Updates
+
+- Update to C++17 standard
+
+- Update to Boost 1.86.0 (minimum 1.72.0)
+
+- Update required CMake to 3.16.2
+
+- Add support for Ubuntu 24.04 Noble
+
+- Add build support for readline
+
+### Display Improvements
+
+- Display parent accounts with one child if they contain posts
+
+- Align amounts even when account names are long
+
+- Fix percentile balance report of time commodity
 
 ## 3.3.2 (2023-03-30)
 
