@@ -3,6 +3,10 @@
 
   nixConfig.bash-prompt = "ledger$ ";
 
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  };
+
   outputs = { self, nixpkgs }: let
     usePython = true;
     gpgmeSupport = true;
@@ -18,7 +22,7 @@
       in with pkgs; {
       ledger = stdenv.mkDerivation {
         pname = "ledger";
-        version = "3.3.2-${self.shortRev or "dirty"}";
+        version = "3.4.1-${self.shortRev or "dirty"}";
 
         src = self;
 

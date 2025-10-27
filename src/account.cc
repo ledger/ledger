@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -186,7 +186,7 @@ bool account_t::remove_post(post_t * post)
 {
   // It's possible that 'post' wasn't yet in this account, but try to
   // remove it anyway.  This can happen if there is an error during
-  // parsing, when the posting knows what it's account is, but
+  // parsing, when the posting knows what its account is, but
   // xact_t::finalize has not yet added that posting to the account.
   posts.remove(post);
   post->account = NULL;

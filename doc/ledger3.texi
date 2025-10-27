@@ -113,7 +113,7 @@
 
 @copying
 
-Copyright @copyright{} 2003--2023, John Wiegley.  All rights reserved.
+Copyright @copyright{} 2003--2025, John Wiegley.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -1778,7 +1778,7 @@ commodity name must be enclosed in double quotes @samp{"}:
 
 Please note that, for querying quoted commodities, the quotes need to be escaped, as follows:
 
-@smallexample @c command:15453B3
+@smallexample @c command:9FB8B7E
 $ ledger -f d reg -l 'commodity == "\"Arcancia Équilibre 454\""'
 @end smallexample
 
@@ -2809,6 +2809,7 @@ doing it.
 * Commodity prices::
 * Prices versus costs::
 * Fixated prices and costs::
+* Commodity swaps over common base currency::
 * Lot dates::
 * Lot notes::
 * Lot value expressions::
@@ -3043,6 +3044,7 @@ The are two forms of metadata: plain tags, and tag/value pairs.
 * Metadata tags::
 * Metadata values::
 * Typed metadata::
+* Payee metadata::
 @end menu
 
 @node Metadata tags, Metadata values, Metadata, Metadata
@@ -3081,7 +3083,7 @@ the colon, and cannot appear in the Key:
       ; MyTag: This is just a bogus value for MyTag
 @end smallexample
 
-@node Typed metadata,  , Metadata values, Metadata
+@node Typed metadata, Payee metadata, Metadata values, Metadata
 @subsection Typed metadata
 
 If a metadata tag ends in ::, its value will be parsed as a value
@@ -3117,7 +3119,7 @@ date.
 * Payee metadata::
 @end menu
 
-@node Payee metadata,  , Typed metadata, Metadata
+@node Payee metadata,  ,  , Typed metadata
 @subsection Payee metadata
 @cindex Payee metadata
 @findex register
@@ -3621,7 +3623,7 @@ example in the print report.  Functionally, however, there is no
 difference, and neither the register nor the balance report are
 sensitive to this difference.
 
-@node Fixated prices and costs, Lot dates, Prices versus costs, Transactions
+@node Fixated prices and costs, Commodity swaps over common base currency, Prices versus costs, Transactions
 @section Fixated prices and costs
 
 If you bought a stock last year, and ask for its value today, Ledger
@@ -3655,7 +3657,61 @@ fixated prices by way of the cost:
 This is the same as the previous transaction, with the same caveats
 found in @ref{Prices versus costs}.
 
-@node Lot dates, Lot notes, Fixated prices and costs, Transactions
+@node Commodity swaps over common base currency, Lot dates, Fixated prices and costs, Transactions
+@section Commodity swaps over common base currency
+
+When exchanging one commodity for another, Ledger allows tracking gain
+or loss through a common base currency. This is useful for situations
+where you trade between two non-base commodities that both have known
+prices in terms of a third currency.
+
+For example, if you exchange Bitcoin (BTC) for Ethereum (ETH), and both
+have known dollar values, Ledger can calculate and track the gain or
+loss in dollar terms automatically.
+
+To use this feature, you need to specify price annotations for both the
+source commodity and the destination commodity:
+
+@smallexample
+2025-04-12 Coinbase
+    Assets:Coinbase       -100 BTC @{$100@} @ 2 ETH @{$40@} [2025-04-12]
+    Assets:Coinbase        200 ETH @{$40@} [2025-04-12]
+    Expenses:Capital Loss  $2,000.00
+@end smallexample
+
+In this example:
+
+@itemize
+@item
+You're selling 100 BTC that originally cost $100 each (total basis:
+$10,000)
+@item
+You're receiving 200 ETH worth $40 each (total value: $8,000)
+@item
+The transaction includes an automatically calculated capital loss of
+$2,000 (the difference between the basis of BTC and the value of ETH in
+the common currency)
+@end itemize
+
+The price annotation in braces @{$40@} on the ETH receiving side
+indicates the per-unit price of the ETH in the common base
+currency. Ledger will use this to calculate the gain or loss
+automatically.
+
+You can also sell the second commodity later and track its gain/loss:
+
+@smallexample
+2025-04-13 Coinbase
+    Assets:Coinbase       -200 ETH @{$40@} [2025-04-12] @ $50
+    Assets:Coinbase          $10,000
+    Income:Capital Gain   $-2,000.00
+@end smallexample
+
+This approach provides full end-to-end tracking of your investments
+across different commodities while maintaining accurate gain/loss
+records in a common base currency.
+
+@node Lot dates, Lot notes, Commodity swaps over common base currency, Transactions
 @section Lot dates
 @findex --lot-dates
 
@@ -4121,7 +4177,7 @@ complex, but if you have further interest, please consult the Web.
 Ledger makes this otherwise difficult law very easy.  Just set up an
 automated posting at the top of your ledger file:
 
-@smallexample @c input:C371854
+@smallexample @c input:EFFC310
 ; This automated transaction will compute Huqúqu'lláh based on this
 ; journal's postings.  Any accounts that match will affect the
 ; Liabilities:Huqúqu'lláh account by 19% of the value of that posting.
@@ -4137,7 +4193,7 @@ account.  So, if $1000 is earned from @samp{Income:Salary}, $190 is
 added to @samp{Liabilities:Huqúqu'lláh}; if $1000 is spent on Rent,
 $190 is subtracted.
 
-@smallexample @c input:C371854
+@smallexample @c input:EFFC310
 2003/01/01 (99) Salary
   Income:Salary  -$1000
   Assets:Checking
@@ -4161,11 +4217,11 @@ When ready to pay, just write a check to cover the amount shown in
 That's it.  To see how much Huqúq is currently owed based on your
 ledger transactions, use:
 
-@smallexample @c command:C371854
+@smallexample @c command:EFFC310
 $ ledger balance Liabilities:Huqúq
 @end smallexample
 
-@smallexample @c output:C371854
+@smallexample @c output:EFFC310
                 $-95  Liabilities:Huqúqu'lláh
 @end smallexample
 
@@ -4210,7 +4266,7 @@ may be excluded from reports by using @option{--real}.
 Credit cards sometimes provide a cashback percentage of purchases. This
 can be setup with the following:
 
-@smallexample @c input:7D1589F
+@smallexample @c input:B03E97E
 ; This automated transaction will add to "Assets:Credit Card Cashback"
 ; the amount of the transaction multiplied by the "cashback" tag.
 
@@ -4221,7 +4277,7 @@ can be setup with the following:
 
 To add a transaction that gives 2% cashback:
 
-@smallexample @c input:7D1589F
+@smallexample @c input:B03E97E
 2023/06/06 McDonalds
   ; cashback:: 2%
   Expenses:Food:Restaurants  $23.98
@@ -4229,13 +4285,13 @@ To add a transaction that gives 2% cashback:
 @end smallexample
 
 Now when a report is generated, e.g.
-@smallexample @c command:7D1589F
+@smallexample @c command:B03E97E
 $ ledger -f cashback.dat reg
 @end smallexample
 
 The cashback postings appear with the transaction.
 
-@smallexample @c output:7D1589F
+@smallexample @c output:B03E97E
 23-Jun-06 McDonalds             Expen:Food:Restaurants       $23.98       $23.98
                                 Liabilitie:Credit Card      $-23.98            0
                                 ..Credit Card Cashback        $0.48        $0.48
@@ -4936,6 +4992,10 @@ directly by Emacs Lisp.  The format of the @code{sexp} is:
   (ACCOUNT AMOUNT)...)  ; list of postings
  ...)                   ; list of transactions
 @end smallexample
+
+By default, the @var{DATE} field uses the Emacs Lisp time format (a list
+of integers representing the time).  You can control the date format
+using the @option{--lisp-date-format} option (@pxref{Report Options}).
 
 @noindent
 @command{emacs} can also be used as a synonym for @command{lisp}.
@@ -6850,6 +6910,31 @@ Change the sign of all reported values.
 Only transactions that satisfy @var{EXPR} are considered in
 calculations and for display.
 
+@item --lisp-date-format @var{FORMAT}
+@findex lisp-date-format
+Specify the format for dates in @command{lisp} output.  By default,
+dates are formatted using the Emacs Lisp time format (a list of integers).
+This option allows you to use different formats:
+
+@itemize @bullet
+@item
+@samp{seconds} or @samp{epoch} - Output dates as Unix timestamps (seconds
+since 1970-01-01)
+@item
+Any strftime format string - Use custom date formatting (e.g.,
+@samp{%Y-%m-%d} for ISO format)
+@end itemize
+
+Examples:
+
+@smallexample @c command:71F9578
+$ ledger -f sample.dat --lisp-date-format seconds lisp
+@end smallexample
+
+@smallexample @c command:A4F8A94
+$ ledger -f sample.dat --lisp-date-format '%Y-%m-%d' lisp
+@end smallexample
+
 @item --lot-dates
 Report the date on which each commodity in a balance report was
 purchased.
@@ -7054,8 +7139,8 @@ Used as part of development testing.
 Sort the @command{register} report based on the value expression given
 to sort.
 
-@item --sort-all @var{FIXME}
-@value{FIXME:UNDOCUMENTED}
+@item --sort-all
+Sort all accounts and commodities.
 
 @item --sort-xacts @var{VEXPR}
 @itemx --period-sort @var{VEXPR}
@@ -7271,7 +7356,7 @@ In the balance report, it shows all the accounts affected by
 transactions having a related posting.  For example, if a file had
 this transaction:
 
-@smallexample @c input:94C5675
+@smallexample @c input:1242E1E
 2004/03/20 Safeway
     Expenses:Food                       $65.00
     Expenses:Cash                       $20.00
@@ -7280,14 +7365,14 @@ this transaction:
 
 And the register command was:
 
-@smallexample @c command:94C5675
-$ ledger -f example.dat -r register food
+@smallexample @c command:1242E1E
+$ ledger -f safeway.dat -r register food
 @end smallexample
 
 The following would be printed, showing the postings related to the
 posting that matched:
 
-@smallexample @c output:94C5675
+@smallexample @c output:1242E1E
 04-Mar-20 Safeway               Expenses:Cash                $20.00       $20.00
                                 Assets:Checking             $-85.00      $-65.00
 @end smallexample
@@ -7986,6 +8071,93 @@ last oct
 weekly last august
 @end smallexample
 
+@subsection Date Expressions
+
+Date expressions can be used in various contexts, such as with the @option{--display} (@option{-d}) option to filter transactions by date, or within square brackets to specify relative dates. Date expressions support a rich set of keywords for specifying both absolute and relative dates.
+
+@subsubsection Basic Date Keywords
+
+The following keywords can be used to specify common dates:
+
+@table @code
+@item today
+The current date.
+
+@item tomorrow
+The day after today.
+
+@item yesterday
+@itemx yday
+The day before today (both @code{yesterday} and @code{yday} can be used).
+@end table
+
+@subsubsection Relative Date Expressions
+
+You can specify dates relative to the current date using various time units:
+
+@table @code
+@item N days ago
+A specific number of days before today (e.g., @code{3 days ago}).
+
+@item N days hence
+A specific number of days after today (e.g., @code{60 days hence}).
+
+@item N weeks ago/hence
+A specific number of weeks before or after today.
+
+@item N months ago/hence
+A specific number of months before or after today.
+
+@item N quarters ago/hence
+A specific number of quarters before or after today.
+
+@item N years ago/hence
+A specific number of years before or after today.
+@end table
+
+@subsubsection Period-based Expressions
+
+You can refer to time periods using @code{this}, @code{last}, and @code{next}:
+
+@table @code
+@item this day/week/month/quarter/year
+The current day, week, month, quarter, or year.
+
+@item last day/week/month/quarter/year
+The previous day, week, month, quarter, or year.
+
+@item next day/week/month/quarter/year
+The upcoming day, week, month, quarter, or year.
+@end table
+
+@subsubsection Using Date Expressions
+
+Date expressions are typically used within square brackets @code{[...]} in filtering expressions. Here are some examples:
+
+@smallexample
+# Show transactions from this month
+$ ledger -d "d>[this month]" register checking
+
+# Show transactions from the last 60 days
+$ ledger -d "d>[60 days ago]" register
+
+# Show transactions until 30 days from now
+$ ledger -d "d<[30 days hence]" register
+
+# Show transactions from last quarter
+$ ledger -d "d>=[last quarter] and d<[this quarter]" register
+@end smallexample
+
+Date expressions can also be used with the @option{--begin} and @option{--end} options:
+
+@smallexample
+# Transactions from 90 days ago until today
+$ ledger --begin "[90 days ago]" --end "[today]" register
+
+# Forecast 6 months into the future
+$ ledger --forecast "d<[6 months hence]" register
+@end smallexample
+
 @node Budgeting and Forecasting, Time Keeping, Command-Line Syntax, Top
 @chapter Budgeting and Forecasting
 
@@ -8401,7 +8573,10 @@ A regular expression that matches a transaction's tags against its values.
 
 @item expr date =~ /REGEX/
 Useful for specifying a date in plain terms.  For example, you could say
-@samp{expr date =~ /2014/}.
+@samp{expr date =~ /2014/}.  You can also use date expressions within square
+brackets for more sophisticated date filtering.  For example,
+@samp{date > [last month]} or @samp{date < [60 days hence]}.  See
+@ref{Period Expressions} for a complete list of available date keywords.
 
 @item expr comment =~ /REGEX/
 A regular expression that matches against a posting's comment
@@ -8546,6 +8721,10 @@ $ ledger -f expr.dat --format "%(ansify_if(account, blue, options.color))\n" reg
 @end smallexample
 @end defun
 
+@defun averaged_lots
+Return lots with averaged prices.
+@end defun
+
 @defun ceiling value
 Return the next integer of @var{value} toward @math{+}infinity.
 @smallexample @c command:FF9C18C,with_input:3406FC1
@@ -8555,6 +8734,14 @@ $ ledger -f expr.dat --format "%(account) %(ceiling(amount))\n" reg
 Assets:Cash ¤ -123,00
 Expenses:Office Supplies ¤ 124,00
 @end smallexample
+@end defun
+
+@defun clear_commodity
+Clear commodity pricing information.
+@end defun
+
+@defun commodity_price commodity
+Return the price of the given commodity.
 @end defun
 
 @defvar code
@@ -8602,11 +8789,19 @@ or the depth of the account
 @value{FIXME:UNDOCUMENTED}
 @end defvar
 
+@defun display_amount amount
+Format amount for display.
+@end defun
+
 @c FIXME
 @defvar display_total
 @defvarx T
 @value{FIXME:UNDOCUMENTED}
 @end defvar
+
+@defun display_total total
+Format total for display.
+@end defun
 
 @defun floor value
 Return the next integer of @var{value} toward @math{-}infinity.
@@ -8670,6 +8865,18 @@ $ ledger -f expr.dat --format "»%(justify(account, 30, 30, true))«\n" reg
 @end smallexample
 @end defun
 
+@defun lot_date posting
+Return the lot date of a posting.
+@end defun
+
+@defun lot_price posting
+Return the lot price of a posting.
+@end defun
+
+@defun lot_tag posting
+Return the lot tag of a posting.
+@end defun
+
 @defun market value datetime
 @defunx P
 Return the price of @var{value} at @var{datetime}.  Note that @var{datetime}
@@ -8678,7 +8885,7 @@ e.g. @code{[2012/03/23]}.
 @end defun
 
 @defun nail_down
-@value{FIXME:UNDOCUMENTED}
+Fix the precision of an amount.
 @end defun
 
 @defvar now
@@ -8735,11 +8942,11 @@ preceding it with another double quote, as prescribed by RFC 4180.
 @end defun
 
 @defun round
-@value{FIXME:UNDOCUMENTED}
+Round an amount to standard precision.
 @end defun
 
 @defun rounded
-@value{FIXME:UNDOCUMENTED}
+Return rounded version of amount.
 @end defun
 
 @defun roundto value n
@@ -8756,6 +8963,10 @@ Expenses:Office Supplies ¤ 123,40
 @defun scrub value
 Clean @var{value} using various transformations such as @code{round}, stripping
 value annotations, and more.
+@end defun
+
+@defun set_commodity_price commodity price
+Set the price for a commodity.
 @end defun
 
 @defun should_bold
@@ -8823,7 +9034,7 @@ $ ledger -f expr.dat --now 2015/01/01 --format "%(today)\n" reg assets
 @end smallexample
 
 @defun top_amount
-@value{FIXME:UNDOCUMENTED}
+Return the top-level amount.
 @end defun
 
 @defun total_expr
@@ -8847,11 +9058,11 @@ Truncate @var{string} to @var{total_len} ensuring that each account is at least
 @end defun
 
 @defun unround
-@value{FIXME:UNDOCUMENTED}
+Remove rounding from an amount.
 @end defun
 
 @defun unrounded
-@value{FIXME:UNDOCUMENTED}
+Return unrounded version of amount.
 @end defun
 
 @defun value_date
@@ -9245,7 +9456,7 @@ Convert a string to date value.
 * Date and Time Format Codes::
 @end menu
 
-@node Date and Time Format Codes, Text Formatting, Date Functions, Formatting Functions and Codes
+@node Date and Time Format Codes, Text Formatting, Date Functions, Date Functions
 @subsection Date and Time Format Codes
 
 Date and time format are specified as strings of single letter codes

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -299,6 +299,7 @@ public:
     HANDLER(inject_).report(out);
     HANDLER(invert).report(out);
     HANDLER(limit_).report(out);
+    HANDLER(lisp_date_format_).report(out);
     HANDLER(lot_dates).report(out);
     HANDLER(lot_prices).report(out);
     HANDLER(average_lot_prices).report(out);
@@ -548,6 +549,7 @@ public:
   OPTION(report_t, date_);
   OPTION(report_t, date_format_);
   OPTION(report_t, datetime_format_);
+  OPTION(report_t, lisp_date_format_);
 
   OPTION_(report_t, dc, DO() {
       OTHER(amount_).expr.set_base_expr

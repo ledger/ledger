@@ -31,14 +31,14 @@ jobs:
             cmake_args: -DUSE_PYTHON=ON -DUSE_GPGME=ON
           }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         name: Check out repository code
 
       - if: runner.os == 'Linux'
         name: Linux dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install libxml2-utils libgmp-dev libmpfr-dev libedit-dev libboost-dev libboost-test-dev libboost-regex-dev libboost-python-dev libboost-system-dev libboost-date-time-dev libboost-iostreams-dev libboost-filesystem-dev libboost-serialization-dev libgpgmepp-dev libgpg-error-dev libgpgme-dev
+          sudo ./acprep dependencies --python
 
       - if: runner.os == 'macOS'
         name: Mac Dependencies
@@ -53,7 +53,8 @@ jobs:
           brew list -1 | grep python | while read formula; do brew unlink $formula; brew link --overwrite $formula; done
 
           brew update
-          brew install --force --overwrite boost boost-python3 gmp mpfr icu4c gpgme
+          brew uninstall cmake
+          ./acprep dependencies --python
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -177,7 +177,7 @@ namespace {
     void apply_account_directive(char * line);
     void apply_tag_directive(char * line);
     void apply_rate_directive(char * line);
-    void apply_year_directive(char * line);
+    void apply_year_directive(char * line, bool use_apply_stack = false);
     void end_apply_directive(char * line);
 
     xact_t * xact_directive(char * line, std::streamsize len,
@@ -255,7 +255,7 @@ void instance_t::parse()
   bool error_flag = false;
   xact_t * previous_xact = NULL;
 
-  while (in.good() && ! in.eof()) {
+  while (in.good() && ! in.eof() && in.peek() != '^' && in.good()) {
     try {
       if (xact_t * xact = read_next_directive(error_flag, previous_xact)) {
         previous_xact = xact;
@@ -793,6 +793,15 @@ void instance_t::include_directive(char * line)
       if (is_regular_file(*iter))
         {
         string base = (*iter).filename().string();
+        // Skip files with invalid UTF-8 in their names to avoid encoding errors
+        if (!utf8::is_valid(base.begin(), base.end())) {
+          DEBUG("textual.include", "Skipping file with invalid UTF-8 name: " << base);
+          continue;
+        }
+        if (context.pathname == *iter) {
+          DEBUG("textual.include", "Avoiding recursive include of: " << *iter);
+          continue;
+        }
         if (glob.match(base)) {
           journal_t *  journal  = context.journal;
           account_t *  master   = top_account();
@@ -809,6 +818,10 @@ void instance_t::include_directive(char * line)
           context_stack.get_current().journal = journal;
           context_stack.get_current().master  = master;
           context_stack.get_current().scope   = scope;
+
+          parse_context_t * save_current_context = journal->current_context;
+          journal->current_context = &context_stack.get_current();
+
           try {
             instance_t instance(context_stack, context_stack.get_current(),
                                 this, no_assertions, hash_type);
@@ -820,6 +833,7 @@ void instance_t::include_directive(char * line)
             count    += context_stack.get_current().count;
             sequence += context_stack.get_current().sequence;
 
+            journal->current_context = save_current_context;
             context_stack.pop();
             throw;
           }
@@ -828,6 +842,7 @@ void instance_t::include_directive(char * line)
           count    += context_stack.get_current().count;
           sequence += context_stack.get_current().sequence;
 
+          journal->current_context = save_current_context;
           context_stack.pop();
 
           files_found = true;
@@ -855,17 +870,15 @@ void instance_t::apply_directive(char * line)
   else if (keyword == "fixed" || keyword == "rate")
     apply_rate_directive(b);
   else if (keyword == "year")
-    apply_year_directive(b);
+    apply_year_directive(b, true);  // "apply year" uses apply_stack
 }
 
 void instance_t::apply_account_directive(char * line)
 {
   if (account_t * acct = top_account()->find_account(line))
     apply_stack.push_front(application_t("account", acct));
-#if !NO_ASSERTS
   else
     assert("Failed to create account" == NULL);
-#endif
 }
 
 void instance_t::apply_tag_directive(char * line)
@@ -891,16 +904,27 @@ void instance_t::apply_rate_directive(char * line)
   }
 }
 
-void instance_t::apply_year_directive(char * line)
+void instance_t::apply_year_directive(char * line, bool use_apply_stack)
 {
   try {
     unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));
-    apply_stack.push_front(application_t("year", epoch));
+    if (use_apply_stack) {
+      // Used for "apply year" which needs "end apply"
+      apply_stack.push_front(application_t("year", epoch));
+    }
+    // Otherwise for plain "year" directive, don't use apply_stack - it's a permanent change
     DEBUG("times.epoch", "Setting current year to " << year);
-    // This must be set to the last day of the year, otherwise partial
-    // dates like "11/01" will refer to last year's November, not the
-    // current year.
-    epoch = datetime_t(date_t(year, 12, 31));
+
+    // Track the year directive separately
+    year_directive_year = year;
+
+    // Only set epoch if it's not already set (e.g., by --now)
+    if (!epoch) {
+      // This must be set to the last day of the year, otherwise partial
+      // dates like "11/01" will refer to last year's November, not the
+      // current year.
+      epoch = datetime_t(date_t(year, 12, 31));
+    }
   } catch(bad_lexical_cast &) {
     throw_(parse_error, _f("Argument '%1%' not a valid year") % skip_ws(line));
   }
@@ -1732,13 +1756,16 @@ post_t * instance_t::parse_post(char *          line,
       );
       expr_t filter_expr(filter_op, &filter_scope);
       account_total =
-        post->account->amount(!post->has_flags(POST_VIRTUAL), filter_expr)
-          .strip_annotations(keep_details_t());
+        post->account->amount(
+          !post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG),
+          filter_expr
+        ).strip_annotations(keep_details_t());
 
       // Subtract amounts from previous posts to this account in the xact.
       for (post_t* p : xact->posts) {
-        if (p->account == post->account &&
-          (! p->has_flags(POST_VIRTUAL) || post->has_flags(POST_VIRTUAL))
+        if(p->account == post->account &&
+          (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG) ||
+            post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))
         ) {
           value_t tmp;
           p->add_to_value(tmp, filter_expr);

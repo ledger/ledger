@@ -16,7 +16,6 @@ set(LEDGER_SOURCES
   chain.cc
   filters.cc
   report.cc
-  views.cc
   select.cc
   session.cc
   option.cc
@@ -54,12 +53,12 @@ set(LEDGER_SOURCES
   wcwidth.cc
   sha512.cc)
 
-if (HAVE_GPGME)
+if(HAVE_GPGME)
   list(APPEND LEDGER_SOURCES
     gpgme.cc)
 endif()
 
-if (HAVE_BOOST_PYTHON)
+if(HAVE_BOOST_PYTHON)
   list(APPEND LEDGER_SOURCES
     py_account.cc
     py_amount.cc
@@ -135,21 +134,20 @@ set(LEDGER_INCLUDES
   unistring.h
   utils.h
   value.h
-  views.h
   xact.h
   ${PROJECT_BINARY_DIR}/ledger.hh
   ${PROJECT_BINARY_DIR}/system.hh)
 
 # Windows provides no strptime(), so supply our own.
-if (WIN32 OR CYGWIN)
+if(WIN32 OR CYGWIN)
   list(APPEND LEDGER_INCLUDES
     strptime.h)
   list(APPEND LEDGER_SOURCES
     strptime.cc)
 endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(
       # -Weverything
       # -Wno-disabled-macro-expansion
@@ -167,8 +165,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       -Wno-unused-local-typedef
       --system-header-prefix=include/boost/
       --system-header-prefix=boost/)
-  elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(GXX_WARNING_FLAGS
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_compile_options(
       -pedantic
       -Wall
       -Winvalid-pch
@@ -186,14 +184,12 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
       -Wno-old-style-cast
       -Wno-deprecated
       -Wno-strict-aliasing)
-
-    add_compile_options(${GXX_WARNING_FLAGS})
   endif()
 endif()
 
 include(GNUInstallDirs)
 
-if (BUILD_LIBRARY)
+if(BUILD_LIBRARY)
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
   add_library(libledger SHARED ${LEDGER_SOURCES})
   add_ledger_library_dependencies(libledger)
@@ -207,11 +203,11 @@ if (BUILD_LIBRARY)
 
   add_executable(ledger ${LEDGER_CLI_SOURCES})
   target_link_libraries(ledger libledger)
-  if (HAVE_GPGME)
+  if(HAVE_GPGME)
     target_link_libraries(ledger Gpgmepp)
   endif()
 
-  if (HAVE_BOOST_PYTHON)
+  if(HAVE_BOOST_PYTHON)
     target_link_libraries(ledger ${Python_LIBRARIES})
   endif()
 
@@ -223,8 +219,8 @@ else()
   add_ledger_library_dependencies(ledger)
 endif()
 
-if (PRECOMPILE_SYSTEM_HH)
-  if (BUILD_LIBRARY)
+if(PRECOMPILE_SYSTEM_HH)
+  if(BUILD_LIBRARY)
     target_precompile_headers(libledger PRIVATE ${PROJECT_BINARY_DIR}/system.hh)
     target_precompile_headers(ledger REUSE_FROM libledger)
   else()
@@ -232,9 +228,9 @@ if (PRECOMPILE_SYSTEM_HH)
   endif()
 endif()
 
-if (USE_PYTHON)
-  if (Python_SITEARCH)
-    if (WIN32 AND NOT CYGWIN)
+if(USE_PYTHON)
+  if(Python_SITEARCH)
+    if(WIN32 AND NOT CYGWIN)
       set(_ledger_python_module_name "ledger.pyd")
     elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
       set(_ledger_python_module_name "ledger.so")

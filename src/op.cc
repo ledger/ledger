@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -50,9 +50,14 @@ void intrusive_ptr_release(const expr_t::op_t * op)
 
 value_t split_cons_expr(expr_t::ptr_op_t op)
 {
+  if (!op) {
+    return value_t();
+  }
   if (op->kind == expr_t::op_t::O_CONS) {
     value_t seq;
-    seq.push_back(expr_value(op->left()));
+    if (op->left()) {
+      seq.push_back(expr_value(op->left()));
+    }
 
     expr_t::ptr_op_t next = op->right();
     while (next) {
@@ -64,7 +69,9 @@ value_t split_cons_expr(expr_t::ptr_op_t op)
         value_op = next;
         next     = NULL;
       }
-      seq.push_back(expr_value(value_op));
+      if (value_op) {
+        seq.push_back(expr_value(value_op));
+      }
     }
     return seq;
   } else {

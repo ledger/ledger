@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -64,16 +64,11 @@ class expr_t::parser_t : public noncopyable
     return lookahead;
   }
 
-#if !NO_ASSERTS
   void push_token(const token_t& tok) const {
     assert(&tok == &lookahead);
     use_lookahead = true;
   }
-#else
-  void push_token(const token_t&) const {
-    use_lookahead = true;
-  }
-#endif // !NO_ASSERTS
+
   void push_token() const {
     use_lookahead = true;
   }

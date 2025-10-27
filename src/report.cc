@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -491,13 +491,11 @@ void report_t::commodities_report(post_handler_ptr handler)
     pass_down_posts<posts_commodities_iterator>(handler, *walker);
   }
   catch (...) {
-#if VERIFY_ON
     IF_VERIFY() {
       // If --verify was used, clean up the posts_commodities_iterator.
       // Otherwise, just leak like a sieve.
       checked_delete(walker);
     }
-#endif
     throw;
   }
 
@@ -1235,6 +1233,7 @@ option_t<report_t> * report_t::lookup_option(const char * p)
     break;
   case 'l':
     OPT_(limit_);
+    else OPT(lisp_date_format_);
     else OPT(lot_dates);
     else OPT(lot_prices);
     else OPT_ALT(lot_notes, lot_tags);
@@ -1702,7 +1701,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         return WRAP_FUNCTOR(xact_command);
       }
       else if (is_eq(p, "emacs")) {
-        return POSTS_REPORTER(new format_emacs_posts(output_stream));
+        return POSTS_REPORTER(new format_emacs_posts(*this, output_stream));
       }
       else if (is_eq(p, "echo")) {
         return MAKE_FUNCTOR(report_t::echo_command);
@@ -1711,7 +1710,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
 
     case 'l':
       if (is_eq(p, "lisp"))
-        return POSTS_REPORTER(new format_emacs_posts(output_stream));
+        return POSTS_REPORTER(new format_emacs_posts(*this, output_stream));
       break;
 
     case 'p':
