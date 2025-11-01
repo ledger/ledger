@@ -83,6 +83,7 @@ dist/win/vc9/ledger.vcproj.*.user
 dist/win/vc9/ledger.suo
 dist/win/vc9/lib/Win32/Debug/
 src/TAGS
+build/
 CMakeCache.txt
 CPackConfig.cmake
 CPackSourceConfig.cmake

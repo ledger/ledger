@@ -74,3 +74,113 @@ jobs:
         # Execute tests defined by the CMake configuration.
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
         run: ctest -C ${{env.BUILD_TYPE}} || ctest -C ${{env.BUILD_TYPE}} --rerun-failed --output-on-failure
+
+  emscripten:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - emsdk: 4.0.13
+            boost: 1_89_0
+            gmp: 6.3.0
+            mpfr: 4.2.2
+    steps:
+      - uses: actions/checkout@v4
+        name: Check out repository code
+      - name: Cache Emscripten
+        uses: actions/cache@v4
+        with:
+          path: 'emsdk-cache'
+          key: ${{ runner.os }}-emsdk-${{ matrix.version.emsdk }}
+      - uses: mymindstorm/setup-emsdk@v14
+        name: Emscripten setup
+        with:
+          version: ${{ matrix.version.emsdk }}
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: Restore cached libraries
+        id: cache-wasm-lib-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: build/dist/
+          key: >-
+            ${{ runner.os }}-wasm-libs-${{ matrix.version.emsdk }}
+            -${{ matrix.version.boost }}
+            -${{ matrix.version.gmp }}
+            -${{ matrix.version.mpfr }}
+      - name: Build Boost
+        if: steps.cache-wasm-lib-restore.outputs.cache-hit != 'true'
+        env:
+          BOOST_VER: ${{ matrix.version.boost }}
+        run: |
+          mkdir -p build
+          cd build
+          wget https://archives.boost.io/release/${BOOST_VER//_/.}/source/boost_${BOOST_VER}.tar.gz
+          tar -zxf boost_${BOOST_VER}.tar.gz
+          mv boost_${BOOST_VER} boost
+          cd boost
+          ./bootstrap.sh
+          ./b2 --prefix=../dist \
+               --with-date_time --with-filesystem --with-iostreams \
+               --with-nowide --with-regex --with-test \
+               toolset=emscripten address-model=32 link=static variant=release threading=single install
+      - name: Build GMP
+        if: steps.cache-wasm-lib-restore.outputs.cache-hit != 'true'
+        env:
+          GMP_VER: ${{ matrix.version.gmp }}
+        run: |
+          cd build
+          wget https://ftp.gnu.org/gnu/gmp/gmp-${GMP_VER}.tar.xz
+          tar -Jxf gmp-${GMP_VER}.tar.xz
+          mv gmp-${GMP_VER} gmp
+          cd gmp
+          emconfigure ./configure --disable-assembly --host wasm32 --enable-cxx --prefix=$(realpath ../dist)
+          emmake make
+          emmake make install
+      - name: Build MPFR
+        if: steps.cache-wasm-lib-restore.outputs.cache-hit != 'true'
+        env:
+          MPFR_VER: ${{ matrix.version.mpfr }}
+        run: |
+          cd build
+          wget https://ftp.gnu.org/gnu/mpfr/mpfr-${MPFR_VER}.tar.xz
+          tar -Jxf mpfr-${MPFR_VER}.tar.xz
+          mv mpfr-${MPFR_VER} mpfr
+          cd mpfr
+          emconfigure ./configure --host wasm32 --prefix=$(realpath ../dist) --with-gmp=$(realpath ../dist)
+          emmake make
+          emmake make install
+      - name: Save library build results
+        uses: actions/cache/save@v4
+        with:
+          path: build/dist/
+          key: ${{ steps.cache-wasm-lib-restore.outputs.cache-primary-key }}
+
+      - name: Build Ledger
+        run: |
+          export BOOST="$(realpath build/dist)"
+          # -lnodefs.js -lnoderawfs.js flags are for testing purposes to support reading from the filesystem.
+          export LDFLAGS='-lnodefs.js -lnoderawfs.js -sSTACK_SIZE=1048576'
+          ./acprep --emscripten --boost="$BOOST" --output=build/ make
+      - name: Fix Emscripten build
+        run: |
+          cd build
+          # Emscripten TTY issue: https://github.com/emscripten-core/emscripten/issues/22264
+          sed -i.bak \
+              -e '1i #!'"$(which node)" \
+              -e 's/if\s*(!stream.tty)/if(!stream.tty||!stream.tty.ops)/g' \
+              -e 's/,\s*tty:\s*true,/,tty:false,/g' \
+              ledger.js
+          # Enable testing from python scripts.
+          chmod a+x ledger.js
+      - name: Test Ledger
+        run: |
+          cd build
+          node ledger.js --version
+          # _py$ : Python tests are not supported.
+          # RegressTest_BF3C1F82 : Emscripten treats 2012/02/30 as a valid date.
+          #     See https://github.com/emscripten-core/emscripten/issues/21024
+          # BaselineTest_opt-output : Outputing to /dev/stderr, probably unsupported by Emscripten.
+          ctest --force-new-ctest-process --output-on-failure \
+            -E '_py$|RegressTest_BF3C1F82|BaselineTest_opt-output'
