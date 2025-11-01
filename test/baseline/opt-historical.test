@@ -115,26 +115,26 @@ end test
 
 test reg stocks -X EUR --now=2012/05/10
 12-Jan-01 Broker                Assets:Stocks            EUR 200,00   EUR 200,00
-12-Feb-02 Commodities revalued  <Revalued>               EUR 200,00   EUR 400,00
-12-Feb-02 Broker                Assets:Stocks            EUR 400,00   EUR 800,00
-12-Mar-03 Commodities revalued  <Revalued>               EUR 400,00 EUR 1.200,00
-12-Mar-03 Broker                Assets:Stocks            EUR 600,00 EUR 1.800,00
-12-Apr-04 Commodities revalued  <Revalued>               EUR 600,00 EUR 2.400,00
-12-Apr-04 Broker                Assets:Stocks            EUR 800,00 EUR 3.200,00
-12-May-05 Commodities revalued  <Revalued>               EUR 800,00 EUR 4.000,00
-12-May-05 Broker                Assets:Stocks          EUR 1.000,00 EUR 5.000,00
+12-Feb-02 Broker                <Adjustment>             EUR 200,00   EUR 400,00
+                                Assets:Stocks            EUR 400,00   EUR 800,00
+12-Mar-03 Broker                <Adjustment>             EUR 400,00 EUR 1.200,00
+                                Assets:Stocks            EUR 600,00 EUR 1.800,00
+12-Apr-04 Broker                <Adjustment>             EUR 600,00 EUR 2.400,00
+                                Assets:Stocks            EUR 800,00 EUR 3.200,00
+12-May-05 Broker                <Adjustment>             EUR 800,00 EUR 4.000,00
+                                Assets:Stocks          EUR 1.000,00 EUR 5.000,00
 end test
 
 test reg stocks -O -X EUR --now=2012/05/10
 12-Jan-01 Broker                Assets:Stocks            EUR 200,00   EUR 200,00
-12-Feb-02 Commodities revalued  <Revalued>               EUR 200,00   EUR 400,00
-12-Feb-02 Broker                Assets:Stocks            EUR 400,00   EUR 800,00
-12-Mar-03 Commodities revalued  <Revalued>               EUR 400,00 EUR 1.200,00
-12-Mar-03 Broker                Assets:Stocks            EUR 600,00 EUR 1.800,00
-12-Apr-04 Commodities revalued  <Revalued>               EUR 600,00 EUR 2.400,00
-12-Apr-04 Broker                Assets:Stocks            EUR 800,00 EUR 3.200,00
-12-May-05 Commodities revalued  <Revalued>               EUR 800,00 EUR 4.000,00
-12-May-05 Broker                Assets:Stocks          EUR 1.000,00 EUR 5.000,00
+12-Feb-02 Broker                <Adjustment>             EUR 200,00   EUR 400,00
+                                Assets:Stocks            EUR 400,00   EUR 800,00
+12-Mar-03 Broker                <Adjustment>             EUR 400,00 EUR 1.200,00
+                                Assets:Stocks            EUR 600,00 EUR 1.800,00
+12-Apr-04 Broker                <Adjustment>             EUR 600,00 EUR 2.400,00
+                                Assets:Stocks            EUR 800,00 EUR 3.200,00
+12-May-05 Broker                <Adjustment>             EUR 800,00 EUR 4.000,00
+                                Assets:Stocks          EUR 1.000,00 EUR 5.000,00
 end test
 
 test reg stocks -B -X EUR
