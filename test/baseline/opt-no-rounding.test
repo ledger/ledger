@@ -67,7 +67,6 @@ test reg -X EUR -H --no-rounding
                                                                      -541.26 GBP
                                                                        4.3441 H1
                                                                       97.0017 H2
-12-Jan-03 Commodities revalued  <Revalued>                        0     5.80 EUR
 12-Jan-03 Receivable            Assets:Current           172.71 EUR   178.51 EUR
                                 Assets:Receivable       -161.06 EUR    17.45 EUR
                                 Assets:Receivable        -11.65 EUR     5.80 EUR

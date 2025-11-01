@@ -821,9 +821,18 @@ void changed_value_posts::output_intermediate_prices(post_t&       post,
 void changed_value_posts::operator()(post_t& post)
 {
   if (last_post) {
-    if (! for_accounts_report && ! historical_prices_only)
-      output_intermediate_prices(*last_post, post.value_date());
-    output_revaluation(*last_post, post.value_date());
+    // Don't generate spurious revaluations when postings are from the same
+    // transaction (e.g., stock splits with multiple prices on the same date).
+    // Within a transaction, postings represent a complete operation.
+    if (last_post->xact != post.xact) {
+      if (! for_accounts_report && ! historical_prices_only)
+        output_intermediate_prices(*last_post, post.value_date());
+
+      // Only generate direct revaluation when staying on the same date.
+      // When moving between dates, output_intermediate_prices handles it.
+      if (last_post->value_date() == post.value_date())
+        output_revaluation(*last_post, post.value_date());
+    }
   }
 
   if (changed_values_only)
