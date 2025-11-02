@@ -828,9 +828,12 @@ void changed_value_posts::operator()(post_t& post)
       if (! for_accounts_report && ! historical_prices_only)
         output_intermediate_prices(*last_post, post.value_date());
 
-      // Only generate direct revaluation when staying on the same date.
-      // When moving between dates, output_intermediate_prices handles it.
-      if (last_post->value_date() == post.value_date())
+      // Generate direct revaluation when:
+      // 1. Using historical prices (output_intermediate_prices is skipped), OR
+      // 2. Staying on the same date (output_intermediate_prices won't handle it)
+      // When moving between dates with intermediate prices enabled,
+      // output_intermediate_prices handles the revaluation.
+      if (historical_prices_only || last_post->value_date() == post.value_date())
         output_revaluation(*last_post, post.value_date());
     }
   }
