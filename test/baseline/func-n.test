@@ -1,0 +1,11 @@
+2012-01-01 Test n function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "n()" -> 1
+__ERROR__
+While evaluating value expression:
+  n()
+  ^^^
+Error: Unknown identifier 'n'
+end test

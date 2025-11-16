@@ -1,0 +1,10 @@
+2012-01-01 Test B function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test reg --display-amount "B()" -> 1
+__ERROR__
+While handling posting from "/Users/johnw/src/ledger/work/more-tests/test/baseline/func-B-upper.test", line 2:
+>     Assets:Test                       $100.00
+Error: The I and B value expression variables are no longer supported
+end test

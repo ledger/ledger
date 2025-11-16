@@ -1,0 +1,6 @@
+2012-01-01 Test note function  
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test reg --display-amount "note()"
+end test
