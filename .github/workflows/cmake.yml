@@ -31,7 +31,7 @@ jobs:
             cmake_args: -DUSE_PYTHON=ON -DUSE_GPGME=ON
           }
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         name: Check out repository code
 
       - if: runner.os == 'Linux'
