@@ -91,6 +91,7 @@ class draft_t : public expr_base_t<value_t>
     {
       TRACE_CTOR(xact_template_t, "copy");
     }
+    xact_template_t& operator=(const xact_template_t&) = default;
     ~xact_template_t() throw() {
       TRACE_DTOR(xact_template_t);
     }

@@ -217,6 +217,7 @@ public:
     {
       TRACE_CTOR(query_t::lexer_t, "copy");
     }
+    lexer_t& operator=(const lexer_t&) = default;
     ~lexer_t() throw() {
       TRACE_DTOR(query_t::lexer_t);
     }
