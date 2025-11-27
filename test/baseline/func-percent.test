@@ -1,11 +1,31 @@
+; Tests for the percent() function
+; Calculates percentage: percent(amount, total) = (amount/total) * 100%
+
 2012-01-01 Test percent function
     Assets:Test                       $100.00
     Equity:Opening
 
-test reg --display-amount "percent(amount)" -> 1
+; Positive test: 50 out of 100 = 50%
+test eval "percent(50, 100)"
+50.00%
+end test
+
+; Positive test: 25 out of 100 = 25%
+test eval "percent(25, 100)"
+25.00%
+end test
+
+; Positive test: 1 out of 4 = 25%
+test eval "percent(1, 4)"
+25.00%
+end test
+
+; Negative test: too few arguments (requires two arguments)
+test eval "percent(100)" -> 1
 __ERROR__
-While calling function 'percent $100.00':
-While handling posting from "$sourcepath/test/baseline/func-percent.test", line 2:
->     Assets:Test                       $100.00
+While evaluating value expression:
+  percent(100)
+  ^^^^^^^^^^^^
+While calling function 'percent 100':
 Error: Too few arguments to function
 end test

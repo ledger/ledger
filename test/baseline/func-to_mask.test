@@ -7,7 +7,7 @@
 
 ; Positive test: create mask from string
 test eval "to_mask(\"Assets\")"
-//
+/Assets/
 end test
 
 ; Negative test: too few arguments

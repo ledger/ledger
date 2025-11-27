@@ -1368,9 +1368,13 @@ void value_t::in_place_cast(type_t cast_type)
     case DATETIME:
       set_datetime(parse_datetime(as_string()));
       return;
-    case MASK:
-      set_mask(as_string());
+    case MASK: {
+      // Make a copy since set_mask calls set_type which may reallocate storage,
+      // invalidating the reference returned by as_string()
+      string str = as_string();
+      set_mask(str);
       return;
+    }
     default:
       break;
     }
