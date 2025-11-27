@@ -218,6 +218,7 @@ public:
       {
         TRACE_CTOR(account_t::xdata_t::details_t, "copy");
       }
+      details_t& operator=(const details_t&) = default;
       ~details_t() throw() {
         TRACE_DTOR(account_t::xdata_t::details_t);
       }

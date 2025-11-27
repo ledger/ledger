@@ -459,7 +459,7 @@ query_t::parser_t::parse_query_expr(lexer_t::token_t::kind_t tok_context,
       case lexer_t::token_t::TOK_BOLD: {
         lexer.next_token(tok_context);
 
-        kind_t kind;
+        kind_t kind = QUERY_SHOW; // Initialize with a default value
         switch (tok.kind) {
         case lexer_t::token_t::TOK_SHOW:
           kind = QUERY_SHOW;

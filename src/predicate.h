@@ -60,6 +60,7 @@ public:
     : expr_t(other), what_to_keep(other.what_to_keep) {
     TRACE_CTOR(predicate_t, "copy");
   }
+  predicate_t& operator=(const predicate_t&) = default;
   predicate_t(ptr_op_t              _ptr,
               const keep_details_t& _what_to_keep,
               scope_t *             _context = NULL)

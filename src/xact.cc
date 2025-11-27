@@ -661,7 +661,7 @@ string xact_t::hash(string nonce, hash_type_t hash_type) const {
   unsigned char data[128];
   string repr_str(repr.str());
 
-  SHA512((void *)repr_str.c_str(), repr_str.length(), data);
+  SHA512(const_cast<char*>(repr_str.c_str()), repr_str.length(), data);
 
   return bufferToHex(
     data, hash_type == HASH_SHA512 ? 64 : 32 /*SHA512_DIGEST_LENGTH*/);

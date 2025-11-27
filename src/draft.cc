@@ -281,8 +281,8 @@ xact_t * draft_t::insert(journal_t& journal)
     
     // Check if the date string contains a year (has at least 2 slashes or a 4-digit year)
     size_t slash_count = std::count(date_str.begin(), date_str.end(), '/');
-    bool has_year = slash_count >= 2 || date_str.find_first_of("0123456789") != string::npos && 
-                    date_str.length() > 5; // Rough check for year presence
+    bool has_year = slash_count >= 2 || (date_str.find_first_of("0123456789") != string::npos &&
+                    date_str.length() > 5); // Rough check for year presence
     
     added->_date = parse_date(date_str);
     

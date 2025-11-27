@@ -81,6 +81,7 @@ public:
       desc(xact.desc), note(xact.note), position(xact.position) {
     TRACE_CTOR(time_xact_t, "copy");
   }
+  time_xact_t& operator=(const time_xact_t&) = default;
   ~time_xact_t() throw() {
     TRACE_DTOR(time_xact_t);
   }

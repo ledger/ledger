@@ -284,7 +284,7 @@ void report_accounts::flush()
 {
   std::ostream& out(report.output_stream);
   format_t      prepend_format;
-  std::size_t   prepend_width;
+  std::size_t   prepend_width = 0;
   bool          do_prepend_format;
 
   if ((do_prepend_format = report.HANDLED(prepend_format_))) {

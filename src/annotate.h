@@ -133,6 +133,7 @@ struct keep_details_t
       keep_tag(other.keep_tag), only_actuals(other.only_actuals) {
     TRACE_CTOR(keep_details_t, "copy");
   }
+  keep_details_t& operator=(const keep_details_t&) = default;
   ~keep_details_t() throw() {
     TRACE_DTOR(keep_details_t);
   }

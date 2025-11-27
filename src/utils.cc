@@ -246,7 +246,17 @@ void   operator delete(void * ptr) noexcept {
     ledger::trace_delete_func(ptr, "new");
   std::free(ptr);
 }
+void   operator delete(void * ptr, std::size_t) noexcept {
+  if (DO_VERIFY() && ledger::memory_tracing_active)
+    ledger::trace_delete_func(ptr, "new");
+  std::free(ptr);
+}
 void   operator delete[](void * ptr) noexcept {
+  if (DO_VERIFY() && ledger::memory_tracing_active)
+    ledger::trace_delete_func(ptr, "new[]");
+  std::free(ptr);
+}
+void   operator delete[](void * ptr, std::size_t) noexcept {
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_delete_func(ptr, "new[]");
   std::free(ptr);
