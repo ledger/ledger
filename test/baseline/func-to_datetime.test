@@ -1,11 +1,21 @@
+; Tests for the to_datetime() function
+; Converts a value to a datetime type
+
 2012-01-01 Test to_datetime function
     Assets:Test                       $100.00
     Equity:Opening
 
-test reg --display-amount "to_datetime()" -> 1
+; Positive test: convert from now
+test eval --now=2024/06/15 "to_datetime(now)"
+2024/06/15 00:00:00
+end test
+
+; Negative test: too few arguments
+test eval "to_datetime()" -> 1
 __ERROR__
+While evaluating value expression:
+  to_datetime()
+  ^^^^^^^^^^^^^
 While calling function 'to_datetime ':
-While handling posting from "$sourcepath/test/baseline/func-to_datetime.test", line 2:
->     Assets:Test                       $100.00
 Error: Too few arguments to function
 end test

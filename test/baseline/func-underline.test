@@ -1,3 +1,7 @@
+; Tests for the underline() function
+; Zero-argument function that returns "underline" string
+; Used with ansify_if() to apply ANSI terminal styles
+
 2012-01-01 Test underline function
     Assets:Test                       $100.00
     Equity:Opening

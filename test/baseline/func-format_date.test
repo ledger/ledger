@@ -1,0 +1,26 @@
+; Tests for the format_date() function
+; Formats a date using optional format string
+
+2012-01-01 Test format_date function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+; Positive test: format date with custom format
+test eval --now=2024/06/15 "format_date(today, \"%Y/%m/%d\")"
+2024/06/15
+end test
+
+; Positive test: format date with ISO format
+test eval --now=2024/06/15 "format_date(today, \"%Y-%m-%d\")"
+2024-06-15
+end test
+
+; Negative test: too few arguments
+test eval "format_date()" -> 1
+__ERROR__
+While evaluating value expression:
+  format_date()
+  ^^^^^^^^^^^^^
+While calling function 'format_date ':
+Error: Too few arguments to function
+end test

@@ -1,19 +1,26 @@
+; Tests for the quantity() function
+; Extracts the numeric portion from an amount, stripping the commodity
+
 2012-01-01 Test quantity function
     Assets:Test                       $100.00
     Equity:Opening
 
+; Positive test: extract quantity from plain number
 test eval "quantity(100)"
 100
 end test
 
-test eval "quantity(1)"
-1
+; Positive test: extract quantity from another number
+test eval "quantity(42.5)"
+42.5
 end test
 
-test reg --display-amount "quantity()" -> 1
+; Negative test: too few arguments
+test eval "quantity()" -> 1
 __ERROR__
+While evaluating value expression:
+  quantity()
+  ^^^^^^^^^^
 While calling function 'quantity ':
-While handling posting from "$sourcepath/test/baseline/func-quantity.test", line 2:
->     Assets:Test                       $100.00
 Error: Too few arguments to function
 end test

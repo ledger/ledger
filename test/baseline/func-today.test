@@ -1,4 +1,7 @@
+2012-01-01 Test today function
+    Assets:Test                       $100.00
+    Equity:Opening
 
-2012/01/01 Test today function  Assets:Test              2025/08/22      $100.00
-                                Equity:Opening           2025/08/22            0
+test eval --now=2025/08/22 "today()"
+2025/08/22
 end test
