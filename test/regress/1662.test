@@ -1,0 +1,8 @@
+!include 1662*
+
+test bal
+         1000.00 USD  Assets
+        -1000.00 USD  Test
+--------------------
+                   0
+end test

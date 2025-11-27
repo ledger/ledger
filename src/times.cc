@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -40,6 +40,7 @@
 namespace ledger {
 
 optional<datetime_t> epoch;
+optional<int> year_directive_year;  // Track year from year directives separately
 
 date_time::weekdays start_of_week = gregorian::Sunday;
 
@@ -99,7 +100,13 @@ namespace {
   {
     std::tm data;
     std::memset(&data, 0, sizeof(std::tm));
-    data.tm_year = CURRENT_DATE().year() - 1900;
+    // When year_directive_year is set (from "apply year" or "year" directive),
+    // use that instead of CURRENT_DATE() to avoid issues with leap year dates
+    if (year_directive_year) {
+      data.tm_year = *year_directive_year - 1900;
+    } else {
+      data.tm_year = CURRENT_DATE().year() - 1900;
+    }
     data.tm_mday = 1;           // some formats have no day
     if (strptime(str, fmt_str.c_str(), &data))
       return gregorian::date_from_tm(data);
@@ -162,10 +169,30 @@ namespace {
         *traits = io.traits;
 
       if (! io.traits.has_year) {
-        when = date_t(CURRENT_DATE().year(), when.month(), when.day());
-
-        if (when.month() > CURRENT_DATE().month())
-          when -= gregorian::years(1);
+        // First check if we have a year directive year to use
+        if (year_directive_year) {
+          // Use the year from the year directive
+          when = date_t(*year_directive_year, when.month(), when.day());
+          DEBUG("times.parse", "Using year directive year: " << *year_directive_year);
+        } else if (epoch) {
+          // When using the epoch (e.g., from --now), use it for the year
+          date_t reference_date = epoch->date();
+          when = date_t(reference_date.year(), when.month(), when.day());
+          
+          // Apply month rollback if the parsed month is after the epoch's month
+          if (when.month() > reference_date.month())
+            when -= gregorian::years(1);
+          
+          DEBUG("times.parse", "Using epoch year: " << reference_date.year() 
+                << ", epoch month: " << reference_date.month()
+                << ", parsed month: " << when.month()
+                << ", final year: " << when.year());
+        } else {
+          // When no epoch, use current date and handle month rollback
+          when = date_t(CURRENT_DATE().year(), when.month(), when.day());
+          if (when.month() > CURRENT_DATE().month())
+            when -= gregorian::years(1);
+        }
       }
     }
     return when;
@@ -567,6 +594,39 @@ public:
   date_interval_t parse();
 
 private:
+  // Helper methods for parsing different token types
+  void handle_date_token(lexer_t::token_t& tok,
+                         optional<date_specifier_t>& inclusion_specifier);
+  void handle_dash_operator(lexer_t::token_t& tok,
+                            optional<date_specifier_t>& inclusion_specifier,
+                            optional<date_specifier_t>& since_specifier,
+                            optional<date_specifier_t>& until_specifier,
+                            bool& end_inclusive);
+  void handle_since_token(lexer_t::token_t& tok,
+                         optional<date_specifier_t>& since_specifier);
+  void handle_until_token(lexer_t::token_t& tok,
+                         optional<date_specifier_t>& until_specifier);
+  void handle_in_token(lexer_t::token_t& tok,
+                      optional<date_specifier_t>& inclusion_specifier);
+  void handle_relative_token(lexer_t::token_t& tok,
+                             optional<date_specifier_t>& since_specifier,
+                             optional<date_specifier_t>& until_specifier,
+                             optional<date_specifier_t>& inclusion_specifier,
+                             const date_t& today);
+  void handle_simple_period_token(lexer_t::token_t::kind_t kind,
+                                  optional<date_specifier_t>& inclusion_specifier,
+                                  const date_t& today);
+  void handle_every_token(lexer_t::token_t& tok,
+                         optional<date_duration_t>& duration);
+  void handle_period_token(lexer_t::token_t::kind_t kind,
+                          optional<date_duration_t>& duration);
+  void finalize_period(date_interval_t& period,
+                      const optional<date_specifier_t>& since_specifier,
+                      const optional<date_specifier_t>& until_specifier,
+                      const optional<date_specifier_t>& inclusion_specifier,
+                      bool end_inclusive);
+
+private:
   void determine_when(lexer_t::token_t& tok, date_specifier_t& specifier);
 };
 
@@ -785,326 +845,316 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
   }
 }
 
-date_interval_t date_parser_t::parse()
+// Helper method implementations
+void date_parser_t::handle_date_token(lexer_t::token_t& tok,
+                                      optional<date_specifier_t>& inclusion_specifier)
 {
-  optional<date_specifier_t> since_specifier;
-  optional<date_specifier_t> until_specifier;
-  optional<date_specifier_t> inclusion_specifier;
+  if (!inclusion_specifier)
+    inclusion_specifier = date_specifier_t();
+  determine_when(tok, *inclusion_specifier);
+}
 
-  date_interval_t period;
-  date_t          today = CURRENT_DATE();
-  bool            end_inclusive = false;
+void date_parser_t::handle_dash_operator(lexer_t::token_t& tok,
+                                         optional<date_specifier_t>& inclusion_specifier,
+                                         optional<date_specifier_t>& since_specifier,
+                                         optional<date_specifier_t>& until_specifier,
+                                         bool& end_inclusive)
+{
+  if (inclusion_specifier) {
+    since_specifier = inclusion_specifier;
+    until_specifier = date_specifier_t();
+    inclusion_specifier = none;
 
-  for (lexer_t::token_t tok = lexer.next_token();
-       tok.kind != lexer_t::token_t::END_REACHED;
-       tok = lexer.next_token()) {
+    tok = lexer.next_token();
+    determine_when(tok, *until_specifier);
+
+    // The dash operator is special: it has an _inclusive_ end.
+    end_inclusive = true;
+  } else {
+    tok.unexpected();
+  }
+}
+
+void date_parser_t::handle_since_token(lexer_t::token_t& tok,
+                                       optional<date_specifier_t>& since_specifier)
+{
+  if (since_specifier) {
+    tok.unexpected();
+  } else {
+    since_specifier = date_specifier_t();
+    tok = lexer.next_token();
+    determine_when(tok, *since_specifier);
+  }
+}
+
+void date_parser_t::handle_until_token(lexer_t::token_t& tok,
+                                       optional<date_specifier_t>& until_specifier)
+{
+  if (until_specifier) {
+    tok.unexpected();
+  } else {
+    until_specifier = date_specifier_t();
+    tok = lexer.next_token();
+    determine_when(tok, *until_specifier);
+  }
+}
+
+void date_parser_t::handle_in_token(lexer_t::token_t& tok,
+                                    optional<date_specifier_t>& inclusion_specifier)
+{
+  if (inclusion_specifier) {
+    tok.unexpected();
+  } else {
+    inclusion_specifier = date_specifier_t();
+    tok = lexer.next_token();
+    determine_when(tok, *inclusion_specifier);
+  }
+}
+
+void date_parser_t::handle_relative_token(lexer_t::token_t& tok,
+                                          optional<date_specifier_t>& since_specifier,
+                                          optional<date_specifier_t>& until_specifier,
+                                          optional<date_specifier_t>& inclusion_specifier,
+                                          const date_t& today)
+{
+  int8_t adjust = 0;
+  if (tok.kind == lexer_t::token_t::TOK_NEXT)
+    adjust = 1;
+  else if (tok.kind == lexer_t::token_t::TOK_LAST)
+    adjust = -1;
+
+  tok = lexer.next_token();
+  switch (tok.kind) {
+  case lexer_t::token_t::TOK_INT: {
+    unsigned short amount = boost::get<unsigned short>(*tok.value);
+    date_t base(today);
+    date_t end(today);
+
+    if (!adjust)
+      adjust = 1;
+
+    tok = lexer.next_token();
     switch (tok.kind) {
-    case lexer_t::token_t::TOK_DATE:
-      if (! inclusion_specifier)
-        inclusion_specifier = date_specifier_t();
-      determine_when(tok, *inclusion_specifier);
+    case lexer_t::token_t::TOK_YEARS:
+      base += gregorian::years(amount * adjust);
       break;
-
-    case lexer_t::token_t::TOK_INT:
-      if (! inclusion_specifier)
-        inclusion_specifier = date_specifier_t();
-      determine_when(tok, *inclusion_specifier);
+    case lexer_t::token_t::TOK_QUARTERS:
+      base += gregorian::months(amount * adjust * 3);
       break;
-
-    case lexer_t::token_t::TOK_A_MONTH:
-      if (! inclusion_specifier)
-        inclusion_specifier = date_specifier_t();
-      determine_when(tok, *inclusion_specifier);
+    case lexer_t::token_t::TOK_MONTHS:
+      base += gregorian::months(amount * adjust);
       break;
-
-    case lexer_t::token_t::TOK_A_WDAY:
-      if (! inclusion_specifier)
-        inclusion_specifier = date_specifier_t();
-      determine_when(tok, *inclusion_specifier);
+    case lexer_t::token_t::TOK_WEEKS:
+      base += gregorian::weeks(amount * adjust);
       break;
-
-    case lexer_t::token_t::TOK_DASH:
-      if (inclusion_specifier) {
-        since_specifier     = inclusion_specifier;
-        until_specifier     = date_specifier_t();
-        inclusion_specifier = none;
-
-        tok = lexer.next_token();
-        determine_when(tok, *until_specifier);
-
-        // The dash operator is special: it has an _inclusive_ end.
-        end_inclusive = true;
-      } else {
-        tok.unexpected();
-      }
+    case lexer_t::token_t::TOK_DAYS:
+      base += gregorian::days(amount * adjust);
       break;
-
-    case lexer_t::token_t::TOK_SINCE:
-      if (since_specifier) {
-        tok.unexpected();
-      } else {
-        since_specifier = date_specifier_t();
-        tok = lexer.next_token();
-        determine_when(tok, *since_specifier);
-      }
-      break;
-
-    case lexer_t::token_t::TOK_UNTIL:
-      if (until_specifier) {
-        tok.unexpected();
-      } else {
-        until_specifier = date_specifier_t();
-        tok = lexer.next_token();
-        determine_when(tok, *until_specifier);
-      }
-      break;
-
-    case lexer_t::token_t::TOK_IN:
-      if (inclusion_specifier) {
-        tok.unexpected();
-      } else {
-        inclusion_specifier = date_specifier_t();
-        tok = lexer.next_token();
-        determine_when(tok, *inclusion_specifier);
-      }
-      break;
-
-    case lexer_t::token_t::TOK_THIS:
-    case lexer_t::token_t::TOK_NEXT:
-    case lexer_t::token_t::TOK_LAST: {
-      int8_t adjust = 0;
-      if (tok.kind == lexer_t::token_t::TOK_NEXT)
-        adjust = 1;
-      else if (tok.kind == lexer_t::token_t::TOK_LAST)
-        adjust = -1;
-
-      tok = lexer.next_token();
-      switch (tok.kind) {
-      case lexer_t::token_t::TOK_INT: {
-        unsigned short amount = boost::get<unsigned short>(*tok.value);
-
-        date_t base(today);
-        date_t end(today);
-
-        if (! adjust)
-          adjust = 1;
-
-        tok = lexer.next_token();
-        switch (tok.kind) {
-        case lexer_t::token_t::TOK_YEARS:
-          base += gregorian::years(amount * adjust);
-          break;
-        case lexer_t::token_t::TOK_QUARTERS:
-          base += gregorian::months(amount * adjust * 3);
-          break;
-        case lexer_t::token_t::TOK_MONTHS:
-          base += gregorian::months(amount * adjust);
-          break;
-        case lexer_t::token_t::TOK_WEEKS:
-          base += gregorian::weeks(amount * adjust);
-          break;
-        case lexer_t::token_t::TOK_DAYS:
-          base += gregorian::days(amount * adjust);
-          break;
-        default:
-          tok.unexpected();
-          break;
-        }
-
-        if (adjust >= 0) {
-          date_t temp = base;
-          base = end;
-          end = temp;
-        }
-
-        since_specifier = date_specifier_t(base);
-        until_specifier = date_specifier_t(end);
-        break;
-      }
-
-      case lexer_t::token_t::TOK_A_MONTH: {
-        inclusion_specifier = date_specifier_t();
-        determine_when(tok, *inclusion_specifier);
-
-        date_t temp(today.year(), *inclusion_specifier->month, 1);
-        temp += gregorian::years(adjust);
-        inclusion_specifier =
-          date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()),
-                           temp.month());
-        break;
-      }
-
-      case lexer_t::token_t::TOK_A_WDAY: {
-        inclusion_specifier = date_specifier_t();
-        determine_when(tok, *inclusion_specifier);
-
-        date_t temp =
-          date_duration_t::find_nearest(today, date_duration_t::WEEKS);
-        while (temp.day_of_week() != inclusion_specifier->wday)
-          temp += gregorian::days(1);
-        temp += gregorian::days(7 * adjust);
-        inclusion_specifier = date_specifier_t(temp);
-        break;
-      }
-
-      case lexer_t::token_t::TOK_YEAR: {
-        date_t temp(today);
-        temp += gregorian::years(adjust);
-        inclusion_specifier =
-          date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()));
-        break;
-      }
-
-      case lexer_t::token_t::TOK_QUARTER: {
-        date_t base =
-          date_duration_t::find_nearest(today, date_duration_t::QUARTERS);
-        date_t temp;
-        if (adjust < 0) {
-          temp = base + gregorian::months(3 * adjust);
-        }
-        else if (adjust == 0) {
-          temp = base + gregorian::months(3);
-        }
-        else if (adjust > 0) {
-          base += gregorian::months(3 * adjust);
-          temp = base + gregorian::months(3 * adjust);
-        }
-        since_specifier = date_specifier_t(adjust < 0 ? temp : base);
-        until_specifier = date_specifier_t(adjust < 0 ? base : temp);
-        break;
-      }
-
-      case lexer_t::token_t::TOK_WEEK: {
-        date_t base =
-          date_duration_t::find_nearest(today, date_duration_t::WEEKS);
-        date_t temp;
-        if (adjust < 0) {
-          temp = base + gregorian::days(7 * adjust);
-        }
-        else if (adjust == 0) {
-          temp = base + gregorian::days(7);
-        }
-        else if (adjust > 0) {
-          base += gregorian::days(7 * adjust);
-          temp = base + gregorian::days(7 * adjust);
-        }
-        since_specifier = date_specifier_t(adjust < 0 ? temp : base);
-        until_specifier = date_specifier_t(adjust < 0 ? base : temp);
-        break;
-      }
-
-      case lexer_t::token_t::TOK_DAY: {
-        date_t temp(today);
-        temp += gregorian::days(adjust);
-        inclusion_specifier = date_specifier_t(temp);
-        break;
-      }
-
-      default:
-      case lexer_t::token_t::TOK_MONTH: {
-        date_t temp(today);
-        temp += gregorian::months(adjust);
-        inclusion_specifier =
-          date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()),
-                           temp.month());
-        break;
-      }
-      }
+    default:
+      tok.unexpected();
       break;
     }
 
-    case lexer_t::token_t::TOK_TODAY:
-      inclusion_specifier = date_specifier_t(today);
-      break;
-    case lexer_t::token_t::TOK_TOMORROW:
-      inclusion_specifier = date_specifier_t(today + gregorian::days(1));
-      break;
-    case lexer_t::token_t::TOK_YESTERDAY:
-      inclusion_specifier = date_specifier_t(today - gregorian::days(1));
-      break;
+    if (adjust >= 0) {
+      date_t temp = base;
+      base = end;
+      end = temp;
+    }
 
-    case lexer_t::token_t::TOK_EVERY:
-      tok = lexer.next_token();
-      if (tok.kind == lexer_t::token_t::TOK_INT) {
-        int quantity = boost::get<unsigned short>(*tok.value);
-        tok = lexer.next_token();
-        switch (tok.kind) {
-        case lexer_t::token_t::TOK_YEARS:
-          period.duration = date_duration_t(date_duration_t::YEARS, quantity);
-          break;
-        case lexer_t::token_t::TOK_QUARTERS:
-          period.duration = date_duration_t(date_duration_t::QUARTERS, quantity);
-          break;
-        case lexer_t::token_t::TOK_MONTHS:
-          period.duration = date_duration_t(date_duration_t::MONTHS, quantity);
-          break;
-        case lexer_t::token_t::TOK_WEEKS:
-          period.duration = date_duration_t(date_duration_t::WEEKS, quantity);
-          break;
-        case lexer_t::token_t::TOK_DAYS:
-          period.duration = date_duration_t(date_duration_t::DAYS, quantity);
-          break;
-        default:
-          tok.unexpected();
-          break;
-        }
-      } else {
-        switch (tok.kind) {
-        case lexer_t::token_t::TOK_YEAR:
-          period.duration = date_duration_t(date_duration_t::YEARS, 1);
-          break;
-        case lexer_t::token_t::TOK_QUARTER:
-          period.duration = date_duration_t(date_duration_t::QUARTERS, 1);
-          break;
-        case lexer_t::token_t::TOK_MONTH:
-          period.duration = date_duration_t(date_duration_t::MONTHS, 1);
-          break;
-        case lexer_t::token_t::TOK_WEEK:
-          period.duration = date_duration_t(date_duration_t::WEEKS, 1);
-          break;
-        case lexer_t::token_t::TOK_DAY:
-          period.duration = date_duration_t(date_duration_t::DAYS, 1);
-          break;
-        default:
-          tok.unexpected();
-          break;
-        }
-      }
-      break;
+    since_specifier = date_specifier_t(base);
+    until_specifier = date_specifier_t(end);
+    break;
+  }
 
-    case lexer_t::token_t::TOK_YEARLY:
-      period.duration = date_duration_t(date_duration_t::YEARS, 1);
-      break;
-    case lexer_t::token_t::TOK_QUARTERLY:
-      period.duration = date_duration_t(date_duration_t::QUARTERS, 1);
-      break;
-    case lexer_t::token_t::TOK_BIMONTHLY:
-      period.duration = date_duration_t(date_duration_t::MONTHS, 2);
-      break;
-    case lexer_t::token_t::TOK_MONTHLY:
-      period.duration = date_duration_t(date_duration_t::MONTHS, 1);
-      break;
-    case lexer_t::token_t::TOK_BIWEEKLY:
-      period.duration = date_duration_t(date_duration_t::WEEKS, 2);
-      break;
-    case lexer_t::token_t::TOK_WEEKLY:
-      period.duration = date_duration_t(date_duration_t::WEEKS, 1);
-      break;
-    case lexer_t::token_t::TOK_DAILY:
-      period.duration = date_duration_t(date_duration_t::DAYS, 1);
-      break;
+  case lexer_t::token_t::TOK_A_MONTH: {
+    inclusion_specifier = date_specifier_t();
+    determine_when(tok, *inclusion_specifier);
 
+    date_t temp(today.year(), *inclusion_specifier->month, 1);
+    temp += gregorian::years(adjust);
+    inclusion_specifier =
+      date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()),
+                       temp.month());
+    break;
+  }
+
+  case lexer_t::token_t::TOK_A_WDAY: {
+    inclusion_specifier = date_specifier_t();
+    determine_when(tok, *inclusion_specifier);
+
+    date_t temp = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
+    while (temp.day_of_week() != inclusion_specifier->wday)
+      temp += gregorian::days(1);
+    temp += gregorian::days(7 * adjust);
+    inclusion_specifier = date_specifier_t(temp);
+    break;
+  }
+
+  case lexer_t::token_t::TOK_YEAR: {
+    date_t temp(today);
+    temp += gregorian::years(adjust);
+    inclusion_specifier =
+      date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()));
+    break;
+  }
+
+  case lexer_t::token_t::TOK_QUARTER: {
+    date_t base = date_duration_t::find_nearest(today, date_duration_t::QUARTERS);
+    date_t temp;
+    if (adjust < 0) {
+      temp = base + gregorian::months(3 * adjust);
+    } else if (adjust == 0) {
+      temp = base + gregorian::months(3);
+    } else if (adjust > 0) {
+      base += gregorian::months(3 * adjust);
+      temp = base + gregorian::months(3 * adjust);
+    }
+    since_specifier = date_specifier_t(adjust < 0 ? temp : base);
+    until_specifier = date_specifier_t(adjust < 0 ? base : temp);
+    break;
+  }
+
+  case lexer_t::token_t::TOK_WEEK: {
+    date_t base = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
+    date_t temp;
+    if (adjust < 0) {
+      temp = base + gregorian::days(7 * adjust);
+    } else if (adjust == 0) {
+      temp = base + gregorian::days(7);
+    } else if (adjust > 0) {
+      base += gregorian::days(7 * adjust);
+      temp = base + gregorian::days(7 * adjust);
+    }
+    since_specifier = date_specifier_t(adjust < 0 ? temp : base);
+    until_specifier = date_specifier_t(adjust < 0 ? base : temp);
+    break;
+  }
+
+  case lexer_t::token_t::TOK_DAY: {
+    date_t temp(today);
+    temp += gregorian::days(adjust);
+    inclusion_specifier = date_specifier_t(temp);
+    break;
+  }
+
+  default:
+  case lexer_t::token_t::TOK_MONTH: {
+    date_t temp(today);
+    temp += gregorian::months(adjust);
+    inclusion_specifier =
+      date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()),
+                       temp.month());
+    break;
+  }
+  }
+}
+
+void date_parser_t::handle_simple_period_token(lexer_t::token_t::kind_t kind,
+                                               optional<date_specifier_t>& inclusion_specifier,
+                                               const date_t& today)
+{
+  switch (kind) {
+  case lexer_t::token_t::TOK_TODAY:
+    inclusion_specifier = date_specifier_t(today);
+    break;
+  case lexer_t::token_t::TOK_TOMORROW:
+    inclusion_specifier = date_specifier_t(today + gregorian::days(1));
+    break;
+  case lexer_t::token_t::TOK_YESTERDAY:
+    inclusion_specifier = date_specifier_t(today - gregorian::days(1));
+    break;
+  default:
+    break;
+  }
+}
+
+void date_parser_t::handle_every_token(lexer_t::token_t& tok,
+                                       optional<date_duration_t>& duration)
+{
+  tok = lexer.next_token();
+  if (tok.kind == lexer_t::token_t::TOK_INT) {
+    int quantity = boost::get<unsigned short>(*tok.value);
+    tok = lexer.next_token();
+    switch (tok.kind) {
+    case lexer_t::token_t::TOK_YEARS:
+      duration = date_duration_t(date_duration_t::YEARS, quantity);
+      break;
+    case lexer_t::token_t::TOK_QUARTERS:
+      duration = date_duration_t(date_duration_t::QUARTERS, quantity);
+      break;
+    case lexer_t::token_t::TOK_MONTHS:
+      duration = date_duration_t(date_duration_t::MONTHS, quantity);
+      break;
+    case lexer_t::token_t::TOK_WEEKS:
+      duration = date_duration_t(date_duration_t::WEEKS, quantity);
+      break;
+    case lexer_t::token_t::TOK_DAYS:
+      duration = date_duration_t(date_duration_t::DAYS, quantity);
+      break;
+    default:
+      tok.unexpected();
+      break;
+    }
+  } else {
+    switch (tok.kind) {
+    case lexer_t::token_t::TOK_YEAR:
+      duration = date_duration_t(date_duration_t::YEARS, 1);
+      break;
+    case lexer_t::token_t::TOK_QUARTER:
+      duration = date_duration_t(date_duration_t::QUARTERS, 1);
+      break;
+    case lexer_t::token_t::TOK_MONTH:
+      duration = date_duration_t(date_duration_t::MONTHS, 1);
+      break;
+    case lexer_t::token_t::TOK_WEEK:
+      duration = date_duration_t(date_duration_t::WEEKS, 1);
+      break;
+    case lexer_t::token_t::TOK_DAY:
+      duration = date_duration_t(date_duration_t::DAYS, 1);
+      break;
     default:
       tok.unexpected();
       break;
     }
   }
+}
 
-#if 0
-  if (! period.duration && inclusion_specifier)
-    period.duration = inclusion_specifier->implied_duration();
-#endif
+void date_parser_t::handle_period_token(lexer_t::token_t::kind_t kind,
+                                        optional<date_duration_t>& duration)
+{
+  switch (kind) {
+  case lexer_t::token_t::TOK_YEARLY:
+    duration = date_duration_t(date_duration_t::YEARS, 1);
+    break;
+  case lexer_t::token_t::TOK_QUARTERLY:
+    duration = date_duration_t(date_duration_t::QUARTERS, 1);
+    break;
+  case lexer_t::token_t::TOK_BIMONTHLY:
+    duration = date_duration_t(date_duration_t::MONTHS, 2);
+    break;
+  case lexer_t::token_t::TOK_MONTHLY:
+    duration = date_duration_t(date_duration_t::MONTHS, 1);
+    break;
+  case lexer_t::token_t::TOK_BIWEEKLY:
+    duration = date_duration_t(date_duration_t::WEEKS, 2);
+    break;
+  case lexer_t::token_t::TOK_WEEKLY:
+    duration = date_duration_t(date_duration_t::WEEKS, 1);
+    break;
+  case lexer_t::token_t::TOK_DAILY:
+    duration = date_duration_t(date_duration_t::DAYS, 1);
+    break;
+  default:
+    break;
+  }
+}
 
+void date_parser_t::finalize_period(date_interval_t& period,
+                                    const optional<date_specifier_t>& since_specifier,
+                                    const optional<date_specifier_t>& until_specifier,
+                                    const optional<date_specifier_t>& inclusion_specifier,
+                                    bool end_inclusive)
+{
   if (since_specifier || until_specifier) {
     date_range_t range(since_specifier, until_specifier);
     range.end_inclusive = end_inclusive;
@@ -1115,9 +1165,96 @@ date_interval_t date_parser_t::parse()
   else if (inclusion_specifier) {
     period.range = date_specifier_or_range_t(*inclusion_specifier);
   }
-  else {
-    /* otherwise, it's something like "monthly", with no date reference */
+  // else: it's something like "monthly", with no date reference
+}
+
+date_interval_t date_parser_t::parse()
+{
+  optional<date_specifier_t> since_specifier;
+  optional<date_specifier_t> until_specifier;
+  optional<date_specifier_t> inclusion_specifier;
+
+  date_interval_t period;
+  date_t          today = CURRENT_DATE();
+  bool            end_inclusive = false;
+
+  // Main parsing loop - process tokens sequentially
+  for (lexer_t::token_t tok = lexer.next_token();
+       tok.kind != lexer_t::token_t::END_REACHED;
+       tok = lexer.next_token()) {
+    
+    switch (tok.kind) {
+    // Simple date/time specifiers
+    case lexer_t::token_t::TOK_DATE:
+    case lexer_t::token_t::TOK_INT:
+    case lexer_t::token_t::TOK_A_MONTH:
+    case lexer_t::token_t::TOK_A_WDAY:
+      handle_date_token(tok, inclusion_specifier);
+      break;
+
+    // Range operators
+    case lexer_t::token_t::TOK_DASH:
+      handle_dash_operator(tok, inclusion_specifier, since_specifier,
+                          until_specifier, end_inclusive);
+      break;
+
+    case lexer_t::token_t::TOK_SINCE:
+      handle_since_token(tok, since_specifier);
+      break;
+
+    case lexer_t::token_t::TOK_UNTIL:
+      handle_until_token(tok, until_specifier);
+      break;
+
+    case lexer_t::token_t::TOK_IN:
+      handle_in_token(tok, inclusion_specifier);
+      break;
+
+    // Relative time expressions (this/next/last)
+    case lexer_t::token_t::TOK_THIS:
+    case lexer_t::token_t::TOK_NEXT:
+    case lexer_t::token_t::TOK_LAST:
+      handle_relative_token(tok, since_specifier, until_specifier,
+                           inclusion_specifier, today);
+      break;
+
+    // Simple period tokens (today/tomorrow/yesterday)
+    case lexer_t::token_t::TOK_TODAY:
+    case lexer_t::token_t::TOK_TOMORROW:
+    case lexer_t::token_t::TOK_YESTERDAY:
+      handle_simple_period_token(tok.kind, inclusion_specifier, today);
+      break;
+
+    // Recurring period specifications
+    case lexer_t::token_t::TOK_EVERY:
+      handle_every_token(tok, period.duration);
+      break;
+
+    // Period shortcuts
+    case lexer_t::token_t::TOK_YEARLY:
+    case lexer_t::token_t::TOK_QUARTERLY:
+    case lexer_t::token_t::TOK_BIMONTHLY:
+    case lexer_t::token_t::TOK_MONTHLY:
+    case lexer_t::token_t::TOK_BIWEEKLY:
+    case lexer_t::token_t::TOK_WEEKLY:
+    case lexer_t::token_t::TOK_DAILY:
+      handle_period_token(tok.kind, period.duration);
+      break;
+
+    default:
+      tok.unexpected();
+      break;
+    }
   }
+
+#if 0
+  if (!period.duration && inclusion_specifier)
+    period.duration = inclusion_specifier->implied_duration();
+#endif
+
+  // Finalize the period structure with collected specifiers
+  finalize_period(period, since_specifier, until_specifier,
+                  inclusion_specifier, end_inclusive);
 
   return period;
 }

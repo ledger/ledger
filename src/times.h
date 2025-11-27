@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -65,6 +65,7 @@ inline bool is_valid(const date_t& moment) {
 }
 
 extern optional<datetime_t> epoch;
+extern optional<int> year_directive_year;
 
 #ifdef BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK
 #define TRUE_CURRENT_TIME() (boost::posix_time::microsec_clock::local_time())
@@ -279,6 +280,7 @@ public:
       day(other.day), wday(other.wday) {
     TRACE_CTOR(date_specifier_t, "copy");
   }
+  date_specifier_t& operator=(const date_specifier_t&) = default;
   ~date_specifier_t() throw() {
     TRACE_DTOR(date_specifier_t);
   }
@@ -471,6 +473,7 @@ public:
       since_specified(other.since_specified) {
     TRACE_CTOR(date_interval_t, "copy");
   }
+  date_interval_t& operator=(const date_interval_t&) = default;
   ~date_interval_t() throw() {
     TRACE_DTOR(date_interval_t);
   }

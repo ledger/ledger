@@ -66,7 +66,7 @@ Dependency  | Version (or greater)
 [ICU]       | 63 _optional_
 [gettext]   | 0.17 _optional_
 [libedit]   | 20090111-3.0 _optional_
-[Python]    | 3.9 _optional_
+[Python]    | 3.10 _optional_
 [Gpgmepp]   | 1.13.1 _optional_
 [doxygen]   | 1.9.5 _optional_, for `make docs`
 [graphviz]  | 2.20.3 _optional_, for `make docs`

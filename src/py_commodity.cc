@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -392,6 +392,15 @@ void export_commodity()
 
     .def("valid", &commodity_t::valid)
     ;
+  class_< price_point_t > ("PricePoint")
+    .add_property("price", make_getter(&price_point_t::price),
+                  make_setter(&price_point_t::price))
+    .add_property("when", make_getter(&price_point_t::when,
+                                      return_value_policy<return_by_value>()),
+                  make_setter(&price_point_t::when,
+                              return_value_policy<return_by_value>()))
+    ;
+  register_optional_to_python<price_point_t>();
 
   class_< annotation_t > ("Annotation")
 #if 1

@@ -19,6 +19,6 @@ P 1990/02/15 12:00:00 FOO $3
 test reg -V gas
 90-Jan-01 Payee                 Expenses:Gas                   $200         $200
 90-Feb-01 Payee                 Expenses:Gas                   $200         $400
-90-Feb-20 Commodities revalued  <Revalued>                     $100         $500
-90-Feb-20 Payee                 Expenses:Gas                   $300         $800
+90-Feb-20 Payee                 <Adjustment>                   $100         $500
+                                Expenses:Gas                   $300         $800
 end test

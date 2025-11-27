@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -67,6 +67,7 @@ public:
   mask_t(const mask_t& m) : expr(m.expr) {
     TRACE_CTOR(mask_t, "copy");
   }
+  mask_t& operator=(const mask_t&) = default;
   ~mask_t() throw() {
     TRACE_DTOR(mask_t);
   }

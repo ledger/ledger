@@ -31,7 +31,7 @@ jobs:
             cmake_args: -DUSE_PYTHON=ON -DUSE_GPGME=ON
           }
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         name: Check out repository code
 
       - if: runner.os == 'Linux'
@@ -53,6 +53,7 @@ jobs:
           brew list -1 | grep python | while read formula; do brew unlink $formula; brew link --overwrite $formula; done
 
           brew update
+          brew uninstall cmake
           ./acprep dependencies --python
 
       - name: Configure CMake

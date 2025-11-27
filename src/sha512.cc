@@ -382,7 +382,7 @@ void SHA512_Update(SHA512_CTX* context, void *datain, size_t len) {
 	}
 	while (len >= SHA512_BLOCK_LENGTH) {
 		/* Process as many complete blocks as we can */
-		SHA512_Transform(context, (sha2_word64*)data);
+		SHA512_Transform(context, reinterpret_cast<const sha2_word64*>(data));
 		ADDINC128(context->bitcount, SHA512_BLOCK_LENGTH << 3);
 		len -= SHA512_BLOCK_LENGTH;
 		data += SHA512_BLOCK_LENGTH;

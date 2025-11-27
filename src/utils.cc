@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -241,12 +241,22 @@ void * operator new[](std::size_t size) {
     ledger::trace_new_func(ptr, "new[]", size);
   return ptr;
 }
-void   operator delete(void * ptr) {
+void   operator delete(void * ptr) noexcept {
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_delete_func(ptr, "new");
   std::free(ptr);
 }
-void   operator delete[](void * ptr) {
+void   operator delete(void * ptr, std::size_t) noexcept {
+  if (DO_VERIFY() && ledger::memory_tracing_active)
+    ledger::trace_delete_func(ptr, "new");
+  std::free(ptr);
+}
+void   operator delete[](void * ptr) noexcept {
+  if (DO_VERIFY() && ledger::memory_tracing_active)
+    ledger::trace_delete_func(ptr, "new[]");
+  std::free(ptr);
+}
+void   operator delete[](void * ptr, std::size_t) noexcept {
   if (DO_VERIFY() && ledger::memory_tracing_active)
     ledger::trace_delete_func(ptr, "new[]");
   std::free(ptr);

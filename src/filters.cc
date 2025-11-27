@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -821,9 +821,21 @@ void changed_value_posts::output_intermediate_prices(post_t&       post,
 void changed_value_posts::operator()(post_t& post)
 {
   if (last_post) {
-    if (! for_accounts_report && ! historical_prices_only)
-      output_intermediate_prices(*last_post, post.value_date());
-    output_revaluation(*last_post, post.value_date());
+    // Don't generate spurious revaluations when postings are from the same
+    // transaction (e.g., stock splits with multiple prices on the same date).
+    // Within a transaction, postings represent a complete operation.
+    if (last_post->xact != post.xact) {
+      if (! for_accounts_report && ! historical_prices_only)
+        output_intermediate_prices(*last_post, post.value_date());
+
+      // Generate direct revaluation when:
+      // 1. Using historical prices (output_intermediate_prices is skipped), OR
+      // 2. Staying on the same date (output_intermediate_prices won't handle it)
+      // When moving between dates with intermediate prices enabled,
+      // output_intermediate_prices handles the revaluation.
+      if (historical_prices_only || last_post->value_date() == post.value_date())
+        output_revaluation(*last_post, post.value_date());
+    }
   }
 
   if (changed_values_only)

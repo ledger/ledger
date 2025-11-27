@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -284,7 +284,7 @@ void report_accounts::flush()
 {
   std::ostream& out(report.output_stream);
   format_t      prepend_format;
-  std::size_t   prepend_width;
+  std::size_t   prepend_width = 0;
   bool          do_prepend_format;
 
   if ((do_prepend_format = report.HANDLED(prepend_format_))) {

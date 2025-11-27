@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2023, John Wiegley.  All rights reserved.
+ * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -217,6 +217,7 @@ public:
     {
       TRACE_CTOR(query_t::lexer_t, "copy");
     }
+    lexer_t& operator=(const lexer_t&) = default;
     ~lexer_t() throw() {
       TRACE_DTOR(query_t::lexer_t);
     }
