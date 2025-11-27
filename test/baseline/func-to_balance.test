@@ -9,7 +9,7 @@ end test
 test reg --display-amount "to_balance()" -> 1
 __ERROR__
 While calling function 'to_balance ':
-While handling posting from "/Users/johnw/src/ledger/work/more-tests/test/baseline/func-to_balance.test", line 2:
+While handling posting from "$sourcepath/test/baseline/func-to_balance.test", line 2:
 >     Assets:Test                       $100.00
 Error: Too few arguments to function
 end test

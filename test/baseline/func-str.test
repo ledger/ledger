@@ -13,7 +13,7 @@ end test
 test reg --display-amount "str()" -> 1
 __ERROR__
 While calling function 'str ':
-While handling posting from "/Users/johnw/src/ledger/work/more-tests/test/baseline/func-str.test", line 2:
+While handling posting from "$sourcepath/test/baseline/func-str.test", line 2:
 >     Assets:Test                       $100.00
 Error: Too few arguments to function
 end test

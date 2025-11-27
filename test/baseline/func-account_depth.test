@@ -4,7 +4,7 @@
 
 test reg --display-amount "account_depth(account())" -> 1
 __ERROR__
-While handling posting from "/Users/johnw/src/ledger/work/more-tests/test/baseline/func-account_depth.test", line 2:
+While handling posting from "$sourcepath/test/baseline/func-account_depth.test", line 2:
 >     Assets:Test                       $100.00
 Error: Unknown identifier 'account_depth'
 end test

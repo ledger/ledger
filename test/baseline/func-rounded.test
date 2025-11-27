@@ -14,7 +14,7 @@ test reg --display-amount "rounded()" -> 1
 __ERROR__
 While rounding :
 While calling function 'rounded ':
-While handling posting from "/Users/johnw/src/ledger/work/more-tests/test/baseline/func-rounded.test", line 2:
+While handling posting from "$sourcepath/test/baseline/func-rounded.test", line 2:
 >     Assets:Test                       $100.00
 Error: Cannot set rounding for an uninitialized value
 end test
