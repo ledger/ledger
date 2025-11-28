@@ -9,13 +9,13 @@
     Expenses:Transport:Gas         $30.00
     Assets:Checking
 
-test reg --depth 1 --date-format %y-%b-%d
-24-Jan-01 Test Transaction      Expenses                    $180.00      $180.00
+test reg --depth 1 --date-format %Y-%m-%d
+2024-01-01 Test Transaction     Expenses                    $180.00      $180.00
                                 Assets                     $-180.00            0
 end test
 
-test reg --depth 2 --date-format %y-%b-%d
-24-Jan-01 Test Transaction      Expenses:Food               $150.00      $150.00
+test reg --depth 2 --date-format %Y-%m-%d
+2024-01-01 Test Transaction     Expenses:Food               $150.00      $150.00
                                 Expenses:Transport           $30.00      $180.00
                                 Assets:Checking            $-180.00            0
 end test
