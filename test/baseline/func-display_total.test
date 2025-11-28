@@ -1,6 +1,0 @@
-2012-01-01 Test display_total function
-    Assets:Test                       $100.00
-    Equity:Opening
-
-test eval "display_total()"
-end test

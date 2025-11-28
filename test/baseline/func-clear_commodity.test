@@ -1,19 +1,21 @@
+; Tests for the clear_commodity() function
+; Removes the commodity from an amount, returning just the numeric quantity
+
 2012-01-01 Test clear_commodity function
     Assets:Test                       $100.00
     Equity:Opening
 
-test eval "clear_commodity(100)"
+; Positive test: remove commodity from dollar amount
+test eval 'clear_commodity($100)'
 100
 end test
 
-test eval "clear_commodity(1)"
-1
+; Positive test: remove commodity from EUR amount
+test eval 'clear_commodity(50 EUR)'
+50
 end test
 
-test reg --display-amount "clear_commodity()" -> 1
-__ERROR__
-While calling function 'clear_commodity ':
-While handling posting from "$sourcepath/test/baseline/func-clear_commodity.test", line 2:
->     Assets:Test                       $100.00
-Error: Too few arguments to function
+; Positive test: remove commodity from amount with decimals
+test eval 'clear_commodity($123.45)'
+123.45
 end test

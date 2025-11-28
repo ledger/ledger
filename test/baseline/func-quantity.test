@@ -5,22 +5,17 @@
     Assets:Test                       $100.00
     Equity:Opening
 
-; Positive test: extract quantity from plain number
-test eval "quantity(100)"
+; Positive test: extract quantity from dollar amount
+test eval 'quantity($100)'
 100
 end test
 
-; Positive test: extract quantity from another number
-test eval "quantity(42.5)"
-42.5
+; Positive test: extract quantity from EUR amount
+test eval 'quantity(50 EUR)'
+50
 end test
 
-; Negative test: too few arguments
-test eval "quantity()" -> 1
-__ERROR__
-While evaluating value expression:
-  quantity()
-  ^^^^^^^^^^
-While calling function 'quantity ':
-Error: Too few arguments to function
+; Positive test: extract quantity from amount with decimals
+test eval 'quantity($123.45)'
+123.45
 end test

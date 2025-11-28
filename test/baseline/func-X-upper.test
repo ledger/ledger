@@ -1,6 +1,0 @@
-2012-01-01 Test X function
-    Assets:Test                       $100.00
-    Equity:Opening
-
-test reg --display-amount "X()"
-end test

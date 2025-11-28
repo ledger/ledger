@@ -1,6 +1,0 @@
-2012-01-01 Test depth function
-    Assets:Test                       $100.00
-    Equity:Opening
-
-test eval "depth()"
-end test

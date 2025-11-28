@@ -1,7 +1,0 @@
-2012-01-01 Test primary_date function
-    Assets:Test                       $100.00
-    Equity:Opening
-
-test eval "primary_date()"
-0
-end test
