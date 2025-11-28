@@ -1,0 +1,21 @@
+; Tests for the quantity() function
+; Extracts the numeric portion from an amount, stripping the commodity
+
+2012-01-01 Test quantity function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+; Positive test: extract quantity from dollar amount
+test eval 'quantity($100)'
+100
+end test
+
+; Positive test: extract quantity from EUR amount
+test eval 'quantity(50 EUR)'
+50
+end test
+
+; Positive test: extract quantity from amount with decimals
+test eval 'quantity($123.45)'
+123.45
+end test

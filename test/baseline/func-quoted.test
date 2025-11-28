@@ -1,0 +1,19 @@
+2012-01-01 Test quoted function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "quoted('hello')"
+"hello"
+end test
+
+test eval "quoted('test')"
+"test"
+end test
+
+test reg --display-amount "quoted()" -> 1
+__ERROR__
+While calling function 'quoted ':
+While handling posting from "$sourcepath/test/baseline/func-quoted.test", line 2:
+>     Assets:Test                       $100.00
+Error: Too few arguments to function
+end test

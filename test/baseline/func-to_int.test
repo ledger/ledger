@@ -1,0 +1,36 @@
+; Tests for the to_int() function
+; Converts a value to an integer (rounds to nearest)
+
+2012-01-01 Test to_int function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+; Positive test: convert number to int
+test eval "to_int(42)"
+42
+end test
+
+; Positive test: round decimal up
+test eval "to_int(42.7)"
+43
+end test
+
+; Positive test: round decimal down
+test eval "to_int(42.3)"
+42
+end test
+
+; Positive test: round negative (away from zero)
+test eval "to_int(-42.7)"
+-43
+end test
+
+; Negative test: too few arguments
+test eval "to_int()" -> 1
+__ERROR__
+While evaluating value expression:
+  to_int()
+  ^^^^^^^^
+While calling function 'to_int ':
+Error: Too few arguments to function
+end test

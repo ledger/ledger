@@ -1,0 +1,19 @@
+2012-01-01 Test to_date function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "to_date('2023-01-01')"
+2023/01/01
+end test
+
+test eval "to_date('2023/12/31')"
+2023/12/31
+end test
+
+test reg --display-amount "to_date()" -> 1
+__ERROR__
+While calling function 'to_date ':
+While handling posting from "$sourcepath/test/baseline/func-to_date.test", line 2:
+>     Assets:Test                       $100.00
+Error: Too few arguments to function
+end test

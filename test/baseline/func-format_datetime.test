@@ -1,0 +1,16 @@
+; Tests for the format_datetime() function
+; Formats a datetime value using a strftime format string
+
+2012-01-01 Test format_datetime function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+; Positive test: format current time with ISO date format
+test --now 2024/06/15 eval 'format_datetime(now, "%Y-%m-%d")'
+2024-06-15
+end test
+
+; Positive test: format with different format string
+test --now 2024/06/15 eval 'format_datetime(now, "%d/%m/%Y")'
+15/06/2024
+end test

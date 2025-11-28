@@ -1,0 +1,14 @@
+2012-01-01 Test func-false function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "false"
+0
+end test
+
+test reg --display-amount "false()" -> 1
+__ERROR__
+While handling posting from "$sourcepath/test/baseline/func-false.test", line 2:
+>     Assets:Test                       $100.00
+Error: Cannot call a boolean as a function
+end test

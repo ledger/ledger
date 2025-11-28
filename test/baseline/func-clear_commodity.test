@@ -1,0 +1,21 @@
+; Tests for the clear_commodity() function
+; Removes the commodity from an amount, returning just the numeric quantity
+
+2012-01-01 Test clear_commodity function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+; Positive test: remove commodity from dollar amount
+test eval 'clear_commodity($100)'
+100
+end test
+
+; Positive test: remove commodity from EUR amount
+test eval 'clear_commodity(50 EUR)'
+50
+end test
+
+; Positive test: remove commodity from amount with decimals
+test eval 'clear_commodity($123.45)'
+123.45
+end test

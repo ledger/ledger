@@ -1,0 +1,19 @@
+2012-01-01 Test max function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "max(100, 200)"
+200
+end test
+
+test eval "max(-50, 75)"
+75
+end test
+
+test reg --display-amount "max()" -> 1
+__ERROR__
+While calling function 'max ':
+While handling posting from "$sourcepath/test/baseline/func-max.test", line 2:
+>     Assets:Test                       $100.00
+Error: Too few arguments to function
+end test
