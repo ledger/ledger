@@ -1,0 +1,26 @@
+; Test for issue #634
+; Fixed by PR #96: Corrected behavior of floor, and added ceiling
+; https://github.com/ledger/ledger/issues/634
+; Correctly implement floor(), ceil() and round()
+
+2024/01/01 Test Transaction
+    Expenses        $100.567
+    Assets
+
+test bal --format "%(floor(amount))\n"
+$-101.000
+$100.000
+0
+end test
+
+test bal --format "%(ceiling(amount))\n"
+$-100.000
+$101.000
+0
+end test
+
+test bal --format "%(round(amount))\n"
+$-100.567
+$100.567
+0
+end test
