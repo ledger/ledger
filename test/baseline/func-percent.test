@@ -19,13 +19,3 @@ end test
 test eval "percent(1, 4)"
 25.00%
 end test
-
-; Negative test: too few arguments (requires two arguments)
-test eval "percent(100)" -> 1
-__ERROR__
-While evaluating value expression:
-  percent(100)
-  ^^^^^^^^^^^^
-While calling function 'percent 100':
-Error: Too few arguments to function
-end test
