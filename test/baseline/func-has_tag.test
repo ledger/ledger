@@ -1,11 +1,13 @@
-2012-01-01 Test has_tag function
+; Tests for the has_tag() function
+; Returns true if a posting has a tag matching the given pattern
+
+2012-01-01 Test has_tag
+    ; Note: this is a note
     Assets:Test                       $100.00
     Equity:Opening
 
-test reg --display-amount "has_tag()" -> 1
-__ERROR__
-While calling function 'has_tag ':
-While handling posting from "$sourcepath/test/baseline/func-has_tag.test", line 2:
->     Assets:Test                       $100.00
-Error: Too few arguments to function
+; Positive test: find posting with Note tag
+test reg --limit "has_tag(/Note/)"
+12-Jan-01 Test has_tag          Assets:Test                 $100.00      $100.00
+                                Equity:Opening             $-100.00            0
 end test

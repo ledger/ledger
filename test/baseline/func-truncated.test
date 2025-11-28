@@ -1,4 +1,16 @@
+; Tests for the truncated() function
+; Truncates a string to a specified width with ellipsis
 
-2012/01/01 Test truncated fun.. Assets:Test                 $100.00      $100.00
-                                Equity:Opening             $-100.00            0
+2012-01-01 Test truncated function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+; Positive test: truncate long string
+test eval 'truncated("hello world", 5)'
+hel..
+end test
+
+; Positive test: string shorter than width unchanged
+test eval 'truncated("hi", 10)'
+hi
 end test

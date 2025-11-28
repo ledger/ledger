@@ -1,12 +1,12 @@
-2012-01-01 Test account function
-    Assets:Test                       $100.00
+; Tests for the account variable
+; Returns the account associated with a posting
+
+2012-01-01 Test account
+    Assets:Bank:Checking              $100.00
     Equity:Opening
 
-test eval "account()" -> 1
-__ERROR__
-While evaluating value expression:
-  account()
-  ^^^^^^^^^
-While calling function 'account ':
-Error: Too few arguments to function
+; Positive test: display account in total column
+test reg --total "account"
+12-Jan-01 Test account          Assets:Bank:Checking        $100.00 Assets:Bank:Checking
+                                Equity:Opening             $-100.00 Equity:Opening
 end test

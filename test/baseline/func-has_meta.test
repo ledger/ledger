@@ -1,11 +1,13 @@
-2012-01-01 Test has_meta function
+; Tests for the has_meta() function
+; Returns true if a posting has metadata matching the given pattern
+
+2012-01-01 Test has_meta
+    ; Category: Food
     Assets:Test                       $100.00
     Equity:Opening
 
-test reg --display-amount "has_meta()" -> 1
-__ERROR__
-While calling function 'has_meta ':
-While handling posting from "$sourcepath/test/baseline/func-has_meta.test", line 2:
->     Assets:Test                       $100.00
-Error: Too few arguments to function
+; Positive test: find posting with Category metadata
+test reg --limit "has_meta(/Category/)"
+12-Jan-01 Test has_meta         Assets:Test                 $100.00      $100.00
+                                Equity:Opening             $-100.00            0
 end test

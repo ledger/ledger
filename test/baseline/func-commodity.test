@@ -1,12 +1,16 @@
+; Tests for the commodity() function
+; Extracts the commodity symbol from an amount
+
 2012-01-01 Test commodity function
     Assets:Test                       $100.00
     Equity:Opening
 
-test eval "commodity()" -> 1
-__ERROR__
-While evaluating value expression:
-  commodity()
-  ^^^^^^^^^^^
-While calling function 'commodity ':
-Error: Too few arguments to function
+; Positive test: extract dollar commodity
+test eval 'commodity($100)'
+$
+end test
+
+; Positive test: extract euro commodity
+test eval 'commodity(50 EUR)'
+EUR
 end test
