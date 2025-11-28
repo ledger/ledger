@@ -353,6 +353,21 @@ commodity_pool_t::parse_price_directive
   point.price.parse(symbol_and_price, PARSE_NO_MIGRATE);
   VERIFY(point.price.valid());
 
+  // Update the price commodity's precision based on the parsed amount.
+  // When PARSE_NO_MIGRATE is used, the commodity precision isn't automatically
+  // updated during parsing, so we need to do it manually here. However, only
+  // update if the commodity's precision is at the default value (0) AND the
+  // commodity hasn't been explicitly declared (COMMODITY_KNOWN) or had its
+  // format set (COMMODITY_STYLE_NO_MIGRATE). This ensures we don't override
+  // precision set by commodity directives, D directives, or N directives.
+  if (point.price.has_commodity()) {
+    commodity_t& price_commodity = point.price.commodity();
+    if (price_commodity.precision() == 0 &&
+        !price_commodity.has_flags(COMMODITY_KNOWN) &&
+        !price_commodity.has_flags(COMMODITY_STYLE_NO_MIGRATE))
+      price_commodity.set_precision(point.price.precision());
+  }
+
   DEBUG("commodity.download", "Looking up symbol: " << symbol);
   if (commodity_t * commodity = find_or_create(symbol)) {
     DEBUG("commodity.download", "Adding price for " << symbol << ": "
