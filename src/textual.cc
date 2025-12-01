@@ -1180,6 +1180,10 @@ void instance_t::commodity_format_directive(commodity_t& comm, string format)
            _f("commodity directive symbol %1% and format directive symbol %2% should be the same")
              % comm.symbol()
              % amt.commodity().symbol());
+  // Explicitly set the precision from the format directive. The parse() call
+  // above only updates precision when the new precision is greater, but a
+  // format directive should be authoritative and set the exact precision.
+  amt.commodity().set_precision(amt.precision());
   amt.commodity().add_flags(COMMODITY_STYLE_NO_MIGRATE);
   VERIFY(amt.valid());
 }
