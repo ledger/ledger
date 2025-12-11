@@ -125,31 +125,37 @@ account_t * account_t::find_account_re(const string& regexp)
   return find_account_re_(this, mask_t(regexp));
 }
 
-void account_t::add_post(post_t * post)
+void invalidate_xdata_cache(account_t *account)
 {
-  posts.push_back(post);
-
-  // Adding a new post changes the possible totals that may have been
-  // computed before.
-  if (xdata_) {
-    xdata_->self_details.gathered     = false;
-    xdata_->self_details.calculated   = false;
-    xdata_->family_details.gathered   = false;
-    xdata_->family_details.calculated = false;
-    if (! xdata_->family_details.total.is_null()) {
-      xdata_->family_details.total = ledger::value_t();
+  if (account->has_xdata()) {
+    account_t::xdata_t& xdata_ = account->xdata();
+    xdata_.self_details.gathered     = false;
+    xdata_.self_details.calculated   = false;
+    xdata_.family_details.gathered   = false;
+    xdata_.family_details.calculated = false;
+    if (! xdata_.family_details.total.is_null()) {
+      xdata_.family_details.total = ledger::value_t();
     }
-    account_t *ancestor = this;
+    account_t *ancestor = account;
     while (ancestor->parent) {
       ancestor = ancestor->parent;
       if (ancestor->has_xdata()) {
-        xdata_t &xdata = ancestor->xdata();
+        account_t::xdata_t &xdata = ancestor->xdata();
         xdata.family_details.gathered   = false;
         xdata.family_details.calculated = false;
         xdata.family_details.total = ledger::value_t();
       }
     }
   }
+}
+
+void account_t::add_post(post_t * post)
+{
+  posts.push_back(post);
+
+  // Adding a new post changes the possible totals that may have been
+  // computed before.
+  invalidate_xdata_cache(this);
 }
 
 void account_t::add_deferred_post(const string& uuid, post_t * post)
@@ -190,6 +196,14 @@ bool account_t::remove_post(post_t * post)
   // xact_t::finalize has not yet added that posting to the account.
   posts.remove(post);
   post->account = NULL;
+
+  // Invalidate cached iterators
+  if (xdata_) {
+    xdata_->self_details.last_post = none;
+    xdata_->self_details.last_reported_post = none;
+    invalidate_xdata_cache(this);
+  }
+
   return true;
 }
 
