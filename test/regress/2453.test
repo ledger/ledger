@@ -1,0 +1,17 @@
+; Test for issue #2453: Python API raw posts
+;
+; When using conditional automated transactions, the posts should be
+; correctly separated into raw and generated posts
+
+= Food
+    (Assets:Cash)    $100
+
+2012-03-01 KFC
+    Expenses:Food    $100
+    Assets:Credit
+
+test reg
+        2012-03-01 KFC        Expenses:Food          $100         $100
+                              Assets:Credit         $-100            0
+                              (Assets:Cash)          $100         $100
+end test
