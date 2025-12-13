@@ -49,18 +49,19 @@ optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
   char buf[256];
   buf[0] = '\0';
 
-  string getquote_cmd("getquote \"");
-  getquote_cmd += commodity.symbol();
-  getquote_cmd += "\" \"";
+  string getquote(commodity_pool_t::current_pool->getquote);
+  getquote += " \"";
+  getquote += commodity.symbol();
+  getquote += "\" \"";
   if (exchange_commodity)
-    getquote_cmd += exchange_commodity->symbol();
-  getquote_cmd += "\"";
+    getquote += exchange_commodity->symbol();
+  getquote += "\"";
 
-  DEBUG("commodity.download", "invoking command: " << getquote_cmd);
+  DEBUG("commodity.download", "invoking command: " << getquote);
 
   bool success = true;
 #if !defined(_WIN32) && !defined(__CYGWIN__)
-  if (FILE* fp = popen(getquote_cmd.c_str(), "r")) {
+  if (FILE* fp = popen(getquote.c_str(), "r")) {
     if (std::feof(fp) || !std::fgets(buf, 255, fp))
       success = false;
     if (pclose(fp) != 0)
@@ -87,8 +88,9 @@ optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
   } else {
     DEBUG("commodity.download",
           "Failed to download price for '"
-              << commodity.symbol() << "' (command: \"getquote " << commodity.symbol() << " "
-              << (exchange_commodity ? exchange_commodity->symbol() : "''") << "\")");
+          "' (command: \""
+                  << commodity_pool_t::current_pool->getquote << " " << commodity.symbol() < < < <
+              (exchange_commodity ? exchange_commodity->symbol() : "''") << "\")");
 
     // Don't try to download this commodity again.
     commodity.add_flags(COMMODITY_NOMARKET);

@@ -130,6 +130,8 @@ public:
   OPTION(session_t, day_break);
   OPTION(session_t, download); // -Q
 
+  OPTION__(session_t, getquote, CTOR(session_t, getquote) { value = "getquote"; });
+
   OPTION_(session_t, decimal_comma, DO() { commodity_t::decimal_comma_by_default = true; });
 
   OPTION_(session_t, time_colon, DO() { commodity_t::time_colon_by_default = true; });

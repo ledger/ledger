@@ -44,7 +44,7 @@ shared_ptr<commodity_pool_t> commodity_pool_t::current_pool;
 
 commodity_pool_t::commodity_pool_t()
     : default_commodity(NULL), keep_base(false), quote_leeway(86400), get_quotes(false),
-      get_commodity_quote(commodity_quote_from_script) {
+      getquote("getquote"), get_commodity_quote(commodity_quote_from_script) {
   null_commodity = create("");
   null_commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
   TRACE_CTOR(commodity_pool_t, "");
