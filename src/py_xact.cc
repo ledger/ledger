@@ -35,6 +35,7 @@
 #include "pyutils.h"
 #include "xact.h"
 #include "post.h"
+#include "item.h"
 
 namespace ledger {
 
@@ -42,6 +43,39 @@ using namespace python;
 using namespace boost::python;
 
 namespace {
+
+// Helper class to provide filtered iteration over posts
+class raw_posts_iterator {
+  posts_list::iterator current;
+  posts_list::iterator end;
+
+  void advance_to_next_raw() {
+    while (current != end && (*current)->has_flags(ITEM_GENERATED)) {
+      ++current;
+    }
+  }
+
+public:
+  raw_posts_iterator(posts_list::iterator begin, posts_list::iterator end_)
+      : current(begin), end(end_) {
+    advance_to_next_raw();
+  }
+
+  post_t* next() {
+    if (current == end) {
+      PyErr_SetString(PyExc_StopIteration, "");
+      boost::python::throw_error_already_set();
+    }
+    post_t* result = *current;
+    ++current;
+    advance_to_next_raw();
+    return result;
+  }
+};
+
+raw_posts_iterator* get_raw_posts_iterator(xact_base_t& xact) {
+  return new raw_posts_iterator(xact.posts.begin(), xact.posts.end());
+}
 
 long posts_len(xact_base_t& xact) {
   return static_cast<long>(xact.posts.size());
@@ -85,6 +119,11 @@ string py_xact_to_string(xact_t&) {
 using namespace boost::python;
 
 void export_xact() {
+  class_<raw_posts_iterator>("RawPostsIterator", no_init)
+      .def("__iter__", boost::python::self)
+      .def("__next__", &raw_posts_iterator::next, return_internal_reference<>())
+      .def("next", &raw_posts_iterator::next, return_internal_reference<>());
+
   class_<xact_base_t, bases<item_t>, noncopyable>("TransactionBase", no_init)
       .add_property("journal", make_getter(&xact_base_t::journal, return_internal_reference<>()),
                     make_setter(&xact_base_t::journal, with_custodian_and_ward<1, 2>()))
@@ -101,6 +140,8 @@ void export_xact() {
                                                                          &xact_t::posts_end))
       .def("posts", boost::python::range<return_internal_reference<>>(&xact_t::posts_begin,
                                                                       &xact_t::posts_end))
+      .def("raw_posts", &get_raw_posts_iterator, return_value_policy<manage_new_object>(),
+           "Return iterator for non-generated (raw) posts only")
 
       .def("valid", &xact_base_t::valid);
 
