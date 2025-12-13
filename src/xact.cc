@@ -798,12 +798,18 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
           string fullname = account->fullname();
           assert(!fullname.empty());
 
-          if (contains(fullname, "$account")) {
-            fullname =
-                regex_replace(fullname, regex("\\$account\\>"), initial_post->account->fullname());
-            while (account->parent)
-              account = account->parent;
-            account = account->find_account(fullname);
+          const regex re("\\$([A-Za-z_]+)");
+          smatch matches;
+          if (regex_search(fullname, matches, re)) {
+            bind_scope_t bound_scope(*context.scope, *initial_post->account);
+            const string subexpr = matches[1];
+            value_t result = expr_t(subexpr).calc(bound_scope);
+            if (result.is_string()) {
+              fullname = regex_replace(fullname, re, result.as_string());
+              while (account->parent)
+                account = account->parent;
+              account = account->find_account(fullname);
+            }
           } else if (contains(fullname, "%(")) {
             format_t account_name(fullname);
             std::ostringstream buf;
