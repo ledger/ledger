@@ -1,0 +1,42 @@
+name: clang-format
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
+
+      - name: Check formatting
+        run: |
+          # Find all C++ source files
+          files=$(find src -name '*.h' -o -name '*.cc' | sort)
+
+          # Check each file
+          failed=0
+          for file in $files; do
+            if ! clang-format --dry-run --Werror "$file" 2>/dev/null; then
+              echo "::error file=$file::File is not properly formatted"
+              failed=1
+            fi
+          done
+
+          if [ $failed -eq 1 ]; then
+            echo ""
+            echo "Some files are not properly formatted."
+            echo "Please run: find src -name '*.h' -o -name '*.cc' | xargs clang-format -i"
+            exit 1
+          fi
+
+          echo "All files are properly formatted!"
