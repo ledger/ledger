@@ -740,7 +740,10 @@ public:
   OPTION(report_t, inject_);
 
   OPTION_(report_t, invert, DO() {
-      OTHER(amount_).on(whence, "-amount_expr");
+      OTHER(display_amount_)
+        .on(whence, "-display_amount");
+      OTHER(display_total_)
+        .on(whence, "-display_total");
     });
 
   OPTION_
