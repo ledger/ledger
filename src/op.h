@@ -47,8 +47,7 @@ namespace ledger {
 
 using namespace boost::placeholders;
 
-class expr_t::op_t : public noncopyable
-{
+class expr_t::op_t : public noncopyable {
   friend class expr_t;
   friend class expr_t::parser_t;
 
@@ -57,15 +56,16 @@ public:
 
 private:
   mutable short refc;
-  ptr_op_t      left_;
+  ptr_op_t left_;
 
   variant<boost::blank,
-          ptr_op_t,             // used by all binary operators
-          value_t,              // used by constant VALUE
-          string,               // used by constant IDENT
-          expr_t::func_t,       // used by terminal FUNCTION
-          shared_ptr<scope_t>   // used by terminal SCOPE
-          > data;
+          ptr_op_t,           // used by all binary operators
+          value_t,            // used by constant VALUE
+          string,             // used by constant IDENT
+          expr_t::func_t,     // used by terminal FUNCTION
+          shared_ptr<scope_t> // used by terminal SCOPE
+          >
+      data;
 
 public:
   enum kind_t {
@@ -124,12 +124,8 @@ public:
 
   kind_t kind;
 
-  explicit op_t() : refc(0), kind(UNKNOWN) {
-    TRACE_CTOR(op_t, "");
-  }
-  explicit op_t(const kind_t _kind) : refc(0), kind(_kind) {
-    TRACE_CTOR(op_t, "const kind_t");
-  }
+  explicit op_t() : refc(0), kind(UNKNOWN) { TRACE_CTOR(op_t, ""); }
+  explicit op_t(const kind_t _kind) : refc(0), kind(_kind) { TRACE_CTOR(op_t, "const kind_t"); }
   ~op_t() {
     TRACE_DTOR(op_t);
     assert(refc == 0);
@@ -148,9 +144,7 @@ public:
     VERIFY(val.valid());
     return val;
   }
-  const value_t& as_value() const {
-    return const_cast<op_t *>(this)->as_value_lval();
-  }
+  const value_t& as_value() const { return const_cast<op_t*>(this)->as_value_lval(); }
   void set_value(const value_t& val) {
     VERIFY(val.valid());
     data = val;
@@ -167,43 +161,25 @@ public:
     assert(is_ident());
     return boost::get<string>(data);
   }
-  const string& as_ident() const {
-    return const_cast<op_t *>(this)->as_ident_lval();
-  }
-  void set_ident(const string& val) {
-    data = val;
-  }
+  const string& as_ident() const { return const_cast<op_t*>(this)->as_ident_lval(); }
+  void set_ident(const string& val) { data = val; }
 
-  bool is_function() const {
-    return kind == FUNCTION;
-  }
+  bool is_function() const { return kind == FUNCTION; }
   expr_t::func_t& as_function_lval() {
     assert(is_function());
     return boost::get<expr_t::func_t>(data);
   }
-  const expr_t::func_t& as_function() const {
-    return const_cast<op_t *>(this)->as_function_lval();
-  }
-  void set_function(const expr_t::func_t& val) {
-    data = val;
-  }
+  const expr_t::func_t& as_function() const { return const_cast<op_t*>(this)->as_function_lval(); }
+  void set_function(const expr_t::func_t& val) { data = val; }
 
-  bool is_scope() const {
-    return kind == SCOPE;
-  }
-  bool is_scope_unset() const {
-    return data.which() == 0;
-  }
+  bool is_scope() const { return kind == SCOPE; }
+  bool is_scope_unset() const { return data.which() == 0; }
   shared_ptr<scope_t> as_scope_lval() {
     assert(is_scope());
-    return boost::get<shared_ptr<scope_t> >(data);
+    return boost::get<shared_ptr<scope_t>>(data);
   }
-  const shared_ptr<scope_t> as_scope() const {
-    return const_cast<op_t *>(this)->as_scope_lval();
-  }
-  void set_scope(shared_ptr<scope_t> val) {
-    data = val;
-  }
+  const shared_ptr<scope_t> as_scope() const { return const_cast<op_t*>(this)->as_scope_lval(); }
+  void set_scope(shared_ptr<scope_t> val) { data = val; }
 
   // These three functions must use 'kind == IDENT' rather than
   // 'is_ident()', because they are called before the `data' member gets
@@ -225,9 +201,7 @@ public:
     assert(kind > TERMINALS || is_ident());
     return boost::get<ptr_op_t>(data);
   }
-  const ptr_op_t& as_op() const {
-    return const_cast<op_t *>(this)->as_op_lval();
-  }
+  const ptr_op_t& as_op() const { return const_cast<op_t*>(this)->as_op_lval(); }
 
   ptr_op_t& right() {
     assert(kind > TERMINALS);
@@ -249,21 +223,19 @@ public:
 
 private:
   void acquire() const {
-    DEBUG("op.memory",
-          "Acquiring " << this << ", refc now " << refc + 1);
+    DEBUG("op.memory", "Acquiring " << this << ", refc now " << refc + 1);
     assert(refc >= 0);
     refc++;
   }
   void release() const {
-    DEBUG("op.memory",
-          "Releasing " << this << ", refc now " << refc - 1);
+    DEBUG("op.memory", "Releasing " << this << ", refc now " << refc - 1);
     assert(refc > 0);
     if (--refc == 0)
       checked_delete(this);
   }
 
-  friend void intrusive_ptr_add_ref(const op_t * op);
-  friend void intrusive_ptr_release(const op_t * op);
+  friend void intrusive_ptr_add_ref(const op_t* op);
+  friend void intrusive_ptr_release(const op_t* op);
 
   ptr_op_t copy(ptr_op_t _left = NULL, ptr_op_t _right = NULL) const {
     ptr_op_t node(new_node(kind, _left, _right));
@@ -273,35 +245,27 @@ private:
   }
 
 public:
-  static ptr_op_t new_node(kind_t _kind, ptr_op_t _left = NULL,
-                           ptr_op_t _right = NULL);
+  static ptr_op_t new_node(kind_t _kind, ptr_op_t _left = NULL, ptr_op_t _right = NULL);
 
-  ptr_op_t compile(scope_t& scope, const int depth = 0,
-                   scope_t * param_scope = NULL);
-  value_t  calc(scope_t& scope, ptr_op_t * locus = NULL,
-                const int depth = 0);
+  ptr_op_t compile(scope_t& scope, const int depth = 0, scope_t* param_scope = NULL);
+  value_t calc(scope_t& scope, ptr_op_t* locus = NULL, const int depth = 0);
 
-  value_t call(const value_t& args, scope_t& scope,
-               ptr_op_t * locus = NULL, const int depth = 0);
+  value_t call(const value_t& args, scope_t& scope, ptr_op_t* locus = NULL, const int depth = 0);
 
-  struct context_t
-  {
-    ptr_op_t                 expr_op;
-    ptr_op_t                 op_to_find;
-    std::ostream::pos_type * start_pos;
-    std::ostream::pos_type * end_pos;
-    bool                     relaxed;
+  struct context_t {
+    ptr_op_t expr_op;
+    ptr_op_t op_to_find;
+    std::ostream::pos_type* start_pos;
+    std::ostream::pos_type* end_pos;
+    bool relaxed;
 
     context_t() : start_pos(NULL), end_pos(NULL), relaxed(false) {}
 
-    context_t(const ptr_op_t&                _expr_op,
-              const ptr_op_t&                _op_to_find,
-              std::ostream::pos_type * const _start_pos  = NULL,
-              std::ostream::pos_type * const _end_pos    = NULL,
-              const bool                     _relaxed    = true)
-      : expr_op(_expr_op), op_to_find(_op_to_find),
-        start_pos(_start_pos), end_pos(_end_pos),
-        relaxed(_relaxed) {}
+    context_t(const ptr_op_t& _expr_op, const ptr_op_t& _op_to_find,
+              std::ostream::pos_type* const _start_pos = NULL,
+              std::ostream::pos_type* const _end_pos = NULL, const bool _relaxed = true)
+        : expr_op(_expr_op), op_to_find(_op_to_find), start_pos(_start_pos), end_pos(_end_pos),
+          relaxed(_relaxed) {}
   };
 
   bool print(std::ostream& out, const context_t& context = context_t()) const;
@@ -312,17 +276,17 @@ public:
   static ptr_op_t wrap_scope(shared_ptr<scope_t> sobj);
 
 private:
-  value_t calc_call(scope_t& scope, ptr_op_t * locus, const int depth);
-  value_t calc_cons(scope_t& scope, ptr_op_t * locus, const int depth);
-  value_t calc_seq(scope_t& scope, ptr_op_t * locus, const int depth);
+  value_t calc_call(scope_t& scope, ptr_op_t* locus, const int depth);
+  value_t calc_cons(scope_t& scope, ptr_op_t* locus, const int depth);
+  value_t calc_seq(scope_t& scope, ptr_op_t* locus, const int depth);
 };
 
-inline expr_t::ptr_op_t
-expr_t::op_t::new_node(kind_t _kind, ptr_op_t _left, ptr_op_t _right)
-{
+inline expr_t::ptr_op_t expr_t::op_t::new_node(kind_t _kind, ptr_op_t _left, ptr_op_t _right) {
   ptr_op_t node(new op_t(_kind));
-  if (_left)  node->set_left(_left);
-  if (_right) node->set_right(_right);
+  if (_left)
+    node->set_left(_left);
+  if (_right)
+    node->set_right(_right);
   return node;
 }
 
@@ -332,8 +296,7 @@ inline expr_t::ptr_op_t expr_t::op_t::wrap_value(const value_t& val) {
   return temp;
 }
 
-inline expr_t::ptr_op_t
-expr_t::op_t::wrap_functor(expr_t::func_t fobj) {
+inline expr_t::ptr_op_t expr_t::op_t::wrap_functor(expr_t::func_t fobj) {
   ptr_op_t temp(new op_t(op_t::FUNCTION));
   temp->set_function(fobj);
   return temp;
@@ -342,8 +305,7 @@ expr_t::op_t::wrap_functor(expr_t::func_t fobj) {
 #define MAKE_FUNCTOR(x) expr_t::op_t::wrap_functor(bind(&x, this, _1))
 #define WRAP_FUNCTOR(x) expr_t::op_t::wrap_functor(x)
 
-string op_context(const expr_t::ptr_op_t op,
-                  const expr_t::ptr_op_t locus = NULL);
+string op_context(const expr_t::ptr_op_t op, const expr_t::ptr_op_t locus = NULL);
 
 value_t split_cons_expr(expr_t::ptr_op_t op);
 

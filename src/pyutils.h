@@ -43,21 +43,19 @@
  */
 #pragma once
 
-namespace ledger { namespace python {
+namespace ledger {
+namespace python {
 
 template <typename T, typename TfromPy>
-struct object_from_python
-{
+struct object_from_python {
   object_from_python() {
-    boost::python::converter::registry::insert
-      (&TfromPy::convertible, &TfromPy::construct,
-       boost::python::type_id<T>());
+    boost::python::converter::registry::insert(&TfromPy::convertible, &TfromPy::construct,
+                                               boost::python::type_id<T>());
   }
 };
 
 template <typename T, typename TtoPy, typename TfromPy>
-struct register_python_conversion
-{
+struct register_python_conversion {
   register_python_conversion() {
     boost::python::to_python_converter<T, TtoPy>();
     object_from_python<T, TfromPy>();
@@ -65,22 +63,16 @@ struct register_python_conversion
 };
 
 template <typename T>
-struct register_optional_to_python : public boost::noncopyable
-{
-  struct optional_to_python
-  {
-    static PyObject * convert(const boost::optional<T>& value)
-    {
-      return boost::python::incref
-        (value ? boost::python::to_python_value<T>()(*value) :
-                 boost::python::detail::none());
+struct register_optional_to_python : public boost::noncopyable {
+  struct optional_to_python {
+    static PyObject* convert(const boost::optional<T>& value) {
+      return boost::python::incref(value ? boost::python::to_python_value<T>()(*value)
+                                         : boost::python::detail::none());
     }
   };
 
-  struct optional_from_python
-  {
-    static void * convertible(PyObject * source)
-    {
+  struct optional_from_python {
+    static void* convertible(PyObject* source) {
       using namespace boost::python::converter;
 
       if (source == Py_None)
@@ -89,23 +81,21 @@ struct register_optional_to_python : public boost::noncopyable
       const registration& converters(registered<T>::converters);
 
       if (implicit_rvalue_convertible_from_python(source, converters)) {
-        rvalue_from_python_stage1_data data =
-          rvalue_from_python_stage1(source, converters);
+        rvalue_from_python_stage1_data data = rvalue_from_python_stage1(source, converters);
         return rvalue_from_python_stage2(source, data, converters);
       }
       return NULL;
     }
 
-    static void construct(PyObject * source,
-                          boost::python::converter::rvalue_from_python_stage1_data * data)
-    {
+    static void construct(PyObject* source,
+                          boost::python::converter::rvalue_from_python_stage1_data* data) {
       using namespace boost::python::converter;
 
       const T value = typename boost::python::extract<T>(source);
 
-      void * storage = ((rvalue_from_python_storage<boost::optional<T>>*) data)->storage.bytes;
+      void* storage = ((rvalue_from_python_storage<boost::optional<T>>*)data)->storage.bytes;
 
-      if (source == Py_None)      // == None
+      if (source == Py_None)                // == None
         new (storage) boost::optional<T>(); // A Boost uninitialized value
       else
         new (storage) boost::optional<T>(value);
@@ -115,86 +105,66 @@ struct register_optional_to_python : public boost::noncopyable
   };
 
   explicit register_optional_to_python() {
-    register_python_conversion<boost::optional<T>,
-                               optional_to_python, optional_from_python>();
+    register_python_conversion<boost::optional<T>, optional_to_python, optional_from_python>();
   }
 };
 
 template <typename T1, typename T2>
-struct PairToTupleConverter
-{
-  static PyObject * convert(const std::pair<T1, T2>& pair) {
-    return boost::python::incref
-      (boost::python::make_tuple(pair.first, pair.second).ptr());
+struct PairToTupleConverter {
+  static PyObject* convert(const std::pair<T1, T2>& pair) {
+    return boost::python::incref(boost::python::make_tuple(pair.first, pair.second).ptr());
   }
 };
 
 template <typename MapType>
-struct map_value_type_converter
-{
+struct map_value_type_converter {
   map_value_type_converter() {
-    boost::python::to_python_converter
-      <typename MapType::value_type,
-       PairToTupleConverter<const typename MapType::key_type,
-                            typename MapType::mapped_type> >();
+    boost::python::to_python_converter<
+        typename MapType::value_type,
+        PairToTupleConverter<const typename MapType::key_type, typename MapType::mapped_type>>();
   }
 };
 
 template <typename T>
-PyObject * str_to_py_unicode(const T& str)
-{
+PyObject* str_to_py_unicode(const T& str) {
   using namespace boost::python;
-  PyObject * uni = PyUnicode_FromString(str.c_str());
+  PyObject* uni = PyUnicode_FromString(str.c_str());
   return object(handle<>(borrowed(uni))).ptr();
 }
 
-} } // namespace ledger::python
+} // namespace python
+} // namespace ledger
 
-namespace boost { namespace python {
+namespace boost {
+namespace python {
 
 // Use expr to create the PyObject corresponding to x
-# define BOOST_PYTHON_RETURN_TO_PYTHON_BY_VALUE(T, expr, pytype)\
-    template <> struct to_python_value<T&>                      \
-        : detail::builtin_to_python                             \
-    {                                                           \
-        inline PyObject* operator()(T const& x) const           \
-        {                                                       \
-            return (expr);                                      \
-        }                                                       \
-        inline PyTypeObject const* get_pytype() const           \
-        {                                                       \
-            return (pytype);                                    \
-        }                                                       \
-    };                                                          \
-    template <> struct to_python_value<T const&>                \
-        : detail::builtin_to_python                             \
-    {                                                           \
-        inline PyObject* operator()(T const& x) const           \
-        {                                                       \
-            return (expr);                                      \
-        }                                                       \
-        inline PyTypeObject const* get_pytype() const           \
-        {                                                       \
-            return (pytype);                                    \
-        }                                                       \
-    };
+#define BOOST_PYTHON_RETURN_TO_PYTHON_BY_VALUE(T, expr, pytype)                                    \
+  template <>                                                                                      \
+  struct to_python_value<T&> : detail::builtin_to_python {                                         \
+    inline PyObject* operator()(T const& x) const { return (expr); }                               \
+    inline PyTypeObject const* get_pytype() const { return (pytype); }                             \
+  };                                                                                               \
+  template <>                                                                                      \
+  struct to_python_value<T const&> : detail::builtin_to_python {                                   \
+    inline PyObject* operator()(T const& x) const { return (expr); }                               \
+    inline PyTypeObject const* get_pytype() const { return (pytype); }                             \
+  };
 
-# define BOOST_PYTHON_ARG_TO_PYTHON_BY_VALUE(T, expr)   \
-    namespace converter                                 \
-    {                                                   \
-      template <> struct arg_to_python< T >             \
-        : handle<>                                      \
-      {                                                 \
-          arg_to_python(T const& x)                     \
-            : boost::python::handle<>(expr) {}                 \
-      };                                                \
-    }
+#define BOOST_PYTHON_ARG_TO_PYTHON_BY_VALUE(T, expr)                                               \
+  namespace converter {                                                                            \
+  template <>                                                                                      \
+  struct arg_to_python<T> : handle<> {                                                             \
+    arg_to_python(T const& x) : boost::python::handle<>(expr) {}                                   \
+  };                                                                                               \
+  }
 
 // Specialize argument and return value converters for T using expr
-# define BOOST_PYTHON_TO_PYTHON_BY_VALUE(T, expr, pytype)  \
-        BOOST_PYTHON_RETURN_TO_PYTHON_BY_VALUE(T,expr, pytype)  \
-        BOOST_PYTHON_ARG_TO_PYTHON_BY_VALUE(T,expr)
+#define BOOST_PYTHON_TO_PYTHON_BY_VALUE(T, expr, pytype)                                           \
+  BOOST_PYTHON_RETURN_TO_PYTHON_BY_VALUE(T, expr, pytype)                                          \
+  BOOST_PYTHON_ARG_TO_PYTHON_BY_VALUE(T, expr)
 
-} } // namespace boost::python
+} // namespace python
+} // namespace boost
 
-//boost::python::register_ptr_to_python< boost::shared_ptr<Base> >();
+// boost::python::register_ptr_to_python< boost::shared_ptr<Base> >();

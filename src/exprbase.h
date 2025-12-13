@@ -67,38 +67,32 @@ class scope_t;
 class call_scope_t;
 
 template <typename ResultType>
-class expr_base_t
-{
+class expr_base_t {
 public:
   typedef ResultType result_type;
 
-  typedef function<result_type (call_scope_t&)> func_t;
+  typedef function<result_type(call_scope_t&)> func_t;
 
 protected:
-  scope_t * context;
-  string    str;
-  bool      compiled;
+  scope_t* context;
+  string str;
+  bool compiled;
 
   virtual result_type real_calc(scope_t& scope) = 0;
 
 public:
-  expr_base_t(const expr_base_t& other)
-    : context(other.context), str(other.str), compiled(false) {
+  expr_base_t(const expr_base_t& other) : context(other.context), str(other.str), compiled(false) {
     TRACE_CTOR(expr_base_t, "copy");
   }
-  expr_base_t(scope_t * _context = NULL)
-    : context(_context), compiled(false)
-  {
+  expr_base_t(scope_t* _context = NULL) : context(_context), compiled(false) {
     TRACE_CTOR(expr_base_t, "scope_t *");
   }
-  virtual ~expr_base_t() {
-    TRACE_DTOR(expr_base_t);
-  }
+  virtual ~expr_base_t() { TRACE_DTOR(expr_base_t); }
 
   expr_base_t& operator=(const expr_base_t& _expr) {
     if (this != &_expr) {
-      str      = _expr.str;
-      context  = _expr.context;
+      str = _expr.str;
+      context = _expr.context;
       compiled = _expr.compiled;
     }
     return *this;
@@ -108,32 +102,24 @@ public:
     return *this;
   }
 
-  virtual operator bool() const throw() {
-    return ! str.empty();
-  }
+  virtual operator bool() const throw() { return !str.empty(); }
 
-  virtual string text() const throw() {
-    return str;
-  }
+  virtual string text() const throw() { return str; }
   void set_text(const string& txt) {
-    str      = txt;
+    str = txt;
     compiled = false;
   }
 
-  void parse(const string& expr_str,
-             const parse_flags_t& flags = PARSE_DEFAULT) {
+  void parse(const string& expr_str, const parse_flags_t& flags = PARSE_DEFAULT) {
     std::istringstream stream(expr_str);
     return parse(stream, flags, expr_str);
   }
-  virtual void parse(std::istream&,
-                     const parse_flags_t& = PARSE_DEFAULT,
+  virtual void parse(std::istream&, const parse_flags_t& = PARSE_DEFAULT,
                      const optional<string>& original_string = none) {
     set_text(original_string ? *original_string : "<stream>");
   }
 
-  virtual void mark_uncompiled() {
-    compiled = false;
-  }
+  virtual void mark_uncompiled() { compiled = false; }
 
   void recompile(scope_t& scope) {
     compiled = false;
@@ -141,20 +127,17 @@ public:
   }
 
   virtual void compile(scope_t& scope) {
-    if (! compiled) {
+    if (!compiled) {
       // Derived classes need to do something here.
-      context  = &scope;
+      context = &scope;
       compiled = true;
     }
   }
 
-  result_type operator()(scope_t& scope) {
-    return calc(scope);
-  }
+  result_type operator()(scope_t& scope) { return calc(scope); }
 
-  result_type calc(scope_t& scope)
-  {
-    if (! compiled) {
+  result_type calc(scope_t& scope) {
+    if (!compiled) {
 #if DEBUG_ON
       if (SHOW_DEBUG("expr.compile")) {
         DEBUG("expr.compile", "Before compilation:");
@@ -182,16 +165,10 @@ public:
     return calc(*context);
   }
 
-  scope_t * get_context() {
-    return context;
-  }
-  void set_context(scope_t * scope) {
-    context = scope;
-  }
+  scope_t* get_context() { return context; }
+  void set_context(scope_t* scope) { context = scope; }
 
-  virtual string context_to_str() const {
-    return empty_string;
-  }
+  virtual string context_to_str() const { return empty_string; }
 
   string print_to_str() const {
     std::ostringstream out;
@@ -233,8 +210,7 @@ public:
 };
 
 template <typename ResultType>
-std::ostream& operator<<(std::ostream& out,
-                         const expr_base_t<ResultType>& expr) {
+std::ostream& operator<<(std::ostream& out, const expr_base_t<ResultType>& expr) {
   expr.print(out);
   return out;
 }

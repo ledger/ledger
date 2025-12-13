@@ -37,10 +37,9 @@ namespace ledger {
 
 bool item_t::use_aux_date = false;
 
-bool item_t::has_tag(const string& tag, bool) const
-{
+bool item_t::has_tag(const string& tag, bool) const {
   DEBUG("item.meta", "Checking if item has tag: " << tag);
-  if (! metadata) {
+  if (!metadata) {
     DEBUG("item.meta", "Item has no metadata at all");
     return false;
   }
@@ -56,13 +55,11 @@ bool item_t::has_tag(const string& tag, bool) const
   return i != metadata->end();
 }
 
-bool item_t::has_tag(const mask_t& tag_mask,
-                     const optional<mask_t>& value_mask, bool) const
-{
+bool item_t::has_tag(const mask_t& tag_mask, const optional<mask_t>& value_mask, bool) const {
   if (metadata) {
     foreach (const string_map::value_type& data, *metadata) {
       if (tag_mask.match(data.first)) {
-        if (! value_mask)
+        if (!value_mask)
           return true;
         else if (data.second.first)
           return value_mask->match(data.second.first->to_string());
@@ -72,8 +69,7 @@ bool item_t::has_tag(const mask_t& tag_mask,
   return false;
 }
 
-optional<value_t> item_t::get_tag(const string& tag, bool) const
-{
+optional<value_t> item_t::get_tag(const string& tag, bool) const {
   DEBUG("item.meta", "Getting item tag: " << tag);
   if (metadata) {
     DEBUG("item.meta", "Item has metadata");
@@ -86,16 +82,13 @@ optional<value_t> item_t::get_tag(const string& tag, bool) const
   return none;
 }
 
-optional<value_t> item_t::get_tag(const mask_t& tag_mask,
-                                  const optional<mask_t>& value_mask,
-                                  bool) const
-{
+optional<value_t> item_t::get_tag(const mask_t& tag_mask, const optional<mask_t>& value_mask,
+                                  bool) const {
   if (metadata) {
     foreach (const string_map::value_type& data, *metadata) {
       if (tag_mask.match(data.first) &&
-          (! value_mask ||
-           (data.second.first &&
-            value_mask->match(data.second.first->to_string())))) {
+          (!value_mask ||
+           (data.second.first && value_mask->match(data.second.first->to_string())))) {
         return data.second.first;
       }
     }
@@ -104,40 +97,36 @@ optional<value_t> item_t::get_tag(const mask_t& tag_mask,
 }
 
 namespace {
-  struct CaseInsensitiveKeyCompare
+struct CaseInsensitiveKeyCompare
 #if __cplusplus < 201103L
     : public std::binary_function<string, string, bool>
 #endif
-  {
-    bool operator()(const string& s1, const string& s2) const {
-      return boost::algorithm::ilexicographical_compare(s1, s2);
-    }
-  };
-}
-
-item_t::string_map::iterator
-item_t::set_tag(const string&            tag,
-                const optional<value_t>& value,
-                const bool               overwrite_existing)
 {
-  assert(! tag.empty());
+  bool operator()(const string& s1, const string& s2) const {
+    return boost::algorithm::ilexicographical_compare(s1, s2);
+  }
+};
+} // namespace
 
-  if (! metadata)
+item_t::string_map::iterator item_t::set_tag(const string& tag, const optional<value_t>& value,
+                                             const bool overwrite_existing) {
+  assert(!tag.empty());
+
+  if (!metadata)
     metadata = string_map(CaseInsensitiveKeyCompare());
 
   DEBUG("item.meta", "Setting tag '" << tag << "' to value '"
-        << (value ? *value : string_value("<none>")) << "'");
+                                     << (value ? *value : string_value("<none>")) << "'");
 
   optional<value_t> data = value;
-  if (data && (data->is_null() ||
-               (data->is_string() && data->as_string().empty())))
+  if (data && (data->is_null() || (data->is_string() && data->as_string().empty())))
     data = none;
 
   string_map::iterator i = metadata->find(tag);
   if (i == metadata->end()) {
     DEBUG("item.meta", "Setting new metadata value");
-    std::pair<string_map::iterator, bool> result
-      = metadata->insert(string_map::value_type(tag, tag_data_t(data, false)));
+    std::pair<string_map::iterator, bool> result =
+        metadata->insert(string_map::value_type(tag, tag_data_t(data, false)));
     assert(result.second);
     return result.first;
   } else {
@@ -150,21 +139,17 @@ item_t::set_tag(const string&            tag,
   }
 }
 
-void item_t::parse_tags(const char * p,
-                        scope_t&     scope,
-                        bool         overwrite_existing)
-{
-  if (! std::strchr(p, ':')) {
-    if (const char * b = std::strchr(p, '[')) {
+void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) {
+  if (!std::strchr(p, ':')) {
+    if (const char* b = std::strchr(p, '[')) {
       if (*(b + 1) != '\0' &&
-          (std::isdigit(static_cast<unsigned char>(*(b + 1))) ||
-           *(b + 1) == '=')) {
-        if (const char * e = std::strchr(b, ']')) {
+          (std::isdigit(static_cast<unsigned char>(*(b + 1))) || *(b + 1) == '=')) {
+        if (const char* e = std::strchr(b, ']')) {
           char buf[256];
           std::strncpy(buf, b + 1, static_cast<std::size_t>(e - b - 1));
           buf[e - b - 1] = '\0';
 
-          if (char * pp = std::strchr(buf, '=')) {
+          if (char* pp = std::strchr(buf, '=')) {
             *pp++ = '\0';
             _date_aux = parse_date(pp);
           }
@@ -181,26 +166,22 @@ void item_t::parse_tags(const char * p,
   std::strcpy(buf.get(), p);
 
   string tag;
-  bool   by_value = false;
-  bool   first = true;
-  for (char * q = std::strtok(buf.get(), " \t");
-       q;
-       q = std::strtok(NULL, " \t")) {
+  bool by_value = false;
+  bool first = true;
+  for (char* q = std::strtok(buf.get(), " \t"); q; q = std::strtok(NULL, " \t")) {
     const string::size_type len = std::strlen(q);
-    if (len < 2) continue;
+    if (len < 2)
+      continue;
     if (q[0] == ':' && q[len - 1] == ':') { // a series of tags
-      for (char * r = std::strtok(q + 1, ":");
-           r;
-           r = std::strtok(NULL, ":")) {
+      for (char* r = std::strtok(q + 1, ":"); r; r = std::strtok(NULL, ":")) {
         string_map::iterator i = set_tag(r, none, overwrite_existing);
         (*i).second.second = true;
       }
-    }
-    else if (first && q[len - 1] == ':') { // a metadata setting
+    } else if (first && q[len - 1] == ':') { // a metadata setting
       std::size_t index = 1;
       if (q[len - 2] == ':') {
         by_value = true;
-        index    = 2;
+        index = 2;
       }
       tag = string(q, len - index);
 
@@ -220,10 +201,7 @@ void item_t::parse_tags(const char * p,
   }
 }
 
-void item_t::append_note(const char * p,
-                         scope_t&     scope,
-                         bool         overwrite_existing)
-{
+void item_t::append_note(const char* p, scope_t& scope, bool overwrite_existing) {
   if (note) {
     *note += '\n';
     *note += p;
@@ -235,167 +213,156 @@ void item_t::append_note(const char * p,
 }
 
 namespace {
-  value_t get_status(item_t& item) {
-    return long(item.state());
-  }
-  value_t get_uncleared(item_t& item) {
-    return item.state() == item_t::UNCLEARED;
-  }
-  value_t get_cleared(item_t& item) {
-    return item.state() == item_t::CLEARED;
-  }
-  value_t get_pending(item_t& item) {
-    return item.state() == item_t::PENDING;
-  }
-
-  value_t get_actual(item_t& item) {
-    return ! item.has_flags(ITEM_GENERATED | ITEM_TEMP);
-  }
-
-  value_t get_date(item_t& item) {
-    return item.date();
-  }
-  value_t get_primary_date(item_t& item) {
-    return item.primary_date();
-  }
-  value_t get_aux_date(item_t& item) {
-    if (optional<date_t> aux_date = item.aux_date())
-      return *aux_date;
-    return NULL_VALUE;
-  }
-  value_t get_note(item_t& item) {
-    return item.note ? string_value(*item.note) : NULL_VALUE;
-  }
-
-  value_t has_tag(call_scope_t& args) {
-    item_t& item(find_scope<item_t>(args));
-
-    if (args.size() == 1) {
-      if (args[0].is_string())
-        return item.has_tag(args.get<string>(0));
-      else if (args[0].is_mask())
-        return item.has_tag(args.get<mask_t>(0));
-      else
-        throw_(std::runtime_error,
-               _f("Expected string or mask for argument 1, but received %1%")
-               % args[0].label());
-    }
-    else if (args.size() == 2) {
-      if (args[0].is_mask() && args[1].is_mask())
-        return item.has_tag(args.get<mask_t>(0), args.get<mask_t>(1));
-      else
-        throw_(std::runtime_error,
-               _f("Expected masks for arguments 1 and 2, but received %1% and %2%")
-               % args[0].label() % args[1].label());
-    }
-    else if (args.size() == 0) {
-      throw_(std::runtime_error, _("Too few arguments to function"));
-    }
-    else {
-      throw_(std::runtime_error, _("Too many arguments to function"));
-    }
-    return false;
-  }
-
-  value_t get_tag(call_scope_t& args)
-  {
-    item_t& item(find_scope<item_t>(args));
-    optional<value_t> val;
-
-    if (args.size() == 1) {
-      if (args[0].is_string())
-        val = item.get_tag(args.get<string>(0));
-      else if (args[0].is_mask())
-        val = item.get_tag(args.get<mask_t>(0));
-      else
-        throw_(std::runtime_error,
-               _f("Expected string or mask for argument 1, but received %1%")
-               % args[0].label());
-    }
-    else if (args.size() == 2) {
-      if (args[0].is_mask() && args[1].is_mask())
-        val = item.get_tag(args.get<mask_t>(0), args.get<mask_t>(1));
-      else
-        throw_(std::runtime_error,
-               _f("Expected masks for arguments 1 and 2, but received %1% and %2%")
-               % args[0].label() % args[1].label());
-    }
-    else if (args.size() == 0) {
-      throw_(std::runtime_error, _("Too few arguments to function"));
-    }
-    else {
-      throw_(std::runtime_error, _("Too many arguments to function"));
-    }
-
-    return val ? *val : NULL_VALUE;
-  }
-
-  value_t get_pathname(item_t& item) {
-    if (item.pos)
-      return string_value(item.pos->pathname.string());
-    else
-      return NULL_VALUE;
-  }
-
-  value_t get_filebase(item_t& item) {
-    if (item.pos)
-      return string_value(item.pos->pathname.filename().string());
-    else
-      return NULL_VALUE;
-  }
-
-  value_t get_filepath(item_t& item) {
-    if (item.pos)
-      return string_value(item.pos->pathname.parent_path().string());
-    else
-      return NULL_VALUE;
-  }
-
-
-  value_t get_beg_pos(item_t& item) {
-    return item.pos ? long(item.pos->beg_pos) : 0L;
-  }
-
-  value_t get_beg_line(item_t& item) {
-    return item.pos ? long(item.pos->beg_line) : 0L;
-  }
-
-  value_t get_end_pos(item_t& item) {
-    return item.pos ? long(item.pos->end_pos) : 0L;
-  }
-
-  value_t get_end_line(item_t& item) {
-    return item.pos ? long(item.pos->end_line) : 0L;
-  }
-
-  value_t get_seq(item_t& item) {
-    return long(item.seq());
-  }
-  value_t get_id(item_t& item) {
-    return string_value(item.id());
-  }
-
-  value_t get_addr(item_t& item) {
-    return long(reinterpret_cast<intptr_t>(&item));
-  }
-
-  value_t get_depth(item_t&) {
-    return 0L;
-  }
-
-  value_t ignore(item_t&) {
-    return false;
-  }
-
-  template <value_t (*Func)(item_t&)>
-  value_t get_wrapper(call_scope_t& scope) {
-    return (*Func)(find_scope<item_t>(scope));
-  }
+value_t get_status(item_t& item) {
+  return long(item.state());
+}
+value_t get_uncleared(item_t& item) {
+  return item.state() == item_t::UNCLEARED;
+}
+value_t get_cleared(item_t& item) {
+  return item.state() == item_t::CLEARED;
+}
+value_t get_pending(item_t& item) {
+  return item.state() == item_t::PENDING;
 }
 
-value_t get_comment(item_t& item)
-{
-  if (! item.note) {
+value_t get_actual(item_t& item) {
+  return !item.has_flags(ITEM_GENERATED | ITEM_TEMP);
+}
+
+value_t get_date(item_t& item) {
+  return item.date();
+}
+value_t get_primary_date(item_t& item) {
+  return item.primary_date();
+}
+value_t get_aux_date(item_t& item) {
+  if (optional<date_t> aux_date = item.aux_date())
+    return *aux_date;
+  return NULL_VALUE;
+}
+value_t get_note(item_t& item) {
+  return item.note ? string_value(*item.note) : NULL_VALUE;
+}
+
+value_t has_tag(call_scope_t& args) {
+  item_t& item(find_scope<item_t>(args));
+
+  if (args.size() == 1) {
+    if (args[0].is_string())
+      return item.has_tag(args.get<string>(0));
+    else if (args[0].is_mask())
+      return item.has_tag(args.get<mask_t>(0));
+    else
+      throw_(std::runtime_error,
+             _f("Expected string or mask for argument 1, but received %1%") % args[0].label());
+  } else if (args.size() == 2) {
+    if (args[0].is_mask() && args[1].is_mask())
+      return item.has_tag(args.get<mask_t>(0), args.get<mask_t>(1));
+    else
+      throw_(std::runtime_error,
+             _f("Expected masks for arguments 1 and 2, but received %1% and %2%") %
+                 args[0].label() % args[1].label());
+  } else if (args.size() == 0) {
+    throw_(std::runtime_error, _("Too few arguments to function"));
+  } else {
+    throw_(std::runtime_error, _("Too many arguments to function"));
+  }
+  return false;
+}
+
+value_t get_tag(call_scope_t& args) {
+  item_t& item(find_scope<item_t>(args));
+  optional<value_t> val;
+
+  if (args.size() == 1) {
+    if (args[0].is_string())
+      val = item.get_tag(args.get<string>(0));
+    else if (args[0].is_mask())
+      val = item.get_tag(args.get<mask_t>(0));
+    else
+      throw_(std::runtime_error,
+             _f("Expected string or mask for argument 1, but received %1%") % args[0].label());
+  } else if (args.size() == 2) {
+    if (args[0].is_mask() && args[1].is_mask())
+      val = item.get_tag(args.get<mask_t>(0), args.get<mask_t>(1));
+    else
+      throw_(std::runtime_error,
+             _f("Expected masks for arguments 1 and 2, but received %1% and %2%") %
+                 args[0].label() % args[1].label());
+  } else if (args.size() == 0) {
+    throw_(std::runtime_error, _("Too few arguments to function"));
+  } else {
+    throw_(std::runtime_error, _("Too many arguments to function"));
+  }
+
+  return val ? *val : NULL_VALUE;
+}
+
+value_t get_pathname(item_t& item) {
+  if (item.pos)
+    return string_value(item.pos->pathname.string());
+  else
+    return NULL_VALUE;
+}
+
+value_t get_filebase(item_t& item) {
+  if (item.pos)
+    return string_value(item.pos->pathname.filename().string());
+  else
+    return NULL_VALUE;
+}
+
+value_t get_filepath(item_t& item) {
+  if (item.pos)
+    return string_value(item.pos->pathname.parent_path().string());
+  else
+    return NULL_VALUE;
+}
+
+value_t get_beg_pos(item_t& item) {
+  return item.pos ? long(item.pos->beg_pos) : 0L;
+}
+
+value_t get_beg_line(item_t& item) {
+  return item.pos ? long(item.pos->beg_line) : 0L;
+}
+
+value_t get_end_pos(item_t& item) {
+  return item.pos ? long(item.pos->end_pos) : 0L;
+}
+
+value_t get_end_line(item_t& item) {
+  return item.pos ? long(item.pos->end_line) : 0L;
+}
+
+value_t get_seq(item_t& item) {
+  return long(item.seq());
+}
+value_t get_id(item_t& item) {
+  return string_value(item.id());
+}
+
+value_t get_addr(item_t& item) {
+  return long(reinterpret_cast<intptr_t>(&item));
+}
+
+value_t get_depth(item_t&) {
+  return 0L;
+}
+
+value_t ignore(item_t&) {
+  return false;
+}
+
+template <value_t (*Func)(item_t&)>
+value_t get_wrapper(call_scope_t& scope) {
+  return (*Func)(find_scope<item_t>(scope));
+}
+} // namespace
+
+value_t get_comment(item_t& item) {
+  if (!item.note) {
     return string_value("");
   } else {
     std::ostringstream buf;
@@ -405,7 +372,7 @@ value_t get_comment(item_t& item)
       buf << "  ;";
 
     bool need_separator = false;
-    for (const char * p = item.note->c_str(); *p; p++) {
+    for (const char* p = item.note->c_str(); *p; p++) {
       if (*p == '\n') {
         need_separator = true;
       } else {
@@ -420,16 +387,12 @@ value_t get_comment(item_t& item)
   }
 }
 
-void item_t::define(const symbol_t::kind_t, const string& name,
-                    expr_t::ptr_op_t def)
-{
+void item_t::define(const symbol_t::kind_t, const string& name, expr_t::ptr_op_t def) {
   bind_scope_t bound_scope(*scope_t::default_scope, *this);
   set_tag(name, def->calc(bound_scope));
 }
 
-expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
-                                const string& name)
-{
+expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind, const string& name) {
   if (kind != symbol_t::FUNCTION)
     return NULL;
 
@@ -482,7 +445,7 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
       return WRAP_FUNCTOR(get_wrapper<&get_filebase>);
     else if (name == "filepath")
       return WRAP_FUNCTOR(get_wrapper<&get_filepath>);
-     break;
+    break;
 
   case 'h':
     if (name == "has_tag")
@@ -560,8 +523,7 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind,
   return NULL;
 }
 
-bool item_t::valid() const
-{
+bool item_t::valid() const {
   if (_state != UNCLEARED && _state != CLEARED && _state != PENDING) {
     DEBUG("ledger.validate", "item_t: state is bad");
     return false;
@@ -570,19 +532,16 @@ bool item_t::valid() const
   return true;
 }
 
-void print_item(std::ostream& out, const item_t& item, const string& prefix)
-{
-  out << source_context(item.pos->pathname, item.pos->beg_pos,
-                        item.pos->end_pos, prefix);
+void print_item(std::ostream& out, const item_t& item, const string& prefix) {
+  out << source_context(item.pos->pathname, item.pos->beg_pos, item.pos->end_pos, prefix);
 }
 
-string item_context(const item_t& item, const string& desc)
-{
-  if (! item.pos)
+string item_context(const item_t& item, const string& desc) {
+  if (!item.pos)
     return empty_string;
 
   std::streamoff len = item.pos->end_pos - item.pos->beg_pos;
-  if (! (len > 0))
+  if (!(len > 0))
     return empty_string;
 
   assert(len < 1024 * 1024);
@@ -597,8 +556,7 @@ string item_context(const item_t& item, const string& desc)
   out << desc << _(" from \"") << item.pos->pathname.string() << "\"";
 
   if (item.pos->beg_line != item.pos->end_line)
-    out << _(", lines ") << item.pos->beg_line << "-"
-        << item.pos->end_line << ":\n";
+    out << _(", lines ") << item.pos->beg_line << "-" << item.pos->end_line << ":\n";
   else
     out << _(", line ") << item.pos->beg_line << ":\n";
 
@@ -607,8 +565,7 @@ string item_context(const item_t& item, const string& desc)
   return out.str();
 }
 
-void put_metadata(property_tree::ptree& st, const item_t::string_map& metadata)
-{
+void put_metadata(property_tree::ptree& st, const item_t::string_map& metadata) {
   foreach (const item_t::string_map::value_type& pair, metadata) {
     if (pair.second.first) {
       property_tree::ptree& vt(st.add("value", ""));

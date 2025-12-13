@@ -57,70 +57,61 @@ class account_t;
 class parse_context_t;
 class parse_context_stack_t;
 
-typedef std::list<xact_t *>              xacts_list;
-typedef std::list<auto_xact_t *>         auto_xacts_list;
-typedef std::list<period_xact_t *>       period_xacts_list;
-typedef std::pair<mask_t, string>        payee_alias_mapping_t;
+typedef std::list<xact_t*> xacts_list;
+typedef std::list<auto_xact_t*> auto_xacts_list;
+typedef std::list<period_xact_t*> period_xacts_list;
+typedef std::pair<mask_t, string> payee_alias_mapping_t;
 typedef std::list<payee_alias_mapping_t> payee_alias_mappings_t;
-typedef std::pair<string, string>        payee_uuid_mapping_t;
-typedef std::list<payee_uuid_mapping_t>  payee_uuid_mappings_t;
-typedef std::pair<mask_t, account_t *>   account_mapping_t;
-typedef std::list<account_mapping_t>     account_mappings_t;
-typedef std::map<string, account_t *>    accounts_map;
-typedef std::map<string, xact_t *>       checksum_map_t;
+typedef std::pair<string, string> payee_uuid_mapping_t;
+typedef std::list<payee_uuid_mapping_t> payee_uuid_mappings_t;
+typedef std::pair<mask_t, account_t*> account_mapping_t;
+typedef std::list<account_mapping_t> account_mappings_t;
+typedef std::map<string, account_t*> accounts_map;
+typedef std::map<string, xact_t*> checksum_map_t;
 
 typedef std::multimap<string, expr_t::check_expr_pair> tag_check_exprs_map;
 
-class journal_t : public noncopyable
-{
+class journal_t : public noncopyable {
 public:
-  struct fileinfo_t
-  {
-    optional<path>   filename;
-    datetime_t       modtime;
-    bool             from_stream;
+  struct fileinfo_t {
+    optional<path> filename;
+    datetime_t modtime;
+    bool from_stream;
 
-    fileinfo_t() : from_stream(true) {
-      TRACE_CTOR(journal_t::fileinfo_t, "");
-    }
-    fileinfo_t(const path& _filename)
-      : filename(_filename), from_stream(false) {
+    fileinfo_t() : from_stream(true) { TRACE_CTOR(journal_t::fileinfo_t, ""); }
+    fileinfo_t(const path& _filename) : filename(_filename), from_stream(false) {
       modtime = posix_time::from_time_t(last_write_time(*filename));
       TRACE_CTOR(journal_t::fileinfo_t, "const path&");
     }
     fileinfo_t(const fileinfo_t& info)
-      : filename(info.filename),
-        modtime(info.modtime), from_stream(info.from_stream)
-    {
+        : filename(info.filename), modtime(info.modtime), from_stream(info.from_stream) {
       TRACE_CTOR(journal_t::fileinfo_t, "copy");
     }
-    ~fileinfo_t() throw() {
-      TRACE_DTOR(journal_t::fileinfo_t);
-    }
+    ~fileinfo_t() throw() { TRACE_DTOR(journal_t::fileinfo_t); }
   };
 
-  account_t *            master;
-  account_t *            bucket;
-  xacts_list             xacts;
-  auto_xacts_list        auto_xacts;
-  period_xacts_list      period_xacts;
-  std::list<fileinfo_t>  sources;
-  std::set<string>       known_payees;
-  std::set<string>       known_tags;
-  bool                   was_loaded;
-  bool                   check_payees;
-  bool                   day_break;
-  bool                   recursive_aliases;
-  bool                   no_aliases;
+  account_t* master;
+  account_t* bucket;
+  xacts_list xacts;
+  auto_xacts_list auto_xacts;
+  period_xacts_list period_xacts;
+  std::list<fileinfo_t> sources;
+  std::set<string> known_payees;
+  std::set<string> known_tags;
+  bool was_loaded;
+  bool check_payees;
+  bool day_break;
+  bool recursive_aliases;
+  bool no_aliases;
   payee_alias_mappings_t payee_alias_mappings;
-  payee_uuid_mappings_t  payee_uuid_mappings;
-  account_mappings_t     account_mappings;
-  accounts_map           account_aliases;
-  account_mappings_t     payees_for_unknown_accounts;
-  checksum_map_t         checksum_map;
-  tag_check_exprs_map    tag_check_exprs;
-  optional<expr_t>       value_expr;
-  parse_context_t *      current_context;
+  payee_uuid_mappings_t payee_uuid_mappings;
+  account_mappings_t account_mappings;
+  accounts_map account_aliases;
+  account_mappings_t payees_for_unknown_accounts;
+  checksum_map_t checksum_map;
+  tag_check_exprs_map tag_check_exprs;
+  optional<expr_t> value_expr;
+  parse_context_t* current_context;
 
   enum checking_style_t {
     CHECK_PERMISSIVE,
@@ -138,54 +129,35 @@ public:
 
   void initialize();
 
-  std::list<fileinfo_t>::iterator sources_begin() {
-    return sources.begin();
-  }
-  std::list<fileinfo_t>::iterator sources_end() {
-    return sources.end();
-  }
+  std::list<fileinfo_t>::iterator sources_begin() { return sources.begin(); }
+  std::list<fileinfo_t>::iterator sources_end() { return sources.end(); }
 
-  void        add_account(account_t * acct);
-  bool        remove_account(account_t * acct);
-  account_t * find_account(const string& name, bool auto_create = true);
-  account_t * find_account_re(const string& regexp);
+  void add_account(account_t* acct);
+  bool remove_account(account_t* acct);
+  account_t* find_account(const string& name, bool auto_create = true);
+  account_t* find_account_re(const string& regexp);
 
-  account_t * expand_aliases(string name);
+  account_t* expand_aliases(string name);
 
-  account_t * register_account(const string& name, post_t * post,
-                               account_t * master = NULL);
-  string      register_payee(const string& name);
-  string      validate_payee(const string& name_or_alias);
-  void        register_commodity(commodity_t& comm,
-                                 variant<int, xact_t *, post_t *> context);
-  void        register_metadata(const string& key, const value_t& value,
-                                variant<int, xact_t *, post_t *> context);
+  account_t* register_account(const string& name, post_t* post, account_t* master = NULL);
+  string register_payee(const string& name);
+  string validate_payee(const string& name_or_alias);
+  void register_commodity(commodity_t& comm, variant<int, xact_t*, post_t*> context);
+  void register_metadata(const string& key, const value_t& value,
+                         variant<int, xact_t*, post_t*> context);
 
-  bool add_xact(xact_t * xact);
-  void extend_xact(xact_base_t * xact);
-  bool remove_xact(xact_t * xact);
+  bool add_xact(xact_t* xact);
+  void extend_xact(xact_base_t* xact);
+  bool remove_xact(xact_t* xact);
 
-  xacts_list::iterator xacts_begin() {
-    return xacts.begin();
-  }
-  xacts_list::iterator xacts_end() {
-    return xacts.end();
-  }
-  auto_xacts_list::iterator auto_xacts_begin() {
-    return auto_xacts.begin();
-  }
-  auto_xacts_list::iterator auto_xacts_end() {
-    return auto_xacts.end();
-  }
-  period_xacts_list::iterator period_xacts_begin() {
-    return period_xacts.begin();
-  }
-  period_xacts_list::iterator period_xacts_end() {
-    return period_xacts.end();
-  }
+  xacts_list::iterator xacts_begin() { return xacts.begin(); }
+  xacts_list::iterator xacts_end() { return xacts.end(); }
+  auto_xacts_list::iterator auto_xacts_begin() { return auto_xacts.begin(); }
+  auto_xacts_list::iterator auto_xacts_end() { return auto_xacts.end(); }
+  period_xacts_list::iterator period_xacts_begin() { return period_xacts.begin(); }
+  period_xacts_list::iterator period_xacts_end() { return period_xacts.end(); }
 
-  std::size_t read(parse_context_stack_t& context,
-                   hash_type_t hash_type);
+  std::size_t read(parse_context_stack_t& context, hash_type_t hash_type);
 
   bool has_xdata();
   void clear_xdata();
@@ -193,13 +165,11 @@ public:
   bool valid() const;
 
 private:
+  std::size_t read_textual(parse_context_stack_t& context, hash_type_t hash_type);
 
-  std::size_t read_textual(parse_context_stack_t& context,
-                           hash_type_t hash_type);
-
-  bool        should_check_payees();
-  bool        payee_not_registered(const string& name);
-  string      translate_payee_name(const string& name);
+  bool should_check_payees();
+  bool payee_not_registered(const string& name);
+  string translate_payee_name(const string& name);
 };
 
 } // namespace ledger

@@ -35,10 +35,8 @@
 
 namespace ledger {
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse_value_term(std::istream&        in,
-                                   const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_value_term(std::istream& in,
+                                                    const parse_flags_t& tflags) const {
   ptr_op_t node;
 
   token_t& tok = next_token(in, tflags);
@@ -58,8 +56,7 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
   }
 
   case token_t::LPAREN:
-    node = parse_value_expr(in, tflags.plus_flags(PARSE_PARTIAL)
-                            .minus_flags(PARSE_SINGLE));
+    node = parse_value_expr(in, tflags.plus_flags(PARSE_PARTIAL).minus_flags(PARSE_SINGLE));
     tok = next_token(in, tflags, token_t::RPAREN);
     break;
 
@@ -71,21 +68,18 @@ expr_t::parser_t::parse_value_term(std::istream&        in,
   return node;
 }
 
-
-expr_t::ptr_op_t
-expr_t::parser_t::parse_call_expr(std::istream& in,
-                                 const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_call_expr(std::istream& in,
+                                                   const parse_flags_t& tflags) const {
   ptr_op_t node(parse_value_term(in, tflags));
 
-  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+  if (node && !tflags.has_flags(PARSE_SINGLE)) {
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
       if (tok.kind == token_t::LPAREN) {
         ptr_op_t prev(node);
         node = new op_t(op_t::O_CALL);
         node->set_left(prev);
-        push_token(tok);        // let the parser see the '(' again
+        push_token(tok); // let the parser see the '(' again
         node->set_right(parse_value_expr(in, tflags.plus_flags(PARSE_SINGLE)));
       } else {
         push_token(tok);
@@ -97,13 +91,11 @@ expr_t::parser_t::parse_call_expr(std::istream& in,
   return node;
 }
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse_dot_expr(std::istream& in,
-                                 const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_dot_expr(std::istream& in,
+                                                  const parse_flags_t& tflags) const {
   ptr_op_t node(parse_call_expr(in, tflags));
 
-  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+  if (node && !tflags.has_flags(PARSE_SINGLE)) {
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
       if (tok.kind == token_t::DOT) {
@@ -111,9 +103,8 @@ expr_t::parser_t::parse_dot_expr(std::istream& in,
         node = new op_t(op_t::O_LOOKUP);
         node->set_left(prev);
         node->set_right(parse_call_expr(in, tflags));
-        if (! node->right())
-          throw_(parse_error,
-                 _f("%1% operator not followed by argument") % tok.symbol);
+        if (!node->right())
+          throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
       } else {
         push_token(tok);
         break;
@@ -124,10 +115,8 @@ expr_t::parser_t::parse_dot_expr(std::istream& in,
   return node;
 }
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse_unary_expr(std::istream& in,
-                                   const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_unary_expr(std::istream& in,
+                                                    const parse_flags_t& tflags) const {
   ptr_op_t node;
 
   token_t& tok = next_token(in, tflags);
@@ -135,9 +124,8 @@ expr_t::parser_t::parse_unary_expr(std::istream& in,
   switch (tok.kind) {
   case token_t::EXCLAM: {
     ptr_op_t term(parse_dot_expr(in, tflags));
-    if (! term)
-      throw_(parse_error,
-             _f("%1% operator not followed by argument") % tok.symbol);
+    if (!term)
+      throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
 
     // A very quick optimization
     if (term->kind == op_t::VALUE) {
@@ -152,9 +140,8 @@ expr_t::parser_t::parse_unary_expr(std::istream& in,
 
   case token_t::MINUS: {
     ptr_op_t term(parse_dot_expr(in, tflags));
-    if (! term)
-      throw_(parse_error,
-             _f("%1% operator not followed by argument") % tok.symbol);
+    if (!term)
+      throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
 
     // A very quick optimization
     if (term->kind == op_t::VALUE) {
@@ -176,26 +163,21 @@ expr_t::parser_t::parse_unary_expr(std::istream& in,
   return node;
 }
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse_mul_expr(std::istream& in,
-                                 const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_mul_expr(std::istream& in,
+                                                  const parse_flags_t& tflags) const {
   ptr_op_t node(parse_unary_expr(in, tflags));
 
-  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+  if (node && !tflags.has_flags(PARSE_SINGLE)) {
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
-      if (tok.kind == token_t::STAR || tok.kind == token_t::SLASH ||
-          tok.kind == token_t::KW_DIV) {
+      if (tok.kind == token_t::STAR || tok.kind == token_t::SLASH || tok.kind == token_t::KW_DIV) {
         ptr_op_t prev(node);
-        node = new op_t(tok.kind == token_t::STAR ?
-                        op_t::O_MUL : op_t::O_DIV);
+        node = new op_t(tok.kind == token_t::STAR ? op_t::O_MUL : op_t::O_DIV);
         node->set_left(prev);
         node->set_right(parse_unary_expr(in, tflags));
-        if (! node->right())
-          throw_(parse_error,
-                 _f("%1% operator not followed by argument") % tok.symbol);
+        if (!node->right())
+          throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
       } else {
         push_token(tok);
         break;
@@ -206,26 +188,21 @@ expr_t::parser_t::parse_mul_expr(std::istream& in,
   return node;
 }
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse_add_expr(std::istream& in,
-                                 const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_add_expr(std::istream& in,
+                                                  const parse_flags_t& tflags) const {
   ptr_op_t node(parse_mul_expr(in, tflags));
 
-  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+  if (node && !tflags.has_flags(PARSE_SINGLE)) {
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
-      if (tok.kind == token_t::PLUS ||
-          tok.kind == token_t::MINUS) {
+      if (tok.kind == token_t::PLUS || tok.kind == token_t::MINUS) {
         ptr_op_t prev(node);
-        node = new op_t(tok.kind == token_t::PLUS ?
-                        op_t::O_ADD : op_t::O_SUB);
+        node = new op_t(tok.kind == token_t::PLUS ? op_t::O_ADD : op_t::O_SUB);
         node->set_left(prev);
         node->set_right(parse_mul_expr(in, tflags));
-        if (! node->right())
-          throw_(parse_error,
-                 _f("%1% operator not followed by argument") % tok.symbol);
+        if (!node->right())
+          throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
       } else {
         push_token(tok);
         break;
@@ -236,18 +213,16 @@ expr_t::parser_t::parse_add_expr(std::istream& in,
   return node;
 }
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse_logic_expr(std::istream& in,
-                                   const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
+                                                    const parse_flags_t& tflags) const {
   ptr_op_t node(parse_add_expr(in, tflags));
 
-  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+  if (node && !tflags.has_flags(PARSE_SINGLE)) {
     while (true) {
-      op_t::kind_t  kind   = op_t::LAST;
+      op_t::kind_t kind = op_t::LAST;
       parse_flags_t _flags = tflags;
-      token_t&      tok    = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
-      bool          negate = false;
+      token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
+      bool negate = false;
 
       switch (tok.kind) {
       case token_t::EQUAL:
@@ -290,9 +265,8 @@ expr_t::parser_t::parse_logic_expr(std::istream& in,
         node->set_left(prev);
         node->set_right(parse_add_expr(in, _flags));
 
-        if (! node->right())
-          throw_(parse_error,
-                 _f("%1% operator not followed by argument") % tok.symbol);
+        if (!node->right())
+          throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
 
         if (negate) {
           prev = node;
@@ -303,17 +277,15 @@ expr_t::parser_t::parse_logic_expr(std::istream& in,
     }
   }
 
- exit_loop:
+exit_loop:
   return node;
 }
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse_and_expr(std::istream& in,
-                                 const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_and_expr(std::istream& in,
+                                                  const parse_flags_t& tflags) const {
   ptr_op_t node(parse_logic_expr(in, tflags));
 
-  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+  if (node && !tflags.has_flags(PARSE_SINGLE)) {
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
@@ -322,9 +294,8 @@ expr_t::parser_t::parse_and_expr(std::istream& in,
         node = new op_t(op_t::O_AND);
         node->set_left(prev);
         node->set_right(parse_logic_expr(in, tflags));
-        if (! node->right())
-          throw_(parse_error,
-                 _f("%1% operator not followed by argument") % tok.symbol);
+        if (!node->right())
+          throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
       } else {
         push_token(tok);
         break;
@@ -334,13 +305,11 @@ expr_t::parser_t::parse_and_expr(std::istream& in,
   return node;
 }
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse_or_expr(std::istream& in,
-                                const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_or_expr(std::istream& in,
+                                                 const parse_flags_t& tflags) const {
   ptr_op_t node(parse_and_expr(in, tflags));
 
-  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+  if (node && !tflags.has_flags(PARSE_SINGLE)) {
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
@@ -349,9 +318,8 @@ expr_t::parser_t::parse_or_expr(std::istream& in,
         node = new op_t(op_t::O_OR);
         node->set_left(prev);
         node->set_right(parse_and_expr(in, tflags));
-        if (! node->right())
-          throw_(parse_error,
-                 _f("%1% operator not followed by argument") % tok.symbol);
+        if (!node->right())
+          throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
       } else {
         push_token(tok);
         break;
@@ -361,13 +329,11 @@ expr_t::parser_t::parse_or_expr(std::istream& in,
   return node;
 }
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse_querycolon_expr(std::istream& in,
-                                        const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_querycolon_expr(std::istream& in,
+                                                         const parse_flags_t& tflags) const {
   ptr_op_t node(parse_or_expr(in, tflags));
 
-  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+  if (node && !tflags.has_flags(PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
     if (tok.kind == token_t::QUERY) {
@@ -375,30 +341,27 @@ expr_t::parser_t::parse_querycolon_expr(std::istream& in,
       node = new op_t(op_t::O_QUERY);
       node->set_left(prev);
       node->set_right(parse_or_expr(in, tflags));
-      if (! node->right())
-        throw_(parse_error,
-               _f("%1% operator not followed by argument") % tok.symbol);
+      if (!node->right())
+        throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
 
       next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT), token_t::COLON);
       prev = node->right();
       ptr_op_t subnode = new op_t(op_t::O_COLON);
       subnode->set_left(prev);
       subnode->set_right(parse_or_expr(in, tflags));
-      if (! subnode->right())
-        throw_(parse_error,
-               _f("%1% operator not followed by argument") % tok.symbol);
+      if (!subnode->right())
+        throw_(parse_error, _f("%1% operator not followed by argument") % tok.symbol);
 
       node->set_right(subnode);
-    }
-    else if (tok.kind == token_t::KW_IF) {
+    } else if (tok.kind == token_t::KW_IF) {
       ptr_op_t if_op(parse_or_expr(in, tflags));
-      if (! if_op)
+      if (!if_op)
         throw_(parse_error, _("'if' keyword not followed by argument"));
 
       tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
       if (tok.kind == token_t::KW_ELSE) {
         ptr_op_t else_op(parse_or_expr(in, tflags));
-        if (! else_op)
+        if (!else_op)
           throw_(parse_error, _("'else' keyword not followed by argument"));
 
         ptr_op_t subnode = new op_t(op_t::O_COLON);
@@ -422,27 +385,24 @@ expr_t::parser_t::parse_querycolon_expr(std::istream& in,
 
         push_token(tok);
       }
-    }
-    else {
+    } else {
       push_token(tok);
     }
   }
   return node;
 }
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse_comma_expr(std::istream& in,
-                                   const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_comma_expr(std::istream& in,
+                                                    const parse_flags_t& tflags) const {
   ptr_op_t node(parse_querycolon_expr(in, tflags));
 
-  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+  if (node && !tflags.has_flags(PARSE_SINGLE)) {
     ptr_op_t next;
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
       if (tok.kind == token_t::COMMA) {
-        if (! next) {
+        if (!next) {
           ptr_op_t prev(node);
           node = new op_t(op_t::O_CONS);
           node->set_left(prev);
@@ -469,13 +429,11 @@ expr_t::parser_t::parse_comma_expr(std::istream& in,
   return node;
 }
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse_lambda_expr(std::istream& in,
-                                    const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_lambda_expr(std::istream& in,
+                                                     const parse_flags_t& tflags) const {
   ptr_op_t node(parse_comma_expr(in, tflags));
 
-  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+  if (node && !tflags.has_flags(PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
     if (tok.kind == token_t::ARROW) {
@@ -493,13 +451,11 @@ expr_t::parser_t::parse_lambda_expr(std::istream& in,
   return node;
 }
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse_assign_expr(std::istream& in,
-                                    const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_assign_expr(std::istream& in,
+                                                     const parse_flags_t& tflags) const {
   ptr_op_t node(parse_lambda_expr(in, tflags));
 
-  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+  if (node && !tflags.has_flags(PARSE_SINGLE)) {
     token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
 
     if (tok.kind == token_t::ASSIGN) {
@@ -517,19 +473,17 @@ expr_t::parser_t::parse_assign_expr(std::istream& in,
   return node;
 }
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse_value_expr(std::istream& in,
-                                   const parse_flags_t& tflags) const
-{
+expr_t::ptr_op_t expr_t::parser_t::parse_value_expr(std::istream& in,
+                                                    const parse_flags_t& tflags) const {
   ptr_op_t node(parse_assign_expr(in, tflags));
 
-  if (node && ! tflags.has_flags(PARSE_SINGLE)) {
+  if (node && !tflags.has_flags(PARSE_SINGLE)) {
     ptr_op_t chain;
     while (true) {
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
       if (tok.kind == token_t::SEMI) {
         ptr_op_t seq(new op_t(op_t::O_SEQ));
-        if (! chain) {
+        if (!chain) {
           seq->set_left(node);
           node = seq;
         } else {
@@ -548,11 +502,8 @@ expr_t::parser_t::parse_value_expr(std::istream& in,
   return node;
 }
 
-expr_t::ptr_op_t
-expr_t::parser_t::parse(std::istream&           in,
-                        const parse_flags_t&    flags,
-                        const optional<string>& original_string)
-{
+expr_t::ptr_op_t expr_t::parser_t::parse(std::istream& in, const parse_flags_t& flags,
+                                         const optional<string>& original_string) {
   try {
     ptr_op_t top_node = parse_value_expr(in, flags);
 
@@ -563,8 +514,7 @@ expr_t::parser_t::parse(std::istream&           in,
     lookahead.clear();
 
     return top_node;
-  }
-  catch (const std::exception&) {
+  } catch (const std::exception&) {
     if (original_string) {
       add_error_context(_("While parsing value expression:"));
 
@@ -582,8 +532,7 @@ expr_t::parser_t::parse(std::istream&           in,
       DEBUG("parser.error", "     token kind = " << int(lookahead.kind));
       DEBUG("parser.error", "   token length = " << lookahead.length);
 
-      add_error_context(line_context(*original_string,
-                                     static_cast<string::size_type>(pos),
+      add_error_context(line_context(*original_string, static_cast<string::size_type>(pos),
                                      static_cast<string::size_type>(end_pos)));
     }
     throw;

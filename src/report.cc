@@ -51,42 +51,40 @@
 
 namespace ledger {
 
-void report_t::normalize_options(const string& verb)
-{
+void report_t::normalize_options(const string& verb) {
   // Patch up some of the reporting options based on what kind of
   // command it was.
 
 #if HAVE_ISATTY
-  if (! HANDLED(force_color)) {
-    if (! HANDLED(no_color) && isatty(STDOUT_FILENO))
+  if (!HANDLED(force_color)) {
+    if (!HANDLED(no_color) && isatty(STDOUT_FILENO))
       HANDLER(color).on("?normalize");
-    if (HANDLED(color) && ! isatty(STDOUT_FILENO))
+    if (HANDLED(color) && !isatty(STDOUT_FILENO))
       HANDLER(color).off();
-  }
-  else {
+  } else {
     HANDLER(color).on("?normalize");
   }
-  if (! HANDLED(force_pager)) {
-    if (HANDLED(pager_) && ! isatty(STDOUT_FILENO))
+  if (!HANDLED(force_pager)) {
+    if (HANDLED(pager_) && !isatty(STDOUT_FILENO))
       HANDLER(pager_).off();
   }
 #endif
 
   if (HANDLED(output_)) {
-    if (HANDLED(color) && ! HANDLED(force_color))
+    if (HANDLED(color) && !HANDLED(force_color))
       HANDLER(color).off();
-    if (HANDLED(pager_) && ! HANDLED(force_pager))
+    if (HANDLED(pager_) && !HANDLED(force_pager))
       HANDLER(pager_).off();
   }
 
-  item_t::use_aux_date = (HANDLED(aux_date) && ! HANDLED(primary_date));
+  item_t::use_aux_date = (HANDLED(aux_date) && !HANDLED(primary_date));
 
-  commodity_pool_t::current_pool->keep_base  = HANDLED(base);
+  commodity_pool_t::current_pool->keep_base = HANDLED(base);
   commodity_pool_t::current_pool->get_quotes = session.HANDLED(download);
 
   if (session.HANDLED(price_exp_))
     commodity_pool_t::current_pool->quote_leeway =
-      lexical_cast<long>(session.HANDLER(price_exp_).value) * 3600L;
+        lexical_cast<long>(session.HANDLER(price_exp_).value) * 3600L;
 
   if (session.HANDLED(price_db_))
     commodity_pool_t::current_pool->price_db = session.HANDLER(price_db_).str();
@@ -99,40 +97,35 @@ void report_t::normalize_options(const string& verb)
     set_datetime_format(HANDLER(datetime_format_).str().c_str());
   if (HANDLED(start_of_week_)) {
     if (optional<date_time::weekdays> weekday =
-        string_to_day_of_week(HANDLER(start_of_week_).str()))
+            string_to_day_of_week(HANDLER(start_of_week_).str()))
       start_of_week = *weekday;
   }
 
   long meta_width = -1;
 
-  if (! HANDLED(prepend_format_) && HANDLED(meta_)) {
-    if (! HANDLED(meta_width_)) {
+  if (!HANDLED(prepend_format_) && HANDLED(meta_)) {
+    if (!HANDLED(meta_width_)) {
       string::size_type i = HANDLER(meta_).str().find(':');
       if (i != string::npos) {
-        HANDLED(meta_width_).on("?normalize",
-                                string(HANDLER(meta_).str(), i + 1));
-        HANDLED(meta_).on("?normalize",
-                          string(HANDLER(meta_).str(), 0, i));
+        HANDLED(meta_width_).on("?normalize", string(HANDLER(meta_).str(), i + 1));
+        HANDLED(meta_).on("?normalize", string(HANDLER(meta_).str(), 0, i));
       }
     }
     if (HANDLED(meta_width_)) {
       HANDLER(prepend_format_)
-        .on("?normalize", string("%(justify(truncated(tag(\"") +
-            HANDLER(meta_).str() + "\"), " +
-            HANDLED(meta_width_).value + " - 1), " +
-            HANDLED(meta_width_).value + "))");
+          .on("?normalize", string("%(justify(truncated(tag(\"") + HANDLER(meta_).str() + "\"), " +
+                                HANDLED(meta_width_).value + " - 1), " +
+                                HANDLED(meta_width_).value + "))");
       meta_width = lexical_cast<long>(HANDLED(meta_width_).value);
     } else {
-      HANDLER(prepend_format_)
-        .on("?normalize", string("%(tag(\"") + HANDLER(meta_).str() + "\"))");
+      HANDLER(prepend_format_).on("?normalize", string("%(tag(\"") + HANDLER(meta_).str() + "\"))");
     }
   }
 
   if (verb == "print" || verb == "xact" || verb == "dump") {
     HANDLER(related_all).parent = this;
     HANDLER(related_all).on("?normalize");
-  }
-  else if (verb == "equity") {
+  } else if (verb == "equity") {
     HANDLER(equity).on("?normalize");
   }
 
@@ -152,34 +145,28 @@ void report_t::normalize_options(const string& verb)
   // initial parsing of the options.
   if (HANDLED(amount_data)) {
     HANDLER(format_).on("?normalize", HANDLER(plot_amount_format_).value);
-  }
-  else if (HANDLED(total_data)) {
+  } else if (HANDLED(total_data)) {
     HANDLER(format_).on("?normalize", HANDLER(plot_total_format_).value);
   }
 
   // If the --exchange (-X) option was used, parse out any final price
   // settings that may be there.
-  if (HANDLED(exchange_) &&
-      HANDLER(exchange_).str().find('=') != string::npos) {
-    value_t(0L).exchange_commodities(HANDLER(exchange_).str(), true,
-                                     terminus);
+  if (HANDLED(exchange_) && HANDLER(exchange_).str().find('=') != string::npos) {
+    value_t(0L).exchange_commodities(HANDLER(exchange_).str(), true, terminus);
   }
 
   if (HANDLED(percent)) {
     commodity_t::decimal_comma_by_default = false;
     if (HANDLED(market)) {
-      HANDLER(total_)
-        .on("?normalize",
-            "(__tmp = market(parent.total, value_date, exchange);"
-            " ((is_account & parent & __tmp) ?"
-            "   percent(scrub(market(total, value_date, exchange)), "
-            "           scrub(__tmp)) : 0))");
+      HANDLER(total_).on("?normalize", "(__tmp = market(parent.total, value_date, exchange);"
+                                       " ((is_account & parent & __tmp) ?"
+                                       "   percent(scrub(market(total, value_date, exchange)), "
+                                       "           scrub(__tmp)) : 0))");
     }
   }
 
   if (HANDLED(immediate) && HANDLED(market)) {
-    HANDLER(amount_)
-      .on("?normalize", "market(amount_expr, value_date, exchange)");
+    HANDLER(amount_).on("?normalize", "market(amount_expr, value_date, exchange)");
   }
 
   long cols = 0;
@@ -188,11 +175,11 @@ void report_t::normalize_options(const string& verb)
 #endif
   if (HANDLED(columns_))
     cols = lexical_cast<long>(HANDLER(columns_).value);
-  else if (const char * columns = std::getenv("COLUMNS"))
+  else if (const char* columns = std::getenv("COLUMNS"))
     cols = lexical_cast<long>(columns);
 #if HAVE_IOCTL
   else if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1)
-      cols = ws.ws_col;
+    cols = ws.ws_col;
 #endif
   else
     cols = 80L;
@@ -203,22 +190,18 @@ void report_t::normalize_options(const string& verb)
   if (cols > 0) {
     DEBUG("auto.columns", "cols = " << cols);
 
-    long date_width    = (HANDLED(date_width_) ?
-                          lexical_cast<long>(HANDLER(date_width_).str()) :
-                          static_cast<long>
-                          (format_date(CURRENT_DATE(),FMT_PRINTED).length()));
-    long payee_width   = (HANDLED(payee_width_) ?
-                          lexical_cast<long>(HANDLER(payee_width_).str()) :
-                          long(double(cols) * 0.263157));
-    long account_width = (HANDLED(account_width_) ?
-                          lexical_cast<long>(HANDLER(account_width_).str()) :
-                          long(double(cols) * 0.302631));
-    long amount_width  = (HANDLED(amount_width_) ?
-                          lexical_cast<long>(HANDLER(amount_width_).str()) :
-                          long(double(cols) * 0.157894));
-    long total_width   = (HANDLED(total_width_) ?
-                          lexical_cast<long>(HANDLER(total_width_).str()) :
-                          amount_width);
+    long date_width = (HANDLED(date_width_)
+                           ? lexical_cast<long>(HANDLER(date_width_).str())
+                           : static_cast<long>(format_date(CURRENT_DATE(), FMT_PRINTED).length()));
+    long payee_width = (HANDLED(payee_width_) ? lexical_cast<long>(HANDLER(payee_width_).str())
+                                              : long(double(cols) * 0.263157));
+    long account_width =
+        (HANDLED(account_width_) ? lexical_cast<long>(HANDLER(account_width_).str())
+                                 : long(double(cols) * 0.302631));
+    long amount_width = (HANDLED(amount_width_) ? lexical_cast<long>(HANDLER(amount_width_).str())
+                                                : long(double(cols) * 0.157894));
+    long total_width =
+        (HANDLED(total_width_) ? lexical_cast<long>(HANDLER(total_width_).str()) : amount_width);
 
     DEBUG("auto.columns", "date_width    = " << date_width);
     DEBUG("auto.columns", "payee_width   = " << payee_width);
@@ -226,14 +209,10 @@ void report_t::normalize_options(const string& verb)
     DEBUG("auto.columns", "amount_width  = " << amount_width);
     DEBUG("auto.columns", "total_width   = " << total_width);
 
-    if (! HANDLED(date_width_) &&
-        ! HANDLED(payee_width_) &&
-        ! HANDLED(account_width_) &&
-        ! HANDLED(amount_width_) &&
-        ! HANDLED(total_width_)) {
-      long total = (4 /* the spaces between */ + date_width + payee_width +
-                    account_width + amount_width + total_width +
-                    (HANDLED(dc) ? 1 + amount_width : 0));
+    if (!HANDLED(date_width_) && !HANDLED(payee_width_) && !HANDLED(account_width_) &&
+        !HANDLED(amount_width_) && !HANDLED(total_width_)) {
+      long total = (4 /* the spaces between */ + date_width + payee_width + account_width +
+                    amount_width + total_width + (HANDLED(dc) ? 1 + amount_width : 0));
       while (total > cols && account_width > 5 && payee_width > 5) {
         DEBUG("auto.columns", "adjusting account down");
         if (total > cols) {
@@ -252,47 +231,45 @@ void report_t::normalize_options(const string& verb)
       }
     }
 
-    if (! HANDLED(meta_width_))
-      HANDLER(meta_width_).value    = "0";
-    if (! HANDLED(prepend_width_))
+    if (!HANDLED(meta_width_))
+      HANDLER(meta_width_).value = "0";
+    if (!HANDLED(prepend_width_))
       HANDLER(prepend_width_).value = "0";
-    if (! HANDLED(date_width_))
-      HANDLER(date_width_).value    = to_string(date_width);
-    if (! HANDLED(payee_width_))
-      HANDLER(payee_width_).value   = to_string(payee_width);
-    if (! HANDLED(account_width_))
+    if (!HANDLED(date_width_))
+      HANDLER(date_width_).value = to_string(date_width);
+    if (!HANDLED(payee_width_))
+      HANDLER(payee_width_).value = to_string(payee_width);
+    if (!HANDLED(account_width_))
       HANDLER(account_width_).value = to_string(account_width);
-    if (! HANDLED(amount_width_))
-      HANDLER(amount_width_).value  = to_string(amount_width);
-    if (! HANDLED(total_width_))
-      HANDLER(total_width_).value   = to_string(total_width);
+    if (!HANDLED(amount_width_))
+      HANDLER(amount_width_).value = to_string(amount_width);
+    if (!HANDLED(total_width_))
+      HANDLER(total_width_).value = to_string(total_width);
   }
 }
 
-void report_t::normalize_period()
-{
+void report_t::normalize_period() {
   date_interval_t interval(HANDLER(period_).str());
 
   optional<date_t> begin = interval.begin();
-  optional<date_t> end   = interval.end();
+  optional<date_t> end = interval.end();
 
-  if (! HANDLED(begin_) && begin) {
+  if (!HANDLED(begin_) && begin) {
     string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
     HANDLER(limit_).on(string("?normalize"), predicate);
   }
-  if (! HANDLED(end_) && end) {
+  if (!HANDLED(end_) && end) {
     string predicate = "date<[" + to_iso_extended_string(*end) + "]";
     HANDLER(limit_).on(string("?normalize"), predicate);
   }
 
-  if (! interval.duration)
+  if (!interval.duration)
     HANDLER(period_).off();
-  else if (! HANDLED(sort_all_))
+  else if (!HANDLED(sort_all_))
     HANDLER(sort_xacts_).on("?normalize");
 }
 
-void report_t::parse_query_args(const value_t& args, const string& whence)
-{
+void report_t::parse_query_args(const value_t& args, const string& whence) {
   query_t query(args, what_to_keep());
 
   if (query.has_query(query_t::QUERY_LIMIT)) {
@@ -319,36 +296,28 @@ void report_t::parse_query_args(const value_t& args, const string& whence)
     HANDLER(period_).on(whence, query.get_query(query_t::QUERY_FOR));
     DEBUG("report.predicate", "Report period     = " << HANDLER(period_).str());
 
-    normalize_period();         // it needs normalization
+    normalize_period(); // it needs normalization
   }
 }
 
 namespace {
-  struct posts_flusher
-  {
-    post_handler_ptr handler;
-    report_t&        report;
+struct posts_flusher {
+  post_handler_ptr handler;
+  report_t& report;
 
-    posts_flusher(post_handler_ptr _handler, report_t& _report)
-      : handler(_handler), report(_report) {
-      TRACE_CTOR(posts_flusher, "post_handler_ptr, report_t&");
-    }
-    ~posts_flusher() throw() {
-      TRACE_DTOR(posts_flusher);
-    }
+  posts_flusher(post_handler_ptr _handler, report_t& _report) : handler(_handler), report(_report) {
+    TRACE_CTOR(posts_flusher, "post_handler_ptr, report_t&");
+  }
+  ~posts_flusher() throw() { TRACE_DTOR(posts_flusher); }
 
-    void operator()(const value_t&) {
-      report.session.journal->clear_xdata();
-    }
-  };
-}
+  void operator()(const value_t&) { report.session.journal->clear_xdata(); }
+};
+} // namespace
 
-void report_t::posts_report(post_handler_ptr handler)
-{
+void report_t::posts_report(post_handler_ptr handler) {
   handler = chain_post_handlers(handler, *this);
   if (HANDLED(group_by_)) {
-    unique_ptr<post_splitter>
-      splitter(new post_splitter(handler, *this, HANDLER(group_by_).expr));
+    unique_ptr<post_splitter> splitter(new post_splitter(handler, *this, HANDLER(group_by_).expr));
     splitter->set_postflush_func(posts_flusher(handler, *this));
     handler = post_handler_ptr(splitter.release());
   }
@@ -357,25 +326,21 @@ void report_t::posts_report(post_handler_ptr handler)
   journal_posts_iterator walker(*session.journal.get());
   pass_down_posts<journal_posts_iterator>(handler, walker);
 
-  if (! HANDLED(group_by_))
+  if (!HANDLED(group_by_))
     posts_flusher(handler, *this)(value_t());
 }
 
-void report_t::generate_report(post_handler_ptr handler)
-{
+void report_t::generate_report(post_handler_ptr handler) {
   handler = chain_handlers(handler, *this);
 
-  generate_posts_iterator walker
-    (session, HANDLED(seed_) ?
-     lexical_cast<unsigned int>(HANDLER(seed_).str()) : 0,
-     HANDLED(head_) ?
-     lexical_cast<unsigned int>(HANDLER(head_).str()) : 50);
+  generate_posts_iterator walker(
+      session, HANDLED(seed_) ? lexical_cast<unsigned int>(HANDLER(seed_).str()) : 0,
+      HANDLED(head_) ? lexical_cast<unsigned int>(HANDLER(head_).str()) : 50);
 
   pass_down_posts<generate_posts_iterator>(handler, walker);
 }
 
-void report_t::xact_report(post_handler_ptr handler, xact_t& xact)
-{
+void report_t::xact_report(post_handler_ptr handler, xact_t& xact) {
   handler = chain_handlers(handler, *this);
 
   xact_posts_iterator walker(xact);
@@ -385,85 +350,75 @@ void report_t::xact_report(post_handler_ptr handler, xact_t& xact)
 }
 
 namespace {
-  struct accounts_title_printer
-  {
-    acct_handler_ptr handler;
-    report_t&        report;
+struct accounts_title_printer {
+  acct_handler_ptr handler;
+  report_t& report;
 
-    accounts_title_printer(acct_handler_ptr _handler, report_t& _report)
+  accounts_title_printer(acct_handler_ptr _handler, report_t& _report)
       : handler(_handler), report(_report) {}
 
-    void operator()(const value_t& val)
-    {
-      if (! report.HANDLED(no_titles)) {
-        std::ostringstream buf;
-        val.print(buf);
-        handler->title(buf.str());
-      }
+  void operator()(const value_t& val) {
+    if (!report.HANDLED(no_titles)) {
+      std::ostringstream buf;
+      val.print(buf);
+      handler->title(buf.str());
     }
-  };
+  }
+};
 
-  struct accounts_flusher
-  {
-    acct_handler_ptr handler;
-    report_t&        report;
+struct accounts_flusher {
+  acct_handler_ptr handler;
+  report_t& report;
 
-    accounts_flusher(acct_handler_ptr _handler, report_t& _report)
+  accounts_flusher(acct_handler_ptr _handler, report_t& _report)
       : handler(_handler), report(_report) {}
 
-    void operator()(const value_t&)
-    {
-      report.HANDLER(amount_).expr.mark_uncompiled();
-      report.HANDLER(total_).expr.mark_uncompiled();
-      report.HANDLER(display_amount_).expr.mark_uncompiled();
-      report.HANDLER(display_total_).expr.mark_uncompiled();
-      report.HANDLER(revalued_total_).expr.mark_uncompiled();
+  void operator()(const value_t&) {
+    report.HANDLER(amount_).expr.mark_uncompiled();
+    report.HANDLER(total_).expr.mark_uncompiled();
+    report.HANDLER(display_amount_).expr.mark_uncompiled();
+    report.HANDLER(display_total_).expr.mark_uncompiled();
+    report.HANDLER(revalued_total_).expr.mark_uncompiled();
 
-      if (report.HANDLED(display_)) {
-        DEBUG("report.predicate",
-              "Display predicate = " << report.HANDLER(display_).str());
-        if (! report.HANDLED(sort_)) {
-          basic_accounts_iterator iter(*report.session.journal->master);
-          pass_down_accounts<basic_accounts_iterator>
-            (handler, iter, predicate_t(report.HANDLER(display_).str(),
-                                        report.what_to_keep()), report);
-        } else {
-          expr_t sort_expr(report.HANDLER(sort_).str());
-          sort_expr.set_context(&report);
-          sorted_accounts_iterator iter(
-            *report.session.journal->master, sort_expr, report,
-            report.HANDLED(flat));
-          pass_down_accounts<sorted_accounts_iterator>
-            (handler, iter, predicate_t(report.HANDLER(display_).str(),
-                                        report.what_to_keep()), report);
-        }
+    if (report.HANDLED(display_)) {
+      DEBUG("report.predicate", "Display predicate = " << report.HANDLER(display_).str());
+      if (!report.HANDLED(sort_)) {
+        basic_accounts_iterator iter(*report.session.journal->master);
+        pass_down_accounts<basic_accounts_iterator>(
+            handler, iter, predicate_t(report.HANDLER(display_).str(), report.what_to_keep()),
+            report);
       } else {
-        if (! report.HANDLED(sort_)) {
-          basic_accounts_iterator iter(*report.session.journal->master);
-          pass_down_accounts<basic_accounts_iterator>(handler, iter);
-        } else {
-          expr_t sort_expr(report.HANDLER(sort_).str());
-          sort_expr.set_context(&report);
-          sorted_accounts_iterator iter(
-            *report.session.journal->master, sort_expr, report,
-            report.HANDLED(flat));
-          pass_down_accounts<sorted_accounts_iterator>(handler, iter);
-        }
+        expr_t sort_expr(report.HANDLER(sort_).str());
+        sort_expr.set_context(&report);
+        sorted_accounts_iterator iter(*report.session.journal->master, sort_expr, report,
+                                      report.HANDLED(flat));
+        pass_down_accounts<sorted_accounts_iterator>(
+            handler, iter, predicate_t(report.HANDLER(display_).str(), report.what_to_keep()),
+            report);
       }
-
-      report.session.journal->clear_xdata();
+    } else {
+      if (!report.HANDLED(sort_)) {
+        basic_accounts_iterator iter(*report.session.journal->master);
+        pass_down_accounts<basic_accounts_iterator>(handler, iter);
+      } else {
+        expr_t sort_expr(report.HANDLER(sort_).str());
+        sort_expr.set_context(&report);
+        sorted_accounts_iterator iter(*report.session.journal->master, sort_expr, report,
+                                      report.HANDLED(flat));
+        pass_down_accounts<sorted_accounts_iterator>(handler, iter);
+      }
     }
-  };
-}
 
-void report_t::accounts_report(acct_handler_ptr handler)
-{
-  post_handler_ptr chain =
-    chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
-                        /* for_accounts_report= */ true);
+    report.session.journal->clear_xdata();
+  }
+};
+} // namespace
+
+void report_t::accounts_report(acct_handler_ptr handler) {
+  post_handler_ptr chain = chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
+                                               /* for_accounts_report= */ true);
   if (HANDLED(group_by_)) {
-    unique_ptr<post_splitter>
-      splitter(new post_splitter(chain, *this, HANDLER(group_by_).expr));
+    unique_ptr<post_splitter> splitter(new post_splitter(chain, *this, HANDLER(group_by_).expr));
 
     splitter->set_preflush_func(accounts_title_printer(handler, *this));
     splitter->set_postflush_func(accounts_flusher(handler, *this));
@@ -478,19 +433,17 @@ void report_t::accounts_report(acct_handler_ptr handler)
   journal_posts_iterator walker(*session.journal.get());
   pass_down_posts<journal_posts_iterator>(chain, walker);
 
-  if (! HANDLED(group_by_))
+  if (!HANDLED(group_by_))
     accounts_flusher(handler, *this)(value_t());
 }
 
-void report_t::commodities_report(post_handler_ptr handler)
-{
+void report_t::commodities_report(post_handler_ptr handler) {
   handler = chain_handlers(handler, *this);
 
-  posts_commodities_iterator * walker(new posts_commodities_iterator(*session.journal.get()));
+  posts_commodities_iterator* walker(new posts_commodities_iterator(*session.journal.get()));
   try {
     pass_down_posts<posts_commodities_iterator>(handler, *walker);
-  }
-  catch (...) {
+  } catch (...) {
     IF_VERIFY() {
       // If --verify was used, clean up the posts_commodities_iterator.
       // Otherwise, just leak like a sieve.
@@ -502,8 +455,7 @@ void report_t::commodities_report(post_handler_ptr handler)
   session.journal->clear_xdata();
 }
 
-value_t report_t::display_value(const value_t& val)
-{
+value_t report_t::display_value(const value_t& val) {
   value_t temp(val.strip_annotations(what_to_keep()));
   if (HANDLED(base))
     return temp;
@@ -512,65 +464,56 @@ value_t report_t::display_value(const value_t& val)
 }
 
 namespace {
-  value_t top_amount(const value_t& val)
-  {
-    switch (val.type()) {
-    case value_t::BALANCE:
-      return (*val.as_balance().amounts.begin()).second;
+value_t top_amount(const value_t& val) {
+  switch (val.type()) {
+  case value_t::BALANCE:
+    return (*val.as_balance().amounts.begin()).second;
 
-    case value_t::SEQUENCE: {
-      return top_amount(*val.as_sequence().begin());
-    }
+  case value_t::SEQUENCE: {
+    return top_amount(*val.as_sequence().begin());
+  }
 
-    default:
-      return val;
-    }
+  default:
+    return val;
   }
 }
+} // namespace
 
-value_t report_t::fn_top_amount(call_scope_t& args)
-{
+value_t report_t::fn_top_amount(call_scope_t& args) {
   return top_amount(args[0]);
 }
 
-value_t report_t::fn_amount_expr(call_scope_t& scope)
-{
+value_t report_t::fn_amount_expr(call_scope_t& scope) {
   return HANDLER(amount_).expr.calc(scope);
 }
 
-value_t report_t::fn_total_expr(call_scope_t& scope)
-{
+value_t report_t::fn_total_expr(call_scope_t& scope) {
   return HANDLER(total_).expr.calc(scope);
 }
 
-value_t report_t::fn_display_amount(call_scope_t& scope)
-{
+value_t report_t::fn_display_amount(call_scope_t& scope) {
   return HANDLER(display_amount_).expr.calc(scope);
 }
 
-value_t report_t::fn_display_total(call_scope_t& scope)
-{
+value_t report_t::fn_display_total(call_scope_t& scope) {
   return HANDLER(display_total_).expr.calc(scope);
 }
 
-value_t report_t::fn_should_bold(call_scope_t& scope)
-{
+value_t report_t::fn_should_bold(call_scope_t& scope) {
   if (HANDLED(bold_if_))
     return HANDLER(bold_if_).expr.calc(scope);
   else
     return false;
 }
 
-value_t report_t::fn_averaged_lots(call_scope_t& args)
-{
+value_t report_t::fn_averaged_lots(call_scope_t& args) {
   if (args.has<balance_t>(0))
     return average_lot_prices(args.get<balance_t>(0));
   else
     return args[0];
 }
 
-value_t report_t::fn_market(call_scope_t& args)
-{
+value_t report_t::fn_market(call_scope_t& args) {
   value_t result;
   value_t arg0 = args[0];
 
@@ -580,8 +523,7 @@ value_t report_t::fn_market(call_scope_t& args)
 
   if (arg0.is_string()) {
     amount_t tmp(1L);
-    commodity_t * commodity =
-      commodity_pool_t::current_pool->find_or_create(arg0.as_string());
+    commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(arg0.as_string());
     tmp.set_commodity(*commodity);
     arg0 = tmp;
   }
@@ -590,55 +532,48 @@ value_t report_t::fn_market(call_scope_t& args)
   if (args.has<string>(2))
     target_commodity = args.get<string>(2);
 
-  if (! target_commodity.empty())
+  if (!target_commodity.empty())
     result = arg0.exchange_commodities(target_commodity,
                                        /* add_prices= */ false, moment);
   else
     result = arg0.value(moment);
 
-  return ! result.is_null() ? result : arg0;
+  return !result.is_null() ? result : arg0;
 }
 
-value_t report_t::fn_get_at(call_scope_t& args)
-{
+value_t report_t::fn_get_at(call_scope_t& args) {
   std::size_t index = static_cast<std::size_t>(args.get<long>(1));
   if (index == 0) {
-    if (! args[0].is_sequence())
+    if (!args[0].is_sequence())
       return args[0];
-  }
-  else if (! args[0].is_sequence()) {
+  } else if (!args[0].is_sequence()) {
     throw_(std::runtime_error,
-           _f("Attempting to get argument at index %1% from %2%")
-           % index % args[0].label());
+           _f("Attempting to get argument at index %1% from %2%") % index % args[0].label());
   }
 
   value_t::sequence_t& seq(args[0].as_sequence_lval());
   if (index >= seq.size())
-    throw_(std::runtime_error,
-           _f("Attempting to get index %1% from %2% with %3% elements")
-           % index % args[0].label() % seq.size());
+    throw_(std::runtime_error, _f("Attempting to get index %1% from %2% with %3% elements") %
+                                   index % args[0].label() % seq.size());
 
   return seq[index];
 }
 
-value_t report_t::fn_is_seq(call_scope_t& scope)
-{
+value_t report_t::fn_is_seq(call_scope_t& scope) {
   return scope.value().is_sequence();
 }
 
-value_t report_t::fn_strip(call_scope_t& args)
-{
+value_t report_t::fn_strip(call_scope_t& args) {
   return args.value().strip_annotations(what_to_keep());
 }
 
-value_t report_t::fn_trim(call_scope_t& args)
-{
-  string             temp(args.value().to_string());
+value_t report_t::fn_trim(call_scope_t& args) {
+  string temp(args.value().to_string());
   scoped_array<char> buf(new char[temp.length() + 1]);
   std::strcpy(buf.get(), temp.c_str());
 
-  const char * p = buf.get();
-  const char * e = buf.get() + temp.length() - 1;
+  const char* p = buf.get();
+  const char* e = buf.get() + temp.length() - 1;
 
   while (p <= e && std::isspace(static_cast<unsigned char>(*p)))
     p++;
@@ -648,90 +583,73 @@ value_t report_t::fn_trim(call_scope_t& args)
 
   if (p > e) {
     return string_value(empty_string);
-  }
-  else {
+  } else {
     return string_value(string(p, static_cast<std::string::size_type>(e - p + 1)));
   }
 }
 
-value_t report_t::fn_format(call_scope_t& args)
-{
+value_t report_t::fn_format(call_scope_t& args) {
   format_t format(args.get<string>(0));
   std::ostringstream out;
   out << format(args);
   return string_value(out.str());
 }
 
-value_t report_t::fn_print(call_scope_t& args)
-{
+value_t report_t::fn_print(call_scope_t& args) {
   for (std::size_t i = 0; i < args.size(); i++)
     args[i].print(output_stream);
   static_cast<std::ostream&>(output_stream) << std::endl;
   return true;
 }
 
-value_t report_t::fn_scrub(call_scope_t& args)
-{
+value_t report_t::fn_scrub(call_scope_t& args) {
   return display_value(args.value());
 }
 
-value_t report_t::fn_rounded(call_scope_t& args)
-{
+value_t report_t::fn_rounded(call_scope_t& args) {
   return args.value().rounded();
 }
 
-value_t report_t::fn_unrounded(call_scope_t& args)
-{
+value_t report_t::fn_unrounded(call_scope_t& args) {
   return args.value().unrounded();
 }
 
-value_t report_t::fn_quantity(call_scope_t& args)
-{
+value_t report_t::fn_quantity(call_scope_t& args) {
   return args.get<amount_t>(0).number();
 }
 
-value_t report_t::fn_floor(call_scope_t& args)
-{
+value_t report_t::fn_floor(call_scope_t& args) {
   return args[0].floored();
 }
 
-value_t report_t::fn_ceiling(call_scope_t& args)
-{
+value_t report_t::fn_ceiling(call_scope_t& args) {
   return args[0].ceilinged();
 }
 
-value_t report_t::fn_round(call_scope_t& args)
-{
+value_t report_t::fn_round(call_scope_t& args) {
   return args[0].rounded();
 }
 
-value_t report_t::fn_roundto(call_scope_t& args)
-{
+value_t report_t::fn_roundto(call_scope_t& args) {
   return args[0].roundto(args.get<int>(1));
 }
 
-value_t report_t::fn_unround(call_scope_t& args)
-{
+value_t report_t::fn_unround(call_scope_t& args) {
   return args[0].unrounded();
 }
 
-value_t report_t::fn_abs(call_scope_t& args)
-{
+value_t report_t::fn_abs(call_scope_t& args) {
   return args[0].abs();
 }
 
-value_t report_t::fn_truncated(call_scope_t& args)
-{
-  return string_value(format_t::truncate
-                      (args.get<string>(0),
-                       (args.has<int>(1) && args.get<int>(1) > 0) ?
-                       static_cast<std::size_t>(args.get<int>(1)) : 0,
-                       args.has<int>(2) ?
-                       static_cast<std::size_t>(args.get<int>(2)) : 0));
+value_t report_t::fn_truncated(call_scope_t& args) {
+  return string_value(format_t::truncate(
+      args.get<string>(0),
+      (args.has<int>(1) && args.get<int>(1) > 0) ? static_cast<std::size_t>(args.get<int>(1)) : 0,
+      args.has<int>(2) ? static_cast<std::size_t>(args.get<int>(2)) : 0));
 }
 
-value_t report_t::fn_justify(call_scope_t& args)
-{
+value_t report_t::fn_justify(call_scope_t& args) {
   uint_least8_t flags(AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES);
 
   if (args.has<bool>(3) && args.get<bool>(3))
@@ -740,14 +658,12 @@ value_t report_t::fn_justify(call_scope_t& args)
     flags |= AMOUNT_PRINT_COLORIZE;
 
   std::ostringstream out;
-  args[0].print(out, args.get<int>(1),
-                args.has<int>(2) ? args.get<int>(2) : -1, flags);
+  args[0].print(out, args.get<int>(1), args.has<int>(2) ? args.get<int>(2) : -1, flags);
 
   return string_value(out.str());
 }
 
-value_t report_t::fn_quoted(call_scope_t& args)
-{
+value_t report_t::fn_quoted(call_scope_t& args) {
   std::ostringstream out;
 
   out << '"';
@@ -763,8 +679,7 @@ value_t report_t::fn_quoted(call_scope_t& args)
   return string_value(out.str());
 }
 
-value_t report_t::fn_quoted_rfc(call_scope_t& args)
-{
+value_t report_t::fn_quoted_rfc(call_scope_t& args) {
   std::ostringstream out;
 
   out << '"';
@@ -780,8 +695,7 @@ value_t report_t::fn_quoted_rfc(call_scope_t& args)
   return string_value(out.str());
 }
 
-value_t report_t::fn_join(call_scope_t& args)
-{
+value_t report_t::fn_join(call_scope_t& args) {
   std::ostringstream out;
 
   string arg(args.get<string>(0));
@@ -794,40 +708,47 @@ value_t report_t::fn_join(call_scope_t& args)
   return string_value(out.str());
 }
 
-value_t report_t::fn_format_date(call_scope_t& args)
-{
+value_t report_t::fn_format_date(call_scope_t& args) {
   if (args.has<string>(1))
-    return string_value(format_date(args.get<date_t>(0), FMT_CUSTOM,
-                                    args.get<string>(1).c_str()));
+    return string_value(format_date(args.get<date_t>(0), FMT_CUSTOM, args.get<string>(1).c_str()));
   else
     return string_value(format_date(args.get<date_t>(0), FMT_PRINTED));
 }
 
-value_t report_t::fn_format_datetime(call_scope_t& args)
-{
+value_t report_t::fn_format_datetime(call_scope_t& args) {
   if (args.has<string>(1))
-    return string_value(format_datetime(args.get<datetime_t>(0), FMT_CUSTOM,
-                                        args.get<string>(1).c_str()));
+    return string_value(
+        format_datetime(args.get<datetime_t>(0), FMT_CUSTOM, args.get<string>(1).c_str()));
   else
     return string_value(format_datetime(args.get<datetime_t>(0), FMT_PRINTED));
 }
 
-value_t report_t::fn_ansify_if(call_scope_t& args)
-{
+value_t report_t::fn_ansify_if(call_scope_t& args) {
   if (args.has<string>(1)) {
     string color = args.get<string>(1);
     std::ostringstream buf;
-    if (color == "black")          buf << "\033[30m";
-    else if (color == "red")       buf << "\033[31m";
-    else if (color == "green")     buf << "\033[32m";
-    else if (color == "yellow")    buf << "\033[33m";
-    else if (color == "blue")      buf << "\033[34m";
-    else if (color == "magenta")   buf << "\033[35m";
-    else if (color == "cyan")      buf << "\033[36m";
-    else if (color == "white")     buf << "\033[37m";
-    else if (color == "bold")      buf << "\033[1m";
-    else if (color == "underline") buf << "\033[4m";
-    else if (color == "blink")     buf << "\033[5m";
+    if (color == "black")
+      buf << "\033[30m";
+    else if (color == "red")
+      buf << "\033[31m";
+    else if (color == "green")
+      buf << "\033[32m";
+    else if (color == "yellow")
+      buf << "\033[33m";
+    else if (color == "blue")
+      buf << "\033[34m";
+    else if (color == "magenta")
+      buf << "\033[35m";
+    else if (color == "cyan")
+      buf << "\033[36m";
+    else if (color == "white")
+      buf << "\033[37m";
+    else if (color == "bold")
+      buf << "\033[1m";
+    else if (color == "underline")
+      buf << "\033[4m";
+    else if (color == "blink")
+      buf << "\033[5m";
     buf << args[0];
     buf << "\033[0m";
     return string_value(buf.str());
@@ -835,22 +756,19 @@ value_t report_t::fn_ansify_if(call_scope_t& args)
   return args[0];
 }
 
-value_t report_t::fn_percent(call_scope_t& args)
-{
+value_t report_t::fn_percent(call_scope_t& args) {
   return (amount_t("100.00%") *
           (args.get<amount_t>(0).reduced() / args.get<amount_t>(1).reduced()).number());
 }
 
-value_t report_t::fn_commodity(call_scope_t& args)
-{
+value_t report_t::fn_commodity(call_scope_t& args) {
   return string_value(args.get<amount_t>(0).commodity().symbol());
 }
 
-value_t report_t::fn_commodity_price(call_scope_t& args)
-{
-  optional<price_point_t> price_point
-    = commodity_pool_t::current_pool->commodity_price_history.find_price
-        (args.get<amount_t>(0).commodity(), args.get<datetime_t>(1));
+value_t report_t::fn_commodity_price(call_scope_t& args) {
+  optional<price_point_t> price_point =
+      commodity_pool_t::current_pool->commodity_price_history.find_price(
+          args.get<amount_t>(0).commodity(), args.get<datetime_t>(1));
   if (price_point) {
     return price_point->price;
   } else {
@@ -858,34 +776,28 @@ value_t report_t::fn_commodity_price(call_scope_t& args)
   }
 }
 
-value_t report_t::fn_set_commodity_price(call_scope_t& args)
-{
-  args.get<amount_t>(0).commodity().add_price(
-    args.get<datetime_t>(1), args.get<amount_t>(2), true);
+value_t report_t::fn_set_commodity_price(call_scope_t& args) {
+  args.get<amount_t>(0).commodity().add_price(args.get<datetime_t>(1), args.get<amount_t>(2), true);
   return NULL_VALUE;
 }
 
-value_t report_t::fn_clear_commodity(call_scope_t& args)
-{
+value_t report_t::fn_clear_commodity(call_scope_t& args) {
   amount_t amt(args.get<amount_t>(0));
   amt.clear_commodity();
   return amt;
 }
 
-value_t report_t::fn_nail_down(call_scope_t& args)
-{
+value_t report_t::fn_nail_down(call_scope_t& args) {
   value_t arg0(args[0]);
   value_t arg1(args[1]);
 
   switch (arg0.type()) {
   case value_t::AMOUNT: {
     amount_t tmp(arg0.as_amount());
-    if (tmp.has_commodity() && ! tmp.is_null() && ! tmp.is_realzero()) {
+    if (tmp.has_commodity() && !tmp.is_null() && !tmp.is_realzero()) {
       arg1 = arg1.strip_annotations(keep_details_t()).to_amount();
-      expr_t value_expr(is_expr(arg1) ?
-                        as_expr(arg1) :
-                        expr_t::op_t::wrap_value(arg1.unrounded() /
-                                                 arg0.number()));
+      expr_t value_expr(is_expr(arg1) ? as_expr(arg1)
+                                      : expr_t::op_t::wrap_value(arg1.unrounded() / arg0.number()));
       std::ostringstream buf;
       value_expr.print(buf);
       value_expr.set_text(buf.str());
@@ -897,8 +809,7 @@ value_t report_t::fn_nail_down(call_scope_t& args)
 
   case value_t::BALANCE: {
     balance_t tmp;
-    foreach (const balance_t::amounts_map::value_type& pair,
-             arg0.as_balance_lval().amounts) {
+    foreach (const balance_t::amounts_map::value_type& pair, arg0.as_balance_lval().amounts) {
       call_scope_t inner_args(*args.parent);
       inner_args.push_back(pair.second);
       inner_args.push_back(arg1);
@@ -919,14 +830,12 @@ value_t report_t::fn_nail_down(call_scope_t& args)
   }
 
   default:
-    throw_(std::runtime_error, _f("Attempting to nail down %1%")
-           % args[0].label());
+    throw_(std::runtime_error, _f("Attempting to nail down %1%") % args[0].label());
   }
   return arg0;
 }
 
-value_t report_t::fn_lot_date(call_scope_t& args)
-{
+value_t report_t::fn_lot_date(call_scope_t& args) {
   if (args[0].has_annotation()) {
     const annotation_t& details(args[0].annotation());
     if (details.date)
@@ -935,8 +844,7 @@ value_t report_t::fn_lot_date(call_scope_t& args)
   return NULL_VALUE;
 }
 
-value_t report_t::fn_lot_price(call_scope_t& args)
-{
+value_t report_t::fn_lot_price(call_scope_t& args) {
   if (args[0].has_annotation()) {
     const annotation_t& details(args[0].annotation());
     if (details.price)
@@ -945,8 +853,7 @@ value_t report_t::fn_lot_price(call_scope_t& args)
   return NULL_VALUE;
 }
 
-value_t report_t::fn_lot_tag(call_scope_t& args)
-{
+value_t report_t::fn_lot_tag(call_scope_t& args) {
   if (args[0].has_annotation()) {
     const annotation_t& details(args[0].annotation());
     if (details.tag)
@@ -955,121 +862,107 @@ value_t report_t::fn_lot_tag(call_scope_t& args)
   return NULL_VALUE;
 }
 
-value_t report_t::fn_to_boolean(call_scope_t& args)
-{
+value_t report_t::fn_to_boolean(call_scope_t& args) {
   return args.get<bool>(0);
 }
 
-value_t report_t::fn_to_int(call_scope_t& args)
-{
+value_t report_t::fn_to_int(call_scope_t& args) {
   // This method is not called fn_to_long, because that would be
   // confusing to users who don't care about the distinction between
   // integer and long.
   return args.get<long>(0);
 }
 
-value_t report_t::fn_to_datetime(call_scope_t& args)
-{
+value_t report_t::fn_to_datetime(call_scope_t& args) {
   return args.get<datetime_t>(0);
 }
 
-value_t report_t::fn_to_date(call_scope_t& args)
-{
+value_t report_t::fn_to_date(call_scope_t& args) {
   return args.get<date_t>(0);
 }
 
-value_t report_t::fn_to_amount(call_scope_t& args)
-{
+value_t report_t::fn_to_amount(call_scope_t& args) {
   return args.get<amount_t>(0);
 }
 
-value_t report_t::fn_to_balance(call_scope_t& args)
-{
+value_t report_t::fn_to_balance(call_scope_t& args) {
   return args.get<balance_t>(0);
 }
 
-value_t report_t::fn_to_string(call_scope_t& args)
-{
+value_t report_t::fn_to_string(call_scope_t& args) {
   return string_value(args.get<string>(0));
 }
 
-value_t report_t::fn_to_mask(call_scope_t& args)
-{
+value_t report_t::fn_to_mask(call_scope_t& args) {
   return args.get<mask_t>(0);
 }
 
-value_t report_t::fn_to_sequence(call_scope_t& args)
-{
+value_t report_t::fn_to_sequence(call_scope_t& args) {
   return args[0].to_sequence();
 }
 
 namespace {
-  value_t fn_black(call_scope_t&) {
-    return string_value("black");
-  }
-  value_t fn_blink(call_scope_t&) {
-    return string_value("blink");
-  }
-  value_t fn_blue(call_scope_t&) {
-    return string_value("blue");
-  }
-  value_t fn_bold(call_scope_t&) {
-    return string_value("bold");
-  }
-  value_t fn_cyan(call_scope_t&) {
-    return string_value("cyan");
-  }
-  value_t fn_green(call_scope_t&) {
-    return string_value("green");
-  }
-  value_t fn_magenta(call_scope_t&) {
-    return string_value("magenta");
-  }
-  value_t fn_red(call_scope_t&) {
-    return string_value("red");
-  }
-  value_t fn_underline(call_scope_t&) {
-    return string_value("underline");
-  }
-  value_t fn_white(call_scope_t&) {
-    return string_value("white");
-  }
-  value_t fn_yellow(call_scope_t&) {
-    return string_value("yellow");
-  }
-  value_t fn_false(call_scope_t&) {
-    return false;
-  }
-  value_t fn_null(call_scope_t&) {
-    return NULL_VALUE;
-  }
+value_t fn_black(call_scope_t&) {
+  return string_value("black");
 }
+value_t fn_blink(call_scope_t&) {
+  return string_value("blink");
+}
+value_t fn_blue(call_scope_t&) {
+  return string_value("blue");
+}
+value_t fn_bold(call_scope_t&) {
+  return string_value("bold");
+}
+value_t fn_cyan(call_scope_t&) {
+  return string_value("cyan");
+}
+value_t fn_green(call_scope_t&) {
+  return string_value("green");
+}
+value_t fn_magenta(call_scope_t&) {
+  return string_value("magenta");
+}
+value_t fn_red(call_scope_t&) {
+  return string_value("red");
+}
+value_t fn_underline(call_scope_t&) {
+  return string_value("underline");
+}
+value_t fn_white(call_scope_t&) {
+  return string_value("white");
+}
+value_t fn_yellow(call_scope_t&) {
+  return string_value("yellow");
+}
+value_t fn_false(call_scope_t&) {
+  return false;
+}
+value_t fn_null(call_scope_t&) {
+  return NULL_VALUE;
+}
+} // namespace
 
-value_t report_t::reload_command(call_scope_t&)
-{
+value_t report_t::reload_command(call_scope_t&) {
   session.close_journal_files();
   session.read_journal_files();
   return true;
 }
 
-value_t report_t::echo_command(call_scope_t& args)
-{
+value_t report_t::echo_command(call_scope_t& args) {
   std::ostream& out(output_stream);
   out << args.get<string>(0) << std::endl;
   return true;
 }
 
-value_t report_t::pricemap_command(call_scope_t& args)
-{
+value_t report_t::pricemap_command(call_scope_t& args) {
   std::ostream& out(output_stream);
-  commodity_pool_t::current_pool->commodity_price_history.print_map
-    (out, args.has<string>(0) ?
-     datetime_t(parse_date(args.get<string>(0))) : datetime_t());
+  commodity_pool_t::current_pool->commodity_price_history.print_map(
+      out, args.has<string>(0) ? datetime_t(parse_date(args.get<string>(0))) : datetime_t());
   return true;
 }
 
-option_t<report_t> * report_t::lookup_option(const char * p)
-{
+option_t<report_t>* report_t::lookup_option(const char* p) {
   switch (*p) {
   case '%':
     OPT_CH(percent);
@@ -1335,19 +1228,15 @@ option_t<report_t> * report_t::lookup_option(const char * p)
   return NULL;
 }
 
-void report_t::define(const symbol_t::kind_t kind, const string& name,
-                      expr_t::ptr_op_t def)
-{
+void report_t::define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) {
   session.define(kind, name, def);
 }
 
-expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
-                                  const string& name)
-{
+expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& name) {
   if (expr_t::ptr_op_t def = session.lookup(kind, name))
     return def;
 
-  const char * p = name.c_str();
+  const char* p = name.c_str();
 
   switch (kind) {
   case symbol_t::FUNCTION:
@@ -1368,11 +1257,9 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       case 'S':
         return MAKE_FUNCTOR(report_t::fn_strip);
       case 'i':
-        throw_(std::runtime_error,
-               _("The i value expression variable is no longer supported"));
+        throw_(std::runtime_error, _("The i value expression variable is no longer supported"));
       case 'A':
-        throw_(std::runtime_error,
-               _("The A value expression variable is no longer supported"));
+        throw_(std::runtime_error, _("The A value expression variable is no longer supported"));
       case 'v':
       case 'V':
         throw_(std::runtime_error,
@@ -1590,56 +1477,44 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     }
 
     // Check if they are trying to access an option's setting or value.
-    if (option_t<report_t> * handler = lookup_option(p))
+    if (option_t<report_t>* handler = lookup_option(p))
       return MAKE_OPT_FUNCTOR(report_t, handler);
     break;
 
   case symbol_t::OPTION:
-    if (option_t<report_t> * handler = lookup_option(p))
+    if (option_t<report_t>* handler = lookup_option(p))
       return MAKE_OPT_HANDLER(report_t, handler);
     break;
 
-#define POSTS_REPORTER(formatter)                               \
-    WRAP_FUNCTOR(reporter<>(post_handler_ptr(formatter), *this, \
-                            string("#") + p))
+#define POSTS_REPORTER(formatter)                                                                  \
+  WRAP_FUNCTOR(reporter<>(post_handler_ptr(formatter), *this, string("#") + p))
 
     // Can't use WRAP_FUNCTOR here because the template arguments
     // confuse the parser
-#define POSTS_REPORTER_(method, formatter)                      \
-    expr_t::op_t::wrap_functor                                  \
-    (reporter<post_t, post_handler_ptr, method>                 \
-      (post_handler_ptr(formatter), *this, string("#") + p))
+#define POSTS_REPORTER_(method, formatter)                                                         \
+  expr_t::op_t::wrap_functor(reporter<post_t, post_handler_ptr, method>(                           \
+      post_handler_ptr(formatter), *this, string("#") + p))
 
-#define FORMATTED_POSTS_REPORTER(format)                                \
-    POSTS_REPORTER                                                      \
-      (new format_posts                                                 \
-       (*this, report_format(HANDLER(format)),                          \
-        maybe_format(HANDLER(prepend_format_)),                         \
-        HANDLED(prepend_width_) ?                                       \
-        lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0))
+#define FORMATTED_POSTS_REPORTER(format)                                                           \
+  POSTS_REPORTER(new format_posts(                                                                 \
+      *this, report_format(HANDLER(format)), maybe_format(HANDLER(prepend_format_)),               \
+      HANDLED(prepend_width_) ? lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0))
 
-#define FORMATTED_COMMODITIES_REPORTER(format)                          \
-    POSTS_REPORTER_                                                     \
-      (&report_t::commodities_report,                                   \
-       new format_posts                                                 \
-       (*this, report_format(HANDLER(format)),                          \
-        maybe_format(HANDLER(prepend_format_)),                         \
-        HANDLED(prepend_width_) ?                                       \
-        lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0))
+#define FORMATTED_COMMODITIES_REPORTER(format)                                                     \
+  POSTS_REPORTER_(                                                                                 \
+      &report_t::commodities_report,                                                               \
+      new format_posts(                                                                            \
+          *this, report_format(HANDLER(format)), maybe_format(HANDLER(prepend_format_)),           \
+          HANDLED(prepend_width_) ? lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0))
 
-#define ACCOUNTS_REPORTER(formatter)                                    \
-    expr_t::op_t::wrap_functor(reporter<account_t, acct_handler_ptr,    \
-                               &report_t::accounts_report>              \
-                               (acct_handler_ptr(formatter), *this,     \
-                                string("#") + p))
+#define ACCOUNTS_REPORTER(formatter)                                                               \
+  expr_t::op_t::wrap_functor(reporter<account_t, acct_handler_ptr, &report_t::accounts_report>(    \
+      acct_handler_ptr(formatter), *this, string("#") + p))
 
-#define FORMATTED_ACCOUNTS_REPORTER(format)                             \
-    ACCOUNTS_REPORTER                                                   \
-      (new format_accounts                                              \
-       (*this, report_format(HANDLER(format)),                          \
-        maybe_format(HANDLER(prepend_format_)),                         \
-        HANDLED(prepend_width_) ?                                       \
-        lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0))
+#define FORMATTED_ACCOUNTS_REPORTER(format)                                                        \
+  ACCOUNTS_REPORTER(new format_accounts(                                                           \
+      *this, report_format(HANDLER(format)), maybe_format(HANDLER(prepend_format_)),               \
+      HANDLED(prepend_width_) ? lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0))
 
   case symbol_t::COMMAND:
     switch (*p) {
@@ -1656,15 +1531,14 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
         // width of 20. If the user has set the amount width, this should be
         // used instead; but if they haven't, we need to use the old default
         // in order for the tests to pass.
-        if (! HANDLED(amount_width_))
+        if (!HANDLED(amount_width_))
           HANDLER(amount_width_).value = "20";
         return FORMATTED_ACCOUNTS_REPORTER(balance_format_);
-      }
-      else if (is_eq(p, "budget")) {
+      } else if (is_eq(p, "budget")) {
         HANDLER(amount_).on(string("#budget"), "(amount, 0)");
 
         budget_flags |= BUDGET_WRAP_VALUES;
-        if (! (budget_flags & ~BUDGET_WRAP_VALUES))
+        if (!(budget_flags & ~BUDGET_WRAP_VALUES))
           budget_flags |= BUDGET_BUDGETED;
 
         return FORMATTED_ACCOUNTS_REPORTER(budget_format_);
@@ -1674,16 +1548,12 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'c':
       if (is_eq(p, "csv")) {
         return FORMATTED_POSTS_REPORTER(csv_format_);
-      }
-      else if (is_eq(p, "cleared")) {
-        HANDLER(amount_).on(string("#cleared"),
-                            "(amount, cleared ? amount : 0)");
+      } else if (is_eq(p, "cleared")) {
+        HANDLER(amount_).on(string("#cleared"), "(amount, cleared ? amount : 0)");
         return FORMATTED_ACCOUNTS_REPORTER(cleared_format_);
-      }
-      else if (is_eq(p, "convert")) {
+      } else if (is_eq(p, "convert")) {
         return WRAP_FUNCTOR(convert_command);
-      }
-      else if (is_eq(p, "commodities")) {
+      } else if (is_eq(p, "commodities")) {
         return POSTS_REPORTER(new report_commodities(*this));
       }
       break;
@@ -1696,14 +1566,11 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       if (is_eq(p, "equity")) {
         HANDLER(generated).on("#equity");
         return POSTS_REPORTER(new print_xacts(*this));
-      }
-      else if (is_eq(p, "entry")) {
+      } else if (is_eq(p, "entry")) {
         return WRAP_FUNCTOR(xact_command);
-      }
-      else if (is_eq(p, "emacs")) {
+      } else if (is_eq(p, "emacs")) {
         return POSTS_REPORTER(new format_emacs_posts(*this, output_stream));
-      }
-      else if (is_eq(p, "echo")) {
+      } else if (is_eq(p, "echo")) {
         return MAKE_FUNCTOR(report_t::echo_command);
       }
       break;
@@ -1716,17 +1583,13 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'p':
       if (*(p + 1) == '\0' || is_eq(p, "print")) {
         return POSTS_REPORTER(new print_xacts(*this, HANDLED(raw)));
-      }
-      else if (is_eq(p, "prices")) {
+      } else if (is_eq(p, "prices")) {
         return FORMATTED_COMMODITIES_REPORTER(prices_format_);
-      }
-      else if (is_eq(p, "pricedb") || is_eq(p, "pricesdb")) {
+      } else if (is_eq(p, "pricedb") || is_eq(p, "pricesdb")) {
         return FORMATTED_COMMODITIES_REPORTER(pricedb_format_);
-      }
-      else if (is_eq(p, "pricemap")) {
+      } else if (is_eq(p, "pricemap")) {
         return MAKE_FUNCTOR(report_t::pricemap_command);
-      }
-      else if (is_eq(p, "payees")) {
+      } else if (is_eq(p, "payees")) {
         return POSTS_REPORTER(new report_payees(*this));
       }
       break;
@@ -1734,8 +1597,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
     case 'r':
       if (*(p + 1) == '\0' || is_eq(p, "reg") || is_eq(p, "register")) {
         return FORMATTED_POSTS_REPORTER(register_format_);
-      }
-      else if (is_eq(p, "reload")) {
+      } else if (is_eq(p, "reload")) {
         return MAKE_FUNCTOR(report_t::reload_command);
       }
       break;
@@ -1757,8 +1619,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       if (is_eq(p, "xact"))
         return WRAP_FUNCTOR(xact_command);
       else if (is_eq(p, "xml"))
-        return POSTS_REPORTER(new format_ptree(*this,
-                                               format_ptree::FORMAT_XML));
+        return POSTS_REPORTER(new format_ptree(*this, format_ptree::FORMAT_XML));
       break;
     }
     break;
@@ -1781,8 +1642,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind,
       break;
     case 'g':
       if (is_eq(p, "generate"))
-        return POSTS_REPORTER_(&report_t::generate_report,
-                               new print_xacts(*this));
+        return POSTS_REPORTER_(&report_t::generate_report, new print_xacts(*this));
       break;
     case 'p':
       if (is_eq(p, "parse"))

@@ -35,14 +35,12 @@
 
 namespace ledger {
 
-mask_t::mask_t(const string& pat) : expr()
-{
+mask_t::mask_t(const string& pat) : expr() {
   *this = pat;
   TRACE_CTOR(mask_t, "const string&");
 }
 
-mask_t& mask_t::operator=(const string& pat)
-{
+mask_t& mask_t::operator=(const string& pat) {
 #if HAVE_BOOST_REGEX_UNICODE
   expr = boost::make_u32regex(pat.c_str(), boost::regex::perl | boost::regex::icase);
 #else
@@ -52,8 +50,7 @@ mask_t& mask_t::operator=(const string& pat)
   return *this;
 }
 
-mask_t& mask_t::assign_glob(const string& pat)
-{
+mask_t& mask_t::assign_glob(const string& pat) {
   string re_pat = "";
   string::size_type len = pat.length();
   for (string::size_type i = 0; i < len; i++) {

@@ -50,8 +50,7 @@
 
 namespace ledger {
 
-class mask_t
-{
+class mask_t {
 public:
 #if HAVE_BOOST_REGEX_UNICODE
   boost::u32regex expr;
@@ -61,53 +60,38 @@ public:
 
   explicit mask_t(const string& pattern);
 
-  mask_t() : expr() {
-    TRACE_CTOR(mask_t, "");
-  }
-  mask_t(const mask_t& m) : expr(m.expr) {
-    TRACE_CTOR(mask_t, "copy");
-  }
+  mask_t() : expr() { TRACE_CTOR(mask_t, ""); }
+  mask_t(const mask_t& m) : expr(m.expr) { TRACE_CTOR(mask_t, "copy"); }
   mask_t& operator=(const mask_t&) = default;
-  ~mask_t() throw() {
-    TRACE_DTOR(mask_t);
-  }
+  ~mask_t() throw() { TRACE_DTOR(mask_t); }
 
   mask_t& operator=(const string& other);
   mask_t& assign_glob(const string& other);
 
-  bool operator<(const mask_t& other) const {
-    return expr < other.expr;
-  }
-  bool operator==(const mask_t& other) const {
-    return expr == other.expr;
-  }
+  bool operator<(const mask_t& other) const { return expr < other.expr; }
+  bool operator==(const mask_t& other) const { return expr == other.expr; }
 
   bool match(const string& text) const {
 #if HAVE_BOOST_REGEX_UNICODE
-    DEBUG("mask.match",
-          "Matching: \"" << text << "\" =~ /" << str() << "/ = "
-          << (boost::u32regex_search(text, expr) ? "true" : "false"));
+    DEBUG("mask.match", "Matching: \"" << text << "\" =~ /" << str() << "/ = "
+                                       << (boost::u32regex_search(text, expr) ? "true" : "false"));
     return boost::u32regex_search(text, expr);
 #else
-    DEBUG("mask.match",
-          "Matching: \"" << text << "\" =~ /" << str() << "/ = "
-          << (boost::regex_search(text, expr) ? "true" : "false"));
+    DEBUG("mask.match", "Matching: \"" << text << "\" =~ /" << str() << "/ = "
+                                       << (boost::regex_search(text, expr) ? "true" : "false"));
     return boost::regex_search(text, expr);
 #endif
   }
 
-  bool empty() const {
-    return expr.empty();
-  }
+  bool empty() const { return expr.empty(); }
 
   string str() const {
-    if (! empty()) {
+    if (!empty()) {
 #if HAVE_BOOST_REGEX_UNICODE
       assert(sizeof(boost::uint32_t) == sizeof(UChar32));
       unistring ustr;
       std::basic_string<UChar32> expr_str = expr.str();
-      std::copy(expr_str.begin(), expr_str.end(),
-                std::back_inserter(ustr.utf32chars));
+      std::copy(expr_str.begin(), expr_str.end(), std::back_inserter(ustr.utf32chars));
       return ustr.extract();
 #else
       return expr.str();

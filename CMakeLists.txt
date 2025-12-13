@@ -347,6 +347,26 @@ add_subdirectory(test)
 
 ########################################################################
 
+# clang-format targets for code formatting
+find_program(CLANG_FORMAT clang-format)
+if(CLANG_FORMAT)
+  file(GLOB_RECURSE ALL_SOURCE_FILES
+    ${CMAKE_SOURCE_DIR}/src/*.cc
+    ${CMAKE_SOURCE_DIR}/src/*.h)
+
+  add_custom_target(reformat
+    COMMAND ${CLANG_FORMAT} -i ${ALL_SOURCE_FILES}
+    COMMENT "Reformatting source files with clang-format"
+    VERBATIM)
+
+  add_custom_target(lint
+    COMMAND ${CLANG_FORMAT} --dry-run --Werror ${ALL_SOURCE_FILES}
+    COMMENT "Checking source file formatting with clang-format"
+    VERBATIM)
+endif()
+
+########################################################################
+
 # build a CPack driven installer package
 include(InstallRequiredSystemLibraries)
 

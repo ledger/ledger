@@ -65,15 +65,15 @@ struct keep_details_t;
 DECLARE_EXCEPTION(amount_error, std::runtime_error);
 
 enum parse_flags_enum_t {
-  PARSE_DEFAULT    = 0x00,
-  PARSE_PARTIAL    = 0x01,
-  PARSE_SINGLE     = 0x02,
+  PARSE_DEFAULT = 0x00,
+  PARSE_PARTIAL = 0x01,
+  PARSE_SINGLE = 0x02,
   PARSE_NO_MIGRATE = 0x04,
-  PARSE_NO_REDUCE  = 0x08,
-  PARSE_NO_ASSIGN  = 0x10,
-  PARSE_NO_ANNOT   = 0x20,
+  PARSE_NO_REDUCE = 0x08,
+  PARSE_NO_ASSIGN = 0x10,
+  PARSE_NO_ANNOT = 0x20,
   PARSE_OP_CONTEXT = 0x40,
-  PARSE_SOFT_FAIL  = 0x80
+  PARSE_SOFT_FAIL = 0x80
 };
 
 typedef flags::basic_t<parse_flags_enum_t, uint_least8_t> parse_flags_t;
@@ -89,11 +89,11 @@ typedef flags::basic_t<parse_flags_enum_t, uint_least8_t> parse_flags_t;
  * kept to an excessive degree.
  */
 class amount_t
-  : public ordered_field_operators<amount_t,
-           ordered_field_operators<amount_t, double,
-           ordered_field_operators<amount_t, unsigned long,
-           ordered_field_operators<amount_t, long> > > >
-{
+    : public ordered_field_operators<
+          amount_t, ordered_field_operators<
+                        amount_t, double,
+                        ordered_field_operators<amount_t, unsigned long,
+                                                ordered_field_operators<amount_t, long>>>> {
 public:
   /** Ready the amount subsystem for use.
       @note Normally called by session_t::initialize(). */
@@ -124,8 +124,8 @@ protected:
 
   struct bigint_t;
 
-  bigint_t *    quantity;
-  commodity_t * commodity_;
+  bigint_t* quantity;
+  commodity_t* commodity_;
 
 public:
   /** @name Constructors
@@ -134,9 +134,7 @@ public:
   /** Creates a value for which is_null() is true, and which has no
       value or commodity.  If used in a value expression it evaluates to
       zero, and its commodity equals \c commodity_t::null_commodity. */
-  amount_t() : quantity(NULL), commodity_(NULL) {
-    TRACE_CTOR(amount_t, "");
-  }
+  amount_t() : quantity(NULL), commodity_(NULL) { TRACE_CTOR(amount_t, ""); }
 
   /** Convert a double to an amount.  As much precision as possible is
       decoded from the binary floating point number. */
@@ -161,7 +159,7 @@ public:
       amount.  If no commodity is present, the resulting commodity is \c
       commodity_t::null_commodity.  The number may be of infinite
       precision. */
-  explicit amount_t(const char * val) : quantity(NULL) {
+  explicit amount_t(const char* val) : quantity(NULL) {
     assert(val);
     parse(val);
     TRACE_CTOR(amount_t, "const char *");
@@ -215,23 +213,15 @@ public:
       be freed. */
   amount_t& operator=(const amount_t& amt);
 
-  amount_t& operator=(const double val) {
-    return *this = amount_t(val);
-  }
-  amount_t& operator=(const unsigned long val) {
-    return *this = amount_t(val);
-  }
-  amount_t& operator=(const long val) {
-    return *this = amount_t(val);
-  }
+  amount_t& operator=(const double val) { return *this = amount_t(val); }
+  amount_t& operator=(const unsigned long val) { return *this = amount_t(val); }
+  amount_t& operator=(const long val) { return *this = amount_t(val); }
 
   /* Assign a string to an amount.  This causes the contents of the
      string to be parsed, look for a commoditized or uncommoditized
      amount specifier. */
-  amount_t& operator=(const string& str) {
-    return *this = amount_t(str);
-  }
-  amount_t& operator=(const char * str) {
+  amount_t& operator=(const string& str) { return *this = amount_t(str); }
+  amount_t& operator=(const char* str) {
     assert(str);
     return *this = amount_t(str);
   }
@@ -273,9 +263,7 @@ public:
 
   amount_t& operator+=(const amount_t& amt);
   amount_t& operator-=(const amount_t& amt);
-  amount_t& operator*=(const amount_t& amt) {
-    return multiply(amt);
-  }
+  amount_t& operator*=(const amount_t& amt) { return multiply(amt); }
   amount_t& multiply(const amount_t& amt, bool ignore_commodity = false);
 
   /** Divide two amounts while extending the precision to preserve the
@@ -297,8 +285,8 @@ public:
       amount.commodity().precision()
       @endcode */
   precision_t precision() const;
-  bool        keep_precision() const;
-  void        set_keep_precision(const bool keep = true) const;
+  bool keep_precision() const;
+  void set_keep_precision(const bool keep = true) const;
   precision_t display_precision() const;
 
   /** Returns the negated value of an amount.
@@ -311,9 +299,7 @@ public:
   }
   void in_place_negate();
 
-  amount_t operator-() const {
-    return negated();
-  }
+  amount_t operator-() const { return negated(); }
 
   /** Returns the absolute value of an amount.  Equivalent to:
       @code
@@ -418,9 +404,8 @@ public:
       calling value() for that moment in time would yield the amount \c
       $100.00.
   */
-  optional<amount_t>
-  value(const datetime_t& moment        = datetime_t(),
-        const commodity_t * in_terms_of = NULL) const;
+  optional<amount_t> value(const datetime_t& moment = datetime_t(),
+                           const commodity_t* in_terms_of = NULL) const;
 
   optional<amount_t> price() const;
 
@@ -455,21 +440,15 @@ public:
   */
   int sign() const;
 
-  operator bool() const {
-    return is_nonzero();
-  }
-  bool is_nonzero() const {
-    return ! is_zero();
-  }
+  operator bool() const { return is_nonzero(); }
+  bool is_nonzero() const { return !is_zero(); }
 
   bool is_zero() const;
-  bool is_realzero() const {
-    return sign() == 0;
-  }
+  bool is_realzero() const { return sign() == 0; }
 
   bool is_null() const {
-    if (! quantity) {
-      assert(! commodity_);
+    if (!quantity) {
+      assert(!commodity_);
       return true;
     }
     return false;
@@ -512,12 +491,10 @@ public:
       would be displayed.
   */
   double to_double() const;
-  long   to_long() const;
-  bool   fits_in_long() const;
+  long to_long() const;
+  bool fits_in_long() const;
 
-  operator string() const {
-    return to_string();
-  }
+  operator string() const { return to_string(); }
   string to_string() const;
   string to_fullstring() const;
   string quantity_string() const;
@@ -548,14 +525,12 @@ public:
       number() returns a commodity-less version of an amount.  This is
       useful for accessing just the numeric portion of an amount.
   */
-  commodity_t * commodity_ptr() const;
-  commodity_t& commodity() const {
-    return *commodity_ptr();
-  }
+  commodity_t* commodity_ptr() const;
+  commodity_t& commodity() const { return *commodity_ptr(); }
 
   bool has_commodity() const;
   void set_commodity(commodity_t& comm) {
-    if (! quantity)
+    if (!quantity)
       *this = 0L;
     commodity_ = &comm;
   }
@@ -568,12 +543,10 @@ public:
       return tmp;
     }
   }
-  void clear_commodity() {
-    commodity_ = NULL;
-  }
+  void clear_commodity() { commodity_ = NULL; }
 
   amount_t number() const {
-    if (! has_commodity())
+    if (!has_commodity())
       return *this;
 
     amount_t temp(*this);
@@ -606,13 +579,11 @@ public:
       strip_annotations() returns an amount whose commodity's annotations have
       been stripped.
   */
-  void          annotate(const annotation_t& details);
-  bool          has_annotation() const;
+  void annotate(const annotation_t& details);
+  bool has_annotation() const;
 
   annotation_t& annotation();
-  const annotation_t& annotation() const {
-    return const_cast<amount_t&>(*this).annotation();
-  }
+  const annotation_t& annotation() const { return const_cast<amount_t&>(*this).annotation(); }
 
   /** If the lot price is considered whenever working with commoditized
       values.
@@ -677,17 +648,14 @@ public:
 
       parse(string, flags_t) also parses an amount from a string.
   */
-  bool parse(std::istream& in,
-             const parse_flags_t& flags = PARSE_DEFAULT);
-  bool parse(const string& str,
-             const parse_flags_t& flags = PARSE_DEFAULT) {
+  bool parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT);
+  bool parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
     std::istringstream stream(str);
     bool result = parse(stream, flags);
     return result;
   }
 
-  static void parse_conversion(const string& larger_str,
-                               const string& smaller_str);
+  static void parse_conversion(const string& larger_str, const string& smaller_str);
 
   /*@}*/
 
@@ -708,14 +676,13 @@ public:
       true, the full internal precision of the amount is displayed, regardless
       of its commodity's display precision.
   */
-#define AMOUNT_PRINT_NO_FLAGS                 0x00
-#define AMOUNT_PRINT_RIGHT_JUSTIFY            0x01
-#define AMOUNT_PRINT_COLORIZE                 0x02
-#define AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS  0x04
-#define AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES   0x08
+#define AMOUNT_PRINT_NO_FLAGS 0x00
+#define AMOUNT_PRINT_RIGHT_JUSTIFY 0x01
+#define AMOUNT_PRINT_COLORIZE 0x02
+#define AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS 0x04
+#define AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES 0x08
 
-  void print(std::ostream&       out,
-             const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
+  void print(std::ostream& out, const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
 
   /*@}*/
 
@@ -781,7 +748,6 @@ inline std::istream& operator>>(std::istream& in, amount_t& amt) {
   return in;
 }
 
-void put_amount(property_tree::ptree& pt, const amount_t& amt,
-                bool commodity_details = false);
+void put_amount(property_tree::ptree& pt, const amount_t& amt, bool commodity_details = false);
 
 } // namespace ledger

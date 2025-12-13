@@ -37,54 +37,48 @@
 namespace ledger {
 
 namespace {
-  typedef std::pair<xact_t *, int> score_entry_t;
-  typedef std::deque<score_entry_t> scorecard_t;
-  typedef std::map<uint32_t, std::size_t> char_positions_map;
+typedef std::pair<xact_t*, int> score_entry_t;
+typedef std::deque<score_entry_t> scorecard_t;
+typedef std::map<uint32_t, std::size_t> char_positions_map;
 
-  struct score_sorter {
-    bool operator()(const score_entry_t& left,
-                    const score_entry_t& right) const {
-      return left.second > right.second;
-    }
-  };
+struct score_sorter {
+  bool operator()(const score_entry_t& left, const score_entry_t& right) const {
+    return left.second > right.second;
+  }
+};
 
-  typedef std::map<account_t *, int>  account_use_map;
-  typedef std::pair<account_t *, int> account_use_pair;
+typedef std::map<account_t*, int> account_use_map;
+typedef std::pair<account_t*, int> account_use_pair;
 
-  struct usage_sorter {
-    bool operator()(const account_use_pair& left,
-                    const account_use_pair& right) const {
-      return left.second < right.second;
-    }
-  };
-}
+struct usage_sorter {
+  bool operator()(const account_use_pair& left, const account_use_pair& right) const {
+    return left.second < right.second;
+  }
+};
+} // namespace
 
-std::pair<xact_t *, account_t *>
-lookup_probable_account(const string& ident,
-                        xacts_list::reverse_iterator iter,
-                        xacts_list::reverse_iterator end,
-                        account_t * ref_account)
-{
+std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
+                                                       xacts_list::reverse_iterator iter,
+                                                       xacts_list::reverse_iterator end,
+                                                       account_t* ref_account) {
   scorecard_t scores;
 
 #if !HAVE_BOOST_REGEX_UNICODE
-    string lident = ident;
-    to_lower(lident);
-    unistring lowered_ident(lident);
+  string lident = ident;
+  to_lower(lident);
+  unistring lowered_ident(lident);
 #else
-    // jww (2010-03-07): Not yet implemented
-    unistring lowered_ident(ident);
+  // jww (2010-03-07): Not yet implemented
+  unistring lowered_ident(ident);
 #endif
 
-  DEBUG("lookup.account",
-        "Looking up identifier '" << lowered_ident.extract() << "'");
+  DEBUG("lookup.account", "Looking up identifier '" << lowered_ident.extract() << "'");
 #if DEBUG_ON
   if (ref_account != NULL)
-    DEBUG("lookup.account",
-          "  with reference account: " << ref_account->fullname());
+    DEBUG("lookup.account", "  with reference account: " << ref_account->fullname());
 #endif
 
-  xact_t * xact;
+  xact_t* xact;
   while (iter != end && (xact = *iter++) != NULL) {
 #if 0
     // Only consider transactions from the last two years (jww (2010-03-07):
@@ -111,18 +105,18 @@ lookup_probable_account(const string& ident,
 
     DEBUG("lookup", "Considering payee: " << value_key.extract());
 
-    std::size_t        index          = 0;
-    std::size_t        last_match_pos = unistring::npos;
-    int                bonus          = 0;
-    int                score          = 0;
-    std::size_t        pos;
+    std::size_t index = 0;
+    std::size_t last_match_pos = unistring::npos;
+    int bonus = 0;
+    int score = 0;
+    std::size_t pos;
     char_positions_map positions;
 
     // Walk each letter in the source identifier
     foreach (const uint32_t& ch, lowered_ident.utf32chars) {
-      int         addend      = 0;
-      bool        added_bonus = false;
-      std::size_t value_len   = value_key.length();
+      int addend = 0;
+      bool added_bonus = false;
+      std::size_t value_len = value_key.length();
 
       pos = value_key.find(ch);
 
@@ -132,8 +126,7 @@ lookup_probable_account(const string& ident,
       // matches.
 
       char_positions_map::iterator pi = positions.find(ch);
-      while (pi != positions.end() &&
-             pos != unistring::npos && pos <= (*pi).second &&
+      while (pi != positions.end() && pos != unistring::npos && pos <= (*pi).second &&
              (*pi).second + 1 < value_len)
         pos = value_key.find(ch, (*pi).second + 1);
 
@@ -148,10 +141,9 @@ lookup_probable_account(const string& ident,
         // points.  Plus, an extra point is added for every letter in chains
         // of 3 or more.
 
-        if (last_match_pos == unistring::npos ?
-            index == 0 && pos == 0 : pos == last_match_pos + 1) {
-          DEBUG("lookup",
-                "  char " << index << " in-sequence match with bonus " << bonus);
+        if (last_match_pos == unistring::npos ? index == 0 && pos == 0
+                                              : pos == last_match_pos + 1) {
+          DEBUG("lookup", "  char " << index << " in-sequence match with bonus " << bonus);
           addend += 10;
           if (bonus > 2)
             addend += bonus - 2;
@@ -171,12 +163,12 @@ lookup_probable_account(const string& ident,
         // extra point if it's preceded by a non-alphabetic character.
 
         else {
-          bool in_order_match = (last_match_pos != unistring::npos &&
-                                 pos > last_match_pos);
-          DEBUG("lookup", "  char " << index << " " <<
-                (in_order_match ? "in-order" : "out-of-order")
-                << " match" << (in_order_match && pos - index < 3 ?
-                                " with proximity bonus of 1" : ""));
+          bool in_order_match = (last_match_pos != unistring::npos && pos > last_match_pos);
+          DEBUG("lookup", "  char "
+                              << index << " " << (in_order_match ? "in-order" : "out-of-order")
+                              << " match"
+                              << (in_order_match && pos - index < 3 ? " with proximity bonus of 1"
+                                                                    : ""));
 
           if (pos < index)
             addend += 1;
@@ -204,7 +196,7 @@ lookup_probable_account(const string& ident,
           last_match_pos = pos;
         }
 
-      // If the letter does not appear at all, decrease the score by 1
+        // If the letter does not appear at all, decrease the score by 1
 
       } else {
         last_match_pos = unistring::npos;
@@ -221,8 +213,7 @@ lookup_probable_account(const string& ident,
       // divisor for the addend.
 
       if ((int(index / 5) + 1) > 1) {
-        DEBUG("lookup",
-              "  discounting the addend by / " << (int(index / 5) + 1));
+        DEBUG("lookup", "  discounting the addend by / " << (int(index / 5) + 1));
         addend = int(double(addend) / (int(index / 5) + 1));
       }
 
@@ -230,7 +221,7 @@ lookup_probable_account(const string& ident,
       score += addend;
       DEBUG("lookup", "  score is " << score);
 
-      if (! added_bonus)
+      if (!added_bonus)
         bonus = 0;
 
       index++;
@@ -248,24 +239,21 @@ lookup_probable_account(const string& ident,
 
   std::stable_sort(scores.begin(), scores.end(), score_sorter());
 
-  scorecard_t::iterator si        = scores.begin();
-  int                   decay     = 0;
-  xact_t *              best_xact = si != scores.end() ? (*si).first : NULL;
-  account_use_map       account_usage;
+  scorecard_t::iterator si = scores.begin();
+  int decay = 0;
+  xact_t* best_xact = si != scores.end() ? (*si).first : NULL;
+  account_use_map account_usage;
 
   for (int i = 0; i < 5 && si != scores.end(); i++, si++) {
     DEBUG("lookup.account",
-          "Payee: " << std::setw(5) << std::right << (*si).second <<
-          " - " << (*si).first->payee);
+          "Payee: " << std::setw(5) << std::right << (*si).second << " - " << (*si).first->payee);
 
-    foreach (post_t * post, (*si).first->posts) {
-      if (! post->has_flags(ITEM_TEMP | ITEM_GENERATED) &&
-          post->account != ref_account &&
-          ! post->account->has_flags(ACCOUNT_TEMP | ACCOUNT_GENERATED)) {
+    foreach (post_t* post, (*si).first->posts) {
+      if (!post->has_flags(ITEM_TEMP | ITEM_GENERATED) && post->account != ref_account &&
+          !post->account->has_flags(ACCOUNT_TEMP | ACCOUNT_GENERATED)) {
         account_use_map::iterator x = account_usage.find(post->account);
         if (x == account_usage.end())
-          account_usage.insert(account_use_pair(post->account,
-                                                ((*si).second - decay)));
+          account_usage.insert(account_use_pair(post->account, ((*si).second - decay)));
         else
           (*x).second += ((*si).second - decay);
       }
@@ -277,16 +265,15 @@ lookup_probable_account(const string& ident,
 #if DEBUG_ON
     if (SHOW_DEBUG("lookup.account")) {
       foreach (const account_use_pair& value, account_usage) {
-        DEBUG("lookup.account",
-              "Account: " << value.second << " - " << value.first->fullname());
+        DEBUG("lookup.account", "Account: " << value.second << " - " << value.first->fullname());
       }
     }
 #endif
-    return std::pair<xact_t *, account_t *>
-      (best_xact, (*std::max_element(account_usage.begin(), account_usage.end(),
-                                     usage_sorter())).first);
+    return std::pair<xact_t*, account_t*>(
+        best_xact,
+        (*std::max_element(account_usage.begin(), account_usage.end(), usage_sorter())).first);
   } else {
-    return std::pair<xact_t *, account_t *>(best_xact, NULL);
+    return std::pair<xact_t*, account_t*>(best_xact, NULL);
   }
 }
 

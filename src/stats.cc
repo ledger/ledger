@@ -40,32 +40,29 @@
 
 namespace ledger {
 
-value_t report_statistics(call_scope_t& args)
-{
+value_t report_statistics(call_scope_t& args) {
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  const account_t::xdata_t::details_t&
-    statistics(report.session.journal->master->family_details(true));
+  const account_t::xdata_t::details_t& statistics(
+      report.session.journal->master->family_details(true));
 
-  if (! is_valid(statistics.earliest_post) &&
-      ! is_valid(statistics.latest_post))
+  if (!is_valid(statistics.earliest_post) && !is_valid(statistics.latest_post))
     return NULL_VALUE;
 
   assert(is_valid(statistics.earliest_post));
   assert(is_valid(statistics.latest_post));
 
-  out << format(_f("Time period: %1% to %2% (%3% days)")
-                % format_date(statistics.earliest_post)
-                % format_date(statistics.latest_post)
-                % (statistics.latest_post -
-                   statistics.earliest_post).days())
-      << std::endl << std::endl;
+  out << format(_f("Time period: %1% to %2% (%3% days)") % format_date(statistics.earliest_post) %
+                format_date(statistics.latest_post) %
+                (statistics.latest_post - statistics.earliest_post).days())
+      << std::endl
+      << std::endl;
 
   out << _("  Files these postings came from:") << std::endl;
 
   foreach (const path& pathname, statistics.filenames)
-    if (! pathname.empty())
+    if (!pathname.empty())
       out << "    " << pathname.string() << std::endl;
   out << std::endl;
 
@@ -85,21 +82,19 @@ value_t report_statistics(call_scope_t& args)
 
   out << " (";
   out.precision(2);
-  out << (double(statistics.posts_count)/
+  out << (double(statistics.posts_count) /
           double((statistics.latest_post - statistics.earliest_post).days()))
       << _(" per day)") << std::endl;
 
   out << _("  Uncleared postings:     ");
   out.width(6);
-  out << (statistics.posts_count -
-                        statistics.posts_cleared_count) << std::endl;
+  out << (statistics.posts_count - statistics.posts_cleared_count) << std::endl;
 
   out << std::endl;
 
   out << _("  Days since last post:   ");
   out.width(6);
-  out << (CURRENT_DATE() - statistics.latest_post).days()
-      << std::endl;
+  out << (CURRENT_DATE() - statistics.latest_post).days() << std::endl;
 
   out << _("  Posts in last 7 days:   ");
   out.width(6);

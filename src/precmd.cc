@@ -43,48 +43,46 @@
 namespace ledger {
 
 namespace {
-  post_t * get_sample_xact(report_t& report)
+post_t* get_sample_xact(report_t& report) {
   {
+    string str;
     {
-      string str;
-      {
-        std::ostringstream buf;
+      std::ostringstream buf;
 
-        buf << "2004/05/27 Book Store\n"
-            << "    ; This note applies to all postings. :SecondTag:\n"
-            << "    Expenses:Books                 20 BOOK @ $10\n"
-            << "    ; Metadata: Some Value\n"
-            << "    ; Typed:: $100 + $200\n"
-            << "    ; :ExampleTag:\n"
-            << "    ; Here follows a note describing the posting.\n"
-            << "    Liabilities:MasterCard        $-200.00\n";
+      buf << "2004/05/27 Book Store\n"
+          << "    ; This note applies to all postings. :SecondTag:\n"
+          << "    Expenses:Books                 20 BOOK @ $10\n"
+          << "    ; Metadata: Some Value\n"
+          << "    ; Typed:: $100 + $200\n"
+          << "    ; :ExampleTag:\n"
+          << "    ; Here follows a note describing the posting.\n"
+          << "    Liabilities:MasterCard        $-200.00\n";
 
-        str = buf.str();
-      }
-
-      std::ostream& out(report.output_stream);
-
-      out << _("--- Context is first posting of the following transaction ---")
-          << std::endl << str << std::endl;
-      {
-        shared_ptr<std::istringstream> in(new std::istringstream(str));
-
-        parse_context_stack_t parsing_context;
-        parsing_context.push(in);
-        parsing_context.get_current().journal = report.session.journal.get();
-        parsing_context.get_current().scope   = &report.session;
-
-        report.session.journal->read(parsing_context, NO_HASHES);
-        report.session.journal->clear_xdata();
-      }
+      str = buf.str();
     }
-    xact_t * first = report.session.journal->xacts.front();
-    return first->posts.front();
-  }
-}
 
-value_t parse_command(call_scope_t& args)
-{
+    std::ostream& out(report.output_stream);
+
+    out << _("--- Context is first posting of the following transaction ---") << std::endl
+        << str << std::endl;
+    {
+      shared_ptr<std::istringstream> in(new std::istringstream(str));
+
+      parse_context_stack_t parsing_context;
+      parsing_context.push(in);
+      parsing_context.get_current().journal = report.session.journal.get();
+      parsing_context.get_current().scope = &report.session;
+
+      report.session.journal->read(parsing_context, NO_HASHES);
+      report.session.journal->clear_xdata();
+    }
+  }
+  xact_t* first = report.session.journal->xacts.front();
+  return first->posts.front();
+}
+} // namespace
+
+value_t parse_command(call_scope_t& args) {
   string arg = join_args(args);
   if (arg.empty())
     throw std::logic_error(_("Usage: parse TEXT"));
@@ -92,7 +90,7 @@ value_t parse_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  post_t * post = get_sample_xact(report);
+  post_t* post = get_sample_xact(report);
 
   out << _("--- Input expression ---") << std::endl;
   out << arg << std::endl;
@@ -118,20 +116,18 @@ value_t parse_command(call_scope_t& args)
   return NULL_VALUE;
 }
 
-value_t eval_command(call_scope_t& args)
-{
+value_t eval_command(call_scope_t& args) {
   report_t& report(find_scope<report_t>(args));
-  expr_t    expr(join_args(args));
-  value_t   result(expr.calc(args).strip_annotations(report.what_to_keep()));
+  expr_t expr(join_args(args));
+  value_t result(expr.calc(args).strip_annotations(report.what_to_keep()));
 
-  if (! result.is_null())
+  if (!result.is_null())
     report.output_stream << result << std::endl;
 
   return NULL_VALUE;
 }
 
-value_t format_command(call_scope_t& args)
-{
+value_t format_command(call_scope_t& args) {
   string arg = join_args(args);
   if (arg.empty())
     throw std::logic_error(_("Usage: format TEXT"));
@@ -139,7 +135,7 @@ value_t format_command(call_scope_t& args)
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  post_t * post = get_sample_xact(report);
+  post_t* post = get_sample_xact(report);
 
   out << _("--- Input format string ---") << std::endl;
   out << arg << std::endl << std::endl;
@@ -157,8 +153,7 @@ value_t format_command(call_scope_t& args)
   return NULL_VALUE;
 }
 
-value_t period_command(call_scope_t& args)
-{
+value_t period_command(call_scope_t& args) {
   string arg = join_args(args);
   if (arg.empty())
     throw std::logic_error(_("Usage: period TEXT"));
@@ -175,8 +170,7 @@ value_t period_command(call_scope_t& args)
   return NULL_VALUE;
 }
 
-value_t query_command(call_scope_t& args)
-{
+value_t query_command(call_scope_t& args) {
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
@@ -184,8 +178,7 @@ value_t query_command(call_scope_t& args)
   args.value().dump(out);
   out << std::endl << std::endl;
 
-  query_t query(args.value(), report.what_to_keep(),
-                ! report.HANDLED(collapse));
+  query_t query(args.value(), report.what_to_keep(), !report.HANDLED(collapse));
   if (query.has_query(query_t::QUERY_LIMIT)) {
     call_scope_t sub_args(static_cast<scope_t&>(args));
     sub_args.push_back(string_value(query.get_query(query_t::QUERY_LIMIT)));
@@ -194,8 +187,7 @@ value_t query_command(call_scope_t& args)
   }
 
   if (query.has_query(query_t::QUERY_SHOW)) {
-    out << std::endl << _("====== Display predicate ======")
-        << std::endl << std::endl;
+    out << std::endl << _("====== Display predicate ======") << std::endl << std::endl;
 
     call_scope_t disp_sub_args(static_cast<scope_t&>(args));
     disp_sub_args.push_back(string_value(query.get_query(query_t::QUERY_SHOW)));

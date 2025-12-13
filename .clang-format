@@ -1,0 +1,76 @@
+# Clang-format configuration for Ledger
+# Based on LLVM style - the de-facto standard for C++ formatting
+
+BasedOnStyle: LLVM
+
+# Use C++17 standard for parsing
+Standard: c++17
+
+# Column width - slightly increased from LLVM's 80 for readability
+ColumnLimit: 100
+
+# Keep the 2-space indentation (LLVM default)
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+
+# Brace wrapping - Attach style (K&R), same as LLVM default
+BreakBeforeBraces: Attach
+
+# Pointer and reference alignment - Left (pointer goes with type)
+PointerAlignment: Left
+
+# Access modifiers at class level (not indented)
+AccessModifierOffset: -2
+
+# Namespace handling - don't indent namespace contents
+NamespaceIndentation: None
+
+# Constructor initializer lists
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerIndentWidth: 4
+
+# Include sorting - DISABLED due to header dependency order requirements
+# The codebase has specific include ordering requirements that automatic
+# sorting would break.
+SortIncludes: Never
+
+# Keep short functions on single line if they fit
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+
+# Align consecutive assignments and declarations for readability
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+
+# Template handling
+AlwaysBreakTemplateDeclarations: Yes
+
+# Penalty settings to prefer certain line breaks
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 60
+
+# Bin-pack arguments - one per line when they don't fit
+BinPackArguments: true
+BinPackParameters: true
+
+# Lambda formatting
+LambdaBodyIndentation: Signature
+
+# Spaces
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInAngles: Never
+SpacesInContainerLiterals: true
+SpacesInParentheses: false
+SpacesInSquareBrackets: false

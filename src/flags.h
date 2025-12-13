@@ -41,11 +41,11 @@
  */
 #pragma once
 
-namespace ledger { namespace flags {
+namespace ledger {
+namespace flags {
 
 template <typename T = boost::uint_least8_t, typename U = T>
-class supports_flags
-{
+class supports_flags {
 public:
   typedef T flags_t;
 
@@ -53,37 +53,23 @@ protected:
   flags_t _flags;
 
 public:
-  supports_flags() : _flags(static_cast<T>(0)) {
-    TRACE_CTOR(supports_flags, "");
-  }
+  supports_flags() : _flags(static_cast<T>(0)) { TRACE_CTOR(supports_flags, ""); }
   supports_flags(const supports_flags& arg) : _flags(arg._flags) {
     TRACE_CTOR(supports_flags, "copy");
   }
-  supports_flags(const flags_t& arg) : _flags(arg) {
-    TRACE_CTOR(supports_flags, "const flags_t&");
-  }
-  ~supports_flags() throw() {
-    TRACE_DTOR(supports_flags);
-  }
+  supports_flags(const flags_t& arg) : _flags(arg) { TRACE_CTOR(supports_flags, "const flags_t&"); }
+  ~supports_flags() throw() { TRACE_DTOR(supports_flags); }
 
   supports_flags& operator=(const supports_flags& other) {
     _flags = other._flags;
     return *this;
   }
 
-  flags_t flags() const {
-    return _flags;
-  }
-  bool has_flags(const flags_t arg) const {
-    return _flags & arg;
-  }
+  flags_t flags() const { return _flags; }
+  bool has_flags(const flags_t arg) const { return _flags & arg; }
 
-  void set_flags(const flags_t arg) {
-    _flags = arg;
-  }
-  void clear_flags() {
-    _flags = static_cast<T>(0);
-  }
+  void set_flags(const flags_t arg) { _flags = arg; }
+  void clear_flags() { _flags = static_cast<T>(0); }
   void add_flags(const flags_t arg) {
     _flags = static_cast<T>(static_cast<U>(_flags) | static_cast<U>(arg));
   }
@@ -93,12 +79,9 @@ public:
 };
 
 template <typename T = boost::uint_least8_t, typename U = T>
-class basic_t : public supports_flags<T, U>
-{
+class basic_t : public supports_flags<T, U> {
 public:
-  basic_t() {
-    TRACE_CTOR(basic_t, "");
-  }
+  basic_t() { TRACE_CTOR(basic_t, ""); }
   basic_t(const T& bits) {
     TRACE_CTOR(basic_t, "const T&");
     supports_flags<T, U>::set_flags(bits);
@@ -107,14 +90,9 @@ public:
     TRACE_CTOR(basic_t, "const U&");
     supports_flags<T, U>::set_flags(static_cast<T>(bits));
   }
-  ~basic_t() throw() {
-    TRACE_DTOR(basic_t);
-  }
+  ~basic_t() throw() { TRACE_DTOR(basic_t); }
 
-  basic_t(const basic_t& other)
-    : supports_flags<T, U>(other) {
-    TRACE_CTOR(basic_t, "copy");
-  }
+  basic_t(const basic_t& other) : supports_flags<T, U>(other) { TRACE_CTOR(basic_t, "copy"); }
   basic_t& operator=(const basic_t& other) {
     set_flags(other.flags());
     return *this;
@@ -124,12 +102,8 @@ public:
     return *this;
   }
 
-  operator T() const {
-    return supports_flags<T, U>::flags();
-  }
-  operator U() const {
-    return supports_flags<T, U>::flags();
-  }
+  operator T() const { return supports_flags<T, U>::flags(); }
+  operator U() const { return supports_flags<T, U>::flags(); }
 
   basic_t plus_flags(const T& arg) const {
     basic_t temp(*this);
@@ -144,8 +118,7 @@ public:
 };
 
 template <typename T = boost::uint_least8_t>
-class delegates_flags : public boost::noncopyable
-{
+class delegates_flags : public boost::noncopyable {
 public:
   typedef T flags_t;
 
@@ -153,35 +126,20 @@ protected:
   supports_flags<T>& _flags;
 
 public:
-  delegates_flags() : _flags() {
-    TRACE_CTOR(delegates_flags, "");
-  }
+  delegates_flags() : _flags() { TRACE_CTOR(delegates_flags, ""); }
   delegates_flags(supports_flags<T>& arg) : _flags(arg) {
     TRACE_CTOR(delegates_flags, "const supports_flags<T>&");
   }
-  ~delegates_flags() throw() {
-    TRACE_DTOR(delegates_flags);
-  }
+  ~delegates_flags() throw() { TRACE_DTOR(delegates_flags); }
 
-  flags_t flags() const {
-    return _flags.flags();
-  }
-  bool has_flags(const flags_t arg) const {
-    return _flags.has_flags(arg);
-  }
+  flags_t flags() const { return _flags.flags(); }
+  bool has_flags(const flags_t arg) const { return _flags.has_flags(arg); }
 
-  void set_flags(const flags_t arg) {
-    _flags.set_flags(arg);
-  }
-  void clear_flags() {
-    _flags.clear_flags();
-  }
-  void add_flags(const flags_t arg) {
-    _flags.add_flags(arg);
-  }
-  void drop_flags(const flags_t arg) {
-    _flags.drop_flags(arg);
-  }
+  void set_flags(const flags_t arg) { _flags.set_flags(arg); }
+  void clear_flags() { _flags.clear_flags(); }
+  void add_flags(const flags_t arg) { _flags.add_flags(arg); }
+  void drop_flags(const flags_t arg) { _flags.drop_flags(arg); }
 };
 
-} } // namespace ledger::flags
+} // namespace flags
+} // namespace ledger

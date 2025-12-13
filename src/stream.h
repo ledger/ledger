@@ -62,8 +62,7 @@ namespace ledger {
  * Cline's "C++ FAQ Lite". Arguably this should be three different
  * classes, but that introduces additional unneeded complications.
  */
-class output_stream_t
-{
+class output_stream_t {
   output_stream_t& operator=(const output_stream_t&);
 
 private:
@@ -74,22 +73,19 @@ public:
    * A pointer to the ostream.  Don't delete this; the output_stream_t
    * class takes care of this.
    */
-  std::ostream * os;
+  std::ostream* os;
 
   /**
    * Construct a new output_stream_t.
    */
-  output_stream_t() : pipe_to_pager_fd(-1), os(&std::cout) {
-    TRACE_CTOR(output_stream_t, "");
-  }
+  output_stream_t() : pipe_to_pager_fd(-1), os(&std::cout) { TRACE_CTOR(output_stream_t, ""); }
 
   /**
    * When copy-constructed, make the copy just be a new output stream.  This
    * allows large classes to rely on their default copy-constructor without
    * worrying about pointer copying within output_stream_t.
    */
-  output_stream_t(const output_stream_t&)
-    : pipe_to_pager_fd(-1), os(&std::cout) {
+  output_stream_t(const output_stream_t&) : pipe_to_pager_fd(-1), os(&std::cout) {
     TRACE_CTOR(output_stream_t, "copy");
   }
 
@@ -113,22 +109,18 @@ public:
    * empty.
    */
   void initialize(const optional<path>& output_file = none,
-                  const optional<path>& pager_path  = none);
+                  const optional<path>& pager_path = none);
 
   /**
    * Converter to a standard ostream.  This is used so that we can
    * stream directly to an object of type output_stream_t.
    */
-  operator std::ostream&() {
-    return *os;
-  }
+  operator std::ostream&() { return *os; }
 
   /**
    * Flushing function.  A simple proxy for ostream's flush.
    */
-  void flush() {
-    os->flush();
-  }
+  void flush() { os->flush(); }
 
   /**
    * Close the output stream, waiting on the pager process if necessary.

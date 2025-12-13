@@ -38,9 +38,8 @@
 
 namespace ledger {
 
-xact_t& temporaries_t::copy_xact(xact_t& origin)
-{
-  if (! xact_temps)
+xact_t& temporaries_t::copy_xact(xact_t& origin) {
+  if (!xact_temps)
     xact_temps = std::list<xact_t>();
 
   xact_temps->push_back(origin);
@@ -50,9 +49,8 @@ xact_t& temporaries_t::copy_xact(xact_t& origin)
   return temp;
 }
 
-xact_t& temporaries_t::create_xact()
-{
-  if (! xact_temps)
+xact_t& temporaries_t::create_xact() {
+  if (!xact_temps)
     xact_temps = std::list<xact_t>();
 
   xact_temps->push_back(xact_t());
@@ -62,10 +60,8 @@ xact_t& temporaries_t::create_xact()
   return temp;
 }
 
-post_t& temporaries_t::copy_post(post_t& origin, xact_t& xact,
-                                 account_t * account)
-{
-  if (! post_temps)
+post_t& temporaries_t::copy_post(post_t& origin, xact_t& xact, account_t* account) {
+  if (!post_temps)
     post_temps = std::list<post_t>();
 
   post_temps->push_back(origin);
@@ -81,10 +77,8 @@ post_t& temporaries_t::copy_post(post_t& origin, xact_t& xact,
   return temp;
 }
 
-post_t& temporaries_t::create_post(xact_t& xact, account_t * account,
-                                   bool bidir_link)
-{
-  if (! post_temps)
+post_t& temporaries_t::create_post(xact_t& xact, account_t* account, bool bidir_link) {
+  if (!post_temps)
     post_temps = std::list<post_t>();
 
   post_temps->push_back(post_t(account));
@@ -102,10 +96,8 @@ post_t& temporaries_t::create_post(xact_t& xact, account_t * account,
   return temp;
 }
 
-account_t& temporaries_t::create_account(const string& name,
-                                         account_t *   parent)
-{
-  if (! acct_temps)
+account_t& temporaries_t::create_account(const string& name, account_t* parent) {
+  if (!acct_temps)
     acct_temps = std::list<account_t>();
 
   acct_temps->push_back(account_t(parent, name));
@@ -118,14 +110,13 @@ account_t& temporaries_t::create_account(const string& name,
   return temp;
 }
 
-void temporaries_t::clear()
-{
+void temporaries_t::clear() {
   if (post_temps) {
     foreach (post_t& post, *post_temps) {
-      if (! post.xact->has_flags(ITEM_TEMP))
+      if (!post.xact->has_flags(ITEM_TEMP))
         post.xact->remove_post(&post);
 
-      if (post.account && ! post.account->has_flags(ACCOUNT_TEMP))
+      if (post.account && !post.account->has_flags(ACCOUNT_TEMP))
         post.account->remove_post(&post);
     }
     post_temps->clear();
@@ -136,7 +127,7 @@ void temporaries_t::clear()
 
   if (acct_temps) {
     foreach (account_t& acct, *acct_temps) {
-      if (acct.parent && ! acct.parent->has_flags(ACCOUNT_TEMP))
+      if (acct.parent && !acct.parent->has_flags(ACCOUNT_TEMP))
         acct.parent->remove_account(&acct);
     }
     acct_temps->clear();

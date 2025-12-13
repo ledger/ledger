@@ -57,30 +57,25 @@ class report_t;
  *
  * Long.
  */
-class format_ptree : public item_handler<post_t>
-{
+class format_ptree : public item_handler<post_t> {
 protected:
   report_t& report;
 
-  typedef std::map<string, commodity_t *>  commodities_map;
-  typedef std::pair<string, commodity_t *> commodities_pair;
+  typedef std::map<string, commodity_t*> commodities_map;
+  typedef std::pair<string, commodity_t*> commodities_pair;
 
-  commodities_map      commodities;
-  std::set<xact_t *>   transactions_set;
-  std::deque<xact_t *> transactions;
+  commodities_map commodities;
+  std::set<xact_t*> transactions_set;
+  std::deque<xact_t*> transactions;
 
 public:
-  enum format_t {
-    FORMAT_XML
-  } format;
+  enum format_t { FORMAT_XML } format;
 
   format_ptree(report_t& _report, format_t _format = FORMAT_XML)
-    : report(_report), format(_format) {
+      : report(_report), format(_format) {
     TRACE_CTOR(format_ptree, "report&, format_t");
   }
-  virtual ~format_ptree() {
-    TRACE_DTOR(format_ptree);
-  }
+  virtual ~format_ptree() { TRACE_DTOR(format_ptree); }
 
   virtual void flush();
   virtual void operator()(post_t& post);

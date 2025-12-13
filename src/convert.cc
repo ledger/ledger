@@ -42,9 +42,8 @@
 
 namespace ledger {
 
-value_t convert_command(call_scope_t& args)
-{
-  report_t&  report(args.context<report_t>());
+value_t convert_command(call_scope_t& args) {
+  report_t& report(args.context<report_t>());
   journal_t& journal(*report.session.journal.get());
 
   string bucket_name;
@@ -53,8 +52,8 @@ value_t convert_command(call_scope_t& args)
   else
     bucket_name = _("Equity:Unknown");
 
-  account_t * bucket  = journal.master->find_account(bucket_name);
-  account_t * unknown = journal.master->find_account(_("Expenses:Unknown"));
+  account_t* bucket = journal.master->find_account(bucket_name);
+  account_t* unknown = journal.master->find_account(_("Expenses:Unknown"));
 
   // Create a flat list
   xacts_list current_xacts(journal.xacts_begin(), journal.xacts_end());
@@ -62,66 +61,60 @@ value_t convert_command(call_scope_t& args)
   // Read in the series of transactions from the CSV file
 
   print_xacts formatter(report);
-  path        csv_file_path(args.get<string>(0));
+  path csv_file_path(args.get<string>(0));
 
   report.session.parsing_context.push(csv_file_path);
   parse_context_t& context(report.session.parsing_context.get_current());
   context.journal = &journal;
-  context.master  = bucket;
+  context.master = bucket;
 
   csv_reader reader(context);
 
   try {
-    while (xact_t * xact = reader.read_xact(report.HANDLED(rich_data))) {
+    while (xact_t* xact = reader.read_xact(report.HANDLED(rich_data))) {
       if (report.HANDLED(invert)) {
-        foreach (post_t * post, xact->posts)
+        foreach (post_t* post, xact->posts)
           post->amount.in_place_negate();
       }
 
-      string ref = (xact->has_tag(_("UUID")) ?
-                    xact->get_tag(_("UUID"))->to_string() :
-                    sha1sum(reader.get_last_line()));
+      string ref = (xact->has_tag(_("UUID")) ? xact->get_tag(_("UUID"))->to_string()
+                                             : sha1sum(reader.get_last_line()));
 
       checksum_map_t::const_iterator entry = journal.checksum_map.find(ref);
       if (entry != journal.checksum_map.end()) {
-        INFO(file_context(reader.get_pathname(),
-                          reader.get_linenum())
+        INFO(file_context(reader.get_pathname(), reader.get_linenum())
              << " " << "Ignoring known UUID " << ref);
-        checked_delete(xact);     // ignore it
+        checked_delete(xact); // ignore it
         continue;
       }
 
-      if (report.HANDLED(rich_data) && ! xact->has_tag(_("UUID")))
+      if (report.HANDLED(rich_data) && !xact->has_tag(_("UUID")))
         xact->set_tag(_("UUID"), string_value(ref));
 
       if (xact->posts.front()->account == NULL) {
-        if (account_t * acct =
-            (report.HANDLED(auto_match) ?
-             lookup_probable_account(xact->payee, current_xacts.rbegin(),
-                                     current_xacts.rend(), bucket).second :
-             NULL))
+        if (account_t* acct = (report.HANDLED(auto_match)
+                                   ? lookup_probable_account(xact->payee, current_xacts.rbegin(),
+                                                             current_xacts.rend(), bucket)
+                                         .second
+                                   : NULL))
           xact->posts.front()->account = acct;
         else
           xact->posts.front()->account = unknown;
       }
 
-      if (! journal.add_xact(xact)) {
+      if (!journal.add_xact(xact)) {
         checked_delete(xact);
-        throw_(std::runtime_error,
-               _("Failed to finalize derived transaction (check commodities)"));
-      }
-      else {
+        throw_(std::runtime_error, _("Failed to finalize derived transaction (check commodities)"));
+      } else {
         xact_posts_iterator xact_iter(*xact);
-        while (post_t * post = *xact_iter++)
+        while (post_t* post = *xact_iter++)
           formatter(*post);
       }
     }
     formatter.flush();
-  }
-  catch (const std::exception&) {
-    add_error_context(_f("While parsing file %1%")
-                      % file_context(reader.get_pathname(),
-                                      reader.get_linenum()));
+  } catch (const std::exception&) {
+    add_error_context(_f("While parsing file %1%") %
+                      file_context(reader.get_pathname(), reader.get_linenum()));
     add_error_context(_("While parsing CSV line:"));
     add_error_context(line_context(reader.get_last_line()));
     throw;
