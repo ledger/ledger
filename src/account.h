@@ -196,17 +196,13 @@ public:
 
     std::list<sort_value_t> sort_values;
 
-    xdata_t() : supports_flags<>() {
-      TRACE_CTOR(account_t::xdata_t, "");
-    }
+    xdata_t() : supports_flags<>() { TRACE_CTOR(account_t::xdata_t, ""); }
     xdata_t(const xdata_t& other)
         : supports_flags<>(other.flags()), self_details(other.self_details),
           family_details(other.family_details), sort_values(other.sort_values) {
       TRACE_CTOR(account_t::xdata_t, "copy");
     }
-    ~xdata_t() throw() {
-      TRACE_DTOR(account_t::xdata_t);
-    }
+    ~xdata_t() throw() { TRACE_DTOR(account_t::xdata_t); }
   };
 
   // This variable holds optional "extended data" which is usually produced

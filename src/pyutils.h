@@ -142,13 +142,21 @@ namespace python {
 #define BOOST_PYTHON_RETURN_TO_PYTHON_BY_VALUE(T, expr, pytype)                                    \
   template <>                                                                                      \
   struct to_python_value<T&> : detail::builtin_to_python {                                         \
-    inline PyObject* operator()(T const& x) const { return (expr); }                               \
-    inline PyTypeObject const* get_pytype() const { return (pytype); }                             \
+    inline PyObject* operator()(T const& x) const {                                                \
+      return (expr);                                                                               \
+    }                                                                                              \
+    inline PyTypeObject const* get_pytype() const {                                                \
+      return (pytype);                                                                             \
+    }                                                                                              \
   };                                                                                               \
   template <>                                                                                      \
   struct to_python_value<T const&> : detail::builtin_to_python {                                   \
-    inline PyObject* operator()(T const& x) const { return (expr); }                               \
-    inline PyTypeObject const* get_pytype() const { return (pytype); }                             \
+    inline PyObject* operator()(T const& x) const {                                                \
+      return (expr);                                                                               \
+    }                                                                                              \
+    inline PyTypeObject const* get_pytype() const {                                                \
+      return (pytype);                                                                             \
+    }                                                                                              \
   };
 
 #define BOOST_PYTHON_ARG_TO_PYTHON_BY_VALUE(T, expr)                                               \

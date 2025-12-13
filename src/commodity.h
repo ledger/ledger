@@ -115,9 +115,7 @@ protected:
           symbol(_symbol), precision(0) {
       TRACE_CTOR(commodity_t::base_t, "const string&");
     }
-    virtual ~base_t() {
-      TRACE_DTOR(commodity_t::base_t);
-    }
+    virtual ~base_t() { TRACE_DTOR(commodity_t::base_t); }
   };
 
   shared_ptr<base_t> base;
