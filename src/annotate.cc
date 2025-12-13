@@ -75,6 +75,11 @@ bool annotation_t::operator<(const annotation_t& rhs) const
     //if (value_expr->text() > rhs.value_expr->text()) return false;
   }
 
+  // Compare semantic flags last
+  unsigned int lhs_flags = flags() & ANNOTATION_SEMANTIC_FLAGS;
+  unsigned int rhs_flags = rhs.flags() & ANNOTATION_SEMANTIC_FLAGS;
+  if (lhs_flags < rhs_flags) return true;
+
   return false;
 }
 

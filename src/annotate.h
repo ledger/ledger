@@ -59,6 +59,10 @@ struct annotation_t : public flags::supports_flags<>,
 #define ANNOTATION_TAG_CALCULATED        0x10
 #define ANNOTATION_VALUE_EXPR_CALCULATED 0x20
 
+// Mask for flags that affect semantic equality (not just metadata)
+#define ANNOTATION_SEMANTIC_FLAGS        (ANNOTATION_PRICE_FIXATED | \
+                                          ANNOTATION_PRICE_NOT_PER_UNIT)
+
   optional<amount_t> price;
   optional<date_t>   date;
   optional<string>   tag;
@@ -95,7 +99,9 @@ struct annotation_t : public flags::supports_flags<>,
             tag   == rhs.tag   &&
             (value_expr && rhs.value_expr ?
              value_expr->text() == rhs.value_expr->text() :
-             value_expr == rhs.value_expr));
+             value_expr == rhs.value_expr) &&
+            (flags() & ANNOTATION_SEMANTIC_FLAGS) ==
+              (rhs.flags() & ANNOTATION_SEMANTIC_FLAGS));
   }
 
   void parse(std::istream& in);

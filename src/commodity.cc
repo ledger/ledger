@@ -518,9 +518,21 @@ int commodity_t::compare_by_commodity::operator()(const amount_t * left,
             arightcomm.details.value_expr->text());
   }
 
-  DEBUG("commodity.compare", "the two are incomparable, which should never happen");
-  assert(false);
-  return -1;
+  // Compare semantic flags (ANNOTATION_PRICE_FIXATED and ANNOTATION_PRICE_NOT_PER_UNIT)
+  unsigned int left_flags = aleftcomm.details.flags() & ANNOTATION_SEMANTIC_FLAGS;
+  unsigned int right_flags = arightcomm.details.flags() & ANNOTATION_SEMANTIC_FLAGS;
+  if (left_flags < right_flags) {
+    DEBUG("commodity.compare", "left has fewer semantic flags");
+    return -1;
+  }
+  if (left_flags > right_flags) {
+    DEBUG("commodity.compare", "left has more semantic flags");
+    return 1;
+  }
+
+  // All attributes match - the commodities are equal
+  DEBUG("commodity.compare", "all attributes match, commodities are equal");
+  return 0;
 }
 
 void put_commodity(property_tree::ptree& st, const commodity_t& comm,
