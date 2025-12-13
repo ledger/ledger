@@ -15,27 +15,39 @@ jobs:
 
       - name: Install clang-format
         run: |
-          sudo apt-get update
-          sudo apt-get install -y clang-format
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 18
+          sudo apt-get install -y clang-format-18
+          echo "Using clang-format version:"
+          clang-format-18 --version
 
       - name: Check formatting
         run: |
           # Find all C++ source files
           files=$(find src -name '*.h' -o -name '*.cc' | sort)
 
-          # Check each file
-          failed=0
+          # Check each file and collect errors
+          failed_files=""
           for file in $files; do
-            if ! clang-format --dry-run --Werror "$file" 2>/dev/null; then
-              echo "::error file=$file::File is not properly formatted"
-              failed=1
+            if ! clang-format-18 --dry-run --Werror "$file" 2>&1 | head -20; then
+              failed_files="$failed_files $file"
             fi
           done
 
-          if [ $failed -eq 1 ]; then
+          if [ -n "$failed_files" ]; then
             echo ""
-            echo "Some files are not properly formatted."
-            echo "Please run: find src -name '*.h' -o -name '*.cc' | xargs clang-format -i"
+            echo "========================================="
+            echo "The following files need formatting:"
+            for file in $failed_files; do
+              echo "  - $file"
+            done
+            echo ""
+            echo "To fix, run from the build directory:"
+            echo "  make reformat"
+            echo ""
+            echo "Or manually:"
+            echo "  find src -name '*.h' -o -name '*.cc' | xargs clang-format-18 -i"
             exit 1
           fi
 

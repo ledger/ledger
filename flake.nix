@@ -104,7 +104,7 @@
         inputsFrom = [ self.packages.${system}.ledger ];
 
         packages = [
-          clang-tools # Provides clang-format
+          llvmPackages_18.clang-tools # Provides clang-format (pinned to match CI)
         ];
 
         shellHook = ''
