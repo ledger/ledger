@@ -31,8 +31,8 @@
 
 #include <system.hh>
 
-#include "global.h"             // This is where the meat of main() is, which
-                                // was moved there for the sake of clarity here
+#include "global.h" // This is where the meat of main() is, which
+                    // was moved there for the sake of clarity here
 #include "session.h"
 
 #if HAVE_BOOST_NOWIDE
@@ -50,12 +50,11 @@ using namespace ledger;
 
 #if HAVE_BOOST_PYTHON
 namespace ledger {
-  extern char * argv0;
+extern char* argv0;
 }
 #endif
 
-int main(int argc, char * argv[], char * envp[])
-{
+int main(int argc, char* argv[], char* envp[]) {
   int status = 1;
 
 #if HAVE_BOOST_NOWIDE
@@ -94,7 +93,7 @@ int main(int argc, char * argv[], char * envp[])
   ::textdomain("ledger");
 #endif
 
-  global_scope_t * global_scope = NULL;
+  global_scope_t* global_scope = NULL;
 
   try {
     // Create the session object, which maintains nearly all state relating to
@@ -118,21 +117,18 @@ int main(int argc, char * argv[], char * envp[])
       status = 0;
 
       ifstream in(global_scope->HANDLER(script_).str());
-      while (status == 0 && ! in.eof()) {
+      while (status == 0 && !in.eof()) {
         char line[1024];
         in.getline(line, 1023);
 
-        char * p = skip_ws(line);
+        char* p = skip_ws(line);
         if (*p && *p != '#')
-          status =
-            global_scope->execute_command_wrapper(split_arguments(p), true);
+          status = global_scope->execute_command_wrapper(split_arguments(p), true);
       }
-    }
-    else if (! args.empty()) {
+    } else if (!args.empty()) {
       // User has invoke a verb at the interactive command-line
       status = global_scope->execute_command_wrapper(args, false);
-    }
-    else {
+    } else {
       // Commence the REPL by displaying the current Ledger version
       global_scope->show_version_info(std::cout);
 
@@ -141,12 +137,12 @@ int main(int argc, char * argv[], char * envp[])
       bool exit_loop = false;
 
 #if HAVE_EDIT || HAVE_READLINE
-      rl_readline_name = const_cast<char *>("Ledger");
+      rl_readline_name = const_cast<char*>("Ledger");
       // TODO: rl_attempted_completion_function = ledger_completion;
 
-      while (char * p = readline(global_scope->prompt_string())) {
-        char * expansion = NULL;
-        int    result;
+      while (char* p = readline(global_scope->prompt_string())) {
+        char* expansion = NULL;
+        int result;
 
         result = history_expand(skip_ws(p), &expansion);
 
@@ -154,21 +150,19 @@ int main(int argc, char * argv[], char * envp[])
           if (expansion)
             std::free(expansion);
           std::free(p);
-          throw_(std::logic_error,
-                 _f("Failed to expand history reference '%1%'") % p);
-        }
-        else if (expansion) {
+          throw_(std::logic_error, _f("Failed to expand history reference '%1%'") % p);
+        } else if (expansion) {
           add_history(expansion);
         }
 
 #else // HAVE_EDIT || HAVE_READLINE
 
-      while (! std::cin.eof()) {
+      while (!std::cin.eof()) {
         std::cout << global_scope->prompt_string();
         char line[1024];
         std::cin.getline(line, 1023);
 
-        char * p = skip_ws(line);
+        char* p = skip_ws(line);
 
 #endif // HAVE_EDIT || HAVE_READLINE
 
@@ -191,17 +185,14 @@ int main(int argc, char * argv[], char * envp[])
           break;
       }
 
-      status = 0;                       // report success
+      status = 0; // report success
     }
-  }
-  catch (const std::exception& err) {
+  } catch (const std::exception& err) {
     if (global_scope)
       global_scope->report_error(err);
     else
-      std::cerr << "Exception during initialization: " << err.what()
-                << std::endl;
-  }
-  catch (const error_count& errors) {
+      std::cerr << "Exception during initialization: " << err.what() << std::endl;
+  } catch (const error_count& errors) {
     // used for a "quick" exit, and is used only if help text (such as
     // --help) was displayed
     status = static_cast<int>(errors.count);
@@ -222,7 +213,7 @@ int main(int argc, char * argv[], char * envp[])
   else {
     if (global_scope)
       global_scope->quick_close();
-    INFO("Ledger ended");       // let global_scope leak!
+    INFO("Ledger ended"); // let global_scope leak!
   }
 
   // Return the final status to the operating system, either 1 for error or 0

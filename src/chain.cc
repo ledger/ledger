@@ -39,9 +39,7 @@
 
 namespace ledger {
 
-post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler,
-                                         report_t&        report)
-{
+post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t& report) {
   post_handler_ptr handler(base_handler);
 
   // anonymize_posts removes all meaningful information from xact payee's and
@@ -51,12 +49,9 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler,
 
   // This filter_posts will only pass through posts matching the `predicate'.
   if (report.HANDLED(limit_)) {
-    DEBUG("report.predicate",
-          "Report predicate expression = " << report.HANDLER(limit_).str());
-    handler.reset(new filter_posts
-                  (handler, predicate_t(report.HANDLER(limit_).str(),
-                                        report.what_to_keep()),
-                   report));
+    DEBUG("report.predicate", "Report predicate expression = " << report.HANDLER(limit_).str());
+    handler.reset(new filter_posts(
+        handler, predicate_t(report.HANDLER(limit_).str(), report.what_to_keep()), report));
   }
 
   // budget_posts takes a set of posts from a data file and uses them to
@@ -67,8 +62,8 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler,
   // future balance.
 
   if (report.budget_flags != BUDGET_NO_BUDGET) {
-    budget_posts * budget_handler =
-      new budget_posts(handler, report.terminus.date(), report.budget_flags);
+    budget_posts* budget_handler =
+        new budget_posts(handler, report.terminus.date(), report.budget_flags);
     budget_handler->add_period_xacts(report.session.journal->period_xacts);
     handler.reset(budget_handler);
 
@@ -77,42 +72,32 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler,
     // further clean the results so that no automated posts that don't match
     // the filter get reported.
     if (report.HANDLED(limit_))
-      handler.reset(new filter_posts
-                    (handler, predicate_t(report.HANDLER(limit_).str(),
-                                          report.what_to_keep()),
-                     report));
-  }
-  else if (report.HANDLED(forecast_while_)) {
-    forecast_posts * forecast_handler
-      = new forecast_posts(handler,
-                           predicate_t(report.HANDLER(forecast_while_).str(),
-                                       report.what_to_keep()),
-                           report,
-                           (report.HANDLED(forecast_years_) ?
-                            lexical_cast<std::size_t>
-                            (report.HANDLER(forecast_years_).value) : 5UL));
+      handler.reset(new filter_posts(
+          handler, predicate_t(report.HANDLER(limit_).str(), report.what_to_keep()), report));
+  } else if (report.HANDLED(forecast_while_)) {
+    forecast_posts* forecast_handler = new forecast_posts(
+        handler, predicate_t(report.HANDLER(forecast_while_).str(), report.what_to_keep()), report,
+        (report.HANDLED(forecast_years_)
+             ? lexical_cast<std::size_t>(report.HANDLER(forecast_years_).value)
+             : 5UL));
     forecast_handler->add_period_xacts(report.session.journal->period_xacts);
     handler.reset(forecast_handler);
 
     // See above, under budget_posts.
     if (report.HANDLED(limit_))
-      handler.reset(new filter_posts
-                    (handler, predicate_t(report.HANDLER(limit_).str(),
-                                          report.what_to_keep()),
-                     report));
+      handler.reset(new filter_posts(
+          handler, predicate_t(report.HANDLER(limit_).str(), report.what_to_keep()), report));
   }
 
   return handler;
 }
 
-post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
-                                     report_t&        report,
-                                     bool             for_accounts_report)
-{
-  post_handler_ptr       handler(base_handler);
-  predicate_t            display_predicate;
-  predicate_t            only_predicate;
-  display_filter_posts * display_filter = NULL;
+post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& report,
+                                     bool for_accounts_report) {
+  post_handler_ptr handler(base_handler);
+  predicate_t display_predicate;
+  predicate_t only_predicate;
+  display_filter_posts* display_filter = NULL;
 
   expr_t& expr(report.HANDLER(amount_).expr);
   expr.set_context(&report);
@@ -121,38 +106,32 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
   report.HANDLER(display_amount_).expr.set_context(&report);
   report.HANDLER(display_total_).expr.set_context(&report);
 
-  if (! for_accounts_report) {
+  if (!for_accounts_report) {
     // Make sure only forecast postings which match are allowed through
     if (report.HANDLED(forecast_while_)) {
-      handler.reset(new filter_posts
-                    (handler, predicate_t(report.HANDLER(forecast_while_).str(),
-                                          report.what_to_keep()),
-                     report));
+      handler.reset(new filter_posts(
+          handler, predicate_t(report.HANDLER(forecast_while_).str(), report.what_to_keep()),
+          report));
     }
 
     // truncate_xacts cuts off a certain number of _xacts_ from being
     // displayed.  It does not affect calculation.
     if (report.HANDLED(head_) || report.HANDLED(tail_))
-      handler.reset
-        (new truncate_xacts(handler,
-                            report.HANDLED(head_) ?
-                            lexical_cast<int>(report.HANDLER(head_).value) : 0,
-                            report.HANDLED(tail_) ?
-                            lexical_cast<int>(report.HANDLER(tail_).value) : 0));
+      handler.reset(new truncate_xacts(
+          handler, report.HANDLED(head_) ? lexical_cast<int>(report.HANDLER(head_).value) : 0,
+          report.HANDLED(tail_) ? lexical_cast<int>(report.HANDLER(tail_).value) : 0));
 
     // display_filter_posts adds virtual posts to the list to account
     // for changes in value of commodities, which otherwise would affect
     // the running total unpredictably.
-    display_filter = new display_filter_posts(handler, report,
-                                              report.HANDLED(revalued) &&
-                                              ! report.HANDLED(no_rounding));
+    display_filter = new display_filter_posts(
+        handler, report, report.HANDLED(revalued) && !report.HANDLED(no_rounding));
     handler.reset(display_filter);
 
     // filter_posts will only pass through posts matching the
     // `display_predicate'.
     if (report.HANDLED(display_)) {
-      display_predicate = predicate_t(report.HANDLER(display_).str(),
-                                      report.what_to_keep());
+      display_predicate = predicate_t(report.HANDLER(display_).str(), report.what_to_keep());
       handler.reset(new filter_posts(handler, display_predicate, report));
     }
   }
@@ -160,28 +139,25 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
   // changed_value_posts adds virtual posts to the list to account for changes
   // in market value of commodities, which otherwise would affect the running
   // total unpredictably.
-  if (report.HANDLED(revalued) &&
-      (! for_accounts_report || report.HANDLED(unrealized)))
+  if (report.HANDLED(revalued) && (!for_accounts_report || report.HANDLED(unrealized)))
     handler.reset(new changed_value_posts(handler, report, for_accounts_report,
-                                          report.HANDLED(unrealized),
-                                          display_filter));
+                                          report.HANDLED(unrealized), display_filter));
 
   // calc_posts computes the running total.  When this appears will determine,
   // for example, whether filtered posts are included or excluded from the
   // running total.
-  handler.reset(new calc_posts(handler, expr, (! for_accounts_report ||
-                                               (report.HANDLED(revalued) &&
-                                                report.HANDLED(unrealized)))));
+  handler.reset(new calc_posts(
+      handler, expr,
+      (!for_accounts_report || (report.HANDLED(revalued) && report.HANDLED(unrealized)))));
 
   // filter_posts will only pass through posts matching the
   // `secondary_predicate'.
   if (report.HANDLED(only_)) {
-    only_predicate = predicate_t(report.HANDLER(only_).str(),
-                                 report.what_to_keep());
+    only_predicate = predicate_t(report.HANDLER(only_).str(), report.what_to_keep());
     handler.reset(new filter_posts(handler, only_predicate, report));
   }
 
-  if (! for_accounts_report) {
+  if (!for_accounts_report) {
     // sort_posts will sort all the posts it sees, based on the `sort_order'
     // value expression.
     if (report.HANDLED(sort_)) {
@@ -198,10 +174,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
       if (report.HANDLED(depth_))
         collapse_depth = lexical_cast<int>(report.HANDLER(depth_).str());
 
-      handler.reset(new collapse_posts(handler, report, expr,
-                                       display_predicate, only_predicate,
-                                       report.HANDLED(collapse_if_zero),
-                                       collapse_depth));
+      handler.reset(new collapse_posts(handler, report, expr, display_predicate, only_predicate,
+                                       report.HANDLED(collapse_if_zero), collapse_depth));
     }
 
     // subtotal_posts combines all the posts it receives into one subtotal
@@ -226,36 +200,29 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
   // interval_posts groups posts together based on a time period, such as
   // weekly or monthly.
   if (report.HANDLED(period_))
-    handler.reset(new interval_posts(handler, expr,
-                                     report.HANDLER(period_).str(),
-                                     report.HANDLED(exact),
-                                     report.HANDLED(empty),
+    handler.reset(new interval_posts(handler, expr, report.HANDLER(period_).str(),
+                                     report.HANDLED(exact), report.HANDLED(empty),
                                      report.HANDLED(align_intervals)));
 
   if (report.HANDLED(date_))
     handler.reset(new transfer_details(handler, transfer_details::SET_DATE,
-                                       report.session.journal->master,
-                                       report.HANDLER(date_).str(),
+                                       report.session.journal->master, report.HANDLER(date_).str(),
                                        report));
 
   if (report.HANDLED(account_)) {
     handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
                                        report.session.journal->master,
-                                       report.HANDLER(account_).str(),
-                                       report));
-  }
-  else if (report.HANDLED(pivot_)) {
+                                       report.HANDLER(account_).str(), report));
+  } else if (report.HANDLED(pivot_)) {
     string pivot = report.HANDLER(pivot_).str();
     pivot = string("\"") + pivot + ":\" + tag(\"" + pivot + "\")";
     handler.reset(new transfer_details(handler, transfer_details::SET_ACCOUNT,
-                                       report.session.journal->master, pivot,
-                                       report));
+                                       report.session.journal->master, pivot, report));
   }
 
   if (report.HANDLED(payee_))
     handler.reset(new transfer_details(handler, transfer_details::SET_PAYEE,
-                                       report.session.journal->master,
-                                       report.HANDLER(payee_).str(),
+                                       report.session.journal->master, report.HANDLER(payee_).str(),
                                        report));
 
   // related_posts will pass along all posts related to the post received.  If
@@ -266,8 +233,8 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler,
     handler.reset(new related_posts(handler, report.HANDLED(related_all)));
 
   if (report.HANDLED(inject_))
-    handler.reset(new inject_posts(handler, report.HANDLED(inject_).str(),
-                                   report.session.journal->master));
+    handler.reset(
+        new inject_posts(handler, report.HANDLED(inject_).str(), report.session.journal->master));
 
   return handler;
 }

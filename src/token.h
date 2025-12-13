@@ -45,82 +45,77 @@
 
 namespace ledger {
 
-struct expr_t::token_t : public noncopyable
-{
+struct expr_t::token_t : public noncopyable {
   enum kind_t {
-    ERROR,                      // an error occurred while tokenizing
-    VALUE,                      // any kind of literal value
-    IDENT,                      // [A-Za-z_]+
-    MASK,                       // /regexp/
+    ERROR, // an error occurred while tokenizing
+    VALUE, // any kind of literal value
+    IDENT, // [A-Za-z_]+
+    MASK,  // /regexp/
 
-    LPAREN,                     // (
-    RPAREN,                     // )
-    LBRACE,                     // {
-    RBRACE,                     // }
+    LPAREN, // (
+    RPAREN, // )
+    LBRACE, // {
+    RBRACE, // }
 
-    EQUAL,                      // ==
-    NEQUAL,                     // !=
-    LESS,                       // <
-    LESSEQ,                     // <=
-    GREATER,                    // >
-    GREATEREQ,                  // >=
+    EQUAL,     // ==
+    NEQUAL,    // !=
+    LESS,      // <
+    LESSEQ,    // <=
+    GREATER,   // >
+    GREATEREQ, // >=
 
-    ASSIGN,                     // =
-    MATCH,                      // =~
-    NMATCH,                     // !~
-    MINUS,                      // -
-    PLUS,                       // +
-    STAR,                       // *
-    SLASH,                      // /
-    ARROW,                      // ->
-    KW_DIV,                     // div
+    ASSIGN, // =
+    MATCH,  // =~
+    NMATCH, // !~
+    MINUS,  // -
+    PLUS,   // +
+    STAR,   // *
+    SLASH,  // /
+    ARROW,  // ->
+    KW_DIV, // div
 
-    EXCLAM,                     // !, not
-    KW_AND,                     // &, &&, and
-    KW_OR,                      // |, ||, or
-    KW_MOD,                     // %
+    EXCLAM, // !, not
+    KW_AND, // &, &&, and
+    KW_OR,  // |, ||, or
+    KW_MOD, // %
 
-    KW_IF,                      // if
-    KW_ELSE,                    // else
+    KW_IF,   // if
+    KW_ELSE, // else
 
-    QUERY,                      // ?
-    COLON,                      // :
+    QUERY, // ?
+    COLON, // :
 
-    DOT,                        // .
-    COMMA,                      // ,
-    SEMI,                       // ;
+    DOT,   // .
+    COMMA, // ,
+    SEMI,  // ;
 
     TOK_EOF,
     UNKNOWN
 
   } kind;
 
-  char        symbol[6];
-  value_t     value;
+  char symbol[6];
+  value_t value;
   std::size_t length;
 
-  explicit token_t() : kind(UNKNOWN), length(0) {
-    TRACE_CTOR(expr_t::token_t, "");
-  }
-  ~token_t() throw() {
-    TRACE_DTOR(expr_t::token_t);
-  }
+  explicit token_t() : kind(UNKNOWN), length(0) { TRACE_CTOR(expr_t::token_t, ""); }
+  ~token_t() throw() { TRACE_DTOR(expr_t::token_t); }
 
   token_t& operator=(const token_t& other) {
     if (&other == this)
       return *this;
-    assert(false);              // only one token object is used at a time
+    assert(false); // only one token object is used at a time
     return *this;
   }
 
   void clear() {
-    kind      = UNKNOWN;
-    length    = 0;
-    value     = NULL_VALUE;
+    kind = UNKNOWN;
+    length = 0;
+    value = NULL_VALUE;
     symbol[0] = '\0';
   }
 
-  int  parse_reserved_word(std::istream& in);
+  int parse_reserved_word(std::istream& in);
   void parse_ident(std::istream& in);
   void next(std::istream& in, const parse_flags_t& flags);
   void rewind(std::istream& in);

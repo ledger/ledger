@@ -39,32 +39,24 @@
 
 namespace ledger {
 
-expr_t::expr_t() : base_type()
-{
+expr_t::expr_t() : base_type() {
   TRACE_CTOR(expr_t, "");
 }
 
-expr_t::expr_t(const expr_t& other) : base_type(other), ptr(other.ptr)
-{
+expr_t::expr_t(const expr_t& other) : base_type(other), ptr(other.ptr) {
   TRACE_CTOR(expr_t, "copy");
 }
-expr_t::expr_t(ptr_op_t _ptr, scope_t * _context)
-  : base_type(_context), ptr(_ptr)
-{
+expr_t::expr_t(ptr_op_t _ptr, scope_t* _context) : base_type(_context), ptr(_ptr) {
   TRACE_CTOR(expr_t, "const ptr_op_t&, scope_t *");
 }
 
-expr_t::expr_t(const string& _str, const parse_flags_t& flags)
-  : base_type()
-{
-  if (! _str.empty())
+expr_t::expr_t(const string& _str, const parse_flags_t& flags) : base_type() {
+  if (!_str.empty())
     parse(_str, flags);
   TRACE_CTOR(expr_t, "string, parse_flags_t");
 }
 
-expr_t::expr_t(std::istream& in, const parse_flags_t& flags)
-  : base_type()
-{
+expr_t::expr_t(std::istream& in, const parse_flags_t& flags) : base_type() {
   parse(in, flags);
   TRACE_CTOR(expr_t, "std::istream&, parse_flags_t");
 }
@@ -73,8 +65,7 @@ expr_t::~expr_t() {
   TRACE_DTOR(expr_t);
 }
 
-expr_t& expr_t::operator=(const expr_t& _expr)
-{
+expr_t& expr_t::operator=(const expr_t& _expr) {
   if (this != &_expr) {
     base_type::operator=(_expr);
     ptr = _expr.ptr;
@@ -82,19 +73,16 @@ expr_t& expr_t::operator=(const expr_t& _expr)
   return *this;
 }
 
-expr_t::operator bool() const throw()
-{
+expr_t::operator bool() const throw() {
   return ptr.get() != NULL;
 }
 
-expr_t::ptr_op_t expr_t::get_op() throw()
-{
+expr_t::ptr_op_t expr_t::get_op() throw() {
   return ptr;
 }
 
 void expr_t::parse(std::istream& in, const parse_flags_t& flags,
-                   const optional<string>& original_string)
-{
+                   const optional<string>& original_string) {
   parser_t parser;
   std::istream::pos_type start_pos = in.tellg();
   ptr = parser.parse(in, flags, original_string);
@@ -102,38 +90,32 @@ void expr_t::parse(std::istream& in, const parse_flags_t& flags,
 
   if (original_string) {
     set_text(*original_string);
-  }
-  else if (end_pos > start_pos) {
+  } else if (end_pos > start_pos) {
     in.clear();
     in.seekg(start_pos, std::ios::beg);
-    scoped_array<char> buf
-      (new char[static_cast<std::size_t>(end_pos - start_pos) + 1]);
+    scoped_array<char> buf(new char[static_cast<std::size_t>(end_pos - start_pos) + 1]);
     int len = static_cast<int>(end_pos) - static_cast<int>(start_pos);
     in.read(buf.get(), len);
     buf[len] = '\0';
     set_text(buf.get());
-  }
-  else {
+  } else {
     set_text("<stream>");
   }
 }
 
-void expr_t::compile(scope_t& scope)
-{
-  if (! compiled && ptr) {
+void expr_t::compile(scope_t& scope) {
+  if (!compiled && ptr) {
     ptr = ptr->compile(scope);
     base_type::compile(scope);
   }
 }
 
-value_t expr_t::real_calc(scope_t& scope)
-{
+value_t expr_t::real_calc(scope_t& scope) {
   if (ptr) {
     ptr_op_t locus;
     try {
       return ptr->calc(scope, &locus);
-    }
-    catch (const std::exception&) {
+    } catch (const std::exception&) {
       if (locus) {
         string current_context = error_context();
 
@@ -149,7 +131,7 @@ value_t expr_t::real_calc(scope_t& scope)
           std::ostringstream out;
           char linebuf[1024];
           bool first = true;
-          while (in.good() && ! in.eof()) {
+          while (in.good() && !in.eof()) {
             in.getline(linebuf, 1023);
             std::streamsize len = in.gcount();
             if (len > 0) {
@@ -163,7 +145,7 @@ value_t expr_t::real_calc(scope_t& scope)
           add_error_context(out.str());
         }
 
-        if (! current_context.empty())
+        if (!current_context.empty())
           add_error_context(current_context);
       }
       throw;
@@ -172,57 +154,49 @@ value_t expr_t::real_calc(scope_t& scope)
   return NULL_VALUE;
 }
 
-bool expr_t::is_constant() const
-{
+bool expr_t::is_constant() const {
   assert(compiled);
   return ptr && ptr->is_value();
 }
 
-bool expr_t::is_function() const
-{
+bool expr_t::is_function() const {
   assert(compiled);
   return ptr && ptr->is_function();
 }
 
-value_t& expr_t::constant_value()
-{
+value_t& expr_t::constant_value() {
   assert(is_constant());
   return ptr->as_value_lval();
 }
 
-const value_t& expr_t::constant_value() const
-{
+const value_t& expr_t::constant_value() const {
   assert(is_constant());
   return ptr->as_value();
 }
 
-expr_t::func_t& expr_t::get_function()
-{
+expr_t::func_t& expr_t::get_function() {
   assert(is_function());
   return ptr->as_function_lval();
 }
 
-string expr_t::context_to_str() const
-{
+string expr_t::context_to_str() const {
   return ptr ? op_context(ptr) : _("<empty expression>");
 }
 
-void expr_t::print(std::ostream& out) const
-{
+void expr_t::print(std::ostream& out) const {
   if (ptr)
     ptr->print(out);
 }
 
-void expr_t::dump(std::ostream& out) const
-{
-  if (ptr) ptr->dump(out, 0);
+void expr_t::dump(std::ostream& out) const {
+  if (ptr)
+    ptr->dump(out, 0);
 }
 
-bool merged_expr_t::check_for_single_identifier(const string& expr)
-{
+bool merged_expr_t::check_for_single_identifier(const string& expr) {
   bool single_identifier = true;
-  for (const char * p = expr.c_str(); *p; ++p)
-    if (! std::isalnum(static_cast<unsigned char>(*p)) || *p == '_') {
+  for (const char* p = expr.c_str(); *p; ++p)
+    if (!std::isalnum(static_cast<unsigned char>(*p)) || *p == '_') {
       single_identifier = false;
       break;
     }
@@ -236,8 +210,7 @@ bool merged_expr_t::check_for_single_identifier(const string& expr)
   }
 }
 
-void merged_expr_t::compile(scope_t& scope)
-{
+void merged_expr_t::compile(scope_t& scope) {
   if (exprs.empty()) {
     parse(base_expr);
   } else {
@@ -259,27 +232,23 @@ void merged_expr_t::compile(scope_t& scope)
   expr_t::compile(scope);
 }
 
-expr_t::ptr_op_t as_expr(const value_t& val)
-{
+expr_t::ptr_op_t as_expr(const value_t& val) {
   VERIFY(val.is_any());
   return val.as_any<expr_t::ptr_op_t>();
 }
 
-void set_expr(value_t& val, expr_t::ptr_op_t op)
-{
+void set_expr(value_t& val, expr_t::ptr_op_t op) {
   val.set_any(op);
 }
 
-value_t expr_value(expr_t::ptr_op_t op)
-{
+value_t expr_value(expr_t::ptr_op_t op) {
   value_t temp;
   temp.set_any(op);
   return temp;
 }
 
-value_t source_command(call_scope_t& args)
-{
-  std::istream * in = NULL;
+value_t source_command(call_scope_t& args) {
+  std::istream* in = NULL;
   scoped_ptr<ifstream> stream;
   string pathname;
 
@@ -292,24 +261,22 @@ value_t source_command(call_scope_t& args)
     in = &std::cin;
   }
 
-  symbol_scope_t         file_locals(args);
-  std::size_t            linenum = 0;
-  char                   buf[4096];
+  symbol_scope_t file_locals(args);
+  std::size_t linenum = 0;
+  char buf[4096];
   std::istream::pos_type pos;
 
-  while (in->good() && ! in->eof()) {
+  while (in->good() && !in->eof()) {
     pos = in->tellg();
     in->getline(buf, 4095);
     linenum++;
 
-    char * p = skip_ws(buf);
+    char* p = skip_ws(buf);
     if (*p && *p != ';') {
       try {
         expr_t(p).calc(file_locals);
-      }
-      catch (const std::exception&) {
-        add_error_context(_f("While parsing value expression on line %1%:")
-                          % linenum);
+      } catch (const std::exception&) {
+        add_error_context(_f("While parsing value expression on line %1%:") % linenum);
         add_error_context(source_context(pathname, pos, in->tellg(), "> "));
       }
     }

@@ -48,7 +48,7 @@
  */
 #pragma once
 
-#include "balance.h"            // includes amount.h
+#include "balance.h" // includes amount.h
 #include "mask.h"
 
 namespace ledger {
@@ -73,25 +73,31 @@ class scope_t;
  * memory allocations need to take place at all.
  */
 class value_t
-  : public ordered_field_operators<value_t,
-           equality_comparable<value_t, balance_t,
-           additive<value_t, balance_t,
-           multiplicative<value_t, balance_t,
-           totally_ordered<value_t, commodity_t,
-           addable<value_t, commodity_t,
-           ordered_field_operators<value_t, amount_t,
-           ordered_field_operators<value_t, double,
-           ordered_field_operators<value_t, unsigned long,
-           ordered_field_operators<value_t, long> > > > > > > > > >
-{
+    : public ordered_field_operators<
+          value_t,
+          equality_comparable<
+              value_t, balance_t,
+              additive<value_t, balance_t,
+                       multiplicative<
+                           value_t, balance_t,
+                           totally_ordered<
+                               value_t, commodity_t,
+                               addable<value_t, commodity_t,
+                                       ordered_field_operators<
+                                           value_t, amount_t,
+                                           ordered_field_operators<
+                                               value_t, double,
+                                               ordered_field_operators<
+                                                   value_t, unsigned long,
+                                                   ordered_field_operators<value_t, long>>>>>>>>>> {
 public:
   /**
    * The sequence_t member type abstracts the type used to represent a
    * resizable "array" of value_t objects.
    */
-  typedef ptr_deque<value_t>          sequence_t;
-  typedef sequence_t::iterator        iterator;
-  typedef sequence_t::const_iterator  const_iterator;
+  typedef ptr_deque<value_t> sequence_t;
+  typedef sequence_t::iterator iterator;
+  typedef sequence_t::const_iterator const_iterator;
   typedef sequence_t::difference_type difference_type;
 
   /**
@@ -100,23 +106,22 @@ public:
    * type_t.
    */
   enum type_t {
-    VOID,                       // a null value (i.e., uninitialized)
-    BOOLEAN,                    // a boolean
-    DATETIME,                   // a date and time (Boost posix_time)
-    DATE,                       // a date (Boost gregorian::date)
-    INTEGER,                    // a signed integer value
-    AMOUNT,                     // a ledger::amount_t
-    BALANCE,                    // a ledger::balance_t
-    COMMODITY,                  // a ledger::commodity_t
-    STRING,                     // a string object
-    MASK,                       // a regular expression mask
-    SEQUENCE,                   // a vector of value_t objects
-    SCOPE,                      // a pointer to a scope
-    ANY                         // a pointer to an arbitrary object
+    VOID,      // a null value (i.e., uninitialized)
+    BOOLEAN,   // a boolean
+    DATETIME,  // a date and time (Boost posix_time)
+    DATE,      // a date (Boost gregorian::date)
+    INTEGER,   // a signed integer value
+    AMOUNT,    // a ledger::amount_t
+    BALANCE,   // a ledger::balance_t
+    COMMODITY, // a ledger::commodity_t
+    STRING,    // a string object
+    MASK,      // a regular expression mask
+    SEQUENCE,  // a vector of value_t objects
+    SCOPE,     // a pointer to a scope
+    ANY        // a pointer to an arbitrary object
   };
 
-  class storage_t
-  {
+  class storage_t {
     friend class value_t;
 
     /**
@@ -129,19 +134,20 @@ public:
      * The `type' member holds the value_t::type_t value representing
      * the type of the object stored.
      */
-    variant<bool,                // BOOLEAN
-            datetime_t,          // DATETIME
-            date_t,              // DATE
-            long,                // INTEGER
-            amount_t,            // AMOUNT
-            balance_t *,         // BALANCE
-            commodity_t const *, // COMMODITY
-            string,              // STRING
-            mask_t,              // MASK
-            sequence_t *,        // SEQUENCE
-            scope_t *,           // SCOPE
-            boost::any           // ANY
-            > data;
+    variant<bool,               // BOOLEAN
+            datetime_t,         // DATETIME
+            date_t,             // DATE
+            long,               // INTEGER
+            amount_t,           // AMOUNT
+            balance_t*,         // BALANCE
+            commodity_t const*, // COMMODITY
+            string,             // STRING
+            mask_t,             // MASK
+            sequence_t*,        // SEQUENCE
+            scope_t*,           // SCOPE
+            boost::any          // ANY
+            >
+        data;
 
     type_t type;
 
@@ -158,11 +164,9 @@ public:
      * should rarely ever be seen in practice, since the first thing
      * that value_t typically does is to assign a valid value.
      */
-    explicit storage_t() : type(VOID), refc(0) {
-      TRACE_CTOR(value_t::storage_t, "");
-    }
+    explicit storage_t() : type(VOID), refc(0) { TRACE_CTOR(value_t::storage_t, ""); }
 
-  public:                       // so `checked_delete' can access it
+  public: // so `checked_delete' can access it
     /**
      * Destructor.  Must only be called when the reference count has
      * reached zero.  The `destroy' method is used to do the actual
@@ -181,8 +185,7 @@ public:
      * Assignment and copy operators.  These are called when making a
      * new copy of a storage object in order to modify the copy.
      */
-    explicit storage_t(const storage_t& rhs)
-      : type(rhs.type), refc(0) {
+    explicit storage_t(const storage_t& rhs) : type(rhs.type), refc(0) {
       *this = rhs;
       TRACE_CTOR(value_t::storage_t, "copy");
     }
@@ -194,23 +197,21 @@ public:
      * release.
      */
     void acquire() const {
-      DEBUG("value.storage.refcount",
-             "Acquiring " << this << ", refc now " << refc + 1);
+      DEBUG("value.storage.refcount", "Acquiring " << this << ", refc now " << refc + 1);
       VERIFY(refc >= 0);
       refc++;
     }
     void release() const {
-      DEBUG("value.storage.refcount",
-             "Releasing " << this << ", refc now " << refc - 1);
+      DEBUG("value.storage.refcount", "Releasing " << this << ", refc now " << refc - 1);
       VERIFY(refc > 0);
       if (--refc == 0)
         checked_delete(this);
     }
 
-    friend inline void intrusive_ptr_add_ref(value_t::storage_t * storage_ptr) {
+    friend inline void intrusive_ptr_add_ref(value_t::storage_t* storage_ptr) {
       storage_ptr->acquire();
     }
-    friend inline void intrusive_ptr_release(value_t::storage_t * storage_ptr) {
+    friend inline void intrusive_ptr_release(value_t::storage_t* storage_ptr) {
       storage_ptr->release();
     }
 
@@ -220,10 +221,10 @@ public:
       case VOID:
         return;
       case BALANCE:
-        checked_delete(boost::get<balance_t *>(data));
+        checked_delete(boost::get<balance_t*>(data));
         break;
       case SEQUENCE:
-        checked_delete(boost::get<sequence_t *>(data));
+        checked_delete(boost::get<sequence_t*>(data));
         break;
       default:
         break;
@@ -275,9 +276,7 @@ public:
    * true) is required to represent the literal string "$100", and not
    * the amount "one hundred dollars".
    */
-  value_t() {
-    TRACE_CTOR(value_t, "");
-  }
+  value_t() { TRACE_CTOR(value_t, ""); }
 
   value_t(const bool val) {
     set_boolean(val);
@@ -330,7 +329,7 @@ public:
 
     TRACE_CTOR(value_t, "const string&, bool");
   }
-  explicit value_t(const char * val, bool literal = false) {
+  explicit value_t(const char* val, bool literal = false) {
     if (literal)
       set_string(val);
     else
@@ -344,7 +343,7 @@ public:
     TRACE_CTOR(value_t, "const sequence_t&");
   }
 
-  explicit value_t(scope_t * item) {
+  explicit value_t(scope_t* item) {
     set_scope(item);
     TRACE_CTOR(value_t, "scope_t *");
   }
@@ -361,9 +360,7 @@ public:
    * that refers to our storage object will decrease its reference
    * count itself upon destruction.
    */
-  ~value_t() {
-    TRACE_DTOR(value_t);
-  }
+  ~value_t() { TRACE_DTOR(value_t); }
 
   /**
    * Assignment and copy operators.  Values are cheaply copied by
@@ -375,7 +372,7 @@ public:
     TRACE_CTOR(value_t, "copy");
   }
   value_t& operator=(const value_t& val) {
-    if (! (this == &val || storage == val.storage))
+    if (!(this == &val || storage == val.storage))
       storage = val.storage;
     return *this;
   }
@@ -421,12 +418,10 @@ public:
     temp.in_place_negate();
     return temp;
   }
-  void    in_place_negate();    // exists for efficiency's sake
-  void    in_place_not();       // exists for efficiency's sake
+  void in_place_negate(); // exists for efficiency's sake
+  void in_place_not();    // exists for efficiency's sake
 
-  value_t operator-() const {
-    return negated();
-  }
+  value_t operator-() const { return negated(); }
 
   value_t abs() const;
 
@@ -477,50 +472,43 @@ public:
     temp.in_place_reduce();
     return temp;
   }
-  void    in_place_reduce();    // exists for efficiency's sake
+  void in_place_reduce(); // exists for efficiency's sake
 
   value_t unreduced() const {
     value_t temp(*this);
     temp.in_place_unreduce();
     return temp;
   }
-  void    in_place_unreduce();  // exists for efficiency's sake
+  void in_place_unreduce(); // exists for efficiency's sake
 
   // Return the "market value" of a given value at a specific time.
-  value_t value(const datetime_t&   moment      = datetime_t(),
-                const commodity_t * in_terms_of = NULL) const;
+  value_t value(const datetime_t& moment = datetime_t(),
+                const commodity_t* in_terms_of = NULL) const;
 
-  value_t exchange_commodities(const std::string& commodities,
-                               const bool         add_prices = false,
-                               const datetime_t&  moment     = datetime_t());
+  value_t exchange_commodities(const std::string& commodities, const bool add_prices = false,
+                               const datetime_t& moment = datetime_t());
 
   /**
    * Truth tests.
    */
   operator bool() const;
 
-  bool is_nonzero() const {
-    return ! is_zero();
-  }
+  bool is_nonzero() const { return !is_zero(); }
 
   bool is_realzero() const;
   bool is_zero() const;
   bool is_null() const {
-    if (! storage) {
+    if (!storage) {
       VERIFY(is_type(VOID));
       return true;
     } else {
-      VERIFY(! is_type(VOID));
+      VERIFY(!is_type(VOID));
       return false;
     }
   }
 
-  type_t type() const {
-    return storage ? storage->type : VOID;
-  }
-  bool is_type(type_t _type) const {
-    return type() == _type;
-  }
+  type_t type() const { return storage ? storage->type : VOID; }
+  bool is_type(type_t _type) const { return type() == _type; }
 
 private:
   void set_type(type_t new_type);
@@ -555,9 +543,7 @@ public:
    * assignment operator (whose implementation simply calls the various set_
    * methods).
    */
-  bool is_boolean() const {
-    return is_type(BOOLEAN);
-  }
+  bool is_boolean() const { return is_type(BOOLEAN); }
   bool& as_boolean_lval() {
     VERIFY(is_boolean());
     _dup();
@@ -572,9 +558,7 @@ public:
     storage = val ? true_value : false_value;
   }
 
-  bool is_datetime() const {
-    return is_type(DATETIME);
-  }
+  bool is_datetime() const { return is_type(DATETIME); }
   datetime_t& as_datetime_lval() {
     VERIFY(is_datetime());
     _dup();
@@ -589,9 +573,7 @@ public:
     storage->data = val;
   }
 
-  bool is_date() const {
-    return is_type(DATE);
-  }
+  bool is_date() const { return is_type(DATE); }
   date_t& as_date_lval() {
     VERIFY(is_date());
     _dup();
@@ -606,9 +588,7 @@ public:
     storage->data = val;
   }
 
-  bool is_long() const {
-    return is_type(INTEGER);
-  }
+  bool is_long() const { return is_type(INTEGER); }
   long& as_long_lval() {
     VERIFY(is_long());
     _dup();
@@ -623,9 +603,7 @@ public:
     storage->data = val;
   }
 
-  bool is_amount() const {
-    return is_type(AMOUNT);
-  }
+  bool is_amount() const { return is_type(AMOUNT); }
   amount_t& as_amount_lval() {
     VERIFY(is_amount());
     _dup();
@@ -641,17 +619,15 @@ public:
     storage->data = val;
   }
 
-  bool is_balance() const {
-    return is_type(BALANCE);
-  }
+  bool is_balance() const { return is_type(BALANCE); }
   balance_t& as_balance_lval() {
     VERIFY(is_balance());
     _dup();
-    return *boost::get<balance_t *>(storage->data);
+    return *boost::get<balance_t*>(storage->data);
   }
   const balance_t& as_balance() const {
     VERIFY(is_balance());
-    return *boost::get<balance_t *>(storage->data);
+    return *boost::get<balance_t*>(storage->data);
   }
   void set_balance(const balance_t& val) {
     VERIFY(val.valid());
@@ -659,18 +635,14 @@ public:
     storage->data = new balance_t(val);
   }
 
-  bool is_commodity() const {
-    return is_type(COMMODITY);
-  }
+  bool is_commodity() const { return is_type(COMMODITY); }
   const commodity_t& as_commodity() const {
     VERIFY(is_commodity());
-    return *boost::get<commodity_t const *>(storage->data);
+    return *boost::get<commodity_t const*>(storage->data);
   }
   void set_commodity(const commodity_t& val);
 
-  bool is_string() const {
-    return is_type(STRING);
-  }
+  bool is_string() const { return is_type(STRING); }
   string& as_string_lval() {
     VERIFY(is_string());
     _dup();
@@ -685,15 +657,13 @@ public:
     storage->data = val;
     VERIFY(boost::get<string>(storage->data) == val);
   }
-  void set_string(const char * val = "") {
+  void set_string(const char* val = "") {
     set_type(STRING);
     storage->data = string(val);
     VERIFY(boost::get<string>(storage->data) == val);
   }
 
-  bool is_mask() const {
-    return is_type(MASK);
-  }
+  bool is_mask() const { return is_type(MASK); }
   mask_t& as_mask_lval() {
     VERIFY(is_mask());
     _dup();
@@ -714,17 +684,15 @@ public:
     storage->data = val;
   }
 
-  bool is_sequence() const {
-    return is_type(SEQUENCE);
-  }
+  bool is_sequence() const { return is_type(SEQUENCE); }
   sequence_t& as_sequence_lval() {
     VERIFY(is_sequence());
     _dup();
-    return *boost::get<sequence_t *>(storage->data);
+    return *boost::get<sequence_t*>(storage->data);
   }
   const sequence_t& as_sequence() const {
     VERIFY(is_sequence());
-    return *boost::get<sequence_t *>(storage->data);
+    return *boost::get<sequence_t*>(storage->data);
   }
   void set_sequence(const sequence_t& val) {
     set_type(SEQUENCE);
@@ -734,14 +702,12 @@ public:
   /**
    * Dealing with scope pointers.
    */
-  bool is_scope() const {
-    return is_type(SCOPE);
-  }
-  scope_t * as_scope() const {
+  bool is_scope() const { return is_type(SCOPE); }
+  scope_t* as_scope() const {
     VERIFY(is_scope());
-    return boost::get<scope_t *>(storage->data);
+    return boost::get<scope_t*>(storage->data);
   }
-  void set_scope(scope_t * val) {
+  void set_scope(scope_t* val) {
     set_type(SCOPE);
     storage->data = val;
   }
@@ -752,13 +718,10 @@ public:
    * a boost::any object, but if you use as_any<type_t>, then it returns
    * a type_t by value.
    */
-  bool is_any() const {
-    return is_type(ANY);
-  }
+  bool is_any() const { return is_type(ANY); }
   template <typename T>
   bool is_any() const {
-    return (is_type(ANY) &&
-            boost::get<boost::any>(storage->data).type() == typeid(T));
+    return (is_type(ANY) && boost::get<boost::any>(storage->data).type() == typeid(T));
   }
   boost::any& as_any_lval() {
     VERIFY(is_any());
@@ -792,18 +755,18 @@ public:
    * its underlying type, where possible.  If not possible, an
    * exception is thrown.
    */
-  bool        to_boolean() const;
-  int         to_int() const;
-  long        to_long() const;
+  bool to_boolean() const;
+  int to_int() const;
+  long to_long() const;
   std::size_t to_size_t() const { return static_cast<std::size_t>(to_long()); }
-  datetime_t  to_datetime() const;
-  date_t      to_date() const;
-  amount_t    to_amount() const;
-  balance_t   to_balance() const;
+  datetime_t to_datetime() const;
+  date_t to_date() const;
+  amount_t to_amount() const;
+  balance_t to_balance() const;
   const commodity_t& to_commodity() const;
-  string      to_string() const;
-  mask_t      to_mask() const;
-  sequence_t  to_sequence() const;
+  string to_string() const;
+  mask_t to_mask() const;
+  sequence_t to_sequence() const;
 
   /**
    * Dynamic typing conversion methods.
@@ -826,27 +789,25 @@ public:
     temp.in_place_cast(cast_type);
     return temp;
   }
-  void    in_place_cast(type_t cast_type);
+  void in_place_cast(type_t cast_type);
 
   value_t simplified() const {
     value_t temp = *this;
     temp.in_place_simplify();
     return temp;
   }
-  void    in_place_simplify();
+  void in_place_simplify();
 
   value_t number() const;
 
   /**
    * Annotated commodity methods.
    */
-  void          annotate(const annotation_t& details);
-  bool          has_annotation() const;
+  void annotate(const annotation_t& details);
+  bool has_annotation() const;
 
   annotation_t& annotation();
-  const annotation_t& annotation() const {
-    return const_cast<value_t&>(*this).annotation();
-  }
+  const annotation_t& annotation() const { return const_cast<value_t&>(*this).annotation(); }
 
   value_t strip_annotations(const keep_details_t& what_to_keep) const;
 
@@ -854,7 +815,7 @@ public:
    * Collection-style access methods for SEQUENCE values.
    */
   value_t& operator[](const std::size_t index) {
-    VERIFY(! is_null());
+    VERIFY(!is_null());
     if (is_sequence())
       return as_sequence_lval()[index];
     else if (index == 0)
@@ -865,7 +826,7 @@ public:
     return null;
   }
   const value_t& operator[](const std::size_t index) const {
-    VERIFY(! is_null());
+    VERIFY(!is_null());
     if (is_sequence())
       return as_sequence()[index];
     else if (index == 0)
@@ -879,7 +840,7 @@ public:
   void push_front(const value_t& val) {
     if (is_null())
       *this = sequence_t();
-    if (! is_sequence())
+    if (!is_sequence())
       in_place_cast(SEQUENCE);
     as_sequence_lval().push_front(new value_t(val));
   }
@@ -887,15 +848,15 @@ public:
   void push_back(const value_t& val) {
     if (is_null())
       *this = sequence_t();
-    if (! is_sequence())
+    if (!is_sequence())
       in_place_cast(SEQUENCE);
     as_sequence_lval().push_back(new value_t(val));
   }
 
   void pop_back() {
-    VERIFY(! is_null());
+    VERIFY(!is_null());
 
-    if (! is_sequence()) {
+    if (!is_sequence()) {
       storage.reset();
     } else {
       as_sequence_lval().pop_back();
@@ -904,8 +865,7 @@ public:
       std::size_t new_size = seq.size();
       if (new_size == 0) {
         storage.reset();
-      }
-      else if (new_size == 1) {
+      } else if (new_size == 1) {
         *this = seq.front();
       }
     }
@@ -938,9 +898,7 @@ public:
       return 1;
   }
 
-  bool empty() const {
-    return size() == 0;
-  }
+  bool empty() const { return size() == 0; }
 
   /**
    * Informational methods.
@@ -950,10 +908,8 @@ public:
   /**
    * Printing methods.
    */
-  void print(std::ostream&       out,
-             const int           first_width  = -1,
-             const int           latter_width = -1,
-             const uint_least8_t flags        = AMOUNT_PRINT_NO_FLAGS) const;
+  void print(std::ostream& out, const int first_width = -1, const int latter_width = -1,
+             const uint_least8_t flags = AMOUNT_PRINT_NO_FLAGS) const;
 
   void dump(std::ostream& out, const bool relaxed = true) const;
 
@@ -970,8 +926,7 @@ inline value_t string_value(const string& str = "") {
 }
 
 #define VALUE_OR_ZERO(val) ((val).is_null() ? value_t(0L) : (val))
-#define SIMPLIFIED_VALUE_OR_ZERO(val) \
-  ((val).is_null() ? value_t(0L) : (val).simplified())
+#define SIMPLIFIED_VALUE_OR_ZERO(val) ((val).is_null() ? value_t(0L) : (val).simplified())
 
 inline value_t mask_value(const string& str) {
   return value_t(mask_t(str));
@@ -988,7 +943,7 @@ inline string value_context(const value_t& val) {
   return buf.str();
 }
 
-inline value_t scope_value(scope_t * val) {
+inline value_t scope_value(scope_t* val) {
   return value_t(val);
 }
 
@@ -1001,9 +956,8 @@ inline value_t& add_or_set_value(value_t& lhs, const T& rhs) {
   return lhs;
 }
 
-struct sort_value_t
-{
-  bool    inverted;
+struct sort_value_t {
+  bool inverted;
   value_t value;
 
   sort_value_t() : inverted(false) {}

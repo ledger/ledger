@@ -54,10 +54,9 @@ namespace {
   }
 #endif
 
-  long xacts_len(journal_t& journal)
-  {
-    return static_cast<long>(journal.xacts.size());
-  }
+long xacts_len(journal_t& journal) {
+  return static_cast<long>(journal.xacts.size());
+}
 
 #if 0
   xact_t& xacts_getitem(journal_t& journal, long i)
@@ -124,21 +123,17 @@ namespace {
   }
 #endif
 
-  account_t * py_find_account_1(journal_t& journal, const string& name)
-  {
-    return journal.find_account(name);
-  }
+account_t* py_find_account_1(journal_t& journal, const string& name) {
+  return journal.find_account(name);
+}
 
-  account_t * py_find_account_2(journal_t& journal, const string& name,
-                                const bool auto_create)
-  {
-    return journal.find_account(name, auto_create);
-  }
+account_t* py_find_account_2(journal_t& journal, const string& name, const bool auto_create) {
+  return journal.find_account(name, auto_create);
+}
 
-  account_t * py_register_account(journal_t& journal, const string& name, post_t* post)
-  {
-    return journal.register_account(name, post, journal.master);
-  }
+account_t* py_register_account(journal_t& journal, const string& name, post_t* post) {
+  return journal.register_account(name, post, journal.master);
+}
 
 #if 0
   std::size_t py_read(journal_t& journal, const string& pathname)
@@ -147,188 +142,164 @@ namespace {
   }
 #endif
 
-  struct collector_wrapper
-  {
-    journal_t& journal;
-    report_t   report;
+struct collector_wrapper {
+  journal_t& journal;
+  report_t report;
 
-    post_handler_ptr posts_collector;
+  post_handler_ptr posts_collector;
 
-    collector_wrapper(journal_t& _journal, report_t& base)
-      : journal(_journal), report(base),
-        posts_collector(new collect_posts) {
-      TRACE_CTOR(collector_wrapper, "journal_t&, report_t&");
-    }
-    ~collector_wrapper() {
-      TRACE_DTOR(collector_wrapper);
-      journal.clear_xdata();
-    }
+  collector_wrapper(journal_t& _journal, report_t& base)
+      : journal(_journal), report(base), posts_collector(new collect_posts) {
+    TRACE_CTOR(collector_wrapper, "journal_t&, report_t&");
+  }
+  ~collector_wrapper() {
+    TRACE_DTOR(collector_wrapper);
+    journal.clear_xdata();
+  }
 
-    std::size_t length() const {
-      return dynamic_cast<collect_posts *>(posts_collector.get())->length();
-    }
+  std::size_t length() const {
+    return dynamic_cast<collect_posts*>(posts_collector.get())->length();
+  }
 
-    std::vector<post_t *>::iterator begin() {
-      return dynamic_cast<collect_posts *>(posts_collector.get())->begin();
-    }
-    std::vector<post_t *>::iterator end() {
-      return dynamic_cast<collect_posts *>(posts_collector.get())->end();
-    }
-  };
+  std::vector<post_t*>::iterator begin() {
+    return dynamic_cast<collect_posts*>(posts_collector.get())->begin();
+  }
+  std::vector<post_t*>::iterator end() {
+    return dynamic_cast<collect_posts*>(posts_collector.get())->end();
+  }
+};
 
-  shared_ptr<collector_wrapper> py_query(journal_t& journal,
-                                         const string& query)
-  {
-    if (journal.has_xdata()) {
-      PyErr_SetString(PyExc_RuntimeError,
-                      _("Cannot have more than one active journal query"));
-      throw_error_already_set();
-    }
+shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& query) {
+  if (journal.has_xdata()) {
+    PyErr_SetString(PyExc_RuntimeError, _("Cannot have more than one active journal query"));
+    throw_error_already_set();
+  }
 
-    report_t& current_report(downcast<report_t>(*scope_t::default_scope));
-    shared_ptr<collector_wrapper>
-      coll(new collector_wrapper(journal, current_report));
+  report_t& current_report(downcast<report_t>(*scope_t::default_scope));
+  shared_ptr<collector_wrapper> coll(new collector_wrapper(journal, current_report));
 
-    unique_ptr<journal_t> save_journal(coll->report.session.journal.release());
-    coll->report.session.journal.reset(&coll->journal);
+  unique_ptr<journal_t> save_journal(coll->report.session.journal.release());
+  coll->report.session.journal.reset(&coll->journal);
 
-    try {
-      strings_list remaining =
-        process_arguments(split_arguments(query.c_str()), coll->report);
-      coll->report.normalize_options("register");
+  try {
+    strings_list remaining = process_arguments(split_arguments(query.c_str()), coll->report);
+    coll->report.normalize_options("register");
 
-      value_t args;
-      foreach (const string& arg, remaining)
-        args.push_back(string_value(arg));
-      coll->report.parse_query_args(args, "@Journal.query");
+    value_t args;
+    foreach (const string& arg, remaining)
+      args.push_back(string_value(arg));
+    coll->report.parse_query_args(args, "@Journal.query");
 
-      coll->report.posts_report(coll->posts_collector);
-    }
-    catch (...) {
-      coll->report.session.journal.release();
-      coll->report.session.journal.reset(save_journal.release());
-      throw;
-    }
+    coll->report.posts_report(coll->posts_collector);
+  } catch (...) {
     coll->report.session.journal.release();
     coll->report.session.journal.reset(save_journal.release());
-
-    return coll;
+    throw;
   }
+  coll->report.session.journal.release();
+  coll->report.session.journal.reset(save_journal.release());
 
-  post_t * posts_getitem(collector_wrapper& collector, long i)
-  {
-    return dynamic_cast<collect_posts *>(collector.posts_collector.get())
+  return coll;
+}
+
+post_t* posts_getitem(collector_wrapper& collector, long i) {
+  return dynamic_cast<collect_posts*>(collector.posts_collector.get())
       ->posts[static_cast<std::size_t>(i)];
-  }
+}
 
 } // unnamed namespace
 
-#define EXC_TRANSLATOR(type)                            \
-  void exc_translate_ ## type(const type& err) {        \
-    PyErr_SetString(PyExc_RuntimeError, err.what()); \
+#define EXC_TRANSLATOR(type)                                                                       \
+  void exc_translate_##type(const type& err) {                                                     \
+    PyErr_SetString(PyExc_RuntimeError, err.what());                                               \
   }
 
 EXC_TRANSLATOR(parse_error)
 EXC_TRANSLATOR(error_count)
 
-void export_journal()
-{
-  class_< item_handler<post_t>, shared_ptr<item_handler<post_t> >,
-          boost::noncopyable >("PostHandler")
-    ;
+void export_journal() {
+  class_<item_handler<post_t>, shared_ptr<item_handler<post_t>>, boost::noncopyable>("PostHandler");
 
-  class_< collector_wrapper, shared_ptr<collector_wrapper>,
-          boost::noncopyable >("PostCollectorWrapper", no_init)
-    .def("__len__", &collector_wrapper::length)
-    .def("__getitem__", posts_getitem, return_internal_reference<>())
-    .def("__iter__", boost::python::range<return_internal_reference<> >
-         (&collector_wrapper::begin, &collector_wrapper::end))
-    ;
+  class_<collector_wrapper, shared_ptr<collector_wrapper>, boost::noncopyable>(
+      "PostCollectorWrapper", no_init)
+      .def("__len__", &collector_wrapper::length)
+      .def("__getitem__", posts_getitem, return_internal_reference<>())
+      .def("__iter__", boost::python::range<return_internal_reference<>>(&collector_wrapper::begin,
+                                                                         &collector_wrapper::end));
 
-  class_< journal_t::fileinfo_t > ("FileInfo")
-    .def(init<path>())
+  class_<journal_t::fileinfo_t>("FileInfo")
+      .def(init<path>())
 
-    .add_property("filename",
-                  make_getter(&journal_t::fileinfo_t::filename),
-                  make_setter(&journal_t::fileinfo_t::filename))
-    .add_property("modtime",
-                  make_getter(&journal_t::fileinfo_t::modtime),
-                  make_setter(&journal_t::fileinfo_t::modtime))
-    .add_property("from_stream",
-                  make_getter(&journal_t::fileinfo_t::from_stream),
-                  make_setter(&journal_t::fileinfo_t::from_stream))
-    ;
+      .add_property("filename", make_getter(&journal_t::fileinfo_t::filename),
+                    make_setter(&journal_t::fileinfo_t::filename))
+      .add_property("modtime", make_getter(&journal_t::fileinfo_t::modtime),
+                    make_setter(&journal_t::fileinfo_t::modtime))
+      .add_property("from_stream", make_getter(&journal_t::fileinfo_t::from_stream),
+                    make_setter(&journal_t::fileinfo_t::from_stream));
 
-  class_< journal_t, boost::noncopyable > ("Journal")
+  class_<journal_t, boost::noncopyable>("Journal")
 #if 0
     .def(init<path>())
     .def(init<string>())
 #endif
-    .add_property("master",
-                  make_getter(&journal_t::master,
-                              return_internal_reference<1,
-                                  with_custodian_and_ward_postcall<1, 0> >()))
-    .add_property("bucket",
-                  make_getter(&journal_t::bucket,
-                              return_internal_reference<1,
-                                  with_custodian_and_ward_postcall<1, 0> >()),
-                  make_setter(&journal_t::bucket))
-    .add_property("was_loaded", make_getter(&journal_t::was_loaded))
+      .add_property(
+          "master",
+          make_getter(&journal_t::master,
+                      return_internal_reference<1, with_custodian_and_ward_postcall<1, 0>>()))
+      .add_property(
+          "bucket",
+          make_getter(&journal_t::bucket,
+                      return_internal_reference<1, with_custodian_and_ward_postcall<1, 0>>()),
+          make_setter(&journal_t::bucket))
+      .add_property("was_loaded", make_getter(&journal_t::was_loaded))
 
-    .def("add_account", &journal_t::add_account)
-    .def("remove_account", &journal_t::remove_account)
+      .def("add_account", &journal_t::add_account)
+      .def("remove_account", &journal_t::remove_account)
 
-    .def("find_account", py_find_account_1,
-         return_internal_reference<1,
-             with_custodian_and_ward_postcall<1, 0> >())
-    .def("find_account", py_find_account_2,
-         return_internal_reference<1,
-             with_custodian_and_ward_postcall<1, 0> >())
-    .def("find_account_re", &journal_t::find_account_re,
-         return_internal_reference<1,
-             with_custodian_and_ward_postcall<1, 0> >())
+      .def("find_account", py_find_account_1,
+           return_internal_reference<1, with_custodian_and_ward_postcall<1, 0>>())
+      .def("find_account", py_find_account_2,
+           return_internal_reference<1, with_custodian_and_ward_postcall<1, 0>>())
+      .def("find_account_re", &journal_t::find_account_re,
+           return_internal_reference<1, with_custodian_and_ward_postcall<1, 0>>())
 
-    .def("register_account", py_register_account,
-         return_internal_reference<1,
-             with_custodian_and_ward_postcall<1, 0> >())
+      .def("register_account", py_register_account,
+           return_internal_reference<1, with_custodian_and_ward_postcall<1, 0>>())
 
-    .def("expand_aliases", &journal_t::expand_aliases,
-         return_internal_reference<1,
-             with_custodian_and_ward_postcall<1, 0> >())
+      .def("expand_aliases", &journal_t::expand_aliases,
+           return_internal_reference<1, with_custodian_and_ward_postcall<1, 0>>())
 
-    .def("add_xact", &journal_t::add_xact)
-    .def("remove_xact", &journal_t::remove_xact)
+      .def("add_xact", &journal_t::add_xact)
+      .def("remove_xact", &journal_t::remove_xact)
 
-    .def("__len__", xacts_len)
+      .def("__len__", xacts_len)
 #if 0
     .def("__getitem__", xacts_getitem,
          return_internal_reference<1,
              with_custodian_and_ward_postcall<1, 0> >())
 #endif
 
-    .def("__iter__", boost::python::range<return_internal_reference<> >
-         (&journal_t::xacts_begin, &journal_t::xacts_end))
-    .def("xacts", boost::python::range<return_internal_reference<> >
-         (&journal_t::xacts_begin, &journal_t::xacts_end))
-    .def("auto_xacts", boost::python::range<return_internal_reference<> >
-         (&journal_t::auto_xacts_begin, &journal_t::auto_xacts_end))
-    .def("period_xacts", boost::python::range<return_internal_reference<> >
-         (&journal_t::period_xacts_begin, &journal_t::period_xacts_end))
-    .def("sources", boost::python::range<return_internal_reference<> >
-         (&journal_t::sources_begin, &journal_t::sources_end))
+      .def("__iter__", boost::python::range<return_internal_reference<>>(&journal_t::xacts_begin,
+                                                                         &journal_t::xacts_end))
+      .def("xacts", boost::python::range<return_internal_reference<>>(&journal_t::xacts_begin,
+                                                                      &journal_t::xacts_end))
+      .def("auto_xacts", boost::python::range<return_internal_reference<>>(
+                             &journal_t::auto_xacts_begin, &journal_t::auto_xacts_end))
+      .def("period_xacts", boost::python::range<return_internal_reference<>>(
+                               &journal_t::period_xacts_begin, &journal_t::period_xacts_end))
+      .def("sources", boost::python::range<return_internal_reference<>>(&journal_t::sources_begin,
+                                                                        &journal_t::sources_end))
 #if 0
     .def("read", py_read)
 #endif
-    .def("has_xdata", &journal_t::has_xdata)
-    .def("clear_xdata", &journal_t::clear_xdata)
+      .def("has_xdata", &journal_t::has_xdata)
+      .def("clear_xdata", &journal_t::clear_xdata)
 
-    .def("query", py_query)
+      .def("query", py_query)
 
-    .def("valid", &journal_t::valid)
-    ;
+      .def("valid", &journal_t::valid);
 
-#define EXC_TRANSLATE(type) \
-  register_exception_translator<type>(&exc_translate_ ## type);
+#define EXC_TRANSLATE(type) register_exception_translator<type>(&exc_translate_##type);
 
   EXC_TRANSLATE(parse_error);
   EXC_TRANSLATE(error_count);

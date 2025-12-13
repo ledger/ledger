@@ -49,23 +49,20 @@ class xact_t;
 
 class report_t;
 
-class format_emacs_posts : public item_handler<post_t>
-{
+class format_emacs_posts : public item_handler<post_t> {
   format_emacs_posts();
 
 protected:
-  report_t&     report;
+  report_t& report;
   std::ostream& out;
-  xact_t *     last_xact;
+  xact_t* last_xact;
 
 public:
   format_emacs_posts(report_t& _report, std::ostream& _out)
-    : report(_report), out(_out), last_xact(NULL) {
+      : report(_report), out(_out), last_xact(NULL) {
     TRACE_CTOR(format_emacs_posts, "report_t&, std::ostream&");
   }
-  ~format_emacs_posts() {
-    TRACE_DTOR(format_emacs_posts);
-  }
+  ~format_emacs_posts() { TRACE_DTOR(format_emacs_posts); }
 
   virtual void write_xact(xact_t& xact);
   virtual void flush() {

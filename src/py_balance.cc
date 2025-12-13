@@ -44,34 +44,29 @@ using namespace boost::python;
 
 namespace {
 
-  boost::optional<balance_t> py_value_0(const balance_t& balance) {
-    return balance.value(CURRENT_TIME());
-  }
-  boost::optional<balance_t> py_value_1(const balance_t& balance,
-                                        const commodity_t * in_terms_of) {
-    return balance.value(CURRENT_TIME(), in_terms_of);
-  }
-  boost::optional<balance_t> py_value_2(const balance_t& balance,
-                                        const commodity_t * in_terms_of,
-                                        const datetime_t& moment) {
-    return balance.value(moment, in_terms_of);
-  }
-  boost::optional<balance_t> py_value_2d(const balance_t& balance,
-                                         const commodity_t * in_terms_of,
-                                         const date_t& moment) {
-    return balance.value(datetime_t(moment), in_terms_of);
-  }
+boost::optional<balance_t> py_value_0(const balance_t& balance) {
+  return balance.value(CURRENT_TIME());
+}
+boost::optional<balance_t> py_value_1(const balance_t& balance, const commodity_t* in_terms_of) {
+  return balance.value(CURRENT_TIME(), in_terms_of);
+}
+boost::optional<balance_t> py_value_2(const balance_t& balance, const commodity_t* in_terms_of,
+                                      const datetime_t& moment) {
+  return balance.value(moment, in_terms_of);
+}
+boost::optional<balance_t> py_value_2d(const balance_t& balance, const commodity_t* in_terms_of,
+                                       const date_t& moment) {
+  return balance.value(datetime_t(moment), in_terms_of);
+}
 
-  boost::optional<amount_t>
-  py_commodity_amount_0(const balance_t& balance) {
-    return balance.commodity_amount();
-  }
+boost::optional<amount_t> py_commodity_amount_0(const balance_t& balance) {
+  return balance.commodity_amount();
+}
 
-  boost::optional<amount_t>
-  py_commodity_amount_1(const balance_t& balance,
-                        const commodity_t& commodity) {
-    return balance.commodity_amount(commodity);
-  }
+boost::optional<amount_t> py_commodity_amount_1(const balance_t& balance,
+                                                const commodity_t& commodity) {
+  return balance.commodity_amount(commodity);
+}
 
 #if 0
   void py_print(balance_t& balance, object out) {
@@ -85,153 +80,143 @@ namespace {
   }
 #endif
 
-  long balance_len(balance_t& bal) {
-    return static_cast<long>(bal.amounts.size());
+long balance_len(balance_t& bal) {
+  return static_cast<long>(bal.amounts.size());
+}
+
+amount_t balance_getitem(balance_t& bal, long i) {
+  long len = static_cast<long>(bal.amounts.size());
+
+  if (labs(i) >= len) {
+    PyErr_SetString(PyExc_IndexError, _("Index out of range"));
+    throw_error_already_set();
   }
 
-  amount_t balance_getitem(balance_t& bal, long i) {
-    long len = static_cast<long>(bal.amounts.size());
+  long x = i < 0 ? len + i : i;
+  balance_t::amounts_map::iterator elem = bal.amounts.begin();
+  while (--x >= 0)
+    elem++;
 
-    if (labs(i) >= len) {
-      PyErr_SetString(PyExc_IndexError, _("Index out of range"));
-      throw_error_already_set();
-    }
+  return (*elem).second;
+}
 
-    long x = i < 0 ? len + i : i;
-    balance_t::amounts_map::iterator elem = bal.amounts.begin();
-    while (--x >= 0)
-      elem++;
+balance_t py_strip_annotations_0(balance_t& balance) {
+  return balance.strip_annotations(keep_details_t());
+}
+balance_t py_strip_annotations_1(balance_t& balance, const keep_details_t& keep) {
+  return balance.strip_annotations(keep);
+}
 
-    return (*elem).second;
-  }
-
-  balance_t py_strip_annotations_0(balance_t& balance) {
-    return balance.strip_annotations(keep_details_t());
-  }
-  balance_t py_strip_annotations_1(balance_t& balance, const keep_details_t& keep) {
-    return balance.strip_annotations(keep);
-  }
-
-  PyObject * py_balance_unicode(balance_t& balance) {
-    return str_to_py_unicode(balance.to_string());
-  }
+PyObject* py_balance_unicode(balance_t& balance) {
+  return str_to_py_unicode(balance.to_string());
+}
 
 } // unnamed namespace
 
-#define EXC_TRANSLATOR(type)                            \
-  void exc_translate_ ## type(const type& err) {        \
-    PyErr_SetString(PyExc_ArithmeticError, err.what()); \
+#define EXC_TRANSLATOR(type)                                                                       \
+  void exc_translate_##type(const type& err) {                                                     \
+    PyErr_SetString(PyExc_ArithmeticError, err.what());                                            \
   }
 
 EXC_TRANSLATOR(balance_error)
 
-void export_balance()
-{
-  class_< balance_t > ("Balance")
-    .def(init<balance_t>())
-    .def(init<amount_t>())
-    .def(init<long>())
-    .def(init<string>())
+void export_balance() {
+  class_<balance_t>("Balance")
+      .def(init<balance_t>())
+      .def(init<amount_t>())
+      .def(init<long>())
+      .def(init<string>())
 
-    .def(self += self)
-    .def(self += other<amount_t>())
-    .def(self += long())
-    .def(self +  self)
-    .def(self +  other<amount_t>())
-    .def(self +  long())
-    .def(self -= self)
-    .def(self -= other<amount_t>())
-    .def(self -= long())
-    .def(self -  self)
-    .def(self -  other<amount_t>())
-    .def(self -  long())
-    .def(self *= other<amount_t>())
-    .def(self *= long())
-    .def(self *  other<amount_t>())
-    .def(self *  long())
-    .def(self /= other<amount_t>())
-    .def(self /= long())
-    .def(self /  other<amount_t>())
-    .def(self /  long())
-    .def(- self)
+      .def(self += self)
+      .def(self += other<amount_t>())
+      .def(self += long())
+      .def(self + self)
+      .def(self + other<amount_t>())
+      .def(self + long())
+      .def(self -= self)
+      .def(self -= other<amount_t>())
+      .def(self -= long())
+      .def(self - self)
+      .def(self - other<amount_t>())
+      .def(self - long())
+      .def(self *= other<amount_t>())
+      .def(self *= long())
+      .def(self * other<amount_t>())
+      .def(self * long())
+      .def(self /= other<amount_t>())
+      .def(self /= long())
+      .def(self / other<amount_t>())
+      .def(self / long())
+      .def(-self)
 
-    .def(self == self)
-    .def(self == other<amount_t>())
-    .def(self == long())
-    .def(self != self)
-    .def(self != other<amount_t>())
-    .def(self != long())
-    .def(! self)
+      .def(self == self)
+      .def(self == other<amount_t>())
+      .def(self == long())
+      .def(self != self)
+      .def(self != other<amount_t>())
+      .def(self != long())
+      .def(!self)
 
-    .def("__str__", &balance_t::to_string)
-    .def("to_string", &balance_t::to_string)
-    .def("__unicode__", py_balance_unicode)
+      .def("__str__", &balance_t::to_string)
+      .def("to_string", &balance_t::to_string)
+      .def("__unicode__", py_balance_unicode)
 
-    .def("negated", &balance_t::negated)
-    .def("in_place_negate", &balance_t::in_place_negate,
-         return_internal_reference<>())
-    .def(- self)
+      .def("negated", &balance_t::negated)
+      .def("in_place_negate", &balance_t::in_place_negate, return_internal_reference<>())
+      .def(-self)
 
-    .def("abs", &balance_t::abs)
-    .def("__abs__", &balance_t::abs)
+      .def("abs", &balance_t::abs)
+      .def("__abs__", &balance_t::abs)
 
-    .def("__len__", balance_len)
-    .def("__getitem__", balance_getitem)
+      .def("__len__", balance_len)
+      .def("__getitem__", balance_getitem)
 
-    .def("rounded", &balance_t::rounded)
-    .def("in_place_round", &balance_t::in_place_round,
-         return_internal_reference<>())
+      .def("rounded", &balance_t::rounded)
+      .def("in_place_round", &balance_t::in_place_round, return_internal_reference<>())
 
-    .def("__round__", &balance_t::roundto)
-    .def("in_place_roundto", &balance_t::in_place_roundto,
-            return_internal_reference<>())
+      .def("__round__", &balance_t::roundto)
+      .def("in_place_roundto", &balance_t::in_place_roundto, return_internal_reference<>())
 
-    .def("truncated", &balance_t::truncated)
-    .def("in_place_truncate", &balance_t::in_place_truncate,
-         return_internal_reference<>())
+      .def("truncated", &balance_t::truncated)
+      .def("in_place_truncate", &balance_t::in_place_truncate, return_internal_reference<>())
 
-    .def("floored", &balance_t::floored)
-    .def("in_place_floor", &balance_t::in_place_floor,
-         return_internal_reference<>())
+      .def("floored", &balance_t::floored)
+      .def("in_place_floor", &balance_t::in_place_floor, return_internal_reference<>())
 
-    .def("unrounded", &balance_t::unrounded)
-    .def("in_place_unround", &balance_t::in_place_unround,
-         return_internal_reference<>())
+      .def("unrounded", &balance_t::unrounded)
+      .def("in_place_unround", &balance_t::in_place_unround, return_internal_reference<>())
 
-    .def("reduced", &balance_t::reduced)
-    .def("in_place_reduce", &balance_t::in_place_reduce,
-         return_internal_reference<>())
+      .def("reduced", &balance_t::reduced)
+      .def("in_place_reduce", &balance_t::in_place_reduce, return_internal_reference<>())
 
-    .def("unreduced", &balance_t::unreduced)
-    .def("in_place_unreduce", &balance_t::in_place_unreduce,
-         return_internal_reference<>())
+      .def("unreduced", &balance_t::unreduced)
+      .def("in_place_unreduce", &balance_t::in_place_unreduce, return_internal_reference<>())
 
-    .def("value", py_value_0)
-    .def("value", py_value_1, args("in_terms_of"))
-    .def("value", py_value_2, args("in_terms_of", "moment"))
-    .def("value", py_value_2d, args("in_terms_of", "moment"))
+      .def("value", py_value_0)
+      .def("value", py_value_1, args("in_terms_of"))
+      .def("value", py_value_2, args("in_terms_of", "moment"))
+      .def("value", py_value_2d, args("in_terms_of", "moment"))
 
-    .def("__nonzero__", &balance_t::is_nonzero)
-    .def("is_nonzero", &balance_t::is_nonzero)
-    .def("is_zero", &balance_t::is_zero)
-    .def("is_realzero", &balance_t::is_realzero)
+      .def("__nonzero__", &balance_t::is_nonzero)
+      .def("is_nonzero", &balance_t::is_nonzero)
+      .def("is_zero", &balance_t::is_zero)
+      .def("is_realzero", &balance_t::is_realzero)
 
-    .def("is_empty", &balance_t::is_empty)
-    .def("single_amount", &balance_t::single_amount)
+      .def("is_empty", &balance_t::is_empty)
+      .def("single_amount", &balance_t::single_amount)
 
-    .def("to_amount", &balance_t::to_amount)
+      .def("to_amount", &balance_t::to_amount)
 
-    .def("commodity_count", &balance_t::commodity_count)
-    .def("commodity_amount", py_commodity_amount_0)
-    .def("commodity_amount", py_commodity_amount_1)
+      .def("commodity_count", &balance_t::commodity_count)
+      .def("commodity_amount", py_commodity_amount_0)
+      .def("commodity_amount", py_commodity_amount_1)
 
-    .def("number", &balance_t::number)
+      .def("number", &balance_t::number)
 
-    .def("strip_annotations", py_strip_annotations_0)
-    .def("strip_annotations", py_strip_annotations_1)
+      .def("strip_annotations", py_strip_annotations_0)
+      .def("strip_annotations", py_strip_annotations_1)
 
-    .def("valid",  &balance_t::valid)
-    ;
+      .def("valid", &balance_t::valid);
 
   register_optional_to_python<balance_t>();
 
@@ -239,8 +224,7 @@ void export_balance()
   implicitly_convertible<string, balance_t>();
   implicitly_convertible<amount_t, balance_t>();
 
-#define EXC_TRANSLATE(type) \
-  register_exception_translator<type>(&exc_translate_ ## type);
+#define EXC_TRANSLATE(type) register_exception_translator<type>(&exc_translate_##type);
 
   EXC_TRANSLATE(balance_error);
 }

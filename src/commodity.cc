@@ -42,56 +42,47 @@ namespace ledger {
 bool commodity_t::decimal_comma_by_default = false;
 bool commodity_t::time_colon_by_default = false;
 
-void commodity_t::add_price(const datetime_t& date, const amount_t& price,
-                            const bool reflexive)
-{
+void commodity_t::add_price(const datetime_t& date, const amount_t& price, const bool reflexive) {
   if (reflexive) {
-    DEBUG("history.find", "Marking "
-          << price.commodity().symbol() << " as a primary commodity");
+    DEBUG("history.find", "Marking " << price.commodity().symbol() << " as a primary commodity");
     price.commodity().add_flags(COMMODITY_PRIMARY);
   } else {
     DEBUG("history.find", "Marking " << symbol() << " as a primary commodity");
     add_flags(COMMODITY_PRIMARY);
   }
 
-  DEBUG("history.find", "Adding price: " << symbol()
-        << " for " << price << " on " << date);
+  DEBUG("history.find", "Adding price: " << symbol() << " for " << price << " on " << date);
 
   pool().commodity_price_history.add_price(referent(), date, price);
 
-  base->price_map.clear();    // a price was added, invalid the map
+  base->price_map.clear(); // a price was added, invalid the map
 }
 
-void commodity_t::remove_price(const datetime_t& date, commodity_t& commodity)
-{
+void commodity_t::remove_price(const datetime_t& date, commodity_t& commodity) {
   pool().commodity_price_history.remove_price(referent(), commodity, date);
 
   DEBUG("history.find", "Removing price: " << symbol() << " on " << date);
 
-  base->price_map.clear();  // a price was added, invalid the map
+  base->price_map.clear(); // a price was added, invalid the map
 }
 
 void commodity_t::map_prices(function<void(datetime_t, const amount_t&)> fn,
-                             const datetime_t& moment,
-                             const datetime_t& _oldest,
-                             bool bidirectionally)
-{
+                             const datetime_t& moment, const datetime_t& _oldest,
+                             bool bidirectionally) {
   datetime_t when;
-  if (! moment.is_not_a_date_time())
+  if (!moment.is_not_a_date_time())
     when = moment;
   else if (epoch)
     when = *epoch;
   else
     when = CURRENT_TIME();
 
-  pool().commodity_price_history.map_prices(fn, referent(), when, _oldest,
-                                            bidirectionally);
+  pool().commodity_price_history.map_prices(fn, referent(), when, _oldest, bidirectionally);
 }
 
-optional<price_point_t>
-commodity_t::find_price_from_expr(expr_t& expr, const commodity_t * commodity,
-                                  const datetime_t& moment) const
-{
+optional<price_point_t> commodity_t::find_price_from_expr(expr_t& expr,
+                                                          const commodity_t* commodity,
+                                                          const datetime_t& moment) const {
 #if DEBUG_ON
   if (SHOW_DEBUG("commodity.price.find")) {
     ledger::_log_buffer << "valuation expr: ";
@@ -115,14 +106,12 @@ commodity_t::find_price_from_expr(expr_t& expr, const commodity_t * commodity,
   return price_point_t(moment, result.to_amount());
 }
 
-optional<price_point_t>
-commodity_t::find_price(const commodity_t * commodity,
-                        const datetime_t&   moment,
-                        const datetime_t&   oldest) const
-{
+optional<price_point_t> commodity_t::find_price(const commodity_t* commodity,
+                                                const datetime_t& moment,
+                                                const datetime_t& oldest) const {
   DEBUG("commodity.price.find", "commodity_t::find_price(" << symbol() << ")");
 
-  const commodity_t * target = NULL;
+  const commodity_t* target = NULL;
   if (commodity)
     target = commodity;
   else if (pool().default_commodity)
@@ -131,24 +120,24 @@ commodity_t::find_price(const commodity_t * commodity,
   if (target && this == target)
     return none;
 
-  base_t::memoized_price_entry entry(moment, oldest,
-                                     commodity ? commodity : NULL);
+  base_t::memoized_price_entry entry(moment, oldest, commodity ? commodity : NULL);
 
-  DEBUG("commodity.price.find", "looking for memoized args: "
-        << (! moment.is_not_a_date_time() ? format_datetime(moment) : "NONE") << ", "
-        << (! oldest.is_not_a_date_time() ? format_datetime(oldest) : "NONE") << ", "
-        << (commodity ? commodity->symbol()      : "NONE"));
+  DEBUG("commodity.price.find",
+        "looking for memoized args: "
+            << (!moment.is_not_a_date_time() ? format_datetime(moment) : "NONE") << ", "
+            << (!oldest.is_not_a_date_time() ? format_datetime(oldest) : "NONE") << ", "
+            << (commodity ? commodity->symbol() : "NONE"));
   {
     base_t::memoized_price_map::iterator i = base->price_map.find(entry);
     if (i != base->price_map.end()) {
-      DEBUG("commodity.price.find", "found! returning: "
-            << ((*i).second ? (*i).second->price : amount_t(0L)));
+      DEBUG("commodity.price.find",
+            "found! returning: " << ((*i).second ? (*i).second->price : amount_t(0L)));
       return (*i).second;
     }
   }
 
   datetime_t when;
-  if (! moment.is_not_a_date_time())
+  if (!moment.is_not_a_date_time())
     when = moment;
   else if (epoch)
     when = *epoch;
@@ -158,38 +147,32 @@ commodity_t::find_price(const commodity_t * commodity,
   if (base->value_expr)
     return find_price_from_expr(*base->value_expr, commodity, when);
 
-  optional<price_point_t>
-    point(target ?
-          pool().commodity_price_history.find_price(referent(), *target,
-                                                    when, oldest) :
-          pool().commodity_price_history.find_price(referent(), when, oldest));
+  optional<price_point_t> point(
+      target ? pool().commodity_price_history.find_price(referent(), *target, when, oldest)
+             : pool().commodity_price_history.find_price(referent(), when, oldest));
 
   // Record this price point in the memoization map
   if (base->price_map.size() > base_t::max_price_map_size) {
-    DEBUG("history.find",
-          "price map has grown too large, clearing it by half");
+    DEBUG("history.find", "price map has grown too large, clearing it by half");
     for (std::size_t i = 0; i < base_t::max_price_map_size >> 1; i++)
       base->price_map.erase(base->price_map.begin());
   }
 
-  DEBUG("history.find",
-        "remembered: " << (point ? point->price : amount_t(0L)));
+  DEBUG("history.find", "remembered: " << (point ? point->price : amount_t(0L)));
   base->price_map.insert(base_t::memoized_price_map::value_type(entry, point));
 
   return point;
 }
 
-optional<price_point_t>
-commodity_t::check_for_updated_price(const optional<price_point_t>& point,
-                                     const datetime_t&   moment,
-                                     const commodity_t*  in_terms_of)
-{
-  if (pool().get_quotes && ! has_flags(COMMODITY_NOMARKET)) {
+optional<price_point_t> commodity_t::check_for_updated_price(const optional<price_point_t>& point,
+                                                             const datetime_t& moment,
+                                                             const commodity_t* in_terms_of) {
+  if (pool().get_quotes && !has_flags(COMMODITY_NOMARKET)) {
     bool exceeds_leeway = true;
 
     if (point) {
       time_duration_t::sec_type seconds_diff;
-      if (! moment.is_not_a_date_time()) {
+      if (!moment.is_not_a_date_time()) {
         seconds_diff = (moment - point->when).total_seconds();
         DEBUG("commodity.download", "moment = " << moment);
         DEBUG("commodity.download", "slip.moment = " << seconds_diff);
@@ -204,13 +187,10 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
     }
 
     if (exceeds_leeway) {
-      DEBUG("commodity.download",
-            "attempting to download a more current quote...");
-      if (optional<price_point_t> quote =
-          pool().get_commodity_quote(referent(), in_terms_of)) {
-        if (! in_terms_of ||
-            (quote->price.has_commodity() &&
-             quote->price.commodity_ptr() == in_terms_of))
+      DEBUG("commodity.download", "attempting to download a more current quote...");
+      if (optional<price_point_t> quote = pool().get_commodity_quote(referent(), in_terms_of)) {
+        if (!in_terms_of ||
+            (quote->price.has_commodity() && quote->price.commodity_ptr() == in_terms_of))
           return quote;
       }
     }
@@ -218,8 +198,7 @@ commodity_t::check_for_updated_price(const optional<price_point_t>& point,
   return point;
 }
 
-commodity_t& commodity_t::nail_down(const expr_t& expr)
-{
+commodity_t& commodity_t::nail_down(const expr_t& expr) {
   annotation_t new_details;
 
   new_details.value_expr = expr;
@@ -228,19 +207,18 @@ commodity_t& commodity_t::nail_down(const expr_t& expr)
   return *pool().find_or_create(symbol(), new_details);
 }
 
-commodity_t::operator bool() const
-{
+commodity_t::operator bool() const {
   return this != pool().null_commodity;
 }
 
 namespace {
-  // Invalid commodity characters:
-  //   SPACE, TAB, NEWLINE, RETURN
-  //   0-9 . , ; : ? ! - + * / ^ & | =
-  //   < > { } [ ] ( ) @
+// Invalid commodity characters:
+//   SPACE, TAB, NEWLINE, RETURN
+//   0-9 . , ; : ? ! - + * / ^ & | =
+//   < > { } [ ] ( ) @
 
-  static int invalid_chars[256] = {
-          /* 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f */
+static int invalid_chars[256] = {
+    /* 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f */
     /* 00 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0,
     /* 10 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     /* 20 */ 1, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -257,34 +235,32 @@ namespace {
     /* d0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     /* e0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     /* f0 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  };
+};
 
-  bool is_reserved_token(const char * buf)
-  {
-    switch (buf[0]) {
-    case 'a':
-      return std::strcmp(buf, "and") == 0;
-    case 'd':
-      return std::strcmp(buf, "div") == 0;
-    case 'e':
-      return std::strcmp(buf, "else") == 0;
-    case 'f':
-      return std::strcmp(buf, "false") == 0;
-    case 'i':
-      return std::strcmp(buf, "if") == 0;
-    case 'o':
-      return std::strcmp(buf, "or") == 0;
-    case 'n':
-      return std::strcmp(buf, "not") == 0;
-    case 't':
-      return std::strcmp(buf, "true") == 0;
-    }
-    return false;
+bool is_reserved_token(const char* buf) {
+  switch (buf[0]) {
+  case 'a':
+    return std::strcmp(buf, "and") == 0;
+  case 'd':
+    return std::strcmp(buf, "div") == 0;
+  case 'e':
+    return std::strcmp(buf, "else") == 0;
+  case 'f':
+    return std::strcmp(buf, "false") == 0;
+  case 'i':
+    return std::strcmp(buf, "if") == 0;
+  case 'o':
+    return std::strcmp(buf, "or") == 0;
+  case 'n':
+    return std::strcmp(buf, "not") == 0;
+  case 't':
+    return std::strcmp(buf, "true") == 0;
   }
+  return false;
 }
+} // namespace
 
-bool commodity_t::symbol_needs_quotes(const string& symbol)
-{
+bool commodity_t::symbol_needs_quotes(const string& symbol) {
   foreach (char ch, symbol)
     if (invalid_chars[static_cast<unsigned char>(ch)])
       return true;
@@ -292,8 +268,7 @@ bool commodity_t::symbol_needs_quotes(const string& symbol)
   return false;
 }
 
-void commodity_t::parse_symbol(std::istream& in, string& symbol)
-{
+void commodity_t::parse_symbol(std::istream& in, string& symbol) {
   std::istream::pos_type pos = in.tellg();
 
   char buf[256];
@@ -306,8 +281,8 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
     else
       throw_(amount_error, _("Quoted commodity symbol lacks closing quote"));
   } else {
-    char * _p = buf;
-    while (_p - buf < 255 && in.good() && ! in.eof() && ! invalid_chars[c]) {
+    char* _p = buf;
+    while (_p - buf < 255 && in.good() && !in.eof() && !invalid_chars[c]) {
       c = in.get();
       if (c == '\\') {
         c = in.get();
@@ -330,16 +305,15 @@ void commodity_t::parse_symbol(std::istream& in, string& symbol)
   }
 }
 
-void commodity_t::parse_symbol(char *& p, string& symbol)
-{
+void commodity_t::parse_symbol(char*& p, string& symbol) {
   if (*p == '"') {
-    char * q = std::strchr(p + 1, '"');
-    if (! q)
+    char* q = std::strchr(p + 1, '"');
+    if (!q)
       throw_(amount_error, _("Quoted commodity symbol lacks closing quote"));
     symbol = string(p + 1, 0, static_cast<std::string::size_type>(q - p - 1));
     p = q + 2;
   } else {
-    char * q = next_element(p);
+    char* q = next_element(p);
     symbol = p;
     if (q)
       p = q;
@@ -350,14 +324,12 @@ void commodity_t::parse_symbol(char *& p, string& symbol)
     throw_(amount_error, _("Failed to parse commodity"));
 }
 
-void commodity_t::print(std::ostream& out, bool elide_quotes, bool) const
-{
+void commodity_t::print(std::ostream& out, bool elide_quotes, bool) const {
   string sym = symbol();
-  if (elide_quotes && has_flags(COMMODITY_STYLE_SEPARATED) &&
-      ! sym.empty() && sym[0] == '"' &&
-      ! std::strchr(sym.c_str(), ' ')) {
+  if (elide_quotes && has_flags(COMMODITY_STYLE_SEPARATED) && !sym.empty() && sym[0] == '"' &&
+      !std::strchr(sym.c_str(), ' ')) {
     string subsym(sym, 1, sym.length() - 2);
-    if (! all(subsym, is_digit()))
+    if (!all(subsym, is_digit()))
       out << subsym;
     else
       out << sym;
@@ -365,15 +337,13 @@ void commodity_t::print(std::ostream& out, bool elide_quotes, bool) const
     out << sym;
 }
 
-bool commodity_t::valid() const
-{
+bool commodity_t::valid() const {
   if (symbol().empty() && this != pool().null_commodity) {
-    DEBUG("ledger.validate",
-           "commodity_t: symbol().empty() && this != null_commodity");
+    DEBUG("ledger.validate", "commodity_t: symbol().empty() && this != null_commodity");
     return false;
   }
 
-  if (annotated && ! base) {
+  if (annotated && !base) {
     DEBUG("ledger.validate", "commodity_t: annotated && ! base");
     return false;
   }
@@ -386,9 +356,8 @@ bool commodity_t::valid() const
   return true;
 }
 
-int commodity_t::compare_by_commodity::operator()(const amount_t * left,
-                                                  const amount_t * right) const
-{
+int commodity_t::compare_by_commodity::operator()(const amount_t* left,
+                                                  const amount_t* right) const {
   commodity_t& leftcomm(left->commodity());
   commodity_t& rightcomm(right->commodity());
 
@@ -401,15 +370,13 @@ int commodity_t::compare_by_commodity::operator()(const amount_t * left,
     return cmp;
   }
 
-  if (! leftcomm.has_annotation() && rightcomm.has_annotation()) {
+  if (!leftcomm.has_annotation() && rightcomm.has_annotation()) {
     DEBUG("commodity.compare", "left has no annotation, right does");
     return -1;
-  }
-  else if (leftcomm.has_annotation() && ! rightcomm.has_annotation()) {
+  } else if (leftcomm.has_annotation() && !rightcomm.has_annotation()) {
     DEBUG("commodity.compare", "right has no annotation, left does");
     return 1;
-  }
-  else if (! leftcomm.has_annotation() && ! rightcomm.has_annotation()) {
+  } else if (!leftcomm.has_annotation() && !rightcomm.has_annotation()) {
     DEBUG("commodity.compare", "there are no annotations, commodities match");
     return 0;
   }
@@ -417,11 +384,11 @@ int commodity_t::compare_by_commodity::operator()(const amount_t * left,
   annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));
   annotated_commodity_t& arightcomm(static_cast<annotated_commodity_t&>(rightcomm));
 
-  if (! aleftcomm.details.price && arightcomm.details.price) {
+  if (!aleftcomm.details.price && arightcomm.details.price) {
     DEBUG("commodity.compare", "left has no price, right does");
     return -1;
   }
-  if (aleftcomm.details.price && ! arightcomm.details.price) {
+  if (aleftcomm.details.price && !arightcomm.details.price) {
     DEBUG("commodity.compare", "right has no price, left does");
     return 1;
   }
@@ -439,8 +406,7 @@ int commodity_t::compare_by_commodity::operator()(const amount_t * left,
       amount_t rightpricenumeric(rightprice);
       leftpricenumeric.clear_commodity();
       rightpricenumeric.clear_commodity();
-      DEBUG("commodity.compare",
-            "both have price, commodities don't match, recursing");
+      DEBUG("commodity.compare", "both have price, commodities don't match, recursing");
       int cmp2 = commodity_t::compare_by_commodity()(&leftpricenumeric, &rightpricenumeric);
       if (cmp2 != 0) {
         DEBUG("commodity.compare", "recursion found a disparity");
@@ -452,45 +418,42 @@ int commodity_t::compare_by_commodity::operator()(const amount_t * left,
       if (leftprice < rightprice) {
         DEBUG("commodity.compare", "left price is less");
         return -1;
-      }
-      else if (leftprice > rightprice) {
+      } else if (leftprice > rightprice) {
         DEBUG("commodity.compare", "left price is more");
         return 1;
       }
     }
   }
 
-  if (! aleftcomm.details.date && arightcomm.details.date) {
+  if (!aleftcomm.details.date && arightcomm.details.date) {
     DEBUG("commodity.compare", "left has no date, right does");
     return -1;
   }
-  if (aleftcomm.details.date && ! arightcomm.details.date) {
+  if (aleftcomm.details.date && !arightcomm.details.date) {
     DEBUG("commodity.compare", "right has no date, left does");
     return 1;
   }
 
   if (aleftcomm.details.date && arightcomm.details.date) {
-    gregorian::date_duration diff =
-      *aleftcomm.details.date - *arightcomm.details.date;
+    gregorian::date_duration diff = *aleftcomm.details.date - *arightcomm.details.date;
     DEBUG("commodity.compare", "both have dates, comparing on difference");
     if (diff.is_negative()) {
       DEBUG("commodity.compare", "dates differ");
       return -1;
     }
 
-    gregorian::date_duration diff2 =
-      *arightcomm.details.date - *aleftcomm.details.date;
+    gregorian::date_duration diff2 = *arightcomm.details.date - *aleftcomm.details.date;
     if (diff2.is_negative()) {
       DEBUG("commodity.compare", "dates differ");
       return 1;
     }
   }
 
-  if (! aleftcomm.details.tag && arightcomm.details.tag) {
+  if (!aleftcomm.details.tag && arightcomm.details.tag) {
     DEBUG("commodity.compare", "left has no tag, right does");
     return -1;
   }
-  if (aleftcomm.details.tag && ! arightcomm.details.tag) {
+  if (aleftcomm.details.tag && !arightcomm.details.tag) {
     DEBUG("commodity.compare", "right has no tag, left does");
     return 1;
   }
@@ -503,19 +466,18 @@ int commodity_t::compare_by_commodity::operator()(const amount_t * left,
       return 1;
   }
 
-  if (! aleftcomm.details.value_expr && arightcomm.details.value_expr) {
+  if (!aleftcomm.details.value_expr && arightcomm.details.value_expr) {
     DEBUG("commodity.compare", "left has no value expr, right does");
     return -1;
   }
-  if (aleftcomm.details.value_expr && ! arightcomm.details.value_expr) {
+  if (aleftcomm.details.value_expr && !arightcomm.details.value_expr) {
     DEBUG("commodity.compare", "right has no value expr, left does");
     return 1;
   }
 
   if (aleftcomm.details.value_expr && arightcomm.details.value_expr) {
     DEBUG("commodity.compare", "both have value exprs, comparing text reprs");
-    return (aleftcomm.details.value_expr->text() <
-            arightcomm.details.value_expr->text());
+    return (aleftcomm.details.value_expr->text() < arightcomm.details.value_expr->text());
   }
 
   // Compare semantic flags (ANNOTATION_PRICE_FIXATED and ANNOTATION_PRICE_NOT_PER_UNIT)
@@ -535,14 +497,16 @@ int commodity_t::compare_by_commodity::operator()(const amount_t * left,
   return 0;
 }
 
-void put_commodity(property_tree::ptree& st, const commodity_t& comm,
-                   bool commodity_details)
-{
+void put_commodity(property_tree::ptree& st, const commodity_t& comm, bool commodity_details) {
   std::string flags;
-  if (! (comm.has_flags(COMMODITY_STYLE_SUFFIXED)))  flags += 'P';
-  if (comm.has_flags(COMMODITY_STYLE_SEPARATED))     flags += 'S';
-  if (comm.has_flags(COMMODITY_STYLE_THOUSANDS))     flags += 'T';
-  if (comm.has_flags(COMMODITY_STYLE_DECIMAL_COMMA)) flags += 'D';
+  if (!(comm.has_flags(COMMODITY_STYLE_SUFFIXED)))
+    flags += 'P';
+  if (comm.has_flags(COMMODITY_STYLE_SEPARATED))
+    flags += 'S';
+  if (comm.has_flags(COMMODITY_STYLE_THOUSANDS))
+    flags += 'T';
+  if (comm.has_flags(COMMODITY_STYLE_DECIMAL_COMMA))
+    flags += 'D';
   st.put("<xmlattr>.flags", flags);
 
   st.put("symbol", comm.symbol());

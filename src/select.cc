@@ -45,58 +45,51 @@
 namespace ledger {
 
 namespace {
-  bool get_principal_identifiers(expr_t::ptr_op_t expr, string& ident,
-                                 bool do_transforms = false)
-  {
-    bool result = true;
+bool get_principal_identifiers(expr_t::ptr_op_t expr, string& ident, bool do_transforms = false) {
+  bool result = true;
 
-    if (expr->is_ident()) {
-      string name(expr->as_ident());
-      if (name == "date" || name == "aux_date" || name == "payee") {
-        if (! ident.empty() &&
-            ! (name == "date" || name == "aux_date" || name == "payee"))
-          result = false;
-        ident = name;
-      }
-      else if (name == "account") {
-        if (! ident.empty() && ! (name == "account"))
-          result = false;
-        ident = name;
-        if (do_transforms)
-          expr->set_ident("display_account");
-      }
-      else if (name == "amount") {
-        if (! ident.empty() && ! (name == "amount"))
-          result = false;
-        ident = name;
-        if (do_transforms)
-          expr->set_ident("display_amount");
-      }
-      else if (name == "total") {
-        if (! ident.empty() && ! (name == "total"))
-          result = false;
-        ident = name;
-        if (do_transforms)
-          expr->set_ident("display_total");
-      }
+  if (expr->is_ident()) {
+    string name(expr->as_ident());
+    if (name == "date" || name == "aux_date" || name == "payee") {
+      if (!ident.empty() && !(name == "date" || name == "aux_date" || name == "payee"))
+        result = false;
+      ident = name;
+    } else if (name == "account") {
+      if (!ident.empty() && !(name == "account"))
+        result = false;
+      ident = name;
+      if (do_transforms)
+        expr->set_ident("display_account");
+    } else if (name == "amount") {
+      if (!ident.empty() && !(name == "amount"))
+        result = false;
+      ident = name;
+      if (do_transforms)
+        expr->set_ident("display_amount");
+    } else if (name == "total") {
+      if (!ident.empty() && !(name == "total"))
+        result = false;
+      ident = name;
+      if (do_transforms)
+        expr->set_ident("display_total");
     }
-
-    if (expr->kind > expr_t::op_t::TERMINALS || expr->is_scope()) {
-      if (expr->left()) {
-        if (! get_principal_identifiers(expr->left(), ident, do_transforms))
-          result = false;
-        if (expr->kind > expr_t::op_t::UNARY_OPERATORS && expr->has_right())
-          if (! get_principal_identifiers(expr->right(), ident, do_transforms))
-            result = false;
-      }
-    }
-
-    return result;
   }
-}
 
-value_t select_command(call_scope_t& args)
-{
+  if (expr->kind > expr_t::op_t::TERMINALS || expr->is_scope()) {
+    if (expr->left()) {
+      if (!get_principal_identifiers(expr->left(), ident, do_transforms))
+        result = false;
+      if (expr->kind > expr_t::op_t::UNARY_OPERATORS && expr->has_right())
+        if (!get_principal_identifiers(expr->right(), ident, do_transforms))
+          result = false;
+    }
+  }
+
+  return result;
+}
+} // namespace
+
+value_t select_command(call_scope_t& args) {
   string text = "select " + join_args(args);
   if (text.empty())
     throw std::logic_error(_("Usage: select TEXT"));
@@ -114,11 +107,10 @@ value_t select_command(call_scope_t& args)
   //   GROUP BY <VALEXPR>
   //   STYLE <NAME>
 
-  boost::regex select_re
-    ("(select|from|where|display|collect|group\\s+by|style)\\s+"
-     "(.+?)"
-     "(?=(\\s+(from|where|display|collect|group\\s+by|style)\\s+|$))",
-     boost::regex::perl | boost::regex::icase);
+  boost::regex select_re("(select|from|where|display|collect|group\\s+by|style)\\s+"
+                         "(.+?)"
+                         "(?=(\\s+(from|where|display|collect|group\\s+by|style)\\s+|$))",
+                         boost::regex::perl | boost::regex::icase);
 
   boost::regex from_accounts_re("from\\s+accounts\\>");
   bool accounts_report = boost::regex_search(text, from_accounts_re);
@@ -139,10 +131,10 @@ value_t select_command(call_scope_t& args)
     DEBUG("select.parse", "arg: " << arg);
 
     if (keyword == "select") {
-      expr_t  args_expr(arg);
+      expr_t args_expr(arg);
       value_t columns(split_cons_expr(args_expr.get_op()));
-      bool    first = true;
-      string  thus_far = "";
+      bool first = true;
+      string thus_far = "";
 
       std::size_t cols = 0;
 #if HAVE_IOCTL
@@ -150,42 +142,38 @@ value_t select_command(call_scope_t& args)
 #endif
       if (report.HANDLED(columns_))
         cols = lexical_cast<std::size_t>(report.HANDLER(columns_).value);
-      else if (const char * columns_env = std::getenv("COLUMNS"))
+      else if (const char* columns_env = std::getenv("COLUMNS"))
         cols = lexical_cast<std::size_t>(columns_env);
 #if HAVE_IOCTL
       else if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1)
-          cols = ws.ws_col;
+        cols = ws.ws_col;
 #endif
       else
         cols = 80;
 
       std::size_t date_width =
-        (report.HANDLED(date_width_) ?
-         lexical_cast<std::size_t>(report.HANDLER(date_width_).str()) :
-         static_cast<std::size_t>
-         (format_date(CURRENT_DATE(),FMT_PRINTED).length()));
-      std::size_t payee_width =
-        (report.HANDLED(payee_width_) ?
-         lexical_cast<std::size_t>(report.HANDLER(payee_width_).str()) :
-         std::size_t(double(cols) * 0.263157));
+          (report.HANDLED(date_width_)
+               ? lexical_cast<std::size_t>(report.HANDLER(date_width_).str())
+               : static_cast<std::size_t>(format_date(CURRENT_DATE(), FMT_PRINTED).length()));
+      std::size_t payee_width = (report.HANDLED(payee_width_)
+                                     ? lexical_cast<std::size_t>(report.HANDLER(payee_width_).str())
+                                     : std::size_t(double(cols) * 0.263157));
       std::size_t account_width =
-        (report.HANDLED(account_width_) ?
-         lexical_cast<std::size_t>(report.HANDLER(account_width_).str()) :
-         std::size_t(double(cols) * 0.302631));
+          (report.HANDLED(account_width_)
+               ? lexical_cast<std::size_t>(report.HANDLER(account_width_).str())
+               : std::size_t(double(cols) * 0.302631));
       std::size_t amount_width =
-        (report.HANDLED(amount_width_) ?
-         lexical_cast<std::size_t>(report.HANDLER(amount_width_).str()) :
-         std::size_t(double(cols) * 0.157894));
-      std::size_t total_width =
-        (report.HANDLED(total_width_) ?
-         lexical_cast<std::size_t>(report.HANDLER(total_width_).str()) :
-         amount_width);
-      std::size_t meta_width =
-        (report.HANDLED(meta_width_) ?
-         lexical_cast<std::size_t>(report.HANDLER(meta_width_).str()) :
-         10);
+          (report.HANDLED(amount_width_)
+               ? lexical_cast<std::size_t>(report.HANDLER(amount_width_).str())
+               : std::size_t(double(cols) * 0.157894));
+      std::size_t total_width = (report.HANDLED(total_width_)
+                                     ? lexical_cast<std::size_t>(report.HANDLER(total_width_).str())
+                                     : amount_width);
+      std::size_t meta_width = (report.HANDLED(meta_width_)
+                                    ? lexical_cast<std::size_t>(report.HANDLER(meta_width_).str())
+                                    : 10);
 
-      bool saw_payee   = false;
+      bool saw_payee = false;
       bool saw_account = false;
 
       std::size_t cols_needed = 0;
@@ -194,22 +182,17 @@ value_t select_command(call_scope_t& args)
         if (get_principal_identifiers(as_expr(column), ident)) {
           if (ident == "date" || ident == "aux_date") {
             cols_needed += date_width + 1;
-          }
-          else if (ident == "payee") {
+          } else if (ident == "payee") {
             cols_needed += payee_width + 1;
             saw_payee = true;
-          }
-          else if (ident == "account") {
+          } else if (ident == "account") {
             cols_needed += account_width + 1;
             saw_account = true;
-          }
-          else if (ident == "amount") {
+          } else if (ident == "amount") {
             cols_needed += amount_width + 1;
-          }
-          else if (ident == "total") {
+          } else if (ident == "total") {
             cols_needed += total_width + 1;
-          }
-          else {
+          } else {
             cols_needed += meta_width + 1;
           }
         }
@@ -230,8 +213,8 @@ value_t select_command(call_scope_t& args)
         }
       }
 
-      while ((saw_account || saw_payee) && cols_needed > cols &&
-             account_width > 5 && payee_width > 5) {
+      while ((saw_account || saw_payee) && cols_needed > cols && account_width > 5 &&
+             payee_width > 5) {
         DEBUG("auto.columns", "adjusting account down");
         if (saw_account && cols_needed > cols) {
           --account_width;
@@ -248,16 +231,16 @@ value_t select_command(call_scope_t& args)
         DEBUG("auto.columns", "account_width now = " << account_width);
       }
 
-      if (! report.HANDLED(date_width_))
-        report.HANDLER(date_width_).value    = to_string(date_width);
-      if (! report.HANDLED(payee_width_))
-        report.HANDLER(payee_width_).value   = to_string(payee_width);
-      if (! report.HANDLED(account_width_))
+      if (!report.HANDLED(date_width_))
+        report.HANDLER(date_width_).value = to_string(date_width);
+      if (!report.HANDLED(payee_width_))
+        report.HANDLER(payee_width_).value = to_string(payee_width);
+      if (!report.HANDLED(account_width_))
         report.HANDLER(account_width_).value = to_string(account_width);
-      if (! report.HANDLED(amount_width_))
-        report.HANDLER(amount_width_).value  = to_string(amount_width);
-      if (! report.HANDLED(total_width_))
-        report.HANDLER(total_width_).value   = to_string(total_width);
+      if (!report.HANDLED(amount_width_))
+        report.HANDLER(amount_width_).value = to_string(amount_width);
+      if (!report.HANDLED(total_width_))
+        report.HANDLER(total_width_).value = to_string(total_width);
 
       foreach (const value_t& column, columns.to_sequence()) {
         if (first)
@@ -279,11 +262,10 @@ value_t select_command(call_scope_t& args)
             formatter << "green if color and date > today),"
                       << "bold if should_bold)";
 
-            if (! thus_far.empty())
+            if (!thus_far.empty())
               thus_far += " + ";
             thus_far += "int(date_width) + 1";
-          }
-          else if (ident == "payee") {
+          } else if (ident == "payee") {
             formatter << "ansify_if("
                       << "ansify_if(justify(truncated(";
 
@@ -293,11 +275,10 @@ value_t select_command(call_scope_t& args)
             formatter << "bold if color and !cleared and actual),"
                       << "bold if should_bold)";
 
-            if (! thus_far.empty())
+            if (!thus_far.empty())
               thus_far += " + ";
             thus_far += "int(payee_width) + 1";
-          }
-          else if (ident == "account") {
+          } else if (ident == "account") {
             formatter << "ansify_if(";
 
             if (accounts_report) {
@@ -310,14 +291,13 @@ value_t select_command(call_scope_t& args)
                         << "int(account_width), -1, ";
               formatter << "false, color),";
 
-              if (! thus_far.empty())
+              if (!thus_far.empty())
                 thus_far += " + ";
               thus_far += "int(account_width) + 1";
             }
 
             formatter << " bold if should_bold)";
-          }
-          else if (ident == "amount" || ident == "total") {
+          } else if (ident == "amount" || ident == "total") {
             formatter << "ansify_if("
                       << "justify(scrub(";
 
@@ -330,7 +310,7 @@ value_t select_command(call_scope_t& args)
             else
               formatter << "int(total_width),";
 
-            if (! thus_far.empty())
+            if (!thus_far.empty())
               thus_far += " + ";
 
             if (ident == "amount")
@@ -347,8 +327,7 @@ value_t select_command(call_scope_t& args)
                       << " bold if should_bold)";
 
             thus_far += " + 1";
-          }
-          else {
+          } else {
             formatter << "ansify_if("
                       << "justify(truncated(";
 
@@ -357,7 +336,7 @@ value_t select_command(call_scope_t& args)
             formatter << ", int(meta_width or 10)), int(meta_width) or 10),";
             formatter << "bold if should_bold)";
 
-            if (! thus_far.empty())
+            if (!thus_far.empty())
               thus_far += " + ";
             thus_far += "(int(meta_width) or 10) + 1";
           }
@@ -366,33 +345,27 @@ value_t select_command(call_scope_t& args)
       }
       formatter << "\\n";
       DEBUG("select.parse", "formatter: " << formatter.str());
-    }
-    else if (keyword == "from") {
+    } else if (keyword == "from") {
       if (arg == "xacts" || arg == "txns" || arg == "transactions") {
-        report_functor = expr_t::op_t::wrap_functor
-          (reporter<>(post_handler_ptr(new print_xacts(report,
-                                                       report.HANDLED(raw))),
-                      report, string("#select")));
+        report_functor = expr_t::op_t::wrap_functor(
+            reporter<>(post_handler_ptr(new print_xacts(report, report.HANDLED(raw))), report,
+                       string("#select")));
+      } else if (arg == "posts" || arg == "postings") {
+        report_functor = expr_t::op_t::wrap_functor(
+            reporter<>(post_handler_ptr(new format_posts(report, formatter.str())), report,
+                       string("#select")));
+      } else if (arg == "accounts") {
+        report_functor = expr_t::op_t::wrap_functor(
+            reporter<account_t, acct_handler_ptr, &report_t::accounts_report>(
+                acct_handler_ptr(new format_accounts(report, formatter.str())), report,
+                string("#select")));
+      } else if (arg == "commodities") {
+        report_functor = expr_t::op_t::wrap_functor(
+            reporter<post_t, post_handler_ptr, &report_t::commodities_report>(
+                post_handler_ptr(new format_posts(report, formatter.str())), report,
+                string("#select")));
       }
-      else if (arg == "posts" || arg == "postings") {
-        report_functor = expr_t::op_t::wrap_functor
-          (reporter<>(post_handler_ptr(new format_posts(report, formatter.str())),
-                      report, string("#select")));
-      }
-      else if (arg == "accounts") {
-        report_functor = expr_t::op_t::wrap_functor
-          (reporter<account_t, acct_handler_ptr, &report_t::accounts_report>
-           (acct_handler_ptr(new format_accounts(report, formatter.str())),
-            report, string("#select")));
-      }
-      else if (arg == "commodities") {
-        report_functor = expr_t::op_t::wrap_functor
-          (reporter<post_t, post_handler_ptr, &report_t::commodities_report>
-           (post_handler_ptr(new format_posts(report, formatter.str())),
-            report, string("#select")));
-      }
-    }
-    else if (keyword == "where") {
+    } else if (keyword == "where") {
 #if 0
       query_t          query;
       keep_details_t   keeper(true, true, true);
@@ -402,34 +375,26 @@ value_t select_command(call_scope_t& args)
 #else
       report.HANDLER(limit_).on("#select", arg);
 #endif
-    }
-    else if (keyword == "display") {
+    } else if (keyword == "display") {
       report.HANDLER(display_).on("#select", arg);
-    }
-    else if (keyword == "collect") {
+    } else if (keyword == "collect") {
       report.HANDLER(amount_).on("#select", arg);
-    }
-    else if (keyword == "group by") {
+    } else if (keyword == "group by") {
       report.HANDLER(group_by_).on("#select", arg);
-    }
-    else if (keyword == "style") {
+    } else if (keyword == "style") {
       if (arg == "csv") {
-      }
-      else if (arg == "xml") {
-      }
-      else if (arg == "json") {
-      }
-      else if (arg == "emacs") {
+      } else if (arg == "xml") {
+      } else if (arg == "json") {
+      } else if (arg == "emacs") {
       }
     }
 
     ++m1;
   }
 
-  if (! report_functor) {
-    report_functor = expr_t::op_t::wrap_functor
-      (reporter<>(post_handler_ptr(new format_posts(report, formatter.str())),
-                  report, string("#select")));
+  if (!report_functor) {
+    report_functor = expr_t::op_t::wrap_functor(reporter<>(
+        post_handler_ptr(new format_posts(report, formatter.str())), report, string("#select")));
   }
 
   call_scope_t call_args(report);
