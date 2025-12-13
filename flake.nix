@@ -95,5 +95,24 @@
 
     defaultPackage = forAllSystems (system: self.packages.${system}.ledger);
 
+    devShells = forAllSystems (system: let
+        pkgs = nixpkgsFor.${system};
+      in with pkgs; {
+      default = mkShellNoCC {
+        name = "ledger-dev";
+
+        inputsFrom = [ self.packages.${system}.ledger ];
+
+        packages = [
+          clang-tools # Provides clang-format
+        ];
+
+        shellHook = ''
+          echo "Ledger development environment"
+          echo "clang-format version: $(clang-format --version)"
+        '';
+      };
+    });
+
   };
 }
