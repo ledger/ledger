@@ -38,18 +38,15 @@
 
 namespace ledger {
 
-void intrusive_ptr_add_ref(const expr_t::op_t * op)
-{
+void intrusive_ptr_add_ref(const expr_t::op_t* op) {
   op->acquire();
 }
 
-void intrusive_ptr_release(const expr_t::op_t * op)
-{
+void intrusive_ptr_release(const expr_t::op_t* op) {
   op->release();
 }
 
-value_t split_cons_expr(expr_t::ptr_op_t op)
-{
+value_t split_cons_expr(expr_t::ptr_op_t op) {
   if (!op) {
     return value_t();
   }
@@ -64,10 +61,10 @@ value_t split_cons_expr(expr_t::ptr_op_t op)
       expr_t::ptr_op_t value_op;
       if (next->kind == expr_t::op_t::O_CONS) {
         value_op = next->left();
-        next     = next->has_right() ? next->right() : NULL;
+        next = next->has_right() ? next->right() : NULL;
       } else {
         value_op = next;
-        next     = NULL;
+        next = NULL;
       }
       if (value_op) {
         seq.push_back(expr_value(value_op));
@@ -80,25 +77,19 @@ value_t split_cons_expr(expr_t::ptr_op_t op)
 }
 
 namespace {
-  inline void check_type_context(scope_t& scope, value_t& result)
-  {
-    if (scope.type_required() &&
-        scope.type_context() != value_t::VOID &&
-        result.type() != scope.type_context()) {
-      throw_(calc_error,
-             _f("Expected return of %1%, but received %2%")
-             % result.label(scope.type_context())
-             % result.label());
-    }
+inline void check_type_context(scope_t& scope, value_t& result) {
+  if (scope.type_required() && scope.type_context() != value_t::VOID &&
+      result.type() != scope.type_context()) {
+    throw_(calc_error, _f("Expected return of %1%, but received %2%") %
+                           result.label(scope.type_context()) % result.label());
   }
 }
+} // namespace
 
-expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
-                                       scope_t * param_scope)
-{
-  scope_t *           scope_ptr = &scope;
+expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t* param_scope) {
+  scope_t* scope_ptr = &scope;
   unique_ptr<scope_t> bound_scope;
-  expr_t::ptr_op_t    result;
+  expr_t::ptr_op_t result;
 
 #if DEBUG_ON
   if (SHOW_DEBUG("expr.compile")) {
@@ -115,7 +106,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
     ptr_op_t def;
     if (param_scope)
       def = param_scope->lookup(symbol_t::FUNCTION, as_ident());
-    if (! def)
+    if (!def)
       def = scope_ptr->lookup(symbol_t::FUNCTION, as_ident());
     if (def) {
       // Identifier references are first looked up at the point of
@@ -128,30 +119,24 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
       }
 #endif // DEBUG_ON
       result = copy(def);
-    }
-    else if (left()) {
+    } else if (left()) {
       result = copy();
-    }
-    else {
+    } else {
       result = this;
     }
-  }
-  else if (is_scope()) {
+  } else if (is_scope()) {
     shared_ptr<scope_t> subscope(new symbol_scope_t(*scope_t::empty_scope));
     set_scope(subscope);
     bound_scope.reset(new bind_scope_t(*scope_ptr, *subscope.get()));
     scope_ptr = bound_scope.get();
-  }
-  else if (kind < TERMINALS) {
+  } else if (kind < TERMINALS) {
     result = this;
-  }
-  else if (kind == O_DEFINE) {
+  } else if (kind == O_DEFINE) {
     switch (left()->kind) {
     case IDENT: {
       ptr_op_t node(right()->compile(*scope_ptr, depth + 1, param_scope));
 
-      DEBUG("expr.compile",
-            "Defining " << left()->as_ident() << " in " << scope_ptr);
+      DEBUG("expr.compile", "Defining " << left()->as_ident() << " in " << scope_ptr);
       scope_ptr->define(symbol_t::FUNCTION, left()->as_ident(), node);
       break;
     }
@@ -164,8 +149,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
 
         node = node->compile(*scope_ptr, depth + 1, param_scope);
 
-        DEBUG("expr.compile",
-              "Defining " << left()->left()->as_ident() << " in " << scope_ptr);
+        DEBUG("expr.compile", "Defining " << left()->left()->as_ident() << " in " << scope_ptr);
         scope_ptr->define(symbol_t::FUNCTION, left()->left()->as_ident(), node);
         break;
       }
@@ -175,25 +159,19 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
       throw_(compile_error, _("Invalid function definition"));
     }
     result = wrap_value(NULL_VALUE);
-  }
-  else if (kind == O_LAMBDA) {
+  } else if (kind == O_LAMBDA) {
     symbol_scope_t params(param_scope ? *param_scope : *scope_t::empty_scope);
 
-    for (ptr_op_t sym = left();
-         sym;
-         sym = sym->has_right() ? sym->right() : NULL) {
+    for (ptr_op_t sym = left(); sym; sym = sym->has_right() ? sym->right() : NULL) {
       ptr_op_t varname = sym->kind == O_CONS ? sym->left() : sym;
 
-      if (! varname->is_ident()) {
+      if (!varname->is_ident()) {
         std::ostringstream buf;
         varname->dump(buf, 0);
-        throw_(calc_error,
-               _f("Invalid function or lambda parameter: %1%") % buf.str());
+        throw_(calc_error, _f("Invalid function or lambda parameter: %1%") % buf.str());
       } else {
-        DEBUG("expr.compile",
-              "Defining function parameter " << varname->as_ident());
-        params.define(symbol_t::FUNCTION, varname->as_ident(),
-                      new op_t(PLUG));
+        DEBUG("expr.compile", "Defining function parameter " << varname->as_ident());
+        params.define(symbol_t::FUNCTION, varname->as_ident(), new op_t(PLUG));
       }
     }
 
@@ -204,22 +182,23 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
       result = copy(left(), rhs);
   }
 
-  if (! result) {
-    if (! left())
+  if (!result) {
+    if (!left())
       throw_(calc_error, _("Syntax error"));
 
     ptr_op_t lhs(left()->compile(*scope_ptr, depth + 1, param_scope));
-    ptr_op_t rhs(kind > UNARY_OPERATORS && has_right() ?
-                 (kind == O_LOOKUP ? right() :
-                  right()->compile(*scope_ptr, depth + 1, param_scope)) : NULL);
+    ptr_op_t rhs(
+        kind > UNARY_OPERATORS && has_right()
+            ? (kind == O_LOOKUP ? right() : right()->compile(*scope_ptr, depth + 1, param_scope))
+            : NULL);
 
-    if (lhs == left() && (! rhs || rhs == right())) {
+    if (lhs == left() && (!rhs || rhs == right())) {
       result = this;
     } else {
       ptr_op_t intermediate(copy(lhs, rhs));
 
       // Reduce constants immediately if possible
-      if ((! lhs || lhs->is_value()) && (! rhs || rhs->is_value()))
+      if ((!lhs || lhs->is_value()) && (!rhs || rhs->is_value()))
         result = wrap_value(intermediate->calc(*scope_ptr, NULL, depth + 1));
       else
         result = intermediate;
@@ -238,297 +217,269 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth,
 }
 
 namespace {
-  expr_t::ptr_op_t lookup_ident(expr_t::ptr_op_t op, scope_t& scope)
-  {
-    expr_t::ptr_op_t def = op->left();
+expr_t::ptr_op_t lookup_ident(expr_t::ptr_op_t op, scope_t& scope) {
+  expr_t::ptr_op_t def = op->left();
 
-    // If no definition was pre-compiled for this identifier, look it up
-    // in the current scope.
-    if (! def || def->kind == expr_t::op_t::PLUG) {
-      DEBUG("scope.symbols", "Looking for IDENT '" << op->as_ident() << "'");
-      def = scope.lookup(symbol_t::FUNCTION, op->as_ident());
-    }
-    if (! def)
-      throw_(calc_error, _f("Unknown identifier '%1%'") % op->as_ident());
-    return def;
+  // If no definition was pre-compiled for this identifier, look it up
+  // in the current scope.
+  if (!def || def->kind == expr_t::op_t::PLUG) {
+    DEBUG("scope.symbols", "Looking for IDENT '" << op->as_ident() << "'");
+    def = scope.lookup(symbol_t::FUNCTION, op->as_ident());
   }
+  if (!def)
+    throw_(calc_error, _f("Unknown identifier '%1%'") % op->as_ident());
+  return def;
 }
+} // namespace
 
-value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t * locus, const int depth)
-{
+value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
   try {
 
-  value_t result;
+    value_t result;
 
 #if DEBUG_ON
-  if (SHOW_DEBUG("expr.calc")) {
-    for (int i = 0; i < depth; i++)
-      ledger::_log_buffer << '.';
-    ledger::_log_buffer << op_context(this) << " => ...";
-    DEBUG("expr.calc", "");
-  }
+    if (SHOW_DEBUG("expr.calc")) {
+      for (int i = 0; i < depth; i++)
+        ledger::_log_buffer << '.';
+      ledger::_log_buffer << op_context(this) << " => ...";
+      DEBUG("expr.calc", "");
+    }
 #endif
 
-  switch (kind) {
-  case VALUE:
-    result = as_value();
-    break;
+    switch (kind) {
+    case VALUE:
+      result = as_value();
+      break;
 
-  case O_DEFINE:
-    result = NULL_VALUE;
-    break;
+    case O_DEFINE:
+      result = NULL_VALUE;
+      break;
 
-  case IDENT:
-    if (ptr_op_t definition = lookup_ident(this, scope)) {
-      // Evaluating an identifier is the same as calling its definition
-      // directly
-      result = definition->calc(scope, locus, depth + 1);
-      check_type_context(scope, result);
-    }
-    break;
-
-  case FUNCTION: {
-    // Evaluating a FUNCTION is the same as calling it directly; this
-    // happens when certain functions-that-look-like-variables (such as
-    // "amount") are resolved.
-    call_scope_t call_args(scope, locus, depth + 1);
-    result = as_function()(call_args);
-    check_type_context(scope, result);
-    break;
-  }
-
-  case SCOPE:
-    assert(! is_scope_unset());
-    if (is_scope_unset()) {
-      symbol_scope_t subscope(scope);
-      result = left()->calc(subscope, locus, depth + 1);
-    } else {
-      bind_scope_t bound_scope(scope, *as_scope());
-      result = left()->calc(bound_scope, locus, depth + 1);
-    }
-    break;
-
-  case O_LOOKUP: {
-    context_scope_t context_scope(scope, value_t::SCOPE);
-    bool scope_error = true;
-    if (value_t obj = left()->calc(context_scope, locus, depth + 1)) {
-      if (obj.is_scope() && obj.as_scope() != NULL) {
-        bind_scope_t bound_scope(scope, *obj.as_scope());
-        result = right()->calc(bound_scope, locus, depth + 1);
-        scope_error = false;
+    case IDENT:
+      if (ptr_op_t definition = lookup_ident(this, scope)) {
+        // Evaluating an identifier is the same as calling its definition
+        // directly
+        result = definition->calc(scope, locus, depth + 1);
+        check_type_context(scope, result);
       }
+      break;
+
+    case FUNCTION: {
+      // Evaluating a FUNCTION is the same as calling it directly; this
+      // happens when certain functions-that-look-like-variables (such as
+      // "amount") are resolved.
+      call_scope_t call_args(scope, locus, depth + 1);
+      result = as_function()(call_args);
+      check_type_context(scope, result);
+      break;
     }
-    if (scope_error)
-      throw_(calc_error, _("Left operand does not evaluate to an object"));
-    break;
-  }
 
-  case O_CALL:
-    result = calc_call(scope, locus, depth);
-    check_type_context(scope, result);
-    break;
+    case SCOPE:
+      assert(!is_scope_unset());
+      if (is_scope_unset()) {
+        symbol_scope_t subscope(scope);
+        result = left()->calc(subscope, locus, depth + 1);
+      } else {
+        bind_scope_t bound_scope(scope, *as_scope());
+        result = left()->calc(bound_scope, locus, depth + 1);
+      }
+      break;
 
-  case O_LAMBDA:
-    result = expr_value(this);
-    break;
+    case O_LOOKUP: {
+      context_scope_t context_scope(scope, value_t::SCOPE);
+      bool scope_error = true;
+      if (value_t obj = left()->calc(context_scope, locus, depth + 1)) {
+        if (obj.is_scope() && obj.as_scope() != NULL) {
+          bind_scope_t bound_scope(scope, *obj.as_scope());
+          result = right()->calc(bound_scope, locus, depth + 1);
+          scope_error = false;
+        }
+      }
+      if (scope_error)
+        throw_(calc_error, _("Left operand does not evaluate to an object"));
+      break;
+    }
 
-  case O_MATCH:
-    result = (right()->calc(scope, locus, depth + 1).as_mask()
-              .match(left()->calc(scope, locus, depth + 1).to_string()));
-    break;
+    case O_CALL:
+      result = calc_call(scope, locus, depth);
+      check_type_context(scope, result);
+      break;
 
-  case O_EQ:
-    result = (left()->calc(scope, locus, depth + 1) ==
-              right()->calc(scope, locus, depth + 1));
-    break;
-  case O_LT:
-    result = (left()->calc(scope, locus, depth + 1) <
-              right()->calc(scope, locus, depth + 1));
-    break;
-  case O_LTE:
-    result = (left()->calc(scope, locus, depth + 1) <=
-              right()->calc(scope, locus, depth + 1));
-    break;
-  case O_GT:
-    result = (left()->calc(scope, locus, depth + 1) >
-              right()->calc(scope, locus, depth + 1));
-    break;
-  case O_GTE:
-    result = (left()->calc(scope, locus, depth + 1) >=
-              right()->calc(scope, locus, depth + 1));
-    break;
+    case O_LAMBDA:
+      result = expr_value(this);
+      break;
 
-  case O_ADD:
-    result = (left()->calc(scope, locus, depth + 1) +
-              right()->calc(scope, locus, depth + 1));
-    break;
-  case O_SUB:
-    result = (left()->calc(scope, locus, depth + 1) -
-              right()->calc(scope, locus, depth + 1));
-    break;
-  case O_MUL:
-    result = (left()->calc(scope, locus, depth + 1) *
-              right()->calc(scope, locus, depth + 1));
-    break;
-  case O_DIV:
-    result = (left()->calc(scope, locus, depth + 1) /
-              right()->calc(scope, locus, depth + 1));
-    break;
+    case O_MATCH:
+      result = (right()
+                    ->calc(scope, locus, depth + 1)
+                    .as_mask()
+                    .match(left()->calc(scope, locus, depth + 1).to_string()));
+      break;
 
-  case O_NEG:
-    result = left()->calc(scope, locus, depth + 1).negated();
-    break;
+    case O_EQ:
+      result = (left()->calc(scope, locus, depth + 1) == right()->calc(scope, locus, depth + 1));
+      break;
+    case O_LT:
+      result = (left()->calc(scope, locus, depth + 1) < right()->calc(scope, locus, depth + 1));
+      break;
+    case O_LTE:
+      result = (left()->calc(scope, locus, depth + 1) <= right()->calc(scope, locus, depth + 1));
+      break;
+    case O_GT:
+      result = (left()->calc(scope, locus, depth + 1) > right()->calc(scope, locus, depth + 1));
+      break;
+    case O_GTE:
+      result = (left()->calc(scope, locus, depth + 1) >= right()->calc(scope, locus, depth + 1));
+      break;
 
-  case O_NOT:
-    result = ! left()->calc(scope, locus, depth + 1);
-    break;
+    case O_ADD:
+      result = (left()->calc(scope, locus, depth + 1) + right()->calc(scope, locus, depth + 1));
+      break;
+    case O_SUB:
+      result = (left()->calc(scope, locus, depth + 1) - right()->calc(scope, locus, depth + 1));
+      break;
+    case O_MUL:
+      result = (left()->calc(scope, locus, depth + 1) * right()->calc(scope, locus, depth + 1));
+      break;
+    case O_DIV:
+      result = (left()->calc(scope, locus, depth + 1) / right()->calc(scope, locus, depth + 1));
+      break;
 
-  case O_AND:
-    if (left()->calc(scope, locus, depth + 1))
-      result = right()->calc(scope, locus, depth + 1);
-    else
-      result = false;
-    break;
+    case O_NEG:
+      result = left()->calc(scope, locus, depth + 1).negated();
+      break;
 
-  case O_OR:
-    if (value_t temp = left()->calc(scope, locus, depth + 1))
-      result = temp;
-    else
-      result = right()->calc(scope, locus, depth + 1);
-    break;
+    case O_NOT:
+      result = !left()->calc(scope, locus, depth + 1);
+      break;
 
-  case O_QUERY:
-    assert(right());
-    assert(right()->kind == O_COLON);
-    if (value_t temp = left()->calc(scope, locus, depth + 1))
-      result = right()->left()->calc(scope, locus, depth + 1);
-    else
-      result = right()->right()->calc(scope, locus, depth + 1);
-    break;
+    case O_AND:
+      if (left()->calc(scope, locus, depth + 1))
+        result = right()->calc(scope, locus, depth + 1);
+      else
+        result = false;
+      break;
 
-  case O_COLON:
-    assert("We should never calculate an O_COLON operator" == NULL);
-    break;
+    case O_OR:
+      if (value_t temp = left()->calc(scope, locus, depth + 1))
+        result = temp;
+      else
+        result = right()->calc(scope, locus, depth + 1);
+      break;
 
-  case O_CONS:
-    result = calc_cons(scope, locus, depth);
-    break;
+    case O_QUERY:
+      assert(right());
+      assert(right()->kind == O_COLON);
+      if (value_t temp = left()->calc(scope, locus, depth + 1))
+        result = right()->left()->calc(scope, locus, depth + 1);
+      else
+        result = right()->right()->calc(scope, locus, depth + 1);
+      break;
 
-  case O_SEQ:
-    result = calc_seq(scope, locus, depth);
-    break;
+    case O_COLON:
+      assert("We should never calculate an O_COLON operator" == NULL);
+      break;
 
-  default:
-    throw_(calc_error, _f("Unexpected expr node '%1%'") % op_context(this));
-  }
+    case O_CONS:
+      result = calc_cons(scope, locus, depth);
+      break;
+
+    case O_SEQ:
+      result = calc_seq(scope, locus, depth);
+      break;
+
+    default:
+      throw_(calc_error, _f("Unexpected expr node '%1%'") % op_context(this));
+    }
 
 #if DEBUG_ON
-  if (SHOW_DEBUG("expr.calc")) {
-    for (int i = 0; i < depth; i++)
-      ledger::_log_buffer << '.';
-    ledger::_log_buffer << op_context(this) <<  " => ";
-    result.dump(ledger::_log_buffer, true);
-    DEBUG("expr.calc", "");
-  }
+    if (SHOW_DEBUG("expr.calc")) {
+      for (int i = 0; i < depth; i++)
+        ledger::_log_buffer << '.';
+      ledger::_log_buffer << op_context(this) << " => ";
+      result.dump(ledger::_log_buffer, true);
+      DEBUG("expr.calc", "");
+    }
 #endif
 
-  return result;
+    return result;
 
-  }
-  catch (const std::exception&) {
-    if (locus && ! *locus)
+  } catch (const std::exception&) {
+    if (locus && !*locus)
       *locus = this;
     throw;
   }
 }
 
 namespace {
-  expr_t::ptr_op_t find_definition(expr_t::ptr_op_t op, scope_t& scope,
-                                   expr_t::ptr_op_t * locus, const int depth,
-                                   int recursion_depth = 0)
-  {
-    // If the object we are apply call notation to is a FUNCTION value
-    // or an O_LAMBDA expression, then this is the object we want to
-    // call.
-    if (op->is_function() || op->kind == expr_t::op_t::O_LAMBDA)
-      return op;
+expr_t::ptr_op_t find_definition(expr_t::ptr_op_t op, scope_t& scope, expr_t::ptr_op_t* locus,
+                                 const int depth, int recursion_depth = 0) {
+  // If the object we are apply call notation to is a FUNCTION value
+  // or an O_LAMBDA expression, then this is the object we want to
+  // call.
+  if (op->is_function() || op->kind == expr_t::op_t::O_LAMBDA)
+    return op;
 
-    if (recursion_depth > 256)
-      throw_(value_error, _("Function recursion_depth too deep (> 256)"));
+  if (recursion_depth > 256)
+    throw_(value_error, _("Function recursion_depth too deep (> 256)"));
 
-    // If it's an identifier, look up its definition and see if it's a
-    // function.
-    if (op->is_ident())
-      return find_definition(lookup_ident(op, scope), scope,
-                             locus, depth, recursion_depth + 1);
+  // If it's an identifier, look up its definition and see if it's a
+  // function.
+  if (op->is_ident())
+    return find_definition(lookup_ident(op, scope), scope, locus, depth, recursion_depth + 1);
 
-    // Value objects might be callable if they contain an expression.
-    if (op->is_value()) {
-      value_t def(op->as_value());
-      if (is_expr(def))
-        return find_definition(as_expr(def), scope, locus, depth,
-                               recursion_depth + 1);
-      else
-        throw_(value_error, _f("Cannot call %1% as a function") % def.label());
-    }
-
-    // Resolve ordinary expressions.
-    return find_definition(expr_t::op_t::wrap_value(op->calc(scope, locus,
-                                                             depth + 1)),
-                           scope, locus, depth + 1, recursion_depth + 1);
+  // Value objects might be callable if they contain an expression.
+  if (op->is_value()) {
+    value_t def(op->as_value());
+    if (is_expr(def))
+      return find_definition(as_expr(def), scope, locus, depth, recursion_depth + 1);
+    else
+      throw_(value_error, _f("Cannot call %1% as a function") % def.label());
   }
 
-  value_t call_lambda(expr_t::ptr_op_t func, scope_t& scope,
-                      call_scope_t& call_args, expr_t::ptr_op_t * locus,
-                      const int depth)
-  {
-    std::size_t args_index(0);
-    std::size_t args_count(call_args.size());
-
-    symbol_scope_t args_scope(*scope_t::empty_scope);
-
-    for (expr_t::ptr_op_t sym = func->left();
-         sym;
-         sym = sym->has_right() ? sym->right() : NULL) {
-      expr_t::ptr_op_t varname =
-        sym->kind == expr_t::op_t::O_CONS ? sym->left() : sym;
-      if (! varname->is_ident()) {
-        throw_(calc_error, _("Invalid function definition"));
-      }
-      else if (args_index == args_count) {
-        DEBUG("expr.calc", "Defining function argument as null: "
-              << varname->as_ident());
-        args_scope.define(symbol_t::FUNCTION, varname->as_ident(),
-                          expr_t::op_t::wrap_value(NULL_VALUE));
-      }
-      else {
-        DEBUG("expr.calc", "Defining function argument from call_args: "
-              << varname->as_ident());
-        args_scope.define(symbol_t::FUNCTION, varname->as_ident(),
-                          expr_t::op_t::wrap_value(call_args[args_index++]));
-      }
-    }
-
-    if (args_index < args_count)
-      throw_(calc_error,
-             _f("Too few arguments in function call (saw %1%, wanted %2%)")
-             % args_count % args_index);
-
-    if (func->right()->is_scope()) {
-      bind_scope_t outer_scope(scope, *func->right()->as_scope());
-      bind_scope_t bound_scope(outer_scope, args_scope);
-
-      return func->right()->left()->calc(bound_scope, locus, depth + 1);
-    } else {
-      return func->right()->calc(args_scope, locus, depth + 1);
-    }
-  }
+  // Resolve ordinary expressions.
+  return find_definition(expr_t::op_t::wrap_value(op->calc(scope, locus, depth + 1)), scope, locus,
+                         depth + 1, recursion_depth + 1);
 }
 
+value_t call_lambda(expr_t::ptr_op_t func, scope_t& scope, call_scope_t& call_args,
+                    expr_t::ptr_op_t* locus, const int depth) {
+  std::size_t args_index(0);
+  std::size_t args_count(call_args.size());
 
-value_t expr_t::op_t::call(const value_t& args, scope_t& scope,
-                           ptr_op_t * locus, const int depth)
-{
+  symbol_scope_t args_scope(*scope_t::empty_scope);
+
+  for (expr_t::ptr_op_t sym = func->left(); sym; sym = sym->has_right() ? sym->right() : NULL) {
+    expr_t::ptr_op_t varname = sym->kind == expr_t::op_t::O_CONS ? sym->left() : sym;
+    if (!varname->is_ident()) {
+      throw_(calc_error, _("Invalid function definition"));
+    } else if (args_index == args_count) {
+      DEBUG("expr.calc", "Defining function argument as null: " << varname->as_ident());
+      args_scope.define(symbol_t::FUNCTION, varname->as_ident(),
+                        expr_t::op_t::wrap_value(NULL_VALUE));
+    } else {
+      DEBUG("expr.calc", "Defining function argument from call_args: " << varname->as_ident());
+      args_scope.define(symbol_t::FUNCTION, varname->as_ident(),
+                        expr_t::op_t::wrap_value(call_args[args_index++]));
+    }
+  }
+
+  if (args_index < args_count)
+    throw_(calc_error, _f("Too few arguments in function call (saw %1%, wanted %2%)") % args_count %
+                           args_index);
+
+  if (func->right()->is_scope()) {
+    bind_scope_t outer_scope(scope, *func->right()->as_scope());
+    bind_scope_t bound_scope(outer_scope, args_scope);
+
+    return func->right()->left()->calc(bound_scope, locus, depth + 1);
+  } else {
+    return func->right()->calc(args_scope, locus, depth + 1);
+  }
+}
+} // namespace
+
+value_t expr_t::op_t::call(const value_t& args, scope_t& scope, ptr_op_t* locus, const int depth) {
   call_scope_t call_args(scope, locus, depth + 1);
   call_args.set_args(args);
 
@@ -537,15 +488,12 @@ value_t expr_t::op_t::call(const value_t& args, scope_t& scope,
   else if (kind == O_LAMBDA)
     return call_lambda(this, scope, call_args, locus, depth);
   else
-    return find_definition(this, scope, locus, depth)
-      ->calc(call_args, locus, depth);
+    return find_definition(this, scope, locus, depth)->calc(call_args, locus, depth);
 }
 
-value_t expr_t::op_t::calc_call(scope_t& scope, ptr_op_t * locus,
-                                const int depth)
-{
+value_t expr_t::op_t::calc_call(scope_t& scope, ptr_op_t* locus, const int depth) {
   ptr_op_t func = left();
-  string   name = func->is_ident() ? func->as_ident() : "<value expr>";
+  string name = func->is_ident() ? func->as_ident() : "<value expr>";
 
   func = find_definition(func, scope, locus, depth);
 
@@ -560,17 +508,13 @@ value_t expr_t::op_t::calc_call(scope_t& scope, ptr_op_t * locus,
       assert(func->kind == O_LAMBDA);
       return call_lambda(func, scope, call_args, locus, depth);
     }
-  }
-  catch (const std::exception&) {
-    add_error_context(_f("While calling function '%1% %2%':") % name
-                      % call_args.args);
+  } catch (const std::exception&) {
+    add_error_context(_f("While calling function '%1% %2%':") % name % call_args.args);
     throw;
   }
 }
 
-value_t expr_t::op_t::calc_cons(scope_t& scope, ptr_op_t * locus,
-                                const int depth)
-{
+value_t expr_t::op_t::calc_cons(scope_t& scope, ptr_op_t* locus, const int depth) {
   value_t result = left()->calc(scope, locus, depth + 1);
   if (has_right()) {
     value_t temp;
@@ -581,10 +525,10 @@ value_t expr_t::op_t::calc_cons(scope_t& scope, ptr_op_t * locus,
       ptr_op_t value_op;
       if (next->kind == O_CONS) {
         value_op = next->left();
-        next     = next->has_right() ? next->right() : NULL;
+        next = next->has_right() ? next->right() : NULL;
       } else {
         value_op = next;
-        next     = NULL;
+        next = NULL;
       }
       temp.push_back(value_op->calc(scope, locus, depth + 1));
     }
@@ -593,9 +537,7 @@ value_t expr_t::op_t::calc_cons(scope_t& scope, ptr_op_t * locus,
   return result;
 }
 
-value_t expr_t::op_t::calc_seq(scope_t& scope, ptr_op_t * locus,
-                               const int depth)
-{
+value_t expr_t::op_t::calc_seq(scope_t& scope, ptr_op_t* locus, const int depth) {
   // An O_SEQ is very similar to an O_CONS except that only the last
   // result value in the series is kept.  O_CONS builds up a list.
   //
@@ -609,10 +551,10 @@ value_t expr_t::op_t::calc_seq(scope_t& scope, ptr_op_t * locus,
       ptr_op_t value_op;
       if (next->kind == O_SEQ) {
         value_op = next->left();
-        next     = next->right();
+        next = next->right();
       } else {
         value_op = next;
-        next     = NULL;
+        next = NULL;
       }
       result = value_op->calc(scope, locus, depth + 1);
     }
@@ -621,48 +563,45 @@ value_t expr_t::op_t::calc_seq(scope_t& scope, ptr_op_t * locus,
 }
 
 namespace {
-  bool print_cons(std::ostream& out, const expr_t::const_ptr_op_t op,
-                  const expr_t::op_t::context_t& context)
-  {
-    bool found = false;
+bool print_cons(std::ostream& out, const expr_t::const_ptr_op_t op,
+                const expr_t::op_t::context_t& context) {
+  bool found = false;
 
-    assert(op->left());
-    if (op->left()->print(out, context))
+  assert(op->left());
+  if (op->left()->print(out, context))
+    found = true;
+
+  if (op->has_right()) {
+    out << ", ";
+    if (op->right()->kind == expr_t::op_t::O_CONS)
+      found = print_cons(out, op->right(), context);
+    else if (op->right()->print(out, context))
       found = true;
-
-    if (op->has_right()) {
-      out << ", ";
-      if (op->right()->kind == expr_t::op_t::O_CONS)
-        found = print_cons(out, op->right(), context);
-      else if (op->right()->print(out, context))
-        found = true;
-    }
-    return found;
   }
-
-  bool print_seq(std::ostream& out, const expr_t::const_ptr_op_t op,
-                 const expr_t::op_t::context_t& context)
-  {
-    bool found = false;
-
-    assert(op->left());
-    if (op->left()->print(out, context))
-      found = true;
-
-    if (op->has_right()) {
-      out << "; ";
-      if (op->right()->kind == expr_t::op_t::O_SEQ)
-        found = print_seq(out, op->right(), context);
-      else if (op->right()->print(out, context))
-        found = true;
-    }
-
-    return found;
-  }
+  return found;
 }
 
-bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
-{
+bool print_seq(std::ostream& out, const expr_t::const_ptr_op_t op,
+               const expr_t::op_t::context_t& context) {
+  bool found = false;
+
+  assert(op->left());
+  if (op->left()->print(out, context))
+    found = true;
+
+  if (op->has_right()) {
+    out << "; ";
+    if (op->right()->kind == expr_t::op_t::O_SEQ)
+      found = print_seq(out, op->right(), context);
+    else if (op->right()->print(out, context))
+      found = true;
+  }
+
+  return found;
+}
+} // namespace
+
+bool expr_t::op_t::print(std::ostream& out, const context_t& context) const {
   bool found = false;
 
   if (context.start_pos && this == context.op_to_find) {
@@ -867,7 +806,7 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
   if (kind > TERMINALS && (kind != O_CALL && kind != O_DEFINE))
     out << ')';
 
-  if (! symbol.empty()) {
+  if (!symbol.empty()) {
     if (commodity_pool_t::current_pool->find(symbol))
       out << '@';
     out << symbol;
@@ -881,10 +820,9 @@ bool expr_t::op_t::print(std::ostream& out, const context_t& context) const
   return found;
 }
 
-void expr_t::op_t::dump(std::ostream& out, const int depth) const
-{
+void expr_t::op_t::dump(std::ostream& out, const int depth) const {
   out.setf(std::ios::left);
-  out.width((sizeof(void *) * 2) + 2);
+  out.width((sizeof(void*) * 2) + 2);
   out << this;
 
   for (int i = 0; i < depth; i++)
@@ -916,34 +854,78 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
       out << as_scope().get();
     break;
 
-  case O_DEFINE: out << "O_DEFINE"; break;
-  case O_LOOKUP: out << "O_LOOKUP"; break;
-  case O_LAMBDA: out << "O_LAMBDA"; break;
-  case O_CALL:   out << "O_CALL"; break;
-  case O_MATCH:  out << "O_MATCH"; break;
+  case O_DEFINE:
+    out << "O_DEFINE";
+    break;
+  case O_LOOKUP:
+    out << "O_LOOKUP";
+    break;
+  case O_LAMBDA:
+    out << "O_LAMBDA";
+    break;
+  case O_CALL:
+    out << "O_CALL";
+    break;
+  case O_MATCH:
+    out << "O_MATCH";
+    break;
 
-  case O_NOT:    out << "O_NOT"; break;
-  case O_NEG:    out << "O_NEG"; break;
+  case O_NOT:
+    out << "O_NOT";
+    break;
+  case O_NEG:
+    out << "O_NEG";
+    break;
 
-  case O_ADD:    out << "O_ADD"; break;
-  case O_SUB:    out << "O_SUB"; break;
-  case O_MUL:    out << "O_MUL"; break;
-  case O_DIV:    out << "O_DIV"; break;
+  case O_ADD:
+    out << "O_ADD";
+    break;
+  case O_SUB:
+    out << "O_SUB";
+    break;
+  case O_MUL:
+    out << "O_MUL";
+    break;
+  case O_DIV:
+    out << "O_DIV";
+    break;
 
-  case O_EQ:     out << "O_EQ"; break;
-  case O_LT:     out << "O_LT"; break;
-  case O_LTE:    out << "O_LTE"; break;
-  case O_GT:     out << "O_GT"; break;
-  case O_GTE:    out << "O_GTE"; break;
+  case O_EQ:
+    out << "O_EQ";
+    break;
+  case O_LT:
+    out << "O_LT";
+    break;
+  case O_LTE:
+    out << "O_LTE";
+    break;
+  case O_GT:
+    out << "O_GT";
+    break;
+  case O_GTE:
+    out << "O_GTE";
+    break;
 
-  case O_AND:    out << "O_AND"; break;
-  case O_OR:     out << "O_OR"; break;
+  case O_AND:
+    out << "O_AND";
+    break;
+  case O_OR:
+    out << "O_OR";
+    break;
 
-  case O_QUERY:  out << "O_QUERY"; break;
-  case O_COLON:  out << "O_COLON"; break;
+  case O_QUERY:
+    out << "O_QUERY";
+    break;
+  case O_COLON:
+    out << "O_COLON";
+    break;
 
-  case O_CONS:   out << "O_CONS"; break;
-  case O_SEQ:    out << "O_SEQ"; break;
+  case O_CONS:
+    out << "O_CONS";
+    break;
+  case O_SEQ:
+    out << "O_SEQ";
+    break;
 
   case LAST:
   default:
@@ -960,16 +942,13 @@ void expr_t::op_t::dump(std::ostream& out, const int depth) const
       left()->dump(out, depth + 1);
       if (kind > UNARY_OPERATORS && has_right())
         right()->dump(out, depth + 1);
-    }
-    else if (kind > UNARY_OPERATORS) {
-      assert(! has_right());
+    } else if (kind > UNARY_OPERATORS) {
+      assert(!has_right());
     }
   }
 }
 
-string op_context(const expr_t::ptr_op_t op,
-                  const expr_t::ptr_op_t locus)
-{
+string op_context(const expr_t::ptr_op_t op, const expr_t::ptr_op_t locus) {
   std::ostream::pos_type start_pos, end_pos;
   expr_t::op_t::context_t context(op, locus, &start_pos, &end_pos);
   std::ostringstream buf;

@@ -1,0 +1,16 @@
+; Tests for the trim() function
+; Removes leading and trailing whitespace from a string
+
+2012-01-01 Test trim function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+; Positive test: trim leading and trailing whitespace
+test eval "trim(\"  hello  \")"
+hello
+end test
+
+; Positive test: no whitespace to trim
+test eval "trim(\"hello\")"
+hello
+end test

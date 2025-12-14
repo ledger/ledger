@@ -1,0 +1,20 @@
+2012-01-01 Test join function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "join('foo\nbar')"
+foo\nbar
+end test
+
+test eval "'foo\nbar'"
+foo
+bar
+end test
+
+test reg --display-amount "join()" -> 1
+__ERROR__
+While calling function 'join ':
+While handling posting from "$sourcepath/test/baseline/func-join.test", line 2:
+>     Assets:Test                       $100.00
+Error: Too few arguments to function
+end test

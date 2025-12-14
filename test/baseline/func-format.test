@@ -1,0 +1,15 @@
+2012-01-01 Test format function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval --now=2025/08/22 "format('Date: %(date)')"
+Date: 2025/08/22
+end test
+
+test reg --display-amount "format()" -> 1
+__ERROR__
+While calling function 'format ':
+While handling posting from "$sourcepath/test/baseline/func-format.test", line 2:
+>     Assets:Test                       $100.00
+Error: Too few arguments to function
+end test

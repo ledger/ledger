@@ -1,0 +1,13 @@
+; Tests for the has_meta() function
+; Returns true if a posting has metadata matching the given pattern
+
+2012-01-01 Test has_meta
+    ; Category: Food
+    Assets:Test                       $100.00
+    Equity:Opening
+
+; Positive test: find posting with Category metadata
+test reg --limit "has_meta(/Category/)"
+12-Jan-01 Test has_meta         Assets:Test                 $100.00      $100.00
+                                Equity:Opening             $-100.00            0
+end test

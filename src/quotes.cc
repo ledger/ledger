@@ -38,15 +38,12 @@
 
 namespace ledger {
 
-optional<price_point_t>
-commodity_quote_from_script(commodity_t& commodity,
-                            const commodity_t * exchange_commodity)
-{
+optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
+                                                    const commodity_t* exchange_commodity) {
   DEBUG("commodity.download", "downloading quote for symbol " << commodity.symbol());
 #if DEBUG_ON
   if (exchange_commodity)
-    DEBUG("commodity.download",
-          "  in terms of commodity " << exchange_commodity->symbol());
+    DEBUG("commodity.download", "  in terms of commodity " << exchange_commodity->symbol());
 #endif
 
   char buf[256];
@@ -63,8 +60,8 @@ commodity_quote_from_script(commodity_t& commodity,
 
   bool success = true;
 #if !defined(_WIN32) && !defined(__CYGWIN__)
-  if (FILE * fp = popen(getquote_cmd.c_str(), "r")) {
-    if (std::feof(fp) || ! std::fgets(buf, 255, fp))
+  if (FILE* fp = popen(getquote_cmd.c_str(), "r")) {
+    if (std::feof(fp) || !std::fgets(buf, 255, fp))
       success = false;
     if (pclose(fp) != 0)
       success = false;
@@ -73,28 +70,25 @@ commodity_quote_from_script(commodity_t& commodity,
   }
 
   if (success && buf[0]) {
-    if (char * p = std::strchr(buf, '\n')) *p = '\0';
+    if (char* p = std::strchr(buf, '\n'))
+      *p = '\0';
     DEBUG("commodity.download", "downloaded quote: " << buf);
 
-    if (optional<std::pair<commodity_t *, price_point_t> > point =
-        commodity_pool_t::current_pool->parse_price_directive(buf)) {
+    if (optional<std::pair<commodity_t*, price_point_t>> point =
+            commodity_pool_t::current_pool->parse_price_directive(buf)) {
       if (commodity_pool_t::current_pool->price_db) {
         ofstream database(*commodity_pool_t::current_pool->price_db,
                           std::ios_base::out | std::ios_base::app);
-        database << "P "
-                 << format_datetime(point->second.when, FMT_WRITTEN)
-                 << " " << commodity.symbol()
-                 << " " << point->second.price
-                 << std::endl;
+        database << "P " << format_datetime(point->second.when, FMT_WRITTEN) << " "
+                 << commodity.symbol() << " " << point->second.price << std::endl;
       }
       return point->second;
     }
   } else {
     DEBUG("commodity.download",
-          "Failed to download price for '" << commodity.symbol() <<
-          "' (command: \"getquote " << commodity.symbol() <<
-          " " << (exchange_commodity ?
-                  exchange_commodity->symbol() : "''") << "\")");
+          "Failed to download price for '"
+              << commodity.symbol() << "' (command: \"getquote " << commodity.symbol() << " "
+              << (exchange_commodity ? exchange_commodity->symbol() : "''") << "\")");
 
     // Don't try to download this commodity again.
     commodity.add_flags(COMMODITY_NOMARKET);

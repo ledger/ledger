@@ -1,0 +1,23 @@
+account Assets:Cash
+    assert account("Assets:Cash").amount >= 0.00 EUR
+
+2018/06/23 * Misc
+    Expenses:Food                              30.00 EUR
+    Assets:Cash                               -30.00 EUR
+
+2018/06/24 * Gift
+    Income:Gift                               -60.00 EUR
+    Assets:Cash                                60.00 EUR
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 6:
+While applying automated transaction from "$FILE", lines 1-2:
+> account Assets:Cash
+>     assert account("Assets:Cash").amount >= 0.00 EUR
+While extending transaction from "$FILE", lines 4-6:
+> 2018/06/23 * Misc
+>     Expenses:Food                              30.00 EUR
+>     Assets:Cash                               -30.00 EUR
+Error: Transaction assertion failed: ((account("Assets:Cash").amount) >= {0.00 EUR})
+end test

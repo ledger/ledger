@@ -52,8 +52,7 @@ class account_t;
 
 DECLARE_EXCEPTION(csv_error, std::runtime_error);
 
-class csv_reader
-{
+class csv_reader {
   parse_context_t context;
 
   enum headers_t {
@@ -77,39 +76,31 @@ class csv_reader
 
 public:
   csv_reader(parse_context_t& _context)
-    : context(_context),
-      masks{ std::make_pair(mask_t("date"), FIELD_DATE),
-             std::make_pair(mask_t("posted( ?date)?"), FIELD_DATE_AUX),
-             std::make_pair(mask_t("code"), FIELD_CODE),
-             std::make_pair(mask_t("(payee|desc(ription)?|title)"), FIELD_PAYEE),
-             std::make_pair(mask_t("credit|amount"), FIELD_CREDIT),
-             std::make_pair(mask_t("debit"), FIELD_DEBIT),
-             std::make_pair(mask_t("cost"), FIELD_COST),
-             std::make_pair(mask_t("total"), FIELD_TOTAL),
-             std::make_pair(mask_t("note"), FIELD_NOTE),
-             std::make_pair(mask_t(""), FIELD_UNKNOWN) } {
+      : context(_context),
+        masks{std::make_pair(mask_t("date"), FIELD_DATE),
+              std::make_pair(mask_t("posted( ?date)?"), FIELD_DATE_AUX),
+              std::make_pair(mask_t("code"), FIELD_CODE),
+              std::make_pair(mask_t("(payee|desc(ription)?|title)"), FIELD_PAYEE),
+              std::make_pair(mask_t("credit|amount"), FIELD_CREDIT),
+              std::make_pair(mask_t("debit"), FIELD_DEBIT),
+              std::make_pair(mask_t("cost"), FIELD_COST),
+              std::make_pair(mask_t("total"), FIELD_TOTAL),
+              std::make_pair(mask_t("note"), FIELD_NOTE),
+              std::make_pair(mask_t(""), FIELD_UNKNOWN)} {
     read_index(*context.stream.get());
     TRACE_CTOR(csv_reader, "parse_context_t&");
   }
-  ~csv_reader() {
-    TRACE_DTOR(csv_reader);
-  }
+  ~csv_reader() { TRACE_DTOR(csv_reader); }
 
-  void   read_index(std::istream& in);
+  void read_index(std::istream& in);
   string read_field(std::istream& in);
-  char * next_line(std::istream& in);
+  char* next_line(std::istream& in);
 
-  xact_t * read_xact(bool rich_data);
+  xact_t* read_xact(bool rich_data);
 
-  const char * get_last_line() const {
-    return context.linebuf;
-  }
-  path get_pathname() const {
-    return context.pathname;
-  }
-  std::size_t get_linenum() const {
-    return context.linenum;
-  }
+  const char* get_last_line() const { return context.linebuf; }
+  path get_pathname() const { return context.pathname; }
+  std::size_t get_linenum() const { return context.linenum; }
 };
 
 } // namespace ledger

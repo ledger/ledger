@@ -46,25 +46,20 @@
 
 namespace ledger {
 
-class expr_t : public expr_base_t<value_t>
-{
+class expr_t : public expr_base_t<value_t> {
   class parser_t;
   typedef expr_base_t<value_t> base_type;
 
 public:
   struct token_t;
   class op_t;
-  typedef intrusive_ptr<op_t>       ptr_op_t;
+  typedef intrusive_ptr<op_t> ptr_op_t;
   typedef intrusive_ptr<const op_t> const_ptr_op_t;
 
-  enum check_expr_kind_t {
-    EXPR_GENERAL,
-    EXPR_ASSERTION,
-    EXPR_CHECK
-  };
+  enum check_expr_kind_t { EXPR_GENERAL, EXPR_ASSERTION, EXPR_CHECK };
 
   typedef std::pair<expr_t, check_expr_kind_t> check_expr_pair;
-  typedef std::list<check_expr_pair>           check_expr_list;
+  typedef std::list<check_expr_pair> check_expr_list;
 
 protected:
   ptr_op_t ptr;
@@ -72,7 +67,7 @@ protected:
 public:
   expr_t();
   expr_t(const expr_t& other);
-  expr_t(ptr_op_t _ptr, scope_t * _context = NULL);
+  expr_t(ptr_op_t _ptr, scope_t* _context = NULL);
 
   expr_t(const string& _str, const parse_flags_t& flags = PARSE_DEFAULT);
   expr_t(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT);
@@ -90,21 +85,20 @@ public:
     return parse(stream, flags, str);
   }
 
-  virtual void    parse(std::istream&           in,
-                        const parse_flags_t&    flags           = PARSE_DEFAULT,
-                        const optional<string>& original_string = none);
-  virtual void    compile(scope_t& scope);
+  virtual void parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT,
+                     const optional<string>& original_string = none);
+  virtual void compile(scope_t& scope);
   virtual value_t real_calc(scope_t& scope);
 
-  bool            is_constant() const;
-  value_t&        constant_value();
-  const value_t&  constant_value() const;
-  bool            is_function() const;
-  func_t&         get_function();
+  bool is_constant() const;
+  value_t& constant_value();
+  const value_t& constant_value() const;
+  bool is_function() const;
+  func_t& get_function();
 
-  virtual string  context_to_str() const;
-  virtual void    print(std::ostream& out) const;
-  virtual void    dump(std::ostream& out) const;
+  virtual string context_to_str() const;
+  virtual void print(std::ostream& out) const;
+  virtual void dump(std::ostream& out) const;
 };
 
 /**
@@ -115,8 +109,8 @@ inline bool is_expr(const value_t& val) {
 }
 
 expr_t::ptr_op_t as_expr(const value_t& val);
-void             set_expr(value_t& val, expr_t::ptr_op_t op);
-value_t          expr_value(expr_t::ptr_op_t op);
+void set_expr(value_t& val, expr_t::ptr_op_t op);
+value_t expr_value(expr_t::ptr_op_t op);
 
 // A merged expression allows one to set an expression term, "foo", and
 // a base expression, "bar", and then merge in later expressions that
@@ -134,8 +128,7 @@ value_t          expr_value(expr_t::ptr_op_t op);
 // This allows users to select flags like -O, -B or -I at any time, and
 // also combine flags such as -V and -A.
 
-class merged_expr_t : public expr_t
-{
+class merged_expr_t : public expr_t {
 public:
   string term;
   string base_expr;
@@ -143,38 +136,27 @@ public:
 
   std::list<string> exprs;
 
-  merged_expr_t(const string& _term, const string& expr,
-                const string& merge_op = ";")
-    : expr_t(), term(_term), base_expr(expr), merge_operator(merge_op) {
+  merged_expr_t(const string& _term, const string& expr, const string& merge_op = ";")
+      : expr_t(), term(_term), base_expr(expr), merge_operator(merge_op) {
     TRACE_CTOR(merged_expr_t, "string, string, string");
   }
-  virtual ~merged_expr_t() {
-    TRACE_DTOR(merged_expr_t);
-  }
+  virtual ~merged_expr_t() { TRACE_DTOR(merged_expr_t); }
 
-  void set_term(const string& _term) {
-    term = _term;
-  }
-  void set_base_expr(const string& expr) {
-    base_expr = expr;
-  }
-  void set_merge_operator(const string& merge_op) {
-    merge_operator = merge_op;
-  }
+  void set_term(const string& _term) { term = _term; }
+  void set_base_expr(const string& expr) { base_expr = expr; }
+  void set_merge_operator(const string& merge_op) { merge_operator = merge_op; }
 
   bool check_for_single_identifier(const string& expr);
 
   void prepend(const string& expr) {
-    if (! check_for_single_identifier(expr))
+    if (!check_for_single_identifier(expr))
       exprs.push_front(expr);
   }
   void append(const string& expr) {
-    if (! check_for_single_identifier(expr))
+    if (!check_for_single_identifier(expr))
       exprs.push_back(expr);
   }
-  void remove(const string& expr) {
-    exprs.remove(expr);
-  }
+  void remove(const string& expr) { exprs.remove(expr); }
 
   virtual void compile(scope_t& scope);
 };

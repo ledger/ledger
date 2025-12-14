@@ -1,0 +1,21 @@
+; Tests for the to_mask() function
+; Converts a string to a regex mask for pattern matching
+
+2012-01-01 Test to_mask function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+; Positive test: create mask from string
+test eval "to_mask(\"Assets\")"
+/Assets/
+end test
+
+; Negative test: too few arguments
+test eval "to_mask()" -> 1
+__ERROR__
+While evaluating value expression:
+  to_mask()
+  ^^^^^^^^^
+While calling function 'to_mask ':
+Error: Too few arguments to function
+end test

@@ -36,12 +36,11 @@
 
 namespace ledger {
 
-int expr_t::token_t::parse_reserved_word(std::istream& in)
-{
+int expr_t::token_t::parse_reserved_word(std::istream& in) {
   int c = in.peek();
 
-  if (c == 'a' || c == 'd' || c == 'e' || c == 'f' ||
-      c == 'i' || c == 'o' || c == 'n' || c == 't') {
+  if (c == 'a' || c == 'd' || c == 'e' || c == 'f' || c == 'i' || c == 'o' || c == 'n' ||
+      c == 't') {
     length = 0;
 
     char buf[6];
@@ -126,9 +125,8 @@ int expr_t::token_t::parse_reserved_word(std::istream& in)
   return -1;
 }
 
-void expr_t::token_t::parse_ident(std::istream& in)
-{
-  kind   = IDENT;
+void expr_t::token_t::parse_ident(std::istream& in) {
+  kind = IDENT;
   length = 0;
 
   int c;
@@ -138,13 +136,12 @@ void expr_t::token_t::parse_ident(std::istream& in)
   value.set_string(buf);
 }
 
-void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
-{
+void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
   if (in.eof()) {
     kind = TOK_EOF;
     return;
   }
-  if (! in.good())
+  if (!in.good())
     throw_(parse_error, _("Input stream no longer valid"));
 
   int c = peek_next_nonws(in);
@@ -153,7 +150,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     kind = TOK_EOF;
     return;
   }
-  if (! in.good())
+  if (!in.good())
     throw_(parse_error, _("Input stream no longer valid"));
 
   symbol[0] = c;
@@ -207,10 +204,9 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
 
     date_interval_t timespan(buf);
     optional<date_t> begin = timespan.begin();
-    if (! begin)
-      throw_(parse_error,
-             _("Date specifier does not refer to a starting date"));
-    kind  = VALUE;
+    if (!begin)
+      throw_(parse_error, _("Date specifier does not refer to a starting date"));
+    kind = VALUE;
     value = *begin;
     break;
   }
@@ -238,7 +234,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     if (c != '}')
       expected('}', c);
     length++;
-    kind  = VALUE;
+    kind = VALUE;
     value = temp;
     break;
   }
@@ -253,8 +249,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
       kind = NEQUAL;
       length = 2;
       break;
-    }
-    else if (c == '~') {
+    } else if (c == '~') {
       in.get();
       symbol[1] = c;
       symbol[2] = '\0';
@@ -301,7 +296,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     in.get();
     if (pflags.has_flags(PARSE_OP_CONTEXT)) { // operator context
       kind = SLASH;
-    } else {                    // terminal context
+    } else { // terminal context
       // Read in the regexp
       char buf[4096];
       READ_INTO_(in, buf, 4095, c, length, c != '/');
@@ -326,8 +321,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
       kind = MATCH;
       length = 2;
       break;
-    }
-    else if (c == '=') {
+    } else if (c == '=') {
       in.get();
       symbol[1] = c;
       symbol[2] = '\0';
@@ -388,7 +382,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     // If not, rewind back to the beginning of the word to scan it
     // again.  If the result was -1, it means no identifier was scanned
     // so we don't have to rewind.
-    if (result == 0 || ! in.good()) {
+    if (result == 0 || !in.good()) {
       in.clear();
       in.seekg(pos, std::ios::beg);
       if (in.fail())
@@ -396,7 +390,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
     }
 
     assert(in.good());
-    assert(! in.eof());
+    assert(!in.eof());
     assert(static_cast<int>(in.tellg()) != -1);
 
     // When in relaxed parsing mode, we want to migrate commodity flags
@@ -412,15 +406,15 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
 
     try {
       amount_t temp;
-      if (! temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL))) {
+      if (!temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL))) {
         in.clear();
         in.seekg(pos, std::ios::beg);
-        if (in.fail() || ! in.good())
+        if (in.fail() || !in.good())
           throw_(parse_error, _("Failed to reset input stream"));
 
         c = in.peek();
         if (c != -1) {
-          if (! std::isalpha(c) && c != '_')
+          if (!std::isalpha(c) && c != '_')
             expected('\0', c);
 
           parse_ident(in);
@@ -428,27 +422,26 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
           throw_(parse_error, _("Unexpected EOF"));
         }
 
-        if (! value.is_string() || value.as_string().empty()) {
+        if (!value.is_string() || value.as_string().empty()) {
           kind = ERROR;
           symbol[0] = c;
           symbol[1] = '\0';
           throw_(parse_error, _("Failed to parse identifier"));
         }
       } else {
-        if (! in.good()) {
+        if (!in.good()) {
           in.clear();
           in.seekg(0, std::ios::end);
           if (in.fail())
             throw_(parse_error, _("Failed to reset input stream"));
         }
 
-        kind   = VALUE;
-        value  = temp;
+        kind = VALUE;
+        value = temp;
         length = static_cast<std::size_t>(in.tellg() - pos);
       }
-    }
-    catch (const std::exception&) {
-      kind   = ERROR;
+    } catch (const std::exception&) {
+      kind = ERROR;
       length = static_cast<std::size_t>(in.tellg() - pos);
       throw;
     }
@@ -457,17 +450,14 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags)
   }
 }
 
-void expr_t::token_t::rewind(std::istream& in)
-{
+void expr_t::token_t::rewind(std::istream& in) {
   in.clear();
-  in.seekg(- int(length), std::ios::cur);
+  in.seekg(-int(length), std::ios::cur);
   if (in.fail())
     throw_(parse_error, _("Failed to rewind input stream"));
 }
 
-
-void expr_t::token_t::unexpected(const char wanted)
-{
+void expr_t::token_t::unexpected(const char wanted) {
   kind_t prev_kind = kind;
 
   kind = ERROR;
@@ -486,23 +476,18 @@ void expr_t::token_t::unexpected(const char wanted)
   } else {
     switch (prev_kind) {
     case TOK_EOF:
-      throw_(parse_error,
-             _f("Unexpected end of expression (wanted '%1%')") % wanted);
+      throw_(parse_error, _f("Unexpected end of expression (wanted '%1%')") % wanted);
     case IDENT:
-      throw_(parse_error,
-             _f("Unexpected symbol '%1%' (wanted '%2%')") % value % wanted);
+      throw_(parse_error, _f("Unexpected symbol '%1%' (wanted '%2%')") % value % wanted);
     case VALUE:
-      throw_(parse_error,
-             _f("Unexpected value '%1%' (wanted '%2%')") % value % wanted);
+      throw_(parse_error, _f("Unexpected value '%1%' (wanted '%2%')") % value % wanted);
     default:
-      throw_(parse_error, _f("Unexpected expression token '%1%' (wanted '%2%')")
-             % symbol % wanted);
+      throw_(parse_error, _f("Unexpected expression token '%1%' (wanted '%2%')") % symbol % wanted);
     }
   }
 }
 
-void expr_t::token_t::expected(const char wanted, const int c)
-{
+void expr_t::token_t::expected(const char wanted, const int c) {
   if (c == -1) {
     if (wanted == '\0')
       throw_(parse_error, _("Unexpected end"));
@@ -513,81 +498,146 @@ void expr_t::token_t::expected(const char wanted, const int c)
     if (wanted == '\0')
       throw_(parse_error, _f("Invalid char '%1%'") % ch);
     else
-      throw_(parse_error,
-             _f("Invalid char '%1%' (wanted '%2%')") % ch % wanted);
+      throw_(parse_error, _f("Invalid char '%1%' (wanted '%2%')") % ch % wanted);
   }
 }
 
-void expr_t::token_t::expected(const kind_t wanted)
-{
+void expr_t::token_t::expected(const kind_t wanted) {
   try {
-    if (wanted == expr_t::token_t::ERROR ||
-        wanted == expr_t::token_t::UNKNOWN)
+    if (wanted == expr_t::token_t::ERROR || wanted == expr_t::token_t::UNKNOWN)
       throw_(parse_error, _f("Invalid token '%1%'") % *this);
     else
-      throw_(parse_error,
-             _f("Invalid token '%1%' (wanted '%2%')") % *this % wanted);
-  }
-  catch (...) {
+      throw_(parse_error, _f("Invalid token '%1%' (wanted '%2%')") % *this % wanted);
+  } catch (...) {
     kind = ERROR;
     throw;
   }
 }
 
-std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind)
-{
+std::ostream& operator<<(std::ostream& out, const expr_t::token_t::kind_t& kind) {
   switch (kind) {
-  case expr_t::token_t::ERROR:     out << "<error token>"; break;
-  case expr_t::token_t::VALUE:     out << "<value>"; break;
-  case expr_t::token_t::IDENT:     out << "<identifier>"; break;
-  case expr_t::token_t::MASK:      out << "<regex mask>"; break;
+  case expr_t::token_t::ERROR:
+    out << "<error token>";
+    break;
+  case expr_t::token_t::VALUE:
+    out << "<value>";
+    break;
+  case expr_t::token_t::IDENT:
+    out << "<identifier>";
+    break;
+  case expr_t::token_t::MASK:
+    out << "<regex mask>";
+    break;
 
-  case expr_t::token_t::LPAREN:    out << "("; break;
-  case expr_t::token_t::RPAREN:    out << ")"; break;
-  case expr_t::token_t::LBRACE:    out << "{"; break;
-  case expr_t::token_t::RBRACE:    out << "}"; break;
+  case expr_t::token_t::LPAREN:
+    out << "(";
+    break;
+  case expr_t::token_t::RPAREN:
+    out << ")";
+    break;
+  case expr_t::token_t::LBRACE:
+    out << "{";
+    break;
+  case expr_t::token_t::RBRACE:
+    out << "}";
+    break;
 
-  case expr_t::token_t::EQUAL:     out << "=="; break;
-  case expr_t::token_t::NEQUAL:    out << "!="; break;
-  case expr_t::token_t::LESS:      out << "<"; break;
-  case expr_t::token_t::LESSEQ:    out << "<="; break;
-  case expr_t::token_t::GREATER:   out << ">"; break;
-  case expr_t::token_t::GREATEREQ: out << ">="; break;
+  case expr_t::token_t::EQUAL:
+    out << "==";
+    break;
+  case expr_t::token_t::NEQUAL:
+    out << "!=";
+    break;
+  case expr_t::token_t::LESS:
+    out << "<";
+    break;
+  case expr_t::token_t::LESSEQ:
+    out << "<=";
+    break;
+  case expr_t::token_t::GREATER:
+    out << ">";
+    break;
+  case expr_t::token_t::GREATEREQ:
+    out << ">=";
+    break;
 
-  case expr_t::token_t::ASSIGN:    out << "="; break;
-  case expr_t::token_t::MATCH:     out << "=~"; break;
-  case expr_t::token_t::NMATCH:    out << "!~"; break;
-  case expr_t::token_t::MINUS:     out << "-"; break;
-  case expr_t::token_t::PLUS:      out << "+"; break;
-  case expr_t::token_t::STAR:      out << "*"; break;
-  case expr_t::token_t::SLASH:     out << "/"; break;
-  case expr_t::token_t::ARROW:     out << "->"; break;
-  case expr_t::token_t::KW_DIV:    out << "div"; break;
+  case expr_t::token_t::ASSIGN:
+    out << "=";
+    break;
+  case expr_t::token_t::MATCH:
+    out << "=~";
+    break;
+  case expr_t::token_t::NMATCH:
+    out << "!~";
+    break;
+  case expr_t::token_t::MINUS:
+    out << "-";
+    break;
+  case expr_t::token_t::PLUS:
+    out << "+";
+    break;
+  case expr_t::token_t::STAR:
+    out << "*";
+    break;
+  case expr_t::token_t::SLASH:
+    out << "/";
+    break;
+  case expr_t::token_t::ARROW:
+    out << "->";
+    break;
+  case expr_t::token_t::KW_DIV:
+    out << "div";
+    break;
 
-  case expr_t::token_t::EXCLAM:    out << "!"; break;
-  case expr_t::token_t::KW_AND:    out << "and"; break;
-  case expr_t::token_t::KW_OR:     out << "or"; break;
-  case expr_t::token_t::KW_MOD:    out << "mod"; break;
+  case expr_t::token_t::EXCLAM:
+    out << "!";
+    break;
+  case expr_t::token_t::KW_AND:
+    out << "and";
+    break;
+  case expr_t::token_t::KW_OR:
+    out << "or";
+    break;
+  case expr_t::token_t::KW_MOD:
+    out << "mod";
+    break;
 
-  case expr_t::token_t::KW_IF:     out << "if"; break;
-  case expr_t::token_t::KW_ELSE:   out << "else"; break;
+  case expr_t::token_t::KW_IF:
+    out << "if";
+    break;
+  case expr_t::token_t::KW_ELSE:
+    out << "else";
+    break;
 
-  case expr_t::token_t::QUERY:     out << "?"; break;
-  case expr_t::token_t::COLON:     out << ":"; break;
+  case expr_t::token_t::QUERY:
+    out << "?";
+    break;
+  case expr_t::token_t::COLON:
+    out << ":";
+    break;
 
-  case expr_t::token_t::DOT:       out << "."; break;
-  case expr_t::token_t::COMMA:     out << ","; break;
-  case expr_t::token_t::SEMI:      out << ";"; break;
+  case expr_t::token_t::DOT:
+    out << ".";
+    break;
+  case expr_t::token_t::COMMA:
+    out << ",";
+    break;
+  case expr_t::token_t::SEMI:
+    out << ";";
+    break;
 
-  case expr_t::token_t::TOK_EOF:   out << "<end of input>"; break;
-  case expr_t::token_t::UNKNOWN:   out << "<unknown>"; break;
+  case expr_t::token_t::TOK_EOF:
+    out << "<end of input>";
+    break;
+  case expr_t::token_t::UNKNOWN:
+    out << "<unknown>";
+    break;
   }
 
   return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const expr_t::token_t& token)
-{
+std::ostream& operator<<(std::ostream& out, const expr_t::token_t& token) {
   switch (token.kind) {
   case expr_t::token_t::VALUE:
     out << "<value '" << token.value << "'>";

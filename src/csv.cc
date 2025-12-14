@@ -40,23 +40,20 @@
 
 namespace ledger {
 
-string csv_reader::read_field(std::istream& in)
-{
+string csv_reader::read_field(std::istream& in) {
   string field;
 
   char c;
   if (in.peek() == '"' || in.peek() == '|') {
     in.get(c);
     char x;
-    while (in.good() && ! in.eof()) {
+    while (in.good() && !in.eof()) {
       in.get(x);
       if (x == '\\') {
         in.get(x);
-      }
-      else if (x == '"' && in.peek() == '"') {
+      } else if (x == '"' && in.peek() == '"') {
         in.get(x);
-      }
-      else if (x == c) {
+      } else if (x == c) {
         if (x == '|')
           in.unget();
         else if (in.peek() == ',')
@@ -66,9 +63,8 @@ string csv_reader::read_field(std::istream& in)
       if (x != '\0')
         field += x;
     }
-  }
-  else {
-    while (in.good() && ! in.eof()) {
+  } else {
+    while (in.good() && !in.eof()) {
       in.get(c);
       if (in.good()) {
         if (c == ',')
@@ -82,12 +78,11 @@ string csv_reader::read_field(std::istream& in)
   return field;
 }
 
-char * csv_reader::next_line(std::istream& in)
-{
-  while (in.good() && ! in.eof() && in.peek() == '#')
+char* csv_reader::next_line(std::istream& in) {
+  while (in.good() && !in.eof() && in.peek() == '#')
     in.getline(context.linebuf, parse_context_t::MAX_LINE);
 
-  if (! in.good() || in.eof() || in.peek() == -1)
+  if (!in.good() || in.eof() || in.peek() == -1)
     return NULL;
 
   in.getline(context.linebuf, parse_context_t::MAX_LINE);
@@ -95,15 +90,14 @@ char * csv_reader::next_line(std::istream& in)
   return context.linebuf;
 }
 
-void csv_reader::read_index(std::istream& in)
-{
-  char * line = next_line(in);
-  if (! line)
+void csv_reader::read_index(std::istream& in) {
+  char* line = next_line(in);
+  if (!line)
     return;
 
   std::istringstream instr(line);
 
-  while (instr.good() && ! instr.eof()) {
+  while (instr.good() && !instr.eof()) {
     string field = read_field(instr);
     names.push_back(field);
 
@@ -117,10 +111,9 @@ void csv_reader::read_index(std::istream& in)
   }
 }
 
-xact_t * csv_reader::read_xact(bool rich_data)
-{
-  char * line = next_line(*context.stream.get());
-  if (! line || index.empty())
+xact_t* csv_reader::read_xact(bool rich_data) {
+  char* line = next_line(*context.stream.get());
+  if (!line || index.empty())
     return NULL;
   context.linenum++;
 
@@ -131,17 +124,17 @@ xact_t * csv_reader::read_xact(bool rich_data)
 
   xact->set_state(item_t::CLEARED);
 
-  xact->pos           = position_t();
+  xact->pos = position_t();
   xact->pos->pathname = context.pathname;
-  xact->pos->beg_pos  = context.stream->tellg();
+  xact->pos->beg_pos = context.stream->tellg();
   xact->pos->beg_line = context.linenum;
   xact->pos->sequence = context.sequence++;
 
   post->xact = xact.get();
 
-  post->pos           = position_t();
+  post->pos = position_t();
   post->pos->pathname = context.pathname;
-  post->pos->beg_pos  = context.stream->tellg();
+  post->pos->beg_pos = context.stream->tellg();
   post->pos->beg_line = context.linenum;
   post->pos->sequence = context.sequence++;
 
@@ -153,7 +146,7 @@ xact_t * csv_reader::read_xact(bool rich_data)
   string total;
   string field;
 
-  while (instr.good() && ! instr.eof() && n < index.size()) {
+  while (instr.good() && !instr.eof() && n < index.size()) {
     field = read_field(instr);
 
     switch (index[n]) {
@@ -162,12 +155,12 @@ xact_t * csv_reader::read_xact(bool rich_data)
       break;
 
     case FIELD_DATE_AUX:
-      if (! field.empty())
+      if (!field.empty())
         xact->_date_aux = parse_date(field);
       break;
 
     case FIELD_CODE:
-      if (! field.empty())
+      if (!field.empty())
         xact->code = field;
       break;
 
@@ -181,7 +174,7 @@ xact_t * csv_reader::read_xact(bool rich_data)
           break;
         }
       }
-      if (! found)
+      if (!found)
         xact->payee = field;
       break;
     }
@@ -192,8 +185,7 @@ xact_t * csv_reader::read_xact(bool rich_data)
         break;
       std::istringstream amount_str(field);
       amt.parse(amount_str, PARSE_NO_REDUCE);
-      if (! amt.has_commodity() &&
-          commodity_pool_t::current_pool->default_commodity)
+      if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
         amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
       if (index[n] == FIELD_DEBIT)
         amt = -amt;
@@ -206,8 +198,7 @@ xact_t * csv_reader::read_xact(bool rich_data)
     case FIELD_COST: {
       std::istringstream amount_str(field);
       amt.parse(amount_str, PARSE_NO_REDUCE);
-      if (! amt.has_commodity() &&
-          commodity_pool_t::current_pool->default_commodity)
+      if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
         amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
       post->cost = amt;
       break;
@@ -218,12 +209,12 @@ xact_t * csv_reader::read_xact(bool rich_data)
       break;
 
     case FIELD_NOTE:
-      if (! field.empty())
+      if (!field.empty())
         xact->note = field;
       break;
 
     case FIELD_UNKNOWN:
-      if (! names[n].empty() && ! field.empty())
+      if (!names[n].empty() && !field.empty())
         xact->set_tag(names[n], string_value(field));
       break;
     }
@@ -231,8 +222,7 @@ xact_t * csv_reader::read_xact(bool rich_data)
   }
 
   if (rich_data) {
-    xact->set_tag(_("Imported"),
-                  string_value(format_date(CURRENT_DATE(), FMT_WRITTEN)));
+    xact->set_tag(_("Imported"), string_value(format_date(CURRENT_DATE(), FMT_WRITTEN)));
     xact->set_tag(_("CSV"), string_value(line));
   }
 
@@ -253,23 +243,22 @@ xact_t * csv_reader::read_xact(bool rich_data)
 
   post->xact = xact.get();
 
-  post->pos           = position_t();
+  post->pos = position_t();
   post->pos->pathname = context.pathname;
-  post->pos->beg_pos  = context.stream->tellg();
+  post->pos->beg_pos = context.stream->tellg();
   post->pos->beg_line = context.linenum;
   post->pos->sequence = context.sequence++;
 
   post->set_state(item_t::CLEARED);
   post->account = context.master;
 
-  if (! amt.is_null())
-    post->amount = - amt;
+  if (!amt.is_null())
+    post->amount = -amt;
 
-  if (! total.empty()) {
+  if (!total.empty()) {
     std::istringstream assigned_amount_str(total);
     amt.parse(assigned_amount_str, PARSE_NO_REDUCE);
-    if (! amt.has_commodity() &&
-        commodity_pool_t::current_pool->default_commodity)
+    if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
       amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
     post->assigned_amount = amt;
   }

@@ -43,38 +43,26 @@
 
 namespace ledger {
 
-class temporaries_t
-{
-  optional<std::list<xact_t> >    xact_temps;
-  optional<std::list<post_t> >    post_temps;
-  optional<std::list<account_t> > acct_temps;
+class temporaries_t {
+  optional<std::list<xact_t>> xact_temps;
+  optional<std::list<post_t>> post_temps;
+  optional<std::list<account_t>> acct_temps;
 
 public:
-  temporaries_t() {
-    TRACE_CTOR(temporaries_t, "");
-  }
+  temporaries_t() { TRACE_CTOR(temporaries_t, ""); }
   ~temporaries_t() {
     TRACE_DTOR(temporaries_t);
     clear();
   }
 
-  xact_t&    copy_xact(xact_t& origin);
-  xact_t&    create_xact();
-  xact_t&    last_xact() {
-    return xact_temps->back();
-  }
-  post_t&    copy_post(post_t& origin, xact_t& xact,
-                       account_t * account = NULL);
-  post_t&    create_post(xact_t& xact, account_t * account,
-                         bool bidir_link = true);
-  post_t&    last_post() {
-    return post_temps->back();
-  }
-  account_t& create_account(const string& name   = "",
-                            account_t *   parent = NULL);
-  account_t& last_account() {
-    return acct_temps->back();
-  }
+  xact_t& copy_xact(xact_t& origin);
+  xact_t& create_xact();
+  xact_t& last_xact() { return xact_temps->back(); }
+  post_t& copy_post(post_t& origin, xact_t& xact, account_t* account = NULL);
+  post_t& create_post(xact_t& xact, account_t* account, bool bidir_link = true);
+  post_t& last_post() { return post_temps->back(); }
+  account_t& create_account(const string& name = "", account_t* parent = NULL);
+  account_t& last_account() { return acct_temps->back(); }
 
   void clear();
 };

@@ -39,17 +39,24 @@
 
 namespace ledger {
 
-bool annotation_t::operator<(const annotation_t& rhs) const
-{
-  if (! price && rhs.price) return true;
-  if (price && ! rhs.price) return false;
-  if (! date && rhs.date)   return true;
-  if (date && ! rhs.date)   return false;
-  if (! tag && rhs.tag)     return true;
-  if (tag && ! rhs.tag)     return false;
+bool annotation_t::operator<(const annotation_t& rhs) const {
+  if (!price && rhs.price)
+    return true;
+  if (price && !rhs.price)
+    return false;
+  if (!date && rhs.date)
+    return true;
+  if (date && !rhs.date)
+    return false;
+  if (!tag && rhs.tag)
+    return true;
+  if (tag && !rhs.tag)
+    return false;
 
-  if (! value_expr && rhs.value_expr) return true;
-  if (value_expr && ! rhs.value_expr) return false;
+  if (!value_expr && rhs.value_expr)
+    return true;
+  if (value_expr && !rhs.value_expr)
+    return false;
 
   if (price) {
     if (price->commodity().symbol() < rhs.price->commodity().symbol())
@@ -57,29 +64,41 @@ bool annotation_t::operator<(const annotation_t& rhs) const
     if (price->commodity().symbol() > rhs.price->commodity().symbol())
       return false;
 
-    if (*price < *rhs.price) return true;
-    if (*price > *rhs.price) return false;
+    if (*price < *rhs.price)
+      return true;
+    if (*price > *rhs.price)
+      return false;
   }
   if (date) {
-    if (*date < *rhs.date)   return true;
-    if (*date > *rhs.date)   return false;
+    if (*date < *rhs.date)
+      return true;
+    if (*date > *rhs.date)
+      return false;
   }
   if (tag) {
-    if (*tag < *rhs.tag)     return true;
-    if (*tag > *rhs.tag)     return false;
+    if (*tag < *rhs.tag)
+      return true;
+    if (*tag > *rhs.tag)
+      return false;
   }
   if (value_expr) {
-    DEBUG("annotate.less", "Comparing (" << value_expr->text()
-          << ") < (" << rhs.value_expr->text());
-    if (value_expr->text() < rhs.value_expr->text()) return true;
-    //if (value_expr->text() > rhs.value_expr->text()) return false;
+    DEBUG("annotate.less",
+          "Comparing (" << value_expr->text() << ") < (" << rhs.value_expr->text());
+    if (value_expr->text() < rhs.value_expr->text())
+      return true;
+    // if (value_expr->text() > rhs.value_expr->text()) return false;
   }
+
+  // Compare semantic flags last
+  unsigned int lhs_flags = flags() & ANNOTATION_SEMANTIC_FLAGS;
+  unsigned int rhs_flags = rhs.flags() & ANNOTATION_SEMANTIC_FLAGS;
+  if (lhs_flags < rhs_flags)
+    return true;
 
   return false;
 }
 
-void annotation_t::parse(std::istream& in)
-{
+void annotation_t::parse(std::istream& in) {
   do {
     std::istream::pos_type pos = in.tellg();
     if (static_cast<int>(pos) < 0)
@@ -123,8 +142,7 @@ void annotation_t::parse(std::istream& in)
 
       DEBUG("commodity.annotations", "Parsed annotation price: " << temp);
       price = temp;
-    }
-    else if (c == '[') {
+    } else if (c == '[') {
       if (date)
         throw_(amount_error, _("Commodity specifies more than one date"));
 
@@ -136,19 +154,16 @@ void annotation_t::parse(std::istream& in)
         throw_(amount_error, _("Commodity date lacks closing bracket"));
 
       date = parse_date(buf);
-    }
-    else if (c == '(') {
+    } else if (c == '(') {
       in.get();
       c = in.peek();
       if (c == '@') {
         in.clear();
         in.seekg(pos, std::ios::beg);
         break;
-      }
-      else if (c == '(') {
+      } else if (c == '(') {
         if (value_expr)
-          throw_(amount_error,
-                 _("Commodity specifies more than one valuation expression"));
+          throw_(amount_error, _("Commodity specifies more than one valuation expression"));
 
         in.get();
         READ_INTO(in, buf, 255, c, c != ')');
@@ -158,11 +173,9 @@ void annotation_t::parse(std::istream& in)
           if (c == ')')
             in.get();
           else
-            throw_(amount_error,
-                   _("Commodity valuation expression lacks closing parentheses"));
+            throw_(amount_error, _("Commodity valuation expression lacks closing parentheses"));
         } else {
-          throw_(amount_error,
-                 _("Commodity valuation expression lacks closing parentheses"));
+          throw_(amount_error, _("Commodity valuation expression lacks closing parentheses"));
         }
 
         value_expr = expr_t(buf);
@@ -178,8 +191,7 @@ void annotation_t::parse(std::istream& in)
 
         tag = buf;
       }
-    }
-    else {
+    } else {
       in.clear();
       in.seekg(pos, std::ios::beg);
       break;
@@ -188,36 +200,27 @@ void annotation_t::parse(std::istream& in)
 
 #if DEBUG_ON
   if (SHOW_DEBUG("amount.commodities") && *this) {
-    DEBUG("amount.commodities",
-          "Parsed commodity annotations: " << std::endl << *this);
+    DEBUG("amount.commodities", "Parsed commodity annotations: " << std::endl << *this);
   }
 #endif
 }
 
-void annotation_t::print(std::ostream& out, bool keep_base,
-                         bool no_computed_annotations) const
-{
-  if (price &&
-      (! no_computed_annotations || ! has_flags(ANNOTATION_PRICE_CALCULATED)))
-    out << " {"
-        << (has_flags(ANNOTATION_PRICE_FIXATED) ? "=" : "")
-        << (keep_base ? *price : price->unreduced())
-        << '}';
+void annotation_t::print(std::ostream& out, bool keep_base, bool no_computed_annotations) const {
+  if (price && (!no_computed_annotations || !has_flags(ANNOTATION_PRICE_CALCULATED)))
+    out << " {" << (has_flags(ANNOTATION_PRICE_FIXATED) ? "=" : "")
+        << (keep_base ? *price : price->unreduced()) << '}';
 
-  if (date &&
-      (! no_computed_annotations || ! has_flags(ANNOTATION_DATE_CALCULATED)))
+  if (date && (!no_computed_annotations || !has_flags(ANNOTATION_DATE_CALCULATED)))
     out << " [" << format_date(*date, FMT_WRITTEN) << ']';
 
-  if (tag &&
-      (! no_computed_annotations || ! has_flags(ANNOTATION_TAG_CALCULATED)))
+  if (tag && (!no_computed_annotations || !has_flags(ANNOTATION_TAG_CALCULATED)))
     out << " (" << *tag << ')';
 
-  if (value_expr && ! has_flags(ANNOTATION_VALUE_EXPR_CALCULATED))
+  if (value_expr && !has_flags(ANNOTATION_VALUE_EXPR_CALCULATED))
     out << " ((" << *value_expr << "))";
 }
 
-void put_annotation(property_tree::ptree& st, const annotation_t& details)
-{
+void put_annotation(property_tree::ptree& st, const annotation_t& details) {
   if (details.price)
     put_amount(st.put("price", ""), *details.price);
 
@@ -231,25 +234,21 @@ void put_annotation(property_tree::ptree& st, const annotation_t& details)
     st.put("value_expr", details.value_expr->text());
 }
 
-bool keep_details_t::keep_all(const commodity_t& comm) const
-{
-  return (! comm.has_annotation() ||
-          (keep_price && keep_date && keep_tag && ! only_actuals));
+bool keep_details_t::keep_all(const commodity_t& comm) const {
+  return (!comm.has_annotation() || (keep_price && keep_date && keep_tag && !only_actuals));
 }
 
-bool keep_details_t::keep_any(const commodity_t& comm) const
-{
+bool keep_details_t::keep_any(const commodity_t& comm) const {
   return comm.has_annotation() && (keep_price || keep_date || keep_tag);
 }
 
-bool annotated_commodity_t::operator==(const commodity_t& comm) const
-{
+bool annotated_commodity_t::operator==(const commodity_t& comm) const {
   // If the base commodities don't match, the game's up.
   if (base != comm.base)
     return false;
 
   assert(annotated);
-  if (! comm.annotated)
+  if (!comm.annotated)
     return false;
 
   if (details != as_annotated_commodity(comm).details)
@@ -258,16 +257,13 @@ bool annotated_commodity_t::operator==(const commodity_t& comm) const
   return true;
 }
 
-optional<price_point_t>
-annotated_commodity_t::find_price(const commodity_t * commodity,
-                                  const datetime_t&   moment,
-                                  const datetime_t&   oldest) const
-{
-  DEBUG("commodity.price.find",
-        "annotated_commodity_t::find_price(" << symbol() << ")");
+optional<price_point_t> annotated_commodity_t::find_price(const commodity_t* commodity,
+                                                          const datetime_t& moment,
+                                                          const datetime_t& oldest) const {
+  DEBUG("commodity.price.find", "annotated_commodity_t::find_price(" << symbol() << ")");
 
   datetime_t when;
-  if (! moment.is_not_a_date_time())
+  if (!moment.is_not_a_date_time())
     when = moment;
   else if (epoch)
     when = *epoch;
@@ -276,7 +272,7 @@ annotated_commodity_t::find_price(const commodity_t * commodity,
 
   DEBUG("commodity.price.find", "reference time: " << when);
 
-  const commodity_t * target = NULL;
+  const commodity_t* target = NULL;
   if (commodity)
     target = commodity;
 
@@ -284,11 +280,9 @@ annotated_commodity_t::find_price(const commodity_t * commodity,
     DEBUG("commodity.price.find", "price annotation: " << *details.price);
 
     if (details.has_flags(ANNOTATION_PRICE_FIXATED)) {
-      DEBUG("commodity.price.find",
-            "amount_t::value: fixated price =  " << *details.price);
+      DEBUG("commodity.price.find", "amount_t::value: fixated price =  " << *details.price);
       return price_point_t(when, *details.price);
-    }
-    else if (! target) {
+    } else if (!target) {
       DEBUG("commodity.price.find", "setting target commodity from price");
       target = details.price->commodity_ptr();
     }
@@ -300,60 +294,46 @@ annotated_commodity_t::find_price(const commodity_t * commodity,
 #endif
 
   if (details.value_expr)
-    return find_price_from_expr(const_cast<expr_t&>(*details.value_expr),
-                                commodity, when);
+    return find_price_from_expr(const_cast<expr_t&>(*details.value_expr), commodity, when);
 
   return commodity_t::find_price(target, when, oldest);
 }
 
-commodity_t&
-annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
-{
-  DEBUG("commodity.annotated.strip",
-        "Reducing commodity " << *this << std::endl
-         << "  keep price " << what_to_keep.keep_price << " "
-         << "  keep date "  << what_to_keep.keep_date << " "
-         << "  keep tag "   << what_to_keep.keep_tag);
+commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep) {
+  DEBUG("commodity.annotated.strip", "Reducing commodity "
+                                         << *this << std::endl
+                                         << "  keep price " << what_to_keep.keep_price << " "
+                                         << "  keep date " << what_to_keep.keep_date << " "
+                                         << "  keep tag " << what_to_keep.keep_tag);
 
-  commodity_t * new_comm;
+  commodity_t* new_comm;
 
   bool keep_price =
-    ((what_to_keep.keep_price ||
-      (details.has_flags(ANNOTATION_PRICE_FIXATED) &&
-       has_flags(COMMODITY_SAW_ANN_PRICE_FLOAT) &&
-       has_flags(COMMODITY_SAW_ANN_PRICE_FIXATED))) &&
-     (! what_to_keep.only_actuals ||
-      ! details.has_flags(ANNOTATION_PRICE_CALCULATED)));
-  bool keep_date  =
-    (what_to_keep.keep_date       &&
-     (! what_to_keep.only_actuals ||
-      ! details.has_flags(ANNOTATION_DATE_CALCULATED)));
-  bool keep_tag   =
-    (what_to_keep.keep_tag        &&
-     (! what_to_keep.only_actuals ||
-      ! details.has_flags(ANNOTATION_TAG_CALCULATED)));
+      ((what_to_keep.keep_price ||
+        (details.has_flags(ANNOTATION_PRICE_FIXATED) && has_flags(COMMODITY_SAW_ANN_PRICE_FLOAT) &&
+         has_flags(COMMODITY_SAW_ANN_PRICE_FIXATED))) &&
+       (!what_to_keep.only_actuals || !details.has_flags(ANNOTATION_PRICE_CALCULATED)));
+  bool keep_date = (what_to_keep.keep_date &&
+                    (!what_to_keep.only_actuals || !details.has_flags(ANNOTATION_DATE_CALCULATED)));
+  bool keep_tag = (what_to_keep.keep_tag &&
+                   (!what_to_keep.only_actuals || !details.has_flags(ANNOTATION_TAG_CALCULATED)));
 
-  DEBUG("commodity.annotated.strip",
-        "Reducing commodity " << *this << std::endl
-         << "  keep price " << keep_price << " "
-         << "  keep date "  << keep_date << " "
-         << "  keep tag "   << keep_tag);
+  DEBUG("commodity.annotated.strip", "Reducing commodity " << *this << std::endl
+                                                           << "  keep price " << keep_price << " "
+                                                           << "  keep date " << keep_date << " "
+                                                           << "  keep tag " << keep_tag);
 
-  if ((keep_price && details.price) ||
-      (keep_date  && details.date)  ||
-      (keep_tag   && details.tag)) {
-    new_comm = pool().find_or_create
-      (referent(), annotation_t(keep_price ? details.price : none,
-                                keep_date  ? details.date  : none,
-                                keep_tag   ? details.tag   : none));
+  if ((keep_price && details.price) || (keep_date && details.date) || (keep_tag && details.tag)) {
+    new_comm = pool().find_or_create(referent(), annotation_t(keep_price ? details.price : none,
+                                                              keep_date ? details.date : none,
+                                                              keep_tag ? details.tag : none));
 
     // Transfer over any relevant annotation flags, as they still apply.
     if (new_comm->annotated) {
       annotation_t& new_details(as_annotated_commodity(*new_comm).details);
       if (keep_price)
         new_details.add_flags(details.flags() &
-                              (ANNOTATION_PRICE_CALCULATED |
-                               ANNOTATION_PRICE_FIXATED));
+                              (ANNOTATION_PRICE_CALCULATED | ANNOTATION_PRICE_FIXATED));
       if (keep_date)
         new_details.add_flags(details.flags() & ANNOTATION_DATE_CALCULATED);
       if (keep_tag)
@@ -366,9 +346,8 @@ annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep)
   return referent();
 }
 
-void annotated_commodity_t::write_annotations
-  (std::ostream& out, bool no_computed_annotations) const
-{
+void annotated_commodity_t::write_annotations(std::ostream& out,
+                                              bool no_computed_annotations) const {
   details.print(out, pool().keep_base, no_computed_annotations);
 }
 

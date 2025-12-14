@@ -45,10 +45,9 @@
 
 namespace ledger {
 
-std::pair<xact_t *, account_t *>
-lookup_probable_account(const string& ident,
-                        xacts_list::reverse_iterator iter,
-                        xacts_list::reverse_iterator end,
-                        account_t * ref_account = NULL);
+std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
+                                                       xacts_list::reverse_iterator iter,
+                                                       xacts_list::reverse_iterator end,
+                                                       account_t* ref_account = NULL);
 
 } // namespace ledger

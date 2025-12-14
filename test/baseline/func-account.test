@@ -1,0 +1,12 @@
+; Tests for the account variable
+; Returns the account associated with a posting
+
+2012-01-01 Test account
+    Assets:Bank:Checking              $100.00
+    Equity:Opening
+
+; Positive test: display account in total column
+test reg --total "account"
+12-Jan-01 Test account          Assets:Bank:Checking        $100.00 Assets:Bank:Checking
+                                Equity:Opening             $-100.00 Equity:Opening
+end test

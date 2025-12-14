@@ -1,0 +1,19 @@
+2012-01-01 Test abs function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "abs(100.75)"
+100.75
+end test
+
+test eval "abs(-25.3)"
+25.3
+end test
+
+test reg --display-amount "abs()" -> 1
+__ERROR__
+While calling function 'abs ':
+While handling posting from "$sourcepath/test/baseline/func-abs.test", line 2:
+>     Assets:Test                       $100.00
+Error: Too few arguments to function
+end test

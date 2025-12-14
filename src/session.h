@@ -51,26 +51,23 @@ namespace ledger {
 
 class xact_t;
 
-struct ComparePaths
-{
-  bool operator()(const path& p1, const path& p2) const
-  {
+struct ComparePaths {
+  bool operator()(const path& p1, const path& p2) const {
     return p1 < p2 && !boost::filesystem::equivalent(p1, p2);
   }
 };
 
 #define COMMA ,
 
-class session_t : public symbol_scope_t
-{
-  friend void set_session_context(session_t * session);
+class session_t : public symbol_scope_t {
+  friend void set_session_context(session_t* session);
 
 public:
   bool flush_on_next_data_file;
 
   unique_ptr<journal_t> journal;
   parse_context_stack_t parsing_context;
-  optional<expr_t>      value_expr;
+  optional<expr_t> value_expr;
 
   explicit session_t();
   virtual ~session_t() {
@@ -78,22 +75,18 @@ public:
     parsing_context.pop();
   }
 
-  virtual string description() {
-    return _("current session");
-  }
+  virtual string description() { return _("current session"); }
 
-  void set_flush_on_next_data_file(const bool truth) {
-    flush_on_next_data_file = truth;
-  }
+  void set_flush_on_next_data_file(const bool truth) { flush_on_next_data_file = truth; }
 
-  journal_t * read_journal(const path& pathname);
-  journal_t * read_journal_from_string(const string& data);
+  journal_t* read_journal(const path& pathname);
+  journal_t* read_journal_from_string(const string& data);
   std::size_t read_data(const string& master_account = "");
 
-  journal_t * read_journal_files();
+  journal_t* read_journal_files();
   void close_journal_files();
 
-  journal_t * get_journal();
+  journal_t* get_journal();
 
   value_t fn_account(call_scope_t& scope);
   value_t fn_min(call_scope_t& scope);
@@ -104,8 +97,7 @@ public:
   value_t fn_lot_date(call_scope_t& scope);
   value_t fn_lot_tag(call_scope_t& scope);
 
-  void report_options(std::ostream& out)
-  {
+  void report_options(std::ostream& out) {
     HANDLER(check_payees).report(out);
     HANDLER(day_break).report(out);
     HANDLER(download).report(out);
@@ -126,10 +118,9 @@ public:
     HANDLER(value_expr_).report(out);
   }
 
-  option_t<session_t> * lookup_option(const char * p);
+  option_t<session_t>* lookup_option(const char* p);
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-                                  const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
 
   /**
    * Option handlers
@@ -139,49 +130,42 @@ public:
   OPTION(session_t, day_break);
   OPTION(session_t, download); // -Q
 
-  OPTION_(session_t, decimal_comma, DO() {
-      commodity_t::decimal_comma_by_default = true;
-    });
+  OPTION_(session_t, decimal_comma, DO() { commodity_t::decimal_comma_by_default = true; });
 
-  OPTION_(session_t, time_colon, DO() {
-      commodity_t::time_colon_by_default = true;
-    });
+  OPTION_(session_t, time_colon, DO() { commodity_t::time_colon_by_default = true; });
 
-  OPTION__
-  (session_t, price_exp_, // -Z
-   CTOR(session_t, price_exp_) { value = "24"; });
+  OPTION__(
+      session_t, price_exp_, // -Z
+      CTOR(session_t, price_exp_) { value = "24"; });
 
-  OPTION__
-  (session_t, file_, // -f
-   std::list<path> data_files;
-   CTOR(session_t, file_) {}
-   DO_(str) {
-     if (parent->flush_on_next_data_file) {
-       data_files.clear();
-       parent->flush_on_next_data_file = false;
-     }
-     data_files.push_back(str);
-   });
+  OPTION__(
+      session_t, file_, // -f
+      std::list<path> data_files;
+      CTOR(session_t, file_) {} DO_(str) {
+        if (parent->flush_on_next_data_file) {
+          data_files.clear();
+          parent->flush_on_next_data_file = false;
+        }
+        data_files.push_back(str);
+      });
 
-  OPTION__
-  (session_t, hashes_,
-   hash_type_t hash_type = NO_HASHES;
-   CTOR(session_t, hashes_) {}
-   DO_(str) {
-     if (str == "sha512" || str == "SHA512") {
-       hash_type = HASH_SHA512;
-     } else if (str == "sha512_half" || str == "SHA512_Half") {
-       hash_type = HASH_SHA512_Half;
-     } else {
-        throw_(std::invalid_argument, _f("Unrecognized hash type"));
-     }
-   });
+  OPTION__(
+      session_t, hashes_, hash_type_t hash_type = NO_HASHES; CTOR(session_t, hashes_) {} DO_(str) {
+        if (str == "sha512" || str == "SHA512") {
+          hash_type = HASH_SHA512;
+        } else if (str == "sha512_half" || str == "SHA512_Half") {
+          hash_type = HASH_SHA512_Half;
+        } else {
+          throw_(std::invalid_argument, _f("Unrecognized hash type"));
+        }
+      });
 
-  OPTION_(session_t, input_date_format_, DO_(str) {
-      // This changes static variables inside times.h, which affects the
-      // basic date parser.
-      set_input_date_format(str.c_str());
-    });
+  OPTION_(
+      session_t, input_date_format_, DO_(str) {
+        // This changes static variables inside times.h, which affects the
+        // basic date parser.
+        set_input_date_format(str.c_str());
+      });
 
   OPTION(session_t, explicit);
   OPTION(session_t, master_account_);
@@ -202,6 +186,6 @@ public:
  * the library.  Thus, a session_t maintains all of the information relating
  * to a single usage of the Ledger library.
  */
-void set_session_context(session_t * session);
+void set_session_context(session_t* session);
 
 } // namespace ledger

@@ -42,25 +42,21 @@ namespace ledger {
 std::ostringstream _ctxt_buffer;
 std::ostringstream _desc_buffer;
 
-string error_context()
-{
+string error_context() {
   string context = _ctxt_buffer.str();
   _ctxt_buffer.clear();
   _ctxt_buffer.str("");
   return context;
 }
 
-string file_context(const path& file, const std::size_t line)
-{
+string file_context(const path& file, const std::size_t line) {
   std::ostringstream buf;
   buf << '"' << file.string() << "\", line " << line << ":";
   return buf.str();
 }
 
-string line_context(const string&           line,
-                    const string::size_type pos,
-                    const string::size_type end_pos)
-{
+string line_context(const string& line, const string::size_type pos,
+                    const string::size_type end_pos) {
   std::ostringstream buf;
   buf << "  " << line << "\n";
 
@@ -82,13 +78,10 @@ string line_context(const string&           line,
   return buf.str();
 }
 
-string source_context(const path&                  file,
-                      const std::istream::pos_type pos,
-                      const std::istream::pos_type end_pos,
-                      const string&                prefix)
-{
+string source_context(const path& file, const std::istream::pos_type pos,
+                      const std::istream::pos_type end_pos, const string& prefix) {
   const std::streamoff len = end_pos - pos;
-  if (! len || file.empty())
+  if (!len || file.empty())
     return _("<no source context>");
 
   assert(len > 0);
@@ -109,9 +102,7 @@ string source_context(const path&                  file,
   buf[static_cast<std::ptrdiff_t>(len)] = '\0';
 
   bool first = true;
-  for (char * p = std::strtok(buf.get(), "\n");
-       p;
-       p = std::strtok(NULL, "\n")) {
+  for (char* p = std::strtok(buf.get(), "\n"); p; p = std::strtok(NULL, "\n")) {
     if (first)
       first = false;
     else
@@ -119,7 +110,7 @@ string source_context(const path&                  file,
     out << prefix << p;
   }
 
-  delete(in);
+  delete (in);
   return out.str();
 }
 

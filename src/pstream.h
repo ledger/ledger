@@ -41,36 +41,32 @@
  */
 #pragma once
 
-//#include <istream>
-//#include <streambuf>
+// #include <istream>
+// #include <streambuf>
 
 namespace ledger {
 
-class ptristream : public std::istream
-{
-  class ptrinbuf : public std::streambuf
-  {
+class ptristream : public std::istream {
+  class ptrinbuf : public std::streambuf {
     ptrinbuf(const ptrinbuf&);
     ptrinbuf& operator=(const ptrinbuf&);
 
   protected:
-    char *      ptr;
+    char* ptr;
     std::size_t len;
 
   public:
-    ptrinbuf(char * _ptr, std::size_t _len) : ptr(_ptr), len(_len) {
+    ptrinbuf(char* _ptr, std::size_t _len) : ptr(_ptr), len(_len) {
       if (*ptr && len == 0)
         len = std::strlen(ptr);
 
-      setg(ptr,                 // beginning of putback area
-           ptr,                 // read position
-           ptr+len);            // end position
+      setg(ptr,        // beginning of putback area
+           ptr,        // read position
+           ptr + len); // end position
 
       TRACE_CTOR(ptrinbuf, "char *, std::size_t");
     }
-    ~ptrinbuf() throw() {
-      TRACE_DTOR(ptrinbuf);
-    }
+    ~ptrinbuf() throw() { TRACE_DTOR(ptrinbuf); }
 
   protected:
     virtual int_type underflow() {
@@ -81,21 +77,19 @@ class ptristream : public std::istream
         return EOF;
     }
 
-    virtual pos_type seekoff(off_type off, ios_base::seekdir way,
-                             ios_base::openmode)
-    {
+    virtual pos_type seekoff(off_type off, ios_base::seekdir way, ios_base::openmode) {
       // cast to avoid gcc '-Wswitch' warning
       // as ios_base::beg/cur/end are not necessarily values of 'way' enum type ios_base::seekdir
       // based on https://svn.boost.org/trac/boost/ticket/7644
       switch (static_cast<int>(way)) {
       case std::ios::cur:
-        setg(ptr, gptr()+off, ptr+len);
+        setg(ptr, gptr() + off, ptr + len);
         break;
       case std::ios::beg:
-        setg(ptr, ptr+off, ptr+len);
+        setg(ptr, ptr + off, ptr + len);
         break;
       case std::ios::end:
-        setg(ptr, egptr()+off, ptr+len);
+        setg(ptr, egptr() + off, ptr + len);
         break;
       }
       return pos_type(gptr() - ptr);
@@ -106,10 +100,7 @@ protected:
   ptrinbuf buf;
 
 public:
-  ptristream(char * ptr, std::size_t len = 0)
-    : std::istream(0), buf(ptr, len) {
-    rdbuf(&buf);
-  }
+  ptristream(char* ptr, std::size_t len = 0) : std::istream(0), buf(ptr, len) { rdbuf(&buf); }
 };
 
 } // namespace ledger

@@ -52,42 +52,37 @@ class unistring;
 
 DECLARE_EXCEPTION(format_error, std::runtime_error);
 
-class format_t : public expr_base_t<string>, public noncopyable
-{
+class format_t : public expr_base_t<string>, public noncopyable {
   typedef expr_base_t<string> base_type;
 
-  struct element_t : public flags::supports_flags<>, public noncopyable
-  {
+  struct element_t : public flags::supports_flags<>, public noncopyable {
 #define ELEMENT_ALIGN_LEFT 0x01
 
     enum kind_t { STRING, EXPR };
 
-    kind_t                       type;
-    std::size_t                  min_width;
-    std::size_t                  max_width;
-    variant<string, expr_t>      data;
+    kind_t type;
+    std::size_t min_width;
+    std::size_t max_width;
+    variant<string, expr_t> data;
     scoped_ptr<struct element_t> next;
 
-    element_t() throw()
-      : supports_flags<>(), type(STRING), min_width(0), max_width(0) {
+    element_t() throw() : supports_flags<>(), type(STRING), min_width(0), max_width(0) {
       TRACE_CTOR(element_t, "");
     }
-    ~element_t() throw() {
-      TRACE_DTOR(element_t);
-    }
+    ~element_t() throw() { TRACE_DTOR(element_t); }
 
     element_t& operator=(const element_t& elem) {
       if (this != &elem) {
         supports_flags<>::operator=(elem);
-        type      = elem.type;
+        type = elem.type;
         min_width = elem.min_width;
         max_width = elem.max_width;
-        data      = elem.data;
+        data = elem.data;
       }
       return *this;
     }
 
-    friend inline void mark_red(std::ostream& out, const element_t * elem) {
+    friend inline void mark_red(std::ostream& out, const element_t* elem) {
       out.setf(std::ios::left);
       out.width(0);
       out << "\033[31m";
@@ -117,31 +112,24 @@ public:
   static bool default_style_changed;
 
 private:
-  static element_t * parse_elements(const string& fmt,
-                                    const optional<format_t&>& tmpl);
+  static element_t* parse_elements(const string& fmt, const optional<format_t&>& tmpl);
 
 public:
-  format_t() : base_type() {
-    TRACE_CTOR(format_t, "");
-  }
-  format_t(const string& _str, scope_t * context = NULL)
-    : base_type(context) {
-    if (! _str.empty())
+  format_t() : base_type() { TRACE_CTOR(format_t, ""); }
+  format_t(const string& _str, scope_t* context = NULL) : base_type(context) {
+    if (!_str.empty())
       parse_format(_str);
     TRACE_CTOR(format_t, "const string&");
   }
-  virtual ~format_t() {
-    TRACE_DTOR(format_t);
-  }
+  virtual ~format_t() { TRACE_DTOR(format_t); }
 
-  void parse_format(const string& _format,
-                    const optional<format_t&>& tmpl = none) {
+  void parse_format(const string& _format, const optional<format_t&>& tmpl = none) {
     elements.reset(parse_elements(_format, tmpl));
     set_text(_format);
   }
 
   virtual void mark_uncompiled() {
-    for (element_t * elem = elements.get(); elem; elem = elem->next.get()) {
+    for (element_t* elem = elements.get(); elem; elem = elem->next.get()) {
       if (elem->type == element_t::EXPR) {
         expr_t& expr(boost::get<expr_t>(elem->data));
         expr.mark_uncompiled();
@@ -152,14 +140,11 @@ public:
   virtual result_type real_calc(scope_t& scope);
 
   virtual void dump(std::ostream& out) const {
-    for (const element_t * elem = elements.get();
-         elem;
-         elem = elem->next.get())
+    for (const element_t* elem = elements.get(); elem; elem = elem->next.get())
       elem->dump(out);
   }
 
-  static string truncate(const unistring&  str,
-                         const std::size_t width,
+  static string truncate(const unistring& str, const std::size_t width,
                          const std::size_t account_abbrev_length = 0);
 };
 

@@ -49,39 +49,32 @@
 
 namespace ledger {
 
-class python_module_t : public scope_t, public noncopyable
-{
+class python_module_t : public scope_t, public noncopyable {
 public:
-  string                module_name;
+  string module_name;
   boost::python::object module_object;
-  boost::python::dict   module_globals;
+  boost::python::dict module_globals;
 
   explicit python_module_t(const string& name);
   explicit python_module_t(const string& name, boost::python::object obj);
 
   void import_module(const string& name, bool import_direct = false);
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-                                  const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
 
-  void define_global(const string& name, boost::python::object obj) {
-    module_globals[name] = obj;
-  }
+  void define_global(const string& name, boost::python::object obj) { module_globals[name] = obj; }
 
-  virtual string description() {
-    return module_name;
-  }
+  virtual string description() { return module_name; }
 };
 
-typedef std::map<PyObject *, shared_ptr<python_module_t> > python_module_map_t;
+typedef std::map<PyObject*, shared_ptr<python_module_t>> python_module_map_t;
 
-class python_interpreter_t : public session_t
-{
+class python_interpreter_t : public session_t {
 public:
   bool is_initialized;
 
   shared_ptr<python_module_t> main_module;
-  python_module_map_t         modules_map;
+  python_module_map_t modules_map;
 
   shared_ptr<python_module_t> import_module(const string& name) {
     shared_ptr<python_module_t> mod(new python_module_t(name));
@@ -104,15 +97,11 @@ public:
 
   boost::python::object import_option(const string& name);
 
-  enum py_eval_mode_t {
-    PY_EVAL_EXPR,
-    PY_EVAL_STMT,
-    PY_EVAL_MULTI
-  };
+  enum py_eval_mode_t { PY_EVAL_EXPR, PY_EVAL_STMT, PY_EVAL_MULTI };
 
   boost::python::object eval(std::istream& in, py_eval_mode_t mode = PY_EVAL_EXPR);
   boost::python::object eval(const string& str, py_eval_mode_t mode = PY_EVAL_EXPR);
-  boost::python::object eval(const char * c_str, py_eval_mode_t mode = PY_EVAL_EXPR) {
+  boost::python::object eval(const char* c_str, py_eval_mode_t mode = PY_EVAL_EXPR) {
     return eval(string(c_str), mode);
   }
 
@@ -127,28 +116,21 @@ public:
   public:
     string name;
 
-    functor_t(boost::python::object _func, const string& _name)
-      : func(_func), name(_name) {
+    functor_t(boost::python::object _func, const string& _name) : func(_func), name(_name) {
       TRACE_CTOR(functor_t, "boost::python::object, const string&");
     }
-    functor_t(const functor_t& other)
-      : func(other.func), name(other.name) {
+    functor_t(const functor_t& other) : func(other.func), name(other.name) {
       TRACE_CTOR(functor_t, "copy");
     }
-    virtual ~functor_t() throw() {
-      TRACE_DTOR(functor_t);
-    }
+    virtual ~functor_t() throw() { TRACE_DTOR(functor_t); }
     virtual value_t operator()(call_scope_t& args);
   };
 
-  option_t<python_interpreter_t> * lookup_option(const char * p);
+  option_t<python_interpreter_t>* lookup_option(const char* p);
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind,
-                                  const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
 
-  OPTION_(python_interpreter_t, import_, DO_(str) {
-      parent->import_option(str);
-    });
+  OPTION_(python_interpreter_t, import_, DO_(str) { parent->import_option(str); });
 };
 
 extern shared_ptr<python_interpreter_t> python_session;

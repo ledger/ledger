@@ -1,0 +1,19 @@
+2012-01-01 Test int function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "int(100)"
+100
+end test
+
+test eval "int(-50.75)"
+-51
+end test
+
+test reg --display-amount "int()" -> 1
+__ERROR__
+While calling function 'int ':
+While handling posting from "$sourcepath/test/baseline/func-int.test", line 2:
+>     Assets:Test                       $100.00
+Error: Too few arguments to function
+end test

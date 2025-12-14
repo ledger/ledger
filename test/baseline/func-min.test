@@ -1,0 +1,19 @@
+2012-01-01 Test min function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "min(100, 200)"
+100
+end test
+
+test eval "min(-50, 75)"
+-50
+end test
+
+test reg --display-amount "min()" -> 1
+__ERROR__
+While calling function 'min ':
+While handling posting from "$sourcepath/test/baseline/func-min.test", line 2:
+>     Assets:Test                       $100.00
+Error: Too few arguments to function
+end test

@@ -36,31 +36,28 @@
 using namespace boost::python;
 
 namespace ledger {
-  extern void initialize_for_python();
+extern void initialize_for_python();
 }
 
-BOOST_PYTHON_MODULE(ledger)
-{
+BOOST_PYTHON_MODULE(ledger) {
   using namespace ledger;
 
   scope().attr("__author__") = "John Wiegley <jwiegley@gmail.com>";
   scope().attr("__version__") = Ledger_VERSION;
   scope().attr("__date__") = Ledger_VERSION_DATE;
   scope().attr("__doc__") =
-    "Python API Documentation\n\n"
-    "Documentation of the Ledger Python API is an ongoing process and you are invited\n"
-    "to help out and contribute. In case you find this documentation incorrect,\n"
-    "incomplete, unclear, or lacking please open a pull request at\n"
-    "https://git.ledger-cli.org/ledger/pulls."
-    ;
+      "Python API Documentation\n\n"
+      "Documentation of the Ledger Python API is an ongoing process and you are invited\n"
+      "to help out and contribute. In case you find this documentation incorrect,\n"
+      "incomplete, unclear, or lacking please open a pull request at\n"
+      "https://git.ledger-cli.org/ledger/pulls.";
 
 #if !DEBUG_MODE
   docstring_options doc_options;
   doc_options.disable_cpp_signatures();
 #endif
 
-
-  if (! python_session.get())
+  if (!python_session.get())
     python_session.reset(new python_interpreter_t);
 
   set_session_context(python_session.get());

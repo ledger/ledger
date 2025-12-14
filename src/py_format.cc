@@ -38,28 +38,26 @@ namespace ledger {
 using namespace boost::python;
 
 #if 0
-#define EXC_TRANSLATOR(type)                            \
-  void exc_translate_ ## type(const type& err) {        \
-    PyErr_SetString(PyExc_ArithmeticError, err.what()); \
+#define EXC_TRANSLATOR(type)                                                                       \
+  void exc_translate_##type(const type& err) {                                                     \
+    PyErr_SetString(PyExc_ArithmeticError, err.what());                                            \
   }
 
 //EXC_TRANSLATOR(format_error)
 #endif
 
-void export_format()
-{
+void export_format() {
 #if 0
   class_< format_t > ("Format")
     ;
 #endif
 
-  //register_optional_to_python<amount_t>();
+  // register_optional_to_python<amount_t>();
 
-  //implicitly_convertible<string, amount_t>();
+  // implicitly_convertible<string, amount_t>();
 
 #if 0
-#define EXC_TRANSLATE(type) \
-  register_exception_translator<type>(&exc_translate_ ## type);
+#define EXC_TRANSLATE(type) register_exception_translator<type>(&exc_translate_##type);
 
   //EXC_TRANSLATE(format_error);
 #endif

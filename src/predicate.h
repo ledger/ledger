@@ -47,47 +47,36 @@
 
 namespace ledger {
 
-class predicate_t : public expr_t
-{
+class predicate_t : public expr_t {
 public:
   keep_details_t what_to_keep;
 
   predicate_t(const keep_details_t& _what_to_keep = keep_details_t())
-    : what_to_keep(_what_to_keep) {
+      : what_to_keep(_what_to_keep) {
     TRACE_CTOR(predicate_t, "");
   }
-  predicate_t(const predicate_t& other)
-    : expr_t(other), what_to_keep(other.what_to_keep) {
+  predicate_t(const predicate_t& other) : expr_t(other), what_to_keep(other.what_to_keep) {
     TRACE_CTOR(predicate_t, "copy");
   }
-  predicate_t(ptr_op_t              _ptr,
-              const keep_details_t& _what_to_keep,
-              scope_t *             _context = NULL)
-    : expr_t(_ptr, _context), what_to_keep(_what_to_keep) {
+  predicate_t& operator=(const predicate_t&) = default;
+  predicate_t(ptr_op_t _ptr, const keep_details_t& _what_to_keep, scope_t* _context = NULL)
+      : expr_t(_ptr, _context), what_to_keep(_what_to_keep) {
     TRACE_CTOR(predicate_t, "ptr_op_t, keep_details_t, scope_t *");
   }
-  predicate_t(const string&         str,
-              const keep_details_t& _what_to_keep,
-              const parse_flags_t&  flags = PARSE_DEFAULT)
-    : expr_t(str, flags), what_to_keep(_what_to_keep) {
+  predicate_t(const string& str, const keep_details_t& _what_to_keep,
+              const parse_flags_t& flags = PARSE_DEFAULT)
+      : expr_t(str, flags), what_to_keep(_what_to_keep) {
     TRACE_CTOR(predicate_t, "string, keep_details_t, parse_flags_t");
   }
-  predicate_t(std::istream&         in,
-              const keep_details_t& _what_to_keep,
-              const parse_flags_t&  flags = PARSE_DEFAULT)
-    : expr_t(in, flags), what_to_keep(_what_to_keep) {
+  predicate_t(std::istream& in, const keep_details_t& _what_to_keep,
+              const parse_flags_t& flags = PARSE_DEFAULT)
+      : expr_t(in, flags), what_to_keep(_what_to_keep) {
     TRACE_CTOR(predicate_t, "std::istream&, keep_details_t, parse_flags_t");
   }
-  virtual ~predicate_t() {
-    TRACE_DTOR(predicate_t);
-  }
+  virtual ~predicate_t() { TRACE_DTOR(predicate_t); }
 
   virtual value_t real_calc(scope_t& scope) {
-    return (*this ?
-            expr_t::real_calc(scope)
-              .strip_annotations(what_to_keep)
-              .to_boolean() :
-            true);
+    return (*this ? expr_t::real_calc(scope).strip_annotations(what_to_keep).to_boolean() : true);
   }
 };
 

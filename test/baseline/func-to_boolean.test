@@ -1,0 +1,23 @@
+2012-01-01 Test to_boolean function
+    Assets:Test                       $100.00
+    Equity:Opening
+
+test eval "to_boolean(1)"
+1
+end test
+
+test eval "to_boolean(0)"
+0
+end test
+
+test eval "to_boolean(100)"
+1
+end test
+
+test reg --display-amount "to_boolean()" -> 1
+__ERROR__
+While calling function 'to_boolean ':
+While handling posting from "$sourcepath/test/baseline/func-to_boolean.test", line 2:
+>     Assets:Test                       $100.00
+Error: Too few arguments to function
+end test
