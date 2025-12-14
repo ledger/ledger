@@ -1,0 +1,19 @@
+2023-07-10
+  A  $30
+  B
+
+2023-07-14
+  A  $30 = $60  ; balance_filter: uh oh
+  B
+
+test balance -f - -> 1
+__ERROR__
+While parsing file "", line 6:
+While evaluating value expression:
+  (uh ? (amount : 0))
+   ^^
+While parsing posting:
+  A  $30 = $60  ; balance_filter: uh oh
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error: Unknown identifier 'uh'
+end test

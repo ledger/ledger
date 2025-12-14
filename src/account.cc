@@ -576,7 +576,7 @@ void account_t::clear_xdata() {
       pair.second->clear_xdata();
 }
 
-value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&>& expr) const {
+value_t account_t::amount(const optional<bool> real_only) const {
   DEBUG("account.amount", "real only: " << real_only);
 
   if (xdata_ && xdata_->has_flags(ACCOUNT_EXT_VISITED)) {
@@ -590,10 +590,10 @@ value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&
       if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
         if (!(*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
           if (!(*i)->has_flags(POST_VIRTUAL)) {
-            (*i)->add_to_value(xdata_->self_details.real_total, expr);
+            (*i)->add_to_value(xdata_->self_details.real_total, none);
           }
 
-          (*i)->add_to_value(xdata_->self_details.total, expr);
+          (*i)->add_to_value(xdata_->self_details.total, none);
           (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
         }
       }
@@ -609,10 +609,10 @@ value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&
       if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
         if (!(*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
           if (!(*i)->has_flags(POST_VIRTUAL)) {
-            (*i)->add_to_value(xdata_->self_details.real_total, expr);
+            (*i)->add_to_value(xdata_->self_details.real_total, none);
           }
 
-          (*i)->add_to_value(xdata_->self_details.total, expr);
+          (*i)->add_to_value(xdata_->self_details.total, none);
           (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
         }
       }
@@ -624,6 +624,36 @@ value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&
     } else {
       return xdata_->self_details.total;
     }
+  } else {
+    return NULL_VALUE;
+  }
+}
+
+value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&>& expr) const {
+  if (!expr)
+    return amount(real_only);
+
+  DEBUG("account.amount", "real only: " << real_only);
+
+  if (xdata_ && xdata_->has_flags(ACCOUNT_EXT_VISITED)) {
+    value_t total;
+    posts_list::const_iterator i = posts.begin();
+    for (; i != posts.end(); i++) {
+      if ((*i)->xdata().has_flags(POST_EXT_VISITED) &&
+          (real_only != true || !(*i)->has_flags(POST_VIRTUAL))) {
+        (*i)->add_to_value(total, expr);
+      }
+    }
+
+    i = xdata_->reported_posts.begin();
+    for (; i != xdata_->reported_posts.end(); i++) {
+      if ((*i)->xdata().has_flags(POST_EXT_VISITED) &&
+          (real_only != true || !(*i)->has_flags(POST_VIRTUAL))) {
+        (*i)->add_to_value(total, expr);
+      }
+    }
+
+    return total;
   } else {
     return NULL_VALUE;
   }
