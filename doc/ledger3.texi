@@ -3225,6 +3225,7 @@ expression with parentheses:
 * Balance assignments::
 * Resetting a balance::
 * Balancing transactions::
+* Balance filter::
 @end menu
 
 If at the end of a posting's amount (and after the cost too, if there
@@ -3329,7 +3330,7 @@ This is the only time in ledger when more than one posting's amount
 may be empty---and then only because it's not truly empty, it is
 indirectly provided by the balance assignment's value.
 
-@node Balancing transactions,  , Resetting a balance, Balance verification
+@node Balancing transactions, Balance filter, Resetting a balance, Balance verification
 @subsection Balancing transactions
 @findex --empty
 
@@ -3349,6 +3350,51 @@ the input file.
 A balanced virtual transaction is used simply to indicate to Ledger that
 this is not a ``real'' transaction.  It won't appear in any reports
 anyway (unless you use a register report with @option{--empty}).
+
+@node Balance filter,  , Balancing transactions, Balance verification
+@subsection Balance filter
+
+Sometimes it can be useful to consider only some postings when computing a
+balance assertion/assignment. For example, if transactions are not in
+chronological order, then it may be useful to only consider the balance of
+postings that are before a specific date. This may be achieved with the
+@samp{balance_filter} tag.
+
+The @samp{balance_filter} tag, may apply to a single balance posting or an
+entire transaction, and the filter may be set to any valid expression that
+returns a boolean. For example, the following balance assertion only considers
+postings that are dated before the balance assertion:
+
+@smallexample
+2012-03-10 KFC
+    ; balance_filter: balance_post.date >= post.date
+    Expenses:Food                $20.00
+    Assets:Cash                 $-20.00 = $500.00
+@end smallexample
+
+Any variables used in the filter expression are by default respective to the
+posting being filtered. To get properties of the balance posting, the
+@samp{balance_post} variable is provided.
+
+@subsubsection Balance filter limitations
+
+Due to some limitations in the parser, balance filters have some restrictions:
+
+@itemize
+
+@item Just like normal balance assertions/assignments, transactions or postings
+that appear later in the journal are never considered even if they would
+satisfy the provided filter.
+
+@item To apply a balance filter only for a specific posting, the
+@samp{balance_filter} tag must appear on the same line as the posting. (It
+cannot go on a subsequent line.) This limitation does not apply when setting a
+balance filter for an entire transaction.
+
+@item The @samp{balance_filter} tag is not propagated from automatic
+transactions to postings in an actual transaction.
+
+@end itemize
 
 @node Posting cost, Explicit posting costs, Balance verification, Transactions
 @section Posting cost
