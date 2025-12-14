@@ -1,0 +1,27 @@
+2015-10-20=2015-10-19 Test
+    Account1                                       2 EUR
+    Account2
+
+2015-10-20=2015-10-21 Test
+    Account1                                       2 EUR
+    Account2
+
+test print --date-format '%Y-%d-%m'
+2015-20-10=2015-19-10 Test
+    Account1                                   2 EUR
+    Account2
+
+2015-20-10=2015-21-10 Test
+    Account1                                   2 EUR
+    Account2
+end test
+
+test print
+2015/10/20=2015/10/19 Test
+    Account1                                   2 EUR
+    Account2
+
+2015/10/20=2015/10/21 Test
+    Account1                                   2 EUR
+    Account2
+end test
