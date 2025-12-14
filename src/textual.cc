@@ -1563,15 +1563,18 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         DEBUG("post.assign", "line " << context.linenum << ": "
                                      << "account balance = " << account_total);
         DEBUG("post.assign", "line " << context.linenum << ": "
-                                     << "post amount = " << amt << " (is_zero = " << amt.is_zero()
-                                     << ")");
+                                     << "post amount = " << post->amount
+                                     << " (is_zero = " << post->amount.is_zero() << ")");
+        DEBUG("post.assign", "line " << context.linenum << ": "
+                                     << "post assertion = " << amt
+                                     << " (is_zero = " << amt.is_zero() << ")");
 
         balance_t diff = amt;
 
         switch (account_total.type()) {
         case value_t::AMOUNT: {
           amount_t amt(account_total.as_amount().strip_annotations(keep_details_t()));
-          diff -= amt;
+          diff -= amt.reduced();
           DEBUG("textual.parse", "line " << context.linenum << ": "
                                          << "Subtracting amount " << amt << " from diff, yielding "
                                          << diff);
@@ -1637,7 +1640,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
           }
         } else {
           // balance assertion
-          diff -= post->amount.strip_annotations(keep_details_t());
+          diff -= post->amount.reduced().strip_annotations(keep_details_t());
           if (!no_assertions && !diff.is_zero()) {
             balance_t tot = (-diff + amt).strip_annotations(keep_details_t());
             DEBUG("textual.parse",
