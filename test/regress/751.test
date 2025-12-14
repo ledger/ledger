@@ -1,0 +1,27 @@
+account food
+account Assets:Cash
+commodity $
+
+account Assets:Cash
+    check abs(amount) <= 20
+    check commodity == '$'
+    default
+
+2012-02-29 KFC
+    food                                      $25.00
+    Assets:Cash
+
+; This xact has a default account to balance the expense, it shoud also be
+; checked even if not explicitly written down
+2012-02-29 KFC
+    food                                      $25.00
+
+test bal
+             $-50.00  Assets:Cash
+              $50.00  food
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 12: Transaction check failed: (abs(amount) <= {20})
+Warning: "$FILE", line 17: Transaction check failed: (abs(amount) <= {20})
+end test
