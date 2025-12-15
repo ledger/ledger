@@ -45,15 +45,15 @@
 #include "predicate.h"
 #include "format.h"
 #include "account.h"
+#include "post.h"
 
 namespace ledger {
 
 class xact_t;
-class post_t;
 class item_t;
 class report_t;
 
-class format_posts : public item_handler<post_t> {
+class format_posts : public item_handler<post_t>, scope_t {
 protected:
   report_t& report;
   format_t first_line_format;
@@ -84,6 +84,11 @@ public:
 
     item_handler<post_t>::clear();
   }
+
+  virtual value_t get_last_post(call_scope_t& args) { return scope_value(last_post); }
+
+  virtual string description() { return "format"; }
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
 };
 
 class format_accounts : public item_handler<account_t> {

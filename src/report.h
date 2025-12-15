@@ -880,7 +880,9 @@ public:
                  "           bold if should_bold))\n%/"
                  "%(justify(\" \", int(date_width)))"
                  " %(ansify_if("
-                 "   justify(truncated(has_tag(\"Payee\") ? payee : \" \", "
+                 "   justify(truncated(previous_post"
+                 "                       ? (previous_post.payee != payee ? payee : \" \")"
+                 "                       : payee, "
                  "                     int(payee_width)), int(payee_width)),"
                  "             bold if should_bold))"
                  " %$3 %$4 %$5\n");
