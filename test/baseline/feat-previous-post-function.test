@@ -1,0 +1,24 @@
+; Test previous_post function basic functionality
+; Verifies that previous_post returns the previous posting's data
+
+2025-01-01 Store A
+    Expenses:Food         $50.00
+    Assets:Checking
+
+2025-01-02 Store B
+    Expenses:Food         $30.00
+    Assets:Checking
+
+2025-01-03 Store A
+    Expenses:Food         $25.00
+    Assets:Checking
+
+
+test reg --format='%(payee) | prev=%(previous_post ? previous_post.payee : "NONE")\n'
+Store A | prev=NONE
+Store A | prev=Store A
+Store B | prev=Store A
+Store B | prev=Store B
+Store A | prev=Store B
+Store A | prev=Store A
+end test

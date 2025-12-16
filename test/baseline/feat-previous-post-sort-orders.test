@@ -1,0 +1,33 @@
+; Test previous_post with different sort orders
+; Verifies the fix for issue #868: previous_post tracks display order, not date order
+
+2025-01-03 Store C
+    Expenses:Food         $50.00
+    Assets:Checking
+
+2025-01-01 Store A
+    Expenses:Food         $20.00
+    Assets:Checking
+
+2025-01-02 Store B
+    Expenses:Food         $30.00
+    Assets:Checking
+
+
+test reg --sort date --format='%(date) %(payee) prev=%(previous_post ? previous_post.payee : "NONE")\n'
+2025/01/01 Store A prev=NONE
+2025/01/01 Store A prev=Store A
+2025/01/02 Store B prev=Store A
+2025/01/02 Store B prev=Store B
+2025/01/03 Store C prev=Store B
+2025/01/03 Store C prev=Store C
+end test
+
+test reg --sort payee --format='%(date) %(payee) prev=%(previous_post ? previous_post.payee : "NONE")\n'
+2025/01/01 Store A prev=NONE
+2025/01/01 Store A prev=Store A
+2025/01/02 Store B prev=Store A
+2025/01/02 Store B prev=Store B
+2025/01/03 Store C prev=Store B
+2025/01/03 Store C prev=Store C
+end test

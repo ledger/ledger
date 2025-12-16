@@ -9362,6 +9362,7 @@ functions are described later):
 * Date Functions::
 * Date and Time Format Codes::
 * Text Formatting::
+* Posting Context::
 * Data File Parsing Information::
 @end menu
 
@@ -9636,7 +9637,39 @@ prices.  @code{strip} removes these annotations.
 
 @end table
 
-@node Data File Parsing Information,  , Text Formatting, Formatting Functions and Codes
+@node Posting Context, Data File Parsing Information, Text Formatting, Formatting Functions and Codes
+@subsection Posting Context
+
+The following function provides access to contextual information during
+report generation:
+
+@table @code
+
+@item previous_post
+Returns the previously processed posting in a register report.  This
+enables conditional formatting based on comparison with the previous
+posting's data.  Returns @code{null} for the first posting in a report.
+
+The @code{previous_post} function is particularly useful for suppressing
+duplicate values in register reports.  For example, to display the payee
+only when it differs from the previous posting:
+
+@smallexample
+--format='%(previous_post ? (previous_post.payee != payee ? payee : "") : payee)'
+@end smallexample
+
+You can access any field of the previous posting using dot notation:
+@code{previous_post.payee}, @code{previous_post.date},
+@code{previous_post.account}, @code{previous_post.amount}, etc.
+
+@strong{Note:} The @code{previous_post} tracks display order, not
+chronological order.  This means it works correctly with any sort order
+(@option{--sort date}, @option{--sort amount}, @option{--sort payee},
+etc.).
+
+@end table
+
+@node Data File Parsing Information,  , Posting Context, Formatting Functions and Codes
 @subsection Data File Parsing Information
 
 The following format strings provide locational metadata
