@@ -307,8 +307,7 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
         assert(tok.value);
         arg2->set_value(mask_t(*tok.value));
 
-        node->set_right(expr_t::op_t::new_node(
-            expr_t::op_t::O_SEQ, expr_t::op_t::new_node(expr_t::op_t::O_CONS, arg1, arg2)));
+        node->set_right(expr_t::op_t::new_node(expr_t::op_t::O_CONS, arg1, arg2));
       } else {
         node->set_right(arg1);
       }

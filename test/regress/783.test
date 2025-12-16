@@ -1,0 +1,24 @@
+= %class = Booga
+    (Expenses:Electronics)    (amount)
+
+= %class=Education
+    (Expenses:Education)    (amount)
+
+2025/12/15 * Electronics
+    Assets                                   $100.00
+    Expenses
+    ; class: Booga
+
+
+2025/12/15 * Textbooks
+    Assets                                    $10.00
+    Expenses
+    ; class: Education
+
+test bal 'expenses:'
+            $-110.00  Expenses
+             $-10.00    Education
+            $-100.00    Electronics
+--------------------
+            $-110.00
+end test
