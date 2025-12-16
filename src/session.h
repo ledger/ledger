@@ -129,6 +129,7 @@ public:
   OPTION(session_t, check_payees);
   OPTION(session_t, day_break);
   OPTION(session_t, download); // -Q
+  OPTION(session_t, getquote_);
 
   OPTION_(session_t, decimal_comma, DO() { commodity_t::decimal_comma_by_default = true; });
 
