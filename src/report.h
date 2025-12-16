@@ -880,6 +880,11 @@ public:
                  "           bold if should_bold))\n%/"
                  "%(justify(\" \", int(date_width)))"
                  " %(ansify_if("
+                 // Conditional payee display using previous_post function:
+                 // - If this is the first post (previous_post is NULL/falsy), show payee
+                 // - If previous post has a different payee, show payee
+                 // - If previous post has the same payee, show blank to avoid repetition
+                 // This fixes issue #868: payee display is now consistent regardless of sort order
                  "   justify(truncated(previous_post"
                  "                       ? (previous_post.payee != payee ? payee : \" \")"
                  "                       : payee, "
