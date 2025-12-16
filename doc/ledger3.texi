@@ -6240,9 +6240,13 @@ Set expected freshness of prices in @var{INT} hours.
 @itemx -Q
 Download quotes using the script named @file{getquote}.
 
-@c FIXME: The option doesn't exist currently.
-@c @item --getquote @var{FILE}
-@c Sets the path to a user-defined script to download commodity prices.
+@item --getquote @var{PATH}
+Specify the path or command name for the price quote retrieval script.
+The default value is @file{getquote}.  This option allows you to use
+a custom script or specify an absolute path to the quote retrieval
+program.  The script will be called with the commodity symbol as an
+argument and should return the current price in a format understood
+by Ledger.
 
 @item --quantity
 @itemx -O
@@ -6404,9 +6408,8 @@ a decimal separator, not the usual period.
 
 @item --download
 @itemx -Q
-Direct Ledger to download prices.
-@c using the script defined via the option
-@c @option{--getquote @var{FILE}}.
+Direct Ledger to download prices using the script defined via the option
+@option{--getquote @var{PATH}} (defaults to @file{getquote}).
 
 @item --file @var{FILE}
 @itemx -f @var{FILE}
@@ -7900,6 +7903,20 @@ a @file{getquote} script, implemented in Perl, is provided in the
 distribution.  Downloaded quote price are then appended to the price
 database, usually specified using the environment variable
 @env{LEDGER_PRICE_DB}.
+
+@item --getquote @var{PATH}
+Specify the path or command name for the price quote retrieval script.
+The default value is @file{getquote}.  This option allows you to use
+a custom script or specify an absolute path to the quote retrieval
+program.  For example:
+
+@example
+ledger --getquote /usr/local/bin/myquotes --download bal
+@end example
+
+The script will be called with the commodity symbol as the first argument
+and optionally the target commodity as the second argument.  It should
+return the current price in a format understood by Ledger.
 
 @end ftable
 
