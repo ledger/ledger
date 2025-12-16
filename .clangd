@@ -1,0 +1,5 @@
+CompileFlags:
+  CompilationDatabase: "."
+  Remove:
+    - "-include"
+    - "*cmake_pch.hxx"

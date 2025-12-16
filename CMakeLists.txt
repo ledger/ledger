@@ -6,6 +6,8 @@ set(Required_Icu_Version 63)
 set(Required_Python_Version 3.10)
 set(Required_Gpgmepp_Version 1.13.1)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 cmake_minimum_required(VERSION ${Required_CMake_Version})
 
 option(CMAKE_BUILD_TYPE "CMake Build type" "Release")
