@@ -72,17 +72,39 @@ void format_posts::flush() {
   report.output_stream.flush();
 }
 
+/**
+ * @brief Looks up functions provided by the format_posts scope.
+ *
+ * This method implements the scope_t::lookup interface to register functions
+ * that can be used in format expressions. Functions are looked up during
+ * expression compilation and bound to this instance for later evaluation.
+ *
+ * Implementation notes:
+ * - Only handles FUNCTION symbol types; returns NULL for others to delegate
+ *   to parent scopes
+ * - Uses a switch on the first character for O(1) dispatch efficiency
+ * - Full string comparison only performed for candidate matches
+ * - Returns NULL to continue lookup chain if function is not found
+ *
+ * @param kind The type of symbol being looked up (must be FUNCTION)
+ * @param name The name of the function to look up
+ * @return Function operator bound to this instance, or NULL to delegate
+ */
 expr_t::ptr_op_t format_posts::lookup(const symbol_t::kind_t kind, const string& name) {
+  // Only register functions; let parent scopes handle other symbol types
   if (kind != symbol_t::FUNCTION)
     return NULL;
 
+  // Switch on first character for efficient dispatch
   switch (name[0]) {
   case 'p':
     if (name == "previous_post")
+      // Bind get_last_post to this instance and return as a callable functor
       return MAKE_FUNCTOR(format_posts::get_last_post);
     break;
   }
 
+  // Function not found; delegate to parent scope in the chain
   return NULL;
 }
 
@@ -90,6 +112,13 @@ void format_posts::operator()(post_t& post) {
   if (!post.has_xdata() || !post.xdata().has_flags(POST_EXT_DISPLAYED)) {
     std::ostream& out(report.output_stream);
 
+    // Create a nested scope chain: post -> format_posts (this) -> report
+    // This allows format expressions to access:
+    //   - post data (date, payee, account, amount, etc.) from the post scope
+    //   - previous_post function from the format_posts scope (this)
+    //   - report options and functions from the report scope
+    // The inner_scope binds the post with this format_posts instance,
+    // then bound_scope binds that with the report to create the full chain.
     bind_scope_t inner_scope(post, *this);
     bind_scope_t bound_scope(report, inner_scope);
 
