@@ -53,20 +53,6 @@ class xact_t;
 class item_t;
 class report_t;
 
-/**
- * @class format_posts
- * @brief Formats and outputs postings according to format strings.
- *
- * This class processes postings sequentially and formats them for output.
- * It inherits from both item_handler<post_t> for the handler interface and
- * scope_t to participate in the expression evaluation scope chain.
- *
- * The scope chain integration allows format expressions to access the
- * previous_post function, which returns the last processed posting.
- * This enables conditional formatting based on the previous posting's data.
- *
- * Scope chain structure: post -> format_posts (this) -> report
- */
 class format_posts : public item_handler<post_t>, scope_t {
 protected:
   report_t& report;
@@ -116,7 +102,7 @@ public:
    * such as suppressing the payee when it matches the previous posting.
    *
    * @param args Call scope for function arguments (unused for this function)
-   * @return A scope value wrapping last_post, or NULL for the first posting
+   * @return last_post or NULL for the first posting
    *
    * @note This returns a SCOPE type value that can be dereferenced in expressions:
    *       previous_post.payee, previous_post.date, etc.
@@ -130,19 +116,6 @@ public:
    */
   virtual string description() { return "format"; }
 
-  /**
-   * @brief Looks up functions provided by this scope.
-   *
-   * This method is part of the scope chain lookup mechanism. It registers
-   * functions that can be called from format expressions.
-   *
-   * Currently registered functions:
-   * - previous_post: Returns the previously processed posting (see get_last_post)
-   *
-   * @param kind The type of symbol being looked up (FUNCTION, OPTION, etc.)
-   * @param name The name of the symbol to look up
-   * @return Pointer to the function operator, or NULL to delegate to parent scope
-   */
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
 };
 
