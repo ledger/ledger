@@ -533,7 +533,70 @@ void instance_t::automated_xact_directive(char* line) {
 
   bool reveal_context = true;
 
+  // if the line is with "= name disable", disable the named automated xact
+  // if the line is with "= name enable", enable the named automated xact
+  // if the line is with "= name delete", delete the named automated xact
+  for (char* p = skip_ws(line + 1); *p; p++) {
+    if (!(*p == ' ' || *p == '\t'))
+      continue;
+
+    // we have the name, now check for keyword
+    const std::size_t remlen = std::strlen(skip_ws(p));
+
+    if (remlen >= 7 && std::strncmp(skip_ws(p), "disable", 7) == 0) {
+      char* name = skip_ws(line + 1);
+      next_element(name);
+
+      DEBUG("textual", "disabling automated transaction named '" << name << "'");
+      foreach (auto_xact_t* xact, context.journal->auto_xacts) {
+        if (xact->name && xact->name == string(name)) {
+          xact->enabled = false;
+        }
+      }
+      return;
+    } else if (remlen >= 6 && std::strncmp(skip_ws(p), "enable", 6) == 0) {
+      char* name = skip_ws(line + 1);
+      next_element(name);
+
+      DEBUG("textual", "enabling automated transaction named '" << name << "'");
+      foreach (auto_xact_t* xact, context.journal->auto_xacts) {
+        if (xact->name && xact->name == string(name)) {
+          xact->enabled = true;
+        }
+      }
+      return;
+    } else if (remlen >= 6 && std::strncmp(skip_ws(p), "delete", 6) == 0) {
+      char* name = skip_ws(line + 1);
+      next_element(name);
+
+      DEBUG("textual", "deleting automated transaction named '" << name << "'");
+      auto_xacts_list::iterator it = context.journal->auto_xacts.begin();
+      auto_xacts_list::iterator end = context.journal->auto_xacts.end();
+
+      while (it != end) {
+        if ((*it)->name && (*it)->name == string(name)) {
+          it = context.journal->auto_xacts.erase(it);
+          continue;
+        }
+        it++;
+      }
+      return;
+    }
+  }
+
   try {
+    // try to parse name, the syntax is "= name :: query"
+    optional<string> xact_name = {};
+    char* first_colon = std::strchr(line, ':');
+    if (*(first_colon + 1) == ':') {
+      DEBUG("textual", "found possible name separator");
+      char* name = skip_ws(line + 1);
+      next_element(name);
+      DEBUG("textual", "name is '" << name << "'");
+      line = first_colon + 2;
+      xact_name = string(name);
+    }
+
     query_t query;
     keep_details_t keeper(true, true, true);
     expr_t::ptr_op_t expr =
@@ -542,7 +605,7 @@ void instance_t::automated_xact_directive(char* line) {
       throw parse_error(_("Expected predicate after '='"));
     }
 
-    unique_ptr<auto_xact_t> ae(new auto_xact_t(predicate_t(expr, keeper)));
+    unique_ptr<auto_xact_t> ae(new auto_xact_t(predicate_t(expr, keeper), xact_name));
     ae->pos = position_t();
     ae->pos->pathname = context.pathname;
     ae->pos->beg_pos = context.line_beg_pos;
