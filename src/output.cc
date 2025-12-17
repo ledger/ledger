@@ -72,11 +72,26 @@ void format_posts::flush() {
   report.output_stream.flush();
 }
 
+expr_t::ptr_op_t format_posts::lookup(const symbol_t::kind_t kind, const string& name) {
+  if (kind != symbol_t::FUNCTION)
+    return NULL;
+
+  switch (name[0]) {
+  case 'p':
+    if (name == "previous_post")
+      return MAKE_FUNCTOR(format_posts::get_last_post);
+    break;
+  }
+
+  return NULL;
+}
+
 void format_posts::operator()(post_t& post) {
   if (!post.has_xdata() || !post.xdata().has_flags(POST_EXT_DISPLAYED)) {
     std::ostream& out(report.output_stream);
 
-    bind_scope_t bound_scope(report, post);
+    bind_scope_t inner_scope(post, *this);
+    bind_scope_t bound_scope(report, inner_scope);
 
     if (!report_title.empty()) {
       if (first_report_title)

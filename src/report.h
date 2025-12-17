@@ -880,7 +880,13 @@ public:
                  "           bold if should_bold))\n%/"
                  "%(justify(\" \", int(date_width)))"
                  " %(ansify_if("
-                 "   justify(truncated(has_tag(\"Payee\") ? payee : \" \", "
+                 // Conditional payee display using previous_post function:
+                 // - If this is the first post (previous_post is NULL/falsy), show payee
+                 // - If previous post has a different payee, show payee
+                 // - If previous post has the same payee, show blank to avoid repetition
+                 "   justify(truncated(previous_post"
+                 "                       ? (previous_post.payee != payee ? payee : \" \")"
+                 "                       : payee, "
                  "                     int(payee_width)), int(payee_width)),"
                  "             bold if should_bold))"
                  " %$3 %$4 %$5\n");

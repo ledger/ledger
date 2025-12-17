@@ -45,15 +45,15 @@
 #include "predicate.h"
 #include "format.h"
 #include "account.h"
+#include "post.h"
 
 namespace ledger {
 
 class xact_t;
-class post_t;
 class item_t;
 class report_t;
 
-class format_posts : public item_handler<post_t> {
+class format_posts : public item_handler<post_t>, scope_t {
 protected:
   report_t& report;
   format_t first_line_format;
@@ -62,7 +62,16 @@ protected:
   format_t prepend_format;
   std::size_t prepend_width;
   xact_t* last_xact;
+
+  /**
+   * Pointer to the previously processed posting.
+   * This is a non-owning pointer used to implement the previous_post function.
+   * NULL for the first posting in the report.
+   * Lifetime: Valid only during the current report iteration; postings are
+   * owned by the journal and outlive this handler.
+   */
   post_t* last_post;
+
   bool first_report_title;
   string report_title;
 
@@ -84,6 +93,30 @@ public:
 
     item_handler<post_t>::clear();
   }
+
+  /**
+   * @brief Returns the previously processed posting.
+   *
+   * This function is exposed to format expressions as 'previous_post'.
+   * It enables conditional formatting based on the previous posting's data,
+   * such as suppressing the payee when it matches the previous posting.
+   *
+   * @param args Call scope for function arguments (unused for this function)
+   * @return last_post or NULL for the first posting
+   *
+   * @note This returns a SCOPE type value that can be dereferenced in expressions:
+   *       previous_post.payee, previous_post.date, etc.
+   * @note Returns NULL (falsy) when processing the first posting in a report
+   */
+  virtual value_t get_last_post(call_scope_t& args) { return scope_value(last_post); }
+
+  /**
+   * @brief Provides a description of this scope for debugging.
+   * @return String identifier for this scope type
+   */
+  virtual string description() { return "format"; }
+
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
 };
 
 class format_accounts : public item_handler<account_t> {
