@@ -536,60 +536,60 @@ void instance_t::automated_xact_directive(char* line) {
   // if the line is with "= name disable", disable the named automated xact
   // if the line is with "= name enable", enable the named automated xact
   // if the line is with "= name delete", delete the named automated xact
-  for (char* p = skip_ws(line + 1); *p; p++) {
-    if (!(*p == ' ' || *p == '\t'))
+  char* p;
+  for (p = skip_ws(line + 1); *p; p++) {
+    if (!(*p == ' ' || *p == '\t' || *p == '\0'))
       continue;
+  }
 
-    // we have the name, now check for keyword
-    const std::size_t remlen = std::strlen(skip_ws(p));
+  // we have the name, now check for keyword
+  const std::size_t remlen = std::strlen(skip_ws(p));
 
-    if (remlen >= 7 && std::strncmp(skip_ws(p), "disable", 7) == 0) {
-      char* name = skip_ws(line + 1);
-      next_element(name);
+  if (remlen >= 7 && std::strncmp(skip_ws(p), "disable", 7) == 0) {
+    char* name = skip_ws(line + 1);
+    next_element(name);
 
-      DEBUG("textual", "disabling automated transaction named '" << name << "'");
-      foreach (auto_xact_t* xact, context.journal->auto_xacts) {
-        if (xact->name && xact->name == string(name)) {
-          xact->enabled = false;
-        }
+    DEBUG("textual", "disabling automated transaction named '" << name << "'");
+    foreach (auto_xact_t* xact, context.journal->auto_xacts) {
+      if (xact->name && xact->name == string(name)) {
+        xact->enabled = false;
       }
-      return;
-    } else if (remlen >= 6 && std::strncmp(skip_ws(p), "enable", 6) == 0) {
-      char* name = skip_ws(line + 1);
-      next_element(name);
-
-      DEBUG("textual", "enabling automated transaction named '" << name << "'");
-      foreach (auto_xact_t* xact, context.journal->auto_xacts) {
-        if (xact->name && xact->name == string(name)) {
-          xact->enabled = true;
-        }
-      }
-      return;
-    } else if (remlen >= 6 && std::strncmp(skip_ws(p), "delete", 6) == 0) {
-      char* name = skip_ws(line + 1);
-      next_element(name);
-
-      DEBUG("textual", "deleting automated transaction named '" << name << "'");
-      auto_xacts_list::iterator it = context.journal->auto_xacts.begin();
-      auto_xacts_list::iterator end = context.journal->auto_xacts.end();
-
-      while (it != end) {
-        if ((*it)->name && (*it)->name == string(name)) {
-          it = context.journal->auto_xacts.erase(it);
-          continue;
-        }
-        it++;
-      }
-      return;
     }
+    return;
+  } else if (remlen >= 6 && std::strncmp(skip_ws(p), "enable", 6) == 0) {
+    char* name = skip_ws(line + 1);
+    next_element(name);
+
+    DEBUG("textual", "enabling automated transaction named '" << name << "'");
+    foreach (auto_xact_t* xact, context.journal->auto_xacts) {
+      if (xact->name && xact->name == string(name)) {
+        xact->enabled = true;
+      }
+    }
+    return;
+  } else if (remlen >= 6 && std::strncmp(skip_ws(p), "delete", 6) == 0) {
+    char* name = skip_ws(line + 1);
+    next_element(name);
+
+    DEBUG("textual", "deleting automated transaction named '" << name << "'");
+    auto_xacts_list::iterator it = context.journal->auto_xacts.begin();
+    auto_xacts_list::iterator end = context.journal->auto_xacts.end();
+
+    while (it != end) {
+      if ((*it)->name && (*it)->name == string(name)) {
+        it = context.journal->auto_xacts.erase(it);
+        continue;
+      }
+      it++;
+    }
+    return;
   }
 
   try {
     // try to parse name, the syntax is "= name :: query"
-    optional<string> xact_name = {};
+    optional<string> xact_name = none;
     char* first_colon = std::strchr(line, ':');
-    if (*(first_colon + 1) == ':') {
-      DEBUG("textual", "found possible name separator");
+    if (first_colon && *(first_colon + 1) == ':') {
       char* name = skip_ws(line + 1);
       next_element(name);
       DEBUG("textual", "name is '" << name << "'");
