@@ -528,6 +528,17 @@ void instance_t::option_directive(char* line) {
     throw_(option_error, _f("Illegal option --%1%") % (line + 2));
 }
 
+namespace {
+void check_command_has_match(parse_context_t& context, bool has_match, const string& command,
+                             const mask_t& name_mask) {
+  if (!has_match) {
+    context.warning(_f("Automated transaction command '%1%' with mask '%2%' didn't match any "
+                       "automated transaction.") %
+                    command % name_mask);
+  }
+}
+} // namespace
+
 void instance_t::automated_xact_directive(char* line) {
   std::istream::pos_type pos = context.line_beg_pos;
 
@@ -574,6 +585,7 @@ void instance_t::automated_xact_directive(char* line) {
   }
 
   mask_t name_mask(name);
+  bool has_match = false;
 
   if (command == "enable" || command == "disable") {
     DEBUG("textual.autoxact", command << " automated transaction matching '" << name << "'");
@@ -582,8 +594,10 @@ void instance_t::automated_xact_directive(char* line) {
       if (xact->name && name_mask.match(xact->name.get())) {
         DEBUG("textual.autoxact", command << "d '" << xact->name.get() << "'");
         xact->enabled = enabled;
+        has_match = true;
       }
     }
+    check_command_has_match(context, has_match, command, name_mask);
     return;
   } else if (command == "delete") {
     DEBUG("textual.autoxact", "deleting automated transaction matching '" << name << "'");
@@ -594,10 +608,12 @@ void instance_t::automated_xact_directive(char* line) {
       if ((*it)->name && name_mask.match((*it)->name.get())) {
         DEBUG("textual.autoxact", "deleted '" << (*it)->name.get() << "'");
         it = context.journal->auto_xacts.erase(it);
+        has_match = true;
         continue;
       }
       it++;
     }
+    check_command_has_match(context, has_match, command, name_mask);
     return;
   }
 
@@ -620,6 +636,12 @@ void instance_t::automated_xact_directive(char* line) {
         query.parse_args(string_value(query_start).to_sequence(), keeper, false, true);
     if (!expr) {
       throw parse_error(_("Expected predicate after '='"));
+    }
+
+    foreach (auto_xact_t* xact, context.journal->auto_xacts) {
+      if (xact->name && name == xact->name.get()) {
+        throw_(parse_error, _f("Automated transaction with name '%1%' already exists") % name);
+      }
     }
 
     unique_ptr<auto_xact_t> ae(new auto_xact_t(predicate_t(expr, keeper), xact_name));
