@@ -1,0 +1,21 @@
+; Test for PR #2512: Duplicate name error
+; https://github.com/ledger/ledger/pull/2512
+; Test that duplicate names produce an error
+
+= "savings" :: /^Income:/
+    (Assets:Savings)                      0.10
+
+= "savings" :: /^Income:Bonus/
+    (Assets:Savings)                      0.05
+
+2024-01-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 8:
+While parsing automated transaction:
+> = "savings" :: /^Income:Bonus/
+Error: Automated transaction with name 'savings' already exists
+end test
