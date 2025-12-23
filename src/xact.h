@@ -111,8 +111,10 @@ public:
 class auto_xact_t : public xact_base_t {
 public:
   predicate_t predicate;
+  optional<string> name;
   bool try_quick_match;
   std::map<string, bool> memoized_results;
+  bool enabled;
 
   optional<expr_t::check_expr_list> check_exprs;
 
@@ -132,12 +134,17 @@ public:
 
   auto_xact_t() : try_quick_match(true), active_post(NULL) { TRACE_CTOR(auto_xact_t, ""); }
   auto_xact_t(const auto_xact_t& other)
-      : xact_base_t(), predicate(other.predicate), try_quick_match(other.try_quick_match),
-        active_post(other.active_post) {
+      : xact_base_t(), predicate(other.predicate), name(other.name),
+        try_quick_match(other.try_quick_match), active_post(other.active_post) {
     TRACE_CTOR(auto_xact_t, "copy");
   }
   auto_xact_t(const predicate_t& _predicate)
-      : predicate(_predicate), try_quick_match(true), active_post(NULL) {
+      : predicate(_predicate), name(none), try_quick_match(true), enabled(true), active_post(NULL) {
+    TRACE_CTOR(auto_xact_t, "const predicate_t&");
+  }
+  auto_xact_t(const predicate_t& _predicate, optional<string> _name)
+      : predicate(_predicate), name(_name), try_quick_match(true), enabled(true),
+        active_post(NULL) {
     TRACE_CTOR(auto_xact_t, "const predicate_t&");
   }
 

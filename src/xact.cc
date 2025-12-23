@@ -681,6 +681,9 @@ static string apply_format(const string& str, scope_t& scope) {
 void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
   posts_list initial_posts(xact.posts.begin(), xact.posts.end());
 
+  if (!enabled)
+    return;
+
   try {
 
     bool needs_further_verification = false;
