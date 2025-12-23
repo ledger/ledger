@@ -438,7 +438,7 @@ inline char* trim_ws(char* ptr) {
 
 inline char* next_element(char* buf, bool variable = false) {
   for (char* p = buf; *p; p++) {
-    if (!(*p == ' ' || *p == '\t' || *p == '\0'))
+    if (!(*p == ' ' || *p == '\t'))
       continue;
 
     if (!variable) {

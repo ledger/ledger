@@ -533,50 +533,66 @@ void instance_t::automated_xact_directive(char* line) {
 
   bool reveal_context = true;
 
-  // if the line is with "= name disable", disable the named automated xact
-  // if the line is with "= name enable", enable the named automated xact
-  // if the line is with "= name delete", delete the named automated xact
-  char* p;
-  for (p = skip_ws(line + 1); *p; p++) {
-    if (!(*p == ' ' || *p == '\t' || *p == '\0'))
-      continue;
+  string name;
+  char* p = skip_ws(line + 1);
+  switch (*p) {
+  case '\'':
+  case '"':
+  case '/': {
+    char closing = *p;
+    bool found_closing = false;
+    for (p++; *p; p++) {
+      if (*p == '\\') {
+        if (*(p++) == '\0')
+          throw_(parse_error, _("Unexpected '\\' at end of pattern"));
+      } else if (*p == closing) {
+        p++;
+        found_closing = true;
+        break;
+      }
+      name.push_back(*p);
+    }
+    if (!found_closing)
+      throw_(parse_error, _f("Expected '%1%' at end of pattern") % closing);
+    if (name.empty())
+      throw_(parse_error, _("Match pattern is empty"));
+  }
+  default:
+    for (; *p; p++) {
+      if (*p == ' ' || *p == '\t')
+        break;
+      name.push_back(*p);
+    }
   }
 
-  // we have the name, now check for keyword
-  const std::size_t remlen = std::strlen(skip_ws(p));
+  p = skip_ws(p);
+  string command;
+  for (; *p; p++) {
+    if (*p == ' ' || *p == '\t')
+      break;
+    command.push_back(*p);
+  }
 
-  if (remlen >= 7 && std::strncmp(skip_ws(p), "disable", 7) == 0) {
-    char* name = skip_ws(line + 1);
-    next_element(name);
+  mask_t name_mask(name);
 
-    DEBUG("textual", "disabling automated transaction named '" << name << "'");
+  if (command == "enable" || command == "disable") {
+    DEBUG("textual.autoxact", command << " automated transaction matching '" << name << "'");
+    bool enabled = command == "enable";
     foreach (auto_xact_t* xact, context.journal->auto_xacts) {
-      if (xact->name && xact->name == string(name)) {
-        xact->enabled = false;
+      if (xact->name && name_mask.match(xact->name.get())) {
+        DEBUG("textual.autoxact", command << "d '" << xact->name.get() << "'");
+        xact->enabled = enabled;
       }
     }
     return;
-  } else if (remlen >= 6 && std::strncmp(skip_ws(p), "enable", 6) == 0) {
-    char* name = skip_ws(line + 1);
-    next_element(name);
-
-    DEBUG("textual", "enabling automated transaction named '" << name << "'");
-    foreach (auto_xact_t* xact, context.journal->auto_xacts) {
-      if (xact->name && xact->name == string(name)) {
-        xact->enabled = true;
-      }
-    }
-    return;
-  } else if (remlen >= 6 && std::strncmp(skip_ws(p), "delete", 6) == 0) {
-    char* name = skip_ws(line + 1);
-    next_element(name);
-
-    DEBUG("textual", "deleting automated transaction named '" << name << "'");
+  } else if (command == "delete") {
+    DEBUG("textual.autoxact", "deleting automated transaction matching '" << name << "'");
     auto_xacts_list::iterator it = context.journal->auto_xacts.begin();
     auto_xacts_list::iterator end = context.journal->auto_xacts.end();
 
     while (it != end) {
-      if ((*it)->name && (*it)->name == string(name)) {
+      if ((*it)->name && name_mask.match((*it)->name.get())) {
+        DEBUG("textual.autoxact", "deleted '" << (*it)->name.get() << "'");
         it = context.journal->auto_xacts.erase(it);
         continue;
       }
@@ -585,22 +601,23 @@ void instance_t::automated_xact_directive(char* line) {
     return;
   }
 
-  try {
-    // try to parse name, the syntax is "= name :: query"
-    optional<string> xact_name = none;
-    char* first_colon = std::strchr(line, ':');
-    if (first_colon && *(first_colon + 1) == ':') {
-      char* name = skip_ws(line + 1);
-      next_element(name);
-      DEBUG("textual", "name is '" << name << "'");
-      line = first_colon + 2;
-      xact_name = string(name);
-    }
+  optional<string> xact_name = none;
 
+  // if command is :: it means we are defining a new query, so we need to start
+  // parsing the query at `p`
+  char* query_start = line + 1;
+  if (command == "::") {
+    query_start = p;
+    xact_name = name;
+    DEBUG("textual.autoxact", "defining named autoxact '" << name << "'");
+  }
+  query_start = skip_ws(query_start);
+
+  try {
     query_t query;
     keep_details_t keeper(true, true, true);
     expr_t::ptr_op_t expr =
-        query.parse_args(string_value(skip_ws(line + 1)).to_sequence(), keeper, false, true);
+        query.parse_args(string_value(query_start).to_sequence(), keeper, false, true);
     if (!expr) {
       throw parse_error(_("Expected predicate after '='"));
     }
