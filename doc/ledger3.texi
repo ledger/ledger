@@ -3674,9 +3674,9 @@ source commodity and the destination commodity:
 
 @smallexample
 2025-04-12 Coinbase
-    Assets:Coinbase       -100 BTC @{$100@} @ 2 ETH @{$40@} [2025-04-12]
-    Assets:Coinbase        200 ETH @{$40@} [2025-04-12]
-    Expenses:Capital Loss  $2,000.00
+    Assets:Coinbase          -100 BTC @{$100@} @@ 2 ETH @{$40@} [2025-04-12]
+    Assets:Coinbase           200 ETH @{$40@} [2025-04-12]
+    Expenses:Capital Loss  $2,000
 @end smallexample
 
 In this example:
@@ -3702,9 +3702,9 @@ You can also sell the second commodity later and track its gain/loss:
 
 @smallexample
 2025-04-13 Coinbase
-    Assets:Coinbase       -200 ETH @{$40@} [2025-04-12] @ $50
-    Assets:Coinbase          $10,000
-    Income:Capital Gain   $-2,000.00
+    Assets:Coinbase          -200 ETH @{$40@} [2025-04-12] @@ $50
+    Assets:Coinbase       $10,000
+    Income:Capital Gain   $-2,000
 @end smallexample
 
 This approach provides full end-to-end tracking of your investments
