@@ -135,7 +135,8 @@ public:
   auto_xact_t() : try_quick_match(true), active_post(NULL) { TRACE_CTOR(auto_xact_t, ""); }
   auto_xact_t(const auto_xact_t& other)
       : xact_base_t(), predicate(other.predicate), name(other.name),
-        try_quick_match(other.try_quick_match), active_post(other.active_post) {
+        try_quick_match(other.try_quick_match), enabled(other.enabled),
+        active_post(other.active_post) {
     TRACE_CTOR(auto_xact_t, "copy");
   }
   auto_xact_t(const predicate_t& _predicate)

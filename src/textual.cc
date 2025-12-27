@@ -567,6 +567,7 @@ void instance_t::automated_xact_directive(char* line) {
       throw_(parse_error, _f("Expected '%1%' at end of pattern") % closing);
     if (name.empty())
       throw_(parse_error, _("Match pattern is empty"));
+    break;
   }
   default:
     for (; *p; p++) {
