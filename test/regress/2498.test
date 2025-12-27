@@ -1,0 +1,14 @@
+2025/12/13 * Food
+    expenses                                  100.00 Kc {{=5.00 EUR}}
+    assets
+
+2025/12/13 * Food
+    expenses                                  200.00 Kc {=0.05 EUR}
+    assets
+
+test bal --lots
+-300.00 Kc {=EUR0.05}  assets
+300.00 Kc {=EUR0.05}  expenses
+--------------------
+                   0
+end test
