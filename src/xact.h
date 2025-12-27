@@ -199,7 +199,7 @@ public:
 };
 
 typedef std::list<xact_t*> xacts_list;
-typedef std::list<auto_xact_t*> auto_xacts_list;
+typedef std::list<unique_ptr<auto_xact_t>> auto_xacts_list;
 typedef std::list<period_xact_t*> period_xacts_list;
 
 void put_xact(property_tree::ptree& pt, const xact_t& xact);

@@ -591,7 +591,7 @@ void instance_t::automated_xact_directive(char* line) {
   if (command == "enable" || command == "disable") {
     DEBUG("textual.autoxact", command << " automated transaction matching '" << name << "'");
     bool enabled = command == "enable";
-    foreach (auto_xact_t* xact, context.journal->auto_xacts) {
+    foreach (unique_ptr<auto_xact_t>& xact, context.journal->auto_xacts) {
       if (xact->name && name_mask.match(xact->name.get())) {
         DEBUG("textual.autoxact", command << "d '" << xact->name.get() << "'");
         xact->enabled = enabled;
@@ -602,17 +602,19 @@ void instance_t::automated_xact_directive(char* line) {
     return;
   } else if (command == "delete") {
     DEBUG("textual.autoxact", "deleting automated transaction matching '" << name << "'");
-    auto_xacts_list::iterator it = context.journal->auto_xacts.begin();
-    auto_xacts_list::iterator end = context.journal->auto_xacts.end();
+    auto_xacts_list::iterator it = context.journal->auto_xacts_begin();
+    auto_xacts_list::iterator end = context.journal->auto_xacts_end();
 
     while (it != end) {
-      if ((*it)->name && name_mask.match((*it)->name.get())) {
-        DEBUG("textual.autoxact", "deleted '" << (*it)->name.get() << "'");
+      unique_ptr<auto_xact_t>& xact = *it;
+      if (xact->name && name_mask.match(xact->name.get())) {
+        DEBUG("textual.autoxact", "deleted '" << xact->name.get() << "'");
         it = context.journal->auto_xacts.erase(it);
         has_match = true;
         continue;
+      } else {
+        it++;
       }
-      it++;
     }
     check_command_has_match(context, has_match, command, name_mask);
     return;
@@ -639,7 +641,7 @@ void instance_t::automated_xact_directive(char* line) {
       throw parse_error(_("Expected predicate after '='"));
     }
 
-    foreach (auto_xact_t* xact, context.journal->auto_xacts) {
+    foreach (unique_ptr<auto_xact_t>& xact, context.journal->auto_xacts) {
       if (xact->name && name == xact->name.get()) {
         throw_(parse_error, _f("Automated transaction with name '%1%' already exists") % name);
       }
@@ -702,13 +704,11 @@ void instance_t::automated_xact_directive(char* line) {
       }
     }
 
-    context.journal->auto_xacts.push_back(ae.get());
-
     ae->journal = context.journal;
     ae->pos->end_pos = context.curr_pos;
     ae->pos->end_line = context.linenum;
 
-    ae.release();
+    context.journal->auto_xacts.push_back(std::move(ae));
   } catch (const std::exception&) {
     if (reveal_context) {
       add_error_context(_("While parsing automated transaction:"));
@@ -1034,13 +1034,11 @@ void instance_t::account_directive(char* line) {
   }
 
   if (ae.get()) {
-    context.journal->auto_xacts.push_back(ae.get());
-
     ae->journal = context.journal;
     ae->pos->end_pos = in.tellg();
     ae->pos->end_line = context.linenum;
 
-    ae.release();
+    context.journal->auto_xacts.push_back(std::move(ae));
   }
 }
 

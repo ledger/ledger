@@ -71,9 +71,6 @@ journal_t::~journal_t() {
   foreach (xact_t* xact, xacts)
     checked_delete(xact);
 
-  foreach (auto_xact_t* xact, auto_xacts)
-    checked_delete(xact);
-
   foreach (period_xact_t* xact, period_xacts)
     checked_delete(xact);
 
@@ -409,7 +406,7 @@ bool journal_t::add_xact(xact_t* xact) {
 }
 
 void journal_t::extend_xact(xact_base_t* xact) {
-  foreach (auto_xact_t* auto_xact, auto_xacts)
+  foreach (unique_ptr<auto_xact_t>& auto_xact, auto_xacts)
     auto_xact->extend_xact(*xact, *current_context);
 }
 
@@ -473,7 +470,7 @@ bool journal_t::has_xdata() {
     if (xact->has_xdata())
       return true;
 
-  foreach (auto_xact_t* xact, auto_xacts)
+  foreach (unique_ptr<auto_xact_t>& xact, auto_xacts)
     if (xact->has_xdata())
       return true;
 
@@ -492,7 +489,7 @@ void journal_t::clear_xdata() {
     if (!xact->has_flags(ITEM_TEMP))
       xact->clear_xdata();
 
-  foreach (auto_xact_t* xact, auto_xacts)
+  foreach (unique_ptr<auto_xact_t>& xact, auto_xacts)
     if (!xact->has_flags(ITEM_TEMP))
       xact->clear_xdata();
 
