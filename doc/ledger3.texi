@@ -3875,6 +3875,8 @@ transaction.
 * State flags::
 * Effective Dates::
 * Periodic Transactions::
+* Named Automated Transactions::
+* Controlling Automated Transactions::
 * Concrete Example of Automated Transactions::
 @end menu
 
@@ -4154,7 +4156,7 @@ Note that the @option{--aux-date} option is an alias for
 @option{--effective}; for a brief explanation of auxiliary date
 @pxref{Auxiliary dates}.
 
-@node Periodic Transactions, Concrete Example of Automated Transactions, Effective Dates, Automated Transactions
+@node Periodic Transactions, Named Automated Transactions, Effective Dates, Automated Transactions
 @subsection Periodic Transactions
 @findex --budget
 
@@ -4164,7 +4166,142 @@ forecasting only, they have no effect without the @option{--budget}
 option specified.  For examples and details, @pxref{Budgeting and
 Forecasting}.
 
-@node Concrete Example of Automated Transactions,  , Periodic Transactions, Automated Transactions
+@node Named Automated Transactions, Controlling Automated Transactions, Periodic Transactions, Automated Transactions
+@subsection Named Automated Transactions
+
+Automated transactions can be given names using the @samp{::} syntax.
+This allows you to reference and control them later in the journal file.
+A named automated transaction is defined by placing a name (optionally
+quoted) between the @samp{=} sign and the @samp{::} separator, followed
+by the predicate:
+
+@smallexample @c input:validate
+= "tithe" :: /^Income:/
+    (Liabilities:Tithe)                   0.10
+@end smallexample
+
+This defines an automated transaction named @samp{tithe} that applies
+to any posting matching @samp{/^Income:/}.
+
+Names can be specified with or without quotes:
+
+@smallexample @c input:validate
+= savings :: /^Income:/
+    (Assets:Savings)                      0.05
+
+= "vacation fund" :: /^Income:Bonus/
+    (Assets:Vacation)                     0.25
+@end smallexample
+
+Quotes (single @samp{'}, double @samp{"}, or forward slash @samp{/})
+are required if the name contains spaces or special characters.
+
+Named automated transactions must have unique names.  Attempting to
+define two automated transactions with the same name will result in
+a parse error.
+
+@node Controlling Automated Transactions, Concrete Example of Automated Transactions, Named Automated Transactions, Automated Transactions
+@subsection Controlling Automated Transactions
+
+Named automated transactions can be controlled using special directives
+that enable, disable, or delete them.  These directives use the same
+@samp{=} prefix as automated transactions but are followed by a name
+pattern and a command.
+
+@subsubsection Disabling Automated Transactions
+
+To temporarily disable a named automated transaction, use the
+@samp{disable} command:
+
+@smallexample @c input:validate
+= "tithe" :: /^Income:/
+    (Liabilities:Tithe)                   0.10
+
+2024-01-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking
+
+= tithe disable
+
+2024-02-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking
+@end smallexample
+
+In this example, the first salary transaction will have the tithe
+automated transaction applied, but after the @samp{disable} directive,
+the second salary transaction will not.
+
+@subsubsection Enabling Automated Transactions
+
+To re-enable a previously disabled automated transaction, use the
+@samp{enable} command:
+
+@smallexample @c input:validate
+= savings :: /^Income:/
+    (Assets:Savings)                      0.10
+
+= savings disable
+
+2024-01-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking
+
+= savings enable
+
+2024-02-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking
+@end smallexample
+
+The first salary will not have savings applied (disabled), but the
+second one will (re-enabled).
+
+@subsubsection Deleting Automated Transactions
+
+To permanently remove a named automated transaction, use the
+@samp{delete} command:
+
+@smallexample @c input:validate
+= "temp-tax" :: /^Income:/
+    (Expenses:Tax:Estimate)               0.25
+
+2024-01-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking
+
+= temp-tax delete
+
+2024-02-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking
+@end smallexample
+
+After deletion, the automated transaction cannot be re-enabled.
+
+@subsubsection Pattern Matching
+
+The name used in enable, disable, and delete commands is treated as
+a pattern (regular expression).  This allows you to control multiple
+automated transactions at once:
+
+@smallexample @c input:validate
+= "tax:federal" :: /^Income:/
+    (Expenses:Tax:Federal)                0.22
+
+= "tax:state" :: /^Income:/
+    (Expenses:Tax:State)                  0.05
+
+= "tax:.*" disable
+@end smallexample
+
+This disables both @samp{tax:federal} and @samp{tax:state} automated
+transactions with a single command.
+
+If a command's pattern does not match any automated transaction,
+a warning is issued.
+
+@node Concrete Example of Automated Transactions,  , Controlling Automated Transactions, Automated Transactions
 @subsection Concrete Example of Automated Transactions
 
 @subsubsection Tithing

@@ -58,7 +58,7 @@ class parse_context_t;
 class parse_context_stack_t;
 
 typedef std::list<xact_t*> xacts_list;
-typedef std::list<auto_xact_t*> auto_xacts_list;
+typedef std::list<unique_ptr<auto_xact_t>> auto_xacts_list;
 typedef std::list<period_xact_t*> period_xacts_list;
 typedef std::pair<mask_t, string> payee_alias_mapping_t;
 typedef std::list<payee_alias_mapping_t> payee_alias_mappings_t;
