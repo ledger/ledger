@@ -1,0 +1,35 @@
+2025/12/26 * Hello
+    Expenses                                     $10
+    Assets
+
+12/27-2025 * World
+    Expenses                                     $20
+    Assets
+
+test reg --input-date-format '%m/%d-%Y' --columns 80
+25-Dec-26 Hello                 Expenses                        $10          $10
+                                Assets                         $-10            0
+25-Dec-27 World                 Expenses                        $20          $20
+                                Assets                         $-20            0
+end test
+
+test reg --input-date-format '%m/%d-%Y' -b 'Feb' --columns 80
+25-Dec-26 Hello                 Expenses                        $10          $10
+                                Assets                         $-10            0
+25-Dec-27 World                 Expenses                        $20          $20
+                                Assets                         $-20            0
+end test
+
+test reg --input-date-format '%m/%d-%Y' -b '2025/12/01' --columns 80
+25-Dec-26 Hello                 Expenses                        $10          $10
+                                Assets                         $-10            0
+25-Dec-27 World                 Expenses                        $20          $20
+                                Assets                         $-20            0
+end test
+
+test reg --input-date-format '%m/%d-%Y' -b '12/01-2025' --columns 80
+25-Dec-26 Hello                 Expenses                        $10          $10
+                                Assets                         $-10            0
+25-Dec-27 World                 Expenses                        $20          $20
+                                Assets                         $-20            0
+end test
