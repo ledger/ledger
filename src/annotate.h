@@ -58,7 +58,7 @@ struct annotation_t : public flags::supports_flags<>, public equality_comparable
 #define ANNOTATION_VALUE_EXPR_CALCULATED 0x20
 
 // Mask for flags that affect semantic equality (not just metadata)
-#define ANNOTATION_SEMANTIC_FLAGS (ANNOTATION_PRICE_FIXATED | ANNOTATION_PRICE_NOT_PER_UNIT)
+#define ANNOTATION_SEMANTIC_FLAGS (ANNOTATION_PRICE_FIXATED)
 
   optional<amount_t> price;
   optional<date_t> date;
