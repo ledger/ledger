@@ -290,6 +290,18 @@ date_t date_specifier_t::begin() const {
   // jww (2009-11-16): Handle wday.  If a month is set, find the most recent
   // wday in that month; if the year is set, then in that year.
 
+  // If only month is specified (no year) and we're using the true current date
+  // (epoch matches current time), and the month is in the future, assume previous year.
+  // This ensures "-b Feb" in January 2026 means February 2025, not February 2026.
+  // When --now is explicitly set, epoch differs from true current time, so we don't roll back.
+  if (!year && month && epoch) {
+    date_t true_current_date = gregorian::day_clock::local_day();
+    // Check if epoch is still at its initial value (matches current date)
+    if (epoch->date() == true_current_date && *month > true_current_date.month()) {
+      the_year--;
+    }
+  }
+
   return gregorian::date(static_cast<date_t::year_type>(the_year),
                          static_cast<date_t::month_type>(the_month),
                          static_cast<date_t::day_type>(the_day));
