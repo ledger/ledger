@@ -67,6 +67,19 @@ value_t convert_command(call_scope_t& args) {
   parse_context_t& context(report.session.parsing_context.get_current());
   context.journal = &journal;
   context.master = bucket;
+  context.scope = &report.session;
+
+  // RAII guard to set and restore journal.current_context during CSV parsing.
+  // This ensures metadata checks and warnings have a valid parse context.
+  struct current_context_guard {
+    journal_t& journal;
+    parse_context_t* saved;
+    current_context_guard(journal_t& j, parse_context_t* current)
+        : journal(j), saved(j.current_context) {
+      journal.current_context = current;
+    }
+    ~current_context_guard() { journal.current_context = saved; }
+  } guard(journal, &context);
 
   csv_reader reader(context);
 
