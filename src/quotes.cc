@@ -49,7 +49,13 @@ optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
   char buf[256];
   buf[0] = '\0';
 
-  string getquote_cmd("getquote \"");
+  string getquote_cmd;
+  if (commodity_pool_t::current_pool->getquote)
+    getquote_cmd = commodity_pool_t::current_pool->getquote->string();
+  else
+    getquote_cmd = "getquote";
+
+  getquote_cmd += " \"";
   getquote_cmd += commodity.symbol();
   getquote_cmd += "\" \"";
   if (exchange_commodity)
@@ -86,9 +92,13 @@ optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
     }
   } else {
     DEBUG("commodity.download",
-          "Failed to download price for '"
-              << commodity.symbol() << "' (command: \"getquote " << commodity.symbol() << " "
-              << (exchange_commodity ? exchange_commodity->symbol() : "''") << "\")");
+          "Failed to download price for '" << commodity.symbol()
+          << "' (command: \""
+          << (commodity_pool_t::current_pool->getquote
+              ? commodity_pool_t::current_pool->getquote->string()
+              : "getquote")
+          << " " << commodity.symbol() << " "
+          << (exchange_commodity ? exchange_commodity->symbol() : "''") << "\")");
 
     // Don't try to download this commodity again.
     commodity.add_flags(COMMODITY_NOMARKET);
