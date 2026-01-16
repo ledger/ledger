@@ -69,6 +69,10 @@ account_t* account_t::find_account(const string& acct_name, const bool auto_crea
     rest = acct_name.c_str() + sep + 1;
   }
 
+  if (std::strcmp(first, "") == 0) {
+    throw parse_error(_("Account name contains an empty sub-account name"));
+  }
+
   account_t* account;
 
   i = accounts.find(first);

@@ -447,7 +447,8 @@ void instance_t::clock_in_directive(char* line, bool capitalized) {
   position.end_line = context.linenum;
   position.sequence = context.sequence++;
 
-  time_xact_t event(position, parse_datetime(datetime), capitalized,
+  datetime_t when = parse_datetime(datetime);
+  time_xact_t event(position, when, capitalized,
                     p ? top_account()->find_account(p) : NULL, n ? n : "", end ? end : "");
 
   timelog.clock_in(event);
@@ -473,7 +474,8 @@ void instance_t::clock_out_directive(char* line, bool capitalized) {
   position.end_line = context.linenum;
   position.sequence = context.sequence++;
 
-  time_xact_t event(position, parse_datetime(datetime), capitalized,
+  datetime_t when = parse_datetime(datetime);
+  time_xact_t event(position, when, capitalized,
                     p ? top_account()->find_account(p) : NULL, n ? n : "", end ? end : "");
 
   context.count += timelog.clock_out(event);

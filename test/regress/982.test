@@ -1,0 +1,12 @@
+2025/12/27 * Foo
+    Foo::Bar                                     $10
+    Expenses
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 2:
+While parsing posting:
+  Foo::Bar                                     $10
+
+Error: Account name contains an empty sub-account name
+end test
