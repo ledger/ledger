@@ -1,0 +1,23 @@
+src/textual.cc
+  44f6430704c7740e 450-451,477-478
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.35",
+  "base_commit_sha": "7087f64fdb550b1046cd70259b180d10081fbb1f",
+  "prompts": {
+    "44f6430704c7740e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7996d140-4391-4801-b198-5ee7bae96c8f",
+        "model": "claude-opus-4-5-20251101"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [],
+      "total_additions": 4,
+      "total_deletions": 2,
+      "accepted_lines": 4,
+      "overriden_lines": 0
+    }
+  }
+}
