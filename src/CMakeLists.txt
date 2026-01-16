@@ -254,6 +254,21 @@ if(USE_PYTHON)
   endif()
 endif()
 
+# Emscripten needs special flags to support exceptions.
+# See: https://emscripten.org/docs/porting/exceptions.html
+if (EMSCRIPTEN)
+  if (BUILD_LIBRARY)
+    target_compile_options(libledger PRIVATE -fwasm-exceptions)
+    if (PRECOMPILE_SYSTEM_HH)
+      # The ledger executable will be built with +mutable-globals,
+      # requiring a PIC precompiled header from libledger.
+      set_property(TARGET libledger PROPERTY POSITION_INDEPENDENT_CODE ON)
+    endif()
+  endif()
+  target_compile_options(ledger PRIVATE -fwasm-exceptions)
+  target_link_options(ledger PRIVATE -fwasm-exceptions)
+endif()
+
 install(TARGETS ledger DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 ### CMakeLists.txt ends here

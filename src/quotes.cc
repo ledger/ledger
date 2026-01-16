@@ -59,7 +59,7 @@ optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
   DEBUG("commodity.download", "invoking command: " << getquote_cmd);
 
   bool success = true;
-#if !defined(_WIN32) && !defined(__CYGWIN__)
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(__EMSCRIPTEN__)
   if (FILE* fp = popen(getquote_cmd.c_str(), "r")) {
     if (std::feof(fp) || !std::fgets(buf, 255, fp))
       success = false;
