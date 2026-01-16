@@ -1,0 +1,24 @@
+; Test conditional formatting based on previous_post
+; Shows how previous_post can be used for conditional display
+
+2025-01-01 Grocery Store
+    Expenses:Food         $50.00
+    Assets:Checking
+
+2025-01-02 Grocery Store
+    Expenses:Food         $30.00
+    Assets:Checking
+
+2025-01-03 Gas Station
+    Expenses:Auto         $45.00
+    Assets:Checking
+
+
+test reg --format='%(date) %(previous_post ? (previous_post.payee == payee ? "[DUPE]" : payee) : payee)\n'
+2025/01/01 Grocery Store
+2025/01/01 [DUPE]
+2025/01/02 [DUPE]
+2025/01/02 [DUPE]
+2025/01/03 Gas Station
+2025/01/03 [DUPE]
+end test
