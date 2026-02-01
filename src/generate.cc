@@ -65,6 +65,7 @@ generate_posts_iterator::generate_posts_iterator(session_t& _session, unsigned i
   next_aux_date = parse_date(next_aux_date_buf.str());
 
   TRACE_CTOR(generate_posts_iterator, "bool");
+  increment();
 }
 
 void generate_posts_iterator::generate_string(std::ostream& out, int len, bool only_alpha) {
