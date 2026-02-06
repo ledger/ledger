@@ -339,9 +339,16 @@ void generate_posts_iterator::increment() {
       parsing_context.get_current().journal = session.journal.get();
       parsing_context.get_current().scope = &session;
 
-      if (session.journal->read(parsing_context, NO_HASHES) != 0) {
-        VERIFY(session.journal->xacts.back()->valid());
-        posts.reset(*session.journal->xacts.back());
+      if (session.journal->read(parsing_context, NO_HASHES, false) != 0) {
+        xact_t* new_xact = session.journal->xacts.back();
+        // Clear xdata only on the newly parsed xact to remove any
+        // artifacts from balance assertions or valexpr evaluations
+        // during parsing.  We must not call journal->clear_xdata()
+        // here because that would destroy xdata on posts already
+        // processed by calc_posts in the handler chain.
+        new_xact->clear_xdata();
+        VERIFY(new_xact->valid());
+        posts.reset(*new_xact);
         post = *posts++;
       }
     } catch (std::exception&) {
