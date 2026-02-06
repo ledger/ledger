@@ -427,7 +427,8 @@ bool journal_t::remove_xact(xact_t* xact) {
   return true;
 }
 
-std::size_t journal_t::read(parse_context_stack_t& context, hash_type_t hash_type) {
+std::size_t journal_t::read(parse_context_stack_t& context, hash_type_t hash_type,
+                            bool should_clear_xdata) {
   std::size_t count = 0;
   try {
     parse_context_t& current(context.get_current());
@@ -460,7 +461,8 @@ std::size_t journal_t::read(parse_context_stack_t& context, hash_type_t hash_typ
   // xdata may have been set for some accounts and transaction due to the use
   // of balance assertions or other calculations performed in valexpr-based
   // posting amounts.
-  clear_xdata();
+  if (should_clear_xdata)
+    clear_xdata();
 
   return count;
 }

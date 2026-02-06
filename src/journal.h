@@ -157,7 +157,8 @@ public:
   period_xacts_list::iterator period_xacts_begin() { return period_xacts.begin(); }
   period_xacts_list::iterator period_xacts_end() { return period_xacts.end(); }
 
-  std::size_t read(parse_context_stack_t& context, hash_type_t hash_type);
+  std::size_t read(parse_context_stack_t& context, hash_type_t hash_type,
+                   bool should_clear_xdata = true);
 
   bool has_xdata();
   void clear_xdata();
