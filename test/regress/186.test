@@ -13,7 +13,7 @@ test reg --input-date-format '%m/%d-%Y' --columns 80
                                 Assets                         $-20            0
 end test
 
-test reg --input-date-format '%m/%d-%Y' -b 'Feb' --columns 80
+test reg --input-date-format '%m/%d-%Y' -b '2025/02/01' --columns 80
 25-Dec-26 Hello                 Expenses                        $10          $10
                                 Assets                         $-10            0
 25-Dec-27 World                 Expenses                        $20          $20
