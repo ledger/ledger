@@ -303,6 +303,9 @@ value_t value_t::number() const {
 }
 
 value_t& value_t::operator+=(const value_t& val) {
+  if (val.is_null())
+    return *this;
+
   if (is_string()) {
     if (val.is_string())
       as_string_lval() += val.as_string();
@@ -442,6 +445,9 @@ value_t& value_t::operator+=(const value_t& val) {
 }
 
 value_t& value_t::operator-=(const value_t& val) {
+  if (val.is_null())
+    return *this;
+
   if (is_sequence()) {
     sequence_t& seq(as_sequence_lval());
 
@@ -465,6 +471,11 @@ value_t& value_t::operator-=(const value_t& val) {
   }
 
   switch (type()) {
+  case VOID:
+    *this = val;
+    in_place_negate();
+    return *this;
+
   case DATETIME:
     switch (val.type()) {
     case INTEGER:
@@ -1639,6 +1650,8 @@ void value_t::in_place_unreduce() {
 
 value_t value_t::abs() const {
   switch (type()) {
+  case VOID:
+    return *this;
   case INTEGER: {
     long val = as_long();
     if (val < 0)
