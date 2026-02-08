@@ -908,7 +908,6 @@ public:
 
   OPTION_(
       report_t, sort_, DO_(str) { // -S
-        OTHER(sort_xacts_).off();
         OTHER(sort_all_).off();
       });
 
@@ -920,7 +919,6 @@ public:
 
   OPTION_(
       report_t, sort_xacts_, DO_(str) {
-        OTHER(sort_).on(whence, str);
         OTHER(sort_all_).off();
       });
 
