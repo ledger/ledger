@@ -1347,6 +1347,8 @@ void value_t::in_place_cast(type_t cast_type) {
 
 void value_t::in_place_negate() {
   switch (type()) {
+  case VOID:
+    return;
   case BOOLEAN:
     set_boolean(!as_boolean());
     return;
