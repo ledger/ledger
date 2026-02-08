@@ -1740,11 +1740,40 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         if (post->amount.is_null()) {
           // balance assignment
           if (!diff.is_zero()) {
-            // This will fail if there are more than 1 commodity in diff, which is wanted,
-            // as amount cannot store more than 1 commodity.
-            post->amount = diff.to_amount();
+            // Recompute the diff preserving lot annotations (cost basis
+            // and lot date) so that the assigned amount retains them.
+            value_t ann_total(
+                post->account
+                    ->amount(!(post->has_flags(POST_VIRTUAL) ||
+                               post->has_flags(POST_IS_TIMELOG))));
+            balance_t ann_diff = amt;
+            switch (ann_total.type()) {
+            case value_t::AMOUNT:
+              ann_diff -= ann_total.as_amount().reduced();
+              break;
+            case value_t::BALANCE:
+              ann_diff -= ann_total.as_balance();
+              break;
+            default:
+              break;
+            }
+            for (post_t* p : xact->posts) {
+              if (p->account == post->account &&
+                  ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==
+                   (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {
+                ann_diff -= p->amount;
+              }
+            }
+            // Use annotated diff if it can be represented as a single
+            // amount; fall back to the stripped diff otherwise (e.g.
+            // when multiple lots with different annotations exist).
+            try {
+              post->amount = ann_diff.to_amount();
+            } catch (...) {
+              post->amount = diff.to_amount();
+            }
             DEBUG("textual.parse", "line " << context.linenum << ": "
-                                           << "Overwrite null posting with " << diff.to_amount());
+                                           << "Overwrite null posting with " << post->amount);
           } else {
             post->amount = amt - amt; // this is '0' with the correct commodity.
             DEBUG("textual.parse", "line " << context.linenum << ": "
