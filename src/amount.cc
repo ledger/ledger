@@ -167,13 +167,35 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
         }
       }
 
+      bool time_colon =
+          (("h" == comm->symbol() || "m" == comm->symbol()) &&
+           (commodity_t::time_colon_by_default ||
+            (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON))));
+
       for (const char* p = buf; *p; p++) {
         if (*p == '.') {
-          if (("h" == comm->symbol() || "m" == comm->symbol()) &&
-              (commodity_t::time_colon_by_default ||
-               (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON))))
+          if (time_colon) {
+            // Convert decimal fraction of hours/minutes to the next
+            // smaller time unit (e.g. 0.50h -> 0:30h, meaning 30 min).
             out << ':';
-          else if (commodity_t::decimal_comma_by_default ||
+            // Parse the fractional digits and convert
+            const char* frac_start = p + 1;
+            int num_digits = 0;
+            long frac_val = 0;
+            long divisor = 1;
+            for (const char* q = frac_start; *q && *q >= '0' && *q <= '9'; q++) {
+              frac_val = frac_val * 10 + (*q - '0');
+              divisor *= 10;
+              num_digits++;
+            }
+            long minutes = (frac_val * 60 + divisor / 2) / divisor;
+            // Use the same number of digits as the original fraction,
+            // but at least enough to represent the minutes value.
+            int min_width = (minutes == 0) ? 1 : (minutes >= 10 ? 2 : 1);
+            int width = std::max(num_digits, min_width);
+            out << std::setw(width) << std::setfill('0') << minutes;
+            break;  // fractional part fully handled
+          } else if (commodity_t::decimal_comma_by_default ||
                    (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
             out << ',';
           else
@@ -185,9 +207,7 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
           out << *p;
 
           if (integer_digits > 3 && --integer_digits % 3 == 0) {
-            if (("h" == comm->symbol() || "m" == comm->symbol()) &&
-                (commodity_t::time_colon_by_default ||
-                 (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON))))
+            if (time_colon)
               out << ':';
             else if (commodity_t::decimal_comma_by_default ||
                      (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
@@ -672,13 +692,6 @@ void amount_t::in_place_unreduce() {
   }
 
   if (shifted) {
-    if (comm && ("h" == comm->symbol() || "m" == comm->symbol()) &&
-        commodity_t::time_colon_by_default) {
-      double truncated = trunc(tmp.to_double());
-      double precision = tmp.to_double() - truncated;
-      tmp = truncated + (precision * (comm->smaller()->number() / 100.0));
-    }
-
     *this = tmp;
     commodity_ = comm;
   }
