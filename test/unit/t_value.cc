@@ -831,7 +831,7 @@ BOOST_AUTO_TEST_CASE(testNegation)
   value_t v17(usd);
   value_t v18(*usd.pool().null_commodity);
 
-  BOOST_CHECK_THROW(v1.negated(), value_error);
+  BOOST_CHECK(v1.negated().is_null());
   BOOST_CHECK_EQUAL(v2.negated(), value_t(false));
   v5.in_place_negate();
   BOOST_CHECK_EQUAL(v5, value_t(-2L));
