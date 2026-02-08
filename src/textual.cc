@@ -985,6 +985,7 @@ void instance_t::account_directive(char* line) {
 
   char* p = skip_ws(line);
   account_t* account = context.journal->register_account(p, NULL, top_account());
+  account->add_flags(ACCOUNT_KNOWN);
   unique_ptr<auto_xact_t> ae;
 
   while (peek_whitespace_line()) {
