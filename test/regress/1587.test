@@ -1,0 +1,15 @@
+; Regression test for bug #1587: balance assignments drop lot annotations.
+; When a balance assignment like =0 computes the amount to transfer, the
+; lot cost basis and date annotations should be preserved.
+
+2024/01/01 * Old Broker
+    Assets:Brokerage:Old       100 FOO @ $123
+    Assets:Checking
+
+2024/01/02 * New Broker  ; Transfer
+    Assets:Brokerage:Old               =0
+    Assets:Brokerage:New
+
+test bal --lots --flat '^Assets:Brokerage:New'
+100 FOO {$123} [2024/01/01]  Assets:Brokerage:New
+end test
