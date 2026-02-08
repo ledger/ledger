@@ -97,6 +97,7 @@ struct create_price_xact {
       xact_temps.push_back(xact);
       xact->payee = symbol;
       xact->_date = date.date();
+      xact->_state = item_t::CLEARED;
       xacts_by_commodity.insert(std::pair<string, xact_t*>(symbol, xact));
       xact->journal = &journal;
     }
@@ -114,6 +115,7 @@ struct create_price_xact {
       post_t& temp = temps.create_post(*xact, account);
       temp._date = date.date();
       temp.amount = price;
+      temp._state = item_t::CLEARED;
 
       temp.xdata().datetime = date;
     }
