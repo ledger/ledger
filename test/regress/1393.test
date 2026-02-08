@@ -1,0 +1,25 @@
+; Regression test for bug #1393: lot date should be preserved, not replaced
+; by the transaction date during finalization.
+
+2020/10/01 Buy
+    Assets:Brokerage       10 AAPL [2020/10/01] @ $100
+    Assets:Cash
+
+2020/11/01 Buy
+    Assets:Brokerage       5 AAPL [2020/11/01] @ $120
+    Assets:Cash
+
+test print
+2020/10/01 Buy
+    Assets:Brokerage                    10 AAPL [2020/10/01] @ $100
+    Assets:Cash
+
+2020/11/01 Buy
+    Assets:Brokerage                    5 AAPL [2020/11/01] @ $120
+    Assets:Cash
+end test
+
+test bal --lots Assets:Brokerage
+10 AAPL {$100} [2020/10/01]
+5 AAPL {$120} [2020/11/01]  Assets:Brokerage
+end test

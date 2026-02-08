@@ -214,7 +214,8 @@ void commodity_pool_t::exchange(commodity_t& commodity, const amount_t& per_unit
 cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount_t& cost,
                                             const bool is_per_unit, const bool add_price,
                                             const optional<datetime_t>& moment,
-                                            const optional<string>& tag) {
+                                            const optional<string>& tag,
+                                            const optional<date_t>& lot_date) {
   DEBUG("commodity.prices.add", "exchange: " << amount << " for " << cost);
   DEBUG("commodity.prices.add", "exchange: is-per-unit   = " << is_per_unit);
 #if DEBUG_ON
@@ -262,12 +263,14 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
 
   DEBUG("commodity.prices.add", "exchange: basis-cost    = " << breakdown.basis_cost);
 
-  annotation_t annotation(per_unit_cost, moment ? moment->date() : optional<date_t>(), tag);
+  annotation_t annotation(per_unit_cost,
+                          lot_date ? *lot_date : (moment ? moment->date() : optional<date_t>()),
+                          tag);
 
   annotation.add_flags(ANNOTATION_PRICE_CALCULATED);
   if (current_annotation && current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))
     annotation.add_flags(ANNOTATION_PRICE_FIXATED);
-  if (moment)
+  if (!lot_date && moment)
     annotation.add_flags(ANNOTATION_DATE_CALCULATED);
   if (tag)
     annotation.add_flags(ANNOTATION_TAG_CALCULATED);
