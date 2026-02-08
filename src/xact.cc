@@ -257,6 +257,51 @@ bool xact_base_t::finalize() {
     }
   }
 
+  // If the balance has more than 2 commodities and no null post, check
+  // whether fixated price annotations ({=price}) can be used to compute
+  // costs and reduce the commodity count.  This handles the case where
+  // multiple postings have different fixated prices for the same base
+  // commodity (e.g., EUR {=$1.32} and EUR {=$1.33}).
+  if (!null_post && balance.is_balance() && balance.as_balance().amounts.size() > 2) {
+    bool recompute = false;
+    foreach (post_t* post, posts) {
+      if (!post->cost &&
+          !post->amount.is_null() &&
+          post->must_balance() &&
+          post->amount.has_annotation() &&
+          post->amount.annotation().price &&
+          post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
+        const annotation_t& ann(post->amount.annotation());
+        post->cost = *ann.price;
+        post->cost->in_place_unround();
+        if (ann.has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
+          if (post->amount.sign() < 0)
+            post->cost->in_place_negate();
+        } else {
+          commodity_t& cost_commodity(post->cost->commodity());
+          *post->cost *= post->amount;
+          post->cost->set_commodity(cost_commodity);
+        }
+        post->add_flags(POST_COST_CALCULATED);
+        post->add_flags(POST_COST_FIXATED);
+        recompute = true;
+      }
+    }
+
+    if (recompute) {
+      balance = NULL_VALUE;
+      foreach (post_t* post, posts) {
+        if (!post->must_balance())
+          continue;
+        amount_t& p(post->cost ? *post->cost : post->amount);
+        if (!p.is_null())
+          add_or_set_value(balance, p.keep_precision()
+                                        ? p.rounded().reduced()
+                                        : p.reduced());
+      }
+    }
+  }
+
   posts_list copy(posts);
 
   if (has_date()) {
