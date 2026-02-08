@@ -61,6 +61,7 @@ public:
 #define POST_DEFERRED 0x1000        // the account was specified with <angles>
 #define POST_IS_TIMELOG 0x2000      // the posting is a timelog entry
 #define POST_AMOUNT_USER_ANNOTATED 0x4000 // amount has user-specified annotations
+#define POST_AMOUNT_USER_DATE 0x8000      // amount has user-specified lot date
 
   xact_t* xact; // only set for posts of regular xacts
   account_t* account;

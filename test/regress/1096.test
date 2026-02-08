@@ -28,7 +28,7 @@ test generate --seed=54321 --head=5
     C:nsava7cpSA74 Y1s5Ln7Ds            YEZC-4537.19
     [DZP0jhs8s:T2CofWutSSHP2]           uiiu -7388.53
     [R5:4ZLj PDc:goY2u t:wb2pty9r19:Fw]  nw3132.73 {QwZO236.783}
-    (i8CUGX4Ptq6q 5vj:TbY64yYp5AB)       nyWK7552.45 @ IGcFQw574.603
+    (i8CUGX4Ptq6q 5vj:TbY64yYp5AB)      nyWK7552.45 [2125/11/23] @ IGcFQw574.603
     W9Q5Hx4e 5yUZF8 2j9q
     ; lQXldz4eeYpD1MLj:8fz8LaE
 
@@ -71,7 +71,7 @@ test generate --seed=54321
     C:nsava7cpSA74 Y1s5Ln7Ds            YEZC-4537.19
     [DZP0jhs8s:T2CofWutSSHP2]           uiiu -7388.53
     [R5:4ZLj PDc:goY2u t:wb2pty9r19:Fw]  nw3132.73 {QwZO236.783}
-    (i8CUGX4Ptq6q 5vj:TbY64yYp5AB)       nyWK7552.45 @ IGcFQw574.603
+    (i8CUGX4Ptq6q 5vj:TbY64yYp5AB)      nyWK7552.45 [2125/11/23] @ IGcFQw574.603
     W9Q5Hx4e 5yUZF8 2j9q
     ; lQXldz4eeYpD1MLj:8fz8LaE
 
@@ -119,7 +119,7 @@ test generate --seed=54321
     (OM2Q O9Ewv:v)                      2493.23iqibk @ 2106.35 Cmm
     ; sk8Hgs
     [u9O:56]                             EEUO52.0402
-    mFa4cwAkl                           mJDCc 2537.24 @@ 4502.06dhj
+    mFa4cwAkl                           mJDCc 2537.24 [2082/01/16] @@ 4502.06dhj
     ; ZRmyw89JF9M50:RkuyQeos Ha2 6
     vcv5p                               -9834.79 sRV @ 1990.32 iOKb
     ; C8W1j80mWJ628Hkcw98TE0
