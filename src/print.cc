@@ -219,10 +219,12 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         // first.
       } else {
         std::ostringstream amt_str;
+        bool suppress_computed =
+            !report.HANDLED(generated) && !post->has_flags(POST_AMOUNT_USER_ANNOTATED);
         value_t(post->amount)
             .print(amt_str, static_cast<int>(amount_width), -1,
                    AMOUNT_PRINT_RIGHT_JUSTIFY |
-                       (report.HANDLED(generated) ? 0 : AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS));
+                       (suppress_computed ? AMOUNT_PRINT_NO_COMPUTED_ANNOTATIONS : 0));
         amt = amt_str.str();
       }
 
