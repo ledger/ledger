@@ -60,6 +60,7 @@ public:
 #define POST_ANONYMIZED 0x0800      // a temporary, anonymous posting
 #define POST_DEFERRED 0x1000        // the account was specified with <angles>
 #define POST_IS_TIMELOG 0x2000      // the posting is a timelog entry
+#define POST_AMOUNT_USER_ANNOTATED 0x4000 // amount has user-specified annotations
 
   xact_t* xact; // only set for posts of regular xacts
   account_t* account;

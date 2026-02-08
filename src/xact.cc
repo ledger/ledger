@@ -396,6 +396,7 @@ bool xact_base_t::finalize() {
                                                               : breakdown.amount.annotation().tag,
                                                           breakdown.amount.annotation().value_expr))
                 : breakdown.amount;
+        post->drop_flags(POST_AMOUNT_USER_ANNOTATED);
         DEBUG("xact.finalize", "added breakdown, balance = " << balance);
       }
 
