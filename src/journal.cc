@@ -295,6 +295,7 @@ void journal_t::register_metadata(const string& key, const value_t& value,
                                    : static_cast<scope_t&>(*boost::get<post_t*>(context)));
       value_scope_t val_scope(bound_scope, value);
 
+      (*i).second.first.mark_uncompiled();
       if (!(*i).second.first.calc(val_scope).to_boolean()) {
         if ((*i).second.second == expr_t::EXPR_ASSERTION)
           throw_(parse_error, _f("Metadata assertion failed for (%1%: %2%): %3%") % key % value %
