@@ -639,7 +639,14 @@ public:
         OTHER(market).on(whence);
       });
 
-  OPTION(report_t, flat);
+  OPTION_(
+      report_t, flat, DO() {
+        // In flat mode, each account is listed independently, so show only
+        // the account's own amount rather than the family total (which
+        // includes sub-accounts).  The root account (where parent is null)
+        // still uses total for the grand total line.
+        OTHER(total_).on(whence, "parent ? amount : total");
+      });
   OPTION(report_t, force_color);
   OPTION(report_t, force_pager);
   OPTION(report_t, forecast_while_);
