@@ -1034,9 +1034,16 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
         no_more_commas = true;
       } else {
         if (last_comma != string::npos) {
+          // A period appearing after a comma that was tentatively treated as
+          // a thousands separator means the comma was actually the decimal
+          // separator (European style). Retroactively switch to decimal_comma.
           decimal_comma_style = true;
+          new_quantity->prec =
+              static_cast<precision_t>(quant.length() - 1 - last_comma);
           if (decimal_offset % 3 != 0)
             throw_(amount_error, _("Incorrect use of thousand-mark period"));
+          comm_flags |= COMMODITY_STYLE_THOUSANDS;
+          no_more_commas = true;
         } else {
           no_more_periods = true;
           new_quantity->prec = decimal_offset;
@@ -1059,7 +1066,11 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
           decimal_offset = 0;
         }
       } else {
-        if (decimal_offset % 3 != 0) {
+        if (decimal_offset % 3 != 0 ||
+            // A single comma with more than 3 digits after it cannot
+            // be a thousands separator (which requires commas every 3
+            // digits). Treat it as a decimal comma instead.
+            (last_comma == string::npos && decimal_offset > 3)) {
           if (last_comma != string::npos || last_period != string::npos) {
             throw_(amount_error, _("Incorrect use of thousand-mark comma"));
           } else {
@@ -1070,7 +1081,11 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
           }
         } else {
           comm_flags |= COMMODITY_STYLE_THOUSANDS;
-          no_more_periods = true;
+          // Only block periods after the second comma confirms thousands
+          // style. The first comma with exactly 3 trailing digits is
+          // ambiguous and a later period can disambiguate it.
+          if (last_comma != string::npos)
+            no_more_periods = true;
         }
       }
 
