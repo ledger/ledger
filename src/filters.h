@@ -676,6 +676,7 @@ public:
 
   virtual void clear() {
     interval = start_interval;
+    all_posts.clear();
 
     subtotal_posts::clear();
     create_accounts();
