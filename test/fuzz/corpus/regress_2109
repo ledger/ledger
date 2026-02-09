@@ -1,0 +1,14 @@
+2021/11/22 Entry
+    Assets:Foo        100 FOO (Note) {$43.44}
+    Income:Bar
+
+2021/11/22 Entry
+    Assets:Foo        100 FOO (Misc) {$45.44} = 200 FOO
+    Income:Bar
+
+2021/11/22 Entry
+    Assets:Foo        $100
+    Income:Bar
+
+2021/11/22 Balance Check
+    Assets:Foo                                0 FOO = 200 FOO

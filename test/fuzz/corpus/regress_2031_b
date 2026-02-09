@@ -1,0 +1,11 @@
+commodity $
+  format $1,000.00
+
+P 2021-01-01 00:00:00 s $0.006944
+
+i 2021-04-29 07:00:00    Hours:Project
+o 2021-04-29 08:30:00
+
+2021-04-30 ! Get paid
+  Hours:Project           -5400s
+  Assets:Bank:Checking    $37.50

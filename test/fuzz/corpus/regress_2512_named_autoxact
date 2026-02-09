@@ -1,0 +1,14 @@
+; Test for PR #2512: Named automated transactions
+; https://github.com/ledger/ledger/pull/2512
+; Basic test for naming an automated transaction using :: syntax
+
+= "savings" :: /^Income:/
+    (Assets:Savings)                      0.10
+
+2024-01-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking
+
+2024-01-15 Bonus
+    Income:Bonus                          $500
+    Assets:Checking

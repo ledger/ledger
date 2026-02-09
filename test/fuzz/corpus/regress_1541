@@ -1,0 +1,9 @@
+; Regression test for bug #1541: prices and pricedb commands produce no output
+; when --cleared is in effect (e.g. from ~/.ledgerrc). Synthetic price posts
+; are now marked as cleared so they pass through the clearing state filter.
+
+2024/01/01 * Buy stock
+    Assets:Brokerage       10 AAPL @ $100
+    Assets:Checking
+
+P 2024/06/01 AAPL $150

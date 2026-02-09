@@ -1,0 +1,33 @@
+2012-01-01 * Opening balance
+    Assets:Current                         17.43 EUR
+    Assets:Investments                200 "LU02" @ 24.77 EUR
+    Assets:Investments                 58 "LU02" @ 24.79900855 EUR
+    Equity:Opening balance
+
+2012-01-01 * Opening balance
+    Assets:Pension                        785.44 GBP
+    Assets:Pension               97.0017 "H2" @ 5.342999720204 GBP
+    Assets:Pension                4.3441 "H1" @ 5.289999915108 GBP
+    Equity:Opening balance
+
+2012-01-01 * Opening balance: misc
+    Assets:Piggy bank                       3.51 GBP
+    Equity:Opening balance
+
+2012-01-01 * Opening balance
+    Assets:Rewards                   9836 AAdvantage
+    Equity:Opening balance
+
+2012-01-03 * Receivable
+    Assets:Current
+    Assets:Receivable                    -161.06 EUR
+    Assets:Receivable                      -9.99 GBP @@ 11.65 EUR
+
+2012-01-27 * Test
+    Income:Test                         -2759.50 GBP
+    Income:Test                          -110.76 GBP
+    Assets:Foo                            345.57 GBP
+    Expenses:Test                          16.47 GBP
+    Expenses:Test                           6.33 GBP
+    Expenses:Test                         261.39 GBP
+    Assets:Current

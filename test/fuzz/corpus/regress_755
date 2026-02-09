@@ -1,0 +1,11 @@
+; Test backwards compatibility with ledger2
+
+--date-format %Y/%m/%d
+
+2009-04-17 * Test 1
+    A                     10.00 EUR
+    B
+
+2009-04-18=2010-04-20 (110) Test 2
+    * C                   20.00 EUR ;foo
+    * B

@@ -1,0 +1,16 @@
+# Test for issue #2482: Automatic transaction does not match for some commodities
+# When an auto-filled posting creates multiple balancing posts for different
+# commodities, auto transactions should match all of them, not just the first
+# one alphabetically.
+
+= expr ( account =~ /^assets:/ & commodity == 'BTC' )
+    (allocation:investments:crypto)       1
+
+= expr ( account =~ /^assets:/ & commodity == 'USD' )
+    (allocation:investments:cash)         1
+
+2025/10/25 * BTC buy
+    assets:crypto                             0.01 BTC (@@) 1000.00 USD
+    expenses:crypto:fee                       0.00001 BTC
+    assets:crypto                            -0.00001 BTC
+    assets:crypto

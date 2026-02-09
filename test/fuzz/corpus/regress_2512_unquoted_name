@@ -1,0 +1,10 @@
+; Test for PR #2512: Unquoted names
+; https://github.com/ledger/ledger/pull/2512
+; Test that unquoted (bare) names work correctly
+
+= tithe :: /^Income:/
+    (Liabilities:Tithe)                   0.10
+
+2024-01-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking

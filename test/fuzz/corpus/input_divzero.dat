@@ -1,0 +1,11 @@
+; -*- ledger -*-
+; Time-stamp: <2011-11-22 13:59 (cpearls)>
+
+;  this journal file will cause a divide by zero error.  The divide by
+;  zero goes away if you add a significant figure to any of the last
+;  divisors in either transaction ( "10.74" -> "10.740" )
+
+2011/04/05 * VSGBX Dividend
+    Assets:Investments:401K:Matching    ( (1.0/3.0)*0.11/10.74 VSGBX) ; 0.003414
+    Assets:Investments:401K:Deferred    ( (2.0/3.0)*0.11/10.74 VSGBX) ; 0.006828
+    Income:Exempt:Dividends                $-0.11   

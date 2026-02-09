@@ -1,0 +1,11 @@
+2008/01/01 * Purchase Apple shares
+       Equities        1000 AAPL @ $2
+       Cash
+
+2008/06/30 * Sell some Apple shares
+       Equities        -500 AAPL @ $2.5
+       Cash
+
+P 2008/10/01 02:18:02 AAPL $3
+P 2009/01/31 02:18:02 AAPL $4
+P 3000/01/01 02:18:02 APPL $100

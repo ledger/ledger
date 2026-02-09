@@ -1,0 +1,10 @@
+P 2012-03-01 EUR $2
+P 2012-03-01 GBP $2
+
+2012-03-05 KFC
+    Expenses:Food                10 EUR
+    Assets:Cash
+
+2012-03-10 KFC
+    Expenses:Food                10 GBP
+    Assets:Cash

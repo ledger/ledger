@@ -1,0 +1,9 @@
+2007/12/31 * Cost basis for: RED HAT INC RHT
+  Assets:Investments:RBC-Broker:Account-RSP                    4 RHT
+  Equity:Opening-Balances:Cost                           -689.87 CAD
+
+2008/01/03=2007/12/28 * Sell -- RHT -- RED HAT INC CA TAUX DE CHANGE    .96590
+  Assets:Investments:RBC-Broker:Account-RSP              -4.00 RHT @      21.14 CAD
+  Expenses:Financial:Commissions                          9.95 USD @    0.96590 CAD
+  Assets:Investments:RBC-Broker:Account-RSP              72.06 CAD
+  Expenses:Financial:Fees

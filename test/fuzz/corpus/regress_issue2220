@@ -1,0 +1,4 @@
+bucket Liabilities:CreditCard
+
+2023/01/01 * Payment
+    Assets:Checking     $-34.86

@@ -1,0 +1,3 @@
+; Test for invalid option embedded in journal
+
+--foo

@@ -1,0 +1,10 @@
+# Test for issue #2468: Non-leap year should fail with February 29
+# This test ensures that February 29 is correctly rejected in non-leap years
+
+apply year 2023
+
+02/29 * Invalid Transaction
+  Expenses:Cash    $100.00
+  Expenses:Misc
+
+end apply year

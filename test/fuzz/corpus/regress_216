@@ -1,0 +1,10 @@
+; Test for issue #216
+; Fixed by PR #1901: Make --depth in register report collapse sub-accounts
+; https://github.com/ledger/ledger/issues/216
+; --depth for register and balance reports
+
+2024/01/01 Test Transaction
+    Expenses:Food:Groceries        $100.00
+    Expenses:Food:Restaurant       $50.00
+    Expenses:Transport:Gas         $30.00
+    Assets:Checking

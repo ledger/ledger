@@ -1,0 +1,18 @@
+; Test for PR #2512: Enable automated transactions
+; https://github.com/ledger/ledger/pull/2512
+; Test that enable command re-enables a previously disabled auto xact
+
+= "savings" :: /^Income:/
+    (Assets:Savings)                      0.10
+
+= savings disable
+
+2024-01-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking
+
+= savings enable
+
+2024-02-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking

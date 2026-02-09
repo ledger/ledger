@@ -1,0 +1,7 @@
+!apply account A
+!include 89233B6D-a.dat
+!end
+
+!apply account B
+!include 89233B6D-b.dat
+!end

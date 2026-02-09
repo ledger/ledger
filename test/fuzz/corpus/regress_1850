@@ -1,0 +1,22 @@
+; Test for issue #1850
+; Fixed by PR #1851: fix #1850: segfault when using ledger print
+; https://github.com/ledger/ledger/issues/1850
+; Segfault when using ledger print with auto transactions and account directives
+; The bug occurred when:
+;   - regex matches the payee
+;   - Expenses:Unknown is used in automatic transaction
+;   - An unrelated account declaration exists
+
+= expr payee =~ /Max/ & account =~ /Expenses:Unknown/
+	Expenses:Rent  1
+	Expenses:Unknown  -1
+
+account Expenses:Car
+	payee SB Tank
+
+
+2019/12/30 * Max Mustermann  ; Rent
+    Expenses:Unknown                        650,00
+    Assets:Checking                             -650,00 €
+
+; The fix prevents segfault - print should work without crashing
