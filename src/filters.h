@@ -920,12 +920,12 @@ class pass_down_accounts : public item_handler<account_t> {
   pass_down_accounts();
 
   optional<predicate_t> pred;
-  optional<scope_t&> context;
+  scope_t* context;
 
 public:
   pass_down_accounts(acct_handler_ptr handler, Iterator& iter,
                      const optional<predicate_t>& _pred = none,
-                     const optional<scope_t&>& _context = none)
+                     scope_t* _context = nullptr)
       : item_handler<account_t>(handler), pred(_pred), context(_context) {
     TRACE_CTOR(pass_down_accounts, "acct_handler_ptr, accounts_iterator, ...");
 

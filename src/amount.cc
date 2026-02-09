@@ -97,7 +97,7 @@ bool amount_t::is_initialized = false;
 namespace {
 void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precision,
                     int zeros_prec = -1, mpfr_rnd_t rnd = GMP_RNDN,
-                    const optional<commodity_t&>& comm = none) {
+                    const commodity_t* comm = nullptr) {
   char* buf = NULL;
   try {
 #if DEBUG_ON
@@ -1090,7 +1090,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
 
   if (last_comma != string::npos || last_period != string::npos) {
     string::size_type len = quant.length();
-    scoped_array<char> buf(new char[len + 1]);
+    std::unique_ptr<char[]> buf(new char[len + 1]);
     const char* p = quant.c_str();
     char* t = buf.get();
 
@@ -1172,7 +1172,7 @@ void amount_t::print(std::ostream& _out, const uint_least8_t flags) const {
   }
 
   stream_out_mpq(out, MP(quantity), display_precision(), comm ? commodity().precision() : 0,
-                 GMP_RNDN, comm);
+                 GMP_RNDN, &comm);
 
   if (comm.has_flags(COMMODITY_STYLE_SUFFIXED)) {
     if (comm.has_flags(COMMODITY_STYLE_SEPARATED))

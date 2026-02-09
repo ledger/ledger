@@ -47,17 +47,17 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(set_string_overloads, set_string, 0, 2)
 
 namespace {
 
-boost::optional<value_t> py_value_0(const value_t& value) {
+optional<value_t> py_value_0(const value_t& value) {
   return value.value(CURRENT_TIME());
 }
-boost::optional<value_t> py_value_1(const value_t& value, const commodity_t* in_terms_of) {
+optional<value_t> py_value_1(const value_t& value, const commodity_t* in_terms_of) {
   return value.value(CURRENT_TIME(), in_terms_of);
 }
-boost::optional<value_t> py_value_2(const value_t& value, const commodity_t* in_terms_of,
+optional<value_t> py_value_2(const value_t& value, const commodity_t* in_terms_of,
                                     const datetime_t& moment) {
   return value.value(moment, in_terms_of);
 }
-boost::optional<value_t> py_value_2d(const value_t& value, const commodity_t* in_terms_of,
+optional<value_t> py_value_2d(const value_t& value, const commodity_t* in_terms_of,
                                      const date_t& moment) {
   return value.value(datetime_t(moment), in_terms_of);
 }

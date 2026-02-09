@@ -457,11 +457,11 @@ public:
    * amount for the given commodity within the balance; if no
    * commodity is specified, it returns the (optional) uncommoditized
    * component of the balance.  If no matching element can be found,
-   * boost::none is returned.
+   * none is returned.
    */
   std::size_t commodity_count() const { return amounts.size(); }
 
-  optional<amount_t> commodity_amount(const optional<const commodity_t&>& commodity = none) const;
+  optional<amount_t> commodity_amount(const commodity_t* commodity = nullptr) const;
 
   amounts_map::iterator find_by_name(const commodity_t& comm);
   amounts_map::const_iterator find_by_name(const commodity_t& comm) const;

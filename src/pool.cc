@@ -357,7 +357,7 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
 
 commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, const bool add_prices,
                                                       const optional<datetime_t>& moment) {
-  scoped_array<char> buf(new char[str.length() + 1]);
+  std::unique_ptr<char[]> buf(new char[str.length() + 1]);
 
   std::strcpy(buf.get(), str.c_str());
 

@@ -124,7 +124,7 @@ inline expr_t::ptr_op_t ident_node(const string& ident) {
 }
 } // namespace
 
-format_t::element_t* format_t::parse_elements(const string& fmt, const optional<format_t&>& tmpl) {
+format_t::element_t* format_t::parse_elements(const string& fmt, const format_t* tmpl) {
   unique_ptr<element_t> result;
 
   element_t* current = NULL;

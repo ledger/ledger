@@ -396,7 +396,7 @@ struct accounts_flusher {
         basic_accounts_iterator iter(*report.session.journal->master);
         pass_down_accounts<basic_accounts_iterator>(
             handler, iter, predicate_t(report.HANDLER(display_).str(), report.what_to_keep()),
-            report);
+            &report);
       } else {
         expr_t sort_expr(report.HANDLER(sort_).str());
         sort_expr.set_context(&report);
@@ -404,7 +404,7 @@ struct accounts_flusher {
                                       report.HANDLED(flat));
         pass_down_accounts<sorted_accounts_iterator>(
             handler, iter, predicate_t(report.HANDLER(display_).str(), report.what_to_keep()),
-            report);
+            &report);
       }
     } else {
       if (!report.HANDLED(sort_)) {
@@ -596,7 +596,7 @@ value_t report_t::fn_strip(call_scope_t& args) {
 
 value_t report_t::fn_trim(call_scope_t& args) {
   string temp(args.value().to_string());
-  scoped_array<char> buf(new char[temp.length() + 1]);
+  std::unique_ptr<char[]> buf(new char[temp.length() + 1]);
   std::strcpy(buf.get(), temp.c_str());
 
   const char* p = buf.get();

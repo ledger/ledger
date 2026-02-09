@@ -36,7 +36,6 @@
 #include "parser.h"
 #include "scope.h"
 
-#include <boost/smart_ptr/scoped_ptr.hpp>
 
 namespace ledger {
 
@@ -96,7 +95,7 @@ void expr_t::parse(std::istream& in, const parse_flags_t& flags,
   } else if (end_pos > start_pos) {
     in.clear();
     in.seekg(start_pos, std::ios::beg);
-    scoped_array<char> buf(new char[static_cast<std::size_t>(end_pos - start_pos) + 1]);
+    std::unique_ptr<char[]> buf(new char[static_cast<std::size_t>(end_pos - start_pos) + 1]);
     int len = static_cast<int>(end_pos) - static_cast<int>(start_pos);
     in.read(buf.get(), len);
     buf[len] = '\0';
@@ -268,7 +267,7 @@ value_t expr_value(expr_t::ptr_op_t op) {
 
 value_t source_command(call_scope_t& args) {
   std::istream* in = NULL;
-  scoped_ptr<ifstream> stream;
+  std::unique_ptr<ifstream> stream;
   string pathname;
 
   if (args.has(0)) {

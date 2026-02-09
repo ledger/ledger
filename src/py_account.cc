@@ -102,16 +102,16 @@ value_t py_amount_0(const account_t& account) {
   return account.amount();
 }
 
-value_t py_amount_1(const account_t& account, const boost::optional<expr_t&>& expr) {
-  return account.amount(false, expr);
+value_t py_amount_1(const account_t& account, expr_t& expr) {
+  return account.amount(false, &expr);
 }
 
 value_t py_total_0(const account_t& account) {
   return account.total();
 }
 
-value_t py_total_1(const account_t& account, const boost::optional<expr_t&>& expr) {
-  return account.total(expr);
+value_t py_total_1(const account_t& account, expr_t& expr) {
+  return account.total(&expr);
 }
 
 } // unnamed namespace

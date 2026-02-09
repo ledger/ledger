@@ -79,14 +79,13 @@ using boost::intrusive_ptr;
 using boost::bad_lexical_cast;
 using boost::lexical_cast;
 using boost::noncopyable;
-using boost::optional;
-using boost::none;
-using boost::none_t;
+using std::optional;
+constexpr auto none = std::nullopt;
+using none_t = std::nullopt_t;
 using boost::ptr_deque;
 using boost::ptr_list;
-using boost::scoped_array;
-using boost::scoped_ptr;
-using boost::shared_ptr;
+using std::shared_ptr;
+using std::make_shared;
 
 // Boost.Operators
 using boost::addable;
@@ -156,6 +155,18 @@ typedef boost::filesystem::path path;
 typedef boost::filesystem::ifstream ifstream;
 typedef boost::filesystem::ofstream ofstream;
 typedef boost::filesystem::filesystem_error filesystem_error;
+
+// Stream operator for std::optional, replicating boost::optional behavior
+template <typename Ch, typename Tr, typename T>
+inline std::basic_ostream<Ch, Tr>&
+operator<<(std::basic_ostream<Ch, Tr>& os, const std::optional<T>& opt) {
+  if (opt)
+    os << *opt;
+  else
+    os << "--";
+  return os;
+}
+
 } // namespace ledger
 
 /*@}*/

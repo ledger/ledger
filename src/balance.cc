@@ -193,7 +193,7 @@ balance_t::amounts_map::const_iterator balance_t::find_by_name(const commodity_t
 }
 
 optional<amount_t>
-balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const {
+balance_t::commodity_amount(const commodity_t* commodity) const {
   if (!commodity) {
     if (amounts.size() == 1) {
       return amounts.begin()->second;
@@ -209,7 +209,7 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
   } else if (amounts.size() > 0) {
     amounts_map::const_iterator i = commodity->has_annotation()
                                         ? find_by_name(*commodity)
-                                        : amounts.find(const_cast<commodity_t*>(&*commodity));
+                                        : amounts.find(const_cast<commodity_t*>(commodity));
     if (i != amounts.end())
       return i->second;
   }

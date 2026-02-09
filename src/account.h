@@ -218,8 +218,8 @@ public:
   const xdata_t& xdata() const;
 
   value_t amount(const optional<bool> real_only = false,
-                 const optional<expr_t&>& expr = none) const;
-  value_t total(const optional<expr_t&>& expr = none) const;
+                 expr_t* expr = nullptr) const;
+  value_t total(expr_t* expr = nullptr) const;
 
   const xdata_t::details_t& self_details(bool gather_all = true) const;
   const xdata_t::details_t& family_details(bool gather_all = true) const;
