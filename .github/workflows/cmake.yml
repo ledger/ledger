@@ -30,6 +30,12 @@ jobs:
             PY_MAJOR: 3,
             cmake_args: -DUSE_PYTHON=ON -DUSE_GPGME=ON
           }
+          - {
+            os: ubuntu-latest,
+            name: Ubuntu-Sanitizers,
+            PY_MAJOR: 3,
+            cmake_args: -DUSE_SANITIZERS=ON
+          }
     steps:
       - uses: actions/checkout@v6
         name: Check out repository code
@@ -74,3 +80,6 @@ jobs:
         # Execute tests defined by the CMake configuration.
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
         run: ctest -C ${{env.BUILD_TYPE}} || ctest -C ${{env.BUILD_TYPE}} --rerun-failed --output-on-failure
+        env:
+          ASAN_OPTIONS: ${{ contains(matrix.config.cmake_args, 'USE_SANITIZERS') && 'detect_leaks=1:halt_on_error=0:suppressions=../sanitizer-suppressions.txt' || '' }}
+          UBSAN_OPTIONS: ${{ contains(matrix.config.cmake_args, 'USE_SANITIZERS') && 'print_stacktrace=1:halt_on_error=0' || '' }}

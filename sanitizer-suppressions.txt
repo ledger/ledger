@@ -1,0 +1,13 @@
+# Sanitizer suppression file for known pre-existing issues.
+# Used by CI sanitizer builds (ASAN_OPTIONS=suppressions=...).
+#
+# Format: <type>:<pattern>
+# See https://clang.llvm.org/docs/AddressSanitizer.html#suppressing-reports
+
+# ledger-1581: bind_scope_t lifetime issue
+# https://github.com/ledger/ledger/issues/1581
+leak:bind_scope_t
+
+# ledger-1557: pure virtual call in destructor chain
+# https://github.com/ledger/ledger/issues/1557
+vptr:scope_t
