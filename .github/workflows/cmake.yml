@@ -83,3 +83,40 @@ jobs:
         env:
           ASAN_OPTIONS: ${{ contains(matrix.config.cmake_args, 'USE_SANITIZERS') && 'detect_leaks=1:halt_on_error=0:suppressions=../sanitizer-suppressions.txt' || '' }}
           UBSAN_OPTIONS: ${{ contains(matrix.config.cmake_args, 'USE_SANITIZERS') && 'print_stacktrace=1:halt_on_error=0' || '' }}
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        name: Check out repository code
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo ./acprep dependencies
+          sudo apt-get install -y lcov
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DUSE_GCOV=ON -DDISABLE_ASSERTS=ON
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config Debug
+
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        run: ctest -C Debug || ctest -C Debug --rerun-failed --output-on-failure
+
+      - name: Generate coverage report
+        working-directory: ${{github.workspace}}/build
+        run: |
+          lcov --capture --directory . --output-file coverage.info --ignore-errors mismatch
+          lcov --remove coverage.info '/usr/*' '*/test/*' '*/boost/*' --output-file coverage.info
+          lcov --summary coverage.info
+          genhtml coverage.info --output-directory coverage-report
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ${{github.workspace}}/build/coverage-report/
+          retention-days: 30
+          if-no-files-found: error
