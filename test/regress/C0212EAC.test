@@ -19,12 +19,7 @@ test reg
 08-Jan-01 Buy 5.00 GBP          Assets:Cash                5.00 GBP     5.00 GBP
                                 Assets:Checking           -7.00 EUR    -7.00 EUR
                                                                         5.00 GBP
-09-Jan-01 Sell 5.00 GBP for 7.. Assets:Cash            -5.00 GBP {=1.40 EUR}    -7.00 EUR
-                                                                        5.00 GBP
-                                                           -5.00 GBP {=1.40 EUR}
+09-Jan-01 Sell 5.00 GBP for 7.. Assets:Cash               -5.00 GBP    -7.00 EUR
                                 Assets:Checking            7.50 EUR     0.50 EUR
-                                                                        5.00 GBP
-                                                           -5.00 GBP {=1.40 EUR}
-                                Income:Gain               -0.50 EUR     5.00 GBP
-                                                           -5.00 GBP {=1.40 EUR}
+                                Income:Gain               -0.50 EUR            0
 end test
