@@ -340,6 +340,8 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/src/system.hh.in
   ${PROJECT_BINARY_DIR}/system.hh)
 
+set(Ledger_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
+
 configure_file(
   ${PROJECT_SOURCE_DIR}/src/ledger.hh.in
   ${PROJECT_BINARY_DIR}/ledger.hh)

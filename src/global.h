@@ -118,6 +118,8 @@ public:
       out << Ledger_VERSION_PRERELEASE;
     if (std::strlen(Ledger_VERSION_DATE) > 0)
       out << '-' << Ledger_VERSION_DATE;
+    if (std::strlen(Ledger_BUILD_TYPE) > 0)
+      out << " (" << Ledger_BUILD_TYPE << ')';
     out << _(", the command-line accounting tool");
     out << _("\nwith");
 #if !HAVE_GPGME
