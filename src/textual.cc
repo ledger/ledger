@@ -1780,6 +1780,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
                                            << "Overwrite null posting with zero diff with "
                                            << amt - amt);
           }
+          post->add_flags(POST_CALCULATED);
         } else {
           // balance assertion
           diff -= post->amount.reduced().strip_annotations(keep_details_t());
