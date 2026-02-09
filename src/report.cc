@@ -48,6 +48,7 @@
 #include "convert.h"
 #include "ptree.h"
 #include "emacs.h"
+#include "xdata_context.h"
 
 namespace ledger {
 
@@ -315,6 +316,9 @@ struct posts_flusher {
 } // namespace
 
 void report_t::posts_report(post_handler_ptr handler) {
+  xdata_context_t context;
+  xdata_context_t::scope_guard guard(context);
+
   handler = chain_post_handlers(handler, *this);
   if (HANDLED(group_by_)) {
     unique_ptr<post_splitter> splitter(new post_splitter(handler, *this, HANDLER(group_by_).expr));
@@ -331,6 +335,9 @@ void report_t::posts_report(post_handler_ptr handler) {
 }
 
 void report_t::generate_report(post_handler_ptr handler) {
+  xdata_context_t context;
+  xdata_context_t::scope_guard guard(context);
+
   handler = chain_handlers(handler, *this);
 
   generate_posts_iterator walker(
@@ -341,6 +348,9 @@ void report_t::generate_report(post_handler_ptr handler) {
 }
 
 void report_t::xact_report(post_handler_ptr handler, xact_t& xact) {
+  xdata_context_t context;
+  xdata_context_t::scope_guard guard(context);
+
   handler = chain_handlers(handler, *this);
 
   xact_posts_iterator walker(xact);
@@ -415,6 +425,9 @@ struct accounts_flusher {
 } // namespace
 
 void report_t::accounts_report(acct_handler_ptr handler) {
+  xdata_context_t context;
+  xdata_context_t::scope_guard guard(context);
+
   post_handler_ptr chain = chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
                                                /* for_accounts_report= */ true);
   if (HANDLED(group_by_)) {
@@ -438,6 +451,9 @@ void report_t::accounts_report(acct_handler_ptr handler) {
 }
 
 void report_t::commodities_report(post_handler_ptr handler) {
+  xdata_context_t context;
+  xdata_context_t::scope_guard guard(context);
+
   handler = chain_handlers(handler, *this);
 
   posts_commodities_iterator* walker(new posts_commodities_iterator(*session.journal.get()));

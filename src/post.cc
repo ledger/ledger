@@ -37,8 +37,53 @@
 #include "journal.h"
 #include "format.h"
 #include "pool.h"
+#include "xdata_context.h"
 
 namespace ledger {
+
+bool post_t::has_xdata() const {
+  if (xdata_context_t* ctx = xdata_context_t::current())
+    return ctx->has_post_xdata(this);
+  return static_cast<bool>(xdata_);
+}
+
+void post_t::clear_xdata() {
+  if (xdata_context_t* ctx = xdata_context_t::current()) {
+    ctx->clear_post_xdata(this);
+    return;
+  }
+  xdata_ = none;
+}
+
+post_t::xdata_t& post_t::xdata() {
+  if (xdata_context_t* ctx = xdata_context_t::current())
+    return ctx->post_xdata(this);
+  if (!xdata_)
+    xdata_ = xdata_t();
+  return *xdata_;
+}
+
+void post_t::copy_details(const item_t& item) {
+  const post_t& post(dynamic_cast<const post_t&>(item));
+  if (xdata_context_t* ctx = xdata_context_t::current()) {
+    // When a context is active, copy the source's context xdata (if any)
+    // into a new context entry for this post.
+    if (ctx->has_post_xdata(&post))
+      xdata() = post.xdata();
+  } else {
+    xdata_ = post.xdata_;
+  }
+  item_t::copy_details(item);
+}
+
+account_t* post_t::reported_account() {
+  if (has_xdata()) {
+    if (account_t* acct = xdata().account)
+      return acct;
+  }
+  assert(account);
+  return account;
+}
 
 bool post_t::has_tag(const string& tag, bool inherit) const {
   if (item_t::has_tag(tag))
@@ -75,14 +120,14 @@ optional<value_t> post_t::get_tag(const mask_t& tag_mask, const optional<mask_t>
 }
 
 date_t post_t::value_date() const {
-  if (xdata_ && is_valid(xdata_->value_date))
-    return xdata_->value_date;
+  if (has_xdata() && is_valid(xdata().value_date))
+    return xdata().value_date;
   return date();
 }
 
 date_t post_t::date() const {
-  if (xdata_ && is_valid(xdata_->date))
-    return xdata_->date;
+  if (has_xdata() && is_valid(xdata().date))
+    return xdata().date;
 
   if (item_t::use_aux_date) {
     if (optional<date_t> aux = aux_date())
@@ -93,8 +138,8 @@ date_t post_t::date() const {
 }
 
 date_t post_t::primary_date() const {
-  if (xdata_ && is_valid(xdata_->date))
-    return xdata_->date;
+  if (has_xdata() && is_valid(xdata().date))
+    return xdata().date;
 
   if (!_date) {
     if (xact)
@@ -240,8 +285,8 @@ value_t get_price(post_t& post) {
 }
 
 value_t get_total(post_t& post) {
-  if (post.xdata_ && !post.xdata_->total.is_null())
-    return post.xdata_->total;
+  if (post.has_xdata() && !post.xdata().total.is_null())
+    return post.xdata().total;
   else if (post.amount.is_null())
     return 0L;
   else
@@ -249,8 +294,8 @@ value_t get_total(post_t& post) {
 }
 
 value_t get_count(post_t& post) {
-  if (post.xdata_)
-    return long(post.xdata_->count);
+  if (post.has_xdata())
+    return long(post.xdata().count);
   else
     return 1L;
 }
@@ -590,9 +635,9 @@ bool post_t::valid() const {
 }
 
 void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const {
-  if (xdata_ && xdata_->has_flags(POST_EXT_COMPOUND)) {
-    if (!xdata_->compound_value.is_null())
-      add_or_set_value(value, xdata_->compound_value);
+  if (has_xdata() && xdata().has_flags(POST_EXT_COMPOUND)) {
+    if (!xdata().compound_value.is_null())
+      add_or_set_value(value, xdata().compound_value);
   } else if (expr) {
     if (expr->fast_path() == expr_t::fast_path_t::POST_AMOUNT) {
       // Fast path: directly read the post amount without creating
@@ -611,16 +656,14 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const {
       add_or_set_value(value, temp);
       expr->set_context(ctx);
 #else
-      if (!xdata_)
-        xdata_ = xdata_t();
-      xdata_->value = expr->calc(bound_scope);
-      xdata_->add_flags(POST_EXT_COMPOUND);
+      xdata().value = expr->calc(bound_scope);
+      xdata().add_flags(POST_EXT_COMPOUND);
 
-      add_or_set_value(value, xdata_->value);
+      add_or_set_value(value, xdata().value);
 #endif
     }
-  } else if (xdata_ && xdata_->has_flags(POST_EXT_VISITED) && !xdata_->visited_value.is_null()) {
-    add_or_set_value(value, xdata_->visited_value);
+  } else if (has_xdata() && xdata().has_flags(POST_EXT_VISITED) && !xdata().visited_value.is_null()) {
+    add_or_set_value(value, xdata().visited_value);
   } else {
     add_or_set_value(value, amount);
   }
@@ -720,8 +763,8 @@ void put_post(property_tree::ptree& st, const post_t& post) {
   if (post.metadata)
     put_metadata(st.put("metadata", ""), *post.metadata);
 
-  if (post.xdata_ && !post.xdata_->total.is_null())
-    put_value(st.put("total", ""), post.xdata_->total);
+  if (post.has_xdata() && !post.xdata().total.is_null())
+    put_value(st.put("total", ""), post.xdata().total);
 }
 
 } // namespace ledger

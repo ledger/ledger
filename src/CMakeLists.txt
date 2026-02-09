@@ -3,6 +3,7 @@ set(LEDGER_CLI_SOURCES
   main.cc)
 
 set(LEDGER_SOURCES
+  xdata_context.cc
   stats.cc
   generate.cc
   csv.cc
