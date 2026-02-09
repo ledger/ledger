@@ -196,7 +196,11 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
 
     unistring name(pbuf.str());
 
-    if (!post->has_flags(POST_CALCULATED) || report.HANDLED(generated)) {
+    bool is_balance_assignment =
+        post->has_flags(POST_CALCULATED) && post->assigned_amount;
+
+    if (!post->has_flags(POST_CALCULATED) || is_balance_assignment ||
+        report.HANDLED(generated)) {
       out << name.extract();
       std::string::size_type slip = (static_cast<std::string::size_type>(account_width) -
                                      static_cast<std::string::size_type>(name.length()));
@@ -206,7 +210,10 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
                ? lexical_cast<std::size_t>(report.HANDLER(amount_width_).str())
                : 12);
       string amt;
-      if (post->amount_expr) {
+      if (is_balance_assignment) {
+        // For balance assignments, don't print the computed amount;
+        // only the = assignment will be printed below.
+      } else if (post->amount_expr) {
         std::ostringstream amt_str;
         justify(amt_str, post->amount_expr->text(), (int)amount_width, true);
         amt = amt_str.str();
