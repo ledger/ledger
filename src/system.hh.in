@@ -151,6 +151,9 @@
 
 #include <boost/intrusive_ptr.hpp>
 
+#include <boost/smart_ptr/scoped_ptr.hpp>
+#include <boost/smart_ptr/scoped_array.hpp>
+
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/write.hpp>
 #define BOOST_IOSTREAMS_USE_DEPRECATED 1
