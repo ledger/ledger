@@ -143,6 +143,28 @@ public:
   }
 };
 
+//
+// lexical_scope_t
+//
+// Like bind_scope_t, but defines only go to the grandchild (local scope),
+// not the parent.  Used for SCOPE node compilation so that local variable
+// definitions (O_DEFINE) don't leak into enclosing scopes.
+//
+class lexical_scope_t : public bind_scope_t {
+  lexical_scope_t();
+
+public:
+  explicit lexical_scope_t(scope_t& _parent, scope_t& _grandchild)
+      : bind_scope_t(_parent, _grandchild) {
+    TRACE_CTOR(lexical_scope_t, "scope_t&, scope_t&");
+  }
+  virtual ~lexical_scope_t() { TRACE_DTOR(lexical_scope_t); }
+
+  virtual void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) {
+    grandchild.define(kind, name, def);
+  }
+};
+
 template <typename T>
 T* search_scope(scope_t* ptr, bool prefer_direct_parents = false) {
   DEBUG("scope.search", "Searching scope " << ptr->description());

@@ -1,0 +1,29 @@
+; Regression test for REPL state leakage with --gain
+;
+; Running "bal --gain" followed by "bal" in REPL mode (via --script) used to
+; fail with "Attempting to get argument at index 1 from an amount" because
+; the --gain expression's SCOPE node leaked a display_total definition into
+; the session, which persisted across commands.
+
+2024/01/01 Buy Stock
+    Assets:Brokerage  10 AAPL @ $100
+    Assets:Checking  $-1000
+
+P 2024/06/01 AAPL $150
+
+2024/07/01 Sell Stock
+    Assets:Checking  $750
+    Assets:Brokerage  -5 AAPL {$100} @ $150
+    Income:Capital Gains  $-250
+
+test --script test/regress/2131_repl_gain.dat
+                $250  Assets:Brokerage
+               $-250
+              5 AAPL  Assets
+              5 AAPL    Brokerage
+               $-250    Checking
+               $-250  Income:Capital Gains
+--------------------
+               $-500
+              5 AAPL
+end test
