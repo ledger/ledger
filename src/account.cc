@@ -34,8 +34,31 @@
 #include "account.h"
 #include "post.h"
 #include "xact.h"
+#include "xdata_context.h"
 
 namespace ledger {
+
+bool account_t::has_xdata() const {
+  if (xdata_context_t* ctx = xdata_context_t::current())
+    return ctx->has_acct_xdata(this);
+  return static_cast<bool>(xdata_);
+}
+
+account_t::xdata_t& account_t::xdata() {
+  if (xdata_context_t* ctx = xdata_context_t::current())
+    return ctx->acct_xdata(this);
+  if (!xdata_)
+    xdata_ = xdata_t();
+  return *xdata_;
+}
+
+const account_t::xdata_t& account_t::xdata() const {
+  return const_cast<account_t*>(this)->xdata();
+}
+
+bool account_t::has_xflags(xdata_t::flags_t flags) const {
+  return has_xdata() && xdata().has_flags(flags);
+}
 
 account_t::~account_t() {
   TRACE_DTOR(account_t);
@@ -191,9 +214,9 @@ bool account_t::remove_post(post_t* post) {
   post->account = NULL;
 
   // Invalidate cached iterators
-  if (xdata_) {
-    xdata_->self_details.last_post = none;
-    xdata_->self_details.last_reported_post = none;
+  if (has_xdata()) {
+    xdata().self_details.last_post = none;
+    xdata().self_details.last_reported_post = none;
     invalidate_xdata_cache(this);
   }
 
@@ -573,6 +596,13 @@ account_t::xdata_t::details_t& account_t::xdata_t::details_t::operator+=(const d
 }
 
 void account_t::clear_xdata() {
+  if (xdata_context_t* ctx = xdata_context_t::current()) {
+    ctx->clear_acct_xdata(this);
+    foreach (accounts_map::value_type& pair, accounts)
+      if (!pair.second->has_flags(ACCOUNT_TEMP))
+        pair.second->clear_xdata();
+    return;
+  }
   xdata_ = none;
 
   foreach (accounts_map::value_type& pair, accounts)
@@ -583,10 +613,12 @@ void account_t::clear_xdata() {
 value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&>& expr) const {
   DEBUG("account.amount", "real only: " << real_only);
 
-  if (xdata_ && xdata_->has_flags(ACCOUNT_EXT_VISITED)) {
+  if (has_xdata() && xdata().has_flags(ACCOUNT_EXT_VISITED)) {
+    xdata_t& xd(const_cast<account_t*>(this)->xdata());
+
     posts_list::const_iterator i;
-    if (xdata_->self_details.last_post)
-      i = *xdata_->self_details.last_post;
+    if (xd.self_details.last_post)
+      i = *xd.self_details.last_post;
     else
       i = posts.begin();
 
@@ -594,39 +626,39 @@ value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&
       if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
         if (!(*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
           if (!(*i)->has_flags(POST_VIRTUAL)) {
-            (*i)->add_to_value(xdata_->self_details.real_total, expr);
+            (*i)->add_to_value(xd.self_details.real_total, expr);
           }
 
-          (*i)->add_to_value(xdata_->self_details.total, expr);
+          (*i)->add_to_value(xd.self_details.total, expr);
           (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
         }
       }
-      xdata_->self_details.last_post = i;
+      xd.self_details.last_post = i;
     }
 
-    if (xdata_->self_details.last_reported_post)
-      i = *xdata_->self_details.last_reported_post;
+    if (xd.self_details.last_reported_post)
+      i = *xd.self_details.last_reported_post;
     else
-      i = xdata_->reported_posts.begin();
+      i = xd.reported_posts.begin();
 
-    for (; i != xdata_->reported_posts.end(); i++) {
+    for (; i != xd.reported_posts.end(); i++) {
       if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
         if (!(*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
           if (!(*i)->has_flags(POST_VIRTUAL)) {
-            (*i)->add_to_value(xdata_->self_details.real_total, expr);
+            (*i)->add_to_value(xd.self_details.real_total, expr);
           }
 
-          (*i)->add_to_value(xdata_->self_details.total, expr);
+          (*i)->add_to_value(xd.self_details.total, expr);
           (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
         }
       }
-      xdata_->self_details.last_reported_post = i;
+      xd.self_details.last_reported_post = i;
     }
 
     if (real_only == true) {
-      return xdata_->self_details.real_total;
+      return xd.self_details.real_total;
     } else {
-      return xdata_->self_details.total;
+      return xd.self_details.total;
     }
   } else {
     return NULL_VALUE;
@@ -634,43 +666,46 @@ value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&
 }
 
 value_t account_t::total(const optional<expr_t&>& expr) const {
-  if (!(xdata_ && xdata_->family_details.calculated)) {
-    const_cast<account_t&>(*this).xdata().family_details.calculated = true;
+  if (!(has_xdata() && xdata().family_details.calculated)) {
+    xdata_t& xd(const_cast<account_t&>(*this).xdata());
+    xd.family_details.calculated = true;
 
     value_t temp;
     foreach (const accounts_map::value_type& pair, accounts) {
       temp = pair.second->total(expr);
       if (!temp.is_null())
-        add_or_set_value(xdata_->family_details.total, temp);
+        add_or_set_value(xd.family_details.total, temp);
     }
 
     temp = amount(false, expr);
     if (!temp.is_null())
-      add_or_set_value(xdata_->family_details.total, temp);
+      add_or_set_value(xd.family_details.total, temp);
   }
-  return xdata_->family_details.total;
+  return xdata().family_details.total;
 }
 
 const account_t::xdata_t::details_t& account_t::self_details(bool gather_all) const {
-  if (!(xdata_ && xdata_->self_details.gathered)) {
-    const_cast<account_t&>(*this).xdata().self_details.gathered = true;
+  if (!(has_xdata() && xdata().self_details.gathered)) {
+    xdata_t& xd(const_cast<account_t&>(*this).xdata());
+    xd.self_details.gathered = true;
 
     foreach (const post_t* post, posts)
-      xdata_->self_details.update(const_cast<post_t&>(*post), gather_all);
+      xd.self_details.update(const_cast<post_t&>(*post), gather_all);
   }
-  return xdata_->self_details;
+  return xdata().self_details;
 }
 
 const account_t::xdata_t::details_t& account_t::family_details(bool gather_all) const {
-  if (!(xdata_ && xdata_->family_details.gathered)) {
-    const_cast<account_t&>(*this).xdata().family_details.gathered = true;
+  if (!(has_xdata() && xdata().family_details.gathered)) {
+    xdata_t& xd(const_cast<account_t&>(*this).xdata());
+    xd.family_details.gathered = true;
 
     foreach (const accounts_map::value_type& pair, accounts)
-      xdata_->family_details += pair.second->family_details(gather_all);
+      xd.family_details += pair.second->family_details(gather_all);
 
-    xdata_->family_details += self_details(gather_all);
+    xd.family_details += self_details(gather_all);
   }
-  return xdata_->family_details;
+  return xdata().family_details;
 }
 
 void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
