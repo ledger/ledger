@@ -54,16 +54,103 @@
 /*@{*/
 
 namespace ledger {
-using namespace boost;
+
+// Explicit Boost type imports (replaces `using namespace boost;`)
+// Sorted by category for maintainability.
+
+// boost::algorithm string functions
+using boost::algorithm::contains;
+using boost::algorithm::icontains;
+using boost::algorithm::replace_all;
+using boost::algorithm::starts_with;
+using boost::algorithm::to_lower;
+using boost::algorithm::trim;
+using boost::algorithm::trim_left;
+using boost::is_any_of;
+using boost::is_digit;
+
+// Core types
+using boost::any;
+using boost::any_cast;
+using boost::checked_delete;
+using boost::format;
+using boost::function;
+using boost::intrusive_ptr;
+using boost::bad_lexical_cast;
+using boost::lexical_cast;
+using boost::noncopyable;
+using boost::optional;
+using boost::none;
+using boost::none_t;
+using boost::ptr_deque;
+using boost::ptr_list;
+using boost::scoped_array;
+using boost::scoped_ptr;
+using boost::shared_ptr;
+
+// Boost.Operators
+using boost::addable;
+using boost::additive;
+using boost::equality_comparable;
+using boost::equality_comparable1;
+using boost::equality_comparable2;
+using boost::multiplicative;
+using boost::ordered_field_operators;
+using boost::totally_ordered;
+
+// Boost.Cast
+using boost::polymorphic_downcast;
+
+// Boost.Variant
+using boost::apply_visitor;
+using boost::get;
+using boost::static_visitor;
+using boost::variant;
+
+// Boost.Regex
+using boost::regex;
+using boost::regex_search;
+using boost::regex_match;
+using boost::smatch;
+
+// Boost.Random
+using boost::mt19937;
+using boost::uniform_int;
+using boost::uniform_real;
+using boost::variate_generator;
+
+// Boost.Tokenizer
+using boost::char_separator;
+using boost::tokenizer;
+
+// Boost.Tuple
+using boost::tuple;
+
+// Boost.Iterator
+using boost::transform_iterator;
+
+// Boost.Iostreams
+namespace iostreams = boost::iostreams;
+
+// Boost.Bind
+using boost::bind;
+
+// Boost sub-namespace aliases (these were previously accessible
+// via `using namespace boost;` and are used throughout the codebase)
+namespace date_time = boost::date_time;
+namespace gregorian = boost::gregorian;
+namespace posix_time = boost::posix_time;
+namespace filesystem = boost::filesystem;
+namespace property_tree = boost::property_tree;
 
 typedef std::string string;
 typedef std::list<string> strings_list;
 
-typedef posix_time::ptime ptime;
+typedef boost::posix_time::ptime ptime;
 typedef ptime::time_duration_type time_duration;
-typedef gregorian::date date;
-typedef gregorian::date_duration date_duration;
-typedef posix_time::seconds seconds;
+typedef boost::gregorian::date date;
+typedef boost::gregorian::date_duration date_duration;
+typedef boost::posix_time::seconds seconds;
 
 typedef boost::filesystem::path path;
 typedef boost::filesystem::ifstream ifstream;

@@ -55,6 +55,7 @@ BOOST_INSTALL_PROPERTY(edge, price_ratio);
 } // namespace boost
 
 namespace ledger {
+using namespace boost;  // Boost.Graph types used extensively in this file
 
 class commodity_history_impl_t : public noncopyable {
 public:
