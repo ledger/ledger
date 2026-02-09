@@ -1,0 +1,20 @@
+2008/01/01 income
+    assets:bank:checking  $1
+    income:salary
+
+2008/06/01 gift
+    assets:bank:checking  $1
+    income:gifts
+
+2008/06/02 save
+    assets:bank:saving  $1
+    assets:bank:checking
+
+2008/06/03 * eat & shop
+    expenses:food      $1
+    expenses:supplies  $1
+    assets:cash
+
+2008/12/31 * pay off
+    liabilities:debts  $1
+    assets:bank:checking

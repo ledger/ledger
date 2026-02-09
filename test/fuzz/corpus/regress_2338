@@ -1,0 +1,8 @@
+; Test for issue #2338
+; Fixed by PR #2341: Avoid ctype abuse
+; https://github.com/ledger/ledger/issues/2338
+; UTF-8 encoding should be preserved in ledger print
+
+2024/01/01 田中さん
+    Expenses:食費        ¥1000
+    Assets:現金

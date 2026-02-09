@@ -1,0 +1,10 @@
+D 1.000,00€
+
+2009/03/16 * denn's
+  ; Kauf: Yogi-Tee 
+  Aufwand:Einkauf:Lebensmittel            17,94€
+  Aktiva:Bank:Girokonto
+
+2009/03/24 Ansparen
+  Aktiva:Bank:Sparkonto                  800,00€
+  Aktiva:Bank:Girokonto

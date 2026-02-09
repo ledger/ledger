@@ -1,0 +1,14 @@
+# Test for issue #2481: --exchange option produces empty output due to commodity precision issues
+# When a commodity is only defined in a price record (P directive), its precision
+# should be inferred from the price amount, not default to 0.
+#
+# Original report syntax:
+#   2222-01-01
+#       a    1.0000000 g
+#       b
+
+P 2020-01-01 g 0.022 e
+
+2222-01-01
+    a    1.0000000 g
+    b

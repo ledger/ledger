@@ -1,0 +1,11 @@
+; Regression test for bug #1559: value corruption when converting currencies
+; at high precision with decimal comma format. When digits after a comma are
+; a multiple of 3, the parser incorrectly treats the comma as a thousands
+; separator instead of a decimal separator.
+
+commodity PLN
+    format 1.000,000000000 PLN
+
+2024/01/01 Test
+    Expenses:Test    -6.005,76 USD @ 4,166728274 PLN
+    Assets:Bank

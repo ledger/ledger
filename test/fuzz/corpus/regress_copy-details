@@ -1,0 +1,5 @@
+2024-10-10 foo
+    expenses  ; :bar:
+    assets:first   -5 USD
+    assets:second  -3 USD
+    assets:third  -10 EUR

@@ -1,0 +1,17 @@
+2003/09/13 a payee ; sat
+    A  $100.00
+    B
+
+2003/09/14 a payee ; mon
+    A  $100.00
+    B
+    
+2004/10/15 a payee ; fri
+    A  $50.00
+    B
+
+2004/10/19 a payee ; tue
+    A  $50.00
+    B
+
+;sun first day of month

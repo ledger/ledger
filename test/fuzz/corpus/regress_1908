@@ -1,0 +1,13 @@
+; Bug #1908: --invert does not work with composite reports
+; --invert should correctly invert amounts even when combined with --collapse
+; The fix ensures --invert only affects display_amount and display_total,
+; not the intermediate amount_expr used for aggregation.
+
+2017-07-01 t1
+    Income:Sub1   -10 USD
+    Assets
+
+2019-07-01 t2
+    Income:Sub1   -100 USD
+    Income:Sub2  -1000 USD
+    Assets

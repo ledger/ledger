@@ -1,0 +1,15 @@
+# Test for issue #2468: Leap year date validation with apply year
+# This test ensures that February 29 is correctly handled in leap years
+# when using the "apply year" directive
+
+apply year 2024
+
+02/29 * Leap Year Transaction
+  Expenses:Cash    $123.45
+  Expenses:Misc
+
+03/01 * Regular March Transaction
+  Expenses:Food    $50.00
+  Income
+
+end apply year

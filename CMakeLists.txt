@@ -364,6 +364,37 @@ add_subdirectory(test)
 
 ########################################################################
 
+# Fuzz testing target (requires Clang with libFuzzer)
+option(ENABLE_FUZZING "Build fuzz testing targets (requires Clang)" OFF)
+if(ENABLE_FUZZING)
+  if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    message(FATAL_ERROR "Fuzzing requires Clang compiler")
+  endif()
+
+  add_executable(journal_fuzzer test/fuzz/journal_fuzzer.cc)
+  target_compile_options(journal_fuzzer PRIVATE
+    -fsanitize=fuzzer,address,undefined -fno-sanitize-recover=all)
+  target_link_options(journal_fuzzer PRIVATE
+    -fsanitize=fuzzer,address,undefined)
+  target_include_directories(journal_fuzzer PRIVATE
+    ${CMAKE_SOURCE_DIR}/src ${PROJECT_BINARY_DIR})
+  target_link_libraries(journal_fuzzer libledger)
+
+  if(PRECOMPILE_SYSTEM_HH)
+    target_precompile_headers(journal_fuzzer REUSE_FROM libledger)
+  endif()
+
+  add_custom_target(fuzz
+    COMMAND ${CMAKE_BINARY_DIR}/journal_fuzzer
+      ${CMAKE_SOURCE_DIR}/test/fuzz/corpus/
+      -max_len=65536 -timeout=10
+    DEPENDS journal_fuzzer
+    COMMENT "Running journal parser fuzzer"
+    VERBATIM)
+endif()
+
+########################################################################
+
 # clang-format targets for code formatting
 find_program(CLANG_FORMAT clang-format)
 if(CLANG_FORMAT)

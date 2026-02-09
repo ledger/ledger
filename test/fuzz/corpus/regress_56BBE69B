@@ -1,0 +1,9 @@
+D 1000.00 USD
+
+2010-01-07 * Put money in
+    Assets:A                              -20.00 EUR
+    Equity:Opening balances
+
+2010-01-11 * Purchase
+    Assets:A                               20.00 EUR @@ 25.00 USD
+    Expenses:B

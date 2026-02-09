@@ -1,0 +1,19 @@
+; Test for PR #2512: Pattern matching for automated transaction commands
+; https://github.com/ledger/ledger/pull/2512
+; Test that pattern matching works for enable/disable commands
+
+= "tax:federal" :: /^Income:/
+    (Expenses:Tax:Federal)                0.22
+
+= "tax:state" :: /^Income:/
+    (Expenses:Tax:State)                  0.05
+
+2024-01-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking
+
+= "tax:.*" disable
+
+2024-02-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking

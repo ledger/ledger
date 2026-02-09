@@ -1,0 +1,8 @@
+2011-01-01 * Opening balance
+    Assets:Investment                  100 "AAA" @ 16.58900489 EUR
+    Assets:Investments                   5 "BBB" @ 24.79900855 EUR
+    Equity:Opening balance
+
+2011-02-10 * Reimbursement: Taxi / Subway / Bus / Train
+    Assets:A                                              1.59 GBP
+    Assets:B                  -1.80 EUR @ 0.884955752212389381 GBP

@@ -1,0 +1,2 @@
+; Check that include directives are relative for "-f /dev/stdin"
+include non-existent-ledger-file-BF3C1F82

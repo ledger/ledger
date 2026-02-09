@@ -1,0 +1,59 @@
+= ~ ^A
+    [Balance]                                                 1
+    [Budget:$account]                                         -1
+
+~ Monthly from 2014/01 to 2014/12/31
+  [Budget:A]    100.00 USD
+  [Balance]
+
+~ Monthly from 2014/01 to 2014/12/31
+  [Budget:Z]    100.00 USD
+  [Balance]
+
+2014/10/01  toto0
+	    [Budget:A:B]  0.01 USD
+	    [Balance]
+
+2014/11/01  toto1
+   A:B      51.00 USD
+   Cash
+
+2014/11/02  toto2
+   A:B      52.00 USD
+   Cash
+
+2014/11/03  toto3
+   A:B      53.00 USD
+   Cash
+
+2014/11/04  toto4
+   A:B      54.00 USD
+   Cash
+
+2014/12/08  toto5
+   A:B      55.00 USD
+   Cash
+
+2014/12/09  toto6
+   A:B      56.00 USD
+   Cash
+
+2014/12/10  toto7
+   A:B      57.00 USD
+   Cash
+
+2014/12/11  toto8
+   A:B      58.00 USD
+   Cash
+
+2014/12/12  toto9
+   A:B      59.00 USD
+   Cash
+
+2014/12/12  toto9
+   C      59.00 USD
+   Cash
+
+2015/01/12  toto10
+   A:B     59.00 USD
+   Cash

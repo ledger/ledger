@@ -1,0 +1,25 @@
+; Test for issue #1454 - {xx} vs {=xx} lot price handling
+;
+; This test verifies that variable lot prices {xx} are treated differently
+; from fixed lot prices {=xx}. The = prefix indicates a "fixated" price
+; that should not be affected by market price changes.
+;
+; Bug: Ledger was treating {xx} and {=xx} as equivalent, using whichever
+; was seen first for all subsequent uses of that price.
+
+; Use variable lot price (not fixated)
+2024/12/10 * Food with variable price
+    Expenses:Food                               100.00 Kc {0.05 EUR}
+    Assets:Bank                                 -5.00 EUR
+
+; Use fixed lot price (fixated with =)
+2024/12/11 * Food with fixed price
+    Expenses:Food                               100.00 Kc {=0.05 EUR}
+    Assets:Bank                                 -5.00 EUR
+
+; Use variable lot price again - should remain variable, not become fixed
+2024/12/12 * Food with variable price again
+    Expenses:Food                               100.00 Kc {0.05 EUR}
+    Assets:Bank                                 -5.00 EUR
+
+; Test that --lots shows both variable {0.05 EUR} and fixed {=0.05 EUR} separately

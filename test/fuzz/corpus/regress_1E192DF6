@@ -1,0 +1,31 @@
+; -*- ledger -*-
+D 1000,00 PLN
+N $
+N h
+N PLN
+N zł
+C 1,00 PLN = 1,00
+
+2010-05-19 * ŁUKASZ STELMACH
+    Assets:Checking:Konto24 GBP               200,00 GBP @ 4,8799 PLN  ; fikimiki
+    Assets:Checking:Konto<30                 -975,98 PLN
+
+2010-05-19 * ŁUKASZ STELMACH
+    Assets:Checking:Konto24 GBP               200,00 GBP @ 4,8799 PLN  ; fikimiki
+    Assets:Checking:Konto<30                 -975,98 PLN
+
+2010-05-19 * ŁUKASZ STELMACH
+   Assets:Checking:Konto<30                 -975,98 PLN @ 0,204922 GBP
+   Assets:Checking:Konto24 GBP               200,00 GBP ; fikimiki
+
+2010-05-19 * ŁUKASZ STELMACH
+   Assets:Checking:Konto<30                 -975,98 PLN @ 0,204922 GBP
+   Assets:Checking:Konto24 GBP               200,00 GBP ; fikimiki
+
+2010-05-19 * ŁUKASZ STELMACH
+   Assets:Checking:Konto24 GBP               200,00 GBP @ 4,8799 PLN  ; fikimiki
+   Assets:Checking:Konto<30                 -975,98 PLN
+
+2010-05-19 * ŁUKASZ STELMACH
+   Assets:Checking:Konto24 GBP               200,00 GBP @ 4,8799 PLN  ; fikimiki
+   Assets:Checking:Konto<30                 -975,98 PLN

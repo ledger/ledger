@@ -1,0 +1,10 @@
+tag Foo
+    assert value =~ /^Bar$/
+
+2019/01/01 * Payee
+    ;; Foo: Bar
+    Income:Foo    $-1
+    Assets:Cash    $1
+2019/01/01 * Another Payee
+    Assets:Cash   $-1
+    Expenses:Baz   $1

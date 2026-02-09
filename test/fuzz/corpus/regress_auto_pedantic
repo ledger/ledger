@@ -1,0 +1,14 @@
+commodity €
+payee Apple
+tag TVA
+
+account Assets:Bank
+account Expenses:Accessories
+account TVA:$account
+
+= /Expenses:?/ & %/TVA/
+    (TVA:$account)                           (tag("TVA"))
+
+2025/04/10 * Apple  ; TVA:: 0.2
+    Assets:Bank
+    Expenses:Accessories                     €100.00

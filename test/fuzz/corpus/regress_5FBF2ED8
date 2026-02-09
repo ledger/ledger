@@ -1,0 +1,11 @@
+2008/01/01      * Checking balance
+        Assets:Bank:Checking                            £0.00
+        Equity:Opening Balances
+
+2008/02/02      Salary
+        Income:Employer                                         £-334.00
+        Assets:Bank:Checking                            $512.85 @@ £334.00
+
+2008/03/02      Salary
+        Income:Employer                                         £-248.07
+        Assets:Bank:Checking                            $404.82 @@ £248.07

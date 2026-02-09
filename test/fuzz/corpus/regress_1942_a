@@ -1,0 +1,13 @@
+2018/01/01 * Opening Balance
+    Assets:Checking                             $1000.00
+    Equity:Opening Balances                    -$1000.00
+
+2018/01/01 * Budget
+    [Assets:Budget:Rent]                         $100.00
+    [Assets:Budget:Emergency]                    $200.00
+    [Assets:Checking]                           -$300.00
+
+2018/01/01 * Budget
+    [Assets:Budget:Rent]                       = $100.00
+    [Assets:Budget:Emergency]                  = $400.00
+    [Assets:Bank]                               -$500.00

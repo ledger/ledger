@@ -1,0 +1,61 @@
+name: Fuzz
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Nightly at 3am UTC
+  workflow_dispatch:       # Allow manual triggering
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - uses: actions/checkout@v6
+        name: Check out repository code
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo ./acprep dependencies
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DENABLE_FUZZING=ON -DBUILD_LIBRARY=ON
+
+      - name: Build fuzzer
+        run: cmake --build ${{github.workspace}}/build --target journal_fuzzer
+
+      - name: Run fuzzer
+        working-directory: ${{github.workspace}}/build
+        run: |
+          mkdir -p fuzz-findings
+          ./journal_fuzzer \
+            ${{github.workspace}}/test/fuzz/corpus/ \
+            -max_len=65536 \
+            -timeout=10 \
+            -max_total_time=1800 \
+            -artifact_prefix=fuzz-findings/ \
+            2>&1 | tee fuzz-output.log
+        continue-on-error: true
+
+      - name: Check for crashes
+        working-directory: ${{github.workspace}}/build
+        run: |
+          if ls fuzz-findings/crash-* 1>/dev/null 2>&1; then
+            echo "::error::Fuzzer found crashes"
+            ls -la fuzz-findings/
+            exit 1
+          else
+            echo "No crashes found"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fuzz-findings
+          path: |
+            ${{github.workspace}}/build/fuzz-findings/
+            ${{github.workspace}}/build/fuzz-output.log
+          retention-days: 30
+          if-no-files-found: ignore

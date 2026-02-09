@@ -1,0 +1,10 @@
+account Assets:Cash
+    assert account("Assets:Cash").amount >= 0.00 EUR
+
+2018/06/23 * Misc
+    Expenses:Food                              30.00 EUR
+    Assets:Cash                               -30.00 EUR
+
+2018/06/24 * Gift
+    Income:Gift                               -60.00 EUR
+    Assets:Cash                                60.00 EUR

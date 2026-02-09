@@ -1,0 +1,7 @@
+; Regression test for GitHub issue #2100: print garbles balance assignment.
+; The print command should output balance assignments as "Account = $20"
+; not "Account $20 = $20".
+
+2022-01-01 * Opening balance
+    Checking                         = $20
+    Equity:Adjustments

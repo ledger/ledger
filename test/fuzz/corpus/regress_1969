@@ -1,0 +1,11 @@
+2020-10-30 * Set up liability
+    Expenses:Test                     310.56 EUR
+    Liabilities:Foo                  -310.56 EUR
+
+2020-10-30 * Pay liability
+    Assets:Bank          -416.30 AUD @ 0.746 EUR
+    Liabilities:Foo
+
+2020-10-30 * Put another commodity into the account so the account is always displayed
+    Expenses:Test                      10.00 GBP
+    Liabilities:Foo

@@ -1,0 +1,5 @@
+; Check that error reporting works for "-f -"
+
+2012/02/30 * Test
+  a  1
+  b

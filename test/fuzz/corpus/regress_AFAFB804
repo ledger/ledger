@@ -1,0 +1,26 @@
+; Test for: ledger should allow sorting by multiple criteria, like:
+; -S date,payee
+
+2010-02-09 * Z
+    A         $10
+    B
+
+2010-02-09 * Y
+    B         $10
+    C
+
+2010-02-09 * X
+    C         $10
+    D
+
+2010-02-10 * Z
+    A         $15
+    B
+
+2010-02-10 * Y
+    B         $15
+    C
+
+2010-02-10 * X
+    C         $15
+    D

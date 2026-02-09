@@ -1,0 +1,9 @@
+; Test for: Using ! erroneously in a data file causes a segfault
+
+! Assets:Cash
+
+2008/01/01 January
+    Expenses:Books          $10.00
+    Assets:Cash
+
+!end

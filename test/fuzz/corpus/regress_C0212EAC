@@ -1,0 +1,14 @@
+2007-01-01 Opening balances
+  Assets:Cash         10.00 EUR
+  Equity:Opening balances
+
+2008-01-01 Buy 5.00 GBP
+  Assets:Cash               5.00 GBP @ 1.4 EUR
+  Assets:Checking
+
+2009-01-01 Sell 5.00 GBP for 7.50 EUR that I bought for 7.00 EUR
+ Assets:Cash                       -5.00 GBP {=1.4 EUR} @ 1.5 EUR
+ Assets:Checking                     7.50 EUR
+ Income:Gain
+
+P 2009-02-01 00:00:00 GBP 1.5 EUR

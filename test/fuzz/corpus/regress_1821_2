@@ -1,0 +1,15 @@
+; Test for issue #1821 - Bug 2: Lot prices with unrealized gains
+; When stock is purchased and then fully sold using lot price notation,
+; there should be no unrealized gains (only realized gains).
+
+2004-05-01 Stock purchase
+    Assets:Broker                   50 AAPL @ $30.00
+    Assets:Broker                   $-1,500
+
+2005-08-01 Stock sale
+    Assets:Broker                   -50 AAPL {$30} @ $50.00
+    Income:Capital Gains            $-1,000.00
+    Assets:Broker                   $2,500
+
+; After selling all stock, there should be no unrealized gains.
+; The $1,000 gain is realized and properly recorded in Income:Capital Gains.

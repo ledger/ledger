@@ -1,0 +1,7 @@
+2012-01-01 * Buy AAA
+    A         1 AAA @ 1.00 EUR
+    B                -1.00 EUR
+
+2012-02-01 * Buy AAA
+    A         1 AAA @ 2.00 EUR
+    B                -2.00 EUR

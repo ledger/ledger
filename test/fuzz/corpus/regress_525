@@ -1,0 +1,15 @@
+; Test for issue #525
+; Fixed by PR #552: Fix auto xact posts not getting applied to account total durring journal parse
+; https://github.com/ledger/ledger/issues/525
+; Balance assignment not working with automated transaction
+
+= /^Expenses:/
+        [Assets:Budget:$account]     -1.0
+        [Assets:Checking]             1.0
+
+2018/01/02 * Walmart
+    Expenses:Food:Groceries             $18.00
+    Assets:Checking
+
+2018/01/02 * Zero-based Budget
+    [Assets:Checking]              = $0.00

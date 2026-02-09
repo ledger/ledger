@@ -1,0 +1,39 @@
+; Test for issue #2174
+; Fixed by PR #2210: Increase string size limit in src/unistring.h assert
+; https://github.com/ledger/ledger/issues/2174
+; long transaction causes assertion failure with register format
+
+2023/01/01 Opening Balances
+    Assets:Investments:Brokerage  10 ABC @ $1
+    Assets:Investments:Brokerage  20 DEF @ $150.10
+    Assets:Investments:Brokerage  20 DEF @ $155.10
+    Assets:Investments:Brokerage  20 DEF @ $160.10
+    Assets:Investments:Brokerage  0.555 DEF @ $139.86
+    Assets:Investments:Brokerage  0.555 DEF @ $105.38
+    Assets:Investments:Brokerage  0.555 DEF @ $106.03
+    Assets:Investments:Brokerage  0.555 DEF @ $100.43
+    Assets:Investments:Brokerage  0.555 DEF @ $110.43
+    Assets:Investments:Brokerage  0.555 DEF @ $167.84
+    Assets:Investments:Brokerage  0.555 DEF @ $154.28
+    Assets:Investments:Brokerage  0.555 DEF @ $137.87
+    Assets:Investments:Brokerage  0.555 DEF @ $167.62
+    Assets:Investments:Brokerage  0.555 DEF @ $103.49
+    Assets:Investments:Brokerage  0.555 DEF @ $183.88
+    Assets:Investments:Brokerage  0.555 DEF @ $164.78
+    Assets:Investments:Brokerage  0.555 DEF @ $124.15
+    Assets:Investments:Brokerage  0.555 DEF @ $189.91
+    Assets:Investments:Brokerage  0.555 DEF @ $165.80
+    Assets:Investments:Brokerage  0.555 DEF @ $172.87
+    Assets:Investments:Brokerage  0.555 DEF @ $152.30
+    Assets:Investments:Brokerage  0.555 DEF @ $175.06
+    Assets:Investments:Brokerage  0.555 DEF @ $140.07
+    Assets:Investments:Brokerage  0.555 DEF @ $321.53
+    Assets:Investments:Brokerage  0.555 DEF @ $173.77
+    Assets:Investments:Brokerage  0.555 DEF @ $183.37
+    Assets:Investments:Brokerage  0.555 DEF @ $159.54
+    Assets:Investments:Brokerage  0.555 DEF @ $107.77
+    Assets:Investments:Brokerage  0.555 DEF @ $122.80
+    Assets:Investments:Brokerage  0.555 DEF @ $139.38
+    Assets:Investments:Brokerage  0.555 DEF @ $134.81
+    Assets:Investments:Brokerage  0.555 DEF @ $177.23
+    Equity:Opening Balances

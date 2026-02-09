@@ -1,0 +1,9 @@
+2001/01/01 * Balance
+    Actif:Courant:Cc   10000,00 F = 10000,00 F
+    Equity
+
+2002/01/11 * Passage à l'euro
+    Actif:Courant:Cc   -10000,00 F = 0,00 F
+    Actif:Courant:Cc   1524,49 € = 1524,49 €
+    Revenu:Devise      10000,00 F
+    Revenu:Devise      -1524,49 €

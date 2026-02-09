@@ -1,0 +1,13 @@
+; Test for issue #1948
+; Fixed by PR #2055: check that commodity format uses correct symbol
+; https://github.com/ledger/ledger/issues/1948
+; Ledger should reject commodity directives where the format symbol
+; doesn't match the commodity name
+
+; Invalid: commodity is CTGXXV but format uses CTG25
+commodity CTGXXV
+    format 1000.000 CTG25
+
+2024/01/01 Test
+    Expenses        1000.000 CTGXXV
+    Assets

@@ -1,0 +1,15 @@
+; Test for issue #1821 - Bug 1: Multiple prices on same day (stock split)
+; Unrealized gains/losses should be correctly calculated when there are
+; multiple price changes on the same day within a single transaction.
+
+2004-05-01 Stock purchase
+    Assets:Broker     10 AAPL @ $50
+    Equity:Broker
+
+2004-05-02 * Stock Split
+    Assets:Broker     -10 AAPL @ $50
+    Assets:Broker     100 AAPL @ $5
+
+; After the stock split, we have 100 shares at $5 = $500, which is the
+; same total value as before (10 shares at $50 = $500). There should be
+; no unrealized gains or losses.

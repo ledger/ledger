@@ -1,0 +1,56 @@
+; -*- ledger -*-
+
+N $
+
+= /^Expenses:Books/
+    (Liabilities:Taxes)                                -0.10
+
+~ Monthly
+    Assets:Bank:Checking                             $500.00
+    Income:Salary
+
+~ Yearly
+    Expenses:Donations                               $100.00
+    Assets:Bank:Checking
+
+2004/05/01 * Checking balance
+    Assets:Bank:Checking                           $1,000.00
+    Equity:Opening Balances
+
+2004/05/03=2004/05/01 * Investment balance
+    Assets:Brokerage                                 50 AAPL @ $30.00
+    Equity:Opening Balances
+
+2004/05/14 * Páy dày
+    Assets:Bank:Checking                             500.00€
+    Income:Salary
+
+2004/05/14 * Another dày in which there is Páying
+    Asséts:Bánk:Chécking:Asséts:Bánk:Chécking        $500.00
+    Income:Salary
+
+2004/05/14 * Another dày in which there is Páying
+    Русский язык:Активы:Русский язык:Русский язык         $1000.00
+    Income:Salary
+
+apply tag foo
+
+2004/05/27 Book Store
+    Expenses:Books                                    $20.00
+    Expenses:Cards                                    $40.00
+    Expenses:Docs                                     $30.00
+    Liabilities:MasterCard
+
+end apply tag
+
+2004/05/27 (100) Credit card company
+    ; This is an xact note!
+    ; Sample: Value
+    Liabilities:MasterCard                            $20.00
+    ; This is a posting note!
+    ; Sample: Another Value
+    ; :MyTag:
+    Assets:Bank:Checking
+    ; :AnotherTag:
+
+;;; sample.dat ends here

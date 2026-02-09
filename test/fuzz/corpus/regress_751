@@ -1,0 +1,17 @@
+account food
+account Assets:Cash
+commodity $
+
+account Assets:Cash
+    check abs(amount) <= 20
+    check commodity == '$'
+    default
+
+2012-02-29 KFC
+    food                                      $25.00
+    Assets:Cash
+
+; This xact has a default account to balance the expense, it shoud also be
+; checked even if not explicitly written down
+2012-02-29 KFC
+    food                                      $25.00
