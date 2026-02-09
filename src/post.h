@@ -47,6 +47,7 @@ namespace ledger {
 
 class xact_t;
 class account_t;
+class xdata_context_t;
 
 class post_t : public item_t {
 public:
@@ -89,8 +90,7 @@ public:
   }
   post_t(const post_t& post)
       : item_t(post), xact(post.xact), account(post.account), amount(post.amount), cost(post.cost),
-        assigned_amount(post.assigned_amount), checkin(post.checkin), checkout(post.checkout),
-        xdata_(post.xdata_) {
+        assigned_amount(post.assigned_amount), checkin(post.checkin), checkout(post.checkout) {
     copy_details(post);
     TRACE_CTOR(post_t, "copy");
   }
@@ -135,11 +135,7 @@ public:
   std::size_t xact_id() const;
   std::size_t account_id() const;
 
-  virtual void copy_details(const item_t& item) {
-    const post_t& post(dynamic_cast<const post_t&>(item));
-    xdata_ = post.xdata_;
-    item_t::copy_details(item);
-  }
+  virtual void copy_details(const item_t& item);
 
   bool valid() const;
 
@@ -186,26 +182,16 @@ public:
   // moment.
   mutable optional<xdata_t> xdata_;
 
-  bool has_xdata() const { return static_cast<bool>(xdata_); }
-  void clear_xdata() { xdata_ = none; }
-  xdata_t& xdata() {
-    if (!xdata_)
-      xdata_ = xdata_t();
-    return *xdata_;
-  }
+  bool has_xdata() const;
+  void clear_xdata();
+  xdata_t& xdata();
   const xdata_t& xdata() const { return const_cast<post_t*>(this)->xdata(); }
 
   void add_to_value(value_t& value, const optional<expr_t&>& expr = none) const;
 
   void set_reported_account(account_t* account);
 
-  account_t* reported_account() {
-    if (xdata_)
-      if (account_t* acct = xdata_->account)
-        return acct;
-    assert(account);
-    return account;
-  }
+  account_t* reported_account();
 
   const account_t* reported_account() const {
     return const_cast<post_t*>(this)->reported_account();

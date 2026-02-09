@@ -50,6 +50,7 @@ using namespace boost::placeholders;
 class account_t;
 class xact_t;
 class post_t;
+class xdata_context_t;
 
 typedef std::list<post_t*> posts_list;
 typedef std::map<string, account_t*> accounts_map;
@@ -211,17 +212,10 @@ public:
   // moment.
   mutable optional<xdata_t> xdata_;
 
-  bool has_xdata() const { return static_cast<bool>(xdata_); }
+  bool has_xdata() const;
   void clear_xdata();
-  xdata_t& xdata() {
-    if (!xdata_)
-      xdata_ = xdata_t();
-    return *xdata_;
-  }
-  const xdata_t& xdata() const {
-    assert(xdata_);
-    return *xdata_;
-  }
+  xdata_t& xdata();
+  const xdata_t& xdata() const;
 
   value_t amount(const optional<bool> real_only = false,
                  const optional<expr_t&>& expr = none) const;
@@ -230,7 +224,7 @@ public:
   const xdata_t::details_t& self_details(bool gather_all = true) const;
   const xdata_t::details_t& family_details(bool gather_all = true) const;
 
-  bool has_xflags(xdata_t::flags_t flags) const { return xdata_ && xdata_->has_flags(flags); }
+  bool has_xflags(xdata_t::flags_t flags) const;
   bool children_with_xdata() const;
   std::size_t children_with_flags(xdata_t::flags_t flags) const;
 };
