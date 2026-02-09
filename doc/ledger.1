@@ -1,4 +1,4 @@
-.Dd December 13, 2023
+.Dd August 21, 2025
 .Dt LEDGER 1
 .Os
 .Sh NAME
@@ -557,6 +557,13 @@ script, implemented in Perl, is provided in the
 distribution.  Downloaded quote price are then appended to the price
 database, usually specified using the environment variable
 .Ev LEDGER_PRICE_DB .
+.It Fl \-getquote Ar PATH
+Specify the path or command name for the price quote retrieval script.
+The default value is
+.Em getquote .
+This option allows you to use a custom script or specify an absolute path
+to the quote retrieval program.  The script will be called with the
+commodity symbol as an argument and should return the current price.
 .It Fl \-effective
 Show auxiliary dates for all calculations.  Alias for
 .Fl \-aux-date .
