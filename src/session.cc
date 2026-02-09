@@ -267,8 +267,8 @@ value_t session_t::fn_str(call_scope_t& args) {
 
 value_t session_t::fn_lot_price(call_scope_t& args) {
   amount_t amt(args.get<amount_t>(0, false));
-  if (amt.has_annotation() && amt.annotation().price)
-    return *amt.annotation().price;
+  if (amt.has_annotation() && amt.annotation().acquisition_cost)
+    return *amt.annotation().acquisition_cost;
   else
     return NULL_VALUE;
 }

@@ -40,9 +40,9 @@
 namespace ledger {
 
 bool annotation_t::operator<(const annotation_t& rhs) const {
-  if (!price && rhs.price)
+  if (!acquisition_cost && rhs.acquisition_cost)
     return true;
-  if (price && !rhs.price)
+  if (acquisition_cost && !rhs.acquisition_cost)
     return false;
   if (!date && rhs.date)
     return true;
@@ -58,15 +58,15 @@ bool annotation_t::operator<(const annotation_t& rhs) const {
   if (value_expr && !rhs.value_expr)
     return false;
 
-  if (price) {
-    if (price->commodity().symbol() < rhs.price->commodity().symbol())
+  if (acquisition_cost) {
+    if (acquisition_cost->commodity().symbol() < rhs.acquisition_cost->commodity().symbol())
       return true;
-    if (price->commodity().symbol() > rhs.price->commodity().symbol())
+    if (acquisition_cost->commodity().symbol() > rhs.acquisition_cost->commodity().symbol())
       return false;
 
-    if (*price < *rhs.price)
+    if (*acquisition_cost < *rhs.acquisition_cost)
       return true;
-    if (*price > *rhs.price)
+    if (*acquisition_cost > *rhs.acquisition_cost)
       return false;
   }
   if (date) {
@@ -107,26 +107,26 @@ void annotation_t::parse(std::istream& in) {
     char buf[256];
     int c = peek_next_nonws(in);
     if (c == '{') {
-      if (price)
-        throw_(amount_error, _("Commodity specifies more than one price"));
+      if (acquisition_cost)
+        throw_(amount_error, _("Commodity specifies more than one acquisition cost"));
 
       in.get();
       c = in.peek();
       if (c == '{') {
         in.get();
-        add_flags(ANNOTATION_PRICE_NOT_PER_UNIT);
+        add_flags(ANNOTATION_COST_NOT_PER_UNIT);
       }
 
       c = peek_next_nonws(in);
       if (c == '=') {
         in.get();
-        add_flags(ANNOTATION_PRICE_FIXATED);
+        add_flags(ANNOTATION_COST_FIXATED);
       }
 
       READ_INTO(in, buf, 255, c, c != '}');
       if (c == '}') {
         in.get();
-        if (has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
+        if (has_flags(ANNOTATION_COST_NOT_PER_UNIT)) {
           c = in.peek();
           if (c != '}')
             throw_(amount_error, _("Commodity lot price lacks double closing brace"));
@@ -140,8 +140,8 @@ void annotation_t::parse(std::istream& in) {
       amount_t temp;
       temp.parse(buf, PARSE_NO_MIGRATE);
 
-      DEBUG("commodity.annotations", "Parsed annotation price: " << temp);
-      price = temp;
+      DEBUG("commodity.annotations", "Parsed annotation acquisition cost: " << temp);
+      acquisition_cost = temp;
     } else if (c == '[') {
       if (date)
         throw_(amount_error, _("Commodity specifies more than one date"));
@@ -206,9 +206,9 @@ void annotation_t::parse(std::istream& in) {
 }
 
 void annotation_t::print(std::ostream& out, bool keep_base, bool no_computed_annotations) const {
-  if (price && (!no_computed_annotations || !has_flags(ANNOTATION_PRICE_CALCULATED)))
-    out << " {" << (has_flags(ANNOTATION_PRICE_FIXATED) ? "=" : "")
-        << (keep_base ? *price : price->unreduced()) << '}';
+  if (acquisition_cost && (!no_computed_annotations || !has_flags(ANNOTATION_COST_CALCULATED)))
+    out << " {" << (has_flags(ANNOTATION_COST_FIXATED) ? "=" : "")
+        << (keep_base ? *acquisition_cost : acquisition_cost->unreduced()) << '}';
 
   if (date && (!no_computed_annotations || !has_flags(ANNOTATION_DATE_CALCULATED)))
     out << " [" << format_date(*date, FMT_WRITTEN) << ']';
@@ -221,6 +221,9 @@ void annotation_t::print(std::ostream& out, bool keep_base, bool no_computed_ann
 }
 
 void put_annotation(property_tree::ptree& st, const annotation_t& details) {
+  if (details.acquisition_cost)
+    put_amount(st.put("acquisition-cost", ""), *details.acquisition_cost);
+
   if (details.price)
     put_amount(st.put("price", ""), *details.price);
 
@@ -276,13 +279,19 @@ optional<price_point_t> annotated_commodity_t::find_price(const commodity_t* com
   if (commodity)
     target = commodity;
 
-  if (details.price) {
-    DEBUG("commodity.price.find", "price annotation: " << *details.price);
+  if (details.acquisition_cost) {
+    DEBUG("commodity.price.find", "acquisition cost annotation: " << *details.acquisition_cost);
 
-    if (details.has_flags(ANNOTATION_PRICE_FIXATED)) {
-      DEBUG("commodity.price.find", "amount_t::value: fixated price =  " << *details.price);
-      return price_point_t(when, *details.price);
+    if (details.has_flags(ANNOTATION_COST_FIXATED)) {
+      DEBUG("commodity.price.find", "amount_t::value: fixated acquisition cost = " << *details.acquisition_cost);
+      return price_point_t(when, *details.acquisition_cost);
     } else if (!target) {
+      DEBUG("commodity.price.find", "setting target commodity from acquisition cost");
+      target = details.acquisition_cost->commodity_ptr();
+    }
+  } else if (details.price) {
+    DEBUG("commodity.price.find", "price annotation: " << *details.price);
+    if (!target) {
       DEBUG("commodity.price.find", "setting target commodity from price");
       target = details.price->commodity_ptr();
     }
@@ -308,6 +317,9 @@ commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what
 
   commodity_t* new_comm;
 
+  bool keep_cost =
+      (what_to_keep.keep_price &&
+       (!what_to_keep.only_actuals || !details.has_flags(ANNOTATION_COST_CALCULATED)));
   bool keep_price =
       (what_to_keep.keep_price &&
        (!what_to_keep.only_actuals || !details.has_flags(ANNOTATION_PRICE_CALCULATED)));
@@ -317,21 +329,27 @@ commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what
                    (!what_to_keep.only_actuals || !details.has_flags(ANNOTATION_TAG_CALCULATED)));
 
   DEBUG("commodity.annotated.strip", "Reducing commodity " << *this << std::endl
+                                                           << "  keep cost " << keep_cost << " "
                                                            << "  keep price " << keep_price << " "
                                                            << "  keep date " << keep_date << " "
                                                            << "  keep tag " << keep_tag);
 
-  if ((keep_price && details.price) || (keep_date && details.date) || (keep_tag && details.tag)) {
-    new_comm = pool().find_or_create(referent(), annotation_t(keep_price ? details.price : none,
-                                                              keep_date ? details.date : none,
-                                                              keep_tag ? details.tag : none));
+  if ((keep_cost && details.acquisition_cost) || (keep_price && details.price) ||
+      (keep_date && details.date) || (keep_tag && details.tag)) {
+    new_comm = pool().find_or_create(referent(),
+        annotation_t(keep_cost ? details.acquisition_cost : none,
+                     keep_price ? details.price : none,
+                     keep_date ? details.date : none,
+                     keep_tag ? details.tag : none));
 
     // Transfer over any relevant annotation flags, as they still apply.
     if (new_comm->annotated) {
       annotation_t& new_details(as_annotated_commodity(*new_comm).details);
-      if (keep_price)
+      if (keep_cost)
         new_details.add_flags(details.flags() &
-                              (ANNOTATION_PRICE_CALCULATED | ANNOTATION_PRICE_FIXATED));
+                              (ANNOTATION_COST_CALCULATED | ANNOTATION_COST_FIXATED));
+      if (keep_price)
+        new_details.add_flags(details.flags() & ANNOTATION_PRICE_CALCULATED);
       if (keep_date)
         new_details.add_flags(details.flags() & ANNOTATION_DATE_CALCULATED);
       if (keep_tag)

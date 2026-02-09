@@ -258,6 +258,8 @@ void anonymize_posts::operator()(post_t& post) {
   render_commodity(temp.amount);
   if (temp.amount.has_annotation()) {
     temp.amount.annotation().tag = none;
+    if (temp.amount.annotation().acquisition_cost)
+      render_commodity(*temp.amount.annotation().acquisition_cost);
     if (temp.amount.annotation().price)
       render_commodity(*temp.amount.annotation().price);
   }

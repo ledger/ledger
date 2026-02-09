@@ -198,10 +198,10 @@ commodity_t& py_strip_ann_annotations_1(annotated_commodity_t& comm, const keep_
 }
 
 boost::optional<amount_t> py_price(annotation_t& ann) {
-  return ann.price;
+  return ann.acquisition_cost;
 }
 boost::optional<amount_t> py_set_price(annotation_t& ann, const boost::optional<amount_t>& price) {
-  return ann.price = price;
+  return ann.acquisition_cost = price;
 }
 
 PyObject* py_commodity_unicode(commodity_t& commodity) {

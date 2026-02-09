@@ -710,12 +710,16 @@ optional<amount_t> amount_t::value(const datetime_t& moment, const commodity_t* 
       optional<price_point_t> point;
       const commodity_t* comm(in_terms_of);
 
-      if (has_annotation() && annotation().price) {
-        if (annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
+      if (has_annotation() && annotation().acquisition_cost) {
+        if (annotation().has_flags(ANNOTATION_COST_FIXATED)) {
           point = price_point_t();
-          point->price = *annotation().price;
-          DEBUG("commodity.prices.find", "amount_t::value: fixated price =  " << point->price);
+          point->price = *annotation().acquisition_cost;
+          DEBUG("commodity.prices.find", "amount_t::value: fixated acquisition cost = " << point->price);
         } else if (!comm) {
+          comm = annotation().acquisition_cost->commodity_ptr();
+        }
+      } else if (has_annotation() && annotation().price) {
+        if (!comm) {
           comm = annotation().price->commodity_ptr();
         }
       }
@@ -748,8 +752,8 @@ optional<amount_t> amount_t::value(const datetime_t& moment, const commodity_t* 
 }
 
 optional<amount_t> amount_t::price() const {
-  if (has_annotation() && annotation().price) {
-    amount_t tmp(*annotation().price);
+  if (has_annotation() && annotation().acquisition_cost) {
+    amount_t tmp(*annotation().acquisition_cost);
     tmp *= *this;
     DEBUG("amount.price", "Returning price of " << *this << " = " << tmp);
     return tmp;
@@ -1149,9 +1153,9 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
     in_place_reduce(); // will not throw an exception
 
   if (commodity_ && details) {
-    if (details.has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
-      assert(details.price);
-      *details.price /= this->abs();
+    if (details.has_flags(ANNOTATION_COST_NOT_PER_UNIT)) {
+      assert(details.acquisition_cost);
+      *details.acquisition_cost /= this->abs();
     }
     set_commodity(*commodity_pool_t::current_pool->find_or_create(*commodity_, details));
   }

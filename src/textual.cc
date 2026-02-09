@@ -1539,7 +1539,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
           foreach (fixed_rate_t& rate, rates) {
             if (*rate.first == post->amount.commodity()) {
               annotation_t details(rate.second);
-              details.add_flags(ANNOTATION_PRICE_FIXATED);
+              details.add_flags(ANNOTATION_COST_FIXATED);
               post->amount.annotate(details);
               DEBUG("textual.parse", "line " << context.linenum << ": "
                                              << "applied rate = " << post->amount);

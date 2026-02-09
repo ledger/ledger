@@ -338,11 +338,11 @@ balance_t average_lot_prices(const balance_t& bal) {
       annotated_commodity_t& acomm(static_cast<annotated_commodity_t&>(*pair.first));
       annotation_t& ann((*i).second.second);
 
-      if (acomm.details.price) {
-        if (ann.price)
-          ann.price = *ann.price + (*acomm.details.price * quant);
+      if (acomm.details.acquisition_cost) {
+        if (ann.acquisition_cost)
+          ann.acquisition_cost = *ann.acquisition_cost + (*acomm.details.acquisition_cost * quant);
         else
-          ann.price = *acomm.details.price * quant;
+          ann.acquisition_cost = *acomm.details.acquisition_cost * quant;
       }
 
       if (acomm.details.date) {
@@ -357,8 +357,8 @@ balance_t average_lot_prices(const balance_t& bal) {
   foreach (balance_map::value_type& pair, bycomm) {
     amount_t amt(pair.second.first);
     if (!amt.is_realzero()) {
-      if (pair.second.second.price)
-        pair.second.second.price = *pair.second.second.price / amt;
+      if (pair.second.second.acquisition_cost)
+        pair.second.second.acquisition_cost = *pair.second.second.acquisition_cost / amt;
 
       commodity_t* acomm =
           commodity_pool_t::current_pool->find_or_create(amt.commodity(), pair.second.second);

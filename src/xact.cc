@@ -269,12 +269,12 @@ bool xact_base_t::finalize() {
           !post->amount.is_null() &&
           post->must_balance() &&
           post->amount.has_annotation() &&
-          post->amount.annotation().price &&
-          post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
+          post->amount.annotation().acquisition_cost &&
+          post->amount.annotation().has_flags(ANNOTATION_COST_FIXATED)) {
         const annotation_t& ann(post->amount.annotation());
-        post->cost = *ann.price;
+        post->cost = *ann.acquisition_cost;
         post->cost->in_place_unround();
-        if (ann.has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
+        if (ann.has_flags(ANNOTATION_COST_NOT_PER_UNIT)) {
           if (post->amount.sign() < 0)
             post->cost->in_place_negate();
         } else {
@@ -322,7 +322,7 @@ bool xact_base_t::finalize() {
           post->amount, *post->cost, false, !post->has_flags(POST_COST_VIRTUAL),
           datetime_t(date(), time_duration(0, 0, 0, 0)), none, lot_date);
 
-      if (post->amount.has_annotation() && post->amount.annotation().price) {
+      if (post->amount.has_annotation() && post->amount.annotation().acquisition_cost) {
         if (breakdown.basis_cost.commodity() == breakdown.final_cost.commodity()) {
           DEBUG("xact.finalize", "breakdown.basis_cost = " << breakdown.basis_cost);
           DEBUG("xact.finalize", "breakdown.final_cost = " << breakdown.final_cost);
@@ -354,20 +354,20 @@ bool xact_base_t::finalize() {
             DEBUG("xact.finalize", "gain_loss would have displayed as zero");
           }
         } else if (post->cost->has_annotation()) {
-          DEBUG("xact.finalize", "checking if cost has price annotation");
+          DEBUG("xact.finalize", "checking if cost has acquisition cost annotation");
 
           // Handle commodity swap over a common base currency
           // Check if price annotation is an amount that also has a cost
           const annotation_t& cost_annot = post->cost->annotation();
-          if (cost_annot.price) {
-            DEBUG("xact.finalize", "yes, checking if price commodities match");
+          if (cost_annot.acquisition_cost) {
+            DEBUG("xact.finalize", "yes, checking if acquisition cost commodities match");
 
             // Get the common base currency costs for both commodities
             amount_t from_cost = breakdown.basis_cost;
 
             // Both costs must be in the same commodity for comparison
-            if (from_cost.commodity() == (*cost_annot.price).commodity()) {
-              amount_t to_cost = *cost_annot.price * *post->cost;
+            if (from_cost.commodity() == (*cost_annot.acquisition_cost).commodity()) {
+              amount_t to_cost = *cost_annot.acquisition_cost * *post->cost;
 
               DEBUG("xact.finalize", "Commodity swap from_cost = " << from_cost);
               DEBUG("xact.finalize", "Commodity swap to_cost = " << to_cost);
@@ -394,21 +394,23 @@ bool xact_base_t::finalize() {
       } else {
         post->amount =
             breakdown.amount.has_annotation()
-                ? amount_t(breakdown.amount, annotation_t(breakdown.amount.annotation().price,
-                                                          breakdown.amount.annotation().date,
-                                                          post->amount.has_annotation()
-                                                              ? post->amount.annotation().tag
-                                                              : breakdown.amount.annotation().tag,
-                                                          breakdown.amount.annotation().value_expr))
+                ? amount_t(breakdown.amount,
+                           annotation_t(breakdown.amount.annotation().acquisition_cost,
+                                        breakdown.amount.annotation().price,
+                                        breakdown.amount.annotation().date,
+                                        post->amount.has_annotation()
+                                            ? post->amount.annotation().tag
+                                            : breakdown.amount.annotation().tag,
+                                        breakdown.amount.annotation().value_expr))
                 : breakdown.amount;
         post->drop_flags(POST_AMOUNT_USER_ANNOTATED);
         DEBUG("xact.finalize", "added breakdown, balance = " << balance);
       }
 
       if (post->has_flags(POST_COST_FIXATED) && post->amount.has_annotation() &&
-          post->amount.annotation().price) {
-        DEBUG("xact.finalize", "fixating annotation price");
-        post->amount.annotation().add_flags(ANNOTATION_PRICE_FIXATED);
+          post->amount.annotation().acquisition_cost) {
+        DEBUG("xact.finalize", "fixating annotation acquisition cost");
+        post->amount.annotation().add_flags(ANNOTATION_COST_FIXATED);
       }
     }
   }

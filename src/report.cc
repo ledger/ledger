@@ -847,8 +847,8 @@ value_t report_t::fn_lot_date(call_scope_t& args) {
 value_t report_t::fn_lot_price(call_scope_t& args) {
   if (args[0].has_annotation()) {
     const annotation_t& details(args[0].annotation());
-    if (details.price)
-      return *details.price;
+    if (details.acquisition_cost)
+      return *details.acquisition_cost;
   }
   return NULL_VALUE;
 }
