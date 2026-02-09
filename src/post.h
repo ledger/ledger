@@ -187,7 +187,7 @@ public:
   xdata_t& xdata();
   const xdata_t& xdata() const { return const_cast<post_t*>(this)->xdata(); }
 
-  void add_to_value(value_t& value, const optional<expr_t&>& expr = none) const;
+  void add_to_value(value_t& value, expr_t* expr = nullptr) const;
 
   void set_reported_account(account_t* account);
 

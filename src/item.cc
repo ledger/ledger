@@ -161,7 +161,7 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
   if (!std::strchr(p, ':'))
     return;
 
-  scoped_array<char> buf(new char[std::strlen(p) + 1]);
+  std::unique_ptr<char[]> buf(new char[std::strlen(p) + 1]);
 
   std::strcpy(buf.get(), p);
 

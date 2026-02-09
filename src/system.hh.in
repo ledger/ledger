@@ -86,6 +86,7 @@
 #include <unordered_map>
 #include <memory>
 #include <new>
+#include <optional>
 #include <set>
 #include <stack>
 #include <string>

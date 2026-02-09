@@ -44,7 +44,6 @@
 #include "expr.h"
 #include "unistring.h"
 
-#include <boost/smart_ptr/scoped_ptr.hpp>
 
 namespace ledger {
 
@@ -64,7 +63,7 @@ class format_t : public expr_base_t<string>, public noncopyable {
     std::size_t min_width;
     std::size_t max_width;
     variant<string, expr_t> data;
-    scoped_ptr<struct element_t> next;
+    std::unique_ptr<struct element_t> next;
 
     element_t() throw() : supports_flags<>(), type(STRING), min_width(0), max_width(0) {
       TRACE_CTOR(element_t, "");
@@ -99,7 +98,7 @@ class format_t : public expr_base_t<string>, public noncopyable {
     void dump(std::ostream& out) const;
   };
 
-  scoped_ptr<element_t> elements;
+  std::unique_ptr<element_t> elements;
 
 public:
   static enum elision_style_t {
@@ -112,7 +111,7 @@ public:
   static bool default_style_changed;
 
 private:
-  static element_t* parse_elements(const string& fmt, const optional<format_t&>& tmpl);
+  static element_t* parse_elements(const string& fmt, const format_t* tmpl);
 
 public:
   format_t() : base_type() { TRACE_CTOR(format_t, ""); }
@@ -123,7 +122,7 @@ public:
   }
   virtual ~format_t() { TRACE_DTOR(format_t); }
 
-  void parse_format(const string& _format, const optional<format_t&>& tmpl = none) {
+  void parse_format(const string& _format, const format_t* tmpl = nullptr) {
     elements.reset(parse_elements(_format, tmpl));
     set_text(_format);
   }

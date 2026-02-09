@@ -284,7 +284,7 @@ void calc_posts::operator()(post_t& post) {
     xdata.count = 1;
   }
 
-  post.add_to_value(xdata.visited_value, amount_expr);
+  post.add_to_value(xdata.visited_value, &amount_expr);
   xdata.add_flags(POST_EXT_VISITED);
 
   account_t* acct = post.reported_account();
@@ -460,8 +460,8 @@ void collapse_posts::operator()(post_t& post) {
   if (last_xact != post.xact && count > 0)
     report_subtotal();
 
-  post.add_to_value(subtotal, amount_expr);
-  post.add_to_value(find_totals(post.account), amount_expr);
+  post.add_to_value(subtotal, &amount_expr);
+  post.add_to_value(find_totals(post.account), &amount_expr);
 
   component_posts.push_back(&post);
 
@@ -1436,7 +1436,7 @@ void forecast_posts::flush() {
 
 inject_posts::inject_posts(post_handler_ptr handler, const string& tag_list, account_t* master)
     : item_handler<post_t>(handler) {
-  scoped_array<char> buf(new char[tag_list.length() + 1]);
+  std::unique_ptr<char[]> buf(new char[tag_list.length() + 1]);
   std::strcpy(buf.get(), tag_list.c_str());
 
   for (char* q = std::strtok(buf.get(), ","); q; q = std::strtok(NULL, ",")) {

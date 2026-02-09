@@ -65,7 +65,7 @@ struct register_python_conversion {
 template <typename T>
 struct register_optional_to_python : public boost::noncopyable {
   struct optional_to_python {
-    static PyObject* convert(const boost::optional<T>& value) {
+    static PyObject* convert(const std::optional<T>& value) {
       return boost::python::incref(value ? boost::python::to_python_value<T>()(*value)
                                          : boost::python::detail::none());
     }
@@ -93,19 +93,19 @@ struct register_optional_to_python : public boost::noncopyable {
 
       const T value = typename boost::python::extract<T>(source);
 
-      void* storage = ((rvalue_from_python_storage<boost::optional<T>>*)data)->storage.bytes;
+      void* storage = ((rvalue_from_python_storage<std::optional<T>>*)data)->storage.bytes;
 
-      if (source == Py_None)                // == None
-        new (storage) boost::optional<T>(); // A Boost uninitialized value
+      if (source == Py_None)
+        new (storage) std::optional<T>();
       else
-        new (storage) boost::optional<T>(value);
+        new (storage) std::optional<T>(value);
 
       data->convertible = storage;
     }
   };
 
   explicit register_optional_to_python() {
-    register_python_conversion<boost::optional<T>, optional_to_python, optional_from_python>();
+    register_python_conversion<std::optional<T>, optional_to_python, optional_from_python>();
   }
 };
 

@@ -610,7 +610,7 @@ void account_t::clear_xdata() {
       pair.second->clear_xdata();
 }
 
-value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&>& expr) const {
+value_t account_t::amount(const optional<bool> real_only, expr_t* expr) const {
   DEBUG("account.amount", "real only: " << real_only);
 
   if (has_xdata() && xdata().has_flags(ACCOUNT_EXT_VISITED)) {
@@ -665,7 +665,7 @@ value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&
   }
 }
 
-value_t account_t::total(const optional<expr_t&>& expr) const {
+value_t account_t::total(expr_t* expr) const {
   if (!(has_xdata() && xdata().family_details.calculated)) {
     xdata_t& xd(const_cast<account_t&>(*this).xdata());
     xd.family_details.calculated = true;
