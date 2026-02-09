@@ -45,6 +45,7 @@ option(BUILD_DEBUG "Build support for runtime debugging" OFF)
 option(PRECOMPILE_SYSTEM_HH "Precompile system.hh" ON)
 
 option(USE_GPGME "Build with support for encrypted journals" OFF)
+option(USE_SANITIZERS "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
 option(BUILD_DOCS "Build and install documentation" OFF)
 option(BUILD_WEB_DOCS "Build version of documentation suitable for viewing online" OFF)
@@ -64,6 +65,11 @@ endif()
 if(CLANG_GCOV)
   set(PROFILE_LIBS profile_rt)
   set(CMAKE_REQUIRED_LIBRARIES ${PROFILE_LIBS})
+endif()
+
+if(USE_SANITIZERS)
+  add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+  add_link_options(-fsanitize=address,undefined)
 endif()
 
 ########################################################################
