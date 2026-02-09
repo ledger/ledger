@@ -107,3 +107,40 @@ jobs:
           else
             echo "::warning::Sanitizer issues were detected. See above for details."
           fi
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        name: Check out repository code
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo ./acprep dependencies
+          sudo apt-get install -y lcov
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DUSE_GCOV=ON -DDISABLE_ASSERTS=ON
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config Debug
+
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        run: ctest -C Debug || ctest -C Debug --rerun-failed --output-on-failure
+
+      - name: Generate coverage report
+        working-directory: ${{github.workspace}}/build
+        run: |
+          lcov --capture --directory . --output-file coverage.info --ignore-errors mismatch
+          lcov --remove coverage.info '/usr/*' '*/test/*' --ignore-errors unused --output-file coverage.info
+          lcov --summary coverage.info
+          genhtml coverage.info --output-directory coverage-report
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ${{github.workspace}}/build/coverage-report/
+          retention-days: 30
+          if-no-files-found: error

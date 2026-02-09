@@ -45,6 +45,7 @@ option(BUILD_DEBUG "Build support for runtime debugging" OFF)
 option(PRECOMPILE_SYSTEM_HH "Precompile system.hh" ON)
 
 option(USE_GPGME "Build with support for encrypted journals" OFF)
+option(USE_GCOV "Enable code coverage with gcov/lcov" OFF)
 option(USE_SANITIZERS "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
 option(BUILD_DOCS "Build and install documentation" OFF)
@@ -63,8 +64,14 @@ else()
 endif()
 
 if(CLANG_GCOV)
+  set(USE_GCOV ON)
   set(PROFILE_LIBS profile_rt)
   set(CMAKE_REQUIRED_LIBRARIES ${PROFILE_LIBS})
+endif()
+
+if(USE_GCOV)
+  add_compile_options(-fprofile-arcs -ftest-coverage)
+  add_link_options(-fprofile-arcs -ftest-coverage)
 endif()
 
 if(USE_SANITIZERS)
