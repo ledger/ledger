@@ -32,6 +32,7 @@
 #include <system.hh>
 
 #include "expr.h"
+#include "op.h"
 #include "parser.h"
 #include "scope.h"
 
@@ -43,7 +44,8 @@ expr_t::expr_t() : base_type() {
   TRACE_CTOR(expr_t, "");
 }
 
-expr_t::expr_t(const expr_t& other) : base_type(other), ptr(other.ptr) {
+expr_t::expr_t(const expr_t& other)
+    : base_type(other), ptr(other.ptr), fast_path_(other.fast_path_) {
   TRACE_CTOR(expr_t, "copy");
 }
 expr_t::expr_t(ptr_op_t _ptr, scope_t* _context) : base_type(_context), ptr(_ptr) {
@@ -69,6 +71,7 @@ expr_t& expr_t::operator=(const expr_t& _expr) {
   if (this != &_expr) {
     base_type::operator=(_expr);
     ptr = _expr.ptr;
+    fast_path_ = _expr.fast_path_;
   }
   return *this;
 }
@@ -105,8 +108,24 @@ void expr_t::parse(std::istream& in, const parse_flags_t& flags,
 
 void expr_t::compile(scope_t& scope) {
   if (!compiled && ptr) {
+    fast_path_ = fast_path_t::NONE;
     ptr = ptr->compile(scope);
     base_type::compile(scope);
+    detect_fast_path();
+  }
+}
+
+void expr_t::detect_fast_path() {
+  // Detect when a compiled expression is a simple identifier that
+  // maps to a known post field.  For the default "amount" expression,
+  // the IDENT remains unresolved at compile time (post_t is not in
+  // the compilation scope) and gets looked up at every calc() call.
+  // By detecting this pattern, callers can bypass the full
+  // scope/calc machinery.
+  if (ptr && ptr->is_ident()) {
+    const string& name = ptr->as_ident();
+    if (name == "amount" || name == "a")
+      fast_path_ = fast_path_t::POST_AMOUNT;
   }
 }
 
