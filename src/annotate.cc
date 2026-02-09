@@ -309,9 +309,7 @@ commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what
   commodity_t* new_comm;
 
   bool keep_price =
-      ((what_to_keep.keep_price ||
-        (details.has_flags(ANNOTATION_PRICE_FIXATED) && has_flags(COMMODITY_SAW_ANN_PRICE_FLOAT) &&
-         has_flags(COMMODITY_SAW_ANN_PRICE_FIXATED))) &&
+      (what_to_keep.keep_price &&
        (!what_to_keep.only_actuals || !details.has_flags(ANNOTATION_PRICE_CALCULATED)));
   bool keep_date = (what_to_keep.keep_date &&
                     (!what_to_keep.only_actuals || !details.has_flags(ANNOTATION_DATE_CALCULATED)));
