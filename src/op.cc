@@ -127,7 +127,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
   } else if (is_scope()) {
     shared_ptr<scope_t> subscope(new symbol_scope_t(*scope_t::empty_scope));
     set_scope(subscope);
-    bound_scope.reset(new bind_scope_t(*scope_ptr, *subscope.get()));
+    bound_scope.reset(new lexical_scope_t(*scope_ptr, *subscope.get()));
     scope_ptr = bound_scope.get();
   } else if (kind < TERMINALS) {
     result = this;

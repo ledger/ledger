@@ -1,0 +1,2 @@
+--no-pager --columns=80 bal --gain
+--no-pager --columns=80 bal
