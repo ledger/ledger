@@ -1,0 +1,17 @@
+; Regression test for GitHub issue #2115: --exchange A:B selective commodity
+; conversion. The A:B syntax should convert only commodity A to B, leaving
+; all other commodities unchanged.
+
+P 2022-01-01 A 1 B
+P 2022-01-01 A 1 C
+
+2022-01-01 test
+    Income
+    Assets  10 A
+    Assets  10 B
+    Assets  10 C
+
+test bal assets -X A:B
+                20 B
+                10 C  Assets
+end test
