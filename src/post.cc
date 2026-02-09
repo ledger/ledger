@@ -233,7 +233,7 @@ value_t get_cost(post_t& post) {
 value_t get_price(post_t& post) {
   if (post.amount.is_null())
     return 0L;
-  if (post.amount.has_annotation() && post.amount.annotation().price)
+  if (post.amount.has_annotation() && post.amount.annotation().acquisition_cost)
     return *post.amount.price();
   else
     return get_cost(post);
