@@ -177,11 +177,11 @@ annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotat
   shared_ptr<annotated_commodity_t> commodity(new annotated_commodity_t(&comm, details));
 
   comm.add_flags(COMMODITY_SAW_ANNOTATED);
-  if (details.price) {
-    if (details.has_flags(ANNOTATION_PRICE_FIXATED))
-      comm.add_flags(COMMODITY_SAW_ANN_PRICE_FIXATED);
+  if (details.acquisition_cost) {
+    if (details.has_flags(ANNOTATION_COST_FIXATED))
+      comm.add_flags(COMMODITY_SAW_ANN_COST_FIXATED);
     else
-      comm.add_flags(COMMODITY_SAW_ANN_PRICE_FLOAT);
+      comm.add_flags(COMMODITY_SAW_ANN_COST_FLOAT);
   }
 
   DEBUG("pool.commodities", "Creating annotated commodity " << "symbol " << commodity->base_symbol()
@@ -246,7 +246,7 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
   // base commodity.
   if (add_price && !per_unit_cost.is_realzero() &&
       (current_annotation == NULL ||
-       !(current_annotation->price && current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))) &&
+       !(current_annotation->acquisition_cost && current_annotation->has_flags(ANNOTATION_COST_FIXATED))) &&
       commodity.referent() != per_unit_cost.commodity().referent()) {
     exchange(commodity, per_unit_cost, moment ? *moment : CURRENT_TIME());
   }
@@ -256,20 +256,31 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
 
   DEBUG("commodity.prices.add", "exchange: final-cost    = " << breakdown.final_cost);
 
-  if (current_annotation && current_annotation->price)
+  if (current_annotation && current_annotation->acquisition_cost)
+    breakdown.basis_cost = (*current_annotation->acquisition_cost * amount).unrounded();
+  else if (current_annotation && current_annotation->price)
     breakdown.basis_cost = (*current_annotation->price * amount).unrounded();
   else
     breakdown.basis_cost = breakdown.final_cost;
 
   DEBUG("commodity.prices.add", "exchange: basis-cost    = " << breakdown.basis_cost);
 
-  annotation_t annotation(per_unit_cost,
+  optional<amount_t> new_acq_cost;
+  if (current_annotation && current_annotation->acquisition_cost) {
+    new_acq_cost = current_annotation->acquisition_cost;
+  } else {
+    new_acq_cost = per_unit_cost;
+  }
+
+  annotation_t annotation(new_acq_cost,
+                          per_unit_cost,
                           lot_date ? *lot_date : (moment ? moment->date() : optional<date_t>()),
                           tag);
 
+  annotation.add_flags(ANNOTATION_COST_CALCULATED);
   annotation.add_flags(ANNOTATION_PRICE_CALCULATED);
-  if (current_annotation && current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))
-    annotation.add_flags(ANNOTATION_PRICE_FIXATED);
+  if (current_annotation && current_annotation->has_flags(ANNOTATION_COST_FIXATED))
+    annotation.add_flags(ANNOTATION_COST_FIXATED);
   if (!lot_date && moment)
     annotation.add_flags(ANNOTATION_DATE_CALCULATED);
   if (tag)

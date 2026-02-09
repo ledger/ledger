@@ -384,18 +384,18 @@ int commodity_t::compare_by_commodity::operator()(const amount_t* left,
   annotated_commodity_t& aleftcomm(static_cast<annotated_commodity_t&>(leftcomm));
   annotated_commodity_t& arightcomm(static_cast<annotated_commodity_t&>(rightcomm));
 
-  if (!aleftcomm.details.price && arightcomm.details.price) {
-    DEBUG("commodity.compare", "left has no price, right does");
+  if (!aleftcomm.details.acquisition_cost && arightcomm.details.acquisition_cost) {
+    DEBUG("commodity.compare", "left has no acquisition cost, right does");
     return -1;
   }
-  if (aleftcomm.details.price && !arightcomm.details.price) {
-    DEBUG("commodity.compare", "right has no price, left does");
+  if (aleftcomm.details.acquisition_cost && !arightcomm.details.acquisition_cost) {
+    DEBUG("commodity.compare", "right has no acquisition cost, left does");
     return 1;
   }
 
-  if (aleftcomm.details.price && arightcomm.details.price) {
-    amount_t leftprice(*aleftcomm.details.price);
-    amount_t rightprice(*arightcomm.details.price);
+  if (aleftcomm.details.acquisition_cost && arightcomm.details.acquisition_cost) {
+    amount_t leftprice(*aleftcomm.details.acquisition_cost);
+    amount_t rightprice(*arightcomm.details.acquisition_cost);
 
     if (leftprice.commodity() != rightprice.commodity()) {
       // Since we have two different amounts, there's really no way to
@@ -480,7 +480,7 @@ int commodity_t::compare_by_commodity::operator()(const amount_t* left,
     return (aleftcomm.details.value_expr->text() < arightcomm.details.value_expr->text());
   }
 
-  // Compare semantic flags (ANNOTATION_PRICE_FIXATED and ANNOTATION_PRICE_NOT_PER_UNIT)
+  // Compare semantic flags (ANNOTATION_COST_FIXATED)
   unsigned int left_flags = aleftcomm.details.flags() & ANNOTATION_SEMANTIC_FLAGS;
   unsigned int right_flags = arightcomm.details.flags() & ANNOTATION_SEMANTIC_FLAGS;
   if (left_flags < right_flags) {

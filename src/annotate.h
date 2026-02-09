@@ -50,39 +50,45 @@
 namespace ledger {
 
 struct annotation_t : public flags::supports_flags<>, public equality_comparable<annotation_t> {
-#define ANNOTATION_PRICE_CALCULATED 0x01
-#define ANNOTATION_PRICE_FIXATED 0x02
-#define ANNOTATION_PRICE_NOT_PER_UNIT 0x04
+#define ANNOTATION_COST_CALCULATED 0x01
+#define ANNOTATION_COST_FIXATED 0x02
+#define ANNOTATION_COST_NOT_PER_UNIT 0x04
 #define ANNOTATION_DATE_CALCULATED 0x08
 #define ANNOTATION_TAG_CALCULATED 0x10
 #define ANNOTATION_VALUE_EXPR_CALCULATED 0x20
+#define ANNOTATION_PRICE_CALCULATED 0x40
 
 // Mask for flags that affect semantic equality (not just metadata)
-#define ANNOTATION_SEMANTIC_FLAGS (ANNOTATION_PRICE_FIXATED)
+#define ANNOTATION_SEMANTIC_FLAGS (ANNOTATION_COST_FIXATED)
 
+  optional<amount_t> acquisition_cost;
   optional<amount_t> price;
   optional<date_t> date;
   optional<string> tag;
   optional<expr_t> value_expr;
 
-  explicit annotation_t(const optional<amount_t>& _price = none,
-                        const optional<date_t>& _date = none, const optional<string>& _tag = none,
+  explicit annotation_t(const optional<amount_t>& _acquisition_cost = none,
+                        const optional<amount_t>& _price = none,
+                        const optional<date_t>& _date = none,
+                        const optional<string>& _tag = none,
                         const optional<expr_t>& _value_expr = none)
-      : supports_flags<>(), price(_price), date(_date), tag(_tag), value_expr(_value_expr) {
-    TRACE_CTOR(annotation_t, "optional<amount_t> + date_t + string + expr_t");
+      : supports_flags<>(), acquisition_cost(_acquisition_cost), price(_price),
+        date(_date), tag(_tag), value_expr(_value_expr) {
+    TRACE_CTOR(annotation_t, "optional<amount_t> + optional<amount_t> + date_t + string + expr_t");
   }
   annotation_t(const annotation_t& other)
-      : supports_flags<>(other.flags()), price(other.price), date(other.date), tag(other.tag),
+      : supports_flags<>(other.flags()), acquisition_cost(other.acquisition_cost),
+        price(other.price), date(other.date), tag(other.tag),
         value_expr(other.value_expr) {
     TRACE_CTOR(annotation_t, "copy");
   }
   ~annotation_t() { TRACE_DTOR(annotation_t); }
 
-  operator bool() const { return price || date || tag || value_expr; }
+  operator bool() const { return acquisition_cost || price || date || tag || value_expr; }
 
   bool operator<(const annotation_t& rhs) const;
   bool operator==(const annotation_t& rhs) const {
-    return (price == rhs.price && date == rhs.date && tag == rhs.tag &&
+    return (acquisition_cost == rhs.acquisition_cost && date == rhs.date && tag == rhs.tag &&
             (value_expr && rhs.value_expr ? value_expr->text() == rhs.value_expr->text()
                                           : value_expr == rhs.value_expr) &&
             (flags() & ANNOTATION_SEMANTIC_FLAGS) == (rhs.flags() & ANNOTATION_SEMANTIC_FLAGS));
