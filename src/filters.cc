@@ -290,8 +290,24 @@ void calc_posts::operator()(post_t& post) {
   account_t* acct = post.reported_account();
   acct->xdata().add_flags(ACCOUNT_EXT_VISITED);
 
-  if (calc_running_total)
+  if (calc_running_total) {
     add_or_set_value(xdata.total, xdata.visited_value);
+
+    // Incrementally maintain a stripped display total alongside the
+    // regular total.  Instead of stripping the entire running total
+    // (O(K) per posting where K = annotated commodities), we strip
+    // only this posting's visited_value (O(1)) and add it to the
+    // previous stripped total.  This relies on strip_annotations
+    // being distributive over balance addition.
+    if (maintain_stripped_total) {
+      if (last_post && last_post->xdata().has_flags(POST_EXT_DISPLAY_TOTAL_CACHED))
+        xdata.display_total = last_post->xdata().display_total;
+
+      value_t stripped_value = xdata.visited_value.strip_annotations(what_to_keep);
+      add_or_set_value(xdata.display_total, stripped_value);
+      xdata.add_flags(POST_EXT_DISPLAY_TOTAL_CACHED);
+    }
+  }
 
   item_handler<post_t>::operator()(post);
 
@@ -477,7 +493,19 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler, report_t& _
                                            bool _show_rounding)
     : item_handler<post_t>(handler), report(_report),
       display_amount_expr(report.HANDLER(display_amount_).expr),
-      display_total_expr(report.HANDLER(display_total_).expr), show_rounding(_show_rounding) {
+      display_total_expr(report.HANDLER(display_total_).expr), show_rounding(_show_rounding),
+      has_stripped_cache(false), what_to_keep(report.what_to_keep()) {
+  // The incremental stripped total optimization is only safe when the
+  // display_total expression is the simple running total accumulation
+  // (i.e., display_total_ = total_expr, total_ = total).  Options like
+  // --market, --exchange, --average, etc. modify these expressions,
+  // breaking the distributive property: strip(f(total)) != f(strip(total)).
+  incremental_strip_eligible =
+      report.HANDLER(display_total_).expr.exprs.empty() &&
+      report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
+      report.HANDLER(total_).expr.exprs.empty() &&
+      report.HANDLER(total_).expr.base_expr == "total" &&
+      !what_to_keep.keep_all();
   create_accounts();
   TRACE_CTOR(display_filter_posts, "post_handler_ptr, report_t&, bool");
 }
@@ -487,8 +515,33 @@ bool display_filter_posts::output_rounding(post_t& post) {
   value_t new_display_total;
 
   if (show_rounding) {
-    new_display_total =
-        (display_total_expr.calc(bound_scope).strip_annotations(report.what_to_keep()));
+    // Optimization: use incremental stripped total computation when
+    // possible.  Instead of stripping the full running total (O(K) GMP
+    // operations where K = number of annotated commodities), we strip
+    // only the posting's contribution and add it to the cached stripped
+    // total from the previous posting (O(1) GMP operations).
+    //
+    // strip_annotations is distributive over balance addition:
+    //   strip(total[n]) = strip(total[n-1]) + strip(visited_value[n])
+    //
+    // We fall back to full stripping when:
+    //   - This is the first posting (no cache yet)
+    //   - The display_total_expr is non-default (--market, --exchange, etc.)
+    //   - The posting is a revalued/generated posting
+    //   - The posting doesn't have visited_value set by calc_posts
+    if (has_stripped_cache && incremental_strip_eligible &&
+        post.account != revalued_account &&
+        post.has_xdata() && post.xdata().has_flags(POST_EXT_VISITED) &&
+        !post.xdata().visited_value.is_null()) {
+      // Incremental path: strip just the posting's contribution
+      value_t stripped_delta = post.xdata().visited_value.strip_annotations(what_to_keep);
+      new_display_total = last_stripped_display_total;
+      add_or_set_value(new_display_total, stripped_delta);
+    } else {
+      // Full path: strip the entire display total from scratch
+      new_display_total =
+          (display_total_expr.calc(bound_scope).strip_annotations(what_to_keep));
+    }
 
     DEBUG("filters.changed_value.rounding",
           "rounding.new_display_total     = " << new_display_total);
@@ -504,11 +557,14 @@ bool display_filter_posts::output_rounding(post_t& post) {
   if (post.account == revalued_account) {
     if (show_rounding)
       last_display_total = new_display_total;
+    // Revalued postings break the incremental chain since they
+    // modify the total in non-standard ways.
+    has_stripped_cache = false;
     return true;
   }
 
   if (value_t repriced_amount =
-          (display_amount_expr.calc(bound_scope).strip_annotations(report.what_to_keep()))) {
+          (display_amount_expr.calc(bound_scope).strip_annotations(what_to_keep))) {
     if (!last_display_total.is_null()) {
       DEBUG("filters.changed_value.rounding",
             "rounding.repriced_amount       = " << repriced_amount);
@@ -536,8 +592,17 @@ bool display_filter_posts::output_rounding(post_t& post) {
                      /* bidir_link=    */ false);
       }
     }
-    if (show_rounding)
+    if (show_rounding) {
       last_display_total = new_display_total;
+      // Update the incremental cache and store in xdata for the
+      // format's scrub(display_total) to reuse.
+      last_stripped_display_total = new_display_total;
+      has_stripped_cache = true;
+      if (post.has_xdata()) {
+        post.xdata().display_total = new_display_total;
+        post.xdata().add_flags(POST_EXT_DISPLAY_TOTAL_CACHED);
+      }
+    }
     return true;
   } else {
     return report.HANDLED(empty);
