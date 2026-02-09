@@ -217,12 +217,20 @@ balance_t::commodity_amount(const optional<const commodity_t&>& commodity) const
 }
 
 balance_t balance_t::strip_annotations(const keep_details_t& what_to_keep) const {
-  balance_t temp;
+  // Fast path: if no amounts have annotations that need stripping,
+  // return *this directly to avoid the expensive GMP arithmetic of
+  // rebuilding the balance via operator+=.
+  foreach (const amounts_map::value_type& pair, amounts) {
+    if (!what_to_keep.keep_all(pair.second.commodity())) {
+      // At least one amount needs stripping; fall through to rebuild
+      balance_t temp;
+      foreach (const amounts_map::value_type& pair2, amounts)
+        temp += pair2.second.strip_annotations(what_to_keep);
+      return temp;
+    }
+  }
 
-  foreach (const amounts_map::value_type& pair, amounts)
-    temp += pair.second.strip_annotations(what_to_keep);
-
-  return temp;
+  return *this;
 }
 
 void balance_t::sorted_amounts(amounts_array& sorted) const {

@@ -153,10 +153,12 @@ public:
 #define POST_EXT_VISITED 0x0040
 #define POST_EXT_MATCHES 0x0080
 #define POST_EXT_CONSIDERED 0x0100
+#define POST_EXT_DISPLAY_TOTAL_CACHED 0x0200
 
     value_t visited_value;
     value_t compound_value;
     value_t total;
+    value_t display_total;  // cached stripped display total
     std::size_t count;
     date_t date;
     date_t value_date;
@@ -170,7 +172,8 @@ public:
     }
     xdata_t(const xdata_t& other)
         : supports_flags<uint_least16_t>(other.flags()), visited_value(other.visited_value),
-          compound_value(other.compound_value), total(other.total), count(other.count),
+          compound_value(other.compound_value), total(other.total),
+          display_total(other.display_total), count(other.count),
           date(other.date), account(other.account), sort_values(other.sort_values) {
       TRACE_CTOR(post_t::xdata_t, "copy");
     }

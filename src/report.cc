@@ -496,6 +496,17 @@ value_t report_t::fn_display_amount(call_scope_t& scope) {
 }
 
 value_t report_t::fn_display_total(call_scope_t& scope) {
+  // Fast path: if display_filter_posts already computed and cached
+  // the stripped display total in the post's xdata, return it directly.
+  // The caller (typically fn_scrub via scrub()) will attempt to strip
+  // annotations again, but since the value is already stripped, the
+  // balance_t::strip_annotations fast-path returns *this immediately
+  // with no GMP arithmetic.
+  if (post_t* post = search_scope<post_t>(&scope)) {
+    if (post->has_xdata() && post->xdata().has_flags(POST_EXT_DISPLAY_TOTAL_CACHED))
+      return post->xdata().display_total;
+  }
+
   return HANDLER(display_total_).expr.calc(scope);
 }
 

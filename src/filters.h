@@ -339,13 +339,17 @@ class calc_posts : public item_handler<post_t> {
   post_t* last_post;
   expr_t& amount_expr;
   bool calc_running_total;
+  bool maintain_stripped_total;
+  keep_details_t what_to_keep;
 
   calc_posts();
 
 public:
-  calc_posts(post_handler_ptr handler, expr_t& _amount_expr, bool _calc_running_total = false)
+  calc_posts(post_handler_ptr handler, expr_t& _amount_expr, bool _calc_running_total = false,
+             bool _maintain_stripped = false, const keep_details_t& _what_to_keep = keep_details_t())
       : item_handler<post_t>(handler), last_post(NULL), amount_expr(_amount_expr),
-        calc_running_total(_calc_running_total) {
+        calc_running_total(_calc_running_total),
+        maintain_stripped_total(_maintain_stripped), what_to_keep(_what_to_keep) {
     TRACE_CTOR(calc_posts, "post_handler_ptr, expr_t&, bool");
   }
   virtual ~calc_posts() { TRACE_DTOR(calc_posts); }
@@ -463,6 +467,10 @@ class display_filter_posts : public item_handler<post_t> {
   expr_t& display_total_expr;
   bool show_rounding;
   value_t last_display_total;
+  value_t last_stripped_display_total;
+  bool has_stripped_cache;
+  bool incremental_strip_eligible;
+  keep_details_t what_to_keep;
   temporaries_t temps;
   account_t* rounding_account;
 
@@ -492,6 +500,8 @@ public:
     display_total_expr.mark_uncompiled();
 
     last_display_total = value_t();
+    last_stripped_display_total = value_t();
+    has_stripped_cache = false;
 
     temps.clear();
     item_handler<post_t>::clear();

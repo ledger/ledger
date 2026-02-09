@@ -61,8 +61,18 @@ public:
   typedef std::pair<expr_t, check_expr_kind_t> check_expr_pair;
   typedef std::list<check_expr_pair> check_expr_list;
 
+  // Fast-path identifiers for common post field lookups.  When the
+  // expression is a simple identifier like "amount", the evaluation
+  // can bypass the full scope/calc machinery and read the field
+  // directly from the post_t object.
+  enum class fast_path_t : uint8_t {
+    NONE = 0,
+    POST_AMOUNT,  // get_amount(post) - post.amount or compound_value
+  };
+
 protected:
   ptr_op_t ptr;
+  fast_path_t fast_path_ = fast_path_t::NONE;
 
 public:
   expr_t();
@@ -96,9 +106,15 @@ public:
   bool is_function() const;
   func_t& get_function();
 
+  fast_path_t fast_path() const { return fast_path_; }
+  void set_fast_path(fast_path_t fp) { fast_path_ = fp; }
+
   virtual string context_to_str() const;
   virtual void print(std::ostream& out) const;
   virtual void dump(std::ostream& out) const;
+
+private:
+  void detect_fast_path();
 };
 
 /**

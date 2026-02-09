@@ -594,20 +594,31 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const {
     if (!xdata_->compound_value.is_null())
       add_or_set_value(value, xdata_->compound_value);
   } else if (expr) {
-    scope_t* ctx = expr->get_context();
-    bind_scope_t bound_scope(*ctx, const_cast<post_t&>(*this));
+    if (expr->fast_path() == expr_t::fast_path_t::POST_AMOUNT) {
+      // Fast path: directly read the post amount without creating
+      // scope objects or evaluating through the AST interpreter.
+      // This is equivalent to get_amount(post) when POST_EXT_COMPOUND
+      // is not set (which is guaranteed by the if-branch above).
+      if (amount.is_null())
+        add_or_set_value(value, value_t(0L));
+      else
+        add_or_set_value(value, amount);
+    } else {
+      scope_t* ctx = expr->get_context();
+      bind_scope_t bound_scope(*ctx, const_cast<post_t&>(*this));
 #if 1
-    value_t temp(expr->calc(bound_scope));
-    add_or_set_value(value, temp);
-    expr->set_context(ctx);
+      value_t temp(expr->calc(bound_scope));
+      add_or_set_value(value, temp);
+      expr->set_context(ctx);
 #else
-    if (!xdata_)
-      xdata_ = xdata_t();
-    xdata_->value = expr->calc(bound_scope);
-    xdata_->add_flags(POST_EXT_COMPOUND);
+      if (!xdata_)
+        xdata_ = xdata_t();
+      xdata_->value = expr->calc(bound_scope);
+      xdata_->add_flags(POST_EXT_COMPOUND);
 
-    add_or_set_value(value, xdata_->value);
+      add_or_set_value(value, xdata_->value);
 #endif
+    }
   } else if (xdata_ && xdata_->has_flags(POST_EXT_VISITED) && !xdata_->visited_value.is_null()) {
     add_or_set_value(value, xdata_->visited_value);
   } else {
