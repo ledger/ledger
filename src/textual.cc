@@ -1154,6 +1154,9 @@ void instance_t::commodity_directive(char* line) {
 
 void instance_t::commodity_alias_directive(commodity_t& comm, string alias) {
   trim(alias);
+  // Strip surrounding quotes if present, matching how commodity names are parsed
+  if (alias.length() > 2 && alias[0] == '"' && alias[alias.length() - 1] == '"')
+    alias = alias.substr(1, alias.length() - 2);
   commodity_pool_t::current_pool->alias(alias, comm);
 }
 
