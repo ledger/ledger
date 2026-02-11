@@ -1,0 +1,22 @@
+; Regression test for GitHub issue #2130: Can't mix {=} expressions with @@
+; expressions when currencies overlap. The presence of @@ on one transaction
+; was causing fixated price annotations {=} on unrelated transactions to be
+; spuriously displayed in plain balance reports.
+
+2022-01-01 test
+    A                                             $1 {=EUR 10}
+    B
+
+2022-01-01 test
+    C                                            $10 @@ EUR 20
+    D
+
+test bal
+                  $1  A
+                 $-1  B
+                 $10  C
+              EUR-20  D
+--------------------
+                 $10
+              EUR-20
+end test
