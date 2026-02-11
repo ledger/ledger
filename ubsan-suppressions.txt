@@ -1,0 +1,9 @@
+# UndefinedBehaviorSanitizer (UBSan) suppression file for known pre-existing issues.
+# Used by CI sanitizer builds via UBSAN_OPTIONS=suppressions=...
+#
+# Format: <check_name>:<pattern>
+# See https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
+
+# ledger-1557: pure virtual call in destructor chain
+# https://github.com/ledger/ledger/issues/1557
+vptr:scope_t
