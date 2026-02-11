@@ -30,6 +30,12 @@ jobs:
             PY_MAJOR: 3,
             cmake_args: -DUSE_PYTHON=ON -DUSE_GPGME=ON
           }
+          - {
+            os: ubuntu-latest,
+            name: Ubuntu-Sanitizers,
+            PY_MAJOR: 3,
+            cmake_args: -DUSE_SANITIZERS=ON
+          }
     steps:
       - uses: actions/checkout@v6
         name: Check out repository code
@@ -74,3 +80,30 @@ jobs:
         # Execute tests defined by the CMake configuration.
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
         run: ctest -C ${{env.BUILD_TYPE}} || ctest -C ${{env.BUILD_TYPE}} --rerun-failed --output-on-failure
+        env:
+          # Sanitizer output is redirected to log files via log_path to prevent
+          # it from contaminating stderr, which the test harness compares against
+          # expected output. Sanitizer findings are reported in a separate step.
+          ASAN_OPTIONS: ${{ contains(matrix.config.cmake_args, 'USE_SANITIZERS') && 'detect_leaks=1:halt_on_error=0:log_path=/tmp/asan_log' || '' }}
+          LSAN_OPTIONS: ${{ contains(matrix.config.cmake_args, 'USE_SANITIZERS') && 'suppressions=../lsan-suppressions.txt:log_path=/tmp/lsan_log' || '' }}
+          UBSAN_OPTIONS: ${{ contains(matrix.config.cmake_args, 'USE_SANITIZERS') && 'print_stacktrace=1:halt_on_error=0:suppressions=../ubsan-suppressions.txt:log_path=/tmp/ubsan_log' || '' }}
+
+      - name: Report sanitizer findings
+        if: contains(matrix.config.cmake_args, 'USE_SANITIZERS') && always()
+        run: |
+          echo "=== Sanitizer Report ==="
+          found=0
+          for prefix in asan_log lsan_log ubsan_log; do
+            files=(/tmp/${prefix}.*)
+            [ -f "${files[0]}" ] || continue
+            echo "--- ${prefix}: ${#files[@]} report(s) ---"
+            # Deduplicate: extract unique error summaries
+            grep -h "SUMMARY\|ERROR\|runtime error" "${files[@]}" 2>/dev/null | sort -u || true
+            echo
+            found=1
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "No sanitizer issues found."
+          else
+            echo "::warning::Sanitizer issues were detected. See above for details."
+          fi
