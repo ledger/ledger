@@ -128,8 +128,14 @@ public:
 
   virtual void compile(scope_t& scope) {
     if (!compiled) {
-      // Derived classes need to do something here.
-      context = &scope;
+      // Only set context from compile() if it hasn't been explicitly
+      // set (e.g. via set_context()).  Many callers pass a
+      // stack-allocated bind_scope_t as 'scope'; storing that pointer
+      // would create a dangling reference once the caller returns.
+      // Contexts set via set_context() point to long-lived scopes
+      // (such as report_t) and must not be overwritten.
+      if (!context)
+        context = &scope;
       compiled = true;
     }
   }
@@ -138,6 +144,14 @@ public:
 
   result_type calc(scope_t& scope) {
     if (!compiled) {
+      // Save context before compile: the scope argument is often a
+      // stack-allocated bind_scope_t that will be destroyed when the
+      // caller returns.  compile() (or a derived override) may store
+      // &scope into context, creating a dangling pointer.  By
+      // restoring the saved context afterwards we ensure that any
+      // long-lived context set via set_context() is preserved.
+      scope_t* saved_context = context;
+
 #if DEBUG_ON
       if (SHOW_DEBUG("expr.compile")) {
         DEBUG("expr.compile", "Before compilation:");
@@ -154,6 +168,9 @@ public:
         dump(*_log_stream);
       }
 #endif // DEBUG_ON
+
+      if (saved_context)
+        context = saved_context;
     }
 
     DEBUG("expr.calc", "Calculating: " << str);
