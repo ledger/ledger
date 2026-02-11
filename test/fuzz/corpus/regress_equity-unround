@@ -1,0 +1,15 @@
+commodity EUR
+    note Euro
+    format 1,000.00 EUR
+
+2022/05/04 * Test 1
+   Assets:Foo  1.0001 EUR
+   Income
+
+2022/05/04 * Test 2
+   Assets:Bar  0.0002 EUR
+   Income
+
+2022/05/04 * Test 3
+   Assets:Baz  3 EUR
+   Income

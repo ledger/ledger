@@ -1,0 +1,6 @@
+# Test for missing arguments
+apply account
+apply tag
+apply fixed
+apply rate
+apply year

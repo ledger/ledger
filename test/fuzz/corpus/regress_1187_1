@@ -1,0 +1,9 @@
+2006/08/17 * Au Bon Bec
+    Dépense:Alimentation:Restaurant      100,00 €
+    Passif:Crédit:Banque
+
+2006/08/20 * Retrait
+    Dépense:Liquide                       60,00 €
+    Passif:Crédit:Banque                 -60,00 €
+    Passif:Crédit:Banque                  60,00 € = -100,00 €
+    Actif:Courant:Cc                     -60,00 €

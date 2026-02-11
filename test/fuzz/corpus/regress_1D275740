@@ -1,0 +1,87 @@
+D 1.200,40 €
+
+1999/11/01 * Achat
+   Actif:SSB      125 STK
+   Actif:SSB            -1672,42 $
+
+1999/11/04 * Vente
+   Actif:SSB        -125 STK
+   Dépense:SSB:Commissions       55,07 $
+   Actif:SSB             1821,54 $
+
+2001/05/01 * Vente
+   Actif:SSEA       -188,7974 STK @ 14,200 $
+   Dépense:SSEA:Commissions       19,60 $
+   Actif:SSEA          2661,32 $
+
+2001/12/21 * Achat
+   Actif:LPG                  7,34316 AMD @ 200,340 €
+   Actif:LPG                    -1471,13 €
+
+2002/12/31 * Réinv. des dividendes
+   Actif:LPG                0,03032 AMD @ 135,060 €
+   Revenu:Dividende:AMD       -4,10 €
+
+2003/12/31 * Réinv. des dividendes
+   Actif:LPG                0,02356 AMD @ 147,830 €
+   Revenu:Dividende:AMD       -3,48 €
+
+2004/02/17 * Vente
+   Actif:LPG                  -7,39704 AMD @ 148,860 €
+   Actif:LPG                     1101,12 €
+
+2005/12/31 * Réinv. des dividendes
+   Actif:LPG                0,87704 LAPD @ 22,680 €
+   Revenu:Dividende:LAPD      -19,89 €
+
+2006/06/30 * Achat
+   Actif:CPE                   54,7328 PM @ 33,200 €
+   Actif:CPE                     -1817,13 €
+
+2006/06/30 * Achat
+   Actif:CPE                   13,8913 PM @ 33,200 €
+   Actif:CPE                      -461,19 €
+
+2007/04/01 Achat
+   Actif:SV               0,2087 CE @ 622,900 €
+   Actif:BC                           -130,00 €
+
+2007/12/27 Vente
+   Actif:SV               -0,2086 EA @ 183,800 €
+   Actif:SV                      38,34 €
+
+2008/01/01 Achat
+   Actif:SV               0,1757 CE @ 739,900 €
+   Actif:BC                           -130,00 €
+
+2008/02/01 Achat
+   Actif:SV               3,1863 EA @ 163,200 €
+   Actif:BC                           -520,00 €
+
+2008/05/01 Achat
+   Actif:SV               0,2599 CE @ 654,100 €
+   Actif:BC                           -170,00 €
+
+2008/10/30 Vente
+   Actif:SV                 -0,0405 CD @ 155,800 €
+   Actif:SV                       6,31 €
+
+2008/12/31 Vente
+   Actif:SV                 -0,0357 MFE @ 259,100 €
+   Actif:SV                       9,25 €
+
+2009/06/29 Vente
+   Actif:SV                 -0,0786 CD @ 155,600 €
+   Actif:SV                      12,23 €
+
+2009/07/30 Vente
+   Actif:SV                 -0,0417 MFE @ 321,100 €
+   Actif:SV                      13,39 €
+
+2009/08/01 Achat
+   Actif:SV                 1,0204 MFE @ 333,200 €
+   Actif:BC                           -340,00 €
+
+2009/09/29 Vente
+   Actif:SV                 -0,0415 MFE @ 358,800 €
+   Actif:SV                      14,89 €

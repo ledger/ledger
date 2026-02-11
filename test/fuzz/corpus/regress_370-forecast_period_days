@@ -1,0 +1,9 @@
+;does not care about start date
+~ every 14 days from 2010/02/23
+    Expenses:Bills:Housecleaning        $85.00
+    Assets:Bank:Checking
+
+;before Sun aug 01 2010
+;now is Mon jun 21 2010
+;a Tuesday?
+;forecasts period start is now first forecast transaction is now + 1 'tomorrow'

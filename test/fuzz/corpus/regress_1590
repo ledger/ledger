@@ -1,0 +1,22 @@
+; Regression test for bug #1590: crash when using --dc with --exchange option
+; due to VOID values in display_total components that cannot be added or
+; passed through abs().
+
+commodity $
+    note United States Dollar
+    alias USD
+    format $1,234.56
+
+commodity EUR
+    note Euro
+    format 1,234.56 EUR
+
+P 2024-06-01 USD 0.80 EUR
+
+2024-07-05 * Payee
+    Expenses    42.00 EUR
+    Assets:Checking
+
+2024-07-05 * Payee 2
+    Expenses    $42.00
+    Assets:Checking

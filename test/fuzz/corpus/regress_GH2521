@@ -1,0 +1,4 @@
+; Regression test for GitHub issue #2521
+; CSV convert command segfaults with --strict when unknown metadata columns exist
+; The issue was that journal.current_context was not set during CSV parsing,
+; causing a null pointer dereference when --strict triggers metadata warnings.

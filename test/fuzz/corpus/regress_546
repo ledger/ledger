@@ -1,0 +1,8 @@
+; Test for issue #546
+; Fixed by PR #1653: Fix garbled dates when using --date-format
+; https://github.com/ledger/ledger/issues/546
+; --date-format option should format dates correctly
+
+2024/01/15 Test Transaction
+    Expenses        $100.00
+    Assets

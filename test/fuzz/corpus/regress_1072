@@ -1,0 +1,10 @@
+--input-date-format %d/%m/%y
+--date-format %d/%m/%y
+
+1/1/14 * Test
+  A        $10
+  B
+
+12/1/14 * Test
+  A        $20
+  B

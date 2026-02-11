@@ -1,0 +1,20 @@
+; Test for issue #551
+; Multiple PRs address this: #93, #94, #95, #115, #122
+; https://github.com/ledger/ledger/issues/551
+; Conflicting options --budget and --invert
+; The bug was that when using --budget with --invert, the cumulative
+; column showed incorrect values
+
+~ Weekly
+    Expenses:Stuff          80.00 USD
+    Income:Budget
+
+2024/01/01 Test1
+    Expenses:Stuff          100.00 USD
+    Assets:Checking
+
+2024/01/08 Test2
+    Expenses:Stuff          50.00 USD
+    Assets:Checking
+
+; Test --budget without --invert (should show over/under budget)

@@ -1,0 +1,16 @@
+; Test for PR #2512: Delete automated transactions
+; https://github.com/ledger/ledger/pull/2512
+; Test that delete command removes auto xact permanently
+
+= "temp-tax" :: /^Income:/
+    (Expenses:Tax:Estimate)               0.25
+
+2024-01-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking
+
+= temp-tax delete
+
+2024-02-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking

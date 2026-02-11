@@ -1,0 +1,24 @@
+; Test for issue #1784 - Stock split with lot notation
+;
+; This test documents the correct way to record stock splits using lot notation.
+; In a stock split, the total cost basis must be preserved - the per-share cost
+; changes inversely to the split ratio.
+;
+; Example: 4:1 split of 7 shares at 40 EUR each
+; - Before: 7 shares at 40 EUR = 280 EUR total cost basis
+; - After: 28 shares at 10 EUR = 280 EUR total cost basis (40 / 4 = 10)
+;
+; IMPORTANT: The cost basis per share must be DIVIDED by the split ratio,
+; not multiplied. Using {160.00 EUR} (40 * 4) instead of {10.00 EUR} (40 / 4)
+; is a user error and will correctly fail with "Transaction does not balance".
+
+2021-02-25 Buy shares
+    Assets:depot  7 "ABCDEF" {40.00 EUR} [2021-02-25]
+    Assets:Bank  -280.00 EUR
+
+; Correct 4:1 stock split - cost basis preserved (40/4 = 10)
+2022-08-03 Stock split 4:1
+    Assets:depot  28 "ABCDEF" {10.00 EUR} [2022-08-03]
+    Assets:depot  -7 "ABCDEF" {40.00 EUR} [2021-02-25]
+
+; Verify the balance - should have 28 shares and 280 EUR spent

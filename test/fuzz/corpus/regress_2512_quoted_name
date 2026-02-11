@@ -1,0 +1,16 @@
+; Test for PR #2512: Quoted names with spaces
+; https://github.com/ledger/ledger/pull/2512
+; Test that quoted names with spaces work correctly
+
+= "vacation fund" :: /^Income:Bonus/
+    (Assets:Vacation)                     0.25
+
+2024-01-01 Bonus
+    Income:Bonus                         $1000
+    Assets:Checking
+
+= "vacation fund" disable
+
+2024-06-01 Bonus
+    Income:Bonus                         $1000
+    Assets:Checking

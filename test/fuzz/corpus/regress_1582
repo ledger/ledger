@@ -1,0 +1,9 @@
+; Regression test for bug #1582: --time-colon with budget produces wrong
+; arithmetic results because the time-colon conversion in in_place_unreduce()
+; corrupted internal values before arithmetic was performed.
+
+~ Daily
+    (testaccount)  2h
+
+2024-05-13 Payee
+    (testaccount)  1.5h

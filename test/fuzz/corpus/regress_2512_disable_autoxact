@@ -1,0 +1,16 @@
+; Test for PR #2512: Disable automated transactions
+; https://github.com/ledger/ledger/pull/2512
+; Test that disable command prevents auto xact from being applied
+
+= "tithe" :: /^Income:/
+    (Liabilities:Tithe)                   0.10
+
+2024-01-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking
+
+= tithe disable
+
+2024-02-01 Salary
+    Income:Salary                        $1000
+    Assets:Checking

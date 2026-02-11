@@ -1,0 +1,2 @@
+; Using -M in combination with an empty result causes a segmentation fault
+; therefore this test case does not have or need any test data

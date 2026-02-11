@@ -1,0 +1,6 @@
+
+;NOTE: this file should NOT end in a new line
+;See https://github.com/ledger/ledger/issues/516
+2021/07/14 test
+	Assets  $30
+	Income  -$30
