@@ -74,6 +74,10 @@ journal_t::~journal_t() {
   foreach (period_xact_t* xact, period_xacts)
     checked_delete(xact);
 
+  // Clear auto_xacts before deleting master to avoid use-after-free:
+  // auto_xact_t destructors call remove_post on accounts owned by master.
+  auto_xacts.clear();
+
   checked_delete(master);
 }
 
