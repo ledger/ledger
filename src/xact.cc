@@ -313,9 +313,14 @@ bool xact_base_t::finalize() {
         throw_(balance_error,
                _("A posting's cost must be of a different commodity than its amount"));
 
+      optional<date_t> lot_date;
+      if (post->has_flags(POST_AMOUNT_USER_DATE) &&
+          post->amount.has_annotation() && post->amount.annotation().date)
+        lot_date = post->amount.annotation().date;
+
       cost_breakdown_t breakdown = commodity_pool_t::current_pool->exchange(
           post->amount, *post->cost, false, !post->has_flags(POST_COST_VIRTUAL),
-          datetime_t(date(), time_duration(0, 0, 0, 0)));
+          datetime_t(date(), time_duration(0, 0, 0, 0)), none, lot_date);
 
       if (post->amount.has_annotation() && post->amount.annotation().price) {
         if (breakdown.basis_cost.commodity() == breakdown.final_cost.commodity()) {
