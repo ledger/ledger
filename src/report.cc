@@ -183,7 +183,7 @@ void report_t::normalize_options(const string& verb) {
   else if (const char* columns = std::getenv("COLUMNS"))
     cols = lexical_cast<long>(columns);
 #if HAVE_IOCTL
-  else if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1)
+  else if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) != -1 && ws.ws_col > 0)
     cols = ws.ws_col;
 #endif
   else
