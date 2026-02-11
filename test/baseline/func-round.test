@@ -1,0 +1,8 @@
+D $1,000.000
+assert roundto($12.345, 0) == $12
+assert roundto($12.345, 1) == $12.3
+assert roundto($12.345, 1) - $12.3 == 0
+assert roundto($12.345, 2) == $12.35
+
+test bal
+end test

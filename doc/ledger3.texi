@@ -9109,8 +9109,8 @@ Return @var{value} rounded to @var{n} digits.  Does not affect formatting.
 $ ledger -f expr.dat --format "%(account) %(roundto(amount, 1))\n" reg
 @end smallexample
 @smallexample @c output:B4DFB9F
-Assets:Cash ¤ -123,40
-Expenses:Office Supplies ¤ 123,40
+Assets:Cash ¤ -123,50
+Expenses:Office Supplies ¤ 123,50
 @end smallexample
 @end defun
 
