@@ -1,0 +1,55 @@
+2010/01/01 Test
+    Assets:Cash   $100
+    Equity
+
+2010/01/02 Purchase
+    Assets:Stocks   10 AAPL
+    Assets:Cash    -$1000
+
+; Test that --getquote option accepts a path argument (with =)
+test --getquote=/custom/path/to/getquote bal
+               $-900
+             10 AAPL  Assets
+               $-900    Cash
+             10 AAPL    Stocks
+               $-100  Equity
+--------------------
+              $-1000
+             10 AAPL
+end test
+
+; Test that --getquote option accepts a path argument (without =)
+test --getquote /custom/path/to/getquote bal
+               $-900
+             10 AAPL  Assets
+               $-900    Cash
+             10 AAPL    Stocks
+               $-100  Equity
+--------------------
+              $-1000
+             10 AAPL
+end test
+
+; Test that --getquote option accepts the default value
+test --getquote getquote bal
+               $-900
+             10 AAPL  Assets
+               $-900    Cash
+             10 AAPL    Stocks
+               $-100  Equity
+--------------------
+              $-1000
+             10 AAPL
+end test
+
+; Test that --getquote=getquote works
+test --getquote=getquote bal
+               $-900
+             10 AAPL  Assets
+               $-900    Cash
+             10 AAPL    Stocks
+               $-100  Equity
+--------------------
+              $-1000
+             10 AAPL
+end test

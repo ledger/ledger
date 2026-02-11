@@ -82,6 +82,11 @@ void report_t::normalize_options(const string& verb) {
   commodity_pool_t::current_pool->keep_base = HANDLED(base);
   commodity_pool_t::current_pool->get_quotes = session.HANDLED(download);
 
+  if (session.HANDLED(getquote_))
+    commodity_pool_t::current_pool->getquote = session.HANDLER(getquote_).str();
+  else
+    commodity_pool_t::current_pool->getquote = "getquote";
+
   if (session.HANDLED(price_exp_))
     commodity_pool_t::current_pool->quote_leeway =
         lexical_cast<long>(session.HANDLER(price_exp_).value) * 3600L;
@@ -496,6 +501,17 @@ value_t report_t::fn_display_amount(call_scope_t& scope) {
 }
 
 value_t report_t::fn_display_total(call_scope_t& scope) {
+  // Fast path: if display_filter_posts already computed and cached
+  // the stripped display total in the post's xdata, return it directly.
+  // The caller (typically fn_scrub via scrub()) will attempt to strip
+  // annotations again, but since the value is already stripped, the
+  // balance_t::strip_annotations fast-path returns *this immediately
+  // with no GMP arithmetic.
+  if (post_t* post = search_scope<post_t>(&scope)) {
+    if (post->has_xdata() && post->xdata().has_flags(POST_EXT_DISPLAY_TOTAL_CACHED))
+      return post->xdata().display_total;
+  }
+
   return HANDLER(display_total_).expr.calc(scope);
 }
 

@@ -1,0 +1,20 @@
+; Regression test for bug #1542: zero-amount budget posting causes crash
+; with --exchange option due to negating an uninitialized value.
+
+~ monthly
+    Income
+    Expenses:Foo                             $100.00
+    Expenses:Bar                               $0.00
+
+2023-01-01 Bar
+    Expenses:Bar                               $2.00
+    Income
+
+test -X '$' budget
+       $2.00     $3800.00    $-3798.00     0  Expenses
+       $2.00                     $2.00     0    Bar
+                 $3800.00    $-3800.00     0    Foo
+      $-2.00    $-3800.00     $3798.00     0  Income
+------------ ------------ ------------ -----
+           0            0            0     0
+end test

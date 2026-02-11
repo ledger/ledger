@@ -146,9 +146,25 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
   // calc_posts computes the running total.  When this appears will determine,
   // for example, whether filtered posts are included or excluded from the
   // running total.
-  handler.reset(new calc_posts(
-      handler, expr,
-      (!for_accounts_report || (report.HANDLED(revalued) && report.HANDLED(unrealized)))));
+  {
+    bool calc_running =
+        (!for_accounts_report || (report.HANDLED(revalued) && report.HANDLED(unrealized)));
+
+    // Enable incremental stripped total maintenance when the display_total
+    // and total expressions are unmodified (default "total" accumulation)
+    // and annotations need stripping.  This allows the format's
+    // scrub(display_total) to use the pre-stripped value from xdata,
+    // avoiding expensive O(K) GMP arithmetic per posting.
+    keep_details_t wtk = report.what_to_keep();
+    bool maintain_stripped = calc_running &&
+        report.HANDLER(display_total_).expr.exprs.empty() &&
+        report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
+        report.HANDLER(total_).expr.exprs.empty() &&
+        report.HANDLER(total_).expr.base_expr == "total" &&
+        !wtk.keep_all();
+
+    handler.reset(new calc_posts(handler, expr, calc_running, maintain_stripped, wtk));
+  }
 
   // filter_posts will only pass through posts matching the
   // `secondary_predicate'.
@@ -159,12 +175,41 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
 
   if (!for_accounts_report) {
     // sort_posts will sort all the posts it sees, based on the `sort_order'
-    // value expression.
+    // value expression.  sort_xacts sorts posts within each transaction.
     if (report.HANDLED(sort_)) {
-      if (report.HANDLED(sort_xacts_))
-        handler.reset(new sort_xacts(handler, expr_t(report.HANDLER(sort_).str()), report));
-      else
-        handler.reset(new sort_posts(handler, report.HANDLER(sort_).str(), report));
+      bool xacts_only = false;
+
+      if (report.HANDLED(sort_xacts_)) {
+        // sort_xacts_ may have its own expression (from --sort-xacts), or
+        // it may have been activated without a value (from period sorting
+        // via normalize_period).  Check value directly since str() throws
+        // on empty values.
+        const string& sort_xacts_value =
+            report.HANDLER(sort_xacts_).value;
+        if (sort_xacts_value.empty()) {
+          // Activated from period sorting: use sort_'s expression for
+          // within-transaction sorting only, no global sort.
+          handler.reset(new sort_xacts(handler,
+                                       expr_t(report.HANDLER(sort_).str()),
+                                       report));
+          xacts_only = true;
+        } else {
+          // --sort-xacts given explicitly with its own expression: apply
+          // within-transaction sort first, then global sort (from --sort).
+          handler.reset(new sort_xacts(handler,
+                                       expr_t(sort_xacts_value), report));
+        }
+      }
+
+      if (! xacts_only)
+        handler.reset(new sort_posts(handler,
+                                     report.HANDLER(sort_).str(), report));
+    } else if (report.HANDLED(sort_xacts_)) {
+      const string& sort_xacts_value =
+          report.HANDLER(sort_xacts_).value;
+      if (! sort_xacts_value.empty())
+        handler.reset(new sort_xacts(handler,
+                                     expr_t(sort_xacts_value), report));
     }
 
     // collapse_posts causes xacts with multiple posts to appear as xacts

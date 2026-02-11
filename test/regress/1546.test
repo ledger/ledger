@@ -1,0 +1,31 @@
+; Regression test for bug #1546: crash (SIGBUS/munmap_chunk) when using tag
+; check directive with include files. The tag check expression's compiled
+; state captured a dangling reference to a stack-local scope on first
+; evaluation, causing a crash on subsequent evaluations.
+
+tag xyz
+  check value =~ /abc/
+
+include 1546-included.dat
+
+2023-04-03
+  acc  $1
+  acc  $-1
+  ; xyz: abc
+
+test print
+2023/03/24 <Unspecified payee>
+    acc                                           $1
+    acc
+    ; xyz: abc
+
+2023/03/26 <Unspecified payee>
+    ; uvw: def
+    acc                                           $1
+    acc
+
+2023/04/03 <Unspecified payee>
+    acc                                           $1
+    acc
+    ; xyz: abc
+end test

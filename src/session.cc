@@ -309,6 +309,9 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
   case 'f':
     OPT_(file_); // -f
     break;
+  case 'g':
+    OPT_(getquote_);
+    break;
   case 'h':
     OPT(hashes_);
     break;

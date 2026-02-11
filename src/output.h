@@ -125,12 +125,12 @@ public:
 };
 
 class report_accounts : public item_handler<post_t> {
-protected:
-  report_t& report;
-
+public:
   typedef std::map<account_t*, std::size_t>::value_type accounts_pair;
   typedef std::map<account_t*, std::size_t, account_compare> accounts_report_map;
 
+protected:
+  report_t& report;
   accounts_report_map accounts;
 
 public:

@@ -87,6 +87,14 @@ void journal_t::initialize() {
   checking_style = CHECK_NORMAL;
   recursive_aliases = false;
   no_aliases = false;
+
+  // Pre-register built-in metadata tags so --strict/--pedantic don't
+  // warn about them.  These are tags that ledger uses internally.
+  known_tags.insert(_("Payee"));
+  known_tags.insert("payee");
+  known_tags.insert(_("UUID"));
+  known_tags.insert(_("Value"));
+  known_tags.insert("Hash");
 }
 
 void journal_t::add_account(account_t* acct) {
@@ -287,6 +295,7 @@ void journal_t::register_metadata(const string& key, const value_t& value,
                                    : static_cast<scope_t&>(*boost::get<post_t*>(context)));
       value_scope_t val_scope(bound_scope, value);
 
+      (*i).second.first.mark_uncompiled();
       if (!(*i).second.first.calc(val_scope).to_boolean()) {
         if ((*i).second.second == expr_t::EXPR_ASSERTION)
           throw_(parse_error, _f("Metadata assertion failed for (%1%: %2%): %3%") % key % value %
