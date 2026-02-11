@@ -1532,23 +1532,46 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
 
   // If we are repricing to just a single commodity, with no price
   // expression, skip the expensive logic below.
-  if (commodities.find(',') == string::npos && commodities.find('=') == string::npos)
+  if (commodities.find(',') == string::npos && commodities.find('=') == string::npos &&
+      commodities.find(':') == string::npos)
     return value(moment, commodity_pool_t::current_pool->find_or_create(commodities));
 
   std::vector<commodity_t*> comms;
+  std::vector<commodity_t*> sources;
   std::vector<bool> force;
 
   typedef tokenizer<char_separator<char>> tokenizer;
   tokenizer tokens(commodities, char_separator<char>(","));
 
   foreach (const string& name, tokens) {
-    string::size_type name_len = name.length();
+    string target_name = name;
+    string source_name;
 
-    if (commodity_t* commodity = commodity_pool_t::current_pool->parse_price_expression(
-            name[name_len - 1] == '!' ? string(name, 0, name_len - 1) : name, add_prices, moment)) {
+    // Handle A:B syntax for selective conversion (convert A to B only)
+    string::size_type colon_pos = name.find(':');
+    if (colon_pos != string::npos) {
+      source_name = string(name, 0, colon_pos);
+      target_name = string(name, colon_pos + 1);
+    }
+
+    string::size_type name_len = target_name.length();
+    bool is_forced = name_len > 0 && target_name[name_len - 1] == '!';
+    string expr_name = is_forced ? string(target_name, 0, name_len - 1) : target_name;
+
+    if (commodity_t* commodity =
+            commodity_pool_t::current_pool->parse_price_expression(expr_name, add_prices, moment)) {
       DEBUG("commodity.exchange", "Pricing for commodity: " << commodity->symbol());
       comms.push_back(&commodity->referent());
-      force.push_back(name[name_len - 1] == '!');
+      force.push_back(is_forced);
+
+      if (!source_name.empty()) {
+        if (commodity_t* src = commodity_pool_t::current_pool->find(source_name))
+          sources.push_back(&src->referent());
+        else
+          sources.push_back(NULL);
+      } else {
+        sources.push_back(NULL);
+      }
     }
   }
 
@@ -1557,9 +1580,15 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
     switch (type()) {
     case AMOUNT:
       DEBUG("commodity.exchange", "We have an amount: " << as_amount_lval());
-      if (!force[index] && std::find(comms.begin(), comms.end(),
-                                     &as_amount_lval().commodity().referent()) != comms.end())
+      if (sources[index]) {
+        // A:B syntax: only convert if the amount is commodity A
+        if (&as_amount_lval().commodity().referent() != sources[index])
+          break;
+      } else if (!force[index] &&
+                 std::find(comms.begin(), comms.end(),
+                           &as_amount_lval().commodity().referent()) != comms.end()) {
         break;
+      }
 
       DEBUG("commodity.exchange", "Referent doesn't match, pricing...");
       if (optional<amount_t> val = as_amount_lval().value(moment, comm)) {
@@ -1578,8 +1607,17 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
         DEBUG("commodity.exchange", "We have a balance amount of commodity: "
                                         << pair.first->symbol()
                                         << " == " << pair.second.commodity().symbol());
-        if (!force[index] &&
-            std::find(comms.begin(), comms.end(), &pair.first->referent()) != comms.end()) {
+        bool should_convert;
+        if (sources[index]) {
+          // A:B syntax: only convert if the amount is commodity A
+          should_convert = (&pair.first->referent() == sources[index]);
+        } else {
+          should_convert =
+              force[index] ||
+              std::find(comms.begin(), comms.end(), &pair.first->referent()) == comms.end();
+        }
+
+        if (!should_convert) {
           temp += pair.second;
         } else {
           DEBUG("commodity.exchange", "Referent doesn't match, pricing...");
