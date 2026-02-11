@@ -31,31 +31,30 @@
 
 #include <ledger.hh>
 
-#include "amount.h"
-#include "journal.h"
-#include "context.h"
-#include "account.h"
-#include "scope.h"
-#include "utils.h"
+#include "session.h"
+#include "report.h"
+#include "xact.h"
 
 #include <cstdint>
 #include <cstddef>
-#include <sstream>
 #include <string>
 
 using namespace ledger;
 
-static bool initialized = false;
+static session_t* session = nullptr;
+static report_t* report_scope = nullptr;
 
 static void ensure_initialized() {
-  if (!initialized) {
-    amount_t::initialize();
-    initialized = true;
+  if (!session) {
+    session = new session_t;
+    set_session_context(session);
+    report_scope = new report_t(*session);
+    scope_t::default_scope = report_scope;
+    scope_t::empty_scope = new empty_scope_t;
   }
 }
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
-  // Limit input size to avoid timeouts on large inputs
   if (size > 65536)
     return 0;
 
@@ -63,26 +62,21 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
 
   try {
     std::string input(reinterpret_cast<const char*>(data), size);
-    shared_ptr<std::istringstream> stream =
-        shared_ptr<std::istringstream>(new std::istringstream(input));
 
+    // Create a fresh journal for each input to avoid state leakage
     journal_t journal;
-    account_t master("");
-    journal.master = &master;
+    journal.initialize();
 
     parse_context_stack_t context_stack;
     context_stack.push(
-        shared_ptr<std::istream>(stream),
+        shared_ptr<std::istream>(new std::istringstream(input)),
         filesystem::current_path());
     parse_context_t& context = context_stack.get_current();
     context.journal = &journal;
-    context.master = &master;
+    context.master = journal.master;
+    context.scope = report_scope;
 
-    // Use an empty_scope since we don't have a full session
-    empty_scope_t empty_scope;
-    context.scope = &empty_scope;
-
-    journal.read_textual(context_stack, NO_HASHES);
+    journal.read(context_stack, NO_HASHES);
   } catch (...) {
     // Suppress all exceptions; we only care about crashes and sanitizer
     // findings (ASan, UBSan).
