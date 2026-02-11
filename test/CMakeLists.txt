@@ -13,7 +13,9 @@ endif()
 
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} ${CTEST_BUILD_FLAGS})
 
-add_subdirectory(unit)
+if (NOT EMSCRIPTEN)
+  add_subdirectory(unit)
+endif()
 
 if(HAVE_BOOST_PYTHON)
   set(TEST_PYTHON_FLAGS "--python")
