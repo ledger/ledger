@@ -253,6 +253,19 @@ void format_accounts::operator()(account_t& account) {
   posted_accounts.push_back(&account);
 }
 
+namespace {
+  void collect_known_accounts(account_t& account,
+                              report_accounts::accounts_report_map& accounts) {
+    if (account.has_flags(ACCOUNT_KNOWN) &&
+        accounts.find(&account) == accounts.end())
+      accounts.insert(
+          report_accounts::accounts_report_map::value_type(&account, 0));
+
+    foreach (accounts_map::value_type& pair, account.accounts)
+      collect_known_accounts(*pair.second, accounts);
+  }
+} // namespace
+
 void report_accounts::flush() {
   std::ostream& out(report.output_stream);
   format_t prepend_format;
@@ -265,6 +278,8 @@ void report_accounts::flush() {
                         ? lexical_cast<std::size_t>(report.HANDLER(prepend_width_).str())
                         : 0;
   }
+
+  collect_known_accounts(*report.session.journal->master, accounts);
 
   foreach (accounts_pair& entry, accounts) {
     if (do_prepend_format) {
