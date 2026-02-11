@@ -140,26 +140,26 @@ item_t::string_map::iterator item_t::set_tag(const string& tag, const optional<v
 }
 
 void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) {
-  if (!std::strchr(p, ':')) {
-    if (const char* b = std::strchr(p, '[')) {
-      if (*(b + 1) != '\0' &&
-          (std::isdigit(static_cast<unsigned char>(*(b + 1))) || *(b + 1) == '=')) {
-        if (const char* e = std::strchr(b, ']')) {
-          char buf[256];
-          std::strncpy(buf, b + 1, static_cast<std::size_t>(e - b - 1));
-          buf[e - b - 1] = '\0';
+  if (const char* b = std::strchr(p, '[')) {
+    if (*(b + 1) != '\0' &&
+        (std::isdigit(static_cast<unsigned char>(*(b + 1))) || *(b + 1) == '=')) {
+      if (const char* e = std::strchr(b, ']')) {
+        char buf[256];
+        std::strncpy(buf, b + 1, static_cast<std::size_t>(e - b - 1));
+        buf[e - b - 1] = '\0';
 
-          if (char* pp = std::strchr(buf, '=')) {
-            *pp++ = '\0';
-            _date_aux = parse_date(pp);
-          }
-          if (buf[0])
-            _date = parse_date(buf);
+        if (char* pp = std::strchr(buf, '=')) {
+          *pp++ = '\0';
+          _date_aux = parse_date(pp);
         }
+        if (buf[0])
+          _date = parse_date(buf);
       }
     }
-    return;
   }
+
+  if (!std::strchr(p, ':'))
+    return;
 
   scoped_array<char> buf(new char[std::strlen(p) + 1]);
 
