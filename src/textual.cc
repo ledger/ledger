@@ -1522,6 +1522,9 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
                                      << "post amount = " << post->amount);
 
       if (!post->amount.is_null() && post->amount.has_commodity()) {
+        if (post->amount.has_annotation())
+          post->add_flags(POST_AMOUNT_USER_ANNOTATED);
+
         context.journal->register_commodity(post->amount.commodity(), post.get());
 
         if (!post->amount.has_annotation()) {
