@@ -212,11 +212,12 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         amt = amt_str.str();
       } else if (count == 2 && index == 2 && post_has_simple_amount(*post) &&
                  post_has_simple_amount(*(*xact.posts.begin())) &&
+                 post->must_balance() && (*xact.posts.begin())->must_balance() &&
                  ((*xact.posts.begin())->amount.commodity() == post->amount.commodity())) {
-        // If there are two postings and they both simple amount, and
-        // they are both of the same commodity, don't bother printing
-        // the second amount as it's always just an inverse of the
-        // first.
+        // If there are two postings and they both simple amount, both
+        // must balance, and they are both of the same commodity, don't
+        // bother printing the second amount as it's always just an
+        // inverse of the first.
       } else {
         std::ostringstream amt_str;
         bool suppress_computed =
