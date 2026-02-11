@@ -21,7 +21,7 @@ end test
 test reg --display-amount "floor()" -> 1
 __ERROR__
 While calling function 'floor ':
-While handling posting from "$sourcepath/test/baseline/func-floor.test", line 2:
+While handling posting from "$sourcepath/test/baseline/func-floor.test", line 7:
 >     Assets:Test                       $100.00
 Error: Too few arguments to function
 end test

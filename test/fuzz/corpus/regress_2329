@@ -25,22 +25,39 @@ assert roundto(-123.45, -1) == -120
 assert roundto(-98765, -3) == -99000
 assert roundto(-24500, -2) == -24500
 
-; round to even
-assert roundto(0.5, 1) + roundto(1.5, 1) + roundto(2.5, 1) + roundto(3.5, 1) + roundto(4.5, 1) == roundto(0.5 + 1.5 + 2.5 + 3.5 + 4.5, 1)
-assert roundto(-0.5, 1) + roundto(-1.5, 1) + roundto(-2.5, 1) + roundto(-3.5, 1) + roundto(-4.5, 1) == roundto(-0.5 - 1.5 - 2.5 - 3.5 - 4.5, 1)
+; standard rounding (0.5 rounds away from zero)
+assert roundto(0.5, 0) == 1
+assert roundto(1.5, 0) == 2
+assert roundto(2.5, 0) == 3
+assert roundto(-0.5, 0) == -1
+assert roundto(-1.5, 0) == -2
+assert roundto(-2.5, 0) == -3
 
-assert roundto(0.12345, 4) == 0.1234
+; rounding zero
+assert roundto(0, 0) == 0
+assert roundto(0, 3) == 0
+assert roundto(0, -2) == 0
+
+; boundary near half
+assert roundto(0.149, 1) == 0.1
+assert roundto(0.150, 1) == 0.2
+assert roundto(0.151, 1) == 0.2
+assert roundto(-0.149, 1) == -0.1
+assert roundto(-0.150, 1) == -0.2
+assert roundto(-0.151, 1) == -0.2
+
+assert roundto(0.12345, 4) == 0.1235
 assert roundto(0.9875, 3) == 0.988
-assert roundto(-0.12345, 4) == -0.1234
+assert roundto(-0.12345, 4) == -0.1235
 assert roundto(-0.9875, 3) == -0.988
-assert roundto(1234.5, 0) == 1234
+assert roundto(1234.5, 0) == 1235
 assert roundto(367.5, 0) == 368
-assert roundto(-1234.5, 0) == -1234
+assert roundto(-1234.5, 0) == -1235
 assert roundto(-367.5, 0) == -368
 assert roundto(29500.00, -3) == 30000
-assert roundto(72250, -2) == 72200
+assert roundto(72250, -2) == 72300
 assert roundto(-29500.00, -3) == -30000
-assert roundto(-72250, -2) == -72200
+assert roundto(-72250, -2) == -72300
 
 ; Assertion in transactions, no error:
 comment
