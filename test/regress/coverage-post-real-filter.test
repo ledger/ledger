@@ -1,0 +1,11 @@
+; Test real vs virtual posting filtering (exercises post.cc get_real)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    (Budget:Food)             $-50.00
+    Assets:Checking
+
+test reg --display "real" -> 0
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00      $-50.00
+end test

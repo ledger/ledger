@@ -1,0 +1,11 @@
+; Test xact with from keyword (exercises draft.cc from account path)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test xact on 2024/03/01 Grocery '$60' from Checking -> 0
+2024/03/01 Grocery Store
+    Expenses:Food                             $60.00
+    Assets:Checking
+end test

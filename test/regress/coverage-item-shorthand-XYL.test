@@ -1,0 +1,18 @@
+; Test X/Y/L shorthand expressions (exercises item.cc lookup X/Y/L paths)
+
+2024/01/15 * Cleared Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 ! Pending Store
+    Expenses:Gas               $30.00
+    Assets:Checking
+
+2024/01/25 Uncleared Store
+    Expenses:Misc              $20.00
+    Assets:Checking
+
+test reg --display "X" --format "%(account) %(amount)\n" -> 0
+Expenses:Food $50.00
+Assets:Checking $-50.00
+end test

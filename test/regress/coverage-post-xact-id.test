@@ -1,0 +1,12 @@
+; Test xact_id expression (exercises post.cc xact_id)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Expenses:Gas               $20.00
+    Assets:Checking
+
+test reg --format "%(xact_id) %(account) %(amount)\n" -> 0
+1 Expenses:Food $50.00
+2 Expenses:Gas $20.00
+3 Assets:Checking $-70.00
+end test

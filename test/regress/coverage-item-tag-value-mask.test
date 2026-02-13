@@ -1,0 +1,21 @@
+; Test tag value mask matching (exercises item.cc has_tag with mask_t and value_mask)
+
+2024/01/15 * Store
+    ; Location: Downtown
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Store
+    ; Location: Uptown
+    Expenses:Food              $30.00
+    Assets:Checking
+
+2024/01/25 * Store
+    ; Category: Organic
+    Expenses:Food              $40.00
+    Assets:Checking
+
+test reg --display "has_tag(/Location/, /Down/)" -> 0
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

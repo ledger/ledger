@@ -1,0 +1,16 @@
+; Test seq and id expressions (exercises item.cc get_seq/get_id)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Gas
+    Expenses:Gas               $30.00
+    Assets:Checking
+
+test reg --format "%(id) %(seq) %(account)\n" -> 0
+2 2 Expenses:Food
+3 3 Assets:Checking
+5 5 Expenses:Gas
+6 6 Assets:Checking
+end test

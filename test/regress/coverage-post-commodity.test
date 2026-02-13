@@ -1,0 +1,10 @@
+; Test commodity expression (exercises post.cc get_commodity)
+
+2024/01/15 * Buy Stock
+    Assets:Brokerage       10 AAPL @ $150.00
+    Assets:Checking
+
+test reg --format "%(commodity) %(amount)\n" -> 0
+AAPL 10 AAPL {$150} [2024/01/15]
+$ $-1500
+end test

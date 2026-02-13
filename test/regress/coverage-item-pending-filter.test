@@ -1,0 +1,18 @@
+; Test Y (pending) filter expression (exercises item.cc get_pending via Y lookup)
+
+2024/01/15 * Cleared Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 ! Pending Store
+    Expenses:Gas               $30.00
+    Assets:Checking
+
+2024/01/25 Uncleared Store
+    Expenses:Misc              $20.00
+    Assets:Checking
+
+test reg --display "Y" --format "%(account) %(amount)\n" -> 0
+Expenses:Gas $30.00
+Assets:Checking $-30.00
+end test

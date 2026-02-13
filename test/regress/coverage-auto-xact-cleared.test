@@ -1,0 +1,14 @@
+; Test auto xact inherits cleared state (exercises auto_xact_t::extend_xact cleared path)
+
+= /Food/
+    (Expenses:Tax)              (amount * 0.10)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --cleared -> 0
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+                                (Expenses:Tax)                $5.00        $5.00
+end test

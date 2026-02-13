@@ -1,0 +1,12 @@
+; Test magnitude expression (exercises xact.cc get_magnitude via lookup)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Expenses:Gas               $20.00
+    Assets:Checking
+
+test reg --format "%(magnitude) %(account) %(amount)\n" -> 0
+$70.00 Expenses:Food $50.00
+$70.00 Expenses:Gas $20.00
+$70.00 Assets:Checking $-70.00
+end test

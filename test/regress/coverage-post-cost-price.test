@@ -1,11 +1,16 @@
-; Test post.cc: post with cost (@) and price annotation
-; Exercises get_cost, get_price, get_has_cost paths
+; Test has_cost, cost, price posting expressions (exercises post.cc get_has_cost/get_cost/get_price)
 
-2024/01/15 Stock Purchase
-    Assets:Brokerage    100 AAPL @ $150.00
+2024/01/15 * Buy Stock
+    Assets:Brokerage       10 AAPL @ $150.00
     Assets:Checking
 
-test reg --format "%(payee) %(account) %(has_cost) %(scrub(cost))\n"
-Stock Purchase Assets:Brokerage true $15000
-Stock Purchase Assets:Checking false $-15000
+2024/01/20 * Buy More
+    Assets:Brokerage       5 AAPL @ $155.00
+    Assets:Checking
+
+test reg --format "%(has_cost ? \"COST:\" : \"NOCOST:\") %(amount) %(cost) %(price)\n" -> 0
+COST: 10 AAPL {$150} [2024/01/15] $1500 $1500
+NOCOST: $-1500 $-1500 $-1500
+COST: 5 AAPL {$155} [2024/01/20] $775 $775
+NOCOST: $-775 $-775 $-775
 end test

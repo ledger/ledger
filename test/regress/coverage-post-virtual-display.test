@@ -1,0 +1,16 @@
+; Test virtual posting display_account (exercises post.cc get_display_account)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    (Budget:Food)             $-50.00
+    [Savings:Reserve]          $10.00
+    [Savings:Checking]        $-10.00
+    Assets:Checking
+
+test reg --format "%(display_account) %(amount)\n" -> 0
+Expenses:Food $50.00
+(Budget:Food) $-50.00
+[Savings:Reserve] $10.00
+[Savings:Checking] $-10.00
+Assets:Checking $-50.00
+end test

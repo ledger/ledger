@@ -1,0 +1,11 @@
+; Test posting-level payee override via Payee tag (exercises post.cc payee_from_tag)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+      ; Payee: Fresh Market
+    Assets:Checking
+
+test reg --format "%(payee) %(account) %(amount)\n" -> 0
+Fresh Market Expenses:Food $50.00
+Grocery Store Assets:Checking $-50.00
+end test

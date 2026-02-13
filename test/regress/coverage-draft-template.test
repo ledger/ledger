@@ -1,0 +1,16 @@
+; Test template command (exercises draft.cc template_command/dump)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test template "Grocery" -> 0
+--- Input arguments ---
+("Grocery")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Grocery
+
+<Posting copied from last related transaction>
+end test

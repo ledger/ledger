@@ -1,0 +1,10 @@
+; Test tag by-value expression (exercises item.cc parse_tags by_value/:: path)
+
+2024/01/15 * Store
+    ; Rate:: 2 * 5
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(tag('Rate')) %(account) %(amount)\n" Expenses -> 0
+10 Expenses:Food $50.00
+end test

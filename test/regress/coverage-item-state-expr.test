@@ -1,0 +1,22 @@
+; Test state expression values (exercises item.cc get_status/get_cleared/get_pending)
+
+2024/01/15 * Cleared Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 ! Pending Store
+    Expenses:Gas               $30.00
+    Assets:Checking
+
+2024/01/25 Uncleared Store
+    Expenses:Misc              $20.00
+    Assets:Checking
+
+test reg --format "%(state) %(account) %(amount)\n" -> 0
+1 Expenses:Food $50.00
+1 Assets:Checking $-50.00
+2 Expenses:Gas $30.00
+2 Assets:Checking $-30.00
+0 Expenses:Misc $20.00
+0 Assets:Checking $-20.00
+end test

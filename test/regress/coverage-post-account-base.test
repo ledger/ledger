@@ -1,0 +1,10 @@
+; Test account_base expression (exercises post.cc get_account_base)
+
+2024/01/15 * Store
+    Expenses:Food:Grocery      $50.00
+    Assets:Checking
+
+test reg --format "%(account_base) %(amount)\n" -> 0
+Grocery $50.00
+Checking $-50.00
+end test

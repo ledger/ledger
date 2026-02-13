@@ -1,0 +1,10 @@
+; Test account depth expression (exercises post.cc get_account_depth)
+
+2024/01/15 * Store
+    Expenses:Food:Grocery      $50.00
+    Assets:Checking
+
+test reg --format "%(depth) %(account) %(amount)\n" -> 0
+3 Expenses:Food:Grocery $50.00
+2 Assets:Checking $-50.00
+end test

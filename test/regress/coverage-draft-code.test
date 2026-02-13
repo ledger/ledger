@@ -1,0 +1,11 @@
+; Test xact with code keyword (exercises draft.cc parse_args code path)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test xact on 2024/03/01 "Grocery" code "CHK123" -> 0
+2024/03/01 (CHK123) Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test

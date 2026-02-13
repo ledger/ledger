@@ -1,0 +1,11 @@
+; Test two-commodity auto-cost calculation (exercises xact.cc finalize two-commodity path)
+
+2024/01/15 * Buy Stock
+    Assets:Brokerage       10 AAPL
+    Assets:Checking       $-1500.00
+
+test reg -> 0
+24-Jan-15 Buy Stock             Assets:Brokerage            10 AAPL      10 AAPL
+                                Assets:Checking           $-1500.00    $-1500.00
+                                                                         10 AAPL
+end test

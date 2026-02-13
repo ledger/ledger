@@ -1,0 +1,15 @@
+; Test auto xact with deferred tags (exercises auto_xact_t deferred_notes)
+
+= /Food/
+    ; Applied: true
+    (Expenses:Tax)              (amount * 0.10)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(has_tag('Applied') ? 'YES' : 'NO') %(account) %(amount)\n" -> 0
+YES Expenses:Food $50.00
+NO Assets:Checking $-50.00
+YES Expenses:Tax $5.00
+end test

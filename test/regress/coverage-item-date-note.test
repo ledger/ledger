@@ -1,0 +1,18 @@
+; Test date parsing from note [date] and [=auxdate] (exercises item.cc parse_tags date path)
+
+2024/01/15 * Store
+    ; [2024/01/10]
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/02/15 * Store
+    ; [=2024/02/20]
+    Expenses:Food              $30.00
+    Assets:Checking
+
+test reg --effective -> 0
+24-Jan-10 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Feb-20 Store                 Expenses:Food                $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test
