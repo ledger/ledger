@@ -1,0 +1,16 @@
+; Test --total-data option (exercises report.cc total data format)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+test reg --total-data -> 0
+2024-01-15 50
+2024-01-15 0
+2024-01-20 30
+2024-01-20 0
+end test

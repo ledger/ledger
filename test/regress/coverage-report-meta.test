@@ -1,0 +1,18 @@
+; Test --meta option prepend format (exercises report.cc meta/prepend_format paths)
+
+2024/01/15 * Grocery Store
+    ; Location: Downtown
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    ; Location: Uptown
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+test reg --meta Location:12 -> 0
+Downtown    24-Jan-15 Grocery Store     Expenses:Food          $50.00     $50.00
+Downtown                                Assets:Checking       $-50.00          0
+Uptown      24-Jan-20 Restaurant        Expenses:Dining        $30.00     $30.00
+Uptown                                  Assets:Checking       $-30.00          0
+end test

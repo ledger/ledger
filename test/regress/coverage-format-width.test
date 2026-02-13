@@ -1,0 +1,10 @@
+; Test format width and alignment (exercises format.cc min_width/max_width)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format '%(date) %-20(payee) %-25(account) %12(scrub(display_amount))\n' -> 0
+2024/01/15 Grocery Store        Expenses:Food                   $50.00
+2024/01/15 Grocery Store        Assets:Checking                $-50.00
+end test

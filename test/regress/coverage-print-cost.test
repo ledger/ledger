@@ -1,0 +1,19 @@
+; Test print command with cost annotations (exercises print.cc cost paths)
+
+2024/01/15 * Buy Stock
+    Assets:Brokerage        10 AAPL @ $150.00
+    Assets:Checking
+
+2024/01/20 * Buy More
+    Assets:Brokerage         5 AAPL @@ $800.00
+    Assets:Checking
+
+test print -> 0
+2024/01/15 * Buy Stock
+    Assets:Brokerage                         10 AAPL @ $150
+    Assets:Checking
+
+2024/01/20 * Buy More
+    Assets:Brokerage                          5 AAPL @@ $800
+    Assets:Checking
+end test

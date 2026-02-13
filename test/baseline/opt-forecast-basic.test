@@ -1,0 +1,12 @@
+; Test basic forecast output (exercises report forecast option)
+
+~ Monthly
+    Expenses:Rent             $1000.00
+    Assets:Checking
+
+test reg --forecast-while "date < [2024/04/01]" --now "2024/01/01" -> 0
+24-Feb-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
+24-Feb-01 Forecast transaction  Assets:Checking           $-1000.00            0
+24-Mar-01 Forecast transaction  Expenses:Rent              $1000.00     $1000.00
+24-Mar-01 Forecast transaction  Assets:Checking           $-1000.00            0
+end test

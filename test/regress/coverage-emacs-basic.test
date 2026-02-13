@@ -1,0 +1,25 @@
+; Test emacs lisp output format (exercises emacs.cc format_emacs_posts)
+
+2024/01/15 * (1001) Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 ! Market
+    Expenses:Food              $30.00
+    Assets:Checking
+
+2024/02/01 Uncleared Shop
+    Expenses:Food              $25.00
+    Assets:Checking
+
+test emacs -> 0
+(("$FILE" 3 (26020 51680 0) "1001" "Grocery Store"
+  (4 "Expenses:Food" "$50.00" t)
+  (5 "Assets:Checking" "$-50.00" t))
+ ("$FILE" 7 (26027 24928 0) nil "Market"
+  (8 "Expenses:Food" "$30.00" pending)
+  (9 "Assets:Checking" "$-30.00" pending))
+ ("$FILE" 11 (26043 13152 0) nil "Uncleared Shop"
+  (12 "Expenses:Food" "$25.00" nil)
+  (13 "Assets:Checking" "$-25.00" nil)))
+end test

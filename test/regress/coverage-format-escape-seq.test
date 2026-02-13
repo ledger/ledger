@@ -1,0 +1,10 @@
+; Test format escape sequences \t \n (exercises format.cc escape case in parse_elements)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format '%(payee)\t%(account)\n' -> 0
+Grocery Store	Expenses:Food
+Grocery Store	Assets:Checking
+end test

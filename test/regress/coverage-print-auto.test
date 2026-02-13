@@ -1,0 +1,20 @@
+; Test print command with auto and periodic transactions (exercises print.cc)
+
+2024/01/15 * (1001) Grocery Store
+    ; Location: Downtown
+    Expenses:Food              $50.00
+    Assets:Checking
+
+= Expenses:Food
+    (Budget:Food)             -1.0
+
+~ Monthly
+    Expenses:Rent             $1000.00
+    Assets:Checking
+
+test print -> 0
+2024/01/15 * (1001) Grocery Store
+    ; Location: Downtown
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test

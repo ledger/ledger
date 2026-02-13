@@ -1,0 +1,10 @@
+; Test single-letter format codes (exercises format.cc parse_elements letter mappings)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format '%d %P %a %t\n' -> 0
+24-Jan-15 Grocery Store Expenses:Food $50.00
+24-Jan-15 Grocery Store Assets:Checking $-50.00
+end test

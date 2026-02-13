@@ -1,0 +1,16 @@
+; Test --dc option for debit/credit columns (exercises report.cc dc column path)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+test reg --dc -> 0
+24-Jan-15 Grocery Store    Expenses:Food        $50.00            0       $50.00
+                           Asset:Checking            0       $50.00            0
+24-Jan-20 Restaurant       Expense:Dining       $30.00            0       $30.00
+                           Asset:Checking            0       $30.00            0
+end test

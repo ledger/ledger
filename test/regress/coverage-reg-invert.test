@@ -1,0 +1,14 @@
+; Test --invert option (exercises report.cc invert flag)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+test reg --invert Expenses -> 0
+24-Jan-15 Grocery Store         Expenses:Food               $-50.00      $-50.00
+24-Jan-20 Restaurant            Expenses:Dining             $-30.00      $-80.00
+end test

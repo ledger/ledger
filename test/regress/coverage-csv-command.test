@@ -1,0 +1,16 @@
+; Test csv command output (exercises report csv command)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+test csv -> 0
+"2024/01/15","","Grocery Store","Expenses:Food","$","50","*",""
+"2024/01/15","","Grocery Store","Assets:Checking","$","-50","*",""
+"2024/01/20","","Restaurant","Expenses:Dining","$","30","*",""
+"2024/01/20","","Restaurant","Assets:Checking","$","-30","*",""
+end test

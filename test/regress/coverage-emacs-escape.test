@@ -1,0 +1,18 @@
+; Test emacs S-expression escaping (exercises emacs.cc escape_string)
+
+2024/01/15 * Fresh "Produce" Shop
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Back\slash Store
+    Expenses:Food              $30.00
+    Assets:Checking
+
+test emacs -> 0
+(("$FILE" 3 (26020 51680 0) nil "Fresh \"Produce\" Shop"
+  (4 "Expenses:Food" "$50.00" t)
+  (5 "Assets:Checking" "$-50.00" t))
+ ("$FILE" 7 (26027 24928 0) nil "Back\\slash Store"
+  (8 "Expenses:Food" "$30.00" t)
+  (9 "Assets:Checking" "$-30.00" t)))
+end test

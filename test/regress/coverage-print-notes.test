@@ -1,0 +1,17 @@
+; Test print command with metadata and notes (exercises print.cc note paths)
+
+2024/01/15 * Grocery Store
+    ; Location: Downtown
+    ; Receipt: #12345
+    Expenses:Food              $50.00
+    ; Organic: yes
+    Assets:Checking
+
+test print -> 0
+2024/01/15 * Grocery Store
+    ; Location: Downtown
+    ; Receipt: #12345
+    Expenses:Food                             $50.00
+    ; Organic: yes
+    Assets:Checking
+end test

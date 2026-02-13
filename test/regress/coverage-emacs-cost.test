@@ -1,0 +1,19 @@
+; Test emacs output with cost and notes (exercises emacs.cc cost and note paths)
+
+2024/01/15 * Buy Stock
+    Assets:Brokerage        10 AAPL @ $150.00
+    Assets:Checking
+
+2024/01/20 * Another Purchase
+    ; Note: test note
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test emacs -> 0
+(("$FILE" 3 (26020 51680 0) nil "Buy Stock"
+  (4 "Assets:Brokerage" "10 AAPL {$150.00} [2024/01/15]" t "$1500.00")
+  (5 "Assets:Checking" "$-1500.00" t))
+ ("$FILE" 7 (26027 24928 0) nil "Another Purchase"
+  (9 "Expenses:Food" "$50.00" t)
+  (10 "Assets:Checking" "$-50.00" t)))
+end test

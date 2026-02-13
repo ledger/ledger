@@ -1,0 +1,16 @@
+; Test select command (exercises report.cc select_command path)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+test select date, payee, account, amount from Expenses -> 0
+24-Jan-15 Grocery Store            Expenses:Food                         $50.00
+24-Jan-15 Grocery Store            Assets:Checking                      $-50.00
+24-Jan-20 Restaurant               Expenses:Dining                       $30.00
+24-Jan-20 Restaurant               Assets:Checking                      $-30.00
+end test
