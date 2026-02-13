@@ -1,0 +1,13 @@
+; Test session.cc: --decimal-comma option for European number formatting
+; Exercises decimal_comma_option_t handler
+
+2024/01/15 * Test
+    Expenses:Food        50,00 EUR
+    Assets:Checking
+
+test bal --decimal-comma --args-only --columns=80
+          -50,00 EUR  Assets:Checking
+           50,00 EUR  Expenses:Food
+--------------------
+                   0
+end test

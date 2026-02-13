@@ -1,0 +1,17 @@
+; Test output.cc: CSV output format (format_csv_posts)
+; Exercises csv report command in output.h
+
+2024/01/15 * Grocery
+    Expenses:Food        $50.00
+    Assets:Checking
+
+2024/01/20 * Gas Station
+    Expenses:Transport   $30.00
+    Assets:Checking
+
+test csv --args-only --columns=80
+"2024/01/15","","Grocery","Expenses:Food","$","50","*",""
+"2024/01/15","","Grocery","Assets:Checking","$","-50","*",""
+"2024/01/20","","Gas Station","Expenses:Transport","$","30","*",""
+"2024/01/20","","Gas Station","Assets:Checking","$","-30","*",""
+end test

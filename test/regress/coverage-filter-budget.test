@@ -1,0 +1,27 @@
+; Test filters.h: budget_posts filter for --budget reporting
+; Exercises budget_posts::operator() with budgeted and unbudgeted accounts
+
+~ Monthly
+    Expenses:Food       $200.00
+    Assets:Checking
+
+2024/01/10 * Grocery
+    Expenses:Food        $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    Expenses:Food        $30.00
+    Assets:Checking
+
+2024/01/25 * Gas
+    Expenses:Transport    $40.00
+    Assets:Checking
+
+test bal --budget --unbudgeted --begin 2024/01/01 --end 2024/02/01 --args-only --columns=80
+              $80.00  Assets:Checking
+             $-80.00  Expenses
+            $-120.00    Food
+              $40.00    Transport
+--------------------
+                   0
+end test

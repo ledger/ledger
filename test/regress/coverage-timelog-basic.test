@@ -1,15 +1,16 @@
-; Test basic timelog clock in/out (exercises timelog.cc)
+; Test timelog.cc: basic clock in/out timelog format
+; Exercises timeclock_t parsing with i (clock-in) and o (clock-out) directives
 
-i 2024/01/15 09:00:00 Work:Development
-o 2024/01/15 17:00:00
+i 2024/01/15 09:00:00 Project:Work  Coding task
+o 2024/01/15 12:30:00
+i 2024/01/15 13:00:00 Project:Work  Meeting
+o 2024/01/15 14:00:00
 
-i 2024/01/15 18:00:00 Work:Meeting
-o 2024/01/15 19:30:00
+test bal --args-only --columns=80
+               4.50h  Project:Work
+end test
 
-test bal -> 0
-               9.50h  Work
-               8.00h    Development
-               1.50h    Meeting
---------------------
-               9.50h
+test reg --args-only --columns=80
+24-Jan-15 Coding task           Project:Work                  3.50h        3.50h
+24-Jan-15 Meeting               Project:Work                  1.00h        4.50h
 end test

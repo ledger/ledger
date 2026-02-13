@@ -1,0 +1,17 @@
+; Test filters.h: day_of_week_posts filter for --dow reporting
+; Exercises day_of_week_posts::flush() aggregation by day of week
+
+2024/01/15 * Grocery
+    Expenses:Food        $50.00
+    Assets:Checking
+
+2024/01/20 * Gas Station
+    Expenses:Transport   $30.00
+    Assets:Checking
+
+test reg --dow --args-only --columns=80
+24-Jan-15 Mondays               Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+24-Jan-20 Saturdays             Assets:Checking             $-30.00      $-30.00
+                                Expenses:Transport           $30.00            0
+end test

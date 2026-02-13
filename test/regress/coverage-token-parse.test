@@ -1,0 +1,18 @@
+; Test token.cc: complex expression parsing with regex and comparison operators
+; Exercises token_t::next() with various token types
+
+2024/01/15 * Test
+    ; :tag1:tag2:
+    ; Ref: abc123
+    Expenses:Food        $50.00
+    Assets:Checking
+
+2024/01/20 * Test2
+    ; :tag1:
+    Expenses:Books       $20.00
+    Assets:Checking
+
+test reg --limit "has_tag(/tag[12]/) and amount > 10" --args-only --columns=80
+24-Jan-15 Test                  Expenses:Food                $50.00       $50.00
+24-Jan-20 Test2                 Expenses:Books               $20.00       $70.00
+end test

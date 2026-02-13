@@ -1,0 +1,18 @@
+; Test output.cc: Emacs Lisp output format (format_emacs_posts)
+
+2024/01/15 * Grocery
+    Expenses:Food        $50.00
+    Assets:Checking
+
+2024/01/20 * Gas Station
+    Expenses:Transport   $30.00
+    Assets:Checking
+
+test emacs --args-only --columns=80
+(("$FILE" 3 (26020 51680 0) nil "Grocery"
+  (4 "Expenses:Food" "$50.00" t)
+  (5 "Assets:Checking" "$-50.00" t))
+ ("$FILE" 7 (26027 24928 0) nil "Gas Station"
+  (8 "Expenses:Transport" "$30.00" t)
+  (9 "Assets:Checking" "$-30.00" t)))
+end test
