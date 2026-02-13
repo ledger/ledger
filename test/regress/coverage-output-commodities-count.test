@@ -1,0 +1,16 @@
+; Test report_commodities with --count option
+; Covers: report_commodities::flush() with count handling
+
+2024/01/15 Buy Stock
+    Assets:Brokerage       10 AAPL @ $150.00
+    Assets:Checking
+
+2024/01/20 Buy More
+    Assets:Brokerage       5 GOOG @ $100.00
+    Assets:Checking
+
+test commodities --count -> 0
+4 $
+1 AAPL
+1 GOOG
+end test

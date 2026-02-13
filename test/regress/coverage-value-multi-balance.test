@@ -1,0 +1,41 @@
+; Test value.cc and balance.h: multi-commodity balance formatting and accumulation
+; Coverage target: value.cc - BALANCE += AMOUNT (line 427), BALANCE += BALANCE (line 430),
+;   balance.h - operator+=, to_string, print for multi-commodity balances
+
+2024/01/15 Purchase
+    Expenses:Food       $100.00
+    Expenses:Travel     50 EUR
+    Expenses:Supplies   30 GBP
+    Assets:Checking
+
+test bal Expenses -> 0
+             $100.00
+              50 EUR
+              30 GBP  Expenses
+             $100.00    Food
+              30 GBP    Supplies
+              50 EUR    Travel
+--------------------
+             $100.00
+              50 EUR
+              30 GBP
+end test
+
+test bal Expenses --flat -> 0
+             $100.00  Expenses:Food
+              30 GBP  Expenses:Supplies
+              50 EUR  Expenses:Travel
+--------------------
+             $100.00
+              50 EUR
+              30 GBP
+end test
+
+test reg Expenses -> 0
+24-Jan-15 Purchase              Expenses:Food               $100.00      $100.00
+                                Expenses:Travel              50 EUR      $100.00
+                                                                          50 EUR
+                                Expenses:Supplies            30 GBP      $100.00
+                                                                          50 EUR
+                                                                          30 GBP
+end test

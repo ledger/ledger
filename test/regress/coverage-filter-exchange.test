@@ -1,0 +1,16 @@
+; Test transfer_details filter via --exchange (SET_ACCOUNT path)
+; Covers: transfer_details::operator() SET_ACCOUNT case
+
+P 2024/01/01 EUR $1.10
+P 2024/01/15 EUR $1.12
+
+2024/01/15 Purchase
+    Expenses:Food          100 EUR
+    Assets:Checking
+
+test --exchange $ bal -> 0
+            $-112.00  Assets:Checking
+             $112.00  Expenses:Food
+--------------------
+                   0
+end test

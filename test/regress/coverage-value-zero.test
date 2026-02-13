@@ -1,0 +1,30 @@
+; Test value.cc: zero value operations and simplification
+; Coverage target: value.cc - in_place_simplify is_realzero path (line 261-264),
+;   operator bool() for various types, is_realzero() paths (lines 1427-1458),
+;   balance.h - is_realzero, is_empty
+
+2024/01/15 Transfer
+    Assets:A       $100.00
+    Assets:B      $-100.00
+
+2024/01/20 Purchase
+    Expenses:Food       $0.00
+    Assets:Checking
+
+2024/01/25 Real Purchase
+    Expenses:Travel     $50.00
+    Assets:Checking
+
+test bal -> 0
+             $-50.00  Assets
+             $100.00    A
+            $-100.00    B
+             $-50.00    Checking
+              $50.00  Expenses:Travel
+--------------------
+                   0
+end test
+
+test reg Expenses --display "total != 0" -> 0
+24-Jan-25 Real Purchase         Expenses:Travel              $50.00       $50.00
+end test

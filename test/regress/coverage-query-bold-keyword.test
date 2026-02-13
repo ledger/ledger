@@ -1,0 +1,24 @@
+; Coverage test for query.cc: bold query keyword
+; Exercises query.cc lines 232 (TOK_BOLD token) and
+; lines 456-469: QUERY_BOLD kind in parse_query_expr
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+test bal Expenses bold Food -> 0
+             $115.00  Expenses
+              $50.00    Dining
+[1m              $25.00[0m    [1mFood[0m
+              $40.00    Gas
+--------------------
+             $115.00
+end test

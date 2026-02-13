@@ -1,0 +1,25 @@
+; Test item.cc: get_tag with mask arguments
+; Exercises get_tag(mask_t) (lines 85-97) and get_tag dispatch (lines 281-282)
+; Also exercises meta() function lookup (line 466)
+
+2024/01/15 Grocery Store
+    ; Location: Downtown
+    ; Category: Food
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    ; Location: Uptown
+    ; Category: Transport
+    Expenses:Gas    $30.00
+    Assets:Checking
+
+test reg --format "%(payee)|%(tag(/Loc/))\n" Expenses
+Grocery Store|Downtown
+Gas Station|Uptown
+end test
+
+test reg --format "%(payee)|%(meta(/Cat/))\n" Expenses
+Grocery Store|Food
+Gas Station|Transport
+end test

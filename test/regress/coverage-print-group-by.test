@@ -1,0 +1,36 @@
+; Test print_xacts with --group-by for title() method coverage
+; Covers: print_xacts::title(), operator(), flush(), clear()
+
+2024/01/15 Store A
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/16 Store B
+    Expenses:Transport    $20.00
+    Assets:Checking
+
+2024/01/20 Store A
+    Expenses:Food         $15.00
+    Assets:Checking
+
+2024/01/25 Store B
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test --group-by payee print -> 0
+2024/01/15 Store A
+    Expenses:Food                             $10.00
+    Assets:Checking
+
+2024/01/20 Store A
+    Expenses:Food                             $15.00
+    Assets:Checking
+
+2024/01/16 Store B
+    Expenses:Transport                        $20.00
+    Assets:Checking
+
+2024/01/25 Store B
+    Expenses:Transport                        $30.00
+    Assets:Checking
+end test

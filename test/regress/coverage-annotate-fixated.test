@@ -1,0 +1,13 @@
+; Coverage test for annotate.cc: fixated price path in find_price
+; Exercises annotate.cc lines 282-284: fixated price returns directly
+; without consulting market prices
+
+2024/01/01 Buy at fixated price
+    Assets:Brokerage    10 AAPL {=$150.00}
+    Assets:Checking    $-1500.00
+
+P 2024/03/01 AAPL $200.00
+
+test bal Assets:Brokerage --market -> 0
+            $1500.00  Assets:Brokerage
+end test

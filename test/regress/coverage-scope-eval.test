@@ -1,0 +1,16 @@
+; Coverage test for scope.h: scope lookup via eval command and expressions
+; Exercises scope.h child_scope_t, bind_scope_t lookups
+; through expression evaluation pipeline
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Test Two
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+test reg Expenses --format '%(amount * 2)\n' -> 0
+$50.00
+$80.00
+end test

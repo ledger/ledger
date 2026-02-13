@@ -1,0 +1,19 @@
+; Test report_tags with --values option (exercises output.h report_tags values path)
+; Covers: report_tags::gather_metadata() with values handling
+
+2024/01/15 Store A
+    ; Category: groceries
+    Expenses:Food         $10.00
+      ; Receipt: yes
+    Assets:Checking
+
+2024/01/16 Store B
+    ; Category: transport
+    Expenses:Transport    $20.00
+    Assets:Checking
+
+test tags --values -> 0
+Category: groceries
+Category: transport
+Receipt: yes
+end test

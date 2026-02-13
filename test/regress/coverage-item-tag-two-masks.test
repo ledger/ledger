@@ -1,0 +1,20 @@
+; Test item.cc: get_tag with two mask arguments
+; Exercises get_tag(mask_t, mask_t) dispatch (lines 287-288)
+; and item_t::get_tag(mask_t, optional<mask_t>) (lines 85-97)
+
+2024/01/15 Grocery Store
+    ; Location: Downtown
+    ; Category: Food
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    ; Location: Uptown
+    ; Category: Transport
+    Expenses:Gas    $30.00
+    Assets:Checking
+
+test reg --format "%(payee)|%(tag(/Location/, /Down/))|\n" Expenses
+Grocery Store|Downtown|
+Gas Station||
+end test

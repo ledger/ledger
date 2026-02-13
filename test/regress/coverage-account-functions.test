@@ -1,0 +1,55 @@
+; Test account expression functions from account.cc
+; Exercises fn_any, get_note, get_addr, get_depth_parent, get_earliest,
+; get_latest, and get_cost (error case)
+
+account Expenses:Food
+    note This is a food account
+
+2024/01/15 * Grocery
+    Expenses:Food  $50.00
+    Expenses:Auto:Gas  $30.00
+    Assets:Checking
+
+2024/02/15 * Restaurant
+    Expenses:Food  $30.00
+    Assets:Checking
+
+test bal --format "%(note)\n" Expenses:Food --args-only --columns=80
+This is a food account
+end test
+
+test bal --format "%(earliest)\n" Expenses:Food --args-only --columns=80
+2024/01/15
+end test
+
+test bal --format "%(latest)\n" Expenses:Food --args-only --columns=80
+2024/02/15
+end test
+
+test bal --format "%(any(amount > 40))\n" Expenses:Food --args-only --columns=80
+true
+end test
+
+test bal --format "%(any(amount > 100))\n" Expenses:Food --args-only --columns=80
+false
+end test
+
+test bal --format "%(addr > 0 ? \"ADDR_OK\" : \"ADDR_FAIL\")\n" Expenses:Food --args-only --columns=80
+ADDR_OK
+end test
+
+test bal --format "%(account) dp=%(depth_parent)\n" Expenses --args-only --columns=80
+Expenses dp=0
+Expenses:Auto:Gas dp=1
+Expenses:Food dp=1
+ dp=0
+end test
+
+test bal --format "%(cost)\n" Expenses:Food --args-only --columns=80 -> 1
+__ERROR__
+While calculating format expression:
+  cost
+While evaluating value expression:
+  cost
+Error: An account does not have a 'cost' value
+end test

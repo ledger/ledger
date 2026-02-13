@@ -1,0 +1,25 @@
+; Test value.cc: equality comparisons for various value types
+; Coverage target: value.cc - is_equal_to STRING vs STRING (line 833),
+;   is_equal_to DATETIME vs DATETIME (line 763), operator bool() paths
+
+2024/01/15 * Purchase
+    ; Tag: value1
+    Expenses:Food       $100.00
+    Assets:Checking
+
+2024/01/20 Purchase2
+    ; Tag: value2
+    Expenses:Food       $100.00
+    Assets:Checking
+
+test reg Expenses --display "tag(\"Tag\") == \"value1\"" -> 0
+24-Jan-15 Purchase              Expenses:Food               $100.00      $100.00
+end test
+
+test reg Expenses --display "date == [2024/01/15]" -> 0
+24-Jan-15 Purchase              Expenses:Food               $100.00      $100.00
+end test
+
+test reg Expenses --display "cleared" -> 0
+24-Jan-15 Purchase              Expenses:Food               $100.00      $100.00
+end test

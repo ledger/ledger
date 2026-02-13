@@ -1,0 +1,17 @@
+; Test collapse_posts filter (exercises filters.h collapse_posts and its clear())
+; Covers: collapse_posts::operator(), report_subtotal(), find_totals(), clear()
+
+2024/01/15 Store A
+    Expenses:Food         $10.00
+    Expenses:Drinks        $5.00
+    Assets:Checking
+
+2024/01/20 Store B
+    Expenses:Food         $20.00
+    Expenses:Drinks       $10.00
+    Assets:Checking
+
+test --collapse reg Expenses -> 0
+24-Jan-15 Store A               <Total>                      $15.00       $15.00
+24-Jan-20 Store B               <Total>                      $30.00       $45.00
+end test

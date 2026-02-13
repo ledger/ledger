@@ -1,0 +1,20 @@
+; Test xact.cc: get_code (line 599) and get_payee (line 551) expressions
+; Also tests get_magnitude (line 603)
+
+2024/01/15 (#1234) Grocery Store
+    Expenses:Food        $50.00
+    Assets:Checking
+
+2024/01/20 (#5678) Hardware Store
+    Expenses:Supplies    $30.00
+    Assets:Checking
+
+test reg --format "%(code) %(payee)\n" --args-only --columns=80 Expenses
+#1234 Grocery Store
+#5678 Hardware Store
+end test
+
+test reg --format "%(magnitude)\n" --args-only --columns=80 Expenses
+$50.00
+$30.00
+end test

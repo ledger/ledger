@@ -1,0 +1,14 @@
+; Test format_accounts handler with display predicate
+; Covers: format_accounts::operator(), flush(), mark_accounts(), post_account(), clear()
+
+2024/01/15 Purchase
+    Expenses:Food:Groceries:Organic   $10.00
+    Expenses:Food:Restaurant           $20.00
+    Assets:Checking
+
+test --depth 2 bal -> 0
+             $-30.00  Assets:Checking
+              $30.00  Expenses:Food
+--------------------
+                   0
+end test

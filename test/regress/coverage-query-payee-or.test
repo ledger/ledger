@@ -1,0 +1,26 @@
+; Coverage test for query.cc: payee query with OR using | operator
+; Exercises query.cc lines 136-138: '|' for TOK_OR
+; and parse_or_expr lines 410-428 for OR expression handling
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+2024/01/04 Hardware Store
+    Expenses:Supplies    $15.00
+    Assets:Checking
+
+test reg '@Grocery' or '@Restaurant' -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Jan-03 Restaurant            Expenses:Dining              $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

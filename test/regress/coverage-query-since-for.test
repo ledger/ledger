@@ -1,0 +1,23 @@
+; Coverage test for query.cc: since followed by for keyword break
+; Exercises query.cc lines 511-516: keyword break logic where
+; encountering "for" during "since" token processing causes
+; the lexer to back up and reparse
+
+2023/11/01 November Purchase
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/01/15 January Purchase
+    Expenses:Gas    $25.00
+    Assets:Checking
+
+2024/06/15 June Purchase
+    Expenses:Office    $30.00
+    Assets:Checking
+
+test reg since 2024/01 for 2024 -> 0
+24-Jan-15 January Purchase      Expenses:Gas                 $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Jun-15 June Purchase         Expenses:Office              $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test

@@ -1,0 +1,23 @@
+; Test sort_posts with date-based sorting
+; Covers: sort_posts::post_accumulated_posts(), operator(), flush(), clear()
+
+2024/01/20 Second
+    Expenses:Food         $20.00
+    Assets:Checking
+
+2024/01/15 First
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/25 Third
+    Expenses:Food         $30.00
+    Assets:Checking
+
+test --sort date reg -> 0
+24-Jan-15 First                 Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+24-Jan-20 Second                Expenses:Food                $20.00       $20.00
+                                Assets:Checking             $-20.00            0
+24-Jan-25 Third                 Expenses:Food                $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test

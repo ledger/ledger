@@ -1,0 +1,35 @@
+; Test value.cc: sort comparisons across different value types
+; Coverage target: value.cc - is_less_than AMOUNT vs AMOUNT (line 904-909),
+;   sort_value_is_less_than (line 2143+), commodity comparison in sort
+
+2024/01/15 First
+    Expenses:Food       $300.00
+    Assets:Checking
+
+2024/01/20 Second
+    Expenses:Travel     100 EUR
+    Assets:Checking
+
+2024/01/25 Third
+    Expenses:Food       $50.00
+    Assets:Checking
+
+test reg Expenses --sort amount -> 0
+24-Jan-25 Third                 Expenses:Food                $50.00       $50.00
+24-Jan-15 First                 Expenses:Food               $300.00      $350.00
+24-Jan-20 Second                Expenses:Travel             100 EUR      $350.00
+                                                                         100 EUR
+end test
+
+test reg Expenses --sort "-amount" -> 0
+24-Jan-20 Second                Expenses:Travel             100 EUR      100 EUR
+24-Jan-15 First                 Expenses:Food               $300.00      $300.00
+                                                                         100 EUR
+24-Jan-25 Third                 Expenses:Food                $50.00      $350.00
+                                                                         100 EUR
+end test
+
+test bal Expenses --flat --sort total --no-total -> 0
+             $350.00  Expenses:Food
+             100 EUR  Expenses:Travel
+end test

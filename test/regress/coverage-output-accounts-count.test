@@ -1,0 +1,19 @@
+; Test report_accounts with --count option (exercises output.h report_accounts count path)
+; Covers: report_accounts::operator(), flush(), clear()
+
+2024/01/15 Purchase A
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/16 Purchase B
+    Expenses:Food         $20.00
+    Assets:Checking
+
+2024/01/20 Purchase C
+    Expenses:Food         $15.00
+    Assets:Checking
+
+test accounts --count -> 0
+3 Assets:Checking
+3 Expenses:Food
+end test

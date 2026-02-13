@@ -1,0 +1,20 @@
+; Test timelog multiple overlapping check-ins with specific account checkout
+; Exercises timelog.cc lines 86-95: matching specific account from multiple check-ins
+
+i 2024/01/15 09:00:00 Project:A  Task A
+i 2024/01/15 10:00:00 Project:B  Task B
+o 2024/01/15 11:00:00 Project:B
+o 2024/01/15 12:00:00 Project:A
+
+test reg
+24-Jan-15 Task B                Project:B                     1.00h        1.00h
+24-Jan-15 Task A                Project:A                     3.00h        4.00h
+end test
+
+test print
+2024/01/15 () Task B
+    Project:B                                  3600s
+
+2024/01/15 () Task A
+    Project:A                                 10800s
+end test

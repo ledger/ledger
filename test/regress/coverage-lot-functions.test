@@ -1,0 +1,42 @@
+; Test lot_price(), lot_date(), lot_tag() functions from session.cc and report.cc
+; Exercises extraction of annotation details from lot-priced amounts
+
+P 2024/01/15 AAPL $150.00
+P 2024/06/15 AAPL $180.00
+
+2024/01/15 * Buy Stock
+    Assets:Brokerage  10 AAPL {$150.00} [2024/01/15] (lot1)
+    Assets:Checking  $-1500.00
+
+2024/03/15 * Buy More
+    Assets:Brokerage  5 AAPL {$160.00} [2024/03/15] (lot2)
+    Assets:Checking  $-800.00
+
+2024/06/15 * Sell Stock
+    Assets:Brokerage  -5 AAPL {$150.00} [2024/01/15] (lot1) @ $180.00
+    Assets:Checking  $900.00
+    Income:Capital Gains  $-150.00
+
+test reg --format "%(lot_price(amount))\n" Assets:Brokerage --args-only --columns=80
+$150.00
+$160.00
+$150.00
+end test
+
+test reg --format "%(lot_date(amount))\n" Assets:Brokerage --args-only --columns=80
+2024/01/15
+2024/03/15
+2024/01/15
+end test
+
+test reg --format "%(lot_tag(amount))\n" Assets:Brokerage --args-only --columns=80
+lot1
+lot2
+lot1
+end test
+
+test reg --format "%(lot_price(amount)) %(lot_date(amount)) %(lot_tag(amount))\n" Assets:Brokerage --args-only --columns=80
+$150.00 2024/01/15 lot1
+$160.00 2024/03/15 lot2
+$150.00 2024/01/15 lot1
+end test

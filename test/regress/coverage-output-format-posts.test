@@ -1,0 +1,23 @@
+; Test format_posts handler with multiple transactions
+; Covers: format_posts::operator(), flush(), clear() - between_format path
+
+2024/01/15 Purchase A
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/16 Purchase A
+    Expenses:Food         $20.00
+    Assets:Checking
+
+2024/01/20 Purchase B
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test reg -> 0
+24-Jan-15 Purchase A            Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+24-Jan-16 Purchase A            Expenses:Food                $20.00       $20.00
+                                Assets:Checking             $-20.00            0
+24-Jan-20 Purchase B            Expenses:Transport           $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test

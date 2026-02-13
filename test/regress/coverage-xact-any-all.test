@@ -1,0 +1,24 @@
+; Coverage test for xact.cc: any() and all() functions
+; Exercises xact.cc lines 560-582: fn_any and fn_all functions
+; and lines 591-594: lookup of "any" and "all" identifiers
+
+2024/01/01 Small Purchase
+    Expenses:Food    $15.00
+    Assets:Checking
+
+2024/01/02 Large Purchase
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Mixed Purchase
+    Expenses:Dining    $50.00
+    Expenses:Tips    $10.00
+    Assets:Checking
+
+test reg expr 'any(amount > 30)' -> 0
+24-Jan-02 Large Purchase        Expenses:Gas                 $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+24-Jan-03 Mixed Purchase        Expenses:Dining              $50.00       $50.00
+                                Expenses:Tips                $10.00       $60.00
+                                Assets:Checking             $-60.00            0
+end test

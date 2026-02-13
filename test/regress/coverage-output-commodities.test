@@ -1,0 +1,16 @@
+; Test report_commodities handler (exercises output.h report_commodities)
+; Covers: report_commodities::operator(), flush(), clear()
+
+2024/01/15 Buy Stock
+    Assets:Brokerage       10 AAPL @ $150.00
+    Assets:Checking
+
+2024/01/20 Buy More
+    Assets:Brokerage       5 GOOG @ $100.00
+    Assets:Checking
+
+test commodities -> 0
+$
+AAPL
+GOOG
+end test

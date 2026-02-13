@@ -1,0 +1,24 @@
+; Test report.cc: fn_top_amount (line 487), fn_unround (line 653),
+; and fn_commodity_price (lines 784-792)
+
+P 2024/01/15 AAPL $150.00
+
+2024/01/15 Groceries
+    Expenses:Food        $50.12
+    Assets:Checking
+
+2024/01/20 Buy Stock
+    Assets:Brokerage  10 AAPL
+    Assets:Checking  $-1500.00
+
+test reg --format "%(top_amount(display_total))\n" --args-only --columns=80 Expenses
+$50.12
+end test
+
+test reg --format "%(unround(amount))\n" --args-only --columns=80 Expenses
+$50.12
+end test
+
+test reg --format "%(commodity_price(amount, date))\n" --args-only --columns=80 Brokerage
+$150.00
+end test

@@ -1,0 +1,24 @@
+; Test to_amount() and to_balance() conversion functions from report.cc
+; Exercises fn_to_amount and fn_to_balance
+
+2024/01/15 * Test
+    Expenses:Food  $50.00
+    Assets:Checking
+
+test reg --format "%(to_amount(display_total))\n" --args-only --columns=80
+$50.00
+$0.00
+end test
+
+test reg --format "%(to_balance(display_total))\n" --args-only --columns=80
+$50.00
+
+end test
+
+test eval "to_amount(100)" --args-only --columns=80
+100
+end test
+
+test eval "to_balance(100)" --args-only --columns=80
+100
+end test

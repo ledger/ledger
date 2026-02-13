@@ -1,0 +1,11 @@
+; Test session.cc: price-db file not found error
+; Exercises read_data error path (lines 92-93)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test -f "$FILE" --price-db /tmp/nonexistent_price_db_file_for_coverage_test.db bal -> 1
+__ERROR__
+Error: Could not find specified price-db file  "/tmp/nonexistent_price_db_file_for_coverage_test.db"
+end test

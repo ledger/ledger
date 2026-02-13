@@ -1,0 +1,34 @@
+; Test value.cc and balance.h: exchange rate operations
+; Coverage target: value.cc - balance arithmetic via exchange conversions,
+;   value() method calls, BALANCE to AMOUNT simplification paths,
+;   balance.h - operator+=, operator-=, number() for multi-commodity
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP $1.30
+
+2024/01/15 Purchase
+    Expenses:Food       $100.00
+    Assets:Checking
+
+2024/01/20 Purchase2
+    Expenses:Travel     50 EUR
+    Assets:Checking
+
+2024/01/25 Purchase3
+    Expenses:Supplies   30 GBP
+    Assets:Checking
+
+test bal Expenses --exchange "$" -> 0
+             $194.00  Expenses
+             $100.00    Food
+              $39.00    Supplies
+              $55.00    Travel
+--------------------
+             $194.00
+end test
+
+test reg Expenses --exchange "$" -> 0
+24-Jan-15 Purchase              Expenses:Food               $100.00      $100.00
+24-Jan-20 Purchase2             Expenses:Travel              $55.00      $155.00
+24-Jan-25 Purchase3             Expenses:Supplies            $39.00      $194.00
+end test

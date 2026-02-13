@@ -1,0 +1,31 @@
+; Test truncate_xacts with negative tail count
+; Covers: truncate_xacts::flush() with tail_count < 0 branch
+
+2024/01/01 First
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/02 Second
+    Expenses:Food         $20.00
+    Assets:Checking
+
+2024/01/03 Third
+    Expenses:Food         $30.00
+    Assets:Checking
+
+2024/01/04 Fourth
+    Expenses:Food         $40.00
+    Assets:Checking
+
+2024/01/05 Fifth
+    Expenses:Food         $50.00
+    Assets:Checking
+
+test --tail -2 reg -> 0
+24-Jan-01 First                 Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+24-Jan-02 Second                Expenses:Food                $20.00       $20.00
+                                Assets:Checking             $-20.00            0
+24-Jan-03 Third                 Expenses:Food                $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test

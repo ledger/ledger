@@ -1,0 +1,23 @@
+; Test interval_posts filter (exercises filters.h interval_posts and its clear())
+; Covers: interval_posts::operator(), flush(), report_subtotal(), clear()
+
+2024/01/15 Purchase A
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/25 Purchase B
+    Expenses:Food         $15.00
+    Assets:Checking
+
+2024/02/10 Purchase C
+    Expenses:Food         $20.00
+    Assets:Checking
+
+2024/02/20 Purchase D
+    Expenses:Food         $25.00
+    Assets:Checking
+
+test --monthly reg Expenses -> 0
+24-Jan-01 - 24-Jan-31           Expenses:Food                $25.00       $25.00
+24-Feb-01 - 24-Feb-29           Expenses:Food                $45.00       $70.00
+end test

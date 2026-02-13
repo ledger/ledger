@@ -1,0 +1,10 @@
+; Coverage test for format.h/cc: format with tab escape sequences
+; Exercises format.cc line handling for \t escape in format strings
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test reg Expenses:Food --format '%(account)\t%(amount)\n' -> 0
+Expenses:Food	$25.00
+end test

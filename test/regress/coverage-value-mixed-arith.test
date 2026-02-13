@@ -1,0 +1,26 @@
+; Test value.cc: mixed-type arithmetic (amount*balance, balance*amount, etc.)
+; Coverage target: value.cc - AMOUNT *= BALANCE-single (line 635-636),
+;   AMOUNT /= BALANCE-single (line 700-707),
+;   BALANCE *= AMOUNT-single (line 651-654),
+;   BALANCE /= AMOUNT-single (line 727-730),
+;   BALANCE /= AMOUNT-no-commodity (line 731-733)
+
+2024/01/15 Purchase
+    Expenses:Food       $10.00
+    Assets:Checking
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(amount * total)\n" -> 0
+Expenses:Food $100.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(amount / total)\n" -> 0
+Expenses:Food $1.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(total * amount)\n" -> 0
+Expenses:Food $100.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(total / amount)\n" -> 0
+Expenses:Food $1.00
+end test

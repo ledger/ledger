@@ -1,0 +1,19 @@
+; Coverage test for draft.cc xact_command with complex transactions
+; Exercises draft.cc: 'at' keyword (line 118), matching multi-post xacts
+; and account mask lookup in matching transaction posts
+
+2024/01/15 * Stock Purchase
+    Assets:Brokerage         10 AAPL @ $150.00
+    Assets:Checking       $-1500.00
+
+test xact 2024/03/01 at 'Stock Purchase' Brokerage 5 from Checking
+2024/03/01 Stock Purchase
+    Assets:Brokerage                          5 AAPL
+    Assets:Checking
+end test
+
+test xact 2024/03/01 'Stock Purchase'
+2024/03/01 Stock Purchase
+    Assets:Brokerage                         10 AAPL
+    Assets:Checking                        $-1500.00
+end test

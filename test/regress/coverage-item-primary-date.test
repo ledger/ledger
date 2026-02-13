@@ -1,0 +1,12 @@
+; Test item.cc: primary_date, actual_date, effective_date lookups
+; Exercises get_primary_date (lines 236-237)
+; Exercises lookup for "primary_date" (line 479-480), "actual_date" (line 403-404)
+; Exercises lookup for "effective_date" (line 437-438)
+
+2024/01/15=2024/02/01 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%(primary_date)|%(actual_date)|%(effective_date)|%(payee)\n" Expenses
+2024/01/15|2024/01/15|2024/02/01|Grocery Store
+end test

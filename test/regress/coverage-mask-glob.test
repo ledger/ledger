@@ -1,0 +1,33 @@
+; Coverage test for mask.cc regex pattern matching
+; Exercises mask_t construction, operator=, and match()
+; Tests various regex patterns used in queries
+
+2024/01/15 * Grocery Store
+    Expenses:Food:Groceries   $50.00
+    Assets:Checking
+
+2024/01/20 * Electronics Store
+    Expenses:Shopping:Electronics  $200.00
+    Assets:Checking
+
+2024/01/25 * Restaurant
+    Expenses:Food:Dining    $75.00
+    Assets:Checking
+
+test bal Expenses:Food
+             $125.00  Expenses:Food
+              $75.00    Dining
+              $50.00    Groceries
+--------------------
+             $125.00
+end test
+
+test bal 'Expenses:(Food|Shopping)'
+             $325.00  Expenses
+             $125.00    Food
+              $75.00      Dining
+              $50.00      Groceries
+             $200.00    Shopping:Electronics
+--------------------
+             $325.00
+end test

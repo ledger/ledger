@@ -1,0 +1,27 @@
+; Coverage test for context.h: parse_context_t warning and location methods
+; Exercises context.h lines 94-99: location() and warning() methods
+; Also exercises parse_context_stack_t push/pop via normal file parsing
+
+account Expenses:Food
+account Assets:Checking
+commodity $
+    format $1,000.00
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Test Two
+    Expenses:Gas    $10.00
+    Assets:Checking
+
+test bal --strict -> 0
+             $-35.00  Assets:Checking
+              $35.00  Expenses
+              $25.00    Food
+              $10.00    Gas
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 15: Unknown account 'Expenses:Gas'
+end test

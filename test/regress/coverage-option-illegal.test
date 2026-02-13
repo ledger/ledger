@@ -1,0 +1,11 @@
+; Test option.h: illegal option error handling
+; Covers: process_arguments() illegal option error path, option_error
+
+2024/01/15 Purchase
+    Expenses:Food         $10.00
+    Assets:Checking
+
+test --nonexistent-option reg -> 1
+__ERROR__
+Error: Illegal option --nonexistent-option
+end test

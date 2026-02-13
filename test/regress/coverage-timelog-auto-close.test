@@ -1,0 +1,9 @@
+; Test timelog auto clock-out when file ends with open check-in
+; Exercises timelog.cc lines 149-161: time_log_t::close() auto clock-out
+; Uses accounts command since the amount depends on current time
+
+i 2024/01/15 09:00:00 Project:Work  Morning coding
+
+test accounts
+Project:Work
+end test

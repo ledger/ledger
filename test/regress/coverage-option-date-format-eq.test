@@ -1,0 +1,11 @@
+; Test option.h: option with = value syntax
+; Covers: process_arguments() --name=value parsing path
+
+2024/01/15 Purchase
+    Expenses:Food         $10.00
+    Assets:Checking
+
+test --date-format="%Y-%m-%d" reg -> 0
+2024-01-15 Purchase             Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test

@@ -1,0 +1,27 @@
+; Coverage test for annotate.h/cc: annotation with lot prices, dates, and tags
+; Exercises annotation_t::parse for price {}, date [], and tag () parsing
+; Also exercises annotate.cc print() for all annotation fields
+
+2024/01/01 Buy Stock A
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (lot1)
+    Assets:Checking    $-1500.00
+
+2024/01/15 Buy Stock B
+    Assets:Brokerage    5 AAPL {=$160.00}
+    Assets:Checking    $-800.00
+
+P 2024/03/01 AAPL $175.00
+
+test bal Assets:Brokerage --lots -> 0
+10 AAPL {$150.00} [2024/01/01] (lot1)
+   5 AAPL {=$160.00}  Assets:Brokerage
+end test
+
+test bal Assets:Brokerage --market -> 0
+            $2550.00  Assets:Brokerage
+end test
+
+test bal Assets:Brokerage --lot-prices --lot-dates --lot-tags -> 0
+10 AAPL {$150.00} [2024/01/01] (lot1)
+   5 AAPL {=$160.00}  Assets:Brokerage
+end test

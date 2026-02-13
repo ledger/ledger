@@ -1,0 +1,17 @@
+; Test transfer_details filter via --pivot
+; Covers: transfer_details::operator(), clear()
+
+2024/01/15 Grocery Store
+    Expenses:Food          $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport     $30.00
+    Assets:Checking
+
+test --pivot Expenses reg -> 0
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-15 Grocery Store         Assets:Checking             $-50.00            0
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $30.00
+24-Jan-20 Gas Station           Assets:Checking             $-30.00            0
+end test

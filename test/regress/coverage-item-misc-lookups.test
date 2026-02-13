@@ -1,0 +1,26 @@
+; Test item.cc: miscellaneous lookup paths
+; Exercises uuid lookup (lines 498-499)
+; Exercises L shortcut for actual (lines 508-509)
+; Exercises addr lookup (lines 405-406)
+; Exercises is_account on posting (lines 458-459)
+
+2024/01/15 Grocery Store
+    ; UUID: test-uuid-42
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%(uuid)\n" Expenses
+test-uuid-42
+end test
+
+test reg --format "%(L)|%(payee)\n" Expenses
+true|Grocery Store
+end test
+
+test reg --format "%(addr > 0)|%(payee)\n" Expenses
+true|Grocery Store
+end test
+
+test reg --format "%(is_account)|%(payee)\n" Expenses
+false|Grocery Store
+end test

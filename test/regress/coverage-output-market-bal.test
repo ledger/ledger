@@ -1,0 +1,18 @@
+; Test format_accounts with --market bal for changed value display
+; Covers: changed_value_posts and display_filter_posts in balance report chain
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $160.00
+P 2024/03/01 AAPL $155.00
+
+2024/01/15 Buy
+    Assets:Brokerage       10 AAPL @ $150.00
+    Assets:Checking
+
+test --market --now "2024/03/15" bal -> 0
+              $50.00  Assets
+            $1550.00    Brokerage
+           $-1500.00    Checking
+--------------------
+              $50.00
+end test

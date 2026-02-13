@@ -1,0 +1,23 @@
+; Test interval_posts with --period-sort for combined interval and sort filtering
+; Covers: interval_posts::operator(), flush(), report_subtotal(), sort within periods
+
+2024/01/05 A
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/15 B
+    Expenses:Food         $20.00
+    Assets:Checking
+
+2024/02/05 C
+    Expenses:Food         $30.00
+    Assets:Checking
+
+2024/02/15 D
+    Expenses:Food         $40.00
+    Assets:Checking
+
+test --period-sort amount --monthly reg Expenses -> 0
+24-Jan-01 - 24-Jan-31           Expenses:Food                $30.00       $30.00
+24-Feb-01 - 24-Feb-29           Expenses:Food                $70.00      $100.00
+end test

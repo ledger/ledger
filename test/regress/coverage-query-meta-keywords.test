@@ -1,0 +1,37 @@
+; Coverage test for query.cc: meta/tag/data keyword variations
+; Exercises query.cc lines 222-226: 'meta', 'tag', 'data' keywords for TOK_META
+; Also exercises lines 289-313: metadata key=value matching in parse_query_term
+
+2024/01/01 Grocery Store
+    ; Project: Alpha
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    ; Project: Beta
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    ; Project: Alpha
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+test reg meta Project=Alpha -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Jan-03 Restaurant            Expenses:Dining              $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg tag Project=Beta -> 0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+end test
+
+test reg data Project=Alpha -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Jan-03 Restaurant            Expenses:Dining              $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

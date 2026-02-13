@@ -1,0 +1,88 @@
+; Test interval period tokens: weekly, biweekly, quarterly, daily, bimonthly, monthly
+; (exercises TOK_WEEKLY, TOK_BIWEEKLY, TOK_QUARTERLY, TOK_DAILY, TOK_BIMONTHLY,
+;  TOK_MONTHLY in times.cc)
+
+2024/01/15 * Grocery Store
+    Expenses:Food:Groceries   $50.00
+    Assets:Checking
+
+2024/02/10 * Electric Company
+    Expenses:Utilities:Electric  $120.00
+    Assets:Checking
+
+2024/03/20 * Restaurant
+    Expenses:Food:Dining     $35.00
+    Assets:Checking
+
+2024/04/05 * Gas Station
+    Expenses:Transport:Gas    $45.00
+    Assets:Checking
+
+2024/06/01 * Landlord
+    Expenses:Housing:Rent    $1200.00
+    Assets:Checking
+
+test reg --period "weekly" --now 2024/06/15
+24-Jan-14 - 24-Jan-20           Assets:Checking             $-50.00      $-50.00
+                                Expense:Food:Groceries       $50.00            0
+24-Feb-04 - 24-Feb-10           Assets:Checking            $-120.00     $-120.00
+                                Exp:Utilities:Electric      $120.00            0
+24-Mar-17 - 24-Mar-23           Assets:Checking             $-35.00      $-35.00
+                                Expenses:Food:Dining         $35.00            0
+24-Mar-31 - 24-Apr-06           Assets:Checking             $-45.00      $-45.00
+                                Expenses:Transport:Gas       $45.00            0
+24-May-26 - 24-Jun-01           Assets:Checking           $-1200.00    $-1200.00
+                                Expenses:Housing:Rent      $1200.00            0
+end test
+
+test reg --period "biweekly" --now 2024/06/15
+24-Jan-07 - 24-Jan-20           Assets:Checking             $-50.00      $-50.00
+                                Expense:Food:Groceries       $50.00            0
+24-Feb-04 - 24-Feb-17           Assets:Checking            $-120.00     $-120.00
+                                Exp:Utilities:Electric      $120.00            0
+24-Mar-17 - 24-Mar-30           Assets:Checking             $-35.00      $-35.00
+                                Expenses:Food:Dining         $35.00            0
+24-Mar-31 - 24-Apr-13           Assets:Checking             $-45.00      $-45.00
+                                Expenses:Transport:Gas       $45.00            0
+24-May-26 - 24-Jun-08           Assets:Checking           $-1200.00    $-1200.00
+                                Expenses:Housing:Rent      $1200.00            0
+end test
+
+test reg --period "quarterly" --now 2024/06/15
+24-Jan-01 - 24-Mar-31           Assets:Checking            $-205.00     $-205.00
+                                Expenses:Food:Dining         $35.00     $-170.00
+                                Expense:Food:Groceries       $50.00     $-120.00
+                                Exp:Utilities:Electric      $120.00            0
+24-Apr-01 - 24-Jun-30           Assets:Checking           $-1245.00    $-1245.00
+                                Expenses:Housing:Rent      $1200.00      $-45.00
+                                Expenses:Transport:Gas       $45.00            0
+end test
+
+test reg --period "daily" --begin 2024/01/14 --end 2024/01/17
+24-Jan-15 - 24-Jan-15           Assets:Checking             $-50.00      $-50.00
+                                Expense:Food:Groceries       $50.00            0
+end test
+
+test reg --period "bimonthly" --now 2024/06/15
+24-Jan-01 - 24-Feb-29           Assets:Checking            $-170.00     $-170.00
+                                Expense:Food:Groceries       $50.00     $-120.00
+                                Exp:Utilities:Electric      $120.00            0
+24-Mar-01 - 24-Apr-30           Assets:Checking             $-80.00      $-80.00
+                                Expenses:Food:Dining         $35.00      $-45.00
+                                Expenses:Transport:Gas       $45.00            0
+24-May-01 - 24-Jun-30           Assets:Checking           $-1200.00    $-1200.00
+                                Expenses:Housing:Rent      $1200.00            0
+end test
+
+test reg --period "monthly" --now 2024/06/15
+24-Jan-01 - 24-Jan-31           Assets:Checking             $-50.00      $-50.00
+                                Expense:Food:Groceries       $50.00            0
+24-Feb-01 - 24-Feb-29           Assets:Checking            $-120.00     $-120.00
+                                Exp:Utilities:Electric      $120.00            0
+24-Mar-01 - 24-Mar-31           Assets:Checking             $-35.00      $-35.00
+                                Expenses:Food:Dining         $35.00            0
+24-Apr-01 - 24-Apr-30           Assets:Checking             $-45.00      $-45.00
+                                Expenses:Transport:Gas       $45.00            0
+24-Jun-01 - 24-Jun-30           Assets:Checking           $-1200.00    $-1200.00
+                                Expenses:Housing:Rent      $1200.00            0
+end test

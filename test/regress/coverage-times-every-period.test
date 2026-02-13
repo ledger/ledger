@@ -1,0 +1,83 @@
+; Test "every N period" and combined period expressions
+; (exercises TOK_EVERY, and combined interval+range in times.cc)
+
+2024/01/15 * Grocery Store
+    Expenses:Food:Groceries   $50.00
+    Assets:Checking
+
+2024/02/10 * Electric Company
+    Expenses:Utilities:Electric  $120.00
+    Assets:Checking
+
+2024/03/20 * Restaurant
+    Expenses:Food:Dining     $35.00
+    Assets:Checking
+
+2024/04/05 * Gas Station
+    Expenses:Transport:Gas    $45.00
+    Assets:Checking
+
+2024/06/01 * Landlord
+    Expenses:Housing:Rent    $1200.00
+    Assets:Checking
+
+test reg --period "every 2 months" --now 2024/06/15
+24-Jan-01 - 24-Feb-29           Assets:Checking            $-170.00     $-170.00
+                                Expense:Food:Groceries       $50.00     $-120.00
+                                Exp:Utilities:Electric      $120.00            0
+24-Mar-01 - 24-Apr-30           Assets:Checking             $-80.00      $-80.00
+                                Expenses:Food:Dining         $35.00      $-45.00
+                                Expenses:Transport:Gas       $45.00            0
+24-May-01 - 24-Jun-30           Assets:Checking           $-1200.00    $-1200.00
+                                Expenses:Housing:Rent      $1200.00            0
+end test
+
+test reg --period "every 3 months" --now 2024/06/15
+24-Jan-01 - 24-Mar-31           Assets:Checking            $-205.00     $-205.00
+                                Expenses:Food:Dining         $35.00     $-170.00
+                                Expense:Food:Groceries       $50.00     $-120.00
+                                Exp:Utilities:Electric      $120.00            0
+24-Apr-01 - 24-Jun-30           Assets:Checking           $-1245.00    $-1245.00
+                                Expenses:Housing:Rent      $1200.00      $-45.00
+                                Expenses:Transport:Gas       $45.00            0
+end test
+
+test reg --period "every 2 weeks" --now 2024/06/15
+24-Jan-07 - 24-Jan-20           Assets:Checking             $-50.00      $-50.00
+                                Expense:Food:Groceries       $50.00            0
+24-Feb-04 - 24-Feb-17           Assets:Checking            $-120.00     $-120.00
+                                Exp:Utilities:Electric      $120.00            0
+24-Mar-17 - 24-Mar-30           Assets:Checking             $-35.00      $-35.00
+                                Expenses:Food:Dining         $35.00            0
+24-Mar-31 - 24-Apr-13           Assets:Checking             $-45.00      $-45.00
+                                Expenses:Transport:Gas       $45.00            0
+24-May-26 - 24-Jun-08           Assets:Checking           $-1200.00    $-1200.00
+                                Expenses:Housing:Rent      $1200.00            0
+end test
+
+test reg --period "weekly from 2024/01/01 to 2024/02/01"
+24-Jan-14 - 24-Jan-20           Assets:Checking             $-50.00      $-50.00
+                                Expense:Food:Groceries       $50.00            0
+end test
+
+test reg --period "monthly from 2024/01/01 to 2024/04/01"
+24-Jan-01 - 24-Jan-31           Assets:Checking             $-50.00      $-50.00
+                                Expense:Food:Groceries       $50.00            0
+24-Feb-01 - 24-Feb-29           Assets:Checking            $-120.00     $-120.00
+                                Exp:Utilities:Electric      $120.00            0
+24-Mar-01 - 24-Mar-31           Assets:Checking             $-35.00      $-35.00
+                                Expenses:Food:Dining         $35.00            0
+end test
+
+test reg --period "monthly in 2024" --now 2024/06/15
+24-Jan-01 - 24-Jan-31           Assets:Checking             $-50.00      $-50.00
+                                Expense:Food:Groceries       $50.00            0
+24-Feb-01 - 24-Feb-29           Assets:Checking            $-120.00     $-120.00
+                                Exp:Utilities:Electric      $120.00            0
+24-Mar-01 - 24-Mar-31           Assets:Checking             $-35.00      $-35.00
+                                Expenses:Food:Dining         $35.00            0
+24-Apr-01 - 24-Apr-30           Assets:Checking             $-45.00      $-45.00
+                                Expenses:Transport:Gas       $45.00            0
+24-Jun-01 - 24-Jun-30           Assets:Checking           $-1200.00    $-1200.00
+                                Expenses:Housing:Rent      $1200.00            0
+end test

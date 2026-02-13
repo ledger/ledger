@@ -1,0 +1,21 @@
+; Coverage test for format.h/cc: format string with left justification
+; Exercises format.cc element_t formatting with ELEMENT_ALIGN_LEFT flag
+; and min_width/max_width handling
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+test reg Expenses --format '%-30(account)%12(amount)\n' -> 0
+Expenses:Food                       $25.00
+Expenses:Gas                        $40.00
+Expenses:Dining                     $50.00
+end test

@@ -1,16 +1,19 @@
-; Test filters.h: subtotal_posts and interval_posts for --monthly --subtotal
-; Exercises subtotal_posts::report_subtotal() and interval_posts
+; Test subtotal_posts filter (exercises filters.h subtotal_posts and its clear())
+; Covers: subtotal_posts::operator(), report_subtotal(), flush(), clear()
 
-2024/01/15 * Grocery
-    Expenses:Food        $50.00
+2024/01/15 Purchase A
+    Expenses:Food         $10.00
     Assets:Checking
 
-2024/01/20 * Gas Station
-    Expenses:Transport   $30.00
+2024/02/15 Purchase B
+    Expenses:Food         $20.00
     Assets:Checking
 
-test reg --monthly --subtotal --args-only --columns=80
-24-Jan-01 - 24-Jan-31           Assets:Checking             $-80.00      $-80.00
-                                Expenses:Food                $50.00      $-30.00
-                                Expenses:Transport           $30.00            0
+2024/03/15 Purchase C
+    Expenses:Food         $30.00
+    Assets:Checking
+
+test --subtotal reg -> 0
+24-Jan-15 - 24-Mar-15           Assets:Checking             $-60.00      $-60.00
+                                Expenses:Food                $60.00            0
 end test

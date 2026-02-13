@@ -1,0 +1,20 @@
+; Test sort_posts filter (exercises filters.h sort_posts and its clear())
+; Covers: sort_posts::post_accumulated_posts(), flush(), clear()
+
+2024/01/15 Small
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/20 Large
+    Expenses:Food         $50.00
+    Assets:Checking
+
+2024/01/25 Medium
+    Expenses:Food         $30.00
+    Assets:Checking
+
+test --sort amount reg Expenses -> 0
+24-Jan-15 Small                 Expenses:Food                $10.00       $10.00
+24-Jan-25 Medium                Expenses:Food                $30.00       $40.00
+24-Jan-20 Large                 Expenses:Food                $50.00       $90.00
+end test

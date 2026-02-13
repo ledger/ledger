@@ -1,5 +1,5 @@
 ; Test format.cc: escape sequences in format strings
-; Exercises \n, \t, \\ parsing in parse_elements
+; Exercises \n, \t, \b, \f, \r, \v, \\ parsing in parse_elements
 
 2024/01/15 Test
     Expenses:Food    $50.00
@@ -7,4 +7,24 @@
 
 test reg --format "%(payee)\t%(account)\n" Expenses
 Test	Expenses:Food
+end test
+
+test reg --format "%(payee)\\\\%(account)\n" Expenses
+Test\Expenses:Food
+end test
+
+test reg --format "%(payee)\b%(account)\n" Expenses | cat -v
+Test^HExpenses:Food
+end test
+
+test reg --format "%(payee)\f%(account)\n" Expenses | cat -v
+Test^LExpenses:Food
+end test
+
+test reg --format "%(payee)\v%(account)\n" Expenses | cat -v
+Test^KExpenses:Food
+end test
+
+test reg --format "%(payee)\r%(account)\n" Expenses | cat -v
+Test^MExpenses:Food
 end test

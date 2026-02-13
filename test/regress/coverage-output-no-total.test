@@ -1,0 +1,19 @@
+; Test format_accounts with --no-total option
+; Covers: format_accounts::flush() no_total skip path
+
+2024/01/15 Small
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/20 Large
+    Expenses:Food         $50.00
+    Assets:Checking
+
+2024/01/25 Medium
+    Expenses:Food         $30.00
+    Assets:Checking
+
+test --no-total bal -> 0
+             $-90.00  Assets:Checking
+              $90.00  Expenses:Food
+end test

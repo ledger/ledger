@@ -1,0 +1,21 @@
+; Coverage test for compare.h/cc: compare_items for post sorting
+; Exercises compare.cc lines 82-107: compare_items<post_t>::operator()
+; with multi-field sort expressions
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+test reg --sort 'payee, -amount' Expenses -> 0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $65.00
+24-Jan-03 Restaurant            Expenses:Dining              $50.00      $115.00
+end test

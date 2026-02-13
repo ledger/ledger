@@ -1,14 +1,16 @@
-; Test automated transaction with amount expression (exercises auto_xact_t::extend_xact)
+; Test xact.cc: auto_xact_t with format expression in account name (lines 867-874)
+; When an automated transaction's account name contains %(expr), it is
+; evaluated as a format string using the matched posting's context.
 
 = /Food/
-    (Expenses:Tax)              (amount * 0.10)
+    (Budget:%(account))                 1
 
-2024/01/15 * Grocery Store
-    Expenses:Food              $50.00
+2024/01/15 Grocery
+    Expenses:Food        $50.00
     Assets:Checking
 
-test reg -> 0
-24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+test reg --args-only --columns=80
+24-Jan-15 Grocery               Expenses:Food                $50.00       $50.00
                                 Assets:Checking             $-50.00            0
-                                (Expenses:Tax)                $5.00        $5.00
+                                (Budget:Expenses:Food)       $50.00       $50.00
 end test

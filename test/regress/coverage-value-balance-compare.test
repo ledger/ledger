@@ -1,0 +1,35 @@
+; Test value.cc: balance/amount comparison operators
+; Coverage target: value.cc - is_less_than AMOUNT vs AMOUNT (lines 904-909),
+;   is_less_than BALANCE vs INTEGER/AMOUNT (lines 921-927),
+;   is_greater_than INTEGER vs AMOUNT (line 1037),
+;   is_equal_to AMOUNT vs AMOUNT (line 789)
+
+2024/01/15 Purchase
+    Expenses:Food       $100.00
+    Assets:Checking
+
+2024/01/20 Purchase2
+    Expenses:Food       $200.00
+    Assets:Checking
+
+2024/01/25 Purchase3
+    Expenses:Food       $50.00
+    Assets:Checking
+
+test reg Expenses --display "total > 200" -> 0
+24-Jan-20 Purchase2             Expenses:Food               $200.00      $300.00
+24-Jan-25 Purchase3             Expenses:Food                $50.00      $350.00
+end test
+
+test reg Expenses --display "total < 200" -> 0
+24-Jan-15 Purchase              Expenses:Food               $100.00      $100.00
+end test
+
+test reg Expenses --display "total >= 300" -> 0
+24-Jan-20 Purchase2             Expenses:Food               $200.00      $300.00
+24-Jan-25 Purchase3             Expenses:Food                $50.00      $350.00
+end test
+
+test reg Expenses --display "total <= 100" -> 0
+24-Jan-15 Purchase              Expenses:Food               $100.00      $100.00
+end test

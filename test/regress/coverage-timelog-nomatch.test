@@ -1,0 +1,12 @@
+; Test timelog error: checkout account does not match any active check-in
+; Exercises timelog.cc lines 87-98: searching for matching account and failing
+
+i 2024/01/15 09:00:00 Project:A  Task A
+i 2024/01/15 10:00:00 Project:B  Task B
+o 2024/01/15 11:00:00 Project:C
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 6:
+Error: Timelog check-out event does not match any current check-ins
+end test

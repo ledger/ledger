@@ -1,0 +1,13 @@
+; Coverage test for annotate.cc: non-fixated annotated commodity price lookup
+; Exercises annotate.cc lines 286-288: setting target commodity from
+; non-fixated annotation price when doing market value lookup
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Checking    $-1500.00
+
+P 2024/02/01 AAPL $175.00
+
+test bal Assets:Brokerage --market -> 0
+            $1750.00  Assets:Brokerage
+end test

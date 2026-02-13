@@ -1,0 +1,25 @@
+; Test sort_xacts filter (exercises filters.h sort_xacts and its clear())
+; Covers: sort_xacts::operator(), flush(), clear()
+
+2024/01/20 Second Xact
+    Expenses:Food         $20.00
+    Expenses:Drinks       $10.00
+    Assets:Checking
+
+2024/01/15 First Xact
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/25 Third Xact
+    Expenses:Food         $30.00
+    Assets:Checking
+
+test --sort-xacts amount reg -> 0
+24-Jan-20 Second Xact           Assets:Checking             $-30.00      $-30.00
+                                Expenses:Drinks              $10.00      $-20.00
+                                Expenses:Food                $20.00            0
+24-Jan-15 First Xact            Assets:Checking             $-10.00      $-10.00
+                                Expenses:Food                $10.00            0
+24-Jan-25 Third Xact            Assets:Checking             $-30.00      $-30.00
+                                Expenses:Food                $30.00            0
+end test

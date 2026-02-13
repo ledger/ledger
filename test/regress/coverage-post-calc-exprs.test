@@ -1,0 +1,14 @@
+; Test post.cc: get_is_calculated (line 136), get_is_cost_calculated (line 140),
+; get_commodity_is_primary (lines 211-215)
+; calculated: true if the posting's amount was inferred by ledger
+; cost_calculated: true if the posting's cost was inferred from commodity exchange
+; primary: true if the posting's commodity is the primary (reference) commodity
+
+2024/01/15 Exchange
+    Assets:Foreign  100 EUR
+    Assets:Checking  $-110.00
+
+test reg --format "%(calculated) %(cost_calculated) %(primary)\n" --args-only --columns=80
+false true false
+false false true
+end test

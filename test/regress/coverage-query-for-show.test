@@ -1,0 +1,38 @@
+; Coverage test for query.cc: for/since/until combined with show keyword
+; Exercises query.cc lines 492-533: for/since/until token processing
+; and lines 511-516: keyword break logic when encountering show/bold/for
+
+2023/11/01 November Purchase
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/01/15 January Purchase
+    Expenses:Gas    $25.00
+    Assets:Checking
+
+2024/02/15 February Purchase
+    Expenses:Office    $30.00
+    Assets:Checking
+
+2024/04/15 April Purchase
+    Expenses:Dining    $40.00
+    Assets:Checking
+
+test reg for 2024 show Expenses -> 0
+24-Jan-15 January Purchase      Expenses:Gas                 $25.00       $25.00
+24-Feb-15 February Purchase     Expenses:Office              $30.00       $30.00
+24-Apr-15 April Purchase        Expenses:Dining              $40.00       $40.00
+end test
+
+test reg since 2024/01/02 until 2024/01/04 -> 0
+24-Jan-15 January Purchase      Expenses:Gas                 $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Feb-15 February Purchase     Expenses:Office              $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+24-Apr-15 April Purchase        Expenses:Dining              $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+end test
+
+test reg since 2024/02 show Dining -> 0
+24-Apr-15 April Purchase        Expenses:Dining              $40.00       $40.00
+end test

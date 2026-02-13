@@ -1,27 +1,32 @@
-; Test filters.h: budget_posts filter for --budget reporting
-; Exercises budget_posts::operator() with budgeted and unbudgeted accounts
+; Test budget_posts and generate_posts filters (exercises filters.h)
+; Covers: generate_posts::add_period_xacts(), add_post(), clear()
+; Covers: budget_posts::operator(), report_budget_items(), flush()
 
 ~ Monthly
-    Expenses:Food       $200.00
+    Expenses:Food          $200.00
+    Expenses:Transport     $100.00
     Assets:Checking
 
-2024/01/10 * Grocery
-    Expenses:Food        $50.00
+2024/01/15 Grocery
+    Expenses:Food          $50.00
     Assets:Checking
 
-2024/01/20 * Restaurant
-    Expenses:Food        $30.00
+2024/02/10 Grocery
+    Expenses:Food          $75.00
     Assets:Checking
 
-2024/01/25 * Gas
-    Expenses:Transport    $40.00
-    Assets:Checking
-
-test bal --budget --unbudgeted --begin 2024/01/01 --end 2024/02/01 --args-only --columns=80
-              $80.00  Assets:Checking
-             $-80.00  Expenses
-            $-120.00    Food
-              $40.00    Transport
---------------------
-                   0
+test --budget --now "2024/03/01" reg -> 0
+24-Jan-01 Budget transaction    Expenses:Food              $-200.00     $-200.00
+24-Jan-01 Budget transaction    Expenses:Transport         $-100.00     $-300.00
+24-Jan-01 Budget transaction    Assets:Checking             $300.00            0
+24-Jan-15 Grocery               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Feb-01 Budget transaction    Expenses:Food              $-200.00     $-200.00
+24-Feb-01 Budget transaction    Expenses:Transport         $-100.00     $-300.00
+24-Feb-01 Budget transaction    Assets:Checking             $300.00            0
+24-Feb-10 Grocery               Expenses:Food                $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+24-Mar-01 Budget transaction    Expenses:Food              $-200.00     $-200.00
+24-Mar-01 Budget transaction    Expenses:Transport         $-100.00     $-300.00
+24-Mar-01 Budget transaction    Assets:Checking             $300.00            0
 end test

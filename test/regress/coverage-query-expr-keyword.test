@@ -1,0 +1,21 @@
+; Coverage test for query.cc: expr keyword for expression queries
+; Exercises query.cc lines 239-243: 'expr' keyword triggering TOK_EXPR
+; and line 160-162: consume_next flag handling
+; Also exercises lines 285-287: TOK_EXPR context in parse_query_term
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+test reg expr 'amount > 30' -> 0
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $40.00
+24-Jan-03 Restaurant            Expenses:Dining              $50.00       $90.00
+end test

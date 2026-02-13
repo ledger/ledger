@@ -1,0 +1,23 @@
+; Test report_payees with --count option (exercises output.h report_payees count path)
+; Covers: report_payees::flush() with count handling
+
+2024/01/15 Store A
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/16 Store B
+    Expenses:Food         $20.00
+    Assets:Checking
+
+2024/01/20 Store A
+    Expenses:Food         $15.00
+    Assets:Checking
+
+2024/01/25 Store A
+    Expenses:Food         $12.00
+    Assets:Checking
+
+test payees --count -> 0
+6 Store A
+2 Store B
+end test

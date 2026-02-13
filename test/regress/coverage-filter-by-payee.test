@@ -1,0 +1,23 @@
+; Test by_payee_posts filter (exercises filters.h by_payee_posts and its clear())
+; Covers: by_payee_posts::operator(), flush(), clear()
+
+2024/01/15 Store A
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/16 Store B
+    Expenses:Food         $20.00
+    Assets:Checking
+
+2024/01/20 Store A
+    Expenses:Food         $15.00
+    Assets:Checking
+
+2024/01/25 Store B
+    Expenses:Food         $30.00
+    Assets:Checking
+
+test --by-payee reg Expenses -> 0
+24-Jan-15 Store A               Expenses:Food                $25.00       $25.00
+24-Jan-16 Store B               Expenses:Food                $50.00       $75.00
+end test

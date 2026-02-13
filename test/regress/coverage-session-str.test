@@ -1,0 +1,10 @@
+; Test session.cc: fn_str function
+; Exercises fn_str (lines 264-265) and lookup for "str" (lines 384-385)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%(str(amount))|%(str(100))\n" Expenses
+$50.00|100
+end test

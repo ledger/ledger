@@ -1,0 +1,29 @@
+; Coverage test for query.cc: desc (payee) and note keyword queries
+; Exercises query.cc lines 215-218: 'desc' keyword for TOK_PAYEE (line 216-218)
+; and lines 219-220: 'note' keyword for TOK_NOTE
+; Also line 152-154: '=' prefix at start of string for TOK_NOTE
+
+2024/01/01 Grocery Store
+    ; This is about food
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    ; Fuel and transport
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    ; Fine dining experience
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+test reg desc Grocery -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test
+
+test reg note food -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test

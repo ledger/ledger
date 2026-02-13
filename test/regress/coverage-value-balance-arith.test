@@ -1,0 +1,41 @@
+; Test value.cc: balance arithmetic operations
+; Coverage target: value.cc - BALANCE += INTEGER (line 424), BALANCE *= INTEGER (line 648),
+;   BALANCE /= INTEGER (line 724), BALANCE -= INTEGER (line 567),
+;   INTEGER += BALANCE (line 383), INTEGER -= BALANCE (line 518),
+;   AMOUNT += BALANCE (line 412), AMOUNT -= BALANCE (line 554)
+
+2024/01/15 Purchase
+    Expenses:Food       $300.00
+    Assets:Checking
+
+2024/01/20 Purchase2
+    Expenses:Food       $200.00
+    Assets:Checking
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(total * 2)\n" -> 0
+Expenses:Food $1000.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(total / 2)\n" -> 0
+Expenses:Food $250.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(total + 100)\n" -> 0
+Expenses:Food 100
+$500.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(total - 100)\n" -> 0
+Expenses:Food -100
+$500.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(100 + total)\n" -> 0
+Expenses:Food 100
+$500.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(1000 - total)\n" -> 0
+Expenses:Food 1000
+$-500.00
+end test

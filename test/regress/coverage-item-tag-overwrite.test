@@ -1,0 +1,13 @@
+; Test item.cc: set_tag overwrite path
+; Exercises set_tag with overwrite_existing=true when tag already exists
+; (lines 132-138)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    ; Status: pending
+    ; Status: done
+    Assets:Checking
+
+test reg --format "%(tag(\"Status\"))\n" Expenses
+done
+end test

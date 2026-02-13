@@ -1,0 +1,20 @@
+; Test post.cc: get_count (line 446) and get_account_id (line 315)
+; count returns the running count of postings seen so far
+; account_id returns the 1-based index of this post within its account
+
+2024/01/15 Test
+    Expenses:Food        $50.00
+    Expenses:Drink       $10.00
+    Assets:Checking
+
+test reg --format "%(count)\n" --args-only --columns=80
+1
+2
+3
+end test
+
+test reg --format "%(account_id)\n" --args-only --columns=80
+1
+1
+1
+end test

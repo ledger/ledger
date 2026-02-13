@@ -1,0 +1,34 @@
+; Test value.cc: type coercion and conversion operations
+; Coverage target: value.cc - in_place_cast paths (lines 1162-1353),
+;   in_place_negate (lines 1359-1389), in_place_not (lines 1391-1425),
+;   number() / quantity() (line 284-286)
+
+2024/01/15 Purchase
+    Expenses:Food       $100.00
+    Assets:Checking
+
+2024/01/20 Purchase2
+    Expenses:Travel     50 EUR
+    Assets:Checking
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(int(total))\n" -> 0
+Expenses:Food 100
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(str(total))\n" -> 0
+Expenses:Food $100.00
+end test
+
+test bal Expenses --flat --no-total --format "%(account) %(-total)\n" -> 0
+Expenses:Food $-100.00
+Expenses:Travel -50 EUR
+end test
+
+test bal Expenses --flat --no-total --format "%(account) %(! total ? \"zero\" : \"nonzero\")\n" -> 0
+Expenses:Food nonzero
+Expenses:Travel nonzero
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(quantity(total))\n" -> 0
+Expenses:Food 100
+end test

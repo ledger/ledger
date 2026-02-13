@@ -1,0 +1,24 @@
+; Coverage test for query.cc: query by code using code keyword and # prefix
+; Exercises query.cc lines 146-147: TOK_CODE token via '#' prefix
+; and lines 271-277: code matching in parse_query_term
+
+2024/01/01 (CHK001) Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 (CHK002) Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+2024/01/04 (DEP001) Payroll Deposit
+    Assets:Checking    $2000.00
+    Income:Salary
+
+test reg code CHK001 -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test

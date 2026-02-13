@@ -1,0 +1,23 @@
+; Coverage test for query.cc: NOT query using ! prefix
+; Exercises query.cc lines 140-141: the '!' prefix for TOK_NOT
+; and parse_unary_expr lines 370-377 for NOT handling
+
+2024/01/01 (CHK001) Grocery Store
+    ; Category: food
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 (CHK002) Gas Station
+    ; Category: transport
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    ; Category: food
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+test reg Expenses and not '@Gas' -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Dining              $50.00       $75.00
+end test

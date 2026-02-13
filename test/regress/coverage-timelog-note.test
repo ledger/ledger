@@ -1,0 +1,15 @@
+; Test timelog clock-in/out with notes on both check-in and check-out
+; Exercises timelog.cc line 52-53: appending note to clock-in event
+; Exercises timelog.cc line 48: out_event.desc becomes code
+
+i 2024/01/15 09:00:00 Project:Work  Morning coding  ; Important note
+o 2024/01/15 12:00:00 Project:Work  Done  ; Session complete
+
+test reg
+24-Jan-15 Morning coding        Project:Work                  3.00h        3.00h
+end test
+
+test print
+2024/01/15 (Done) Morning coding  ;Important note
+    Project:Work                              10800s
+end test

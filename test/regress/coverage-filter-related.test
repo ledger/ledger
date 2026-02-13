@@ -1,0 +1,15 @@
+; Test related_posts filter (exercises filters.h related_posts and its clear())
+; Covers: related_posts::operator(), flush(), clear()
+
+2024/01/15 Grocery
+    Expenses:Food          $50.00
+    Assets:Checking
+
+2024/01/20 Gas
+    Expenses:Transport     $30.00
+    Assets:Checking
+
+test --related reg Expenses -> 0
+24-Jan-15 Grocery               Assets:Checking             $-50.00      $-50.00
+24-Jan-20 Gas                   Assets:Checking             $-30.00      $-80.00
+end test

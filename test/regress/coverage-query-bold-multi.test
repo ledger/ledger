@@ -1,0 +1,28 @@
+; Coverage test for query.cc: bold keyword with multiple terms
+; Exercises query.cc lines 474-488: QUERY_BOLD with multiple terms
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+test bal Expenses bold Food Gas -> 0
+             $115.00  Expenses
+              $50.00    Dining
+[1m              $25.00[0m    [1mFood[0m
+[1m              $40.00[0m    [1mGas[0m
+--------------------
+             $115.00
+end test
+
+test reg only Food Dining -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-03 Restaurant            Expenses:Dining              $50.00       $75.00
+end test

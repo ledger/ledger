@@ -1,0 +1,19 @@
+; Test forecast_posts filter (exercises filters.h forecast_posts and its clear())
+; Covers: forecast_posts::add_post(), flush(), clear()
+
+~ Monthly
+    Expenses:Rent             $500.00
+    Assets:Checking
+
+2024/01/15 Paycheck
+    Assets:Checking          $2000.00
+    Income:Salary
+
+test --forecast-while "date < [2024/04/01]" --now "2024/01/01" reg -> 0
+24-Jan-15 Paycheck              Assets:Checking            $2000.00     $2000.00
+                                Income:Salary             $-2000.00            0
+24-Feb-01 Forecast transaction  Expenses:Rent               $500.00      $500.00
+24-Feb-01 Forecast transaction  Assets:Checking            $-500.00            0
+24-Mar-01 Forecast transaction  Expenses:Rent               $500.00      $500.00
+24-Mar-01 Forecast transaction  Assets:Checking            $-500.00            0
+end test

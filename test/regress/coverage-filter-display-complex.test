@@ -1,0 +1,19 @@
+; Test filter_posts with complex display predicate
+; Covers: filter_posts::operator() with complex expression, clear()
+
+2024/01/15 Small Purchase
+    Expenses:Food          $5.00
+    Assets:Checking
+
+2024/01/20 Big Purchase
+    Expenses:Food         $50.00
+    Assets:Checking
+
+2024/01/25 Medium Purchase
+    Expenses:Food         $25.00
+    Assets:Checking
+
+test --display "account =~ /Expenses/ and amount > 20" reg -> 0
+24-Jan-20 Big Purchase          Expenses:Food                $50.00       $50.00
+24-Jan-25 Medium Purchase       Expenses:Food                $25.00       $25.00
+end test

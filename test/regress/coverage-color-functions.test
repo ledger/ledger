@@ -1,0 +1,44 @@
+; Test ANSI color functions from report.cc
+; Exercises fn_red, fn_green, fn_yellow, fn_magenta, fn_cyan, fn_white,
+; fn_black, fn_underline, fn_blink via ansify_if()
+; Output piped through cat -v to make escape codes visible as ^[ sequences
+
+2024/01/15 * Test
+    Expenses:Food  $50.00
+    Assets:Checking
+
+test reg --format "%(ansify_if(payee, red))\n" Expenses | cat -v
+^[[31mTest^[[0m
+end test
+
+test reg --format "%(ansify_if(payee, green))\n" Expenses | cat -v
+^[[32mTest^[[0m
+end test
+
+test reg --format "%(ansify_if(payee, yellow))\n" Expenses | cat -v
+^[[33mTest^[[0m
+end test
+
+test reg --format "%(ansify_if(payee, magenta))\n" Expenses | cat -v
+^[[35mTest^[[0m
+end test
+
+test reg --format "%(ansify_if(payee, cyan))\n" Expenses | cat -v
+^[[36mTest^[[0m
+end test
+
+test reg --format "%(ansify_if(payee, white))\n" Expenses | cat -v
+^[[37mTest^[[0m
+end test
+
+test reg --format "%(ansify_if(payee, black))\n" Expenses | cat -v
+^[[30mTest^[[0m
+end test
+
+test reg --format "%(ansify_if(payee, underline))\n" Expenses | cat -v
+^[[4mTest^[[0m
+end test
+
+test reg --format "%(ansify_if(payee, blink))\n" Expenses | cat -v
+^[[5mTest^[[0m
+end test

@@ -1,0 +1,20 @@
+; Test item.cc: filebase and filepath lookups
+; Exercises get_filebase (lines 309-311), get_filepath (lines 316-318)
+; Exercises lookup for "filebase" (line 444-445), "filepath" (line 446-447)
+; Also exercises value_date lookup (line 503-504)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%(filebase)\n" Expenses
+coverage-item-fileinfo.test
+end test
+
+test reg --format "%(filepath)\n" Expenses
+$sourcepath/test/regress
+end test
+
+test reg --format "%(value_date)|%(payee)\n" Expenses
+2024/01/15|Grocery Store
+end test

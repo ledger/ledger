@@ -1,0 +1,19 @@
+; Test report_payees handler (exercises output.h report_payees)
+; Covers: report_payees::operator(), flush(), clear()
+
+2024/01/15 Store A
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/16 Store B
+    Expenses:Food         $20.00
+    Assets:Checking
+
+2024/01/20 Store A
+    Expenses:Food         $15.00
+    Assets:Checking
+
+test payees -> 0
+Store A
+Store B
+end test

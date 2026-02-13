@@ -1,0 +1,37 @@
+; Test value.cc and balance.h: multi-commodity balance operations
+; Coverage target: value.cc - in_place_negate BALANCE (line 1377),
+;   BALANCE *= AMOUNT-no-commodity (line 656), BALANCE /= AMOUNT-no-commodity (line 732),
+;   balance.h - in_place_negate, operator*=, operator/= for multi-commodity
+
+2024/01/15 Purchase
+    Expenses:Food       $100.00
+    Expenses:Travel     50 EUR
+    Assets:Checking
+
+test bal Expenses --no-total --format "%(account) %(total * 2.5)\n" -> 0
+Expenses $250.00
+125 EUR
+Expenses:Food $250.00
+Expenses:Travel 125 EUR
+end test
+
+test bal Expenses --no-total --format "%(account) %(total / 2.5)\n" -> 0
+Expenses $40.00
+20 EUR
+Expenses:Food $40.00
+Expenses:Travel 20 EUR
+end test
+
+test bal Expenses --no-total --format "%(account) %(-total)\n" -> 0
+Expenses $-100.00
+-50 EUR
+Expenses:Food $-100.00
+Expenses:Travel -50 EUR
+end test
+
+test bal Expenses --no-total --format "%(account) %(abs(total))\n" -> 0
+Expenses $100.00
+50 EUR
+Expenses:Food $100.00
+Expenses:Travel 50 EUR
+end test

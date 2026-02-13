@@ -1,0 +1,24 @@
+; Coverage test for compare.h/cc: compare_items for account sorting
+; Exercises compare.cc lines 120-139: compare_items<account_t>::operator()
+; and compare.h lines 71-73: find_sort_values
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+test bal Expenses --sort amount -> 0
+             $115.00  Expenses
+              $25.00    Food
+              $40.00    Gas
+              $50.00    Dining
+--------------------
+             $115.00
+end test

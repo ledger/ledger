@@ -1,0 +1,19 @@
+; Test posts_as_equity filter via equity command
+; Covers: posts_as_equity::report_subtotal(), flush(), clear()
+
+2024/01/15 Opening
+    Assets:Checking       $1000.00
+    Assets:Savings         $500.00
+    Equity:Opening
+
+2024/01/20 Expense
+    Expenses:Food          $50.00
+    Assets:Checking
+
+test equity -> 0
+2024/01/20 Opening Balances
+    Assets:Checking                          $950.00
+    Assets:Savings                           $500.00
+    Equity:Opening                         $-1500.00
+    Expenses:Food                             $50.00
+end test

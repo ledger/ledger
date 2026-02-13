@@ -1,0 +1,32 @@
+; Test value.cc: subtraction and negation operations
+; Coverage target: value.cc - operator-= AMOUNT-BALANCE (line 553-557),
+;   AMOUNT-AMOUNT same commodity (line 548), AMOUNT+BALANCE (line 412),
+;   in_place_negate for BALANCE (line 1377), VOID subtraction (line 474-477)
+
+2024/01/15 Purchase
+    Expenses:Food       $100.00
+    Expenses:Travel     50 EUR
+    Assets:Checking
+
+2024/01/20 Purchase2
+    Expenses:Food       $200.00
+    Assets:Checking
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(total - amount)\n" -> 0
+Expenses:Food 0
+end test
+
+test bal Expenses --no-total --format "%(account) %(-total)\n" -> 0
+Expenses $-300.00
+-50 EUR
+Expenses:Food $-300.00
+Expenses:Travel -50 EUR
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(amount + total)\n" -> 0
+Expenses:Food $600.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(amount - total)\n" -> 0
+Expenses:Food 0
+end test

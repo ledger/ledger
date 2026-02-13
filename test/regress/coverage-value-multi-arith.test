@@ -1,0 +1,32 @@
+; Test value.cc: multi-commodity balance arithmetic
+; Coverage target: value.cc - BALANCE *= INTEGER (line 648), BALANCE /= INTEGER (line 724),
+;   BALANCE *= AMOUNT-no-commodity (line 656), BALANCE /= AMOUNT-no-commodity (line 732)
+
+2024/01/15 Purchase
+    Expenses:Food       $300.00
+    Expenses:Travel     100 EUR
+    Assets:Checking
+
+test bal Expenses --flat --no-total --format "%(account) %(total * 3)\n" -> 0
+Expenses:Food $900.00
+Expenses:Travel 300 EUR
+end test
+
+test bal Expenses --flat --no-total --format "%(account) %(total / 2)\n" -> 0
+Expenses:Food $150.00
+Expenses:Travel 50 EUR
+end test
+
+test bal Expenses --no-total --format "%(account) %(total * 2.5)\n" -> 0
+Expenses $750.00
+250 EUR
+Expenses:Food $750.00
+Expenses:Travel 250 EUR
+end test
+
+test bal Expenses --no-total --format "%(account) %(total / 2.0)\n" -> 0
+Expenses $150.00
+50 EUR
+Expenses:Food $150.00
+Expenses:Travel 50 EUR
+end test

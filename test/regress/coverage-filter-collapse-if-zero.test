@@ -1,0 +1,21 @@
+; Test collapse_posts with only_collapse_if_zero option
+; Covers: collapse_posts::report_subtotal() non-zero branch with only_collapse_if_zero
+
+2024/01/15 Transfer
+    Assets:Checking       $-100.00
+    Assets:Savings         $100.00
+
+2024/01/20 Purchase
+    Expenses:Food          $50.00
+    Assets:Checking       $-50.00
+
+2024/01/25 Groceries
+    Expenses:Food          $20.00
+    Expenses:Drinks        $10.00
+    Assets:Checking       $-30.00
+
+test --collapse-if-zero reg Expenses -> 0
+24-Jan-20 Purchase              Expenses:Food                $50.00       $50.00
+24-Jan-25 Groceries             Expenses:Food                $20.00       $70.00
+                                Expenses:Drinks              $10.00       $80.00
+end test

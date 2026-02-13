@@ -1,0 +1,21 @@
+; Test post.cc: get_tag with inheritance (lines 68-74)
+; Tags on the transaction are inherited by postings when queried
+
+2024/01/15 Grocery
+    ; Project: Kitchen
+    Expenses:Food        $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Gas         $40.00
+    Assets:Checking
+
+test reg --limit "has_tag(/Project/)" --args-only --columns=80
+24-Jan-15 Grocery               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --format "%(tag(\"Project\"))\n" --args-only --columns=80 Expenses
+Kitchen
+
+end test

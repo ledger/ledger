@@ -1,0 +1,17 @@
+; Coverage test for annotate.cc: total cost annotations with double braces
+; Exercises annotate.cc lines 115-135: parsing {{}} total cost annotations
+; Also exercises ANNOTATION_PRICE_NOT_PER_UNIT flag handling
+
+2024/01/01 Buy at fixated total cost
+    Assets:Brokerage    10 AAPL {{=$1500.00}}
+    Assets:Checking
+
+P 2024/03/01 AAPL $200.00
+
+test bal --lots -> 0
+                   0  Assets
+  10 AAPL {=$150.00}    Brokerage
+ -10 AAPL {=$150.00}    Checking
+--------------------
+                   0
+end test

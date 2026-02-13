@@ -1,0 +1,14 @@
+; Test unround() function from report.cc
+; Exercises fn_unround which returns unrounded amount values
+
+commodity $
+    format $1,000.00
+
+2024/01/15 * Test
+    Expenses:Food  $1.999
+    Assets:Checking
+
+test reg --format "round=%(rounded(amount)) unround=%(unround(amount))\n" --args-only --columns=80
+round=$2.00 unround=$1.999
+round=$-2.00 unround=$-1.999
+end test

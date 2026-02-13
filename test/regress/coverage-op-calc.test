@@ -1,0 +1,61 @@
+; Test various arithmetic and calculation operations
+; (exercises multiplication, division, addition operations in op.cc)
+
+2024/01/15 * Grocery Store
+    Expenses:Food:Groceries   $50.00
+    Assets:Checking
+
+2024/02/10 * Electric Company
+    Expenses:Utilities:Electric  $120.00
+    Assets:Checking
+
+2024/03/20 * Restaurant
+    Expenses:Food:Dining     $35.00
+    Assets:Checking
+
+2024/04/05 * Gas Station
+    Expenses:Transport:Gas    $45.00
+    Assets:Checking
+
+2024/06/01 * Landlord
+    Expenses:Housing:Rent    $1200.00
+    Assets:Checking
+
+test reg --format "%(amount * 2)\n"
+$100.00
+$-100.00
+$240.00
+$-240.00
+$70.00
+$-70.00
+$90.00
+$-90.00
+$2400.00
+$-2400.00
+end test
+
+test reg --format "%(amount / 2)\n"
+$25.00
+$-25.00
+$60.00
+$-60.00
+$17.50
+$-17.50
+$22.50
+$-22.50
+$600.00
+$-600.00
+end test
+
+test reg --format '%(amount + $10)\n'
+$60.00
+$-40.00
+$130.00
+$-110.00
+$45.00
+$-25.00
+$55.00
+$-35.00
+$1210.00
+$-1190.00
+end test

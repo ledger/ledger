@@ -1,0 +1,19 @@
+; Test filter_posts filter with --display expression
+; Covers: filter_posts::operator(), clear()
+
+2024/01/15 Small Purchase
+    Expenses:Food          $5.00
+    Assets:Checking
+
+2024/01/20 Big Purchase
+    Expenses:Food         $50.00
+    Assets:Checking
+
+2024/01/25 Medium Purchase
+    Expenses:Food         $25.00
+    Assets:Checking
+
+test --display "amount>10" reg Expenses -> 0
+24-Jan-20 Big Purchase          Expenses:Food                $50.00       $55.00
+24-Jan-25 Medium Purchase       Expenses:Food                $25.00       $80.00
+end test

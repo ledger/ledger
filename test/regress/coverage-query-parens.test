@@ -1,0 +1,24 @@
+; Coverage test for query.cc: parenthesized query expressions
+; Exercises query.cc lines 350-355: LPAREN/RPAREN handling
+; in parse_query_term for grouped subexpressions via --limit
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+2024/01/04 Office Supply
+    Expenses:Office    $15.00
+    Assets:Checking
+
+test reg --limit '(account=~/Food/ or account=~/Gas/)' -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $40.00       $65.00
+end test

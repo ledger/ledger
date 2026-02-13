@@ -1,0 +1,17 @@
+; Test --immediate option with --market (exercises option handler_thunk)
+; Covers: option_t::on(), handler(), handler_thunk()
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $160.00
+
+2024/01/15 Buy
+    Assets:Brokerage       10 AAPL @ $150.00
+    Assets:Checking
+
+test --immediate --market --now "2024/02/15" bal -> 0
+                   0  Assets
+            $1500.00    Brokerage
+           $-1500.00    Checking
+--------------------
+                   0
+end test

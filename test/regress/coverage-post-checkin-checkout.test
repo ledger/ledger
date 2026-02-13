@@ -1,0 +1,9 @@
+; Test post.cc: get_checkin (line 339) and get_checkout (line 342)
+; These are set when parsing timeclock (i/o) entries
+
+i 2024/01/15 09:00:00 Work:Project
+o 2024/01/15 17:00:00
+
+test reg --format "%(checkin) %(checkout)\n" --args-only --columns=80
+2024/01/15 09:00:00 2024/01/15 17:00:00
+end test

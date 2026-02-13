@@ -1,0 +1,27 @@
+; Test value.cc: market value and gain calculations
+; Coverage target: value.cc - value() method (lines 1495-1513),
+;   annotate/annotation paths, balance arithmetic during valuation,
+;   balance.h - number(), in_place_negate, operator+= for balance operations
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $160.00
+
+2024/01/15 Buy Stocks
+    Assets:Investments       10 AAPL {$150.00} [2024/01/15]
+    Assets:Cash             $-1500.00
+
+2024/01/20 Buy More
+    Assets:Investments       5 AAPL {$155.00} [2024/01/20]
+    Assets:Cash              $-775.00
+
+test bal Assets:Investments --market --now=2024/02/01 -> 0
+            $2400.00  Assets:Investments
+end test
+
+test bal Assets:Investments --gain --now=2024/02/01 -> 0
+             $125.00  Assets:Investments
+end test
+
+test bal Assets:Investments --basis -> 0
+            $2275.00  Assets:Investments
+end test

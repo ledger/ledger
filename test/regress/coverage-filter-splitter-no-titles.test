@@ -1,0 +1,29 @@
+; Test post_splitter with --no-titles (exercises print_title with no_titles handled)
+; Covers: post_splitter::print_title() when no_titles is set
+
+2024/01/15 Store A
+    Expenses:Food         $10.00
+    Assets:Checking
+
+2024/01/16 Store B
+    Expenses:Transport    $20.00
+    Assets:Checking
+
+2024/01/20 Store A
+    Expenses:Food         $15.00
+    Assets:Checking
+
+2024/01/25 Store B
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test --group-by payee --no-titles reg -> 0
+24-Jan-15 Store A               Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+24-Jan-20 Store A               Expenses:Food                $15.00       $15.00
+                                Assets:Checking             $-15.00            0
+24-Jan-16 Store B               Expenses:Transport           $20.00       $20.00
+                                Assets:Checking             $-20.00            0
+24-Jan-25 Store B               Expenses:Transport           $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test

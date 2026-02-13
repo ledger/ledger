@@ -1,0 +1,11 @@
+; Test report.cc: --bold-if option (lines 296-297)
+; Bold uses ANSI escape codes ESC[1m for bold on, ESC[0m for bold off
+
+2024/01/15 Test
+    Expenses:Food        $50.00
+    Assets:Checking
+
+test reg --bold-if "amount > 0" --args-only --columns=80
+[1m24-Jan-15[0m [1mTest                 [0m [1mExpenses:Food         [0m [1m      $50.00[0m [1m      $50.00[0m
+                                Assets:Checking             $-50.00            0
+end test

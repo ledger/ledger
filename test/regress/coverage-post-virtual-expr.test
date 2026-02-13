@@ -1,0 +1,20 @@
+; Test post.cc: get_virtual (line 144) and get_real (line 148) expressions
+; virtual returns true for virtual postings (both balanced and unbalanced)
+
+2024/01/15 Test
+    Expenses:Food        $50.00
+    Assets:Checking     $-50.00
+    (Budget:Food)        $-50.00
+    [Reserve:Food]       $-25.00
+    [Reserve:Savings]     $25.00
+
+test reg --limit "virtual" --args-only --columns=80
+24-Jan-15 Test                  (Budget:Food)               $-50.00      $-50.00
+                                [Reserve:Food]              $-25.00      $-75.00
+                                [Reserve:Savings]            $25.00      $-50.00
+end test
+
+test reg --limit "!virtual" --args-only --columns=80
+24-Jan-15 Test                  Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

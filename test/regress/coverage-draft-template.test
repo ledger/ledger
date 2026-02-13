@@ -1,16 +1,25 @@
-; Test template command (exercises draft.cc template_command/dump)
+; Coverage test for draft.cc template_command
+; Exercises draft.cc lines 47-83: xact_template_t::dump()
+; Also exercises code, note, and post template dump paths
 
 2024/01/15 * Grocery Store
-    Expenses:Food              $50.00
+    Expenses:Food        $50.00
     Assets:Checking
 
-test template "Grocery" -> 0
+test template Grocery '$45.00' code GRC note Shopping
 --- Input arguments ---
-("Grocery")
+("Grocery", "$45.00", "code", "GRC", "note", "Shopping")
 
 --- Transaction template ---
 Date:       <today>
+Code:       GRC
+Note:       Shopping
 Payee mask: Grocery
 
-<Posting copied from last related transaction>
+[Posting "to"]
+  Account mask: <use first of last related accounts>
+  Amount:       $45
+
+[Posting "from"]
+  Account mask: <use last of last related accounts>
 end test

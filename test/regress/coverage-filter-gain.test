@@ -1,0 +1,15 @@
+; Test changed_value_posts filter via --gain reg
+; Covers: changed_value_posts::operator() with changed_values_only path
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $160.00
+P 2024/03/01 AAPL $155.00
+
+2024/01/15 Buy
+    Assets:Brokerage       10 AAPL @ $150.00
+    Assets:Checking
+
+test --gain --now "2024/03/15" reg -> 0
+24-Feb-01 Commodities revalued  <Revalued>                  $100.00      $100.00
+24-Mar-01 Commodities revalued  <Revalued>                  $-50.00       $50.00
+end test

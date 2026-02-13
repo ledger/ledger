@@ -1,16 +1,18 @@
-; Coverage test for select.cc: basic select query
+; Coverage test for select.cc: select with all major column types
+; Exercises select.cc column width calculation and identifier parsing
+; Tests date, payee, account, amount, and total columns from posts
 
-2024/01/01 Grocery Store
-    Expenses:Food    $25.00
+2024/01/15 * Grocery
+    Expenses:Food        $50.00
     Assets:Checking
 
-2024/01/02 Gas Station
-    Expenses:Gas    $40.00
+2024/01/20 * Gas
+    Expenses:Transport   $30.00
     Assets:Checking
 
-test select date, payee, display_amount from reg
-24-Jan-01 Grocery Store                                              $25.00    
-24-Jan-01 Grocery Store                                              $-25.00   
-24-Jan-02 Gas Station                                                $40.00    
-24-Jan-02 Gas Station                                                $-40.00   
+test select date, payee, account, amount, total from posts
+24-Jan-15 Grocery              Expenses:Food                $50.00       $50.00
+24-Jan-15 Grocery              Assets:Checking             $-50.00            0
+24-Jan-20 Gas                  Expenses:Transport           $30.00       $30.00
+24-Jan-20 Gas                  Assets:Checking             $-30.00            0
 end test

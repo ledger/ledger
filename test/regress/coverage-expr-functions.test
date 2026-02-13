@@ -1,15 +1,172 @@
-; Test op.cc: expression functions in --total
-; Exercises O_CALL, O_ADD, O_SUB, O_MUL, O_DIV calc paths
+; Test expression functions to exercise op.cc and expr.cc
+; (exercises quantity(), commodity(), abs(), format_date(), truncated(),
+;  join(), eval command, today, now, count, depth, ternary operator)
 
-2024/01/15 Grocery Store
-    Expenses:Food    $100.00
+2024/01/15 * Grocery Store
+    Expenses:Food:Groceries   $50.00
     Assets:Checking
 
-2024/01/20 Restaurant
-    Expenses:Food    $50.00
+2024/02/10 * Electric Company
+    Expenses:Utilities:Electric  $120.00
     Assets:Checking
 
-test reg --total "total * 2" Expenses
-24-Jan-15 Grocery Store         Expenses:Food               $100.00      $200.00
-24-Jan-20 Restaurant            Expenses:Food                $50.00      $300.00
+2024/03/20 * Restaurant
+    Expenses:Food:Dining     $35.00
+    Assets:Checking
+
+2024/04/05 * Gas Station
+    Expenses:Transport:Gas    $45.00
+    Assets:Checking
+
+2024/06/01 * Landlord
+    Expenses:Housing:Rent    $1200.00
+    Assets:Checking
+
+test reg --format "%(quantity(amount)) %(commodity(amount))\n"
+50 $
+-50 $
+120 $
+-120 $
+35 $
+-35 $
+45 $
+-45 $
+1200 $
+-1200 $
+end test
+
+test reg --format "%(abs(amount))\n"
+$50.00
+$50.00
+$120.00
+$120.00
+$35.00
+$35.00
+$45.00
+$45.00
+$1200.00
+$1200.00
+end test
+
+test reg --format "%(format_date(date, '%Y-%m-%d'))\n"
+2024-01-15
+2024-01-15
+2024-02-10
+2024-02-10
+2024-03-20
+2024-03-20
+2024-04-05
+2024-04-05
+2024-06-01
+2024-06-01
+end test
+
+test reg --format "%(truncated(account, 20))\n"
+Expenses:Food:Groc..
+Assets:Checking
+Expenses:Utilities..
+Assets:Checking
+Expenses:Food:Dining
+Assets:Checking
+Expenses:Transport..
+Assets:Checking
+Expenses:Housing:R..
+Assets:Checking
+end test
+
+test reg --format "%(join(account))\n"
+Expenses:Food:Groceries
+Assets:Checking
+Expenses:Utilities:Electric
+Assets:Checking
+Expenses:Food:Dining
+Assets:Checking
+Expenses:Transport:Gas
+Assets:Checking
+Expenses:Housing:Rent
+Assets:Checking
+end test
+
+test reg --format "%(to_string(amount))\n"
+$50.00
+$-50.00
+$120.00
+$-120.00
+$35.00
+$-35.00
+$45.00
+$-45.00
+$1200.00
+$-1200.00
+end test
+
+test reg --format "%(count) %(account)\n"
+1 Expenses:Food:Groceries
+2 Assets:Checking
+3 Expenses:Utilities:Electric
+4 Assets:Checking
+5 Expenses:Food:Dining
+6 Assets:Checking
+7 Expenses:Transport:Gas
+8 Assets:Checking
+9 Expenses:Housing:Rent
+10 Assets:Checking
+end test
+
+test reg --format "%(depth) %(account)\n"
+3 Expenses:Food:Groceries
+2 Assets:Checking
+3 Expenses:Utilities:Electric
+2 Assets:Checking
+3 Expenses:Food:Dining
+2 Assets:Checking
+3 Expenses:Transport:Gas
+2 Assets:Checking
+3 Expenses:Housing:Rent
+2 Assets:Checking
+end test
+
+test reg --format "%(amount > 0 ? \"positive\" : \"negative\")\n"
+positive
+negative
+positive
+negative
+positive
+negative
+positive
+negative
+positive
+negative
+end test
+
+test eval "2 + 3"
+5
+end test
+
+test eval "10 - 3"
+7
+end test
+
+test eval "4 * 5"
+20
+end test
+
+test eval "20 / 4"
+5
+end test
+
+test eval "(2 + 3) * 4"
+20
+end test
+
+test eval "today" --now 2024/06/15
+2024/06/15
+end test
+
+test eval "now" --now 2024/06/15
+2024/06/15 00:00:00
+end test
+
+test eval "format_date(today, '%Y/%m/%d')" --now 2024/06/15
+2024/06/15
 end test

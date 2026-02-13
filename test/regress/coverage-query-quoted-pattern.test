@@ -1,0 +1,23 @@
+; Coverage test for query.cc: quoted and slash-delimited patterns
+; Exercises query.cc lines 76-97: parsing of '/pattern/', 'pattern',
+; and "pattern" delimited query terms
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Restaurant
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+test reg /Food/ -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+end test
+
+test reg 'Food' -> 0
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+end test

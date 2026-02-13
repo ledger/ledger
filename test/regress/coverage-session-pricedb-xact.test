@@ -1,0 +1,14 @@
+; Test session.cc: transactions in price-db file error
+; Exercises the error path when price-db contains transactions (line 133)
+; Uses the test file itself as the price-db, which contains the transaction below
+
+P 2024/01/15 AAPL $150.00
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test -f "$FILE" --price-db "$FILE" bal -> 1
+__ERROR__
+Error: Transactions not allowed in price history file
+end test

@@ -1,0 +1,13 @@
+; Test format_accounts with --percent option
+; Covers: format_accounts::flush() with percent handling (skips total line)
+
+2024/01/15 Purchase
+    Expenses:Food          $50.00
+    Expenses:Transport     $30.00
+    Assets:Checking
+
+test --percent bal Expenses -> 0
+             100.00%  Expenses
+              62.50%    Food
+              37.50%    Transport
+end test

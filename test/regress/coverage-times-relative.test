@@ -1,0 +1,65 @@
+; Test relative date expressions: today, yesterday, tomorrow
+; (exercises TOK_TODAY, TOK_YESTERDAY, TOK_TOMORROW in times.cc)
+
+2024/01/15 * Grocery Store
+    Expenses:Food:Groceries   $50.00
+    Assets:Checking
+
+2024/02/10 * Electric Company
+    Expenses:Utilities:Electric  $120.00
+    Assets:Checking
+
+2024/03/20 * Restaurant
+    Expenses:Food:Dining     $35.00
+    Assets:Checking
+
+2024/04/05 * Gas Station
+    Expenses:Transport:Gas    $45.00
+    Assets:Checking
+
+2024/06/01 * Landlord
+    Expenses:Housing:Rent    $1200.00
+    Assets:Checking
+
+test reg --period "since today" --now 2024/04/05
+24-Apr-05 Gas Station           Expenses:Transport:Gas       $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+24-Jun-01 Landlord              Expenses:Housing:Rent      $1200.00     $1200.00
+                                Assets:Checking           $-1200.00            0
+end test
+
+test reg --period "from today" --now 2024/04/05
+24-Apr-05 Gas Station           Expenses:Transport:Gas       $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+24-Jun-01 Landlord              Expenses:Housing:Rent      $1200.00     $1200.00
+                                Assets:Checking           $-1200.00            0
+end test
+
+test reg --period "until yesterday" --now 2024/04/06
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Feb-10 Electric Company      Exp:Utilities:Electric      $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+24-Mar-20 Restaurant            Expenses:Food:Dining         $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+end test
+
+test reg --period "since tomorrow" --now 2024/03/19
+24-Mar-20 Restaurant            Expenses:Food:Dining         $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+24-Apr-05 Gas Station           Expenses:Transport:Gas       $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+24-Jun-01 Landlord              Expenses:Housing:Rent      $1200.00     $1200.00
+                                Assets:Checking           $-1200.00            0
+end test
+
+test reg --period "until tomorrow" --now 2024/04/05
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Feb-10 Electric Company      Exp:Utilities:Electric      $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+24-Mar-20 Restaurant            Expenses:Food:Dining         $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+24-Apr-05 Gas Station           Expenses:Transport:Gas       $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+end test

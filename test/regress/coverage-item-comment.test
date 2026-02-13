@@ -1,0 +1,34 @@
+; Test item.cc: get_comment function
+; Exercises get_comment (lines 364-388) including:
+;   - empty note path (line 365-366)
+;   - short note (<=15 chars) with "  ;" prefix (line 372)
+;   - long note (>15 chars) with "\n    ;" prefix (lines 369-370)
+;   - multi-line note with separator logic (lines 376-383)
+
+2024/01/15 No Note
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Short Note
+    Expenses:Food    $25.00  ; Short
+    Assets:Checking
+
+2024/01/25 Long Note
+    Expenses:Food    $75.00  ; This is quite a long note for a posting
+    Assets:Checking
+
+2024/01/30 Multi Note
+    Expenses:Food    $35.00
+    ; Line one of note
+    ; Line two of note
+    Assets:Checking
+
+test reg --format "%(payee)|%(comment)|\n" Expenses
+No Note||
+Short Note|  ; Short|
+Long Note|
+    ; This is quite a long note for a posting|
+Multi Note|
+    ; Line one of note
+    ; Line two of note|
+end test

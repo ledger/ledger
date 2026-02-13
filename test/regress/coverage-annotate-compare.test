@@ -1,0 +1,21 @@
+; Coverage test for annotate.cc: annotation_t::operator< comparison
+; Exercises annotate.cc lines 42-98: full comparison operator including
+; price commodity symbol comparison, date, tag, and flag ordering
+
+2024/01/01 Buy Lot A
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (lotA)
+    Assets:Checking    $-1500.00
+
+2024/01/02 Buy Lot B
+    Assets:Brokerage    5 AAPL {$155.00} [2024/01/02] (lotB)
+    Assets:Checking    $-775.00
+
+2024/01/03 Buy Lot C
+    Assets:Brokerage    3 AAPL {$145.00} [2024/01/03] (lotC)
+    Assets:Checking    $-435.00
+
+test bal Assets:Brokerage --lots --sort 'd' -> 0
+3 AAPL {$145.00} [2024/01/03] (lotC)
+10 AAPL {$150.00} [2024/01/01] (lotA)
+5 AAPL {$155.00} [2024/01/02] (lotB)  Assets:Brokerage
+end test

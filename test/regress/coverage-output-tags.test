@@ -1,0 +1,18 @@
+; Test report_tags handler (exercises output.h report_tags)
+; Covers: report_tags::operator(), gather_metadata(), flush(), clear()
+
+2024/01/15 Store A
+    ; Category: groceries
+    Expenses:Food         $10.00
+      ; Receipt: yes
+    Assets:Checking
+
+2024/01/16 Store B
+    ; Category: transport
+    Expenses:Transport    $20.00
+    Assets:Checking
+
+test tags -> 0
+Category
+Receipt
+end test

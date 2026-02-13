@@ -1,0 +1,21 @@
+; Test xact.cc: fixated cost annotation {=$PRICE} with multiple commodities
+; Exercises lines 272-287: when balance has >2 commodities and fixated prices,
+; costs are computed from the fixated price annotations.
+
+2024/01/15 * Exchange
+    Assets:Foreign  100 EUR {=$1.10}
+    Assets:Foreign  1000 JPY {=$0.0075}
+    Assets:Checking  $-117.50
+
+test reg --format "%(has_cost ? \"COST\" : \"NOCOST\") %(amount) %(cost)\n" --args-only --columns=80
+COST 100 EUR {=$1.10} $110.00
+COST 1000 JPY {=$0.0075} $7.50
+NOCOST $-117.50 $-117.50
+end test
+
+test print --args-only --columns=80
+2024/01/15 * Exchange
+    Assets:Foreign                      100 EUR {=$1.10}
+    Assets:Foreign                      1000 JPY {=$0.0075}
+    Assets:Checking                         $-117.50
+end test
