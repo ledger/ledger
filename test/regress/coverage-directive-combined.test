@@ -1,0 +1,25 @@
+; Test combined directive parsing (exercises textual.cc Y, account, commodity, tag directives)
+
+Y 2024
+account Expenses:Food
+    note Food purchases
+    alias food
+
+account Assets:Checking
+    default
+
+commodity $
+    format $1,000.00
+
+tag Location
+    check value =~ /[A-Z]/
+
+2024/01/15 * Store
+    ; Location: Downtown
+    food              $50.00
+    Assets:Checking
+
+test reg -> 0
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

@@ -1,0 +1,19 @@
+; Test parse error with line number reporting (exercises textual.cc error paths)
+
+2024/01/15 * Bad Transaction
+    Expenses:Food              $30.00
+    Expenses:Food              $20.00
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While balancing transaction from "$FILE", lines 3-5:
+> 2024/01/15 * Bad Transaction
+>     Expenses:Food              $30.00
+>     Expenses:Food              $20.00
+Unbalanced remainder is:
+              $50.00
+Amount to balance against:
+              $50.00
+Error: Transaction does not balance
+end test

@@ -1,0 +1,22 @@
+; Test Unicode payee and account handling (exercises textual.cc Unicode parsing)
+
+2024/01/15 * Ünïcödé Shöp
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * 日本語のお店
+    Expenses:Food              $30.00
+    Assets:Checking
+
+2024/01/25 * Магазин
+    Expenses:Food              $40.00
+    Assets:Checking
+
+test reg -> 0
+24-Jan-15 Ünïcödé Shöp          Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-20 日本語のお店          Expenses:Food                $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+24-Jan-25 Магазин               Expenses:Food                $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+end test

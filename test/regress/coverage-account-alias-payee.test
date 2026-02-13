@@ -1,0 +1,15 @@
+; Test account alias and payee subdirectives (exercises textual.cc account_directive)
+
+account Expenses:Groceries
+    note All grocery purchases
+    alias groceries
+    payee Store
+
+2024/01/15 * Store
+    groceries              $50.00
+    Assets:Checking
+
+test reg -> 0
+24-Jan-15 Store                 Expenses:Groceries           $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

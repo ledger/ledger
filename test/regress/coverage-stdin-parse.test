@@ -1,0 +1,10 @@
+; Test parsing from stdin (exercises parser.cc stdin path)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test -f - reg -> 0
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

@@ -1,0 +1,12 @@
+; Test include directive with relative path (exercises textual.cc include_directive)
+
+include ../input/drewr3.dat
+
+test bal Assets -> 0
+         $ -3,804.00  Assets
+          $ 1,396.00    Checking
+             $ 30.00      Business
+         $ -5,200.00    Savings
+--------------------
+         $ -3,804.00
+end test

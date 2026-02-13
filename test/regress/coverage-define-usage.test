@@ -1,0 +1,14 @@
+; Test define directive with expression usage (exercises textual.cc define_directive)
+
+define tax_rate=0.10
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Expenses:Tax              ($50.00 * tax_rate)
+    Assets:Checking
+
+test reg -> 0
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Expenses:Tax                  $5.00       $55.00
+                                Assets:Checking             $-55.00            0
+end test

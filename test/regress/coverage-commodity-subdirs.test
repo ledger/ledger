@@ -1,0 +1,15 @@
+; Test commodity directive with multiple subdirectives (exercises textual.cc commodity_directive)
+
+commodity $
+    format $1,000.00
+    note US Dollar
+    alias USD
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg -> 0
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

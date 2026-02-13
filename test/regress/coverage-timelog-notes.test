@@ -1,0 +1,12 @@
+; Test timelog clock directives with notes (exercises textual.cc timelog parsing paths)
+
+i 2024/01/15 09:00:00 Work:Project  Sprint planning
+o 2024/01/15 12:00:00
+
+I 2024/01/15 13:00:00 Work:Project  Code review
+O 2024/01/15 17:30:00
+
+test reg -> 0
+24-Jan-15 Sprint planning       Work:Project                  3.00h        3.00h
+24-Jan-15 Code review           Work:Project                  4.50h        7.50h
+end test
