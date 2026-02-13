@@ -1,0 +1,19 @@
+; Test --basis strips lot prices for cost basis (exercises annotate.cc, commodity.cc)
+
+P 2024/06/01 AAPL $170.00
+
+2024/01/15 * Buy stock
+    Assets:Brokerage       10 AAPL {$150.00}
+    Assets:Checking
+
+2024/02/15 * Buy more
+    Assets:Brokerage        5 AAPL {$160.00}
+    Assets:Checking
+
+test bal --basis --args-only --columns=80 -> 0
+                   0  Assets
+             15 AAPL    Brokerage
+            -15 AAPL    Checking
+--------------------
+                   0
+end test

@@ -1,0 +1,13 @@
+; Test fixated cost annotation {=price} (exercises annotate.cc ANNOTATION_PRICE_FIXATED)
+
+2024/01/15 * Buy stock
+    Assets:Brokerage       10 AAPL {=$150.00}
+    Assets:Checking
+
+test bal --lots --args-only --columns=80 -> 0
+                   0  Assets
+     10 AAPL {=$150}    Brokerage
+    -10 AAPL {=$150}    Checking
+--------------------
+                   0
+end test

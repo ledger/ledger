@@ -1,0 +1,15 @@
+; Test commodity alias resolves to base commodity (exercises pool.cc alias)
+
+commodity EUR
+    alias euro
+
+2024/01/15 * Store
+    Expenses:Food              50.00 euro
+    Assets:Checking           -50.00 EUR
+
+test bal --args-only --columns=80 -> 0
+          -50.00 EUR  Assets:Checking
+           50.00 EUR  Expenses:Food
+--------------------
+                   0
+end test

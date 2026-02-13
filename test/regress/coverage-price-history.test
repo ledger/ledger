@@ -1,0 +1,17 @@
+; Test multiple price directives and prices command (exercises history.cc, pool.cc)
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $155.00
+P 2024/03/01 AAPL $160.00
+P 2024/04/01 AAPL $165.00
+
+2024/01/15 * Buy
+    Assets:Brokerage       10 AAPL
+    Assets:Checking
+
+test prices --args-only --columns=80 -> 0
+2024/01/01 AAPL          $150.00
+2024/02/01 AAPL          $155.00
+2024/03/01 AAPL          $160.00
+2024/04/01 AAPL          $165.00
+end test

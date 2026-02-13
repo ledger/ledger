@@ -5,6 +5,8 @@
 #include <system.hh>
 
 #include "balance.h"
+#include "commodity.h"
+#include "annotate.h"
 
 using namespace ledger;
 
@@ -523,6 +525,373 @@ BOOST_AUTO_TEST_CASE(testForZero)
 
   BOOST_CHECK(b0.valid());
   BOOST_CHECK(b1.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testStripAnnotations)
+{
+  // Create an annotated amount: 10 AAPL with a price annotation
+  amount_t a1("10 AAPL");
+  annotation_t ann1;
+  ann1.price = amount_t("$50.00");
+  a1.annotate(ann1);
+
+  BOOST_CHECK(a1.has_annotation());
+
+  // Build a balance with the annotated amount
+  balance_t b1;
+  b1 += a1;
+
+  // Strip all annotations (keep nothing)
+  keep_details_t keep_none;
+  balance_t b2 = b1.strip_annotations(keep_none);
+
+  // After stripping, the amount should no longer carry annotation info
+  // but the commodity count should remain at 1
+  BOOST_CHECK_EQUAL(b2.commodity_count(), 1);
+
+  // The stripped amount should equal 10 AAPL without annotation
+  amount_t a_plain("10 AAPL");
+  BOOST_CHECK_EQUAL(b2, a_plain);
+
+  // Keep all annotations
+  keep_details_t keep_all(true, true, true, false);
+  balance_t b3 = b1.strip_annotations(keep_all);
+  BOOST_CHECK_EQUAL(b3.commodity_count(), 1);
+
+  // Stripping an empty balance should yield an empty balance
+  balance_t b_empty;
+  balance_t b_stripped = b_empty.strip_annotations(keep_none);
+  BOOST_CHECK(b_stripped.is_empty());
+
+  // Balance with non-annotated amounts should be unchanged
+  balance_t b4;
+  b4 += amount_t("$100.00");
+  balance_t b5 = b4.strip_annotations(keep_none);
+  BOOST_CHECK_EQUAL(b4, b5);
+
+  BOOST_CHECK(b1.valid());
+  BOOST_CHECK(b2.valid());
+  BOOST_CHECK(b3.valid());
+  BOOST_CHECK(b_empty.valid());
+  BOOST_CHECK(b_stripped.valid());
+  BOOST_CHECK(b4.valid());
+  BOOST_CHECK(b5.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testCommodityAmount)
+{
+  // Build a multi-commodity balance
+  balance_t b1;
+  b1 += amount_t("$100.00");
+  b1 += amount_t("EUR 50");
+  b1 += amount_t("CAD 75");
+
+  // Extract the dollar amount
+  optional<amount_t> dollar_amt =
+    b1.commodity_amount(amount_t("$1").commodity());
+  BOOST_CHECK(dollar_amt);
+  BOOST_CHECK_EQUAL(*dollar_amt, amount_t("$100.00"));
+
+  // Extract the EUR amount
+  optional<amount_t> eur_amt =
+    b1.commodity_amount(amount_t("EUR 1").commodity());
+  BOOST_CHECK(eur_amt);
+  BOOST_CHECK_EQUAL(*eur_amt, amount_t("EUR 50"));
+
+  // Extract the CAD amount
+  optional<amount_t> cad_amt =
+    b1.commodity_amount(amount_t("CAD 1").commodity());
+  BOOST_CHECK(cad_amt);
+  BOOST_CHECK_EQUAL(*cad_amt, amount_t("CAD 75"));
+
+  // Looking up a commodity not in the balance returns none
+  optional<amount_t> gbp_amt =
+    b1.commodity_amount(amount_t("GBP 1").commodity());
+  BOOST_CHECK(!gbp_amt);
+
+  // Single-commodity balance: calling with no argument returns the amount
+  balance_t b2;
+  b2 += amount_t("$200.00");
+  optional<amount_t> single_amt = b2.commodity_amount();
+  BOOST_CHECK(single_amt);
+  BOOST_CHECK_EQUAL(*single_amt, amount_t("$200.00"));
+
+  // Empty balance: calling with no argument returns none
+  balance_t b3;
+  optional<amount_t> empty_amt = b3.commodity_amount();
+  BOOST_CHECK(!empty_amt);
+
+  BOOST_CHECK(b1.valid());
+  BOOST_CHECK(b2.valid());
+  BOOST_CHECK(b3.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testCommodityCount)
+{
+  balance_t b0;
+  BOOST_CHECK_EQUAL(b0.commodity_count(), 0);
+
+  b0 += amount_t("$100.00");
+  BOOST_CHECK_EQUAL(b0.commodity_count(), 1);
+
+  b0 += amount_t("EUR 50");
+  BOOST_CHECK_EQUAL(b0.commodity_count(), 2);
+
+  b0 += amount_t("CAD 75");
+  BOOST_CHECK_EQUAL(b0.commodity_count(), 3);
+
+  // Adding more of an existing commodity should not increase the count
+  b0 += amount_t("$50.00");
+  BOOST_CHECK_EQUAL(b0.commodity_count(), 3);
+
+  // Subtracting the exact amount of a commodity removes it from the map
+  b0 -= amount_t("CAD 75");
+  BOOST_CHECK_EQUAL(b0.commodity_count(), 2);
+
+  BOOST_CHECK(b0.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testSingleAmount)
+{
+  // single_amount() returns true when balance has exactly one commodity
+  balance_t b1;
+  b1 += amount_t("$100.00");
+  BOOST_CHECK(b1.single_amount());
+
+  // single_amount() returns false for empty balance
+  balance_t b0;
+  BOOST_CHECK(!b0.single_amount());
+
+  // single_amount() returns false for multi-commodity balance
+  balance_t b2;
+  b2 += amount_t("$100.00");
+  b2 += amount_t("EUR 50");
+  BOOST_CHECK(!b2.single_amount());
+
+  BOOST_CHECK(b0.valid());
+  BOOST_CHECK(b1.valid());
+  BOOST_CHECK(b2.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testBalancePrint)
+{
+  // Test printing a single-commodity balance
+  balance_t b1;
+  b1 += amount_t("$100.00");
+  std::ostringstream out1;
+  b1.print(out1);
+  // With no width specified, print uses -1 (no justification)
+  BOOST_CHECK(!out1.str().empty());
+  // The output should contain the dollar amount
+  BOOST_CHECK(out1.str().find("100") != std::string::npos);
+
+  // Test printing a multi-commodity balance
+  balance_t b2;
+  b2 += amount_t("$100.00");
+  b2 += amount_t("EUR 50");
+  std::ostringstream out2;
+  b2.print(out2, 20);
+  std::string printed = out2.str();
+  // Should contain both commodities
+  BOOST_CHECK(printed.find("100") != std::string::npos);
+  BOOST_CHECK(printed.find("EUR") != std::string::npos);
+
+  // Test printing an empty balance (should print zero)
+  balance_t b3;
+  std::ostringstream out3;
+  b3.print(out3, 10);
+  BOOST_CHECK(out3.str().find("0") != std::string::npos);
+
+  // Test printing with right justification
+  balance_t b4;
+  b4 += amount_t("$50.00");
+  std::ostringstream out4;
+  b4.print(out4, 20, -1, AMOUNT_PRINT_RIGHT_JUSTIFY);
+  std::string justified = out4.str();
+  BOOST_CHECK(!justified.empty());
+  BOOST_CHECK(justified.find("50") != std::string::npos);
+
+  BOOST_CHECK(b1.valid());
+  BOOST_CHECK(b2.valid());
+  BOOST_CHECK(b3.valid());
+  BOOST_CHECK(b4.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testToAmount)
+{
+  // Single-commodity balance converts to amount_t
+  balance_t b1;
+  b1 += amount_t("$100.00");
+  amount_t a1 = b1.to_amount();
+  BOOST_CHECK_EQUAL(a1, amount_t("$100.00"));
+
+  // Empty balance throws
+  balance_t b2;
+  BOOST_CHECK_THROW(b2.to_amount(), balance_error);
+
+  // Multi-commodity balance throws
+  balance_t b3;
+  b3 += amount_t("$100.00");
+  b3 += amount_t("EUR 50");
+  BOOST_CHECK_THROW(b3.to_amount(), balance_error);
+
+  // Verify to_string() works via string conversion
+  balance_t b4;
+  b4 += amount_t("$42.00");
+  std::string s = b4.to_string();
+  BOOST_CHECK(!s.empty());
+  BOOST_CHECK(s.find("42") != std::string::npos);
+
+  BOOST_CHECK(b1.valid());
+  BOOST_CHECK(b2.valid());
+  BOOST_CHECK(b3.valid());
+  BOOST_CHECK(b4.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testMapSortedAmounts)
+{
+  // Build a multi-commodity balance
+  balance_t b1;
+  b1 += amount_t("$100.00");
+  b1 += amount_t("EUR 50");
+  b1 += amount_t("CAD 75");
+
+  // Collect amounts via map_sorted_amounts
+  std::vector<amount_t> collected;
+  b1.map_sorted_amounts([&](const amount_t& amt) {
+    collected.push_back(amt);
+  });
+
+  // Should have collected exactly 3 amounts
+  BOOST_CHECK_EQUAL(collected.size(), 3);
+
+  // Verify all three commodity amounts are present
+  bool found_dollar = false, found_eur = false, found_cad = false;
+  for (const auto& amt : collected) {
+    if (amt.commodity().symbol() == "$")
+      found_dollar = true;
+    else if (amt.commodity().symbol() == "EUR")
+      found_eur = true;
+    else if (amt.commodity().symbol() == "CAD")
+      found_cad = true;
+  }
+  BOOST_CHECK(found_dollar);
+  BOOST_CHECK(found_eur);
+  BOOST_CHECK(found_cad);
+
+  // Verify amounts are sorted by commodity (alphabetical by symbol)
+  // CAD < EUR < $ (prefix symbols sort after alphabetic ones)
+  for (std::size_t i = 1; i < collected.size(); i++) {
+    BOOST_CHECK(commodity_t::compare_by_commodity()(&collected[i-1], &collected[i]) < 0);
+  }
+
+  // Empty balance: map_sorted_amounts should not invoke the callback
+  balance_t b2;
+  std::vector<amount_t> empty_collected;
+  b2.map_sorted_amounts([&](const amount_t& amt) {
+    empty_collected.push_back(amt);
+  });
+  BOOST_CHECK(empty_collected.empty());
+
+  // Single-commodity balance: should invoke callback exactly once
+  balance_t b3;
+  b3 += amount_t("$200.00");
+  std::vector<amount_t> single_collected;
+  b3.map_sorted_amounts([&](const amount_t& amt) {
+    single_collected.push_back(amt);
+  });
+  BOOST_CHECK_EQUAL(single_collected.size(), 1);
+  BOOST_CHECK_EQUAL(single_collected[0], amount_t("$200.00"));
+
+  // Also test sorted_amounts directly
+  balance_t::amounts_array sorted;
+  b1.sorted_amounts(sorted);
+  BOOST_CHECK_EQUAL(sorted.size(), 3);
+  for (std::size_t i = 1; i < sorted.size(); i++) {
+    BOOST_CHECK(commodity_t::compare_by_commodity()(sorted[i-1], sorted[i]) < 0);
+  }
+
+  BOOST_CHECK(b1.valid());
+  BOOST_CHECK(b2.valid());
+  BOOST_CHECK(b3.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testTruncatedAndUnrounded)
+{
+  amount_t a1("$ 123.456");
+  amount_t a2("EUR 789.123");
+
+  balance_t b1;
+  b1 += a1;
+  b1 += a2;
+
+  // Test truncated(): each component amount should be truncated
+  balance_t b_trunc = b1.truncated();
+  balance_t b_trunc_expected;
+  b_trunc_expected += a1.truncated();
+  b_trunc_expected += a2.truncated();
+  BOOST_CHECK_EQUAL(b_trunc, b_trunc_expected);
+
+  // Test in_place_truncate()
+  balance_t b2(b1);
+  b2.in_place_truncate();
+  BOOST_CHECK_EQUAL(b2, b_trunc_expected);
+
+  // Test unrounded(): each component amount should be unrounded
+  balance_t b_unround = b1.unrounded();
+  balance_t b_unround_expected;
+  b_unround_expected += a1.unrounded();
+  b_unround_expected += a2.unrounded();
+  BOOST_CHECK_EQUAL(b_unround, b_unround_expected);
+
+  // Test in_place_unround()
+  balance_t b3(b1);
+  b3.in_place_unround();
+  BOOST_CHECK_EQUAL(b3, b_unround_expected);
+
+  // Test on empty balance
+  balance_t b_empty;
+  BOOST_CHECK_EQUAL(b_empty.truncated(), b_empty);
+  BOOST_CHECK_EQUAL(b_empty.unrounded(), b_empty);
+
+  // Test reduced() and unreduced()
+  balance_t b4;
+  b4 += amount_t("$100.00");
+  balance_t b_reduced = b4.reduced();
+  BOOST_CHECK(b_reduced.valid());
+
+  balance_t b_unreduced = b4.unreduced();
+  BOOST_CHECK(b_unreduced.valid());
+
+  // Test in_place_reduce() and in_place_unreduce()
+  balance_t b5(b4);
+  b5.in_place_reduce();
+  BOOST_CHECK(b5.valid());
+
+  balance_t b6(b4);
+  b6.in_place_unreduce();
+  BOOST_CHECK(b6.valid());
+
+  // Test number() strips commodities from all component amounts
+  balance_t b7;
+  b7 += amount_t("$100.00");
+  b7 += amount_t("EUR 50");
+  balance_t b_number = b7.number();
+  // The number balance should contain commodity-less amounts
+  // that sum together since they share the null commodity
+  BOOST_CHECK(b_number.valid());
+
+  BOOST_CHECK(b1.valid());
+  BOOST_CHECK(b2.valid());
+  BOOST_CHECK(b3.valid());
+  BOOST_CHECK(b_trunc.valid());
+  BOOST_CHECK(b_unround.valid());
+  BOOST_CHECK(b_empty.valid());
+  BOOST_CHECK(b4.valid());
+  BOOST_CHECK(b5.valid());
+  BOOST_CHECK(b6.valid());
+  BOOST_CHECK(b7.valid());
+  BOOST_CHECK(b_number.valid());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

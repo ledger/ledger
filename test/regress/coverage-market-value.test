@@ -1,0 +1,16 @@
+; Test --market balance uses latest price (exercises history.cc find_price)
+
+P 2024/01/01 EUR $1.10
+P 2024/06/01 EUR $1.20
+
+2024/01/15 * Buy Euros
+    Assets:Euro           100 EUR
+    Assets:Checking      $-110.00
+
+test bal --market --args-only --columns=80 -> 0
+              $10.00  Assets
+            $-110.00    Checking
+             $120.00    Euro
+--------------------
+              $10.00
+end test

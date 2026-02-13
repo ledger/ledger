@@ -1,0 +1,19 @@
+; Test --lot-dates strips prices and tags from annotations (exercises annotate.cc strip_annotations)
+
+2024/01/15 * Buy stock
+    Assets:Brokerage       10 AAPL {$150.00} [2024-01-15]
+    Assets:Checking
+
+2024/02/15 * Buy more
+    Assets:Brokerage        5 AAPL {$160.00} [2024-02-15]
+    Assets:Checking
+
+test bal --lot-dates --args-only --columns=80 -> 0
+                   0  Assets
+10 AAPL [2024/01/15]
+ 5 AAPL [2024/02/15]    Brokerage
+-10 AAPL [2024/01/15]
+-5 AAPL [2024/02/15]    Checking
+--------------------
+                   0
+end test

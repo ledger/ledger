@@ -6,6 +6,7 @@
 
 #include "amount.h"
 #include "commodity.h"
+#include "annotate.h"
 
 #define internalAmount(x) amount_t::exact(x)
 
@@ -1411,6 +1412,202 @@ BOOST_AUTO_TEST_CASE(testCommodityPrinting)
   BOOST_CHECK(x2.valid());
 }
 
+BOOST_AUTO_TEST_CASE(testKeepPrecision)
+{
+  // An amount created via exact() (internalAmount) has keep_precision true
+  amount_t x1(internalAmount("$1.234567"));
+  BOOST_CHECK(x1.keep_precision());
+  BOOST_CHECK_EQUAL(string("$1.234567"), x1.to_string());
+
+  // After setting keep_precision to false, display uses commodity precision
+  x1.set_keep_precision(false);
+  BOOST_CHECK(!x1.keep_precision());
+  BOOST_CHECK_EQUAL(string("$1.23"), x1.to_string());
+
+  // Setting it back to true restores full precision display
+  x1.set_keep_precision(true);
+  BOOST_CHECK(x1.keep_precision());
+  BOOST_CHECK_EQUAL(string("$1.234567"), x1.to_string());
+
+  // A normally parsed commodity amount does not keep precision
+  amount_t x2("$1.23");
+  BOOST_CHECK(!x2.keep_precision());
+  x2.set_keep_precision(true);
+  BOOST_CHECK(x2.keep_precision());
+
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testUnrounded)
+{
+  // Start with a normal commodity amount (not exact), keep_precision is false
+  amount_t x0("$1.23");
+  BOOST_CHECK(!x0.keep_precision());
+  amount_t x0u = x0.unrounded();
+  BOOST_CHECK(x0u.keep_precision());
+  BOOST_CHECK_EQUAL(string("$1.23"), x0u.to_string());
+
+  // With an internal amount that has extra precision
+  amount_t x1(internalAmount("$1.23456789"));
+  // internalAmount (exact) already sets keep_precision
+  BOOST_CHECK(x1.keep_precision());
+
+  // Set keep_precision to false to simulate a rounded amount
+  x1.set_keep_precision(false);
+  BOOST_CHECK(!x1.keep_precision());
+  BOOST_CHECK_EQUAL(string("$1.23"), x1.to_string());
+
+  // unrounded should set keep_precision and show full precision
+  amount_t x2 = x1.unrounded();
+  BOOST_CHECK(x2.keep_precision());
+  BOOST_CHECK_EQUAL(string("$1.23456789"), x2.to_string());
+
+  // The original should remain unchanged
+  BOOST_CHECK(!x1.keep_precision());
+
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testAnnotation)
+{
+  amount_t x1("100 AAPL");
+
+  BOOST_CHECK(!x1.has_annotation());
+
+  annotation_t ann;
+  ann.price = amount_t("$50.00");
+  x1.annotate(ann);
+
+  BOOST_CHECK(x1.has_annotation());
+  BOOST_CHECK(x1.annotation().price);
+  BOOST_CHECK_EQUAL(*x1.annotation().price, amount_t("$50.00"));
+
+  // Test strip_annotations with default keep_details (all false) strips everything
+  amount_t x2 = x1.strip_annotations(keep_details_t());
+  BOOST_CHECK(!x2.has_annotation());
+  BOOST_CHECK_EQUAL(x1.number(), x2.number());
+
+  // Test strip_annotations keeping price
+  amount_t x3 = x1.strip_annotations(keep_details_t(true, false, false));
+  BOOST_CHECK(x3.has_annotation());
+  BOOST_CHECK(x3.annotation().price);
+  BOOST_CHECK_EQUAL(*x3.annotation().price, amount_t("$50.00"));
+
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+  BOOST_CHECK(x3.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testAnnotationWithDate)
+{
+  amount_t x1("100 AAPL");
+
+  annotation_t ann;
+  ann.price = amount_t("$50.00");
+  ann.date = parse_date("2024/01/15");
+  ann.tag = string("lot1");
+  x1.annotate(ann);
+
+  BOOST_CHECK(x1.has_annotation());
+  BOOST_CHECK(x1.annotation().price);
+  BOOST_CHECK(x1.annotation().date);
+  BOOST_CHECK(x1.annotation().tag);
+  BOOST_CHECK_EQUAL(*x1.annotation().price, amount_t("$50.00"));
+  BOOST_CHECK_EQUAL(*x1.annotation().tag, string("lot1"));
+
+  // Strip keeping only price
+  keep_details_t kd(true, false, false);
+  amount_t x2 = x1.strip_annotations(kd);
+  BOOST_CHECK(x2.has_annotation());
+  BOOST_CHECK(x2.annotation().price);
+  BOOST_CHECK(!x2.annotation().date);
+  BOOST_CHECK(!x2.annotation().tag);
+
+  // Strip keeping nothing
+  amount_t x3 = x1.strip_annotations(keep_details_t());
+  BOOST_CHECK(!x3.has_annotation());
+
+  // Strip keeping everything
+  keep_details_t kd_all(true, true, true);
+  amount_t x4 = x1.strip_annotations(kd_all);
+  BOOST_CHECK(x4.has_annotation());
+  BOOST_CHECK(x4.annotation().price);
+  BOOST_CHECK(x4.annotation().date);
+  BOOST_CHECK(x4.annotation().tag);
+
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+  BOOST_CHECK(x3.valid());
+  BOOST_CHECK(x4.valid());
+}
+
 #endif // NOT_FOR_PYTHON
+
+BOOST_AUTO_TEST_CASE(testDisplayPrecision)
+{
+  amount_t x1("$1.00");
+
+  // display_precision follows commodity precision
+  BOOST_CHECK_EQUAL(amount_t::precision_t(2), x1.display_precision());
+
+  amount_t x2("123.456");
+  // uncommoditized amount display_precision equals its own precision
+  BOOST_CHECK_EQUAL(amount_t::precision_t(3), x2.display_precision());
+
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testAmountNumber)
+{
+  amount_t x1("$123.45");
+  amount_t x2 = x1.number();
+
+  BOOST_CHECK_EQUAL(string("123.45"), x2.to_string());
+  BOOST_CHECK(!x2.has_commodity());
+  BOOST_CHECK(x1.has_commodity());
+
+  // number() of an uncommoditized amount returns itself
+  amount_t x3("123.45");
+  BOOST_CHECK_EQUAL(x3, x3.number());
+
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+  BOOST_CHECK(x3.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testWithCommodity)
+{
+  amount_t x1("123.45");
+  amount_t x2("EUR 1.00");
+
+  BOOST_CHECK(!x1.has_commodity());
+  amount_t x3 = x1.with_commodity(x2.commodity());
+  BOOST_CHECK(x3.has_commodity());
+  BOOST_CHECK_EQUAL(x3.commodity(), x2.commodity());
+
+  // The numeric value should be preserved
+  BOOST_CHECK_EQUAL(x1.number(), x3.number());
+
+  BOOST_CHECK(x1.valid());
+  BOOST_CHECK(x2.valid());
+  BOOST_CHECK(x3.valid());
+}
+
+BOOST_AUTO_TEST_CASE(testClearCommodity)
+{
+  amount_t x1("$123.45");
+  BOOST_CHECK(x1.has_commodity());
+
+  x1.clear_commodity();
+  BOOST_CHECK(!x1.has_commodity());
+
+  // After clearing commodity, the numeric value should remain
+  BOOST_CHECK_EQUAL(amount_t("123.45"), x1);
+
+  BOOST_CHECK(x1.valid());
+}
 
 BOOST_AUTO_TEST_SUITE_END()

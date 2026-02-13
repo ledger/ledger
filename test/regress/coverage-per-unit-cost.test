@@ -1,0 +1,17 @@
+; Test per-unit cost with @ syntax (exercises commodity.cc exchange, pool.cc)
+
+2024/01/15 * Convert
+    Assets:Brokerage        100 AAPL @ $150.00
+    Assets:Checking
+
+2024/02/15 * Convert back
+    Assets:Brokerage       -100 AAPL @ $160.00
+    Assets:Checking
+
+test reg --args-only --columns=80 -> 0
+24-Jan-15 Convert               Assets:Brokerage           100 AAPL     100 AAPL
+                                Assets:Checking             $-15000      $-15000
+                                                                        100 AAPL
+24-Feb-15 Convert back          Assets:Brokerage          -100 AAPL      $-15000
+                                Assets:Checking              $16000        $1000
+end test

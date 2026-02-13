@@ -1,0 +1,13 @@
+; Test total cost annotation {{price}} (exercises annotate.cc ANNOTATION_PRICE_NOT_PER_UNIT)
+
+commodity $
+    format $1,000.00
+
+2024/01/15 * Buy stock
+    Assets:Brokerage       10 AAPL {{$1,500.00}}
+    Assets:Checking
+
+test reg --args-only --columns=80 -> 0
+24-Jan-15 Buy stock             Assets:Brokerage            10 AAPL      10 AAPL
+                                Assets:Checking            -10 AAPL            0
+end test

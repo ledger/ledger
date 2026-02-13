@@ -1,0 +1,15 @@
+; Test pricedb command output format (exercises pool.cc, history.cc)
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $155.00
+P 2024/03/01 AAPL $160.00
+
+2024/01/15 * Buy
+    Assets:Brokerage       10 AAPL
+    Assets:Checking
+
+test pricedb --args-only --columns=80 -> 0
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/02/01 00:00:00 AAPL $155.00
+P 2024/03/01 00:00:00 AAPL $160.00
+end test

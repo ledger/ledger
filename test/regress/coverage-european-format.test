@@ -1,0 +1,16 @@
+; Test European number format with decimal comma (exercises commodity.cc COMMODITY_STYLE_DECIMAL_COMMA)
+
+2024/01/15 * Store
+    Expenses:Food              50.00 EUR
+    Assets:Checking           -50.00 EUR
+
+2024/02/15 * Store
+    Expenses:Food              1.234,56 EUR
+    Assets:Checking
+
+test bal --args-only --columns=80 -> 0
+       -1.284,56 EUR  Assets:Checking
+        1.284,56 EUR  Expenses:Food
+--------------------
+                   0
+end test
