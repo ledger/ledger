@@ -1,0 +1,45 @@
+; Test month name and weekday name tokens in period expressions
+; Exercises next_token month/weekday parsing (lines 1684-1687)
+; string_to_month_of_year (lines 225-252)
+; string_to_day_of_week (lines 206-223)
+; handle_relative_token with TOK_A_MONTH (lines 1015-1023)
+; handle_in_token (lines 950-959)
+; determine_when TOK_A_MONTH (lines 865-878)
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/03/20 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/06/10 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+2025/03/20 Payee D
+    Expenses:Gas    $45.00
+    Assets:Checking
+
+test reg --now 2024/06/15 --period "in january"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --now 2024/06/15 --period "in march"
+24-Mar-20 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test
+
+test reg --now 2024/06/15 --period "next march"
+25-Mar-20 Payee D               Expenses:Gas                 $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+end test
+
+test reg --now 2024/06/15 --period "since june"
+24-Jun-10 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+25-Mar-20 Payee D               Expenses:Gas                 $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+end test

@@ -1,0 +1,14 @@
+; Test session.cc: fn_account with mask argument
+; Exercises fn_account mask path (lines 248-249) via account(/regex/) call
+
+account Expenses:Food
+account Expenses:Rent
+account Assets:Checking
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test bal --format "%(account(/Expenses/) ? \"found\" : \"none\")\n" Expenses
+found
+end test

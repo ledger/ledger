@@ -1,0 +1,45 @@
+; Test "every N units" with plural unit tokens and various quantities
+; Exercises handle_every_token if branch (lines 1115-1137)
+; with TOK_YEARS, TOK_QUARTERS, TOK_MONTHS, TOK_WEEKS, TOK_DAYS
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/03/20 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/06/10 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+2024/08/05 Payee D
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+2024/11/15 Payee E
+    Expenses:Entertainment    $200.00
+    Assets:Checking
+
+test reg --now 2024/12/15 --period "every 3 months"
+24-Jan-01 - 24-Mar-31           Assets:Checking           $-1050.00    $-1050.00
+                                Expenses:Food                $50.00    $-1000.00
+                                Expenses:Rent              $1000.00            0
+24-Apr-01 - 24-Jun-30           Assets:Checking             $-75.00      $-75.00
+                                Expenses:Transport           $75.00            0
+24-Jul-01 - 24-Sep-30           Assets:Checking            $-120.00     $-120.00
+                                Expenses:Utilities          $120.00            0
+24-Oct-01 - 24-Dec-31           Assets:Checking            $-200.00     $-200.00
+                                Expenses:Entertainment      $200.00            0
+end test
+
+test reg --now 2024/12/15 --period "every 2 weeks" --begin 2024/01/07 --end 2024/02/04
+24-Jan-07 - 24-Jan-20           Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+end test
+
+test reg --now 2024/12/15 --period "every 5 days" --begin 2024/01/11 --end 2024/01/22
+24-Jan-15 - 24-Jan-19           Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+end test

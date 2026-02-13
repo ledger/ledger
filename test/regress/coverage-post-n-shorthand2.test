@@ -1,0 +1,11 @@
+; Test post_t::lookup for lowercase n shorthand
+; Targets: post.cc lines 457-458 (n -> get_count)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(n) %(account)\n"
+1 Expenses:Food
+2 Assets:Checking
+end test

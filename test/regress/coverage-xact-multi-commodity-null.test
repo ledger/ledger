@@ -1,0 +1,19 @@
+; Test multi-commodity transaction with null posting
+; Targets: xact.cc lines 424-427 (balance.is_balance() with null_post)
+; Exercises the multi-commodity balancing with null post path
+
+2024/01/15 * Multi Currency
+    Assets:USD                 $100.00
+    Assets:EUR                 80 EUR
+    Expenses:Commission
+
+test bal --columns 80
+             $100.00
+              80 EUR  Assets
+              80 EUR    EUR
+             $100.00    USD
+            $-100.00
+             -80 EUR  Expenses:Commission
+--------------------
+                   0
+end test

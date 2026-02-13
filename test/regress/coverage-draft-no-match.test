@@ -1,0 +1,12 @@
+; Test draft.cc when no matching payee is found (covers draft.cc lines 289-292)
+; When payee is not found, the payee mask is used directly as the payee string
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test xact 2024/03/01 'Totally New Payee' Food '$30' from Checking
+2024/03/01 Totally New Payee
+    Expenses:Food                             $30.00
+    Assets:Checking
+end test

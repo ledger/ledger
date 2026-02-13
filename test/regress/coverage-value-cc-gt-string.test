@@ -1,0 +1,24 @@
+; Test value.cc: is_greater_than STRING paths (lines 1095-1104)
+; Also exercises STRING > COMMODITY paths (line 1098)
+
+; STRING > STRING (lines 1100)
+test eval "\"xyz\" > \"abc\""
+1
+end test
+
+test eval "\"abc\" > \"xyz\""
+0
+end test
+
+test eval "\"abc\" > \"abc\""
+0
+end test
+
+; Multiple string comparisons
+test eval "\"banana\" > \"apple\""
+1
+end test
+
+test eval "\"apple\" > \"banana\""
+0
+end test

@@ -1,0 +1,72 @@
+; Test token.cc: various operator tokens and reserved words
+; Exercises: KW_DIV (div keyword), false/true literals,
+;   amount literal in braces {$100}, comparison operators,
+;   string literals, regex match
+
+test eval "10 div 3"
+3.333333
+end test
+
+test eval "false"
+0
+end test
+
+test eval "true"
+1
+end test
+
+test eval '{$100}'
+$100
+end test
+
+test eval '{$100} + {$50}'
+$150
+end test
+
+test eval '{$100} * 2'
+$200
+end test
+
+test eval "5 == 5"
+1
+end test
+
+test eval "5 != 3"
+1
+end test
+
+test eval "5 != 5"
+0
+end test
+
+test eval "5 < 10"
+1
+end test
+
+test eval "5 <= 5"
+1
+end test
+
+test eval "10 > 5"
+1
+end test
+
+test eval "5 >= 5"
+1
+end test
+
+test eval '"hello"'
+hello
+end test
+
+test eval "'world'"
+world
+end test
+
+test eval '"hello" =~ /ell/'
+1
+end test
+
+test eval '"hello" =~ /xyz/'
+0
+end test

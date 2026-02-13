@@ -1,0 +1,21 @@
+; Test miscellaneous functions (exercises report.cc fn_is_seq/fn_clear_commodity/fn_commodity)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test eval "is_seq(42)"
+0
+end test
+
+test eval "is_seq(to_sequence(42))"
+1
+end test
+
+test eval 'clear_commodity($50)'
+50
+end test
+
+test eval 'commodity($50)'
+$
+end test

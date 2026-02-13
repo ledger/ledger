@@ -1,0 +1,16 @@
+; Test xact_t::lookup for payee, magnitude, code functions
+; Targets: xact.cc lines 540-614 (get_magnitude, get_code, get_payee via xact scope)
+
+2024/01/15 (CHK-100) Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/16 Gas Station
+    Expenses:Gas               $30.00
+    Assets:Checking
+
+; Exercise xact_t::lookup for payee, code, magnitude
+test reg --format "%(xact.code) %(xact.payee) %(xact.magnitude)\n" Expenses
+CHK-100 Grocery Store $50.00
+ Gas Station $30.00
+end test

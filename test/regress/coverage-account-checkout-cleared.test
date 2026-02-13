@@ -1,0 +1,13 @@
+; Coverage: account.cc line 277: get_latest_checkout_cleared function
+; Tests format expression with latest_checkout_cleared for cleared timelog entries
+; Note: I/O (uppercase) set cleared flag on timelog postings
+
+I 2024/01/15 09:00:00 Project:Work  Morning task
+O 2024/01/15 12:00:00
+
+I 2024/01/16 09:00:00 Project:Work  Afternoon task
+O 2024/01/16 17:00:00
+
+test bal --format "%(latest_checkout_cleared)\n" --args-only --columns=80
+true
+end test

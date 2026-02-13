@@ -1,0 +1,13 @@
+; Test session.cc: --input-date-format option
+; Exercises lookup_option case 'i' -> input_date_format_ (line 319)
+
+2024-01-15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test -f "$FILE" bal --input-date-format "%Y-%m-%d" -> 0
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

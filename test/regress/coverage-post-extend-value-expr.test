@@ -1,0 +1,11 @@
+; Test extend_post with Value tag
+; Targets: post.cc lines 634-666 (extend_post with Value tag)
+
+2024/01/15 * Buy Stock
+    ; Value: market(amount, date, exchange)
+    Assets:Investments         10 AAPL @ $150.00
+    Assets:Checking
+
+test bal Assets:Investments --columns 80
+             10 AAPL  Assets:Investments
+end test

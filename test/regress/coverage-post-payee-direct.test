@@ -1,0 +1,11 @@
+; Test post_t::payee with _payee set (direct payee)
+; Targets: post.cc lines 122-129 (payee with _payee)
+
+2024/01/15 * Original Payee
+    Expenses:Food              $50.00
+        ; Payee: Override Payee
+    Assets:Checking
+
+test reg --format "%(payee) %(amount)\n" Expenses
+Override Payee $50.00
+end test

@@ -1,0 +1,11 @@
+; Test post_t::aux_date inheriting from xact
+; Targets: post.cc lines 108-113 (aux_date inheritance)
+
+2024/01/15=2024/02/01 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --effective --columns 80
+24-Feb-01 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

@@ -1,0 +1,68 @@
+; Test op.cc: various operations through format expressions
+; Exercises: O_NEG, O_NOT, O_SUB, O_MUL, O_DIV in calc,
+;   O_EQ, O_LT, O_LTE, O_GT, O_GTE comparisons,
+;   O_MATCH regex matching
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test reg --format "%(amount * 2) %(account)\n"
+$100.00 Expenses:Food
+$-100.00 Assets:Checking
+$60.00 Expenses:Transport
+$-60.00 Assets:Checking
+end test
+
+test reg --format "%(amount / 2) %(account)\n"
+$25.00 Expenses:Food
+$-25.00 Assets:Checking
+$15.00 Expenses:Transport
+$-15.00 Assets:Checking
+end test
+
+test reg --format "%(amount - amount) %(account)\n"
+0 Expenses:Food
+0 Assets:Checking
+0 Expenses:Transport
+0 Assets:Checking
+end test
+
+test reg --format "%(amount > 0 ? amount : -amount) %(account)\n"
+$50.00 Expenses:Food
+$50.00 Assets:Checking
+$30.00 Expenses:Transport
+$30.00 Assets:Checking
+end test
+
+test reg --format "%(amount == amount ? 1 : 0)\n"
+1
+1
+1
+1
+end test
+
+test reg --format "%(amount < 0 ? \"neg\" : \"pos\")\n"
+pos
+neg
+pos
+neg
+end test
+
+test reg --format "%(amount <= 0 ? \"le\" : \"gt\")\n"
+gt
+le
+gt
+le
+end test
+
+test reg --format "%(amount >= 0 ? \"ge\" : \"lt\")\n"
+ge
+lt
+ge
+lt
+end test

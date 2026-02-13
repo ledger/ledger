@@ -1,0 +1,24 @@
+; Coverage: journal.cc lines 133-140: payees_for_unknown_accounts mapping
+; When account name is "Unknown", check payee to find the real account
+
+account Expenses:Food
+    payee Grocery
+account Expenses:Auto
+    payee Gas
+
+2024/01/15 Grocery Store
+    Unknown    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Unknown    $35.00
+    Assets:Checking
+
+test bal --columns=80
+             $-85.00  Assets:Checking
+              $85.00  Expenses
+              $35.00    Auto
+              $50.00    Food
+--------------------
+                   0
+end test

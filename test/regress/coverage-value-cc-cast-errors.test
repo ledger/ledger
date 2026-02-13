@@ -1,0 +1,30 @@
+; Test value.cc: in_place_cast error paths
+; Exercises cast failures where types cannot be converted
+
+; STRING -> INTEGER when string is non-numeric (line 1312)
+; to_int("abc") exercises the break at line 1312 and throw at line 1355
+test eval "to_int(\"abc\")" -> 1
+__ERROR__
+While evaluating value expression:
+  to_int("abc")
+  ^^^^^^^^^^^^^
+While converting abc:
+While calling function 'to_int abc':
+Error: Cannot convert a string to an integer
+end test
+
+; STRING -> COMMODITY when commodity not found (line 1322)
+; to_commodity tries to find "XYZNONEXIST" in pool, fails, breaks to error
+; Actually this exercises line 1318-1322: commodity_pool_t::current_pool->find fails
+
+; BOOLEAN -> incompatible type error (line 1191-1193)
+; Casting boolean to DATE is not supported
+test eval "to_date(true)" -> 1
+__ERROR__
+While evaluating value expression:
+  to_date(true)
+  ^^^^^^^^^^^^^
+While converting 1:
+While calling function 'to_date 1':
+Error: Cannot convert a boolean to a date
+end test

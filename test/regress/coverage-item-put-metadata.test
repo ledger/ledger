@@ -1,0 +1,12 @@
+; Test put_metadata with both tag and value types in XML
+; Targets: item.cc lines 568-578 (put_metadata)
+
+2024/01/15 * Store
+    ; :food:organic:
+    ; Category: groceries
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test bal Expenses --columns 80
+              $50.00  Expenses:Food
+end test

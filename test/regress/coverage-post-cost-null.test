@@ -1,0 +1,11 @@
+; Test get_cost and get_price with null amount and no cost
+; Targets: post.cc lines 222-231 (get_cost paths), 233-240 (get_price paths)
+
+2024/01/15 * Buy Stock
+    Assets:Investments         10 AAPL @ $150.00
+    Assets:Checking
+
+; cost returns the cost when present
+test reg --format "%(cost) %(has_cost)\n" Assets:Investments
+$1500 true
+end test

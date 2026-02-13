@@ -1,0 +1,44 @@
+; Test mask.h: glob and regex pattern matching variations
+; Exercises mask_t construction, assign_glob, match, str, empty, valid
+; Targets: mask.h lines 61-110
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/18 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+2024/01/20 Electric Company
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+2024/01/22 Phone Company
+    Expenses:Utilities:Phone    $45.00
+    Assets:Checking
+
+; Test regex matching with alternation
+test reg --limit "payee =~ /Store|Station/" Expenses --columns 80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-18 Gas Station           Expenses:Transport           $30.00       $80.00
+end test
+
+; Test account matching with deep hierarchy
+test bal Utilities --columns 80
+             $165.00  Expenses:Utilities
+              $45.00    Phone
+--------------------
+             $165.00
+end test
+
+; Test regex with anchoring behavior
+test reg --limit "account =~ /^Expenses:Food$/" --columns 80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+end test
+
+; Test payee matching via query syntax
+test reg @"Grocery" --columns 80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

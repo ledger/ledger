@@ -1,0 +1,16 @@
+; Test token.cc: DOT and ARROW operators
+; Exercises: DOT '.' token (lines 360-362),
+;            ARROW '->' lambda token (lines 267-272)
+
+2024/01/15 Payee
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --display "account.parent" --columns=80
+24-Jan-15 Payee                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test eval "x -> x + 1"
+<#EXPR (x -> (x + {1}))>
+end test

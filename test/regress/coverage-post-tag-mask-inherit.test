@@ -1,0 +1,11 @@
+; Test post_t::get_tag with mask that inherits from xact
+; Targets: post.cc lines 68-75 (get_tag mask with inherit)
+
+2024/01/15 Store
+    ; Category: food
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(tag(/Category/)) %(amount)\n" Expenses
+food $50.00
+end test

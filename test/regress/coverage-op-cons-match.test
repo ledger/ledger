@@ -1,0 +1,31 @@
+; Test op.cc: O_CONS (comma expressions) and O_MATCH (regex matching)
+; Exercises: calc_cons (lines 517-538), O_MATCH calc (lines 312-317),
+;   print_cons (lines 566-582), split_cons_expr
+
+test eval "1, 2, 3"
+(1, 2, 3)
+end test
+
+test eval '"test" =~ /es/'
+1
+end test
+
+test eval '"test" =~ /xyz/'
+0
+end test
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test reg --limit 'account =~ /Food/' --columns=80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+end test
+
+test reg --limit 'account =~ /Transport/' --columns=80
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $30.00
+end test

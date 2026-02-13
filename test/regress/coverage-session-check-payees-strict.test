@@ -1,0 +1,23 @@
+; Test session.cc: --check-payees with --pedantic
+; Exercises check_payees (line 114-115) together with pedantic mode (line 119-120)
+
+payee Grocery Store
+account Expenses:Food
+account Assets:Checking
+commodity $
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Unknown Payee
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test -f "$FILE" bal --pedantic --check-payees -> 1
+__ERROR__
+While parsing file "$FILE", line 13:
+While parsing transaction:
+> 2024/01/20 Unknown Payee
+Error: Unknown payee 'Unknown Payee'
+end test

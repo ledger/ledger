@@ -1,0 +1,10 @@
+; Test post_t::lookup for parent keyword
+; Targets: post.cc line 471 (parent -> get_xact)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(parent.payee) %(amount)\n" Expenses
+Store $50.00
+end test

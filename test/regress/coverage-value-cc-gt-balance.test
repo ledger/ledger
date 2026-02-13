@@ -1,0 +1,25 @@
+; Test value.cc: is_greater_than with BALANCE types (lines 1059-1075)
+; Exercises BALANCE > INTEGER, BALANCE > AMOUNT, BALANCE > BALANCE
+
+2024/01/15 Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport  $30.00
+    Assets:Checking
+
+; Sorting descending triggers is_greater_than in sort_value_is_less_than (line 2155)
+test bal --sort "-display_total" --flat --columns 80
+              $50.00  Expenses:Food
+              $30.00  Expenses:Transport
+             $-80.00  Assets:Checking
+--------------------
+                   0
+end test
+
+; AMOUNT > INTEGER in register format (line 1048)
+test reg --format "%(amount > 35 ? \"high\" : \"low\")\n" Expenses
+high
+low
+end test

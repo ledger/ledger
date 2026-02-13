@@ -1,0 +1,30 @@
+; Test value.cc: is_greater_than and is_less_than SEQUENCE paths
+; Exercises SEQUENCE comparison (lines 1107-1133 for >, 966-992 for <)
+; Multiple sort keys create sort_value lists compared element by element
+
+2024/01/15 Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport  $30.00
+    Assets:Checking
+
+2024/01/25 Restaurant
+    Expenses:Food:Dining  $25.00
+    Assets:Checking
+
+; Use sorting with multiple keys to exercise sequence comparison in sort
+; Multiple sort keys create sort_value lists that are compared element by element
+test reg --sort "account, amount" Expenses --columns 80
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+24-Jan-25 Restaurant            Expenses:Food:Dining         $25.00       $75.00
+24-Jan-20 Gas Station           Expenses:Transport           $30.00      $105.00
+end test
+
+; Sort by payee then date to exercise multiple comparisons
+test reg --sort "payee, date" Expenses --columns 80
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $30.00
+24-Jan-25 Restaurant            Expenses:Food:Dining         $25.00       $55.00
+24-Jan-15 Store                 Expenses:Food                $50.00      $105.00
+end test

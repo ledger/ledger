@@ -1,0 +1,63 @@
+; Test value.cc: INTEGER type arithmetic error paths
+; Uses to_int() to create actual INTEGER type values (not AMOUNT)
+; Exercises lines 387-389, 523-525, 622-624, 686-688
+
+; INTEGER + STRING error (operator+= INTEGER default break, lines 387-389)
+test eval "to_int(5) + \"text\"" -> 1
+__ERROR__
+While evaluating value expression:
+  (to_int(5) + "text")
+  ^^^^^^^^^^^^^^^^^^^^
+While adding text to 5:
+Error: Cannot add a string to an integer
+end test
+
+; INTEGER - STRING error (operator-= INTEGER default break, lines 523-525)
+test eval "to_int(5) - \"text\"" -> 1
+__ERROR__
+While evaluating value expression:
+  (to_int(5) - "text")
+  ^^^^^^^^^^^^^^^^^^^^
+While subtracting text from 5:
+Error: Cannot subtract a string from an integer
+end test
+
+; INTEGER * STRING error (operator*= INTEGER default break, lines 622-624)
+test eval "to_int(5) * \"text\"" -> 1
+__ERROR__
+While evaluating value expression:
+  (to_int(5) * "text")
+  ^^^^^^^^^^^^^^^^^^^^
+While multiplying text with 5:
+Error: Cannot multiply an integer with a string
+end test
+
+; INTEGER / STRING error (operator/= INTEGER default break, lines 686-688)
+test eval "to_int(5) / \"text\"" -> 1
+__ERROR__
+While evaluating value expression:
+  (to_int(5) / "text")
+  ^^^^^^^^^^^^^^^^^^^^
+While dividing 5 by text:
+Error: Cannot divide an integer by a string
+end test
+
+; INTEGER == STRING error (is_equal_to INTEGER default break, lines 780-782)
+test eval "to_int(5) == \"text\"" -> 1
+__ERROR__
+While evaluating value expression:
+  (to_int(5) == "text")
+  ^^^^^^^^^^^^^^^^^^^^^
+While comparing equality of 5 and text:
+Error: Cannot compare an integer to a string
+end test
+
+; INTEGER < STRING error (is_less_than INTEGER default break, lines 896-898)
+test eval "to_int(5) < \"text\"" -> 1
+__ERROR__
+While evaluating value expression:
+  (to_int(5) < "text")
+  ^^^^^^^^^^^^^^^^^^^^
+While comparing if 5 is less than text:
+Error: Cannot compare an integer to a string
+end test

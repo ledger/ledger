@@ -1,0 +1,8 @@
+; Test --output with --pager (exercises report.cc normalize_options output_ + pager off path)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test bal --pager cat --output /dev/null
+end test

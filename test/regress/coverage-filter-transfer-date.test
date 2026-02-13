@@ -1,0 +1,19 @@
+; Test transfer_details filter with --pivot for payee-based grouping
+; Covers transfer_details::operator() with SET_ACCOUNT element
+
+2024/01/15 Grocery Store
+    ; Payee: Market
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    ; Payee: Shell
+    Expenses:Gas               $35.00
+    Assets:Checking
+
+test reg --pivot Payee
+24-Jan-15 Market                Pa:Marke:Expenses:Food       $50.00       $50.00
+24-Jan-15 Market                Pa:Mark:Asset:Checking      $-50.00            0
+24-Jan-20 Shell                 Pay:Shell:Expenses:Gas       $35.00       $35.00
+24-Jan-20 Shell                 Pa:She:Assets:Checking      $-35.00            0
+end test

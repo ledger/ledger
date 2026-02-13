@@ -1,0 +1,10 @@
+; Test %% literal percent in format (exercises format.cc %% STRING path)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(account) 100%%\n"
+Expenses:Food 100%
+Assets:Checking 100%
+end test

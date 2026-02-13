@@ -1,0 +1,56 @@
+; Test mask.h: mask pattern matching and comparison operators
+; Exercises mask_t copy constructor, assignment, destructor, match, str
+; Targets: mask.h lines 64-66, 74-84, 88-102
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries  $50.00
+    Assets:Checking
+
+2024/01/18 Restaurant
+    Expenses:Food:Dining    $35.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport:Gas   $30.00
+    Assets:Checking
+
+2024/01/25 Electric Company
+    Expenses:Utilities:Electric  $120.00
+    Assets:Checking
+
+; Test regex matching on payee (exercises mask_t construction and match)
+test reg --limit "payee =~ /Store/" --columns 80
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+; Test regex matching on account (exercises mask_t match path)
+test reg --limit "account =~ /Food/" --columns 80
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+24-Jan-18 Restaurant            Expenses:Food:Dining         $35.00       $85.00
+end test
+
+; Test negated regex match (exercises mask_t match + negation)
+test reg --limit "not (payee =~ /Station/)" Expenses --columns 80
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+24-Jan-18 Restaurant            Expenses:Food:Dining         $35.00       $85.00
+24-Jan-25 Electric Company      Exp:Utilities:Electric      $120.00      $205.00
+end test
+
+; Test display filter with regex (exercises mask_t through display)
+test reg --display "commodity(amount) =~ /\\$/" --columns 80
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-18 Restaurant            Expenses:Food:Dining         $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+24-Jan-20 Gas Station           Expenses:Transport:Gas       $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+24-Jan-25 Electric Company      Exp:Utilities:Electric      $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+end test
+
+; Test payee query (exercises mask_t for payee matching)
+test reg payee "Grocery" --columns 80
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

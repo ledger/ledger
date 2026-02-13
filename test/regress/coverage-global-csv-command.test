@@ -1,0 +1,15 @@
+; Test global.cc: csv command
+; Exercises look_for_command and csv report execution
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test csv Expenses
+"2024/01/01","","Grocery Store","Expenses:Food","$","25","",""
+"2024/01/02","","Gas Station","Expenses:Transport","$","30","",""
+end test

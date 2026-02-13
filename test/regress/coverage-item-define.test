@@ -1,0 +1,13 @@
+; Test item_t::define with tag metadata
+; Targets: item.cc lines 390-393 (define via set_tag)
+
+define my_tag(val) = val
+
+2024/01/15 * Store
+    ; MyCustom:: 42 + 1
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(tag(\"MyCustom\")) %(account)\n" Expenses
+43 Expenses:Food
+end test

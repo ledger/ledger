@@ -1,0 +1,48 @@
+; Coverage test for select.cc: FROM postings path and WHERE clause
+; Exercises: FROM postings (lines 353-356), WHERE clause (line 376),
+;   payee-only column (lines 268-280), account-only column (lines 281-299)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+2024/01/25 Restaurant
+    Expenses:Food    $40.00
+    Assets:Checking
+
+test select date, payee, account, amount from postings --columns=80
+24-Jan-15 Grocery Store            Expenses:Food                         $50.00
+24-Jan-15 Grocery Store            Assets:Checking                      $-50.00
+24-Jan-20 Gas Station              Expenses:Transport                    $30.00
+24-Jan-20 Gas Station              Assets:Checking                      $-30.00
+24-Jan-25 Restaurant               Expenses:Food                         $40.00
+24-Jan-25 Restaurant               Assets:Checking                      $-40.00
+end test
+
+test select date, payee, amount from posts where 'amount > 0' --columns=80
+24-Jan-15 Grocery Store                                                  $50.00
+24-Jan-20 Gas Station                                                    $30.00
+24-Jan-25 Restaurant                                                     $40.00
+end test
+
+test select payee, amount from posts --columns=80
+Grocery Store                                                            $50.00
+Grocery Store                                                           $-50.00
+Gas Station                                                              $30.00
+Gas Station                                                             $-30.00
+Restaurant                                                               $40.00
+Restaurant                                                              $-40.00
+end test
+
+test select account, amount from posts --columns=80
+Expenses:Food                                                            $50.00
+Assets:Checking                                                         $-50.00
+Expenses:Transport                                                       $30.00
+Assets:Checking                                                         $-30.00
+Expenses:Food                                                            $40.00
+Assets:Checking                                                         $-40.00
+end test

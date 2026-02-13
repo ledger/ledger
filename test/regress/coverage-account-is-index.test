@@ -1,0 +1,13 @@
+; Coverage: account.cc lines 443-444: is_index lookup (self posts count)
+
+2024/01/15 * Grocery
+    Expenses:Food  $50.00
+    Assets:Checking
+
+2024/02/15 * Restaurant
+    Expenses:Food  $30.00
+    Assets:Checking
+
+test bal --format "%(is_index)\n" Expenses:Food --args-only --columns=80
+2
+end test

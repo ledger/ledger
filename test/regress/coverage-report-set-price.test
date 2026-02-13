@@ -1,0 +1,10 @@
+; Test set_commodity_price function (exercises report.cc fn_set_commodity_price)
+
+P 2024/01/01 AAPL $150.00
+
+2024/01/15 * Buy Stock
+    Assets:Brokerage          10 AAPL @ $150.00
+    Assets:Checking          $-1500.00
+
+test eval "set_commodity_price(1 AAPL, today, $200)"
+end test

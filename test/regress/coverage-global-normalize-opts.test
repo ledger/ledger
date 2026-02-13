@@ -1,0 +1,27 @@
+; Test global.cc: normalize_options for different command verbs
+; Exercises execute_command -> normalize_options (line 229)
+
+2024/01/01 Test1
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/02/01 Test2
+    Expenses:Rent    $500.00
+    Assets:Checking
+
+test bal --flat --no-total Expenses
+              $25.00  Expenses:Food
+             $500.00  Expenses:Rent
+end test
+
+test reg --date-format "%Y-%m-%d" Expenses
+2024-01-01 Test1                Expenses:Food                $25.00       $25.00
+2024-02-01 Test2                Expenses:Rent               $500.00      $525.00
+end test
+
+test bal --depth 1
+            $-525.00  Assets
+             $525.00  Expenses
+--------------------
+                   0
+end test

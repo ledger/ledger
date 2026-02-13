@@ -1,0 +1,10 @@
+; Test %$ field reference error (exercises format.cc line 263 error path)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format '%(account) %$1\n' -> 1
+__ERROR__
+Error: Prior field reference, but no template
+end test

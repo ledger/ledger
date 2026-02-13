@@ -1,0 +1,26 @@
+; Coverage: journal.cc lines 229-235: validate_payee with CHECK_ERROR
+; Using --pedantic --check-payees to trigger error for unknown payees
+
+commodity $
+    format $1,000.00
+
+account Expenses:Food
+account Assets:Checking
+
+payee Known Store
+
+2024/01/15 Known Store
+    Expenses:Food       $50.00
+    Assets:Checking
+
+2024/01/20 Unknown Store
+    Expenses:Food       $35.00
+    Assets:Checking
+
+test bal --pedantic --check-payees -> 1
+__ERROR__
+While parsing file "$FILE", line 16:
+While parsing transaction:
+> 2024/01/20 Unknown Store
+Error: Unknown payee 'Unknown Store'
+end test

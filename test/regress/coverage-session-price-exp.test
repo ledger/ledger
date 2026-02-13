@@ -1,0 +1,12 @@
+; Test session.cc: --price-exp option
+; Exercises lookup_option case 'p' -> price_exp_ (line 332)
+
+P 2024/01/01 AAPL $150.00
+
+2024/01/15 Buy Stock
+    Assets:Brokerage    10 AAPL
+    Assets:Checking    $-1500.00
+
+test bal --price-exp 1440000 --market Assets:Brokerage
+            $1500.00  Assets:Brokerage
+end test

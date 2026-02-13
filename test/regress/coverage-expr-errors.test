@@ -1,0 +1,34 @@
+; Test expr.cc/op.cc: expression error paths
+; Exercises: unknown identifier error (op.cc line 230),
+;   real_calc error handling (expr.cc lines 137-171),
+;   op_context generation (op.cc lines 951-966)
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --display "undefined_var" -> 1
+__ERROR__
+While evaluating value expression:
+  undefined_var
+  ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 7:
+>     Expenses:Food    $50.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+test eval "1 +" -> 1
+__ERROR__
+While parsing value expression:
+  1 +
+
+Error: + operator not followed by argument
+end test
+
+test eval "(1 + 2" -> 1
+__ERROR__
+While parsing value expression:
+  (1 + 2
+
+Error: Invalid token '<end of input>' (wanted ')')
+end test

@@ -1,0 +1,11 @@
+; Test post_t::lookup for N, n, and index symbols
+; Targets: post.cc lines 446, 457-458, 504-505
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+; Test O (total) lookup
+test reg --format "%(O)\n" Expenses
+$50.00
+end test

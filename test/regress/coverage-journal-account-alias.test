@@ -1,0 +1,22 @@
+; Coverage: journal.cc expand_aliases() account alias expansion
+; Tests both full account alias and partial (first component) alias
+
+alias Food=Expenses:Food
+alias Auto=Expenses:Auto
+
+2024/01/15 Store
+    Food    $50.00
+    Assets:Checking
+
+2024/01/20 Station
+    Auto:Gas    $35.00
+    Assets:Checking
+
+test bal --columns=80
+             $-85.00  Assets:Checking
+              $85.00  Expenses
+              $35.00    Auto:Gas
+              $50.00    Food
+--------------------
+                   0
+end test

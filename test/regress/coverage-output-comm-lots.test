@@ -1,0 +1,10 @@
+; Test commodities with --lot-prices (exercises output.cc annotated_commodity path in report_commodities)
+
+2024/01/15 * Buy Stock
+    Assets:Brokerage          10 AAPL {$150.00}
+    Assets:Checking          $-1500.00
+
+test commodities --lot-prices
+$
+AAPL {$150.00}
+end test

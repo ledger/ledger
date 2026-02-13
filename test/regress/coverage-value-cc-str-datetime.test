@@ -1,0 +1,12 @@
+; Test value.cc: in_place_cast STRING -> DATETIME path (line 1327-1328)
+; Exercises the conversion from string to datetime via to_datetime function
+
+; STRING -> DATETIME conversion (line 1327: set_datetime(parse_datetime(as_string())))
+test eval "to_datetime(\"2024/01/15 10:00:00\")"
+2024/01/15 10:00:00
+end test
+
+; Another datetime conversion
+test eval "to_datetime(\"2024/12/25 23:59:59\")"
+2024/12/25 23:59:59
+end test

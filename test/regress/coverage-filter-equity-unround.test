@@ -1,0 +1,18 @@
+; Test posts_as_equity filter (covers filters.h posts_as_equity class)
+; Exercises the equity command which generates opening balances
+
+2024/01/15 Buy Stock
+    Assets:Brokerage         10 AAPL @ $150.00
+    Assets:Checking       $-1500.00
+
+2024/02/15 Sell Stock
+    Assets:Brokerage         -5 AAPL @ $160.00
+    Assets:Checking        $800.00
+
+test equity
+2024/02/15 Opening Balances
+    Assets:Brokerage                          5 AAPL
+    Assets:Checking                         $-700.00
+    Equity:Opening Balances                  $700.00
+    Equity:Opening Balances                  -5 AAPL
+end test

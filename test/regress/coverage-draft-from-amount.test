@@ -1,0 +1,12 @@
+; Test draft.cc with from keyword and explicit amount (covers draft.cc lines 437-439)
+; When 'from' is used with an amount, the amount should be negated
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test xact 2024/03/01 Grocery to Food '$30' from Checking '$30'
+2024/03/01 Grocery Store
+    Expenses:Food                             $30.00
+    Assets:Checking
+end test

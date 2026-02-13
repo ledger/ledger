@@ -1,0 +1,64 @@
+; Test determine_when with various unit+ago/hence combinations
+; (exercises determine_when in times.cc: lines 700-898)
+; Tests TOK_INT with TOK_YEAR, TOK_QUARTER, TOK_WEEK, TOK_DAY + TOK_AGO/TOK_HENCE
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/03/20 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/06/10 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+2024/08/05 Payee D
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+2024/11/15 Payee E
+    Expenses:Entertainment    $200.00
+    Assets:Checking
+
+test reg --now 2025/06/15 --period "since 1 year ago"
+24-Aug-05 Payee D               Expenses:Utilities          $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+24-Nov-15 Payee E               Expenses:Entertainment      $200.00      $200.00
+                                Assets:Checking            $-200.00            0
+end test
+
+test reg --now 2024/09/15 --period "since 2 quarters ago"
+24-Mar-20 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+24-Jun-10 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+24-Aug-05 Payee D               Expenses:Utilities          $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+24-Nov-15 Payee E               Expenses:Entertainment      $200.00      $200.00
+                                Assets:Checking            $-200.00            0
+end test
+
+test reg --now 2024/01/29 --period "since 2 weeks ago"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Mar-20 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+24-Jun-10 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+24-Aug-05 Payee D               Expenses:Utilities          $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+24-Nov-15 Payee E               Expenses:Entertainment      $200.00      $200.00
+                                Assets:Checking            $-200.00            0
+end test
+
+test reg --now 2024/01/01 --period "until 3 weeks hence"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --now 2024/01/05 --period "until 11 days hence"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

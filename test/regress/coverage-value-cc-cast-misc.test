@@ -1,0 +1,42 @@
+; Test value.cc: in_place_cast and type conversion paths
+; Exercises less commonly covered conversion paths
+
+2024/01/15 Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; Test AMOUNT -> STRING via string concatenation (operator+= STRING path)
+; When left is STRING and right is AMOUNT, val.to_string() at line 313 is called
+test reg --format "%(\"Balance: \" + display_amount)\n" Expenses
+Balance: $50.00
+end test
+
+; Test STRING + STRING (operator+= STRING path, line 311)
+test eval "\"hello\" + \" world\""
+hello world
+end test
+
+; Test STRING + INTEGER via to_string (line 313)
+test eval "\"count: \" + 5"
+count: 5
+end test
+
+; Test COMMODITY -> STRING cast (in_place_cast line 1298)
+; Commodity concatenated with string triggers COMMODITY -> STRING conversion
+test reg --format "%(commodity + \" is the commodity\")\n" Expenses
+$ is the commodity
+end test
+
+; Test string * integer (operator*= STRING path, line 595-600)
+test eval "\"ab\" * 3"
+ababab
+end test
+
+; Test string equality
+test eval "\"hello\" == \"hello\""
+1
+end test
+
+test eval "\"hello\" == \"world\""
+0
+end test

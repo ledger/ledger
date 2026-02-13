@@ -1,0 +1,13 @@
+; Test get_tag with mask and value_mask both matching
+; Targets: item.cc lines 85-97 (get_tag with mask and optional value_mask)
+
+2024/01/15 * Store
+    ; Category: food
+    ; Type: organic
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --limit "tag(/Categ/, /foo/)" --format "%(tag(/Category/)) %(amount)\n"
+food $50.00
+food $-50.00
+end test

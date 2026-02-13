@@ -1,0 +1,30 @@
+; Test today/tomorrow/yesterday as standalone period expressions
+; Exercises handle_simple_period_token (lines 1095-1111)
+; These are different from the determine_when TOK_TODAY/etc cases
+
+2024/01/14 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/15 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/01/16 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+test reg --now 2024/01/15 --period "today"
+24-Jan-15 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test
+
+test reg --now 2024/01/15 --period "tomorrow"
+24-Jan-16 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+end test
+
+test reg --now 2024/01/15 --period "yesterday"
+24-Jan-14 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

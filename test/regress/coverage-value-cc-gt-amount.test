@@ -1,0 +1,34 @@
+; Test value.cc: is_greater_than AMOUNT paths (lines 1046-1056)
+; Exercises AMOUNT > INTEGER (line 1048), AMOUNT > AMOUNT (line 1050)
+; Also INTEGER > AMOUNT (line 1037)
+
+2024/01/15 Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport  $30.00
+    Assets:Checking
+
+; AMOUNT > INTEGER (line 1048): as_amount() > val.as_long()
+test reg --format "%(amount > 0 ? \"positive\" : \"negative\")\n" Expenses
+positive
+positive
+end test
+
+test reg --format "%(amount > 100 ? \"over\" : \"under\")\n" Expenses
+under
+under
+end test
+
+; AMOUNT > AMOUNT (line 1050): as_amount() > val.as_amount()
+test reg --format "%(amount > 40 ? \"high\" : \"low\")\n" Expenses
+high
+low
+end test
+
+; INTEGER > AMOUNT (line 1037): val.as_amount() < as_long()
+test reg --format "%(60 > amount ? \"under60\" : \"over60\")\n" Expenses
+under60
+under60
+end test

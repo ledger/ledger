@@ -1,0 +1,22 @@
+; Test draft template command with account masks (covers draft.cc lines 67-77)
+; Exercises the template dump function with account masks in postings
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test template on 2024/03/01 Grocery to Food '$30' from Checking
+--- Input arguments ---
+("on", "2024/03/01", "Grocery", "to", "Food", "$30", "from", "Checking")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Grocery
+
+[Posting "to"]
+  Account mask: Food
+  Amount:       $30
+
+[Posting "from"]
+  Account mask: Checking
+end test

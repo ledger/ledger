@@ -1,0 +1,9 @@
+; Test global.cc: push precommand
+; Exercises PRECOMMAND lookup (lines 355-363) and push_command (line 360)
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test push -> 0
+end test

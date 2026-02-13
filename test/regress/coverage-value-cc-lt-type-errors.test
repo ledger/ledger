@@ -1,0 +1,71 @@
+; Test value.cc: is_less_than type mismatch break paths
+; Exercises break+throw paths in is_less_than (lines 874-998)
+
+2024/01/15 Purchase
+    Expenses:Both    $50.00
+    Expenses:Both    30 EUR
+    Assets:Checking  $-50.00
+    Assets:Savings  -30 EUR
+
+; BOOLEAN < AMOUNT error (line 874-875 break)
+test eval "true < 5" -> 1
+__ERROR__
+While evaluating value expression:
+  (true < 5)
+  ^^^^^^^^^^
+While comparing if 1 is less than 5:
+Error: Cannot compare a boolean to an amount
+end test
+
+; DATE < AMOUNT error (line 885 break)
+test eval "[2024/01/15] < 5" -> 1
+__ERROR__
+While evaluating value expression:
+  ([2024/01/15] < 5)
+  ^^^^^^^^^^^^^^^^^^
+While comparing if 2024/01/15 is less than 5:
+Error: Cannot compare a date to an amount
+end test
+
+; BALANCE < STRING error (line 932-934 break)
+; Need to get a balance value compared to a string
+; This is harder to trigger; using AMOUNT < BOOLEAN instead
+test eval "5 < true" -> 1
+__ERROR__
+While evaluating value expression:
+  (5 < true)
+  ^^^^^^^^^^
+While comparing if 5 is less than 1:
+Error: Cannot compare an amount to a boolean
+end test
+
+; STRING < AMOUNT error (line 946/961-963 break)
+test eval "\"text\" < 5" -> 1
+__ERROR__
+While evaluating value expression:
+  ("text" < 5)
+  ^^^^^^^^^^^^
+While comparing if text is less than 5:
+Error: Cannot compare a string to an amount
+end test
+
+; DATETIME < AMOUNT error (line 880 break)
+test eval "to_datetime(\"2024/01/15 10:00:00\") < 5" -> 1
+__ERROR__
+While evaluating value expression:
+  (to_datetime("2024/01/15 10:00:00") < 5)
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+While comparing if 2024/01/15 10:00:00 is less than 5:
+Error: Cannot compare a date/time to an amount
+end test
+
+; BALANCE < STRING error (line 932-934 break)
+test bal "Expenses:Both" --format "%(display_total < \"text\")\n" --no-total -> 1
+__ERROR__
+While evaluating value expression:
+  (display_total < "text")
+  ^^^^^^^^^^^^^^^^^^^^^^^^
+While comparing if $50.00
+30 EUR is less than text:
+Error: Cannot compare a balance to a string
+end test

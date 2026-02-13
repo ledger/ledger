@@ -1,0 +1,13 @@
+; Test auto xact with %(format) in account name via format_t
+; Targets: xact.cc lines 867-874 (%(expr) format in account name)
+
+= /Expenses/
+    (Budget:%(payee))         0.10
+
+2024/01/15 Grocery
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg Budget --columns 80
+24-Jan-15 Grocery               (Budget:Grocery)              $5.00        $5.00
+end test

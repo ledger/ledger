@@ -1,0 +1,10 @@
+; Test format with width on date shortcut (exercises format.cc string element width path)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format '%20D\n'
+          2024/01/15
+          2024/01/15
+end test

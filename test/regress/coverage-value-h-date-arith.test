@@ -1,0 +1,40 @@
+; Test value.h: date and datetime arithmetic operations
+; Exercises value_t::operator+= and -= with DATE/DATETIME + INTEGER/AMOUNT
+; Targets: value.cc lines 340-367 (date+=), 480-505 (date-=)
+
+2024/01/15 Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/25 Gas Station
+    Expenses:Transport  $30.00
+    Assets:Checking
+
+; Test date + integer (exercises DATE += INTEGER path)
+test reg --format "%(date + 5)\n" Expenses
+2024/01/20
+2024/01/30
+end test
+
+; Test date - integer (exercises DATE -= INTEGER path)
+test reg --format "%(date - 3)\n" Expenses
+2024/01/12
+2024/01/22
+end test
+
+; Test date + 0 (boundary case)
+test reg --format "%(date + 0)\n" Expenses
+2024/01/15
+2024/01/25
+end test
+
+; Test date - large value crossing month boundary
+test reg --format "%(date - 15)\n" Expenses:Food
+2023/12/31
+end test
+
+; Test date comparisons with calculated dates
+test reg --display "(date + 10) > [2024/01/30]" --columns 80
+24-Jan-25 Gas Station           Expenses:Transport           $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test

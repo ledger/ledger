@@ -1,0 +1,34 @@
+; Test token.cc: date literal, string literal, and misc token parsing
+; Exercises: date literal [YYYY/MM/DD] parsing (lines 194-212),
+;   string literals in single/double quotes (lines 214-227),
+;   dot operator DOT (lines 359-362), comma COMMA (lines 364-367),
+;   semicolon SEMI (lines 369-372)
+
+test eval "[2024/01/15]"
+2024/01/15
+end test
+
+test eval "[2024/01/15] < [2024/06/01]"
+1
+end test
+
+test eval "x = 10; y = 20; x + y"
+30
+end test
+
+test eval '"hello" + " " + "world"'
+hello world
+end test
+
+2024/01/15 Test Transaction
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/06/01 Later Transaction
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test reg --limit "date >= [2024/06/01]" --columns=80
+24-Jun-01 Later Transaction     Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test

@@ -1,0 +1,10 @@
+; Test format backslash escape sequences (exercises format.cc \\ parsing)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format '%(account)\\%(account)\n'
+Expenses:Food\Expenses:Food
+Assets:Checking\Assets:Checking
+end test

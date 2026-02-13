@@ -1,0 +1,10 @@
+; Test filename, filebase, filepath lookups
+; Targets: item.cc lines 302-321 (pathname getters)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(filebase) %(account)\n" Expenses
+coverage-item-filename.test Expenses:Food
+end test

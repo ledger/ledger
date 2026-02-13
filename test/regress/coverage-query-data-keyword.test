@@ -1,0 +1,16 @@
+; Test query parser with 'data' keyword for metadata matching (covers query.cc line 226)
+; The 'data' keyword should work the same as 'tag' and 'meta' keywords
+
+2024/01/15 Grocery Store
+    ; Type: food
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Gas               $35.00
+    Assets:Checking
+
+test reg data Type
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

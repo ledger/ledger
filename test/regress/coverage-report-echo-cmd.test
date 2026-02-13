@@ -1,0 +1,9 @@
+; Test echo command (exercises report.cc echo_command)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test echo "Hello from ledger"
+Hello from ledger
+end test

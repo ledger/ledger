@@ -1,0 +1,47 @@
+; Test op.cc/token.cc: if/else keyword syntax and ternary operator
+; Exercises: KW_ELSE token (token.cc lines 69-72),
+;   O_QUERY/O_COLON calc paths (op.cc lines 370-377),
+;   ternary operator (? :), if/else keyword form
+
+test eval "5 ? 10 : 20"
+10
+end test
+
+test eval "0 ? 10 : 20"
+20
+end test
+
+test eval "10 if true else 20"
+10
+end test
+
+test eval "10 if false else 20"
+20
+end test
+
+test eval "10 if true"
+10
+end test
+
+test eval "(1 ? 2 : 3) + (0 ? 4 : 5)"
+7
+end test
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Refund
+    Expenses:Food    $-25.00
+    Assets:Checking
+
+test reg --format '%(amount > 0 ? "DEBIT" : "CREDIT") %(account)\n'
+DEBIT Expenses:Food
+CREDIT Assets:Checking
+CREDIT Expenses:Food
+DEBIT Assets:Checking
+end test
+
+test reg --amount "amount if amount > 0" Expenses --columns=80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+end test

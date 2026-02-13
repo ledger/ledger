@@ -1,0 +1,19 @@
+; Test token.cc: single & and | operators (without doubling)
+; Exercises: single '&' as KW_AND (lines 171-172),
+;            single '|' as KW_OR (lines 182-183)
+
+test eval "true & false"
+0
+end test
+
+test eval "true & true"
+1
+end test
+
+test eval "false | true"
+1
+end test
+
+test eval "false | false"
+0
+end test

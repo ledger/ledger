@@ -1,0 +1,12 @@
+; Test get_comment with long note (> 15 chars) for newline formatting
+; Targets: item.cc lines 364-387 (get_comment with long notes)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+        ; This is a very long note that has more than fifteen characters
+    Assets:Checking
+
+test reg --format "comment:%(comment):\n" Expenses
+comment:
+    ; This is a very long note that has more than fifteen characters:
+end test

@@ -1,0 +1,9 @@
+; Test format_date and format_datetime with custom formats (exercises report.cc fn_format_date/fn_format_datetime)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test eval "format_date(today, \"%Y-%m-%d\")"
+2026-02-13
+end test

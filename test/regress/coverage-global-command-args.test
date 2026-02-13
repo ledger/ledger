@@ -1,0 +1,25 @@
+; Test global.cc: command with multiple arguments
+; Exercises execute_command argument passing (lines 255-257)
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+2024/01/03 Landlord
+    Expenses:Rent    $500.00
+    Assets:Checking
+
+test bal --flat Expenses:Food Expenses:Transport
+              $25.00  Expenses:Food
+              $30.00  Expenses:Transport
+--------------------
+              $55.00
+end test
+
+test reg Expenses:Rent
+24-Jan-03 Landlord              Expenses:Rent               $500.00      $500.00
+end test

@@ -1,0 +1,13 @@
+; Test append_note with multiple note lines
+; Targets: item.cc lines 204-213 (append_note with existing note)
+
+2024/01/15 * Store
+    ; First line
+    ; Second line
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(note)\n" Expenses
+ First line
+ Second line
+end test

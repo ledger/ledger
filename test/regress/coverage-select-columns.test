@@ -1,0 +1,63 @@
+; Coverage test for select.cc: various column types and width adjustments
+; Exercises: total column (lines 193-194, 300-319), aux_date column (lines 183-184),
+;   meta/unknown ident (lines 195-196, 330-341), column width expansion (lines 201-213),
+;   column width shrinking (lines 216-231), no-from default path (lines 395-398)
+
+2024/01/15=2024/01/16 Grocery Store
+    ; Tag: food
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20=2024/01/21 Gas Station
+    ; Tag: fuel
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test select date, total from posts --columns=80
+24-Jan-15       $50.00
+24-Jan-15            0
+24-Jan-20       $30.00
+24-Jan-20            0
+end test
+
+test select aux_date, amount from posts --columns=80
+24-Jan-16       $50.00
+24-Jan-16      $-50.00
+24-Jan-21       $30.00
+24-Jan-21      $-30.00
+end test
+
+test select date, note, amount from posts --columns=80
+24-Jan-15  Tag: food       $50.00
+24-Jan-15  Tag: food      $-50.00
+24-Jan-20  Tag: fuel       $30.00
+24-Jan-20  Tag: fuel      $-30.00
+end test
+
+test select date, amount --columns=80
+24-Jan-15       $50.00
+24-Jan-15      $-50.00
+24-Jan-20       $30.00
+24-Jan-20      $-30.00
+end test
+
+test select date, payee, account, amount, total from posts --columns=200
+24-Jan-15 Grocery Store                                            Expenses:Food                                                                                 $50.00                          $50.00
+24-Jan-15 Grocery Store                                            Assets:Checking                                                                              $-50.00                               0
+24-Jan-20 Gas Station                                              Expenses:Transport                                                                            $30.00                          $30.00
+24-Jan-20 Gas Station                                              Assets:Checking                                                                              $-30.00                               0
+end test
+
+test select date, payee, account, amount, total from posts --columns=60
+24-Jan-15 Grocery Store  Expenses:Food     $50.00    $50.00
+24-Jan-15 Grocery Store  Asset:Checking   $-50.00         0
+24-Jan-20 Gas Station    Expe:Transport    $30.00    $30.00
+24-Jan-20 Gas Station    Asset:Checking   $-30.00         0
+end test
+
+test select date, payee, account, amount, total from posts --columns=40
+24-Jan-15 Grocer.. ..Food $50.00 $50.00
+24-Jan-15 Grocer.. ..king $-50.00      0
+24-Jan-20 Gas St.. ..port $30.00 $30.00
+24-Jan-20 Gas St.. ..king $-30.00      0
+end test

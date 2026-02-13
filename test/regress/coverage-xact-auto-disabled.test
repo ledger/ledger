@@ -1,0 +1,14 @@
+; Test disabled auto transactions (enabled=false path)
+; Targets: xact.cc lines 735-736 (early return when !enabled)
+
+= /Expenses/
+    (Budget)                  0.10
+
+2024/01/15 Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+; Using --now-rewrite to avoid auto transactions
+test bal Expenses --columns 80
+              $50.00  Expenses:Food
+end test

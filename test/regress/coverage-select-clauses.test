@@ -1,0 +1,80 @@
+; Coverage test for select.cc: display, collect, group by, style clauses
+; Exercises: DISPLAY clause (line 379), COLLECT clause (line 381),
+;   GROUP BY clause (line 383), STYLE clause (lines 385-389)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+2024/01/25 Restaurant
+    Expenses:Food    $40.00
+    Assets:Checking
+
+test select date, payee, account, amount from posts display 'amount > 0' --columns=80
+24-Jan-15 Grocery Store            Expenses:Food                         $50.00
+24-Jan-20 Gas Station              Expenses:Transport                    $30.00
+24-Jan-25 Restaurant               Expenses:Food                         $40.00
+end test
+
+test select date, amount from posts collect amount --columns=80
+24-Jan-15       $50.00
+24-Jan-15      $-50.00
+24-Jan-20       $30.00
+24-Jan-20      $-30.00
+24-Jan-25       $40.00
+24-Jan-25      $-40.00
+end test
+
+test select date, amount from posts group by payee --columns=80
+Gas Station
+24-Jan-20       $30.00
+24-Jan-20      $-30.00
+
+Grocery Store
+24-Jan-15       $50.00
+24-Jan-15      $-50.00
+
+Restaurant
+24-Jan-25       $40.00
+24-Jan-25      $-40.00
+end test
+
+test select date, amount from posts style xml --columns=80
+24-Jan-15       $50.00
+24-Jan-15      $-50.00
+24-Jan-20       $30.00
+24-Jan-20      $-30.00
+24-Jan-25       $40.00
+24-Jan-25      $-40.00
+end test
+
+test select date, amount from posts style json --columns=80
+24-Jan-15       $50.00
+24-Jan-15      $-50.00
+24-Jan-20       $30.00
+24-Jan-20      $-30.00
+24-Jan-25       $40.00
+24-Jan-25      $-40.00
+end test
+
+test select date, amount from posts style csv --columns=80
+24-Jan-15       $50.00
+24-Jan-15      $-50.00
+24-Jan-20       $30.00
+24-Jan-20      $-30.00
+24-Jan-25       $40.00
+24-Jan-25      $-40.00
+end test
+
+test select date, amount from posts style emacs --columns=80
+24-Jan-15       $50.00
+24-Jan-15      $-50.00
+24-Jan-20       $30.00
+24-Jan-20      $-30.00
+24-Jan-25       $40.00
+24-Jan-25      $-40.00
+end test

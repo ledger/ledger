@@ -1,0 +1,22 @@
+; Test global.cc: --options flag exercises report_options() (lines 287-308)
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test -f "$FILE" bal --options --columns 80 -> 0
+===============================================================================
+[Global scope options]
+             --args-only                                             --args-only
+
+[Session scope options]
+                  --file = $FILE-f
+
+[Report scope options]
+               --columns = 80                                        --columns
+===============================================================================
+             $-25.00  Assets:Checking
+              $25.00  Expenses:Food
+--------------------
+                   0
+end test

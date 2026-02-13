@@ -1,0 +1,12 @@
+; Test item_t::lookup for has_meta keyword
+; Targets: item.cc lines 453-454 (has_meta -> has_tag)
+
+2024/01/15 * Store
+    ; Category: food
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --limit "has_meta(\"Category\")" --columns 80
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

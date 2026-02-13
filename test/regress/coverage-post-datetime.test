@@ -1,0 +1,10 @@
+; Test get_datetime function
+; Targets: post.cc lines 335-337 (get_datetime)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(datetime) %(account)\n" Expenses
+2024/01/15 00:00:00 Expenses:Food
+end test

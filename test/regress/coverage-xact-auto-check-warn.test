@@ -1,0 +1,14 @@
+; Test auto transaction check expression (warning path)
+; Targets: xact.cc lines 796-801 (check expr warning path)
+
+= /Expenses/
+    check amount < $1000
+    (Budget)                  0.10
+
+2024/01/15 Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg Budget --columns 80
+24-Jan-15 Store                 (Budget)                      $5.00        $5.00
+end test

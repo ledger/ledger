@@ -1,0 +1,25 @@
+; Coverage: journal.cc lines 144-161: register_account with CHECK_ERROR
+; Using --pedantic to trigger error for unknown accounts
+
+commodity $
+    format $1,000.00
+
+account Expenses:Food
+account Assets:Checking
+
+2024/01/15 Store
+    Expenses:Food       $50.00
+    Assets:Checking
+
+2024/01/20 Shop
+    Expenses:Unknown    $35.00
+    Assets:Checking
+
+test bal --pedantic -> 1
+__ERROR__
+While parsing file "$FILE", line 15:
+While parsing posting:
+  Expenses:Unknown    $35.00
+
+Error: Unknown account 'Expenses:Unknown'
+end test

@@ -1,0 +1,50 @@
+; Test value.h: sequence and collection operations
+; Exercises value_t push_back, push_front, pop_back, size, empty
+; Also exercises sequence iteration and sort with multiple sort keys
+; Targets: value.h lines 840-901, value.cc sequence operator paths
+
+2024/01/15 Store A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/18 Store B
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport  $30.00
+    Assets:Checking
+
+2024/01/22 Restaurant
+    Expenses:Food:Dining    $45.00
+    Assets:Checking
+
+; Test sorting with multiple keys (exercises sequence comparison)
+test reg --sort "account, amount" Expenses --columns 80
+24-Jan-18 Store B               Expenses:Food                $25.00       $25.00
+24-Jan-15 Store A               Expenses:Food                $50.00       $75.00
+24-Jan-22 Restaurant            Expenses:Food:Dining         $45.00      $120.00
+24-Jan-20 Gas Station           Expenses:Transport           $30.00      $150.00
+end test
+
+; Test sorting with multiple keys reversed
+test reg --sort "account, -amount" Expenses --columns 80
+24-Jan-15 Store A               Expenses:Food                $50.00       $50.00
+24-Jan-18 Store B               Expenses:Food                $25.00       $75.00
+24-Jan-22 Restaurant            Expenses:Food:Dining         $45.00      $120.00
+24-Jan-20 Gas Station           Expenses:Transport           $30.00      $150.00
+end test
+
+; Test sorting by payee (string sort, exercises string comparison)
+test reg --sort payee Expenses --columns 80
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $30.00
+24-Jan-22 Restaurant            Expenses:Food:Dining         $45.00       $75.00
+24-Jan-15 Store A               Expenses:Food                $50.00      $125.00
+24-Jan-18 Store B               Expenses:Food                $25.00      $150.00
+end test
+
+; Test head/tail limiting with sort
+test reg --sort amount --head 2 Expenses --columns 80
+24-Jan-18 Store B               Expenses:Food                $25.00       $25.00
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $55.00
+end test

@@ -1,0 +1,21 @@
+; Test value.cc: is_less_than BALANCE paths (lines 917-934)
+; Exercises BALANCE < INTEGER/AMOUNT with multi-commodity balances
+
+2024/01/15 Purchase
+    Expenses:Both    $50.00
+    Expenses:Both    30 EUR
+    Assets:Checking  $-50.00
+    Assets:Savings  -30 EUR
+
+; BALANCE < INTEGER where one amount >= threshold (line 924: return false)
+; Expenses:Both has balance of $50 + 30 EUR
+; $50 >= 40 triggers return false at line 924
+test bal "Expenses:Both" --format "%(display_total < 40 ? \"lt\" : \"gte\")\n" --no-total
+gte
+end test
+
+; BALANCE < INTEGER where all amounts < threshold (line 927: return !no_amounts)
+; Both $50 < 100 and 30 EUR < 100
+test bal "Expenses:Both" --format "%(display_total < 100 ? \"lt\" : \"gte\")\n" --no-total
+lt
+end test

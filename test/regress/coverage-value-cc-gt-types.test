@@ -1,0 +1,36 @@
+; Test value.cc: is_greater_than with AMOUNT, BALANCE, DATE types
+; Exercises lines 1033-1075 (INTEGER>AMOUNT, AMOUNT>INTEGER, AMOUNT>AMOUNT)
+; Also exercises BALANCE > INTEGER/AMOUNT paths (lines 1059-1075)
+
+2024/01/15 Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport  $30.00
+    Assets:Checking
+
+; AMOUNT > INTEGER (line 1048 - as_amount() > val.as_long())
+test reg --format "%(amount > 0 ? \"pos\" : \"neg\")\n" Expenses
+pos
+pos
+end test
+
+; BALANCE > INTEGER via display_total (BALANCE vs INTEGER path, lines 1059-1068)
+test bal Expenses --format "%(display_total > 30 ? \"high\" : \"low\")\n" --flat
+high
+low
+high
+end test
+
+; AMOUNT > AMOUNT (line 1050)
+test reg --format "%(amount > 40 ? \"big\" : \"small\")\n" Expenses
+big
+small
+end test
+
+; INTEGER > AMOUNT (line 1037 - val.as_amount() < as_long())
+test reg --format "%(100 > amount ? \"over\" : \"under\")\n" Expenses
+over
+over
+end test

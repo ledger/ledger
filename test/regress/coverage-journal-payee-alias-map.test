@@ -1,0 +1,26 @@
+; Coverage: journal.cc lines 251-256: payee_alias_mappings matching loop
+; Also exercises register_payee() at line 218
+
+commodity $
+    format $1,000.00
+account Expenses:Food
+account Assets:Checking
+
+payee Real Store
+    alias Grocery
+    alias Market
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Fish Market
+    Expenses:Food    $35.00
+    Assets:Checking
+
+test reg --strict --check-payees --columns=80 -> 0
+24-Jan-15 Real Store            Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-20 Real Store            Expenses:Food                $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+end test

@@ -1,0 +1,14 @@
+; Test 2-commodity transaction with explicit cost (saw_cost=true path)
+; Targets: xact.cc lines 216-218 (saw_cost break path)
+
+2024/01/15 Foreign Purchase
+    Expenses:Travel            100 EUR @ $1.10
+    Assets:Checking           $-110.00
+
+test bal --columns 80
+            $-110.00  Assets:Checking
+             100 EUR  Expenses:Travel
+--------------------
+            $-110.00
+             100 EUR
+end test

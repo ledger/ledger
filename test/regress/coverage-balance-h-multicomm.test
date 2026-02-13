@@ -1,0 +1,55 @@
+; Test balance.h: multi-commodity balance operations
+; Exercises balance_t += -= *= /= with different types
+; Also exercises is_zero, is_nonzero, is_realzero, is_empty, single_amount
+; Targets: balance.h lines 209-229, 265-281, 395-427
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP $1.30
+
+2024/01/10 Setup
+    Assets:Savings    $1000.00
+    Assets:Savings    500 EUR
+    Income:Salary
+
+2024/01/15 Store
+    Expenses:Food    $50.00
+    Expenses:Food    20 EUR
+    Assets:Savings
+
+2024/01/20 Market
+    Expenses:Food    15 GBP
+    Assets:Savings
+
+; Test multi-commodity register (exercises balance addition)
+test bal Assets --columns 80
+             $950.00
+             480 EUR
+             -15 GBP  Assets:Savings
+end test
+
+; Test multi-commodity negation (exercises balance_t negated, in_place_negate)
+test bal Income --columns 80
+           $-1000.00
+            -500 EUR  Income:Salary
+end test
+
+; Test balance abs via --market (exercises balance_t abs indirectly)
+test bal --market Expenses --columns 80
+              $91.50  Expenses:Food
+end test
+
+; Test balance with empty accounts via --empty
+test bal --empty Assets --columns 80
+             $950.00
+             480 EUR
+             -15 GBP  Assets:Savings
+end test
+
+; Test balance rounding via --market (exercises balance_t rounded)
+test bal --market --columns 80
+            $1458.50  Assets:Savings
+              $91.50  Expenses:Food
+           $-1550.00  Income:Salary
+--------------------
+                   0
+end test

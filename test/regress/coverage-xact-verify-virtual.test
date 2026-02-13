@@ -1,0 +1,12 @@
+; Test verify() with virtual balanced postings
+; Targets: xact.cc lines 489-491 (verify virtual must_balance path)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    [Budget:Food]             $-50.00
+    [Budget:Food]              $50.00
+    Assets:Checking
+
+test bal Expenses --columns 80
+              $50.00  Expenses:Food
+end test

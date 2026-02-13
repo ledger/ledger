@@ -1,0 +1,13 @@
+; Test auto transaction with $variable in account name
+; Targets: xact.cc lines 857-866 (regex_search in account name)
+
+= /Expenses/
+    (Budget:$account)          0.10
+
+2024/01/15 Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg Budget --columns 80
+24-Jan-15 Store                 (Budget:Expenses:Food)        $5.00        $5.00
+end test

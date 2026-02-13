@@ -1,0 +1,35 @@
+; Coverage test for select.cc: single-column select to exercise edge cases
+; Exercises: total as first column (thus_far empty, line 321-322),
+;   amount as first column, payee as first column, account as first column
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; total as first column exercises thus_far.empty() at line 321
+test select total from posts --columns=80
+      $50.00
+           0
+      $30.00
+           0
+end test
+
+; amount as first column
+test select amount from posts --columns=80
+      $50.00
+     $-50.00
+      $30.00
+     $-30.00
+end test
+
+; date as first column
+test select date from posts --columns=80
+24-Jan-15
+24-Jan-15
+24-Jan-20
+24-Jan-20
+end test

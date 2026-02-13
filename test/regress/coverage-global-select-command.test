@@ -1,0 +1,11 @@
+; Test global.cc: select command
+; Exercises a different command verb lookup path
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test select account, amount from Expenses:Food
+Expenses:Food                                                            $25.00
+Assets:Checking                                                         $-25.00
+end test

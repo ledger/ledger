@@ -1,0 +1,17 @@
+; Coverage: journal.cc lines 511-513: clear_xdata for period_xacts
+; Tests periodic transactions which populate the period_xacts list
+
+~ Monthly
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/01/15 Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test bal --budget --period "jan 2024" --columns=80
+             $950.00  Assets:Checking
+           $-1000.00  Expenses:Rent
+--------------------
+             $-50.00
+end test

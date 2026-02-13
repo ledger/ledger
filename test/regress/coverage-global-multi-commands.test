@@ -1,0 +1,26 @@
+; Test global.cc: multiple command executions
+; Exercises execute_command and execute_command_wrapper paths
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test bal Expenses
+              $25.00  Expenses:Food
+end test
+
+test reg Expenses
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+end test
+
+test print
+2024/01/01 Grocery Store
+    Expenses:Food                             $25.00
+    Assets:Checking
+end test
+
+test equity
+2024/01/01 Opening Balances
+    Assets:Checking                          $-25.00
+    Expenses:Food
+end test

@@ -1,0 +1,8 @@
+; Coverage test for expr.cc: source_command function
+; Exercises: source_command (lines 269-305) - file path (lines 274-277),
+;   comment skipping (line 294), expression evaluation (line 296),
+;   error catching (lines 297-300)
+
+; Source the test file itself (mostly comments - exercises comment skip)
+test -f /dev/null source $sourcepath/test/regress/coverage-expr-source-cmd.test
+end test

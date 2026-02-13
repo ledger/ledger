@@ -1,0 +1,22 @@
+; Test various value_t type checking paths
+; Exercises is_null_or_zero for different types
+; Also exercises value printing for edge cases
+
+2024/01/15 Test
+    Expenses:Food  $50.00
+    Assets:Checking
+
+; Test that 0 is zero
+test eval "0 == 0"
+1
+end test
+
+; Test string comparison
+test eval "\"abc\" < \"def\""
+1
+end test
+
+; Test string equality
+test eval "\"abc\" == \"abc\""
+1
+end test

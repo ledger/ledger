@@ -1,0 +1,82 @@
+; Test period command with "every" expressions
+; Exercises: handle_every_token (lines 1113-1160)
+; token_t::dump for TOK_EVERY, TOK_INT, plural tokens
+; date_duration_t operator<< for various durations
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test period --now 2024/06/15 "every 2 quarters"
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 2
+TOK_QUARTERS: quarters
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+duration: 2 quarters
+
+--- After stabilization ---
+   start: 24-Apr-01
+duration: 2 quarters
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Apr-01 -- 24-Sep-30
+ 2: 24-Oct-01 -- 25-Mar-31
+ 3: 25-Apr-01 -- 25-Sep-30
+ 4: 25-Oct-01 -- 26-Mar-31
+ 5: 26-Apr-01 -- 26-Sep-30
+ 6: 26-Oct-01 -- 27-Mar-31
+ 7: 27-Apr-01 -- 27-Sep-30
+ 8: 27-Oct-01 -- 28-Mar-31
+ 9: 28-Apr-01 -- 28-Sep-30
+10: 28-Oct-01 -- 29-Mar-31
+11: 29-Apr-01 -- 29-Sep-30
+12: 29-Oct-01 -- 30-Mar-31
+13: 30-Apr-01 -- 30-Sep-30
+14: 30-Oct-01 -- 31-Mar-31
+15: 31-Apr-01 -- 31-Sep-30
+16: 31-Oct-01 -- 32-Mar-31
+17: 32-Apr-01 -- 32-Sep-30
+18: 32-Oct-01 -- 33-Mar-31
+19: 33-Apr-01 -- 33-Sep-30
+20: 33-Oct-01 -- 34-Mar-31
+end test
+
+test period --now 2024/06/15 "every 3 years"
+--- Period expression tokens ---
+TOK_EVERY: every
+TOK_INT: 3
+TOK_YEARS: years
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+duration: 3 years
+
+--- After stabilization ---
+   start: 24-Jan-01
+duration: 3 years
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01 -- 26-Dec-31
+ 2: 27-Jan-01 -- 29-Dec-31
+ 3: 30-Jan-01 -- 32-Dec-31
+ 4: 33-Jan-01 -- 35-Dec-31
+ 5: 36-Jan-01 -- 38-Dec-31
+ 6: 39-Jan-01 -- 41-Dec-31
+ 7: 42-Jan-01 -- 44-Dec-31
+ 8: 45-Jan-01 -- 47-Dec-31
+ 9: 48-Jan-01 -- 50-Dec-31
+10: 51-Jan-01 -- 53-Dec-31
+11: 54-Jan-01 -- 56-Dec-31
+12: 57-Jan-01 -- 59-Dec-31
+13: 60-Jan-01 -- 62-Dec-31
+14: 63-Jan-01 -- 65-Dec-31
+15: 66-Jan-01 -- 68-Dec-31
+16: 69-Jan-01 -- 71-Dec-31
+17: 72-Jan-01 -- 74-Dec-31
+18: 75-Jan-01 -- 77-Dec-31
+19: 78-Jan-01 -- 80-Dec-31
+20: 81-Jan-01 -- 83-Dec-31
+end test

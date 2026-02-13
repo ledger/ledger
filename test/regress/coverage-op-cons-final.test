@@ -1,0 +1,23 @@
+; Coverage test for op.cc: calc_cons else branch (non-O_CONS right)
+; Exercises: calc_cons else branch (lines 529-531) when right node
+;   is not O_CONS (final element of cons chain)
+
+; Two-element cons expression: right is VALUE, not O_CONS
+test eval "1, 2"
+(1, 2)
+end test
+
+; Three-element cons: right is O_CONS with right being VALUE
+test eval "1, 2, 3"
+(1, 2, 3)
+end test
+
+; Cons with expressions
+test eval "2 + 3, 4 * 5, 6 - 1"
+(5, 20, 5)
+end test
+
+; Single cons with strings
+test eval '"hello", "world"'
+(hello, world)
+end test

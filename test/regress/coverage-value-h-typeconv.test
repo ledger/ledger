@@ -1,0 +1,71 @@
+; Test value.h: type conversion and coercion methods
+; Exercises to_int, to_long, to_amount, to_balance, to_string, to_boolean
+; Also exercises is_zero, is_nonzero, number() on different types
+; Targets: value.cc lines 125-303, value.h lines 758-769, 496
+
+2024/01/15 Store
+    Expenses:Food    $50.75
+    Assets:Checking
+
+2024/01/20 Gas
+    Expenses:Transport  $30.25
+    Assets:Checking
+
+; Test to_int conversion (exercises value_t::to_int)
+test reg --format "%(to_int(amount))\n" Expenses
+51
+30
+end test
+
+; Test to_string conversion (exercises value_t::to_string)
+test reg --format "%(to_string(amount))\n" Expenses
+$50.75
+$30.25
+end test
+
+; Test quantity function (exercises value_t::number via amount_t::number)
+test reg --format "%(quantity(amount))\n" Expenses
+50.75
+30.25
+end test
+
+; Test boolean truth value of amounts (exercises value_t::operator bool)
+test reg --format "%(amount ? \"nonzero\" : \"zero\")\n" Expenses
+nonzero
+nonzero
+end test
+
+; Test is_zero behavior (exercises value_t::is_zero)
+test bal --display "total != 0" --columns 80
+             $-81.00  Assets:Checking
+              $81.00  Expenses
+              $50.75    Food
+              $30.25    Transport
+--------------------
+                   0
+end test
+
+; Test amount to_amount identity (exercises value_t::to_amount for AMOUNT type)
+test reg --format "%(to_amount(amount))\n" Expenses
+$50.75
+$30.25
+end test
+
+; Test number() on integers (exercises value_t::number for INTEGER type)
+test eval "5"
+5
+end test
+
+; Test type coercion with mixed expressions
+test eval "10 + 5"
+15
+end test
+
+; Test boolean values in eval context
+test eval "true"
+1
+end test
+
+test eval "false"
+0
+end test

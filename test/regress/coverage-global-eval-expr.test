@@ -1,0 +1,14 @@
+; Test global.cc: eval precommand with various expressions
+; Exercises precommand lookup and execution paths
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test eval "2 * 3 + 4"
+10
+end test
+
+test eval "\"hello\" + \" world\""
+hello world
+end test

@@ -1,0 +1,10 @@
+; Coverage: timelog.cc lines 149-161: close() auto clock-out with multiple accounts
+; Multiple checkins that are auto-closed at end of file
+
+i 2024/01/15 09:00:00 Project:A  Task A
+i 2024/01/15 10:00:00 Project:B  Task B
+
+test accounts
+Project:A
+Project:B
+end test

@@ -1,0 +1,14 @@
+; Test -S (sort) option (exercises report.cc OPT_CH(sort_))
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+test reg Expenses -S amount
+24-Jan-20 Restaurant            Expenses:Dining              $30.00       $30.00
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $80.00
+end test

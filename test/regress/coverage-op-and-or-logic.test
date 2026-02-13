@@ -1,0 +1,22 @@
+; Test op.cc O_AND and O_OR eval paths
+; Exercises calc for logical operators
+
+2024/01/15 Test
+    Expenses:Food  $50.00
+    Assets:Checking
+
+test eval "1 and 1"
+1
+end test
+
+test eval "1 and 0"
+0
+end test
+
+test eval "0 or 1"
+1
+end test
+
+test eval "0 or 0"
+0
+end test

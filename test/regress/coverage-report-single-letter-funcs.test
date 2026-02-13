@@ -1,0 +1,9 @@
+; Test single-letter function lookups (exercises report.cc lookup FUNCTION 't' and 'T' paths)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(T)\n" Expenses
+$50.00
+end test

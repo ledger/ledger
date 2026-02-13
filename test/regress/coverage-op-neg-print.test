@@ -1,0 +1,12 @@
+; Test op.cc print() for O_NEG operator
+; Exercises print() O_NEG case (lines 641-644)
+; Expression with negation that gets printed in error context
+
+2024/01/15 Test
+    Expenses:Food  $50.00
+    Assets:Checking
+
+test reg --format "%(- amount)\n"
+$-50.00
+$50.00
+end test

@@ -1,0 +1,15 @@
+; Test post_t::has_tag returning false (inherit=false) and
+; get_tag returning value from post (not xact)
+; Targets: post.cc lines 48, 57, 71, 74
+
+2024/01/15 Store
+    ; TxnTag: abc
+    Expenses:Food              $50.00
+        ; PostTag: xyz
+    Assets:Checking
+
+; The post has PostTag but not TxnTag on itself (it inherits TxnTag)
+; This exercises has_tag with inherit=true falling through to xact
+test reg --limit "has_tag(\"PostTag\")" --format "%(tag(\"PostTag\")) %(amount)\n"
+xyz $50.00
+end test

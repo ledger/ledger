@@ -1,0 +1,13 @@
+; Test auto transaction with cost on auto posting
+; Targets: xact.cc lines 880-881 (post->cost in auto xact)
+
+= /Expenses/
+    (Budget)                  $10.00
+
+2024/01/15 Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg Budget --columns 80
+24-Jan-15 Store                 (Budget)                     $10.00       $10.00
+end test

@@ -1,0 +1,21 @@
+; Test pricemap command (exercises report.cc pricemap_command)
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $155.00
+
+2024/01/15 * Buy Stock
+    Assets:Brokerage          10 AAPL @ $150.00
+    Assets:Checking          $-1500.00
+
+test pricemap
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="$"];
+6[label="AAPL"];
+6--5 ;
+}
+end test

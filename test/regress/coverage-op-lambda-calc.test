@@ -1,0 +1,43 @@
+; Coverage test for op.cc: O_LAMBDA calc path and additional lambda behaviors
+; Exercises: O_LAMBDA calc, call_lambda (lines 445-479),
+;   find_definition recursion, multi-parameter lambdas
+
+define double(x) = x * 2
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test reg --format "%(double(quantity(amount)))\n"
+100
+-100
+60
+-60
+end test
+
+; Function composition exercises recursive find_definition
+define inc(x) = x + 1
+
+test reg --format "%(inc(double(quantity(amount))))\n"
+101
+-99
+61
+-59
+end test
+
+; Inline eval with function definition and call
+test eval "sq(x) = x * x; sq(7)"
+49
+end test
+
+test eval "add(x, y) = x + y; add(10, 20)"
+30
+end test
+
+test eval "id(x) = x; id(42)"
+42
+end test

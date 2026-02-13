@@ -1,0 +1,59 @@
+; Test xact.h: transaction accessor methods
+; Exercises xact_t::code, payee, has_xdata, clear_xdata, description
+; Targets: xact.h lines 84-100, 76-77
+
+2024/01/15 (INV-001) Grocery Store
+    ; Payee: Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport  $30.00
+    Assets:Checking
+
+2024/01/25 (INV-003) Electric Company
+    ; Note: monthly bill
+    Expenses:Utilities  $120.00
+    Assets:Checking
+
+; Test payee accessor via format (exercises xact_t payee field)
+test reg --format "%(payee)\n"
+Grocery Store
+Grocery Store
+Gas Station
+Gas Station
+Electric Company
+Electric Company
+end test
+
+; Test code accessor via format (exercises xact_t code field)
+test reg --format "%(code)\n"
+INV-001
+INV-001
+
+
+INV-003
+INV-003
+end test
+
+; Test combined payee and code (exercises both accessors)
+test reg --format "%(payee)%(code ? \" [\" + code + \"]\" : \"\")\n"
+Grocery Store [INV-001]
+Grocery Store [INV-001]
+Gas Station
+Gas Station
+Electric Company [INV-003]
+Electric Company [INV-003]
+end test
+
+; Test filtering by payee (exercises payee lookup and comparison)
+test reg --limit "payee == \"Gas Station\"" --columns 80
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test
+
+; Test filtering by code (exercises code lookup)
+test reg --limit "code == \"INV-001\"" --columns 80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+          Grocery Store         Assets:Checking             $-50.00            0
+end test

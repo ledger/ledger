@@ -1,0 +1,37 @@
+; Coverage test for op.cc: compile intermediate path and non-constant reduction
+; Exercises: compile line 204 (intermediate non-constant result),
+;   compile line 192 (O_LOOKUP right() not compiled),
+;   various runtime expression evaluation paths
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; Test expressions that can't be reduced to constants at compile time
+; because they reference runtime variables (amount, total, account)
+test reg --format "%(amount + amount)\n"
+$100.00
+$-100.00
+$60.00
+$-60.00
+end test
+
+; This exercises O_SUB calc with runtime operands
+test reg --format "%(total - amount)\n"
+0
+$50.00
+0
+$30.00
+end test
+
+; Test nested ternary that exercises O_QUERY paths at runtime
+test reg --format "%(amount > 0 ? (amount > 40 ? \"big\" : \"small\") : \"neg\")\n"
+big
+neg
+small
+neg
+end test

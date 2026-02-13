@@ -1,0 +1,27 @@
+; Test value.cc: boolean value operations and type casting
+; Coverage target: value.cc - operator bool() BOOLEAN (line 85),
+;   in_place_cast BOOLEAN to INTEGER (line 1182),
+;   in_place_cast BOOLEAN to STRING (line 1188),
+;   in_place_not for BOOLEAN (line 1394)
+
+2024/01/15 * Purchase
+    Expenses:Food       $100.00
+    Assets:Checking
+
+2024/01/20 Purchase2
+    Expenses:Travel     $50.00
+    Assets:Checking
+
+test reg --format "%(cleared ? \"C\" : \"P\") %(payee)\n" -> 0
+C Purchase
+C Purchase
+P Purchase2
+P Purchase2
+end test
+
+test reg --format "%(payee) %(int(cleared))\n" -> 0
+Purchase 1
+Purchase 1
+Purchase2 0
+Purchase2 0
+end test

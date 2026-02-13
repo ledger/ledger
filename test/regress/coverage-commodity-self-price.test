@@ -1,0 +1,13 @@
+; Test commodity price lookup when commodity equals target (covers commodity.cc line 120-121)
+; Requesting market value of $ in terms of $ should return the amount as-is
+
+2024/01/15 Purchase
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test bal --market --exchange '$'
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

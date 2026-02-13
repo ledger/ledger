@@ -1,0 +1,17 @@
+; Test period transactions via budget command
+; Targets: xact.cc period_xact_t paths
+
+~ Monthly
+    Expenses:Rent              $1200.00
+    Assets:Checking
+
+2024/01/15 * Grocery
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test budget --columns 80
+     $-50.00   $-31200.00    $31150.00     0  Assets:Checking
+           0    $31200.00   $-31200.00     0  Expenses:Rent
+------------ ------------ ------------ -----
+     $-50.00            0      $-50.00     0
+end test

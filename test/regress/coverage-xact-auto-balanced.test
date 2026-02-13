@@ -1,0 +1,18 @@
+; Test auto transaction with balanced (must_balance) postings
+; Targets: xact.cc lines 929-930 (needs_further_verification), 935-936
+
+= /Expenses/
+    [Budget:Expenses]          0.10
+    [Budget:Savings]          -0.10
+
+2024/01/15 Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test bal Budget --columns 80
+                   0  Budget
+               $5.00    Expenses
+              $-5.00    Savings
+--------------------
+                   0
+end test

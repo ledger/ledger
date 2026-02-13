@@ -1,0 +1,19 @@
+; Test value.cc: amount operations that trigger balance conversion
+; Coverage target: value.cc - AMOUNT += INTEGER with commodity (line 394-396),
+;   AMOUNT -= INTEGER with commodity (line 530-534),
+;   AMOUNT += AMOUNT different commodity (line 403-405),
+;   AMOUNT -= AMOUNT different commodity (line 542-546)
+
+2024/01/15 Purchase
+    Expenses:Food       $100.00
+    Assets:Checking
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(amount + 50)\n" -> 0
+Expenses:Food 50
+$100.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(amount - 50)\n" -> 0
+Expenses:Food -50
+$100.00
+end test

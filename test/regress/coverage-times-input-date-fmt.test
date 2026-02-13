@@ -1,0 +1,18 @@
+; Test --input-date-format option
+; Exercises set_input_date_format (lines 1841-1843)
+; and date parsing with custom format via parse_date_mask_routine
+
+15.01.2024 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+20.03.2024 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+test reg --input-date-format "%d.%m.%Y"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Mar-20 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test

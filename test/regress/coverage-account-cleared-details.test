@@ -1,0 +1,26 @@
+; Coverage: account.cc lines 676-721: xdata details_t::update
+; Tests cleared/virtual post counting and date tracking
+
+2024/01/15 * Payee1
+    Expenses:Food  $50.00
+    Assets:Checking
+
+2024/02/15 Payee2
+    Expenses:Food  $30.00
+    Assets:Checking
+
+2024/03/15 * Payee3
+    Expenses:Food  $20.00
+    Assets:Checking
+
+test bal --format "%(latest_cleared)\n" Expenses:Food --args-only --columns=80
+2024/03/15
+end test
+
+test bal --format "%(count)\n" Expenses:Food --args-only --columns=80
+3
+end test
+
+test bal --format "%(subcount)\n" Expenses:Food --args-only --columns=80
+3
+end test

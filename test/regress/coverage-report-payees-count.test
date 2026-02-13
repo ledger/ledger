@@ -1,0 +1,18 @@
+; Test payees --count (exercises output.cc report_payees with count)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+2024/01/25 * Grocery Store
+    Expenses:Food              $40.00
+    Assets:Checking
+
+test payees --count
+4 Grocery Store
+2 Restaurant
+end test

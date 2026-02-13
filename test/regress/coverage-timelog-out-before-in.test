@@ -1,0 +1,10 @@
+; Coverage: timelog.cc line 107: check-out date less than corresponding check-in
+
+i 2024/01/15 12:00:00 Project:Work  Morning task
+o 2024/01/15 09:00:00
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+Error: Timelog check-out date less than corresponding check-in
+end test

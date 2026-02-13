@@ -1,0 +1,52 @@
+; Test value.h: mixed-type arithmetic operations
+; Exercises value_t operators with INTEGER+AMOUNT, AMOUNT+INTEGER combinations
+; Also exercises in_place_simplify, simplified paths
+; Targets: value.cc lines 369-419 (INTEGER+AMOUNT), 507-562 (INTEGER-AMOUNT),
+;          612-643 (mult paths), 675-739 (div paths)
+
+2024/01/15 Store
+    Expenses:Food    $100.00
+    Assets:Checking
+
+; Test amount * integer and integer * amount
+test reg --format "%(amount * 3)\n" Expenses:Food
+$300.00
+end test
+
+; Test amount / integer
+test reg --format "%(amount / 4)\n" Expenses:Food
+$25.00
+end test
+
+; Test integer arithmetic chained
+test eval "(10 + 20) * 3"
+90
+end test
+
+test eval "100 / (5 * 2)"
+10
+end test
+
+; Test amount comparison with integer
+test reg --format "%(quantity(amount) > 50 ? \"big\" : \"small\")\n" Expenses:Food
+big
+end test
+
+test reg --format "%(quantity(amount) == 100 ? \"exact\" : \"diff\")\n" Expenses:Food
+exact
+end test
+
+; Test mixed arithmetic in display filter
+test reg --display "quantity(amount) >= 100" --columns 80
+24-Jan-15 Store                 Expenses:Food               $100.00      $100.00
+end test
+
+; Test negation of amount
+test reg --format "%(- amount)\n" Expenses:Food
+$-100.00
+end test
+
+; Test abs of negative amounts
+test reg --format "%(abs(amount))\n" Assets:Checking
+$100.00
+end test

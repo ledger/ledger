@@ -1,0 +1,23 @@
+; Test value.cc: is_less_than various paths
+; Exercises is_less_than for SEQUENCE < AMOUNT (lines 969-975)
+; and SEQUENCE < SEQUENCE (lines 977-987)
+
+2024/01/15 Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport  $30.00
+    Assets:Checking
+
+2024/01/25 Restaurant
+    Expenses:Food:Dining  $25.00
+    Assets:Checking
+
+; Sorting with multiple criteria exercises sequence-based comparisons
+; When sort criteria have equal first elements, the second elements are compared
+test reg --sort "account, amount" Expenses --columns 80
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+24-Jan-25 Restaurant            Expenses:Food:Dining         $25.00       $75.00
+24-Jan-20 Gas Station           Expenses:Transport           $30.00      $105.00
+end test

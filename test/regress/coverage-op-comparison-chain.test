@@ -1,0 +1,30 @@
+; Test op.cc comparison operator eval paths
+; Exercises O_EQ, O_LT, O_LTE, O_GT, O_GTE eval paths
+
+2024/01/15 Test
+    Expenses:Food  $50.00
+    Assets:Checking
+
+test eval "5 == 5"
+1
+end test
+
+test eval "3 < 5"
+1
+end test
+
+test eval "5 <= 5"
+1
+end test
+
+test eval "7 > 3"
+1
+end test
+
+test eval "5 >= 5"
+1
+end test
+
+test eval "3 != 5"
+1
+end test

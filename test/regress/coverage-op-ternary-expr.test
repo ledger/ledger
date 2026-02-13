@@ -1,0 +1,14 @@
+; Test op.cc O_QUERY/O_COLON evaluation paths
+; Exercises calc for ternary expressions (lines 338-360)
+
+2024/01/15 Test
+    Expenses:Food  $50.00
+    Assets:Checking
+
+test eval "1 ? 42 : 99"
+42
+end test
+
+test eval "0 ? 42 : 99"
+99
+end test

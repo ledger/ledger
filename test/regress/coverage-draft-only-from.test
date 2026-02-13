@@ -1,0 +1,12 @@
+; Test draft.cc with all postings marked as 'from' (covers draft.cc lines 203-204)
+; When all postings are 'from', a blank 'to' posting is prepended
+
+2024/01/15 * Transfer
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test xact 2024/03/01 Transfer from Checking
+2024/03/01 Transfer
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test

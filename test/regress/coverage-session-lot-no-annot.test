@@ -1,0 +1,10 @@
+; Test session.cc: lot_price/lot_date/lot_tag with non-annotated amounts
+; Exercises the else branches returning NULL_VALUE (lines 272-273, 279-280, 286-287)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%(lot_price(amount))|%(lot_date(amount))|%(lot_tag(amount))\n" Expenses
+||
+end test

@@ -1,0 +1,42 @@
+; Test value.cc: arithmetic operator error/throw paths
+; Exercises type mismatch throws in operator+=, *=, /=
+
+; Test AMOUNT + BOOLEAN error (operator+= AMOUNT default path, lines 417-419)
+test eval "1 + true" -> 1
+__ERROR__
+While evaluating value expression:
+  (1 + true)
+  ^^^^^^^^^^
+While adding 1 to 1:
+Error: Cannot add a boolean to an amount
+end test
+
+; Test AMOUNT * BOOLEAN error (operator*= AMOUNT default, lines 641-643, 669-670)
+test eval "5 * true" -> 1
+__ERROR__
+While evaluating value expression:
+  (5 * true)
+  ^^^^^^^^^^
+While multiplying 1 with 5:
+Error: Cannot multiply an amount with a boolean
+end test
+
+; Test AMOUNT / STRING error (operator/= AMOUNT default, lines 717-719)
+test eval "5 / \"text\"" -> 1
+__ERROR__
+While evaluating value expression:
+  (5 / "text")
+  ^^^^^^^^^^^^
+While dividing 5 by text:
+Error: Cannot divide an amount by a string
+end test
+
+; Test STRING - AMOUNT error (operator-= default, lines 584-588)
+test eval "\"text\" - 5" -> 1
+__ERROR__
+While evaluating value expression:
+  ("text" - 5)
+  ^^^^^^^^^^^^
+While subtracting 5 from text:
+Error: Cannot subtract an amount from a string
+end test

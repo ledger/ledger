@@ -1,0 +1,62 @@
+; Test "last N units" and "next N units" period expressions
+; Exercises handle_relative_token with TOK_INT (lines 974-1012)
+; Covers: last N years, last N quarters, last N months, last N weeks, last N days
+; And: next N years, next N months, next N weeks, next N days
+
+2024/01/07 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/15 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/03/20 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+2024/06/10 Payee D
+    Expenses:Gas    $45.00
+    Assets:Checking
+
+2024/08/05 Payee E
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+test reg --now 2024/06/15 --period "last 3 months"
+24-Mar-20 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+24-Jun-10 Payee D               Expenses:Gas                 $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+end test
+
+test reg --now 2024/06/15 --period "last 7 days"
+24-Jun-10 Payee D               Expenses:Gas                 $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+end test
+
+test reg --now 2024/06/15 --period "last 2 weeks"
+24-Jun-10 Payee D               Expenses:Gas                 $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+end test
+
+test reg --now 2024/06/15 --period "last 2 quarters"
+24-Jan-07 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-15 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+24-Mar-20 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+24-Jun-10 Payee D               Expenses:Gas                 $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+end test
+
+test reg --now 2024/06/15 --period "next 3 months"
+24-Aug-05 Payee E               Expenses:Utilities          $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+end test
+
+test reg --now 2024/01/10 --period "next 2 weeks"
+24-Jan-15 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test

@@ -1,0 +1,8 @@
+; Test null function (exercises report.cc fn_null lookup)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test eval "null"
+end test

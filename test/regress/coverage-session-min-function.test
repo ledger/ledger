@@ -1,0 +1,15 @@
+; Test session.cc: fn_min function
+; Exercises fn_min (line 254-255) and lookup for "min" (line 377-378)
+
+2024/01/15 Grocery Store
+    Expenses:Food    50 USD
+    Assets:Checking
+
+2024/01/20 Restaurant
+    Expenses:Food    30 USD
+    Assets:Checking
+
+test reg --format "%(min(amount, 35 USD))\n" Expenses
+35 USD
+30 USD
+end test

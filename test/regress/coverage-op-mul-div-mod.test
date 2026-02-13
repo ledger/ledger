@@ -1,0 +1,14 @@
+; Test op.cc calc paths for arithmetic operators
+; Exercises O_MUL, O_DIV eval paths
+
+2024/01/15 Test
+    Expenses:Food  $50.00
+    Assets:Checking
+
+test eval "6 * 7"
+42
+end test
+
+test eval "100 / 4"
+25
+end test

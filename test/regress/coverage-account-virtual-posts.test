@@ -1,0 +1,18 @@
+; Coverage: account.cc lines 679-680: posts_virtuals_count in details_t::update
+; Tests virtual postings in account details
+
+2024/01/15 * Payee
+    Expenses:Food  $50.00
+    Assets:Checking
+    [Budget:Food]  $50.00
+    [Budget:Savings]  $-50.00
+
+test bal --columns=80
+             $-50.00  Assets:Checking
+                   0  Budget
+              $50.00    Food
+             $-50.00    Savings
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

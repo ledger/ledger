@@ -1,0 +1,27 @@
+; Test value.cc: is_greater_than DATETIME paths (lines 1022-1025)
+; Also exercises is_greater_than with STRING (sort by payee descending)
+
+2024/01/15 Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport  $30.00
+    Assets:Checking
+
+; Sorting by date descending triggers is_greater_than for DATE comparison
+; The sort comparator uses both < and > operators via sort_value_is_less_than
+test reg --sort "-date" --columns 80
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+; Sorting by payee descending to trigger string > comparison in sort
+test reg --sort "-payee" --columns 80
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test

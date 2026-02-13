@@ -1,0 +1,17 @@
+; Test display_filter_posts with market value and exchange
+; Covers display_filter_posts, changed_value_posts paths
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $155.00
+
+2024/01/15 Buy Stock
+    Assets:Brokerage         10 AAPL @ $150.00
+    Assets:Checking       $-1500.00
+
+test bal --market --exchange '$'
+              $50.00  Assets
+            $1550.00    Brokerage
+           $-1500.00    Checking
+--------------------
+              $50.00
+end test

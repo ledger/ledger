@@ -1,0 +1,11 @@
+; Test parse_tags when no colon is found (early return)
+; Targets: item.cc lines 161-162 (no colon early return)
+
+2024/01/15 * Store
+    ; This is just a plain note without any tags
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(note)\n" Expenses
+ This is just a plain note without any tags
+end test

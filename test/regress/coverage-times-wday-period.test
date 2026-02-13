@@ -1,0 +1,41 @@
+; Test weekday name tokens in period expressions
+; Exercises string_to_day_of_week (lines 206-223)
+; determine_when TOK_A_WDAY (lines 879-882)
+; handle_relative_token TOK_A_WDAY (lines 1026-1035)
+
+2024/01/07 Sunday Payee
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/08 Monday Payee
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/01/15 Monday Payee
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+2024/01/22 Monday Payee
+    Expenses:Gas    $45.00
+    Assets:Checking
+
+test reg --now 2024/01/18 --period "next monday"
+24-Jan-22 Monday Payee          Expenses:Gas                 $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+end test
+
+test reg --now 2024/01/18 --period "last monday"
+24-Jan-08 Monday Payee          Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test
+
+test reg --now 2024/01/18 --period "since sunday"
+24-Jan-07 Sunday Payee          Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-08 Monday Payee          Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+24-Jan-15 Monday Payee          Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+24-Jan-22 Monday Payee          Expenses:Gas                 $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+end test

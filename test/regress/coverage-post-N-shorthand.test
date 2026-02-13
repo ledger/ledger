@@ -1,0 +1,11 @@
+; Test post_t::lookup for N shorthand
+; Targets: post.cc lines 504-505 (N -> get_count)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(N) %(account)\n"
+1 Expenses:Food
+2 Assets:Checking
+end test

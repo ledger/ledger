@@ -1,0 +1,24 @@
+; Test value_t::is_greater_than for STRING type via payee sort
+; Exercises is_greater_than STRING path and is_less_than STRING path
+; Also exercises sort_value_is_less_than (line 2155)
+
+2024/01/15 Zebra Corp
+    Expenses:Food  $50.00
+    Assets:Checking
+
+2024/01/16 Apple Inc
+    Expenses:Rent  $1000.00
+    Assets:Checking
+
+2024/01/17 Mango Ltd
+    Expenses:Utilities  $200.00
+    Assets:Checking
+
+test reg --sort payee
+24-Jan-16 Apple Inc             Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+24-Jan-17 Mango Ltd             Expenses:Utilities          $200.00      $200.00
+                                Assets:Checking            $-200.00            0
+24-Jan-15 Zebra Corp            Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

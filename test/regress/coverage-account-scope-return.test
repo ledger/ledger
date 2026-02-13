@@ -1,0 +1,10 @@
+; Coverage: account.cc line 260-261: get_account returning scope_value
+; Uses a format expression that returns account as scope via parent
+
+2024/01/15 * Grocery
+    Expenses:Food  $50.00
+    Assets:Checking
+
+test bal --format "%(parent.account)\n" Expenses:Food --args-only --columns=80
+Expenses
+end test

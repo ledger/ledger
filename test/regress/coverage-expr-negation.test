@@ -1,0 +1,41 @@
+; Test op.cc: O_NEG (negation) and O_NOT operators
+; Exercises: O_NEG calc (line 349), O_NOT calc (line 353),
+;   negation in expressions, format expressions with negation
+
+test eval "!0"
+1
+end test
+
+test eval "!1"
+0
+end test
+
+test eval "!true"
+0
+end test
+
+test eval "!false"
+1
+end test
+
+test eval "0 - 5"
+-5
+end test
+
+test eval "0 - (3 + 4)"
+-7
+end test
+
+2024/01/15 Purchase
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%(0 - amount)\n"
+$-50.00
+$50.00
+end test
+
+test reg --format "%(!(amount > 0))\n"
+false
+true
+end test

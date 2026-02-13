@@ -1,0 +1,11 @@
+; Test token.cc unexpected() for various unexpected token paths
+; Exercises unexpected token handling in expression parser
+
+; Double operator triggers unexpected token error
+test eval "(5 +)" -> 1
+__ERROR__
+While parsing value expression:
+  (5 +)
+      ^
+Error: ) operator not followed by argument
+end test

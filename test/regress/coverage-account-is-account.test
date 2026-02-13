@@ -1,0 +1,12 @@
+; Coverage: account.cc line 441-442: is_account returns true
+; Tests the is_account format function
+
+2024/01/15 * Payee
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test bal --format "%(is_account)\n" --args-only --columns=80
+true
+true
+true
+end test

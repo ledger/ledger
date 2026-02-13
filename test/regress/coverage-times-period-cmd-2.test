@@ -1,0 +1,104 @@
+; Test the "period" command with various period types
+; Exercises: token_t::dump with various token kinds
+; date_duration_t operator<< (lines 323-337)
+; date_interval_t::dump with different durations
+; date_specifier_t::begin/end (lines 287-321)
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test period --now 2024/06/15 "weekly"
+--- Period expression tokens ---
+TOK_WEEKLY: weekly
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+duration: 1 week
+
+--- After stabilization ---
+   start: 24-Jun-09
+duration: 1 week
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jun-09 -- 24-Jun-15
+ 2: 24-Jun-16 -- 24-Jun-22
+ 3: 24-Jun-23 -- 24-Jun-29
+ 4: 24-Jun-30 -- 24-Jul-06
+ 5: 24-Jul-07 -- 24-Jul-13
+ 6: 24-Jul-14 -- 24-Jul-20
+ 7: 24-Jul-21 -- 24-Jul-27
+ 8: 24-Jul-28 -- 24-Aug-03
+ 9: 24-Aug-04 -- 24-Aug-10
+10: 24-Aug-11 -- 24-Aug-17
+11: 24-Aug-18 -- 24-Aug-24
+12: 24-Aug-25 -- 24-Aug-31
+13: 24-Sep-01 -- 24-Sep-07
+14: 24-Sep-08 -- 24-Sep-14
+15: 24-Sep-15 -- 24-Sep-21
+16: 24-Sep-22 -- 24-Sep-28
+17: 24-Sep-29 -- 24-Oct-05
+18: 24-Oct-06 -- 24-Oct-12
+19: 24-Oct-13 -- 24-Oct-19
+20: 24-Oct-20 -- 24-Oct-26
+end test
+
+test period --now 2024/06/15 "daily from 2024/06/14 to 2024/06/17"
+--- Period expression tokens ---
+TOK_DAILY: daily
+TOK_SINCE: since
+TOK_DATE:  year 2024 month Jun day 14
+TOK_UNTIL: until
+TOK_DATE:  year 2024 month Jun day 17
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024 month Jun day 14 to year 2024 month Jun day 17
+duration: 1 day
+
+--- After stabilization ---
+   range: from year 2024 month Jun day 14 to year 2024 month Jun day 17
+   start: 24-Jun-14
+  finish: 24-Jun-17
+duration: 1 day
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jun-14 -- 24-Jun-14
+ 2: 24-Jun-15 -- 24-Jun-15
+ 3: 24-Jun-16 -- 24-Jun-16
+end test
+
+test period --now 2024/06/15 "yearly"
+--- Period expression tokens ---
+TOK_YEARLY: yearly
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+duration: 1 year
+
+--- After stabilization ---
+   start: 24-Jan-01
+duration: 1 year
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01 -- 24-Dec-31
+ 2: 25-Jan-01 -- 25-Dec-31
+ 3: 26-Jan-01 -- 26-Dec-31
+ 4: 27-Jan-01 -- 27-Dec-31
+ 5: 28-Jan-01 -- 28-Dec-31
+ 6: 29-Jan-01 -- 29-Dec-31
+ 7: 30-Jan-01 -- 30-Dec-31
+ 8: 31-Jan-01 -- 31-Dec-31
+ 9: 32-Jan-01 -- 32-Dec-31
+10: 33-Jan-01 -- 33-Dec-31
+11: 34-Jan-01 -- 34-Dec-31
+12: 35-Jan-01 -- 35-Dec-31
+13: 36-Jan-01 -- 36-Dec-31
+14: 37-Jan-01 -- 37-Dec-31
+15: 38-Jan-01 -- 38-Dec-31
+16: 39-Jan-01 -- 39-Dec-31
+17: 40-Jan-01 -- 40-Dec-31
+18: 41-Jan-01 -- 41-Dec-31
+19: 42-Jan-01 -- 42-Dec-31
+20: 43-Jan-01 -- 43-Dec-31
+end test

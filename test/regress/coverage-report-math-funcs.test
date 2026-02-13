@@ -1,0 +1,21 @@
+; Test math functions (exercises report.cc fn_ceiling/fn_floor/fn_round/fn_roundto/fn_abs/fn_unround)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test eval "ceiling(3.2)"
+4
+end test
+
+test eval "floor(3.8)"
+3
+end test
+
+test eval "abs(-42)"
+42
+end test
+
+test eval "roundto(3.456, 1)"
+3.5
+end test

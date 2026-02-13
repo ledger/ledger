@@ -1,0 +1,14 @@
+; Test draft.cc with multiple postings where last account is 'from'
+; Covers draft.cc lines 193-194, 203-208
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $30.00
+    Expenses:Supplies          $20.00
+    Assets:Checking
+
+test xact 2024/03/01 Grocery Food '$25' Supplies '$15' Checking
+2024/03/01 Grocery Store
+    Expenses:Food                             $25.00
+    Expenses:Supplies                         $15.00
+    Assets:Checking
+end test

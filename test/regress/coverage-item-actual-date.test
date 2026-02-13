@@ -1,0 +1,10 @@
+; Test item_t::lookup for actual_date keyword
+; Targets: item.cc lines 403-404 (actual_date -> get_primary_date)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(actual_date) %(account)\n" Expenses
+2024/01/15 Expenses:Food
+end test

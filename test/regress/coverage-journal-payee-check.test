@@ -1,0 +1,26 @@
+; Coverage: journal.cc register_payee(), validate_payee(), should_check_payees()
+; Coverage: journal.cc payee_not_registered(), translate_payee_name()
+
+commodity $
+    format $1,000.00
+account Expenses:Food
+account Assets:Checking
+
+payee Known Payee
+
+2024/01/15 Known Payee
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Unknown Payee
+    Expenses:Food    $35.00
+    Assets:Checking
+
+test bal --strict --check-payees -> 0
+             $-85.00  Assets:Checking
+              $85.00  Expenses:Food
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 15: Unknown payee 'Unknown Payee'
+end test

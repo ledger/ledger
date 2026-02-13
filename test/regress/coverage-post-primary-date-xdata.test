@@ -1,0 +1,11 @@
+; Test post_t::primary_date with xdata date and _date set
+; Targets: post.cc lines 95-106 (primary_date paths)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+        ; [2024/02/01]
+    Assets:Checking
+
+test reg --format "%(date) %(account)\n" Expenses
+2024/02/01 Expenses:Food
+end test

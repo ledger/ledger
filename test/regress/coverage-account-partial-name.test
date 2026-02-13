@@ -1,0 +1,12 @@
+; Coverage: account.cc lines 243-246: get_partial_name function
+; Tests the partial_account format function
+
+2024/01/15 * Payee
+    Expenses:Food:Groceries    $50.00
+    Assets:Checking
+
+test bal --format "%(partial_account)\n" --args-only --columns=80
+Assets:Checking
+Expenses:Food:Groceries
+
+end test

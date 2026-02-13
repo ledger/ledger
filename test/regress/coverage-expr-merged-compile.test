@@ -1,0 +1,20 @@
+; Coverage test for expr.cc: merged_expr_t compile with multiple expressions
+; Exercises: merged_expr_t::compile with exprs list (lines 236-249),
+;   semicolon merge operator (line 240-241)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; Multiple --amount flags trigger merged_expr_t with exprs list
+; Each additional --amount calls append(), adding to exprs
+test reg --amount 'amount * 2' --amount 'amount * 3'
+24-Jan-15 Grocery Store         Expenses:Food               $150.00      $150.00
+                                Assets:Checking            $-150.00            0
+24-Jan-20 Gas Station           Expenses:Transport           $90.00       $90.00
+                                Assets:Checking             $-90.00            0
+end test

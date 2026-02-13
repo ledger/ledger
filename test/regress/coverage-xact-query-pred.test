@@ -1,0 +1,22 @@
+; Test O_QUERY ternary operator in auto xact predicate
+; Targets: xact.cc lines 707-710 (post_pred O_QUERY case)
+
+= expr account =~ /Expenses/ ? account =~ /Food/ : account =~ /Income/
+    (Budget)                   0.10
+
+2024/01/15 Grocery
+    Expenses:Food              $100.00
+    Assets:Checking
+
+2024/01/16 Gas Station
+    Expenses:Gas               $50.00
+    Assets:Checking
+
+2024/01/17 Salary
+    Income:Salary              $-3000.00
+    Assets:Checking
+
+test reg Budget --columns 80
+24-Jan-15 Grocery               (Budget)                     $10.00       $10.00
+24-Jan-17 Salary                (Budget)                   $-300.00     $-290.00
+end test

@@ -1,0 +1,12 @@
+; Test main.cc: exception handling in main
+; Exercises the error catch path in main (lines 190-194)
+; via an invalid option that triggers an exception during initialization
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test -f "$FILE" --unknown-option-xyz bal -> 1
+__ERROR__
+Error: Illegal option --unknown-option-xyz
+end test

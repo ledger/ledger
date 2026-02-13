@@ -1,0 +1,14 @@
+; Test token.cc error paths
+; Exercises expected(kind_t) (lines 505-515)
+; operator<<(ostream, token_t) (lines 640-657)
+; operator<<(ostream, kind_t) (lines 517-637)
+
+; Test unclosed parenthesis - triggers expected(RPAREN) which
+; calls operator<<(ostream, token_t) and operator<<(ostream, kind_t)
+test eval "(5" -> 1
+__ERROR__
+While parsing value expression:
+  (5
+
+Error: Invalid token '<end of input>' (wanted ')')
+end test

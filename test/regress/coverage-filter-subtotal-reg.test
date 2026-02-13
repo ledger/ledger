@@ -1,0 +1,20 @@
+; Test subtotal_posts filter in register output (covers filters.h lines 612-639)
+; Exercises subtotal_posts constructor, flush, clear
+
+2024/01/15 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Gas               $35.00
+    Assets:Checking
+
+2024/01/25 Grocery Market
+    Expenses:Food              $25.00
+    Assets:Checking
+
+test reg --subtotal
+24-Jan-15 - 24-Jan-25           Assets:Checking            $-110.00     $-110.00
+                                Expenses:Food                $75.00      $-35.00
+                                Expenses:Gas                 $35.00            0
+end test

@@ -1,0 +1,13 @@
+; Test global.cc: execute_command_wrapper success path
+; Exercises execute_command_wrapper returning status 0 (line 277)
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test bal -> 0
+             $-25.00  Assets:Checking
+              $25.00  Expenses:Food
+--------------------
+                   0
+end test

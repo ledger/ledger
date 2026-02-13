@@ -1,0 +1,51 @@
+; Test op.cc: O_OR and O_AND calc paths
+; Exercises O_OR (lines 364-368), O_AND (lines 357-358) in calc()
+; Also exercises token.cc: or/and/not keywords, && and || operators
+
+test eval "true or false"
+1
+end test
+
+test eval "false or true"
+1
+end test
+
+test eval "false or false"
+0
+end test
+
+test eval "true and true"
+1
+end test
+
+test eval "true and false"
+0
+end test
+
+test eval "false and true"
+0
+end test
+
+test eval "not false"
+1
+end test
+
+test eval "not true"
+0
+end test
+
+test eval "1 or 0"
+1
+end test
+
+test eval "0 or 5"
+5
+end test
+
+test eval "1 and 2"
+2
+end test
+
+test eval "0 and 2"
+0
+end test

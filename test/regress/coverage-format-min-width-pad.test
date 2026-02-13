@@ -1,0 +1,10 @@
+; Test format with min_width padding (exercises format.cc min_width > temp.length() padding loop)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format '%30a\n'
+                 Expenses:Food
+               Assets:Checking
+end test

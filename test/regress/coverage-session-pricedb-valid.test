@@ -1,0 +1,14 @@
+; Test session.cc: valid price database loading
+; Exercises read_data price_db path with a valid .pricedb file
+; Tests parsing_context.push with price_db (lines 129-139)
+
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $180.00
+
+2024/01/15 Buy Stock
+    Assets:Brokerage    10 AAPL
+    Assets:Checking    $-1500.00
+
+test bal --market Assets:Brokerage
+            $1800.00  Assets:Brokerage
+end test

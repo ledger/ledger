@@ -1,0 +1,14 @@
+; Test session.cc: --hashes option
+; Exercises lookup_option case 'h' -> hashes_ (line 316)
+; SHA-512 hash type for journal integrity checking
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test bal --hashes sha512
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

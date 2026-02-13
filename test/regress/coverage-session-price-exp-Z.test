@@ -1,0 +1,12 @@
+; Test session.cc: -Z short option for price-exp
+; Exercises lookup_option case 'Z' -> OPT_CH(price_exp_) (line 296)
+
+P 2024/01/01 AAPL $150.00
+
+2024/06/15 Buy Stock
+    Assets:Brokerage    10 AAPL
+    Assets:Checking    $-1500.00
+
+test bal -Z 86400 --market Assets:Brokerage
+            $1500.00  Assets:Brokerage
+end test

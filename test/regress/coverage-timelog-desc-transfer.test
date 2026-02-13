@@ -1,0 +1,10 @@
+; Coverage: timelog.cc lines 109-115: desc and note transfer from checkout to checkin
+; When the check-in has no description, the checkout description is used as
+; the payee. When the check-in has no note, the checkout note is used.
+
+i 2024/01/15 09:00:00 Project:Work
+o 2024/01/15 12:00:00 Project:Work  Afternoon work
+
+test reg --columns=80
+24-Jan-15 Afternoon work        Project:Work                  3.00h        3.00h
+end test

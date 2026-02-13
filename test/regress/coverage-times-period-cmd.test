@@ -1,0 +1,40 @@
+; Test the "period" command which exercises show_period_tokens and dump
+; Exercises: show_period_tokens (lines 1890-1901)
+; token_t::dump (lines 515-632)
+; token_t::to_string (lines 426-513)
+; date_interval_t::dump (lines 1560-1612)
+; date_interval_t::stabilize (lines 1345-1461)
+; date_interval_t::resolve_end (lines 1300-1315)
+; date_interval_t::operator++ (lines 1536-1558)
+; date_duration_t::find_nearest (lines 1317-1343)
+; date_duration_t operator<< (lines 323-337)
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test period --now 2024/06/15 "monthly from 2024/01 to 2024/05"
+--- Period expression tokens ---
+TOK_MONTHLY: monthly
+TOK_SINCE: since
+TOK_DATE:  year 2024 month Jan
+TOK_UNTIL: until
+TOK_DATE:  year 2024 month May
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024 month Jan to year 2024 month May
+duration: 1 month
+
+--- After stabilization ---
+   range: from year 2024 month Jan to year 2024 month May
+   start: 24-Jan-01
+  finish: 24-May-01
+duration: 1 month
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01 -- 24-Jan-31
+ 2: 24-Feb-01 -- 24-Feb-29
+ 3: 24-Mar-01 -- 24-Mar-31
+ 4: 24-Apr-01 -- 24-Apr-30
+end test

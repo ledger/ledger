@@ -1,0 +1,12 @@
+; Coverage: account.cc line 320: get_earliest_checkin function
+; Tests format expression with earliest_checkin for timelog entries
+
+i 2024/01/15 09:00:00 Project:Work  Morning task
+o 2024/01/15 12:00:00
+
+i 2024/01/16 13:00:00 Project:Work  Afternoon task
+o 2024/01/16 17:00:00
+
+test bal --format "%(earliest_checkin)\n" --args-only --columns=80
+2024/01/15 09:00:00
+end test

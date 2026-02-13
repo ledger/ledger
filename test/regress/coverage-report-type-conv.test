@@ -1,0 +1,29 @@
+; Test type conversion functions (exercises report.cc fn_to_boolean/fn_to_int/fn_to_string/etc.)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test eval "to_boolean(true)"
+1
+end test
+
+test eval "to_int(42)"
+42
+end test
+
+test eval "to_string(\"hello\")"
+hello
+end test
+
+test eval "to_amount(42)"
+42
+end test
+
+test eval "to_balance(100)"
+100
+end test
+
+test eval "to_sequence(42)"
+(42)
+end test

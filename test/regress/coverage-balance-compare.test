@@ -1,0 +1,22 @@
+; Test balance.h: balance comparison operations for sorting
+; Coverage target: balance.h - operator== for balance, operator< for sorting,
+;   balance accumulation and sorting across different commodities
+
+2024/01/15 Purchase
+    Expenses:Food       $100.00
+    Expenses:Travel     50 EUR
+    Assets:Checking
+
+2024/01/20 Purchase2
+    Expenses:Food       $100.00
+    Assets:Checking
+
+test bal Expenses --flat --sort total --no-total -> 0
+             $200.00  Expenses:Food
+              50 EUR  Expenses:Travel
+end test
+
+test bal Expenses --flat --no-total --format "%(account) %(total)\n" -> 0
+Expenses:Food $200.00
+Expenses:Travel 50 EUR
+end test

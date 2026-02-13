@@ -1,0 +1,22 @@
+; Test balance.h: zero balance operations and is_empty/is_realzero
+; Coverage target: balance.h - is_realzero (lines 415-423),
+;   is_empty (line 425), balance simplification for zero amounts
+
+2024/01/15 Purchase
+    Expenses:Food       $0.00
+    Assets:Checking
+
+2024/01/20 Purchase2
+    Expenses:Food       $100.00
+    Assets:Checking
+
+2024/01/25 Refund
+    Expenses:Food       $-100.00
+    Assets:Checking
+
+test bal --empty Expenses:Food -> 0
+                   0  Expenses:Food
+end test
+
+test bal Expenses:Food -> 0
+end test

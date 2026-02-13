@@ -1,0 +1,20 @@
+; Test global.cc: report_error with error context
+; Exercises report_error (lines 172-185) including context display
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking  $-25.00
+
+test -f "$FILE" bal -> 1
+__ERROR__
+While parsing file "$FILE", line 6:
+While balancing transaction from "$FILE", lines 4-6:
+> 2024/01/15 Grocery Store
+>     Expenses:Food    $50.00
+>     Assets:Checking  $-25.00
+Unbalanced remainder is:
+              $25.00
+Amount to balance against:
+              $50.00
+Error: Transaction does not balance
+end test

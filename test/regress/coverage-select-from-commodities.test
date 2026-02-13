@@ -1,0 +1,15 @@
+; Coverage test for select.cc: FROM commodities path
+; Exercises: select_command FROM commodities (lines 362-366)
+
+2024/01/15 Purchase
+    Assets:Stocks    10 AAPL @ $150.00
+    Assets:Checking
+
+2024/01/20 Purchase
+    Assets:Stocks    5 GOOG @ $100.00
+    Assets:Checking
+
+test select date, account, amount from commodities --columns=80
+24-Jan-15 AAPL                                                             $150
+24-Jan-20 GOOG                                                             $100
+end test

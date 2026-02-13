@@ -1,0 +1,13 @@
+; Test commodity output with thousands separator (covers commodity.cc lines 506-507)
+; Exercises COMMODITY_STYLE_THOUSANDS flag
+
+commodity 1,000.00 USD
+
+2024/01/15 Purchase
+    Expenses:Food         1,500.00 USD
+    Assets:Checking
+
+test reg
+24-Jan-15 Purchase              Expenses:Food          1,500.00 USD 1,500.00 USD
+                                Assets:Checking        -1,500.00 USD            0
+end test

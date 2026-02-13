@@ -1,0 +1,20 @@
+; Test collapse_posts filter with depth option (covers filters.h collapse_posts)
+; Exercises collapse filtering with depth-based account collapsing
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries              $50.00
+    Assets:Checking
+
+2024/01/15 Gas Station
+    Expenses:Transport:Fuel              $35.00
+    Assets:Checking
+
+2024/01/20 Restaurant
+    Expenses:Food:Dining                 $45.00
+    Assets:Checking
+
+test reg --collapse Expenses
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+24-Jan-15 Gas Station           Expense:Transport:Fuel       $35.00       $85.00
+24-Jan-20 Restaurant            Expenses:Food:Dining         $45.00      $130.00
+end test

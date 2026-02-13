@@ -1,0 +1,14 @@
+; Test EXPR_GENERAL in auto xact check_exprs
+; Targets: xact.cc lines 794-795 (EXPR_GENERAL eval path)
+
+= /Expenses/
+    expr commodity == "$"
+    (Budget)                  0.10
+
+2024/01/15 Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg Budget --columns 80
+24-Jan-15 Store                 (Budget)                      $5.00        $5.00
+end test

@@ -1,0 +1,28 @@
+; Test op.cc: O_DEFINE with O_CALL (function definitions) and O_LAMBDA
+; Exercises: O_DEFINE O_CALL handler (lines 144-155),
+;   O_LAMBDA compile (lines 162-183), call_lambda (lines 445-479),
+;   find_definition (lines 415-443), op_t::call (lines 482-491)
+
+test eval "add(x, y) = x + y; add(3, 7)"
+10
+end test
+
+test eval "mul(a, b) = a * b; mul(4, 5)"
+20
+end test
+
+test eval "sq(n) = n * n; sq(6)"
+36
+end test
+
+test eval "max(a, b) = a > b ? a : b; max(10, 20)"
+20
+end test
+
+test eval "min(a, b) = a < b ? a : b; min(10, 20)"
+10
+end test
+
+test eval "inc(x) = x + 1; inc(inc(3))"
+5
+end test

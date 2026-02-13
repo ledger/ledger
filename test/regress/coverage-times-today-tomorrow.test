@@ -1,0 +1,30 @@
+; Test today/tomorrow/yesterday as standalone period tokens
+; (exercises handle_simple_period_token in times.cc: lines 1095-1111)
+; These are handled differently from "since today" etc.
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/03/20 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/06/10 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+test reg --now 2024/01/15 --period "today"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --now 2024/01/14 --period "tomorrow"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --now 2024/01/16 --period "yesterday"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

@@ -1,0 +1,18 @@
+; Test query with for keyword followed by show and since
+; Covers query.cc lines 510-516 (for/since/until termination on show keyword)
+
+2024/01/15 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/02/20 Gas Station
+    Expenses:Gas               $35.00
+    Assets:Checking
+
+2024/03/25 Restaurant
+    Expenses:Dining            $45.00
+    Assets:Checking
+
+test reg for 2024/02 show Expenses
+24-Feb-20 Gas Station           Expenses:Gas                 $35.00       $35.00
+end test

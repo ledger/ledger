@@ -1,0 +1,10 @@
+; Test format with only max_width (no min_width) (exercises format.cc line 216: min=max when min==0)
+
+2024/01/15 * Test
+    Expenses:Food:Groceries:VeryLongSubcategory:MoreDetails    $50.00
+    Assets:Checking:MainAccount:LongBankName:SubAccount
+
+test reg --format '%.15a\n'
+Expenses:Food..
+Assets:Checki..
+end test

@@ -1,0 +1,37 @@
+; Test xact.h: xact_base_t::magnitude and finalize methods
+; Also exercises xact_t::valid, has_xdata, clear_xdata indirectly
+; Targets: xact.h lines 71-77, xact.cc lines 80-105
+
+2024/01/15 (TXN-001) Grocery Store
+    ; :groceries:
+    Expenses:Food    $50.00
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/20 (TXN-002) Split Purchase
+    Expenses:Food       $30.00
+    Expenses:Transport  $20.00
+    Assets:Checking
+
+; Test that multi-posting transactions finalize correctly
+test bal Expenses --columns 80
+             $125.00  Expenses
+             $105.00    Food
+              $20.00    Transport
+--------------------
+             $125.00
+end test
+
+; Test with transaction code filtering (exercises code accessor)
+test reg --limit "code =~ /TXN/" Expenses --columns 80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Expenses:Food                $25.00       $75.00
+24-Jan-20 Split Purchase        Expenses:Food                $30.00      $105.00
+                                Expenses:Transport           $20.00      $125.00
+end test
+
+; Test with tag filtering on transactions
+test reg --limit "has_tag(\"groceries\")" Expenses --columns 80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Expenses:Food                $25.00       $75.00
+end test

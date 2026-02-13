@@ -1,0 +1,25 @@
+; Test interval_posts filter with monthly period (covers filters.h lines 666-693)
+; Exercises interval_posts with monthly aggregation
+
+2024/01/15 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/25 Gas Station
+    Expenses:Gas               $35.00
+    Assets:Checking
+
+2024/02/10 Grocery Store
+    Expenses:Food              $45.00
+    Assets:Checking
+
+2024/02/20 Restaurant
+    Expenses:Dining            $40.00
+    Assets:Checking
+
+test reg --monthly Expenses
+24-Jan-01 - 24-Jan-31           Expenses:Food                $50.00       $50.00
+                                Expenses:Gas                 $35.00       $85.00
+24-Feb-01 - 24-Feb-29           Expenses:Dining              $40.00      $125.00
+                                Expenses:Food                $45.00      $170.00
+end test

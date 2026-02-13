@@ -1,0 +1,67 @@
+; Test date_interval_t operations: stabilize, find_period, operator++
+; Exercises stabilize (lines 1345-1461)
+; find_period (lines 1463-1534)
+; operator++ (lines 1536-1558)
+; resolve_end (lines 1300-1315)
+; find_nearest (lines 1317-1343)
+; These are triggered by period expressions combining duration with ranges
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/03/20 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+2024/04/15 Payee D
+    Expenses:Gas    $45.00
+    Assets:Checking
+
+2024/06/10 Payee E
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+test reg --now 2024/06/15 --period "monthly from 2024/01 to 2024/05"
+24-Jan-01 - 24-Jan-31           Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+24-Feb-01 - 24-Feb-29           Assets:Checking           $-1000.00    $-1000.00
+                                Expenses:Rent              $1000.00            0
+24-Mar-01 - 24-Mar-31           Assets:Checking             $-75.00      $-75.00
+                                Expenses:Transport           $75.00            0
+24-Apr-01 - 24-Apr-30           Assets:Checking             $-45.00      $-45.00
+                                Expenses:Gas                 $45.00            0
+end test
+
+test reg --now 2024/06/15 --period "weekly from 2024/01/14 to 2024/02/04"
+24-Jan-14 - 24-Jan-20           Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+end test
+
+test reg --now 2024/06/15 --period "quarterly from 2024/01 to 2024/07"
+24-Jan-01 - 24-Mar-31           Assets:Checking           $-1125.00    $-1125.00
+                                Expenses:Food                $50.00    $-1075.00
+                                Expenses:Rent              $1000.00      $-75.00
+                                Expenses:Transport           $75.00            0
+24-Apr-01 - 24-Jun-30           Assets:Checking            $-165.00     $-165.00
+                                Expenses:Gas                 $45.00     $-120.00
+                                Expenses:Utilities          $120.00            0
+end test
+
+test reg --now 2024/06/15 --period "yearly from 2024/01 to 2025/01"
+24-Jan-01 - 24-Dec-31           Assets:Checking           $-1290.00    $-1290.00
+                                Expenses:Food                $50.00    $-1240.00
+                                Expenses:Gas                 $45.00    $-1195.00
+                                Expenses:Rent              $1000.00     $-195.00
+                                Expenses:Transport           $75.00     $-120.00
+                                Expenses:Utilities          $120.00            0
+end test
+
+test reg --now 2024/06/15 --period "daily from 2024/01/14 to 2024/01/17"
+24-Jan-15 - 24-Jan-15           Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+end test

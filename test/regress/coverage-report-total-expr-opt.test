@@ -1,0 +1,17 @@
+; Test -T (total expression) option (exercises report.cc OPT_CH(total_))
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+test bal Expenses -T "total * 2"
+             $160.00  Expenses
+              $60.00    Dining
+             $100.00    Food
+--------------------
+             $160.00
+end test

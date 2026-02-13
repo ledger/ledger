@@ -1,0 +1,18 @@
+; Test single-letter option shortcuts (exercises report.cc lookup_option: -C)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 Pending Purchase
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+2024/02/15 * Utility Bill
+    Expenses:Utilities         $100.00
+    Assets:Checking
+
+test reg -C Expenses
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Feb-15 Utility Bill          Expenses:Utilities          $100.00      $150.00
+end test

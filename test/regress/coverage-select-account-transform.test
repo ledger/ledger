@@ -1,0 +1,31 @@
+; Coverage test for select.cc: account identifier transformation in select
+; Exercises: get_principal_identifiers with do_transforms=true (lines 48-89),
+;   account -> display_account transformation (line 62),
+;   amount -> display_amount transformation (line 68),
+;   total -> display_total transformation (line 74)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; When used in select columns, 'account' is transformed to 'display_account',
+; 'amount' to 'display_amount', and 'total' to 'display_total'
+test select date, account, amount, total from posts --columns=80
+24-Jan-15 Expenses:Food                                     $50.00       $50.00
+24-Jan-15 Assets:Checking                                  $-50.00            0
+24-Jan-20 Expenses:Transport                                $30.00       $30.00
+24-Jan-20 Assets:Checking                                  $-30.00            0
+end test
+
+; Test from accounts to exercise account identifier in accounts report context
+test select account, total from accounts --columns=80
+Assets:Checking      $-80.00
+Expenses       $80.00
+Food       $50.00
+Transport       $30.00
+            0
+end test

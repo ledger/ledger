@@ -1,0 +1,13 @@
+; Test auto transaction with amount_expr
+; Targets: xact.cc lines 807-818 (amount_expr evaluation path)
+
+= /Expenses/
+    (Savings)                  (amount * -2)
+
+2024/01/15 Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg Savings --columns 80
+24-Jan-15 Store                 (Savings)                  $-100.00     $-100.00
+end test

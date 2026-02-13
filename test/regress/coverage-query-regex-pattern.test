@@ -1,0 +1,18 @@
+; Test query parser with /regex/ pattern syntax (covers query.cc lines 78-98)
+; Forward slash delimited patterns in queries
+
+2024/01/15 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Gas               $35.00
+    Assets:Checking
+
+2024/01/25 Restaurant
+    Expenses:Dining            $45.00
+    Assets:Checking
+
+test reg '/Fo.d/'
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+end test

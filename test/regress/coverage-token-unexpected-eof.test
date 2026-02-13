@@ -1,0 +1,8 @@
+; Test token.cc unexpected() for TOK_EOF path in period parser
+; Exercises unexpected(char=0) TOK_EOF case (line 467-468)
+; An incomplete period expression triggers unexpected end
+
+test reg --period "every" -> 1
+__ERROR__
+Error: Unexpected end of expression
+end test

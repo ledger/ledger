@@ -1,0 +1,13 @@
+; Test mask_t::assign_glob with '?' pattern via include directive
+; Covers mask.cc lines 59-60 (? glob character)
+
+include glob_test_dir/data_?.dat
+
+test bal Expenses
+             $130.00  Expenses
+              $45.00    Dining
+              $50.00    Food
+              $35.00    Gas
+--------------------
+             $130.00
+end test

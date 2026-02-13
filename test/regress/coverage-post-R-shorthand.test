@@ -1,0 +1,12 @@
+; Test post_t::lookup for R shorthand
+; Targets: post.cc lines 514-515 (R -> get_real)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    (Budget:Food)              $50.00
+    Assets:Checking
+
+test reg --format "%(R) %(account)\n" --real
+true Expenses:Food
+true Assets:Checking
+end test

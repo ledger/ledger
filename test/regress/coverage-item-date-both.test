@@ -1,0 +1,11 @@
+; Test parse_tags with both primary and aux date in brackets
+; Targets: item.cc lines 143-157 (parse_tags date parsing)
+
+2024/01/15 * Store
+    ; [2024/02/01=2024/03/01]
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(date) %(effective_date) %(account)\n" Expenses
+2024/02/01 2024/03/01 Expenses:Food
+end test

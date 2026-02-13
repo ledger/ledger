@@ -1,0 +1,40 @@
+; Coverage test for op.cc: SCOPE and various calc paths
+; Exercises: SCOPE calc with bound scope (lines 278-286),
+;   O_DEFINE compile paths, O_LAMBDA compile (lines 162-183),
+;   find_definition with FUNCTION and O_LAMBDA (lines 415-443)
+
+; Test expressions with multiple variable definitions and function calls
+; that exercise the scope and lambda paths
+test eval "x = 10; y = 20; x + y"
+30
+end test
+
+; Exercises O_LAMBDA compile where rhs changes (line 182)
+test eval "add(a, b) = a + b; add(3, 4)"
+7
+end test
+
+; Multiple nested function definitions exercise scope management
+test eval "x = 5; dbl(n) = n * 2; dbl(x)"
+10
+end test
+
+; Chain of calls exercises find_definition recursion
+test eval "inc(x) = x + 1; dec(x) = x - 1; inc(dec(10))"
+10
+end test
+
+; Test variable reassignment in sequence
+test eval "x = 1; x = x + 1; x"
+2
+end test
+
+; Deeply nested expression evaluation
+test eval "(1 + 2) * (3 + 4)"
+21
+end test
+
+; Test with boolean result in sequence
+test eval "x = 5; x > 3"
+1
+end test

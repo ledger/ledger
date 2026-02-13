@@ -1,0 +1,15 @@
+; Test commodity comparison with tag annotations
+; Covers commodity.cc lines 453-458 (tag comparison in compare_by_commodity)
+
+2024/01/15 Buy Lot 1
+    Assets:Brokerage         10 AAPL {$150.00} (lot1)
+    Assets:Checking
+
+2024/01/20 Buy Lot 2
+    Assets:Brokerage          5 AAPL {$150.00}
+    Assets:Checking
+
+test bal --lots Assets:Brokerage
+       5 AAPL {$150}
+10 AAPL {$150} (lot1)  Assets:Brokerage
+end test

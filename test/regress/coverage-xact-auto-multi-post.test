@@ -1,0 +1,15 @@
+; Test auto transaction with multiple auto posts and different amounts
+; Targets: xact.cc lines 820-827 (post_amount with commodity)
+
+= /Expenses/
+    (Tax:Federal)              $-5.00
+    (Tax:State)                $-2.00
+
+2024/01/15 Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg Tax --columns 80
+24-Jan-15 Store                 (Tax:Federal)                $-5.00       $-5.00
+                                (Tax:State)                  $-2.00       $-7.00
+end test

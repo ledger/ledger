@@ -1,0 +1,10 @@
+; Test TRUNCATE_LEADING style (exercises format.cc truncate leading path)
+
+2024/01/15 * Test
+    Expenses:Food:Groceries:VeryLongSubcategory:MoreDetails    $50.00
+    Assets:Checking:MainAccount:LongBankName:SubAccount
+
+test reg --columns=60 --truncate leading
+24-Jan-15 Test           ..y:MoreDetails    $50.00    $50.00
+                         ..me:SubAccount   $-50.00         0
+end test

@@ -1,0 +1,11 @@
+; Test calculated and cost_calculated flags
+; Targets: post.cc lines 136-141 (get_is_calculated, get_is_cost_calculated)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(calculated) %(cost_calculated) %(account)\n"
+false false Expenses:Food
+true false Assets:Checking
+end test

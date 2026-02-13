@@ -1,0 +1,19 @@
+; Test value.cc: operator*= BALANCE * AMOUNT-with-commodity (line 659)
+; When a multi-commodity balance is multiplied by an amount that has a commodity
+
+2024/01/15 Purchase
+    Expenses:Both    $50.00
+    Expenses:Both    30 EUR
+    Assets:Checking  $-50.00
+    Assets:Savings  -30 EUR
+
+; BALANCE * AMOUNT-with-commodity error (line 659 break)
+test bal "Expenses:Both" --format "%(display_total * to_amount(\"$5\"))\n" --no-total -> 1
+__ERROR__
+While evaluating value expression:
+  (display_total * to_amount("$5"))
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+While multiplying $5.00 with $50.00
+30 EUR:
+Error: Cannot multiply a balance with an amount
+end test

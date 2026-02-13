@@ -1,0 +1,19 @@
+; Test query parser with '|' OR operator (covers query.cc lines 137-138)
+; The '|' character in a query should combine terms with OR logic
+
+2024/01/15 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Gas               $35.00
+    Assets:Checking
+
+2024/01/25 Restaurant
+    Expenses:Dining            $45.00
+    Assets:Checking
+
+test reg Food '|' Gas
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-20 Gas Station           Expenses:Gas                 $35.00       $85.00
+end test

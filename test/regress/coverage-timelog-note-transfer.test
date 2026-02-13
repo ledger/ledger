@@ -1,0 +1,10 @@
+; Coverage: timelog.cc lines 114-115: note transfer from checkout to checkin
+; When the check-in has no note, the checkout note is used.
+
+i 2024/01/15 09:00:00 Project:Work  Morning work
+o 2024/01/15 12:00:00 Project:Work  Done  ; Completed session
+
+test print
+2024/01/15 (Done) Morning work  ;Completed session
+    Project:Work                              10800s
+end test

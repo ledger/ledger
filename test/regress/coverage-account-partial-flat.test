@@ -1,0 +1,17 @@
+; Coverage: account.cc lines 225-233: partial_name with flat=true
+; Tests the flat account display which uses partial_name(flat=true)
+
+2024/01/15 * Payee
+    Expenses:Food:Groceries    $50.00
+    Expenses:Food:Dining       $30.00
+    Expenses:Auto:Gas          $40.00
+    Assets:Checking
+
+test bal --flat --columns=80
+            $-120.00  Assets:Checking
+              $40.00  Expenses:Auto:Gas
+              $30.00  Expenses:Food:Dining
+              $50.00  Expenses:Food:Groceries
+--------------------
+                   0
+end test

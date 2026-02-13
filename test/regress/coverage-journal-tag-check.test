@@ -1,0 +1,28 @@
+; Coverage: journal.cc register_metadata(), check_metadata()
+; Tests unknown tag warning with --strict
+
+commodity $
+    format $1,000.00
+account Expenses:Food
+account Assets:Checking
+
+tag Category
+
+2024/01/15 Store
+    ; Category: food
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Shop
+    ; UnknownTag: value
+    Expenses:Food    $35.00
+    Assets:Checking
+
+test bal --strict -> 0
+             $-85.00  Assets:Checking
+              $85.00  Expenses:Food
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 19: Unknown metadata tag 'UnknownTag'
+end test

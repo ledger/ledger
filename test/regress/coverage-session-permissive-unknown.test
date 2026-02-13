@@ -1,0 +1,13 @@
+; Test session.cc: --permissive option with undeclared accounts
+; Exercises permissive mode (line 117-118) which suppresses all warnings
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test bal --permissive -> 0
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

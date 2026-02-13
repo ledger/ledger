@@ -1,0 +1,15 @@
+; Test auto transaction deferred tag applied to specific post
+; Targets: xact.cc lines 784-789, 911-916 (deferred_notes handling)
+
+= /Expenses/
+    ; MyTag: hello
+    (Budget)                  0.10
+
+2024/01/15 Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --limit "has_tag(\"MyTag\")" --format "%(tag(\"MyTag\")) %(account) %(amount)\n"
+hello Expenses:Food $50.00
+hello Budget $5.00
+end test

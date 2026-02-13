@@ -1,0 +1,25 @@
+; Coverage test for op.cc: print() method for arithmetic operators
+; Exercises: print O_ADD (lines 648-653), O_SUB (lines 655-660),
+;   O_MUL (lines 662-667), O_DIV (lines 669-674) via select column expressions
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test select amount + total from posts --columns=80
+     $100.00
+     $-50.00
+      $60.00
+     $-30.00
+end test
+
+test select amount / 2 from posts --columns=80
+      $25.00
+     $-25.00
+      $15.00
+     $-15.00
+end test

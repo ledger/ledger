@@ -1,0 +1,12 @@
+; Test session.cc: lot_price(), lot_date(), lot_tag() through eval precommand
+; These functions in session.cc are only reached when looked up as session-level
+; functions, not through the report scope. The eval command with explicit
+; lot_price/lot_date/lot_tag calls on annotated amounts should exercise them.
+
+2024/01/15 Buy Stock
+    Assets:Brokerage  10 AAPL {$150.00} [2024/01/15] (lot1)
+    Assets:Checking  $-1500.00
+
+test reg --format "%(lot_price(amount))|%(lot_date(amount))|%(lot_tag(amount))\n" Assets:Brokerage
+$150.00|2024/01/15|lot1
+end test

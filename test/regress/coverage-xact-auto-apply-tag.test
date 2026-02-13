@@ -1,0 +1,16 @@
+; Test apply_format in auto xact deferred tag notes
+; Targets: xact.cc lines 722-727 (apply_format with %( in tag value)
+; Also tests lines 784-789, 911-916 (deferred_notes applied to posts)
+
+= /Expenses/
+    ; Category:: payee
+    (Budget)                  0.10
+
+2024/01/15 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --limit "has_tag(\"Category\")" --format "%(tag(\"Category\")) %(account) %(amount)\n"
+Grocery Store Expenses:Food $50.00
+ Budget $5.00
+end test

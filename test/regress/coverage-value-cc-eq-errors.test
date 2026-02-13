@@ -1,0 +1,22 @@
+; Test value.cc: is_equal_to error/break paths (lines 759-850)
+; Exercises type mismatch in equality comparison
+
+; BOOLEAN == INTEGER error (line 759 break, then 853-854 throw)
+test eval "true == 5" -> 1
+__ERROR__
+While evaluating value expression:
+  (true == 5)
+  ^^^^^^^^^^^
+While comparing equality of 1 and 5:
+Error: Cannot compare a boolean to an amount
+end test
+
+; AMOUNT == STRING error (line 793 break, then 853-854 throw)
+test eval "5 == \"text\"" -> 1
+__ERROR__
+While evaluating value expression:
+  (5 == "text")
+  ^^^^^^^^^^^^^
+While comparing equality of 5 and text:
+Error: Cannot compare an amount to a string
+end test

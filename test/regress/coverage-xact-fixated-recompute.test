@@ -1,0 +1,19 @@
+; Test fixated price recompute path when balance has > 2 commodities
+; Targets: xact.cc lines 271-302 (fixated price recompute path)
+; This test creates a multi-commodity transaction where fixated prices
+; trigger cost calculation to reduce the balance
+
+2024/01/15 * Convert Multiple Currencies
+    Assets:USD                 100 USD {=$1.10}
+    Assets:EUR                 200 EUR {=$1.20}
+    Assets:Cash
+
+test bal Assets --columns 80
+                   0  Assets
+            -200 EUR
+            -100 USD    Cash
+             200 EUR    EUR
+             100 USD    USD
+--------------------
+                   0
+end test

@@ -1,0 +1,19 @@
+; Test by_payee_posts filter (covers filters.h lines 751-756)
+; Exercises the --by-payee subtotaling
+
+2024/01/15 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Gas               $35.00
+    Assets:Checking
+
+2024/01/25 Grocery Store
+    Expenses:Food              $25.00
+    Assets:Checking
+
+test reg --by-payee Expenses
+24-Jan-20 Gas Station           Expenses:Gas                 $35.00       $35.00
+24-Jan-15 Grocery Store         Expenses:Food                $75.00      $110.00
+end test

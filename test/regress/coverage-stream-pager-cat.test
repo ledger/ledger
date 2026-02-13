@@ -1,0 +1,14 @@
+; Test stream.cc: pager initialization and cleanup
+; Exercises do_fork (lines 59-95), initialize pager path (line 102-103)
+; and close with pager (lines 115-123)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test bal --pager cat -> 0
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

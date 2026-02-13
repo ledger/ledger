@@ -1,0 +1,51 @@
+; Test next/last with month, day, year in handle_relative_token
+; (exercises handle_relative_token in times.cc: lines 1038-1093)
+; Targets TOK_MONTH, TOK_DAY, TOK_YEAR branches and TOK_A_WDAY branch
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/03/20 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/06/10 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+2024/08/05 Payee D
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+2024/11/15 Payee E
+    Expenses:Entertainment    $200.00
+    Assets:Checking
+
+test reg --now 2024/02/15 --period "next month"
+24-Mar-20 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test
+
+test reg --now 2024/04/20 --period "last month"
+24-Mar-20 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test
+
+test reg --now 2024/01/14 --period "next day"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --now 2024/01/16 --period "last day"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --now 2023/06/15 --period "next year" Expenses:Food
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+end test
+
+test reg --now 2025/06/15 --period "last year" Expenses:Food
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+end test

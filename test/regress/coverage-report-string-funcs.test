@@ -1,0 +1,17 @@
+; Test string functions (exercises report.cc fn_trim/fn_quoted_rfc/fn_join)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test eval "trim(\"  hello  \")"
+hello
+end test
+
+test eval "quoted_rfc(\"hello\")"
+"hello"
+end test
+
+test eval "join(\"line1\")"
+line1
+end test

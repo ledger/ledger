@@ -1,0 +1,33 @@
+; Test token.cc: && and || operator tokens, !~ NMATCH operator
+; Exercises: && token (lines 163-169), || token (lines 174-183),
+;   !~ NMATCH (lines 253-258), -> ARROW (lines 267-272)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+2024/01/25 Restaurant
+    Expenses:Food:Dining    $45.00
+    Assets:Checking
+
+test reg --display "account =~ /Food/ && amount > 0" --columns=80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-25 Restaurant            Expenses:Food:Dining         $45.00       $45.00
+end test
+
+test reg --display "account =~ /Food/ || account =~ /Transport/" --columns=80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $30.00
+24-Jan-25 Restaurant            Expenses:Food:Dining         $45.00       $45.00
+end test
+
+test reg --display "account !~ /Food/" --columns=80
+24-Jan-15 Grocery Store         Assets:Checking             $-50.00            0
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+24-Jan-25 Restaurant            Assets:Checking             $-45.00            0
+end test

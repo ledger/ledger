@@ -1,0 +1,10 @@
+; Test primary commodity check
+; Targets: post.cc lines 211-215 (get_commodity_is_primary)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(primary) %(account)\n" Expenses
+false Expenses:Food
+end test

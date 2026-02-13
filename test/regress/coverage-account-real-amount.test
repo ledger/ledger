@@ -1,0 +1,15 @@
+; Coverage: account.cc line 626: amount(real_only=true)
+; Tests --real flag which filters virtual postings from account amounts
+
+2024/01/15 * Payee
+    Expenses:Food  $50.00
+    Assets:Checking
+    [Budget:Food]  $50.00
+    [Budget:Savings]  $-50.00
+
+test bal --real --columns=80
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

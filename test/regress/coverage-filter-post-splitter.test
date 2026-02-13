@@ -1,0 +1,33 @@
+; Coverage: filters.cc post_splitter::flush(), post_splitter::operator()
+; Coverage: filters.cc post_splitter::print_title()
+; Coverage: filters.h post_splitter::clear(), ~post_splitter()
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Auto:Gas    $35.00
+    Assets:Checking
+
+2024/02/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/02/10 Gas Station
+    Expenses:Auto:Gas    $40.00
+    Assets:Checking
+
+test reg --group-by payee --columns=80
+Gas Station
+24-Jan-20 Gas Station           Expenses:Auto:Gas            $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+24-Feb-10 Gas Station           Expenses:Auto:Gas            $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+
+Grocery Store
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Feb-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test

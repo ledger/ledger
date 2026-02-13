@@ -1,0 +1,10 @@
+; Test value_t division of amount by long
+; Exercises value_t::operator/= AMOUNT/INTEGER path (lines 704-705)
+
+2024/01/15 Test
+    Expenses:Food  $100.00
+    Assets:Checking
+
+test eval "100 / 4"
+25
+end test

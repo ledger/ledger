@@ -1,0 +1,15 @@
+; Test session.cc: --no-aliases option
+; Exercises no_aliases setting (lines 108-109)
+
+alias food=Expenses:Food
+
+2024/01/15 Grocery Store
+    food    $50.00
+    Assets:Checking
+
+test bal --no-aliases
+             $-50.00  Assets:Checking
+              $50.00  food
+--------------------
+                   0
+end test

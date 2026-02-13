@@ -1,0 +1,11 @@
+; Test item_t::lookup for depth keyword
+; Targets: item.cc lines 428-429, 350-352 (get_depth)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(depth) %(account)\n"
+2 Expenses:Food
+2 Assets:Checking
+end test

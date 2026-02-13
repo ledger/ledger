@@ -1,0 +1,19 @@
+; Test query parser with 'meta' keyword for metadata matching (covers query.cc line 224)
+; The 'meta' keyword should work the same as 'tag' keyword
+
+2024/01/15 Grocery Store
+    ; Category: weekly
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    ; Category: monthly
+    Expenses:Gas               $35.00
+    Assets:Checking
+
+test reg meta Category
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-20 Gas Station           Expenses:Gas                 $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+end test

@@ -1,0 +1,19 @@
+; Coverage: journal.cc lines 368-414: UUID duplicate detection
+; Two transactions with the same UUID and equivalent postings should deduplicate
+
+2024/01/15 Store
+    ; UUID: abc-123
+    Expenses:Food       $50.00
+    Assets:Checking
+
+2024/01/15 Store
+    ; UUID: abc-123
+    Expenses:Food       $50.00
+    Assets:Checking
+
+test bal --columns=80
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

@@ -1,0 +1,92 @@
+; Test all month name parsing (string_to_month_of_year)
+; (exercises lines 225-252 in times.cc)
+; Tests every month abbreviation: jan, feb, mar, apr, may, jun,
+; jul, aug, sep, oct, nov, dec
+
+2024/01/15 Jan Xact
+    Expenses:Jan    $10.00
+    Assets:Checking
+
+2024/02/15 Feb Xact
+    Expenses:Feb    $20.00
+    Assets:Checking
+
+2024/03/15 Mar Xact
+    Expenses:Mar    $30.00
+    Assets:Checking
+
+2024/04/15 Apr Xact
+    Expenses:Apr    $40.00
+    Assets:Checking
+
+2024/05/15 May Xact
+    Expenses:May    $50.00
+    Assets:Checking
+
+2024/06/15 Jun Xact
+    Expenses:Jun    $60.00
+    Assets:Checking
+
+2024/07/15 Jul Xact
+    Expenses:Jul    $70.00
+    Assets:Checking
+
+2024/08/15 Aug Xact
+    Expenses:Aug    $80.00
+    Assets:Checking
+
+2024/09/15 Sep Xact
+    Expenses:Sep    $90.00
+    Assets:Checking
+
+2024/10/15 Oct Xact
+    Expenses:Oct    $100.00
+    Assets:Checking
+
+2024/11/15 Nov Xact
+    Expenses:Nov    $110.00
+    Assets:Checking
+
+2024/12/15 Dec Xact
+    Expenses:Dec    $120.00
+    Assets:Checking
+
+test reg --now 2024/12/30 --period "feb"
+24-Feb-15 Feb Xact              Expenses:Feb                 $20.00       $20.00
+                                Assets:Checking             $-20.00            0
+end test
+
+test reg --now 2024/12/30 --period "apr"
+24-Apr-15 Apr Xact              Expenses:Apr                 $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+end test
+
+test reg --now 2024/12/30 --period "may"
+24-May-15 May Xact              Expenses:May                 $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --now 2024/12/30 --period "jun"
+24-Jun-15 Jun Xact              Expenses:Jun                 $60.00       $60.00
+                                Assets:Checking             $-60.00            0
+end test
+
+test reg --now 2024/12/30 --period "jul"
+24-Jul-15 Jul Xact              Expenses:Jul                 $70.00       $70.00
+                                Assets:Checking             $-70.00            0
+end test
+
+test reg --now 2024/12/30 --period "sep"
+24-Sep-15 Sep Xact              Expenses:Sep                 $90.00       $90.00
+                                Assets:Checking             $-90.00            0
+end test
+
+test reg --now 2024/12/30 --period "oct"
+24-Oct-15 Oct Xact              Expenses:Oct                $100.00      $100.00
+                                Assets:Checking            $-100.00            0
+end test
+
+test reg --now 2024/12/30 --period "dec"
+24-Dec-15 Dec Xact              Expenses:Dec                $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+end test

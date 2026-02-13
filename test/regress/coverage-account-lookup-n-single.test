@@ -1,0 +1,18 @@
+; Coverage: account.cc line 461-462: 'n' shortcut for get_subcount
+; Tests single-char 'n' function name (self posts count)
+
+2024/01/15 * Grocery
+    Expenses:Food  $50.00
+    Assets:Checking
+
+2024/02/15 * Restaurant
+    Expenses:Food  $30.00
+    Assets:Checking
+
+2024/03/15 * Shop
+    Expenses:Food  $20.00
+    Assets:Checking
+
+test bal --format "%(n)\n" Expenses:Food --args-only --columns=80
+3
+end test

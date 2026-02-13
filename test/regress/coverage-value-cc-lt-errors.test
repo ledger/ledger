@@ -1,0 +1,22 @@
+; Test value.cc: is_less_than error paths
+; Exercises type mismatch throws in less-than comparison
+
+; INTEGER < STRING error (line 896-898 break, then 998-999 throw)
+test eval "5 < \"text\"" -> 1
+__ERROR__
+While evaluating value expression:
+  (5 < "text")
+  ^^^^^^^^^^^^
+While comparing if 5 is less than text:
+Error: Cannot compare an amount to a string
+end test
+
+; AMOUNT < STRING error (line 913-915 break, then 998-999)
+test eval "5 < true" -> 1
+__ERROR__
+While evaluating value expression:
+  (5 < true)
+  ^^^^^^^^^^
+While comparing if 5 is less than 1:
+Error: Cannot compare an amount to a boolean
+end test

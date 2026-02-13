@@ -1,0 +1,21 @@
+; Test op.cc print() and calc for complex expressions
+; Exercises multiple operator print paths via format expressions
+
+2024/01/15 Test
+    Expenses:Food  $50.00
+    Assets:Checking
+
+; Nested arithmetic
+test eval "(3 + 4) * 2"
+14
+end test
+
+; String concatenation
+test eval "\"hello\" + \" world\""
+hello world
+end test
+
+; Chained comparisons with and
+test eval "(5 > 3) and (10 < 20)"
+1
+end test

@@ -1,0 +1,15 @@
+; Test commodities command (exercises report.cc commodities command and output.cc report_commodities)
+
+2024/01/15 * Buy Stock
+    Assets:Brokerage          10 AAPL @ $150.00
+    Assets:Checking          $-1500.00
+
+2024/01/20 * Buy More
+    Assets:Brokerage          5 GOOG @ $100.00
+    Assets:Checking          $-500.00
+
+test commodities
+$
+AAPL
+GOOG
+end test

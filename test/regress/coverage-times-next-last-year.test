@@ -1,0 +1,48 @@
+; Test "next year", "last 2 years", and "this quarter" as standalone periods
+; Exercises handle_relative_token TOK_YEAR (lines 1038-1042)
+; handle_relative_token TOK_QUARTER (lines 1045-1058)
+; handle_relative_token TOK_WEEK (lines 1061-1074)
+; handle_relative_token TOK_DAY (lines 1077-1081)
+; handle_relative_token TOK_MONTH (lines 1085-1090)
+
+2023/06/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/15 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/03/20 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+2024/06/10 Payee D
+    Expenses:Gas    $45.00
+    Assets:Checking
+
+2025/06/15 Payee E
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+test reg --now 2024/06/15 --period "next year"
+25-Jun-15 Payee E               Expenses:Utilities          $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+end test
+
+test reg --now 2024/06/15 --period "next quarter"
+end test
+
+test reg --now 2024/06/15 --period "next day"
+end test
+
+test reg --now 2024/06/15 --period "last 2 years"
+23-Jun-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-15 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+24-Mar-20 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+24-Jun-10 Payee D               Expenses:Gas                 $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+end test

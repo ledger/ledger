@@ -1,0 +1,19 @@
+; Test query parser with '#' token for code matching (covers query.cc lines 146-147)
+; The '#' character in a query should filter by transaction code
+
+2024/01/15 (1001) Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 (1002) Gas Station
+    Expenses:Gas               $35.00
+    Assets:Checking
+
+2024/01/25 (1003) Grocery Store
+    Expenses:Food              $25.00
+    Assets:Checking
+
+test reg '#1002'
+24-Jan-20 Gas Station           Expenses:Gas                 $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+end test

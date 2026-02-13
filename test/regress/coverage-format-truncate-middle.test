@@ -1,0 +1,10 @@
+; Test TRUNCATE_MIDDLE style (exercises format.cc truncate middle path)
+
+2024/01/15 * Test
+    Expenses:Food:Groceries:VeryLongSubcategory:MoreDetails    $50.00
+    Assets:Checking:MainAccount:LongBankName:SubAccount
+
+test reg --columns=60 --truncate middle
+24-Jan-15 Test           Expens..Details    $50.00    $50.00
+                         Assets..Account   $-50.00         0
+end test

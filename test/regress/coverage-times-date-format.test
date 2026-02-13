@@ -1,0 +1,29 @@
+; Test date formatting options
+; Exercises format_date with FMT_CUSTOM (lines 1811-1817)
+; and FMT_WRITTEN via print command (line 1809)
+; Also exercises set_input_date_format (lines 1841-1843)
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/03/20 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+test reg --date-format "%Y-%m-%d"
+2024-01-15 Payee A              Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+2024-03-20 Payee B              Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test
+
+test print
+2024/01/15 Payee A
+    Expenses:Food                             $50.00
+    Assets:Checking
+
+2024/03/20 Payee B
+    Expenses:Rent                           $1000.00
+    Assets:Checking
+end test

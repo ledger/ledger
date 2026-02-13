@@ -1,0 +1,12 @@
+; Test deferred (periodic) posting
+; Targets: xact.cc lines 462-464 (POST_DEFERRED handling)
+
+2024/01/15 * Monthly Rent
+    Expenses:Rent              $1200.00
+    Assets:Checking           $-1200.00
+        ; [2024/02/01]
+
+test reg --columns 80
+24-Jan-15 Monthly Rent          Expenses:Rent              $1200.00     $1200.00
+24-Feb-01 Monthly Rent          Assets:Checking           $-1200.00            0
+end test

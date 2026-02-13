@@ -1,0 +1,28 @@
+; Coverage: journal.cc lines 393-408: UUID with non-equivalent postings error
+; Two transactions with the same UUID but different amounts should error
+
+2024/01/15 Store
+    ; UUID: xyz-789
+    Expenses:Food       $50.00
+    Assets:Checking
+
+2024/01/15 Store
+    ; UUID: xyz-789
+    Expenses:Food       $75.00
+    Assets:Checking
+
+test bal --columns=80 -> 1
+__ERROR__
+While parsing file "$FILE", line 12:
+While comparing this previously seen transaction:
+> 2024/01/15 Store
+>     ; UUID: xyz-789
+>     Expenses:Food       $50.00
+>     Assets:Checking
+to this later transaction:
+> 2024/01/15 Store
+>     ; UUID: xyz-789
+>     Expenses:Food       $75.00
+>     Assets:Checking
+Error: Transactions with the same UUID must have equivalent postings
+end test

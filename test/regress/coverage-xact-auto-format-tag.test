@@ -1,0 +1,14 @@
+; Test apply_format with format expressions in deferred tag data
+; Targets: xact.cc lines 722-727 (apply_format with %( expressions)
+
+= /Expenses/
+    ; SourcePayee: %(payee)
+    (Budget)                  0.10
+
+2024/01/15 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg Budget --columns 80
+24-Jan-15 Grocery Store         (Budget)                      $5.00        $5.00
+end test

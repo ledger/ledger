@@ -1,0 +1,70 @@
+; Test balance.h: multi-commodity balance arithmetic and comparisons
+; Exercises balance_t operators, is_zero, is_nonzero, to_amount, number
+; Targets: balance.h lines 147, 188-229, 265-474
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP $1.30
+
+2024/01/15 International Store
+    Expenses:Food    $50.00
+    Expenses:Drink    10 EUR
+    Expenses:Misc    5 GBP
+    Assets:Checking  $-50.00
+    Assets:Checking  -10 EUR
+    Assets:Checking  -5 GBP
+
+; Test multi-commodity balance display (exercises balance_t addition/subtraction)
+test bal --columns 80
+             $-50.00
+             -10 EUR
+              -5 GBP  Assets:Checking
+              $50.00
+              10 EUR
+               5 GBP  Expenses
+              10 EUR    Drink
+              $50.00    Food
+               5 GBP    Misc
+--------------------
+                   0
+end test
+
+; Test balance conversion with --exchange (exercises balance_t::value, to_amount)
+test bal --exchange $ --columns 80
+             $-67.50  Assets:Checking
+              $67.50  Expenses
+              $11.00    Drink
+              $50.00    Food
+               $6.50    Misc
+--------------------
+                   0
+end test
+
+; Test --market (exercises balance value calculation paths)
+test bal --market --columns 80
+             $-67.50  Assets:Checking
+              $67.50  Expenses
+              $11.00    Drink
+              $50.00    Food
+               $6.50    Misc
+--------------------
+                   0
+end test
+
+; Test sorting multi-commodity (exercises balance comparison for sort)
+test bal --market --sort total --flat --columns 80
+             $-67.50  Assets:Checking
+              $50.00  Expenses:Food
+              $11.00  Expenses:Drink
+               $6.50  Expenses:Misc
+--------------------
+                   0
+end test
+
+; Test balance with --percent (exercises balance division paths)
+test bal --market --percent --columns 80
+             100.00%  Assets:Checking
+                   0  Expenses
+              16.30%    Drink
+              74.07%    Food
+               9.63%    Misc
+end test

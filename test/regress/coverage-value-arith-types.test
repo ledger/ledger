@@ -1,0 +1,32 @@
+; Test value.cc: arithmetic operations between different value types
+; Coverage target: value.cc - AMOUNT *= AMOUNT (line 632), AMOUNT /= AMOUNT (line 697),
+;   INTEGER *= AMOUNT (line 619), INTEGER /= AMOUNT (line 683),
+;   AMOUNT *= INTEGER (line 629), AMOUNT /= INTEGER (line 693)
+
+2024/01/15 Purchase
+    Expenses:Food       $10.00
+    Assets:Checking
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(amount * amount)\n" -> 0
+Expenses:Food $100.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(amount / amount)\n" -> 0
+Expenses:Food $1.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(5 * amount)\n" -> 0
+Expenses:Food $50.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(100 / amount)\n" -> 0
+Expenses:Food $10.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(amount * 5)\n" -> 0
+Expenses:Food $50.00
+end test
+
+test bal Expenses:Food --flat --no-total --format "%(account) %(amount / 5)\n" -> 0
+Expenses:Food $2.00
+end test

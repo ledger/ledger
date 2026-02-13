@@ -1,0 +1,41 @@
+; Test day-of-week name parsing in period expressions
+; (exercises string_to_day_of_week in times.cc: lines 206-223)
+; Tests TOK_A_WDAY with this/last, covering sunday, wednesday, friday, saturday
+
+2024/01/14 Sunday Xact
+    Expenses:A    $10.00
+    Assets:Checking
+
+2024/01/15 Monday Xact
+    Expenses:B    $20.00
+    Assets:Checking
+
+2024/01/16 Tuesday Xact
+    Expenses:C    $30.00
+    Assets:Checking
+
+2024/01/17 Wednesday Xact
+    Expenses:D    $40.00
+    Assets:Checking
+
+2024/01/18 Thursday Xact
+    Expenses:E    $50.00
+    Assets:Checking
+
+2024/01/19 Friday Xact
+    Expenses:F    $60.00
+    Assets:Checking
+
+2024/01/20 Saturday Xact
+    Expenses:G    $70.00
+    Assets:Checking
+
+test reg --now 2024/01/15 --period "this sunday"
+24-Jan-14 Sunday Xact           Expenses:A                   $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test
+
+test reg --now 2024/01/21 --period "last saturday"
+24-Jan-20 Saturday Xact         Expenses:G                   $70.00       $70.00
+                                Assets:Checking             $-70.00            0
+end test

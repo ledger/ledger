@@ -1,0 +1,14 @@
+; Test session.cc: option value access via function lookup
+; Exercises lookup() FUNCTION case falling through to lookup_option (line 392-393)
+
+account Expenses:Food
+account Assets:Checking
+commodity $
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test bal --strict --format "%(account)\n" Expenses
+Expenses:Food
+end test

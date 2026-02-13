@@ -1,0 +1,81 @@
+; Test "this/next/last" with all unit types (year, quarter, month, week, day)
+; Exercises determine_when TOK_THIS/TOK_NEXT/TOK_LAST branches (lines 784-862)
+; Also exercises handle_relative_token (lines 961-1093)
+; and word-based token parsing in next_token (lines 1668-1745)
+
+2024/01/07 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/14 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/01/15 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+2024/01/21 Payee D
+    Expenses:Entertainment    $200.00
+    Assets:Checking
+
+2024/02/15 Payee E
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+2024/03/20 Payee F
+    Expenses:Dining    $60.00
+    Assets:Checking
+
+2024/06/10 Payee G
+    Expenses:Gas    $45.00
+    Assets:Checking
+
+test reg --now 2024/01/15 --period "this week"
+24-Jan-14 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+24-Jan-15 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+end test
+
+test reg --now 2024/01/15 --period "this day"
+24-Jan-15 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+end test
+
+test reg --now 2024/01/15 --period "this month"
+24-Jan-07 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-14 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+24-Jan-15 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+24-Jan-21 Payee D               Expenses:Entertainment      $200.00      $200.00
+                                Assets:Checking            $-200.00            0
+end test
+
+test reg --now 2024/01/15 --period "next week"
+24-Jan-21 Payee D               Expenses:Entertainment      $200.00      $200.00
+                                Assets:Checking            $-200.00            0
+end test
+
+test reg --now 2024/01/15 --period "last week"
+24-Jan-07 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --now 2024/02/15 --period "next month"
+24-Mar-20 Payee F               Expenses:Dining              $60.00       $60.00
+                                Assets:Checking             $-60.00            0
+end test
+
+test reg --now 2024/02/15 --period "last month"
+24-Jan-07 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-14 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+24-Jan-15 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+24-Jan-21 Payee D               Expenses:Entertainment      $200.00      $200.00
+                                Assets:Checking            $-200.00            0
+end test

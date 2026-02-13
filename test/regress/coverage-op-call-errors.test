@@ -1,0 +1,23 @@
+; Coverage test for op.cc: function call error paths
+; Exercises: find_definition VALUE error (lines 432-437),
+;   calc_call exception context (lines 511-514),
+;   call_lambda too-few-args (lines 467-469)
+
+; Calling a non-function variable: exercises VALUE branch in find_definition
+test eval "x = 5; x(3)" -> 1
+__ERROR__
+While evaluating value expression:
+  (null; x(3))
+         ^^^^
+Error: Cannot call an amount as a function
+end test
+
+; Too many arguments to a function: exercises args_index < args_count check
+test eval "add(x, y) = x + y; add(1, 2, 3)" -> 1
+__ERROR__
+While evaluating value expression:
+  (null; add(1, 2, 3))
+         ^^^^^^^^^^^^
+While calling function 'add (1, 2, <#EXPR {3}>)':
+Error: Too few arguments in function call (saw 3, wanted 2)
+end test

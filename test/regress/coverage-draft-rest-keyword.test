@@ -1,0 +1,12 @@
+; Test draft.cc with 'rest' keyword (covers draft.cc line 149)
+; The 'rest' keyword is ignored but should not cause errors
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test xact 2024/03/01 Grocery '$30' rest
+2024/03/01 Grocery Store
+    Expenses:Food                             $30.00
+    Assets:Checking
+end test

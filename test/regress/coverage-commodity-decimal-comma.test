@@ -1,0 +1,15 @@
+; Test commodity with decimal comma style (covers commodity.cc lines 508-509)
+; Tests COMMODITY_STYLE_DECIMAL_COMMA flag in XML output
+
+commodity 1.000,00 EUR
+
+2024/01/15 Purchase
+    Expenses:Food         1.500,00 EUR
+    Assets:Checking
+
+test bal
+       -1.500,00 EUR  Assets:Checking
+        1.500,00 EUR  Expenses:Food
+--------------------
+                   0
+end test

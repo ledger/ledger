@@ -1,0 +1,13 @@
+; Coverage: account.cc lines 237-240: operator<< for account_t
+; Tests the debug/output stream operator by using the accounts command
+
+2024/01/15 * Payee
+    Expenses:Food:Groceries    $50.00
+    Expenses:Auto:Gas          $30.00
+    Assets:Checking
+
+test accounts --args-only --columns=80
+Assets:Checking
+Expenses:Auto:Gas
+Expenses:Food:Groceries
+end test

@@ -1,0 +1,10 @@
+; Test stream.cc: --output with "-" meaning stdout
+; Exercises initialize path where output_file == "-" falls through to cout (line 100)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test bal --output - Expenses -> 0
+              $50.00  Expenses:Food
+end test

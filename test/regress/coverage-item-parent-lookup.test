@@ -1,0 +1,10 @@
+; Test item_t::lookup for is_account keyword
+; Targets: item.cc lines 458-459 (is_account -> ignore)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(is_account) %(account)\n" Expenses
+false Expenses:Food
+end test

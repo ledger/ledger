@@ -1,0 +1,11 @@
+; Test payee_from_tag
+; Targets: post.cc lines 115-120 (payee_from_tag), 122-129 (payee)
+
+2024/01/15 * Original
+    ; Payee: From Tag
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(payee) %(amount)\n" Expenses
+From Tag $50.00
+end test

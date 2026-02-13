@@ -1,0 +1,12 @@
+; Test parse_tags with series of tags (colon-delimited)
+; Targets: item.cc lines 175-179 (series of tags parsing)
+
+2024/01/15 * Store
+    ; :food:organic:fresh:
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --limit "has_tag(\"organic\")" --columns 80
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

@@ -1,0 +1,11 @@
+; Coverage: timelog.cc line 168-169: double check-in to same account error
+; Checking in to an account that is already checked in should error
+
+i 2024/01/15 09:00:00 Project:Work  First task
+i 2024/01/15 10:00:00 Project:Work  Second task
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+Error: Cannot double check-in to the same account
+end test

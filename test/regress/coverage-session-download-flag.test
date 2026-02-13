@@ -1,0 +1,17 @@
+; Test session.cc: -Q and --download flags
+; Exercises lookup_option case 'Q' -> download (line 293) and
+; case 'd' -> download (line 302)
+
+P 2024/01/01 AAPL $150.00
+
+2024/01/15 Buy Stock
+    Assets:Brokerage    10 AAPL
+    Assets:Checking    $-1500.00
+
+test bal -Q Assets:Brokerage
+             10 AAPL  Assets:Brokerage
+end test
+
+test bal --download Assets:Brokerage
+             10 AAPL  Assets:Brokerage
+end test

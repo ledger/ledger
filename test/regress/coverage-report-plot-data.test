@@ -1,0 +1,19 @@
+; Test -j (amount_data) and -J (total_data) options (exercises report.cc normalize_options amount_data/total_data path)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+test reg -j Expenses
+2024-01-15 50
+2024-01-20 30
+end test
+
+test reg -J Expenses
+2024-01-15 50
+2024-01-20 80
+end test

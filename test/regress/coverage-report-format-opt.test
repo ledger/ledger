@@ -1,0 +1,10 @@
+; Test -F (format) option (exercises report.cc OPT_CH(format_))
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg -F '%(date) %(account)\n'
+2024/01/15 Expenses:Food
+2024/01/15 Assets:Checking
+end test

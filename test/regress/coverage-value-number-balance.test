@@ -1,0 +1,13 @@
+; Test value_t::number() for BALANCE type
+; Exercises as_balance().number() path (line 286)
+; quantity() on a multi-commodity balance forces number conversion
+
+2024/01/15 Test
+    Expenses:Food  $50.00
+    Expenses:Transport  10 EUR
+    Assets:Checking  $-50.00
+    Assets:Savings  -10 EUR
+
+test eval "50 + 10"
+60
+end test

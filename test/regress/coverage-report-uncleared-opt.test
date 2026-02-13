@@ -1,0 +1,13 @@
+; Test -U (uncleared) option (exercises report.cc OPT_CH(uncleared))
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 Pending Purchase
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+test reg -U Expenses
+24-Jan-20 Pending Purchase      Expenses:Dining              $30.00       $30.00
+end test

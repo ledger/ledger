@@ -1,0 +1,13 @@
+; Test auto xact with cost propagation from annotated amount
+; Targets: xact.cc lines 882-898 (auto cost derivation from annotation)
+
+= /Expenses/
+    (Budget)                   1.00
+
+2024/01/15 Utility
+    Expenses:Electric          100 kWh @@ 72 EUR
+    Assets:Checking
+
+test reg Budget --columns 80
+24-Jan-15 Utility               (Budget)                    100 kWh      100 kWh
+end test

@@ -1,0 +1,26 @@
+; Coverage: journal.cc lines 277-289: register_metadata with CHECK_ERROR
+; Using --pedantic to trigger error for unknown metadata tag
+
+commodity $
+    format $1,000.00
+
+account Expenses:Food
+account Assets:Checking
+
+tag Category
+
+2024/01/15 Store
+    ; Category: food
+    Expenses:Food       $50.00
+    Assets:Checking
+
+2024/01/20 Shop
+    ; BadTag: value
+    Expenses:Food       $35.00
+    Assets:Checking
+
+test bal --pedantic -> 1
+__ERROR__
+While parsing file "$FILE", line 20:
+Error: Unknown metadata tag 'BadTag'
+end test

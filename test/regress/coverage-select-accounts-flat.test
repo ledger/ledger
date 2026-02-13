@@ -1,0 +1,26 @@
+; Coverage test for select.cc: select from accounts with flat option
+; Exercises: accounts_report path (lines 357-361), account identifier with
+;   accounts_report (lines 284-286), partial_account display
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test select account, amount from accounts --flat --columns=80
+Assets:Checking      $-80.00
+Expenses:Food       $50.00
+Expenses:Transport       $30.00
+            0
+end test
+
+test select account from accounts --columns=80
+Assets:Checking
+Expenses
+Food
+Transport
+
+end test

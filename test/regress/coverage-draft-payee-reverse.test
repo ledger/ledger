@@ -1,0 +1,20 @@
+; Test draft.cc payee matching with reverse iteration (covers draft.cc lines 232-235)
+; When payee matches a later transaction, that match should be used
+
+2024/01/15 * First Store
+    Expenses:Food              $30.00
+    Assets:Checking
+
+2024/01/20 * Second Store
+    Expenses:Gas               $40.00
+    Assets:Checking
+
+2024/01/25 * First Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test xact 2024/03/01 'First' '$60'
+2024/03/01 First Store
+    Expenses:Food                             $60.00
+    Assets:Checking
+end test

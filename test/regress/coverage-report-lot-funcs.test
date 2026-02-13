@@ -1,0 +1,10 @@
+; Test lot_date, lot_price, lot_tag functions (exercises report.cc fn_lot_date/fn_lot_price/fn_lot_tag)
+
+2024/01/15 * Buy Stock
+    Assets:Brokerage          10 AAPL {$150.00} [2024/01/15] (lot1)
+    Assets:Checking          $-1500.00
+
+test reg --format "%(date) %(account) %(lot_date(amount)) %(lot_price(amount)) %(lot_tag(amount))\n"
+2024/01/15 Assets:Brokerage 2024/01/15 $150.00 lot1
+2024/01/15 Assets:Checking   
+end test

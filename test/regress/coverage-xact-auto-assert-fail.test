@@ -1,0 +1,24 @@
+; Test auto transaction assertion failure
+; Targets: xact.cc lines 797-798 (assertion failure path)
+
+= /Expenses/
+    assert amount < $10
+    (Budget)                  0.10
+
+2024/01/15 Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg Budget --columns 80 -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+While applying automated transaction from "$FILE", lines 4-6:
+> = /Expenses/
+>     assert amount < $10
+>     (Budget)                  0.10
+While extending transaction from "$FILE", lines 8-10:
+> 2024/01/15 Store
+>     Expenses:Food              $50.00
+>     Assets:Checking
+Error: Transaction assertion failed: (amount < {$10.00})
+end test

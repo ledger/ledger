@@ -1,0 +1,28 @@
+; Coverage test for expr.cc: merged_expr_t check_for_single_identifier success
+; Exercises: check_for_single_identifier success path (lines 223-226),
+;   merged_expr_t compile with exprs (lines 236-249)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; --amount cost triggers append("cost") which calls check_for_single_identifier
+; "cost" is all alphanumeric, so it returns true, setting base_expr="cost"
+test reg --amount cost
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test
+
+; --total cost triggers append on total_ merged_expr_t
+test reg --total cost
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00      $-50.00
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $30.00
+                                Assets:Checking             $-30.00      $-30.00
+end test

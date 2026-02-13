@@ -1,0 +1,13 @@
+; Test auto xact with %(format) in account name
+; Targets: xact.cc lines 867-874 (regex_search %(expr) in account)
+
+= /Expenses:Food/
+    (Saving:%(account))       -0.10
+
+2024/01/15 Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg Saving --columns 80
+24-Jan-15 Store                 (Saving:Expenses:Food)       $-5.00       $-5.00
+end test

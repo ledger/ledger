@@ -1,0 +1,22 @@
+; Test value.cc: operator/= error paths
+; Exercises type mismatch throws in division
+
+; BOOLEAN / INTEGER error (line 742-746 default break + throw)
+test eval "true / 5" -> 1
+__ERROR__
+While evaluating value expression:
+  (true / 5)
+  ^^^^^^^^^^
+While dividing 1 by 5:
+Error: Cannot divide a boolean by an amount
+end test
+
+; STRING / INTEGER error (line 742-746)
+test eval "\"text\" / 5" -> 1
+__ERROR__
+While evaluating value expression:
+  ("text" / 5)
+  ^^^^^^^^^^^^
+While dividing text by 5:
+Error: Cannot divide a string by an amount
+end test

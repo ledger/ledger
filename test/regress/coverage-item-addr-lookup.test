@@ -1,0 +1,10 @@
+; Test item_t::lookup for addr keyword
+; Targets: item.cc lines 405-406 (addr -> get_addr)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(addr > 0) %(account)\n" Expenses
+true Expenses:Food
+end test

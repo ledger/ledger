@@ -1,0 +1,23 @@
+; Test cleared command (exercises report.cc cleared command lookup)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 Pending Purchase
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+2024/02/15 * Utility Bill
+    Expenses:Utilities         $100.00
+    Assets:Checking
+
+test cleared
+        $-180.00            $-150.00    24-Feb-15    Assets:Checking
+         $180.00             $150.00                 Expenses
+          $30.00                   0                   Dining
+          $50.00              $50.00    24-Jan-15      Food
+         $100.00             $100.00    24-Feb-15      Utilities
+----------------    ----------------    ---------
+               0                   0             
+end test

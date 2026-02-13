@@ -1,0 +1,20 @@
+; Test budget command (exercises report.cc budget command lookup)
+
+~ Monthly
+    Expenses:Food              $500.00
+    Assets:Checking
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+test budget -p "2024/01"
+     $-80.00     $-500.00      $420.00   16%  Assets:Checking
+      $50.00      $500.00     $-450.00   10%  Expenses:Food
+------------ ------------ ------------ -----
+     $-30.00            0      $-30.00     0
+end test

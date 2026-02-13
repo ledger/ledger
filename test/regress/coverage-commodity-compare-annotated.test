@@ -1,0 +1,23 @@
+; Test commodity_t::compare_by_commodity with annotated commodities
+; Covers commodity.cc annotated comparison paths (lines 384-498)
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/01 GOOG $140.00
+
+2024/01/15 Buy Apple
+    Assets:Brokerage         10 AAPL {$150.00} [2024/01/15] (lot1)
+    Assets:Checking
+
+2024/01/20 Buy More Apple
+    Assets:Brokerage          5 AAPL {$155.00} [2024/01/20] (lot2)
+    Assets:Checking
+
+2024/01/25 Buy Google
+    Assets:Brokerage          8 GOOG {$140.00}
+    Assets:Checking
+
+test bal Assets:Brokerage --lots
+10 AAPL {$150.00} [2024/01/15] (lot1)
+5 AAPL {$155.00} [2024/01/20] (lot2)
+    8 GOOG {$140.00}  Assets:Brokerage
+end test

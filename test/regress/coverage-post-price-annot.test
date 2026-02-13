@@ -1,0 +1,10 @@
+; Test get_price with annotated price
+; Targets: post.cc lines 233-240 (get_price with annotation price)
+
+2024/01/15 * Buy Stock
+    Assets:Investments         10 AAPL @ $150.00
+    Assets:Checking
+
+test reg --format "%(price) %(amount)\n" Assets:Investments
+$1500 10 AAPL {$150} [2024/01/15]
+end test

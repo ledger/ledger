@@ -1,0 +1,49 @@
+; Test range operators: "from X to Y", "since X until Y", and "X - Y" dash range
+; Exercises handle_since_token (lines 928-937)
+; handle_until_token (lines 939-948)
+; handle_dash_operator (lines 908-926)
+; finalize_period with since/until specifiers (lines 1196-1201)
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/03/20 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/06/10 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+2024/08/05 Payee D
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+test reg --now 2024/12/15 --period "from 2024/01 to 2024/04"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Mar-20 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test
+
+test reg --now 2024/12/15 --period "since 2024/03 until 2024/07"
+24-Mar-20 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+24-Jun-10 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+end test
+
+test reg --now 2024/12/15 --period "2024/01 - 2024/04"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Mar-20 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test
+
+test reg --now 2024/12/15 --period "2024/06 - 2024/09"
+24-Jun-10 Payee C               Expenses:Transport           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+24-Aug-05 Payee D               Expenses:Utilities          $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+end test

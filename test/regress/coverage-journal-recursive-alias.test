@@ -1,0 +1,16 @@
+; Coverage: journal.cc lines 163-216: expand_aliases with recursive_aliases
+; Tests recursive alias expansion where alias A->B and B->C
+
+alias Food=Groceries
+alias Groceries=Expenses:Food
+
+2024/01/15 Store
+    Food    $50.00
+    Assets:Checking
+
+test bal --recursive-aliases --columns=80
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

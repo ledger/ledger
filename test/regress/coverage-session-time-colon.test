@@ -1,0 +1,11 @@
+; Test session.cc: --time-colon option
+; Exercises lookup_option case 't' -> time_colon (line 343)
+
+2024/01/15 Work
+    (Billable)    1.5h
+    (Billable)    0.75h
+
+test reg --time-colon
+24-Jan-15 Work                  (Billable)                    1:30h        1:30h
+                                (Billable)                    45:0m        2:15h
+end test

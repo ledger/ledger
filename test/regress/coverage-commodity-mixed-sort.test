@@ -1,0 +1,12 @@
+; Test commodity comparison with mixed annotated/non-annotated commodities
+; Covers commodity.cc compare_by_commodity paths (lines 370-499)
+
+2024/01/15 Buy Stock Lots
+    Assets:Brokerage         10 AAPL {$150.00}
+    Assets:Brokerage          5 AAPL
+    Assets:Checking
+
+test bal --lots Assets:Brokerage
+              5 AAPL
+      10 AAPL {$150}  Assets:Brokerage
+end test

@@ -1,0 +1,19 @@
+; Coverage: filters.cc transfer_details::operator()
+; Coverage: filters.h transfer_details::clear(), ~transfer_details()
+
+P 2024/01/01 EUR $1.10
+
+2024/01/15 European Purchase
+    Expenses:Food    20 EUR
+    Assets:Checking
+
+2024/01/20 Domestic Purchase
+    Expenses:Auto    $50.00
+    Assets:Checking
+
+test reg --exchange $ --columns=80
+24-Jan-15 European Purchase     Expenses:Food                $22.00       $22.00
+                                Assets:Checking             $-22.00            0
+24-Jan-20 Domestic Purchase     Expenses:Auto                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

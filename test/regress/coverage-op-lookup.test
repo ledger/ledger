@@ -1,0 +1,29 @@
+; Coverage test for op.cc: O_LOOKUP (dot operator) calc and print paths
+; Exercises: O_LOOKUP calc (lines 288-301), O_LOOKUP compile (line 192),
+;   O_LOOKUP print (lines 758-764)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; post.account exercises O_LOOKUP calc: left evaluates to scope (post),
+; right (account) is looked up in that scope
+test reg --format "%(post.account)\n"
+Expenses:Food
+Assets:Checking
+Expenses:Transport
+Assets:Checking
+end test
+
+; Error case: dot operator on non-object
+test eval "1 . 2" -> 1
+__ERROR__
+While evaluating value expression:
+  (1.2)
+  ^^^^^
+Error: Left operand does not evaluate to an object
+end test

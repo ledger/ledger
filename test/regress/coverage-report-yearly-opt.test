@@ -1,0 +1,14 @@
+; Test -Y (yearly) option (exercises report.cc OPT_CH(yearly))
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/06/20 * Restaurant
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+test reg -Y Expenses
+24-Jan-01 - 24-Dec-31           Expenses:Dining              $30.00       $30.00
+                                Expenses:Food                $50.00       $80.00
+end test

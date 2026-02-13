@@ -1,0 +1,19 @@
+; Coverage: journal.cc register_commodity()
+
+commodity $
+    format $1,000.00
+account Expenses:Food
+account Assets:Checking
+
+2024/01/15 Store
+    Expenses:Food    20 EUR
+    Assets:Checking
+
+test bal --strict -> 0
+             -20 EUR  Assets:Checking
+              20 EUR  Expenses:Food
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 9: Unknown commodity 'EUR'
+end test

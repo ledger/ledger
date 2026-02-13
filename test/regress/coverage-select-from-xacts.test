@@ -1,0 +1,40 @@
+; Coverage test for select.cc: FROM xacts/txns/transactions paths
+; Exercises: select_command FROM xacts (line 349-352), txns, transactions aliases
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test select date, payee, amount from xacts --columns=80
+2024/01/15 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport                        $30.00
+    Assets:Checking
+end test
+
+test select date, payee, amount from txns --columns=80
+2024/01/15 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport                        $30.00
+    Assets:Checking
+end test
+
+test select date, payee, amount from transactions --columns=80
+2024/01/15 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport                        $30.00
+    Assets:Checking
+end test

@@ -1,0 +1,26 @@
+; Coverage: journal.cc translate_payee_name() payee alias mapping loop
+; Coverage: journal.cc register_payee(), validate_payee()
+
+commodity $
+    format $1,000.00
+account Expenses:Food
+account Assets:Checking
+
+payee Store
+    alias Grocery Mart
+    alias Gas Stop
+
+2024/01/15 Grocery Mart
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Stop
+    Expenses:Food    $35.00
+    Assets:Checking
+
+test reg --strict --check-payees --columns=80 -> 0
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-20 Store                 Expenses:Food                $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+end test

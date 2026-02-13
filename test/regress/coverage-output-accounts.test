@@ -1,0 +1,26 @@
+; Coverage: output.cc report_accounts::flush(), report_accounts::operator()
+; Coverage: output.h report_accounts::clear()
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Auto    $35.00
+    Assets:Checking
+
+2024/02/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test accounts --columns=80
+Assets:Checking
+Expenses:Auto
+Expenses:Food
+end test
+
+test accounts --count --columns=80
+3 Assets:Checking
+1 Expenses:Auto
+2 Expenses:Food
+end test

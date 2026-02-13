@@ -1,0 +1,62 @@
+; Test value.h: operator overloads for mixed-type arithmetic
+; Exercises value_t::operator+=, -=, *=, /= with different type combinations
+; Targets: value.cc lines 305-749, value.h operator templates
+
+2024/01/15 Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport  $30.00
+    Assets:Checking
+
+; Test amount * integer (exercises value_t::operator*= AMOUNT * INTEGER)
+test reg --format "%(amount * 2)\n"
+$100.00
+$-100.00
+$60.00
+$-60.00
+end test
+
+; Test amount / integer (exercises value_t::operator/= AMOUNT / INTEGER)
+test reg --format "%(amount / 2)\n"
+$25.00
+$-25.00
+$15.00
+$-15.00
+end test
+
+; Test integer * integer (exercises value_t::operator*= INTEGER * INTEGER)
+test eval "3 * 4"
+12
+end test
+
+; Test integer / integer (exercises value_t::operator/= INTEGER / INTEGER)
+test eval "20 / 4"
+5
+end test
+
+; Test integer + integer (exercises value_t::operator+= INTEGER + INTEGER)
+test eval "7 + 3"
+10
+end test
+
+; Test integer - integer (exercises value_t::operator-= INTEGER - INTEGER)
+test eval "10 - 3"
+7
+end test
+
+; Test string + string concatenation (exercises value_t::operator+= STRING + STRING)
+test reg --format "%(\"hello\" + \" world\")\n" Expenses:Food
+hello world
+end test
+
+; Test string * integer repetition (exercises value_t::operator*= STRING * INTEGER)
+test reg --format "%(\"ab\" * 3)\n" Expenses:Food
+ababab
+end test
+
+; Test negation (exercises value_t::negated, in_place_negate)
+test reg --format "%(- amount)\n" Expenses:Food
+$-50.00
+end test

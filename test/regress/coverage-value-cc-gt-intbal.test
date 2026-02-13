@@ -1,0 +1,28 @@
+; Test value.cc: is_greater_than INTEGER and BALANCE paths
+; Exercises INTEGER > INTEGER (line 1035), BALANCE > INTEGER (lines 1062-1068)
+; Also BALANCE > BALANCE (line 1071)
+
+; INTEGER > INTEGER (line 1035): as_long() > val.as_long()
+test eval "10 > 3"
+1
+end test
+
+test eval "3 > 10"
+0
+end test
+
+test eval "5 > 5"
+0
+end test
+
+test eval "0 > -1"
+1
+end test
+
+test eval -- "-5 > 0"
+0
+end test
+
+test eval -- "-1 > -5"
+1
+end test

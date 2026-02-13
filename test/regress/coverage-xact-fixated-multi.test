@@ -1,0 +1,17 @@
+; Test fixated price annotations with multiple commodities
+; Targets: xact.cc lines 271-302 (fixated price cost computation)
+
+2024/01/15 Buy Shares
+    Assets:Investments         10 AAPL {=$150.00}
+    Assets:Investments         20 GOOG {=$100.00}
+    Assets:Checking
+
+test bal Assets --columns 80
+                   0  Assets
+            -10 AAPL
+            -20 GOOG    Checking
+             10 AAPL
+             20 GOOG    Investments
+--------------------
+                   0
+end test

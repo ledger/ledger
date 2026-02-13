@@ -1,0 +1,22 @@
+; Test value.cc: is_greater_than BOOLEAN paths (lines 1007-1020)
+; Exercises all boolean > boolean comparisons
+
+; true > false = true (line 1009-1010)
+test eval "true > false"
+1
+end test
+
+; true > true = false (lines 1008,1011-1012)
+test eval "true > true"
+0
+end test
+
+; false > true = false (lines 1013-1014, 1016-1017)
+test eval "false > true"
+0
+end test
+
+; false > false = false (lines 1013-1014, 1015)
+test eval "false > false"
+0
+end test

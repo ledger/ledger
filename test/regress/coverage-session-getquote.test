@@ -1,0 +1,10 @@
+; Test session.cc: --getquote option path
+; Exercises lookup_option case 'g' -> getquote_ (line 313)
+
+2024/01/15 Buy Stock
+    Assets:Brokerage    10 AAPL
+    Assets:Checking    $-1500.00
+
+test bal --getquote /bin/echo Assets:Brokerage
+             10 AAPL  Assets:Brokerage
+end test

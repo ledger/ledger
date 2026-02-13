@@ -1,0 +1,16 @@
+; Test value_t annotate for AMOUNT type
+; Exercises annotate path (line 1844)
+; Annotations are triggered by lot prices
+
+2024/01/15 Buy Stock
+    Assets:Brokerage  10 AAPL @ $150.00
+    Assets:Checking  $-1500.00
+
+2024/02/15 Buy More
+    Assets:Brokerage  5 AAPL @ $155.00
+    Assets:Checking  $-775.00
+
+test bal Assets:Brokerage --lots
+10 AAPL {$150.00} [2024/01/15]
+5 AAPL {$155.00} [2024/02/15]  Assets:Brokerage
+end test

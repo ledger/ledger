@@ -1,0 +1,53 @@
+; Test month name parsing in period expressions
+; (exercises string_to_month_of_year in times.cc: lines 225-252)
+; Tests TOK_A_MONTH, TOK_IN, and month-specific parsing for aug, nov, mar, jan
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/03/20 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/06/10 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+2024/08/05 Payee D
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+2024/11/15 Payee E
+    Expenses:Entertainment    $200.00
+    Assets:Checking
+
+test reg --now 2024/09/15 --period "in aug"
+24-Aug-05 Payee D               Expenses:Utilities          $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+end test
+
+test reg --now 2024/12/15 --period "in nov"
+24-Nov-15 Payee E               Expenses:Entertainment      $200.00      $200.00
+                                Assets:Checking            $-200.00            0
+end test
+
+test reg --now 2024/06/15 --period "in jan"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --now 2024/06/15 --period "this mar"
+24-Mar-20 Payee B               Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test
+
+test reg --now 2023/06/15 --period "next aug"
+24-Aug-05 Payee D               Expenses:Utilities          $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+end test
+
+test reg --now 2025/06/15 --period "last nov"
+24-Nov-15 Payee E               Expenses:Entertainment      $200.00      $200.00
+                                Assets:Checking            $-200.00            0
+end test

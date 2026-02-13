@@ -1,0 +1,12 @@
+; Test finalize with null balance (balance.is_balance() path)
+; Targets: xact.cc lines 218-230 (balance paths during finalize)
+
+2024/01/15 * Multi
+    Expenses:Food              $50.00
+    Expenses:Gas               $30.00
+    Expenses:Rent              $500.00
+    Assets:Checking
+
+test bal Assets --columns 80
+            $-580.00  Assets:Checking
+end test

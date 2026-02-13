@@ -1,0 +1,14 @@
+; Test get_comment with multiline note (newline handling)
+; Targets: item.cc lines 376-384 (multiline note separator)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+        ; First line of the note that is quite long
+        ; Second line
+    Assets:Checking
+
+test reg --format "comment:%(comment):\n" Expenses
+comment:
+    ; First line of the note that is quite long
+    ; Second line:
+end test

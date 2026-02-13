@@ -1,0 +1,21 @@
+; Test --group-by with balance report (exercises report.cc accounts_title_printer and accounts_flusher)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+2024/02/15 * Grocery Store
+    Expenses:Food              $40.00
+    Assets:Checking
+
+test bal --group-by payee Expenses
+Grocery Store
+              $90.00  Expenses:Food
+
+Restaurant
+              $30.00  Expenses:Dining
+end test

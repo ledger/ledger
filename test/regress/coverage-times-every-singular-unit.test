@@ -1,0 +1,57 @@
+; Test "every" with singular unit names (year, quarter, month, week, day)
+; Exercises handle_every_token else branch with singular tokens (lines 1139-1159)
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/03/20 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/06/10 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+2024/08/05 Payee D
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+test reg --now 2024/12/15 --period "every year"
+24-Jan-01 - 24-Dec-31           Assets:Checking           $-1245.00    $-1245.00
+                                Expenses:Food                $50.00    $-1195.00
+                                Expenses:Rent              $1000.00     $-195.00
+                                Expenses:Transport           $75.00     $-120.00
+                                Expenses:Utilities          $120.00            0
+end test
+
+test reg --now 2024/12/15 --period "every quarter"
+24-Jan-01 - 24-Mar-31           Assets:Checking           $-1050.00    $-1050.00
+                                Expenses:Food                $50.00    $-1000.00
+                                Expenses:Rent              $1000.00            0
+24-Apr-01 - 24-Jun-30           Assets:Checking             $-75.00      $-75.00
+                                Expenses:Transport           $75.00            0
+24-Jul-01 - 24-Sep-30           Assets:Checking            $-120.00     $-120.00
+                                Expenses:Utilities          $120.00            0
+end test
+
+test reg --now 2024/12/15 --period "every month"
+24-Jan-01 - 24-Jan-31           Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+24-Mar-01 - 24-Mar-31           Assets:Checking           $-1000.00    $-1000.00
+                                Expenses:Rent              $1000.00            0
+24-Jun-01 - 24-Jun-30           Assets:Checking             $-75.00      $-75.00
+                                Expenses:Transport           $75.00            0
+24-Aug-01 - 24-Aug-31           Assets:Checking            $-120.00     $-120.00
+                                Expenses:Utilities          $120.00            0
+end test
+
+test reg --now 2024/12/15 --period "every week" --begin 2024/01/14 --end 2024/01/28
+24-Jan-14 - 24-Jan-20           Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+end test
+
+test reg --now 2024/12/15 --period "every day" --begin 2024/01/14 --end 2024/01/17
+24-Jan-15 - 24-Jan-15           Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+end test

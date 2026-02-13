@@ -1,0 +1,13 @@
+; Test auto transaction with cleared state propagation
+; Targets: xact.cc lines 902-905 (cleared state propagation)
+
+= /Expenses/
+    (Budget)                  0.10
+
+2024/01/15 * Cleared Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg Budget --columns 80
+24-Jan-15 Cleared Store         (Budget)                      $5.00        $5.00
+end test

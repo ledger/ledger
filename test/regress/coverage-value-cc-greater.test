@@ -1,0 +1,59 @@
+; Test value.cc: is_greater_than paths (lines 1004-1143)
+; Exercises the > operator for various type combinations
+; Most of is_greater_than is uncovered since sorting mostly uses < operator
+
+; STRING > STRING (lines 1096-1104)
+test eval "\"def\" > \"abc\""
+1
+end test
+
+test eval "\"abc\" > \"def\""
+0
+end test
+
+test eval "\"abc\" > \"abc\""
+0
+end test
+
+; INTEGER > INTEGER (line 1035)
+test eval "5 > 3"
+1
+end test
+
+test eval "3 > 5"
+0
+end test
+
+test eval "3 > 3"
+0
+end test
+
+; BOOLEAN > BOOLEAN (lines 1007-1020)
+test eval "true > false"
+1
+end test
+
+test eval "false > true"
+0
+end test
+
+test eval "true > true"
+0
+end test
+
+test eval "false > false"
+0
+end test
+
+; DATE > DATE (lines 1028-1030)
+test eval "[2024/01/15] > [2024/01/10]"
+1
+end test
+
+test eval "[2024/01/10] > [2024/01/15]"
+0
+end test
+
+test eval "[2024/01/15] > [2024/01/15]"
+0
+end test

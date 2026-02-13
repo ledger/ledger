@@ -1,0 +1,10 @@
+; Test post_t::lookup for b shorthand (cost)
+; Targets: post.cc lines 407-408 (b -> get_cost)
+
+2024/01/15 * Buy Stock
+    Assets:Investments         10 AAPL @ $150.00
+    Assets:Checking
+
+test reg --format "%(b) %(account)\n" Assets:Investments
+$1500 Assets:Investments
+end test

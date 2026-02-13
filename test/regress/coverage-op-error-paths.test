@@ -1,0 +1,20 @@
+; Coverage test for op.cc: error paths in expression evaluation
+; Exercises: calc_call exception context (lines 511-514),
+;   error context generation in real_calc
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; Test error in function call to trigger calc_call error context
+; This exercises the "While calling function" error path at lines 511-513
+test reg --format '%(quantity("not_a_number"))\n' -> 1
+__ERROR__
+While evaluating value expression:
+  quantity("not_a_number")
+  ^^^^^^^^^^^^^^^^^^^^^^^^
+While calling function 'quantity not_a_number':
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $50.00
+Error: No quantity specified for amount
+end test

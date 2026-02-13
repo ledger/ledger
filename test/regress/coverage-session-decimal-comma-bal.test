@@ -1,0 +1,13 @@
+; Test session.cc: --decimal-comma option
+; Exercises lookup_option case 'd' -> decimal_comma (line 303)
+
+2024/01/15 Grocery Store
+    Expenses:Food    50,00 EUR
+    Assets:Checking
+
+test bal --decimal-comma
+          -50,00 EUR  Assets:Checking
+           50,00 EUR  Expenses:Food
+--------------------
+                   0
+end test

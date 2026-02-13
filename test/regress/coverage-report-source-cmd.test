@@ -1,0 +1,8 @@
+; Test source command (exercises report.cc 'source' command lookup)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test source /dev/null
+end test

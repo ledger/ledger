@@ -1,0 +1,102 @@
+; Test value.cc: operator+=, -=, *=, /= error/break paths
+; Exercises type mismatch break+throw paths in arithmetic operators
+
+2024/01/15 Purchase
+    Expenses:Both    $50.00
+    Expenses:Both    30 EUR
+    Assets:Checking  $-50.00
+    Assets:Savings  -30 EUR
+
+; DATETIME + STRING error (operator+= DATETIME default break, lines 352-354)
+test eval "to_datetime(\"2024/01/15 10:00:00\") + \"text\"" -> 1
+__ERROR__
+While evaluating value expression:
+  (to_datetime("2024/01/15 10:00:00") + "text")
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+While adding text to 2024/01/15 10:00:00:
+Error: Cannot add a string to a date/time
+end test
+
+; DATETIME - STRING error (operator-= DATETIME default break, lines 490-492)
+test eval "to_datetime(\"2024/01/15 10:00:00\") - \"text\"" -> 1
+__ERROR__
+While evaluating value expression:
+  (to_datetime("2024/01/15 10:00:00") - "text")
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+While subtracting text from 2024/01/15 10:00:00:
+Error: Cannot subtract a string from a date/time
+end test
+
+; DATE + STRING error (operator+= DATE default break, lines 365-367)
+test eval "[2024/01/15] + \"text\"" -> 1
+__ERROR__
+While evaluating value expression:
+  ([2024/01/15] + "text")
+  ^^^^^^^^^^^^^^^^^^^^^^^
+While adding text to 2024/01/15:
+Error: Cannot add a string to a date
+end test
+
+; DATE - STRING error (operator-= DATE default break, lines 503-505)
+test eval "[2024/01/15] - \"text\"" -> 1
+__ERROR__
+While evaluating value expression:
+  ([2024/01/15] - "text")
+  ^^^^^^^^^^^^^^^^^^^^^^^
+While subtracting text from 2024/01/15:
+Error: Cannot subtract a string from a date
+end test
+
+; AMOUNT - BOOLEAN error (operator-= AMOUNT default break, lines 560-562)
+test eval "5 - true" -> 1
+__ERROR__
+While evaluating value expression:
+  (5 - true)
+  ^^^^^^^^^^
+While subtracting 1 from 5:
+Error: Cannot subtract a boolean from an amount
+end test
+
+; BALANCE + STRING error (operator+= BALANCE default break, lines 433-435)
+test bal "Expenses:Both" --format "%(display_total + \"text\")\n" --no-total -> 1
+__ERROR__
+While evaluating value expression:
+  (display_total + "text")
+  ^^^^^^^^^^^^^^^^^^^^^^^^
+While adding text to $50.00
+30 EUR:
+Error: Cannot add a string to a balance
+end test
+
+; BALANCE - STRING error (operator-= BALANCE default break, lines 579-581)
+test bal "Expenses:Both" --format "%(display_total - \"text\")\n" --no-total -> 1
+__ERROR__
+While evaluating value expression:
+  (display_total - "text")
+  ^^^^^^^^^^^^^^^^^^^^^^^^
+While subtracting text from $50.00
+30 EUR:
+Error: Cannot subtract a string from a balance
+end test
+
+; BALANCE * STRING error (operator*= BALANCE default break, lines 659-663)
+test bal "Expenses:Both" --format "%(display_total * \"text\")\n" --no-total -> 1
+__ERROR__
+While evaluating value expression:
+  (display_total * "text")
+  ^^^^^^^^^^^^^^^^^^^^^^^^
+While multiplying text with $50.00
+30 EUR:
+Error: Cannot multiply a balance with a string
+end test
+
+; BALANCE / STRING error (operator/= BALANCE default break, lines 735-739)
+test bal "Expenses:Both" --format "%(display_total / \"text\")\n" --no-total -> 1
+__ERROR__
+While evaluating value expression:
+  (display_total / "text")
+  ^^^^^^^^^^^^^^^^^^^^^^^^
+While dividing $50.00
+30 EUR by text:
+Error: Cannot divide a balance by a string
+end test

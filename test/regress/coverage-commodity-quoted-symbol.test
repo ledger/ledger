@@ -1,0 +1,10 @@
+; Test commodity with quoted symbol (covers commodity.cc parse_symbol lines 309-314)
+; A commodity symbol containing spaces must be quoted
+
+2024/01/15 Fund Purchase
+    Assets:Investment         10 "FUND A" @ $100.00
+    Assets:Checking
+
+test bal Assets:Investment
+         10 "FUND A"  Assets:Investment
+end test

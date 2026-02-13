@@ -1,0 +1,27 @@
+; Coverage: journal.cc lines 144-161: register_account with CHECK_WARNING
+; Using --strict to trigger warning for unknown accounts
+
+commodity $
+    format $1,000.00
+
+account Expenses:Food
+account Assets:Checking
+
+2024/01/15 Store
+    Expenses:Food       $50.00
+    Assets:Checking
+
+2024/01/20 Shop
+    Expenses:Unknown    $35.00
+    Assets:Checking
+
+test bal --strict -> 0
+             $-85.00  Assets:Checking
+              $85.00  Expenses
+              $50.00    Food
+              $35.00    Unknown
+--------------------
+                   0
+__ERROR__
+Warning: "$FILE", line 15: Unknown account 'Expenses:Unknown'
+end test

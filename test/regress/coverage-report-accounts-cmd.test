@@ -1,0 +1,19 @@
+; Test accounts command (exercises report.cc accounts command and output.cc report_accounts)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+2024/01/25 * Grocery Store
+    Expenses:Food              $40.00
+    Assets:Checking
+
+test accounts
+Assets:Checking
+Expenses:Dining
+Expenses:Food
+end test

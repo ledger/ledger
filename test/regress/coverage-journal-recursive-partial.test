@@ -1,0 +1,16 @@
+; Coverage: journal.cc lines 196-203: recursive alias with partial expansion
+; Tests recursive alias expansion on first component of colon-separated name
+
+alias Exp=Spending
+alias Spending=Expenses
+
+2024/01/15 Store
+    Exp:Food    $50.00
+    Assets:Checking
+
+test bal --recursive-aliases --columns=80
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

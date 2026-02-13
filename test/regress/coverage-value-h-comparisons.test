@@ -1,0 +1,100 @@
+; Test value.h: comparison operators for various type combinations
+; Exercises is_equal_to, is_less_than, is_greater_than paths
+; Targets: value.cc lines 751-1069, value.h comparison templates
+
+2024/01/15 Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport  $30.00
+    Assets:Checking
+
+; Test amount > integer via quantity (exercises AMOUNT comparison paths)
+test reg --format "%(quantity(amount) > 40 ? \"big\" : \"small\")\n" Expenses
+big
+small
+end test
+
+; Test amount < integer (exercises AMOUNT < INTEGER path)
+test reg --format "%(quantity(amount) < 40 ? \"small\" : \"big\")\n" Expenses
+big
+small
+end test
+
+; Test amount == integer (exercises AMOUNT == INTEGER path)
+test reg --format "%(quantity(amount) == 50 ? \"match\" : \"no\")\n" Expenses
+match
+no
+end test
+
+; Test integer comparisons (exercises INTEGER vs INTEGER paths)
+test eval "3 < 5"
+1
+end test
+
+test eval "5 > 3"
+1
+end test
+
+test eval "3 == 3"
+1
+end test
+
+test eval "3 < 3"
+0
+end test
+
+test eval "3 > 3"
+0
+end test
+
+; Test string comparisons (exercises STRING vs STRING paths)
+test eval "\"abc\" < \"def\""
+1
+end test
+
+test eval "\"def\" > \"abc\""
+1
+end test
+
+test eval "\"abc\" == \"abc\""
+1
+end test
+
+test eval "\"xyz\" < \"abc\""
+0
+end test
+
+; Test boolean comparisons (exercises BOOLEAN comparison paths)
+test eval "true == true"
+1
+end test
+
+test eval "false == false"
+1
+end test
+
+test eval "true > false"
+1
+end test
+
+test eval "false < true"
+1
+end test
+
+; Test date comparisons (exercises DATE vs DATE paths)
+test reg --display "date < [2024/01/18]" --columns 80
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --display "date > [2024/01/18]" --columns 80
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test
+
+test reg --display "date == [2024/01/15]" --columns 80
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

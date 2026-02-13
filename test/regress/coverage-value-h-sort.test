@@ -1,0 +1,69 @@
+; Test value.h: sort_value_t and sorting comparisons
+; Exercises sort_value_is_less_than, sort_value_t constructor
+; Also exercises is_less_than and is_greater_than with AMOUNT types
+; Targets: value.h line 963, value.cc sort comparisons
+
+2024/01/15 Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/18 Restaurant
+    Expenses:Food:Dining    $25.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport  $30.00
+    Assets:Checking
+
+2024/01/25 Electric
+    Expenses:Utilities  $120.00
+    Assets:Checking
+
+; Test sorting by total ascending (exercises sort_value_t with amount comparisons)
+test bal --sort total --flat --columns 80
+            $-225.00  Assets:Checking
+              $25.00  Expenses:Food:Dining
+              $30.00  Expenses:Transport
+              $50.00  Expenses:Food
+             $120.00  Expenses:Utilities
+--------------------
+                   0
+end test
+
+; Test sorting by total descending (exercises negated sort_value_t)
+test bal --sort "-total" --flat --columns 80
+             $120.00  Expenses:Utilities
+              $50.00  Expenses:Food
+              $30.00  Expenses:Transport
+              $25.00  Expenses:Food:Dining
+            $-225.00  Assets:Checking
+--------------------
+                   0
+end test
+
+; Test sorting by account name (exercises string comparison in sort)
+test bal --sort account --flat --columns 80
+            $-225.00  Assets:Checking
+              $50.00  Expenses:Food
+              $25.00  Expenses:Food:Dining
+              $30.00  Expenses:Transport
+             $120.00  Expenses:Utilities
+--------------------
+                   0
+end test
+
+; Test sorting register by amount (exercises sort with register output)
+test reg --sort amount Expenses --columns 80
+24-Jan-18 Restaurant            Expenses:Food:Dining         $25.00       $25.00
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $55.00
+24-Jan-15 Store                 Expenses:Food                $50.00      $105.00
+24-Jan-25 Electric              Expenses:Utilities          $120.00      $225.00
+end test
+
+; Test sorting register by date (exercises date comparison in sort)
+test reg --sort date Expenses --columns 80
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+24-Jan-18 Restaurant            Expenses:Food:Dining         $25.00       $75.00
+24-Jan-20 Gas Station           Expenses:Transport           $30.00      $105.00
+24-Jan-25 Electric              Expenses:Utilities          $120.00      $225.00
+end test

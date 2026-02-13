@@ -1,0 +1,26 @@
+; Test value.cc: is_less_than SEQUENCE < SEQUENCE equal-key path (line 982)
+; When sorting by multiple keys, entries with equal first keys exercise
+; the sequence comparison path where !((*i) < (*j)) returns false
+
+2024/01/15 Charlie
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/15 Alpha
+    Expenses:Food    $30.00
+    Assets:Checking
+
+2024/01/15 Bravo
+    Expenses:Food    $40.00
+    Assets:Checking
+
+; Sort by date then payee - same dates force sequence comparison
+; where first key comparison has !(date1 < date2) = true (equal dates)
+test reg --sort "date, payee"
+2024/01/15 Alpha                Expenses:Food                $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+2024/01/15 Bravo                Expenses:Food                $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+2024/01/15 Charlie              Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

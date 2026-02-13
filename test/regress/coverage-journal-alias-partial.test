@@ -1,0 +1,22 @@
+; Coverage: journal.cc lines 191-208: expand_aliases partial account name
+; Tests alias expansion where only the first component of a multi-component
+; account name matches an alias
+
+alias Exp=Expenses
+
+2024/01/15 Store
+    Exp:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Station
+    Exp:Auto:Gas    $35.00
+    Assets:Checking
+
+test bal --columns=80
+             $-85.00  Assets:Checking
+              $85.00  Expenses
+              $35.00    Auto:Gas
+              $50.00    Food
+--------------------
+                   0
+end test

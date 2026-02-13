@@ -1,0 +1,10 @@
+; Test format width with truncation (exercises format.cc trailing truncation with .. line 681)
+
+2024/01/15 * Test
+    Expenses:Food:Groceries:VeryLongSubcategory:MoreDetails    $50.00
+    Assets:Checking:MainAccount:LongBankName:SubAccount
+
+test reg --format '%-15.15a\n'
+Expenses:Food..
+Assets:Checki..
+end test

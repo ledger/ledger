@@ -1,0 +1,49 @@
+; Test color function lookups (exercises report.cc fn_black/fn_red/fn_green/fn_blue/fn_cyan/fn_magenta/fn_yellow/fn_white/fn_bold/fn_underline/fn_blink)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test eval "red"
+red
+end test
+
+test eval "blue"
+blue
+end test
+
+test eval "green"
+green
+end test
+
+test eval "bold"
+bold
+end test
+
+test eval "cyan"
+cyan
+end test
+
+test eval "magenta"
+magenta
+end test
+
+test eval "yellow"
+yellow
+end test
+
+test eval "white"
+white
+end test
+
+test eval "black"
+black
+end test
+
+test eval "underline"
+underline
+end test
+
+test eval "blink"
+blink
+end test

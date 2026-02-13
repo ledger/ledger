@@ -1,0 +1,36 @@
+; Coverage test for op.cc: negation and NOT in format expressions
+; Exercises: O_NEG calc (lines 332-334) via format,
+;   O_NOT calc (lines 337-340) via format,
+;   intermediate non-constant compile (line 204)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; Negation of amount exercises O_NEG in calc
+test reg --format "%(- amount)\n"
+$-50.00
+$50.00
+$-30.00
+$30.00
+end test
+
+; NOT of boolean expression exercises O_NOT in calc
+test reg --format "%(not (amount > 0))\n"
+false
+true
+false
+true
+end test
+
+; Negation of quantity exercises O_NEG with integer
+test reg --format "%(- quantity(amount))\n"
+-50
+50
+-30
+30
+end test

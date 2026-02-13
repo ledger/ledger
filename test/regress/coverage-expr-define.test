@@ -1,0 +1,27 @@
+; Test expr.cc: define directive and expression evaluation
+; Exercises: O_DEFINE with IDENT (op.cc lines 136-141),
+;   O_DEFINE with O_CALL (lines 144-155), O_LAMBDA (lines 162-183)
+
+define max(a, b) = a > b ? a : b
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test reg --format "%(max(quantity(amount), 0))\n"
+50
+0
+30
+0
+end test
+
+define rate = 2
+
+test reg --format "%(amount * rate)\n" Expenses
+$100.00
+$60.00
+end test

@@ -1,0 +1,17 @@
+; Test stream.cc: pager with sort command
+; Exercises do_fork, initialize with pager, and close paths
+; Uses sort as the pager to verify piping works
+
+2024/01/01 Beta Corp
+    Expenses:Food    $30.00
+    Assets:Checking
+
+2024/01/02 Alpha Inc
+    Expenses:Rent    $500.00
+    Assets:Checking
+
+test accounts --pager sort -> 0
+Assets:Checking
+Expenses:Food
+Expenses:Rent
+end test

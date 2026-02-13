@@ -1,0 +1,25 @@
+; Test query parser with 'payee' keyword and parentheses
+; Covers query.cc lines 218, 350-355 (LPAREN handling)
+
+2024/01/15 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Gas               $35.00
+    Assets:Checking
+
+2024/01/25 Grocery Market
+    Expenses:Food              $25.00
+    Assets:Checking
+
+test reg payee Grocery and Food
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-25 Grocery Market        Expenses:Food                $25.00       $75.00
+end test
+
+test reg '(' Food or Gas ')' and Expenses
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-20 Gas Station           Expenses:Gas                 $35.00       $85.00
+24-Jan-25 Grocery Market        Expenses:Food                $25.00      $110.00
+end test

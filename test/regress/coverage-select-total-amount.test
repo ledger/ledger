@@ -1,0 +1,36 @@
+; Coverage test for select.cc: total column and amount/total print paths
+; Exercises: total column in select (lines 300-329),
+;   amount+total combined (thus_far tracking), total_width handling
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; Select amount and total together exercises the thus_far accumulation
+; for column positioning (lines 313-319, 321-329)
+test select amount, total from posts --columns=80
+      $50.00       $50.00
+     $-50.00            0
+      $30.00       $30.00
+     $-30.00            0
+end test
+
+; Total-only column (no amount) to exercise total column path independently
+test select date, total from posts --columns=80
+24-Jan-15       $50.00
+24-Jan-15            0
+24-Jan-20       $30.00
+24-Jan-20            0
+end test
+
+; Amount-only to exercise amount_width and thus_far independently
+test select amount from posts --columns=80
+      $50.00
+     $-50.00
+      $30.00
+     $-30.00
+end test

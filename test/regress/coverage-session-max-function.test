@@ -1,0 +1,15 @@
+; Test session.cc: fn_max function
+; Exercises fn_max (line 257-258) and lookup for "max" (line 379-380)
+
+2024/01/15 Grocery Store
+    Expenses:Food    50 USD
+    Assets:Checking
+
+2024/01/20 Restaurant
+    Expenses:Food    30 USD
+    Assets:Checking
+
+test reg --format "%(max(amount, 35 USD))\n" Expenses
+50 USD
+35 USD
+end test

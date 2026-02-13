@@ -1,0 +1,19 @@
+; Test --percent --market together (exercises report.cc normalize_options percent+market path)
+
+2024/01/15 * Income
+    Assets:Checking          $1000.00
+    Income:Salary
+
+2024/01/20 * Grocery Store
+    Expenses:Food              $300.00
+    Assets:Checking
+
+2024/01/25 * Restaurant
+    Expenses:Dining            $200.00
+    Assets:Checking
+
+test bal Expenses --percent --market
+             100.00%  Expenses
+              40.00%    Dining
+              60.00%    Food
+end test

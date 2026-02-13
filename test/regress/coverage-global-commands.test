@@ -1,0 +1,28 @@
+; Test global.cc: various command verbs
+; Exercises look_for_command (line 429-434) and execute_command paths
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test accounts
+Assets:Checking
+Expenses:Food
+Expenses:Transport
+end test
+
+test payees
+Gas Station
+Grocery Store
+end test
+
+test commodities
+$
+end test
+
+test tags
+end test

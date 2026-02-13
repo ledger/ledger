@@ -1,0 +1,37 @@
+; Test "in" token and "from X to Y" period expressions
+; (exercises handle_in_token in times.cc: lines 950-958)
+; Also tests combined since+until with today/tomorrow tokens
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/03/20 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/06/10 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+2024/08/05 Payee D
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+2024/11/15 Payee E
+    Expenses:Entertainment    $200.00
+    Assets:Checking
+
+test reg --now 2024/12/15 --period "in 2024" Expenses:Food
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+end test
+
+test reg --now 2024/01/15 --period "from today to tomorrow"
+24-Jan-15 Payee A               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --now 2024/09/15 --period "in august"
+24-Aug-05 Payee D               Expenses:Utilities          $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+end test

@@ -1,0 +1,14 @@
+; Coverage: account.cc line 393: fn_all returns true when all posts match
+; Tests the all() function where every posting matches the condition
+
+2024/01/15 * Grocery
+    Expenses:Food  $50.00
+    Assets:Checking
+
+2024/02/15 * Restaurant
+    Expenses:Food  $30.00
+    Assets:Checking
+
+test bal --format "%(all(amount > 0) ? \"ALL_POSITIVE\" : \"NOT_ALL\")\n" Expenses:Food --args-only --columns=80
+ALL_POSITIVE
+end test

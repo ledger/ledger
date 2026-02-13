@@ -1,0 +1,24 @@
+; Coverage: filters.cc post_splitter::print_title() no_titles branch
+; Coverage: filters.cc post_splitter::flush() postflush_func branch
+; Coverage: output.h format_posts::clear(), format_accounts::clear()
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Auto    $35.00
+    Assets:Checking
+
+2024/02/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test reg --group-by payee --no-titles --columns=80 -> 0
+24-Jan-20 Gas Station           Expenses:Auto                $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Feb-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test

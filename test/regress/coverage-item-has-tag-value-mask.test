@@ -1,0 +1,17 @@
+; Test has_tag with tag_mask and value_mask filtering
+; Targets: item.cc lines 58-70 (has_tag mask variant with value checking)
+
+2024/01/15 * Store
+    ; Category: food
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/16 * Gas
+    ; Category: transport
+    Expenses:Gas               $30.00
+    Assets:Checking
+
+test reg --limit "has_tag(/Category/, /food/)" --columns 80
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

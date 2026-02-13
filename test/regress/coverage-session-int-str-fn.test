@@ -1,0 +1,11 @@
+; Test session.cc: fn_int and fn_str functions
+; Exercises fn_int (line 261-262), fn_str (line 264-265),
+; and their lookups (lines 372-373, 384-385)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.75
+    Assets:Checking
+
+test reg --format "%(int(amount))|%(str(quantity(amount)))\n" Expenses
+51|50.75
+end test

@@ -1,0 +1,38 @@
+; Coverage test for op.cc: print() method paths via select column expressions
+; Exercises: print O_ADD (lines 648-653), print O_DIV (lines 669-674),
+;   print O_MATCH (lines 793-798), print IDENT (lines 624-625),
+;   print VALUE (lines 620-621)
+; Each select column calls as_expr(column)->print(formatter) which exercises
+; the print() method for whatever operator type the column expression represents.
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; amount + total exercises O_ADD print path
+test select amount + total from posts --columns=80
+     $100.00
+     $-50.00
+      $60.00
+     $-30.00
+end test
+
+; amount / 2 exercises O_DIV print path
+test select amount / 2 from posts --columns=80
+      $25.00
+     $-25.00
+      $15.00
+     $-15.00
+end test
+
+; Multiple expression columns
+test select amount + total, amount / 2 from posts --columns=80
+     $100.00       $25.00
+     $-50.00      $-25.00
+      $60.00       $15.00
+     $-30.00      $-15.00
+end test

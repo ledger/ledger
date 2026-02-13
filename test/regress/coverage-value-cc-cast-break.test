@@ -1,0 +1,98 @@
+; Test value.cc: in_place_cast default break/throw paths
+; Exercises uncovered default breaks in in_place_cast (lines 1175-1352)
+
+2024/01/15 Purchase
+    Expenses:Both    $50.00
+    Expenses:Both    30 EUR
+    Assets:Checking  $-50.00
+    Assets:Savings  -30 EUR
+
+; VOID -> DATE error (lines 1175/1177 break, then 1355-1356 throw)
+test eval "to_date(null)" -> 1
+__ERROR__
+While evaluating value expression:
+  to_date(null)
+  ^^^^^^^^^^^^^
+While converting :
+While calling function 'to_date ':
+Error: Cannot convert an uninitialized value to a date
+end test
+
+; DATE -> INTEGER error (lines 1204/1206 break)
+test eval "to_int([2024/01/15])" -> 1
+__ERROR__
+While evaluating value expression:
+  to_int([2024/01/15])
+  ^^^^^^^^^^^^^^^^^^^^
+While converting 2024/01/15:
+While calling function 'to_int 2024/01/15':
+Error: Cannot convert a date to an integer
+end test
+
+; DATETIME -> INTEGER error (lines 1216/1218 break)
+test eval "to_int(to_datetime(\"2024/01/15 10:00:00\"))" -> 1
+__ERROR__
+While evaluating value expression:
+  to_int(to_datetime("2024/01/15 10:00:00"))
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+While converting 2024/01/15 10:00:00:
+While calling function 'to_int 2024/01/15 10:00:00':
+Error: Cannot convert a date/time to an integer
+end test
+
+; AMOUNT -> DATE error (lines 1258/1260 break)
+test eval "to_date(5)" -> 1
+__ERROR__
+While evaluating value expression:
+  to_date(5)
+  ^^^^^^^^^^
+While converting 5:
+While calling function 'to_date 5':
+Error: Cannot convert an amount to a date
+end test
+
+; BALANCE -> INTEGER error (lines 1290/1292 break)
+test bal "Expenses:Both" --format "%(to_int(display_total))\n" --no-total -> 1
+__ERROR__
+While evaluating value expression:
+  to_int(display_total)
+  ^^^^^^^^^^^^^^^^^^^^^
+While converting $50.00
+30 EUR:
+While calling function 'to_int $50.00
+30 EUR':
+Error: Cannot convert a balance to an integer
+end test
+
+; STRING -> BALANCE error (line 1337 break)
+test eval "to_balance(\"test\")" -> 1
+__ERROR__
+While evaluating value expression:
+  to_balance("test")
+  ^^^^^^^^^^^^^^^^^^
+While converting test:
+While calling function 'to_balance test':
+Error: Cannot convert a string to a balance
+end test
+
+; DATETIME -> AMOUNT error (lines 1216/1218 break via to_amount path)
+test eval "to_amount(to_datetime(\"2024/01/15 10:00:00\"))" -> 1
+__ERROR__
+While evaluating value expression:
+  to_amount(to_datetime("2024/01/15 10:00:00"))
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+While converting 2024/01/15 10:00:00:
+While calling function 'to_amount 2024/01/15 10:00:00':
+Error: Cannot convert a date/time to an amount
+end test
+
+; AMOUNT -> DATETIME error (lines 1258/1260 break via to_datetime path)
+test eval "to_datetime(5)" -> 1
+__ERROR__
+While evaluating value expression:
+  to_datetime(5)
+  ^^^^^^^^^^^^^^
+While converting 5:
+While calling function 'to_datetime 5':
+Error: Cannot convert an amount to a date/time
+end test

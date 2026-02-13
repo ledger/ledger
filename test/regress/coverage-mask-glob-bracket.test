@@ -1,0 +1,12 @@
+; Test mask_t::assign_glob with '[ab]' bracket pattern via include directive
+; Covers mask.cc lines 65-68 ([] glob character)
+
+include glob_test_dir/data_[ab].dat
+
+test bal Expenses
+              $85.00  Expenses
+              $50.00    Food
+              $35.00    Gas
+--------------------
+              $85.00
+end test

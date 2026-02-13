@@ -1,0 +1,12 @@
+; Test post note concatenation with xact note
+; Targets: post.cc lines 171-179 (get_note with post and xact notes)
+
+2024/01/15 * Store
+    ; TxnNote: important
+    Expenses:Food              $50.00
+        ; PostNote: food purchase
+    Assets:Checking
+
+test reg --format "%(note)\n" Expenses
+ PostNote: food purchase TxnNote: important
+end test

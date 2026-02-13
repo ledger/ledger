@@ -1,0 +1,18 @@
+; Test value_t::is_greater_than for DATE type
+; Exercises is_greater_than DATE path (lines 1027-1030)
+; Sorting in reverse order triggers the > comparison
+
+2024/03/20 Later
+    Expenses:Rent  $1000.00
+    Assets:Checking
+
+2024/01/15 Earlier
+    Expenses:Food  $50.00
+    Assets:Checking
+
+test reg --sort date
+24-Jan-15 Earlier               Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Mar-20 Later                 Expenses:Rent              $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+end test

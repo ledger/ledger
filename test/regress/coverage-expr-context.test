@@ -1,0 +1,18 @@
+; Coverage test for expr.cc: context_to_str and error handling paths
+; Exercises: context_to_str (line 201-203), format error context (format.cc line 452)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format '%(bad_func(amount))\n' -> 1
+__ERROR__
+While calculating format expression:
+  bad_func(amount)
+While evaluating value expression:
+  bad_func(amount)
+  ^^^^^^^^^^^^^^^^
+While handling posting from "$FILE", line 5:
+>     Expenses:Food    $50.00
+Error: Unknown identifier 'bad_func'
+end test

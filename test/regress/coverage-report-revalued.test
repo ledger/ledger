@@ -1,0 +1,13 @@
+; Test --revalued option (exercises report.cc revalued option)
+
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $200.00
+
+2024/01/15 * Buy Stock
+    Assets:Brokerage          10 AAPL
+    Assets:Checking          $-1500.00
+
+test reg --revalued Assets:Brokerage -V -e 2024/07/01
+24-Jan-15 Buy Stock             Assets:Brokerage           $1500.00     $1500.00
+24-Jun-01 Commodities revalued  <Revalued>                  $500.00     $2000.00
+end test

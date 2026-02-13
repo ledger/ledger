@@ -1,0 +1,29 @@
+; Test query parser with 'note' and 'code' keywords
+; Covers query.cc lines 220, 214 and parse_query_term code/note/payee token handling
+
+2024/01/15 (ABC) Grocery Store
+    ; This is a food purchase
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 (DEF) Gas Station
+    ; Fuel for car
+    Expenses:Gas               $35.00
+    Assets:Checking
+
+2024/01/25 (ABC) Restaurant
+    ; Dinner out with friends
+    Expenses:Dining            $45.00
+    Assets:Checking
+
+test reg note food
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg code ABC
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Jan-25 Restaurant            Expenses:Dining              $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+end test

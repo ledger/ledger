@@ -1,0 +1,11 @@
+; Test global.cc: unrecognized command error path
+; Exercises execute_command line 232: "Unrecognized command"
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test nonexistent_command_xyz -> 1
+__ERROR__
+Error: Unrecognized command 'nonexistent_command_xyz'
+end test

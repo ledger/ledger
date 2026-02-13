@@ -1,0 +1,13 @@
+; Test post_t::lookup for index keyword
+; Targets: post.cc line 446 (index -> get_count)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Expenses:Gas               $30.00
+    Assets:Checking
+
+test reg --format "%(index) %(account)\n"
+1 Expenses:Food
+2 Expenses:Gas
+3 Assets:Checking
+end test

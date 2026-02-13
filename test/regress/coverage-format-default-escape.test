@@ -1,0 +1,12 @@
+; Test format.cc default escape sequence path
+; Exercises parse_format default case (line 184)
+; An unrecognized escape sequence falls through to default
+
+2024/01/15 Test
+    Expenses:Food  $50.00
+    Assets:Checking
+
+test reg --format "\a%(account)\n"
+aExpenses:Food
+aAssets:Checking
+end test

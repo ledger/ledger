@@ -1,0 +1,18 @@
+; Test --meta with width (exercises report.cc normalize_options meta_width/prepend_format path)
+
+2024/01/15 * Grocery Store
+    ; Category: food
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Restaurant
+    ; Category: dining
+    Expenses:Dining            $30.00
+    Assets:Checking
+
+test reg --meta Category:10
+food      24-Jan-15 Grocery Store     Expenses:Food           $50.00      $50.00
+food                                  Assets:Checking        $-50.00           0
+dining    24-Jan-20 Restaurant        Expenses:Dining         $30.00      $30.00
+dining                                Assets:Checking        $-30.00           0
+end test

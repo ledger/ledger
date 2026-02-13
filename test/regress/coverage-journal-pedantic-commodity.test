@@ -1,0 +1,21 @@
+; Coverage: journal.cc lines 262-273: register_commodity with CHECK_ERROR
+; Using --pedantic to trigger error for unknown commodity
+
+commodity $
+    format $1,000.00
+
+account Expenses:Food
+account Assets:Checking
+
+2024/01/15 Store
+    Expenses:Food       20 EUR
+    Assets:Checking
+
+test bal --pedantic -> 1
+__ERROR__
+While parsing file "$FILE", line 11:
+While parsing posting:
+  Expenses:Food       20 EUR
+                      ^^^^^^
+Error: Unknown commodity 'EUR'
+end test

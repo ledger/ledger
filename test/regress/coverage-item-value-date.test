@@ -1,0 +1,12 @@
+; Test item_t::lookup for value_date keyword
+; Targets: item.cc lines 503-504 (value_date -> get_date)
+; Note: this goes through post_t::lookup for value_date -> get_value_date
+; but the item.cc value_date path is not reachable from post context
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format "%(value_date) %(account)\n" Expenses
+2024/01/15 Expenses:Food
+end test

@@ -1,0 +1,17 @@
+; Test commodity price history with multiple prices (covers commodity.cc lines 38-55)
+; Exercises add_price for non-reflexive commodity pricing
+
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.12
+P 2024/03/01 EUR $1.08
+
+2024/01/15 European Trip
+    Expenses:Travel        500 EUR
+    Assets:Checking
+
+test bal --market --now 2024/03/15 --exchange '$'
+            $-540.00  Assets:Checking
+             $540.00  Expenses:Travel
+--------------------
+                   0
+end test

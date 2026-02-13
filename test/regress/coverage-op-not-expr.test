@@ -1,0 +1,11 @@
+; Test op.cc O_NOT evaluation path
+; Exercises print() for O_NOT (lines 636-640)
+; Also exercises calc for boolean negation
+
+2024/01/15 Test
+    Expenses:Food  $50.00
+    Assets:Checking
+
+test eval "!0"
+1
+end test

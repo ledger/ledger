@@ -1,0 +1,10 @@
+; Test unrecognized format character error (exercises format.cc line 253 error path)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --format '%Q' -> 1
+__ERROR__
+Error: Unrecognized formatting character: Q
+end test

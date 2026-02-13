@@ -1,0 +1,15 @@
+; Test commodity comparison with different price annotations
+; Covers commodity.cc lines 388-393 (price comparison in compare_by_commodity)
+
+2024/01/15 Buy Lot With Price
+    Assets:Brokerage         10 AAPL {$150.00}
+    Assets:Checking
+
+2024/01/20 Buy Lot Without Price
+    Assets:Brokerage          5 AAPL
+    Assets:Checking
+
+test bal --lots Assets:Brokerage
+              5 AAPL
+      10 AAPL {$150}  Assets:Brokerage
+end test

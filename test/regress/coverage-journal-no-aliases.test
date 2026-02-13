@@ -1,0 +1,15 @@
+; Coverage: journal.cc line 171-172: no_aliases flag
+; When --no-aliases is set, alias expansion is skipped
+
+alias Food=Expenses:Food
+
+2024/01/15 Store
+    Food    $50.00
+    Assets:Checking
+
+test bal --no-aliases --columns=80
+             $-50.00  Assets:Checking
+              $50.00  Food
+--------------------
+                   0
+end test

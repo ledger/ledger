@@ -1,0 +1,8 @@
+; Test mask_t::assign_glob with '\' escape character via include directive
+; Covers mask.cc lines 72-74 (\ glob escape)
+
+include glob_test_dir/data\_a.dat
+
+test bal Expenses
+              $50.00  Expenses:Food
+end test

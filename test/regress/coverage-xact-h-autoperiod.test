@@ -1,0 +1,36 @@
+; Test xact.h: automated and periodic transaction handling
+; Exercises auto_xact_t (parse_tags, extend_xact, deferred_tag_data_t)
+; Targets: xact.h lines 111-172
+
+= /Food/
+    (Budget:Food)    -1
+
+= /Transport/
+    (Budget:Transport)    -0.5
+
+2024/01/15 Grocery Store
+    ; :food-purchase:
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    ; :fuel:
+    Expenses:Transport  $30.00
+    Assets:Checking
+
+; Test automated transactions fire correctly
+test reg Budget --columns 80
+24-Jan-15 Grocery Store         (Budget:Food)               $-50.00      $-50.00
+24-Jan-20 Gas Station           (Budget:Transport)          $-15.00      $-65.00
+end test
+
+; Test that tags are propagated through auto transactions
+test reg --format "%(has_tag(\"food-purchase\") ? \"tagged\" : \"untagged\")\n" Expenses:Food
+tagged
+end test
+
+; Test the main register with auto transactions included
+test reg Expenses --columns 80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $80.00
+end test

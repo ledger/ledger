@@ -1,0 +1,22 @@
+; Coverage: account.cc lines 443-497: short function name lookups
+; Tests N (family posts count), O (family total), l (depth), n (self posts count)
+
+2024/01/15 * Grocery
+    Expenses:Food  $50.00
+    Assets:Checking
+
+2024/02/15 * Restaurant
+    Expenses:Food  $30.00
+    Assets:Checking
+
+test bal --format "l=%(l)\n" Expenses:Food --args-only --columns=80
+l=2
+end test
+
+test bal --format "N=%(N) n=%(n)\n" Expenses:Food --args-only --columns=80
+N=2 n=2
+end test
+
+test bal --format "O=%(O)\n" Expenses:Food --args-only --columns=80
+O=$80.00
+end test

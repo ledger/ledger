@@ -1,0 +1,36 @@
+; Test value.h: balance-type value operations
+; Exercises value_t operators with BALANCE type arguments
+; Targets: value.cc lines 421-435 (BALANCE+=), 564-581 (BALANCE-=),
+;          645-663 (BALANCE*=), 721-739 (BALANCE/=)
+
+P 2024/01/01 EUR $1.10
+
+2024/01/15 Multi
+    Expenses:Food    $50.00
+    Expenses:Food    10 EUR
+    Assets:Checking  $-50.00
+    Assets:Checking  -10 EUR
+
+; Test balance multiplication via percentage (--percent triggers bal / bal)
+test bal --market --percent --columns 80 -> 0
+             100.00%  Assets:Checking
+             100.00%  Expenses:Food
+end test
+
+; Test balance sorting with multi-commodity (exercises balance comparison)
+test bal --market --sort total --flat --columns 80
+             $-61.00  Assets:Checking
+              $61.00  Expenses:Food
+--------------------
+                   0
+end test
+
+; Test balance with amount filter (exercises balance > amount comparison)
+test bal --market --limit "total > 0" --flat --columns 80
+              $61.00  Expenses:Food
+end test
+
+; Test balance with amount filter negative (exercises balance < amount)
+test bal --market --limit "total < 0" --flat --columns 80
+             $-61.00  Assets:Checking
+end test

@@ -1,0 +1,32 @@
+; Test op.cc: O_AND/O_OR in limit and display expressions
+; Exercises: O_AND calc (lines 357-361), O_OR calc (lines 363-368),
+;   O_NOT in expressions, regex matching in limit
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+2024/01/25 Restaurant
+    Expenses:Food:Dining    $45.00
+    Assets:Checking
+
+test reg --limit "amount > 0 and account =~ /Food/" --columns=80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-25 Restaurant            Expenses:Food:Dining         $45.00       $95.00
+end test
+
+test reg --limit "account =~ /Food/ or account =~ /Transport/" --display "amount > 0" --columns=80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $80.00
+24-Jan-25 Restaurant            Expenses:Food:Dining         $45.00      $125.00
+end test
+
+test reg --limit "!(account =~ /Checking/)" --columns=80
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-20 Gas Station           Expenses:Transport           $30.00       $80.00
+24-Jan-25 Restaurant            Expenses:Food:Dining         $45.00      $125.00
+end test

@@ -1,0 +1,19 @@
+; Coverage test for op.cc: O_LAMBDA in calc, missing args, function as value
+; Exercises: O_LAMBDA calc (lines 308-310),
+;   call_lambda null default args (lines 456-459),
+;   find_definition O_LAMBDA path (line 420-421)
+
+; Evaluating a function name without calling it returns the lambda value
+test eval "add(x, y) = x + y; add"
+<#EXPR ((x, y) -> (x + y))>
+end test
+
+; Calling with fewer args than params: missing args default to null
+test eval "add(x, y) = x + y; add(1)"
+1
+end test
+
+; Single-arg function called without args
+test eval "inc(x) = x + 1; inc()"
+1
+end test
