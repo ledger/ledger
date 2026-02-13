@@ -1,0 +1,21 @@
+; Test --exchange on balance report
+; This exercises the exchange/conversion on balance report
+
+2008/01/01 Buy EUR
+    Assets:Foreign      100 EUR
+    Assets:Checking    -100 USD
+
+2008/01/02 Buy GBP
+    Assets:Foreign       50 GBP
+    Assets:Checking     -50 USD
+
+P 2008/06/01 EUR 1.25 USD
+P 2008/06/01 GBP 1.50 USD
+
+test bal --exchange USD
+           50.00 USD  Assets
+         -150.00 USD    Checking
+          200.00 USD    Foreign
+--------------------
+           50.00 USD
+end test

@@ -1,0 +1,16 @@
+; Test --sort with --flat on balance report
+; This exercises the sorted_accounts_iterator with flat mode
+
+2008/01/01 Test
+    Expenses:Food:Dining    $30.00
+    Expenses:Food:Tips       $5.00
+    Expenses:Auto:Gas       $40.00
+    Assets:Cash
+
+test bal --sort amount --flat Expenses
+               $5.00  Expenses:Food:Tips
+              $30.00  Expenses:Food:Dining
+              $40.00  Expenses:Auto:Gas
+--------------------
+              $75.00
+end test

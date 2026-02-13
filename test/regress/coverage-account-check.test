@@ -1,0 +1,15 @@
+; Test account directive with check subdirective
+
+account Expenses:Food
+    check commodity == "$"
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Checking
+
+test bal
+             $-10.00  Assets:Checking
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

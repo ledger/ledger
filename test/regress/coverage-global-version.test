@@ -1,0 +1,8 @@
+; Coverage test for global.cc: --options flag to exercise report_options
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test reg --options Expenses
+end test

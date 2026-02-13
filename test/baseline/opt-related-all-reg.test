@@ -1,0 +1,18 @@
+; Test --related with --related-all on register
+; This exercises related_posts with also_matching=true
+
+2008/01/01 Restaurant
+    Expenses:Food       $20.00
+    Expenses:Tips        $3.00
+    Assets:Cash
+
+test reg --related food
+08-Jan-01 Restaurant            Expenses:Tips                 $3.00        $3.00
+                                Assets:Cash                 $-23.00      $-20.00
+end test
+
+test reg --related --related-all food
+08-Jan-01 Restaurant            Expenses:Food                $20.00       $20.00
+                                Expenses:Tips                 $3.00       $23.00
+                                Assets:Cash                 $-23.00            0
+end test

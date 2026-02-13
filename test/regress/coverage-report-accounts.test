@@ -1,0 +1,15 @@
+; Test accounts command (exercises report_accounts in output.h)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Gas Station
+    Expenses:Auto:Fuel         $35.00
+    Assets:Checking
+
+test accounts -> 0
+Assets:Checking
+Expenses:Auto:Fuel
+Expenses:Food
+end test

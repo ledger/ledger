@@ -1,0 +1,10 @@
+; Test format.cc: %% literal percent in format strings
+; Exercises the %% case in parse_elements
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%(payee) 100%% %(account)\n" Expenses
+Test 100% Expenses:Food
+end test

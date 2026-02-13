@@ -1,0 +1,23 @@
+; Test --pivot with register report
+; This exercises transfer_details SET_ACCOUNT in register context
+
+2014/01/01 * Invoice 101
+    ; Customer: AAA
+    Assets:Receivables       $100.00
+    Income:Sales
+
+2014/01/15 * Invoice 102
+    ; Customer: BBB
+    Assets:Receivables       $200.00
+    Income:Sales
+
+2014/02/01 * Invoice 103
+    ; Customer: AAA
+    Assets:Receivables       $150.00
+    Income:Sales
+
+test reg --pivot Customer Receivables
+14-Jan-01 Invoice 101           Cu:AA:Asse:Receivables      $100.00      $100.00
+14-Jan-15 Invoice 102           Cu:BB:Asse:Receivables      $200.00      $300.00
+14-Feb-01 Invoice 103           Cu:AA:Asse:Receivables      $150.00      $450.00
+end test

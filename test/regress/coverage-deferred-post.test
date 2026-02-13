@@ -1,0 +1,8 @@
+; Test deferred posting syntax (<account>)
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Checking  $-10.00
+    <Deferred:Entry>  $10.00
+    <Deferred:Entry>  $-10.00
+

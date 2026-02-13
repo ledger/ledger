@@ -1,0 +1,20 @@
+; Test --percent combined with --market
+; This exercises the code path in report.cc where percent + market
+; overrides the total_ expression
+
+2008/01/01 Buy Stock
+    Assets:Brokerage        10 AAPL @ $20.00
+    Assets:Checking
+
+2008/02/01 Groceries
+    Expenses:Food           $50.00
+    Assets:Checking
+
+P 2008/03/01 AAPL $30.00
+
+test bal --percent --market
+              50.00%  Assets
+             600.00%    Brokerage
+            -500.00%    Checking
+             100.00%  Expenses:Food
+end test

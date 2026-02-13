@@ -1,0 +1,19 @@
+; Test virtual and balanced virtual postings
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Checking  $-10.00
+    [Budget:Food]    $-10.00
+    [Budget:Savings]  $10.00
+    (Info:Tracking)   $10.00
+
+test bal
+             $-10.00  Assets:Checking
+                   0  Budget
+             $-10.00    Food
+              $10.00    Savings
+              $10.00  Expenses:Food
+              $10.00  Info:Tracking
+--------------------
+              $10.00
+end test

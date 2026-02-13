@@ -1,0 +1,11 @@
+; Test inline assert on a posting within a transaction
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    assert amount == $10.00
+    Assets:Checking
+
+test reg
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test

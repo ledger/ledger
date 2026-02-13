@@ -1,0 +1,15 @@
+; Test top-level expr and eval directives
+
+expr 2 + 2
+eval 3 + 3
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Checking
+
+test bal
+             $-10.00  Assets:Checking
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

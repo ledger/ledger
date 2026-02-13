@@ -1,0 +1,13 @@
+; Test account.cc: deep account hierarchy (6+ levels)
+; Exercises find_account(), fullname(), partial_name(), depth
+
+2024/01/15 Deep Purchase
+    Expenses:Personal:Food:Groceries:Organic:Vegetables    $25.00
+    Assets:Bank:Savings:Emergency:Fund:Reserve
+
+test bal
+             $-25.00  Assets:Bank:Savings:Emergency:Fund:Reserve
+              $25.00  Expenses:Personal:Food:Groceries:Organic:Vegetables
+--------------------
+                   0
+end test

@@ -1,0 +1,17 @@
+; Coverage test for query.cc: query by note
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00  ; weekly shopping
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00  ; fill up
+    Assets:Checking
+
+2024/01/03 Grocery Store
+    Expenses:Food    $15.00  ; quick stop
+    Assets:Checking
+
+test reg note weekly
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+end test

@@ -1,0 +1,14 @@
+; Test --download with exchange commodity specified
+; This exercises the exchange_commodity path in quotes.cc
+
+2024/01/15 Buy Stock
+    Assets:Brokerage        10 AAPL
+    Assets:Checking        $-1000.00
+
+test bal --exchange $ --download --getquote $sourcepath/test/scripts/mock-getquote.sh -> 0
+             $500.00  Assets
+            $1500.00    Brokerage
+           $-1000.00    Checking
+--------------------
+             $500.00
+end test

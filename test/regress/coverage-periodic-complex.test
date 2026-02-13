@@ -1,0 +1,16 @@
+; Test periodic transaction with complex interval
+
+~ Monthly
+    Expenses:Food    $300.00
+    Assets:Checking
+
+2024/01/01 Payee
+    Expenses:Food    $100.00
+    Assets:Checking
+
+test bal
+            $-100.00  Assets:Checking
+             $100.00  Expenses:Food
+--------------------
+                   0
+end test

@@ -1,0 +1,12 @@
+; Test timelog with payee description (exercises timelog.cc payee path)
+
+i 2024/01/15 09:00:00 Work:Development  Project Alpha
+o 2024/01/15 12:00:00
+
+i 2024/01/15 13:00:00 Work:Development  Project Beta
+o 2024/01/15 17:00:00
+
+test reg -> 0
+24-Jan-15 Project Alpha         Work:Development              3.00h        3.00h
+24-Jan-15 Project Beta          Work:Development              4.00h        7.00h
+end test

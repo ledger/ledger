@@ -1,0 +1,15 @@
+; Test account directive with alias subdirective
+
+account Expenses:Food
+    alias food
+
+2024/01/01 Payee
+    food    $10.00
+    Assets:Checking
+
+test bal
+             $-10.00  Assets:Checking
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

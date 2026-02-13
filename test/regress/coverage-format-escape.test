@@ -1,0 +1,10 @@
+; Test format.cc: escape sequences in format strings
+; Exercises \n, \t, \\ parsing in parse_elements
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%(payee)\t%(account)\n" Expenses
+Test	Expenses:Food
+end test

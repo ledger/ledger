@@ -1,0 +1,16 @@
+; Test query with meta tag=value matching (exercises query.cc TOK_META with O_EQ)
+
+2024/01/15 * Store
+    ; Location: Downtown
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Gas
+    ; Location: Highway
+    Expenses:Auto              $30.00
+    Assets:Checking
+
+test reg %Location=Downtown -> 0
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

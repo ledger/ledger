@@ -1,0 +1,14 @@
+; Test --unrealized on register report
+; This exercises changed_value_posts with show_unrealized on register
+
+2008/01/01 Buy Stock
+    Assets:Brokerage        10 AAPL @ $20.00
+    Assets:Checking        $-200.00
+
+P 2008/02/01 AAPL $25.00
+
+test reg -V --unrealized
+08-Jan-01 Buy Stock             Assets:Brokerage            $200.00      $200.00
+                                Assets:Checking            $-200.00            0
+08-Feb-01 Commodities revalued  <Revalued>                   $50.00       $50.00
+end test

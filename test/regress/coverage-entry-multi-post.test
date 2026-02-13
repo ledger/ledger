@@ -1,0 +1,14 @@
+; Test draft.cc: xact command with multiple postings
+; Exercises draft_t with explicit account names and amounts
+
+2024/01/10 Monthly Bills
+    Expenses:Rent          $1000.00
+    Expenses:Utilities       $150.00
+    Assets:Checking
+
+test --now 2024/02/01 xact "Monthly Bills" Expenses:Rent 1000 Expenses:Utilities 150
+2024/02/01 Monthly Bills
+    Expenses:Rent                           $1000.00
+    Expenses:Utilities                       $150.00
+    Assets:Checking
+end test

@@ -1,0 +1,17 @@
+; Test xact.cc: transaction with aux-date
+; Exercises aux_date paths and --effective display
+
+2024/01/15=2024/02/01 Deferred Payment
+    Expenses:Food    $75.00
+    Assets:Checking
+
+2024/01/20 Normal Payment
+    Expenses:Transport    $40.00
+    Assets:Checking
+
+test reg --effective
+24-Feb-01 Deferred Payment      Expenses:Food                $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+24-Jan-20 Normal Payment        Expenses:Transport           $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+end test

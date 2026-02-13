@@ -1,0 +1,15 @@
+; Test C directive (price conversion)
+
+C 1.00 Kb = 1024 b
+C 1.00 Mb = 1024 Kb
+
+2024/01/01 Data usage
+    Expenses:Internet    1 Mb
+    Assets:Bandwidth
+
+test bal
+            -1.00 Mb  Assets:Bandwidth
+             1.00 Mb  Expenses:Internet
+--------------------
+                   0
+end test

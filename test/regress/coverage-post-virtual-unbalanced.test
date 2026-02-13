@@ -1,0 +1,13 @@
+; Test post.cc: virtual unbalanced postings (Account)
+; Exercises POST_VIRTUAL without POST_MUST_BALANCE
+
+2024/01/15 Salary
+    Assets:Checking    $3000.00
+    Income:Salary
+    (Budget:Savings)    $500.00
+
+test reg
+24-Jan-15 Salary                Assets:Checking            $3000.00     $3000.00
+                                Income:Salary             $-3000.00            0
+                                (Budget:Savings)            $500.00      $500.00
+end test

@@ -1,0 +1,10 @@
+; Coverage test for global.cc: --init-file /dev/null option
+; Using /dev/null as init file to test the option processing path
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test reg --init-file /dev/null Expenses
+24-Jan-01 Test                  Expenses:Food                $25.00       $25.00
+end test

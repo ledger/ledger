@@ -1,0 +1,28 @@
+; Test nested apply account directives
+
+apply account Personal
+
+apply account Expenses
+
+2024/01/01 Payee
+    Food    $10.00
+    Cash   $-10.00
+
+end apply account
+
+2024/01/02 Payee2
+    Income:Salary    $100.00
+    Assets:Checking
+
+end apply account
+
+test bal
+                   0  Personal
+            $-100.00    Assets:Checking
+                   0    Expenses
+             $-10.00      Cash
+              $10.00      Food
+             $100.00    Income:Salary
+--------------------
+                   0
+end test

@@ -1,0 +1,18 @@
+; Test payees command (exercises report_payees in output.h)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Gas Station
+    Expenses:Auto:Fuel         $35.00
+    Assets:Checking
+
+2024/01/25 * Grocery Store
+    Expenses:Food              $30.00
+    Assets:Checking
+
+test payees -> 0
+Gas Station
+Grocery Store
+end test

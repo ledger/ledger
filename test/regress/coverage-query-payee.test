@@ -1,0 +1,20 @@
+; Coverage test for query.cc: query by payee using @payee syntax
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Grocery Outlet
+    Expenses:Food    $15.00
+    Assets:Checking
+
+test reg @Grocery
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Jan-03 Grocery Outlet        Expenses:Food                $15.00       $15.00
+                                Assets:Checking             $-15.00            0
+end test

@@ -1,0 +1,12 @@
+; Test draft.cc: xact command with explicit date
+; Exercises draft_t date parsing with date_string
+
+2024/01/10 Restaurant
+    Expenses:Food:Dining    $45.00
+    Assets:Checking
+
+test xact 2024/03/15 Restaurant
+2024/03/15 Restaurant
+    Expenses:Food:Dining                      $45.00
+    Assets:Checking
+end test

@@ -1,0 +1,15 @@
+; Test basic timelog clock in/out (exercises timelog.cc)
+
+i 2024/01/15 09:00:00 Work:Development
+o 2024/01/15 17:00:00
+
+i 2024/01/15 18:00:00 Work:Meeting
+o 2024/01/15 19:30:00
+
+test bal -> 0
+               9.50h  Work
+               8.00h    Development
+               1.50h    Meeting
+--------------------
+               9.50h
+end test

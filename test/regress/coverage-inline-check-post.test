@@ -1,0 +1,11 @@
+; Test inline check within transaction posting
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    check amount == $10.00
+    Assets:Checking
+
+test reg
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test

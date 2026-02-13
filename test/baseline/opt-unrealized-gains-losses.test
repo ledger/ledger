@@ -1,0 +1,17 @@
+; Test --unrealized with both --unrealized-gains and --unrealized-losses
+; This exercises changed_value_posts with custom equity account names
+
+2008/10/01 Buy Winner
+    Assets:Brokerage:Winner   10 AAPL
+    Assets:Checking          $-200.00
+
+P 2008/10/20 12:00:00 AAPL $30.00
+
+test bal -V --unrealized --unrealized-gains "Equity:UG" --unrealized-losses "Equity:UL"
+             $100.00  Assets
+             $300.00    Brokerage:Winner
+            $-200.00    Checking
+            $-100.00  Equity:UG
+--------------------
+                   0
+end test

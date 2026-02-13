@@ -1,0 +1,14 @@
+; Test payee directive with alias and uuid subdirectives
+
+payee Grocery Store
+    alias ^groceries
+    uuid 12345-abcde
+
+2024/01/01 groceries
+    Expenses:Food    $10.00
+    Assets:Checking
+
+test reg
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test

@@ -1,0 +1,17 @@
+; Test apply fixed / end apply fixed directive
+
+apply fixed EUR $1.10
+
+2024/01/01 Buy Euros
+    Assets:Foreign    100 EUR
+    Assets:Checking
+
+end apply fixed
+
+test bal
+                   0  Assets
+            -100 EUR    Checking
+             100 EUR    Foreign
+--------------------
+                   0
+end test

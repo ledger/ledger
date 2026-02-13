@@ -1,0 +1,6 @@
+; Test transaction with auxiliary date
+
+2024/01/01=2024/01/05 Payee
+    Expenses:Food    $10.00
+    Assets:Checking
+

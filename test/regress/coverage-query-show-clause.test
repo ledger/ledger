@@ -1,0 +1,13 @@
+; Test query with show clause (exercises query.cc TOK_SHOW path)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Gas
+    Expenses:Auto              $30.00
+    Assets:Checking
+
+test bal show Food -> 0
+              $50.00  Expenses:Food
+end test

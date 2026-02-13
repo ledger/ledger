@@ -1,0 +1,24 @@
+; Coverage test for query.cc: query by date range
+
+2023/12/15 Before Period
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/10 In Period
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/20 Also In Period
+    Expenses:Office    $15.00
+    Assets:Checking
+
+2024/02/05 After Period
+    Expenses:Dining    $50.00
+    Assets:Checking
+
+test reg -b 2024/01 -e 2024/02
+24-Jan-10 In Period             Expenses:Gas                 $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+24-Jan-20 Also In Period        Expenses:Office              $15.00       $15.00
+                                Assets:Checking             $-15.00            0
+end test

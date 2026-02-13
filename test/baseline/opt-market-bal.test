@@ -1,0 +1,20 @@
+; Test --market on balance report with multiple commodities
+; This exercises market valuation in the balance command
+
+2008/01/01 Buy Stocks
+    Assets:Brokerage:AAPL    10 AAPL @ $20.00
+    Assets:Brokerage:GOOG     5 GOOG @ $100.00
+    Assets:Checking
+
+P 2008/06/01 AAPL $30.00
+P 2008/06/01 GOOG $120.00
+
+test bal --market
+             $200.00  Assets
+             $900.00    Brokerage
+             $300.00      AAPL
+             $600.00      GOOG
+            $-700.00    Checking
+--------------------
+             $200.00
+end test

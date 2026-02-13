@@ -1,0 +1,17 @@
+; Coverage test for query.cc: query by amount expression
+
+2024/01/01 Small Purchase
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/01/02 Large Purchase
+    Expenses:Electronics    $500.00
+    Assets:Checking
+
+2024/01/03 Medium Purchase
+    Expenses:Clothing    $75.00
+    Assets:Checking
+
+test reg expr 'amount > 100'
+24-Jan-02 Large Purchase        Expenses:Electronics        $500.00      $500.00
+end test

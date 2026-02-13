@@ -1,0 +1,19 @@
+; Test --daily register grouping (exercises date_duration_t::DAYS in times.cc)
+
+2024/01/15 Payee A
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/01/16 Payee B
+    Expenses:Food    $20.00
+    Assets:Checking
+
+2024/01/17 Payee C
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test --daily reg Expenses
+24-Jan-15 - 24-Jan-15           Expenses:Food                $10.00       $10.00
+24-Jan-16 - 24-Jan-16           Expenses:Food                $20.00       $30.00
+24-Jan-17 - 24-Jan-17           Expenses:Food                $30.00       $60.00
+end test

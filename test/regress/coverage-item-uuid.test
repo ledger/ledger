@@ -1,0 +1,11 @@
+; Test item.cc: UUID metadata and id()
+; Exercises get_id/uuid lookup, set_tag, parse_tags
+
+2024/01/15 Grocery Store
+    ; UUID: 550e8400-e29b-41d4-a716-446655440000
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%(payee)|%(id)\n" Expenses
+Grocery Store|550e8400-e29b-41d4-a716-446655440000
+end test

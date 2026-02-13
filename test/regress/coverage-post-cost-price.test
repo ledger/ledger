@@ -1,0 +1,11 @@
+; Test post.cc: post with cost (@) and price annotation
+; Exercises get_cost, get_price, get_has_cost paths
+
+2024/01/15 Stock Purchase
+    Assets:Brokerage    100 AAPL @ $150.00
+    Assets:Checking
+
+test reg --format "%(payee) %(account) %(has_cost) %(scrub(cost))\n"
+Stock Purchase Assets:Brokerage true $15000
+Stock Purchase Assets:Checking false $-15000
+end test

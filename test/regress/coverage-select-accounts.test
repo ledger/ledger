@@ -1,0 +1,16 @@
+; Coverage test for select.cc: select from accounts (bal)
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+test select account, display_total from bal Expenses
+Expenses:Food                                                        $25.00    
+Assets:Checking                                                      $0.00     
+Expenses:Gas                                                         $40.00    
+Assets:Checking                                                      $0.00     
+end test

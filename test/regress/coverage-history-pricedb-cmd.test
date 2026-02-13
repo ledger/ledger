@@ -1,0 +1,16 @@
+; Coverage test for history.cc: pricedb command output
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/15 AAPL $155.00
+P 2024/02/01 AAPL $160.00
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Checking
+
+test pricedb
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/01/15 00:00:00 AAPL $155.00
+P 2024/02/01 00:00:00 AAPL $160.00
+end test

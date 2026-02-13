@@ -1,0 +1,15 @@
+; Test print command with payee query filter (exercises print_xacts operator())
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking           $-50.00
+
+2024/01/20 * Gas Station
+    Expenses:Auto:Fuel         $35.00
+    Assets:Checking           $-35.00
+
+test print @Grocery -> 0
+2024/01/15 * Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test

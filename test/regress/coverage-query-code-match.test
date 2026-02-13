@@ -1,0 +1,14 @@
+; Test query with code matching (exercises query.cc TOK_CODE path)
+
+2024/01/15 * (CODE1) Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * (CODE2) Gas
+    Expenses:Auto              $30.00
+    Assets:Checking
+
+test reg code CODE1 -> 0
+24-Jan-15 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

@@ -1,0 +1,17 @@
+; Coverage test for query.cc: complex AND query
+
+2024/01/01 Shop A
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Shop B
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Shop A
+    Expenses:Gas    $30.00
+    Assets:Checking
+
+test reg Expenses:Gas and @"Shop A"
+24-Jan-03 Shop A                Expenses:Gas                 $30.00       $30.00
+end test

@@ -1,0 +1,18 @@
+; Coverage test for query.cc: complex OR query
+
+2024/01/01 Payee One
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Payee Two
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Payee Three
+    Expenses:Office    $15.00
+    Assets:Checking
+
+test reg Expenses:Food or Expenses:Gas
+24-Jan-01 Payee One             Expenses:Food                $25.00       $25.00
+24-Jan-02 Payee Two             Expenses:Gas                 $40.00       $65.00
+end test

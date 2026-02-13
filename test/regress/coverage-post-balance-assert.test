@@ -1,0 +1,17 @@
+; Test post.cc: balance assertion = $amount
+; Exercises assigned_amount path and POST_CALCULATED
+
+2024/01/10 Opening Balance
+    Assets:Checking    $1000.00
+    Equity:Opening
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking   = $950.00
+
+test reg
+24-Jan-10 Opening Balance       Assets:Checking            $1000.00     $1000.00
+                                Equity:Opening            $-1000.00            0
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

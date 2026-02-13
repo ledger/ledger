@@ -1,0 +1,19 @@
+; Test comment / end comment block
+
+comment
+This is a comment block.
+It should be completely ignored by the parser.
+Even if it contains directives like:
+2024/01/01 Fake Transaction
+    Expenses:Food    $999.00
+    Assets:Checking
+end comment
+
+2024/01/01 Real Transaction
+    Expenses:Food    $10.00
+    Assets:Checking
+
+test reg
+24-Jan-01 Real Transaction      Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test

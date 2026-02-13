@@ -1,0 +1,214 @@
+2024/01/15 * Currency Exchange
+    Assets:EUR                 100 EUR
+    Assets:Checking           $-110.00
+
+2024/01/20 * British Purchase
+    Expenses:Travel            50 GBP
+    Assets:Checking           $-65.00
+
+test xml Assets:EUR | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ version="VVVVVV"/g'
+<?xml version="1.0" encoding="utf-8"?>
+<ledger version="VVVVVV">
+  <commodities>
+    <commodity flags="S">
+      <symbol>EUR</symbol>
+      <annotation>
+        <price>
+          <commodity flags="P">
+            <symbol>$</symbol>
+          </commodity>
+          <quantity>1.1</quantity>
+        </price>
+        <date>2024/01/15</date>
+      </annotation>
+    </commodity>
+  </commodities>
+  <accounts>
+    <account id="XXXX">
+      <name/>
+      <fullname/>
+      <account-total>
+        <amount>
+          <commodity flags="S">
+            <symbol>EUR</symbol>
+          </commodity>
+          <quantity>100</quantity>
+        </amount>
+      </account-total>
+      <account id="XXXX">
+        <name>Assets</name>
+        <fullname>Assets</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="S">
+              <symbol>EUR</symbol>
+            </commodity>
+            <quantity>100</quantity>
+          </amount>
+        </account-total>
+        <account/>
+        <account id="XXXX">
+          <name>EUR</name>
+          <fullname>Assets:EUR</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="S">
+                <symbol>EUR</symbol>
+              </commodity>
+              <quantity>100</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="S">
+                <symbol>EUR</symbol>
+              </commodity>
+              <quantity>100</quantity>
+            </amount>
+          </account-total>
+        </account>
+      </account>
+      <account/>
+    </account>
+  </accounts>
+  <transactions>
+    <transaction state="cleared">
+      <date>2024/01/15</date>
+      <payee>Currency Exchange</payee>
+      <postings>
+        <posting state="cleared">
+          <account ref="XXXX">
+            <name>Assets:EUR</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="S">
+                <symbol>EUR</symbol>
+              </commodity>
+              <quantity>100</quantity>
+            </amount>
+          </post-amount>
+          <cost>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>110</quantity>
+          </cost>
+          <total>
+            <amount>
+              <commodity flags="S">
+                <symbol>EUR</symbol>
+              </commodity>
+              <quantity>100</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+  </transactions>
+</ledger>
+
+end test
+
+test xml Expenses:Travel | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ version="VVVVVV"/g'
+<?xml version="1.0" encoding="utf-8"?>
+<ledger version="VVVVVV">
+  <commodities>
+    <commodity flags="S">
+      <symbol>GBP</symbol>
+      <annotation>
+        <price>
+          <commodity flags="P">
+            <symbol>$</symbol>
+          </commodity>
+          <quantity>1.3</quantity>
+        </price>
+        <date>2024/01/20</date>
+      </annotation>
+    </commodity>
+  </commodities>
+  <accounts>
+    <account id="XXXX">
+      <name/>
+      <fullname/>
+      <account-total>
+        <amount>
+          <commodity flags="S">
+            <symbol>GBP</symbol>
+          </commodity>
+          <quantity>50</quantity>
+        </amount>
+      </account-total>
+      <account/>
+      <account id="XXXX">
+        <name>Expenses</name>
+        <fullname>Expenses</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="S">
+              <symbol>GBP</symbol>
+            </commodity>
+            <quantity>50</quantity>
+          </amount>
+        </account-total>
+        <account id="XXXX">
+          <name>Travel</name>
+          <fullname>Expenses:Travel</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="S">
+                <symbol>GBP</symbol>
+              </commodity>
+              <quantity>50</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="S">
+                <symbol>GBP</symbol>
+              </commodity>
+              <quantity>50</quantity>
+            </amount>
+          </account-total>
+        </account>
+      </account>
+    </account>
+  </accounts>
+  <transactions>
+    <transaction state="cleared">
+      <date>2024/01/20</date>
+      <payee>British Purchase</payee>
+      <postings>
+        <posting state="cleared">
+          <account ref="XXXX">
+            <name>Expenses:Travel</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="S">
+                <symbol>GBP</symbol>
+              </commodity>
+              <quantity>50</quantity>
+            </amount>
+          </post-amount>
+          <cost>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>65</quantity>
+          </cost>
+          <total>
+            <amount>
+              <commodity flags="S">
+                <symbol>GBP</symbol>
+              </commodity>
+              <quantity>50</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+  </transactions>
+</ledger>
+
+end test

@@ -1,0 +1,19 @@
+; Test --depth with register report
+; This exercises the collapse_posts filter with collapse_depth parameter
+
+2008/01/01 Dinner
+    Expenses:Food:Dining  $20.00
+    Expenses:Food:Tips     $3.00
+    Assets:Cash:Wallet
+
+2008/01/02 Lunch
+    Expenses:Food:Dining  $10.00
+    Expenses:Food:Tips     $2.00
+    Assets:Cash:Wallet
+
+test reg --depth 1
+08-Jan-01 Dinner                Expenses                     $23.00       $23.00
+                                Assets                      $-23.00            0
+08-Jan-02 Lunch                 Expenses                     $12.00       $12.00
+                                Assets                      $-12.00            0
+end test

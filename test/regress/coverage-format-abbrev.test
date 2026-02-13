@@ -1,0 +1,11 @@
+; Test format.cc: abbreviation of long account names
+; Exercises ABBREVIATE style in truncate() with account_abbrev_length
+
+2024/01/15 Long Account Name Test
+    Expenses:PersonalItems:FoodAndDrinks:GroceriesAndSnacks:OrganicAndNatural    $100.00
+    Assets:BankingAndFinance:CheckingAccounts:PrimaryAccount:MainBalance
+
+test reg
+24-Jan-15 Long Account Name T.. ..Gr:OrganicAndNatural      $100.00      $100.00
+                                ..Ba:Ch:Pr:MainBalance     $-100.00            0
+end test

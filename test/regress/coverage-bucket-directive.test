@@ -1,0 +1,22 @@
+; Test bucket / A directive
+
+bucket Assets:Checking
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+
+A Assets:Savings
+
+2024/01/02 Payee2
+    Expenses:Rent    $500.00
+
+test bal
+            $-510.00  Assets
+             $-10.00    Checking
+            $-500.00    Savings
+             $510.00  Expenses
+              $10.00    Food
+             $500.00    Rent
+--------------------
+                   0
+end test

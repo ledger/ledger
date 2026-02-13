@@ -1,0 +1,15 @@
+; Test op.cc: ternary expression (O_QUERY/O_COLON)
+; Exercises calc() O_QUERY and O_COLON paths
+
+2024/01/15 Grocery Store
+    Expenses:Food    $125.50
+    Assets:Checking
+
+2024/01/20 Refund
+    Expenses:Food    $-25.00
+    Assets:Checking
+
+test reg --amount "amount > 0 ? amount : -amount" Expenses
+24-Jan-15 Grocery Store         Expenses:Food               $125.50      $125.50
+24-Jan-20 Refund                Expenses:Food                $25.00      $150.50
+end test

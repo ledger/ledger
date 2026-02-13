@@ -1,0 +1,14 @@
+; Test N directive (nomarket/no-download)
+
+N VIRT
+
+2024/01/01 Virtual Currency
+    Assets:Virtual    100 VIRT
+    Equity:Opening
+
+test bal
+            100 VIRT  Assets:Virtual
+           -100 VIRT  Equity:Opening
+--------------------
+                   0
+end test

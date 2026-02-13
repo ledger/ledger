@@ -1,0 +1,15 @@
+; Test commodity directive with note subdirective
+
+commodity $
+    note US Dollar
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Checking
+
+test bal
+             $-10.00  Assets:Checking
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

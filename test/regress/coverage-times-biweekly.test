@@ -1,0 +1,19 @@
+; Test biweekly register grouping (exercises BIWEEKLY token in times.cc)
+
+2024/01/15 Payee A
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/02/15 Payee B
+    Expenses:Food    $20.00
+    Assets:Checking
+
+2024/03/15 Payee C
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test --period "biweekly" --begin 2024/01/01 --end 2024/04/01 reg Expenses
+24-Jan-07 - 24-Jan-20           Expenses:Food                $10.00       $10.00
+24-Feb-04 - 24-Feb-17           Expenses:Food                $20.00       $30.00
+24-Mar-03 - 24-Mar-16           Expenses:Food                $30.00       $60.00
+end test

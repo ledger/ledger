@@ -1,0 +1,11 @@
+; Test format.cc: date format codes %d (with aux date) and %D
+; Exercises single_letter_mappings for 'd' and 'D'
+
+2024/01/15=2024/02/01 Payment
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+test reg --format "%d %-30.30(account) %12t\n"
+24-Jan-15=24-Feb-01 Expenses:Rent                      $1000.00
+24-Jan-15=24-Feb-01 Assets:Checking                   $-1000.00
+end test

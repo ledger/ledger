@@ -1,0 +1,16 @@
+; Coverage test for select.cc: basic select query
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+test select date, payee, display_amount from reg
+24-Jan-01 Grocery Store                                              $25.00    
+24-Jan-01 Grocery Store                                              $-25.00   
+24-Jan-02 Gas Station                                                $40.00    
+24-Jan-02 Gas Station                                                $-40.00   
+end test

@@ -1,0 +1,22 @@
+; Test --period monthly register (exercises times.cc monthly period)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/02/15 * Store
+    Expenses:Food              $30.00
+    Assets:Checking
+
+2024/03/15 * Store
+    Expenses:Food              $40.00
+    Assets:Checking
+
+test reg --period monthly -> 0
+24-Jan-01 - 24-Jan-31           Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+24-Feb-01 - 24-Feb-29           Assets:Checking             $-30.00      $-30.00
+                                Expenses:Food                $30.00            0
+24-Mar-01 - 24-Mar-31           Assets:Checking             $-40.00      $-40.00
+                                Expenses:Food                $40.00            0
+end test

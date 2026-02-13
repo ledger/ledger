@@ -1,0 +1,18 @@
+; Test account.cc: account subcount, count, latest, earliest functions
+; Exercises self_details() and family_details() update paths
+
+2024/01/10 * First Payment
+    Expenses:Food    $30.00
+    Assets:Checking
+
+2024/01/20 Second Payment
+    Expenses:Food    $45.00
+    Assets:Checking
+
+2024/02/01 * Third Payment
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test bal --format "%(account) count=%(count) subcount=%(subcount)\n" Expenses
+Expenses:Food count=3 subcount=3
+end test

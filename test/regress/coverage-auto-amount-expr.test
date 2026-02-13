@@ -1,0 +1,14 @@
+; Test automated transaction with amount expression
+
+= /^Expenses:Food/
+    (Expenses:Tax)    (amount * 0.10)
+
+2024/01/01 Payee
+    Expenses:Food    $100.00
+    Assets:Checking
+
+test reg
+24-Jan-01 Payee                 Expenses:Food               $100.00      $100.00
+                                Assets:Checking            $-100.00            0
+                                (Expenses:Tax)               $10.00       $10.00
+end test

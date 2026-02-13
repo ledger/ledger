@@ -1,0 +1,19 @@
+; Test xact.cc: pending (!) state with --pending filter
+; Exercises item_t::PENDING state
+
+2024/01/10 * Cleared Purchase
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/15 Uncleared Purchase
+    Expenses:Food    $30.00
+    Assets:Checking
+
+2024/01/20 ! Pending Purchase
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test reg --pending
+24-Jan-20 Pending Purchase      Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test

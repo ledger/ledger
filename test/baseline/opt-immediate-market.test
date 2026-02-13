@@ -1,0 +1,25 @@
+; Test --immediate combined with --market
+; This exercises the code path in report.cc where immediate + market
+; overrides the amount_ expression to use market() at value_date
+
+2008/01/01 Buy Stock
+    Assets:Brokerage        10 AAPL @ $20.00
+    Assets:Checking
+
+2008/02/01 Buy More
+    Assets:Brokerage         5 AAPL @ $25.00
+    Assets:Checking
+
+P 2008/03/01 AAPL $30.00
+
+test reg --immediate --market Brokerage
+08-Jan-01 Buy Stock             Assets:Brokerage            $200.00      $200.00
+08-Feb-01 Buy More              Assets:Brokerage            $125.00      $325.00
+end test
+
+test reg --market Brokerage
+08-Jan-01 Buy Stock             Assets:Brokerage            $200.00      $200.00
+08-Feb-01 Commodities revalued  <Revalued>                   $50.00      $250.00
+08-Feb-01 Buy More              Assets:Brokerage            $125.00      $375.00
+08-Mar-01 Commodities revalued  <Revalued>                   $75.00      $450.00
+end test

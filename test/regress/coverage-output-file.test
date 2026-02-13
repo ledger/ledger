@@ -1,0 +1,12 @@
+; Test --output FILE option (exercises stream.cc output_stream_t::initialize with file)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test bal --output /dev/stdout -> 0
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

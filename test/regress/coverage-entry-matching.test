@@ -1,0 +1,12 @@
+; Test draft.cc: xact matching with amounts
+; Exercises draft_t::insert() with template posts containing amounts
+
+2024/01/10 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test --now 2024/02/01 xact "Grocery Store" 75
+2024/02/01 Grocery Store
+    Expenses:Food                             $75.00
+    Assets:Checking
+end test

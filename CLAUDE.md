@@ -103,3 +103,7 @@ Run tests after any code changes to ensure compatibility.
 - The `acprep` script automates most build configurations
 - Timezone for tests is set to America/Chicago by default
 - Use `./acprep --help` to see all build options
+
+## Task Master AI Instructions
+**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
+@./.taskmaster/CLAUDE.md

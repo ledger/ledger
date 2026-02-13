@@ -1,0 +1,10 @@
+; Test automated transaction with inline check and assert
+
+= /^Expenses:Food/
+    check amount > 0
+    (Expenses:Tax)    (amount * 0.10)
+
+2024/01/01 Payee
+    Expenses:Food    $100.00
+    Assets:Checking
+

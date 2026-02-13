@@ -1,0 +1,17 @@
+; Test --weekly register grouping (exercises date_duration_t::WEEKS in times.cc)
+
+2024/01/15 Payee A
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/01/16 Payee B
+    Expenses:Food    $20.00
+    Assets:Checking
+
+2024/01/17 Payee C
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test --weekly reg Expenses
+24-Jan-14 - 24-Jan-20           Expenses:Food                $60.00       $60.00
+end test

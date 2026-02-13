@@ -1,0 +1,15 @@
+; Test --payee with an expression
+; This exercises transfer_details SET_PAYEE in chain.cc
+
+2008/01/01 Store A
+    Expenses:Food           $10.00
+    Assets:Cash
+
+2008/01/02 Store B
+    Expenses:Rent          $500.00
+    Assets:Cash
+
+test reg --payee=account Expenses
+08-Jan-01 Expenses:Food         Expenses:Food                $10.00       $10.00
+08-Jan-02 Expenses:Rent         Expenses:Rent               $500.00      $510.00
+end test

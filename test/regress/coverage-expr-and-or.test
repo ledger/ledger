@@ -1,0 +1,18 @@
+; Test op.cc: AND/OR in query expressions
+; Exercises O_AND and O_OR calc paths
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/16 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+2024/01/17 Restaurant
+    Expenses:Food:Dining    $45.00
+    Assets:Checking
+
+test reg food and not dining
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+end test

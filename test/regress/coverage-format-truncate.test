@@ -1,0 +1,11 @@
+; Test format.cc: truncation via max_width in format strings
+; Exercises truncate() with TRUNCATE_TRAILING (default)
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries:Organic:Vegetables    $125.50
+    Assets:Checking
+
+test reg --format "%-30.30(account)  %12.12(scrub(display_amount))\n"
+Expenses:Food:Groceries:Orga..       $125.50
+Assets:Checking                     $-125.50
+end test

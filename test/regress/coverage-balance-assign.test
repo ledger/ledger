@@ -1,0 +1,17 @@
+; Test balance assignment (= amount on posting)
+
+2024/01/01 Opening Balance
+    Assets:Checking    $1000.00
+    Equity:Opening
+
+2024/01/15 Payee
+    Assets:Checking    = $900.00
+    Expenses:Food
+
+test bal
+             $900.00  Assets:Checking
+           $-1000.00  Equity:Opening
+             $100.00  Expenses:Food
+--------------------
+                   0
+end test

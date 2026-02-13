@@ -1,0 +1,205 @@
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Gas Station
+    Expenses:Auto:Fuel         $35.00
+    Assets:Checking
+
+2024/01/25 * Movie Theater
+    Expenses:Entertainment     $20.00
+    Assets:Checking
+
+test xml Expenses | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ version="VVVVVV"/g'
+<?xml version="1.0" encoding="utf-8"?>
+<ledger version="VVVVVV">
+  <commodities>
+    <commodity flags="P">
+      <symbol>$</symbol>
+    </commodity>
+  </commodities>
+  <accounts>
+    <account id="XXXX">
+      <name/>
+      <fullname/>
+      <account-total>
+        <amount>
+          <commodity flags="P">
+            <symbol>$</symbol>
+          </commodity>
+          <quantity>105</quantity>
+        </amount>
+      </account-total>
+      <account/>
+      <account id="XXXX">
+        <name>Expenses</name>
+        <fullname>Expenses</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>105</quantity>
+          </amount>
+        </account-total>
+        <account id="XXXX">
+          <name>Auto</name>
+          <fullname>Expenses:Auto</fullname>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>35</quantity>
+            </amount>
+          </account-total>
+          <account id="XXXX">
+            <name>Fuel</name>
+            <fullname>Expenses:Auto:Fuel</fullname>
+            <account-amount>
+              <amount>
+                <commodity flags="P">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>35</quantity>
+              </amount>
+            </account-amount>
+            <account-total>
+              <amount>
+                <commodity flags="P">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>35</quantity>
+              </amount>
+            </account-total>
+          </account>
+        </account>
+        <account id="XXXX">
+          <name>Entertainment</name>
+          <fullname>Expenses:Entertainment</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>20</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>20</quantity>
+            </amount>
+          </account-total>
+        </account>
+        <account id="XXXX">
+          <name>Food</name>
+          <fullname>Expenses:Food</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>50</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>50</quantity>
+            </amount>
+          </account-total>
+        </account>
+      </account>
+    </account>
+  </accounts>
+  <transactions>
+    <transaction state="cleared">
+      <date>2024/01/15</date>
+      <payee>Grocery Store</payee>
+      <postings>
+        <posting state="cleared">
+          <account ref="XXXX">
+            <name>Expenses:Food</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>50</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>50</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction state="cleared">
+      <date>2024/01/20</date>
+      <payee>Gas Station</payee>
+      <postings>
+        <posting state="cleared">
+          <account ref="XXXX">
+            <name>Expenses:Auto:Fuel</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>35</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>85</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction state="cleared">
+      <date>2024/01/25</date>
+      <payee>Movie Theater</payee>
+      <postings>
+        <posting state="cleared">
+          <account ref="XXXX">
+            <name>Expenses:Entertainment</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>20</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>105</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+  </transactions>
+</ledger>
+
+end test

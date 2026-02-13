@@ -1,0 +1,19 @@
+; Test --by-payee on register report
+; This exercises by_payee_posts filter
+
+2008/01/01 Store A
+    Expenses:Food           $10.00
+    Assets:Cash
+
+2008/01/15 Store B
+    Expenses:Food           $20.00
+    Assets:Cash
+
+2008/02/01 Store A
+    Expenses:Food           $15.00
+    Assets:Cash
+
+test reg --by-payee Expenses
+08-Jan-01 Store A               Expenses:Food                $25.00       $25.00
+08-Jan-15 Store B               Expenses:Food                $20.00       $45.00
+end test

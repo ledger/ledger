@@ -1,0 +1,9 @@
+; Coverage test for global.cc: --args-only option
+
+2024/01/01 Test
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test reg --args-only Expenses
+24-Jan-01 Test                  Expenses:Food                $25.00       $25.00
+end test

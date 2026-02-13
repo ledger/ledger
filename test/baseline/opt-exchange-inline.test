@@ -1,0 +1,14 @@
+; Test --exchange with inline price setting (using = syntax)
+; This exercises the exchange option parsing with = in report.cc
+
+2008/01/01 Test
+    Assets:EUR      100 EUR
+    Assets:USD     -125 USD
+
+test bal --exchange 'USD=1.25 EUR'
+             -45 USD  Assets
+              80 USD    EUR
+            -125 USD    USD
+--------------------
+             -45 USD
+end test

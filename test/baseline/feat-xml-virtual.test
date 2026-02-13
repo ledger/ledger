@@ -1,0 +1,273 @@
+2024/01/15 * Paycheck
+    Assets:Checking          $1000.00
+    Income:Salary
+    (Budget:Food)             $200.00
+    [Savings:Emergency]       $100.00
+    [Assets:Checking]        $-100.00
+
+test xml | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ version="VVVVVV"/g'
+<?xml version="1.0" encoding="utf-8"?>
+<ledger version="VVVVVV">
+  <commodities>
+    <commodity flags="P">
+      <symbol>$</symbol>
+    </commodity>
+  </commodities>
+  <accounts>
+    <account id="XXXX">
+      <name/>
+      <fullname/>
+      <account-total>
+        <amount>
+          <commodity flags="P">
+            <symbol>$</symbol>
+          </commodity>
+          <quantity>200</quantity>
+        </amount>
+      </account-total>
+      <account id="XXXX">
+        <name>Assets</name>
+        <fullname>Assets</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>900</quantity>
+          </amount>
+        </account-total>
+        <account id="XXXX">
+          <name>Checking</name>
+          <fullname>Assets:Checking</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>900</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>900</quantity>
+            </amount>
+          </account-total>
+        </account>
+      </account>
+      <account id="XXXX">
+        <name>Budget</name>
+        <fullname>Budget</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>200</quantity>
+          </amount>
+        </account-total>
+        <account id="XXXX">
+          <name>Food</name>
+          <fullname>Budget:Food</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>200</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>200</quantity>
+            </amount>
+          </account-total>
+        </account>
+      </account>
+      <account id="XXXX">
+        <name>Income</name>
+        <fullname>Income</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>-1000</quantity>
+          </amount>
+        </account-total>
+        <account id="XXXX">
+          <name>Salary</name>
+          <fullname>Income:Salary</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-1000</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-1000</quantity>
+            </amount>
+          </account-total>
+        </account>
+      </account>
+      <account id="XXXX">
+        <name>Savings</name>
+        <fullname>Savings</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>100</quantity>
+          </amount>
+        </account-total>
+        <account id="XXXX">
+          <name>Emergency</name>
+          <fullname>Savings:Emergency</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>100</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>100</quantity>
+            </amount>
+          </account-total>
+        </account>
+      </account>
+    </account>
+  </accounts>
+  <transactions>
+    <transaction state="cleared">
+      <date>2024/01/15</date>
+      <payee>Paycheck</payee>
+      <postings>
+        <posting state="cleared">
+          <account ref="XXXX">
+            <name>Assets:Checking</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>1000</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>1000</quantity>
+            </amount>
+          </total>
+        </posting>
+        <posting state="cleared">
+          <account ref="XXXX">
+            <name>Income:Salary</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-1000</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>0</quantity>
+            </amount>
+          </total>
+        </posting>
+        <posting state="cleared" virtual="true">
+          <account ref="XXXX">
+            <name>Budget:Food</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>200</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>200</quantity>
+            </amount>
+          </total>
+        </posting>
+        <posting state="cleared" virtual="true">
+          <account ref="XXXX">
+            <name>Savings:Emergency</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>100</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>300</quantity>
+            </amount>
+          </total>
+        </posting>
+        <posting state="cleared" virtual="true">
+          <account ref="XXXX">
+            <name>Assets:Checking</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-100</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>200</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+  </transactions>
+</ledger>
+
+end test

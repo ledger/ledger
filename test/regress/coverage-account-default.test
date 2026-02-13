@@ -1,0 +1,14 @@
+; Test account directive with default subdirective
+
+account Assets:Checking
+    default
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+
+test bal
+             $-10.00  Assets:Checking
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

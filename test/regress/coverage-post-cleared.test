@@ -1,0 +1,6 @@
+; Test posting with cleared state flag
+
+2024/01/01 Payee
+    * Expenses:Food    $10.00
+    Assets:Checking
+

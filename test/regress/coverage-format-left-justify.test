@@ -1,0 +1,11 @@
+; Test format.cc: left justification with %-
+; Exercises ELEMENT_ALIGN_LEFT flag in format_t::real_calc
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%-40(account)|%12t\n"
+Expenses:Food                           |      $50.00
+Assets:Checking                         |     $-50.00
+end test

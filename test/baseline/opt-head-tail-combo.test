@@ -1,0 +1,33 @@
+; Test --head and --tail combined
+; This exercises truncate_xacts with both head and tail
+
+2008/01/01 Txn 1
+    Expenses:A              $10.00
+    Assets:Cash
+
+2008/01/02 Txn 2
+    Expenses:B              $20.00
+    Assets:Cash
+
+2008/01/03 Txn 3
+    Expenses:C              $30.00
+    Assets:Cash
+
+2008/01/04 Txn 4
+    Expenses:D              $40.00
+    Assets:Cash
+
+2008/01/05 Txn 5
+    Expenses:E              $50.00
+    Assets:Cash
+
+2008/01/06 Txn 6
+    Expenses:F              $60.00
+    Assets:Cash
+
+test reg --head 2 --tail 2 Expenses
+08-Jan-01 Txn 1                 Expenses:A                   $10.00       $10.00
+08-Jan-02 Txn 2                 Expenses:B                   $20.00       $30.00
+08-Jan-05 Txn 5                 Expenses:E                   $50.00      $150.00
+08-Jan-06 Txn 6                 Expenses:F                   $60.00      $210.00
+end test

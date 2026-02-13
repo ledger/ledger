@@ -1,0 +1,18 @@
+; Coverage test for query.cc: query by transaction code
+
+2024/01/01 (1001) Check Payment
+    Expenses:Rent    $800.00
+    Assets:Checking
+
+2024/01/02 (1002) Another Check
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+2024/01/03 Card Purchase
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test reg code 1001
+24-Jan-01 Check Payment         Expenses:Rent               $800.00      $800.00
+                                Assets:Checking            $-800.00            0
+end test

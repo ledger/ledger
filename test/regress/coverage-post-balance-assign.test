@@ -1,0 +1,17 @@
+; Test post.cc: balance assignment
+; Exercises balance assignment path in post
+
+2024/01/10 Opening Balance
+    Assets:Checking    $1000.00
+    Equity:Opening
+
+2024/01/15 Adjustment
+    Assets:Checking   = $900.00
+    Expenses:Adjustment
+
+test reg
+24-Jan-10 Opening Balance       Assets:Checking            $1000.00     $1000.00
+                                Equity:Opening            $-1000.00            0
+24-Jan-15 Adjustment            Assets:Checking            $-100.00     $-100.00
+                                Expenses:Adjustment         $100.00            0
+end test

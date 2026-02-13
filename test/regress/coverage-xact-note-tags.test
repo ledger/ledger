@@ -1,0 +1,17 @@
+; Test xact.cc: transaction notes with tags ; :tag1:tag2:
+; Exercises has_tag, get_tag paths in item.cc
+
+2024/01/15 Grocery Store
+    ; :food:organic:
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    ; :transport:fuel:
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test reg --format "%(payee) %(has_tag(\"food\") ? \"FOOD\" : \"OTHER\")\n" Expenses
+Grocery Store FOOD
+Gas Station OTHER
+end test

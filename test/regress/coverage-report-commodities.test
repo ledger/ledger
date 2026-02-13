@@ -1,0 +1,15 @@
+; Test commodities command (exercises report_commodities in output.h)
+
+2024/01/15 * Buy Stock
+    Assets:Brokerage        10 AAPL
+    Assets:Checking        $-1000.00
+
+2024/01/20 * Buy More Stock
+    Assets:Brokerage        5 GOOG
+    Assets:Checking        $-500.00
+
+test commodities -> 0
+$
+AAPL
+GOOG
+end test

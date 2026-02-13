@@ -1,0 +1,14 @@
+; Test --download with a getquote script that returns empty output
+; This exercises the empty response path in quotes.cc
+
+2024/01/15 Buy Stock
+    Assets:Brokerage        10 EMPTYQUOTE
+    Assets:Checking        $-1000.00
+
+test bal --market --download --getquote $sourcepath/test/scripts/mock-getquote.sh -> 0
+                   0  Assets
+            $1000.00    Brokerage
+           $-1000.00    Checking
+--------------------
+                   0
+end test

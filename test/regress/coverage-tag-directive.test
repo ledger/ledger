@@ -1,0 +1,20 @@
+; Test tag directive with assert and check subdirectives
+
+tag Receipt
+    assert value =~ /[0-9]/
+
+tag Category
+    check value =~ /[A-Za-z]/
+
+2024/01/01 Payee
+    ; Receipt: 12345
+    ; Category: food
+    Expenses:Food    $10.00
+    Assets:Checking
+
+test bal
+             $-10.00  Assets:Checking
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

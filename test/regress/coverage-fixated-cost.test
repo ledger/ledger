@@ -1,0 +1,16 @@
+; Test fixated per-unit cost syntax (@ = AMOUNT)
+; The = sign means the price is "fixated" (locked/fixed)
+
+2024/01/01 Buy Euros
+    Assets:Foreign       100 EUR @ = $1.10
+    Assets:Checking
+
+test bal
+               $-110
+             100 EUR  Assets
+               $-110    Checking
+             100 EUR    Foreign
+--------------------
+               $-110
+             100 EUR
+end test

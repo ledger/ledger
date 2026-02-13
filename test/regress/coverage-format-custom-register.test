@@ -1,0 +1,12 @@
+; Test format.cc: custom --register-format exercising %C %P %N format codes
+; Exercises single_letter_mappings for code, payee, note
+
+2024/01/15 (1001) Grocery Store
+    ; Main purchase
+    Expenses:Food    $125.50
+    Assets:Checking
+
+test reg --format "%C%P %-25(account) %12t\n"
+(1001) Grocery Store Expenses:Food                  $125.50
+(1001) Grocery Store Assets:Checking               $-125.50
+end test

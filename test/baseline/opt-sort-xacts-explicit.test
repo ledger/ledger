@@ -1,0 +1,21 @@
+; Test --sort-xacts with an explicit sort expression
+; This exercises the sort_xacts filter with a user-provided expression
+
+2008/01/01 Dinner
+    Expenses:Tips        $3.00
+    Expenses:Food       $20.00
+    Assets:Cash
+
+2008/01/02 Lunch
+    Expenses:Tips        $2.00
+    Expenses:Food       $10.00
+    Assets:Cash
+
+test reg --sort-xacts account
+08-Jan-01 Dinner                Assets:Cash                 $-23.00      $-23.00
+                                Expenses:Food                $20.00       $-3.00
+                                Expenses:Tips                 $3.00            0
+08-Jan-02 Lunch                 Assets:Cash                 $-12.00      $-12.00
+                                Expenses:Food                $10.00       $-2.00
+                                Expenses:Tips                 $2.00            0
+end test

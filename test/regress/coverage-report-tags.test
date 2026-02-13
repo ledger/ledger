@@ -1,0 +1,17 @@
+; Test tags command (exercises report_tags in output.h)
+
+2024/01/15 * Grocery Store
+    ; Location: Downtown
+    Expenses:Food              $50.00
+    ; Organic: true
+    Assets:Checking
+
+2024/01/20 * Gas Station
+    ; Location: Highway
+    Expenses:Auto:Fuel         $35.00
+    Assets:Checking
+
+test tags -> 0
+Location
+Organic
+end test

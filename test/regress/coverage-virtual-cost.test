@@ -1,0 +1,6 @@
+; Test virtual cost syntax (@ in parentheses)
+
+2024/01/01 Buy Euros
+    Assets:Foreign    100 EUR (@) $1.10
+    Assets:Checking
+

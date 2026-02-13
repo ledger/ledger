@@ -1,0 +1,14 @@
+; Test query with since clause (exercises query.cc TOK_SINCE date path)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Gas
+    Expenses:Auto              $30.00
+    Assets:Checking
+
+test reg since 2024/01/18 -> 0
+24-Jan-20 Gas                   Expenses:Auto                $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test

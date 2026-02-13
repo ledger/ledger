@@ -1,0 +1,27 @@
+; Test --group-by combined with --no-titles
+; This exercises the accounts_title_printer checking no_titles flag
+
+2008/01/01 Store A
+    Expenses:Food           $10.00
+    Assets:Cash
+
+2008/02/01 Store B
+    Expenses:Rent          $500.00
+    Assets:Cash
+
+2008/03/01 Store A
+    Expenses:Food           $15.00
+    Assets:Cash
+
+test bal --group-by payee --no-titles Expenses
+              $25.00  Expenses:Food
+             $500.00  Expenses:Rent
+end test
+
+test bal --group-by payee Expenses
+Store A
+              $25.00  Expenses:Food
+
+Store B
+             $500.00  Expenses:Rent
+end test

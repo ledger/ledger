@@ -1,0 +1,15 @@
+; Coverage test for history.cc: prices command output
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/15 AAPL $155.00
+P 2024/02/01 AAPL $160.00
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Checking
+
+test prices
+2024/01/01 AAPL          $150.00
+2024/01/15 AAPL          $155.00
+2024/02/01 AAPL          $160.00
+end test

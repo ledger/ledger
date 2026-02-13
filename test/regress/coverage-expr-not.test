@@ -1,0 +1,16 @@
+; Test op.cc: NOT in query
+; Exercises O_NOT calc path
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/16 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test reg not Food
+24-Jan-15 Grocery Store         Assets:Checking             $-50.00      $-50.00
+24-Jan-16 Gas Station           Expenses:Transport           $30.00      $-20.00
+                                Assets:Checking             $-30.00      $-50.00
+end test

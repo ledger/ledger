@@ -1,0 +1,18 @@
+; Test apply tag / end apply tag directive
+
+apply tag testtag
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Checking
+
+end apply tag
+
+2024/01/02 Another Payee
+    Expenses:Food    $5.00
+    Assets:Checking
+
+test reg %testtag
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test

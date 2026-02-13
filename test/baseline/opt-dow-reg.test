@@ -1,0 +1,28 @@
+; Test --dow (day of week) on register report
+; This exercises the day_of_week_posts filter
+
+2008/01/07 Monday Shopping
+    Expenses:Food       $10.00
+    Assets:Cash
+
+2008/01/08 Tuesday Shopping
+    Expenses:Food       $12.00
+    Assets:Cash
+
+2008/01/09 Wednesday Shopping
+    Expenses:Food       $15.00
+    Assets:Cash
+
+2008/01/14 Monday Shopping
+    Expenses:Food       $11.00
+    Assets:Cash
+
+2008/01/15 Tuesday Shopping
+    Expenses:Food       $13.00
+    Assets:Cash
+
+test reg --dow Expenses
+08-Jan-07 Mondays               Expenses:Food                $21.00       $21.00
+08-Jan-08 Tuesdays              Expenses:Food                $25.00       $46.00
+08-Jan-09 Wednesdays            Expenses:Food                $15.00       $61.00
+end test

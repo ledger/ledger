@@ -1,0 +1,18 @@
+; Test P directive (price history)
+
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.12
+
+2024/01/15 Buy Euros
+    Assets:Foreign    100 EUR
+    Assets:Checking   $-110.00
+
+test bal
+            $-110.00
+             100 EUR  Assets
+            $-110.00    Checking
+             100 EUR    Foreign
+--------------------
+            $-110.00
+             100 EUR
+end test

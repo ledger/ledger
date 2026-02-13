@@ -1,0 +1,15 @@
+; Test post.cc: post with display_account showing virtual brackets
+; Exercises get_display_account showing [Account] and (Account)
+
+2024/01/15 Salary
+    Assets:Checking    $3000.00
+    Income:Salary
+    [Budget:Food]    $-300.00
+    [Budget:Rent]    $300.00
+
+test reg --format "%(display_account) %t\n"
+Assets:Checking $3000.00
+Income:Salary $-3000.00
+[Budget:Food] $-300.00
+[Budget:Rent] $300.00
+end test

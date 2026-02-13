@@ -1,0 +1,12 @@
+; Test xact.cc/item.cc: transaction metadata key:value pairs
+; Exercises set_tag, get_tag, parse_tags
+
+2024/01/15 Grocery Store
+    ; Project: Kitchen
+    ; Category: Food
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%(payee)|%(tag(\"Project\"))|%(tag(\"Category\"))\n" Expenses
+Grocery Store|Kitchen|Food
+end test

@@ -1,0 +1,18 @@
+; Coverage test for query.cc: complex NOT query
+
+2024/01/01 Payee One
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Payee Two
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+2024/01/03 Payee Three
+    Expenses:Office    $15.00
+    Assets:Checking
+
+test reg not Expenses:Food and not Assets
+24-Jan-02 Payee Two             Expenses:Gas                 $40.00       $40.00
+24-Jan-03 Payee Three           Expenses:Office              $15.00       $55.00
+end test

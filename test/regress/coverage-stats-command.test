@@ -1,0 +1,27 @@
+; Test stats command (exercises output handler in report.cc)
+
+2024/01/15 * Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Gas Station
+    Expenses:Auto:Fuel         $35.00
+    Assets:Checking
+
+test stats | sed 's/[0-9][0-9]* days)/N days)/; s/[0-9][0-9.]* per day/N per day/; s/Days since last post: *[0-9]*/Days since last post:      NNN/; s/Posts in last [0-9]* days: *[0-9]*/Posts in last N days:        N/g; s/Posts seen this month: *[0-9]*/Posts seen this month:       N/' -> 0
+Time period: 24-Jan-15 to 24-Jan-20 (N days)
+
+  Files these postings came from:
+    $FILE
+
+  Unique payees:               2
+  Unique accounts:             3
+
+  Number of postings:          4 (N per day)
+  Uncleared postings:          0
+
+  Days since last post:      NNN
+  Posts in last N days:        N
+  Posts in last N days:        N
+  Posts seen this month:       N
+end test

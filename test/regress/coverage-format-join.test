@@ -1,0 +1,11 @@
+; Test format.cc: format with tag() for metadata access
+; Exercises expression functions within format strings
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    ; Memo: Weekly groceries
+    Assets:Checking
+
+test reg --format "%(payee) %(tag(\"Memo\"))\n" Expenses
+Grocery Store Weekly groceries
+end test

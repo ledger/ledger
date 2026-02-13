@@ -1,0 +1,10 @@
+; Test payee UUID mapping
+
+payee Grocery Store
+    uuid abc-123-def
+
+2024/01/01 Unknown Vendor
+    ; UUID: abc-123-def
+    Expenses:Food    $10.00
+    Assets:Checking
+

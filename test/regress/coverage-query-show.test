@@ -1,0 +1,17 @@
+; Coverage test for query.cc: query with show display filter and only keyword
+
+2024/01/01 Grocery Store
+    Expenses:Food    $25.00
+    Assets:Checking
+
+2024/01/02 Gas Station
+    Expenses:Gas    $40.00
+    Assets:Checking
+
+test reg Expenses show Food
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+end test
+
+test reg only Food
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+end test

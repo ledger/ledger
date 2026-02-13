@@ -1,0 +1,19 @@
+; Test op.cc: comparison operators (O_EQ, O_LT, O_LTE, O_GT, O_GTE)
+; Exercises comparison calc paths via --display filter
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/16 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+2024/01/17 Restaurant
+    Expenses:Food    $75.00
+    Assets:Checking
+
+test reg --display "amount >= 50" Expenses
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-17 Restaurant            Expenses:Food                $75.00      $155.00
+end test

@@ -1,0 +1,23 @@
+; Test --period "since X" (exercises TOK_SINCE in times.cc)
+
+2024/09/15 Payee A
+    Expenses:Food    $90.00
+    Assets:Checking
+
+2024/10/15 Payee B
+    Expenses:Food    $100.00
+    Assets:Checking
+
+2024/11/15 Payee C
+    Expenses:Food    $110.00
+    Assets:Checking
+
+2024/12/15 Payee D
+    Expenses:Food    $120.00
+    Assets:Checking
+
+test --period "since 2024/10" reg Expenses
+24-Oct-15 Payee B               Expenses:Food               $100.00      $100.00
+24-Nov-15 Payee C               Expenses:Food               $110.00      $210.00
+24-Dec-15 Payee D               Expenses:Food               $120.00      $330.00
+end test

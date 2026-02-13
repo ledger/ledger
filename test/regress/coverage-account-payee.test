@@ -1,0 +1,15 @@
+; Test account directive with payee subdirective
+
+account Expenses:Food
+    payee ^Grocery
+
+2024/01/01 Grocery Store
+    Expenses    $10.00
+    Assets:Checking
+
+test bal
+             $-10.00  Assets:Checking
+              $10.00  Expenses
+--------------------
+                   0
+end test

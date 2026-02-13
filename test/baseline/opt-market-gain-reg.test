@@ -1,0 +1,16 @@
+; Test --gain on register with multiple price changes
+; This exercises the gain calculation showing only gains/losses
+
+2008/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL @ $20.00
+    Assets:Checking
+
+P 2008/02/01 AAPL $25.00
+P 2008/03/01 AAPL $22.00
+P 2008/04/01 AAPL $30.00
+
+test reg --gain Brokerage
+08-Feb-01 Commodities revalued  <Revalued>                   $50.00       $50.00
+08-Mar-01 Commodities revalued  <Revalued>                  $-30.00       $20.00
+08-Apr-01 Commodities revalued  <Revalued>                   $80.00      $100.00
+end test

@@ -1,0 +1,56 @@
+; Test --quarterly register grouping (exercises QUARTERS duration in times.cc)
+
+2024/01/15 Payee A
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/02/15 Payee B
+    Expenses:Food    $20.00
+    Assets:Checking
+
+2024/03/15 Payee C
+    Expenses:Food    $30.00
+    Assets:Checking
+
+2024/04/15 Payee D
+    Expenses:Food    $40.00
+    Assets:Checking
+
+2024/05/15 Payee E
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/06/15 Payee F
+    Expenses:Food    $60.00
+    Assets:Checking
+
+2024/07/15 Payee G
+    Expenses:Food    $70.00
+    Assets:Checking
+
+2024/08/15 Payee H
+    Expenses:Food    $80.00
+    Assets:Checking
+
+2024/09/15 Payee I
+    Expenses:Food    $90.00
+    Assets:Checking
+
+2024/10/15 Payee J
+    Expenses:Food    $100.00
+    Assets:Checking
+
+2024/11/15 Payee K
+    Expenses:Food    $110.00
+    Assets:Checking
+
+2024/12/15 Payee L
+    Expenses:Food    $120.00
+    Assets:Checking
+
+test --quarterly reg Expenses
+24-Jan-01 - 24-Mar-31           Expenses:Food                $60.00       $60.00
+24-Apr-01 - 24-Jun-30           Expenses:Food               $150.00      $210.00
+24-Jul-01 - 24-Sep-30           Expenses:Food               $240.00      $450.00
+24-Oct-01 - 24-Dec-31           Expenses:Food               $330.00      $780.00
+end test

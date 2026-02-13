@@ -1,0 +1,28 @@
+; Test --monthly with --sort
+; This exercises the interaction of period sorting (normalize_period)
+; with sort_xacts, which sorts posts within each period interval
+
+2008/01/15 Late January
+    Expenses:Food       $30.00
+    Assets:Cash
+
+2008/01/05 Early January
+    Expenses:Rent      $500.00
+    Assets:Cash
+
+2008/02/20 Late Feb
+    Expenses:Food       $25.00
+    Assets:Cash
+
+2008/02/01 Early Feb
+    Expenses:Rent      $500.00
+    Assets:Cash
+
+test reg --monthly --sort amount
+08-Jan-01 - 08-Jan-31           Assets:Cash                $-530.00     $-530.00
+                                Expenses:Food                $30.00     $-500.00
+                                Expenses:Rent               $500.00            0
+08-Feb-01 - 08-Feb-29           Assets:Cash                $-525.00     $-525.00
+                                Expenses:Food                $25.00     $-500.00
+                                Expenses:Rent               $500.00            0
+end test

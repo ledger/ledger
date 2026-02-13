@@ -1,0 +1,24 @@
+; Test --monthly register grouping (exercises MONTHS duration in times.cc)
+
+2024/01/15 Payee A
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/02/15 Payee B
+    Expenses:Food    $20.00
+    Assets:Checking
+
+2024/03/15 Payee C
+    Expenses:Food    $30.00
+    Assets:Checking
+
+2024/04/15 Payee D
+    Expenses:Food    $40.00
+    Assets:Checking
+
+test --monthly --begin 2024/01/01 --end 2024/05/01 reg Expenses
+24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00       $10.00
+24-Feb-01 - 24-Feb-29           Expenses:Food                $20.00       $30.00
+24-Mar-01 - 24-Mar-31           Expenses:Food                $30.00       $60.00
+24-Apr-01 - 24-Apr-30           Expenses:Food                $40.00      $100.00
+end test

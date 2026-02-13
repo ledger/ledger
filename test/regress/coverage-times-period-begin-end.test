@@ -1,0 +1,32 @@
+; Test --begin and --end date filtering (exercises date range filtering in times.cc)
+
+2024/01/15 Payee A
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/02/15 Payee B
+    Expenses:Food    $20.00
+    Assets:Checking
+
+2024/03/15 Payee C
+    Expenses:Food    $30.00
+    Assets:Checking
+
+2024/04/15 Payee D
+    Expenses:Food    $40.00
+    Assets:Checking
+
+2024/05/15 Payee E
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/06/15 Payee F
+    Expenses:Food    $60.00
+    Assets:Checking
+
+test --begin 2024/03/01 --end 2024/07/01 reg Expenses
+24-Mar-15 Payee C               Expenses:Food                $30.00       $30.00
+24-Apr-15 Payee D               Expenses:Food                $40.00       $70.00
+24-May-15 Payee E               Expenses:Food                $50.00      $120.00
+24-Jun-15 Payee F               Expenses:Food                $60.00      $180.00
+end test

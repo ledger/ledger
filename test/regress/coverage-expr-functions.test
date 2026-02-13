@@ -1,0 +1,15 @@
+; Test op.cc: expression functions in --total
+; Exercises O_CALL, O_ADD, O_SUB, O_MUL, O_DIV calc paths
+
+2024/01/15 Grocery Store
+    Expenses:Food    $100.00
+    Assets:Checking
+
+2024/01/20 Restaurant
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --total "total * 2" Expenses
+24-Jan-15 Grocery Store         Expenses:Food               $100.00      $200.00
+24-Jan-20 Restaurant            Expenses:Food                $50.00      $300.00
+end test

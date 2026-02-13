@@ -1,0 +1,17 @@
+; Test format.cc: justify() function via custom format with expressions
+; Exercises the justify/scrub wrappers in format_t::real_calc
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries    $125.50
+    Assets:Checking
+
+2024/01/20 Electric Company
+    Expenses:Utilities:Electric    $85.30
+    Assets:Checking
+
+test reg --format "%(justify(scrub(display_amount), 20, 20, true, color))  %(justify(scrub(display_total), 20, 20, true, color))  %(account)\n"
+             $125.50               $125.50  Expenses:Food:Groceries
+            $-125.50                     0  Assets:Checking
+              $85.30                $85.30  Expenses:Utilities:Electric
+             $-85.30                     0  Assets:Checking
+end test

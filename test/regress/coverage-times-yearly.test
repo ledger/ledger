@@ -1,0 +1,17 @@
+; Test --yearly register grouping (exercises YEARS duration in times.cc)
+
+2024/01/15 Payee A
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/06/15 Payee B
+    Expenses:Food    $20.00
+    Assets:Checking
+
+2024/12/15 Payee C
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test --yearly reg Expenses
+24-Jan-01 - 24-Dec-31           Expenses:Food                $60.00       $60.00
+end test

@@ -1,0 +1,10 @@
+; Test item.cc: item position info (beg_line, end_line, beg_pos, end_pos)
+; Exercises get_beg_line, get_end_line, get_beg_pos, get_end_pos
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%(payee) beg=%(beg_line) end=%(end_line)\n" Expenses
+Grocery Store beg=5 end=5
+end test

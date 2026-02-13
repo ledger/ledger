@@ -1,0 +1,12 @@
+; Test --gain on balance report
+; This exercises gain calculation through the balance command
+
+2008/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL @ $20.00
+    Assets:Checking
+
+P 2008/06/01 AAPL $30.00
+
+test bal --gain
+             $100.00  Assets:Brokerage
+end test

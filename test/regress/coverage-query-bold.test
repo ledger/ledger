@@ -1,0 +1,33 @@
+; Coverage test for query.cc: for, since and until query keywords
+
+2023/11/01 November
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/01/15 January
+    Expenses:Gas    $25.00
+    Assets:Checking
+
+2024/02/15 February
+    Expenses:Office    $30.00
+    Assets:Checking
+
+2024/04/15 April
+    Expenses:Dining    $40.00
+    Assets:Checking
+
+test reg since 2024/02
+24-Feb-15 February              Expenses:Office              $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+24-Apr-15 April                 Expenses:Dining              $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+end test
+
+test reg for 2024
+24-Jan-15 January               Expenses:Gas                 $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Feb-15 February              Expenses:Office              $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+24-Apr-15 April                 Expenses:Dining              $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+end test

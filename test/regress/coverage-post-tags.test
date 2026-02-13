@@ -1,0 +1,12 @@
+; Test post.cc: posting-level tags
+; Exercises post_t::has_tag, get_tag with inheritance from xact
+
+2024/01/15 Grocery Store
+    ; XactTag: FromXact
+    Expenses:Food    $50.00
+    ; PostTag: FromPost
+    Assets:Checking
+
+test reg --format "%(payee)|%(tag(\"PostTag\"))|%(tag(\"XactTag\"))\n" Expenses
+Grocery Store|FromPost|FromXact
+end test

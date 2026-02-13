@@ -1,0 +1,16 @@
+; Test draft.cc: basic xact command matching previous payee
+; Exercises draft_t::insert() with matching transaction
+
+2024/01/10 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/15 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test --now 2024/02/01 xact "Grocery Store"
+2024/02/01 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test

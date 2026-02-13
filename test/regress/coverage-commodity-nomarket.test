@@ -1,0 +1,15 @@
+; Test commodity directive with nomarket subdirective
+
+commodity PRIV
+    nomarket
+
+2024/01/01 Private Investment
+    Assets:Investment    100 PRIV
+    Equity:Opening
+
+test bal
+            100 PRIV  Assets:Investment
+           -100 PRIV  Equity:Opening
+--------------------
+                   0
+end test

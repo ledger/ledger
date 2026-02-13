@@ -1,0 +1,17 @@
+; Test --period "this month" (exercises TOK_THIS/TOK_MONTH in times.cc)
+
+2024/05/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/06/15 Payee B
+    Expenses:Food    $60.00
+    Assets:Checking
+
+2024/07/15 Payee C
+    Expenses:Food    $70.00
+    Assets:Checking
+
+test --now 2024/06/15 --period "this month" reg Expenses
+24-Jun-15 Payee B               Expenses:Food                $60.00       $60.00
+end test

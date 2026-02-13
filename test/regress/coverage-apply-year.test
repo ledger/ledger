@@ -1,0 +1,20 @@
+; Test apply year directive with end apply year
+
+apply year 2023
+
+03/15 First Transaction
+    Expenses:Food    $10.00
+    Assets:Checking
+
+end apply year
+
+2024/06/01 Second Transaction
+    Expenses:Food    $20.00
+    Assets:Checking
+
+test reg
+23-Mar-15 First Transaction     Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+24-Jun-01 Second Transaction    Expenses:Food                $20.00       $20.00
+                                Assets:Checking             $-20.00            0
+end test

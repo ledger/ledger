@@ -1,0 +1,16 @@
+; Test transaction with cleared and pending states
+
+2024/01/01 * Cleared Payee
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/01/02 ! Pending Payee
+    Expenses:Food    $5.00
+    Assets:Checking
+
+test bal
+             $-15.00  Assets:Checking
+              $15.00  Expenses:Food
+--------------------
+                   0
+end test

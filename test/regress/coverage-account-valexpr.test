@@ -1,0 +1,17 @@
+; Test account.cc: account depth_spacer and depth functions
+; Exercises get_depth_spacer, get_depth, partial_name
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test bal --format "%(depth)|%(account)\n" Expenses
+1|Expenses
+3|Expenses:Food:Groceries
+2|Expenses:Transport
+0|
+end test

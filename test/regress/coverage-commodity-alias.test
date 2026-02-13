@@ -1,0 +1,15 @@
+; Test commodity directive with alias subdirective
+
+commodity $
+    alias USD
+
+2024/01/01 Payee
+    Expenses:Food    10 USD
+    Assets:Checking
+
+test bal
+               -10 $  Assets:Checking
+                10 $  Expenses:Food
+--------------------
+                   0
+end test

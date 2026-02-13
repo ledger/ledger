@@ -1,0 +1,19 @@
+; Test equity command with --unround
+; This exercises posts_as_equity filter with the unround option
+
+2008/01/01 Opening
+    Assets:Checking     $1000.00
+    Equity:Opening
+
+2008/02/01 Buy Stock
+    Assets:Brokerage    10 AAPL @ $20.00
+    Assets:Checking
+
+test equity --unround
+2008/02/01 Opening Balances
+    Assets:Brokerage                         10 AAPL
+    Assets:Checking                          $800.00
+    Equity:Opening                         $-1000.00
+    Equity:Opening Balances                  $200.00
+    Equity:Opening Balances                 -10 AAPL
+end test

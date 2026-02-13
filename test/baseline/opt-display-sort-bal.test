@@ -1,0 +1,23 @@
+; Test --display with --sort on balance report
+; This exercises the display+sort branch in accounts_flusher
+
+2008/01/01 Payee A
+    Expenses:Food           $30.00
+    Assets:Cash
+
+2008/01/02 Payee B
+    Expenses:Rent          $500.00
+    Assets:Cash
+
+2008/01/03 Payee C
+    Expenses:Auto           $50.00
+    Assets:Cash
+
+test bal --sort amount --display "amount > 0" Expenses
+             $580.00  Expenses
+              $30.00    Food
+              $50.00    Auto
+             $500.00    Rent
+--------------------
+             $580.00
+end test

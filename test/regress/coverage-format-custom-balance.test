@@ -1,0 +1,18 @@
+; Test format.cc: custom --balance-format
+; Exercises format string parsing with expression format and min/max width
+
+2024/01/15 Grocery Store
+    Expenses:Food    $125.50
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $45.00
+    Assets:Checking
+
+test bal --balance-format "%20(account) %12(scrub(display_total))\n"
+     Assets:Checking     $-170.50
+            Expenses      $170.50
+       Expenses:Food      $125.50
+  Expenses:Transport       $45.00
+                                0
+end test

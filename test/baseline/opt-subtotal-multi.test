@@ -1,0 +1,26 @@
+; Test --subtotal with multiple commodities
+; This exercises subtotal_posts with mixed-commodity postings
+
+2008/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL @ $20.00
+    Assets:Checking
+
+2008/02/01 Buy EUR
+    Assets:Foreign      100 EUR @ $1.25
+    Assets:Checking
+
+2008/03/01 Groceries
+    Expenses:Food       $50.00
+    Assets:Checking
+
+test reg --subtotal
+08-Jan-01 - 08-Mar-01           Assets:Brokerage            10 AAPL      10 AAPL
+                                Assets:Checking            $-375.00     $-375.00
+                                                                         10 AAPL
+                                Assets:Foreign              100 EUR     $-375.00
+                                                                         10 AAPL
+                                                                         100 EUR
+                                Expenses:Food                $50.00     $-325.00
+                                                                         10 AAPL
+                                                                         100 EUR
+end test
