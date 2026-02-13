@@ -1,0 +1,21 @@
+; Test --check-payees with payee directives (exercises journal.cc register_payee, check_payees)
+
+--check-payees
+
+payee Store A
+payee Store B
+
+2024/01/15 * Store A
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Store B
+    Expenses:Food              $30.00
+    Assets:Checking
+
+test bal --args-only --columns=80 -> 0
+             $-80.00  Assets:Checking
+              $80.00  Expenses:Food
+--------------------
+                   0
+end test

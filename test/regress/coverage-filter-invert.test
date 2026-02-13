@@ -1,0 +1,19 @@
+; Test --invert negating amounts (exercises filters.cc calc_posts)
+
+2024/01/15 * Store A
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Store B
+    Expenses:Food              $30.00
+    Assets:Checking
+
+2024/02/01 * Store A
+    Expenses:Supplies          $25.00
+    Assets:Checking
+
+test reg --invert Expenses --args-only --columns=80 -> 0
+24-Jan-15 Store A               Expenses:Food               $-50.00      $-50.00
+24-Jan-20 Store B               Expenses:Food               $-30.00      $-80.00
+24-Feb-01 Store A               Expenses:Supplies           $-25.00     $-105.00
+end test

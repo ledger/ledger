@@ -1,0 +1,21 @@
+; Test monthly intervals with --empty generating placeholder posts (exercises filters.cc interval_posts)
+
+2024/01/15 * Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/03/15 * Store
+    Expenses:Food              $60.00
+    Assets:Checking
+
+2024/05/15 * Store
+    Expenses:Food              $55.00
+    Assets:Checking
+
+test reg --monthly --empty Expenses --args-only --columns=80 -> 0
+24-Jan-01 - 24-Jan-31           Expenses:Food                $50.00       $50.00
+24-Feb-01 - 24-Feb-29           <None>                            0       $50.00
+24-Mar-01 - 24-Mar-31           Expenses:Food                $60.00      $110.00
+24-Apr-01 - 24-Apr-30           <None>                            0      $110.00
+24-May-01 - 24-May-31           Expenses:Food                $55.00      $165.00
+end test

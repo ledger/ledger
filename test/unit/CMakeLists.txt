@@ -14,7 +14,7 @@ if(BUILD_LIBRARY)
   endif()
   add_ledger_test(UtilTests)
 
-  add_executable(MathTests t_amount.cc t_commodity.cc t_balance.cc t_expr.cc t_value.cc)
+  add_executable(MathTests t_amount.cc t_commodity.cc t_balance.cc t_expr.cc t_value.cc t_account.cc)
   set_source_files_properties(t_amount.cc t_value.cc PROPERTIES COMPILE_FLAGS "-Wno-unused-comparison")
   if(HAVE_BOOST_PYTHON)
     target_link_libraries(MathTests ${Python_LIBRARIES})

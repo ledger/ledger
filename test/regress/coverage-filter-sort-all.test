@@ -1,0 +1,49 @@
+; Test --sort-all sorting accounts by amount (exercises filters.h sorted_accounts_iterator)
+
+2024/01/15 * Payee
+    Expenses:Food:Groceries:Produce    $10.00
+    Expenses:Food:Groceries:Meat       $20.00
+    Expenses:Food:Dining:Lunch         $15.00
+    Expenses:Auto:Gas                  $40.00
+    Expenses:Auto:Insurance            $100.00
+    Assets:Checking
+
+2024/02/15 * Payee2
+    Expenses:Food:Groceries:Produce    $12.00
+    Expenses:Food:Dining:Dinner        $25.00
+    Expenses:Auto:Gas                  $45.00
+    Assets:Checking
+
+test bal --sort-all amount --args-only --columns=80 -> 0
+            $-267.00  Assets:Checking
+             $267.00  Expenses
+             $185.00    Auto
+              $85.00      Gas
+             $100.00      Insurance
+              $82.00    Food
+              $40.00      Dining
+              $15.00        Lunch
+              $25.00        Dinner
+              $42.00      Groceries
+              $20.00        Meat
+              $22.00        Produce
+--------------------
+                   0
+end test
+
+test bal --sort-all "-amount" --args-only --columns=80 -> 0
+            $-267.00  Assets:Checking
+             $267.00  Expenses
+             $185.00    Auto
+             $100.00      Insurance
+              $85.00      Gas
+              $82.00    Food
+              $40.00      Dining
+              $25.00        Dinner
+              $15.00        Lunch
+              $42.00      Groceries
+              $22.00        Produce
+              $20.00        Meat
+--------------------
+                   0
+end test

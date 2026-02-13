@@ -1,0 +1,35 @@
+; Test --payee=account and --account=payee (exercises filters.cc transfer_details)
+
+2024/01/15 * Store A
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/20 * Store B
+    Expenses:Food              $30.00
+    Assets:Checking
+
+2024/02/01 * Store A
+    Expenses:Supplies          $25.00
+    Assets:Checking
+
+test reg --payee=account --args-only --columns=80 -> 0
+24-Jan-15 Expenses:Food         Expenses:Food                $50.00       $50.00
+24-Jan-15 Assets:Checking       Assets:Checking             $-50.00            0
+24-Jan-20 Expenses:Food         Expenses:Food                $30.00       $30.00
+24-Jan-20 Assets:Checking       Assets:Checking             $-30.00            0
+24-Feb-01 Expenses:Supplies     Expenses:Supplies            $25.00       $25.00
+24-Feb-01 Assets:Checking       Assets:Checking             $-25.00            0
+end test
+
+test bal --account=payee --args-only --columns=80 -> 0
+                   0  Store A
+             $-75.00    Assets:Checking
+              $75.00    Expenses
+              $50.00      Food
+              $25.00      Supplies
+                   0  Store B
+             $-30.00    Assets:Checking
+              $30.00    Expenses:Food
+--------------------
+                   0
+end test

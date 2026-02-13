@@ -1,0 +1,18 @@
+; Test equity command output (exercises filters.cc posts_as_equity)
+
+2024/01/15 * Opening
+    Assets:Checking        $5000.00
+    Assets:Savings         $3000.00
+    Equity:Opening Balances
+
+2024/01/20 * Store
+    Expenses:Food            $50.00
+    Assets:Checking
+
+test equity --args-only --columns=80 -> 0
+2024/01/20 Opening Balances
+    Assets:Checking                         $4950.00
+    Assets:Savings                          $3000.00
+    Equity:Opening Balances                $-8000.00
+    Expenses:Food                             $50.00
+end test

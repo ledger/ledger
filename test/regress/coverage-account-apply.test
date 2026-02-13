@@ -1,0 +1,24 @@
+; Test apply account directive (exercises account.cc find_account with hierarchy)
+
+apply account Assets
+
+2024/01/15 * Opening
+    Checking               $5000.00
+    Savings                $3000.00
+    Equity:Opening Balances
+
+end apply account
+
+2024/01/20 * Store
+    Expenses:Food            $50.00
+    Assets:Checking
+
+test bal --args-only --columns=80 -> 0
+             $-50.00  Assets
+            $4950.00    Checking
+           $-8000.00    Equity:Opening Balances
+            $3000.00    Savings
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

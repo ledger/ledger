@@ -1,0 +1,35 @@
+; Test regex account query matching (exercises account.cc find_account_re, query parsing)
+
+2024/01/15 * Payee
+    Expenses:Food:Groceries:Produce    $10.00
+    Expenses:Food:Groceries:Meat       $20.00
+    Expenses:Food:Dining:Lunch         $15.00
+    Expenses:Auto:Gas                  $40.00
+    Expenses:Auto:Insurance            $100.00
+    Assets:Checking
+
+2024/02/15 * Payee2
+    Expenses:Food:Groceries:Produce    $12.00
+    Expenses:Food:Dining:Dinner        $25.00
+    Expenses:Auto:Gas                  $45.00
+    Assets:Checking
+
+test bal /Food/ --args-only --columns=80 -> 0
+              $82.00  Expenses:Food
+              $40.00    Dining
+              $25.00      Dinner
+              $15.00      Lunch
+              $42.00    Groceries
+              $20.00      Meat
+              $22.00      Produce
+--------------------
+              $82.00
+end test
+
+test reg /Food/ --args-only --columns=80 -> 0
+24-Jan-15 Payee                 Ex:Fo:Grocerie:Produce       $10.00       $10.00
+                                Exp:Foo:Groceries:Meat       $20.00       $30.00
+                                Expe:Food:Dining:Lunch       $15.00       $45.00
+24-Feb-15 Payee2                Ex:Fo:Grocerie:Produce       $12.00       $57.00
+                                Exp:Food:Dining:Dinner       $25.00       $82.00
+end test
