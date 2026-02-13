@@ -1,0 +1,13 @@
+; Test incomplete expression error (exercises expr.cc/op.cc parsing)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --limit 'amount >' -> 1
+__ERROR__
+While parsing value expression:
+  amount >
+
+Error: > operator not followed by argument
+end test

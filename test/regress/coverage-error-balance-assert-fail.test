@@ -1,0 +1,18 @@
+; Test balance assertion failure (exercises post.cc balance verification)
+
+2024/01/15 * Test
+    Assets:Checking           $100.00
+    Equity:Opening
+
+2024/01/20 * Test2
+    Assets:Checking            $50.00 = $999.00
+    Equity:Opening
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 8:
+While parsing posting:
+  Assets:Checking            $50.00 = $999.00
+                                      ^^^^^^^
+Error: Balance assertion off by $849.00 (expected to see $150.00)
+end test

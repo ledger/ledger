@@ -1,0 +1,13 @@
+; Test unknown function call error (exercises scope.cc/op.cc lookup)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test eval 'nonexistent_func(5)' -> 1
+__ERROR__
+While evaluating value expression:
+  nonexistent_func(5)
+  ^^^^^^^^^^^^^^^^^^^
+Error: Unknown identifier 'nonexistent_func'
+end test

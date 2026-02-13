@@ -1,0 +1,10 @@
+; Test invalid regex pattern error (exercises mask.cc regex compilation)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg '/[invalid/' -> 1
+__ERROR__
+Error: Unmatched [ or [^ in character class declaration.  The error occurred while parsing the regular expression: '[invalid>>>HERE>>>'.
+end test

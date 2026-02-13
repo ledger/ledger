@@ -1,0 +1,13 @@
+; Test invalid date format error (exercises textual.cc date parsing)
+
+2024/13/01 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+While parsing transaction:
+> 2024/13/01 * Test
+Error: Invalid date: 2024/13/01
+end test

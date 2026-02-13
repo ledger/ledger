@@ -1,0 +1,17 @@
+; Test circular alias expansion error (exercises journal.cc expand_aliases)
+
+alias food=grocery
+alias grocery=food
+
+2024/01/15 * Test
+    food                       $50.00
+    Assets:Checking
+
+test bal --recursive-aliases -> 1
+__ERROR__
+While parsing file "$FILE", line 7:
+While parsing posting:
+  food                       $50.00
+
+Error: Infinite recursion on alias expansion for food
+end test
