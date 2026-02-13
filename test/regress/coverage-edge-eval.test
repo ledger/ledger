@@ -1,0 +1,13 @@
+; Test eval command for expression evaluation (exercises precmd.cc eval_command)
+
+2024/01/15 * Test
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test eval '2+3' --args-only --columns=80 -> 0
+5
+end test
+
+test eval '10 * 5' --args-only --columns=80 -> 0
+50
+end test

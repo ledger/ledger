@@ -1,0 +1,15 @@
+; Test xact command for entry generation (exercises precmd.cc xact_command)
+
+2024/01/15 * Grocery Store
+    Expenses:Food:Groceries       $50.00
+    Assets:Checking
+
+2024/02/01 * Grocery Store
+    Expenses:Food:Groceries       $55.00
+    Assets:Checking
+
+test xact 2024/03/15 'Grocery Store' 'Expenses:Food' '$40' --args-only --columns=80 -> 0
+2024/03/15 Grocery Store
+    Expenses:Food:Groceries                   $40.00
+    Assets:Checking
+end test

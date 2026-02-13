@@ -1,0 +1,30 @@
+; Test cleared report with mixed states (exercises precmd.cc cleared report)
+
+2024/01/05 * Cleared transaction
+    Expenses:Food              $45.00
+    Assets:Checking
+
+2024/01/10 ! Pending transaction
+    Expenses:Auto:Gas          $35.00
+    Assets:Checking
+
+2024/01/15 Uncleared transaction
+    Expenses:Utilities         $120.00
+    Assets:Checking
+
+test reg --cleared --args-only --columns=80 -> 0
+24-Jan-05 Cleared transaction   Expenses:Food                $45.00       $45.00
+                                Assets:Checking             $-45.00            0
+end test
+
+test reg --pending --args-only --columns=80 -> 0
+24-Jan-10 Pending transaction   Expenses:Auto:Gas            $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+end test
+
+test reg --uncleared --args-only --columns=80 -> 0
+24-Jan-10 Pending transaction   Expenses:Auto:Gas            $35.00       $35.00
+                                Assets:Checking             $-35.00            0
+24-Jan-15 Uncleared transaction Expenses:Utilities          $120.00      $120.00
+                                Assets:Checking            $-120.00            0
+end test
