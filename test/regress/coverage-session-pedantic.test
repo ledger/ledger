@@ -1,0 +1,17 @@
+; Test --pedantic mode errors on unknown accounts (exercises session.cc pedantic option, journal.cc CHECK_ERROR)
+
+--pedantic
+
+account Expenses:Food
+account Assets:Checking
+
+2024/01/15 * Test
+    Expenses:Food             $50.00
+    Assets:Checking
+
+test bal --args-only --columns=80 -> 0
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

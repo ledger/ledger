@@ -1,0 +1,12 @@
+; Test --hashes option with sha512 (exercises session.cc hashes_ option)
+
+2024/01/15 * Test
+    Expenses:Food             $50.00
+    Assets:Checking
+
+test print --hashes=sha512 --args-only --columns=80 -> 0
+2024/01/15 * Test
+    ; Hash: 98ece0b2d765a755a75130f5f03bcc97f74036cdecc77f12776ca73c7622448b7dda3ef0b9bfff2dd5028e0e404f20832d7e78d3f25a1d9b437e178aafeec2ff
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test

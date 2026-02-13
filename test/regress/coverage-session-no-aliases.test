@@ -1,0 +1,14 @@
+; Test --no-aliases prevents alias expansion (exercises session.cc no_aliases, journal.cc expand_aliases)
+
+alias food=Expenses:Food
+
+2024/01/15 * Test
+    food                   $50.00
+    Assets:Checking
+
+test bal --no-aliases --args-only --columns=80 -> 0
+             $-50.00  Assets:Checking
+              $50.00  food
+--------------------
+                   0
+end test

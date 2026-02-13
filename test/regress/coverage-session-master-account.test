@@ -1,0 +1,13 @@
+; Test --master-account nests all accounts under given prefix (exercises session.cc master_account option)
+
+2024/01/15 * Test
+    Checking               $50.00
+    Savings                $-50.00
+
+test bal --master-account Assets --args-only --columns=80 -> 0
+                   0  Assets
+              $50.00    Checking
+             $-50.00    Savings
+--------------------
+                   0
+end test

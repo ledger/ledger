@@ -1,0 +1,13 @@
+; Test --explicit suppresses auto-generated print info (exercises session.cc explicit option)
+
+--explicit
+
+2024/01/15 * Test
+    Expenses:Food             $50.00
+    Assets:Checking
+
+test print --args-only --columns=80 -> 0
+2024/01/15 * Test
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test
