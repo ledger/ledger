@@ -1,0 +1,21 @@
+; Test for issue #2566
+; Automated transaction should balance when copying amount and cost
+; from a posting with a total cost annotation (@@)
+
+= /Expenses/
+    Copy    (a)
+    Copy   (-b)
+
+2026-02-02 ACME
+    Expenses  100 kWh @@ 72,00€
+    Liabilities         -72,00€
+
+test --decimal-comma reg
+26-Feb-02 ACME                  Expenses                    100 kWh      100 kWh
+                                Liabilities                 -72,00€      100 kWh
+                                                                         -72,00€
+                                Copy                        100 kWh      200 kWh
+                                                                         -72,00€
+                                Copy                        -72,00€      200 kWh
+                                                                        -144,00€
+end test

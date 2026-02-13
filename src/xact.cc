@@ -879,6 +879,23 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
           new_post->copy_details(*post);
           if (post->cost)
             new_post->cost = post->cost;
+          else if (initial_post->cost && amt.has_annotation() &&
+                   amt.annotation().price) {
+            // When the auto-generated amount has a price annotation (e.g., copied
+            // from a posting with cost like "100 kWh @@ 72€"), derive the cost
+            // from the annotation so verify() can check the balance correctly.
+            new_post->cost = *amt.annotation().price;
+            new_post->cost->in_place_unround();
+            if (amt.annotation().has_flags(ANNOTATION_PRICE_NOT_PER_UNIT)) {
+              if (amt.sign() < 0)
+                new_post->cost->in_place_negate();
+            } else {
+              commodity_t& cost_commodity(new_post->cost->commodity());
+              *new_post->cost *= amt;
+              new_post->cost->set_commodity(cost_commodity);
+            }
+            new_post->add_flags(POST_COST_CALCULATED);
+          }
 
           // A Cleared transaction implies all of its automatic posting are cleared
           // CPR 2012/10/23
