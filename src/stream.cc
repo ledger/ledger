@@ -31,6 +31,9 @@
 
 #include <system.hh>
 
+#define BOOST_IOSTREAMS_USE_DEPRECATED 1
+#include <boost/iostreams/device/file_descriptor.hpp>
+
 #include "stream.h"
 
 namespace ledger {
