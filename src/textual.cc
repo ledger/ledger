@@ -1675,10 +1675,21 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
                       << "POST assign: parsed balance amount = " << *post->assigned_amount);
 
         const amount_t& amt(*post->assigned_amount);
+
+        // When the assertion/assignment amount has lot annotations,
+        // preserve them in the comparison so that annotated balance
+        // assertions like "= 1.00 XXX {=1.01 USD}" work correctly
+        // (fixes #2318, #2355).  When the amount has no annotations,
+        // strip annotations from the account total so that assertions
+        // like "= 2 AAA" match regardless of lot cost basis or date
+        // (the behavior that bug #1055 depends on).
+        bool strip = !amt.has_annotation();
+
         value_t account_total(
             post->account
-                ->amount(!(post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))
-                .strip_annotations(keep_details_t()));
+                ->amount(!(post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG))));
+        if (strip)
+          account_total = account_total.strip_annotations(keep_details_t());
 
         DEBUG("post.assign", "line " << context.linenum << ": "
                                      << "account balance = " << account_total);
@@ -1693,15 +1704,15 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
 
         switch (account_total.type()) {
         case value_t::AMOUNT: {
-          amount_t amt(account_total.as_amount().strip_annotations(keep_details_t()));
-          diff -= amt.reduced();
+          amount_t acct_amt(account_total.as_amount());
+          diff -= acct_amt.reduced();
           DEBUG("textual.parse", "line " << context.linenum << ": "
-                                         << "Subtracting amount " << amt << " from diff, yielding "
+                                         << "Subtracting amount " << acct_amt << " from diff, yielding "
                                          << diff);
           break;
         }
         case value_t::BALANCE: {
-          balance_t bal(account_total.as_balance().strip_annotations(keep_details_t()));
+          balance_t bal(account_total.as_balance());
           diff -= bal;
           DEBUG("textual.parse", "line " << context.linenum << ": "
                                          << "Subtracting balance " << bal << " from diff, yielding "
@@ -1721,10 +1732,10 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
           if (p->account == post->account &&
               ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==
                (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {
-            amount_t amt(p->amount.strip_annotations(keep_details_t()));
-            diff -= amt;
+            amount_t p_amt(strip ? p->amount.strip_annotations(keep_details_t()) : p->amount);
+            diff -= p_amt;
             DEBUG("textual.parse", "line " << context.linenum << ": "
-                                           << "Subtracting " << amt << ", diff = " << diff);
+                                           << "Subtracting " << p_amt << ", diff = " << diff);
           }
         }
 
@@ -1747,37 +1758,46 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         if (post->amount.is_null()) {
           // balance assignment
           if (!diff.is_zero()) {
-            // Recompute the diff preserving lot annotations (cost basis
-            // and lot date) so that the assigned amount retains them.
-            value_t ann_total(
-                post->account
-                    ->amount(!(post->has_flags(POST_VIRTUAL) ||
-                               post->has_flags(POST_IS_TIMELOG))));
-            balance_t ann_diff = amt;
-            switch (ann_total.type()) {
-            case value_t::AMOUNT:
-              ann_diff -= ann_total.as_amount().reduced();
-              break;
-            case value_t::BALANCE:
-              ann_diff -= ann_total.as_balance();
-              break;
-            default:
-              break;
-            }
-            for (post_t* p : xact->posts) {
-              if (p->account == post->account &&
-                  ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==
-                   (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {
-                ann_diff -= p->amount;
+            if (strip) {
+              // Recompute the diff preserving lot annotations (cost basis
+              // and lot date) so that the assigned amount retains them.
+              value_t ann_total(
+                  post->account
+                      ->amount(!(post->has_flags(POST_VIRTUAL) ||
+                                 post->has_flags(POST_IS_TIMELOG))));
+              balance_t ann_diff = amt;
+              switch (ann_total.type()) {
+              case value_t::AMOUNT:
+                ann_diff -= ann_total.as_amount().reduced();
+                break;
+              case value_t::BALANCE:
+                ann_diff -= ann_total.as_balance();
+                break;
+              default:
+                break;
               }
-            }
-            // Use annotated diff if it can be represented as a single
-            // amount; fall back to the stripped diff otherwise (e.g.
-            // when multiple lots with different annotations exist).
-            try {
-              post->amount = ann_diff.to_amount();
-            } catch (...) {
-              post->amount = diff.to_amount();
+              for (post_t* p : xact->posts) {
+                if (p->account == post->account &&
+                    ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==
+                     (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {
+                  ann_diff -= p->amount;
+                }
+              }
+              // Use annotated diff if it can be represented as a single
+              // amount; fall back to the stripped diff otherwise (e.g.
+              // when multiple lots with different annotations exist).
+              try {
+                post->amount = ann_diff.to_amount();
+              } catch (...) {
+                post->amount = diff.to_amount();
+              }
+            } else {
+              // Diff already has annotations; use it directly.
+              try {
+                post->amount = diff.to_amount();
+              } catch (...) {
+                post->amount = diff.strip_annotations(keep_details_t()).to_amount();
+              }
             }
             DEBUG("textual.parse", "line " << context.linenum << ": "
                                            << "Overwrite null posting with " << post->amount);
@@ -1790,9 +1810,11 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
           post->add_flags(POST_CALCULATED);
         } else {
           // balance assertion
-          diff -= post->amount.reduced().strip_annotations(keep_details_t());
+          amount_t post_amt(strip ? post->amount.reduced().strip_annotations(keep_details_t())
+                                  : post->amount.reduced());
+          diff -= post_amt;
           if (!no_assertions && !diff.is_zero()) {
-            balance_t tot = (-diff + amt).strip_annotations(keep_details_t());
+            balance_t tot = strip ? (-diff + amt).strip_annotations(keep_details_t()) : (-diff + amt);
             DEBUG("textual.parse",
                   "Balance assertion: off by " << diff << " (expected to see " << tot << ")");
             throw_(parse_error, _f("Balance assertion off by %1% (expected to see %2%)") %

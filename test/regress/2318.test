@@ -1,0 +1,14 @@
+; Regression test for bug #2318: balance assertion fails with lot-priced
+; commodities.  An assertion like "= 1.00 XXX {=1.01 USD}" should succeed
+; when the account contains exactly 1.00 XXX {=1.01 USD}.
+
+2023-01-01 Payee
+    Assets:XXX  1.00 XXX {=1.01 USD} = 1.00 XXX {=1.01 USD}
+    Liabilities:XXX  -1.00 XXX {=1.01 USD}
+
+test balance
+            1.00 XXX  Assets:XXX
+           -1.00 XXX  Liabilities:XXX
+--------------------
+                   0
+end test
