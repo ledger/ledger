@@ -22,8 +22,8 @@ P 2024-06-01 USD 0.80 EUR
     Assets:Checking
 
 test bal --dc -X $
-                       $94.50        $-94.50  Assets:Checking
-        $94.50                        $94.50  Expenses
+             0         $94.50        $-94.50  Assets:Checking
+        $94.50              0         $94.50  Expenses
 --------------------------------------------
         $94.50         $94.50              0
 end test
