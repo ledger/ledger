@@ -276,6 +276,7 @@ public:
     HANDLER(gain).report(out);
     HANDLER(generated).report(out);
     HANDLER(group_by_).report(out);
+    HANDLER(group_by_cumulative).report(out);
     HANDLER(group_title_format_).report(out);
     HANDLER(head_).report(out);
     HANDLER(immediate).report(out);
@@ -678,6 +679,8 @@ public:
   OPTION(report_t, generated);
 
   OPTION_(report_t, group_by_, expr_t expr; DO_(str) { expr = str; });
+
+  OPTION(report_t, group_by_cumulative);
 
   OPTION__(
       report_t, group_title_format_,

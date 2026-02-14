@@ -580,6 +580,33 @@ void account_t::clear_xdata() {
       pair.second->clear_xdata();
 }
 
+void account_t::clear_display_state() {
+  if (xdata_) {
+    // Reset display-related flags but preserve ACCOUNT_EXT_VISITED so
+    // that accumulated self_details totals remain valid.
+    xdata_->clear_flags();
+    xdata_->add_flags(ACCOUNT_EXT_VISITED);
+
+    // Reset family_details so total() recalculates the account tree,
+    // but keep self_details intact so amounts accumulate across groups.
+    xdata_->family_details.calculated = false;
+    xdata_->family_details.total = value_t();
+
+    // Reset the iteration position so amount() re-scans from the
+    // beginning.  Posts already marked POST_EXT_CONSIDERED will be
+    // skipped, but newly visited posts anywhere in the list will be
+    // picked up.
+    xdata_->self_details.last_post = none;
+    xdata_->self_details.last_reported_post = none;
+
+    xdata_->sort_values.clear();
+  }
+
+  foreach (accounts_map::value_type& pair, accounts)
+    if (!pair.second->has_flags(ACCOUNT_TEMP))
+      pair.second->clear_display_state();
+}
+
 value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&>& expr) const {
   DEBUG("account.amount", "real only: " << real_only);
 

@@ -213,6 +213,7 @@ public:
 
   bool has_xdata() const { return static_cast<bool>(xdata_); }
   void clear_xdata();
+  void clear_display_state();
   xdata_t& xdata() {
     if (!xdata_)
       xdata_ = xdata_t();

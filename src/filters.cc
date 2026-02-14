@@ -49,6 +49,8 @@ void post_splitter::print_title(const value_t& val) {
 }
 
 void post_splitter::flush() {
+  bool cumulative = report.HANDLED(group_by_cumulative);
+
   foreach (value_to_posts_map::value_type& pair, posts_map) {
     preflush_func(pair.first);
 
@@ -56,7 +58,11 @@ void post_splitter::flush() {
       (*post_chain)(*post);
 
     post_chain->flush();
-    post_chain->clear();
+
+    // In cumulative mode, don't clear the chain state between groups
+    // so that account totals accumulate across groups.
+    if (!cumulative)
+      post_chain->clear();
 
     if (postflush_func)
       (*postflush_func)(pair.first);
