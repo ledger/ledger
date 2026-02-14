@@ -1,0 +1,26 @@
+; Regression test for issue #2509: print command does not print commodity
+; annotations with dates.
+;
+; When a posting has both a lot price {$100} and a lot date [2012-03-01],
+; the print command was dropping both annotations, outputting only the
+; per-unit cost (@ $120).
+
+2012-03-01 AAPL
+    Assets                                        10 APPL @ $100
+    Assets                                    -$1000
+
+2012-03-02 AAPL
+    Assets                                       -10 APPL {$100} [2012-03-01] @ $120
+    Capital Gains                              -$200
+    Assets                                     $1200
+
+test print -> 0
+2012/03/01 AAPL
+    Assets                                   10 APPL @ $100
+    Assets                                    $-1000
+
+2012/03/02 AAPL
+    Assets                              -10 APPL {$100} [2012/03/01] @ $120
+    Capital Gains                              $-200
+    Assets                                     $1200
+end test
