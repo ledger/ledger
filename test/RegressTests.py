@@ -20,21 +20,7 @@ from difflib import unified_diff
 
 from LedgerHarness import LedgerHarness
 
-parser = argparse.ArgumentParser(prog='RegressTests', parents=[LedgerHarness.parser()])
-parser.add_argument('-j', '--jobs', type=int, default=1)
-parser.add_argument('tests', type=pathlib.Path)
-args = parser.parse_args()
-multiproc &= (args.jobs >= 1)
-harness = LedgerHarness(args.ledger, args.sourcepath, args.verify, args.gmalloc, args.python)
-
-match = re.match(r'(Baseline|Regress|Manual)Test_(.*)', str(args.tests))
-if match:
-  args.tests = pathlib.Path('test') / match.group(1).lower() / (match.group(2) + '.test')
-
-if not args.tests.is_dir() and not args.tests.is_file():
-    print(f'{args.tests} is not a directory or file (cwd: {os.getcwd()})'
-          , file=sys.stderr)
-    sys.exit(1)
+harness = None
 
 class RegressFile(object):
     def __init__(self, filename):
@@ -201,28 +187,48 @@ def do_test(path):
     entry.run_tests()
     entry.close()
 
+def init_worker(ledger, sourcepath, verify, gmalloc, python):
+    global harness
+    harness = LedgerHarness(ledger, sourcepath, verify, gmalloc, python)
+
 if __name__ == '__main__':
-    if multiproc:
-        pool = Pool(args.jobs*2)
-    else:
-        pool = None
+    parser = argparse.ArgumentParser(prog='RegressTests',
+                                     parents=[LedgerHarness.parser()])
+    parser.add_argument('-j', '--jobs', type=int, default=1)
+    parser.add_argument('tests', type=pathlib.Path)
+    args = parser.parse_args()
+    multiproc &= (args.jobs >= 1)
+    harness = LedgerHarness(args.ledger, args.sourcepath, args.verify,
+                            args.gmalloc, args.python)
+
+    match = re.match(r'(Baseline|Regress|Manual)Test_(.*)', str(args.tests))
+    if match:
+        args.tests = pathlib.Path('test') / match.group(1).lower() / \
+            (match.group(2) + '.test')
+
+    if not args.tests.is_dir() and not args.tests.is_file():
+        print(f'{args.tests} is not a directory or file (cwd: {os.getcwd()})',
+              file=sys.stderr)
+        sys.exit(1)
 
     if args.tests.is_dir():
         tests = [p for p in args.tests.iterdir()
                 if (p.suffix == '.test' and
                     (not p.match('*_py.test') or (harness.python and
                                              not harness.verify)))]
-        if pool:
+        if multiproc:
+            pool = Pool(args.jobs*2, initializer=init_worker,
+                        initargs=(args.ledger, args.sourcepath, args.verify,
+                                  args.gmalloc, args.python))
             pool.map(do_test, tests, 1)
+            pool.close()
+            pool.join()
         else:
-            map(do_test, tests)
+            for t in tests:
+                do_test(t)
     else:
         entry = RegressFile(args.tests)
         entry.run_tests()
         entry.close()
-
-    if pool:
-        pool.close()
-        pool.join()
 
     harness.exit()
