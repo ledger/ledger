@@ -40,6 +40,53 @@ class JournalTestCase(unittest.TestCase):
             self.assertEqual(str(e).splitlines()[-1],
                               "No quantity specified for amount")
 
+    def testRereadJournalFromString(self):
+        """Test that reading a journal a second time does not cause an assertion failure.
+        Regression test for GitHub issues #2320 and #514."""
+        journal = read_journal_from_string("""
+2012-03-01 KFC
+    Expenses:Food      $21.34
+    Assets:Cash
+""")
+        for xact in journal:
+            self.assertEqual(xact.payee, "KFC")
+
+        # Reading a second journal should reset state and work correctly
+        journal = read_journal_from_string("""
+2012-03-02 Starbucks
+    Expenses:Coffee    $5.00
+    Assets:Cash
+""")
+        xacts = [xact for xact in journal]
+        self.assertEqual(len(xacts), 1)
+        self.assertEqual(xacts[0].payee, "Starbucks")
+
+        for post in journal.query("coffee"):
+            self.assertEqual(str(post.account), "Expenses:Coffee")
+            self.assertEqual(post.amount, Amount("$5.00"))
+
+    def testCloseAndRereadJournal(self):
+        """Test that close_journal_files followed by read works correctly.
+        Regression test for GitHub issues #2320 and #514."""
+        journal = read_journal_from_string("""
+2012-03-01 KFC
+    Expenses:Food      $21.34
+    Assets:Cash
+""")
+        for xact in journal:
+            self.assertEqual(xact.payee, "KFC")
+
+        close_journal_files()
+
+        journal = read_journal_from_string("""
+2012-03-02 Starbucks
+    Expenses:Coffee    $5.00
+    Assets:Cash
+""")
+        xacts = [xact for xact in journal]
+        self.assertEqual(len(xacts), 1)
+        self.assertEqual(xacts[0].payee, "Starbucks")
+
     def testFilterByCommodity(self):
         journal = read_journal_from_string("""
 commodity Comm
