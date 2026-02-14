@@ -1,0 +1,35 @@
+; Regression test for issue #2301: Accept numbers with a trailing decimal mark
+;
+; Ledger should accept amounts with a trailing decimal mark and no decimal
+; digits (e.g. "1,234." with trailing period). This is used by hledger to
+; disambiguate decimal marks from digit group marks.
+
+commodity $
+    format $1,000.
+
+2024-01-01 Test trailing decimal period
+    Expenses:Food                            $1,234.
+    Assets:Checking
+
+2024-01-02 Test simple trailing decimal
+    Expenses:Rent                               $500.
+    Assets:Checking
+
+2024-01-03 Test trailing decimal with thousands
+    Expenses:Car                            $12,345.
+    Assets:Checking
+
+test bal Expenses -> 0
+             $14,079  Expenses
+             $12,345    Car
+              $1,234    Food
+                $500    Rent
+--------------------
+             $14,079
+end test
+
+test reg Expenses -> 0
+24-Jan-01 Test trailing decim.. Expenses:Food                $1,234       $1,234
+24-Jan-02 Test simple trailin.. Expenses:Rent                  $500       $1,734
+24-Jan-03 Test trailing decim.. Expenses:Car                $12,345      $14,079
+end test
