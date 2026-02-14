@@ -1,0 +1,25 @@
+; Regression test for issue #2519: declared accounts don't show up
+; in accounts output.
+;
+; Accounts declared with the `account` directive but having no postings
+; should still appear in the accounts command output.
+
+account Foo:Bar
+account Baz:Qiz
+account Also:Declared
+
+2000-01-01 A thing
+    Foo:Bar  6
+    Baz:Qiz
+
+test accounts
+Also:Declared
+Baz:Qiz
+Foo:Bar
+end test
+
+test accounts --count
+0 Also:Declared
+1 Baz:Qiz
+1 Foo:Bar
+end test
