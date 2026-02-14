@@ -8,12 +8,12 @@
     Assets:Savings  -30 EUR
 
 ; BALANCE * AMOUNT-with-commodity error (line 659 break)
-test bal "Expenses:Both" --format "%(display_total * to_amount(\"$5\"))\n" --no-total -> 1
+test bal "Expenses:Both" --format "%(display_total * to_amount(\"5 EUR\"))\n" --no-total -> 1
 __ERROR__
 While evaluating value expression:
-  (display_total * to_amount("$5"))
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-While multiplying $5.00 with $50.00
+  (display_total * to_amount("5 EUR"))
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+While multiplying 5 EUR with $50.00
 30 EUR:
 Error: Cannot multiply a balance with an amount
 end test
