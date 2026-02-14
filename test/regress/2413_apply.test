@@ -1,0 +1,25 @@
+# Test case related to issue #2413
+# Verify that "end apply year" properly reverts year_directive_year
+# so that a subsequent "year" directive is correctly used by xact.
+# Without the fix, "end apply year" would leave year_directive_year stuck
+# at the old value, causing xact to use the wrong year.
+
+apply year 2020
+
+2020-03-02 Shop
+    Expenses:Food                              $5.00
+    Account
+
+end apply year
+
+year 2025
+
+2025-03-02 Shop
+    Expenses:Food                             $10.00
+    Account
+
+test xact 03-03 Shop 10
+2025/03/03 Shop
+    Expenses:Food                             $10.00
+    Account
+end test
