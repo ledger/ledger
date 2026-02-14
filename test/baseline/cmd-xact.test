@@ -19,6 +19,7 @@ end test
 
 test --now 2012/03/25 xact "Test 2"
 2012/03/25 Test 2
+    ; Payee: Test 3
     C                                      20.00 EUR
     D
 end test

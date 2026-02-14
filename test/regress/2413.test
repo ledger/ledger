@@ -29,13 +29,13 @@ end test
 
 # The issue author expected 2025 for both 03-03 and 03/03 formats
 test xact 03-03 Shop 10
-2025/03/03 Shop
+2025/03/03 Shop  ; for =2025-03-06
     Expenses:Food                             $10.00
     Account
 end test
 
 test xact 03/03 Shop 10
-2025/03/03 Shop
+2025/03/03 Shop  ; for =2025-03-06
     Expenses:Food                             $10.00
     Account
 end test
