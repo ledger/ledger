@@ -1,0 +1,12 @@
+2008/01/01 Café Dépôt
+    Expenses:Food             $10.00
+    Assets:Cash
+
+2008/01/15 Grocery Store
+    Expenses:Food             $15.00
+    Assets:Cash
+
+test --ignore-diacritics reg @cafe
+08-Jan-01 Café Dépôt            Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
