@@ -205,6 +205,8 @@ journal_t* session_t::read_journal_files() {
 }
 
 journal_t* session_t::read_journal(const path& pathname) {
+  journal.reset(new journal_t);
+
   HANDLER(file_).data_files.clear();
   HANDLER(file_).data_files.push_back(pathname);
 
@@ -212,6 +214,8 @@ journal_t* session_t::read_journal(const path& pathname) {
 }
 
 journal_t* session_t::read_journal_from_string(const string& data) {
+  journal.reset(new journal_t);
+
   HANDLER(file_).data_files.clear();
 
   shared_ptr<std::istream> stream(new std::istringstream(data));
