@@ -1,0 +1,36 @@
+; Regression test for issue #2395
+; --ignore-diacritics flag should allow ASCII search terms to match
+; accented/diacritic characters in payee names, account names, etc.
+
+2024-01-01 Boulangerie spécialité
+    Expenses:Café    10 EUR
+    Assets:Checking
+
+2024-01-15 Grocery Store
+    Expenses:Food    20 EUR
+    Assets:Checking
+
+2024-02-01 Résumé Services
+    Expenses:Office    50 EUR
+    Assets:Checking
+
+; Test 1: Payee search with @, ASCII pattern matching accented payee
+test reg --ignore-diacritics @specialite --columns=80 -> 0
+24-Jan-01 Boulangerie spécial.. Expenses:Café                10 EUR       10 EUR
+                                Assets:Checking             -10 EUR            0
+end test
+
+; Test 2: Account search, ASCII pattern matching accented account
+test reg --ignore-diacritics Cafe --columns=80 -> 0
+24-Jan-01 Boulangerie spécial.. Expenses:Café                10 EUR       10 EUR
+end test
+
+; Test 3: Payee search with accented pattern matching accented payee
+test reg --ignore-diacritics @Resume --columns=80 -> 0
+24-Feb-01 Résumé Services       Expenses:Office              50 EUR       50 EUR
+                                Assets:Checking             -50 EUR            0
+end test
+
+; Test 4: Without --ignore-diacritics, ASCII should NOT match accented
+test reg @specialite --columns=80 -> 0
+end test

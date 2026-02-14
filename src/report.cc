@@ -1135,6 +1135,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
   case 'i':
     OPT(invert);
     else OPT(inject_);
+    else OPT(ignore_diacritics);
     else OPT(immediate);
     break;
   case 'j':

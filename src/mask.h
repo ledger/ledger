@@ -50,6 +50,23 @@
 
 namespace ledger {
 
+/**
+ * @brief Strip diacritics/accents from a UTF-8 string.
+ *
+ * Converts accented characters to their ASCII base equivalents,
+ * e.g. "specialite" matches "sp\xc3\xa9cialit\xc3\xa9".
+ * Uses a lookup table for common Latin accented characters.
+ */
+string fold_diacritics(const string& text);
+
+/**
+ * @brief Global flag to enable diacritics-insensitive matching.
+ *
+ * When set to true, mask_t will strip diacritics from both the
+ * pattern and the text before matching.
+ */
+extern bool ignore_diacritics;
+
 class mask_t {
 public:
 #if HAVE_BOOST_REGEX_UNICODE
@@ -72,14 +89,15 @@ public:
   bool operator==(const mask_t& other) const { return expr == other.expr; }
 
   bool match(const string& text) const {
+    string match_text = ignore_diacritics ? fold_diacritics(text) : text;
 #if HAVE_BOOST_REGEX_UNICODE
-    DEBUG("mask.match", "Matching: \"" << text << "\" =~ /" << str() << "/ = "
-                                       << (boost::u32regex_search(text, expr) ? "true" : "false"));
-    return boost::u32regex_search(text, expr);
+    DEBUG("mask.match", "Matching: \"" << match_text << "\" =~ /" << str() << "/ = "
+                                       << (boost::u32regex_search(match_text, expr) ? "true" : "false"));
+    return boost::u32regex_search(match_text, expr);
 #else
-    DEBUG("mask.match", "Matching: \"" << text << "\" =~ /" << str() << "/ = "
-                                       << (boost::regex_search(text, expr) ? "true" : "false"));
-    return boost::regex_search(text, expr);
+    DEBUG("mask.match", "Matching: \"" << match_text << "\" =~ /" << str() << "/ = "
+                                       << (boost::regex_search(match_text, expr) ? "true" : "false"));
+    return boost::regex_search(match_text, expr);
 #endif
   }
 

@@ -692,6 +692,10 @@ public:
                                   "market(amount_expr, value_date, exchange))");
       });
 
+  OPTION_(report_t, ignore_diacritics, DO() {
+    ledger::ignore_diacritics = true;
+  });
+
   OPTION(report_t, immediate);
   OPTION(report_t, inject_);
 
