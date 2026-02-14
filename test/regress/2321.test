@@ -1,0 +1,30 @@
+; Regression test for issue #2321
+; Commodity exchange (-X) should work for quoted commodities
+; that use value expressions with market() function.
+
+commodity N1
+commodity N2
+	value s, d, t -> market(2 "N1", d, t)
+commodity N3
+	value s, d, t -> market(2 "N2", d, t)
+commodity N4
+	value s, d, t -> market(2 "N3", d, t)
+
+2024-01-05 Buy
+	Assets	1 "N4"
+	Equity
+
+test reg -X 'N3' -> 0
+24-Jan-05 Buy                   Assets                         2 N3         2 N3
+                                Equity                        -2 N3            0
+end test
+
+test reg -X 'N2' -> 0
+24-Jan-05 Buy                   Assets                         4 N2         4 N2
+                                Equity                        -4 N2            0
+end test
+
+test reg -X 'N1' -> 0
+24-Jan-05 Buy                   Assets                         8 N1         8 N1
+                                Equity                        -8 N1            0
+end test
