@@ -35,14 +35,14 @@ test bal expenses:food
 end test
 
 test bal expenses:food -V
-           600.00 DM  Expenses:Food
+            30.00 DM  Expenses:Food
 end test
 
 test bal expenses:food   -X "DM" --now "2015-05-02"
-           600.00 DM  Expenses:Food
+            30.00 DM  Expenses:Food
 end test
 
 test bal expenses:food   -X "DM" --now "2015-06-02"
-           600.00 DM  Expenses:Food
+            30.00 DM  Expenses:Food
 end test
 

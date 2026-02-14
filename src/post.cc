@@ -639,8 +639,20 @@ void extend_post(post_t& post, journal_t& journal) {
   if (!details || !details->value_expr) {
     optional<expr_t> value_expr;
 
-    if (optional<value_t> data = post.get_tag(_("Value")))
-      value_expr = expr_t(data->to_string());
+    if (optional<value_t> data = post.get_tag(_("Value"))) {
+      // When the Value:: tag uses a typed expression (::), the expression is
+      // evaluated at parse time and the result is the total converted value
+      // (e.g., market(amount, post.date, exchange) returns amount * rate).
+      // Since value_expr is used as a per-unit price, we must divide by the
+      // posting quantity to convert from total value to per-unit price.
+      if (data->is_amount() && !post.amount.is_zero()) {
+        amount_t per_unit(data->as_amount());
+        per_unit /= post.amount.number();
+        value_expr = expr_t(per_unit.to_string());
+      } else {
+        value_expr = expr_t(data->to_string());
+      }
+    }
 
     if (!value_expr)
       value_expr = post.account->value_expr;
