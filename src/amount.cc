@@ -907,6 +907,35 @@ void parse_quantity(std::istream& in, string& value) {
     in.unget();
   }
 
+  // If the next character in the stream is a period that was just stripped,
+  // and it was preceded by a digit, re-read it as a trailing decimal mark.
+  // A trailing decimal point with no following digits indicates zero decimal
+  // places, which is used by hledger to disambiguate decimal marks from
+  // digit group marks (e.g. "1,234." means 1234 with period as decimal mark).
+  //
+  // Note: we only re-read periods, not commas, because commas serve as
+  // argument separators in value expressions and re-reading them would break
+  // expression parsing (e.g. "justify(..., 12, 2, ...)").
+  if (len > 0 && std::isdigit(static_cast<unsigned char>(buf[len - 1]))) {
+    c = in.peek();
+    if (c == '.') {
+      int next = EOF;
+      in.get();
+      if (!in.eof())
+        next = in.peek();
+      // Only keep the trailing period if it is NOT followed by a digit
+      // (if followed by a digit, it was not actually stripped -- this guards
+      // against double-reading).
+      if (next == EOF || !std::isdigit(next)) {
+        buf[len++] = '.';
+        buf[len] = '\0';
+      } else {
+        // Put it back; it wasn't a trailing mark
+        in.unget();
+      }
+    }
+  }
+
   value = buf;
 }
 } // namespace
