@@ -4,6 +4,6 @@
     Expenses:Food              $50.00
     Assets:Checking
 
-test eval "format_date(today, \"%Y-%m-%d\")"
-2026-02-13
+test eval --now 2024/01/15 "format_date(today, \"%Y-%m-%d\")"
+2024-01-15
 end test
