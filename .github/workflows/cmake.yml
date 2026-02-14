@@ -9,6 +9,8 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Debug
+  # Minimum line coverage percentage required. Raise this as coverage improves.
+  MIN_COVERAGE: 85
 
 jobs:
   build:
@@ -137,6 +139,18 @@ jobs:
           lcov --remove coverage.info '/usr/*' '*/test/*' --ignore-errors unused --output-file coverage.info
           lcov --summary coverage.info
           genhtml coverage.info --output-directory coverage-report
+
+      - name: Check coverage threshold
+        working-directory: ${{github.workspace}}/build
+        run: |
+          COVERAGE=$(lcov --summary coverage.info 2>&1 | grep "lines\.\.\.\.\.\." | sed 's/.*: \([0-9.]*\)%.*/\1/')
+          echo "Line coverage: ${COVERAGE}%"
+          echo "Minimum threshold: ${{env.MIN_COVERAGE}}%"
+          if ! awk "BEGIN{exit ($COVERAGE >= ${{env.MIN_COVERAGE}}) ? 0 : 1}"; then
+            echo "::error::Line coverage ${COVERAGE}% is below the minimum threshold of ${{env.MIN_COVERAGE}}%"
+            exit 1
+          fi
+          echo "Coverage check passed: ${COVERAGE}% >= ${{env.MIN_COVERAGE}}%"
 
       - uses: actions/upload-artifact@v4
         with:
