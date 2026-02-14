@@ -98,7 +98,7 @@ optional<price_point_t> commodity_t::find_price_from_expr(expr_t& expr,
     call_args.push_back(string_value(base_symbol()));
     call_args.push_back(moment);
     if (commodity)
-      call_args.push_back(string_value(commodity->symbol()));
+      call_args.push_back(string_value(commodity->base_symbol()));
 
     result = as_expr(result)->call(call_args, *scope_t::default_scope);
   }
