@@ -4,8 +4,8 @@
     Expenses:Food              $50.00
     Assets:Checking
 
-test xact "Grocery Store" Expenses:Food '$25.00' Assets:Checking
-2026/02/13 Grocery Store
+test xact --now 2024/01/16 "Grocery Store" Expenses:Food '$25.00' Assets:Checking
+2024/01/16 Grocery Store
     Expenses:Food                             $25.00
     Assets:Checking
 end test

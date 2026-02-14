@@ -4,8 +4,8 @@
     Expenses:Food              $50.00
     Assets:Checking
 
-test draft "Grocery Store" Expenses:Food '$25.00' Assets:Checking
-2026/02/13 Grocery Store
+test draft --now 2024/01/16 "Grocery Store" Expenses:Food '$25.00' Assets:Checking
+2024/01/16 Grocery Store
     Expenses:Food                             $25.00
     Assets:Checking
 end test
