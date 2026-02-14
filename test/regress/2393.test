@@ -1,0 +1,82 @@
+; Test for issue #2393: Show balance sheets over date range
+; The --group-by-cumulative option used with --group-by shows the
+; cumulative balance after each group, allowing users to see the
+; balance sheet at various points in time.
+
+2024/01/01 Opening Balance
+    Assets:Checking          $5000
+    Assets:Savings           $3000
+    Equity:Opening
+
+2024/01/15 Grocery Store
+    Expenses:Food             $120
+    Assets:Checking
+
+2024/02/01 Paycheck
+    Assets:Checking          $3000
+    Income:Salary
+
+2024/02/10 Transfer to Savings
+    Assets:Savings           $1000
+    Assets:Checking
+
+test bal --group-by date --group-by-cumulative Assets
+2024/01/01
+               $8000  Assets
+               $5000    Checking
+               $3000    Savings
+--------------------
+               $8000
+
+2024/01/15
+               $7880  Assets
+               $4880    Checking
+               $3000    Savings
+--------------------
+               $7880
+
+2024/02/01
+              $10880  Assets
+               $7880    Checking
+               $3000    Savings
+--------------------
+              $10880
+
+2024/02/10
+              $10880  Assets
+               $6880    Checking
+               $4000    Savings
+--------------------
+              $10880
+end test
+
+; Also test with date+payee group title format
+test bal --group-by 'format_date(date, "%Y/%m/%d") + " " + payee' --group-by-cumulative Assets
+2024/01/01 Opening Balance
+               $8000  Assets
+               $5000    Checking
+               $3000    Savings
+--------------------
+               $8000
+
+2024/01/15 Grocery Store
+               $7880  Assets
+               $4880    Checking
+               $3000    Savings
+--------------------
+               $7880
+
+2024/02/01 Paycheck
+              $10880  Assets
+               $7880    Checking
+               $3000    Savings
+--------------------
+              $10880
+
+2024/02/10 Transfer to Savings
+              $10880  Assets
+               $6880    Checking
+               $4000    Savings
+--------------------
+              $10880
+end test

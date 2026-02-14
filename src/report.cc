@@ -414,7 +414,10 @@ struct accounts_flusher {
       }
     }
 
-    report.session.journal->clear_xdata();
+    if (report.HANDLED(group_by_cumulative))
+      report.session.journal->master->clear_display_state();
+    else
+      report.session.journal->clear_xdata();
   }
 };
 } // namespace
@@ -1125,6 +1128,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
   case 'g':
     OPT(gain);
     else OPT(group_by_);
+    else OPT(group_by_cumulative);
     else OPT(group_title_format_);
     else OPT(generated);
     break;

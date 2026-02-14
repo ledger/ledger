@@ -1,0 +1,43 @@
+; Test --group-by-cumulative which causes --group-by to show cumulative
+; balances across groups, rather than independent balances per group.
+; This is useful for showing balance sheets at various points in time.
+
+2024/01/01 Opening
+    Assets:Checking          $1000
+    Equity:Opening
+
+2024/01/15 Grocery
+    Expenses:Food              $50
+    Assets:Checking
+
+2024/02/01 Paycheck
+    Assets:Checking          $2000
+    Income:Salary
+
+test bal --group-by date --group-by-cumulative Assets
+2024/01/01
+               $1000  Assets:Checking
+
+2024/01/15
+                $950  Assets
+                $950    Checking
+--------------------
+                $950
+
+2024/02/01
+               $2950  Assets
+               $2950    Checking
+--------------------
+               $2950
+end test
+
+test bal --group-by date Assets
+2024/01/01
+               $1000  Assets:Checking
+
+2024/01/15
+                $-50  Assets:Checking
+
+2024/02/01
+               $2000  Assets:Checking
+end test
