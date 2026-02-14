@@ -277,15 +277,22 @@ xact_t* draft_t::insert(journal_t& journal) {
 
   if (matching) {
     added->payee = matching->payee;
-    // added->code  = matching->code;
-    // added->note  = matching->note;
+    added->code  = matching->code;
+    added->note  = matching->note;
+
+    if (matching->note) {
+      if (matching->has_flags(ITEM_NOTE_ON_NEXT_LINE))
+        added->add_flags(ITEM_NOTE_ON_NEXT_LINE);
+    }
+    if (matching->metadata)
+      added->metadata = matching->metadata;
 
 #if DEBUG_ON
     DEBUG("draft.xact", "Setting payee from match: " << added->payee);
-    // if (added->code)
-    //   DEBUG("draft.xact", "Setting code  from match: " << *added->code);
-    // if (added->note)
-    //   DEBUG("draft.xact", "Setting note  from match: " << *added->note);
+    if (added->code)
+      DEBUG("draft.xact", "Setting code  from match: " << *added->code);
+    if (added->note)
+      DEBUG("draft.xact", "Setting note  from match: " << *added->note);
 #endif
   } else {
     added->payee = tmpl->payee_mask.str();

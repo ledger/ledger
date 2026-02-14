@@ -1,0 +1,15 @@
+; Regression test for #2406: xact does not duplicate comments/tags
+; The xact command should copy transaction-level comments and tags
+; from the matched transaction when generating a new one.
+
+2025/02/03 Migros
+    ; cashback:: 2%
+    Expenses:Food:Groceries                   $63.28
+    Liabilities:Apple Card
+
+test --now 2025/02/06 xact Migros
+2025/02/06 Migros
+    ; cashback:: 2%
+    Expenses:Food:Groceries                   $63.28
+    Liabilities:Apple Card
+end test
