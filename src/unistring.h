@@ -67,7 +67,7 @@ public:
     // This size should be at least as large as MAX_LINE in context.h
     assert(len < 4096);
     VERIFY(utf8::is_valid(p, p + len));
-    utf8::unchecked::utf8to32(p, p + len, std::back_inserter(utf32chars));
+    utf8::utf8to32(p, p + len, std::back_inserter(utf32chars));
 
     TRACE_CTOR(unistring, "std::string");
   }
@@ -92,7 +92,7 @@ public:
     assert(begin + len <= this_len);
 
     if (this_len)
-      utf8::unchecked::utf32to8(
+      utf8::utf32to8(
           utf32chars.begin() + static_cast<std::string::difference_type>(begin),
           utf32chars.begin() + static_cast<std::string::difference_type>(begin) +
               static_cast<std::string::difference_type>(len ? (len > this_len ? this_len : len)
@@ -138,7 +138,7 @@ public:
     utf8result += std::string(head, '.');
 
     if (begin_idx < end_idx)
-      utf8::unchecked::utf32to8(
+      utf8::utf32to8(
           utf32chars.begin() + static_cast<std::string::difference_type>(begin_idx),
           utf32chars.begin() + static_cast<std::string::difference_type>(end_idx),
           std::back_inserter(utf8result));
