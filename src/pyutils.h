@@ -82,7 +82,7 @@ struct register_optional_to_python : public boost::noncopyable {
 
       if (implicit_rvalue_convertible_from_python(source, converters)) {
         rvalue_from_python_stage1_data data = rvalue_from_python_stage1(source, converters);
-        return rvalue_from_python_stage2(source, data, converters);
+        return data.convertible;
       }
       return NULL;
     }
