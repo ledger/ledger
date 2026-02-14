@@ -1670,7 +1670,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         const amount_t& amt(*post->assigned_amount);
         value_t account_total(
             post->account
-                ->amount(!(post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))
+                ->amount(!post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))
                 .strip_annotations(keep_details_t()));
 
         DEBUG("post.assign", "line " << context.linenum << ": "
@@ -1759,8 +1759,8 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             }
             for (post_t* p : xact->posts) {
               if (p->account == post->account &&
-                  ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==
-                   (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {
+                  (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG) ||
+                  post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))) {
                 ann_diff -= p->amount;
               }
             }
