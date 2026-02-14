@@ -1,0 +1,18 @@
+; Regression test for issue #2344
+; budget command and budget switch not working with --time-colon.
+; Negative time values should display correctly (e.g. -0:30h not -0:70h),
+; and budget percentage should be calculated correctly.
+
+~ Daily
+    (testaccount)  2h
+
+2024-05-13 Payee
+    (testaccount)  1.5h
+
+test bal --budget --time-colon -b 2024-05-13 -e 2024-05-14
+              -0:30h  testaccount
+end test
+
+test budget --time-colon -b 2024-05-13 -e 2024-05-14
+       1:30h        2:00h       -0:30h   75%  testaccount
+end test
