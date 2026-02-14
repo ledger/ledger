@@ -1,0 +1,29 @@
+; Regression test for GitHub issue #2359: crash when using bal --dc -X
+; due to "Cannot abs an uninitialized value" error when get_at returns
+; VOID for display_total elements after currency conversion.
+
+commodity $
+    note United States Dollar
+    format $1,000.00
+
+commodity EUR
+    note Euro
+    format 1,000.00 EUR
+
+P 2024-01-01 EUR $1.10
+
+2024-01-15 * Opening Balance
+    Assets:Checking              $1,000.00
+    Equity:Opening
+
+2024-01-20 * European Expense
+    Expenses:Travel              100.00 EUR
+    Assets:Checking
+
+test bal --dc -X $
+     $1,000.00        $110.00        $890.00  Assets:Checking
+             0      $1,000.00     $-1,000.00  Equity:Opening
+       $110.00              0        $110.00  Expenses:Travel
+--------------------------------------------
+     $1,110.00      $1,110.00              0
+end test
