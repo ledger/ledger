@@ -42,7 +42,7 @@ option(USE_DOXYGEN "Build reference documentation using Doxygen" OFF)
 
 option(DISABLE_ASSERTS "Build without any internal consistency checks" OFF)
 option(BUILD_DEBUG "Build support for runtime debugging" OFF)
-option(PRECOMPILE_SYSTEM_HH "Precompile system.hh" ON)
+option(PRECOMPILE_SYSTEM_HH "Precompile system.hh (improves build times for all build types)" ON)
 
 option(USE_GPGME "Build with support for encrypted journals" OFF)
 option(USE_GCOV "Enable code coverage with gcov/lcov" OFF)
@@ -346,6 +346,12 @@ include_directories("${PROJECT_BINARY_DIR}")
 configure_file(
   ${PROJECT_SOURCE_DIR}/src/system.hh.in
   ${PROJECT_BINARY_DIR}/system.hh)
+
+if(PRECOMPILE_SYSTEM_HH)
+  message(STATUS "Precompiled headers: enabled (all build types)")
+else()
+  message(STATUS "Precompiled headers: disabled")
+endif()
 
 set(Ledger_BUILD_TYPE "${CMAKE_BUILD_TYPE}")
 

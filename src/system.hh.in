@@ -153,8 +153,6 @@
 
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/write.hpp>
-#define BOOST_IOSTREAMS_USE_DEPRECATED 1
-#include <boost/iostreams/device/file_descriptor.hpp>
 
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/transform_iterator.hpp>
@@ -167,11 +165,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/uniform_real.hpp>
-#include <boost/random/variate_generator.hpp>
-
 // jww (2012-05-20): This must be included before Boost.Regex
 #include <boost/xpressive/xpressive_static.hpp>
 
@@ -180,8 +173,6 @@
 #else
 #include <boost/regex.hpp>
 #endif // HAVE_BOOST_REGEX_UNICODE
-
-#include <boost/tokenizer.hpp>
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>

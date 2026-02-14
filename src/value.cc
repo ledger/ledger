@@ -31,6 +31,8 @@
 
 #include <system.hh>
 
+#include <boost/tokenizer.hpp>
+
 #include "value.h"
 #include "commodity.h"
 #include "annotate.h"

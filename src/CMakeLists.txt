@@ -219,6 +219,10 @@ else()
   add_ledger_library_dependencies(ledger)
 endif()
 
+# Precompiled headers for system.hh significantly reduce build times.
+# This is enabled for all build types (Debug, Release, RelWithDebInfo, etc.)
+# via the PRECOMPILE_SYSTEM_HH option. CMake's target_precompile_headers
+# (available since CMake 3.16) handles PCH generation and reuse automatically.
 if(PRECOMPILE_SYSTEM_HH)
   if(BUILD_LIBRARY)
     target_precompile_headers(libledger PRIVATE ${PROJECT_BINARY_DIR}/system.hh)
