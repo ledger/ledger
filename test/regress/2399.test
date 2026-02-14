@@ -1,0 +1,20 @@
+; Regression test for GitHub issue #2399
+; Value:: metadata with market() should not square the amount
+; when converting with -X flag.
+
+= expr account =~ /^Expense:/
+    ; Value:: market(amount, post.date, exchange)
+
+2017/12/20 Formatting
+    A                                           0.00 EUR
+    B                                           0.00 EUR
+
+P 2017/12/28 00:00:00      BAR   1.80 EUR
+
+2017/12/28 Test
+    Expense:SomeFee                  9.29 BAR
+    Income:Test
+
+test reg -X EUR Expense:SomeFee
+17-Dec-28 Test                  Expense:SomeFee           16.72 EUR    16.72 EUR
+end test
