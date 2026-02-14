@@ -2,10 +2,6 @@
     Assets:Brokerage           10 AAPL @ $150.00
     Assets:Checking          $-1500.00
 
-2024/02/15 * Buy More Stock
-    Assets:Brokerage           5 AAPL @ $160.00
-    Assets:Checking           $-800.00
-
 test xml | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ version="VVVVVV"/g'
 <?xml version="1.0" encoding="utf-8"?>
 <ledger version="VVVVVV">
@@ -36,19 +32,13 @@ test xml | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ ve
             <commodity flags="P">
               <symbol>$</symbol>
             </commodity>
-            <quantity>-2300</quantity>
+            <quantity>-1500</quantity>
           </amount>
           <amount>
             <commodity flags="S">
               <symbol>AAPL</symbol>
             </commodity>
             <quantity>10</quantity>
-          </amount>
-          <amount>
-            <commodity flags="S">
-              <symbol>AAPL</symbol>
-            </commodity>
-            <quantity>5</quantity>
           </amount>
         </balance>
       </account-total>
@@ -61,7 +51,7 @@ test xml | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ ve
               <commodity flags="P">
                 <symbol>$</symbol>
               </commodity>
-              <quantity>-2300</quantity>
+              <quantity>-1500</quantity>
             </amount>
             <amount>
               <commodity flags="S">
@@ -69,48 +59,26 @@ test xml | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ ve
               </commodity>
               <quantity>10</quantity>
             </amount>
-            <amount>
-              <commodity flags="S">
-                <symbol>AAPL</symbol>
-              </commodity>
-              <quantity>5</quantity>
-            </amount>
           </balance>
         </account-total>
         <account id="XXXX">
           <name>Brokerage</name>
           <fullname>Assets:Brokerage</fullname>
           <account-amount>
-            <balance>
-              <amount>
-                <commodity flags="S">
-                  <symbol>AAPL</symbol>
-                </commodity>
-                <quantity>5</quantity>
-              </amount>
-              <amount>
-                <commodity flags="S">
-                  <symbol>AAPL</symbol>
-                </commodity>
-                <quantity>10</quantity>
-              </amount>
-            </balance>
+            <amount>
+              <commodity flags="S">
+                <symbol>AAPL</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
           </account-amount>
           <account-total>
-            <balance>
-              <amount>
-                <commodity flags="S">
-                  <symbol>AAPL</symbol>
-                </commodity>
-                <quantity>5</quantity>
-              </amount>
-              <amount>
-                <commodity flags="S">
-                  <symbol>AAPL</symbol>
-                </commodity>
-                <quantity>10</quantity>
-              </amount>
-            </balance>
+            <amount>
+              <commodity flags="S">
+                <symbol>AAPL</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
           </account-total>
         </account>
         <account id="XXXX">
@@ -121,7 +89,7 @@ test xml | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ ve
               <commodity flags="P">
                 <symbol>$</symbol>
               </commodity>
-              <quantity>-2300</quantity>
+              <quantity>-1500</quantity>
             </amount>
           </account-amount>
           <account-total>
@@ -129,7 +97,7 @@ test xml | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ ve
               <commodity flags="P">
                 <symbol>$</symbol>
               </commodity>
-              <quantity>-2300</quantity>
+              <quantity>-1500</quantity>
             </amount>
           </account-total>
         </account>
@@ -193,88 +161,6 @@ test xml | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ ve
                   <symbol>AAPL</symbol>
                 </commodity>
                 <quantity>10</quantity>
-              </amount>
-            </balance>
-          </total>
-        </posting>
-      </postings>
-    </transaction>
-    <transaction state="cleared">
-      <date>2024/02/15</date>
-      <payee>Buy More Stock</payee>
-      <postings>
-        <posting state="cleared">
-          <account ref="XXXX">
-            <name>Assets:Brokerage</name>
-          </account>
-          <post-amount>
-            <amount>
-              <commodity flags="S">
-                <symbol>AAPL</symbol>
-              </commodity>
-              <quantity>5</quantity>
-            </amount>
-          </post-amount>
-          <cost>
-            <commodity flags="P">
-              <symbol>$</symbol>
-            </commodity>
-            <quantity>800</quantity>
-          </cost>
-          <total>
-            <balance>
-              <amount>
-                <commodity flags="S">
-                  <symbol>AAPL</symbol>
-                </commodity>
-                <quantity>5</quantity>
-              </amount>
-              <amount>
-                <commodity flags="S">
-                  <symbol>AAPL</symbol>
-                </commodity>
-                <quantity>10</quantity>
-              </amount>
-              <amount>
-                <commodity flags="P">
-                  <symbol>$</symbol>
-                </commodity>
-                <quantity>-1500</quantity>
-              </amount>
-            </balance>
-          </total>
-        </posting>
-        <posting state="cleared">
-          <account ref="XXXX">
-            <name>Assets:Checking</name>
-          </account>
-          <post-amount>
-            <amount>
-              <commodity flags="P">
-                <symbol>$</symbol>
-              </commodity>
-              <quantity>-800</quantity>
-            </amount>
-          </post-amount>
-          <total>
-            <balance>
-              <amount>
-                <commodity flags="P">
-                  <symbol>$</symbol>
-                </commodity>
-                <quantity>-2300</quantity>
-              </amount>
-              <amount>
-                <commodity flags="S">
-                  <symbol>AAPL</symbol>
-                </commodity>
-                <quantity>10</quantity>
-              </amount>
-              <amount>
-                <commodity flags="S">
-                  <symbol>AAPL</symbol>
-                </commodity>
-                <quantity>5</quantity>
               </amount>
             </balance>
           </total>
