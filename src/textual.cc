@@ -59,6 +59,7 @@ typedef std::pair<commodity_t*, amount_t> fixed_rate_t;
 struct application_t {
   string label;
   variant<optional<datetime_t>, account_t*, string, fixed_rate_t> value;
+  optional<int> saved_year_directive;
 
   application_t(string _label, optional<datetime_t> epoch) : label(_label), value(epoch) {}
   application_t(string _label, account_t* acct) : label(_label), value(acct) {}
@@ -265,8 +266,10 @@ void instance_t::parse() {
     }
   }
 
-  if (apply_stack.front().value.type() == typeid(optional<datetime_t>))
+  if (apply_stack.front().value.type() == typeid(optional<datetime_t>)) {
     epoch = boost::get<optional<datetime_t>>(apply_stack.front().value);
+    year_directive_year = apply_stack.front().saved_year_directive;
+  }
 
   apply_stack.pop_front();
 
@@ -934,7 +937,9 @@ void instance_t::apply_year_directive(char* line, bool use_apply_stack) {
     unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));
     if (use_apply_stack) {
       // Used for "apply year" which needs "end apply"
-      apply_stack.push_front(application_t("year", epoch));
+      application_t entry("year", epoch);
+      entry.saved_year_directive = year_directive_year;
+      apply_stack.push_front(entry);
     }
     // Otherwise for plain "year" directive, don't use apply_stack - it's a permanent change
     DEBUG("times.epoch", "Setting current year to " << year);
@@ -973,8 +978,10 @@ void instance_t::end_apply_directive(char* kind) {
            _f("'end apply %1%' directive does not match 'apply %2%' directive") % name %
                apply_stack.front().label);
 
-  if (apply_stack.front().value.type() == typeid(optional<datetime_t>))
+  if (apply_stack.front().value.type() == typeid(optional<datetime_t>)) {
     epoch = boost::get<optional<datetime_t>>(apply_stack.front().value);
+    year_directive_year = apply_stack.front().saved_year_directive;
+  }
 
   apply_stack.pop_front();
 }
