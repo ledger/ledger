@@ -41,6 +41,208 @@
  */
 #pragma once
 
+/**
+ * @defgroup filters Filter Pipeline
+ * @ingroup report
+ *
+ * @brief Chain of Responsibility pipeline for processing postings and accounts.
+ *
+ * @section overview Pipeline Overview
+ *
+ * Ledger's reporting engine processes postings through a chain of handler
+ * objects, each implementing the Chain of Responsibility pattern.  Every
+ * handler wraps the next handler in the chain via a shared_ptr; when a
+ * posting is passed to operator(), the handler may transform, filter,
+ * accumulate, or forward it to the next handler.
+ *
+ * The chain is constructed by chain_handlers() (chain.h), which calls:
+ *   -# chain_post_handlers()   -- builds the inner (downstream) portion
+ *   -# chain_pre_post_handlers() -- wraps with outer (upstream) handlers
+ *
+ * Since each new handler wraps the previous, the last handler added is the
+ * outermost (first to receive postings).  Postings flow from the outermost
+ * handler inward toward the base output handler.
+ *
+ * @section base_classes Base Class Hierarchy
+ *
+ * All handlers derive from `item_handler<T>` (defined in chain.h):
+ * @code
+ *   template <typename T>
+ *   class item_handler : public noncopyable {
+ *   protected:
+ *     shared_ptr<item_handler> handler;  // next handler in chain
+ *   public:
+ *     virtual void flush();
+ *     virtual void operator()(T& item);
+ *     virtual void clear();
+ *   };
+ * @endcode
+ *
+ * Two type aliases are provided:
+ * - `post_handler_ptr = shared_ptr<item_handler<post_t>>`
+ * - `acct_handler_ptr = shared_ptr<item_handler<account_t>>`
+ *
+ * @section handler_inventory Complete Handler Inventory
+ *
+ * @subsection cat_collection Collection and Splitting
+ * - **post_splitter** -- Groups postings by expression value, flushing a
+ *   sub-chain per group.  Used by --group-by.
+ * - **collect_posts** -- Accumulates post_t* into a vector; does not forward.
+ * - **push_to_posts_list** -- Pushes postings into an external posts_list.
+ *
+ * @subsection cat_passthrough Pass-Through / Iteration
+ * - **pass_down_posts\<Iterator\>** -- Iterates an iterator of postings,
+ *   passing each through the handler chain, then flushes.
+ * - **pass_down_accounts\<Iterator\>** -- Same for accounts, with optional
+ *   predicate filtering.
+ * - **ignore_posts** -- Discards all postings (no-op operator()).
+ *
+ * @subsection cat_filtering Filtering
+ * - **filter_posts** -- Only forwards postings matching a predicate_t
+ *   expression.  Used for --limit, --display, --only, and internal filters.
+ * - **related_posts** -- Collects postings, then on flush() passes through
+ *   the related (sibling) postings from each transaction.  Used by --related.
+ *
+ * @subsection cat_sorting Sorting
+ * - **sort_posts** -- Accumulates all postings, sorts by a sort expression on
+ *   flush(), then forwards in sorted order.  Used by --sort.
+ * - **sort_xacts** -- Sorts postings within each transaction boundary.
+ *   Used by --sort-xacts or period-based sorting.
+ *
+ * @subsection cat_truncation Truncation
+ * - **truncate_xacts** -- Limits output to the first head_count and/or last
+ *   tail_count transactions.  Used by --head and --tail.
+ *
+ * @subsection cat_calculation Calculation
+ * - **calc_posts** -- Evaluates the amount expression and optionally computes
+ *   running totals.  Stores results in posting xdata.  This is the core
+ *   calculation stage that most display handlers depend on.
+ *
+ * @subsection cat_display Display and Revaluation
+ * - **display_filter_posts** -- Inserts rounding adjustment postings to keep
+ *   displayed totals consistent.  Requires calc_posts downstream.
+ * - **changed_value_posts** -- Inserts virtual revaluation postings when
+ *   commodity market values change between postings.  Used by --revalued
+ *   and --unrealized.  Requires calc_posts downstream.
+ *
+ * @subsection cat_aggregation Aggregation and Subtotaling
+ * - **subtotal_posts** -- Combines all postings into one subtotal transaction
+ *   per commodity per account.  Used by --subtotal.
+ * - **interval_posts** (extends subtotal_posts) -- Groups postings by time
+ *   intervals (daily, weekly, monthly, etc.).  Used by --period.
+ * - **collapse_posts** -- Collapses multi-posting transactions into single
+ *   subtotaled postings per commodity.  Used by --collapse and --depth.
+ * - **by_payee_posts** -- Subtotals postings grouped by payee.  Used by
+ *   --by-payee.
+ * - **day_of_week_posts** (extends subtotal_posts) -- Accumulates postings
+ *   by day of week (0=Sunday through 6=Saturday).  Used by --dow.
+ *
+ * @subsection cat_generation Synthetic Posting Generation
+ * - **generate_posts** -- Base class for generating synthetic postings from
+ *   period_xacts (automated periodic transactions in the journal).
+ * - **budget_posts** (extends generate_posts) -- Generates budget postings
+ *   that balance against reported actuals.  Flags control budgeted-only,
+ *   unbudgeted-only, or both.  Used by --budget/--add-budget/--unbudgeted.
+ * - **forecast_posts** (extends generate_posts) -- Generates forecast postings
+ *   into the future, governed by a while-predicate and year limit.  Used by
+ *   --forecast-while.
+ *
+ * @subsection cat_transformation Transformation
+ * - **transfer_details** -- Rewrites a posting's date, account, or payee based
+ *   on an expression.  Used by --date, --account, --payee, and --pivot.
+ * - **anonymize_posts** -- Replaces all identifying information (payee, account
+ *   names, commodity symbols) with anonymized data.  Used by --anon.
+ * - **posts_as_equity** (extends subtotal_posts) -- Converts postings into
+ *   equity opening-balance format.  Used by --equity.
+ *
+ * @subsection cat_injection Injection
+ * - **inject_posts** -- Injects additional postings based on tag values found
+ *   on transactions.  Used by --inject.
+ *
+ * @section handler_ordering Handler Ordering (from chain.cc)
+ *
+ * The full posting flow for a register/posting report is shown below.
+ * Postings enter at the top and flow downward to the output handler.
+ * Handlers marked with (conditional) are only present when the corresponding
+ * option is active.
+ *
+ * @subsection pre_post chain_pre_post_handlers (outermost, added last)
+ *
+ * @code
+ *   [posting source]
+ *     → budget_posts or forecast_posts    (conditional, mutually exclusive)
+ *       → filter_posts(limit)             (re-applied if budget/forecast active)
+ *     → filter_posts(limit)               (conditional: --limit)
+ *     → anonymize_posts                   (conditional: --anon)
+ * @endcode
+ *
+ * @subsection post chain_post_handlers (innermost, added first)
+ *
+ * @code
+ *     → inject_posts                      (conditional: --inject)
+ *     → related_posts                     (conditional: --related)
+ *     → transfer_details(SET_PAYEE)       (conditional: --payee)
+ *     → transfer_details(SET_ACCOUNT)     (conditional: --account or --pivot)
+ *     → transfer_details(SET_DATE)        (conditional: --date)
+ *     → interval_posts                    (conditional: --period)
+ *     → day_of_week_posts / by_payee_posts (conditional, mutually exclusive)
+ *     → posts_as_equity / subtotal_posts  (conditional, mutually exclusive)
+ *     → collapse_posts                    (conditional: --collapse or --depth)
+ *     → sort_posts / sort_xacts           (conditional: --sort / --sort-xacts)
+ *     → filter_posts(only)                (conditional: --only)
+ *     → calc_posts                        (always present)
+ *     → changed_value_posts               (conditional: --revalued)
+ *     → filter_posts(display)             (conditional: --display, not accounts)
+ *     → display_filter_posts              (not accounts report)
+ *     → truncate_xacts                    (conditional: --head/--tail, not accounts)
+ *     → filter_posts(forecast_while)      (conditional: --forecast-while, not accounts)
+ *     → [output handler]
+ * @endcode
+ *
+ * For accounts reports (for_accounts_report=true), the following stages are
+ * skipped: forecast_while filter, truncate_xacts, display_filter_posts,
+ * display filter, sort, collapse, subtotal/equity.
+ *
+ * @section mutual_exclusions Mutual Exclusions
+ *
+ * - **budget_posts** vs **forecast_posts** -- Only one can be active; controlled
+ *   by budget_flags vs --forecast-while in chain_pre_post_handlers().
+ * - **posts_as_equity** vs **subtotal_posts** -- --equity takes precedence over
+ *   --subtotal.
+ * - **day_of_week_posts** vs **by_payee_posts** -- --dow takes precedence over
+ *   --by-payee.
+ * - **sort_posts** vs **sort_xacts** (partial) -- When --sort and --sort-xacts
+ *   are both specified, sort_xacts runs within-transaction first, then
+ *   sort_posts applies the global sort.  When period sorting activates
+ *   sort_xacts alone, sort_posts is skipped.
+ *
+ * @section adding_handler Adding a New Handler
+ *
+ * To add a new filter to the pipeline:
+ *
+ * 1. Define a new class in this file inheriting from `item_handler<post_t>`.
+ *    Implement operator()(post_t&) and optionally flush() and clear().
+ *
+ * 2. In chain.cc, add a conditional block in chain_pre_post_handlers() or
+ *    chain_post_handlers() that wraps the handler chain:
+ *    @code
+ *      if (report.HANDLED(my_option))
+ *        handler.reset(new my_handler(handler, ...));
+ *    @endcode
+ *
+ * 3. Position matters: handlers added later in the function execute earlier
+ *    in the posting flow (they are outermost in the chain).
+ *
+ * 4. If the handler needs calc_posts results, place it after (i.e., add it
+ *    before) the calc_posts creation in chain_post_handlers().
+ *
+ * 5. Add a corresponding OPTION declaration in report.h to expose the
+ *    command-line flag.  See option.h for the macro system.
+ *
+ * 6. Implement clear() to reset all mutable state so the handler can be
+ *    reused across multiple report runs.
+ */
+
 #include "chain.h"
 #include "xact.h"
 #include "post.h"

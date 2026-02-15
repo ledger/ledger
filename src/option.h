@@ -43,6 +43,174 @@
  */
 #pragma once
 
+/**
+ * @defgroup options Option Macro System
+ * @ingroup expr
+ *
+ * @brief Macro-based system for declaring, parsing, and dispatching
+ *        command-line options.
+ *
+ * @section opt_overview System Overview
+ *
+ * Ledger's command-line options are declared as data members of scope classes
+ * (primarily report_t) using a family of preprocessor macros.  Each option
+ * expands into a small struct that inherits from option_t<T>, with an instance
+ * named `<name>handler` embedded as a member of the parent class.  This
+ * approach gives each option its own handler_thunk() override for custom
+ * side-effect logic, while keeping declarations concise.
+ *
+ * @section opt_core Core Template: option_t\<T\>
+ *
+ * @code
+ *   template <typename T>
+ *   class option_t {
+ *     const char* name;          // internal name (underscores, trailing _ = wants arg)
+ *     string::size_type name_len;
+ *     const char ch;             // single-character shortcut ('\0' if none)
+ *     bool handled;              // true once on() has been called
+ *     optional<string> source;   // where the option was set from
+ *   public:
+ *     T* parent;                 // owning scope, set by OPT macros during lookup
+ *     string value;              // the option's string argument value
+ *     bool wants_arg;            // true if name ends with '_'
+ *
+ *     void on(whence);           // activate boolean option
+ *     void on(whence, str);      // activate with argument value
+ *     void off();                // deactivate option
+ *     operator bool();           // returns handled
+ *     string str();              // returns value (asserts handled)
+ *     string desc();             // returns --long-form description
+ *
+ *     // Override these for custom behavior:
+ *     virtual void handler_thunk(const optional<string>& whence);
+ *     virtual void handler_thunk(const optional<string>& whence, const string& str);
+ *   };
+ * @endcode
+ *
+ * Key behavior:
+ * - `on(whence)` calls handler_thunk(whence), then sets handled=true.
+ * - `on(whence, str)` calls handler_thunk(whence, str); if the thunk did not
+ *   modify value, sets value=str.  Then sets handled=true.
+ * - `wants_arg` is auto-detected from a trailing underscore in the name.
+ * - `desc()` converts underscores to hyphens for display (e.g., "sort_all_"
+ *   becomes "--sort-all").
+ *
+ * @section opt_macros Macro Inventory by Family
+ *
+ * @subsection opt_structure Structure Macros (building blocks)
+ *
+ * | Macro | Expansion | Purpose |
+ * |-------|-----------|---------|
+ * | `BEGIN(type, name)` | `struct name##option_t : public option_t<type>` | Opens the option struct declaration |
+ * | `CTOR(type, name)` | `name##option_t() : option_t<type>(#name)` | Basic constructor |
+ * | `CTOR_(type, name, base)` | `name##option_t() : option_t<type>(#name), base` | Constructor with extra member initializer |
+ * | `DECL1(type, name, vartype, var, value)` | declares `vartype var;` + constructor | Adds an extra member variable to the option struct |
+ * | `END(name)` | `name##handler` | Closes the struct and declares the member instance |
+ *
+ * @subsection opt_handler Handler Override Macros
+ *
+ * | Macro | Expansion | Purpose |
+ * |-------|-----------|---------|
+ * | `DO()` | `void handler_thunk(whence) override` | Override for boolean (no-arg) options |
+ * | `DO_(var)` | `void handler_thunk(whence, var) override` | Override for options taking an argument |
+ *
+ * @subsection opt_convenience Convenience Declaration Macros
+ *
+ * These combine BEGIN/CTOR/END into single-line declarations:
+ *
+ * | Macro | Usage Pattern | Purpose |
+ * |-------|---------------|---------|
+ * | `OPTION(type, name)` | `OPTION(report_t, color);` | Simple option, no custom handler logic |
+ * | `OPTION_(type, name, body)` | `OPTION_(report_t, actual, DO() { ... });` | Option with custom DO()/DO_() handler |
+ * | `OPTION__(type, name, body)` | `OPTION__(report_t, amount_, DECL1(...) { } DO_(...) { ... });` | Fully custom body with extra members, custom CTOR, and handler |
+ *
+ * @subsection opt_lookup Lookup Macros (used in lookup_option)
+ *
+ * These macros are used in the lookup_option() method to match a command-line
+ * string to the corresponding option handler:
+ *
+ * | Macro | Purpose |
+ * |-------|---------|
+ * | `OPT(name)` | Exact name match; sets parent pointer and returns handler |
+ * | `OPT_(name)` | Match by full name or single-character shortcut |
+ * | `OPT_ALT(name, alt)` | Match by primary name or an alternative name |
+ * | `OPT_CH(name)` | Single-character-only match (no long form) |
+ *
+ * @subsection opt_access Access and Cross-Reference Macros
+ *
+ * | Macro | Expansion | Purpose |
+ * |-------|-----------|---------|
+ * | `HANDLER(name)` | `name##handler` | Access the option's member instance |
+ * | `HANDLED(name)` | `name##handler` | Same; tests if option is set (via bool conversion) |
+ * | `OTHER(name)` | `parent->HANDLER(name)` | Access another option on the same parent; used in DO()/DO_() bodies for cross-option side effects |
+ * | `COPY_OPT(name, other)` | copy constructor helper | Copies one option's handler from another instance |
+ *
+ * @subsection opt_factory Factory Macros
+ *
+ * | Macro | Purpose |
+ * |-------|---------|
+ * | `MAKE_OPT_HANDLER(type, x)` | Wraps the option's handler() method as an expr_t functor |
+ * | `MAKE_OPT_FUNCTOR(type, x)` | Wraps the option's operator() as an expr_t functor |
+ *
+ * @section opt_naming Naming Conventions
+ *
+ * - **Trailing underscore** = option takes a string argument.
+ *   Example: `limit_` declares `--limit VALUE`.
+ * - **No trailing underscore** = boolean flag.
+ *   Example: `collapse` declares `--collapse` (on/off).
+ * - **Underscores in name** map to **hyphens on CLI**.
+ *   Example: `sort_all_` becomes `--sort-all VALUE`.
+ *   The `is_eq()` helper function handles this mapping during lookup.
+ * - **Member name**: The option instance is always `name##handler`.
+ *   Example: `OPTION(report_t, color)` creates member `colorhandler`.
+ *
+ * @section opt_example Step-by-Step: Adding a New Command-Line Option
+ *
+ * Suppose you want to add `--my-filter VALUE` to report_t:
+ *
+ * **Step 1.** Declare the option in report.h using an OPTION macro.
+ * Since it takes an argument, use a trailing underscore in the name:
+ * @code
+ *   // In report_t's member declarations:
+ *   OPTION_(report_t, my_filter_,
+ *     DO_(str) {
+ *       // Custom handler: also activate --limit with a predicate
+ *       OTHER(limit_).on(whence, string("account=~/") + str + "/");
+ *     });
+ * @endcode
+ * This expands to a struct `my_filter_option_t` with an instance
+ * `my_filter_handler` as a member of report_t.
+ *
+ * **Step 2.** Register the option in report_t::lookup_option() (report.cc):
+ * @code
+ *   OPT(my_filter_);
+ * @endcode
+ * Or, to also support `-m` as a shortcut, use:
+ * @code
+ *   OPT_(my_filter_);
+ *   // and set ch='m' via a custom CTOR if desired.
+ * @endcode
+ *
+ * **Step 3.** (Optional) If you need a filter handler in the pipeline,
+ * add it to chain_pre_post_handlers() or chain_post_handlers() in chain.cc:
+ * @code
+ *   if (report.HANDLED(my_filter_))
+ *     handler.reset(new my_filter_handler_t(handler, report.HANDLER(my_filter_).str()));
+ * @endcode
+ *
+ * **Step 4.** Add the option to report_options() for --options output:
+ * @code
+ *   HANDLER(my_filter_).report(out);
+ * @endcode
+ *
+ * **Step 5.** For a simple boolean flag instead, omit the trailing underscore:
+ * @code
+ *   OPTION(report_t, my_flag);  // creates --my-flag with no argument
+ * @endcode
+ * Test it with `report.HANDLED(my_flag)` which returns true if the user
+ * passed `--my-flag`.
+ */
+
 #include "scope.h"
 
 namespace ledger {
