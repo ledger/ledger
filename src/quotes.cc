@@ -38,6 +38,22 @@
 
 namespace ledger {
 
+static std::string shell_escape(const std::string& s) {
+  std::string result;
+  result.reserve(s.size() * 2);
+  for (char c : s) {
+    switch (c) {
+      case '$': case '`': case '|': case ';': case '&':
+      case '(': case ')': case '>': case '<': case '!':
+      case '\'': case '"': case '\\': case '\n':
+        result += '\\';
+        break;
+    }
+    result += c;
+  }
+  return result;
+}
+
 optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
                                                     const commodity_t* exchange_commodity) {
   DEBUG("commodity.download", "downloading quote for symbol " << commodity.symbol());
@@ -56,10 +72,10 @@ optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
     getquote_cmd = "getquote";
 
   getquote_cmd += " \"";
-  getquote_cmd += commodity.symbol();
+  getquote_cmd += shell_escape(commodity.symbol());
   getquote_cmd += "\" \"";
   if (exchange_commodity)
-    getquote_cmd += exchange_commodity->symbol();
+    getquote_cmd += shell_escape(exchange_commodity->symbol());
   getquote_cmd += "\"";
 
   DEBUG("commodity.download", "invoking command: " << getquote_cmd);
