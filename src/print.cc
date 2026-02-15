@@ -156,7 +156,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
   out << '\n';
 
   if (xact.metadata) {
-    foreach (const item_t::string_map::value_type& data, *xact.metadata) {
+    for (const item_t::string_map::value_type& data : *xact.metadata) {
       if (!data.second.second) {
         out << "    ; ";
         if (data.second.first)
@@ -177,13 +177,13 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
 
   // Find the longest account name to line up all amounts when account names
   // are long
-  foreach (post_t* post, xact.posts) {
+  for (post_t* post : xact.posts) {
     unistring name = format_account_name(xact, post).str();
     if (account_width < name.length())
       account_width = name.length();
   }
 
-  foreach (post_t* post, xact.posts) {
+  for (post_t* post : xact.posts) {
     index++;
 
     if (!report.HANDLED(generated) &&
@@ -297,7 +297,7 @@ void print_xacts::flush() {
   std::ostream& out(report.output_stream);
 
   bool first = true;
-  foreach (xact_t* xact, xacts) {
+  for (xact_t* xact : xacts) {
     if (first)
       first = false;
     else

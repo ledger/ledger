@@ -55,7 +55,7 @@ balance_t::balance_t(const long val) {
 }
 
 balance_t& balance_t::operator+=(const balance_t& bal) {
-  foreach (const amounts_map::value_type& pair, bal.amounts)
+  for (const amounts_map::value_type& pair : bal.amounts)
     *this += pair.second;
   return *this;
 }
@@ -78,7 +78,7 @@ balance_t& balance_t::operator+=(const amount_t& amt) {
 }
 
 balance_t& balance_t::operator-=(const balance_t& bal) {
-  foreach (const amounts_map::value_type& pair, bal.amounts)
+  for (const amounts_map::value_type& pair : bal.amounts)
     *this -= pair.second;
   return *this;
 }
@@ -113,7 +113,7 @@ balance_t& balance_t::operator*=(const amount_t& amt) {
   } else if (!amt.commodity()) {
     // Multiplying by an amount with no commodity causes all the
     // component amounts to be increased by the same factor.
-    foreach (amounts_map::value_type& pair, amounts)
+    for (amounts_map::value_type& pair : amounts)
       pair.second *= amt;
   } else if (amounts.size() == 1) {
     // Multiplying by a commoditized amount is only valid if the sole
@@ -142,7 +142,7 @@ balance_t& balance_t::operator/=(const amount_t& amt) {
   } else if (!amt.commodity()) {
     // Dividing by an amount with no commodity causes all the
     // component amounts to be divided by the same factor.
-    foreach (amounts_map::value_type& pair, amounts)
+    for (amounts_map::value_type& pair : amounts)
       pair.second /= amt;
   } else if (amounts.size() == 1) {
     // Dividing by a commoditized amount is only valid if the sole
@@ -165,7 +165,7 @@ optional<balance_t> balance_t::value(const datetime_t& moment,
   balance_t temp;
   bool resolved = false;
 
-  foreach (const amounts_map::value_type& pair, amounts) {
+  for (const amounts_map::value_type& pair : amounts) {
     if (optional<amount_t> val = pair.second.value(moment, in_terms_of)) {
       temp += *val;
       resolved = true;
@@ -220,11 +220,11 @@ balance_t balance_t::strip_annotations(const keep_details_t& what_to_keep) const
   // Fast path: if no amounts have annotations that need stripping,
   // return *this directly to avoid the expensive GMP arithmetic of
   // rebuilding the balance via operator+=.
-  foreach (const amounts_map::value_type& pair, amounts) {
+  for (const amounts_map::value_type& pair : amounts) {
     if (!what_to_keep.keep_all(pair.second.commodity())) {
       // At least one amount needs stripping; fall through to rebuild
       balance_t temp;
-      foreach (const amounts_map::value_type& pair2, amounts)
+      for (const amounts_map::value_type& pair2 : amounts)
         temp += pair2.second.strip_annotations(what_to_keep);
       return temp;
     }
@@ -234,7 +234,7 @@ balance_t balance_t::strip_annotations(const keep_details_t& what_to_keep) const
 }
 
 void balance_t::sorted_amounts(amounts_array& sorted) const {
-  foreach (const amounts_map::value_type& pair, amounts)
+  for (const amounts_map::value_type& pair : amounts)
     if (!pair.second.is_null())
       sorted.push_back(&pair.second);
   std::stable_sort(sorted.begin(), sorted.end(), [](const amount_t* left, const amount_t* right) {
@@ -251,7 +251,7 @@ void balance_t::map_sorted_amounts(function<void(const amount_t&)> fn) const {
     } else {
       amounts_array sorted;
       sorted_amounts(sorted);
-      foreach (const amount_t* amount, sorted)
+      for (const amount_t* amount : sorted)
         fn(*amount);
     }
   }
@@ -275,7 +275,7 @@ struct print_amount_from_balance {
         flags(other.flags) {
     TRACE_CTOR(print_amount_from_balance, "copy");
   }
-  ~print_amount_from_balance() throw() { TRACE_DTOR(print_amount_from_balance); }
+  ~print_amount_from_balance() noexcept { TRACE_DTOR(print_amount_from_balance); }
 
   void operator()(const amount_t& amount) {
     if (amount.is_zero())
@@ -320,7 +320,7 @@ void balance_t::print(std::ostream& out, const int first_width, const int latter
 }
 
 void put_balance(property_tree::ptree& st, const balance_t& bal) {
-  foreach (const balance_t::amounts_map::value_type& pair, bal.amounts)
+  for (const balance_t::amounts_map::value_type& pair : bal.amounts)
     put_amount(st.add("amount", ""), pair.second);
 }
 
@@ -330,7 +330,7 @@ balance_t average_lot_prices(const balance_t& bal) {
   typedef std::map<optional<std::string>, std::pair<amount_t, annotation_t>> balance_map;
   balance_map bycomm;
 
-  foreach (const balance_t::amounts_map::value_type& pair, bal.amounts) {
+  for (const balance_t::amounts_map::value_type& pair : bal.amounts) {
     optional<std::string> sym(pair.first->symbol());
     amount_t quant(pair.second.strip_annotations(keep_details_t()));
 
@@ -362,7 +362,7 @@ balance_t average_lot_prices(const balance_t& bal) {
 
   balance_t result;
 
-  foreach (balance_map::value_type& pair, bycomm) {
+  for (balance_map::value_type& pair : bycomm) {
     amount_t amt(pair.second.first);
     if (!amt.is_realzero()) {
       if (pair.second.second.price)

@@ -406,7 +406,6 @@ inline void check_for_signal() {
  */
 /*@{*/
 
-#define foreach BOOST_FOREACH
 using std::unique_ptr;
 
 namespace ledger {

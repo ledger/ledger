@@ -178,7 +178,7 @@ public:
         TRACE_CTOR(account_t::xdata_t::details_t, "copy");
       }
       details_t& operator=(const details_t&) = default;
-      ~details_t() throw() { TRACE_DTOR(account_t::xdata_t::details_t); }
+      ~details_t() noexcept { TRACE_DTOR(account_t::xdata_t::details_t); }
 
       details_t& operator+=(const details_t& other);
 
@@ -197,7 +197,7 @@ public:
           family_details(other.family_details), sort_values(other.sort_values) {
       TRACE_CTOR(account_t::xdata_t, "copy");
     }
-    ~xdata_t() throw() { TRACE_DTOR(account_t::xdata_t); }
+    ~xdata_t() noexcept { TRACE_DTOR(account_t::xdata_t); }
   };
 
   // This variable holds optional "extended data" which is usually produced

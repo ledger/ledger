@@ -86,9 +86,9 @@ public:
 
   expr_t& operator=(const expr_t& _expr);
 
-  virtual operator bool() const throw() override;
+  virtual operator bool() const noexcept override;
 
-  ptr_op_t get_op() throw();
+  ptr_op_t get_op() noexcept;
 
   void parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
     std::istringstream stream(str);

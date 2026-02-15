@@ -177,7 +177,7 @@ value_t select_command(call_scope_t& args) {
       bool saw_account = false;
 
       std::size_t cols_needed = 0;
-      foreach (const value_t& column, columns.to_sequence()) {
+      for (const value_t& column : columns.to_sequence()) {
         string ident;
         if (get_principal_identifiers(as_expr(column), ident)) {
           if (ident == "date" || ident == "aux_date") {
@@ -242,7 +242,7 @@ value_t select_command(call_scope_t& args) {
       if (!report.HANDLED(total_width_))
         report.HANDLER(total_width_).value = to_string(total_width);
 
-      foreach (const value_t& column, columns.to_sequence()) {
+      for (const value_t& column : columns.to_sequence()) {
         if (first)
           first = false;
         else

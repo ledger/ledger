@@ -68,10 +68,10 @@ journal_t::~journal_t() {
 
   // Don't bother unhooking each xact's posts from the accounts they refer to,
   // because all accounts are about to be deleted.
-  foreach (xact_t* xact, xacts)
+  for (xact_t* xact : xacts)
     checked_delete(xact);
 
-  foreach (period_xact_t* xact, period_xacts)
+  for (period_xact_t* xact : period_xacts)
     checked_delete(xact);
 
   // Clear auto_xacts before deleting master to avoid use-after-free:
@@ -131,7 +131,7 @@ account_t* journal_t::register_account(const string& name, post_t* post,
   // If the account name being registered is "Unknown", check whether
   // the payee indicates an account that should be used.
   if (result->name == _("Unknown")) {
-    foreach (account_mapping_t& value, payees_for_unknown_accounts) {
+    for (account_mapping_t& value : payees_for_unknown_accounts) {
       if (post && post->xact && value.first.match(post->xact->payee)) {
         result = value.second;
         break;
@@ -248,7 +248,7 @@ bool journal_t::payee_not_registered(const string& name) {
 string journal_t::translate_payee_name(const string& name) {
   string payee;
 
-  foreach (payee_alias_mapping_t& value, payee_alias_mappings) {
+  for (payee_alias_mapping_t& value : payee_alias_mappings) {
     if (value.first.match(name)) {
       payee = value.second;
       break;
@@ -318,7 +318,7 @@ void check_all_metadata(journal_t& journal, variant<int, xact_t*, post_t*> conte
   post_t* post = context.which() == 2 ? boost::get<post_t*>(context) : NULL;
 
   if ((xact || post) && (xact ? xact->metadata : post->metadata)) {
-    foreach (const item_t::string_map::value_type& pair, xact ? *xact->metadata : *post->metadata) {
+    for (const item_t::string_map::value_type& pair : xact ? *xact->metadata : *post->metadata) {
       const string& key(pair.first);
 
       const optional<value_t>& value = pair.second.first;
@@ -356,7 +356,7 @@ bool journal_t::add_xact(xact_t* xact) {
   extend_xact(xact);
   check_all_metadata(*this, xact);
 
-  foreach (post_t* post, xact->posts) {
+  for (post_t* post : xact->posts) {
     extend_post(*post, *this);
     check_all_metadata(*this, post);
   }
@@ -372,7 +372,7 @@ bool journal_t::add_xact(xact_t* xact) {
     if (!result.second) {
       // This UUID has been seen before; apply any postings which the
       // earlier version may have deferred.
-      foreach (post_t* post, xact->posts) {
+      for (post_t* post : xact->posts) {
         account_t* acct = post->account;
         if (acct->deferred_posts) {
           auto i = acct->deferred_posts->find(uuid);
@@ -419,7 +419,7 @@ bool journal_t::add_xact(xact_t* xact) {
 }
 
 void journal_t::extend_xact(xact_base_t* xact) {
-  foreach (unique_ptr<auto_xact_t>& auto_xact, auto_xacts)
+  for (unique_ptr<auto_xact_t>& auto_xact : auto_xacts)
     auto_xact->extend_xact(*xact, *current_context);
 }
 
@@ -481,15 +481,15 @@ std::size_t journal_t::read(parse_context_stack_t& context, hash_type_t hash_typ
 }
 
 bool journal_t::has_xdata() {
-  foreach (xact_t* xact, xacts)
+  for (xact_t* xact : xacts)
     if (xact->has_xdata())
       return true;
 
-  foreach (unique_ptr<auto_xact_t>& xact, auto_xacts)
+  for (unique_ptr<auto_xact_t>& xact : auto_xacts)
     if (xact->has_xdata())
       return true;
 
-  foreach (period_xact_t* xact, period_xacts)
+  for (period_xact_t* xact : period_xacts)
     if (xact->has_xdata())
       return true;
 
@@ -500,15 +500,15 @@ bool journal_t::has_xdata() {
 }
 
 void journal_t::clear_xdata() {
-  foreach (xact_t* xact, xacts)
+  for (xact_t* xact : xacts)
     if (!xact->has_flags(ITEM_TEMP))
       xact->clear_xdata();
 
-  foreach (unique_ptr<auto_xact_t>& xact, auto_xacts)
+  for (unique_ptr<auto_xact_t>& xact : auto_xacts)
     if (!xact->has_flags(ITEM_TEMP))
       xact->clear_xdata();
 
-  foreach (period_xact_t* xact, period_xacts)
+  for (period_xact_t* xact : period_xacts)
     if (!xact->has_flags(ITEM_TEMP))
       xact->clear_xdata();
 
@@ -521,7 +521,7 @@ bool journal_t::valid() const {
     return false;
   }
 
-  foreach (const xact_t* xact, xacts)
+  for (const xact_t* xact : xacts)
     if (!xact->valid()) {
       DEBUG("ledger.validate", "journal_t: xact not valid");
       return false;

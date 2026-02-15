@@ -66,10 +66,10 @@ class format_t : public expr_base_t<string>, public noncopyable {
     variant<string, expr_t> data;
     scoped_ptr<struct element_t> next;
 
-    element_t() throw() : supports_flags<>(), type(STRING), min_width(0), max_width(0) {
+    element_t() noexcept : supports_flags<>(), type(STRING), min_width(0), max_width(0) {
       TRACE_CTOR(element_t, "");
     }
-    ~element_t() throw() { TRACE_DTOR(element_t); }
+    ~element_t() noexcept { TRACE_DTOR(element_t); }
 
     element_t& operator=(const element_t& elem) {
       if (this != &elem) {

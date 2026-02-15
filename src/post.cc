@@ -352,7 +352,7 @@ value_t fn_any(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
-  foreach (post_t* p, post.xact->posts) {
+  for (post_t* p : post.xact->posts) {
     bind_scope_t bound_scope(args, *p);
     if (p == &post && args.has(1) && !args.get<bool>(1)) {
       // If the user specifies any(EXPR, false), and the context is a
@@ -369,7 +369,7 @@ value_t fn_all(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
-  foreach (post_t* p, post.xact->posts) {
+  for (post_t* p : post.xact->posts) {
     bind_scope_t bound_scope(args, *p);
     if (p == &post && args.has(1) && !args.get<bool>(1)) {
       // If the user specifies any(EXPR, false), and the context is a
@@ -533,7 +533,7 @@ amount_t post_t::resolve_expr(scope_t& scope, expr_t& expr) {
 
 std::size_t post_t::xact_id() const {
   std::size_t id = 1;
-  foreach (post_t* p, xact->posts) {
+  for (post_t* p : xact->posts) {
     if (p == this)
       return id;
     id++;
@@ -544,7 +544,7 @@ std::size_t post_t::xact_id() const {
 
 std::size_t post_t::account_id() const {
   std::size_t id = 1;
-  foreach (post_t* p, account->posts) {
+  for (post_t* p : account->posts) {
     if (p == this)
       return id;
     id++;

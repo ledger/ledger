@@ -90,7 +90,7 @@ public:
 
   template <typename T>
   void get_applications(std::vector<T>& result) {
-    foreach (application_t& state, apply_stack) {
+    for (application_t& state : apply_stack) {
       if (state.value.type() == typeid(T))
         result.push_back(boost::get<T>(state.value));
     }
@@ -100,7 +100,7 @@ public:
 
   template <typename T>
   optional<T> get_application() {
-    foreach (application_t& state, apply_stack) {
+    for (application_t& state : apply_stack) {
       if (state.value.type() == typeid(T))
         return boost::get<T>(state.value);
     }
@@ -242,7 +242,7 @@ void instance_t::parse() {
         for (instance_t* instance = parent; instance; instance = instance->parent)
           instances.push_front(instance);
 
-        foreach (instance_t* instance, instances)
+        for (instance_t* instance : instances)
           add_error_context(_f("In file included from %1%") % instance->context.location());
       }
       add_error_context(_f("While parsing file %1%") % context.location());
@@ -596,7 +596,7 @@ void instance_t::automated_xact_directive(char* line) {
   if (command == "enable" || command == "disable") {
     DEBUG("textual.autoxact", command << " automated transaction matching '" << name << "'");
     bool enabled = command == "enable";
-    foreach (unique_ptr<auto_xact_t>& xact, context.journal->auto_xacts) {
+    for (unique_ptr<auto_xact_t>& xact : context.journal->auto_xacts) {
       if (xact->name && name_mask.match(xact->name.get())) {
         DEBUG("textual.autoxact", command << "d '" << xact->name.get() << "'");
         xact->enabled = enabled;
@@ -646,7 +646,7 @@ void instance_t::automated_xact_directive(char* line) {
       throw parse_error(_("Expected predicate after '='"));
     }
 
-    foreach (unique_ptr<auto_xact_t>& xact, context.journal->auto_xacts) {
+    for (unique_ptr<auto_xact_t>& xact : context.journal->auto_xacts) {
       if (xact->name && name == xact->name.get()) {
         throw_(parse_error, _f("Automated transaction with name '%1%' already exists") % name);
       }
@@ -1540,7 +1540,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         if (!post->amount.has_annotation()) {
           std::vector<fixed_rate_t> rates;
           get_applications<fixed_rate_t>(rates);
-          foreach (fixed_rate_t& rate, rates) {
+          for (fixed_rate_t& rate : rates) {
             if (*rate.first == post->amount.commodity()) {
               annotation_t details(rate.second);
               details.add_flags(ANNOTATION_PRICE_FIXATED);
@@ -1848,7 +1848,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
 
     std::vector<string> tags;
     get_applications<string>(tags);
-    foreach (string& tag, tags)
+    for (string& tag : tags)
       post->parse_tags(tag.c_str(), *context.scope, true);
 
     string post_payee = post->payee_from_tag();
@@ -2048,7 +2048,7 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
   if (xact->_state == item_t::UNCLEARED) {
     item_t::application_t result = item_t::CLEARED;
 
-    foreach (post_t * post, xact->posts) {
+    for (post_t * post : xact->posts) {
       if (post->_state == item_t::UNCLEARED) {
         result = item_t::UNCLEARED;
         break;
@@ -2065,7 +2065,7 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
 
     std::vector<string> tags;
     get_applications<string>(tags);
-    foreach (string& tag, tags)
+    for (string& tag : tags)
       xact->parse_tags(tag.c_str(), *context.scope, false);
 
     TRACE_STOP(xact_details, 1);

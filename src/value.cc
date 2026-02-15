@@ -107,7 +107,7 @@ value_t::operator bool() const {
   }
   case SEQUENCE:
     if (!as_sequence().empty()) {
-      foreach (const value_t& value, as_sequence()) {
+      for (const value_t& value : as_sequence()) {
         if (value)
           return true;
       }
@@ -289,7 +289,7 @@ value_t value_t::number() const {
   case SEQUENCE:
     if (!as_sequence().empty()) {
       value_t temp;
-      foreach (const value_t& value, as_sequence())
+      for (const value_t& value : as_sequence())
         temp += value.number();
       return temp;
     }
@@ -921,7 +921,7 @@ bool value_t::is_less_than(const value_t& val) const {
     case INTEGER:
     case AMOUNT: {
       bool no_amounts = true;
-      foreach (const balance_t::amounts_map::value_type& pair, as_balance().amounts) {
+      for (const balance_t::amounts_map::value_type& pair : as_balance().amounts) {
         if (pair.second >= val)
           return false;
         no_amounts = false;
@@ -969,7 +969,7 @@ bool value_t::is_less_than(const value_t& val) const {
     case INTEGER:
     case AMOUNT: {
       bool no_amounts = true;
-      foreach (const value_t& value, as_sequence()) {
+      for (const value_t& value : as_sequence()) {
         if (value >= val)
           return false;
         no_amounts = false;
@@ -1062,7 +1062,7 @@ bool value_t::is_greater_than(const value_t& val) const {
     case INTEGER:
     case AMOUNT: {
       bool no_amounts = true;
-      foreach (const balance_t::amounts_map::value_type& pair, as_balance().amounts) {
+      for (const balance_t::amounts_map::value_type& pair : as_balance().amounts) {
         if (pair.second <= val)
           return false;
         no_amounts = false;
@@ -1110,7 +1110,7 @@ bool value_t::is_greater_than(const value_t& val) const {
     case INTEGER:
     case AMOUNT: {
       bool no_amounts = true;
-      foreach (const value_t& value, as_sequence()) {
+      for (const value_t& value : as_sequence()) {
         if (value <= val)
           return false;
         no_amounts = false;
@@ -1379,7 +1379,7 @@ void value_t::in_place_negate() {
     as_balance_lval().in_place_negate();
     return;
   case SEQUENCE:
-    foreach (value_t& value, as_sequence_lval())
+    for (value_t& value : as_sequence_lval())
       value.in_place_negate();
     return;
   default:
@@ -1415,7 +1415,7 @@ void value_t::in_place_not() {
     set_boolean(as_string().empty());
     return;
   case SEQUENCE:
-    foreach (value_t& value, as_sequence_lval())
+    for (value_t& value : as_sequence_lval())
       value.in_place_not();
     return;
   default:
@@ -1509,7 +1509,7 @@ value_t value_t::value(const datetime_t& moment, const commodity_t* in_terms_of)
 
   case SEQUENCE: {
     value_t temp;
-    foreach (const value_t& value, as_sequence())
+    for (const value_t& value : as_sequence())
       temp.push_back(value.value(moment, in_terms_of));
     return temp;
   }
@@ -1527,7 +1527,7 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
                                       const datetime_t& moment) {
   if (type() == SEQUENCE) {
     value_t temp;
-    foreach (value_t& value, as_sequence_lval())
+    for (value_t& value : as_sequence_lval())
       temp.push_back(value.exchange_commodities(commodities, add_prices, moment));
     return temp;
   }
@@ -1545,7 +1545,7 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
   typedef tokenizer<char_separator<char>> tokenizer;
   tokenizer tokens(commodities, char_separator<char>(","));
 
-  foreach (const string& name, tokens) {
+  for (const string& name : tokens) {
     string target_name = name;
     string source_name;
 
@@ -1578,7 +1578,7 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
   }
 
   std::size_t index = 0;
-  foreach (commodity_t* comm, comms) {
+  for (commodity_t* comm : comms) {
     switch (type()) {
     case AMOUNT:
       DEBUG("commodity.exchange", "We have an amount: " << as_amount_lval());
@@ -1605,7 +1605,7 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
       bool repriced = false;
 
       DEBUG("commodity.exchange", "We have a balance: " << as_balance_lval());
-      foreach (const balance_t::amounts_map::value_type& pair, as_balance_lval().amounts) {
+      for (const balance_t::amounts_map::value_type& pair : as_balance_lval().amounts) {
         DEBUG("commodity.exchange", "We have a balance amount of commodity: "
                                         << pair.first->symbol()
                                         << " == " << pair.second.commodity().symbol());
@@ -1659,7 +1659,7 @@ void value_t::in_place_reduce() {
     as_balance_lval().in_place_reduce();
     return;
   case SEQUENCE:
-    foreach (value_t& value, as_sequence_lval())
+    for (value_t& value : as_sequence_lval())
       value.in_place_reduce();
     return;
   default:
@@ -1678,7 +1678,7 @@ void value_t::in_place_unreduce() {
     as_balance_lval().in_place_unreduce();
     return;
   case SEQUENCE:
-    foreach (value_t& value, as_sequence_lval())
+    for (value_t& value : as_sequence_lval())
       value.in_place_unreduce();
     return;
   default:
@@ -1722,7 +1722,7 @@ void value_t::in_place_round() {
     as_balance_lval().in_place_round();
     return;
   case SEQUENCE:
-    foreach (value_t& value, as_sequence_lval())
+    for (value_t& value : as_sequence_lval())
       value.in_place_round();
     return;
   default:
@@ -1745,7 +1745,7 @@ void value_t::in_place_roundto(int places) {
     as_balance_lval().in_place_roundto(places);
     return;
   case SEQUENCE:
-    foreach (value_t& value, as_sequence_lval())
+    for (value_t& value : as_sequence_lval())
       value.in_place_roundto(places);
     return;
   default:
@@ -1764,7 +1764,7 @@ void value_t::in_place_truncate() {
     as_balance_lval().in_place_truncate();
     return;
   case SEQUENCE:
-    foreach (value_t& value, as_sequence_lval())
+    for (value_t& value : as_sequence_lval())
       value.in_place_truncate();
     return;
   default:
@@ -1786,7 +1786,7 @@ void value_t::in_place_floor() {
     as_balance_lval().in_place_floor();
     return;
   case SEQUENCE:
-    foreach (value_t& value, as_sequence_lval())
+    for (value_t& value : as_sequence_lval())
       value.in_place_floor();
     return;
   default:
@@ -1808,7 +1808,7 @@ void value_t::in_place_ceiling() {
     as_balance_lval().in_place_ceiling();
     return;
   case SEQUENCE:
-    foreach (value_t& value, as_sequence_lval())
+    for (value_t& value : as_sequence_lval())
       value.in_place_ceiling();
     return;
   default:
@@ -1830,7 +1830,7 @@ void value_t::in_place_unround() {
     as_balance_lval().in_place_unround();
     return;
   case SEQUENCE:
-    foreach (value_t& value, as_sequence_lval())
+    for (value_t& value : as_sequence_lval())
       value.in_place_unround();
     return;
   default:
@@ -1889,7 +1889,7 @@ value_t value_t::strip_annotations(const keep_details_t& what_to_keep) const {
 
   case SEQUENCE: {
     sequence_t temp;
-    foreach (const value_t& value, as_sequence())
+    for (const value_t& value : as_sequence())
       temp.push_back(new value_t(value.strip_annotations(what_to_keep)));
     return temp;
   }
@@ -2010,7 +2010,7 @@ void value_t::print(std::ostream& _out, const int first_width, const int latter_
   case SEQUENCE: {
     out << '(';
     bool first = true;
-    foreach (const value_t& value, as_sequence()) {
+    for (const value_t& value : as_sequence()) {
       if (first)
         first = false;
       else
@@ -2081,7 +2081,7 @@ void value_t::dump(std::ostream& out, const bool relaxed) const {
 
   case STRING:
     out << '"';
-    foreach (const char& ch, as_string()) {
+    for (const char& ch : as_string()) {
       switch (ch) {
       case '"':
         out << "\\\"";
@@ -2114,7 +2114,7 @@ void value_t::dump(std::ostream& out, const bool relaxed) const {
   case SEQUENCE: {
     out << '(';
     bool first = true;
-    foreach (const value_t& value, as_sequence()) {
+    for (const value_t& value : as_sequence()) {
       if (first)
         first = false;
       else
@@ -2204,7 +2204,7 @@ void put_value(property_tree::ptree& pt, const value_t& value) {
 
   case value_t::SEQUENCE: {
     property_tree::ptree& st(pt.add("sequence", ""));
-    foreach (const value_t& member, value.as_sequence())
+    for (const value_t& member : value.as_sequence())
       put_value(st, member);
     break;
   }

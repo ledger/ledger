@@ -117,7 +117,7 @@ struct keep_details_t {
     TRACE_CTOR(keep_details_t, "copy");
   }
   keep_details_t& operator=(const keep_details_t&) = default;
-  ~keep_details_t() throw() { TRACE_DTOR(keep_details_t); }
+  ~keep_details_t() noexcept { TRACE_DTOR(keep_details_t); }
 
   bool keep_all() const { return keep_price && keep_date && keep_tag && !only_actuals; }
   bool keep_all(const commodity_t& comm) const;

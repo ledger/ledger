@@ -61,7 +61,7 @@ value_t report_statistics(call_scope_t& args) {
 
   out << _("  Files these postings came from:") << std::endl;
 
-  foreach (const path& pathname, statistics.filenames)
+  for (const path& pathname : statistics.filenames)
     if (!pathname.empty())
       out << "    " << pathname.string() << std::endl;
   out << std::endl;

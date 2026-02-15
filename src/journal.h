@@ -78,7 +78,7 @@ public:
         : filename(info.filename), modtime(info.modtime), from_stream(info.from_stream) {
       TRACE_CTOR(journal_t::fileinfo_t, "copy");
     }
-    ~fileinfo_t() throw() { TRACE_DTOR(journal_t::fileinfo_t); }
+    ~fileinfo_t() noexcept { TRACE_DTOR(journal_t::fileinfo_t); }
   };
 
   account_t* master;

@@ -145,7 +145,6 @@
 #include <boost/filesystem/directory.hpp>
 #include <boost/filesystem/path.hpp>
 
-#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/function.hpp>
 

@@ -76,11 +76,11 @@ expr_t& expr_t::operator=(const expr_t& _expr) {
   return *this;
 }
 
-expr_t::operator bool() const throw() {
+expr_t::operator bool() const noexcept {
   return ptr.get() != NULL;
 }
 
-expr_t::ptr_op_t expr_t::get_op() throw() {
+expr_t::ptr_op_t expr_t::get_op() noexcept {
   return ptr;
 }
 
@@ -236,7 +236,7 @@ void merged_expr_t::compile(scope_t& scope) {
     std::ostringstream buf;
 
     buf << "__tmp_" << term << "=(" << term << "=(" << base_expr << ")";
-    foreach (const string& expr, exprs) {
+    for (const string& expr : exprs) {
       if (merge_operator == ";")
         buf << merge_operator << term << "=" << expr;
       else

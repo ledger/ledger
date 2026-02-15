@@ -81,8 +81,8 @@ string source_context(const path& file, const std::istream::pos_type pos,
 #define DECLARE_EXCEPTION(name, kind)                                                              \
   class name : public kind {                                                                       \
   public:                                                                                          \
-    explicit name(const string& why) throw() : kind(why) {}                                        \
-    virtual ~name() throw() {}                                                                     \
+    explicit name(const string& why) noexcept : kind(why) {}                                        \
+    virtual ~name() noexcept {}                                                                     \
   }
 
 struct error_count {

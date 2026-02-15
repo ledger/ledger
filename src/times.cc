@@ -192,7 +192,7 @@ date_t parse_date_mask_routine(const char* date_str, date_io_t& io, date_traits_
 }
 
 date_t parse_date_mask(const char* date_str, date_traits_t* traits = NULL) {
-  foreach (shared_ptr<date_io_t>& reader, readers) {
+  for (shared_ptr<date_io_t>& reader : readers) {
     date_t when = parse_date_mask_routine(date_str, *reader.get(), traits);
     if (!when.is_not_a_date())
       return when;
@@ -411,7 +411,7 @@ class date_parser_t {
       token_t(const token_t& tok) : kind(tok.kind), value(tok.value) {
         TRACE_CTOR(date_parser_t::lexer_t::token_t, "copy");
       }
-      ~token_t() throw() { TRACE_DTOR(date_parser_t::lexer_t::token_t); }
+      ~token_t() noexcept { TRACE_DTOR(date_parser_t::lexer_t::token_t); }
 
       token_t& operator=(const token_t& tok) {
         if (this != &tok) {
@@ -644,7 +644,7 @@ class date_parser_t {
         : begin(other.begin), end(other.end), token_cache(other.token_cache) {
       TRACE_CTOR(date_parser_t::lexer_t, "copy");
     }
-    ~lexer_t() throw() { TRACE_DTOR(date_parser_t::lexer_t); }
+    ~lexer_t() noexcept { TRACE_DTOR(date_parser_t::lexer_t); }
 
     token_t next_token();
     void push_token(token_t tok) {
@@ -668,7 +668,7 @@ public:
   date_parser_t(const date_parser_t& parser) : arg(parser.arg), lexer(parser.lexer) {
     TRACE_CTOR(date_parser_t, "copy");
   }
-  ~date_parser_t() throw() { TRACE_DTOR(date_parser_t); }
+  ~date_parser_t() noexcept { TRACE_DTOR(date_parser_t); }
 
   date_interval_t parse();
 
@@ -1875,11 +1875,11 @@ void times_shutdown() {
 
     readers.clear();
 
-    foreach (datetime_io_map::value_type& pair, temp_datetime_io)
+    for (datetime_io_map::value_type& pair : temp_datetime_io)
       checked_delete(pair.second);
     temp_datetime_io.clear();
 
-    foreach (date_io_map::value_type& pair, temp_date_io)
+    for (date_io_map::value_type& pair : temp_date_io)
       checked_delete(pair.second);
     temp_date_io.clear();
 

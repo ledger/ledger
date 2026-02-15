@@ -186,7 +186,7 @@ std::pair<std::size_t, std::size_t> format_accounts::mark_accounts(account_t& ac
   std::size_t visited = 0;
   std::size_t to_display = 0;
 
-  foreach (accounts_map::value_type& pair, account.accounts) {
+  for (accounts_map::value_type& pair : account.accounts) {
     std::pair<std::size_t, std::size_t> i = mark_accounts(*pair.second, flat);
     visited += i.first;
     to_display += i.second;
@@ -229,7 +229,7 @@ void format_accounts::flush() {
 
   std::size_t displayed = 0;
 
-  foreach (account_t* account, posted_accounts)
+  for (account_t* account : posted_accounts)
     displayed += post_account(*account, report.HANDLED(flat));
 
   if (displayed > 1 && !report.HANDLED(no_total) && !report.HANDLED(percent)) {
@@ -261,7 +261,7 @@ namespace {
       accounts.insert(
           report_accounts::accounts_report_map::value_type(&account, 0));
 
-    foreach (accounts_map::value_type& pair, account.accounts)
+    for (accounts_map::value_type& pair : account.accounts)
       collect_known_accounts(*pair.second, accounts);
   }
 } // namespace
@@ -281,7 +281,7 @@ void report_accounts::flush() {
 
   collect_known_accounts(*report.session.journal->master, accounts);
 
-  foreach (accounts_pair& entry, accounts) {
+  for (accounts_pair& entry : accounts) {
     if (do_prepend_format) {
       bind_scope_t bound_scope(report, *entry.first);
       out.width(static_cast<std::streamsize>(prepend_width));
@@ -305,7 +305,7 @@ void report_accounts::operator()(post_t& post) {
 void report_payees::flush() {
   std::ostream& out(report.output_stream);
 
-  foreach (payees_pair& entry, payees) {
+  for (payees_pair& entry : payees) {
     if (report.HANDLED(count))
       out << entry.second << ' ';
     out << entry.first << '\n';
@@ -323,7 +323,7 @@ void report_payees::operator()(post_t& post) {
 void report_tags::flush() {
   std::ostream& out(report.output_stream);
 
-  foreach (tags_pair& entry, tags) {
+  for (tags_pair& entry : tags) {
     if (report.HANDLED(count))
       out << entry.second << ' ';
     out << entry.first << '\n';
@@ -333,7 +333,7 @@ void report_tags::flush() {
 void report_tags::gather_metadata(item_t& item) {
   if (!item.metadata)
     return;
-  foreach (const item_t::string_map::value_type& data, *item.metadata) {
+  for (const item_t::string_map::value_type& data : *item.metadata) {
     string tag(data.first);
     if (report.HANDLED(values) && data.second.first)
       tag += ": " + data.second.first.get().to_string();
@@ -354,7 +354,7 @@ void report_tags::operator()(post_t& post) {
 void report_commodities::flush() {
   std::ostream& out(report.output_stream);
 
-  foreach (commodities_pair& entry, commodities) {
+  for (commodities_pair& entry : commodities) {
     if (report.HANDLED(count))
       out << entry.second << ' ';
     out << *entry.first << '\n';

@@ -1054,7 +1054,8 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
 
   new_quantity->prec = 0;
 
-  BOOST_REVERSE_FOREACH(const char& ch, quant) {
+  for (auto it = quant.rbegin(); it != quant.rend(); ++it) {
+    const char& ch = *it;
     string_index--;
 
     if (ch == '.') {

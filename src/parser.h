@@ -87,7 +87,7 @@ class expr_t::parser_t : public noncopyable {
 
 public:
   parser_t() : use_lookahead(false) { TRACE_CTOR(parser_t, ""); }
-  ~parser_t() throw() { TRACE_DTOR(parser_t); }
+  ~parser_t() noexcept { TRACE_DTOR(parser_t); }
 
   ptr_op_t parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT,
                  const optional<string>& original_string = boost::none);

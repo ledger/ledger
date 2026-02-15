@@ -415,7 +415,7 @@ void global_scope_t::normalize_session_options() {
   INFO("Initialization file is " << HANDLER(init_file_).str());
   INFO("Price database is " << session().HANDLER(price_db_).str());
 
-  foreach (const path& pathname, session().HANDLER(file_).data_files)
+  for (const path& pathname : session().HANDLER(file_).data_files)
     INFO("Journal file is " << pathname.string());
 }
 

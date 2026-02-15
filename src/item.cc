@@ -57,7 +57,7 @@ bool item_t::has_tag(const string& tag, bool) const {
 
 bool item_t::has_tag(const mask_t& tag_mask, const optional<mask_t>& value_mask, bool) const {
   if (metadata) {
-    foreach (const string_map::value_type& data, *metadata) {
+    for (const string_map::value_type& data : *metadata) {
       if (tag_mask.match(data.first)) {
         if (!value_mask)
           return true;
@@ -85,7 +85,7 @@ optional<value_t> item_t::get_tag(const string& tag, bool) const {
 optional<value_t> item_t::get_tag(const mask_t& tag_mask, const optional<mask_t>& value_mask,
                                   bool) const {
   if (metadata) {
-    foreach (const string_map::value_type& data, *metadata) {
+    for (const string_map::value_type& data : *metadata) {
       if (tag_mask.match(data.first) &&
           (!value_mask ||
            (data.second.first && value_mask->match(data.second.first->to_string())))) {
@@ -566,7 +566,7 @@ string item_context(const item_t& item, const string& desc) {
 }
 
 void put_metadata(property_tree::ptree& st, const item_t::string_map& metadata) {
-  foreach (const item_t::string_map::value_type& pair, metadata) {
+  for (const item_t::string_map::value_type& pair : metadata) {
     if (pair.second.first) {
       property_tree::ptree& vt(st.add("value", ""));
       vt.put("<xmlattr>.key", pair.first);

@@ -177,7 +177,7 @@ public:
           date(other.date), account(other.account), sort_values(other.sort_values) {
       TRACE_CTOR(post_t::xdata_t, "copy");
     }
-    ~xdata_t() throw() { TRACE_DTOR(post_t::xdata_t); }
+    ~xdata_t() noexcept { TRACE_DTOR(post_t::xdata_t); }
   };
 
   // This variable holds optional "extended data" which is usually produced

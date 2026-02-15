@@ -1035,7 +1035,7 @@ public:
       : handler(other.handler), report(other.report), whence(other.whence) {
     TRACE_CTOR(reporter, "copy");
   }
-  ~reporter() throw() { TRACE_DTOR(reporter); }
+  ~reporter() noexcept { TRACE_DTOR(reporter); }
 
   value_t operator()(call_scope_t& args) {
     if (args.size() > 0)
