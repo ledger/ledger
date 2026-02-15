@@ -320,7 +320,7 @@ class PrepareBuild(CommandLineApp):
         self.initialize()
 
     def main(self, *args):
-        if args and args[0] in ['default', 'debug', 'opt', 'gcov', 'gprof']:
+        if args and args[0] in ['default', 'debug', 'opt', 'gcov', 'gprof', 'prof']:
             self.current_flavor = args[0]
             args = args[1:]
 
@@ -825,6 +825,10 @@ class PrepareBuild(CommandLineApp):
         self.CXXFLAGS.append('-pg')
         self.LDFLAGS.append('-pg')
 
+    def setup_flavor_prof(self):
+        self.configure_args.append('-DCMAKE_BUILD_TYPE=Release')
+        self.configure_args.append('-DUSE_CLANG_PROFILING=ON')
+
     #########################################################################
     # Configure build tree using CMake                                      #
     #########################################################################
@@ -1092,6 +1096,7 @@ being 'debug':
   opt               Full optimizations
   gcov              Coverage analysis
   gprof             Code profiling (for macOS, just use: 'shark -i ledger ...')
+  prof              Clang instrumentation profiling (use llvm-profdata to analyze)
 
 Next is the optional build PHASE, with 'config' being the default:
 

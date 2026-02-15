@@ -79,6 +79,31 @@ if(USE_SANITIZERS)
   add_link_options(-fsanitize=address,undefined)
 endif()
 
+option(USE_CLANG_PROFILING "Enable Clang instrumentation profiling (-fprofile-instr-generate)" OFF)
+set(CLANG_PROFILE_DATA "" CACHE FILEPATH "Path to .profdata file for profile-guided optimization")
+
+if(USE_CLANG_PROFILING)
+  if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    message(FATAL_ERROR "Clang profiling requires the Clang compiler")
+  endif()
+  if(CLANG_PROFILE_DATA)
+    message(FATAL_ERROR "USE_CLANG_PROFILING and CLANG_PROFILE_DATA are mutually exclusive")
+  endif()
+  add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+  add_link_options(-fprofile-instr-generate)
+endif()
+
+if(CLANG_PROFILE_DATA)
+  if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    message(FATAL_ERROR "Profile-guided optimization requires the Clang compiler")
+  endif()
+  if(NOT EXISTS "${CLANG_PROFILE_DATA}")
+    message(FATAL_ERROR "CLANG_PROFILE_DATA file not found: ${CLANG_PROFILE_DATA}")
+  endif()
+  add_compile_options(-fprofile-instr-use=${CLANG_PROFILE_DATA})
+  add_link_options(-fprofile-instr-use=${CLANG_PROFILE_DATA})
+endif()
+
 ########################################################################
 
 if(USE_PYTHON)
