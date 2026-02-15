@@ -346,11 +346,7 @@ void trace_ctor_func(void* ptr, const char* cls_name, const char* args, std::siz
 
   memory_tracing_active = false;
 
-  static char name[1024];
-  std::strcpy(name, cls_name);
-  std::strcat(name, "(");
-  std::strcat(name, args);
-  std::strcat(name, ")");
+  std::string name = std::string(cls_name) + "(" + args + ")";
 
   DEBUG("memory.debug", "TRACE_CTOR " << ptr << " " << name);
 
@@ -359,7 +355,7 @@ void trace_ctor_func(void* ptr, const char* cls_name, const char* args, std::siz
   add_to_count_map(*live_object_count, cls_name, cls_size);
   add_to_count_map(*total_object_count, cls_name, cls_size);
   add_to_count_map(*total_object_count, "__ALL__", cls_size);
-  add_to_count_map(*total_ctor_count, name, cls_size);
+  add_to_count_map(*total_ctor_count, name.c_str(), cls_size);
 
   memory_tracing_active = true;
 }
