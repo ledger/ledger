@@ -105,6 +105,9 @@
 
         packages = [
           llvmPackages_18.clang-tools # Provides clang-format (pinned to match CI)
+          llvmPackages_18.clang       # Clang compiler for profiling builds
+          llvmPackages_18.llvm        # Provides llvm-profdata, llvm-cov
+          hyperfine                   # Statistical benchmarking
         ];
 
         shellHook = ''
