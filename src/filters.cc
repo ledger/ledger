@@ -51,10 +51,10 @@ void post_splitter::print_title(const value_t& val) {
 void post_splitter::flush() {
   bool cumulative = report.HANDLED(group_by_cumulative);
 
-  foreach (value_to_posts_map::value_type& pair, posts_map) {
+  for (value_to_posts_map::value_type& pair : posts_map) {
     preflush_func(pair.first);
 
-    foreach (post_t* post, pair.second)
+    for (post_t* post : pair.second)
       (*post_chain)(*post);
 
     post_chain->flush();
@@ -93,7 +93,7 @@ void truncate_xacts::flush() {
   xact_t* xact = (*posts.begin())->xact;
 
   int l = 0;
-  foreach (post_t* post, posts)
+  for (post_t* post : posts)
     if (xact != post->xact) {
       l++;
       xact = post->xact;
@@ -103,7 +103,7 @@ void truncate_xacts::flush() {
   xact = (*posts.begin())->xact;
 
   int i = 0;
-  foreach (post_t* post, posts) {
+  for (post_t* post : posts) {
     if (xact != post->xact) {
       xact = post->xact;
       i++;
@@ -154,7 +154,7 @@ void truncate_xacts::operator()(post_t& post) {
 void sort_posts::post_accumulated_posts() {
   std::stable_sort(posts.begin(), posts.end(), compare_items<post_t>(sort_order, report));
 
-  foreach (post_t* post, posts) {
+  for (post_t* post : posts) {
     post->xdata().drop_flags(POST_EXT_SORT_CALC);
     item_handler<post_t>::operator()(*post);
   }
@@ -177,7 +177,7 @@ void split_string(const string& str, const char ch, std::list<string>& strings) 
 account_t* create_temp_account_from_path(std::list<string>& account_names, temporaries_t& temps,
                                          account_t* master) {
   account_t* new_account = NULL;
-  foreach (const string& name, account_names) {
+  for (const string& name : account_names) {
     if (new_account) {
       new_account = new_account->find_account(name);
     } else {
@@ -394,7 +394,7 @@ void collapse_posts::report_subtotal() {
     return;
 
   std::size_t displayed_count = 0;
-  foreach (post_t* post, component_posts) {
+  for (post_t* post : component_posts) {
     bind_scope_t bound_scope(report, *post);
     if (only_predicate(bound_scope) && display_predicate(bound_scope))
       displayed_count++;
@@ -403,13 +403,13 @@ void collapse_posts::report_subtotal() {
   if (collapse_depth == 0 && displayed_count == 1) {
     item_handler<post_t>::operator()(*last_post);
   } else if (only_collapse_if_zero && !subtotal.is_zero()) {
-    foreach (post_t* post, component_posts)
+    for (post_t* post : component_posts)
       item_handler<post_t>::operator()(*post);
   } else {
     date_t earliest_date;
     date_t latest_date;
 
-    foreach (post_t* post, component_posts) {
+    for (post_t* post : component_posts) {
       date_t date = post->date();
       date_t value_date = post->value_date();
       if (!is_valid(earliest_date) || date < earliest_date)
@@ -426,7 +426,7 @@ void collapse_posts::report_subtotal() {
     DEBUG("filters.collapse", "earliest date    = " << earliest_date);
     DEBUG("filters.collapse", "latest date      = " << latest_date);
 
-    foreach (totals_map::value_type& pat, totals) {
+    for (totals_map::value_type& pat : totals) {
       handle_value(/* value=      */ pat.second,
                    /* account=    */ pat.first,
                    /* xact=       */ &xact,
@@ -476,9 +476,9 @@ void collapse_posts::operator()(post_t& post) {
 
 void related_posts::flush() {
   if (posts.size() > 0) {
-    foreach (post_t* post, posts) {
+    for (post_t* post : posts) {
       assert(post->xact);
-      foreach (post_t* r_post, post->xact->posts) {
+      for (post_t* r_post : post->xact->posts) {
         post_t::xdata_t& xdata(r_post->xdata());
         if (!xdata.has_flags(POST_EXT_HANDLED) &&
             (!xdata.has_flags(POST_EXT_RECEIVED) ? !r_post->has_flags(ITEM_GENERATED | POST_VIRTUAL)
@@ -791,7 +791,7 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
   case value_t::BALANCE: {
     price_map_t all_prices;
 
-    foreach (const balance_t::amounts_map::value_type& amt_comm, display_total.as_balance().amounts)
+    for (const balance_t::amounts_map::value_type& amt_comm : display_total.as_balance().amounts)
       amt_comm.first->map_prices(insert_prices_in_map(all_prices), datetime_t(current),
                                  datetime_t(post.value_date()), true);
 
@@ -799,7 +799,8 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
     typedef std::map<const date_t, bool> date_map;
     date_map pricing_dates;
 
-    BOOST_REVERSE_FOREACH(const price_map_t::value_type& price, all_prices) {
+    for (auto it = all_prices.rbegin(); it != all_prices.rend(); ++it) {
+      const auto& price = *it;
       // This insert will fail if a later price has already been inserted
       // for that date.
       DEBUG("filters.revalued", "re-inserting " << price.second << " at " << price.first.date());
@@ -808,7 +809,7 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
 
     // Go through the time-sorted prices list, outputting a revaluation for
     // each price difference.
-    foreach (const date_map::value_type& price, pricing_dates) {
+    for (const date_map::value_type& price : pricing_dates) {
       output_revaluation(post, price.first);
       last_total = repriced_total;
     }
@@ -858,7 +859,7 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
   optional<date_t> range_finish = interval ? interval->inclusive_end() : none;
 
   if (!range_start || !range_finish) {
-    foreach (post_t* post, component_posts) {
+    for (post_t* post : component_posts) {
       date_t date = post->date();
       date_t value_date = post->value_date();
 #if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
@@ -889,7 +890,7 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
   xact.payee = out_date.str();
   xact._date = *range_start;
 
-  foreach (values_map::value_type& pair, values)
+  for (values_map::value_type& pair : values)
     handle_value(/* value=      */ pair.second.value,
                  /* account=    */ pair.second.account,
                  /* xact=       */ &xact,
@@ -1054,7 +1055,7 @@ struct create_post_from_amount {
         temps(other.temps) {
     TRACE_CTOR(create_post_from_amount, "copy");
   }
-  ~create_post_from_amount() throw() { TRACE_DTOR(create_post_from_amount); }
+  ~create_post_from_amount() noexcept { TRACE_DTOR(create_post_from_amount); }
 
   void operator()(const amount_t& amount) {
     if (amount.is_zero())
@@ -1068,7 +1069,7 @@ struct create_post_from_amount {
 
 void posts_as_equity::report_subtotal() {
   date_t finish;
-  foreach (post_t* post, component_posts) {
+  for (post_t* post : component_posts) {
     date_t date = post->date();
     if (!is_valid(finish) || date > finish)
       finish = date;
@@ -1080,7 +1081,7 @@ void posts_as_equity::report_subtotal() {
   xact._date = finish;
 
   value_t total = 0L;
-  foreach (values_map::value_type& pair, values) {
+  for (values_map::value_type& pair : values) {
     value_t value(pair.second.value.strip_annotations(report.what_to_keep()));
     if (unround)
       value.in_place_unround();
@@ -1126,7 +1127,7 @@ void posts_as_equity::report_subtotal() {
 }
 
 void by_payee_posts::flush() {
-  foreach (payee_subtotals_map::value_type& pair, payee_subtotals)
+  for (payee_subtotals_map::value_type& pair : payee_subtotals)
     pair.second->report_subtotal(pair.first.c_str());
 
   item_handler<post_t>::flush();
@@ -1198,7 +1199,7 @@ void transfer_details::operator()(post_t& post) {
 
 void day_of_week_posts::flush() {
   for (int i = 0; i < 7; i++) {
-    foreach (post_t* post, days_of_the_week[i])
+    for (post_t* post : days_of_the_week[i])
       subtotal_posts::operator()(*post);
     subtotal_posts::report_subtotal("%As");
     days_of_the_week[i].clear();
@@ -1208,8 +1209,8 @@ void day_of_week_posts::flush() {
 }
 
 void generate_posts::add_period_xacts(period_xacts_list& period_xacts) {
-  foreach (period_xact_t* xact, period_xacts)
-    foreach (post_t* post, xact->posts)
+  for (period_xact_t* xact : period_xacts)
+    for (post_t* post : xact->posts)
       add_post(xact->period, *post);
 }
 
@@ -1228,7 +1229,7 @@ void budget_posts::report_budget_items(const date_t& date) {
         posts_to_erase.push_back(i);
       }
     }
-    foreach (pending_posts_list::iterator& i, posts_to_erase)
+    for (pending_posts_list::iterator& i : posts_to_erase)
       pending_posts.erase(i);
   }
 
@@ -1298,7 +1299,7 @@ void budget_posts::report_budget_items(const date_t& date) {
 void budget_posts::operator()(post_t& post) {
   bool post_in_budget = false;
 
-  foreach (pending_posts_list::value_type& pair, pending_posts) {
+  for (pending_posts_list::value_type& pair : pending_posts) {
     for (account_t* acct = post.reported_account(); acct; acct = acct->parent) {
       if (acct == (*pair.second).reported_account()) {
         post_in_budget = true;
@@ -1457,7 +1458,7 @@ inject_posts::inject_posts(post_handler_ptr handler, const string& tag_list, acc
 }
 
 void inject_posts::operator()(post_t& post) {
-  foreach (tags_list_pair& pair, tags_list) {
+  for (tags_list_pair& pair : tags_list) {
     optional<value_t> tag_value = post.get_tag(pair.first, false);
     // When checking if the transaction has the tag, only inject once
     // per transaction.

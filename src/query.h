@@ -107,7 +107,7 @@ public:
       token_t(const token_t& tok) : kind(tok.kind), value(tok.value) {
         TRACE_CTOR(query_t::lexer_t::token_t, "copy");
       }
-      ~token_t() throw() { TRACE_DTOR(query_t::lexer_t::token_t); }
+      ~token_t() noexcept { TRACE_DTOR(query_t::lexer_t::token_t); }
 
       token_t& operator=(const token_t& tok) {
         if (this != &tok) {
@@ -243,7 +243,7 @@ public:
       TRACE_CTOR(query_t::lexer_t, "copy");
     }
     lexer_t& operator=(const lexer_t&) = default;
-    ~lexer_t() throw() { TRACE_DTOR(query_t::lexer_t); }
+    ~lexer_t() noexcept { TRACE_DTOR(query_t::lexer_t); }
 
     token_t next_token(token_t::kind_t tok_context = token_t::UNKNOWN);
     void push_token(token_t tok) {
@@ -288,7 +288,7 @@ protected:
     parser_t(const parser_t& other) : args(other.args), lexer(other.lexer) {
       TRACE_CTOR(query_t::parser_t, "copy");
     }
-    ~parser_t() throw() { TRACE_DTOR(query_t::parser_t); }
+    ~parser_t() noexcept { TRACE_DTOR(query_t::parser_t); }
 
     expr_t::ptr_op_t parse(bool subexpression = false) {
       return parse_query_expr(lexer_t::token_t::TOK_ACCOUNT, subexpression);

@@ -83,7 +83,7 @@ struct create_price_xact {
       : journal(_journal), account(_account), temps(_temps), xact_temps(_xact_temps) {
     TRACE_CTOR(create_price_xact, "journal_t&, account_t *, temporaries_t&, xacts_list&");
   }
-  ~create_price_xact() throw() { TRACE_DTOR(create_price_xact); }
+  ~create_price_xact() noexcept { TRACE_DTOR(create_price_xact); }
 
   void operator()(const datetime_t& date, const amount_t& price) {
     xact_t* xact;
@@ -104,7 +104,7 @@ struct create_price_xact {
 
     bool post_already_exists = false;
 
-    foreach (post_t* post, xact->posts) {
+    for (post_t* post : xact->posts) {
       if (post->date() == date.date() && post->amount == price) {
         post_already_exists = true;
         break;
@@ -140,7 +140,7 @@ void posts_commodities_iterator::reset(journal_t& journal) {
     commodities.insert(&comm.referent());
   }
 
-  foreach (commodity_t* comm, commodities)
+  for (commodity_t* comm : commodities)
     comm->map_prices(create_price_xact(journal, journal.master->find_account(comm->symbol()), temps,
                                        xact_temps));
 
@@ -194,7 +194,7 @@ void sorted_accounts_iterator::push_back(account_t& account) {
 
 #if DEBUG_ON
     if (SHOW_DEBUG("account.sorted")) {
-      foreach (account_t* acct, accounts_list.back())
+      for (account_t* acct : accounts_list.back())
         DEBUG("account.sorted", "Account (flat): " << acct->fullname());
     }
 #endif
@@ -207,21 +207,21 @@ void sorted_accounts_iterator::push_back(account_t& account) {
 }
 
 void sorted_accounts_iterator::push_all(account_t& account, accounts_deque_t& deque) {
-  foreach (accounts_map::value_type& pair, account.accounts) {
+  for (accounts_map::value_type& pair : account.accounts) {
     deque.push_back(pair.second);
     push_all(*pair.second, deque);
   }
 }
 
 void sorted_accounts_iterator::sort_accounts(account_t& account, accounts_deque_t& deque) {
-  foreach (accounts_map::value_type& pair, account.accounts)
+  for (accounts_map::value_type& pair : account.accounts)
     deque.push_back(pair.second);
 
   std::stable_sort(deque.begin(), deque.end(), compare_items<account_t>(sort_cmp, report));
 
 #if DEBUG_ON
   if (SHOW_DEBUG("account.sorted")) {
-    foreach (account_t* acct, deque)
+    for (account_t* acct : deque)
       DEBUG("account.sorted", "Account: " << acct->fullname());
   }
 #endif

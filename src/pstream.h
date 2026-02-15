@@ -66,7 +66,7 @@ class ptristream : public std::istream {
 
       TRACE_CTOR(ptrinbuf, "char *, std::size_t");
     }
-    ~ptrinbuf() throw() { TRACE_DTOR(ptrinbuf); }
+    ~ptrinbuf() noexcept { TRACE_DTOR(ptrinbuf); }
 
   protected:
     virtual int_type underflow() override {

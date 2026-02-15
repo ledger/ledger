@@ -67,7 +67,7 @@ class draft_t : public expr_base_t<value_t> {
       optional<amount_t> cost;
 
       post_template_t() : from(false) { TRACE_CTOR(post_template_t, ""); }
-      ~post_template_t() throw() { TRACE_DTOR(post_template_t); }
+      ~post_template_t() noexcept { TRACE_DTOR(post_template_t); }
     };
 
     std::list<post_template_t> posts;
@@ -79,7 +79,7 @@ class draft_t : public expr_base_t<value_t> {
       TRACE_CTOR(xact_template_t, "copy");
     }
     xact_template_t& operator=(const xact_template_t&) = default;
-    ~xact_template_t() throw() { TRACE_DTOR(xact_template_t); }
+    ~xact_template_t() noexcept { TRACE_DTOR(xact_template_t); }
 
     void dump(std::ostream& out) const;
   };
@@ -92,7 +92,7 @@ public:
       parse_args(args);
     TRACE_CTOR(draft_t, "value_t");
   }
-  virtual ~draft_t() throw() { TRACE_DTOR(draft_t); }
+  virtual ~draft_t() noexcept { TRACE_DTOR(draft_t); }
 
   void parse_args(const value_t& args);
 

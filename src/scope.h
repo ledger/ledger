@@ -60,7 +60,7 @@ struct symbol_t {
   symbol_t(const symbol_t& sym) : kind(sym.kind), name(sym.name), definition(sym.definition) {
     TRACE_CTOR(symbol_t, "copy");
   }
-  ~symbol_t() throw() { TRACE_DTOR(symbol_t); }
+  ~symbol_t() noexcept { TRACE_DTOR(symbol_t); }
 
   bool operator<(const symbol_t& sym) const { return kind < sym.kind || name < sym.name; }
   bool operator==(const symbol_t& sym) const { return kind == sym.kind || name == sym.name; }
@@ -88,7 +88,7 @@ public:
 class empty_scope_t : public scope_t {
 public:
   empty_scope_t() { TRACE_CTOR(empty_scope_t, ""); }
-  ~empty_scope_t() throw() { TRACE_DTOR(empty_scope_t); }
+  ~empty_scope_t() noexcept { TRACE_DTOR(empty_scope_t); }
 
   virtual string description() override { return _("<empty>"); }
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t, const string&) override { return NULL; }
@@ -498,7 +498,7 @@ public:
   value_scope_t(scope_t& _parent, const value_t& _value) : child_scope_t(_parent), value(_value) {
     TRACE_CTOR(value_scope_t, "scope_t&, value_t");
   }
-  ~value_scope_t() throw() { TRACE_DTOR(value_scope_t); }
+  ~value_scope_t() noexcept { TRACE_DTOR(value_scope_t); }
 
   virtual string description() override { return parent->description(); }
 

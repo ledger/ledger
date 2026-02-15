@@ -313,7 +313,7 @@ struct posts_flusher {
   posts_flusher(post_handler_ptr _handler, report_t& _report) : handler(_handler), report(_report) {
     TRACE_CTOR(posts_flusher, "post_handler_ptr, report_t&");
   }
-  ~posts_flusher() throw() { TRACE_DTOR(posts_flusher); }
+  ~posts_flusher() noexcept { TRACE_DTOR(posts_flusher); }
 
   void operator()(const value_t&) { report.session.journal->clear_xdata(); }
 };
@@ -687,7 +687,7 @@ value_t report_t::fn_quoted(call_scope_t& args) {
 
   out << '"';
   string arg(args.get<string>(0));
-  foreach (const char ch, arg) {
+  for (const char ch : arg) {
     if (ch == '"')
       out << "\\\"";
     else
@@ -703,7 +703,7 @@ value_t report_t::fn_quoted_rfc(call_scope_t& args) {
 
   out << '"';
   string arg(args.get<string>(0));
-  foreach (const char ch, arg) {
+  for (const char ch : arg) {
     if (ch == '"')
       out << '"' << '"';
     else
@@ -718,7 +718,7 @@ value_t report_t::fn_join(call_scope_t& args) {
   std::ostringstream out;
 
   string arg(args.get<string>(0));
-  foreach (const char ch, arg) {
+  for (const char ch : arg) {
     if (ch != '\n')
       out << ch;
     else
@@ -828,7 +828,7 @@ value_t report_t::fn_nail_down(call_scope_t& args) {
 
   case value_t::BALANCE: {
     balance_t tmp;
-    foreach (const balance_t::amounts_map::value_type& pair, arg0.as_balance_lval().amounts) {
+    for (const balance_t::amounts_map::value_type& pair : arg0.as_balance_lval().amounts) {
       call_scope_t inner_args(*args.parent);
       inner_args.push_back(pair.second);
       inner_args.push_back(arg1);
@@ -839,7 +839,7 @@ value_t report_t::fn_nail_down(call_scope_t& args) {
 
   case value_t::SEQUENCE: {
     value_t tmp;
-    foreach (value_t& value, arg0.as_sequence_lval()) {
+    for (value_t& value : arg0.as_sequence_lval()) {
       call_scope_t inner_args(*args.parent);
       inner_args.push_back(value);
       inner_args.push_back(arg1);

@@ -57,19 +57,19 @@ void format_ptree::flush() {
                               Ledger_VERSION_PATCH));
 
   property_tree::ptree& ct(pt.put("ledger.commodities", ""));
-  foreach (const commodities_pair& pair, commodities)
+  for (const commodities_pair& pair : commodities)
     put_commodity(ct.add("commodity", ""), *pair.second, true);
 
   property_tree::ptree& at(pt.put("ledger.accounts", ""));
   put_account(at.add("account", ""), *report.session.journal->master, account_visited_p);
 
   property_tree::ptree& tt(pt.put("ledger.transactions", ""));
-  foreach (const xact_t* xact, transactions) {
+  for (const xact_t* xact : transactions) {
     property_tree::ptree& t(tt.add("transaction", ""));
     put_xact(t, *xact);
 
     property_tree::ptree& post_tree(t.put("postings", ""));
-    foreach (const post_t* post, xact->posts)
+    for (const post_t* post : xact->posts)
       if (post->has_xdata() && post->xdata().has_flags(POST_EXT_VISITED))
         put_post(post_tree.add("posting", ""), *post);
   }

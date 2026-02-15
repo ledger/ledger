@@ -63,7 +63,7 @@ void draft_t::xact_template_t::dump(std::ostream& out) const {
   if (posts.empty()) {
     out << std::endl << _("<Posting copied from last related transaction>") << std::endl;
   } else {
-    foreach (const post_template_t& post, posts) {
+    for (const post_template_t& post : posts) {
       out << std::endl << _f("[Posting \"%1%\"]") % (post.from ? _("from") : _("to")) << std::endl;
 
       if (post.account_mask)
@@ -193,7 +193,7 @@ void draft_t::parse_args(const value_t& args) {
     if (tmpl->posts.size() > 1 && tmpl->posts.back().account_mask && !tmpl->posts.back().amount)
       tmpl->posts.back().from = true;
 
-    foreach (xact_template_t::post_template_t& post_tmpl, tmpl->posts) {
+    for (xact_template_t::post_template_t& post_tmpl : tmpl->posts) {
       if (post_tmpl.from)
         has_only_to = false;
       else
@@ -312,7 +312,7 @@ xact_t* draft_t::insert(journal_t& journal) {
     if (matching) {
       DEBUG("draft.xact", "Template had no postings, copying from match");
 
-      foreach (post_t* post, matching->posts) {
+      for (post_t* post : matching->posts) {
         added->add_post(new post_t(*post));
         added->posts.back()->set_state(item_t::UNCLEARED);
       }
@@ -324,7 +324,7 @@ xact_t* draft_t::insert(journal_t& journal) {
     DEBUG("draft.xact", "Template had postings");
 
     bool any_post_has_amount = false;
-    foreach (xact_template_t::post_template_t& post, tmpl->posts) {
+    for (xact_template_t::post_template_t& post : tmpl->posts) {
       if (post.amount) {
         DEBUG("draft.xact", "  and at least one has an amount specified");
         any_post_has_amount = true;
@@ -332,7 +332,7 @@ xact_t* draft_t::insert(journal_t& journal) {
       }
     }
 
-    foreach (xact_template_t::post_template_t& post, tmpl->posts) {
+    for (xact_template_t::post_template_t& post : tmpl->posts) {
       unique_ptr<post_t> new_post;
 
       commodity_t* found_commodity = NULL;
@@ -341,7 +341,7 @@ xact_t* draft_t::insert(journal_t& journal) {
         if (post.account_mask) {
           DEBUG("draft.xact", "Looking for matching posting based on account mask");
 
-          foreach (post_t* x, matching->posts) {
+          for (post_t* x : matching->posts) {
             if (post.account_mask->match(x->account->fullname())) {
               new_post.reset(new post_t(*x));
               DEBUG("draft.xact", "Founding posting from line " << x->pos->beg_line);
@@ -402,7 +402,7 @@ xact_t* draft_t::insert(journal_t& journal) {
           // commodity used in that account
           for (xacts_list::reverse_iterator j = journal.xacts.rbegin(); j != journal.xacts.rend();
                j++) {
-            foreach (post_t* x, (*j)->posts) {
+            for (post_t* x : (*j)->posts) {
               if (x->account == acct && !x->amount.is_null()) {
                 new_post.reset(new post_t(*x));
                 DEBUG("draft.xact", "Found account in journal postings, setting new posting");

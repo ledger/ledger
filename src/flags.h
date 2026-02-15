@@ -58,7 +58,7 @@ public:
     TRACE_CTOR(supports_flags, "copy");
   }
   supports_flags(const flags_t& arg) : _flags(arg) { TRACE_CTOR(supports_flags, "const flags_t&"); }
-  ~supports_flags() throw() { TRACE_DTOR(supports_flags); }
+  ~supports_flags() noexcept { TRACE_DTOR(supports_flags); }
 
   supports_flags& operator=(const supports_flags& other) {
     _flags = other._flags;
@@ -90,7 +90,7 @@ public:
     TRACE_CTOR(basic_t, "const U&");
     supports_flags<T, U>::set_flags(static_cast<T>(bits));
   }
-  ~basic_t() throw() { TRACE_DTOR(basic_t); }
+  ~basic_t() noexcept { TRACE_DTOR(basic_t); }
 
   basic_t(const basic_t& other) : supports_flags<T, U>(other) { TRACE_CTOR(basic_t, "copy"); }
   basic_t& operator=(const basic_t& other) {
@@ -130,7 +130,7 @@ public:
   delegates_flags(supports_flags<T>& arg) : _flags(arg) {
     TRACE_CTOR(delegates_flags, "const supports_flags<T>&");
   }
-  ~delegates_flags() throw() { TRACE_DTOR(delegates_flags); }
+  ~delegates_flags() noexcept { TRACE_DTOR(delegates_flags); }
 
   flags_t flags() const { return _flags.flags(); }
   bool has_flags(const flags_t arg) const { return _flags.has_flags(arg); }

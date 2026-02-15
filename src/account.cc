@@ -40,7 +40,7 @@ namespace ledger {
 account_t::~account_t() {
   TRACE_DTOR(account_t);
 
-  foreach (accounts_map::value_type& pair, accounts) {
+  for (accounts_map::value_type& pair : accounts) {
     if (!pair.second->has_flags(ACCOUNT_TEMP) || has_flags(ACCOUNT_TEMP)) {
       checked_delete(pair.second);
     }
@@ -111,7 +111,7 @@ account_t* find_account_re_(account_t* account, const mask_t& regexp) {
   if (regexp.match(account->fullname()))
     return account;
 
-  foreach (accounts_map::value_type& pair, account->accounts)
+  for (accounts_map::value_type& pair : account->accounts)
     if (account_t* a = find_account_re_(pair.second, regexp))
       return a;
 
@@ -170,15 +170,15 @@ void account_t::add_deferred_post(const string& uuid, post_t* post) {
 
 void account_t::apply_deferred_posts() {
   if (deferred_posts) {
-    foreach (deferred_posts_map_t::value_type& pair, *deferred_posts) {
-      foreach (post_t* post, pair.second)
+    for (deferred_posts_map_t::value_type& pair : *deferred_posts) {
+      for (post_t* post : pair.second)
         post->account->add_post(post);
     }
     deferred_posts = none;
   }
 
   // Also apply in child accounts
-  foreach (const accounts_map::value_type& pair, accounts)
+  for (const accounts_map::value_type& pair : accounts)
     pair.second->apply_deferred_posts();
 }
 
@@ -373,7 +373,7 @@ value_t fn_any(call_scope_t& args) {
   account_t& account(args.context<account_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
-  foreach (post_t* p, account.posts) {
+  for (post_t* p : account.posts) {
     bind_scope_t bound_scope(args, *p);
     if (expr->calc(bound_scope, args.locus, args.depth).to_boolean())
       return true;
@@ -385,7 +385,7 @@ value_t fn_all(call_scope_t& args) {
   account_t& account(args.context<account_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
-  foreach (post_t* p, account.posts) {
+  for (post_t* p : account.posts) {
     bind_scope_t bound_scope(args, *p);
     if (!expr->calc(bound_scope, args.locus, args.depth).to_boolean())
       return false;
@@ -506,7 +506,7 @@ bool account_t::valid() const {
     return false;
   }
 
-  foreach (const accounts_map::value_type& pair, accounts) {
+  for (const accounts_map::value_type& pair : accounts) {
     if (this == pair.second) {
       DEBUG("ledger.validate", "account_t: parent refers to itself!");
       return false;
@@ -522,7 +522,7 @@ bool account_t::valid() const {
 }
 
 bool account_t::children_with_xdata() const {
-  foreach (const accounts_map::value_type& pair, accounts)
+  for (const accounts_map::value_type& pair : accounts)
     if (pair.second->has_xdata() || pair.second->children_with_xdata())
       return true;
 
@@ -533,7 +533,7 @@ std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const {
   std::size_t count = 0;
   bool grandchildren_visited = false;
 
-  foreach (const accounts_map::value_type& pair, accounts)
+  for (const accounts_map::value_type& pair : accounts)
     if (pair.second->has_xflags(flags) || pair.second->children_with_flags(flags))
       count++;
 
@@ -575,7 +575,7 @@ account_t::xdata_t::details_t& account_t::xdata_t::details_t::operator+=(const d
 void account_t::clear_xdata() {
   xdata_ = none;
 
-  foreach (accounts_map::value_type& pair, accounts)
+  for (accounts_map::value_type& pair : accounts)
     if (!pair.second->has_flags(ACCOUNT_TEMP))
       pair.second->clear_xdata();
 }
@@ -602,7 +602,7 @@ void account_t::clear_display_state() {
     xdata_->sort_values.clear();
   }
 
-  foreach (accounts_map::value_type& pair, accounts)
+  for (accounts_map::value_type& pair : accounts)
     if (!pair.second->has_flags(ACCOUNT_TEMP))
       pair.second->clear_display_state();
 }
@@ -665,7 +665,7 @@ value_t account_t::total(const optional<expr_t&>& expr) const {
     const_cast<account_t&>(*this).xdata().family_details.calculated = true;
 
     value_t temp;
-    foreach (const accounts_map::value_type& pair, accounts) {
+    for (const accounts_map::value_type& pair : accounts) {
       temp = pair.second->total(expr);
       if (!temp.is_null())
         add_or_set_value(xdata_->family_details.total, temp);
@@ -682,7 +682,7 @@ const account_t::xdata_t::details_t& account_t::self_details(bool gather_all) co
   if (!(xdata_ && xdata_->self_details.gathered)) {
     const_cast<account_t&>(*this).xdata().self_details.gathered = true;
 
-    foreach (const post_t* post, posts)
+    for (const post_t* post : posts)
       xdata_->self_details.update(const_cast<post_t&>(*post), gather_all);
   }
   return xdata_->self_details;
@@ -692,7 +692,7 @@ const account_t::xdata_t::details_t& account_t::family_details(bool gather_all) 
   if (!(xdata_ && xdata_->family_details.gathered)) {
     const_cast<account_t&>(*this).xdata().family_details.gathered = true;
 
-    foreach (const accounts_map::value_type& pair, accounts)
+    for (const accounts_map::value_type& pair : accounts)
       xdata_->family_details += pair.second->family_details(gather_all);
 
     xdata_->family_details += self_details(gather_all);
@@ -768,7 +768,7 @@ void put_account(property_tree::ptree& st, const account_t& acct,
     if (!total.is_null())
       put_value(st.put("account-total", ""), total);
 
-    foreach (const accounts_map::value_type& pair, acct.accounts)
+    for (const accounts_map::value_type& pair : acct.accounts)
       put_account(st.add("account", ""), *pair.second, pred);
   }
 }

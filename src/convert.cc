@@ -86,7 +86,7 @@ value_t convert_command(call_scope_t& args) {
   try {
     while (xact_t* xact = reader.read_xact(report.HANDLED(rich_data))) {
       if (report.HANDLED(invert)) {
-        foreach (post_t* post, xact->posts)
+        for (post_t* post : xact->posts)
           post->amount.in_place_negate();
       }
 

@@ -46,7 +46,7 @@ op_bool_tuple find_option(scope_t& scope, const string& name) {
     throw_(option_error, _f("Illegal option --%1%") % name);
   }
 
-  foreach (char ch, name) {
+  for (char ch : name) {
     if (ch == '-')
       *p++ = '_';
     else
@@ -215,7 +215,7 @@ strings_list process_arguments(strings_list args, scope_t& scope) {
         option_queue.push_back(op_bool_char_tuple(opt.first, opt.second, c));
       }
 
-      foreach (op_bool_char_tuple& o, option_queue) {
+      for (op_bool_char_tuple& o : option_queue) {
         const char* value = NULL;
         if (o.truth && ++i != args.end()) {
           value = (*i).c_str();

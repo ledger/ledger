@@ -102,8 +102,8 @@ commodity_t* py_pool_getitem(commodity_pool_t& pool, const string& symbol) {
 
 list py_pool_keys(commodity_pool_t& pool) {
   list keys;
-  BOOST_REVERSE_FOREACH(const commodity_pool_t::commodities_map::value_type& pair,
-                        pool.commodities) {
+  for (auto it = pool.commodities.rbegin(); it != pool.commodities.rend(); ++it) {
+    const auto& pair = *it;
     keys.insert(0, pair.first);
   }
   return keys;

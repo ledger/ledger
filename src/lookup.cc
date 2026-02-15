@@ -113,7 +113,7 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
     char_positions_map positions;
 
     // Walk each letter in the source identifier
-    foreach (const uint32_t& ch, lowered_ident.utf32chars) {
+    for (const uint32_t& ch : lowered_ident.utf32chars) {
       int addend = 0;
       bool added_bonus = false;
       std::size_t value_len = value_key.length();
@@ -248,7 +248,7 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
     DEBUG("lookup.account",
           "Payee: " << std::setw(5) << std::right << (*si).second << " - " << (*si).first->payee);
 
-    foreach (post_t* post, (*si).first->posts) {
+    for (post_t* post : (*si).first->posts) {
       if (!post->has_flags(ITEM_TEMP | ITEM_GENERATED) && post->account != ref_account &&
           !post->account->has_flags(ACCOUNT_TEMP | ACCOUNT_GENERATED)) {
         account_use_map::iterator x = account_usage.find(post->account);
@@ -264,7 +264,7 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
   if (account_usage.size() > 0) {
 #if DEBUG_ON
     if (SHOW_DEBUG("lookup.account")) {
-      foreach (const account_use_pair& value, account_usage) {
+      for (const account_use_pair& value : account_usage) {
         DEBUG("lookup.account", "Account: " << value.second << " - " << value.first->fullname());
       }
     }

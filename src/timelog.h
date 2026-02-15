@@ -74,7 +74,7 @@ public:
     TRACE_CTOR(time_xact_t, "copy");
   }
   time_xact_t& operator=(const time_xact_t&) = default;
-  ~time_xact_t() throw() { TRACE_DTOR(time_xact_t); }
+  ~time_xact_t() noexcept { TRACE_DTOR(time_xact_t); }
 };
 
 class time_log_t : public boost::noncopyable {

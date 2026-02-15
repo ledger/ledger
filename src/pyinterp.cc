@@ -462,7 +462,7 @@ object convert_value_to_python(const value_t& val) {
     return object(val);
   case value_t::SEQUENCE: { // a vector of value_t objects
     list arglist;
-    foreach (const value_t& elem, val.as_sequence())
+    for (const value_t& elem : val.as_sequence())
       arglist.append(elem);
     return arglist;
   }
@@ -507,7 +507,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args) {
       // jww (2009-11-05): What about a single argument which is a sequence,
       // rather than a sequence of arguments?
       if (args.value().is_sequence())
-        foreach (const value_t& value, args.value().as_sequence())
+        for (const value_t& value : args.value().as_sequence())
           arglist.append(convert_value_to_python(value));
       else
         arglist.append(convert_value_to_python(args.value()));

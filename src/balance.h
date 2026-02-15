@@ -268,14 +268,14 @@ public:
     return temp;
   }
   void in_place_negate() {
-    foreach (amounts_map::value_type& pair, amounts)
+    for (amounts_map::value_type& pair : amounts)
       pair.second.in_place_negate();
   }
   balance_t operator-() const { return negated(); }
 
   balance_t abs() const {
     balance_t temp;
-    foreach (const amounts_map::value_type& pair, amounts)
+    for (const amounts_map::value_type& pair : amounts)
       temp += pair.second.abs();
     return temp;
   }
@@ -286,7 +286,7 @@ public:
     return temp;
   }
   void in_place_round() {
-    foreach (amounts_map::value_type& pair, amounts)
+    for (amounts_map::value_type& pair : amounts)
       pair.second.in_place_round();
   }
 
@@ -297,7 +297,7 @@ public:
   }
 
   void in_place_roundto(int places) {
-    foreach (amounts_map::value_type& pair, amounts)
+    for (amounts_map::value_type& pair : amounts)
       pair.second.in_place_roundto(places);
   }
 
@@ -307,7 +307,7 @@ public:
     return temp;
   }
   void in_place_truncate() {
-    foreach (amounts_map::value_type& pair, amounts)
+    for (amounts_map::value_type& pair : amounts)
       pair.second.in_place_truncate();
   }
 
@@ -317,7 +317,7 @@ public:
     return temp;
   }
   void in_place_floor() {
-    foreach (amounts_map::value_type& pair, amounts)
+    for (amounts_map::value_type& pair : amounts)
       pair.second.in_place_floor();
   }
 
@@ -327,7 +327,7 @@ public:
     return temp;
   }
   void in_place_ceiling() {
-    foreach (amounts_map::value_type& pair, amounts)
+    for (amounts_map::value_type& pair : amounts)
       pair.second.in_place_ceiling();
   }
 
@@ -337,7 +337,7 @@ public:
     return temp;
   }
   void in_place_unround() {
-    foreach (amounts_map::value_type& pair, amounts)
+    for (amounts_map::value_type& pair : amounts)
       pair.second.in_place_unround();
   }
 
@@ -350,7 +350,7 @@ public:
     // A temporary must be used here because reduction may cause
     // multiple component amounts to collapse to the same commodity.
     balance_t temp;
-    foreach (const amounts_map::value_type& pair, amounts)
+    for (const amounts_map::value_type& pair : amounts)
       temp += pair.second.reduced();
     *this = temp;
   }
@@ -364,7 +364,7 @@ public:
     // A temporary must be used here because unreduction may cause
     // multiple component amounts to collapse to the same commodity.
     balance_t temp;
-    foreach (const amounts_map::value_type& pair, amounts)
+    for (const amounts_map::value_type& pair : amounts)
       temp += pair.second.unreduced();
     *this = temp;
   }
@@ -396,7 +396,7 @@ public:
     if (is_empty())
       return false;
 
-    foreach (const amounts_map::value_type& pair, amounts)
+    for (const amounts_map::value_type& pair : amounts)
       if (pair.second.is_nonzero())
         return true;
     return false;
@@ -406,7 +406,7 @@ public:
     if (is_empty())
       return true;
 
-    foreach (const amounts_map::value_type& pair, amounts)
+    for (const amounts_map::value_type& pair : amounts)
       if (!pair.second.is_zero())
         return false;
     return true;
@@ -416,7 +416,7 @@ public:
     if (is_empty())
       return true;
 
-    foreach (const amounts_map::value_type& pair, amounts)
+    for (const amounts_map::value_type& pair : amounts)
       if (!pair.second.is_realzero())
         return false;
     return true;
@@ -468,7 +468,7 @@ public:
 
   balance_t number() const {
     balance_t temp;
-    foreach (const amounts_map::value_type& pair, amounts)
+    for (const amounts_map::value_type& pair : amounts)
       temp += pair.second.number();
     return temp;
   }
@@ -534,7 +534,7 @@ public:
   void dump(std::ostream& out) const {
     out << "BALANCE(";
     bool first = true;
-    foreach (const amounts_map::value_type& pair, amounts) {
+    for (const amounts_map::value_type& pair : amounts) {
       if (first)
         first = false;
       else
@@ -545,7 +545,7 @@ public:
   }
 
   bool valid() const {
-    foreach (const amounts_map::value_type& pair, amounts)
+    for (const amounts_map::value_type& pair : amounts)
       if (!pair.second.valid()) {
         DEBUG("ledger.validate", "balance_t: ! pair.second.valid()");
         return false;

@@ -66,7 +66,7 @@ public:
   compare_items(const compare_items& other) : sort_order(other.sort_order), report(other.report) {
     TRACE_CTOR(compare_items, "copy");
   }
-  ~compare_items() throw() { TRACE_DTOR(compare_items); }
+  ~compare_items() noexcept { TRACE_DTOR(compare_items); }
 
   void find_sort_values(std::list<sort_value_t>& sort_values, scope_t& scope);
 

@@ -50,7 +50,7 @@ xact_base_t::~xact_base_t() {
   TRACE_DTOR(xact_base_t);
 
   if (!has_flags(ITEM_TEMP)) {
-    foreach (post_t* post, posts) {
+    for (post_t* post : posts) {
       // If the posting is a temporary, it will be destructed when the
       // temporary is.
       assert(!post->has_flags(ITEM_TEMP));
@@ -78,7 +78,7 @@ bool xact_base_t::remove_post(post_t* post) {
 }
 
 bool xact_base_t::has_xdata() {
-  foreach (post_t* post, posts)
+  for (post_t* post : posts)
     if (post->has_xdata())
       return true;
 
@@ -86,14 +86,14 @@ bool xact_base_t::has_xdata() {
 }
 
 void xact_base_t::clear_xdata() {
-  foreach (post_t* post, posts)
+  for (post_t* post : posts)
     if (!post->has_flags(ITEM_TEMP))
       post->clear_xdata();
 }
 
 value_t xact_base_t::magnitude() const {
   value_t halfbal = 0L;
-  foreach (const post_t* post, posts) {
+  for (const post_t* post : posts) {
     if (post->amount.sign() > 0) {
       if (post->cost)
         halfbal += *post->cost;
@@ -124,7 +124,7 @@ struct add_balancing_post {
       : first(other.first), xact(other.xact), null_post(other.null_post) {
     TRACE_CTOR(add_balancing_post, "copy");
   }
-  ~add_balancing_post() throw() { TRACE_DTOR(add_balancing_post); }
+  ~add_balancing_post() noexcept { TRACE_DTOR(add_balancing_post); }
 
   void operator()(const amount_t& amount) {
     if (first) {
@@ -149,7 +149,7 @@ bool xact_base_t::finalize() {
   value_t balance;
   post_t* null_post = NULL;
 
-  foreach (post_t* post, posts) {
+  for (post_t* post : posts) {
     if (!post->must_balance())
       continue;
 
@@ -205,7 +205,7 @@ bool xact_base_t::finalize() {
     bool saw_cost = false;
     post_t* top_post = NULL;
 
-    foreach (post_t* post, posts) {
+    for (post_t* post : posts) {
       if (!post->amount.is_null() && post->must_balance()) {
         if (post->amount.has_annotation())
           top_post = post;
@@ -241,7 +241,7 @@ bool xact_base_t::finalize() {
 
         DEBUG("xact.finalize", "per_unit_cost = " << per_unit_cost);
 
-        foreach (post_t* post, posts) {
+        for (post_t* post : posts) {
           const amount_t& amt(post->amount.reduced());
 
           if (post->must_balance() && amt.commodity() == comm) {
@@ -264,7 +264,7 @@ bool xact_base_t::finalize() {
   // commodity (e.g., EUR {=$1.32} and EUR {=$1.33}).
   if (!null_post && balance.is_balance() && balance.as_balance().amounts.size() > 2) {
     bool recompute = false;
-    foreach (post_t* post, posts) {
+    for (post_t* post : posts) {
       if (!post->cost &&
           !post->amount.is_null() &&
           post->must_balance() &&
@@ -290,7 +290,7 @@ bool xact_base_t::finalize() {
 
     if (recompute) {
       balance = NULL_VALUE;
-      foreach (post_t* post, posts) {
+      for (post_t* post : posts) {
         if (!post->must_balance())
           continue;
         amount_t& p(post->cost ? *post->cost : post->amount);
@@ -305,7 +305,7 @@ bool xact_base_t::finalize() {
   posts_list copy(posts);
 
   if (has_date()) {
-    foreach (post_t* post, copy) {
+    for (post_t* post : copy) {
       if (!post->cost)
         continue;
 
@@ -449,7 +449,7 @@ bool xact_base_t::finalize() {
     bool all_null = true;
     bool some_null = false;
 
-    foreach (post_t* post, posts) {
+    for (post_t* post : posts) {
       assert(post->account);
 
       if (!post->amount.is_null()) {
@@ -486,7 +486,7 @@ bool xact_base_t::verify() {
 
   value_t balance;
 
-  foreach (post_t* post, posts) {
+  for (post_t* post : posts) {
     if (!post->must_balance())
       continue;
 
@@ -505,7 +505,7 @@ bool xact_base_t::verify() {
   // more in terms of total cost, accounting for any possible gain/loss
   // amounts.
 
-  foreach (post_t* post, posts) {
+  for (post_t* post : posts) {
     if (!post->cost)
       continue;
 
@@ -561,7 +561,7 @@ value_t fn_any(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
-  foreach (post_t* p, post.xact->posts) {
+  for (post_t* p : post.xact->posts) {
     bind_scope_t bound_scope(args, *p);
     if (expr->calc(bound_scope, args.locus, args.depth).to_boolean())
       return true;
@@ -573,7 +573,7 @@ value_t fn_all(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
-  foreach (post_t* p, post.xact->posts) {
+  for (post_t* p : post.xact->posts) {
     bind_scope_t bound_scope(args, *p);
     if (!expr->calc(bound_scope, args.locus, args.depth).to_boolean())
       return false;
@@ -619,7 +619,7 @@ bool xact_t::valid() const {
     return false;
   }
 
-  foreach (post_t* post, posts)
+  for (post_t* post : posts)
     if (post->xact != this || !post->valid()) {
       DEBUG("ledger.validate", "xact_t: post not valid");
       return false;
@@ -652,7 +652,7 @@ string xact_t::hash(string nonce, hash_type_t hash_type) const {
   std::vector<std::string> strings;
 
   posts_list all_posts(posts.begin(), posts.end());
-  foreach (post_t* post, all_posts) {
+  for (post_t* post : all_posts) {
     std::ostringstream posting;
     posting << post->account->fullname();
     if (!post->amount.is_null())
@@ -666,7 +666,7 @@ string xact_t::hash(string nonce, hash_type_t hash_type) const {
 
   std::sort(strings.begin(), strings.end());
 
-  foreach (string& str, strings) {
+  for (string& str : strings) {
     repr << str;
   }
 
@@ -739,7 +739,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
 
     bool needs_further_verification = false;
 
-    foreach (post_t* initial_post, initial_posts) {
+    for (post_t* initial_post : initial_posts) {
       // Skip posts generated by auto transactions, but not balancing posts
       // generated by finalize() (which have both ITEM_GENERATED and POST_CALCULATED).
       // This ensures auto transactions can match all commodities in multi-commodity
@@ -782,7 +782,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
 
       if (matches_predicate) {
         if (deferred_notes) {
-          foreach (deferred_tag_data_t& data, *deferred_notes) {
+          for (deferred_tag_data_t& data : *deferred_notes) {
             if (data.apply_to_post == NULL)
               initial_post->append_note(apply_format(data.tag_data, bound_scope).c_str(),
                                         bound_scope, data.overwrite_existing);
@@ -790,7 +790,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
         }
 
         if (check_exprs) {
-          foreach (expr_t::check_expr_pair& pair, *check_exprs) {
+          for (expr_t::check_expr_pair& pair : *check_exprs) {
             if (pair.second == expr_t::EXPR_GENERAL) {
               pair.first.calc(bound_scope);
             } else if (!pair.first.calc(bound_scope).to_boolean()) {
@@ -802,7 +802,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
           }
         }
 
-        foreach (post_t* post, posts) {
+        for (post_t* post : posts) {
           amount_t post_amount;
           if (post->amount.is_null()) {
             if (!post->amount_expr)
@@ -909,7 +909,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
               journal->register_account(account->fullname(), new_post.get(), journal->master);
 
           if (deferred_notes) {
-            foreach (deferred_tag_data_t& data, *deferred_notes) {
+            for (deferred_tag_data_t& data : *deferred_notes) {
               if (!data.apply_to_post || data.apply_to_post == post) {
                 new_post->append_note(apply_format(data.tag_data, bound_scope).c_str(), bound_scope,
                                       data.overwrite_existing);

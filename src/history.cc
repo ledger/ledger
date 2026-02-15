@@ -293,7 +293,7 @@ void commodity_history_impl_t::map_prices(function<void(datetime_t, const amount
 
     const price_map_t& prices(get(ratiomap, edge));
 
-    foreach (const price_map_t::value_type& pair, prices) {
+    for (const price_map_t::value_type& pair : prices) {
       const datetime_t& when(pair.first);
 
       DEBUG("history.map", "Price " << pair.second << " on " << when);
@@ -482,7 +482,7 @@ template <class Name>
 class label_writer {
 public:
   label_writer(Name _name) : name(_name) { TRACE_CTOR(label_writer<Name>, "Name"); }
-  ~label_writer() throw() { TRACE_DTOR(label_writer<Name>); }
+  ~label_writer() noexcept { TRACE_DTOR(label_writer<Name>); }
 
   template <class VertexOrEdge>
   void operator()(std::ostream& out, const VertexOrEdge& v) const {

@@ -60,7 +60,7 @@ struct position_t {
     *this = pos;
     TRACE_CTOR(position_t, "copy");
   }
-  ~position_t() throw() { TRACE_DTOR(position_t); }
+  ~position_t() noexcept { TRACE_DTOR(position_t); }
 
   position_t& operator=(const position_t& pos) {
     if (this != &pos) {

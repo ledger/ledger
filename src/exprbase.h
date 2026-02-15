@@ -102,9 +102,9 @@ public:
     return *this;
   }
 
-  virtual operator bool() const throw() { return !str.empty(); }
+  virtual operator bool() const noexcept { return !str.empty(); }
 
-  virtual string text() const throw() { return str; }
+  virtual string text() const noexcept { return str; }
   void set_text(const string& txt) {
     str = txt;
     compiled = false;

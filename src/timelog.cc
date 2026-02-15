@@ -151,10 +151,10 @@ void time_log_t::close() {
   if (!time_xacts.empty()) {
     std::list<account_t*> accounts;
 
-    foreach (time_xact_t& time_xact, time_xacts)
+    for (time_xact_t& time_xact : time_xacts)
       accounts.push_back(time_xact.account);
 
-    foreach (account_t* account, accounts) {
+    for (account_t* account : accounts) {
       DEBUG("timelog", "Clocking out from account " << account->fullname());
       context.count += clock_out_from_timelog(
           time_xacts, time_xact_t(none, CURRENT_TIME(), false, account), context);
@@ -165,7 +165,7 @@ void time_log_t::close() {
 
 void time_log_t::clock_in(time_xact_t event) {
   if (!time_xacts.empty()) {
-    foreach (time_xact_t& time_xact, time_xacts) {
+    for (time_xact_t& time_xact : time_xacts) {
       if (event.account == time_xact.account)
         throw parse_error(_("Cannot double check-in to the same account"));
     }

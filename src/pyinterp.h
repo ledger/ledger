@@ -122,7 +122,7 @@ public:
     functor_t(const functor_t& other) : func(other.func), name(other.name) {
       TRACE_CTOR(functor_t, "copy");
     }
-    virtual ~functor_t() throw() { TRACE_DTOR(functor_t); }
+    virtual ~functor_t() noexcept { TRACE_DTOR(functor_t); }
     virtual value_t operator()(call_scope_t& args);
   };
 

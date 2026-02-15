@@ -125,7 +125,7 @@ struct date_traits_t {
       : has_year(traits.has_year), has_month(traits.has_month), has_day(traits.has_day) {
     TRACE_CTOR(date_traits_t, "copy");
   }
-  ~date_traits_t() throw() { TRACE_DTOR(date_traits_t); }
+  ~date_traits_t() noexcept { TRACE_DTOR(date_traits_t); }
 
   date_traits_t& operator=(const date_traits_t& traits) {
     has_year = traits.has_year;
@@ -151,7 +151,7 @@ struct date_duration_t {
   date_duration_t(const date_duration_t& dur) : quantum(dur.quantum), length(dur.length) {
     TRACE_CTOR(date_duration_t, "copy");
   }
-  ~date_duration_t() throw() { TRACE_DTOR(date_duration_t); }
+  ~date_duration_t() noexcept { TRACE_DTOR(date_duration_t); }
 
   date_t add(const date_t& date) const {
     switch (quantum) {
@@ -262,7 +262,7 @@ public:
     TRACE_CTOR(date_specifier_t, "copy");
   }
   date_specifier_t& operator=(const date_specifier_t&) = default;
-  ~date_specifier_t() throw() { TRACE_DTOR(date_specifier_t); }
+  ~date_specifier_t() noexcept { TRACE_DTOR(date_specifier_t); }
 
   date_t begin() const;
   date_t end() const;
@@ -315,7 +315,7 @@ public:
         end_inclusive(other.end_inclusive) {
     TRACE_CTOR(date_range_t, "date_range_t");
   }
-  ~date_range_t() throw() { TRACE_DTOR(date_range_t); }
+  ~date_range_t() noexcept { TRACE_DTOR(date_range_t); }
 
   optional<date_t> begin() const {
     if (range_begin)
@@ -371,7 +371,7 @@ public:
   date_specifier_or_range_t(const date_range_t& range) : specifier_or_range(range) {
     TRACE_CTOR(date_specifier_or_range_t, "date_range_t");
   }
-  ~date_specifier_or_range_t() throw() { TRACE_DTOR(date_specifier_or_range_t); }
+  ~date_specifier_or_range_t() noexcept { TRACE_DTOR(date_specifier_or_range_t); }
 
   optional<date_t> begin() const {
     if (specifier_or_range.type() == typeid(date_specifier_t))
@@ -429,7 +429,7 @@ public:
     TRACE_CTOR(date_interval_t, "copy");
   }
   date_interval_t& operator=(const date_interval_t&) = default;
-  ~date_interval_t() throw() { TRACE_DTOR(date_interval_t); }
+  ~date_interval_t() noexcept { TRACE_DTOR(date_interval_t); }
 
   bool operator==(const date_interval_t& other) const {
     return (start == other.start && (!start || *start == *other.start));

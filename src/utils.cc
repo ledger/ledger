@@ -143,7 +143,7 @@ inline void add_to_count_map(object_count_map& the_map, const char* name, std::s
 std::size_t current_memory_size() {
   std::size_t memory_size = 0;
 
-  foreach (const object_count_map::value_type& pair, *live_memory_count)
+  for (const object_count_map::value_type& pair : *live_memory_count)
     memory_size += pair.second.second;
 
   return memory_size;
@@ -321,7 +321,7 @@ void stream_memory_size(std::ostream& out, std::size_t size) {
 }
 
 void report_count_map(std::ostream& out, object_count_map& the_map) {
-  foreach (object_count_map::value_type& pair, the_map) {
+  for (object_count_map::value_type& pair : the_map) {
     out << "  " << std::right << std::setw(18);
     stream_commified_number(out, pair.second.first);
     out << "  " << std::right << std::setw(7);
@@ -334,7 +334,7 @@ void report_count_map(std::ostream& out, object_count_map& the_map) {
 std::size_t current_objects_size() {
   std::size_t objects_size = 0;
 
-  foreach (const object_count_map::value_type& pair, *live_object_count)
+  for (const object_count_map::value_type& pair : *live_object_count)
     objects_size += pair.second.second;
 
   return objects_size;
@@ -411,7 +411,7 @@ void report_memory(std::ostream& out, bool report_all) {
   if (live_memory->size() > 0) {
     out << "Live memory:" << std::endl;
 
-    foreach (const memory_map::value_type& pair, *live_memory) {
+    for (const memory_map::value_type& pair : *live_memory) {
       out << "  " << std::right << std::setw(18) << pair.first << "  " << std::right
           << std::setw(7);
       stream_memory_size(out, pair.second.second);
@@ -432,7 +432,7 @@ void report_memory(std::ostream& out, bool report_all) {
   if (live_objects->size() > 0) {
     out << "Live objects:" << std::endl;
 
-    foreach (const objects_map::value_type& pair, *live_objects) {
+    for (const objects_map::value_type& pair : *live_objects) {
       out << "  " << std::right << std::setw(18) << pair.first << "  " << std::right
           << std::setw(7);
       stream_memory_size(out, pair.second.second);

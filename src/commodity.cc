@@ -261,7 +261,7 @@ bool is_reserved_token(const char* buf) {
 } // namespace
 
 bool commodity_t::symbol_needs_quotes(const string& symbol) {
-  foreach (char ch, symbol)
+  for (char ch : symbol)
     if (invalid_chars[static_cast<unsigned char>(ch)])
       return true;
 

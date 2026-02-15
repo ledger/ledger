@@ -448,7 +448,7 @@ public:
       : item_handler<post_t>(handler), also_matching(_also_matching) {
     TRACE_CTOR(related_posts, "post_handler_ptr, const bool");
   }
-  virtual ~related_posts() throw() { TRACE_DTOR(related_posts); }
+  virtual ~related_posts() noexcept { TRACE_DTOR(related_posts); }
 
   virtual void flush() override;
   virtual void operator()(post_t& post) override {
@@ -599,7 +599,7 @@ protected:
           must_balance(av.must_balance) {
       TRACE_CTOR(acct_value_t, "copy");
     }
-    ~acct_value_t() throw() { TRACE_DTOR(acct_value_t); }
+    ~acct_value_t() noexcept { TRACE_DTOR(acct_value_t); }
   };
 
   typedef std::map<string, acct_value_t> values_map;
@@ -665,7 +665,7 @@ public:
     create_accounts();
     TRACE_CTOR(interval_posts, "post_handler_ptr, expr_t&, date_interval_t, bool, bool");
   }
-  virtual ~interval_posts() throw() { TRACE_DTOR(interval_posts); }
+  virtual ~interval_posts() noexcept { TRACE_DTOR(interval_posts); }
 
   void create_accounts() { empty_account = &temps.create_account(_("<None>")); }
 
@@ -712,7 +712,7 @@ public:
     create_accounts();
     TRACE_CTOR(posts_as_equity, "post_handler_ptr, expr_t&");
   }
-  virtual ~posts_as_equity() throw() { TRACE_DTOR(posts_as_equity); }
+  virtual ~posts_as_equity() noexcept { TRACE_DTOR(posts_as_equity); }
 
   void create_accounts() {
     equity_account = &temps.create_account(_("Equity"));
@@ -802,7 +802,7 @@ public:
       : subtotal_posts(handler, amount_expr) {
     TRACE_CTOR(day_of_week_posts, "post_handler_ptr, bool");
   }
-  virtual ~day_of_week_posts() throw() { TRACE_DTOR(day_of_week_posts); }
+  virtual ~day_of_week_posts() noexcept { TRACE_DTOR(day_of_week_posts); }
 
   virtual void flush() override;
   virtual void operator()(post_t& post) override {
@@ -865,7 +865,7 @@ public:
       : generate_posts(handler), flags(_flags), terminus(_terminus) {
     TRACE_CTOR(budget_posts, "post_handler_ptr, date_t, uint_least8_t");
   }
-  virtual ~budget_posts() throw() { TRACE_DTOR(budget_posts); }
+  virtual ~budget_posts() noexcept { TRACE_DTOR(budget_posts); }
 
   void report_budget_items(const date_t& date);
 
@@ -885,7 +885,7 @@ public:
         forecast_years(_forecast_years) {
     TRACE_CTOR(forecast_posts, "post_handler_ptr, predicate_t, scope_t&, std::size_t");
   }
-  virtual ~forecast_posts() throw() { TRACE_DTOR(forecast_posts); }
+  virtual ~forecast_posts() noexcept { TRACE_DTOR(forecast_posts); }
 
   virtual void add_post(const date_interval_t& period, post_t& post) override;
   virtual void flush() override;
@@ -907,7 +907,7 @@ class inject_posts : public item_handler<post_t> {
 public:
   inject_posts(post_handler_ptr handler, const string& tag_list, account_t* master);
 
-  virtual ~inject_posts() throw() {
+  virtual ~inject_posts() noexcept {
     TRACE_DTOR(inject_posts);
     handler.reset();
   }

@@ -186,7 +186,7 @@ shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& query) 
     coll->report.normalize_options("register");
 
     value_t args;
-    foreach (const string& arg, remaining)
+    for (const string& arg : remaining)
       args.push_back(string_value(arg));
     coll->report.parse_query_args(args, "@Journal.query");
 
