@@ -34,52 +34,30 @@
  */
 
 /**
- * @file   convert.h
+ * @file   types.h
  * @author John Wiegley
  *
  * @ingroup data
  */
 #pragma once
 
-#include "chain.h"
-#include "predicate.h"
-#include "format.h"
+#include <list>
+#include <map>
+#include <memory>
+#include <string>
 
 namespace ledger {
 
-class xact_t;
 class post_t;
-class report_t;
+class xact_t;
+class auto_xact_t;
+class period_xact_t;
+class account_t;
 
-class print_xacts : public item_handler<post_t> {
-protected:
-  typedef std::list<xact_t*> xacts_list;
-  typedef std::map<xact_t*, bool> xacts_present_map;
-
-  report_t& report;
-  xacts_present_map xacts_present;
-  xacts_list xacts;
-  bool print_raw;
-  bool first_title;
-
-public:
-  print_xacts(report_t& _report, bool _print_raw = false)
-      : report(_report), print_raw(_print_raw), first_title(true) {
-    TRACE_CTOR(print_xacts, "report&, bool");
-  }
-  virtual ~print_xacts() { TRACE_DTOR(print_xacts); }
-
-  virtual void title(const string&) override;
-
-  virtual void flush() override;
-  virtual void operator()(post_t& post) override;
-
-  virtual void clear() override {
-    xacts_present.clear();
-    xacts.clear();
-
-    item_handler<post_t>::clear();
-  }
-};
+typedef std::list<post_t *>                          posts_list;
+typedef std::list<xact_t *>                          xacts_list;
+typedef std::list<std::unique_ptr<auto_xact_t>>      auto_xacts_list;
+typedef std::list<period_xact_t *>                   period_xacts_list;
+typedef std::map<std::string, account_t *>           accounts_map;
 
 } // namespace ledger

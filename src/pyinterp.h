@@ -60,11 +60,11 @@ public:
 
   void import_module(const string& name, bool import_direct = false);
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   void define_global(const string& name, boost::python::object obj) { module_globals[name] = obj; }
 
-  virtual string description() { return module_name; }
+  virtual string description() override { return module_name; }
 };
 
 typedef std::map<PyObject*, shared_ptr<python_module_t>> python_module_map_t;
@@ -128,7 +128,7 @@ public:
 
   option_t<python_interpreter_t>* lookup_option(const char* p);
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   OPTION_(python_interpreter_t, import_, DO_(str) { parent->import_option(str); });
 };

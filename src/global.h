@@ -62,7 +62,7 @@ public:
       report_stack.front().quick_close();
   }
 
-  virtual string description() { return _("global scope"); }
+  virtual string description() override { return _("global scope"); }
 
   void parse_init(path init_file);
   void read_init();
@@ -140,7 +140,7 @@ See LICENSE file included with the distribution for details and disclaimer.");
 
   option_t<global_scope_t>* lookup_option(const char* p);
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   OPTION(global_scope_t, args_only);
   OPTION(global_scope_t, debug_);

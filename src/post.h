@@ -96,7 +96,7 @@ public:
   }
   virtual ~post_t() { TRACE_DTOR(post_t); }
 
-  virtual string description() {
+  virtual string description() override {
     if (pos) {
       std::ostringstream buf;
       buf << _f("posting at line %1%") % pos->beg_line;
@@ -106,19 +106,19 @@ public:
     }
   }
 
-  virtual bool has_tag(const string& tag, bool inherit = true) const;
+  virtual bool has_tag(const string& tag, bool inherit = true) const override;
   virtual bool has_tag(const mask_t& tag_mask, const optional<mask_t>& value_mask = none,
-                       bool inherit = true) const;
+                       bool inherit = true) const override;
 
-  virtual optional<value_t> get_tag(const string& tag, bool inherit = true) const;
+  virtual optional<value_t> get_tag(const string& tag, bool inherit = true) const override;
   virtual optional<value_t> get_tag(const mask_t& tag_mask,
                                     const optional<mask_t>& value_mask = none,
-                                    bool inherit = true) const;
+                                    bool inherit = true) const override;
 
   virtual date_t value_date() const;
-  virtual date_t date() const;
-  virtual date_t primary_date() const;
-  virtual optional<date_t> aux_date() const;
+  virtual date_t date() const override;
+  virtual date_t primary_date() const override;
+  virtual optional<date_t> aux_date() const override;
 
   string payee_from_tag() const;
   string payee() const;
@@ -128,14 +128,14 @@ public:
     return !(has_flags(POST_VIRTUAL) || has_flags(POST_IS_TIMELOG)) || has_flags(POST_MUST_BALANCE);
   }
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   amount_t resolve_expr(scope_t& scope, expr_t& expr);
 
   std::size_t xact_id() const;
   std::size_t account_id() const;
 
-  virtual void copy_details(const item_t& item) {
+  virtual void copy_details(const item_t& item) override {
     const post_t& post(dynamic_cast<const post_t&>(item));
     xdata_ = post.xdata_;
     item_t::copy_details(item);

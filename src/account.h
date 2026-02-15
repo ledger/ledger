@@ -42,17 +42,12 @@
 #pragma once
 
 #include "scope.h"
+#include "types.h"
 
 namespace ledger {
 
 using namespace boost::placeholders;
 
-class account_t;
-class xact_t;
-class post_t;
-
-typedef std::list<post_t*> posts_list;
-typedef std::map<string, account_t*> accounts_map;
 typedef std::map<string, posts_list> deferred_posts_map_t;
 
 class account_t : public flags::supports_flags<>, public scope_t {
@@ -86,7 +81,7 @@ public:
   }
   virtual ~account_t();
 
-  virtual string description() { return string(_("account ")) + fullname(); }
+  virtual string description() override { return string(_("account ")) + fullname(); }
 
   operator string() const { return fullname(); }
   string fullname() const;
@@ -122,7 +117,7 @@ public:
   posts_list::iterator posts_begin() { return posts.begin(); }
   posts_list::iterator posts_end() { return posts.end(); }
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   bool valid() const;
 

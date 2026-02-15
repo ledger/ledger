@@ -153,15 +153,15 @@ public:
 
   virtual ~annotated_commodity_t() { TRACE_DTOR(annotated_commodity_t); }
 
-  virtual bool operator==(const commodity_t& comm) const;
+  virtual bool operator==(const commodity_t& comm) const override;
   virtual bool operator==(const annotated_commodity_t& comm) const {
     return *this == static_cast<const commodity_t&>(comm);
   }
 
-  virtual commodity_t& referent() { return *ptr; }
-  virtual const commodity_t& referent() const { return *ptr; }
+  virtual commodity_t& referent() override { return *ptr; }
+  virtual const commodity_t& referent() const override { return *ptr; }
 
-  virtual optional<expr_t> value_expr() const {
+  virtual optional<expr_t> value_expr() const override {
     if (details.value_expr)
       return details.value_expr;
     return commodity_t::value_expr();
@@ -169,12 +169,12 @@ public:
 
   optional<price_point_t> virtual find_price(const commodity_t* commodity = NULL,
                                              const datetime_t& moment = datetime_t(),
-                                             const datetime_t& oldest = datetime_t()) const;
+                                             const datetime_t& oldest = datetime_t()) const override;
 
-  virtual commodity_t& strip_annotations(const keep_details_t& what_to_keep);
+  virtual commodity_t& strip_annotations(const keep_details_t& what_to_keep) override;
 
   virtual void print(std::ostream& out, bool elide_quotes = false,
-                     bool print_annotations = false) const {
+                     bool print_annotations = false) const override {
     if (print_annotations) {
       std::ostringstream buf;
       commodity_t::print(buf, elide_quotes);
@@ -185,7 +185,7 @@ public:
     }
   }
 
-  virtual void write_annotations(std::ostream& out, bool no_computed_annotations = false) const;
+  virtual void write_annotations(std::ostream& out, bool no_computed_annotations = false) const override;
 };
 
 inline annotated_commodity_t& as_annotated_commodity(commodity_t& commodity) {

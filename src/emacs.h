@@ -65,12 +65,12 @@ public:
   ~format_emacs_posts() { TRACE_DTOR(format_emacs_posts); }
 
   virtual void write_xact(xact_t& xact);
-  virtual void flush() {
+  virtual void flush() override {
     if (last_xact)
       out << "))\n";
     out.flush();
   }
-  virtual void operator()(post_t& post);
+  virtual void operator()(post_t& post) override;
   virtual string escape_string(string raw);
 };
 

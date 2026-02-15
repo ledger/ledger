@@ -165,8 +165,8 @@ public:
   void set_state(state_t new_state) { _state = new_state; }
   virtual state_t state() const { return _state; }
 
-  virtual void define(const symbol_t::kind_t, const string&, expr_t::ptr_op_t);
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
+  virtual void define(const symbol_t::kind_t, const string&, expr_t::ptr_op_t) override;
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   bool valid() const;
 };

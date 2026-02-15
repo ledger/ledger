@@ -75,7 +75,7 @@ public:
     parsing_context.pop();
   }
 
-  virtual string description() { return _("current session"); }
+  virtual string description() override { return _("current session"); }
 
   void set_flush_on_next_data_file(const bool truth) { flush_on_next_data_file = truth; }
 
@@ -120,7 +120,7 @@ public:
 
   option_t<session_t>* lookup_option(const char* p);
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   /**
    * Option handlers

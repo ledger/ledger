@@ -191,8 +191,8 @@ public:
   vartype var;                                                                                     \
   name##option_t() : option_t<type>(#name), var value
 
-#define DO() virtual void handler_thunk(const optional<string>& whence)
-#define DO_(var) virtual void handler_thunk(const optional<string>& whence, const string& var)
+#define DO() virtual void handler_thunk(const optional<string>& whence) override
+#define DO_(var) virtual void handler_thunk(const optional<string>& whence, const string& var) override
 
 #define END(name) name##handler
 

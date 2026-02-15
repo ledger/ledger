@@ -66,13 +66,13 @@ public:
 
   explicit data_streambuffer_t(GpgME::Data& _data);
 
-  virtual int_type underflow();
+  virtual int_type underflow() override;
 
 protected:
   virtual std::streambuf::pos_type seekpos(std::streambuf::pos_type sp,
-                                           std::ios_base::openmode which);
+                                           std::ios_base::openmode which) override;
   virtual std::streambuf::pos_type seekoff(std::streambuf::off_type off, std::ios_base::seekdir dir,
-                                           std::ios_base::openmode which);
+                                           std::ios_base::openmode which) override;
 };
 
 class decrypted_stream_t : public std::istream {

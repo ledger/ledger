@@ -86,7 +86,7 @@ public:
 
   expr_t& operator=(const expr_t& _expr);
 
-  virtual operator bool() const throw();
+  virtual operator bool() const throw() override;
 
   ptr_op_t get_op() throw();
 
@@ -96,9 +96,9 @@ public:
   }
 
   virtual void parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT,
-                     const optional<string>& original_string = none);
-  virtual void compile(scope_t& scope);
-  virtual value_t real_calc(scope_t& scope);
+                     const optional<string>& original_string = none) override;
+  virtual void compile(scope_t& scope) override;
+  virtual value_t real_calc(scope_t& scope) override;
 
   bool is_constant() const;
   value_t& constant_value();
@@ -109,9 +109,9 @@ public:
   fast_path_t fast_path() const { return fast_path_; }
   void set_fast_path(fast_path_t fp) { fast_path_ = fp; }
 
-  virtual string context_to_str() const;
-  virtual void print(std::ostream& out) const;
-  virtual void dump(std::ostream& out) const;
+  virtual string context_to_str() const override;
+  virtual void print(std::ostream& out) const override;
+  virtual void dump(std::ostream& out) const override;
 
 private:
   void detect_fast_path();
@@ -174,7 +174,7 @@ public:
   }
   void remove(const string& expr) { exprs.remove(expr); }
 
-  virtual void compile(scope_t& scope);
+  virtual void compile(scope_t& scope) override;
 };
 
 class call_scope_t;

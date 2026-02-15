@@ -96,14 +96,14 @@ public:
 
   void parse_args(const value_t& args);
 
-  virtual result_type real_calc(scope_t&) {
+  virtual result_type real_calc(scope_t&) override {
     assert(false);
     return true;
   }
 
   xact_t* insert(journal_t& journal);
 
-  virtual void dump(std::ostream& out) const {
+  virtual void dump(std::ostream& out) const override {
     if (tmpl)
       tmpl->dump(out);
   }
