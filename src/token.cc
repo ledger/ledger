@@ -44,7 +44,7 @@ int expr_t::token_t::parse_reserved_word(std::istream& in) {
     length = 0;
 
     char buf[6];
-    READ_INTO_(in, buf, 5, c, length, std::isalpha(c));
+    READ_INTO_(in, buf, 5, c, length, std::isalpha(static_cast<unsigned char>(c)));
 
     switch (buf[0]) {
     case 'a':
@@ -131,7 +131,7 @@ void expr_t::token_t::parse_ident(std::istream& in) {
 
   int c;
   char buf[256];
-  READ_INTO_(in, buf, 255, c, length, std::isalpha(c) || c == '_');
+  READ_INTO_(in, buf, 255, c, length, std::isalpha(static_cast<unsigned char>(c)) || c == '_');
 
   value.set_string(buf);
 }
@@ -376,7 +376,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
 
     // First, check to see if it's a reserved word, such as: and or not
     int result = parse_reserved_word(in);
-    if (std::isalpha(c) && result == 1)
+    if (std::isalpha(static_cast<unsigned char>(c)) && result == 1)
       break;
 
     // If not, rewind back to the beginning of the word to scan it
@@ -414,7 +414,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
 
         c = in.peek();
         if (c != -1) {
-          if (!std::isalpha(c) && c != '_')
+          if (!std::isalpha(static_cast<unsigned char>(c)) && c != '_')
             expected('\0', c);
 
           parse_ident(in);

@@ -875,7 +875,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
 
           // Copy over details so that the resulting post is a mirror of
           // the automated xact's one.
-          post_t* new_post = new post_t(account, amt);
+          auto new_post = std::make_unique<post_t>(account, amt);
           new_post->copy_details(*post);
           if (post->cost)
             new_post->cost = post->cost;
@@ -906,7 +906,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
 
           new_post->add_flags(ITEM_GENERATED);
           new_post->account =
-              journal->register_account(account->fullname(), new_post, journal->master);
+              journal->register_account(account->fullname(), new_post.get(), journal->master);
 
           if (deferred_notes) {
             foreach (deferred_tag_data_t& data, *deferred_notes) {
@@ -919,14 +919,15 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
 
           extend_post(*new_post, *journal);
 
-          xact.add_post(new_post);
-          new_post->account->add_post(new_post);
+          post_t* raw_post = new_post.release();
+          xact.add_post(raw_post);
+          raw_post->account->add_post(raw_post);
 
           // Add flags so this post updates the account balance
-          new_post->xdata().add_flags(POST_EXT_VISITED);
-          new_post->account->xdata().add_flags(ACCOUNT_EXT_VISITED);
+          raw_post->xdata().add_flags(POST_EXT_VISITED);
+          raw_post->account->xdata().add_flags(ACCOUNT_EXT_VISITED);
 
-          if (new_post->must_balance())
+          if (raw_post->must_balance())
             needs_further_verification = true;
         }
       }

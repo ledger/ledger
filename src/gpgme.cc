@@ -178,7 +178,7 @@ istream* decrypted_stream_t::open_stream(const path& filename) {
 }
 
 decrypted_stream_t::decrypted_stream_t(path& filename)
-    : istream(new data_streambuffer_t(*new Data())) {
+    : istream(nullptr), file(nullptr) {
   init_lib();
 
   file = open_file(filename);
@@ -191,16 +191,18 @@ decrypted_stream_t::decrypted_stream_t(path& filename)
     file = nullptr;
   }
 
-  set_rdbuf(new data_streambuffer_t(*dec_d.get()));
+  rdbuf(new data_streambuffer_t(*dec_d.get()));
   clear();
 }
 
 decrypted_stream_t::decrypted_stream_t(shared_ptr<Data> dec_d)
-    : istream(new data_streambuffer_t(*dec_d.get())), dec_d(dec_d), file(nullptr) {
+    : istream(nullptr), dec_d(dec_d), file(nullptr) {
+  rdbuf(new data_streambuffer_t(*dec_d.get()));
   clear();
 }
 
 decrypted_stream_t::~decrypted_stream_t() {
+  delete rdbuf();
   if (file)
     fclose(file);
 }

@@ -1308,12 +1308,10 @@ void instance_t::python_directive(char*) {
 #endif // HAVE_BOOST_PYTHON
 
 bool instance_t::general_directive(char* line) {
-  char buf[8192];
+  std::string buf(line);
 
-  std::strcpy(buf, line);
-
-  char* p = buf;
-  char* arg = next_element(buf);
+  char* p = &buf[0];
+  char* arg = next_element(&buf[0]);
 
   if (*p == '@' || *p == '!')
     p++;
@@ -1446,8 +1444,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
   post->pos->beg_line = context.linenum;
   post->pos->sequence = context.sequence++;
 
-  char buf[parse_context_t::MAX_LINE + 1];
-  std::strcpy(buf, line);
+  std::string buf(line);
   std::streamsize beg = 0;
 
   try {
