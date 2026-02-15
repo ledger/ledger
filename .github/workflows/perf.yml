@@ -1,0 +1,104 @@
+name: Performance
+
+on:
+  pull_request:
+    branches: master
+
+env:
+  # Maximum allowed regression percentage for any single benchmark.
+  PERF_THRESHOLD: "2.0"
+  # Number of measured runs per benchmark command (higher = more stable).
+  PERF_RUNS: "15"
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        name: Check out PR branch
+        with:
+          fetch-depth: 0
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=channel:nixpkgs-unstable
+
+      # Save PR versions of flake and benchmark files so we can restore them
+      # after switching to the base branch.  nix develop must always use the
+      # PR flake (which includes hyperfine and LLVM tools).
+      - name: Save PR support files
+        run: |
+          mkdir -p /tmp/pr-files
+          cp flake.nix flake.lock /tmp/pr-files/
+          cp benchmark/run_benchmark.sh benchmark/compare_benchmarks.py \
+             benchmark/gen_benchmark.py /tmp/pr-files/
+
+      # --- Build and benchmark the PR branch ---
+
+      - name: Build PR branch
+        run: |
+          nix develop --command bash -c "
+            cmake -B build-pr \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_CXX_COMPILER=clang++ \
+              -DDISABLE_ASSERTS=ON
+            cmake --build build-pr -- -j\$(nproc)
+          "
+
+      - name: Benchmark PR branch
+        run: |
+          nix develop --command bash -c "
+            python3 benchmark/gen_benchmark.py
+            ./benchmark/run_benchmark.sh build-pr/ledger pr_results.json
+          "
+        env:
+          HYPERFINE_RUNS: ${{ env.PERF_RUNS }}
+
+      # --- Build and benchmark the base branch ---
+
+      - name: Check out base branch
+        run: git checkout ${{ github.event.pull_request.base.sha }}
+
+      - name: Restore PR support files
+        run: |
+          cp /tmp/pr-files/flake.nix /tmp/pr-files/flake.lock .
+          mkdir -p benchmark
+          cp /tmp/pr-files/run_benchmark.sh /tmp/pr-files/compare_benchmarks.py \
+             /tmp/pr-files/gen_benchmark.py benchmark/
+
+      - name: Build base branch
+        run: |
+          nix develop --command bash -c "
+            cmake -B build-base \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_CXX_COMPILER=clang++ \
+              -DDISABLE_ASSERTS=ON
+            cmake --build build-base -- -j\$(nproc)
+          "
+
+      - name: Benchmark base branch
+        run: |
+          nix develop --command bash -c "
+            python3 benchmark/gen_benchmark.py
+            ./benchmark/run_benchmark.sh build-base/ledger base_results.json
+          "
+        env:
+          HYPERFINE_RUNS: ${{ env.PERF_RUNS }}
+
+      # --- Compare results ---
+
+      - name: Compare benchmark results
+        run: |
+          python3 benchmark/compare_benchmarks.py \
+            base_results.json pr_results.json \
+            --threshold ${{ env.PERF_THRESHOLD }}
+
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            base_results.json
+            pr_results.json
+          retention-days: 30
