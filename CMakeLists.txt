@@ -72,6 +72,24 @@ endif()
 if(USE_GCOV)
   add_compile_options(-fprofile-arcs -ftest-coverage)
   add_link_options(-fprofile-arcs -ftest-coverage)
+
+  find_program(LCOV lcov)
+  find_program(GENHTML genhtml)
+  if(LCOV AND GENHTML)
+    add_custom_target(coverage
+      COMMAND ${LCOV} --capture --directory . --output-file coverage.info
+              --ignore-errors mismatch
+      COMMAND ${LCOV} --remove coverage.info '/usr/*' '*/test/*' '*/boost/*' '*/nix/store/*'
+              --output-file coverage.info --ignore-errors unused
+      COMMAND ${GENHTML} coverage.info --output-directory coverage_html
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      COMMENT "Generating code coverage report in coverage_html/"
+    )
+    add_custom_target(coverage-clean
+      COMMAND find ${CMAKE_BINARY_DIR} -name '*.gcda' -delete
+      COMMENT "Removing .gcda files for fresh coverage run"
+    )
+  endif()
 endif()
 
 if(USE_SANITIZERS)
@@ -104,6 +122,18 @@ if(CLANG_PROFILE_DATA)
   add_link_options(-fprofile-instr-use=${CLANG_PROFILE_DATA})
 endif()
 
+option(USE_ASAN "Enable AddressSanitizer only" OFF)
+option(USE_UBSAN "Enable UndefinedBehaviorSanitizer only" OFF)
+
+if(USE_ASAN)
+  add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+  add_link_options(-fsanitize=address)
+endif()
+
+if(USE_UBSAN)
+  add_compile_options(-fsanitize=undefined)
+  add_link_options(-fsanitize=undefined)
+endif()
 ########################################################################
 
 if(USE_PYTHON)
