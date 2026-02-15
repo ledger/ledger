@@ -1,0 +1,9 @@
+flake.nix
+  58f27f27cf917540 108-110
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "bed62f4f82bf3942d45029a41942a560e54b7eb1",
+  "prompts": {}
+}
