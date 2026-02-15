@@ -58,13 +58,14 @@ void create_timelog_xact(const time_xact_t& in_event, const time_xact_t& out_eve
   amt.parse(buf);
   VERIFY(amt.valid());
 
-  post_t* post = new post_t(in_event.account, amt, POST_IS_TIMELOG);
+  auto post = std::make_unique<post_t>(in_event.account, amt, POST_IS_TIMELOG);
   post->set_state(out_event.completed ? item_t::CLEARED : item_t::UNCLEARED);
   post->pos = in_event.position;
   post->checkin = in_event.checkin;
   post->checkout = out_event.checkin;
-  curr->add_post(post);
-  in_event.account->add_post(post);
+  post_t* raw_post = post.release();
+  curr->add_post(raw_post);
+  in_event.account->add_post(raw_post);
 
   if (!context.journal->add_xact(curr.get()))
     throw parse_error(_("Failed to record 'out' timelog transaction"));
