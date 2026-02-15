@@ -24,6 +24,8 @@ set(LEDGER_SOURCES
   iterators.cc
   timelog.cc
   textual.cc
+  textual_directives.cc
+  textual_xacts.cc
   temps.cc
   journal.cc
   account.cc
