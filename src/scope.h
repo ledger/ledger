@@ -90,8 +90,8 @@ public:
   empty_scope_t() { TRACE_CTOR(empty_scope_t, ""); }
   ~empty_scope_t() throw() { TRACE_DTOR(empty_scope_t); }
 
-  virtual string description() { return _("<empty>"); }
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t, const string&) { return NULL; }
+  virtual string description() override { return _("<empty>"); }
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t, const string&) override { return NULL; }
 };
 
 class child_scope_t : public noncopyable, public scope_t {
@@ -104,12 +104,12 @@ public:
   }
   virtual ~child_scope_t() { TRACE_DTOR(child_scope_t); }
 
-  virtual void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) {
+  virtual void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) override {
     if (parent)
       parent->define(kind, name, def);
   }
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) {
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override {
     if (parent)
       return parent->lookup(kind, name);
     return NULL;
@@ -129,14 +129,14 @@ public:
   }
   virtual ~bind_scope_t() { TRACE_DTOR(bind_scope_t); }
 
-  virtual string description() { return grandchild.description(); }
+  virtual string description() override { return grandchild.description(); }
 
-  virtual void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) {
+  virtual void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) override {
     parent->define(kind, name, def);
     grandchild.define(kind, name, def);
   }
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) {
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override {
     if (expr_t::ptr_op_t def = grandchild.lookup(kind, name))
       return def;
     return child_scope_t::lookup(kind, name);
@@ -160,7 +160,7 @@ public:
   }
   virtual ~lexical_scope_t() { TRACE_DTOR(lexical_scope_t); }
 
-  virtual void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) {
+  virtual void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) override {
     grandchild.define(kind, name, def);
   }
 };
@@ -213,7 +213,7 @@ public:
   }
   virtual ~symbol_scope_t() { TRACE_DTOR(symbol_scope_t); }
 
-  virtual string description() {
+  virtual string description() override {
     if (parent)
       return parent->description();
     else
@@ -221,9 +221,9 @@ public:
     return empty_string;
   }
 
-  virtual void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def);
+  virtual void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) override;
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 };
 
 class context_scope_t : public child_scope_t {
@@ -238,10 +238,10 @@ public:
   }
   virtual ~context_scope_t() { TRACE_DTOR(context_scope_t); }
 
-  virtual string description() { return parent->description(); }
+  virtual string description() override { return parent->description(); }
 
-  virtual value_t::type_t type_context() const { return value_type_context; }
-  virtual bool type_required() const { return required; }
+  virtual value_t::type_t type_context() const override { return value_type_context; }
+  virtual bool type_required() const override { return required; }
 };
 
 class call_scope_t : public context_scope_t {
@@ -500,9 +500,9 @@ public:
   }
   ~value_scope_t() throw() { TRACE_DTOR(value_scope_t); }
 
-  virtual string description() { return parent->description(); }
+  virtual string description() override { return parent->description(); }
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) {
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override {
     if (kind != symbol_t::FUNCTION)
       return NULL;
 

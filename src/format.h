@@ -128,7 +128,7 @@ public:
     set_text(_format);
   }
 
-  virtual void mark_uncompiled() {
+  virtual void mark_uncompiled() override {
     for (element_t* elem = elements.get(); elem; elem = elem->next.get()) {
       if (elem->type == element_t::EXPR) {
         expr_t& expr(boost::get<expr_t>(elem->data));
@@ -137,9 +137,9 @@ public:
     }
   }
 
-  virtual result_type real_calc(scope_t& scope);
+  virtual result_type real_calc(scope_t& scope) override;
 
-  virtual void dump(std::ostream& out) const {
+  virtual void dump(std::ostream& out) const override {
     for (const element_t* elem = elements.get(); elem; elem = elem->next.get())
       elem->dump(out);
   }

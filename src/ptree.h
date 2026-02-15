@@ -77,10 +77,10 @@ public:
   }
   virtual ~format_ptree() { TRACE_DTOR(format_ptree); }
 
-  virtual void flush();
-  virtual void operator()(post_t& post);
+  virtual void flush() override;
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     commodities.clear();
     transactions_set.clear();
     transactions.clear();

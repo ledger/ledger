@@ -69,7 +69,7 @@ class ptristream : public std::istream {
     ~ptrinbuf() throw() { TRACE_DTOR(ptrinbuf); }
 
   protected:
-    virtual int_type underflow() {
+    virtual int_type underflow() override {
       // is read position before end of buffer?
       if (gptr() < egptr())
         return traits_type::to_int_type(*gptr());
@@ -77,7 +77,7 @@ class ptristream : public std::istream {
         return EOF;
     }
 
-    virtual pos_type seekoff(off_type off, ios_base::seekdir way, ios_base::openmode) {
+    virtual pos_type seekoff(off_type off, ios_base::seekdir way, ios_base::openmode) override {
       // cast to avoid gcc '-Wswitch' warning
       // as ios_base::beg/cur/end are not necessarily values of 'way' enum type ios_base::seekdir
       // based on https://svn.boost.org/trac/boost/ticket/7644

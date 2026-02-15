@@ -43,14 +43,12 @@
 
 #include "item.h"
 #include "predicate.h"
+#include "types.h"
 
 namespace ledger {
 
-class post_t;
 class journal_t;
 class parse_context_t;
-
-typedef std::list<post_t*> posts_list;
 
 class xact_base_t : public item_t {
 public:
@@ -89,7 +87,7 @@ public:
 
   virtual ~xact_t() { TRACE_DTOR(xact_t); }
 
-  virtual string description() {
+  virtual string description() override {
     if (pos) {
       std::ostringstream buf;
       buf << _f("transaction at line %1%") % pos->beg_line;
@@ -99,11 +97,11 @@ public:
     }
   }
 
-  virtual void add_post(post_t* post);
+  virtual void add_post(post_t* post) override;
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
-  virtual bool valid() const;
+  virtual bool valid() const override;
 
   string hash(string nonce, hash_type_t hash_type) const;
 };
@@ -151,7 +149,7 @@ public:
 
   virtual ~auto_xact_t() { TRACE_DTOR(auto_xact_t); }
 
-  virtual string description() {
+  virtual string description() override {
     if (pos) {
       std::ostringstream buf;
       buf << _f("automated transaction at line %1%") % pos->beg_line;
@@ -161,7 +159,7 @@ public:
     }
   }
 
-  virtual void parse_tags(const char* p, scope_t&, bool overwrite_existing = true) {
+  virtual void parse_tags(const char* p, scope_t&, bool overwrite_existing = true) override {
     if (!deferred_notes)
       deferred_notes = deferred_notes_list();
     deferred_notes->push_back(deferred_tag_data_t(p, overwrite_existing));
@@ -187,7 +185,7 @@ public:
 
   virtual ~period_xact_t() { TRACE_DTOR(period_xact_t); }
 
-  virtual string description() {
+  virtual string description() override {
     if (pos) {
       std::ostringstream buf;
       buf << _f("periodic transaction at line %1%") % pos->beg_line;
@@ -197,10 +195,6 @@ public:
     }
   }
 };
-
-typedef std::list<xact_t*> xacts_list;
-typedef std::list<unique_ptr<auto_xact_t>> auto_xacts_list;
-typedef std::list<period_xact_t*> period_xacts_list;
 
 void put_xact(property_tree::ptree& pt, const xact_t& xact);
 

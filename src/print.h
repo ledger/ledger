@@ -69,12 +69,12 @@ public:
   }
   virtual ~print_xacts() { TRACE_DTOR(print_xacts); }
 
-  virtual void title(const string&);
+  virtual void title(const string&) override;
 
-  virtual void flush();
-  virtual void operator()(post_t& post);
+  virtual void flush() override;
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     xacts_present.clear();
     xacts.clear();
 

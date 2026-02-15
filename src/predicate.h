@@ -75,7 +75,7 @@ public:
   }
   virtual ~predicate_t() { TRACE_DTOR(predicate_t); }
 
-  virtual value_t real_calc(scope_t& scope) {
+  virtual value_t real_calc(scope_t& scope) override {
     return (*this ? expr_t::real_calc(scope).strip_annotations(what_to_keep).to_boolean() : true);
   }
 };

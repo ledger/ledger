@@ -86,10 +86,10 @@ public:
 
   virtual void print_title(const value_t& val);
 
-  virtual void flush();
-  virtual void operator()(post_t& post);
+  virtual void flush() override;
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     posts_map.clear();
     post_chain->clear();
     item_handler<post_t>::clear();
@@ -103,7 +103,7 @@ public:
 
 class ignore_posts : public item_handler<post_t> {
 public:
-  virtual void operator()(post_t&) {}
+  virtual void operator()(post_t&) override {}
 };
 
 class collect_posts : public item_handler<post_t> {
@@ -118,10 +118,10 @@ public:
   std::vector<post_t*>::iterator begin() { return posts.begin(); }
   std::vector<post_t*>::iterator end() { return posts.end(); }
 
-  virtual void flush() {}
-  virtual void operator()(post_t& post) { posts.push_back(&post); }
+  virtual void flush() override {}
+  virtual void operator()(post_t& post) override { posts.push_back(&post); }
 
-  virtual void clear() {
+  virtual void clear() override {
     posts.clear();
     item_handler<post_t>::clear();
   }
@@ -162,7 +162,7 @@ public:
   }
   virtual ~push_to_posts_list() { TRACE_DTOR(push_to_posts_list); }
 
-  virtual void operator()(post_t& post) { posts.push_back(&post); }
+  virtual void operator()(post_t& post) override { posts.push_back(&post); }
 };
 
 class truncate_xacts : public item_handler<post_t> {
@@ -184,10 +184,10 @@ public:
   }
   virtual ~truncate_xacts() { TRACE_DTOR(truncate_xacts); }
 
-  virtual void flush();
-  virtual void operator()(post_t& post);
+  virtual void flush() override;
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     completed = false;
     posts.clear();
     xacts_seen = 0;
@@ -219,14 +219,14 @@ public:
 
   virtual void post_accumulated_posts();
 
-  virtual void flush() {
+  virtual void flush() override {
     post_accumulated_posts();
     item_handler<post_t>::flush();
   }
 
-  virtual void operator()(post_t& post) { posts.push_back(&post); }
+  virtual void operator()(post_t& post) override { posts.push_back(&post); }
 
-  virtual void clear() {
+  virtual void clear() override {
     posts.clear();
     sort_order.mark_uncompiled();
 
@@ -251,12 +251,12 @@ public:
   }
   virtual ~sort_xacts() { TRACE_DTOR(sort_xacts); }
 
-  virtual void flush() {
+  virtual void flush() override {
     sorter.flush();
     item_handler<post_t>::flush();
   }
 
-  virtual void operator()(post_t& post) {
+  virtual void operator()(post_t& post) override {
     if (last_xact && post.xact != last_xact)
       sorter.post_accumulated_posts();
 
@@ -265,7 +265,7 @@ public:
     last_xact = post.xact;
   }
 
-  virtual void clear() {
+  virtual void clear() override {
     sorter.clear();
     last_xact = NULL;
 
@@ -286,7 +286,7 @@ public:
   }
   virtual ~filter_posts() { TRACE_DTOR(filter_posts); }
 
-  virtual void operator()(post_t& post) {
+  virtual void operator()(post_t& post) override {
     bind_scope_t bound_scope(context, post);
     if (pred(bound_scope)) {
       post.xdata().add_flags(POST_EXT_MATCHES);
@@ -294,7 +294,7 @@ public:
     }
   }
 
-  virtual void clear() {
+  virtual void clear() override {
     pred.mark_uncompiled();
     item_handler<post_t>::clear();
   }
@@ -328,9 +328,9 @@ public:
 
   void render_commodity(amount_t& amt);
 
-  virtual void operator()(post_t& post);
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     temps.clear();
     comms.clear();
     last_xact = NULL;
@@ -358,9 +358,9 @@ public:
   }
   virtual ~calc_posts() { TRACE_DTOR(calc_posts); }
 
-  virtual void operator()(post_t& post);
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     last_post = NULL;
     amount_expr.mark_uncompiled();
 
@@ -409,16 +409,16 @@ public:
 
   value_t& find_totals(account_t* account);
 
-  virtual void flush() {
+  virtual void flush() override {
     report_subtotal();
     item_handler<post_t>::flush();
   }
 
   void report_subtotal();
 
-  virtual void operator()(post_t& post);
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     amount_expr.mark_uncompiled();
     display_predicate.mark_uncompiled();
     only_predicate.mark_uncompiled();
@@ -450,13 +450,13 @@ public:
   }
   virtual ~related_posts() throw() { TRACE_DTOR(related_posts); }
 
-  virtual void flush();
-  virtual void operator()(post_t& post) {
+  virtual void flush() override;
+  virtual void operator()(post_t& post) override {
     post.xdata().add_flags(POST_EXT_RECEIVED);
     posts.push_back(&post);
   }
 
-  virtual void clear() {
+  virtual void clear() override {
     posts.clear();
     item_handler<post_t>::clear();
   }
@@ -497,9 +497,9 @@ public:
 
   bool output_rounding(post_t& post);
 
-  virtual void operator()(post_t& post);
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     display_amount_expr.mark_uncompiled();
     display_total_expr.mark_uncompiled();
 
@@ -552,14 +552,14 @@ public:
                                        : &temps.create_account(_("<Revalued>")));
   }
 
-  virtual void flush();
+  virtual void flush() override;
 
   void output_revaluation(post_t& post, const date_t& current);
   void output_intermediate_prices(post_t& post, const date_t& current);
 
-  virtual void operator()(post_t& post);
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     total_expr.mark_uncompiled();
     display_total_expr.mark_uncompiled();
 
@@ -626,14 +626,14 @@ public:
   void report_subtotal(const char* spec_fmt = NULL,
                        const optional<date_interval_t>& interval = none);
 
-  virtual void flush() {
+  virtual void flush() override {
     if (values.size() > 0)
       report_subtotal();
     item_handler<post_t>::flush();
   }
-  virtual void operator()(post_t& post);
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     amount_expr.mark_uncompiled();
     values.clear();
     temps.clear();
@@ -685,10 +685,10 @@ public:
   }
 #endif
 
-  virtual void operator()(post_t& post);
-  virtual void flush();
+  virtual void operator()(post_t& post) override;
+  virtual void flush() override;
 
-  virtual void clear() {
+  virtual void clear() override {
     interval = start_interval;
     all_posts.clear();
 
@@ -721,12 +721,12 @@ public:
 
   void report_subtotal();
 
-  virtual void flush() {
+  virtual void flush() override {
     report_subtotal();
     subtotal_posts::flush();
   }
 
-  virtual void clear() {
+  virtual void clear() override {
     last_post = NULL;
     subtotal_posts::clear();
     create_accounts();
@@ -749,10 +749,10 @@ public:
   }
   virtual ~by_payee_posts() { TRACE_DTOR(by_payee_posts); }
 
-  virtual void flush();
-  virtual void operator()(post_t& post);
+  virtual void flush() override;
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     amount_expr.mark_uncompiled();
     payee_subtotals.clear();
 
@@ -782,9 +782,9 @@ public:
     handler.reset();
   }
 
-  virtual void operator()(post_t& post);
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     expr.mark_uncompiled();
     temps.clear();
 
@@ -804,12 +804,12 @@ public:
   }
   virtual ~day_of_week_posts() throw() { TRACE_DTOR(day_of_week_posts); }
 
-  virtual void flush();
-  virtual void operator()(post_t& post) {
+  virtual void flush() override;
+  virtual void operator()(post_t& post) override {
     days_of_the_week[post.date().day_of_week()].push_back(&post);
   }
 
-  virtual void clear() {
+  virtual void clear() override {
     for (int i = 0; i < 7; i++)
       days_of_the_week[i].clear();
 
@@ -841,7 +841,7 @@ public:
 
   virtual void add_post(const date_interval_t& period, post_t& post);
 
-  virtual void clear() {
+  virtual void clear() override {
     pending_posts.clear();
     temps.clear();
 
@@ -869,8 +869,8 @@ public:
 
   void report_budget_items(const date_t& date);
 
-  virtual void flush();
-  virtual void operator()(post_t& post);
+  virtual void flush() override;
+  virtual void operator()(post_t& post) override;
 };
 
 class forecast_posts : public generate_posts {
@@ -887,10 +887,10 @@ public:
   }
   virtual ~forecast_posts() throw() { TRACE_DTOR(forecast_posts); }
 
-  virtual void add_post(const date_interval_t& period, post_t& post);
-  virtual void flush();
+  virtual void add_post(const date_interval_t& period, post_t& post) override;
+  virtual void flush() override;
 
-  virtual void clear() {
+  virtual void clear() override {
     pred.mark_uncompiled();
     generate_posts::clear();
   }
@@ -912,7 +912,7 @@ public:
     handler.reset();
   }
 
-  virtual void operator()(post_t& post);
+  virtual void operator()(post_t& post) override;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -949,7 +949,7 @@ public:
 
   virtual ~pass_down_accounts() { TRACE_DTOR(pass_down_accounts); }
 
-  virtual void clear() {
+  virtual void clear() override {
     if (pred)
       pred->mark_uncompiled();
 

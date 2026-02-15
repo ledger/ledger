@@ -71,12 +71,12 @@ public:
                const optional<string>& _prepend_format = none, std::size_t _prepend_width = 0);
   virtual ~format_posts() { TRACE_DTOR(format_posts); }
 
-  virtual void title(const string& str) { report_title = str; }
+  virtual void title(const string& str) override { report_title = str; }
 
-  virtual void flush();
-  virtual void operator()(post_t& post);
+  virtual void flush() override;
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     last_xact = NULL;
     last_post = NULL;
 
@@ -107,14 +107,14 @@ public:
 
   std::pair<std::size_t, std::size_t> mark_accounts(account_t& account, const bool flat);
 
-  virtual void title(const string& str) { report_title = str; }
+  virtual void title(const string& str) override { report_title = str; }
 
   virtual std::size_t post_account(account_t& account, const bool flat);
-  virtual void flush();
+  virtual void flush() override;
 
-  virtual void operator()(account_t& account);
+  virtual void operator()(account_t& account) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     disp_pred.mark_uncompiled();
     posted_accounts.clear();
 
@@ -137,10 +137,10 @@ public:
   report_accounts(report_t& _report) : report(_report) { TRACE_CTOR(report_accounts, "report&"); }
   virtual ~report_accounts() { TRACE_DTOR(report_accounts); }
 
-  virtual void flush();
-  virtual void operator()(post_t& post);
+  virtual void flush() override;
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     accounts.clear();
     item_handler<post_t>::clear();
   }
@@ -158,10 +158,10 @@ public:
   report_payees(report_t& _report) : report(_report) { TRACE_CTOR(report_payees, "report&"); }
   virtual ~report_payees() { TRACE_DTOR(report_payees); }
 
-  virtual void flush();
-  virtual void operator()(post_t& post);
+  virtual void flush() override;
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     payees.clear();
     item_handler<post_t>::clear();
   }
@@ -179,11 +179,11 @@ public:
   report_tags(report_t& _report) : report(_report) { TRACE_CTOR(report_tags, "report&"); }
   virtual ~report_tags() { TRACE_DTOR(report_tags); }
 
-  virtual void flush();
+  virtual void flush() override;
   virtual void gather_metadata(item_t& item);
-  virtual void operator()(post_t& post);
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     tags.clear();
     item_handler<post_t>::clear();
   }
@@ -204,10 +204,10 @@ public:
   }
   virtual ~report_commodities() { TRACE_DTOR(report_commodities); }
 
-  virtual void flush();
-  virtual void operator()(post_t& post);
+  virtual void flush() override;
+  virtual void operator()(post_t& post) override;
 
-  virtual void clear() {
+  virtual void clear() override {
     commodities.clear();
     item_handler<post_t>::clear();
   }

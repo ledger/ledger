@@ -132,7 +132,7 @@ public:
 
   void quick_close() { output_stream.close(); }
 
-  virtual string description() { return _("current report"); }
+  virtual string description() override { return _("current report"); }
 
   void normalize_options(const string& verb);
   void normalize_period();
@@ -356,9 +356,9 @@ public:
 
   option_t<report_t>* lookup_option(const char* p);
 
-  virtual void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def);
+  virtual void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) override;
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   /**
    * Option handlers
