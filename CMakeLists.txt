@@ -10,7 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 cmake_minimum_required(VERSION ${Required_CMake_Version})
 
-option(CMAKE_BUILD_TYPE "CMake Build type" "Release")
+set(CMAKE_BUILD_TYPE "Release" CACHE STRING "CMake build type (Release, Debug, RelWithDebInfo, MinSizeRel)")
 if(BUILD_DEBUG)
   message(DEPRECATION "BUILD_DEBUG is deprecated! Set CMAKE_BUILD_TYPE to Debug instead!")
   set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "CMake Build type" FORCE)
