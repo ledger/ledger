@@ -457,7 +457,7 @@ inline char* next_element(char* buf, bool variable = false) {
 
 inline int peek_next_nonws(std::istream& in) {
   int c = in.peek();
-  while (in.good() && !in.eof() && std::isspace(c)) {
+  while (in.good() && !in.eof() && std::isspace(static_cast<unsigned char>(c))) {
     in.get();
     c = in.peek();
   }

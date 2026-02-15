@@ -899,7 +899,7 @@ void parse_quantity(std::istream& in, string& value) {
     max--;
     in.get();
   }
-  READ_INTO(in, p, max, c, std::isdigit(c) || c == '.' || c == ',');
+  READ_INTO(in, p, max, c, std::isdigit(static_cast<unsigned char>(c)) || c == '.' || c == ',');
 
   string::size_type len = std::strlen(buf);
   while (len > 0 && !std::isdigit(static_cast<unsigned char>(buf[len - 1]))) {
@@ -926,7 +926,7 @@ void parse_quantity(std::istream& in, string& value) {
       // Only keep the trailing period if it is NOT followed by a digit
       // (if followed by a digit, it was not actually stripped -- this guards
       // against double-reading).
-      if (next == EOF || !std::isdigit(next)) {
+      if (next == EOF || !std::isdigit(static_cast<unsigned char>(next))) {
         buf[len++] = '.';
         buf[len] = '\0';
       } else {
@@ -961,7 +961,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
   }
 
   char n;
-  if (std::isdigit(c)) {
+  if (std::isdigit(static_cast<unsigned char>(c))) {
     parse_quantity(in, quant);
 
     if (!in.eof() && ((n = static_cast<char>(in.peek())) != '\n')) {
@@ -981,7 +981,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
     commodity_t::parse_symbol(in, symbol);
 
     if (!in.eof() && ((n = static_cast<char>(in.peek())) != '\n')) {
-      if (std::isspace(in.peek()))
+      if (std::isspace(static_cast<unsigned char>(in.peek())))
         comm_flags |= COMMODITY_STYLE_SEPARATED;
 
       parse_quantity(in, quant);
