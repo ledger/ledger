@@ -45,28 +45,19 @@
 #include "times.h"
 #include "mask.h"
 #include "expr.h"
+#include "types.h"
 
 namespace ledger {
 
 class xact_base_t;
-class xact_t;
-class auto_xact_t;
-class period_xact_t;
-class post_t;
-class account_t;
 class parse_context_t;
 class parse_context_stack_t;
 
-typedef std::list<xact_t*> xacts_list;
-typedef std::list<unique_ptr<auto_xact_t>> auto_xacts_list;
-typedef std::list<period_xact_t*> period_xacts_list;
 typedef std::pair<mask_t, string> payee_alias_mapping_t;
 typedef std::list<payee_alias_mapping_t> payee_alias_mappings_t;
-typedef std::pair<string, string> payee_uuid_mapping_t;
-typedef std::list<payee_uuid_mapping_t> payee_uuid_mappings_t;
+typedef std::unordered_map<string, string> payee_uuid_mappings_t;
 typedef std::pair<mask_t, account_t*> account_mapping_t;
 typedef std::list<account_mapping_t> account_mappings_t;
-typedef std::map<string, account_t*> accounts_map;
 typedef std::map<string, xact_t*> checksum_map_t;
 
 typedef std::multimap<string, expr_t::check_expr_pair> tag_check_exprs_map;

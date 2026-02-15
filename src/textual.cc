@@ -86,7 +86,7 @@ public:
       : context_stack(_context_stack), context(_context), in(*context.stream.get()),
         parent(_parent), no_assertions(_no_assertions), hash_type(_hash_type), timelog(context) {}
 
-  virtual string description() { return _("textual parser"); }
+  virtual string description() override { return _("textual parser"); }
 
   template <typename T>
   void get_applications(std::vector<T>& result) {
@@ -193,7 +193,7 @@ public:
 
   xact_t* parse_xact(char* line, std::streamsize len, account_t* account, xact_t* previous_xact);
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name);
+  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 };
 
 void parse_amount_expr(std::istream& in, scope_t& scope, post_t& post, amount_t& amount,
@@ -1120,7 +1120,7 @@ void instance_t::payee_alias_directive(const string& payee, string alias) {
 
 void instance_t::payee_uuid_directive(const string& payee, string uuid) {
   trim(uuid);
-  context.journal->payee_uuid_mappings.push_back(payee_uuid_mapping_t(uuid, payee));
+  context.journal->payee_uuid_mappings[uuid] = payee;
 }
 
 void instance_t::commodity_directive(char* line) {
@@ -2028,10 +2028,9 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
         if (!last_post) {
           if (xact->has_tag(_("UUID"))) {
             string uuid = xact->get_tag(_("UUID"))->to_string();
-            foreach (payee_uuid_mapping_t value, context.journal->payee_uuid_mappings) {
-              if (value.first.compare(uuid) == 0) {
-                xact->payee = value.second;
-              }
+            auto it = context.journal->payee_uuid_mappings.find(uuid);
+            if (it != context.journal->payee_uuid_mappings.end()) {
+              xact->payee = it->second;
             }
           }
         }
