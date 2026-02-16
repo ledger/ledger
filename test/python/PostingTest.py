@@ -401,6 +401,48 @@ class PostingTestCase(unittest.TestCase):
         self.assertEqual(queried_account, str(food_post.account))
 
 
+class PostingPositionTestCase(unittest.TestCase):
+    """Test case for position_t access (issue #1002)."""
+
+    def setUp(self):
+        self.journal = read_journal_from_string("""
+2012-03-01 KFC
+    Expenses:Food      $21.34
+    Assets:Cash
+""")
+
+    def tearDown(self):
+        close_journal_files()
+
+    def test_xact_pos_accessible(self):
+        """Test that xact.pos is accessible without crashing (#1002)."""
+        posts = self.journal.query("food")
+        self.assertEqual(len(posts), 1)
+        post = posts[0]
+        xact = post.xact
+        pos = xact.pos
+        # pos should be a Position object (not None for parsed transactions)
+        self.assertIsNotNone(pos)
+
+    def test_xact_pos_beg_line(self):
+        """Test that beg_line is accessible on position."""
+        posts = self.journal.query("food")
+        xact = posts[0].xact
+        pos = xact.pos
+        self.assertIsNotNone(pos)
+        self.assertIsInstance(pos.beg_line, int)
+        self.assertGreater(pos.beg_line, 0)
+
+    def test_xact_pos_end_line(self):
+        """Test that end_line is accessible on position."""
+        posts = self.journal.query("food")
+        xact = posts[0].xact
+        pos = xact.pos
+        self.assertIsNotNone(pos)
+        self.assertIsInstance(pos.end_line, int)
+        self.assertGreaterEqual(pos.end_line, pos.beg_line)
+
+
 class PostingWithAuxDateTestCase(unittest.TestCase):
     """Separate test case for auxiliary date features."""
 
@@ -542,6 +584,7 @@ def suite():
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
     suite.addTests(loader.loadTestsFromTestCase(PostingTestCase))
+    suite.addTests(loader.loadTestsFromTestCase(PostingPositionTestCase))
     suite.addTests(loader.loadTestsFromTestCase(PostingWithAuxDateTestCase))
     suite.addTests(loader.loadTestsFromTestCase(PostingWithAssignedAmountTestCase))
     suite.addTests(loader.loadTestsFromTestCase(PostingTagsTestCase))
