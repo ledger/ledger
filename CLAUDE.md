@@ -5,9 +5,9 @@ code in this repository.
 
 ## Project Overview
 
-Ledger is a powerful command-line double-entry accounting system written in
-C++. It uses plain text files for input and generates financial reports
-without requiring a database.
+Ledger is a command-line double-entry accounting system written in C++. It
+uses plain text files for input and generates financial reports without
+requiring a database.
 
 ## Key Commands
 
@@ -33,6 +33,13 @@ cmake ..
 make -j$(nproc)
 ```
 
+Useful CMake flags:
+
+- `-DUSE_PYTHON=ON` -- Enable Python bindings (requires Boost.Python)
+- `-DUSE_SANITIZERS=ON` -- Enable AddressSanitizer + UBSan
+- `-DBUILD_DEBUG=ON` -- Enable runtime debugging support
+- `-DDISABLE_ASSERTS=ON` -- Disable assertion checks
+
 ### Running Tests
 
 ```bash
@@ -44,9 +51,16 @@ cd build && ctest -R baseline     # Run baseline tests
 cd build && ctest -R regress      # Run regression tests
 cd build && ctest -R manual       # Run manual tests
 
-# Run a single test file
-./build/ledger -f test/input/sample.dat reg
+# Run a single test by name
+cd build && ctest -R 2413         # Run regression test for issue #2413
+
+# Run a .test file directly via the harness
+python test/RegressTests.py --ledger ./build/ledger \
+  --sourcepath . test/regress/2413.test
 ```
+
+Python 3.10+ is required to run the test harness. All tests run with
+`TZ=America/Chicago`.
 
 ### Development Commands
 
@@ -87,23 +101,72 @@ The codebase is organized around these key abstractions:
 - **Expression Trees**: Mathematical and logical expressions are AST-based
 - **Value Semantics**: Most objects use value semantics with careful memory management
 
-## Testing Approach
+## Coding Conventions
 
-- **Unit Tests**: C++ tests in `test/unit/` using Boost.Test
-- **Regression Tests**: Python-based tests in `test/regress/` comparing output
-- **Baseline Tests**: Core functionality tests in `test/baseline/`
-- **DocTests**: Examples extracted from documentation in `doc/`
+### Style
 
-Run tests after any code changes to ensure compatibility.
+- 2-space indentation, no tabs, 100-column limit
+- LLVM-based formatting enforced by `.clang-format` (checked in CI)
+- K&R braces (attach style)
+- Pointer alignment: left (`int* p`, not `int *p`)
+- Do not reorder `#include` directives (`SortIncludes: Never`)
+
+### Naming
+
+- Classes/types: `snake_case` with `_t` suffix (`journal_t`, `xact_t`, `account_t`)
+- Functions/methods: `snake_case` (`add_post()`, `finalize()`)
+- Macros: `UPPER_CASE` (`TRACE_CTOR`, `DECLARE_EXCEPTION`)
+
+### Key Macros
+
+- `TRACE_CTOR(class, "args")` / `TRACE_DTOR(class)` -- constructor/destructor tracing
+- `DECLARE_EXCEPTION(name, base)` -- declare a custom exception type
+
+### Memory Management
+
+- Use `shared_ptr` and `unique_ptr` for ownership
+- Many classes inherit from `noncopyable`
+
+## Test File Format
+
+Tests in `test/baseline/` and `test/regress/` use a `.test` format:
+
+```
+; Journal data (transactions, directives, etc.)
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+```
+
+Key details:
+
+- Journal data appears at the top of the file
+- `test <ledger-command>` begins a test block; expected output follows
+- `test <command> -> <exit_code>` tests for a specific exit code
+- `end test` closes the block
+- `__ERROR__` marks expected stderr output within a test block
+- `$FILE` is replaced with the test file path at runtime
+- Multiple `test`/`end test` blocks can appear in one file
+
+### Regression Test Naming
+
+- Named by GitHub issue number: `2413.test`, `1036.test`
+- Some use hex hashes: `012ADB60.test`
+- Python-dependent tests use a `_py.test` suffix
+
+When fixing a bug, add a regression test in `test/regress/` named after the
+issue number.
 
 ## Important Notes
 
 - The project uses CMake 3.16.2+ and requires Boost 1.72+
 - Python bindings are optional but enable additional features
 - The `acprep` script automates most build configurations
-- Timezone for tests is set to America/Chicago by default
 - Use `./acprep --help` to see all build options
-
-## Task Master AI Instructions
-**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
-@./.taskmaster/CLAUDE.md
+- All source files live in a flat `src/` directory (no subdirectories)
+- PRs should target `master` (see `CONTRIBUTING.md`)
