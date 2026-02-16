@@ -1,0 +1,11 @@
+2022/01/15 Payee
+    expenses:category1  £10
+    expenses:category2  $11
+    assets:debit
+
+test reg --format="%(quoted(filename)),%(quoted(xact.beg_line)),%(quoted(xact.end_line)),%(quoted(date)),%(quoted(payee)),%(quoted(account)),%(quoted(cost))\n"
+"$FILE","1","4","2022/01/15","Payee","expenses:category1","£10"
+"$FILE","1","4","2022/01/15","Payee","expenses:category2","$11"
+"$FILE","1","4","2022/01/15","Payee","assets:debit","$-11"
+"$FILE","1","4","2022/01/15","Payee","assets:debit","£-10"
+end test
