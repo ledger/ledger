@@ -159,6 +159,60 @@ and testing Ledger.
 
 You can run `make check` to confirm the result, and `make install` to install.
 
+## Python Bindings
+
+Ledger includes optional Python bindings built with [Boost.Python]. Python
+support is **off by default** and must be explicitly enabled.
+
+### Prerequisites
+
+In addition to the standard [dependencies](#dependencies), you need:
+
+- Python 3.10 or later (with development headers)
+- Boost.Python (matching your Boost and Python versions)
+
+See the platform-specific dependency sections above for package names (e.g.
+`boost-python3` on Homebrew, `libboost-python-dev` on Ubuntu).
+
+### Building with Python Support
+
+Using `acprep`:
+
+    $ ./acprep --python update --output=build
+
+Or using CMake directly:
+
+    $ mkdir build && cd build
+    $ cmake -DUSE_PYTHON=ON ..
+    $ make -j$(nproc)
+
+### Installing the Python Module
+
+Running `make install` (or `cmake --install build`) copies `ledger.so` (or
+`ledger.pyd` on Windows) into your Python installation's `site-packages`
+directory. After installing:
+
+    $ python -c "import ledger; print(ledger)"
+
+### Using Without Installing
+
+To use the module directly from the build tree without installing, point
+`PYTHONPATH` at the build directory:
+
+    $ PYTHONPATH=build python -c "import ledger; print(ledger)"
+
+On Linux you may also need to set `LD_LIBRARY_PATH=build`, and on macOS
+`DYLD_LIBRARY_PATH=build`.
+
+A demo script is included at `python/demo.py`:
+
+    $ PYTHONPATH=build python python/demo.py
+
+For full documentation of the Python API, see the "Extending with Python"
+chapter in the [Ledger manual](https://www.ledger-cli.org/3.0/doc/ledger3.html).
+
+[Boost.Python]: https://www.boost.org/doc/libs/release/libs/python/
+
 ## Resources
 
 Now that you're up and running, here are a few resources to keep in mind:
