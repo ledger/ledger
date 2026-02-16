@@ -1,0 +1,11 @@
+; Regression test for issue #908
+; Segfault on register grouping when no records returned
+; An empty ledger file with --monthly and a non-matching filter
+; should return empty output, not segfault.
+
+2015/01/01 Test payee
+    Expenses:Food              $10.00
+    Assets:Checking
+
+test reg --monthly nonexistent
+end test
