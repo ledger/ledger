@@ -405,6 +405,40 @@ void collapse_posts::report_subtotal() {
   } else if (only_collapse_if_zero && !subtotal.is_zero()) {
     for (post_t* post : component_posts)
       item_handler<post_t>::operator()(*post);
+  } else if (collapse_depth > 0 && item_t::use_aux_date) {
+    // When using --depth with --effective, group posts by both the
+    // depth-truncated account and effective date, so that postings with
+    // different effective dates are not incorrectly collapsed together.
+    typedef std::pair<date_t, account_t*> date_acct_key;
+    typedef std::map<date_acct_key, value_t> grouped_totals_map;
+    grouped_totals_map grouped;
+
+    for (post_t* post : component_posts) {
+      account_t* acct = post->account;
+      while (acct->depth > collapse_depth && acct->parent)
+        acct = acct->parent;
+
+      date_t d = post->date();
+      date_acct_key key(d, acct);
+      post->add_to_value(grouped[key], amount_expr);
+    }
+
+    for (const grouped_totals_map::value_type& entry : grouped) {
+      date_t d = entry.first.first;
+      account_t* acct = entry.first.second;
+
+      xact_t& xact = temps.create_xact();
+      xact.payee = last_xact->payee;
+      xact._date = d;
+
+      handle_value(/* value=      */ entry.second,
+                   /* account=    */ acct,
+                   /* xact=       */ &xact,
+                   /* temps=      */ temps,
+                   /* handler=    */ handler,
+                   /* date=       */ d,
+                   /* act_date_p= */ true);
+    }
   } else {
     date_t earliest_date;
     date_t latest_date;
