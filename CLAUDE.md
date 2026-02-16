@@ -33,6 +33,13 @@ cmake ..
 make -j$(nproc)
 ```
 
+Useful CMake flags:
+
+- `-DUSE_PYTHON=ON` -- Enable Python bindings (requires Boost.Python)
+- `-DUSE_SANITIZERS=ON` -- Enable AddressSanitizer + UBSan
+- `-DBUILD_DEBUG=ON` -- Enable runtime debugging support
+- `-DDISABLE_ASSERTS=ON` -- Disable assertion checks
+
 ### Running Tests
 
 ```bash
@@ -44,9 +51,16 @@ cd build && ctest -R baseline     # Run baseline tests
 cd build && ctest -R regress      # Run regression tests
 cd build && ctest -R manual       # Run manual tests
 
-# Run a single test file
-./build/ledger -f test/input/sample.dat reg
+# Run a single test by name
+cd build && ctest -R 2413         # Run regression test for issue #2413
+
+# Run a .test file directly via the harness
+python test/RegressTests.py --ledger ./build/ledger \
+  --sourcepath . test/regress/2413.test
 ```
+
+Python 3.10+ is required to run the test harness. All tests run with
+`TZ=America/Chicago`.
 
 ### Development Commands
 
