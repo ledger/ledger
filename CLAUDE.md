@@ -101,14 +101,66 @@ The codebase is organized around these key abstractions:
 - **Expression Trees**: Mathematical and logical expressions are AST-based
 - **Value Semantics**: Most objects use value semantics with careful memory management
 
-## Testing Approach
+## Coding Conventions
 
-- **Unit Tests**: C++ tests in `test/unit/` using Boost.Test
-- **Regression Tests**: Python-based tests in `test/regress/` comparing output
-- **Baseline Tests**: Core functionality tests in `test/baseline/`
-- **DocTests**: Examples extracted from documentation in `doc/`
+### Style
 
-Run tests after any code changes to ensure compatibility.
+- 2-space indentation, no tabs, 100-column limit
+- LLVM-based formatting enforced by `.clang-format` (checked in CI)
+- K&R braces (attach style)
+- Pointer alignment: left (`int* p`, not `int *p`)
+- Do not reorder `#include` directives (`SortIncludes: Never`)
+
+### Naming
+
+- Classes/types: `snake_case` with `_t` suffix (`journal_t`, `xact_t`, `account_t`)
+- Functions/methods: `snake_case` (`add_post()`, `finalize()`)
+- Macros: `UPPER_CASE` (`TRACE_CTOR`, `DECLARE_EXCEPTION`)
+
+### Key Macros
+
+- `TRACE_CTOR(class, "args")` / `TRACE_DTOR(class)` -- constructor/destructor tracing
+- `DECLARE_EXCEPTION(name, base)` -- declare a custom exception type
+
+### Memory Management
+
+- Use `shared_ptr` and `unique_ptr` for ownership
+- Many classes inherit from `noncopyable`
+
+## Test File Format
+
+Tests in `test/baseline/` and `test/regress/` use a `.test` format:
+
+```
+; Journal data (transactions, directives, etc.)
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+```
+
+Key details:
+
+- Journal data appears at the top of the file
+- `test <ledger-command>` begins a test block; expected output follows
+- `test <command> -> <exit_code>` tests for a specific exit code
+- `end test` closes the block
+- `__ERROR__` marks expected stderr output within a test block
+- `$FILE` is replaced with the test file path at runtime
+- Multiple `test`/`end test` blocks can appear in one file
+
+### Regression Test Naming
+
+- Named by GitHub issue number: `2413.test`, `1036.test`
+- Some use hex hashes: `012ADB60.test`
+- Python-dependent tests use a `_py.test` suffix
+
+When fixing a bug, add a regression test in `test/regress/` named after the
+issue number.
 
 ## Important Notes
 
