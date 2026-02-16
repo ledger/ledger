@@ -1,0 +1,16 @@
+; Regression test for #2599: --depth breaks --effective
+; When using --depth with --effective, effective dates should be preserved
+; rather than collapsing all postings to the original transaction date.
+
+2026/02/04 Insurance
+    expenses:car:insurance          $100.00 ; [=2025/02/04]
+    expenses:car:insurance          $100.00 ; [=2025/03/04]
+    expenses:car:insurance          $100.00 ; [=2025/04/04]
+    assets:bank
+
+test reg --effective --depth 2
+25-Feb-04 Insurance             expenses:car                $100.00      $100.00
+25-Mar-04 Insurance             expenses:car                $100.00      $200.00
+25-Apr-04 Insurance             expenses:car                $100.00      $300.00
+26-Feb-04 Insurance             assets:bank                $-300.00            0
+end test
