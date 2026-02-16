@@ -152,7 +152,7 @@ jobs:
           fi
           echo "Coverage check passed: ${COVERAGE}% >= ${{env.MIN_COVERAGE}}%"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: coverage-report
           path: ${{github.workspace}}/build/coverage-report/
