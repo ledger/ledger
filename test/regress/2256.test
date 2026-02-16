@@ -1,0 +1,8 @@
+; Verify that --cleared doesn't prevent prices command from working
+2023-06-01 * Test
+    A              10.00 EUR @@ 10.70 USD
+    B
+
+test -C prices
+2023/06/01 EUR           USD1.07
+end test
