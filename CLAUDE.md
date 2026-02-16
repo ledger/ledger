@@ -5,9 +5,9 @@ code in this repository.
 
 ## Project Overview
 
-Ledger is a powerful command-line double-entry accounting system written in
-C++. It uses plain text files for input and generates financial reports
-without requiring a database.
+Ledger is a command-line double-entry accounting system written in C++. It
+uses plain text files for input and generates financial reports without
+requiring a database.
 
 ## Key Commands
 
@@ -101,9 +101,6 @@ Run tests after any code changes to ensure compatibility.
 - The project uses CMake 3.16.2+ and requires Boost 1.72+
 - Python bindings are optional but enable additional features
 - The `acprep` script automates most build configurations
-- Timezone for tests is set to America/Chicago by default
 - Use `./acprep --help` to see all build options
-
-## Task Master AI Instructions
-**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
-@./.taskmaster/CLAUDE.md
+- All source files live in a flat `src/` directory (no subdirectories)
+- PRs should target `master` (see `CONTRIBUTING.md`)
