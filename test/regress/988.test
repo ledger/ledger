@@ -1,0 +1,11 @@
+; Regression test for issue #988
+; Virtual-only transactions with multiple commodities should not
+; generate non-virtual (real) postings.
+
+2013/09/03  Budget for travel to Mexico
+  [Assets:Budgeted]                       -200.00 USD
+  [Assets:Budgeted]                   -7000.00 MXN
+  [Budget:Travel]
+
+test bal --real
+end test
