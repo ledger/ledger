@@ -1,0 +1,291 @@
+src/textual_xacts.cc
+  e236c91b20791ae5 312-372,631,658
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.3",
+  "base_commit_sha": "da3fb9f0d885a4922689128695e6db7a8bc2fcac",
+  "prompts": {
+    "e236c91b20791ae5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5f0fe02a-1c8f-45ca-bf9f-704462239bd5",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>medium</command-message>\n<command-name>/medium</command-name>\n<command-args>Examine PR 2570 and, based on the comments there, create a PR to resolve the duplication in textual.cc mentioned by dbear496.</command-args>",
+          "timestamp": "2026-02-16T06:51:25.809Z"
+        },
+        {
+          "type": "user",
+          "text": "Remember the following:\n\n- Use the claude-code skill to provide context for the rest of the task\n- Use beads to keep track of tasks you notice you work, and then complete those tasks in order to fully complete the initial task\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step:\n\n\nARGUMENTS: Examine PR 2570 and, based on the comments there, create a PR to resolve the duplication in textual.cc mentioned by dbear496.",
+          "timestamp": "2026-02-16T06:51:25.809Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me start by examining PR 2570 on GitHub to understand the context and comments, particularly from dbear496 about duplication in textual.cc.",
+          "timestamp": "2026-02-16T06:51:29.504Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I'll start by examining PR 2570 and its comments to understand the duplication issue mentioned by dbear496.",
+          "timestamp": "2026-02-16T06:51:30.264Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr view 2570 --json title,body,url,state,baseRefName,headRefName,comments",
+            "description": "Get PR 2570 details and comments"
+          },
+          "timestamp": "2026-02-16T06:51:31.701Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh api repos/ledger/ledger/pulls/2570/comments",
+            "description": "Get PR 2570 review comments"
+          },
+          "timestamp": "2026-02-16T06:51:32.727Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me examine the specific lines in textual.cc that dbear496 is referring to, and also check PR 2543 for context.",
+          "timestamp": "2026-02-16T06:51:38.915Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/pr-2570/src/textual.cc",
+            "limit": 130,
+            "offset": 1670
+          },
+          "timestamp": "2026-02-16T06:51:39.799Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh pr view 2543 --json title,body,url,state,baseRefName,headRefName",
+            "description": "Get PR 2543 details"
+          },
+          "timestamp": "2026-02-16T06:51:40.413Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The line references are from the master branch. Let me check the file on master.",
+          "timestamp": "2026-02-16T06:51:44.345Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show 8900388fc39148112cb4c2cebc644c89ba392ce0:src/textual.cc | wc -l",
+            "description": "Check line count of textual.cc at referenced commit"
+          },
+          "timestamp": "2026-02-16T06:51:45.740Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline -5 master -- src/textual.cc",
+            "description": "Recent commits to textual.cc on master"
+          },
+          "timestamp": "2026-02-16T06:51:46.574Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The file was recently refactored and split into 3 files. Let me check the current state on master.",
+          "timestamp": "2026-02-16T06:51:49.352Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show master:src/textual.cc | wc -l",
+            "description": "Check current textual.cc line count on master"
+          },
+          "timestamp": "2026-02-16T06:51:50.340Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline -1 master",
+            "description": "Latest commit on master"
+          },
+          "timestamp": "2026-02-16T06:51:50.584Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The file was split. The duplicated code must now be in one of the split files. Let me find where the balance assignment code lives now.",
+          "timestamp": "2026-02-16T06:51:53.950Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git show 8900388fc39148112cb4c2cebc644c89ba392ce0:src/textual.cc | sed -n '1680,1790p'",
+            "description": "Show the duplicated code at referenced commit"
+          },
+          "timestamp": "2026-02-16T06:51:54.830Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I can see the duplication clearly. Let me find where this code lives in the current master after the split.",
+          "timestamp": "2026-02-16T06:51:57.821Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "output_mode": "files_with_matches",
+            "path": "/Users/johnw/src/ledger/pr-2570/src",
+            "pattern": "strip annotations from the account total"
+          },
+          "timestamp": "2026-02-16T06:51:58.932Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/pr-2570/src/textual_xacts.cc"
+          },
+          "timestamp": "2026-02-16T06:52:02.160Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "mcp__sequential-thinking__sequentialthinking",
+          "input": {
+            "nextThoughtNeeded": false,
+            "thought": "Now I can see the duplication clearly. In the `parse_post` function in `textual_xacts.cc`:\n\n**First computation (lines 561-631)**: Computes `diff` by:\n1. Getting `account_total` (optionally stripping annotations based on `strip`)\n2. Subtracting account_total from `amt` to get `diff`\n3. Subtracting previous posts in the xact from `diff`\n4. If `amt` has a commodity, restricting `diff` to that commodity\n\n**Second computation (lines 636-660)**: When `strip` is true and we're in a balance assignment (post->amount.is_null()) and diff is not zero, it recomputes the same calculation but WITHOUT stripping annotations:\n1. Gets `ann_total` (account total without stripping)\n2. Subtracts ann_total from `amt` to get `ann_diff`\n3. Subtracts previous posts (without stripping) from `ann_diff`\n\nThe purpose of the second computation is to preserve lot annotations. The first computation strips annotations to check if the balance differs; the second preserves them so the assigned amount retains lot information.\n\ndbear496's suggestion: Either detect upfront whether to preserve annotations, or extract the computation into a subroutine called twice with different parameters.\n\nThe cleanest approach is to extract the diff computation into a helper function that takes a `strip` parameter. Something like:\n\n```cpp\nbalance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t* xact, \n                                bool strip, parse_context_t& context);\n```\n\nThis function would:\n1. Get account_total, optionally stripping\n2. Compute diff = amt - account_total\n3. Subtract previous posts (optionally stripping their amounts)\n4. If amt has commodity, restrict to that commodity\n5. Return diff\n\nThen in the balance assignment path:\n- Call it with `strip=true` to check if there's a difference\n- If strip was true and diff is not zero, call it again with `strip=false` to get the annotated diff\n\nWait, but the second computation doesn't do the commodity restriction step. Let me re-read...\n\nActually looking more carefully at the second block (lines 636-660):\n- It computes ann_diff but does NOT do the commodity restriction step\n- It just subtracts account total and previous posts\n\nAnd the first block (lines 561-631) does:\n- Subtract account total\n- Subtract previous posts  \n- Commodity restriction\n\nSo they're not quite identical. But the core subtraction logic IS the same. Let me think about the best refactoring approach.\n\nActually, I think the best approach is a helper that computes the diff from account total and previous posts, parameterized by whether to strip. The commodity restriction is only needed for the first (stripped) computation to check zero, not for the annotated recomputation.\n\nLet me design this:\n\n```cpp\nstatic balance_t compute_balance_diff(\n    const amount_t& amt, post_t* post, xact_t* xact,\n    bool strip_annotations, parse_context_t& context)\n{\n    value_t account_total(\n        post->account->self_total(\n            !(post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG))));\n    if (strip_annotations)\n        account_total = account_total.strip_annotations(keep_details_t());\n\n    balance_t diff = amt;\n\n    switch (account_total.type()) {\n    case value_t::AMOUNT: {\n        amount_t acct_amt(account_total.as_amount());\n        diff -= acct_amt.reduced();\n        break;\n    }\n    case value_t::BALANCE: {\n        balance_t bal(account_total.as_balance());\n        diff -= bal;\n        break;\n    }\n    default:\n        break;\n    }\n\n    for (post_t* p : xact->posts) {\n        if (p->account == post->account &&\n            ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==\n             (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {\n            amount_t p_amt(strip_annotations ? p->amount.strip_annotations(keep_details_t()) : p->amount);\n            diff -= p_amt;\n        }\n    }\n\n    return diff;\n}\n```\n\nThen in the main code:\n1. `diff = compute_balance_diff(amt, post.get(), xact, strip, context)` \n2. Apply commodity restriction to diff\n3. In balance assignment when strip && !diff.is_zero():\n   `ann_diff = compute_balance_diff(amt, post.get(), xact, false, context)`\n   Then try to use ann_diff.to_amount(), falling back to diff.to_amount()\n\nWait, but in the current second computation, when strip is false (i.e., amt has annotations), it doesn't re-strip the previous posts' amounts. Looking at line 658: `ann_diff -= p->amount;` — this uses the raw amount without stripping. And in the first computation at line 610: `amount_t p_amt(strip ? p->amount.strip_annotations(keep_details_t()) : p->amount);` — when strip is false, it also uses raw amount. So `compute_balance_diff(amt, post, xact, false, ...)` would use raw amounts for everything, which matches the second computation.\n\nThe only subtle difference: in the second computation, the amount subtracted from the account total uses `.reduced()` only for AMOUNT case (line 645-646: `ann_diff -= ann_total.as_amount().reduced()`). The first computation also uses `.reduced()` at line 582-583. So they match.\n\nThis refactoring looks clean. Let me also keep the DEBUG statements. Actually, the DEBUG lines are numerous and specific to each call site. I think for a clean refactoring, I can either:\n1. Include the DEBUG statements in the helper (but they reference `context.linenum` so the helper would need context)\n2. Keep DEBUG statements at the call sites by having the helper return the diff without DEBUG\n\nI'll include a few key DEBUG statements in the helper since the context is already available. But to keep it simple and focused, I might leave the more detailed DEBUG lines at the call sites.\n\nActually, looking at this more carefully, the simplest and cleanest approach that matches dbear496's suggestion is to extract the computation into a helper function. The DEBUG macros can go in the helper since we pass context. Let me plan the implementation.\n",
+            "thoughtNumber": 1,
+            "totalThoughts": 1
+          },
+          "timestamp": "2026-02-16T06:52:36.939Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the duplication. Let me create a new branch and implement the fix.",
+          "timestamp": "2026-02-16T06:52:39.747Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git checkout master && git checkout -b refactor/balance-diff-subroutine",
+            "description": "Create new branch from master for the refactoring"
+          },
+          "timestamp": "2026-02-16T06:52:41.328Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git fetch origin master && git checkout -b refactor/balance-diff-subroutine origin/master",
+            "description": "Create new branch from origin/master"
+          },
+          "timestamp": "2026-02-16T06:52:45.358Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. Now let me re-read the file on this new branch to make sure it matches what we saw.",
+          "timestamp": "2026-02-16T06:52:53.251Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/pr-2570/src/textual_xacts.cc",
+            "limit": 150,
+            "offset": 550
+          },
+          "timestamp": "2026-02-16T06:52:54.409Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have a clear picture of the duplication. Let me implement the refactoring using the cpp-pro agent.",
+          "timestamp": "2026-02-16T06:52:57.393Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Task",
+          "input": {
+            "description": "Refactor balance diff computation",
+            "mode": "bypassPermissions",
+            "prompt": "In `/Users/johnw/src/ledger/pr-2570/src/textual_xacts.cc`, there is duplicated code in the `parse_post` method for computing the balance diff during balance assignments. The same computation pattern appears twice:\n\n1. **Lines 563-615**: First computation that gets account_total, subtracts it from amt, then subtracts previous posts' amounts. This uses `strip` to optionally strip annotations.\n\n2. **Lines 639-660**: Second computation (inside the `if (strip)` block for balance assignments) that repeats the same pattern but WITHOUT stripping annotations, to preserve lot annotations.\n\nExtract the shared computation into a static helper function. Here is the exact refactoring to perform:\n\n### Step 1: Add this helper function BEFORE the `parse_post` method (before line 312 `post_t* instance_t::parse_post`)\n\n```cpp\n/**\n * Compute the difference between the assigned/asserted amount and the\n * current account balance, subtracting amounts from previous posts to\n * the same account in the current transaction.\n *\n * When strip_annotations is true, lot annotations (cost basis, lot date)\n * are removed from the account total and previous post amounts before\n * comparison.\n */\nstatic balance_t compute_balance_diff(\n    const amount_t& amt, post_t* post, xact_t* xact,\n    bool strip_annotations, parse_context_t& context)\n{\n  value_t account_total(\n      post->account\n          ->self_total(!(post->has_flags(POST_VIRTUAL) ||\n                         post->has_flags(POST_IS_TIMELOG))));\n  if (strip_annotations)\n    account_total = account_total.strip_annotations(keep_details_t());\n\n  DEBUG(\"post.assign\", \"line \" << context.linenum << \": \"\n                               << \"account balance = \" << account_total);\n\n  balance_t diff = amt;\n\n  switch (account_total.type()) {\n  case value_t::AMOUNT:\n    diff -= account_total.as_amount().reduced();\n    DEBUG(\"textual.parse\", \"line \" << context.linenum << \": \"\n                                   << \"Subtracting amount \" << account_total.as_amount()\n                                   << \" from diff, yielding \" << diff);\n    break;\n  case value_t::BALANCE:\n    diff -= account_total.as_balance();\n    DEBUG(\"textual.parse\", \"line \" << context.linenum << \": \"\n                                   << \"Subtracting balance \" << account_total.as_balance()\n                                   << \" from diff, yielding \" << diff);\n    break;\n  default:\n    break;\n  }\n\n  // Subtract amounts from previous posts to this account in the xact.\n  for (post_t* p : xact->posts) {\n    if (p->account == post->account &&\n        ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==\n         (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {\n      amount_t p_amt(strip_annotations\n                         ? p->amount.strip_annotations(keep_details_t())\n                         : p->amount);\n      diff -= p_amt;\n      DEBUG(\"textual.parse\", \"line \" << context.linenum << \": \"\n                                     << \"Subtracting \" << p_amt << \", diff = \" << diff);\n    }\n  }\n\n  DEBUG(\"post.assign\", \"line \" << context.linenum << \": \" << \"diff = \" << diff);\n\n  return diff;\n}\n```\n\n### Step 2: Replace lines 563-615 (the first computation block) with a call to the helper\n\nReplace this entire block:\n```cpp\n        value_t account_total(\n            post->account\n                ->self_total(!(post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG))));\n        if (strip)\n          account_total = account_total.strip_annotations(keep_details_t());\n\n        DEBUG(\"post.assign\", \"line \" << context.linenum << \": \"\n                                     << \"account balance = \" << account_total);\n        DEBUG(\"post.assign\", \"line \" << context.linenum << \": \"\n                                     << \"post amount = \" << post->amount\n                                     << \" (is_zero = \" << post->amount.is_zero() << \")\");\n        DEBUG(\"post.assign\", \"line \" << context.linenum << \": \"\n                                     << \"post assertion = \" << amt\n                                     << \" (is_zero = \" << amt.is_zero() << \")\");\n\n        balance_t diff = amt;\n\n        switch (account_total.type()) {\n        case value_t::AMOUNT: {\n          amount_t acct_amt(account_total.as_amount());\n          diff -= acct_amt.reduced();\n          DEBUG(\"textual.parse\", \"line \" << context.linenum << \": \"\n                                         << \"Subtracting amount \" << acct_amt << \" from diff, yielding \"\n                                         << diff);\n          break;\n        }\n        case value_t::BALANCE: {\n          balance_t bal(account_total.as_balance());\n          diff -= bal;\n          DEBUG(\"textual.parse\", \"line \" << context.linenum << \": \"\n                                         << \"Subtracting balance \" << bal << \" from diff, yielding \"\n                                         << diff);\n          break;\n        }\n        default:\n          break;\n        }\n\n        DEBUG(\"post.assign\", \"line \" << context.linenum << \": \" << \"diff = \" << diff);\n        DEBUG(\"textual.parse\", \"line \" << context.linenum << \": \"\n                                       << \"POST assign: diff = \" << diff);\n\n        // Subtract amounts from previous posts to this account in the xact.\n        for (post_t* p : xact->posts) {\n          if (p->account == post->account &&\n              ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==\n               (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {\n            amount_t p_amt(strip ? p->amount.strip_annotations(keep_details_t()) : p->amount);\n            diff -= p_amt;\n            DEBUG(\"textual.parse\", \"line \" << context.linenum << \": \"\n                                           << \"Subtracting \" << p_amt << \", diff = \" << diff);\n          }\n        }\n```\n\nWith:\n```cpp\n        DEBUG(\"post.assign\", \"line \" << context.linenum << \": \"\n                                     << \"post amount = \" << post->amount\n                                     << \" (is_zero = \" << post->amount.is_zero() << \")\");\n        DEBUG(\"post.assign\", \"line \" << context.linenum << \": \"\n                                     << \"post assertion = \" << amt\n                                     << \" (is_zero = \" << amt.is_zero() << \")\");\n\n        balance_t diff = compute_balance_diff(amt, post.get(), xact, strip, context);\n        DEBUG(\"textual.parse\", \"line \" << context.linenum << \": \"\n                                       << \"POST assign: diff = \" << diff);\n```\n\n### Step 3: Replace the second computation block (lines 636-660) with a call to the helper\n\nReplace this block:\n```cpp\n            if (strip) {\n              // Recompute the diff preserving lot annotations (cost basis\n              // and lot date) so that the assigned amount retains them.\n              value_t ann_total(\n                  post->account\n                      ->self_total(!(post->has_flags(POST_VIRTUAL) ||\n                                     post->has_flags(POST_IS_TIMELOG))));\n              balance_t ann_diff = amt;\n              switch (ann_total.type()) {\n              case value_t::AMOUNT:\n                ann_diff -= ann_total.as_amount().reduced();\n                break;\n              case value_t::BALANCE:\n                ann_diff -= ann_total.as_balance();\n                break;\n              default:\n                break;\n              }\n              for (post_t* p : xact->posts) {\n                if (p->account == post->account &&\n                    ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==\n                     (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {\n                  ann_diff -= p->amount;\n                }\n              }\n              // Use annotated diff if it can be represented as a single\n              // amount; fall back to the stripped diff otherwise (e.g.\n              // when multiple lots with different annotations exist).\n              try {\n                post->amount = ann_diff.to_amount();\n              } catch (...) {\n                post->amount = diff.to_amount();\n              }\n```\n\nWith:\n```cpp\n            if (strip) {\n              // Recompute the diff preserving lot annotations (cost basis\n              // and lot date) so that the assigned amount retains them.\n              balance_t ann_diff =\n                  compute_balance_diff(amt, post.get(), xact, false, context);\n              // Use annotated diff if it can be represented as a single\n              // amount; fall back to the stripped diff otherwise (e.g.\n              // when multiple lots with different annotations exist).\n              try {\n                post->amount = ann_diff.to_amount();\n              } catch (...) {\n                post->amount = diff.to_amount();\n              }\n```\n\nMake these exact edits to `/Users/johnw/src/ledger/pr-2570/src/textual_xacts.cc`. Use the Edit tool for precise replacements. Read the file first to confirm exact strings before editing.",
+            "subagent_type": "cpp-pro"
+          },
+          "timestamp": "2026-02-16T06:53:22.869Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 1402 tests passed. Now let me verify the changes look correct and build cleanly.",
+          "timestamp": "2026-02-16T06:57:00.663Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/pr-2570/src/textual_xacts.cc",
+            "limit": 80,
+            "offset": 310
+          },
+          "timestamp": "2026-02-16T06:57:01.397Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/pr-2570/src/textual_xacts.cc",
+            "limit": 75,
+            "offset": 620
+          },
+          "timestamp": "2026-02-16T06:57:04.277Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The refactoring looks clean. Now let me commit and create the PR.",
+          "timestamp": "2026-02-16T06:57:07.676Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff --stat",
+            "description": "Show diff stats"
+          },
+          "timestamp": "2026-02-16T06:57:08.513Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline -5 origin/master",
+            "description": "Recent commit messages for style reference"
+          },
+          "timestamp": "2026-02-16T06:57:11.448Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add src/textual_xacts.cc && git commit -m \"$(cat <<'EOF'\nrefactor: extract compute_balance_diff to eliminate code duplication\n\nExtract the balance diff computation (account total subtraction and\nprevious post subtraction) into a static helper function\ncompute_balance_diff(). This eliminates the near-identical code that\nappeared twice in parse_post: once for the initial stripped comparison\nand again for the annotated recomputation during balance assignments.\n\nAddresses the code duplication noted by dbear496 in PR #2570, where\nthe lot-annotation-preserving recomputation (from PR #2543) duplicated\nthe initial balance diff calculation.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the refactoring"
+          },
+          "timestamp": "2026-02-16T06:57:18.606Z"
+        }
+      ],
+      "total_additions": 64,
+      "total_deletions": 66,
+      "accepted_lines": 63,
+      "overriden_lines": 0
+    }
+  }
+}
