@@ -1,0 +1,24 @@
+; Regression test for #2589: Allow apostrophe as digit group separator
+; Some currency formats use apostrophe for digit grouping, e.g.,
+; Swiss francs: CHF 1'234'567.89
+
+2026/01/15 Salary
+    assets:bank                     CHF 1'234'567.89
+    income:salary
+
+2026/01/20 Rent
+    expenses:rent                   CHF 1'200.00
+    assets:bank
+
+test bal
+    CHF 1'233'367.89  assets:bank
+        CHF 1'200.00  expenses:rent
+   CHF -1'234'567.89  income:salary
+--------------------
+                   0
+end test
+
+test reg assets
+26-Jan-15 Salary                assets:bank            CHF 1'234'567.89 CHF 1'234'567.89
+26-Jan-20 Rent                  assets:bank            CHF -1'200.00 CHF 1'233'367.89
+end test
