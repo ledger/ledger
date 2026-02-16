@@ -1,0 +1,11 @@
+; Regression test for issue #1116
+; Core dump for certain regexes with a period
+; Using -p Monthly with a period-containing filter should not crash.
+
+2015/01/01 Test payee
+    Expenses:Food              $10.00
+    Assets:Checking
+
+test reg -p Monthly ^A
+15-Jan-01 - 15-Jan-31           Assets:Checking             $-10.00      $-10.00
+end test
