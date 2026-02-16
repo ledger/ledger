@@ -244,6 +244,12 @@ if(USE_PYTHON)
       set(_ledger_python_module_name "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
     endif()
 
+    # Allow packagers to override where the Python module is installed.
+    # By default this uses Python's site-packages, but systems like Homebrew
+    # may need to install under CMAKE_INSTALL_PREFIX instead.
+    set(LEDGER_PYTHON_INSTALL_DIR "${Python_SITEARCH}" CACHE PATH
+      "Directory to install the ledger Python module into")
+
     # FIXME: symlink would be sufficient:
     # maybe using install(CODE "...") and
     # execute_process(COMMAND "${CMAKE_COMMAND}" -E create_symlink ...).
@@ -254,7 +260,7 @@ if(USE_PYTHON)
       $<TARGET_FILE:libledger> "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}")
     install(
       FILES "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}"
-      DESTINATION ${Python_SITEARCH})
+      DESTINATION "${LEDGER_PYTHON_INSTALL_DIR}")
   else()
     message(WARNING "Python_SITEARCH not set. Will not install python module.")
   endif()
