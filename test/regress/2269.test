@@ -1,0 +1,28 @@
+; Regression test for issue #2269
+; munmap_chunk(): invalid pointer when tag value checks are used.
+; Using tag checks with value =~ /pattern/ should not cause
+; a use-after-free crash.
+
+tag xyz
+  check value =~ /abc/
+
+2023-03-24 Payee1
+  Expenses  $1
+  Assets   $-1
+  ; xyz: abc
+
+2023-03-26 Payee2
+  ; uvw: def
+  Expenses  $1
+  Assets   $-1
+
+2023-04-03 Payee3
+  Expenses  $1
+  Assets   $-1
+  ; xyz: abc
+
+test reg Expenses
+23-Mar-24 Payee1                Expenses                         $1           $1
+23-Mar-26 Payee2                Expenses                         $1           $2
+23-Apr-03 Payee3                Expenses                         $1           $3
+end test
