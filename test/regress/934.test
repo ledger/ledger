@@ -1,0 +1,14 @@
+; Regression test for issue #934
+; "ledger print" should properly align amounts
+
+2015/01/01 Test
+    Expenses:Food:Groceries             $12.50
+    Expenses:Food:Dining Out           $123.45
+    Assets:Checking
+
+test print
+2015/01/01 Test
+    Expenses:Food:Groceries                   $12.50
+    Expenses:Food:Dining Out                 $123.45
+    Assets:Checking
+end test
