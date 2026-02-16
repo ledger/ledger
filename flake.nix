@@ -108,11 +108,22 @@
           llvmPackages_18.clang       # Clang compiler for profiling builds
           llvmPackages_18.llvm        # Provides llvm-profdata, llvm-cov
           hyperfine                   # Statistical benchmarking
+          lcov                        # Frontend for gcov (coverage analysis tool)
+        ] ++ lib.optionals (system == "x86_64-linux" || system == "aarch64-linux") [
+          gcc                         # GNU compiler suite, includes gcov for Linux
         ];
 
         shellHook = ''
           echo "Ledger development environment"
           echo "clang-format version: $(clang-format --version)"
+          echo "Coverage tools available:"
+          ${if system == "x86_64-linux" || system == "aarch64-linux" then ''
+          echo "  - gcov: $(gcov --version | head -1)"
+          '' else ''
+          echo "  - gcov: Not available on $(uname)"
+          ''}
+          echo "  - lcov: $(lcov --version | head -1)"
+          echo "  - llvm-cov: $(llvm-cov --version | head -1)"
         '';
       };
     });
