@@ -446,7 +446,58 @@ void report_t::accounts_report(acct_handler_ptr handler) {
 }
 
 void report_t::commodities_report(post_handler_ptr handler) {
+  // Transaction state predicates (--cleared, --pending, --uncleared,
+  // --actual, --real) don't apply to commodity prices.  Strip them
+  // from the limit before building the handler chain.
+
+  string saved_limit;
+  bool had_limit = HANDLED(limit_);
+  if (had_limit)
+    saved_limit = HANDLER(limit_).str();
+
+  if (had_limit) {
+    // Decompose the compound limit expression into individual terms.
+    // The limit is built as nested "(old)&(new)" conjunctions, so
+    // we peel terms from the right to flatten it into a list.
+    std::set<string> state_preds = {
+      "cleared", "pending", "uncleared|pending", "actual", "real"
+    };
+
+    std::vector<string> terms;
+    string rest = saved_limit;
+    while (!rest.empty()) {
+      string::size_type sep = rest.rfind(")&(");
+      if (sep == string::npos) {
+        terms.push_back(rest);
+        break;
+      }
+      terms.push_back(rest.substr(sep + 3, rest.length() - sep - 4));
+      rest = rest.substr(1, sep - 1);
+    }
+
+    // Rebuild the limit without state predicates.
+    string new_limit;
+    for (const auto& term : terms) {
+      if (state_preds.find(term) == state_preds.end()) {
+        if (new_limit.empty())
+          new_limit = term;
+        else
+          new_limit = "(" + new_limit + ")&(" + term + ")";
+      }
+    }
+
+    HANDLER(limit_).off();
+    if (!new_limit.empty())
+      HANDLER(limit_).on(none, new_limit);
+  }
+
   handler = chain_handlers(handler, *this);
+
+  // Restore the original limit.
+  if (had_limit) {
+    HANDLER(limit_).off();
+    HANDLER(limit_).on(none, saved_limit);
+  }
 
   posts_commodities_iterator* walker(new posts_commodities_iterator(*session.journal.get()));
   try {
