@@ -309,6 +309,67 @@ void detail::parse_amount_expr(std::istream& in, scope_t& scope, post_t& post, a
   }
 }
 
+/**
+ * Compute the difference between the assigned/asserted amount and the
+ * current account balance, subtracting amounts from previous posts to
+ * the same account in the current transaction.
+ *
+ * When strip_annotations is true, lot annotations (cost basis, lot date)
+ * are removed from the account total and previous post amounts before
+ * comparison.
+ */
+static balance_t compute_balance_diff(
+    const amount_t& amt, post_t* post, xact_t* xact,
+    bool strip_annotations, parse_context_t& context)
+{
+  value_t account_total(
+      post->account
+          ->self_total(!(post->has_flags(POST_VIRTUAL) ||
+                         post->has_flags(POST_IS_TIMELOG))));
+  if (strip_annotations)
+    account_total = account_total.strip_annotations(keep_details_t());
+
+  DEBUG("post.assign", "line " << context.linenum << ": "
+                               << "account balance = " << account_total);
+
+  balance_t diff = amt;
+
+  switch (account_total.type()) {
+  case value_t::AMOUNT:
+    diff -= account_total.as_amount().reduced();
+    DEBUG("textual.parse", "line " << context.linenum << ": "
+                                   << "Subtracting amount " << account_total.as_amount()
+                                   << " from diff, yielding " << diff);
+    break;
+  case value_t::BALANCE:
+    diff -= account_total.as_balance();
+    DEBUG("textual.parse", "line " << context.linenum << ": "
+                                   << "Subtracting balance " << account_total.as_balance()
+                                   << " from diff, yielding " << diff);
+    break;
+  default:
+    break;
+  }
+
+  // Subtract amounts from previous posts to this account in the xact.
+  for (post_t* p : xact->posts) {
+    if (p->account == post->account &&
+        ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==
+         (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {
+      amount_t p_amt(strip_annotations
+                         ? p->amount.strip_annotations(keep_details_t())
+                         : p->amount);
+      diff -= p_amt;
+      DEBUG("textual.parse", "line " << context.linenum << ": "
+                                     << "Subtracting " << p_amt << ", diff = " << diff);
+    }
+  }
+
+  DEBUG("post.assign", "line " << context.linenum << ": " << "diff = " << diff);
+
+  return diff;
+}
+
 post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* account, xact_t* xact,
                                bool defer_expr) {
   TRACE_START(post_details, 1, "Time spent parsing postings:");
@@ -560,14 +621,6 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         // (the behavior that bug #1055 depends on).
         bool strip = !amt.has_annotation();
 
-        value_t account_total(
-            post->account
-                ->self_total(!(post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG))));
-        if (strip)
-          account_total = account_total.strip_annotations(keep_details_t());
-
-        DEBUG("post.assign", "line " << context.linenum << ": "
-                                     << "account balance = " << account_total);
         DEBUG("post.assign", "line " << context.linenum << ": "
                                      << "post amount = " << post->amount
                                      << " (is_zero = " << post->amount.is_zero() << ")");
@@ -575,44 +628,9 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
                                      << "post assertion = " << amt
                                      << " (is_zero = " << amt.is_zero() << ")");
 
-        balance_t diff = amt;
-
-        switch (account_total.type()) {
-        case value_t::AMOUNT: {
-          amount_t acct_amt(account_total.as_amount());
-          diff -= acct_amt.reduced();
-          DEBUG("textual.parse", "line " << context.linenum << ": "
-                                         << "Subtracting amount " << acct_amt << " from diff, yielding "
-                                         << diff);
-          break;
-        }
-        case value_t::BALANCE: {
-          balance_t bal(account_total.as_balance());
-          diff -= bal;
-          DEBUG("textual.parse", "line " << context.linenum << ": "
-                                         << "Subtracting balance " << bal << " from diff, yielding "
-                                         << diff);
-          break;
-        }
-        default:
-          break;
-        }
-
-        DEBUG("post.assign", "line " << context.linenum << ": " << "diff = " << diff);
+        balance_t diff = compute_balance_diff(amt, post.get(), xact, strip, context);
         DEBUG("textual.parse", "line " << context.linenum << ": "
                                        << "POST assign: diff = " << diff);
-
-        // Subtract amounts from previous posts to this account in the xact.
-        for (post_t* p : xact->posts) {
-          if (p->account == post->account &&
-              ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==
-               (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {
-            amount_t p_amt(strip ? p->amount.strip_annotations(keep_details_t()) : p->amount);
-            diff -= p_amt;
-            DEBUG("textual.parse", "line " << context.linenum << ": "
-                                           << "Subtracting " << p_amt << ", diff = " << diff);
-          }
-        }
 
         // If amt has a commodity, restrict balancing to that. Otherwise, it's the blanket '0' and
         // check that all of them are zero.
@@ -636,28 +654,8 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             if (strip) {
               // Recompute the diff preserving lot annotations (cost basis
               // and lot date) so that the assigned amount retains them.
-              value_t ann_total(
-                  post->account
-                      ->self_total(!(post->has_flags(POST_VIRTUAL) ||
-                                     post->has_flags(POST_IS_TIMELOG))));
-              balance_t ann_diff = amt;
-              switch (ann_total.type()) {
-              case value_t::AMOUNT:
-                ann_diff -= ann_total.as_amount().reduced();
-                break;
-              case value_t::BALANCE:
-                ann_diff -= ann_total.as_balance();
-                break;
-              default:
-                break;
-              }
-              for (post_t* p : xact->posts) {
-                if (p->account == post->account &&
-                    ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==
-                     (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {
-                  ann_diff -= p->amount;
-                }
-              }
+              balance_t ann_diff =
+                  compute_balance_diff(amt, post.get(), xact, false, context);
               // Use annotated diff if it can be represented as a single
               // amount; fall back to the stripped diff otherwise (e.g.
               // when multiple lots with different annotations exist).
