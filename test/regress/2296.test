@@ -1,0 +1,16 @@
+; Regression test for GitHub issue #2296: value corruption when converting
+; currencies at high precision with a decimal comma. Without --decimal-comma
+; or a preceding commodity directive, ledger must auto-detect that a comma
+; followed by more than 3 digits is a decimal separator, not a thousands
+; separator.
+
+2023-04-24 sale
+    Bank1    -6005,76 USD @ 4,166728274 PLN
+    Bank2    25024,37 PLN
+
+test bal --exchange PLN
+       -25024,37 PLN  Bank1
+        25024,37 PLN  Bank2
+--------------------
+                   0
+end test
