@@ -1,0 +1,20 @@
+; Regression test for issue #1831
+; Balance assignments should produce correct results regardless of
+; whether transactions are in one file or split across multiple files.
+; This test verifies the single-file case works correctly.
+
+2018-01-01 Initial assignment
+  Assets:Cash             10000.00 EUR
+  Equity
+
+2019-01-01 Dummy expense
+  Assets:Cash              -100.00 EUR
+  Expenses
+
+2020-01-01 Reassignment
+  Assets:Cash           = 10000.00 EUR
+  Equity
+
+test bal Assets:Cash
+        10000.00 EUR  Assets:Cash
+end test

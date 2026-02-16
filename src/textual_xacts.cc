@@ -562,7 +562,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
 
         value_t account_total(
             post->account
-                ->amount(!(post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG))));
+                ->self_total(!(post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG))));
         if (strip)
           account_total = account_total.strip_annotations(keep_details_t());
 
@@ -638,8 +638,8 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
               // and lot date) so that the assigned amount retains them.
               value_t ann_total(
                   post->account
-                      ->amount(!(post->has_flags(POST_VIRTUAL) ||
-                                 post->has_flags(POST_IS_TIMELOG))));
+                      ->self_total(!(post->has_flags(POST_VIRTUAL) ||
+                                     post->has_flags(POST_IS_TIMELOG))));
               balance_t ann_diff = amt;
               switch (ann_total.type()) {
               case value_t::AMOUNT:
