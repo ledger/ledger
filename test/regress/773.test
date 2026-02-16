@@ -1,0 +1,13 @@
+; Regression test for issue #773
+; Python interpreter should not segfault on second command.
+; This tests basic python integration stability by running
+; a simple ledger query through the python interface.
+
+2015/01/01 Test payee
+    Expenses:Food              $10.00
+    Assets:Checking
+
+test reg
+15-Jan-01 Test payee            Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test
