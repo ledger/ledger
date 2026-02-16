@@ -209,6 +209,8 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
           if (integer_digits > 3 && --integer_digits % 3 == 0) {
             if (time_colon)
               out << ':';
+            else if (comm && comm->has_flags(COMMODITY_STYLE_THOUSANDS_APOSTROPHE))
+              out << '\'';
             else if (commodity_t::decimal_comma_by_default ||
                      (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
               out << '.';
@@ -899,7 +901,7 @@ void parse_quantity(std::istream& in, string& value) {
     max--;
     in.get();
   }
-  READ_INTO(in, p, max, c, std::isdigit(static_cast<unsigned char>(c)) || c == '.' || c == ',');
+  READ_INTO(in, p, max, c, std::isdigit(static_cast<unsigned char>(c)) || c == '.' || c == ',' || c == '\'');
 
   string::size_type len = std::strlen(buf);
   while (len > 0 && !std::isdigit(static_cast<unsigned char>(buf[len - 1]))) {
@@ -1040,6 +1042,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
   string::size_type string_index = quant.length();
   string::size_type last_comma = string::npos;
   string::size_type last_period = string::npos;
+  string::size_type last_apostrophe = string::npos;
 
   bool no_more_commas = false;
   bool no_more_periods = false;
@@ -1126,6 +1129,14 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
 
       if (last_comma == string::npos)
         last_comma = string_index;
+    } else if (ch == '\'') {
+      // Apostrophe is always a thousands separator (e.g., CHF 1'234'567.89)
+      if (decimal_offset % 3 != 0)
+        throw_(amount_error, _("Incorrect use of thousand-mark apostrophe"));
+      comm_flags |= COMMODITY_STYLE_THOUSANDS;
+      comm_flags |= COMMODITY_STYLE_THOUSANDS_APOSTROPHE;
+      if (last_apostrophe == string::npos)
+        last_apostrophe = string_index;
     } else {
       decimal_offset++;
     }
@@ -1147,14 +1158,15 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
 
   // Now we have the final number.  Remove commas and periods, if necessary.
 
-  if (last_comma != string::npos || last_period != string::npos) {
+  if (last_comma != string::npos || last_period != string::npos ||
+      last_apostrophe != string::npos) {
     string::size_type len = quant.length();
     scoped_array<char> buf(new char[len + 1]);
     const char* p = quant.c_str();
     char* t = buf.get();
 
     while (*p) {
-      if (*p == ',' || *p == '.')
+      if (*p == ',' || *p == '.' || *p == '\'')
         p++;
       *t++ = *p++;
     }
