@@ -1,0 +1,7 @@
+2019-01-01 Dummy expense
+  Assets:Cash              -100.00 EUR
+  Expenses
+
+2020-01-01 Reassignment
+  Assets:Cash           = 10000.00 EUR
+  Equity

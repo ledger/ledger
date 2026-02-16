@@ -660,6 +660,20 @@ value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&
   }
 }
 
+value_t account_t::self_total(bool real_only) const {
+  value_t result;
+  std::set<const post_t*> seen;
+  for (const post_t* post : posts) {
+    if (!seen.insert(post).second)
+      continue;
+    if (real_only && post->has_flags(POST_VIRTUAL))
+      continue;
+    if (!post->amount.is_null())
+      add_or_set_value(result, post->amount);
+  }
+  return result;
+}
+
 value_t account_t::total(const optional<expr_t&>& expr) const {
   if (!(xdata_ && xdata_->family_details.calculated)) {
     const_cast<account_t&>(*this).xdata().family_details.calculated = true;

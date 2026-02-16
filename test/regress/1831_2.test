@@ -1,0 +1,8 @@
+; Regression test for issue #1831
+; Balance assignments with multiple files: the balance assignment in the
+; second file should account for transactions from the first file.
+; Assets:Cash should be 10000.00 EUR (not 20000.00 EUR).
+
+test -f $sourcepath/test/regress/1831_2a.dat -f $sourcepath/test/regress/1831_2b.dat bal Assets:Cash -> 0
+        10000.00 EUR  Assets:Cash
+end test
