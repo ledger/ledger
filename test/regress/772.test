@@ -1,0 +1,16 @@
+; Test for issue #772: Short options in ledgerrc should give clear error message
+; Short options like -S should not be supported in config files,
+; and should produce a helpful error message instead of crashing or
+; giving a confusing "Illegal option --" message
+
+-S d
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 6:
+Error: Short options (e.g., -S) are not supported in configuration files. Please use long options (e.g., --sort) instead
+end test
