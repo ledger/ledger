@@ -1,0 +1,24 @@
+; Test for issue #693: Optimized Ledger crashes when exceptions are thrown
+;
+; This test verifies that exception handling works correctly in optimized builds.
+; Previously, optimized builds would crash when exceptions were thrown due to
+; -fomit-frame-pointer breaking stack unwinding.
+;
+; The key is that these commands should exit with error code 1 (not crash with
+; SIGSEGV exit code 139), showing that exceptions are properly caught and handled.
+
+2024/01/01 Test transaction
+    Expenses:Test    $100
+    Assets:Cash
+
+; Test 1: File not found exception - should return error, not crash
+test bal -f /nonexistent/file.dat -> 1
+__ERROR__
+Error: Cannot read journal file "/nonexistent/file.dat"
+end test
+
+; Test 2: Invalid option to trigger an exception
+test bal --invalid-option -> 1
+__ERROR__
+Error: Illegal option --invalid-option
+end test
