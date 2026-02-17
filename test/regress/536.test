@@ -1,0 +1,44 @@
+; Test for issue #536: Crash in --gain register report with price directives
+;
+; The crash occurred when P (price) directives appeared at the top of the file
+; before transactions, combined with --gain and --exchange flags. This was a
+; use-after-free bug in the changed_value_posts destructor, fixed in commit
+; 96c88663 (which addressed issue #541).
+
+P 2018/02/12 Cars 837.29 USD
+P 2018/02/12 Trucks 0.00109460 Cars
+P 2018/02/12 USD 1.25864 CAD
+
+account Assets:One
+account Assets:Two
+account Equity:Opening Balances
+account Expenses:Institution Fees
+
+commodity CAD
+commodity USD
+commodity Cars
+commodity Trucks
+
+2017/12/22 * Opening Balance
+  Assets:Two                             25.00 Trucks @ 0.000195 Cars
+  Equity:Opening Balances
+
+2018/01/04 What
+  Assets:One                          0.00062722 Cars @ 515.00 USD
+  Assets:One                               -9.14 USD
+  Expenses:Institution Fees
+
+test reg --exchange CAD --gain One or Two or Institution
+17-Dec-22 Opening Balance       Assets:Two             -0.00487500 Cars
+                                                       25.00 Trucks -0.00487500 Cars
+                                                                    25.00 Trucks
+18-Jan-04 What                  Assets:One             0.00062722 Cars
+                                                     -0.3230183 USD -0.00424778 Cars
+                                                                    25.00 Trucks
+                                                                  -0.3230183 USD
+18-Feb-12 Commodities revalued  <Revalued>              CAD29.09294
+                                                   -0.00062722 Cars
+                                                      -25.00 Trucks
+                                                           0.32 USD  CAD29.09294
+                                                                -0.00487500 Cars
+end test
