@@ -1,0 +1,28 @@
+; Test for issue #1993: Tags values can become spontaneously uninitialized
+; When using --market with commodities that have per-unit costs, revaluation
+; posts need to inherit tags from the source postings so that tag-based filters
+; and format expressions work correctly.
+
+1950-01-01 ! Transaction 1
+    Assets:Stock        10 GOOG @ 3 USD
+    ; ending:: [1950-01-01]
+    Assets:Cash
+
+
+1950-01-02 ! Transaction 2
+    Assets:Stock       -10 GOOG @ 4 USD
+    Assets:Cash
+    ; ending:: [1950-01-04]
+
+test reg --format "%(format_date(tag('ending'), '%Y-%m-%d'))\n" --limit "has_tag('ending')" --market
+1950-01-01
+1950-01-01
+1950-01-04
+end test
+
+; Also test with sorting by tag (original failing case)
+test reg --format "%(format_date(tag('ending'), '%Y-%m-%d')) %(account) %(payee)\n" --limit "has_tag('ending')" --sort "tag('ending')" --market
+1950-01-01 Assets:Stock Transaction 1
+1950-01-01 <Revalued> Commodities revalued
+1950-01-04 Assets:Cash Transaction 2
+end test
