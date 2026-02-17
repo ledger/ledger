@@ -1,0 +1,27 @@
+; Test for issue #1221: Null pointer dereference in apply_tag_directive
+; This test verifies that the apply tag directive properly handles
+; missing arguments and doesn't crash with a null pointer dereference.
+;
+; The original bug report showed a crash when apply_tag_directive was
+; called with a NULL pointer, causing a SEGV in strlen via trim_ws.
+; The fix adds null checks to all apply_*_directive functions.
+
+; Valid usage: apply tag with argument should work correctly
+apply tag Important
+
+2024/01/01 Test transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+end apply
+
+test reg
+24-Jan-01 Test transaction      Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Verify that the tag was applied
+test bal --no-total
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+end test
