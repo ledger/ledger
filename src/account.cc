@@ -365,7 +365,7 @@ value_t get_wrapper(call_scope_t& args) {
   return (*Func)(args.context<account_t>());
 }
 
-value_t get_parent(account_t& account) {
+value_t get_parent_account(account_t& account) {
   return scope_value(account.parent);
 }
 
@@ -468,7 +468,7 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind, const string& fn
     if (fn_name == "partial_account")
       return WRAP_FUNCTOR(get_partial_name);
     else if (fn_name == "parent")
-      return WRAP_FUNCTOR(get_wrapper<&get_parent>);
+      return WRAP_FUNCTOR(get_wrapper<&get_parent_account>);
     break;
 
   case 's':
