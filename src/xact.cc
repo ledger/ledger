@@ -680,6 +680,9 @@ string xact_t::hash(string nonce, hash_type_t hash_type) const {
 
 namespace {
 bool post_pred(expr_t::ptr_op_t op, post_t& post) {
+  if (!op)
+    return false;
+
   switch (op->kind) {
   case expr_t::op_t::VALUE:
     return op->as_value().to_boolean();
