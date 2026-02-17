@@ -158,7 +158,7 @@ value_t get_xact_id(post_t& post) {
 }
 
 value_t get_code(post_t& post) {
-  if (post.xact->code)
+  if (post.xact && post.xact->code)
     return string_value(*post.xact->code);
   else
     return NULL_VALUE;
@@ -169,9 +169,9 @@ value_t get_payee(post_t& post) {
 }
 
 value_t get_note(post_t& post) {
-  if (post.note || post.xact->note) {
+  if (post.note || (post.xact && post.xact->note)) {
     string note = post.note ? *post.note : empty_string;
-    note += post.xact->note ? *post.xact->note : empty_string;
+    note += (post.xact && post.xact->note) ? *post.xact->note : empty_string;
     return string_value(note);
   } else {
     return NULL_VALUE;
@@ -179,7 +179,7 @@ value_t get_note(post_t& post) {
 }
 
 value_t get_magnitude(post_t& post) {
-  return post.xact->magnitude();
+  return post.xact ? post.xact->magnitude() : value_t();
 }
 
 value_t get_amount(post_t& post) {
@@ -352,6 +352,9 @@ value_t fn_any(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
 
+  if (!post.xact)
+    return false;
+
   for (post_t* p : post.xact->posts) {
     bind_scope_t bound_scope(args, *p);
     if (p == &post && args.has(1) && !args.get<bool>(1)) {
@@ -368,6 +371,9 @@ value_t fn_any(call_scope_t& args) {
 value_t fn_all(call_scope_t& args) {
   post_t& post(args.context<post_t>());
   expr_t::ptr_op_t expr(args.get<expr_t::ptr_op_t>(0));
+
+  if (!post.xact)
+    return true;
 
   for (post_t* p : post.xact->posts) {
     bind_scope_t bound_scope(args, *p);
