@@ -1,0 +1,18 @@
+; Regression test for GitHub issue #1642: crash when using --dc -X with one-sided transactions
+; "Cannot abs an uninitialized value" error when display_total has only debit or only credit.
+;
+; This is the same underlying bug as issue #2359, where the --dc option creates a sequence
+; for display_amount and display_total with (debit, credit) elements. When combined with -X,
+; currency conversion can result in only one element in the sequence. The get_at() calls in
+; the format expression would then return VOID for the missing element, causing abs() to fail.
+
+2017/12/01 Opening Balance
+    Assets:Something              $ 100.00
+    Equity:Opening Balances
+
+test bal --dc -X '$'
+      $ 100.00              0       $ 100.00  Assets:Something
+             0       $ 100.00      $ -100.00  Equity:Opening Balances
+--------------------------------------------
+      $ 100.00       $ 100.00              0
+end test
