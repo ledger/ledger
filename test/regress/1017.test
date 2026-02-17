@@ -1,0 +1,58 @@
+; Test for issue #1017: segfault with --group-by and -B basis option
+;
+; The crash occurred when grouping by a field (like 'note') where not all
+; postings have the field defined. The segfault was caused by improper ordering
+; in handler clear() methods when using --group-by with options that use the
+; revaluation handlers (-B, -V, --market).
+;
+; This was fixed in commit c0ad7e34 (Jan 4, 2018) by Michael Budde.
+; The fix reordered the clear() methods in display_filter_posts and
+; changed_value_posts to call create_accounts() after item_handler::clear()
+; instead of before, preventing use-after-free errors.
+;
+; This test verifies that --group-by works correctly with -B when some
+; postings lack the grouping field.
+
+1/2 Payee1
+    Acct1  -$100
+    Acct2  $50  ; Note1
+    Acct2       ; Note2
+
+1/2 Payee2
+    Acct3  -$50
+    Acct2   $50 ; Note1
+
+
+test reg Acct2 --group-by note
+ Note1
+26-Jan-02 Payee1                Acct2                           $50          $50
+26-Jan-02 Payee2                Acct2                           $50         $100
+
+ Note2
+26-Jan-02 Payee1                Acct2                           $50          $50
+end test
+
+test reg Acct2 --group-by note -B
+ Note1
+26-Jan-02 Payee1                Acct2                           $50          $50
+26-Jan-02 Payee2                Acct2                           $50         $100
+
+ Note2
+26-Jan-02 Payee1                Acct2                           $50          $50
+end test
+
+test bal Acct2 --group-by note
+ Note1
+                $100  Acct2
+
+ Note2
+                 $50  Acct2
+end test
+
+test bal Acct2 --group-by note -B
+ Note1
+                $100  Acct2
+
+ Note2
+                 $50  Acct2
+end test
