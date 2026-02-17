@@ -1,0 +1,46 @@
+; This test documents issue #1764: Crash with Python extensions
+;
+; When using Python to create a posting and add it to a transaction,
+; ledger would crash with a segfault when trying to evaluate expressions
+; on the posting (e.g., during print).
+;
+; The root cause was that Python-created postings lacked proper scope
+; parent linkage. When search_scope<post_t> tried to walk up the scope
+; chain during expression evaluation, it would crash.
+;
+; The fix: Make item_t inherit from child_scope_t instead of scope_t,
+; and set post->parent = this in xact_t::add_post(). This ensures all
+; postings have proper scope parent linkage whether created from C++ or
+; Python.
+;
+; Since Python bindings require Boost.Python which may not be available,
+; this test validates basic posting operations work correctly with the
+; new scope parent linkage.
+
+2012-02-29 01:13:49 * KFC
+    ; lots: buy
+    Assets:Checking
+    Assets:Coinbase      1 BTC @@ $1000
+
+test print
+2012/02/29 01:13:49 * KFC
+    ; lots: buy
+    Assets:Checking
+    Assets:Coinbase                            1 BTC @@ $1000
+end test
+
+test reg
+12-Feb-29 01:13:49 * KFC        Assets:Checking              $-1000       $-1000
+                                Assets:Coinbase               1 BTC       $-1000
+                                                                           1 BTC
+end test
+
+test bal
+              $-1000
+               1 BTC  Assets
+              $-1000    Checking
+               1 BTC    Coinbase
+--------------------
+              $-1000
+               1 BTC
+end test
