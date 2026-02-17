@@ -211,8 +211,18 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
                : 12);
       string amt;
       if (is_balance_assignment) {
-        // For balance assignments, don't print the computed amount;
-        // only the = assignment will be printed below.
+        // For balance assignments, format the = assignment right-justified
+        // within amount_width to align with regular amounts.
+        std::ostringstream amt_str;
+        amt_str << " = ";
+        value_t(*post->assigned_amount).print(amt_str, -1, -1);
+        unistring assign_str(amt_str.str());
+        int padding = amount_width - assign_str.length();
+        if (padding > 0) {
+          amt = string(padding, ' ') + amt_str.str();
+        } else {
+          amt = amt_str.str();
+        }
       } else if (post->amount_expr) {
         std::ostringstream amt_str;
         justify(amt_str, post->amount_expr->text(), (int)amount_width, true);
@@ -261,7 +271,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
           amtbuf << " " << cost_op << " " << (*post->given_cost / post->amount).abs();
       }
 
-      if (post->assigned_amount)
+      if (post->assigned_amount && !is_balance_assignment)
         amtbuf << " = " << *post->assigned_amount;
 
       string trailer = amtbuf.str();
