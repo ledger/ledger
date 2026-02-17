@@ -179,7 +179,10 @@ value_t get_note(post_t& post) {
 }
 
 value_t get_magnitude(post_t& post) {
-  return post.xact ? post.xact->magnitude() : value_t();
+  if (post.xact)
+    return post.xact->magnitude();
+  else
+    return NULL_VALUE;
 }
 
 value_t get_amount(post_t& post) {
