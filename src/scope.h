@@ -81,6 +81,8 @@ public:
   virtual void define(const symbol_t::kind_t, const string&, expr_t::ptr_op_t) {}
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) = 0;
 
+  virtual scope_t* get_parent() { return NULL; }
+
   virtual value_t::type_t type_context() const { return value_t::VOID; }
   virtual bool type_required() const { return false; }
 };
@@ -103,6 +105,8 @@ public:
     TRACE_CTOR(child_scope_t, "scope_t&");
   }
   virtual ~child_scope_t() { TRACE_DTOR(child_scope_t); }
+
+  virtual scope_t* get_parent() override { return parent; }
 
   virtual void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) override {
     if (parent)
@@ -176,8 +180,8 @@ T* search_scope(scope_t* ptr, bool prefer_direct_parents = false) {
     if (T* sought = search_scope<T>(prefer_direct_parents ? scope->parent : &scope->grandchild))
       return sought;
     return search_scope<T>(prefer_direct_parents ? &scope->grandchild : scope->parent);
-  } else if (child_scope_t* child_scope = dynamic_cast<child_scope_t*>(ptr)) {
-    return search_scope<T>(child_scope->parent);
+  } else if (scope_t* parent = ptr->get_parent()) {
+    return search_scope<T>(parent);
   }
   return NULL;
 }
