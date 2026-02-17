@@ -1,0 +1,40 @@
+; Test for issue #1218 and #1858: Null pointer dereference in post_t::payee()
+; This occurs when processing periodic transactions with automated expressions
+; that reference the payee before any actual transactions exist.
+
+account Assets:Checking
+account Expenses:Rent
+account Expenses:Groceries
+account Income:Salary
+
+commodity $
+    note American Dollars
+    format $1,000.00
+    nomarket
+    default
+
+~ monthly
+    Expenses:Rent                                                    $50.00
+    Expenses:Groceries                                               $40.00
+    Assets:Checking
+
+~ biweekly
+    Assets:Checking                                                  $50.00
+    Income:Salary
+
+; This automated transaction references payee in the predicate
+; It should not crash even when processing periodic transactions
+= expr payee =~ /Assets/
+    Assets:Checking                                                      -1
+    Assets:Checking                                                       1
+
+2020/01/10  Salary
+    Assets:Checking                                                  $75.26
+    Income:Salary
+
+test bal --explicit --pedantic
+              $75.26  Assets:Checking
+             $-75.26  Income:Salary
+--------------------
+                   0
+end test
