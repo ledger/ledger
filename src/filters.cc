@@ -323,9 +323,14 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
                   post_handler_ptr handler, const date_t& date = date_t(),
                   const bool act_date_p = true, const value_t& total = value_t(),
                   const bool direct_amount = false, const bool mark_visited = false,
-                  const bool bidir_link = true) {
+                  const bool bidir_link = true, post_t* source_post = NULL) {
   post_t& post = temps.create_post(*xact, account, bidir_link);
   post.add_flags(ITEM_GENERATED);
+
+  // Copy tags/metadata from the source posting so that revaluation posts
+  // inherit tags and can be properly filtered by predicates like --limit
+  if (source_post && source_post->metadata)
+    post.metadata = source_post->metadata;
 
   // If the account for this post is all virtual, then report the post as
   // such.  This allows subtotal reports to show "(Account)" for accounts
@@ -729,7 +734,11 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
                      /* handler=       */ handler,
                      /* date=          */ *xact._date,
                      /* act_date_p=    */ true,
-                     /* total=         */ repriced_total);
+                     /* total=         */ repriced_total,
+                     /* direct_amount= */ false,
+                     /* mark_visited=  */ false,
+                     /* bidir_link=    */ true,
+                     /* source_post=   */ &post);
       } else if (show_unrealized) {
         handle_value(
             /* value=         */ -diff,
@@ -741,7 +750,9 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
             /* act_date_p=    */ true,
             /* total=         */ value_t(),
             /* direct_amount= */ false,
-            /* mark_visited=  */ true);
+            /* mark_visited=  */ true,
+            /* bidir_link=    */ true,
+            /* source_post=   */ &post);
       }
     }
   }
