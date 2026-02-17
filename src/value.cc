@@ -1503,6 +1503,10 @@ value_t value_t::value(const datetime_t& moment, const commodity_t* in_terms_of)
     return NULL_VALUE;
 
   case BALANCE:
+    // An empty balance is zero in any commodity, so return it as-is rather
+    // than converting to NULL_VALUE which would display as blank
+    if (as_balance().is_empty())
+      return *this;
     if (optional<balance_t> bal = as_balance().value(moment, in_terms_of))
       return *bal;
     return NULL_VALUE;
