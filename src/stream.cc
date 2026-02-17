@@ -51,7 +51,9 @@ namespace {
  *
  * This function returns only for the process that is still Ledger.
  *
+ * @param os Pointer to the ostream pointer to be initialized
  * @param pager_path Path to the pager command.
+ * @param pager_pid Pointer to store the PID of the pager process
  *
  * @return The file descriptor of the pipe to the pager.  The caller
  * is responsible for cleaning this up.
@@ -59,7 +61,7 @@ namespace {
  * @exception std::logic_error Some problem was encountered, such as
  * failure to create a pipe or failure to fork a child process.
  */
-int do_fork(std::ostream** os, const path& pager_path) {
+int do_fork(std::ostream** os, const path& pager_path, pid_t* pager_pid) {
 #if !defined(_WIN32) && !defined(__CYGWIN__)
   int pfd[2];
 
@@ -67,10 +69,10 @@ int do_fork(std::ostream** os, const path& pager_path) {
   if (status == -1)
     throw std::logic_error(_("Failed to create pipe"));
 
-  status = fork();
-  if (status < 0) {
+  pid_t pid = fork();
+  if (pid < 0) {
     throw std::logic_error(_("Failed to fork child process"));
-  } else if (status == 0) { // child
+  } else if (pid == 0) { // child
     // Duplicate pipe's reading end into stdin
     status = dup2(pfd[0], STDIN_FILENO);
     if (status == -1)
@@ -90,6 +92,7 @@ int do_fork(std::ostream** os, const path& pager_path) {
     close(pfd[0]);
     typedef iostreams::stream<iostreams::file_descriptor_sink> fdstream;
     *os = new fdstream(pfd[1], iostreams::never_close_handle);
+    *pager_pid = pid;
   }
   return pfd[1];
 #else
@@ -100,12 +103,18 @@ int do_fork(std::ostream** os, const path& pager_path) {
 
 void output_stream_t::initialize(const optional<path>& output_file,
                                  const optional<path>& pager_path) {
-  if (output_file && *output_file != "-")
+  // Clean up any previous state before re-initializing
+  close();
+
+  if (output_file && *output_file != "-") {
     os = new ofstream(*output_file);
-  else if (pager_path)
-    pipe_to_pager_fd = do_fork(&os, *pager_path);
-  else
+  } else if (pager_path) {
+#if !defined(_WIN32) && !defined(__CYGWIN__)
+    pipe_to_pager_fd = do_fork(&os, *pager_path, &pager_pid);
+#endif
+  } else {
     os = &std::cout;
+  }
 }
 
 void output_stream_t::close() {
@@ -119,10 +128,13 @@ void output_stream_t::close() {
     ::close(pipe_to_pager_fd);
     pipe_to_pager_fd = -1;
 
-    int status;
-    wait(&status);
-    if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-      throw std::logic_error(_("Error in the pager"));
+    if (pager_pid != -1) {
+      int status;
+      waitpid(pager_pid, &status, 0);
+      pager_pid = -1;
+      if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+        throw std::logic_error(_("Error in the pager"));
+    }
   }
 #endif
 }
