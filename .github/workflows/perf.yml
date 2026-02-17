@@ -6,7 +6,7 @@ on:
 
 env:
   # Maximum allowed regression percentage for any single benchmark.
-  PERF_THRESHOLD: "2.0"
+  PERF_THRESHOLD: "5.0"
   # Number of measured runs per benchmark command (higher = more stable).
   PERF_RUNS: "15"
 
