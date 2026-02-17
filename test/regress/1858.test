@@ -1,0 +1,31 @@
+account Assets:Checking
+account Expenses:Rent
+account Expenses:Groceries
+account Income:Salary
+
+commodity $
+    note American Dollars
+    format $1,000.00
+    nomarket
+    default
+
+= expr payee =~ /Salary/
+    Assets:Checking                                                      -1
+    Assets:Checking                                                       1
+
+~ monthly
+    Expenses:Rent                                                    $50.00
+    Expenses:Groceries                                               $40.00
+    Assets:Checking
+
+# This needs to be updated
+~ biweekly
+    Assets:Checking                                                  $50.00
+    Income:Salary
+
+2020/01/10  Salary
+    Assets:Checking                                                  $75.26
+    Income:Salary
+
+test bal
+end test
