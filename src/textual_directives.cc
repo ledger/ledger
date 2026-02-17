@@ -131,6 +131,14 @@ void instance_t::nomarket_directive(char* line) {
 }
 
 void instance_t::option_directive(char* line) {
+  // Check if this is a short option (single dash) vs long option (double dash)
+  if (line[0] == '-' && line[1] != '-') {
+    // Short options are not supported in configuration files
+    throw_(option_error,
+           _("Short options (e.g., -S) are not supported in configuration files. "
+             "Please use long options (e.g., --sort) instead"));
+  }
+
   char* p = next_element(line);
   if (!p) {
     p = std::strchr(line, '=');
