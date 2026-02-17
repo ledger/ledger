@@ -61,11 +61,13 @@ protected:
   xacts_list xacts;
   bool print_raw;
   bool first_title;
+  bool omit_trailing_newline;
 
 public:
-  print_xacts(report_t& _report, bool _print_raw = false)
-      : report(_report), print_raw(_print_raw), first_title(true) {
-    TRACE_CTOR(print_xacts, "report&, bool");
+  print_xacts(report_t& _report, bool _print_raw = false, bool _omit_trailing_newline = false)
+      : report(_report), print_raw(_print_raw), first_title(true),
+        omit_trailing_newline(_omit_trailing_newline) {
+    TRACE_CTOR(print_xacts, "report&, bool, bool");
   }
   virtual ~print_xacts() { TRACE_DTOR(print_xacts); }
 

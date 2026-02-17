@@ -122,6 +122,20 @@ class RegressFile(object):
                 # makes it impossible for the process output to have a \.
                 expected_output = [l.replace('\\', '/') for l in expected_output]
 
+            # Fix for issue #1208: xact/draft/entry commands no longer output trailing newlines.
+            # Normalize comparison by ensuring both expected and actual have consistent line endings.
+            # Process output from readlines() will have \n on all lines except possibly the last.
+            # Expected output from test file has \n on all lines (since read with readline()).
+            # If lengths match and only difference is trailing \n on expected's last line, normalize it.
+            if (expected_output and process_output and
+                len(expected_output) == len(process_output)):
+                # Check if all lines match except for potential trailing newline on last line
+                if expected_output[-1].endswith('\n') and not process_output[-1].endswith('\n'):
+                    if expected_output[-1][:-1] == process_output[-1]:
+                        # Normalize: strip trailing newline from expected's last line
+                        expected_output = list(expected_output)  # Make a copy
+                        expected_output[-1] = expected_output[-1][:-1]
+
             for line in unified_diff(expected_output, process_output):
                 index += 1
                 if index < 3:

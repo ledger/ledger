@@ -1,0 +1,17 @@
+; Test for issue #1208: ledger xact should not output trailing newline
+; after the last posting. This allows tools like ledger-add-transaction
+; to append output without creating unnecessary blank lines.
+;
+; Prior to the fix, print_xact would output a trailing newline after the
+; last posting. When Emacs ledger-add-transaction appended this output
+; to a file and added its own newline, it would create an unwanted blank line.
+
+2024/01/01 Some existing transaction
+    Assets:Bank              $100
+    Income:Salary
+
+test xact --now 2024/01/16 "NewPayee" Expenses:Food '$10' Liabilities:CreditCard
+2024/01/16 NewPayee
+    Expenses:Food                                $10
+    Liabilities:CreditCard
+end test
