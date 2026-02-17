@@ -1,0 +1,19 @@
+; Test for issue #1220: Null pointer dereference in get_code
+; https://github.com/ledger/ledger/issues/1220
+; The bug occurred when an automated transaction's predicate
+; referenced the 'code' field, but the posting didn't have
+; an associated transaction yet.
+
+= expr code =~ /.*/
+    (Assets:AutoGen)  $1.00
+
+2024-01-01 * (TEST) Test Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test Transaction      Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+                                (Assets:AutoGen)              $1.00        $1.00
+                                (Assets:AutoGen)              $1.00        $2.00
+end test

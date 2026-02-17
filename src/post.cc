@@ -158,7 +158,7 @@ value_t get_xact_id(post_t& post) {
 }
 
 value_t get_code(post_t& post) {
-  if (post.xact->code)
+  if (post.xact && post.xact->code)
     return string_value(*post.xact->code);
   else
     return NULL_VALUE;
@@ -169,9 +169,9 @@ value_t get_payee(post_t& post) {
 }
 
 value_t get_note(post_t& post) {
-  if (post.note || post.xact->note) {
+  if (post.note || (post.xact && post.xact->note)) {
     string note = post.note ? *post.note : empty_string;
-    note += post.xact->note ? *post.xact->note : empty_string;
+    note += (post.xact && post.xact->note) ? *post.xact->note : empty_string;
     return string_value(note);
   } else {
     return NULL_VALUE;
@@ -179,7 +179,10 @@ value_t get_note(post_t& post) {
 }
 
 value_t get_magnitude(post_t& post) {
-  return post.xact->magnitude();
+  if (post.xact)
+    return post.xact->magnitude();
+  else
+    return NULL_VALUE;
 }
 
 value_t get_amount(post_t& post) {
