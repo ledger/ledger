@@ -199,7 +199,16 @@ class DocTests:
           verify = verify.decode('utf-8')
           if sys.platform == 'win32':
             verify = verify.replace('\r\n', '\n')
-          valid = (output == verify) or (not error and validation)
+
+          # Fix for issue #1208: xact/draft/entry commands no longer output trailing newlines.
+          # Normalize comparison by stripping trailing newline from expected output if actual
+          # output doesn't have one (but they otherwise match).
+          normalized_output = output
+          if output and verify and output.endswith('\n') and not verify.endswith('\n'):
+            if output[:-1] == verify:
+              normalized_output = output[:-1]
+
+          valid = (normalized_output == verify) or (not error and validation)
         except subprocess.CalledProcessError as e:
           error = e.output
           valid = False
@@ -217,7 +226,7 @@ class DocTests:
           if self.verbose > 1:
             print(' '.join(command))
             if not validation:
-              for line in unified_diff(output.split('\n'), verify.split('\n'), fromfile='generated', tofile='expected'):
+              for line in unified_diff(normalized_output.split('\n'), verify.split('\n'), fromfile='generated', tofile='expected'):
                 print(line)
               print()
       else:
