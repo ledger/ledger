@@ -55,14 +55,11 @@
           "-DBUILD_DOCS:BOOL=ON"
           "-DUSE_PYTHON:BOOL=${if usePython then "ON" else "OFF"}"
           "-DUSE_GPGME:BOOL=${if gpgmeSupport then "ON" else "OFF"}"
+        ] ++ lib.optionals usePython [
+          # Install the Python module into our own 'py' output rather than the
+          # read-only Python store path.
+          "-DLEDGER_PYTHON_INSTALL_DIR=${placeholder "py"}/${python3.sitePackages}"
         ];
-
-        # by default, it will query the python interpreter for its sitepackages location
-        # however, that would write to a different nixstore path, pass our own sitePackages location
-        prePatch = lib.optionalString usePython ''
-          substituteInPlace src/CMakeLists.txt \
-            --replace 'DESTINATION ''${Python_SITEARCH}' 'DESTINATION "${placeholder "py"}/${python3.sitePackages}"'
-        '';
 
         installTargets = [ "doc" "install" ];
 
