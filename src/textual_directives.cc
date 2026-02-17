@@ -268,6 +268,9 @@ void instance_t::apply_directive(char* line) {
 }
 
 void instance_t::apply_account_directive(char* line) {
+  if (!line)
+    throw_(parse_error, _("Directive 'apply account' requires an argument"));
+
   if (account_t* acct = top_account()->find_account(line))
     apply_stack.push_front(application_t("account", acct));
   else
@@ -275,6 +278,9 @@ void instance_t::apply_account_directive(char* line) {
 }
 
 void instance_t::apply_tag_directive(char* line) {
+  if (!line)
+    throw_(parse_error, _("Directive 'apply tag' requires an argument"));
+
   string tag(trim_ws(line));
 
   if (tag.find(':') == string::npos)
@@ -284,6 +290,9 @@ void instance_t::apply_tag_directive(char* line) {
 }
 
 void instance_t::apply_rate_directive(char* line) {
+  if (!line)
+    throw_(parse_error, _("Directive 'apply fixed/rate' requires an argument"));
+
   if (optional<std::pair<commodity_t*, price_point_t>> price_point =
           commodity_pool_t::current_pool->parse_price_directive(trim_ws(line), true, true)) {
     apply_stack.push_front(
@@ -294,6 +303,9 @@ void instance_t::apply_rate_directive(char* line) {
 }
 
 void instance_t::apply_year_directive(char* line, bool use_apply_stack) {
+  if (!line)
+    throw_(parse_error, _("Directive 'apply year' requires an argument"));
+
   try {
     unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));
     if (use_apply_stack) {
