@@ -533,6 +533,7 @@ xact_t::xact_t(const xact_t& e) : xact_base_t(e), code(e.code), payee(e.payee) {
 
 void xact_t::add_post(post_t* post) {
   post->xact = this;
+  post->parent = this;
   xact_base_t::add_post(post);
 }
 

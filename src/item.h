@@ -88,6 +88,7 @@ public:
   typedef std::pair<optional<value_t>, bool> tag_data_t;
   typedef std::map<string, tag_data_t, std::function<bool(string, string)>> string_map;
 
+  scope_t* parent;
   state_t _state;
   optional<date_t> _date;
   optional<date_t> _date_aux;
@@ -96,10 +97,10 @@ public:
   optional<string_map> metadata;
 
   item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
-      : supports_flags<uint_least16_t>(_flags), _state(UNCLEARED), note(_note) {
+      : supports_flags<uint_least16_t>(_flags), _state(UNCLEARED), note(_note), parent(NULL) {
     TRACE_CTOR(item_t, "flags_t, const string&");
   }
-  item_t(const item_t& item) : supports_flags<uint_least16_t>(), scope_t() {
+  item_t(const item_t& item) : supports_flags<uint_least16_t>(), scope_t(), parent(NULL) {
     copy_details(item);
     TRACE_CTOR(item_t, "copy");
   }
@@ -109,6 +110,7 @@ public:
     set_flags(item.flags());
     set_state(item.state());
 
+    parent = item.parent;
     _date = item._date;
     _date_aux = item._date_aux;
     note = item.note;
@@ -118,6 +120,8 @@ public:
 
   virtual bool operator==(const item_t& xact) { return this == &xact; }
   virtual bool operator!=(const item_t& xact) { return !(*this == xact); }
+
+  virtual scope_t* get_parent() override { return parent; }
 
   string id() const {
     if (optional<value_t> ref = get_tag(_("UUID"))) {
