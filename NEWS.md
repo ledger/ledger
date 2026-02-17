@@ -4,6 +4,8 @@
 
 - Fix version number in binary
 
+- Fix crash in optimized builds when exceptions are thrown (issue #693)
+
 ## 3.4.0
 
 ### Critical Bug Fixes
