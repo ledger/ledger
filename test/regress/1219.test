@@ -1,0 +1,24 @@
+; Test for issue #1219: Null pointer dereference in post_pred
+; This test ensures that auto transactions with predicates work correctly
+; and that the null pointer check in post_pred doesn't break functionality.
+
+= /^Expenses:Food/
+    (Budget:Food)    -1.00
+
+2024/01/01 Test Transaction
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test Transaction      Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+                                (Budget:Food)               $-10.00      $-10.00
+end test
+
+test bal
+             $-10.00  Assets:Cash
+             $-10.00  Budget:Food
+              $10.00  Expenses:Food
+--------------------
+             $-10.00
+end test
