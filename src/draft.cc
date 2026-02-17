@@ -514,7 +514,9 @@ value_t xact_command(call_scope_t& args) {
     // Only consider actual postings for the "xact" command
     report.HANDLER(limit_).on("#xact", "actual");
 
-    report.xact_report(post_handler_ptr(new print_xacts(report)), *new_xact.get());
+    // Pass true for omit_trailing_newline to fix issue #1208
+    // This prevents ledger-add-transaction from creating blank lines
+    report.xact_report(post_handler_ptr(new print_xacts(report, false, true)), *new_xact.get());
   }
 
   return true;

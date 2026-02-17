@@ -119,7 +119,7 @@ std::ostringstream format_account_name(xact_t& xact, post_t* post) {
   return pbuf;
 }
 
-void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
+void print_xact(report_t& report, std::ostream& out, xact_t& xact, bool omit_final_newline = false) {
   format_type_t format_type = FMT_WRITTEN;
   string format_str;
   optional<const char*> format;
@@ -181,6 +181,17 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
     unistring name = format_account_name(xact, post).str();
     if (account_width < name.length())
       account_width = name.length();
+  }
+
+  // Find the last posting that will actually be printed (not skipped)
+  post_t* last_printed_post = nullptr;
+  for (auto it = xact.posts.rbegin(); it != xact.posts.rend(); ++it) {
+    post_t* post = *it;
+    if (report.HANDLED(generated) ||
+        (!post->has_flags(ITEM_TEMP | ITEM_GENERATED) || post->has_flags(POST_ANONYMIZED))) {
+      last_printed_post = post;
+      break;
+    }
   }
 
   for (post_t* post : xact.posts) {
@@ -279,7 +290,10 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
     if (post->note)
       print_note(out, *post->note, post->has_flags(ITEM_NOTE_ON_NEXT_LINE), columns,
                  4 + account_width);
-    out << '\n';
+
+    // Output newline after posting, but skip it for the last posting if omit_final_newline is true
+    if (!omit_final_newline || post != last_printed_post)
+      out << '\n';
   }
 }
 } // namespace
@@ -296,18 +310,22 @@ void print_xacts::title(const string&) {
 void print_xacts::flush() {
   std::ostream& out(report.output_stream);
 
-  bool first = true;
-  for (xact_t* xact : xacts) {
-    if (first)
-      first = false;
-    else
-      out << '\n';
+  for (auto it = xacts.begin(); it != xacts.end(); ++it) {
+    xact_t* xact = *it;
 
     if (print_raw) {
       print_item(out, *xact);
       out << '\n';
     } else {
-      print_xact(report, out, *xact);
+      // For the last transaction, pass the omit_trailing_newline flag
+      auto next_it = it;
+      ++next_it;
+      bool is_last = (next_it == xacts.end());
+      print_xact(report, out, *xact, is_last && omit_trailing_newline);
+
+      // Add blank line between transactions (but not after the last one)
+      if (!is_last)
+        out << "\n";
     }
   }
 
