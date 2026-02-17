@@ -1,5 +1,6 @@
-; Regression test for bug #1542 and #2262: zero-amount budget posting causes
-; crash with --exchange option due to negating an uninitialized value.
+; Regression test for bug #2262: zero-amount budget posting causes crash
+; with --exchange option due to negating an uninitialized value.
+; This is essentially the same issue as #1542.
 
 ~ monthly
     Income
