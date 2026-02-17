@@ -1,0 +1,28 @@
+; Segmentation fault with --unbudgeted when all accounts are budgeted (BZ#849)
+; This issue is related to BZ#730 - both caused by interval_posts::flush()
+; attempting to access all_posts.front() when the deque is empty.
+;
+; When using --unbudgeted with all accounts budgeted, no posts pass through
+; to interval_posts, resulting in an empty all_posts deque. Without proper
+; size checking, this causes a segfault when combined with -M (monthly intervals).
+
+~ monthly
+    Expenses     $10.00
+    Assets
+
+2012/01/01 Test Transaction
+    Expenses     $10.00
+    Assets
+
+test -M reg --unbudgeted
+end test
+
+test -M bal --unbudgeted
+end test
+
+; Also test with --unbudgeted alone (no interval)
+test reg --unbudgeted
+end test
+
+test bal --unbudgeted
+end test
