@@ -2671,7 +2671,9 @@ Specifies the default commodity to use, by specifying an amount in the
 expected format.  The @command{xact} command will use this commodity as
 the default when none other can be determined.  This command may be used
 multiple times, to set the default flags for different commodities;
-whichever is seen last is used as the default commodity.  For example,
+whichever is seen last is used as the default commodity.  The format
+specified in the D directive is locked and will not be changed by
+observational formatting from transactions in the journal.  For example,
 to set US dollars as the default commodity, while also setting the
 thousands flag and decimal flag for that commodity, use:
 
