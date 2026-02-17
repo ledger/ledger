@@ -1,0 +1,84 @@
+; Test for issue #1163: Interactive mode crash after multiple commands
+; This test ensures that output_stream_t properly cleans up resources
+; when multiple commands are executed in succession, preventing the
+; resource leak that caused crashes after 3-10 commands in interactive mode.
+
+2009/01/01 Opening Balance
+    Assets:Checking    1000.00 BGN
+    Equity:Opening
+
+2009/05/15 Grocery Store
+    Expenses:Food    50.00 BGN
+    Assets:Checking
+
+2009/06/20 Salary
+    Income:Salary    -2000.00 BGN
+    Assets:Checking
+
+2009/07/10 Rent
+    Expenses:Rent    500.00 BGN
+    Assets:Checking
+
+2009/08/05 Utilities
+    Expenses:Utilities    75.00 BGN
+    Assets:Checking
+
+2009/09/12 Gas Station
+    Expenses:Auto    60.00 BGN
+    Assets:Checking
+
+; Run multiple balance commands with format options similar to the crash scenario
+; Each command should properly initialize and clean up the output stream
+
+test bal ^Assets -X BGN -e 2009/06/30 --format='2009-Jun-30,%a,%t\n' --no-pager
+2009-Jun-30,Assets:Checking,2950.00 BGN
+end test
+
+test bal ^Assets -X BGN -e 2009/07/31 --format='2009-Jul-31,%a,%t\n' --no-pager
+2009-Jul-31,Assets:Checking,2450.00 BGN
+end test
+
+test bal ^Assets -X BGN -e 2009/08/31 --format='2009-Aug-31,%a,%t\n' --no-pager
+2009-Aug-31,Assets:Checking,2375.00 BGN
+end test
+
+test bal ^Assets -X BGN -e 2009/09/30 --format='2009-Sep-30,%a,%t\n' --no-pager
+2009-Sep-30,Assets:Checking,2315.00 BGN
+end test
+
+test bal ^Assets -X BGN -e 2009/10/31 --format='2009-Oct-31,%a,%t\n' --no-pager
+2009-Oct-31,Assets:Checking,2315.00 BGN
+end test
+
+test bal ^Assets -X BGN -e 2009/11/30 --format='2009-Nov-30,%a,%t\n' --no-pager
+2009-Nov-30,Assets:Checking,2315.00 BGN
+end test
+
+test bal ^Assets -X BGN -e 2009/12/31 --format='2009-Dec-31,%a,%t\n' --no-pager
+2009-Dec-31,Assets:Checking,2315.00 BGN
+end test
+
+test bal ^Expenses -X BGN -e 2009/09/30 --format='2009-Sep-30,%a,%t\n' --no-pager
+2009-Sep-30,Expenses,0
+2009-Sep-30,Expenses:Auto,60.00 BGN
+2009-Sep-30,Expenses:Food,50.00 BGN
+2009-Sep-30,Expenses:Rent,500.00 BGN
+2009-Sep-30,Expenses:Utilities,75.00 BGN
+2009-Sep-30,,0
+end test
+
+test bal ^Income -X BGN -e 2009/09/30 --format='2009-Sep-30,%a,%t\n' --no-pager
+2009-Sep-30,Income:Salary,-2000.00 BGN
+end test
+
+test bal -X BGN -e 2009/09/30 --format='2009-Sep-30,%a,%t\n' --no-pager
+2009-Sep-30,Assets:Checking,2315.00 BGN
+2009-Sep-30,Equity:Opening,-1000.00 BGN
+2009-Sep-30,Expenses,0
+2009-Sep-30,Expenses:Auto,60.00 BGN
+2009-Sep-30,Expenses:Food,50.00 BGN
+2009-Sep-30,Expenses:Rent,500.00 BGN
+2009-Sep-30,Expenses:Utilities,75.00 BGN
+2009-Sep-30,Income:Salary,-2000.00 BGN
+2009-Sep-30,,0
+end test
