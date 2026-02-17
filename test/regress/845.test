@@ -1,0 +1,40 @@
+; Test for issue #845: Ledger should exit gracefully on invalid option syntax
+; Bug: Using syntax like -f=file.dat (with equals sign after single-dash option)
+;      would cause ledger to crash during cleanup after reporting "Illegal option -="
+; Fix: Ensure program exits cleanly with proper error message and exit code 1,
+;      without any memory corruption or crash during cleanup
+;
+; The original bug report from 2012 showed that ledger would correctly detect
+; the illegal option "-=" when parsing "-f=~/tmp/c.dat", but would then crash
+; with invalid memory reads during program exit/cleanup phase.
+
+2024/01/01 * Opening Balance
+    Assets:Checking          $1000.00
+    Equity:Opening Balances
+
+2024/01/15 * Groceries
+    Expenses:Food         $50.00
+    Assets:Checking
+
+; Test the specific failing case: -f= syntax
+; This should fail with "Illegal option -=" and exit code 1, not crash
+; The key is that it must exit gracefully without memory corruption
+test -f= bal -> 1
+__ERROR__
+Error: Illegal option -=
+end test
+
+; Similar test with -f=value to ensure consistent handling
+test -f=nonexistent.dat bal -> 1
+__ERROR__
+Error: Illegal option -=
+end test
+
+; Verify normal operation is unaffected
+test bal
+             $950.00  Assets:Checking
+           $-1000.00  Equity:Opening Balances
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test
