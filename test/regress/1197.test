@@ -1,0 +1,42 @@
+; Test for issue #1197
+; The D directive should force display characteristics and prevent
+; observational formatting from overriding the specified format.
+; https://github.com/ledger/ledger/issues/1197
+
+D $1,000.00
+
+2024/01/01 Transaction 1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Transaction 2 with different precision
+    Expenses:Food    $20.0000
+    Assets:Cash
+
+2024/01/03 Transaction 3
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test bal Expenses
+              $60.00  Expenses:Food
+end test
+
+test reg Expenses
+24-Jan-01 Transaction 1         Expenses:Food                $10.00       $10.00
+24-Jan-02 Transaction 2 with .. Expenses:Food                $20.00       $30.00
+24-Jan-03 Transaction 3         Expenses:Food                $30.00       $60.00
+end test
+
+test print
+2024/01/01 Transaction 1
+    Expenses:Food                             $10.00
+    Assets:Cash
+
+2024/01/02 Transaction 2 with different precision
+    Expenses:Food                             $20.00
+    Assets:Cash
+
+2024/01/03 Transaction 3
+    Expenses:Food                             $30.00
+    Assets:Cash
+end test

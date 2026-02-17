@@ -100,6 +100,9 @@ void instance_t::default_commodity_directive(char* line) {
   VERIFY(amt.valid());
   commodity_pool_t::current_pool->default_commodity = &amt.commodity();
   amt.commodity().add_flags(COMMODITY_KNOWN);
+  // Set COMMODITY_STYLE_NO_MIGRATE to lock the format and prevent
+  // observational formatting from overriding it (issue #1197)
+  amt.commodity().add_flags(COMMODITY_STYLE_NO_MIGRATE);
 }
 
 void instance_t::default_account_directive(char* line) {
