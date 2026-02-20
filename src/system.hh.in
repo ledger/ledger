@@ -89,6 +89,7 @@
 #include <new>
 #include <optional>
 #include <set>
+#include <variant>
 #include <stack>
 #include <string>
 #include <string_view>
