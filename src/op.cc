@@ -508,6 +508,8 @@ value_t expr_t::op_t::calc_call(scope_t& scope, ptr_op_t* locus, const int depth
       assert(func->kind == O_LAMBDA);
       return call_lambda(func, scope, call_args, locus, depth);
     }
+  } catch (const recursion_error&) {
+    throw;
   } catch (const std::exception&) {
     add_error_context(_f("While calling function '%1% %2%':") % name % call_args.args);
     throw;

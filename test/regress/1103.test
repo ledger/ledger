@@ -1,0 +1,10 @@
+2024/01/15 * Grocery Store
+    Expenses:Food              $10.00
+    Assets:Cash
+
+test -t 't' reg -> 1
+__ERROR__
+While handling posting from "$FILE", line 2:
+>     Expenses:Food              $10.00
+Error: Expression recursion depth exceeded (257)
+end test

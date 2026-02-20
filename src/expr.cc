@@ -130,10 +130,22 @@ void expr_t::detect_fast_path() {
 }
 
 value_t expr_t::real_calc(scope_t& scope) {
+  static thread_local int eval_depth = 0;
+
+  struct EvalDepthGuard {
+    EvalDepthGuard() { ++eval_depth; }
+    ~EvalDepthGuard() { --eval_depth; }
+  } depth_guard;
+
   if (ptr) {
     ptr_op_t locus;
     try {
+      if (eval_depth > 256)
+        throw_(recursion_error,
+               _f("Expression recursion depth exceeded (%1%)") % eval_depth);
       return ptr->calc(scope, &locus);
+    } catch (const recursion_error&) {
+      throw;
     } catch (const std::exception&) {
       if (locus) {
         string current_context = error_context();
