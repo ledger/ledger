@@ -240,6 +240,8 @@ void session_t::close_journal_files() {
 
   journal.reset(new journal_t);
   amount_t::initialize();
+  amount_t::parse_conversion("1.0m", "60s");
+  amount_t::parse_conversion("1.00h", "60m");
 }
 
 journal_t* session_t::get_journal() {
