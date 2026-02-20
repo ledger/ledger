@@ -732,6 +732,19 @@ class PrepareBuild(CommandLineApp):
         if self.options.python:
             self.configure_args.append('-DUSE_PYTHON=1')
 
+        if system == 'Darwin':
+            import subprocess
+            try:
+                result = subprocess.run(['xcrun', '--sdk', 'macosx', '--show-sdk-path'],
+                                      capture_output=True, text=True, check=True)
+                sdk_path = result.stdout.strip()
+                if sdk_path:
+                    self.configure_args.append('-DCMAKE_OSX_SYSROOT=' + sdk_path)
+                    self.log.info('Using macOS SDK => ' + sdk_path)
+            except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                # xcrun is unavailable or failed; proceed without an explicit macOS SDK sysroot.
+                self.log.debug('Unable to determine macOS SDK via xcrun: %s', e)
+
         if system.startswith('CYGWIN'):
             self.configure_args.append('-G')
             self.configure_args.append('Unix Makefiles')
