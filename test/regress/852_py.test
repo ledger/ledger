@@ -1,0 +1,3 @@
+test python test/regress/852.py
+dir(ledger) ok
+end test
