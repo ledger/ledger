@@ -143,6 +143,23 @@ void instance_t::automated_xact_directive(char* line) {
   query_start = skip_ws(query_start);
 
   try {
+    // Detect lines of '=' characters used as visual dividers (e.g. "============").
+    // After the leading '=' that triggered automated-transaction parsing, the
+    // remainder is in query_start.  If it consists solely of '=' characters
+    // (with optional trailing whitespace and/or a ';' comment) the user almost
+    // certainly intended a divider line rather than an automated transaction.
+    if (*query_start == '=') {
+      char* p = query_start;
+      while (*p == '=')
+        ++p;
+      p = skip_ws(p);
+      if (*p == '\0' || *p == ';') {
+        throw parse_error(_(
+            "Lines beginning with '=' are automated transactions, not dividers;"
+            " for a comment or divider line, use ';' instead"));
+      }
+    }
+
     query_t query;
     keep_details_t keeper(true, true, true);
     expr_t::ptr_op_t expr =

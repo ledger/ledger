@@ -13,5 +13,5 @@ __ERROR__
 While parsing file "$FILE", line 5:
 While parsing automated transaction:
 > ============
-Error: note operator not followed by argument
+Error: Lines beginning with '=' are automated transactions, not dividers; for a comment or divider line, use ';' instead
 end test
