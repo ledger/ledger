@@ -43,8 +43,7 @@
  */
 #pragma once
 
-namespace ledger {
-namespace python {
+namespace ledger::python {
 
 template <typename T, typename TfromPy>
 struct object_from_python {
@@ -126,11 +125,9 @@ PyObject* str_to_py_unicode(const T& str) {
   return object(handle<>(borrowed(uni))).ptr();
 }
 
-} // namespace python
-} // namespace ledger
+} // namespace ledger::python
 
-namespace boost {
-namespace python {
+namespace boost::python {
 
 // Use expr to create the PyObject corresponding to x
 #define BOOST_PYTHON_RETURN_TO_PYTHON_BY_VALUE(T, expr, pytype)                                    \
@@ -166,7 +163,6 @@ namespace python {
   BOOST_PYTHON_RETURN_TO_PYTHON_BY_VALUE(T, expr, pytype)                                          \
   BOOST_PYTHON_ARG_TO_PYTHON_BY_VALUE(T, expr)
 
-} // namespace python
-} // namespace boost
+} // namespace boost::python
 
 // boost::python::register_ptr_to_python< std::shared_ptr<Base> >();
