@@ -35,6 +35,7 @@
 #include "pyutils.h"
 #include "error.h"
 #include "session.h"
+#include "pool.h"
 
 namespace ledger {
 
@@ -53,8 +54,25 @@ journal_t* py_read_journal_from_string(const string& data) {
 PyObject* py_error_context(const session_t& session) {
   return str_to_py_unicode(error_context());
 }
+// After close_journal_files() replaces the commodity pool, rebind the
+// module-level `ledger.commodities` attribute to the new pool.  Without
+// this, any commodity_t* obtained from the old pool carries a graph_index
+// into the old pool's Boost.Graph price-history; using it as `target` in
+// find_price() on the new pool causes an out-of-bounds vertex() call and
+// the this=0x0 segfault described in issue #976.
+void py_update_commodities() {
+  object main_module = import("ledger");
+  main_module.attr("commodities") = commodity_pool_t::current_pool;
+}
+
 void py_close_journal_files() {
   python_session->close_journal_files();
+  py_update_commodities();
+}
+
+void py_session_close_journal_files(session_t& session) {
+  session.close_journal_files();
+  py_update_commodities();
 }
 } // namespace
 
@@ -64,7 +82,7 @@ void export_session() {
       .def("read_journal_from_string", &session_t::read_journal_from_string,
            return_internal_reference<>())
       .def("read_journal_files", &session_t::read_journal_files, return_internal_reference<>())
-      .def("close_journal_files", &session_t::close_journal_files)
+      .def("close_journal_files", &py_session_close_journal_files)
       .def("journal", &session_t::get_journal, return_internal_reference<>())
       .def("error_context", &py_error_context);
 

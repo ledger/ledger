@@ -37,6 +37,8 @@
 #include "journal.h"
 #include "iterators.h"
 #include "filters.h"
+#include "amount.h"
+#include "pool.h"
 
 namespace ledger {
 
@@ -236,10 +238,48 @@ journal_t* session_t::read_journal_from_string(const string& data) {
 
 void session_t::close_journal_files() {
   journal.reset();
-  amount_t::shutdown();
+
+  // Reset the commodity pool without tearing down and re-initializing the
+  // GMP global temporaries.  A full shutdown()/initialize() cycle is
+  // wrong here for two reasons:
+  //
+  // 1. The Python bindings export `ledger.commodities` as a shared_ptr copy
+  //    of current_pool captured at import time.  After shutdown() drops
+  //    current_pool's refcount, Python may still hold the old pool alive.
+  //    initialize() then creates a brand-new pool.  Any commodity_t* raw
+  //    pointers (e.g. `eur = ledger.commodities.find_or_create('EUR')`) now
+  //    point into the *old* pool and carry graph_index values that are
+  //    indices into the old pool's Boost.Graph price history.  Passing such
+  //    a commodity as `target` to find_price() on the *new* pool calls
+  //    vertex(old_index, new_graph) with an out-of-bounds index, corrupting
+  //    Dijkstra's predecessor/distance vectors and ultimately producing the
+  //    this=0x0 segfault reported in issue #976.
+  //
+  // 2. Calling mpz_clear / mpq_clear / mpfr_clear followed immediately by
+  //    mpz_init / mpq_init / mpfr_init on the same static variables is
+  //    harmless in isolation but unnecessary: the GMP temporaries are still
+  //    valid and can simply continue to be used.
+  //
+  // The correct behaviour is to replace only the commodity pool (and with it
+  // its price history graph), leaving the GMP temporaries untouched.
+  commodity_pool_t::current_pool.reset(new commodity_pool_t);
+
+  // Reinstate the built-in time-unit commodities that initialize() would
+  // normally create, so that timelog parsing continues to work.
+  if (commodity_t* commodity = commodity_pool_t::current_pool->create("s"))
+    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+  else
+    assert(false);
+
+  if (commodity_t* commodity = commodity_pool_t::current_pool->create("%"))
+    commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
+  else
+    assert(false);
+
+  amount_t::parse_conversion("1.0m", "60s");
+  amount_t::parse_conversion("1.00h", "60m");
 
   journal.reset(new journal_t);
-  amount_t::initialize();
 }
 
 journal_t* session_t::get_journal() {
