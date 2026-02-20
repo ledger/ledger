@@ -323,36 +323,43 @@ value_t python_interpreter_t::python_command(call_scope_t& args) {
   if (!is_initialized)
     initialize();
 
-  wchar_t** argv = new wchar_t*[args.size() + 1];
-
-  std::size_t len = std::strlen(argv0) + 1;
-  argv[0] = new wchar_t[len];
-  mbstowcs(argv[0], argv0, len);
-
-  for (std::size_t i = 0; i < args.size(); i++) {
-    string arg = args.get<string>(i);
-    std::size_t len = arg.length() + 1;
-    argv[i + 1] = new wchar_t[len];
-    mbstowcs(argv[i + 1], arg.c_str(), len);
-  }
-
   int status = 1;
 
-  try {
-    status = Py_Main(static_cast<int>(args.size()) + 1, argv);
-  } catch (const error_already_set&) {
-    PyErr_Print();
-    throw_(std::runtime_error, _("Failed to execute Python module"));
-  } catch (...) {
+  if (args.size() == 0) {
+    // Interactive mode: use PyRun_InteractiveLoop instead of Py_Main to avoid
+    // loading readline.so, which conflicts with libedit already loaded by
+    // ledger and causes a segfault on startup (GitHub issue #852).
+    status = PyRun_InteractiveLoop(stdin, "<stdin>");
+  } else {
+    wchar_t** argv = new wchar_t*[args.size() + 1];
+
+    std::size_t len = std::strlen(argv0) + 1;
+    argv[0] = new wchar_t[len];
+    mbstowcs(argv[0], argv0, len);
+
+    for (std::size_t i = 0; i < args.size(); i++) {
+      string arg = args.get<string>(i);
+      std::size_t len = arg.length() + 1;
+      argv[i + 1] = new wchar_t[len];
+      mbstowcs(argv[i + 1], arg.c_str(), len);
+    }
+
+    try {
+      status = Py_Main(static_cast<int>(args.size()) + 1, argv);
+    } catch (const error_already_set&) {
+      PyErr_Print();
+      throw_(std::runtime_error, _("Failed to execute Python module"));
+    } catch (...) {
+      for (std::size_t i = 0; i < args.size() + 1; i++)
+        delete[] argv[i];
+      delete[] argv;
+      throw;
+    }
+
     for (std::size_t i = 0; i < args.size() + 1; i++)
       delete[] argv[i];
     delete[] argv;
-    throw;
   }
-
-  for (std::size_t i = 0; i < args.size() + 1; i++)
-    delete[] argv[i];
-  delete[] argv;
 
   if (status != 0) {
     throw_(std::runtime_error, _("Failed to execute Python module"));
