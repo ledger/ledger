@@ -145,7 +145,7 @@ account_t* py_register_account(journal_t& journal, const string& name, post_t* p
 struct collector_wrapper {
   journal_t& journal;
   report_t report;
-
+  post_handler_ptr handler_chain;  // Keeps the filter chain alive (owns synthetic temp posts)
   post_handler_ptr posts_collector;
 
   collector_wrapper(journal_t& _journal, report_t& base)
@@ -190,7 +190,29 @@ shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& query) 
       args.push_back(string_value(arg));
     coll->report.parse_query_args(args, "@Journal.query");
 
-    coll->report.posts_report(coll->posts_collector);
+    // Build the full filter chain and store it in handler_chain.
+    // This is essential: filters like interval_posts create synthetic posts
+    // stored in their temporaries_t. By keeping handler_chain alive in
+    // collector_wrapper, we ensure those synthetic posts remain valid while
+    // Python iterates the collected results.
+    coll->handler_chain = chain_post_handlers(coll->posts_collector, coll->report);
+
+    if (coll->report.HANDLED(group_by_)) {
+      unique_ptr<post_splitter> splitter(
+          new post_splitter(coll->handler_chain, coll->report,
+                            coll->report.HANDLER(group_by_).expr));
+      journal_t* jrnl = coll->report.session.journal.get();
+      splitter->set_postflush_func([jrnl](const value_t&) { jrnl->clear_xdata(); });
+      coll->handler_chain = post_handler_ptr(splitter.release());
+    }
+
+    coll->handler_chain = chain_pre_post_handlers(coll->handler_chain, coll->report);
+
+    journal_posts_iterator walker(*coll->report.session.journal.get());
+    pass_down_posts<journal_posts_iterator>(coll->handler_chain, walker);
+
+    if (!coll->report.HANDLED(group_by_))
+      coll->report.session.journal->clear_xdata();
   } catch (...) {
     coll->report.session.journal.release();
     coll->report.session.journal.reset(save_journal.release());
