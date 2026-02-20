@@ -50,7 +50,7 @@ journal_t* py_read_journal_from_string(const string& data) {
   return python_session->read_journal_from_string(data);
 }
 
-PyObject* py_error_context(const session_t& session) {
+PyObject* py_error_context([[maybe_unused]] const session_t& session) {
   return str_to_py_unicode(error_context());
 }
 void py_close_journal_files() {

@@ -160,7 +160,7 @@ resume:
   case '\\':
     consume_next = true;
     ++arg_i;
-    // fall through...
+    [[fallthrough]];
   default: {
     string ident;
     for (; arg_i != arg_end; ++arg_i) {
@@ -184,7 +184,7 @@ resume:
           consume_next = true;
         if (!consume_next && tok_context == token_t::TOK_EXPR)
           goto test_ident;
-        // fall through...
+        [[fallthrough]];
       case '(':
       case '&':
       case '|':
@@ -195,7 +195,7 @@ resume:
       case '=':
         if (!consume_next && tok_context != token_t::TOK_EXPR)
           goto test_ident;
-      // fall through...
+        [[fallthrough]];
       default:
         ident.push_back(*arg_i);
         break;

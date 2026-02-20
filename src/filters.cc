@@ -74,14 +74,13 @@ void post_splitter::operator()(post_t& post) {
   value_t result(group_by_expr.calc(bound_scope));
 
   if (!result.is_null()) {
-    value_to_posts_map::iterator i = posts_map.find(result);
-    if (i != posts_map.end()) {
+    if (auto i = posts_map.find(result); i != posts_map.end()) {
       (*i).second.push_back(&post);
     } else {
-      std::pair<value_to_posts_map::iterator, bool> inserted =
+      auto [iter, ok] =
           posts_map.insert(value_to_posts_map::value_type(result, posts_list()));
-      assert(inserted.second);
-      (*inserted.first).second.push_back(&post);
+      assert(ok);
+      iter->second.push_back(&post);
     }
   }
 }
@@ -198,8 +197,7 @@ void anonymize_posts::render_commodity(amount_t& amt) {
   std::size_t id;
   bool newly_added = false;
 
-  commodity_index_map::iterator i = comms.find(&comm);
-  if (i == comms.end()) {
+  if (auto i = comms.find(&comm); i == comms.end()) {
     id = next_comm_id++;
     newly_added = true;
     comms.insert(commodity_index_map::value_type(&comm, id));
@@ -358,7 +356,7 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
   case value_t::BOOLEAN:
   case value_t::INTEGER:
     temp.in_place_cast(value_t::AMOUNT);
-    // fall through...
+    [[fallthrough]];
 
   case value_t::AMOUNT:
     post.amount = temp.as_amount();
@@ -798,7 +796,7 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
     case value_t::BOOLEAN:
     case value_t::INTEGER:
       last_total.in_place_cast(value_t::AMOUNT);
-      // fall through...
+      [[fallthrough]];
 
     case value_t::AMOUNT:
       temp.amount = last_total.as_amount();
@@ -831,7 +829,7 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
 
   case value_t::AMOUNT:
     display_total.in_place_cast(value_t::BALANCE);
-    // fall through...
+    [[fallthrough]];
 
   case value_t::BALANCE: {
     price_map_t all_prices;
@@ -958,8 +956,7 @@ void subtotal_posts::operator()(post_t& post) {
   post.xdata().compound_value = amount;
   post.xdata().add_flags(POST_EXT_COMPOUND);
 
-  values_map::iterator i = values.find(acct->fullname());
-  if (i == values.end()) {
+  if (auto i = values.find(acct->fullname()); i == values.end()) {
 #if DEBUG_ON
     std::pair<values_map::iterator, bool> result =
 #endif
