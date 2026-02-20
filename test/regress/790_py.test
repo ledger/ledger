@@ -1,0 +1,15 @@
+2012/01/15 Electric Company
+    Expenses:Utilities          $50.00
+    Assets:Checking
+
+2012/02/15 Electric Company
+    Expenses:Utilities          $55.00
+    Assets:Checking
+
+2012/03/15 Electric Company
+    Expenses:Utilities          $60.00
+    Assets:Checking
+
+test python test/regress/790.py
+3
+end test
