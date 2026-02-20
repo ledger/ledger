@@ -56,7 +56,7 @@ class scope_t;
 
 class parse_context_t {
 public:
-  static const std::size_t MAX_LINE = 4096;
+  inline static constexpr std::size_t MAX_LINE = 4096;
 
   std::shared_ptr<std::istream> stream;
 

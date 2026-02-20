@@ -577,8 +577,6 @@ inline string sha1sum(const string& str,
   return digest_to_hex(message_digest, len);
 }
 
-extern const string version;
-
 enum hash_type_t { NO_HASHES = 0, HASH_SHA512 = 1, HASH_SHA512_Half = 2 };
 
 } // namespace ledger

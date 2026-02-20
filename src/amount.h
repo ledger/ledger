@@ -109,7 +109,7 @@ public:
 
   /** Number of places of precision by which values are extended to
       avoid losing precision during division and multiplication. */
-  static const std::size_t extend_by_digits = 6U;
+  inline static constexpr std::size_t extend_by_digits = 6U;
 
   /** If amounts should be streamed using to_fullstring() rather than
       to_string(), so that complete precision is always displayed no matter
