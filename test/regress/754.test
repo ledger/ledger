@@ -1,0 +1,15 @@
+; Regression test for issue #754
+; Segfault with -D (--daily) flag when no transactions are present.
+; Using interval grouping options (-D, -W, -M, -Y) with an empty journal or
+; with a filter that matches no transactions should produce empty output,
+; not a segfault.
+
+2013/04/01 Someone
+    Expenses:Something     $1,000.00
+    Assets:Checking
+
+test reg -D ^Expense:Something
+end test
+
+test reg --daily ^Expense:Something
+end test
