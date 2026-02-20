@@ -191,81 +191,99 @@ endif()
 
 include(GNUInstallDirs)
 
-if(BUILD_LIBRARY)
-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
-  add_library(libledger SHARED ${LEDGER_SOURCES})
-  add_ledger_library_dependencies(libledger)
-  set_target_properties(libledger PROPERTIES
-    PREFIX ""
-    INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
-    VERSION ${Ledger_VERSION_MAJOR}
-    SOVERSION ${Ledger_VERSION_MAJOR})
-  set_source_files_properties(
-    ${LEDGER_CLI_SOURCES} PROPERTIES COMPILE_FLAGS "-fPIC")
-
-  add_executable(ledger ${LEDGER_CLI_SOURCES})
-  target_link_libraries(ledger libledger)
-  if(HAVE_GPGME)
-    target_link_libraries(ledger Gpgmepp)
-  endif()
-
-  if(HAVE_BOOST_PYTHON)
-    target_link_libraries(ledger ${Python_LIBRARIES})
-  endif()
-
-  install(TARGETS libledger DESTINATION ${CMAKE_INSTALL_LIBDIR})
-  install(FILES ${LEDGER_INCLUDES}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
-else()
-  add_executable(ledger ${LEDGER_SOURCES} main.cc global.cc)
+if(SKBUILD)
+  # When called by scikit-build-core, build a Python extension module
+  # directly from all sources (no separate libledger shared library).
+  # Python sources are already included in LEDGER_SOURCES via the
+  # HAVE_BOOST_PYTHON block above.
+  Python_add_library(ledger MODULE ${LEDGER_SOURCES} WITH_SOABI)
   add_ledger_library_dependencies(ledger)
-endif()
 
-# Precompiled headers for system.hh significantly reduce build times.
-# This is enabled for all build types (Debug, Release, RelWithDebInfo, etc.)
-# via the PRECOMPILE_SYSTEM_HH option. CMake's target_precompile_headers
-# (available since CMake 3.16) handles PCH generation and reuse automatically.
-if(PRECOMPILE_SYSTEM_HH)
-  if(BUILD_LIBRARY)
-    target_precompile_headers(libledger PRIVATE ${PROJECT_BINARY_DIR}/system.hh)
-    target_precompile_headers(ledger REUSE_FROM libledger)
-  else()
+  # Precompiled headers for system.hh reduce build times.
+  if(PRECOMPILE_SYSTEM_HH)
     target_precompile_headers(ledger PRIVATE ${PROJECT_BINARY_DIR}/system.hh)
   endif()
-endif()
 
-if(USE_PYTHON)
-  if(Python_SITEARCH)
-    if(WIN32 AND NOT CYGWIN)
-      set(_ledger_python_module_name "ledger.pyd")
-    elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
-      set(_ledger_python_module_name "ledger.so")
-    else()
-      set(_ledger_python_module_name "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
+  # Install directly to the site-packages root; scikit-build-core maps
+  # DESTDIR / CMAKE_INSTALL_PREFIX to the wheel's site-packages directory.
+  install(TARGETS ledger DESTINATION .)
+else()
+  if(BUILD_LIBRARY)
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+    add_library(libledger SHARED ${LEDGER_SOURCES})
+    add_ledger_library_dependencies(libledger)
+    set_target_properties(libledger PROPERTIES
+      PREFIX ""
+      INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
+      VERSION ${Ledger_VERSION_MAJOR}
+      SOVERSION ${Ledger_VERSION_MAJOR})
+    set_source_files_properties(
+      ${LEDGER_CLI_SOURCES} PROPERTIES COMPILE_FLAGS "-fPIC")
+
+    add_executable(ledger ${LEDGER_CLI_SOURCES})
+    target_link_libraries(ledger libledger)
+    if(HAVE_GPGME)
+      target_link_libraries(ledger Gpgmepp)
     endif()
 
-    # Allow packagers to override where the Python module is installed.
-    # By default this uses Python's site-packages, but systems like Homebrew
-    # may need to install under CMAKE_INSTALL_PREFIX instead.
-    set(LEDGER_PYTHON_INSTALL_DIR "${Python_SITEARCH}" CACHE PATH
-      "Directory to install the ledger Python module into")
+    if(HAVE_BOOST_PYTHON)
+      target_link_libraries(ledger ${Python_LIBRARIES})
+    endif()
 
-    # FIXME: symlink would be sufficient:
-    # maybe using install(CODE "...") and
-    # execute_process(COMMAND "${CMAKE_COMMAND}" -E create_symlink ...).
-    # Windows will need a special case due to not supporting symlinks.
-    add_custom_command(
-      TARGET libledger POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      $<TARGET_FILE:libledger> "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}")
-    install(
-      FILES "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}"
-      DESTINATION "${LEDGER_PYTHON_INSTALL_DIR}")
+    install(TARGETS libledger DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install(FILES ${LEDGER_INCLUDES}
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ledger)
   else()
-    message(WARNING "Python_SITEARCH not set. Will not install python module.")
+    add_executable(ledger ${LEDGER_SOURCES} main.cc global.cc)
+    add_ledger_library_dependencies(ledger)
   endif()
-endif()
 
-install(TARGETS ledger DESTINATION ${CMAKE_INSTALL_BINDIR})
+  # Precompiled headers for system.hh significantly reduce build times.
+  # This is enabled for all build types (Debug, Release, RelWithDebInfo, etc.)
+  # via the PRECOMPILE_SYSTEM_HH option. CMake's target_precompile_headers
+  # (available since CMake 3.16) handles PCH generation and reuse automatically.
+  if(PRECOMPILE_SYSTEM_HH)
+    if(BUILD_LIBRARY)
+      target_precompile_headers(libledger PRIVATE ${PROJECT_BINARY_DIR}/system.hh)
+      target_precompile_headers(ledger REUSE_FROM libledger)
+    else()
+      target_precompile_headers(ledger PRIVATE ${PROJECT_BINARY_DIR}/system.hh)
+    endif()
+  endif()
+
+  if(USE_PYTHON)
+    if(Python_SITEARCH)
+      if(WIN32 AND NOT CYGWIN)
+        set(_ledger_python_module_name "ledger.pyd")
+      elseif(CMAKE_SYSTEM_NAME STREQUAL Darwin)
+        set(_ledger_python_module_name "ledger.so")
+      else()
+        set(_ledger_python_module_name "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
+      endif()
+
+      # Allow packagers to override where the Python module is installed.
+      # By default this uses Python's site-packages, but systems like Homebrew
+      # may need to install under CMAKE_INSTALL_PREFIX instead.
+      set(LEDGER_PYTHON_INSTALL_DIR "${Python_SITEARCH}" CACHE PATH
+        "Directory to install the ledger Python module into")
+
+      # FIXME: symlink would be sufficient:
+      # maybe using install(CODE "...") and
+      # execute_process(COMMAND "${CMAKE_COMMAND}" -E create_symlink ...).
+      # Windows will need a special case due to not supporting symlinks.
+      add_custom_command(
+        TARGET libledger POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:libledger> "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}")
+      install(
+        FILES "${CMAKE_BINARY_DIR}/${_ledger_python_module_name}"
+        DESTINATION "${LEDGER_PYTHON_INSTALL_DIR}")
+    else()
+      message(WARNING "Python_SITEARCH not set. Will not install python module.")
+    endif()
+  endif()
+
+  install(TARGETS ledger DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 ### CMakeLists.txt ends here
