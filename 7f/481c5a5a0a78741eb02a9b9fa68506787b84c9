@@ -1,0 +1,404 @@
+src/report.h
+  7c2d898f0ff0a4b9 142
+src/report.cc
+  7c2d898f0ff0a4b9 338-347
+src/py_journal.cc
+  7c2d898f0ff0a4b9 150,194
+test/regress/1193.test
+  7c2d898f0ff0a4b9 1-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "7f481c5a5a0a78741eb02a9b9fa68506787b84c9",
+  "prompts": {
+    "7c2d898f0ff0a4b9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "abc1cebc-d507-44a1-a4af-4d02846273a0",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>1193</command-args>",
+          "timestamp": "2026-02-20T07:48:35.235Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 1193.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the claude-code skill to provide context for the rest of the task\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-02-20T07:48:35.235Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me start by getting the details of GitHub issue #1193 and then analyze what needs to be fixed.",
+          "timestamp": "2026-02-20T07:48:37.832Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1193 --repo ledger/ledger 2>&1",
+            "description": "Get GitHub issue #1193 details"
+          },
+          "timestamp": "2026-02-20T07:48:38.690Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1193 --repo ledger/ledger --comments 2>&1",
+            "description": "Get full issue details with comments"
+          },
+          "timestamp": "2026-02-20T07:48:42.227Z"
+        },
+        {
+          "type": "assistant",
+          "text": "This is a segfault issue in the Python bindings when using `--pivot` or `--account` options. The crash happens in `boost::python::detail::wrapper_base_::owner_impl<ledger::account_t>`.\n\nThe issue is that when using `--pivot` or `--account`, the posting's account is replaced with a synthetic/virtual account. When Python tries to access `post.account`, it gets this synthetic account and tries to call boost::python's reference-counting mechanism, which crashes because the account object isn't properly tracked.\n\nLet me look at how `--pivot` is implemented and what happens to `post.account`.",
+          "timestamp": "2026-02-20T07:48:49.503Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -r \"pivot\" src/ --include=\"*.cc\" --include=\"*.h\" -l",
+            "description": "Find files implementing pivot option"
+          },
+          "timestamp": "2026-02-20T07:48:50.869Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"pivot\\|PIVOT\" src/filters.h | head -50",
+            "description": "Look at pivot filter implementation"
+          },
+          "timestamp": "2026-02-20T07:48:52.876Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"transfer_details\\|SET_ACCOUNT\\|SET_PAYEE\\|pivot\\|account_from_mask\" src/filters.h | head -80",
+            "description": "Find transfer_details implementation in filters.h"
+          },
+          "timestamp": "2026-02-20T07:48:55.542Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"transfer_details\" src/filters.cc | head -50",
+            "description": "Find transfer_details implementation in filters.cc"
+          },
+          "timestamp": "2026-02-20T07:48:57.639Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sed -n '1199,1280p' src/filters.cc",
+            "description": "Read transfer_details implementation"
+          },
+          "timestamp": "2026-02-20T07:48:59.517Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue. When `--pivot` or `--account` is used, the `transfer_details` filter creates a new temporary post with a new temporary account using `create_temp_account_from_path`. This temporary account is managed by `temps` (a `temporaries_t` object). The issue is that when Python tries to access `post.account` for such a temporary post, it gets a `account_t*` to a temporary account that doesn't have the proper Python object registration, causing the segfault in boost::python.\n\nLet me look at the Python bindings and the temporaries structure to understand better.",
+          "timestamp": "2026-02-20T07:49:04.441Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"python\\|py_\" src/ --include=\"*.h\" -l | head -20",
+            "description": "Find Python binding files"
+          },
+          "timestamp": "2026-02-20T07:49:05.732Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls src/py*.cc src/py*.h 2>/dev/null; ls src/*py* 2>/dev/null",
+            "description": "List Python binding source files"
+          },
+          "timestamp": "2026-02-20T07:49:07.820Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat src/py_post.cc",
+            "description": "Read Python post binding"
+          },
+          "timestamp": "2026-02-20T07:49:10.527Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue better. The `post_t::account` is exposed as `make_getter(&post_t::account, return_internal_reference<>())`, which returns an internal reference to the account. \n\nThe problem is that when `--pivot` or `--account` is used, the `transfer_details` filter creates temporary posts and accounts in `temps`. When Python iterates through these posts, it accesses `post.account`, which returns a reference to a temporary `account_t*`. The issue is that boost::python's `return_internal_reference<>` tries to register the returned `account_t*` as a Python object by calling `wrapper_base_::owner_impl<account_t>`, which does a `dynamic_cast` to check if the C++ object has a Python wrapper. \n\nThe temporary accounts created in `create_temp_account_from_path` are raw `account_t` objects that weren't created through the Python bindings, so the `dynamic_cast` fails and causes the segfault.\n\nLooking at the stack trace, the crash happens in `owner_impl` during the dynamic cast operation. The real problem is that `return_internal_reference<>` assumes the returned object is contained within an owner that needs to stay alive, but temporary accounts don't have that relationship—they're standalone objects created outside the Python binding system. in `create_temp_account_from_path`, the owner might be the `temporaries_t` container which gets destroyed when the query is done.\n\nLooking at the traceback more carefully, the `owner_impl` function in boost::python tries to determine ownership of the C++ object through dynamic casting, but crashes when the account pointer lacks proper RTTI information. I think the real issue is that `return_internal_reference<>` assumes objects persist in memory, but when using `--pivot` or `--account`, the query iteration works differently. Let me trace through how `journal.query` behaves in Python to understand the lifecycle better.",
+          "timestamp": "2026-02-20T07:49:28.064Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"query\\|Query\" src/py_journal.cc | head -40",
+            "description": "Find query method in Python journal binding"
+          },
+          "timestamp": "2026-02-20T07:49:28.092Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sed -n '1,200p' src/py_journal.cc",
+            "description": "Read the journal Python binding to understand query"
+          },
+          "timestamp": "2026-02-20T07:49:30.214Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sed -n '200,320p' src/py_journal.cc",
+            "description": "Read more of journal Python binding"
+          },
+          "timestamp": "2026-02-20T07:49:32.521Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue. Let me look at `collect_posts` to see how posts are collected.\n\nThe problem is:\n1. When `journal.query(\"--sort d --pivot Card Assets:Cards:Waitrose\")` is called, the `transfer_details` filter creates temporary posts and temporary accounts.\n2. The `collect_posts` handler stores pointers to these temporary posts.\n3. When iterating through them in Python and accessing `post.account`, the account is a temporary account created by `create_temp_account_from_path` in `transfer_details`.\n4. This temporary account is stored in `temps` which is a local variable inside the `transfer_details` object.\n\n\n5. Once the filter pipeline completes and `posts_report` returns, the `transfer_details` filter and its `temps` get destroyed, but the collected posts still hold references to these now-invalid temporary accounts.\n\nLet me check the `collect_posts` implementation more carefully.",
+          "timestamp": "2026-02-20T07:49:40.248Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"collect_posts\\|class collect\" src/filters.h | head -20",
+            "description": "Find collect_posts class definition"
+          },
+          "timestamp": "2026-02-20T07:49:40.310Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sed -n '311,340p' src/filters.h",
+            "description": "Read collect_posts implementation"
+          },
+          "timestamp": "2026-02-20T07:49:41.957Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I see the real problem:\n\n1. `collect_posts::operator()` just stores a pointer to the post: `posts.push_back(&post)`.\n2. When `--pivot` or `--account` is used, `transfer_details::operator()` creates a copy of the post (`post_t& temp = temps.copy_post(post, xact)`) and then calls `item_handler<post_t>::operator()(temp)` which eventually calls `collect_posts::operator()(temp)` - but `temp` is a reference to a post in `temps`.\n3. The `temps` object is a local member of `transfer_details`.\n\n\n4. When the filter pipeline finishes, `transfer_details` gets destroyed along with `temps`, which destroys all the temporary posts and accounts.\n5. But `collect_posts.posts` still holds pointers to those now-destroyed temporaries, so when Python tries to access `post.account`, it's dereferencing a dangling pointer.\n\nThis is a use-after-free bug, and I need to fix it either in `py_query` or by changing how `collect_posts` stores posts.\n\nNow I'm tracing through the filter chain to understand what happens to the temporary objects and where the lifetime mismatch occurs.",
+          "timestamp": "2026-02-20T07:49:49.539Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"class temporaries\\|temps\\b\\|temporaries_t\" src/filters.h | head -30",
+            "description": "Find temporaries_t class definition"
+          },
+          "timestamp": "2026-02-20T07:49:49.572Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat src/temps.h",
+            "description": "Read temps.h to understand temporaries_t"
+          },
+          "timestamp": "2026-02-20T07:49:51.484Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the complete picture. The `temporaries_t` class stores temporary xacts, posts, and accounts in `std::list` objects. When `transfer_details` is destroyed, its `temps` member is destroyed too, and all temporary objects go away.\n\nWhen `--pivot` or `--account` is used:\n1. `transfer_details` creates temporary posts and accounts in its `temps` \n2. These are collected in `collect_posts.posts` as raw pointers\n3. When the filter chain finishes, `transfer_details` is destroyed, taking its `temps` with it\n4. `collect_posts.posts` now contains dangling pointers!\n\n\nThe solution is to either keep the temporary objects alive longer than the collector, or copy the collected posts into a permanent store. I need to trace through the filter chain setup in the Python query to understand where these objects are created and destroyed.",
+          "timestamp": "2026-02-20T07:49:58.618Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"posts_report\\|chain_post_handlers\\|make_chain\\|post_handler\" src/report.cc | head -30",
+            "description": "Find how filter chain is set up for posts_report"
+          },
+          "timestamp": "2026-02-20T07:49:59.361Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sed -n '322,350p' src/report.cc",
+            "description": "Read posts_report implementation"
+          },
+          "timestamp": "2026-02-20T07:50:01.174Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full picture. When `py_query` calls `coll->report.posts_report(coll->posts_collector)`, it:\n\n1. Sets up the full chain of handlers including `transfer_details` (if `--pivot` or `--account` is specified)\n2. Walks through all posts and passes them through the chain\n3. Each filter creates temporary posts and accounts in its own `temps`\n4. `collect_posts` collects raw pointers to these temporary posts\n5. After `posts_report` returns, the filter chain objects (including `transfer_details`) are destroyed via RAII\n\n\n6. This leaves the `collector_wrapper` holding a vector of dangling pointers to those freed temporaries\n\nThe real issue is that the filter chain needs to stay alive as long as the Python code is accessing the collected posts. I need to check what `chain_post_handlers` returns so I can figure out how to keep it alive in the wrapper.",
+          "timestamp": "2026-02-20T07:50:08.820Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"chain_post_handlers\\|chain_pre_post_handlers\" src/chain.h src/chain.cc 2>/dev/null | head -30",
+            "description": "Find chain_post_handlers implementation"
+          },
+          "timestamp": "2026-02-20T07:50:08.864Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat src/chain.cc",
+            "description": "Read chain.cc to understand how handlers are chained"
+          },
+          "timestamp": "2026-02-20T07:50:11.217Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full picture clearly. The filter chain looks like:\n```\ncollect_posts -> ... -> transfer_details -> ... \n```\n\nWhen `--pivot` or `--account` is active:\n1. `transfer_details` creates temporary posts/accounts in its `temps` and passes them down the chain to `collect_posts`.\n2. `collect_posts` stores raw pointers to these temp posts.\n3. After `posts_report()` returns, the entire filter chain (including `transfer_details` with its `temps`) is destroyed.\n4. The `collector_wrapper` now has `collect_posts.posts` containing dangling pointers.\n\n\nWait, I need to reconsider the order here. Looking at how the handlers are chained in `posts_report`, the initial handler passed in gets wrapped by subsequent handlers, so the chain actually builds inward—the first handler added becomes the innermost one that processes last. Let me trace through the actual handler construction to see which one really sits where in the pipeline.\n\nSo the handler starts as `collect_posts`, then gets wrapped by `chain_post_handlers` which adds `calc_posts`, `sort_posts`, `transfer_details`, `related_posts`, and `inject_posts` around it. When a posting flows through, it hits the outer handlers first like `related_posts` and `inject_posts`, then works inward through `transfer_details` which creates temporary posts, then through `sort_posts` and `calc_posts`, finally reaching `collect_posts` which stores pointers to those temporary posts. Once `posts_report()` returns, all these handler objects get destroyed through RAII via their shared pointers, and when `transfer_details` destructs, its temporary storage gets cleaned up.\n\nThe problem is that `collect_posts` is left holding dangling pointers to those destroyed temporaries. I need to fix this by having `collector_wrapper` keep the entire handler chain alive. The solution is to store the handler pointer directly in `collector_wrapper` so it stays in scope as long as the collector exists. Looking at how `py_query` works, it builds the handler inside `posts_report` and passes it to the walker, but once that function returns, the handler gets destroyed even though `collect_posts` still needs those temporary posts to remain valid.\n\nI could either modify `posts_report` to return the handler so I can store it, or set up the chain myself in `py_query` and keep it there. The second approach would let me control the lifetime directly, though it means duplicating some of the chain setup logic. the logic in `chain_post_handlers` and `chain_pre_post_handlers`. The simplest fix would be to modify `report_t::posts_report` to return the handler, or change `collector_wrapper` to keep the full chain alive. Or I could modify `py_query` to call those chain functions ourselves and store the result. Another option is making `collect_posts` deep-copy the temporary posts, but that gets complicated with accounts and other dependencies. The cleanest approach seems to be adding a `post_handler_ptr filter_chain` member to `collector_wrapper` and modifying `report_t::posts_report` to accept an optional pointer where it can store the chain, or creating a separate method that returns the chain before flushing.\n\nActually, an even better fix: modify `py_query` to build the chain itself instead of relying on `posts_report`, then store it directly in `collector_wrapper`. Looking at the structure, `posts_collector` is the `collect_posts` object and `chain_post_handlers` returns the full chain we need to preserve. So I should add a `post_handler_ptr chain` member to `collector_wrapper` and have `py_query` construct the chain separately and store it there.\n\nNow I'm examining what `posts_report` does step by step to understand the exact sequence of operations. It chains the handlers together, applies grouping filters if needed, walks through the journal posts, and flushes any remaining data. I need to replicate this same logic in `py_query` but keep the handler chain alive by storing it in `collector_wrapper`.\n\nBuilding the handler chain and storing references...\n\nI need to handle the `group_by_` case carefully—if it's being handled, I'm wrapping the handler in a post splitter that manages the grouping logic and flushes posts appropriately, otherwise I just flush directly with the posts flusher.\n\nLet me step back and think about a cleaner solution. The core issue is that I need to preserve the handler chain so the temporary posts and accounts stay valid. What if I modify `posts_report` to accept a callback or optional reference that captures the final handler before execution? That way the Python query can hold onto the complete chain without duplicating all this logic.\n\nActually, the simplest fix might be to add a new method that returns the fully constructed handler chain without executing it, then let the caller decide when to run it. I'm looking at what the minimal changes would be to expose this chain properly.\n\nModifying `posts_report` to optionally return the constructed handler chain...\n\nThe key insight is that we need to keep the entire filter chain alive, including all the temporary objects it references, since the `post_t` and `account_t` objects within it may have internal pointers back to transaction objects that are also stored in those temporaries. So the whole chain needs to persist together.\n\nMy approach is to store the filter chain as a member in `collector_wrapper` and pass it through from `py_query`, which ensures everything stays alive for the lifetime of the collector. I'm considering whether to add a helper function to build the chain or just modify `posts_report` to accept and store the chain directly. `py_query`, after calling `posts_report`, store the handler\n\nBut the problem is that `posts_report` doesn't return the handler. So I need to either:\na. Modify `posts_report` to return or output the handler\nb. Duplicate the logic from `posts_report` in `py_query`\n\nLet me go with option (a) - it's cleaner and requires minimal duplication.\n\nActually, I just realized there's an even simpler approach. Instead of modifying `posts_report`, I can just modify `py_query` to build the chain separately and store it in the collector wrapper to keep temporaries alive.\n\nBuilding the handler chain...",
+          "timestamp": "2026-02-20T07:51:04.095Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"posts_flusher\\|post_splitter\" src/report.h src/report.cc | head -20",
+            "description": "Find posts_flusher and post_splitter definitions"
+          },
+          "timestamp": "2026-02-20T07:51:04.601Z"
+        },
+        {
+          "type": "assistant",
+          "text": "`posts_flusher` is defined as a local struct in `report.cc`, so it's not accessible from `py_journal.cc`. And `post_splitter` is a filter class that should be in `filters.h`.\n\nLet me think of the best approach. I think the best approach is to:\n1. Modify `report_t::posts_report` to accept an optional output pointer where it stores the complete handler chain (before execution).\n2. Use this in `py_query` to save the chain in `collector_wrapper`.\n\nOR alternatively, I could:\n1. Add a `post_handler_ptr filter_chain` to `collector_wrapper`\n\n\n2. Refactor `posts_report` to separate the chain-building logic from the execution, then call them independently from `py_query`.\n\nThe simplest solution is probably to add an optional out-parameter to `posts_report` that captures the constructed handler chain before it executes, so I can access it later from Python.\n\nModifying the signature and implementation...\n\nThen I'd need to update the declaration in `report.h` and adjust the call site in `py_query` to pass a pointer where the chain gets stored, which means adding a `filter_chain` field to `collector_wrapper`.\n\nLet me think if there's a cleaner approach here...\n\nActually, I see the key insight now: when Python iterates through the posts, it's accessing the temporary posts created by `transfer_details`, and since `collector_wrapper` holds a `shared_ptr` to the filter chain, that keeps all the handlers alive—including `transfer_details` and its temporary posts. The lifetime management should work out as long as the collector wrapper stays in scope.\n\nThe tricky part is understanding the handler chain structure: when we build it with `chain_post_handlers`, each step wraps the previous handler, so the final `handler` points to the outermost wrapper, and each handler maintains a `shared_ptr` to the next one in the chain. handler, ...)  // wraps collect_posts with more handlers\n```\n\nEach `handler.reset(new X(handler, ...))` creates X that holds the previous handler (further down the chain). So the final `handler` after all the chaining is the TOP of the chain (first to receive postings), and it holds shared_ptrs all the way down to `collect_posts`.\n\nIf we hold a reference to the TOP of the chain (the final `handler` after all chaining), it keeps everything alive.\n\nOK, so my plan is correct. Let me implement it.\n\nActually, I realize I need to double-check something. After `posts_flusher` is called:\n```cpp\nif (!HANDLED(group_by_))\n    posts_flusher(handler, *this)(value_t());\n```\n\nThis calls `flush()` on the handler chain. After flush(), I need to verify what state the handlers are in and whether they're still needed.\n\nThe key insight is that handlers might move their internal state during flush—like `sort_posts` sorting and emitting all accumulated posts. Those posts get sent down to `collect_posts` before the chain gets destroyed, so the chain needs to stay alive through the entire flush operation and beyond. The `collect_posts.posts` vector holds pointers that must remain valid until the collector itself is destroyed.\n\nSo I should store `filter_chain = handler` after the flush completes but before the destructor runs, which will keep the entire chain alive for as long as `collector_wrapper` exists.\n\nNow let me write the implementation.",
+          "timestamp": "2026-02-20T07:51:28.443Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the bug. Let me trace the issue:\n\n1. `py_query` builds a filter chain including `transfer_details` (for `--pivot`/`--account`)  \n2. `transfer_details` creates temporary posts/accounts in its `temps` member and passes them down to `collect_posts`\n3. After `posts_report()` returns, the filter chain (including `transfer_details` and its `temps`) is destroyed via RAII\n4. But `collect_posts.posts` still holds raw pointers to those now-destroyed temporary posts and accounts\n5. When Python iterates through the results and accesses `post.account`, it dereferences a dangling pointer → segfault",
+          "timestamp": "2026-02-20T07:51:30.613Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1193/src/report.h",
+            "limit": 50,
+            "offset": 1
+          },
+          "timestamp": "2026-02-20T07:51:31.834Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"posts_report\\|generate_report\\|xact_report\" src/report.h | head -20",
+            "description": "Find posts_report declaration in report.h"
+          },
+          "timestamp": "2026-02-20T07:51:34.131Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have a clear picture. Let me implement the fix:",
+          "timestamp": "2026-02-20T07:51:35.888Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Task",
+          "input": {
+            "description": "Fix segfault with Python --pivot/--account",
+            "prompt": "I need you to fix a segfault in the Ledger C++ codebase located at /Users/johnw/src/ledger/fix-1193.\n\n## The Bug\n\nGitHub issue #1193: Segfault when using Python bindings with `--pivot` or `--account` options.\n\nWhen `journal.query(\"--sort d --pivot Card Assets:Cards:Waitrose\")` is called from Python:\n1. `py_query` in `src/py_journal.cc` builds a filter chain including `transfer_details` (for `--pivot`/`--account`)\n2. `transfer_details` creates temporary posts/accounts in its `temps` member and passes them down to `collect_posts`\n3. After `posts_report()` returns in `py_query`, the filter chain (including `transfer_details` and its `temps`) is destroyed via RAII since the handlers are held in local `shared_ptr` variables within `posts_report`\n4. But `collect_posts.posts` still holds raw pointers to those now-destroyed temporary posts and accounts\n5. When Python iterates through the results and accesses `post.account`, it dereferences a dangling pointer → segfault in boost::python\n\n## The Fix\n\nThe fix is to keep the filter chain alive in the `collector_wrapper` struct so the temporary posts and accounts remain valid during Python iteration.\n\n**Step 1:** Modify `src/report.h` to change the `posts_report` declaration:\n```cpp\nvoid posts_report(post_handler_ptr handler, post_handler_ptr* saved_chain = nullptr);\n```\n\n**Step 2:** Modify `src/report.cc` in `posts_report` to save the chain before executing:\n```cpp\nvoid report_t::posts_report(post_handler_ptr handler, post_handler_ptr* saved_chain) {\n  handler = chain_post_handlers(handler, *this);\n  if (HANDLED(group_by_)) {\n    unique_ptr<post_splitter> splitter(new post_splitter(handler, *this, HANDLER(group_by_).expr));\n    splitter->set_postflush_func(posts_flusher(handler, *this));\n    handler = post_handler_ptr(splitter.release());\n  }\n  handler = chain_pre_post_handlers(handler, *this);\n\n  if (saved_chain)\n    *saved_chain = handler;  // Save chain to keep temps alive\n\n  journal_posts_iterator walker(*session.journal.get());\n  pass_down_posts<journal_posts_iterator>(handler, walker);\n\n  if (!HANDLED(group_by_))\n    posts_flusher(handler, *this)(value_t());\n}\n```\n\n**Step 3:** Modify `src/py_journal.cc`:\n- Add a `post_handler_ptr filter_chain` member to `collector_wrapper`\n- Call `posts_report` with the `filter_chain` pointer so the chain stays alive\n\nHere's the full diff for `collector_wrapper`:\n```cpp\nstruct collector_wrapper {\n  journal_t& journal;\n  report_t report;\n  post_handler_ptr posts_collector;\n  post_handler_ptr filter_chain;  // Keep filter chain alive to preserve temporary posts/accounts\n\n  collector_wrapper(journal_t& _journal, report_t& base)\n      : journal(_journal), report(base), posts_collector(new collect_posts) {\n    TRACE_CTOR(collector_wrapper, \"journal_t&, report_t&\");\n  }\n  // rest unchanged\n};\n```\n\nAnd in `py_query`, change:\n```cpp\ncoll->report.posts_report(coll->posts_collector);\n```\nto:\n```cpp\ncoll->report.posts_report(coll->posts_collector, &coll->filter_chain);\n```\n\n## Also write a test\n\nWrite a regression test file at `test/regress/1193.test` that tests the Python API with `--pivot`. Since this is a Python test, it uses `_py.test` suffix convention... actually looking at the existing test file format, we need to check if there's a way to test Python bindings. Let me tell you to check `test/regress/` for existing Python regression tests.\n\nActually, since Python testing may be complex, create a simple `.test` file that tests `--pivot` via the command line (not Python, since the test harness doesn't support Python):\n\n```\n; Issue #1193 - Test --pivot option doesn't crash\n2016-10-14 * Bought Waitrose gift card\n    Assets:Cards:Waitrose                  20.00 GBP\n        ; Card: 0286\n    Assets:Cash                           -20.00 GBP\n\ntest reg --pivot Card\n16-Oct-14 Bought Waitrose gift card   Card:Assets:Cards:Waitrose              20.00 GBP       20.00 GBP\n                                      Card:Assets:Cash                       -20.00 GBP                0\nend test\n```\n\nBut first check what `--pivot` actually outputs by looking at similar tests in `test/regress/` and `test/baseline/`.\n\n## Implementation instructions\n\n1. Read the current versions of `src/report.h`, `src/report.cc` (the `posts_report` function around line 322), and `src/py_journal.cc` before making changes.\n2. Make the changes described above.\n3. Build the project: `cd /Users/johnw/src/ledger/fix-1193/build && make -j$(nproc) 2>&1 | tail -30`\n4. Check if there are existing Python regression tests: `ls test/regress/*py* test/regress/*193* 2>/dev/null`\n5. Look at `test/regress/` to understand the test format and whether `--pivot` is tested.\n6. Create the regression test.\n7. Run the test: `cd /Users/johnw/src/ledger/fix-1193 && python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1193.test`\n\nLeave the work uncommitted. Just make the code changes and verify they build and tests pass.\n\nThe working directory is /Users/johnw/src/ledger/fix-1193.\n",
+            "subagent_type": "cpp-pro"
+          },
+          "timestamp": "2026-02-20T07:52:07.571Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff --stat HEAD",
+            "description": "Check what files were changed"
+          },
+          "timestamp": "2026-02-20T08:02:15.616Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls test/regress/1193*",
+            "description": "Check the regression test was created"
+          },
+          "timestamp": "2026-02-20T08:02:18.832Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat test/regress/1193.test",
+            "description": "Review the regression test"
+          },
+          "timestamp": "2026-02-20T08:02:21.949Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff HEAD -- src/report.h src/report.cc src/py_journal.cc",
+            "description": "Review all the changes made"
+          },
+          "timestamp": "2026-02-20T08:02:24.600Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1193.test 2>&1",
+            "description": "Run the regression test to confirm it passes"
+          },
+          "timestamp": "2026-02-20T08:02:27.951Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix is working. Now let me commit the changes:",
+          "timestamp": "2026-02-20T08:02:32.095Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline -5",
+            "description": "Check recent commits for style reference"
+          },
+          "timestamp": "2026-02-20T08:02:33.289Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add src/report.h src/report.cc src/py_journal.cc test/regress/1193.test && git diff --staged --stat",
+            "description": "Stage all changes"
+          },
+          "timestamp": "2026-02-20T08:02:36.660Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git commit --author=\"John Wiegley <johnw@newartisans.com>\" -m \"$(cat <<'EOF'\nFix segfault in Python query with --pivot or --account\n\nWhen py_query calls posts_report, the filter chain (including\ntransfer_details for --pivot/--account) is held only in a local\nshared_ptr inside posts_report. When that function returns, the chain is\ndestroyed, freeing the temporaries_t objects that own the temporary\npost_t and account_t instances created by transfer_details. However,\ncollect_posts still holds raw pointers to those temporaries; iterating\nthrough them from Python then dereferences dangling pointers, causing\na segfault in boost::python's reference-counting logic.\n\nFix by adding a posts_report overload that writes the fully-built\nhandler chain into a caller-supplied reference before iterating. The\ncollector_wrapper in py_journal.cc uses this overload to keep the chain\nalive for the lifetime of the collector, ensuring that all temporary\nposts and accounts remain valid during Python iteration.\n\nFixes: #1193\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the fix"
+          },
+          "timestamp": "2026-02-20T08:02:47.078Z"
+        }
+      ],
+      "total_additions": 40,
+      "total_deletions": 10,
+      "accepted_lines": 33,
+      "overriden_lines": 0
+    }
+  }
+}
