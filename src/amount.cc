@@ -1211,8 +1211,8 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
 void amount_t::parse_conversion(const string& larger_str, const string& smaller_str) {
   amount_t larger, smaller;
 
-  larger.parse(larger_str, PARSE_NO_REDUCE);
-  smaller.parse(smaller_str, PARSE_NO_REDUCE);
+  (void)larger.parse(larger_str, PARSE_NO_REDUCE);
+  (void)smaller.parse(smaller_str, PARSE_NO_REDUCE);
 
   larger *= smaller.number();
 

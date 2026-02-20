@@ -413,7 +413,7 @@ public:
   /**
    * Unary arithmetic operators.
    */
-  value_t negated() const {
+  [[nodiscard]] value_t negated() const {
     value_t temp = *this;
     temp.in_place_negate();
     return temp;
@@ -423,9 +423,9 @@ public:
 
   value_t operator-() const { return negated(); }
 
-  value_t abs() const;
+  [[nodiscard]] value_t abs() const;
 
-  value_t rounded() const {
+  [[nodiscard]] value_t rounded() const {
     value_t temp(*this);
     temp.in_place_round();
     return temp;
@@ -439,21 +439,21 @@ public:
   }
   void in_place_roundto(int places);
 
-  value_t truncated() const {
+  [[nodiscard]] value_t truncated() const {
     value_t temp(*this);
     temp.in_place_truncate();
     return temp;
   }
   void in_place_truncate();
 
-  value_t floored() const {
+  [[nodiscard]] value_t floored() const {
     value_t temp(*this);
     temp.in_place_floor();
     return temp;
   }
   void in_place_floor();
 
-  value_t ceilinged() const {
+  [[nodiscard]] value_t ceilinged() const {
     value_t temp(*this);
     temp.in_place_ceiling();
     return temp;
@@ -493,11 +493,11 @@ public:
    */
   operator bool() const;
 
-  bool is_nonzero() const { return !is_zero(); }
+  [[nodiscard]] bool is_nonzero() const { return !is_zero(); }
 
-  bool is_realzero() const;
-  bool is_zero() const;
-  bool is_null() const {
+  [[nodiscard]] bool is_realzero() const;
+  [[nodiscard]] bool is_zero() const;
+  [[nodiscard]] bool is_null() const {
     if (!storage) {
       VERIFY(is_type(VOID));
       return true;
@@ -764,9 +764,9 @@ public:
   amount_t to_amount() const;
   balance_t to_balance() const;
   const commodity_t& to_commodity() const;
-  string to_string() const;
-  mask_t to_mask() const;
-  sequence_t to_sequence() const;
+  [[nodiscard]] string to_string() const;
+  [[nodiscard]] mask_t to_mask() const;
+  [[nodiscard]] sequence_t to_sequence() const;
 
   /**
    * Dynamic typing conversion methods.
@@ -903,7 +903,7 @@ public:
   /**
    * Informational methods.
    */
-  string label(optional<type_t> the_type = none) const;
+  [[nodiscard]] string label(optional<type_t> the_type = none) const;
 
   /**
    * Printing methods.
@@ -916,7 +916,7 @@ public:
   /**
    * Debugging methods.
    */
-  bool valid() const;
+  [[nodiscard]] bool valid() const;
 };
 
 #define NULL_VALUE (value_t())

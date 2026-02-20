@@ -257,10 +257,10 @@ BOOST_AUTO_TEST_CASE(testValid)
   BOOST_CHECK(root.valid());
 
   // Create a hierarchy via find_account and verify the whole tree is valid
-  root.find_account("Income:Salary");
-  root.find_account("Expenses:Food:Groceries");
-  root.find_account("Assets:Bank:Checking");
-  root.find_account("Assets:Bank:Savings");
+  (void)root.find_account("Income:Salary");
+  (void)root.find_account("Expenses:Food:Groceries");
+  (void)root.find_account("Assets:Bank:Checking");
+  (void)root.find_account("Assets:Bank:Savings");
   BOOST_CHECK(root.valid());
 }
 

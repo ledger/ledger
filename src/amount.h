@@ -152,7 +152,7 @@ public:
       commodity_t::null_commodity.  The number may be of infinite
       precision. */
   explicit amount_t(const string& val) : quantity(NULL) {
-    parse(val);
+    (void)parse(val);
     TRACE_CTOR(amount_t, "const string&");
   }
   /** Parse a pointer to a C string as an (optionally commoditized)
@@ -161,7 +161,7 @@ public:
       precision. */
   explicit amount_t(const char* val) : quantity(NULL) {
     assert(val);
-    parse(val);
+    (void)parse(val);
     TRACE_CTOR(amount_t, "const char *");
   }
 
@@ -292,7 +292,7 @@ public:
   /** Returns the negated value of an amount.
       @see operator-()
   */
-  amount_t negated() const {
+  [[nodiscard]] amount_t negated() const {
     amount_t temp(*this);
     temp.in_place_negate();
     return temp;
@@ -306,7 +306,7 @@ public:
       (x < * 0) ? - x : x
       @endcode
   */
-  amount_t abs() const {
+  [[nodiscard]] amount_t abs() const {
     if (sign() < 0)
       return negated();
     return *this;
@@ -324,7 +324,7 @@ public:
       default state of an amount, but if one has become unrounded, this
       sets the "keep precision" state back to false.
       @see set_keep_precision */
-  amount_t rounded() const {
+  [[nodiscard]] amount_t rounded() const {
     amount_t temp(*this);
     temp.in_place_round();
     return temp;
@@ -340,7 +340,7 @@ public:
 
   /** Yields an amount which has lost all of its extra precision, beyond what
       the display precision of the commodity would have printed. */
-  amount_t truncated() const {
+  [[nodiscard]] amount_t truncated() const {
     amount_t temp(*this);
     temp.in_place_truncate();
     return temp;
@@ -349,7 +349,7 @@ public:
 
   /** Yields an amount which has lost all of its extra precision, beyond what
       the display precision of the commodity would have printed. */
-  amount_t floored() const {
+  [[nodiscard]] amount_t floored() const {
     amount_t temp(*this);
     temp.in_place_floor();
     return temp;
@@ -358,7 +358,7 @@ public:
 
   /** Yields an amount which has lost all of its extra precision, beyond what
       the display precision of the commodity would have printed. */
-  amount_t ceilinged() const {
+  [[nodiscard]] amount_t ceilinged() const {
     amount_t temp(*this);
     temp.in_place_ceiling();
     return temp;
@@ -441,12 +441,12 @@ public:
   int sign() const;
 
   operator bool() const { return is_nonzero(); }
-  bool is_nonzero() const { return !is_zero(); }
+  [[nodiscard]] bool is_nonzero() const { return !is_zero(); }
 
-  bool is_zero() const;
-  bool is_realzero() const { return sign() == 0; }
+  [[nodiscard]] bool is_zero() const;
+  [[nodiscard]] bool is_realzero() const { return sign() == 0; }
 
-  bool is_null() const {
+  [[nodiscard]] bool is_null() const {
     if (!quantity) {
       assert(!commodity_);
       return true;
@@ -490,14 +490,14 @@ public:
       been stripped and the full, internal precision of the amount
       would be displayed.
   */
-  double to_double() const;
-  long to_long() const;
-  bool fits_in_long() const;
+  [[nodiscard]] double to_double() const;
+  [[nodiscard]] long to_long() const;
+  [[nodiscard]] bool fits_in_long() const;
 
   operator string() const { return to_string(); }
-  string to_string() const;
-  string to_fullstring() const;
-  string quantity_string() const;
+  [[nodiscard]] string to_string() const;
+  [[nodiscard]] string to_fullstring() const;
+  [[nodiscard]] string quantity_string() const;
 
   /*@}*/
 
@@ -648,8 +648,8 @@ public:
 
       parse(string, flags_t) also parses an amount from a string.
   */
-  bool parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT);
-  bool parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
+  [[nodiscard]] bool parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT);
+  [[nodiscard]] bool parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
     std::istringstream stream(str);
     bool result = parse(stream, flags);
     return result;
@@ -707,14 +707,14 @@ public:
     out << ")";
   }
 
-  bool valid() const;
+  [[nodiscard]] bool valid() const;
 
   /*@}*/
 };
 
 inline amount_t amount_t::exact(const string& value) {
   amount_t temp;
-  temp.parse(value, PARSE_NO_MIGRATE);
+  (void)temp.parse(value, PARSE_NO_MIGRATE);
   return temp;
 }
 
@@ -744,7 +744,7 @@ inline std::ostream& operator<<(std::ostream& out, const amount_t& amt) {
   return out;
 }
 inline std::istream& operator>>(std::istream& in, amount_t& amt) {
-  amt.parse(in);
+  (void)amt.parse(in);
   return in;
 }
 

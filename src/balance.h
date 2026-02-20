@@ -262,7 +262,7 @@ public:
    * in_place_reduce()
    * in_place_unreduce()
    */
-  balance_t negated() const {
+  [[nodiscard]] balance_t negated() const {
     balance_t temp(*this);
     temp.in_place_negate();
     return temp;
@@ -273,14 +273,14 @@ public:
   }
   balance_t operator-() const { return negated(); }
 
-  balance_t abs() const {
+  [[nodiscard]] balance_t abs() const {
     balance_t temp;
     for (const amounts_map::value_type& pair : amounts)
       temp += pair.second.abs();
     return temp;
   }
 
-  balance_t rounded() const {
+  [[nodiscard]] balance_t rounded() const {
     balance_t temp(*this);
     temp.in_place_round();
     return temp;
@@ -301,7 +301,7 @@ public:
       pair.second.in_place_roundto(places);
   }
 
-  balance_t truncated() const {
+  [[nodiscard]] balance_t truncated() const {
     balance_t temp(*this);
     temp.in_place_truncate();
     return temp;
@@ -311,7 +311,7 @@ public:
       pair.second.in_place_truncate();
   }
 
-  balance_t floored() const {
+  [[nodiscard]] balance_t floored() const {
     balance_t temp(*this);
     temp.in_place_floor();
     return temp;
@@ -321,7 +321,7 @@ public:
       pair.second.in_place_floor();
   }
 
-  balance_t ceilinged() const {
+  [[nodiscard]] balance_t ceilinged() const {
     balance_t temp(*this);
     temp.in_place_ceiling();
     return temp;
@@ -331,7 +331,7 @@ public:
       pair.second.in_place_ceiling();
   }
 
-  balance_t unrounded() const {
+  [[nodiscard]] balance_t unrounded() const {
     balance_t temp(*this);
     temp.in_place_unround();
     return temp;
@@ -392,7 +392,7 @@ public:
    */
   operator bool() const { return is_nonzero(); }
 
-  bool is_nonzero() const {
+  [[nodiscard]] bool is_nonzero() const {
     if (is_empty())
       return false;
 
@@ -402,7 +402,7 @@ public:
     return false;
   }
 
-  bool is_zero() const {
+  [[nodiscard]] bool is_zero() const {
     if (is_empty())
       return true;
 
@@ -412,7 +412,7 @@ public:
     return true;
   }
 
-  bool is_realzero() const {
+  [[nodiscard]] bool is_realzero() const {
     if (is_empty())
       return true;
 
@@ -422,15 +422,15 @@ public:
     return true;
   }
 
-  bool is_empty() const { return amounts.size() == 0; }
-  bool single_amount() const { return amounts.size() == 1; }
+  [[nodiscard]] bool is_empty() const { return amounts.size() == 0; }
+  [[nodiscard]] bool single_amount() const { return amounts.size() == 1; }
 
   /**
    * Conversion methods.  A balance can be converted to an amount, but
    * only if contains a single component amount.
    */
   operator string() const { return to_string(); }
-  string to_string() const {
+  [[nodiscard]] string to_string() const {
     std::ostringstream buf;
     print(buf);
     return buf.str();
@@ -544,7 +544,7 @@ public:
     out << ")";
   }
 
-  bool valid() const {
+  [[nodiscard]] bool valid() const {
     for (const amounts_map::value_type& pair : amounts)
       if (!pair.second.valid()) {
         DEBUG("ledger.validate", "balance_t: ! pair.second.valid()");

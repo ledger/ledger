@@ -312,7 +312,7 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
 
   price_point_t point;
   point.when = datetime;
-  point.price.parse(symbol_and_price, PARSE_NO_MIGRATE);
+  (void)point.price.parse(symbol_and_price, PARSE_NO_MIGRATE);
   VERIFY(point.price.valid());
 
   // Update the price commodity's precision based on the parsed amount.

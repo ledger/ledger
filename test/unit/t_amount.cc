@@ -55,18 +55,18 @@ BOOST_AUTO_TEST_CASE(testParser)
   string buf("$100...");
   std::istringstream input(buf);
   amount_t x13;
-  x13.parse(input);
+  (void)x13.parse(input);
   BOOST_CHECK_EQUAL(x12, x13);
 #endif // NOT_FOR_PYTHON
 
   amount_t x14;
-  BOOST_CHECK_THROW(x14.parse("DM"), amount_error);
+  BOOST_CHECK_THROW((void)x14.parse("DM"), amount_error);
 
   amount_t x15("$1.000.000,00"); // parsing this switches us to European
 
   amount_t x16("$2000");
   BOOST_CHECK_EQUAL(string("$2.000,00"), x16.to_string());
-  x16.parse("$2000,00");
+  (void)x16.parse("$2000,00");
   BOOST_CHECK_EQUAL(string("$2.000,00"), x16.to_string());
 
   // Since use of a decimal-comma is an additive quality, we must switch back
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(testParser)
 
   amount_t x18("$2000");
   BOOST_CHECK_EQUAL(string("$2,000.00"), x18.to_string());
-  x18.parse("$2,000");
+  (void)x18.parse("$2,000");
   BOOST_CHECK_EQUAL(string("$2,000.00"), x18.to_string());
 
   BOOST_CHECK_EQUAL(x15, x17);
@@ -88,37 +88,37 @@ BOOST_AUTO_TEST_CASE(testParser)
   BOOST_CHECK_EQUAL(string("EUR 1000"), x19.to_string());
   BOOST_CHECK_EQUAL(string("EUR 1000"), x20.to_string());
 
-  x1.parse("$100.0000", PARSE_NO_MIGRATE);
+  (void)x1.parse("$100.0000", PARSE_NO_MIGRATE);
   BOOST_CHECK_EQUAL(amount_t::precision_t(2), x12.commodity().precision());
   BOOST_CHECK_EQUAL(x1.commodity(), x12.commodity());
   BOOST_CHECK_EQUAL(x1, x12);
 
-  x0.parse("$100.0000");
+  (void)x0.parse("$100.0000");
   BOOST_CHECK_EQUAL(amount_t::precision_t(4), x12.commodity().precision());
   BOOST_CHECK_EQUAL(x0.commodity(), x12.commodity());
   BOOST_CHECK_EQUAL(x0, x12);
 
-  x2.parse("$100.00", PARSE_NO_REDUCE);
+  (void)x2.parse("$100.00", PARSE_NO_REDUCE);
   BOOST_CHECK_EQUAL(x2, x12);
-  x3.parse("$100.00", PARSE_NO_MIGRATE | PARSE_NO_REDUCE);
+  (void)x3.parse("$100.00", PARSE_NO_MIGRATE | PARSE_NO_REDUCE);
   BOOST_CHECK_EQUAL(x3, x12);
 
-  x4.parse("$100.00");
+  (void)x4.parse("$100.00");
   BOOST_CHECK_EQUAL(x4, x12);
-  x5.parse("$100.00", PARSE_NO_MIGRATE);
+  (void)x5.parse("$100.00", PARSE_NO_MIGRATE);
   BOOST_CHECK_EQUAL(x5, x12);
-  x6.parse("$100.00", PARSE_NO_REDUCE);
+  (void)x6.parse("$100.00", PARSE_NO_REDUCE);
   BOOST_CHECK_EQUAL(x6, x12);
-  x7.parse("$100.00", PARSE_NO_MIGRATE | PARSE_NO_REDUCE);
+  (void)x7.parse("$100.00", PARSE_NO_MIGRATE | PARSE_NO_REDUCE);
   BOOST_CHECK_EQUAL(x7, x12);
 
-  x8.parse("$100.00");
+  (void)x8.parse("$100.00");
   BOOST_CHECK_EQUAL(x8, x12);
-  x9.parse("$100.00", PARSE_NO_MIGRATE);
+  (void)x9.parse("$100.00", PARSE_NO_MIGRATE);
   BOOST_CHECK_EQUAL(x9, x12);
-  x10.parse("$100.00", PARSE_NO_REDUCE);
+  (void)x10.parse("$100.00", PARSE_NO_REDUCE);
   BOOST_CHECK_EQUAL(x10, x12);
-  x11.parse("$100.00", PARSE_NO_MIGRATE | PARSE_NO_REDUCE);
+  (void)x11.parse("$100.00", PARSE_NO_MIGRATE | PARSE_NO_REDUCE);
   BOOST_CHECK_EQUAL(x11, x12);
 
   BOOST_CHECK(x0.valid());
@@ -376,8 +376,8 @@ BOOST_AUTO_TEST_CASE(testCommodityEquality)
   amount_t x10("-123.45€");
 
   BOOST_CHECK(x0.is_null());
-  BOOST_CHECK_THROW(x0.is_zero(), amount_error);
-  BOOST_CHECK_THROW(x0.is_realzero(), amount_error);
+  BOOST_CHECK_THROW((void)x0.is_zero(), amount_error);
+  BOOST_CHECK_THROW((void)x0.is_realzero(), amount_error);
   BOOST_CHECK_THROW(x0.sign(), amount_error);
   BOOST_CHECK_THROW(x0.compare(x1), amount_error);
   BOOST_CHECK_THROW(x0.compare(x2), amount_error);
@@ -1006,7 +1006,7 @@ BOOST_AUTO_TEST_CASE(testNegation)
   amount_t x8(string("-123.456"));
   amount_t x9(- x3);
 
-  BOOST_CHECK_THROW(x0.negated(), amount_error);
+  BOOST_CHECK_THROW((void)x0.negated(), amount_error);
   BOOST_CHECK_EQUAL(x5, x1);
   BOOST_CHECK_EQUAL(x7, x1);
   BOOST_CHECK_EQUAL(x6, x3);
@@ -1089,7 +1089,7 @@ BOOST_AUTO_TEST_CASE(testAbs)
   amount_t x1(-1234L);
   amount_t x2(1234L);
 
-  BOOST_CHECK_THROW(x0.abs(), amount_error);
+  BOOST_CHECK_THROW((void)x0.abs(), amount_error);
   BOOST_CHECK_EQUAL(amount_t(1234L), x1.abs());
   BOOST_CHECK_EQUAL(amount_t(1234L), x2.abs());
 
@@ -1116,7 +1116,7 @@ BOOST_AUTO_TEST_CASE(testFloor)
   amount_t x1("123.123");
   amount_t x2("-123.123");
 
-  BOOST_CHECK_THROW(x0.floored(), amount_error);
+  BOOST_CHECK_THROW((void)x0.floored(), amount_error);
   BOOST_CHECK_EQUAL(amount_t(123L), x1.floored());
   BOOST_CHECK_EQUAL(amount_t(-124L), x2.floored());
 
@@ -1143,7 +1143,7 @@ BOOST_AUTO_TEST_CASE(testCeiling)
   amount_t x1("123.123");
   amount_t x2("-123.123");
 
-  BOOST_CHECK_THROW(x0.ceilinged(), amount_error);
+  BOOST_CHECK_THROW((void)x0.ceilinged(), amount_error);
   BOOST_CHECK_EQUAL(amount_t(124L), x1.ceilinged());
   BOOST_CHECK_EQUAL(amount_t(-123L), x2.ceilinged());
 
@@ -1293,8 +1293,8 @@ BOOST_AUTO_TEST_CASE(testForZero)
   amount_t x1("0.000000000000000000001");
 
   BOOST_CHECK(x1);
-  BOOST_CHECK_THROW(x0.is_zero(), amount_error);
-  BOOST_CHECK_THROW(x0.is_realzero(), amount_error);
+  BOOST_CHECK_THROW((void)x0.is_zero(), amount_error);
+  BOOST_CHECK_THROW((void)x0.is_realzero(), amount_error);
   BOOST_CHECK(! x1.is_zero());
   BOOST_CHECK(! x1.is_realzero());
 
@@ -1319,8 +1319,8 @@ BOOST_AUTO_TEST_CASE(testIntegerConversion)
   amount_t x1(123456L);
   amount_t x2("12345682348723487324");
 
-  BOOST_CHECK_THROW(x0.to_long(), amount_error);
-  BOOST_CHECK_THROW(x0.to_double(), amount_error);
+  BOOST_CHECK_THROW((void)x0.to_long(), amount_error);
+  BOOST_CHECK_THROW((void)x0.to_double(), amount_error);
   BOOST_CHECK(! x2.fits_in_long());
   BOOST_CHECK_EQUAL(123456L, x1.to_long());
   BOOST_CHECK_EQUAL(123456.0, x1.to_double());

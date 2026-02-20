@@ -138,7 +138,7 @@ void annotation_t::parse(std::istream& in) {
       }
 
       amount_t temp;
-      temp.parse(buf, PARSE_NO_MIGRATE);
+      (void)temp.parse(buf, PARSE_NO_MIGRATE);
 
       DEBUG("commodity.annotations", "Parsed annotation price: " << temp);
       price = temp;

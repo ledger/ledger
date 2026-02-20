@@ -124,9 +124,9 @@ public:
   std::list<fileinfo_t>::iterator sources_end() { return sources.end(); }
 
   void add_account(account_t* acct);
-  bool remove_account(account_t* acct);
-  account_t* find_account(const string& name, bool auto_create = true);
-  account_t* find_account_re(const string& regexp);
+  [[nodiscard]] bool remove_account(account_t* acct);
+  [[nodiscard]] account_t* find_account(const string& name, bool auto_create = true);
+  [[nodiscard]] account_t* find_account_re(const string& regexp);
 
   account_t* expand_aliases(string name);
 
@@ -137,9 +137,9 @@ public:
   void register_metadata(const string& key, const value_t& value,
                          variant<int, xact_t*, post_t*> context);
 
-  bool add_xact(xact_t* xact);
+  [[nodiscard]] bool add_xact(xact_t* xact);
   void extend_xact(xact_base_t* xact);
-  bool remove_xact(xact_t* xact);
+  [[nodiscard]] bool remove_xact(xact_t* xact);
 
   xacts_list::iterator xacts_begin() { return xacts.begin(); }
   xacts_list::iterator xacts_end() { return xacts.end(); }
@@ -151,10 +151,10 @@ public:
   std::size_t read(parse_context_stack_t& context, hash_type_t hash_type,
                    bool should_clear_xdata = true);
 
-  bool has_xdata();
+  [[nodiscard]] bool has_xdata();
   void clear_xdata();
 
-  bool valid() const;
+  [[nodiscard]] bool valid() const;
 
 private:
   std::size_t read_textual(parse_context_stack_t& context, hash_type_t hash_type);

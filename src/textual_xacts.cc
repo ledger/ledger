@@ -475,7 +475,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
       ptristream stream(next, static_cast<std::size_t>(len - beg));
 
       if (*next != '(') // indicates a value expression
-        post->amount.parse(stream, PARSE_NO_REDUCE);
+        (void)post->amount.parse(stream, PARSE_NO_REDUCE);
       else
         parse_amount_expr(stream, *context.scope, *post.get(), post->amount,
                           PARSE_NO_REDUCE | PARSE_SINGLE | PARSE_NO_ASSIGN, defer_expr,
@@ -553,7 +553,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
             ptristream cstream(p, static_cast<std::size_t>(len - beg));
 
             if (*p != '(') // indicates a value expression
-              post->cost->parse(cstream, PARSE_NO_MIGRATE);
+              (void)post->cost->parse(cstream, PARSE_NO_MIGRATE);
             else
               parse_amount_expr(cstream, *context.scope, *post.get(), *post->cost,
                                 PARSE_NO_MIGRATE | PARSE_SINGLE | PARSE_NO_ASSIGN);
@@ -611,7 +611,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         ptristream stream(p, static_cast<std::size_t>(len - beg));
 
         if (*p != '(') // indicates a value expression
-          post->assigned_amount->parse(stream);
+          (void)post->assigned_amount->parse(stream);
         else
           parse_amount_expr(stream, *context.scope, *post.get(), *post->assigned_amount,
                             PARSE_SINGLE | PARSE_NO_MIGRATE);
