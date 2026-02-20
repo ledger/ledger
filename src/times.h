@@ -395,10 +395,10 @@ public:
   }
 
   bool begin_has_year() const {
-    if (specifier_or_range.type() == typeid(date_specifier_t))
-      return boost::get<date_specifier_t>(specifier_or_range).has_year();
-    else if (specifier_or_range.type() == typeid(date_range_t))
-      return boost::get<date_range_t>(specifier_or_range).begin_has_year();
+    if (std::holds_alternative<date_specifier_t>(specifier_or_range))
+      return std::get<date_specifier_t>(specifier_or_range).has_year();
+    else if (std::holds_alternative<date_range_t>(specifier_or_range))
+      return std::get<date_range_t>(specifier_or_range).begin_has_year();
     else
       return false;
   }
