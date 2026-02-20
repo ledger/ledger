@@ -55,7 +55,7 @@ int mk_wcwidth(boost::uint32_t ucs);
  */
 class unistring {
 public:
-  static const std::size_t npos = static_cast<std::size_t>(-1);
+  inline static constexpr std::size_t npos = static_cast<std::size_t>(-1);
 
   std::vector<boost::uint32_t> utf32chars;
 

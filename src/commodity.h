@@ -104,7 +104,7 @@ protected:
     typedef tuple<datetime_t, datetime_t, const commodity_t*> memoized_price_entry;
     typedef std::map<memoized_price_entry, std::optional<price_point_t>> memoized_price_map;
 
-    static const std::size_t max_price_map_size = 8;
+    inline static constexpr std::size_t max_price_map_size = 8;
     mutable memoized_price_map price_map;
 
   public:
