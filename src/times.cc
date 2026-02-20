@@ -1775,8 +1775,8 @@ void date_parser_t::lexer_t::token_t::expected(char wanted, char c) {
 }
 
 namespace {
-typedef std::map<std::string, datetime_io_t*> datetime_io_map;
-typedef std::map<std::string, date_io_t*> date_io_map;
+typedef std::map<std::string, std::unique_ptr<datetime_io_t>> datetime_io_map;
+typedef std::map<std::string, std::unique_ptr<date_io_t>> date_io_map;
 
 datetime_io_map temp_datetime_io;
 date_io_map temp_date_io;
@@ -1790,9 +1790,8 @@ std::string format_datetime(const datetime_t& when, const format_type_t format_t
     if (auto i = temp_datetime_io.find(*format); i != temp_datetime_io.end()) {
       return (*i).second->format(when);
     } else {
-      datetime_io_t* formatter = new datetime_io_t(*format, false);
-      temp_datetime_io.insert(datetime_io_map::value_type(*format, formatter));
-      return formatter->format(when);
+      auto& stored = (temp_datetime_io[*format] = std::make_unique<datetime_io_t>(*format, false));
+      return stored->format(when);
     }
   } else if (format_type == FMT_PRINTED) {
     return printed_datetime_io->format(when);
@@ -1810,9 +1809,8 @@ std::string format_date(const date_t& when, const format_type_t format_type,
     if (auto i = temp_date_io.find(*format); i != temp_date_io.end()) {
       return (*i).second->format(when);
     } else {
-      date_io_t* formatter = new date_io_t(*format, false);
-      temp_date_io.insert(date_io_map::value_type(*format, formatter));
-      return formatter->format(when);
+      auto& stored = (temp_date_io[*format] = std::make_unique<date_io_t>(*format, false));
+      return stored->format(when);
     }
   } else if (format_type == FMT_PRINTED) {
     return printed_date_io->format(when);
@@ -1873,12 +1871,8 @@ void times_shutdown() {
 
     readers.clear();
 
-    for (datetime_io_map::value_type& pair : temp_datetime_io)
-      checked_delete(pair.second);
     temp_datetime_io.clear();
 
-    for (date_io_map::value_type& pair : temp_date_io)
-      checked_delete(pair.second);
     temp_date_io.clear();
 
     is_initialized = false;
