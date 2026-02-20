@@ -109,7 +109,7 @@ bool journal_t::remove_account(account_t* acct) {
   return master->remove_account(acct);
 }
 
-account_t* journal_t::find_account(const string& name, bool auto_create) {
+account_t* journal_t::find_account(string_view name, bool auto_create) {
   return master->find_account(name, auto_create);
 }
 
@@ -117,11 +117,11 @@ account_t* journal_t::find_account_re(const string& regexp) {
   return master->find_account_re(regexp);
 }
 
-account_t* journal_t::register_account(const string& name, post_t* post,
+account_t* journal_t::register_account(string_view name, post_t* post,
                                        account_t* master_account) {
   // If there are any account aliases, substitute before creating an account
   // object.
-  account_t* result = expand_aliases(name);
+  account_t* result = expand_aliases(string(name));
 
   // Create the account object and associate it with the journal; this
   // is registering the account.

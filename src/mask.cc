@@ -137,12 +137,12 @@ boost::uint32_t fold_codepoint(boost::uint32_t cp) {
 
 } // namespace
 
-string fold_diacritics(const string& text) {
-  const char* p = text.c_str();
-  std::size_t len = text.length();
+string fold_diacritics(string_view text) {
+  const char* p = text.data();
+  std::size_t len = text.size();
 
   if (!utf8::is_valid(p, p + len))
-    return text;
+    return string(text);
 
   std::vector<boost::uint32_t> utf32chars;
   utf8::unchecked::utf8to32(p, p + len, std::back_inserter(utf32chars));
@@ -157,7 +157,7 @@ string fold_diacritics(const string& text) {
   }
 
   if (!changed)
-    return text;
+    return string(text);
 
   string result;
   utf8::unchecked::utf32to8(utf32chars.begin(), utf32chars.end(),
@@ -165,13 +165,13 @@ string fold_diacritics(const string& text) {
   return result;
 }
 
-mask_t::mask_t(const string& pat) : expr() {
+mask_t::mask_t(string_view pat) : expr() {
   *this = pat;
-  TRACE_CTOR(mask_t, "const string&");
+  TRACE_CTOR(mask_t, "string_view");
 }
 
-mask_t& mask_t::operator=(const string& pat) {
-  string folded_pat = ignore_diacritics ? fold_diacritics(pat) : pat;
+mask_t& mask_t::operator=(string_view pat) {
+  string folded_pat = ignore_diacritics ? fold_diacritics(pat) : string(pat);
 #if HAVE_BOOST_REGEX_UNICODE
   expr = boost::make_u32regex(folded_pat.c_str(), boost::regex::perl | boost::regex::icase);
 #else
@@ -181,9 +181,9 @@ mask_t& mask_t::operator=(const string& pat) {
   return *this;
 }
 
-mask_t& mask_t::assign_glob(const string& pat) {
+mask_t& mask_t::assign_glob(string_view pat) {
   string re_pat = "";
-  string::size_type len = pat.length();
+  string_view::size_type len = pat.size();
   for (string::size_type i = 0; i < len; i++) {
     switch (pat[i]) {
     case '?':

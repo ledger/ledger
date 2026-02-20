@@ -47,29 +47,24 @@ account_t::~account_t() {
   }
 }
 
-account_t* account_t::find_account(const string& acct_name, const bool auto_create) {
+account_t* account_t::find_account(string_view acct_name, const bool auto_create) {
   accounts_map::const_iterator i = accounts.find(acct_name);
   if (i != accounts.end())
     return (*i).second;
 
-  char buf[8192];
+  string_view::size_type sep = acct_name.find(':');
+  assert(sep < 256 || sep == string_view::npos);
 
-  string::size_type sep = acct_name.find(':');
-  assert(sep < 256 || sep == string::npos);
-
-  const char *first, *rest;
-  if (sep == string::npos) {
-    first = acct_name.c_str();
-    rest = NULL;
+  string_view first;
+  string_view rest;
+  if (sep == string_view::npos) {
+    first = acct_name;
   } else {
-    std::strncpy(buf, acct_name.c_str(), sep);
-    buf[sep] = '\0';
-
-    first = buf;
-    rest = acct_name.c_str() + sep + 1;
+    first = acct_name.substr(0, sep);
+    rest = acct_name.substr(sep + 1);
   }
 
-  if (std::strcmp(first, "") == 0) {
+  if (first.empty()) {
     throw parse_error(_("Account name contains an empty sub-account name"));
   }
 
@@ -80,7 +75,7 @@ account_t* account_t::find_account(const string& acct_name, const bool auto_crea
     if (!auto_create)
       return NULL;
 
-    account = new account_t(this, first);
+    account = new account_t(this, string(first));
 
     // An account created within a temporary or generated account is itself
     // temporary or generated, so that the whole tree has the same status.
@@ -92,7 +87,7 @@ account_t* account_t::find_account(const string& acct_name, const bool auto_crea
 #if DEBUG_ON
     std::pair<accounts_map::iterator, bool> result =
 #endif
-        accounts.insert(accounts_map::value_type(first, account));
+        accounts.insert(accounts_map::value_type(string(first), account));
 #if DEBUG_ON
     assert(result.second);
 #endif
@@ -100,7 +95,7 @@ account_t* account_t::find_account(const string& acct_name, const bool auto_crea
     account = (*i).second;
   }
 
-  if (rest)
+  if (!rest.empty())
     account = account->find_account(rest, auto_create);
 
   return account;

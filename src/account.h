@@ -93,7 +93,7 @@ public:
     return n > 0;
   }
 
-  [[nodiscard]] account_t* find_account(const string& name, bool auto_create = true);
+  [[nodiscard]] account_t* find_account(string_view name, bool auto_create = true);
   [[nodiscard]] account_t* find_account_re(const string& regexp);
 
   typedef transform_iterator<function<account_t*(accounts_map::value_type&)>,
