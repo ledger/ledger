@@ -428,7 +428,8 @@ optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& 
     const commodity_t* u_comm = get(namemap, u);
     const commodity_t* v_comm = get(namemap, v);
 
-    assert(u_comm == last_target || v_comm == last_target);
+    if (u_comm != last_target && v_comm != last_target)
+      return none;
 
     bool first_run = false;
     if (price.is_null()) {
