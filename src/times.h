@@ -359,7 +359,7 @@ public:
 };
 
 class date_specifier_or_range_t {
-  typedef variant<int, date_specifier_t, date_range_t> value_type;
+  typedef std::variant<int, date_specifier_t, date_range_t> value_type;
 
   value_type specifier_or_range;
 
@@ -378,18 +378,18 @@ public:
   ~date_specifier_or_range_t() noexcept { TRACE_DTOR(date_specifier_or_range_t); }
 
   optional<date_t> begin() const {
-    if (specifier_or_range.type() == typeid(date_specifier_t))
-      return boost::get<date_specifier_t>(specifier_or_range).begin();
-    else if (specifier_or_range.type() == typeid(date_range_t))
-      return boost::get<date_range_t>(specifier_or_range).begin();
+    if (std::holds_alternative<date_specifier_t>(specifier_or_range))
+      return std::get<date_specifier_t>(specifier_or_range).begin();
+    else if (std::holds_alternative<date_range_t>(specifier_or_range))
+      return std::get<date_range_t>(specifier_or_range).begin();
     else
       return none;
   }
   optional<date_t> end() const {
-    if (specifier_or_range.type() == typeid(date_specifier_t))
-      return boost::get<date_specifier_t>(specifier_or_range).end();
-    else if (specifier_or_range.type() == typeid(date_range_t))
-      return boost::get<date_range_t>(specifier_or_range).end();
+    if (std::holds_alternative<date_specifier_t>(specifier_or_range))
+      return std::get<date_specifier_t>(specifier_or_range).end();
+    else if (std::holds_alternative<date_range_t>(specifier_or_range))
+      return std::get<date_range_t>(specifier_or_range).end();
     else
       return none;
   }
@@ -406,10 +406,10 @@ public:
   string to_string() const {
     std::ostringstream out;
 
-    if (specifier_or_range.type() == typeid(date_specifier_t))
-      out << "in" << boost::get<date_specifier_t>(specifier_or_range).to_string();
-    else if (specifier_or_range.type() == typeid(date_range_t))
-      out << boost::get<date_range_t>(specifier_or_range).to_string();
+    if (std::holds_alternative<date_specifier_t>(specifier_or_range))
+      out << "in" << std::get<date_specifier_t>(specifier_or_range).to_string();
+    else if (std::holds_alternative<date_range_t>(specifier_or_range))
+      out << std::get<date_range_t>(specifier_or_range).to_string();
 
     return out.str();
   }

@@ -64,10 +64,10 @@ void format_t::element_t::dump(std::ostream& out) const {
 
   switch (type) {
   case STRING:
-    out << "   str: '" << boost::get<string>(data) << "'" << std::endl;
+    out << "   str: '" << std::get<string>(data) << "'" << std::endl;
     break;
   case EXPR:
-    out << "  expr: " << boost::get<expr_t>(data) << std::endl;
+    out << "  expr: " << std::get<expr_t>(data) << std::endl;
     break;
   }
 }
@@ -294,7 +294,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
         if (!format_amount)
           break;
 
-        expr_t::ptr_op_t op = boost::get<expr_t>(current->data).get_op();
+        expr_t::ptr_op_t op = std::get<expr_t>(current->data).get_op();
 
         expr_t::ptr_op_t call2_node(new expr_t::op_t(expr_t::op_t::O_CALL));
         {
@@ -354,7 +354,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
         current->min_width = 0;
         current->max_width = 0;
 
-        string prev_expr = boost::get<expr_t>(current->data).text();
+        string prev_expr = std::get<expr_t>(current->data).text();
 
         expr_t::ptr_op_t colorize_op;
         if (op->kind == expr_t::op_t::O_CONS)
@@ -381,7 +381,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
           current->data = expr_t(call2_node);
         }
 
-        boost::get<expr_t>(current->data).set_text(prev_expr);
+        std::get<expr_t>(current->data).set_text(prev_expr);
         break;
       }
 
@@ -422,11 +422,11 @@ string format_t::real_calc(scope_t& scope) {
     case element_t::STRING:
       if (elem->min_width > 0)
         out.width(static_cast<std::streamsize>(elem->min_width));
-      out << boost::get<string>(elem->data);
+      out << std::get<string>(elem->data);
       break;
 
     case element_t::EXPR: {
-      expr_t& expr(boost::get<expr_t>(elem->data));
+      expr_t& expr(std::get<expr_t>(elem->data));
       try {
         expr.compile(scope);
 

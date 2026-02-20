@@ -385,7 +385,7 @@ class date_parser_t {
 
       } kind;
 
-      typedef variant<unsigned short, string, date_specifier_t::year_type,
+      typedef std::variant<unsigned short, string,
                       date_time::months_of_year, date_time::weekdays, date_specifier_t>
           content_t;
 
@@ -416,12 +416,12 @@ class date_parser_t {
 
         switch (kind) {
         case UNKNOWN:
-          out << boost::get<string>(*value);
+          out << std::get<string>(*value);
           break;
         case TOK_DATE:
-          return boost::get<date_specifier_t>(*value).to_string();
+          return std::get<date_specifier_t>(*value).to_string();
         case TOK_INT:
-          out << boost::get<unsigned short>(*value);
+          out << std::get<unsigned short>(*value);
           break;
         case TOK_SLASH:
           return "/";
@@ -430,10 +430,10 @@ class date_parser_t {
         case TOK_DOT:
           return ".";
         case TOK_A_MONTH:
-          out << date_specifier_t::month_type(boost::get<date_time::months_of_year>(*value));
+          out << date_specifier_t::month_type(std::get<date_time::months_of_year>(*value));
           break;
         case TOK_A_WDAY:
-          out << date_specifier_t::day_of_week_type(boost::get<date_time::weekdays>(*value));
+          out << date_specifier_t::day_of_week_type(std::get<date_time::weekdays>(*value));
           break;
         case TOK_AGO:
           return "ago";
@@ -691,11 +691,11 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
 
   switch (tok.kind) {
   case lexer_t::token_t::TOK_DATE:
-    specifier = boost::get<date_specifier_t>(*tok.value);
+    specifier = std::get<date_specifier_t>(*tok.value);
     break;
 
   case lexer_t::token_t::TOK_INT: {
-    unsigned short amount = boost::get<unsigned short>(*tok.value);
+    unsigned short amount = std::get<unsigned short>(*tok.value);
     int8_t adjust = 0;
 
     tok = lexer.peek_token();
@@ -778,7 +778,7 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
     tok = lexer.next_token();
     switch (tok.kind) {
     case lexer_t::token_t::TOK_A_MONTH: {
-      date_t temp(today.year(), boost::get<date_time::months_of_year>(*tok.value), 1);
+      date_t temp(today.year(), std::get<date_time::months_of_year>(*tok.value), 1);
       temp += gregorian::years(adjust);
       specifier =
           date_specifier_t(static_cast<date_specifier_t::year_type>(temp.year()), temp.month());
@@ -787,7 +787,7 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
 
     case lexer_t::token_t::TOK_A_WDAY: {
       date_t temp = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
-      while (temp.day_of_week() != boost::get<date_time::months_of_year>(*tok.value))
+      while (temp.day_of_week() != std::get<date_time::months_of_year>(*tok.value))
         temp += gregorian::days(1);
       temp += gregorian::days(7 * adjust);
       specifier = date_specifier_t(temp);
@@ -852,11 +852,11 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
 
   case lexer_t::token_t::TOK_A_MONTH:
     specifier.month =
-        date_specifier_t::month_type(boost::get<date_time::months_of_year>(*tok.value));
+        date_specifier_t::month_type(std::get<date_time::months_of_year>(*tok.value));
     tok = lexer.peek_token();
     switch (tok.kind) {
     case lexer_t::token_t::TOK_INT:
-      specifier.year = boost::get<date_specifier_t::year_type>(*tok.value);
+      specifier.year = std::get<unsigned short>(*tok.value);
       break;
     case lexer_t::token_t::END_REACHED:
       break;
@@ -866,7 +866,7 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
     break;
   case lexer_t::token_t::TOK_A_WDAY:
     specifier.wday =
-        date_specifier_t::day_of_week_type(boost::get<date_time::weekdays>(*tok.value));
+        date_specifier_t::day_of_week_type(std::get<date_time::weekdays>(*tok.value));
     break;
 
   case lexer_t::token_t::TOK_TODAY:
@@ -960,7 +960,7 @@ void date_parser_t::handle_relative_token(lexer_t::token_t& tok,
   tok = lexer.next_token();
   switch (tok.kind) {
   case lexer_t::token_t::TOK_INT: {
-    unsigned short amount = boost::get<unsigned short>(*tok.value);
+    unsigned short amount = std::get<unsigned short>(*tok.value);
     date_t base(today);
     date_t end(today);
 
@@ -1101,7 +1101,7 @@ void date_parser_t::handle_simple_period_token(lexer_t::token_t::kind_t kind,
 void date_parser_t::handle_every_token(lexer_t::token_t& tok, optional<date_duration_t>& duration) {
   tok = lexer.next_token();
   if (tok.kind == lexer_t::token_t::TOK_INT) {
-    int quantity = boost::get<unsigned short>(*tok.value);
+    int quantity = std::get<unsigned short>(*tok.value);
     tok = lexer.next_token();
     switch (tok.kind) {
     case lexer_t::token_t::TOK_YEARS:
