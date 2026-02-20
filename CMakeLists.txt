@@ -55,7 +55,11 @@ endif()
 
 ########################################################################
 
-option(USE_PYTHON "Build support for the Python scripting bridge" OFF)
+if(SKBUILD)
+  option(USE_PYTHON "Build support for the Python scripting bridge" ON)
+else()
+  option(USE_PYTHON "Build support for the Python scripting bridge" OFF)
+endif()
 set(PYTHON_REQUIRED_VERSION "" CACHE STRING "Specific Python version to find (e.g. 3.11)")
 option(USE_DOXYGEN "Build reference documentation using Doxygen" OFF)
 
@@ -67,7 +71,13 @@ option(USE_GPGME "Build with support for encrypted journals" OFF)
 option(USE_GCOV "Enable code coverage with gcov" OFF)
 option(USE_LLVM_COV "Enable code coverage with LLVM instrumentation and lcov/genhtml" OFF)
 option(USE_SANITIZERS "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
-option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
+# In SKBUILD mode, BUILD_LIBRARY is OFF: we build a Python MODULE directly,
+# not a shared library plus a separately-installed .so copy.
+if(SKBUILD)
+  option(BUILD_LIBRARY "Build and install Ledger as a library" OFF)
+else()
+  option(BUILD_LIBRARY "Build and install Ledger as a library" ON)
+endif()
 option(BUILD_DOCS "Build and install documentation" OFF)
 option(BUILD_WEB_DOCS "Build version of documentation suitable for viewing online" OFF)
 
@@ -201,8 +211,8 @@ endif()
 ########################################################################
 
 if(USE_PYTHON)
-  if(NOT BUILD_LIBRARY)
-    message(ERROR "Building the python module requires BUILD_LIBRARY=ON.")
+  if(NOT BUILD_LIBRARY AND NOT SKBUILD)
+    message(WARNING "Building the python module requires BUILD_LIBRARY=ON (or SKBUILD mode).")
   endif()
 
   if(PYTHON_REQUIRED_VERSION)
@@ -210,8 +220,17 @@ if(USE_PYTHON)
   else()
     set(_python_version ${Required_Python_Version})
   endif()
-  find_package(Python ${_python_version}
-    COMPONENTS Interpreter Development)
+  # In SKBUILD mode scikit-build-core only provides Development.Module (no
+  # Development.Embed), so request that component explicitly.  In a regular
+  # build the full Development component (Module + Embed) is still used so
+  # that the interpreter can embed Python for the --python command.
+  if(SKBUILD)
+    find_package(Python ${_python_version}
+      COMPONENTS Interpreter Development.Module)
+  else()
+    find_package(Python ${_python_version}
+      COMPONENTS Interpreter Development)
+  endif()
   if(PYTHON_FOUND AND ${Python_VERSION} VERSION_GREATER_EQUAL ${_python_version})
     set(BOOST_PYTHON "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}")
     set(HAVE_BOOST_PYTHON 1)
@@ -534,9 +553,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 add_subdirectory(src)
-add_subdirectory(doc)
-add_subdirectory(contrib)
-add_subdirectory(test)
+if(NOT SKBUILD)
+  add_subdirectory(doc)
+  add_subdirectory(contrib)
+  add_subdirectory(test)
+endif()
 
 ########################################################################
 
