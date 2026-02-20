@@ -1,0 +1,48 @@
+; Test for issue #1175: ledger-post-align-xact does not correctly align
+; lines with balance assignments or expression amounts
+
+; Test that balance assignments and expression amounts are properly aligned
+; with regular amounts when using the print command
+
+2024/01/01 Opening Balance
+    Assets:Checking                          $100.00
+    Equity:Opening
+
+2024/01/05 Balance Assignment
+    Assets:Checking                        = $150.00
+    Income:Salary
+
+2024/01/10 Expression Amount
+    Assets:Checking                     ($25.00 + $25.00)
+    Expenses:Food
+
+2024/01/15 Mixed Transaction
+    Assets:Checking                          $200.00
+    Assets:Savings                         = $500.00
+    Income:Bonus
+
+test print
+2024/01/01 Opening Balance
+    Assets:Checking                          $100.00
+    Equity:Opening
+
+2024/01/05 Balance Assignment
+    Assets:Checking                        = $150.00
+    Income:Salary
+
+2024/01/10 Expression Amount
+    Assets:Checking                     ($25.00 + $25.00)
+    Expenses:Food
+
+2024/01/15 Mixed Transaction
+    Assets:Checking                          $200.00
+    Assets:Savings                         = $500.00
+    Income:Bonus
+end test
+
+; Test the xact command which is used by ledger-mode
+test xact --now=2026/02/16 Balance
+2026/02/16 Balance Assignment
+    Assets:Checking                        = $150.00
+    Income:Salary
+end test
