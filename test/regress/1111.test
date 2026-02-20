@@ -1,0 +1,22 @@
+; Test case for issue #1111
+; When an automated transaction creates a posting for an account named
+; "Unknown" and there are payee sub-directives, the payee should be used
+; to resolve the "Unknown" account to the appropriate mapped account.
+
+account Equity:Known
+        payee MyPayee
+
+= expr true
+        Unknown  1
+
+2024/01/01 MyPayee
+        Expenses:Food  $10
+        Assets:Checking
+
+test p --generated
+2024/01/01 MyPayee
+    Expenses:Food                                $10
+    Assets:Checking                             $-10
+    Equity:Known                                 $10
+    Equity:Known                                $-10
+end test
