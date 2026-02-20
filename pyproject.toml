@@ -1,0 +1,43 @@
+[build-system]
+requires = ["scikit-build-core>=0.10"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "ledger"
+version = "3.4.1"
+description = "A command-line double-entry accounting system"
+readme = "README.md"
+license = {file = "LICENSE.md"}
+requires-python = ">=3.10"
+authors = [
+  {name = "John Wiegley", email = "jwiegley@gmail.com"},
+]
+keywords = ["accounting", "double-entry", "finance", "ledger"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: BSD License",
+  "Programming Language :: C++",
+  "Programming Language :: Python :: 3",
+  "Topic :: Office/Business :: Financial",
+  "Topic :: Office/Business :: Financial :: Accounting",
+]
+
+[project.urls]
+Homepage = "https://ledger-cli.org"
+Documentation = "https://ledger-cli.org/docs.html"
+Repository = "https://github.com/ledger/ledger"
+"Issue Tracker" = "https://github.com/ledger/ledger/issues"
+
+[tool.scikit-build]
+# Development.Module (CMake 3.18+) is required for Python extension builds.
+cmake.minimum-version = "3.18"
+# No Python package directory: the extension module is installed directly
+# to the site-packages root by CMake's install(TARGETS ledger DESTINATION .)
+wheel.packages = []
+
+[tool.scikit-build.cmake.define]
+# Force Python bindings on and skip the shared library in wheel builds.
+USE_PYTHON = "ON"
+BUILD_LIBRARY = "OFF"
