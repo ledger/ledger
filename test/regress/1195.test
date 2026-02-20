@@ -1,0 +1,13 @@
+apply fixed
+
+€ 0.9000
+
+end
+
+test -f - bal -> 2
+__ERROR__
+While parsing file "", line 1:
+Error: Directive 'apply fixed' requires an argument
+While parsing file "", line 5:
+Error: 'end' or 'end apply' found, but no enclosing 'apply' directive
+end test
