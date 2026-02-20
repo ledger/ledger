@@ -448,7 +448,7 @@ if(ENABLE_FUZZING)
   target_link_libraries(journal_fuzzer libledger)
 
   if(PRECOMPILE_SYSTEM_HH)
-    target_precompile_headers(journal_fuzzer REUSE_FROM libledger)
+    target_precompile_headers(journal_fuzzer PRIVATE ${PROJECT_BINARY_DIR}/system.hh)
   endif()
 
   add_custom_target(fuzz
