@@ -178,8 +178,8 @@ shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& query) 
   report_t& current_report(downcast<report_t>(*scope_t::default_scope));
   shared_ptr<collector_wrapper> coll(new collector_wrapper(journal, current_report));
 
-  unique_ptr<journal_t> save_journal(coll->report.session.journal.release());
-  coll->report.session.journal.reset(&coll->journal);
+  boost::shared_ptr<journal_t> save_journal = coll->report.session.journal;
+  coll->report.session.journal = boost::shared_ptr<journal_t>(&coll->journal, [](journal_t*) {});
 
   try {
     strings_list remaining = process_arguments(split_arguments(query.c_str()), coll->report);
@@ -192,12 +192,10 @@ shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& query) 
 
     coll->report.posts_report(coll->posts_collector);
   } catch (...) {
-    coll->report.session.journal.release();
-    coll->report.session.journal.reset(save_journal.release());
+    coll->report.session.journal = save_journal;
     throw;
   }
-  coll->report.session.journal.release();
-  coll->report.session.journal.reset(save_journal.release());
+  coll->report.session.journal = save_journal;
 
   return coll;
 }
@@ -237,7 +235,7 @@ void export_journal() {
       .add_property("from_stream", make_getter(&journal_t::fileinfo_t::from_stream),
                     make_setter(&journal_t::fileinfo_t::from_stream));
 
-  class_<journal_t, boost::noncopyable>("Journal")
+  class_<journal_t, boost::shared_ptr<journal_t>, boost::noncopyable>("Journal")
 #if 0
     .def(init<path>())
     .def(init<string>())
