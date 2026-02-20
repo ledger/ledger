@@ -1,0 +1,5 @@
+test python test/regress/977.py
+foo
+Assets:Checking
+Assets:Savings
+end test
