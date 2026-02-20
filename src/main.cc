@@ -48,21 +48,11 @@
 
 using namespace ledger;
 
-#if HAVE_BOOST_PYTHON
-namespace ledger {
-extern char* argv0;
-}
-#endif
-
 int main(int argc, char* argv[], char* envp[]) {
   int status = 1;
 
 #if HAVE_BOOST_NOWIDE
   boost::nowide::args a(argc, argv); // Fix command-line encoding on Windows
-#endif
-
-#if HAVE_BOOST_PYTHON
-  argv0 = argv[0];
 #endif
 
   // The very first thing we do is handle some very special command-line
