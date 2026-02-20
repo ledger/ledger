@@ -133,9 +133,9 @@ public:
   account_t* register_account(const string& name, post_t* post, account_t* master = NULL);
   string register_payee(const string& name);
   string validate_payee(const string& name_or_alias);
-  void register_commodity(commodity_t& comm, variant<int, xact_t*, post_t*> context);
+  void register_commodity(commodity_t& comm, std::variant<int, xact_t*, post_t*> context);
   void register_metadata(const string& key, const value_t& value,
-                         variant<int, xact_t*, post_t*> context);
+                         std::variant<int, xact_t*, post_t*> context);
 
   [[nodiscard]] bool add_xact(xact_t* xact);
   void extend_xact(xact_base_t* xact);

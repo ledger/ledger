@@ -256,10 +256,10 @@ string journal_t::translate_payee_name(const string& name) {
   return payee.empty() ? name : payee;
 }
 
-void journal_t::register_commodity(commodity_t& comm, variant<int, xact_t*, post_t*> context) {
+void journal_t::register_commodity(commodity_t& comm, std::variant<int, xact_t*, post_t*> context) {
   if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
     if (!comm.has_flags(COMMODITY_KNOWN)) {
-      if (context.which() == 0) {
+      if (context.index() == 0) {
         comm.add_flags(COMMODITY_KNOWN);
       } else if (checking_style == CHECK_WARNING) {
         current_context->warning(_f("Unknown commodity '%1%'") % comm);
@@ -271,12 +271,12 @@ void journal_t::register_commodity(commodity_t& comm, variant<int, xact_t*, post
 }
 
 void journal_t::register_metadata(const string& key, const value_t& value,
-                                  variant<int, xact_t*, post_t*> context) {
+                                  std::variant<int, xact_t*, post_t*> context) {
   if (checking_style == CHECK_WARNING || checking_style == CHECK_ERROR) {
     std::set<string>::iterator i = known_tags.find(key);
 
     if (i == known_tags.end()) {
-      if (context.which() == 0) {
+      if (context.index() == 0) {
         known_tags.insert(key);
       } else if (checking_style == CHECK_WARNING) {
         current_context->warning(_f("Unknown metadata tag '%1%'") % key);
@@ -286,15 +286,15 @@ void journal_t::register_metadata(const string& key, const value_t& value,
     }
   }
 
-  if (!value.is_null() && context.which() != 0) {
+  if (!value.is_null() && context.index() != 0) {
     std::pair<tag_check_exprs_map::iterator, tag_check_exprs_map::iterator> range =
         tag_check_exprs.equal_range(key);
 
     for (tag_check_exprs_map::iterator i = range.first; i != range.second; ++i) {
       bind_scope_t bound_scope(*current_context->scope,
-                               context.which() == 1
-                                   ? static_cast<scope_t&>(*boost::get<xact_t*>(context))
-                                   : static_cast<scope_t&>(*boost::get<post_t*>(context)));
+                               context.index() == 1
+                                   ? static_cast<scope_t&>(*std::get<xact_t*>(context))
+                                   : static_cast<scope_t&>(*std::get<post_t*>(context)));
       value_scope_t val_scope(bound_scope, value);
 
       (*i).second.first.mark_uncompiled();
@@ -311,9 +311,9 @@ void journal_t::register_metadata(const string& key, const value_t& value,
 }
 
 namespace {
-void check_all_metadata(journal_t& journal, variant<int, xact_t*, post_t*> context) {
-  xact_t* xact = context.which() == 1 ? boost::get<xact_t*>(context) : NULL;
-  post_t* post = context.which() == 2 ? boost::get<post_t*>(context) : NULL;
+void check_all_metadata(journal_t& journal, std::variant<int, xact_t*, post_t*> context) {
+  xact_t* xact = context.index() == 1 ? std::get<xact_t*>(context) : NULL;
+  post_t* post = context.index() == 2 ? std::get<post_t*>(context) : NULL;
 
   if ((xact || post) && (xact ? xact->metadata : post->metadata)) {
     for (const item_t::string_map::value_type& pair : xact ? *xact->metadata : *post->metadata) {

@@ -60,7 +60,7 @@ typedef std::pair<commodity_t*, amount_t> fixed_rate_t;
 
 struct application_t {
   string label;
-  variant<optional<datetime_t>, account_t*, string, fixed_rate_t> value;
+  std::variant<optional<datetime_t>, account_t*, string, fixed_rate_t> value;
   optional<int> saved_year_directive;
 
   application_t(string _label, optional<datetime_t> epoch) : label(_label), value(epoch) {}
@@ -93,8 +93,8 @@ public:
   template <typename T>
   void get_applications(std::vector<T>& result) {
     for (application_t& state : apply_stack) {
-      if (state.value.type() == typeid(T))
-        result.push_back(boost::get<T>(state.value));
+      if (std::holds_alternative<T>(state.value))
+        result.push_back(std::get<T>(state.value));
     }
     if (parent)
       parent->get_applications<T>(result);
@@ -103,8 +103,8 @@ public:
   template <typename T>
   optional<T> get_application() {
     for (application_t& state : apply_stack) {
-      if (state.value.type() == typeid(T))
-        return boost::get<T>(state.value);
+      if (std::holds_alternative<T>(state.value))
+        return std::get<T>(state.value);
     }
     return parent ? parent->get_application<T>() : none;
   }

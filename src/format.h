@@ -63,7 +63,7 @@ class format_t : public expr_base_t<string>, public noncopyable {
     kind_t type;
     std::size_t min_width;
     std::size_t max_width;
-    variant<string, expr_t> data;
+    std::variant<string, expr_t> data;
     scoped_ptr<struct element_t> next;
 
     element_t() noexcept : supports_flags<>(), type(STRING), min_width(0), max_width(0) {
@@ -131,7 +131,7 @@ public:
   virtual void mark_uncompiled() override {
     for (element_t* elem = elements.get(); elem; elem = elem->next.get()) {
       if (elem->type == element_t::EXPR) {
-        expr_t& expr(boost::get<expr_t>(elem->data));
+        expr_t& expr(std::get<expr_t>(elem->data));
         expr.mark_uncompiled();
       }
     }

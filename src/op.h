@@ -58,13 +58,13 @@ private:
   mutable short refc;
   ptr_op_t left_;
 
-  variant<boost::blank,
-          ptr_op_t,           // used by all binary operators
-          value_t,            // used by constant VALUE
-          string,             // used by constant IDENT
-          expr_t::func_t,     // used by terminal FUNCTION
-          std::shared_ptr<scope_t> // used by terminal SCOPE
-          >
+  std::variant<std::monostate,
+               ptr_op_t,           // used by all binary operators
+               value_t,            // used by constant VALUE
+               string,             // used by constant IDENT
+               expr_t::func_t,     // used by terminal FUNCTION
+               std::shared_ptr<scope_t> // used by terminal SCOPE
+               >
       data;
 
 public:
@@ -133,14 +133,14 @@ public:
 
   bool is_value() const {
     if (kind == VALUE) {
-      assert(data.type() == typeid(value_t));
+      assert(std::holds_alternative<value_t>(data));
       return true;
     }
     return false;
   }
   value_t& as_value_lval() {
     assert(is_value());
-    value_t& val(boost::get<value_t>(data));
+    value_t& val(std::get<value_t>(data));
     VERIFY(val.valid());
     return val;
   }
@@ -152,14 +152,14 @@ public:
 
   bool is_ident() const {
     if (kind == IDENT) {
-      assert(data.type() == typeid(string));
+      assert(std::holds_alternative<string>(data));
       return true;
     }
     return false;
   }
   string& as_ident_lval() {
     assert(is_ident());
-    return boost::get<string>(data);
+    return std::get<string>(data);
   }
   const string& as_ident() const { return const_cast<op_t*>(this)->as_ident_lval(); }
   void set_ident(const string& val) { data = val; }
@@ -167,16 +167,16 @@ public:
   bool is_function() const { return kind == FUNCTION; }
   expr_t::func_t& as_function_lval() {
     assert(is_function());
-    return boost::get<expr_t::func_t>(data);
+    return std::get<expr_t::func_t>(data);
   }
   const expr_t::func_t& as_function() const { return const_cast<op_t*>(this)->as_function_lval(); }
   void set_function(const expr_t::func_t& val) { data = val; }
 
   bool is_scope() const { return kind == SCOPE; }
-  bool is_scope_unset() const { return data.which() == 0; }
+  bool is_scope_unset() const { return data.index() == 0; }
   std::shared_ptr<scope_t> as_scope_lval() {
     assert(is_scope());
-    return boost::get<std::shared_ptr<scope_t>>(data);
+    return std::get<std::shared_ptr<scope_t>>(data);
   }
   const std::shared_ptr<scope_t> as_scope() const { return const_cast<op_t*>(this)->as_scope_lval(); }
   void set_scope(std::shared_ptr<scope_t> val) { data = val; }
@@ -199,7 +199,7 @@ public:
 
   ptr_op_t& as_op_lval() {
     assert(kind > TERMINALS || is_ident());
-    return boost::get<ptr_op_t>(data);
+    return std::get<ptr_op_t>(data);
   }
   const ptr_op_t& as_op() const { return const_cast<op_t*>(this)->as_op_lval(); }
 
@@ -218,7 +218,7 @@ public:
   bool has_right() const {
     if (kind < TERMINALS)
       return false;
-    return data.which() != 0 && as_op();
+    return data.index() != 0 && as_op();
   }
 
 private:

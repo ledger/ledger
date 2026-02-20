@@ -90,8 +90,8 @@ void instance_t::parse() {
     }
   }
 
-  if (apply_stack.front().value.type() == typeid(optional<datetime_t>)) {
-    epoch = boost::get<optional<datetime_t>>(apply_stack.front().value);
+  if (std::holds_alternative<boost::optional<datetime_t>>(apply_stack.front().value)) {
+    epoch = std::get<boost::optional<datetime_t>>(apply_stack.front().value);
     year_directive_year = apply_stack.front().saved_year_directive;
   }
 
