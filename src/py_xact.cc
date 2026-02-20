@@ -99,8 +99,8 @@ void export_xact() {
 
       .def("__iter__", boost::python::range<return_internal_reference<>>(&xact_t::posts_begin,
                                                                          &xact_t::posts_end))
-      .def("posts", boost::python::range<return_internal_reference<>>(&xact_t::posts_begin,
-                                                                      &xact_t::posts_end))
+      .add_property("posts", boost::python::range<return_internal_reference<>>(&xact_t::posts_begin,
+                                                                               &xact_t::posts_end))
 
       .def("valid", &xact_base_t::valid);
 
