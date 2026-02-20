@@ -57,6 +57,7 @@ namespace ledger {
 using namespace boost;
 
 typedef std::string string;
+using string_view = std::string_view;
 typedef std::list<string> strings_list;
 
 typedef posix_time::ptime ptime;

@@ -128,12 +128,12 @@ public:
 
   void add_account(account_t* acct);
   [[nodiscard]] bool remove_account(account_t* acct);
-  [[nodiscard]] account_t* find_account(const string& name, bool auto_create = true);
+  [[nodiscard]] account_t* find_account(string_view name, bool auto_create = true);
   [[nodiscard]] account_t* find_account_re(const string& regexp);
 
   account_t* expand_aliases(string name);
 
-  account_t* register_account(const string& name, post_t* post, account_t* master = NULL);
+  account_t* register_account(string_view name, post_t* post, account_t* master = NULL);
   string register_payee(const string& name);
   string validate_payee(const string& name_or_alias);
   void register_commodity(commodity_t& comm, std::variant<int, xact_t*, post_t*> context);

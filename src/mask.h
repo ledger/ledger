@@ -57,7 +57,7 @@ namespace ledger {
  * e.g. "specialite" matches "sp\xc3\xa9cialit\xc3\xa9".
  * Uses a lookup table for common Latin accented characters.
  */
-string fold_diacritics(const string& text);
+string fold_diacritics(string_view text);
 
 /**
  * @brief Global flag to enable diacritics-insensitive matching.
@@ -75,29 +75,35 @@ public:
   boost::regex expr;
 #endif
 
-  explicit mask_t(const string& pattern);
+  explicit mask_t(string_view pattern);
 
   mask_t() : expr() { TRACE_CTOR(mask_t, ""); }
   mask_t(const mask_t& m) : expr(m.expr) { TRACE_CTOR(mask_t, "copy"); }
   mask_t& operator=(const mask_t&) = default;
   ~mask_t() noexcept { TRACE_DTOR(mask_t); }
 
-  mask_t& operator=(const string& other);
-  mask_t& assign_glob(const string& other);
+  mask_t& operator=(string_view other);
+  mask_t& assign_glob(string_view other);
 
   bool operator<(const mask_t& other) const { return expr < other.expr; }
   bool operator==(const mask_t& other) const { return expr == other.expr; }
 
-  bool match(const string& text) const {
-    string match_text = ignore_diacritics ? fold_diacritics(text) : text;
+  bool match(string_view text) const {
 #if HAVE_BOOST_REGEX_UNICODE
+    string match_text = ignore_diacritics ? fold_diacritics(text) : string(text);
     DEBUG("mask.match", "Matching: \"" << match_text << "\" =~ /" << str() << "/ = "
                                        << (boost::u32regex_search(match_text, expr) ? "true" : "false"));
     return boost::u32regex_search(match_text, expr);
 #else
-    DEBUG("mask.match", "Matching: \"" << match_text << "\" =~ /" << str() << "/ = "
-                                       << (boost::regex_search(match_text, expr) ? "true" : "false"));
-    return boost::regex_search(match_text, expr);
+    if (ignore_diacritics) {
+      string match_text = fold_diacritics(text);
+      DEBUG("mask.match", "Matching: \"" << match_text << "\" =~ /" << str() << "/ = "
+                                         << (boost::regex_search(match_text, expr) ? "true" : "false"));
+      return boost::regex_search(match_text, expr);
+    }
+    DEBUG("mask.match", "Matching: \"" << text << "\" =~ /" << str() << "/ = "
+                                       << (boost::regex_search(text.begin(), text.end(), expr) ? "true" : "false"));
+    return boost::regex_search(text.begin(), text.end(), expr);
 #endif
   }
 

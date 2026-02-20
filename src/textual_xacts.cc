@@ -462,7 +462,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
       e--;
     }
 
-    string name(p, static_cast<string::size_type>(e - p));
+    string_view name(p, static_cast<string_view::size_type>(e - p));
     DEBUG("textual.parse", "line " << context.linenum << ": "
                                    << "Parsed account name " << name);
 

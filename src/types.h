@@ -58,6 +58,6 @@ typedef std::list<post_t *>                          posts_list;
 typedef std::list<xact_t *>                          xacts_list;
 typedef std::list<std::unique_ptr<auto_xact_t>>      auto_xacts_list;
 typedef std::list<period_xact_t *>                   period_xacts_list;
-typedef std::map<std::string, account_t *>           accounts_map;
+typedef std::map<std::string, account_t *, std::less<>> accounts_map;
 
 } // namespace ledger
