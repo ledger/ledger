@@ -41,7 +41,7 @@ test print
 end test
 
 ; Test the xact command which is used by ledger-mode
-test xact Balance
+test xact --now=2026/02/16 Balance
 2026/02/16 Balance Assignment
     Assets:Checking                        = $150.00
     Income:Salary
