@@ -674,7 +674,7 @@ string format_t::truncate(const unistring& ustr, const std::size_t width,
       }
       break;
     }
-    // fall through...
+    [[fallthrough]];
 
   case TRUNCATE_TRAILING:
     // This method truncates at the end (the default).

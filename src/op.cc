@@ -153,7 +153,7 @@ expr_t::ptr_op_t expr_t::op_t::compile(scope_t& scope, const int depth, scope_t*
         scope_ptr->define(symbol_t::FUNCTION, left()->left()->as_ident(), node);
         break;
       }
-      // fall through...
+      [[fallthrough]];
 
     default:
       throw_(compile_error, _("Invalid function definition"));

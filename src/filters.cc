@@ -358,7 +358,7 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
   case value_t::BOOLEAN:
   case value_t::INTEGER:
     temp.in_place_cast(value_t::AMOUNT);
-    // fall through...
+    [[fallthrough]];
 
   case value_t::AMOUNT:
     post.amount = temp.as_amount();
@@ -798,7 +798,7 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
     case value_t::BOOLEAN:
     case value_t::INTEGER:
       last_total.in_place_cast(value_t::AMOUNT);
-      // fall through...
+      [[fallthrough]];
 
     case value_t::AMOUNT:
       temp.amount = last_total.as_amount();
@@ -831,7 +831,7 @@ void changed_value_posts::output_intermediate_prices(post_t& post, const date_t&
 
   case value_t::AMOUNT:
     display_total.in_place_cast(value_t::BALANCE);
-    // fall through...
+    [[fallthrough]];
 
   case value_t::BALANCE: {
     price_map_t all_prices;
