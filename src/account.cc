@@ -602,57 +602,52 @@ void account_t::clear_display_state() {
       pair.second->clear_display_state();
 }
 
-value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&>& expr) const {
+value_t account_t::amount(
+  const optional<bool> real_only,
+  const optional<expr_t&>& expr /*= none*/
+) const {
   DEBUG("account.amount", "real only: " << real_only);
 
-  if (xdata_ && xdata_->has_flags(ACCOUNT_EXT_VISITED)) {
-    posts_list::const_iterator i;
-    if (xdata_->self_details.last_post)
-      i = *xdata_->self_details.last_post;
-    else
-      i = posts.begin();
-
-    for (; i != posts.end(); i++) {
-      if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
-        if (!(*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
-          if (!(*i)->has_flags(POST_VIRTUAL)) {
-            (*i)->add_to_value(xdata_->self_details.real_total, expr);
-          }
-
-          (*i)->add_to_value(xdata_->self_details.total, expr);
-          (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
-        }
-      }
-      xdata_->self_details.last_post = i;
-    }
-
-    if (xdata_->self_details.last_reported_post)
-      i = *xdata_->self_details.last_reported_post;
-    else
-      i = xdata_->reported_posts.begin();
-
-    for (; i != xdata_->reported_posts.end(); i++) {
-      if ((*i)->xdata().has_flags(POST_EXT_VISITED)) {
-        if (!(*i)->xdata().has_flags(POST_EXT_CONSIDERED)) {
-          if (!(*i)->has_flags(POST_VIRTUAL)) {
-            (*i)->add_to_value(xdata_->self_details.real_total, expr);
-          }
-
-          (*i)->add_to_value(xdata_->self_details.total, expr);
-          (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
-        }
-      }
-      xdata_->self_details.last_reported_post = i;
-    }
-
-    if (real_only == true) {
-      return xdata_->self_details.real_total;
-    } else {
-      return xdata_->self_details.total;
-    }
-  } else {
+  if (!xdata_ || !xdata_->has_flags(ACCOUNT_EXT_VISITED))
     return NULL_VALUE;
+
+  value_t total_, real_total_;
+  value_t& total = expr ? total_ : xdata_->self_details.total;
+  value_t& real_total = expr ? real_total_ : xdata_->self_details.real_total;
+  posts_list::const_iterator i = !expr && xdata_->self_details.last_post
+    ? *xdata_->self_details.last_post
+    : posts.begin();
+
+  bool reported = false;
+  for (;; i++) {
+    if (i == posts.end()) {
+      // when we reach the end of normal posts, then iterate reported_posts
+      i = !expr && xdata_->self_details.last_reported_post
+        ? *xdata_->self_details.last_reported_post
+        : xdata_->reported_posts.begin();
+      reported = true;
+    }
+    if (i == xdata_->reported_posts.end()) break;
+
+    if (!expr) {
+      if (reported)
+        xdata_->self_details.last_reported_post = i;
+      else
+        xdata_->self_details.last_post = i;
+    }
+
+    if (!(*i)->xdata().has_flags(POST_EXT_VISITED)) continue;
+    if (!expr && (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) continue;
+
+    (*i)->add_to_value(total, expr);
+    if (!(*i)->has_flags(POST_VIRTUAL))
+      (*i)->add_to_value(real_total, expr);
+
+    if (!expr)
+      (*i)->xdata().add_flags(POST_EXT_CONSIDERED);
   }
+
+  return real_only == true ? real_total : total;
 }
 
 value_t account_t::self_total(bool real_only) const {

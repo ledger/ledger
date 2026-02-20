@@ -341,8 +341,7 @@ static balance_t compute_balance_diff(
 {
   value_t account_total(
       post->account
-          ->self_total(!(post->has_flags(POST_VIRTUAL) ||
-                         post->has_flags(POST_IS_TIMELOG))));
+          ->self_total(!post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG)));
   if (strip_annotations)
     account_total = account_total.strip_annotations(keep_details_t());
 
@@ -371,8 +370,8 @@ static balance_t compute_balance_diff(
   // Subtract amounts from previous posts to this account in the xact.
   for (post_t* p : xact->posts) {
     if (p->account == post->account &&
-        ((p->has_flags(POST_VIRTUAL) || p->has_flags(POST_IS_TIMELOG)) ==
-         (post->has_flags(POST_VIRTUAL) || post->has_flags(POST_IS_TIMELOG)))) {
+        (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG) ||
+         post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))) {
       amount_t p_amt(strip_annotations
                          ? p->amount.strip_annotations(keep_details_t())
                          : p->amount);
