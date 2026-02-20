@@ -314,168 +314,73 @@ public:
   bool empty() const { return args.size() == 0; }
 };
 
-template <>
-inline bool call_scope_t::has<bool>(std::size_t index) {
+template <typename T>
+inline bool call_scope_t::has(std::size_t index) {
   if (index < args.size()) {
-    resolve(index, value_t::BOOLEAN, false);
-    return !args[index].is_null();
-  }
-  return false;
-}
-template <>
-inline bool call_scope_t::has<int>(std::size_t index) {
-  if (index < args.size()) {
-    resolve(index, value_t::INTEGER, false);
-    return !args[index].is_null();
-  }
-  return false;
-}
-template <>
-inline bool call_scope_t::has<long>(std::size_t index) {
-  if (index < args.size()) {
-    resolve(index, value_t::INTEGER, false);
-    return !args[index].is_null();
-  }
-  return false;
-}
-template <>
-inline bool call_scope_t::has<amount_t>(std::size_t index) {
-  if (index < args.size()) {
-    resolve(index, value_t::AMOUNT, false);
-    return !args[index].is_null();
-  }
-  return false;
-}
-template <>
-inline bool call_scope_t::has<balance_t>(std::size_t index) {
-  if (index < args.size()) {
-    resolve(index, value_t::BALANCE, false);
-    return !args[index].is_null();
-  }
-  return false;
-}
-template <>
-inline bool call_scope_t::has<string>(std::size_t index) {
-  if (index < args.size()) {
-    resolve(index, value_t::STRING, false);
-    return !args[index].is_null();
-  }
-  return false;
-}
-template <>
-inline bool call_scope_t::has<date_t>(std::size_t index) {
-  if (index < args.size()) {
-    resolve(index, value_t::DATE, false);
-    return !args[index].is_null();
-  }
-  return false;
-}
-template <>
-inline bool call_scope_t::has<datetime_t>(std::size_t index) {
-  if (index < args.size()) {
-    resolve(index, value_t::DATETIME, false);
-    return !args[index].is_null();
-  }
-  return false;
-}
-template <>
-inline bool call_scope_t::has<scope_t*>(std::size_t index) {
-  if (index < args.size()) {
-    resolve(index, value_t::SCOPE, false);
-    return !args[index].is_null();
-  }
-  return false;
-}
-template <>
-inline bool call_scope_t::has<expr_t::ptr_op_t>(std::size_t index) {
-  if (index < args.size()) {
-    resolve(index, value_t::ANY, false);
+    if constexpr (std::is_same_v<T, bool>)
+      resolve(index, value_t::BOOLEAN, false);
+    else if constexpr (std::is_same_v<T, int> || std::is_same_v<T, long>)
+      resolve(index, value_t::INTEGER, false);
+    else if constexpr (std::is_same_v<T, amount_t>)
+      resolve(index, value_t::AMOUNT, false);
+    else if constexpr (std::is_same_v<T, balance_t>)
+      resolve(index, value_t::BALANCE, false);
+    else if constexpr (std::is_same_v<T, string>)
+      resolve(index, value_t::STRING, false);
+    else if constexpr (std::is_same_v<T, date_t>)
+      resolve(index, value_t::DATE, false);
+    else if constexpr (std::is_same_v<T, datetime_t>)
+      resolve(index, value_t::DATETIME, false);
+    else if constexpr (std::is_same_v<T, scope_t*>)
+      resolve(index, value_t::SCOPE, false);
+    else if constexpr (std::is_same_v<T, expr_t::ptr_op_t>)
+      resolve(index, value_t::ANY, false);
     return !args[index].is_null();
   }
   return false;
 }
 
-template <>
-inline bool call_scope_t::get<bool>(std::size_t index, bool convert) {
-  if (convert)
-    return resolve(index, value_t::BOOLEAN, false).to_boolean();
-  else
+template <typename T>
+inline T call_scope_t::get(std::size_t index, bool convert) {
+  if constexpr (std::is_same_v<T, bool>) {
+    if (convert)
+      return resolve(index, value_t::BOOLEAN, false).to_boolean();
     return resolve(index, value_t::BOOLEAN).as_boolean();
-}
-template <>
-inline int call_scope_t::get<int>(std::size_t index, bool) {
-  return resolve(index, value_t::INTEGER, false).to_int();
-}
-template <>
-inline long call_scope_t::get<long>(std::size_t index, bool convert) {
-  if (convert)
-    return resolve(index, value_t::INTEGER, false).to_long();
-  else
+  } else if constexpr (std::is_same_v<T, int>) {
+    return resolve(index, value_t::INTEGER, false).to_int();
+  } else if constexpr (std::is_same_v<T, long>) {
+    if (convert)
+      return resolve(index, value_t::INTEGER, false).to_long();
     return resolve(index, value_t::INTEGER).as_long();
-}
-template <>
-inline amount_t call_scope_t::get<amount_t>(std::size_t index, bool convert) {
-  if (convert)
-    return resolve(index, value_t::AMOUNT, false).to_amount();
-  else
+  } else if constexpr (std::is_same_v<T, amount_t>) {
+    if (convert)
+      return resolve(index, value_t::AMOUNT, false).to_amount();
     return resolve(index, value_t::AMOUNT).as_amount();
-}
-template <>
-inline balance_t call_scope_t::get<balance_t>(std::size_t index, bool convert) {
-  if (convert)
-    return resolve(index, value_t::BALANCE, false).to_balance();
-  else
+  } else if constexpr (std::is_same_v<T, balance_t>) {
+    if (convert)
+      return resolve(index, value_t::BALANCE, false).to_balance();
     return resolve(index, value_t::BALANCE).as_balance();
-}
-template <>
-inline string call_scope_t::get<string>(std::size_t index, bool convert) {
-  if (convert)
-    return resolve(index, value_t::STRING, false).to_string();
-  else
+  } else if constexpr (std::is_same_v<T, string>) {
+    if (convert)
+      return resolve(index, value_t::STRING, false).to_string();
     return resolve(index, value_t::STRING).as_string();
-}
-template <>
-inline mask_t call_scope_t::get<mask_t>(std::size_t index, bool convert) {
-  if (convert)
-    return resolve(index, value_t::MASK, false).to_mask();
-  else
+  } else if constexpr (std::is_same_v<T, mask_t>) {
+    if (convert)
+      return resolve(index, value_t::MASK, false).to_mask();
     return resolve(index, value_t::MASK).as_mask();
-}
-template <>
-inline date_t call_scope_t::get<date_t>(std::size_t index, bool convert) {
-  if (convert)
-    return resolve(index, value_t::DATE, false).to_date();
-  else
+  } else if constexpr (std::is_same_v<T, date_t>) {
+    if (convert)
+      return resolve(index, value_t::DATE, false).to_date();
     return resolve(index, value_t::DATE).as_date();
-}
-template <>
-inline datetime_t call_scope_t::get<datetime_t>(std::size_t index, bool convert) {
-  if (convert)
-    return resolve(index, value_t::DATETIME, false).to_datetime();
-  else
+  } else if constexpr (std::is_same_v<T, datetime_t>) {
+    if (convert)
+      return resolve(index, value_t::DATETIME, false).to_datetime();
     return resolve(index, value_t::DATETIME).as_datetime();
-}
-
-#if 0
-template <>
-inline value_t::sequence_t&
-call_scope_t::get<value_t::sequence_t&>(std::size_t index, bool) {
-  return resolve(index, value_t::SEQUENCE).as_sequence_lval();
-}
-template <>
-inline const value_t::sequence_t&
-call_scope_t::get<const value_t::sequence_t&>(std::size_t index, bool) {
-  return resolve(index, value_t::SEQUENCE).as_sequence();
-}
-#endif
-
-template <>
-inline scope_t* call_scope_t::get<scope_t*>(std::size_t index, bool) {
-  return resolve(index, value_t::SCOPE).as_scope();
-}
-template <>
-inline expr_t::ptr_op_t call_scope_t::get<expr_t::ptr_op_t>(std::size_t index, bool) {
-  return args[index].as_any<expr_t::ptr_op_t>();
+  } else if constexpr (std::is_same_v<T, scope_t*>) {
+    return resolve(index, value_t::SCOPE).as_scope();
+  } else if constexpr (std::is_same_v<T, expr_t::ptr_op_t>) {
+    return args[index].as_any<expr_t::ptr_op_t>();
+  }
 }
 
 inline string join_args(call_scope_t& args) {
