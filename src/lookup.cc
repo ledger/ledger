@@ -251,8 +251,7 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
     for (post_t* post : (*si).first->posts) {
       if (!post->has_flags(ITEM_TEMP | ITEM_GENERATED) && post->account != ref_account &&
           !post->account->has_flags(ACCOUNT_TEMP | ACCOUNT_GENERATED)) {
-        account_use_map::iterator x = account_usage.find(post->account);
-        if (x == account_usage.end())
+        if (auto x = account_usage.find(post->account); x == account_usage.end())
           account_usage.insert(account_use_pair(post->account, ((*si).second - decay)));
         else
           (*x).second += ((*si).second - decay);

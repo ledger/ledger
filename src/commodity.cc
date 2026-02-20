@@ -127,13 +127,10 @@ std::optional<price_point_t> commodity_t::find_price(const commodity_t* commodit
             << (!moment.is_not_a_date_time() ? format_datetime(moment) : "NONE") << ", "
             << (!oldest.is_not_a_date_time() ? format_datetime(oldest) : "NONE") << ", "
             << (commodity ? commodity->symbol() : "NONE"));
-  {
-    base_t::memoized_price_map::iterator i = base->price_map.find(entry);
-    if (i != base->price_map.end()) {
-      DEBUG("commodity.price.find",
-            "found! returning: " << ((*i).second ? (*i).second->price : amount_t(0L)));
-      return (*i).second;
-    }
+  if (auto i = base->price_map.find(entry); i != base->price_map.end()) {
+    DEBUG("commodity.price.find",
+          "found! returning: " << ((*i).second ? (*i).second->price : amount_t(0L)));
+    return (*i).second;
   }
 
   datetime_t when;
