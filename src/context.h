@@ -117,8 +117,8 @@ inline parse_context_t open_for_reading(const path& pathname, const path& cwd) {
 }
 
 inline path safe_current_path() {
-  boost::system::error_code ec;
-  path cwd = filesystem::current_path(ec);
+  std::error_code ec;
+  path cwd = std::filesystem::current_path(ec);
   if (ec)
     return path("/");
   return cwd;
