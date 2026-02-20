@@ -38,7 +38,7 @@ struct textual_fixture {
   std::size_t parse_text(const std::string& input) {
     session.journal.reset(new journal_t);
 
-    shared_ptr<std::istream> stream(new std::istringstream(input));
+    std::shared_ptr<std::istream> stream(new std::istringstream(input));
     session.parsing_context.push(stream);
 
     parse_context_t& ctx = session.parsing_context.get_current();
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(testCommodityDirective)
   session.journal.reset(new journal_t);
   session.journal->checking_style = journal_t::CHECK_WARNING;
 
-  shared_ptr<std::istream> stream(new std::istringstream(input));
+  std::shared_ptr<std::istream> stream(new std::istringstream(input));
   session.parsing_context.push(stream);
   parse_context_t& ctx = session.parsing_context.get_current();
   ctx.journal  = session.journal.get();
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(testPayeeDirective)
   session.journal->check_payees = true;
   session.journal->checking_style = journal_t::CHECK_WARNING;
 
-  shared_ptr<std::istream> stream(new std::istringstream(input));
+  std::shared_ptr<std::istream> stream(new std::istringstream(input));
   session.parsing_context.push(stream);
   parse_context_t& ctx = session.parsing_context.get_current();
   ctx.journal  = session.journal.get();
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(testTagDirective)
   session.journal.reset(new journal_t);
   session.journal->checking_style = journal_t::CHECK_WARNING;
 
-  shared_ptr<std::istream> stream(new std::istringstream(input));
+  std::shared_ptr<std::istream> stream(new std::istringstream(input));
   session.parsing_context.push(stream);
   parse_context_t& ctx = session.parsing_context.get_current();
   ctx.journal  = session.journal.get();

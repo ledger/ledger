@@ -63,7 +63,7 @@ private:
           value_t,            // used by constant VALUE
           string,             // used by constant IDENT
           expr_t::func_t,     // used by terminal FUNCTION
-          shared_ptr<scope_t> // used by terminal SCOPE
+          std::shared_ptr<scope_t> // used by terminal SCOPE
           >
       data;
 
@@ -174,12 +174,12 @@ public:
 
   bool is_scope() const { return kind == SCOPE; }
   bool is_scope_unset() const { return data.which() == 0; }
-  shared_ptr<scope_t> as_scope_lval() {
+  std::shared_ptr<scope_t> as_scope_lval() {
     assert(is_scope());
-    return boost::get<shared_ptr<scope_t>>(data);
+    return boost::get<std::shared_ptr<scope_t>>(data);
   }
-  const shared_ptr<scope_t> as_scope() const { return const_cast<op_t*>(this)->as_scope_lval(); }
-  void set_scope(shared_ptr<scope_t> val) { data = val; }
+  const std::shared_ptr<scope_t> as_scope() const { return const_cast<op_t*>(this)->as_scope_lval(); }
+  void set_scope(std::shared_ptr<scope_t> val) { data = val; }
 
   // These three functions must use 'kind == IDENT' rather than
   // 'is_ident()', because they are called before the `data' member gets
@@ -273,7 +273,7 @@ public:
 
   static ptr_op_t wrap_value(const value_t& val);
   static ptr_op_t wrap_functor(expr_t::func_t fobj);
-  static ptr_op_t wrap_scope(shared_ptr<scope_t> sobj);
+  static ptr_op_t wrap_scope(std::shared_ptr<scope_t> sobj);
 
 private:
   value_t calc_call(scope_t& scope, ptr_op_t* locus, const int depth);

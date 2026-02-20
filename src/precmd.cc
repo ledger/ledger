@@ -66,7 +66,7 @@ post_t* get_sample_xact(report_t& report) {
     out << _("--- Context is first posting of the following transaction ---") << std::endl
         << str << std::endl;
     {
-      shared_ptr<std::istringstream> in(new std::istringstream(str));
+      std::shared_ptr<std::istringstream> in(new std::istringstream(str));
 
       parse_context_stack_t parsing_context;
       parsing_context.push(in);

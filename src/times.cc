@@ -112,14 +112,14 @@ typedef temporal_io_t<datetime_t, posix_time::time_input_facet, posix_time::time
     datetime_io_t;
 typedef temporal_io_t<date_t, gregorian::date_input_facet, gregorian::date_facet> date_io_t;
 
-shared_ptr<datetime_io_t> input_datetime_io;
-shared_ptr<datetime_io_t> timelog_datetime_io;
-shared_ptr<datetime_io_t> written_datetime_io;
-shared_ptr<date_io_t> written_date_io;
-shared_ptr<datetime_io_t> printed_datetime_io;
-shared_ptr<date_io_t> printed_date_io;
+std::shared_ptr<datetime_io_t> input_datetime_io;
+std::shared_ptr<datetime_io_t> timelog_datetime_io;
+std::shared_ptr<datetime_io_t> written_datetime_io;
+std::shared_ptr<date_io_t> written_date_io;
+std::shared_ptr<datetime_io_t> printed_datetime_io;
+std::shared_ptr<date_io_t> printed_date_io;
 
-std::deque<shared_ptr<date_io_t>> readers;
+std::deque<std::shared_ptr<date_io_t>> readers;
 
 bool convert_separators_to_slashes = true;
 
@@ -192,7 +192,7 @@ date_t parse_date_mask_routine(const char* date_str, date_io_t& io, date_traits_
 }
 
 date_t parse_date_mask(const char* date_str, date_traits_t* traits = NULL) {
-  for (shared_ptr<date_io_t>& reader : readers) {
+  for (std::shared_ptr<date_io_t>& reader : readers) {
     date_t when = parse_date_mask_routine(date_str, *reader.get(), traits);
     if (!when.is_not_a_date())
       return when;
@@ -1827,7 +1827,7 @@ void set_date_format(const char* format) {
 }
 
 void set_input_date_format(const char* format) {
-  readers.push_front(shared_ptr<date_io_t>(new date_io_t(format, true)));
+  readers.push_front(std::shared_ptr<date_io_t>(new date_io_t(format, true)));
   convert_separators_to_slashes = false;
 }
 
@@ -1842,11 +1842,11 @@ void times_initialize() {
     printed_datetime_io.reset(new datetime_io_t("%y-%b-%d %H:%M:%S", false));
     printed_date_io.reset(new date_io_t("%y-%b-%d", false));
 
-    readers.push_back(shared_ptr<date_io_t>(new date_io_t("%m/%d", true)));
-    readers.push_back(shared_ptr<date_io_t>(new date_io_t("%Y/%m/%d", true)));
-    readers.push_back(shared_ptr<date_io_t>(new date_io_t("%Y/%m", true)));
-    readers.push_back(shared_ptr<date_io_t>(new date_io_t("%y/%m/%d", true)));
-    readers.push_back(shared_ptr<date_io_t>(new date_io_t("%Y-%m-%d", true)));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%m/%d", true)));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y/%m/%d", true)));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y/%m", true)));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%y/%m/%d", true)));
+    readers.push_back(std::shared_ptr<date_io_t>(new date_io_t("%Y-%m-%d", true)));
 
     is_initialized = true;
   }

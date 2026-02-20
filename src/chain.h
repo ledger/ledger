@@ -51,12 +51,12 @@ class account_t;
 template <typename T>
 class item_handler : public noncopyable {
 protected:
-  shared_ptr<item_handler> handler;
+  std::shared_ptr<item_handler> handler;
 
 public:
   item_handler() { TRACE_CTOR(item_handler, ""); }
-  item_handler(shared_ptr<item_handler> _handler) : handler(_handler) {
-    TRACE_CTOR(item_handler, "shared_ptr<item_handler>");
+  item_handler(std::shared_ptr<item_handler> _handler) : handler(_handler) {
+    TRACE_CTOR(item_handler, "std::shared_ptr<item_handler>");
   }
   virtual ~item_handler() { TRACE_DTOR(item_handler); }
 
@@ -82,8 +82,8 @@ public:
   }
 };
 
-typedef shared_ptr<item_handler<post_t>> post_handler_ptr;
-typedef shared_ptr<item_handler<account_t>> acct_handler_ptr;
+typedef std::shared_ptr<item_handler<post_t>> post_handler_ptr;
+typedef std::shared_ptr<item_handler<account_t>> acct_handler_ptr;
 
 class report_t;
 

@@ -332,7 +332,7 @@ void generate_posts_iterator::increment() {
     DEBUG("generate.post", "The post we intend to parse:\n" << buf.str());
 
     try {
-      shared_ptr<std::istringstream> in(new std::istringstream(buf.str()));
+      std::shared_ptr<std::istringstream> in(new std::istringstream(buf.str()));
 
       parse_context_stack_t parsing_context;
       parsing_context.push(in);

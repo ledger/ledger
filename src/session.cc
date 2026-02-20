@@ -154,7 +154,7 @@ std::size_t session_t::read_data(const string& master_account) {
       }
       buffer.flush();
 
-      shared_ptr<std::istream> stream(new std::istringstream(buffer.str()));
+      std::shared_ptr<std::istream> stream(new std::istringstream(buffer.str()));
       parsing_context.push(stream);
     } else {
       parsing_context.push(pathname);
@@ -218,7 +218,7 @@ journal_t* session_t::read_journal_from_string(const string& data) {
 
   HANDLER(file_).data_files.clear();
 
-  shared_ptr<std::istream> stream(new std::istringstream(data));
+  std::shared_ptr<std::istream> stream(new std::istringstream(data));
   parsing_context.push(stream);
 
   parsing_context.get_current().journal = journal.get();

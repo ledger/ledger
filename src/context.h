@@ -58,7 +58,7 @@ class parse_context_t {
 public:
   static const std::size_t MAX_LINE = 4096;
 
-  shared_ptr<std::istream> stream;
+  std::shared_ptr<std::istream> stream;
 
   path pathname;
   path current_directory;
@@ -78,7 +78,7 @@ public:
       : current_directory(cwd), master(NULL), scope(NULL), linenum(0), errors(0), count(0),
         sequence(1) {}
 
-  explicit parse_context_t(shared_ptr<std::istream> _stream, const path& cwd)
+  explicit parse_context_t(std::shared_ptr<std::istream> _stream, const path& cwd)
       : stream(_stream), current_directory(cwd), master(NULL), scope(NULL), linenum(0), errors(0),
         count(0), sequence(1) {}
 
@@ -107,9 +107,9 @@ inline parse_context_t open_for_reading(const path& pathname, const path& cwd) {
 
   path parent(filename.parent_path());
 #if HAVE_GPGME
-  shared_ptr<std::istream> stream(decrypted_stream_t::open_stream(filename));
+  std::shared_ptr<std::istream> stream(decrypted_stream_t::open_stream(filename));
 #else
-  shared_ptr<std::istream> stream(new ifstream(filename));
+  std::shared_ptr<std::istream> stream(new ifstream(filename));
 #endif
   parse_context_t context(stream, parent);
   context.pathname = filename;
@@ -121,7 +121,7 @@ class parse_context_stack_t {
 
 public:
   void push() { parsing_context.push_front(parse_context_t(filesystem::current_path())); }
-  void push(shared_ptr<std::istream> stream, const path& cwd = filesystem::current_path()) {
+  void push(std::shared_ptr<std::istream> stream, const path& cwd = filesystem::current_path()) {
     parsing_context.push_front(parse_context_t(stream, cwd));
   }
   void push(const path& pathname, const path& cwd = filesystem::current_path()) {

@@ -143,13 +143,13 @@ typedef transform_iterator<function<commodity_t*(commodity_pool_t::commodities_m
 commodities_map_seconds_iterator py_pool_commodities_values_begin(commodity_pool_t& pool) {
   return make_transform_iterator(
       pool.commodities.begin(),
-      boost::bind(&shared_ptr<commodity_t>::get,
+      boost::bind(&std::shared_ptr<commodity_t>::get,
                   boost::bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
 }
 commodities_map_seconds_iterator py_pool_commodities_values_end(commodity_pool_t& pool) {
   return make_transform_iterator(
       pool.commodities.end(),
-      boost::bind(&shared_ptr<commodity_t>::get,
+      boost::bind(&std::shared_ptr<commodity_t>::get,
                   boost::bind(&commodity_pool_t::commodities_map::value_type::second, _1)));
 }
 
@@ -211,7 +211,7 @@ PyObject* py_commodity_unicode(commodity_t& commodity) {
 } // unnamed namespace
 
 void export_commodity() {
-  class_<commodity_pool_t, shared_ptr<commodity_pool_t>, boost::noncopyable>("CommodityPool",
+  class_<commodity_pool_t, std::shared_ptr<commodity_pool_t>, boost::noncopyable>("CommodityPool",
                                                                              no_init)
       .add_property("null_commodity",
                     make_getter(&commodity_pool_t::null_commodity, return_internal_reference<>()))
