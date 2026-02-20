@@ -279,6 +279,9 @@ void commodity_history_impl_t::map_prices(function<void(datetime_t, const amount
                                           const datetime_t& oldest, bool bidirectionally) {
   DEBUG("history.map", "Mapping prices for source commodity: " << source);
 
+  if (!source.graph_index() || *source.graph_index() >= num_vertices(price_graph))
+    return;
+
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
 
   FGraph fg(price_graph, recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>(
@@ -322,6 +325,9 @@ void commodity_history_impl_t::map_prices(function<void(datetime_t, const amount
 std::optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& source,
                                                                    const datetime_t& moment,
                                                                    const datetime_t& oldest) {
+  if (!source.graph_index() || *source.graph_index() >= num_vertices(price_graph))
+    return std::nullopt;
+
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
 
   FGraph fg(price_graph, recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>(
@@ -380,6 +386,16 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
                                                                    const datetime_t& moment,
                                                                    const datetime_t& oldest) {
   if (source == target)
+    return std::nullopt;
+
+  // Guard against cross-pool commodity lookups (e.g. after close_journal_files()
+  // a commodity from the old pool may carry a graph_index that is out of range
+  // for the new pool's price graph).  Treat such commodities as unresolvable
+  // rather than invoking undefined behaviour in Boost.Graph (issue #976).
+  std::size_t n = num_vertices(price_graph);
+  if (!source.graph_index() || *source.graph_index() >= n)
+    return std::nullopt;
+  if (!target.graph_index() || *target.graph_index() >= n)
     return std::nullopt;
 
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
