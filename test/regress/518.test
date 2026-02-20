@@ -1,0 +1,22 @@
+; Regression test for GitHub issue #518:
+; Assertion failure when using --unround with --group-by account
+
+2017-12-23 a
+    Expenses:A  $1
+    Assets
+
+2017-12-25 b
+    Expenses:B  $1
+    Assets
+
+test reg --group-by account --unround
+Assets
+17-Dec-23 a                     Assets                          $-1          $-1
+17-Dec-25 b                     Assets                          $-1          $-2
+
+Expenses:A
+17-Dec-23 a                     Expenses:A                       $1           $1
+
+Expenses:B
+17-Dec-25 b                     Expenses:B                       $1           $1
+end test
