@@ -99,10 +99,10 @@ protected:
     optional<string> note;
     optional<amount_t> smaller;
     optional<amount_t> larger;
-    optional<expr_t> value_expr;
+    std::optional<expr_t> value_expr;
 
     typedef tuple<datetime_t, datetime_t, const commodity_t*> memoized_price_entry;
-    typedef std::map<memoized_price_entry, optional<price_point_t>> memoized_price_map;
+    typedef std::map<memoized_price_entry, std::optional<price_point_t>> memoized_price_map;
 
     static const std::size_t max_price_map_size = 8;
     mutable memoized_price_map price_map;
@@ -182,8 +182,8 @@ public:
   optional<amount_t> larger() const { return base->larger; }
   void set_larger(const optional<amount_t>& arg = none) { base->larger = arg; }
 
-  virtual optional<expr_t> value_expr() const { return base->value_expr; }
-  void set_value_expr(const optional<expr_t>& expr = none) { base->value_expr = expr; }
+  virtual std::optional<expr_t> value_expr() const { return base->value_expr; }
+  void set_value_expr(const std::optional<expr_t>& expr = {}) { base->value_expr = expr; }
 
   void add_price(const datetime_t& date, const amount_t& price, const bool reflexive = true);
   void remove_price(const datetime_t& date, commodity_t& commodity);
@@ -192,16 +192,16 @@ public:
                   const datetime_t& moment = datetime_t(), const datetime_t& _oldest = datetime_t(),
                   bool bidirectionally = false);
 
-  optional<price_point_t> find_price_from_expr(expr_t& expr, const commodity_t* commodity,
-                                               const datetime_t& moment) const;
+  std::optional<price_point_t> find_price_from_expr(expr_t& expr, const commodity_t* commodity,
+                                                    const datetime_t& moment) const;
 
-  optional<price_point_t> virtual find_price(const commodity_t* commodity = NULL,
-                                             const datetime_t& moment = datetime_t(),
-                                             const datetime_t& oldest = datetime_t()) const;
+  std::optional<price_point_t> virtual find_price(const commodity_t* commodity = NULL,
+                                                   const datetime_t& moment = datetime_t(),
+                                                   const datetime_t& oldest = datetime_t()) const;
 
-  optional<price_point_t> check_for_updated_price(const optional<price_point_t>& point,
-                                                  const datetime_t& moment,
-                                                  const commodity_t* in_terms_of);
+  std::optional<price_point_t> check_for_updated_price(const std::optional<price_point_t>& point,
+                                                        const datetime_t& moment,
+                                                        const commodity_t* in_terms_of);
 
   commodity_t& nail_down(const expr_t& expr);
 

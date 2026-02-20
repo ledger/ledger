@@ -166,7 +166,7 @@ optional<balance_t> balance_t::value(const datetime_t& moment,
   bool resolved = false;
 
   for (const amounts_map::value_type& pair : amounts) {
-    if (optional<amount_t> val = pair.second.value(moment, in_terms_of)) {
+    if (auto val = pair.second.value(moment, in_terms_of)) {
       temp += *val;
       resolved = true;
     } else {

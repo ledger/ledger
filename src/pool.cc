@@ -81,8 +81,7 @@ commodity_t* commodity_pool_t::create(const string& symbol) {
 commodity_t* commodity_pool_t::find(const string& symbol) {
   DEBUG("pool.commodities", "Find commodity " << symbol);
 
-  commodities_map::const_iterator i = commodities.find(symbol);
-  if (i != commodities.end())
+  if (auto i = commodities.find(symbol); i != commodities.end())
     return (*i).second.get();
   return NULL;
 }
@@ -119,9 +118,8 @@ commodity_t* commodity_pool_t::find(const string& symbol, const annotation_t& de
   DEBUG("pool.commodities", "commodity_pool_t::find[ann] " << "symbol " << symbol << std::endl
                                                            << details);
 
-  annotated_commodities_map::const_iterator i =
-      annotated_commodities.find(annotated_commodities_map::key_type(symbol, details));
-  if (i != annotated_commodities.end()) {
+  if (auto i = annotated_commodities.find(annotated_commodities_map::key_type(symbol, details));
+      i != annotated_commodities.end()) {
     DEBUG("pool.commodities", "commodity_pool_t::find[ann] found "
                                   << "symbol " << (*i).second->base_symbol() << std::endl
                                   << as_annotated_commodity(*(*i).second.get()).details);
@@ -213,9 +211,9 @@ void commodity_pool_t::exchange(commodity_t& commodity, const amount_t& per_unit
 
 cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount_t& cost,
                                             const bool is_per_unit, const bool add_price,
-                                            const optional<datetime_t>& moment,
-                                            const optional<string>& tag,
-                                            const optional<date_t>& lot_date) {
+                                            const std::optional<datetime_t>& moment,
+                                            const std::optional<string>& tag,
+                                            const std::optional<date_t>& lot_date) {
   DEBUG("commodity.prices.add", "exchange: " << amount << " for " << cost);
   DEBUG("commodity.prices.add", "exchange: is-per-unit   = " << is_per_unit);
 #if DEBUG_ON
@@ -264,7 +262,7 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
   DEBUG("commodity.prices.add", "exchange: basis-cost    = " << breakdown.basis_cost);
 
   annotation_t annotation(per_unit_cost,
-                          lot_date ? *lot_date : (moment ? moment->date() : optional<date_t>()),
+                          lot_date ? lot_date : (moment ? std::optional<date_t>(moment->date()) : std::optional<date_t>{}),
                           tag);
 
   annotation.add_flags(ANNOTATION_PRICE_CALCULATED);
@@ -282,12 +280,12 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
   return breakdown;
 }
 
-optional<std::pair<commodity_t*, price_point_t>>
+std::optional<std::pair<commodity_t*, price_point_t>>
 commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool no_date) {
   char* date_field_ptr = line;
   char* time_field_ptr = next_element(date_field_ptr);
   if (!time_field_ptr)
-    return none;
+    return std::nullopt;
   string date_field = date_field_ptr;
 
   char* symbol_and_price;
@@ -297,7 +295,7 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
   if (!no_date && std::isdigit(static_cast<unsigned char>(time_field_ptr[0]))) {
     symbol_and_price = next_element(time_field_ptr);
     if (!symbol_and_price)
-      return none;
+      return std::nullopt;
 
     datetime = parse_datetime(date_field + " " + time_field_ptr);
   } else if (!no_date && std::isdigit(static_cast<unsigned char>(date_field_ptr[0]))) {
@@ -341,11 +339,11 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
     return std::pair<commodity_t*, price_point_t>(commodity, point);
   }
 
-  return none;
+  return std::nullopt;
 }
 
 commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, const bool add_prices,
-                                                      const optional<datetime_t>& moment) {
+                                                      const std::optional<datetime_t>& moment) {
   scoped_array<char> buf(new char[str.length() + 1]);
 
   std::strcpy(buf.get(), str.c_str());

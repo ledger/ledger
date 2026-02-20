@@ -80,9 +80,9 @@ void commodity_t::map_prices(function<void(datetime_t, const amount_t&)> fn,
   pool().commodity_price_history.map_prices(fn, referent(), when, _oldest, bidirectionally);
 }
 
-optional<price_point_t> commodity_t::find_price_from_expr(expr_t& expr,
-                                                          const commodity_t* commodity,
-                                                          const datetime_t& moment) const {
+std::optional<price_point_t> commodity_t::find_price_from_expr(expr_t& expr,
+                                                               const commodity_t* commodity,
+                                                               const datetime_t& moment) const {
 #if DEBUG_ON
   if (SHOW_DEBUG("commodity.price.find")) {
     ledger::_log_buffer << "valuation expr: ";
@@ -106,9 +106,9 @@ optional<price_point_t> commodity_t::find_price_from_expr(expr_t& expr,
   return price_point_t(moment, result.to_amount());
 }
 
-optional<price_point_t> commodity_t::find_price(const commodity_t* commodity,
-                                                const datetime_t& moment,
-                                                const datetime_t& oldest) const {
+std::optional<price_point_t> commodity_t::find_price(const commodity_t* commodity,
+                                                     const datetime_t& moment,
+                                                     const datetime_t& oldest) const {
   DEBUG("commodity.price.find", "commodity_t::find_price(" << symbol() << ")");
 
   const commodity_t* target = NULL;
@@ -118,7 +118,7 @@ optional<price_point_t> commodity_t::find_price(const commodity_t* commodity,
     target = &*pool().default_commodity;
 
   if (target && this == target)
-    return none;
+    return std::nullopt;
 
   base_t::memoized_price_entry entry(moment, oldest, commodity ? commodity : NULL);
 
@@ -147,7 +147,7 @@ optional<price_point_t> commodity_t::find_price(const commodity_t* commodity,
   if (base->value_expr)
     return find_price_from_expr(*base->value_expr, commodity, when);
 
-  optional<price_point_t> point(
+  std::optional<price_point_t> point(
       target ? pool().commodity_price_history.find_price(referent(), *target, when, oldest)
              : pool().commodity_price_history.find_price(referent(), when, oldest));
 
@@ -164,9 +164,9 @@ optional<price_point_t> commodity_t::find_price(const commodity_t* commodity,
   return point;
 }
 
-optional<price_point_t> commodity_t::check_for_updated_price(const optional<price_point_t>& point,
-                                                             const datetime_t& moment,
-                                                             const commodity_t* in_terms_of) {
+std::optional<price_point_t> commodity_t::check_for_updated_price(const std::optional<price_point_t>& point,
+                                                                    const datetime_t& moment,
+                                                                    const commodity_t* in_terms_of) {
   if (pool().get_quotes && !has_flags(COMMODITY_NOMARKET)) {
     bool exceeds_leeway = true;
 
@@ -188,7 +188,7 @@ optional<price_point_t> commodity_t::check_for_updated_price(const optional<pric
 
     if (exceeds_leeway) {
       DEBUG("commodity.download", "attempting to download a more current quote...");
-      if (optional<price_point_t> quote = pool().get_commodity_quote(referent(), in_terms_of)) {
+      if (std::optional<price_point_t> quote = pool().get_commodity_quote(referent(), in_terms_of)) {
         if (!in_terms_of ||
             (quote->price.has_commodity() && quote->price.commodity_ptr() == in_terms_of))
           return quote;

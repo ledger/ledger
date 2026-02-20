@@ -80,7 +80,7 @@ public:
   bool get_quotes;         // --download
   optional<path> getquote; // --getquote=
 
-  function<optional<price_point_t>(commodity_t& commodity, const commodity_t* in_terms_of)>
+  function<std::optional<price_point_t>(commodity_t& commodity, const commodity_t* in_terms_of)>
       get_commodity_quote;
 
   static std::shared_ptr<commodity_pool_t> current_pool;
@@ -106,17 +106,17 @@ public:
 
   cost_breakdown_t exchange(const amount_t& amount, const amount_t& cost,
                             const bool is_per_unit = false, const bool add_price = true,
-                            const optional<datetime_t>& moment = none,
-                            const optional<string>& tag = none,
-                            const optional<date_t>& lot_date = none);
+                            const std::optional<datetime_t>& moment = {},
+                            const std::optional<string>& tag = {},
+                            const std::optional<date_t>& lot_date = {});
 
   // Parse commodity prices from a textual representation
 
-  optional<std::pair<commodity_t*, price_point_t>>
+  std::optional<std::pair<commodity_t*, price_point_t>>
   parse_price_directive(char* line, bool do_not_add_price = false, bool no_date = false);
 
   commodity_t* parse_price_expression(const std::string& str, const bool add_prices = true,
-                                      const optional<datetime_t>& moment = none);
+                                      const std::optional<datetime_t>& moment = {});
 };
 
 } // namespace ledger

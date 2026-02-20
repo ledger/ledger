@@ -82,8 +82,8 @@ void py_exchange_3(commodity_pool_t& pool, commodity_t& commodity, const amount_
 
 cost_breakdown_t py_exchange_7(commodity_pool_t& pool, const amount_t& amount, const amount_t& cost,
                                const bool is_per_unit, const bool add_prices,
-                               const boost::optional<datetime_t>& moment,
-                               const boost::optional<string>& tag) {
+                               const std::optional<datetime_t>& moment,
+                               const std::optional<string>& tag) {
   return pool.exchange(amount, cost, is_per_unit, add_prices, moment, tag);
 }
 
@@ -197,11 +197,12 @@ commodity_t& py_strip_ann_annotations_1(annotated_commodity_t& comm, const keep_
   return comm.strip_annotations(keep);
 }
 
-boost::optional<amount_t> py_price(annotation_t& ann) {
+std::optional<amount_t> py_price(annotation_t& ann) {
   return ann.price;
 }
-boost::optional<amount_t> py_set_price(annotation_t& ann, const boost::optional<amount_t>& price) {
-  return ann.price = price;
+std::optional<amount_t> py_set_price(annotation_t& ann, const std::optional<amount_t>& price) {
+  ann.price = price;
+  return ann.price;
 }
 
 PyObject* py_commodity_unicode(commodity_t& commodity) {

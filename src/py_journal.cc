@@ -145,7 +145,7 @@ account_t* py_register_account(journal_t& journal, const string& name, post_t* p
 struct collector_wrapper {
   journal_t& journal;
   report_t report;
-
+  post_handler_ptr handler_chain;  // Keeps the filter chain alive (owns synthetic temp posts)
   post_handler_ptr posts_collector;
 
   collector_wrapper(journal_t& _journal, report_t& base)
@@ -169,14 +169,14 @@ struct collector_wrapper {
   }
 };
 
-std::shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& query) {
+shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& query) {
   if (journal.has_xdata()) {
     PyErr_SetString(PyExc_RuntimeError, _("Cannot have more than one active journal query"));
     throw_error_already_set();
   }
 
   report_t& current_report(downcast<report_t>(*scope_t::default_scope));
-  std::shared_ptr<collector_wrapper> coll(new collector_wrapper(journal, current_report));
+  shared_ptr<collector_wrapper> coll(new collector_wrapper(journal, current_report));
 
   unique_ptr<journal_t> save_journal(coll->report.session.journal.release());
   coll->report.session.journal.reset(&coll->journal);
@@ -190,7 +190,29 @@ std::shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& qu
       args.push_back(string_value(arg));
     coll->report.parse_query_args(args, "@Journal.query");
 
-    coll->report.posts_report(coll->posts_collector);
+    // Build the full filter chain and store it in handler_chain.
+    // This is essential: filters like interval_posts create synthetic posts
+    // stored in their temporaries_t. By keeping handler_chain alive in
+    // collector_wrapper, we ensure those synthetic posts remain valid while
+    // Python iterates the collected results.
+    coll->handler_chain = chain_post_handlers(coll->posts_collector, coll->report);
+
+    if (coll->report.HANDLED(group_by_)) {
+      unique_ptr<post_splitter> splitter(
+          new post_splitter(coll->handler_chain, coll->report,
+                            coll->report.HANDLER(group_by_).expr));
+      journal_t* jrnl = coll->report.session.journal.get();
+      splitter->set_postflush_func([jrnl](const value_t&) { jrnl->clear_xdata(); });
+      coll->handler_chain = post_handler_ptr(splitter.release());
+    }
+
+    coll->handler_chain = chain_pre_post_handlers(coll->handler_chain, coll->report);
+
+    journal_posts_iterator walker(*coll->report.session.journal.get());
+    pass_down_posts<journal_posts_iterator>(coll->handler_chain, walker);
+
+    if (!coll->report.HANDLED(group_by_))
+      coll->report.session.journal->clear_xdata();
   } catch (...) {
     coll->report.session.journal.release();
     coll->report.session.journal.reset(save_journal.release());
@@ -218,9 +240,9 @@ EXC_TRANSLATOR(parse_error)
 EXC_TRANSLATOR(error_count)
 
 void export_journal() {
-  class_<item_handler<post_t>, std::shared_ptr<item_handler<post_t>>, boost::noncopyable>("PostHandler");
+  class_<item_handler<post_t>, shared_ptr<item_handler<post_t>>, boost::noncopyable>("PostHandler");
 
-  class_<collector_wrapper, std::shared_ptr<collector_wrapper>, boost::noncopyable>(
+  class_<collector_wrapper, shared_ptr<collector_wrapper>, boost::noncopyable>(
       "PostCollectorWrapper", no_init)
       .def("__len__", &collector_wrapper::length)
       .def("__getitem__", posts_getitem, return_internal_reference<>())

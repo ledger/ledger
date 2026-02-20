@@ -60,14 +60,14 @@ struct annotation_t : public flags::supports_flags<>, public equality_comparable
 // Mask for flags that affect semantic equality (not just metadata)
 #define ANNOTATION_SEMANTIC_FLAGS (ANNOTATION_PRICE_FIXATED)
 
-  optional<amount_t> price;
-  optional<date_t> date;
-  optional<string> tag;
-  optional<expr_t> value_expr;
+  std::optional<amount_t> price;
+  std::optional<date_t> date;
+  std::optional<string> tag;
+  std::optional<expr_t> value_expr;
 
-  explicit annotation_t(const optional<amount_t>& _price = none,
-                        const optional<date_t>& _date = none, const optional<string>& _tag = none,
-                        const optional<expr_t>& _value_expr = none)
+  explicit annotation_t(const std::optional<amount_t>& _price = {},
+                        const std::optional<date_t>& _date = {}, const std::optional<string>& _tag = {},
+                        const std::optional<expr_t>& _value_expr = {})
       : supports_flags<>(), price(_price), date(_date), tag(_tag), value_expr(_value_expr) {
     TRACE_CTOR(annotation_t, "optional<amount_t> + date_t + string + expr_t");
   }
@@ -161,15 +161,15 @@ public:
   virtual commodity_t& referent() override { return *ptr; }
   virtual const commodity_t& referent() const override { return *ptr; }
 
-  virtual optional<expr_t> value_expr() const override {
+  virtual std::optional<expr_t> value_expr() const override {
     if (details.value_expr)
       return details.value_expr;
     return commodity_t::value_expr();
   }
 
-  optional<price_point_t> virtual find_price(const commodity_t* commodity = NULL,
-                                             const datetime_t& moment = datetime_t(),
-                                             const datetime_t& oldest = datetime_t()) const override;
+  std::optional<price_point_t> virtual find_price(const commodity_t* commodity = NULL,
+                                                  const datetime_t& moment = datetime_t(),
+                                                  const datetime_t& oldest = datetime_t()) const override;
 
   virtual commodity_t& strip_annotations(const keep_details_t& what_to_keep) override;
 

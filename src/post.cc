@@ -48,7 +48,7 @@ bool post_t::has_tag(const string& tag, bool inherit) const {
   return false;
 }
 
-bool post_t::has_tag(const mask_t& tag_mask, const optional<mask_t>& value_mask,
+bool post_t::has_tag(const mask_t& tag_mask, const std::optional<mask_t>& value_mask,
                      bool inherit) const {
   if (item_t::has_tag(tag_mask, value_mask))
     return true;
@@ -57,21 +57,21 @@ bool post_t::has_tag(const mask_t& tag_mask, const optional<mask_t>& value_mask,
   return false;
 }
 
-optional<value_t> post_t::get_tag(const string& tag, bool inherit) const {
-  if (optional<value_t> value = item_t::get_tag(tag))
+std::optional<value_t> post_t::get_tag(const string& tag, bool inherit) const {
+  if (std::optional<value_t> value = item_t::get_tag(tag))
     return value;
   if (inherit && xact)
     return xact->get_tag(tag);
-  return none;
+  return std::nullopt;
 }
 
-optional<value_t> post_t::get_tag(const mask_t& tag_mask, const optional<mask_t>& value_mask,
-                                  bool inherit) const {
-  if (optional<value_t> value = item_t::get_tag(tag_mask, value_mask))
+std::optional<value_t> post_t::get_tag(const mask_t& tag_mask, const std::optional<mask_t>& value_mask,
+                                       bool inherit) const {
+  if (std::optional<value_t> value = item_t::get_tag(tag_mask, value_mask))
     return value;
   if (inherit && xact)
     return xact->get_tag(tag_mask, value_mask);
-  return none;
+  return std::nullopt;
 }
 
 date_t post_t::value_date() const {
@@ -113,7 +113,7 @@ optional<date_t> post_t::aux_date() const {
 }
 
 string post_t::payee_from_tag() const {
-  if (optional<value_t> post_payee = get_tag(_("Payee")))
+  if (std::optional<value_t> post_payee = get_tag(_("Payee")))
     return post_payee->as_string();
   else
     return "";
@@ -646,9 +646,9 @@ void extend_post(post_t& post, journal_t& journal) {
   annotation_t* details = (comm.has_annotation() ? &as_annotated_commodity(comm).details : NULL);
 
   if (!details || !details->value_expr) {
-    optional<expr_t> value_expr;
+    std::optional<expr_t> value_expr;
 
-    if (optional<value_t> data = post.get_tag(_("Value"))) {
+    if (std::optional<value_t> data = post.get_tag(_("Value"))) {
       // When the Value:: tag uses a typed expression (::), the expression is
       // evaluated at parse time and the result is the total converted value
       // (e.g., market(amount, post.date, exchange) returns amount * rate).

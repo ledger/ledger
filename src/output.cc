@@ -295,8 +295,7 @@ void report_accounts::flush() {
 }
 
 void report_accounts::operator()(post_t& post) {
-  accounts_report_map::iterator i = accounts.find(post.account);
-  if (i == accounts.end())
+  if (auto i = accounts.find(post.account); i == accounts.end())
     accounts.insert(accounts_pair(post.account, 1));
   else
     (*i).second++;
@@ -313,8 +312,7 @@ void report_payees::flush() {
 }
 
 void report_payees::operator()(post_t& post) {
-  std::map<string, std::size_t>::iterator i = payees.find(post.payee());
-  if (i == payees.end())
+  if (auto i = payees.find(post.payee()); i == payees.end())
     payees.insert(payees_pair(post.payee(), 1));
   else
     (*i).second++;
@@ -336,10 +334,9 @@ void report_tags::gather_metadata(item_t& item) {
   for (const item_t::string_map::value_type& data : *item.metadata) {
     string tag(data.first);
     if (report.HANDLED(values) && data.second.first)
-      tag += ": " + data.second.first.get().to_string();
+      tag += ": " + data.second.first->to_string();
 
-    std::map<string, std::size_t>::iterator i = tags.find(tag);
-    if (i == tags.end())
+    if (auto i = tags.find(tag); i == tags.end())
       tags.insert(tags_pair(tag, 1));
     else
       (*i).second++;
@@ -365,8 +362,7 @@ void report_commodities::operator()(post_t& post) {
   amount_t temp(post.amount.strip_annotations(report.what_to_keep()));
   commodity_t& comm(temp.commodity());
 
-  commodities_report_map::iterator i = commodities.find(&comm);
-  if (i == commodities.end())
+  if (auto i = commodities.find(&comm); i == commodities.end())
     commodities.insert(commodities_pair(&comm, 1));
   else
     (*i).second++;
@@ -374,8 +370,7 @@ void report_commodities::operator()(post_t& post) {
   if (comm.has_annotation()) {
     annotated_commodity_t& ann_comm(as_annotated_commodity(comm));
     if (ann_comm.details.price) {
-      commodities_report_map::iterator ii = commodities.find(&ann_comm.details.price->commodity());
-      if (ii == commodities.end())
+      if (auto ii = commodities.find(&ann_comm.details.price->commodity()); ii == commodities.end())
         commodities.insert(commodities_pair(&ann_comm.details.price->commodity(), 1));
       else
         (*ii).second++;
@@ -384,8 +379,7 @@ void report_commodities::operator()(post_t& post) {
 
   if (post.cost) {
     amount_t temp_cost(post.cost->strip_annotations(report.what_to_keep()));
-    i = commodities.find(&temp_cost.commodity());
-    if (i == commodities.end())
+    if (auto i = commodities.find(&temp_cost.commodity()); i == commodities.end())
       commodities.insert(commodities_pair(&temp_cost.commodity(), 1));
     else
       (*i).second++;

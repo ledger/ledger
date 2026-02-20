@@ -233,7 +233,7 @@ void anonymize_posts::operator()(post_t& post) {
     copy_xact_details = true;
   }
   xact_t& xact = temps.last_xact();
-  xact.code = none;
+  xact.code = std::nullopt;
 
   if (copy_xact_details) {
     xact.copy_details(*post.xact);
@@ -263,7 +263,7 @@ void anonymize_posts::operator()(post_t& post) {
 
   render_commodity(temp.amount);
   if (temp.amount.has_annotation()) {
-    temp.amount.annotation().tag = none;
+    temp.amount.annotation().tag = std::nullopt;
     if (temp.amount.annotation().price)
       render_commodity(*temp.amount.annotation().price);
   }
@@ -1504,7 +1504,7 @@ inject_posts::inject_posts(post_handler_ptr handler, const string& tag_list, acc
 
 void inject_posts::operator()(post_t& post) {
   for (tags_list_pair& pair : tags_list) {
-    optional<value_t> tag_value = post.get_tag(pair.first, false);
+    std::optional<value_t> tag_value = post.get_tag(pair.first, false);
     // When checking if the transaction has the tag, only inject once
     // per transaction.
     if (!tag_value && pair.second.second.find(post.xact) == pair.second.second.end() &&

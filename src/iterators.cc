@@ -89,8 +89,7 @@ struct create_price_xact {
     xact_t* xact;
     string symbol = price.commodity().symbol();
 
-    std::map<string, xact_t*>::iterator i = xacts_by_commodity.find(symbol);
-    if (i != xacts_by_commodity.end()) {
+    if (auto i = xacts_by_commodity.find(symbol); i != xacts_by_commodity.end()) {
       xact = (*i).second;
     } else {
       xact = &temps.create_xact();

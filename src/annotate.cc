@@ -257,9 +257,9 @@ bool annotated_commodity_t::operator==(const commodity_t& comm) const {
   return true;
 }
 
-optional<price_point_t> annotated_commodity_t::find_price(const commodity_t* commodity,
-                                                          const datetime_t& moment,
-                                                          const datetime_t& oldest) const {
+std::optional<price_point_t> annotated_commodity_t::find_price(const commodity_t* commodity,
+                                                               const datetime_t& moment,
+                                                               const datetime_t& oldest) const {
   DEBUG("commodity.price.find", "annotated_commodity_t::find_price(" << symbol() << ")");
 
   datetime_t when;
@@ -322,9 +322,9 @@ commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what
                                                            << "  keep tag " << keep_tag);
 
   if ((keep_price && details.price) || (keep_date && details.date) || (keep_tag && details.tag)) {
-    new_comm = pool().find_or_create(referent(), annotation_t(keep_price ? details.price : none,
-                                                              keep_date ? details.date : none,
-                                                              keep_tag ? details.tag : none));
+    new_comm = pool().find_or_create(referent(), annotation_t(keep_price ? details.price : std::nullopt,
+                                                              keep_date ? details.date : std::nullopt,
+                                                              keep_tag ? details.tag : std::nullopt));
 
     // Transfer over any relevant annotation flags, as they still apply.
     if (new_comm->annotated) {

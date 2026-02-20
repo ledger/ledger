@@ -1787,8 +1787,7 @@ std::string format_datetime(const datetime_t& when, const format_type_t format_t
   if (format_type == FMT_WRITTEN) {
     return written_datetime_io->format(when);
   } else if (format_type == FMT_CUSTOM && format) {
-    datetime_io_map::iterator i = temp_datetime_io.find(*format);
-    if (i != temp_datetime_io.end()) {
+    if (auto i = temp_datetime_io.find(*format); i != temp_datetime_io.end()) {
       return (*i).second->format(when);
     } else {
       datetime_io_t* formatter = new datetime_io_t(*format, false);
@@ -1808,8 +1807,7 @@ std::string format_date(const date_t& when, const format_type_t format_type,
   if (format_type == FMT_WRITTEN) {
     return written_date_io->format(when);
   } else if (format_type == FMT_CUSTOM && format) {
-    date_io_map::iterator i = temp_date_io.find(*format);
-    if (i != temp_date_io.end()) {
+    if (auto i = temp_date_io.find(*format); i != temp_date_io.end()) {
       return (*i).second->format(when);
     } else {
       date_io_t* formatter = new date_io_t(*format, false);

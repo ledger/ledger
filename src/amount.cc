@@ -704,7 +704,7 @@ void amount_t::in_place_unreduce() {
   }
 }
 
-optional<amount_t> amount_t::value(const datetime_t& moment, const commodity_t* in_terms_of) const {
+std::optional<amount_t> amount_t::value(const datetime_t& moment, const commodity_t* in_terms_of) const {
   if (quantity) {
 #if DEBUG_ON
     DEBUG("commodity.price.find", "amount_t::value of " << commodity().symbol());
@@ -714,7 +714,7 @@ optional<amount_t> amount_t::value(const datetime_t& moment, const commodity_t* 
       DEBUG("commodity.price.find", "amount_t::value: in_terms_of = " << in_terms_of->symbol());
 #endif
     if (has_commodity() && (in_terms_of || !commodity().has_flags(COMMODITY_PRIMARY))) {
-      optional<price_point_t> point;
+      std::optional<price_point_t> point;
       const commodity_t* comm(in_terms_of);
 
       if (has_annotation() && annotation().price) {
@@ -751,17 +751,17 @@ optional<amount_t> amount_t::value(const datetime_t& moment, const commodity_t* 
   } else {
     throw_(amount_error, _("Cannot determine value of an uninitialized amount"));
   }
-  return none;
+  return std::nullopt;
 }
 
-optional<amount_t> amount_t::price() const {
+std::optional<amount_t> amount_t::price() const {
   if (has_annotation() && annotation().price) {
     amount_t tmp(*annotation().price);
     tmp *= *this;
     DEBUG("amount.price", "Returning price of " << *this << " = " << tmp);
     return tmp;
   }
-  return none;
+  return std::nullopt;
 }
 
 int amount_t::sign() const {

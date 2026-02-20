@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(testPriceHistory)
   cad.add_price(jan17_06, amount_t("$1.11"));
 
 #ifndef NOT_FOR_PYTHON
-  optional<amount_t> amt = x1.value(feb28_07sbm);
+  std::optional<amount_t> amt = x1.value(feb28_07sbm);
   BOOST_CHECK(amt);
   BOOST_CHECK_EQUAL(amount_t("$1831.83"), *amt);
 
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(testAnnotationConstruction)
   BOOST_CHECK(! ann2.tag);
 
   // With date only
-  annotation_t ann3(none, parse_date("2024/01/15"));
+  annotation_t ann3(std::nullopt, parse_date("2024/01/15"));
   BOOST_CHECK(ann3);
   BOOST_CHECK(! ann3.price);
   BOOST_CHECK(ann3.date);
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE(testAnnotationConstruction)
   BOOST_CHECK(! ann3.tag);
 
   // With tag only
-  annotation_t ann4(none, none, string("lot1"));
+  annotation_t ann4(std::nullopt, std::nullopt, string("lot1"));
   BOOST_CHECK(ann4);
   BOOST_CHECK(! ann4.price);
   BOOST_CHECK(! ann4.date);
@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(testAnnotationPrinting)
 
   // Print annotation with date
   {
-    annotation_t ann(none, parse_date("2024/01/15"));
+    annotation_t ann(std::nullopt, parse_date("2024/01/15"));
     std::ostringstream out;
     ann.print(out);
     BOOST_CHECK_EQUAL(string(" [2024/01/15]"), out.str());
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(testAnnotationPrinting)
 
   // Print annotation with tag
   {
-    annotation_t ann(none, none, string("lot1"));
+    annotation_t ann(std::nullopt, std::nullopt, string("lot1"));
     std::ostringstream out;
     ann.print(out);
     BOOST_CHECK_EQUAL(string(" (lot1)"), out.str());
@@ -532,7 +532,7 @@ BOOST_AUTO_TEST_CASE(testAnnotationComparison)
   BOOST_CHECK(! (ann1 == ann5));
 
   // Test operator< - no price vs price
-  annotation_t ann_no_price(none, parse_date("2024/01/15"));
+  annotation_t ann_no_price(std::nullopt, parse_date("2024/01/15"));
   annotation_t ann_with_price(amount_t("$50.00"));
   BOOST_CHECK(ann_no_price < ann_with_price);
   BOOST_CHECK(! (ann_with_price < ann_no_price));
@@ -701,7 +701,7 @@ BOOST_AUTO_TEST_CASE(testRemovePrice)
   msft.add_price(mar15, amount_t("$320.00"));
 
   // Verify the latest price is findable
-  optional<price_point_t> pp = msft.find_price(NULL, mar15);
+  std::optional<price_point_t> pp = msft.find_price(NULL, mar15);
   BOOST_CHECK(pp);
   BOOST_CHECK_EQUAL(amount_t("$320.00"), pp->price);
 

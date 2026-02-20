@@ -55,7 +55,7 @@ bool item_t::has_tag(const string& tag, bool) const {
   return i != metadata->end();
 }
 
-bool item_t::has_tag(const mask_t& tag_mask, const optional<mask_t>& value_mask, bool) const {
+bool item_t::has_tag(const mask_t& tag_mask, const std::optional<mask_t>& value_mask, bool) const {
   if (metadata) {
     for (const string_map::value_type& data : *metadata) {
       if (tag_mask.match(data.first)) {
@@ -69,7 +69,7 @@ bool item_t::has_tag(const mask_t& tag_mask, const optional<mask_t>& value_mask,
   return false;
 }
 
-optional<value_t> item_t::get_tag(const string& tag, bool) const {
+std::optional<value_t> item_t::get_tag(const string& tag, bool) const {
   DEBUG("item.meta", "Getting item tag: " << tag);
   if (metadata) {
     DEBUG("item.meta", "Item has metadata");
@@ -79,11 +79,11 @@ optional<value_t> item_t::get_tag(const string& tag, bool) const {
       return (*i).second.first;
     }
   }
-  return none;
+  return std::nullopt;
 }
 
-optional<value_t> item_t::get_tag(const mask_t& tag_mask, const optional<mask_t>& value_mask,
-                                  bool) const {
+std::optional<value_t> item_t::get_tag(const mask_t& tag_mask, const std::optional<mask_t>& value_mask,
+                                       bool) const {
   if (metadata) {
     for (const string_map::value_type& data : *metadata) {
       if (tag_mask.match(data.first) &&
@@ -93,7 +93,7 @@ optional<value_t> item_t::get_tag(const mask_t& tag_mask, const optional<mask_t>
       }
     }
   }
-  return none;
+  return std::nullopt;
 }
 
 namespace {
@@ -108,7 +108,7 @@ struct CaseInsensitiveKeyCompare
 };
 } // namespace
 
-item_t::string_map::iterator item_t::set_tag(const string& tag, const optional<value_t>& value,
+item_t::string_map::iterator item_t::set_tag(const string& tag, const std::optional<value_t>& value,
                                              const bool overwrite_existing) {
   assert(!tag.empty());
 
@@ -118,9 +118,9 @@ item_t::string_map::iterator item_t::set_tag(const string& tag, const optional<v
   DEBUG("item.meta", "Setting tag '" << tag << "' to value '"
                                      << (value ? *value : string_value("<none>")) << "'");
 
-  optional<value_t> data = value;
+  std::optional<value_t> data = value;
   if (data && (data->is_null() || (data->is_string() && data->as_string().empty())))
-    data = none;
+    data = std::nullopt;
 
   string_map::iterator i = metadata->find(tag);
   if (i == metadata->end()) {
@@ -174,7 +174,7 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
       continue;
     if (q[0] == ':' && q[len - 1] == ':') { // a series of tags
       for (char* r = std::strtok(q + 1, ":"); r; r = std::strtok(NULL, ":")) {
-        string_map::iterator i = set_tag(r, none, overwrite_existing);
+        string_map::iterator i = set_tag(r, std::nullopt, overwrite_existing);
         (*i).second.second = true;
       }
     } else if (first && q[len - 1] == ':') { // a metadata setting
@@ -273,7 +273,7 @@ value_t has_tag(call_scope_t& args) {
 
 value_t get_tag(call_scope_t& args) {
   item_t& item(find_scope<item_t>(args));
-  optional<value_t> val;
+  std::optional<value_t> val;
 
   if (args.size() == 1) {
     if (args[0].is_string())

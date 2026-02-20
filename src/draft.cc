@@ -300,7 +300,7 @@ xact_t* draft_t::insert(journal_t& journal) {
   }
 
   if (tmpl->code) {
-    added->code = tmpl->code;
+    added->code = *tmpl->code;
     DEBUG("draft.xact", "Now setting code from template: " << *added->code);
   }
   if (tmpl->note) {
