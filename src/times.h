@@ -267,6 +267,8 @@ public:
   date_t begin() const;
   date_t end() const;
 
+  bool has_year() const { return static_cast<bool>(year); }
+
   bool is_within(const date_t& date) const { return date >= begin() && date < end(); }
 
   optional<date_duration_t> implied_duration() const {
@@ -334,6 +336,8 @@ public:
     }
   }
 
+  bool begin_has_year() const { return range_begin && range_begin->has_year(); }
+
   bool is_within(const date_t& date) const {
     optional<date_t> b = begin();
     optional<date_t> e = end();
@@ -390,6 +394,15 @@ public:
       return none;
   }
 
+  bool begin_has_year() const {
+    if (specifier_or_range.type() == typeid(date_specifier_t))
+      return boost::get<date_specifier_t>(specifier_or_range).has_year();
+    else if (specifier_or_range.type() == typeid(date_range_t))
+      return boost::get<date_range_t>(specifier_or_range).begin_has_year();
+    else
+      return false;
+  }
+
   string to_string() const {
     std::ostringstream out;
 
@@ -442,6 +455,10 @@ public:
 
   optional<date_t> begin() const { return start ? start : (range ? range->begin() : none); }
   optional<date_t> end() const { return finish ? finish : (range ? range->end() : none); }
+
+  // Returns true if the begin date was specified with an explicit year in the
+  // original expression (as opposed to having the year inferred from context).
+  bool begin_has_year() const { return range && range->begin_has_year(); }
 
   void parse(const string& str);
 

@@ -421,6 +421,12 @@ public:
       report_t, begin_, DO_(str) { // -b
         date_interval_t interval(str);
         if (optional<date_t> begin = interval.begin()) {
+          // When no explicit year was given (e.g. "-b 10/01" or "-b Oct"),
+          // and the resolved begin date lies in the future, roll back one year.
+          // The user most likely wants the most recent past occurrence of that
+          // date rather than a future one.
+          if (!interval.begin_has_year() && *begin > CURRENT_DATE())
+            begin = *begin - gregorian::years(1);
           string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
           OTHER(limit_).on(whence, predicate);
         } else {
