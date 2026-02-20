@@ -1,0 +1,9 @@
+i 2003/10/06 15:21:00 EDG  fp_conv
+o 2003/10/06 15:47:53 retrieved documents from ACM and the Web
+
+test bal -S t -t t -> 1
+__ERROR__
+While handling posting from "$FILE", line 1:
+> i 2003/10/06 15:21:00 EDG  fp_conv
+Error: Expression recursion depth exceeded (257)
+end test
