@@ -200,7 +200,7 @@ xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact)
   case '@':
   case '!':
     line++;
-    // fall through...
+    [[fallthrough]];
   default: // some other directive
     if (!general_directive(line)) {
       switch (line[0]) {

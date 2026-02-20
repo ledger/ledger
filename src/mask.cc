@@ -204,7 +204,7 @@ mask_t& mask_t::assign_glob(string_view pat) {
         re_pat += pat[++i];
         break;
       }
-      // fallthrough...
+      [[fallthrough]];
     default:
       re_pat += pat[i];
       break;
