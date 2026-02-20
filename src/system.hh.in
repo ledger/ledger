@@ -85,6 +85,7 @@
 #include <map>
 #include <unordered_map>
 #include <memory>
+#include <any>
 #include <new>
 #include <optional>
 #include <set>
@@ -131,7 +132,6 @@
 #include <mpfr.h>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/any.hpp>
 #include <boost/bind/bind.hpp>
 #include <boost/cast.hpp>
 #include <boost/current_function.hpp>

@@ -116,7 +116,7 @@ value_t::operator bool() const {
   case SCOPE:
     return as_scope() != NULL;
   case ANY:
-    return !as_any().empty();
+    return as_any().has_value();
   }
 
   add_error_context(_f("While taking boolean value of %1%:") % *this);
@@ -1450,7 +1450,7 @@ bool value_t::is_realzero() const {
   case SCOPE:
     return as_scope() == NULL;
   case ANY:
-    return as_any().empty();
+    return !as_any().has_value();
 
   default:
     add_error_context(_f("While applying is_realzero to %1%:") % *this);
@@ -1483,7 +1483,7 @@ bool value_t::is_zero() const {
   case SCOPE:
     return as_scope() == NULL;
   case ANY:
-    return as_any().empty();
+    return !as_any().has_value();
 
   default:
     add_error_context(_f("While applying is_zero to %1%:") % *this);
@@ -2112,7 +2112,7 @@ void value_t::dump(std::ostream& out, const bool relaxed) const {
     if (as_any().type() == typeid(expr_t::ptr_op_t))
       as_any<expr_t::ptr_op_t>()->dump(out);
     else
-      out << boost::unsafe_any_cast<const void*>(&as_any());
+      out << as_any().type().name();
     break;
 
   case SEQUENCE: {

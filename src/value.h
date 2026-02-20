@@ -145,7 +145,7 @@ public:
             mask_t,             // MASK
             sequence_t*,        // SEQUENCE
             scope_t*,           // SCOPE
-            boost::any          // ANY
+            std::any            // ANY
             >
         data;
 
@@ -715,39 +715,39 @@ public:
   /**
    * Dealing with any type at all is bit involved because we actually
    * deal with typed object.  For example, if you call as_any it returns
-   * a boost::any object, but if you use as_any<type_t>, then it returns
+   * a std::any object, but if you use as_any<type_t>, then it returns
    * a type_t by value.
    */
   bool is_any() const { return is_type(ANY); }
   template <typename T>
   bool is_any() const {
-    return (is_type(ANY) && boost::get<boost::any>(storage->data).type() == typeid(T));
+    return (is_type(ANY) && boost::get<std::any>(storage->data).type() == typeid(T));
   }
-  boost::any& as_any_lval() {
+  std::any& as_any_lval() {
     VERIFY(is_any());
     _dup();
-    return boost::get<boost::any>(storage->data);
+    return boost::get<std::any>(storage->data);
   }
   template <typename T>
   T& as_any_lval() {
-    return any_cast<T&>(as_any_lval());
+    return std::any_cast<T&>(as_any_lval());
   }
-  const boost::any& as_any() const {
+  const std::any& as_any() const {
     VERIFY(is_any());
-    return boost::get<boost::any>(storage->data);
+    return boost::get<std::any>(storage->data);
   }
   template <typename T>
   const T& as_any() const {
-    return any_cast<const T&>(as_any());
+    return std::any_cast<const T&>(as_any());
   }
-  void set_any(const boost::any& val) {
+  void set_any(const std::any& val) {
     set_type(ANY);
     storage->data = val;
   }
   template <typename T>
   void set_any(T& val) {
     set_type(ANY);
-    storage->data = boost::any(val);
+    storage->data = std::any(val);
   }
 
   /**
