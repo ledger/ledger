@@ -88,6 +88,7 @@
 #include <any>
 #include <new>
 #include <optional>
+#include <variant>
 #include <set>
 #include <stack>
 #include <string>
