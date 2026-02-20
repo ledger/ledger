@@ -1,0 +1,20 @@
+; Test that --budget --monthly with no budget defined does not segfault
+; Regression test for GitHub issue #1035
+; "Segfault in ledger::interval_posts::flush --budget --monthly and no budget"
+;
+; When no periodic transactions (~) are defined, using --budget should
+; produce no output and exit cleanly rather than crash with a segfault.
+
+2012/5/14 something
+    me  € 42.00
+    bank
+
+2012/5/15 duh
+    me  € 1
+    me
+
+test --budget --monthly balance -> 0
+end test
+
+test --budget --monthly register -> 0
+end test
