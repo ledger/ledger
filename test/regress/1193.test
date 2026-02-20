@@ -1,0 +1,10 @@
+; Issue #1193 - Test --pivot option doesn't crash
+2016-10-14 * Bought Waitrose gift card
+    Assets:Cards:Waitrose                  20.00 GBP
+        ; Card: 0286
+    Assets:Cash                           -20.00 GBP
+
+test reg --pivot Card
+16-Oct-14 Bought Waitrose gif.. Ca:02:As:Card:Waitrose    20.00 GBP    20.00 GBP
+16-Oct-14 Bought Waitrose gif.. Assets:Cash              -20.00 GBP            0
+end test

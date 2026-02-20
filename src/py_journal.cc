@@ -147,6 +147,7 @@ struct collector_wrapper {
   report_t report;
 
   post_handler_ptr posts_collector;
+  post_handler_ptr filter_chain;  // Keep filter chain alive to preserve temporary posts/accounts
 
   collector_wrapper(journal_t& _journal, report_t& base)
       : journal(_journal), report(base), posts_collector(new collect_posts) {
@@ -190,7 +191,7 @@ std::shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& qu
       args.push_back(string_value(arg));
     coll->report.parse_query_args(args, "@Journal.query");
 
-    coll->report.posts_report(coll->posts_collector);
+    coll->report.posts_report(coll->posts_collector, coll->filter_chain);
   } catch (...) {
     coll->report.session.journal.release();
     coll->report.session.journal.reset(save_journal.release());
