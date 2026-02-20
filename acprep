@@ -741,8 +741,9 @@ class PrepareBuild(CommandLineApp):
                 if sdk_path:
                     self.configure_args.append('-DCMAKE_OSX_SYSROOT=' + sdk_path)
                     self.log.info('Using macOS SDK => ' + sdk_path)
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                pass
+            except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                # xcrun is unavailable or failed; proceed without an explicit macOS SDK sysroot.
+                self.log.debug('Unable to determine macOS SDK via xcrun: %s', e)
 
         if system.startswith('CYGWIN'):
             self.configure_args.append('-G')
