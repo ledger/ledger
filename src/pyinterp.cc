@@ -228,7 +228,7 @@ object python_interpreter_t::import_option(const string& str) {
 
   if (contains(str, ".py")) {
     path& cwd(parsing_context.get_current().current_directory);
-    path parent(filesystem::absolute(file, cwd).parent_path());
+    path parent((file.is_absolute() ? file : std::filesystem::absolute(cwd / file)).parent_path());
     DEBUG("python.interp", "Adding " << parent << " to PYTHONPATH");
     paths.insert(0, parent.string());
     sys_dict["path"] = paths;

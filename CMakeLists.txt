@@ -29,7 +29,6 @@ set(Ledger_TEST_TIMEZONE "America/Chicago")
 
 enable_testing()
 
-add_compile_definitions(BOOST_FILESYSTEM_NO_DEPRECATED)
 set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard")
 if(CYGWIN)
   add_compile_options(-U__STRICT_ANSI__)
@@ -165,7 +164,7 @@ endif()
 
 # Set BOOST_ROOT to help CMake to find the right Boost version
 find_package(Boost ${Required_Boost_Version}
-  REQUIRED date_time filesystem iostreams regex unit_test_framework
+  REQUIRED date_time iostreams regex unit_test_framework
   ${BOOST_PYTHON} OPTIONAL_COMPONENTS nowide
   CONFIG)
 

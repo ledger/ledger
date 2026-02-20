@@ -53,7 +53,7 @@ class xact_t;
 
 struct ComparePaths {
   bool operator()(const path& p1, const path& p2) const {
-    return p1 < p2 && !boost::filesystem::equivalent(p1, p2);
+    return p1 < p2 && !std::filesystem::equivalent(p1, p2);
   }
 };
 

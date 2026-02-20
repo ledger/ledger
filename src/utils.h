@@ -65,10 +65,10 @@ typedef gregorian::date date;
 typedef gregorian::date_duration date_duration;
 typedef posix_time::seconds seconds;
 
-typedef boost::filesystem::path path;
-typedef boost::filesystem::ifstream ifstream;
-typedef boost::filesystem::ofstream ofstream;
-typedef boost::filesystem::filesystem_error filesystem_error;
+using path = std::filesystem::path;
+using ifstream = std::ifstream;
+using ofstream = std::ofstream;
+using filesystem_error = std::filesystem::filesystem_error;
 } // namespace ledger
 
 /*@}*/
