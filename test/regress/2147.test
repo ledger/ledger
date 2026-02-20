@@ -1,0 +1,22 @@
+; Issue #2147: Combining repeating transaction with automated transaction
+; that uses payee in predicate segfaults when evaluated against period
+; transaction postings (which have no parent xact).
+
+= expr account =~ /Assets:Inventory/ & payee =~ /DADA/ & comment =~ /Automate/
+    Expenses:Products                  1
+    Assets:Inventory                  -1
+
+~ monthly
+    Expenses:Rent                    $50.00
+    Assets:Checking
+
+2021/01/15 DADA
+    Assets:Inventory                  10 WIDGET ; Automate
+    Assets:Cash                      -10 WIDGET
+
+test bal
+          -10 WIDGET  Assets:Cash
+           10 WIDGET  Expenses:Products
+--------------------
+                   0
+end test
