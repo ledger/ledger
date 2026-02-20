@@ -116,15 +116,23 @@ inline parse_context_t open_for_reading(const path& pathname, const path& cwd) {
   return context;
 }
 
+inline path safe_current_path() {
+  boost::system::error_code ec;
+  path cwd = filesystem::current_path(ec);
+  if (ec)
+    return path("/");
+  return cwd;
+}
+
 class parse_context_stack_t {
   std::list<parse_context_t> parsing_context;
 
 public:
-  void push() { parsing_context.push_front(parse_context_t(filesystem::current_path())); }
-  void push(std::shared_ptr<std::istream> stream, const path& cwd = filesystem::current_path()) {
+  void push() { parsing_context.push_front(parse_context_t(safe_current_path())); }
+  void push(std::shared_ptr<std::istream> stream, const path& cwd = safe_current_path()) {
     parsing_context.push_front(parse_context_t(stream, cwd));
   }
-  void push(const path& pathname, const path& cwd = filesystem::current_path()) {
+  void push(const path& pathname, const path& cwd = safe_current_path()) {
     parsing_context.push_front(open_for_reading(pathname, cwd));
   }
 
