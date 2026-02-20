@@ -229,7 +229,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
   case '{': {
     in.get();
     amount_t temp;
-    temp.parse(in, PARSE_NO_MIGRATE);
+    (void)temp.parse(in, PARSE_NO_MIGRATE);
     c = in.get();
     if (c != '}')
       expected('}', c);

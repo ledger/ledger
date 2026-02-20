@@ -93,8 +93,8 @@ public:
     return n > 0;
   }
 
-  account_t* find_account(const string& name, bool auto_create = true);
-  account_t* find_account_re(const string& regexp);
+  [[nodiscard]] account_t* find_account(const string& name, bool auto_create = true);
+  [[nodiscard]] account_t* find_account_re(const string& regexp);
 
   typedef transform_iterator<function<account_t*(accounts_map::value_type&)>,
                              accounts_map::iterator>
@@ -119,7 +119,7 @@ public:
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
-  bool valid() const;
+  [[nodiscard]] bool valid() const;
 
   friend class journal_t;
 

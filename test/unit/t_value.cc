@@ -775,7 +775,7 @@ BOOST_AUTO_TEST_CASE(testForZero)
   BOOST_CHECK(v7.is_nonzero());
   BOOST_CHECK(v8.is_nonzero());
   BOOST_CHECK(v9.is_zero());
-  BOOST_CHECK_THROW(v10.is_zero(), value_error);
+  BOOST_CHECK_THROW((void)v10.is_zero(), value_error);
   BOOST_CHECK(v11.is_zero());
   BOOST_CHECK(v12.is_nonzero());
   BOOST_CHECK(v13.is_nonzero());
@@ -838,7 +838,7 @@ BOOST_AUTO_TEST_CASE(testNegation)
   v8.in_place_negate();
   v9.in_place_negate();
   BOOST_CHECK_EQUAL(v8, v9);
-  BOOST_CHECK_THROW(v10.negated(), value_error);
+  BOOST_CHECK_THROW((void)v10.negated(), value_error);
   BOOST_CHECK_EQUAL(-v12, v13);
   BOOST_CHECK_THROW(-v14, value_error);
   BOOST_CHECK_THROW(-v16, value_error);
@@ -871,7 +871,7 @@ BOOST_AUTO_TEST_CASE(testAbsoluteValue)
 {
   value_t v1(amount_t("$1").commodity());
 
-  BOOST_CHECK_THROW(v1.abs(), value_error);
+  BOOST_CHECK_THROW((void)v1.abs(), value_error);
 
   BOOST_CHECK(v1.valid());
 }
@@ -880,11 +880,11 @@ BOOST_AUTO_TEST_CASE(testRounding)
 {
   value_t v1(amount_t("$1").commodity());
 
-  BOOST_CHECK_THROW(v1.rounded(), value_error);
+  BOOST_CHECK_THROW((void)v1.rounded(), value_error);
   BOOST_CHECK(v1.roundto(2) == v1);
-  BOOST_CHECK_THROW(v1.truncated(), value_error);
-  BOOST_CHECK_THROW(v1.floored(), value_error);
-  BOOST_CHECK_THROW(v1.ceilinged(), value_error);
+  BOOST_CHECK_THROW((void)v1.truncated(), value_error);
+  BOOST_CHECK_THROW((void)v1.floored(), value_error);
+  BOOST_CHECK_THROW((void)v1.ceilinged(), value_error);
   BOOST_CHECK_THROW(v1.unrounded(), value_error);
   BOOST_CHECK(v1.reduced() == v1);
   BOOST_CHECK(v1.unreduced() == v1);
@@ -1961,7 +1961,7 @@ BOOST_AUTO_TEST_CASE(testAbsBalance)
 BOOST_AUTO_TEST_CASE(testAbsStringThrows)
 {
   value_t v1(string("hello"), true);
-  BOOST_CHECK_THROW(v1.abs(), value_error);
+  BOOST_CHECK_THROW((void)v1.abs(), value_error);
 }
 
 // ---------------------------------------------------------------------------
@@ -2004,7 +2004,7 @@ BOOST_AUTO_TEST_CASE(testRoundSequence)
 BOOST_AUTO_TEST_CASE(testRoundStringThrows)
 {
   value_t v1(string("hello"), true);
-  BOOST_CHECK_THROW(v1.rounded(), value_error);
+  BOOST_CHECK_THROW((void)v1.rounded(), value_error);
 }
 
 BOOST_AUTO_TEST_CASE(testRoundtoInteger)
@@ -2073,7 +2073,7 @@ BOOST_AUTO_TEST_CASE(testTruncateSequence)
 BOOST_AUTO_TEST_CASE(testTruncateStringThrows)
 {
   value_t v1(string("hello"), true);
-  BOOST_CHECK_THROW(v1.truncated(), value_error);
+  BOOST_CHECK_THROW((void)v1.truncated(), value_error);
 }
 
 BOOST_AUTO_TEST_CASE(testFloorInteger)
@@ -2110,7 +2110,7 @@ BOOST_AUTO_TEST_CASE(testFloorSequence)
 BOOST_AUTO_TEST_CASE(testFloorStringThrows)
 {
   value_t v1(string("hello"), true);
-  BOOST_CHECK_THROW(v1.floored(), value_error);
+  BOOST_CHECK_THROW((void)v1.floored(), value_error);
 }
 
 BOOST_AUTO_TEST_CASE(testCeilingInteger)
@@ -2147,7 +2147,7 @@ BOOST_AUTO_TEST_CASE(testCeilingSequence)
 BOOST_AUTO_TEST_CASE(testCeilingStringThrows)
 {
   value_t v1(string("hello"), true);
-  BOOST_CHECK_THROW(v1.ceilinged(), value_error);
+  BOOST_CHECK_THROW((void)v1.ceilinged(), value_error);
 }
 
 BOOST_AUTO_TEST_CASE(testUnroundInteger)
@@ -3136,7 +3136,7 @@ BOOST_AUTO_TEST_CASE(testBoolOperatorSequenceAllZero)
 BOOST_AUTO_TEST_CASE(testBoolOperatorMaskThrows)
 {
   value_t v1(mask_t("regex"));
-  BOOST_CHECK_THROW(static_cast<bool>(v1) ? true : false, value_error);
+  BOOST_CHECK_THROW((void)static_cast<bool>(v1), value_error);
 }
 
 // ---------------------------------------------------------------------------

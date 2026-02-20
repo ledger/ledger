@@ -64,10 +64,10 @@ std::optional<amount_t> py_value_2d(const amount_t& amount, const commodity_t* i
 }
 
 void py_parse_str_1(amount_t& amount, const string& str) {
-  amount.parse(str);
+  (void)amount.parse(str);
 }
 void py_parse_str_2(amount_t& amount, const string& str, unsigned char flags) {
-  amount.parse(str, flags);
+  (void)amount.parse(str, flags);
 }
 
 #if 0

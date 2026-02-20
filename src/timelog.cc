@@ -55,7 +55,7 @@ void create_timelog_xact(const time_xact_t& in_event, const time_xact_t& out_eve
   char buf[32];
   std::snprintf(buf, 32, "%lds", long((out_event.checkin - in_event.checkin).total_seconds()));
   amount_t amt;
-  amt.parse(buf);
+  (void)amt.parse(buf);
   VERIFY(amt.valid());
 
   auto post = std::make_unique<post_t>(in_event.account, amt, POST_IS_TIMELOG);

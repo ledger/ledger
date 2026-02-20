@@ -184,7 +184,7 @@ xact_t* csv_reader::read_xact(bool rich_data) {
       if (field.length() == 0)
         break;
       std::istringstream amount_str(field);
-      amt.parse(amount_str, PARSE_NO_REDUCE);
+      (void)amt.parse(amount_str, PARSE_NO_REDUCE);
       if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
         amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
       if (index[n] == FIELD_DEBIT)
@@ -197,7 +197,7 @@ xact_t* csv_reader::read_xact(bool rich_data) {
 
     case FIELD_COST: {
       std::istringstream amount_str(field);
-      amt.parse(amount_str, PARSE_NO_REDUCE);
+      (void)amt.parse(amount_str, PARSE_NO_REDUCE);
       if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
         amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
       post->cost = amt;
@@ -257,7 +257,7 @@ xact_t* csv_reader::read_xact(bool rich_data) {
 
   if (!total.empty()) {
     std::istringstream assigned_amount_str(total);
-    amt.parse(assigned_amount_str, PARSE_NO_REDUCE);
+    (void)amt.parse(assigned_amount_str, PARSE_NO_REDUCE);
     if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
       amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
     post->assigned_amount = amt;

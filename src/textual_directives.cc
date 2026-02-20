@@ -552,7 +552,7 @@ void instance_t::commodity_format_directive(commodity_t& comm, string format) {
   // observational formatting.
   trim(format);
   amount_t amt;
-  amt.parse(format, PARSE_NO_REDUCE);
+  (void)amt.parse(format, PARSE_NO_REDUCE);
   if (amt.commodity() != comm)
     throw_(parse_error,
            _f("commodity directive symbol %1% and format directive symbol %2% should be the same") %
