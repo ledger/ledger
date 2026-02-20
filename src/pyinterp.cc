@@ -378,8 +378,8 @@ expr_t::ptr_op_t python_module_t::lookup(const symbol_t::kind_t kind, const stri
       if (object obj = module_globals.get(name.c_str())) {
         if (PyModule_Check(obj.ptr())) {
           std::shared_ptr<python_module_t> mod;
-          python_module_map_t::iterator i = python_session->modules_map.find(obj.ptr());
-          if (i == python_session->modules_map.end()) {
+          if (auto i = python_session->modules_map.find(obj.ptr());
+              i == python_session->modules_map.end()) {
             mod.reset(new python_module_t(name, obj));
             python_session->modules_map.insert(python_module_map_t::value_type(obj.ptr(), mod));
           } else {
