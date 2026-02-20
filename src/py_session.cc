@@ -42,12 +42,14 @@ using namespace python;
 using namespace boost::python;
 
 namespace {
-journal_t* py_read_journal(const string& pathname) {
-  return python_session->read_journal(path(pathname));
+boost::shared_ptr<journal_t> py_read_journal(const string& pathname) {
+  python_session->read_journal(path(pathname));
+  return python_session->journal;
 }
 
-journal_t* py_read_journal_from_string(const string& data) {
-  return python_session->read_journal_from_string(data);
+boost::shared_ptr<journal_t> py_read_journal_from_string(const string& data) {
+  python_session->read_journal_from_string(data);
+  return python_session->journal;
 }
 
 PyObject* py_error_context(const session_t& session) {
@@ -56,24 +58,42 @@ PyObject* py_error_context(const session_t& session) {
 void py_close_journal_files() {
   python_session->close_journal_files();
 }
+
+boost::shared_ptr<journal_t> py_session_read_journal(session_t& session, const path& pathname) {
+  session.read_journal(pathname);
+  return session.journal;
+}
+
+boost::shared_ptr<journal_t> py_session_read_journal_from_string(session_t& session,
+                                                                 const string& data) {
+  session.read_journal_from_string(data);
+  return session.journal;
+}
+
+boost::shared_ptr<journal_t> py_session_read_journal_files(session_t& session) {
+  session.read_journal_files();
+  return session.journal;
+}
+
+boost::shared_ptr<journal_t> py_session_get_journal(session_t& session) {
+  return session.journal;
+}
 } // namespace
 
 void export_session() {
   class_<session_t, boost::noncopyable>("Session")
-      .def("read_journal", &session_t::read_journal, return_internal_reference<>())
-      .def("read_journal_from_string", &session_t::read_journal_from_string,
-           return_internal_reference<>())
-      .def("read_journal_files", &session_t::read_journal_files, return_internal_reference<>())
+      .def("read_journal", py_session_read_journal)
+      .def("read_journal_from_string", py_session_read_journal_from_string)
+      .def("read_journal_files", py_session_read_journal_files)
       .def("close_journal_files", &session_t::close_journal_files)
-      .def("journal", &session_t::get_journal, return_internal_reference<>())
+      .def("journal", py_session_get_journal)
       .def("error_context", &py_error_context);
 
   scope().attr("session") = object(ptr(static_cast<session_t*>(python_session.get())));
   scope().attr("close_journal_files") = boost::python::make_function(&py_close_journal_files);
-  scope().attr("read_journal") =
-      boost::python::make_function(&py_read_journal, return_internal_reference<>());
+  scope().attr("read_journal") = boost::python::make_function(&py_read_journal);
   scope().attr("read_journal_from_string") =
-      boost::python::make_function(&py_read_journal_from_string, return_internal_reference<>());
+      boost::python::make_function(&py_read_journal_from_string);
 }
 
 } // namespace ledger
