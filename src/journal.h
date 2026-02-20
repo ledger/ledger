@@ -71,7 +71,10 @@ public:
 
     fileinfo_t() : from_stream(true) { TRACE_CTOR(journal_t::fileinfo_t, ""); }
     fileinfo_t(const path& _filename) : filename(_filename), from_stream(false) {
-      modtime = posix_time::from_time_t(last_write_time(*filename));
+      auto ftime = std::filesystem::last_write_time(*filename);
+      auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
+          ftime - decltype(ftime)::clock::now() + std::chrono::system_clock::now());
+      modtime = posix_time::from_time_t(std::chrono::system_clock::to_time_t(sctp));
       TRACE_CTOR(journal_t::fileinfo_t, "const path&");
     }
     fileinfo_t(const fileinfo_t& info)

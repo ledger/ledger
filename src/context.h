@@ -101,7 +101,7 @@ public:
 
 inline parse_context_t open_for_reading(const path& pathname, const path& cwd) {
   path filename = resolve_path(pathname);
-  filename = filesystem::absolute(filename, cwd);
+  filename = filename.is_absolute() ? filename : std::filesystem::absolute(cwd / filename);
   if (!exists(filename) || is_directory(filename))
     throw_(std::runtime_error, _f("Cannot read journal file %1%") % filename);
 
