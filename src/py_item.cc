@@ -52,18 +52,18 @@ bool py_has_tag_1m(item_t& item, const mask_t& tag_mask) {
   return item.has_tag(tag_mask);
 }
 bool py_has_tag_2m(item_t& item, const mask_t& tag_mask,
-                   const boost::optional<mask_t>& value_mask) {
+                   const std::optional<mask_t>& value_mask) {
   return item.has_tag(tag_mask, value_mask);
 }
 
-boost::optional<value_t> py_get_tag_1s(item_t& item, const string& tag) {
+std::optional<value_t> py_get_tag_1s(item_t& item, const string& tag) {
   return item.get_tag(tag);
 }
-boost::optional<value_t> py_get_tag_1m(item_t& item, const mask_t& tag_mask) {
+std::optional<value_t> py_get_tag_1m(item_t& item, const mask_t& tag_mask) {
   return item.get_tag(tag_mask);
 }
-boost::optional<value_t> py_get_tag_2m(item_t& item, const mask_t& tag_mask,
-                                       const boost::optional<mask_t>& value_mask) {
+std::optional<value_t> py_get_tag_2m(item_t& item, const mask_t& tag_mask,
+                                      const std::optional<mask_t>& value_mask) {
   return item.get_tag(tag_mask, value_mask);
 }
 

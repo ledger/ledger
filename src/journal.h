@@ -101,7 +101,7 @@ public:
   account_mappings_t payees_for_unknown_accounts;
   checksum_map_t checksum_map;
   tag_check_exprs_map tag_check_exprs;
-  optional<expr_t> value_expr;
+  std::optional<expr_t> value_expr;
   parse_context_t* current_context;
 
   enum checking_style_t {

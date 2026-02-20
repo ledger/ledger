@@ -44,28 +44,34 @@ using namespace boost::python;
 
 namespace {
 
-boost::optional<balance_t> py_value_0(const balance_t& balance) {
-  return balance.value(CURRENT_TIME());
+std::optional<balance_t> py_value_0(const balance_t& balance) {
+  auto r = balance.value(CURRENT_TIME());
+  return r ? std::optional<balance_t>(*r) : std::nullopt;
 }
-boost::optional<balance_t> py_value_1(const balance_t& balance, const commodity_t* in_terms_of) {
-  return balance.value(CURRENT_TIME(), in_terms_of);
+std::optional<balance_t> py_value_1(const balance_t& balance, const commodity_t* in_terms_of) {
+  auto r = balance.value(CURRENT_TIME(), in_terms_of);
+  return r ? std::optional<balance_t>(*r) : std::nullopt;
 }
-boost::optional<balance_t> py_value_2(const balance_t& balance, const commodity_t* in_terms_of,
-                                      const datetime_t& moment) {
-  return balance.value(moment, in_terms_of);
+std::optional<balance_t> py_value_2(const balance_t& balance, const commodity_t* in_terms_of,
+                                    const datetime_t& moment) {
+  auto r = balance.value(moment, in_terms_of);
+  return r ? std::optional<balance_t>(*r) : std::nullopt;
 }
-boost::optional<balance_t> py_value_2d(const balance_t& balance, const commodity_t* in_terms_of,
-                                       const date_t& moment) {
-  return balance.value(datetime_t(moment), in_terms_of);
+std::optional<balance_t> py_value_2d(const balance_t& balance, const commodity_t* in_terms_of,
+                                     const date_t& moment) {
+  auto r = balance.value(datetime_t(moment), in_terms_of);
+  return r ? std::optional<balance_t>(*r) : std::nullopt;
 }
 
-boost::optional<amount_t> py_commodity_amount_0(const balance_t& balance) {
-  return balance.commodity_amount();
+std::optional<amount_t> py_commodity_amount_0(const balance_t& balance) {
+  auto r = balance.commodity_amount();
+  return r ? std::optional<amount_t>(*r) : std::nullopt;
 }
 
-boost::optional<amount_t> py_commodity_amount_1(const balance_t& balance,
-                                                const commodity_t& commodity) {
-  return balance.commodity_amount(commodity);
+std::optional<amount_t> py_commodity_amount_1(const balance_t& balance,
+                                              const commodity_t& commodity) {
+  auto r = balance.commodity_amount(commodity);
+  return r ? std::optional<amount_t>(*r) : std::nullopt;
 }
 
 #if 0

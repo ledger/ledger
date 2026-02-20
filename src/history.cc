@@ -104,12 +104,12 @@ public:
                   const datetime_t& moment, const datetime_t& _oldest = datetime_t(),
                   bool bidirectionally = false);
 
-  optional<price_point_t> find_price(const commodity_t& source, const datetime_t& moment,
-                                     const datetime_t& oldest = datetime_t());
+  std::optional<price_point_t> find_price(const commodity_t& source, const datetime_t& moment,
+                                         const datetime_t& oldest = datetime_t());
 
-  optional<price_point_t> find_price(const commodity_t& source, const commodity_t& target,
-                                     const datetime_t& moment,
-                                     const datetime_t& oldest = datetime_t());
+  std::optional<price_point_t> find_price(const commodity_t& source, const commodity_t& target,
+                                          const datetime_t& moment,
+                                          const datetime_t& oldest = datetime_t());
 
   void print_map(std::ostream& out, const datetime_t& moment = datetime_t());
 };
@@ -140,16 +140,16 @@ void commodity_history_t::map_prices(function<void(datetime_t, const amount_t&)>
   p_impl->map_prices(fn, source, moment, _oldest, bidirectionally);
 }
 
-optional<price_point_t> commodity_history_t::find_price(const commodity_t& source,
-                                                        const datetime_t& moment,
-                                                        const datetime_t& oldest) {
+std::optional<price_point_t> commodity_history_t::find_price(const commodity_t& source,
+                                                              const datetime_t& moment,
+                                                              const datetime_t& oldest) {
   return p_impl->find_price(source, moment, oldest);
 }
 
-optional<price_point_t> commodity_history_t::find_price(const commodity_t& source,
-                                                        const commodity_t& target,
-                                                        const datetime_t& moment,
-                                                        const datetime_t& oldest) {
+std::optional<price_point_t> commodity_history_t::find_price(const commodity_t& source,
+                                                              const commodity_t& target,
+                                                              const datetime_t& moment,
+                                                              const datetime_t& oldest) {
   return p_impl->find_price(source, target, moment, oldest);
 }
 
@@ -320,9 +320,9 @@ void commodity_history_impl_t::map_prices(function<void(datetime_t, const amount
   }
 }
 
-optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& source,
-                                                             const datetime_t& moment,
-                                                             const datetime_t& oldest) {
+std::optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& source,
+                                                                   const datetime_t& moment,
+                                                                   const datetime_t& oldest) {
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
 
   FGraph fg(price_graph, recent_edge_weight<EdgeWeightMap, PricePointMap, PriceRatioMap>(
@@ -370,19 +370,19 @@ optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& 
 
   if (price.is_null()) {
     DEBUG("history.find", "there is no final price");
-    return none;
+    return std::nullopt;
   } else {
     DEBUG("history.find", "final price is = " << price.unrounded());
     return price_point_t(most_recent, price);
   }
 }
 
-optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& source,
-                                                             const commodity_t& target,
-                                                             const datetime_t& moment,
-                                                             const datetime_t& oldest) {
+std::optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& source,
+                                                                   const commodity_t& target,
+                                                                   const datetime_t& moment,
+                                                                   const datetime_t& oldest) {
   if (source == target)
-    return none;
+    return std::nullopt;
 
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
@@ -469,7 +469,7 @@ optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& 
 
   if (price.is_null()) {
     DEBUG("history.find", "there is no final price");
-    return none;
+    return std::nullopt;
   } else {
     price.set_commodity(const_cast<commodity_t&>(target));
     DEBUG("history.find", "final price is = " << price.unrounded());

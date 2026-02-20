@@ -79,7 +79,7 @@ public:
 
 class xact_t : public xact_base_t {
 public:
-  optional<string> code;
+  std::optional<string> code;
   string payee;
 
   xact_t() { TRACE_CTOR(xact_t, ""); }

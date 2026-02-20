@@ -836,7 +836,7 @@ value_t report_t::fn_commodity(call_scope_t& args) {
 }
 
 value_t report_t::fn_commodity_price(call_scope_t& args) {
-  optional<price_point_t> price_point =
+  std::optional<price_point_t> price_point =
       commodity_pool_t::current_pool->commodity_price_history.find_price(
           args.get<amount_t>(0).commodity(), args.get<datetime_t>(1));
   if (price_point) {

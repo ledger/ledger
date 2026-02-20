@@ -176,8 +176,7 @@ account_t* journal_t::expand_aliases(string name) {
   // loop until no expansion can be found
   do {
     if (account_aliases.size() > 0) {
-      accounts_map::const_iterator i = account_aliases.find(name);
-      if (i != account_aliases.end()) {
+      if (auto i = account_aliases.find(name); i != account_aliases.end()) {
         if (std::find(already_seen.begin(), already_seen.end(), name) != already_seen.end()) {
           throw_(std::runtime_error, _f("Infinite recursion on alias expansion for %1%") % name);
         }
@@ -191,8 +190,7 @@ account_t* journal_t::expand_aliases(string name) {
         size_t colon = name.find(':');
         if (colon != string::npos) {
           string first_account_name = name.substr(0, colon);
-          accounts_map::const_iterator j = account_aliases.find(first_account_name);
-          if (j != account_aliases.end()) {
+          if (auto j = account_aliases.find(first_account_name); j != account_aliases.end()) {
             if (std::find(already_seen.begin(), already_seen.end(), first_account_name) !=
                 already_seen.end()) {
               throw_(std::runtime_error,
@@ -321,7 +319,7 @@ void check_all_metadata(journal_t& journal, variant<int, xact_t*, post_t*> conte
     for (const item_t::string_map::value_type& pair : xact ? *xact->metadata : *post->metadata) {
       const string& key(pair.first);
 
-      const optional<value_t>& value = pair.second.first;
+      const std::optional<value_t>& value = pair.second.first;
       if (value)
         journal.register_metadata(key, *value, context);
       else
@@ -365,7 +363,7 @@ bool journal_t::add_xact(xact_t* xact) {
   // not add this one to the journal.  However, all automated checks
   // will have been performed by extend_xact, so asserts can still be
   // applied to it.
-  if (optional<value_t> ref = xact->get_tag(_("UUID"))) {
+  if (std::optional<value_t> ref = xact->get_tag(_("UUID"))) {
     std::string uuid = ref->to_string();
     std::pair<checksum_map_t::iterator, bool> result =
         checksum_map.insert(checksum_map_t::value_type(uuid, xact));

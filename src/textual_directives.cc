@@ -118,7 +118,7 @@ void instance_t::price_conversion_directive(char* line) {
 }
 
 void instance_t::price_xact_directive(char* line) {
-  optional<std::pair<commodity_t*, price_point_t>> point =
+  std::optional<std::pair<commodity_t*, price_point_t>> point =
       commodity_pool_t::current_pool->parse_price_directive(skip_ws(line + 1));
   if (!point)
     throw parse_error(_("Pricing entry failed to parse"));
@@ -296,7 +296,7 @@ void instance_t::apply_rate_directive(char* line) {
   if (!line)
     throw_(parse_error, _("Directive 'apply fixed/rate' requires an argument"));
 
-  if (optional<std::pair<commodity_t*, price_point_t>> price_point =
+  if (std::optional<std::pair<commodity_t*, price_point_t>> price_point =
           commodity_pool_t::current_pool->parse_price_directive(trim_ws(line), true, true)) {
     apply_stack.push_front(
         application_t("fixed", fixed_rate_t(price_point->first, price_point->second.price)));

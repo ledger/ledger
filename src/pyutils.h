@@ -64,22 +64,20 @@ struct register_python_conversion {
 
 template <typename T>
 struct register_optional_to_python : public boost::noncopyable {
-  struct optional_to_python {
-    static PyObject* convert(const boost::optional<T>& value) {
+  // Converters for std::optional<T> (used by C++17-migrated wrapper functions)
+  struct std_optional_to_python {
+    static PyObject* convert(const std::optional<T>& value) {
       return boost::python::incref(value ? boost::python::to_python_value<T>()(*value)
                                          : boost::python::detail::none());
     }
   };
 
-  struct optional_from_python {
+  struct std_optional_from_python {
     static void* convertible(PyObject* source) {
       using namespace boost::python::converter;
-
       if (source == Py_None)
         return source;
-
       const registration& converters(registered<T>::converters);
-
       if (implicit_rvalue_convertible_from_python(source, converters)) {
         rvalue_from_python_stage1_data data = rvalue_from_python_stage1(source, converters);
         return data.convertible;
@@ -90,22 +88,18 @@ struct register_optional_to_python : public boost::noncopyable {
     static void construct(PyObject* source,
                           boost::python::converter::rvalue_from_python_stage1_data* data) {
       using namespace boost::python::converter;
-
       const T value = typename boost::python::extract<T>(source);
-
-      void* storage = ((rvalue_from_python_storage<boost::optional<T>>*)data)->storage.bytes;
-
-      if (source == Py_None)                // == None
-        new (storage) boost::optional<T>(); // A Boost uninitialized value
+      void* storage = ((rvalue_from_python_storage<std::optional<T>>*)data)->storage.bytes;
+      if (source == Py_None)
+        new (storage) std::optional<T>();
       else
-        new (storage) boost::optional<T>(value);
-
+        new (storage) std::optional<T>(value);
       data->convertible = storage;
     }
   };
 
   explicit register_optional_to_python() {
-    register_python_conversion<boost::optional<T>, optional_to_python, optional_from_python>();
+    register_python_conversion<std::optional<T>, std_optional_to_python, std_optional_from_python>();
   }
 };
 

@@ -68,9 +68,9 @@ public:
 
   amount_t amount; // can be null until finalization
   optional<expr_t> amount_expr;
-  optional<amount_t> cost;
-  optional<amount_t> given_cost;
-  optional<amount_t> assigned_amount;
+  std::optional<amount_t> cost;
+  std::optional<amount_t> given_cost;
+  std::optional<amount_t> assigned_amount;
   optional<datetime_t> checkin;
   optional<datetime_t> checkout;
 
@@ -107,13 +107,13 @@ public:
   }
 
   virtual bool has_tag(const string& tag, bool inherit = true) const override;
-  virtual bool has_tag(const mask_t& tag_mask, const optional<mask_t>& value_mask = none,
+  virtual bool has_tag(const mask_t& tag_mask, const std::optional<mask_t>& value_mask = {},
                        bool inherit = true) const override;
 
-  virtual optional<value_t> get_tag(const string& tag, bool inherit = true) const override;
-  virtual optional<value_t> get_tag(const mask_t& tag_mask,
-                                    const optional<mask_t>& value_mask = none,
-                                    bool inherit = true) const override;
+  virtual std::optional<value_t> get_tag(const string& tag, bool inherit = true) const override;
+  virtual std::optional<value_t> get_tag(const mask_t& tag_mask,
+                                         const std::optional<mask_t>& value_mask = {},
+                                         bool inherit = true) const override;
 
   virtual date_t value_date() const;
   virtual date_t date() const override;

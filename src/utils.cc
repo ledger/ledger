@@ -129,8 +129,7 @@ void shutdown_memory_tracing() {
 }
 
 inline void add_to_count_map(object_count_map& the_map, const char* name, std::size_t size) {
-  object_count_map::iterator k = the_map.find(name);
-  if (k != the_map.end()) {
+  if (auto k = the_map.find(name); k != the_map.end()) {
     (*k).second.first++;
     (*k).second.second += size;
   } else {
@@ -654,8 +653,7 @@ void start_timer(const char* name, log_level_t lvl) {
   memory_tracing_active = false;
 #endif
 
-  timer_map::iterator i = timers.find(name);
-  if (i == timers.end()) {
+  if (auto i = timers.find(name); i == timers.end()) {
     timers.insert(timer_map::value_type(name, timer_t(lvl, _log_buffer.str())));
   } else {
     assert((*i).second.description == _log_buffer.str());
@@ -767,8 +765,7 @@ path expand_path(const path& pathname) {
 #if HAVE_GETPWUID
     if (!pfx) {
       // Punt. We're trying to expand ~/, but HOME isn't set
-      struct passwd* pw = getpwuid(getuid());
-      if (pw)
+      if (struct passwd* pw = getpwuid(getuid()))
         pfx = pw->pw_dir;
     }
 #endif
@@ -776,8 +773,7 @@ path expand_path(const path& pathname) {
 #if HAVE_GETPWNAM
   else {
     string user(path_string, 1, pos == string::npos ? string::npos : pos - 1);
-    struct passwd* pw = getpwnam(user.c_str());
-    if (pw)
+    if (struct passwd* pw = getpwnam(user.c_str()))
       pfx = pw->pw_dir;
   }
 #endif

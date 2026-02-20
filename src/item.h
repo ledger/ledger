@@ -85,7 +85,7 @@ public:
 
   enum state_t { UNCLEARED = 0, CLEARED, PENDING };
 
-  typedef std::pair<optional<value_t>, bool> tag_data_t;
+  typedef std::pair<std::optional<value_t>, bool> tag_data_t;
   typedef std::map<string, tag_data_t, std::function<bool(string, string)>> string_map;
 
   scope_t* parent;
@@ -124,7 +124,7 @@ public:
   virtual scope_t* get_parent() override { return parent; }
 
   string id() const {
-    if (optional<value_t> ref = get_tag(_("UUID"))) {
+    if (std::optional<value_t> ref = get_tag(_("UUID"))) {
       return ref->to_string();
     } else {
       std::ostringstream buf;
@@ -135,15 +135,15 @@ public:
   std::size_t seq() const { return pos ? pos->sequence : 0L; }
 
   virtual bool has_tag(const string& tag, bool inherit = true) const;
-  virtual bool has_tag(const mask_t& tag_mask, const optional<mask_t>& value_mask = none,
+  virtual bool has_tag(const mask_t& tag_mask, const std::optional<mask_t>& value_mask = {},
                        bool inherit = true) const;
 
-  virtual optional<value_t> get_tag(const string& tag, bool inherit = true) const;
-  virtual optional<value_t> get_tag(const mask_t& tag_mask,
-                                    const optional<mask_t>& value_mask = none,
-                                    bool inherit = true) const;
+  virtual std::optional<value_t> get_tag(const string& tag, bool inherit = true) const;
+  virtual std::optional<value_t> get_tag(const mask_t& tag_mask,
+                                         const std::optional<mask_t>& value_mask = {},
+                                         bool inherit = true) const;
 
-  virtual string_map::iterator set_tag(const string& tag, const optional<value_t>& value = none,
+  virtual string_map::iterator set_tag(const string& tag, const std::optional<value_t>& value = {},
                                        const bool overwrite_existing = true);
 
   virtual void parse_tags(const char* p, scope_t& scope, bool overwrite_existing = true);

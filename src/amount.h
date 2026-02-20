@@ -404,10 +404,10 @@ public:
       calling value() for that moment in time would yield the amount \c
       $100.00.
   */
-  optional<amount_t> value(const datetime_t& moment = datetime_t(),
-                           const commodity_t* in_terms_of = NULL) const;
+  std::optional<amount_t> value(const datetime_t& moment = datetime_t(),
+                                const commodity_t* in_terms_of = NULL) const;
 
-  optional<amount_t> price() const;
+  std::optional<amount_t> price() const;
 
   /*@}*/
 

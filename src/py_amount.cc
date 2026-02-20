@@ -44,19 +44,23 @@ using namespace boost::python;
 
 namespace {
 
-boost::optional<amount_t> py_value_0(const amount_t& amount) {
-  return amount.value(CURRENT_TIME());
+std::optional<amount_t> py_value_0(const amount_t& amount) {
+  auto r = amount.value(CURRENT_TIME());
+  return r ? std::optional<amount_t>(*r) : std::nullopt;
 }
-boost::optional<amount_t> py_value_1(const amount_t& amount, const commodity_t* in_terms_of) {
-  return amount.value(CURRENT_TIME(), in_terms_of);
+std::optional<amount_t> py_value_1(const amount_t& amount, const commodity_t* in_terms_of) {
+  auto r = amount.value(CURRENT_TIME(), in_terms_of);
+  return r ? std::optional<amount_t>(*r) : std::nullopt;
 }
-boost::optional<amount_t> py_value_2(const amount_t& amount, const commodity_t* in_terms_of,
-                                     const datetime_t& moment) {
-  return amount.value(moment, in_terms_of);
+std::optional<amount_t> py_value_2(const amount_t& amount, const commodity_t* in_terms_of,
+                                   const datetime_t& moment) {
+  auto r = amount.value(moment, in_terms_of);
+  return r ? std::optional<amount_t>(*r) : std::nullopt;
 }
-boost::optional<amount_t> py_value_2d(const amount_t& amount, const commodity_t* in_terms_of,
-                                      const date_t& moment) {
-  return amount.value(datetime_t(moment), in_terms_of);
+std::optional<amount_t> py_value_2d(const amount_t& amount, const commodity_t* in_terms_of,
+                                    const date_t& moment) {
+  auto r = amount.value(datetime_t(moment), in_terms_of);
+  return r ? std::optional<amount_t>(*r) : std::nullopt;
 }
 
 void py_parse_str_1(amount_t& amount, const string& str) {

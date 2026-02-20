@@ -1498,7 +1498,7 @@ value_t value_t::value(const datetime_t& moment, const commodity_t* in_terms_of)
     return NULL_VALUE;
 
   case AMOUNT:
-    if (optional<amount_t> val = as_amount().value(moment, in_terms_of))
+    if (auto val = as_amount().value(moment, in_terms_of))
       return *val;
     return NULL_VALUE;
 
@@ -1597,7 +1597,7 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
       }
 
       DEBUG("commodity.exchange", "Referent doesn't match, pricing...");
-      if (optional<amount_t> val = as_amount_lval().value(moment, comm)) {
+      if (auto val = as_amount_lval().value(moment, comm)) {
         DEBUG("commodity.exchange", "Re-priced amount is: " << *val);
         return *val;
       }
@@ -1627,7 +1627,7 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
           temp += pair.second;
         } else {
           DEBUG("commodity.exchange", "Referent doesn't match, pricing...");
-          if (optional<amount_t> val = pair.second.value(moment, comm)) {
+          if (auto val = pair.second.value(moment, comm)) {
             DEBUG("commodity.exchange", "Re-priced member amount is: " << *val);
             temp += *val;
             repriced = true;

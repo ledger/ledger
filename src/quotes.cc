@@ -54,8 +54,8 @@ static std::string shell_escape(const std::string& s) {
   return result;
 }
 
-optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
-                                                    const commodity_t* exchange_commodity) {
+std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
+                                                         const commodity_t* exchange_commodity) {
   DEBUG("commodity.download", "downloading quote for symbol " << commodity.symbol());
 #if DEBUG_ON
   if (exchange_commodity)
@@ -96,7 +96,7 @@ optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
       *p = '\0';
     DEBUG("commodity.download", "downloaded quote: " << buf);
 
-    if (optional<std::pair<commodity_t*, price_point_t>> point =
+    if (std::optional<std::pair<commodity_t*, price_point_t>> point =
             commodity_pool_t::current_pool->parse_price_directive(buf)) {
       if (commodity_pool_t::current_pool->price_db) {
         ofstream database(*commodity_pool_t::current_pool->price_db,
@@ -120,7 +120,7 @@ optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
     commodity.add_flags(COMMODITY_NOMARKET);
   }
 #endif
-  return none;
+  return std::nullopt;
 }
 
 } // namespace ledger

@@ -64,7 +64,7 @@ public:
   accounts_map accounts;
   posts_list posts;
   optional<deferred_posts_map_t> deferred_posts;
-  optional<expr_t> value_expr;
+  std::optional<expr_t> value_expr;
 
   mutable string _fullname;
 

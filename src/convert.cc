@@ -93,8 +93,7 @@ value_t convert_command(call_scope_t& args) {
       string ref = (xact->has_tag(_("UUID")) ? xact->get_tag(_("UUID"))->to_string()
                                              : sha1sum(reader.get_last_line()));
 
-      checksum_map_t::const_iterator entry = journal.checksum_map.find(ref);
-      if (entry != journal.checksum_map.end()) {
+      if (auto entry = journal.checksum_map.find(ref); entry != journal.checksum_map.end()) {
         INFO(file_context(reader.get_pathname(), reader.get_linenum())
              << " " << "Ignoring known UUID " << ref);
         checked_delete(xact); // ignore it
