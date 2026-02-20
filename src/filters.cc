@@ -1185,12 +1185,12 @@ void by_payee_posts::operator()(post_t& post) {
   if (i == payee_subtotals.end()) {
     payee_subtotals_pair temp(post.payee(),
                               std::shared_ptr<subtotal_posts>(new subtotal_posts(handler, amount_expr)));
-    std::pair<payee_subtotals_map::iterator, bool> result = payee_subtotals.insert(temp);
+    auto [iter, inserted] = payee_subtotals.insert(temp);
 
-    assert(result.second);
-    if (!result.second)
+    assert(inserted);
+    if (!inserted)
       return;
-    i = result.first;
+    i = iter;
   }
 
   (*(*i).second)(post);

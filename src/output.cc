@@ -187,9 +187,9 @@ std::pair<std::size_t, std::size_t> format_accounts::mark_accounts(account_t& ac
   std::size_t to_display = 0;
 
   for (accounts_map::value_type& pair : account.accounts) {
-    std::pair<std::size_t, std::size_t> i = mark_accounts(*pair.second, flat);
-    visited += i.first;
-    to_display += i.second;
+    auto [child_visited, child_to_display] = mark_accounts(*pair.second, flat);
+    visited += child_visited;
+    to_display += child_to_display;
   }
 
 #if DEBUG_ON

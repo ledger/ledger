@@ -97,11 +97,11 @@ commodity_t* commodity_pool_t::alias(const string& name, commodity_t& referent) 
   commodities_map::const_iterator i = commodities.find(referent.base_symbol());
   assert(i != commodities.end());
 
-  std::pair<commodities_map::iterator, bool> result =
+  auto [iter, inserted] =
       commodities.insert(commodities_map::value_type(name, (*i).second));
-  assert(result.second);
+  assert(inserted);
 
-  return (*result.first).second.get();
+  return (*iter).second.get();
 }
 
 commodity_t* commodity_pool_t::create(const string& symbol, const annotation_t& details) {

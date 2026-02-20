@@ -88,8 +88,8 @@ void format_ptree::operator()(post_t& post) {
 
   commodities.insert(commodities_pair(post.amount.commodity().symbol(), &post.amount.commodity()));
 
-  std::pair<std::set<xact_t*>::iterator, bool> result = transactions_set.insert(post.xact);
-  if (result.second) // we haven't seen this transaction before
+  auto [iter, inserted] = transactions_set.insert(post.xact);
+  if (inserted) // we haven't seen this transaction before
     transactions.push_back(post.xact);
 }
 

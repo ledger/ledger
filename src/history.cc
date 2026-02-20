@@ -241,17 +241,17 @@ void commodity_history_impl_t::add_price(const commodity_t& source, const dateti
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*price.commodity().graph_index(), price_graph);
 
-  std::pair<edge_descriptor, bool> e1 = edge(sv, tv, price_graph);
-  if (!e1.second)
-    e1 = add_edge(sv, tv, price_graph);
+  auto [e1_desc, e1_exists] = edge(sv, tv, price_graph);
+  if (!e1_exists)
+    std::tie(e1_desc, e1_exists) = add_edge(sv, tv, price_graph);
 
-  price_map_t& prices(get(ratiomap, e1.first));
+  price_map_t& prices(get(ratiomap, e1_desc));
 
-  std::pair<price_map_t::iterator, bool> result =
+  auto [iter, inserted] =
       prices.insert(price_map_t::value_type(when, price));
-  if (!result.second) {
+  if (!inserted) {
     // There is already an entry for this moment, so update it
-    (*result.first).second = price;
+    iter->second = price;
   }
 }
 
@@ -262,15 +262,15 @@ void commodity_history_impl_t::remove_price(const commodity_t& source, const com
   vertex_descriptor sv = vertex(*source.graph_index(), price_graph);
   vertex_descriptor tv = vertex(*target.graph_index(), price_graph);
 
-  std::pair<Graph::edge_descriptor, bool> e1 = edge(sv, tv, price_graph);
-  if (e1.second) {
-    price_map_t& prices(get(ratiomap, e1.first));
+  auto [e1_desc, e1_exists] = edge(sv, tv, price_graph);
+  if (e1_exists) {
+    price_map_t& prices(get(ratiomap, e1_desc));
 
     // jww (2012-03-04): If it fails, should we give a warning?
     prices.erase(date);
 
     if (prices.empty())
-      remove_edge(e1.first, price_graph);
+      remove_edge(e1_desc, price_graph);
   }
 }
 
@@ -288,10 +288,9 @@ void commodity_history_impl_t::map_prices(function<void(datetime_t, const amount
 
   graph_traits<FGraph>::adjacency_iterator f_vi, f_vend;
   for (boost::tuples::tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
-    std::pair<Graph::edge_descriptor, bool> edgePair = edge(sv, *f_vi, fg);
-    Graph::edge_descriptor edge = edgePair.first;
+    auto [edge_desc, edge_exists] = edge(sv, *f_vi, fg);
 
-    const price_map_t& prices(get(ratiomap, edge));
+    const price_map_t& prices(get(ratiomap, edge_desc));
 
     for (const price_map_t::value_type& pair : prices) {
       const datetime_t& when(pair.first);
@@ -342,13 +341,12 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
 
   graph_traits<FGraph>::adjacency_iterator f_vi, f_vend;
   for (boost::tuples::tie(f_vi, f_vend) = adjacent_vertices(sv, fg); f_vi != f_vend; ++f_vi) {
-    std::pair<Graph::edge_descriptor, bool> edgePair = edge(sv, *f_vi, fg);
-    Graph::edge_descriptor edge = edgePair.first;
+    auto [edge_desc, edge_exists] = edge(sv, *f_vi, fg);
 
     DEBUG("history.find", "u commodity = " << get(namemap, sv)->symbol());
     DEBUG("history.find", "v commodity = " << get(namemap, *f_vi)->symbol());
 
-    const price_point_t& point(get(pricemap, edge));
+    const price_point_t& point(get(pricemap, edge_desc));
 
     if (price.is_null() || point.when > most_recent) {
       most_recent = point.when;
@@ -414,11 +412,8 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
 
   vertex_descriptor v = tv;
   for (vertex_descriptor u = predecessorMap[v]; u != v; v = u, u = predecessorMap[v]) {
-    std::pair<Graph::edge_descriptor, bool> edgePair_uv = edge(u, v, fg);
-    std::pair<Graph::edge_descriptor, bool> edgePair_vu = edge(v, u, fg);
-
-    Graph::edge_descriptor edge_uv = edgePair_uv.first;
-    Graph::edge_descriptor edge_vu = edgePair_vu.first;
+    auto [edge_uv, uv_exists] = edge(u, v, fg);
+    auto [edge_vu, vu_exists] = edge(v, u, fg);
 
     const price_point_t& point_uv(get(pricemap, edge_uv));
     const price_point_t& point_vu(get(pricemap, edge_vu));

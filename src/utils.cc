@@ -133,9 +133,9 @@ inline void add_to_count_map(object_count_map& the_map, const char* name, std::s
     (*k).second.first++;
     (*k).second.second += size;
   } else {
-    std::pair<object_count_map::iterator, bool> result =
+    auto [iter, inserted] =
         the_map.insert(object_count_map::value_type(name, count_size_pair(1, size)));
-    VERIFY(result.second);
+    VERIFY(inserted);
   }
 }
 
