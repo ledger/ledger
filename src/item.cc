@@ -388,8 +388,18 @@ value_t get_comment(item_t& item) {
 }
 
 void item_t::define(const symbol_t::kind_t, const string& name, expr_t::ptr_op_t def) {
-  bind_scope_t bound_scope(*scope_t::default_scope, *this);
-  set_tag(name, def->calc(bound_scope));
+  if (defining_)
+    return;
+  defining_ = true;
+  try {
+    bind_scope_t bound_scope(*scope_t::default_scope, *this);
+    set_tag(name, def->calc(bound_scope));
+    defining_ = false;
+  }
+  catch (...) {
+    defining_ = false;
+    throw;
+  }
 }
 
 expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind, const string& name) {

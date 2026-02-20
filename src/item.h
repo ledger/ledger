@@ -95,12 +95,15 @@ public:
   optional<string> note;
   optional<position_t> pos;
   optional<string_map> metadata;
+  bool defining_;
 
   item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
-      : supports_flags<uint_least16_t>(_flags), _state(UNCLEARED), note(_note), parent(NULL) {
+      : supports_flags<uint_least16_t>(_flags), _state(UNCLEARED), note(_note), parent(NULL),
+        defining_(false) {
     TRACE_CTOR(item_t, "flags_t, const string&");
   }
-  item_t(const item_t& item) : supports_flags<uint_least16_t>(), scope_t(), parent(NULL) {
+  item_t(const item_t& item)
+      : supports_flags<uint_least16_t>(), scope_t(), parent(NULL), defining_(false) {
     copy_details(item);
     TRACE_CTOR(item_t, "copy");
   }
