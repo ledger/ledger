@@ -170,3 +170,7 @@ issue number.
 - Use `./acprep --help` to see all build options
 - All source files live in a flat `src/` directory (no subdirectories)
 - PRs should target `master` (see `CONTRIBUTING.md`)
+
+## Task Master AI Instructions
+**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
+@./.taskmaster/CLAUDE.md

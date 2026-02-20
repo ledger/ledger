@@ -50,10 +50,10 @@ value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs)
 
   switch (type) {
   case BALANCE:
-    data = new balance_t(*boost::get<balance_t*>(rhs.data));
+    data = new balance_t(*std::get<balance_t*>(rhs.data));
     break;
   case SEQUENCE:
-    data = new sequence_t(*boost::get<sequence_t*>(rhs.data));
+    data = new sequence_t(*std::get<sequence_t*>(rhs.data));
     break;
 
   default:

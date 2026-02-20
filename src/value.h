@@ -134,19 +134,19 @@ public:
      * The `type' member holds the value_t::type_t value representing
      * the type of the object stored.
      */
-    variant<bool,               // BOOLEAN
-            datetime_t,         // DATETIME
-            date_t,             // DATE
-            long,               // INTEGER
-            amount_t,           // AMOUNT
-            balance_t*,         // BALANCE
-            commodity_t const*, // COMMODITY
-            string,             // STRING
-            mask_t,             // MASK
-            sequence_t*,        // SEQUENCE
-            scope_t*,           // SCOPE
-            std::any            // ANY
-            >
+    std::variant<bool,               // BOOLEAN
+                 datetime_t,         // DATETIME
+                 date_t,             // DATE
+                 long,               // INTEGER
+                 amount_t,           // AMOUNT
+                 balance_t*,         // BALANCE
+                 commodity_t const*, // COMMODITY
+                 string,             // STRING
+                 mask_t,             // MASK
+                 sequence_t*,        // SEQUENCE
+                 scope_t*,           // SCOPE
+                 std::any            // ANY
+                 >
         data;
 
     type_t type;
@@ -221,10 +221,10 @@ public:
       case VOID:
         return;
       case BALANCE:
-        checked_delete(boost::get<balance_t*>(data));
+        checked_delete(std::get<balance_t*>(data));
         break;
       case SEQUENCE:
-        checked_delete(boost::get<sequence_t*>(data));
+        checked_delete(std::get<sequence_t*>(data));
         break;
       default:
         break;
@@ -547,11 +547,11 @@ public:
   bool& as_boolean_lval() {
     VERIFY(is_boolean());
     _dup();
-    return boost::get<bool>(storage->data);
+    return std::get<bool>(storage->data);
   }
   const bool& as_boolean() const {
     VERIFY(is_boolean());
-    return boost::get<bool>(storage->data);
+    return std::get<bool>(storage->data);
   }
   void set_boolean(const bool val) {
     set_type(BOOLEAN);
@@ -562,11 +562,11 @@ public:
   datetime_t& as_datetime_lval() {
     VERIFY(is_datetime());
     _dup();
-    return boost::get<datetime_t>(storage->data);
+    return std::get<datetime_t>(storage->data);
   }
   const datetime_t& as_datetime() const {
     VERIFY(is_datetime());
-    return boost::get<datetime_t>(storage->data);
+    return std::get<datetime_t>(storage->data);
   }
   void set_datetime(const datetime_t& val) {
     set_type(DATETIME);
@@ -577,11 +577,11 @@ public:
   date_t& as_date_lval() {
     VERIFY(is_date());
     _dup();
-    return boost::get<date_t>(storage->data);
+    return std::get<date_t>(storage->data);
   }
   const date_t& as_date() const {
     VERIFY(is_date());
-    return boost::get<date_t>(storage->data);
+    return std::get<date_t>(storage->data);
   }
   void set_date(const date_t& val) {
     set_type(DATE);
@@ -592,11 +592,11 @@ public:
   long& as_long_lval() {
     VERIFY(is_long());
     _dup();
-    return boost::get<long>(storage->data);
+    return std::get<long>(storage->data);
   }
   const long& as_long() const {
     VERIFY(is_long());
-    return boost::get<long>(storage->data);
+    return std::get<long>(storage->data);
   }
   void set_long(const long val) {
     set_type(INTEGER);
@@ -607,11 +607,11 @@ public:
   amount_t& as_amount_lval() {
     VERIFY(is_amount());
     _dup();
-    return boost::get<amount_t>(storage->data);
+    return std::get<amount_t>(storage->data);
   }
   const amount_t& as_amount() const {
     VERIFY(is_amount());
-    return boost::get<amount_t>(storage->data);
+    return std::get<amount_t>(storage->data);
   }
   void set_amount(const amount_t& val) {
     VERIFY(val.valid());
@@ -623,11 +623,11 @@ public:
   balance_t& as_balance_lval() {
     VERIFY(is_balance());
     _dup();
-    return *boost::get<balance_t*>(storage->data);
+    return *std::get<balance_t*>(storage->data);
   }
   const balance_t& as_balance() const {
     VERIFY(is_balance());
-    return *boost::get<balance_t*>(storage->data);
+    return *std::get<balance_t*>(storage->data);
   }
   void set_balance(const balance_t& val) {
     VERIFY(val.valid());
@@ -638,7 +638,7 @@ public:
   bool is_commodity() const { return is_type(COMMODITY); }
   const commodity_t& as_commodity() const {
     VERIFY(is_commodity());
-    return *boost::get<commodity_t const*>(storage->data);
+    return *std::get<commodity_t const*>(storage->data);
   }
   void set_commodity(const commodity_t& val);
 
@@ -646,34 +646,34 @@ public:
   string& as_string_lval() {
     VERIFY(is_string());
     _dup();
-    return boost::get<string>(storage->data);
+    return std::get<string>(storage->data);
   }
   const string& as_string() const {
     VERIFY(is_string());
-    return boost::get<string>(storage->data);
+    return std::get<string>(storage->data);
   }
   void set_string(const string& val = "") {
     set_type(STRING);
     storage->data = val;
-    VERIFY(boost::get<string>(storage->data) == val);
+    VERIFY(std::get<string>(storage->data) == val);
   }
   void set_string(const char* val = "") {
     set_type(STRING);
     storage->data = string(val);
-    VERIFY(boost::get<string>(storage->data) == val);
+    VERIFY(std::get<string>(storage->data) == val);
   }
 
   bool is_mask() const { return is_type(MASK); }
   mask_t& as_mask_lval() {
     VERIFY(is_mask());
     _dup();
-    VERIFY(boost::get<mask_t>(storage->data).valid());
-    return boost::get<mask_t>(storage->data);
+    VERIFY(std::get<mask_t>(storage->data).valid());
+    return std::get<mask_t>(storage->data);
   }
   const mask_t& as_mask() const {
     VERIFY(is_mask());
-    VERIFY(boost::get<mask_t>(storage->data).valid());
-    return boost::get<mask_t>(storage->data);
+    VERIFY(std::get<mask_t>(storage->data).valid());
+    return std::get<mask_t>(storage->data);
   }
   void set_mask(const string& val) {
     set_type(MASK);
@@ -688,11 +688,11 @@ public:
   sequence_t& as_sequence_lval() {
     VERIFY(is_sequence());
     _dup();
-    return *boost::get<sequence_t*>(storage->data);
+    return *std::get<sequence_t*>(storage->data);
   }
   const sequence_t& as_sequence() const {
     VERIFY(is_sequence());
-    return *boost::get<sequence_t*>(storage->data);
+    return *std::get<sequence_t*>(storage->data);
   }
   void set_sequence(const sequence_t& val) {
     set_type(SEQUENCE);
@@ -705,7 +705,7 @@ public:
   bool is_scope() const { return is_type(SCOPE); }
   scope_t* as_scope() const {
     VERIFY(is_scope());
-    return boost::get<scope_t*>(storage->data);
+    return std::get<scope_t*>(storage->data);
   }
   void set_scope(scope_t* val) {
     set_type(SCOPE);
@@ -721,12 +721,12 @@ public:
   bool is_any() const { return is_type(ANY); }
   template <typename T>
   bool is_any() const {
-    return (is_type(ANY) && boost::get<std::any>(storage->data).type() == typeid(T));
+    return (is_type(ANY) && std::get<std::any>(storage->data).type() == typeid(T));
   }
   std::any& as_any_lval() {
     VERIFY(is_any());
     _dup();
-    return boost::get<std::any>(storage->data);
+    return std::get<std::any>(storage->data);
   }
   template <typename T>
   T& as_any_lval() {
@@ -734,7 +734,7 @@ public:
   }
   const std::any& as_any() const {
     VERIFY(is_any());
-    return boost::get<std::any>(storage->data);
+    return std::get<std::any>(storage->data);
   }
   template <typename T>
   const T& as_any() const {
