@@ -41,8 +41,7 @@
  */
 #pragma once
 
-namespace ledger {
-namespace flags {
+namespace ledger::flags {
 
 template <typename T = boost::uint_least8_t, typename U = T>
 class supports_flags {
@@ -141,5 +140,4 @@ public:
   void drop_flags(const flags_t arg) { _flags.drop_flags(arg); }
 };
 
-} // namespace flags
-} // namespace ledger
+} // namespace ledger::flags

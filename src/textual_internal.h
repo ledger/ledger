@@ -53,8 +53,7 @@
 #include "timelog.h"
 #endif
 
-namespace ledger {
-namespace detail {
+namespace ledger::detail {
 
 typedef std::pair<commodity_t*, amount_t> fixed_rate_t;
 
@@ -202,5 +201,4 @@ void parse_amount_expr(std::istream& in, scope_t& scope, post_t& post, amount_t&
                        const parse_flags_t& flags = PARSE_DEFAULT, const bool defer_expr = false,
                        optional<expr_t>* amount_expr = NULL);
 
-} // namespace detail
-} // namespace ledger
+} // namespace ledger::detail
