@@ -281,14 +281,14 @@ void export_journal() {
 
       .def("__iter__", boost::python::range<return_internal_reference<>>(&journal_t::xacts_begin,
                                                                          &journal_t::xacts_end))
-      .def("xacts", boost::python::range<return_internal_reference<>>(&journal_t::xacts_begin,
-                                                                      &journal_t::xacts_end))
-      .def("auto_xacts", boost::python::range<return_internal_reference<>>(
-                             &journal_t::auto_xacts_begin, &journal_t::auto_xacts_end))
-      .def("period_xacts", boost::python::range<return_internal_reference<>>(
-                               &journal_t::period_xacts_begin, &journal_t::period_xacts_end))
-      .def("sources", boost::python::range<return_internal_reference<>>(&journal_t::sources_begin,
-                                                                        &journal_t::sources_end))
+      .add_property("xacts", boost::python::range<return_internal_reference<>>(&journal_t::xacts_begin,
+                                                                               &journal_t::xacts_end))
+      .add_property("auto_xacts", boost::python::range<return_internal_reference<>>(
+                                      &journal_t::auto_xacts_begin, &journal_t::auto_xacts_end))
+      .add_property("period_xacts", boost::python::range<return_internal_reference<>>(
+                                        &journal_t::period_xacts_begin, &journal_t::period_xacts_end))
+      .add_property("sources", boost::python::range<return_internal_reference<>>(&journal_t::sources_begin,
+                                                                                 &journal_t::sources_end))
 #if 0
     .def("read", py_read)
 #endif

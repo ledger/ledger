@@ -32,6 +32,15 @@ class TransactionTestCase(unittest.TestCase):
         self.assertEqual(len(x0_posts), 4)
         self.assertEqual(len(x1_posts), 0)
 
+    def testPostsProperty(self):
+        """Test that xact.posts is iterable as a property (GitHub issue #682)."""
+        xacts = [xact for xact in self.journal]
+        # posts should be iterable directly without calling it as a method
+        posts = [post for post in xacts[0].posts]
+        self.assertEqual(len(posts), 2)
+        self.assertEqual(str(posts[0].account), "Expenses:Food")
+        self.assertEqual(str(posts[1].account), "Assets:Cash")
+
     def testSetNote(self):
         xacts = [xact for xact in self.journal]
         self.assertEqual(xacts[0].note, 'this is a note')
