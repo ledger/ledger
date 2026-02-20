@@ -51,7 +51,7 @@
  *
  * Ledger's reporting engine processes postings through a chain of handler
  * objects, each implementing the Chain of Responsibility pattern.  Every
- * handler wraps the next handler in the chain via a shared_ptr; when a
+ * handler wraps the next handler in the chain via a std::shared_ptr; when a
  * posting is passed to operator(), the handler may transform, filter,
  * accumulate, or forward it to the next handler.
  *
@@ -70,7 +70,7 @@
  *   template <typename T>
  *   class item_handler : public noncopyable {
  *   protected:
- *     shared_ptr<item_handler> handler;  // next handler in chain
+ *     std::shared_ptr<item_handler> handler;  // next handler in chain
  *   public:
  *     virtual void flush();
  *     virtual void operator()(T& item);
@@ -79,8 +79,8 @@
  * @endcode
  *
  * Two type aliases are provided:
- * - `post_handler_ptr = shared_ptr<item_handler<post_t>>`
- * - `acct_handler_ptr = shared_ptr<item_handler<account_t>>`
+ * - `post_handler_ptr = std::shared_ptr<item_handler<post_t>>`
+ * - `acct_handler_ptr = std::shared_ptr<item_handler<account_t>>`
  *
  * @section handler_inventory Complete Handler Inventory
  *
@@ -936,8 +936,8 @@ public:
 };
 
 class by_payee_posts : public item_handler<post_t> {
-  typedef std::map<string, shared_ptr<subtotal_posts>> payee_subtotals_map;
-  typedef std::pair<string, shared_ptr<subtotal_posts>> payee_subtotals_pair;
+  typedef std::map<string, std::shared_ptr<subtotal_posts>> payee_subtotals_map;
+  typedef std::pair<string, std::shared_ptr<subtotal_posts>> payee_subtotals_pair;
 
   expr_t& amount_expr;
   payee_subtotals_map payee_subtotals;

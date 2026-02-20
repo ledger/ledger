@@ -119,16 +119,16 @@ protected:
     virtual ~base_t() { TRACE_DTOR(commodity_t::base_t); }
   };
 
-  shared_ptr<base_t> base;
+  std::shared_ptr<base_t> base;
 
   commodity_pool_t* parent_;
   optional<string> qualified_symbol;
   bool annotated;
 
-  explicit commodity_t(commodity_pool_t* _parent, const shared_ptr<base_t>& _base)
+  explicit commodity_t(commodity_pool_t* _parent, const std::shared_ptr<base_t>& _base)
       : delegates_flags<uint_least16_t>(*_base.get()), base(_base), parent_(_parent),
         annotated(false) {
-    TRACE_CTOR(commodity_t, "commodity_pool_t *, shared_ptr<base_t>");
+    TRACE_CTOR(commodity_t, "commodity_pool_t *, std::shared_ptr<base_t>");
   }
 
 public:

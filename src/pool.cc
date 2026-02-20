@@ -40,7 +40,7 @@
 
 namespace ledger {
 
-shared_ptr<commodity_pool_t> commodity_pool_t::current_pool;
+std::shared_ptr<commodity_pool_t> commodity_pool_t::current_pool;
 
 commodity_pool_t::commodity_pool_t()
     : default_commodity(NULL), keep_base(false), quote_leeway(86400), get_quotes(false),
@@ -51,8 +51,8 @@ commodity_pool_t::commodity_pool_t()
 }
 
 commodity_t* commodity_pool_t::create(const string& symbol) {
-  shared_ptr<commodity_t::base_t> base_commodity(new commodity_t::base_t(symbol));
-  shared_ptr<commodity_t> commodity(new commodity_t(this, base_commodity));
+  std::shared_ptr<commodity_t::base_t> base_commodity(new commodity_t::base_t(symbol));
+  std::shared_ptr<commodity_t> commodity(new commodity_t(this, base_commodity));
 
   DEBUG("pool.commodities", "Creating base commodity " << symbol);
 
@@ -174,7 +174,7 @@ annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotat
   assert(!comm.has_annotation());
   assert(details);
 
-  shared_ptr<annotated_commodity_t> commodity(new annotated_commodity_t(&comm, details));
+  std::shared_ptr<annotated_commodity_t> commodity(new annotated_commodity_t(&comm, details));
 
   comm.add_flags(COMMODITY_SAW_ANNOTATED);
   if (details.price) {

@@ -43,7 +43,7 @@ namespace ledger {
 using namespace python;
 using namespace boost::python;
 
-shared_ptr<python_interpreter_t> python_session;
+std::shared_ptr<python_interpreter_t> python_session;
 
 char* argv0;
 
@@ -82,7 +82,7 @@ void initialize_for_python() {
 
   if (!scope_t::default_scope) {
     python_session.reset(new ledger::python_interpreter_t);
-    shared_ptr<session_t> session_ptr = python_session;
+    std::shared_ptr<session_t> session_ptr = python_session;
     scope_t::default_scope = new report_t(*session_ptr);
   }
 }
@@ -377,7 +377,7 @@ expr_t::ptr_op_t python_module_t::lookup(const symbol_t::kind_t kind, const stri
     if (module_globals.has_key(name.c_str())) {
       if (object obj = module_globals.get(name.c_str())) {
         if (PyModule_Check(obj.ptr())) {
-          shared_ptr<python_module_t> mod;
+          std::shared_ptr<python_module_t> mod;
           python_module_map_t::iterator i = python_session->modules_map.find(obj.ptr());
           if (i == python_session->modules_map.end()) {
             mod.reset(new python_module_t(name, obj));

@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(testIgnorePostsDiscardsAll)
 {
   // ignore_posts does not forward anything; a downstream collector
   // should receive nothing when chained after ignore_posts
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   ignore_posts ignorer;
 
   account_t* acct = make_account("Assets:Cash");
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(testIgnorePostsDoesNotThrow)
 BOOST_AUTO_TEST_CASE(testFilterPostsAlwaysTrue)
 {
   // A predicate that always evaluates to true passes all posts through
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   predicate_t pred("1", keep_details_t());
   filter_posts filter(collector, pred, report);
 
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(testFilterPostsAlwaysTrue)
 BOOST_AUTO_TEST_CASE(testFilterPostsAlwaysFalse)
 {
   // A predicate that always evaluates to false discards all posts
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   predicate_t pred("0", keep_details_t());
   filter_posts filter(collector, pred, report);
 
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(testFilterPostsAlwaysFalse)
 BOOST_AUTO_TEST_CASE(testFilterPostsByAccount)
 {
   // A predicate filtering by account name only passes matching posts
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   predicate_t pred("account =~ /Expenses/", keep_details_t());
   filter_posts filter(collector, pred, report);
 
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(testFilterPostsByAccount)
 BOOST_AUTO_TEST_CASE(testFilterPostsSetsMatchFlag)
 {
   // Posts that match the filter predicate should have POST_EXT_MATCHES set
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   predicate_t pred("1", keep_details_t());
   filter_posts filter(collector, pred, report);
 
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(testFilterPostsSetsMatchFlag)
 BOOST_AUTO_TEST_CASE(testSortPostsEmpty)
 {
   // Sorting an empty set produces an empty output
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   sort_posts sorter(collector, expr_t("date"), report);
 
   sorter.flush();
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(testSortPostsEmpty)
 BOOST_AUTO_TEST_CASE(testSortPostsSingle)
 {
   // A single post passes through unchanged
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   sort_posts sorter(collector, expr_t("date"), report);
 
   account_t* acct = make_account("Expenses");
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(testSortPostsSingle)
 BOOST_AUTO_TEST_CASE(testSortPostsByDate)
 {
   // Posts from different transactions should be sorted by date
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   sort_posts sorter(collector, expr_t("date"), report);
 
   account_t* acct = make_account("Expenses");
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(testSortPostsByDate)
 BOOST_AUTO_TEST_CASE(testSortPostsClear)
 {
   // After clear(), accumulated posts are discarded
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   sort_posts sorter(collector, expr_t("date"), report);
 
   account_t* acct = make_account("Expenses");
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(testSortPostsClear)
 BOOST_AUTO_TEST_CASE(testTruncateXactsHeadOne)
 {
   // head_count=1 returns only the first transaction's posts
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   truncate_xacts truncator(collector, /*head_count=*/1, /*tail_count=*/0);
 
   account_t* acct = make_account("Expenses");
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(testTruncateXactsHeadOne)
 BOOST_AUTO_TEST_CASE(testTruncateXactsTailOne)
 {
   // tail_count=1 returns only the last transaction's posts
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   truncate_xacts truncator(collector, /*head_count=*/0, /*tail_count=*/1);
 
   account_t* acct = make_account("Expenses");
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(testTruncateXactsTailOne)
 BOOST_AUTO_TEST_CASE(testTruncateXactsHeadLargerThanInput)
 {
   // head_count larger than total xacts returns all posts
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   truncate_xacts truncator(collector, /*head_count=*/10, /*tail_count=*/0);
 
   account_t* acct = make_account("Expenses");
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(testTruncateXactsHeadLargerThanInput)
 BOOST_AUTO_TEST_CASE(testTruncateXactsHeadAndTailZero)
 {
   // head_count=0 and tail_count=0 produces no output
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   truncate_xacts truncator(collector, /*head_count=*/0, /*tail_count=*/0);
 
   account_t* acct = make_account("Expenses");
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsAccountChanged)
 {
   // After anonymization, the post's account name should differ from
   // the original
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   anonymize_posts anonymizer(collector);
 
   account_t* expenses = make_account("Expenses:Food:Groceries");
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsPayeeChanged)
 {
   // After anonymization, the transaction payee should differ from
   // the original
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   anonymize_posts anonymizer(collector);
 
   account_t* expenses = make_account("Expenses:Dining");
@@ -534,7 +534,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsPayeeChanged)
 BOOST_AUTO_TEST_CASE(testAnonymizePostsFlagSet)
 {
   // Anonymized posts should have the POST_ANONYMIZED flag set
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   anonymize_posts anonymizer(collector);
 
   account_t* expenses = make_account("Expenses:Transport");
@@ -582,9 +582,9 @@ BOOST_AUTO_TEST_CASE(testPushToPostsList)
 BOOST_AUTO_TEST_CASE(testFilterThenCollect)
 {
   // Verify chaining: filter_posts -> collect_posts
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   predicate_t pred("1", keep_details_t());
-  shared_ptr<filter_posts> filter(new filter_posts(collector, pred, report));
+  std::shared_ptr<filter_posts> filter(new filter_posts(collector, pred, report));
 
   account_t* acct = make_account("Expenses");
   xact_t* xact = make_xact("Test", date_t(2024, 8, 1));
@@ -599,9 +599,9 @@ BOOST_AUTO_TEST_CASE(testFilterThenCollect)
 BOOST_AUTO_TEST_CASE(testSortThenFilterThenCollect)
 {
   // Verify multi-stage chaining: sort_posts -> filter_posts -> collect_posts
-  shared_ptr<collect_posts> collector(new collect_posts);
+  std::shared_ptr<collect_posts> collector(new collect_posts);
   predicate_t pred("1", keep_details_t());
-  shared_ptr<filter_posts> filter(new filter_posts(collector, pred, report));
+  std::shared_ptr<filter_posts> filter(new filter_posts(collector, pred, report));
   sort_posts sorter(filter, expr_t("date"), report);
 
   account_t* acct = make_account("Expenses");

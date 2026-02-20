@@ -67,17 +67,17 @@ public:
   virtual string description() override { return module_name; }
 };
 
-typedef std::map<PyObject*, shared_ptr<python_module_t>> python_module_map_t;
+typedef std::map<PyObject*, std::shared_ptr<python_module_t>> python_module_map_t;
 
 class python_interpreter_t : public session_t {
 public:
   bool is_initialized;
 
-  shared_ptr<python_module_t> main_module;
+  std::shared_ptr<python_module_t> main_module;
   python_module_map_t modules_map;
 
-  shared_ptr<python_module_t> import_module(const string& name) {
-    shared_ptr<python_module_t> mod(new python_module_t(name));
+  std::shared_ptr<python_module_t> import_module(const string& name) {
+    std::shared_ptr<python_module_t> mod(new python_module_t(name));
     if (name != "__main__")
       main_module->define_global(name, mod->module_object);
     return mod;
@@ -133,7 +133,7 @@ public:
   OPTION_(python_interpreter_t, import_, DO_(str) { parent->import_option(str); });
 };
 
-extern shared_ptr<python_interpreter_t> python_session;
+extern std::shared_ptr<python_interpreter_t> python_session;
 
 } // namespace ledger
 

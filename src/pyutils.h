@@ -175,4 +175,4 @@ namespace python {
 } // namespace python
 } // namespace boost
 
-// boost::python::register_ptr_to_python< boost::shared_ptr<Base> >();
+// boost::python::register_ptr_to_python< std::shared_ptr<Base> >();

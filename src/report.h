@@ -1021,13 +1021,13 @@ public:
 template <class Type = post_t, class handler_ptr = post_handler_ptr,
           void (report_t::*report_method)(handler_ptr) = &report_t::posts_report>
 class reporter {
-  shared_ptr<item_handler<Type>> handler;
+  std::shared_ptr<item_handler<Type>> handler;
 
   report_t& report;
   string whence;
 
 public:
-  reporter(shared_ptr<item_handler<Type>> _handler, report_t& _report, const string& _whence)
+  reporter(std::shared_ptr<item_handler<Type>> _handler, report_t& _report, const string& _whence)
       : handler(_handler), report(_report), whence(_whence) {
     TRACE_CTOR(reporter, "item_handler<Type>, report_t&, string");
   }

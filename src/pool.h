@@ -64,8 +64,8 @@ public:
    * explicitly by calling the create methods of commodity_pool_t, or
    * implicitly by parsing a commoditized amount.
    */
-  typedef std::map<string, shared_ptr<commodity_t>> commodities_map;
-  typedef std::map<std::pair<string, annotation_t>, shared_ptr<annotated_commodity_t>>
+  typedef std::map<string, std::shared_ptr<commodity_t>> commodities_map;
+  typedef std::map<std::pair<string, annotation_t>, std::shared_ptr<annotated_commodity_t>>
       annotated_commodities_map;
 
   commodities_map commodities;
@@ -83,7 +83,7 @@ public:
   function<optional<price_point_t>(commodity_t& commodity, const commodity_t* in_terms_of)>
       get_commodity_quote;
 
-  static shared_ptr<commodity_pool_t> current_pool;
+  static std::shared_ptr<commodity_pool_t> current_pool;
 
   explicit commodity_pool_t();
   virtual ~commodity_pool_t() { TRACE_DTOR(commodity_pool_t); }

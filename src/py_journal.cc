@@ -169,14 +169,14 @@ struct collector_wrapper {
   }
 };
 
-shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& query) {
+std::shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& query) {
   if (journal.has_xdata()) {
     PyErr_SetString(PyExc_RuntimeError, _("Cannot have more than one active journal query"));
     throw_error_already_set();
   }
 
   report_t& current_report(downcast<report_t>(*scope_t::default_scope));
-  shared_ptr<collector_wrapper> coll(new collector_wrapper(journal, current_report));
+  std::shared_ptr<collector_wrapper> coll(new collector_wrapper(journal, current_report));
 
   unique_ptr<journal_t> save_journal(coll->report.session.journal.release());
   coll->report.session.journal.reset(&coll->journal);
@@ -218,9 +218,9 @@ EXC_TRANSLATOR(parse_error)
 EXC_TRANSLATOR(error_count)
 
 void export_journal() {
-  class_<item_handler<post_t>, shared_ptr<item_handler<post_t>>, boost::noncopyable>("PostHandler");
+  class_<item_handler<post_t>, std::shared_ptr<item_handler<post_t>>, boost::noncopyable>("PostHandler");
 
-  class_<collector_wrapper, shared_ptr<collector_wrapper>, boost::noncopyable>(
+  class_<collector_wrapper, std::shared_ptr<collector_wrapper>, boost::noncopyable>(
       "PostCollectorWrapper", no_init)
       .def("__len__", &collector_wrapper::length)
       .def("__getitem__", posts_getitem, return_internal_reference<>())
