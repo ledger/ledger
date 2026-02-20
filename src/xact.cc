@@ -909,6 +909,20 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
           }
 
           new_post->add_flags(ITEM_GENERATED);
+          // If the target account is named "Unknown", try to resolve it using
+          // the payee of the originating transaction.  This mirrors the lookup
+          // in journal_t::register_account, but here we have access to
+          // initial_post->xact where the payee is available.  The new post has
+          // not yet been linked to a transaction at this point, so
+          // register_account cannot perform the lookup on its own.
+          if (account->name == _("Unknown") && initial_post->xact) {
+            for (account_mapping_t& value : journal->payees_for_unknown_accounts) {
+              if (value.first.match(initial_post->xact->payee)) {
+                account = value.second;
+                break;
+              }
+            }
+          }
           new_post->account =
               journal->register_account(account->fullname(), new_post.get(), journal->master);
 
