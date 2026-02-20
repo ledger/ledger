@@ -287,10 +287,9 @@ void journal_t::register_metadata(const string& key, const value_t& value,
   }
 
   if (!value.is_null() && context.index() != 0) {
-    std::pair<tag_check_exprs_map::iterator, tag_check_exprs_map::iterator> range =
-        tag_check_exprs.equal_range(key);
+    auto [range_begin, range_end] = tag_check_exprs.equal_range(key);
 
-    for (tag_check_exprs_map::iterator i = range.first; i != range.second; ++i) {
+    for (auto i = range_begin; i != range_end; ++i) {
       bind_scope_t bound_scope(*current_context->scope,
                                context.index() == 1
                                    ? static_cast<scope_t&>(*std::get<xact_t*>(context))
@@ -365,9 +364,9 @@ bool journal_t::add_xact(xact_t* xact) {
   // applied to it.
   if (std::optional<value_t> ref = xact->get_tag(_("UUID"))) {
     std::string uuid = ref->to_string();
-    std::pair<checksum_map_t::iterator, bool> result =
+    auto [iter, inserted] =
         checksum_map.insert(checksum_map_t::value_type(uuid, xact));
-    if (!result.second) {
+    if (!inserted) {
       // This UUID has been seen before; apply any postings which the
       // earlier version may have deferred.
       for (post_t* post : xact->posts) {
@@ -383,7 +382,7 @@ bool journal_t::add_xact(xact_t* xact) {
         }
       }
 
-      xact_t* other = (*result.first).second;
+      xact_t* other = iter->second;
 
       // Copy the two lists of postings (which should be relatively
       // short), and make sure that the intersection is the empty set

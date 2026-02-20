@@ -437,10 +437,10 @@ void instance_t::account_alias_directive(account_t* account, string alias) {
   if (alias == account->fullname()) {
     throw_(parse_error, _f("Illegal alias %1%=%2%") % alias % account->fullname());
   }
-  std::pair<accounts_map::iterator, bool> result =
+  auto [iter, inserted] =
       context.journal->account_aliases.insert(accounts_map::value_type(alias, account));
-  if (!result.second)
-    (*result.first).second = account;
+  if (!inserted)
+    iter->second = account;
 }
 
 void instance_t::alias_directive(char* line) {

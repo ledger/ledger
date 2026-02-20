@@ -44,15 +44,16 @@ void symbol_scope_t::define(const symbol_t::kind_t kind, const string& name, exp
   if (!symbols)
     symbols = symbol_map();
 
-  std::pair<symbol_map::iterator, bool> result =
+  auto [iter, inserted] =
       symbols->insert(symbol_map::value_type(symbol_t(kind, name, def), def));
-  if (!result.second) {
-    symbol_map::iterator i = symbols->find(symbol_t(kind, name));
+  if (!inserted) {
+    auto i = symbols->find(symbol_t(kind, name));
     assert(i != symbols->end());
     symbols->erase(i);
 
-    result = symbols->insert(symbol_map::value_type(symbol_t(kind, name, def), def));
-    if (!result.second)
+    auto [iter2, inserted2] =
+        symbols->insert(symbol_map::value_type(symbol_t(kind, name, def), def));
+    if (!inserted2)
       throw_(compile_error, _f("Redefinition of '%1%' in the same scope") % name);
   }
 }
