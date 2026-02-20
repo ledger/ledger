@@ -208,8 +208,8 @@ if(SKBUILD)
   # DESTDIR / CMAKE_INSTALL_PREFIX to the wheel's site-packages directory.
   install(TARGETS ledger DESTINATION .)
 else()
-
-if(BUILD_LIBRARY)set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+  if(BUILD_LIBRARY)
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
     add_library(libledger SHARED ${LEDGER_SOURCES})
     add_ledger_library_dependencies(libledger)
     set_target_properties(libledger PROPERTIES
@@ -259,13 +259,13 @@ if(BUILD_LIBRARY)set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTAL
       else()
         set(_ledger_python_module_name "ledger${CMAKE_SHARED_LIBRARY_SUFFIX}")
       endif()
-  
+
       # Allow packagers to override where the Python module is installed.
       # By default this uses Python's site-packages, but systems like Homebrew
       # may need to install under CMAKE_INSTALL_PREFIX instead.
       set(LEDGER_PYTHON_INSTALL_DIR "${Python_SITEARCH}" CACHE PATH
         "Directory to install the ledger Python module into")
-  
+
       # FIXME: symlink would be sufficient:
       # maybe using install(CODE "...") and
       # execute_process(COMMAND "${CMAKE_COMMAND}" -E create_symlink ...).
