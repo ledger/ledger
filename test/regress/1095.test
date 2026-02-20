@@ -1,0 +1,44 @@
+; Test that -b MM/DD without a year rolls back to the previous year when the
+; specified date would otherwise fall in the future.  GitHub issue #1095.
+
+2014/10/15 Q4 2014
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2015/01/15 Q1 2015 early
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2015/02/10 Q1 2015 mid
+    Expenses:Food    $25.00
+    Assets:Cash
+
+; With --now 2015/02/19, October is in the future relative to February.
+; -b 10/01 should therefore resolve to 2014/10/01, not 2015/10/01.
+test reg --now 2015/02/19 -b 10/01
+14-Oct-15 Q4 2014               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+15-Jan-15 Q1 2015 early         Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+15-Feb-10 Q1 2015 mid           Expenses:Food                $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+end test
+
+; With --now 2015/02/19, January is in the past relative to February.
+; -b 01/01 should resolve to 2015/01/01 (current year, not rolled back).
+test reg --now 2015/02/19 -b 01/01
+15-Jan-15 Q1 2015 early         Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+15-Feb-10 Q1 2015 mid           Expenses:Food                $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+end test
+
+; With --now 2015/02/19, an explicit year should never be rolled back.
+test reg --now 2015/02/19 -b 2014/10/01
+14-Oct-15 Q4 2014               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+15-Jan-15 Q1 2015 early         Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+15-Feb-10 Q1 2015 mid           Expenses:Food                $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+end test
