@@ -9860,8 +9860,8 @@ Here is how you would traverse all the postings in your data file:
 @smallexample
 import ledger
 
-for xact in ledger.read_journal("sample.dat").xacts():
-    for post in xact.posts():
+for xact in ledger.read_journal("sample.dat").xacts:
+    for post in xact.posts:
         print "Transferring %s to/from %s" % (post.amount, post.account)
 @end smallexample
 
@@ -9919,7 +9919,7 @@ looking at its @code{xact} member:
 last_xact = None
 for post in ledger.read_journal("sample.dat").query(""):
     if post.xact != last_xact:
-        for post in post.xact.posts():
+        for post in post.xact.posts:
             print "Transferring %s to/from %s" % (post.amount,
             post.account)
         last_xact = post.xact

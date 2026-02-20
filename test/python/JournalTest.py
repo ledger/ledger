@@ -23,6 +23,27 @@ class JournalTestCase(unittest.TestCase):
             self.assertEqual(str(post.account), "Expenses:Food")
             self.assertEqual(post.amount, Amount("$21.34"))
 
+    def testXactsProperty(self):
+        """Test that journal.xacts is iterable as a property (GitHub issue #682)."""
+        journal = read_journal_from_string("""
+2012-03-01 KFC
+    Expenses:Food      $21.34
+    Assets:Cash
+""")
+        # xacts should be iterable directly without calling it as a method
+        xacts = [xact for xact in journal.xacts]
+        self.assertEqual(len(xacts), 1)
+        self.assertEqual(xacts[0].payee, "KFC")
+
+        # posts should be iterable directly from xact.posts (no parentheses)
+        posts = [post for post in xacts[0].posts]
+        self.assertEqual(len(posts), 2)
+
+        # post.xact.posts should also be iterable directly (the original bug)
+        for post in journal.query("food"):
+            sibling_posts = [p for p in post.xact.posts]
+            self.assertEqual(len(sibling_posts), 2)
+
     def testParseError(self):
         # TODO: ledger spits out parse errors to standard out.
         # This should not happen, especially when the error

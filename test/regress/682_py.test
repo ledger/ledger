@@ -1,0 +1,6 @@
+test python test/regress/682.py
+$10.00 Expenses:Food
+$-10.00 Assets:Cash
+via xact: $10.00 Expenses:Food
+via xact: $-10.00 Assets:Cash
+end test
