@@ -37,6 +37,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <sstream>
 #include <string>
 
 using namespace ledger;
@@ -69,8 +70,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
 
     parse_context_stack_t context_stack;
     context_stack.push(
-        shared_ptr<std::istream>(new std::istringstream(input)),
-        filesystem::current_path());
+        std::make_shared<std::istringstream>(input),
+        std::filesystem::current_path());
     parse_context_t& context = context_stack.get_current();
     context.journal = &journal;
     context.master = journal.master;
