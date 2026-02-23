@@ -8563,7 +8563,11 @@ A posting's date, as the number of seconds past the epoch.  This
 is always ``today'' for an account.
 
 @item aux_date
-A posting's aux date
+A posting's aux date (also called effective date).  This is the
+secondary date specified after @samp{=} in a transaction header, e.g.,
+@samp{2020/10/01=2020/10/02}.  Returns an empty value for postings
+that have no auxiliary date.  Can be used in value expressions to
+filter by auxiliary date; @pxref{Complex expressions} for examples.
 
 @item a
 @itemx amount
@@ -8733,6 +8737,19 @@ Useful for specifying a date in plain terms.  For example, you could say
 brackets for more sophisticated date filtering.  For example,
 @samp{date > [last month]} or @samp{date < [60 days hence]}.  See
 @ref{Period Expressions} for a complete list of available date keywords.
+
+@item expr aux_date >= [DATE]
+Filter postings based on their auxiliary date (effective date).  Since
+not all postings have an auxiliary date, combine with a null check using
+@samp{and}: @samp{aux_date and aux_date >= [2020/10/01]}.  This avoids
+errors when comparing against postings without an auxiliary date.
+
+@smallexample @c command:validate
+$ ledger reg -l "aux_date and aux_date >= [2020/10/01]"
+@end smallexample
+
+Any comparison operator can be used with @samp{aux_date}: @samp{<},
+@samp{<=}, @samp{>}, @samp{>=}, @samp{==}.  @xref{Auxiliary dates}.
 
 @item expr comment =~ /REGEX/
 A regular expression that matches against a posting's comment
