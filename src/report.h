@@ -119,12 +119,6 @@ public:
       : session(_session), terminus(CURRENT_TIME()), budget_flags(BUDGET_NO_BUDGET) {
     TRACE_CTOR(report_t, "session_t&");
   }
-  report_t(const report_t& report)
-      : scope_t(report), session(report.session), output_stream(report.output_stream),
-        terminus(report.terminus), budget_flags(report.budget_flags) {
-    TRACE_CTOR(report_t, "copy");
-  }
-
   virtual ~report_t() {
     TRACE_DTOR(report_t);
     output_stream.close();

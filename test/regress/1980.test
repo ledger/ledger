@@ -1,0 +1,33 @@
+; Regression test for issue #1980
+; .ledgerrc options (--date-format, --start-of-week) should be applied in
+; interactive (REPL) mode, not just one-shot mode.
+;
+; In interactive mode (and --script mode), each command runs with a fresh
+; copy of the report object created by push_report(). Before the fix, the
+; report_t copy constructor did not copy option handlers, so options like
+; --date-format and --start-of-week from .ledgerrc were silently lost.
+;
+; This test passes --date-format and --start-of-week on the command line
+; (simulating .ledgerrc settings) and verifies they are preserved when
+; running commands in --script mode (which uses at_repl=true).
+
+2010/12/01 Payee A
+    Expenses:Food    $100.00
+    Assets:Checking
+
+2010/12/08 Payee B
+    Expenses:Food    $200.00
+    Assets:Checking
+
+2010/12/15 Payee C
+    Expenses:Food    $150.00
+    Assets:Checking
+
+test --date-format '%Y-%m-%d' --start-of-week 1 --script test/regress/1980.dat
+2010-12-01 - 2010-12-05         Assets:Checking            $-100.00     $-100.00
+                                Expenses:Food               $100.00            0
+2010-12-06 - 2010-12-12         Assets:Checking            $-200.00     $-200.00
+                                Expenses:Food               $200.00            0
+2010-12-13 - 2010-12-19         Assets:Checking            $-150.00     $-150.00
+                                Expenses:Food               $150.00            0
+end test

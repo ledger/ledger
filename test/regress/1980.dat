@@ -1,0 +1,1 @@
+--no-pager --columns=80 reg -W --period "2010/12"

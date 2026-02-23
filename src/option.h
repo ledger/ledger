@@ -243,7 +243,7 @@ public:
   }
   option_t(const option_t& other)
       : name(other.name), name_len(other.name_len), ch(other.ch), handled(other.handled),
-        parent(NULL), value(other.value), wants_arg(other.wants_arg) {
+        source(other.source), parent(NULL), value(other.value), wants_arg(other.wants_arg) {
     TRACE_CTOR(option_t, "copy");
   }
 
