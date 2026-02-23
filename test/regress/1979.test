@@ -1,0 +1,25 @@
+; Regression test for issue #1979:
+; year/Y directives inside an included file must not bleed into the parent
+; file after the include returns.  Specifically, when an included file
+; contains multiple year directives, the last one set must not affect the
+; year used by transactions that follow the include directive in the parent.
+
+year 2020
+
+include 1979.dat
+
+; This transaction has no year component.  It must resolve to 2020 (the
+; year set in the parent file before the include), not 2023 (the last year
+; set inside the included file).
+05/15 Post-include Transaction
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test reg
+22-Jan-01 In-included First     Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+23-Jul-01 In-included Second    Expenses:Food                $20.00       $20.00
+                                Assets:Checking             $-20.00            0
+20-May-15 Post-include Transa.. Expenses:Food                $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test
