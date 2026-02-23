@@ -1,0 +1,28 @@
+; Regression test for issue #2043:
+; --forecast coredumps if there are repeating accounts that are also in
+; automated accounts.
+;
+; Auto-transaction-generated posts added to period_xact_t (via extend_xact)
+; have no xact back-pointer and must not be placed into pending_posts for
+; forecast/budget generation.
+
+= Expenses:Food
+    Expenses:Food:Tax     0.10
+    Assets:Savings       -0.10
+
+~ Monthly
+    Expenses:Food        $100.00
+    Assets:Checking
+
+2024/01/15 Paycheck
+    Assets:Checking       $2000.00
+    Income:Salary
+
+test --forecast-while "date < [2024/04/01]" --now "2024/01/01" reg
+24-Jan-15 Paycheck              Assets:Checking            $2000.00     $2000.00
+                                Income:Salary             $-2000.00            0
+24-Feb-01 Forecast transaction  Expenses:Food               $100.00      $100.00
+24-Feb-01 Forecast transaction  Assets:Checking            $-100.00            0
+24-Mar-01 Forecast transaction  Expenses:Food               $100.00      $100.00
+24-Mar-01 Forecast transaction  Assets:Checking            $-100.00            0
+end test
