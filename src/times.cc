@@ -1363,10 +1363,24 @@ void date_interval_t::stabilize(const optional<date_t>& date, bool align_interva
       case date_duration_t::MONTHS:
       case date_duration_t::QUARTERS:
       case date_duration_t::YEARS:
-        // These start on most recent period start quantum before when
+        // These start on most recent period start quantum before when.
         DEBUG("times.interval", "stabilize: monthly, quarterly or yearly duration");
         if (align_intervals && since_specified) {
           start = when;
+        } else if (since_specified && initial_start) {
+          // When the user specified an explicit start date (e.g.
+          // "every 1 months from 2023-01-15"), preserve the day-of-period
+          // rather than snapping to the first of the month.  Advance from
+          // the range begin by whole intervals until we reach the interval
+          // that contains or immediately precedes 'when'.
+          start = *initial_start;
+          {
+            date_t next = duration->add(*start);
+            while (next <= when) {
+              start = next;
+              next = duration->add(*start);
+            }
+          }
         } else {
           start = date_duration_t::find_nearest(when, duration->quantum);
         }
