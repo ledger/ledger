@@ -1,0 +1,18 @@
+; Regression test for issue #2011: post date not considered for lots
+;
+; When a posting has a date override via the ; [date] notation, that date
+; should be used as the lot acquisition date rather than the transaction date.
+
+2021/01/01 * Buy stocks
+    Assets:Stocks  25 AMZN @ $10 ; [2021/01/05]
+    Assets:Savings
+
+test bal --lots
+               $-250
+25 AMZN {$10} [2021/01/05]  Assets
+               $-250    Savings
+25 AMZN {$10} [2021/01/05]    Stocks
+--------------------
+               $-250
+25 AMZN {$10} [2021/01/05]
+end test
