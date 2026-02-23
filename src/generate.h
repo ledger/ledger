@@ -107,11 +107,11 @@ public:
 
 protected:
   void generate_string(std::ostream& out, int len, bool only_alpha = false);
-  bool generate_account(std::ostream& out, bool no_virtual = false);
+  bool generate_account(std::ostream& out, bool no_virtual = false, bool* out_is_virtual = nullptr);
   void generate_commodity(std::ostream& out, const string& exclude = "");
   string generate_amount(std::ostream& out, value_t not_this_amount = NULL_VALUE,
                          bool no_negative = false, const string& exclude = "");
-  bool generate_post(std::ostream& out, bool no_amount = false);
+  bool generate_post(std::ostream& out, bool no_amount = false, bool* out_is_virtual = nullptr);
   void generate_cost(std::ostream& out, value_t amount);
   void generate_date(std::ostream& out);
   void generate_state(std::ostream& out);

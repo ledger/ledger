@@ -147,11 +147,21 @@ bool xact_base_t::finalize() {
   // price of unpriced commodities.
 
   value_t balance;
+  value_t virtual_balance;
   post_t* null_post = NULL;
+  post_t* virtual_null_post = NULL;
 
   for (post_t* post : posts) {
     if (!post->must_balance())
       continue;
+
+    // Within the must_balance() loop, a post with POST_VIRTUAL set is
+    // necessarily a balanced-virtual posting ([Account] syntax), because
+    // plain virtual postings ((Account)) have POST_MUST_BALANCE clear and
+    // would be skipped above.
+    bool is_balanced_virtual = post->has_flags(POST_VIRTUAL);
+    value_t& cur_balance = is_balanced_virtual ? virtual_balance : balance;
+    post_t*& cur_null_post = is_balanced_virtual ? virtual_null_post : null_post;
 
     amount_t& p(post->cost ? *post->cost : post->amount);
     if (!p.is_null()) {
@@ -161,28 +171,36 @@ bool xact_base_t::finalize() {
       // is ignored when displaying the amount.  We never want this set
       // for the balance, so we must clear the flag in a temporary to
       // avoid it propagating into the balance.
-      add_or_set_value(balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());
-    } else if (null_post) {
+      add_or_set_value(cur_balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());
+    } else if (cur_null_post) {
       bool post_account_bad = account_ends_with_special_char(post->account->fullname());
-      bool null_post_account_bad = account_ends_with_special_char(null_post->account->fullname());
+      bool null_post_account_bad =
+          account_ends_with_special_char(cur_null_post->account->fullname());
 
       if (post_account_bad || null_post_account_bad)
         throw_(std::logic_error,
                _f("Posting with null amount's account may be misspelled:\n  \"%1%\"") %
-                   (post_account_bad ? post->account->fullname() : null_post->account->fullname()));
+                   (post_account_bad ? post->account->fullname()
+                                     : cur_null_post->account->fullname()));
       else
         throw_(std::logic_error, _("Only one posting with null amount allowed per transaction"));
     } else {
-      null_post = post;
+      cur_null_post = post;
     }
   }
   VERIFY(balance.valid());
+  VERIFY(virtual_balance.valid());
 
 #if DEBUG_ON
   DEBUG("xact.finalize", "initial balance = " << balance);
   DEBUG("xact.finalize", "balance is " << balance.label());
   if (balance.is_balance())
     DEBUG("xact.finalize", "balance commodity count = " << balance.as_balance().amounts.size());
+  DEBUG("xact.finalize", "initial virtual_balance = " << virtual_balance);
+  DEBUG("xact.finalize", "virtual_balance is " << virtual_balance.label());
+  if (virtual_balance.is_balance())
+    DEBUG("xact.finalize",
+          "virtual_balance commodity count = " << virtual_balance.as_balance().amounts.size());
 #endif
 
   // If there is only one post, balance against the default account if one has
@@ -293,11 +311,11 @@ bool xact_base_t::finalize() {
       for (post_t* post : posts) {
         if (!post->must_balance())
           continue;
+        if (post->has_flags(POST_VIRTUAL)) // skip balanced-virtual postings
+          continue;
         amount_t& p(post->cost ? *post->cost : post->amount);
         if (!p.is_null())
-          add_or_set_value(balance, p.keep_precision()
-                                        ? p.rounded().reduced()
-                                        : p.reduced());
+          add_or_set_value(balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());
       }
     }
   }
@@ -432,12 +450,41 @@ bool xact_base_t::finalize() {
 
     balance = NULL_VALUE;
   }
+
+  if (virtual_null_post != NULL) {
+    // Same logic as null_post above, but for balanced-virtual postings.
+
+    DEBUG("xact.finalize", "there was a null balanced-virtual posting");
+    add_balancing_post post_adder(*this, virtual_null_post);
+
+    if (virtual_balance.is_balance())
+      virtual_balance.as_balance_lval().map_sorted_amounts(post_adder);
+    else if (virtual_balance.is_amount())
+      post_adder(virtual_balance.as_amount_lval());
+    else if (virtual_balance.is_long())
+      post_adder(virtual_balance.to_amount());
+    else if (!virtual_balance.is_null() && !virtual_balance.is_realzero())
+      throw_(balance_error, _("Transaction does not balance"));
+
+    virtual_balance = NULL_VALUE;
+  }
+
   DEBUG("xact.finalize", "resolved balance = " << balance);
+  DEBUG("xact.finalize", "resolved virtual_balance = " << virtual_balance);
 
   if (!balance.is_null() && !balance.is_zero()) {
     add_error_context(item_context(*this, _("While balancing transaction")));
     add_error_context(_("Unbalanced remainder is:"));
     add_error_context(value_context(balance));
+    add_error_context(_("Amount to balance against:"));
+    add_error_context(value_context(magnitude()));
+    throw_(balance_error, _("Transaction does not balance"));
+  }
+
+  if (!virtual_balance.is_null() && !virtual_balance.is_zero()) {
+    add_error_context(item_context(*this, _("While balancing transaction")));
+    add_error_context(_("Unbalanced remainder is:"));
+    add_error_context(value_context(virtual_balance));
     add_error_context(_("Amount to balance against:"));
     add_error_context(value_context(magnitude()));
     throw_(balance_error, _("Transaction does not balance"));

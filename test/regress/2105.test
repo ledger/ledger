@@ -1,0 +1,22 @@
+; Regression test for GitHub issue #2105:
+; Real postings and balanced-virtual postings ([Account]) must balance
+; independently.  A real posting and a balanced-virtual posting with opposite
+; amounts must NOT cancel each other out and silently pass the balance check.
+
+2024/08/11 Example
+    Income                                     $1.00
+    [Expenses]                                $-1.00
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 8:
+While balancing transaction from "$FILE", lines 6-8:
+> 2024/08/11 Example
+>     Income                                     $1.00
+>     [Expenses]                                $-1.00
+Unbalanced remainder is:
+               $1.00
+Amount to balance against:
+               $1.00
+Error: Transaction does not balance
+end test
