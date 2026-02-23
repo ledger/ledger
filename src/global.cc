@@ -223,8 +223,14 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
   // report options based on the command verb.
 
   if (!is_precommand) {
-    if (!at_repl)
+    if (!at_repl) {
+      // Set use_aux_date before reading journal files so that balance
+      // assertions respect effective date ordering when --effective is used
+      // (fixes #2071).
+      item_t::use_aux_date =
+          (report().HANDLED(aux_date) && !report().HANDLED(primary_date));
       session().read_journal_files();
+    }
 
     report().normalize_options(verb);
 
