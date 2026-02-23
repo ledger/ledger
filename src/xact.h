@@ -375,7 +375,8 @@ public:
    * generated, verify() is called to ensure the transaction still
    * balances.
    */
-  virtual void extend_xact(xact_base_t& xact, parse_context_t& context);
+  virtual void extend_xact(xact_base_t& xact, parse_context_t& context,
+                           const posts_list* posts_to_process = nullptr);
 };
 
 /**
