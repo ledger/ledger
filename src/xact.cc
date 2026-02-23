@@ -904,11 +904,14 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
             new_post->add_flags(POST_COST_CALCULATED);
           }
 
-          // A Cleared transaction implies all of its automatic posting are cleared
-          // CPR 2012/10/23
+          // A Cleared or Pending transaction implies all of its automatic
+          // postings carry the same state. CPR 2012/10/23
           if (xact.state() == item_t::CLEARED) {
             DEBUG("xact.extend.cleared", "CLEARED");
             new_post->set_state(item_t::CLEARED);
+          } else if (xact.state() == item_t::PENDING) {
+            DEBUG("xact.extend.cleared", "PENDING");
+            new_post->set_state(item_t::PENDING);
           }
 
           new_post->add_flags(ITEM_GENERATED);

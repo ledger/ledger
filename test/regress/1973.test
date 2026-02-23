@@ -1,0 +1,18 @@
+; Test that auto-generated postings inherit pending state from the transaction
+; GitHub issue #1973: No way to catch state flags in automated transaction
+
+= /Food/
+    (Budget:Food)              (amount * 0.10)
+
+2024/01/15 ! Pending Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+test reg --pending --columns=80 -> 0
+24-Jan-15 Pending Grocery Store Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+                                (Budget:Food)                 $5.00        $5.00
+end test
+
+test reg --cleared --columns=80 -> 0
+end test
