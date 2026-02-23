@@ -33,7 +33,7 @@ jobs:
           cp benchmark/run_benchmark.sh benchmark/compare_benchmarks.py \
              benchmark/gen_benchmark.py /tmp/pr-files/
 
-      # --- Build and benchmark the PR branch ---
+      # --- Build PR branch ---
 
       - name: Build PR branch
         run: |
@@ -45,16 +45,7 @@ jobs:
             cmake --build build-pr -- -j\$(nproc)
           "
 
-      - name: Benchmark PR branch
-        run: |
-          nix develop --command bash -c "
-            python3 benchmark/gen_benchmark.py
-            ./benchmark/run_benchmark.sh build-pr/ledger pr_results.json
-          "
-        env:
-          HYPERFINE_RUNS: ${{ env.PERF_RUNS }}
-
-      # --- Build and benchmark the base branch ---
+      # --- Build base branch ---
 
       - name: Check out base branch
         run: git checkout ${{ github.event.pull_request.base.sha }}
@@ -76,11 +67,17 @@ jobs:
             cmake --build build-base -- -j\$(nproc)
           "
 
-      - name: Benchmark base branch
+      # --- Benchmark both branches simultaneously ---
+      # Both binaries are run interleaved by hyperfine so they experience
+      # equal OS page cache conditions, avoiding warm-cache measurement bias.
+
+      - name: Benchmark both branches
         run: |
           nix develop --command bash -c "
             python3 benchmark/gen_benchmark.py
-            ./benchmark/run_benchmark.sh build-base/ledger base_results.json
+            ./benchmark/run_benchmark.sh \
+              build-pr/ledger build-base/ledger \
+              pr_results.json base_results.json
           "
         env:
           HYPERFINE_RUNS: ${{ env.PERF_RUNS }}
