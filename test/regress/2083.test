@@ -1,0 +1,15 @@
+; Regression test for GitHub issue #2083
+; Budget periods should respect the day-of-month from "from" clause.
+; "every 1 months from 2023-01-15" should produce transactions on the
+; 15th of each month, not the 1st.
+
+~ every 1 months from 2023-01-15
+    Equity
+    Budget:Groceries    $-55.00
+
+test reg --budget Budget:Groceries --now=2023/05/01
+23-Jan-15 Budget transaction    Budget:Groceries             $55.00       $55.00
+23-Feb-15 Budget transaction    Budget:Groceries             $55.00      $110.00
+23-Mar-15 Budget transaction    Budget:Groceries             $55.00      $165.00
+23-Apr-15 Budget transaction    Budget:Groceries             $55.00      $220.00
+end test
