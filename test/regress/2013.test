@@ -1,0 +1,15 @@
+2021/01/01 Opening Balance
+    Assets:Bank                  1000.00 EUR
+    Equity:Opening Balances
+
+2021/01/01 Savings for new car
+    [Assets:Savings:Car]          500.00 EUR
+    [Assets:Bank]                -500.00 EUR
+
+test reg car
+21-Jan-01 Savings for new car   [Assets:Savings:Car]     500.00 EUR   500.00 EUR
+end test
+
+test reg car --related
+21-Jan-01 Savings for new car   [Assets:Bank]           -500.00 EUR  -500.00 EUR
+end test
