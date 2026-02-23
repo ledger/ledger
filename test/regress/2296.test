@@ -3,14 +3,72 @@
 ; or a preceding commodity directive, ledger must auto-detect that a comma
 ; followed by more than 3 digits is a decimal separator, not a thousands
 ; separator.
+;
+; The parser distinguishes decimal commas from thousands commas using two
+; heuristics (both require a single, first-occurrence comma):
+;
+;   1. decimal_offset % 3 != 0  -- non-multiple-of-3 digit count, e.g. 2 or 4
+;   2. decimal_offset > 3       -- more than 3 digits, even if a multiple of 3
+;
+; Additionally, a period that appears to the LEFT of an already-seen comma
+; retroactively reclassifies that comma as a decimal separator (European
+; thousands-period style: 1.234,567).
+
+; --- Test 1: original reported case ---
+; 4,166728274 has 9 digits after the comma.  9 % 3 == 0 but 9 > 3,
+; so heuristic 2 fires and the comma is treated as a decimal separator.
+; Without the fix this was parsed as 4166728274 PLN (four billion).
 
 2023-04-24 sale
     Bank1    -6005,76 USD @ 4,166728274 PLN
     Bank2    25024,37 PLN
 
-test bal --exchange PLN
+test bal Bank --exchange PLN
        -25024,37 PLN  Bank1
         25024,37 PLN  Bank2
 --------------------
                    0
+end test
+
+; --- Test 2: 6-digit decimal comma ---
+; 4,166000 has 6 digits after the comma.  6 % 3 == 0 but 6 > 3, so
+; heuristic 2 fires.  Parsed as 4.166000, not as 4166000.
+; Uses CZK to avoid inheriting decimal-comma style already set on PLN.
+
+2023-05-01 six-digit-decimal
+    Assets:CZK    4,166000 CZK
+    Expenses:CZK
+
+test bal Assets:CZK
+        4,166000 CZK  Assets:CZK
+end test
+
+; --- Test 3: 4-digit decimal comma ---
+; 4,1667 has 4 digits after the comma.  4 % 3 != 0, so heuristic 1 fires.
+; Parsed as 4.1667, not as 41667.
+; Uses HUF to avoid inheriting style from earlier commodities.
+
+2023-05-02 four-digit-decimal
+    Assets:HUF    4,1667 HUF
+    Expenses:HUF
+
+test bal Assets:HUF
+          4,1667 HUF  Assets:HUF
+end test
+
+; --- Test 4: retroactive decimal-comma switch via thousands period ---
+; 1.000,567 uses a period as the thousands separator and a comma as the
+; decimal separator (European style).  The parser first sees the comma with
+; 3 trailing digits and tentatively marks it as a thousands separator.
+; When it then encounters the period to the left, it retroactively switches
+; to decimal_comma mode and recomputes the precision from the comma position.
+; Parsed as 1000.567, displayed as 1.000,567.
+; Uses EUR to get a fresh commodity with no prior style.
+
+2023-05-03 retroactive-switch
+    Assets:EUR    1.000,567 EUR
+    Expenses:EUR
+
+test bal Assets:EUR
+       1.000,567 EUR  Assets:EUR
 end test
