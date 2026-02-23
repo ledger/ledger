@@ -1,0 +1,24 @@
+; Regression test for GitHub issue #2003:
+; 'apply tag' with --strict should not warn about the applied tags being
+; unknown, since using 'apply tag' is an explicit declaration of those tags.
+
+commodity $
+
+account Assets:Checking
+account Expenses:Auto
+
+apply tag hastag: true
+apply tag nestedtag: true
+
+2011/01/25 Tom's Used Cars
+    Expenses:Auto                    $ 5,500.00
+    Assets:Checking
+
+end apply tag
+
+test bal --strict -> 0
+         $ -5,500.00  Assets:Checking
+          $ 5,500.00  Expenses:Auto
+--------------------
+                   0
+end test
