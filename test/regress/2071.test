@@ -1,0 +1,29 @@
+; Regression test for issue #2071: balance assertions were evaluated in file
+; order instead of effective date order when --effective is used.
+;
+; The posting "acc1  -5 r = 5 r ;[=2021-03-01]" has an effective date of
+; 2021-03-01, which falls between the first transaction (2021-01-01, adds 10 r)
+; and the third transaction (effective 2021-06-01, subtracts 10 r).  With
+; --effective, the account balance at 2021-03-01 is 10 r + (-5 r) = 5 r, so
+; the assertion "= 5 r" should pass.  Without the fix, the assertion was
+; checked in file order and failed.
+
+2021-01-01 first
+  acc1  10 r = 10 r
+  income:opening
+
+2021-02-01 third
+  expenses    ;[=2021-06-01]
+  acc1  -10 r ;[=2021-06-01]
+
+2021-04-01 second
+  expenses  5 r   ;[=2021-03-01]
+  acc1  -5 r = 5 r ;[=2021-03-01]
+
+test bal --effective
+                -5 r  acc1
+                15 r  expenses
+               -10 r  income:opening
+--------------------
+                   0
+end test

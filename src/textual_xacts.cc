@@ -339,9 +339,26 @@ static balance_t compute_balance_diff(
     const amount_t& amt, post_t* post, xact_t* xact,
     bool strip_annotations, parse_context_t& context)
 {
-  value_t account_total(
-      post->account
-          ->self_total(!post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG)));
+  bool real_only = !post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG);
+  value_t account_total;
+  if (item_t::use_aux_date) {
+    // When using effective dates, only count posts whose effective date is on
+    // or before the current posting's effective date, so that balance
+    // assertions respect --effective ordering rather than file order
+    // (fixes #2071).
+    date_t cutoff = post->date();
+    std::set<const post_t*> seen;
+    for (const post_t* p : post->account->posts) {
+      if (!seen.insert(p).second)
+        continue;
+      if (real_only && p->has_flags(POST_VIRTUAL))
+        continue;
+      if (!p->amount.is_null() && p->date() <= cutoff)
+        add_or_set_value(account_total, p->amount);
+    }
+  } else {
+    account_total = post->account->self_total(real_only);
+  }
   if (strip_annotations)
     account_total = account_total.strip_annotations(keep_details_t());
 
@@ -625,6 +642,18 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         DEBUG("textual.parse",
               "line " << context.linenum << ": "
                       << "POST assign: parsed balance amount = " << *post->assigned_amount);
+
+        // Pre-parse the inline note to extract an effective date before
+        // checking the balance assertion.  The note (e.g. "[=2021-03-01]")
+        // appears after the assertion amount on the same line, but
+        // post->date() must return the effective date so that the
+        // date-filtered account balance in compute_balance_diff() is
+        // correct (fixes #2071).
+        if (item_t::use_aux_date && !stream.eof()) {
+          const char* rest = skip_ws(p + static_cast<std::ptrdiff_t>(stream.tellg()));
+          if (rest && *rest == ';')
+            post->parse_tags(rest + 1, *context.scope, true);
+        }
 
         const amount_t& amt(*post->assigned_amount);
 
