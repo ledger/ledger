@@ -109,7 +109,7 @@ inline parse_context_t open_for_reading(const path& pathname, const path& cwd) {
 #if HAVE_GPGME
   std::shared_ptr<std::istream> stream(decrypted_stream_t::open_stream(filename));
 #else
-  std::shared_ptr<std::istream> stream(new ifstream(filename));
+  std::shared_ptr<std::istream> stream(new ifstream(filename, std::ios::binary));
 #endif
   parse_context_t context(stream, parent);
   context.pathname = filename;

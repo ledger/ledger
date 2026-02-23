@@ -92,7 +92,7 @@ string source_context(const path& file, const std::istream::pos_type pos,
 #if HAVE_GPGME
   std::istream* in(decrypted_stream_t::open_stream(file));
 #else
-  std::istream* in(new ifstream(file));
+  std::istream* in(new ifstream(file, std::ios::binary));
 #endif
   in->seekg(pos, std::ios::beg);
 
@@ -102,7 +102,7 @@ string source_context(const path& file, const std::istream::pos_type pos,
   buf[static_cast<std::ptrdiff_t>(len)] = '\0';
 
   bool first = true;
-  for (char* p = std::strtok(buf.get(), "\n"); p; p = std::strtok(NULL, "\n")) {
+  for (char* p = std::strtok(buf.get(), "\r\n"); p; p = std::strtok(NULL, "\r\n")) {
     if (first)
       first = false;
     else
