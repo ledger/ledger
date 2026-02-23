@@ -4436,6 +4436,72 @@ The cashback postings appear with the transaction.
                                 ..Credit Card Cashback        $0.48        $0.48
                                 In:Credit Card Rewards       $-0.48            0
 @end smallexample
+
+@subsubsection Sales Tax
+
+A common use case is automatically computing sales tax for certain
+purchases.  The following automated transaction adds an 8.25% sales tax
+to any posting in @samp{Expenses:Grocery:Household}, recording the tax
+as an additional expense and deducting it from the credit card balance:
+
+@smallexample @c input:validate
+= /Expenses:Grocery:Household/
+    Expenses:Grocery:Household    (roundto(amount * 0.0825, 2))
+    Liabilities:CC:Visa           (roundto(-amount * 0.0825, 2))
+
+2020/12/03 Target
+    Expenses:Grocery:Food         $10.00
+    Expenses:Grocery:Household     $6.50
+    Liabilities:CC:Visa
+@end smallexample
+
+If only some items are taxable, you can tag them and restrict the
+automated transaction to postings with that tag:
+
+@smallexample @c input:validate
+= /Expenses:Grocery:Household/ and %tax
+    Expenses:Grocery:Household    (roundto(amount * 0.0825, 2))
+    Liabilities:CC:Visa           (roundto(-amount * 0.0825, 2))
+
+2020/12/03 Target
+    Expenses:Grocery:Food:Snacks   $3.00
+    Expenses:Grocery:Food:Produce  $3.50
+    Expenses:Grocery:Food:Snacks   $1.50
+    Expenses:Grocery:Household     $1.50
+        ; :tax:
+    Expenses:Grocery:Household     $5.00
+        ; :tax:
+    Assets:Coupon                 -$1.00
+    Liabilities:CC:Visa
+@end smallexample
+
+Only the two @samp{Expenses:Grocery:Household} postings tagged with
+@samp{:tax:} will have sales tax applied; the food items and coupon are
+unaffected.
+
+If different items carry different tax rates, you can store the rate
+directly in each posting's metadata and retrieve it with @code{tag()}:
+
+@smallexample @c input:validate
+= /Expenses:Grocery:Household/ and %tax
+    Expenses:Grocery:Household    (roundto(amount * tag('tax'), 2))
+    Liabilities:CC:Visa           (roundto(-amount * tag('tax'), 2))
+
+2020/12/03 Target
+    Expenses:Grocery:Food:Snacks   $3.00
+    Expenses:Grocery:Food:Produce  $3.50
+    Expenses:Grocery:Food:Snacks   $1.50
+    Expenses:Grocery:Household     $1.50
+        ; tax:: 0.0825
+    Expenses:Grocery:Household     $5.00
+        ; tax:: 0.090
+    Assets:Coupon                 -$1.00
+    Liabilities:CC:Visa
+@end smallexample
+
+Here, the first household item is taxed at 8.25% and the second at 9%,
+with each rate stored directly in the posting's metadata.
+
 @node Building Reports, Reporting Commands, Transactions, Top
 @chapter Building Reports
 
