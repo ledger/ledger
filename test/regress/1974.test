@@ -1,0 +1,24 @@
+; Regression test for issue #1974
+; The print command was incorrectly omitting amounts for unbalanced virtual
+; postings when a transaction had exactly two postings of the same commodity.
+; The 2-posting amount elision optimization only applies when both postings
+; must balance; unbalanced virtual postings like (A) and (B) must always
+; have their amounts printed explicitly.
+
+2020-11-29
+  (A)  1
+  (B)  1
+
+test print
+2020/11/29 <Unspecified payee>
+    (A)                                            1
+    (B)                                            1
+end test
+
+; Verify the output is valid and can be re-parsed correctly
+test bal
+                   1  A
+                   1  B
+--------------------
+                   2
+end test
