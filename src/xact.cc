@@ -265,11 +265,8 @@ bool xact_base_t::finalize() {
   if (!null_post && balance.is_balance() && balance.as_balance().amounts.size() > 2) {
     bool recompute = false;
     for (post_t* post : posts) {
-      if (!post->cost &&
-          !post->amount.is_null() &&
-          post->must_balance() &&
-          post->amount.has_annotation() &&
-          post->amount.annotation().price &&
+      if (!post->cost && !post->amount.is_null() && post->must_balance() &&
+          post->amount.has_annotation() && post->amount.annotation().price &&
           post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED)) {
         const annotation_t& ann(post->amount.annotation());
         post->cost = *ann.price;
@@ -295,9 +292,7 @@ bool xact_base_t::finalize() {
           continue;
         amount_t& p(post->cost ? *post->cost : post->amount);
         if (!p.is_null())
-          add_or_set_value(balance, p.keep_precision()
-                                        ? p.rounded().reduced()
-                                        : p.reduced());
+          add_or_set_value(balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());
       }
     }
   }
@@ -314,8 +309,8 @@ bool xact_base_t::finalize() {
                _("A posting's cost must be of a different commodity than its amount"));
 
       std::optional<date_t> lot_date;
-      if (post->has_flags(POST_AMOUNT_USER_DATE) &&
-          post->amount.has_annotation() && post->amount.annotation().date)
+      if (post->has_flags(POST_AMOUNT_USER_DATE) && post->amount.has_annotation() &&
+          post->amount.annotation().date)
         lot_date = post->amount.annotation().date;
 
       cost_breakdown_t breakdown = commodity_pool_t::current_pool->exchange(
@@ -894,8 +889,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context,
           new_post->copy_details(*post);
           if (post->cost)
             new_post->cost = post->cost;
-          else if (initial_post->cost && amt.has_annotation() &&
-                   amt.annotation().price) {
+          else if (initial_post->cost && amt.has_annotation() && amt.annotation().price) {
             // When the auto-generated amount has a price annotation (e.g., copied
             // from a posting with cost like "100 kWh @@ 72€"), derive the cost
             // from the annotation so verify() can check the balance correctly.

@@ -31,6 +31,8 @@
 
 #include <system.hh>
 
+#include <unordered_set>
+
 #include "journal.h"
 #include "context.h"
 #include "amount.h"
@@ -117,8 +119,7 @@ account_t* journal_t::find_account_re(const string& regexp) {
   return master->find_account_re(regexp);
 }
 
-account_t* journal_t::register_account(string_view name, post_t* post,
-                                       account_t* master_account) {
+account_t* journal_t::register_account(string_view name, post_t* post, account_t* master_account) {
   // If there are any account aliases, substitute before creating an account
   // object.
   account_t* result = expand_aliases(string(name));
@@ -364,8 +365,7 @@ bool journal_t::add_xact(xact_t* xact) {
   // applied to it.
   if (std::optional<value_t> ref = xact->get_tag(_("UUID"))) {
     std::string uuid = ref->to_string();
-    auto [iter, inserted] =
-        checksum_map.insert(checksum_map_t::value_type(uuid, xact));
+    auto [iter, inserted] = checksum_map.insert(checksum_map_t::value_type(uuid, xact));
     if (!inserted) {
       // This UUID has been seen before; apply any postings which the
       // earlier version may have deferred.
@@ -419,47 +419,99 @@ void journal_t::extend_xact(xact_base_t* xact) {
   if (auto_xacts.empty())
     return;
 
-  // Remember the last post already in the list before the first auto-xact
-  // wave runs.  std::list iterators survive insertions, so this remains
-  // valid and lets us cheaply locate newly generated posts afterward.
+  // Build a flat index of raw pointers so we can use integer indices throughout.
+  // This avoids repeated list traversals and enables the per-AT tracking below.
+  std::vector<auto_xact_t*> ats;
+  ats.reserve(auto_xacts.size());
+  for (auto& up : auto_xacts)
+    ats.push_back(up.get());
+  const std::size_t n = ats.size();
+
   const bool had_posts = !xact->posts.empty();
-  const posts_list::iterator before_wave =
+  const posts_list::iterator pre_wave =
       had_posts ? std::prev(xact->posts.end()) : xact->posts.end();
 
-  // First wave: original behavior (auto_xact_t::extend_xact's internal
-  // ITEM_GENERATED filtering applies).
-  for (unique_ptr<auto_xact_t>& auto_xact : auto_xacts)
-    auto_xact->extend_xact(*xact, *current_context);
+  // First wave: run each auto transaction on the original posts.
+  // Track where each AT's output begins (end() means it generated nothing).
+  std::vector<posts_list::iterator> at_start(n, xact->posts.end());
+  for (std::size_t i = 0; i < n; ++i) {
+    const posts_list::iterator tail =
+        xact->posts.empty() ? xact->posts.end() : std::prev(xact->posts.end());
+    ats[i]->extend_xact(*xact, *current_context);
+    // First post added by AT[i]: begin() if list was empty, else next after old tail.
+    // Both equal end() if AT[i] generated nothing (empty list stays empty;
+    // non-empty list: next-after-unchanged-tail == end()).
+    at_start[i] = (tail == xact->posts.end()) ? xact->posts.begin() : std::next(tail);
+  }
 
-  // Locate the first auto-generated post from the first wave.
-  // If nothing was generated, we're done (the common case, zero extra
-  // allocations beyond the two iterator ops above).
-  posts_list::iterator gen_begin =
-      had_posts ? std::next(before_wave) : xact->posts.begin();
-  if (gen_begin == xact->posts.end())
+  // Fast path: nothing was generated at all.
+  const posts_list::iterator gen_begin_initial =
+      had_posts ? std::next(pre_wave) : xact->posts.begin();
+  if (gen_begin_initial == xact->posts.end())
     return;
 
-  // Cascade: feed newly generated posts back through the auto transactions
-  // in subsequent waves.  This allows cross-triggering between distinct
-  // auto transactions (issue #2102).
+  // Cascade: feed generated posts back through the auto transactions to allow
+  // cross-triggering (issue #2102).  Each AT must not see posts it already
+  // generated (to prevent self-triggering loops like "= expr true" or commodity
+  // auto-allocation rules that generate posts matching their own predicate).
   //
-  // A fresh snapshot of the current wave is passed to each auto-xact.
-  // The depth cap guards against infinite mutual-triggering loops.
+  // self_gen[i] accumulates every post that auto_xacts[i] has generated across
+  // all waves.  Posts in self_gen[i] are excluded when building AT[i]'s input
+  // for each cascade wave.
+
+  std::vector<std::unordered_set<post_t*>> self_gen(n);
+
+  // Seed self_gen from the first wave: AT[i]'s output is
+  // [at_start[i], at_start[next-nonempty-j]) i.e. contiguous suffix ranges.
+  for (std::size_t i = 0; i < n; ++i) {
+    if (at_start[i] == xact->posts.end())
+      continue; // AT[i] generated nothing in wave 1
+    // Find the end of AT[i]'s range (= start of next AT that generated something)
+    posts_list::iterator end_i = xact->posts.end();
+    for (std::size_t j = i + 1; j < n; ++j) {
+      if (at_start[j] != xact->posts.end()) {
+        end_i = at_start[j];
+        break;
+      }
+    }
+    for (auto it = at_start[i]; it != end_i; ++it)
+      self_gen[i].insert(*it);
+  }
+
+  // Cascade loop: process waves of newly generated posts.
+  posts_list::iterator gen_begin = gen_begin_initial;
   static const int MAX_NESTED_DEPTH = 20;
   for (int depth = 0; depth < MAX_NESTED_DEPTH; ++depth) {
-    // Snapshot the posts to cascade in this wave.
-    posts_list wave(gen_begin, xact->posts.end());
+    // Build the full wave from all posts generated since the last iteration.
+    posts_list full_wave(gen_begin, xact->posts.end());
 
-    // Mark the current tail so we can find posts added by this cascade wave.
-    const posts_list::iterator before_cascade = std::prev(xact->posts.end());
+    // Remember the tail before this cascade depth so we can locate new posts.
+    const posts_list::iterator before_cascade_wave = std::prev(xact->posts.end());
+    bool any_generated = false;
 
-    for (unique_ptr<auto_xact_t>& auto_xact : auto_xacts)
-      auto_xact->extend_xact(*xact, *current_context, &wave);
+    for (std::size_t i = 0; i < n; ++i) {
+      // Build AT[i]'s filtered input: exclude posts it has already generated.
+      posts_list filtered;
+      for (post_t* p : full_wave)
+        if (!self_gen[i].count(p))
+          filtered.push_back(p);
+      if (filtered.empty())
+        continue;
 
-    // Locate posts added during this cascade wave.
-    gen_begin = std::next(before_cascade);
-    if (gen_begin == xact->posts.end())
-      break;  // Nothing new generated; cascade complete.
+      const posts_list::iterator before_this_at = std::prev(xact->posts.end());
+      ats[i]->extend_xact(*xact, *current_context, &filtered);
+
+      // Record all newly generated posts in self_gen[i].
+      for (auto it = std::next(before_this_at); it != xact->posts.end(); ++it) {
+        self_gen[i].insert(*it);
+        any_generated = true;
+      }
+    }
+
+    if (!any_generated)
+      break; // Nothing new generated; cascade complete.
+
+    gen_begin = std::next(before_cascade_wave);
   }
 }
 
