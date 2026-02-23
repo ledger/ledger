@@ -211,8 +211,51 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
     break;
   }
 
-  case '\'':
+  case '\'': {
+    char delim;
+    in.get(delim);
+    char buf[4096];
+    READ_INTO_(in, buf, 4095, c, length, c != delim);
+    if (c != delim)
+      expected(delim, c);
+    in.get();
+    length++;
+    kind = VALUE;
+    value.set_string(buf);
+    break;
+  }
+
   case '"': {
+    std::istream::pos_type pos = in.tellg();
+
+    parse_flags_t parse_flags;
+    parse_flags.add_flags(PARSE_NO_ANNOT);
+    if (pflags.has_flags(PARSE_NO_MIGRATE))
+      parse_flags.add_flags(PARSE_NO_MIGRATE);
+    if (pflags.has_flags(PARSE_NO_REDUCE))
+      parse_flags.add_flags(PARSE_NO_REDUCE);
+
+    try {
+      amount_t temp;
+      if (temp.parse(in, parse_flags.plus_flags(PARSE_SOFT_FAIL))) {
+        if (!in.good()) {
+          in.clear();
+          in.seekg(0, std::ios::end);
+          if (in.fail())
+            throw_(parse_error, _("Failed to reset input stream"));
+        }
+        kind = VALUE;
+        value = temp;
+        length = static_cast<std::size_t>(in.tellg() - pos);
+        break;
+      }
+    } catch (const std::exception&) {}
+
+    in.clear();
+    in.seekg(pos, std::ios::beg);
+    if (in.fail())
+      throw_(parse_error, _("Failed to reset input stream"));
+
     char delim;
     in.get(delim);
     char buf[4096];
