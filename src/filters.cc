@@ -1256,7 +1256,11 @@ void day_of_week_posts::flush() {
 void generate_posts::add_period_xacts(period_xacts_list& period_xacts) {
   for (period_xact_t* xact : period_xacts)
     for (post_t* post : xact->posts)
-      add_post(xact->period, *post);
+      // Skip auto-transaction-generated posts (ITEM_GENERATED without
+      // POST_CALCULATED); they have no xact back-pointer and should not
+      // produce independent forecast/budget entries.
+      if (!post->has_flags(ITEM_GENERATED) || post->has_flags(POST_CALCULATED))
+        add_post(xact->period, *post);
 }
 
 void generate_posts::add_post(const date_interval_t& period, post_t& post) {
