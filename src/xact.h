@@ -166,7 +166,8 @@ public:
     deferred_notes->back().apply_to_post = active_post;
   }
 
-  virtual void extend_xact(xact_base_t& xact, parse_context_t& context);
+  virtual void extend_xact(xact_base_t& xact, parse_context_t& context,
+                           const posts_list* posts_to_process = nullptr);
 };
 
 class period_xact_t : public xact_base_t {
