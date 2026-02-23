@@ -1,0 +1,24 @@
+; Test that virtual postings work with time grouping (-M)
+; From GitHub issue #2051
+;
+; When an account appears as both non-virtual (Assets:Checking $500.00) and
+; virtual ([Assets:Checking] -$500.00) in the same reporting period, the
+; register -M command previously threw:
+;   'equity' cannot accept virtual and non-virtual postings to the same account
+
+2004/03/20 Contributions
+    Assets:Checking                    $500.00
+    Income:Donations
+
+2004/03/25 Distribution of donations
+    [Funds:School]                     $300.00
+    [Funds:Building]                   $200.00
+    [Assets:Checking]                 $-500.00
+
+test register -M
+04-Mar-01 - 04-Mar-31           Assets:Checking             $500.00      $500.00
+                                [Assets:Checking]          $-500.00            0
+                                [Funds:Building]            $200.00      $200.00
+                                [Funds:School]              $300.00      $500.00
+                                Income:Donations           $-500.00            0
+end test
