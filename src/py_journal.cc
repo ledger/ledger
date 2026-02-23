@@ -169,6 +169,49 @@ struct collector_wrapper {
   }
 };
 
+struct xacts_collector_wrapper {
+  std::vector<std::unique_ptr<xact_t>> owned_xacts;
+  std::vector<xact_t*> xacts;
+
+  std::size_t length() const { return xacts.size(); }
+  std::vector<xact_t*>::iterator begin() { return xacts.begin(); }
+  std::vector<xact_t*>::iterator end() { return xacts.end(); }
+};
+
+bool py_is_raw_hidden_post(const post_t& post) {
+  return post.has_flags(ITEM_GENERATED);
+}
+
+bool py_is_calculated_null_amount(const post_t& post) {
+  return post.has_flags(POST_CALCULATED) && !post.has_flags(ITEM_GENERATED) &&
+         !post.assigned_amount && !post.amount_expr;
+}
+
+shared_ptr<xacts_collector_wrapper> py_xacts(journal_t& journal) {
+  shared_ptr<xacts_collector_wrapper> coll(new xacts_collector_wrapper);
+
+  for (xact_t* xact : journal.xacts) {
+    std::unique_ptr<xact_t> raw_xact(new xact_t(*xact));
+
+    for (post_t* post : xact->posts) {
+      if (py_is_raw_hidden_post(*post))
+        continue;
+
+      std::unique_ptr<post_t> raw_post(new post_t(*post));
+      if (py_is_calculated_null_amount(*post)) {
+        raw_post->amount = amount_t();
+        raw_post->drop_flags(POST_CALCULATED);
+      }
+      raw_xact->add_post(raw_post.release());
+    }
+
+    coll->xacts.push_back(raw_xact.get());
+    coll->owned_xacts.push_back(std::move(raw_xact));
+  }
+
+  return coll;
+}
+
 shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& query) {
   if (journal.has_xdata()) {
     PyErr_SetString(PyExc_RuntimeError, _("Cannot have more than one active journal query"));
@@ -229,6 +272,10 @@ post_t* posts_getitem(collector_wrapper& collector, long i) {
       ->posts[static_cast<std::size_t>(i)];
 }
 
+xact_t* xacts_getitem(xacts_collector_wrapper& collector, long i) {
+  return collector.xacts[static_cast<std::size_t>(i)];
+}
+
 } // unnamed namespace
 
 #define EXC_TRANSLATOR(type)                                                                       \
@@ -248,6 +295,13 @@ void export_journal() {
       .def("__getitem__", posts_getitem, return_internal_reference<>())
       .def("__iter__", boost::python::range<return_internal_reference<>>(&collector_wrapper::begin,
                                                                          &collector_wrapper::end));
+
+  class_<xacts_collector_wrapper, shared_ptr<xacts_collector_wrapper>, boost::noncopyable>(
+      "XactCollectorWrapper", no_init)
+      .def("__len__", &xacts_collector_wrapper::length)
+      .def("__getitem__", xacts_getitem, return_internal_reference<>())
+      .def("__iter__", boost::python::range<return_internal_reference<>>(&xacts_collector_wrapper::begin,
+                                                                         &xacts_collector_wrapper::end));
 
   class_<journal_t::fileinfo_t>("FileInfo")
       .def(init<path>())
@@ -301,10 +355,8 @@ void export_journal() {
              with_custodian_and_ward_postcall<1, 0> >())
 #endif
 
-      .def("__iter__", boost::python::range<return_internal_reference<>>(&journal_t::xacts_begin,
-                                                                         &journal_t::xacts_end))
-      .def("xacts", boost::python::range<return_internal_reference<>>(&journal_t::xacts_begin,
-                                                                      &journal_t::xacts_end))
+      .def("__iter__", py_xacts)
+      .def("xacts", py_xacts)
       .def("auto_xacts", boost::python::range<return_internal_reference<>>(
                              &journal_t::auto_xacts_begin, &journal_t::auto_xacts_end))
       .def("period_xacts", boost::python::range<return_internal_reference<>>(

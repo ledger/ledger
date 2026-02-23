@@ -129,6 +129,26 @@ commodity Comm
         posts = journal.query('books -l "commodity  * 2 == \\"BB\\""')
         self.assertTrue(len(posts) == 1 and posts[0].amount.commodity == b_control)
 
+    def testXactsStayRawWithConditionalAutomatedTransaction(self):
+        journal = read_journal_from_string("""
+= Food
+    (Assets:Cash)    $100
+
+2012-03-01 KFC
+    Expenses:Food    $100
+    Assets:Credit
+""")
+
+        xacts = list(journal.xacts())
+        self.assertEqual(len(xacts), 1)
+
+        posts = list(xacts[0].posts())
+        self.assertEqual(len(posts), 2)
+        self.assertEqual(str(posts[0].account), "Expenses:Food")
+        self.assertEqual(posts[0].amount, Amount("$100"))
+        self.assertEqual(str(posts[1].account), "Assets:Credit")
+        self.assertTrue(posts[1].amount.is_null())
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(JournalTestCase)
 
