@@ -171,7 +171,11 @@ value_t get_payee(post_t& post) {
 value_t get_note(post_t& post) {
   if (post.note || (post.xact && post.xact->note)) {
     string note = post.note ? *post.note : empty_string;
-    note += (post.xact && post.xact->note) ? *post.xact->note : empty_string;
+    if (post.xact && post.xact->note) {
+      if (!note.empty())
+        note += '\n';
+      note += *post.xact->note;
+    }
     return string_value(note);
   } else {
     return NULL_VALUE;

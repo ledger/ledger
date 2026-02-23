@@ -1,0 +1,22 @@
+; Regression test for GitHub issue #1975
+; Notes in format expressions should concatenate consistently
+; using newlines whether combining posting+xact notes or multiple posting notes
+
+; Transaction with both posting and transaction metadata
+2020/12/03 * PayeeA
+  ; Transaction note
+  AccountA        10  ; Tag: value
+  AccountB
+
+; Posting with multiple metadata entries on separate lines
+2020/12/03 * PayeeB
+  AccountA        10  ; Posting note
+                      ; Tag: value
+  AccountB
+
+test reg --format "%P %A %t %N\n" AccountA
+PayeeA AccountA 10  Tag: value
+ Transaction note
+PayeeB AccountA 10  Posting note
+ Tag: value
+end test

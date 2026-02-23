@@ -8,5 +8,6 @@
     Assets:Checking
 
 test reg --format "%(note)\n" Expenses
- PostNote: food purchase TxnNote: important
+ PostNote: food purchase
+ TxnNote: important
 end test
