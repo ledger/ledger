@@ -739,6 +739,31 @@ std::optional<amount_t> amount_t::value(const datetime_t& moment, const commodit
         // setting of --price-exp.
         if (point)
           point = commodity().check_for_updated_price(point, moment, comm);
+
+        // If no price was found directly, walk the larger unit chain to find
+        // a price for an equivalent larger unit (issue #2017).  This handles
+        // chains such as A -> B -> C -> D when amounts are stored in the
+        // smallest unit (D) but a price is only defined for an intermediate
+        // unit such as B.  We scale the amount up to the larger unit before
+        // computing the price, then return the scaled price directly.
+        if (!point && commodity().larger()) {
+          amount_t scaled(*this);
+          while (!point && scaled.commodity_ && scaled.commodity().larger()) {
+            scaled /= scaled.commodity().larger()->number();
+            scaled.commodity_ = scaled.commodity().larger()->commodity_;
+            if (comm && scaled.commodity().referent() == comm->referent())
+              break;
+            point = scaled.commodity().find_price(comm, moment);
+            if (point)
+              point = scaled.commodity().check_for_updated_price(point, moment, comm);
+          }
+          if (point) {
+            amount_t price(point->price);
+            price.multiply(scaled, true);
+            price.in_place_round();
+            return price;
+          }
+        }
       }
 
       if (point) {
