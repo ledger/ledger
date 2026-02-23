@@ -405,76 +405,90 @@ void collapse_posts::report_subtotal() {
       displayed_count++;
   }
 
-  if (collapse_depth == 0 && displayed_count == 1) {
-    item_handler<post_t>::operator()(*last_post);
-  } else if (only_collapse_if_zero && !subtotal.is_zero()) {
+  if (only_collapse_if_zero && !subtotal.is_zero()) {
+    // --collapse-if-zero with non-zero subtotal: pass all component posts
+    // through uncollapsed.  Must be checked before the displayed_count == 1
+    // optimisation because display_predicate evaluates on posts that have not
+    // yet had their running totals computed by calc_posts, so the predicate
+    // result is unreliable at this point.
     for (post_t* post : component_posts)
       item_handler<post_t>::operator()(*post);
-  } else if (collapse_depth > 0 && item_t::use_aux_date) {
-    // When using --depth with --effective, group posts by both the
-    // depth-truncated account and effective date, so that postings with
-    // different effective dates are not incorrectly collapsed together.
-    typedef std::pair<date_t, account_t*> date_acct_key;
-    typedef std::map<date_acct_key, value_t> grouped_totals_map;
-    grouped_totals_map grouped;
+  } else if (!only_collapse_if_zero && collapse_depth == 0 && displayed_count == 1) {
+    // Regular --collapse optimisation: only one post matched the display
+    // predicate, so pass it through directly rather than building a synthetic
+    // posting.
+    item_handler<post_t>::operator()(*last_post);
+  } else if (!only_collapse_if_zero) {
+    // Regular --collapse: collapse all component posts into synthetic
+    // posting(s).
+    if (collapse_depth > 0 && item_t::use_aux_date) {
+      // When using --depth with --effective, group posts by both the
+      // depth-truncated account and effective date, so that postings with
+      // different effective dates are not incorrectly collapsed together.
+      typedef std::pair<date_t, account_t*> date_acct_key;
+      typedef std::map<date_acct_key, value_t> grouped_totals_map;
+      grouped_totals_map grouped;
 
-    for (post_t* post : component_posts) {
-      account_t* acct = post->account;
-      while (acct->depth > collapse_depth && acct->parent)
-        acct = acct->parent;
+      for (post_t* post : component_posts) {
+        account_t* acct = post->account;
+        while (acct->depth > collapse_depth && acct->parent)
+          acct = acct->parent;
 
-      date_t d = post->date();
-      date_acct_key key(d, acct);
-      post->add_to_value(grouped[key], amount_expr);
-    }
+        date_t d = post->date();
+        date_acct_key key(d, acct);
+        post->add_to_value(grouped[key], amount_expr);
+      }
 
-    for (const grouped_totals_map::value_type& entry : grouped) {
-      date_t d = entry.first.first;
-      account_t* acct = entry.first.second;
+      for (const grouped_totals_map::value_type& entry : grouped) {
+        date_t d = entry.first.first;
+        account_t* acct = entry.first.second;
+
+        xact_t& xact = temps.create_xact();
+        xact.payee = last_xact->payee;
+        xact._date = d;
+
+        handle_value(/* value=      */ entry.second,
+                     /* account=    */ acct,
+                     /* xact=       */ &xact,
+                     /* temps=      */ temps,
+                     /* handler=    */ handler,
+                     /* date=       */ d,
+                     /* act_date_p= */ true);
+      }
+    } else {
+      date_t earliest_date;
+      date_t latest_date;
+
+      for (post_t* post : component_posts) {
+        date_t date = post->date();
+        date_t value_date = post->value_date();
+        if (!is_valid(earliest_date) || date < earliest_date)
+          earliest_date = date;
+        if (!is_valid(latest_date) || value_date > latest_date)
+          latest_date = value_date;
+      }
 
       xact_t& xact = temps.create_xact();
       xact.payee = last_xact->payee;
-      xact._date = d;
+      xact._date = (is_valid(earliest_date) ? earliest_date : last_xact->_date);
 
-      handle_value(/* value=      */ entry.second,
-                   /* account=    */ acct,
-                   /* xact=       */ &xact,
-                   /* temps=      */ temps,
-                   /* handler=    */ handler,
-                   /* date=       */ d,
-                   /* act_date_p= */ true);
-    }
-  } else {
-    date_t earliest_date;
-    date_t latest_date;
+      DEBUG("filters.collapse", "Pseudo-xact date = " << *xact._date);
+      DEBUG("filters.collapse", "earliest date    = " << earliest_date);
+      DEBUG("filters.collapse", "latest date      = " << latest_date);
 
-    for (post_t* post : component_posts) {
-      date_t date = post->date();
-      date_t value_date = post->value_date();
-      if (!is_valid(earliest_date) || date < earliest_date)
-        earliest_date = date;
-      if (!is_valid(latest_date) || value_date > latest_date)
-        latest_date = value_date;
-    }
-
-    xact_t& xact = temps.create_xact();
-    xact.payee = last_xact->payee;
-    xact._date = (is_valid(earliest_date) ? earliest_date : last_xact->_date);
-
-    DEBUG("filters.collapse", "Pseudo-xact date = " << *xact._date);
-    DEBUG("filters.collapse", "earliest date    = " << earliest_date);
-    DEBUG("filters.collapse", "latest date      = " << latest_date);
-
-    for (totals_map::value_type& pat : totals) {
-      handle_value(/* value=      */ pat.second,
-                   /* account=    */ pat.first,
-                   /* xact=       */ &xact,
-                   /* temps=      */ temps,
-                   /* handler=    */ handler,
-                   /* date=       */ latest_date,
-                   /* act_date_p= */ false);
+      for (totals_map::value_type& pat : totals) {
+        handle_value(/* value=      */ pat.second,
+                     /* account=    */ pat.first,
+                     /* xact=       */ &xact,
+                     /* temps=      */ temps,
+                     /* handler=    */ handler,
+                     /* date=       */ latest_date,
+                     /* act_date_p= */ false);
+      }
     }
   }
+  // When only_collapse_if_zero && subtotal.is_zero(): suppress entirely
+  // (fall through to cleanup below).
 
   totals.clear();
   component_posts.clear();
