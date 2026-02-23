@@ -260,13 +260,13 @@ BOOST_AUTO_TEST_CASE(testCommodityPrint)
     BOOST_CHECK_EQUAL(string("\"My Fund\""), out.str());
   }
 
-  // With elide_quotes=true, quotes should be kept because symbol
-  // contains spaces (elide_quotes only removes quotes when the inner
-  // symbol has no spaces and COMMODITY_STYLE_SEPARATED is set)
+  // With elide_quotes=true, quotes should be removed even when the symbol
+  // contains spaces, as long as COMMODITY_STYLE_SEPARATED is set (which it
+  // is for "10 \"My Fund\"" since there is a space between amount and symbol)
   {
     std::ostringstream out;
     fund.print(out, true, false);
-    BOOST_CHECK_EQUAL(string("\"My Fund\""), out.str());
+    BOOST_CHECK_EQUAL(string("My Fund"), out.str());
   }
 
   BOOST_CHECK(x1.valid());

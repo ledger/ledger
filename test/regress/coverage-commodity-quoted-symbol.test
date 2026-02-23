@@ -6,5 +6,5 @@
     Assets:Checking
 
 test bal Assets:Investment
-         10 "FUND A"  Assets:Investment
+           10 FUND A  Assets:Investment
 end test

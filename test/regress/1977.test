@@ -1,0 +1,19 @@
+; Regression test for GitHub issue #1977
+; Commodity names with spaces should not show double quotes in reports
+
+2024/01/01 Test
+    Assets:Savings    12.34 "pieces of XYZ"
+    Assets:Checking
+
+test bal
+                   0  Assets
+-12.34 pieces of XYZ    Checking
+ 12.34 pieces of XYZ    Savings
+--------------------
+                   0
+end test
+
+test reg
+24-Jan-01 Test                  Assets:Savings         12.34 pieces of XYZ 12.34 pieces of XYZ
+                                Assets:Checking        -12.34 pieces of XYZ            0
+end test
