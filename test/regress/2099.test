@@ -1,0 +1,19 @@
+; Test: account("name").total in automated transaction predicates (issue #2099)
+; The automated posting fires only while Assets:Budget total is below $50.00.
+; First income posting brings the budget to $60.00; second does not trigger.
+
+= expr account =~ /^Income/ and account("Assets:Budget").total < $50.00
+    [Assets:Budget]             $60.00
+    [Assets:Savings]           -$60.00
+
+2023-01-01 Employer
+    Assets:Checking            $100.00
+    Income:Salary
+
+2023-02-01 Employer
+    Assets:Checking            $100.00
+    Income:Salary
+
+test bal Assets:Budget
+              $60.00  Assets:Budget
+end test

@@ -3871,6 +3871,7 @@ transaction.
 @menu
 * Amount multipliers::
 * Accessing the matching posting's amount::
+* Using current account balances::
 * Referring to the matching posting's account::
 * Applying metadata to every matched posting::
 * Applying metadata to the generated posting::
@@ -3911,7 +3912,7 @@ Then the latter transaction turns into this during parsing:
     Bar                       $-1000.00
 @end smallexample
 
-@node Accessing the matching posting's amount, Referring to the matching posting's account, Amount multipliers, Automated Transactions
+@node Accessing the matching posting's amount, Using current account balances, Amount multipliers, Automated Transactions
 @subsection Accessing the matching posting's amount
 
 If you use an amount expression for an automated transaction's
@@ -3938,7 +3939,56 @@ This becomes:
     (Foo)                       $-40.00
 @end smallexample
 
-@node Referring to the matching posting's account, Applying metadata to every matched posting, Accessing the matching posting's amount, Automated Transactions
+@node Using current account balances, Referring to the matching posting's account, Accessing the matching posting's amount, Automated Transactions
+@subsection Using current account balances
+
+The @code{account()} function can be called within an automated
+transaction predicate or amount expression to retrieve any account by
+name and inspect its running balance.  The argument is a string
+containing the full account name.  The returned account object exposes
+two properties:
+
+@table @code
+@item .total
+The cumulative balance of the account, including all subaccounts, as of
+all transactions processed so far.
+@item .amount
+The balance of the account itself, without including subaccounts.
+@end table
+
+A common use is to cap contributions to a budget account once it has
+reached a certain level.  In the example below, an automated posting
+adds $60.00 to @samp{Assets:Budget} for each income posting, but only
+fires while the budget balance is below $50.00:
+
+@smallexample @c input:04D8BC7
+= expr account =~ /^Income/ and account("Assets:Budget").total < $50.00
+    [Assets:Budget]             $60.00
+    [Assets:Savings]           -$60.00
+
+2023-01-01 Employer
+    Assets:Checking            $100.00
+    Income:Salary
+
+2023-02-01 Employer
+    Assets:Checking            $100.00
+    Income:Salary
+@end smallexample
+
+The first income posting triggers the rule because the budget starts at
+zero, bringing it to $60.00.  The second posting finds the budget
+already at $60.00, which is not below the threshold, so the rule does
+not fire again.
+
+@smallexample @c command:04D8BC7
+$ ledger balance Assets:Budget
+@end smallexample
+
+@smallexample @c output:04D8BC7
+              $60.00  Assets:Budget
+@end smallexample
+
+@node Referring to the matching posting's account, Applying metadata to every matched posting, Using current account balances, Automated Transactions
 @subsection Referring to the matching posting's account
 
 Sometimes you want to refer to the account that was matched
@@ -8856,6 +8906,26 @@ or the depth of the account
 @defvar account_base
 Return the last part of the account hierarchy.
 @end defvar
+
+@defun account name
+Look up the account named @var{name} in the current journal and return
+it as an account object.  The argument may be a string containing the
+full account name.  Returns an empty value if no matching account is
+found.
+
+The returned object supports these properties:
+
+@table @code
+@item .total
+The cumulative balance of the account, including all subaccounts.
+@item .amount
+The balance of the account itself, without subaccounts.
+@end table
+
+This function is primarily useful in automated transaction predicates
+and @code{assert} or @code{check} directives to inspect the running
+balance of a named account (@pxref{Using current account balances}).
+@end defun
 
 @defun amount_expr
 Return the calculated amount of the posting according to the @option{--amount}
