@@ -741,28 +741,26 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context,
   if (!enabled)
     return;
 
-  posts_list initial_posts;
-  if (posts_to_process) {
-    // Caller-supplied list: use as-is (no ITEM_GENERATED filtering needed since
-    // the caller controls exactly which newly-generated posts to process).
-    initial_posts = *posts_to_process;
-  } else {
-    // Original behavior: snapshot current posts, skipping auto-generated ones
-    // (unless they are POST_CALCULATED balancing posts from finalize(), which
-    // ensures auto transactions can match all commodities in multi-commodity
-    // balancing posts).
+  // When a caller-supplied list is given (cascade wave), use it directly to
+  // avoid an extra allocation.  When null, build the snapshot as before:
+  // skip ITEM_GENERATED posts unless they are POST_CALCULATED balancing posts
+  // from finalize() (which ensures auto transactions can match all commodities
+  // in multi-commodity balancing posts).
+  posts_list snapshot;
+  if (!posts_to_process) {
     for (post_t* post : xact.posts) {
       if (post->has_flags(ITEM_GENERATED) && !post->has_flags(POST_CALCULATED))
         continue;
-      initial_posts.push_back(post);
+      snapshot.push_back(post);
     }
+    posts_to_process = &snapshot;
   }
 
   try {
 
     bool needs_further_verification = false;
 
-    for (post_t* initial_post : initial_posts) {
+    for (post_t* initial_post : *posts_to_process) {
 
       bind_scope_t bound_scope(*scope_t::default_scope, *initial_post);
 
