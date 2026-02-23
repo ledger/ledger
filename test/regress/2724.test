@@ -1,0 +1,43 @@
+; Regression test for issue #2724
+;
+; Percentage amounts used as multipliers or divisors must be treated as
+; fractions (divided by 100) so that "amount * 19%" means "amount * 0.19",
+; not "amount * 19".
+;
+; The "%" builtin commodity stores its numeric value literally, so 19% is
+; stored with quantity 19.  Without the fix, multiplying by 19% would yield
+; a result 100x too large.
+
+; --- Tests 1 and 2: basic multiply/divide by percentage in a format expression
+
+2024/01/01 Simple Percentage
+    Expenses:Food               $200.00
+    Assets:Checking
+
+test reg --format "%(amount * 50%) %(account)\n" Expenses:Food
+$100.00 Expenses:Food
+end test
+
+test reg --format "%(amount / 50%) %(account)\n" Expenses:Food
+$400.00 Expenses:Food
+end test
+
+; --- Test 3: auto-xact with a percentage stored in a by-value tag ---
+;
+; This is the canonical case from the issue: tag('VAT') returns 19% and
+; multiplying the posting amount by it should produce 19% of the amount,
+; i.e. $1000 * 19% = $190, not $19000.
+
+= /Expenses:Services/
+    (Liabilities:VAT)             (amount * tag("VAT"))
+
+2024/01/02 VAT Purchase
+    ; VAT:: 19%
+    Expenses:Services           $1000.00
+    Assets:Checking
+
+test reg --columns 80 -b 2024/01/02
+24-Jan-02 VAT Purchase          Expenses:Services          $1000.00     $1000.00
+                                Assets:Checking           $-1000.00            0
+                                (Liabilities:VAT)           $190.00      $190.00
+end test
