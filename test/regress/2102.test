@@ -1,0 +1,28 @@
+; Test for GitHub issue #2102: Allow recursive/nested automated transactions
+;
+; When one automated transaction generates a posting that matches another
+; automated transaction's predicate, the second automated transaction should
+; also fire.  Previously, ITEM_GENERATED postings were unconditionally skipped,
+; so nested automation never worked.
+
+= /expenses:gym/
+    expenses:whatever                         $10
+    assets:bank                              -$10
+
+= /income:salary/
+    expenses:gym                              $50
+    assets:bank                              -$50
+
+2022-04-04 Salary
+    assets:bank                           $1,000
+    income:salary
+
+test bal
+                $940  assets:bank
+                 $60  expenses
+                 $50    gym
+                 $10    whatever
+             $-1,000  income:salary
+--------------------
+                   0
+end test
