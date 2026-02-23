@@ -151,8 +151,71 @@ void truncate_xacts::operator()(post_t& post) {
   posts.push_back(&post);
 }
 
+static void recompute_balance_assignments(std::deque<post_t*>& posts) {
+  std::map<account_t*, value_t> sorted_balance;
+
+  for (post_t* post : posts) {
+    if (post->assigned_amount.has_value() && post->has_flags(POST_CALCULATED)) {
+      // This is a balance assignment post; recompute its amount relative to
+      // the running balance in sorted order rather than file order.
+      const amount_t& amt(*post->assigned_amount);
+      bool strip = !amt.has_annotation();
+
+      value_t cur_balance;
+      auto it = sorted_balance.find(post->account);
+      if (it != sorted_balance.end())
+        cur_balance = it->second;
+
+      if (strip && !cur_balance.is_null())
+        cur_balance = cur_balance.strip_annotations(keep_details_t());
+
+      balance_t diff = amt;
+      switch (cur_balance.type()) {
+      case value_t::AMOUNT:
+        diff -= cur_balance.as_amount().reduced();
+        break;
+      case value_t::BALANCE:
+        diff -= cur_balance.as_balance();
+        break;
+      default:
+        break;
+      }
+
+      amount_t new_amount;
+      if (amt.has_commodity()) {
+        optional<amount_t> wanted = diff.commodity_amount(amt.commodity());
+        new_amount = wanted ? *wanted : (amt - amt);
+      } else {
+        try {
+          new_amount = diff.to_amount();
+        } catch (...) {
+          new_amount = amt - amt;
+        }
+      }
+
+      if (new_amount != post->amount) {
+        amount_t delta = new_amount - post->amount;
+        post->amount = new_amount;
+
+        // Adjust the auto-filled counter-post in the same transaction.
+        for (post_t* p : post->xact->posts) {
+          if (p != post && p->has_flags(POST_CALCULATED) && !p->assigned_amount.has_value() &&
+              !p->amount.is_null()) {
+            p->amount -= delta;
+          }
+        }
+      }
+    }
+
+    if (!post->amount.is_null() && !post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))
+      add_or_set_value(sorted_balance[post->account], post->amount);
+  }
+}
+
 void sort_posts::post_accumulated_posts() {
   std::stable_sort(posts.begin(), posts.end(), compare_items<post_t>(sort_order, report));
+
+  recompute_balance_assignments(posts);
 
   for (post_t* post : posts) {
     post->xdata().drop_flags(POST_EXT_SORT_CALC);
@@ -543,12 +606,11 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler, report_t& _
   // (i.e., display_total_ = total_expr, total_ = total).  Options like
   // --market, --exchange, --average, etc. modify these expressions,
   // breaking the distributive property: strip(f(total)) != f(strip(total)).
-  incremental_strip_eligible =
-      report.HANDLER(display_total_).expr.exprs.empty() &&
-      report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
-      report.HANDLER(total_).expr.exprs.empty() &&
-      report.HANDLER(total_).expr.base_expr == "total" &&
-      !what_to_keep.keep_all();
+  incremental_strip_eligible = report.HANDLER(display_total_).expr.exprs.empty() &&
+                               report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
+                               report.HANDLER(total_).expr.exprs.empty() &&
+                               report.HANDLER(total_).expr.base_expr == "total" &&
+                               !what_to_keep.keep_all();
   create_accounts();
   TRACE_CTOR(display_filter_posts, "post_handler_ptr, report_t&, bool");
 }
@@ -572,8 +634,7 @@ bool display_filter_posts::output_rounding(post_t& post) {
     //   - The display_total_expr is non-default (--market, --exchange, etc.)
     //   - The posting is a revalued/generated posting
     //   - The posting doesn't have visited_value set by calc_posts
-    if (has_stripped_cache && incremental_strip_eligible &&
-        post.account != revalued_account &&
+    if (has_stripped_cache && incremental_strip_eligible && post.account != revalued_account &&
         post.has_xdata() && post.xdata().has_flags(POST_EXT_VISITED) &&
         !post.xdata().visited_value.is_null()) {
       // Incremental path: strip just the posting's contribution
@@ -582,8 +643,7 @@ bool display_filter_posts::output_rounding(post_t& post) {
       add_or_set_value(new_display_total, stripped_delta);
     } else {
       // Full path: strip the entire display total from scratch
-      new_display_total =
-          (display_total_expr.calc(bound_scope).strip_annotations(what_to_keep));
+      new_display_total = (display_total_expr.calc(bound_scope).strip_annotations(what_to_keep));
     }
 
     DEBUG("filters.changed_value.rounding",
@@ -1183,8 +1243,8 @@ void by_payee_posts::flush() {
 void by_payee_posts::operator()(post_t& post) {
   payee_subtotals_map::iterator i = payee_subtotals.find(post.payee());
   if (i == payee_subtotals.end()) {
-    payee_subtotals_pair temp(post.payee(),
-                              std::shared_ptr<subtotal_posts>(new subtotal_posts(handler, amount_expr)));
+    payee_subtotals_pair temp(
+        post.payee(), std::shared_ptr<subtotal_posts>(new subtotal_posts(handler, amount_expr)));
     auto [iter, inserted] = payee_subtotals.insert(temp);
 
     assert(inserted);
