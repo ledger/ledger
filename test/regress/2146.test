@@ -1,0 +1,32 @@
+; Regression test for --gain-since DATE option (issue #2146)
+;
+; --gain computes gain from original cost basis.  --gain-since DATE changes
+; the cost baseline: for postings dated before DATE, the baseline is the
+; market value at DATE rather than the original cost.  This lets users
+; compute gain within a specific period while still accounting for
+; unrealised appreciation that existed at the period start.
+;
+; Scenario:
+;   100 XYZ bought at $2 (cost $200), market value $3 at 2022-01-01
+;   100 more XYZ bought at $4 on 2022-02-01
+;   XYZ price rises to $5 by 2022-03-31
+;
+; Expected gain with --gain-since 2022/01/01:
+;   Initial lot: 100 XYZ x ($5 - $3) = $200
+;   Second lot:  100 XYZ x ($5 - $4) = $100
+;   Total: $300
+
+P 2022/01/01 XYZ $3
+P 2022/03/31 XYZ $5
+
+2021/12/01 Buy initial lot
+    Assets:Investments    100 XYZ @ $2
+    Assets:Checking      $-200
+
+2022/02/01 Buy second lot
+    Assets:Investments    100 XYZ @ $4
+    Assets:Checking      $-400
+
+test --gain --gain-since "2022/01/01" --now "2022/03/31" bal
+                $300  Assets:Investments
+end test
