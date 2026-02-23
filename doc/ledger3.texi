@@ -4455,8 +4455,8 @@ can be setup with the following:
 ; the amount of the transaction multiplied by the "cashback" tag.
 
 = "Liabilities:Credit Card" and %cashback
-    Assets:Credit Card Cashback  (-amount * tag("cashback") * 0.01)
-    Income:Credit Card Rewards    (amount * tag("cashback") * 0.01)
+    Assets:Credit Card Cashback  (-amount * tag("cashback"))
+    Income:Credit Card Rewards    (amount * tag("cashback"))
 @end smallexample
 
 To add a transaction that gives 2% cashback:
