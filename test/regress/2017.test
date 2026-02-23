@@ -1,0 +1,25 @@
+; Test that -X conversion works when a price is defined for an intermediate
+; unit in a conversion chain (issue #2017).
+;
+; Here A reduces to D via B and C, but the P directive only covers B.
+; When ledger stores 1.00 A internally as 1,000,000,000 D (after reduce),
+; it must walk the larger() chain D->C->B to find the price for B and then
+; scale the result correctly.
+
+C 1.00 A = 1000 B
+C 1.00 B = 1000 C
+C 1.00 C = 1000 D
+
+P 2020/01/01 B 5.00 USD
+
+2020/01/02 Test
+    Assets:Holdings    1.00 A
+    Assets:Cash       -1.00 A
+
+test bal -X USD
+                   0  Assets
+         USD-5000.00    Cash
+          USD5000.00    Holdings
+--------------------
+                   0
+end test
