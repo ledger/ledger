@@ -1,0 +1,22 @@
+; Test that --permissive suppresses balance assertion errors when an
+; elided (auto-computed) amount is combined with a balance assignment.
+; Without --permissive, the balance assignment sets Assets:Checking to
+; $12345, making the transaction unbalanced ($3141 + $12345 = $15486).
+; With --permissive, the balance assignment is skipped and the elided
+; amount is auto-computed as -$3141 to balance the transaction.
+
+2021/02/14 Test transaction
+  Liabilities:Visa  $3141
+  Assets:Checking  =$12345
+
+test bal --permissive
+              $-3141  Assets:Checking
+               $3141  Liabilities:Visa
+--------------------
+                   0
+end test
+
+test reg --permissive
+21-Feb-14 Test transaction      Liabilities:Visa              $3141        $3141
+                                Assets:Checking              $-3141            0
+end test
