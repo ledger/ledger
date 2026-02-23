@@ -164,6 +164,7 @@ public:
   value_t fn_rounded(call_scope_t& scope);
   value_t fn_unrounded(call_scope_t& scope);
   value_t fn_truncated(call_scope_t& scope);
+  value_t fn_trunc(call_scope_t& scope);
   value_t fn_floor(call_scope_t& scope);
   value_t fn_ceiling(call_scope_t& scope);
   value_t fn_clear_commodity(call_scope_t& scope);

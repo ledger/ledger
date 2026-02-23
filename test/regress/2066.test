@@ -1,0 +1,30 @@
+; Test that amount truncation rounds towards zero (issue #2066).
+; The trunc() function must use truncation (towards zero), not rounding.
+; For negative values this means -1.9 truncates to -1, not -2.
+
+; Commodity Q with display precision 0
+D Q 1
+
+2023-01-01 Test
+    Assets:Test   -5 Q
+    Equity
+
+; -5/3 Q ≈ -1.666...  trunc towards zero → -1 Q (not -2 Q)
+test eval "trunc(-5 / 3 * 1 Q)"
+-1 Q
+end test
+
+; -3/2 Q = -1.5  trunc towards zero → -1 Q (not -2 Q)
+test eval "trunc(-3 / 2 * 1 Q)"
+-1 Q
+end test
+
+; positive value: 5/3 Q ≈ 1.666...  trunc towards zero → 1 Q
+test eval "trunc(5 / 3 * 1 Q)"
+1 Q
+end test
+
+; floor should still give -2 Q for negative fractions
+test eval "floor(-5 / 3 * 1 Q)"
+-2 Q
+end test
