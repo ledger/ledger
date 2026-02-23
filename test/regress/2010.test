@@ -1,0 +1,33 @@
+; Regression test for issue #2010: commodity alias mustn't be in quotes
+; Tests that quoted alias names in commodity directives work correctly.
+; Prior to the fix, 'alias "BBB1"' would store the alias as '"BBB1"'
+; (including the surrounding quotes) instead of 'BBB1', causing lookups
+; to fail.
+
+commodity "AAA1"
+    alias "BBB1"
+
+2024/01/01 Test Quoted Alias
+    Expenses:Food    10 "BBB1"
+    Assets:Cash
+
+; Also verify that quoted and unquoted alias forms are equivalent when
+; the commodity symbol does not end in a digit.
+
+commodity AAAX
+    alias "BBBX"
+
+2024/01/02 Test Non-Numeric Alias
+    Income:Salary    -20 BBBX
+    Assets:Bank
+
+test bal
+            -10 AAA1
+             20 AAAX  Assets
+             20 AAAX    Bank
+            -10 AAA1    Cash
+             10 AAA1  Expenses:Food
+            -20 AAAX  Income:Salary
+--------------------
+                   0
+end test
