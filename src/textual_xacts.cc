@@ -666,37 +666,45 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
 
         if (post->amount.is_null()) {
           // balance assignment
-          if (!diff.is_zero()) {
-            if (strip) {
-              // Recompute the diff preserving lot annotations (cost basis
-              // and lot date) so that the assigned amount retains them.
-              balance_t ann_diff =
-                  compute_balance_diff(amt, post.get(), xact, false, context);
-              // Use annotated diff if it can be represented as a single
-              // amount; fall back to the stripped diff otherwise (e.g.
-              // when multiple lots with different annotations exist).
-              try {
-                post->amount = ann_diff.to_amount();
-              } catch (...) {
-                post->amount = diff.to_amount();
-              }
-            } else {
-              // Diff already has annotations; use it directly.
-              try {
-                post->amount = diff.to_amount();
-              } catch (...) {
-                post->amount = diff.strip_annotations(keep_details_t()).to_amount();
-              }
-            }
+          if (no_assertions) {
+            // With --permissive, skip computing the posting amount from the
+            // balance assignment.  Leave post->amount null so that finalize()
+            // will auto-compute the balancing amount from the other postings.
             DEBUG("textual.parse", "line " << context.linenum << ": "
-                                           << "Overwrite null posting with " << post->amount);
+                                           << "Skipping balance assignment (permissive mode)");
           } else {
-            post->amount = amt - amt; // this is '0' with the correct commodity.
-            DEBUG("textual.parse", "line " << context.linenum << ": "
-                                           << "Overwrite null posting with zero diff with "
-                                           << amt - amt);
+            if (!diff.is_zero()) {
+              if (strip) {
+                // Recompute the diff preserving lot annotations (cost basis
+                // and lot date) so that the assigned amount retains them.
+                balance_t ann_diff =
+                    compute_balance_diff(amt, post.get(), xact, false, context);
+                // Use annotated diff if it can be represented as a single
+                // amount; fall back to the stripped diff otherwise (e.g.
+                // when multiple lots with different annotations exist).
+                try {
+                  post->amount = ann_diff.to_amount();
+                } catch (...) {
+                  post->amount = diff.to_amount();
+                }
+              } else {
+                // Diff already has annotations; use it directly.
+                try {
+                  post->amount = diff.to_amount();
+                } catch (...) {
+                  post->amount = diff.strip_annotations(keep_details_t()).to_amount();
+                }
+              }
+              DEBUG("textual.parse", "line " << context.linenum << ": "
+                                             << "Overwrite null posting with " << post->amount);
+            } else {
+              post->amount = amt - amt; // this is '0' with the correct commodity.
+              DEBUG("textual.parse", "line " << context.linenum << ": "
+                                             << "Overwrite null posting with zero diff with "
+                                             << amt - amt);
+            }
+            post->add_flags(POST_CALCULATED);
           }
-          post->add_flags(POST_CALCULATED);
         } else {
           // balance assertion
           amount_t post_amt(strip ? post->amount.reduced().strip_annotations(keep_details_t())
