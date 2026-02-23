@@ -174,6 +174,16 @@ void report_t::normalize_options(const string& verb) {
     HANDLER(amount_).on("?normalize", "market(amount_expr, value_date, exchange)");
   }
 
+  if (HANDLED(gain) && HANDLED(gain_since_)) {
+    // When --gain-since DATE is used with --gain, compute gain relative to
+    // the market value at DATE rather than from the original cost basis.
+    // For postings dated before DATE, use market(amount, DATE) as the cost
+    // baseline instead of the original cost.
+    string gf_str = "[" + to_iso_extended_string(gain_from->date()) + "]";
+    HANDLER(amount_).expr.set_base_expr(
+        "(amount, date < " + gf_str + " ? market(amount, " + gf_str + ", exchange) : cost)");
+  }
+
   long cols = 0;
 #if HAVE_IOCTL
   struct winsize ws;
@@ -1182,6 +1192,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     break;
   case 'g':
     OPT(gain);
+    else OPT(gain_since_);
     else OPT(group_by_);
     else OPT(group_by_cumulative);
     else OPT(group_title_format_);

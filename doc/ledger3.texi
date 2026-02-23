@@ -6377,6 +6377,11 @@ Report last known market value.
 @itemx -G
 Report net gain or loss for commodities that have a price history.
 
+@item --gain-since @var{DATE}
+When used with @option{--gain}, compute unrealised gain relative to the
+market value at @var{DATE} rather than each lot's original cost basis.
+Only appreciation since @var{DATE} is reported.
+
 @end ftable
 
 @node Detailed Option Description, Period Expressions, Command-Line Quick Reference, Command-Line Syntax
@@ -7047,6 +7052,61 @@ Use the given format string to print output.
 @itemx -G
 @itemx --change
 Report on gains using the latest available prices.
+
+@item --gain-since @var{DATE}
+@findex --gain-since
+When combined with @option{--gain} (@option{-G}), compute unrealised gain
+relative to the market value at @var{DATE} rather than each lot's original
+cost basis.
+
+By default, @option{--gain} measures how much a position has appreciated
+since it was @emph{acquired}: it computes
+@math{market(amount, now) - cost}.
+This is the since-inception gain, which can be misleading when you want to
+analyse performance over a specific window such as the current calendar year.
+Positions held before the period started contribute gain from before the window.
+
+@option{--gain-since @var{DATE}} addresses this by changing the baseline for
+lots whose posting date is before @var{DATE}: instead of the original cost,
+the baseline becomes the market value of the lot at @var{DATE}.
+Lots acquired on or after @var{DATE} are unaffected and still use their
+original cost.
+
+@subsubheading Example
+
+@smallexample @c input:validate
+P 2022/01/01 AAPL $150.00
+P 2022/12/31 AAPL $180.00
+
+2021/06/01 Buy shares
+    Assets:Brokerage    10 AAPL @@ $120.00
+    Assets:Cash
+
+2022/07/01 Buy more shares
+    Assets:Brokerage    10 AAPL @@ $160.00
+    Assets:Cash
+@end smallexample
+
+@smallexample
+$ ledger bal --gain
+             $600.00  Assets:Brokerage
+@end smallexample
+
+@noindent
+The $600 is gain from cost: 10@times{}($180@minus{}$120) + 10@times{}($180@minus{}$160).
+To see only the gain @emph{within} 2022:
+
+@smallexample
+$ ledger bal --gain --gain-since 2022/01/01
+             $500.00  Assets:Brokerage
+@end smallexample
+
+@noindent
+The first lot now uses $150 (market value at 2022-01-01) as its baseline:
+10@times{}($180@minus{}$150) = $300.
+The second lot, acquired after the reference date, still uses its cost:
+10@times{}($180@minus{}$160) = $200.
+Total: $500.
 
 @item --generated
 Include auto-generated postings (such as those from automated
@@ -8058,6 +8118,14 @@ Use the last known value for commodities to calculate final values.
 @itemx -G
 Report the net gain/loss for all commodities in the report that have
 a price history.
+
+@item --gain-since @var{DATE}
+When combined with @option{--gain}, report gain relative to the market
+value at @var{DATE} rather than original cost.  Use this to measure
+performance within a period: positions held before @var{DATE} use their
+market value at @var{DATE} as the baseline, so only appreciation since
+that date is counted.  @xref{--gain-since}, for a full description and
+example.
 
 @end ftable
 

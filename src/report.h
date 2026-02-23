@@ -113,6 +113,7 @@ public:
 #define BUDGET_WRAP_VALUES 0x04
 
   datetime_t terminus;
+  optional<datetime_t> gain_from;
   uint_least8_t budget_flags;
 
   explicit report_t(session_t& _session)
@@ -269,6 +270,7 @@ public:
     HANDLER(forecast_years_).report(out);
     HANDLER(format_).report(out);
     HANDLER(gain).report(out);
+    HANDLER(gain_since_).report(out);
     HANDLER(generated).report(out);
     HANDLER(group_by_).report(out);
     HANDLER(group_by_cumulative).report(out);
@@ -678,6 +680,17 @@ public:
       });
 
   OPTION(report_t, generated);
+
+  OPTION_(
+      report_t, gain_since_, DO_(str) {
+        date_interval_t interval(str);
+        if (optional<date_t> d = interval.begin()) {
+          parent->gain_from = datetime_t(*d);
+        } else {
+          throw_(std::invalid_argument,
+                 _f("Could not determine the gain reference date '%1%'") % str);
+        }
+      });
 
   OPTION_(report_t, group_by_, expr_t expr; DO_(str) { expr = str; });
 
