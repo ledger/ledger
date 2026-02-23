@@ -1117,6 +1117,7 @@ The result of this command might be:
 @menu
 * Commodity price histories::
 * Commodity equivalences::
+* The Percentage Commodity::
 @end menu
 
 @node Commodity price histories, Commodity equivalences, Commodities and Currencies, Commodities and Currencies
@@ -1141,7 +1142,7 @@ its various reports.  It will always report balances in terms of the
 commodity total, rather than the current value of those commodities.
 To enable pricing reports, use one of the commodity reporting options.
 
-@node Commodity equivalences,  , Commodity price histories, Commodities and Currencies
+@node Commodity equivalences, The Percentage Commodity, Commodity price histories, Commodities and Currencies
 @subsection Commodity equivalences
 
 Sometimes a commodity has several forms which are all equivalent.  An
@@ -1200,6 +1201,70 @@ would report as a decimal amount (less than @samp{1.00}), the next
 smallest commodity is used.  If a commodity could be reported in terms
 of a higher commodity without resulting to a partial fraction, then
 the larger commodity is used.
+
+@node The Percentage Commodity, , Commodity equivalences, Commodities and Currencies
+@subsection The Percentage Commodity
+
+Ledger treats @samp{%} as a built-in commodity with special arithmetic
+semantics.  Amounts written with a @samp{%} suffix---such as
+@samp{19%} or @samp{2.5%}---are percentage values.  Unlike ordinary
+commodities, which simply label a quantity, a @samp{%} amount is
+automatically treated as its fractional equivalent whenever it appears
+as the operand of multiplication or division.
+
+@table @asis
+@item Multiplication
+The percentage is divided by 100 before the product is formed, so the
+result has the commodity of the other operand rather than @samp{%}:
+
+@example
+$1000.00 * 19%  @result{}  $190.00    (not $19000.00)
+@end example
+
+@item Division
+The divisor is likewise treated as a fraction, so dividing by a
+percentage is the same as multiplying by its reciprocal:
+
+@example
+$190.00 / 19%   @result{}  $1000.00   (not $10.00)
+@end example
+
+@item Percentage @times{} percentage
+When both operands carry @samp{%}, only one implicit division by 100
+takes place, preserving the natural percentage convention:
+
+@example
+10% * 10%  @result{}  1%   (i.e., 0.10 @times{} 0.10 = 0.01 = 1%)
+@end example
+
+@item Addition and subtraction
+These operations do @emph{not} apply the fractional conversion; the
+face values are summed as-is:
+
+@example
+5% + 3%  @result{}  8%
+@end example
+@end table
+
+Percentage amounts arise naturally when a value that includes a percent
+sign is stored as a transaction tag.  The typical pattern is to annotate
+a transaction with a rate and then reference it from an automated
+transaction:
+
+@smallexample @c input:validate
+= /Expenses:Services/ and %VAT
+    (Liabilities:VAT)   (amount * tag("VAT"))
+
+2024/03/01 Web Hosting
+    ; VAT:: 20%
+    Expenses:Services         $100.00
+    Assets:Checking
+@end smallexample
+
+Because @code{tag("VAT")} returns @samp{20%}, the expression
+@code{amount * tag("VAT")} computes @samp{$100.00 * 20% = $20.00} and
+posts that amount to @samp{Liabilities:VAT}.  Without the special
+handling, the same expression would have yielded @samp{$2000.00}.
 
 @node Accounts and Inventories, Understanding Equity, Commodities and Currencies, Principles of Accounting with Ledger
 @section Accounts and Inventories
@@ -4455,8 +4520,8 @@ can be setup with the following:
 ; the amount of the transaction multiplied by the "cashback" tag.
 
 = "Liabilities:Credit Card" and %cashback
-    Assets:Credit Card Cashback  (-amount * tag("cashback") * 0.01)
-    Income:Credit Card Rewards    (amount * tag("cashback") * 0.01)
+    Assets:Credit Card Cashback  (-amount * tag("cashback"))
+    Income:Credit Card Rewards    (amount * tag("cashback"))
 @end smallexample
 
 To add a transaction that gives 2% cashback:
