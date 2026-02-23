@@ -856,6 +856,9 @@ bool value_t::is_equal_to(const value_t& val) const {
 
 bool value_t::is_less_than(const value_t& val) const {
   switch (type()) {
+  case VOID:
+    return !val.is_null();  // null is less than any non-null value
+
   case BOOLEAN:
     if (val.is_boolean()) {
       if (as_boolean()) {
@@ -997,6 +1000,9 @@ bool value_t::is_less_than(const value_t& val) const {
 
 bool value_t::is_greater_than(const value_t& val) const {
   switch (type()) {
+  case VOID:
+    return false;  // null is not greater than anything
+
   case BOOLEAN:
     if (val.is_boolean()) {
       if (as_boolean()) {
