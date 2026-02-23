@@ -120,7 +120,8 @@ void generate_posts_iterator::generate_string(std::ostream& out, int len, bool o
   }
 }
 
-bool generate_posts_iterator::generate_account(std::ostream& out, bool no_virtual) {
+bool generate_posts_iterator::generate_account(std::ostream& out, bool no_virtual,
+                                               bool* out_is_virtual) {
   bool must_balance = true;
   bool is_virtual = false;
 
@@ -148,6 +149,9 @@ bool generate_posts_iterator::generate_account(std::ostream& out, bool no_virtua
     else
       out << ')';
   }
+
+  if (out_is_virtual)
+    *out_is_virtual = is_virtual;
 
   return must_balance;
 }
@@ -215,9 +219,10 @@ string generate_posts_iterator::generate_amount(std::ostream& out, value_t not_t
   return buf.str();
 }
 
-bool generate_posts_iterator::generate_post(std::ostream& out, bool no_amount) {
+bool generate_posts_iterator::generate_post(std::ostream& out, bool no_amount,
+                                            bool* out_is_virtual) {
   out << "    ";
-  bool must_balance = generate_account(out, no_amount);
+  bool must_balance = generate_account(out, no_amount, out_is_virtual);
   out << "  ";
 
   if (!no_amount) {
@@ -311,13 +316,28 @@ void generate_posts_iterator::generate_xact(std::ostream& out) {
   out << '\n';
 
   int count = three_gen() * 2;
-  bool has_must_balance = false;
+  bool has_real_must_balance = false;
+  bool has_virtual_must_balance = false;
   for (int i = 0; i < count; i++) {
-    if (generate_post(out))
-      has_must_balance = true;
+    bool is_virtual = false;
+    if (generate_post(out, false, &is_virtual)) {
+      if (is_virtual)
+        has_virtual_must_balance = true;
+      else
+        has_real_must_balance = true;
+    }
   }
-  if (has_must_balance)
+  // Add a null-amount real posting to absorb any real-posting imbalance.
+  if (has_real_must_balance)
     generate_post(out, true);
+  // Add a null-amount balanced-virtual posting to absorb any balanced-virtual
+  // imbalance.  Without this, balanced-virtual postings would have to sum to
+  // zero on their own, which random generation cannot guarantee.
+  if (has_virtual_must_balance) {
+    out << "    [";
+    generate_string(out, strlen_gen());
+    out << "]\n";
+  }
 
   out << '\n';
 }
