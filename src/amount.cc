@@ -469,8 +469,29 @@ amount_t& amount_t::multiply(const amount_t& amt, bool ignore_commodity) {
   mpq_mul(MP(quantity), MP(quantity), MP(amt.quantity));
   quantity->prec = static_cast<precision_t>(quantity->prec + amt.quantity->prec);
 
-  if (!has_commodity() && !ignore_commodity)
-    commodity_ = amt.commodity_;
+  // If the multiplier has the "%" commodity, treat it as a fraction: divide
+  // the result by 100 so that e.g. "$1000 * 19%" yields "$190" rather than
+  // "$19000".  When both operands carry "%" the percentage semantics still
+  // apply (19% * 19% = 3.61%, not 361%).  In that case the result keeps the
+  // "%" commodity; otherwise the result keeps the commodity of *this.
+  if (amt.has_commodity() && amt.commodity().symbol() == "%") {
+    mpq_t hundred;
+    mpq_init(hundred);
+    mpq_set_ui(hundred, 100, 1);
+    mpq_div(MP(quantity), MP(quantity), hundred);
+    mpq_clear(hundred);
+    quantity->prec = static_cast<precision_t>(quantity->prec + 2);
+
+    // If *this had no commodity (or also had "%"), propagate "%" to result;
+    // otherwise keep *this's commodity (the "%" is consumed by the division).
+    if (!has_commodity() && !ignore_commodity)
+      commodity_ = amt.commodity_;
+    // If *this had a non-% commodity, leave commodity_ unchanged so the
+    // result keeps that commodity and the "%" is not propagated.
+  } else {
+    if (!has_commodity() && !ignore_commodity)
+      commodity_ = amt.commodity_;
+  }
 
   if (has_commodity() && !keep_precision()) {
     precision_t comm_prec = commodity().precision();
@@ -501,11 +522,26 @@ amount_t& amount_t::operator/=(const amount_t& amt) {
   // Increase the value's precision, to capture fractional parts after
   // the divide.  Round up in the last position.
 
-  mpq_div(MP(quantity), MP(quantity), MP(amt.quantity));
-  quantity->prec = static_cast<precision_t>(quantity->prec + amt.quantity->prec + extend_by_digits);
+  // If the divisor has the "%" commodity, treat it as a fraction: instead of
+  // dividing by e.g. 19 we divide by 0.19, which is equivalent to dividing
+  // by amt and then multiplying by 100.  So "$1190 / 19%" yields "$6263.16"
+  // (i.e. $1190 / 0.19).
+  if (amt.has_commodity() && amt.commodity().symbol() == "%") {
+    mpq_t hundred;
+    mpq_init(hundred);
+    mpq_set_ui(hundred, 100, 1);
+    mpq_div(MP(quantity), MP(quantity), MP(amt.quantity));
+    mpq_mul(MP(quantity), MP(quantity), hundred);
+    mpq_clear(hundred);
+    quantity->prec = static_cast<precision_t>(quantity->prec + amt.quantity->prec + extend_by_digits);
+    // commodity_ is unchanged: *this keeps its own commodity; "%" is consumed.
+  } else {
+    mpq_div(MP(quantity), MP(quantity), MP(amt.quantity));
+    quantity->prec = static_cast<precision_t>(quantity->prec + amt.quantity->prec + extend_by_digits);
 
-  if (!has_commodity())
-    commodity_ = amt.commodity_;
+    if (!has_commodity())
+      commodity_ = amt.commodity_;
+  }
 
   // If this amount has a commodity, and we're not dealing with plain
   // numbers, or internal numbers (which keep full precision at all
