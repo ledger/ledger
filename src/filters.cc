@@ -324,7 +324,8 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
                   const post_handler_ptr& handler, const date_t& date = date_t(),
                   const bool act_date_p = true, const value_t& total = value_t(),
                   const bool direct_amount = false, const bool mark_visited = false,
-                  const bool bidir_link = true, post_t* source_post = nullptr) {
+                  const bool bidir_link = true, post_t* source_post = nullptr,
+                  const bool force_virtual = false, const bool force_must_balance = false) {
   post_t& post = temps.create_post(*xact, account, bidir_link);
   post.add_flags(ITEM_GENERATED);
 
@@ -333,10 +334,16 @@ void handle_value(const value_t& value, account_t* account, xact_t* xact, tempor
   if (source_post && source_post->metadata)
     post.metadata = source_post->metadata;
 
-  // If the account for this post is all virtual, then report the post as
-  // such.  This allows subtotal reports to show "(Account)" for accounts
-  // that contain only virtual posts.
-  if (account && account->has_xdata() && account->xdata().has_flags(ACCOUNT_EXT_AUTO_VIRTUALIZE)) {
+  // If the caller explicitly specifies that this posting is virtual (e.g.,
+  // when subtotal_posts accumulates virtual and non-virtual postings for the
+  // same account as separate entries), use that flag directly.  Otherwise,
+  // infer virtual status from account xdata flags as before.
+  if (force_virtual) {
+    post.add_flags(POST_VIRTUAL);
+    if (force_must_balance)
+      post.add_flags(POST_MUST_BALANCE);
+  } else if (account && account->has_xdata() &&
+             account->xdata().has_flags(ACCOUNT_EXT_AUTO_VIRTUALIZE)) {
     if (!account->xdata().has_flags(ACCOUNT_EXT_HAS_NON_VIRTUALS)) {
       post.add_flags(POST_VIRTUAL);
       if (!account->xdata().has_flags(ACCOUNT_EXT_HAS_UNB_VIRTUALS))
@@ -956,13 +963,20 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
   xact._date = *range_start;
 
   for (values_map::value_type& pair : values)
-    handle_value(/* value=      */ pair.second.value,
-                 /* account=    */ pair.second.account,
-                 /* xact=       */ &xact,
-                 /* temps=      */ temps,
-                 /* handler=    */ handler,
-                 /* date=       */ *range_finish,
-                 /* act_date_p= */ false);
+    handle_value(/* value=              */ pair.second.value,
+                 /* account=            */ pair.second.account,
+                 /* xact=               */ &xact,
+                 /* temps=              */ temps,
+                 /* handler=            */ handler,
+                 /* date=               */ *range_finish,
+                 /* act_date_p=         */ false,
+                 /* total=              */ value_t(),
+                 /* direct_amount=      */ false,
+                 /* mark_visited=       */ false,
+                 /* bidir_link=         */ true,
+                 /* source_post=        */ nullptr,
+                 /* force_virtual=      */ pair.second.is_virtual,
+                 /* force_must_balance= */ pair.second.must_balance);
 
   values.clear();
 }
@@ -978,22 +992,26 @@ void subtotal_posts::operator()(post_t& post) {
   post.xdata().compound_value = amount;
   post.xdata().add_flags(POST_EXT_COMPOUND);
 
-  values_map::iterator i = values.find(acct->fullname());
+  // Use a composite key to distinguish virtual from non-virtual postings to
+  // the same account.  A sentinel suffix '\x01' is appended for virtual
+  // postings so they accumulate separately and do not trigger the error that
+  // previously fired when the same account appeared with both virtual and
+  // non-virtual postings within a single reporting period (issue #2051).
+  string key = acct->fullname();
+  if (post.has_flags(POST_VIRTUAL))
+    key += '\x01';
+
+  values_map::iterator i = values.find(key);
   if (i == values.end()) {
 #if DEBUG_ON
     std::pair<values_map::iterator, bool> result =
 #endif
-        values.insert(
-            values_pair(acct->fullname(), acct_value_t(acct, amount, post.has_flags(POST_VIRTUAL),
-                                                       post.has_flags(POST_MUST_BALANCE))));
+        values.insert(values_pair(key, acct_value_t(acct, amount, post.has_flags(POST_VIRTUAL),
+                                                    post.has_flags(POST_MUST_BALANCE))));
 #if DEBUG_ON
     assert(result.second);
 #endif
   } else {
-    if (post.has_flags(POST_VIRTUAL) != (*i).second.is_virtual)
-      throw_(std::logic_error, _("'equity' cannot accept virtual and "
-                                 "non-virtual postings to the same account"));
-
     add_or_set_value((*i).second.value, amount);
   }
 
