@@ -1767,6 +1767,28 @@ void value_t::in_place_truncate() {
   throw_(value_error, _f("Cannot truncate %1%") % label());
 }
 
+void value_t::in_place_display_round() {
+  switch (type()) {
+  case INTEGER:
+    return;
+  case AMOUNT:
+    as_amount_lval().in_place_roundto(as_amount_lval().display_precision());
+    return;
+  case BALANCE:
+    as_balance_lval().in_place_display_round();
+    return;
+  case SEQUENCE:
+    for (value_t& value : as_sequence_lval())
+      value.in_place_display_round();
+    return;
+  default:
+    break;
+  }
+
+  add_error_context(_f("While display-rounding %1%:") % *this);
+  throw_(value_error, _f("Cannot display-round %1%") % label());
+}
+
 void value_t::in_place_floor() {
   switch (type()) {
   case INTEGER:

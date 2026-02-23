@@ -612,7 +612,8 @@ bool display_filter_posts::output_rounding(post_t& post) {
       DEBUG("filters.changed_value.rounding",
             "rounding.repriced_amount       = " << repriced_amount);
 
-      value_t precise_display_total(new_display_total.truncated() - repriced_amount.truncated());
+      value_t precise_display_total(new_display_total.display_rounded() -
+                                    repriced_amount.display_rounded());
 
       DEBUG("filters.changed_value.rounding",
             "rounding.precise_display_total = " << precise_display_total);
