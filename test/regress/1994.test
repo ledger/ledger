@@ -1,0 +1,12 @@
+; Regression test for issue #1994
+; Resetting a balance with = syntax should work correctly with multiple
+; journal files. The balance assignment in the second file should reset
+; the account balance to the specified amount (1.00 €), regardless of
+; the existing balance from the first file (100.00 €).
+
+test -f $sourcepath/test/regress/1994a.dat -f $sourcepath/test/regress/1994b.dat balance -> 0
+              1.00 €  Assets:Cash
+             -1.00 €  Equity:Opening Balances
+--------------------
+                   0
+end test
