@@ -311,6 +311,16 @@ public:
       pair.second.in_place_truncate();
   }
 
+  [[nodiscard]] balance_t display_rounded() const {
+    balance_t temp(*this);
+    temp.in_place_display_round();
+    return temp;
+  }
+  void in_place_display_round() {
+    for (amounts_map::value_type& pair : amounts)
+      pair.second.in_place_roundto(pair.second.display_precision());
+  }
+
   [[nodiscard]] balance_t floored() const {
     balance_t temp(*this);
     temp.in_place_floor();

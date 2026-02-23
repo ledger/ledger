@@ -446,6 +446,13 @@ public:
   }
   void in_place_truncate();
 
+  [[nodiscard]] value_t display_rounded() const {
+    value_t temp(*this);
+    temp.in_place_display_round();
+    return temp;
+  }
+  void in_place_display_round();
+
   [[nodiscard]] value_t floored() const {
     value_t temp(*this);
     temp.in_place_floor();
