@@ -1,0 +1,17 @@
+2021-08-26   Example transaction
+  Account-A         $1.00
+  Account-B               = 0
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+While balancing transaction from "$FILE", lines 1-3:
+> 2021-08-26   Example transaction
+>   Account-A         $1.00
+>   Account-B               = 0
+Unbalanced remainder is:
+               $1.00
+Amount to balance against:
+               $1.00
+Error: Transaction does not balance
+end test
