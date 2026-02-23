@@ -1,0 +1,752 @@
+src/textual_directives.cc
+  0b3d6a86001fdbcd 226-232,243-245,251-252
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "b2d39a5c02414d188f43b3f40691d287327ea383",
+  "prompts": {
+    "0b3d6a86001fdbcd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7bd2e0d0-16ba-4858-b7fe-38bae0223bc2",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>1979</command-args>",
+          "timestamp": "2026-02-23T07:33:48.636Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 1979.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the claude-code skill to provide context for the rest of the task\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-02-23T07:33:48.636Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me start by understanding the GitHub issue #1979 and then fix it. I'll use the fix skill approach: Think, Research, Plan, Act, Review.",
+          "timestamp": "2026-02-23T07:33:51.427Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1979",
+            "description": "View GitHub issue 1979"
+          },
+          "timestamp": "2026-02-23T07:33:52.390Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1979 --comments",
+            "description": "View issue comments"
+          },
+          "timestamp": "2026-02-23T07:33:56.241Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I need to understand the issue better. The problem is with the \"year\" directive - when an included file has multiple \"year\" directives, the global `epoch` variable gets confused. The `epoch` is not being saved and restored when including files.\n\nLet me understand the issue:\n1. When you include a file, it should be as if you've textually substituted the included file's content\n2. But the \"year\" directive changes the global `epoch` state\n3. When you have multiple \"year\" directives in an included file, the epoch state from the included file bleeds into the parent file\n\nWait, actually reading the issue more carefully - the problem seems to be that when multiple \"year\" directives are in an included file, the epoch is getting confused. \n\nI think the year directive might be setting the epoch to the start of a year, and when you change years multiple times in an included file, the final epoch value persists after the include completes instead of being restored. Let me check how the year directive is actually implemented in the code.",
+          "timestamp": "2026-02-23T07:34:04.071Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"year\\|epoch\" /Users/johnw/src/ledger/fix-1979/src/textual.cc | head -80",
+            "description": "Find year directive and epoch handling in textual.cc"
+          },
+          "timestamp": "2026-02-23T07:34:04.248Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"year\\|epoch\\|apply_year\\|apply_stack\\|saved_year\" /Users/johnw/src/ledger/fix-1979/src/textual.cc | head -120",
+            "description": "Find all year/epoch/apply_stack references in textual.cc"
+          },
+          "timestamp": "2026-02-23T07:34:06.941Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"year\\|epoch\\|apply_year\\|year_directive\" /Users/johnw/src/ledger/fix-1979/src/textual.h | head -60",
+            "description": "Find year/epoch handling in textual.h"
+          },
+          "timestamp": "2026-02-23T07:34:09.231Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1979/src/textual*",
+            "description": "List textual files"
+          },
+          "timestamp": "2026-02-23T07:34:11.476Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"year\\|epoch\\|apply_year\\|year_directive\\|saved_year\\|apply_stack\\|application_t\" /Users/johnw/src/ledger/fix-1979/src/textual_directives.cc | head -100",
+            "description": "Find year directive handling in textual_directives.cc"
+          },
+          "timestamp": "2026-02-23T07:34:14.974Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"year\\|epoch\\|year_directive\\|saved_year\" /Users/johnw/src/ledger/fix-1979/src/textual_internal.h",
+            "description": "Find year/epoch related fields in textual_internal.h"
+          },
+          "timestamp": "2026-02-23T07:34:18.299Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"year_directive_year\\|epoch\\b\" /Users/johnw/src/ledger/fix-1979/src/textual_internal.h",
+            "description": "Find year_directive_year and epoch in textual_internal.h"
+          },
+          "timestamp": "2026-02-23T07:34:20.628Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"year_directive_year\\|epoch\\b\" /Users/johnw/src/ledger/fix-1979/src/ | grep -v \".o:\" | head -60",
+            "description": "Find all references to year_directive_year and epoch"
+          },
+          "timestamp": "2026-02-23T07:34:22.783Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I need to understand what the actual problem is. Let me look at `apply_year_directive` more carefully. The issue says \"when an included file has multiple 'year' directives, the global `epoch` variable gets confused.\"\n\nLooking at the current code:\n```cpp\nvoid instance_t::apply_year_directive(char* line, bool use_apply_stack) {\n    unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));\n    if (use_apply_stack) {\n      // Used for \"apply year\" which needs \"end apply\"\n      application_t entry(\"year\", epoch);\n\n\n```\n\nI see the function saves the current epoch state when using the apply stack, then updates the year directive and only sets epoch if it hasn't been set already. The problem is that `year_directive_year` is being tracked separately from `epoch`, which can cause confusion when multiple year directives are processed in included files.\n\nNow I'm realizing the core issue: when parsing transactions with just month and day, the code relies on `year_directive_year` to fill in the year, but this value persists across file boundaries. When an included file changes the year directive multiple times, the final value from that included file carries over into the parent file's context, which breaks the expected scoping behavior. I need to check how the include directive handles context preservation to understand whether the year directive should be saved and restored like other state.",
+          "timestamp": "2026-02-23T07:34:33.467Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"include\\|push_front\\|pop_front\\|apply_stack\\|context_stack\\|instance_t\" /Users/johnw/src/ledger/fix-1979/src/textual.cc | head -80",
+            "description": "Find include handling and apply_stack usage in textual.cc"
+          },
+          "timestamp": "2026-02-23T07:34:33.519Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"include\\|push_front\\|pop_front\\|apply_stack\\|instance_t\\|parent\" /Users/johnw/src/ledger/fix-1979/src/textual_directives.cc | head -100",
+            "description": "Find include directive handling in textual_directives.cc"
+          },
+          "timestamp": "2026-02-23T07:34:36.076Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1979/src/textual_directives.cc",
+            "limit": 100,
+            "offset": 156
+          },
+          "timestamp": "2026-02-23T07:34:38.585Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the problem. When an included file is processed, a new `instance_t` is created. But the `epoch` and `year_directive_year` global variables are not saved and restored around the include.\n\nSo when the included file processes `year` directives, it changes the global `epoch` and `year_directive_year`. When the included file is done, those values remain set.\n\nLooking at the include handling code (lines 226-230):\n```cpp\ninstance_t instance(context_stack, context_stack.get_current(), this, no_assertions, hash_type);\ninstance.apply_stack.push_front(application_t(\"account\", master));\n\n\n```\n\nEach `instance_t` has its own `apply_stack`, but the `epoch` and `year_directive_year` are global variables. So when a year directive changes them in the included file, those changes persist. I need to check what happens when `parse()` finishes to see if there's any cleanup of the apply_stack that might give me a clue about how to properly isolate these globals.",
+          "timestamp": "2026-02-23T07:34:46.713Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1979/src/textual.cc",
+            "limit": 110,
+            "offset": 39
+          },
+          "timestamp": "2026-02-23T07:34:46.884Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue better. Let me trace through what happens:\n\n1. When `instance_t::parse()` ends (lines 93-98), it checks if the first element in the `apply_stack` holds a `datetime_t` (i.e., it's a \"year\" type entry) and if so, restores `epoch` from it.\n\nBut wait - the initial entry in `apply_stack` for an included file is `application_t(\"account\", master)` - it's of type \"account\". So when `parse()` ends, line 93 checks if `apply_stack.front().value` holds `boost::optional<datetime_t>`. Since it holds an `account_t*`, the condition is false and epoch is NOT restored.\n\n\nThe real issue is that when parsing an included file, any `year` directives modify the global `epoch` and `year_directive_year`, but since the first stack entry is an \"account\" application rather than a datetime entry, those changes never get restored when the included file finishes parsing. The fix needs to save and restore these values around the included file's parse operation. year` when processing included files.\n\nLet me look at the `include_directive` code again and see where I should save/restore these values.\n\nIn `include_directive` (lines 226-230 in textual_directives.cc), a new instance is created with an \"account\" entry pushed to the apply stack, then `parse()` is called. The fix would be to save `epoch` and `year_directive_year` before parsing and restore them after.\n\nBut I need to think about what the right behavior should be here. The issue is that \"year\" directives in included files are affecting the parent file's context, which seems wrong. Looking at the existing code, there's logic to restore the apply stack's front value if it's a year entry, but since the included file starts with an \"account\" entry, the year context never gets restored.\n\nExamining the restoration logic more carefully... I'm saving the epoch and year directive state before creating a new instance for the included file, then restoring them afterward—even in error cases—so that directives in included files don't leak into the parent file's context.\n\nBut I need to reconsider whether this is actually the right approach. The original \"include\" semantics were meant to be simple textual substitution, but the issue shows this causes problems when included files have year directives that shouldn't affect the parent file's subsequent transactions. Looking at the test case, including a file with multiple year directives is corrupting the dates of transactions back in the parent file, which suggests the current behavior is definitely broken and needs this kind of isolation.\n\nThe key insight is that after an include finishes, the year context should snap back to whatever it was before the include started. I'm examining the code that handles this restoration at the end of parsing to understand how it currently works. pop the apply_stack and restore the epoch. The top entry of the apply_stack should be the initial \"account\" entry for included files (or the initial \"account\" entry pushed in `journal_t::read_textual`).\n\nWhen apply_year_directive is called for a plain \"year\" directive (not \"apply year\"), it does NOT push to the apply_stack - it just changes `year_directive_year` and `epoch` directly.\n\nSo the initial state has `epoch` as null from the \"account\" entry in apply_stack, but after a year directive, `epoch` gets set. When the included file's parse() finishes, it checks if the front of apply_stack is a datetime type - but it's \"account\" type, so it does NOT restore epoch.\n\nLet me trace through what happens in the original code: initially `epoch` is null or set by `--now`, then including `d.txt` with `Y2018` sets `epoch` to the end of 2018 and `year_directive_year` to 2018. When `Y2017` is encountered, `epoch` is already set so the condition fails and only `year_directive_year` changes to 2017. By the time `d.txt` finishes parsing, `epoch` remains at 2018-12-31 while `year_directive_year` is 2017, creating the mismatch.\n\nLooking at the apply_year_directive code, I see it saves the year directive state when using apply_stack for \"apply year\" blocks that need \"end apply\" to restore. For plain year directives without apply_stack, it directly modifies `year_directive_year` and `epoch`.\n\nThe key issue is that `epoch` only gets set if it's not already set—this was intentional to avoid overriding `--now`, but it creates a mismatch when a second year directive comes along and updates `year_directive_year` without updating `epoch`. So dates end up being parsed with the wrong year because the two values are out of sync.\n\nLet me check the forecast code to see how `epoch` is actually being used there.",
+          "timestamp": "2026-02-23T07:35:24.946Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me look at the draft.cc and times.cc to understand how epoch and year_directive_year interact:",
+          "timestamp": "2026-02-23T07:35:24.953Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1979/src/textual_directives.cc",
+            "limit": 60,
+            "offset": 308
+          },
+          "timestamp": "2026-02-23T07:35:25.694Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1979/src/times.cc",
+            "limit": 50,
+            "offset": 40
+          },
+          "timestamp": "2026-02-23T07:35:27.885Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1979/src/times.cc",
+            "limit": 100,
+            "offset": 90
+          },
+          "timestamp": "2026-02-23T07:35:29.826Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the problem much better. Let me trace through what happens with the test case described in the issue:\n\n1. We include `d.txt` which has `Y2018` and `Y2017` directives\n2. When we process `Y2018` in `d.txt`:\n   - `year_directive_year = 2018`\n   - `epoch` was null, so it gets set to `datetime_t(date_t(2018, 12, 31))`\n3. When we process `Y2017` in `d.txt`:\n   - `year_directive_year = 2017`\n   - `epoch` stays at `2018-12-31` because it's already set\n4. When `d.txt` finishes parsing, the apply_stack pops an \"account\" entry without restoring `epoch` and `year_directive_year`\n5. Back in the parent file, we end up with `year_directive_year = 2017` but `epoch = 2018-12-31`, so transactions with dates like `12/30` get the wrong year applied—they use 2017 from the directive but the epoch from the included file.\n\nThe real issue is that `epoch` isn't being updated when the year directive changes. I need to save and restore both `epoch` and `year_directive_year` around the include directive in `textual_directives.cc`. But wait—I should think about the semantics here. If include is just textual substitution, should year directives in included files affect subsequent transactions in the parent? The current behavior is broken because `year_directive_year` gets set correctly but `epoch` doesn't follow, creating an inconsistency. Wait, but if we always update `epoch` to the last day of the year directive year, won't that break the `--now` functionality? The comment indicates that `epoch` set by `--now` should be protected from being overridden, while `epoch` set by a previous year directive should be replaceable by the next one. So I need to distinguish between these two sources—either by tracking which mechanism set `epoch`, or finding a simpler solution. Let me trace through the flow: before parsing starts, `epoch` is either null or already set by `--now`.\n\nLooking at the code that initializes `epoch` in the global context, it's being set to the current time unconditionally, which means `epoch` is never actually null during parsing. That would explain why the conditional check in `apply_year_directive` never triggers.",
+          "timestamp": "2026-02-23T07:35:51.885Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1979/src/global.cc",
+            "limit": 30,
+            "offset": 40
+          },
+          "timestamp": "2026-02-23T07:35:51.931Z"
+        },
+        {
+          "type": "assistant",
+          "text": "So `epoch` is always set to the current time in `global_scope_t` constructor! This means the `if (!epoch)` check in `apply_year_directive` will NEVER be true, and therefore the `epoch` is NEVER updated by a year directive.\n\nSo when a year directive is processed, `year_directive_year` gets updated but `epoch` stays at `CURRENT_TIME()` (or whatever was set by `--now`).\n\nBut then why does parsing dates use `year_directive_year` instead of `epoch->year()`? Because `parse_date_mask_routine` checks `year_directive_year` FIRST (if it's set), before checking epoch.\n\n\nNow I need to understand how forecast uses these values—whether it starts generating transactions from `epoch` or if there's another mechanism at play.",
+          "timestamp": "2026-02-23T07:35:58.391Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"forecast\\|epoch\\|year_directive_year\\|CURRENT_DATE\\|CURRENT_TIME\" /Users/johnw/src/ledger/fix-1979/src/draft.cc | head -60",
+            "description": "Find forecast and epoch usage in draft.cc"
+          },
+          "timestamp": "2026-02-23T07:35:58.927Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"forecast\\|epoch\\|CURRENT_DATE\" /Users/johnw/src/ledger/fix-1979/src/filters.cc | head -80",
+            "description": "Find forecast/epoch usage in filters.cc"
+          },
+          "timestamp": "2026-02-23T07:36:02.796Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1979/src/filters.cc",
+            "limit": 110,
+            "offset": 1375
+          },
+          "timestamp": "2026-02-23T07:36:05.213Z"
+        },
+        {
+          "type": "assistant",
+          "text": "So `forecast_posts::add_post` starts the period at `CURRENT_DATE()`, which is defined as:\n\n```cpp\n#define CURRENT_DATE() (epoch ? epoch->date() : boost::gregorian::day_clock::local_day())\n```\n\nSo `CURRENT_DATE()` uses `epoch` if it's set. Since `epoch` is always set to `CURRENT_TIME()` in `global_scope_t`, `CURRENT_DATE()` would be the current date.\n\nBut... if the issue says forecast transactions are going back to 2018, that means `CURRENT_DATE()` is returning dates in 2018. That would only happen if `epoch` was set to a date in 2018.\n \nHold on, I thought `epoch` was always initialized to `CURRENT_TIME()` in `global_scope_t`, and `apply_year_directive` only modifies it if it's not already set. So it should stay at the current time. But the user is reporting forecast transactions dating back to early 2018, which means `CURRENT_DATE()` must be returning 2018 dates somehow. Let me look at the loop in `add_post` that advances through the period—it's checking if the start date is before `CURRENT_DATE()` and incrementing until it's not, so if `CURRENT_DATE()` is in 2018, that would explain why the transactions are appearing in the past.\n\nActually, I think I see the real issue now. When `b.txt` finishes processing with its year directives, `year_directive_year` gets left at some past year like 2017 or 2018. Then back in `a.txt`, when the periodic transaction with the `~` syntax gets parsed, it's using that stale `year_directive_year` context instead of the current year, which causes the period dates to be calculated incorrectly.\n\nThe forecast mechanism itself is working as designed—it's advancing from the period start date until it reaches `CURRENT_DATE()`. But if that period start date is being set to 2018 because of the leftover year directive, then the forecast will generate all those transactions going back through the years to reach today. I see the issue now—`add_post` passes a copy of the interval `i` to `generate_posts::add_post`, but then continues advancing `i` in its own while loop, so the stored period and the loop's advancement are operating on different objects. I need to check what `generate_posts::add_post` actually does with that interval to understand if this is the intended behavior.",
+          "timestamp": "2026-02-23T07:36:25.976Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"add_post\\|pending_posts\\|add_period\" /Users/johnw/src/ledger/fix-1979/src/filters.cc | head -40",
+            "description": "Find pending_posts and add_post in filters.cc"
+          },
+          "timestamp": "2026-02-23T07:36:26.016Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at `forecast_posts::add_post` more carefully:\n\n```cpp\nvoid forecast_posts::add_post(const date_interval_t& period, post_t& post) {\n  date_interval_t i(period);\n  if (!i.start && !i.find_period(CURRENT_DATE()))\n    return;\n\n  generate_posts::add_post(i, post);  // <-- adds the CURRENT state of i before the while loop\n\n  // Advance the period's interval until it is at or beyond the current\n  // date.\n  while (*i.start < CURRENT_DATE())\n    ++i;\n}\n```\n\nI see the issue now—`add_post` is called with `i` before the while loop advances it, so `pending_posts` stores a copy of the period from the past (like 2018), and then the local `i` gets incremented in the loop, but that doesn't affect what was already stored.\n\nLooking at the `flush()` method, it accesses the `next` member of the stored period to get the next occurrence. Let me trace through what's happening with the periodic transaction's start date. The issue describes test files where `a.txt` is the main file and `b.txt` is included with multiple year directives, and the forecast shows transactions going back to 2018—which suggests the periodic transaction's start date is in 2018. Now I need to check what `add_post` actually does with that period...\n\nThe `add_post` method takes a period and advances a local copy forward until it reaches the current date, but that loop only modifies the local variable, not the one stored in `pending_posts`. So the period that gets stored is the original one from `generate_posts::add_post`, which still has the original start date. Then when `flush()` accesses `(*least).first`, it's getting that stored `date_interval_t` with the old start date. I'm realizing the while loop only advances a local copy of the period, so the original never gets updated before being added to `pending_posts`. This seems like a bug—the period should probably be advanced before insertion. Let me step back and look at how `date_interval_t` initialization works and trace through the regression tests to understand what's actually happening with the periodic transaction dates.",
+          "timestamp": "2026-02-23T07:36:42.892Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at the issue from a different angle - examining what the test files look like and writing a simpler test:",
+          "timestamp": "2026-02-23T07:36:42.906Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1979/test/regress/ | grep -E \"^19\" | head -20",
+            "description": "Check for existing tests near issue 1979"
+          },
+          "timestamp": "2026-02-23T07:36:44.060Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1979/test/regress/1969.test",
+            "description": "Look at an existing regression test for reference"
+          },
+          "timestamp": "2026-02-23T07:36:46.848Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me create a test to reproduce the issue with multiple year directives:",
+          "timestamp": "2026-02-23T07:36:49.449Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Task",
+          "input": {
+            "description": "Research year directive and include behavior",
+            "prompt": "I'm analyzing a bug in the Ledger accounting software (C++). The issue is about the \"year\" directive and \"include\" directives interacting incorrectly.\n\nThe issue (#1979): When an included file has multiple \"year\" directives, the global `epoch` and `year_directive_year` variables get confused, causing incorrect dates in subsequent transactions.\n\nPlease analyze the following code and help me understand the problem and the fix.\n\nKey code in `/Users/johnw/src/ledger/fix-1979/src/textual_directives.cc`:\n\n```cpp\nvoid instance_t::apply_year_directive(char* line, bool use_apply_stack) {\n  if (!line)\n    throw_(parse_error, _(\"Directive 'apply year' requires an argument\"));\n\n  try {\n    unsigned short year(lexical_cast<unsigned short>(skip_ws(line)));\n    if (use_apply_stack) {\n      // Used for \"apply year\" which needs \"end apply\"\n      application_t entry(\"year\", epoch);\n      entry.saved_year_directive = year_directive_year;\n      apply_stack.push_front(entry);\n    }\n    // Otherwise for plain \"year\" directive, don't use apply_stack - it's a permanent change\n    DEBUG(\"times.epoch\", \"Setting current year to \" << year);\n\n    // Track the year directive separately\n    year_directive_year = year;\n\n    // Only set epoch if it's not already set (e.g., by --now)\n    if (!epoch) {\n      epoch = datetime_t(date_t(year, 12, 31));\n    }\n  } catch (bad_lexical_cast&) {\n    throw_(parse_error, _f(\"Argument '%1%' not a valid year\") % skip_ws(line));\n  }\n}\n```\n\nAnd in `/Users/johnw/src/ledger/fix-1979/src/global.cc`:\n```cpp\nglobal_scope_t::global_scope_t(char** envp) {\n  epoch = CURRENT_TIME();\n```\n\nAnd in the include directive handling (textual_directives.cc):\n```cpp\ninstance_t instance(context_stack, context_stack.get_current(), this, no_assertions, hash_type);\ninstance.apply_stack.push_front(application_t(\"account\", master));\ninstance.parse();\n```\n\nAnd at the end of `instance_t::parse()` in textual.cc:\n```cpp\nif (std::holds_alternative<boost::optional<datetime_t>>(apply_stack.front().value)) {\n    epoch = std::get<boost::optional<datetime_t>>(apply_stack.front().value);\n    year_directive_year = apply_stack.front().saved_year_directive;\n}\napply_stack.pop_front();\n```\n\nThe `year_directive_year` global in times.cc:\n```cpp\noptional<datetime_t> epoch;\noptional<int> year_directive_year; // Track year from year directives separately\n```\n\nFrom `times.cc`, how dates are parsed when year is missing:\n```cpp\nif (!io.traits.has_year) {\n  // First check if we have a year directive year to use\n  if (year_directive_year) {\n    when = date_t(*year_directive_year, when.month(), when.day());\n  } else if (epoch) {\n    // When using the epoch (e.g., from --now), use it for the year\n    date_t reference_date = epoch->date();\n    when = date_t(reference_date.year(), when.month(), when.day());\n    if (when.month() > reference_date.month())\n      when -= gregorian::years(1);\n  } else {\n    when = date_t(CURRENT_DATE().year(), when.month(), when.day());\n    if (when.month() > CURRENT_DATE().month())\n      when -= gregorian::years(1);\n  }\n}\n```\n\nProblem analysis:\n1. `epoch` is ALWAYS set to `CURRENT_TIME()` at startup, so `if (!epoch)` in `apply_year_directive` is NEVER true\n2. When a \"year\" directive is processed, only `year_directive_year` is updated, NOT `epoch` (because epoch is already set)\n3. When an included file finishes parsing, `parse()` checks if the front of apply_stack is a datetime type - but it's \"account\" type (pushed at the start of include processing) - so it does NOT restore `year_directive_year` to null\n4. Therefore, `year_directive_year` from the included file bleeds into the parent file\n\nThe fix should be:\n- When processing an included file, save and restore `year_directive_year` (and potentially epoch) around the include\n\nQUESTION: What's the correct fix? Should we:\nA) Save/restore `year_directive_year` (and `epoch`) in `include_directive()` before and after processing the included file\nB) Have `apply_year_directive` also update `epoch` (not just `year_directive_year`) when epoch was set by a previous year directive (but not when set by `--now`)\nC) Something else\n\nPlease analyze the code and suggest the correct approach. The key files are:\n- `/Users/johnw/src/ledger/fix-1979/src/textual_directives.cc`\n- `/Users/johnw/src/ledger/fix-1979/src/textual.cc`  \n- `/Users/johnw/src/ledger/fix-1979/src/times.cc`\n- `/Users/johnw/src/ledger/fix-1979/src/times.h`\n- `/Users/johnw/src/ledger/fix-1979/src/textual_internal.h`\n\nPlease READ these files to understand the full context and provide a complete analysis with a specific code fix.",
+            "subagent_type": "cpp-pro"
+          },
+          "timestamp": "2026-02-23T07:37:16.619Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The agent has analyzed the problem. Now let me implement the fix. The fix is in `include_directive()` in `textual_directives.cc` - save and restore `epoch` and `year_directive_year` around the included file's parse. Let me read the current state of the include_directive to make the precise edit.",
+          "timestamp": "2026-02-23T08:00:24.629Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me implement the fix now. The root cause is clear: `year_directive_year` (and `epoch` if it was changed) leak from included files back into the parent file. The fix saves and restores these globals around each include.",
+          "timestamp": "2026-02-23T08:00:25.704Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1979/src/textual_directives.cc",
+            "limit": 40,
+            "offset": 217
+          },
+          "timestamp": "2026-02-23T08:00:26.377Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix is already in place! It looks like the cpp-pro agent already implemented the fix. Let me check what the full state of the file looks like and whether a test was created.",
+          "timestamp": "2026-02-23T08:00:28.855Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix is already in place. Let me check if the regression test was also created:",
+          "timestamp": "2026-02-23T08:00:29.695Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1979/test/regress/1979* 2>/dev/null && git -C /Users/johnw/src/ledger/fix-1979 status",
+            "description": "Check for regression test and git status"
+          },
+          "timestamp": "2026-02-23T08:00:30.505Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1979/test/regress/1979.test && echo \"---\" && cat /Users/johnw/src/ledger/fix-1979/test/regress/1979.dat",
+            "description": "View the regression test files"
+          },
+          "timestamp": "2026-02-23T08:00:34.192Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test file has some issues:\n1. The included `1979.dat` sets `year 2022` then `year 2023`. But the expected output shows \"22-Jan-01\" and \"23-Jul-01\" - but the test says \"1979.dat\" contains `year 2022` / `year 2023`. That's OK - those years are inside the included file, so those transactions should have those years.\n2. The `05/15 Post-include Transaction` in the parent file should use year 2020 (the parent's year directive), not 2023 (the last year in the included file).\n\n\n3. The expected output shows `20-May-15` which is correct for 2020, so that part checks out.\n\nNow I'm verifying the date format against ledger's default output - the dates like \"22-Jan-01\", \"23-Jul-01\", and \"20-May-15\" all match the expected YY-Mon-DD format.\n\nThe real question is how the test file handles the year context: after including `1979.dat` which temporarily changes the year to 2022 and 2023, the subsequent `05/15` transaction should revert back to 2020 from the parent file once the include completes. the expected output date `20-May-15` would be 2020-May-15... But is May 15 > current date's month? Let me think: \n\nActually in the test harness, there's TZ=America/Chicago. But tests should be run with a fixed date. Let me see if the test has `--now` in it or if it just uses fixed explicit dates.\n\nLooking at the test: `test reg` - this runs `reg` (register) command. The transactions all have explicit dates (parsed from MM/DD with year directives), so the output should be deterministic regardless of when the test runs.\n\nFor `05/15 Post-include Transaction` in the parent file, after `year 2020`, the date parsing would use `year_directive_year = 2020` with the fix. Without the fix, it would incorrectly use `year_directive_year = 2023` from the included file, giving `2023-05-15`. The expected output shows `20-May-15` (2020), which validates the fix is working correctly.\n\nNow I'm checking what date format ledger uses for register output - it looks like `YY-Mon-DD` based on the expected output I'm seeing.",
+          "timestamp": "2026-02-23T08:00:52.298Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me verify the test is correctly formatted by checking an existing test:",
+          "timestamp": "2026-02-23T08:00:52.313Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1979/test/regress/1969.test && echo \"===\" && cat /Users/johnw/src/ledger/fix-1979/test/regress/1993.test | head -40",
+            "description": "Look at existing tests for format reference"
+          },
+          "timestamp": "2026-02-23T08:00:52.348Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I see - in the test files, the transactions in the journal data section use the full `YYYY/MM/DD` or `YYYY-MM-DD` format. The `year` directive alone changes the year for parsing - but the transactions in the test file need to match what ledger would actually output.\n\nLooking at the 1979.test file, the transactions use:\n- `year 2020` + `05/15` in the parent file (just month/day, so year from directive)\n- `year 2022` + `01/01` and `year 2023` + `07/01` in the included file\n\nBut in the TEST section (after `test reg`), the dates in the expected output are formatted with the default date format. Let me check what ledger's default output format for dates is...\n\n\nThe expected output shows dates like `22-Jan-01` which looks like `YY-Mon-DD` format, but I'm seeing inconsistencies - 1969.test uses `2020-10-30` format instead. The actual output format seems to depend on system date settings and how the dates were originally parsed.\n\nLooking at the test files more carefully, the parent uses a `year 2020` directive with dates like `05/15`, while 1979.dat has `01/01` and `07/01` formats. But the expected output shows `22-Jan-01`, `23-Jul-01`, `20-May-15` which is `%y-%b-%d` format - that doesn't match what ledger typically outputs. I should actually run the test to see what's happening.",
+          "timestamp": "2026-02-23T08:01:03.332Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me build the project and verify the fix works:",
+          "timestamp": "2026-02-23T08:01:03.378Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls build/ 2>/dev/null | head -5 && echo \"---\" && ls build/ledger 2>/dev/null && echo \"binary exists\"",
+            "description": "Check if build directory and binary exist"
+          },
+          "timestamp": "2026-02-23T08:01:03.536Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1979/build/ledger 2>/dev/null && echo \"binary exists\" || echo \"no binary\"",
+            "description": "Check for ledger binary"
+          },
+          "timestamp": "2026-02-23T08:01:06.210Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1979/",
+            "description": "List repository contents"
+          },
+          "timestamp": "2026-02-23T08:01:08.453Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "find /Users/johnw/src/ledger/ -name \"ledger\" -type f -executable 2>/dev/null | head -5",
+            "description": "Find ledger binary in any build directory"
+          },
+          "timestamp": "2026-02-23T08:01:10.896Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug 2>&1 | tail -5 && cd build && make -j$(nproc) ledger 2>&1 | tail -10",
+            "description": "Configure and build ledger",
+            "timeout": 300000
+          },
+          "timestamp": "2026-02-23T08:01:16.224Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me test the fix manually with the test files:",
+          "timestamp": "2026-02-23T08:01:31.292Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1979 && build/ledger -f test/regress/1979.test reg 2>&1",
+            "description": "Test the fix with the regression test file"
+          },
+          "timestamp": "2026-02-23T08:01:32.151Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix is working. The output shows:\n1. `2022/01/01 In-included First` - correct, from the included file with year 2022\n2. `2023/07/01 In-included Second` - correct, from the included file with year 2023\n3. `2020/05/15 Post-include Trans..` - correct! Uses year 2020 from the parent file, not 2023\n\nThe fix is working. But the test file has wrong expected output format. The expected output in 1979.test shows:\n```\n22-Jan-01 In-included First     Expenses:Food                $10.00       $10.00\n\n\n```\n\nBut the actual output shows:\n```\n2022/01/01 In-included First    Expenses:Food                $10.00       $10.00\n```\n\nSo I need to update the test file with the correct expected output. The date format `22-Jan-01` doesn't match what ledger actually outputs (`2022/01/01`), so I'll fix the test expectations to match the real format.\n\n```",
+          "timestamp": "2026-02-23T08:01:40.390Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix works. The test file has incorrect expected output - the format shows `22-Jan-01` style but ledger outputs `2022/01/01` style. Let me fix the test file:",
+          "timestamp": "2026-02-23T08:01:40.434Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1979/test/regress/1979.test"
+          },
+          "timestamp": "2026-02-23T08:01:40.695Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "; Regression test for issue #1979:\n; year/Y directives inside an included file must not bleed into the parent\n; file after the include returns.  Specifically, when an included file\n; contains multiple year directives, the last one set must not affect the\n; year used by transactions that follow the include directive in the parent.\n\nyear 2020\n\ninclude 1979.dat\n\n; This transaction has no year component.  It must resolve to 2020 (the\n; year set in the parent file before the include), not 2023 (the last year\n; set inside the included file).\n05/15 Post-include Transaction\n    Expenses:Food    $30.00\n    Assets:Checking\n\ntest reg\n2022/01/01 In-included First    Expenses:Food                $10.00       $10.00\n                                Assets:Checking             $-10.00            0\n2023/07/01 In-included Second   Expenses:Food                $20.00       $20.00\n                                Assets:Checking             $-20.00            0\n2020/05/15 Post-include Trans.. Expenses:Food                $30.00       $30.00\n                                Assets:Checking             $-30.00            0\nend test\n",
+            "file_path": "/Users/johnw/src/ledger/fix-1979/test/regress/1979.test"
+          },
+          "timestamp": "2026-02-23T08:01:45.232Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me run the actual test via the test harness:",
+          "timestamp": "2026-02-23T08:01:48.271Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1979.test 2>&1",
+            "description": "Run the regression test via the test harness"
+          },
+          "timestamp": "2026-02-23T08:01:49.507Z"
+        },
+        {
+          "type": "assistant",
+          "text": "So the test harness is showing the OPPOSITE: it's expecting `2022/01/01` format but the actual output from the test via the harness is `22-Jan-01`!\n\nWait, the diff shows:\n```\n-2022/01/01 In-included First\n+22-Jan-01 In-included First\n```\n\nThis means:\n- `-` (expected/what's in the test file) = `2022/01/01 In-included First` - this is what I put in the test file\n- `+` (actual/what ledger outputs) = `22-Jan-01 In-included First`\n  \nI think I see the issue now—when the test harness runs with the full path to the test file, the include directive resolves relative to that directory, but when I ran it manually with a relative path, something different happened with how the includes were resolved.\n\nLooking at the diff more carefully, the expected output shows `2022/01/01` format while the actual output from ledger is `22-Jan-01` format, which is strange since my manual run produced the `2022/01/01` format. The discrepancy suggests the test harness is somehow getting a different code path or configuration than my manual execution. I'm realizing the discrepancy might stem from how ledger handles date formatting when parsing dates without explicit years—the output format could be influenced by the input format or system locale settings rather than what I'm seeing in my manual test runs.",
+          "timestamp": "2026-02-23T08:02:06.959Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago build/ledger -f \"/Users/johnw/src/ledger/fix-1979/test/regress/1979.test\" reg 2>&1",
+            "description": "Run ledger exactly as test harness would"
+          },
+          "timestamp": "2026-02-23T08:02:07.609Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good, the fix works. The test harness is showing a different result. Let me look at the test harness more carefully to understand why it's getting `22-Jan-01` format...\n\nWait - I think the issue is with the test harness itself. Let me re-read the diff output:\n\n```\n--\n$ledger -f \"/Users/johnw/src/ledger/fix-1979/test/regress/1979.test\" reg\n\n--\n  @@ -1,6 +1,6 @@\n\n  -2022/01/01 In-included First    Expenses:Food                $10.00       $10.00\n\n\n```\n\nHmm, I need to understand the diff conventions here. The `-` line shows the expected output from the test file, and the `+` line shows what ledger is actually producing. Looking at the original test file before my changes, it had `22-Jan-01` format, so that's what the test expects. But my fix is outputting `2022/01/01` instead, which is why the test is failing.\n\nWait, that doesn't match what I'm seeing when I run the command manually. Let me trace through the test harness code to understand how it's actually running the tests and why there's a discrepancy between the manual output and the test output. Python's `difflib` or `diff`, typically:\n- `-` = from file a (first argument)\n- `+` = from file b (second argument)\n\nIn the test harness, if file a = expected output (from test file) and file b = actual output, then:\n- `-` 2022/01/01 → this is what was expected (in the test file)\n- `+` 22-Jan-01 → this is what ledger actually produced\n\nBut when I run manually, I get `2022/01/01`. So why does the test harness get `22-Jan-01`?\n\nLet me check the test harness to see if it does something special, or if there's a separate step that generates the expected output...\n\nOh wait! I think I understand now. The test harness might be running the test with the ORIGINAL test file that the cpp-pro agent created, which had `22-Jan-01` format expected output. My newly modified test file (with 2022/01/01 format) is being compared against what ledger actually outputs. So the test harness is reading my updated test file with the new expected format, running ledger on it, and comparing the actual output—but ledger is producing `22-Jan-01` format instead. Yet when I run the same command manually with the timezone set, I get `2022/01/01`. This discrepancy is puzzling since the test harness should be executing the exact same command.",
+          "timestamp": "2026-02-23T08:02:26.985Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "head -80 /Users/johnw/src/ledger/fix-1979/test/RegressTests.py",
+            "description": "Look at test harness implementation"
+          },
+          "timestamp": "2026-02-23T08:02:27.416Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "sed -n '80,180p' /Users/johnw/src/ledger/fix-1979/test/RegressTests.py",
+            "description": "Read more of RegressTests.py"
+          },
+          "timestamp": "2026-02-23T08:02:30.685Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I see the issue. The test harness runs:\n```\n$ledger -f \"$filename\" reg\n```\n\nWhen the test file doesn't have `-f` in the command. In our test, `test reg` doesn't have `-f`, so the harness adds `-f \"<filename>\"` and runs:```\n$ledger -f \"/Users/johnw/src/ledger/fix-1979/test/regress/1979.test\" reg\n```But wait - the included file in `1979.test` is `include 1979.dat`. The `1979.dat` file is in the same directory as `1979.test`. When ledger is run with the absolute path, it should look for `1979.dat` relative to `1979.test`'s directory.\n\n\nLet me check what flags the harness's `run()` method actually passes when executing the test, since that might explain the discrepancy I'm seeing.",
+          "timestamp": "2026-02-23T08:02:37.916Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"def run\\|columns\\|ENV\\|environ\\|TZ\" /Users/johnw/src/ledger/fix-1979/test/LedgerHarness.py | head -30",
+            "description": "Check LedgerHarness for TZ and column settings"
+          },
+          "timestamp": "2026-02-23T08:02:38.474Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago /Users/johnw/src/ledger/fix-1979/build/ledger --columns=80 -f \"/Users/johnw/src/ledger/fix-1979/test/regress/1979.test\" reg 2>&1",
+            "description": "Run ledger with columns=80 as the test harness would"
+          },
+          "timestamp": "2026-02-23T08:02:41.344Z"
+        },
+        {
+          "type": "assistant",
+          "text": "OK, when I run manually I get `2022/01/01` format. But the test harness is getting `22-Jan-01` format. There's something different about the test harness environment...\n\nWait, let me re-read the diff more carefully. The diff shows:\n```\nFAILURE in output from test/regress/1979.test:--$ledger -f \"/Users/johnw/src/ledger/fix-1979/test/regress/1979.test\" reg\n--  @@ -1,6 +1,6 @@  -2022/01/01 In-included First    Expenses:Food                $10.00       $10.00  +22-Jan-01 In-included First     Expenses:Food                $10.00       $10.00\n\n\n```\n\nSo the expected output from the test file is `2022/01/01`, but ledger is actually producing `22-Jan-01`. That's the opposite of what I'm seeing when I run it manually. The test harness might be invoking a different ledger binary than the one I'm testing with.\n\n```\nI need to double-check what's actually in the test file right now. There's a discrepancy between what I expect to be there and what the test harness is showing - the output format is different (`22-Jan-01` vs `2022/01/01`), and I'm wondering if there's a timing issue with how files were written or if the test harness is somehow running against stale content. Let me look at the test harness output more carefully to understand what's happening.\n```\nActually, I think the issue might be simpler - let me just rewrite the test with explicit year formats to eliminate any ambiguity about date parsing.\n```",
+          "timestamp": "2026-02-23T08:02:59.188Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test output from the harness shows `22-Jan-01` format but manual runs give `2022/01/01`. The dates without explicit years are being formatted differently. Let me simplify the test to use fully explicit dates instead:",
+          "timestamp": "2026-02-23T08:02:59.771Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1979/test/regress/1979.test"
+          },
+          "timestamp": "2026-02-23T08:03:00.208Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1979/test/regress/1979.dat"
+          },
+          "timestamp": "2026-02-23T08:03:02.073Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "file /Users/johnw/src/ledger/fix-1979/test/regress/1979.dat && cat /Users/johnw/src/ledger/fix-1979/test/regress/1979.dat",
+            "description": "Check the dat file"
+          },
+          "timestamp": "2026-02-23T08:03:04.268Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good, the dat file is ASCII text (even though Read says it's binary - maybe it has some special chars). The dat file uses `year XXXX` directives followed by transactions with `MM/DD` format.\n\nThe issue is: when the test runs via the harness, it gets `22-Jan-01` format. But when I run manually, I get `2022/01/01` format. \n\nThis is confusing. Let me check what the harness's `run()` method actually does more carefully - maybe it's using different environment variables or maybe there's a `--date-format` flag being used.\n\n\nLooking more closely at the LedgerHarness implementation...",
+          "timestamp": "2026-02-23T08:03:09.609Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1979/test/LedgerHarness.py",
+            "description": "Read the full LedgerHarness.py"
+          },
+          "timestamp": "2026-02-23T08:03:10.002Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Key observations from LedgerHarness:\n1. It uses `cmd = [str(self.ledger), '--args-only']` - so it passes `--args-only` flag!\n2. The `cwd` is set to `self.sourcepath` (the ledger source root)\n\nSo the actual command run by the harness is:\n```\n/path/to/ledger --args-only --columns=80 -f \"/Users/.../test/regress/1979.test\" reg\n```\n\nThe `--args-only` flag! Let me check what `--args-only` does - it might change how dates are parsed or formatted.Actually, looking at the harness command:```python\n\n\n```\n\nThe `$ledger` placeholder gets replaced with the ledger binary and `--args-only` flag, which prevents the tool from reading initialization files like `~/.ledgerrc` that could contain date format settings affecting the test output.\n\nLet me test this approach to see if it resolves the output discrepancy.",
+          "timestamp": "2026-02-23T08:03:19.299Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago build/ledger --args-only --columns=80 -f \"test/regress/1979.test\" reg 2>&1",
+            "description": "Run with --args-only as test harness does"
+          },
+          "timestamp": "2026-02-23T08:03:19.587Z"
+        },
+        {
+          "type": "assistant",
+          "text": "With `--args-only`, the output uses `%y-%b-%d` format (e.g., `22-Jan-01`). Without `--args-only`, it uses `%Y/%m/%d` format (e.g., `2022/01/01`).\n\nThe `--args-only` flag skips reading init files. Without `--args-only`, my personal `~/.ledgerrc` or `LEDGER_FILE` env variable might be setting a date format. Let me check:\n\nWithout `--args-only`:\n- Reads `~/.ledgerrc` which might set `--input-date-format` or `--output-date-format`\n\n\n- Uses ledger's default date format with `--args-only`\n\nSo `22-Jan-01` is ledger's default output format when dates are parsed without an explicit year. The input format is `MM/DD` without a year, and ledger applies the year from `year_directive_year`, then outputs it in `%y-%b-%d` format. This seems odd though—why would dates without explicit years get formatted differently than those with years?\n\nI think ledger actually uses the same date format for output as it detected during input parsing. Since `01/01` is `MM/DD` format, the output format would be derived from that input format. Let me trace through how the date parsing and formatting logic works in the codebase, particularly in the `parse_date_mask_routine` and `date_io_t` class to understand the actual mechanism.\n\nExamining the parsing and formatting functions...",
+          "timestamp": "2026-02-23T08:03:35.221Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"readers\\|add_reader\\|push_back.*date_io\\|date_format\\|%y\\|%Y\" /Users/johnw/src/ledger/fix-1979/src/times.cc | head -50",
+            "description": "Find date format readers in times.cc"
+          },
+          "timestamp": "2026-02-23T08:03:36.841Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand! \n\n`printed_date_io` uses format `%y-%b-%d` (e.g., `22-Jan-01`). This is the format used for output in the register command.\n\nBut dates parsed with `%Y/%m/%d` format would format as... Let me think. The register output uses `printed_date_io` to format dates. Looking at `printed_date_io`, it always uses `%y-%b-%d` format.\n\nWait, but when I run without `--args-only`, I get `2022/01/01` format. That means my `~/.ledgerrc` must be setting a different output date format. With `--args-only`, the default `printed_date_io` format (`%y-%b-%d`) is used.\n \nSo I had it backwards—the original test file was actually correct with the `22-Jan-01` format, and I mistakenly changed it to `2022/01/01` because I was testing without `--args-only`. The fix needs to restore the proper date format in the expected output. I'm noticing the spacing in the original test file matches what ledger outputs with the `--args-only` flag, so the test was correct to begin with. Let me restore it to its original state and verify the formatting is consistent across all the transaction entries.",
+          "timestamp": "2026-02-23T08:03:52.187Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The default output format with `--args-only` is `%y-%b-%d` (like `22-Jan-01`). The original test was correct. Let me restore it:",
+          "timestamp": "2026-02-23T08:03:52.598Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Write",
+          "input": {
+            "content": "; Regression test for issue #1979:\n; year/Y directives inside an included file must not bleed into the parent\n; file after the include returns.  Specifically, when an included file\n; contains multiple year directives, the last one set must not affect the\n; year used by transactions that follow the include directive in the parent.\n\nyear 2020\n\ninclude 1979.dat\n\n; This transaction has no year component.  It must resolve to 2020 (the\n; year set in the parent file before the include), not 2023 (the last year\n; set inside the included file).\n05/15 Post-include Transaction\n    Expenses:Food    $30.00\n    Assets:Checking\n\ntest reg\n22-Jan-01 In-included First     Expenses:Food                $10.00       $10.00\n                                Assets:Checking             $-10.00            0\n23-Jul-01 In-included Second    Expenses:Food                $20.00       $20.00\n                                Assets:Checking             $-20.00            0\n20-May-15 Post-include Transa.. Expenses:Food                $30.00       $30.00\n                                Assets:Checking             $-30.00            0\nend test\n",
+            "file_path": "/Users/johnw/src/ledger/fix-1979/test/regress/1979.test"
+          },
+          "timestamp": "2026-02-23T08:03:58.329Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python3 test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1979.test 2>&1",
+            "description": "Run the regression test via the test harness"
+          },
+          "timestamp": "2026-02-23T08:04:01.348Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test passes. Now let me verify that the fix doesn't break any existing tests:",
+          "timestamp": "2026-02-23T08:04:03.778Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd build && ctest -R regress --output-on-failure -j$(nproc) 2>&1 | tail -30",
+            "description": "Run all regression tests",
+            "timeout": 300000
+          },
+          "timestamp": "2026-02-23T08:04:04.809Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd build && cmake .. -DUSE_PYTHON=OFF 2>&1 | tail -5 && make -j$(nproc) 2>&1 | tail -5",
+            "description": "Reconfigure cmake with tests enabled",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-23T08:04:07.842Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1979 && cmake -B build -S . -DUSE_PYTHON=OFF 2>&1 | tail -5 && cd build && make -j$(nproc) 2>&1 | tail -5",
+            "description": "Configure and build with tests",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-23T08:04:11.162Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -j$(nproc) --output-on-failure 2>&1 | tail -30",
+            "description": "Run all tests via ctest",
+            "timeout": 300000
+          },
+          "timestamp": "2026-02-23T08:04:20.873Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 1435 tests pass. Now let me review the complete diff before committing:",
+          "timestamp": "2026-02-23T08:04:37.575Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1979 diff src/textual_directives.cc",
+            "description": "Review changes to textual_directives.cc"
+          },
+          "timestamp": "2026-02-23T08:04:38.563Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix is clean and correct. Now let me commit the changes:",
+          "timestamp": "2026-02-23T08:04:41.789Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -C /Users/johnw/src/ledger/fix-1979 log --oneline -3",
+            "description": "Check recent commits for message style"
+          },
+          "timestamp": "2026-02-23T08:04:42.653Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1979 && git add src/textual_directives.cc && git commit --author=\"John Wiegley <johnw@newartisans.com>\" -m \"$(cat <<'EOF'\nfix: restore year/epoch state after processing included files\n\nWhen an included file contains one or more year/Y directives, the\nglobal year_directive_year (and epoch) were permanently modified,\nbleeding into the parent file after the include returned.  This\ncaused subsequent transactions in the parent file that omit the year\nto receive the wrong year — the last year set in the included file\nrather than whatever year was in effect before the include.\n\nSave both epoch and year_directive_year before creating the nested\ninstance_t for an included file, and restore them unconditionally\nwhen the instance finishes (both in the normal and exception paths).\nThis mirrors the save/restore logic that end_apply_directive already\nperforms for the \"apply year\" / \"end apply year\" block directive.\n\nFixes #1979\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the fix to textual_directives.cc"
+          },
+          "timestamp": "2026-02-23T08:04:51.049Z"
+        }
+      ],
+      "total_additions": 59,
+      "total_deletions": 12,
+      "accepted_lines": 47,
+      "overriden_lines": 0
+    }
+  }
+}
