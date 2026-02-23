@@ -1,0 +1,17 @@
+; Regression test for #2172
+; A double-quoted commodity followed by a number (e.g., "foo" 10) must be
+; parsed as an amount in an expression, not as a string literal followed by a
+; bare number.  Before the fix, `amount == "foo" 10` was parsed as
+; `(amount == "foo") 10`, failing with "Cannot compare an amount to a string".
+
+2024/01/01 Test
+    Expenses:Food    10 "foo"
+    Assets:Cash
+
+test reg --limit "amount == \"foo\" 10"
+24-Jan-01 Test                  Expenses:Food                10 foo       10 foo
+end test
+
+test reg --limit "amount == 10 \"foo\""
+24-Jan-01 Test                  Expenses:Food                10 foo       10 foo
+end test
