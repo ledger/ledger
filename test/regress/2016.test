@@ -1,0 +1,46 @@
+; Regression test for issue #2016: balance error shows wrong source lines
+;
+; When a transaction fails to balance, the error message should display
+; the actual source lines of that specific transaction, not lines from
+; some earlier position in the file.  On Windows, text-mode I/O could
+; cause file byte offsets to drift, making the source context display
+; lines from a completely different part of the file.
+
+2024/01/01 Opening Balance
+    Assets:Checking                  $5000.00
+    Equity:Opening Balances
+
+2024/02/01 Groceries
+    Expenses:Food                      $120.00
+    Assets:Checking
+
+2024/02/05 Utilities
+    Expenses:Utilities                  $85.00
+    Assets:Checking
+
+2024/02/10 Rent
+    Expenses:Rent                      $900.00
+    Assets:Checking
+
+2024/02/15 Salary
+    Assets:Checking                  $3000.00
+    Income:Salary
+
+; This transaction intentionally does not balance
+2024/02/20 Unbalanced Payment
+    Expenses:Misc                      $200.00
+    Assets:Checking                   $-150.00
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 32:
+While balancing transaction from "$FILE", lines 30-32:
+> 2024/02/20 Unbalanced Payment
+>     Expenses:Misc                      $200.00
+>     Assets:Checking                   $-150.00
+Unbalanced remainder is:
+              $50.00
+Amount to balance against:
+             $200.00
+Error: Transaction does not balance
+end test
