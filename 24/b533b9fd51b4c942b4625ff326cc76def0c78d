@@ -1,0 +1,401 @@
+src/filters.cc
+  2fe8c256e8aafe4b 408-413,416-424,431,436,441,444-450,461,469,474,478,487,490-491
+test/regress/1984.test
+  2fe8c256e8aafe4b 1-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "24b533b9fd51b4c942b4625ff326cc76def0c78d",
+  "prompts": {
+    "2fe8c256e8aafe4b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c4ddef26-acd9-4a1b-9eec-8d8840de38d3",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>1984</command-args>",
+          "timestamp": "2026-02-23T07:33:43.057Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 1984.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the claude-code skill to provide context for the rest of the task\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-02-23T07:33:43.057Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me start by getting the details of GitHub issue #1984 and understanding what needs to be fixed.",
+          "timestamp": "2026-02-23T07:33:45.397Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1984 --repo ledger/ledger",
+            "description": "Get GitHub issue #1984 details"
+          },
+          "timestamp": "2026-02-23T07:33:46.173Z"
+        },
+        {
+          "type": "assistant",
+          "text": "This is an interesting issue. Let me understand it:\n\n1. There's an issue with `--display` and `--collapse-if-zero` used together\n2. When using `--collapse-if-zero`, no-op transactions (like \"Breakfast\") get collapsed/hidden\n3. When also using `--display 'total < 0'`, the running total becomes incorrect because:\n   - The `--collapse-if-zero` hides certain transactions from display, but the `--display` filter is applied before the collapse calculation\n   - This causes the running total shown in the output to be wrong\n\nLet me look at the relevant source code to understand how `--collapse-if-zero` and `--display` interact.\n\n\nNow I'll create a test case to reproduce the issue and see exactly what's happening with the running totals.",
+          "timestamp": "2026-02-23T07:33:51.965Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline -5",
+            "description": "Check current branch state"
+          },
+          "timestamp": "2026-02-23T07:33:52.485Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat > /tmp/test_1984.dat << 'EOF'\n= !%/^BUDGETED$/ & /^Assets:/\n    ; :BUDGETED:\n    ($account:Budget)                             -1\n\n= !%/^BUDGETED$/ & /^Expenses:Cash$/\n    ; :BUDGETED:\n    (Assets:Budget:Other)                    (-cost) ; :CASH:\n\n= !%/^BUDGETED$/ & /^Expenses:/\n    ; :BUDGETED:\n    (Assets:Budget:Other)                    (-cost)\n\n2019/01/01 * Opening Balances\n    ; :BUDGETED:\n    Assets:Checking                       200.00 EUR\n    Equity:Opening Balances              -200.00 EUR\n    [Assets:Budget:Other]                  50.00 EUR\n    [Assets:Checking:Budget]              -50.00 EUR\n\n2019/01/06 * ATM\n    Expenses:Cash                          30.00 EUR\n    Assets:Checking\n\n2019/01/07 * Breakfast\n    Expenses:Cafe                           5.00 EUR\n    Expenses:Cash\n\n2019/01/14 * Books\n    Expenses:Education                     20.00 EUR\n    Assets:Checking\n\n2019/02/01 * Assertion\n    [Assets:Budget:Other]                 = 0.00 EUR\nEOF\necho \"Test file created\"",
+            "description": "Create test data file for issue #1984"
+          },
+          "timestamp": "2026-02-23T07:33:57.413Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls build/ 2>/dev/null | head -5 || echo \"No build dir\"",
+            "description": "Check if build directory exists"
+          },
+          "timestamp": "2026-02-23T07:34:00.247Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/build/ 2>/dev/null | head -10 || echo \"No build dir\"",
+            "description": "Check build directory in parent"
+          },
+          "timestamp": "2026-02-23T07:34:02.926Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "find /Users/johnw -name \"ledger\" -type f -executable 2>/dev/null | head -5",
+            "description": "Find ledger binary"
+          },
+          "timestamp": "2026-02-23T07:34:05.213Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "which ledger || echo \"not in PATH\"",
+            "description": "Check if ledger is in PATH"
+          },
+          "timestamp": "2026-02-23T07:36:07.463Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago ledger -f /tmp/test_1984.dat reg '^Assets:Budget:Other$'\necho \"---\"\nTZ=America/Chicago ledger -f /tmp/test_1984.dat reg --collapse-if-zero '^Assets:Budget:Other$'\necho \"---\"\nTZ=America/Chicago ledger -f /tmp/test_1984.dat reg --collapse-if-zero '^Assets:Budget:Other$' --display 'total < 0'",
+            "description": "Reproduce the issue with the test data"
+          },
+          "timestamp": "2026-02-23T07:36:10.780Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I can reproduce the issue. The problem is clear:\n\n1. Without `--collapse-if-zero`, the register shows all entries correctly.\n2. With `--collapse-if-zero`, the Breakfast transaction (which nets to zero) is collapsed/hidden.\n3. When adding `--display 'total < 0'`, the Books entry shows with a running total of -5.00 EUR instead of 0.\n\nThe issue is that when `--collapse-if-zero` collapses the Breakfast transaction, the `total` variable for `--display` still includes the effect of the Breakfast posting in its calculation.\n \nLet me trace through what's happening more carefully. The Breakfast transaction has two postings to `Assets:Budget:Other` that cancel each other out (+5.00 EUR and -5.00 EUR), so it gets collapsed. But the `total` calculation for `--display` appears to be computed before the collapse happens, which is why the Books entry shows an incorrect running total of -5.00 EUR instead of 0.\n\nI need to look at how `--collapse-if-zero` and `--display` interact in the filter chain, particularly in the collapse filter implementation and how it handles the total calculation.",
+          "timestamp": "2026-02-23T07:36:20.617Z"
+        },
+        {
+          "type": "assistant",
+          "text": "I can reproduce the issue. Now let me look at the relevant source code:",
+          "timestamp": "2026-02-23T07:36:20.628Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Task",
+          "input": {
+            "description": "Find collapse-if-zero filter code",
+            "prompt": "Search the ledger codebase at /Users/johnw/src/ledger/fix-1984 for the implementation of --collapse-if-zero filter. Look in:\n1. src/filters.h and src/filters.cc for any class or function related to \"collapse\" \n2. Look for how --collapse-if-zero interacts with --display \n3. Find how the running total is computed in the register command\n4. Look at how display_predicate interacts with the collapse filter\n\nSearch for these patterns: \"collapse_if_zero\", \"collapse\", \"display_predicate\", \"collapse_posts\" in the source files.\n\nReturn the file paths, line numbers, and key code sections that implement the collapse-if-zero behavior and how it interacts with the display filter.",
+            "subagent_type": "Explore"
+          },
+          "timestamp": "2026-02-23T07:36:24.111Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me now look at the actual source code to understand the bug better. The issue is that when `--collapse-if-zero` and `--display` are used together, the running total is wrong.\n\nLet me read the key source files to understand the handler chain and the specific bug.",
+          "timestamp": "2026-02-23T07:37:29.861Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1984/src/filters.cc",
+            "limit": 150,
+            "offset": 390
+          },
+          "timestamp": "2026-02-23T07:37:30.381Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1984/src/chain.cc",
+            "limit": 150,
+            "offset": 90
+          },
+          "timestamp": "2026-02-23T07:37:30.951Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the pipeline:\n\n1. `collapse_posts` - accumulates postings per transaction and checks if the subtotal is zero\n2. `calc_posts` - computes the running total (AFTER collapse_posts)\n3. `filter_posts(only_predicate)` - filters posts by --only predicate\n4. `filter_posts(display_predicate)` - filters posts by --display predicate\n\nWait, let me re-read the pipeline. The handlers are built as a chain, and since each handler is PREPENDED to the chain (wraps the previous handler), the actual ORDER OF EXECUTION for a posting flowing through is:\n\n\nWhen a handler wraps another, the outer handler processes first. So the chain built from innermost to outermost means a posting flows through collapse_posts first (if enabled), then sort operations, then the only-predicate filter, calc_posts, the display-predicate filter, and finally the base output handler. more handlers\n\nSo when a posting flows through the chain, it goes:\n- First to `collapse_posts` (or the outermost handler)\n- Then to `calc_posts`\n- Then to `filter_posts(display_predicate)` \n- Then to `display_filter_posts`\n- Then to `base_handler`\n\nSo the flow is:\n1. A posting arrives at `collapse_posts`\n2. `collapse_posts` accumulates it in `subtotal`\n3. When a new transaction starts (or flush), `collapse_posts.report_subtotal()` is called\n4. In `report_subtotal()`, if `only_collapse_if_zero && !subtotal.is_zero()`, it sends component_posts one by one to `item_handler<post_t>::operator()()` which calls the NEXT handler in the chain\n5. The next handler receives the posting (passes through `calc_posts`)\n6. `calc_posts` computes the running total\n7. Eventually `filter_posts(display_predicate)` decides whether to show the posting\n\nNow I see the bug: the \"Breakfast\" transaction has two postings that cancel out to zero, so `collapse_posts` collapses them and never forwards them down the chain. But when evaluating `displayed_count`, it's checking the `display_predicate` on each component post individually. Examining the collapse_posts logic...\n\nChecking the condition for when to actually output the collapsed postings - when `displayed_count == 1`, it outputs just the last post, but the issue is that the `display_predicate` is being evaluated on individual postings before they've gone through the full handler chain where `calc_posts` would have computed the running total that the display filter depends on. The issue is that when `report_subtotal()` evaluates the display predicate on the original component posts, those posts haven't been processed by `calc_posts` yet, so their `total` fields contain stale values from previous iterations rather than the freshly computed totals. This means the predicate is checking against outdated data before the calculation pass has even run. at 20, then 20 - 20 = 0 (after Books). But the display shows -5.00 EUR for Books, which means somewhere the running total is being calculated as -5 instead of 0. Let me trace through the actual postings: Opening Balances adds 50, ATM subtracts 30 to get 20, then Breakfast's two components (+5 and -5) should net to zero, but if they're being processed separately before collapsing, maybe the running total is being updated mid-transaction and then the collapse happens after one posting has already moved it to 25, then back to 20, then Books subtracts 20 to hit 0—unless the collapse is retroactively removing the Breakfast postings from the running total calculation, which would leave us at 20 - 25 = -5.\n\nThe key issue is that when `collapse_posts` collapses the Breakfast transaction to zero, the display predicate is still evaluating against the original component posts using their individual `total` values, not the collapsed result. So the predicate might be checking whether each component post's running total is negative, and if one of them is, it gets displayed even though the net transaction is zero. me trace through what happens with the Books transaction and the filtered postings. When `--collapse-if-zero` is enabled and we hit a zero subtotal like Breakfast, the code skips the special branch and falls through to create a normal subtotal post—except since the subtotal is zero, nothing actually gets created. Now I'm working through the Books transaction to understand how the multiple postings to Assets:Budget:Other interact with the automatic transactions and filtering. spent on breakfast too? Let me re-read...\n  \n  Actually in the Breakfast transaction:\n- Expenses:Cafe 5.00 EUR -> auto-xact creates (Assets:Budget:Other) -5.00 EUR\n- Expenses:Cash -5.00 EUR (spending the 30 EUR cash we took from ATM) -> auto-xact for Expenses:Cash creates (Assets:Budget:Other) (+5.00 EUR)\n  \n  So two postings +5 and -5 net to zero. Got it.\n\n- Books: Expenses:Education 20.00 EUR -> auto-xact creates (Assets:Budget:Other) -20.00 EUR\n  \n  One posting to Assets:Budget:Other: -20 EUR\n\nSo Books is a single-posting transaction (for Assets:Budget:Other).\n\nNow when `--collapse-if-zero` is active, Breakfast gets collapsed since its subtotal is zero, but Books doesn't collapse because the subtotal is -20 EUR. The condition checks if we're in collapse-if-zero mode with a non-zero subtotal, which means Books passes all its component postings through without collapsing. Wait, no. Let me re-read the logic here. I'm checking the conditions for when a post gets collapsed versus passed through directly. For Books with a subtotal of -20 EUR, I need to understand what `displayed_count` actually represents—it's the number of component posts that pass the display predicate `total < 0`. The tricky part is figuring out what `total` evaluates to for these component posts before they've gone through `calc_posts`. I think `total` here refers to the post's own total function rather than `xdata.total`, so I need to trace through how that's computed in the bind scope context. For the Breakfast transaction with two component posts that sum to zero, I'm trying to figure out whether `displayed_count` would be 1 or 2 depending on how the predicate evaluates. count`: evaluates `display_predicate` on each post\n- What is `total` for each Breakfast post? The xdata.total wasn't set by calc_posts yet for these posts.\n\nActually, I realize the issue is more subtle. When the Breakfast posts are evaluated, they haven't gone through `calc_posts` yet, so the `total` function/variable on those posts would return something different - perhaps using the post's xdata from a previous pass.\n\nBut the real question is: why does the Books entry show -5.00 EUR instead of the correct value?\n\nLet me trace through what happens in each scenario. Without the collapse flag, all four postings flow through calc_posts and generate running totals of 50, 20, 25, 20, 0 - none of which satisfy the `total < 0` condition, so nothing displays. When I add `--collapse-if-zero`, the Breakfast entries get collapsed before reaching calc_posts, leaving only Opening, ATM, and Books with running totals of 50, 20, and 0 respectively - still nothing displays since none are negative. But when both flags are used together, the collapse still happens the same way, yet somehow the display predicate is evaluating against a stale or incorrect total value for the Books entry.\n\nThe key insight is that `displayed_count` in `report_subtotal()` is checking the predicate against the component posts before they've been processed by `calc_posts`, so `total` would be whatever was previously set on those post objects' xdata.\n\nFor the Books post with a -20 EUR amount, the predicate `0 < 0` evaluates to false, giving `displayed_count = 0`. This means the collapse condition `collapse_depth == 0 && displayed_count == 1` fails, and since `only_collapse_if_zero` is true and the subtotal is non-zero, all component posts get passed through to `calc_posts` where the running total is computed correctly.\n\nNow I need to trace through what happens when both `--display` and `--collapse-if-zero` are used together, starting with the Breakfast transaction.\n\nWhen the Breakfast posts arrive at `collapse_posts`, the subtotal is 0 after both posts process. The issue is that `displayed_count` depends on evaluating the display predicate for each component post, but those posts haven't been through `calc_posts` yet, so their xdata might not be initialized. I'm looking at how `calc_posts` initializes xdata and sets the running total based on the previous post's xdata.\n\ntotal. Since the collapsed Breakfast posts skip `calc_posts` entirely, their xdata.total remains uninitialized or zero. When the display predicate evaluates `total < 0` on these posts, it gets 0, which fails the condition for both posts.\n\nNow looking at the Books transaction—it's a single post with -20 EUR that also hasn't gone through `calc_posts` yet. The question is what value `total` evaluates to when the display predicate runs on it. If Books had its xdata.total set from a previous iteration, that would be stale data, but more likely the real issue is how these unevaluated posts affect the state when they're checked but never passed through the calculation pipeline.\n\nLet me reconsider the `report_subtotal()` logic for Breakfast. When the subtotal is zero, the `only_collapse_if_zero && !subtotal.is_zero()` condition fails, so it falls through to normal collapse behavior. The normal collapse iterates through the totals map and calls `handle_value` for each entry—but if the subtotal for an account is zero, I need to verify whether `handle_value` actually creates a post or if the `--collapse-if-zero` flag suppresses it.\n\nActually, looking at the real bug here: the output shows a total of -5.00 EUR instead of 0, which means `calc_posts` computed an incorrect total. The issue might be that when `display_predicate` references the total value, it's checking against a total that hasn't been properly calculated yet for these posts. Let me trace through what happens without the display filter applied.\n\nWhen Breakfast transactions collapse with `collapse-if-zero`, those +5 and -5 posts never reach `calc_posts` at all. So `calc_posts` only sees Opening (+50, total 50), ATM (-30, total 20), and Books (-20, total 0). Then when `--display 'total < 0'` is applied afterward, none of those totals are negative, so nothing should display. But the output shows a Books entry with -5.00 EUR, which suggests the display filter is somehow being applied before the collapse happens, or the total calculation is getting corrupted by the filtering logic.\n\nI think the issue might be in how `displayed_count` evaluates the display predicate against component posts—when it checks `total < 0` on each post, it's computing the `total` function, which might be reading stale or incorrect xdata values that haven't been properly updated by `calc_posts` yet.\n\nLooking at the `calc_posts` operator, it accesses `post.xdata()` to initialize or update the post's extended data, and if evaluating the predicate triggers xdata creation with default values before `calc_posts` runs, those defaults could interfere with the later calculations.\n\nStill examining the calc_posts logic... I'm tracing through the collapse logic step by step: when the ATM transaction arrives, it triggers a report for the Opening balance, which creates xdata as a side effect during the displayed_count evaluation. Since the subtotal is non-zero (50), the only_collapse_if_zero condition fails and the Opening post gets passed through to the next handler where its total gets recalculated. Now the ATM post itself is being added to the collapse_posts with its own subtotal adjustment. on each Breakfast post, both the +5 and -5 transactions create xdata with total = 0, so displayed_count stays at 0. Since the subtotal is actually zero, the collapse condition fails and it falls through to normal collapse behavior. Now I'm wondering what happens when `handle_value` gets called with a value of 0 — does it still create a post, or is that where the filtering happens?\n\nLooking back at the logic, I realize the issue might be with how `displayed_count` is computed. These are original posts that haven't gone through `calc_posts` yet, so when the display predicate checks `total < 0`, it's evaluating against a post whose xdata hasn't been initialized by that calculation step. If `post.xdata()` creates a default xdata with zero total when accessed, then that predicate would evaluate to false for both posts, which explains why displayed_count remains 0.\n\nBut there's something more subtle happening—when `displayed_count` evaluates the display predicate on these Breakfast posts, it's actually creating xdata on the same post objects that `collapse_posts` is holding. Since the Breakfast transaction has a subtotal of 0, those posts never make it to `calc_posts`, so their xdata state gets frozen at whatever the display predicate evaluation left it at. Then when the Books post arrives and goes through the same flow, it's working with a different set of posts that do get processed by `calc_posts`.\n\nThe real question is what `last_post` points to in `calc_posts` at that moment—if Breakfast was collapsed and filtered out, then `last_post` should still be the ATM post with its total of 20, which would make Books' calculation come out to 0, not -5. So something else must be corrupting the state.\n\nActually, I need to trace through how the `total` value in the display predicate gets evaluated—is it pulling from the post's `xdata.total` that was set by `calc_posts`, or is it computed some other way? Let me look at where that predicate actually reads the total value.\n\nLooking at the actual output, the Books entry shows a running total of -5.00 EUR, which means the previous balance before Books was 15 EUR (since 15 - 20 = -5). But that doesn't match what I'd expect—the ATM withdrawal should have left us at 20 EUR, not 15 EUR. The breakfast transaction with +5 seems to be affecting the calculation in an unexpected way.\n\nLet me trace through the math: if I only count the -5 breakfast post in the total but not the +5, I get 50 - 30 - 5 = 15, and then 15 - 20 = -5, which matches the output. So somehow only one of the two breakfast posts is being passed to calc_posts when it should be both or neither.\n\nI need to look at how `report_subtotal()` handles the Breakfast transaction and why it might be filtering out one of the posts.\n\nLooking at the display predicate logic: if the +5 post evaluates to false under `total < 0` but the -5 post evaluates to true, then `displayed_count` becomes 1, which triggers the collapse condition. When that happens, only the last post (the -5 one) gets sent through to calc_posts, which explains why only that one affects the calculation. The -5 post then inherits the ATM's total value of 20, so subtracting 5 gives 15, and the subsequent Books transaction brings it down to -5.\n\nThe real question is why the display predicate would return true for the -5 post in the first place—I need to trace what value `total` actually has when the predicate evaluates it for that specific post.\n\nI think I've found it: the `total` in the predicate might not be the running total at all, but rather the individual post's amount. If that's the case, then the -5 post has amount -5, which satisfies `total < 0`, while the +5 post doesn't. That would explain why only one transaction displays, triggering the collapse condition.\n\nThe real issue is that the predicate is being evaluated against the original posts before they've been processed through `calc_posts`, so `total` might not represent what we expect—it could be defaulting to the post's own amount or some uninitialized value rather than the actual running total. a VIRTUAL POST or AUTO TRANSACTION post, the `total` expression might evaluate differently. The -5 post is from an auto transaction and its amount is negative. If `total` evaluates to the post's total value through some other means, I need to look at the actual code to understand what `total` is in this context.\n\nLet me reconsider: the `displayed_count` check in `report_subtotal()` uses `display_predicate` with the post's current state before `calc_posts` runs. If `total` in the predicate evaluates using `xdata.total` which is 0, then both posts fail the `total < 0` check, giving `displayed_count = 0`. That would make both the collapse condition and the `only_collapse_if_zero && !subtotal.is_zero()` check false, leading to the else branch that collapses and outputs nothing. But something is being output, so the collapse must work differently.\n\nWhen `displayed_count == 1`, the code sends `last_post` directly through to `calc_posts`. For Breakfast, that's the -5 post. This means `display_predicate` must evaluate to TRUE for exactly one of the Breakfast posts, and since the predicate is `total < 0`, one of them must have a negative total value. I'm realizing that `total` in the display predicate likely refers to `xdata().total` from the posting itself, which gets set by `calc_posts`. For posts that haven't gone through that calculation yet, it would default to zero. But I'm wondering if there's a lazy evaluation happening or if `total` resolves differently in the predicate context. Let me trace through what actually happens when the display predicate evaluates `total < 0` on these posts before they're processed by `calc_posts`.\n\nSince `total` would be zero for all Breakfast posts at this point, the predicate `0 < 0` fails for everything, giving `displayed_count = 0`. This cascades through the collapse logic: the first two collapse conditions both evaluate to false, so it falls through to normal collapse behavior. The totals map ends up with `Assets:Budget:Other → 0`, and I need to check whether `handle_value` actually creates a posting for zero subtotals or skips it entirely.\n\nLooking at the option handling, `--collapse-if-zero` enables both the `collapse_if_zero` flag and the `collapse` flag itself, which then instantiates the collapse_posts handler with the appropriate parameters.\n\nThe key logic is in `report_subtotal()`: when `only_collapse_if_zero` is true and the subtotal is non-zero, it bypasses the collapse and outputs all posts directly. But for Breakfast where the subtotal is zero, that condition fails and it falls through to normal collapse behavior, which then calls `handle_value(0, ...)` on the zero total. Let me trace what happens when that zero value gets processed. So the zero post shouldn't actually cause the problem since it would just maintain the running total. But then why is the output showing -5.00 EUR? Let me reconsider whether the `displayed_count == 1` check is actually triggering for some posts. I need to look at what values are available when the predicate gets evaluated.\n\nActually, I'm realizing that the component_posts in collapse_posts contain all posts matching the initial filter, not just those filtered by the display predicate—the display predicate is what `--display` specifies. So the posts arriving at collapse_posts are the ones that matter here.\n\nAt the time `report_subtotal()` evaluates the display predicate on these component posts, they haven't been through calc_posts yet, so their xdata.total isn't set by that handler. But I need to understand how `total` actually resolves in a posting scope within Ledger's expression system.\n\nThe real question is what happens when `collapse_posts` evaluates the display predicate inside `report_subtotal()` — it's using the same predicate that was passed in, but evaluating it against posts that are at a different stage of processing than expected.\n\nLooking at the actual output, the Books entry shows -5.00 EUR as its total, which means when `filter_posts` evaluated the predicate `total < 0`, the xdata.total was already -5.00 EUR. So I need to trace backwards through `calc_posts` to understand how that value got set.\n\nIf the running total is -5.00 EUR after Books, and Books itself is -20.00 EUR, then the previous total must have been 15.00 EUR. Working backwards through the transactions, that means `calc_posts` saw Opening (+50), ATM (-30), and Breakfast (-5), which gives 50 - 30 - 5 = 15, then 15 - 20 = -5. This confirms that only the -5 Breakfast post made it through to `calc_posts`, not the +5 post.\n\nFor exactly one of the two Breakfast posts to pass the display predicate, the `total` field must be evaluating differently for each post—likely one satisfies `total < 0` while the other doesn't. I'm wondering if `total` resolves to something different for auto-generated posts—maybe it's pulling from the post amount rather than xdata.total. I need to look at how the posting scope actually resolves the `total` symbol to understand what's happening here.",
+          "timestamp": "2026-02-23T07:40:29.351Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look more deeply at the specific code to understand the bug:",
+          "timestamp": "2026-02-23T07:40:29.416Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1984/src/filters.cc",
+            "limit": 80,
+            "offset": 270
+          },
+          "timestamp": "2026-02-23T07:40:29.833Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "context": 2,
+            "glob": "*.cc",
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-1984/src",
+            "pattern": "\\\"total\\\""
+          },
+          "timestamp": "2026-02-23T07:40:30.898Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1984/src/post.cc",
+            "limit": 40,
+            "offset": 480
+          },
+          "timestamp": "2026-02-23T07:40:34.855Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "context": 10,
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-1984/src/post.cc",
+            "pattern": "get_total"
+          },
+          "timestamp": "2026-02-23T07:40:37.778Z"
+        },
+        {
+          "type": "assistant",
+          "text": "There's the bug! Look at `get_total`:\n\n```cpp\nvalue_t get_total(post_t& post) {\n  if (post.xdata_ && !post.xdata_->total.is_null())\n    return post.xdata_->total;\n  else if (post.amount.is_null())\n    return 0L;\n  else\n    return post.amount;  // <-- Falls back to post.amount when xdata is not set!\n}\n```\n\nWhen `total` is evaluated for a post that hasn't been through `calc_posts` (so `xdata_->total` is null/not set), it falls back to returning `post.amount`!\n\n\nSo for the Breakfast -5 EUR post, `xdata_` isn't set yet, so it returns the raw amount of -5.00 EUR, making `total < 0` true. For the +5 EUR post, it returns +5.00 EUR, making the condition false. That's why `displayed_count` ends up as 1 for the Breakfast transaction.\n\nWith only one post displayed, the code triggers the collapse condition and sends the -5 post to the next handler. That handler recalculates the running total: starting from the ATM post's total of 20, the -5 post brings it to 15, then the Books transaction at -20 brings it down to -5. Since -5 is negative, it passes the filter and gets included in the output.\n\nThe real issue is that `report_subtotal()` checks the display predicate against posts before they've been processed through `calc_posts`, so it's using the raw post amounts instead of the computed running totals. The `get_total()` function falls back to `post.amount` when the total hasn't been calculated yet, which causes the wrong display decisions. I can either fix `get_total()` to return 0 instead of falling back to the post amount, or stop evaluating the display predicate in `report_subtotal()` altogether since that logic is fundamentally flawed.\n\nActually, I'm realizing the `displayed_count` check is trying to optimize away the synthetic post when only one component would display anyway—but that optimization breaks when the display predicate depends on running totals that haven't been computed yet.\n\nThe simplest fix is to skip the display predicate check entirely in `report_subtotal()` and instead rely on the other conditions: pass through if we have a non-zero subtotal and `only_collapse_if_zero` is set, otherwise create the synthetic post. This avoids the timing issue with running totals altogether. So the -5 post slips through and corrupts the running total. The fix is to prioritize the zero-suppression check: when `only_collapse_if_zero` is true and the subtotal is zero, I need to always collapse regardless of whether there's only one post displayed. The single-post optimization shouldn't override the zero-suppression logic.\n\nLooking at the code flow, the problem is that the `displayed_count == 1` branch executes unconditionally and passes through the single post, even when zero-suppression should kick in. I need to reorder the conditions so the zero-suppression check comes first, preventing the single-post optimization from bypassing it.\n\nThere's also something off with how `displayed_count` itself is being evaluated...\n\nRefactoring the condition order...\n\nThe key insight is that when `only_collapse_if_zero` is true and the subtotal is zero, we should suppress output entirely, but when it's false we need the normal collapse logic to handle the `displayed_count == 1` optimization. I'm restructuring this so the zero-suppression case takes priority, then falling back to the collapse behavior for everything else. The fix needs to check for the `only_collapse_if_zero && subtotal.is_zero()` case before applying the `displayed_count == 1` optimization, so that zero subtotals get properly suppressed instead of incorrectly passing through. Restructuring the logic so that when `only_collapse_if_zero` is set and the subtotal is zero, I clear all state and return early without outputting anything, bypassing the display predicate entirely. Then I'm setting up the loop to check which posts actually pass the display filter. I see the issue now—when `only_collapse_if_zero` is true and the subtotal is zero, the code incorrectly uses the `displayed_count == 1` check with pre-calculation totals, which is the actual bug in issue #1984. The non-zero case correctly passes all posts through without collapsing, and the regular collapse mode has a separate issue with incorrect totals that's unrelated to this specific problem.\n\nThe fix is to reorder the checks so `only_collapse_if_zero` is evaluated first regardless of the subtotal's sign, which would suppress output when the subtotal is zero and pass all component posts through when it's not.\n\nRestructuring the conditional logic... Now I'm reconsidering whether the `displayed_count == 1` optimization should also apply when `only_collapse_if_zero` is set. Looking back at the original code structure, that check came first, which suggests it might have been intentional to handle both cases. Let me trace through what happens with the current logic to see if there's an edge case I'm missing where a single item should bypass the collapse-if-zero behavior. I'm realizing the `displayed_count == 1` check is really about the regular `--collapse` behavior where you want a single synthetic posting per transaction, not about `--collapse-if-zero` semantics. The cleanest fix is to make sure `only_collapse_if_zero && subtotal.is_zero()` gets handled independently of that `displayed_count` check, so the zero-suppression works as expected without changing how regular collapse behaves. I'm seeing the issue now—the current branching logic doesn't properly handle the `only_collapse_if_zero` case when the subtotal is zero, because the first branch only checks `displayed_count == 1` without considering whether we should suppress output entirely. The fix is to add an early check that catches the zero-subtotal case before any other branching logic executes, preventing the creation of synthetic zero posts downstream. Restructuring the conditions with `only_collapse_if_zero` first makes the logic clearer: when that flag is true, I either pass all posts through for non-zero subtotals or suppress everything for zero subtotals, whereas the regular collapse behavior handles the `displayed_count == 1` optimization and synthetic post generation separately. I should verify this doesn't break existing tests and think through how depth collapsing interacts with the zero-collapse flag. So the `displayed_count == 1` optimization only matters for regular `--collapse`, since `--collapse-if-zero` already handles the non-zero case correctly by passing through all component posts. Let me check if there are existing tests covering this behavior within the collapse-if-zero scenario.",
+          "timestamp": "2026-02-23T07:41:59.320Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Found the root cause. The `get_total` function falls back to `post.amount` when xdata hasn't been set yet:\n\n```cpp\nvalue_t get_total(post_t& post) {\n  if (post.xdata_ && !post.xdata_->total.is_null())\n    return post.xdata_->total;\n  else if (post.amount.is_null())\n    return 0L;\n  else\n    return post.amount;  // <-- returns raw amount as \"total\" for unprocessed posts\n}\n```\n\nWhen `collapse_posts::report_subtotal()` evaluates `display_predicate` against component posts (before `calc_posts`), the Breakfast -5 EUR post has no xdata total yet, so `total` evaluates to `-5.00 EUR`, making `total < 0` true. This causes `displayed_count == 1`, and `last_post` (the -5 post) gets passed through to `calc_posts`, corrupting the running total.",
+          "timestamp": "2026-02-23T07:42:02.406Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1984/src/filters.h",
+            "limit": 70,
+            "offset": 573
+          },
+          "timestamp": "2026-02-23T07:42:03.696Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1984/test/baseline/opt-collapse-if-zero.test"
+          },
+          "timestamp": "2026-02-23T07:42:04.220Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full picture. Let me now implement the fix.\n\nThe fix is in `src/filters.cc`, in the `collapse_posts::report_subtotal()` function.\n\nThe current logic:\n```cpp\nif (collapse_depth == 0 && displayed_count == 1) {\n    item_handler<post_t>::operator()(*last_post);\n} else if (only_collapse_if_zero && !subtotal.is_zero()) {\n    for (post_t* post : component_posts)\n        item_handler<post_t>::operator()(*post);\n} else if (collapse_depth > 0 && item_t::use_aux_date) {\n\n\n```\n\nThe fix: handle `only_collapse_if_zero` BEFORE the `displayed_count == 1` check:\n\n```cpp\nif (only_collapse_if_zero && subtotal.is_zero()) {\n    // Suppress zero-net transactions entirely (the point of --collapse-if-zero)\n    // Do nothing - clean up below\n} else if (collapse_depth == 0 && displayed_count == 1) {\n    item_handler<post_t>::operator()(*last_post);\n} else if (only_collapse\n```\n\nReordering the conditional checks... I need to make sure the cleanup code at the end of the function still executes regardless of which branch I take. Looking at the full function structure, I can see that using `else if` chains will work fine since the cleanup happens after all the conditional logic, so it'll run no matter which path is taken. Continuing with the restructured logic, I'm handling the case where `only_collapse_if_zero` is active and the subtotal is non-zero by passing posts through uncollapsed, then checking for an optimization when there's only one post to display, and finally handling the normal collapse behavior with depth considerations.\n\nFor the zero-subtotal case with `only_collapse_if_zero` enabled, I'm simply suppressing output entirely. The cleanest approach here is to check the `only_collapse_if_zero` flag earlier in the logic flow, before evaluating the single-post optimization, so the conditions don't become tangled.\n\nLooking at the actual control flow, there are really four distinct paths: passing through a single post when depth is zero, passing all items through when `only_collapse_if_zero` with non-zero subtotal, handling depth-based collapse with effective dates, and the default collapse behavior. The issue is that the first two cases are conflicting in how they're currently ordered.\n\nThe fix is to add an additional condition to the single-post pass-through case so it doesn't trigger when we're in `only_collapse_if_zero` mode with a zero subtotal. Alternatively, I could reorder the checks to evaluate the `only_collapse_if_zero` logic first, which would be cleaner. Let me go with reordering the conditions...\n\nReordering the checks...\n\nNow I'm wondering if this loses the `collapse_depth > 0 && item_t::use_aux_date` behavior when `only_collapse_if_zero` is set. I need to think through whether that case should still apply or if it's overridden by the zero-subtotal suppression.\n\nLet me restructure this more cleanly: when `only_collapse_if_zero` is true, I should only suppress if the subtotal is zero, otherwise pass everything through. For other cases, I handle the collapse depth and auxiliary date logic separately. This way the logic is clearer about what each flag controls. I'm realizing there's a potential behavior change here—by moving `only_collapse_if_zero` outside the conditional chain, it now takes priority over the `displayed_count == 1` optimization, which means when both conditions are true, I'd pass all component posts instead of just the last one. I need to verify whether this is the intended behavior for `--collapse-if-zero`. I need to figure out what happens when both `--collapse-if-zero` and `--depth N` are specified together. Since `--collapse-if-zero` enables `--collapse`, both flags would be active simultaneously, creating a `collapse_posts` handler with both `only_collapse_if_zero` and `collapse_depth` set. Let me trace through the option definitions to understand the intended interaction. I need to verify my understanding of the edge cases before implementing the fix. The key insight is that `only_collapse_if_zero` should short-circuit the entire collapse logic—when the subtotal is zero, suppress everything, and when it's non-zero, pass all posts through without any depth collapsing. For the normal case without that flag, I'll keep the original logic for handling displayed counts and depth collapse. Now I'm ready to implement the changes in the filter code and add a regression test.",
+          "timestamp": "2026-02-23T07:42:52.206Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full bug. Let me use the cpp-pro agent to implement the fix:",
+          "timestamp": "2026-02-23T07:42:52.220Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Task",
+          "input": {
+            "description": "Implement fix for issue 1984",
+            "prompt": "Fix a bug in the ledger C++ project at /Users/johnw/src/ledger/fix-1984.\n\n## The Bug (Issue #1984)\n\nWhen `--collapse-if-zero` and `--display 'total < 0'` are used together, the running total becomes incorrect.\n\nRoot cause: In `src/filters.cc`, `collapse_posts::report_subtotal()` evaluates `display_predicate` on component posts **before** `calc_posts` has computed running totals. The `get_total()` function in `src/post.cc` (lines 245-252) falls back to returning `post.amount` when `xdata_->total` hasn't been set yet:\n\n```cpp\nvalue_t get_total(post_t& post) {\n  if (post.xdata_ && !post.xdata_->total.is_null())\n    return post.xdata_->total;\n  else if (post.amount.is_null())\n    return 0L;\n  else\n    return post.amount;  // fallback to post amount!\n}\n```\n\nIn `collapse_posts::report_subtotal()` (lines 397-486 of `src/filters.cc`), the current logic is:\n\n```cpp\nif (collapse_depth == 0 && displayed_count == 1) {\n    item_handler<post_t>::operator()(*last_post);  // pass single post through\n} else if (only_collapse_if_zero && !subtotal.is_zero()) {\n    for (post_t* post : component_posts)\n        item_handler<post_t>::operator()(*post);   // pass all through\n} else if (collapse_depth > 0 && item_t::use_aux_date) {\n    // depth + effective dates collapse\n    ...\n} else {\n    // normal collapse\n    ...\n}\n```\n\nFor the Breakfast transaction (which nets to zero with +5 EUR and -5 EUR postings):\n1. `display_predicate` (`total < 0`) is evaluated on each component post\n2. The -5 EUR post has no `xdata_->total`, so `total` falls back to `post.amount` = -5 EUR\n3. `-5 < 0` is TRUE, so `displayed_count = 1`\n4. The `collapse_depth == 0 && displayed_count == 1` branch triggers\n5. The -5 EUR post is passed through to `calc_posts`, corrupting the running total\n\nThe fix: reorder the branches so `only_collapse_if_zero` is checked BEFORE `displayed_count == 1`. When `only_collapse_if_zero` is true:\n- Zero subtotal → suppress (output nothing) -- this is the whole point of --collapse-if-zero\n- Non-zero subtotal → pass all component posts through\n\nOnly apply the `displayed_count == 1` optimization for regular `--collapse` (when `only_collapse_if_zero` is false).\n\n## Files to Modify\n\n1. `src/filters.cc` - Fix `collapse_posts::report_subtotal()` (around lines 397-486)\n2. `test/regress/1984.test` - Add regression test\n\n## The Fix\n\nIn `src/filters.cc`, change the if-else chain in `report_subtotal()` from:\n```cpp\nif (collapse_depth == 0 && displayed_count == 1) {\n    item_handler<post_t>::operator()(*last_post);\n} else if (only_collapse_if_zero && !subtotal.is_zero()) {\n    for (post_t* post : component_posts)\n        item_handler<post_t>::operator()(*post);\n} else if (collapse_depth > 0 && item_t::use_aux_date) {\n    ...\n} else {\n    ...\n}\n```\n\nTo (handle only_collapse_if_zero FIRST):\n```cpp\nif (only_collapse_if_zero && !subtotal.is_zero()) {\n    // --collapse-if-zero with non-zero subtotal: pass all component posts through uncollapsed\n    for (post_t* post : component_posts)\n        item_handler<post_t>::operator()(*post);\n} else if (!only_collapse_if_zero && collapse_depth == 0 && displayed_count == 1) {\n    // Regular --collapse optimization: if only one post matches, pass it through directly\n    item_handler<post_t>::operator()(*last_post);\n} else if (!only_collapse_if_zero) {\n    // Regular --collapse: collapse to synthetic post(s)\n    if (collapse_depth > 0 && item_t::use_aux_date) {\n        // [the depth + effective dates code stays here]\n    } else {\n        // [the normal collapse code stays here]\n    }\n}\n// When only_collapse_if_zero && subtotal.is_zero(): suppress entirely (fall through to cleanup)\n```\n\nThe key insight: when `only_collapse_if_zero` is true and subtotal is zero, we want to suppress entirely. When `only_collapse_if_zero` is true and subtotal is non-zero, we pass all through. The `displayed_count == 1` optimization is only for regular `--collapse`.\n\n## Regression Test\n\nCreate `test/regress/1984.test` with data from the issue (simplified test cases):\n\n```\n= !%/^BUDGETED$/ & /^Expenses:Cash$/\n    ; :BUDGETED:\n    (Assets:Budget:Other)                    (-cost)\n\n= !%/^BUDGETED$/ & /^Expenses:/\n    ; :BUDGETED:\n    (Assets:Budget:Other)                    (-cost)\n\n2019/01/01 * Opening Balances\n    ; :BUDGETED:\n    Assets:Checking                       200.00 EUR\n    Equity:Opening Balances              -200.00 EUR\n    [Assets:Budget:Other]                  50.00 EUR\n    [Assets:Checking:Budget]              -50.00 EUR\n\n2019/01/06 * ATM\n    Expenses:Cash                          30.00 EUR\n    Assets:Checking\n\n2019/01/07 * Breakfast\n    Expenses:Cafe                           5.00 EUR\n    Expenses:Cash\n\n2019/01/14 * Books\n    Expenses:Education                     20.00 EUR\n    Assets:Checking\n\ntest reg --collapse-if-zero '^Assets:Budget:Other$' --display 'total < 0'\nend test\n```\n\nThe expected output is EMPTY because the total never goes negative (it goes: 50 → 20 → 0, with the Breakfast zero-net transaction suppressed).\n\n## Instructions\n\n1. Read `src/filters.cc` to see the exact current code (especially lines 397-486)\n2. Implement the fix by reordering the if-else chain in `report_subtotal()`\n3. Create the regression test file at `test/regress/1984.test`\n4. Do NOT commit - leave changes uncommitted\n\nBe careful to preserve all the existing code in the if-else branches - only reorder the logic.",
+            "subagent_type": "cpp-pro"
+          },
+          "timestamp": "2026-02-23T07:43:16.341Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix has been implemented. Let me verify the changes and test them.",
+          "timestamp": "2026-02-23T08:03:27.372Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me verify the changes look correct:",
+          "timestamp": "2026-02-23T08:03:27.639Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff src/filters.cc",
+            "description": "Show changes to filters.cc"
+          },
+          "timestamp": "2026-02-23T08:03:28.381Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1984/test/regress/1984.test",
+            "description": "Show the regression test"
+          },
+          "timestamp": "2026-02-23T08:03:28.935Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix looks good. Now let me build the project and run the tests to verify the fix works.",
+          "timestamp": "2026-02-23T08:03:30.872Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. The fix looks correct. Let me build the project and verify:",
+          "timestamp": "2026-02-23T08:03:31.282Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "./acprep debug --output=build 2>&1 | tail -5",
+            "description": "Configure debug build",
+            "timeout": 60000
+          },
+          "timestamp": "2026-02-23T08:03:32.995Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1984/build && make -j$(nproc) ledger 2>&1 | tail -20",
+            "description": "Build ledger binary",
+            "timeout": 300000
+          },
+          "timestamp": "2026-02-23T08:03:36.870Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "TZ=America/Chicago /Users/johnw/src/ledger/fix-1984/build/ledger -f /tmp/test_1984.dat reg '^Assets:Budget:Other$'\necho \"--- with --collapse-if-zero ---\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1984/build/ledger -f /tmp/test_1984.dat reg --collapse-if-zero '^Assets:Budget:Other$'\necho \"--- with --collapse-if-zero --display 'total < 0' (should be empty) ---\"\nTZ=America/Chicago /Users/johnw/src/ledger/fix-1984/build/ledger -f /tmp/test_1984.dat reg --collapse-if-zero '^Assets:Budget:Other$' --display 'total < 0'\necho \"Exit: $?\"",
+            "description": "Verify the fix works with the test case from the issue"
+          },
+          "timestamp": "2026-02-23T08:03:42.679Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix works correctly. Now let me run the full test suite to confirm nothing is broken:",
+          "timestamp": "2026-02-23T08:03:44.726Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -j$(nproc) 2>&1 | tail -20",
+            "description": "Run all tests",
+            "timeout": 300000
+          },
+          "timestamp": "2026-02-23T08:03:45.525Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 1435 tests pass. Let me run the new regression test specifically:",
+          "timestamp": "2026-02-23T08:03:57.334Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest -R 1984 -V 2>&1",
+            "description": "Run regression test for issue 1984"
+          },
+          "timestamp": "2026-02-23T08:03:58.134Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All tests pass. Now let me commit the fix:",
+          "timestamp": "2026-02-23T08:04:00.825Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1984 && git diff --stat",
+            "description": "Show what changed"
+          },
+          "timestamp": "2026-02-23T08:04:01.429Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git status",
+            "description": "Show git status"
+          },
+          "timestamp": "2026-02-23T08:04:03.477Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline -3",
+            "description": "Check recent commits for message style"
+          },
+          "timestamp": "2026-02-23T08:04:06.169Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add src/filters.cc test/regress/1984.test && git commit --author=\"John Wiegley <johnw@newartisans.com>\" -m \"$(cat <<'EOF'\nfix: check only_collapse_if_zero before displayed_count==1 in report_subtotal\n\nWhen --collapse-if-zero and --display are used together with a predicate\nthat references the running total (e.g. 'total < 0'), the display predicate\nwas evaluated against component posts before calc_posts had computed running\ntotals.  get_total() falls back to post.amount when xdata_->total is null,\nso a posting with a negative amount could satisfy 'total < 0' even though\nits true running total was positive.\n\nThis caused the displayed_count==1 branch to fire for a zero-net transaction\n(which should be suppressed by --collapse-if-zero), leaking one posting\nthrough to calc_posts and corrupting the running total for all subsequent\npostings.\n\nFix by checking only_collapse_if_zero first in report_subtotal():\n- non-zero subtotal: pass all component posts through uncollapsed\n- zero subtotal: suppress entirely (fall through without outputting)\nThe displayed_count==1 optimisation is now only applied for regular --collapse.\n\nFixes: https://github.com/ledger/ledger/issues/1984\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the fix and regression test"
+          },
+          "timestamp": "2026-02-23T08:04:16.886Z"
+        }
+      ],
+      "total_additions": 106,
+      "total_deletions": 63,
+      "accepted_lines": 61,
+      "overriden_lines": 0
+    }
+  }
+}
