@@ -1,0 +1,32 @@
+; Test that --sort-all 'date' recomputes balance assignment amounts in
+; sorted order, not file order (GitHub issue #2065).
+;
+; Transactions are listed out of date order to verify that the balance
+; assignments (= amount) are computed based on the date-sorted order:
+;   A (2021-01-01): account1 += 100        → balance 100
+;   B (2021-02-01): account1 += 10         → balance 110
+;   C (2021-03-01): account1 = 200 (assign) → diff = +90
+;   D (2021-04-01): account1 = 300 (assign) → diff = +100
+
+2021-01-01 A
+    account1    100.00 EUR
+    account2
+
+2021-04-01 D
+    account1    = 300.00 EUR
+    account2
+
+2021-02-01 B
+    account1     10.00 EUR
+    account2
+
+2021-03-01 C
+    account1    = 200.00 EUR
+    account2
+
+test --date-format '%Y-%m-%d' --sort-all 'date' reg account1
+2021-01-01 A                    account1                 100.00 EUR   100.00 EUR
+2021-02-01 B                    account1                  10.00 EUR   110.00 EUR
+2021-03-01 C                    account1                  90.00 EUR   200.00 EUR
+2021-04-01 D                    account1                 100.00 EUR   300.00 EUR
+end test
