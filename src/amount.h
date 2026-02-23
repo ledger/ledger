@@ -339,13 +339,23 @@ public:
   void in_place_roundto(int places);
 
   /** Yields an amount which has lost all of its extra precision, beyond what
-      the display precision of the commodity would have printed. */
+      the display precision of the commodity would have printed, truncating
+      towards zero. */
   [[nodiscard]] amount_t truncated() const {
     amount_t temp(*this);
     temp.in_place_truncate();
     return temp;
   }
   void in_place_truncate();
+
+  /** Yields an amount rounded to the commodity's display precision using
+      round-half-away-from-zero.  Suitable for computing display adjustment
+      postings where the result must match the displayed value. */
+  [[nodiscard]] amount_t display_rounded() const {
+    amount_t temp(*this);
+    temp.in_place_roundto(temp.display_precision());
+    return temp;
+  }
 
   /** Yields an amount which has lost all of its extra precision, beyond what
       the display precision of the commodity would have printed. */

@@ -590,9 +590,40 @@ void amount_t::in_place_truncate() {
   if (!quantity)
     throw_(amount_error, _("Cannot truncate an uninitialized amount"));
 
-  DEBUG("amount.truncate", "Truncating " << *this << " to precision " << display_precision());
+  DEBUG("amount.truncate",
+        "Truncating " << *this << " to precision " << display_precision());
 
-  in_place_roundto(display_precision());
+  _dup();
+
+  const int places = display_precision();
+
+  mpz_t& scale(temp);
+  if (places)
+    mpz_ui_pow_ui(scale, 10, labs(places));
+
+  // Scale the numerator or denominator so that the division below produces
+  // a result at the requested decimal precision.
+  if (places > 0) {
+    mpz_mul(mpq_numref(MP(quantity)), mpq_numref(MP(quantity)), scale);
+  } else if (places < 0) {
+    mpz_mul(mpq_denref(MP(quantity)), mpq_denref(MP(quantity)), scale);
+  }
+
+  // mpz_tdiv_q truncates towards zero -- exactly the semantics required.
+  // No rounding step; the remainder is simply discarded.
+  auto whole(mpq_numref(tempq));
+  mpz_tdiv_q(whole, mpq_numref(MP(quantity)), mpq_denref(MP(quantity)));
+
+  if (places > 0) {
+    mpq_set_num(MP(quantity), whole);
+    mpq_set_den(MP(quantity), scale);
+    mpq_canonicalize(MP(quantity));
+  } else if (places == 0) {
+    mpq_set_z(MP(quantity), whole);
+  } else {
+    mpq_set_ui(MP(quantity), 0, 1);
+    mpz_mul(mpq_numref(MP(quantity)), whole, scale);
+  }
 
   DEBUG("amount.truncate", "Truncated = " << *this);
 }
