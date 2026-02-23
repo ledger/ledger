@@ -65,7 +65,7 @@ class session_t : public symbol_scope_t {
 public:
   bool flush_on_next_data_file;
 
-  unique_ptr<journal_t> journal;
+  boost::shared_ptr<journal_t> journal;
   parse_context_stack_t parsing_context;
   optional<expr_t> value_expr;
 
