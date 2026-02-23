@@ -1,0 +1,38 @@
+; Regression test for issue #1985: aux_date can be used in queries
+; Tests that aux_date comparisons work in --limit expressions and that
+; postings without an aux_date are excluded (not cause an error).
+
+2020/10/01=2020/10/02 Transaction A
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2020/10/05=2020/10/08 Transaction B
+    Expenses:Food    $20.00
+    Assets:Checking
+
+2020/10/10 Transaction C (no aux date)
+    Expenses:Food    $30.00
+    Assets:Checking
+
+; Filter by aux_date >= date: only transactions with aux_date on or after
+; the given date should appear; Transaction C has no aux_date and is excluded.
+test reg -l "aux_date >= [2020/10/02]"
+20-Oct-01 Transaction A         Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+20-Oct-05 Transaction B         Expenses:Food                $20.00       $20.00
+                                Assets:Checking             $-20.00            0
+end test
+
+; Filter with aux_date check: only Transaction B has aux_date >= 2020/10/05
+test reg -l "aux_date >= [2020/10/05]"
+20-Oct-05 Transaction B         Expenses:Food                $20.00       $20.00
+                                Assets:Checking             $-20.00            0
+end test
+
+; Explicit null guard form also works
+test reg -l "aux_date and aux_date >= [2020/10/02]"
+20-Oct-01 Transaction A         Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+20-Oct-05 Transaction B         Expenses:Food                $20.00       $20.00
+                                Assets:Checking             $-20.00            0
+end test
