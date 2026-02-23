@@ -187,6 +187,22 @@ to use the
 report.
 .It Fl \-gain Pq Fl G
 Show any gains (or losses) in commodity values over time.
+.It Fl \-gain-since Ar DATE
+When used with
+.Fl \-gain ,
+compute unrealised gain relative to the market value at
+.Ar DATE
+rather than each lot's original cost basis.
+This is useful for analysing performance within a specific period: lots held
+before
+.Ar DATE
+are treated as if they were acquired at their market value on that date, so
+only appreciation since
+.Ar DATE
+is reported.
+Lots acquired on or after
+.Ar DATE
+still use their original cost.
 .It Fl \-head Ar number
 Only show the top
 .Ar number
@@ -623,6 +639,35 @@ Use the given format string
 to print output.
 .It Fl \-gain Pq Fl G
 Report net gain or loss for commodities that have a price history.
+.It Fl \-gain-since Ar DATE
+When combined with
+.Fl \-gain ,
+replace the cost basis for pre-date lots with their market value at
+.Ar DATE .
+This yields period-relative gain: how much value has changed
+.Em since
+.Ar DATE
+rather than since the original purchase.
+For example:
+.Bd -literal -offset indent
+P 2022/01/01 AAPL $150
+P 2022/12/31 AAPL $180
+
+2021/06/01 Buy
+    Assets:Brokerage    10 AAPL @ $120
+    Assets:Cash
+
+2022/07/01 Buy more
+    Assets:Brokerage    10 AAPL @ $160
+    Assets:Cash
+.Ed
+.Pp
+.Ic ledger bal --gain
+reports $600 (gain from cost $120 and $160).
+.Ic "ledger bal --gain --gain-since 2022/01/01"
+reports $500 instead: the first lot uses $150 (market at 2022-01-01) as
+its baseline, so its gain is 10\[mu]($180\[mi]$150)=$300; the second lot
+still uses cost $160, contributing 10\[mu]($180\[mi]$160)=$200.
 .It Fl \-generated
 Include auto-generated postings (such as those from automated
 transactions) in the report, in cases where you normally wouldn't want
