@@ -1,0 +1,29 @@
+= !%/^BUDGETED$/ & /^Expenses:Cash$/
+    ; :BUDGETED:
+    (Assets:Budget:Other)                    (-cost)
+
+= !%/^BUDGETED$/ & /^Expenses:/
+    ; :BUDGETED:
+    (Assets:Budget:Other)                    (-cost)
+
+2019/01/01 * Opening Balances
+    ; :BUDGETED:
+    Assets:Checking                       200.00 EUR
+    Equity:Opening Balances              -200.00 EUR
+    [Assets:Budget:Other]                  50.00 EUR
+    [Assets:Checking:Budget]              -50.00 EUR
+
+2019/01/06 * ATM
+    Expenses:Cash                          30.00 EUR
+    Assets:Checking
+
+2019/01/07 * Breakfast
+    Expenses:Cafe                           5.00 EUR
+    Expenses:Cash
+
+2019/01/14 * Books
+    Expenses:Education                     20.00 EUR
+    Assets:Checking
+
+test reg --collapse-if-zero '^Assets:Budget:Other$' --display 'total < 0'
+end test
