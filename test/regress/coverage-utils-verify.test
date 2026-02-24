@@ -1,0 +1,36 @@
+; Coverage test for utils.cc memory tracing via --verify
+; Exercises: initialize_memory_tracing, shutdown_memory_tracing,
+;   trace_ctor_func, trace_dtor_func, trace_new_func, trace_delete_func,
+;   add_to_count_map, current_memory_size, current_objects_size,
+;   operator new/delete overloads with tracing
+; Targets: utils.cc lines 88-256, 333-397
+
+2024/01/01 Opening Balance
+    Assets:Checking         $1000.00
+    Equity:Opening
+
+2024/01/15 Grocery Store
+    Expenses:Food            $50.00
+    Assets:Checking
+
+2024/02/01 Salary
+    Assets:Checking        $3000.00
+    Income:Salary
+
+test bal --verify 2>/dev/null
+            $3950.00  Assets:Checking
+           $-1000.00  Equity:Opening
+              $50.00  Expenses:Food
+           $-3000.00  Income:Salary
+--------------------
+                   0
+end test
+
+test reg --verify 2>/dev/null
+24-Jan-01 Opening Balance       Assets:Checking            $1000.00     $1000.00
+                                Equity:Opening            $-1000.00            0
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Feb-01 Salary                Assets:Checking            $3000.00     $3000.00
+                                Income:Salary             $-3000.00            0
+end test

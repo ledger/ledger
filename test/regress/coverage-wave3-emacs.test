@@ -1,0 +1,18 @@
+; Coverage tests for report.cc emacs/lisp output (lines 1649-1658)
+; and output.h format_emacs_posts, format_ptree
+
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test emacs
+(("/Users/johnw/src/ledger/better-coverage/test/regress/coverage-wave3-emacs.test" 4 (26002 21728 0) nil "Test Payee"
+  (5 "Expenses:Food" "$10.00" nil)
+  (6 "Assets:Cash" "$-10.00" nil)))
+end test
+
+test lisp
+(("/Users/johnw/src/ledger/better-coverage/test/regress/coverage-wave3-emacs.test" 4 (26002 21728 0) nil "Test Payee"
+  (5 "Expenses:Food" "$10.00" nil)
+  (6 "Assets:Cash" "$-10.00" nil)))
+end test

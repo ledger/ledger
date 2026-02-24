@@ -1,0 +1,52 @@
+; Coverage tests for report.cc format options and output.h
+; Tests: format_accounts (lines 117-124), report_accounts (143-146),
+;        report_payees (164-167), report_tags (186-189),
+;        report_commodities (210-213)
+
+2024/01/01 * Shop A
+    ; Color: red
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 * Shop B
+    ; Size: large
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+2024/02/01 * Shop A
+    ; Color: blue
+    Expenses:Food    $20.00
+    Assets:Cash
+
+; Test custom balance format (covers format_accounts lines 104-124)
+test bal --format "%(account) => %(display_total)\n"
+Assets:Cash => $-530.00
+Expenses => $530.00
+Expenses:Food => $30.00
+Expenses:Rent => $500.00
+ => 0
+end test
+
+; Test accounts report with multiple runs
+; (first run builds, second run clears the state)
+test accounts Expenses
+Expenses:Food
+Expenses:Rent
+end test
+
+; Test payees report
+test payees
+Shop A
+Shop B
+end test
+
+; Test tags report
+test tags
+Color
+Size
+end test
+
+; Test commodities report
+test commodities
+$
+end test

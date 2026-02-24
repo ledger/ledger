@@ -1,0 +1,55 @@
+; Coverage tests for report.cc command lookup paths
+; Targets: csv (1628), accounts (1603), commodities (1637),
+;          payees (1673), tags (1695), cleared (1624),
+;          equity (1654), echo (1654), pricemap
+
+P 2024/01/01 EUR $1.10
+P 2024/01/15 EUR $1.12
+
+2024/01/01 * Payee
+    ; tag1: value1
+    Expenses:Food    10 EUR
+    ; tag2: value2
+    Assets:Cash
+
+test csv
+"2024/01/01","","Payee","Expenses:Food","EUR","10","*"," tag2: value2\n tag1: value1"
+"2024/01/01","","Payee","Assets:Cash","EUR","-10","*"," tag1: value1"
+end test
+
+test accounts
+Assets:Cash
+Expenses:Food
+end test
+
+test commodities
+EUR
+end test
+
+test payees
+Payee
+end test
+
+test tags
+tag1
+tag2
+end test
+
+test equity
+2024/01/01 Opening Balances
+    Assets:Cash                              -10 EUR
+    Expenses:Food
+end test
+
+test pricemap
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="$"];
+6[label="EUR"];
+6--5 ;
+}
+end test

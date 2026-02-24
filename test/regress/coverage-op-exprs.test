@@ -1,0 +1,96 @@
+; Coverage tests for op.cc - expression evaluation through register
+; Exercises expression paths that require posting/account context
+; Uses quantity() to avoid $ parsing issues in test harness
+
+2024/01/01 Groceries
+    Expenses:Food        $50.00
+    Assets:Checking
+
+2024/01/02 Books
+    Expenses:Books       $20.00
+    Assets:Checking
+
+2024/01/03 Salary
+    Assets:Checking    $2000.00
+    Income:Salary
+
+; Test --limit with greater-than (O_GT in calc)
+test reg --limit "amount > 0" --args-only --columns=80
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+24-Jan-02 Books                 Expenses:Books               $20.00       $70.00
+24-Jan-03 Salary                Assets:Checking            $2000.00     $2070.00
+end test
+
+; Test --limit with less-than and AND (O_LT, O_AND in calc)
+test reg --limit "quantity(amount) < 100 and quantity(amount) > 0" --args-only --columns=80
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+24-Jan-02 Books                 Expenses:Books               $20.00       $70.00
+end test
+
+; Test --limit with NOT (O_NOT in calc)
+test reg --limit "not (amount < 0)" --args-only --columns=80
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+24-Jan-02 Books                 Expenses:Books               $20.00       $70.00
+24-Jan-03 Salary                Assets:Checking            $2000.00     $2070.00
+end test
+
+; Test --limit with ternary (O_QUERY/O_COLON in calc)
+test reg --limit "amount > 0 ? true : false" --args-only --columns=80
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+24-Jan-02 Books                 Expenses:Books               $20.00       $70.00
+24-Jan-03 Salary                Assets:Checking            $2000.00     $2070.00
+end test
+
+; Test --limit with regex match on account (O_MATCH in calc)
+test reg --limit "account =~ /Food/" --args-only --columns=80
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+end test
+
+; Test --limit with GTE (O_GTE in calc)
+test reg --limit "quantity(amount) >= 50" --args-only --columns=80
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+24-Jan-03 Salary                Assets:Checking            $2000.00     $2050.00
+end test
+
+; Test --limit with LTE (O_LTE in calc)
+test reg --limit "quantity(amount) <= 50 and amount > 0" --args-only --columns=80
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+24-Jan-02 Books                 Expenses:Books               $20.00       $70.00
+end test
+
+; Test --limit with equality (O_EQ in calc)
+test reg --limit "quantity(amount) == 50" --args-only --columns=80
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+end test
+
+; Test --limit with multiplication (O_MUL in calc)
+test reg --limit "quantity(amount) * 2 >= 100" --args-only --columns=80
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+24-Jan-03 Salary                Assets:Checking            $2000.00     $2050.00
+end test
+
+; Test --limit with division (O_DIV in calc)
+test reg --limit "quantity(amount) / 2 >= 10" --args-only --columns=80
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+24-Jan-02 Books                 Expenses:Books               $20.00       $70.00
+24-Jan-03 Salary                Assets:Checking            $2000.00     $2070.00
+end test
+
+; Test --limit with subtraction (O_SUB in calc)
+test reg --limit "quantity(amount) - 10 > 0" --args-only --columns=80
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+24-Jan-02 Books                 Expenses:Books               $20.00       $70.00
+24-Jan-03 Salary                Assets:Checking            $2000.00     $2070.00
+end test
+
+; Test --limit with addition (O_ADD in calc)
+test reg --limit "quantity(amount) + 10 > 55" --args-only --columns=80
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+24-Jan-03 Salary                Assets:Checking            $2000.00     $2050.00
+end test
+
+; Test --limit with OR (O_OR in calc)
+test reg --limit "quantity(amount) == 50 or quantity(amount) == 20" --args-only --columns=80
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+24-Jan-02 Books                 Expenses:Books               $20.00       $70.00
+end test

@@ -1,0 +1,18 @@
+; Test coverage for textual_xacts.cc lines 493-498, 935-953
+; Value expression in posting amount and transaction-level assert/check/expr
+
+2024/01/15 Test Payee
+    Expenses:Food                          ($10.00 * 3)
+    Assets:Cash
+
+2024/01/20 Another Payee
+    Expenses:Food                           $15.00
+    assert amount >= 0
+    check amount >= 0
+    expr amount
+    Assets:Cash
+
+test reg Expenses
+24-Jan-15 Test Payee            Expenses:Food                $30.00       $30.00
+24-Jan-20 Another Payee         Expenses:Food                $15.00       $45.00
+end test

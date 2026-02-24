@@ -1,0 +1,24 @@
+; Test coverage for draft.cc lines 53-80
+; Test the 'template' command with code and note keywords
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test template Grocery code INV001 note "Test note" Expenses:Food '$25.00' from Assets:Savings
+--- Input arguments ---
+("Grocery", "code", "INV001", "note", "Test note", "Expenses:Food", "$25.00", "from", "Assets:Savings")
+
+--- Transaction template ---
+Date:       <today>
+Code:       INV001
+Note:       Test note
+Payee mask: Grocery
+
+[Posting "to"]
+  Account mask: Expenses:Food
+  Amount:       $25
+
+[Posting "from"]
+  Account mask: Assets:Savings
+end test

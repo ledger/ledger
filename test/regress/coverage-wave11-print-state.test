@@ -1,0 +1,38 @@
+; Coverage for print.cc lines 53,58,165,175,210,224
+; Tests print command with various states, amounts, balance assignments
+
+2024/01/01 * Cleared
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 ! Pending
+    Expenses:Drinks    $5.00
+    Assets:Cash
+
+2024/01/03 With Code
+    ! Expenses:Gas    $20.00
+    Assets:Cash
+
+2024/01/04 Virtual Post
+    Expenses:Office    $100.00
+    (Budget:Office)    $-100.00
+    Assets:Cash
+
+test print
+2024/01/01 * Cleared
+    Expenses:Food                             $10.00
+    Assets:Cash
+
+2024/01/02 ! Pending
+    Expenses:Drinks                            $5.00
+    Assets:Cash
+
+2024/01/03 With Code
+    ! Expenses:Gas                            $20.00
+    Assets:Cash
+
+2024/01/04 Virtual Post
+    Expenses:Office                          $100.00
+    (Budget:Office)                         $-100.00
+    Assets:Cash
+end test

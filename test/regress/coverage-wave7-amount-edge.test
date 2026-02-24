@@ -1,0 +1,67 @@
+; Coverage for amount.cc edge cases:
+; - Lines 609-610: in_place_truncate with negative places
+; - Lines 624-625: in_place_truncate with negative places remainder
+; - Lines 653: in_place_roundto uninitialized
+; - Lines 786: value() scaled commodity chain
+; - Lines 820: price() returns nullopt
+; - Lines 911: annotate with assert(false) path
+; - Lines 992: parse negative sign handling
+; - Lines 1126: parse with too many periods
+; - Lines 1138: parse with too many commas
+; - Lines 1152-1156: parse comma style edge cases
+; - Lines 1169: parse incorrect comma usage
+; - Lines 1191: parse apostrophe thousand separator
+; - Lines 1237-1240: parse with debug amount
+; - Lines 1323-1333: amount_t::valid()
+
+; Test negative amount parsing and commodity placement
+2024/01/01 Test negative prefix
+    Expenses:Food    -$10.00
+    Assets:Cash
+
+; Test amount with apostrophe thousand separator (Swiss style)
+commodity CHF 1'234'567.89
+
+2024/01/02 Swiss amount
+    Expenses:Travel    CHF 1'234.56
+    Assets:Cash
+
+; Test amount with decimal comma style
+commodity EUR 1.234,56
+
+2024/01/03 European amount
+    Expenses:Travel    EUR 2.500,00
+    Assets:Cash
+
+; Test printing with AMOUNT_PRINT_ELIDE_COMMODITY_QUOTES
+2024/01/04 Quoted commodity
+    Expenses:Test    1.00 "QUOTED STOCK"
+    Assets:Cash
+
+test reg Expenses:Food
+24-Jan-01 Test negative prefix  Expenses:Food               $-10.00      $-10.00
+end test
+
+test reg Expenses:Travel --sort amount
+24-Jan-02 Swiss amount          Expenses:Travel        CHF 1'234.56 CHF 1'234.56
+24-Jan-03 European amount       Expenses:Travel        EUR 2.500,00 CHF 1'234.56
+                                                                    EUR 2.500,00
+end test
+
+test print
+2024/01/01 Test negative prefix
+    Expenses:Food                            $-10.00
+    Assets:Cash
+
+2024/01/02 Swiss amount
+    Expenses:Travel                     CHF 1'234.56
+    Assets:Cash
+
+2024/01/03 European amount
+    Expenses:Travel                     EUR 2.500,00
+    Assets:Cash
+
+2024/01/04 Quoted commodity
+    Expenses:Test                       1.00 "QUOTED STOCK"
+    Assets:Cash
+end test

@@ -1,0 +1,38 @@
+; Coverage test for utils.cc memory tracing with more complex operations
+; Exercises: trace_ctor_func/trace_dtor_func through multiple transaction
+;   types, posting operations, account hierarchy operations
+; Targets: utils.cc lines 342-397
+
+2024/01/01 Opening Balance
+    Assets:Checking         $1000.00
+    Assets:Savings          $5000.00
+    Equity:Opening
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries  $50.00
+    Assets:Checking
+
+2024/01/20 Restaurant
+    Expenses:Food:Dining     $30.00
+    Assets:Checking
+
+2024/02/01 Salary
+    Assets:Checking        $3000.00
+    Income:Salary
+
+2024/02/01 Transfer
+    Assets:Savings          $500.00
+    Assets:Checking
+
+test bal --verify Expenses 2>/dev/null
+              $80.00  Expenses:Food
+              $30.00    Dining
+              $50.00    Groceries
+--------------------
+              $80.00
+end test
+
+test reg --verify Food 2>/dev/null
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+24-Jan-20 Restaurant            Expenses:Food:Dining         $30.00       $80.00
+end test

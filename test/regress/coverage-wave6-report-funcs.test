@@ -1,0 +1,67 @@
+; Coverage tests for report.cc function dispatch and option paths
+; Targets: lines 583, 595-599, 638, 689, 724, 836, 840, 849, 856,
+;   960-976, 1061, 1091, 1094, 1106, 1417, 1429, 1450, 1468, 1479,
+;   1490, 1502, 1528-1530, 1544, 1549, 1554
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (lot1) @ $150.00
+    Assets:Cash    $-1500.00
+
+2024/02/01 Buy More
+    Assets:Brokerage    5 AAPL {$160.00} [2024/02/01] (lot2) @ $160.00
+    Assets:Cash    $-800.00
+
+; Test fn_commodity (line 840)
+test reg --format "%(commodity(display_amount))\n" Assets:Cash
+$
+$
+end test
+
+; Test fn_quantity (line 689)
+test reg --format "%(quantity(display_amount))\n" Assets:Cash
+-1500
+-800
+end test
+
+; Test fn_strip (line 638)
+test reg --format "%(strip(amount))\n" Assets:Brokerage
+10 AAPL
+5 AAPL
+end test
+
+; Test fn_market with string arg (lines 595-599)
+test reg --format "%(market(\"AAPL\", now, \"$\"))\n" Assets:Cash
+$160.00
+$160.00
+end test
+
+; Test -F short flag for format (line 1061)
+test reg -F "%(account)\n" Assets:Cash
+Assets:Cash
+Assets:Cash
+end test
+
+; Test -S short flag for sort (line 1091)
+test reg -S date Assets:Cash
+24-Jan-01 Buy Stock             Assets:Cash               $-1500.00    $-1500.00
+24-Feb-01 Buy More              Assets:Cash                $-800.00    $-2300.00
+end test
+
+; Test -T short flag for total (line 1094)
+test bal -T "total * 2" Assets:Cash
+           $-4600.00  Assets:Cash
+end test
+
+; Test -X short flag for exchange (line 1106)
+test bal -X "$" Assets
+             $100.00  Assets
+            $2400.00    Brokerage
+           $-2300.00    Cash
+--------------------
+             $100.00
+end test
+
+; Test fn_percent (line 836)
+test bal --percent Assets:Cash
+             100.00%  Assets:Cash
+end test

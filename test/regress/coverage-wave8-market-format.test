@@ -1,0 +1,20 @@
+; Coverage tests for report.cc market function (586-612) and format (661-666)
+; Targets: market with exchange (605-607), market with string commodity (594-598)
+
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Payee
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+test reg --format '%(market(amount, today, "$"))\n' Expenses
+$11.00
+end test
+
+test reg --format '%(market("EUR", today))\n' Expenses
+$1.10
+end test
+
+test reg --format '%(format("%(payee)"))\n' Expenses
+Payee
+end test

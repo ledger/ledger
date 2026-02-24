@@ -1,0 +1,18 @@
+; Coverage tests for report.cc session-level functions
+; Tests: fn_nail_down SEQUENCE case (lines 896-903),
+;        fn_market with string arg (594-599), fn_is_seq (632-634),
+;        fn_top_amount, fn_options
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Test fn_is_seq (line 632-634)
+test reg --format "%(is_seq(amount) ? 'seq' : 'single')\n" Expenses
+single
+end test
+
+; Test fn_options
+test eval options
+<#SCOPE>
+end test

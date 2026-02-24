@@ -1,0 +1,74 @@
+; Coverage tests for xact.cc edge cases
+; Lines targeted: 235-236, 296-298, 313, 315, 447, 449, 464-467,
+;   608-618, 620-630, 643, 653, 658, 944-946, 1024, 1029
+
+; --- Two commodities with a pre-existing cost (lines 234-236) ---
+2024/01/01 Exchange with cost
+    Assets:Brokerage      100 EUR @ $1.10
+    Assets:Cash           $-110.00
+
+; --- Fixated price with NOT_PER_UNIT and negative amount (lines 296-298) ---
+2024/01/02 Fixated Price Edge
+    Assets:Stock          -10 AAA {=$100.00}
+    Assets:Stock           5 AAA {=$110.00}
+    Assets:Stock           5 AAA {=$120.00}
+    Assets:Cash
+
+; --- Virtual null post auto-balance (lines 464-467) ---
+2024/01/03 Virtual Null Balance
+    Expenses:Food         $50.00
+    Assets:Cash           $-50.00
+    [Budget:Food]         $-50.00
+    [Budget:Income]
+
+; --- fn_any and fn_all via query (lines 608-618, 620-630) ---
+2024/01/04 AnyAll Test
+    Expenses:Food         $10.00
+    Expenses:Drink        $5.00
+    Assets:Cash
+
+; --- Auto xact with check and expr (lines 847-854) ---
+= Expenses:Food
+    check account =~ /Food/
+    expr 1 + 1
+    (Budget:Food)         (amount * -1)
+
+; --- Period xact (covers period_xact_t) ---
+~ Monthly
+    Expenses:Rent         $1000.00
+    Assets:Cash
+
+; --- Transaction with aux_date for put_xact line 1029 ---
+2024/01/05=2024/01/10 Aux Date Payee
+    Expenses:Misc         $25.00
+    Assets:Cash
+
+2024/01/06 Food Purchase
+    Expenses:Food         $20.00
+    Assets:Cash
+
+test reg Expenses:Food -y "%y-%b-%d"
+24-Jan-03 Virtual Null Balance  Expenses:Food                $50.00       $50.00
+24-Jan-04 AnyAll Test           Expenses:Food                $10.00       $60.00
+24-Jan-06 Food Purchase         Expenses:Food                $20.00       $80.00
+end test
+
+test reg --limit "any(account =~ /Food/)" Expenses:Food -y "%y-%b-%d"
+24-Jan-03 Virtual Null Balance  Expenses:Food                $50.00       $50.00
+24-Jan-04 AnyAll Test           Expenses:Food                $10.00       $60.00
+24-Jan-06 Food Purchase         Expenses:Food                $20.00       $80.00
+end test
+
+test reg --limit "all(amount != 0)" Expenses:Food -y "%y-%b-%d"
+24-Jan-03 Virtual Null Balance  Expenses:Food                $50.00       $50.00
+24-Jan-04 AnyAll Test           Expenses:Food                $10.00       $60.00
+24-Jan-06 Food Purchase         Expenses:Food                $20.00       $80.00
+end test
+
+test bal Budget
+             $-20.00  Budget
+             $-70.00    Food
+              $50.00    Income
+--------------------
+             $-20.00
+end test

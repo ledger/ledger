@@ -1,0 +1,32 @@
+; Coverage tests for textual_xacts.cc
+; Tests: balance assignment, deferred posting, weekly interval, cleared posting
+
+; Test balance assignment (null amount with = )
+2024/01/01 Opening
+    Assets:Checking                 $1000.00
+    Equity:Opening
+
+2024/01/02 Grocery
+    Expenses:Food
+    Assets:Checking                            = $900.00
+
+; Test deferred posting
+2024/01/03 Deferred Test
+    Expenses:Office                  $50.00
+    <Assets:Deferred>
+
+test bal Assets
+             $850.00  Assets
+             $900.00    Checking
+             $-50.00    Deferred
+--------------------
+             $850.00
+end test
+
+test bal Expenses
+             $150.00  Expenses
+             $100.00    Food
+              $50.00    Office
+--------------------
+             $150.00
+end test

@@ -1,0 +1,22 @@
+; Wave 2 coverage tests for option.cc
+; Covers: process_arguments error paths (lines 91-96, 124, 135-137, 198, 203, 224)
+
+2024/01/01 Test
+    Expenses:Food              $25.00
+    Assets:Cash
+
+; Test illegal long option - covers line 192 (option_error throw)
+test reg --nonexistent-option-xyz -> 1
+__ERROR__
+Error: Illegal option --nonexistent-option-xyz
+end test
+
+; Test -- separator stops option processing - covers line 170-172
+test reg -- Expenses
+24-Jan-01 Test                  Expenses:Food                $25.00       $25.00
+end test
+
+; Test option with = value (line 183-184)
+test reg --limit="account =~ /Expenses/"
+24-Jan-01 Test                  Expenses:Food                $25.00       $25.00
+end test

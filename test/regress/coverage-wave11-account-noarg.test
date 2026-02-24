@@ -1,0 +1,10 @@
+; Coverage for textual_directives.cc account directive sub-directive requiring arg
+
+account Expenses:Food
+    alias
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+Error: Account directive 'alias' requires an argument
+end test

@@ -1,0 +1,29 @@
+; Coverage tests for report.cc budget command (lines 1615-1622)
+; and filters.cc budget_posts (lines 1290-1347, 1349-1395)
+
+~ Monthly
+    Expenses:Food    $500.00
+    Expenses:Transport    $200.00
+    Assets:Cash
+
+2024/01/05 Grocery Store
+    Expenses:Food    $100.00
+    Assets:Cash
+
+2024/01/15 Gas Station
+    Expenses:Transport    $50.00
+    Assets:Cash
+
+2024/01/20 Restaurant
+    Expenses:Food    $75.00
+    Assets:Cash
+
+; Test budget report (covers budget command dispatch and budget_posts filter)
+test budget --begin 2024/01/01 --end 2024/02/01
+    $-225.00     $-700.00      $475.00   32%  Assets:Cash
+     $225.00      $700.00     $-475.00   32%  Expenses
+     $175.00      $500.00     $-325.00   35%    Food
+      $50.00      $200.00     $-150.00   25%    Transport
+------------ ------------ ------------ -----
+           0            0            0     0
+end test

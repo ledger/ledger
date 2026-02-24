@@ -1,0 +1,15 @@
+; Coverage wave 11: format.cc min/max width
+; Targets lines 424, 471-472, 617
+
+2020/01/15 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2020/02/15 Restaurant
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --format "%10D %20a %12t\n" Expenses
+2020/01/15        Expenses:Food       $10.00
+2020/02/15        Expenses:Food       $20.00
+end test

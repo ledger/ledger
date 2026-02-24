@@ -1,0 +1,154 @@
+; Tests for report.cc option handlers - part B
+; Covers: --group-by, --prepend-format, --payee, --sort-all, --sort-xacts,
+;   --gain, --lot-prices, --lot-dates, --lot-tags, --lots,
+;   --revalued-only, --no-revalued, --exchange, --average-lot-prices,
+;   --unround, --no-rounding, --real, --values, --base,
+;   --start-of-week, echo command, pricemap command
+
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $195.00
+
+2024/01/01 Buy Stock
+    Assets:Brokerage     10 AAPL {$150.00} [2024/01/01] (tag1)
+    Assets:Cash         $-1500.00
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries     $50.00
+    Expenses:Food:Restaurant    $25.00
+    Assets:Cash
+
+2024/02/01 Gas Station
+    Expenses:Auto:Gas           $35.00
+    Assets:Cash
+
+2024/03/01 Paycheck
+    Assets:Cash                 $3000.00
+    Income:Salary
+
+; Test --group-by option
+test reg --group-by payee Expenses
+Gas Station
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00       $35.00
+
+Grocery Store
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+end test
+
+; Test --prepend-format option
+test reg --prepend-format='%(format_date(date, "%Y")) ' Expenses
+2024 24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+2024                                 Expens:Food:Restaurant       $25.00       $75.00
+2024 24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test --payee option with expression
+test reg --payee='account =~ /Food/ ? "FOOD" : payee' Expenses
+24-Jan-15 FOOD                  Expense:Food:Groceries       $50.00       $50.00
+24-Jan-15 FOOD                  Expens:Food:Restaurant       $25.00       $75.00
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test --sort-all option
+test reg --sort-all date Expenses
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test --sort-xacts option
+test reg --sort-xacts date Expenses
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test --gain option
+test reg --market --gain Assets:Brokerage
+24-Jun-01 Commodities revalued  <Revalued>                  $450.00      $450.00
+end test
+
+; Test --lot-prices --lot-dates --lot-tags --lots options
+test reg --lot-prices --lot-dates --lot-tags --lots Assets:Brokerage
+24-Jan-01 Buy Stock             Assets:Brokerage       10 AAPL {$150.00} [2024/01/01] (tag1) 10 AAPL {$150.00} [2024/01/01] (tag1)
+end test
+
+; Test --revalued-only option
+test reg --revalued-only --market --exchange '$' Assets:Brokerage
+24-Jun-01 Commodities revalued  <Revalued>                  $450.00     $1950.00
+end test
+
+; Test --no-revalued option
+test reg --no-revalued --market --exchange '$' Assets:Brokerage
+24-Jan-01 Buy Stock             Assets:Brokerage           $1500.00     $1500.00
+24-Jun-01 Commodities revalued  <Revalued>                  $450.00     $1950.00
+end test
+
+; Test --exchange option
+test reg --now 2024/06/01 --exchange '$' Assets:Brokerage
+24-Jan-01 Buy Stock             Assets:Brokerage           $1500.00     $1500.00
+24-Jun-01 Commodities revalued  <Revalued>                  $450.00     $1950.00
+end test
+
+; Test --average-lot-prices option
+test reg --average-lot-prices Assets:Brokerage
+24-Jan-01 Buy Stock             Assets:Brokerage       10 AAPL {$150.00} 10 AAPL {$150.00}
+end test
+
+; Test --unround option
+test reg --unround Expenses
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test --no-rounding option
+test reg --no-rounding Expenses
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test --values option
+test reg --values Expenses
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test --base option
+test bal --base Expenses
+             $110.00  Expenses
+              $35.00    Auto:Gas
+              $75.00    Food
+              $50.00      Groceries
+              $25.00      Restaurant
+--------------------
+             $110.00
+end test
+
+; Test --start-of-week option
+test reg --start-of-week=monday --weekly Expenses
+24-Jan-15 - 24-Jan-21           Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+24-Jan-29 - 24-Feb-04           Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test pricemap command
+test pricemap
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="$"];
+6[label="AAPL"];
+6--5 ;
+}
+end test
+
+; Test echo command - covers line 1026-1029
+test echo Hello
+Hello
+end test

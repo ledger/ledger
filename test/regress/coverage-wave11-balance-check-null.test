@@ -1,0 +1,15 @@
+; Coverage for xact.cc lines 523,538: finalization balance check paths.
+; Line 538 is the verify() must_balance skip for virtual.
+
+2024/01/01 Test
+    (Virtual:Fund)                $10.00
+    Expenses:Food                 $20.00
+    Assets:Cash
+
+test bal
+             $-20.00  Assets:Cash
+              $20.00  Expenses:Food
+              $10.00  Virtual:Fund
+--------------------
+              $10.00
+end test

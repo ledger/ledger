@@ -1,0 +1,15 @@
+; Test coverage for textual_directives.cc lines 288, 293, 298
+; apply_tag_directive with colon format and simple format
+
+apply tag :proj:
+2024/01/01 Test
+    Expenses:Food                           $50.00
+    Assets:Cash
+end apply tag
+
+test bal
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

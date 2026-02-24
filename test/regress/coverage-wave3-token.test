@@ -1,0 +1,57 @@
+; Wave 3 coverage tests for token.cc operator<< (lines 560-701)
+; Triggers expected(kind_t) which prints token types via operator<<
+
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; expected(kind_t) with VALUE token and RPAREN wanted
+; Covers: operator<<(token_t) VALUE case (line 685-686)
+;         operator<<(kind_t) RPAREN case (line 578-579)
+test eval "(1 2)" -> 1
+__ERROR__
+While parsing value expression:
+  (1 2)
+     ^
+Error: Invalid token '<value '2'>' (wanted ')')
+end test
+
+; expected(kind_t) with TOK_EOF - missing closing paren
+; Covers: operator<<(kind_t) TOK_EOF case (line 672-674)
+test eval "(" -> 1
+__ERROR__
+While parsing value expression:
+  (
+
+Error: Invalid token '<end of input>' (wanted ')')
+end test
+
+; expected(kind_t) with TOK_EOF after expression
+; Covers: operator<<(token_t) default case (line 695-696)
+test eval "(1" -> 1
+__ERROR__
+While parsing value expression:
+  (1
+
+Error: Invalid token '<end of input>' (wanted ')')
+end test
+
+; Operator not followed by argument (token unexpected)
+; Covers: unexpected() VALUE case (line 514-515)
+test eval "1 + )" -> 1
+__ERROR__
+While parsing value expression:
+  1 + )
+      ^
+Error: ) operator not followed by argument
+end test
+
+; Operator at end with no argument
+; Covers: unexpected() TOK_EOF case (line 510-511)
+test eval "1 +" -> 1
+__ERROR__
+While parsing value expression:
+  1 +
+
+Error: + operator not followed by argument
+end test

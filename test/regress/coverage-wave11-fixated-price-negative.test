@@ -1,0 +1,23 @@
+; Coverage for xact.cc lines 296-298: fixated price (NOT_PER_UNIT) with
+; negative amount; and lines 313-315: balanced-virtual posting skip in
+; the recompute loop.
+
+2024/01/01 Multi sell
+    Assets:Brokerage              -5 EUR {{=$6.60}}
+    Assets:Brokerage              -3 EUR {=$1.33}
+    Assets:Cash                   $10.59
+    [Budget:Tracking]             $1.00
+    [Budget:Offset]              $-1.00
+
+test bal
+              $10.59
+              -8 EUR  Assets
+              -8 EUR    Brokerage
+              $10.59    Cash
+                   0  Budget
+              $-1.00    Offset
+               $1.00    Tracking
+--------------------
+              $10.59
+              -8 EUR
+end test

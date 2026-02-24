@@ -1,0 +1,12 @@
+; Coverage tests for csv.cc
+; Targets: CSV import via convert command
+
+2024/01/01 Existing
+    Expenses:Food    $10.00
+    Assets:Checking
+
+; Test CSV format output (csv.cc is exercised by csv command)
+test csv
+"2024/01/01","","Existing","Expenses:Food","$","10","",""
+"2024/01/01","","Existing","Assets:Checking","$","-10","",""
+end test

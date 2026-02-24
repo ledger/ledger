@@ -1,0 +1,10 @@
+; Coverage: session.cc - fn_str (line 270) and fn_lot_tag (line 373)
+
+2024/01/01 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(str(amount))\n" --columns=80
+$10.00
+$-10.00
+end test

@@ -1,0 +1,22 @@
+; Coverage tests for times.cc lines 506-507, 515-516, 521-522 (token dump)
+; Also covers times.cc line 646 (peek_token caching)
+; Also covers times.cc line 325 (date_duration_t operator<< years)
+
+2024/01/01 January
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 February
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/03/01 March
+    Expenses:Food    $30.00
+    Assets:Cash
+
+; "every 2 weeks" exercises the TOK_EVERY handler and TOK_INT + TOK_WEEKS
+test reg --period "every 2 weeks" --begin 2024/01/01 --end 2024/04/01 Expenses
+23-Dec-24 - 24-Jan-06           Expenses:Food                $10.00       $10.00
+24-Jan-21 - 24-Feb-03           Expenses:Food                $20.00       $30.00
+24-Feb-18 - 24-Mar-02           Expenses:Food                $30.00       $60.00
+end test

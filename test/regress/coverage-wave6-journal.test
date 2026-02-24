@@ -1,0 +1,26 @@
+; Tests for journal.cc uncovered lines: alias expansion (196),
+; has_xdata with auto_xacts (485-496), valid() (517-524)
+
+; Test alias expansion with nested accounts
+alias Food=Expenses:Food
+alias Rent=Expenses:Rent
+
+2024/01/01 Grocery
+    Food                  $100.00
+    Assets:Cash
+
+2024/01/02 Landlord
+    Rent                  $500.00
+    Assets:Cash
+
+; === Test 1: Aliases expand correctly ===
+test bal Expenses --flat --no-total --columns 80
+             $100.00  Expenses:Food
+             $500.00  Expenses:Rent
+end test
+
+; === Test 2: Register shows expanded aliases ===
+test reg Expenses --columns 80
+24-Jan-01 Grocery               Expenses:Food               $100.00      $100.00
+24-Jan-02 Landlord              Expenses:Rent               $500.00      $600.00
+end test

@@ -1,0 +1,26 @@
+; Tests for value_date, T function lookups
+; Covers report.cc lines 1528-1530, 1544, 1549, 1554
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Test value_date - covers line 1544
+test reg --format '%(value_date)\n' --head 1 Expenses
+2024/01/15
+end test
+
+; Test T function (display_total) - covers lines 1528-1530
+test reg --format '%(T)\n' --head 1 Expenses
+$50.00
+end test
+
+; Test white function lookup - covers line 1549
+test reg --format '%(white)\n' --head 1 Expenses
+white
+end test
+
+; Test yellow function lookup - covers line 1554
+test reg --format '%(yellow)\n' --head 1 Expenses
+yellow
+end test

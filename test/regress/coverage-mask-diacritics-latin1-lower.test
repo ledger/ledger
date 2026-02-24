@@ -1,0 +1,72 @@
+; Coverage tests for mask.cc fold_codepoint: Latin-1 Supplement lowercase
+; Covers lines 69-87: ß-þ lowercase mappings
+
+; Characters: ß(0xDF)→s, à(0xE0)→a, æ(0xE6)→a, ç(0xE7)→c
+;   è(0xE8)→e, ì(0xEC)→i, ð(0xF0)→d, ñ(0xF1)→n
+;   ò(0xF2)→o, ù(0xF9)→u, ý(0xFD)→y, þ(0xFE)→t
+
+2024/01/01 Straße
+    Expenses:Foodß            $10.00
+    Assets:Checking
+
+2024/01/02 Àpple
+    Expenses:Foodà            $20.00
+    Assets:Checking
+
+2024/01/03 Æsop
+    Expenses:Foodæ            $30.00
+    Assets:Checking
+
+2024/01/04 Façade
+    Expenses:Foodç            $40.00
+    Assets:Checking
+
+2024/01/05 Fête
+    Expenses:Foodè            $50.00
+    Assets:Checking
+
+2024/01/06 Naìve
+    Expenses:Foodì            $60.00
+    Assets:Checking
+
+2024/01/07 Norðic
+    Expenses:Foodð            $70.00
+    Assets:Checking
+
+2024/01/08 Señor
+    Expenses:Foodñ            $80.00
+    Assets:Checking
+
+2024/01/09 Risòtto
+    Expenses:Foodò            $90.00
+    Assets:Checking
+
+2024/01/10 Vùlgar
+    Expenses:Foodù            $100.00
+    Assets:Checking
+
+2024/01/11 Holýday
+    Expenses:Foodý            $110.00
+    Assets:Checking
+
+2024/01/12 Norþern
+    Expenses:Foodþ            $120.00
+    Assets:Checking
+
+test bal Expenses --ignore-diacritics
+             $780.00  Expenses
+              $10.00    Foodß
+              $20.00    Foodà
+              $30.00    Foodæ
+              $40.00    Foodç
+              $50.00    Foodè
+              $60.00    Foodì
+              $70.00    Foodð
+              $80.00    Foodñ
+              $90.00    Foodò
+             $100.00    Foodù
+             $110.00    Foodý
+             $120.00    Foodþ
+--------------------
+             $780.00
+end test

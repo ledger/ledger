@@ -1,0 +1,36 @@
+; Coverage tests for report.cc short option handlers
+; Targets: -F (1061), -S (1091), -T (1094), -X (1106)
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Payee2
+    Expenses:Drinks    $5.00
+    Assets:Cash
+
+test reg -F "%(date) %(payee)\n" Expenses
+2024/01/01 Payee
+2024/02/01 Payee2
+end test
+
+test reg -S amount
+24-Jan-01 Payee                 Assets:Cash                 $-10.00      $-10.00
+24-Feb-01 Payee2                Assets:Cash                  $-5.00      $-15.00
+                                Expenses:Drinks               $5.00      $-10.00
+24-Jan-01 Payee                 Expenses:Food                $10.00            0
+end test
+
+test bal -T total
+             $-15.00  Assets:Cash
+              $15.00  Expenses
+               $5.00    Drinks
+              $10.00    Food
+--------------------
+                   0
+end test
+
+test reg -X EUR Expenses
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+24-Feb-01 Payee2                Expenses:Drinks               $5.00       $15.00
+end test

@@ -1,0 +1,47 @@
+; Tests for xact.cc uncovered lines: fn_any, fn_all, get_code,
+; auto transactions with amount expressions, finalize edge cases.
+
+; === Auto transaction with percentage ===
+= /Expenses/
+    (Liabilities:Tax)         0.10
+
+2024/01/01 Grocery
+    Expenses:Food        $100.00
+    Assets:Cash
+
+2024/01/02 (#123) Payment
+    Expenses:Bills       $50.00
+    Assets:Cash
+
+; === Test 1: Auto transaction triggers extend_xact paths ===
+test reg --columns 80
+24-Jan-01 Grocery               Expenses:Food               $100.00      $100.00
+                                Assets:Cash                $-100.00            0
+                                (Liabilities:Tax)            $10.00       $10.00
+24-Jan-02 Payment               Expenses:Bills               $50.00       $60.00
+                                Assets:Cash                 $-50.00       $10.00
+                                (Liabilities:Tax)             $5.00       $15.00
+end test
+
+; === Test 2: Get transaction code via format expression ===
+test reg payee Payment --format "%(code)\n"
+#123
+#123
+#123
+end test
+
+; === Test 3: Using "any" function (fn_any in xact.cc) ===
+test reg Expenses --limit "any(account =~ /Cash/)" --columns 80
+24-Jan-01 Grocery               Expenses:Food               $100.00      $100.00
+24-Jan-02 Payment               Expenses:Bills               $50.00      $150.00
+end test
+
+; === Test 4: Using "all" function (fn_all in xact.cc) ===
+test reg --limit "all(amount > 0 or account =~ /Cash/)" --columns 80
+24-Jan-01 Grocery               Expenses:Food               $100.00      $100.00
+                                Assets:Cash                $-100.00            0
+                                (Liabilities:Tax)            $10.00       $10.00
+24-Jan-02 Payment               Expenses:Bills               $50.00       $60.00
+                                Assets:Cash                 $-50.00       $10.00
+                                (Liabilities:Tax)             $5.00       $15.00
+end test

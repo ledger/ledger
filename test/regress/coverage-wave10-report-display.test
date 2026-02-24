@@ -1,0 +1,18 @@
+; Tests for t function, top_amount, set_commodity_price lookup, format precommand
+; Covers report.cc lines 1490, 1502, 1505-1506, 1720
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Expenses:Auto    30 EUR
+    Assets:Cash
+
+; Test t function (display_amount) - covers line 1502
+test reg --format '%(t)\n' --head 1 Expenses:Food
+$50.00
+end test
+
+; Test top_amount with multi-commodity total - covers line 1506 and fn_top_amount
+test reg --format '%(top_amount(total))\n' Expenses
+$50.00
+30 EUR
+end test

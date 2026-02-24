@@ -1,0 +1,35 @@
+; Wave 2 coverage tests for pool.cc
+; Covers: find (line 114), find_or_create (line 145),
+; exchange (lines 223, 274, 288, 298),
+; parse_price_directive (line 342), parse_price_expression (line 363)
+
+; Price directives - covers parse_price_directive lines
+P 2024/01/01 EUR $1.10
+P 2024/01/15 EUR $1.12
+P 2024/02/01 EUR $1.08
+
+; Test commodity exchange with cost basis - covers exchange lines
+2024/01/01 Buy EUR
+    Assets:EUR              100 EUR @ $1.10
+    Assets:Cash
+
+2024/01/15 Buy more EUR
+    Assets:EUR               50 EUR @ $1.12
+    Assets:Cash
+
+; Sell with explicit cost
+2024/02/01 Sell EUR
+    Assets:EUR              -50 EUR @ $1.08
+    Assets:Cash
+
+; Test pricesdb output - covers price iteration
+test pricesdb
+P 2024/01/01 00:00:00 EUR $1.10
+P 2024/01/15 00:00:00 EUR $1.12
+P 2024/02/01 00:00:00 EUR $1.08
+end test
+
+; Test value conversion with prices - covers find_price
+test bal Assets:EUR -V --now 2024/02/01
+             $108.00  Assets:EUR
+end test

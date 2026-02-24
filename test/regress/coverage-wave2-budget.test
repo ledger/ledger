@@ -1,0 +1,18 @@
+; Wave 2 coverage tests for budget command
+; Covers: report.cc budget_command (lines 1615-1622), budget_flags,
+;   filters.h budget_posts, budget filter chain
+
+~ Monthly
+    Expenses:Food     $300.00
+    Assets:Checking
+
+2024/01/15 Groceries
+    Expenses:Food     $100.00
+    Assets:Checking
+
+test budget
+    $-100.00    $-7800.00     $7700.00    1%  Assets:Checking
+     $100.00     $7800.00    $-7700.00    1%  Expenses:Food
+------------ ------------ ------------ -----
+           0            0            0     0
+end test

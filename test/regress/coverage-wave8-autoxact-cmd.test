@@ -1,0 +1,20 @@
+; Coverage tests for textual_xacts.cc automated_xact_directive commands
+; Targets lines 45-48, 67-68, 77, 79, 101-131 (enable/disable/delete commands)
+
+; Define a named automated transaction
+= "myauto" :: /Expenses/
+    (Budget:Expenses)             1
+
+; Disable the named auto-transaction
+= "myauto" disable
+
+; Re-enable the named auto-transaction
+= "myauto" enable
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+test reg Budget
+24-Jan-01 Test                  (Budget:Expenses)            $10.00       $10.00
+end test

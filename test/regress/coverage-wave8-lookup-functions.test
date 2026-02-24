@@ -1,0 +1,40 @@
+; Coverage tests for report.cc and session.cc lookup functions
+; Targets report.cc: T (1528-1530), t (1502), value_date (1544)
+; Targets session.cc: min (258-260), max (261-263), int (265-267), str (268-270)
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%(T)\n" Expenses
+$10.00
+end test
+
+test reg --format "%(t)\n" Expenses
+$10.00
+end test
+
+test reg --format "%(format_date(value_date, \"%Y\"))\n" Expenses
+2024
+end test
+
+test reg --format '%(min(amount, 5))\n' Expenses
+5
+end test
+
+test reg --format '%(max(amount, 5))\n' Expenses
+$10.00
+end test
+
+test reg --format "%(int(10.5))\n" Expenses
+10
+end test
+
+test reg --format "%(str(10))\n" Expenses
+10
+end test
+
+test reg --format "%(abs(amount))\n"
+$10.00
+$10.00
+end test

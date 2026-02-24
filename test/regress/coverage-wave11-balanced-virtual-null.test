@@ -1,0 +1,16 @@
+; Coverage for xact.cc lines 464-467: balanced-virtual null posting where
+; the virtual_balance is a long (integer amount), triggering the to_amount()
+; conversion path.
+
+2024/01/01 Test
+    Expenses:Food                  10
+    Assets:Cash                   -10
+    [Budget:Food]                   5
+    [Budget:Savings]
+
+test reg
+24-Jan-01 Test                  Expenses:Food                    10           10
+                                Assets:Cash                     -10            0
+                                [Budget:Food]                     5            5
+                                [Budget:Savings]                 -5            0
+end test

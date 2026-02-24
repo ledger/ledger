@@ -1,0 +1,15 @@
+; Test fn_should_bold for report.cc coverage
+; Targets report.cc lines 572-577 (fn_should_bold)
+
+2024/01/15 Large Purchase
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 Small Purchase
+    Expenses:Food    $10.00
+    Assets:Checking
+
+test reg --bold-if "amount > 30" --format "%(should_bold) %(payee)\n" Expenses
+true Large Purchase
+false Small Purchase
+end test

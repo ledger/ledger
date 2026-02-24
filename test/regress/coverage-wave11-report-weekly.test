@@ -1,0 +1,16 @@
+; Test -W (weekly) option for report.cc coverage
+
+2024/01/15 Monday Purchase
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/22 Next Monday
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test reg -W
+24-Jan-14 - 24-Jan-20           Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+24-Jan-21 - 24-Jan-27           Assets:Checking             $-30.00      $-30.00
+                                Expenses:Food                $30.00            0
+end test

@@ -1,0 +1,229 @@
+; Tests for report.cc uncovered lines - option handlers and report functions
+; Covers: lines 61 75 77 183-184 186-187 190 474-475 485 506 509-512 529 532
+;   583 620 626 638 689 724 836 840 849 856 896-904 907 912-919 921-928
+;   930-937 960 964 968 972 976 981 984 987 990 993 996 999 1002 1005 1008
+;   1011 1020-1023 1061 1091 1094 1106 1326 1332 1334 1417 1429 1450 1468
+;   1479 1490 1502 1528-1530 1544 1549 1554 1603 1624 1637 1642 1654 1659
+;   1673 1678-1679 1681 1690 1695 1701 1720 1724 1734 1737
+
+; --- Journal data ---
+P 2024/01/01 AAPL $150.00
+P 2024/01/15 AAPL $155.00
+
+2024/01/01 Grocery Store
+    Expenses:Food:Groceries       $50.00
+    Assets:Cash
+
+2024/01/15 Gas Station
+    Expenses:Auto:Gas             $35.00
+    Assets:Cash
+
+2024/02/01 * Investment Buy
+    Assets:Invest                 10 AAPL {$150.00} [2024/01/01] (lot1)
+    Assets:Cash
+
+; --- Test 1: fn_quantity (line 689) ---
+test reg --columns 80 --format "%(quantity(amount))\n" Expenses
+50
+35
+end test
+
+; --- Test 2: fn_commodity (line 840) ---
+test reg --columns 80 --format "%(commodity(amount))\n" Expenses
+$
+$
+end test
+
+; --- Test 3: fn_truncated (line 724) ---
+test reg --columns 80 --format "%(truncated(payee, 10))\n" Expenses
+Grocery ..
+Gas Stat..
+end test
+
+; --- Test 4: fn_percent (line 836) with --percent ---
+test bal --percent --no-total Expenses
+             100.00%  Expenses
+             100.00%    Auto:Gas
+             100.00%    Food:Groceries
+end test
+
+; --- Test 5: lot_date (lines 912-919) ---
+test reg --columns 80 --format "%(lot_date(amount))\n" Assets:Invest
+2024/01/01
+end test
+
+; --- Test 6: lot_price (lines 921-928) ---
+test reg --columns 80 --format "%(lot_price(amount))\n" Assets:Invest
+$150.00
+end test
+
+; --- Test 7: lot_tag (lines 930-937) ---
+test reg --columns 80 --format "%(lot_tag(amount))\n" Assets:Invest
+lot1
+end test
+
+; --- Test 8: to_amount (line 960) ---
+test reg --columns 80 --format "%(to_amount(10))\n" Expenses:Food
+10
+end test
+
+; --- Test 9: to_balance (line 964) ---
+test reg --columns 80 --format "%(to_balance(amount))\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 10: to_string (line 968) ---
+test reg --columns 80 --format "%(to_string(payee))\n" Expenses:Food
+Grocery Store
+end test
+
+; --- Test 11: to_mask (line 972) ---
+test reg --columns 80 --format "%(to_mask(\"Exp\"))\n" Expenses:Food
+Exp
+end test
+
+; --- Test 12: color name functions (lines 981-1011) ---
+test reg --columns 80 --format "%(black) %(blink) %(blue) %(bold) %(cyan) %(green) %(magenta) %(red) %(underline) %(white) %(yellow)\n" Expenses:Food
+black blink blue bold cyan green magenta red underline white yellow
+end test
+
+; --- Test 13: U function (abs) alias (line 1332) ---
+test reg --columns 80 --format "%(U(amount))\n" Assets:Cash
+$50.00
+$35.00
+10 AAPL {$150.00} [2024/01/01] (lot1)
+end test
+
+; --- Test 14: S function (strip) alias (line 1334) ---
+test reg --columns 80 --format "%(S(amount))\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 15: T function alias (line 1528-1530) ---
+test reg --columns 80 --format "%(T)\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 16: P function (market) alias (line 1326) ---
+test reg --columns 80 --format "%(P(amount))\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 17: value_date function (line 1544) ---
+test reg --columns 80 --format "%(value_date)\n" Expenses:Food
+2024/01/01
+end test
+
+; --- Test 18: accounts command (line 1603) ---
+test accounts
+Assets:Cash
+Assets:Invest
+Expenses:Auto:Gas
+Expenses:Food:Groceries
+end test
+
+; --- Test 19: commodities command (line 1637) ---
+test commodities
+$
+AAPL
+end test
+
+; --- Test 20: payees command (line 1673) ---
+test payees
+Gas Station
+Grocery Store
+Investment Buy
+end test
+
+; --- Test 21: equity command (line 1642) ---
+test equity Expenses
+2024/01/15 Opening Balances
+    Expenses:Auto:Gas                         $35.00
+    Expenses:Food:Groceries                   $50.00
+    Equity:Opening Balances                  $-85.00
+end test
+
+; --- Test 22: csv command (line 1626) ---
+test csv Expenses:Food
+"2024/01/01","","Grocery Store","Expenses:Food:Groceries","$","50","",""
+end test
+
+; --- Test 23: fn_averaged_lots (line 583) ---
+test reg --columns 80 --format "%(averaged_lots(amount))\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 24: echo command (line 1654) ---
+test echo "hello world"
+hello world
+end test
+
+; --- Test 25: -S (sort) option (line 1091) ---
+test reg -S date --columns 80 Expenses
+24-Jan-01 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+24-Jan-15 Gas Station           Expenses:Auto:Gas            $35.00       $85.00
+end test
+
+; --- Test 26: -F (format) option (line 1061) ---
+test reg -F "%(payee)\n" Expenses
+Grocery Store
+Gas Station
+end test
+
+; --- Test 27: -T (total) option (line 1094) ---
+test reg -T "amount * 2" --columns 80 Expenses:Food
+24-Jan-01 Grocery Store         Expense:Food:Groceries       $50.00      $100.00
+end test
+
+; --- Test 28: -X (exchange) option (line 1106) ---
+test reg -X $ --columns 80 Assets:Invest
+24-Feb-01 Investment Buy        Assets:Invest              $1550.00     $1550.00
+end test
+
+; --- Test 29: prices command (line 1664) ---
+test prices
+2024/01/01 AAPL          $150.00
+2024/01/15 AAPL          $155.00
+end test
+
+; --- Test 30: pricedb command (line 1667) ---
+test pricedb
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/01/15 00:00:00 AAPL $155.00
+end test
+
+; --- Test 31: commodity_price function (line 849) ---
+test reg --columns 80 --format "%(commodity_price(amount, now))\n" Assets:Invest
+$155.00
+end test
+
+; --- Test 32: cleared command (line 1624) ---
+test cleared
+         $-85.00                   0                 Assets
+         $-85.00
+        -10 AAPL            -10 AAPL    24-Feb-01      Cash
+         10 AAPL             10 AAPL    24-Feb-01      Invest
+          $85.00                   0                 Expenses
+          $35.00                   0                   Auto:Gas
+          $50.00                   0                   Food:Groceries
+----------------    ----------------    ---------
+               0                   0             
+end test
+
+; --- Test 33: tags command (line 1695) ---
+test tags
+end test
+
+; --- Test 34: pricemap command (line 1690) ---
+test pricemap
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="$"];
+6[label="AAPL"];
+6--5 ;
+}
+end test

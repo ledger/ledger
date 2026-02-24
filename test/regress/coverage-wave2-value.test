@@ -1,0 +1,56 @@
+; Tests for value.cc uncovered lines: is_greater_than, is_less_than,
+; in_place_negate, in_place_display_round, label() for SCOPE/ANY,
+; dump/print for various types, equity/accounts/commodities/payees/tags commands.
+
+2024/01/01 Setup
+    Assets:Checking          $100.00
+    Assets:Savings           100 EUR
+    Expenses:Food
+
+; === Test 1: Balance comparisons (is_greater_than BALANCE path) ===
+test reg Assets --sort "total > 50" --columns 80
+24-Jan-01 Setup                 Assets:Checking             $100.00      $100.00
+                                Assets:Savings              100 EUR      $100.00
+                                                                         100 EUR
+end test
+
+; === Test 2: Display rounding for INTEGER via quantity ===
+test reg Assets:Checking --display-amount "quantity(amount)" --columns 80
+24-Jan-01 Setup                 Assets:Checking                 100      $100.00
+end test
+
+; === Test 3: Negate a balance via format expression ===
+test bal Assets:Checking --format "%(- total)\n"
+$-100.00
+end test
+
+; === Test 4: Equity command (triggers COMMAND 'e' path in report.cc) ===
+test equity
+2024/01/01 Opening Balances
+    Assets:Checking                          $100.00
+    Assets:Savings                           100 EUR
+    Expenses:Food                           $-100.00
+    Expenses:Food                           -100 EUR
+end test
+
+; === Test 5: accounts command (report.cc COMMAND 'a' path) ===
+test accounts
+Assets:Checking
+Assets:Savings
+Expenses:Food
+end test
+
+; === Test 6: commodities command (report.cc COMMAND 'c' path) ===
+test commodities
+$
+EUR
+end test
+
+; === Test 7: payees command (report.cc COMMAND 'p' path) ===
+test payees
+Setup
+end test
+
+; === Test 8: tags command (report.cc COMMAND 't' path) ===
+test tags
+end test

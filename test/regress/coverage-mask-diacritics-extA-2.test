@@ -1,0 +1,114 @@
+; Coverage tests for mask.cc fold_codepoint: Latin Extended-A part 2
+; Covers lines 110-131: Ń-ž mappings
+
+; Ń(0x143)→N, ń(0x144)→n, Ō(0x14C)→O, ō(0x14D)→o
+; Œ(0x152)→O, œ(0x153)→o, Ŕ(0x154)→R, ŕ(0x155)→r
+; Ś(0x15A)→S, ś(0x15B)→s, Ţ(0x162)→T, ţ(0x163)→t
+; Ũ(0x168)→U, ũ(0x169)→u, Ŵ(0x174)→W, ŵ(0x175)→w
+; Ŷ(0x176)→Y, ŷ(0x177)→y, Ź(0x179)→Z, ź(0x17A)→z
+
+2024/01/01 ExtB1
+    Expenses:FdŃ             $10.00
+    Assets:Checking
+
+2024/01/02 ExtB2
+    Expenses:Fdń             $10.00
+    Assets:Checking
+
+2024/01/03 ExtB3
+    Expenses:FdŌ             $10.00
+    Assets:Checking
+
+2024/01/04 ExtB4
+    Expenses:Fdō             $10.00
+    Assets:Checking
+
+2024/01/05 ExtB5
+    Expenses:FdŒ             $10.00
+    Assets:Checking
+
+2024/01/06 ExtB6
+    Expenses:Fdœ             $10.00
+    Assets:Checking
+
+2024/01/07 ExtB7
+    Expenses:FdŔ             $10.00
+    Assets:Checking
+
+2024/01/08 ExtB8
+    Expenses:Fdŕ             $10.00
+    Assets:Checking
+
+2024/01/09 ExtB9
+    Expenses:FdŚ             $10.00
+    Assets:Checking
+
+2024/01/10 ExtB10
+    Expenses:Fdś             $10.00
+    Assets:Checking
+
+2024/01/11 ExtB11
+    Expenses:FdŢ             $10.00
+    Assets:Checking
+
+2024/01/12 ExtB12
+    Expenses:Fdţ             $10.00
+    Assets:Checking
+
+2024/01/13 ExtB13
+    Expenses:FdŨ             $10.00
+    Assets:Checking
+
+2024/01/14 ExtB14
+    Expenses:Fdũ             $10.00
+    Assets:Checking
+
+2024/01/15 ExtB15
+    Expenses:FdŴ             $10.00
+    Assets:Checking
+
+2024/01/16 ExtB16
+    Expenses:Fdŵ             $10.00
+    Assets:Checking
+
+2024/01/17 ExtB17
+    Expenses:FdŶ             $10.00
+    Assets:Checking
+
+2024/01/18 ExtB18
+    Expenses:Fdŷ             $10.00
+    Assets:Checking
+
+2024/01/19 ExtB19
+    Expenses:FdŹ             $10.00
+    Assets:Checking
+
+2024/01/20 ExtB20
+    Expenses:Fdź             $10.00
+    Assets:Checking
+
+test bal Expenses --ignore-diacritics
+             $200.00  Expenses
+              $10.00    FdŃ
+              $10.00    Fdń
+              $10.00    FdŌ
+              $10.00    Fdō
+              $10.00    FdŒ
+              $10.00    Fdœ
+              $10.00    FdŔ
+              $10.00    Fdŕ
+              $10.00    FdŚ
+              $10.00    Fdś
+              $10.00    FdŢ
+              $10.00    Fdţ
+              $10.00    FdŨ
+              $10.00    Fdũ
+              $10.00    FdŴ
+              $10.00    Fdŵ
+              $10.00    FdŶ
+              $10.00    Fdŷ
+              $10.00    FdŹ
+              $10.00    Fdź
+--------------------
+             $200.00
+end test

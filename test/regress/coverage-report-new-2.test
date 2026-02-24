@@ -1,0 +1,143 @@
+; Coverage tests for report.cc expression functions and color functions
+; Targets: report.cc lines 960-1011 (color/conversion fns), 1326-1352, 1417-1554
+
+2024/01/15 Test Payee
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; Test color functions (report.cc fn_red/green/blue/etc, lines 981-1011)
+test eval red
+red
+end test
+
+test eval green
+green
+end test
+
+test eval blue
+blue
+end test
+
+test eval bold
+bold
+end test
+
+test eval cyan
+cyan
+end test
+
+test eval magenta
+magenta
+end test
+
+test eval white
+white
+end test
+
+test eval yellow
+yellow
+end test
+
+test eval black
+black
+end test
+
+test eval underline
+underline
+end test
+
+test eval blink
+blink
+end test
+
+; Test null function (report.cc fn_null)
+test eval null
+end test
+
+; Test conversion functions with single quotes to protect $
+test eval 'to_string("hello")'
+hello
+end test
+
+test eval 'to_boolean(1)'
+1
+end test
+
+test eval 'to_int(42)'
+42
+end test
+
+test eval 'to_amount($50)'
+$50
+end test
+
+test eval 'to_sequence(10)'
+(10)
+end test
+
+test eval 'abs(-5)'
+5
+end test
+
+test eval 'quantity($100)'
+100
+end test
+
+test eval 'ceiling($10)'
+$10
+end test
+
+test eval 'floor($10)'
+$10
+end test
+
+test eval 'round($10.555)'
+$10.555
+end test
+
+test eval 'trim("  hello  ")'
+hello
+end test
+
+test eval 'is_seq(10)'
+0
+end test
+
+test eval 'join("hello world")'
+hello world
+end test
+
+test eval 'quoted("test")'
+"test"
+end test
+
+test eval 'quoted_rfc("test")'
+"test"
+end test
+
+test eval 'roundto($10.555, 2)'
+$10.560
+end test
+
+test eval 'unround($10.56)'
+$10.56
+end test
+
+test eval 'clear_commodity($100)'
+100
+end test
+
+; Test to_mask function
+test eval 'to_mask("food")'
+/food/
+end test
+
+; Test to_balance function (report.cc fn_to_balance, line 964)
+test eval 'to_balance($50)'
+$50
+end test
+
+; Test format function (report.cc fn_format)
+test eval 'format("Amount is %%")'
+Amount is %
+end test

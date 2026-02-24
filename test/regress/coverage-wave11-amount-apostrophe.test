@@ -1,0 +1,12 @@
+; Coverage wave 11: amount.cc apostrophe thousands separator
+; Targets lines 1191
+
+commodity CHF 1'000.00
+
+2020/01/15 Purchase
+    Expenses:Food    CHF 1'234.56
+    Assets:Cash
+
+test bal Expenses
+        CHF 1'234.56  Expenses:Food
+end test

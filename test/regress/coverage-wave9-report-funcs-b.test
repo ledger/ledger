@@ -1,0 +1,109 @@
+; Tests for report.cc function lookup paths and color/style functions
+; Covers: fn_black..fn_yellow (lines 978-1011), fn_null (1015-1017),
+;   fn_bold, fn_underline, fn_blink (988-1005),
+;   fn_format_date (785), fn_format_datetime (792),
+;   fn_percent (833), fn_ansify_if (800-831),
+;   fn_print (lines 1457-1458),
+;   single-char lookups 'd','m','P','t','T','U','S' (lines 1320-1335),
+;   multi-char lookups: value_date, today, now, market (lines 1432-1544)
+
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $195.00
+
+2024/01/01 Buy Stock
+    Assets:Brokerage     10 AAPL {$150.00} [2024/01/01] (tag1)
+    Assets:Cash         $-1500.00
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries     $50.00
+    Expenses:Food:Restaurant    $25.00
+    Assets:Cash
+
+2024/02/01 Gas Station
+    Expenses:Auto:Gas           $35.00
+    Assets:Cash
+
+; Test color name functions - covers lines 978-1011
+test reg --format '%(black) %(red) %(green) %(yellow) %(blue) %(magenta) %(cyan) %(white)\n' --head 1 Expenses
+black red green yellow blue magenta cyan white
+black red green yellow blue magenta cyan white
+end test
+
+; Test style functions - covers lines 988, 1003, 982
+test reg --format '%(bold) %(underline) %(blink)\n' --head 1 Expenses
+bold underline blink
+bold underline blink
+end test
+
+; Test null function - covers lines 1015-1017
+test reg --format '%(null)x\n' --head 1 Expenses
+x
+x
+end test
+
+; Test single-char 'd' (fn_now as date) - covers line 1322-1324
+test reg --now 2024/06/01 --format '%(d)\n' --head 1 Expenses:Auto:Gas
+2024/02/01
+end test
+
+; Test single-char 'm' (fn_now as datetime) - covers line 1323
+test reg --now 2024/06/01 --format '%(m)\n' --head 1 Expenses:Auto:Gas
+2024/06/01 00:00:00
+end test
+
+; Test single-char 'U' (fn_abs) - covers line 1332
+test reg --format '%(U(amount))\n' --head 1 Expenses:Auto:Gas
+$35.00
+end test
+
+; Test single-char 'S' (fn_strip) - covers line 1334
+test reg --format '%(S(amount))\n' --head 1 Expenses:Auto:Gas
+$35.00
+end test
+
+; Test single-char 't' (fn_display_amount) - covers line 1328
+test reg --format '%(t)\n' --head 1 Expenses:Auto:Gas
+$35.00
+end test
+
+; Test single-char 'T' (fn_display_total) - covers line 1330
+test reg --format '%(T)\n' --head 1 Expenses:Auto:Gas
+$35.00
+end test
+
+; Test single-char 'P' (fn_market) - covers line 1326
+test reg --now 2024/06/01 --format '%(P(amount, now))\n' Assets:Brokerage
+$1950.00
+end test
+
+; Test value_date lookup - covers line 1543
+test reg --now 2024/06/01 --format '%(value_date)\n' --head 1 Expenses:Auto:Gas
+2024/02/01
+end test
+
+; Test today lookup - covers line 1500
+test reg --now 2024/06/01 --format '%(today)\n' --head 1 Expenses:Auto:Gas
+2024/06/01
+end test
+
+; Test format_date with custom format - covers line 787
+test reg --format '%(format_date(date, "%Y-%m-%d"))\n' --head 1 Expenses:Auto:Gas
+2024-02-01
+end test
+
+; Test percent function - covers lines 833-836
+test reg --format '%(percent(amount, total))\n' Expenses
+100.00%
+33.33%
+31.82%
+end test
+
+; Test market function with multi-char name - covers line 1433
+test reg --now 2024/06/01 --format '%(market(amount, now))\n' Assets:Brokerage
+$1950.00
+end test
+
+; Test trim function - covers fn_trim
+test reg --format '%(trim(payee))\n' --head 1 Expenses:Auto:Gas
+Gas Station
+end test

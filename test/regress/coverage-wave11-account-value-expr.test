@@ -1,0 +1,12 @@
+; Coverage for textual_directives.cc account_value_directive
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $170.00
+
+2024/01/01 Buy
+    Assets:Broker    10 AAPL @ $150.00
+    Assets:Cash    $-1500.00
+
+test bal -V --now 2024/02/01 Assets:Broker
+            $1700.00  Assets:Broker
+end test

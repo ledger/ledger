@@ -1,0 +1,17 @@
+; Coverage: select.cc - exercises select command with various column combinations
+; Covers: lines 55, 59, 65, 71, 81, 84, 95, 145-173, 266, 322
+
+2024/01/01 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Auto    $25.00
+    Assets:Cash
+
+test select date, payee, account, amount, total from posts --columns=80
+24-Jan-01 Grocery Store        Expenses:Food                $10.00       $10.00
+24-Jan-01 Grocery Store        Assets:Cash                 $-10.00            0
+24-Jan-02 Gas Station          Expenses:Auto                $25.00       $25.00
+24-Jan-02 Gas Station          Assets:Cash                 $-25.00            0
+end test

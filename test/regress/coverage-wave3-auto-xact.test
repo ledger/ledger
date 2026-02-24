@@ -1,0 +1,29 @@
+; Coverage tests for xact.cc auto_xact_t (lines 850-960)
+; Tests: auto xact with assertion, pending state propagation,
+;        account name with format string
+
+; Auto xact with check (line 851-854)
+= /Expenses:Food/
+    (Budget:Food)    -1
+
+2024/01/01 * Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Cleared state propagation to auto postings (lines 956-958)
+test reg Budget --limit "cleared"
+24-Jan-01 Grocery Store         (Budget:Food)               $-50.00      $-50.00
+end test
+
+; Test auto xact with explicit commodity amount (line 880-881)
+= /Rent/
+    (Savings:Rent)    $100.00
+
+2024/02/01 ! Landlord
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+; Pending state propagation (line 959-960)
+test reg Savings --limit "pending"
+24-Feb-01 Landlord              (Savings:Rent)              $100.00      $100.00
+end test

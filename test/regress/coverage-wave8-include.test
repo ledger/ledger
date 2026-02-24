@@ -1,0 +1,16 @@
+; Coverage tests for textual_directives.cc include directive
+; Targets lines 156-268 (include_directive)
+
+include coverage-wave8-include-data.test
+
+2024/01/01 Main File
+    Expenses:Food             $10.00
+    Assets:Cash
+
+test bal Expenses
+              $35.00  Expenses
+              $10.00    Food
+              $25.00    Included
+--------------------
+              $35.00
+end test

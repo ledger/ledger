@@ -1,0 +1,45 @@
+; Test report.cc color function lookups and conversion functions via eval
+; These are dispatched through report_t::lookup for symbol_t::FUNCTION
+2024/01/15 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test eval "black"
+black
+end test
+
+test eval "blink"
+blink
+end test
+
+test eval "blue"
+blue
+end test
+
+test eval "bold"
+bold
+end test
+
+test eval "cyan"
+cyan
+end test
+
+test eval "red"
+red
+end test
+
+test eval "underline"
+underline
+end test
+
+test eval "to_balance(10)"
+10
+end test
+
+test eval "to_sequence(10)"
+(10)
+end test
+
+test reg --format "%(T)\n" Expenses:Food
+$10.00
+end test

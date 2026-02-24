@@ -1,0 +1,13 @@
+; Coverage tests for filters.cc anonymize_posts (lines 266-274)
+; Covers: annotation price rendering, cost rendering
+; Anonymized output is non-deterministic, so test with count
+
+2024/01/01 Stock Purchase
+    Assets:Brokerage       10 AAPL @ $150.00
+    Assets:Cash           $-1500.00
+
+; Test 1: Anonymize with cost produces 2 postings
+test reg --anon --format "%(1)\n"
+1
+1
+end test

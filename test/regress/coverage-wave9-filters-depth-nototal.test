@@ -1,0 +1,13 @@
+; Test coverage for various filter options
+; --depth and --no-total balance options
+
+2024/01/01 Test
+    Expenses:Food:Groceries                 $30.00
+    Expenses:Food:Restaurants               $20.00
+    Expenses:Tools:Power                    $50.00
+    Assets:Cash
+
+test bal --depth 1 --no-total
+            $-100.00  Assets
+             $100.00  Expenses
+end test

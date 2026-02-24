@@ -1,0 +1,11 @@
+; Test source command for report.cc coverage
+; Targets report.cc line 1687 (source command lookup)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; The source command reads and re-parses a journal file
+; With no output expected (it just validates the file)
+test source $FILE
+end test

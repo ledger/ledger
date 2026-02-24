@@ -1,0 +1,17 @@
+; Test coverage for filters.cc lines 1116-1173
+; equity command exercises posts_as_equity filter
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/02 Hardware Store
+    Expenses:Tools                          $25.00
+    Assets:Cash
+
+test equity
+2024/01/02 Opening Balances
+    Assets:Cash                              $-75.00
+    Expenses:Food                             $50.00
+    Expenses:Tools                            $25.00
+end test

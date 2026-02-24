@@ -1,0 +1,42 @@
+; Coverage tests for select.cc WHERE and DISPLAY clauses
+; Targets: where clause (376), display clause (379), style clause (385-389)
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Payee2
+    Expenses:Drinks    $5.00
+    Assets:Cash
+
+test --columns=80 select date,amount where account =~ /Expenses/
+24-Jan-01       $10.00
+24-Feb-01        $5.00
+end test
+
+test --columns=80 select date,amount from posts style csv
+24-Jan-01       $10.00
+24-Jan-01      $-10.00
+24-Feb-01        $5.00
+24-Feb-01       $-5.00
+end test
+
+test --columns=80 select date,amount from txns
+2024/01/01 Payee
+    Expenses:Food                             $10.00
+    Assets:Cash
+
+2024/02/01 Payee2
+    Expenses:Drinks                            $5.00
+    Assets:Cash
+end test
+
+test --columns=80 select date,amount from transactions
+2024/01/01 Payee
+    Expenses:Food                             $10.00
+    Assets:Cash
+
+2024/02/01 Payee2
+    Expenses:Drinks                            $5.00
+    Assets:Cash
+end test

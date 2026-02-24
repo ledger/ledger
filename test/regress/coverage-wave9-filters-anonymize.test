@@ -1,0 +1,12 @@
+; Test coverage for filters.cc lines 227-277
+; --anon option exercises anonymize_posts filter
+; Note: hashes change per run, so test the structure with --format
+
+2024/01/01 * Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test reg --anon --format '%(amount) %(display_amount)\n'
+A50.00 A50.00
+A-50.00 A-50.00
+end test

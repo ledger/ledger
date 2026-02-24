@@ -1,0 +1,13 @@
+; Coverage for textual_xacts.cc lines 113-131 (auto xact delete)
+
+= 'food_budget' :: Expenses:Food
+    (Budget:Food)    -1
+
+= 'food_budget' delete
+
+2024/01/01 Grocery
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg Budget
+end test

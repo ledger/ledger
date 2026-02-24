@@ -1,0 +1,102 @@
+; Tests for textual_xacts.cc uncovered lines
+; Covers: automated_xact_directive (lines 45-48, 67-68, 77, 79, 126),
+;   xact_directive (lines 277-279, 306), balance assertions/assignments
+;   (lines 636-639, 722-725, 756, 772), parse_xact (lines 882, 948-953),
+;   virtual and deferred postings (line 459, 565, 578, 608)
+
+; Test virtual posting (balanced) - covers line 461-472
+2024/01/01 Test Virtual
+    Expenses:Food         $10.00
+    [Assets:Budget]       $-10.00
+    Assets:Cash           $-10.00
+    [Assets:Budget]        $10.00
+
+; Test virtual posting (unbalanced) - covers line 461-462
+2024/01/02 Test Virtual Unbalanced
+    Expenses:Food         $20.00
+    Assets:Cash
+    (Tracking:Expense)    $20.00
+
+test bal Tracking
+              $20.00  Tracking:Expense
+end test
+
+; Test deferred posting - covers lines 473-478
+2024/01/03 Test Deferred
+    Expenses:Food         $30.00
+    Assets:Cash
+    <Liabilities:Visa>    $-30.00
+    <Liabilities:Visa>     $30.00
+
+; Test balance assertion - covers lines 636-639, 737-756
+2024/01/04 Opening
+    Assets:Checking       $100.00
+    Equity:Opening
+
+2024/01/05 Withdrawal
+    Assets:Checking       $-25.00 = $75.00
+    Expenses:Cash
+
+; Test balance assignment with null posting - covers lines 722-725
+2024/01/06 Deposit
+    Assets:Checking        = $200.00
+    Income:Salary
+
+test bal Assets:Checking
+             $200.00  Assets:Checking
+end test
+
+test reg --begin 2024/01/06 --end 2024/01/07 Assets:Checking
+24-Jan-06 Deposit               Assets:Checking             $125.00      $125.00
+end test
+
+; Test automated transaction - covers textual_xacts.cc lines 52-183
+= Expenses:Food
+    (Budget:Food)         -1
+
+2024/01/10 Groceries
+    Expenses:Food         $40.00
+    Assets:Cash
+
+test reg Budget
+24-Jan-01 Test Virtual          [Assets:Budget]             $-10.00      $-10.00
+                                [Assets:Budget]              $10.00            0
+24-Jan-10 Groceries             (Budget:Food)               $-40.00      $-40.00
+end test
+
+; Test cost with per-unit (@) - covers lines 565-589
+2024/01/11 Buy Shares
+    Assets:Brokerage       5 AAPL @ $150.00
+    Assets:Cash
+
+test reg Assets:Brokerage --begin 2024/01/11 --end 2024/01/12
+24-Jan-11 Buy Shares            Assets:Brokerage             5 AAPL       5 AAPL
+end test
+
+; Test cost with total (@@) - covers lines 565-589
+2024/01/12 Buy Total Cost
+    Assets:Brokerage       5 GOOG @@ $1000.00
+    Assets:Cash
+
+test reg Assets:Brokerage --begin 2024/01/12 --end 2024/01/13
+24-Jan-12 Buy Total Cost        Assets:Brokerage             5 GOOG       5 GOOG
+end test
+
+; Test fixed cost with = - covers line 561-565
+2024/01/13 Fixed Cost
+    Assets:Brokerage       5 MSFT @= $100.00
+    Assets:Cash
+
+test reg Assets:Brokerage --begin 2024/01/13 --end 2024/01/14
+24-Jan-13 Fixed Cost            Assets:Brokerage             5 MSFT       5 MSFT
+end test
+
+; Test transaction with expression - covers lines 935-953
+2024/01/14 Marked
+    expr true
+    Expenses:Rent         $500.00
+    Assets:Cash
+
+test reg --begin 2024/01/14 --end 2024/01/15 Expenses
+24-Jan-14 Marked                Expenses:Rent               $500.00      $500.00
+end test

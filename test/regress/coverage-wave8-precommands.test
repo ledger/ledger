@@ -1,0 +1,30 @@
+; Coverage tests for report.cc precommand lookup paths
+; Targets: format precommand (1720), query precommand (1734)
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test format '%(payee)\n'
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input format string ---
+%(payee)\n
+
+--- Format elements ---
+Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: payee
+Element:  STRING  flags: 0x0  min:  0  max:  0   str: '
+'
+
+--- Formatted string ---
+"Book Store
+"
+end test

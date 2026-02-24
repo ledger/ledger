@@ -1,0 +1,20 @@
+; Test session options for session.cc coverage
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --check-payees
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --permissive
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg --explicit
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

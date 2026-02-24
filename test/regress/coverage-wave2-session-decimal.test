@@ -1,0 +1,10 @@
+; Session.cc coverage - decimal-comma option
+; Covers: session.h line 134 (decimal_comma), session.cc lookup_option 'd' branch
+
+2024/01/01 Test
+    Expenses:Food              $10,00
+    Assets:Cash
+
+test bal --decimal-comma Expenses
+              $10,00  Expenses:Food
+end test

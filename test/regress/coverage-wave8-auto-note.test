@@ -1,0 +1,26 @@
+; Coverage tests for textual_xacts.cc automated_xact_directive note paths
+; Targets lines 194-206 (note on auto-xact body), 217-221 (check/assert/expr in auto-xact)
+
+; Auto-xact with note on the auto-xact body itself
+= /Expenses/
+    ; This is a note on the auto-xact
+    (Budget:Noted)                1
+
+; Auto-xact with eval inside
+= /Drink/
+    eval 2 + 3
+    (Budget:Eval)                 1
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/02 Test Drink
+    Expenses:Drink            $5.00
+    Assets:Cash
+
+test reg Budget
+24-Jan-01 Test                  (Budget:Noted)               $10.00       $10.00
+24-Jan-02 Test Drink            (Budget:Noted)                $5.00       $15.00
+                                (Budget:Eval)                 $5.00       $20.00
+end test

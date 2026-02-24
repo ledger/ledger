@@ -1,0 +1,30 @@
+; Coverage tests for xact.cc multi-commodity handling
+; Tests: finalize with >2 commodities, fixated prices (lines 280-319)
+
+; Three commodities with fixated prices
+2024/01/01 Multi Commodity
+    Assets:Stocks    10 AAPL {=$150.00}
+    Assets:Bonds     20 BOND {=$50.00}
+    Assets:Cash    $-2500.00
+
+test bal Assets
+           $-1725.00
+              5 AAPL
+             20 BOND  Assets
+             20 BOND    Bonds
+           $-1725.00    Cash
+              5 AAPL    Stocks
+--------------------
+           $-1725.00
+              5 AAPL
+             20 BOND
+end test
+
+; Fixated price with negative amount (line 296-297)
+2024/02/01 Sell with fixated
+    Assets:Stocks    -5 AAPL {=$155.00}
+    Assets:Cash    $775.00
+
+test bal Assets:Stocks
+              5 AAPL  Assets:Stocks
+end test

@@ -1,0 +1,13 @@
+; Test session fn_min and fn_max for session.cc coverage
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test eval 'min(10, 20)'
+10
+end test
+
+test eval 'max(10, 20)'
+20
+end test

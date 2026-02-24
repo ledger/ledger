@@ -1,0 +1,17 @@
+; Test coverage for filters.cc lines 1108, 1171
+; posts_as_equity report_subtotal
+
+2024/01/01 Opening
+    Assets:Cash                           $1000.00
+    Equity:Opening
+
+2024/01/15 Expense
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test equity
+2024/01/15 Opening Balances
+    Assets:Cash                              $950.00
+    Equity:Opening                         $-1000.00
+    Expenses:Food                             $50.00
+end test

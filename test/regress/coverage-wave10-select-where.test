@@ -1,0 +1,14 @@
+; Coverage: select.cc - where clause (line 368-377)
+
+2024/01/01 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Auto    $25.00
+    Assets:Cash
+
+test select date, payee, account, amount from posts where account =~ /Expenses/ --columns=80
+24-Jan-01 Grocery Store            Expenses:Food                         $10.00
+24-Jan-02 Gas Station              Expenses:Auto                         $25.00
+end test

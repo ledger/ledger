@@ -1,0 +1,12 @@
+; Coverage for account.cc lines 420-426: depth, depth_parent, depth_spacer.
+; Also covers lines 464-466: parent account lookup.
+
+2024/01/01 Test
+    Expenses:Food:Groceries       $10.00
+    Assets:Cash
+
+test bal --format "%(depth_spacer)%(account_base) d=%(depth)\n"
+Cash d=2
+Groceries d=3
+ d=0
+end test

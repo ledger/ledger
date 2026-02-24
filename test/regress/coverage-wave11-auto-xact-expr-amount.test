@@ -1,0 +1,16 @@
+; Coverage for xact.cc lines 869-871: auto_xact posting with an amount
+; expression that evaluates to an amount_t (not long), hitting the
+; result.is_amount() -> result.as_amount() path.
+
+= /Expenses/
+    (Budget)                                 ($5.00)
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+                                (Budget)                      $5.00        $5.00
+end test

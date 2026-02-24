@@ -1,0 +1,15 @@
+; Test --average-lot-prices for report.cc coverage
+
+P 2024/01/01 AAPL $150.00
+
+2024/01/15 Buy Low
+    Assets:Brokerage    10 AAPL {$100.00}
+    Assets:Checking    $-1000.00
+
+2024/02/15 Buy High
+    Assets:Brokerage    10 AAPL {$200.00}
+    Assets:Checking    $-2000.00
+
+test bal --average-lot-prices Assets:Brokerage
+   20 AAPL {$150.00}  Assets:Brokerage
+end test

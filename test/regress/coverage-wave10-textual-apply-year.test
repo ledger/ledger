@@ -1,0 +1,21 @@
+; Test coverage for textual_directives.cc lines 395, 420, 785, 803, 813, 839
+; apply year, end apply, general_directive switches for bucket, define, import, payee, tag, year
+
+apply year 2023
+
+01/01 January Test
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+end apply year
+
+2024/02/01 February Test
+    Expenses:Food                           $30.00
+    Assets:Cash
+
+test reg
+23-Jan-01 January Test          Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+24-Feb-01 February Test         Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test

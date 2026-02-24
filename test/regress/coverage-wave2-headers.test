@@ -1,0 +1,54 @@
+; Wave 2 coverage tests for various header files
+; Covers: exprbase.h, mask.h, format.h, op.h, amount.h, balance.h,
+; post.h, annotate.h
+
+; Use expressions to exercise op.h and exprbase.h inline methods
+
+2024/01/01 * (ABC) Grocery Store
+    ; Category: food
+    ; :Grocery:
+    Expenses:Food              $25.00
+    Assets:Checking
+
+2024/01/15 * Gas Station
+    Expenses:Transport         $40.00
+    Assets:Checking
+
+2024/02/01 Electric Company
+    Expenses:Utilities         $75.00
+    Assets:Checking
+
+; Test with format expression that exercises format.h lines 131-138
+test reg --format "%(format_date(date, \"%Y-%m-%d\")) %(payee) %(display_amount)\n" Expenses
+2024-01-01 Grocery Store $25.00
+2024-01-15 Gas Station $40.00
+2024-02-01 Electric Company $75.00
+end test
+
+; Test with expression using mask (regex) - covers mask.h lines
+test reg --limit "payee =~ /Store/" Expenses
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+end test
+
+; Test negated match - covers mask.h negation path
+test reg --limit "payee !~ /Store/" Expenses
+24-Jan-15 Gas Station           Expenses:Transport           $40.00       $40.00
+24-Feb-01 Electric Company      Expenses:Utilities           $75.00      $115.00
+end test
+
+; Test post with metadata tag query - covers post.h lines 99-105, 107
+test reg --limit "has_tag(/Category/)" Expenses
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+end test
+
+; Test cleared transactions - covers post.h state flags
+test reg --cleared Expenses
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-15 Gas Station           Expenses:Transport           $40.00       $65.00
+end test
+
+; Test with code filter - exercises xact code path
+test reg --limit "code =~ /ABC/"
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+end test

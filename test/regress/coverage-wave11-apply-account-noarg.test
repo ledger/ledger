@@ -1,0 +1,9 @@
+; Coverage for textual_directives.cc line 275 (apply requires argument)
+
+apply account
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+Error: Directive 'apply account' requires an argument
+end test

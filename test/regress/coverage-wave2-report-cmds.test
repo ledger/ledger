@@ -1,0 +1,29 @@
+; Tests for report.cc uncovered command paths: cleared, select,
+; fn_quantity, fn_roundto, fn_unrounded
+
+2024/01/01 * Grocery
+    Expenses:Food        $100.00
+    Assets:Cash
+
+2024/01/02 ! Pending Bill
+    Expenses:Bills       $50.00
+    Assets:Cash
+
+2024/01/03 Uncleared
+    Expenses:Misc        $25.00
+    Assets:Cash
+
+; === Test 1: fn_quantity ===
+test reg Expenses:Food --format "%(quantity(amount))\n"
+100
+end test
+
+; === Test 2: fn_roundto ===
+test reg Expenses:Food --format "%(roundto(quantity(amount),0))\n"
+100
+end test
+
+; === Test 3: fn_unrounded ===
+test reg Expenses:Food --format "%(unrounded(amount))\n"
+$100.00
+end test

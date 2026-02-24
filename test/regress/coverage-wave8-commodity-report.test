@@ -1,0 +1,20 @@
+; Coverage tests for report.cc commodities_report limit stripping (448-515)
+; Targets: compound limit rebuilding (485), state predicate stripping
+
+P 2024/01/01 EUR $1.10
+
+2024/01/01 * Payee
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+test --cleared prices
+2024/01/01 EUR             $1.10
+end test
+
+test --pending prices
+2024/01/01 EUR             $1.10
+end test
+
+test --real prices
+2024/01/01 EUR             $1.10
+end test

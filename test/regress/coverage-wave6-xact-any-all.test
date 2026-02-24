@@ -1,0 +1,31 @@
+; Tests for xact.cc fn_any and fn_all (lines 608-630)
+; These are the xact-level any() and all() functions accessed via
+; the transaction context, distinct from post-level any/all.
+
+2024/01/01 Mixed Transaction
+    Expenses:Food        $100.00
+    Expenses:Rent        $500.00
+    Assets:Cash
+
+2024/01/02 All Food
+    Expenses:Food:A       $10.00
+    Expenses:Food:B       $20.00
+    Assets:Cash
+
+; === Test 1: any() - does any posting match? ===
+test reg --limit "any(account =~ /Rent/)" --columns 80
+24-Jan-01 Mixed Transaction     Expenses:Food               $100.00      $100.00
+                                Expenses:Rent               $500.00      $600.00
+                                Assets:Cash                $-600.00            0
+end test
+
+; === Test 2: all() - do all postings match? ===
+test reg --limit "all(account =~ /Expenses/)" --columns 80
+end test
+
+; === Test 3: any with amount condition ===
+test reg --limit "any(amount > 400)" --columns 80
+24-Jan-01 Mixed Transaction     Expenses:Food               $100.00      $100.00
+                                Expenses:Rent               $500.00      $600.00
+                                Assets:Cash                $-600.00            0
+end test

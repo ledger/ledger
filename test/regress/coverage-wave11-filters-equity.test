@@ -1,0 +1,19 @@
+; Coverage wave 11: filters.cc posts_as_equity
+; Targets lines 805-806, 810, 815-817
+
+2020/01/01 Opening
+    Assets:Checking         $1000.00
+    Assets:Savings          $5000.00
+    Equity:Opening
+
+2020/06/15 Purchase
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test equity
+2020/06/15 Opening Balances
+    Assets:Checking                          $950.00
+    Assets:Savings                          $5000.00
+    Equity:Opening                         $-6000.00
+    Expenses:Food                             $50.00
+end test

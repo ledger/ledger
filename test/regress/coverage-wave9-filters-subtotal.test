@@ -1,0 +1,19 @@
+; Test coverage for filters.cc lines 899-991
+; --subtotal in register exercises subtotal_posts
+
+2024/01/01 Grocery
+    Expenses:Food                           $30.00
+    Assets:Cash
+
+2024/01/15 More Grocery
+    Expenses:Food                           $20.00
+    Assets:Cash
+
+2024/01/20 Hardware
+    Expenses:Tools                          $50.00
+    Assets:Cash
+
+test reg --subtotal Expenses
+24-Jan-01 - 24-Jan-20           Expenses:Food                $50.00       $50.00
+                                Expenses:Tools               $50.00      $100.00
+end test

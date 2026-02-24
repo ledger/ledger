@@ -1,0 +1,26 @@
+; Coverage tests for commodity.cc
+; Tests: price history, commodity comparison, annotations with dates/tags
+
+P 2024/01/01 EUR $1.10
+P 2024/01/15 EUR $1.12
+P 2024/02/01 EUR $1.15
+
+2024/01/01 Investment
+    Assets:Stocks                    10 AAPL @ $150.00
+    Assets:Cash
+
+2024/02/01 Euro Purchase
+    Assets:EUR                      100 EUR
+    Assets:Cash                    $-115.00
+
+test bal Assets:EUR
+             100 EUR  Assets:EUR
+end test
+
+test bal --market Assets:EUR --now 2024/02/01
+             $115.00  Assets:EUR
+end test
+
+test reg Assets:Stocks
+24-Jan-01 Investment            Assets:Stocks               10 AAPL      10 AAPL
+end test

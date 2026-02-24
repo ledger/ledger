@@ -1,0 +1,83 @@
+; Coverage tests for report.cc function lookups and implementations
+; Targets: fn_lot_date (912-918), fn_lot_price (921-927),
+;          fn_lot_tag (930-936), fn_to_amount (960), fn_to_balance (964),
+;          fn_to_string (968), fn_to_mask (972), fn_percent (836),
+;          fn_commodity (840), fn_truncated (724), fn_quantity (689),
+;          fn_is_seq (626), fn_strip (638), fn_averaged_lots (583),
+;          fn_top_amount (529), fn_get_at (626), fn_join (1429)
+
+2024/01/01 Payee
+    Expenses:Food    10 AAPL {$100.00} [2023/06/15] (mytag)
+    Assets:Cash    $-1000.00
+
+test reg --format "%(lot_date(amount))\n" Expenses
+2023/06/15
+end test
+
+test reg --format "%(lot_price(amount))\n" Expenses
+$100.00
+end test
+
+test reg --format "%(lot_tag(amount))\n" Expenses
+mytag
+end test
+
+test reg --format "%(to_amount(10))\n" Expenses
+10
+end test
+
+test reg --format "%(to_balance(amount))\n" Expenses
+10 AAPL {$100.00} [2023/06/15] (mytag)
+end test
+
+test reg --format "%(to_string(payee))\n" Expenses
+Payee
+end test
+
+test reg --format "%(to_mask(\"Expenses\"))\n" Expenses
+Expenses
+end test
+
+test reg --format "%(percent(quantity(amount), 100))\n" Expenses
+10.00%
+end test
+
+test reg --format "%(commodity(amount))\n" Expenses
+AAPL
+end test
+
+test reg --format "%(truncated(payee, 3))\n" Expenses
+P..
+end test
+
+test reg --format "%(quantity(amount))\n" Expenses
+10
+end test
+
+test reg --format "%(is_seq(amount))\n" Expenses
+false
+end test
+
+test reg --format "%(strip(amount))\n" Expenses
+10 AAPL
+end test
+
+test reg --format "%(averaged_lots(amount))\n" Expenses
+10 AAPL {$100.00} [2023/06/15]
+end test
+
+test reg --format "%(get_at(amount, 0))\n" Expenses
+10 AAPL {$100.00} [2023/06/15] (mytag)
+end test
+
+test reg --format "%(join(payee))\n" Expenses
+Payee
+end test
+
+test reg --format "%(quoted(payee))\n" Expenses
+"Payee"
+end test
+
+test reg --format "%(quoted_rfc(payee))\n" Expenses
+"Payee"
+end test

@@ -1,0 +1,10 @@
+; Coverage tests for --bold-if option (report.cc 572-577)
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --force-color --bold-if 'amount > 0' --format '%(ansify_if(payee, should_bold ? bold : null))\n' 
+[1mPayee[0m
+Payee
+end test

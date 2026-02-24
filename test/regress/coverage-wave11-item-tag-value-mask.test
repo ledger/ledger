@@ -1,0 +1,12 @@
+; Coverage for item.cc line 64-65: has_tag with mask and value_mask.
+; Tests the case where a tag is checked with both a tag mask and a value mask.
+
+2024/01/01 Test
+    ; Category: food
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+test reg --display "has_tag(/Category/, /food/)" --format "%(account) %(tag('Category'))\n"
+Expenses:Food food
+Assets:Cash food
+end test

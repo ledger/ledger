@@ -1,0 +1,19 @@
+; Coverage for account.cc lines 453,460,487,492,500-501,506-507,511-512:
+; Account lookup functions: 'n' (subcount), 'N' (family count), 'O' (total),
+; 'l' (depth), and children_with_xdata/valid paths.
+
+2024/01/01 Test
+    Expenses:Food:Groceries       $10.00
+    Assets:Cash
+
+2024/01/02 Test 2
+    Expenses:Food:Dining          $20.00
+    Assets:Cash
+
+test bal --format "%(account) n=%(n) N=%(N) O=%(O) l=%(l)\n"
+Assets:Cash n=2 N=2 O=$-30.00 l=2
+Expenses:Food n=0 N=2 O=$30.00 l=2
+Expenses:Food:Dining n=1 N=1 O=$20.00 l=3
+Expenses:Food:Groceries n=1 N=1 O=$10.00 l=3
+ n=0 N=4 O=0 l=0
+end test

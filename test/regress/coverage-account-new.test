@@ -1,0 +1,41 @@
+; Coverage tests for account.cc
+; Tests: account directives with sub-directives, account depth, fullname
+
+account Expenses:Food
+    alias food
+    payee Grocery
+
+account Expenses:Gas
+
+account Assets:Cash
+
+2024/01/01 Grocery
+    food                             $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas                     $30.00
+    Assets:Cash
+
+; Test account depth display
+test bal --depth 1
+             $-80.00  Assets
+              $80.00  Expenses
+--------------------
+                   0
+end test
+
+test bal --depth 2
+             $-80.00  Assets:Cash
+              $80.00  Expenses
+              $50.00    Food
+              $30.00    Gas
+--------------------
+                   0
+end test
+
+test accounts
+Assets:Cash
+Expenses:Food
+Expenses:Gas
+end test

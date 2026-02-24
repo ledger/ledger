@@ -1,0 +1,116 @@
+; Coverage tests for value.cc comparison operators
+; Tests is_less_than, is_greater_than, is_equal_to for various types
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Expenses:Drink   5.00 EUR
+    Assets:Cash
+
+; Boolean comparisons - exercises is_greater_than lines 1007-1020
+; and is_less_than lines 862-875
+test eval 'true > false'
+1
+end test
+
+test eval 'false > true'
+0
+end test
+
+test eval 'true > true'
+0
+end test
+
+test eval 'false > false'
+0
+end test
+
+test eval 'false < true'
+1
+end test
+
+test eval 'true < false'
+0
+end test
+
+test eval 'true < true'
+0
+end test
+
+test eval 'false < false'
+0
+end test
+
+; Integer comparisons with amounts - exercises is_greater_than lines 1035-1043
+test eval '5 > $3'
+1
+end test
+
+test eval '5 > $10'
+0
+end test
+
+test eval '5 < $10'
+1
+end test
+
+; Amount comparisons with integers - exercises is_greater_than lines 1048-1056
+test eval '$5 > 3'
+1
+end test
+
+test eval '$3 > 10'
+0
+end test
+
+test eval '$3 < 10'
+1
+end test
+
+; Amount vs amount comparisons - exercises is_greater_than lines 1048-1050
+test eval '$5 > $3'
+1
+end test
+
+test eval '$3 > $5'
+0
+end test
+
+; Date comparisons - exercises is_greater_than lines 1023-1030
+; and is_less_than lines 883-886
+test eval '[2024/01/01] > [2023/12/31]'
+1
+end test
+
+test eval '[2023/12/31] > [2024/01/01]'
+0
+end test
+
+test eval '[2023/12/31] < [2024/01/01]'
+1
+end test
+
+test eval '[2024/01/01] < [2023/12/31]'
+0
+end test
+
+; String comparisons - exercises is_greater_than lines 1092-1100
+; and is_less_than for strings
+test eval '"abc" < "abd"'
+1
+end test
+
+test eval '"abd" > "abc"'
+1
+end test
+
+test eval '"abc" > "abd"'
+0
+end test
+
+test eval '"abc" < "abc"'
+0
+end test
+
+test eval '"xyz" > "abc"'
+1
+end test

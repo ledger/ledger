@@ -1,0 +1,13 @@
+; Coverage for textual_xacts.cc lines 190, 198-199 (auto xact note on next line)
+
+= Expenses
+    ; This is a note for the automated xact
+    (Budget)    -1
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal Budget
+             $-10.00  Budget
+end test

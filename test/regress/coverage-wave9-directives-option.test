@@ -1,0 +1,15 @@
+; Test coverage for textual_directives.cc lines 136-154
+; --flat option directive in journal file
+
+--flat
+
+2024/01/01 Test
+    Expenses:Food:Groceries                 $50.00
+    Assets:Cash
+
+test bal
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food:Groceries
+--------------------
+                   0
+end test

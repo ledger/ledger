@@ -1,0 +1,69 @@
+; Coverage tests for xact.cc
+; Tests: auto transactions (fn_any/fn_all), verify, fixated prices,
+;        virtual balance postings, cost calculation, hash, code
+
+; Test auto-transactions with fn_any/fn_all (covers lines 608-630)
+= /Food/
+    (Budget:Food)                    -1
+
+2024/01/01 (123) Grocery Store
+    Expenses:Food                    $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas                     $30.00
+    Assets:Cash
+
+; Test two commodities without explicit cost (covers lines 235-236)
+2024/01/03 Currency Exchange
+    Assets:EUR                       100 EUR
+    Assets:USD                      -$130.00
+
+; Test virtual postings with balanced amounts (covers lines 447-467)
+2024/01/04 Budget Entry
+    Expenses:Rent                  $1000.00
+    Assets:Checking               $-1000.00
+    [Budget:Rent]                  $-1000.00
+    [Budget:Available]              $1000.00
+
+; Test pending transaction state
+2024/01/05 ! Pending Payment
+    Expenses:Utilities                $75.00
+    Assets:Checking
+
+; Test transaction with aux date
+2024/01/06=2024/01/10 Delayed Payment
+    Expenses:Insurance               $200.00
+    Assets:Checking
+
+test reg Food
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                (Budget:Food)               $-50.00            0
+end test
+
+test reg Gas
+24-Jan-02 Gas Station           Expenses:Gas                 $30.00       $30.00
+end test
+
+test reg EUR
+24-Jan-03 Currency Exchange     Assets:EUR                  100 EUR      100 EUR
+end test
+
+test reg Budget:Rent
+24-Jan-04 Budget Entry          [Budget:Rent]             $-1000.00    $-1000.00
+end test
+
+test reg code 123
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+                                (Budget:Food)               $-50.00      $-50.00
+end test
+
+test reg --pending
+24-Jan-05 Pending Payment       Expenses:Utilities           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+end test
+
+test reg --aux-date Insurance
+24-Jan-10 Delayed Payment       Expenses:Insurance          $200.00      $200.00
+end test

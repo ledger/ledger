@@ -1,0 +1,15 @@
+; Test coverage for textual_xacts.cc lines 453-462
+; Lot price syntax: {$150.00} and {=$155.00} (fixated)
+
+2024/01/01 Buy Stock
+    Assets:Brokerage                        10 AAPL {$150.00}
+    Assets:Cash                         $-1500.00
+
+2024/01/02 Buy Stock Fixated
+    Assets:Brokerage                         5 AAPL {=$155.00}
+    Assets:Cash                          $-775.00
+
+test bal Brokerage --lot-prices --flat
+   10 AAPL {$150.00}
+   5 AAPL {=$155.00}  Assets:Brokerage
+end test

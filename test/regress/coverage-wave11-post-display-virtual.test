@@ -1,0 +1,17 @@
+; Coverage for post.cc lines 308-320: get_display_account when a post
+; is virtual (balanced or unbalanced).
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    [Budget:Food]                 $5.00
+    [Budget:Savings]             $-5.00
+    (Memo:Note)                   $5.00
+    Assets:Cash                  $-10.00
+
+test reg --format "%(display_account)\n"
+Expenses:Food
+[Budget:Food]
+[Budget:Savings]
+(Memo:Note)
+Assets:Cash
+end test

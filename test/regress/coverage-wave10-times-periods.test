@@ -1,0 +1,27 @@
+; Coverage tests for times.cc lines 789-795 (TOK_A_WDAY handling in date parsing)
+; Also covers times.cc line 1215 (handle_date_token for TOK_A_MONTH)
+; Also covers times.cc line 1240 (handle_relative_token for this/next/last)
+; Also covers times.cc line 1247 (handle_simple_period_token for tomorrow/yesterday)
+
+2024/01/01 Monday Xact
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/03/15 Mid Month
+    Expenses:Drinks    $20.00
+    Assets:Cash
+
+2024/06/01 June Xact
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --period "in 2024" Expenses
+24-Jan-01 Monday Xact           Expenses:Food                $10.00       $10.00
+24-Mar-15 Mid Month             Expenses:Drinks              $20.00       $30.00
+24-Jun-01 June Xact             Expenses:Food                $30.00       $60.00
+end test
+
+test reg --period "from 2024/01/01 to 2024/04/01" Expenses
+24-Jan-01 Monday Xact           Expenses:Food                $10.00       $10.00
+24-Mar-15 Mid Month             Expenses:Drinks              $20.00       $30.00
+end test

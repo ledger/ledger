@@ -1,0 +1,9 @@
+; Coverage for textual_xacts.cc post cost with expression amounts
+
+2024/01/01 Expression Cost
+    Assets:Broker    10 AAPL @ ($150.00)
+    Assets:Cash
+
+test bal Assets:Broker
+             10 AAPL  Assets:Broker
+end test

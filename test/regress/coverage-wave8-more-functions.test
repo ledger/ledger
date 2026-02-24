@@ -1,0 +1,15 @@
+; Coverage tests for additional report.cc functions
+; Targets: commodity_price no-price (849), set_commodity_price (854-856, 1490),
+;          fn_clear_commodity (858-862), fn_should_bold (572-577)
+
+2024/01/01 Payee
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+test reg --format "|%(commodity_price(amount, today))|\n" Expenses
+||
+end test
+
+test reg --format "%(set_commodity_price(amount, today, 1.5 USD))%(commodity_price(amount, today))\n" Expenses
+1.5 USD
+end test

@@ -1,0 +1,11 @@
+; Coverage: select.cc - select from accounts (line 284-297)
+
+2024/01/01 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test select account from accounts --columns=80
+Assets:Cash
+Expenses:Food
+
+end test

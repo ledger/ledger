@@ -1,0 +1,18 @@
+; Test -G (gain) option for report.cc coverage
+
+P 2024/01/01 AAPL $150.00
+P 2024/03/01 AAPL $160.00
+
+2024/01/15 Buy Stocks
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Checking    $-1500.00
+
+2024/03/15 Sell Stocks
+    Assets:Checking    $800.00
+    Assets:Brokerage    -5 AAPL {$150.00} @ $160.00
+    Income:Capital Gains    $-50.00
+
+test reg -G
+24-Mar-01 Commodities revalued  <Revalued>                  $100.00      $100.00
+24-Mar-15 Sell Stocks           Assets:Brokerage            $-50.00       $50.00
+end test

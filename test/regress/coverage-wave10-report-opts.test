@@ -1,0 +1,34 @@
+; Tests for short options -F, -S, -T, -X
+; Covers report.cc lines 1061, 1091, 1094, 1106
+
+P 2024/01/15 EUR $1.10
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Expenses:Auto    $30.00
+    Assets:Cash
+
+2024/01/16 Test2
+    Expenses:Travel    10 EUR
+    Assets:Cash
+
+; Test -F short option (format) - covers line 1061
+test reg -F '%(date) %(payee) %(amount)\n' --head 1 Expenses:Food
+2024/01/15 Test $50.00
+end test
+
+; Test -S short option (sort) - covers line 1091
+test reg -S amount Expenses:Food or Expenses:Auto
+24-Jan-15 Test                  Expenses:Auto                $30.00       $30.00
+                                Expenses:Food                $50.00       $80.00
+end test
+
+; Test -T short option (total expression) - covers line 1094
+test reg -T 'amount * 2' --head 1 Expenses:Food
+24-Jan-15 Test                  Expenses:Food                $50.00      $100.00
+end test
+
+; Test -X short option (exchange) - covers line 1106
+test reg -X '$' Expenses:Travel
+24-Jan-16 Test2                 Expenses:Travel              $11.00       $11.00
+end test

@@ -1,0 +1,14 @@
+; Test coverage for textual_xacts.cc lines 616-756
+; Balance assignment and assertion paths
+
+2024/01/01 Opening
+    Assets:Bank                            $100.00
+    Equity:Opening
+
+2024/01/05 Deposit
+    Assets:Bank                              $0.00 = $100.00
+    Income:Salary
+
+test bal Assets
+             $100.00  Assets:Bank
+end test

@@ -1,0 +1,52 @@
+; Coverage tests for post.cc get_price, get_cost paths
+; Targets lines 240-246 (get_price with annotation price)
+
+2024/01/01 Stock Purchase
+    Assets:Stocks       10 AAPL @ $150.00
+    Assets:Cash
+
+; Test price lookup with annotated amount
+test reg --format '%(price)\n' Assets:Stocks
+$1500
+end test
+
+; Test cost_calculated lookup
+test reg --format '%(cost_calculated)\n' Assets:Stocks
+false
+end test
+
+; Test calculated lookup
+test reg --format '%(calculated)\n' Assets:Cash
+true
+end test
+
+; Test primary lookup (commodity_is_primary)
+test reg --format '%(primary)\n' Assets:Cash
+true
+end test
+
+; Test checkin/checkout (should be empty/null)
+test reg --format '%(checkin)X\n%(checkout)X\n' Assets:Stocks
+X
+X
+end test
+
+; Test has_cost
+test reg --format '%(has_cost)\n' Assets:Stocks
+true
+end test
+
+; Test use_direct_amount
+test reg --format '%(use_direct_amount)\n' Assets:Stocks
+false
+end test
+
+; Test value_date
+test reg --format '%(value_date)\n' Assets:Stocks
+2024/01/01
+end test
+
+; Test xact lookup
+test reg --format '%(parent ? "yes" : "no")\n' Assets:Stocks
+yes
+end test

@@ -1,0 +1,15 @@
+; Test coverage for item.cc lines 439-530
+; Test item_t::lookup fields: L, X, Y, filebase, filepath, id, uuid, seq, addr
+
+2024/01/01 * Test Payee
+    Expenses:Food                           $50.00
+    Assets:Cash                            $-50.00
+
+2024/01/02 ! Pending Payee
+    Expenses:Drink                           $5.00
+    Assets:Cash                             $-5.00
+
+test reg --format '%(L) %(X) %(Y) %(filebase) %(seq)\n' Expenses
+true true false coverage-wave9-item-lookup.test 2
+true false true coverage-wave9-item-lookup.test 5
+end test

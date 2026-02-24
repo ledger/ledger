@@ -1,0 +1,137 @@
+; Test all remaining determine_when branches for THIS/NEXT/LAST
+; Exercises determine_when lines 772-851 with all adjust values (-1, 0, +1)
+; for each unit type (TOK_YEAR, TOK_QUARTER, TOK_WEEK, TOK_DAY, TOK_MONTH,
+; TOK_A_MONTH) via since/until/from/in expressions.
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; TOK_NEXT + TOK_QUARTER (adjust=1): lines 811-813
+test period --now 2024/06/15 "until next quarter"
+--- Period expression tokens ---
+TOK_UNTIL: until
+TOK_NEXT: next
+TOK_QUARTER: quarter
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range:  to year 2024 month Jul day 1
+
+--- After stabilization ---
+   range:  to year 2024 month Jul day 1
+  finish: 24-Jul-01
+
+--- Sample dates in range (max. 20) ---
+end test
+
+; TOK_NEXT + TOK_WEEK (adjust=1): lines 826-828
+test period --now 2024/06/15 "from next week"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_NEXT: next
+TOK_WEEK: week
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024 month Jun day 16
+
+--- After stabilization ---
+   range: from year 2024 month Jun day 16
+   start: 24-Jun-16
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jun-16
+end test
+
+; TOK_LAST + TOK_WEEK (adjust=-1): lines 822-823
+test period --now 2024/06/15 "since last week"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_LAST: last
+TOK_WEEK: week
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024 month Jun day 2
+
+--- After stabilization ---
+   range: from year 2024 month Jun day 2
+   start: 24-Jun-02
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jun-02
+end test
+
+; TOK_NEXT + TOK_YEAR (adjust=1): lines 798-800
+test period --now 2024/06/15 "since next year"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_NEXT: next
+TOK_YEAR: year
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2025
+
+--- After stabilization ---
+   range: from year 2025
+   start: 25-Jan-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 25-Jan-01
+end test
+
+; TOK_LAST + TOK_YEAR (adjust=-1): lines 798-800
+test period --now 2024/06/15 "until last year"
+--- Period expression tokens ---
+TOK_UNTIL: until
+TOK_LAST: last
+TOK_YEAR: year
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range:  to year 2023
+
+--- After stabilization ---
+   range:  to year 2023
+  finish: 23-Jan-01
+
+--- Sample dates in range (max. 20) ---
+end test
+
+; TOK_THIS + TOK_A_MONTH (adjust=0): lines 781-784
+test period --now 2024/06/15 "until this january"
+--- Period expression tokens ---
+TOK_UNTIL: until
+TOK_THIS: this
+TOK_A_MONTH: Jan
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range:  to year 2024 month Jan
+
+--- After stabilization ---
+   range:  to year 2024 month Jan
+  finish: 24-Jan-01
+
+--- Sample dates in range (max. 20) ---
+end test
+
+; TOK_LAST + TOK_A_MONTH (adjust=-1): lines 781-784
+test period --now 2024/06/15 "until last january"
+--- Period expression tokens ---
+TOK_UNTIL: until
+TOK_LAST: last
+TOK_A_MONTH: Jan
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range:  to year 2023 month Jan
+
+--- After stabilization ---
+   range:  to year 2023 month Jan
+  finish: 23-Jan-01
+
+--- Sample dates in range (max. 20) ---
+end test

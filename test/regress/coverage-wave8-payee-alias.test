@@ -1,0 +1,27 @@
+; Coverage tests for textual_directives.cc payee directive with alias/uuid
+; Targets lines 513-542 (payee_directive, payee_alias_directive, payee_uuid_directive)
+
+payee Grocery Store
+  alias groceries
+  alias supermarket
+  uuid abc-123-def
+
+2024/01/01 groceries
+    Expenses:Food             $10.00
+    Assets:Cash
+
+2024/01/02 supermarket
+    Expenses:Food              $5.00
+    Assets:Cash
+
+; UUID mapping: a transaction with UUID tag gets the payee override
+2024/01/03 Unknown Place
+    ; UUID: abc-123-def
+    Expenses:Food              $3.00
+    Assets:Cash
+
+test reg --format '%(payee)\n' Expenses
+Grocery Store
+Grocery Store
+Grocery Store
+end test

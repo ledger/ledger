@@ -1,0 +1,135 @@
+; Coverage tests for report.cc options and command paths
+; Targets: report.cc lines 153-154 (--total-data), 474-485 (commodities --cleared),
+;          1603-1701 command lookups, filters.h various filter operations
+
+2024/01/15 Grocery Store
+    ; MyTag: food
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Electric Company
+    ; Utility: power
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+2024/02/15 Grocery Store
+    ; MyTag: food
+    Expenses:Food    $45.00
+    Assets:Checking
+
+P 2024/01/01 $ 0.80 EUR
+P 2024/02/01 $ 0.82 EUR
+
+; Test --total-data (-J) option (report.cc line 153-154)
+test reg -J Expenses
+2024-01-15 50
+2024-01-20 170
+2024-02-15 215
+end test
+
+; Test --amount-data (-j) option
+test reg -j Expenses
+2024-01-15 50
+2024-01-20 120
+2024-02-15 45
+end test
+
+; Test --no-total option
+test bal --no-total Expenses
+             $215.00  Expenses
+              $95.00    Food
+             $120.00    Utilities
+end test
+
+; Test --flat option
+test bal --flat Expenses
+              $95.00  Expenses:Food
+             $120.00  Expenses:Utilities
+--------------------
+             $215.00
+end test
+
+; Test --depth option
+test bal --depth 1
+            $-215.00  Assets
+             $215.00  Expenses
+--------------------
+                   0
+end test
+
+; Test --percent option (report.cc lines 163-171)
+test bal --percent Expenses
+             100.00%  Expenses
+              44.19%    Food
+              55.81%    Utilities
+end test
+
+; Test --collapse option
+test reg --collapse Expenses
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-20 Electric Company      Expenses:Utilities          $120.00      $170.00
+24-Feb-15 Grocery Store         Expenses:Food                $45.00      $215.00
+end test
+
+; Test --by-payee subtotal (filters.h by_payee_posts)
+test reg --by-payee Expenses
+24-Jan-20 Electric Company      Expenses:Utilities          $120.00      $120.00
+24-Jan-15 Grocery Store         Expenses:Food                $95.00      $215.00
+end test
+
+; Test --sort option (report.cc line 1090-1091)
+test reg --sort amount Expenses
+24-Feb-15 Grocery Store         Expenses:Food                $45.00       $45.00
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $95.00
+24-Jan-20 Electric Company      Expenses:Utilities          $120.00      $215.00
+end test
+
+; Test --head option (filters.h truncate_xacts)
+test reg --head 2 Expenses
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-20 Electric Company      Expenses:Utilities          $120.00      $170.00
+end test
+
+; Test --tail option (filters.h truncate_xacts)
+test reg --tail 1 Expenses
+24-Feb-15 Grocery Store         Expenses:Food                $45.00      $215.00
+end test
+
+; Test --monthly subtotal (filters.h interval_posts)
+test reg --monthly Expenses
+24-Jan-01 - 24-Jan-31           Expenses:Food                $50.00       $50.00
+                                Expenses:Utilities          $120.00      $170.00
+24-Feb-01 - 24-Feb-29           Expenses:Food                $45.00      $215.00
+end test
+
+; Test --weekly subtotal
+test reg --weekly --begin 2024/01/15 --end 2024/01/22 Expenses
+24-Jan-14 - 24-Jan-20           Expenses:Food                $50.00       $50.00
+                                Expenses:Utilities          $120.00      $170.00
+end test
+
+; Test --daily subtotal
+test reg --daily --begin 2024/01/15 --end 2024/01/16 Expenses
+24-Jan-15 - 24-Jan-15           Expenses:Food                $50.00       $50.00
+end test
+
+; Test --subtotal option
+test reg --subtotal Expenses
+24-Jan-15 - 24-Feb-15           Expenses:Food                $95.00       $95.00
+                                Expenses:Utilities          $120.00      $215.00
+end test
+
+; Test --dow (day of week) option (filters.h day_of_week_posts)
+test reg --dow --begin 2024/01/15 --end 2024/01/22 Expenses
+24-Jan-15 Mondays               Expenses:Food                $50.00       $50.00
+24-Jan-20 Saturdays             Expenses:Utilities          $120.00      $170.00
+end test
+
+; Test cleared command (report.cc line 1629-1631)
+test cleared Expenses
+         $215.00                   0                 Expenses
+          $95.00                   0                   Food
+         $120.00                   0                   Utilities
+----------------    ----------------    ---------
+         $215.00                   0             
+end test

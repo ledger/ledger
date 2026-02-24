@@ -1,0 +1,14 @@
+; Coverage for account.cc lines 429-452: earliest, latest, earliest_checkin,
+; latest_checkout, latest_cleared lookups.
+
+2024/01/01 * First
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+2024/02/01 * Second
+    Expenses:Food                 $20.00
+    Assets:Cash
+
+test bal --format "%(account) %(earliest) %(latest) %(latest_cleared)\n" Expenses
+Expenses:Food 2024/01/01 2024/02/01 2024/02/01
+end test

@@ -1,0 +1,23 @@
+; Test coverage for filters.cc lines 1306, 1308, 1383, 1436
+; budget_posts and report_budget_items
+
+~ monthly
+    Expenses:Food                          $200.00
+    Assets:Cash
+
+2024/01/01 Groceries
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/15 More Groceries
+    Expenses:Food                           $30.00
+    Assets:Cash
+
+test reg --budget --begin 2024/01/01 --end 2024/02/01
+24-Jan-01 Budget transaction    Expenses:Food              $-200.00     $-200.00
+24-Jan-01 Budget transaction    Assets:Cash                 $200.00            0
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+24-Jan-15 More Groceries        Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test

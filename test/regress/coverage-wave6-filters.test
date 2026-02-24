@@ -1,0 +1,46 @@
+; Coverage tests for filters.cc
+; Targets: filter processing paths, group-by, interval reports
+
+2024/01/01 Payee1
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/15 Payee2
+    Expenses:Dining    $30.00
+    Assets:Cash
+
+2024/02/01 Payee1
+    Expenses:Food    $40.00
+    Assets:Cash
+
+2024/02/15 Payee3
+    Expenses:Transport    $25.00
+    Assets:Cash
+
+; Test monthly grouped register (filters.cc interval handling)
+test reg --monthly Expenses
+24-Jan-01 - 24-Jan-31           Expenses:Dining              $30.00       $30.00
+                                Expenses:Food                $50.00       $80.00
+24-Feb-01 - 24-Feb-29           Expenses:Food                $40.00      $120.00
+                                Expenses:Transport           $25.00      $145.00
+end test
+
+; Test --daily register
+test reg --daily --limit "date==[2024/01/01]" Expenses
+24-Jan-01 - 24-Jan-01           Expenses:Food                $50.00       $50.00
+end test
+
+; Test --by-payee grouping (filters.cc)
+test reg --by-payee Expenses
+24-Jan-01 Payee1                Expenses:Food                $90.00       $90.00
+24-Jan-15 Payee2                Expenses:Dining              $30.00      $120.00
+24-Feb-15 Payee3                Expenses:Transport           $25.00      $145.00
+end test
+
+; Test --average (filters.cc)
+test reg --monthly --average Expenses
+24-Jan-01 - 24-Jan-31           Expenses:Dining              $30.00       $30.00
+                                Expenses:Food                $50.00       $40.00
+24-Feb-01 - 24-Feb-29           Expenses:Food                $40.00       $40.00
+                                Expenses:Transport           $25.00       $36.25
+end test

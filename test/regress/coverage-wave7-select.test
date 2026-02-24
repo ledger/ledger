@@ -1,0 +1,57 @@
+; Tests for select.cc uncovered lines
+; Covers: lines 55 59 65 71 81 84 95 145-146 148-149 152 156 159 163
+;   167 170 173 266 322
+
+; --- Journal data ---
+2024/01/01 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Cash
+
+2024/01/15 Gas Station
+    Expenses:Auto:Gas          $35.00
+    Assets:Cash
+
+; --- Test 1: select with date, payee, account, amount, total ---
+; Covers: select command lines 55-173 (all get_principal_identifiers paths)
+; date->line 55, account->line 59/65, amount->line 65, total->line 71
+test select date,payee,account,amount,total
+24-Jan-01 Grocery Store        Expenses:Food                $50.00       $50.00
+24-Jan-01 Grocery Store        Assets:Cash                 $-50.00            0
+24-Jan-15 Gas Station          Expenses:Auto:Gas            $35.00       $35.00
+24-Jan-15 Gas Station          Assets:Cash                 $-35.00            0
+end test
+
+; --- Test 2: select from accounts ---
+; Covers: from_accounts_re (line 95), accounts_report path
+test select account,amount from accounts
+Assets:Cash      $-85.00
+Expenses            0
+Auto:Gas       $35.00
+Food       $50.00
+            0
+end test
+
+; --- Test 3: select with where clause ---
+; Covers: where keyword handling in select_command
+test select date,amount where account=~/Expenses/
+24-Jan-01       $50.00
+24-Jan-15       $35.00
+end test
+
+; --- Test 4: select just amount ---
+; Covers: amount column sizing
+test select amount
+      $50.00
+     $-50.00
+      $35.00
+     $-35.00
+end test
+
+; --- Test 5: select just total ---
+; Covers: total column sizing
+test select total
+      $50.00
+           0
+      $35.00
+           0
+end test

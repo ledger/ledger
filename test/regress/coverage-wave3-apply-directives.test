@@ -1,0 +1,31 @@
+; Test textual_directives.cc: apply year, apply tag, apply account,
+; bucket directive
+apply year 2024
+
+apply tag TestTag
+
+apply account Personal
+
+bucket Expenses:Sink
+
+01/15 Grocery Store
+    Expenses:Food    $25.00
+
+end apply account
+
+end apply tag
+
+end apply year
+
+test bal
+                   0  Personal:Expenses
+              $25.00    Food
+             $-25.00    Sink
+--------------------
+                   0
+end test
+
+test reg --format "%(has_tag('TestTag'))\n"
+true
+true
+end test

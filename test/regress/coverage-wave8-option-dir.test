@@ -1,0 +1,13 @@
+; Coverage tests for textual_directives.cc option_directive
+; Targets lines 136-154 (option_directive) and lines 842-847 (general_directive fallthrough)
+
+; Option directive with value (long option)
+--date-format %Y-%m-%d
+
+2024/01/01 Test
+    Expenses:Food              $10.00
+    Assets:Cash
+
+test reg Expenses
+2024-01-01 Test                 Expenses:Food                $10.00       $10.00
+end test

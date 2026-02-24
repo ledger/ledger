@@ -1,0 +1,31 @@
+; Coverage wave 8: amount parsing edge cases
+; Tests: parse with negative prefix, PARSE_NO_ANNOT, elide commodity
+
+2024/01/01 Opening Balance
+    Assets:Bank          $1,234.56
+    Equity:Opening
+
+2024/01/15 Purchase
+    Expenses:Food        DM 123.45
+    Assets:Cash
+
+2024/02/01 Stock Purchase
+    Assets:Investment    10 AAPL {$150.00}
+    Assets:Bank         $-1,500.00
+
+2024/03/01 European Amount
+    Expenses:Travel      EUR 1.234,56
+    Assets:Bank
+
+test reg Expenses:Food
+24-Jan-15 Purchase              Expenses:Food             DM 123.45    DM 123.45
+end test
+
+test bal Assets:Bank
+            $-265.44
+       EUR -1.234,56  Assets:Bank
+end test
+
+test reg Expenses:Travel
+24-Mar-01 European Amount       Expenses:Travel        EUR 1.234,56 EUR 1.234,56
+end test

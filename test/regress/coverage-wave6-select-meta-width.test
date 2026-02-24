@@ -1,0 +1,14 @@
+; Coverage tests for select.cc
+; Tests: explicit meta_width option to cover line 173
+; and meta column identifier for lines 195-196, 330-341
+
+2024/01/15 Grocery Store
+    ; Tag: food
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; Test with explicit meta_width - covers line 173
+test select date, note, amount --columns 80 --meta-width 15
+24-Jan-15  Tag: food            $50.00
+24-Jan-15  Tag: food           $-50.00
+end test

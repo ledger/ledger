@@ -1,0 +1,17 @@
+; Test coverage for xact.cc lines 944-946
+; auto_xact_t extend_xact cost derivation from price annotation
+
+= /Expenses/
+    (Budget)                                 1.00
+
+2024/01/01 Buy energy
+    Expenses:Energy                        100 kWh @@ 72 EUR
+    Assets:Cash
+
+test reg
+24-Jan-01 Buy energy            Expenses:Energy             100 kWh      100 kWh
+                                Assets:Cash                  EUR-72       EUR-72
+                                                                         100 kWh
+                                (Budget)                    100 kWh       EUR-72
+                                                                         200 kWh
+end test

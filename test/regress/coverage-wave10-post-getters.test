@@ -1,0 +1,64 @@
+; Coverage tests for post.cc getter functions
+; Covers: get_code (161-164), get_note (171-182), get_magnitude (185-189),
+; get_amount (192-198), get_commodity_is_primary (218-220),
+; get_cost (230-246), get_total (249-255), get_count (258-262),
+; get_account with string/mask arg (265-303)
+
+2024/01/01 (CODE1) Grocery
+    ; TagNote: A note
+    Expenses:Food:Produce    $50.00
+    Assets:Cash
+
+2024/01/02 Stock Purchase
+    Assets:Brokerage     10 AAPL @ $150.00
+    Assets:Cash         $-1500.00
+
+2024/01/03 No Code
+    Expenses:Misc         $25.00
+    Assets:Cash
+
+; Test 1: Code is empty when no code (line 161-164)
+test reg Expenses:Misc --format "%(code)\n"
+
+end test
+
+; Test 2: Note from post with xact note concat (line 171-182)
+test reg Expenses:Food --format "%(note)\n"
+ TagNote: A note
+end test
+
+; Test 3: get_commodity function (line 211-212)
+test reg Assets:Brokerage --format "%(commodity)\n"
+AAPL
+end test
+
+; Test 4: get_total when no xdata (line 252-255)
+test reg Expenses:Misc --format "%(total)\n"
+$25.00
+end test
+
+; Test 5: get_account as string in scope context (line 300-301)
+test reg Expenses --format "%(account)\n"
+Expenses:Food:Produce
+Expenses:Misc
+end test
+
+; Test 6: primary commodity flag (line 218-220)
+test reg Assets:Brokerage --format "%(primary ? 'yes' : 'no')\n"
+no
+end test
+
+; Test 7: cost_calculated flag (line 430)
+test reg Assets:Brokerage --format "%(cost_calculated)\n"
+false
+end test
+
+; Test 8: calculated flag (line 434)
+test reg Assets:Brokerage --format "%(calculated)\n"
+false
+end test
+
+; Test 9: account_id (line 411-412)
+test reg Expenses:Food --format "%(account_id)\n"
+1
+end test

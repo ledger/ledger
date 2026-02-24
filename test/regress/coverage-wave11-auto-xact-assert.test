@@ -1,0 +1,16 @@
+; Coverage for xact.cc lines 846-856: auto_xact check_exprs evaluation.
+; The assert expression is evaluated during extend_xact.
+
+= /Expenses/
+    assert amount > 0
+    (Budget)                                 1.00
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+                                (Budget)                     $10.00       $10.00
+end test

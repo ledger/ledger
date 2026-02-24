@@ -1,0 +1,49 @@
+; Coverage tests for times.cc period parsing edge cases
+
+2020/01/01 Opening Balance
+    Assets:Checking    $1000.00
+    Equity:Opening
+
+2020/02/15 Groceries
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2020/03/01 Rent
+    Expenses:Rent    $800.00
+    Assets:Checking
+
+2020/04/15 Utilities
+    Expenses:Utilities    $100.00
+    Assets:Checking
+
+2020/05/01 Groceries
+    Expenses:Food    $60.00
+    Assets:Checking
+
+2020/06/15 Insurance
+    Expenses:Insurance    $200.00
+    Assets:Checking
+
+test reg -p "monthly from 2020/01/01 to 2020/04/01" Expenses
+20-Feb-01 - 20-Feb-29           Expenses:Food                $50.00       $50.00
+20-Mar-01 - 20-Mar-31           Expenses:Rent               $800.00      $850.00
+end test
+
+test reg -p "from 2020/02/01 to 2020/04/01" Expenses
+20-Feb-15 Groceries             Expenses:Food                $50.00       $50.00
+20-Mar-01 Rent                  Expenses:Rent               $800.00      $850.00
+end test
+
+test reg -p "since 2020/05/01" Expenses
+20-May-01 Groceries             Expenses:Food                $60.00       $60.00
+20-Jun-15 Insurance             Expenses:Insurance          $200.00      $260.00
+end test
+
+test reg -p "until 2020/03/01" Expenses
+20-Feb-15 Groceries             Expenses:Food                $50.00       $50.00
+end test
+
+test reg -p "2020/01/01 - 2020/03/15" Expenses
+20-Feb-15 Groceries             Expenses:Food                $50.00       $50.00
+20-Mar-01 Rent                  Expenses:Rent               $800.00      $850.00
+end test

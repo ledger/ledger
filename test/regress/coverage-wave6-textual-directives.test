@@ -1,0 +1,75 @@
+; Coverage tests for textual_directives.cc - directive parsing edge cases
+
+alias food=Expenses:Food
+alias transport=Expenses:Transport:Gas
+alias rent=Expenses:Housing:Rent
+
+2020/01/01 Grocery Store
+    food    $50.00
+    Assets:Checking
+
+2020/02/01 Gas Station
+    transport    $30.00
+    Assets:Checking
+
+2020/03/01 Landlord
+    rent    $800.00
+    Assets:Checking
+
+test bal Expenses --flat
+             $150.00  Expenses:Food
+             $800.00  Expenses:Housing:Rent
+              $30.00  Expenses:Transport:Gas
+              $10.00  Expenses:Year
+--------------------
+             $990.00
+end test
+
+apply account Assets
+
+2020/04/01 Transfer
+    Checking    $-100.00
+    Savings    $100.00
+
+end apply account
+
+test bal Assets:Savings
+             $100.00  Assets:Savings
+end test
+
+year 2020
+
+01/01 Year Test
+    Expenses:Year    $10.00
+    Assets:Checking
+
+test reg Expenses:Year
+20-Jan-01 Year Test             Expenses:Year                $10.00       $10.00
+end test
+
+bucket Assets:Checking
+
+2020/05/01 Restaurant
+    Expenses:Food    $75.00
+
+test reg -p "2020/05" Expenses
+20-May-01 Restaurant            Expenses:Food                $75.00       $75.00
+end test
+
+comment
+This is a block comment.
+end comment
+
+tag Receipt
+
+2020/06/01 Store Purchase
+    ; Receipt: 12345
+    Expenses:Food    $25.00
+    Assets:Checking
+
+test reg -p "2020/06" Expenses
+20-Jun-01 Store Purchase        Expenses:Food                $25.00       $25.00
+end test
+
+payee Grocery Store
+payee Gas Station

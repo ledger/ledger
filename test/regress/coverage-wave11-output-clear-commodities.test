@@ -1,0 +1,20 @@
+; Test report_commodities::clear() via --group-by for output.h coverage
+; Targets output.h lines 210-213 (report_commodities::clear)
+; The clear() method is called between groups by post_splitter
+
+P 2024/01/01 AAPL $150.00
+
+2024/01/15 Buy Stocks
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Checking    $-1500.00
+
+2024/02/15 Buy More
+    Assets:Brokerage    5 AAPL @ $150.00
+    Assets:Checking    $-750.00
+
+test commodities --group-by payee
+$
+AAPL
+$
+AAPL
+end test

@@ -1,0 +1,11 @@
+; Coverage for item.cc lines 392: item value_expr (define).
+; Also lines 107: item lookup for 'id' and 'seq'.
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+test reg --format "%(id) %(seq)\n"
+2 2
+3 3
+end test

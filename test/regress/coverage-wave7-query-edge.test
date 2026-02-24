@@ -1,0 +1,66 @@
+; Coverage for query.cc/query.h edge cases:
+; - Lines 72-73: next_token quoted pattern
+; - Lines 112-113: next_token expression context
+; - Lines 120: next_token whitespace skip
+; - Lines 161-162: next_token backslash escape
+; - Lines 169-170: default identifier parsing
+; - Lines 248: unknown token return
+; - Lines 279: parse_query_term operator not followed by argument
+; - Lines 304: metadata equality operator
+; - Lines 335-336: parse_query_term with code/note context
+; - Lines 354: parse_query_term with LPAREN
+; - Lines 373: parse_unary_expr with NOT
+; - Lines 399: parse_and_expr
+; - Lines 420: parse_or_expr
+; - Lines 471: parse_query_expr with show/only/bold/for
+; - Lines 533: query_t::parse_args
+
+2024/01/01 Grocery Store
+    ; Food: grocery
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    ; Transport: fuel
+    Expenses:Transport    $30.00
+    Assets:Cash
+
+2024/01/03 Restaurant
+    ; Dining: dinner
+    Expenses:Food:Dining    $25.00
+    Assets:Cash
+
+2024/01/04 Hardware Store
+    ; Home: tools
+    Expenses:Home    $50.00
+    Assets:Cash
+
+; Test basic account query
+test reg Food
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $25.00       $35.00
+end test
+
+; Test payee query with @
+test reg @Restaurant
+24-Jan-03 Restaurant            Expenses:Food:Dining         $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+end test
+
+; Test NOT query
+test reg Expenses and not Food
+24-Jan-02 Gas Station           Expenses:Transport           $30.00       $30.00
+24-Jan-04 Hardware Store        Expenses:Home                $50.00       $80.00
+end test
+
+; Test OR query
+test reg Expenses:Food or Expenses:Home
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+24-Jan-03 Restaurant            Expenses:Food:Dining         $25.00       $35.00
+24-Jan-04 Hardware Store        Expenses:Home                $50.00       $85.00
+end test
+
+; Test AND query with quoted payee
+test reg Expenses and @"Grocery Store"
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+end test

@@ -1,0 +1,12 @@
+; Test coverage for post.cc lines 225-246
+; Test cost and price calculations via --format
+
+P 2024/01/01 AAPL $155.00
+
+2024/01/01 Stock Purchase
+    Assets:Brokerage                        10 AAPL @ $150.00
+    Assets:Cash
+
+test reg --format '%(has_cost) %(cost) %(price) %(b)\n' Brokerage
+true $1500.00 $1500.00 $1500.00
+end test

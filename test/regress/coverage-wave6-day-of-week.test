@@ -1,0 +1,21 @@
+; Tests for filters.cc day_of_week_posts (filters.h lines 1014-1019)
+; Covers: day_of_week_posts::operator(), flush(), clear()
+
+2024/01/01 Monday Grocery
+    Expenses:Food         $10.00
+    Assets:Cash
+
+2024/01/03 Wednesday Gas
+    Expenses:Fuel         $20.00
+    Assets:Cash
+
+2024/01/05 Friday Dinner
+    Expenses:Dining       $30.00
+    Assets:Cash
+
+; === Test 1: Day-of-week subtotals ===
+test reg --dow Expenses --columns 80
+24-Jan-01 Mondays               Expenses:Food                $10.00       $10.00
+24-Jan-03 Wednesdays            Expenses:Fuel                $20.00       $30.00
+24-Jan-05 Fridays               Expenses:Dining              $30.00       $60.00
+end test

@@ -1,0 +1,11 @@
+; Test coverage for item.cc lines 439, 465, 488, 514
+; Test item lookup fields: depth, has_meta, parent, value_date
+
+2024/01/01=2024/01/15 * Test Payee
+    ; Source: manual
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test reg --format '%(has_meta("Source")) %(value_date) %(pending) %(uncleared) %(primary_date)\n' Expenses
+true 2024/01/01 false false 2024/01/01
+end test

@@ -1,0 +1,14 @@
+; Coverage for account.cc line 119: find_account_re.
+; Uses the regex account lookup via an account argument with mask syntax.
+
+2024/01/01 Test
+    Expenses:Food:Groceries       $10.00
+    Expenses:Food:Dining          $5.00
+    Assets:Cash
+
+test bal --format "%(account)\n" /Food/
+Expenses:Food
+Expenses:Food:Dining
+Expenses:Food:Groceries
+
+end test

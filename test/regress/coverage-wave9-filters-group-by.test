@@ -1,0 +1,23 @@
+; Test coverage for filters.cc lines 43-87
+; --group-by exercises post_splitter filter
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/15 Hardware Store
+    Expenses:Tools                          $30.00
+    Assets:Cash
+
+2024/01/20 Grocery Store
+    Expenses:Food                           $25.00
+    Assets:Cash
+
+test reg --group-by payee Expenses
+Grocery Store
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-20 Grocery Store         Expenses:Food                $25.00       $75.00
+
+Hardware Store
+24-Jan-15 Hardware Store        Expenses:Tools               $30.00       $30.00
+end test

@@ -1,0 +1,22 @@
+; Test coverage for draft.cc lines 47-83, 493-506
+; Test the 'template' command which dumps the xact template
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test template 2024/02/01 Grocery Expenses:Food '$30.00'
+--- Input arguments ---
+("2024/02/01", "Grocery", "Expenses:Food", "$30.00")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Grocery
+
+[Posting "to"]
+  Account mask: Expenses:Food
+  Amount:       $30
+
+[Posting "from"]
+  Account mask: <use last of last related accounts>
+end test

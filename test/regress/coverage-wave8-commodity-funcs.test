@@ -1,0 +1,21 @@
+; Coverage tests for report.cc commodity functions
+; Targets: fn_commodity_price (842-851), fn_commodity (838-840),
+;          commodity_price with no price (849)
+
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Payee
+    Expenses:Food    10 EUR
+    Assets:Cash
+
+test reg --format "%(commodity_price(amount, today))\n" Expenses
+$1.10
+end test
+
+test reg --format "%(commodity(amount))\n" Expenses
+EUR
+end test
+
+test --columns=80 select date,account,amount from commodities
+24-Jan-01 EUR                                                             $1.10
+end test

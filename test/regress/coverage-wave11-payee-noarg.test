@@ -1,0 +1,10 @@
+; Coverage for textual_directives.cc payee directive sub-directive requiring arg
+
+payee Test Payee
+    alias
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+Error: Payee directive 'alias' requires an argument
+end test

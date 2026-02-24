@@ -1,0 +1,14 @@
+; Coverage tests for times.cc lines 1750, 1753 (token_t::expected error)
+; Also covers times.cc line 1776 (expected with wanted char)
+; Also covers times.cc line 306-307 (date_specifier_t::end() assert)
+; Tests invalid date period expressions that trigger error paths
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Invalid period expression triggers expected() error in date parser
+test reg --period "@@" -> 1
+__ERROR__
+Error: Invalid char '@'
+end test

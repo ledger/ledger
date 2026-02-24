@@ -1,0 +1,13 @@
+; Test fn_truncated for report.cc coverage
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test eval 'truncated("Hello World This Is Long", 10)'
+Hello Wo..
+end test
+
+test eval 'truncated("Short", 10)'
+Short
+end test

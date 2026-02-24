@@ -1,0 +1,35 @@
+; Coverage tests for textual_directives.cc miscellaneous directive paths
+; Targets lines 505-507 (account default), 454-458 (account eval),
+; 734-735 (@ prefix), 655-667 (value directive), 659-666 (comment directive)
+
+; Test account with default sub-directive
+account Assets:Default
+  default
+
+; Test account with eval sub-directive
+account Assets:Valued
+  eval 1 + 2
+
+; Test value directive
+value market(amount, date)
+
+comment
+This is a multi-line comment block.
+It should be completely ignored.
+end comment
+
+; Test @ prefix on directive
+@assert 1 == 1
+
+; Test ! prefix on directive (alternative syntax)
+!check 2 == 2
+
+2024/01/01 Test
+    Expenses:Food             $10.00
+
+test bal
+             $-10.00  Assets:Default
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

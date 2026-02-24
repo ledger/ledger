@@ -1,0 +1,10 @@
+; Coverage for account.cc line 394: account xdata.
+; Also account.cc lines 626,683: account balance and total calculation.
+
+2024/01/01 Test
+    Expenses:Food:Groceries       $10.00
+    Assets:Cash
+
+test bal --format "%(partial_account) %(total)\n" Expenses
+Expenses:Food:Groceries $10.00
+end test

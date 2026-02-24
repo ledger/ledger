@@ -1,0 +1,45 @@
+; Coverage tests for textual_directives.cc
+; Tests: account subdirectives (alias, value, payee, default), payee alias/uuid,
+;        commodity alias/nomarket/default, tag check
+
+account Expenses:Food
+    alias food
+    default
+
+account Expenses:Gas
+    alias gas
+
+payee Grocery Store
+    alias GS
+
+payee Gas Station
+    alias GasStn
+
+commodity $
+    alias USD
+    nomarket
+
+tag Receipt
+    check value =~ /[0-9]+/
+
+2024/01/01 GS
+    ; Receipt: 12345
+    food                             $50.00
+    Assets:Cash
+
+2024/01/02 GasStn
+    gas                              $30.00
+    Assets:Cash
+
+test bal Expenses
+              $80.00  Expenses
+              $50.00    Food
+              $30.00    Gas
+--------------------
+              $80.00
+end test
+
+test reg @"Grocery Store"
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test

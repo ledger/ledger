@@ -1,0 +1,221 @@
+; Coverage tests for op.cc - expression evaluation calc() paths
+; Tests various operator types through the eval command
+
+; Basic arithmetic operators (O_ADD, O_SUB, O_MUL, O_DIV)
+test eval '2 + 3'
+5
+end test
+
+test eval '10 - 4'
+6
+end test
+
+test eval '6 * 7'
+42
+end test
+
+test eval '15 / 3'
+5
+end test
+
+; Comparison operators (O_EQ, O_LT, O_LTE, O_GT, O_GTE)
+test eval '1 == 1'
+1
+end test
+
+test eval '1 == 2'
+0
+end test
+
+test eval '1 < 2'
+1
+end test
+
+test eval '2 < 1'
+0
+end test
+
+test eval '1 <= 1'
+1
+end test
+
+test eval '3 > 2'
+1
+end test
+
+test eval '5 >= 5'
+1
+end test
+
+; Logical operators (O_AND, O_OR, O_NOT) using keywords
+test eval '1 and 1'
+1
+end test
+
+test eval '1 and 0'
+0
+end test
+
+test eval '0 or 5'
+5
+end test
+
+test eval '0 or 0'
+0
+end test
+
+test eval 'not 0'
+1
+end test
+
+test eval 'not 1'
+0
+end test
+
+; Symbolic logical operators
+test eval '1 & 1'
+1
+end test
+
+test eval '0 | 7'
+7
+end test
+
+; Ternary operator (O_QUERY / O_COLON)
+test eval '1 ? 2 : 3'
+2
+end test
+
+test eval '0 ? 2 : 3'
+3
+end test
+
+; If/else expressions
+test eval '1 if true'
+1
+end test
+
+test eval '0 if false else 99'
+99
+end test
+
+test eval '1 if true else 0'
+1
+end test
+
+test eval '0 if false else 99'
+99
+end test
+
+; Negation (O_NEG via subtraction from 0)
+test eval '0 - 7'
+-7
+end test
+
+; Variable definition and sequences (O_DEFINE, O_SEQ)
+test eval 'x = 5; x + 1'
+6
+end test
+
+test eval 'x = 10; y = 20; x + y'
+30
+end test
+
+; Div keyword
+test eval '10 div 3'
+3.333333
+end test
+
+; Boolean literals (token reserved words)
+test eval 'true'
+1
+end test
+
+test eval 'false'
+0
+end test
+
+; String values
+test eval '"hello"'
+hello
+end test
+
+; String match (O_MATCH)
+test eval '"hello" =~ /hel/'
+1
+end test
+
+test eval '"hello" =~ /xyz/'
+0
+end test
+
+; Lambda expressions (O_LAMBDA)
+test eval '(x -> x + 1)(5)'
+6
+end test
+
+test eval '(x, y -> x + y)(3, 4)'
+7
+end test
+
+; Function definition and call (O_CALL, O_DEFINE)
+test eval 'add(x, y) = x + y; add(3, 4)'
+7
+end test
+
+test eval 'double(x) = x * 2; double(5)'
+10
+end test
+
+; Cons expression through function args (O_CONS)
+test eval 'print(1, 2, 3)'
+123
+1
+end test
+
+; Nested expressions
+test eval '(1 + 2) * (3 + 4)'
+21
+end test
+
+test eval '((5 + 3) / 2) * 4'
+16
+end test
+
+; Complex ternary with nested expressions
+test eval '(1 + 1 == 2) ? (3 * 4) : (5 + 6)'
+12
+end test
+
+; Chained comparisons with logical operators
+test eval '(1 < 2) & (3 > 2)'
+1
+end test
+
+test eval '(1 > 2) | (3 > 2)'
+1
+end test
+
+; Not-equal via negated equality
+test eval '1 != 2'
+1
+end test
+
+test eval '1 != 1'
+0
+end test
+
+; Not-match
+test eval '"hello" !~ /xyz/'
+1
+end test
+
+; Multiple sequence operations
+test eval 'a = 1; b = 2; c = 3; a + b + c'
+6
+end test
+
+; Function with multiple statements in body
+test eval 'myfn(w, u)=(z=w+u;z*2); (myfn(10, 15))'
+50
+end test

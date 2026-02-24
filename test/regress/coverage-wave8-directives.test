@@ -1,0 +1,77 @@
+; Coverage tests for textual_directives.cc
+; Targets lines 124, 199-200, 239-249, 288, 293, 298, 339, 346,
+;   395, 420, 485, 520, 556, 626, 735, 758, 765, 785, 803, 813, 815, 839, 843-847
+
+; Test year directive - triggers line 835-838
+year 2024
+
+; Test bucket directive - triggers line 760-764
+bucket Assets:Cash
+
+; Test account directive with alias - triggers lines 199-200, 428-486
+account Expenses:Food
+  alias food
+  note This is for food expenses
+
+; Test tag directive with assert - triggers line 630-634
+tag Receipt
+  assert value =~ /[0-9]+/
+
+; Test commodity directive with format, note, nomarket, default - triggers 544-577
+commodity $
+  format $1,000.00
+  note US Dollar
+  default
+
+; Test payee directive with alias and uuid - triggers 513-542
+payee Grocery Store
+  alias groceries
+  uuid abc-123-def
+
+; Test define directive - triggers line 781-784
+define vat_rate=0.20
+
+; Test assert directive - triggers line 754-756
+assert 1 == 1
+
+; Test check directive - triggers line 768-770
+check 2 == 2
+
+; Test eval/expr directive - triggers line 791-793
+eval 3 + 4
+
+; Test apply account - triggers lines 286-294
+apply account Personal
+
+2024/01/01 Grocery Store
+    ; Receipt: 12345
+    Expenses:Food            $50.00
+
+end apply account
+
+; Test apply tag with multiple colons - triggers lines 296-332
+apply tag :project:billable:
+
+2024/01/02 Client Work
+    Expenses:Consulting      $100.00
+    Assets:Cash
+
+end apply tag
+
+; Test apply year / end apply year - triggers lines 350-405
+apply year 2024
+
+01/15 Regular Payment
+    Expenses:Bills            $75.00
+    Assets:Cash
+
+end apply year
+
+test bal Expenses Personal:Expenses
+             $175.00  Expenses
+              $75.00    Bills
+             $100.00    Consulting
+              $50.00  Personal:Expenses:Food
+--------------------
+             $225.00
+end test

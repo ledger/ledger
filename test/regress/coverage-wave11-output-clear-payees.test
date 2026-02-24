@@ -1,0 +1,16 @@
+; Test report_payees::clear() via --group-by for output.h coverage
+; Targets output.h lines 164-167 (report_payees::clear)
+; The clear() method is called between groups by post_splitter
+
+2024/01/15 Alpha Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 Beta Shop
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test payees --group-by date
+Alpha Store
+Beta Shop
+end test

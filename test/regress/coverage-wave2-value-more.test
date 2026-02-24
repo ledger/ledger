@@ -1,0 +1,36 @@
+; Tests for value.cc additional uncovered lines: is_less_than paths,
+; in_place_negate for amounts, balance display, sort comparisons.
+
+2024/01/01 Multi
+    Assets:A        $100.00
+    Assets:B        50 EUR
+    Equity
+
+; === Test 1: Sort by amount ascending (triggers is_less_than) ===
+test reg Assets --sort amount --columns 80
+24-Jan-01 Multi                 Assets:A                    $100.00      $100.00
+                                Assets:B                     50 EUR      $100.00
+                                                                          50 EUR
+end test
+
+; === Test 2: Sort by -amount descending (triggers is_greater_than) ===
+test reg Assets --sort "-amount" --columns 80
+24-Jan-01 Multi                 Assets:B                     50 EUR       50 EUR
+                                Assets:A                    $100.00      $100.00
+                                                                          50 EUR
+end test
+
+; === Test 3: Balance flat view ===
+test bal --flat --columns 80
+             $100.00  Assets:A
+              50 EUR  Assets:B
+            $-100.00
+             -50 EUR  Equity
+--------------------
+                   0
+end test
+
+; === Test 4: Negate via expression ===
+test reg Assets:A --format "%(- amount)\n"
+$-100.00
+end test

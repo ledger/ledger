@@ -1,0 +1,19 @@
+; Coverage for textual_directives.cc lines 785,803,813-815 (assert/check/define)
+; Also covers general_directive switch cases for 'a' (assert), 'c' (check), 'd' (define)
+
+define vat_rate=0.20
+
+assert 1 == 1
+
+check 1 == 1
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

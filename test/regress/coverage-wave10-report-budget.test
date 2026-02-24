@@ -1,0 +1,18 @@
+; Tests for budget command
+; Covers report.cc lines 1615-1624
+
+~ Monthly
+    Expenses:Food    $300.00
+    Assets:Cash
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Test budget command - covers line 1622
+test budget
+     $-50.00    $-7800.00     $7750.00    1%  Assets:Cash
+      $50.00     $7800.00    $-7750.00    1%  Expenses:Food
+------------ ------------ ------------ -----
+           0            0            0     0
+end test

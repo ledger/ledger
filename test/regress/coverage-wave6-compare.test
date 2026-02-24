@@ -1,0 +1,46 @@
+; Coverage tests for compare.cc - sort operations
+
+2020/01/01 Charlie
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2020/01/15 Alice
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+2020/02/01 Bob
+    Expenses:Rent    $800.00
+    Assets:Checking
+
+2020/02/15 Alice
+    Expenses:Food    $45.00
+    Assets:Checking
+
+test reg Expenses --sort payee
+20-Jan-15 Alice                 Expenses:Transport           $30.00       $30.00
+20-Feb-15 Alice                 Expenses:Food                $45.00       $75.00
+20-Feb-01 Bob                   Expenses:Rent               $800.00      $875.00
+20-Jan-01 Charlie               Expenses:Food                $50.00      $925.00
+end test
+
+test reg Expenses --sort amount
+20-Jan-15 Alice                 Expenses:Transport           $30.00       $30.00
+20-Feb-15 Alice                 Expenses:Food                $45.00       $75.00
+20-Jan-01 Charlie               Expenses:Food                $50.00      $125.00
+20-Feb-01 Bob                   Expenses:Rent               $800.00      $925.00
+end test
+
+test reg Expenses --sort "-date"
+20-Feb-15 Alice                 Expenses:Food                $45.00       $45.00
+20-Feb-01 Bob                   Expenses:Rent               $800.00      $845.00
+20-Jan-15 Alice                 Expenses:Transport           $30.00      $875.00
+20-Jan-01 Charlie               Expenses:Food                $50.00      $925.00
+end test
+
+test bal Expenses --sort account --flat
+              $95.00  Expenses:Food
+             $800.00  Expenses:Rent
+              $30.00  Expenses:Transport
+--------------------
+             $925.00
+end test

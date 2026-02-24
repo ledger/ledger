@@ -1,0 +1,12 @@
+; Test coverage for post.cc lines 529 (R single-char lookup for real posts)
+
+2024/01/01 Test
+    Expenses:Food                           $50.00
+    (Virtual:Note)                           $5.00
+    Assets:Cash
+
+test reg --format '%(account) %(R)\n'
+Expenses:Food true
+Virtual:Note false
+Assets:Cash true
+end test

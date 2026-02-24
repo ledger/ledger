@@ -1,0 +1,21 @@
+; Test coverage for textual_directives.cc lines 339, 346
+; apply_rate_directive (apply fixed)
+
+apply fixed EUR $1.10
+2024/01/01 Test
+    Expenses:Travel                        100 EUR
+    Assets:Cash
+end apply fixed
+
+2024/02/01 Test2
+    Expenses:Travel                        100 EUR @ $1.20
+    Assets:Cash
+
+test bal --flat
+            $-120.00
+            -100 EUR  Assets:Cash
+             200 EUR  Expenses:Travel
+--------------------
+            $-120.00
+             100 EUR
+end test

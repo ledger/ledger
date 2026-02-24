@@ -1,0 +1,43 @@
+; Wave 3 coverage tests for mask.cc
+; Tests diacritics folding (lines 46-166) and glob patterns (lines 184-213)
+
+; Diacritics test data
+2024/01/01 Café Résumé
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Normal Store
+    Expenses:Clothes    $20.00
+    Assets:Cash
+
+2024/01/03 Ñoño
+    Expenses:Other    $30.00
+    Assets:Cash
+
+; Test --ignore-diacritics matching Café with Cafe (lines 140-166, 173-181)
+; Exercises fold_diacritics, fold_codepoint for é→e, ñ→n
+test reg --ignore-diacritics @Cafe --date-format "%Y/%m/%d"
+2024/01/01 Café Résumé          Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Test --ignore-diacritics matching Résumé with Resume
+; Exercises fold_codepoint for é→e
+test reg --ignore-diacritics @Resume --date-format "%Y/%m/%d"
+2024/01/01 Café Résumé          Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Test --ignore-diacritics matching Ñoño with Nono
+; Exercises fold_codepoint for ñ→n, ñ→n
+test reg --ignore-diacritics @Nono --date-format "%Y/%m/%d"
+2024/01/03 Ñoño                 Expenses:Other               $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+; Test --ignore-diacritics with account matching (non-diacritic)
+test reg --ignore-diacritics Expenses --date-format "%Y/%m/%d"
+2024/01/01 Café Résumé          Expenses:Food                $10.00       $10.00
+2024/01/02 Normal Store         Expenses:Clothes             $20.00       $30.00
+2024/01/03 Ñoño                 Expenses:Other               $30.00       $60.00
+end test

@@ -1,0 +1,21 @@
+; Test coverage for various reporting commands
+; payees and accounts commands
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/02 Hardware Store
+    Expenses:Tools                          $30.00
+    Assets:Cash
+
+test payees
+Grocery Store
+Hardware Store
+end test
+
+test accounts
+Assets:Cash
+Expenses:Food
+Expenses:Tools
+end test

@@ -1,0 +1,85 @@
+; Wave 2 coverage tests for op.cc - eval expressions
+; Covers: O_ADD, O_SUB, O_MUL, O_DIV, O_EQ, O_LT, O_LTE, O_GT, O_GTE,
+;   O_AND, O_OR, O_NOT, O_NEG, O_MATCH, O_QUERY, O_COLON, O_SEQ, O_CONS
+;   calc_add, calc_sub, calc_mul, calc_div, calc_eq, calc_lt, calc_lte,
+;   calc_gt, calc_gte, calc_and, calc_or, calc_not, calc_neg, calc_match,
+;   calc_query, calc_colon, calc_seq
+
+2024/01/01 Test
+    Expenses:Food     $10.00
+    Assets:Cash
+
+; Test eval with addition - covers O_ADD
+test eval "2 + 3"
+5
+end test
+
+; Test eval with subtraction - covers O_SUB
+test eval "10 - 4"
+6
+end test
+
+; Test eval with multiplication - covers O_MUL
+test eval "3 * 7"
+21
+end test
+
+; Test eval with division - covers O_DIV
+test eval "20 / 4"
+5
+end test
+
+; Test eval with greater than - covers O_GT
+test eval "5 > 3"
+1
+end test
+
+; Test eval with less than - covers O_LT
+test eval "5 < 3"
+0
+end test
+
+; Test eval with greater-or-equal - covers O_GTE
+test eval "5 >= 5"
+1
+end test
+
+; Test eval with less-or-equal - covers O_LTE
+test eval "5 <= 5"
+1
+end test
+
+; Test eval with equality - covers O_EQ
+test eval "5 == 5"
+1
+end test
+
+; Test eval with AND - covers O_AND
+test eval "true and false"
+0
+end test
+
+; Test eval with OR - covers O_OR
+test eval "true or false"
+1
+end test
+
+; Test eval with NOT - covers O_NOT
+test eval "not false"
+1
+end test
+
+; Test eval with sequence - covers O_SEQ
+test eval "1; 2"
+2
+end test
+
+; Test eval with ternary - covers O_QUERY + O_COLON
+test eval "true ? 42 : 0"
+42
+end test
+
+; Test eval with ternary (false branch) - covers O_QUERY + O_COLON false path
+test eval "false ? 42 : 99"
+99
+end test

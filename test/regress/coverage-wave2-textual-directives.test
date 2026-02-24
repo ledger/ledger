@@ -1,0 +1,77 @@
+; Tests for textual_directives.cc uncovered lines
+; Covers: nomarket_directive, apply_tag_directive, apply_rate_directive,
+;   apply_year_directive, end_apply_directive, payee_directive,
+;   account_directive, commodity_directive, tag_directive
+
+; Test apply tag directive - covers lines 296-335
+apply tag vacation
+2024/01/01 Hotel
+    Expenses:Travel       $200.00
+    Assets:Cash
+end apply tag
+
+test reg %vacation
+24-Jan-01 Hotel                 Expenses:Travel             $200.00      $200.00
+                                Assets:Cash                $-200.00            0
+end test
+
+; Test apply fixed/rate directive - covers lines 337-348
+apply fixed AAPL $100.00
+2024/01/02 Buy AAPL
+    Assets:Brokerage       10 AAPL
+    Assets:Cash            $-1000.00
+end apply fixed
+
+test bal --market Assets:Brokerage
+            $1000.00  Assets:Brokerage
+end test
+
+; Test apply year directive - covers lines 350-405
+apply year 2023
+2023/06/15 Mid-year
+    Expenses:Misc         $50.00
+    Assets:Cash
+end apply year
+
+test reg --begin 2023/06/01 --end 2023/07/01 Expenses:Misc
+23-Jun-15 Mid-year              Expenses:Misc                $50.00       $50.00
+end test
+
+; Test payee directive with alias - covers lines 513-531
+payee Grocery Store
+    alias Groceries
+
+2024/02/01 Groceries
+    Expenses:Food         $30.00
+    Assets:Cash
+
+test reg @"Grocery Store"
+24-Feb-01 Grocery Store         Expenses:Food                $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+; Test tag directive with check - covers lines 616-636
+tag Project
+    check value =~ /./
+
+2024/02/02 Work
+    ; Project: Alpha
+    Expenses:Work         $100.00
+    Assets:Cash
+
+test reg %Project
+24-Feb-02 Work                  Expenses:Work               $100.00      $100.00
+                                Assets:Cash                $-100.00            0
+end test
+
+; Test account directive with default - covers lines 407-486
+account Expenses:Misc
+    default
+
+2024/02/03 Default test
+    Expenses:Food         $10.00
+
+test reg --begin 2024/02/03 --end 2024/02/04
+24-Feb-03 Default test          Expenses:Food                $10.00       $10.00
+                                Expenses:Misc               $-10.00            0
+end test

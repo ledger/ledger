@@ -1,0 +1,95 @@
+; Tests for account.cc uncovered lines
+; Covers: find_account_re (line 119), add_post (line 162),
+;   partial_name (line 235), get_account (lines 241-260),
+;   account lookups (lines 250-272), valid() (lines 498-525),
+;   children_with_xdata (lines 519-524), children_with_flags (line 538),
+;   account_amount (lines 394-460), various lookup functions (lines 453-496)
+
+; Setup transactions to exercise account operations
+2024/01/01 Test
+    Expenses:Food:Groceries     $50.00
+    Expenses:Food:Restaurant    $25.00
+    Expenses:Auto:Gas           $35.00
+    Assets:Cash
+
+; Test account regex matching - covers account.cc line 119
+test reg Expenses:Food
+24-Jan-01 Test                  Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+24-Jan-02 Virtual               Expense:Food:Groceries       $10.00       $85.00
+end test
+
+; Test partial account name - covers account.cc line 235
+test bal --flat Expenses
+              $35.00  Expenses:Auto:Gas
+              $60.00  Expenses:Food:Groceries
+              $25.00  Expenses:Food:Restaurant
+--------------------
+             $120.00
+end test
+
+; Test account depth display - covers depth-related code
+test bal --depth 1
+            $-120.00  Assets
+             $120.00  Expenses
+              $10.00  Tracking
+--------------------
+              $10.00
+end test
+
+test bal --depth 2
+            $-120.00  Assets:Cash
+             $120.00  Expenses
+              $35.00    Auto
+              $85.00    Food
+              $10.00  Tracking:Total
+--------------------
+              $10.00
+end test
+
+; Test count/subcount of accounts - covers lines 274-280
+test reg --group-by account --subtotal --display "count > 0"
+Assets:Cash
+24-Jan-01 - 24-Jan-02           Assets:Cash                $-120.00     $-120.00
+
+Expenses:Auto:Gas
+24-Jan-01 - 24-Jan-01           Expenses:Auto:Gas            $35.00       $35.00
+
+Expenses:Food:Groceries
+24-Jan-01 - 24-Jan-02           Expense:Food:Groceries       $60.00       $60.00
+
+Expenses:Food:Restaurant
+24-Jan-01 - 24-Jan-01           Expens:Food:Restaurant       $25.00       $25.00
+
+Tracking:Total
+24-Jan-02 - 24-Jan-02           (Tracking:Total)             $10.00       $10.00
+end test
+
+; Test account as scope value - covers line 255-256
+test reg --amount "amount" --display "account =~ /Groceries/" Expenses
+24-Jan-01 Test                  Expense:Food:Groceries       $50.00       $50.00
+24-Jan-02 Virtual               Expense:Food:Groceries       $10.00      $120.00
+end test
+
+; Test is_account function (returns false for postings) - covers account.cc/item.cc
+test reg --limit "!is_account" --head 1
+24-Jan-01 Test                  Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+                                Expenses:Auto:Gas            $35.00      $110.00
+                                Assets:Cash                $-110.00            0
+end test
+
+; Test auto-virtualize and equity - covers account.cc xdata flags
+2024/01/02 Virtual
+    Expenses:Food:Groceries     $10.00
+    (Tracking:Total)            $10.00
+    Assets:Cash
+
+test equity
+2024/01/02 Opening Balances
+    Assets:Cash                             $-120.00
+    Expenses:Auto:Gas                         $35.00
+    Expenses:Food:Groceries                   $60.00
+    Expenses:Food:Restaurant                  $25.00
+    (Tracking:Total)                          $10.00
+end test

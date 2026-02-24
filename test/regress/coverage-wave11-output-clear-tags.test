@@ -1,0 +1,22 @@
+; Test report_tags::clear() via --group-by for output.h coverage
+; Targets output.h lines 186-189 (report_tags::clear)
+; The clear() method is called between groups by post_splitter
+
+2024/01/15 Alpha Store
+    ; Project: HomeFood
+    ; Location: Downtown
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 Beta Shop
+    ; Project: Shopping
+    ; Location: Uptown
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test tags --group-by payee
+Location
+Project
+Location
+Project
+end test

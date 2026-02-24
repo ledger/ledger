@@ -1,0 +1,18 @@
+; Coverage for account.cc lines 453,460: Account 'total' and 'amount' lookups.
+; Also covers 'subcount' path.
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+2024/01/02 Test 2
+    Expenses:Drink                $5.00
+    Assets:Cash
+
+test bal --format "%(account) %(total) %(subcount)\n"
+Assets:Cash $-15.00 2
+Expenses $15.00 0
+Expenses:Drink $5.00 1
+Expenses:Food $10.00 1
+ 0 0
+end test

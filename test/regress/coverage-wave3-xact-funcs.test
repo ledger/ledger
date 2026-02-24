@@ -1,0 +1,227 @@
+; Coverage tests for xact.cc XML output (lines 1017-1032)
+; and hash function (lines 691-729)
+
+2024/01/01 * (ABC) Test Payee
+    ; Note: test note
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 ! Pending Payee
+    Expenses:Transport    $20.00
+    Assets:Cash
+
+; Test xml output - covers put_xact with cleared/pending states, code, notes
+test xml | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ version="VVVVVV"/g'
+<?xml version="1.0" encoding="utf-8"?>
+<ledger version="VVVVVV">
+  <commodities>
+    <commodity flags="P">
+      <symbol>$</symbol>
+    </commodity>
+  </commodities>
+  <accounts>
+    <account id="XXXX">
+      <name/>
+      <fullname/>
+      <account-total>
+        <amount>
+          <commodity flags="P">
+            <symbol>$</symbol>
+          </commodity>
+          <quantity>0</quantity>
+        </amount>
+      </account-total>
+      <account id="XXXX">
+        <name>Assets</name>
+        <fullname>Assets</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>-30</quantity>
+          </amount>
+        </account-total>
+        <account id="XXXX">
+          <name>Cash</name>
+          <fullname>Assets:Cash</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-30</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-30</quantity>
+            </amount>
+          </account-total>
+        </account>
+      </account>
+      <account id="XXXX">
+        <name>Expenses</name>
+        <fullname>Expenses</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>30</quantity>
+          </amount>
+        </account-total>
+        <account id="XXXX">
+          <name>Food</name>
+          <fullname>Expenses:Food</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </account-total>
+        </account>
+        <account id="XXXX">
+          <name>Transport</name>
+          <fullname>Expenses:Transport</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>20</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>20</quantity>
+            </amount>
+          </account-total>
+        </account>
+      </account>
+    </account>
+  </accounts>
+  <transactions>
+    <transaction state="cleared">
+      <date>2024/01/01</date>
+      <code>ABC</code>
+      <payee>Test Payee</payee>
+      <note> Note: test note</note>
+      <metadata>
+        <value key="Note">
+          <string>test note</string>
+        </value>
+      </metadata>
+      <postings>
+        <posting state="cleared">
+          <account ref="XXXX">
+            <name>Expenses:Food</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </total>
+        </posting>
+        <posting state="cleared">
+          <account ref="XXXX">
+            <name>Assets:Cash</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-10</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>0</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction state="pending">
+      <date>2024/01/15</date>
+      <payee>Pending Payee</payee>
+      <postings>
+        <posting state="pending">
+          <account ref="XXXX">
+            <name>Expenses:Transport</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>20</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>20</quantity>
+            </amount>
+          </total>
+        </posting>
+        <posting state="pending">
+          <account ref="XXXX">
+            <name>Assets:Cash</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-20</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>0</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+  </transactions>
+</ledger>
+
+end test

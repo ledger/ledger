@@ -1,0 +1,15 @@
+; Coverage for textual_directives.cc line 520 (payee directive empty line break)
+
+payee Test Payee
+    alias TestP
+
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

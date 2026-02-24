@@ -1,0 +1,25 @@
+; Test custom date format for format_date FMT_CUSTOM cache path
+; Exercises format_date (line 1793) - cached custom format lookup
+; When --date-format is used, format_date is called with FMT_CUSTOM.
+; The first call creates the formatter; subsequent calls use the cache.
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/04/20 Payee B
+    Expenses:Rent    $1000.00
+    Assets:Checking
+
+2024/08/10 Payee C
+    Expenses:Transport    $75.00
+    Assets:Checking
+
+test reg --now 2024/12/15 --period "monthly from 2024/01 to 2024/10" --date-format "%d/%m/%Y"
+01/01/2024 - 31/01/2024         Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+01/04/2024 - 30/04/2024         Assets:Checking           $-1000.00    $-1000.00
+                                Expenses:Rent              $1000.00            0
+01/08/2024 - 31/08/2024         Assets:Checking             $-75.00      $-75.00
+                                Expenses:Transport           $75.00            0
+end test

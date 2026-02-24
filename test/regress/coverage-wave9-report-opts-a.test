@@ -1,0 +1,199 @@
+; Tests for report.cc option handlers
+; Covers various option handler bodies in lookup_option (lines 1039-1305)
+; Targets: --dc, --deviation, --amount-data, --total-data, --count,
+;   --no-total, --no-titles, --average, --immediate, --collapse,
+;   --related, --invert, --subtotal, --sort, --percent, --by-payee,
+;   --quantity, --price, --tail, --head,
+;   --date-format, --flat,
+;   --weekly, --daily, --quarterly, --yearly, --dow,
+;   --sort-all, --sort-xacts, --collapse-if-zero
+
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $195.00
+
+2024/01/01 Buy Stock
+    Assets:Brokerage     10 AAPL {$150.00} [2024/01/01] (tag1)
+    Assets:Cash         $-1500.00
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries     $50.00
+    Expenses:Food:Restaurant    $25.00
+    Assets:Cash
+
+2024/02/01 Gas Station
+    Expenses:Auto:Gas           $35.00
+    Assets:Cash
+
+2024/03/01 Paycheck
+    Assets:Cash                 $3000.00
+    Income:Salary
+
+; Test --dc option
+test reg --dc Expenses
+24-Jan-15 Grocery Store    ..Fo:Groceries       $50.00            0       $50.00
+                           ..o:Restaurant       $25.00            0       $75.00
+24-Feb-01 Gas Station      Expen:Auto:Gas       $35.00            0      $110.00
+end test
+
+; Test --deviation option
+test reg --deviation Expenses
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00            0
+                                Expens:Food:Restaurant       $25.00      $-50.00
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00      $-75.00
+end test
+
+; Test --amount-data option
+test reg --amount-data Expenses
+2024-01-15 50
+2024-01-15 25
+2024-02-01 35
+end test
+
+; Test --total-data option
+test reg --total-data Expenses
+2024-01-15 50
+2024-01-15 75
+2024-02-01 110
+end test
+
+; Test --no-total and --no-titles options
+test bal --no-total --no-titles Expenses
+             $110.00  Expenses
+              $35.00    Auto:Gas
+              $75.00    Food
+              $50.00      Groceries
+              $25.00      Restaurant
+end test
+
+; Test --average option
+test reg --average Expenses
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $37.50
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00       $36.67
+end test
+
+; Test --collapse option
+test reg --collapse Expenses
+24-Jan-15 Grocery Store         <Total>                      $75.00       $75.00
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test --related option
+test reg --related Expenses
+24-Jan-15 Grocery Store         Assets:Cash                 $-75.00      $-75.00
+24-Feb-01 Gas Station           Assets:Cash                 $-35.00     $-110.00
+end test
+
+; Test --invert option
+test reg --invert Expenses
+24-Jan-15 Grocery Store         Expense:Food:Groceries      $-50.00      $-50.00
+                                Expens:Food:Restaurant      $-25.00      $-75.00
+24-Feb-01 Gas Station           Expenses:Auto:Gas           $-35.00     $-110.00
+end test
+
+; Test --subtotal option
+test reg --subtotal Expenses
+24-Jan-15 - 24-Feb-01           Expenses:Auto:Gas            $35.00       $35.00
+                                Expense:Food:Groceries       $50.00       $85.00
+                                Expens:Food:Restaurant       $25.00      $110.00
+end test
+
+; Test --sort option
+test reg --sort amount Expenses
+24-Jan-15 Grocery Store         Expens:Food:Restaurant       $25.00       $25.00
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00       $60.00
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00      $110.00
+end test
+
+; Test --percent option with balance
+test bal --percent Expenses
+             100.00%  Expenses
+             100.00%    Auto:Gas
+              68.18%    Food
+              66.67%      Groceries
+              33.33%      Restaurant
+end test
+
+; Test --by-payee option
+test reg --by-payee Expenses
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00       $35.00
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $85.00
+                                Expens:Food:Restaurant       $25.00      $110.00
+end test
+
+; Test --quantity option
+test reg --quantity Assets:Brokerage
+24-Jan-01 Buy Stock             Assets:Brokerage            10 AAPL      10 AAPL
+end test
+
+; Test --price option
+test reg --price Assets:Brokerage
+24-Jan-01 Buy Stock             Assets:Brokerage           $1500.00     $1500.00
+end test
+
+; Test --tail option
+test reg --tail 1 Expenses
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test --head option
+test reg --head 1 Expenses
+24-Jan-15 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+end test
+
+; Test --date-format option
+test reg --date-format '%Y-%m-%d' Expenses
+2024-01-15 Grocery Store        Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+2024-02-01 Gas Station          Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test --flat option
+test bal --flat Expenses
+              $35.00  Expenses:Auto:Gas
+              $50.00  Expenses:Food:Groceries
+              $25.00  Expenses:Food:Restaurant
+--------------------
+             $110.00
+end test
+
+; Test --daily option
+test reg --daily Expenses
+24-Jan-15 - 24-Jan-15           Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+24-Feb-01 - 24-Feb-01           Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test --weekly option
+test reg --weekly Expenses
+24-Jan-14 - 24-Jan-20           Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+24-Jan-28 - 24-Feb-03           Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test --quarterly option
+test reg --quarterly Expenses
+24-Jan-01 - 24-Mar-31           Expenses:Auto:Gas            $35.00       $35.00
+                                Expense:Food:Groceries       $50.00       $85.00
+                                Expens:Food:Restaurant       $25.00      $110.00
+end test
+
+; Test --yearly option
+test reg --yearly Expenses
+24-Jan-01 - 24-Dec-31           Expenses:Auto:Gas            $35.00       $35.00
+                                Expense:Food:Groceries       $50.00       $85.00
+                                Expens:Food:Restaurant       $25.00      $110.00
+end test
+
+; Test --dow option
+test reg --dow Expenses
+24-Jan-15 Mondays               Expense:Food:Groceries       $50.00       $50.00
+                                Expens:Food:Restaurant       $25.00       $75.00
+24-Feb-01 Thursdays             Expenses:Auto:Gas            $35.00      $110.00
+end test
+
+; Test --collapse-if-zero option
+test bal --collapse-if-zero Expenses
+             $110.00  Expenses
+end test

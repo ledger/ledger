@@ -1,0 +1,24 @@
+; Coverage tests for global.cc lines 353, 368 (PRECOMMAND push/pop lookup)
+; Also covers global.cc line 407 (TRACE_FINISH environment)
+; Also covers global.cc lines 420-426 (normalize_session_options)
+
+2024/01/01 Payee A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Payee B
+    Expenses:Drinks    $5.00
+    Assets:Cash
+
+; Multiple commands exercise the command lookup path in global_scope_t::lookup
+test bal --flat
+             $-15.00  Assets:Cash
+               $5.00  Expenses:Drinks
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test
+
+; Source command exercises the precommand lookup path
+test source $FILE
+end test

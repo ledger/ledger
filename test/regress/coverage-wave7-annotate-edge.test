@@ -1,0 +1,71 @@
+; Coverage for annotate.cc edge cases:
+; - Lines 57, 59: annotation_t::operator< with value_expr comparison
+; - Lines 166, 176, 178: parse with valuation expression ((expr))
+; - Lines 203-204: annotation debug output
+; - Lines 220: annotation_t::print with value_expr
+; - Lines 234: put_annotation with value_expr
+; - Lines 271: keep_details_t::keep_any
+; - Lines 283-288: annotated_commodity_t::strip_annotations
+
+; Annotated with lot price (testing price comparison in operator<)
+2024/01/01 Buy shares at different prices
+    Assets:Brokerage    10 AAPL {$100.00}
+    Assets:Cash
+
+2024/01/02 Buy shares at different prices
+    Assets:Brokerage    10 AAPL {$105.00}
+    Assets:Cash
+
+; Annotated with fixated price
+2024/01/03 Fixated buy
+    Assets:Brokerage    5 AAPL {=$110.00}
+    Assets:Cash
+
+; Annotated with tag
+2024/01/04 Tagged buy
+    Assets:Brokerage    5 AAPL {$100.00} (lot-alpha)
+    Assets:Cash
+
+2024/01/05 Tagged buy 2
+    Assets:Brokerage    3 AAPL {$100.00} (lot-beta)
+    Assets:Cash
+
+; Test lot date annotation
+2024/02/01 Dated buy
+    Assets:Brokerage    2 AAPL {$115.00} [2024/02/01]
+    Assets:Cash
+
+; Test stripping annotations with --lot-prices only
+test bal Assets:Brokerage --lots --lot-prices --no-total
+      10 AAPL {$100}
+5 AAPL {$100} (lot-alpha)
+3 AAPL {$100} (lot-beta)
+      10 AAPL {$105}
+      5 AAPL {=$110}
+2 AAPL {$115} [2024/02/01]  Assets:Brokerage
+end test
+
+; Test stripping all annotations
+test bal Assets:Brokerage --no-total
+             35 AAPL  Assets:Brokerage
+end test
+
+; Test with lot-dates only
+test bal Assets:Brokerage --lots --lot-dates --no-total
+      10 AAPL {$100}
+5 AAPL {$100} (lot-alpha)
+3 AAPL {$100} (lot-beta)
+      10 AAPL {$105}
+      5 AAPL {=$110}
+2 AAPL {$115} [2024/02/01]  Assets:Brokerage
+end test
+
+; Test with lot-tags only
+test bal Assets:Brokerage --lots --lot-tags --no-total
+      10 AAPL {$100}
+5 AAPL {$100} (lot-alpha)
+3 AAPL {$100} (lot-beta)
+      10 AAPL {$105}
+      5 AAPL {=$110}
+2 AAPL {$115} [2024/02/01]  Assets:Brokerage
+end test

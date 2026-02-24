@@ -1,0 +1,13 @@
+; Coverage tests for format.cc lines 434-438 (EXPR is_function branch)
+; Also covers format.cc line 424 (STRING min_width)
+; format functions that return values use the is_function() path
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Custom format exercising justify function (is_function path)
+test reg -F "%(justify(scrub(display_amount), 20, 20, true))\n"
+              $10.00
+             $-10.00
+end test

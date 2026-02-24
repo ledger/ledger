@@ -1,0 +1,42 @@
+; Test error conditions in times.cc period parsing
+; Exercises various error/throw paths:
+;   handle_since_token duplicate (lines 919-920)
+;   handle_until_token duplicate (lines 930-931)
+;   handle_in_token duplicate (lines 941-942)
+;   TOK_DOT unexpected (lines 1637-1638)
+;   TOK_SLASH unexpected (lines 1631-1632)
+;   parse() default unexpected (line 1268)
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; Duplicate "since" should error
+test reg --now 2024/06/15 --period "since 2024/01 since 2024/03" -> 1
+__ERROR__
+Error: Unexpected date period token 'since'
+end test
+
+; Duplicate "until" should error
+test reg --now 2024/06/15 --period "until 2024/03 until 2024/06" -> 1
+__ERROR__
+Error: Unexpected date period token 'until'
+end test
+
+; Duplicate "in" should error
+test reg --now 2024/06/15 --period "in 2024 in 2025" -> 1
+__ERROR__
+Error: Unexpected date period token 'in'
+end test
+
+; Standalone DOT is invalid
+test reg --now 2024/06/15 --period "." -> 1
+__ERROR__
+Error: Unexpected date period token '.'
+end test
+
+; Standalone SLASH is invalid
+test reg --now 2024/06/15 --period "/" -> 1
+__ERROR__
+Error: Unexpected date period token '/'
+end test

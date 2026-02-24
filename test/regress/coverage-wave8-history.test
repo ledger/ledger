@@ -1,0 +1,50 @@
+; Regression test for coverage-wave8: history.cc uncovered lines
+; Lines: 187-188 273 308 335 359-361 363-364 383 460 495-498
+
+commodity $
+commodity EUR
+commodity GBP
+commodity CHF
+
+; Setup price history for multi-hop conversion (lines 383, 460)
+P 2024/01/01 EUR $1.10
+P 2024/01/15 EUR $1.12
+P 2024/02/01 EUR $1.15
+P 2024/01/01 GBP $1.30
+P 2024/01/15 GBP $1.32
+P 2024/02/01 GBP $1.35
+
+; Additional prices for CHF to exercise multi-hop through EUR (line 460)
+P 2024/01/01 CHF 0.95 EUR
+P 2024/02/01 CHF 0.97 EUR
+
+; Transactions with multiple commodities
+2024/01/10 European purchase
+    Expenses:Travel       100 EUR
+    Assets:Cash
+
+2024/01/20 UK purchase
+    Expenses:Travel       50 GBP
+    Assets:Cash
+
+2024/02/15 Swiss purchase
+    Expenses:Travel       200 CHF
+    Assets:Cash
+
+; Test find_price with target (multi-hop dijkstra, lines 383-460)
+test balance Expenses --market --now 2024/02/01
+              $67.50
+             294 EUR  Expenses:Travel
+end test
+
+; Test exchange (exercises find_price with target, lines 335, 359-361, 363-364)
+test balance Expenses --exchange $ --now 2024/02/01
+             $405.60  Expenses:Travel
+end test
+
+; Test commodities listing (exercises print_map, lines 495-498)
+test commodities
+CHF
+EUR
+GBP
+end test

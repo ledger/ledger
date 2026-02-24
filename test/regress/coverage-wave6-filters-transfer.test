@@ -1,0 +1,18 @@
+; Tests for filters.cc transfer_details (lines 1193, 1232, 1306-1308)
+; Covers SET_PAYEE, SET_ACCOUNT, SET_DATE paths
+
+2024/01/01 Grocery
+    Expenses:Food        $100.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Fuel         $50.00
+    Assets:Cash
+
+; === Test 1: --payee (SET_PAYEE path) ===
+test reg --payee "payee + ' (modified)'" --columns 80
+24-Jan-01 Grocery (modified)    Expenses:Food               $100.00      $100.00
+24-Jan-01 Grocery (modified)    Assets:Cash                $-100.00            0
+24-Jan-02 Gas Station (modifi.. Expenses:Fuel                $50.00       $50.00
+24-Jan-02 Gas Station (modifi.. Assets:Cash                 $-50.00            0
+end test

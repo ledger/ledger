@@ -1,0 +1,15 @@
+; Wave 3 coverage tests for mask.cc assign_glob [...] pattern
+; Tests bracket glob (lines 195-199)
+
+; Include using [...] glob pattern (matches data_a and data_b only)
+include glob_includes/data_[ab].dat
+
+; Test that only a and b files are loaded (not c)
+test bal
+             $-30.00  Assets:Cash
+              $30.00  Expenses
+              $20.00    Clothes
+              $10.00    Food
+--------------------
+                   0
+end test

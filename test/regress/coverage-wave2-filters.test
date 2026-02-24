@@ -1,0 +1,74 @@
+; Tests for filters.cc uncovered lines
+; Covers: handle_value (lines 342-376),
+;   changed_value_posts (lines 713-715), subtotal_posts (lines 805-817),
+;   interval_posts (lines 930-931, 975, 1014-1032),
+;   equity filter (line 1108), display filter (lines 1171, 1193)
+
+; Setup data
+2024/01/01 Grocery Store
+    Expenses:Food         $50.00
+    Assets:Cash
+
+2024/01/15 Gas
+    Expenses:Auto:Gas     $35.00
+    Assets:Cash
+
+2024/02/01 Grocery Store
+    Expenses:Food         $55.00
+    Assets:Cash
+
+2024/02/15 Gas
+    Expenses:Auto:Gas     $40.00
+    Assets:Cash
+
+; Test subtotal with interval - covers interval_posts lines 930-931, 1014-1032
+test reg --monthly Expenses
+24-Jan-01 - 24-Jan-31           Expenses:Auto:Gas            $35.00       $35.00
+                                Expenses:Food                $50.00       $85.00
+24-Feb-01 - 24-Feb-29           Expenses:Auto:Gas            $40.00      $125.00
+                                Expenses:Food                $55.00      $180.00
+end test
+
+; Test weekly interval - covers interval_posts
+test reg --weekly Expenses:Food
+23-Dec-31 - 24-Jan-06           Expenses:Food                $50.00       $50.00
+24-Jan-28 - 24-Feb-03           Expenses:Food                $55.00      $105.00
+end test
+
+; Test --display filter - covers lines 1171, 1193
+test reg --display "amount > 40" Expenses
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Feb-01 Grocery Store         Expenses:Food                $55.00      $140.00
+end test
+
+; Test equity command which exercises equity filter - covers line 1108
+test equity
+2024/02/15 Opening Balances
+    Assets:Brokerage                         10 AAPL
+    Assets:Cash                            $-1680.00
+    Expenses:Auto:Gas                         $75.00
+    Expenses:Food                            $105.00
+    Equity:Opening Balances                 $1500.00
+    Equity:Opening Balances                 -10 AAPL
+end test
+
+; Test changed_value_posts with market values - covers lines 713-715, 805-817
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $160.00
+P 2024/03/01 AAPL $170.00
+
+2024/01/01 Buy Stock
+    Assets:Brokerage      10 AAPL
+    Assets:Cash           $-1500.00
+
+test reg --market --monthly -e 2024/04/01 Assets:Brokerage
+24-Jan-01 - 24-Jan-31           Assets:Brokerage           $1500.00     $1500.00
+end test
+
+; Test --collapse flag - covers related filter paths
+test reg --collapse Expenses
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-15 Gas                   Expenses:Auto:Gas            $35.00       $85.00
+24-Feb-01 Grocery Store         Expenses:Food                $55.00      $140.00
+24-Feb-15 Gas                   Expenses:Auto:Gas            $40.00      $180.00
+end test

@@ -1,0 +1,35 @@
+; Coverage tests for filters.cc interval_posts
+; Tests: --weekly, --quarterly, --yearly intervals, --display predicate
+
+2024/01/01 Test1
+    Expenses:Food                    $50.00
+    Assets:Cash
+
+2024/01/08 Test2
+    Expenses:Food                    $30.00
+    Assets:Cash
+
+2024/01/15 Test3
+    Expenses:Food                    $20.00
+    Assets:Cash
+
+; Test --weekly reporting
+test reg --weekly Expenses
+23-Dec-31 - 24-Jan-06           Expenses:Food                $50.00       $50.00
+24-Jan-07 - 24-Jan-13           Expenses:Food                $30.00       $80.00
+24-Jan-14 - 24-Jan-20           Expenses:Food                $20.00      $100.00
+end test
+
+; Test --display predicate filter
+test reg --display 'amount>25' Expenses
+24-Jan-01 Test1                 Expenses:Food                $50.00       $50.00
+24-Jan-08 Test2                 Expenses:Food                $30.00       $80.00
+end test
+
+; Test --depth 1 account truncation
+test bal --depth 1
+            $-100.00  Assets
+             $100.00  Expenses
+--------------------
+                   0
+end test

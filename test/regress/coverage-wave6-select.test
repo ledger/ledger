@@ -1,0 +1,24 @@
+; Coverage tests for select.cc command
+; Targets select.cc uncovered lines
+
+2024/01/01 Payee
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/01 Store
+    Expenses:Dining    $30.00
+    Assets:Checking
+
+; Test basic select command (select.cc line 92+)
+test select date,payee,account,amount from posts
+24-Jan-01 Payee                    Expenses:Food                         $50.00
+24-Jan-01 Payee                    Assets:Cash                          $-50.00
+24-Feb-01 Store                    Expenses:Dining                       $30.00
+24-Feb-01 Store                    Assets:Checking                      $-30.00
+end test
+
+; Test select with where clause (no date column = wider account)
+test select account,amount from posts where account =~ /Expenses/
+Expenses:Food                                                            $50.00
+Expenses:Dining                                                          $30.00
+end test

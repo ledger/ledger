@@ -1,0 +1,66 @@
+; Coverage tests for draft.cc - basic xact command paths
+; Targets lines 59, 80, 120, 133, 138, 142, 266-267, 269, 293, 363, 369
+
+2024/01/01 Grocery Store
+    Expenses:Food            $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas             $30.00
+    Assets:Cash
+
+; Test basic xact (draft) with payee match - triggers line 266 (has_year check)
+test xact --now 2024/01/10 Grocery
+2024/01/10 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test
+
+; Test xact with date - triggers date parsing (lines 100-102, 246-269)
+test xact 2024/03/01 Grocery
+2024/03/01 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test
+
+; Test xact with 'on' keyword - triggers line 133
+test xact --now 2024/01/10 on 2024/06/15 Grocery
+2024/06/15 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test
+
+; Test xact with 'code' keyword - triggers line 138
+test xact --now 2024/01/10 code CHK123 Grocery
+2024/01/10 (CHK123) Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test
+
+; Test xact with 'note' keyword - triggers line 142
+test xact --now 2024/01/10 note "my note" Grocery
+2024/01/10 Grocery Store  ;my note
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test
+
+; Test xact with 'at' keyword - triggers line 120
+test xact --now 2024/01/10 at Grocery
+2024/01/10 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test
+
+; Test xact with 'to' account and amount - triggers line 123
+test xact --now 2024/01/10 Grocery to Expenses:Food '$25'
+2024/01/10 Grocery Store
+    Expenses:Food                             $25.00
+    Assets:Cash
+end test
+
+; Test xact with explicit amount and account - triggers line 172
+test xact --now 2024/01/10 Grocery Expenses:Food '$25'
+2024/01/10 Grocery Store
+    Expenses:Food                             $25.00
+    Assets:Cash
+end test

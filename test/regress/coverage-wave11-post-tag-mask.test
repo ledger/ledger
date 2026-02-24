@@ -1,0 +1,14 @@
+; Coverage for post.cc line 71: Post get_tag with mask.
+; The post inherits tags from the xact when inherit=true.
+; Also covers item.cc has_tag with mask (line 58-65).
+
+2024/01/01 Test
+    ; Category: food
+    Expenses:Food                 $10.00
+      ; Priority: high
+    Assets:Cash
+
+test reg --format "%(has_tag(/Priority/)) %(has_tag(/Category/))\n"
+true true
+false true
+end test

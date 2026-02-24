@@ -1,0 +1,18 @@
+; Coverage tests for textual_directives.cc default_commodity_directive
+; Targets line 98-106 (default_commodity_directive)
+; And price conversion directive line 113-118
+
+D $1,000.00
+
+C 1.00 Kb = 1024 b
+
+2024/01/01 Test
+    Expenses:Food              $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

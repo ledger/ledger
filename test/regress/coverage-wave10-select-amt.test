@@ -1,0 +1,10 @@
+; Coverage: select.cc - select with amount and total only (line 300-329)
+
+2024/01/01 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test select amount, total from posts --columns=80
+      $10.00       $10.00
+     $-10.00            0
+end test

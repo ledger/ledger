@@ -1,0 +1,37 @@
+; Coverage tests for session.cc
+; Tests: strict mode, check_payees, recursive aliases
+
+account Expenses:Food
+account Expenses:Gas
+account Assets:Cash
+
+payee Grocery Store
+payee Gas Station
+
+commodity $
+
+2024/01/01 Grocery Store
+    Expenses:Food                    $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas                     $30.00
+    Assets:Cash
+
+test bal --strict
+             $-80.00  Assets:Cash
+              $80.00  Expenses
+              $50.00    Food
+              $30.00    Gas
+--------------------
+                   0
+end test
+
+test bal --pedantic
+             $-80.00  Assets:Cash
+              $80.00  Expenses
+              $50.00    Food
+              $30.00    Gas
+--------------------
+                   0
+end test

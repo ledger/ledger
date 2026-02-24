@@ -1,0 +1,23 @@
+; Test coverage for textual_directives.cc lines 544-616
+; commodity directive with alias, value, format, nomarket, default, note
+
+commodity EUR
+    alias Euro
+    format 1.000,00 EUR
+    note European currency
+    nomarket
+    default
+
+commodity $
+    format $1,000.00
+
+2024/01/01 Test
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test bal
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

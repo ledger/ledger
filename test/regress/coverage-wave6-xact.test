@@ -1,0 +1,26 @@
+; Coverage tests for xact.cc
+; Targets: period xacts, auto xacts, transaction finalization
+
+; Auto-xact matching
+= /Food/
+    (Budget:Food)    -1
+
+2024/01/01 Grocery
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/01 Restaurant
+    Expenses:Food    $30.00
+    Assets:Cash
+
+; Test auto-xact budget generation
+test reg Budget
+24-Jan-01 Grocery               (Budget:Food)               $-50.00      $-50.00
+24-Feb-01 Restaurant            (Budget:Food)               $-30.00      $-80.00
+end test
+
+; Test regular register
+test reg Expenses
+24-Jan-01 Grocery               Expenses:Food                $50.00       $50.00
+24-Feb-01 Restaurant            Expenses:Food                $30.00       $80.00
+end test

@@ -1,0 +1,15 @@
+; Test session lot_price, lot_date, lot_tag for session.cc coverage
+; Targets session.cc lines 272-292 (fn_lot_price, fn_lot_date, fn_lot_tag)
+; Also targets session.cc lines 366-372 (lookup dispatchers)
+; These functions take amount_t and extract annotation details
+
+2024/01/15 Buy
+    Assets:Stocks    10 AAPL {$150.00} [2024/01/15] (ticker)
+    Assets:Checking    $-1500.00
+
+; lot_price, lot_date, lot_tag are looked up from session scope
+; when called in format expressions they are found through report's own
+; lot functions, but we exercise them through format nonetheless
+test reg --format "%(lot_price(amount)) %(lot_date(amount)) %(lot_tag(amount))\n" Assets:Stocks
+$150.00 2024/01/15 ticker
+end test

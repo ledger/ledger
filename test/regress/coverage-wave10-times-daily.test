@@ -1,0 +1,20 @@
+; Coverage tests for times.cc line 1175 (TOK_DAILY duration)
+; Also covers times.cc line 1268 (handle_period_token)
+
+2024/01/01 Day One
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Day Two
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/01/03 Day Three
+    Expenses:Food    $30.00
+    Assets:Cash
+
+test reg --daily Expenses
+24-Jan-01 - 24-Jan-01           Expenses:Food                $10.00       $10.00
+24-Jan-02 - 24-Jan-02           Expenses:Food                $20.00       $30.00
+24-Jan-03 - 24-Jan-03           Expenses:Food                $30.00       $60.00
+end test

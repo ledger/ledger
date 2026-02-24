@@ -1,0 +1,35 @@
+; Tests for strip, quantity, truncated, averaged_lots functions
+; Covers report.cc lines 583, 638, 689, 724
+
+2024/01/15 Buy Stock
+    Assets:Brokerage    5 AAPL {$100.00} [2024/01/15] (lot1)
+    Assets:Cash         $-500.00
+
+2024/02/01 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Test strip - covers line 638
+test reg --format '%(strip(amount))\n' Assets:Brokerage
+5 AAPL
+end test
+
+; Test quantity - covers line 689
+test reg --format '%(quantity(amount))\n' --head 1 Expenses
+50
+end test
+
+; Test truncated with 2 args - covers line 724
+test reg --format '%(truncated(payee, 5))\n' --head 1 Expenses
+Gro..
+end test
+
+; Test truncated with 3 args - covers line 724 (third arg path)
+test reg --format '%(truncated(payee, 10, 2))\n' --head 1 Expenses
+..ry Store
+end test
+
+; Test averaged_lots with non-balance - covers line 583
+test reg --format '%(averaged_lots(amount))\n' --head 1 Expenses
+$50.00
+end test

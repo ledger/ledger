@@ -1,0 +1,15 @@
+; Coverage for print.cc metadata printing
+
+2024/01/01 Test
+    ; Note: some note value
+    ; :tag1:
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test print
+2024/01/01 Test
+    ; Note: some note value
+    ; :tag1:
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test

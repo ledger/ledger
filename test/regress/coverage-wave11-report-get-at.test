@@ -1,0 +1,18 @@
+; Test fn_get_at for report.cc coverage
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test eval 'get_at(42, 0)'
+42
+end test
+
+test eval 'get_at(42, 1)' -> 1
+__ERROR__
+While evaluating value expression:
+  get_at(42, 1)
+  ^^^^^^^^^^^^^
+While calling function 'get_at (42, 1)':
+Error: Attempting to get argument at index 1 from an amount
+end test

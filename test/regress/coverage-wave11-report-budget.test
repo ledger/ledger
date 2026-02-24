@@ -1,0 +1,21 @@
+; Test budget command for report.cc coverage
+; Targets report.cc lines 1615-1622 (budget command lookup)
+
+~ Monthly
+    Expenses:Food    $200.00
+    Assets:Checking
+
+2024/01/15 Grocery Store
+    Expenses:Food    $180.00
+    Assets:Checking
+
+2024/02/20 Restaurant
+    Expenses:Food    $220.00
+    Assets:Checking
+
+test budget
+    $-400.00    $-5200.00     $4800.00    8%  Assets:Checking
+     $400.00     $5200.00    $-4800.00    8%  Expenses:Food
+------------ ------------ ------------ -----
+           0            0            0     0
+end test

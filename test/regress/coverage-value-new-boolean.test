@@ -1,0 +1,48 @@
+; Coverage tests for value.cc boolean conversion and operator bool()
+; Exercises in_place_cast to BOOLEAN and operator bool() paths
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; operator bool() for different types - exercises lines 82-126
+; Boolean to boolean
+test eval 'to_boolean(true)'
+1
+end test
+
+test eval 'to_boolean(false)'
+0
+end test
+
+; Integer to boolean - exercises line 93
+test eval 'to_boolean(42)'
+1
+end test
+
+test eval 'to_boolean(0)'
+0
+end test
+
+; Amount to boolean - exercises line 95
+test eval 'to_boolean($10.00)'
+1
+end test
+
+test eval 'to_boolean($0.00)'
+0
+end test
+
+; String to boolean - exercises lines 100-101
+test eval 'to_boolean("hello")'
+1
+end test
+
+test eval 'to_boolean("")'
+0
+end test
+
+; Date to boolean - exercises line 91
+test eval 'to_boolean([2024/01/01])'
+1
+end test

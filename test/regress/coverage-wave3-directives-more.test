@@ -1,0 +1,45 @@
+; Test textual_directives.cc: alias, def, assert, check, value, comment,
+; tag, apply fixed, account payee/value/eval directives
+alias Food=Expenses:Food
+
+def my_val = 42
+
+assert 1 == 1
+
+check 1 == 1
+
+value amount * 1
+
+comment
+This is a multi-line comment
+that spans multiple lines
+end comment
+
+tag MyCustomTag
+
+account Expenses:Groceries
+    payee Grocery
+    alias groceries
+    note This is the groceries account
+    default
+    eval 1 + 1
+
+commodity EUR
+    alias Euro
+    nomarket
+    default
+
+apply fixed EUR $1.10
+
+2024/01/15 Grocery Store
+    Food              $25.00
+    Assets:Cash
+
+end apply fixed
+
+test bal
+             $-25.00  Assets:Cash
+              $25.00  Expenses:Food
+--------------------
+                   0
+end test

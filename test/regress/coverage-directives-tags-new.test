@@ -1,0 +1,34 @@
+; Coverage tests for textual_directives.cc
+; Tests: apply tag with :name1:name2: format, bucket directive
+
+; Test bucket directive
+bucket Assets:Cash
+
+2024/01/01 Test A
+    Expenses:Food                    $10.00
+
+2024/01/02 Test B
+    Expenses:Gas                     $20.00
+
+; Test apply tag with multiple colon-separated tags
+apply tag :Project:Region:
+
+2024/01/03 Test C
+    Expenses:Office                  $30.00
+    Assets:Cash
+
+end apply
+
+test bal Expenses
+              $60.00  Expenses
+              $10.00    Food
+              $20.00    Gas
+              $30.00    Office
+--------------------
+              $60.00
+end test
+
+test reg %Project
+24-Jan-03 Test C                Expenses:Office              $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test

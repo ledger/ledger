@@ -1,0 +1,28 @@
+; Wave 2 coverage tests for xact.h period_xact_t
+; Covers: period_xact_t description (lines 188-196)
+
+; Period transaction - covers period_xact_t lines 188-196
+~ Monthly
+    Expenses:Rent             $1200.00
+    Assets:Checking
+
+2024/01/01 Grocery Store
+    Expenses:Food              $25.00
+    Assets:Checking
+
+2024/01/15 Salary
+    Assets:Checking          $1000.00
+    Income:Salary
+
+; Test budget report with period xact
+test bal --budget Expenses:Rent
+           $-1200.00  Expenses:Rent
+end test
+
+; Test unbudgeted with period xact
+test bal --unbudgeted
+              $25.00  Expenses:Food
+           $-1000.00  Income:Salary
+--------------------
+            $-975.00
+end test

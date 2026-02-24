@@ -1,0 +1,20 @@
+; Test coverage for filters.cc calc_posts average handling
+; --average computes running average
+
+2024/01/01 First
+    Expenses:Food                           $30.00
+    Assets:Cash
+
+2024/01/02 Second
+    Expenses:Food                           $60.00
+    Assets:Cash
+
+2024/01/03 Third
+    Expenses:Food                           $90.00
+    Assets:Cash
+
+test reg --average Expenses
+24-Jan-01 First                 Expenses:Food                $30.00       $30.00
+24-Jan-02 Second                Expenses:Food                $60.00       $45.00
+24-Jan-03 Third                 Expenses:Food                $90.00       $60.00
+end test

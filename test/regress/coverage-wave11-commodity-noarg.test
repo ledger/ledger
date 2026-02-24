@@ -1,0 +1,10 @@
+; Coverage for textual_directives.cc commodity directive with sub-directive requiring arg
+
+commodity $
+    alias
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+Error: Commodity directive 'alias' requires an argument
+end test

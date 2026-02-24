@@ -1,0 +1,12 @@
+; Coverage for account.cc line 459: Account 'note' lookup.
+
+account Expenses:Food
+    note This is the food account
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+test bal --format "%(account) %(note)\n" Expenses
+Expenses:Food This is the food account
+end test

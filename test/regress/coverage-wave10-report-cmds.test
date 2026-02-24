@@ -1,0 +1,34 @@
+; Tests for command lookups: accounts, commodities, tags, payees
+; Covers report.cc lines 1603, 1637, 1673, 1690, 1695
+
+2024/01/15 Grocery Store
+    ; Category: food
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/20 Gas Station
+    Expenses:Auto    $30.00
+    Assets:Cash
+
+; Test accounts command - covers line 1603
+test accounts
+Assets:Cash
+Expenses:Auto
+Expenses:Food
+end test
+
+; Test commodities command - covers line 1637
+test commodities
+$
+end test
+
+; Test payees command - covers line 1673
+test payees
+Gas Station
+Grocery Store
+end test
+
+; Test tags command - covers line 1695
+test tags
+Category
+end test

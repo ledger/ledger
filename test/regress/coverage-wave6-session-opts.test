@@ -1,0 +1,33 @@
+; Coverage tests for session.cc
+; Tests: uncovered option lookup branches and function paths
+; Covers: -Z price_exp (line 300-301), fn_account NULL_VALUE (line 255),
+;   MAKE_OPT_FUNCTOR (line 397), lookup 'l' break (line 373)
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+; Test -Z (price_exp) option - covers lookup_option 'Z' branch (line 300-301)
+test bal -Z 24 Expenses
+              $10.00  Expenses:Food
+end test
+
+; Test --value-expr option - covers session.cc line 124-125
+test bal --value-expr "amount" Expenses
+              $10.00  Expenses:Food
+end test
+
+; Test --time-colon option - covers session.cc line 347
+test bal --time-colon Expenses
+              $10.00  Expenses:Food
+end test
+
+; Test --getquote option - covers session.cc line 317 (getquote_ option)
+test bal --getquote /dev/null Expenses
+              $10.00  Expenses:Food
+end test
+
+; Test --hashes option - covers session.cc line 320
+test bal Expenses --hashes sha512
+              $10.00  Expenses:Food
+end test

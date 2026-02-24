@@ -1,0 +1,16 @@
+; Coverage for post.cc lines 363,383: post fn_any and fn_all.
+; These use the post_t lookup for "any" and "all" functions.
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    Expenses:Drink                $5.00
+    Assets:Cash
+
+test reg --display "any(amount > 0)"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Expenses:Drink                $5.00       $15.00
+                                Assets:Cash                 $-15.00            0
+end test
+
+test reg --display "all(account =~ /Expenses/)"
+end test

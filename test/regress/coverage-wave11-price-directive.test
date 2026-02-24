@@ -1,0 +1,18 @@
+; Coverage for textual_directives.cc line 124 (price_xact_directive)
+; Also covers history.cc lines for price conversion
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/15 AAPL $155.00
+P 2024/02/01 AAPL $160.00
+
+2024/01/01 Buy Stock
+    Assets:Broker    10 AAPL @ $150.00
+    Assets:Cash    $-1500.00
+
+test bal -V -X $ --now 2024/02/01
+             $100.00  Assets
+            $1600.00    Broker
+           $-1500.00    Cash
+--------------------
+             $100.00
+end test

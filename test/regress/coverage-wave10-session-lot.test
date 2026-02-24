@@ -1,0 +1,18 @@
+; Coverage: session.cc - fn_lot_tag (line 373), fn_lot_price (line 272),
+;                        fn_lot_date (line 279)
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (mytag)
+    Assets:Cash
+
+test reg Assets:Brokerage --format "%(lot_tag(amount))\n" --columns=80
+mytag
+end test
+
+test reg Assets:Brokerage --format "%(lot_price(amount))\n" --columns=80
+$150
+end test
+
+test reg Assets:Brokerage --format "%(lot_date(amount))\n" --columns=80
+2024/01/01
+end test

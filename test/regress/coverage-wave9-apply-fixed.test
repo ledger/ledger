@@ -1,0 +1,17 @@
+; Test coverage for textual_directives.cc lines 337-348
+; apply fixed/rate directive
+
+apply fixed EUR $1.10
+
+2024/01/01 European Purchase
+    Expenses:Food                          100 EUR
+    Assets:Cash
+
+end apply fixed
+
+test bal --lot-prices
+   -100 EUR {=$1.10}  Assets:Cash
+    100 EUR {=$1.10}  Expenses:Food
+--------------------
+                   0
+end test

@@ -1,0 +1,48 @@
+; Coverage tests for amount.cc operations
+; Tests precision, rounding, truncation, floor, ceiling, invert
+
+2024/01/01 Test
+    Expenses:Food    $10.567
+    Assets:Cash
+
+; Floor amount - exercises in_place_floor (line 581+)
+test eval 'floor($10.567)'
+$10.000
+end test
+
+; Ceiling amount - exercises in_place_ceiling (line 653+)
+test eval 'ceiling($10.567)'
+$11.000
+end test
+
+; Unround amount - exercises in_place_unround (lines 693-702)
+test eval 'unround($10.567)'
+$10.567
+end test
+
+; Amount division - exercises division paths
+test eval '$10.00 / $5.00'
+$2.00
+end test
+
+test eval '$10 / 3'
+$3
+end test
+
+; Negate amount - exercises in_place_negate (lines 560-566)
+test eval -- '-$10.00'
+$-10.00
+end test
+
+; Amount sign check
+test eval '$10.00 > 0'
+1
+end test
+
+test eval '$-5.00 > 0'
+0
+end test
+
+test eval '$-5.00 < 0'
+1
+end test

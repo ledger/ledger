@@ -1,0 +1,130 @@
+; Tests for account.cc lookup paths (lines 392-496)
+; Covers: account_base, depth, depth_spacer, depth_parent,
+;   partial_account, is_account, subcount, is_index,
+;   count (N), total (O), l (depth alias), note,
+;   use_direct_amount, earliest, latest, any, all
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries     $50.00
+    Expenses:Food:Restaurant    $25.00
+    Assets:Cash
+
+2024/02/01 Gas Station
+    Expenses:Auto:Gas           $35.00
+    Assets:Cash
+
+; Test account_base lookup - covers account.cc line 403
+test bal --format '%(account_base)\n' --flat Expenses
+Gas
+Groceries
+Restaurant
+
+end test
+
+; Test depth lookup - covers account.cc line 421
+test bal --format '%(depth)\n' --flat Expenses
+3
+3
+3
+0
+end test
+
+; Test depth_spacer lookup - covers account.cc line 425
+test bal --format '>%(depth_spacer)<\n' --flat Expenses
+>  <
+>    <
+>    <
+><
+end test
+
+; Test partial_account lookup - covers account.cc line 464
+test bal --format '%(partial_account(true))\n' --flat Expenses
+Expenses:Auto:Gas
+Expenses:Food:Groceries
+Expenses:Food:Restaurant
+
+end test
+
+; Test is_account lookup - covers account.cc line 437
+test bal --format '%(is_account)\n' --flat Expenses
+true
+true
+true
+true
+end test
+
+; Test subcount (and is_index) lookup - covers account.cc line 439, 471
+test bal --format '%(subcount) %(is_index)\n' --flat Expenses
+1 1
+1 1
+1 1
+0 0
+end test
+
+; Test N (count) lookup - covers account.cc line 485-486
+test bal --format '%(N)\n' --flat Expenses
+1
+1
+1
+5
+end test
+
+; Test O (total) lookup - covers account.cc line 490-491
+test bal --format '%(O)\n' --flat Expenses
+$35.00
+$50.00
+$25.00
+$110.00
+end test
+
+; Test l (depth alias) lookup - covers account.cc line 443-444
+test bal --format '%(l)\n' --flat Expenses
+3
+3
+3
+0
+end test
+
+; Test depth_parent lookup - covers account.cc line 423
+test bal --format '%(depth_parent)\n' --flat Expenses
+1
+2
+2
+0
+end test
+
+; Test use_direct_amount lookup - covers account.cc line 481
+test bal --format '%(use_direct_amount)\n' --flat Expenses
+false
+false
+false
+false
+end test
+
+; Test note lookup - covers account.cc line 459
+test bal --format '>%(note)<\n' --flat Expenses
+><
+><
+><
+><
+end test
+
+; Test earliest lookup - covers account.cc line 430
+test bal --format '%(earliest)\n' --flat Expenses:Auto:Gas
+2024/02/01
+end test
+
+; Test latest lookup - covers account.cc line 448
+test bal --format '%(latest)\n' --flat Expenses:Auto:Gas
+2024/02/01
+end test
+
+; Test any function - covers account.cc line 407
+test bal --format '%(any(amount > 0))\n' --flat Expenses:Auto:Gas
+true
+end test
+
+; Test all function - covers account.cc line 409
+test bal --format '%(all(amount > 0))\n' --flat Expenses:Auto:Gas
+true
+end test

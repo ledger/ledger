@@ -1,0 +1,62 @@
+; Coverage tests for select.cc
+; Targets: select_command (55-173, 266, 322)
+; Tests various FROM, WHERE, COLLECT, GROUP BY clauses
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Payee2
+    Expenses:Drinks    $5.00
+    Assets:Cash
+
+test --columns=80 select date,payee,account,amount,total from posts
+24-Jan-01 Payee                Expenses:Food                $10.00       $10.00
+24-Jan-01 Payee                Assets:Cash                 $-10.00            0
+24-Feb-01 Payee2               Expenses:Drinks               $5.00        $5.00
+24-Feb-01 Payee2               Assets:Cash                  $-5.00            0
+end test
+
+test --columns=80 select date,payee,account,amount from xacts
+2024/01/01 Payee
+    Expenses:Food                             $10.00
+    Assets:Cash
+
+2024/02/01 Payee2
+    Expenses:Drinks                            $5.00
+    Assets:Cash
+end test
+
+test --columns=80 select account,amount from accounts
+Assets:Cash      $-15.00
+Expenses            0
+Drinks        $5.00
+Food       $10.00
+            0
+end test
+
+test --columns=80 select date,amount from postings
+24-Jan-01       $10.00
+24-Jan-01      $-10.00
+24-Feb-01        $5.00
+24-Feb-01       $-5.00
+end test
+
+test --columns=80 select amount collect amount from posts
+      $10.00
+     $-10.00
+       $5.00
+      $-5.00
+end test
+
+test --columns=80 select account,amount from posts group by account
+Assets:Cash
+Assets:Cash                                                             $-10.00
+Assets:Cash                                                              $-5.00
+
+Expenses:Drinks
+Expenses:Drinks                                                           $5.00
+
+Expenses:Food
+Expenses:Food                                                            $10.00
+end test

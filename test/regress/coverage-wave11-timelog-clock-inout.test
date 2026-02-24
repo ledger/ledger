@@ -1,0 +1,15 @@
+; Coverage for timelog.cc multiple clock-in/out pairs and completed
+
+I 2024/01/01 09:00:00 Work:ProjectA  Paid hourly work
+O 2024/01/01 12:00:00  Morning done
+
+i 2024/01/01 13:00:00 Work:ProjectB
+o 2024/01/01 15:30:00
+
+test bal
+               5.50h  Work
+               3.00h    ProjectA
+               2.50h    ProjectB
+--------------------
+               5.50h
+end test

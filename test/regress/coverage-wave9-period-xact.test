@@ -1,0 +1,18 @@
+; Test coverage for textual_xacts.cc lines 248-290
+; Period transaction directive and budget filtering
+
+~ Monthly
+    Expenses:Food                          $500.00
+    Assets:Cash
+
+2024/01/15 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/02/10 Grocery Store
+    Expenses:Food                           $75.00
+    Assets:Cash
+
+test bal --budget -b 2024/01/01 -e 2024/03/01 Expenses
+            $-875.00  Expenses:Food
+end test

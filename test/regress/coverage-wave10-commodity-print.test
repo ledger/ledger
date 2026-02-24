@@ -1,0 +1,21 @@
+; Coverage tests for commodity.cc lines 177-178, 183, 192 (exceeds_leeway/download)
+; Also covers commodity.cc line 78 (map_prices with current time)
+; Also covers commodity.cc lines 88-91 (find_price_from_expr debug)
+
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $175.00
+
+2024/01/01 Buy Stock
+    Assets:Stock    10 AAPL
+    Assets:Cash    $-1500.00
+
+; Test market value with price database
+test bal --market --now 2024/06/15 Assets:Stock
+            $1750.00  Assets:Stock
+end test
+
+; Test pricesdb output
+test pricesdb
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/06/01 00:00:00 AAPL $175.00
+end test

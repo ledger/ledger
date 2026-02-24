@@ -1,0 +1,13 @@
+; Coverage for xact.cc lines 234-236: finalization edge case where a post
+; has a user-specified cost (not POST_COST_CALCULATED) while two commodities
+; are in play. The saw_cost flag triggers and skips the auto cost calculation.
+
+2024/01/01 Buy stock
+    Assets:Brokerage              10 AAPL @ $15.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Buy stock             Assets:Brokerage            10 AAPL      10 AAPL
+                                Assets:Cash                   $-150        $-150
+                                                                         10 AAPL
+end test

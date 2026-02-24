@@ -1,0 +1,59 @@
+; Coverage tests for report.cc functions (lines 896-976, 1417-1554)
+; Tests: lot_date, lot_price, lot_tag, to_* conversion functions
+
+; Test lot_date, lot_price, lot_tag via expressions
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/01] (lot1) @ $150.00
+    Assets:Cash    $-1500.00
+
+2024/02/01 Buy More
+    Assets:Brokerage    5 AAPL {$160.00} [2024/02/01] (lot2) @ $160.00
+    Assets:Cash    $-800.00
+
+; Test lot_date function
+test reg --format "%(lot_date(amount))\n" Assets:Brokerage
+2024/01/01
+2024/02/01
+end test
+
+; Test lot_price function
+test reg --format "%(lot_price(amount))\n" Assets:Brokerage
+$150.00
+$160.00
+end test
+
+; Test lot_tag function
+test reg --format "%(lot_tag(amount))\n" Assets:Brokerage
+lot1
+lot2
+end test
+
+; Test to_string
+test reg --format "%(to_string(account))\n" Assets:Brokerage
+Assets:Brokerage
+Assets:Brokerage
+end test
+
+; Test to_int
+test reg --format "%(to_int(quantity(amount)))\n" Assets:Brokerage
+10
+5
+end test
+
+; Test to_boolean
+test reg --format "%(to_boolean(amount) ? 'yes' : 'no')\n" Assets:Brokerage
+yes
+yes
+end test
+
+; Test to_date
+test reg --format "%(to_date(date))\n" --limit "account =~ /Brokerage/"
+2024/01/01
+2024/02/01
+end test
+
+; Test get_at with index 0 non-sequence (line 616-618)
+test reg --format "%(get_at(amount, 0))\n" Assets:Brokerage
+10 AAPL {$150.00} [2024/01/01] (lot1)
+5 AAPL {$160.00} [2024/02/01] (lot2)
+end test

@@ -1,0 +1,46 @@
+; Additional coverage tests for textual_directives.cc
+; Tests: apply year, apply fixed, value directive, check, assert,
+;        comment block, define
+
+; Test apply year directive
+apply year 2024
+
+2024/06/01 Test Store
+    Expenses:Food                    $10.00
+    Assets:Cash
+
+end apply year
+
+; Test define directive
+define my_amount = 100
+
+; Test check and assert directives
+check 1 == 1
+
+assert 2 + 2 == 4
+
+; Test comment block
+comment
+This is a multi-line
+comment block that should
+be completely ignored
+end comment
+
+; Test fixated rate
+apply fixed EUR $1.10
+
+2024/07/01 Euro Purchase
+    Expenses:Travel                  100 EUR
+    Assets:Cash
+
+end apply fixed
+
+test bal Expenses
+              $10.00
+             100 EUR  Expenses
+              $10.00    Food
+             100 EUR    Travel
+--------------------
+              $10.00
+             100 EUR
+end test

@@ -1,0 +1,27 @@
+; Coverage tests for select.cc
+; Tests: select with various column combinations
+
+2024/01/01 Grocery Store
+    Expenses:Food                    $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas                     $30.00
+    Assets:Cash
+
+; Test select from accounts
+test select account,total from accounts
+Assets:Cash      $-80.00
+Expenses       $80.00
+Food       $50.00
+Gas       $30.00
+            0
+end test
+
+; Test select with payee and amount columns
+test select payee,amount --columns 80
+Grocery Store                                                            $50.00
+Grocery Store                                                           $-50.00
+Gas Station                                                              $30.00
+Gas Station                                                             $-30.00
+end test

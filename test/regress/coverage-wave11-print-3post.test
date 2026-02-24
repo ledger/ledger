@@ -1,0 +1,13 @@
+; Coverage for print.cc - three posts to test non-elided amounts
+
+2024/01/01 Split Transaction
+    Expenses:Food    $10.00
+    Expenses:Drinks    $5.00
+    Assets:Cash
+
+test print
+2024/01/01 Split Transaction
+    Expenses:Food                             $10.00
+    Expenses:Drinks                            $5.00
+    Assets:Cash
+end test

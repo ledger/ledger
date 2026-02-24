@@ -1,0 +1,11 @@
+; Coverage for print.cc - two posts with different commodities (no elision)
+
+2024/01/01 Multi Currency
+    Expenses:Food    100 EUR
+    Assets:Cash    $-110.00
+
+test print
+2024/01/01 Multi Currency
+    Expenses:Food                            100 EUR
+    Assets:Cash                             $-110.00
+end test

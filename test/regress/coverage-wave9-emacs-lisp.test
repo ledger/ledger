@@ -1,0 +1,20 @@
+; Tests for emacs/lisp output format
+; Covers: format_emacs_posts (report.cc lines 1649-1650, 1657-1658)
+
+2024/01/15 Test
+    Expenses:Food     $50.00
+    Assets:Cash
+
+; Test emacs command - covers report.cc line 1649-1650
+test emacs
+(("$FILE" 4 (26020 51680 0) nil "Test"
+  (5 "Expenses:Food" "$50.00" nil)
+  (6 "Assets:Cash" "$-50.00" nil)))
+end test
+
+; Test lisp command (alias for emacs) - covers report.cc line 1657-1658
+test lisp
+(("$FILE" 4 (26020 51680 0) nil "Test"
+  (5 "Expenses:Food" "$50.00" nil)
+  (6 "Assets:Cash" "$-50.00" nil)))
+end test

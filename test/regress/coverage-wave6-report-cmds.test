@@ -1,0 +1,71 @@
+; Coverage tests for report.cc command dispatch paths
+; Targets report.cc lines: 1601, 1615-1622, 1629-1631, 1635, 1641, 1644-1646,
+;   1650, 1658, 1663, 1665, 1667, 1671, 1677, 1685, 1693, 1700
+
+; Journal with cleared/pending/uncleared transactions and tags
+2024/01/01 * Grocery Store
+    ; Memo: shopping
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/15 ! Restaurant
+    Expenses:Dining    $30.00
+    Assets:Checking
+
+2024/02/01 * Gas Station
+    Expenses:Transport    $40.00
+    Assets:Cash
+
+; Test 'accounts' command (line 1601)
+test accounts
+Assets:Cash
+Assets:Checking
+Expenses:Dining
+Expenses:Food
+Expenses:Transport
+end test
+
+; Test 'commodities' command (line 1635)
+test commodities
+$
+end test
+
+; Test 'payees' command (line 1671)
+test payees
+Gas Station
+Grocery Store
+Restaurant
+end test
+
+; Test 'tags' command (line 1693)
+test tags
+Memo
+end test
+
+; Test 'cleared' command (line 1629-1631)
+test cleared
+        $-120.00             $-90.00                 Assets
+         $-90.00             $-90.00    24-Feb-01      Cash
+         $-30.00                   0                   Checking
+         $120.00              $90.00                 Expenses
+          $30.00                   0                   Dining
+          $50.00              $50.00    24-Jan-01      Food
+          $40.00              $40.00    24-Feb-01      Transport
+----------------    ----------------    ---------
+               0                   0             
+end test
+
+; Test 'equity' command (line 1644-1646)
+test equity
+2024/02/01 Opening Balances
+    Assets:Cash                              $-90.00
+    Assets:Checking                          $-30.00
+    Expenses:Dining                           $30.00
+    Expenses:Food                             $50.00
+    Expenses:Transport                        $40.00
+end test
+
+; Test 'echo' command (line 1652)
+test echo hello
+hello
+end test

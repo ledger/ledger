@@ -1,0 +1,21 @@
+; Coverage tests for textual_directives.cc general_directive paths
+; Targets various branches in the switch statement (lines 728-850)
+
+; Test 'Y' directive (year) - line 834-838
+Y 2024
+
+; Test 'A' directive (default account) - line 108-111
+A Assets:Cash
+
+01/01 Test
+    Expenses:Food              $10.00
+
+; Test 'def' directive (alias for define) - line 781
+def savings_rate=0.05
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

@@ -1,0 +1,10 @@
+; Coverage wave 11: format.cc curly brace format
+; Targets lines 361, 364-376, 379-380
+
+2020/01/15 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%D %-20P %(display_amount)\n" Expenses
+2020/01/15 Grocery Store        $10.00
+end test

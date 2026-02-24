@@ -1,0 +1,47 @@
+; Coverage tests for xact.cc finalize paths
+; Tests: two-commodity auto-cost (lines 220-275), fixated prices (280-319),
+;        virtual null posts (454-467), fn_any/fn_all (608-630),
+;        xact code/magnitude lookups (588-606, 633-662)
+
+; Test two-commodity auto-cost inference (lines 220-274)
+2024/01/01 Currency Exchange
+    Assets:EUR    100 EUR
+    Assets:USD    $-110.00
+
+test reg Assets:EUR
+24-Jan-01 Currency Exchange     Assets:EUR                  100 EUR      100 EUR
+end test
+
+; Test fn_any and fn_all via query expressions (lines 608-630)
+2024/02/01 * Multi-post
+    Expenses:Food    $50.00
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+; Test any() function
+test reg --limit "any(account =~ /Food/)" --format "%(payee)\n"
+Multi-post
+Multi-post
+Multi-post
+Coded Purchase
+Coded Purchase
+end test
+
+; Test all() function
+test reg --limit "all(amount > 0)" --format "%(payee)\n"
+end test
+
+; Test xact code (line 592-597) and magnitude (line 588-590)
+2024/03/01 (CODE123) Coded Purchase
+    Expenses:Food    $25.00
+    Assets:Cash
+
+test reg --format "%(code)\n" Expenses --limit "code"
+CODE123
+end test
+
+; Test payee lookup (line 599-601)
+test reg --format "%(payee)\n" --limit "payee =~ /Coded/"
+Coded Purchase
+Coded Purchase
+end test

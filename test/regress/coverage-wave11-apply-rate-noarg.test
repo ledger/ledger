@@ -1,0 +1,9 @@
+; Coverage for textual_directives.cc line 339 (apply fixed/rate without arg)
+
+apply fixed
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+Error: Directive 'apply fixed' requires an argument
+end test

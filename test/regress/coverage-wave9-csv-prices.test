@@ -1,0 +1,18 @@
+; Test coverage for various output commands
+; csv output and prices command
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $160.00
+
+2024/01/01 Stock Buy
+    Assets:Brokerage                        10 AAPL @ $150.00
+    Assets:Cash
+
+test csv Brokerage
+"2024/01/01","","Stock Buy","Assets:Brokerage","AAPL","10","",""
+end test
+
+test prices AAPL
+2024/01/01 AAPL          $150.00
+2024/02/01 AAPL          $160.00
+end test

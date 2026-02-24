@@ -1,0 +1,53 @@
+; Tests for report.cc precommand and error paths
+; Covers: eval_command (1712-1713), template_command (1740-1741),
+;   single-char error paths: 'i' (1336), 'A' (1338),
+;   'V'/'v' (1340-1342), 'I'/'B' (1344-1346), 'G'/'g' (1348-1350)
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries     $50.00
+    Assets:Cash
+
+; Test eval precommand - covers report.cc line 1712-1713
+test eval 2 + 3
+5
+end test
+
+; Test deprecated single-char 'i' error - covers report.cc line 1336
+test reg --format '%(i)\n' Expenses -> 1
+__ERROR__
+While handling posting from "$FILE", line 7:
+>     Expenses:Food:Groceries     $50.00
+Error: The i value expression variable is no longer supported
+end test
+
+; Test deprecated single-char 'A' error - covers report.cc line 1338
+test reg --format '%(A)\n' Expenses -> 1
+__ERROR__
+While handling posting from "$FILE", line 7:
+>     Expenses:Food:Groceries     $50.00
+Error: The A value expression variable is no longer supported
+end test
+
+; Test deprecated single-char 'V' error - covers report.cc lines 1340-1342
+test reg --format '%(V)\n' Expenses -> 1
+__ERROR__
+While handling posting from "$FILE", line 7:
+>     Expenses:Food:Groceries     $50.00
+Error: The V and v value expression variables are no longer supported
+end test
+
+; Test deprecated single-char 'B' error - covers report.cc lines 1344-1346
+test reg --format '%(B)\n' Expenses -> 1
+__ERROR__
+While handling posting from "$FILE", line 7:
+>     Expenses:Food:Groceries     $50.00
+Error: The I and B value expression variables are no longer supported
+end test
+
+; Test deprecated single-char 'G' error - covers report.cc lines 1348-1350
+test reg --format '%(G)\n' Expenses -> 1
+__ERROR__
+While handling posting from "$FILE", line 7:
+>     Expenses:Food:Groceries     $50.00
+Error: The G and g value expression variables are no longer supported
+end test

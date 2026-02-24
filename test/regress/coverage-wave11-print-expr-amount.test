@@ -1,0 +1,11 @@
+; Coverage for print.cc lines for expression amounts
+
+2024/01/01 Expression Amount
+    Expenses:Food    ($5.00 + $3.00)
+    Assets:Cash
+
+test print
+2024/01/01 Expression Amount
+    Expenses:Food                       ($5.00 + $3.00)
+    Assets:Cash
+end test

@@ -1,0 +1,25 @@
+; Test format_accounts::clear() via --group-by for output.h coverage
+; Targets output.h lines 117-124 (format_accounts::clear)
+; The clear() method is called between groups by post_splitter
+
+2024/01/15 Alpha Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 Beta Shop
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test bal --group-by payee
+Alpha Store
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+
+Beta Shop
+             $-30.00  Assets:Checking
+              $30.00  Expenses:Food
+--------------------
+                   0
+end test

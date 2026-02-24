@@ -1,0 +1,53 @@
+; Coverage tests for more report.cc command dispatch paths
+; Targets: lines 1663, 1665, 1667, 1669, 1677, 1685, 1689, 1698-1700
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Cash    $-1500.00
+
+2024/02/01 Buy More
+    Assets:Brokerage    5 AAPL @ $160.00
+    Assets:Cash    $-800.00
+
+; Test 'prices' command (line 1665)
+test prices
+2024/01/01 AAPL          $150.00
+2024/02/01 AAPL          $160.00
+end test
+
+; Test 'pricesdb' command (line 1667)
+test pricesdb
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/02/01 00:00:00 AAPL $160.00
+end test
+
+; Test 'pricemap' command (line 1669)
+test pricemap
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="AAPL"];
+6[label="$"];
+5--6 ;
+}
+end test
+
+; Test 'print' command (line 1663)
+test print Assets:Cash
+2024/01/01 Buy Stock
+    Assets:Brokerage                         10 AAPL @ $150.00
+    Assets:Cash                            $-1500.00
+
+2024/02/01 Buy More
+    Assets:Brokerage                          5 AAPL @ $160.00
+    Assets:Cash                             $-800.00
+end test
+
+; Test 'register' command (line 1677)
+test register Assets:Cash
+24-Jan-01 Buy Stock             Assets:Cash               $-1500.00    $-1500.00
+24-Feb-01 Buy More              Assets:Cash                $-800.00    $-2300.00
+end test

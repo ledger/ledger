@@ -1,0 +1,13 @@
+; Test coverage for filters.cc lines 705-760
+; --gain report with price changes (changed_value_posts)
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $160.00
+
+2024/01/01 Buy Stock
+    Assets:Brokerage                        10 AAPL @ $150.00
+    Assets:Cash
+
+test reg --gain -b 2024/01/01 -e 2024/03/01
+24-Feb-01 Commodities revalued  <Revalued>                  $100.00      $100.00
+end test

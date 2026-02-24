@@ -1,0 +1,48 @@
+; Wave 2 coverage tests for iterators.cc
+; Covers: sorted_accounts_iterator (lines 196-198, 223-225),
+; posts_commodities_iterator (lines 108, 109, 131, 138)
+
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.12
+P 2024/01/01 GBP $1.30
+
+2024/01/01 Buy EUR
+    Assets:EUR              100 EUR @ $1.10
+    Assets:Cash
+
+2024/01/02 Buy GBP
+    Assets:GBP               50 GBP @ $1.30
+    Assets:Cash
+
+2024/01/15 Grocery
+    Expenses:Food              $25.00
+    Assets:Cash
+
+2024/02/01 More Food
+    Expenses:Food              $30.00
+    Assets:Cash
+
+; Test sorted accounts with sort expression - covers sorted_accounts_iterator
+test bal --sort amount --flat
+            $-230.00  Assets:Cash
+              $55.00  Expenses:Food
+             100 EUR  Assets:EUR
+              50 GBP  Assets:GBP
+--------------------
+            $-175.00
+             100 EUR
+              50 GBP
+end test
+
+; Test commodities command - covers posts_commodities_iterator
+test commodities
+$
+EUR
+GBP
+end test
+
+; Test prices command - covers price iteration in history
+test prices EUR
+2024/01/01 EUR             $1.10
+2024/02/01 EUR             $1.12
+end test

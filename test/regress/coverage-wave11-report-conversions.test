@@ -1,0 +1,29 @@
+; Test conversion functions for report.cc coverage
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test eval 'to_boolean(1)'
+1
+end test
+
+test eval 'to_int(42)'
+42
+end test
+
+test eval 'to_string(42)'
+42
+end test
+
+test eval 'to_amount($50)'
+$50
+end test
+
+test eval 'to_balance($50)'
+$50
+end test
+
+test eval 'to_sequence($50)'
+($50)
+end test

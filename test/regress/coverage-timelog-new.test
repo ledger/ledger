@@ -1,0 +1,21 @@
+; Coverage tests for timelog.cc
+; Tests: clock-in/clock-out time tracking
+
+i 2024/01/01 09:00:00 Project:Work
+o 2024/01/01 17:00:00
+
+i 2024/01/02 10:00:00 Project:Meeting
+o 2024/01/02 11:30:00
+
+test bal
+               9.50h  Project
+               1.50h    Meeting
+               8.00h    Work
+--------------------
+               9.50h
+end test
+
+test reg
+24-Jan-01                       Project:Work                  8.00h        8.00h
+24-Jan-02                       Project:Meeting               1.50h        9.50h
+end test

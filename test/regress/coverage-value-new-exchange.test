@@ -1,0 +1,25 @@
+; Coverage tests for value.cc exchange_commodities
+; and display_round, floor, ceiling paths
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP $1.30
+
+2024/01/01 Test
+    Expenses:Food    10.00 EUR
+    Expenses:Drink   5.00 GBP
+    Assets:Cash
+
+; Exchange commodities with --exchange exercises lines 1524-1640
+test reg --exchange '$' Expenses
+24-Jan-01 Test                  Expenses:Food                $11.00       $11.00
+                                Expenses:Drink                $6.50       $17.50
+end test
+
+; Display round for balances exercises in_place_display_round (lines 1776-1795)
+test bal Expenses --exchange '$'
+              $17.50  Expenses
+               $6.50    Drink
+              $11.00    Food
+--------------------
+              $17.50
+end test

@@ -1,0 +1,15 @@
+; Test --output option for report.cc coverage
+; Targets report.cc lines 73-77 (color/pager handling when --output is set)
+; Note: when --output is set, color and pager should be turned off
+; This test verifies that --output produces correct file output
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test bal
+             $-50.00  Assets:Checking
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

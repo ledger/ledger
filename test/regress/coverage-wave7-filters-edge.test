@@ -1,0 +1,47 @@
+; Coverage for filters.cc edge cases:
+; - Lines 217: display_filter_posts with annotation
+; - Lines 266-274: anonymize_posts
+; - Lines 342-376: changed_value_posts
+; - Lines 713-715: output_revaluation exception
+; - Lines 805-831: output_intermediate_prices
+; - Lines 865: output_intermediate_prices default
+; - Lines 930-975: changed_value_posts operator()
+; - Lines 1014-1032: interval_posts special handling
+
+; Set up price history for revaluation
+P 2024/01/01 00:00:00 AAPL $100.00
+P 2024/02/01 00:00:00 AAPL $110.00
+P 2024/03/01 00:00:00 AAPL $120.00
+P 2024/04/01 00:00:00 AAPL $115.00
+
+2024/01/15 Buy stock
+    Assets:Brokerage    10 AAPL {$100.00}
+    Assets:Cash         $-1000.00
+
+2024/04/15 Sell stock
+    Assets:Cash         $1150.00
+    Assets:Brokerage    -10 AAPL {$100.00} @ $115.00
+    Income:Gains
+
+; Test revaluation output (covers changed_value_posts, output_intermediate_prices)
+test reg Assets:Brokerage --market -V
+24-Jan-15 Buy stock             Assets:Brokerage           $1000.00     $1000.00
+24-Feb-01 Commodities revalued  <Revalued>                  $100.00     $1100.00
+24-Mar-01 Commodities revalued  <Revalued>                  $100.00     $1200.00
+24-Apr-01 Commodities revalued  <Revalued>                  $-50.00     $1150.00
+24-Apr-15 Sell stock            Assets:Brokerage          $-1150.00            0
+end test
+
+; Test interval posts with --monthly (empty result is fine)
+test reg Expenses --monthly
+end test
+
+; Test with --gain report (covers changed_value_posts gain path)
+test reg Assets:Brokerage --gain
+24-Feb-01 Commodities revalued  <Revalued>                  $100.00      $100.00
+24-Mar-01 Commodities revalued  <Revalued>                  $100.00      $200.00
+24-Apr-01 Commodities revalued  <Revalued>                  $-50.00      $150.00
+24-Apr-15 Sell stock            <Adjustment>                    150
+                                                           $-150.00          150
+                                Assets:Brokerage           $-150.00            0
+end test

@@ -1,0 +1,23 @@
+; Test coverage for textual_directives.cc lines 296-335
+; apply tag directive with various formats
+
+apply tag :Project:
+
+2024/01/01 Test1
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+end apply tag
+
+apply tag Category: Groceries
+
+2024/01/02 Test2
+    Expenses:Drink                           $5.00
+    Assets:Cash
+
+end apply tag
+
+test reg --format '%(has_tag("Project")) %(has_tag("Category")) %(payee)\n' Expenses
+true false Test1
+false true Test2
+end test

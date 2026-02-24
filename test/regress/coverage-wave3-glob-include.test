@@ -1,0 +1,27 @@
+; Wave 3 coverage tests for mask.cc assign_glob (lines 184-213)
+; Tests glob pattern conversion: ?, *, [...]
+; Uses include directive with glob patterns
+
+include glob_includes/data_*.dat
+
+; Test that all included files are loaded (verifying * glob works)
+test bal
+             $-60.00  Assets:Cash
+              $60.00  Expenses
+              $20.00    Clothes
+              $10.00    Food
+              $30.00    Other
+--------------------
+                   0
+end test
+
+; Verify specific payees from both included files
+test reg @"Glob Test A" --date-format "%Y/%m/%d"
+2024/01/01 Glob Test A          Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg @"Glob Test B" --date-format "%Y/%m/%d"
+2024/01/02 Glob Test B          Expenses:Clothes             $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

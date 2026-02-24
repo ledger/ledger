@@ -1,0 +1,15 @@
+; Test coverage for xact.cc lines 234-236
+; Two commodities, no null post, and a posting has an explicit cost
+; This exercises the saw_cost=true path (lines 234-236)
+
+2024/01/01 Buy Euros
+    Assets:Euro                            100 EUR @ $1.10
+    Assets:Cash
+
+test bal --flat
+               $-110  Assets:Cash
+             100 EUR  Assets:Euro
+--------------------
+               $-110
+             100 EUR
+end test

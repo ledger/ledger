@@ -1,0 +1,88 @@
+; Coverage tests for report.cc advanced commands and filters
+; Targets: report.cc equity/pivot/group-by/inject/related/display/only/pricemap
+;          filters.h: post_splitter, transfer_details, related_posts, inject_posts, sort_xacts
+
+2024/01/15 Grocery Store
+    ; MyTag: food
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Electric Company
+    ; Utility: power
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+2024/02/15 Grocery Store
+    ; MyTag: food
+    Expenses:Food    $45.00
+    Assets:Checking
+
+P 2024/01/01 $ 0.80 EUR
+P 2024/02/01 $ 0.82 EUR
+
+; Test equity command (report.cc equity_command, line 1644-1646)
+test equity
+2024/02/15 Opening Balances
+    Assets:Checking                         $-215.00
+    Expenses:Food                             $95.00
+    Expenses:Utilities                       $120.00
+end test
+
+; Test --pivot option (filters.h transfer_details SET_ACCOUNT)
+test reg --pivot MyTag Expenses:Food
+24-Jan-15 Grocery Store         MyT:food:Expenses:Food       $50.00       $50.00
+24-Feb-15 Grocery Store         MyT:food:Expenses:Food       $45.00       $95.00
+end test
+
+; Test --group-by option (filters.h post_splitter)
+test reg --group-by 'payee' Expenses
+Electric Company
+24-Jan-20 Electric Company      Expenses:Utilities          $120.00      $120.00
+
+Grocery Store
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Feb-15 Grocery Store         Expenses:Food                $45.00       $95.00
+end test
+
+; Test --related option (filters.h related_posts)
+test reg --related Expenses:Food
+24-Jan-15 Grocery Store         Assets:Checking             $-50.00      $-50.00
+24-Feb-15 Grocery Store         Assets:Checking             $-45.00      $-95.00
+end test
+
+; Test --sort-xacts option (filters.h sort_xacts)
+test reg --sort-xacts '-amount' Expenses
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-20 Electric Company      Expenses:Utilities          $120.00      $170.00
+24-Feb-15 Grocery Store         Expenses:Food                $45.00      $215.00
+end test
+
+; Test --display filter (filters.h filter_posts display)
+test reg --display 'amount>$50' Expenses
+24-Jan-20 Electric Company      Expenses:Utilities          $120.00      $170.00
+end test
+
+; Test --only filter (filters.h filter_posts only)
+test reg --only 'amount>$50' Expenses
+24-Jan-20 Electric Company      Expenses:Utilities          $120.00      $120.00
+end test
+
+; Test pricemap command (report.cc pricemap_command, line 1042-1043)
+test pricemap
+graph G {
+0[label=""];
+1[label="s"];
+2[label="%"];
+3[label="m"];
+4[label="h"];
+5[label="$"];
+6[label="EUR"];
+5--6 ;
+}
+end test
+
+; Test pricedb command
+test pricedb
+P 2024/01/01 00:00:00 $ EUR0.80
+P 2024/02/01 00:00:00 $ EUR0.82
+end test

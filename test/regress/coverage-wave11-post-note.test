@@ -1,0 +1,15 @@
+; Coverage for post.cc get_note: line 171-183.
+; Tests both the case where a post has a note and the xact has a note,
+; so they get concatenated.
+
+2024/01/01 Test
+    ; Transaction note
+    Expenses:Food                 $10.00
+      ; Post note
+    Assets:Cash
+
+test reg --format "%(note)\n"
+ Post note
+ Transaction note
+ Transaction note
+end test

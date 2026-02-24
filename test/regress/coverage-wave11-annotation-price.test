@@ -1,0 +1,15 @@
+; Coverage for annotate.cc lines 166,176-178,203-204,234,271,283-288
+; Tests various annotation types: price, date, tag, value_expr
+
+2024/01/01 Buy with lot date and tag
+    Assets:Broker    10 AAPL {$150.00} [2024/01/01] (lot1)
+    Assets:Cash    $-1500.00
+
+2024/01/02 Buy with fixated price
+    Assets:Broker    5 AAPL {=$155.00}
+    Assets:Cash    $-775.00
+
+test bal --lots Assets:Broker
+10 AAPL {$150.00} [2024/01/01] (lot1)
+   5 AAPL {=$155.00}  Assets:Broker
+end test

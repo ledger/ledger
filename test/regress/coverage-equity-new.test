@@ -1,0 +1,17 @@
+; Coverage tests for filters.cc posts_as_equity
+; Tests: equity command
+
+2024/01/01 Opening
+    Assets:Checking                 $1000.00
+    Equity:Opening
+
+2024/01/02 Grocery
+    Expenses:Food                    $50.00
+    Assets:Checking
+
+test equity
+2024/01/02 Opening Balances
+    Assets:Checking                          $950.00
+    Equity:Opening                         $-1000.00
+    Expenses:Food                             $50.00
+end test

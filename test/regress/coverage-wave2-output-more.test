@@ -1,0 +1,47 @@
+; Additional output coverage tests
+; Covers: csv output (csv.cc), --no-total, --head/--tail,
+;   --date-format option
+
+2024/01/01 Grocery Store
+    Expenses:Food              $10.00
+    Assets:Cash
+
+2024/01/15 Gas Station
+    Expenses:Transport         $20.00
+    Assets:Cash
+
+2024/02/01 Electric Company
+    Expenses:Utilities         $30.00
+    Assets:Cash
+
+; Test --no-total flag with --flat
+test bal --no-total --flat Expenses
+              $10.00  Expenses:Food
+              $20.00  Expenses:Transport
+              $30.00  Expenses:Utilities
+end test
+
+; Test --head limit
+test reg --head 2 Expenses
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+24-Jan-15 Gas Station           Expenses:Transport           $20.00       $30.00
+end test
+
+; Test --tail limit
+test reg --tail 1 Expenses
+24-Feb-01 Electric Company      Expenses:Utilities           $30.00       $60.00
+end test
+
+; Test csv output format
+test csv Expenses
+"2024/01/01","","Grocery Store","Expenses:Food","$","10","",""
+"2024/01/15","","Gas Station","Expenses:Transport","$","20","",""
+"2024/02/01","","Electric Company","Expenses:Utilities","$","30","",""
+end test
+
+; Test --date-format option
+test reg --date-format "%Y-%m-%d" Expenses
+2024-01-01 Grocery Store        Expenses:Food                $10.00       $10.00
+2024-01-15 Gas Station          Expenses:Transport           $20.00       $30.00
+2024-02-01 Electric Company     Expenses:Utilities           $30.00       $60.00
+end test

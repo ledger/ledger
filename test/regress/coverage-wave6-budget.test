@@ -1,0 +1,39 @@
+; Coverage tests for report.cc budget command
+; Targets report.cc lines 1615-1622
+
+~ Monthly
+    Expenses:Food    $200.00
+    Expenses:Transport    $100.00
+    Assets:Cash
+
+2024/01/01 Grocery
+    Expenses:Food    $150.00
+    Assets:Cash
+
+2024/01/15 Gas
+    Expenses:Transport    $80.00
+    Assets:Cash
+
+2024/02/01 Restaurant
+    Expenses:Food    $250.00
+    Assets:Cash
+
+; Test 'budget' command (lines 1615-1622)
+test budget
+    $-480.00    $-7800.00     $7320.00    6%  Assets:Cash
+     $480.00     $7800.00    $-7320.00    6%  Expenses
+     $400.00     $5200.00    $-4800.00    8%    Food
+      $80.00     $2600.00    $-2520.00    3%    Transport
+------------ ------------ ------------ -----
+           0            0            0     0
+end test
+
+; Test 'budget' with --add-budget (lines 1114)
+test budget --add-budget
+    $-480.00    $-7800.00     $7320.00    6%  Assets:Cash
+     $480.00     $7800.00    $-7320.00    6%  Expenses
+     $400.00     $5200.00    $-4800.00    8%    Food
+      $80.00     $2600.00    $-2520.00    3%    Transport
+------------ ------------ ------------ -----
+           0            0            0     0
+end test

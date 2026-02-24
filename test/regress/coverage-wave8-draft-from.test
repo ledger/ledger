@@ -1,0 +1,28 @@
+; Coverage tests for draft.cc - from keyword, unmatched payee, rest keyword
+; Targets lines 293 (unmatched payee), 147-155 (cost parsing),
+; 451-452 (negative cost check), 456 (@ cost operator), 460-465 (@@ cost)
+
+2024/01/01 Grocery Store
+    Expenses:Food            $50.00
+    Assets:Cash
+
+; Test xact with 'from' keyword - triggers line 123, 130
+test xact --now 2024/01/10 Grocery '$25' from Assets:Cash
+2024/01/10 Grocery Store
+    Expenses:Food                             $25.00
+    Assets:Cash
+end test
+
+; Test xact with unmatched payee - triggers line 293 (payee from template)
+test xact --now 2024/01/10 "Brand New Payee" Expenses:Food '$10' Assets:Cash
+2024/01/10 Brand New Payee
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test
+
+; Test xact with 'rest' keyword - triggers line 144
+test xact --now 2024/01/10 Grocery rest '$25'
+2024/01/10 Grocery Store
+    Expenses:Food                             $25.00
+    Assets:Cash
+end test

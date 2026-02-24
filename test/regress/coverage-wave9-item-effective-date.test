@@ -1,0 +1,11 @@
+; Test coverage for item.cc lines 143-176
+; Effective date in note brackets [=date] and [date=date]
+
+2024/01/01 Test Payee
+    Expenses:Food                           $50.00
+    ; [=2024/01/15]
+    Assets:Cash
+
+test reg --effective Expenses
+24-Jan-15 Test Payee            Expenses:Food                $50.00       $50.00
+end test

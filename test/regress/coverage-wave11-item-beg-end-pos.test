@@ -1,0 +1,11 @@
+; Coverage for item.cc lines 306,313,320: pathname/filebase/filepath lookups.
+; Also lines 323-337: beg_pos, beg_line, end_pos, end_line.
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+test reg --format "%(beg_line) %(end_line)\n"
+5 5
+6 6
+end test

@@ -1,0 +1,60 @@
+; Test draft.cc parse_args and template output (lines 49-155)
+2024/01/15 * (1001) Grocery Store
+    Expenses:Food              $25.00
+    Assets:Cash
+
+test template "Grocery" '$50' to "Assets:Cash"
+--- Input arguments ---
+("Grocery", "$50", "to", "Assets:Cash")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Grocery
+
+[Posting "to"]
+  Account mask: <use first of last related accounts>
+  Amount:       $50
+
+[Posting "from"]
+  Account mask: Assets:Cash
+end test
+
+test template "Grocery" code "1234" note "TestNote"
+--- Input arguments ---
+("Grocery", "code", "1234", "note", "TestNote")
+
+--- Transaction template ---
+Date:       <today>
+Code:       1234
+Note:       TestNote
+Payee mask: Grocery
+
+<Posting copied from last related transaction>
+end test
+
+test template at "Grocery" '$100' from "Assets:Cash"
+--- Input arguments ---
+("at", "Grocery", "$100", "from", "Assets:Cash")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Grocery
+
+[Posting "to"]
+  Account mask: <use first of last related accounts>
+  Amount:       $100
+
+[Posting "from"]
+  Account mask: Assets:Cash
+end test
+
+test template "Grocery" on "2024/03/01"
+--- Input arguments ---
+("Grocery", "on", "2024/03/01")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Grocery
+
+<Posting copied from last related transaction>
+end test

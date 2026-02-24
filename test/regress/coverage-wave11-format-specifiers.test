@@ -1,0 +1,11 @@
+; Coverage wave 11: format.cc format specifiers
+; Targets lines 361, 364-366, 369-372, 375-376, 379-380
+
+2020/01/15 Grocery Store
+    ; Tag: Value1
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --format "%D %P %a %t %T %N\n" Expenses
+2020/01/15 Grocery Store Expenses:Food $10.00 $10.00  Tag: Value1
+end test

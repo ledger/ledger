@@ -1,0 +1,24 @@
+; Coverage tests for filters.cc inject_posts (line 1510-1534)
+; Covers: inject_posts xact-level tag fallback (lines 1515-1517)
+; The existing coverage-filter-inject.test covers post-level tag injection.
+; This test covers xact-level tag injection and the "inject once per xact" set.
+
+2024/01/01 Grocery
+    ; Rebate: $10.00
+    Expenses:Food    $100.00
+    Assets:Cash
+
+2024/01/02 Gas
+    ; Rebate: $5.00
+    Expenses:Fuel    $50.00
+    Assets:Cash
+
+; Test 1: Inject from xact-level tag (no post-level tag present)
+test reg --inject Rebate --columns 80
+24-Jan-01 Grocery               Rebate                       $10.00       $10.00
+24-Jan-01 Grocery               Expenses:Food               $100.00      $110.00
+                                Assets:Cash                $-100.00       $10.00
+24-Jan-02 Gas                   Rebate                        $5.00       $15.00
+24-Jan-02 Gas                   Expenses:Fuel                $50.00       $65.00
+                                Assets:Cash                 $-50.00       $15.00
+end test

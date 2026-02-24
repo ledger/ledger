@@ -1,0 +1,23 @@
+; Coverage tests for draft.cc template command
+; Targets lines 363, 369 (xact_template_t::dump)
+
+2024/01/01 Grocery Store
+    Expenses:Food            $50.00
+    Assets:Cash
+
+; Test template command with multiple args - triggers dump paths
+test template Grocery Expenses:Food '$25'
+--- Input arguments ---
+("Grocery", "Expenses:Food", "$25")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Grocery
+
+[Posting "to"]
+  Account mask: Expenses:Food
+  Amount:       $25
+
+[Posting "from"]
+  Account mask: <use last of last related accounts>
+end test

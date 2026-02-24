@@ -1,0 +1,39 @@
+; Coverage tests for account.cc uncovered lookup functions
+; Covers: find_account_re (119), operator<< (232-235),
+; get_partial_name (238-241), get_amount (266-268),
+; get_total (270-272), latest_cleared (445-446)
+
+2024/01/01 * Grocery
+    ; :food:
+    Expenses:Food:Produce    $50.00
+    Assets:Cash
+
+2024/01/02 * More
+    Expenses:Food:Produce    $30.00
+    Expenses:Food:Dairy      $20.00
+    Assets:Cash
+
+; Test 1: Account amount (line 266-268)
+test bal Expenses --format "%(amount) %(account)\n" --flat --no-total
+$20.00 Expenses:Food:Dairy
+$80.00 Expenses:Food:Produce
+end test
+
+; Test 2: Account total (line 270-272)
+test bal Expenses --format "%(total) %(account)\n" --no-total
+$100.00 Expenses:Food
+$20.00 Expenses:Food:Dairy
+$80.00 Expenses:Food:Produce
+end test
+
+; Test 3: Latest cleared (line 445-446)
+test bal Expenses:Food:Produce --format "%(latest_cleared)\n" --flat --no-total
+2024/01/02
+end test
+
+; Test 4: Subcount via n (line 456-457)
+test bal Expenses --format "%(n) %(account)\n" --no-total
+0 Expenses:Food
+1 Expenses:Food:Dairy
+2 Expenses:Food:Produce
+end test

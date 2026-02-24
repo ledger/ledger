@@ -1,0 +1,27 @@
+; Coverage tests for filters.cc interval_posts (lines 993-1016)
+; Covers: report_subtotal, operator(), flush with sorted posts
+
+2024/01/05 Week1
+    Expenses:Food    $100.00
+    Assets:Cash
+
+2024/01/15 Week2
+    Expenses:Food    $200.00
+    Assets:Cash
+
+2024/02/01 Month2
+    Expenses:Food    $150.00
+    Assets:Cash
+
+; Test 1: Monthly subtotals
+test reg Expenses --monthly --columns 80
+24-Jan-01 - 24-Jan-31           Expenses:Food               $300.00      $300.00
+24-Feb-01 - 24-Feb-29           Expenses:Food               $150.00      $450.00
+end test
+
+; Test 2: Weekly subtotals
+test reg Expenses --weekly --columns 80
+23-Dec-31 - 24-Jan-06           Expenses:Food               $100.00      $100.00
+24-Jan-14 - 24-Jan-20           Expenses:Food               $200.00      $300.00
+24-Jan-28 - 24-Feb-03           Expenses:Food               $150.00      $450.00
+end test

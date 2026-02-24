@@ -1,0 +1,19 @@
+; Test coverage for filters.cc lines 89-170
+; --invert and --tail/-n options exercise truncate and invert filters
+
+2024/01/01 First
+    Expenses:Food                           $10.00
+    Assets:Cash
+
+2024/01/02 Second
+    Expenses:Food                           $20.00
+    Assets:Cash
+
+2024/01/03 Third
+    Expenses:Food                           $30.00
+    Assets:Cash
+
+test reg --invert --tail 2 Expenses
+24-Jan-02 Second                Expenses:Food               $-20.00      $-30.00
+24-Jan-03 Third                 Expenses:Food               $-30.00      $-60.00
+end test

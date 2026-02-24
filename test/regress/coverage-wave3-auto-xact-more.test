@@ -1,0 +1,25 @@
+; Test xact.cc/textual_xacts.cc: auto xact with note, assert, check
+; account assert/check directives
+= /Food/
+    ; Auto-xact note
+    assert 1 == 1
+    check 1 == 1
+    (Budget:Food)            -1
+
+account Expenses:Food
+    assert amount >= 0
+    check amount >= 0
+
+2024/01/15 Grocery Store  ;inline xact note
+    Expenses:Food              $25.00
+    Assets:Cash
+
+test reg Budget
+24-Jan-15 Grocery Store         (Budget:Food)               $-25.00      $-25.00
+end test
+
+test print
+2024/01/15 Grocery Store  ;inline xact note
+    Expenses:Food                             $25.00  ; Auto-xact note
+    Assets:Cash
+end test

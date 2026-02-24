@@ -1,0 +1,34 @@
+; Coverage tests for xact.cc - balanced-virtual null posting paths
+; Targets lines 454-470 (virtual_null_post with is_amount and is_balance)
+
+; Balanced-virtual posting with null amount triggers lines 462-463
+2024/01/03 Virtual Balance
+    Expenses:Food            $10.00
+    Assets:Cash             -$10.00
+    [Budget:Food]            $10.00
+    [Budget:Savings]
+
+; Multi-commodity balanced-virtual null post triggers lines 460-461
+2024/01/04 Multi Commodity Virtual
+    Expenses:Travel         100 EUR
+    Assets:Cash            -100 EUR
+    [Budget:EUR]            100 EUR
+    [Budget:USD]             50 USD
+    [Budget:Offset]
+
+test bal Budget
+                   0  Budget
+             100 EUR    EUR
+              $10.00    Food
+            -100 EUR
+             -50 USD    Offset
+             $-10.00    Savings
+              50 USD    USD
+--------------------
+                   0
+end test
+
+test bal Budget:Offset
+            -100 EUR
+             -50 USD  Budget:Offset
+end test

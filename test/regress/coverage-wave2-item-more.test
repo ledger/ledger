@@ -1,0 +1,31 @@
+; Additional coverage tests for item.cc
+; Covers: aux_date (lines 239-243), parse_tags with date brackets (lines 143-158),
+;   get_tag with value mask (lines 85-97), append_note (lines 204-213),
+;   has_tag with 2 args (lines 259-261)
+
+2024/01/01 Test A
+    ; Category: food
+    ; Priority: high
+    Expenses:Food              $10.00
+    Assets:Cash
+
+2024/01/02=2024/01/05 Test B
+    Expenses:Transport         $20.00
+    Assets:Cash
+
+; Test aux_date (effective date) - covers item.cc lines 239-243
+test reg --aux-date Expenses
+24-Jan-01 Test A                Expenses:Food                $10.00       $10.00
+24-Jan-05 Test B                Expenses:Transport           $20.00       $30.00
+end test
+
+; Test has_tag with value mask - covers item.cc line 261
+test reg --limit "has_tag(/Category/, /food/)"
+24-Jan-01 Test A                Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Test tag() function with specific string - covers item.cc lines 72-83
+test reg --amount "tag(\"Category\")" --limit "has_tag(\"Category\")" Expenses
+24-Jan-01 Test A                Expenses:Food                  food         food
+end test

@@ -1,0 +1,15 @@
+; Test coverage for textual_xacts.cc lines 60-80
+; Automated xact directive with single-quoted pattern
+
+= 'Food'
+    Expenses:Tax                              0.10
+    Assets:Tax                               -0.10
+
+2024/01/15 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test reg Tax
+24-Jan-15 Grocery Store         Expenses:Tax                  $5.00        $5.00
+                                Assets:Tax                   $-5.00            0
+end test

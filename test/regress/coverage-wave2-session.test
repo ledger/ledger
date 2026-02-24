@@ -1,0 +1,68 @@
+; Tests for session.cc uncovered lines
+; Covers: fn_min/fn_max (lines 258-263), fn_int/fn_str (lines 265-270),
+;   fn_lot_price/lot_date/lot_tag (lines 272-292), lookup_option (lines 294-397)
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+; Test min/max functions - covers session.cc lines 258-263
+test reg --amount "min(amount, 5)" Expenses
+24-Jan-01 Test                  Expenses:Food                     5            5
+end test
+
+test reg --amount "max(amount, 15)" Expenses
+24-Jan-01 Test                  Expenses:Food                    15           15
+end test
+
+; Test int() function - covers session.cc line 265
+test reg --amount "int(amount)" Expenses
+24-Jan-01 Test                  Expenses:Food                    10           10
+end test
+
+; Test str() function - covers session.cc line 268
+test reg --amount "str(amount)" Expenses
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+end test
+
+; Test lot_price, lot_date, lot_tag - covers session.cc lines 272-292
+2024/01/02 Buy
+    Assets:Broker           10 AAPL {$150.00} [2024/01/02] (lot1)
+    Assets:Cash            $-1500.00
+
+test reg --amount "lot_price(amount)" Assets:Broker
+24-Jan-02 Buy                   Assets:Broker               $150.00      $150.00
+end test
+
+test reg --amount "lot_date(amount)" Assets:Broker
+24-Jan-02 Buy                   Assets:Broker            2024/01/02   2024/01/02
+end test
+
+test reg --amount "lot_tag(amount)" Assets:Broker
+24-Jan-02 Buy                   Assets:Broker                  lot1         lot1
+end test
+
+; Test display filter with account expression
+test reg --amount "amount" --display "account =~ /Expenses/"
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+end test
+
+; Test day-break option - covers session.cc line 103-104
+test bal --day-break Assets:Cash
+           $-1510.00  Assets:Cash
+end test
+
+; Test recursive-aliases option - covers session.cc lines 106-107
+test bal --recursive-aliases Assets:Cash
+           $-1510.00  Assets:Cash
+end test
+
+; Test no-aliases option - covers session.cc line 108-109
+test bal --no-aliases Assets:Cash
+           $-1510.00  Assets:Cash
+end test
+
+; Test permissive option - covers session.cc line 117-118
+test bal --permissive Assets:Cash
+           $-1510.00  Assets:Cash
+end test

@@ -1,0 +1,55 @@
+; Coverage tests for amount.cc and value.cc annotation paths
+; Tests annotate, has_annotation, strip_annotations, price calculations
+
+; Lot price annotation - exercises amount.cc annotate (lines 889-913)
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Cash
+
+; Per-unit price annotation
+2024/01/02 Buy More
+    Assets:Brokerage    5 AAPL @ $155.00
+    Assets:Cash
+
+; Lot price with curly brace notation
+2024/01/03 Buy Commodity
+    Assets:Metals    1 GOLD {$2000.00}
+    Assets:Cash
+
+; Fixed cost annotation
+2024/01/04 Exchange
+    Assets:EUR    100 EUR @@ $110.00
+    Assets:Cash
+
+; Register with lots exercises annotation and has_annotation paths
+test reg --lots Assets:Brokerage
+24-Jan-01 Buy Stock             Assets:Brokerage       10 AAPL {$150} [2024/01/01] 10 AAPL {$150} [2024/01/01]
+24-Jan-02 Buy More              Assets:Brokerage       5 AAPL {$155} [2024/01/02] 10 AAPL {$150} [2024/01/01]
+                                                      5 AAPL {$155} [2024/01/02]
+end test
+
+; Balance with lots
+test bal --lots Assets:Brokerage
+10 AAPL {$150} [2024/01/01]
+5 AAPL {$155} [2024/01/02]  Assets:Brokerage
+end test
+
+; Stripping annotations exercises strip_annotations (lines 937-944)
+test bal Assets:Brokerage
+             15 AAPL  Assets:Brokerage
+end test
+
+; Cost basis exercises amount price() path (lines 813-821)
+test bal --cost Assets:Brokerage
+               $2275  Assets:Brokerage
+end test
+
+; Balance with lot prices for metals
+test bal --lots Assets:Metals
+      1 GOLD {$2000}  Assets:Metals
+end test
+
+; Total cost annotation
+test bal --lots Assets:EUR
+100 EUR {$1.1} [2024/01/04]  Assets:EUR
+end test

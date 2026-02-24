@@ -1,0 +1,159 @@
+; Tests for report.cc function lookups and implementations
+; Covers: fn_lot_date, fn_lot_price, fn_lot_tag (lines 912-937),
+;   fn_to_boolean, fn_to_int, fn_to_date, fn_to_amount, fn_to_string,
+;   fn_to_mask, fn_to_balance (lines 939-976),
+;   fn_ceiling, fn_floor, fn_round, fn_roundto, fn_abs (lines 698-717),
+;   fn_unround (line 711), fn_commodity (line 838),
+;   fn_clear_commodity (line 858), fn_top_amount (line), fn_is_seq (line),
+;   fn_truncated, fn_justify (lines 719-738),
+;   fn_quoted, fn_quoted_rfc, fn_join (lines 740-783)
+
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $195.00
+
+2024/01/01 Buy Stock
+    Assets:Brokerage     10 AAPL {$150.00} [2024/01/01] (tag1)
+    Assets:Cash         $-1500.00
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries     $50.00
+    Expenses:Food:Restaurant    $25.00
+    Assets:Cash
+
+2024/02/01 Gas Station
+    Expenses:Auto:Gas           $35.00
+    Assets:Cash
+
+; Test lot_date, lot_price, lot_tag - covers lines 912-937
+test reg --format '%(lot_date(amount)) %(lot_price(amount)) %(lot_tag(amount))\n' Assets:Brokerage
+2024/01/01 $150.00 tag1
+end test
+
+; Test to_int and to_string - covers lines 943-968
+test reg --format '%(to_int(quantity(amount))) %(to_string(payee))\n' --head 2 Expenses
+50 Grocery Store
+25 Grocery Store
+35 Gas Station
+end test
+
+; Test to_boolean - covers line 940
+test reg --format '%(to_boolean(amount))\n' --head 1 Expenses
+true
+true
+end test
+
+; Test to_amount - covers line 959
+test reg --format '%(to_amount(amount))\n' --head 1 Expenses
+$50.00
+$25.00
+end test
+
+; Test to_date - covers line 955
+test reg --format '%(to_date(date))\n' --head 1 Expenses
+2024/01/15
+2024/01/15
+end test
+
+; Test to_mask - covers line 971
+test reg --format '%(to_mask("Food"))\n' --head 1
+Food
+Food
+end test
+
+; Test abs - covers line 716
+test reg --format '%(abs(amount))\n' --head 3 Expenses
+$50.00
+$25.00
+$35.00
+end test
+
+; Test commodity - covers line 839
+test reg --format '%(commodity(amount))\n' --head 3 Expenses
+$
+$
+$
+end test
+
+; Test clear_commodity - covers line 858-862
+test reg --format '%(clear_commodity(amount))\n' --head 3 Expenses
+50
+25
+35
+end test
+
+; Test top_amount - covers fn_top_amount
+test reg --format '%(top_amount(amount))\n' --head 3 Expenses
+$50.00
+$25.00
+$35.00
+end test
+
+; Test is_seq - covers fn_is_seq
+test reg --format '%(is_seq(amount))\n' --head 3 Expenses
+false
+false
+false
+end test
+
+; Test truncated - covers lines 719-724
+test reg --format '%(truncated(payee, 5))\n' --head 3 Expenses
+Gro..
+Gro..
+Gas..
+end test
+
+; Test justify with right justify - covers lines 726-738
+test reg --format '%(justify(amount, 12, -1, true))\n' --head 3 Expenses
+      $50.00
+      $25.00
+      $35.00
+end test
+
+; Test quoted - covers lines 740-754
+test reg --format '%(quoted(payee))\n' --head 2 Expenses
+"Grocery Store"
+"Grocery Store"
+"Gas Station"
+end test
+
+; Test quoted_rfc - covers lines 756-770
+test reg --format '%(quoted_rfc(payee))\n' --head 2 Expenses
+"Grocery Store"
+"Grocery Store"
+"Gas Station"
+end test
+
+; Test join - covers lines 772-783
+test reg --format '%(join(payee))\n' --head 2 Expenses
+Grocery Store
+Grocery Store
+Gas Station
+end test
+
+; Test roundto - covers lines 707-709
+test reg --format '%(roundto(amount, 0))\n' --head 3 Expenses
+$50.00
+$25.00
+$35.00
+end test
+
+; Test unround - covers lines 711-713
+test reg --format '%(unround(amount))\n' --head 3 Expenses
+$50.00
+$25.00
+$35.00
+end test
+
+; Test rounded and unrounded - covers fn_round and fn_unrounded
+test reg --format '%(rounded(amount)) %(unrounded(amount))\n' --head 3 Expenses
+$50.00 $50.00
+$25.00 $25.00
+$35.00 $35.00
+end test
+
+; Test floor and ceiling - covers lines 698-701
+test reg --format '%(floor(amount)) %(ceiling(amount))\n' --head 3 Expenses
+$50.00 $50.00
+$25.00 $25.00
+$35.00 $35.00
+end test

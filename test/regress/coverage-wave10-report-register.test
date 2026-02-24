@@ -1,0 +1,19 @@
+; Tests for register, equity commands
+; Covers report.cc lines 1645, 1678-1681
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Test register via 'r' short form - covers lines 1678
+test r
+24-Jan-15 Test                  Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test
+
+; Test equity command - covers line 1645
+test equity
+2024/01/15 Opening Balances
+    Assets:Cash                              $-50.00
+    Expenses:Food
+end test

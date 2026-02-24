@@ -1,0 +1,14 @@
+; Test coverage for textual_xacts.cc lines 696-734
+; Balance assignment: posting with null amount = target balance
+
+2024/01/01 Opening
+    Assets:Bank                            $100.00
+    Equity:Opening
+
+2024/01/05 Adjustment
+    Assets:Bank                                    = $150.00
+    Income:Adjustment
+
+test bal Assets
+             $150.00  Assets:Bank
+end test

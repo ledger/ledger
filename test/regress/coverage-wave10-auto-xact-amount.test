@@ -1,0 +1,17 @@
+; Test coverage for xact.cc lines 863, 867-870
+; auto_xact_t extend_xact where amount_expr result is_long() path
+
+= /Expenses/
+    (Savings)                                10
+
+2024/01/01 Test
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test bal --flat
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food
+             $500.00  Savings
+--------------------
+             $500.00
+end test

@@ -1,0 +1,27 @@
+; Coverage tests for report.cc remaining command dispatch
+; Tests: select command (line 1688-1690), prices/pricesdb (1664-1667),
+;        pricemap (1668-1669), source/script (1686-1687, 1736-1737)
+
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.20
+
+2024/01/01 Buy EUR
+    Assets:EUR    100 EUR @ $1.10
+    Assets:Cash    $-110.00
+
+; Test prices command (covers lines 1664-1665)
+test prices EUR
+2024/01/01 EUR             $1.10
+2024/02/01 EUR             $1.20
+end test
+
+; Test pricesdb command (covers lines 1666-1667)
+test pricesdb EUR
+P 2024/01/01 00:00:00 EUR $1.10
+P 2024/02/01 00:00:00 EUR $1.20
+end test
+
+; Test select command (covers line 1688-1690)
+test select date, payee, account, amount where account =~ /Assets:EUR/
+24-Jan-01 Buy EUR                  Assets:EUR                           100 EUR
+end test

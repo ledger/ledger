@@ -1,0 +1,14 @@
+; Coverage for textual_directives.cc line 384-391
+; Tests 'end apply' without enclosing 'apply' directive
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+end apply
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 8:
+Error: 'end' or 'end apply' found, but no enclosing 'apply' directive
+end test

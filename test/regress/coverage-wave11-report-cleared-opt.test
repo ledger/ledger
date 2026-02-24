@@ -1,0 +1,14 @@
+; Test -C (cleared) shorthand option for report.cc coverage
+
+2024/01/15 * Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 Restaurant
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test reg -C
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test

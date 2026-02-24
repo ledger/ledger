@@ -1,0 +1,38 @@
+; Coverage for commodity.cc edge cases:
+; - Lines 50-51: add_price with reflexive=false marking primary
+; - Lines 78: map_prices with epoch/current time fallback
+; - Lines 88-91: find_price_from_expr with debug
+; - Lines 321-349: commodity_t::print with annotation, commodity valid()
+; - Lines 408-505: compare_by_commodity with tags, dates, value_expr
+
+; Set up commodities with prices
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/02/01 00:00:00 AAPL $155.00
+P 2024/03/01 00:00:00 AAPL $160.00
+
+; Annotated commodity with lot price
+2024/01/15 Buy AAPL
+    Assets:Brokerage    10 AAPL {$150.00}
+    Assets:Cash
+
+; Annotated commodity with lot date
+2024/02/15 Buy AAPL with date
+    Assets:Brokerage    5 AAPL {$155.00} [2024/02/15]
+    Assets:Cash
+
+; Annotated commodity with fixated price
+2024/03/15 Buy AAPL fixated
+    Assets:Brokerage    3 AAPL {=$160.00}
+    Assets:Cash
+
+; Test total price notation {{}}
+2024/04/01 Buy with total price
+    Assets:Brokerage    100 AAPL {{$16000.00}}
+    Assets:Cash
+
+test bal Assets:Brokerage --lots
+   10 AAPL {$150.00}
+5 AAPL {$155.00} [2024/02/15]
+  100 AAPL {$160.00}
+   3 AAPL {=$160.00}  Assets:Brokerage
+end test

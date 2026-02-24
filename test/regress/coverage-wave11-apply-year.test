@@ -1,0 +1,31 @@
+; Coverage for textual_directives.cc apply_year_directive
+; Also covers the 'y' and 'Y' year directives at lines 834-839
+
+apply year 2020
+
+01/15 Test One
+    Expenses:Food    $10.00
+    Assets:Cash
+
+end apply year
+
+Y 2021
+
+02/15 Test Two
+    Expenses:Drinks    $5.00
+    Assets:Cash
+
+year 2022
+
+03/15 Test Three
+    Expenses:Gas    $20.00
+    Assets:Cash
+
+test reg
+20-Jan-15 Test One              Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+21-Feb-15 Test Two              Expenses:Drinks               $5.00        $5.00
+                                Assets:Cash                  $-5.00            0
+22-Mar-15 Test Three            Expenses:Gas                 $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test

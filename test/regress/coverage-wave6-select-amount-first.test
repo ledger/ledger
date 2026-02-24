@@ -1,0 +1,21 @@
+; Coverage tests for select.cc
+; Tests: amount as the very first column with thus_far empty
+; Covers line 322 (formatter << "-1" when thus_far is empty)
+; and line 266 (thus_far += " + " when not the first column)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; amount as first and only column - thus_far is empty at line 321
+; so formatter uses -1 for the column start position
+test select amount --columns 80
+      $50.00
+     $-50.00
+end test
+
+; total as first, then amount - exercises thus_far accumulation (line 266)
+test select total, amount --columns 80
+      $50.00       $50.00
+           0      $-50.00
+end test

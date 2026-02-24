@@ -1,0 +1,15 @@
+; Coverage wave 11: format.cc real_calc
+; Targets line 424
+
+2020/01/15 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2020/02/15 Restaurant
+    Expenses:Food    $20.00
+    Assets:Cash
+
+test reg --format "%-20(payee) %12(display_amount) %12(display_total)\n" Expenses
+Grocery Store              $10.00       $10.00
+Restaurant                 $20.00       $30.00
+end test

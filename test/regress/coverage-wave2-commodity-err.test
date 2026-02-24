@@ -1,0 +1,15 @@
+; Coverage test for commodity.cc - unclosed quoted commodity error
+; Covers: parse_symbol error path (line 279)
+
+2024/01/01 Bad Quote
+    Assets:Test              10 "UNCLOSED
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  Assets:Test              10 "UNCLOSED
+                           ^^^^^^^^^^^^
+Error: Quoted commodity symbol lacks closing quote
+end test

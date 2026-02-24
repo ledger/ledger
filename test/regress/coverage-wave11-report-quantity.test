@@ -1,0 +1,14 @@
+; Test -O (quantity) option for report.cc coverage
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 Restaurant
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test reg -O Expenses
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Feb-20 Restaurant            Expenses:Food                $30.00       $80.00
+end test

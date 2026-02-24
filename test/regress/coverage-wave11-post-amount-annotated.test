@@ -1,0 +1,13 @@
+; Coverage for textual_xacts.cc lines 503-525 (post amount with annotation and fixed rate)
+
+apply fixed AAPL $150.00
+
+2024/01/01 Buy Stock
+    Assets:Broker    10 AAPL
+    Assets:Cash
+
+end apply
+
+test bal Assets:Broker
+             10 AAPL  Assets:Broker
+end test

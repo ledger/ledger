@@ -1,0 +1,11 @@
+; Test lisp command for report.cc coverage
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test lisp
+(("$FILE" 3 (26020 51680 0) nil "Grocery Store"
+  (4 "Expenses:Food" "$50.00" nil)
+  (5 "Assets:Checking" "$-50.00" nil)))
+end test

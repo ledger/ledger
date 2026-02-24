@@ -1,0 +1,17 @@
+; Coverage for history.cc print_map (lines 460, 495-498)
+; And pool.cc commodity operations
+; Tests the pricesdb command
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/15 AAPL $155.00
+P 2024/02/01 AAPL $160.00
+
+2024/01/01 Buy
+    Assets:Broker    10 AAPL @ $150.00
+    Assets:Cash    $-1500.00
+
+test pricesdb
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/01/15 00:00:00 AAPL $155.00
+P 2024/02/01 00:00:00 AAPL $160.00
+end test

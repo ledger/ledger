@@ -1,0 +1,27 @@
+; Coverage tests for query.cc - show/only/bold/for keywords
+
+2020/01/01 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2020/02/01 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+2020/03/01 Landlord
+    Expenses:Rent    $800.00
+    Assets:Checking
+
+test reg Expenses show Food
+20-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+end test
+
+test reg Expenses only Food
+20-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+end test
+
+test reg Expenses for 2020
+20-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+20-Feb-01 Gas Station           Expenses:Transport           $30.00       $80.00
+20-Mar-01 Landlord              Expenses:Rent               $800.00      $880.00
+end test

@@ -1,0 +1,11 @@
+; Coverage for textual_directives.cc price_conversion_directive (C directive)
+
+C 1.00 Kb = 1024 b
+
+2024/01/01 Data Usage
+    Expenses:Data    5 Kb
+    Assets:Bandwidth
+
+test bal Expenses
+             5.00 Kb  Expenses:Data
+end test

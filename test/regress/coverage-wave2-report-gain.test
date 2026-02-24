@@ -1,0 +1,39 @@
+; Wave 2 coverage tests for report.cc gain and market value paths
+; Covers: report.cc -G/--gain flag, changed_value_posts in filters.cc,
+;   fn_market (lines 586-612), equity command
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $160.00
+
+2024/01/01 Buy
+    Assets:Brokerage     10 AAPL @ $150.00
+    Assets:Cash          $-1500.00
+
+; Test gain report - covers changed_value_posts output_revaluation
+test reg --gain Assets:Brokerage
+24-Feb-01 Commodities revalued  <Revalued>                  $100.00      $100.00
+end test
+
+; Test market value report - covers fn_market path
+test bal -V Assets:Brokerage --now 2024/02/01
+            $1600.00  Assets:Brokerage
+end test
+
+; Test equity command - covers equity_command in report.cc
+test equity
+2024/01/01 Opening Balances
+    Assets:Brokerage                         10 AAPL
+    Assets:Cash                            $-1500.00
+    Equity:Opening Balances                 $1500.00
+    Equity:Opening Balances                 -10 AAPL
+end test
+
+; Test historical pricing - covers -H flag
+test bal -H Assets:Brokerage
+            $1500.00  Assets:Brokerage
+end test
+
+; Test basis pricing - covers -B flag
+test bal -B Assets:Brokerage
+            $1500.00  Assets:Brokerage
+end test

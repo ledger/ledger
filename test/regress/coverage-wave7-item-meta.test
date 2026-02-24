@@ -1,0 +1,102 @@
+; Coverage tests for item.cc edge cases
+; Lines targeted: 49-50, 52-53, 66, 107, 306, 313, 320,
+;   344, 350-351, 392, 439, 465, 488, 514, 520, 525, 530,
+;   536-539, 542-543
+
+; --- Transaction with metadata for tag testing ---
+2024/01/01 Test With Tags
+    ; MyTag: myvalue
+    ; UUID: abc-123
+    Expenses:Food         $10.00
+    ; PostTag: postval
+    Assets:Cash
+
+; --- Transaction without metadata ---
+2024/01/02 No Tags
+    Expenses:Food         $5.00
+    Assets:Cash
+
+; --- Transaction for filename/filebase lookup ---
+2024/01/03 Filename Test
+    Expenses:Food         $3.00
+    Assets:Cash
+
+; Test has_tag with tag mask (item.cc line 58-69)
+test reg --format "%(has_tag(/MyTag/))\n" Expenses:Food -y "%y-%b-%d"
+true
+false
+false
+end test
+
+; Test has_tag with tag and value mask (item.cc line 66)
+test reg --format "%(has_tag(/MyTag/, /myvalue/))\n" Expenses:Food -y "%y-%b-%d"
+true
+false
+false
+end test
+
+; Test UUID accessor / id (item.cc line 344)
+test reg --format "%(id)\n" Expenses:Food -y "%y-%b-%d"
+abc-123
+5
+8
+end test
+
+; Test filename (item.cc lines 306)
+test reg --format "%(filename)\n" Expenses:Food -y "%y-%b-%d" --head 1
+$FILE
+end test
+
+; Test filebase (item.cc line 313)
+test reg --format "%(filebase)\n" Expenses:Food -y "%y-%b-%d" --head 1
+coverage-wave7-item-meta.test
+end test
+
+; Test filepath (item.cc line 320)
+test reg --format "%(filepath != \"\")\n" Expenses:Food -y "%y-%b-%d" --head 1
+true
+end test
+
+; Test depth accessor
+test reg --format "%(depth)\n" Expenses:Food -y "%y-%b-%d"
+2
+2
+2
+end test
+
+; Test note accessor (item.cc line 392)
+test reg --format "%(note)\n" Expenses:Food -y "%y-%b-%d"
+ PostTag: postval
+ MyTag: myvalue
+ UUID: abc-123
+
+
+end test
+
+; Test beg_line accessor (item.cc line 465)
+test reg --format "%(beg_line != 0)\n" Expenses:Food -y "%y-%b-%d"
+true
+true
+true
+end test
+
+; Test cleared accessor (item.cc)
+test reg --format "%(cleared)\n" Expenses:Food -y "%y-%b-%d"
+false
+false
+false
+end test
+
+; Test pending accessor (item.cc)
+test reg --format "%(pending)\n" Expenses:Food -y "%y-%b-%d"
+false
+false
+false
+end test
+
+; Test date (item.cc line 536-539, 542-543)
+test reg --format "%(date)\n" Expenses:Food -y "%y-%b-%d"
+24-Jan-01
+24-Jan-02
+24-Jan-03
+end test

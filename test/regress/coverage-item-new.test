@@ -1,0 +1,29 @@
+; Coverage tests for item.cc
+; Tests: metadata tags, tag matching, notes on items
+
+2024/01/01 Store  ; xact note
+    ; Category: grocery
+    ; :shopping:
+    Expenses:Food                    $50.00
+      ; Item: apples
+    Assets:Cash
+
+2024/01/02 Office
+    ; Priority: high
+    Expenses:Office                  $100.00
+    Assets:Cash
+
+test reg tag Category
+24-Jan-01 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test
+
+test reg tag Priority
+24-Jan-02 Office                Expenses:Office             $100.00      $100.00
+                                Assets:Cash                $-100.00            0
+end test
+
+test reg %shopping
+24-Jan-01 Store                 Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test

@@ -1,0 +1,12 @@
+; Coverage tests for textual_directives.cc nomarket directive
+; Targets line 127-134 (nomarket_directive)
+
+N EUR
+
+2024/01/01 Test
+    Expenses:Travel          100 EUR
+    Assets:Cash             -100 EUR
+
+test bal Expenses
+             100 EUR  Expenses:Travel
+end test

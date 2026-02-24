@@ -1,0 +1,16 @@
+; Coverage for account.cc lines 235,241,250,254-256,268,272:
+; Account lookup functions exercised through the balance report format.
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+2024/01/02 Test 2
+    Expenses:Food                 $20.00
+    Assets:Cash
+
+test bal --format "%(account) %(total) %(depth) %(count)\n"
+Assets:Cash $-30.00 2 2
+Expenses:Food $30.00 2 2
+ 0 0 4
+end test

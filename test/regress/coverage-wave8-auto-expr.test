@@ -1,0 +1,21 @@
+; Coverage tests for xact.cc auto_xact_t::extend_xact amount expression paths
+; Targets lines 863, 867-868, 870, 885, 890-891, 893, 898-902
+
+; Auto-xact with percentage (no commodity in post_amount)
+; triggers line 878-879 (initial_post->amount * post_amount)
+= /Expenses/
+    (Budget:Percent)         0.10
+
+; Auto-xact with fixed amount (has commodity)
+; triggers line 880-881 (post_amount has commodity)
+= /Food/
+    (Budget:Fixed)           $5.00
+
+2024/01/01 Test
+    Expenses:Food            $100.00
+    Assets:Cash
+
+test reg Budget
+24-Jan-01 Test                  (Budget:Percent)             $10.00       $10.00
+                                (Budget:Fixed)                $5.00       $15.00
+end test

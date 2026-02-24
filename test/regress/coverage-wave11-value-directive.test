@@ -1,0 +1,14 @@
+; Coverage for textual_directives.cc value_directive (line 655-657)
+
+value market(amount, date, "EUR")
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

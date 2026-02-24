@@ -1,0 +1,19 @@
+; Coverage: select.cc - from xacts (line 349-352)
+
+2024/01/01 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Auto    $25.00
+    Assets:Cash
+
+test select date, payee from xacts --columns=80
+2024/01/01 Grocery Store
+    Expenses:Food                             $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Auto                             $25.00
+    Assets:Cash
+end test

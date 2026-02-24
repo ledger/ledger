@@ -1,0 +1,12 @@
+; Coverage tests for xact.cc fixated price handling (lines 280-319)
+; Tests the code path where more than 2 commodities exist with fixated prices
+
+2024/01/01 Multi-commodity with fixated prices
+    Assets:Portfolio    100 EUR {=$1.32}
+    Assets:Portfolio    200 GBP {=$1.50}
+    Assets:Cash    $-432.00
+
+test bal Assets:Portfolio
+             100 EUR
+             200 GBP  Assets:Portfolio
+end test

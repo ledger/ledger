@@ -1,0 +1,14 @@
+; Test coverage for textual_directives.cc lines 454-458, 509-511
+; account directive with eval and value sub-directives
+
+account Expenses:Food
+    eval 1 + 1
+    value amount
+
+2024/01/01 Test
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test bal Expenses
+              $50.00  Expenses:Food
+end test

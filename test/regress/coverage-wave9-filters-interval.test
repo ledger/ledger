@@ -1,0 +1,19 @@
+; Test coverage for filters.cc lines 1006-1085
+; interval_posts filter via --monthly
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/15 Grocery Store
+    Expenses:Food                           $25.00
+    Assets:Cash
+
+2024/02/01 Grocery Store
+    Expenses:Food                           $30.00
+    Assets:Cash
+
+test reg --monthly Expenses:Food
+24-Jan-01 - 24-Jan-31           Expenses:Food                $75.00       $75.00
+24-Feb-01 - 24-Feb-29           Expenses:Food                $30.00      $105.00
+end test

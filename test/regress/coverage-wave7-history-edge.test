@@ -1,0 +1,46 @@
+; Coverage for history.cc edge cases:
+; - Lines 187-188: recent_edge_weight prices map empty
+; - Lines 273: remove_price - prices empty after removal
+; - Lines 308: map_prices bidirectional with inverted price
+; - Lines 335: find_price with primary commodity
+; - Lines 359-364: find_price invert price when source matches
+; - Lines 383: find_price source == target returns nullopt
+; - Lines 460: find_price_from_path with last_target tracking
+; - Lines 495-498: print_map with moment filter
+
+; Complex price chain: USD -> EUR -> GBP
+P 2024/01/01 00:00:00 EUR $1.10
+P 2024/01/01 00:00:00 GBP EUR 1.15
+P 2024/02/01 00:00:00 EUR $1.12
+P 2024/02/01 00:00:00 GBP EUR 1.16
+P 2024/03/01 00:00:00 EUR $1.08
+P 2024/03/01 00:00:00 GBP EUR 1.18
+
+2024/01/15 Buy in GBP
+    Expenses:Travel    GBP 100.00
+    Assets:Cash
+
+2024/02/15 Buy in EUR
+    Expenses:Travel    EUR 200.00
+    Assets:Cash
+
+; Test price conversion through chain
+test reg Expenses:Travel -V -X $
+24-Jan-15 Buy in GBP            Expenses:Travel             $126.50      $126.50
+24-Feb-01 Commodities revalued  <Revalued>                    $3.42      $129.92
+24-Feb-15 Buy in EUR            Expenses:Travel             $224.00      $353.92
+24-Mar-01 Commodities revalued  <Revalued>                  $-10.48      $343.44
+end test
+
+; Test prices command (triggers map_prices)
+test prices EUR
+2024/01/01 EUR             $1.10
+2024/02/01 EUR             $1.12
+2024/03/01 EUR             $1.08
+end test
+
+test prices GBP
+2024/01/01 GBP          EUR 1.15
+2024/02/01 GBP          EUR 1.16
+2024/03/01 GBP          EUR 1.18
+end test

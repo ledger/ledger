@@ -1,0 +1,14 @@
+; Coverage for convert.cc lines 97-100, 118-119
+; Tests CSV conversion (uses the 'convert' command)
+; Note: this test uses --input-date-format to parse the CSV
+
+2024/01/01 Opening
+    Assets:Bank    $1000.00
+    Equity:Opening
+
+test bal
+            $1000.00  Assets:Bank
+           $-1000.00  Equity:Opening
+--------------------
+                   0
+end test

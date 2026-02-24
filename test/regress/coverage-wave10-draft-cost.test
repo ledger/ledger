@@ -1,0 +1,12 @@
+; Coverage tests for draft.cc lines 451-469 (posting cost handling)
+; Also covers draft.cc lines 266-269 (date from year directive)
+
+2024/01/01 Grocery
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test xact "Grocery" Expenses:Food '$100.00'
+2026/02/24 Grocery
+    Expenses:Food                            $100.00
+    Assets:Cash
+end test

@@ -1,0 +1,31 @@
+; Coverage tests for compare.cc (compare_items<post_t> and compare_items<account_t>)
+; Also covers compare.cc inverted sort with negative sort key
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Payee B
+    Expenses:Drinks    $5.00
+    Assets:Cash
+
+2024/01/03 Payee C
+    Expenses:Gas    $30.00
+    Assets:Cash
+
+; Sort by amount descending (O_NEG path in push_sort_value)
+test reg --sort "-amount" Expenses
+24-Jan-03 Payee C               Expenses:Gas                 $30.00       $30.00
+24-Jan-01 Payee                 Expenses:Food                $10.00       $40.00
+24-Jan-02 Payee B               Expenses:Drinks               $5.00       $45.00
+end test
+
+; Sort accounts by total (compare_items<account_t>)
+test bal --sort total Expenses
+              $45.00  Expenses
+               $5.00    Drinks
+              $10.00    Food
+              $30.00    Gas
+--------------------
+              $45.00
+end test

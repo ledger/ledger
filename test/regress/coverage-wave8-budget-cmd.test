@@ -1,0 +1,21 @@
+~ Monthly
+    Expenses:Food    $300.00
+    Assets:Checking
+
+2024/01/15 * Grocery
+    Expenses:Food    $250.00
+    Assets:Checking
+
+test --now 2024/03/01 budget
+    $-250.00     $-900.00      $650.00   28%  Assets:Checking
+     $250.00      $900.00     $-650.00   28%  Expenses:Food
+------------ ------------ ------------ -----
+           0            0            0     0
+end test
+
+test cleared
+        $-250.00            $-250.00    24-Jan-15    Assets:Checking
+         $250.00             $250.00    24-Jan-15    Expenses:Food
+----------------    ----------------    ---------
+               0                   0             
+end test

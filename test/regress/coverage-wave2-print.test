@@ -1,0 +1,51 @@
+; Wave 2 coverage tests for print.cc
+; Covers: print with balance assignment (lines 53, 58, 210, 224),
+; post_has_simple_amount, metadata printing (line 165),
+; amount_expr (line 175)
+
+; Balance assignment test - covers lines 53, 58, 210, 224
+2024/01/01 Opening Balance
+    Assets:Checking             = $500.00
+    Equity:Opening
+
+; Transaction with metadata
+2024/01/02 Grocery Store
+    ; Note: weekly groceries
+    Expenses:Food              $25.00
+    Assets:Checking
+
+; Simple two-post transaction (elided amount path)
+2024/01/03 Gas Station
+    Expenses:Transport         $40.00
+    Assets:Checking
+
+test print
+2024/01/01 Opening Balance
+    Assets:Checking                        = $500.00
+    Equity:Opening
+
+2024/01/02 Grocery Store
+    ; Note: weekly groceries
+    Expenses:Food                             $25.00
+    Assets:Checking
+
+2024/01/03 Gas Station
+    Expenses:Transport                        $40.00
+    Assets:Checking
+end test
+
+; Test print with generated posts
+test print --generated
+2024/01/01 Opening Balance
+    Assets:Checking                        = $500.00
+    Equity:Opening                          $-500.00
+
+2024/01/02 Grocery Store
+    ; Note: weekly groceries
+    Expenses:Food                             $25.00
+    Assets:Checking                          $-25.00
+
+2024/01/03 Gas Station
+    Expenses:Transport                        $40.00
+    Assets:Checking                          $-40.00
+end test

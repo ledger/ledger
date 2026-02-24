@@ -1,0 +1,12 @@
+; Coverage for post.cc lines 253,262: get_total when no xdata total,
+; and get_count when no xdata returns 1L.
+; Also covers lines 519,524: post_t lookup for 'N' and 'O' shorthand.
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+test reg --format "%(O) %(N)\n"
+$10.00 1
+$0.00 2
+end test

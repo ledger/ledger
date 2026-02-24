@@ -1,0 +1,16 @@
+; Coverage for output.cc line 376 (report_commodities operator)
+; Tests the commodities command
+
+2024/01/01 Buy
+    Assets:Broker    10 AAPL @ $150.00
+    Assets:Cash    $-1500.00
+
+2024/01/02 Buy More
+    Assets:Broker    5 GOOG @ $100.00
+    Assets:Cash    $-500.00
+
+test commodities
+$
+AAPL
+GOOG
+end test

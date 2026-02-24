@@ -1,0 +1,24 @@
+; Coverage: session.cc - fn_int (line 265), fn_str (line 270)
+; Also fn_min (line 258) and fn_max (line 261)
+
+2024/01/01 Test
+    Expenses:Food    $10.50
+    Assets:Cash
+
+test reg --format "%(int(amount))\n" --columns=80
+10
+-10
+end test
+
+test reg --format "%(str(amount))\n" --columns=80
+$10.50
+$-10.50
+end test
+
+test reg Expenses --format "%(min(amount, 0))\n" --columns=80
+0
+end test
+
+test reg Expenses --format "%(max(amount, 0))\n" --columns=80
+$10.50
+end test

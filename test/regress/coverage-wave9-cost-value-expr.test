@@ -1,0 +1,14 @@
+; Test coverage for textual_xacts.cc lines 571-575
+; Posting with value expression in cost field (cost using parenthesized expr)
+
+2024/01/01 Stock Purchase
+    Assets:Brokerage                        10 AAPL @ ($150.00 + $5.00)
+    Assets:Cash
+
+test bal Assets --flat
+             10 AAPL  Assets:Brokerage
+              $-1550  Assets:Cash
+--------------------
+              $-1550
+             10 AAPL
+end test

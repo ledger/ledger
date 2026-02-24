@@ -1,0 +1,95 @@
+; Coverage tests for post.cc (lines 48-74, 160-296, 519-600, 702-740)
+; Tests: post has_tag/get_tag inheritance, post lookup functions,
+;        post valid(), xact_id(), account_id(), put_post XML output
+
+; Test post has_tag with inheritance (lines 46-74)
+2024/01/01 Payee With Note
+    ; XactTag: xact_value
+    Expenses:Food    $10.00
+      ; PostTag: post_value
+    Assets:Cash
+
+; get_tag inherits from xact (lines 60-74)
+test reg --format "%(tag('XactTag'))\n" --limit "account =~ /Expenses:Food/"
+xact_value
+end test
+
+test reg --format "%(tag('PostTag'))\n" --limit "account =~ /Expenses:Food/"
+post_value
+end test
+
+; Test post code lookup (lines 160-164)
+2024/02/01 (CD99) Coded
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test reg --format "%(code)\n" Expenses:Rent
+CD99
+end test
+
+; Test post note combining (lines 171-183)
+2024/03/01 Note Merge
+    ; XactNote: from xact
+    Expenses:Transport    $20.00
+      ; PostNote: from post
+    Assets:Cash
+
+test reg --format "%(note)\n" Expenses:Transport
+ PostNote: from post
+ XactNote: from xact
+end test
+
+; Test post magnitude (lines 185-189)
+test reg --format "%(magnitude)\n" --limit "account =~ /Expenses:Transport/"
+$20.00
+end test
+
+; Test get_commodity (lines 205-216)
+test reg --format "%(commodity)\n" --limit "account =~ /Expenses:Food/"
+$
+end test
+
+; Test get_has_cost and get_cost (lines 225-237)
+2024/04/01 Foreign
+    Expenses:Travel    100 EUR @ $1.10
+    Assets:Cash
+
+test reg --format "%(has_cost ? 'yes' : 'no')\n" Expenses:Travel
+yes
+end test
+
+test reg --format "%(cost)\n" Expenses:Travel
+$110.00
+end test
+
+; Test get_price (lines 240-246)
+test reg --format "%(price)\n" Expenses:Travel
+$110.00
+end test
+
+; Test get_total (lines 249-255)
+test reg --format "%(total)\n" --limit "account =~ /Expenses:Food/"
+$10.00
+end test
+
+; Test get_count (lines 258-262)
+test reg --format "%(count)\n" --limit "account =~ /Expenses:Food/"
+1
+end test
+
+; Test virtual post indicator (lines 502-504)
+2024/05/01 Virtual Test
+    Expenses:Misc    $15.00
+    Assets:Cash    $-15.00
+    [Budget:Misc]    $-15.00
+    [Budget:Income]    $15.00
+
+test reg --format "%(virtual ? '[' : '(')%(account)%(virtual ? ']' : ')')\n" --limit "virtual"
+[Budget:Misc]
+[Budget:Income]
+end test
+
+; Test xact_id (lines 547-556)
+test reg --format "%(xact_id)\n" --limit "account =~ /Expenses:Food/" --tail 1
+1
+end test

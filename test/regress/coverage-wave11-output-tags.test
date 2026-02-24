@@ -1,0 +1,20 @@
+; Test tags command for output.h coverage
+; Targets report.cc line 1693 (tags command) and
+; output.h lines 186-189 (report_tags::clear)
+
+2024/01/15 Grocery Store
+    ; Project: HomeFood
+    ; Location: Downtown
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 Restaurant
+    ; Project: DiningOut
+    Expenses:Food    $30.00
+    ; Location: Midtown
+    Assets:Checking
+
+test tags
+Location
+Project
+end test

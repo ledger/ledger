@@ -1,0 +1,76 @@
+; Coverage tests for textual_xacts.cc - transaction parsing edge cases
+
+2020/01/01=2020/01/05 Paycheck
+    Assets:Checking    $3000.00
+    Income:Salary
+
+2020/01/15 (#1001) Rent Payment
+    Expenses:Rent    $800.00
+    Assets:Checking
+
+2020/02/01 * Groceries
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2020/02/15 ! Pending Purchase
+    Expenses:Shopping    $100.00
+    Assets:Checking
+
+2020/03/01 Buy Stock
+    Assets:Investments    10 AAPL @ $150.00
+    Assets:Checking    $-1500.00
+
+2020/03/15 Buy More Stock
+    Assets:Investments    5 AAPL @@ $780.00
+    Assets:Checking    $-780.00
+
+2020/04/01 Deposit
+    Assets:Checking    $500.00 = $270.00
+    Income:Other
+
+2020/04/15 Tagged Transaction
+    ; :business:deductible:
+    Expenses:Business    $200.00
+    Assets:Checking
+
+2020/05/01 Inline Note
+    Expenses:Food    $30.00  ; lunch
+    Assets:Checking
+
+2020/05/15 Expression Amount
+    Expenses:Food    ($10.00 * 3)
+    Assets:Checking
+
+2020/06/01 Multi Note
+    Expenses:Office    $150.00
+    ; Note line 1
+    ; Note line 2
+    Assets:Checking
+
+test reg Expenses --sort date
+20-Jan-15 Rent Payment          Expenses:Rent               $800.00      $800.00
+20-Feb-01 Groceries             Expenses:Food                $50.00      $850.00
+20-Feb-15 Pending Purchase      Expenses:Shopping           $100.00      $950.00
+20-Apr-15 Tagged Transaction    Expenses:Business           $200.00     $1150.00
+20-May-01 Inline Note           Expenses:Food                $30.00     $1180.00
+20-May-15 Expression Amount     Expenses:Food                $30.00     $1210.00
+20-Jun-01 Multi Note            Expenses:Office             $150.00     $1360.00
+end test
+
+test reg --aux-date Income
+20-Jan-05 Paycheck              Income:Salary             $-3000.00    $-3000.00
+20-Apr-01 Deposit               Income:Other               $-500.00    $-3500.00
+end test
+
+test reg --cleared Expenses
+20-Feb-01 Groceries             Expenses:Food                $50.00       $50.00
+end test
+
+test reg --pending Expenses
+20-Feb-15 Pending Purchase      Expenses:Shopping           $100.00      $100.00
+end test
+
+test reg %business
+20-Apr-15 Tagged Transaction    Expenses:Business           $200.00      $200.00
+                                Assets:Checking            $-200.00            0
+end test

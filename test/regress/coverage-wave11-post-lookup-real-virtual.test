@@ -1,0 +1,12 @@
+; Coverage for post.cc lines 529: post_t lookup for 'R' shorthand.
+; Also exercises get_real and get_virtual.
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    (Virtual:Savings)             $5.00
+    Assets:Cash                  $-10.00
+
+test reg --real
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

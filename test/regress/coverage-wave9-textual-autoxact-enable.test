@@ -1,0 +1,21 @@
+; Test coverage for textual_xacts.cc lines 100-130
+; Automated xact enable/disable/delete commands
+
+= taxes :: /Food/
+    Expenses:Tax                              0.10
+    Assets:Tax                               -0.10
+
+= 'taxes' disable
+
+= 'taxes' enable
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test bal Tax
+              $-5.00  Assets:Tax
+               $5.00  Expenses:Tax
+--------------------
+                   0
+end test

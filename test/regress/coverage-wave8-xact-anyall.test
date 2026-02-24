@@ -1,0 +1,22 @@
+; Coverage tests for xact.cc fn_any and fn_all
+; Targets lines 608-630
+
+2024/01/01 Test Payee
+    Expenses:Food            $10.00
+    Assets:Cash             -$10.00
+
+2024/01/02 Another Payee
+    Expenses:Drink            $5.00
+    Assets:Cash              -$5.00
+
+test reg --limit 'any(account =~ /Food/)'
+24-Jan-01 Test Payee            Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+test reg --limit 'all(amount != 0)'
+24-Jan-01 Test Payee            Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-02 Another Payee         Expenses:Drink                $5.00        $5.00
+                                Assets:Cash                  $-5.00            0
+end test

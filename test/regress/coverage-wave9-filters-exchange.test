@@ -1,0 +1,13 @@
+; Test coverage for filters.cc lines 342-376
+; --exchange triggers changed_value_posts paths
+
+P 2024/01/01 EUR $1.10
+P 2024/02/01 EUR $1.20
+
+2024/01/01 European Purchase
+    Expenses:Food                          100 EUR
+    Assets:Cash
+
+test bal --exchange $ Expenses
+             $120.00  Expenses:Food
+end test

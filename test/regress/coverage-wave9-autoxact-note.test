@@ -1,0 +1,19 @@
+; Test coverage for textual_xacts.cc lines 194-205
+; Automated transaction with trailing note on the auto xact and on its posting
+
+= /Food/
+    ; Note on auto xact
+    Expenses:Tax                              0.10
+    ; Note on posting
+    Assets:Tax                               -0.10
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test bal Tax
+              $-5.00  Assets:Tax
+               $5.00  Expenses:Tax
+--------------------
+                   0
+end test
