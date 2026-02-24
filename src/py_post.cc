@@ -48,8 +48,7 @@ bool py_has_tag_1s(post_t& post, const string& tag) {
 bool py_has_tag_1m(post_t& post, const mask_t& tag_mask) {
   return post.has_tag(tag_mask);
 }
-bool py_has_tag_2m(post_t& post, const mask_t& tag_mask,
-                   const std::optional<mask_t>& value_mask) {
+bool py_has_tag_2m(post_t& post, const mask_t& tag_mask, const std::optional<mask_t>& value_mask) {
   return post.has_tag(tag_mask, value_mask);
 }
 
@@ -60,7 +59,7 @@ std::optional<value_t> py_get_tag_1m(post_t& post, const mask_t& tag_mask) {
   return post.get_tag(tag_mask);
 }
 std::optional<value_t> py_get_tag_2m(post_t& post, const mask_t& tag_mask,
-                                      const std::optional<mask_t>& value_mask) {
+                                     const std::optional<mask_t>& value_mask) {
   return post.get_tag(tag_mask, value_mask);
 }
 

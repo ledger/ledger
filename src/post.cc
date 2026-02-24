@@ -65,7 +65,8 @@ std::optional<value_t> post_t::get_tag(const string& tag, bool inherit) const {
   return std::nullopt;
 }
 
-std::optional<value_t> post_t::get_tag(const mask_t& tag_mask, const std::optional<mask_t>& value_mask,
+std::optional<value_t> post_t::get_tag(const mask_t& tag_mask,
+                                       const std::optional<mask_t>& value_mask,
                                        bool inherit) const {
   if (std::optional<value_t> value = item_t::get_tag(tag_mask, value_mask))
     return value;

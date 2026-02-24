@@ -180,8 +180,8 @@ void report_t::normalize_options(const string& verb) {
     // For postings dated before DATE, use market(amount, DATE) as the cost
     // baseline instead of the original cost.
     string gf_str = "[" + to_iso_extended_string(gain_from->date()) + "]";
-    HANDLER(amount_).expr.set_base_expr(
-        "(amount, date < " + gf_str + " ? market(amount, " + gf_str + ", exchange) : cost)");
+    HANDLER(amount_).expr.set_base_expr("(amount, date < " + gf_str + " ? market(amount, " +
+                                        gf_str + ", exchange) : cost)");
   }
 
   long cols = 0;
@@ -469,9 +469,7 @@ void report_t::commodities_report(post_handler_ptr handler) {
     // Decompose the compound limit expression into individual terms.
     // The limit is built as nested "(old)&(new)" conjunctions, so
     // we peel terms from the right to flatten it into a list.
-    std::set<string> state_preds = {
-      "cleared", "pending", "uncleared|pending", "actual", "real"
-    };
+    std::set<string> state_preds = {"cleared", "pending", "uncleared|pending", "actual", "real"};
 
     std::vector<string> terms;
     string rest = saved_limit;

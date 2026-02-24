@@ -602,9 +602,7 @@ void account_t::clear_display_state() {
       pair.second->clear_display_state();
 }
 
-value_t account_t::amount(
-  const optional<bool> real_only,
-  const optional<expr_t&>& expr /*= none*/
+value_t account_t::amount(const optional<bool> real_only, const optional<expr_t&>& expr /*= none*/
 ) const {
   DEBUG("account.amount", "real only: " << real_only);
 
@@ -614,20 +612,20 @@ value_t account_t::amount(
   value_t total_, real_total_;
   value_t& total = expr ? total_ : xdata_->self_details.total;
   value_t& real_total = expr ? real_total_ : xdata_->self_details.real_total;
-  posts_list::const_iterator i = !expr && xdata_->self_details.last_post
-    ? *xdata_->self_details.last_post
-    : posts.begin();
+  posts_list::const_iterator i =
+      !expr && xdata_->self_details.last_post ? *xdata_->self_details.last_post : posts.begin();
 
   bool reported = false;
   for (;; i++) {
     if (i == posts.end()) {
       // when we reach the end of normal posts, then iterate reported_posts
       i = !expr && xdata_->self_details.last_reported_post
-        ? *xdata_->self_details.last_reported_post
-        : xdata_->reported_posts.begin();
+              ? *xdata_->self_details.last_reported_post
+              : xdata_->reported_posts.begin();
       reported = true;
     }
-    if (i == xdata_->reported_posts.end()) break;
+    if (i == xdata_->reported_posts.end())
+      break;
 
     if (!expr) {
       if (reported)
@@ -636,8 +634,10 @@ value_t account_t::amount(
         xdata_->self_details.last_post = i;
     }
 
-    if (!(*i)->xdata().has_flags(POST_EXT_VISITED)) continue;
-    if (!expr && (*i)->xdata().has_flags(POST_EXT_CONSIDERED)) continue;
+    if (!(*i)->xdata().has_flags(POST_EXT_VISITED))
+      continue;
+    if (!expr && (*i)->xdata().has_flags(POST_EXT_CONSIDERED))
+      continue;
 
     (*i)->add_to_value(total, expr);
     if (!(*i)->has_flags(POST_VIRTUAL))

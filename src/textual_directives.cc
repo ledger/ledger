@@ -33,9 +33,9 @@
 
 namespace ledger {
 
-using detail::instance_t;
 using detail::application_t;
 using detail::fixed_rate_t;
+using detail::instance_t;
 
 #if TIMELOG_SUPPORT
 
@@ -60,8 +60,8 @@ void instance_t::clock_in_directive(char* line, bool capitalized) {
   position.sequence = context.sequence++;
 
   datetime_t when = parse_datetime(datetime);
-  time_xact_t event(position, when, capitalized,
-                    p ? top_account()->find_account(p) : NULL, n ? n : "", end ? end : "");
+  time_xact_t event(position, when, capitalized, p ? top_account()->find_account(p) : NULL,
+                    n ? n : "", end ? end : "");
 
   timelog.clock_in(event);
 }
@@ -87,8 +87,8 @@ void instance_t::clock_out_directive(char* line, bool capitalized) {
   position.sequence = context.sequence++;
 
   datetime_t when = parse_datetime(datetime);
-  time_xact_t event(position, when, capitalized,
-                    p ? top_account()->find_account(p) : NULL, n ? n : "", end ? end : "");
+  time_xact_t event(position, when, capitalized, p ? top_account()->find_account(p) : NULL,
+                    n ? n : "", end ? end : "");
 
   context.count += timelog.clock_out(event);
 }
@@ -137,9 +137,8 @@ void instance_t::option_directive(char* line) {
   // Check if this is a short option (single dash) vs long option (double dash)
   if (line[0] == '-' && line[1] != '-') {
     // Short options are not supported in configuration files
-    throw_(option_error,
-           _("Short options (e.g., -S) are not supported in configuration files. "
-             "Please use long options (e.g., --sort) instead"));
+    throw_(option_error, _("Short options (e.g., -S) are not supported in configuration files. "
+                           "Please use long options (e.g., --sort) instead"));
   }
 
   char* p = next_element(line);
@@ -185,8 +184,8 @@ void instance_t::include_directive(char* line) {
 
     // Sort parent_path since on some file systems it is unsorted.
     std::vector<path> sorted_parent_path;
-    std::copy(std::filesystem::directory_iterator(parent_path), std::filesystem::directory_iterator(),
-              std::back_inserter(sorted_parent_path));
+    std::copy(std::filesystem::directory_iterator(parent_path),
+              std::filesystem::directory_iterator(), std::back_inserter(sorted_parent_path));
     std::sort(sorted_parent_path.begin(), sorted_parent_path.end());
 
     for (std::vector<path>::const_iterator iter(sorted_parent_path.begin()),

@@ -67,7 +67,7 @@ public:
   // directly from the post_t object.
   enum class fast_path_t : uint8_t {
     NONE = 0,
-    POST_AMOUNT,  // get_amount(post) - post.amount or compound_value
+    POST_AMOUNT, // get_amount(post) - post.amount or compound_value
   };
 
 protected:

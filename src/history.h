@@ -69,7 +69,7 @@ public:
                   bool bidirectionally = false);
 
   std::optional<price_point_t> find_price(const commodity_t& source, const datetime_t& moment,
-                                         const datetime_t& oldest = datetime_t());
+                                          const datetime_t& oldest = datetime_t());
 
   std::optional<price_point_t> find_price(const commodity_t& source, const commodity_t& target,
                                           const datetime_t& moment,

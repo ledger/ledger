@@ -196,11 +196,9 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
 
     unistring name(pbuf.str());
 
-    bool is_balance_assignment =
-        post->has_flags(POST_CALCULATED) && post->assigned_amount;
+    bool is_balance_assignment = post->has_flags(POST_CALCULATED) && post->assigned_amount;
 
-    if (!post->has_flags(POST_CALCULATED) || is_balance_assignment ||
-        report.HANDLED(generated)) {
+    if (!post->has_flags(POST_CALCULATED) || is_balance_assignment || report.HANDLED(generated)) {
       out << name.extract();
       std::string::size_type slip = (static_cast<std::string::size_type>(account_width) -
                                      static_cast<std::string::size_type>(name.length()));
@@ -228,8 +226,8 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         justify(amt_str, post->amount_expr->text(), (int)amount_width, true);
         amt = amt_str.str();
       } else if (count == 2 && index == 2 && post_has_simple_amount(*post) &&
-                 post_has_simple_amount(*(*xact.posts.begin())) &&
-                 post->must_balance() && (*xact.posts.begin())->must_balance() &&
+                 post_has_simple_amount(*(*xact.posts.begin())) && post->must_balance() &&
+                 (*xact.posts.begin())->must_balance() &&
                  ((*xact.posts.begin())->amount.commodity() == post->amount.commodity())) {
         // If there are two postings and they both simple amount, both
         // must balance, and they are both of the same commodity, don't

@@ -59,10 +59,10 @@ private:
   ptr_op_t left_;
 
   std::variant<std::monostate,
-               ptr_op_t,           // used by all binary operators
-               value_t,            // used by constant VALUE
-               string,             // used by constant IDENT
-               expr_t::func_t,     // used by terminal FUNCTION
+               ptr_op_t,                // used by all binary operators
+               value_t,                 // used by constant VALUE
+               string,                  // used by constant IDENT
+               expr_t::func_t,          // used by terminal FUNCTION
                std::shared_ptr<scope_t> // used by terminal SCOPE
                >
       data;
@@ -178,7 +178,9 @@ public:
     assert(is_scope());
     return std::get<std::shared_ptr<scope_t>>(data);
   }
-  const std::shared_ptr<scope_t> as_scope() const { return const_cast<op_t*>(this)->as_scope_lval(); }
+  const std::shared_ptr<scope_t> as_scope() const {
+    return const_cast<op_t*>(this)->as_scope_lval();
+  }
   void set_scope(std::shared_ptr<scope_t> val) { data = val; }
 
   // These three functions must use 'kind == IDENT' rather than

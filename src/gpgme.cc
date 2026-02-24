@@ -177,8 +177,7 @@ istream* decrypted_stream_t::open_stream(const path& filename) {
   return new ifstream(filename);
 }
 
-decrypted_stream_t::decrypted_stream_t(path& filename)
-    : istream(nullptr), file(nullptr) {
+decrypted_stream_t::decrypted_stream_t(path& filename) : istream(nullptr), file(nullptr) {
   init_lib();
 
   file = open_file(filename);

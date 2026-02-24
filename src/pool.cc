@@ -97,8 +97,7 @@ commodity_t* commodity_pool_t::alias(const string& name, commodity_t& referent) 
   commodities_map::const_iterator i = commodities.find(referent.base_symbol());
   assert(i != commodities.end());
 
-  auto [iter, inserted] =
-      commodities.insert(commodities_map::value_type(name, (*i).second));
+  auto [iter, inserted] = commodities.insert(commodities_map::value_type(name, (*i).second));
   assert(inserted);
 
   return (*iter).second.get();
@@ -261,9 +260,11 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
 
   DEBUG("commodity.prices.add", "exchange: basis-cost    = " << breakdown.basis_cost);
 
-  annotation_t annotation(per_unit_cost,
-                          lot_date ? lot_date : (moment ? std::optional<date_t>(moment->date()) : std::optional<date_t>{}),
-                          tag);
+  annotation_t annotation(
+      per_unit_cost,
+      lot_date ? lot_date
+               : (moment ? std::optional<date_t>(moment->date()) : std::optional<date_t>{}),
+      tag);
 
   annotation.add_flags(ANNOTATION_PRICE_CALCULATED);
   if (current_annotation && current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))

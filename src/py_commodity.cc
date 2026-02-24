@@ -213,7 +213,7 @@ PyObject* py_commodity_unicode(commodity_t& commodity) {
 
 void export_commodity() {
   class_<commodity_pool_t, std::shared_ptr<commodity_pool_t>, boost::noncopyable>("CommodityPool",
-                                                                             no_init)
+                                                                                  no_init)
       .add_property("null_commodity",
                     make_getter(&commodity_pool_t::null_commodity, return_internal_reference<>()))
       .add_property(

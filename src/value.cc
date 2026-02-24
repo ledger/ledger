@@ -857,7 +857,7 @@ bool value_t::is_equal_to(const value_t& val) const {
 bool value_t::is_less_than(const value_t& val) const {
   switch (type()) {
   case VOID:
-    return !val.is_null();  // null is less than any non-null value
+    return !val.is_null(); // null is less than any non-null value
 
   case BOOLEAN:
     if (val.is_boolean()) {
@@ -1001,7 +1001,7 @@ bool value_t::is_less_than(const value_t& val) const {
 bool value_t::is_greater_than(const value_t& val) const {
   switch (type()) {
   case VOID:
-    return false;  // null is not greater than anything
+    return false; // null is not greater than anything
 
   case BOOLEAN:
     if (val.is_boolean()) {
@@ -1585,8 +1585,8 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
         if (&as_amount_lval().commodity().referent() != sources[index])
           break;
       } else if (!force[index] &&
-                 std::find(comms.begin(), comms.end(),
-                           &as_amount_lval().commodity().referent()) != comms.end()) {
+                 std::find(comms.begin(), comms.end(), &as_amount_lval().commodity().referent()) !=
+                     comms.end()) {
         break;
       }
 
@@ -1612,9 +1612,8 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
           // A:B syntax: only convert if the amount is commodity A
           should_convert = (&pair.first->referent() == sources[index]);
         } else {
-          should_convert =
-              force[index] ||
-              std::find(comms.begin(), comms.end(), &pair.first->referent()) == comms.end();
+          should_convert = force[index] || std::find(comms.begin(), comms.end(),
+                                                     &pair.first->referent()) == comms.end();
         }
 
         if (!should_convert) {

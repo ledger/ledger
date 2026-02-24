@@ -145,7 +145,7 @@ account_t* py_register_account(journal_t& journal, const string& name, post_t* p
 struct collector_wrapper {
   journal_t& journal;
   report_t report;
-  post_handler_ptr handler_chain;  // Keeps the filter chain alive (owns synthetic temp posts)
+  post_handler_ptr handler_chain; // Keeps the filter chain alive (owns synthetic temp posts)
   post_handler_ptr posts_collector;
 
   collector_wrapper(journal_t& _journal, report_t& base)
@@ -198,9 +198,8 @@ shared_ptr<collector_wrapper> py_query(journal_t& journal, const string& query) 
     coll->handler_chain = chain_post_handlers(coll->posts_collector, coll->report);
 
     if (coll->report.HANDLED(group_by_)) {
-      unique_ptr<post_splitter> splitter(
-          new post_splitter(coll->handler_chain, coll->report,
-                            coll->report.HANDLER(group_by_).expr));
+      unique_ptr<post_splitter> splitter(new post_splitter(coll->handler_chain, coll->report,
+                                                           coll->report.HANDLER(group_by_).expr));
       journal_t* jrnl = coll->report.session.journal.get();
       splitter->set_postflush_func([jrnl](const value_t&) { jrnl->clear_xdata(); });
       coll->handler_chain = post_handler_ptr(splitter.release());

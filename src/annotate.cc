@@ -308,9 +308,8 @@ commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what
 
   commodity_t* new_comm;
 
-  bool keep_price =
-      (what_to_keep.keep_price &&
-       (!what_to_keep.only_actuals || !details.has_flags(ANNOTATION_PRICE_CALCULATED)));
+  bool keep_price = (what_to_keep.keep_price && (!what_to_keep.only_actuals ||
+                                                 !details.has_flags(ANNOTATION_PRICE_CALCULATED)));
   bool keep_date = (what_to_keep.keep_date &&
                     (!what_to_keep.only_actuals || !details.has_flags(ANNOTATION_DATE_CALCULATED)));
   bool keep_tag = (what_to_keep.keep_tag &&
@@ -322,9 +321,10 @@ commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what
                                                            << "  keep tag " << keep_tag);
 
   if ((keep_price && details.price) || (keep_date && details.date) || (keep_tag && details.tag)) {
-    new_comm = pool().find_or_create(referent(), annotation_t(keep_price ? details.price : std::nullopt,
-                                                              keep_date ? details.date : std::nullopt,
-                                                              keep_tag ? details.tag : std::nullopt));
+    new_comm =
+        pool().find_or_create(referent(), annotation_t(keep_price ? details.price : std::nullopt,
+                                                       keep_date ? details.date : std::nullopt,
+                                                       keep_tag ? details.tag : std::nullopt));
 
     // Transfer over any relevant annotation flags, as they still apply.
     if (new_comm->annotated) {

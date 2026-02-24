@@ -98,7 +98,8 @@ struct register_optional_to_python : public boost::noncopyable {
   };
 
   explicit register_optional_to_python() {
-    register_python_conversion<std::optional<T>, std_optional_to_python, std_optional_from_python>();
+    register_python_conversion<std::optional<T>, std_optional_to_python,
+                               std_optional_from_python>();
   }
 };
 

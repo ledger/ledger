@@ -552,10 +552,11 @@ class calc_posts : public item_handler<post_t> {
 
 public:
   calc_posts(post_handler_ptr handler, expr_t& _amount_expr, bool _calc_running_total = false,
-             bool _maintain_stripped = false, const keep_details_t& _what_to_keep = keep_details_t())
+             bool _maintain_stripped = false,
+             const keep_details_t& _what_to_keep = keep_details_t())
       : item_handler<post_t>(handler), last_post(NULL), amount_expr(_amount_expr),
-        calc_running_total(_calc_running_total),
-        maintain_stripped_total(_maintain_stripped), what_to_keep(_what_to_keep) {
+        calc_running_total(_calc_running_total), maintain_stripped_total(_maintain_stripped),
+        what_to_keep(_what_to_keep) {
     TRACE_CTOR(calc_posts, "post_handler_ptr, expr_t&, bool");
   }
   virtual ~calc_posts() { TRACE_DTOR(calc_posts); }

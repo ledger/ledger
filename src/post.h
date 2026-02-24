@@ -50,16 +50,16 @@ class account_t;
 
 class post_t : public item_t {
 public:
-#define POST_VIRTUAL 0x0010         // the account was specified with (parens)
-#define POST_MUST_BALANCE 0x0020    // posting must balance in the transaction
-#define POST_CALCULATED 0x0040      // posting's amount was calculated
-#define POST_COST_CALCULATED 0x0080 // posting's cost was calculated
-#define POST_COST_IN_FULL 0x0100    // cost specified using @@
-#define POST_COST_FIXATED 0x0200    // cost is fixed using = indicator
-#define POST_COST_VIRTUAL 0x0400    // cost is virtualized: (@)
-#define POST_ANONYMIZED 0x0800      // a temporary, anonymous posting
-#define POST_DEFERRED 0x1000        // the account was specified with <angles>
-#define POST_IS_TIMELOG 0x2000      // the posting is a timelog entry
+#define POST_VIRTUAL 0x0010               // the account was specified with (parens)
+#define POST_MUST_BALANCE 0x0020          // posting must balance in the transaction
+#define POST_CALCULATED 0x0040            // posting's amount was calculated
+#define POST_COST_CALCULATED 0x0080       // posting's cost was calculated
+#define POST_COST_IN_FULL 0x0100          // cost specified using @@
+#define POST_COST_FIXATED 0x0200          // cost is fixed using = indicator
+#define POST_COST_VIRTUAL 0x0400          // cost is virtualized: (@)
+#define POST_ANONYMIZED 0x0800            // a temporary, anonymous posting
+#define POST_DEFERRED 0x1000              // the account was specified with <angles>
+#define POST_IS_TIMELOG 0x2000            // the posting is a timelog entry
 #define POST_AMOUNT_USER_ANNOTATED 0x4000 // amount has user-specified annotations
 #define POST_AMOUNT_USER_DATE 0x8000      // amount has user-specified lot date
 
@@ -158,7 +158,7 @@ public:
     value_t visited_value;
     value_t compound_value;
     value_t total;
-    value_t display_total;  // cached stripped display total
+    value_t display_total; // cached stripped display total
     std::size_t count;
     date_t date;
     date_t value_date;
@@ -173,8 +173,8 @@ public:
     xdata_t(const xdata_t& other)
         : supports_flags<uint_least16_t>(other.flags()), visited_value(other.visited_value),
           compound_value(other.compound_value), total(other.total),
-          display_total(other.display_total), count(other.count),
-          date(other.date), account(other.account), sort_values(other.sort_values) {
+          display_total(other.display_total), count(other.count), date(other.date),
+          account(other.account), sort_values(other.sort_values) {
       TRACE_CTOR(post_t::xdata_t, "copy");
     }
     ~xdata_t() noexcept { TRACE_DTOR(post_t::xdata_t); }

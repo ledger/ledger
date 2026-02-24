@@ -92,12 +92,11 @@ public:
     assert(begin + len <= this_len);
 
     if (this_len)
-      utf8::utf32to8(
-          utf32chars.begin() + static_cast<std::string::difference_type>(begin),
-          utf32chars.begin() + static_cast<std::string::difference_type>(begin) +
-              static_cast<std::string::difference_type>(len ? (len > this_len ? this_len : len)
-                                                            : this_len),
-          std::back_inserter(utf8result));
+      utf8::utf32to8(utf32chars.begin() + static_cast<std::string::difference_type>(begin),
+                     utf32chars.begin() + static_cast<std::string::difference_type>(begin) +
+                         static_cast<std::string::difference_type>(
+                             len ? (len > this_len ? this_len : len) : this_len),
+                     std::back_inserter(utf8result));
 
     return utf8result;
   }
@@ -138,10 +137,9 @@ public:
     utf8result += std::string(head, '.');
 
     if (begin_idx < end_idx)
-      utf8::utf32to8(
-          utf32chars.begin() + static_cast<std::string::difference_type>(begin_idx),
-          utf32chars.begin() + static_cast<std::string::difference_type>(end_idx),
-          std::back_inserter(utf8result));
+      utf8::utf32to8(utf32chars.begin() + static_cast<std::string::difference_type>(begin_idx),
+                     utf32chars.begin() + static_cast<std::string::difference_type>(end_idx),
+                     std::back_inserter(utf8result));
 
     utf8result += std::string(tail, '.');
 

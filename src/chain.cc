@@ -157,12 +157,10 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
     // scrub(display_total) to use the pre-stripped value from xdata,
     // avoiding expensive O(K) GMP arithmetic per posting.
     keep_details_t wtk = report.what_to_keep();
-    bool maintain_stripped = calc_running &&
-        report.HANDLER(display_total_).expr.exprs.empty() &&
-        report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
-        report.HANDLER(total_).expr.exprs.empty() &&
-        report.HANDLER(total_).expr.base_expr == "total" &&
-        !wtk.keep_all();
+    bool maintain_stripped = calc_running && report.HANDLER(display_total_).expr.exprs.empty() &&
+                             report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
+                             report.HANDLER(total_).expr.exprs.empty() &&
+                             report.HANDLER(total_).expr.base_expr == "total" && !wtk.keep_all();
 
     handler = std::make_shared<calc_posts>(handler, expr, calc_running, maintain_stripped, wtk);
   }
@@ -185,32 +183,26 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
         // it may have been activated without a value (from period sorting
         // via normalize_period).  Check value directly since str() throws
         // on empty values.
-        const string& sort_xacts_value =
-            report.HANDLER(sort_xacts_).value;
+        const string& sort_xacts_value = report.HANDLER(sort_xacts_).value;
         if (sort_xacts_value.empty()) {
           // Activated from period sorting: use sort_'s expression for
           // within-transaction sorting only, no global sort.
-          handler = std::make_shared<sort_xacts>(handler,
-                                                  expr_t(report.HANDLER(sort_).str()),
-                                                  report);
+          handler =
+              std::make_shared<sort_xacts>(handler, expr_t(report.HANDLER(sort_).str()), report);
           xacts_only = true;
         } else {
           // --sort-xacts given explicitly with its own expression: apply
           // within-transaction sort first, then global sort (from --sort).
-          handler = std::make_shared<sort_xacts>(handler,
-                                                  expr_t(sort_xacts_value), report);
+          handler = std::make_shared<sort_xacts>(handler, expr_t(sort_xacts_value), report);
         }
       }
 
-      if (! xacts_only)
-        handler = std::make_shared<sort_posts>(handler,
-                                               report.HANDLER(sort_).str(), report);
+      if (!xacts_only)
+        handler = std::make_shared<sort_posts>(handler, report.HANDLER(sort_).str(), report);
     } else if (report.HANDLED(sort_xacts_)) {
-      const string& sort_xacts_value =
-          report.HANDLER(sort_xacts_).value;
-      if (! sort_xacts_value.empty())
-        handler = std::make_shared<sort_xacts>(handler,
-                                               expr_t(sort_xacts_value), report);
+      const string& sort_xacts_value = report.HANDLER(sort_xacts_).value;
+      if (!sort_xacts_value.empty())
+        handler = std::make_shared<sort_xacts>(handler, expr_t(sort_xacts_value), report);
     }
 
     // collapse_posts causes xacts with multiple posts to appear as xacts
@@ -220,9 +212,9 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
       if (report.HANDLED(depth_))
         collapse_depth = lexical_cast<int>(report.HANDLER(depth_).str());
 
-      handler = std::make_shared<collapse_posts>(handler, report, expr, display_predicate,
-                                                 only_predicate, report.HANDLED(collapse_if_zero),
-                                                 collapse_depth);
+      handler =
+          std::make_shared<collapse_posts>(handler, report, expr, display_predicate, only_predicate,
+                                           report.HANDLED(collapse_if_zero), collapse_depth);
     }
 
     // subtotal_posts combines all the posts it receives into one subtotal

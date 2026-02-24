@@ -167,10 +167,9 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
         }
       }
 
-      bool time_colon =
-          (("h" == comm->symbol() || "m" == comm->symbol()) &&
-           (commodity_t::time_colon_by_default ||
-            (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON))));
+      bool time_colon = (("h" == comm->symbol() || "m" == comm->symbol()) &&
+                         (commodity_t::time_colon_by_default ||
+                          (comm && comm->has_flags(COMMODITY_STYLE_TIME_COLON))));
 
       for (const char* p = buf; *p; p++) {
         if (*p == '.') {
@@ -194,9 +193,9 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
             int min_width = (minutes == 0) ? 1 : (minutes >= 10 ? 2 : 1);
             int width = std::max(num_digits, min_width);
             out << std::setw(width) << std::setfill('0') << minutes;
-            break;  // fractional part fully handled
+            break; // fractional part fully handled
           } else if (commodity_t::decimal_comma_by_default ||
-                   (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
+                     (comm && comm->has_flags(COMMODITY_STYLE_DECIMAL_COMMA)))
             out << ',';
           else
             out << *p;
@@ -533,11 +532,13 @@ amount_t& amount_t::operator/=(const amount_t& amt) {
     mpq_div(MP(quantity), MP(quantity), MP(amt.quantity));
     mpq_mul(MP(quantity), MP(quantity), hundred);
     mpq_clear(hundred);
-    quantity->prec = static_cast<precision_t>(quantity->prec + amt.quantity->prec + extend_by_digits);
+    quantity->prec =
+        static_cast<precision_t>(quantity->prec + amt.quantity->prec + extend_by_digits);
     // commodity_ is unchanged: *this keeps its own commodity; "%" is consumed.
   } else {
     mpq_div(MP(quantity), MP(quantity), MP(amt.quantity));
-    quantity->prec = static_cast<precision_t>(quantity->prec + amt.quantity->prec + extend_by_digits);
+    quantity->prec =
+        static_cast<precision_t>(quantity->prec + amt.quantity->prec + extend_by_digits);
 
     if (!has_commodity())
       commodity_ = amt.commodity_;
@@ -626,8 +627,7 @@ void amount_t::in_place_truncate() {
   if (!quantity)
     throw_(amount_error, _("Cannot truncate an uninitialized amount"));
 
-  DEBUG("amount.truncate",
-        "Truncating " << *this << " to precision " << display_precision());
+  DEBUG("amount.truncate", "Truncating " << *this << " to precision " << display_precision());
 
   _dup();
 
@@ -771,7 +771,8 @@ void amount_t::in_place_unreduce() {
   }
 }
 
-std::optional<amount_t> amount_t::value(const datetime_t& moment, const commodity_t* in_terms_of) const {
+std::optional<amount_t> amount_t::value(const datetime_t& moment,
+                                        const commodity_t* in_terms_of) const {
   if (quantity) {
 #if DEBUG_ON
     DEBUG("commodity.price.find", "amount_t::value of " << commodity().symbol());
@@ -993,7 +994,8 @@ void parse_quantity(std::istream& in, string& value) {
     max--;
     in.get();
   }
-  READ_INTO(in, p, max, c, std::isdigit(static_cast<unsigned char>(c)) || c == '.' || c == ',' || c == '\'');
+  READ_INTO(in, p, max, c,
+            std::isdigit(static_cast<unsigned char>(c)) || c == '.' || c == ',' || c == '\'');
 
   string::size_type len = std::strlen(buf);
   while (len > 0 && !std::isdigit(static_cast<unsigned char>(buf[len - 1]))) {
@@ -1168,8 +1170,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
           // a thousands separator means the comma was actually the decimal
           // separator (European style). Retroactively switch to decimal_comma.
           decimal_comma_style = true;
-          new_quantity->prec =
-              static_cast<precision_t>(quant.length() - 1 - last_comma);
+          new_quantity->prec = static_cast<precision_t>(quant.length() - 1 - last_comma);
           if (decimal_offset % 3 != 0)
             throw_(amount_error, _("Incorrect use of thousand-mark period"));
           comm_flags |= COMMODITY_STYLE_THOUSANDS;

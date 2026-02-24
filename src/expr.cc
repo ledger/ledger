@@ -141,8 +141,7 @@ value_t expr_t::real_calc(scope_t& scope) {
     ptr_op_t locus;
     try {
       if (eval_depth > 256)
-        throw_(recursion_error,
-               _f("Expression recursion depth exceeded (%1%)") % eval_depth);
+        throw_(recursion_error, _f("Expression recursion depth exceeded (%1%)") % eval_depth);
       return ptr->calc(scope, &locus);
     } catch (const recursion_error&) {
       throw;

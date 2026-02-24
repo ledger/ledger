@@ -43,11 +43,22 @@ static std::string shell_escape(const std::string& s) {
   result.reserve(s.size() * 2);
   for (char c : s) {
     switch (c) {
-      case '$': case '`': case '|': case ';': case '&':
-      case '(': case ')': case '>': case '<': case '!':
-      case '\'': case '"': case '\\': case '\n':
-        result += '\\';
-        break;
+    case '$':
+    case '`':
+    case '|':
+    case ';':
+    case '&':
+    case '(':
+    case ')':
+    case '>':
+    case '<':
+    case '!':
+    case '\'':
+    case '"':
+    case '\\':
+    case '\n':
+      result += '\\';
+      break;
     }
     result += c;
   }
@@ -107,14 +118,14 @@ std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
       return point->second;
     }
   } else {
-    DEBUG("commodity.download",
-          "Failed to download price for '" << commodity.symbol()
-          << "' (command: \""
-          << (commodity_pool_t::current_pool->getquote
-              ? commodity_pool_t::current_pool->getquote->string()
-              : "getquote")
-          << " " << commodity.symbol() << " "
-          << (exchange_commodity ? exchange_commodity->symbol() : "''") << "\")");
+    DEBUG("commodity.download", "Failed to download price for '"
+                                    << commodity.symbol() << "' (command: \""
+                                    << (commodity_pool_t::current_pool->getquote
+                                            ? commodity_pool_t::current_pool->getquote->string()
+                                            : "getquote")
+                                    << " " << commodity.symbol() << " "
+                                    << (exchange_commodity ? exchange_commodity->symbol() : "''")
+                                    << "\")");
 
     // Don't try to download this commodity again.
     commodity.add_flags(COMMODITY_NOMARKET);
