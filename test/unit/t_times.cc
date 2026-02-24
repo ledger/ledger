@@ -1552,9 +1552,11 @@ BOOST_AUTO_TEST_CASE(testDateIntervalDumpNoDurationW11)
 
 BOOST_AUTO_TEST_CASE(testParseDateWithSlashRethrowW11)
 {
-  // A date string containing "/" should be rethrown if invalid
+  // A date string containing "/" should be rethrown if invalid.
+  // Use a valid year range (>=1400) but invalid month/day to avoid
+  // boost::gregorian::bad_year on some platforms.
   BOOST_CHECK_THROW(
-    date_interval_t interval("99/99/99"),
+    date_interval_t interval("2020/99/99"),
     date_error
   );
 }
