@@ -10,6 +10,23 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 cmake_minimum_required(VERSION ${Required_CMake_Version})
 
+# When building on macOS with a Nix-provided clang wrapper and an Xcode SDK sysroot,
+# the Xcode SDK's usr/include/c++/v1 directory gets inserted into the include search
+# path between the Nix libc++ c++/v1 and the SDK's C headers. Both c++/v1/stdint.h
+# wrappers share the _LIBCPP_STDINT_H guard, which breaks the #include_next chain to
+# usr/include/stdint.h and leaves uint8_t/uint64_t undefined. Apple SDK headers such
+# as sys/resource.h (pulled in by sys/wait.h) use these types unconditionally.
+# Clearing CMAKE_OSX_SYSROOT lets the Nix clang wrapper use its own bundled SDK
+# (which has no conflicting usr/include/c++/v1), resolving the include path conflict.
+if(APPLE AND NOT DEFINED CMAKE_OSX_SYSROOT)
+  # Allow the Nix clang wrapper to use its built-in sysroot so that only one
+  # c++/v1 stdint.h wrapper appears in the search path.
+  if(DEFINED ENV{NIX_CC} OR "$ENV{NIX_BUILD_TOP}" MATCHES "/nix/store/"
+     OR CMAKE_CXX_COMPILER MATCHES "/nix/store/")
+    set(CMAKE_OSX_SYSROOT "" CACHE PATH "Cleared: Nix clang uses its own SDK" FORCE)
+  endif()
+endif()
+
 set(CMAKE_BUILD_TYPE "Release" CACHE STRING "CMake build type (Release, Debug, RelWithDebInfo, MinSizeRel)")
 if(BUILD_DEBUG)
   message(DEPRECATION "BUILD_DEBUG is deprecated! Set CMAKE_BUILD_TYPE to Debug instead!")
