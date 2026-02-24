@@ -1,0 +1,67 @@
+; Coverage tests for item.cc miscellaneous lookup paths
+; Targets lines 49-53, 66, 107, 344, 350-351, 439, 465, 488, 514, 520, 525, 530
+
+2024/01/01 * Cleared Test
+    ; MyTag: hello
+    ; Category: food
+    Expenses:Food             $10.00
+    Assets:Cash
+
+2024/01/02 ! Pending Test
+    Expenses:Drink             $5.00
+    Assets:Cash
+
+; Test has_meta (alias for has_tag) - line 465
+test reg --format '%(has_meta("MyTag") ? "YES" : "NO")\n' Expenses:Food
+YES
+end test
+
+; Test meta (alias for tag) - line 476
+test reg --format '%(meta("MyTag"))\n' Expenses:Food
+hello
+end test
+
+; Test has_tag with regex mask - lines 49-50
+test reg --format '%(has_tag(/MyTag/) ? "YES" : "NO")\n' Expenses:Food
+YES
+end test
+
+; Test has_tag with two regex masks - lines 52-53, 107
+test reg --format '%(has_tag(/MyTag/, /hell/) ? "YES" : "NO")\n' Expenses:Food
+YES
+end test
+
+; Test uuid (alias for id) - lines 508-509
+test reg --format '%(uuid)\n' Expenses:Food
+2
+end test
+
+; Test status/state - lines 493-495
+test reg --format '%(status)\n' Expenses:Food
+1
+end test
+
+; Test actual_date (alias for primary_date) - line 413
+test reg --format '%(actual_date)\n' Expenses:Food
+2024/01/01
+end test
+
+; Test aux_date (returns null for no aux date) - lines 417-418
+test reg --format '%(aux_date)X\n' Expenses:Food
+X
+end test
+
+; Test effective_date (alias for aux_date) - lines 447-448
+test reg --format '%(effective_date)X\n' Expenses:Food
+X
+end test
+
+; Test is_account (always returns false for postings) - line 469
+test reg --format '%(is_account)\n' Expenses:Food
+false
+end test
+
+; Test primary_date - line 489-490
+test reg --format '%(primary_date)\n' Expenses:Food
+2024/01/01
+end test

@@ -1,0 +1,41 @@
+; Coverage tests for textual_xacts.cc cost parsing paths
+; Targets lines 535-610 (cost parsing with @ and @@)
+
+; Test per-unit cost with @
+2024/01/01 Per Unit Cost
+    Assets:Stocks       10 AAPL @ $150.00
+    Assets:Cash
+
+; Test total cost with @@
+2024/01/02 Total Cost
+    Assets:Stocks       10 AAPL @@ $1500.00
+    Assets:Cash
+
+; Test virtual cost with (@)
+2024/01/03 Virtual Cost
+    Assets:Stocks       10 AAPL (@) $150.00
+    Assets:Cash
+
+; Test fixed cost with @=
+2024/01/04 Fixed Cost
+    Assets:Stocks       10 AAPL @=$150.00
+    Assets:Cash
+
+; Test cost with expression (@ expr) - line 573-575
+2024/01/05 Expr Cost
+    Assets:Stocks       10 AAPL @ ($150.00)
+    Assets:Cash
+
+; Test total cost with negative amount (line 589-590)
+2024/01/06 Negative Total Cost
+    Assets:Stocks      -10 AAPL @@ $1500.00
+    Assets:Cash
+
+test reg Assets:Stocks
+24-Jan-01 Per Unit Cost         Assets:Stocks               10 AAPL      10 AAPL
+24-Jan-02 Total Cost            Assets:Stocks               10 AAPL      20 AAPL
+24-Jan-03 Virtual Cost          Assets:Stocks               10 AAPL      30 AAPL
+24-Jan-04 Fixed Cost            Assets:Stocks               10 AAPL      40 AAPL
+24-Jan-05 Expr Cost             Assets:Stocks               10 AAPL      50 AAPL
+24-Jan-06 Negative Total Cost   Assets:Stocks              -10 AAPL      40 AAPL
+end test

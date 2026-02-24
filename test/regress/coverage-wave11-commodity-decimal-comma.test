@@ -1,0 +1,12 @@
+; Coverage wave 11: commodity.cc decimal comma style
+; Targets lines 505
+
+commodity 1.000,00 EUR
+
+2020/01/15 Purchase
+    Expenses:Food    100,50 EUR
+    Assets:Cash
+
+test bal Expenses
+          100,50 EUR  Expenses:Food
+end test

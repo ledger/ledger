@@ -1,0 +1,20 @@
+; Test coverage for xact.cc lines 475-481
+; Unbalanced transaction error path
+
+2024/01/01 Test
+    Expenses:Food                           $50.00
+    Assets:Cash                            $-40.00
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 6:
+While balancing transaction from "$FILE", lines 4-6:
+> 2024/01/01 Test
+>     Expenses:Food                           $50.00
+>     Assets:Cash                            $-40.00
+Unbalanced remainder is:
+              $10.00
+Amount to balance against:
+              $50.00
+Error: Transaction does not balance
+end test

@@ -1,0 +1,68 @@
+; Coverage tests for mask.cc fold_codepoint: Latin-1 Supplement uppercase
+; Covers lines 51-66: À-Þ uppercase mappings
+
+; Characters: À(0xC0)→A, Æ(0xC6)→A, Ç(0xC7)→C, È(0xC8)→E
+;   Ì(0xCC)→I, Ð(0xD0)→D, Ñ(0xD1)→N, Ö(0xD6)→O, Ù(0xD9)→U
+;   Ý(0xDD)→Y, Þ(0xDE)→T
+
+2024/01/01 Àchat
+    Expenses:FoodÀ            $10.00
+    Assets:Checking
+
+2024/01/02 Æsthetic
+    Expenses:FoodÆ            $20.00
+    Assets:Checking
+
+2024/01/03 Çerise
+    Expenses:FoodÇ            $30.00
+    Assets:Checking
+
+2024/01/04 Èlite
+    Expenses:FoodÈ            $40.00
+    Assets:Checking
+
+2024/01/05 Ìmport
+    Expenses:FoodÌ            $50.00
+    Assets:Checking
+
+2024/01/06 Ðenmark
+    Expenses:FoodÐ            $60.00
+    Assets:Checking
+
+2024/01/07 Ñoble
+    Expenses:FoodÑ            $70.00
+    Assets:Checking
+
+2024/01/08 Östern
+    Expenses:FoodÖ            $80.00
+    Assets:Checking
+
+2024/01/09 Ùnion
+    Expenses:FoodÙ            $90.00
+    Assets:Checking
+
+2024/01/10 Ýellow
+    Expenses:FoodÝ            $100.00
+    Assets:Checking
+
+2024/01/11 Þorn
+    Expenses:FoodÞ            $110.00
+    Assets:Checking
+
+; Test: all account names get folded during matching
+test bal Expenses --ignore-diacritics
+             $660.00  Expenses
+              $10.00    FoodÀ
+              $20.00    FoodÆ
+              $30.00    FoodÇ
+              $40.00    FoodÈ
+              $50.00    FoodÌ
+              $60.00    FoodÐ
+              $70.00    FoodÑ
+              $80.00    FoodÖ
+              $90.00    FoodÙ
+             $100.00    FoodÝ
+             $110.00    FoodÞ
+--------------------
+             $660.00
+end test

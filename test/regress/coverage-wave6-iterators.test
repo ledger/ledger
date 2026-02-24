@@ -1,0 +1,41 @@
+; Coverage tests for iterators.cc - sorted accounts, commodities iterators
+
+P 2020/01/01 AAPL $150.00
+P 2020/02/01 AAPL $155.00
+P 2020/03/01 AAPL $160.00
+
+2020/01/01 Buy Stock
+    Assets:Investments:Stocks    10 AAPL @ $150.00
+    Assets:Checking    $-1500.00
+
+2020/02/01 Groceries
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2020/03/01 Gas
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; Test sorted accounts (exercises sorted_accounts_iterator)
+test bal --sort account --flat
+           $-1580.00  Assets:Checking
+             10 AAPL  Assets:Investments:Stocks
+              $50.00  Expenses:Food
+              $30.00  Expenses:Transport
+--------------------
+           $-1500.00
+             10 AAPL
+end test
+
+; Test pricedb report (exercises posts_commodities_iterator)
+test pricedb
+P 2020/01/01 00:00:00 AAPL $150.00
+P 2020/02/01 00:00:00 AAPL $155.00
+P 2020/03/01 00:00:00 AAPL $160.00
+end test
+
+; Test commodities report
+test commodities
+$
+AAPL
+end test

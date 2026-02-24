@@ -1,0 +1,33 @@
+; Coverage tests for annotate.cc
+; Tests: lot pricing, per-unit and total prices, fixated prices,
+;        lot dates, lot tags
+
+; Test fixated per-unit price
+2024/01/01 Buy Stock A
+    Assets:Stocks                    10 AAPL {=$150.00}
+    Assets:Cash
+
+; Test lot with date annotation
+2024/01/02 Buy Stock B
+    Assets:Stocks                     3 GOOG {$100.00} [2024/01/02]
+    Assets:Cash
+
+; Test lot with tag annotation
+2024/01/03 Buy Stock C
+    Assets:Stocks                     2 MSFT {$200.00} (batch1)
+    Assets:Cash
+
+test bal --lots Assets:Stocks
+     10 AAPL {=$150}
+3 GOOG {$100} [2024/01/02]
+2 MSFT {$200} (batch1)  Assets:Stocks
+end test
+
+test reg Assets:Stocks
+24-Jan-01 Buy Stock A           Assets:Stocks               10 AAPL      10 AAPL
+24-Jan-02 Buy Stock B           Assets:Stocks                3 GOOG      10 AAPL
+                                                                          3 GOOG
+24-Jan-03 Buy Stock C           Assets:Stocks                2 MSFT      10 AAPL
+                                                                          3 GOOG
+                                                                          2 MSFT
+end test

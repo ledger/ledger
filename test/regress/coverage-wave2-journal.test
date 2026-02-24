@@ -1,0 +1,53 @@
+; Tests for journal.cc uncovered lines
+; Covers: add_account/remove_account (lines 104-109),
+;   journal::read (lines 440-478), has_xdata/clear_xdata (lines 480-513),
+;   journal::valid (lines 515-524)
+
+2024/01/01 Test
+    Expenses:Food          $10.00
+    Assets:Cash
+
+2024/01/02 Test 2
+    Expenses:Rent         $500.00
+    Assets:Cash
+
+; Test balance with multiple accounts to exercise account tree
+test bal
+            $-510.00  Assets:Cash
+             $510.00  Expenses
+              $10.00    Food
+             $500.00    Rent
+--------------------
+                   0
+end test
+
+; Test register to exercise xdata computation
+test reg Expenses
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+24-Jan-02 Test 2                Expenses:Rent               $500.00      $510.00
+end test
+
+; Test --subtotal to force subtotal (exercises xdata paths)
+test reg --subtotal Expenses
+24-Jan-01 - 24-Jan-02           Expenses:Food                $10.00       $10.00
+                                Expenses:Rent               $500.00      $510.00
+end test
+
+; Test print command
+test print
+2024/01/01 Test
+    Expenses:Food                             $10.00
+    Assets:Cash
+
+2024/01/02 Test 2
+    Expenses:Rent                            $500.00
+    Assets:Cash
+end test
+
+; Test equity command
+test equity
+2024/01/02 Opening Balances
+    Assets:Cash                             $-510.00
+    Expenses:Food                             $10.00
+    Expenses:Rent                            $500.00
+end test

@@ -1,0 +1,26 @@
+; Coverage tests for history.cc (commodity_history_impl_t price graph)
+; Price history uses Dijkstra shortest paths through the commodity graph
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP $1.30
+P 2024/06/01 EUR $1.12
+P 2024/06/01 GBP $1.32
+
+2024/01/01 Euro Purchase
+    Expenses:Travel    100.00 EUR
+    Assets:Cash
+
+2024/02/01 British Purchase
+    Expenses:Travel    50.00 GBP
+    Assets:Cash
+
+; Market value using price history (exercises commodity_history graph lookup)
+test bal --market --now 2024/06/15 Expenses:Travel
+             $178.00  Expenses:Travel
+end test
+
+; Prices command exercises the price history iteration
+test prices EUR
+2024/01/01 EUR             $1.10
+2024/06/01 EUR             $1.12
+end test

@@ -1,0 +1,28 @@
+; Coverage tests for textual_xacts.cc
+; Tests: balance assertions, auto transactions with percentage
+
+; Test balance assertions
+2024/01/01 Opening
+    Assets:Checking                 $1000.00
+    Equity:Opening
+
+2024/01/02 Grocery
+    Expenses:Food                    $50.00
+    Assets:Checking                            = $950.00
+
+; Test auto transaction with percentage
+= /Food/
+    (Budget:Food)                   -100%
+
+2024/01/03 Food Court
+    Expenses:Food                    $15.00
+    Assets:Cash
+
+test bal Assets:Checking
+             $950.00  Assets:Checking
+end test
+
+test reg Expenses:Food
+24-Jan-02 Grocery               Expenses:Food                $50.00       $50.00
+24-Jan-03 Food Court            Expenses:Food                $15.00       $65.00
+end test

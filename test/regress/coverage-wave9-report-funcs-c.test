@@ -1,0 +1,83 @@
+; Tests for report.cc additional function lookup paths
+; Covers: fn_commodity_price (842), fn_averaged_lots (579),
+;   fn_scrub (675), fn_quantity (687), fn_format (661),
+;   fn_format_datetime (792), fn_should_bold (572),
+;   fn_amount_expr (547), fn_total_expr (549),
+;   fn_get_at (614), fn_display_amount (553), fn_display_total (557),
+;   fn_set_commodity_price (853), fn_now (544)
+
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $195.00
+
+2024/01/01 Buy Stock
+    Assets:Brokerage     10 AAPL {$150.00} [2024/01/01] (tag1)
+    Assets:Cash         $-1500.00
+
+2024/02/01 Gas Station
+    Expenses:Auto:Gas           $35.00
+    Assets:Cash
+
+; Test commodity_price function - covers line 842-851
+test reg --now 2024/06/01 --format '%(commodity_price(amount, now))\n' Assets:Brokerage
+$195.00
+end test
+
+; Test averaged_lots function - covers lines 579-584
+test bal --format '%(averaged_lots(display_total))\n' --flat Assets:Brokerage
+10 AAPL {$150.00} [2024/01/01]
+end test
+
+; Test scrub function - covers line 675-677
+test reg --format '%(scrub(amount))\n' Expenses:Auto:Gas
+$35.00
+end test
+
+; Test quantity function - covers lines 687-689
+test reg --format '%(quantity(amount))\n' Expenses:Auto:Gas
+35
+end test
+
+; Test format function - covers lines 661-666
+test reg --format '%(format("%(payee)"))\n' Expenses:Auto:Gas
+Gas Station
+end test
+
+; Test format_datetime with custom format - covers line 794-795
+test reg --format '%(format_datetime(now, "%Y-%m-%d"))\n' --now 2024/06/01 Expenses:Auto:Gas
+2024-06-01
+end test
+
+; Test should_bold function - covers lines 572-577
+test reg --format '%(should_bold)\n' --bold-if='amount>10' Expenses:Auto:Gas
+true
+end test
+
+; Test amount_expr - covers line 547-548
+test reg --format '%(amount_expr)\n' Expenses:Auto:Gas
+$35.00
+end test
+
+; Test total_expr - covers line 549-551
+test reg --format '%(total_expr)\n' Expenses:Auto:Gas
+$35.00
+end test
+
+; Test get_at with index 0 - covers lines 614-630
+test reg --format '%(get_at(amount, 0))\n' Expenses:Auto:Gas
+$35.00
+end test
+
+; Test display_amount function - covers line 553-555
+test reg --format '%(display_amount)\n' Expenses:Auto:Gas
+$35.00
+end test
+
+; Test display_total function - covers line 557-570
+test reg --format '%(display_total)\n' Expenses:Auto:Gas
+$35.00
+end test
+
+; Test now function - covers line 544-545
+test reg --now 2024/06/01 --format '%(now)\n' Expenses:Auto:Gas
+2024/06/01 00:00:00
+end test

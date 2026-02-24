@@ -1,0 +1,12 @@
+; Test coverage for textual_directives.cc lines 113-118
+; C directive (price conversion)
+
+C 1.00 GBP = $1.25
+
+2024/01/01 Test
+    Expenses:Food                          100 GBP
+    Assets:Cash
+
+test bal Expenses
+          100.00 GBP  Expenses:Food
+end test

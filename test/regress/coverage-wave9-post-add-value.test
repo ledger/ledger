@@ -1,0 +1,15 @@
+; Test coverage for post.cc lines 605-640
+; Test add_to_value paths: compound value, visited value, and amount expression
+
+2024/01/01 Test1
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/02 Test2
+    Expenses:Food                           $25.00
+    Assets:Cash
+
+test reg --format '%(display_amount) %(total) %(cost) %(price)\n' Expenses
+$50.00 $50.00 $50.00 $50.00
+$25.00 $75.00 $25.00 $25.00
+end test

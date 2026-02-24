@@ -1,0 +1,16 @@
+; Coverage for xact.cc lines 296-298: fixated total price
+; (ANNOTATION_PRICE_NOT_PER_UNIT) with a negative amount. Uses double-brace
+; {{=price}} syntax. Multiple lots create > 2 commodities in balance.
+
+2024/01/01 Sell energy
+    Expenses:Energy              -100 kWh {{=72 EUR}}
+    Expenses:Energy              -50 kWh {=0.8 EUR}
+    Assets:Cash                   112 EUR
+
+test bal
+             112 EUR  Assets:Cash
+            -150 kWh  Expenses:Energy
+--------------------
+             112 EUR
+            -150 kWh
+end test

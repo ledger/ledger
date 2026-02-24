@@ -1,0 +1,16 @@
+; Test -M (monthly) option for report.cc coverage
+
+2024/01/15 January Purchase
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 February Purchase
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test reg -M
+24-Jan-01 - 24-Jan-31           Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+24-Feb-01 - 24-Feb-29           Assets:Checking             $-30.00      $-30.00
+                                Expenses:Food                $30.00            0
+end test

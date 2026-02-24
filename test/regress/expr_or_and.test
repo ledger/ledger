@@ -1,0 +1,22 @@
+; Test expressions with OR and AND using non-boolean operands
+; These exercise op.cc O_OR and O_AND paths
+
+2024/01/01 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/15 Gas Station
+    Expenses:Transport         $30.00
+    Assets:Checking
+
+; AND with truthy left returns right operand
+test reg --amount "amount & 1" Expenses
+24-Jan-01 Grocery Store         Expenses:Food                     1            1
+24-Jan-15 Gas Station           Expenses:Transport                1            2
+end test
+
+; OR with truthy left returns left value
+test reg --amount "amount | 999" Expenses
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-15 Gas Station           Expenses:Transport           $30.00       $80.00
+end test

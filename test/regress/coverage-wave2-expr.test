@@ -1,0 +1,42 @@
+; Tests for expr.cc uncovered lines
+; Covers: expression evaluation, merge_exprs, function calls
+
+2024/01/01 Test
+    Expenses:Food         $10.00
+    Assets:Cash
+
+; Test expression with value expression context
+test reg --amount "amount + 0" Expenses
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+end test
+
+; Test expression with function call (quantity) - covers function path
+test reg --amount "quantity(amount)" Expenses
+24-Jan-01 Test                  Expenses:Food                    10           10
+end test
+
+; Test display expression merging - covers merge_exprs line 255
+test reg --display "account =~ /Expenses/" Expenses
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+end test
+
+; Test expression context (abs)
+test reg --amount "abs(amount)" Assets
+24-Jan-01 Test                  Assets:Cash                  $10.00       $10.00
+end test
+
+; Test payee expression
+test reg --amount "amount" @Test
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Test total expression
+test reg --total "total * 2" Expenses
+24-Jan-01 Test                  Expenses:Food                $10.00       $20.00
+end test
+
+; Test neg expression
+test reg --amount "-amount" Assets
+24-Jan-01 Test                  Assets:Cash                  $10.00       $10.00
+end test

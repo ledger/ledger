@@ -1,0 +1,10 @@
+; Test lot_date, lot_price, lot_tag functions for report.cc coverage
+; Targets report.cc lines 912-937
+
+2024/01/15 Buy Stocks
+    Assets:Brokerage    10 AAPL {$150.00} [2024/01/15] (mytag)
+    Assets:Checking    $-1500.00
+
+test reg --format "%(lot_date(amount)) %(lot_price(amount)) %(lot_tag(amount))\n" Assets:Brokerage
+2024/01/15 $150.00 mytag
+end test

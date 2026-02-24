@@ -1,0 +1,44 @@
+; Tests for filters.cc uncovered lines in equity/collapse/by_payee paths
+; Covers: collapse_posts (399), posts_as_equity (930-931, 975),
+; by_payee_posts (1175), transfer_details (1232)
+
+2024/01/01 Grocery
+    Expenses:Food        $100.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Fuel         $50.00
+    Assets:Cash
+
+2024/01/03 Grocery
+    Expenses:Food         $75.00
+    Assets:Cash
+
+; === Test 1: Collapse posts (only collapses same xact) ===
+test reg Expenses --collapse --columns 80
+24-Jan-01 Grocery               Expenses:Food               $100.00      $100.00
+24-Jan-02 Gas Station           Expenses:Fuel                $50.00      $150.00
+24-Jan-03 Grocery               Expenses:Food                $75.00      $225.00
+end test
+
+; === Test 2: Equity output ===
+test equity --columns 80
+2024/01/03 Opening Balances
+    Assets:Cash                             $-225.00
+    Expenses:Food                            $175.00
+    Expenses:Fuel                             $50.00
+end test
+
+; === Test 3: By payee subtotals ===
+test reg --by-payee Expenses --columns 80
+24-Jan-02 Gas Station           Expenses:Fuel                $50.00       $50.00
+24-Jan-01 Grocery               Expenses:Food               $175.00      $225.00
+end test
+
+; === Test 4: Display payee ===
+test reg --display "payee =~ /Grocery/" --columns 80
+24-Jan-01 Grocery               Expenses:Food               $100.00      $100.00
+                                Assets:Cash                $-100.00            0
+24-Jan-03 Grocery               Expenses:Food                $75.00       $75.00
+                                Assets:Cash                 $-75.00            0
+end test

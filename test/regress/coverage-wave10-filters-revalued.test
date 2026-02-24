@@ -1,0 +1,23 @@
+; Test coverage for filters.cc lines 713-715, 805-817
+; changed_value_posts output_revaluation and output_intermediate_prices
+
+P 2024/01/01 AAPL $100.00
+P 2024/01/15 AAPL $110.00
+P 2024/02/01 AAPL $105.00
+
+2024/01/01 Buy Stock
+    Assets:Brokerage                        10 AAPL @ $100.00
+    Assets:Cash
+
+2024/02/01 Another Buy
+    Assets:Brokerage                         5 AAPL @ $105.00
+    Assets:Cash
+
+test reg --revalued --market
+24-Jan-01 Buy Stock             Assets:Brokerage           $1000.00     $1000.00
+                                Assets:Cash               $-1000.00            0
+24-Jan-15 Commodities revalued  <Revalued>                  $100.00      $100.00
+24-Feb-01 Commodities revalued  <Revalued>                  $-50.00       $50.00
+24-Feb-01 Another Buy           Assets:Brokerage            $525.00      $575.00
+                                Assets:Cash                $-525.00       $50.00
+end test

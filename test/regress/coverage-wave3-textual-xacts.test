@@ -1,0 +1,24 @@
+; Test textual_xacts.cc: balance assertion, balance assignment,
+; total cost @@, inline assert/check/expr, xact note parsing
+2024/01/15 Grocery Store
+    assert 1 == 1
+    check 1 == 1
+    expr 1 + 1
+    Expenses:Food              $25.00
+    Assets:Cash              $-25.00 = $-25.00
+
+2024/01/16 Buy Stocks
+    Assets:Stocks              10 AAPL @@ $150.00
+    Assets:Cash
+
+test bal Expenses
+              $25.00  Expenses:Food
+end test
+
+test bal Assets:Cash
+            $-175.00  Assets:Cash
+end test
+
+test bal Assets:Stocks
+             10 AAPL  Assets:Stocks
+end test

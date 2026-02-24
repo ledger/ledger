@@ -1,0 +1,23 @@
+; Coverage tests for report.cc color function lookups and ansify_if
+; Targets: fn_green (994-996), fn_magenta (997-999), fn_red (1000-1002),
+;          fn_bold (988-990), fn_underline (1003-1005), fn_blink (982-984),
+;          fn_cyan (991-993), fn_yellow (1009-1011), fn_white (1006-1008),
+;          fn_blue (985-987), fn_black (979-981)
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --force-color --format "%(ansify_if(payee, green))\n%(ansify_if(payee, magenta))\n%(ansify_if(payee, red))\n%(ansify_if(payee, bold))\n%(ansify_if(payee, underline))\n%(ansify_if(payee, blink))\n%(ansify_if(payee, cyan))\n%(ansify_if(payee, yellow))\n%(ansify_if(payee, white))\n%(ansify_if(payee, blue))\n%(ansify_if(payee, black))\n" Expenses
+[32mPayee[0m
+[35mPayee[0m
+[31mPayee[0m
+[1mPayee[0m
+[4mPayee[0m
+[5mPayee[0m
+[36mPayee[0m
+[33mPayee[0m
+[37mPayee[0m
+[34mPayee[0m
+[30mPayee[0m
+end test

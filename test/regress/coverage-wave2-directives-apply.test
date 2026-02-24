@@ -1,0 +1,34 @@
+; Wave 2 coverage tests for textual_directives.cc apply directives
+; Covers: apply_account_directive (lines 286-293), apply_tag_directive (lines 296-309),
+;   end_apply_directive (lines 380-404)
+
+apply account Assets
+
+2024/01/01 Test
+    Checking     $100.00
+    Savings      $-100.00
+
+end apply account
+
+; Test apply account worked - accounts should be under Assets:
+test bal Assets:Checking
+             $100.00  Assets:Checking
+end test
+
+apply tag Receipts
+
+2024/01/02 Tagged
+    Expenses:Food     $10.00
+    Assets:Cash
+
+end apply tag
+
+2024/01/03 Not Tagged
+    Expenses:Food     $20.00
+    Assets:Cash
+
+; Test that apply tag applied the tag only to the Tagged transaction
+test reg %Receipts
+24-Jan-02 Tagged                Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

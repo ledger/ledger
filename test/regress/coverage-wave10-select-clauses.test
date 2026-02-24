@@ -1,0 +1,51 @@
+; Coverage for select.cc SQL-like clauses
+; Tests: where (line 376), display (line 379), collect (line 381),
+;        group by (line 383), style (lines 385-389)
+
+2024/01/01 Grocery Store
+    ; Category: groceries
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/15 Gas Station
+    ; Category: fuel
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; === Test 1: where clause (line 376) ===
+test select date,payee,amount from posts where 'account =~ /Food/'
+24-Jan-01 Grocery Store                                                  $50.00
+end test
+
+; === Test 2: display clause (line 379) ===
+test select date,payee,amount from posts display 'amount > 0'
+24-Jan-01 Grocery Store                                                  $50.00
+24-Jan-15 Gas Station                                                    $30.00
+end test
+
+; === Test 3: collect clause (line 381) ===
+test select date,payee,amount from posts collect 'amount * 2'
+24-Jan-01 Grocery Store                                                 $100.00
+24-Jan-01 Grocery Store                                                $-100.00
+24-Jan-15 Gas Station                                                    $60.00
+24-Jan-15 Gas Station                                                   $-60.00
+end test
+
+; === Test 4: group by clause (line 383) ===
+test select amount from posts 'group by' payee
+Gas Station
+      $30.00
+     $-30.00
+
+Grocery Store
+      $50.00
+     $-50.00
+end test
+
+; === Test 5: style clause (lines 385-389) ===
+test select amount from posts style csv
+      $50.00
+     $-50.00
+      $30.00
+     $-30.00
+end test

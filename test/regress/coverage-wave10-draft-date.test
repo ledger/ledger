@@ -1,0 +1,18 @@
+; Coverage tests for draft.cc lines 266-269 (date from year directive)
+; Also covers draft.cc line 363, 369 (copied postings from matching xact)
+; Also covers draft.cc line 488 (add_xact finalization)
+
+2024/01/01 Restaurant
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/01 Restaurant
+    Expenses:Food    $75.00
+    Assets:Cash
+
+; The xact command creates a draft transaction
+test xact on 2024/06/15 "Restaurant"
+2024/06/15 Restaurant
+    Expenses:Food                             $75.00
+    Assets:Cash
+end test

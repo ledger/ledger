@@ -1,0 +1,34 @@
+; Tests for format.cc uncovered lines: truncate_string various modes,
+; parse_format, format with custom format strings.
+
+2024/01/01 A Very Long Payee Name For Testing Truncation
+    Expenses:Food:Restaurant:Downtown:Fancy:Place    $100.00
+    Assets:Cash
+
+2024/01/02 Short
+    Expenses:Misc    $5.00
+    Assets:Cash
+
+; === Test 1: Truncation in register (exercises truncate_string) ===
+test reg --columns 60
+24-Jan-01 A Very Long .. ..e:Do:Fa:Place   $100.00   $100.00
+                         Assets:Cash      $-100.00         0
+24-Jan-02 Short          Expenses:Misc       $5.00     $5.00
+                         Assets:Cash        $-5.00         0
+end test
+
+; === Test 2: Very narrow columns (more aggressive truncation) ===
+test reg --columns 40
+24-Jan-01 A Very.. ..Place $100.00 $100.00
+                   As:Cash $-100.00      0
+24-Jan-02 Short    Ex:Misc  $5.00  $5.00
+                   As:Cash $-5.00      0
+end test
+
+; === Test 3: Custom format with field widths ===
+test reg --format "%-30a %10t\n"
+Expenses:Food:Restaurant:Downtown:Fancy:Place    $100.00
+Assets:Cash                      $-100.00
+Expenses:Misc                       $5.00
+Assets:Cash                        $-5.00
+end test

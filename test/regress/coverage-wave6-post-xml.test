@@ -1,0 +1,219 @@
+; Tests for post.cc put_post XML output (lines 702-740)
+; Covers: state (cleared/pending), virtual flag, _date,
+; payee_from_tag, account ref, post-amount, cost, note, metadata, total
+
+2024/01/01 * Grocery
+    ; Payee: Override Payee
+    Expenses:Food        $100.00
+    Assets:Cash
+
+2024/01/02 ! Pending Purchase
+    ; Note: This is a note
+    Expenses:Misc         $50.00
+    Assets:Cash
+
+2024/01/03 Stock with Cost
+    Assets:Brokerage     10 AAPL @ $150.00
+    Assets:Cash         $-1500.00
+
+; === Test 1: XML output with cleared state and payee tag ===
+test xml Expenses:Food | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ version="VVVVVV"/g'
+<?xml version="1.0" encoding="utf-8"?>
+<ledger version="VVVVVV">
+  <commodities>
+    <commodity flags="P">
+      <symbol>$</symbol>
+    </commodity>
+  </commodities>
+  <accounts>
+    <account id="XXXX">
+      <name/>
+      <fullname/>
+      <account-total>
+        <amount>
+          <commodity flags="P">
+            <symbol>$</symbol>
+          </commodity>
+          <quantity>100</quantity>
+        </amount>
+      </account-total>
+      <account/>
+      <account id="XXXX">
+        <name>Expenses</name>
+        <fullname>Expenses</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>100</quantity>
+          </amount>
+        </account-total>
+        <account id="XXXX">
+          <name>Food</name>
+          <fullname>Expenses:Food</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>100</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>100</quantity>
+            </amount>
+          </account-total>
+        </account>
+        <account/>
+      </account>
+    </account>
+  </accounts>
+  <transactions>
+    <transaction state="cleared">
+      <date>2024/01/01</date>
+      <payee>Grocery</payee>
+      <note> Payee: Override Payee</note>
+      <metadata>
+        <value key="Payee">
+          <string>Override Payee</string>
+        </value>
+      </metadata>
+      <postings>
+        <posting state="cleared">
+          <payee>Override Payee</payee>
+          <account ref="XXXX">
+            <name>Expenses:Food</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>100</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>100</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+  </transactions>
+</ledger>
+
+end test
+
+; === Test 2: XML output with cost ===
+test xml Assets:Brokerage | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ version="VVVVVV"/g'
+<?xml version="1.0" encoding="utf-8"?>
+<ledger version="VVVVVV">
+  <commodities>
+    <commodity flags="S">
+      <symbol>AAPL</symbol>
+      <annotation>
+        <price>
+          <commodity flags="P">
+            <symbol>$</symbol>
+          </commodity>
+          <quantity>150</quantity>
+        </price>
+        <date>2024/01/03</date>
+      </annotation>
+    </commodity>
+  </commodities>
+  <accounts>
+    <account id="XXXX">
+      <name/>
+      <fullname/>
+      <account-total>
+        <amount>
+          <commodity flags="S">
+            <symbol>AAPL</symbol>
+          </commodity>
+          <quantity>10</quantity>
+        </amount>
+      </account-total>
+      <account id="XXXX">
+        <name>Assets</name>
+        <fullname>Assets</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="S">
+              <symbol>AAPL</symbol>
+            </commodity>
+            <quantity>10</quantity>
+          </amount>
+        </account-total>
+        <account id="XXXX">
+          <name>Brokerage</name>
+          <fullname>Assets:Brokerage</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="S">
+                <symbol>AAPL</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="S">
+                <symbol>AAPL</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </account-total>
+        </account>
+        <account/>
+      </account>
+      <account/>
+    </account>
+  </accounts>
+  <transactions>
+    <transaction>
+      <date>2024/01/03</date>
+      <payee>Stock with Cost</payee>
+      <postings>
+        <posting>
+          <account ref="XXXX">
+            <name>Assets:Brokerage</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="S">
+                <symbol>AAPL</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </post-amount>
+          <cost>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>1500</quantity>
+          </cost>
+          <total>
+            <amount>
+              <commodity flags="S">
+                <symbol>AAPL</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+  </transactions>
+</ledger>
+
+end test

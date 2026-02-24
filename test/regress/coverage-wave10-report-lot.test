@@ -1,0 +1,28 @@
+; Tests for lot_date, lot_price, lot_tag functions
+; Covers report.cc lines 912-937
+
+2024/01/15 Buy Stock
+    Assets:Brokerage    5 AAPL {$100.00} [2024/01/15] (lot1)
+    Assets:Cash         $-500.00
+
+2024/02/01 Buy More
+    Assets:Brokerage    3 AAPL {$120.00} [2024/02/01] (lot2)
+    Assets:Cash         $-360.00
+
+; Test lot_date - covers line 912-918
+test reg --format '%(lot_date(amount))\n' Assets:Brokerage
+2024/01/15
+2024/02/01
+end test
+
+; Test lot_price - covers line 921-927
+test reg --format '%(lot_price(amount))\n' Assets:Brokerage
+$100.00
+$120.00
+end test
+
+; Test lot_tag - covers line 930-937
+test reg --format '%(lot_tag(amount))\n' Assets:Brokerage
+lot1
+lot2
+end test

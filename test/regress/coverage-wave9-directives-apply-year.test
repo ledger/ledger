@@ -1,0 +1,24 @@
+; Test coverage for textual_directives.cc lines 288-298, 350-405
+; apply year directive with end apply, and assert/check top-level directives
+
+apply year 2024
+assert 1 == 1
+check 1 == 1
+
+01/15 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+end apply year
+
+2025/02/01 Another Purchase
+    Expenses:Tools                          $25.00
+    Assets:Cash
+
+test bal Expenses
+              $75.00  Expenses
+              $50.00    Food
+              $25.00    Tools
+--------------------
+              $75.00
+end test

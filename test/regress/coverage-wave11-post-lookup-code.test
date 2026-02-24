@@ -1,0 +1,11 @@
+; Coverage for post.cc lines 160-164: get_code path when xact has a code.
+; Also covers line 169: get_payee through post lookup.
+
+2024/01/01 (ABC123) Grocery Store
+    Expenses:Food                 $25.00
+    Assets:Cash
+
+test reg --format "%(code) %(payee)\n"
+ABC123 Grocery Store
+ABC123 Grocery Store
+end test

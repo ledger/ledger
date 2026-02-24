@@ -1,0 +1,48 @@
+; Coverage tests for output.h - report_accounts, report_payees,
+; report_tags, report_commodities, clear() methods
+
+2020/01/01 Grocery Store
+    ; :food:
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2020/01/15 Gas Station
+    ; :transport:
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+2020/02/01 Restaurant
+    ; :food:dining:
+    Expenses:Food:Dining    $75.00
+    Assets:Checking
+
+2020/02/15 Grocery Store
+    ; :food:
+    Expenses:Food    $45.00
+    Assets:Checking
+
+; Test accounts report (covers report_accounts)
+test accounts Expenses --flat
+Expenses:Food
+Expenses:Food:Dining
+Expenses:Transport
+end test
+
+; Test payees report (covers report_payees)
+test payees
+Gas Station
+Grocery Store
+Restaurant
+end test
+
+; Test tags report (covers report_tags)
+test tags
+dining
+food
+transport
+end test
+
+; Test commodities report (covers report_commodities)
+test commodities
+$
+end test

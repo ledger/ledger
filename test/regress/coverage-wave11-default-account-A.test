@@ -1,0 +1,13 @@
+; Coverage for textual.cc line 227-228 (A default account directive)
+
+A Assets:Cash
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

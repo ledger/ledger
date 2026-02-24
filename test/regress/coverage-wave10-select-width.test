@@ -1,0 +1,18 @@
+; Coverage for select.cc column width adjustment paths
+; Tests width expansion (lines 201-214) and shrinking (lines 216-231)
+
+2024/01/01 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/15 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; === Test 1: Very narrow columns forces width shrinking path (lines 216-231) ===
+test select date,payee,account,amount,total from posts --columns=50
+24-Jan-01 Grocery S.. Expens:Food  $50.00  $50.00
+24-Jan-01 Grocery S.. As:Checking $-50.00       0
+24-Jan-15 Gas Station ..Transport  $30.00  $30.00
+24-Jan-15 Gas Station As:Checking $-30.00       0
+end test

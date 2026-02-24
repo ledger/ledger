@@ -1,0 +1,67 @@
+; Coverage wave 8: account lookup and display
+; Tests: account functions, depth, partial_name, valid(), children_with_xdata
+
+2024/01/01 Opening Balance
+    Assets:Bank:Checking      $5,000.00
+    Assets:Bank:Savings       $10,000.00
+    Equity:Opening
+
+2024/01/15 Grocery Shopping
+    Expenses:Food:Groceries      $150.00
+    Assets:Bank:Checking
+
+2024/01/20 Restaurant
+    Expenses:Food:Dining         $75.00
+    Assets:Bank:Checking
+
+2024/02/01 Rent
+    Expenses:Housing:Rent      $1,200.00
+    Assets:Bank:Checking
+
+2024/02/15 Electric Bill
+    Expenses:Housing:Utilities   $100.00
+    Assets:Bank:Checking
+
+; Test balance with depth
+test bal --depth 2 Assets
+          $13,475.00  Assets:Bank
+end test
+
+; Test balance with flat
+test bal --flat Assets
+           $3,475.00  Assets:Bank:Checking
+          $10,000.00  Assets:Bank:Savings
+--------------------
+          $13,475.00
+end test
+
+; Test register with account function
+test reg Expenses:Food
+24-Jan-15 Grocery Shopping      Expense:Food:Groceries      $150.00      $150.00
+24-Jan-20 Restaurant            Expenses:Food:Dining         $75.00      $225.00
+end test
+
+; Test total (family) via balance
+test bal Expenses
+           $1,525.00  Expenses
+             $225.00    Food
+              $75.00      Dining
+             $150.00      Groceries
+           $1,300.00    Housing
+           $1,200.00      Rent
+             $100.00      Utilities
+--------------------
+           $1,525.00
+end test
+
+; Test with format using depth_spacer
+test bal --format "%(depth_spacer)%(partial_account)\n" Expenses
+Expenses
+  Food
+    Dining
+    Groceries
+  Housing
+    Rent
+    Utilities
+
+end test

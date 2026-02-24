@@ -1,0 +1,37 @@
+; Coverage tests for value.cc balance arithmetic and division
+; Exercises balance division paths (lines 723-741) and number paths
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Expenses:Drink   6.00 EUR
+    Assets:Cash
+
+; Balance / integer exercises lines 726-727
+test bal Expenses:Food --format '%(display_total / 2)\n'
+$5.00
+end test
+
+; Balance / amount (single-commodity balance / amount) exercises lines 729-732
+test bal Expenses:Food --format '%(display_total / $2.00)\n'
+$5.00
+end test
+
+; Multi-commodity balance / integer exercises lines 726-727
+test bal Expenses --format '%(display_total / 2)\n'
+$5.00
+3.00 EUR
+3.00 EUR
+$5.00
+$5.00
+3.00 EUR
+end test
+
+; Multi-commodity balance / commodityless amount exercises lines 733-735
+test bal Expenses --format '%(display_total / 3)\n'
+$3.33
+2.00 EUR
+2.00 EUR
+$3.33
+$3.33
+2.00 EUR
+end test

@@ -1,0 +1,52 @@
+; Coverage tests for report.cc expression functions (more)
+; Targets: fn_truncated, fn_join, fn_is_seq, fn_to_*, fn_to_mask, fn_to_balance
+
+2024/01/01 Buy Stock
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Cash    $-1500.00
+
+2024/02/01 Sell Stock
+    Assets:Brokerage    -5 AAPL @ $160.00
+    Assets:Cash    $800.00
+
+; Test fn_truncated with 3 args (line 720-724)
+test reg --format "%(truncated(account, 15, 3))\n" Assets:Cash
+Assets:Cash
+Assets:Cash
+end test
+
+; Test fn_join (line 1428)
+test reg --format "%(join(account))\n" Assets:Cash
+Assets:Cash
+Assets:Cash
+end test
+
+; Test fn_is_seq (line 1421)
+test reg --format "%(is_seq(amount) ? 'seq' : 'single')\n" Assets:Cash
+single
+single
+end test
+
+; Test fn_to_amount (line 1516)
+test reg --format "%(to_amount(display_amount))\n" Assets:Cash
+$-1500.00
+$800.00
+end test
+
+; Test fn_to_mask (line 1522) - outputs without slashes
+test reg --format "%(to_mask('foo'))\n" Assets:Cash
+foo
+foo
+end test
+
+; Test fn_to_balance (line 1518)
+test reg --format "%(to_balance(display_amount))\n" Assets:Cash
+$-1500.00
+$800.00
+end test
+
+; Test fn_to_string (line 1520)
+test reg --format "%(to_string(account))\n" Assets:Cash
+Assets:Cash
+Assets:Cash
+end test

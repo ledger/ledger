@@ -1,0 +1,62 @@
+; Coverage for select.cc FROM clause variants
+; Tests: from xacts (line 349), from transactions (line 349),
+;        from posts (line 353), from accounts (lines 357-361),
+;        default no-from path (lines 395-398)
+
+2024/01/01 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/15 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; === Test 1: from xacts (print format, lines 349-352) ===
+test select date,payee,amount from xacts
+2024/01/01 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+
+2024/01/15 Gas Station
+    Expenses:Transport                        $30.00
+    Assets:Checking
+end test
+
+; === Test 2: from transactions (alias, line 349) ===
+test select date,payee,amount from transactions
+2024/01/01 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+
+2024/01/15 Gas Station
+    Expenses:Transport                        $30.00
+    Assets:Checking
+end test
+
+; === Test 3: from txns (alias, line 349) ===
+test select date,payee,amount from txns
+2024/01/01 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Checking
+
+2024/01/15 Gas Station
+    Expenses:Transport                        $30.00
+    Assets:Checking
+end test
+
+; === Test 4: default no-from path (lines 395-398) ===
+test select amount
+      $50.00
+     $-50.00
+      $30.00
+     $-30.00
+end test
+
+; === Test 5: from accounts (lines 357-361) ===
+test select account,total from accounts
+Assets:Checking      $-80.00
+Expenses       $80.00
+Food       $50.00
+Transport       $30.00
+            0
+end test

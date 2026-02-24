@@ -1,0 +1,69 @@
+; Coverage tests for draft.cc
+; Targets draft.cc uncovered lines for parse_args and insert
+
+2024/01/01 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/15 Restaurant
+    Expenses:Dining    $30.00
+    Assets:Checking
+
+; Test 'draft' command with date (lines 131-135)
+test draft on 2024/03/01 Grocery
+2024/03/01 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test
+
+; Test 'draft' with code (lines 136-139)
+test xact on 2024/03/01 Grocery code 1234
+2024/03/01 (1234) Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test
+
+; Test 'draft' with note (lines 140-143)
+test xact on 2024/03/01 Grocery note memo
+2024/03/01 Grocery Store  ;memo
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test
+
+; Test 'draft' with 'at' keyword (lines 118-121)
+test xact on 2024/03/01 at Grocery
+2024/03/01 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test
+
+; Test 'draft' with 'rest' keyword (line 144-145)
+test xact on 2024/03/01 Grocery 100 rest
+2024/03/01 Grocery Store
+    Expenses:Food                            $100.00
+    Assets:Cash
+end test
+
+; Test 'draft' with to/from keywords (lines 122-130)
+test xact on 2024/03/01 Grocery 25 from Checking
+2024/03/01 Grocery Store
+    Expenses:Food                             $25.00
+    Assets:Checking
+end test
+
+; Test 'template' precommand (lines 47-82 template dump)
+test template Grocery 100
+--- Input arguments ---
+("Grocery", "100")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Grocery
+
+[Posting "to"]
+  Account mask: <use first of last related accounts>
+  Amount:       100
+
+[Posting "from"]
+  Account mask: <use last of last related accounts>
+end test

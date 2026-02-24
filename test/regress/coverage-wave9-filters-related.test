@@ -1,0 +1,14 @@
+; Test coverage for filters.cc related posts handling
+; --related shows the opposite side of transactions
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/02 Salary
+    Income:Salary                         $-2000.00
+    Assets:Bank
+
+test reg --related Expenses
+24-Jan-01 Grocery Store         Assets:Cash                 $-50.00      $-50.00
+end test

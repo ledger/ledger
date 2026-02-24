@@ -1,0 +1,23 @@
+; Coverage for item.cc lines 465,520,525,530,538-539:
+; Item lookup functions: L (actual/non-virtual), X (cleared), Y (pending).
+
+2024/01/01 * Cleared transaction
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+2024/01/02 ! Pending transaction
+    Expenses:Drink                $5.00
+    Assets:Cash
+
+2024/01/03 Uncleared transaction
+    Expenses:Misc                 $3.00
+    Assets:Cash
+
+test reg --format "%(L) %(X) %(Y)\n"
+true true false
+true true false
+true false true
+true false true
+true false false
+true false false
+end test

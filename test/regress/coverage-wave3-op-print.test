@@ -1,0 +1,246 @@
+; Wave 3 coverage tests for op.cc print() function (lines 606-823)
+; Triggers op_context() which calls print() on the expression tree
+; when evaluation errors occur, covering all operator type branches.
+
+2024/01/01 Test Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; O_ADD print path (line 649-655)
+test reg --limit "amount + undefined_var > 0" -> 1
+__ERROR__
+While evaluating value expression:
+  ((amount + undefined_var) > 0)
+             ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_SUB print path (line 656-662)
+test reg --limit "amount - undefined_var > 0" -> 1
+__ERROR__
+While evaluating value expression:
+  ((amount - undefined_var) > 0)
+             ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_MUL print path (line 663-669)
+test reg --limit "amount * undefined_var > 0" -> 1
+__ERROR__
+While evaluating value expression:
+  ((amount * undefined_var) > 0)
+             ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_DIV print path (line 670-676)
+test reg --limit "amount / undefined_var > 0" -> 1
+__ERROR__
+While evaluating value expression:
+  ((amount / undefined_var) > 0)
+             ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_EQ print path (line 678-684)
+test reg --limit "amount == undefined_var" -> 1
+__ERROR__
+While evaluating value expression:
+  (amount == undefined_var)
+             ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_LT print path (line 685-691)
+test reg --limit "amount < undefined_var" -> 1
+__ERROR__
+While evaluating value expression:
+  (amount < undefined_var)
+            ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_LTE print path (line 692-698)
+test reg --limit "amount <= undefined_var" -> 1
+__ERROR__
+While evaluating value expression:
+  (amount <= undefined_var)
+             ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_GT print path (line 699-705) - using amount > 0 but with undefined inside
+test reg --limit "amount > undefined_var" -> 1
+__ERROR__
+While evaluating value expression:
+  (amount > undefined_var)
+            ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_GTE print path (line 706-712)
+test reg --limit "amount >= undefined_var" -> 1
+__ERROR__
+While evaluating value expression:
+  (amount >= undefined_var)
+             ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_AND print path (line 714-720)
+test reg --limit "amount & undefined_var" -> 1
+__ERROR__
+While evaluating value expression:
+  (amount & undefined_var)
+            ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_OR print path (line 721-727) - first operand must be falsy
+test reg --limit "0 | undefined_var" -> 1
+__ERROR__
+While evaluating value expression:
+  (0 | undefined_var)
+       ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_NOT print path (line 638-642)
+test reg --limit "!undefined_var" -> 1
+__ERROR__
+While evaluating value expression:
+  (! undefined_var)
+     ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_NEG print path (line 643-647)
+test reg --limit "-undefined_var" -> 1
+__ERROR__
+While evaluating value expression:
+  (- undefined_var)
+     ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_QUERY and O_COLON print paths (lines 729-743)
+test reg --limit "undefined_var ? 1 : 0" -> 1
+__ERROR__
+While evaluating value expression:
+  (undefined_var ? (1 : 0))
+   ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_COLON print path - right side of ternary
+test reg --limit "1 ? undefined_var : 0" -> 1
+__ERROR__
+While evaluating value expression:
+  (1 ? (undefined_var : 0))
+        ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_MATCH print path (line 794-800)
+test reg --limit "account =~ undefined_var" -> 1
+__ERROR__
+While evaluating value expression:
+  (account =~ undefined_var)
+              ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_LOOKUP print path (line 760-766)
+test reg --limit "amount.undefined_var" -> 1
+__ERROR__
+While evaluating value expression:
+  (amount.undefined_var)
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Expected return of a scope, but received an amount
+end test
+
+; O_CALL print path (line 776-792) - single arg
+test reg --limit "undefined_func(amount)" -> 1
+__ERROR__
+While evaluating value expression:
+  undefined_func(amount)
+  ^^^^^^^^^^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_func'
+end test
+
+; O_CALL with O_CONS print path (lines 745-747, 776-792) - multiple args
+test reg --limit "undefined_func(amount, total)" -> 1
+__ERROR__
+While evaluating value expression:
+  undefined_func(amount, total)
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_func'
+end test
+
+; O_SEQ print path (line 748-750)
+test reg --limit "amount; undefined_var" -> 1
+__ERROR__
+While evaluating value expression:
+  (amount; undefined_var)
+           ^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_var'
+end test
+
+; O_LAMBDA print path (line 768-774) with O_SEQ
+test eval "x -> (x + undefined_var); x(1)" -> 1
+__ERROR__
+While evaluating value expression:
+  ((x -> (x + undefined_var)); x(1))
+                               ^^^^
+Error: Unknown identifier 'x'
+end test
+
+; O_CALL with no args - empty parens (line 789-791)
+test reg --limit "undefined_func()" -> 1
+__ERROR__
+While evaluating value expression:
+  undefined_func()
+  ^^^^^^^^^^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food    $10.00
+Error: Unknown identifier 'undefined_func'
+end test

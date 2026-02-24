@@ -1,0 +1,17 @@
+; Coverage tests for csv.cc
+; Tests: CSV output format
+
+2024/01/01 Grocery Store
+    Expenses:Food                    $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas                     $30.00
+    Assets:Cash
+
+test csv
+"2024/01/01","","Grocery Store","Expenses:Food","$","50","",""
+"2024/01/01","","Grocery Store","Assets:Cash","$","-50","",""
+"2024/01/02","","Gas Station","Expenses:Gas","$","30","",""
+"2024/01/02","","Gas Station","Assets:Cash","$","-30","",""
+end test

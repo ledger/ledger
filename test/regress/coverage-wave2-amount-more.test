@@ -1,0 +1,78 @@
+; Additional tests for amount.cc uncovered lines
+; Covers: decimal comma parsing (lines 1106-1202), time colon output (170-197),
+;   reduce/unreduce (705-736), annotate/strip_annotations (889-947),
+;   invert (569-577), unround (692-703)
+
+; --- Decimal comma style (European) ---
+commodity EUR 1.234,56
+2024/01/01 European Purchase
+    Expenses:Food            EUR 1.234,56
+    Assets:Bank
+
+test bal Expenses:Food
+        EUR 1.234,56  Expenses:Food
+end test
+
+test bal Assets:Bank
+       EUR -1.234,56  Assets:Bank
+end test
+
+; --- Time colon formatting ---
+C 1.00h = 60m
+C 1.00m = 60s
+
+2024/01/02 Work Morning
+    Billable            1.50h
+    Equity
+
+test reg --time-colon Billable --begin 2024/01/02 --end 2024/01/03
+24-Jan-02 Work Morning          Billable                      1:30h        1:30h
+end test
+
+; --- Reduce chain (s -> m -> h) ---
+2024/01/03 Work Afternoon
+    Billable            7200s
+    Equity
+
+test reg Billable --begin 2024/01/03 --end 2024/01/04
+24-Jan-03 Work Afternoon        Billable                      2.00h        2.00h
+end test
+
+; --- Annotated amounts with lot price and date ---
+; Covers: lines 889-914 (annotate), 916-935 (has_annotation/annotation),
+;         937-947 (strip_annotations), 751-758 (value with annotation price)
+2024/01/04 Buy Stock
+    Assets:Brokerage      10 AAPL {$150.00} [2024/01/01]
+    Assets:Cash           $-1500.00
+
+test bal --lot-prices Assets:Brokerage
+   10 AAPL {$150.00}  Assets:Brokerage
+end test
+
+; --- Market value with price lookup ---
+; Covers: lines 738-811 (value function), 764-805 (price lookup chain)
+P 2024/01/04 AAPL $160.00
+
+test bal --market Assets:Brokerage
+            $1600.00  Assets:Brokerage
+end test
+
+; --- Invert function ---
+; Covers: lines 569-577 (in_place_invert)
+2024/01/05 Divisible
+    Expenses:Test         $5.00
+    Assets:Cash
+
+test reg --amount "1 / amount" Expenses:Test --begin 2024/01/05 --end 2024/01/06
+24-Jan-05 Divisible             Expenses:Test                 $0.20        $0.20
+end test
+
+; --- Unrounded amounts (GBP avoids $ precision contamination) ---
+; Covers: lines 692-703 (in_place_unround)
+2024/01/06 Unround Test
+    Expenses:Unround      GBP 10.125
+    Assets:Cash
+
+test reg --amount "unrounded(amount)" Expenses:Unround --begin 2024/01/06 --end 2024/01/07
+24-Jan-06 Unround Test          Expenses:Unround         GBP 10.125   GBP 10.125
+end test

@@ -1,0 +1,77 @@
+; Regression test for coverage-wave8: filters.cc uncovered lines
+; Lines: 217 266-269 272 274 342 364 369 374 376 713-715 805-806 810 815 817
+;        831 865 930-931 975 1014-1015 1020-1021 1032 1108 1171 1193 1232
+;        1306 1308 1383 1436 1484-1485
+
+commodity $
+
+; Basic transactions
+2024/01/15 Store A
+    Expenses:Food         $10.00
+    Assets:Cash
+
+2024/01/20 Store B
+    Expenses:Food         $20.00
+    Assets:Cash
+
+2024/02/01 Gas Station
+    Expenses:Auto:Gas     $30.00
+    Assets:Cash
+
+2024/02/15 Restaurant
+    Expenses:Food         $15.00
+    Assets:Cash
+
+2024/03/01 Rent
+    Expenses:Housing      $1000.00
+    Assets:Cash
+
+; Transaction with virtual postings (lines 342, 974-975)
+2024/03/15 Tax allocation
+    Expenses:Tax          $500.00
+    Assets:Cash          -$500.00
+    [Budget:Tax]          $500.00
+    [Budget:Savings]     -$500.00
+
+; Test weekly interval (lines 1014-1015, 1020-1021, 1032)
+test register Expenses:Food --weekly
+24-Jan-14 - 24-Jan-20           Expenses:Food                $30.00       $30.00
+24-Feb-11 - 24-Feb-17           Expenses:Food                $15.00       $45.00
+end test
+
+; Test equity (lines 1108-1173)
+test equity Expenses
+2024/03/15 Opening Balances
+    Expenses:Auto:Gas                         $30.00
+    Expenses:Food                             $45.00
+    Expenses:Housing                        $1000.00
+    Expenses:Tax                             $500.00
+    Equity:Opening Balances                $-1575.00
+end test
+
+; Test sorting (exercises compare.cc lines 87-89, 98-100, 120, 131)
+test register Expenses --sort amount
+24-Jan-15 Store A               Expenses:Food                $10.00       $10.00
+24-Feb-15 Restaurant            Expenses:Food                $15.00       $25.00
+24-Jan-20 Store B               Expenses:Food                $20.00       $45.00
+24-Feb-01 Gas Station           Expenses:Auto:Gas            $30.00       $75.00
+24-Mar-15 Tax allocation        Expenses:Tax                $500.00      $575.00
+24-Mar-01 Rent                  Expenses:Housing           $1000.00     $1575.00
+end test
+
+; Test display filter (lines 217, 266-269)
+test register Expenses:Food --display 'amount>$12'
+24-Jan-20 Store B               Expenses:Food                $20.00       $30.00
+24-Feb-15 Restaurant            Expenses:Food                $15.00       $45.00
+end test
+
+; Test budget (lines 1306, 1308, 1383, 1436, 1484-1485)
+~ monthly
+    Expenses:Food         $200.00
+    Assets:Cash
+
+test register Expenses:Food --budget --monthly --end 2024/04/01
+24-Jan-01 - 24-Jan-31           Expenses:Food              $-170.00     $-170.00
+24-Feb-01 - 24-Feb-29           Expenses:Food              $-185.00     $-355.00
+24-Mar-01 - 24-Mar-31           Expenses:Food              $-200.00     $-555.00
+end test

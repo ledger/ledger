@@ -1,0 +1,114 @@
+; Test period command with biweekly, bimonthly, quarterly
+; Exercises: handle_period_token (lines 1150-1177)
+;   TOK_BIWEEKLY dump/to_string (lines 481, 593-594)
+;   TOK_BIMONTHLY dump/to_string (lines 477, 587-588)
+;   TOK_QUARTERLY dump/to_string (lines 475, 584-585)
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test period --now 2024/06/15 "biweekly"
+--- Period expression tokens ---
+TOK_BIWEEKLY: biweekly
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+duration: 2 weeks
+
+--- After stabilization ---
+   start: 24-Jun-02
+duration: 2 weeks
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jun-02 -- 24-Jun-15
+ 2: 24-Jun-16 -- 24-Jun-29
+ 3: 24-Jun-30 -- 24-Jul-13
+ 4: 24-Jul-14 -- 24-Jul-27
+ 5: 24-Jul-28 -- 24-Aug-10
+ 6: 24-Aug-11 -- 24-Aug-24
+ 7: 24-Aug-25 -- 24-Sep-07
+ 8: 24-Sep-08 -- 24-Sep-21
+ 9: 24-Sep-22 -- 24-Oct-05
+10: 24-Oct-06 -- 24-Oct-19
+11: 24-Oct-20 -- 24-Nov-02
+12: 24-Nov-03 -- 24-Nov-16
+13: 24-Nov-17 -- 24-Nov-30
+14: 24-Dec-01 -- 24-Dec-14
+15: 24-Dec-15 -- 24-Dec-28
+16: 24-Dec-29 -- 25-Jan-11
+17: 25-Jan-12 -- 25-Jan-25
+18: 25-Jan-26 -- 25-Feb-08
+19: 25-Feb-09 -- 25-Feb-22
+20: 25-Feb-23 -- 25-Mar-08
+end test
+
+test period --now 2024/06/15 "bimonthly"
+--- Period expression tokens ---
+TOK_BIMONTHLY: bimonthly
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+duration: 2 months
+
+--- After stabilization ---
+   start: 24-Jun-01
+duration: 2 months
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jun-01 -- 24-Jul-31
+ 2: 24-Aug-01 -- 24-Sep-30
+ 3: 24-Oct-01 -- 24-Nov-30
+ 4: 24-Dec-01 -- 25-Jan-31
+ 5: 25-Feb-01 -- 25-Mar-31
+ 6: 25-Apr-01 -- 25-May-31
+ 7: 25-Jun-01 -- 25-Jul-31
+ 8: 25-Aug-01 -- 25-Sep-30
+ 9: 25-Oct-01 -- 25-Nov-30
+10: 25-Dec-01 -- 26-Jan-31
+11: 26-Feb-01 -- 26-Mar-31
+12: 26-Apr-01 -- 26-May-31
+13: 26-Jun-01 -- 26-Jul-31
+14: 26-Aug-01 -- 26-Sep-30
+15: 26-Oct-01 -- 26-Nov-30
+16: 26-Dec-01 -- 27-Jan-31
+17: 27-Feb-01 -- 27-Mar-31
+18: 27-Apr-01 -- 27-May-31
+19: 27-Jun-01 -- 27-Jul-31
+20: 27-Aug-01 -- 27-Sep-30
+end test
+
+test period --now 2024/06/15 "quarterly"
+--- Period expression tokens ---
+TOK_QUARTERLY: quarterly
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+duration: 1 quarter
+
+--- After stabilization ---
+   start: 24-Apr-01
+duration: 1 quarter
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Apr-01 -- 24-Jun-30
+ 2: 24-Jul-01 -- 24-Sep-30
+ 3: 24-Oct-01 -- 24-Dec-31
+ 4: 25-Jan-01 -- 25-Mar-31
+ 5: 25-Apr-01 -- 25-Jun-30
+ 6: 25-Jul-01 -- 25-Sep-30
+ 7: 25-Oct-01 -- 25-Dec-31
+ 8: 26-Jan-01 -- 26-Mar-31
+ 9: 26-Apr-01 -- 26-Jun-30
+10: 26-Jul-01 -- 26-Sep-30
+11: 26-Oct-01 -- 26-Dec-31
+12: 27-Jan-01 -- 27-Mar-31
+13: 27-Apr-01 -- 27-Jun-30
+14: 27-Jul-01 -- 27-Sep-30
+15: 27-Oct-01 -- 27-Dec-31
+16: 28-Jan-01 -- 28-Mar-31
+17: 28-Apr-01 -- 28-Jun-30
+18: 28-Jul-01 -- 28-Sep-30
+19: 28-Oct-01 -- 28-Dec-31
+20: 29-Jan-01 -- 29-Mar-31
+end test

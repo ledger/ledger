@@ -1,0 +1,16 @@
+; Test coverage for filters.cc lines 397-435
+; --collapse exercises collapse_posts filter
+
+2024/01/01 Multi-part Purchase
+    Expenses:Food                           $30.00
+    Expenses:Drink                          $20.00
+    Assets:Cash
+
+2024/01/02 Single Purchase
+    Expenses:Food                           $15.00
+    Assets:Cash
+
+test reg --collapse Expenses
+24-Jan-01 Multi-part Purchase   <Total>                      $50.00       $50.00
+24-Jan-02 Single Purchase       Expenses:Food                $15.00       $65.00
+end test

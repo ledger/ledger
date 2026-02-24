@@ -1,0 +1,31 @@
+; Coverage for compare.cc line 62 (sort with account)
+; Also covers lines 87-89, 98-100, 120, 131
+
+2024/01/01 Payee A
+    Expenses:Zebra    $10.00
+    Assets:Cash
+
+2024/01/02 Payee B
+    Expenses:Apple    $20.00
+    Assets:Cash
+
+2024/01/03 Payee C
+    Expenses:Mango    $15.00
+    Assets:Cash
+
+; Sort by account name
+test reg --sort account Expenses
+24-Jan-02 Payee B               Expenses:Apple               $20.00       $20.00
+24-Jan-03 Payee C               Expenses:Mango               $15.00       $35.00
+24-Jan-01 Payee A               Expenses:Zebra               $10.00       $45.00
+end test
+
+; Sort accounts by -total (inverted, compound compare)
+test bal --sort "-total" Expenses
+              $45.00  Expenses
+              $20.00    Apple
+              $15.00    Mango
+              $10.00    Zebra
+--------------------
+              $45.00
+end test

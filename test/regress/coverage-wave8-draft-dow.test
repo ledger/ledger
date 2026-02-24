@@ -1,0 +1,14 @@
+; Coverage tests for draft.cc day-of-week parsing
+; Targets lines 103-116 (weekday parsing in parse_args)
+
+2024/01/01 Grocery Store
+    Expenses:Food            $50.00
+    Assets:Cash
+
+; xact with day of week - triggers lines 103-116
+; --now 2024/01/10 (Wednesday), most recent monday = 2024/01/08
+test xact --now 2024/01/10 monday Grocery
+2024/01/08 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test

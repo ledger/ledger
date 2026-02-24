@@ -1,0 +1,29 @@
+; Coverage tests for textual_directives.cc commodity directives
+; Targets lines 544-616 (commodity directive with sub-directives)
+
+commodity EUR
+  alias EURO
+  nomarket
+  note European currency
+
+commodity $
+  format $1,000.00
+  default
+
+2024/01/01 Test Purchase
+    Expenses:Food             $10.00
+    Assets:Cash
+
+2024/01/02 EUR Test
+    Expenses:Travel           50 EURO
+    Assets:Cash
+
+test bal Expenses
+              $10.00
+              50 EUR  Expenses
+              $10.00    Food
+              50 EUR    Travel
+--------------------
+              $10.00
+              50 EUR
+end test

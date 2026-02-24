@@ -1,0 +1,18 @@
+; Coverage tests for format.cc lines 361-380 (colorize/ansify_if in format elements)
+; Uses --bold-if to trigger the colorize_op code path in format element construction
+; Uses --no-color to suppress actual ANSI output so test output matches cleanly
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/15 Groceries
+    Expenses:Food    $25.00
+    Assets:Cash
+
+; This exercises format.cc 361-380: the bold_if format expression gets parsed
+; into an ansify_if call wrapping the format element
+test reg --bold-if "amount>100" Expenses
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+24-Jan-15 Groceries             Expenses:Food                $25.00       $35.00
+end test

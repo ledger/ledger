@@ -1,0 +1,20 @@
+; Test coverage for textual_xacts.cc lines 206-221
+; Automated transaction with assert/check/expr sub-directives
+
+= /Food/
+    assert account =~ /Food/
+    check account =~ /Food/
+    expr account
+    Expenses:Tax                              0.10
+    Assets:Tax                               -0.10
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test bal Tax
+              $-5.00  Assets:Tax
+               $5.00  Expenses:Tax
+--------------------
+                   0
+end test

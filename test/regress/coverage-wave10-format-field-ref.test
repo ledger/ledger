@@ -1,0 +1,12 @@
+; Coverage tests for format.cc lines 267-268 (%$ field reference validation)
+; Also covers format.cc lines 104-106 (parse_single_expression EOF branch)
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Test format with %% literal percent
+test reg -F "%D %%\n"
+2024/01/01 %
+2024/01/01 %
+end test

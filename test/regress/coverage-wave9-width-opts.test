@@ -1,0 +1,32 @@
+; Tests for report.cc width option handlers
+; Covers: --amount-width, --date-width, --payee-width,
+;   --account-width, --total-width (lines 198-252)
+
+2024/02/01 Gas Station
+    Expenses:Auto:Gas     $35.00
+    Assets:Cash
+
+; Test --amount-width option - covers line 206-207
+test bal --amount-width=25 Expenses
+                   $35.00  Expenses:Auto:Gas
+end test
+
+; Test --date-width option - covers lines 198-199
+test reg --date-width=12 Expenses
+24-Feb-01    Gas Station           Expenses:Auto:Gas              $35.00       $35.00
+end test
+
+; Test --payee-width option - covers lines 201-202
+test reg --payee-width=10 Expenses
+24-Feb-01 Gas Stat.. Expenses:Auto:Gas              $35.00       $35.00
+end test
+
+; Test --account-width option - covers lines 203-205
+test reg --account-width=30 Expenses
+24-Feb-01 Gas Station           Expenses:Auto:Gas                    $35.00       $35.00
+end test
+
+; Test --total-width option - covers lines 208-209
+test reg --total-width=15 Expenses
+24-Feb-01 Gas Station           Expenses:Auto:Gas              $35.00          $35.00
+end test

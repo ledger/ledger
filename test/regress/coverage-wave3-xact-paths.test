@@ -1,0 +1,40 @@
+; Coverage tests for xact.cc various paths
+; Tests: virtual null post balancing (lines 454-467),
+;        auto_xact_t extend_xact (lines 850-960)
+
+; Test virtual null post balancing (balanced-virtual with null amount)
+2024/01/01 Virtual Null Post
+    Expenses:Food    $50.00
+    Assets:Cash    $-50.00
+    [Budget:Food]    $-50.00
+    [Budget:Income]
+
+test bal Budget
+                   0  Budget
+             $-50.00    Food
+              $50.00    Income
+--------------------
+                   0
+end test
+
+; Test auto_xact_t extend_xact with percentage amount (lines 859-902)
+= /Expenses/
+    (Savings)    10%
+
+2024/02/01 Auto Percentage
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test reg Savings
+24-Feb-01 Auto Percentage       (Savings)                       10%          10%
+24-Mar-01 Cleared Auto          (Savings)                       10%          20%
+end test
+
+; Test auto xact with cleared state propagation (lines 956-959)
+2024/03/01 * Cleared Auto
+    Expenses:Rent    $500.00
+    Assets:Cash
+
+test reg Savings --limit "cleared"
+24-Mar-01 Cleared Auto          (Savings)                       10%          10%
+end test

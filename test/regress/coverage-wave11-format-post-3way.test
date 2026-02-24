@@ -1,0 +1,17 @@
+; Coverage for output.cc lines 54-57 (format_posts operator, three-part format)
+; Tests format with %/ separators for first/next/between line formats
+
+2024/01/01 Payee A
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Payee B
+    Expenses:Drinks    $5.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Payee A               Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-02 Payee B               Expenses:Drinks               $5.00        $5.00
+                                Assets:Cash                  $-5.00            0
+end test

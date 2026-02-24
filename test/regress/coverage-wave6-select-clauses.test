@@ -1,0 +1,31 @@
+; Coverage tests for select.cc
+; Tests: where, display, collect, group by clauses
+; Covers lines 376-383 in select.cc
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; Test select with where clause - covers line 376
+test select date, payee, account, amount from posts where account =~ /Expenses/ --columns 80
+24-Jan-15 Grocery Store            Expenses:Food                         $50.00
+24-Jan-20 Gas Station              Expenses:Transport                    $30.00
+end test
+
+; Test select with display clause - covers line 379
+test select date, account, amount from posts display account =~ /Expenses/ --columns 80
+24-Jan-15 Expenses:Food                                                  $50.00
+24-Jan-20 Expenses:Transport                                             $30.00
+end test
+
+; Test select with collect clause - covers line 381
+test select date, account, amount from posts collect amount --columns 80
+24-Jan-15 Expenses:Food                                                  $50.00
+24-Jan-15 Assets:Checking                                               $-50.00
+24-Jan-20 Expenses:Transport                                             $30.00
+24-Jan-20 Assets:Checking                                               $-30.00
+end test

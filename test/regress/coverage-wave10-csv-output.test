@@ -1,0 +1,18 @@
+; Coverage tests for csv.cc output path
+; Also indirectly exercises commodity comparison through sorted output
+
+2024/01/01 Grocery Store
+    Expenses:Food                    $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas                     30.00 EUR
+    Assets:Cash
+
+; CSV output exercises the format_posts::operator() for CSV format
+test csv
+"2024/01/01","","Grocery Store","Expenses:Food","$","50","",""
+"2024/01/01","","Grocery Store","Assets:Cash","$","-50","",""
+"2024/01/02","","Gas Station","Expenses:Gas","EUR","30","",""
+"2024/01/02","","Gas Station","Assets:Cash","EUR","-30","",""
+end test

@@ -1,0 +1,9 @@
+; Coverage for textual_directives.cc line 740 (general directive requires argument)
+
+alias
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+Error: Directive 'alias' requires an argument
+end test

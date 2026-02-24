@@ -1,0 +1,15 @@
+; Test coverage for textual_directives.cc lines 98-106
+; D directive (default commodity)
+
+D $1,000.00
+
+2024/01/01 Test
+    Expenses:Food                             50
+    Assets:Cash
+
+test bal
+                 -50  Assets:Cash
+                  50  Expenses:Food
+--------------------
+                   0
+end test

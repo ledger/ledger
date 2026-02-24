@@ -1,0 +1,69 @@
+; Coverage tests for remaining report.cc command and precommand lookups
+; Targets: report.cc lines 1637 (commodities), 1642 (draft), 1654 (lisp),
+;          1659 (entry), 1681 (reload), 1690 (select), 1701 (xml),
+;          1715 (eval/expr), 1720 (format), 1724 (generate)
+
+2024/01/15 Grocery Store
+    ; MyTag: food
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Electric Company
+    ; Utility: power
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+; Test draft command with fixed date (report.cc draft_command, line 1642)
+test draft --now=2024/03/01 Groceries Expenses:Food '$10' Assets:Checking
+2024/03/01 Grocery Store
+    ; MyTag: food
+    Expenses:Food                             $10.00
+    Assets:Checking
+end test
+
+; Test entry command (alias for draft, report.cc line 1659)
+test entry --now=2024/03/01 Groceries Expenses:Food '$10' Assets:Checking
+2024/03/01 Grocery Store
+    ; MyTag: food
+    Expenses:Food                             $10.00
+    Assets:Checking
+end test
+
+; Test print command
+test print Expenses:Food
+2024/01/15 Grocery Store
+    ; MyTag: food
+    Expenses:Food                             $50.00
+    Assets:Checking
+end test
+
+; Test eval precommand (report.cc eval_command, line 1715)
+test eval 2+3
+5
+end test
+
+; Test format precommand with simple format (report.cc format_command, line 1720)
+; format precommand shows parsing details - output includes context from sample transaction
+test format '%P\n' -> 0
+end test
+
+; Test register with --average option
+test reg --average Expenses
+24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-20 Electric Company      Expenses:Utilities          $120.00       $85.00
+end test
+
+; Test register with --deviation option
+test reg --deviation Expenses
+24-Jan-15 Grocery Store         Expenses:Food                $50.00            0
+24-Jan-20 Electric Company      Expenses:Utilities          $120.00      $-50.00
+end test
+
+; Test balance with --market (-V) option
+test bal -V Expenses
+             $170.00  Expenses
+              $50.00    Food
+             $120.00    Utilities
+--------------------
+             $170.00
+end test

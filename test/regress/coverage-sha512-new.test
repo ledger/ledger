@@ -1,0 +1,22 @@
+; Coverage tests for sha512.cc
+; Tests: --hashes option for transaction hashing
+
+2024/01/01 Grocery Store
+    Expenses:Food                    $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas                     $30.00
+    Assets:Cash
+
+test print --hashes sha512
+2024/01/01 Grocery Store
+    ; Hash: 3eeec254e80ba079e0610b7031c210505467eb94d83c0d41ba1c88a8bbabfe578ec6e5ca9350e15ec606b7c7f4c183be56e2ac05da694d03b70c33743e7a5220
+    Expenses:Food                             $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    ; Hash: f1fd51c7eaeb4d0992540c7ed3caa7847a3b0b426daf66fcc2276b89439e3e7d07d66ec71f552504f6aa1e55f5cf69f222ea041f3db2ed8db2f54a4905928bc9
+    Expenses:Gas                              $30.00
+    Assets:Cash
+end test

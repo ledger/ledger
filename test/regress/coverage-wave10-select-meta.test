@@ -1,0 +1,29 @@
+; Coverage for select.cc meta/unknown identifier column path
+; Tests: lines 330-341 (else branch for unrecognized column identifiers)
+; and lines 196-197 (meta_width for cols_needed)
+
+2024/01/01 Grocery Store
+    ; Category: groceries
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/15 Gas Station
+    ; Category: fuel
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; === Test 1: note column goes through meta/else path ===
+test select date,payee,note,amount from posts
+24-Jan-01 Grocery Store                                  Category: groceries       $50.00
+24-Jan-01 Grocery Store                                  Category: groceries      $-50.00
+24-Jan-15 Gas Station                                    Category: fuel       $30.00
+24-Jan-15 Gas Station                                    Category: fuel      $-30.00
+end test
+
+; === Test 2: total column path (lines 300-329) ===
+test select date,amount,total from posts
+24-Jan-01       $50.00       $50.00
+24-Jan-01      $-50.00            0
+24-Jan-15       $30.00       $30.00
+24-Jan-15      $-30.00            0
+end test

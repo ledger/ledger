@@ -1,0 +1,107 @@
+; Test period command with tokens not yet covered in dump/to_string
+; Exercises: token_t::dump and token_t::to_string for:
+;   TOK_NEXT (lines 451, 548-549, 551-552)
+;   TOK_LAST (lines 453, 557-558)
+;   TOK_TODAY (lines 457, 560-561, 563-564)
+;   TOK_TOMORROW (line 459)
+;   TOK_YESTERDAY (line 461)
+;   TOK_AGO (lines 439, 527-528)
+;   TOK_HENCE (lines 441, 530-531)
+;   TOK_IN (lines 447, 542-543)
+;   TOK_BIWEEKLY (lines 481, 593-594)
+;   TOK_BIMONTHLY (lines 477, 587-588)
+;   TOK_QUARTERLY (lines 475, 584-585)
+;   TOK_DASH (lines 429, 518-519)
+;   TOK_A_WDAY (lines 436-437, 506-507)
+;   TOK_WEEKS (lines 491, 608-609)
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test period --now 2024/06/15 "next year"
+--- Period expression tokens ---
+TOK_NEXT: next
+TOK_YEAR: year
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2025
+
+--- After stabilization ---
+   range: in year 2025
+   start: 25-Jan-01
+  finish: 26-Jan-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 25-Jan-01
+end test
+
+test period --now 2024/06/15 "last month"
+--- Period expression tokens ---
+TOK_LAST: last
+TOK_MONTH: month
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2024 month May
+
+--- After stabilization ---
+   range: in year 2024 month May
+   start: 24-May-01
+  finish: 24-Jun-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-May-01
+end test
+
+test period --now 2024/06/15 "today"
+--- Period expression tokens ---
+TOK_TODAY: today
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2024 month Jun day 15
+
+--- After stabilization ---
+   range: in year 2024 month Jun day 15
+   start: 24-Jun-15
+  finish: 24-Jun-16
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jun-15
+end test
+
+test period --now 2024/06/15 "tomorrow"
+--- Period expression tokens ---
+TOK_TOMORROW: tomorrow
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2024 month Jun day 16
+
+--- After stabilization ---
+   range: in year 2024 month Jun day 16
+   start: 24-Jun-16
+  finish: 24-Jun-17
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jun-16
+end test
+
+test period --now 2024/06/15 "yesterday"
+--- Period expression tokens ---
+TOK_YESTERDAY: yesterday
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2024 month Jun day 14
+
+--- After stabilization ---
+   range: in year 2024 month Jun day 14
+   start: 24-Jun-14
+  finish: 24-Jun-15
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jun-14
+end test

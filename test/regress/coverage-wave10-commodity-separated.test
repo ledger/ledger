@@ -1,0 +1,10 @@
+; Coverage tests for commodity.cc lines 338-339 (print elide_quotes for SEPARATED commodity)
+; Tests commodity with quoted symbol that has COMMODITY_STYLE_SEPARATED flag
+
+2024/01/01 Payee
+    Assets:Bank    1,000.00 "My Fund"
+    Assets:Cash
+
+test bal Assets:Bank
+    1,000.00 My Fund  Assets:Bank
+end test

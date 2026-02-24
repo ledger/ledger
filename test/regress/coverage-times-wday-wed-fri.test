@@ -1,0 +1,60 @@
+; Test Wednesday and Friday weekday names in period expressions
+; Exercises string_to_day_of_week (lines 214, 218):
+;   line 214: return gregorian::Wednesday
+;   line 218: return gregorian::Friday
+; Also exercises TOK_A_WDAY dump/to_string (lines 436-437, 506-507)
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test period --now 2024/06/15 "wednesday"
+--- Period expression tokens ---
+TOK_A_WDAY: Wed
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in wday Wed
+
+--- After stabilization ---
+   range: in wday Wed
+   start: 24-Jan-01
+  finish: 24-Jan-02
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01
+end test
+
+test period --now 2024/06/15 "friday"
+--- Period expression tokens ---
+TOK_A_WDAY: Fri
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in wday Fri
+
+--- After stabilization ---
+   range: in wday Fri
+   start: 24-Jan-01
+  finish: 24-Jan-02
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01
+end test
+
+test period --now 2024/06/15 "january"
+--- Period expression tokens ---
+TOK_A_MONTH: Jan
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in month Jan
+
+--- After stabilization ---
+   range: in month Jan
+   start: 24-Jan-01
+  finish: 24-Feb-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01
+end test

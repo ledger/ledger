@@ -1,0 +1,18 @@
+; Test coverage for filters.cc lines 713-715
+; --unbudgeted shows transactions not matched by any budget
+
+~ Monthly
+    Expenses:Food                          $500.00
+    Assets:Cash
+
+2024/01/15 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/20 Hardware Store
+    Expenses:Tools                          $30.00
+    Assets:Cash
+
+test bal --unbudgeted -b 2024/01/01 -e 2024/02/01 Expenses
+              $30.00  Expenses:Tools
+end test

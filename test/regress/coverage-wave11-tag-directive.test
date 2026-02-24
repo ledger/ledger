@@ -1,0 +1,17 @@
+; Coverage for textual_directives.cc tag_directive
+; Tests tag directive with assert/check sub-directives
+
+tag Receipt
+    assert value =~ /[0-9]/
+
+2024/01/01 Test
+    ; Receipt: 12345
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

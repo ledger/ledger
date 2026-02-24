@@ -1,0 +1,9 @@
+; Coverage for textual_directives.cc line 346 (apply rate error)
+
+apply fixed INVALID
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+Error: Error in fixed directive
+end test

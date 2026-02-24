@@ -1,0 +1,20 @@
+; Test coverage for xact.cc lines 283-321
+; Fixated price annotations with multiple commodities
+
+2024/01/01 Buy Stock
+    Assets:Brokerage                        10 AAPL {=$150.00}
+    Assets:Cash                         $-1500.00
+
+2024/01/02 Buy More Stock
+    Assets:Brokerage                         5 AAPL {=$155.00}
+    Assets:Cash                          $-775.00
+
+test bal --flat --lot-prices Assets
+  10 AAPL {=$150.00}
+   5 AAPL {=$155.00}  Assets:Brokerage
+           $-2275.00  Assets:Cash
+--------------------
+           $-2275.00
+  10 AAPL {=$150.00}
+   5 AAPL {=$155.00}
+end test

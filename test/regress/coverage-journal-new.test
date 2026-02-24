@@ -1,0 +1,25 @@
+; Coverage tests for journal.cc
+; Tests: aliases, account registration
+
+alias Food=Expenses:Food
+alias Gas=Expenses:Gas
+
+2024/01/01 Store
+    Food                             $50.00
+    Assets:Cash
+
+2024/01/02 Pump
+    Gas                              $30.00
+    Assets:Cash
+
+test bal Expenses
+              $80.00  Expenses
+              $50.00    Food
+              $30.00    Gas
+--------------------
+              $80.00
+end test
+
+test bal Assets
+             $-80.00  Assets:Cash
+end test

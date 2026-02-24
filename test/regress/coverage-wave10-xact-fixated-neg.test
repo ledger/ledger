@@ -1,0 +1,17 @@
+; Test coverage for xact.cc lines 296-298
+; Fixated total price with >2 commodities triggering recompute path
+; Also exercises lines 283-305 (fixated cost recompute) and 309-321
+
+2024/01/01 Complex Trade
+    Assets:Brokerage                       -10 AAPL {=$1500.00}
+    Assets:Brokerage                         5 GOOG {=$800.00}
+    Assets:Cash
+
+test bal --flat --lot-prices
+   -10 AAPL {=$1500}
+      5 GOOG {=$800}  Assets:Brokerage
+    10 AAPL {=$1500}
+     -5 GOOG {=$800}  Assets:Cash
+--------------------
+                   0
+end test

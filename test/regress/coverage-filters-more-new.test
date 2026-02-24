@@ -1,0 +1,34 @@
+; Coverage tests for filters.cc
+; Tests: --collapse, --by-payee, --budget, --unbudgeted, --forecast
+
+~ monthly
+    Expenses:Food                   $400.00
+    Assets:Checking
+
+2024/01/01 Grocery Store
+    Expenses:Food                    $350.00
+    Assets:Checking
+
+2024/01/05 Grocery Store
+    Expenses:Food                    $30.00
+    Assets:Checking
+
+2024/01/15 Gas Station
+    Expenses:Gas                     $75.00
+    Assets:Checking
+
+; Test --by-payee subtotals
+test reg --by-payee Expenses
+24-Jan-15 Gas Station           Expenses:Gas                 $75.00       $75.00
+24-Jan-01 Grocery Store         Expenses:Food               $380.00      $455.00
+end test
+
+; Test --budget
+test bal --budget Expenses -b 2024/01/01 -e 2024/02/01
+             $-20.00  Expenses:Food
+end test
+
+; Test --unbudgeted
+test bal --unbudgeted Expenses -b 2024/01/01 -e 2024/02/01
+              $75.00  Expenses:Gas
+end test

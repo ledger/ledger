@@ -1,0 +1,21 @@
+; Coverage for textual_xacts.cc lines 447-448 (post state inheritance from xact)
+; Post gets xact state when post is UNCLEARED but xact is not
+
+2024/01/01 * Cleared Parent
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 ! Pending Parent
+    Expenses:Drinks    $5.00
+    Assets:Cash
+
+; Post with explicit state different from xact
+2024/01/03 * Cleared Parent Mixed
+    ! Expenses:Gas    $20.00
+    Assets:Cash
+
+test reg --cleared
+24-Jan-01 Cleared Parent        Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-03 Cleared Parent Mixed  Assets:Cash                 $-20.00      $-20.00
+end test

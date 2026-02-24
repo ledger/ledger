@@ -1,0 +1,19 @@
+; Test coverage for filters.cc lines 1175-1198
+; by_payee_posts via --by-payee option
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/15 Grocery Store
+    Expenses:Food                           $25.00
+    Assets:Cash
+
+2024/01/20 Hardware Store
+    Expenses:Tools                          $30.00
+    Assets:Cash
+
+test reg --by-payee Expenses
+24-Jan-01 Grocery Store         Expenses:Food                $75.00       $75.00
+24-Jan-20 Hardware Store        Expenses:Tools               $30.00      $105.00
+end test

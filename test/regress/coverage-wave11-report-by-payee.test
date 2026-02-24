@@ -1,0 +1,20 @@
+; Test -P (by_payee) option for report.cc coverage
+
+2024/01/15 Alpha Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 Beta Shop
+    Expenses:Food    $30.00
+    Assets:Checking
+
+2024/03/10 Alpha Store
+    Expenses:Food    $20.00
+    Assets:Checking
+
+test reg -P
+24-Jan-15 Alpha Store           Assets:Checking             $-70.00      $-70.00
+                                Expenses:Food                $70.00            0
+24-Feb-20 Beta Shop             Assets:Checking             $-30.00      $-30.00
+                                Expenses:Food                $30.00            0
+end test

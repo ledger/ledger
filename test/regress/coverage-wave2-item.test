@@ -1,0 +1,80 @@
+; Tests for item.cc uncovered lines
+; Covers: has_tag with mask (line 66), get_tag with mask (lines 49-53),
+;   define (line 392), lookup functions - date/pathname/filebase/filepath (lines 306-321),
+;   beg_pos/beg_line/end_pos/end_line (lines 323-337), seq/id (lines 339-343),
+;   get_addr (line 346-348), get_depth (line 350-351),
+;   cleared/pending/uncleared status lookups (lines 407-530),
+;   get_comment (line 431-432), valid() (lines 536-543)
+
+; Test metadata with tag mask matching - covers lines 58-66
+2024/01/01 Test
+    ; Category: food
+    ; Location: downtown
+    Expenses:Food         $10.00
+    Assets:Cash
+
+test reg %Category
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Test tag with value mask - covers line 65
+test reg %Category=food
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test
+
+; Test cleared status - covers lines 429-430
+2024/01/02 * Cleared Transaction
+    Expenses:Food         $20.00
+    Assets:Cash
+
+test reg --cleared
+24-Jan-02 Cleared Transaction   Expenses:Food                $20.00       $20.00
+                                Assets:Cash                 $-20.00            0
+end test
+
+; Test pending status - covers lines 486
+2024/01/03 ! Pending Transaction
+    Expenses:Food         $15.00
+    Assets:Cash
+
+test reg --pending
+24-Jan-03 Pending Transaction   Expenses:Food                $15.00       $15.00
+                                Assets:Cash                 $-15.00            0
+end test
+
+; Test uncleared status - covers line 506-507
+test reg --uncleared
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+24-Jan-03 Pending Transaction   Expenses:Food                $15.00       $15.00
+                                Assets:Cash                 $-15.00            0
+end test
+
+; Test format expressions that access item properties - covers lines 306-351
+test reg --format "%(filename) %(beg_line)\n" --head 1
+$FILE 13
+$FILE 14
+end test
+
+; Test status expression - covers get_status line 494-495
+test reg --amount "status" --head 1 Expenses
+24-Jan-02 Cleared Transaction   Expenses:Food                     1            1
+end test
+
+; Test seq expression - covers get_seq line 339-340
+test reg --limit "seq > 0" --head 2 Expenses
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+24-Jan-02 Cleared Transaction   Expenses:Food                $20.00       $30.00
+end test
+
+; Test pending expression - covers line 486
+test reg --limit "pending" Expenses
+24-Jan-03 Pending Transaction   Expenses:Food                $15.00       $15.00
+end test
+
+; Test cleared expression - covers line 429-430
+test reg --limit "cleared" Expenses
+24-Jan-02 Cleared Transaction   Expenses:Food                $20.00       $20.00
+end test

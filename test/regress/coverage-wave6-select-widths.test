@@ -1,0 +1,52 @@
+; Coverage tests for select.cc
+; Tests: explicit column width options to cover lines 156, 159, 163, 167, 170, 173
+; These lines are ternary branches using date_width_, payee_width_,
+; account_width_, amount_width_, total_width_, meta_width_ handler values
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; Test with explicit date_width - covers line 156
+test select date, amount --columns 80 --date-width 12
+24-Jan-15          $50.00
+24-Jan-15         $-50.00
+24-Jan-20          $30.00
+24-Jan-20         $-30.00
+end test
+
+; Test with explicit payee_width - covers line 159
+test select payee, amount --columns 80 --payee-width 25
+Grocery Store                   $50.00
+Grocery Store                  $-50.00
+Gas Station                     $30.00
+Gas Station                    $-30.00
+end test
+
+; Test with explicit account_width - covers line 163
+test select account, amount --columns 80 --account-width 30
+Expenses:Food                        $50.00
+Assets:Checking                     $-50.00
+Expenses:Transport                   $30.00
+Assets:Checking                     $-30.00
+end test
+
+; Test with explicit amount_width - covers line 167
+test select date, amount --columns 80 --amount-width 20
+24-Jan-15               $50.00
+24-Jan-15              $-50.00
+24-Jan-20               $30.00
+24-Jan-20              $-30.00
+end test
+
+; Test with explicit total_width - covers line 170
+test select date, total --columns 80 --total-width 20
+24-Jan-15               $50.00
+24-Jan-15                    0
+24-Jan-20               $30.00
+24-Jan-20                    0
+end test

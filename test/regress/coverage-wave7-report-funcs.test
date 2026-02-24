@@ -1,0 +1,114 @@
+; Tests for report.cc uncovered lines - functions and lookup paths
+; Covers: lines 474-475 485 529 532 583 620 626 638 856 907
+;   1417 1429 1468 1479 1490 1502 1549 1554
+;   1659 1678-1679 1681
+
+; --- Journal data ---
+P 2024/01/01 AAPL $150
+P 2024/01/15 AAPL $155
+
+2024/01/01 * Grocery Store
+    Expenses:Food:Groceries       $50.00
+    Assets:Cash
+
+2024/01/15 Gas Station
+    Expenses:Auto:Gas             10 AAPL {$150} [2024/01/01] (lot1)
+    Assets:Cash
+
+; --- Test 1: fn_join (line 1429 in lookup) ---
+test reg --format "%(join(payee))\n" Expenses:Food
+Grocery Store
+end test
+
+; --- Test 2: fn_trim (line 1502 in lookup) ---
+test reg --format "%(trim(\" hello \"))\n" Expenses:Food
+hello
+end test
+
+; --- Test 3: fn_roundto (line 1479 in lookup) ---
+test reg --format "%(roundto(10.1234, 2))\n" Expenses:Food
+10.12
+end test
+
+; --- Test 4: fn_strip (lines 638, 1484 in lookup) ---
+test reg --format "%(strip(amount))\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 5: fn_quantity via lookup (line 1468 in lookup) ---
+test reg --format "%(quantity(amount))\n" Expenses:Food
+50
+end test
+
+; --- Test 6: prices with --cleared + --limit (lines 474-475, 485) ---
+; This triggers commodities_report state pred stripping
+test prices --cleared --limit "amount > 0"
+2024/01/01 AAPL          $150.00
+2024/01/15 AAPL          $155.00
+end test
+
+; --- Test 7: fn_nail_down with amount (line 864-881) ---
+test reg --format "%(nail_down(amount, 5))\n" Expenses:Auto:Gas
+10 AAPL
+end test
+
+; --- Test 8: fn_set_commodity_price (lines 856, 1490 in lookup) ---
+; set_commodity_price returns NULL_VALUE so we print something after
+test reg --format "%(set_commodity_price(amount, now, 200 USD))ok\n" Expenses:Food
+ok
+end test
+
+; --- Test 9: fn_get_at with index 0, non-sequence (line 617-618) ---
+test reg --format "%(get_at(amount, 0))\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 10: fn_is_seq (line 1421 in lookup) ---
+test reg --format "%(is_seq(amount) ? \"yes\" : \"no\")\n" Expenses:Food
+no
+end test
+
+; --- Test 11: fn_averaged_lots (line 583) ---
+test reg --format "%(averaged_lots(amount))\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 12: emacs/lisp command (line 1659) - test via emacs alias ---
+; emacs and lisp both route to format_emacs_posts
+; Skipped: lisp output includes timestamps that change between runs
+
+; --- Test 13: register command (line 1678) ---
+test register Expenses:Food
+24-Jan-01 Grocery Store         Expense:Food:Groceries       $50.00       $50.00
+end test
+
+; --- Test 14: fn_green via lookup (line 1417) ---
+test reg --format "%(green)\n" Expenses:Food
+green
+end test
+
+; --- Test 15: fn_white via lookup (line 1549) ---
+test reg --format "%(white)\n" Expenses:Food
+white
+end test
+
+; --- Test 16: fn_yellow via lookup (line 1554) ---
+test reg --format "%(yellow)\n" Expenses:Food
+yellow
+end test
+
+; --- Test 17: prices with --actual (additional state pred) ---
+test prices --actual
+2024/01/01 AAPL          $150.00
+2024/01/15 AAPL          $155.00
+end test
+
+; --- Test 18: fn_to_boolean ---
+test reg --format "%(to_boolean(true))\n" Expenses:Food
+true
+end test
+
+; --- Test 19: fn_to_int ---
+test reg --format "%(to_int(amount))\n" Expenses:Food
+50
+end test

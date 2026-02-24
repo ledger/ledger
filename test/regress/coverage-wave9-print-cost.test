@@ -1,0 +1,12 @@
+; Test coverage for post.cc lines 71-75
+; print command with cost (exercises post_t::print and cost handling)
+
+2024/01/01 Stock Buy
+    Assets:Brokerage                        10 AAPL @ $150.00
+    Assets:Cash
+
+test print
+2024/01/01 Stock Buy
+    Assets:Brokerage                         10 AAPL @ $150
+    Assets:Cash
+end test

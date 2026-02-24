@@ -1,0 +1,14 @@
+; Coverage for item.cc lines 306,313,320: get_pathname, get_filebase,
+; get_filepath when item has no pos.
+; Also lines 344,350-351: has_tag with mask and value_mask.
+; Note: tags on a transaction note apply to all postings via inheritance.
+
+2024/01/01 Test
+    ; MyTag: hello
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+test reg --format "%(has_tag('MyTag')) %(tag('MyTag')) %(filename)\n"
+true hello $FILE
+true hello $FILE
+end test

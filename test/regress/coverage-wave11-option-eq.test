@@ -1,0 +1,15 @@
+; Coverage for option.cc lines 91-96 and textual_directives.cc option_directive
+; Tests long options in journal file with = syntax
+
+--date-format=%Y/%m/%d
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

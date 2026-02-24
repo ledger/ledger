@@ -1,0 +1,22 @@
+; Wave 3 coverage tests for mask.cc assign_glob (lines 184-213)
+; Tests ? glob (line 189-190) and [...] glob (lines 195-199)
+
+; Include using ? glob pattern (matches data_a, data_b, data_c)
+include glob_includes/data_?.dat
+
+; Test that all three included files are loaded
+test bal
+             $-60.00  Assets:Cash
+              $60.00  Expenses
+              $20.00    Clothes
+              $10.00    Food
+              $30.00    Other
+--------------------
+                   0
+end test
+
+; Verify ? matched single characters
+test reg @"Glob Test A" --date-format "%Y/%m/%d"
+2024/01/01 Glob Test A          Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

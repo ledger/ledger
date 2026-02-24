@@ -1,0 +1,114 @@
+; Coverage tests for mask.cc fold_codepoint: Latin Extended-A part 1
+; Covers lines 90-109: Ā-ĺ mappings
+
+; Ā(0x100)→A, ā(0x101)→a, Ć(0x106)→C, ć(0x107)→c
+; Ď(0x10E)→D, ď(0x10F)→d, Ē(0x112)→E, ē(0x113)→e
+; Ĝ(0x11C)→G, ĝ(0x11D)→g, Ĥ(0x124)→H, ĥ(0x125)→h
+; Ĩ(0x128)→I, ĩ(0x129)→i, Ĵ(0x134)→J, ĵ(0x135)→j
+; Ķ(0x136)→K, ķ(0x137)→k, Ĺ(0x139)→L, ĺ(0x13A)→l
+
+2024/01/01 ExtA1
+    Expenses:FdĀ             $10.00
+    Assets:Checking
+
+2024/01/02 ExtA2
+    Expenses:Fdā             $10.00
+    Assets:Checking
+
+2024/01/03 ExtA3
+    Expenses:FdĆ             $10.00
+    Assets:Checking
+
+2024/01/04 ExtA4
+    Expenses:Fdć             $10.00
+    Assets:Checking
+
+2024/01/05 ExtA5
+    Expenses:FdĎ             $10.00
+    Assets:Checking
+
+2024/01/06 ExtA6
+    Expenses:Fdď             $10.00
+    Assets:Checking
+
+2024/01/07 ExtA7
+    Expenses:FdĒ             $10.00
+    Assets:Checking
+
+2024/01/08 ExtA8
+    Expenses:Fdē             $10.00
+    Assets:Checking
+
+2024/01/09 ExtA9
+    Expenses:FdĜ             $10.00
+    Assets:Checking
+
+2024/01/10 ExtA10
+    Expenses:Fdĝ             $10.00
+    Assets:Checking
+
+2024/01/11 ExtA11
+    Expenses:FdĤ             $10.00
+    Assets:Checking
+
+2024/01/12 ExtA12
+    Expenses:Fdĥ             $10.00
+    Assets:Checking
+
+2024/01/13 ExtA13
+    Expenses:FdĨ             $10.00
+    Assets:Checking
+
+2024/01/14 ExtA14
+    Expenses:Fdĩ             $10.00
+    Assets:Checking
+
+2024/01/15 ExtA15
+    Expenses:FdĴ             $10.00
+    Assets:Checking
+
+2024/01/16 ExtA16
+    Expenses:Fdĵ             $10.00
+    Assets:Checking
+
+2024/01/17 ExtA17
+    Expenses:FdĶ             $10.00
+    Assets:Checking
+
+2024/01/18 ExtA18
+    Expenses:Fdķ             $10.00
+    Assets:Checking
+
+2024/01/19 ExtA19
+    Expenses:FdĹ             $10.00
+    Assets:Checking
+
+2024/01/20 ExtA20
+    Expenses:Fdĺ             $10.00
+    Assets:Checking
+
+test bal Expenses --ignore-diacritics
+             $200.00  Expenses
+              $10.00    FdĀ
+              $10.00    Fdā
+              $10.00    FdĆ
+              $10.00    Fdć
+              $10.00    FdĎ
+              $10.00    Fdď
+              $10.00    FdĒ
+              $10.00    Fdē
+              $10.00    FdĜ
+              $10.00    Fdĝ
+              $10.00    FdĤ
+              $10.00    Fdĥ
+              $10.00    FdĨ
+              $10.00    Fdĩ
+              $10.00    FdĴ
+              $10.00    Fdĵ
+              $10.00    FdĶ
+              $10.00    Fdķ
+              $10.00    FdĹ
+              $10.00    Fdĺ
+--------------------
+             $200.00
+end test

@@ -1,0 +1,32 @@
+; Coverage for textual_directives.cc lines 288,293,298 (apply tag/end handling)
+; Tests apply tag with various formats
+
+apply tag project
+
+2024/01/01 Work Project
+    Expenses:Office    $100.00
+    Assets:Cash
+
+end apply tag
+
+apply tag :billable:
+
+2024/01/02 Client Work
+    Expenses:Travel    $200.00
+    Assets:Cash
+
+end apply tag
+
+apply tag client: ACME
+
+2024/01/03 ACME Project
+    Expenses:Supplies    $50.00
+    Assets:Cash
+
+end apply tag
+
+test reg Expenses
+24-Jan-01 Work Project          Expenses:Office             $100.00      $100.00
+24-Jan-02 Client Work           Expenses:Travel             $200.00      $300.00
+24-Jan-03 ACME Project          Expenses:Supplies            $50.00      $350.00
+end test

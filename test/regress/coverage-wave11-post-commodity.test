@@ -1,0 +1,12 @@
+; Coverage for post.cc lines 211-212: get_commodity when POST_EXT_COMPOUND is
+; set (via collapsed display).
+; Also covers line 220: get_commodity_is_primary.
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+test reg --format "%(commodity) %(primary)\n"
+$ false
+$ false
+end test

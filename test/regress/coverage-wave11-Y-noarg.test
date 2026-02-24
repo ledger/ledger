@@ -1,0 +1,9 @@
+; Coverage for textual.cc line 243-244 (Y directive without argument)
+
+Y
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+Error: Directive 'Y' requires an argument
+end test

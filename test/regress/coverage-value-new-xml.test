@@ -1,0 +1,165 @@
+; Coverage tests for value.cc put_value() XML output
+; Exercises lines 2195-2235 (put_value for various types)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Expenses:Drink   5.00 EUR
+    Assets:Cash
+
+; XML output with balance (multiple commodities) exercises put_value
+; for AMOUNT and BALANCE types (lines 2201-2208)
+test xml bal Expenses | sed -E 's/ (id|ref)="[0-9a-f]+"/ \1="XXXX"/g; s/ version="[0-9]+"/ version="VVVVVV"/g'
+<?xml version="1.0" encoding="utf-8"?>
+<ledger version="VVVVVV">
+  <commodities>
+    <commodity flags="P">
+      <symbol>$</symbol>
+    </commodity>
+    <commodity flags="S">
+      <symbol>EUR</symbol>
+    </commodity>
+  </commodities>
+  <accounts>
+    <account id="XXXX">
+      <name/>
+      <fullname/>
+      <account-total>
+        <balance>
+          <amount>
+            <commodity flags="P">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>10</quantity>
+          </amount>
+          <amount>
+            <commodity flags="S">
+              <symbol>EUR</symbol>
+            </commodity>
+            <quantity>5</quantity>
+          </amount>
+        </balance>
+      </account-total>
+      <account/>
+      <account id="XXXX">
+        <name>Expenses</name>
+        <fullname>Expenses</fullname>
+        <account-total>
+          <balance>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+            <amount>
+              <commodity flags="S">
+                <symbol>EUR</symbol>
+              </commodity>
+              <quantity>5</quantity>
+            </amount>
+          </balance>
+        </account-total>
+        <account id="XXXX">
+          <name>Drink</name>
+          <fullname>Expenses:Drink</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="S">
+                <symbol>EUR</symbol>
+              </commodity>
+              <quantity>5</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="S">
+                <symbol>EUR</symbol>
+              </commodity>
+              <quantity>5</quantity>
+            </amount>
+          </account-total>
+        </account>
+        <account id="XXXX">
+          <name>Food</name>
+          <fullname>Expenses:Food</fullname>
+          <account-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </account-amount>
+          <account-total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </account-total>
+        </account>
+      </account>
+    </account>
+  </accounts>
+  <transactions>
+    <transaction>
+      <date>2024/01/01</date>
+      <payee>Test</payee>
+      <postings>
+        <posting>
+          <account ref="XXXX">
+            <name>Expenses:Food</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="P">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>10</quantity>
+            </amount>
+          </total>
+        </posting>
+        <posting>
+          <account ref="XXXX">
+            <name>Expenses:Drink</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="S">
+                <symbol>EUR</symbol>
+              </commodity>
+              <quantity>5</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="S">
+                  <symbol>EUR</symbol>
+                </commodity>
+                <quantity>5</quantity>
+              </amount>
+              <amount>
+                <commodity flags="P">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>10</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+  </transactions>
+</ledger>
+
+end test

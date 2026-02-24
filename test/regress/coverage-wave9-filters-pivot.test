@@ -1,0 +1,17 @@
+; Test coverage for filters.cc lines 1200-1243
+; --pivot/--inject triggers transfer_details filter
+
+2024/01/01 Grocery Store
+    ; Category: Food
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    ; Category: Transport
+    Expenses:Gas                            $30.00
+    Assets:Cash
+
+test reg --pivot Category Expenses
+24-Jan-01 Grocery Store         Cat:Food:Expenses:Food       $50.00       $50.00
+24-Jan-02 Gas Station           Ca:Transpo:Expense:Gas       $30.00       $80.00
+end test

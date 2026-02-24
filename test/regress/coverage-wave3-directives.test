@@ -1,0 +1,25 @@
+; Test textual_directives.cc: payee directive with alias/uuid,
+; commodity directive with note/format/nomarket/default
+payee Grocery Store
+  alias Store
+  uuid abc123
+
+commodity $
+  note US Dollar
+  format $1,000.00
+  nomarket
+  default
+
+account Expenses:Food
+account Assets:Cash
+
+2024/01/15 Store
+    Expenses:Food    $25.00
+    Assets:Cash
+
+test bal
+             $-25.00  Assets:Cash
+              $25.00  Expenses:Food
+--------------------
+                   0
+end test

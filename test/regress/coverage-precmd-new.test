@@ -1,0 +1,18 @@
+; Coverage tests for precmd.cc
+; Tests: eval pre-command
+
+2024/01/01 Test
+    Expenses:Food                    $10.00
+    Assets:Cash
+
+test eval '2 + 2'
+4
+end test
+
+test eval '10 * 5'
+50
+end test
+
+test eval '"foo" + "bar"'
+foobar
+end test

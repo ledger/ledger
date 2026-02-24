@@ -1,0 +1,11 @@
+; Tests for color name functions
+; Covers report.cc lines 981-1011
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Test all color functions - covers lines 979-1011
+test reg --format '%(green) %(white) %(yellow) %(blue) %(cyan) %(magenta) %(red) %(black) %(bold) %(underline) %(blink)\n' Food
+green white yellow blue cyan magenta red black bold underline blink
+end test

@@ -1,0 +1,12 @@
+; Coverage for post.cc line 189: get_magnitude returns NULL_VALUE when
+; post has no xact. Also covers the normal get_magnitude path.
+; Also covers line 196: get_amount when post.amount.is_null() returns 0L.
+
+2024/01/01 Test
+    Expenses:Food                 $30.00
+    Assets:Cash
+
+test reg --format "%(magnitude)\n"
+$30.00
+$30.00
+end test

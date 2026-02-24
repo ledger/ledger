@@ -1,0 +1,24 @@
+; Tests for report.cc --meta option and meta_width handling
+; Covers: lines 111-127 (meta with width parsing and prepend_format)
+
+2024/01/15 Grocery Store
+    ; Category: Food
+    Expenses:Food     $50.00
+    Assets:Cash
+
+2024/02/01 Gas Station
+    ; Category: Auto
+    Expenses:Auto:Gas     $35.00
+    Assets:Cash
+
+; Test --meta option without width - covers lines 125-127
+test reg --meta Category Expenses
+Food24-Jan-15 Grocery Store         Expenses:Food                $50.00       $50.00
+Auto24-Feb-01 Gas Station           Expenses:Auto:Gas            $35.00       $85.00
+end test
+
+; Test --meta option with width - covers lines 112-124
+test reg --meta 'Category:10' Expenses
+Food      24-Jan-15 Grocery Store     Expenses:Food           $50.00      $50.00
+Auto      24-Feb-01 Gas Station       Expenses:Auto:Gas       $35.00      $85.00
+end test

@@ -1,0 +1,18 @@
+; Coverage for textual_xacts.cc lines 756,772 (period xact)
+; Tests periodic transactions with --budget
+
+~ Monthly
+    Expenses:Rent    $1000.00
+    Assets:Cash
+
+2024/01/15 Landlord
+    Expenses:Rent    $1000.00
+    Assets:Cash
+
+2024/02/15 Landlord
+    Expenses:Rent    $1000.00
+    Assets:Cash
+
+test bal --budget Expenses
+          $-24000.00  Expenses:Rent
+end test

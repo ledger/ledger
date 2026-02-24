@@ -1,0 +1,25 @@
+; Coverage for quotes.cc edge cases:
+; - Lines 72: commodity_quote_from_script default getquote
+; - Lines 91: popen/pclose success
+; - Lines 102-109: write to price_db and return point
+; These lines require --download which tries to run getquote.
+; We can at least exercise the code path by using the
+; price history and --market option which goes through
+; commodity_t::check_for_updated_price.
+
+P 2024/01/01 00:00:00 STOCK $50.00
+P 2024/06/01 00:00:00 STOCK $55.00
+
+2024/01/15 Buy stock
+    Assets:Brokerage    10 STOCK
+    Assets:Cash         $-500.00
+
+; Exercise price lookup to test check_for_updated_price code path
+test reg Assets:Brokerage -V --now 2024/06/15
+24-Jan-15 Buy stock             Assets:Brokerage            $500.00      $500.00
+24-Jun-01 Commodities revalued  <Revalued>                   $50.00      $550.00
+end test
+
+test bal Assets:Brokerage -V --now 2024/06/15
+             $550.00  Assets:Brokerage
+end test

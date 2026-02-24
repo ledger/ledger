@@ -1,0 +1,14 @@
+; Test select command for report.cc coverage
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test select date,payee,amount from reg where "account =~ /Expenses/"
+24-Jan-15 Grocery Store                                                  $50.00
+24-Feb-20 Gas Station                                                    $30.00
+end test

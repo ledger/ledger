@@ -1,0 +1,20 @@
+; Test coverage for textual_xacts.cc lines 535-610
+; Posting with cost expression and fixed cost
+
+2024/01/01 Stock Buy with Expression Cost
+    Assets:Brokerage                        10 AAPL @ ($15.00 * 10)
+    Assets:Cash
+
+2024/01/02 Stock Buy with Total Fixed Cost
+    Assets:Brokerage                        10 GOOG @@ $2000.00
+    Assets:Cash
+
+2024/01/03 Stock Buy with Fixed Cost
+    Assets:Brokerage                        10 MSFT @=  $300.00
+    Assets:Cash
+
+test bal Assets:Brokerage --flat
+             10 AAPL
+             10 GOOG
+             10 MSFT  Assets:Brokerage
+end test

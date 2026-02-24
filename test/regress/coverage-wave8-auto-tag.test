@@ -1,0 +1,16 @@
+; Coverage tests for xact.cc auto_xact_t deferred tag handling
+; Targets lines 447, 449 (deferred_tag_data_t)
+
+; Auto-xact with notes/tags that are deferred until extend_xact
+= /Food/
+    ; AutoTag: auto-value
+    (Budget:Food)                 1
+
+2024/01/01 Test
+    Expenses:Food            $10.00
+    Assets:Cash
+
+; Verify the deferred tag was applied
+test reg --format '%(has_tag("AutoTag") ? tag("AutoTag") : "none")\n' Budget
+auto-value
+end test

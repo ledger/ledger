@@ -1,0 +1,26 @@
+; Test coverage for textual_directives.cc lines 485, 520, 556, 626, 735, 765
+; payee directive, commodity directive, tag directive, bucket, define
+
+payee Grocery Store
+    alias Grocery
+
+commodity $
+    nomarket
+
+tag project
+    check value =~ /./
+
+bucket Assets:Cash
+
+define my_val=50
+
+2024/01/01 Grocery Store
+    ; :project: work
+    Expenses:Food                           $50.00
+
+test bal
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

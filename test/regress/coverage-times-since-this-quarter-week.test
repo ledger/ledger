@@ -1,0 +1,183 @@
+; Test since/until with this/next/last quarter and week in determine_when
+; Exercises determine_when lines 805-832:
+;   TOK_THIS + TOK_QUARTER (lines 805-817, adjust == 0)
+;   TOK_LAST + TOK_QUARTER (lines 805-817, adjust == -1)
+;   TOK_NEXT + TOK_QUARTER (lines 805-817, adjust == 1)
+;   TOK_THIS + TOK_WEEK (lines 820-832, adjust == 0)
+;   TOK_LAST + TOK_WEEK (lines 820-832, adjust == -1)
+;   TOK_NEXT + TOK_WEEK (lines 820-832, adjust == 1)
+
+2024/01/15 Payee A
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; since this year → exercises determine_when TOK_THIS+TOK_YEAR
+test period --now 2024/06/15 "since this year"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_THIS: this
+TOK_YEAR: year
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024
+
+--- After stabilization ---
+   range: from year 2024
+   start: 24-Jan-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01
+end test
+
+; since this week → exercises determine_when TOK_THIS+TOK_WEEK
+test period --now 2024/06/15 "since this week"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_THIS: this
+TOK_WEEK: week
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024 month Jun day 9
+
+--- After stabilization ---
+   range: from year 2024 month Jun day 9
+   start: 24-Jun-09
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jun-09
+end test
+
+; since this day → exercises determine_when TOK_THIS+TOK_DAY
+test period --now 2024/06/15 "since this day"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_THIS: this
+TOK_DAY: day
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024 month Jun day 15
+
+--- After stabilization ---
+   range: from year 2024 month Jun day 15
+   start: 24-Jun-15
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jun-15
+end test
+
+; until last quarter → exercises determine_when TOK_LAST+TOK_QUARTER
+test period --now 2024/06/15 "until last quarter"
+--- Period expression tokens ---
+TOK_UNTIL: until
+TOK_LAST: last
+TOK_QUARTER: quarter
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range:  to year 2024 month Jan day 1
+
+--- After stabilization ---
+   range:  to year 2024 month Jan day 1
+  finish: 24-Jan-01
+
+--- Sample dates in range (max. 20) ---
+end test
+
+; until next day → exercises determine_when TOK_NEXT+TOK_DAY
+test period --now 2024/06/15 "until next day"
+--- Period expression tokens ---
+TOK_UNTIL: until
+TOK_NEXT: next
+TOK_DAY: day
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range:  to year 2024 month Jun day 16
+
+--- After stabilization ---
+   range:  to year 2024 month Jun day 16
+  finish: 24-Jun-16
+
+--- Sample dates in range (max. 20) ---
+end test
+
+; from last month → exercises determine_when TOK_LAST+TOK_MONTH
+test period --now 2024/06/15 "from last month"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_LAST: last
+TOK_MONTH: month
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024 month May
+
+--- After stabilization ---
+   range: from year 2024 month May
+   start: 24-May-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-May-01
+end test
+
+; since next january → exercises determine_when TOK_NEXT+TOK_A_MONTH
+test period --now 2024/06/15 "since next january"
+--- Period expression tokens ---
+TOK_SINCE: since
+TOK_NEXT: next
+TOK_A_MONTH: Jan
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2025 month Jan
+
+--- After stabilization ---
+   range: from year 2025 month Jan
+   start: 25-Jan-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 25-Jan-01
+end test
+
+; in this month → exercises determine_when TOK_THIS+TOK_MONTH via handle_in_token
+test period --now 2024/06/15 "in this month"
+--- Period expression tokens ---
+TOK_IN: in
+TOK_THIS: this
+TOK_MONTH: month
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2024 month Jun
+
+--- After stabilization ---
+   range: in year 2024 month Jun
+   start: 24-Jun-01
+  finish: 24-Jul-01
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jun-01
+end test
+
+; in this quarter → exercises determine_when TOK_THIS+TOK_QUARTER
+test period --now 2024/06/15 "in this quarter"
+--- Period expression tokens ---
+TOK_IN: in
+TOK_THIS: this
+TOK_QUARTER: quarter
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: in year 2024 month Apr day 1
+
+--- After stabilization ---
+   range: in year 2024 month Apr day 1
+   start: 24-Apr-01
+  finish: 24-Apr-02
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Apr-01
+end test

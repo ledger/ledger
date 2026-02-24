@@ -1,0 +1,16 @@
+; Test -D (daily) option for report.cc coverage
+
+2024/01/15 Monday Purchase
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/16 Tuesday Purchase
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test reg -D
+24-Jan-15 - 24-Jan-15           Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+24-Jan-16 - 24-Jan-16           Assets:Checking             $-30.00      $-30.00
+                                Expenses:Food                $30.00            0
+end test

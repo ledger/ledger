@@ -1,0 +1,10 @@
+; Coverage tests for format.cc lines 471-472 (min_width padding with spaces)
+; Also covers format.cc line 617 (adjust == 0 becomes 1 in abbreviation)
+
+2024/01/01 Payee
+    Expenses:Food:Groceries:Produce:Organic    $10.00
+    Assets:Cash
+
+test reg --columns=60 Expenses
+24-Jan-01 Payee          ..Gr:Pr:Organic    $10.00    $10.00
+end test

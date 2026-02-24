@@ -1,0 +1,68 @@
+; Additional session.cc coverage tests
+; Covers: fn_account (lines 249-256), check_payees (line 114-115),
+;   explicit (line 111-113), pedantic (line 119-120), strict (line 121-122),
+;   value_expr (line 124-125), master_account (lines 86-87, 190-191)
+
+account Expenses:Food
+account Expenses:Transport
+account Assets:Cash
+commodity $
+
+2024/01/01 Grocery Store
+    Expenses:Food              $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Transport         $20.00
+    Assets:Cash
+
+; Test --check-payees option - covers session.cc lines 114-115
+test bal --check-payees Expenses
+              $30.00  Expenses
+              $10.00    Food
+              $20.00    Transport
+--------------------
+              $30.00
+end test
+
+; Test --explicit option - covers session.cc lines 111-113
+test bal --explicit Expenses
+              $30.00  Expenses
+              $10.00    Food
+              $20.00    Transport
+--------------------
+              $30.00
+end test
+
+; Test --pedantic option - covers session.cc lines 119-120
+test bal --pedantic Expenses
+              $30.00  Expenses
+              $10.00    Food
+              $20.00    Transport
+--------------------
+              $30.00
+end test
+
+; Test --strict option - covers session.cc lines 121-122
+test bal --strict Expenses
+              $30.00  Expenses
+              $10.00    Food
+              $20.00    Transport
+--------------------
+              $30.00
+end test
+
+; Test --value-expr option - covers session.cc lines 124-125
+test reg --value-expr "amount" Expenses
+24-Jan-01 Grocery Store         Expenses:Food                $10.00       $10.00
+24-Jan-02 Gas Station           Expenses:Transport           $20.00       $30.00
+end test
+
+; Test --master-account option - covers session.cc lines 86-87, 190-191
+test bal --master-account "Personal" Expenses
+              $30.00  Personal:Expenses
+              $10.00    Food
+              $20.00    Transport
+--------------------
+              $30.00
+end test

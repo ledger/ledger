@@ -1,0 +1,23 @@
+; Coverage tests for select.cc
+; Tests: group by clause to cover line 383
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; Test select with group by - covers line 383
+test select account, total from posts group by account --columns 80
+Assets:Checking
+Assets:Checking                                                         $-50.00
+Assets:Checking                                                         $-80.00
+
+Expenses:Food
+Expenses:Food                                                            $50.00
+
+Expenses:Transport
+Expenses:Transport                                                       $30.00
+end test

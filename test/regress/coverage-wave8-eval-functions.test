@@ -1,0 +1,27 @@
+; Coverage tests for report.cc type conversion function lookups
+; Targets: to_boolean (1508), to_int (1510), to_datetime (1512),
+;          to_date (1514), to_string (1520)
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test --now 2024/06/01 eval 'to_boolean(true)'
+1
+end test
+
+test --now 2024/06/01 eval 'to_int(42.7)'
+43
+end test
+
+test --now 2024/06/01 eval 'to_datetime(today)'
+2024/06/01 00:00:00
+end test
+
+test --now 2024/06/01 eval 'to_date(today)'
+2024/06/01
+end test
+
+test eval 'to_string("hello")'
+hello
+end test

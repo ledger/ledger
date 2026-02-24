@@ -1,0 +1,65 @@
+; Wave 2 coverage tests for parser.cc
+; Covers: parse_unary_expr (MINUS, EXCLAM), parse_logic_expr (NEQUAL, NMATCH),
+; parse_and_expr (KW_AND), parse_or_expr (KW_OR),
+; parse_querycolon_expr (QUERY/COLON, if/else)
+
+2024/01/01 Grocery Store
+    Expenses:Food              $25.00
+    Assets:Checking
+
+2024/01/15 Salary
+    Assets:Checking          $1000.00
+    Income:Salary
+
+2024/02/01 Electric Company
+    Expenses:Utilities         $75.00
+    Assets:Checking
+
+; Test NOT expression (EXCLAM) - covers parser.cc line 128
+test reg --limit "!cleared"
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+                                Assets:Checking             $-25.00            0
+24-Jan-15 Salary                Assets:Checking            $1000.00     $1000.00
+                                Income:Salary             $-1000.00            0
+24-Feb-01 Electric Company      Expenses:Utilities           $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+end test
+
+; Test MINUS expression (negation) - covers parser.cc line 144
+test eval -- "-25"
+-25
+end test
+
+; Test AND expression - covers parser.cc lines 298, 322
+test reg --limit "account =~ /Expenses/ and amount > 30"
+24-Feb-01 Electric Company      Expenses:Utilities           $75.00       $75.00
+end test
+
+; Test OR expression - covers parser.cc lines 322
+test reg --limit "account =~ /Food/ or account =~ /Utilities/"
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Feb-01 Electric Company      Expenses:Utilities           $75.00      $100.00
+end test
+
+; Test ternary expression (query:colon) - covers parser.cc lines 345, 353, 359
+test eval "1 > 0 ? 100 : 200"
+100
+end test
+
+; Test if/else expression - covers parser.cc lines 365, 415
+test eval "10 if 1 > 0 else 20"
+10
+end test
+
+; Test comparison operators - covers parser.cc line 230
+test eval "10 < 20"
+1
+end test
+
+test eval "20 >= 20"
+1
+end test
+
+test eval "20 != 10"
+1
+end test

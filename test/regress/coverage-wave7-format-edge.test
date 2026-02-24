@@ -1,0 +1,43 @@
+; Coverage for format.cc edge cases:
+; - Lines 104-106: parse_single_expression eof handling
+; - Lines 115: parse_single_expression whitespace gobble
+; - Lines 240: unrecognized format keyword assert
+; - Lines 267-268: %$ field reference validation
+; - Lines 280: %$ reference to non-existent prior field
+; - Lines 361-380: format_amount with colorize_op
+; - Lines 424: real_calc with STRING element and min_width
+; - Lines 435-438: real_calc with function expression
+; - Lines 471-472: real_calc with min_width padding
+
+; Basic data for format testing
+2024/01/01 Payee one
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 Payee two
+    Expenses:Travel    $20.00
+    Assets:Cash
+
+2024/01/03 Payee three
+    Expenses:Misc    $30.00
+    Assets:Cash
+
+; Test custom format with padding (covers line 424 min_width, 471-472 padding)
+test reg --format "%10d %20P %20t %20T\n"
+ 24-Jan-01            Payee one               $10.00               $10.00
+ 24-Jan-01            Payee one              $-10.00                    0
+ 24-Jan-02            Payee two               $20.00               $20.00
+ 24-Jan-02            Payee two              $-20.00                    0
+ 24-Jan-03          Payee three               $30.00               $30.00
+ 24-Jan-03          Payee three              $-30.00                    0
+end test
+
+; Test format with max_width truncation (covers line 466-472)
+test reg --format "%-10.10P %10t\n"
+Payee one      $10.00
+Payee one     $-10.00
+Payee two      $20.00
+Payee two     $-20.00
+Payee th..     $30.00
+Payee th..    $-30.00
+end test

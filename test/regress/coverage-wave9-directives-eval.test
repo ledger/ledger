@@ -1,0 +1,22 @@
+; Test coverage for textual_directives.cc lines 638-657, 780-837
+; eval, define, value, check, assert directives and bucket/year via general_directive
+
+define vat_rate=0.20
+eval 1 + 1
+
+bucket Assets:Cash
+year 2024
+
+01/01 Grocery Store
+    Expenses:Food                           $50.00
+
+01/02 Hardware
+    Expenses:Tools                          $30.00
+
+test bal Expenses
+              $80.00  Expenses
+              $50.00    Food
+              $30.00    Tools
+--------------------
+              $80.00
+end test

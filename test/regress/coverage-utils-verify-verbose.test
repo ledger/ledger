@@ -1,0 +1,15 @@
+; Coverage test for utils.cc logger_func verify paths
+; Exercises: logger_func with IF_VERIFY() header and memory size output,
+;   current_objects_size, current_memory_size, stream_memory_size
+; Targets: utils.cc lines 539, 547-551, 297-320, 333-340, 142-149
+
+2024/01/01 Opening Balance
+    Assets:Checking         $1000.00
+    Equity:Opening
+
+test bal --verify --verbose 2>/dev/null
+            $1000.00  Assets:Checking
+           $-1000.00  Equity:Opening
+--------------------
+                   0
+end test

@@ -1,0 +1,15 @@
+; Test equity command for report.cc coverage
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 Restaurant
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test equity
+2024/02/20 Opening Balances
+    Assets:Checking                          $-80.00
+    Expenses:Food
+end test

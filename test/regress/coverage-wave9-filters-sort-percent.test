@@ -1,0 +1,18 @@
+; Test coverage for filters.cc sort_posts
+; --sort option and --percent for balance
+
+2024/01/01 Test
+    Expenses:Food                           $30.00
+    Expenses:Tools                          $70.00
+    Assets:Cash
+
+test reg --sort amount Expenses
+24-Jan-01 Test                  Expenses:Food                $30.00       $30.00
+                                Expenses:Tools               $70.00      $100.00
+end test
+
+test bal --percent Expenses
+             100.00%  Expenses
+              30.00%    Food
+              70.00%    Tools
+end test

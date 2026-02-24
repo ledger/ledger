@@ -1,0 +1,10 @@
+; Test -F (format) shorthand option for report.cc coverage
+; Targets report.cc line 1060-1061 (OPT_CH format_)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg -F "%(date) %(payee) %(display_amount)\n" Expenses
+2024/01/15 Grocery Store $50.00
+end test

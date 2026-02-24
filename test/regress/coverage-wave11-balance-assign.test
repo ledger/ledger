@@ -1,0 +1,24 @@
+; Coverage for textual_xacts.cc line 608 (balance assignment)
+; Also covers lines 636-639 (post finalization with balance assignment)
+
+2024/01/01 Opening
+    Assets:Cash    $1000.00
+    Equity:Opening
+
+2024/01/02 Spend
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/03 Correction
+    Assets:Cash    = $900.00
+    Expenses:Adjustment
+
+test bal
+             $900.00  Assets:Cash
+           $-1000.00  Equity:Opening
+             $100.00  Expenses
+              $50.00    Adjustment
+              $50.00    Food
+--------------------
+                   0
+end test

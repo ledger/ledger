@@ -1,0 +1,35 @@
+; Wave 2 coverage tests for select.cc
+; Covers: select command parsing, column width computation,
+; date/payee/account/amount/total ident paths, from accounts
+
+2024/01/01 Grocery Store
+    Expenses:Food              $25.00
+    Assets:Checking
+
+2024/01/15 Salary
+    Assets:Checking          $1000.00
+    Income:Salary
+
+2024/02/01 Electric Company
+    Expenses:Utilities         $75.00
+    Assets:Checking
+
+; Test select with all standard column types - covers lines 55-84, 145-173, 266, 322
+test select date,payee,account,amount,total
+24-Jan-01 Grocery Store        Expenses:Food                $25.00       $25.00
+24-Jan-01 Grocery Store        Assets:Checking             $-25.00            0
+24-Jan-15 Salary               Assets:Checking            $1000.00     $1000.00
+24-Jan-15 Salary               Income:Salary             $-1000.00            0
+24-Feb-01 Electric Company     Expenses:Utilities           $75.00       $75.00
+24-Feb-01 Electric Company     Assets:Checking             $-75.00            0
+end test
+
+; Test select from accounts - covers the accounts_report path
+test select account,total from accounts
+Assets:Checking      $900.00
+Expenses      $100.00
+Food       $25.00
+Utilities       $75.00
+Income:Salary    $-1000.00
+            0
+end test

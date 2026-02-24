@@ -1,0 +1,10 @@
+; Test coverage for textual_xacts.cc lines 459-465
+; Lot date annotation syntax: {$150.00} [2024/01/01]
+
+2024/01/01 Buy Stock with Lot Date
+    Assets:Brokerage              10 AAPL {$150.00} [2024/01/01]
+    Assets:Cash                         $-1500.00
+
+test bal Brokerage --lot-prices --lot-dates --flat
+10 AAPL {$150.00} [2024/01/01]  Assets:Brokerage
+end test

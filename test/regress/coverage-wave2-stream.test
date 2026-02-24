@@ -1,0 +1,10 @@
+; Coverage tests for stream.cc
+; Covers: output_stream_t::initialize with output file (line 109-110)
+
+2024/01/01 Test
+    Expenses:Food              $10.00
+    Assets:Cash
+
+; Test --output flag writes to a file (covers stream.cc line 109-110)
+test bal --output /dev/null Expenses
+end test

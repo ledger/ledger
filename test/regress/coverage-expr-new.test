@@ -1,0 +1,27 @@
+; Coverage tests for expr.cc
+; Tests: expression evaluation, print, compile
+
+2024/01/01 Store
+    Expenses:Food                    $50.00
+    Assets:Cash
+
+2024/01/02 Store
+    Expenses:Food                    $30.00
+    Assets:Cash
+
+test reg -l 'amount > 20' Expenses
+24-Jan-01 Store                 Expenses:Food                $50.00       $50.00
+24-Jan-02 Store                 Expenses:Food                $30.00       $80.00
+end test
+
+test reg -l 'amount >= 50' Expenses
+24-Jan-01 Store                 Expenses:Food                $50.00       $50.00
+end test
+
+test eval '2 + 3'
+5
+end test
+
+test eval '"hello" + " world"'
+hello world
+end test

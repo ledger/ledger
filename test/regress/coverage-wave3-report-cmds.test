@@ -1,0 +1,76 @@
+; Coverage tests for report.cc command dispatch (lines 1600-1737)
+; Tests: accounts, budget, cleared, commodities, csv, equity, emacs,
+;        lisp, payees, tags, xml, select, pricemap, echo commands
+
+; Basic journal for testing various report commands
+2024/01/01 * Grocery Store
+    ; Tag1: value1
+    Expenses:Food:Groceries    $50.00
+    Assets:Cash
+
+2024/01/15 ! Restaurant
+    ; Occasion: dinner
+    Expenses:Food:Dining    $30.00
+    Assets:Checking
+
+2024/02/01 * Gas Station
+    Expenses:Transport    $40.00
+    Assets:Cash
+
+test accounts
+Assets:Cash
+Assets:Checking
+Expenses:Food:Dining
+Expenses:Food:Groceries
+Expenses:Transport
+end test
+
+test payees
+Gas Station
+Grocery Store
+Restaurant
+end test
+
+test tags
+Occasion
+Tag1
+end test
+
+test commodities
+$
+end test
+
+test csv
+"2024/01/01","","Grocery Store","Expenses:Food:Groceries","$","50","*"," Tag1: value1"
+"2024/01/01","","Grocery Store","Assets:Cash","$","-50","*"," Tag1: value1"
+"2024/01/15","","Restaurant","Expenses:Food:Dining","$","30","!"," Occasion: dinner"
+"2024/01/15","","Restaurant","Assets:Checking","$","-30","!"," Occasion: dinner"
+"2024/02/01","","Gas Station","Expenses:Transport","$","40","*",""
+"2024/02/01","","Gas Station","Assets:Cash","$","-40","*",""
+end test
+
+test equity
+2024/02/01 Opening Balances
+    Assets:Cash                              $-90.00
+    Assets:Checking                          $-30.00
+    Expenses:Food:Dining                      $30.00
+    Expenses:Food:Groceries                   $50.00
+    Expenses:Transport                        $40.00
+end test
+
+test cleared
+        $-120.00             $-90.00                 Assets
+         $-90.00             $-90.00    24-Feb-01      Cash
+         $-30.00                   0                   Checking
+         $120.00              $90.00                 Expenses
+          $80.00              $50.00                   Food
+          $30.00                   0                     Dining
+          $50.00              $50.00    24-Jan-01        Groceries
+          $40.00              $40.00    24-Feb-01      Transport
+----------------    ----------------    ---------
+               0                   0             
+end test
+
+test echo hello world
+hello
+end test

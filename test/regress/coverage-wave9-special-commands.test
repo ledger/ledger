@@ -1,0 +1,38 @@
+; Tests for report.cc special commands
+; Covers: budget command (1615-1622), equity command (1644-1646),
+;   xact/draft command (1639-1641, 1647-1648, 1696-1698),
+;   select command (1688-1689)
+
+~ Monthly
+    Expenses:Food     $200.00
+    Assets:Cash
+
+2024/01/15 Grocery Store
+    Expenses:Food     $150.00
+    Assets:Cash
+
+2024/02/10 Restaurant
+    Expenses:Food     $250.00
+    Assets:Cash
+
+; Test budget command - covers report.cc lines 1615-1622
+test budget --now 2024/03/01
+    $-400.00     $-600.00      $200.00   67%  Assets:Cash
+     $400.00      $600.00     $-200.00   67%  Expenses:Food
+------------ ------------ ------------ -----
+           0            0            0     0
+end test
+
+; Test equity command - covers report.cc lines 1644-1646
+test equity
+2024/02/10 Opening Balances
+    Assets:Cash                             $-400.00
+    Expenses:Food
+end test
+
+; Test xact/draft command - covers report.cc lines 1639-1641
+test --now 2024/06/01 xact Grocery Expenses:Food 30 Assets:Cash
+2024/06/01 Grocery Store
+    Expenses:Food                             $30.00
+    Assets:Cash
+end test

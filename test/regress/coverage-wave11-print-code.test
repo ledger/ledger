@@ -1,0 +1,11 @@
+; Coverage for print.cc line 142-143 (print with code)
+
+2024/01/01 * (CHK001) Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test print
+2024/01/01 * (CHK001) Payee
+    Expenses:Food                             $10.00
+    Assets:Cash
+end test

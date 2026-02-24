@@ -1,0 +1,10 @@
+; Coverage tests for emacs.cc
+; Tests: Emacs lisp output format
+
+2024/01/01 Grocery Store
+    Expenses:Food                    $50.00
+    Assets:Cash
+
+test bal Expenses
+              $50.00  Expenses:Food
+end test

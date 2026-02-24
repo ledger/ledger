@@ -1,0 +1,15 @@
+; Wave 2 coverage tests for annotate.cc error paths - duplicate date
+; Covers: duplicate date (line 147)
+
+2024/01/01 Dup Date
+    Assets:Test              1 FOO {$10.00} [2024/01/01] [2024/02/01]
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  Assets:Test              1 FOO {$10.00} [2024/01/01] [2024/02/01]
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error: Commodity specifies more than one date
+end test

@@ -1,0 +1,14 @@
+; Coverage for textual_xacts.cc UUID-based payee resolution
+
+payee Grocery Store
+    uuid ABC-123-DEF
+
+2024/01/01 Unknown Payee
+    ; UUID: ABC-123-DEF
+    Expenses:Food    $50.00
+    Assets:Cash
+
+test reg
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test

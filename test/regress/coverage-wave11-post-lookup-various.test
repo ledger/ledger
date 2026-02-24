@@ -1,0 +1,11 @@
+; Coverage for post.cc lines 539,542,554,563-565: post_t resolve_expr,
+; xact_id, and account_id lookups.
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+test reg --format "%(xact_id) %(account_id) %(display_account) %(depth)\n"
+1 1 Expenses:Food 2
+2 1 Assets:Cash 2
+end test

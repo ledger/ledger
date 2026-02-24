@@ -1,0 +1,38 @@
+; Coverage tests for amount.cc parsing edge cases
+; Exercises amount parsing paths for decimal comma, thousands separators
+
+; European decimal comma with thousand-mark periods (lines 1124-1146)
+2024/01/01 European Style
+    Expenses:Food    1.234.567,89 EUR
+    Assets:Cash
+
+; Single comma as decimal separator with >3 trailing digits (lines 1163-1175)
+2024/01/02 Decimal Comma Long
+    Expenses:Rent    1234,5678 GBP
+    Assets:Cash
+
+; Multiple thousands separators with commas (lines 1177-1178)
+2024/01/03 Thousands Commas
+    Expenses:Travel    1,234,567.89 CHF
+    Assets:Cash
+
+; Apostrophe thousands separator
+2024/01/04 Apostrophe Style
+    Expenses:Misc    1'234'567.89 JPY
+    Assets:Cash
+
+test bal Expenses:Food
+    1.234.567,89 EUR  Expenses:Food
+end test
+
+test bal Expenses:Rent
+       1234,5678 GBP  Expenses:Rent
+end test
+
+test bal Expenses:Travel
+    1,234,567.89 CHF  Expenses:Travel
+end test
+
+test bal Expenses:Misc
+    1'234'567.89 JPY  Expenses:Misc
+end test

@@ -1,0 +1,63 @@
+; Coverage tests for value.cc operations
+; Tests negate, not, is_zero, is_realzero, number, division
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Expenses:Drink   5.00 EUR
+    Assets:Cash
+
+; Negate boolean - exercises in_place_negate lines 1359-1361
+test eval -- '-true'
+0
+end test
+
+test eval -- '-false'
+1
+end test
+
+; Negate integer - exercises in_place_negate line 1364
+test eval -- '-42'
+-42
+end test
+
+; Negate amount - exercises negate paths
+test eval -- '-$10.00'
+$-10.00
+end test
+
+; Amount division by amount - exercises value.cc division paths
+test eval '$10.00 / $5.00'
+$2.00
+end test
+
+; Integer greater than amount - exercises is_greater_than line 1035
+test eval '10 > $5'
+1
+end test
+
+; Amount greater than integer - exercises is_greater_than line 1048
+test eval '$10 > 5'
+1
+end test
+
+; Balance output with multiple commodities exercises value printing
+test bal Expenses
+              $10.00
+            5.00 EUR  Expenses
+            5.00 EUR    Drink
+              $10.00    Food
+--------------------
+              $10.00
+            5.00 EUR
+end test
+
+; Sorting by amount with mixed currencies exercises comparison paths
+test bal Expenses --sort amount
+              $10.00
+            5.00 EUR  Expenses
+              $10.00    Food
+            5.00 EUR    Drink
+--------------------
+              $10.00
+            5.00 EUR
+end test

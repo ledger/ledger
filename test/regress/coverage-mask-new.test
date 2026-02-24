@@ -1,0 +1,28 @@
+; Coverage tests for mask.cc - diacritics folding and glob patterns
+; Covers fold_codepoint, fold_diacritics, assign_glob
+
+; Use accented characters in payee names to trigger diacritics folding
+2024/01/01 Café Résumé
+    Expenses:Food                    $10.00
+    Assets:Cash
+
+2024/01/02 Naïve Purchase
+    Expenses:Shopping                $20.00
+    Assets:Cash
+
+2024/01/03 Über Store
+    Expenses:Shopping                $30.00
+    Assets:Cash
+
+2024/01/04 Piñata Party
+    Expenses:Entertainment           $40.00
+    Assets:Cash
+
+test bal Expenses
+             $100.00  Expenses
+              $40.00    Entertainment
+              $10.00    Food
+              $50.00    Shopping
+--------------------
+             $100.00
+end test

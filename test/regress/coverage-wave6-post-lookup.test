@@ -1,0 +1,100 @@
+; Tests for post.cc uncovered lookup functions: N, O, R, b, virtual,
+; real, depth, index, magnitude, code, note, commodity_is_primary,
+; use_direct_amount, value_date, xact_id, account_id, has_cost
+
+2024/01/01 (CODE1) Grocery
+    ; :food:
+    Expenses:Food        $100.00
+    Assets:Cash
+
+2024/01/02 Stock Purchase
+    Assets:Brokerage     10 AAPL @ $150.00
+    Assets:Cash         $-1500.00
+
+2024/01/03 ! Pending Transaction
+    Expenses:Misc        $50.00
+    Assets:Cash
+
+2024/01/04 * Cleared Transaction
+    Expenses:Rent       $1000.00
+    Assets:Checking
+
+; === Test 1: N (count) function ===
+test reg Expenses --format "%(N)\n"
+1
+2
+3
+end test
+
+; === Test 2: O (total) function ===
+test reg Expenses:Food --format "%(O)\n"
+$100.00
+end test
+
+; === Test 3: R (real) function ===
+test reg Expenses --format "%(R ? 'real' : 'virtual')\n"
+real
+real
+real
+end test
+
+; === Test 4: b (cost) function ===
+test reg Assets:Brokerage --format "%(b)\n"
+$1500.00
+end test
+
+; === Test 5: virtual function ===
+test reg Expenses --format "%(virtual ? 'virt' : 'real')\n"
+real
+real
+real
+end test
+
+; === Test 6: depth function ===
+test reg Expenses --format "%(depth)\n"
+2
+2
+2
+end test
+
+; === Test 7: index / n function ===
+test reg Expenses --format "%(n)\n"
+1
+2
+3
+end test
+
+; === Test 8: magnitude function ===
+test reg Expenses:Food --format "%(magnitude)\n"
+$100.00
+end test
+
+; === Test 9: code function ===
+test reg Expenses:Food --format "%(code)\n"
+CODE1
+end test
+
+; === Test 10: payee function ===
+test reg Expenses:Food --format "%(payee)\n"
+Grocery
+end test
+
+; === Test 11: has_cost function ===
+test reg Assets:Brokerage --format "%(has_cost)\n"
+true
+end test
+
+; === Test 12: xact_id function ===
+test reg Expenses:Food --format "%(xact_id)\n"
+1
+end test
+
+; === Test 13: use_direct_amount function ===
+test reg Expenses:Food --format "%(use_direct_amount)\n"
+false
+end test
+
+; === Test 14: value_date function ===
+test reg Expenses:Food --format "%(value_date)\n"
+2024/01/01
+end test

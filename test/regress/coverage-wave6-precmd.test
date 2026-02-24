@@ -1,0 +1,20 @@
+; Coverage tests for precmd.cc - parse, eval, format, period, query commands
+; Covers lines: 88, 133, 159, 190-196
+
+2020/01/01 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2020/02/01 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; Test eval command (covers line 133)
+test eval 2+3
+5
+end test
+
+; Test eval with expression
+test eval 100/4
+25
+end test

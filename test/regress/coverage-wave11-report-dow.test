@@ -1,0 +1,22 @@
+; Test --dow option for report.cc coverage
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/17 Restaurant
+    Expenses:Food:Dining    $30.00
+    Assets:Checking
+
+2024/01/19 Gas Station
+    Expenses:Transport    $40.00
+    Assets:Checking
+
+test reg --dow
+24-Jan-15 Mondays               Assets:Checking             $-50.00      $-50.00
+                                Expenses:Food                $50.00            0
+24-Jan-17 Wednesdays            Assets:Checking             $-30.00      $-30.00
+                                Expenses:Food:Dining         $30.00            0
+24-Jan-19 Fridays               Assets:Checking             $-40.00      $-40.00
+                                Expenses:Transport           $40.00            0
+end test

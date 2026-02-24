@@ -1,0 +1,37 @@
+; Tests for session.cc uncovered lines
+; Covers: lines 255 270 301 373 397
+
+; --- Journal data ---
+2024/01/01 Test
+    Expenses:Food    10 AAPL {$100} [2024/01/01] (tag1) @ $105
+    Assets:Cash
+
+; --- Test 1: session fn_str (line 270) ---
+test reg --format "%(str(10))\n" Expenses
+10
+end test
+
+; --- Test 2: session fn_lot_date (line 301) via lot_date ---
+test reg --format "%(lot_date(amount))\n" Expenses
+2024/01/01
+end test
+
+; --- Test 3: session fn_lot_tag (line 373) via lot_tag ---
+test reg --format "%(lot_tag(amount))\n" Expenses
+tag1
+end test
+
+; --- Test 4: session fn_lot_price via lot_price ---
+test reg --format "%(lot_price(amount))\n" Expenses
+$100
+end test
+
+; --- Test 5: session fn_min and fn_max ---
+test reg --format "%(min(10, 20)) %(max(10, 20))\n" Expenses
+10 20
+end test
+
+; --- Test 6: session fn_int (line 270 area) ---
+test reg --format "%(int(amount))\n" Expenses
+10
+end test

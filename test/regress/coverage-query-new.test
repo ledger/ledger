@@ -1,0 +1,57 @@
+; Coverage tests for query.cc/query.h
+; Tests: query language operators @payee, %meta, =note, expressions
+
+2024/01/01 (INV001) Grocery Store
+    ; :food:organic:
+    ; Location: Downtown
+    Expenses:Food                    $50.00
+    Assets:Cash
+
+2024/01/02 (INV002) Gas Station  ; fill up
+    Expenses:Gas                     $30.00
+    Assets:Cash
+
+2024/01/03 Restaurant
+    ; :food:
+    Expenses:Dining                  $45.00
+    Assets:Cash
+
+test reg @Grocery
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test
+
+test reg @Gas
+24-Jan-02 Gas Station           Expenses:Gas                 $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg %food
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+24-Jan-03 Restaurant            Expenses:Dining              $45.00       $45.00
+                                Assets:Cash                 $-45.00            0
+end test
+
+test reg =fill
+24-Jan-02 Gas Station           Expenses:Gas                 $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test
+
+test reg @Grocery and Food
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+end test
+
+test reg @Grocery or @Restaurant
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+24-Jan-03 Restaurant            Expenses:Dining              $45.00       $45.00
+                                Assets:Cash                 $-45.00            0
+end test
+
+test reg not @Restaurant
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+24-Jan-02 Gas Station           Expenses:Gas                 $30.00       $30.00
+                                Assets:Cash                 $-30.00            0
+end test

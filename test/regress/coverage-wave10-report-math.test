@@ -1,0 +1,21 @@
+; Tests for percent, commodity, set_commodity_price functions
+; Covers report.cc lines 836, 840, 856
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Test percent - covers line 836
+test reg --format '%(percent(amount, 200))\n' --head 1 Expenses
+25.00%
+end test
+
+; Test commodity - covers line 840
+test reg --format '%(commodity(amount))\n' --head 1 Expenses
+$
+end test
+
+; Test set_commodity_price - covers line 856
+test reg --format '%(set_commodity_price(amount, today, 200))%(amount)\n' --head 1 Expenses
+$50.00
+end test

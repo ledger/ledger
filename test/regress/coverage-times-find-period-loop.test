@@ -1,0 +1,49 @@
+; Test find_period scanning loop and operator++ advancement
+; Exercises find_period (lines 1471, 1478, 1489, 1512-1514, 1519, 1521, 1526-1527)
+; Also exercises stabilize with since_specified (line 1370-1383)
+; and date_interval_t::operator++ (lines 1538-1560)
+
+2024/01/01 Payee A
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/03/01 Payee B
+    Expenses:Rent    $20.00
+    Assets:Checking
+
+2024/06/01 Payee C
+    Expenses:Gas    $30.00
+    Assets:Checking
+
+; Quarterly with begin/end exercises find_period with finish boundary
+test reg --now 2024/12/15 --period "quarterly" --begin 2024/01/01 --end 2024/07/01
+24-Jan-01 - 24-Mar-31           Assets:Checking             $-30.00      $-30.00
+                                Expenses:Food                $10.00      $-20.00
+                                Expenses:Rent                $20.00            0
+24-Apr-01 - 24-Jun-30           Assets:Checking             $-30.00      $-30.00
+                                Expenses:Gas                 $30.00            0
+end test
+
+; Monthly period with spread-out transactions exercises scanning loop
+test reg --now 2024/12/15 --period "monthly from 2024/01 to 2024/07"
+24-Jan-01 - 24-Jan-31           Assets:Checking             $-10.00      $-10.00
+                                Expenses:Food                $10.00            0
+24-Mar-01 - 24-Mar-31           Assets:Checking             $-20.00      $-20.00
+                                Expenses:Rent                $20.00            0
+24-Jun-01 - 24-Jun-30           Assets:Checking             $-30.00      $-30.00
+                                Expenses:Gas                 $30.00            0
+end test
+
+; "every 2 months from" specific date exercises since_specified path
+test reg --now 2024/12/15 --period "every 2 months from 2024/01/15"
+24-Jan-15 - 24-Mar-14           Assets:Checking             $-20.00      $-20.00
+                                Expenses:Rent                $20.00            0
+24-May-15 - 24-Jul-14           Assets:Checking             $-30.00      $-30.00
+                                Expenses:Gas                 $30.00            0
+end test
+
+; Daily with begin/end exercises find_nearest for DAYS (lines 1327-1328)
+test reg --now 2024/12/15 --period "daily" --begin 2024/01/01 --end 2024/01/03
+24-Jan-01 - 24-Jan-01           Assets:Checking             $-10.00      $-10.00
+                                Expenses:Food                $10.00            0
+end test

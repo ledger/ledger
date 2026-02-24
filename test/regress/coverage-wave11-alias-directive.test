@@ -1,0 +1,25 @@
+; Coverage for textual_directives.cc lines 339,346 (alias directive)
+; Also covers line 485 (account_alias_directive duplicate alias)
+
+alias food=Expenses:Food
+alias cash=Assets:Cash
+
+2024/01/01 Groceries
+    food    $15.00
+    cash
+
+; Re-alias food to a different account to cover the "already inserted" path
+alias food=Expenses:Dining
+
+2024/01/02 Restaurant
+    food    $30.00
+    cash
+
+test bal
+             $-45.00  Assets:Cash
+              $45.00  Expenses
+              $30.00    Dining
+              $15.00    Food
+--------------------
+                   0
+end test

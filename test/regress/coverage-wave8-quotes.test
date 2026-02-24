@@ -1,0 +1,35 @@
+; Regression test for coverage-wave8: quotes.cc uncovered lines
+; Lines: 72 91 102 104-106 109
+;
+; quotes.cc handles downloading prices via getquote command.
+; Lines 72-91: building the getquote command string
+; Lines 102-109: parsing the result and writing to price_db
+;
+; We cannot actually test the download path in a regression test since
+; getquote is an external command. Instead we test the commodity
+; quote infrastructure by exercising the --download flag (which triggers
+; commodity_quote_from_script) and the price DB read/write path.
+;
+; The test here verifies the price lookups work correctly even when
+; no getquote is available (the NOMARKET flag path, line 120).
+
+commodity $
+commodity AAPL
+
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $180.00
+
+2024/01/15 Buy Apple
+    Assets:Investments    10 AAPL
+    Assets:Cash
+
+; Test --market which triggers price lookup (may trigger quote attempt)
+test balance Assets:Investments --market --now 2024/06/01
+            $1800.00  Assets:Investments
+end test
+
+; Test pricedb command (exercises price infrastructure)
+test pricedb
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/06/01 00:00:00 AAPL $180.00
+end test

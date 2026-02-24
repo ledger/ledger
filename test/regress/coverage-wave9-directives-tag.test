@@ -1,0 +1,16 @@
+; Test coverage for textual_directives.cc lines 618-636
+; tag directive with assert/check sub-directives, and year/bucket
+
+tag Receipt
+    assert value =~ /[0-9]+/
+
+year 2024
+bucket Assets:Cash
+
+2024/03/01 Grocery
+    ; Receipt: 12345
+    Expenses:Food                           $25.00
+
+test bal Expenses
+              $25.00  Expenses:Food
+end test

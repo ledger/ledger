@@ -1,0 +1,210 @@
+; Coverage tests for report.cc precommand dispatch
+; Tests: eval (1712-1713), expr/parse (1714-1715), format (1718-1720),
+;        query/args (1708-1709, 1732-1734), template (1740-1741),
+;        generate (1722-1724), period (1728-1729)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Test eval precommand (line 1712-1713)
+test eval 2+2
+4
+end test
+
+; Test expr/parse precommand (line 1714-1715)
+test expr 3*4 | sed -E 's/0x[0-9a-f]+/ADDR/g'
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input expression ---
+3*4
+
+--- Text as parsed ---
+({3} * {4})
+
+--- Expression tree ---
+ADDR    O_MUL (1)
+ADDR     VALUE: 3 (1)
+ADDR     VALUE: 4 (1)
+
+--- Compiled tree ---
+ADDR    O_MUL (1)
+ADDR     VALUE: 3 (1)
+ADDR     VALUE: 4 (1)
+
+--- Calculated value ---
+12
+end test
+
+; Test parse precommand (same as expr)
+test parse 5+5 | sed -E 's/0x[0-9a-f]+/ADDR/g'
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input expression ---
+5+5
+
+--- Text as parsed ---
+({5} + {5})
+
+--- Expression tree ---
+ADDR    O_ADD (1)
+ADDR     VALUE: 5 (1)
+ADDR     VALUE: 5 (1)
+
+--- Compiled tree ---
+ADDR    O_ADD (1)
+ADDR     VALUE: 5 (1)
+ADDR     VALUE: 5 (1)
+
+--- Calculated value ---
+10
+end test
+
+; Test query precommand (line 1732-1734)
+test query Expenses | sed -E 's/0x[0-9a-f]+/ADDR/g'
+--- Input arguments ---
+("Expenses")
+
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input expression ---
+(account =~ /Expenses/)
+
+--- Text as parsed ---
+(account =~ /Expenses/)
+
+--- Expression tree ---
+ADDR    O_MATCH (1)
+ADDR     IDENT: account (1)
+ADDR     VALUE: /Expenses/ (1)
+
+--- Compiled tree ---
+ADDR    O_MATCH (1)
+ADDR     IDENT: account (1)
+ADDR      FUNCTION (1)
+ADDR     VALUE: /Expenses/ (1)
+
+--- Calculated value ---
+true
+end test
+
+; Test args precommand (line 1708-1709)
+test args Expenses and Food | sed -E 's/0x[0-9a-f]+/ADDR/g'
+--- Input arguments ---
+("Expenses", "and", "Food")
+
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input expression ---
+((account =~ /Expenses/) & (account =~ /Food/))
+
+--- Text as parsed ---
+((account =~ /Expenses/) & (account =~ /Food/))
+
+--- Expression tree ---
+ADDR    O_AND (1)
+ADDR     O_MATCH (1)
+ADDR      IDENT: account (1)
+ADDR      VALUE: /Expenses/ (1)
+ADDR     O_MATCH (1)
+ADDR      IDENT: account (1)
+ADDR      VALUE: /Food/ (1)
+
+--- Compiled tree ---
+ADDR    O_AND (1)
+ADDR     O_MATCH (1)
+ADDR      IDENT: account (1)
+ADDR       FUNCTION (1)
+ADDR      VALUE: /Expenses/ (1)
+ADDR     O_MATCH (1)
+ADDR      IDENT: account (1)
+ADDR       FUNCTION (1)
+ADDR      VALUE: /Food/ (1)
+
+--- Calculated value ---
+false
+end test
+
+; Test period precommand (line 1728-1729)
+test period monthly from 2024/01/01
+--- Period expression tokens ---
+TOK_MONTHLY: monthly
+TOK_SINCE: since
+TOK_DATE:  year 2024 month Jan day 1
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024 month Jan day 1
+duration: 1 month
+
+--- After stabilization ---
+   range: from year 2024 month Jan day 1
+   start: 24-Jan-01
+duration: 1 month
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01 -- 24-Jan-31
+ 2: 24-Feb-01 -- 24-Feb-29
+ 3: 24-Mar-01 -- 24-Mar-31
+ 4: 24-Apr-01 -- 24-Apr-30
+ 5: 24-May-01 -- 24-May-31
+ 6: 24-Jun-01 -- 24-Jun-30
+ 7: 24-Jul-01 -- 24-Jul-31
+ 8: 24-Aug-01 -- 24-Aug-31
+ 9: 24-Sep-01 -- 24-Sep-30
+10: 24-Oct-01 -- 24-Oct-31
+11: 24-Nov-01 -- 24-Nov-30
+12: 24-Dec-01 -- 24-Dec-31
+13: 25-Jan-01 -- 25-Jan-31
+14: 25-Feb-01 -- 25-Feb-28
+15: 25-Mar-01 -- 25-Mar-31
+16: 25-Apr-01 -- 25-Apr-30
+17: 25-May-01 -- 25-May-31
+18: 25-Jun-01 -- 25-Jun-30
+19: 25-Jul-01 -- 25-Jul-31
+20: 25-Aug-01 -- 25-Aug-31
+end test
+
+; Test template precommand (line 1740-1741)
+test template Grocery $50 | sed -E 's/[0-9]{4}-[A-Z][a-z]{2}-[0-9]{2}/DATE/g'
+--- Input arguments ---
+("Grocery", "0")
+
+--- Transaction template ---
+Date:       DATE
+Payee mask: Grocery
+
+<Posting copied from last related transaction>
+end test

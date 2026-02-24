@@ -1,0 +1,71 @@
+; Tests for precmd.cc uncovered lines
+; Covers: lines 88 133 159 190 192-193 195-196
+
+; --- Test 1: parse with no args (line 88) ---
+test parse -> 1
+__ERROR__
+Error: Usage: parse TEXT
+end test
+
+; --- Test 2: format with no args (line 133) ---
+test format -> 1
+__ERROR__
+Error: Usage: format TEXT
+end test
+
+; --- Test 3: period with no args (line 159) ---
+test period -> 1
+__ERROR__
+Error: Usage: period TEXT
+end test
+
+; --- Test 4: period with valid args (line 159 - normal path) ---
+test period "monthly from 2024/01/01 to 2024/04/01"
+--- Period expression tokens ---
+TOK_MONTHLY: monthly
+TOK_SINCE: since
+TOK_DATE:  year 2024 month Jan day 1
+TOK_UNTIL: until
+TOK_DATE:  year 2024 month Apr day 1
+END_REACHED: <EOF>
+
+--- Before stabilization ---
+   range: from year 2024 month Jan day 1 to year 2024 month Apr day 1
+duration: 1 month
+
+--- After stabilization ---
+   range: from year 2024 month Jan day 1 to year 2024 month Apr day 1
+   start: 24-Jan-01
+  finish: 24-Apr-01
+duration: 1 month
+
+--- Sample dates in range (max. 20) ---
+ 1: 24-Jan-01 -- 24-Jan-31
+ 2: 24-Feb-01 -- 24-Feb-29
+ 3: 24-Mar-01 -- 24-Mar-31
+end test
+
+; --- Test 5: format with valid args (line 133 - normal path) ---
+test format "%(payee)\n"
+--- Context is first posting of the following transaction ---
+2004/05/27 Book Store
+    ; This note applies to all postings. :SecondTag:
+    Expenses:Books                 20 BOOK @ $10
+    ; Metadata: Some Value
+    ; Typed:: $100 + $200
+    ; :ExampleTag:
+    ; Here follows a note describing the posting.
+    Liabilities:MasterCard        $-200.00
+
+--- Input format string ---
+%(payee)\n
+
+--- Format elements ---
+Element:    EXPR  flags: 0x0  min:  0  max:  0  expr: payee
+Element:  STRING  flags: 0x0  min:  0  max:  0   str: '
+'
+
+--- Formatted string ---
+"Book Store
+"
+end test

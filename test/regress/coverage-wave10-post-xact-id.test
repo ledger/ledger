@@ -1,0 +1,11 @@
+; Test coverage for post.cc lines 519, 524, 529, 539, 542, 554, 563, 565
+; Exercises xact_id lookup and the O, N, R single-char lookups
+
+2024/01/01 Test
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test reg --format '%(xact_id) %(N) %(O)\n'
+1 1 $50.00
+2 2 $0.00
+end test

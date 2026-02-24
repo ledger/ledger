@@ -1,0 +1,16 @@
+; Test coverage for xact.cc lines 454-467
+; Virtual balanced posting with null amount (balanced-virtual finalize path)
+
+2024/01/01 Test Transaction
+    Expenses:Food                           $50.00
+    Assets:Cash                            $-50.00
+    [Budget:Food]                           $50.00
+    [Budget:Savings]
+
+test bal Budget
+                   0  Budget
+              $50.00    Food
+             $-50.00    Savings
+--------------------
+                   0
+end test

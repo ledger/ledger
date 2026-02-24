@@ -1,0 +1,42 @@
+; Wave 2 coverage tests for misc uncovered lines
+; Covers: history.cc (price history), post.h (has_tag, get_tag),
+; amount.h (commodity operations), balance.h (balance operations)
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/15 AAPL $155.00
+P 2024/02/01 AAPL $160.00
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Buy AAPL
+    Assets:Brokerage           10 AAPL @ $150.00
+    Assets:Cash
+
+2024/01/15 Buy EUR
+    Assets:EUR              100 EUR @ $1.10
+    Assets:Cash
+
+; Test gain/loss report - exercises history.cc price lookup paths
+test reg Assets:Brokerage --gain
+24-Jan-15 Commodities revalued  <Revalued>                   $50.00       $50.00
+24-Feb-01 Commodities revalued  <Revalued>                   $50.00      $100.00
+end test
+
+; Test balance with market value - exercises commodity price history
+test bal Assets:Brokerage -V --now 2024/02/01
+            $1600.00  Assets:Brokerage
+end test
+
+; Test multi-commodity market value
+test bal Assets -V --now 2024/02/01
+             $100.00  Assets
+            $1600.00    Brokerage
+           $-1610.00    Cash
+             $110.00    EUR
+--------------------
+             $100.00
+end test
+
+; Test basis report
+test bal Assets:Brokerage -B
+            $1500.00  Assets:Brokerage
+end test

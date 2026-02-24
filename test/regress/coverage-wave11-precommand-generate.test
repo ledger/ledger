@@ -1,0 +1,11 @@
+; Test script precommand for report.cc coverage
+; Targets report.cc lines 1736-1737 (script precommand lookup)
+; The script precommand is an alias for source
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; Script reads and re-parses a journal file (same as source)
+test script $FILE
+end test

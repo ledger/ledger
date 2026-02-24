@@ -1,0 +1,12 @@
+; Test coverage for post.cc lines 169, 189, 196, 235, 242, 253, 262
+; Exercises get_payee, get_magnitude, get_amount (null), get_cost (null amount),
+; get_price, get_total, get_count
+
+2024/01/01 Test Payee
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test reg --format '%(payee) %(magnitude) %(N) %(O)\n'
+Test Payee $50.00 1 $50.00
+Test Payee $50.00 2 $0.00
+end test

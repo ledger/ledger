@@ -1,0 +1,21 @@
+; Coverage for history.cc lines for price graph with multi-step conversion
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP $1.30
+
+2024/01/01 European Purchase
+    Expenses:Food    100 EUR
+    Assets:Cash
+
+2024/01/02 British Purchase
+    Expenses:Drinks    50 GBP
+    Assets:Cash
+
+test bal -X $ --now 2024/01/15
+            $-175.00  Assets:Cash
+             $175.00  Expenses
+              $65.00    Drinks
+             $110.00    Food
+--------------------
+                   0
+end test

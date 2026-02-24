@@ -1,0 +1,62 @@
+; Tests for item.cc uncovered lookup functions: has_tag with debug,
+; pathname, filebase, filepath, seq, id, addr, depth, L, X, Y,
+; value_date, comment
+
+2024/01/01 * Grocery
+    ; :food:
+    ; MyTag: hello world
+    Expenses:Food        $100.00
+    Assets:Cash
+
+2024/01/02 ! Pending
+    Expenses:Misc         $50.00
+    Assets:Cash
+
+; === Test 1: L (actual/real) function ===
+test reg Expenses --format "%(L ? 'actual' : 'generated')\n"
+actual
+actual
+end test
+
+; === Test 2: X (cleared) function ===
+test reg --format "%(X ? 'cleared' : 'not')\n" Expenses
+cleared
+not
+end test
+
+; === Test 3: Y (pending) function ===
+test reg --format "%(Y ? 'pending' : 'not')\n" Expenses
+not
+pending
+end test
+
+; === Test 4: depth function ===
+test reg --format "%(depth)\n" Expenses
+2
+2
+end test
+
+; === Test 5: id function ===
+test reg --format "%(id)\n" Expenses:Food
+2
+end test
+
+; === Test 6: has_tag function ===
+test reg --format "%(has_tag('MyTag') ? 'yes' : 'no')\n" Expenses:Food
+yes
+end test
+
+; === Test 7: meta function ===
+test reg --format "%(meta('MyTag'))\n" Expenses:Food
+hello world
+end test
+
+; === Test 8: value_date function from item ===
+test reg --format "%(value_date)\n" Expenses:Food
+2024/01/01
+end test
+
+; === Test 9: beg_line function ===
+test reg --format "%(beg_line)\n" Expenses:Food
+8
+end test

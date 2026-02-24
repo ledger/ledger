@@ -1,0 +1,46 @@
+; Wave 2 coverage tests for query.cc operator parsing
+; Covers: query lexer - AND, OR, NOT operators (lines 112-170),
+;   payee query (@), note query, code query, tag query
+
+2024/01/01 Store Alpha
+    Expenses:Food     $10.00
+    Assets:Cash
+
+2024/01/02 Store Beta
+    Expenses:Auto     $25.00
+    Assets:Cash
+
+2024/01/03 (CHK-100) Store Gamma
+    ; Note: important
+    ; :weekly:
+    Expenses:Rent     $500.00
+    Assets:Cash
+
+; Test AND query - covers query.cc AND token (line 112-113)
+test reg Expenses and @"Store Alpha"
+24-Jan-01 Store Alpha           Expenses:Food                $10.00       $10.00
+end test
+
+; Test OR query - covers query.cc OR token (line 120)
+test reg Expenses:Food or Expenses:Auto
+24-Jan-01 Store Alpha           Expenses:Food                $10.00       $10.00
+24-Jan-02 Store Beta            Expenses:Auto                $25.00       $35.00
+end test
+
+; Test NOT query - covers query.cc NOT token (line 140-141)
+test reg --limit "not (payee =~ /Store Beta/)" Expenses
+24-Jan-01 Store Alpha           Expenses:Food                $10.00       $10.00
+24-Jan-03 Store Gamma           Expenses:Rent               $500.00      $510.00
+end test
+
+; Test payee query (@) - covers query.cc payee term (line 161-162)
+test reg @"Store Beta"
+24-Jan-02 Store Beta            Expenses:Auto                $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+end test
+
+; Test with quoted payee containing spaces
+test reg @"Store Gamma"
+24-Jan-03 Store Gamma           Expenses:Rent               $500.00      $500.00
+                                Assets:Cash                $-500.00            0
+end test

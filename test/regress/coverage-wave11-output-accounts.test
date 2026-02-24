@@ -1,0 +1,18 @@
+; Test accounts command for output.h coverage
+; Targets report.cc line 1601 (accounts command) and
+; output.h lines 143-146 (report_accounts::clear)
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries    $50.00
+    Assets:Checking
+
+2024/02/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Cash
+
+test accounts
+Assets:Cash
+Assets:Checking
+Expenses:Food:Groceries
+Expenses:Transport
+end test

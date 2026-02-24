@@ -1,0 +1,12 @@
+; Test coverage for draft.cc lines 118-155, 266-269, 293, 451-469
+; Test xact command with keyword args: on, code, note, from, to, @
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Checking
+
+test xact on 2024/02/15 Grocery code INV001 note "Monthly groceries" to Expenses:Food '$25.00' from Assets:Checking
+2024/02/15 (INV001) Grocery Store  ;Monthly groceries
+    Expenses:Food                             $25.00
+    Assets:Checking
+end test

@@ -1,0 +1,30 @@
+; Tests for post.cc virtual and real posting lookups (lines 488, 503-504)
+; Also covers xact.cc virtual balance paths (447-449, 464-467)
+
+2024/01/01 Budget Transaction
+    Expenses:Food          $100.00
+    Assets:Cash           $-100.00
+    [Budget:Food]         $-100.00
+    [Budget:Income]
+
+; === Test 1: Virtual postings shown ===
+test reg --columns 80
+24-Jan-01 Budget Transaction    Expenses:Food               $100.00      $100.00
+                                Assets:Cash                $-100.00            0
+                                [Budget:Food]              $-100.00     $-100.00
+                                [Budget:Income]             $100.00            0
+end test
+
+; === Test 2: Only real postings ===
+test reg --real --columns 80
+24-Jan-01 Budget Transaction    Expenses:Food               $100.00      $100.00
+                                Assets:Cash                $-100.00            0
+end test
+
+; === Test 3: Format showing virtual flag ===
+test reg --format "%(virtual ? '[V]' : '[R]') %(account)\n"
+[R] Expenses:Food
+[R] Assets:Cash
+[V] Budget:Food
+[V] Budget:Income
+end test

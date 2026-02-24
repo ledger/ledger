@@ -1,0 +1,16 @@
+; Tests for filters.cc changed_value_posts (lines 713-715, 805-806, 810, 815-817, 831, 865)
+; Covers: output_revaluation, operator(), catch block, last_total casting
+
+P 2024/01/01 AAPL $150.00
+P 2024/01/15 AAPL $160.00
+P 2024/02/01 AAPL $170.00
+
+2024/01/01 Stock Purchase
+    Assets:Brokerage     10 AAPL @ $150.00
+    Assets:Cash         $-1500.00
+
+; === Test 1: Gain report with price changes ===
+test reg Assets:Brokerage --gain --columns 80
+24-Jan-15 Commodities revalued  <Revalued>                  $100.00      $100.00
+24-Feb-01 Commodities revalued  <Revalued>                  $100.00      $200.00
+end test

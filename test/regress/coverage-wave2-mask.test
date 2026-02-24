@@ -1,0 +1,39 @@
+; Tests for mask.cc uncovered lines: fold_codepoint (diacritics folding),
+; fold_diacritics function.
+
+2024/01/01 Achat
+    Dépenses:Café             10.00 EUR
+    Actifs:Banque
+
+2024/01/02 Über Kauf
+    Dépenses:Bücher           20.00 EUR
+    Actifs:Banque
+
+2024/01/03 Ñoño
+    Dépenses:Señor            15.00 EUR
+    Actifs:Banque
+
+; Search with ASCII that should match via diacritics folding
+test bal Depenses --ignore-diacritics
+           45.00 EUR  Dépenses
+           20.00 EUR    Bücher
+           10.00 EUR    Café
+           15.00 EUR    Señor
+--------------------
+           45.00 EUR
+end test
+
+; Search with unaccented version of accented name (cafe -> café)
+test reg Cafe --ignore-diacritics --columns 120
+24-Jan-01 Achat                           Dépenses:Café                                 10.00 EUR          10.00 EUR
+end test
+
+; Search for Bucher (matches Bücher via ü -> u diacritics)
+test reg Bucher --ignore-diacritics --columns 120
+24-Jan-02 Über Kauf                       Dépenses:Bücher                               20.00 EUR          20.00 EUR
+end test
+
+; Search for Senor (matches Señor via ñ -> n folding)
+test reg Senor --ignore-diacritics --columns 120
+24-Jan-03 Ñoño                            Dépenses:Señor                                15.00 EUR          15.00 EUR
+end test

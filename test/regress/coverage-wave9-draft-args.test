@@ -1,0 +1,16 @@
+; Test coverage for draft.cc lines 85-210
+; Test xact command with various argument forms
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/15 Hardware Store
+    Expenses:Tools                          $25.00
+    Assets:Cash
+
+test xact 2024/02/01 Grocery Expenses:Food '$30.00'
+2024/02/01 Grocery Store
+    Expenses:Food                             $30.00
+    Assets:Cash
+end test

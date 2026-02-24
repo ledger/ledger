@@ -1,0 +1,22 @@
+; Coverage tests for xact.cc - fn_any and fn_all expressions
+; Covers lines 608-630
+
+2024/01/01 Grocery Store
+    Expenses:Food                    $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas                     $30.00
+    Assets:Cash
+
+; Test expr 'any(account =~ /Food/)' to cover fn_any
+test reg -l 'any(account =~ /Food/)' @Grocery
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test
+
+; Test expr 'all(amount > -100)' to cover fn_all
+test reg -l 'all(amount > -100)' @Grocery
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test

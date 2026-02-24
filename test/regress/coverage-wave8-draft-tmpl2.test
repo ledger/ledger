@@ -1,0 +1,25 @@
+; Coverage tests for draft.cc template dump with more complex args
+; Targets lines 363, 369 (date, code, note in template dump)
+
+2024/01/01 (CHK001) Grocery Store  ;a note
+    Expenses:Food            $50.00
+    Assets:Cash
+
+; Template with date, code, and note keywords
+test template on 2024/03/01 code CHK999 note "test note" Grocery Expenses:Food '$25'
+--- Input arguments ---
+("on", "2024/03/01", "code", "CHK999", "note", "test note", "Grocery", "Expenses:Food", "$25")
+
+--- Transaction template ---
+Date:       <today>
+Code:       CHK999
+Note:       test note
+Payee mask: Grocery
+
+[Posting "to"]
+  Account mask: Expenses:Food
+  Amount:       $25
+
+[Posting "from"]
+  Account mask: <use last of last related accounts>
+end test

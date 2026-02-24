@@ -1,0 +1,35 @@
+; Coverage tests for compare.cc
+; Tests: various sort keys
+
+2024/01/01 Grocery Store
+    Expenses:Food                    $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas                     $30.00
+    Assets:Cash
+
+2024/01/03 Restaurant
+    Expenses:Food                    $25.00
+    Assets:Cash
+
+; Test sort by amount ascending
+test reg Expenses --sort amount
+24-Jan-03 Restaurant            Expenses:Food                $25.00       $25.00
+24-Jan-02 Gas Station           Expenses:Gas                 $30.00       $55.00
+24-Jan-01 Grocery Store         Expenses:Food                $50.00      $105.00
+end test
+
+; Test sort by amount descending
+test reg Expenses --sort '-amount'
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-02 Gas Station           Expenses:Gas                 $30.00       $80.00
+24-Jan-03 Restaurant            Expenses:Food                $25.00      $105.00
+end test
+
+; Test sort by payee
+test reg Expenses --sort payee
+24-Jan-02 Gas Station           Expenses:Gas                 $30.00       $30.00
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $80.00
+24-Jan-03 Restaurant            Expenses:Food                $25.00      $105.00
+end test

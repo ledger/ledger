@@ -1,0 +1,26 @@
+; Coverage for textual_directives.cc lines 485,520,556 (commodity directive fields)
+; Tests commodity directive with alias, value, format, nomarket, default, and note
+
+commodity $
+    format $1,000.00
+    note US Dollar
+    alias USD
+
+commodity EUR
+    nomarket
+    note Euro currency
+
+commodity GBP
+    default
+    note British Pound
+
+2024/01/01 Test
+    Expenses:Food    $100.00
+    Assets:Cash
+
+test bal
+            $-100.00  Assets:Cash
+             $100.00  Expenses:Food
+--------------------
+                   0
+end test

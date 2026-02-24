@@ -1,0 +1,13 @@
+; Test coverage for xact.cc lines 608-630
+; Auto xact using any() and all() functions
+
+= /Expenses/
+    (Budget:Expenses)                        1.00
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test reg --format '%(any(account =~ /Food/)) %(all(account =~ /./)) %(payee)\n' Food
+true true Grocery Store
+end test

@@ -1,0 +1,40 @@
+; Coverage tests for textual_directives.cc
+; Tests: various directives including apply tag, apply account, year,
+;        alias, payee directive, commodity directive, comment
+
+year 2024
+
+apply account Assets
+
+commodity $
+    format $1,000.00
+    nomarket
+    default
+
+tag Receipt
+
+payee Grocery
+    alias Food Store
+    uuid ABC-123
+
+apply tag Receipt
+
+2024/01/01 Grocery
+    Checking                         $500.00
+    Cash                            $-500.00
+
+end apply tag
+
+end apply account
+
+2024/01/02 * Other
+    Expenses:Food                     $10.00
+    Assets:Cash
+
+test bal Expenses
+              $10.00  Expenses:Food
+end test
+
+test bal Checking
+             $500.00  Assets:Checking
+end test

@@ -1,0 +1,59 @@
+; Tests for draft.cc uncovered lines
+; Covers: parse_args (lines 85-209), insert (lines 212-491)
+
+2024/01/01 Grocery Store
+    Expenses:Food          $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Auto:Gas      $35.00
+    Assets:Cash
+
+; Test basic xact command with payee match and explicit date
+test xact 2024/02/15 Grocery
+2024/02/15 Grocery Store
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test
+
+; Test xact with 'on' keyword for date
+test xact Grocery on 2024/03/20 60
+2024/03/20 Grocery Store
+    Expenses:Food                             $60.00
+    Assets:Cash
+end test
+
+; Test xact with 'to' keyword
+test xact Grocery to Expenses:Dining 30 on 2024/04/01
+2024/04/01 Grocery Store
+    Expenses:Dining                               30
+    Assets:Cash
+end test
+
+; Test xact with 'from' keyword
+test xact Grocery from Assets:Savings 45 on 2024/04/02
+2024/04/02 Grocery Store
+    Expenses:Food
+    Assets:Savings                               -45
+end test
+
+; Test xact with 'code' keyword
+test xact Grocery code 5678 40 on 2024/04/03
+2024/04/03 (5678) Grocery Store
+    Expenses:Food                             $40.00
+    Assets:Cash
+end test
+
+; Test xact with 'note' keyword
+test xact Grocery note "weekly" 55 on 2024/04/04
+2024/04/04 Grocery Store  ;weekly
+    Expenses:Food                             $55.00
+    Assets:Cash
+end test
+
+; Test xact with no payee match (new payee)
+test xact "New Vendor" to Expenses:Misc 10 from Assets:Checking on 2024/04/05
+2024/04/05 New Vendor
+    Expenses:Misc                                 10
+    Assets:Checking
+end test

@@ -1,0 +1,19 @@
+; Coverage for textual.cc lines 200-203 and textual_directives.cc line 734
+; Tests @ and ! prefix on directives
+
+@account Expenses:Travel
+    note Travel expenses
+
+!account Expenses:Medical
+    note Medical expenses
+
+2024/01/01 Trip
+    Expenses:Travel    $200.00
+    Assets:Cash
+
+test bal
+            $-200.00  Assets:Cash
+             $200.00  Expenses:Travel
+--------------------
+                   0
+end test

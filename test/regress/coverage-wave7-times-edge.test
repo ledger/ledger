@@ -1,0 +1,54 @@
+; Coverage for times.cc edge cases:
+; - Lines 789-795: date_parser_t with "this/next/last" weekday
+; - Lines 883-884: determine_when unexpected token
+; - Lines 1459-1530: date_interval_t find_period and stabilize
+; - Lines 1540-1602: date_interval_t dump and increment
+; - Lines 1666: date parsing throws on invalid date in period expression
+
+; Basic transactions for date-period testing
+2024/01/01 First
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/02/01 Second
+    Expenses:Food    $20.00
+    Assets:Cash
+
+2024/03/01 Third
+    Expenses:Food    $30.00
+    Assets:Cash
+
+2024/04/01 Fourth
+    Expenses:Food    $40.00
+    Assets:Cash
+
+2024/05/01 Fifth
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/06/01 Sixth
+    Expenses:Food    $60.00
+    Assets:Cash
+
+; Test with monthly period
+test reg Expenses --monthly
+24-Jan-01 - 24-Jan-31           Expenses:Food                $10.00       $10.00
+24-Feb-01 - 24-Feb-29           Expenses:Food                $20.00       $30.00
+24-Mar-01 - 24-Mar-31           Expenses:Food                $30.00       $60.00
+24-Apr-01 - 24-Apr-30           Expenses:Food                $40.00      $100.00
+24-May-01 - 24-May-31           Expenses:Food                $50.00      $150.00
+24-Jun-01 - 24-Jun-30           Expenses:Food                $60.00      $210.00
+end test
+
+; Test with quarterly period
+test reg Expenses --quarterly
+24-Jan-01 - 24-Mar-31           Expenses:Food                $60.00       $60.00
+24-Apr-01 - 24-Jun-30           Expenses:Food               $150.00      $210.00
+end test
+
+; Test with --begin and --end date range
+test reg Expenses --begin 2024/02/01 --end 2024/05/01
+24-Feb-01 Second                Expenses:Food                $20.00       $20.00
+24-Mar-01 Third                 Expenses:Food                $30.00       $50.00
+24-Apr-01 Fourth                Expenses:Food                $40.00       $90.00
+end test

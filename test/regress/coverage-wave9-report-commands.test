@@ -1,0 +1,87 @@
+; Tests for report.cc command registration paths (lines 1597-1702)
+; Covers: csv, accounts, commodities, payees, tags, prices, pricesdb,
+;   cleared, echo, pricemap commands
+
+P 2024/01/01 AAPL $150.00
+P 2024/06/01 AAPL $195.00
+
+2024/01/01 Buy Stock
+    Assets:Brokerage     10 AAPL {$150.00} [2024/01/01] (tag1)
+    Assets:Cash         $-1500.00
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries     $50.00
+    Expenses:Food:Restaurant    $25.00
+    Assets:Cash
+
+2024/02/01 Gas Station
+    Expenses:Auto:Gas           $35.00
+    Assets:Cash
+
+2024/03/01 Paycheck
+    Assets:Cash                 $3000.00
+    Income:Salary
+
+; Test csv command - covers report.cc line 1628
+test csv Expenses
+"2024/01/15","","Grocery Store","Expenses:Food:Groceries","$","50","",""
+"2024/01/15","","Grocery Store","Expenses:Food:Restaurant","$","25","",""
+"2024/02/01","","Gas Station","Expenses:Auto:Gas","$","35","",""
+end test
+
+; Test accounts command - covers report.cc line 1601
+test accounts
+Assets:Brokerage
+Assets:Cash
+Expenses:Auto:Gas
+Expenses:Food:Groceries
+Expenses:Food:Restaurant
+Income:Salary
+end test
+
+; Test commodities command - covers report.cc line 1635
+test commodities
+$
+AAPL
+end test
+
+; Test payees command - covers report.cc line 1671
+test payees
+Buy Stock
+Gas Station
+Grocery Store
+Paycheck
+end test
+
+; Test tags command - covers report.cc line 1693
+test tags
+end test
+
+; Test prices command - covers report.cc line 1665
+test prices
+2024/01/01 AAPL          $150.00
+2024/06/01 AAPL          $195.00
+end test
+
+; Test pricesdb command - covers report.cc line 1667
+test pricesdb
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/06/01 00:00:00 AAPL $195.00
+end test
+
+; Test cleared command - covers report.cc line 1629-1631
+test cleared
+        $1390.00
+         10 AAPL                   0                 Assets
+         10 AAPL                   0                   Brokerage
+        $1390.00                   0                   Cash
+         $110.00                   0                 Expenses
+          $35.00                   0                   Auto:Gas
+          $75.00                   0                   Food
+          $50.00                   0                     Groceries
+          $25.00                   0                     Restaurant
+       $-3000.00                   0                 Income:Salary
+----------------    ----------------    ---------
+       $-1500.00
+         10 AAPL                   0             
+end test

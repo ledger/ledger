@@ -1,0 +1,19 @@
+; Test coverage for textual_xacts.cc lines 756-773
+; Balance assertion failure error path
+
+2024/01/01 Opening
+    Assets:Bank                            $100.00
+    Equity:Opening
+
+2024/01/05 Wrong Balance Assertion
+    Assets:Bank                             $50.00 = $999.00
+    Income:Salary
+
+test bal Assets -> 1
+__ERROR__
+While parsing file "$FILE", line 9:
+While parsing posting:
+  Assets:Bank                             $50.00 = $999.00
+                                                   ^^^^^^^
+Error: Balance assertion off by $849.00 (expected to see $150.00)
+end test

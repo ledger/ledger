@@ -1,0 +1,26 @@
+; Coverage for textual_directives.cc lines 395,420 (payee directive)
+; Tests payee directive with alias and uuid sub-directives
+
+payee Grocery Store
+    alias Grocery
+    uuid ABC123
+
+payee Restaurant
+    alias Dining Out
+
+2024/01/01 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/02 Restaurant
+    Expenses:Dining    $30.00
+    Assets:Cash
+
+test bal
+             $-80.00  Assets:Cash
+              $80.00  Expenses
+              $30.00    Dining
+              $50.00    Food
+--------------------
+                   0
+end test

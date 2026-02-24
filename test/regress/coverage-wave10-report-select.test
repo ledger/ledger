@@ -1,0 +1,18 @@
+; Tests for select command
+; Covers report.cc lines 1690
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/01/20 Gas Station
+    Expenses:Auto    $30.00
+    Assets:Cash
+
+; Test select command - covers line 1690
+test select amount from reg Expenses
+      $50.00
+     $-50.00
+      $30.00
+     $-30.00
+end test

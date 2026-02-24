@@ -1,0 +1,14 @@
+; Coverage tests for global.cc lines 353, 368 (push/pop precommand lookup)
+; Also covers global.cc line 286 (status = 0 on success)
+; Also covers global.cc lines 420-426 (normalize_session_options)
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

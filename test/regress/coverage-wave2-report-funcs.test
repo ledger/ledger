@@ -1,0 +1,103 @@
+; Wave 2 coverage tests for report.cc - functions and commands
+; Covers: fn_to_boolean, fn_to_int, fn_to_string, fn_to_amount,
+;   fn_to_mask, fn_to_sequence, fn_to_balance, fn_to_date,
+;   color functions (fn_red, fn_bold, fn_blue, etc.), fn_false, fn_null,
+;   echo_command, budget_command, stats paths, pricemap_command
+
+2024/01/01 Test
+    Expenses:Food     $10.00
+    Assets:Cash
+
+; Test color function red - covers fn_red (line 1000-1002)
+test eval "red"
+red
+end test
+
+; Test color function bold - covers fn_bold (line 988-990)
+test eval "bold"
+bold
+end test
+
+; Test color function blue - covers fn_blue (line 985-987)
+test eval "blue"
+blue
+end test
+
+; Test color function cyan - covers fn_cyan (line 991-993)
+test eval "cyan"
+cyan
+end test
+
+; Test color function green - covers fn_green (line 994-996)
+test eval "green"
+green
+end test
+
+; Test color function magenta - covers fn_magenta (line 997-999)
+test eval "magenta"
+magenta
+end test
+
+; Test color function white - covers fn_white (line 1006-1008)
+test eval "white"
+white
+end test
+
+; Test color function yellow - covers fn_yellow (line 1009-1011)
+test eval "yellow"
+yellow
+end test
+
+; Test color function black - covers fn_black (line 979-981)
+test eval "black"
+black
+end test
+
+; Test blink color function - covers fn_blink (line 982-984)
+test eval "blink"
+blink
+end test
+
+; Test underline color function - covers fn_underline (line 1003-1005)
+test eval "underline"
+underline
+end test
+
+; Test to_string conversion - covers fn_to_string (line 966-968)
+test eval "to_string(123)"
+123
+end test
+
+; Test to_int conversion - covers fn_to_int (line 948-952)
+test eval "to_int(\"42\")"
+42
+end test
+
+; Test to_boolean conversion - covers fn_to_boolean (line 939-944)
+test eval "to_boolean(1)"
+1
+end test
+
+; Test to_amount conversion - covers fn_to_amount (line 958-960)
+test eval 'to_amount("10.00")'
+10
+end test
+
+; Test to_mask conversion - covers fn_to_mask (line 970-972)
+test eval "to_mask(\"test\")"
+/test/
+end test
+
+; Test to_sequence conversion - covers fn_to_sequence (line 974-976)
+test eval "to_sequence(42)"
+(42)
+end test
+
+; Test false function - covers fn_false (line 1012-1014)
+test eval "false"
+0
+end test
+
+; Test null function - covers fn_null (line 1015-1017)
+test eval "null"
+end test

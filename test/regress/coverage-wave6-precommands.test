@@ -1,0 +1,20 @@
+; Coverage tests for report.cc precommands
+; Targets report.cc lines: 1709, 1715, 1720, 1724, 1734, 1737
+
+2024/01/01 Payee
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Test 'eval' precommand (line 1713)
+test eval 2+3
+5
+end test
+
+; Test 'eval' with amount expression
+test eval 10+20
+30
+end test
+
+; Test 'source' precommand (line 1687/1737)
+test source $FILE -> 0
+end test

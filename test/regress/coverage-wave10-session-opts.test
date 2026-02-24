@@ -1,0 +1,12 @@
+; Coverage: session.cc - option lookup cases
+; line 300: 'Z' => price_exp_
+; line 397: option_t lookup as functor
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test reg --leeway=10 --columns=80
+24-Jan-01 Test                  Expenses:Food                $10.00       $10.00
+                                Assets:Cash                 $-10.00            0
+end test

@@ -1,0 +1,28 @@
+; Tests for amount.cc uncovered lines - apostrophe thousands, decimal comma,
+; floor, ceiling, roundto, truncate, annotated amounts
+
+; Test apostrophe as thousands separator (CHF style) - covers lines 1191-1193
+commodity CHF 1'234'567.89
+2024/01/01 Swiss Purchase
+    Expenses:Food            CHF 1'234.56
+    Assets:Bank
+
+test reg Expenses
+24-Jan-01 Swiss Purchase        Expenses:Food          CHF 1'234.56 CHF 1'234.56
+end test
+
+test reg --amount "floor(amount)" Expenses
+24-Jan-01 Swiss Purchase        Expenses:Food          CHF 1'234.00 CHF 1'234.00
+end test
+
+test reg --amount "ceiling(amount)" Expenses
+24-Jan-01 Swiss Purchase        Expenses:Food          CHF 1'235.00 CHF 1'235.00
+end test
+
+test reg --amount "roundto(amount, 1)" Expenses
+24-Jan-01 Swiss Purchase        Expenses:Food          CHF 1'234.60 CHF 1'234.60
+end test
+
+test reg --amount "truncate(amount)" Expenses
+24-Jan-01 Swiss Purchase        Expenses:Food          CHF 1'234.56 CHF 1'234.56
+end test

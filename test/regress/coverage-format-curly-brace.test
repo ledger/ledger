@@ -1,0 +1,56 @@
+; Coverage tests for format.cc curly brace {amount} syntax
+; Targets: format.cc lines 297-384 (justify/scrub wrapping for braced amounts)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Electric Bill
+    Expenses:Utilities    $120.00
+    Assets:Checking
+
+; Test 1: Basic {amount} format - exercises justify(scrub(amount))
+; Covers lines 288-296 (format_amount=true), 297-354 (build justify/scrub tree),
+; 380-384 (no colorize, use call2_node directly)
+test reg --format '%{$50}\n' Expenses
+$50.00
+$50.00
+end test
+
+; Test 2: {amount} with min_width - exercises line 320 (min_width > 0)
+; Also covers lines 354-356 (clear widths after wrapping)
+test reg --format '%20{$50}\n' Expenses
+              $50.00
+              $50.00
+end test
+
+; Test 3: {amount} with max_width - exercises line 330 (max_width > 0)
+test reg --format '%.10{$50}\n' Expenses
+    $50.00
+    $50.00
+end test
+
+; Test 4: {amount} with left alignment - exercises line 337 (ELEMENT_ALIGN_LEFT flag)
+; Use pipe delimiter to verify left-justification without trailing space issues
+test reg --format '%-20{$50}|\n' Expenses
+$50.00              |
+$50.00              |
+end test
+
+; Test 5: {amount} with both min and max width
+test reg --format '%20.20{$50}\n' Expenses
+              $50.00
+              $50.00
+end test
+
+; Test 6: Negative braced amount
+test reg --format '%{-$50}\n' Expenses
+$-50.00
+$-50.00
+end test
+
+; Test 7: Left-aligned negative amount with width and delimiter
+test reg --format '%-20{-$50}|\n' Expenses
+$-50.00             |
+$-50.00             |
+end test

@@ -1,0 +1,12 @@
+; Coverage tests for times.cc lines 1801-1802, 1820-1821 (format_datetime/format_date FMT_CUSTOM)
+; Also covers times.cc line 1097 (default case break in handle_simple_period_token)
+; Also covers times.cc line 156 (date validation mismatch check)
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Test custom date format in output
+test reg --date-format "%Y-%m-%d" Expenses
+2024-01-01 Payee                Expenses:Food                $10.00       $10.00
+end test

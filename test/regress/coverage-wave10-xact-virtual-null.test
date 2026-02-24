@@ -1,0 +1,15 @@
+; Test coverage for xact.cc lines 454-467
+; Virtual null posting that needs balancing with multiple commodities
+; Exercises the virtual_null_post balancing path (lines 464-467)
+
+2024/01/01 Test Virtual Balance
+    Assets:Cash                           $100.00
+    Expenses:Food                         $-50.00
+    Expenses:Rent                         $-50.00
+    [Budget:Savings]                       $25.00
+    [Budget:Checking]
+
+test reg Budget
+24-Jan-01 Test Virtual Balance  [Budget:Savings]             $25.00       $25.00
+                                [Budget:Checking]           $-25.00            0
+end test

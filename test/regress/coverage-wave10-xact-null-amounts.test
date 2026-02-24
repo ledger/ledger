@@ -1,0 +1,13 @@
+; Test coverage for xact.cc lines 520-523
+; Simple balance test for finalize paths
+
+2024/01/01 Simple
+    Expenses:Food                          $10.00
+    Assets:Cash
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

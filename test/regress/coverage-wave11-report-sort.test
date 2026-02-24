@@ -1,0 +1,28 @@
+; Test -S (sort) and -T (total) options for report.cc coverage
+
+2024/03/10 Charlie
+    Expenses:Transport    $40.00
+    Assets:Checking
+
+2024/01/15 Alpha
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 Beta
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test reg -S date
+24-Jan-15 Alpha                 Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+24-Feb-20 Beta                  Expenses:Food                $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+24-Mar-10 Charlie               Expenses:Transport           $40.00       $40.00
+                                Assets:Checking             $-40.00            0
+end test
+
+test reg -T "total * 2" Expenses
+24-Mar-10 Charlie               Expenses:Transport           $40.00       $80.00
+24-Jan-15 Alpha                 Expenses:Food                $50.00      $180.00
+24-Feb-20 Beta                  Expenses:Food                $30.00      $240.00
+end test

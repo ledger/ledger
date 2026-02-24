@@ -1,0 +1,10 @@
+; Test coverage for textual_xacts.cc lines 851-870
+; Transaction with pending state, code, and inline note
+
+2024/01/01 ! (INV001) Grocery Store  ; Important note
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test reg --format '%(cleared) %(pending) %(code) %(note)\n' Expenses
+false true INV001  Important note
+end test

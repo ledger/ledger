@@ -1,0 +1,32 @@
+; Tests for is_seq, join, green function lookups
+; Covers report.cc lines 1417, 1429, 1450, 1468, 1479
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Test join function lookup - covers line 1429
+test reg --format '%(join(account))\n'
+Expenses:Food
+Assets:Cash
+end test
+
+; Test is_seq function - covers report.cc fn_is_seq at line 632
+test reg --format '%(is_seq(amount))\n' --head 1 Expenses
+false
+end test
+
+; Test green function lookup - covers line 1417
+test reg --format '%(green)\n' --head 1 Expenses
+green
+end test
+
+; Test quantity function lookup - covers line 1468
+test reg --format '%(quantity(amount))\n' --head 1 Expenses
+50
+end test
+
+; Test roundto function lookup - covers line 1479
+test reg --format '%(roundto(amount, 0))\n' --head 1 Expenses
+$50.00
+end test

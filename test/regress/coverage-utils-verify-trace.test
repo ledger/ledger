@@ -1,0 +1,15 @@
+; Coverage test for utils.cc verify + trace logging
+; Exercises: logger_func with verify + TRACE level,
+;   start_timer, stop_timer, finish_timer with verify
+; Targets: utils.cc lines 547-551, 585-586, 650-727
+
+2024/01/01 Opening Balance
+    Assets:Checking         $1000.00
+    Equity:Opening
+
+test bal --verify --trace 5 2>/dev/null
+            $1000.00  Assets:Checking
+           $-1000.00  Equity:Opening
+--------------------
+                   0
+end test

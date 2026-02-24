@@ -1,0 +1,95 @@
+; Coverage tests for textual_xacts.cc edge cases
+; Lines targeted: 45-48, 67-68, 77, 79, 126, 190, 213-214,
+;   277-279, 306, 353, 355, 459, 565, 578, 608,
+;   636-637, 639, 722-725, 756, 772, 882, 948-949, 951, 953
+
+; --- Auto xact with eval in body (lines 213-214) ---
+= Expenses:Auto
+    eval 1 + 1
+    (Budget:Auto)         (amount * -1)
+
+; --- Transaction with inline math expression (lines 565, 578) ---
+2024/01/01 Math Expression
+    Expenses:Food         ($5.00 * 3)
+    Assets:Cash
+
+; --- Transaction with per-unit cost (line 565, 578, 608) ---
+2024/01/02 Per Unit Cost
+    Expenses:Travel       10 EUR @ $1.10
+    Assets:Cash
+
+; --- Transaction with total cost (lines 589-591) ---
+2024/01/03 Total Cost
+    Expenses:Travel       10 EUR @@ $11.00
+    Assets:Cash
+
+; --- Virtual posting (lines 353, 355) ---
+2024/01/04 Virtual Posting
+    Expenses:Food         $20.00
+    Assets:Cash           $-20.00
+    (Budget:Food)         $-20.00
+
+; --- Balance assignment (lines 636-637, 639, 722-725) ---
+2024/01/05 Setup Account
+    Assets:Checking       $1000.00
+    Income:Salary
+
+2024/01/06 Balance Assignment
+    Assets:Checking       = $900.00
+    Expenses:Misc
+
+; --- Transaction with assert (lines 948-949) ---
+2024/01/07 Assert Test
+    Expenses:Food         $10.00
+    ; Validated: yes
+    assert has_tag("Validated")
+    Assets:Cash
+
+; --- Transaction with check (lines 951, 953) ---
+2024/01/08 Check Test
+    Expenses:Food         $5.00
+    check 1 == 1
+    Assets:Cash
+
+; --- Transaction with expr in body (line 945-946) ---
+2024/01/09 Expr Test
+    Expenses:Food         $3.00
+    expr 1 + 1
+    Assets:Cash
+
+; --- Transaction with note ending in tab+semicolon (line 882) ---
+2024/01/10 Payee With Note	; inline note
+    Expenses:Food         $2.00
+    Assets:Cash
+
+; --- Auto xact trigger ---
+2024/01/12 Auto Trigger
+    Expenses:Auto         $15.00
+    Assets:Cash
+
+; --- Fixated cost (lines 593-594) ---
+2024/01/13 Fixated Cost
+    Expenses:Investment   10 SHR @= $5.00
+    Assets:Cash
+
+; --- Virtual cost posting (line 539, 542) ---
+2024/01/14 Virtual Cost
+    Expenses:Travel       5 EUR (@) $1.10
+    Assets:Cash
+
+test reg Expenses:Food -y "%y-%b-%d"
+24-Jan-01 Math Expression       Expenses:Food                $15.00       $15.00
+24-Jan-04 Virtual Posting       Expenses:Food                $20.00       $35.00
+24-Jan-07 Assert Test           Expenses:Food                $10.00       $45.00
+24-Jan-08 Check Test            Expenses:Food                 $5.00       $50.00
+24-Jan-09 Expr Test             Expenses:Food                 $3.00       $53.00
+24-Jan-10 Payee With Note       Expenses:Food                 $2.00       $55.00
+end test
+
+test bal Assets:Checking
+             $900.00  Assets:Checking
+end test
+
+test reg Expenses:Auto -y "%y-%b-%d"
+24-Jan-12 Auto Trigger          Expenses:Auto                $15.00       $15.00
+end test

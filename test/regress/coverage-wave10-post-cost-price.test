@@ -1,0 +1,12 @@
+; Test coverage for post.cc lines 211, 212, 220, 235
+; Exercises get_commodity (compound and regular), get_commodity_is_primary,
+; get_has_cost, get_cost, get_price paths
+
+2024/01/01 Buy Stock
+    Assets:Brokerage                        10 AAPL @ $150.00
+    Assets:Cash
+
+test reg --format '%(payee) %(has_cost) %(cost) %(price)\n'
+Buy Stock true $1500 $1500
+Buy Stock false $-1500 $-1500
+end test

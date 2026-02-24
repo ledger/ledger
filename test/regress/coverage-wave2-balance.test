@@ -1,0 +1,52 @@
+; Wave 2 coverage tests for balance.cc
+; Covers: balance multiply by zero (line 112), balance division,
+; commodity_amount with multiple commodities (lines 191-192, 202-208),
+; balance value conversion
+
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP $1.30
+
+2024/01/01 Buy EUR
+    Assets:EUR              100 EUR
+    Assets:Cash            $-110.00
+
+2024/01/01 Buy GBP
+    Assets:GBP               50 GBP
+    Assets:Cash             $-65.00
+
+2024/01/15 Shopping
+    Expenses:Food              $25.00
+    Expenses:Utilities         $75.00
+    Assets:Cash
+
+; Test multi-commodity balance output - exercises amounts_map iteration
+test bal Assets:EUR or Assets:GBP
+             100 EUR
+              50 GBP  Assets
+             100 EUR    EUR
+              50 GBP    GBP
+--------------------
+             100 EUR
+              50 GBP
+end test
+
+; Test balance value conversion - covers balance_t::value() lines
+test bal Assets:EUR or Assets:GBP -V --now 2024/01/01
+             $175.00  Assets
+             $110.00    EUR
+              $65.00    GBP
+--------------------
+             $175.00
+end test
+
+; Test balance with single commodity for commodity_amount
+test bal Assets:Cash
+            $-275.00  Assets:Cash
+end test
+
+; Test balance with percentage - exercises operator*= paths
+test bal Expenses --percent
+             100.00%  Expenses
+              25.00%    Food
+              75.00%    Utilities
+end test

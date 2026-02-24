@@ -1,0 +1,10 @@
+; Test coverage for textual_xacts.cc lines 459-465
+; Lot note/tag annotation syntax: {$150.00} (lot note)
+
+2024/01/01 Buy Stock with Lot Note
+    Assets:Brokerage              10 AAPL {$150.00} (Broker A)
+    Assets:Cash                         $-1500.00
+
+test bal Brokerage --lot-prices --lot-notes --flat
+10 AAPL {$150.00} (Broker A)  Assets:Brokerage
+end test

@@ -1,0 +1,41 @@
+; Test "last/next N units" expressions in handle_relative_token
+; Exercises handle_relative_token TOK_INT branch (lines 962-1001):
+;   TOK_MONTHS (lines 978-979)
+;   TOK_QUARTERS (lines 975-976)
+;   TOK_WEEKS (lines 981-982)
+;   TOK_DAYS (lines 984-985)
+; Also tests the swap logic for adjust >= 0 (lines 992-996)
+
+2024/01/01 Payee A
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/03/01 Payee B
+    Expenses:Rent    $20.00
+    Assets:Checking
+
+2024/06/01 Payee C
+    Expenses:Gas    $30.00
+    Assets:Checking
+
+; "last 2 months" creates since/until range
+test reg --now 2024/06/15 --period "last 2 months"
+24-Jun-01 Payee C               Expenses:Gas                 $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test
+
+; "last 2 quarters" exercises TOK_QUARTERS path
+test reg --now 2024/06/15 --period "last 2 quarters"
+24-Jan-01 Payee A               Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+24-Mar-01 Payee B               Expenses:Rent                $20.00       $20.00
+                                Assets:Checking             $-20.00            0
+24-Jun-01 Payee C               Expenses:Gas                 $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test
+
+; "last 2 weeks" exercises TOK_WEEKS path
+test reg --now 2024/06/15 --period "last 2 weeks"
+24-Jun-01 Payee C               Expenses:Gas                 $30.00       $30.00
+                                Assets:Checking             $-30.00            0
+end test

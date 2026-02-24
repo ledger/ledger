@@ -1,0 +1,37 @@
+; Coverage tests for history.cc - commodity price history
+
+P 2020/01/01 AAPL $150.00
+P 2020/02/01 AAPL $155.00
+P 2020/03/01 AAPL $160.00
+P 2020/04/01 AAPL $165.00
+P 2020/01/01 EUR $1.12
+P 2020/02/01 EUR $1.15
+P 2020/03/01 EUR $1.10
+
+2020/01/01 Buy Stock
+    Assets:Investments    10 AAPL @ $150.00
+    Assets:Checking    $-1500.00
+
+2020/02/01 Buy Euro
+    Assets:Forex    100 EUR @ $1.15
+    Assets:Checking    $-115.00
+
+test bal Assets:Investments --market -X $ --now 2020/04/01
+            $1650.00  Assets:Investments
+end test
+
+test pricedb --now 2020/04/01
+P 2020/01/01 00:00:00 AAPL $150.00
+P 2020/02/01 00:00:00 AAPL $155.00
+P 2020/03/01 00:00:00 AAPL $160.00
+P 2020/04/01 00:00:00 AAPL $165.00
+P 2020/01/01 00:00:00 EUR $1.12
+P 2020/02/01 00:00:00 EUR $1.15
+P 2020/03/01 00:00:00 EUR $1.10
+end test
+
+test reg Assets:Investments --gain -X $ --now 2020/04/01
+20-Feb-01 Commodities revalued  <Revalued>                   $50.00       $50.00
+20-Mar-01 Commodities revalued  <Revalued>                   $50.00      $100.00
+20-Apr-01 Commodities revalued  <Revalued>                   $50.00      $150.00
+end test

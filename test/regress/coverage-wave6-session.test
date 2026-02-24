@@ -1,0 +1,51 @@
+; Coverage tests for session.cc
+; Targets: session options, session functions
+
+; Declare accounts and commodities for pedantic/strict mode
+account Expenses:Food
+account Assets:Cash
+commodity $
+
+2024/01/01 Payee
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Test --pedantic session option (session.cc line 119-120)
+test reg --pedantic Expenses
+24-Jan-01 Payee                 Expenses:Food                $50.00       $50.00
+end test
+
+; Test --strict session option (session.cc line 121-122)
+test reg --strict Expenses
+24-Jan-01 Payee                 Expenses:Food                $50.00       $50.00
+end test
+
+; Test --permissive session option (session.cc line 117-118)
+test reg --permissive Expenses
+24-Jan-01 Payee                 Expenses:Food                $50.00       $50.00
+end test
+
+; Test --day-break option (session.cc line 103-104)
+test reg --day-break Expenses
+24-Jan-01 Payee                 Expenses:Food                $50.00       $50.00
+end test
+
+; Test --recursive-aliases option (session.cc line 106-107)
+test reg --recursive-aliases Expenses
+24-Jan-01 Payee                 Expenses:Food                $50.00       $50.00
+end test
+
+; Test --no-aliases option (session.cc line 108-109)
+test reg --no-aliases Expenses
+24-Jan-01 Payee                 Expenses:Food                $50.00       $50.00
+end test
+
+; Test --explicit option (session.cc line 111-113)
+test reg --explicit Expenses
+24-Jan-01 Payee                 Expenses:Food                $50.00       $50.00
+end test
+
+; Test --check-payees option (session.cc line 114-115)
+test reg --check-payees Expenses
+24-Jan-01 Payee                 Expenses:Food                $50.00       $50.00
+end test

@@ -1,0 +1,18 @@
+; Coverage for xact.cc lines 313-315: auto_xact recomputation after fixated
+; price assignment; also covers the balanced-virtual skip logic in the
+; recompute loop.
+
+2024/01/01 Buy items
+    Assets:Brokerage              5 FUND {=$10.00}
+    Assets:Brokerage              3 FUND {=$11.00}
+    Assets:Cash                   $-83.00
+
+test bal
+             $-83.00
+              8 FUND  Assets
+              8 FUND    Brokerage
+             $-83.00    Cash
+--------------------
+             $-83.00
+              8 FUND
+end test

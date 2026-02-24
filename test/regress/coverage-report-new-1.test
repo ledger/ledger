@@ -1,0 +1,37 @@
+; Coverage tests for report.cc command lookups (accounts, payees, tags, commodities)
+; Targets: report.cc lines 1600-1603, 1634-1637, 1670-1673, 1692-1695
+
+2024/01/15 Grocery Store
+    ; MyTag: food
+    Expenses:Food:Groceries    $50.00
+    Assets:Checking
+
+2024/01/20 Electric Company
+    ; Utility: power
+    Expenses:Utilities:Electric    $120.00
+    Assets:Checking
+
+2024/02/01 Grocery Store
+    ; MyTag: food
+    Expenses:Food:Groceries    $45.00
+    Assets:Checking
+
+test accounts
+Assets:Checking
+Expenses:Food:Groceries
+Expenses:Utilities:Electric
+end test
+
+test payees
+Electric Company
+Grocery Store
+end test
+
+test tags
+MyTag
+Utility
+end test
+
+test commodities
+$
+end test

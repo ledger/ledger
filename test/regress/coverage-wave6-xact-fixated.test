@@ -1,0 +1,25 @@
+; Tests for xact.cc fixated price handling (lines 285-321)
+; and two-commodity auto-cost inference (lines 235-236)
+
+; Transaction with fixated price annotation
+2024/01/01 Currency Exchange
+    Assets:EUR              100 EUR {=$1.10}
+    Assets:Cash
+
+; Transaction with fixated per-unit price (not NOT_PER_UNIT)
+2024/01/02 Stock Buy
+    Assets:Brokerage         50 AAPL {=$200.00}
+    Assets:Cash
+
+; Test 1: Fixated price shows annotated amount
+test reg Assets:EUR --format "%(display_amount)\n"
+100 EUR {=$1.1}
+end test
+
+; Test 2: Balance after fixated price
+test bal Assets --flat --no-total --columns 80
+             50 AAPL  Assets:Brokerage
+            -50 AAPL
+            -100 EUR  Assets:Cash
+             100 EUR  Assets:EUR
+end test

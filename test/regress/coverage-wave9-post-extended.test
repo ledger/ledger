@@ -1,0 +1,12 @@
+; Test coverage for post.cc lines 363-396
+; Test fn_any and fn_all functions with exclusion parameter
+
+2024/01/01 Test Payee
+    Expenses:Food                           $50.00
+    Expenses:Drink                          $10.00
+    Assets:Cash
+
+test reg --format '%(any(account =~ /Food/, false)) %(all(account =~ /Expenses/, false))\n' Expenses
+false false
+true false
+end test

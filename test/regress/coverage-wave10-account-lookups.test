@@ -1,0 +1,13 @@
+; Test coverage for account.cc lines 235, 241, 250, 254, 256, 268, 272
+; Exercises account_t lookup: get_account, get_amount, get_total,
+; operator<< (line 235), N and O lookups (lines 487, 492)
+
+2024/01/01 Test
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test bal --format '%(account) %(N) %(O) %(n)\n'
+Assets:Cash 1 $-50.00 1
+Expenses:Food 1 $50.00 1
+ 2 0 0
+end test

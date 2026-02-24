@@ -1,0 +1,15 @@
+; Coverage for textual_directives.cc nomarket_directive
+; Tests N directive and nomarket commodity
+
+N LOYALTY
+
+2024/01/01 Loyalty Points
+    Assets:Loyalty    100 LOYALTY
+    Income:Rewards
+
+test bal --flat
+         100 LOYALTY  Assets:Loyalty
+        -100 LOYALTY  Income:Rewards
+--------------------
+                   0
+end test

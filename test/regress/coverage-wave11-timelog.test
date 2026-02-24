@@ -1,0 +1,11 @@
+; Coverage for timelog.cc lines 71,84-86 (clock_in) and 103-105 (clock_out)
+
+i 2024/01/01 08:00:00 Work:Project
+o 2024/01/01 12:00:00
+
+i 2024/01/01 13:00:00 Work:Project
+o 2024/01/01 17:00:00
+
+test bal
+               8.00h  Work:Project
+end test

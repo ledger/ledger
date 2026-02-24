@@ -1,0 +1,10 @@
+; Test fn_commodity for report.cc coverage
+; Targets report.cc lines 838-840 (fn_commodity)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%(commodity(amount)) %(payee)\n" Expenses
+$ Grocery Store
+end test

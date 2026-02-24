@@ -1,0 +1,17 @@
+; Coverage tests for xact.cc lines 283-307
+; Fixated per-unit price with >2 commodities triggers the recompute path
+
+2024/01/01 Three Commodity Fixated
+    Assets:EUR           100 EUR {=$1.10}
+    Assets:GBP            50 GBP {=$1.30}
+    Assets:USD
+
+test bal Assets
+                   0  Assets
+             100 EUR    EUR
+              50 GBP    GBP
+            -100 EUR
+             -50 GBP    USD
+--------------------
+                   0
+end test

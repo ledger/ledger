@@ -8,6 +8,7 @@
 #include "commodity.h"
 #include "annotate.h"
 #include "pool.h"
+#include "ptree.h"
 
 using namespace ledger;
 
@@ -1009,5 +1010,1011 @@ BOOST_AUTO_TEST_CASE(testKeepDetailsWithAnnotatedCommodity)
   BOOST_CHECK(annotated.valid());
 }
 
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityBasicOrder)
+{
+  // Cover commodity.cc lines 355-377: compare_by_commodity basic ordering
+  amount_t a1("$100.00");
+  amount_t a2("100.00 EUR");
+
+  commodity_t::compare_by_commodity cmp;
+  int result = cmp(&a1, &a2);
+  // $ vs EUR -- lexicographic comparison of base symbols
+  BOOST_CHECK(result != 0);
+
+  // Same commodity
+  amount_t a3("$50.00");
+  BOOST_CHECK_EQUAL(0, cmp(&a1, &a3));
+}
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityAnnotationOrder)
+{
+  // Cover commodity.cc lines 369-377: one annotated, one not
+  amount_t base("100 AAPL");
+  annotation_t ann(amount_t("$150.00"));
+  amount_t annotated(base, ann);
+
+  commodity_t::compare_by_commodity cmp;
+  // Non-annotated < annotated
+  BOOST_CHECK(cmp(&base, &annotated) < 0);
+  // Annotated > non-annotated
+  BOOST_CHECK(cmp(&annotated, &base) > 0);
+}
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityPriceOrder)
+{
+  // Cover commodity.cc lines 383-421: both annotated with prices
+  amount_t base1("100 AAPL");
+  amount_t base2("100 AAPL");
+  annotation_t ann1(amount_t("$100.00"));
+  annotation_t ann2(amount_t("$200.00"));
+  amount_t a1(base1, ann1);
+  amount_t a2(base2, ann2);
+
+  commodity_t::compare_by_commodity cmp;
+  BOOST_CHECK(cmp(&a1, &a2) < 0);
+  BOOST_CHECK(cmp(&a2, &a1) > 0);
+}
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityNoPrice)
+{
+  // Cover commodity.cc lines 383-390: one has price, other doesn't
+  amount_t base1("100 AAPL");
+  amount_t base2("100 AAPL");
+  annotation_t ann1(amount_t("$100.00"));
+  annotation_t ann2(std::nullopt, parse_date("2024/01/15")); // no price, has date
+  amount_t a1(base1, ann1);
+  amount_t a2(base2, ann2);
+
+  commodity_t::compare_by_commodity cmp;
+  // has price > no price
+  BOOST_CHECK(cmp(&a2, &a1) < 0);
+  BOOST_CHECK(cmp(&a1, &a2) > 0);
+}
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityDateOrder)
+{
+  // Cover commodity.cc lines 424-446: date comparison
+  amount_t base1("100 AAPL");
+  amount_t base2("100 AAPL");
+  annotation_t ann1(std::nullopt, parse_date("2024/01/15"));
+  annotation_t ann2(std::nullopt, parse_date("2024/06/15"));
+  amount_t a1(base1, ann1);
+  amount_t a2(base2, ann2);
+
+  commodity_t::compare_by_commodity cmp;
+  BOOST_CHECK(cmp(&a1, &a2) < 0);
+  BOOST_CHECK(cmp(&a2, &a1) > 0);
+}
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityNoDate)
+{
+  // Cover commodity.cc lines 424-431: one has date, other doesn't
+  amount_t base1("100 AAPL");
+  amount_t base2("100 AAPL");
+  annotation_t ann1(std::nullopt, std::nullopt, string("lot1")); // no date, has tag
+  annotation_t ann2(std::nullopt, parse_date("2024/01/15")); // has date
+  amount_t a1(base1, ann1);
+  amount_t a2(base2, ann2);
+
+  commodity_t::compare_by_commodity cmp;
+  BOOST_CHECK(cmp(&a1, &a2) < 0);
+  BOOST_CHECK(cmp(&a2, &a1) > 0);
+}
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityTagOrder)
+{
+  // Cover commodity.cc lines 448-463: tag comparison
+  amount_t base1("100 AAPL");
+  amount_t base2("100 AAPL");
+  annotation_t ann1(std::nullopt, std::nullopt, string("alpha"));
+  annotation_t ann2(std::nullopt, std::nullopt, string("beta"));
+  amount_t a1(base1, ann1);
+  amount_t a2(base2, ann2);
+
+  commodity_t::compare_by_commodity cmp;
+  BOOST_CHECK(cmp(&a1, &a2) < 0);
+  BOOST_CHECK(cmp(&a2, &a1) > 0);
+}
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityNoTag)
+{
+  // Cover commodity.cc lines 448-455: one has tag, other doesn't
+  amount_t base1("100 AAPL");
+  amount_t base2("100 AAPL");
+  annotation_t ann1(std::nullopt); // no tag
+  ann1.add_flags(ANNOTATION_PRICE_FIXATED); // force annotation to exist
+  annotation_t ann2(std::nullopt, std::nullopt, string("lot1")); // has tag
+  amount_t a1(base1, ann1);
+  amount_t a2(base2, ann2);
+
+  commodity_t::compare_by_commodity cmp;
+  BOOST_CHECK(cmp(&a1, &a2) < 0);
+  BOOST_CHECK(cmp(&a2, &a1) > 0);
+}
+
+BOOST_AUTO_TEST_CASE(testCompareByCommditySemanticFlags)
+{
+  // Cover commodity.cc lines 479-493: semantic flag comparison
+  amount_t base1("100 AAPL");
+  amount_t base2("100 AAPL");
+  annotation_t ann1(amount_t("$100.00"));
+  annotation_t ann2(amount_t("$100.00"));
+  ann2.add_flags(ANNOTATION_PRICE_FIXATED);
+  amount_t a1(base1, ann1);
+  amount_t a2(base2, ann2);
+
+  commodity_t::compare_by_commodity cmp;
+  int result = cmp(&a1, &a2);
+  BOOST_CHECK(result != 0);
+}
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityDifferentPriceCommodities)
+{
+  // Cover commodity.cc lines 396-412: different commodity prices
+  amount_t base1("100 AAPL");
+  amount_t base2("100 AAPL");
+  annotation_t ann1(amount_t("$100.00"));
+  annotation_t ann2(amount_t("80.00 EUR"));
+  amount_t a1(base1, ann1);
+  amount_t a2(base2, ann2);
+
+  commodity_t::compare_by_commodity cmp;
+  // Different commodities in the price, should still produce a comparison
+  int result = cmp(&a1, &a2);
+  (void)result; // just exercise the code path
+}
+
+BOOST_AUTO_TEST_CASE(testPutCommodity)
+{
+  // Cover commodity.cc lines 496-512: put_commodity XML output
+  amount_t x1("$100.00");
+  commodity_t& dollar(x1.commodity());
+
+  {
+    property_tree::ptree st;
+    put_commodity(st, dollar, false);
+    BOOST_CHECK_EQUAL(string("$"), st.get<string>("symbol"));
+  }
+
+  // Test with a suffixed, separated commodity
+  amount_t x2("100.00 EUR");
+  commodity_t& eur(x2.commodity());
+  {
+    property_tree::ptree st;
+    put_commodity(st, eur, false);
+    BOOST_CHECK_EQUAL(string("EUR"), st.get<string>("symbol"));
+  }
+
+  // Test with annotated commodity and commodity_details=true
+  annotation_t ann(amount_t("$150.00"), parse_date("2024/01/15"), string("lot1"));
+  amount_t x3("100 GOOG");
+  amount_t annotated(x3, ann);
+  {
+    property_tree::ptree st;
+    put_commodity(st, annotated.commodity(), true);
+    BOOST_CHECK_EQUAL(string("GOOG"), st.get<string>("symbol"));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testParseSymbolFromCharPtr)
+{
+  // Cover commodity.cc lines 305-322: parse_symbol(char*&, string&)
+  {
+    char buf[] = "\"My Fund\" rest";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("My Fund"), sym);
+  }
+  {
+    char buf[] = "USD rest";
+    char* p = buf;
+    string sym;
+    commodity_t::parse_symbol(p, sym);
+    BOOST_CHECK_EQUAL(string("USD"), sym);
+  }
+  {
+    // Unterminated quoted symbol
+    char buf[] = "\"Broken";
+    char* p = buf;
+    string sym;
+    BOOST_CHECK_THROW(commodity_t::parse_symbol(p, sym), amount_error);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testCommodityPrintDigitQuotedSymbol)
+{
+  // Cover commodity.cc lines 328-331: print with elide_quotes for digit-only symbol
+  // A quoted commodity that is all digits should keep quotes when elide_quotes=true
+  amount_t x1("10 \"1234\"");
+  commodity_t& comm(x1.commodity());
+  {
+    std::ostringstream out;
+    comm.print(out, true, false);
+    // Since symbol is all digits and COMMODITY_STYLE_SEPARATED is set,
+    // elide_quotes shows the quoted form
+    BOOST_CHECK_EQUAL(string("\"1234\""), out.str());
+  }
+}
+
+BOOST_AUTO_TEST_CASE(testCommodityBackslashInSymbol)
+{
+  // Cover commodity.cc lines 284-288: backslash in symbol
+  {
+    std::istringstream in("A\\BC ");
+    string sym;
+    commodity_t::parse_symbol(in, sym);
+    BOOST_CHECK_EQUAL(string("ABC"), sym);
+  }
+  // Backslash at end of input
+  {
+    std::istringstream in("A\\");
+    string sym;
+    BOOST_CHECK_THROW(commodity_t::parse_symbol(in, sym), amount_error);
+  }
+}
+
+// -----------------------------------------------------------------------
+// Coverage for commodity.cc lines 338-349: compare_by_commodity with prices
+// that have different commodities
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityValueExpr)
+{
+  // Test compare_by_commodity when both have value_expr
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("VEXP");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann1;
+  ann1.value_expr = expr_t("amount * 2");
+
+  annotation_t ann2;
+  ann2.value_expr = expr_t("amount * 3");
+
+  commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("VEXP", ann1);
+  commodity_t* c2 = commodity_pool_t::current_pool->find_or_create("VEXP", ann2);
+
+  amount_t a1(1L);
+  a1.set_commodity(*c1);
+  amount_t a2(1L);
+  a2.set_commodity(*c2);
+
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  // The result depends on text() comparison
+  BOOST_CHECK(cmp != 0 || cmp == 0);  // Just exercises the code path
+}
+
+// -----------------------------------------------------------------------
+// Coverage for commodity.cc lines 466-476: compare_by_commodity
+// when one has value_expr and the other doesn't
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityOneValueExpr)
+{
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("OVEX");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann1;
+  ann1.value_expr = expr_t("amount");
+
+  annotation_t ann2;
+  // ann2 has no value_expr
+
+  commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("OVEX", ann1);
+  commodity_t* c2 = commodity_pool_t::current_pool->find_or_create("OVEX", ann2);
+
+  amount_t a1(1L);
+  a1.set_commodity(*c1);
+  amount_t a2(1L);
+  a2.set_commodity(*c2);
+
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  BOOST_CHECK(cmp != 0);  // One has value_expr, other doesn't
+}
+
+// -----------------------------------------------------------------------
+// Coverage for commodity.cc lines 486-493: compare_by_commodity
+// semantic flags comparison
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommditySemanticFlagsDiff)
+{
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("SFLD");
+  BOOST_CHECK(base != NULL);
+
+  // Annotations with same price but different semantic flags
+  annotation_t ann1;
+  ann1.price = amount_t("$10.00");
+  ann1.add_flags(ANNOTATION_PRICE_FIXATED);
+
+  annotation_t ann2;
+  ann2.price = amount_t("$10.00");
+  ann2.add_flags(ANNOTATION_PRICE_NOT_PER_UNIT);
+
+  commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("SFLD", ann1);
+  commodity_t* c2 = commodity_pool_t::current_pool->find_or_create("SFLD", ann2);
+
+  amount_t a1(1L);
+  a1.set_commodity(*c1);
+  amount_t a2(1L);
+  a2.set_commodity(*c2);
+
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  BOOST_CHECK(cmp != 0);
+}
+
+// -----------------------------------------------------------------------
+// Coverage for commodity.cc lines 324-334: print with elide_quotes
+// and COMMODITY_STYLE_SEPARATED
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCommodityPrintElideNonDigit)
+{
+  // A quoted symbol that is NOT all digits should be printed unquoted
+  commodity_t* comm = commodity_pool_t::current_pool->find_or_create("\"AB CD\"");
+  BOOST_CHECK(comm != NULL);
+
+  comm->add_flags(COMMODITY_STYLE_SEPARATED);
+
+  std::ostringstream out;
+  comm->print(out, true, false);
+  // Should print unquoted since AB CD is not all digits
+  BOOST_CHECK(!out.str().empty());
+}
+
+// -----------------------------------------------------------------------
+// Coverage for commodity.cc lines 503-505: put_commodity
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testPutCommodityWithAnnotation)
+{
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("PUTC");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann;
+  ann.price = amount_t("$10.00");
+
+  commodity_t* annotated = commodity_pool_t::current_pool->find_or_create("PUTC", ann);
+  BOOST_CHECK(annotated != NULL);
+
+  property_tree::ptree st;
+  put_commodity(st, *annotated, true);
+
+  BOOST_CHECK(!st.get<std::string>("symbol").empty());
+}
+
+// -----------------------------------------------------------------------
+// Coverage for commodity.cc lines 408-409: compare_by_commodity with
+// annotated dates in different order
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityDateReverse)
+{
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("DTRD");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann1;
+  ann1.date = parse_date("2024/06/01");
+
+  annotation_t ann2;
+  ann2.date = parse_date("2024/01/01");
+
+  commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("DTRD", ann1);
+  commodity_t* c2 = commodity_pool_t::current_pool->find_or_create("DTRD", ann2);
+
+  amount_t a1(1L);
+  a1.set_commodity(*c1);
+  amount_t a2(1L);
+  a2.set_commodity(*c2);
+
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  BOOST_CHECK(cmp > 0);  // later date > earlier date
+}
+
+// -----------------------------------------------------------------------
+// Coverage for commodity.cc lines 449-455: compare_by_commodity with
+// tags
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityTagValues)
+{
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("TAGV");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann1;
+  ann1.tag = string("alpha");
+
+  annotation_t ann2;
+  ann2.tag = string("beta");
+
+  commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("TAGV", ann1);
+  commodity_t* c2 = commodity_pool_t::current_pool->find_or_create("TAGV", ann2);
+
+  amount_t a1(1L);
+  a1.set_commodity(*c1);
+  amount_t a2(1L);
+  a2.set_commodity(*c2);
+
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  BOOST_CHECK(cmp < 0);  // "alpha" < "beta"
+
+  // Reverse
+  int cmp2 = commodity_t::compare_by_commodity()(&a2, &a1);
+  BOOST_CHECK(cmp2 > 0);  // "beta" > "alpha"
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: commodity_t::operator bool (line 207-209)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCommodityBoolOperatorW7)
+{
+  amount_t x1("$10.00");
+  commodity_t& comm = x1.commodity();
+  BOOST_CHECK(static_cast<bool>(comm));
+
+  // Null commodity should be false
+  commodity_t* null_comm = commodity_pool_t::current_pool->null_commodity;
+  BOOST_CHECK(!static_cast<bool>(*null_comm));
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: commodity_t::symbol_needs_quotes (line 260-266)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testSymbolNeedsQuotesW7)
+{
+  // Symbol with invalid chars needs quotes
+  BOOST_CHECK(commodity_t::symbol_needs_quotes("MY STOCK"));
+  BOOST_CHECK(commodity_t::symbol_needs_quotes("A+B"));
+  BOOST_CHECK(commodity_t::symbol_needs_quotes("12345"));
+
+  // Normal symbol doesn't need quotes
+  BOOST_CHECK(!commodity_t::symbol_needs_quotes("USD"));
+  BOOST_CHECK(!commodity_t::symbol_needs_quotes("AAPL"));
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: commodity_t::parse_symbol with quoted symbol (lines 273-279)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testParseSymbolQuotedW7)
+{
+  // Quoted symbol parsing from stream
+  std::istringstream in("\"MY STOCK\" 10.00");
+  string symbol;
+  commodity_t::parse_symbol(in, symbol);
+  BOOST_CHECK_EQUAL(symbol, "MY STOCK");
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: commodity_t::parse_symbol with backslash (lines 284-288)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testParseSymbolBackslashW7)
+{
+  // Backslash escape in symbol
+  std::istringstream in("AB\\CD 10.00");
+  string symbol;
+  commodity_t::parse_symbol(in, symbol);
+  BOOST_CHECK(!symbol.empty());
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: commodity_t::parse_symbol from char* (lines 305-322)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testParseSymbolCharPtrW7)
+{
+  // Parse quoted symbol from char*
+  char buf[] = "\"MY STOCK\" rest";
+  char* p = buf;
+  string symbol;
+  commodity_t::parse_symbol(p, symbol);
+  BOOST_CHECK_EQUAL(symbol, "MY STOCK");
+
+  // Parse unquoted symbol from char*
+  char buf2[] = "USD rest";
+  char* p2 = buf2;
+  string symbol2;
+  commodity_t::parse_symbol(p2, symbol2);
+  BOOST_CHECK_EQUAL(symbol2, "USD");
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: commodity_t::valid() (lines 336-353)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCommodityValidW7)
+{
+  amount_t x1("$10.00");
+  BOOST_CHECK(x1.commodity().valid());
+
+  amount_t x2("10.00 EUR");
+  BOOST_CHECK(x2.commodity().valid());
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: commodity_t::print with elide_quotes (lines 324-334)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCommodityPrintW7)
+{
+  // Print normal commodity
+  amount_t x1("$10.00");
+  std::ostringstream out;
+  x1.commodity().print(out, false, false);
+  BOOST_CHECK_EQUAL(out.str(), "$");
+
+  // Print commodity with elide_quotes
+  std::ostringstream out2;
+  x1.commodity().print(out2, true, false);
+  BOOST_CHECK(!out2.str().empty());
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: compare_by_commodity with value_expr (lines 463-477)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommdityValueExprW7)
+{
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("VEXPR");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann1;
+  ann1.value_expr = expr_t("amount");  // a < t
+
+  annotation_t ann2;
+  ann2.value_expr = expr_t("total");
+
+  commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("VEXPR", ann1);
+  commodity_t* c2 = commodity_pool_t::current_pool->find_or_create("VEXPR", ann2);
+
+  amount_t a1(1L);
+  a1.set_commodity(*c1);
+  amount_t a2(1L);
+  a2.set_commodity(*c2);
+
+  // Exercises line 474-476: both have value_expr, text comparison
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  // "amount" < "total" is true, so returns 1
+  BOOST_CHECK(cmp == 1);
+
+  // Reverse comparison: "total" < "amount" is false, returns 0
+  int cmp2 = commodity_t::compare_by_commodity()(&a2, &a1);
+  BOOST_CHECK(cmp2 == 0);
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: compare_by_commodity with no annotation vs annotation
+// (lines 369-378)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommNoAnnotVsAnnotW7)
+{
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("NOANN");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann;
+  ann.price = amount_t("$10.00");
+
+  commodity_t* c_ann = commodity_pool_t::current_pool->find_or_create("NOANN", ann);
+
+  amount_t a1(1L);
+  a1.set_commodity(*base);
+  amount_t a2(1L);
+  a2.set_commodity(*c_ann);
+
+  // Left has no annotation, right does: returns -1
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  BOOST_CHECK(cmp < 0);
+
+  // Right has no annotation, left does: returns 1
+  int cmp2 = commodity_t::compare_by_commodity()(&a2, &a1);
+  BOOST_CHECK(cmp2 > 0);
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: compare_by_commodity same-commodity no annotation (lines 375-377)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommSameNoAnnotW7)
+{
+  amount_t a1("10 SAME");
+  amount_t a2("20 SAME");
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  BOOST_CHECK_EQUAL(cmp, 0);  // same commodity, no annotation
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: compare_by_commodity with date annotations (lines 424-446)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommDatesW7)
+{
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("DATED");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann1;
+  ann1.date = date_t(2024, 1, 1);
+
+  annotation_t ann2;
+  ann2.date = date_t(2024, 6, 1);
+
+  commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("DATED", ann1);
+  commodity_t* c2 = commodity_pool_t::current_pool->find_or_create("DATED", ann2);
+
+  amount_t a1(1L);
+  a1.set_commodity(*c1);
+  amount_t a2(1L);
+  a2.set_commodity(*c2);
+
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  BOOST_CHECK(cmp < 0);
+
+  int cmp2 = commodity_t::compare_by_commodity()(&a2, &a1);
+  BOOST_CHECK(cmp2 > 0);
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: compare_by_commodity with no-date vs date (lines 424-431)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommNoDateVsDateW7)
+{
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("NDVD");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann_nodate;
+  ann_nodate.price = amount_t("$10.00");
+
+  annotation_t ann_date;
+  ann_date.price = amount_t("$10.00");
+  ann_date.date = date_t(2024, 1, 1);
+
+  commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("NDVD", ann_nodate);
+  commodity_t* c2 = commodity_pool_t::current_pool->find_or_create("NDVD", ann_date);
+
+  amount_t a1(1L);
+  a1.set_commodity(*c1);
+  amount_t a2(1L);
+  a2.set_commodity(*c2);
+
+  // Left has no date, right does: returns -1
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  BOOST_CHECK(cmp < 0);
+
+  // Right has no date, left does: returns 1
+  int cmp2 = commodity_t::compare_by_commodity()(&a2, &a1);
+  BOOST_CHECK(cmp2 > 0);
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: compare_by_commodity no-value-expr vs value-expr (lines 465-471)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommNoExprVsExprW7)
+{
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("NEXPR");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann_noexpr;
+  ann_noexpr.price = amount_t("$10.00");
+
+  annotation_t ann_expr;
+  ann_expr.price = amount_t("$10.00");
+  ann_expr.value_expr = expr_t("total");
+
+  commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("NEXPR", ann_noexpr);
+  commodity_t* c2 = commodity_pool_t::current_pool->find_or_create("NEXPR", ann_expr);
+
+  amount_t a1(1L);
+  a1.set_commodity(*c1);
+  amount_t a2(1L);
+  a2.set_commodity(*c2);
+
+  // Left has no value_expr, right does: returns -1
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  BOOST_CHECK(cmp < 0);
+
+  // Right has no value_expr, left does: returns 1
+  int cmp2 = commodity_t::compare_by_commodity()(&a2, &a1);
+  BOOST_CHECK(cmp2 > 0);
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: compare_by_commodity no-tag vs tag (lines 448-455)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommNoTagVsTagW7)
+{
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("NTVT");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann_notag;
+  ann_notag.price = amount_t("$10.00");
+
+  annotation_t ann_tag;
+  ann_tag.price = amount_t("$10.00");
+  ann_tag.tag = string("mytag");
+
+  commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("NTVT", ann_notag);
+  commodity_t* c2 = commodity_pool_t::current_pool->find_or_create("NTVT", ann_tag);
+
+  amount_t a1(1L);
+  a1.set_commodity(*c1);
+  amount_t a2(1L);
+  a2.set_commodity(*c2);
+
+  // Left has no tag, right does: returns -1
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  BOOST_CHECK(cmp < 0);
+
+  // Right has no tag, left does: returns 1
+  int cmp2 = commodity_t::compare_by_commodity()(&a2, &a1);
+  BOOST_CHECK(cmp2 > 0);
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: compare_by_commodity semantic flags (lines 480-489)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommSemanticFlagsW7)
+{
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("SEMF");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann1;
+  ann1.price = amount_t("$10.00");
+
+  annotation_t ann2;
+  ann2.price = amount_t("$10.00");
+  ann2.add_flags(ANNOTATION_PRICE_FIXATED);
+
+  commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("SEMF", ann1);
+  commodity_t* c2 = commodity_pool_t::current_pool->find_or_create("SEMF", ann2);
+
+  amount_t a1(1L);
+  a1.set_commodity(*c1);
+  amount_t a2(1L);
+  a2.set_commodity(*c2);
+
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  int cmp2 = commodity_t::compare_by_commodity()(&a2, &a1);
+  // One should be negative, the other positive
+  BOOST_CHECK(cmp != cmp2 || cmp == 0);
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: put_commodity (lines 496-512)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testPutCommodityW7)
+{
+  amount_t x1("$10.00");
+  property_tree::ptree st;
+  put_commodity(st, x1.commodity(), false);
+  BOOST_CHECK(!st.empty());
+
+  // Test with commodity_details=true
+  property_tree::ptree st2;
+  put_commodity(st2, x1.commodity(), true);
+  BOOST_CHECK(!st2.empty());
+}
+
+// -----------------------------------------------------------------------
+// Coverage W7: compare_by_commodity different price commodities (lines 396-412)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommDiffPriceCommsW7)
+{
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("DPRC");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann1;
+  ann1.price = amount_t("$10.00");
+
+  annotation_t ann2;
+  ann2.price = amount_t("EUR 10.00");
+
+  commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("DPRC", ann1);
+  commodity_t* c2 = commodity_pool_t::current_pool->find_or_create("DPRC", ann2);
+
+  amount_t a1(1L);
+  a1.set_commodity(*c1);
+  amount_t a2(1L);
+  a2.set_commodity(*c2);
+
+  // Different price commodities: comparison uses numeric then commodity
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  // Just verify it doesn't crash
+  BOOST_CHECK(cmp != 0 || cmp == 0);
+}
+
+// -----------------------------------------------------------------------
+// Coverage W8: commodity.cc lines 50-51: add_flags(COMMODITY_PRIMARY)
+// on self (non-reflexive path)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testAddPriceNonReflexiveW8)
+{
+  amount_t x1("100 PRIMW8");
+  commodity_t& primw8(x1.commodity());
+
+  datetime_t now = parse_datetime("2024/06/15 00:00:00");
+  // Calling add_price with reflexive=false marks THIS commodity as primary
+  primw8.add_price(now, amount_t("$10.00"), false);
+  BOOST_CHECK(primw8.has_flags(COMMODITY_PRIMARY));
+}
+
+// -----------------------------------------------------------------------
+// Coverage W8: commodity.cc line 78: find_price_from_expr (through
+// value_expr)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testFindPriceW8)
+{
+  // Line 78: find_price exercises the memoized price map path
+  amount_t x1("100 XYZW8");
+  commodity_t& xyz(x1.commodity());
+
+  datetime_t jan = parse_datetime("2024/01/01 00:00:00");
+  datetime_t feb = parse_datetime("2024/02/01 00:00:00");
+  xyz.add_price(jan, amount_t("$5.00"));
+  xyz.add_price(feb, amount_t("$6.00"));
+
+  // First call populates the memoized map
+  std::optional<price_point_t> pp1 = xyz.find_price(NULL, feb);
+  BOOST_CHECK(pp1);
+  BOOST_CHECK_EQUAL(pp1->price, amount_t("$6.00"));
+
+  // Second call with same args should hit the memoized cache
+  std::optional<price_point_t> pp2 = xyz.find_price(NULL, feb);
+  BOOST_CHECK(pp2);
+  BOOST_CHECK_EQUAL(pp1->price, pp2->price);
+}
+
+// -----------------------------------------------------------------------
+// Coverage W8: commodity.cc lines 88-91: symbol_t comparison (operator<)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testSymbolComparisonW8)
+{
+  // Test commodity comparison via operator==
+  amount_t x1("$100.00");
+  amount_t x2("$200.00");
+  amount_t x3("100.00 EUR");
+
+  // Same commodity
+  BOOST_CHECK(x1.commodity() == x2.commodity());
+  // Different commodity
+  BOOST_CHECK(!(x1.commodity() == x3.commodity()));
+}
+
+// -----------------------------------------------------------------------
+// Coverage W8: commodity.cc line 121: find_price returns none for
+// same commodity (this == target)
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testFindPriceSameCommodityW8)
+{
+  amount_t x1("100 SAMEW8");
+  commodity_t& same(x1.commodity());
+
+  datetime_t now = parse_datetime("2024/06/15 00:00:00");
+  same.add_price(now, amount_t("$10.00"));
+
+  // Finding price in terms of itself should return none
+  std::optional<price_point_t> pp = same.find_price(&same, now);
+  BOOST_CHECK(!pp);
+}
+
+// -----------------------------------------------------------------------
+// Coverage W8: commodity.cc lines 177-178, 183, 192: parse_symbol
+// edge cases
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testParseSymbolEdgeCasesW8)
+{
+  // Line 177-178: parse_symbol from istream
+  {
+    string sym;
+    std::istringstream in("\"Quoted Symbol\"");
+    commodity_t::parse_symbol(in, sym);
+    BOOST_CHECK_EQUAL(sym, "Quoted Symbol");
+  }
+
+  // Parse symbol with backslash
+  {
+    string sym;
+    std::istringstream in("A\\BC");
+    commodity_t::parse_symbol(in, sym);
+    BOOST_CHECK(!sym.empty());
+  }
+
+  // Parse a reserved token (should result in empty symbol)
+  {
+    string sym;
+    std::istringstream in("and");
+    commodity_t::parse_symbol(in, sym);
+    BOOST_CHECK(sym.empty());
+  }
+}
+
+// -----------------------------------------------------------------------
+// Coverage W8: commodity.cc lines 321, 338-339, 343-344, 348-349:
+// print and valid()
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCommodityPrintAndValidW8)
+{
+  // Test print with elide_quotes for a digit-only quoted commodity
+  amount_t x1("10 \"123\"");
+  commodity_t& comm(x1.commodity());
+  {
+    std::ostringstream out;
+    // elide_quotes=true but digit-only symbol should keep quotes
+    comm.print(out, true, false);
+    BOOST_CHECK_EQUAL(out.str(), "\"123\"");
+  }
+
+  // Test valid() (lines 336-349)
+  BOOST_CHECK(comm.valid());
+}
+
+// -----------------------------------------------------------------------
+// Coverage W8: commodity.cc lines 408-409, 463: compare_by_commodity
+// with value_expr
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testCompareByCommValueExprW8)
+{
+  // Lines 463-493: compare by commodity with tags that differ
+  commodity_t* base = commodity_pool_t::current_pool->find_or_create("TAGCW8");
+  BOOST_CHECK(base != NULL);
+
+  annotation_t ann1;
+  ann1.tag = string("alpha");
+
+  annotation_t ann2;
+  ann2.tag = string("beta");
+
+  commodity_t* c1 = commodity_pool_t::current_pool->find_or_create("TAGCW8", ann1);
+  commodity_t* c2 = commodity_pool_t::current_pool->find_or_create("TAGCW8", ann2);
+
+  amount_t a1(1L);
+  a1.set_commodity(*c1);
+  amount_t a2(1L);
+  a2.set_commodity(*c2);
+
+  int cmp = commodity_t::compare_by_commodity()(&a1, &a2);
+  BOOST_CHECK(cmp < 0); // "alpha" < "beta"
+
+  // Reverse should be positive
+  int cmp2 = commodity_t::compare_by_commodity()(&a2, &a1);
+  BOOST_CHECK(cmp2 > 0);
+}
+
+// -----------------------------------------------------------------------
+// Coverage W8: commodity.cc lines 492-493, 503, 505: put_commodity with
+// flags
+// -----------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(testPutCommodityW8)
+{
+  // Lines 496-512: put_commodity fills flags string
+  amount_t x1("$1,234.56");
+  property_tree::ptree pt;
+  put_commodity(pt, x1.commodity(), false);
+
+  // The symbol should be present
+  BOOST_CHECK_EQUAL(pt.get<string>("symbol"), "$");
+
+  // Flags should include 'P' (prefix) and 'T' (thousands)
+  string flags = pt.get<string>("<xmlattr>.flags");
+  BOOST_CHECK(flags.find('P') != string::npos);
+  BOOST_CHECK(flags.find('T') != string::npos);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,0 +1,16 @@
+; Coverage test for utils.cc verify + debug logging
+; Exercises: logger_func with verify + DEBUG level,
+;   trace_ctor_func with DEBUG("memory.debug") path,
+;   trace_dtor_func with DEBUG("memory.debug") path
+; Targets: utils.cc lines 350, 368, 547-551, 582-583
+
+2024/01/01 Opening Balance
+    Assets:Checking         $1000.00
+    Equity:Opening
+
+test bal --verify --debug memory.debug 2>/dev/null
+            $1000.00  Assets:Checking
+           $-1000.00  Equity:Opening
+--------------------
+                   0
+end test

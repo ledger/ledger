@@ -1,0 +1,23 @@
+; Coverage for textual_directives.cc lines 735,758,765 (account directive details)
+; Tests account directive with alias, payee, value, default, note, assert, check
+
+account Expenses:Food
+    alias food
+    note This is the food expense account
+    payee Grocery
+    check commodity == "$"
+    assert commodity == "$"
+
+account Assets:Cash
+    default
+
+2024/01/01 Grocery Store
+    food    $50.00
+    Assets:Cash
+
+test bal
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

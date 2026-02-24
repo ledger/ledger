@@ -1,0 +1,17 @@
+; Test coverage for post.cc lines 308-320
+; display_account for virtual postings shows () and [] wrappers
+
+2024/01/01 Test
+    Expenses:Food                           $50.00
+    Assets:Cash                            $-50.00
+    (Virtual:Unbal)                         $10.00
+    [Virtual:Bal]                           $20.00
+    [Virtual:Bal2]                         $-20.00
+
+test reg --format '%(display_account)\n'
+Expenses:Food
+Assets:Cash
+(Virtual:Unbal)
+[Virtual:Bal]
+[Virtual:Bal2]
+end test

@@ -1,0 +1,15 @@
+; Wave 2 coverage tests for annotate.cc error paths - unclosed bracket
+; Covers: unclosed date bracket (line 154)
+
+2024/01/01 Unclosed Bracket
+    Assets:Test              1 FOO [2024/01/01
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing posting:
+  Assets:Test              1 FOO [2024/01/01
+                           ^^^^^^^^^^^^^^^^^
+Error: Commodity date lacks closing bracket
+end test

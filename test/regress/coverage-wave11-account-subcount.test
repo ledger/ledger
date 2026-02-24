@@ -1,0 +1,17 @@
+; Coverage for account.cc lines 519-525: children_with_xdata.
+; Also account.cc line 538: total() for nested accounts.
+
+2024/01/01 Test
+    Expenses:Food:Groceries       $10.00
+    Assets:Cash
+
+2024/01/02 Test 2
+    Expenses:Food:Dining          $5.00
+    Assets:Cash
+
+test bal Expenses --flat
+               $5.00  Expenses:Food:Dining
+              $10.00  Expenses:Food:Groceries
+--------------------
+              $15.00
+end test

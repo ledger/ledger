@@ -1,0 +1,35 @@
+; Coverage tests for textual_xacts.cc automated_xact_directive quote patterns
+; Targets lines 60-80 (quote/double-quote/slash patterns in auto-xact)
+
+; Auto-xact with single-quote pattern
+= 'Expenses'
+    (Budget:Single)               1
+
+; Auto-xact with double-quote pattern
+= "Food"
+    (Budget:Double)               1
+
+; Auto-xact with slash pattern
+= /Drink/
+    (Budget:Slash)                1
+
+2024/01/01 Test Food
+    Expenses:Food            $10.00
+    Assets:Cash
+
+2024/01/02 Test Drink
+    Expenses:Drink            $5.00
+    Assets:Cash
+
+test reg Budget:Single
+24-Jan-01 Test Food             (Budget:Single)              $10.00       $10.00
+24-Jan-02 Test Drink            (Budget:Single)               $5.00       $15.00
+end test
+
+test reg Budget:Double
+24-Jan-01 Test Food             (Budget:Double)              $10.00       $10.00
+end test
+
+test reg Budget:Slash
+24-Jan-02 Test Drink            (Budget:Slash)                $5.00        $5.00
+end test

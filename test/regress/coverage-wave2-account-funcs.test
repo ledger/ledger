@@ -1,0 +1,46 @@
+; Wave 2 coverage tests for account.cc lookup functions
+; Covers: account_t::lookup - subcount (n), count (N), total (O),
+;   latest, latest_cleared, depth, partial_account, note
+
+2024/01/01 Test
+    Expenses:Food     $10.00
+    Assets:Cash
+
+2024/01/02 * Test2
+    Expenses:Food     $20.00
+    Assets:Cash
+
+; Test subcount via 'n' shortcut - covers line 457 (get_subcount)
+test bal --format "%(account) n=%(n)\n" Expenses
+Expenses:Food n=2
+end test
+
+; Test count via 'N' shortcut - covers line 486 (get_count via N)
+test bal --format "%(account) N=%(N)\n" Expenses
+Expenses:Food N=2
+end test
+
+; Test total via 'O' shortcut - covers line 491 (get_total via O)
+test bal --format "%(account) O=%(O)\n" Expenses
+Expenses:Food O=$30.00
+end test
+
+; Test depth - covers account depth lookup
+test bal --format "%(account) depth=%(depth)\n" --flat Expenses
+Expenses:Food depth=2
+end test
+
+; Test latest - covers line 447 (get_latest)
+test bal --format "%(account) %(latest)\n" Expenses
+Expenses:Food 2024/01/02
+end test
+
+; Test latest_cleared - covers line 446 (get_latest_cleared)
+test bal --format "%(account) %(latest_cleared)\n" Expenses
+Expenses:Food 2024/01/02
+end test
+
+; Test partial_account - covers line 464 (get_partial_name)
+test bal --format "%(partial_account)\n" --flat Expenses
+Expenses:Food
+end test

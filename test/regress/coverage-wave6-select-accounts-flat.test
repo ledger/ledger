@@ -1,0 +1,19 @@
+; Coverage tests for select.cc
+; Tests: from accounts with flat option
+; Covers lines 284-286 (accounts_report path with flat option)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+; Test select from accounts with --flat
+test select account, total from accounts --flat --columns 80
+Assets:Checking      $-80.00
+Expenses:Food       $50.00
+Expenses:Transport       $30.00
+            0
+end test

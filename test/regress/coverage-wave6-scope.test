@@ -1,0 +1,25 @@
+; Coverage tests for scope.h - scope lookup and option handling
+
+2020/01/01 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2020/02/01 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+test reg --display "date>=[2020/02/01]" Expenses
+20-Feb-01 Gas Station           Expenses:Transport           $30.00       $80.00
+end test
+
+test reg --amount "amount * 2" Expenses
+20-Jan-01 Grocery Store         Expenses:Food               $100.00      $100.00
+20-Feb-01 Gas Station           Expenses:Transport           $60.00      $160.00
+end test
+
+test bal Expenses --flat
+              $50.00  Expenses:Food
+              $30.00  Expenses:Transport
+--------------------
+              $80.00
+end test

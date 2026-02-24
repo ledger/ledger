@@ -1,0 +1,38 @@
+; Wave 2 coverage tests for textual.cc
+; Covers: BOM handling (lines 130-133), directive parsing (lines 163, 164, 224, 244),
+; Y directive, N directive, D directive, C directive
+
+; Year directive - covers line 244
+Y 2024
+
+; Default commodity - covers line 234
+D $1000.00
+
+; Nomarket directive - covers line 237
+N $
+
+; Price conversion - covers line 231
+C 1.00 Mb = 1000 Kb
+
+; Price directive - covers line 240
+P 01/01 EUR $1.10
+
+; Option in journal - covers line 179
+--input-date-format %m/%d
+
+01/01 Opening Balance
+    Assets:Checking          $1000.00
+    Equity:Opening
+
+01/15 Grocery Store
+    Expenses:Food              $25.00
+    Assets:Checking
+
+; Test that all directives work correctly
+test bal
+             $975.00  Assets:Checking
+           $-1000.00  Equity:Opening
+              $25.00  Expenses:Food
+--------------------
+                   0
+end test

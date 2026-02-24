@@ -1,0 +1,35 @@
+; Tests for post.cc uncovered lines: has_tag inheritance, get_tag,
+; payee_from_tag, get_cost, get_price, get_has_cost.
+
+2024/01/01 Grocery
+    ; :food:organic:
+    Expenses:Food        $100.00
+    Assets:Cash
+
+2024/01/02 Stock Purchase
+    Assets:Brokerage     10 AAPL @ $150.00
+    Assets:Cash         $-1500.00
+
+; === Test 1: Tag inherited from posting ===
+test reg Expenses --limit "has_tag('food')" --columns 80
+24-Jan-01 Grocery               Expenses:Food               $100.00      $100.00
+end test
+
+; === Test 2: has_cost and cost ===
+test reg Assets:Brokerage --format "%(has_cost ? cost : 'no cost')\n"
+$1500.00
+end test
+
+; === Test 3: Real postings only ===
+test reg --real --columns 80
+24-Jan-01 Grocery               Expenses:Food               $100.00      $100.00
+                                Assets:Cash                $-100.00            0
+24-Jan-02 Stock Purchase        Assets:Brokerage            10 AAPL      10 AAPL
+                                Assets:Cash               $-1500.00    $-1500.00
+                                                                         10 AAPL
+end test
+
+; === Test 4: Get cost (price for stock purchase) ===
+test reg Assets:Brokerage --format "%(price)\n"
+$1500.00
+end test

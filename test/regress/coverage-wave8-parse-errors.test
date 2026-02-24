@@ -1,0 +1,16 @@
+; Coverage tests for textual_xacts.cc error paths
+; Targets lines 77 (unclosed quote pattern), 608 (missing cost amount),
+;   636-639 (null balance assertion/assignment), 756 (empty balance assertion)
+
+; Test balance assertion with expression - line 629-633
+2024/01/01 Opening
+    Assets:Cash              $100.00
+    Equity:Opening
+
+2024/01/02 Expr Balance Assign
+    Assets:Cash                = ($80.00 + $0.00)
+    Expenses:Food
+
+test bal Assets:Cash
+              $80.00  Assets:Cash
+end test

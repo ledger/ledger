@@ -1,0 +1,12 @@
+; Coverage for xact.cc lines 447-449: null posting with a long (integer)
+; balance value. When balance.is_long(), post_adder(balance.to_amount())
+; is called.
+
+2024/01/01 Test integer balance
+    Expenses:Misc                  42
+    Assets:Cash
+
+test reg
+24-Jan-01 Test integer balance  Expenses:Misc                    42           42
+                                Assets:Cash                     -42            0
+end test

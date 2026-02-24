@@ -1,0 +1,37 @@
+; Tests for xact.cc auto_xact_t::post_pred and operator() (lines 735, 863, 867-870)
+; Covers: automated transaction matching, amount expression evaluation
+
+= /Food/
+    Budget:Food                       -1
+    Budget:Income                      1
+
+2024/01/01 Grocery
+    Expenses:Food        $100.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Fuel         $50.00
+    Assets:Cash
+
+; === Test 1: Automated transaction generates matching posts ===
+test reg --columns 80
+24-Jan-01 Grocery               Expenses:Food               $100.00      $100.00
+                                Assets:Cash                $-100.00            0
+                                Budget:Food                $-100.00     $-100.00
+                                Budget:Income               $100.00            0
+24-Jan-02 Gas Station           Expenses:Fuel                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test
+
+; === Test 2: Balance with auto xact ===
+test bal --columns 80
+            $-150.00  Assets:Cash
+                   0  Budget
+            $-100.00    Food
+             $100.00    Income
+             $150.00  Expenses
+             $100.00    Food
+              $50.00    Fuel
+--------------------
+                   0
+end test

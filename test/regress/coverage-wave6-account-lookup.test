@@ -1,0 +1,54 @@
+; Tests for account.cc uncovered lookup functions: N, O, n, partial_account,
+; parent, subcount, use_direct_amount, latest_cleared, latest, account_base,
+; note, children_with_xdata, children_with_flags, valid
+
+2024/01/01 * Grocery
+    Expenses:Food:Produce    $30.00
+    Expenses:Food:Dairy      $20.00
+    Assets:Cash
+
+2024/01/02 * Rent
+    Expenses:Rent           $500.00
+    Assets:Checking
+
+2024/01/03 * More Groceries
+    Expenses:Food:Produce    $15.00
+    Assets:Cash
+
+; === Test 1: Account N (count) ===
+test bal Expenses --format "%(N) %(account)\n" --flat --no-total
+1 Expenses:Food:Dairy
+2 Expenses:Food:Produce
+1 Expenses:Rent
+end test
+
+; === Test 2: Account O (total) ===
+test bal Expenses:Food --format "%(O) %(account)\n" --flat --no-total
+$20.00 Expenses:Food:Dairy
+$45.00 Expenses:Food:Produce
+end test
+
+; === Test 3: Account n (subcount) ===
+test bal Expenses --format "%(n) %(account)\n" --no-total
+0 Expenses
+0 Expenses:Food
+1 Expenses:Food:Dairy
+2 Expenses:Food:Produce
+1 Expenses:Rent
+end test
+
+; === Test 4: Account partial_account ===
+test bal Expenses --format "%(partial_account(true)) %(total)\n" --no-total
+Expenses $565.00
+Expenses:Food $65.00
+Expenses:Food:Dairy $20.00
+Expenses:Food:Produce $45.00
+Expenses:Rent $500.00
+end test
+
+; === Test 5: Account account_base ===
+test bal Expenses --format "%(account_base)\n" --flat --no-total
+Dairy
+Produce
+Rent
+end test

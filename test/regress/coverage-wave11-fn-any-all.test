@@ -1,0 +1,18 @@
+; Coverage for xact.cc lines 608-630: fn_any and fn_all functions
+; exercised through the xact_t lookup paths.
+
+2024/01/01 Groceries
+    Expenses:Food                 $50.00
+    Assets:Cash                  $-50.00
+
+2024/01/02 Rent
+    Expenses:Rent                $800.00
+    Assets:Cash                 $-800.00
+
+test reg --display "any(account =~ /Food/)"
+24-Jan-01 Groceries             Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test
+
+test reg --display "all(amount > 0)"
+end test

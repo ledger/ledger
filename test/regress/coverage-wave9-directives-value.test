@@ -1,0 +1,15 @@
+; Test coverage for textual_directives.cc lines 655-657
+; value directive sets journal-wide value expression
+
+value amount
+
+2024/01/01 Test
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test bal
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

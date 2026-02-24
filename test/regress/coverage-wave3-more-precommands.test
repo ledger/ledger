@@ -1,0 +1,42 @@
+; Test report.cc: more report functions (trim, join, quoted_rfc,
+; clear_commodity, justify, commodity, top_amount, options, now, today)
+2024/01/15 Grocery Store
+    Expenses:Food              $25.00
+    Assets:Cash
+
+test reg --format "%(trim(\"  hello  \"))\n" Expenses:Food
+hello
+end test
+
+test reg --format "%(join(account))\n" Expenses:Food
+Expenses:Food
+end test
+
+test reg --format "%(quoted_rfc(payee))\n" Expenses:Food
+"Grocery Store"
+end test
+
+test reg --format "%(clear_commodity(amount))\n" Expenses:Food
+25
+end test
+
+test reg --format "%(commodity(amount))\n" Expenses:Food
+$
+end test
+
+test print
+2024/01/15 Grocery Store
+    Expenses:Food                             $25.00
+    Assets:Cash
+end test
+
+test csv
+"2024/01/15","","Grocery Store","Expenses:Food","$","25","",""
+"2024/01/15","","Grocery Store","Assets:Cash","$","-25","",""
+end test
+
+test equity
+2024/01/15 Opening Balances
+    Assets:Cash                              $-25.00
+    Expenses:Food
+end test

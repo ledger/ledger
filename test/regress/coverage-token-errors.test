@@ -1,14 +1,121 @@
-; Test token.cc error paths
-; Exercises expected(kind_t) (lines 505-515)
-; operator<<(ostream, token_t) (lines 640-657)
-; operator<<(ostream, kind_t) (lines 517-637)
+; Coverage tests for token.cc - parse error paths
+; Exercises unexpected(), expected(), and error conditions
 
-; Test unclosed parenthesis - triggers expected(RPAREN) which
-; calls operator<<(ostream, token_t) and operator<<(ostream, kind_t)
-test eval "(5" -> 1
+; Unclosed parenthesis - triggers expected(RPAREN) which uses
+; operator<<(token_t) and operator<<(kind_t) for RPAREN and TOK_EOF
+test eval '(5' -> 1
 __ERROR__
 While parsing value expression:
   (5
 
 Error: Invalid token '<end of input>' (wanted ')')
+end test
+
+; Missing colon in ternary - triggers expected(COLON) which uses
+; operator<<(kind_t) for COLON and TOK_EOF
+test eval '1 ? 2' -> 1
+__ERROR__
+While parsing value expression:
+  1 ? 2
+
+Error: Invalid token '<end of input>' (wanted ':')
+end test
+
+; Unterminated single-quoted string (token.cc line 220)
+test eval "'" -> 1
+__ERROR__
+While parsing value expression:
+  '
+
+Error: Missing '''
+end test
+
+; Unterminated double-quoted string (token.cc line 264)
+test eval '"unterminated' -> 1
+__ERROR__
+While parsing value expression:
+  "unterminated
+
+Error: Missing '"'
+end test
+
+; Unterminated regex (token.cc line 347)
+test eval '/unterminated' -> 1
+__ERROR__
+While parsing value expression:
+  /unterminated
+
+Error: Missing '/'
+end test
+
+; Unterminated braced amount (token.cc line 278)
+test eval '{$10' -> 1
+__ERROR__
+While parsing value expression:
+  {$10
+
+Error: Missing '}'
+end test
+
+; Invalid date in brackets (token.cc line 208)
+test eval '[invalid_date]' -> 1
+__ERROR__
+While parsing value expression:
+  [invalid_date]
+
+Error: Unexpected date period token 'invalid'
+end test
+
+; Plus operator not followed by argument
+test eval '1 +' -> 1
+__ERROR__
+While parsing value expression:
+  1 +
+
+Error: + operator not followed by argument
+end test
+
+; Star operator not followed by argument
+test eval '1 *' -> 1
+__ERROR__
+While parsing value expression:
+  1 *
+
+Error: * operator not followed by argument
+end test
+
+; Slash operator not followed by argument
+test eval '1 /' -> 1
+__ERROR__
+While parsing value expression:
+  1 /
+
+Error: / operator not followed by argument
+end test
+
+; Minus operator not followed by argument
+test eval '1 -' -> 1
+__ERROR__
+While parsing value expression:
+  1 -
+
+Error: - operator not followed by argument
+end test
+
+; Dot operator not followed by argument
+test eval '1 .' -> 1
+__ERROR__
+While parsing value expression:
+  1 .
+
+Error: . operator not followed by argument
+end test
+
+; Unexpected RPAREN - triggers unexpected() default case
+test eval '1 + )' -> 1
+__ERROR__
+While parsing value expression:
+  1 + )
+      ^
+Error: ) operator not followed by argument
 end test

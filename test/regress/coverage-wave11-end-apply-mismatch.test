@@ -1,0 +1,16 @@
+; Coverage for textual_directives.cc line 394 (end apply mismatch)
+; Tests that 'end apply' with wrong label gives an error
+
+apply account Expenses
+
+2024/01/01 Test
+    Food    $10.00
+    Assets:Cash
+
+end apply tag
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 10:
+Error: 'end apply tag' directive does not match 'apply account' directive
+end test

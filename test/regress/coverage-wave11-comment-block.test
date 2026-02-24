@@ -1,0 +1,21 @@
+; Coverage for textual_directives.cc lines 839,843-847 (comment directive)
+; Tests 'comment' and 'end comment' blocks
+
+comment
+  This is a multi-line comment block.
+  It should be completely ignored by the parser.
+  Even lines that look like directives:
+  account Expenses:Ignored
+  2024/01/01 Fake Transaction
+end comment
+
+2024/01/01 Real Transaction
+    Expenses:Food    $25.00
+    Assets:Cash
+
+test bal
+             $-25.00  Assets:Cash
+              $25.00  Expenses:Food
+--------------------
+                   0
+end test

@@ -1,0 +1,13 @@
+; Coverage tests for draft.cc lines 120, 133, 138, 142 (xact keyword args)
+; Also covers draft.cc line 59 (empty payee_mask)
+; Also covers draft.cc lines 150, 153 (cost operator)
+
+2024/01/01 Grocery Store
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test xact on 2024/06/15 at "Grocery Store" to Expenses:Food 20 from Assets:Cash code 1234 note "lunch"
+2024/06/15 (1234) Grocery Store  ;lunch
+    Expenses:Food                             $20.00
+    Assets:Cash
+end test

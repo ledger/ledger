@@ -1,0 +1,16 @@
+; Test coverage for textual_xacts.cc lines 113-130
+; Automated xact delete command
+
+= taxes :: /Food/
+    Expenses:Tax                              0.10
+    Assets:Tax                               -0.10
+
+= 'taxes' delete
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test bal Expenses:Food
+              $50.00  Expenses:Food
+end test

@@ -1,0 +1,42 @@
+; Coverage tests for textual_directives.cc and textual_xacts.cc
+; Targets: directive parsing edge cases
+
+; Test 'apply account' directive
+apply account Business
+
+2024/01/01 Client Payment
+    Income:Consulting    $-500.00
+    Assets:Checking
+
+end apply account
+
+; Test 'alias' directive
+alias food=Expenses:Food:Groceries
+
+2024/01/15 Store
+    food    $40.00
+    Assets:Cash
+
+; Test 'account' directive (textual_directives.cc)
+account Expenses:Food:Groceries
+    note Grocery spending
+
+2024/02/01 Grocery
+    Expenses:Food:Groceries    $50.00
+    Assets:Cash
+
+test reg Business:Income
+24-Jan-01 Client Payment        Busi:Income:Consulting     $-500.00     $-500.00
+end test
+
+test reg Expenses:Food:Groceries
+24-Jan-15 Store                 Expense:Food:Groceries       $40.00       $40.00
+24-Feb-01 Grocery               Expense:Food:Groceries       $50.00       $90.00
+end test
+
+test accounts
+Assets:Cash
+Business:Assets:Checking
+Business:Income:Consulting
+Expenses:Food:Groceries
+end test

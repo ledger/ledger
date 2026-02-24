@@ -1,0 +1,17 @@
+; Coverage for xact.cc lines 898-902: auto_xact deferred tag handling.
+; When an automated transaction has tags/notes, they are deferred and
+; applied during extend_xact.
+
+= /Expenses/
+    ; AutoTag: auto-value
+    (Budget)                                 1.00
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+test reg --format "%(account) %(has_tag('AutoTag'))\n"
+Expenses:Food true
+Assets:Cash false
+Budget true
+end test

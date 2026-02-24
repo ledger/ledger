@@ -1,0 +1,48 @@
+; Coverage wave 8: query expression parsing
+; Tests: account, payee, note, and/or/not operators
+
+2024/01/01 Groceries
+    Expenses:Food:Groceries    $50.00
+    Assets:Checking
+
+2024/01/05 Gas Station
+    Expenses:Transport         $40.00
+    Assets:Checking
+
+2024/01/10 Restaurant
+    ; dining out
+    Expenses:Food:Dining       $75.00
+    Assets:Checking
+
+2024/01/15 * Salary
+    Assets:Checking          $3000.00
+    Income:Salary
+
+; Test payee query using @
+test reg @Groceries
+24-Jan-01 Groceries             Expense:Food:Groceries       $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+; Test payee query using keyword
+test reg payee Groceries
+24-Jan-01 Groceries             Expense:Food:Groceries       $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+; Test note query using keyword
+test reg note dining
+24-Jan-10 Restaurant            Expenses:Food:Dining         $75.00       $75.00
+                                Assets:Checking             $-75.00            0
+end test
+
+; Test and/not query
+test reg Expenses and not Food
+24-Jan-05 Gas Station           Expenses:Transport           $40.00       $40.00
+end test
+
+; Test or query using 'or' keyword
+test reg Dining or Transport
+24-Jan-05 Gas Station           Expenses:Transport           $40.00       $40.00
+24-Jan-10 Restaurant            Expenses:Food:Dining         $75.00      $115.00
+end test

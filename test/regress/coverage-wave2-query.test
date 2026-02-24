@@ -1,0 +1,76 @@
+; Tests for query.cc/query.h uncovered lines
+; Covers: meta query with equality, payee/code/note tokens,
+;   unary NOT, AND/OR, parenthesized, parse_query_expr
+
+2024/01/01 (REF001) Grocery Store
+    ; Category: food
+    Expenses:Food            $50.00
+    Assets:Cash
+
+2024/01/02 (REF002) Gas Station
+    ; Category: auto
+    Expenses:Auto:Gas        $35.00
+    Assets:Cash
+
+2024/01/03 Restaurant
+    Expenses:Food            $25.00
+    Assets:Cash
+
+; Test @payee query - covers lines 142-144
+test reg @Grocery
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test
+
+; Test #code query - covers lines 145-147 (need to quote # for shell)
+test reg "#REF001"
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test
+
+; Test %meta query - covers lines 148-150
+test reg %Category
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+24-Jan-02 Gas Station           Expenses:Auto:Gas            $35.00       $35.00
+                                Assets:Cash                 $-35.00            0
+end test
+
+; Test %meta=value query - covers lines 300-313
+test reg %Category=food
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Cash                 $-50.00            0
+end test
+
+; Test !NOT query - covers lines 370-377
+test reg !Expenses
+24-Jan-01 Grocery Store         Assets:Cash                 $-50.00      $-50.00
+24-Jan-02 Gas Station           Assets:Cash                 $-35.00      $-85.00
+24-Jan-03 Restaurant            Assets:Cash                 $-25.00     $-110.00
+end test
+
+; Test & AND query - covers lines 389-408 (quote & for shell)
+test reg Expenses '&' Food
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-03 Restaurant            Expenses:Food                $25.00       $75.00
+end test
+
+; Test | OR query - covers lines 410-428 (quote | for shell)
+test reg Expenses:Food '|' Expenses:Auto
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-02 Gas Station           Expenses:Auto:Gas            $35.00       $85.00
+24-Jan-03 Restaurant            Expenses:Food                $25.00      $110.00
+end test
+
+; Test (parenthesized) query - covers lines 350-355
+test reg "(Expenses:Food|Expenses:Auto)"
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-02 Gas Station           Expenses:Auto:Gas            $35.00       $85.00
+24-Jan-03 Restaurant            Expenses:Food                $25.00      $110.00
+end test
+
+; Test nested (! and &) in queries
+test reg "(!Expenses:Auto&Expenses)"
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-03 Restaurant            Expenses:Food                $25.00       $75.00
+end test

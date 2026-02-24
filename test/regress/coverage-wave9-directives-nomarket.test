@@ -1,0 +1,17 @@
+; Test coverage for textual_directives.cc lines 127-134
+; N directive (nomarket)
+
+N GBP
+
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Test
+    Expenses:Food                          100 EUR
+    Assets:Cash
+
+test bal
+            -100 EUR  Assets:Cash
+             100 EUR  Expenses:Food
+--------------------
+                   0
+end test

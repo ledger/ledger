@@ -1,0 +1,84 @@
+; Coverage tests for item.cc lookup functions
+; Targets lines 49-50, 52-53, 66, 107, 306, 313, 320, 344, 350-351,
+;   392, 439, 465, 488, 514, 520, 525, 530
+
+2024/01/01 * Cleared Test
+    Expenses:Food             $10.00
+    Assets:Cash
+
+2024/01/02 ! Pending Test
+    Expenses:Drink             $5.00
+    Assets:Cash
+
+2024/01/03 Uncleared Test
+    Expenses:Misc              $3.00  ; MyTag: hello
+    Assets:Cash
+
+test reg --format '%(filename)\n' Expenses:Food
+$FILE
+end test
+
+test reg --format '%(filebase)\n' Expenses:Food
+coverage-wave8-item-lookup.test
+end test
+
+test reg --format '%(beg_line) %(end_line)\n' Expenses:Food
+6 6
+end test
+
+test reg --format '%(beg_pos) %(end_pos)\n' Expenses:Food
+184 221
+end test
+
+test reg --format '%(seq)\n' Expenses:Food
+2
+end test
+
+test reg --format '%(id)\n' Expenses:Food
+2
+end test
+
+test reg --format '%(cleared)\n' Expenses:Food
+true
+end test
+
+test reg --format '%(pending)\n' Expenses:Drink
+true
+end test
+
+test reg --format '%(uncleared)\n' Expenses:Misc
+true
+end test
+
+test reg --format '%(actual)\n' Expenses:Food
+true
+end test
+
+test reg --format '%(L)\n' Expenses:Food
+true
+end test
+
+test reg --format '%(X)\n' Expenses:Food
+true
+end test
+
+test reg --format '%(Y)\n' Expenses:Drink
+true
+end test
+
+test reg --format '%(N)\n' Expenses:Food
+1
+end test
+
+test reg --format '%(has_tag("MyTag"))\n' Expenses:Misc
+true
+end test
+
+test reg --format '%(tag("MyTag"))\n' Expenses:Misc
+hello
+end test
+
+test reg --format '%(comment)\n' Expenses:Misc
+  ; MyTag: hello
+end test
+

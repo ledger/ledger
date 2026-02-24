@@ -1,0 +1,16 @@
+; Coverage tests for textual_xacts.cc xact-level assert failure
+; Targets lines 948-949 (xact assert failure throws error)
+
+2024/01/01 Test Payee
+    assert 1 == 0
+    Expenses:Food            $10.00
+    Assets:Cash
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 5:
+While parsing transaction:
+> 2024/01/01 Test Payee
+>     assert 1 == 0
+Error: Transaction assertion failed: 1 == 0
+end test

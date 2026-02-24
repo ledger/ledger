@@ -1,0 +1,12 @@
+; Coverage wave 11: amount.cc strip annotations
+; Targets lines 1138, 1156, 1169
+
+P 2020/01/01 AAPL $100.00
+
+2020/01/15 Buy Stock
+    Assets:Brokerage   10 AAPL {$100.00} [2020/01/15] (some-tag)
+    Assets:Cash
+
+test bal Assets:Brokerage
+             10 AAPL  Assets:Brokerage
+end test

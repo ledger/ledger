@@ -1,0 +1,26 @@
+; Coverage tests for value.cc error paths
+; Exercises error handling in comparison, conversion, and arithmetic
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Error: comparing incompatible types exercises is_greater_than default path
+; (lines 1131-1136) and is_less_than error path (lines 995-996)
+test eval '"hello" > 42' -> 1
+__ERROR__
+While evaluating value expression:
+  ("hello" > 42)
+  ^^^^^^^^^^^^^^
+While comparing if 42 is less than hello:
+Error: Cannot compare an amount to a string
+end test
+
+; Error: division by zero
+test eval '$10 / $0' -> 1
+__ERROR__
+While evaluating value expression:
+  ($10 / $0)
+  ^^^^^^^^^^
+Error: Divide by zero
+end test

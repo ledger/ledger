@@ -1,0 +1,22 @@
+; Coverage tests for report.cc top_amount with balance (line 529)
+; and also tests prices (1665) and pricesdb (1667) commands
+
+P 2024/01/01 EUR $1.10
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Expenses:Food    5 EUR
+    Assets:Cash
+
+test reg --format "%(top_amount(total))\n" Expenses
+$10.00
+5 EUR
+end test
+
+test prices
+2024/01/01 EUR             $1.10
+end test
+
+test pricesdb
+P 2024/01/01 00:00:00 EUR $1.10
+end test

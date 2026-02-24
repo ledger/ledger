@@ -1,0 +1,9 @@
+; Coverage for textual_directives.cc lines 138-143 (short option error)
+
+-S date
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 3:
+Error: Short options (e.g., -S) are not supported in configuration files. Please use long options (e.g., --sort) instead
+end test

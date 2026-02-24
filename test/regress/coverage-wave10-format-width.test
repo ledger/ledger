@@ -1,0 +1,12 @@
+; Coverage tests for format.cc lines 104-106, 115 (parse_single_expression branches)
+; Exercises expression parsing with trailing whitespace and EOF handling
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Format with min/max width specifiers exercises format element construction
+test reg -F "%(min(20, 30)) %(max(40, 50))\n"
+20 50
+20 50
+end test

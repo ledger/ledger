@@ -1,0 +1,18 @@
+; Wave 2 coverage tests for annotate.cc error paths
+; Covers: duplicate price (line 111), duplicate date (line 147),
+; unclosed brace (line 137), unclosed bracket (line 154),
+; unclosed tag paren (line 190), double brace mismatch (line 132)
+
+; Test duplicate price annotation error
+2024/01/01 Dup Price
+    Assets:Test              1 FOO {$10.00} {$20.00}
+    Assets:Cash
+
+test bal -> 1
+__ERROR__
+While parsing file "$FILE", line 8:
+While parsing posting:
+  Assets:Test              1 FOO {$10.00} {$20.00}
+                           ^^^^^^^^^^^^^^^^^^^^^^^
+Error: Commodity specifies more than one price
+end test

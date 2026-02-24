@@ -1,0 +1,10 @@
+; Test coverage for post.cc lines 363, 383
+; fn_any and fn_all from post_t::lookup
+
+2024/01/01 Test
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+test reg --format '%(any(account =~ /Food/)) %(all(account =~ /./)) %(payee)\n' Food
+true true Test
+end test

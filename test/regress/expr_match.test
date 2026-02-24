@@ -1,0 +1,25 @@
+; Test pattern matching expressions
+; These exercise op.cc O_MATCH paths
+
+2024/01/01 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/15 Gas Station
+    Expenses:Transport         $30.00
+    Assets:Checking
+
+2024/01/20 Restaurant
+    Expenses:Food:DiningOut    $25.00
+    Assets:Checking
+
+; Pattern matching in filter expressions
+test reg expr "account =~ /Food/"
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-20 Restaurant            Expense:Food:DiningOut       $25.00       $75.00
+end test
+
+; Pattern matching with NOT using 'not' keyword
+test reg expr "account =~ /Food/ & not(account =~ /DiningOut/)"
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+end test

@@ -1,0 +1,21 @@
+; Test coverage for filters.cc lines 1014-1015, 1032
+; interval_posts without duration (find_period path) and with duration
+
+2024/01/01 Test1
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/15 Test2
+    Expenses:Food                           $30.00
+    Assets:Cash
+
+2024/02/01 Test3
+    Expenses:Food                           $25.00
+    Assets:Cash
+
+test reg --period 'monthly'
+24-Jan-01 - 24-Jan-31           Assets:Cash                 $-80.00      $-80.00
+                                Expenses:Food                $80.00            0
+24-Feb-01 - 24-Feb-29           Assets:Cash                 $-25.00      $-25.00
+                                Expenses:Food                $25.00            0
+end test

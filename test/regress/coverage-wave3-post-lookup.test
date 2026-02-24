@@ -1,0 +1,17 @@
+; Coverage tests for post.cc lookup functions
+; Tests: get_use_direct_amount (201-203),
+;        various account lookup paths (265-298)
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Test use_direct_amount (lines 201-203)
+test reg --format "%(use_direct_amount ? 'direct' : 'indirect')\n" Expenses
+indirect
+end test
+
+; Test account function (lines 265-298)
+test reg --format "%(account)\n" --limit "account =~ /Expenses/"
+Expenses:Food
+end test

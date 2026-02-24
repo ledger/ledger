@@ -1,0 +1,53 @@
+; Coverage tests for query.cc - query parser term/factor/expression handling
+
+2020/01/01 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2020/01/15 Gas Station
+    Expenses:Transport    $30.00
+    Assets:Checking
+
+2020/02/01 Restaurant
+    Expenses:Food:Dining    $75.00
+    Assets:Checking
+
+2020/02/15 (#1234) Electric Company
+    Expenses:Utilities    $100.00
+    Assets:Checking
+
+2020/03/01 Landlord
+    Expenses:Rent    $800.00
+    Assets:Checking
+
+test reg @Grocery
+20-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg Expenses and not Food
+20-Jan-15 Gas Station           Expenses:Transport           $30.00       $30.00
+20-Feb-15 Electric Company      Expenses:Utilities          $100.00      $130.00
+20-Mar-01 Landlord              Expenses:Rent               $800.00      $930.00
+end test
+
+test reg Food or Transport
+20-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+20-Jan-15 Gas Station           Expenses:Transport           $30.00       $80.00
+20-Feb-01 Restaurant            Expenses:Food:Dining         $75.00      $155.00
+end test
+
+test reg code 1234
+20-Feb-15 Electric Company      Expenses:Utilities          $100.00      $100.00
+                                Assets:Checking            $-100.00            0
+end test
+
+test reg desc Grocery
+20-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+                                Assets:Checking             $-50.00            0
+end test
+
+test reg payee Landlord
+20-Mar-01 Landlord              Expenses:Rent               $800.00      $800.00
+                                Assets:Checking            $-800.00            0
+end test

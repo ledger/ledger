@@ -1,0 +1,29 @@
+; Coverage tests for report.cc option handlers
+; Targets report.cc lines: 75-77, 183-190, 474-475, 485
+
+2024/01/01 Payee
+    Expenses:Food    $50.00
+    Assets:Cash
+
+2024/02/01 Store
+    Expenses:Dining    $30.00
+    Assets:Checking
+
+; Test --output option (lines 74-77: turns off color/pager when output file set)
+test reg --output /dev/null Expenses -> 0
+end test
+
+; Test --columns option (line 182) with register
+test reg --columns 120 Expenses
+24-Jan-01 Payee                           Expenses:Food                                    $50.00             $50.00
+24-Feb-01 Store                           Expenses:Dining                                  $30.00             $80.00
+end test
+
+; Test balance with --columns
+test bal --columns 60 Expenses
+              $80.00  Expenses
+              $30.00    Dining
+              $50.00    Food
+--------------------
+              $80.00
+end test

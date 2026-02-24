@@ -1,0 +1,26 @@
+; Coverage for textual_xacts.cc lines 45-48, 67-68, 77-79
+; Tests xact with state markers (*, !) and code parsing
+
+2024/01/01 * (1001) Payee One
+    Expenses:Food    $10.00
+    Assets:Cash
+
+2024/01/02 ! (1002) Payee Two
+    Expenses:Drinks    $5.00
+    Assets:Cash
+
+2024/01/03 (1003) Payee Three
+    Expenses:Gas    $20.00
+    Assets:Cash
+
+; Test that post state inherits from xact when uncleared
+2024/01/04 * Cleared Xact
+    Expenses:Misc    $3.00
+    Assets:Cash
+
+test reg Expenses
+24-Jan-01 Payee One             Expenses:Food                $10.00       $10.00
+24-Jan-02 Payee Two             Expenses:Drinks               $5.00       $15.00
+24-Jan-03 Payee Three           Expenses:Gas                 $20.00       $35.00
+24-Jan-04 Cleared Xact          Expenses:Misc                 $3.00       $38.00
+end test

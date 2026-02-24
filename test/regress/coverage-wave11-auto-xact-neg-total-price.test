@@ -1,0 +1,17 @@
+; Coverage for xact.cc lines 944-946: auto_xact_t::extend_xact cost
+; derivation from ANNOTATION_PRICE_NOT_PER_UNIT with negative amount.
+
+= /Expenses/
+    (Tracking)                               1.00
+
+2024/01/01 Return energy
+    Expenses:Energy                       -100 kWh @@ 72 EUR
+    Assets:Cash
+
+test reg
+24-Jan-01 Return energy         Expenses:Energy            -100 kWh     -100 kWh
+                                Assets:Cash                   EUR72        EUR72
+                                                                        -100 kWh
+                                (Tracking)                 -100 kWh        EUR72
+                                                                        -200 kWh
+end test

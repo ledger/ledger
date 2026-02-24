@@ -1,0 +1,51 @@
+; Coverage tests for format.cc truncation styles
+; Targets: format.cc lines 498-500 (TRUNCATE_LEADING), 503-507 (TRUNCATE_MIDDLE),
+;          510-676 (ABBREVIATE), 679-681 (TRUNCATE_TRAILING)
+
+2024/01/15 Grocery Store
+    Expenses:Food:Groceries:Weekly:Regular    $50.00
+    Assets:Checking:Main:Savings:Regular
+
+2024/01/20 Electric Company
+    Expenses:Utilities:Electric:Monthly:Home    $120.00
+    Assets:Checking:Main:Savings:Regular
+
+; Test TRUNCATE_LEADING: leading truncation style (format.cc lines 498-500)
+test reg --format '%10.10(account) %t\n' --truncate=leading Expenses
+..:Regular $50.00
+..hly:Home $120.00
+end test
+
+; Test TRUNCATE_MIDDLE: middle truncation style (format.cc lines 503-507)
+test reg --format '%10.10(account) %t\n' --truncate=middle Expenses
+Expe..ular $50.00
+Expe..Home $120.00
+end test
+
+; Test TRUNCATE_TRAILING (default): trailing truncation (format.cc lines 679-681)
+test reg --format '%10.10(account) %t\n' --truncate=trailing Expenses
+Expenses.. $50.00
+Expenses.. $120.00
+end test
+
+; Test ABBREVIATE: account abbreviation (format.cc lines 510-676)
+; Use balance with very narrow columns to force abbreviation of long account names
+test bal --flat --columns=45 --abbrev-len 2 Expenses
+              $50.00  Expenses:Food:Groceries:Weekly:Regular
+             $120.00  Expenses:Utilities:Electric:Monthly:Home
+--------------------
+             $170.00
+end test
+
+; Test with right-justified expression (format.cc lines 443-445)
+; value.print() path for expressions with min_width
+test reg --format '%20t %20T\n' Expenses
+              $50.00               $50.00
+             $120.00              $170.00
+end test
+
+; Test left-justified expression with min width
+test reg --format '%-20t %-20T\n' Expenses
+$50.00               $50.00              
+$120.00              $170.00             
+end test

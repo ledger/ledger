@@ -1,0 +1,14 @@
+; Coverage for textual_directives.cc line 626 (bucket directive)
+; Uses 'bucket' keyword (general_directive case 'b')
+
+bucket Assets:Cash
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+
+test bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

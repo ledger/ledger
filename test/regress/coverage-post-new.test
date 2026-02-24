@@ -1,0 +1,66 @@
+; Coverage tests for post.cc
+; Tests: posting tags, payee override, cost/price, virtual postings,
+;        note inheritance, account function, xact_id
+
+2024/01/01 Store A
+    ; :receipt:
+    Expenses:Food                    $25.00
+    Assets:Cash
+
+2024/01/02 Store B
+    ; Payee: Override Payee
+    Expenses:Food                    $15.00
+    Assets:Cash
+
+2024/01/03 Stock Purchase
+    Assets:Brokerage                 10 AAPL @ $150.00
+    Assets:Cash
+
+2024/01/04 Virtual Entry
+    Expenses:Real                    $100.00
+    Assets:Cash                     $-100.00
+    (Budget:Saved)                    $50.00
+
+2024/01/05 * Cleared Check  ; note on xact
+    ; :important:
+    Expenses:Bills                    $200.00
+    Assets:Checking
+
+test bal Expenses
+             $340.00  Expenses
+             $200.00    Bills
+              $40.00    Food
+             $100.00    Real
+--------------------
+             $340.00
+end test
+
+test reg @Override
+24-Jan-02 Override Payee        Expenses:Food                $15.00       $15.00
+          Override Payee        Assets:Cash                 $-15.00            0
+end test
+
+test reg %receipt
+24-Jan-01 Store A               Expenses:Food                $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+end test
+
+test reg tag receipt
+24-Jan-01 Store A               Expenses:Food                $25.00       $25.00
+                                Assets:Cash                 $-25.00            0
+end test
+
+test reg --cleared
+24-Jan-05 Cleared Check         Expenses:Bills              $200.00      $200.00
+                                Assets:Checking            $-200.00            0
+end test
+
+test reg Budget:Saved
+24-Jan-04 Virtual Entry         (Budget:Saved)               $50.00       $50.00
+end test
+
+test print @Stock
+2024/01/03 Stock Purchase
+    Assets:Brokerage                         10 AAPL @ $150.00
+    Assets:Cash
+end test

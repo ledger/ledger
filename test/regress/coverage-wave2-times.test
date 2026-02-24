@@ -1,0 +1,60 @@
+; Tests for times.cc uncovered lines: date_duration_t::operator<<,
+; find_period loop paths, format_datetime/format_date alternative formats,
+; determine_when with adj_seconds/adj_minutes, period parsing.
+
+2024/01/01 January
+    Expenses:Food        $10.00
+    Assets:Cash
+
+2024/02/15 February
+    Expenses:Food        $20.00
+    Assets:Cash
+
+2024/03/01 March
+    Expenses:Food        $30.00
+    Assets:Cash
+
+2024/04/01 April
+    Expenses:Food        $40.00
+    Assets:Cash
+
+2024/07/01 July
+    Expenses:Food        $50.00
+    Assets:Cash
+
+2025/01/01 Next Year
+    Expenses:Food        $60.00
+    Assets:Cash
+
+; === Test 1: Quarterly period ===
+test reg Expenses --quarterly --columns 80
+24-Jan-01 - 24-Mar-31           Expenses:Food                $60.00       $60.00
+24-Apr-01 - 24-Jun-30           Expenses:Food                $40.00      $100.00
+24-Jul-01 - 24-Sep-30           Expenses:Food                $50.00      $150.00
+25-Jan-01 - 25-Mar-31           Expenses:Food                $60.00      $210.00
+end test
+
+; === Test 2: Yearly period ===
+test reg Expenses --yearly --columns 80
+24-Jan-01 - 24-Dec-31           Expenses:Food               $150.00      $150.00
+25-Jan-01 - 25-Dec-31           Expenses:Food                $60.00      $210.00
+end test
+
+; === Test 3: Daily period on a date range ===
+test reg Expenses --daily -b "2024/01/01" -e "2024/01/03" --columns 80
+24-Jan-01 - 24-Jan-01           Expenses:Food                $10.00       $10.00
+end test
+
+; === Test 4: Period with "last year" (triggers find_nearest for YEARS) ===
+test reg Expenses -p "last year" --now "2025/06/15" --columns 80
+24-Jan-01 January               Expenses:Food                $10.00       $10.00
+24-Feb-15 February              Expenses:Food                $20.00       $30.00
+24-Mar-01 March                 Expenses:Food                $30.00       $60.00
+24-Apr-01 April                 Expenses:Food                $40.00      $100.00
+24-Jul-01 July                  Expenses:Food                $50.00      $150.00
+end test
+
+; === Test 5: Period with "this month" ===
+test reg Expenses -p "this month" --now "2024/02/20" --columns 80
+24-Feb-15 February              Expenses:Food                $20.00       $20.00
+end test

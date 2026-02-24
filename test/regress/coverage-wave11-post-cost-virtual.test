@@ -1,0 +1,9 @@
+; Coverage for textual_xacts.cc virtual cost (@ ) with POST_COST_VIRTUAL
+
+2024/01/01 Virtual Cost Purchase
+    Assets:Broker    10 AAPL (@) $150.00
+    Assets:Cash
+
+test bal Assets:Broker
+             10 AAPL  Assets:Broker
+end test

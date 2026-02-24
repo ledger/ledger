@@ -1,0 +1,50 @@
+; Wave 2 coverage tests for compare.cc
+; Covers: compare_items<post_t>, compare_items<account_t>, sort_values,
+; push_sort_value with context, account sort without context (lines 62, 87-89, 98-100, 120, 131)
+
+2024/01/01 Grocery Store
+    Expenses:Food              $25.00
+    Assets:Checking
+
+2024/01/10 Gas Station
+    Expenses:Transport         $40.00
+    Assets:Checking
+
+2024/01/15 Salary
+    Assets:Checking          $1000.00
+    Income:Salary
+
+2024/02/01 Electric Company
+    Expenses:Utilities         $75.00
+    Assets:Checking
+
+; Sort posts by amount - covers compare_items<post_t>::operator() lines 87-89
+test reg --sort amount Expenses
+24-Jan-01 Grocery Store         Expenses:Food                $25.00       $25.00
+24-Jan-10 Gas Station           Expenses:Transport           $40.00       $65.00
+24-Feb-01 Electric Company      Expenses:Utilities           $75.00      $140.00
+end test
+
+; Sort posts by descending date - covers inverted sort values
+test reg --sort -date Expenses
+24-Feb-01 Electric Company      Expenses:Utilities           $75.00       $75.00
+24-Jan-10 Gas Station           Expenses:Transport           $40.00      $115.00
+24-Jan-01 Grocery Store         Expenses:Food                $25.00      $140.00
+end test
+
+; Sort accounts by total - covers compare_items<account_t>::operator() lines 120, 131
+test bal --sort -amount Expenses
+             $140.00  Expenses
+              $75.00    Utilities
+              $40.00    Transport
+              $25.00    Food
+--------------------
+             $140.00
+end test
+
+; Sort by payee expression - covers more comparison paths
+test reg --sort payee Expenses
+24-Feb-01 Electric Company      Expenses:Utilities           $75.00       $75.00
+24-Jan-10 Gas Station           Expenses:Transport           $40.00      $115.00
+24-Jan-01 Grocery Store         Expenses:Food                $25.00      $140.00
+end test

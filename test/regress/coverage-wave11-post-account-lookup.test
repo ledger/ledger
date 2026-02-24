@@ -1,0 +1,11 @@
+; Coverage for post.cc lines 272-274,277-278,288-291,296:
+; get_account with string argument to look up a named account.
+
+2024/01/01 Test
+    Expenses:Food:Groceries       $10.00
+    Assets:Cash
+
+test reg --format "%(account) %(account_base) %(account_id)\n"
+Expenses:Food:Groceries Groceries 1
+Assets:Cash Cash 1
+end test

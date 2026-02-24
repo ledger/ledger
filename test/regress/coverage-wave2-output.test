@@ -1,0 +1,49 @@
+; Wave 2 coverage tests for output.h
+; Covers: report_accounts, report_payees, report_tags, report_commodities
+; clear() methods and operator() paths (lines 117-124, 143-146, 164-167, 186-189, 210-213)
+
+2024/01/01 Grocery Store
+    ; Category: food
+    Expenses:Food              $25.00
+    Assets:Checking
+
+2024/01/10 Gas Station
+    ; Category: transport
+    Expenses:Transport         $40.00
+    Assets:Checking
+
+2024/01/15 Salary
+    Assets:Checking          $1000.00
+    Income:Salary
+
+2024/02/01 Electric Company
+    ; Category: utilities
+    Expenses:Utilities         $75.00
+    Assets:Checking
+
+; report_accounts - covers lines 143-146
+test accounts
+Assets:Checking
+Expenses:Food
+Expenses:Transport
+Expenses:Utilities
+Income:Salary
+end test
+
+; report_payees - covers lines 164-167
+test payees
+Electric Company
+Gas Station
+Grocery Store
+Salary
+end test
+
+; report_tags - covers lines 186-189
+test tags
+Category
+end test
+
+; report_commodities - covers lines 210-213
+test commodities
+$
+end test

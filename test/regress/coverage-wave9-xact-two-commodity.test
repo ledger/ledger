@@ -1,0 +1,16 @@
+; Test coverage for xact.cc lines 215-276
+; Two-commodity transaction auto-cost calculation (finalize path)
+
+2024/01/01 Currency Exchange
+    Assets:EUR                             100 EUR
+    Assets:USD                          $-110.00
+
+test bal
+            $-110.00
+             100 EUR  Assets
+             100 EUR    EUR
+            $-110.00    USD
+--------------------
+            $-110.00
+             100 EUR
+end test

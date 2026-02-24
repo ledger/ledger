@@ -1,0 +1,17 @@
+; Test coverage for filters.cc lines 1232
+; pivot_posts renames accounts based on payee pivot
+
+2024/01/01 Grocery Store
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/15 Restaurant
+    Expenses:Food                           $25.00
+    Assets:Cash
+
+test reg --pivot payee
+24-Jan-01 Grocery Store         Expenses:Food                $50.00       $50.00
+24-Jan-01 Grocery Store         Assets:Cash                 $-50.00            0
+24-Jan-15 Restaurant            Expenses:Food                $25.00       $25.00
+24-Jan-15 Restaurant            Assets:Cash                 $-25.00            0
+end test

@@ -1,0 +1,13 @@
+; Test session fn_str and fn_int for session.cc coverage
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test eval 'str(42)'
+42
+end test
+
+test eval 'int(3)'
+3
+end test

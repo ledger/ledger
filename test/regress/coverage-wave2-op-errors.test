@@ -1,0 +1,38 @@
+; Wave 2 coverage tests for deprecated variables and error paths
+; Covers: report.cc lines 1336 (i deprecated), 1338 (A deprecated),
+;   1341-1342 (V/v deprecated), 1345-1346 (I/B deprecated),
+;   1349-1350 (G/g deprecated)
+
+2024/01/01 Test
+    Expenses:Food     $10.00
+    Assets:Cash
+
+; Test deprecated 'i' variable - covers line 1336
+test eval "i" -> 1
+__ERROR__
+Error: The i value expression variable is no longer supported
+end test
+
+; Test deprecated 'A' variable - covers line 1338
+test eval "A" -> 1
+__ERROR__
+Error: The A value expression variable is no longer supported
+end test
+
+; Test deprecated 'V' variable - covers lines 1341-1342
+test eval "V" -> 1
+__ERROR__
+Error: The V and v value expression variables are no longer supported
+end test
+
+; Test deprecated 'B' variable - covers lines 1345-1346
+test eval "B" -> 1
+__ERROR__
+Error: The I and B value expression variables are no longer supported
+end test
+
+; Test deprecated 'G' variable - covers lines 1349-1350
+test eval "G" -> 1
+__ERROR__
+Error: The G and g value expression variables are no longer supported
+end test

@@ -1,0 +1,21 @@
+; Coverage tests for report.cc remaining lookup paths
+; Tests: fn_to_sequence, fn_to_mask, fn_to_amount, fn_to_balance,
+;        fn_to_datetime, color functions via format
+
+2024/01/01 Test
+    Expenses:Food    $10.00
+    Assets:Cash
+; Test to_amount (line 958-960)
+test reg --format "%(to_amount(10))\n" Expenses
+10
+end test
+
+; Test fn_quoted and fn_quoted_rfc (lines 1462-1465)
+test reg --format "%(quoted(payee))\n" Expenses
+"Test"
+end test
+
+; Test fn_trim (line 1503-1504)
+test reg --format "%(trim(payee))\n" Expenses
+Test
+end test

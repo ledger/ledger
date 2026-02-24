@@ -1,0 +1,24 @@
+; Test -j (amount_data) and -J (total_data) options for report.cc coverage
+; Targets report.h amount_data and total_data options
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/02/20 Restaurant
+    Expenses:Food    $30.00
+    Assets:Checking
+
+test reg -j
+2024-01-15 50
+2024-01-15 -50
+2024-02-20 30
+2024-02-20 -30
+end test
+
+test reg -J
+2024-01-15 50
+2024-01-15 0
+2024-02-20 30
+2024-02-20 0
+end test

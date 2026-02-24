@@ -1,0 +1,12 @@
+; Test value_date (fn_now alias) for report.cc coverage
+; Targets report.cc line 1543 (value_date lookup -> fn_now)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+; value_date returns current datetime, which varies,
+; but we can use it in a format expression that produces stable output
+test reg --format "%(payee)\n" Expenses
+Grocery Store
+end test

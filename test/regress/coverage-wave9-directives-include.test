@@ -1,0 +1,16 @@
+; Test coverage for textual_directives.cc lines 156-269
+; include directive with relative path
+
+include coverage-wave9-include-data.dat
+
+2024/02/01 Local Transaction
+    Expenses:Tools                          $30.00
+    Assets:Cash
+
+test bal Expenses
+              $55.00  Expenses
+              $25.00    Food
+              $30.00    Tools
+--------------------
+              $55.00
+end test

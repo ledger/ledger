@@ -1,0 +1,85 @@
+; Tests for report.cc uncovered lines: fn_lot_date, fn_lot_price, fn_lot_tag,
+; fn_to_boolean, fn_to_int, fn_to_amount, fn_to_string,
+; command: csv, emacs/lisp, print, prices, pricesdb
+
+2024/01/01 Buy Stock
+    Assets:Brokerage          10 AAPL {$150.00} [2024/01/01] (lot1) @ $150.00
+    Assets:Cash              $-1500.00
+
+2024/02/01 Buy More
+    Assets:Brokerage          5 AAPL {$160.00} [2024/02/01] (lot2) @ $160.00
+    Assets:Cash              $-800.00
+
+P 2024/03/01 AAPL $170.00
+
+; Test lot_date
+test reg Assets:Brokerage --format "%(lot_date(amount))\n" --head 1
+2024/01/01
+end test
+
+; Test lot_price
+test reg Assets:Brokerage --format "%(lot_price(amount))\n" --head 1
+$150.00
+end test
+
+; Test lot_tag
+test reg Assets:Brokerage --format "%(lot_tag(amount))\n" --head 1
+lot1
+end test
+
+; fn_to_boolean
+test reg Assets:Brokerage --format "%(to_boolean(amount))\n" --head 1
+true
+end test
+
+; fn_to_int
+test reg Assets:Brokerage --format "%(to_int(quantity(amount)))\n" --head 1
+10
+end test
+
+; fn_to_string
+test reg Assets:Brokerage --format "%(to_string(amount))\n" --head 1
+10 AAPL {$150.00} [2024/01/01] (lot1)
+end test
+
+; fn_to_amount
+test reg Assets:Cash --format "%(to_amount(amount))\n" --head 1
+$-1500.00
+end test
+
+; === CSV output ===
+test csv --head 1
+"2024/01/01","","Buy Stock","Assets:Brokerage","AAPL","10","",""
+"2024/01/01","","Buy Stock","Assets:Cash","$","-1500","",""
+end test
+
+; === Emacs output (report.cc 'emacs' command) ===
+test emacs
+(("$FILE" 5 (26002 21728 0) nil "Buy Stock"
+  (6 "Assets:Brokerage" "10 AAPL {$150.00} [2024/01/01] (lot1)" nil "$1500.00")
+  (7 "Assets:Cash" "$-1500.00" nil))
+ ("$FILE" 9 (26043 13152 0) nil "Buy More"
+  (10 "Assets:Brokerage" "5 AAPL {$160.00} [2024/02/01] (lot2)" nil "$800.00")
+  (11 "Assets:Cash" "$-800.00" nil)))
+end test
+
+; === Print command ===
+test print --head 1
+2024/01/01 Buy Stock
+    Assets:Brokerage                    10 AAPL {$150.00} [2024/01/01] (lot1) @ $150.00
+    Assets:Cash                            $-1500.00
+end test
+
+; === Prices command ===
+test prices
+2024/01/01 AAPL          $150.00
+2024/02/01 AAPL          $160.00
+2024/03/01 AAPL          $170.00
+end test
+
+; === Pricesdb command ===
+test pricesdb
+P 2024/01/01 00:00:00 AAPL $150.00
+P 2024/02/01 00:00:00 AAPL $160.00
+P 2024/03/01 00:00:00 AAPL $170.00
+end test

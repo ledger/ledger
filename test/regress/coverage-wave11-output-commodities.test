@@ -1,0 +1,11 @@
+; Test commodities command for output.h coverage
+; Targets report.cc line 1635 (commodities command) and
+; output.h lines 210-213 (report_commodities::clear)
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test commodities
+$
+end test

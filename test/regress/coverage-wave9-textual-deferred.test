@@ -1,0 +1,13 @@
+; Test coverage for textual_xacts.cc lines 473-479
+; Deferred posting with <Account> syntax
+
+2024/01/01 Test Payee
+    Expenses:Food                           $50.00
+    <Assets:Cash>                          $-50.00
+
+test bal
+             $-50.00  Assets:Cash
+              $50.00  Expenses:Food
+--------------------
+                   0
+end test

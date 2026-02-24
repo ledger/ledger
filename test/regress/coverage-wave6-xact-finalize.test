@@ -1,0 +1,28 @@
+; Coverage tests for xact.cc finalization edge cases
+; Targets: balanced virtual postings, multi-commodity, finalization
+
+; Balanced virtual posting with null amount (lines 454-469)
+2024/01/01 Test Virtual Balance
+    Expenses:Food    $50.00
+    Assets:Cash     $-50.00
+    [Savings:Goal]    $10.00
+    [Savings:Other]
+
+test reg Savings
+24-Jan-01 Test Virtual Balance  [Savings:Goal]               $10.00       $10.00
+                                [Savings:Other]             $-10.00            0
+end test
+
+; Two-commodity transaction auto-pricing (lines 215-276)
+2024/02/01 Currency Exchange
+    Assets:EUR    100 EUR
+    Assets:USD   $-120.00
+
+test reg EUR
+24-Feb-01 Currency Exchange     Assets:EUR                  100 EUR      100 EUR
+end test
+
+; Test bal including multi-commodity
+test bal Assets:Cash
+             $-50.00  Assets:Cash
+end test

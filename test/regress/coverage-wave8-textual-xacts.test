@@ -1,0 +1,57 @@
+; Coverage tests for textual_xacts.cc
+; Targets lines 277-279, 306, 459, 722-725, 948-953
+
+; Test inline math in postings (parenthesized expressions) - line 277-279, 459
+2024/01/01 Inline Math
+    Expenses:Food          ($5.00 * 3)
+    Assets:Cash
+
+; Test balance assertion - line 722-725
+2024/01/02 Balance Assert
+    Assets:Cash             $10.00 = $-5.00
+    Expenses:Misc
+
+; Test virtual posting (parens) - line 306
+2024/01/03 Virtual Posting
+    Expenses:Food             $5.00
+    Assets:Cash              -$5.00
+    (Virtual:Note)            $1.00
+
+; Test cleared and pending state
+2024/01/04 * Cleared Transaction
+    Expenses:Food             $5.00
+    Assets:Cash
+
+2024/01/05 ! Pending Transaction
+    Expenses:Food             $5.00
+    Assets:Cash
+
+; Test transaction-level check failure (warning) - lines 948-953
+2024/01/06 Check Fail
+    check 1 == 2
+    Expenses:Food             $5.00
+    Assets:Cash
+
+; Test transaction-level expr - lines 944-946
+2024/01/07 Expr Eval
+    expr 2 + 3
+    Expenses:Food             $5.00
+    Assets:Cash
+
+; Test deferred posting (<Account>) syntax
+2024/01/08 Deferred Post
+    Expenses:Food             $5.00
+    <Assets:Deferred>        -$5.00
+
+test reg Expenses
+24-Jan-01 Inline Math           Expenses:Food                $15.00       $15.00
+24-Jan-02 Balance Assert        Expenses:Misc               $-10.00        $5.00
+24-Jan-03 Virtual Posting       Expenses:Food                 $5.00       $10.00
+24-Jan-04 Cleared Transaction   Expenses:Food                 $5.00       $15.00
+24-Jan-05 Pending Transaction   Expenses:Food                 $5.00       $20.00
+24-Jan-06 Check Fail            Expenses:Food                 $5.00       $25.00
+24-Jan-07 Expr Eval             Expenses:Food                 $5.00       $30.00
+24-Jan-08 Deferred Post         Expenses:Food                 $5.00       $35.00
+__ERROR__
+Warning: "$FILE", line 31: Transaction check failed: 1 == 2
+end test

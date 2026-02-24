@@ -1,0 +1,25 @@
+; Coverage tests for commodity.cc lines 408-409, 463 (compare by commodity with price/tag)
+; Also covers commodity.cc lines 492-493, 505 (put_commodity flags)
+; Also covers commodity.cc lines 321, 338-339, 343-344, 348-349 (valid/print)
+
+2024/01/01 Buy Stock A
+    Assets:Stock    10 AAPL {$150.00} [2024/01/01] (note1)
+    Assets:Cash
+
+2024/01/02 Buy Stock B
+    Assets:Stock    5 GOOG {$200.00} [2024/01/02] (note2)
+    Assets:Cash
+
+; This exercises commodity comparison paths: comparing annotations with
+; different prices, dates, and tags
+test bal Assets:Stock
+             10 AAPL
+              5 GOOG  Assets:Stock
+end test
+
+; Sorted balance output exercises the compare_by_commodity functor
+test reg --sort amount Assets:Stock
+24-Jan-01 Buy Stock A           Assets:Stock                10 AAPL      10 AAPL
+24-Jan-02 Buy Stock B           Assets:Stock                 5 GOOG      10 AAPL
+                                                                          5 GOOG
+end test

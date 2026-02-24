@@ -1,0 +1,10 @@
+; Coverage for textual_directives.cc line 480 (alias self-reference error)
+
+account Expenses:Food
+    alias Expenses:Food
+
+test reg -> 1
+__ERROR__
+While parsing file "$FILE", line 4:
+Error: Illegal alias Expenses:Food=Expenses:Food
+end test

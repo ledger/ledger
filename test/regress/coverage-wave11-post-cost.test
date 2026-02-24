@@ -1,0 +1,20 @@
+; Coverage for textual_xacts.cc line 306 (post cost parsing)
+; Tests @ per-unit cost and @@ total cost, also virtual cost (@ )
+
+2024/01/01 Buy Stock
+    Assets:Broker    10 AAPL @ $150.00
+    Assets:Cash
+
+2024/01/02 Buy More Stock
+    Assets:Broker    5 GOOG @@ $500.00
+    Assets:Cash
+
+2024/01/03 Fixed Cost
+    Assets:Broker    20 MSFT @=$50.00
+    Assets:Cash
+
+test bal Assets:Broker
+             10 AAPL
+              5 GOOG
+             20 MSFT  Assets:Broker
+end test

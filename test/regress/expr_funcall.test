@@ -1,0 +1,21 @@
+; Test function call expressions
+; These exercise op.cc O_CALL paths
+
+2024/01/01 Test Transaction
+    Expenses:Food              $50.00
+    Assets:Checking
+
+2024/01/15 Another Transaction
+    Expenses:Food             $-30.00
+    Assets:Checking
+
+; Function call: abs()
+test reg --amount "abs(amount)" Expenses
+24-Jan-01 Test Transaction      Expenses:Food                $50.00       $50.00
+24-Jan-15 Another Transaction   Expenses:Food                $30.00       $80.00
+end test
+
+; Ternary expression
+test reg --amount "amount > 0 ? amount : 0" Expenses
+24-Jan-01 Test Transaction      Expenses:Food                $50.00       $50.00
+end test

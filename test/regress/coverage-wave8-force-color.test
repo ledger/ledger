@@ -1,0 +1,20 @@
+; Coverage tests for --force-color and --output interactions
+; Targets report.cc: force_color (61, 65), output disables color (73-77)
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test --force-color bal
+             [31m$-10.00[0m  [34mAssets:Cash[0m
+              $10.00  [34mExpenses:Food[0m
+--------------------
+                   0
+end test
+
+test --output /dev/stdout bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

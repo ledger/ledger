@@ -1,0 +1,211 @@
+; Coverage tests for op.cc - error conditions that trigger print() and error paths
+; These tests use expressions that fail to evaluate, causing the error handler
+; to print expression trees via op_context() -> print()
+
+; O_ADD print path: (VALUE + IDENT)
+test eval '1 + unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (1 + unknown_thing)
+       ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_SUB print path: (VALUE - IDENT)
+test eval '1 - unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (1 - unknown_thing)
+       ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_MUL print path: (expr * IDENT)
+test eval '(1 + 2) * unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  ((1 + 2) * unknown_thing)
+             ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_DIV print path: (VALUE / IDENT)
+test eval '1 / unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (1 / unknown_thing)
+       ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_EQ print path: (VALUE == IDENT)
+test eval '1 == unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (1 == unknown_thing)
+        ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_LT print path: (VALUE < IDENT)
+test eval '1 < unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (1 < unknown_thing)
+       ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_LTE print path: (VALUE <= IDENT)
+test eval '1 <= unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (1 <= unknown_thing)
+        ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_GT print path: (VALUE > IDENT)
+test eval '1 > unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (1 > unknown_thing)
+       ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_GTE print path: (VALUE >= IDENT)
+test eval '1 >= unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (1 >= unknown_thing)
+        ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_AND print path: (VALUE & IDENT)
+test eval '1 & unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (1 & unknown_thing)
+       ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_OR print path: (VALUE | IDENT) - note: 0 needed so left doesn't short-circuit
+test eval '0 | unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (0 | unknown_thing)
+       ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_NOT print path: not IDENT
+test eval 'not unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (! unknown_thing)
+     ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_NEG print path: 0 - IDENT (O_SUB covers this)
+test eval '0 - unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (0 - unknown_thing)
+       ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_QUERY and O_COLON print path: IDENT ? VALUE : VALUE
+test eval 'unknown_thing ? 1 : 2' -> 1
+__ERROR__
+While evaluating value expression:
+  (unknown_thing ? (1 : 2))
+   ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_MATCH print path: IDENT =~ /regex/
+test eval 'unknown_thing =~ /foo/' -> 1
+__ERROR__
+While evaluating value expression:
+  (unknown_thing =~ /foo/)
+   ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_LOOKUP print path: IDENT.member
+test eval 'unknown_thing.foo' -> 1
+__ERROR__
+While evaluating value expression:
+  (unknown_thing.foo)
+   ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_CALL print path: IDENT(args)
+test eval 'unknown_thing(1)' -> 1
+__ERROR__
+While evaluating value expression:
+  unknown_thing(1)
+  ^^^^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_CALL with multiple args (O_CONS in print)
+test eval 'unknown_thing(1, 2)' -> 1
+__ERROR__
+While evaluating value expression:
+  unknown_thing(1, 2)
+  ^^^^^^^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_SEQ print path: VALUE ; IDENT
+test eval '1; unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (1; unknown_thing)
+      ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; O_LAMBDA print path via error in lambda body
+test eval '(x -> unknown_thing)(1)' -> 1
+__ERROR__
+While evaluating value expression:
+  (x -> unknown_thing)(1)
+        ^^^^^^^^^^^^^
+While calling function '<value expr> 1':
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; Complex nested expression covering multiple print paths
+test eval '(1 + 2) * (3 - unknown_thing) / 4' -> 1
+__ERROR__
+While evaluating value expression:
+  (((1 + 2) * (3 - unknown_thing)) / 4)
+                   ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; If/else with error - covers O_QUERY/O_COLON print
+test eval 'unknown_thing if true else 0' -> 1
+__ERROR__
+While evaluating value expression:
+  (true ? (unknown_thing : 0))
+           ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test
+
+; If/else false branch with error
+test eval '0 if false else unknown_thing' -> 1
+__ERROR__
+While evaluating value expression:
+  (false ? (0 : unknown_thing))
+                ^^^^^^^^^^^^^
+Error: Unknown identifier 'unknown_thing'
+end test

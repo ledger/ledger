@@ -1,0 +1,12 @@
+; Coverage for textual_xacts.cc lines 353-355 (post note/metadata)
+; Also covers xact note continuation (line 126)
+
+2024/01/01 Payee  ; xact note
+    ; more xact note
+    Expenses:Food    $10.00  ; post note
+    Assets:Cash
+    ; continuation note on next line for previous post
+
+test reg Expenses
+24-Jan-01 Payee                 Expenses:Food                $10.00       $10.00
+end test

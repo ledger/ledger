@@ -1,0 +1,30 @@
+; Coverage tests for textual_directives.cc account payee/alias directives
+; Targets lines 428-486 (account_alias_directive), 500-503 (account_payee_directive)
+
+; Account with payee sub-directive
+account Expenses:Food
+  payee groceries
+
+; Account with multiple aliases
+account Expenses:Transport
+  alias gas
+  alias fuel
+
+; Plain alias directive
+alias food=Expenses:Food
+
+2024/01/01 Lunch
+    food                      $10.00
+    Assets:Cash
+
+2024/01/02 Gas
+    gas                        $30.00
+    Assets:Cash
+
+test bal Expenses
+              $40.00  Expenses
+              $10.00    Food
+              $30.00    Transport
+--------------------
+              $40.00
+end test

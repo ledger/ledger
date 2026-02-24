@@ -1,0 +1,153 @@
+; Tests for report.cc lookup paths and additional function coverage
+; Covers: report.cc lines 529 532 620 626 836 907
+;   1417 1429 1450 1468 1479 1490 1502 1528-1530 1544 1549 1554
+;   global.cc: execute_command options path
+
+; --- Journal data ---
+2024/01/01 Grocery Store
+    Expenses:Food              $50.00
+    Assets:Cash
+
+2024/01/15 Gas Station
+    ; :fuel:
+    Expenses:Auto:Gas          $35.00
+    Assets:Cash
+
+; --- Test 1: fn_scrub (line 675-677) and display_value (lines 529, 532) ---
+test reg --format "%(scrub(amount))\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 2: fn_print via lookup (line 1458) ---
+; print function writes to output_stream and returns true
+test reg --format "%(print(payee))\n" Expenses:Food
+Grocery Store
+true
+end test
+
+; --- Test 3: fn_format via lookup (line 1407) ---
+test reg --format "%(format(\"hello\"))\n" Expenses:Food
+hello
+end test
+
+; --- Test 4: fn_format_date via lookup (line 1403) ---
+test reg --format "%(format_date(date, \"%Y/%m/%d\"))\n" Expenses:Food
+2024/01/01
+end test
+
+; --- Test 5: fn_format_datetime via lookup (line 1405) ---
+test reg --format "%(format_datetime(now, \"%Y\"))\n" Expenses:Food
+2026
+end test
+
+; --- Test 6: fn_to_sequence via lookup (line 1524) ---
+; to_sequence returns a sequence; we test it doesn't crash with is_seq
+test reg --format "%(is_seq(to_sequence(amount)) ? \"yes\" : \"no\")\n" Expenses:Food
+yes
+end test
+
+; --- Test 7: fn_amount_expr via lookup (line 1359) ---
+test reg --format "%(amount_expr)\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 8: fn_total_expr via lookup (line 1498) ---
+test reg --format "%(total_expr)\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 9: fn_display_amount via lookup (line 1394) ---
+test reg --format "%(display_amount)\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 10: fn_display_total via lookup (line 1396) ---
+test reg --format "%(display_total)\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 11: fn_today via date lookup (line 1398) ---
+; date function returns today's date, tested indirectly through format_date
+test reg --format "%(format_date(date, \"%Y\"))\n" Expenses:Food
+2024
+end test
+
+; --- Test 12: fn_market via market lookup (line 1433) ---
+test reg --format "%(market(amount))\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 13: fn_null via null lookup (line 1440) ---
+test reg --format "%(null ? \"Y\" : \"N\")\n" Expenses:Food
+N
+end test
+
+; --- Test 14: fn_nail_down via lookup (line 1444) ---
+test reg --format "%(nail_down(amount, 5))\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 15: fn_cyan via lookup (line 1381) ---
+test reg --format "%(cyan)\n" Expenses:Food
+cyan
+end test
+
+; --- Test 16: fn_magenta via lookup (line 1435) ---
+test reg --format "%(magenta)\n" Expenses:Food
+magenta
+end test
+
+; --- Test 17: fn_red via lookup (line 1474) ---
+test reg --format "%(red)\n" Expenses:Food
+red
+end test
+
+; --- Test 18: fn_underline via lookup (line 1534) ---
+test reg --format "%(underline)\n" Expenses:Food
+underline
+end test
+
+; --- Test 19: fn_bold via lookup (line 1376) ---
+test reg --format "%(bold)\n" Expenses:Food
+bold
+end test
+
+; --- Test 20: fn_black via lookup (line 1370) ---
+test reg --format "%(black)\n" Expenses:Food
+black
+end test
+
+; --- Test 21: fn_blink via lookup (line 1372) ---
+test reg --format "%(blink)\n" Expenses:Food
+blink
+end test
+
+; --- Test 22: fn_blue via lookup (line 1374) ---
+test reg --format "%(blue)\n" Expenses:Food
+blue
+end test
+
+; --- Test 23: tags command with actual tags (line 1695) ---
+test tags
+fuel
+end test
+
+; --- Test 24: fn_commodity via lookup (line 1383) ---
+test reg --format "%(commodity(amount))\n" Expenses:Food
+$
+end test
+
+; --- Test 25: fn_ceiling via lookup (line 1387) ---
+test reg --format "%(ceiling(amount))\n" Expenses:Food
+$50.00
+end test
+
+; --- Test 26: fn_clear_commodity via lookup (line 1389) ---
+test reg --format "%(clear_commodity(amount))\n" Expenses:Food
+50
+end test
+
+; --- Test 27: fn_top_amount via lookup (line 1506) ---
+test reg --format "%(top_amount(amount))\n" Expenses:Food
+$50.00
+end test

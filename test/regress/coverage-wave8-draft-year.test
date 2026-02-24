@@ -1,0 +1,16 @@
+; Coverage tests for draft.cc year directive adjustment
+; Targets lines 263-269 (year directive adjustment in xact command)
+
+year 2024
+
+2024/01/01 (CHK001) Grocery Store  ;a purchase
+    Expenses:Food            $50.00
+    Assets:Cash
+
+; Using xact with a month/day date (no year) and year directive
+; Triggers lines 263-269 (year adjustment)
+test xact 03/01 Grocery
+2024/03/01 (CHK001) Grocery Store  ;a purchase
+    Expenses:Food                             $50.00
+    Assets:Cash
+end test

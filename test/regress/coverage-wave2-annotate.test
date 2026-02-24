@@ -1,0 +1,50 @@
+; Wave 2 coverage tests for annotate.cc
+; Targets: annotation ordering, parse errors for duplicate annotations,
+; value expressions, find_price with fixated prices
+
+commodity $
+  value 1 $
+
+; Multiple annotations: price + date + tag
+2024/01/01 Complex Annotation
+    Assets:Brokerage           10 AAPL {$15.00} [2024/01/01] (lot-tag)
+    Assets:Cash
+
+; Fixated price - covers lines 282-288 (find_price with fixated annotation)
+2024/01/02 Fixated
+    Assets:Brokerage           5 GOOG {=$500.00}
+    Assets:Cash
+
+; Total price (double brace) - covers lines 131-132
+2024/01/03 Total Price
+    Assets:Brokerage           5 MSFT {{$1000.00}}
+    Assets:Cash
+
+; Different price commodities for ordering - covers operator< lines 57, 59
+P 2024/01/01 EUR $1.10
+P 2024/01/01 GBP $1.30
+
+2024/01/04 Multi currency
+    Assets:EUR              100 EUR {$1.10} [2024/01/04]
+    Assets:Cash
+
+2024/01/05 Multi currency 2
+    Assets:GBP               50 GBP {$1.30} [2024/01/05]
+    Assets:Cash
+
+; Test reg with lot info - covers annotation_t::print
+test reg Assets:Brokerage --lot-prices --lot-dates --lot-tags --lots
+24-Jan-01 Complex Annotation    Assets:Brokerage       10 AAPL {15.00 $} [2024/01/01] (lot-tag) 10 AAPL {15.00 $} [2024/01/01] (lot-tag)
+24-Jan-02 Fixated               Assets:Brokerage       5 GOOG {=500.00 $} 10 AAPL {15.00 $} [2024/01/01] (lot-tag)
+                                                              5 GOOG {=500.00 $}
+24-Jan-03 Total Price           Assets:Brokerage       5 MSFT {200.00 $} 10 AAPL {15.00 $} [2024/01/01] (lot-tag)
+                                                              5 GOOG {=500.00 $}
+                                                               5 MSFT {200.00 $}
+end test
+
+; Test bal -V with fixated price
+test bal Assets:Brokerage -V --now 2024/01/10
+           2500.00 $
+             10 AAPL
+              5 MSFT  Assets:Brokerage
+end test

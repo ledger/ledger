@@ -1,0 +1,21 @@
+; Coverage tests for amount.cc reduce/unreduce and time commodity paths
+; Exercises in_place_reduce (lines 705-713) and related paths
+
+commodity 1h
+C 1.00h = 60m
+C 1.00m = 60s
+
+2024/01/01 Time Entry
+    Expenses:Time    7200s
+    Income:Work
+
+; Reduce exercises in_place_reduce (lines 705-713)
+; 7200s = 120m = 2h
+test bal Expenses:Time
+               2.00h  Expenses:Time
+end test
+
+; Register shows reduced amounts
+test reg Expenses:Time
+24-Jan-01 Time Entry            Expenses:Time                 2.00h        2.00h
+end test

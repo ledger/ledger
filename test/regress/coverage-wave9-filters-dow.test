@@ -1,0 +1,19 @@
+; Test coverage for filters.cc lines 1246-1260
+; day_of_week_posts filter via --dow option
+
+2024/01/01 Monday Grocery
+    Expenses:Food                           $50.00
+    Assets:Cash
+
+2024/01/02 Tuesday Grocery
+    Expenses:Food                           $25.00
+    Assets:Cash
+
+2024/01/08 Monday Again
+    Expenses:Food                           $30.00
+    Assets:Cash
+
+test reg --dow Expenses
+24-Jan-01 Mondays               Expenses:Food                $80.00       $80.00
+24-Jan-02 Tuesdays              Expenses:Food                $25.00      $105.00
+end test

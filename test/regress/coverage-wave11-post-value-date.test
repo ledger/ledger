@@ -1,0 +1,11 @@
+; Coverage for post.cc lines 587-588: get_value_date lookup and
+; lines 593-594: get_datetime lookup.
+
+2024/01/01 Test
+    Expenses:Food                 $10.00
+    Assets:Cash
+
+test reg --format "%(value_date) %(datetime)\n"
+2024/01/01 2024/01/01 00:00:00
+2024/01/01 2024/01/01 00:00:00
+end test

@@ -1,0 +1,95 @@
+; Coverage tests for draft.cc edge cases
+; Lines targeted: 59, 80, 120, 133, 138, 142,
+;   266-267, 269, 293, 363, 369, 488
+
+; Set up some prior transactions so draft can match payees
+2024/01/01 Grocery Store
+    Expenses:Food         $50.00
+    Assets:Cash
+
+2024/01/02 (C123) Gas Station
+    Expenses:Gas          30 EUR
+    Assets:Cash
+
+; Test template command to exercise dump (lines 363, 369)
+; covers parse_args: code (line 138), note (line 142)
+test template Grocery code 4567 note "lunch"
+--- Input arguments ---
+("Grocery", "code", "4567", "note", "lunch")
+
+--- Transaction template ---
+Date:       <today>
+Code:       4567
+Note:       lunch
+Payee mask: Grocery
+
+<Posting copied from last related transaction>
+end test
+
+; Test template with "at" keyword (draft.cc lines 118-121)
+test template 2024/03/15 at Grocery
+--- Input arguments ---
+("2024/03/15", "at", "Grocery")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Grocery
+
+<Posting copied from last related transaction>
+end test
+
+; Test template with "on" keyword (draft.cc lines 131-135)
+test template Grocery on 2024/06/15
+--- Input arguments ---
+("Grocery", "on", "2024/06/15")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Grocery
+
+<Posting copied from last related transaction>
+end test
+
+; Test template with "from" keyword (draft.cc lines 122-130)
+test template Grocery from Assets:Checking
+--- Input arguments ---
+("Grocery", "from", "Assets:Checking")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Grocery
+
+[Posting "to"]
+  Account mask: <use first of last related accounts>
+
+[Posting "from"]
+  Account mask: Assets:Checking
+end test
+
+; Test template with just payee (no posts)
+test template Grocery
+--- Input arguments ---
+("Grocery")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Grocery
+
+<Posting copied from last related transaction>
+end test
+
+; Test template with account mask and rest keyword (line 144-145)
+test template Grocery Expenses:Food rest
+--- Input arguments ---
+("Grocery", "Expenses:Food", "rest")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Grocery
+
+[Posting "to"]
+  Account mask: Expenses:Food
+
+[Posting "from"]
+  Account mask: <use last of last related accounts>
+end test

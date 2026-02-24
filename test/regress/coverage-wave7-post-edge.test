@@ -1,0 +1,95 @@
+; Coverage tests for post.cc edge cases
+; Lines targeted: 71, 169, 189, 196, 211-212, 220, 235, 242,
+;   253, 262, 272-274, 277-278, 288-291, 296, 363, 383, 401,
+;   519, 524, 529, 539, 542, 554, 563, 565, 587-588, 593-594,
+;   597-598, 702, 705, 707, 727, 736-737, 739-740
+
+; --- Basic transaction for post accessor tests ---
+2024/01/01 (CODE1) Test Payee
+    ; XactTag: xvalue
+    Expenses:Food         $10.00
+    ; PostNote: pval
+    Assets:Cash
+
+; --- Virtual posting for display_account (line 707) ---
+2024/01/02 Virtual Test
+    Expenses:Food         $5.00
+    Assets:Cash           $-5.00
+    (Budget:Food)         $-5.00
+
+; --- Posting with cost for has_cost, cost, price (lines 235, 587-598) ---
+2024/01/03 Foreign Purchase
+    Expenses:Travel       100 EUR @ $1.10
+    Assets:Cash
+
+; --- Posting with balance assertion for put_post (lines 736-740) ---
+2024/01/04 With Assertion
+    Assets:Checking       $500.00
+    Income:Salary
+
+2024/01/05 Balance Assert
+    Assets:Checking       $100.00 = $600.00
+    Income:Bonus
+
+; --- post with Payee tag for payee_from_tag (line 169, 702, 705) ---
+2024/01/06 Default Payee
+    Expenses:Food         $7.00
+    ; Payee: Override Payee
+    Assets:Cash
+
+test reg Expenses:Food -y "%y-%b-%d"
+24-Jan-01 Test Payee            Expenses:Food                $10.00       $10.00
+24-Jan-02 Virtual Test          Expenses:Food                 $5.00       $15.00
+24-Jan-06 Override Payee        Expenses:Food                 $7.00       $22.00
+end test
+
+; Test N (count) accessor (post.cc line 519)
+test reg --format "%(N)\n" Expenses:Food -y "%y-%b-%d"
+1
+2
+3
+end test
+
+; Test O (total) accessor (post.cc line 524)
+test reg --format "%(O)\n" Expenses:Food -y "%y-%b-%d"
+$10.00
+$15.00
+$22.00
+end test
+
+; Test R (real) accessor (post.cc line 529)
+test reg --format "%(R)\n" Expenses:Food -y "%y-%b-%d"
+true
+true
+true
+end test
+
+; Test payee accessor (post.cc line 169)
+test reg --format "%(payee)\n" Expenses:Food -y "%y-%b-%d"
+Test Payee
+Virtual Test
+Override Payee
+end test
+
+; Test code accessor (post.cc line 161)
+test reg --format "%(code)\n" Expenses -y "%y-%b-%d"
+CODE1
+
+
+
+end test
+
+; Test has_cost (post.cc line 226)
+test reg --format "%(has_cost)\n" Expenses:Travel -y "%y-%b-%d"
+true
+end test
+
+; Test cost accessor (post.cc line 229-237)
+test reg --format "%(cost)\n" Expenses:Travel -y "%y-%b-%d"
+$110.00
+end test
+
+; Test display_account with virtual (post.cc lines 312-316)
+test reg --format "%(display_account)\n" Budget -y "%y-%b-%d"
+(Budget:Food)
+end test

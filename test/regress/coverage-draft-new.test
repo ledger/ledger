@@ -1,0 +1,26 @@
+; Coverage tests for draft.cc
+; Tests: xact command for generating transactions from templates
+
+2024/01/01 Grocery Store
+    Expenses:Food                    $50.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Gas                     $30.00
+    Assets:Cash
+
+2024/01/03 Restaurant
+    Expenses:Dining                  $45.00
+    Assets:Cash
+
+test xact 2024/06/15 Grocery '$25'
+2024/06/15 Grocery Store
+    Expenses:Food                             $25.00
+    Assets:Cash
+end test
+
+test xact 2024/06/15 Restaurant '$60'
+2024/06/15 Restaurant
+    Expenses:Dining                           $60.00
+    Assets:Cash
+end test

@@ -1,0 +1,17 @@
+; Coverage for textual_directives.cc lines 339,346 (apply rate/fixed)
+; Tests apply fixed/rate directive
+
+apply fixed EUR $1.10
+
+2024/01/01 European Purchase
+    Expenses:Food    100 EUR
+    Assets:Cash
+
+end apply
+
+test bal
+            -100 EUR  Assets:Cash
+             100 EUR  Expenses:Food
+--------------------
+                   0
+end test

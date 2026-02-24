@@ -1,0 +1,18 @@
+; Test coverage for textual_xacts.cc lines 667-694
+; Balance assertion with lot annotation (strip_annotations handling)
+
+2024/01/01 Buy Stock Lot 1
+    Assets:Brokerage                         5 AAPL {=$150.00}
+    Assets:Cash                          $-750.00
+
+2024/01/02 Buy Stock Lot 2
+    Assets:Brokerage                         3 AAPL {=$155.00}
+    Assets:Cash                          $-465.00
+
+2024/01/03 Check Balance
+    Assets:Brokerage                        0 AAPL = 8 AAPL
+    Equity:Adjustments
+
+test bal Brokerage --flat
+              8 AAPL  Assets:Brokerage
+end test

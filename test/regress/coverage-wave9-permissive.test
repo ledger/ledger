@@ -1,0 +1,15 @@
+; Test coverage for textual_xacts.cc lines 698-703
+; --permissive skips balance assertion check, allowing wrong assertions
+
+2024/01/01 Opening
+    Assets:Bank                            $100.00
+    Equity:Opening
+
+2024/01/05 Another
+    Assets:Bank                             $50.00 = $999.00
+    Income:Adjustment
+
+test reg --permissive Assets
+24-Jan-01 Opening               Assets:Bank                 $100.00      $100.00
+24-Jan-05 Another               Assets:Bank                  $50.00      $150.00
+end test

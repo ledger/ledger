@@ -1,0 +1,32 @@
+; Coverage tests for annotate.cc - annotation parsing, printing, comparison
+
+2020/01/01 Buy Stock
+    Assets:Investments    10 AAPL {=$150.00}
+    Assets:Checking    $-1500.00
+
+2020/02/01 Buy More Stock
+    Assets:Investments    5 AAPL {$155.00} [2020/02/01]
+    Assets:Checking    $-775.00
+
+2020/03/01 Buy Stock With Tag
+    Assets:Investments    3 AAPL {$160.00} (lot1)
+    Assets:Checking    $-480.00
+
+2020/04/01 Buy Gold
+    Assets:Investments    2 GOLD {{$3000.00}}
+    Assets:Checking    $-3000.00
+
+test bal Assets:Investments --lots
+  10 AAPL {=$150.00}
+5 AAPL {$155.00} [2020/02/01]
+3 AAPL {$160.00} (lot1)
+   2 GOLD {$1500.00}  Assets:Investments
+end test
+
+test reg Assets:Investments
+20-Jan-01 Buy Stock             Assets:Investments          10 AAPL      10 AAPL
+20-Feb-01 Buy More Stock        Assets:Investments           5 AAPL      15 AAPL
+20-Mar-01 Buy Stock With Tag    Assets:Investments           3 AAPL      18 AAPL
+20-Apr-01 Buy Gold              Assets:Investments           2 GOLD      18 AAPL
+                                                                          2 GOLD
+end test

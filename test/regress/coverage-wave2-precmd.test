@@ -1,0 +1,20 @@
+; Wave 2 coverage tests for precmd.cc
+; Covers: eval_command (line 133), query_command with display predicate (lines 159, 190, 192-196)
+
+2024/01/01 Grocery Store
+    Expenses:Food              $25.00
+    Assets:Checking
+
+2024/02/01 Electric Company
+    Expenses:Utilities         $75.00
+    Assets:Checking
+
+; eval command - covers lines 133 (eval_command)
+test eval 2+3
+5
+end test
+
+; eval with expression referencing data
+test eval "\"Hello World\""
+Hello World
+end test

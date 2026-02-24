@@ -1,0 +1,13 @@
+; Coverage tests for report.cc --output option (lines 73-77)
+; When --output is specified, color and pager are disabled
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+test --output /dev/stdout bal
+             $-10.00  Assets:Cash
+              $10.00  Expenses:Food
+--------------------
+                   0
+end test

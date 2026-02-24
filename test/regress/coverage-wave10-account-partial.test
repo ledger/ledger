@@ -1,0 +1,13 @@
+; Test coverage for account.cc lines 119, 394, 453, 460, 500-525
+; Exercises partial_name (flat mode), account any/all functions,
+; account valid() and children_with_xdata()
+
+2024/01/01 Test
+    Expenses:Food:Groceries                 $50.00
+    Assets:Cash
+
+test bal --format '%(partial_account(true)) %(total)\n'
+Assets:Cash $-50.00
+Expenses:Food:Groceries $50.00
+ 0
+end test

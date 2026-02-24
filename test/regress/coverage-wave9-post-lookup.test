@@ -1,0 +1,12 @@
+; Test coverage for post.cc lines 519-530
+; Test various post_t::lookup field names via --format
+; Covers N, O, R single-char lookups and index, magnitude, etc.
+
+2024/01/01 Test Payee
+    Expenses:Food                           $50.00
+    Assets:Cash                            $-50.00
+
+test reg --format '%(N) %(O) %(R) %(xact_id) %(index) %(magnitude) %(has_cost) %(primary)\n'
+1 $50.00 true 1 1 $50.00 false false
+2 $0.00 true 2 2 $50.00 false false
+end test

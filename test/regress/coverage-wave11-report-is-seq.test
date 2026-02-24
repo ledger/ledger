@@ -1,0 +1,10 @@
+; Test fn_is_seq for report.cc coverage
+; Targets report.cc lines 632-634 (fn_is_seq) and line 1421
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test reg --format "%(is_seq(amount))\n" Expenses
+false
+end test

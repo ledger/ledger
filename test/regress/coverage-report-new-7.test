@@ -1,0 +1,60 @@
+; Coverage tests for additional report.cc and filters.h paths
+; Targets: report.cc fn_top_amount, fn_nail_down, intervals, revalued, gain
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Checking
+
+2024/01/20 Stock Purchase
+    Assets:Brokerage    10 AAPL @ $150.00
+    Assets:Checking    $-1500.00
+
+2024/02/15 Grocery Store
+    Expenses:Food    $45.00
+    Assets:Checking
+
+P 2024/01/01 AAPL $150.00
+P 2024/02/01 AAPL $155.00
+P 2024/01/01 $ 0.80 EUR
+
+; Test top_amount with multi-commodity balance (report.cc lines 529/532)
+test reg --format '%(top_amount(display_total))\n' Assets:Brokerage
+10 AAPL
+end test
+
+; Test register with --revalued (filters.h changed_value_posts)
+test reg --revalued Assets:Brokerage
+24-Jan-20 Stock Purchase        Assets:Brokerage            10 AAPL      10 AAPL
+end test
+
+; Test quarterly interval (filters.h interval_posts)
+test reg --quarterly Expenses
+24-Jan-01 - 24-Mar-31           Expenses:Food                $95.00       $95.00
+end test
+
+; Test yearly interval (filters.h interval_posts)
+test reg --yearly Expenses
+24-Jan-01 - 24-Dec-31           Expenses:Food                $95.00       $95.00
+end test
+
+; Test commodity function in eval
+test eval 'commodity(10 AAPL)'
+AAPL
+end test
+
+; Test register with --gain (report.cc gain option, filters.h changed_value_posts)
+test reg --gain Assets:Brokerage
+24-Feb-01 Commodities revalued  <Revalued>                   $50.00       $50.00
+end test
+
+; Test register with --invert
+test reg --invert Expenses:Food
+24-Jan-15 Grocery Store         Expenses:Food               $-50.00      $-50.00
+24-Feb-15 Grocery Store         Expenses:Food               $-45.00      $-95.00
+end test
+
+; Test the --amount expression option
+test reg --amount 'amount * 2' Expenses:Food
+24-Jan-15 Grocery Store         Expenses:Food               $100.00      $100.00
+24-Feb-15 Grocery Store         Expenses:Food                $90.00      $190.00
+end test

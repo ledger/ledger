@@ -1,0 +1,44 @@
+; Wave 2 coverage tests for filters.cc and filters.h
+; Covers: anonymize_posts (lines 260-277), changed_value_posts,
+;   display_filter_posts, calc_posts
+
+2024/01/01 Test Store
+    Expenses:Food     $10.00
+    Assets:Cash
+
+2024/01/02 Gas Station
+    Expenses:Auto     $25.00
+    Assets:Cash
+
+; Test --average (-A) flag - exercises average filter
+test reg -A Expenses
+24-Jan-01 Test Store            Expenses:Food                $10.00       $10.00
+24-Jan-02 Gas Station           Expenses:Auto                $25.00       $17.50
+end test
+
+; Test --percent flag - exercises percent computation in filters
+test bal -% Expenses
+             100.00%  Expenses
+              71.43%    Auto
+              28.57%    Food
+end test
+
+; Test --invert - exercises invert filter
+test reg --invert Expenses
+24-Jan-01 Test Store            Expenses:Food               $-10.00      $-10.00
+24-Jan-02 Gas Station           Expenses:Auto               $-25.00      $-35.00
+end test
+
+; Test --related - exercises related_posts filter
+test reg --related Expenses
+24-Jan-01 Test Store            Assets:Cash                 $-10.00      $-10.00
+24-Jan-02 Gas Station           Assets:Cash                 $-25.00      $-35.00
+end test
+
+; Test --depth to limit account depth - exercises display_filter
+test bal --depth 1
+             $-35.00  Assets
+              $35.00  Expenses
+--------------------
+                   0
+end test

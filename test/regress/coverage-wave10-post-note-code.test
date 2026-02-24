@@ -1,0 +1,11 @@
+; Test coverage for post.cc lines 71, 169 (get_payee via payee()),
+; get_note combining post and xact notes, get_code
+
+2024/01/01 (1234) Test Payee  ; xact note
+    Expenses:Food                           $50.00  ; post note
+    Assets:Cash
+
+test reg --format '%(code) %(note)\n' Food
+1234  post note
+ xact note
+end test

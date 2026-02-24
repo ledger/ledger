@@ -1,0 +1,21 @@
+; Coverage tests for xact.cc - fixated prices with >2 commodities
+; Covers lines 283-319 (fixated price multi-commodity balancing)
+
+; Test fixated prices with multiple commodities to trigger recompute
+2024/01/01 Multi Currency
+    Assets:EUR                       100 EUR {=$1.32}
+    Assets:GBP                        50 GBP {=$1.55}
+    Assets:Cash                    $-209.50
+
+test bal Assets
+            $-209.50
+             100 EUR
+              50 GBP  Assets
+            $-209.50    Cash
+             100 EUR    EUR
+              50 GBP    GBP
+--------------------
+            $-209.50
+             100 EUR
+              50 GBP
+end test

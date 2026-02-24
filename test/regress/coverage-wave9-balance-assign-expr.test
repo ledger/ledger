@@ -1,0 +1,14 @@
+; Test coverage for textual_xacts.cc lines 629-633
+; Balance assertion with value expression in amount
+
+2024/01/01 Opening
+    Assets:Bank                            $100.00
+    Equity:Opening
+
+2024/01/05 Check
+    Assets:Bank                             $50.00 = ($100.00 + $50.00)
+    Income:Salary
+
+test bal Assets
+             $150.00  Assets:Bank
+end test

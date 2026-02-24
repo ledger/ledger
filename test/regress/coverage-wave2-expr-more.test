@@ -1,0 +1,33 @@
+; Additional coverage tests for expr.cc
+; Covers: expr_t copy, detect_fast_path, real_calc error paths,
+; is_constant, is_function, merged_expr_t, context_to_str
+
+2024/01/01 Test A
+    Expenses:Food              $10.00
+    Assets:Cash
+
+2024/01/02 Test B
+    Expenses:Transport         $20.00
+    Assets:Cash
+
+; Test amount fast path detection (line 127-128) - default amount expression
+test reg Expenses
+24-Jan-01 Test A                Expenses:Food                $10.00       $10.00
+24-Jan-02 Test B                Expenses:Transport           $20.00       $30.00
+end test
+
+; Test expression error path - bad expression (lines 143-154)
+test reg --limit "xyzzy()" -> 1
+__ERROR__
+While evaluating value expression:
+  xyzzy()
+  ^^^^^^^
+While handling posting from "$FILE", line 6:
+>     Expenses:Food              $10.00
+Error: Unknown identifier 'xyzzy'
+end test
+
+; Test merged expression path with multiple --display (line 250-260)
+test reg --display "account =~ /Food/" --display "amount > 0" Expenses
+24-Jan-01 Test A                Expenses:Food                $10.00       $10.00
+end test

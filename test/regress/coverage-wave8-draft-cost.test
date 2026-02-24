@@ -1,0 +1,24 @@
+; Coverage tests for draft.cc template with cost
+; Targets lines 147-155, 79-80 (cost in template dump)
+
+2024/01/01 Stock Purchase
+    Assets:Stocks       10 AAPL @ $150.00
+    Assets:Cash
+
+; Template with cost - triggers lines 79-80 and 147-155
+test template Stock Stocks 10 AAPL @ '$150'
+--- Input arguments ---
+("Stock", "Stocks", "10", "AAPL", "@", "$150")
+
+--- Transaction template ---
+Date:       <today>
+Payee mask: Stock
+
+[Posting "to"]
+  Account mask: Stocks
+  Amount:       10
+
+[Posting "from"]
+  Account mask: AAPL
+  Cost:         @ $150
+end test

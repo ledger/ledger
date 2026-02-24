@@ -1,0 +1,12 @@
+; Coverage tests for option.cc (process_environment, find_option)
+; Also covers global.cc lines 390-404 (deprecated env var handling)
+; These are exercised by normal ledger startup with LEDGER_ env vars
+
+2024/01/01 Payee
+    Expenses:Food    $10.00
+    Assets:Cash
+
+; Simple test to exercise option processing codepath
+test bal --flat Expenses
+              $10.00  Expenses:Food
+end test

@@ -1,0 +1,51 @@
+; Test color name functions for report.cc coverage
+; Targets report.cc lines 978-1017 (fn_black through fn_null)
+; Also targets lines 1416,1434-1435,1473-1474,1533-1534,1547-1548,1552-1553
+
+2024/01/15 Test
+    Expenses:Food    $50.00
+    Assets:Checking
+
+test eval black
+black
+end test
+
+test eval blink
+blink
+end test
+
+test eval blue
+blue
+end test
+
+test eval bold
+bold
+end test
+
+test eval cyan
+cyan
+end test
+
+test eval green
+green
+end test
+
+test eval magenta
+magenta
+end test
+
+test eval red
+red
+end test
+
+test eval underline
+underline
+end test
+
+test eval white
+white
+end test
+
+test eval yellow
+yellow
+end test

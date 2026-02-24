@@ -1,0 +1,18 @@
+; Tests for lisp and echo commands
+; Covers report.cc lines 1654, 1659
+
+2024/01/15 Grocery Store
+    Expenses:Food    $50.00
+    Assets:Cash
+
+; Test lisp command - covers line 1659
+test lisp
+(("$FILE" 4 (26020 51680 0) nil "Grocery Store"
+  (5 "Expenses:Food" "$50.00" nil)
+  (6 "Assets:Cash" "$-50.00" nil)))
+end test
+
+; Test echo command - covers line 1654
+test echo "Hello World"
+Hello World
+end test

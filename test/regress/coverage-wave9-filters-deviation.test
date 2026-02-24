@@ -1,0 +1,20 @@
+; Test coverage for filters.cc deviation handling
+; --deviation computes running deviation from average
+
+2024/01/01 First
+    Expenses:Food                           $30.00
+    Assets:Cash
+
+2024/01/02 Second
+    Expenses:Food                           $60.00
+    Assets:Cash
+
+2024/01/03 Third
+    Expenses:Food                           $90.00
+    Assets:Cash
+
+test reg --deviation Expenses
+24-Jan-01 First                 Expenses:Food                $30.00            0
+24-Jan-02 Second                Expenses:Food                $60.00      $-30.00
+24-Jan-03 Third                 Expenses:Food                $90.00      $-90.00
+end test

@@ -1,0 +1,113 @@
+; Coverage tests for textual_directives.cc edge cases
+; Lines targeted: 124, 199-200, 239-241, 243-244, 246-249,
+;   288, 293, 298, 339, 346, 395, 420, 485, 520, 556,
+;   626, 735, 758, 765, 785, 803, 813, 815, 839, 843-847
+
+; --- year directive (line 839) ---
+year 2024
+
+; --- bucket directive (line 765) ---
+bucket Assets:Cash
+
+; --- define directive (line 785) ---
+define myfunc(x) = x * 2
+
+; --- tag directive (line 626) ---
+tag MyTag
+
+; --- tag directive with assert (line 626, 631-633) ---
+tag PositiveTag
+    assert value =~ /./
+
+; --- commodity directive with format, nomarket, default (lines 485, 556) ---
+commodity $
+    format $1,000.00
+    nomarket
+    default
+
+; --- commodity directive with alias and value (lines 520) ---
+commodity EUR
+    alias Euro
+    value 1 EUR
+    note European currency
+
+; --- payee directive with alias and uuid (lines 485, 520) ---
+payee Grocery Store
+    alias grocery
+    uuid abc-123-def
+
+; --- account directive with alias, value, default (lines 395, 420) ---
+account Expenses:Food
+    alias food
+    value amount
+    note Food expenses
+
+; --- account directive with assert and check (lines 395, 420) ---
+account Expenses:Strict
+    assert account =~ /Strict/
+    check account =~ /Strict/
+
+; --- apply tag (lines 239-249) ---
+apply tag Tracked
+
+; --- apply account (line 288) ---
+apply account Personal
+
+2024/01/01 Test Transaction
+    Expenses:Food         $50.00
+
+end apply account
+
+2024/01/02 Another Transaction
+    Expenses:Food         $25.00
+    Assets:Cash
+
+end apply tag
+
+; --- eval directive (lines 813, 815) ---
+eval 1 + 1
+
+; --- check directive (line 803) ---
+check 1 == 1
+
+; --- apply tag with colon-style tags (lines 243-244, 246-249) ---
+apply tag :Category:Priority:
+
+2024/01/03 Tagged Transaction
+    Expenses:Food         $10.00
+    Assets:Cash
+
+end apply tag
+
+; --- apply tag with value expression (lines 246-249) ---
+apply tag Source: manual
+
+2024/01/04 Source Tagged
+    Expenses:Food         $5.00
+    Assets:Cash
+
+end apply tag
+
+; --- Transactions that trigger account assert/check ---
+2024/01/05 Strict Purchase
+    Expenses:Strict       $15.00
+    Assets:Cash
+
+test reg Expenses:Food -y "%y-%b-%d"
+24-Jan-01 Test Transaction      Personal:Expenses:Food       $50.00       $50.00
+24-Jan-02 Another Transaction   Expenses:Food                $25.00       $75.00
+24-Jan-03 Tagged Transaction    Expenses:Food                $10.00       $85.00
+24-Jan-04 Source Tagged         Expenses:Food                 $5.00       $90.00
+end test
+
+test bal Expenses:Strict
+              $15.00  Expenses:Strict
+end test
+
+; Verify tags are applied
+test reg --format "%(has_tag(\"Tracked\"))\n" Expenses:Food -y "%y-%b-%d"
+true
+true
+false
+false
+end test
