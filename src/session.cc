@@ -235,11 +235,7 @@ journal_t* session_t::read_journal_from_string(const string& data) {
 }
 
 void session_t::close_journal_files() {
-  journal.reset();
-  amount_t::shutdown();
-
   journal.reset(new journal_t);
-  amount_t::initialize();
 }
 
 journal_t* session_t::get_journal() {
