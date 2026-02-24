@@ -81,11 +81,12 @@ public:
   /**
    * Construct a new output_stream_t.
    */
-  output_stream_t() : pipe_to_pager_fd(-1),
+  output_stream_t()
+      : pipe_to_pager_fd(-1),
 #if !defined(_WIN32) && !defined(__CYGWIN__)
-                      pager_pid(-1),
+        pager_pid(-1),
 #endif
-                      os(&std::cout) {
+        os(&std::cout) {
     TRACE_CTOR(output_stream_t, "");
   }
 
@@ -94,11 +95,12 @@ public:
    * allows large classes to rely on their default copy-constructor without
    * worrying about pointer copying within output_stream_t.
    */
-  output_stream_t(const output_stream_t&) : pipe_to_pager_fd(-1),
+  output_stream_t(const output_stream_t&)
+      : pipe_to_pager_fd(-1),
 #if !defined(_WIN32) && !defined(__CYGWIN__)
-                                            pager_pid(-1),
+        pager_pid(-1),
 #endif
-                                            os(&std::cout) {
+        os(&std::cout) {
     TRACE_CTOR(output_stream_t, "copy");
   }
 

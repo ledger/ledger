@@ -101,18 +101,20 @@
  *
  * | Macro | Expansion | Purpose |
  * |-------|-----------|---------|
- * | `BEGIN(type, name)` | `struct name##option_t : public option_t<type>` | Opens the option struct declaration |
- * | `CTOR(type, name)` | `name##option_t() : option_t<type>(#name)` | Basic constructor |
- * | `CTOR_(type, name, base)` | `name##option_t() : option_t<type>(#name), base` | Constructor with extra member initializer |
- * | `DECL1(type, name, vartype, var, value)` | declares `vartype var;` + constructor | Adds an extra member variable to the option struct |
- * | `END(name)` | `name##handler` | Closes the struct and declares the member instance |
+ * | `BEGIN(type, name)` | `struct name##option_t : public option_t<type>` | Opens the option struct
+ * declaration | | `CTOR(type, name)` | `name##option_t() : option_t<type>(#name)` | Basic
+ * constructor | | `CTOR_(type, name, base)` | `name##option_t() : option_t<type>(#name), base` |
+ * Constructor with extra member initializer | | `DECL1(type, name, vartype, var, value)` | declares
+ * `vartype var;` + constructor | Adds an extra member variable to the option struct | | `END(name)`
+ * | `name##handler` | Closes the struct and declares the member instance |
  *
  * @subsection opt_handler Handler Override Macros
  *
  * | Macro | Expansion | Purpose |
  * |-------|-----------|---------|
  * | `DO()` | `void handler_thunk(whence) override` | Override for boolean (no-arg) options |
- * | `DO_(var)` | `void handler_thunk(whence, var) override` | Override for options taking an argument |
+ * | `DO_(var)` | `void handler_thunk(whence, var) override` | Override for options taking an
+ * argument |
  *
  * @subsection opt_convenience Convenience Declaration Macros
  *
@@ -121,8 +123,9 @@
  * | Macro | Usage Pattern | Purpose |
  * |-------|---------------|---------|
  * | `OPTION(type, name)` | `OPTION(report_t, color);` | Simple option, no custom handler logic |
- * | `OPTION_(type, name, body)` | `OPTION_(report_t, actual, DO() { ... });` | Option with custom DO()/DO_() handler |
- * | `OPTION__(type, name, body)` | `OPTION__(report_t, amount_, DECL1(...) { } DO_(...) { ... });` | Fully custom body with extra members, custom CTOR, and handler |
+ * | `OPTION_(type, name, body)` | `OPTION_(report_t, actual, DO() { ... });` | Option with custom
+ * DO()/DO_() handler | | `OPTION__(type, name, body)` | `OPTION__(report_t, amount_, DECL1(...) { }
+ * DO_(...) { ... });` | Fully custom body with extra members, custom CTOR, and handler |
  *
  * @subsection opt_lookup Lookup Macros (used in lookup_option)
  *
@@ -142,8 +145,9 @@
  * |-------|-----------|---------|
  * | `HANDLER(name)` | `name##handler` | Access the option's member instance |
  * | `HANDLED(name)` | `name##handler` | Same; tests if option is set (via bool conversion) |
- * | `OTHER(name)` | `parent->HANDLER(name)` | Access another option on the same parent; used in DO()/DO_() bodies for cross-option side effects |
- * | `COPY_OPT(name, other)` | copy constructor helper | Copies one option's handler from another instance |
+ * | `OTHER(name)` | `parent->HANDLER(name)` | Access another option on the same parent; used in
+ * DO()/DO_() bodies for cross-option side effects | | `COPY_OPT(name, other)` | copy constructor
+ * helper | Copies one option's handler from another instance |
  *
  * @subsection opt_factory Factory Macros
  *
@@ -360,7 +364,9 @@ public:
   name##option_t() : option_t<type>(#name), var value
 
 #define DO() virtual void handler_thunk([[maybe_unused]] const optional<string>& whence) override
-#define DO_(var) virtual void handler_thunk([[maybe_unused]] const optional<string>& whence, [[maybe_unused]] const string& var) override
+#define DO_(var)                                                                                   \
+  virtual void handler_thunk([[maybe_unused]] const optional<string>& whence,                      \
+                             [[maybe_unused]] const string& var) override
 
 #define END(name) name##handler
 

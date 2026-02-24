@@ -33,8 +33,8 @@
 
 namespace ledger {
 
-using detail::instance_t;
 using detail::application_t;
+using detail::instance_t;
 
 void instance_t::parse() {
   INFO("Parsing file " << context.pathname);

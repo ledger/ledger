@@ -196,12 +196,12 @@ public:
                                                     const datetime_t& moment) const;
 
   std::optional<price_point_t> virtual find_price(const commodity_t* commodity = NULL,
-                                                   const datetime_t& moment = datetime_t(),
-                                                   const datetime_t& oldest = datetime_t()) const;
+                                                  const datetime_t& moment = datetime_t(),
+                                                  const datetime_t& oldest = datetime_t()) const;
 
   std::optional<price_point_t> check_for_updated_price(const std::optional<price_point_t>& point,
-                                                        const datetime_t& moment,
-                                                        const commodity_t* in_terms_of);
+                                                       const datetime_t& moment,
+                                                       const commodity_t* in_terms_of);
 
   commodity_t& nail_down(const expr_t& expr);
 

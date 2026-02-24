@@ -161,9 +161,9 @@ std::optional<price_point_t> commodity_t::find_price(const commodity_t* commodit
   return point;
 }
 
-std::optional<price_point_t> commodity_t::check_for_updated_price(const std::optional<price_point_t>& point,
-                                                                    const datetime_t& moment,
-                                                                    const commodity_t* in_terms_of) {
+std::optional<price_point_t>
+commodity_t::check_for_updated_price(const std::optional<price_point_t>& point,
+                                     const datetime_t& moment, const commodity_t* in_terms_of) {
   if (pool().get_quotes && !has_flags(COMMODITY_NOMARKET)) {
     bool exceeds_leeway = true;
 
@@ -185,7 +185,8 @@ std::optional<price_point_t> commodity_t::check_for_updated_price(const std::opt
 
     if (exceeds_leeway) {
       DEBUG("commodity.download", "attempting to download a more current quote...");
-      if (std::optional<price_point_t> quote = pool().get_commodity_quote(referent(), in_terms_of)) {
+      if (std::optional<price_point_t> quote =
+              pool().get_commodity_quote(referent(), in_terms_of)) {
         if (!in_terms_of ||
             (quote->price.has_commodity() && quote->price.commodity_ptr() == in_terms_of))
           return quote;

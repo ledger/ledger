@@ -334,7 +334,8 @@ balance_t average_lot_prices(const balance_t& bal) {
     optional<std::string> sym(pair.first->symbol());
     amount_t quant(pair.second.strip_annotations(keep_details_t()));
 
-    auto [i, inserted] = bycomm.insert(balance_map::value_type(sym, std::make_pair(quant, annotation_t())));
+    auto [i, inserted] =
+        bycomm.insert(balance_map::value_type(sym, std::make_pair(quant, annotation_t())));
     if (!inserted)
       i->second.first += quant;
 

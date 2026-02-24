@@ -44,8 +44,7 @@ void symbol_scope_t::define(const symbol_t::kind_t kind, const string& name, exp
   if (!symbols)
     symbols = symbol_map();
 
-  auto [iter, inserted] =
-      symbols->insert(symbol_map::value_type(symbol_t(kind, name, def), def));
+  auto [iter, inserted] = symbols->insert(symbol_map::value_type(symbol_t(kind, name, def), def));
   if (!inserted) {
     auto i = symbols->find(symbol_t(kind, name));
     assert(i != symbols->end());

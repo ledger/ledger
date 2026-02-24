@@ -385,8 +385,8 @@ class date_parser_t {
 
       } kind;
 
-      typedef std::variant<unsigned short, string,
-                      date_time::months_of_year, date_time::weekdays, date_specifier_t>
+      typedef std::variant<unsigned short, string, date_time::months_of_year, date_time::weekdays,
+                           date_specifier_t>
           content_t;
 
       optional<content_t> value;
@@ -851,8 +851,7 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
   }
 
   case lexer_t::token_t::TOK_A_MONTH:
-    specifier.month =
-        date_specifier_t::month_type(std::get<date_time::months_of_year>(*tok.value));
+    specifier.month = date_specifier_t::month_type(std::get<date_time::months_of_year>(*tok.value));
     tok = lexer.peek_token();
     switch (tok.kind) {
     case lexer_t::token_t::TOK_INT:
@@ -865,8 +864,7 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
     }
     break;
   case lexer_t::token_t::TOK_A_WDAY:
-    specifier.wday =
-        date_specifier_t::day_of_week_type(std::get<date_time::weekdays>(*tok.value));
+    specifier.wday = date_specifier_t::day_of_week_type(std::get<date_time::weekdays>(*tok.value));
     break;
 
   case lexer_t::token_t::TOK_TODAY:

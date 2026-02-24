@@ -534,8 +534,9 @@ void related_posts::flush() {
       for (post_t* r_post : post->xact->posts) {
         post_t::xdata_t& xdata(r_post->xdata());
         if (!xdata.has_flags(POST_EXT_HANDLED) &&
-            (!xdata.has_flags(POST_EXT_RECEIVED) ? (!r_post->has_flags(ITEM_GENERATED) || also_matching)
-                                                 : also_matching)) {
+            (!xdata.has_flags(POST_EXT_RECEIVED)
+                 ? (!r_post->has_flags(ITEM_GENERATED) || also_matching)
+                 : also_matching)) {
           xdata.add_flags(POST_EXT_HANDLED);
           item_handler<post_t>::operator()(*r_post);
         }
@@ -557,12 +558,11 @@ display_filter_posts::display_filter_posts(post_handler_ptr handler, report_t& _
   // (i.e., display_total_ = total_expr, total_ = total).  Options like
   // --market, --exchange, --average, etc. modify these expressions,
   // breaking the distributive property: strip(f(total)) != f(strip(total)).
-  incremental_strip_eligible =
-      report.HANDLER(display_total_).expr.exprs.empty() &&
-      report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
-      report.HANDLER(total_).expr.exprs.empty() &&
-      report.HANDLER(total_).expr.base_expr == "total" &&
-      !what_to_keep.keep_all();
+  incremental_strip_eligible = report.HANDLER(display_total_).expr.exprs.empty() &&
+                               report.HANDLER(display_total_).expr.base_expr == "total_expr" &&
+                               report.HANDLER(total_).expr.exprs.empty() &&
+                               report.HANDLER(total_).expr.base_expr == "total" &&
+                               !what_to_keep.keep_all();
   create_accounts();
   TRACE_CTOR(display_filter_posts, "post_handler_ptr, report_t&, bool");
 }
@@ -586,8 +586,7 @@ bool display_filter_posts::output_rounding(post_t& post) {
     //   - The display_total_expr is non-default (--market, --exchange, etc.)
     //   - The posting is a revalued/generated posting
     //   - The posting doesn't have visited_value set by calc_posts
-    if (has_stripped_cache && incremental_strip_eligible &&
-        post.account != revalued_account &&
+    if (has_stripped_cache && incremental_strip_eligible && post.account != revalued_account &&
         post.has_xdata() && post.xdata().has_flags(POST_EXT_VISITED) &&
         !post.xdata().visited_value.is_null()) {
       // Incremental path: strip just the posting's contribution
@@ -596,8 +595,7 @@ bool display_filter_posts::output_rounding(post_t& post) {
       add_or_set_value(new_display_total, stripped_delta);
     } else {
       // Full path: strip the entire display total from scratch
-      new_display_total =
-          (display_total_expr.calc(bound_scope).strip_annotations(what_to_keep));
+      new_display_total = (display_total_expr.calc(bound_scope).strip_annotations(what_to_keep));
     }
 
     DEBUG("filters.changed_value.rounding",
@@ -1198,8 +1196,8 @@ void by_payee_posts::flush() {
 void by_payee_posts::operator()(post_t& post) {
   payee_subtotals_map::iterator i = payee_subtotals.find(post.payee());
   if (i == payee_subtotals.end()) {
-    payee_subtotals_pair temp(post.payee(),
-                              std::shared_ptr<subtotal_posts>(new subtotal_posts(handler, amount_expr)));
+    payee_subtotals_pair temp(
+        post.payee(), std::shared_ptr<subtotal_posts>(new subtotal_posts(handler, amount_expr)));
     auto [iter, inserted] = payee_subtotals.insert(temp);
 
     assert(inserted);

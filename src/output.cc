@@ -254,16 +254,13 @@ void format_accounts::operator()(account_t& account) {
 }
 
 namespace {
-  void collect_known_accounts(account_t& account,
-                              report_accounts::accounts_report_map& accounts) {
-    if (account.has_flags(ACCOUNT_KNOWN) &&
-        accounts.find(&account) == accounts.end())
-      accounts.insert(
-          report_accounts::accounts_report_map::value_type(&account, 0));
+void collect_known_accounts(account_t& account, report_accounts::accounts_report_map& accounts) {
+  if (account.has_flags(ACCOUNT_KNOWN) && accounts.find(&account) == accounts.end())
+    accounts.insert(report_accounts::accounts_report_map::value_type(&account, 0));
 
-    for (accounts_map::value_type& pair : account.accounts)
-      collect_known_accounts(*pair.second, accounts);
-  }
+  for (accounts_map::value_type& pair : account.accounts)
+    collect_known_accounts(*pair.second, accounts);
+}
 } // namespace
 
 void report_accounts::flush() {

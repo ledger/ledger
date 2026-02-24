@@ -66,7 +66,8 @@ struct annotation_t : public flags::supports_flags<>, public equality_comparable
   std::optional<expr_t> value_expr;
 
   explicit annotation_t(const std::optional<amount_t>& _price = {},
-                        const std::optional<date_t>& _date = {}, const std::optional<string>& _tag = {},
+                        const std::optional<date_t>& _date = {},
+                        const std::optional<string>& _tag = {},
                         const std::optional<expr_t>& _value_expr = {})
       : supports_flags<>(), price(_price), date(_date), tag(_tag), value_expr(_value_expr) {
     TRACE_CTOR(annotation_t, "optional<amount_t> + date_t + string + expr_t");
@@ -167,9 +168,9 @@ public:
     return commodity_t::value_expr();
   }
 
-  std::optional<price_point_t> virtual find_price(const commodity_t* commodity = NULL,
-                                                  const datetime_t& moment = datetime_t(),
-                                                  const datetime_t& oldest = datetime_t()) const override;
+  std::optional<price_point_t> virtual find_price(
+      const commodity_t* commodity = NULL, const datetime_t& moment = datetime_t(),
+      const datetime_t& oldest = datetime_t()) const override;
 
   virtual commodity_t& strip_annotations(const keep_details_t& what_to_keep) override;
 
@@ -185,7 +186,8 @@ public:
     }
   }
 
-  virtual void write_annotations(std::ostream& out, bool no_computed_annotations = false) const override;
+  virtual void write_annotations(std::ostream& out,
+                                 bool no_computed_annotations = false) const override;
 };
 
 inline annotated_commodity_t& as_annotated_commodity(commodity_t& commodity) {

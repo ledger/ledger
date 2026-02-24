@@ -353,7 +353,8 @@ public:
 
   option_t<report_t>* lookup_option(const char* p);
 
-  virtual void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) override;
+  virtual void define(const symbol_t::kind_t kind, const string& name,
+                      expr_t::ptr_op_t def) override;
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
@@ -552,7 +553,8 @@ public:
                       "           true, color),"
                       "           bold if should_bold))"
                       " %(ansify_if("
-                      "   justify(scrub((get_at(display_total, 0) || 0) + (get_at(display_total, 1) || 0)), "
+                      "   justify(scrub((get_at(display_total, 0) || 0) + (get_at(display_total, "
+                      "1) || 0)), "
                       "int(total_width), "
                       "           5 + int(meta_width) + int(date_width) + int(payee_width)"
                       "             + int(account_width) + int(amount_width) + int(amount_width) + "
@@ -576,7 +578,8 @@ public:
                       "          14 + 1 + int(prepend_width) + int(total_width), true, color),"
                       "            bold if should_bold)) "
                       "%(ansify_if("
-                      "  justify(scrub((get_at(display_total, 0) || 0) + (get_at(display_total, 1) || 0)), 14,"
+                      "  justify(scrub((get_at(display_total, 0) || 0) + (get_at(display_total, 1) "
+                      "|| 0)), 14,"
                       "          14 + 2 + int(prepend_width) + int(total_width) + "
                       "int(total_width), true, color),"
                       "            bold if should_bold))"
@@ -709,9 +712,7 @@ public:
                                   "market(amount_expr, value_date, exchange))");
       });
 
-  OPTION_(report_t, ignore_diacritics, DO() {
-    ledger::ignore_diacritics = true;
-  });
+  OPTION_(report_t, ignore_diacritics, DO() { ledger::ignore_diacritics = true; });
 
   OPTION(report_t, immediate);
   OPTION(report_t, inject_);
@@ -938,10 +939,7 @@ public:
         OTHER(sort_xacts_).off();
       });
 
-  OPTION_(
-      report_t, sort_xacts_, DO_(str) {
-        OTHER(sort_all_).off();
-      });
+  OPTION_(report_t, sort_xacts_, DO_(str) { OTHER(sort_all_).off(); });
 
   OPTION(report_t, start_of_week_);
   OPTION(report_t, subtotal); // -s

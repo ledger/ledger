@@ -91,18 +91,22 @@ public:
   bool match(string_view text) const {
 #if HAVE_BOOST_REGEX_UNICODE
     string match_text = ignore_diacritics ? fold_diacritics(text) : string(text);
-    DEBUG("mask.match", "Matching: \"" << match_text << "\" =~ /" << str() << "/ = "
-                                       << (boost::u32regex_search(match_text, expr) ? "true" : "false"));
+    DEBUG("mask.match", "Matching: \""
+                            << match_text << "\" =~ /" << str() << "/ = "
+                            << (boost::u32regex_search(match_text, expr) ? "true" : "false"));
     return boost::u32regex_search(match_text, expr);
 #else
     if (ignore_diacritics) {
       string match_text = fold_diacritics(text);
-      DEBUG("mask.match", "Matching: \"" << match_text << "\" =~ /" << str() << "/ = "
-                                         << (boost::regex_search(match_text, expr) ? "true" : "false"));
+      DEBUG("mask.match",
+            "Matching: \"" << match_text << "\" =~ /" << str()
+                           << "/ = " << (boost::regex_search(match_text, expr) ? "true" : "false"));
       return boost::regex_search(match_text, expr);
     }
-    DEBUG("mask.match", "Matching: \"" << text << "\" =~ /" << str() << "/ = "
-                                       << (boost::regex_search(text.begin(), text.end(), expr) ? "true" : "false"));
+    DEBUG("mask.match", "Matching: \""
+                            << text << "\" =~ /" << str() << "/ = "
+                            << (boost::regex_search(text.begin(), text.end(), expr) ? "true"
+                                                                                    : "false"));
     return boost::regex_search(text.begin(), text.end(), expr);
 #endif
   }

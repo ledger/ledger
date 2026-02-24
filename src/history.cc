@@ -105,7 +105,7 @@ public:
                   bool bidirectionally = false);
 
   std::optional<price_point_t> find_price(const commodity_t& source, const datetime_t& moment,
-                                         const datetime_t& oldest = datetime_t());
+                                          const datetime_t& oldest = datetime_t());
 
   std::optional<price_point_t> find_price(const commodity_t& source, const commodity_t& target,
                                           const datetime_t& moment,
@@ -141,15 +141,15 @@ void commodity_history_t::map_prices(function<void(datetime_t, const amount_t&)>
 }
 
 std::optional<price_point_t> commodity_history_t::find_price(const commodity_t& source,
-                                                              const datetime_t& moment,
-                                                              const datetime_t& oldest) {
+                                                             const datetime_t& moment,
+                                                             const datetime_t& oldest) {
   return p_impl->find_price(source, moment, oldest);
 }
 
 std::optional<price_point_t> commodity_history_t::find_price(const commodity_t& source,
-                                                              const commodity_t& target,
-                                                              const datetime_t& moment,
-                                                              const datetime_t& oldest) {
+                                                             const commodity_t& target,
+                                                             const datetime_t& moment,
+                                                             const datetime_t& oldest) {
   return p_impl->find_price(source, target, moment, oldest);
 }
 
@@ -247,8 +247,7 @@ void commodity_history_impl_t::add_price(const commodity_t& source, const dateti
 
   price_map_t& prices(get(ratiomap, e1_desc));
 
-  auto [iter, inserted] =
-      prices.insert(price_map_t::value_type(when, price));
+  auto [iter, inserted] = prices.insert(price_map_t::value_type(when, price));
   if (!inserted) {
     // There is already an entry for this moment, so update it
     iter->second = price;
@@ -323,8 +322,8 @@ void commodity_history_impl_t::map_prices(function<void(datetime_t, const amount
 }
 
 std::optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& source,
-                                                                   const datetime_t& moment,
-                                                                   const datetime_t& oldest) {
+                                                                  const datetime_t& moment,
+                                                                  const datetime_t& oldest) {
   if (!source.graph_index() || *source.graph_index() >= num_vertices(price_graph))
     return std::nullopt;
 
@@ -382,9 +381,9 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
 }
 
 std::optional<price_point_t> commodity_history_impl_t::find_price(const commodity_t& source,
-                                                                   const commodity_t& target,
-                                                                   const datetime_t& moment,
-                                                                   const datetime_t& oldest) {
+                                                                  const commodity_t& target,
+                                                                  const datetime_t& moment,
+                                                                  const datetime_t& oldest) {
   if (source == target)
     return std::nullopt;
 

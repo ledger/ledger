@@ -117,8 +117,7 @@ account_t* journal_t::find_account_re(const string& regexp) {
   return master->find_account_re(regexp);
 }
 
-account_t* journal_t::register_account(string_view name, post_t* post,
-                                       account_t* master_account) {
+account_t* journal_t::register_account(string_view name, post_t* post, account_t* master_account) {
   // If there are any account aliases, substitute before creating an account
   // object.
   account_t* result = expand_aliases(string(name));
@@ -364,8 +363,7 @@ bool journal_t::add_xact(xact_t* xact) {
   // applied to it.
   if (std::optional<value_t> ref = xact->get_tag(_("UUID"))) {
     std::string uuid = ref->to_string();
-    auto [iter, inserted] =
-        checksum_map.insert(checksum_map_t::value_type(uuid, xact));
+    auto [iter, inserted] = checksum_map.insert(checksum_map_t::value_type(uuid, xact));
     if (!inserted) {
       // This UUID has been seen before; apply any postings which the
       // earlier version may have deferred.

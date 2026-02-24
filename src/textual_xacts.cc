@@ -33,9 +33,9 @@
 
 namespace ledger {
 
-using detail::instance_t;
 using detail::application_t;
 using detail::fixed_rate_t;
+using detail::instance_t;
 using detail::parse_amount_expr;
 
 namespace {
@@ -154,9 +154,8 @@ void instance_t::automated_xact_directive(char* line) {
         ++p;
       p = skip_ws(p);
       if (*p == '\0' || *p == ';') {
-        throw parse_error(_(
-            "Lines beginning with '=' are automated transactions, not dividers;"
-            " for a comment or divider line, use ';' instead"));
+        throw parse_error(_("Lines beginning with '=' are automated transactions, not dividers;"
+                            " for a comment or divider line, use ';' instead"));
       }
     }
 
@@ -335,10 +334,8 @@ void detail::parse_amount_expr(std::istream& in, scope_t& scope, post_t& post, a
  * are removed from the account total and previous post amounts before
  * comparison.
  */
-static balance_t compute_balance_diff(
-    const amount_t& amt, post_t* post, xact_t* xact,
-    bool strip_annotations, parse_context_t& context)
-{
+static balance_t compute_balance_diff(const amount_t& amt, post_t* post, xact_t* xact,
+                                      bool strip_annotations, parse_context_t& context) {
   bool real_only = !post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG);
   value_t account_total;
   if (item_t::use_aux_date) {
@@ -386,12 +383,9 @@ static balance_t compute_balance_diff(
 
   // Subtract amounts from previous posts to this account in the xact.
   for (post_t* p : xact->posts) {
-    if (p->account == post->account &&
-        (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG) ||
-         post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))) {
-      amount_t p_amt(strip_annotations
-                         ? p->amount.strip_annotations(keep_details_t())
-                         : p->amount);
+    if (p->account == post->account && (!p->has_flags(POST_VIRTUAL | POST_IS_TIMELOG) ||
+                                        post->has_flags(POST_VIRTUAL | POST_IS_TIMELOG))) {
+      amount_t p_amt(strip_annotations ? p->amount.strip_annotations(keep_details_t()) : p->amount);
       diff -= p_amt;
       DEBUG("textual.parse", "line " << context.linenum << ": "
                                      << "Subtracting " << p_amt << ", diff = " << diff);
@@ -706,8 +700,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
               if (strip) {
                 // Recompute the diff preserving lot annotations (cost basis
                 // and lot date) so that the assigned amount retains them.
-                balance_t ann_diff =
-                    compute_balance_diff(amt, post.get(), xact, false, context);
+                balance_t ann_diff = compute_balance_diff(amt, post.get(), xact, false, context);
                 // Use annotated diff if it can be represented as a single
                 // amount; fall back to the stripped diff otherwise (e.g.
                 // when multiple lots with different annotations exist).
@@ -740,7 +733,8 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
                                   : post->amount.reduced());
           diff -= post_amt;
           if (!no_assertions && !diff.is_zero()) {
-            balance_t tot = strip ? (-diff + amt).strip_annotations(keep_details_t()) : (-diff + amt);
+            balance_t tot =
+                strip ? (-diff + amt).strip_annotations(keep_details_t()) : (-diff + amt);
             DEBUG("textual.parse",
                   "Balance assertion: off by " << diff << " (expected to see " << tot << ")");
             throw_(parse_error, _f("Balance assertion off by %1% (expected to see %2%)") %

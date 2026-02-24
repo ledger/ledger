@@ -82,8 +82,8 @@ std::optional<value_t> item_t::get_tag(const string& tag, bool) const {
   return std::nullopt;
 }
 
-std::optional<value_t> item_t::get_tag(const mask_t& tag_mask, const std::optional<mask_t>& value_mask,
-                                       bool) const {
+std::optional<value_t> item_t::get_tag(const mask_t& tag_mask,
+                                       const std::optional<mask_t>& value_mask, bool) const {
   if (metadata) {
     for (const string_map::value_type& data : *metadata) {
       if (tag_mask.match(data.first) &&
@@ -125,8 +125,7 @@ item_t::string_map::iterator item_t::set_tag(const string& tag, const std::optio
   string_map::iterator i = metadata->find(tag);
   if (i == metadata->end()) {
     DEBUG("item.meta", "Setting new metadata value");
-    auto [iter, inserted] =
-        metadata->insert(string_map::value_type(tag, tag_data_t(data, false)));
+    auto [iter, inserted] = metadata->insert(string_map::value_type(tag, tag_data_t(data, false)));
     assert(inserted);
     return iter;
   } else {
@@ -395,8 +394,7 @@ void item_t::define(const symbol_t::kind_t, const string& name, expr_t::ptr_op_t
     bind_scope_t bound_scope(*scope_t::default_scope, *this);
     set_tag(name, def->calc(bound_scope));
     defining_ = false;
-  }
-  catch (...) {
+  } catch (...) {
     defining_ = false;
     throw;
   }
