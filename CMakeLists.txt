@@ -18,9 +18,11 @@ cmake_minimum_required(VERSION ${Required_CMake_Version})
 # as sys/resource.h (pulled in by sys/wait.h) use these types unconditionally.
 # Clearing CMAKE_OSX_SYSROOT lets the Nix clang wrapper use its own bundled SDK
 # (which has no conflicting usr/include/c++/v1), resolving the include path conflict.
-if(APPLE AND NOT DEFINED CMAKE_OSX_SYSROOT)
+if(APPLE)
   # Allow the Nix clang wrapper to use its built-in sysroot so that only one
-  # c++/v1 stdint.h wrapper appears in the search path.
+  # c++/v1 stdint.h wrapper appears in the search path.  Apply on every cmake
+  # run (including re-runs with a cached build directory) so that the sysroot
+  # is cleared even when CMAKE_OSX_SYSROOT was previously cached.
   if(DEFINED ENV{NIX_CC} OR "$ENV{NIX_BUILD_TOP}" MATCHES "/nix/store/"
      OR CMAKE_CXX_COMPILER MATCHES "/nix/store/")
     set(CMAKE_OSX_SYSROOT "" CACHE PATH "Cleared: Nix clang uses its own SDK" FORCE)
@@ -208,6 +210,9 @@ endif()
 
 include(FindICU)
 find_package(ICU ${Required_Icu_Version} OPTIONAL_COMPONENTS uc i18n)
+if(ICU_FOUND)
+  include_directories(SYSTEM ${ICU_INCLUDE_DIRS})
+endif()
 
 include(CheckIncludeFiles)
 include(CheckLibraryExists)
