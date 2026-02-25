@@ -183,7 +183,7 @@ decrypted_stream_t::decrypted_stream_t(path& filename) : istream(nullptr), file(
   init_lib();
 
   file = open_file(filename);
-  std::unique_ptr<FILE, int(*)(FILE*)> file_guard(file, &fclose);
+  std::unique_ptr<FILE, int (*)(FILE*)> file_guard(file, &fclose);
 
   auto enc_d = setup_cipher_buffer(file);
   dec_d = decrypt(enc_d);
@@ -193,7 +193,7 @@ decrypted_stream_t::decrypted_stream_t(path& filename) : istream(nullptr), file(
     file_guard.reset();
     file = nullptr;
   } else {
-    file_guard.release();  // constructor succeeded, member takes ownership
+    file_guard.release(); // constructor succeeded, member takes ownership
   }
 
   rdbuf(new data_streambuffer_t(*dec_d.get()));
@@ -207,7 +207,7 @@ decrypted_stream_t::decrypted_stream_t(shared_ptr<Data> dec_d)
 }
 
 decrypted_stream_t::~decrypted_stream_t() {
-  auto* buf = rdbuf(nullptr);  // disconnect first
+  auto* buf = rdbuf(nullptr); // disconnect first
   delete buf;
   if (file)
     fclose(file);

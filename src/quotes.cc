@@ -93,7 +93,7 @@ std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
           if (dlen > 0 && discard[dlen - 1] == '\n')
             break;
         }
-        success = false;  // Don't process truncated output
+        success = false; // Don't process truncated output
       }
     }
     if (pclose(fp) != 0)

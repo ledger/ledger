@@ -83,22 +83,20 @@ class ptristream : public std::istream {
       // based on https://svn.boost.org/trac/boost/ticket/7644
       switch (static_cast<int>(way)) {
       case std::ios::beg: {
-        std::streamoff new_pos = std::max(std::streamoff(0),
-                                          std::min(off, std::streamoff(len)));
+        std::streamoff new_pos = std::max(std::streamoff(0), std::min(off, std::streamoff(len)));
         setg(ptr, ptr + new_pos, ptr + len);
         break;
       }
       case std::ios::cur: {
         std::streamoff cur_off = gptr() - ptr;
-        std::streamoff new_pos = std::max(std::streamoff(0),
-                                          std::min(cur_off + off, std::streamoff(len)));
+        std::streamoff new_pos =
+            std::max(std::streamoff(0), std::min(cur_off + off, std::streamoff(len)));
         setg(ptr, ptr + new_pos, ptr + len);
         break;
       }
       case std::ios::end: {
-        std::streamoff new_pos = std::max(std::streamoff(0),
-                                          std::min(std::streamoff(len) + off,
-                                                   std::streamoff(len)));
+        std::streamoff new_pos =
+            std::max(std::streamoff(0), std::min(std::streamoff(len) + off, std::streamoff(len)));
         setg(ptr, ptr + new_pos, ptr + len);
         break;
       }

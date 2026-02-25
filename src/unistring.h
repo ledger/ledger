@@ -93,7 +93,8 @@ public:
     assert(begin + len <= this_len);
 
     if (this_len) {
-      std::size_t end_idx = (len == 0) ? utf32chars.size() : std::min(begin + len, utf32chars.size());
+      std::size_t end_idx =
+          (len == 0) ? utf32chars.size() : std::min(begin + len, utf32chars.size());
       utf8::utf32to8(utf32chars.begin() + static_cast<std::string::difference_type>(begin),
                      utf32chars.begin() + static_cast<std::string::difference_type>(end_idx),
                      std::back_inserter(utf8result));

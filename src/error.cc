@@ -96,9 +96,9 @@ string source_context(const path& file, const std::istream::pos_type pos,
 
   std::unique_ptr<std::istream> in(
 #if HAVE_GPGME
-    decrypted_stream_t::open_stream(file)
+      decrypted_stream_t::open_stream(file)
 #else
-    new ifstream(file, std::ios::binary)
+      new ifstream(file, std::ios::binary)
 #endif
   );
   in->seekg(pos, std::ios::beg);
