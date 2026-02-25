@@ -175,6 +175,23 @@ void report_t::normalize_options(const string& verb) {
     HANDLER(amount_).on("?normalize", "market(amount_expr, value_date, exchange)");
   }
 
+  if (HANDLED(round)) {
+    if (HANDLED(market)) {
+      if (!HANDLED(immediate)) {
+        // Force per-posting market conversion so rounding happens on individual
+        // market values rather than the accumulated total.  Use 'today' rather
+        // than 'value_date' because in the per-posting expression context
+        // 'value_date' resolves to the posting's own date, which may predate the
+        // price history entries and thus fall back to the lot cost.
+        HANDLER(amount_).on("?normalize", "market(amount_expr, today, exchange)");
+      }
+      HANDLER(amount_).on("?normalize_round", "rounded(amount_expr)");
+    } else {
+      HANDLER(amount_).on("?normalize_round", "rounded(amount_expr)");
+      HANDLER(total_).on("?normalize_round", "rounded(total_expr)");
+    }
+  }
+
   if (HANDLED(gain) && HANDLED(gain_since_)) {
     // When --gain-since DATE is used with --gain, compute gain relative to
     // the market value at DATE rather than from the original cost basis.
