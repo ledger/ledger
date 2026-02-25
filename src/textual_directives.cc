@@ -40,6 +40,8 @@ using detail::instance_t;
 #if TIMELOG_SUPPORT
 
 void instance_t::clock_in_directive(char* line, bool capitalized) {
+  if (std::strlen(line) < 21)
+    throw_(parse_error, _("Clock-in/out directive is too short"));
   string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
   char* p = skip_ws(line + 22);
@@ -67,6 +69,8 @@ void instance_t::clock_in_directive(char* line, bool capitalized) {
 }
 
 void instance_t::clock_out_directive(char* line, bool capitalized) {
+  if (std::strlen(line) < 21)
+    throw_(parse_error, _("Clock-in/out directive is too short"));
   string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
   char* p = skip_ws(line + 22);
@@ -153,6 +157,12 @@ void instance_t::option_directive(char* line) {
 }
 
 void instance_t::include_directive(char* line) {
+  int include_depth = 0;
+  for (instance_t* p = parent; p; p = p->parent)
+    ++include_depth;
+  if (include_depth > 100)
+    throw_(parse_error, _("Maximum include depth exceeded (100)"));
+
   path filename;
 
   DEBUG("textual.include", "include: " << line);
@@ -434,7 +444,10 @@ void instance_t::account_directive(char* line) {
       account_default_directive(account);
     } else if (keyword == "assert" || keyword == "check") {
       keep_details_t keeper(true, true, true);
-      expr_t expr(string("account == \"") + account->fullname() + "\"");
+      string safe_name = account->fullname();
+      boost::replace_all(safe_name, "\\", "\\\\");
+      boost::replace_all(safe_name, "\"", "\\\"");
+      expr_t expr(string("account == \"") + safe_name + "\"");
       predicate_t pred(expr.get_op(), keeper);
 
       if (!ae.get()) {

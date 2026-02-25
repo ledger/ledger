@@ -50,10 +50,6 @@ long accounts_len(account_t& account) {
 }
 
 account_t& accounts_getitem(account_t& account, long i) {
-  static long last_index = 0;
-  static account_t* last_account = nullptr;
-  static accounts_map::iterator elem;
-
   long len = static_cast<long>(account.accounts.size());
 
   if (labs(i) >= len) {
@@ -61,20 +57,9 @@ account_t& accounts_getitem(account_t& account, long i) {
     throw_error_already_set();
   }
 
-  if (&account == last_account && i == last_index + 1) {
-    last_index = i;
-    return *(*++elem).second;
-  }
-
   long x = i < 0 ? len + i : i;
-  elem = account.accounts.begin();
-  while (--x >= 0)
-    elem++;
-
-  last_account = &account;
-  last_index = i;
-
-  return *(*elem).second;
+  auto elem = std::next(account.accounts.begin(), x);
+  return *elem->second;
 }
 
 #if 0
@@ -197,7 +182,7 @@ void export_account() {
       .def("remove_account", &account_t::remove_account)
 
       .def("find_account", &account_t::find_account, return_internal_reference<>())
-      .def("find_account_re", &account_t::find_account, return_internal_reference<>())
+      .def("find_account_re", &account_t::find_account_re, return_internal_reference<>())
 
       .def("add_post", &account_t::add_post)
       .def("remove_post", &account_t::remove_post)

@@ -597,10 +597,12 @@ value_t& value_t::operator-=(const value_t& val) {
 
 value_t& value_t::operator*=(const value_t& val) {
   if (is_string()) {
-    string temp;
+    const string& s = as_string();
     long count = val.to_long();
+    string temp;
+    temp.reserve(s.size() * static_cast<std::size_t>(count));
     for (long i = 0; i < count; i++)
-      temp += as_string();
+      temp += s;
     set_string(temp);
     return *this;
   } else if (is_commodity()) {

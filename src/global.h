@@ -72,7 +72,7 @@ public:
   expr_t::func_t look_for_precommand(scope_t& scope, const string& verb);
   expr_t::func_t look_for_command(scope_t& scope, const string& verb);
 
-  char* prompt_string();
+  string prompt_string();
 
   session_t& session() { return *session_ptr.get(); }
   report_t& report() { return report_stack.front(); }

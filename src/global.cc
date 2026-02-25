@@ -160,14 +160,9 @@ void global_scope_t::read_init() {
   }
 }
 
-char* global_scope_t::prompt_string() {
-  static char prompt[32];
-  std::size_t i;
-  for (i = 0; i < report_stack.size(); i++)
-    prompt[i] = ']';
-  prompt[i++] = ' ';
-  prompt[i] = '\0';
-  return prompt;
+string global_scope_t::prompt_string() {
+  std::size_t depth = std::min(report_stack.size(), std::size_t(30));
+  return string(depth, ']') + " ";
 }
 
 void global_scope_t::report_error(const std::exception& err) {

@@ -140,17 +140,18 @@ int main(int argc, char* argv[], char* envp[]) {
       rl_readline_name = const_cast<char*>("Ledger");
       // TODO: rl_attempted_completion_function = ledger_completion;
 
-      while (char* p = readline(global_scope->prompt_string())) {
+      while (char* p = readline(global_scope->prompt_string().c_str())) {
         char* expansion = nullptr;
         int result;
 
         result = history_expand(skip_ws(p), &expansion);
 
         if (result < 0 || result == 2) {
+          std::string bad_ref(p ? p : "");
           if (expansion)
             std::free(expansion);
           std::free(p);
-          throw_(std::logic_error, _f("Failed to expand history reference '%1%'") % p);
+          throw_(std::logic_error, _f("Failed to expand history reference '%1%'") % bad_ref);
         } else if (expansion) {
           add_history(expansion);
         }

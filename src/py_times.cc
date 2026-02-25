@@ -66,9 +66,10 @@ struct date_from_python {
     date::month_type m = static_cast<date::month_type>(PyDateTime_GET_MONTH(obj_ptr));
     date::day_type d = static_cast<date::day_type>(PyDateTime_GET_DAY(obj_ptr));
 
-    date_t* dte = new date_t(y, m, d);
-
-    data->convertible = (void*)dte;
+    void* storage =
+        reinterpret_cast<converter::rvalue_from_python_storage<date_t>*>(data)->storage.bytes;
+    new (storage) date_t(y, m, d);
+    data->convertible = storage;
   }
 };
 
@@ -110,15 +111,14 @@ struct datetime_from_python {
         static_cast<datetime_t::time_duration_type::min_type>(PyDateTime_DATE_GET_MINUTE(obj_ptr));
     datetime_t::time_duration_type::sec_type s =
         static_cast<datetime_t::time_duration_type::sec_type>(PyDateTime_DATE_GET_SECOND(obj_ptr));
-    datetime_t::time_duration_type::fractional_seconds_type ms =
+    datetime_t::time_duration_type::fractional_seconds_type us =
         static_cast<datetime_t::time_duration_type::fractional_seconds_type>(
-            PyDateTime_DATE_GET_MICROSECOND(obj_ptr)) *
-        1000000;
+            PyDateTime_DATE_GET_MICROSECOND(obj_ptr));
 
-    datetime_t* moment =
-        new datetime_t(date_t(y, m, d), datetime_t::time_duration_type(h, min, s, ms));
-
-    data->convertible = (void*)moment;
+    void* storage =
+        reinterpret_cast<converter::rvalue_from_python_storage<datetime_t>*>(data)->storage.bytes;
+    new (storage) datetime_t(date_t(y, m, d), datetime_t::time_duration_type(h, min, s, us));
+    data->convertible = storage;
   }
 };
 

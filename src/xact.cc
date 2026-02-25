@@ -72,7 +72,10 @@ void xact_base_t::add_post(post_t* post) {
 }
 
 bool xact_base_t::remove_post(post_t* post) {
-  posts.remove(post);
+  auto it = std::find(posts.begin(), posts.end(), post);
+  if (it == posts.end())
+    return false;
+  posts.erase(it);
   post->xact = nullptr;
   return true;
 }
@@ -106,6 +109,8 @@ value_t xact_base_t::magnitude() const {
 
 namespace {
 inline bool account_ends_with_special_char(const string& name) {
+  if (name.empty())
+    return false;
   string::size_type len(name.length());
   return (std::isdigit(static_cast<unsigned char>(name[len - 1])) || name[len - 1] == ')' ||
           name[len - 1] == '}' || name[len - 1] == ']');

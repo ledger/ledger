@@ -31,6 +31,8 @@
 
 #include <system.hh>
 
+#include <unordered_set>
+
 #include "journal.h"
 #include "context.h"
 #include "amount.h"
@@ -171,16 +173,16 @@ account_t* journal_t::expand_aliases(string name) {
     return result;
 
   bool keep_expanding = true;
-  std::list<string> already_seen;
+  std::unordered_set<string> already_seen;
   // loop until no expansion can be found
   do {
     if (account_aliases.size() > 0) {
       if (auto i = account_aliases.find(name); i != account_aliases.end()) {
-        if (std::find(already_seen.begin(), already_seen.end(), name) != already_seen.end()) {
+        if (already_seen.count(name) > 0) {
           throw_(std::runtime_error, _f("Infinite recursion on alias expansion for %1%") % name);
         }
         // there is an alias for the full account name, including colons
-        already_seen.push_back(name);
+        already_seen.insert(name);
         result = (*i).second;
         name = result->fullname();
       } else {
@@ -190,12 +192,11 @@ account_t* journal_t::expand_aliases(string name) {
         if (colon != string::npos) {
           string first_account_name = name.substr(0, colon);
           if (auto j = account_aliases.find(first_account_name); j != account_aliases.end()) {
-            if (std::find(already_seen.begin(), already_seen.end(), first_account_name) !=
-                already_seen.end()) {
+            if (already_seen.count(first_account_name) > 0) {
               throw_(std::runtime_error,
                      _f("Infinite recursion on alias expansion for %1%") % first_account_name);
             }
-            already_seen.push_back(first_account_name);
+            already_seen.insert(first_account_name);
             result = find_account((*j).second->fullname() + name.substr(colon));
             name = result->fullname();
           } else {

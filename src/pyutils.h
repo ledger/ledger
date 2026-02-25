@@ -121,9 +121,7 @@ struct map_value_type_converter {
 
 template <typename T>
 PyObject* str_to_py_unicode(const T& str) {
-  using namespace boost::python;
-  PyObject* uni = PyUnicode_FromString(str.c_str());
-  return object(handle<>(borrowed(uni))).ptr();
+  return PyUnicode_FromString(str.c_str());
 }
 
 } // namespace ledger::python

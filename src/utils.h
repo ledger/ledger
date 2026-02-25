@@ -212,7 +212,7 @@ enum log_level_t : uint8_t {
 
 extern log_level_t _log_level;
 extern std::ostream* _log_stream;
-extern std::ostringstream _log_buffer;
+extern thread_local std::ostringstream _log_buffer;
 
 void logger_func(log_level_t level);
 
@@ -592,7 +592,7 @@ inline string digest_to_hex(const boost::uuids::detail::sha1::digest_type& messa
 
 inline string sha1sum(const string& str,
                       size_t len = sizeof(boost::uuids::detail::sha1::digest_type) * 2) {
-  static boost::uuids::detail::sha1 sha;
+  boost::uuids::detail::sha1 sha;
   boost::uuids::detail::sha1::digest_type message_digest;
 
   sha.reset();

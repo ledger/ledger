@@ -64,9 +64,10 @@ public:
     const char* p = input.c_str();
     std::size_t len = input.length();
 
-    // This size should be at least as large as MAX_LINE in context.h
-    assert(len < 4096);
-    VERIFY(utf8::is_valid(p, p + len));
+    if (len >= 4096)
+      throw_(std::length_error, _f("String too long for unistring: %1% bytes") % len);
+    if (!utf8::is_valid(p, p + len))
+      throw_(std::runtime_error, _("Invalid UTF-8 sequence in string"));
     utf8::utf8to32(p, p + len, std::back_inserter(utf32chars));
 
     TRACE_CTOR(unistring, "std::string");
@@ -91,12 +92,13 @@ public:
     assert(begin <= this_len);
     assert(begin + len <= this_len);
 
-    if (this_len)
+    if (this_len) {
+      std::size_t end_idx =
+          (len == 0) ? utf32chars.size() : std::min(begin + len, utf32chars.size());
       utf8::utf32to8(utf32chars.begin() + static_cast<std::string::difference_type>(begin),
-                     utf32chars.begin() + static_cast<std::string::difference_type>(begin) +
-                         static_cast<std::string::difference_type>(
-                             len ? (len > this_len ? this_len : len) : this_len),
+                     utf32chars.begin() + static_cast<std::string::difference_type>(end_idx),
                      std::back_inserter(utf8result));
+    }
 
     return utf8result;
   }

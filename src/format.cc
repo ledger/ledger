@@ -130,12 +130,11 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
 
   element_t* current = nullptr;
 
-  static char buf[65535];
-  char* q = buf;
+  std::string literal_buf;
 
   for (const char* p = fmt.c_str(); *p; p++) {
     if (*p != '%' && *p != '\\') {
-      *q++ = *p;
+      literal_buf += *p;
       continue;
     }
 
@@ -147,10 +146,10 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
       current = current->next.get();
     }
 
-    if (q != buf) {
+    if (!literal_buf.empty()) {
       current->type = element_t::STRING;
-      current->data = string(buf, q);
-      q = buf;
+      current->data = literal_buf;
+      literal_buf.clear();
 
       current->next.reset(new element_t);
       current = current->next.get();
@@ -394,7 +393,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
     }
   }
 
-  if (q != buf) {
+  if (!literal_buf.empty()) {
     if (!result.get()) {
       result.reset(new element_t);
       current = result.get();
@@ -403,7 +402,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
       current = current->next.get();
     }
     current->type = element_t::STRING;
-    current->data = string(buf, q);
+    current->data = literal_buf;
   }
 
   return result.release();

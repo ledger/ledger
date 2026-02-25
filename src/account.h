@@ -41,6 +41,8 @@
  */
 #pragma once
 
+#include <limits>
+
 #include "scope.h"
 #include "types.h"
 
@@ -72,8 +74,13 @@ public:
             const optional<string>& _note = none)
       : supports_flags<>(), scope_t(), parent(_parent), name(_name), note(_note),
         depth(static_cast<unsigned short>(parent ? parent->depth + 1 : 0)) {
+    if (parent && parent->depth == std::numeric_limits<unsigned short>::max())
+      throw std::runtime_error("Account hierarchy too deep");
     TRACE_CTOR(account_t, "account_t *, const string&, const string&");
   }
+  // Note: copy is intentionally shallow — posts and deferred_posts are
+  // NOT copied. The copy shares the same parent and children map but
+  // has an independent (empty) posting history.
   account_t(const account_t& other)
       : supports_flags<>(other.flags()), scope_t(), parent(other.parent), name(other.name),
         note(other.note), depth(other.depth), accounts(other.accounts) {

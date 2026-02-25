@@ -48,10 +48,6 @@ long posts_len(xact_base_t& xact) {
 }
 
 post_t& posts_getitem(xact_base_t& xact, long i) {
-  static long last_index = 0;
-  static xact_base_t* last_xact = nullptr;
-  static posts_list::iterator elem;
-
   long len = static_cast<long>(xact.posts.size());
 
   if (labs(i) >= len) {
@@ -59,19 +55,8 @@ post_t& posts_getitem(xact_base_t& xact, long i) {
     throw_error_already_set();
   }
 
-  if (&xact == last_xact && i == last_index + 1) {
-    last_index = i;
-    return **++elem;
-  }
-
   long x = i < 0 ? len + i : i;
-  elem = xact.posts.begin();
-  while (--x >= 0)
-    elem++;
-
-  last_xact = &xact;
-  last_index = i;
-
+  auto elem = std::next(xact.posts.begin(), x);
   return **elem;
 }
 

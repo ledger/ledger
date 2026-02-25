@@ -377,9 +377,13 @@ mask_t& mask_t::assign_glob(string_view pat) {
         break;
       }
       [[fallthrough]];
-    default:
+    default: {
+      const char* meta = ".+(){}|";
+      if (std::strchr(meta, pat[i]))
+        re_pat += '\\';
       re_pat += pat[i];
       break;
+    }
     }
   }
   return (*this = re_pat);

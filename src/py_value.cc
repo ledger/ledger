@@ -307,9 +307,7 @@ void export_value() {
       .def("set_long", &value_t::set_long)
 
       .def("is_amount", &value_t::is_amount)
-      .def("is_amount", &value_t::is_amount)
 
-      .def("is_balance", &value_t::is_balance)
       .def("is_balance", &value_t::is_balance)
 
       .def("is_commodity", &value_t::is_commodity)
@@ -317,7 +315,6 @@ void export_value() {
       .def("is_string", &value_t::is_string)
       .def("set_string", py_set_string)
 
-      .def("is_mask", &value_t::is_mask)
       .def("is_mask", &value_t::is_mask)
 
       .def("is_sequence", &value_t::is_sequence)

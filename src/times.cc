@@ -126,11 +126,11 @@ bool convert_separators_to_slashes = true;
 
 date_t parse_date_mask_routine(const char* date_str, date_io_t& io,
                                date_traits_t* traits = nullptr) {
-  if (std::strlen(date_str) > 127) {
+  char buf[128];
+  if (std::strlen(date_str) >= sizeof(buf)) {
     throw_(date_error, _f("Invalid date: %1%") % date_str);
   }
 
-  char buf[128];
   std::strcpy(buf, date_str);
 
   if (convert_separators_to_slashes) {

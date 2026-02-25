@@ -194,7 +194,7 @@ assertEqual(2, amt.display_precision)
 # There are several other supported math operations:
 
 amt    = ledger.Amount('$100.12')
-market = ((ledger.Amount('1 €') / ledger.Amount('$0.77')) * amt)
+market = ((ledger.Amount('1 €') / ledger.Amount('$0.66')) * amt)
 
 assertEqual(market, amt.value(eur))            # find present market value
 

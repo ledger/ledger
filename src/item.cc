@@ -343,7 +343,8 @@ value_t get_id(item_t& item) {
 }
 
 value_t get_addr(item_t& item) {
-  return long(reinterpret_cast<intptr_t>(&item));
+  // Note: truncates on LLP64 (Windows x64) where long is 32-bit
+  return static_cast<long>(reinterpret_cast<uintptr_t>(&item));
 }
 
 value_t get_depth(item_t&) {
