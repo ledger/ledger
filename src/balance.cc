@@ -244,46 +244,43 @@ void balance_t::sorted_amounts(amounts_array& sorted) const {
 
   if (sort_order == lot_sort_order::fifo || sort_order == lot_sort_order::lifo) {
     const bool ascending = (sort_order == lot_sort_order::fifo);
-    std::stable_sort(sorted.begin(), sorted.end(),
-                     [ascending](const amount_t* left, const amount_t* right) {
-                       commodity_t& lc = left->commodity();
-                       commodity_t& rc = right->commodity();
+    std::stable_sort(
+        sorted.begin(), sorted.end(), [ascending](const amount_t* left, const amount_t* right) {
+          commodity_t& lc = left->commodity();
+          commodity_t& rc = right->commodity();
 
-                       // Primary sort: base symbol (same as compare_by_commodity)
-                       int cmp = lc.base_symbol().compare(rc.base_symbol());
-                       if (cmp != 0)
-                         return cmp < 0;
+          // Primary sort: base symbol (same as compare_by_commodity)
+          int cmp = lc.base_symbol().compare(rc.base_symbol());
+          if (cmp != 0)
+            return cmp < 0;
 
-                       // Unannotated lots sort before annotated ones
-                       if (!lc.has_annotation() && rc.has_annotation())
-                         return true;
-                       if (lc.has_annotation() && !rc.has_annotation())
-                         return false;
-                       if (!lc.has_annotation() && !rc.has_annotation())
-                         return false;
+          // Unannotated lots sort before annotated ones
+          if (!lc.has_annotation() && rc.has_annotation())
+            return true;
+          if (lc.has_annotation() && !rc.has_annotation())
+            return false;
+          if (!lc.has_annotation() && !rc.has_annotation())
+            return false;
 
-                       // Both annotated: compare by date first (FIFO=ascending, LIFO=descending)
-                       const annotated_commodity_t& alc =
-                           static_cast<const annotated_commodity_t&>(lc);
-                       const annotated_commodity_t& arc =
-                           static_cast<const annotated_commodity_t&>(rc);
+          // Both annotated: compare by date first (FIFO=ascending, LIFO=descending)
+          const annotated_commodity_t& alc = static_cast<const annotated_commodity_t&>(lc);
+          const annotated_commodity_t& arc = static_cast<const annotated_commodity_t&>(rc);
 
-                       if (!alc.details.date && arc.details.date)
-                         return ascending; // no date sorts first for FIFO, last for LIFO
-                       if (alc.details.date && !arc.details.date)
-                         return !ascending;
-                       if (alc.details.date && arc.details.date && *alc.details.date != *arc.details.date)
-                         return ascending ? *alc.details.date < *arc.details.date
-                                          : *alc.details.date > *arc.details.date;
+          if (!alc.details.date && arc.details.date)
+            return ascending; // no date sorts first for FIFO, last for LIFO
+          if (alc.details.date && !arc.details.date)
+            return !ascending;
+          if (alc.details.date && arc.details.date && *alc.details.date != *arc.details.date)
+            return ascending ? *alc.details.date < *arc.details.date
+                             : *alc.details.date > *arc.details.date;
 
-                       // Dates equal (or both absent): fall back to standard commodity ordering
-                       return commodity_t::compare_by_commodity()(left, right) < 0;
-                     });
+          // Dates equal (or both absent): fall back to standard commodity ordering
+          return commodity_t::compare_by_commodity()(left, right) < 0;
+        });
   } else {
-    std::stable_sort(sorted.begin(), sorted.end(),
-                     [](const amount_t* left, const amount_t* right) {
-                       return commodity_t::compare_by_commodity()(left, right) < 0;
-                     });
+    std::stable_sort(sorted.begin(), sorted.end(), [](const amount_t* left, const amount_t* right) {
+      return commodity_t::compare_by_commodity()(left, right) < 0;
+    });
   }
 }
 
