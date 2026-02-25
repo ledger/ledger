@@ -58,6 +58,12 @@ using payee_alias_mappings_t = std::list<payee_alias_mapping_t>;
 using payee_uuid_mappings_t = std::unordered_map<string, string>;
 using account_mapping_t = std::pair<mask_t, account_t*>;
 using account_mappings_t = std::list<account_mapping_t>;
+
+using payee_rewrite_mapping_t = std::pair<mask_t, string>;
+using payee_rewrite_mappings_t = std::list<payee_rewrite_mapping_t>;
+
+using account_rewrite_mapping_t = std::pair<mask_t, string>;
+using account_rewrite_mappings_t = std::list<account_rewrite_mapping_t>;
 using checksum_map_t = std::map<string, xact_t*>;
 
 using tag_check_exprs_map = std::multimap<string, expr_t::check_expr_pair>;
@@ -99,7 +105,9 @@ public:
   bool no_aliases;
   payee_alias_mappings_t payee_alias_mappings;
   payee_uuid_mappings_t payee_uuid_mappings;
+  payee_rewrite_mappings_t payee_rewrite_mappings;
   account_mappings_t account_mappings;
+  account_rewrite_mappings_t account_rewrite_mappings;
   accounts_map account_aliases;
   account_mappings_t payees_for_unknown_accounts;
   checksum_map_t checksum_map;
