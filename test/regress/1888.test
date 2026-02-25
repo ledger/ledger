@@ -1,0 +1,24 @@
+; Regression test for issue #1888
+;
+; Rounding error when using multipliers with European-style decimal notation
+; (comma as decimal separator). The issue was that amounts like "0,075" were
+; incorrectly parsed as 75 instead of 0.075.
+
+= Tax:Amount
+  Tax:Amount        -0,0815
+  Tax:sometax        0,075
+  Tax:othertax       0,0065
+
+2020-01-06 Client billed
+  Client           $  -1596,00
+  Tax:Amount       $    130,08
+  Assets:Bank      $   1465,92
+
+test reg
+20-Jan-06 Client billed         Client                   $ -1596,00   $ -1596,00
+                                Tax:Amount                 $ 130,08   $ -1465,92
+                                Assets:Bank               $ 1465,92            0
+                                Tax:Amount                 $ -10,60     $ -10,60
+                                Tax:sometax                  $ 9,76      $ -0,85
+                                Tax:othertax                 $ 0,85            0
+end test

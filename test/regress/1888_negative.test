@@ -1,0 +1,15 @@
+; Regression test for issue #1888 (negative amounts)
+;
+; Verify that negative European-style decimal amounts like "-0,075" are
+; parsed correctly as -0.075, not -75.
+
+2020-01-07 Test negative European decimal
+  Assets:Test    EUR -0,075
+  Equity         EUR  0,075
+
+test bal
+          EUR -0,075  Assets:Test
+           EUR 0,075  Equity
+--------------------
+                   0
+end test
