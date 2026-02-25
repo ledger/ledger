@@ -1555,4 +1555,56 @@ void inject_posts::operator()(post_t& post) {
   item_handler<post_t>::operator()(post);
 }
 
+void rewrite_posts::operator()(post_t& post) {
+  journal_t* journal = report.session.journal.get();
+
+  // Check whether any payee or account rewrite rule matches this posting.
+  string new_payee;
+  for (const payee_rewrite_mapping_t& pair : journal->payee_rewrite_mappings) {
+    if (pair.first.match(post.xact->payee)) {
+      new_payee = pair.second;
+      break;
+    }
+  }
+
+  string new_account;
+  for (const account_rewrite_mapping_t& pair : journal->account_rewrite_mappings) {
+    if (pair.first.match(post.account->fullname())) {
+      new_account = pair.second;
+      break;
+    }
+  }
+
+  // If neither rule matched, forward the original posting unchanged.
+  if (new_payee.empty() && new_account.empty()) {
+    item_handler<post_t>::operator()(post);
+    return;
+  }
+
+  // At least one rule matched: create a temporary copy and apply rewrites.
+  xact_t& xact = temps.copy_xact(*post.xact);
+  xact._date = post.date();
+  post_t& temp = temps.copy_post(post, xact);
+  temp.set_state(post.state());
+
+  if (!new_payee.empty())
+    xact.payee = new_payee;
+
+  if (!new_account.empty()) {
+    account_t* prev_account = temp.account;
+    temp.account->remove_post(&temp);
+
+    std::list<string> account_names;
+    split_string(new_account, ':', account_names);
+    temp.account = create_temp_account_from_path(account_names, temps, journal->master);
+    temp.account->add_post(&temp);
+
+    temp.account->add_flags(prev_account->flags());
+    if (prev_account->has_xdata())
+      temp.account->xdata().add_flags(prev_account->xdata().flags());
+  }
+
+  item_handler<post_t>::operator()(temp);
+}
+
 } // namespace ledger
