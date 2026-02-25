@@ -1,0 +1,647 @@
+src/error.cc
+  83bbfc82e20e5a50 89-93,104-107,118-119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "b49f32ec5baf079e484debd69e861a280005eb2a",
+  "prompts": {
+    "83bbfc82e20e5a50": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1d7e17e8-0dc8-4103-8910-70a83d15208c",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>1838</command-args>",
+          "timestamp": "2026-02-25T07:57:46.800Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 1838.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the claude-code skill to provide context for the rest of the task\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-02-25T07:57:46.800Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me start by understanding the GitHub issue #1838 and then plan the fix.",
+          "timestamp": "2026-02-25T07:57:48.942Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1838 --repo ledger/ledger",
+            "description": "View GitHub issue #1838"
+          },
+          "timestamp": "2026-02-25T07:57:49.792Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1838 --repo ledger/ledger --comments",
+            "description": "View issue comments"
+          },
+          "timestamp": "2026-02-25T07:57:53.162Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at the error code in `src/error.cc` at the assertion in question.",
+          "timestamp": "2026-02-25T07:57:57.128Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1215 --repo ledger/ledger",
+            "description": "View related issue #1215"
+          },
+          "timestamp": "2026-02-25T07:57:57.865Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1215 --repo ledger/ledger --comments",
+            "description": "View issue 1215 comments"
+          },
+          "timestamp": "2026-02-25T07:58:01.031Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1838/src/error.cc"
+          },
+          "timestamp": "2026-02-25T07:58:05.789Z"
+        },
+        {
+          "type": "assistant",
+          "text": "So the issue is in `src/error.cc` at line 88. There is an assertion `assert(len < 1048576)` (which is 1MB). This assertion was previously 8192 (8KB) based on the comment. The issue is that when a transaction entry in the ledger file is longer than 1MB (or was 8KB before the fix mentioned in comment), the assertion fails.\n\nThe proper fix is to remove the hard-coded size limit or make the limit much larger, perhaps dynamically handle large transactions without any hardcoded limit.\n\nLet me look at the current assertion and understand what would be a proper fix:\n\n\nI'm considering a few approaches here: I could increase the limit to something like 16MB, remove the assertion entirely and handle oversized context gracefully, or convert it from a hard crash to a soft limit that truncates the output with a message. Since this assertion is really just validating that error message context doesn't balloon to unreasonable sizes, I should probably make it a graceful truncation rather than a crash, or remove the arbitrary limit altogether. Let me trace through where this source context gets used to understand the implications better.",
+          "timestamp": "2026-02-25T07:58:17.492Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/fix-1838/src",
+            "pattern": "source_context"
+          },
+          "timestamp": "2026-02-25T07:58:17.609Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1838/src/error.h",
+            "limit": 20,
+            "offset": 70
+          },
+          "timestamp": "2026-02-25T07:58:20.899Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue. In `src/error.cc`, there's an assertion:\n```cpp\nassert(len < 1048576);\n```\n\nThis was previously 8192 (8KB) but was updated to 1048576 (1MB). However, users with large transactions (like an equity report with many postings) can still hit this limit.\n\nThe issue is that when a transaction is larger than 1MB, the `assert` fails, causing an uncontrolled crash. The proper fix is:\n\n1. Remove the hard limit completely, since modern systems can handle large allocations\n2. Or truncate gracefully if the context is very large, showing just the beginning of the problematic section\n\n\nThe cleanest approach is to remove the assertion entirely and let the system handle large allocations naturally, or implement a soft truncation that displays a truncated context with an ellipsis rather than crashing. I'm looking at the current code structure to determine whether we should eliminate the assertion or add graceful truncation logic instead. I need to implement a fix that replaces the hard assertion with graceful handling—if the length exceeds a reasonable threshold, I'll truncate the content and append an indicator that there's more data rather than crashing.",
+          "timestamp": "2026-02-25T07:58:32.541Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue. The `source_context` function in `src/error.cc` has a hard-coded size assertion that causes a crash when a transaction entry in a ledger file exceeds 1MB. The fix should remove this hard limit (or handle it gracefully).\n\nLet me look at how the context is used to understand the best approach:",
+          "timestamp": "2026-02-25T07:58:32.706Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1838/src/error.cc",
+            "limit": 37,
+            "offset": 81
+          },
+          "timestamp": "2026-02-25T07:58:36.591Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix is clear. The issue is that there's a hard-coded limit of 1MB for the source context. For error messages, we don't need to show the entire transaction - we can truncate at a reasonable limit and indicate that there's more content.\n\nThe best approach:\n1. Keep a reasonable max display limit (e.g., 4096 characters for display purposes)\n2. Remove the assert that causes crashes\n3. If the transaction is longer than the display limit, show the first N bytes and append \"...\"\n\nActually, let me reconsider. The `assert` in C++ will cause an `abort()` in debug mode or undefined behavior in release mode depending on compile flags. \n\nSo the solution is to remove that problematic assertion and instead implement a soft limit on display - if the content exceeds 4096 bytes, I'll truncate it and append a message indicating there's more. Now I'm writing the implementation that handles this gracefully.\n\nWriting the fix... Still writing the buffer handling...\n\nNow I'm thinking about what test would actually catch this regression—the issue seems to be that the equity report generation creates too much output and triggers an assertion, but building a test file with over 1MB of data isn't practical. I need to understand what exactly was failing at line 158 and whether the length of the equity report itself is what's causing the problem.",
+          "timestamp": "2026-02-25T07:58:54.606Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at existing regression tests for context:",
+          "timestamp": "2026-02-25T07:58:54.610Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1838/test/regress/ | head -20 && ls /Users/johnw/src/ledger/fix-1838/test/regress/ | wc -l",
+            "description": "List regression tests"
+          },
+          "timestamp": "2026-02-25T07:58:55.669Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1838/test/regress/1901.test"
+          },
+          "timestamp": "2026-02-25T07:58:57.925Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1838/test/regress/1901*",
+            "description": "Check 1901 test files"
+          },
+          "timestamp": "2026-02-25T07:59:00.547Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls -la /Users/johnw/src/ledger/fix-1838/test/regress/ | tail -20",
+            "description": "List end of regression test directory"
+          },
+          "timestamp": "2026-02-25T07:59:02.719Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1838/test/regress/GH2521.test"
+          },
+          "timestamp": "2026-02-25T07:59:06.016Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1838/test/regress/1036.test"
+          },
+          "timestamp": "2026-02-25T07:59:09.839Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the test format. Let me now figure out the best way to create a regression test for issue #1838.\n\nThe issue is about an equity report (or any large transaction) that exceeds the 1MB limit in `source_context`. The test needs to:\n1. Create a ledger file with many transactions\n2. Generate an equity report from it\n3. Try to parse the equity report and verify it works without crashing\n\nThe problem is that creating a test with a single transaction that's over 1MB would require a huge number of postings. Let me think about a simpler approach.\n\nActually, looking at the issue again - the assertion `assert(len < 1048576)` is what's failing. \n\nThe real issue is that `source_context` fails when trying to display error context for large transactions. Rather than creating an impractically large test file with hundreds of thousands of accounts, I should focus on the actual problem: the user generates an equity report from a ledger file, then tries to parse that equity report as input, which triggers the assertion when the equity entries are too large.\n\nThe equity command outputs transactions that reference many accounts, and when a parse error occurs, ledger attempts to show the source context for that entire transaction. For massive transactions, this context extraction exceeds the 1MB limit. The fix should handle this gracefully instead of asserting.\n\nI'll replace the hard assertion with a soft limit that truncates the display output if it exceeds 4096 bytes, then create a regression test using a ledger file with 100+ accounts where the equity command generates a large transaction with a syntax error to verify it fails gracefully without hitting the assertion.",
+          "timestamp": "2026-02-25T07:59:29.569Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at the test harness to understand if generated test files are possible:",
+          "timestamp": "2026-02-25T07:59:29.705Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1838/test/regress/ | grep -E \"py|gen\" | head -10",
+            "description": "Look for Python or generated tests"
+          },
+          "timestamp": "2026-02-25T07:59:30.918Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1838/test/regress/976_py.test"
+          },
+          "timestamp": "2026-02-25T07:59:33.446Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1838/test/regress/976.py"
+          },
+          "timestamp": "2026-02-25T07:59:35.999Z"
+        },
+        {
+          "type": "assistant",
+          "text": "For the regression test for issue #1838, I need a test that creates a large transaction. The issue is about equity output generating large transactions that ledger then refuses to parse.\n\nI think the best approach is:\n1. Create a ledger file with many accounts (enough to generate a transaction that's significantly large)\n2. Create a test that generates the equity report and passes it back to ledger\n3. Verify it doesn't crash\n\nBut the problem is: the test needs to be self-contained in a .test file. The .test files don't support dynamic generation.\n\nLet me look at an alternative approach - maybe I can create a test that has a large-but-not-too-large transaction that would have previously hit the 8192 (8KB) limit but not the 1048576 (1MB) limit. We could lower the threshold in the test, but that would require changing the assertion.\n\n\nActually, I realize the core issue is that ledger crashes when the equity.dat file exceeds a certain limit, and the fix is to remove or increase that limit. For the regression test, I can create a .test file with many accounts and long names to generate a transaction large enough to trigger the old 8KB threshold, then verify the equity command works without crashing. where source_context is called.\n\nActually wait - the assertion in source_context is about the transaction size. The source_context function shows the source code context of a parsing error. The issue is:1. Run `ledger equity` on a large file, getting an equity.dat\n2. The equity.dat has a single very large transaction (all account balances at a point in time)\n3. Try to balance/register the equity.dat\n4. If there's any parsing/assertion error for that transaction, the source_context tries to show the full transaction\n5. But the transaction is >8KB (or >1MB), so the assertion fails\n\nThe real fix is to gracefully handle large transactions in source_context. The regression test can verify that parsing a file with a large transaction works correctly.\n\nFor the test file, I need to create a ledger with enough accounts to generate an equity transaction exceeding the old 8KB limit - probably around 100 accounts with reasonably long names should do it. I'll structure the test to create many transactions in the original file, then generate equity and verify it can be parsed back without hitting the assertion error. Let me check how the test harness handles file generation and piping.",
+          "timestamp": "2026-02-25T07:59:53.194Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1838/test/RegressTests.py",
+            "limit": 100
+          },
+          "timestamp": "2026-02-25T07:59:53.227Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the test format. The test can use the standard format where if it doesn't have `-f`, it will automatically use the test file as the ledger file.\n\nLet me think about the regression test for issue #1838. The issue is:\n1. `ledger equity` on a large file generates a large transaction\n2. Trying to re-parse that large equity.dat fails because `source_context` has an assertion that the length is < 1MB\n\nFor a proper test, I need to create a transaction in a ledger file that when there's a parse error, causes `source_context` to be called with a range > the old limit.\n\n\nSo the test should have a large transaction with an error that triggers source context display, and verify it handles the large context without crashing instead of showing a truncated version gracefully. So the real issue is that the assertion limit was increased from 8KB to 1MB, but the problem persists with sufficiently large files. I should remove the hard assertion entirely and instead implement graceful truncation with a \"...(truncated)\" indicator when displaying context that exceeds a reasonable display limit. For the test, I'll create a transaction with enough postings to trigger a parse error and verify the error displays without crashing. and verify that ledger handles it correctly. The test doesn't need to exceed 1MB - it just needs to verify the behavior is correct.\n\nActually wait, looking more carefully at the test case for #1215 mentioned in the issue... let me search for any existing test file.\n\nLet me think about what the regression test should look like. The issue is that `source_context` crashes on large transactions. The fix removes the assertion. For a test that verifies this, I could create a .dat file with an intentionally large transaction with many postings, then run balance or register on it to verify it handles the case gracefully.\n\nThe simplest approach is probably a Python script that generates a large enough transaction to trigger the old behavior. But I need to decide on the actual fix strategy: should I remove the assertion entirely, or replace it with graceful truncation? Since `source_context` is just for displaying error messages, truncating to something reasonable like 4KB with an ellipsis indicator would be better for user experience than crashing or showing massive output. Writing the test implementation...",
+          "timestamp": "2026-02-25T08:00:20.968Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have a clear understanding of the issue. The `source_context` function in `src/error.cc` has a hard-coded size assertion (`assert(len < 1048576)`) that crashes the program when trying to display error context for very large transactions (e.g., equity reports with many accounts). The fix should remove this hard limit and handle large transactions gracefully.",
+          "timestamp": "2026-02-25T08:00:21.487Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Task",
+          "input": {
+            "description": "Fix issue 1838 source_context limit",
+            "prompt": "Fix a bug in the Ledger accounting tool at /Users/johnw/src/ledger/fix-1838/src/error.cc.\n\n## Problem\n\nIn `src/error.cc`, the `source_context` function has a hard-coded assertion `assert(len < 1048576)` that causes ledger to crash with an assertion failure when:\n1. A transaction in a ledger file has more than 1MB of source content (e.g., equity reports with many accounts)\n2. Any error occurs that triggers `source_context` to display the context\n\nThe original assertion was 8192 bytes, then increased to 1048576 (1MB). But the real fix should handle this gracefully without any hard upper limit.\n\n## Current code (src/error.cc lines 81-115):\n\n```cpp\nstring source_context(const path& file, const std::istream::pos_type pos,\n                      const std::istream::pos_type end_pos, const string& prefix) {\n  const std::streamoff len = end_pos - pos;\n  if (!len || file.empty())\n    return _(\"<no source context>\");\n\n  assert(len > 0);\n  assert(len < 1048576);\n\n  std::ostringstream out;\n\n#if HAVE_GPGME\n  std::istream* in(decrypted_stream_t::open_stream(file));\n#else\n  std::istream* in(new ifstream(file, std::ios::binary));\n#endif\n  in->seekg(pos, std::ios::beg);\n\n  scoped_array<char> buf(new char[static_cast<std::size_t>(len) + 1]);\n  in->read(buf.get(), static_cast<std::streamsize>(len));\n  assert(in->gcount() == static_cast<std::streamsize>(len));\n  buf[static_cast<std::ptrdiff_t>(len)] = '\\0';\n\n  bool first = true;\n  for (char* p = std::strtok(buf.get(), \"\\r\\n\"); p; p = std::strtok(nullptr, \"\\r\\n\")) {\n    if (first)\n      first = false;\n    else\n      out << '\\n';\n    out << prefix << p;\n  }\n\n  delete (in);\n  return out.str();\n}\n```\n\n## Fix Required\n\nReplace the hard assertion `assert(len < 1048576)` with graceful truncation:\n1. Remove the `assert(len < 1048576)` line\n2. Add a reasonable display limit (e.g., 4096 bytes for error context display purposes)\n3. If the transaction is longer than 4096 bytes, read only the first 4096 bytes and append a line like `prefix + \"...(context truncated)\"` to indicate truncation\n4. Replace the `assert(in->gcount() == ...)` with a safe null-termination using the actual bytes read\n\nHere is the complete file content to help you understand context:\n\n```\n/*\n * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.\n * ... (license header)\n */\n\n#include <system.hh>\n#include \"utils.h\"\n\n#if HAVE_GPGME\n#include \"gpgme.h\"\n#endif\n\nnamespace ledger {\n\nstd::ostringstream _ctxt_buffer;\nstd::ostringstream _desc_buffer;\n\nstring error_context() { ... }\nstring file_context(const path& file, const std::size_t line) { ... }\nstring line_context(...) { ... }\n\nstring source_context(const path& file, const std::istream::pos_type pos,\n                      const std::istream::pos_type end_pos, const string& prefix) {\n  // THIS IS THE FUNCTION TO FIX\n}\n```\n\n## Task\n\n1. Read the file at /Users/johnw/src/ledger/fix-1838/src/error.cc\n2. Apply the fix to gracefully truncate long context instead of asserting\n3. DO NOT commit the changes - leave them in the working tree\n4. The fix should be minimal and targeted - only change what's needed\n\nImportant coding conventions for this project:\n- 2-space indentation\n- 100-column limit\n- K&R braces\n\nThe const `4096` for the display limit should be defined as a named constant.\n\nAfter fixing error.cc, also create a regression test file at /Users/johnw/src/ledger/fix-1838/test/regress/1838.test\n\nThe test should create a scenario where source_context would be called with a large transaction. Create a ledger file with a single large transaction (many postings with long account names) that has a syntax error, and verify that ledger handles it gracefully (shows the truncated context) rather than crashing.\n\nHere is the test format:\n- Journal data appears at the top of the .test file  \n- `test <ledger-command>` begins a test block with expected output following\n- `test <command> -> <exit_code>` tests for a specific exit code\n- `end test` closes the block\n- `__ERROR__` marks expected stderr output within a test block\n- `$FILE` is replaced with the test file path at runtime\n\nFor the test, create a transaction with many postings (at least 100 lines to get ~8KB of content). The test should verify that when there's an error in a large transaction, ledger displays a truncated context and exits with error code 1, rather than crashing with an assertion failure.\n\nLook at /Users/johnw/src/ledger/fix-1838/test/regress/1036.test as an example of a test with error output.\n\nAfter examining the code carefully, implement the fix in error.cc and create the test file. Do NOT commit anything.",
+            "subagent_type": "cpp-pro"
+          },
+          "timestamp": "2026-02-25T08:00:47.952Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1838/src/error.cc"
+          },
+          "timestamp": "2026-02-25T08:06:44.798Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1838/test/regress/1838.test"
+          },
+          "timestamp": "2026-02-25T08:06:47.475Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good, the fix looks correct. Let me now build the project and run the test to verify it works.",
+          "timestamp": "2026-02-25T08:06:49.529Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The changes look good. Now let me build and test:",
+          "timestamp": "2026-02-25T08:06:49.944Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1838/build && make -j$(nproc) ledger 2>&1 | tail -20",
+            "description": "Build ledger",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-25T08:06:51.389Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1838/",
+            "description": "Check directory contents"
+          },
+          "timestamp": "2026-02-25T08:06:54.157Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/ | grep -E \"build|opt|debug\"",
+            "description": "Find existing build directories"
+          },
+          "timestamp": "2026-02-25T08:06:56.901Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/",
+            "description": "List parent ledger directory"
+          },
+          "timestamp": "2026-02-25T08:06:59.770Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/master/ | grep -E \"build|opt|debug\"",
+            "description": "Check master for build directories"
+          },
+          "timestamp": "2026-02-25T08:07:02.408Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/master/build/ | head -10",
+            "description": "Check master build directory"
+          },
+          "timestamp": "2026-02-25T08:07:04.800Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "mkdir -p build && cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build 2>&1 | tail -10",
+            "description": "Configure CMake build",
+            "timeout": 60000
+          },
+          "timestamp": "2026-02-25T08:07:07.886Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "./acprep debug --output=build 2>&1 | tail -30",
+            "description": "Configure build using acprep",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-25T08:07:11.447Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/master/build/ledger 2>/dev/null || echo \"not found\"",
+            "description": "Check if master has a built ledger binary"
+          },
+          "timestamp": "2026-02-25T08:07:15.423Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/master/build/CMakeCache.txt | grep -E \"CMAKE_CXX_COMPILER|Boost_DIR|BOOST\" | head -10",
+            "description": "Check master build configuration"
+          },
+          "timestamp": "2026-02-25T08:07:18.439Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The master build was done with Nix, using Nix store paths for Boost and Clang. I need to use the Nix build environment to build the fix-1838 worktree. Let me try using the Nix development shell.",
+          "timestamp": "2026-02-25T08:07:23.291Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "which nix && nix --version 2>/dev/null | head -1",
+            "description": "Check if nix is available"
+          },
+          "timestamp": "2026-02-25T08:07:24.876Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cp /Users/johnw/src/ledger/master/build/CMakeCache.txt /tmp/master_cmake_cache.txt && head -30 /tmp/master_cmake_cache.txt",
+            "description": "Copy and examine master CMakeCache"
+          },
+          "timestamp": "2026-02-25T08:07:28.053Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "BOOST_DIR=/nix/store/i4h1r48bd2dqrsypsikggv3lzx63gdra-boost-1.87.0-dev/lib/cmake/Boost-1.87.0\nCLANG=/nix/store/6d7hvdhdb18qc7x1h19ki2bdirbhiic2-clang-wrapper-18.1.8/bin/clang++\nmkdir -p /Users/johnw/src/ledger/fix-1838/build\ncmake /Users/johnw/src/ledger/fix-1838 \\\n  -B /Users/johnw/src/ledger/fix-1838/build \\\n  -DCMAKE_CXX_COMPILER=\"$CLANG\" \\\n  -DBoost_DIR=\"$BOOST_DIR\" \\\n  -DCMAKE_BUILD_TYPE=Debug 2>&1 | tail -20",
+            "description": "Configure CMake with Nix-provided Boost and Clang",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-25T08:07:32.511Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "mkdir -p /Users/johnw/src/ledger/fix-1838/build 2>&1 || true",
+            "description": "Create build directory"
+          },
+          "timestamp": "2026-02-25T08:07:35.252Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "BOOST_DIR=\"/nix/store/i4h1r48bd2dqrsypsikggv3lzx63gdra-boost-1.87.0-dev/lib/cmake/Boost-1.87.0\"\nCLANG=\"/nix/store/6d7hvdhdb18qc7x1h19ki2bdirbhiic2-clang-wrapper-18.1.8/bin/clang++\"\nCMAKE=\"/nix/store/g1ck4iddb7q6f5qm8pa3qqss6dp3gjlm-cmake-4.1.2/bin/cmake\"\n\ncd /Users/johnw/src/ledger/fix-1838/build && \"$CMAKE\" /Users/johnw/src/ledger/fix-1838 \\\n  -DCMAKE_CXX_COMPILER=\"$CLANG\" \\\n  -DBoost_DIR=\"$BOOST_DIR\" \\\n  -DCMAKE_BUILD_TYPE=Debug 2>&1 | tail -20",
+            "description": "Configure CMake with Nix paths",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-25T08:07:39.498Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /nix/store/g1ck4iddb7q6f5qm8pa3qqss6dp3gjlm-cmake-4.1.2/bin/cmake 2>&1 || echo \"not found\"\ncmake --version 2>&1 | head -1",
+            "description": "Check cmake availability"
+          },
+          "timestamp": "2026-02-25T08:07:42.513Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "BOOST_DIR=\"/nix/store/i4h1r48bd2dqrsypsikggv3lzx63gdra-boost-1.87.0-dev/lib/cmake/Boost-1.87.0\"\nCLANG=\"/nix/store/6d7hvdhdb18qc7x1h19ki2bdirbhiic2-clang-wrapper-18.1.8/bin/clang++\"\nCMAKE=\"/nix/store/g1ck4iddb7q6f5qm8pa3qqss6dp3gjlm-cmake-4.1.2/bin/cmake\"\necho \"Testing cmake: $CMAKE\"\n\"$CMAKE\" --version 2>&1 | head -1",
+            "description": "Test cmake invocation with full path"
+          },
+          "timestamp": "2026-02-25T08:07:46.515Z"
+        },
+        {
+          "type": "assistant",
+          "text": "There's some whitespace issue with the cmake path. Let me use the full path more carefully.",
+          "timestamp": "2026-02-25T08:07:50.779Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/nix/store/g1ck4iddb7q6f5qm8pa3qqss6dp3gjlm-cmake-4.1.2/bin/cmake --version 2>&1 | head -1",
+            "description": "Test cmake with hardcoded path"
+          },
+          "timestamp": "2026-02-25T08:07:51.792Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/nix/store/g1ck4iddb7q6f5qm8pa3qqss6dp3gjlm-cmake-4.1.2/bin/cmake /Users/johnw/src/ledger/fix-1838 -DCMAKE_CXX_COMPILER=/nix/store/6d7hvdhdb18qc7x1h19ki2bdirbhiic2-clang-wrapper-18.1.8/bin/clang++ -DBoost_DIR=/nix/store/i4h1r48bd2dqrsypsikggv3lzx63gdra-boost-1.87.0-dev/lib/cmake/Boost-1.87.0 -DCMAKE_BUILD_TYPE=Debug 2>&1 | tail -20",
+            "description": "Run CMake configuration with Nix paths",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-25T08:07:55.460Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "rm -rf /Users/johnw/src/ledger/fix-1838/build && mkdir -p /Users/johnw/src/ledger/fix-1838/build && /nix/store/g1ck4iddb7q6f5qm8pa3qqss6dp3gjlm-cmake-4.1.2/bin/cmake /Users/johnw/src/ledger/fix-1838 -DCMAKE_CXX_COMPILER=/nix/store/6d7hvdhdb18qc7x1h19ki2bdirbhiic2-clang-wrapper-18.1.8/bin/clang++ -DBoost_DIR=/nix/store/i4h1r48bd2dqrsypsikggv3lzx63gdra-boost-1.87.0-dev/lib/cmake/Boost-1.87.0 -DCMAKE_BUILD_TYPE=Debug -DUSE_PYTHON=OFF 2>&1 | tail -20",
+            "description": "Reconfigure CMake with fresh build dir",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-25T08:08:05.154Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1838/build 2>&1 | head -5; echo \"---\"; ls /Users/johnw/src/ledger/fix-1838/ | head -5",
+            "description": "Check build directory status"
+          },
+          "timestamp": "2026-02-25T08:08:09.055Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1838/build/",
+            "description": "List build dir contents"
+          },
+          "timestamp": "2026-02-25T08:08:11.788Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The build directory is empty. The cmake command failed with \"Current working directory cannot be established.\" That's strange. Let me try a different approach - instead of building from scratch, let me try reusing the master build directory with a symlink or override approach.\n\nActually, let me try a different approach: instead of building from scratch, let me copy the master build and just rebuild the error.cc object file and re-link.\n\nActually, a better approach is to use the nix develop shell to configure and build:",
+          "timestamp": "2026-02-25T08:08:15.502Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me try using the nix develop shell to build:",
+          "timestamp": "2026-02-25T08:08:15.741Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop /Users/johnw/src/ledger/fix-1838#default --command cmake /Users/johnw/src/ledger/fix-1838 -B /Users/johnw/src/ledger/fix-1838/build -DCMAKE_BUILD_TYPE=Debug -DUSE_PYTHON=OFF 2>&1 | tail -20",
+            "description": "Configure with nix develop shell",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-25T08:08:17.057Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop /Users/johnw/src/ledger/fix-1838#default --command make -C /Users/johnw/src/ledger/fix-1838/build -j$(sysctl -n hw.ncpu) ledger 2>&1 | tail -20",
+            "description": "Build ledger using nix develop",
+            "timeout": 300000
+          },
+          "timestamp": "2026-02-25T08:08:40.832Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The build succeeded. Now let's run the test to see if it passes:",
+          "timestamp": "2026-02-25T08:09:29.841Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop /Users/johnw/src/ledger/fix-1838#default --command python3 /Users/johnw/src/ledger/fix-1838/test/RegressTests.py --ledger /Users/johnw/src/ledger/fix-1838/build/ledger --sourcepath /Users/johnw/src/ledger/fix-1838 /Users/johnw/src/ledger/fix-1838/test/regress/1838.test 2>&1",
+            "description": "Run regression test for issue 1838",
+            "timeout": 60000
+          },
+          "timestamp": "2026-02-25T08:09:31.905Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test passes. Now let me also run the ctest to make sure nothing is broken:",
+          "timestamp": "2026-02-25T08:09:41.388Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop /Users/johnw/src/ledger/fix-1838#default --command sh -c \"ctest -R 1838 -V\" 2>&1",
+            "description": "Run the 1838 regression test via ctest",
+            "timeout": 60000
+          },
+          "timestamp": "2026-02-25T08:09:42.647Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The regression test passes. Now let me also verify that the fix works correctly - let me check what the test actually tests by examining the expected output more carefully:",
+          "timestamp": "2026-02-25T08:09:48.523Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "# Verify that the test exercises the truncation behavior by checking the source\n# context output length\n/Users/johnw/src/ledger/fix-1838/build/ledger -f /Users/johnw/src/ledger/fix-1838/test/regress/1838.test bal 2>&1 | head -20",
+            "description": "Manually run the 1838 test case to see actual output"
+          },
+          "timestamp": "2026-02-25T08:09:50.954Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "/Users/johnw/src/ledger/fix-1838/build/ledger -f /Users/johnw/src/ledger/fix-1838/test/regress/1838.test bal 2>&1 | grep -n \"truncated\\|Error:\"",
+            "description": "Check for truncation and error messages"
+          },
+          "timestamp": "2026-02-25T08:09:55.226Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix is working correctly. The source context is truncated at 4096 bytes and shows `...(context truncated)` instead of crashing with the assertion failure.\n\nNow let me check the git status and commit the changes:",
+          "timestamp": "2026-02-25T08:09:58.173Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1838 && git status && git diff --stat",
+            "description": "Check git status and diff"
+          },
+          "timestamp": "2026-02-25T08:09:59.138Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff src/error.cc",
+            "description": "Review the diff"
+          },
+          "timestamp": "2026-02-25T08:10:02.148Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The changes look good. Let me also run a quick check with clang-format to ensure style compliance:",
+          "timestamp": "2026-02-25T08:10:04.378Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "nix develop /Users/johnw/src/ledger/fix-1838#default --command clang-format --dry-run --Werror /Users/johnw/src/ledger/fix-1838/src/error.cc 2>&1",
+            "description": "Check clang-format compliance"
+          },
+          "timestamp": "2026-02-25T08:10:05.873Z"
+        },
+        {
+          "type": "assistant",
+          "text": "No clang-format issues. Now let me commit the changes:",
+          "timestamp": "2026-02-25T08:10:11.491Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git log --oneline -5",
+            "description": "Check recent commits for style reference"
+          },
+          "timestamp": "2026-02-25T08:10:12.858Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add src/error.cc && git commit --author=\"John Wiegley <johnw@newartisans.com>\" -m \"$(cat <<'EOF'\nFix crash when source_context encounters large transactions\n\nReplace the hard-coded size assertion (assert(len < 1048576)) in\nsource_context() with graceful truncation. Previously, any parse error\non a transaction larger than 1MB would crash with an assertion failure\nrather than reporting a useful error message.\n\nThe error context display is now capped at 4096 bytes. When the\ntransaction source exceeds this limit, the first 4096 bytes are shown\nfollowed by \"...(context truncated)\", giving the user enough context to\nlocate the problem without flooding output or aborting.\n\nThis also replaces the unsafe assert on in->gcount() with a safe\nnull-termination using the actual bytes read, handling partial reads\ngracefully.\n\nFixes #1838, related to #1215.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the error.cc fix"
+          },
+          "timestamp": "2026-02-25T08:10:20.537Z"
+        }
+      ],
+      "total_additions": 13,
+      "total_deletions": 5,
+      "accepted_lines": 13,
+      "overriden_lines": 0
+    }
+  }
+}
