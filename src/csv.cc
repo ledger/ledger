@@ -49,7 +49,7 @@ string csv_reader::read_field(std::istream& in) {
     char x;
     while (in.good() && !in.eof()) {
       in.get(x);
-      if (x == '\\') {
+      if (x == '\\') { // NOLINT(bugprone-branch-clone)
         in.get(x);
       } else if (x == '"' && in.peek() == '"') {
         in.get(x);

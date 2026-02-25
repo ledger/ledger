@@ -59,7 +59,7 @@ struct usage_sorter {
 
 std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
                                                        xacts_list::reverse_iterator iter,
-                                                       xacts_list::reverse_iterator end,
+                                                       const xacts_list::reverse_iterator& end,
                                                        account_t* ref_account) {
   scorecard_t scores;
 
@@ -263,7 +263,7 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
   if (account_usage.size() > 0) {
 #if DEBUG_ON
     if (SHOW_DEBUG("lookup.account")) {
-      for (const account_use_pair& value : account_usage) {
+      for (const auto& value : account_usage) {
         DEBUG("lookup.account", "Account: " << value.second << " - " << value.first->fullname());
       }
     }

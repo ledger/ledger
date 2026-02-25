@@ -57,7 +57,7 @@ void format_ptree::flush() {
                               Ledger_VERSION_PATCH));
 
   property_tree::ptree& ct(pt.put("ledger.commodities", ""));
-  for (const commodities_pair& pair : commodities)
+  for (const auto& pair : commodities)
     put_commodity(ct.add("commodity", ""), *pair.second, true);
 
   property_tree::ptree& at(pt.put("ledger.accounts", ""));

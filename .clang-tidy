@@ -25,8 +25,13 @@ Checks: >-
   -clang-analyzer-*,
   -modernize-use-trailing-return-type
 
-# Treat all enabled warnings as errors so the lint target fails on new issues.
-WarningsAsErrors: "*"
+# Treat enabled warnings as errors so the lint target fails on new issues.
+# Exclude clang-diagnostic-* from errors: these are compiler diagnostics
+# (e.g. ignored PCH files) rather than lint warnings and cannot be suppressed
+# via Checks.
+WarningsAsErrors: >-
+  *,
+  -clang-diagnostic-*
 
 # Only report diagnostics in project headers, not system/Boost headers.
 HeaderFilterRegex: '.*src/.*\.(h|hh)$'

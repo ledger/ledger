@@ -38,7 +38,8 @@ namespace ledger {
 scope_t* scope_t::default_scope = nullptr;
 empty_scope_t* scope_t::empty_scope = nullptr;
 
-void symbol_scope_t::define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) {
+void symbol_scope_t::define(const symbol_t::kind_t kind, const string& name,
+                            const expr_t::ptr_op_t& def) {
   DEBUG("scope.symbols", "Defining '" << name << "' = " << def << " in " << this);
 
   if (!symbols)

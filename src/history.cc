@@ -123,10 +123,10 @@ void commodity_history_t::remove_price(const commodity_t& source, const commodit
   p_impl->remove_price(source, target, date);
 }
 
-void commodity_history_t::map_prices(function<void(datetime_t, const amount_t&)> fn,
+void commodity_history_t::map_prices(const function<void(datetime_t, const amount_t&)>& fn,
                                      const commodity_t& source, const datetime_t& moment,
                                      const datetime_t& _oldest, bool bidirectionally) {
-  p_impl->map_prices(std::move(fn), source, moment, _oldest, bidirectionally);
+  p_impl->map_prices(fn, source, moment, _oldest, bidirectionally);
 }
 
 std::optional<price_point_t> commodity_history_t::find_price(const commodity_t& source,

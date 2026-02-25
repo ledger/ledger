@@ -98,12 +98,12 @@ public:
   bool defining_;
 
   item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
-      : supports_flags<uint_least16_t>(_flags), _state(UNCLEARED), note(_note), parent(nullptr),
+      : supports_flags<uint_least16_t>(_flags), parent(nullptr), _state(UNCLEARED), note(_note),
         defining_(false) {
     TRACE_CTOR(item_t, "flags_t, const string&");
   }
   item_t(const item_t& item)
-      : supports_flags<uint_least16_t>(), scope_t(), parent(nullptr), defining_(false) {
+      : supports_flags<uint_least16_t>(item), scope_t(), parent(nullptr), defining_(false) {
     copy_details(item);
     TRACE_CTOR(item_t, "copy");
   }
@@ -172,7 +172,7 @@ public:
   void set_state(state_t new_state) { _state = new_state; }
   virtual state_t state() const { return _state; }
 
-  void define(const symbol_t::kind_t, const string&, expr_t::ptr_op_t) override;
+  void define(const symbol_t::kind_t, const string&, const expr_t::ptr_op_t&) override;
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   bool valid() const;

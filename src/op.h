@@ -183,7 +183,7 @@ public:
   const std::shared_ptr<scope_t> as_scope() const {
     return const_cast<op_t*>(this)->as_scope_lval();
   }
-  void set_scope(std::shared_ptr<scope_t> val) { data = val; }
+  void set_scope(const std::shared_ptr<scope_t>& val) { data = val; }
 
   // These three functions must use 'kind == IDENT' rather than
   // 'is_ident()', because they are called before the `data' member gets
@@ -241,8 +241,8 @@ private:
   friend void intrusive_ptr_add_ref(const op_t* op);
   friend void intrusive_ptr_release(const op_t* op);
 
-  ptr_op_t copy(ptr_op_t _left = nullptr, ptr_op_t _right = nullptr) const {
-    ptr_op_t node(new_node(kind, std::move(_left), std::move(_right)));
+  ptr_op_t copy(const ptr_op_t& _left = nullptr, const ptr_op_t& _right = nullptr) const {
+    ptr_op_t node(new_node(kind, _left, _right));
     if (kind < TERMINALS)
       node->data = data;
     return node;

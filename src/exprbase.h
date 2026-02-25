@@ -229,7 +229,7 @@ public:
 
   result_type preview(std::ostream& out, scope_t& scope) const {
     out << _("--- Input expression ---") << '\n';
-    out << text() << std::endl;
+    out << text() << '\n';
 
     out << '\n' << _("--- Text as parsed ---") << '\n';
     print(out);

@@ -353,7 +353,8 @@ public:
 
   option_t<report_t>* lookup_option(const char* p);
 
-  void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) override;
+  void define(const symbol_t::kind_t kind, const string& name,
+              const expr_t::ptr_op_t& def) override;
 
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 

@@ -337,7 +337,7 @@ void report_t::posts_report(post_handler_ptr handler) {
   handler = chain_pre_post_handlers(handler, *this);
 
   journal_posts_iterator walker(*session.journal.get());
-  pass_down_posts<journal_posts_iterator>(handler, walker);
+  pass_down_posts<journal_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
 
   if (!HANDLED(group_by_))
     posts_flusher(handler, *this)(value_t());
@@ -350,14 +350,14 @@ void report_t::generate_report(post_handler_ptr handler) {
       session, HANDLED(seed_) ? lexical_cast<unsigned int>(HANDLER(seed_).str()) : 0,
       HANDLED(head_) ? lexical_cast<unsigned int>(HANDLER(head_).str()) : 50);
 
-  pass_down_posts<generate_posts_iterator>(handler, walker);
+  pass_down_posts<generate_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
 }
 
 void report_t::xact_report(post_handler_ptr handler, xact_t& xact) {
   handler = chain_handlers(handler, *this);
 
   xact_posts_iterator walker(xact);
-  pass_down_posts<xact_posts_iterator>(handler, walker);
+  pass_down_posts<xact_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
 
   xact.clear_xdata();
 }
@@ -430,7 +430,8 @@ struct accounts_flusher {
 };
 } // namespace
 
-void report_t::accounts_report(acct_handler_ptr handler) {
+void report_t::accounts_report(
+    acct_handler_ptr handler) { // NOLINT(performance-unnecessary-value-param)
   post_handler_ptr chain = chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
                                                /* for_accounts_report= */ true);
   if (HANDLED(group_by_)) {
@@ -447,7 +448,7 @@ void report_t::accounts_report(acct_handler_ptr handler) {
   // objects created within it during the call to pass_down_posts, which will
   // be needed later by the pass_down_accounts.
   journal_posts_iterator walker(*session.journal.get());
-  pass_down_posts<journal_posts_iterator>(chain, walker);
+  pass_down_posts<journal_posts_iterator>(chain, walker); // NOLINT(bugprone-unused-raii)
 
   if (!HANDLED(group_by_))
     accounts_flusher(handler, *this)(value_t());
@@ -488,6 +489,7 @@ void report_t::commodities_report(post_handler_ptr handler) {
         if (new_limit.empty())
           new_limit = term;
         else
+          // NOLINTNEXTLINE(performance-inefficient-string-concatenation)
           new_limit = "(" + new_limit + ")&(" + term + ")";
       }
     }
@@ -507,7 +509,7 @@ void report_t::commodities_report(post_handler_ptr handler) {
 
   posts_commodities_iterator* walker(new posts_commodities_iterator(*session.journal.get()));
   try {
-    pass_down_posts<posts_commodities_iterator>(handler, *walker);
+    pass_down_posts<posts_commodities_iterator>(handler, *walker); // NOLINT(bugprone-unused-raii)
   } catch (...) {
     IF_VERIFY() {
       // If --verify was used, clean up the posts_commodities_iterator.
@@ -1313,7 +1315,8 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
   return nullptr;
 }
 
-void report_t::define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) {
+void report_t::define(const symbol_t::kind_t kind, const string& name,
+                      const expr_t::ptr_op_t& def) {
   session.define(kind, name, def);
 }
 

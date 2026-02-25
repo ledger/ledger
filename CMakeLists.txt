@@ -491,13 +491,12 @@ file(GLOB_RECURSE ALL_CXX_SOURCE_FILES
   ${CMAKE_SOURCE_DIR}/src/*.h)
 
 # Exclude files from linting that cannot be compiled standalone:
-#   sha512.cc    -- Aaron D. Gifford's SHA-2 implementation (vendored)
-#   strptime.cc  -- Windows-only strptime shim (Google, Apache-2.0)
-#   py_*.cc      -- Python bindings (require Boost.Python / Python headers)
-#   pyledger.cc  -- Python module entry point (requires Boost.Python)
-#   gpgme.*      -- GPGME encryption support (requires libgpgme headers)
+#   sha512.cc     -- Aaron D. Gifford's SHA-2 implementation (vendored)
+#   strptime.cc   -- Windows-only strptime shim (Google, Apache-2.0)
+#   py*.cc/py*.h  -- Python bindings (require Boost.Python / Python headers)
+#   gpgme.*       -- GPGME encryption support (requires libgpgme headers)
 list(FILTER ALL_CXX_SOURCE_FILES EXCLUDE REGEX
-  ".*(sha512|strptime|py_[a-z]+|pyledger|gpgme)\\.(cc|h)$")
+  ".*(sha512|strptime|py[a-z_]+|gpgme)\\.(cc|h)$")
 
 find_program(CLANG_FORMAT clang-format)
 find_program(CLANG_TIDY   clang-tidy)
@@ -544,14 +543,12 @@ if(CLANG_TIDY)
         "${_lint_db_file}"
       COMMAND ${CLANG_TIDY}
         -p "${_lint_db_dir}"
-        --warnings-as-errors="*"
         --quiet
         ${_lint_cc_files})
   else()
     list(APPEND _lint_commands
       COMMAND ${CLANG_TIDY}
         -p "${CMAKE_BINARY_DIR}"
-        --warnings-as-errors="*"
         --quiet
         ${_lint_cc_files})
   endif()

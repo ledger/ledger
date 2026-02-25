@@ -261,7 +261,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
         else
           cost_op = "@";
         if (post->has_flags(POST_COST_VIRTUAL))
-          cost_op = "(" + cost_op + ")";
+          cost_op = "(" + cost_op + ")"; // NOLINT(performance-inefficient-string-concatenation)
 
         if (post->has_flags(POST_COST_IN_FULL))
           amtbuf << " " << cost_op << " " << post->given_cost->abs();

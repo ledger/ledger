@@ -113,14 +113,14 @@ void truncate_xacts::flush() {
     bool print = false;
     if (head_count) {
       if (head_count > 0 && i < head_count)
-        print = true;
+        print = true; // NOLINT(bugprone-branch-clone)
       else if (head_count < 0 && i >= -head_count)
         print = true;
     }
 
     if (!print && tail_count) {
       if (tail_count > 0 && l - i <= tail_count)
-        print = true;
+        print = true; // NOLINT(bugprone-branch-clone)
       else if (tail_count < 0 && l - i > -tail_count)
         print = true;
     }
@@ -1027,18 +1027,18 @@ void interval_posts::operator()(post_t& post) {
   // report in two passes.  Otherwise, we only have to check whether the
   // post falls within the reporting period.
 
-  // NOLINTBEGIN(bugprone-branch-clone)
+  // NOLINTBEGIN(bugprone-branch-clone,bugprone-parent-virtual-call)
   if (interval.duration) {
     all_posts.push_back(&post);
   } else if (interval.find_period(post.date(), align_intervals)) {
     item_handler<post_t>::operator()(post);
   }
-  // NOLINTEND(bugprone-branch-clone)
+  // NOLINTEND(bugprone-branch-clone,bugprone-parent-virtual-call)
 }
 
 void interval_posts::flush() {
   if (!interval.duration) {
-    item_handler<post_t>::flush();
+    item_handler<post_t>::flush(); // NOLINT(bugprone-parent-virtual-call)
     return;
   }
 

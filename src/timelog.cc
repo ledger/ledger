@@ -70,7 +70,7 @@ void create_timelog_xact(const time_xact_t& in_event, const time_xact_t& out_eve
   if (!context.journal->add_xact(curr.get()))
     throw parse_error(_("Failed to record 'out' timelog transaction"));
   else
-    curr.release();
+    curr.release(); // NOLINT(bugprone-unused-return-value)
 }
 
 std::size_t clock_out_from_timelog(std::list<time_xact_t>& time_xacts, time_xact_t out_event,

@@ -67,9 +67,7 @@ inline void warning_func(const string& message) {
 extern std::ostringstream _ctxt_buffer;
 
 #define add_error_context(msg)                                                                     \
-  ((long(_ctxt_buffer.tellp()) == 0) ? (_ctxt_buffer << (msg))                                     \
-                                     : (_ctxt_buffer << std::endl                                  \
-                                                     << (msg)))
+  ((long(_ctxt_buffer.tellp()) == 0) ? (_ctxt_buffer << (msg)) : (_ctxt_buffer << '\n' << (msg)))
 
 string error_context();
 

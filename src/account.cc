@@ -205,7 +205,8 @@ string account_t::fullname() const {
     while (first->parent) {
       first = first->parent;
       if (!first->name.empty())
-        fullname = first->name + ":" + fullname;
+        fullname = // NOLINT(performance-inefficient-string-concatenation)
+            first->name + ":" + fullname;
     }
 
     _fullname = fullname;
@@ -224,7 +225,7 @@ string account_t::partial_name(bool flat) const {
       if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
         break;
     }
-    pname = acct->name + ":" + pname;
+    pname = acct->name + ":" + pname; // NOLINT(performance-inefficient-string-concatenation)
   }
   return pname;
 }

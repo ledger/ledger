@@ -231,7 +231,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
               while (*ptr && std::isalpha(static_cast<unsigned char>(*ptr)))
                 ++ptr;
               string::size_type klen = static_cast<string::size_type>(ptr - beg);
-              string keyword(beg, 0, klen);
+              string keyword(beg, klen);
               if (keyword == "min")
                 expr << (current->min_width > 0 ? static_cast<int>(current->min_width) : -1);
               else if (keyword == "max")

@@ -271,7 +271,7 @@ void instance_t::period_xact_directive(char* line) {
         pe->pos->end_pos = context.curr_pos;
         pe->pos->end_line = context.linenum;
 
-        pe.release();
+        pe.release(); // NOLINT(bugprone-unused-return-value)
       } else {
         reveal_context = true;
         pe->journal = nullptr;

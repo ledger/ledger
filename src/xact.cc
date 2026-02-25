@@ -226,7 +226,7 @@ bool xact_base_t::finalize() {
     for (post_t* post : posts) {
       if (!post->amount.is_null() && post->must_balance()) {
         if (post->amount.has_annotation())
-          top_post = post;
+          top_post = post; // NOLINT(bugprone-branch-clone)
         else if (!top_post)
           top_post = post;
       }

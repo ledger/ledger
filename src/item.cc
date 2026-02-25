@@ -386,7 +386,7 @@ value_t get_comment(item_t& item) {
   }
 }
 
-void item_t::define(const symbol_t::kind_t, const string& name, expr_t::ptr_op_t def) {
+void item_t::define(const symbol_t::kind_t, const string& name, const expr_t::ptr_op_t& def) {
   if (defining_)
     return;
   defining_ = true;

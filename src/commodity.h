@@ -192,7 +192,7 @@ public:
   void add_price(const datetime_t& date, const amount_t& price, const bool reflexive = true);
   void remove_price(const datetime_t& date, commodity_t& commodity);
 
-  void map_prices(function<void(datetime_t, const amount_t&)> fn,
+  void map_prices(const function<void(datetime_t, const amount_t&)>& fn,
                   const datetime_t& moment = datetime_t(), const datetime_t& _oldest = datetime_t(),
                   bool bidirectionally = false);
 

@@ -67,7 +67,7 @@ void commodity_t::remove_price(const datetime_t& date, commodity_t& commodity) {
   base->price_map.clear(); // a price was added, invalid the map
 }
 
-void commodity_t::map_prices(function<void(datetime_t, const amount_t&)> fn,
+void commodity_t::map_prices(const function<void(datetime_t, const amount_t&)>& fn,
                              const datetime_t& moment, const datetime_t& _oldest,
                              bool bidirectionally) {
   datetime_t when;
@@ -78,8 +78,7 @@ void commodity_t::map_prices(function<void(datetime_t, const amount_t&)> fn,
   else
     when = CURRENT_TIME();
 
-  pool().commodity_price_history.map_prices(std::move(fn), referent(), when, _oldest,
-                                            bidirectionally);
+  pool().commodity_price_history.map_prices(fn, referent(), when, _oldest, bidirectionally);
 }
 
 std::optional<price_point_t> commodity_t::find_price_from_expr(expr_t& expr,
@@ -312,7 +311,7 @@ void commodity_t::parse_symbol(char*& p, string& symbol) {
     char* q = std::strchr(p + 1, '"');
     if (!q)
       throw_(amount_error, _("Quoted commodity symbol lacks closing quote"));
-    symbol = string(p + 1, 0, static_cast<std::string::size_type>(q - p - 1));
+    symbol = string(p + 1, static_cast<std::string::size_type>(q - p - 1));
     p = q + 2;
   } else {
     char* q = next_element(p);

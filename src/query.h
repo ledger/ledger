@@ -226,8 +226,8 @@ public:
 
     token_t token_cache;
 
-    lexer_t(value_t::sequence_t::const_iterator _begin, value_t::sequence_t::const_iterator _end,
-            bool _multiple_args = true)
+    lexer_t(const value_t::sequence_t::const_iterator& _begin,
+            const value_t::sequence_t::const_iterator& _end, bool _multiple_args = true)
         : begin(_begin), end(_end), consume_whitespace(false), consume_next_arg(false),
           multiple_args(_multiple_args) {
       assert(begin != end);

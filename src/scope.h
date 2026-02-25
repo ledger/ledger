@@ -80,7 +80,7 @@ public:
 
   virtual string description() = 0;
 
-  virtual void define(const symbol_t::kind_t, const string&, expr_t::ptr_op_t) {}
+  virtual void define(const symbol_t::kind_t, const string&, const expr_t::ptr_op_t&) {}
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) = 0;
 
   virtual scope_t* get_parent() { return nullptr; }
@@ -110,7 +110,8 @@ public:
 
   scope_t* get_parent() override { return parent; }
 
-  void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) override {
+  void define(const symbol_t::kind_t kind, const string& name,
+              const expr_t::ptr_op_t& def) override {
     if (parent)
       parent->define(kind, name, def);
   }
@@ -137,7 +138,8 @@ public:
 
   string description() override { return grandchild.description(); }
 
-  void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) override {
+  void define(const symbol_t::kind_t kind, const string& name,
+              const expr_t::ptr_op_t& def) override {
     parent->define(kind, name, def);
     grandchild.define(kind, name, def);
   }
@@ -166,7 +168,8 @@ public:
   }
   ~lexical_scope_t() override { TRACE_DTOR(lexical_scope_t); }
 
-  void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) override {
+  void define(const symbol_t::kind_t kind, const string& name,
+              const expr_t::ptr_op_t& def) override {
     grandchild.define(kind, name, def);
   }
 };
@@ -227,7 +230,8 @@ public:
     return empty_string;
   }
 
-  void define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) override;
+  void define(const symbol_t::kind_t kind, const string& name,
+              const expr_t::ptr_op_t& def) override;
 
   expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 };

@@ -48,11 +48,11 @@ format_posts::format_posts(report_t& _report, const string& format,
   const char* f = format.c_str();
 
   if (const char* p = std::strstr(f, "%/")) {
-    first_line_format.parse_format(string(f, 0, static_cast<std::string::size_type>(p - f)));
+    first_line_format.parse_format(string(f, static_cast<std::string::size_type>(p - f)));
     const char* n = p + 2;
     // NOLINTBEGIN(bugprone-branch-clone)
     if (const char* pp = std::strstr(n, "%/")) {
-      next_lines_format.parse_format(string(n, 0, static_cast<std::string::size_type>(pp - n)),
+      next_lines_format.parse_format(string(n, static_cast<std::string::size_type>(pp - n)),
                                      first_line_format);
       between_format.parse_format(string(pp + 2), first_line_format);
     } else {
@@ -126,11 +126,11 @@ format_accounts::format_accounts(report_t& _report, const string& format,
   const char* f = format.c_str();
 
   if (const char* p = std::strstr(f, "%/")) {
-    account_line_format.parse_format(string(f, 0, static_cast<std::string::size_type>(p - f)));
+    account_line_format.parse_format(string(f, static_cast<std::string::size_type>(p - f)));
     const char* n = p + 2;
     // NOLINTBEGIN(bugprone-branch-clone)
     if (const char* pp = std::strstr(n, "%/")) {
-      total_line_format.parse_format(string(n, 0, static_cast<std::string::size_type>(pp - n)),
+      total_line_format.parse_format(string(n, static_cast<std::string::size_type>(pp - n)),
                                      account_line_format);
       separator_format.parse_format(string(pp + 2), account_line_format);
     } else {
