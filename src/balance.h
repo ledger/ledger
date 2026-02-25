@@ -99,7 +99,10 @@ public:
   using amounts_map = std::unordered_map<commodity_t*, amount_t>;
   using amounts_array = std::vector<const amount_t*>;
 
+  enum class lot_sort_order { by_commodity, fifo, lifo };
+
   amounts_map amounts;
+  lot_sort_order sort_order = lot_sort_order::by_commodity;
 
   /**
    * Constructors.  balance_t supports similar forms of construction
@@ -153,11 +156,14 @@ public:
   /**
    * Assignment and copy operators.  An balance may be assigned or copied.
    */
-  balance_t(const balance_t& bal) : amounts(bal.amounts) { TRACE_CTOR(balance_t, "copy"); }
+  balance_t(const balance_t& bal) : amounts(bal.amounts), sort_order(bal.sort_order) {
+    TRACE_CTOR(balance_t, "copy");
+  }
 
   balance_t& operator=(const balance_t& bal) {
     if (this != &bal) {
       amounts = bal.amounts;
+      sort_order = bal.sort_order;
     }
     return *this;
   }
@@ -280,6 +286,7 @@ public:
 
   [[nodiscard]] balance_t abs() const {
     balance_t temp;
+    temp.sort_order = sort_order;
     for (const amounts_map::value_type& pair : amounts)
       temp += pair.second.abs();
     return temp;
@@ -375,6 +382,7 @@ public:
     // A temporary must be used here because reduction may cause
     // multiple component amounts to collapse to the same commodity.
     balance_t temp;
+    temp.sort_order = sort_order;
     for (const amounts_map::value_type& pair : amounts)
       temp += pair.second.reduced();
     *this = temp;
@@ -389,6 +397,7 @@ public:
     // A temporary must be used here because unreduction may cause
     // multiple component amounts to collapse to the same commodity.
     balance_t temp;
+    temp.sort_order = sort_order;
     for (const amounts_map::value_type& pair : amounts)
       temp += pair.second.unreduced();
     *this = temp;
@@ -589,5 +598,7 @@ inline std::ostream& operator<<(std::ostream& out, const balance_t& bal) {
 void put_balance(property_tree::ptree& pt, const balance_t& bal);
 
 balance_t average_lot_prices(const balance_t& bal);
+balance_t fifo_lot_prices(const balance_t& bal);
+balance_t lifo_lot_prices(const balance_t& bal);
 
 } // namespace ledger
