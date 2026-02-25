@@ -237,7 +237,9 @@ bool xact_base_t::finalize() {
       }
     }
 
-    if (!saw_cost && top_post) {
+    if (!saw_cost && top_post &&
+        !(top_post->amount.has_annotation() && top_post->amount.annotation().price &&
+          top_post->amount.annotation().has_flags(ANNOTATION_PRICE_FIXATED))) {
       const balance_t& bal(balance.as_balance());
 
       DEBUG("xact.finalize", "there were no costs, and a valid top_post");
@@ -275,12 +277,13 @@ bool xact_base_t::finalize() {
     }
   }
 
-  // If the balance has more than 2 commodities and no null post, check
+  // If the balance has 2 or more commodities and no null post, check
   // whether fixated price annotations ({=price}) can be used to compute
   // costs and reduce the commodity count.  This handles the case where
   // multiple postings have different fixated prices for the same base
-  // commodity (e.g., EUR {=$1.32} and EUR {=$1.33}).
-  if (!null_post && balance.is_balance() && balance.as_balance().amounts.size() > 2) {
+  // commodity (e.g., EUR {=$1.32} and EUR {=$1.33}), including when the
+  // fixated prices collapse to exactly 2 commodities in the balance.
+  if (!null_post && balance.is_balance() && balance.as_balance().amounts.size() >= 2) {
     bool recompute = false;
     for (post_t* post : posts) {
       if (!post->cost && !post->amount.is_null() && post->must_balance() &&
