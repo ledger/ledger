@@ -1,0 +1,56 @@
+; Regression test for GitHub issue #1678:
+; A price directive that references a commodity name before that commodity
+; is defined as an alias should not crash with an assertion failure.
+;
+; The root cause: when pricedb (or a P directive before the commodity
+; directive) uses a commodity name (e.g., RUB), that commodity is created
+; as a standalone object. Later, when a commodity directive defines it as
+; an alias for another symbol (e.g., ₽), pool_t::alias() previously
+; asserted that the insert succeeded, which fails if the name already
+; exists in the commodity map.
+;
+; Also covers the double-include case: including a file with a commodity
+; alias directive more than once previously triggered the same assertion.
+
+P 2018-08-30 $ 68.1451 RUB
+
+commodity ₽
+    alias RUB
+    format ₽1000.00
+    default
+
+; Simulate a double-include by repeating the same commodity/alias block.
+commodity $
+    alias USD
+
+commodity $
+    alias USD
+
+2018-01-01 Opening Balances
+    Assets:Checking             1000 RUB
+    Equity:Opening Balances
+
+2018-02-01 Second Entry
+    Assets:Bank    $500.00
+    Equity:Opening Balances
+
+test bal
+             $500.00
+            ₽1000.00  Assets
+             $500.00    Bank
+            ₽1000.00    Checking
+            $-500.00
+           ₽-1000.00  Equity:Opening Balances
+--------------------
+                   0
+end test
+
+test bal Assets
+             $500.00
+            ₽1000.00  Assets
+             $500.00    Bank
+            ₽1000.00    Checking
+--------------------
+             $500.00
+            ₽1000.00
+end test
