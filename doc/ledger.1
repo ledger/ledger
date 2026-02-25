@@ -965,6 +965,13 @@ to show unrealized capital in a gain/losses report.
 When generating a ledger transaction from a CSV file using the
 .Ic convert
 command, add CSV, Imported, and UUID meta-data.
+.It Fl \-round
+Round all calculated values to the display precision of their commodity.
+This is the default behavior for display, but this option explicitly forces
+rounding in the expression pipeline, which is useful when
+.Fl \-unround
+has been set in the init file and you want to override it for a specific
+invocation.
 .It Fl \-seed Ar INT
 Set the random seed to
 .Ar INT
