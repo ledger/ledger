@@ -1199,11 +1199,32 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
           decimal_offset = 0;
         }
       } else {
+        // Check if the integer part is zero (e.g., "0,075" should be 0.075, not 75)
+        // This handles European-style decimal notation where comma is the decimal
+        // separator. A comma followed by exactly 3 digits is ambiguous: it could
+        // be a thousands separator (1,000) or a decimal separator (0,075 = 0.075).
+        // We treat it as a decimal separator when the integer part is 0.
+        bool integer_part_is_zero = false;
+        if (last_comma == string::npos && string_index > 0) {
+          // Check if all characters before this comma are '0'
+          bool all_zeros = true;
+          for (std::size_t i = 0; i < string_index; i++) {
+            if (quant[i] != '0' && !(i == 0 && quant[i] == '-')) {
+              all_zeros = false;
+              break;
+            }
+          }
+          integer_part_is_zero = all_zeros;
+        }
+
         if (decimal_offset % 3 != 0 ||
             // A single comma with more than 3 digits after it cannot
             // be a thousands separator (which requires commas every 3
             // digits). Treat it as a decimal comma instead.
-            (last_comma == string::npos && decimal_offset > 3)) {
+            (last_comma == string::npos && decimal_offset > 3) ||
+            // A comma after a zero integer part is a decimal separator
+            // (e.g., "0,075" = 0.075, not 75)
+            integer_part_is_zero) {
           if (last_comma != string::npos || last_period != string::npos) {
             throw_(amount_error, _("Incorrect use of thousand-mark comma"));
           } else {
