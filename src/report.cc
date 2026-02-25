@@ -1118,6 +1118,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
   case 'a':
     OPT(abbrev_len_);
     else OPT_(account_);
+    else OPT(account_rewrite_);
     else OPT(actual);
     else OPT(add_budget);
     else OPT(amount_);
@@ -1242,6 +1243,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
   case 'p':
     OPT(pager_);
     else OPT(payee_);
+    else OPT(payee_rewrite_);
     else OPT(pending);
     else OPT(percent);
     else OPT_(period_);

@@ -1,0 +1,29 @@
+; Test payee-rewrite and account-rewrite directives (issue #714)
+; These are report-time rewrites: they create temporary copies of postings
+; during report generation without altering the underlying journal data.
+
+payee-rewrite AdSense payment  AdSense earnings
+
+account-rewrite Assets:Receivable:AdSense  Income:AdSense
+
+2012-01-31 * AdSense earnings (1 Jan - 31 Jan)
+    Assets:Receivable:AdSense                            0.01 EUR
+    Income:AdSense                                      -0.01 EUR
+
+2012-03-01 * AdSense payment
+    Assets:Bank                                          0.01 EUR
+    Assets:Receivable:AdSense                           -0.01 EUR
+
+test reg
+12-Jan-31 AdSense earnings (1.. Income:AdSense             0.01 EUR     0.01 EUR
+12-Jan-31 AdSense earnings (1.. Income:AdSense            -0.01 EUR            0
+12-Mar-01 AdSense earnings      Assets:Bank                0.01 EUR     0.01 EUR
+12-Mar-01 AdSense earnings      Income:AdSense            -0.01 EUR            0
+end test
+
+test bal
+            0.01 EUR  Assets:Bank
+           -0.01 EUR  Income:AdSense
+--------------------
+                   0
+end test

@@ -1120,6 +1120,30 @@ public:
   void operator()(post_t& post) override;
 };
 
+class rewrite_posts : public item_handler<post_t> {
+  report_t& report;
+  temporaries_t temps;
+
+  rewrite_posts();
+
+public:
+  rewrite_posts(post_handler_ptr handler, report_t& _report)
+      : item_handler<post_t>(std::move(handler)), report(_report) {
+    TRACE_CTOR(rewrite_posts, "post_handler_ptr, report_t&");
+  }
+  ~rewrite_posts() override {
+    TRACE_DTOR(rewrite_posts);
+    handler.reset();
+  }
+
+  void operator()(post_t& post) override;
+
+  void clear() override {
+    temps.clear();
+    item_handler<post_t>::clear();
+  }
+};
+
 //////////////////////////////////////////////////////////////////////
 //
 // Account filters

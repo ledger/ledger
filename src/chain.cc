@@ -265,6 +265,10 @@ post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& re
                                                  report.session.journal->master,
                                                  report.HANDLER(payee_).str(), report);
 
+  if (!report.session.journal->payee_rewrite_mappings.empty() ||
+      !report.session.journal->account_rewrite_mappings.empty())
+    handler = std::make_shared<rewrite_posts>(handler, report);
+
   // related_posts will pass along all posts related to the post received.  If
   // the `related_all' handler is on, then all the xact's posts are passed;
   // meaning that if one post of an xact is to be printed, all the post for
