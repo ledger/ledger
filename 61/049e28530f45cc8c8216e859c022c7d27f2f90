@@ -1,0 +1,936 @@
+src/xact.cc
+  aca8355a65db5603 476-508,515
+test/regress/1125.test
+  aca8355a65db5603 1-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "61049e28530f45cc8c8216e859c022c7d27f2f90",
+  "prompts": {
+    "aca8355a65db5603": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "70cdc317-db9f-401a-b94f-e9539c1d8b9b",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>1125</command-args>",
+          "timestamp": "2026-02-25T07:57:41.273Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 1125.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the claude-code skill to provide context for the rest of the task\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-02-25T07:57:41.273Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me start by understanding the GitHub issue #1125 and then work on fixing it.",
+          "timestamp": "2026-02-25T07:57:44.185Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1125 --repo ledger/ledger",
+            "description": "Get issue details for #1125"
+          },
+          "timestamp": "2026-02-25T07:57:45.056Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 1125 --repo ledger/ledger --comments",
+            "description": "Get full issue with comments"
+          },
+          "timestamp": "2026-02-25T07:57:48.309Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue. The problem is about rounding behavior when there are multiple commodity price conversions in a single transaction. The user expects each commodity conversion to be rounded independently, but Ledger appears to be accumulating the unrounded amounts and then rounding once.\n\nLet me understand the specific issue:\n- `0.50 bread @ $3.99` = 1.995 → should round to $2.00\n- `1.50 bread @ $4.99` = 7.485 → should round to $7.49\n- Total expected: $9.49\n\nBut Ledger is apparently doing:\n- 0.50 × 3.99 = 1.995\n\n\n- 1.50 × 4.99 = 7.485\n- Total: 9.48 (rounded from 9.480)\n\nSo the issue is that each price conversion should be rounded to the target commodity's precision independently, but instead they're being summed first and rounded once at the end. I need to look at how the price conversion logic handles rounding in the codebase.",
+          "timestamp": "2026-02-25T07:57:56.253Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue. Let me research the codebase to understand how price conversions and rounding work.",
+          "timestamp": "2026-02-25T07:57:56.270Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Task",
+          "input": {
+            "description": "Explore rounding in commodity price conversions",
+            "prompt": "In the Ledger C++ codebase at /Users/johnw/src/ledger/fix-1125, I need to understand how commodity price conversions (@) work and where rounding happens.\n\nThe issue is: when a transaction has multiple postings with commodity price annotations like `0.50 bread @ $3.99`, each posting's price conversion (multiply quantity × price) should be independently rounded to the target commodity's precision. But Ledger seems to accumulate unrounded amounts and round once at the end.\n\nPlease search for:\n1. Where the `@` price annotation is parsed/processed in transaction/posting balance computation\n2. Where `amount_t` multiplication and rounding happens in relation to commodity prices\n3. The `amount_t::in_reduce_to` or similar methods that convert between commodities\n4. How the balance checker (`finalize()`) handles amounts in different commodities\n5. The `commodity_t::precision()` and rounding functions\n\nKey files to look at: src/amount.cc, src/amount.h, src/textual.cc, src/post.h, src/xact.cc, src/balance.h\n\nFocus on understanding the flow of how `0.50 bread @ $3.99` becomes a dollar amount and where rounding occurs.",
+            "subagent_type": "Explore"
+          },
+          "timestamp": "2026-02-25T07:58:04.084Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have a good understanding of the issue. Let me look at the specific files to understand the fix needed.\n\nThe key issue is in `textual_xacts.cc` at line 577 where the cost is computed:\n```cpp\n*post->cost *= post->amount;\n```\n\nThis multiplies the price by the quantity but keeps the result unrounded. Later, in `xact.cc` the balance is computed as `p.rounded().reduced()` for costs with keep_precision.\n\nThe problem is that rounding happens on the accumulated total rather than on each individual posting's cost. Let me look at the specific code to understand what changes are needed.\n\n\nExamining the relevant source code sections...",
+          "timestamp": "2026-02-25T07:59:43.558Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at the specific code sections identified:",
+          "timestamp": "2026-02-25T07:59:43.566Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/textual_xacts.cc",
+            "limit": 90,
+            "offset": 525
+          },
+          "timestamp": "2026-02-25T07:59:44.316Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/xact.cc",
+            "limit": 100,
+            "offset": 140
+          },
+          "timestamp": "2026-02-25T07:59:45.111Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue better. At line 174, the balance is calculated as:\n```cpp\nadd_or_set_value(cur_balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());\n```\n\nFor cost postings (`post->cost`), `p.keep_precision()` is true (set by `in_place_unround()`), so `p.rounded().reduced()` is called. But this rounding happens during balance accumulation, not per-posting.\n\nWait, actually let me re-read this. For each posting in the `for` loop (line 154), `p` is set to the cost amount. \n\nIf `keep_precision()` is set, then `p.rounded()` gets called for each posting before adding to the balance. So posting 1 with cost 1.995 rounds to 2.00, posting 2 with cost 7.485 rounds to 7.49, and they sum to 9.49. But the issue report suggests this isn't working correctly, so I need to check what the `rounded()` function actually does.\n\nWait, I'm seeing `p.rounded().reduced()` on line 174 — let me look at how both `rounded()` and `reduced()` are implemented in the amount code to understand what's happening.",
+          "timestamp": "2026-02-25T07:59:54.603Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"rounded\\|in_place_round\\|BIGINT_KEEP_PREC\\|keep_precision\" /Users/johnw/src/ledger/fix-1125/src/amount.cc | head -60",
+            "description": "Find rounding functions in amount.cc"
+          },
+          "timestamp": "2026-02-25T07:59:55.209Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"rounded\\|in_place_round\\|keep_precision\" /Users/johnw/src/ledger/fix-1125/src/amount.h | head -40",
+            "description": "Find rounding declarations in amount.h"
+          },
+          "timestamp": "2026-02-25T07:59:56.381Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/amount.cc",
+            "limit": 50,
+            "offset": 616
+          },
+          "timestamp": "2026-02-25T07:59:58.889Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/amount.cc",
+            "limit": 60,
+            "offset": 454
+          },
+          "timestamp": "2026-02-25T07:59:59.683Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Interesting! So `in_place_round()` at line 616 actually just clears the `BIGINT_KEEP_PREC` flag! It doesn't actually perform any mathematical rounding operation on the value itself. The precision rounding happens through display via the commodity precision.\n\nSo the behavior is:\n1. `in_place_unround()` sets `BIGINT_KEEP_PREC` flag (which says \"display with more precision\")\n2. `in_place_round()` clears `BIGINT_KEEP_PREC` flag  \n3. The actual decimal truncation/rounding to commodity precision only happens at display time, based on whether `BIGINT_KEEP_PREC` is set.\n\n\n4. The mathematical rounding must be happening somewhere else in the code.\n\nLet me trace through what happens when `p.rounded().reduced()` is called for each posting in the loop at line 174 of xact.cc. For posting 1 with value 1.995 and `BIGINT_KEEP_PREC` set, `p.rounded()` creates a copy with the flag cleared.\n\nThe critical question is whether clearing `BIGINT_KEEP_PREC` actually performs mathematical rounding or just changes how the value displays. Looking at the code, `in_place_round()` only clears the flag without mathematically rounding the underlying value, so the precision handling must occur during arithmetic operations instead.\n\nThis means when we add 1.995 and 7.485 to the balance with their full precision intact, we'd get 9.480 total—but that doesn't match the expected 9.490 when checking against -$9.49, so there's something else controlling how these values are actually stored or combined. So the mathematical value stays 1.995 even though it displays as 2.00, meaning the accumulated balance would be 9.480 but show as 9.48—off by 0.01 from the user's specified -$9.49. I need to trace through how the balance comparison actually works to see where the discrepancy comes from.",
+          "timestamp": "2026-02-25T08:00:19.888Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look deeper at how the rounding actually works and affects balance checking:",
+          "timestamp": "2026-02-25T08:00:19.893Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/amount.cc",
+            "limit": 50,
+            "offset": 860
+          },
+          "timestamp": "2026-02-25T08:00:19.907Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/xact.cc",
+            "limit": 130,
+            "offset": 330
+          },
+          "timestamp": "2026-02-25T08:00:20.369Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at the balance checking (where the \"not balanced\" error is thrown) and how the balance is compared to zero.",
+          "timestamp": "2026-02-25T08:00:22.835Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/xact.cc",
+            "limit": 80,
+            "offset": 460
+          },
+          "timestamp": "2026-02-25T08:00:24.284Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the problem more clearly. Let me trace through the flow:\n\n1. Transaction is parsed:\n   - Posting 1: amount = 0.50 bread, cost = $3.99 → after multiplication: cost = $1.995 (with BIGINT_KEEP_PREC set)\n   - Posting 2: amount = 1.50 bread, cost = $4.99 → after multiplication: cost = $7.485 (with BIGINT_KEEP_PREC set)\n   - Posting 3: amount = -$9.49\n\n2. In `finalize()`, for each posting:\n   - Postings 1 and 2 go through `rounded()` which clears the BIGINT_KEEP_PREC flag, then `reduced()` returns the value unchanged since the flag is already cleared\n   - Posting 3 has no precision flag set, so it passes through unchanged\n   - The three amounts sum to $0.010, which triggers a balance error\n\nNow I'm looking at the `is_zero()` function to understand how it determines whether a value is actually zero, checking the precision flags and comparing the numerator and denominator...\n\nWhen BIGINT_KEEP_PREC is cleared, the function prints the rounded value to check if it's zero—so $0.010 becomes \"0.01\" at commodity precision 2, which isn't zero, causing the transaction to fail. But wait, I need to reconsider: if the balance is accumulated from the full-precision values $1.995 and $7.485 with the flag cleared, then 1.995 + 7.485 = 9.480, and subtracting 9.49 gives -0.010, not positive 0.010.\n\nThe real issue is that `p.rounded()` only clears the flag without actually rounding the mathematical value, so the balance check fails because -0.010 printed at precision 2 is \"-0.01\", which isn't zero. This makes me wonder how any transaction with price annotations ever balances if rounding just clears a flag—I need to understand what `in_place_round()` actually does and how it affects the zero check. Continuing through the rest of the `is_zero()` function, it formats the quantity to a string using the commodity's precision and then scans through that output to check if there are any non-zero digits besides the decimal point and negative sign. For our -$0.010 case, since `keep_precision()` is false and the quantity's precision (3) exceeds the commodity's precision (2), it takes this path and would format the value, finding only zeros and a decimal point, so it returns true.\n\nWait, let me reconsider—actually the logic checks whether the printed representation contains only zeros, decimals, and minus signs, and if so returns true. So -0.010 formatted at precision 2 becomes \"-0.01\", which has a non-zero digit, making `is_zero()` return false and triggering the error.\n\nNow I'm wondering what happens with a different transaction structure.\n\nLooking at the specific case where 0.50 × $4.00 = $2.00 and 1.50 × $5.00 = $7.50 sum to $9.50, matching the balance exactly—that works because the rounded intermediate values add up correctly. The problem only appears when rounding the individual costs and then summing them produces a different result than rounding the final sum.\n\nSo the real issue is that we need to round each cost amount before accumulating it into the balance, but I need to understand how `in_place_round()` actually works to see if that's the right approach.\n\nLooking more carefully at the implementation, it just clears the BIGINT_KEEP_PREC flag without actually rounding the value mathematically. So calling `.rounded()` on something like $1.995 leaves it as $1.995 internally, just with the flag cleared. When `is_zero()` checks it later using display precision, the exact arithmetic ($1.995 + $7.485 = $9.480, then $9.480 - $9.49 = -$0.010) doesn't match, and -$0.010 displays as \"-0.01\" which fails the zero check.\n\nThe fix needs to actually round the values mathematically during accumulation, not just clear a flag.\n\nI need to look at `in_place_roundto()` to see how it performs actual rounding...",
+          "timestamp": "2026-02-25T08:00:57.097Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/amount.cc",
+            "limit": 50,
+            "offset": 687
+          },
+          "timestamp": "2026-02-25T08:00:57.237Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full picture:\n\n1. `in_place_round()` - just clears the BIGINT_KEEP_PREC flag, doesn't mathematically round the value\n2. `in_place_roundto(places)` - actually mathematically rounds the value to `places` decimal places\n\nSo for the fix, we need to either:\n1. Round the cost values to the commodity's precision before adding them to the balance, using `in_place_roundto(commodity().precision())`\n2. Or change the balance accumulation logic to use properly rounded values\n\nThe issue is that at line 174 in xact.cc:\n\n\n```cpp\nadd_or_set_value(cur_balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());\n```\n\n`p.rounded()` only clears the flag but doesn't mathematically round. I need to use `p.display_rounded()` instead, which actually rounds the value to the commodity's display precision by calling `in_place_roundto()` with the display precision value.",
+          "timestamp": "2026-02-25T08:01:04.856Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"display_precision\" /Users/johnw/src/ledger/fix-1125/src/amount.cc | head -20",
+            "description": "Find display_precision in amount.cc"
+          },
+          "timestamp": "2026-02-25T08:01:04.886Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/amount.cc",
+            "limit": 30,
+            "offset": 585
+          },
+          "timestamp": "2026-02-25T08:01:06.987Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I fully understand the problem. Let me trace through again:\n\nWhen `p.keep_precision()` is true:\n- `p.rounded()` creates a copy and calls `in_place_round()`, which just clears BIGINT_KEEP_PREC\n- Then `.reduced()` reduces the amount\n- The result has the same numeric value (e.g., 1.995) but with BIGINT_KEEP_PREC cleared\n\nWhen this amount with value 1.995 (BIGINT_KEEP_PREC cleared) is added to the balance, the full-precision value (1.995) is stored in the balance. \n\nThe same happens with 7.485, so the balance becomes 1.995 + 7.485 - 9.490 = -0.010. When `is_zero()` checks this balance, it sees BIGINT_KEEP_PREC is false, the commodity precision is 2 for USD, but the quantity has 3 decimal places, making `is_realzero()` return false. The numerator is -1 and denominator is 100, so the check fails.\n\nWhen we print -0.010 at precision 2, we get \"-0.01\", which isn't all zeros, so `is_zero()` returns false and throws the error. The real issue is that line 174 in xact.cc calls `p.rounded()`, which only clears a flag without actually rounding the value mathematically. We need to use `p.display_rounded()` instead, which calls `in_place_roundto()` with the display precision to properly round to the commodity's precision.\n\nFor amounts with the keep_precision flag set (like $1.995), this would round to USD's 2-decimal precision, giving $2.00, so the balance becomes $2.00 + $7.49 - $9.49 = $0.00. The fix is to replace the current conditional with one that calls `display_rounded()` for keep_precision amounts...\n\nActually, wait—`display_rounded()` with keep_precision=true would round to 3 decimal places (the max of the quantity's precision and commodity precision), not the 2 we need. What I really need is to round directly to the commodity's precision regardless of the keep_precision flag, so I should use `in_place_roundto()` with the commodity's precision value explicitly.\n\nI need to either add a new helper function or call `in_place_roundto` directly...\n\nHmm, but there's also the question of whether calling `display_rounded()` after `in_place_round()` would work—once the keep_precision flag is cleared, `display_precision()` would return just the commodity precision.\n\nActually, I think the simplest approach is to just call `in_place_roundto()` directly with the commodity precision, since that's what we're trying to achieve anyway. a different angle - what's the simplest fix?\n\nThe simplest fix at xact.cc line 174 would be to first clear the precision flag with `rounded()`, then apply display rounding to get the correct decimal places. So `$1.995` would become `$1.995` after clearing the flag, then `$2.00` after rounding to the display precision of 2 decimal places. I could write this more concisely by checking if `keep_precision()` is true, then clearing the flag and rounding to the display precision in one go before reducing the value.\n\nBut I'm concerned this might break existing behavior - the current system relies on exact arithmetic values in the balance, and `is_zero()` uses a digit printing trick to check if something rounds to zero. If I pre-round each posting, the balance would be exactly `$0.00` instead, which could cause edge cases with different rounding. I need to think through the original issue more carefully: when a user specifies fractional quantities like 0.50 bread @ $3.99, the system should round the total to $2.00, and 1.50 bread @ $4.99 should round to $7.49.\n\nThe real problem is that Ledger computes the raw products (1.995 and 7.485) and sums them to 9.480, which doesn't match the user's expected -$9.49 total. The user's intent is clear from the comments in their posting - they expect each multiplication to be independently rounded before summing, which is how real-world accounting actually works. So the discrepancy is that Ledger is summing the unrounded intermediate values first (1.995 + 7.485 = 9.480) and then rounding once at the end, whereas the expected behavior is to round each transaction individually before summing them (2.00 + 7.49 = 9.49). The user is pointing out that these two approaches produce different final totals due to rounding differences. So the user expects each cost to be rounded independently before summing—1.995 rounds to 2.00, 7.485 rounds to 7.49, totaling 9.49 and balancing correctly. The fix would be to round costs to commodity precision before adding them to the balance, which means modifying how the value is processed at that point in the code. Let me look more carefully at the current logic to understand what `keep_precision()` is actually doing and whether it's the right place to make this change. So `in_place_round()` just clears the precision flag without actually changing the numeric value—it's really just switching back to normal display mode using commodity precision. But for balance checks, we need the actual number to be rounded, not just the display. Let me trace through how `is_zero()` determines if an amount is zero, since it seems to handle precision in a complex way. So `is_zero()` already accounts for rounding to the commodity's precision, which means -$0.010 isn't actually zero at precision 2—it rounds to -$0.01. The real issue is that the balance needs to be mathematically rounded to the commodity's precision after each posting is added. I'm looking at how to fix this by rounding the posting's cost before it gets added to the balance, rather than letting the rounding happen only during the print check.\n\nModifying the code that adds postings... I'm verifying the logic: after clearing the flag with `rounded()`, calling `display_rounded()` will round to the commodity's precision, which gives me the correct result for cases like $1.995 becoming $2.00. I can simplify this by explicitly clearing the flag and then rounding to the commodity precision in one step. Still writing the rounding logic...\n\nNow I'm checking how `rounded()` and `display_rounded()` are actually used throughout the codebase to understand what the intended behavior should be.\n\nLooking at the comment in the code, it's clear the original intent was just to clear the `keep_precision` flag so it wouldn't propagate into the balance—not to mathematically round the value. The problem is that this approach leaves the full-precision value intact, which causes balance checks to fail when prices don't compute to exact values at the commodity's precision level. So instead of just clearing the flag, I need to actually round the value to the commodity's precision while also clearing that flag.\n\nNow I'm thinking through backward compatibility. If I change the rounding behavior, will it break existing transactions? Let me consider a simple case where the math works out exactly—like 0.50 bread at $4.00 gives exactly $2.00, which rounds cleanly to $2.00 and balances fine. But what about cases where the multiplication doesn't result in a clean value at the commodity's precision?\n\nFor instance, 0.333 bread at $3.00 gives $0.999, which currently prints as $0.00 at 2 decimal places and is_zero() returns true, so the transaction works. With the proposed rounding fix, $0.999 rounds to $1.00, and the balance still works out. But I need to check what happens with 0.666 bread at $3.00, which gives $1.998—let me trace through how that behaves under both approaches. With the proposed fix, both costs round to $1.00 each, giving a balanced $0.00 total. But I'm realizing the real problem might be more subtle—rounding individual line items could mask cases where the sum legitimately doesn't balance, so I need to think through whether this approach actually catches real errors or just hides them. So the real issue is that `is_zero()` already handles small rounding errors within the commodity's epsilon, but the balance discrepancy here isn't small—it's a full rounding difference that accumulates across postings. Let me think about when rounding per-posting would actually break the balance equation versus when it would work out. cases where a user explicitly provides an unrounded total in the Assets line.\n\nActually, looking back at the original issue, the user did provide -$9.49, which is already rounded. They're not giving me the exact arithmetic result.\n\nLet me reconsider the real solution here. I don't think rounding costs in `finalize()` is the right approach. Instead, I should allow transactions to balance even with tiny rounding errors—essentially within the commodity's epsilon tolerance per posting.\n\nBut that's what `is_zero()` is supposed to handle already. Let me trace through what's happening with the balance of -$0.010 when the commodity precision is 2 decimal places.\n\nWhen I check `is_zero()` on -$0.010, it goes through the precision checks and converts to the commodity's precision, printing \"-0.01\". Since that string contains a non-zero digit, the function returns false—meaning the balance isn't considered zero, even though it's just a rounding artifact.\n\nThe real issue is that the user intended their two costs to round to $2.00 and $7.49 for a total of $9.49, which they balanced with -$9.49. But intermediate rounding is creating this $0.01 discrepancy—when you multiply 0.50 units by $3.99 per unit, you get $1.995, which rounds to $2.00 in actual currency, and that's exactly what the user acknowledged in their transaction.\n\nSo the core question becomes: should Ledger round each individual line item's cost before accumulating them, or should it accumulate the exact arithmetic values and only round at the end? In real accounting, each invoice line shows a rounded amount, and the subtotal is the sum of those rounded figures—which might differ from the exact arithmetic by a few cents. Ledger currently accumulates exact values, so rounding errors compound across multiple postings instead of canceling out. The fix would be to round each line item's cost to the commodity's precision independently before accumulating, rather than letting rounding errors pile up.\n\nLooking at the actual code, the issue is in how the balance check handles rounding. The `p.rounded()` call just clears a flag but doesn't actually perform mathematical rounding—it's the `is_zero()` check that accounts for display precision by printing at commodity precision. But the balance accumulation itself never rounds. I should modify the accumulation logic to actually round the value to the commodity's precision before adding it to the running balance. I'm wondering if this approach will break existing tests, and I should check what the current behavior is for commodities with annotations. Actually, maybe the real issue is elsewhere—perhaps the fix belongs in the cost computation logic where amounts are multiplied, so they get rounded to the commodity's precision right after the calculation. I'm going in circles trying different approaches to rounding. Let me step back and reconsider whether `in_place_round()` is actually supposed to perform mathematical rounding but isn't working correctly, rather than just clearing the precision flag. $0.010 which doesn't round to zero. Let me look more carefully at the `is_zero()` implementation to understand how it handles the precision flag and rounding behavior.\n\nWhen the quantity's precision exceeds the commodity's precision and we're not keeping precision, the function formats the number at the commodity's precision level and checks if the resulting string contains only zeros, decimal points, or minus signs. So for -$0.010 with precision 3 but commodity precision 2, it would format to two decimal places and evaluate whether that rounds to zero.\n\nBut this reveals the real issue: the user's transaction doesn't actually balance mathematically. The bread costs $9.480 total, but they recorded $9.49 as payment—a rounding discrepancy of $0.01. In real-world accounting though, this is where the tension lies: actual currency transactions work in discrete units, so the question becomes whether the system should accommodate practical rounding or enforce mathematical exactness.\n\nA Ledger maintainer confirmed this is indeed a bug—the expected behavior should let each line item round independently to the commodity's precision before summing, rather than accumulating full-precision values and only rounding at the end. The fix likely involves adjusting how costs are calculated at a specific point in the code. in xact.cc, when `p.keep_precision()` is true, mathematically round the value to the commodity's precision before adding to the balance. I can refactor this by clearing the BIGINT_KEEP_PREC flag first, then rounding to the display precision, which simplifies to the commodity's precision once the flag is cleared. Exploring whether the existing `display_rounded()` method handles this...\n\nChecking the implementation...\n\nSo `p.rounded().display_rounded()` creates a copy with the flag cleared, then rounds it to the commodity's precision before returning it. The fix chains this with `.reduced()` to get the final balanced value, which should be a clean one-line change. Now I'm wondering if this will break any existing tests, since we're changing how postings with `keep_precision()=true` get rounded when added to the balance.\n\nThe behavior shift is that values like $1.995 will now be rounded to $2.00 before being added to the balance instead of staying at full precision. This affects cases where costs have sub-cent precision or when users provide the exact arithmetic total rather than the rounded sum—they'd need to adjust their inputs to match the new rounding behavior. .49 - $9.48 = $0.01, which fails the balance check. So the fix does change behavior for cases where users provided the un-rounded sum, but that's actually the correct behavior according to the issue—if you're rounding individual costs, you need to provide the rounded total. The `@@` notation for total cost doesn't have this problem since it bypasses multiplication entirely. Now I'm checking whether the gain/loss calculations could be affected by this change.\n\nExamining the gain/loss code...\n\nI'm reconsidering the fix approach. When I call `rounded()` it clears the BIGINT_KEEP_PREC flag, but then chaining `display_rounded()` after that might not have the intended effect since the flag is already gone. I need to think through the order of operations more carefully to ensure the precision handling works as expected. Continuing to examine the rounding logic...\n\nThe function computes a power of 10 based on the decimal places, then performs integer division to separate the whole and remainder parts of the quantity. It multiplies the remainder by 2 and compares it against the denominator to determine whether to round up or down—this is banker's rounding logic. Working through the rounding logic with concrete examples to verify the algorithm handles both positive and negative cases correctly.\n\nNow I need to look at where this fix should be implemented in the codebase, specifically around the rounding logic in the transaction handling code. Refining the balance calculation logic to handle precision flags correctly and ensure per-unit price conversions round independently so the sum of rounded costs matches the total properly.\n\nNow I'm thinking through whether there are existing tests for this behavior and what the old expectations were, plus considering if there's a stricter flag or tolerance-based approach that might be safer. I should examine the balance checking code more carefully, particularly the verify function that iterates through posts and checks if they must balance.",
+          "timestamp": "2026-02-25T08:04:05.640Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/xact.cc",
+            "limit": 40,
+            "offset": 528
+          },
+          "timestamp": "2026-02-25T08:04:06.238Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The same pattern appears in `verify()` at line 544. So both `finalize()` and `verify()` need to be updated.\n\nNow let me also verify the approach by looking at whether `display_rounded()` is appropriate here. Let me double check: when we have `p.rounded()` (which clears BIGINT_KEEP_PREC), and then call `.display_rounded()`:\n\n`display_rounded()` calls `in_place_roundto(display_precision())`, and `display_precision()` when `keep_precision()=false` returns `commodity().precision()` (e.g., 2 for USD). \n\nSo it rounds to 2 decimal places. ✓\n\nBut what if there's no commodity? Then `display_precision()` returns `quantity->prec` (the stored precision), which means rounding to the stored precision doesn't change anything. Since amounts without commodities can't be costs anyway, this edge case shouldn't be a problem.\n\nLet me check what `display_rounded()` actually does in the header file.",
+          "timestamp": "2026-02-25T08:04:14.124Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/amount.h",
+            "limit": 40,
+            "offset": 328
+          },
+          "timestamp": "2026-02-25T08:04:14.466Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have a clear picture. The `display_rounded()` function uses `display_precision()` which, when `keep_precision()=true`, returns `max(quantity->prec, comm.precision())` - which is the FULL precision, not the commodity's precision. That means `display_rounded()` on a keep_precision amount wouldn't round to the commodity's precision.\n\nSo the correct sequence is:\n1. Call `p.rounded()` to get a copy with BIGINT_KEEP_PREC cleared\n2. Then call `.display_rounded()` on that copy (since now `keep_precision()=false`, `display_precision()` returns `commodity().precision()`)\n\n\nThis confirms that `p.rounded().display_rounded()` works correctly - I'm verifying it with the examples: $1.995 with keep_precision=true and precision=3 becomes $2.00 after rounding to the commodity's 2-digit precision, and the same logic applies to $7.485.\n\nNow I'm wondering if there's a cleaner approach by modifying `in_place_round()` itself to actually perform mathematical rounding instead of just clearing the precision flag.\n\nHowever, that would be a more invasive change since `in_place_round()` is called in multiple places throughout the codebase—in the amount class itself, in transaction handling for gain/loss calculations, and elsewhere—so I need to check all the existing usages to understand the impact.",
+          "timestamp": "2026-02-25T08:04:29.332Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"in_place_round\\|\\.rounded()\" /Users/johnw/src/ledger/fix-1125/src/ | grep -v \".h:\"",
+            "description": "Find all uses of rounding functions in source"
+          },
+          "timestamp": "2026-02-25T08:04:29.536Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I see there's also line 315 in xact.cc that has the same pattern:\n\n```cpp\nadd_or_set_value(balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());\n```\n\nAnd the `gain_loss.in_place_round()` at lines 346 and 393.\n\nLet me look at the context around line 315.",
+          "timestamp": "2026-02-25T08:04:32.489Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/xact.cc",
+            "limit": 45,
+            "offset": 305
+          },
+          "timestamp": "2026-02-25T08:04:33.287Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me understand what's at line 306. This is a `recompute` block. Let me look at more context.",
+          "timestamp": "2026-02-25T08:04:36.684Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/xact.cc",
+            "limit": 70,
+            "offset": 240
+          },
+          "timestamp": "2026-02-25T08:04:37.558Z"
+        },
+        {
+          "type": "assistant",
+          "text": "OK so I have a complete picture. There are 3 places in xact.cc where the same pattern exists:\n1. Line 174: `add_or_set_value(cur_balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());`\n2. Line 315: same (in recompute block)\n3. Line 544: same (in verify())\n\nAll three need to be updated to properly round amounts.Now, let me write the actual fix. The simplest approach is to change each of these 3 occurrences. The fix should be:\n\n```cpp\n// Old:\np.keep_precision() ? p.rounded().reduced() : p.reduced()\n\n\n```\n\nModifying the code to call `display_rounded()` after `rounded()` ensures that when keep_precision is true, the value gets rounded to the commodity's precision before being reduced and summed into the balance. This way each posting's cost is independently rounded to the commodity's precision rather than relying on the final balance rounding.\n\nNow I'm checking what existing tests cover rounding and price annotations, then I'll write a regression test for issue 1125.",
+          "timestamp": "2026-02-25T08:04:46.791Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have a clear understanding of the fix. Let me look at existing regression tests to understand the format:",
+          "timestamp": "2026-02-25T08:04:46.802Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1125/test/regress/ | grep -E \"^[0-9]+\" | sort -n | tail -20",
+            "description": "List recent regression tests"
+          },
+          "timestamp": "2026-02-25T08:04:47.386Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -l \"@ \\$\\|@@ \\$\\|bread\\|rounding\" /Users/johnw/src/ledger/fix-1125/test/regress/*.test 2>/dev/null | head -10",
+            "description": "Find tests related to price annotations and rounding"
+          },
+          "timestamp": "2026-02-25T08:04:49.013Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/test/regress/2010.test"
+          },
+          "timestamp": "2026-02-25T08:04:51.968Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/test/regress/2066.test"
+          },
+          "timestamp": "2026-02-25T08:04:52.566Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me look at a test that involves price annotations to understand the format.",
+          "timestamp": "2026-02-25T08:04:56.073Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/test/regress/2329.test"
+          },
+          "timestamp": "2026-02-25T08:04:57.116Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have a good understanding. Let me also look at a test that uses the `@` price annotation for reference.",
+          "timestamp": "2026-02-25T08:04:59.477Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me use `cpp-pro` to implement the fix carefully:",
+          "timestamp": "2026-02-25T08:05:00.105Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Task",
+          "input": {
+            "description": "Implement rounding fix for issue 1125",
+            "prompt": "I need you to fix a bug in the Ledger accounting software (C++) related to issue #1125: \"Potential rounding error with more than one commodity price in one transaction\".\n\n## Problem Description\n\nWhen a transaction has multiple postings with per-unit price annotations (`@`), each posting's cost should be independently rounded to the target commodity's precision before being summed into the balance. Currently, the code accumulates full-precision (unrounded) costs and then checks if the total is zero, which fails when individual roundings don't cancel.\n\nExample that should balance but doesn't:\n```\n2015-07-02 Buying some bread\n    Expenses            0.50 bread @  $3.99    ; $2.00\n    Expenses            1.50 bread @  $4.99    ; $7.49\n    Assets              -$9.49\n```\n\nWhat Ledger currently does:\n- Post 1 cost: 0.50 × $3.99 = $1.995 (stored unrounded, with BIGINT_KEEP_PREC flag)\n- Post 2 cost: 1.50 × $4.99 = $7.485 (stored unrounded, with BIGINT_KEEP_PREC flag)\n- In `finalize()`, `p.rounded()` only CLEARS the BIGINT_KEEP_PREC flag but doesn't mathematically round the value\n- Balance = $1.995 + $7.485 - $9.49 = -$0.010, which is non-zero → ERROR\n\nWhat it should do:\n- Post 1 cost: $1.995 → rounded to commodity precision (2 for USD) → $2.00\n- Post 2 cost: $7.485 → rounded to commodity precision → $7.49  \n- Balance = $2.00 + $7.49 - $9.49 = $0.00 → OK\n\n## Root Cause\n\nIn `src/xact.cc`, the `finalize()` and `verify()` functions accumulate posting costs into a balance. For costs with `keep_precision()=true`, the code calls `p.rounded()` which only clears the `BIGINT_KEEP_PREC` flag but does NOT mathematically round the value. The numeric value (1.995, 7.485) is still the full-precision result of the multiplication.\n\n## Fix Required\n\nThe fix is in `src/xact.cc`. There are 3 places to update:\n\n1. Line 174 (in `finalize()`, initial balance computation):\n```cpp\nadd_or_set_value(cur_balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());\n```\n\n2. Line 315 (in `finalize()`, recompute block for fixated prices):\n```cpp\nadd_or_set_value(balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());\n```\n\n3. Line 544 (in `verify()`):\n```cpp\nadd_or_set_value(balance, p.keep_precision() ? p.rounded().reduced() : p.reduced());\n```\n\nThe fix: Replace `p.rounded()` with `p.rounded().display_rounded()`.\n\nHere's why this works:\n- `p.rounded()` creates a copy and calls `in_place_round()` which clears BIGINT_KEEP_PREC\n- On the resulting copy with `keep_precision()=false`, `display_precision()` returns `commodity().precision()` (e.g., 2 for USD)\n- `.display_rounded()` then calls `in_place_roundto(commodity().precision())` which MATHEMATICALLY rounds the value to 2 decimal places\n- So $1.995 → $2.00 and $7.485 → $7.49\n\n## Files to Modify\n\n### 1. `/Users/johnw/src/ledger/fix-1125/src/xact.cc`\n\nApply the fix at lines 174, 315, and 544. Change each:\n```cpp\np.keep_precision() ? p.rounded().reduced() : p.reduced()\n```\nto:\n```cpp\np.keep_precision() ? p.rounded().display_rounded().reduced() : p.reduced()\n```\n\nAlso update the comment at line 169-173 (and similar comments at 540-543) to reflect that we're not only clearing the flag but also rounding mathematically:\n```cpp\n// If the amount was a cost, it very likely has the\n// \"keep_precision\" flag set, meaning commodity display precision\n// is ignored when displaying the amount.  We never want this set\n// for the balance, so we must clear the flag in a temporary and\n// round to the commodity's precision, ensuring each posting's cost\n// is rounded independently before being summed into the balance.\n```\n\n### 2. Create `/Users/johnw/src/ledger/fix-1125/test/regress/1125.test`\n\nCreate a regression test that verifies the fix:\n\n```\n; Regression test for issue #1125: per-unit price annotations (@) should\n; round each posting's cost to the commodity's precision independently\n; before summing into the balance, not accumulate unrounded values.\n\n2015-07-02 Buying some bread\n    Expenses            0.50 bread @  $3.99    ; 0.50 * 3.99 = 1.995, rounds to $2.00\n    Expenses            1.50 bread @  $4.99    ; 1.50 * 4.99 = 7.485, rounds to $7.49\n    Assets              -$9.49                ; total cost of the bread (sum of rounded amounts)\n\ntest bal\n              2 bread  Assets\n             -$9.49\n            1.5 bread  Expenses\n             $9.49\n--------------------\n                   0\nend test\n```\n\nWait, let me reconsider. The `bal` output for the above transaction would show amounts in their commodity form. Let me think about what the balance output would look like...\n\nActually, it's simpler to just test that the transaction balances:\n\n```\n; Regression test for issue #1125: per-unit price annotations (@) should\n; round each posting's cost to the commodity's precision independently\n; before summing into the balance, not accumulate unrounded values.\n\n2015-07-02 Buying some bread\n    Expenses            0.50 bread @  $3.99\n    Expenses            1.50 bread @  $4.99\n    Assets              -$9.49\n\ntest bal --flat --no-total Expenses\n            0.50 bread  Expenses\nend test\n```\n\nHmm, let me think about what the balance command actually shows for commodity amounts. The `Assets` posting has -$9.49, the `Expenses` postings have bread amounts. \n\nActually, for the regression test, the simplest thing is to check that the transaction parses without error and produces the expected balance. Let me think...\n\nActually, looking at the sample transaction again:\n- Expenses: 0.50 bread (with cost $2.00)\n- Expenses: 1.50 bread (with cost $7.49)  \n- Assets: -$9.49\n\nAfter the fix, the balance should be zero. The test should just verify the transaction parses and the balance report works.\n\nLet me write the test file yourself and have cpp-pro apply the fix.\n\n**Instructions:**\n\n1. Read `/Users/johnw/src/ledger/fix-1125/src/xact.cc` lines 165-180, 305-320, and 528-550 to verify the exact current code.\n\n2. Apply the fix to all three locations in `src/xact.cc`.\n\n3. Create the regression test at `test/regress/1125.test`.\n\n4. Build the code and verify it compiles.\n\n5. Run the regression test to verify it passes.\n\nBuild commands:\n```bash\ncd /Users/johnw/src/ledger/fix-1125/build && make -j$(nproc) ledger 2>&1 | tail -20\n```\n\nTest commands:\n```bash\ncd /Users/johnw/src/ledger/fix-1125 && python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1125.test\n```\n\nOr build first if needed:\n```bash\ncd /Users/johnw/src/ledger/fix-1125 && ./acprep debug --output=build 2>&1 | tail -20\ncd /Users/johnw/src/ledger/fix-1125/build && make -j$(nproc) ledger 2>&1 | tail -30\n```\n\nPlease implement the fix carefully, ensuring:\n- The three locations in xact.cc are all updated\n- The comment is updated to accurately describe what we're doing\n- The regression test covers the exact scenario from the issue\n- The code compiles successfully\n- The test passes\n\nDo NOT commit anything - just leave the changes in the working tree.",
+            "subagent_type": "cpp-pro"
+          },
+          "timestamp": "2026-02-25T08:05:39.233Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check the current state of the changes and verify they were applied correctly.",
+          "timestamp": "2026-02-25T08:10:33.543Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me verify the changes that were made:",
+          "timestamp": "2026-02-25T08:10:33.837Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff src/xact.cc",
+            "description": "Check changes to xact.cc"
+          },
+          "timestamp": "2026-02-25T08:10:34.570Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /Users/johnw/src/ledger/fix-1125/test/regress/1125.test",
+            "description": "Check the new regression test"
+          },
+          "timestamp": "2026-02-25T08:10:35.373Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good, the changes look correct. Now let me build the code and run the test.",
+          "timestamp": "2026-02-25T08:10:37.608Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me build and test:",
+          "timestamp": "2026-02-25T08:10:37.838Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1125/build/",
+            "description": "Check if build directory exists"
+          },
+          "timestamp": "2026-02-25T08:10:38.820Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1125/build && make -j$(nproc) ledger 2>&1 | tail -15",
+            "description": "Build ledger binary",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-25T08:10:42.067Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1125 && python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1125.test 2>&1",
+            "description": "Run the new regression test"
+          },
+          "timestamp": "2026-02-25T08:10:48.130Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The test passes. Let me also run the full test suite to check for regressions:",
+          "timestamp": "2026-02-25T08:10:50.842Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1125/build && ctest -R regress --output-on-failure 2>&1 | tail -30",
+            "description": "Run all regression tests",
+            "timeout": 300000
+          },
+          "timestamp": "2026-02-25T08:10:51.999Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest --output-on-failure 2>&1 | tail -30",
+            "description": "Run all ctest tests",
+            "timeout": 300000
+          },
+          "timestamp": "2026-02-25T08:10:55.232Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ctest --output-on-failure 2>&1 | tail -30",
+            "description": "Run all ctest tests from build dir",
+            "timeout": 300000
+          },
+          "timestamp": "2026-02-25T08:15:58.943Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskOutput",
+          "input": {
+            "block": false,
+            "task_id": "b1d0111",
+            "timeout": 5000
+          },
+          "timestamp": "2026-02-25T08:21:01.837Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cat /private/tmp/claude-501/-Users-johnw-src-ledger-fix-1125/tasks/b1d0111.output 2>/dev/null | tail -30",
+            "description": "Read ctest output"
+          },
+          "timestamp": "2026-02-25T08:21:04.259Z"
+        },
+        {
+          "type": "assistant",
+          "text": "There are some test failures. Let me look at them:\n\n1. `LedgerUtilTests`, `LedgerMathTests`, `LedgerFilterTests`, `LedgerTextualTests` - these are \"Not Run\" which might be a pre-existing issue with the test runner. Let me check.\n\n2. `BaselineTest_opt-no-rounding` - this is related to the \"no-rounding\" option, which might be affected by our change.\n\n3. `RegressTest_04C5E1CA`, `RegressTest_2174`, `RegressTest_536`, `RegressTest_A560FDAD`, `RegressTest_BFD3FBE1`, `RegressTest_CAE63F5C-c`, `RegressTest_coverage-output-equity-unround`, `RegressTest_coverage-wave3-precommands` - these might be related to our change.\n\n\nNow I need to dig into each failure to determine whether it's something we introduced or if it was already broken.",
+          "timestamp": "2026-02-25T08:21:09.234Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Some tests failed. Let me investigate:",
+          "timestamp": "2026-02-25T08:21:09.234Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1125 && python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/536.test 2>&1",
+            "description": "Run failing regression test 536"
+          },
+          "timestamp": "2026-02-25T08:21:09.869Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1125 && python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/2174.test 2>&1",
+            "description": "Run failing regression test 2174"
+          },
+          "timestamp": "2026-02-25T08:21:10.560Z"
+        },
+        {
+          "type": "assistant",
+          "text": "These failures are related to our change. The rounding change is affecting some existing tests in a way that changes their output. Let me look at these test files to understand what's happening.\n\nFor test 536, the `Revalued` posting now has a different value (29.09674 vs 29.09294). This suggests that the rounding of individual costs has changed the calculated revaluation amount.\n\nFor test 2174, the `Opening Balances` entry now shows $-11692 instead of $-11693. This is a rounding difference of $1 due to our change.\n\nThese failures suggest that our fix is too aggressive - it's rounding in places where it shouldn't be. \n\nI need to examine the test files themselves to see what's actually being tested and where the rounding is being applied incorrectly.",
+          "timestamp": "2026-02-25T08:21:16.647Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1125 && python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/04C5E1CA.test test/regress/A560FDAD.test test/regress/BFD3FBE1.test test/regress/CAE63F5C-c.test 2>&1",
+            "description": "Run other failing tests"
+          },
+          "timestamp": "2026-02-25T08:21:16.946Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1125 && python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/coverage-output-equity-unround.test test/regress/coverage-wave3-precommands.test 2>&1 | head -50",
+            "description": "Run other failing tests"
+          },
+          "timestamp": "2026-02-25T08:21:17.859Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "for t in test/regress/04C5E1CA.test test/regress/A560FDAD.test test/regress/BFD3FBE1.test test/regress/CAE63F5C-c.test test/regress/coverage-output-equity-unround.test test/regress/coverage-wave3-precommands.test; do echo \"=== $t ===\"; python test/RegressTests.py --ledger ./build/ledger --sourcepath . \"$t\" 2>&1 | head -20; done",
+            "description": "Run each failing test individually"
+          },
+          "timestamp": "2026-02-25T08:21:22.265Z"
+        },
+        {
+          "type": "assistant",
+          "text": "These failures are more serious. Let me analyze them:\n\n1. **04C5E1CA.test**: The transaction now fails to balance. What's happening is that with our change, costs that were previously accumulating and summing to zero are now not summing to zero after individual rounding.\n\n2. **A560FDAD.test**: Some extra `<Adjustment>` postings are now being generated.\n\n3. **BFD3FBE1.test**: The equity balance is now different, and the transaction doesn't balance properly.\n\n4. **CAE63F5C-c.test**: A transaction that should balance (with `bal -X $`) now produces an error.\n\n\n5. **coverage-output-equity-unround.test**: The `--unround` option is now showing rounded values like `$-451` instead of the expected unrounded `$-450.999`, which means our change is incorrectly rounding amounts that should preserve full precision.\n\n6. **coverage-wave3-precommands.test**: The expression tree representation changed, which seems unrelated to our modification unless it cascaded somehow.\n\nThe core issue appears to be that our change is applying rounding at the wrong stage, affecting both the balance calculations and the precision handling for the unround option. The equity command generates opening balance transactions using stored account amounts, so if our change is somehow affecting those stored values rather than just the balance computation, that would explain why the output shows `$-451` instead of `$-450.999`. But we only modified how the balance is calculated, not the actual `post->cost` and `post->amount` values themselves, so something else must be modifying the stored amounts.\n\nLooking at the `finalize()` code more carefully, I see that `p` is a reference to either `post->cost` or `post->amount`, and our change calls `rounded()` on it which creates a copy—the original `p` shouldn't be affected by operations on that copy.\n\nThe equity output test failure is puzzling given that, so I need to examine what transaction the `coverage-output-equity-unround.test` file is actually using.",
+          "timestamp": "2026-02-25T08:21:43.266Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/test/regress/coverage-output-equity-unround.test"
+          },
+          "timestamp": "2026-02-25T08:21:43.311Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/test/regress/04C5E1CA.test"
+          },
+          "timestamp": "2026-02-25T08:21:43.627Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I see the issue with `coverage-output-equity-unround.test`:\n\n```\n2024/01/15 Buy\n    Assets:Brokerage       3 AAPL @ $150.333\n    Assets:Checking\n```\n\nHere, `3 AAPL @ $150.333` has a cost of 3 × $150.333 = $450.999. The test expects that with `--unround`, the equity output shows `$-450.999` (the unrounded value).\n\nWith our fix, the balance computation uses `p.rounded().display_rounded()` which rounds $450.999 to $451.00. Now `finalize()` computes the balance as $451.00 (for the cost) + the auto-computed Assets:Checking amount. But wait, Assets:Checking has a null amount (it's auto-computed). So the auto-computed amount would be -$451.00 instead of -$450.999.\n\n\nThe real problem is that rounding the cost in the balance calculation also affects the auto-computed amount for the null posting. Since Assets:Checking was left blank to auto-fill and balance the transaction, it now gets filled with -$451.00 instead of -$450.999. Our fix is rounding costs too aggressively, even when they're being used to calculate a missing posting's amount.\n\nThe distinction matters: issue #1125 is about transactions where all postings have explicit amounts, so rounding each cost and checking the sum makes sense. But when a posting's amount is derived from the balance, we shouldn't round the costs used in that calculation—the unrounded actual cost of $450.999 should flow through to Assets:Checking, not the rounded $451.\n\nThe finalize code computes the balance first, then uses it to auto-fill any null posting, so if we round during balance computation, the null posting gets rounded too. I need to check whether the 04C5E1CA test case reveals the same issue.\n\nLooking at that test, the calculation is straightforward: 2 × $3.97 = $7.94 with no rounding needed, yet the test is now failing with a $0.06 discrepancy appearing in the output. Something's off with how the amounts are being handled or displayed. I'm tracing through the precision handling for a $3.97 × 2 transaction. The price has 2 decimal places, and after multiplication I get $7.94 exactly. When I apply `display_rounded()`, it should preserve that $7.94 value since rounding to 2 decimal places doesn't change it. But the output shows the amounts don't balance—$8.00 on one side and $7.94 on the other—which suggests something in the rounding or precision logic is off. I'm tracing through the multiplication step where the cost gets multiplied by the amount, resulting in $7.94 with precision preserved, and then following how the finalize function rounds and displays that value—it appears the rounding logic isn't changing the value since $7.94 already matches the expected precision.\n\nBut the test output is showing -$8.00 for the Liabilities account instead, which doesn't match my calculation. Let me re-examine the null posting auto-computation logic to see where the discrepancy is coming from. I'm looking at the diff output and realizing I misread the symbols—the plus signs indicate new lines in the actual output, not the expected result. The key difference is that the current implementation is showing an extra transaction entry with a $-8.00 liability charge and then a separate $7.94 brush purchase, when it should consolidate these into a single $-7.94 entry. Looking at this diff more carefully, the actual output is showing an extra transaction entry appearing before the final Liabilities line, which suggests the transaction is being duplicated or split incorrectly in the output generation. I need to check what precision the dollar commodity has set, since that would determine how `display_rounded()` behaves. Looking at the `display_precision()` function, it returns the commodity's precision if one exists and we're not keeping the original precision, otherwise it falls back to the commodity's default. This could explain why the rounding is different than expected. Looking at the test case, when the parser encounters `$3.97` as a price annotation, the `$` commodity should learn its precision of 2 at that point. The question is whether this precision is set during the initial parsing with the `PARSE_NO_MIGRATE` flag, or if it happens later during finalization.\n\nThe `PARSE_NO_MIGRATE` flag prevents the commodity's precision from being updated during parsing, which means the `$` commodity might still have precision 0 when we check it. Since the `Liabilities:Mastercard` posting has no amount and the `$3.97` is parsed with this flag, the commodity's precision may not be set until a different point in the process.\n\nBut wait—this should affect both the old and new code equally, so why does the test pass before our change but fail after? Let me trace through what's different: the original code calls `rounded()` to clear the flag, then `reduced()`, which leaves the value unchanged, whereas our new approach...\n\nActually, I see it now. Our change adds `display_rounded()` which applies the commodity's precision, and if that precision is 0 at the time `finalize()` runs, it rounds $7.94 down to $8.00. The null posting then gets computed as -$8.00 instead of -$7.94. The root cause is that when `PARSE_NO_MIGRATE` is used for the cost amount, the `$` commodity hasn't had its precision initialized yet when we need it.\n\nI'm reconsidering the fix—maybe instead of relying on `display_precision()`, I should use the amount's stored precision directly, capped by the commodity's precision if it's available. But wait, this test was passing before our change, so something else is going on with how the `$` commodity's precision gets determined in this particular test case. the pool during parsing. If the `$` commodity hasn't been seen before with normal parsing, its precision stays at 0, which would cause `display_rounded()` to round $7.94 down to $8 — that's likely where the bug is coming from.\n\nLet me think about this differently though. The issue might not be with `display_rounded()` at all, but rather with how the commodity's precision gets set. Maybe I should look at what `roundto()` does instead, since that might give me a better way to handle the rounding.\n\nActually, the core problem is figuring out when to apply rounding. Looking back at the original bug, the issue is that cost amounts with `keep_precision=true` can have sub-cent values that shouldn't persist when the flag is cleared. So the logic should be: round to the commodity's precision only when that precision is actually known (non-zero) and the amount's precision exceeds it. But if the commodity precision is 0 or unknown, or if the amount is already within the commodity's precision, then skip the rounding entirely.\n\nNow examining the `is_zero()` check more carefully: when the amount's precision is less than or equal to the commodity's precision, it only considers the value zero if it's exactly zero. But this breaks down when the commodity precision is 0—in that case the comparison fails and we fall through to checking the printed representation instead.\n\nThe real puzzle is that this test was passing before the change, which suggests the `$` commodity must have had a precision greater than 0 when `finalize()` ran. Let me look at the actual test failure output to understand what's really going wrong here.\n\nLooking at the diff, the expected output shows 6 lines but the actual output has 7 lines, with an extra transaction entry appearing where it shouldn't. The balance calculations are also off—showing $-8.00 and $-0.06 instead of the expected $-7.94. This suggests the issue might not be about commodity precision at all, but rather something about how transactions are being ordered or grouped in the output. I'm parsing the unified diff format more carefully now—lines with a space prefix are unchanged context, plus signs indicate new lines in the actual output, and minus signs show lines missing from it. The actual output is adding extra entries like \"Liabilities:Mastercard -$8.00\" and a duplicate transaction line with \"$7.94\" and \"-$0.06\", while dropping the final summary line that should appear at the end.\n\nThe real issue is that if Liabilities:Mastercard is being auto-filled with -$8.00 for a transaction that only has $7.94 in costs, the math doesn't work out—it would create an imbalance of -$0.06, which should cause Ledger to reject the transaction entirely rather than generate these extra postings. to $7.94 with null posting Liabilities:Mastercard. For Transaction 1, the cost of `2 AAPL @ $3.97` equals $7.94, and when I trace through the finalize() process with keep_precision=true and precision=2, I need to understand what the dollar commodity's stored precision is at that point in the execution order.\n\nThe key insight is that the cost amount uses `PARSE_NO_MIGRATE`, so it doesn't update the commodity precision, but the direct value expression `(2 * $3.97)` in the second transaction would update it to 2 when parsed normally. Since transactions are processed sequentially, the first transaction might not yet have the dollar commodity at precision 2 unless Ledger hardcodes it. Let me check if there's a hardcoded precision for the dollar sign or if the test failure reveals something about this ordering issue. Let me step back and look at this differently—the real issue is understanding what the original code was trying to accomplish and why it's not handling this case correctly. The `rounded()` call is meant to strip the keep_precision flag so it doesn't leak into the balance calculation, but that's not actually solving the mathematical problem at hand.\n\nThe core problem is that `is_zero()` checks if a balance is effectively zero by comparing it at the commodity's precision level, so a balance of $-0.010 displays as \"-0.01\" and fails the zero check. But if we rounded each posting's cost before accumulating them, we'd get $2.00 + $7.49 - $9.49 = $0.00 exactly, which would pass the check.\n\nThe real question is whether we can fix this with a more surgical approach—maybe only rounding costs when the amount's precision exceeds the commodity's precision and the commodity has a defined precision. The alternative would be to change the `is_zero()` logic itself, but that's riskier and might mask real errors. What we actually need is to handle the specific case where a posting has `keep_precision=true` but the cost value has more decimal places than the commodity's display precision, like the $1.995 example from issue #1125.\n\nNow I'm checking whether the commodity's precision is even set when `finalize()` runs for the first transaction, and I need to trace through how the `$` commodity gets its precision assigned in Ledger's parsing logic. at the time of the `finalize()` call for the 04C5E1CA test.\n\nActually, let me look at the `keep_precision` behavior more carefully for the cost amount. The key question is: when `$3.97` is parsed with `PARSE_NO_MIGRATE`, what precision does the resulting `amount_t` have, and what is `commodity().precision()` for the `$` commodity?\n\nLooking at `amount_t::parse()` (amount.cc), when `PARSE_NO_MIGRATE` is set, the commodity's precision is NOT updated. The commodity `$` would have whatever precision was set by previous processing.\n\nIn the 04C5E1CA test, only `$3.97` and `$7.94` are present. The `$3.97` is parsed with PARSE_NO_MIGRATE (as the cost). The `$7.94` from the expression `(2 * $3.97)` is computed as a result—but if both dollar amounts are parsed with PARSE_NO_MIGRATE, the `$` commodity might never get its precision set to 2, leaving it at the default of 0. That would explain why `display_rounded()` rounds to 0 decimal places instead of preserving the 2 decimal places I'd expect.\n\nBut then the old code with `p.rounded().reduced()` somehow still displayed `-$7.94` correctly. Maybe the precision gets set later when the computed amount is stored in the posting, which triggers a migration that updates the commodity's precision.\n\nExamining the `add_balancing_post` code...\n\nStill examining code...\n\nI'm realizing the commodity precision gets set lazily when amounts are first parsed without the `PARSE_NO_MIGRATE` flag, which explains why the display shows the correct precision even though it might differ during finalization. In the test case, the second transaction's calculation is what determines the final commodity precision. I need to dig into the actual code to see how commodity precision gets set during parsing, but this is getting complicated. Let me step back and think about a simpler fix—instead of trying to round during balance computation, I could make the balance check itself more lenient by accounting for precision issues that arise from cost calculations. Actually, that's too vague. The real solution is to ensure costs are rounded correctly during balance computation, but only when it's safe to do so and the commodity precision is actually known.\n\nWriting the rounding logic...\n\nActually, I'm realizing the core issue might be different—when `is_zero()` checks a balance like $-0.010, it returns false because that rounds to \"-0.01\" at commodity precision, which isn't zero. Maybe the real fix is to change how `is_zero()` itself works: it should consider a balance zero if all amounts in it, when rounded to their respective commodity precisions, sum to zero. The user's real concern is that in practice, merchants round each line item individually, so Ledger should mirror that behavior rather than computing exact totals. The fix would need to round costs at the point of calculation, but I need to understand why the existing tests are failing first. Looking at the test cases, the issue seems to be that when `finalize()` runs, the commodity's precision isn't set correctly—for instance, in one test a simple multiplication like 2 × $3.97 should give exactly $7.94 with no rounding needed, yet it's still failing, which suggests the precision information is missing at that stage.\n\nThe `--unround` flag complicates things because it's meant to show the full unrounded value, but our rounding happens during balance computation rather than just at output time, so it affects the auto-filled amounts in null postings. I think the real problem is that the rounding logic is interfering with the unrounded output mode. The test was written expecting the unrounded value to appear in the checking account, but philosophically there's a question about whether costs should be rounded to currency precision when calculated from exact prices. I'm trying to understand Ledger's design intent around whether `@ $3.99` means the price is exact or if the resulting cost should conform to display precision.\n\nThe maintainer actually agrees that rounding should happen for most people's expectations, but the existing tests rely on the old unrounded behavior. So the fix needs to be nuanced: round costs when all postings have explicit amounts, but preserve exact arithmetic when there's a null posting whose amount gets computed from the balance.\n\nLooking at the actual code flow, I can see that the null posting detection happens during the balance computation loop itself. The code iterates through postings, accumulating the balance while tracking whether there's a null posting that needs to be filled in. This means I can check whether we're in the \"all explicit\" case right there in the loop and apply rounding accordingly.\n\nBut here's the catch with issue #1125 — there's no null posting at all, just three explicit amounts that don't balance due to rounding. So the fix needs to apply specifically when all postings are explicit and the balance is non-zero but small enough to be a rounding error.\n\nThe real question is whether we can detect this at the balance check without computing the balance twice. I'm thinking the simpler approach is to apply rounding only at the final balance check itself, not during accumulation — keep the running total exact, then use a rounded comparison when checking if it's zero.\n\nBut there's a fundamental tension here: the user expects each `@` cost to round independently (so 0.50 × $3.99 becomes $2.00), yet mathematically that gives us -$0.010 which isn't actually zero. The current `is_zero()` check correctly identifies this as non-zero, but that conflicts with the user's expectation about how costs should be rounded.\n\nThe real solution is to only apply rounded balance checking for transactions where all amounts are explicit—no null postings. For transactions with null postings, I need to preserve exact arithmetic so the null posting's amount calculates correctly. But implementing this at the balance check stage is getting messy. Let me think about a cleaner approach instead.\n\nActually, the simpler fix is to change what \"balanced\" means: a transaction is balanced if its balance rounds to zero at the commodity's display precision. The `is_zero()` method already handles some edge cases, but I need to check if it properly accounts for accumulated rounding errors.\n\nExamining the is_zero() logic... I'm working through a specific example where a balance of -$0.010 with precision settings shows that `is_zero()` does perform the rounded check, but since -$0.010 rounds to -$0.01 (not zero), it correctly returns false. The core issue is that without additional context about why the balance exists, I can't make `is_zero()` return true for accumulated rounding errors without fundamentally changing how balances are computed. So I'm stepping back to reconsider whether transactions like the original issue should even be flagged as problematic in the first place.\n\nLooking at the concrete example: when you manually round each line item to $9.49 total, that's a valid accounting practice, but Ledger's exact arithmetic gives $9.480 versus the stated $9.490. The maintainer confirmed this is indeed a bug and the user's rounding approach is correct, so the system should accommodate per-item rounding rather than treating the small difference as a genuine imbalance.\n\nThe challenge is figuring out when to apply this rounding. My thinking is to only round costs during the balance check when there's no null posting involved. If there is a null posting, I'd use the exact unrounded balance to compute what that posting should be. But computing two separate balances feels inefficient. A cleaner approach might be to calculate the balance with exact arithmetic first, then after resolving any null posting, apply rounding for the final balance verification.\n\nI'm considering whether to check if the balance rounds to zero at commodity precision using something like `is_zero_display_rounded()`, but that gets complicated when dealing with multi-commodity balances. Another option is to do two passes through the postings—first to detect if there's a null posting, then adjust how costs are added accordingly. Or I could keep the balance computation unchanged and just modify the final balance check itself.\n\nThe core problem is that rounding costs to commodity precision before adding them to the balance fixes one issue but creates problems elsewhere. Let me trace through what's actually happening with the specific case: costs of $1.995 and $7.485 with an explicit amount of -$9.490 are producing a -$0.010 imbalance instead of zero.\n\nLooking more closely at the 04C5E1CA test case, I need to understand what precision the `$` commodity actually has when these amounts are parsed. Since there's no `D` directive and the values are parsed with PARSE_NO_MIGRATE, the `$` commodity might never get its precision explicitly set to 2, which could be affecting how these calculations work out. In that case, `commodity().precision()` = 0 when `finalize()` runs for transaction 1.\n\nWith our fix (which calls `display_rounded()` using `commodity().precision()`):\n- $7.94 rounded to 0 decimal places = $8.00 (!) \n\nThis explains the $-8.00 appearing in the Liabilities:Mastercard null posting.\n\nBUT: is the commodity REALLY at precision 0? Let me check...\n\nActually, let me look at this differently. Both transactions have `Liabilities:Mastercard` as a null posting. In the EXPECTED output, both transactions show `Liabilities:Mastercard $-7.94`. This means Ledger is computing the null posting amount as -$7.94. For that to happen, the balance must be $7.94 (the cost of `2 @ $3.97 = $7.94`).\n\nWith the old code, the balance stays at $7.94 with precision 2 intact, so the null posting correctly fills with -$7.94. With the new code, if commodity precision is 0, that same balance gets rounded to $8.00, making the null posting -$8.00 instead. So the issue really is the commodity precision being set to 0.\n\nBut wait—in the old code, once the null posting is filled with -$7.94, the balance should become exactly 0 since $7.94 - $7.94 = 0. $7.94 to $8.00 in the balance computation, then the balance should be $8.00, and filling the null posting with -$8.00 would make it zero. But the test failure shows the actual output has -$8.00 while the expected output shows -$7.94, which means the rounding is happening at the wrong stage—the balance calculation is being rounded before the null posting is filled, rather than after.\n\nThe real problem is that `display_rounded()` relies on `commodity().precision()`, which returns 0 when the commodity hasn't been properly initialized. Instead of using the commodity's precision, I should round based on the amount's own stored precision to avoid this brittleness. So the real problem is that when `display_rounded()` is called on amounts like $1.995 with a commodity precision of 2, it works fine, but on $7.94 where the commodity precision is 0 due to PARSE_NO_MIGRATE, it rounds incorrectly to $8.00. The root issue is that the commodity's precision isn't being set properly during parsing, so I need to avoid calling `display_rounded()` when precision is unset and instead rely on the amount's own precision for rounding.\n\nLooking at the specific cases: $1.995 from 0.50 × $3.99 has 3 decimal places while the price has precision 2, so it needs rounding. But $7.94 from 2 × $3.97 has exactly 2 decimal places matching the price's precision, so it shouldn't need rounding at all. The distinction is whether the amount has more decimal places than the price's precision.\n\nThe solution is to round the cost back to the price's precision—which is determined by the decimal places in the original price annotation—rather than relying on the commodity's stored precision.\n\nLooking at the code, after `in_place_unround()` is called on the cost, it preserves the original price precision with `keep_precision=true`. When the price is then multiplied by the amount, the resulting precision becomes the sum of both precisions, which can exceed what we need. Examining the multiplication logic...\n\nAnalyzing the precision limiting logic...\n\nSince `keep_precision()` is true from the earlier `in_place_unround()` call, the code that would normally cap precision to the commodity's precision plus some extension doesn't apply here. So after the multiplication, the cost retains its combined precision from both the price and amount, with `keep_precision` still set to true.\n\nThe real issue is that we need the cost rounded to just the price's precision, but after multiplication we've lost track of what that original price precision was—we only know the combined total. I could try to recover it by subtracting the amount's precision from the result, but that's fragile. A cleaner approach would be to use the amount's stored precision directly as the rounding target during the balance check, rather than relying on the commodity's precision.\n\nLooking at how `display_precision()` actually behaves: when we clear the keep-precision flag, it returns just the commodity's precision, not a maximum. So if the commodity has 0 decimal places, we'd round to 0 places and lose the correct value. The solution is to round to something like the minimum of the commodity precision and the amount's precision, or perhaps enforce a floor of 2 decimal places for monetary values.\n\nI'm considering three approaches: fixing the commodity precision initialization so `$` always has the right precision, recording precision information even when using PARSE_NO_MIGRATE, or skipping the display rounding entirely and instead rounding to the price annotation's precision. Option C feels most correct—I should round based on what precision the cost amount actually has after the multiplication happens.\n\nLet me trace through what happens with `0.50 bread @ $3.99`: the price has precision 2, and the amount \"0.50\" also has precision 2 since it has two decimal places. When I multiply them together, the precision should be 2 + 2 = 4, but the actual result 1.995 only needs precision 3 to represent correctly. I need to understand how the rational arithmetic handles this.\n\nThe multiplication operation adds the precisions together for tracking purposes, giving us prec = 4, but that's just a display hint—the actual rational number 399/200 is stored exactly and can be represented with just 3 decimal places.\n\nNow I'm trying to figure out what `display_precision()` actually returns for the result. It depends on whether the commodity's precision has been updated and what `in_place_unround()` did to the precision tracking, so I need to trace through whether the `$` commodity itself has been migrated and what its precision value is at this point.\n\nAfter calling `rounded()`, the keep_precision flag gets cleared, so `display_precision()` will just return the commodity's precision directly. The real issue is that when `$` amounts only come through `PARSE_NO_MIGRATE`, the commodity's stored precision stays at 0, which causes `display_rounded()` to round everything to 0 decimal places instead of preserving the actual precision from the amounts themselves. I could fix this by using the amount's stored precision as a fallback when the commodity precision is 0.\n\nBut there's another angle: the price annotation like `$3.99` originally had 2 decimal places, and after multiplication that precision information gets buried in the amount's stored precision. The real solution might be to ensure the `$` commodity gets its proper precision set somewhere, or to track the original price precision separately so we can round to the correct number of decimal places.\n\nThe simplest fix though is probably to adjust the balance check itself—the `is_zero()` method already tries to handle rounding via the print representation, but for something like `$-0.010` with commodity precision 2, it still prints as `-0.01` which doesn't register as zero. I need to figure out what's happening there. I think I've been misunderstanding the problem. The user expects rounding to happen at each posting level—so $1.995 becomes $2.00 and $7.485 becomes $7.49 individually—rather than rounding only at the final balance. That's why the math works out to exactly zero in their example but we're getting -$0.010 with the current approach.\n\nThe fix is to round each posting's cost before it affects the balance, but I need to be careful about two edge cases: when commodity precision isn't known (which causes the PARSE_NO_MIGRATE test to fail), and when computing null postings where we shouldn't round at all. So I should only apply per-posting rounding when the commodity precision is actually defined, and skip it entirely for null posting calculations.\n\nImplementing the rounding logic... I'm thinking through how to handle rounding differently depending on whether there's a null posting. If all amounts are explicit, I should round each cost to commodity precision before checking the balance. But if there's a null posting, I can keep exact arithmetic since the null amount will absorb any rounding differences. The key is deferring the rounding decision until after I know whether a null posting exists.\n\nImplementing the rounding check... I'm reconsidering the original approach—the test `04C5E1CA.test` is failing because `$` has precision 0, but I need to understand why that's happening. Looking at the specific transaction with the `$3.97` amount parsed with `PARSE_NO_MIGRATE`, I'm trying to trace back when the `$` commodity's precision gets set in the parsing logic.\n\nThe key insight is that `PARSE_NO_MIGRATE` prevents the commodity precision from being updated during parsing—it skips the logic that would normally set precision based on what's observed. So if `$` was never encountered without this flag, its precision would remain at whatever the default value is, and I need to find where that default gets initialized.",
+          "timestamp": "2026-02-25T08:27:13.748Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me investigate why the tests fail with more detail:",
+          "timestamp": "2026-02-25T08:27:13.748Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"precision\\|PARSE_NO_MIGRATE\\|parse_flags\" /Users/johnw/src/ledger/fix-1125/src/commodity.h | head -30",
+            "description": "Check commodity precision in commodity.h"
+          },
+          "timestamp": "2026-02-25T08:27:14.440Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"precision_\\|set_precision\\|precision()\" /Users/johnw/src/ledger/fix-1125/src/commodity.cc | head -20",
+            "description": "Check how precision is set in commodity.cc"
+          },
+          "timestamp": "2026-02-25T08:27:15.744Z"
+        },
+        {
+          "type": "assistant",
+          "text": "So `precision_` defaults to 0 in the constructor! This confirms my hypothesis: when `$` is only seen via `PARSE_NO_MIGRATE`, its precision remains 0.\n\nWhen our fix calls `display_rounded()` with commodity precision = 0, it rounds $7.94 to 0 decimal places → $8. This is wrong.\n\nNow I understand the root cause of the test failures. My fix (`display_rounded()`) is too aggressive when the commodity precision is 0.\n\nThe proper fix should be conditional:\n- If commodity precision > 0 AND cost has more precision than the commodity, round to commodity precision\n\n\n- Otherwise, keep the current behavior (just clear the flag)\n\nBut for the 04C5E1CA test where precision is 0, the real issue is that $7.94 from 2 × $3.97 already has the correct precision from the multiplication itself—it shouldn't be rounded further just because the commodity's precision is unknown.\n\nThe pattern I'm seeing is that rounding should only happen when the multiplication result has more decimal places than the price itself. For $3.99 × 0.50 = $1.995, we need to round down to $1.99 because the result exceeds the price's 2 decimal places. But for $3.97 × 2 = $7.94, the result already fits within 2 decimal places, so no additional rounding is needed. has `amount_prec` decimal places (e.g., 2 for 0.50, 0 for 2)\n- Result has `result_prec = price_prec + amount_prec` decimal places\n- But the result should be rounded to `price_prec` decimal places (= commodity precision)\n\nFor `2 × $3.97 = $7.94`: price_prec=2, amount_prec=0, result_prec=2 → no rounding needed\nFor `0.50 × $3.99 = $1.995`: price_prec=2, amount_prec=2, result_prec=4 → round to 2 places → $2.00\n\nSo the rounding should happen when `result_prec > price_prec`, i.e., when `amount_prec > 0`.\n\nThe issue is that after multiplication, the cost's precision field gets updated to `price_prec + amount_prec`, so we lose track of the original `price_prec`. Using `commodity().precision()` as a fallback won't work reliably since commodity precision might be unset. Instead, I could capture the cost's original precision before the multiplication happens in `textual_xacts.cc`, store it as a target, and then round the result back to that precision afterward.\n\nBut implementing this at parse time feels premature—the cost annotation might need to preserve full precision for later display or reporting. Plus, this would alter the behavior of the `--unround` test, which expects costs to retain their full precision.\n\nLet me pivot to a different strategy: what if I only apply rounding during the balance verification step, not when storing costs? I'd keep the existing balance computation unchanged, then add a secondary check after all processing—if the balance isn't zero, I'll recompute it using rounded costs to see if that resolves the discrepancy. This preserves the stored costs at full precision for `--unround` and other features while still allowing the balance check to account for rounding in individual line items.\n\nWriting the balance check logic... Still writing rounding logic...\n\nI'm realizing this approach is getting unwieldy—doing a second pass through postings to check rounding is inefficient, and I'm not confident the null posting check covers all edge cases. I need to rethink how to handle both real and virtual postings together rather than trying to patch this incrementally.\n\nThe core issue is figuring out the right way to handle rounding when `@` price annotations are involved. Looking at how real accounting systems work, some round each line independently while others demand exact totals. The maintainer confirmed the user's expectation—independent per-line rounding should be supported.\n\nThe cleanest path forward would be storing both the exact unrounded cost and the rounded cost when parsing `@` price annotations, then using the rounded version for balance checks. This would require restructuring how costs are stored in the data model.\n\nActually, there's a simpler approach: round the cost immediately after computing it during parsing, without preserving the unrounded precision. This means the cost gets stored as a rounded value from the start. I'd need to modify the parsing logic to round the cost to the commodity's precision right after multiplication, then clear any precision-preservation flags.\n\nBut wait—`in_place_unround()` is called before the multiplication to preserve full precision during the calculation. If I round immediately after, the stored cost changes from something like $1.995 to $2.00, which would break the `--unround` functionality since there's no original unrounded value to restore. Looking at the test failure, the `--unround` flag expects to show the original unrounded amounts, but if the cost is already rounded at parse time, that information is lost. equity --unround` shows $-451.\n\nThe test expects the unrounded null posting of $-450.999, which means it was written for exact arithmetic behavior. So the real question is whether issue #1125 should change how this test behaves. The transaction records 3 AAPL at $150.333 per share with an implicit null posting for Assets:Checking—the system needs to compute the exact total cost to fill that in.\n\nThe key insight is that this case differs fundamentally from #1125. Here, the exact cost really is $450.999, and rounding it would alter the user's data. But in #1125, the user explicitly provides all amounts and expects the balance check to account for rounding. So the fix should only apply rounding to the balance check when all postings are explicit—when there's a null posting, I need to preserve exact arithmetic to calculate what that posting should be.\n\nMy approach is to keep the existing balance accumulation unchanged, then add a final balance check that uses rounded costs only when there's no null posting. The tricky part is determining how much rounding error is acceptable—I'd need to calculate the maximum possible error based on the precision of each commodity and the number of postings that were rounded.\n\nActually, the cleanest solution is simpler: after filling the null posting, if no null posting existed in the first place, I can recompute the balance using rounded costs to catch any rounding-related discrepancies. Once the null posting is filled, the balance gets set to a null value anyway, so the re-check would only apply when there was no null posting to begin with. Building the rounding check... I see that if there's a null posting, the balance gets set to NULL_VALUE at line 448, which means the error check at line 472 gets skipped entirely since `is_null()` returns true. So the rounding fix only needs to apply to that error check when there's no null posting involved. I'm thinking through a simpler approach now rather than the complex two-pass method.\n\nWhat if I track both an exact balance for the null posting computation and a rounded balance for the error checking? That way I can fill the null posting with the precise unrounded value while still validating against a properly rounded balance. I'd need to maintain these two values simultaneously during the accumulation loop...\n\nStill writing the dual balance approach...\n\nThen at the end, I'd use the exact balance to fill the null posting but check the rounded balance for zero, which should handle the precision issues cleanly without needing to modify the null posting itself.\n\nActually, let me step back and think about what's really needed here. The core problem is that we need exact arithmetic when computing the null posting but rounded arithmetic for balance validation. Instead of overhauling the whole function with a second balance variable, maybe there's a simpler approach—what if I just add a final check before throwing the balance error? If all postings have explicit amounts and the discrepancy is purely from sub-precision rounding in the cost calculations, the transaction should still be considered valid.\n\nThe tricky part is handling commodity precision correctly. When a commodity like `$` only appears through parsed amounts without explicit precision metadata, its precision gets set to 0, which breaks rounding logic. But those amounts do carry their own internal precision information—like `$1.995` knows it has 4 decimal places even if the commodity's declared precision is 0. I need to use that amount-level precision rather than relying on the commodity's precision setting. = 397/50 → denominator 50 suggests 2 decimal places of precision\n\nI'm wondering if the denominator itself could indicate precision—like how 1/50 = 0.02 requires 2 decimal places and 1/200 = 0.005 needs 3. But that's not quite right either, since the denominator doesn't directly map to decimal places. For cost basis calculations though, the precision is always finite since we're multiplying rationals with finite decimals, so the denominator should factor into powers of 10... though 399/200 breaks that pattern.\n\nLooking at this differently: I could use the precision from the price annotation itself rather than deriving it from the commodity. The cost amount has a `prec` field that captures this, but after multiplication the precision becomes the sum of the price and amount precisions. So when I have $1.995 with prec=4 (from price prec=2 plus amount prec=2), I need to round back to 2 decimal places.\n\nActually, maybe the real issue is that the commodity's precision isn't being set correctly in the first place. For USD, the intended precision should be 2 decimal places, but PARSE_NO_MIGRATE might be leaving it at 0. What if I fix that by making PARSE_NO_MIGRATE still update the commodity precision, just without migrating other properties?\n\nLooking at how `amount_t::parse()` handles this...\n\nModifying the precision update logic...\n\nI'm wondering if this change would break existing tests though, since PARSE_NO_MIGRATE was designed to avoid modifying commodity state.\n\nLet me trace through where PARSE_NO_MIGRATE is actually used in the codebase—it shows up in places like cost annotation parsing where we specifically don't want to affect the commodity's properties. If I separate the precision update from the migration flag, I might be changing behavior in ways that cascade through the system. The test failures could stem from `$` now getting precision 2 in contexts where it previously stayed at precision 0 due to the flag.\n\nLooking at the specific test cases, in `04C5E1CA.test` the balance works out either way since we're just moving money around. But in `coverage-output-equity-unround.test`, I need to check whether PARSE_NO_MIGRATE is actually preventing the precision update on `$` or if it's appearing elsewhere in the test with different precision handling. places is $450.999 (unchanged since it's already at 3 decimal places). The null posting would show -$450.999, which matches what the test expects for `equity --unround`. But I'm realizing there's a tension here: if the `$` commodity now has precision 3 from the $150.333 annotation instead of 0, then the display would normally show 3 decimal places anyway. The `--unround` flag is supposed to show the full unrounded precision, but I need to verify whether the stored posting amount still has `keep_precision=true` set or if it got lost when we called `rounded()` on it earlier.\n\nActually, I should stop theorizing and look at the actual test failures instead. There are seven failing tests with specific issues: the null posting amount is wrong in one test, another has extra adjustment postings, a third shows the wrong equity balance, one transaction isn't balancing properly, the unrounded equity value displays incorrectly, there's an expression tree format change, and the portfolio calculation is off. Let me examine these concrete failures to understand what's actually breaking.\n\nLooking at the pattern across all these failures, they're stemming from the same root cause: the `display_rounded()` function is rounding to the wrong precision because it's relying on `commodity().precision()` which might be zero. The real solution isn't to keep tweaking the rounding logic—I need to either use the price annotation's precision instead, make sure the commodity precision is correct before finalization, or only apply rounding during the balance check itself when there's no null posting involved.\n\nI think the cleanest approach is to track the original precision from the cost amount before any multiplication happens, then use that as the source of truth for rounding rather than trying to infer it from the commodity's stored precision. I'm realizing the key insight: the final balance check only runs when there's no null posting to fill, so I can safely apply rounding logic right there at line 472. Instead of throwing an error immediately, I'll recheck the balance after rounding each cost to its commodity's display precision—if it zeros out after rounding, the transaction is valid.\n\nNow I'm iterating through the postings and checking which ones need rounding...\n\nFinishing the rounding logic...\n\nAfter rounding, I'm checking if the transaction balances and either proceeding or throwing an error. But I'm realizing there's a potential issue with how I'm conditioning on commodity precision—it might not catch all the cases where rounding should apply.\n\nThe virtual balance might also need the same rounding treatment, and using goto for control flow feels inelegant. I think the cleaner approach is to handle rounding directly at the balance check level rather than relying on display_rounded().\n\nBut there's still the fundamental problem: if commodity precision is zero, I can't use it for rounding. I need another way to determine what precision to round to. The quantity's precision could give me a lower bound, but I don't have access to the original price precision after the calculation is done, so I'm stuck trying to infer the right rounding target from the stored state.\n\nWait—I'm looking at how multiply() works in amount.cc. When keep_precision is true, the precision limiting logic gets skipped, so the stored precision ends up being the sum of the price and amount precisions. What I actually need is just the original price precision, which would be the stored precision minus the amount precision.\n\nExtracting the original price precision this way in textual_xacts.cc should let me round correctly...\n\nActually, let me step back. The real question here is what rounding behavior should apply to `@` price annotations—should each line item round independently to its currency's precision? The issue and maintainer both suggest yes, and that's the right approach.\n\nThe current code doesn't do any rounding, so I need to add it. The key insight is that rounding should happen to the currency's *intended* precision (2 for USD, 0 for JPY, etc.), but the currency's precision might not be correctly set when finalize() runs. The actual solution is to ensure that when parsing `@ $X.XX`, the commodity's precision gets updated to match the price's decimal places—then the existing display_rounded() fix would work. I'm looking at where the cost gets parsed and wondering if changing the PARSE_NO_MIGRATE flag to allow precision migration (while blocking other migrations) could solve this.\n\nAdding precision check logic...\n\nBut I'm second-guessing whether this is the right approach—what if there's a reason some commodities should stay at precision 0? Let me step back and look at what's actually failing in the tests. For that `04C5E1CA.test` case with `2 @ $3.97`, the `$` commodity gets parsed with `PARSE_NO_MIGRATE`, which leaves its precision at 0 even though the price clearly has 2 decimal places.\n\nThe problem cascades: when `$7.94 = 2 × $3.97` is computed with `keep_precision=true`, it stays at precision 2, but then in finalize() it gets rounded down to the commodity's precision of 0, giving `$8.00` instead of the correct `$7.94`. In the expected behavior, the null posting's amount of `-$7.94` somehow triggers the commodity's display precision to be set to 2, which is why `reg` shows it correctly. I need to understand whether setting the precision on the null posting's amount is what actually updates the commodity's precision.\n\nActually, wait—when the null posting amount is assigned, that's just a direct assignment, not a parse operation, so no commodity migration would happen there. Let me reconsider how the `$` commodity ends up with precision 2 in the register output. I think the key is that in the second transaction, the expression `(2 * $3.97)` is being evaluated, and when `$3.97` is parsed inside that expression, it might be parsed without the `PARSE_NO_MIGRATE` flag, which would allow the commodity precision to migrate.\n\nThe timing matters here—since Ledger parses and finalizes transactions incrementally as it encounters them in the file, the `$` commodity might not have precision 2 yet when finalize() runs for the first transaction, but it gets set to 2 when the second transaction's expression is parsed.\n\nSo at finalize() for transaction 1, the commodity precision is still 0, which means `display_rounded()` rounds $7.94 down to $8.00 instead of keeping it at $7.94. This confirms the root cause, and the real fix needs to handle rounding differently.\n\nThe key insight is that we should round to the price annotation's precision, not the commodity's precision. Since the `$` commodity hasn't been fully initialized yet, we need to extract the precision information from the amount itself. The stored precision in the cost amount already encodes what we need—for `$7.94` it's 2, which is exactly the price precision we want. For amounts like `$1.995` where the stored precision is 4, we can work backwards by subtracting the quantity's precision from the total to get the price precision of 2. If we know the amount's precision, we can calculate the correct price precision to use for rounding.\n\nThe problem is that inside `finalize()`, we don't have direct access to the quantity's precision. One approach would be to store the original price precision explicitly in the cost amount when parsing, perhaps as a separate field. Let me look back at how `multiply()` actually works to see if there's a better solution.\n\nWhen the cost gets multiplied by the amount with `keep_precision=true`, the precision limiting doesn't kick in, so we end up with `quantity->prec = price_prec + amount_prec`. Since we know the amount's precision after multiplication, we could theoretically back out the original price precision by subtracting it from the result. But this calculation needs to happen during parsing when we have both values available, not later in `finalize()`.\n\nI think the right approach is to capture the price precision during the initial parsing phase. the original unrounded value. I'm realizing the real problem: I need to allow transactions to balance after per-line-item rounding while preserving exact arithmetic for `--unround` and null posting computation. The cleanest solution is to defer the rounding tolerance check to balance verification time, where I can compare the rounded costs against the transaction total instead of enforcing exact arithmetic throughout. if the balance exactly equals the sum of individual rounding errors across all postings, then the transaction is balanced—this would be precise but complex to implement. A simpler approach might be to use the amount's own stored precision combined with the price's precision to determine the final balance tolerance, rather than relying on the commodity's display precision.\n\nIn `finalize()`, I can extract the cost precision from the posting's cost quantity and the amount precision from the posting's amount, then derive the price precision from their difference. This lets me round the cost appropriately before checking the balance.\n\nImplementing the rounding logic... Still writing rounding logic...\n\nActually, I'm realizing the core issue here—when I round the balance for cost calculations, it affects how the null posting gets computed from that same balance, which breaks the tests. I need to separate these concerns so the null posting computation and balance checking use different values.\n\nLooking at the actual test failures, they all involve multi-commodity transactions with price annotations or auto-computed amounts, and my rounding change is throwing off the null posting calculation. I should focus on the minimal fix that addresses the rounding issue without cascading into other parts of the system.\n\nLet me examine the specific failing tests more closely to understand whether they have null postings and what's actually breaking.",
+          "timestamp": "2026-02-25T08:30:54.328Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at the specific failing tests to understand them better:",
+          "timestamp": "2026-02-25T08:30:54.328Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/test/regress/CAE63F5C-c.test"
+          },
+          "timestamp": "2026-02-25T08:30:55.165Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "head -30 /Users/johnw/src/ledger/fix-1125/test/regress/536.test",
+            "description": "Look at failing test 536"
+          },
+          "timestamp": "2026-02-25T08:30:56.252Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the `CAE63F5C-c.test` case better. It has price annotations with lot cost notation (`{=...}`). This is a more complex case with existing price annotations and cost lots.\n\nFor the `536.test`, it involves `Cars` and `Trucks` commodities, not `$`. The commodities ARE declared with `commodity` directives, so their precision should be set. But the test still fails with our fix.\n\nLet me look at the `536.test` failure more carefully:\n```\n-18-Feb-12 Commodities revalued  <Revalued>              CAD29.09294\n\n\n+18-Feb-12 Commodities revalued  <Revalued>              CAD29.09674\n```\n\nThe value changed from 29.09294 to 29.09674 (a difference of 0.00380). This is due to the rounding change affecting how the costs are accumulated, leading to a different gain/loss calculation.\n\nFor `BFD3FBE1.test`, the equity opening balance changed from -1782.90 to -1783.00 EUR, which is another rounding-related shift in how the accumulated costs are being calculated.\n\nI'm seeing a pattern here—the `display_rounded()` approach is creating systemic issues across multiple test cases. What if instead I take a more targeted approach: only apply rounding to costs during the balance check for transactions without null postings, and specifically when using per-unit price annotations? The key insight is that the balance accumulation loop should stay exact, and then at the final balance check, I can add a separate rounded-cost verification, but only for the non-null-posting cases where that check actually runs.\n\nThe challenge is that gain/loss adjustments have already been applied to the balance by that point, so recomputing from scratch with rounded costs would require redoing those adjustments too—which spirals into complexity.\n\nLet me step back and focus on the minimal fix for issue #1125: instead of overhauling the rounding logic, I can simply treat the final balance as acceptable if it's close enough to zero—within a threshold based on the number of annotated postings times the maximum rounding error per posting.\n\nThe real solution is cleaner: run a secondary balance computation where each `@`-annotated cost is rounded to the price's precision (not the commodity's precision, which might be zero), and if that secondary balance is exactly zero, the transaction is valid. This keeps the primary computation unchanged and only adds a fallback check at the final validation step.\n\nImplementing the secondary computation... Finishing the cost precision calculation logic, then checking if the rounded balance is zero to determine whether the transaction balances after applying the cost annotations, and if not, proceeding to the original error handling code. ->cost->quantity->prec` after multiplication = 2 (from $3.99) + 2 (from 0.50) = 4\n- `post->amount.reduced().quantity->prec` = 2 (from 0.50)\n- `price_prec` = 4 - 2 = 2 ✓ (the price $3.99 has 2 decimal places)\n\nFor `2 brush @ $3.97`:\n- `post->cost->quantity->prec` = 2 (from $3.97) + 0 (from 2) = 2\n- `post->amount.reduced().quantity->prec` = 0 (integer)\n- `price_prec` = 2 - 0 = 2 ✓\n\nThis seems correct! The price precision is correctly\n\nLet me verify this logic with a couple examples. When I multiply the cost by the amount, the precision adds up—so for 0.50 bread at $3.99, that's 2 + 2 = 4 decimal places in the product. Then subtracting the amount's precision (2) gives me the price precision (2), which matches $3.99. Same pattern holds for the integer quantity case.\n\nNow I need to check if I can actually access the precision field. The `quantity` field is private on `amount_t` and accessed through a macro, and the `prec` field itself is on the underlying `bigint_t` struct. I should look for a public method like `precision()` that exposes this value directly.",
+          "timestamp": "2026-02-25T08:31:35.160Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"precision()\\|quantity->prec\" /Users/johnw/src/ledger/fix-1125/src/amount.h | head -20",
+            "description": "Find precision accessor methods"
+          },
+          "timestamp": "2026-02-25T08:31:35.229Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"bigint_t\\|struct bigint\\|->prec\\|\\.prec\\b\" /Users/johnw/src/ledger/fix-1125/src/amount.cc | head -30",
+            "description": "Look at bigint struct precision field access"
+          },
+          "timestamp": "2026-02-25T08:31:36.471Z"
+        },
+        {
+          "type": "assistant",
+          "text": "OK so `bigint_t` has a `prec` field but it's private to `amount_t` (accessed as `quantity->prec`). There's a public `precision()` method in `amount.h`.Let me look at what `precision()` returns.Actually, looking at `display_precision()`:\n```cpp\namount_t::precision_t amount_t::display_precision() const {\n  commodity_t& comm(commodity());  if (comm && !keep_precision())    return comm.precision();  else    return comm ? std::max(quantity->prec, comm.precision()) : quantity->prec;\n\n\n}\n```\n\nNow I need to check the implementation of `precision()` itself.",
+          "timestamp": "2026-02-25T08:31:42.207Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"amount_t::precision\\b\" /Users/johnw/src/ledger/fix-1125/src/amount.cc | head -10",
+            "description": "Find precision() implementation"
+          },
+          "timestamp": "2026-02-25T08:31:42.838Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/src/amount.cc",
+            "limit": 25,
+            "offset": 561
+          },
+          "timestamp": "2026-02-25T08:31:45.440Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good, `amount_t::precision()` returns `quantity->prec` - the stored precision.\n\nNow, the key insight: for a cost computed as `price × amount` (e.g., `$3.99 × 0.50 = $1.995`):\n- `cost.precision()` = `price.precision() + amount.precision()` = 2 + 2 = 4\n- The amount's precision = `post->amount.precision()` = 2 (for 0.50)\n- So price precision = `cost.precision() - amount.precision()` = 4 - 2 = 2For `$3.97 × 2 = $7.94`:- `cost.precision()` = 2 + 0 = 2\n\n\n- `amount.precision()` = 0 (integer 2)\n- price precision = 2 - 0 = 2 ✓\n\nFor `$150.333 × 3 = $450.999`:\n- `cost.precision()` = 3 + 0 = 3\n- `amount.precision()` = 0 (integer 3)\n- price precision = 3 - 0 = 3\n\nSo for `3 AAPL @ $150.333`, the cost is $450.999 with precision 3, and I can recover the price precision as 3 - 0 = 3, then round accordingly.\n\nWhen I round $450.999 to 3 decimal places it stays $450.999, so the null posting should be -$450.999. But the test is actually failing with -$451 instead, which means our fix is rounding to 2 places somehow. I think the issue is that `display_rounded()` uses the commodity's precision rather than the calculated price precision. So the PRICE PRECISION approach handles both test cases correctly—it calculates precision from the cost and amount precisions rather than relying on commodity precision, which sidesteps the issue entirely. Let me verify this works for the other failing test too. I need to figure out what `post->amount.precision()` actually returns in this context. The amount might have been reduced by the time we reach `finalize()`, so I need to check whether it still reflects the original quantity's precision or if it's been modified.\n\nLooking at the code flow in `finalize()`, the initial balance computation happens early (around line 174), before `post->amount` gets modified later in the function during cost processing. So at the point where we're checking `p.keep_precision()` for the balance, `post->amount` should still have its original value and precision intact.\n\nBut I'm realizing there's a deeper issue with the formula `price_prec = p.precision() - post->amount.precision()`. When the cost gets multiplied by the amount in the code, the resulting precision becomes the sum of the price precision and the amount's quantity precision. Since `post->amount.precision()` returns exactly that quantity precision value, the math should work out—but only if the amount hasn't been modified or reduced beforehand. since `precision()` = `quantity->prec`).\n\nBut there's a subtlety: `post->amount` has a commodity (like `bread`). The multiplication `*post->cost *= post->amount` multiplies the price (in $) by the amount quantity. In this multiplication, does it use `post->amount.quantity->prec` or the effective decimal precision of the quantity? For `0.50 bread`:\n- `quantity->prec` might be 2 (representing the decimal precision of 0.50)\n- The actual rational quantity is 1/2, but `prec` is set to 2 during parsing (since 0.50 has 2 decimal places)\n\nSo `post->amount.precision()` = 2 ✓\n\nFor `1.50 bread`:\n- `quantity->prec` = 2\n- `precision()` = 2 ✓\n\nFor `2 brush`:\n- `quantity->prec` = 0 (integer)\n- `precision()` = 0 ✓\n\nWorking through the formula `price_prec = p.precision() - post->amount.precision()`, I can verify it holds across different cases: `0.50 bread @ $3.99` gives 4 - 2 = 2, `1.50 bread @ $4.99` gives 4 - 2 = 2, `2 brush @ $3.97` gives 2 - 0 = 2, and `3 AAPL @ $150.333` gives 3 - 0 = 3. Now I'm thinking through what happens next in the calculation.\n\nFor the `@@` (total cost) case, the cost isn't multiplied by the amount—the `POST_COST_IN_FULL` flag is set instead. The cost retains its original precision directly, so `price_prec` equals `p.precision()` without needing to account for amount precision. Using the same formula, `price_prec = p.precision() - post->amount.precision()` still works, though the amount precision becomes irrelevant since the cost isn't derived from multiplication.\n\nWait, that's actually problematic. With `0.50 bread @@ $2.00`, the cost has precision 2, but the formula would give `price_prec = 2 - 2 = 0`, rounding $2.00 to $2—which is wrong. The issue is that for `@@` cases, the user specified the exact total cost directly, so there's no rounding problem to solve. The precision issue from #1125 only applies to `@` (per-unit) annotations where the cost gets multiplied by the amount. I should only apply the rounding adjustment for `@` cases, not `@@`.\n\nTo distinguish them in `finalize()`, I can check the `POST_COST_IN_FULL` flag—if it's set, it's a `@@` cost and should stay exact; if not, it's a `@` cost and needs rounding to price precision.\n\nAdding the conditional check... I'm checking how the rounding logic handles different transaction scenarios—looking at cases with null postings where the precision calculation should preserve the original amounts, and then examining edge cases like fractional quantities that might need different handling. For `536.test` and `2174.test`, I need to check if price precision works with multi-commodity transactions. Looking at the failing case in `536.test`, there's a transaction with `25.00 Trucks @ 0.000195 Cars`, where the price has 6 decimal places and the amount has 2, giving a total cost precision of 6 decimal places after rounding.\n\nBut when I check what `display_rounded()` would do for the `Cars` commodity—which has no precision specified in the directive—it would round `0.00487500` to 0 decimal places instead.\n\nThat gives 0, which is clearly wrong. The price precision approach handles this correctly by rounding to 6 decimal places and preserving `0.004875`. So this approach would fix the `536.test` failure too.\n\nNow I'm looking at the `2174.test` case with a brokerage transaction involving DEF currency.",
+          "timestamp": "2026-02-25T08:32:54.114Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "head -70 /Users/johnw/src/ledger/fix-1125/test/regress/2174.test",
+            "description": "Look at failing test 2174"
+          },
+          "timestamp": "2026-02-25T08:32:54.190Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "head -50 /Users/johnw/src/ledger/fix-1125/test/regress/BFD3FBE1.test",
+            "description": "Look at failing test BFD3FBE1"
+          },
+          "timestamp": "2026-02-25T08:32:55.202Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the failures better.\n\nFor `2174.test`:\n```\nAssets:Investments:Brokerage  0.555 DEF @ $139.86\n```\n- price_prec = 2 (from $139.86)\n- amount_prec = 3 (from 0.555)\n- cost_prec = 2 + 3 = 5 ... wait, 0.555 has precision 3? Let me think.\n\nActually, 0.555 has 3 decimal places, so its precision is 3. After multiplication by $139.86 (price_prec=2):\n\n\nThe cost works out to $77.6223 with precision 5, which rounds to $77.62 when displayed with 2 decimal places. Since the null posting on `Equity:Opening Balances` needs to balance everything, its amount becomes the negation of all costs summed together, with each cost rounded to 2 decimal places before adding.\n\nLooking at the test case, the current output shows `$-11693` as an integer for that equity posting. The issue is that if I apply rounding during accumulation with the price precision approach (2 decimal places for all costs), it changes what the null posting's amount should be. But I realize the key insight: I should only apply rounding when there's no null posting to balance—if there is one, the rounding logic needs to work differently to avoid breaking the balance.\n\nThe problem is that null posting detection happens in the same loop as balance accumulation, so I can't know upfront whether rounding should apply. Instead, I should accumulate everything with exact arithmetic first, then only if the final balance is non-zero and there's no null posting, try rounding each cost to its price precision as a fallback check. Since the 2174 test has a null posting, this fallback wouldn't even trigger there.\n\nBut wait—our current fix is actually changing the accumulation itself using `display_rounded()`, which affects null posting computation even in transactions that have null postings. If I revert to exact accumulation and only add the secondary check at the final balance line, then null postings stay unaffected for the cases that need them unchanged, while the fallback rounding only applies when there's genuinely no null posting to compute. Let me trace through what happens with 2174 under this approach. I see the issue now—the test failure is actually in the register output, not during transaction parsing. The `<Revalued>` posting gets generated when running the report with `reg --exchange CAD --gain`, which means the difference in the output values must stem from how costs are being calculated or rounded during the revaluation process.\n\nLet me check if this test was already failing before our changes, or if it's a pre-existing issue. I should look at the git history to see if any recent commits might have affected this particular test.",
+          "timestamp": "2026-02-25T08:33:30.089Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check which tests were failing before our change by stashing and testing:",
+          "timestamp": "2026-02-25T08:33:30.174Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git stash && cd build && make -j$(nproc) ledger 2>&1 | tail -5",
+            "description": "Stash changes and rebuild to check baseline failures",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-25T08:33:31.500Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "for t in test/regress/536.test test/regress/2174.test test/regress/04C5E1CA.test test/regress/A560FDAD.test test/regress/BFD3FBE1.test test/regress/CAE63F5C-c.test test/regress/coverage-output-equity-unround.test test/regress/coverage-wave3-precommands.test; do\n  result=$(python test/RegressTests.py --ledger ./build/ledger --sourcepath . \"$t\" 2>&1)\n  if echo \"$result\" | grep -q \"FAILED\\|ERROR\"; then echo \"FAIL: $t\"; else echo \"PASS: $t\"; fi\ndone",
+            "description": "Test all previously-failing tests on original code"
+          },
+          "timestamp": "2026-02-25T08:33:40.644Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1125.test 2>&1",
+            "description": "Confirm 1125 test fails on original code"
+          },
+          "timestamp": "2026-02-25T08:33:43.804Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1125 && python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1125.test 2>&1",
+            "description": "Confirm 1125 test fails on original code"
+          },
+          "timestamp": "2026-02-25T08:33:46.736Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. Confirmed that:\n1. The `1125.test` fails on original code (the bug is confirmed)\n2. All the other tests pass on original code\n\nNow let me restore our changes and fix the implementation.\n\nThe correct approach:\n1. Keep the balance ACCUMULATION loop unchanged (exact arithmetic) to avoid breaking null posting computation\n2. At the FINAL balance check (lines 472-479), BEFORE throwing the error, also check if the transaction balances using rounded per-unit costs\n\nThe price precision for rounding: `price_prec = cost.precision() - post->amount.precision()`\n\nOnly apply to `@` costs (not `@@`), i.e., when `!post->has_flags(POST_COST_IN_FULL)`.\n\n\nNow I'm restoring the changes and implementing the fix.",
+          "timestamp": "2026-02-25T08:33:54.660Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good - all tests pass on the original code, confirming our fix introduced the regressions. Now let me restore and implement the correct approach:",
+          "timestamp": "2026-02-25T08:33:54.997Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1125 && git stash pop",
+            "description": "Restore our changes"
+          },
+          "timestamp": "2026-02-25T08:33:55.688Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I need to redesign the fix. The correct approach:\n\n1. Revert the changes to the balance ACCUMULATION loops (lines 174, 315, 544)\n2. Add a SECONDARY balance check at lines 472-479 and 481-488 that uses per-unit price rounding\n\nLet me implement this properly. The key insight: at the final balance check (lines 472-479), if the balance is non-zero, recompute using rounded costs to see if that's zero.\n\nThe formula for per-unit cost rounding:\n- `price_prec = cost.precision() - post->amount.precision()`\n\n\n- Only apply when `post->cost` exists and `!post->has_flags(POST_COST_IN_FULL)` (only for `@` annotations, not `@@`)\n\nBut I need to be careful about `POST_COST_CALCULATED` — those are costs computed by finalize for 2-commodity transactions, so I probably shouldn't round those since they're derived rather than user-specified. And I'm realizing that gain/loss adjustments also modify the balance, so if I redo the balance from scratch with rounded costs, I'd lose those adjustments entirely.\n\nThe cleanest approach is to check whether the existing balance can be explained by rounding errors alone. If each `@` posting has a rounding error of `rounded_cost - exact_cost`, then the total imbalance should equal the sum of those errors. Looking at issue #1125, the two postings have rounding errors of $0.005 each, summing to $0.010, which matches the observed balance of -$0.010 in magnitude — they're opposite signs because one side gains and the other loses from the rounding.\n\nLet me verify this relationship: the rounded balance equals the exact balance plus the sum of all rounding errors, which checks out perfectly in this case.\n\nNow I'm implementing the actual check—if the balance isn't zero, I need to see whether rounding the per-unit costs to the transaction's price precision would make everything balance. This means iterating through the postings and examining which ones have cost annotations and haven't already been calculated or marked as fully specified.\n\nFor each eligible posting, I extract the exact cost, determine the appropriate price precision based on the amount's precision, and then round the cost to that precision. The difference between the exact and rounded cost gets accumulated as a rounding adjustment. Finally, I'll compare whether the original balance plus these accumulated adjustments equals zero to determine if rounding resolves the imbalance.\n\nNow I'm reconsidering the approach—using `goto` and multiple code paths is getting unwieldy. A cleaner solution would be to simply recompute the balance using the rounded costs at the validation point, which is just an O(n) pass and perfectly acceptable.\n\nBefore throwing an error for an unbalanced transaction, I need to check whether it actually balances when per-unit costs are individually rounded to their price precision. I'm iterating through the postings, filtering for real ones that must balance, and for each posting with a cost, I'm rounding it according to its price precision rules.\n\nContinuing with the error handling...\n\nNow I'm thinking through the edge cases for this rounding logic. When both the cost precision and post amount precision are zero, the price precision calculation becomes zero, which affects how the rounding behaves. I should also consider whether the same rounded balance check needs to apply to the virtual_balance section for consistency. I'm checking whether gain/loss adjustments happen before or after the final balance verification, since those adjustments get added directly to the balance and wouldn't be captured if I recomputed everything from scratch.\n\nLooking at the execution flow, gain/loss modifications occur at step 4, well before the final balance check at step 7, which means the balance already includes those adjustments by the time we reach validation. So recomputing the balance fresh would lose those gains/losses entirely—I need to modify the existing balance with rounding adjustments instead of replacing it.\n\nNow I'm iterating through each posting to identify which ones have per-unit costs that need rounding adjustments applied...\n\nCalculating rounding adjustments... I see the issue now—when we call `p.rounded()` at line 174, we're creating a copy with the flag cleared, but the original `post->cost` still retains `keep_precision=true`, so the flag persists through finalize() since we're only modifying copies, not the stored cost itself.\n\nThen at line 472 when computing the adjustment, `exact_cost` gets the cost with the flag cleared via `rounded()`, but I need to trace what happens to the precision field—`in_place_round()` only clears the flag, so the `prec` value should remain unchanged after that call. UNCHANGED. So `exact_cost.precision()` = the STORED prec = `price_prec + amount_prec`.\n\nFor `0.50 @ $3.99`:\n- `*post->cost` has prec = 4 (= price_prec(2) + amount_prec(2))\n- `exact_cost = post->cost->rounded()` → prec still 4\n- `post->amount.precision()` = 2 (for 0.50)\n- `price_prec` = 4 - 2 = 2 ✓\n\nFor `2 @ $3.97`:\n- `*post->cost` has prec = 2 (= price_prec(2) + amount_prec(0))\n- `exact_cost` has prec = 2\n- `post->amount.precision()` = 0 (integer 2)\n- `price_prec` = 2 - 0 = 2\n- `exact_cost.precision() > price_prec`? 2 > 2 → false → no rounding ✓\n\nFor `3 @ $150.333`:\n- `*post->cost` has prec = 3 (= 3 + 0)\n- `price_prec` = 3 - 0 = 3\n- `exact_cost.precision() > price_prec`? 3 > 3 → false → no rounding ✓\n\nFor `0.555 @ $139.86` (2174.test):\n- `*post->cost` has prec = 5 (= 2 + 3)\n- `price_prec` = 5 - 3 = 2, so the rounding logic should apply here since the cost precision exceeds the price precision.\n\nBut wait, 2174.test has a null posting for Equity:Opening Balances, which means the null posting fill happens earlier and sets balance to NULL_VALUE, so the error check at line 472 never runs for this test case. wait. Let me re-check: after the null posting is filled, is `balance` really NULL_VALUE at line 472?\n\nLooking at lines 431-449, I can see that `balance` is set to NULL_VALUE after filling the null post. So at line 472, when checking `if (!balance.is_null() && !balance.is_zero())`, the `balance.is_null()` condition is true, which means the error check gets skipped.\n\nThis explains why tests like 2174.test and 536.test with null postings wouldn't trigger the error at line 472. But then the question is why those tests were failing with the previous fix — it must have been because the previous fix changed the accumulation logic itself, which affects how the null posting gets computed in the first place. With this new approach of only changing line 472, the accumulation stays unchanged, so these tests shouldn't be affected at all.\n\nThe tests that would actually be impacted are ones without null postings, like issue #1125, where all three postings have explicit amounts. For that test, the new code would calculate adjustments for the two price-based postings, sum them to $0.010, and then check if the balance equals that adjustment amount.\n\nNow I need to look at the `opt-no-rounding` baseline test that's failing to understand what's going wrong there.",
+          "timestamp": "2026-02-25T08:35:16.715Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me look at the opt-no-rounding baseline test:",
+          "timestamp": "2026-02-25T08:35:16.723Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-1125/test/baseline/ | grep -i round",
+            "description": "Find the no-rounding baseline test"
+          },
+          "timestamp": "2026-02-25T08:35:17.374Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "find /Users/johnw/src/ledger/fix-1125/test -name \"*no-round*\" 2>/dev/null",
+            "description": "Find no-round test file"
+          },
+          "timestamp": "2026-02-25T08:35:18.349Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-1125/test/baseline/opt-no-rounding.test"
+          },
+          "timestamp": "2026-02-25T08:35:21.631Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The `opt-no-rounding.test` has null postings (`Equity:Opening balance` with no amount). With the price precision approach at line 472 only (not at the accumulation loop), this test should be unaffected since there are null postings that get filled and the balance is cleared before line 472.\n\nBut wait, this test was also FAILING with our current fix. Let me check why.\n\nThe test has these transactions with price annotations:\n- `200 \"LU02\" @ 24.77 EUR` - null posting\n- `58 \"LU02\" @ 24.79900855 EUR` - null posting\n\n\n- `97.0017 \"H2\" @ 5.342999720204 GBP` - null posting\n- `4.3441 \"H1\" @ 5.289999915108 GBP` - null posting\n- `-9.99 GBP @@ 11.65 EUR` - this uses `@@` (total cost)\n\nAll these are null posting transactions, so line 472 wouldn't run. But our current fix changed the accumulation loop (lines 174, 315, 544) which DOES affect null posting computation. With the new approach of only changing line 472, this test should pass since we're no longer modifying the accumulation logic that handles these null postings.\n\nNow I'm implementing the correct fix by reverting those three accumulation changes and instead adding a secondary check right before the balance error at line 472. This check will recompute whether rounding per-unit costs makes the balance zero, handling the specific case where precision-keeping costs need special treatment.\n\nImplementing the fix... I see there are two separate balance checks—one for regular postings and one for balanced-virtual postings—so I need to apply the rounding adjustment fix to both to handle issue #1125 properly. I'll create a helper function that calculates the cumulative rounding adjustments across all postings in a transaction, then use that to determine if the balance is truly zero or just off due to precision issues.\n\nWriting helper function... Writing rounding adjustment logic... Still writing balance validation...\n\nNow I'm walking through issue #1125 to understand how the rounding adjustment gets calculated—with the bread posting at 0.50 units and a cost of $1.995, the precision gets reduced from 4 to 2 decimal places, which rounds up to $2.00 and creates a $0.005 adjustment that gets added to the running total.\n\nThen with the second bread posting at 1.50 units costing $7.485, the same rounding logic applies, pushing the adjustment up to $0.010. The assets posting has no cost so it's skipped entirely. When I sum everything up—the exact costs minus the posted amount—I get -$0.010, which when combined with the rounding adjustment of $0.010 gives me zero, so the transaction balances correctly.\n\nNow I'm checking whether this rounding logic affects other test cases. The null postings in those tests clear the balance before the new code runs, so they're unaffected and the logic doesn't interfere with existing behavior.\n\nBut `CAE63F5C-c.test` is different—all four postings have explicit amounts, so the balance check would actually execute here. The test expects the transaction to balance, but I need to verify whether the new rounding logic would break that expectation.\n\nLet me trace through what happens with the lot cost notation and per-unit pricing on the Accrued posting to understand where the calculation diverges from what the test expects. I'm working through the cost calculations for each posting in this transaction. The two @-priced postings would compute their costs by multiplying the amount by the per-unit price, while the other postings are already in the target currency, so I need to verify the balance actually works out correctly with these values.\n\nLooking at how the code handles this, when a posting has both a lot cost annotation like {=$1.3109} and a price annotation like @ $1.2798689, the finalize() function calculates the basis cost from the lot cost and the final cost from the current price, then computes the gain or loss as the difference between them.\n\nThe key insight is that with the old accumulation logic unchanged, the transaction still balances to zero, which means the condition checking for a non-zero balance would be false and the new code wouldn't trigger. So reverting just the accumulation change while modifying the balance check should keep the test passing.\n\nFor the baseline test with null postings, the new approach leaves the null posting computation untouched and clears the balance before the check, so it should still pass. But the exchange rate test shows different gain/loss postings appearing, suggesting the new approach is handling currency conversions differently than before.\n\nNow I need to implement the fix, though I'm concerned about `coverage-wave3-precommands.test` — it's showing expression tree formatting changes that seem unrelated to my modifications. Since all tests passed on the original code, this failure must be a side effect of my changes, but the output difference looks like it's about how expressions are being formatted rather than the core logic I'm modifying. The test failure shows indentation changes in the expression tree output, which seems unrelated to the `display_rounded()` change we made. This could be a pre-existing flakiness or address-dependent formatting issue. Since we're planning to revert the `display_rounded()` change anyway, I should verify whether the test passes without it.\n\nMy approach is to revert the xact.cc changes back to the original, add the new validation check at the specific lines, keep the regression test we added, then rebuild and run the full test suite to confirm everything passes.",
+          "timestamp": "2026-02-25T08:36:47.870Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have a clear understanding. The `display_rounded()` approach was too aggressive - it changed the balance accumulation for null posting transactions too. The correct fix should only apply at the final balance check (line 472), which only runs when there are no null postings. Let me implement the right fix:",
+          "timestamp": "2026-02-25T08:36:48.448Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Task",
+          "input": {
+            "description": "Implement correct targeted rounding fix",
+            "prompt": "I need to fix the rounding approach in /Users/johnw/src/ledger/fix-1125/src/xact.cc for issue #1125.\n\n## Problem\n\nThe previous fix using `display_rounded()` in the balance accumulation loop (lines 174, 315, 544) was too aggressive - it changed how null posting amounts are computed, breaking many other tests.\n\n## Correct Approach\n\nThe fix should ONLY apply at the FINAL balance check at line 472, which only runs when there are NO null postings (null posting filling sets balance = NULL_VALUE, skipping line 472's condition).\n\nAt line 472, before throwing \"Transaction does not balance\", we check:\n**\"Does the balance become zero if we round each per-unit (@) cost to the price's precision?\"**\n\nThe price precision for a per-unit cost is computed as:\n`price_prec = exact_cost.precision() - post->amount.precision()`\n\nThis works because:\n- `post->cost` stores `price × amount` where `cost.prec = price.prec + amount.prec`\n- So `price.prec = cost.prec - amount.prec`\n- `amount_t::precision()` returns `quantity->prec` (the stored precision)\n\nOnly apply rounding to:\n- `@` costs (per-unit), NOT `@@` (total cost, `POST_COST_IN_FULL`)\n- NOT `POST_COST_CALCULATED` costs (computed internally, not user-specified)\n- Costs where `keep_precision()` is true (set by `in_place_unround()` during parsing)\n\n## Current State of the File\n\nRead `/Users/johnw/src/ledger/fix-1125/src/xact.cc` to understand the current state.\n\nThe file currently has our WRONG fix (`display_rounded()`) at lines 174, 315, 544.\n\n## Changes to Make\n\n### Step 1: Revert the WRONG changes in xact.cc\n\nRevert lines 174, 315, 544 back to the original:\n- Line ~174: Change `p.rounded().display_rounded().reduced()` back to `p.rounded().reduced()`\n- Line ~315: Same revert  \n- Line ~544: Same revert\n- Also revert the comments around these changes to their original text\n\nOriginal comment text (lines 169-173):\n```\n// If the amount was a cost, it very likely has the\n// \"keep_precision\" flag set, meaning commodity display precision\n// is ignored when displaying the amount.  We never want this set\n// for the balance, so we must clear the flag in a temporary to\n// avoid it propagating into the balance.\n```\n\n### Step 2: Add the NEW check at lines 472-479\n\nThe current code at lines 472-479 is:\n```cpp\n  if (!balance.is_null() && !balance.is_zero()) {\n    add_error_context(item_context(*this, _(\"While balancing transaction\")));\n    add_error_context(_(\"Unbalanced remainder is:\"));\n    add_error_context(value_context(balance));\n    add_error_context(_(\"Amount to balance against:\"));\n    add_error_context(value_context(magnitude()));\n    throw_(balance_error, _(\"Transaction does not balance\"));\n  }\n```\n\nReplace this with:\n```cpp\n  if (!balance.is_null() && !balance.is_zero()) {\n    // Check whether the imbalance is fully explained by independently rounding\n    // each per-unit (@) annotated cost to the price's decimal precision (issue\n    // #1125).  When a posting has 0.50 bread @ $3.99, the exact cost $1.995 is\n    // kept at full precision during accumulation.  If the user supplies the\n    // rounded total $9.49 instead of the exact $9.480, we accept the\n    // transaction by verifying: balance + Σ(roundedCost - exactCost) == 0.\n    // This only fires when there is no null posting (null posting filling\n    // already cleared balance to NULL_VALUE above).\n    {\n      value_t rounding_adj;\n      for (post_t* post : posts) {\n        if (!post->must_balance() || post->has_flags(POST_VIRTUAL))\n          continue;\n        if (!post->cost || !post->cost->keep_precision())\n          continue;\n        // Only @ (per-unit) costs, not @@ (total) or internally-calculated\n        if (post->has_flags(POST_COST_IN_FULL | POST_COST_CALCULATED))\n          continue;\n        // price_prec = cost_prec - amount_prec (cost = price * amount,\n        // so cost.prec = price.prec + amount.prec after multiply())\n        amount_t exact(post->cost->rounded());\n        const int price_prec = exact.precision() - post->amount.precision();\n        if (price_prec > 0 && exact.precision() > price_prec)\n          add_or_set_value(rounding_adj,\n                           (exact.roundto(price_prec) - exact).reduced());\n      }\n      if (!rounding_adj.is_null()) {\n        value_t test = balance;\n        test += rounding_adj;\n        if (test.is_null() || test.is_zero())\n          goto balanced;\n      }\n    }\n    add_error_context(item_context(*this, _(\"While balancing transaction\")));\n    add_error_context(_(\"Unbalanced remainder is:\"));\n    add_error_context(value_context(balance));\n    add_error_context(_(\"Amount to balance against:\"));\n    add_error_context(value_context(magnitude()));\n    throw_(balance_error, _(\"Transaction does not balance\"));\n    balanced:;\n  }\n```\n\n### Step 3: Update the regression test\n\nThe file `/Users/johnw/src/ledger/fix-1125/test/regress/1125.test` exists. Check if it looks correct. It should test that the transaction from issue #1125 balances.\n\n### Step 4: Build and test\n\n```bash\ncd /Users/johnw/src/ledger/fix-1125/build && make -j$(nproc) ledger 2>&1 | tail -10\n```\n\nThen run the key tests:\n```bash\ncd /Users/johnw/src/ledger/fix-1125 && python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/1125.test\n```\n\nAnd the previously-failing tests:\n```bash\ncd /Users/johnw/src/ledger/fix-1125\nfor t in test/regress/536.test test/regress/2174.test test/regress/04C5E1CA.test test/regress/A560FDAD.test test/regress/BFD3FBE1.test test/regress/CAE63F5C-c.test test/regress/coverage-output-equity-unround.test test/regress/coverage-wave3-precommands.test test/baseline/opt-no-rounding.test; do\n  result=$(python test/RegressTests.py --ledger ./build/ledger --sourcepath . \"$t\" 2>&1)\n  if echo \"$result\" | grep -q \"FAILED\\|ERROR\"; then echo \"FAIL: $t\"; else echo \"PASS: $t\"; fi\ndone\n```\n\nPlease implement all changes and run tests. Report results.\n\nNOTE: The `goto balanced;` is fine in this context since we're jumping forward past the error handling. The label `balanced:` with empty statement `;` is idiomatic C++. Make sure it compiles cleanly.\n\nDo NOT commit anything - leave changes in working tree.",
+            "subagent_type": "cpp-pro"
+          },
+          "timestamp": "2026-02-25T08:37:22.178Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me verify the final state of the changes:",
+          "timestamp": "2026-02-25T08:51:54.439Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff src/xact.cc",
+            "description": "Check final xact.cc diff"
+          },
+          "timestamp": "2026-02-25T08:51:55.157Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The diff looks clean. The fix is a targeted addition at the final balance check only, leaving the accumulation loop intact.\n\nNow let me run the full test suite to check for any remaining failures.",
+          "timestamp": "2026-02-25T08:51:58.120Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. Now let me run the full test suite to see the overall state:",
+          "timestamp": "2026-02-25T08:51:58.582Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1125/build && ctest --output-on-failure 2>&1 | tail -30",
+            "description": "Run complete test suite",
+            "timeout": 600000
+          },
+          "timestamp": "2026-02-25T08:51:59.935Z"
+        },
+        {
+          "type": "assistant",
+          "text": "We're down to 5 failures:\n1. `LedgerUtilTests`, `LedgerMathTests`, `LedgerFilterTests`, `LedgerTextualTests` - all \"Not Run\"\n2. `RegressTest_coverage-wave3-precommands` - which the cpp-pro agent identified as pre-existing\n\nLet me verify these are pre-existing issues (not caused by our change).",
+          "timestamp": "2026-02-25T08:57:52.910Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me verify these remaining failures are pre-existing:",
+          "timestamp": "2026-02-25T08:57:53.148Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git stash && make -j$(nproc) ledger 2>&1 | tail -5 && ctest -R \"LedgerUtilTests|LedgerMathTests|LedgerFilterTests|LedgerTextualTests|coverage-wave3\" --output-on-failure 2>&1 | tail -20",
+            "description": "Check if failures are pre-existing on original code",
+            "timeout": 180000
+          },
+          "timestamp": "2026-02-25T08:57:55.191Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 5 failures are pre-existing on the original code. Let me restore our fix:",
+          "timestamp": "2026-02-25T08:58:12.015Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1125 && git stash pop && cd build && make -j$(nproc) ledger 2>&1 | tail -5",
+            "description": "Restore fix and rebuild",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-25T08:58:13.271Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The fix is correct. All pre-existing failures are unchanged, and our new regression test passes. Now let me commit the work:",
+          "timestamp": "2026-02-25T08:58:20.047Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-1125 && git status",
+            "description": "Check git status"
+          },
+          "timestamp": "2026-02-25T08:58:20.622Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add src/xact.cc test/regress/1125.test && git diff --staged | head -80",
+            "description": "Stage changes and review diff"
+          },
+          "timestamp": "2026-02-25T08:58:26.125Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git commit --author=\"John Wiegley <johnw@newartisans.com>\" -m \"$(cat <<'EOF'\nFix rounding in per-unit price annotation balance checking (issue #1125)\n\nWhen a transaction contains multiple postings with per-unit price\nannotations (@ PRICE), each posting's cost is computed as an exact\nrational product (e.g. 0.50 × $3.99 = $1.995) and accumulated into\nthe balance with full precision.\n\nReal-world accounting rounds each line-item cost independently to the\ncurrency's display precision before summing:\n\n  0.50 bread @ $3.99  →  $1.995  rounds to  $2.00\n  1.50 bread @ $4.99  →  $7.485  rounds to  $7.49\n  Total rounded:  $9.49\n\nSo a transaction that states Assets: -$9.49 should balance, but the\nprevious exact-arithmetic check saw $9.480 vs $9.490 and rejected it.\n\nFix: before throwing \"Transaction does not balance\", verify whether\nthe residual balance is exactly explained by rounding each per-unit\nannotated cost to the price's decimal precision:\n\n  price_prec = cost.precision() - amount.precision()\n  adj = Σ (roundedCost - exactCost)\n  if balance + adj == 0, accept the transaction.\n\nThis check only fires when there is no null posting (null-posting\nfilling already cleared balance to NULL_VALUE), so the exact-\narithmetic path for auto-computed postings is unchanged.\n\nFixes: https://github.com/ledger/ledger/issues/1125\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the fix"
+          },
+          "timestamp": "2026-02-25T08:58:41.292Z"
+        }
+      ],
+      "total_additions": 71,
+      "total_deletions": 21,
+      "accepted_lines": 50,
+      "overriden_lines": 0
+    }
+  }
+}
