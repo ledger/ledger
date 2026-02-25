@@ -766,7 +766,7 @@ string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
 
   SHA512(const_cast<char*>(repr_str.c_str()), repr_str.length(), data);
 
-  return bufferToHex(data, 64);  // SHA-512 always produces 64 bytes
+  return bufferToHex(data, hash_type == HASH_SHA512 ? 64 : 32 /*SHA512_DIGEST_LENGTH*/);
 }
 
 namespace {
