@@ -1,0 +1,19 @@
+; Regression test for GitHub issue #992
+; Transactions with fixated lot prices ({=$price}) without explicit @ conversion
+; should balance the same way as when @ $price is specified explicitly.
+;
+; Previously, using {=$price} without @ would fail to balance even when the
+; amounts matched within display precision. This was because the 2-commodity
+; handler would incorrectly compute an average rate instead of using the
+; individual fixated prices.
+
+2013-11-18 Test
+    Expenses                     -625.00 EUR {=$1.3262}
+    Expenses                     -896.15 EUR {=$1.3348}
+    Accrued                     $828.88
+    Accrued                   $1,196.18
+
+test bal --no-total
+           $2,025.06  Accrued
+        -1521.15 EUR  Expenses
+end test
