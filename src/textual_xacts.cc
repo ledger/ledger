@@ -1005,9 +1005,8 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
       string expected_hash = xact->hash(prev_hash, hash_type);
       if (xact->has_tag("Hash")) {
         string current_hash = xact->get_tag("Hash")->to_string();
-        if (!std::equal(expected_hash.begin(),
-                        expected_hash.begin() + std::min(expected_hash.size(), current_hash.size()),
-                        current_hash.begin()))
+        if (current_hash.size() != expected_hash.size() ||
+            !std::equal(expected_hash.begin(), expected_hash.end(), current_hash.begin()))
           throw_(parse_error, _f("Expected hash %1% != %2%") % expected_hash % current_hash);
       } else {
         xact->set_tag("Hash", string_value(expected_hash));
