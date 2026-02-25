@@ -1,0 +1,613 @@
+src/report.cc
+  595ced54836fc344 1276
+test/regress/2020.test
+  595ced54836fc344 1-37
+doc/ledger3.texi
+  595ced54836fc344 7511-7517
+src/report.h
+  595ced54836fc344 327,371-379,824-832,1023-1027
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "83294f8a40f6f3474613a45920c2faeeb418cdee",
+  "prompts": {
+    "595ced54836fc344": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a3e1b210-e408-4928-8186-e5ea29b5cffb",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<command-message>fix</command-message>\n<command-name>/fix</command-name>\n<command-args>2020</command-args>",
+          "timestamp": "2026-02-25T07:57:51.683Z"
+        },
+        {
+          "type": "user",
+          "text": "# Think, Research, Plan, Act, Review\n\nThink deeply to analyze the following query, construct a well thought out plan of action based on the following context, and then carefully execute that plan step by step.\n\nCreate a PR for each using my jwiegley user on GitHub. The author/committer for all new commits should be signed by johnw@newartisans.com.\n\nThis series of jobs will take a long time, so make a comprehensive and effective plan and then execute step by step until you have completed them all and added new regression tests for each.\n\nNow, please analyze and fix the GitHub issue: 2020.\n\n# Follow these steps\n\n1. Use `gh issue view` to get the issue details\n2. Understand the problem described in the issue\n3. Search the codebase for relevant files\n4. Implement the necessary changes to fix the issue\n5. Write and run tests to verify the fix\n6. Ensure code passes linting and type checking\n7. Leave your work uncommitted in the working tree, so it can be reviewed.\n\nRemember the following:\n- Use the claude-code skill to provide context for the rest of the task\n- Use the GitHub CLI (`gh`) for all GitHub-related tasks\n- Search the codebase for relevant files\n- Ensure code passes linting and type checking after doing any work\n- Use cpp-pro, python-pro, emacs-lisp-pro, rust-pro or haskell-pro as needed for diagnosing and analyzing PRs, fixing code, and writing any new code.\n- Use Web Search and Perplexity as need for research and discovering resources.\n- Use sequential-thinking when appropriate to break down tasks further.\n- Use context7 whenever code examples might help.\n\nCommit all work as a series of atomic, logically sequenced commits. Each commit should represent one coherent change that can be understood, reviewed, and reverted independently.\n\n# Commit Decomposition Principles\n\n**Scope each commit to a single logical change.** A commit should do exactly one thing: add a function, fix a bug, refactor a module, update documentation. If you find yourself writing \"and\" in a commit message, consider splitting the commit.\n\n**Sequence commits to tell a story.** Arrange commits so each builds naturally on the previous. A reviewer reading the series should understand why each change was made and how the code evolved. Foundational changes come before dependent ones.\n\n**Keep each commit in a working state.** Every commit should compile, pass tests, and not introduce obvious regressions. This enables bisection for debugging and allows reviewers to check out any point in history.\n\n# Categorizing Changes\n\nBefore committing, analyze the working tree and group changes into categories:\n\n1. **Infrastructure/setup changes** — new dependencies, configuration, tooling\n2. **Refactoring** — restructuring existing code without changing behavior\n3. **New functionality** — features, APIs, modules\n4. **Bug fixes** — corrections to existing behavior\n5. **Tests** — new or modified test coverage\n6. **Documentation** — comments, READMEs, inline docs\n\nCommit these categories in order when dependencies exist between them. Refactoring that enables a new feature should precede the feature commit.\n\n# Commit Message Format\n\n```\n<summary>\n\n<body>\n\n<footer>\n```\n\n**Summary line:** Imperative mood, no period, under 50 characters. Describe what applying the commit does, not what you did.\n\n**Body:** Explain the motivation and contrast with previous behavior. Wrap at 72 characters. Focus on *why*, not *what* (the diff shows what).\n\n**Footer:** Reference issues, breaking changes, or co-authors.\n\n# Staging Strategy\n\nUse selective staging to craft precise commits:\n\n- `git add -p` for hunks within files\n- `git add <specific-files>` to group related files\n- Review staged changes with `git diff --staged` before committing\n\nWhen a single file contains changes belonging to multiple logical commits, stage hunks separately rather than committing the entire file.\n\n# Quality Checklist\n\nBefore finalizing each commit:\n\n- [ ] Does this commit do exactly one thing?\n- [ ] Could someone understand this change without seeing other commits?\n- [ ] Is the commit message searchable? Will someone find this when grepping history?\n- [ ] Does the code compile and pass tests at this point?\n- [ ] Would reverting this commit cleanly undo one logical change?\n\n# Example Decomposition\n\nGiven work that adds a feature with tests and required refactoring:\n\n```\n1. Extract token validation into dedicated module\n2. Add unit tests for token validation\n3. Implement refresh token rotation\n4. Add integration tests for token refresh flow\n5. Document refresh token behavior in API guide\n```\n\nEach commit is independently reviewable, the sequence shows logical progression, and future developers can find relevant changes through targeted searches.\n\n# Handling Mixed Changes\n\nIf the working tree contains entangled changes:\n\n1. **Identify the distinct changes** — list what logical modifications exist\n2. **Determine dependencies** — which changes require others to be present\n3. **Create a commit plan** — order commits to satisfy dependencies\n4. **Stage incrementally** — use partial staging to isolate each change\n5. **Verify at each step** — ensure the repository works after each commit\n\nWhen changes are too entangled to separate cleanly, prefer a slightly larger commit with a clear message over a commit that leaves the repository in a broken state.\n",
+          "timestamp": "2026-02-25T07:57:51.683Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me start by getting the details of GitHub issue #2020 and understanding what needs to be fixed.",
+          "timestamp": "2026-02-25T07:57:54.067Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 2020 --repo ledger/ledger",
+            "description": "Get GitHub issue #2020 details"
+          },
+          "timestamp": "2026-02-25T07:57:55.058Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "gh issue view 2020 --repo ledger/ledger --comments",
+            "description": "Get comments on issue #2020"
+          },
+          "timestamp": "2026-02-25T07:57:58.466Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The issue is requesting a `--round` option that would be the opposite of `--unround`. Let me search the codebase for `--unround` to understand how it's implemented and then figure out how to add `--round`.",
+          "timestamp": "2026-02-25T07:58:02.029Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"unround\\|UNROUND\\|round_to_nearest\\|ROUND\" /Users/johnw/src/ledger/fix-2020/src/ --include=\"*.cc\" --include=\"*.h\" | head -60",
+            "description": "Search for unround/round related code"
+          },
+          "timestamp": "2026-02-25T07:58:03.676Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"round\\|ROUND\" /Users/johnw/src/ledger/fix-2020/src/report.h | grep -v \"unround\\|UNROUND\\|unRound\" | head -40",
+            "description": "Search for round-related options in report.h"
+          },
+          "timestamp": "2026-02-25T07:58:07.454Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"no_rounding\\|fn_rounded\\|fn_round\" /Users/johnw/src/ledger/fix-2020/src/report.h | head -30",
+            "description": "Find no_rounding option definition"
+          },
+          "timestamp": "2026-02-25T07:58:09.873Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"HANDLER(no_rounding\\|OPTION.*no_rounding\\|unround\\)\" /Users/johnw/src/ledger/fix-2020/src/report.h",
+            "description": "Find the handler definitions for no_rounding and unround"
+          },
+          "timestamp": "2026-02-25T07:58:12.512Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"HANDLER.no_rounding\\|OPTION.*no_rounding\\|unround\" /Users/johnw/src/ledger/fix-2020/src/report.h",
+            "description": "Find handlers for no_rounding and unround"
+          },
+          "timestamp": "2026-02-25T07:58:15.669Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/src/report.h",
+            "limit": 20,
+            "offset": 155
+          },
+          "timestamp": "2026-02-25T07:58:18.342Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/src/report.h",
+            "limit": 15,
+            "offset": 755
+          },
+          "timestamp": "2026-02-25T07:58:20.766Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/src/report.h",
+            "limit": 20,
+            "offset": 995
+          },
+          "timestamp": "2026-02-25T07:58:23.101Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the pattern. The `--unround` option applies `unrounded()` to amount expressions. The request is for `--round` option that would apply `rounded()` to amount expressions (the opposite of `--unround`).\n\nLet me look at how `rounded()` is defined and how `fn_rounded` works.",
+          "timestamp": "2026-02-25T07:58:26.138Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me look at the `fn_rounded` implementation to understand the pattern:",
+          "timestamp": "2026-02-25T07:58:26.416Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"fn_rounded\\|fn_round\\b\\|fn_roundto\" /Users/johnw/src/ledger/fix-2020/src/report.cc | head -20",
+            "description": "Find fn_rounded implementations in report.cc"
+          },
+          "timestamp": "2026-02-25T07:58:27.496Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/src/report.cc",
+            "limit": 45,
+            "offset": 685
+          },
+          "timestamp": "2026-02-25T07:58:30.066Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/src/report.cc",
+            "limit": 20,
+            "offset": 1290
+          },
+          "timestamp": "2026-02-25T07:58:32.470Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"case 'r'\" /Users/johnw/src/ledger/fix-2020/src/report.cc | head -10",
+            "description": "Find case 'r' in report.cc options parsing"
+          },
+          "timestamp": "2026-02-25T07:58:35.509Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/src/report.cc",
+            "limit": 20,
+            "offset": 1264
+          },
+          "timestamp": "2026-02-25T07:58:37.676Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/src/report.cc",
+            "limit": 30,
+            "offset": 1540
+          },
+          "timestamp": "2026-02-25T07:58:40.231Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/src/report.cc",
+            "limit": 20,
+            "offset": 1480
+          },
+          "timestamp": "2026-02-25T07:58:42.510Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the full picture. I need to:\n\n1. Add a `--round` option to `report.h` that applies `rounded()` to amount expressions (similar to `--unround` applying `unrounded()`)\n2. Add the option dispatch in `report.cc`\n3. Add a regression test\n\nLet me look at the `report.h` around the `unround` handler for context:",
+          "timestamp": "2026-02-25T07:58:46.258Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/src/report.h",
+            "limit": 20,
+            "offset": 285
+          },
+          "timestamp": "2026-02-25T07:58:47.007Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"HANDLER(r\" /Users/johnw/src/ledger/fix-2020/src/report.h | head -20",
+            "description": "Find HANDLER entries starting with 'r' in report.h"
+          },
+          "timestamp": "2026-02-25T07:58:49.885Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/src/report.h",
+            "limit": 30,
+            "offset": 316
+          },
+          "timestamp": "2026-02-25T07:58:52.598Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have a clear picture. Let me also check the `amount.h` and `value.h` for the `rounded()` method:",
+          "timestamp": "2026-02-25T07:58:54.969Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"rounded\\b\\|in_place_round\\b\" /Users/johnw/src/ledger/fix-2020/src/amount.h | head -20",
+            "description": "Check rounded() method in amount.h"
+          },
+          "timestamp": "2026-02-25T07:58:56.398Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"rounded\\b\\|in_place_round\\b\" /Users/johnw/src/ledger/fix-2020/src/value.h | head -20",
+            "description": "Check rounded() method in value.h"
+          },
+          "timestamp": "2026-02-25T07:58:58.973Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The `rounded()` method exists. Now let me check what existing tests look like for `--unround`:",
+          "timestamp": "2026-02-25T07:59:01.660Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "ls /Users/johnw/src/ledger/fix-2020/test/regress/ | grep -i \"round\\|2020\" | head -20",
+            "description": "Look for existing round-related regression tests"
+          },
+          "timestamp": "2026-02-25T07:59:03.126Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/test/regress/coverage-report-unround.test"
+          },
+          "timestamp": "2026-02-25T07:59:05.841Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/test/regress/equity-unround.test"
+          },
+          "timestamp": "2026-02-25T07:59:08.226Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"\\-\\-unround\" /Users/johnw/src/ledger/fix-2020/test/ | head -20",
+            "description": "Find tests that use --unround option"
+          },
+          "timestamp": "2026-02-25T07:59:10.873Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/test/baseline/opt-unround.test"
+          },
+          "timestamp": "2026-02-25T07:59:13.233Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I understand the issue fully. I need to add a `--round` option to `ledger` that is the counterpart to `--unround`. When `--round` is specified, amounts should be rounded (using `rounded()`) in their display.\n\nLooking at the `--unround` implementation:\n1. It's defined in `report.h` as an OPTION_ that sets `amount_` and `total_` to use `unrounded()` wrapper\n2. It's dispatched in `report.cc` case 'u'\n\nFor `--round`, I need to:\n1. Add `HANDLER(round).report(out)` in the report function\n\n\n2. Create an OPTION_ handler in `report.h` that wraps both `amount_expr` and `total_expr` with `rounded()`\n3. Add the dispatch case in `report.cc` to handle the 'r' option\n\nLet me check if there's already a `--no-rounding` option I should be aware of.",
+          "timestamp": "2026-02-25T07:59:21.227Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check the `no_rounding` option to understand the pattern better:",
+          "timestamp": "2026-02-25T07:59:21.244Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"no_rounding\" /Users/johnw/src/ledger/fix-2020/src/report.h | head -10",
+            "description": "Find no_rounding option in report.h"
+          },
+          "timestamp": "2026-02-25T07:59:21.919Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"no_rounding\\|HANDLED.*round\" /Users/johnw/src/ledger/fix-2020/src/report.cc | head -20",
+            "description": "Find where no_rounding is used in report.cc"
+          },
+          "timestamp": "2026-02-25T07:59:24.894Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"no_rounding\\|HANDLED.*no_round\" /Users/johnw/src/ledger/fix-2020/src/ | grep -v \".cc:\" | head -20",
+            "description": "Check for no_rounding usage"
+          },
+          "timestamp": "2026-02-25T07:59:27.537Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"no_rounding\" /Users/johnw/src/ledger/fix-2020/src/*.cc | head -20",
+            "description": "Find where no_rounding is used in C++ source files"
+          },
+          "timestamp": "2026-02-25T07:59:30.650Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -rn \"HANDLED.*round\\|round.*HANDLED\" /Users/johnw/src/ledger/fix-2020/src/*.cc | head -20",
+            "description": "Check how round options are referenced with HANDLED macro"
+          },
+          "timestamp": "2026-02-25T07:59:33.934Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me look at the `--round` option in the context of the `amount_expr` to understand the proper expression to use:",
+          "timestamp": "2026-02-25T07:59:36.271Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"amount_expr\\|total_expr\\|amount_\\\\.on\\|total_\\\\.on\" /Users/johnw/src/ledger/fix-2020/src/report.h | grep \"unround\\|round\" | head -20",
+            "description": "Check how amount_expr is wrapped for unround"
+          },
+          "timestamp": "2026-02-25T07:59:37.945Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"amount_expr\\|total_expr\" /Users/johnw/src/ledger/fix-2020/src/report.h | head -30",
+            "description": "Check amount_expr and total_expr usages"
+          },
+          "timestamp": "2026-02-25T07:59:40.547Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have all the information I need. Let me implement the `--round` option. Here's my plan:\n\n1. Add `HANDLER(round).report(out)` in `report.h` in the report function\n2. Add `OPTION_` handler for `round` in `report.h` that applies `rounded(amount_expr)` and `rounded(total_expr)`\n3. Add dispatch `else OPT(round)` in the `case 'r':` section of `report.cc`\n4. Create regression test `test/regress/2020.test`\n\nLet me also check the doc files:",
+          "timestamp": "2026-02-25T07:59:45.140Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"unround\\|--unround\" /Users/johnw/src/ledger/fix-2020/doc/ledger3.texi | head -20",
+            "description": "Check ledger documentation for --unround"
+          },
+          "timestamp": "2026-02-25T07:59:46.232Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/doc/ledger3.texi",
+            "limit": 20,
+            "offset": 7580
+          },
+          "timestamp": "2026-02-25T07:59:48.587Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "grep -n \"@item --r\" /Users/johnw/src/ledger/fix-2020/doc/ledger3.texi | head -20",
+            "description": "Find where --r options are documented"
+          },
+          "timestamp": "2026-02-25T07:59:51.345Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/doc/ledger3.texi",
+            "limit": 15,
+            "offset": 7506
+          },
+          "timestamp": "2026-02-25T07:59:53.813Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me implement the changes. I'll use the `cpp-pro` agent to do this carefully:",
+          "timestamp": "2026-02-25T07:59:56.046Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Task",
+          "input": {
+            "description": "Implement --round option for ledger",
+            "prompt": "I need to add a `--round` option to the Ledger accounting software that is the counterpart to the existing `--unround` option. This is for GitHub issue #2020.\n\n## Background\n\nThe `--unround` option applies `unrounded()` to amount expressions, showing full precision. The new `--round` option should apply `rounded()` to amount expressions, forcing amounts to be rounded to their commodity's display precision. This is useful when you have amounts stored at high precision but want to see/report them rounded.\n\n## Files to modify\n\n### 1. `/Users/johnw/src/ledger/fix-2020/src/report.h`\n\n**Change A**: In the `report` function block (around line 324), add `HANDLER(round).report(out)` after `HANDLER(rich_data).report(out)` in alphabetical order:\n\nCurrent (around line 324):\n```cpp\n    HANDLER(rich_data).report(out);\n    HANDLER(seed_).report(out);\n```\n\nAdd:\n```cpp\n    HANDLER(rich_data).report(out);\n    HANDLER(round).report(out);\n    HANDLER(seed_).report(out);\n```\n\n**Change B**: Add the `OPTION_` definition for `round` around line 1005, after the `unround` option definition but before `weekly`. Looking at the pattern:\n\n```cpp\n  OPTION_(\n      report_t, unround, DO() {\n        OTHER(amount_).on(whence, \"unrounded(amount_expr)\");\n        OTHER(total_).on(whence, \"unrounded(total_expr)\");\n      });\n```\n\nAdd this after the `unround` OPTION_ block:\n\nThe `round` option should appear in alphabetical order - it comes before `unround`. Let me check the exact position. Looking at the file, the OPTION_ definitions appear to be roughly alphabetical. The `round` option should go somewhere around line 810-820 (between `rich_data` and `seed_`). Actually it needs to be alphabetically placed among the options.\n\nLooking at the options file ordering:\n- Line 762: `OPTION(report_t, no_rounding);` - this is for `no-rounding`\n- Line 810+ would be in the right area for `round`\n\nActually, since `--round` comes before `--unround` alphabetically, add it before the `unround` OPTION_, somewhere around line 1001.\n\n**Change C**: The `round` OPTION_ should be placed before `unround` (alphabetically). Here's what to add:\n\n```cpp\n  OPTION_(\n      report_t, round, DO() {\n        OTHER(amount_).on(whence, \"rounded(amount_expr)\");\n        OTHER(total_).on(whence, \"rounded(total_expr)\");\n      });\n```\n\nPlace this before the `unround` OPTION_ (around line 1001).\n\n### 2. `/Users/johnw/src/ledger/fix-2020/src/report.cc`\n\n**Change**: In the `case 'r':` block (around line 1264-1274), add `else OPT(round)` in alphabetical order. Current:\n\n```cpp\n  case 'r':\n    OPT(raw);\n    else OPT(real);\n    else OPT(register_format_);\n    else OPT_(related);\n    else OPT(related_all);\n    else OPT(revalued);\n    else OPT(revalued_only);\n    else OPT(revalued_total_);\n    else OPT(rich_data);\n    break;\n```\n\nAdd `else OPT(round)` after `rich_data`:\n\n```cpp\n  case 'r':\n    OPT(raw);\n    else OPT(real);\n    else OPT(register_format_);\n    else OPT_(related);\n    else OPT(related_all);\n    else OPT(revalued);\n    else OPT(revalued_only);\n    else OPT(revalued_total_);\n    else OPT(rich_data);\n    else OPT(round);\n    break;\n```\n\n### 3. Create `/Users/johnw/src/ledger/fix-2020/test/regress/2020.test`\n\nCreate a regression test that demonstrates the `--round` option:\n\n```\n; Test --round option (GitHub issue #2020)\n; The --round option should force amounts to be rounded to commodity precision\n\ncommodity $\n    format $1,000.00\n\n2024/01/15 * Test\n    Expenses:Food  $1.9995\n    Assets:Checking\n\ntest bal --round\n          $-2.00  Assets:Checking\n           $2.00  Expenses:Food\n--------------------\n                0\nend test\n\ntest reg --round\n24-Jan-15 Test                  Expenses:Food                $2.00        $2.00\n                                Assets:Checking             $-2.00            0\nend test\n```\n\nWait - I need to think about this more carefully. The `--round` option applies `rounded(amount_expr)` which means amounts get rounded to their commodity's display precision. Let me think about what the test values should be.\n\nWith `$1.9995` and a format of `$1,000.00` (2 decimal places), `rounded($1.9995)` would give `$2.00` and `rounded($-1.9995)` gives `$-2.00`.\n\nActually I need to verify this by looking at how `rounded()` works on amounts. Let me check what precision the commodity tracks vs what it displays.\n\nActually, let me create the test file with content that I know should work. The key behavior is:\n- Without `--round`: `$1.9995` displays as `$2.00` (due to commodity display precision), but is stored as `$1.9995`\n- With `--round`: `$1.9995` is explicitly rounded to `$2.00`\n\nThe `--unround` shows the extra precision, so `--round` should be the complement. Let me think about a more meaningful test case where the difference is visible.\n\nActually looking at the `--unround` test in `opt-unround.test`, the `--unround` option with `--percent` shows extra decimal places. The `--round` option would be used to force rounding when someone has set `--unround` in their ledgerrc but occasionally wants to see rounded values.\n\nA simpler test: create amounts with extra precision and show that `--round` rounds them:\n\n```\ncommodity EUR\n    format 1,000.00 EUR\n\n2024/01/15 * Test\n    Expenses:Food  1.9995 EUR\n    Assets:Checking\n\ntest reg --round\n24-Jan-15 Test                  Expenses:Food              2.00 EUR     2.00 EUR\n                                Assets:Checking            -2.00 EUR           0\nend test\n```\n\nActually the tricky part is I need to make sure the amounts are stored with extra precision but normally displayed with less precision. The commodity format determines display, but `rounded()` forces rounding.\n\nLet me look at what the `--unround` test actually verifies. Looking at `opt-unround.test`, it uses `--percent --unround` to show extra decimal places in percentage calculations. The percentage would normally be rounded (e.g., `92.15%`) but with `--unround` it shows `92.14958953%`.\n\nFor `--round`, the symmetrical use case would be:\n- You have `--unround` in your `.ledgerrc`\n- You want to override it with `--round` to get rounded output\n\nBut there's also the direct use case: amounts that are stored with more precision than the commodity format (like `$1.9995` when format is `$1,000.00`). Normally ledger would still display them with some rounding, but `--round` forces proper rounding.\n\nLet me build and run a test to see the actual behavior expected, but first let me just implement the code changes.\n\nPlease make the following changes to the files:\n\n1. In `/Users/johnw/src/ledger/fix-2020/src/report.h`:\n   - Add `HANDLER(round).report(out);` after `HANDLER(rich_data).report(out);` (around line 324)\n   - Add the `OPTION_` definition for `round` before the `unround` option definition (around line 1001)\n\n2. In `/Users/johnw/src/ledger/fix-2020/src/report.cc`:\n   - Add `else OPT(round);` in the `case 'r':` block after `else OPT(rich_data);`\n\n3. Create the regression test `/Users/johnw/src/ledger/fix-2020/test/regress/2020.test`\n\nThen build the project to verify it compiles, and run the test to confirm expected output.\n\nThe build command is:\n```bash\ncd /Users/johnw/src/ledger/fix-2020/build && make -j$(sysctl -n hw.ncpu) 2>&1 | tail -20\n```\n\nThe test command is:\n```bash\ncd /Users/johnw/src/ledger/fix-2020 && python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/2020.test\n```\n\nDo NOT commit the changes - leave them in the working tree for review. Just implement and verify they work.\n\nAuthor/committer for any commits should be johnw@newartisans.com.\n",
+            "subagent_type": "cpp-pro"
+          },
+          "timestamp": "2026-02-25T08:00:34.144Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check what the cpp-pro agent did, and then verify the changes look correct.",
+          "timestamp": "2026-02-25T08:06:30.795Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check the current state of the changes:",
+          "timestamp": "2026-02-25T08:06:31.188Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff --stat",
+            "description": "Check modified files"
+          },
+          "timestamp": "2026-02-25T08:06:31.957Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff && ls /Users/johnw/src/ledger/fix-2020/test/regress/2020.test 2>/dev/null && cat /Users/johnw/src/ledger/fix-2020/test/regress/2020.test",
+            "description": "Show diff and regression test"
+          },
+          "timestamp": "2026-02-25T08:06:36.028Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The changes look good. Now let me build and run the test to verify everything works.",
+          "timestamp": "2026-02-25T08:06:37.694Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me build and test:",
+          "timestamp": "2026-02-25T08:06:37.989Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-2020/build && make -j$(sysctl -n hw.ncpu) 2>&1 | tail -20",
+            "description": "Build ledger",
+            "timeout": 120000
+          },
+          "timestamp": "2026-02-25T08:06:39.027Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Build succeeds. Now run the regression test:",
+          "timestamp": "2026-02-25T08:06:42.368Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "cd /Users/johnw/src/ledger/fix-2020 && TZ=America/Chicago python test/RegressTests.py --ledger ./build/ledger --sourcepath . test/regress/2020.test 2>&1",
+            "description": "Run regression test for issue 2020"
+          },
+          "timestamp": "2026-02-25T08:06:44.188Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 3 tests pass. Let me also verify the `--round` option works correctly with a quick manual test:",
+          "timestamp": "2026-02-25T08:06:47.042Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "echo '\ncommodity $\n    format $1,000.00\n\n2024/01/15 Test\n    Expenses:Food  $1.9995\n    Assets:Checking\n' | ./build/ledger -f - bal && echo \"---WITH --round---\" && echo '\ncommodity $\n    format $1,000.00\n\n2024/01/15 Test\n    Expenses:Food  $1.9995\n    Assets:Checking\n' | ./build/ledger -f - bal --round && echo \"---WITH --unround---\" && echo '\ncommodity $\n    format $1,000.00\n\n2024/01/15 Test\n    Expenses:Food  $1.9995\n    Assets:Checking\n' | ./build/ledger -f - bal --unround",
+            "description": "Manual test to show --round effect"
+          },
+          "timestamp": "2026-02-25T08:06:49.709Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "echo '\ncommodity $\n    format $1,000.00\n\n2024/01/15 Test\n    Expenses:Food  $1.9995\n    Assets:Checking\n' | ./build/ledger -f - bal --unround --round",
+            "description": "Test --unround --round combination"
+          },
+          "timestamp": "2026-02-25T08:06:54.229Z"
+        },
+        {
+          "type": "assistant",
+          "text": "The `--round` option works correctly:\n- Without any option: shows `$2.00` (normal display rounding via commodity)\n- With `--round`: explicitly rounds to `$2.00` (overrides `--unround` if present)  \n- With `--unround`: shows full precision `$1.9995`\n- With `--unround --round`: `--round` wins, shows `$2.00`\n\nNow let me add documentation and then commit:",
+          "timestamp": "2026-02-25T08:06:58.205Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/doc/ledger3.texi",
+            "limit": 40,
+            "offset": 7472
+          },
+          "timestamp": "2026-02-25T08:06:59.278Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/fix-2020/doc/ledger3.texi",
+            "new_string": "@item --rich-data\n@itemx --detail\nWhen generating a ledger transaction from a CSV file using the\n@command{convert} command, add CSV, Imported, and UUID metadata.\n\n@item --round\nRound all calculated values to the display precision of their\ncommodity.  This is the default behavior for display, but this option\nexplicitly forces rounding in the expression pipeline, which is useful\nwhen @option{--unround} has been set in the init file and you want to\noverride it for a specific invocation.\n\n@item --seed @var{INT}",
+            "old_string": "@item --rich-data\n@itemx --detail\nWhen generating a ledger transaction from a CSV file using the\n@command{convert} command, add CSV, Imported, and UUID metadata.\n\n@item --seed @var{INT}",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T08:07:06.888Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me commit the changes as a single atomic commit and create a PR:",
+          "timestamp": "2026-02-25T08:07:09.089Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git status",
+            "description": "Check git status"
+          },
+          "timestamp": "2026-02-25T08:07:09.870Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add src/report.h src/report.cc doc/ledger3.texi test/regress/2020.test",
+            "description": "Stage all changes"
+          },
+          "timestamp": "2026-02-25T08:07:12.609Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git diff --staged",
+            "description": "Review staged changes"
+          },
+          "timestamp": "2026-02-25T08:07:14.931Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git -c user.email=\"johnw@newartisans.com\" -c user.name=\"John Wiegley\" commit -m \"$(cat <<'EOF'\nAdd --round option as complement to --unround\n\nThe --unround flag shows amounts at full precision by disabling rounding\nin the expression pipeline. This commit adds a symmetric --round option\nthat explicitly applies rounded() to all amount expressions, forcing\nvalues to be clipped to their commodity's display precision.\n\nThe primary use case is overriding a persistent --unround setting (e.g.,\nfrom ~/.ledgerrc) on a per-invocation basis without editing the init\nfile.\n\nFixes: https://github.com/ledger/ledger/issues/2020\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit the --round option implementation"
+          },
+          "timestamp": "2026-02-25T08:07:20.842Z"
+        }
+      ],
+      "total_additions": 58,
+      "total_deletions": 6,
+      "accepted_lines": 69,
+      "overriden_lines": 0
+    }
+  }
+}
