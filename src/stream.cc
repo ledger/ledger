@@ -92,6 +92,7 @@ int do_fork(std::ostream** os, const path& pager_path, pid_t* pager_pid) {
       parts.push_back(token);
 
     std::vector<const char*> argv;
+    argv.reserve(parts.size() + 1);
     for (auto& s : parts)
       argv.push_back(s.c_str());
     argv.push_back(nullptr);
@@ -148,7 +149,7 @@ void output_stream_t::close() {
       waitpid(pager_pid, &status, 0);
       pager_pid = -1;
       if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-        std::cerr << "Warning: pager process exited abnormally" << std::endl;
+        std::cerr << "Warning: pager process exited abnormally" << '\n';
     }
   }
 #endif
