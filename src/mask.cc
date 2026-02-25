@@ -378,7 +378,7 @@ mask_t& mask_t::assign_glob(string_view pat) {
       }
       [[fallthrough]];
     default: {
-      const char* meta = ".+(){}^$|";
+      const char* meta = ".+(){}|";
       if (std::strchr(meta, pat[i]))
         re_pat += '\\';
       re_pat += pat[i];
