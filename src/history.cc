@@ -100,6 +100,8 @@ public:
                                           const datetime_t& moment,
                                           const datetime_t& oldest = datetime_t());
 
+  void alias_commodity(commodity_t& old_comm, commodity_t& new_comm);
+
   void print_map(std::ostream& out, const datetime_t& moment = datetime_t());
 };
 
@@ -121,6 +123,10 @@ void commodity_history_t::add_price(const commodity_t& source, const datetime_t&
 void commodity_history_t::remove_price(const commodity_t& source, const commodity_t& target,
                                        const datetime_t& date) {
   p_impl->remove_price(source, target, date);
+}
+
+void commodity_history_t::alias_commodity(commodity_t& old_comm, commodity_t& new_comm) {
+  p_impl->alias_commodity(old_comm, new_comm);
 }
 
 void commodity_history_t::map_prices(const function<void(datetime_t, const amount_t&)>& fn,
@@ -220,6 +226,21 @@ void commodity_history_impl_t::add_commodity(commodity_t& comm) {
     comm.set_graph_index(num_vertices(price_graph));
     add_vertex(/* vertex_name= */ &comm, price_graph);
   }
+}
+
+void commodity_history_impl_t::alias_commodity(commodity_t& old_comm, commodity_t& new_comm) {
+  if (!old_comm.graph_index())
+    return;
+  std::size_t old_index = *old_comm.graph_index();
+  if (old_index >= num_vertices(price_graph))
+    return;
+  // Update the vertex name to point to new_comm
+  NameMap namemap = get(vertex_name, price_graph);
+  vertex_descriptor v = vertex(old_index, price_graph);
+  namemap[v] = &new_comm;
+  // Transfer the graph index to new_comm
+  // (new_comm's previous vertex, if any, becomes orphaned but had no edges)
+  new_comm.set_graph_index(old_index);
 }
 
 void commodity_history_impl_t::add_price(const commodity_t& source, const datetime_t& when,

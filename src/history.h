@@ -60,6 +60,7 @@ public:
   commodity_history_t();
 
   void add_commodity(commodity_t& comm);
+  void alias_commodity(commodity_t& old_comm, commodity_t& new_comm);
 
   void add_price(const commodity_t& source, const datetime_t& when, const amount_t& price);
   void remove_price(const commodity_t& source, const commodity_t& target, const datetime_t& date);
