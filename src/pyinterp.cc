@@ -342,6 +342,9 @@ value_t python_interpreter_t::python_command(call_scope_t& args) {
     status = Py_Main(static_cast<int>(args.size()) + 1, argv);
   } catch (const error_already_set&) {
     PyErr_Print();
+    for (std::size_t i = 0; i < args.size() + 1; i++)
+      delete[] argv[i];
+    delete[] argv;
     throw_(std::runtime_error, _("Failed to execute Python module"));
   } catch (...) {
     for (std::size_t i = 0; i < args.size() + 1; i++)
@@ -541,6 +544,7 @@ value_t python_interpreter_t::functor_t::operator()(call_scope_t& args) {
     throw_(calc_error, _f("Failed call to Python function '%1%'") % name);
   } catch (...) {
     std::signal(SIGINT, sigint_handler);
+    throw;
   }
   std::signal(SIGINT, sigint_handler);
 
