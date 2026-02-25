@@ -223,6 +223,7 @@ public:
   void report_options(std::ostream& out) {
     HANDLER(abbrev_len_).report(out);
     HANDLER(account_).report(out);
+    HANDLER(account_rewrite_).report(out);
     HANDLER(actual).report(out);
     HANDLER(add_budget).report(out);
     HANDLER(align_intervals).report(out);
@@ -299,6 +300,7 @@ public:
     HANDLER(output_).report(out);
     HANDLER(pager_).report(out);
     HANDLER(payee_).report(out);
+    HANDLER(payee_rewrite_).report(out);
     HANDLER(pending).report(out);
     HANDLER(percent).report(out);
     HANDLER(period_).report(out);
@@ -365,6 +367,15 @@ public:
   OPTION_CTOR(report_t, abbrev_len_, CTOR(report_t, abbrev_len_) { on(none, "2"); });
 
   OPTION(report_t, account_);
+  OPTION_(
+      report_t, account_rewrite_, DO_() {
+        // Expects "PATTERN=REPLACEMENT"; splits on the first '=' character.
+        string::size_type eq = str.find('=');
+        if (eq == string::npos)
+          throw_(std::logic_error, _("--account-rewrite requires PATTERN=REPLACEMENT"));
+        parent->session.journal->account_rewrite_mappings.push_back(
+            account_rewrite_mapping_t(mask_t(str.substr(0, eq)), str.substr(eq + 1)));
+      });
 
   OPTION_(
       report_t, actual, DO() { // -L
@@ -809,6 +820,15 @@ public:
   OPTION_(report_t, no_pager, DO() { OTHER(pager_).off(); });
 
   OPTION(report_t, payee_);
+  OPTION_(
+      report_t, payee_rewrite_, DO_() {
+        // Expects "PATTERN=REPLACEMENT"; splits on the first '=' character.
+        string::size_type eq = str.find('=');
+        if (eq == string::npos)
+          throw_(std::logic_error, _("--payee-rewrite requires PATTERN=REPLACEMENT"));
+        parent->session.journal->payee_rewrite_mappings.push_back(
+            payee_rewrite_mapping_t(mask_t(str.substr(0, eq)), str.substr(eq + 1)));
+      });
 
   OPTION_(
       report_t, pending, DO() { // -C
