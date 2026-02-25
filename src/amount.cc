@@ -44,6 +44,8 @@ bool amount_t::stream_fullstrings = false;
 #if !defined(THREADSAFE)
 // These global temporaries are pre-initialized for the sake of
 // efficiency, and are reused over and over again.
+// TODO: These globals are not thread-safe. Use thread_local when
+// per-thread initialization can be guaranteed.
 static mpz_t temp;
 static mpq_t tempq;
 static mpfr_t tempf;
@@ -139,18 +141,19 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
                                             << zeros_prec << ")");
 
     if (zeros_prec >= 0) {
-      string::size_type index = std::strlen(buf);
-      string::size_type point = 0;
-      for (string::size_type i = 0; i < index; i++) {
+      std::ptrdiff_t index = static_cast<std::ptrdiff_t>(std::strlen(buf));
+      std::ptrdiff_t point = 0;
+      for (std::ptrdiff_t i = 0; i < index; i++) {
         if (buf[i] == '.') {
           point = i;
           break;
         }
       }
       if (point > 0) {
-        while (--index >= (point + 1 + static_cast<std::size_t>(zeros_prec)) && buf[index] == '0')
+        while (--index >= (point + 1 + static_cast<std::ptrdiff_t>(zeros_prec)) &&
+               buf[index] == '0')
           buf[index] = '\0';
-        if (index >= (point + static_cast<std::size_t>(zeros_prec)) && buf[index] == '.')
+        if (index >= (point + static_cast<std::ptrdiff_t>(zeros_prec)) && buf[index] == '.')
           buf[index] = '\0';
       }
     }

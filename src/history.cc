@@ -439,6 +439,9 @@ std::optional<price_point_t> commodity_history_impl_t::find_price(const commodit
     auto [edge_uv, uv_exists] = edge(u, v, fg);
     auto [edge_vu, vu_exists] = edge(v, u, fg);
 
+    if (!uv_exists || !vu_exists)
+      continue;
+
     const price_point_t& point_uv(get(pricemap, edge_uv));
     const price_point_t& point_vu(get(pricemap, edge_vu));
 

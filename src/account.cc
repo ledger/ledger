@@ -301,7 +301,8 @@ value_t get_true(account_t&) {
 }
 
 value_t get_addr(account_t& account) {
-  return long(reinterpret_cast<intptr_t>(&account));
+  // Note: truncates on LLP64 (Windows x64) where long is 32-bit
+  return static_cast<long>(reinterpret_cast<uintptr_t>(&account));
 }
 
 value_t get_depth_parent(account_t& account) {
@@ -529,16 +530,10 @@ bool account_t::children_with_xdata() const {
 
 std::size_t account_t::children_with_flags(xdata_t::flags_t flags) const {
   std::size_t count = 0;
-  bool grandchildren_visited = false;
 
   for (const accounts_map::value_type& pair : accounts)
-    if (pair.second->has_xflags(flags) || pair.second->children_with_flags(flags))
+    if (pair.second->has_xflags(flags) || pair.second->children_with_flags(flags) > 0)
       count++;
-
-  // Although no immediately children were visited, if any progeny at all were
-  // visited, it counts as one.
-  if (count == 0 && grandchildren_visited)
-    count = 1;
 
   return count;
 }
