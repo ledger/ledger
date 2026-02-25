@@ -1273,6 +1273,7 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     else OPT(revalued_only);
     else OPT(revalued_total_);
     else OPT(rich_data);
+    else OPT(round);
     break;
   case 's':
     OPT(sort_);

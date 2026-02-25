@@ -324,6 +324,7 @@ public:
     HANDLER(revalued_only).report(out);
     HANDLER(revalued_total_).report(out);
     HANDLER(rich_data).report(out);
+    HANDLER(round).report(out);
     HANDLER(seed_).report(out);
     HANDLER(sort_).report(out);
     HANDLER(sort_all_).report(out);
@@ -1017,6 +1018,12 @@ public:
 
   OPTION(report_t, unrealized_gains_);
   OPTION(report_t, unrealized_losses_);
+
+  OPTION_(
+      report_t, round, DO() {
+        OTHER(amount_).on(whence, "rounded(amount_expr)");
+        OTHER(total_).on(whence, "rounded(total_expr)");
+      });
 
   OPTION_(
       report_t, unround, DO() {
