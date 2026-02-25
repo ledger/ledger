@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(testDefaultConstruction)
   BOOST_CHECK_EQUAL(string(""), xact.payee);
   BOOST_CHECK(! xact.code);
   BOOST_CHECK(xact.posts.empty());
-  BOOST_CHECK(xact.journal == NULL);
+  BOOST_CHECK(xact.journal == nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(testSetDateAndPayee)
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(testRemovePost)
   bool removed = xact.remove_post(post);
   BOOST_CHECK(removed);
   BOOST_CHECK(xact.posts.empty());
-  BOOST_CHECK(post->xact == NULL);
+  BOOST_CHECK(post->xact == nullptr);
 
   delete post;
 }
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(testValidChecksPostXactPointer)
   BOOST_CHECK(xact.valid());
 
   // Corrupt the xact pointer -- valid() should return false
-  post->xact = NULL;
+  post->xact = nullptr;
   BOOST_CHECK(! xact.valid());
 
   // Restore for clean destruction
@@ -513,7 +513,7 @@ BOOST_AUTO_TEST_CASE(testXactBasePropertiesViaXact)
   // xact_base_t properties are accessible through xact_t (which inherits)
   xact_t xact;
   xact.add_flags(ITEM_TEMP);
-  BOOST_CHECK(xact.journal == NULL);
+  BOOST_CHECK(xact.journal == nullptr);
   BOOST_CHECK(xact.posts.empty());
   // xact_base_t::valid() returns true unconditionally
   // but xact_t::valid() requires a date, so test base valid indirectly
@@ -557,14 +557,14 @@ BOOST_AUTO_TEST_CASE(testJournalAddRemoveAccount)
   journal.add_account(acct);
 
   account_t* found = journal.find_account("TestAccount", false);
-  BOOST_CHECK(found != NULL);
+  BOOST_CHECK(found != nullptr);
   BOOST_CHECK_EQUAL(string("TestAccount"), found->name);
 
   bool removed = journal.remove_account(acct);
   BOOST_CHECK(removed);
 
   found = journal.find_account("TestAccount", false);
-  BOOST_CHECK(found == NULL);
+  BOOST_CHECK(found == nullptr);
 
   delete acct;
 }
@@ -577,7 +577,7 @@ BOOST_AUTO_TEST_CASE(testJournalFindAccountRe)
   journal.find_account("Assets:Bank");
 
   account_t* found = journal.find_account_re("Expense");
-  BOOST_CHECK(found != NULL);
+  BOOST_CHECK(found != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(testJournalRemoveXact)
@@ -598,7 +598,7 @@ BOOST_AUTO_TEST_CASE(testJournalRemoveXact)
   bool removed = journal.remove_xact(x1);
   BOOST_CHECK(removed);
   BOOST_CHECK_EQUAL(count_before - 1, journal.xacts.size());
-  BOOST_CHECK(x1->journal == NULL);
+  BOOST_CHECK(x1->journal == nullptr);
 
   // Remove non-existent xact
   xact_t x2;
@@ -718,7 +718,7 @@ BOOST_AUTO_TEST_CASE(testSessionReadJournalFromString)
     "    Expenses:Food    $10.00\n"
     "    Assets:Cash\n"
   );
-  BOOST_CHECK(j != NULL);
+  BOOST_CHECK(j != nullptr);
   BOOST_CHECK_EQUAL(1, j->xacts.size());
 
   scope_t::default_scope = old_scope;
@@ -739,7 +739,7 @@ BOOST_AUTO_TEST_CASE(testSessionCloseJournalFiles)
   session.close_journal_files();
   // After closing, journal should be reset
   journal_t* j = session.get_journal();
-  BOOST_CHECK(j != NULL);
+  BOOST_CHECK(j != nullptr);
   BOOST_CHECK_EQUAL(0, j->xacts.size());
 
   scope_t::default_scope = old_scope;
@@ -753,7 +753,7 @@ BOOST_AUTO_TEST_CASE(testSessionGetJournal)
   scope_t::default_scope = &session;
 
   journal_t* j = session.get_journal();
-  BOOST_CHECK(j != NULL);
+  BOOST_CHECK(j != nullptr);
 
   scope_t::default_scope = old_scope;
 }
@@ -872,7 +872,7 @@ BOOST_AUTO_TEST_CASE(testDraftInsertNoTemplate)
   // Cover draft.cc line 213-214: insert with no template (empty args)
   value_t empty_args;
   draft_t draft(empty_args);
-  BOOST_CHECK(draft.insert(journal) == NULL);
+  BOOST_CHECK(draft.insert(journal) == nullptr);
 }
 
 // ---------------------------------------------------------------------------
@@ -889,7 +889,7 @@ BOOST_AUTO_TEST_CASE(testXactLookupCode)
   xact.code = string("XYZ");
 
   auto op = xact.lookup(symbol_t::FUNCTION, "code");
-  BOOST_CHECK(op != NULL);
+  BOOST_CHECK(op != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(testXactLookupPayee)
@@ -901,10 +901,10 @@ BOOST_AUTO_TEST_CASE(testXactLookupPayee)
   xact.payee = "Test Payee";
 
   auto op = xact.lookup(symbol_t::FUNCTION, "payee");
-  BOOST_CHECK(op != NULL);
+  BOOST_CHECK(op != nullptr);
 
   auto op2 = xact.lookup(symbol_t::FUNCTION, "p");
-  BOOST_CHECK(op2 != NULL);
+  BOOST_CHECK(op2 != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(testXactLookupMagnitude)
@@ -916,7 +916,7 @@ BOOST_AUTO_TEST_CASE(testXactLookupMagnitude)
   xact.payee = "Test";
 
   auto op = xact.lookup(symbol_t::FUNCTION, "magnitude");
-  BOOST_CHECK(op != NULL);
+  BOOST_CHECK(op != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(testXactLookupAnyAll)
@@ -928,10 +928,10 @@ BOOST_AUTO_TEST_CASE(testXactLookupAnyAll)
   xact.payee = "Test";
 
   auto op_any = xact.lookup(symbol_t::FUNCTION, "any");
-  BOOST_CHECK(op_any != NULL);
+  BOOST_CHECK(op_any != nullptr);
 
   auto op_all = xact.lookup(symbol_t::FUNCTION, "all");
-  BOOST_CHECK(op_all != NULL);
+  BOOST_CHECK(op_all != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(testXactLookupNonFunction)
@@ -943,7 +943,7 @@ BOOST_AUTO_TEST_CASE(testXactLookupNonFunction)
   xact.payee = "Test";
 
   auto op = xact.lookup(symbol_t::OPTION, "test");
-  BOOST_CHECK(op == NULL);
+  BOOST_CHECK(op == nullptr);
 }
 
 // ---------------------------------------------------------------------------
@@ -1658,7 +1658,7 @@ BOOST_AUTO_TEST_CASE(testAutoXactSimplePredicate_W7)
     "    Expenses:Food     $10.00\n"
     "    Assets:Cash\n"
   );
-  BOOST_CHECK(j != NULL);
+  BOOST_CHECK(j != nullptr);
   BOOST_CHECK_EQUAL(1, j->xacts.size());
   // The auto_xact should have been applied
   xact_t* x = j->xacts.front();
@@ -1687,7 +1687,7 @@ BOOST_AUTO_TEST_CASE(testAutoXactCostFromAnnotation_W7)
     "    Expenses:Power    100 kWh @@ 72 EUR\n"
     "    Assets:Cash\n"
   );
-  BOOST_CHECK(j != NULL);
+  BOOST_CHECK(j != nullptr);
   BOOST_CHECK_EQUAL(1, j->xacts.size());
   // The auto_xact should have generated a Budget:Power post
   xact_t* x = j->xacts.front();
@@ -1784,7 +1784,7 @@ BOOST_AUTO_TEST_CASE(testPostGetAmountNull_W7)
 
   // When amount is null, lookup for "amount" should return 0L
   auto op = post->lookup(symbol_t::FUNCTION, "amount");
-  BOOST_CHECK(op != NULL);
+  BOOST_CHECK(op != nullptr);
 
   delete post;
 }
@@ -1811,11 +1811,11 @@ BOOST_AUTO_TEST_CASE(testPostCommodityCompound_W7)
 
   // commodity accessor with POST_EXT_COMPOUND uses compound_value
   auto op = post->lookup(symbol_t::FUNCTION, "commodity");
-  BOOST_CHECK(op != NULL);
+  BOOST_CHECK(op != nullptr);
 
   // commodity_is_primary with POST_EXT_COMPOUND
   auto op2 = post->lookup(symbol_t::FUNCTION, "primary");
-  BOOST_CHECK(op2 != NULL);
+  BOOST_CHECK(op2 != nullptr);
 
   delete post;
 }
@@ -1837,10 +1837,10 @@ BOOST_AUTO_TEST_CASE(testPostCostPriceNull_W7)
 
   // Both cost and price should return 0L for null amount
   auto op_cost = post->lookup(symbol_t::FUNCTION, "cost");
-  BOOST_CHECK(op_cost != NULL);
+  BOOST_CHECK(op_cost != nullptr);
 
   auto op_price = post->lookup(symbol_t::FUNCTION, "price");
-  BOOST_CHECK(op_price != NULL);
+  BOOST_CHECK(op_price != nullptr);
 
   delete post;
 }
@@ -1862,11 +1862,11 @@ BOOST_AUTO_TEST_CASE(testPostTotalCount_W7)
 
   // get_total with null amount returns 0L (line 253)
   auto op_total = post->lookup(symbol_t::FUNCTION, "total");
-  BOOST_CHECK(op_total != NULL);
+  BOOST_CHECK(op_total != nullptr);
 
   // get_count without xdata returns 1L (line 262)
   auto op_count = post->lookup(symbol_t::FUNCTION, "count");
-  BOOST_CHECK(op_count != NULL);
+  BOOST_CHECK(op_count != nullptr);
 
   delete post;
 }
@@ -1888,15 +1888,15 @@ BOOST_AUTO_TEST_CASE(testPostShortcutLookups_W7)
 
   // N = count (line 519)
   auto op_N = post->lookup(symbol_t::FUNCTION, "N");
-  BOOST_CHECK(op_N != NULL);
+  BOOST_CHECK(op_N != nullptr);
 
   // O = total (line 524)
   auto op_O = post->lookup(symbol_t::FUNCTION, "O");
-  BOOST_CHECK(op_O != NULL);
+  BOOST_CHECK(op_O != nullptr);
 
   // R = real (line 529)
   auto op_R = post->lookup(symbol_t::FUNCTION, "R");
-  BOOST_CHECK(op_R != NULL);
+  BOOST_CHECK(op_R != nullptr);
 
   delete post;
 }
@@ -1941,7 +1941,7 @@ BOOST_AUTO_TEST_CASE(testPostLookupNonFunction_W7)
 
   // Non-FUNCTION kind falls through to item_t::lookup (line 401)
   auto op = post->lookup(symbol_t::OPTION, "test");
-  BOOST_CHECK(op == NULL);
+  BOOST_CHECK(op == nullptr);
 
   delete post;
 }
@@ -1957,10 +1957,10 @@ BOOST_AUTO_TEST_CASE(testPostFnAnyAllNoXact_W7)
   post.add_flags(ITEM_TEMP);
 
   auto op_any = post.lookup(symbol_t::FUNCTION, "any");
-  BOOST_CHECK(op_any != NULL);
+  BOOST_CHECK(op_any != nullptr);
 
   auto op_all = post.lookup(symbol_t::FUNCTION, "all");
-  BOOST_CHECK(op_all != NULL);
+  BOOST_CHECK(op_all != nullptr);
 }
 
 // ---------------------------------------------------------------------------
@@ -2032,13 +2032,13 @@ BOOST_AUTO_TEST_CASE(testItemPathnameLookupNoPos_W7)
   // No pos set
 
   auto op_fn = xact.lookup(symbol_t::FUNCTION, "filename");
-  BOOST_CHECK(op_fn != NULL);
+  BOOST_CHECK(op_fn != nullptr);
 
   auto op_fb = xact.lookup(symbol_t::FUNCTION, "filebase");
-  BOOST_CHECK(op_fb != NULL);
+  BOOST_CHECK(op_fb != nullptr);
 
   auto op_fp = xact.lookup(symbol_t::FUNCTION, "filepath");
-  BOOST_CHECK(op_fp != NULL);
+  BOOST_CHECK(op_fp != nullptr);
 }
 
 // ---------------------------------------------------------------------------
@@ -2056,13 +2056,13 @@ BOOST_AUTO_TEST_CASE(testItemIdAndAddr_W7)
   string id = xact.id();
   // addr returns a long
   auto op_addr = xact.lookup(symbol_t::FUNCTION, "addr");
-  BOOST_CHECK(op_addr != NULL);
+  BOOST_CHECK(op_addr != nullptr);
 
   auto op_id = xact.lookup(symbol_t::FUNCTION, "id");
-  BOOST_CHECK(op_id != NULL);
+  BOOST_CHECK(op_id != nullptr);
 
   auto op_depth = xact.lookup(symbol_t::FUNCTION, "depth");
-  BOOST_CHECK(op_depth != NULL);
+  BOOST_CHECK(op_depth != nullptr);
 }
 
 // ---------------------------------------------------------------------------
@@ -2077,12 +2077,12 @@ BOOST_AUTO_TEST_CASE(testItemGetComment_W7)
   xact.payee = "Test";
 
   auto op = xact.lookup(symbol_t::FUNCTION, "comment");
-  BOOST_CHECK(op != NULL);
+  BOOST_CHECK(op != nullptr);
 
   // With a note
   xact.note = string("short");
   auto op2 = xact.lookup(symbol_t::FUNCTION, "comment");
-  BOOST_CHECK(op2 != NULL);
+  BOOST_CHECK(op2 != nullptr);
 }
 
 // ---------------------------------------------------------------------------
@@ -2098,55 +2098,55 @@ BOOST_AUTO_TEST_CASE(testItemLookupPaths_W7)
 
   // has_meta (line 464)
   auto op_hm = xact.lookup(symbol_t::FUNCTION, "has_meta");
-  BOOST_CHECK(op_hm != NULL);
+  BOOST_CHECK(op_hm != nullptr);
 
   // meta (line 476)
   auto op_meta = xact.lookup(symbol_t::FUNCTION, "meta");
-  BOOST_CHECK(op_meta != NULL);
+  BOOST_CHECK(op_meta != nullptr);
 
   // pending (line 485-486)
   auto op_pend = xact.lookup(symbol_t::FUNCTION, "pending");
-  BOOST_CHECK(op_pend != NULL);
+  BOOST_CHECK(op_pend != nullptr);
 
   // parent (line 487-488)
   auto op_parent = xact.lookup(symbol_t::FUNCTION, "parent");
-  BOOST_CHECK(op_parent != NULL);
+  BOOST_CHECK(op_parent != nullptr);
 
   // primary_date (line 489-490)
   auto op_pd = xact.lookup(symbol_t::FUNCTION, "primary_date");
-  BOOST_CHECK(op_pd != NULL);
+  BOOST_CHECK(op_pd != nullptr);
 
   // seq (line 497)
   auto op_seq = xact.lookup(symbol_t::FUNCTION, "seq");
-  BOOST_CHECK(op_seq != NULL);
+  BOOST_CHECK(op_seq != nullptr);
 
   // status / state (line 494)
   auto op_status = xact.lookup(symbol_t::FUNCTION, "status");
-  BOOST_CHECK(op_status != NULL);
+  BOOST_CHECK(op_status != nullptr);
 
   // tag (line 501-502)
   auto op_tag = xact.lookup(symbol_t::FUNCTION, "tag");
-  BOOST_CHECK(op_tag != NULL);
+  BOOST_CHECK(op_tag != nullptr);
 
   // uuid (line 508-509)
   auto op_uuid = xact.lookup(symbol_t::FUNCTION, "uuid");
-  BOOST_CHECK(op_uuid != NULL);
+  BOOST_CHECK(op_uuid != nullptr);
 
   // value_date (line 513-514)
   auto op_vd = xact.lookup(symbol_t::FUNCTION, "value_date");
-  BOOST_CHECK(op_vd != NULL);
+  BOOST_CHECK(op_vd != nullptr);
 
   // L (line 518-519)
   auto op_L = xact.lookup(symbol_t::FUNCTION, "L");
-  BOOST_CHECK(op_L != NULL);
+  BOOST_CHECK(op_L != nullptr);
 
   // X (line 522-524)
   auto op_X = xact.lookup(symbol_t::FUNCTION, "X");
-  BOOST_CHECK(op_X != NULL);
+  BOOST_CHECK(op_X != nullptr);
 
   // Y (line 527-529)
   auto op_Y = xact.lookup(symbol_t::FUNCTION, "Y");
-  BOOST_CHECK(op_Y != NULL);
+  BOOST_CHECK(op_Y != nullptr);
 }
 
 // ---------------------------------------------------------------------------
@@ -2474,14 +2474,14 @@ BOOST_AUTO_TEST_CASE(testDraftInsertWithSession_W7)
     "    Expenses:Food     $50.00\n"
     "    Assets:Cash\n"
   );
-  BOOST_CHECK(j != NULL);
+  BOOST_CHECK(j != nullptr);
 
   // Create a draft with matching payee
   value_t args;
   args.push_back(string_value("Grocery"));
   draft_t draft(args);
   xact_t* result = draft.insert(*j);
-  BOOST_CHECK(result != NULL);
+  BOOST_CHECK(result != nullptr);
   if (result)
     BOOST_CHECK_EQUAL(result->payee, "Grocery Store");
 

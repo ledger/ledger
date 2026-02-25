@@ -23,7 +23,7 @@ BOOST_FIXTURE_TEST_SUITE(times, times_fixture)
 BOOST_AUTO_TEST_CASE(testConstructors)
 {
 #ifndef NOT_FOR_PYTHON
-  std::time_t now         = std::time(NULL);
+  std::time_t now         = std::time(nullptr);
   struct tm * moment      = std::localtime(&now);
   std::time_t localMoment = std::mktime(moment);
 #endif // NOT_FOR_PYTHON

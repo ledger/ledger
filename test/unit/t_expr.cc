@@ -1451,7 +1451,7 @@ BOOST_AUTO_TEST_CASE(testExprGetOp)
 {
   // Cover expr.cc: get_op()
   expr_t expr("42 + 1");
-  BOOST_CHECK(expr.get_op() != NULL);
+  BOOST_CHECK(expr.get_op() != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(testExprIsEmpty)
@@ -3171,7 +3171,7 @@ BOOST_AUTO_TEST_CASE(testFindScopeNotFoundW7)
   empty_scope_t scope;
   // find_scope<report_t> should throw since there's no report_t in scope
   // We test the template via search_scope returning NULL
-  BOOST_CHECK(search_scope<empty_scope_t>(&scope) != NULL);
+  BOOST_CHECK(search_scope<empty_scope_t>(&scope) != nullptr);
 }
 
 // -----------------------------------------------------------------------

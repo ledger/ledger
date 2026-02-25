@@ -145,9 +145,9 @@ BOOST_AUTO_TEST_CASE(testConstructors)
   amount_t x6("123.456");
   amount_t x7(string("123456"));
   amount_t x8(string("123.456"));
-  amount_t x9(x3);
-  amount_t x10(x6);
-  amount_t x11(x8);
+  const amount_t& x9(x3);
+  const amount_t& x10(x6);
+  const amount_t& x11(x8);
 
   BOOST_CHECK_EQUAL(amount_t(), x0);
   BOOST_CHECK_NE(amount_t("0"), x0);
@@ -2143,7 +2143,7 @@ BOOST_AUTO_TEST_CASE(testAmountCopyBulkAllocW7)
 {
   // Create amounts and exercise the copy path
   amount_t x1("$10.00");
-  amount_t x2(x1);  // copy constructor
+  const amount_t& x2(x1);  // copy constructor
   BOOST_CHECK_EQUAL(x1, x2);
 
   // Assign over an existing amount
@@ -2589,7 +2589,7 @@ BOOST_AUTO_TEST_CASE(testAmountDivisionW11)
 BOOST_AUTO_TEST_CASE(testAmountCopyW11)
 {
   amount_t x1("$100.00");
-  amount_t x2(x1);
+  const amount_t& x2(x1);
   BOOST_CHECK_EQUAL(x1, x2);
 
   amount_t x3;

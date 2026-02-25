@@ -35,7 +35,7 @@ struct filters_fixture {
   ~filters_fixture() {
     for (xact_t* xact : owned_xacts)
       delete xact;
-    set_session_context(NULL);
+    set_session_context(nullptr);
   }
 
   // Create a test account under the journal root

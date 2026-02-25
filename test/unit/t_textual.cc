@@ -30,7 +30,7 @@ struct textual_fixture {
 
   ~textual_fixture() {
     scope_t::default_scope = saved_default_scope;
-    set_session_context(NULL);
+    set_session_context(nullptr);
   }
 
   // Parse a string as journal input and return the number of transactions
@@ -89,13 +89,13 @@ BOOST_AUTO_TEST_CASE(testParseSimpleTransaction)
 
   // First posting should be to Expenses:Food with $50.00
   post_t* first = xact->posts.front();
-  BOOST_CHECK(first->account != NULL);
+  BOOST_CHECK(first->account != nullptr);
   BOOST_CHECK_EQUAL(string("Expenses:Food"), first->account->fullname());
   BOOST_CHECK(!first->amount.is_null());
 
   // Second posting should be to Assets:Checking with a calculated amount
   post_t* second = xact->posts.back();
-  BOOST_CHECK(second->account != NULL);
+  BOOST_CHECK(second->account != nullptr);
   BOOST_CHECK_EQUAL(string("Assets:Checking"), second->account->fullname());
 }
 
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(testAccountDirective)
   BOOST_CHECK_EQUAL(0u, count);  // no transactions
 
   account_t* acct = session.journal->find_account("Expenses:Food", false);
-  BOOST_CHECK(acct != NULL);
+  BOOST_CHECK(acct != nullptr);
   BOOST_CHECK(acct->has_flags(ACCOUNT_KNOWN));
 }
 
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(testAccountDirectiveWithNote)
   parse_text(input);
 
   account_t* acct = session.journal->find_account("Expenses:Travel", false);
-  BOOST_CHECK(acct != NULL);
+  BOOST_CHECK(acct != nullptr);
   BOOST_CHECK(acct->note);
   BOOST_CHECK_EQUAL(string("Business travel expenses"), *acct->note);
 }
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(testCommodityDirective)
   session.parsing_context.pop();
 
   commodity_t* comm = commodity_pool_t::current_pool->find("$");
-  BOOST_CHECK(comm != NULL);
+  BOOST_CHECK(comm != nullptr);
   BOOST_CHECK(comm->has_flags(COMMODITY_KNOWN));
 }
 

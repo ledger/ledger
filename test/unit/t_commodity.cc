@@ -611,44 +611,44 @@ BOOST_AUTO_TEST_CASE(testCommodityPool)
   commodity_pool_t& pool(dollar.pool());
 
   // The null commodity should exist
-  BOOST_CHECK(pool.null_commodity != NULL);
+  BOOST_CHECK(pool.null_commodity != nullptr);
   BOOST_CHECK_EQUAL(string(""), pool.null_commodity->symbol());
   BOOST_CHECK(pool.null_commodity->has_flags(COMMODITY_BUILTIN));
 
   // find should locate the dollar commodity
   commodity_t* found = pool.find("$");
-  BOOST_CHECK(found != NULL);
+  BOOST_CHECK(found != nullptr);
   BOOST_CHECK(*found == dollar);
 
   // find_or_create should find existing commodity
   commodity_t* found2 = pool.find_or_create("$");
-  BOOST_CHECK(found2 != NULL);
+  BOOST_CHECK(found2 != nullptr);
   BOOST_CHECK(*found2 == dollar);
 
   // find_or_create with new symbol should create it
   commodity_t* gold = pool.find_or_create("GLD");
-  BOOST_CHECK(gold != NULL);
+  BOOST_CHECK(gold != nullptr);
   BOOST_CHECK_EQUAL(string("GLD"), gold->symbol());
   BOOST_CHECK(gold->valid());
 
   // find should now locate GLD
   commodity_t* found3 = pool.find("GLD");
-  BOOST_CHECK(found3 != NULL);
+  BOOST_CHECK(found3 != nullptr);
   BOOST_CHECK(*found3 == *gold);
 
   // find for nonexistent should return NULL
   commodity_t* nonexistent = pool.find("DOESNOTEXIST");
-  BOOST_CHECK(nonexistent == NULL);
+  BOOST_CHECK(nonexistent == nullptr);
 
   // Test alias
   commodity_t* aliased = pool.alias("GOLD", *gold);
-  BOOST_CHECK(aliased != NULL);
+  BOOST_CHECK(aliased != nullptr);
   // Aliased commodity should be findable by the alias name
   commodity_t* found_alias = pool.find("GOLD");
-  BOOST_CHECK(found_alias != NULL);
+  BOOST_CHECK(found_alias != nullptr);
 
   // Test default_commodity
-  BOOST_CHECK(pool.default_commodity == NULL);
+  BOOST_CHECK(pool.default_commodity == nullptr);
 
   BOOST_CHECK(x1.valid());
 }
@@ -702,7 +702,7 @@ BOOST_AUTO_TEST_CASE(testRemovePrice)
   msft.add_price(mar15, amount_t("$320.00"));
 
   // Verify the latest price is findable
-  std::optional<price_point_t> pp = msft.find_price(NULL, mar15);
+  std::optional<price_point_t> pp = msft.find_price(nullptr, mar15);
   BOOST_CHECK(pp);
   BOOST_CHECK_EQUAL(amount_t("$320.00"), pp->price);
 
@@ -710,7 +710,7 @@ BOOST_AUTO_TEST_CASE(testRemovePrice)
   msft.remove_price(mar15, msft.pool().find("$")->referent());
 
   // Now the latest price at mar15 should be the feb15 price
-  pp = msft.find_price(NULL, feb15);
+  pp = msft.find_price(nullptr, feb15);
   BOOST_CHECK(pp);
   BOOST_CHECK_EQUAL(amount_t("$310.00"), pp->price);
 
@@ -937,24 +937,24 @@ BOOST_AUTO_TEST_CASE(testCommodityPoolAnnotated)
 
   // Create a base commodity
   commodity_t* base = pool.find_or_create("XYZ");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
   BOOST_CHECK(! base->has_annotation());
 
   // Create an annotated commodity through the pool
   annotation_t ann(amount_t("$100.00"), parse_date("2024/01/15"), string("lot1"));
   commodity_t* ann_comm = pool.find_or_create("XYZ", ann);
-  BOOST_CHECK(ann_comm != NULL);
+  BOOST_CHECK(ann_comm != nullptr);
   BOOST_CHECK(ann_comm->has_annotation());
 
   // Find the annotated commodity again
   commodity_t* found = pool.find("XYZ", ann);
-  BOOST_CHECK(found != NULL);
+  BOOST_CHECK(found != nullptr);
   BOOST_CHECK(found == ann_comm);
 
   // Find with different annotation should return NULL
   annotation_t ann2(amount_t("$200.00"));
   commodity_t* not_found = pool.find("XYZ", ann2);
-  BOOST_CHECK(not_found == NULL);
+  BOOST_CHECK(not_found == nullptr);
 
   // find_or_create with the same annotation should return the same commodity
   commodity_t* same = pool.find_or_create("XYZ", ann);
@@ -962,7 +962,7 @@ BOOST_AUTO_TEST_CASE(testCommodityPoolAnnotated)
 
   // find_or_create with a different annotation should create a new one
   commodity_t* different = pool.find_or_create("XYZ", ann2);
-  BOOST_CHECK(different != NULL);
+  BOOST_CHECK(different != nullptr);
   BOOST_CHECK(different != ann_comm);
   BOOST_CHECK(different->has_annotation());
 
@@ -1264,7 +1264,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityValueExpr)
 {
   // Test compare_by_commodity when both have value_expr
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("VEXP");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann1;
   ann1.value_expr = expr_t("amount * 2");
@@ -1293,7 +1293,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityValueExpr)
 BOOST_AUTO_TEST_CASE(testCompareByCommdityOneValueExpr)
 {
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("OVEX");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann1;
   ann1.value_expr = expr_t("amount");
@@ -1321,7 +1321,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityOneValueExpr)
 BOOST_AUTO_TEST_CASE(testCompareByCommditySemanticFlagsDiff)
 {
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("SFLD");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   // Annotations with same price but different semantic flags
   annotation_t ann1;
@@ -1353,7 +1353,7 @@ BOOST_AUTO_TEST_CASE(testCommodityPrintElideNonDigit)
 {
   // A quoted symbol that is NOT all digits should be printed unquoted
   commodity_t* comm = commodity_pool_t::current_pool->find_or_create("\"AB CD\"");
-  BOOST_CHECK(comm != NULL);
+  BOOST_CHECK(comm != nullptr);
 
   comm->add_flags(COMMODITY_STYLE_SEPARATED);
 
@@ -1370,13 +1370,13 @@ BOOST_AUTO_TEST_CASE(testCommodityPrintElideNonDigit)
 BOOST_AUTO_TEST_CASE(testPutCommodityWithAnnotation)
 {
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("PUTC");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann;
   ann.price = amount_t("$10.00");
 
   commodity_t* annotated = commodity_pool_t::current_pool->find_or_create("PUTC", ann);
-  BOOST_CHECK(annotated != NULL);
+  BOOST_CHECK(annotated != nullptr);
 
   property_tree::ptree st;
   put_commodity(st, *annotated, true);
@@ -1392,7 +1392,7 @@ BOOST_AUTO_TEST_CASE(testPutCommodityWithAnnotation)
 BOOST_AUTO_TEST_CASE(testCompareByCommdityDateReverse)
 {
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("DTRD");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann1;
   ann1.date = parse_date("2024/06/01");
@@ -1420,7 +1420,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityDateReverse)
 BOOST_AUTO_TEST_CASE(testCompareByCommdityTagValues)
 {
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("TAGV");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann1;
   ann1.tag = string("alpha");
@@ -1560,7 +1560,7 @@ BOOST_AUTO_TEST_CASE(testCommodityPrintW7)
 BOOST_AUTO_TEST_CASE(testCompareByCommdityValueExprW7)
 {
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("VEXPR");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann1;
   ann1.value_expr = expr_t("amount");  // a < t
@@ -1594,7 +1594,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommdityValueExprW7)
 BOOST_AUTO_TEST_CASE(testCompareByCommNoAnnotVsAnnotW7)
 {
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("NOANN");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann;
   ann.price = amount_t("$10.00");
@@ -1634,7 +1634,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommSameNoAnnotW7)
 BOOST_AUTO_TEST_CASE(testCompareByCommDatesW7)
 {
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("DATED");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann1;
   ann1.date = date_t(2024, 1, 1);
@@ -1664,7 +1664,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommDatesW7)
 BOOST_AUTO_TEST_CASE(testCompareByCommNoDateVsDateW7)
 {
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("NDVD");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann_nodate;
   ann_nodate.price = amount_t("$10.00");
@@ -1697,7 +1697,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommNoDateVsDateW7)
 BOOST_AUTO_TEST_CASE(testCompareByCommNoExprVsExprW7)
 {
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("NEXPR");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann_noexpr;
   ann_noexpr.price = amount_t("$10.00");
@@ -1730,7 +1730,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommNoExprVsExprW7)
 BOOST_AUTO_TEST_CASE(testCompareByCommNoTagVsTagW7)
 {
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("NTVT");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann_notag;
   ann_notag.price = amount_t("$10.00");
@@ -1763,7 +1763,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommNoTagVsTagW7)
 BOOST_AUTO_TEST_CASE(testCompareByCommSemanticFlagsW7)
 {
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("SEMF");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann1;
   ann1.price = amount_t("$10.00");
@@ -1810,7 +1810,7 @@ BOOST_AUTO_TEST_CASE(testPutCommodityW7)
 BOOST_AUTO_TEST_CASE(testCompareByCommDiffPriceCommsW7)
 {
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("DPRC");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann1;
   ann1.price = amount_t("$10.00");
@@ -1865,12 +1865,12 @@ BOOST_AUTO_TEST_CASE(testFindPriceW8)
   xyz.add_price(feb, amount_t("$6.00"));
 
   // First call populates the memoized map
-  std::optional<price_point_t> pp1 = xyz.find_price(NULL, feb);
+  std::optional<price_point_t> pp1 = xyz.find_price(nullptr, feb);
   BOOST_CHECK(pp1);
   BOOST_CHECK_EQUAL(pp1->price, amount_t("$6.00"));
 
   // Second call with same args should hit the memoized cache
-  std::optional<price_point_t> pp2 = xyz.find_price(NULL, feb);
+  std::optional<price_point_t> pp2 = xyz.find_price(nullptr, feb);
   BOOST_CHECK(pp2);
   BOOST_CHECK_EQUAL(pp1->price, pp2->price);
 }
@@ -1972,7 +1972,7 @@ BOOST_AUTO_TEST_CASE(testCompareByCommValueExprW8)
 {
   // Lines 463-493: compare by commodity with tags that differ
   commodity_t* base = commodity_pool_t::current_pool->find_or_create("TAGCW8");
-  BOOST_CHECK(base != NULL);
+  BOOST_CHECK(base != nullptr);
 
   annotation_t ann1;
   ann1.tag = string("alpha");
