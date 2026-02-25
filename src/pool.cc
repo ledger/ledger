@@ -98,7 +98,22 @@ commodity_t* commodity_pool_t::alias(const string& name, commodity_t& referent) 
   assert(i != commodities.end());
 
   auto [iter, inserted] = commodities.insert(commodities_map::value_type(name, (*i).second));
-  assert(inserted);
+  if (!inserted) {
+    if (iter->second.get() == (*i).second.get()) {
+      // The alias is already registered with the same referent; this is idempotent.
+      return iter->second.get();
+    }
+    // The name was previously used for a different commodity (e.g., created implicitly
+    // by pricedb parsing before the alias directive was processed, or an include file
+    // with commodity aliases was included multiple times).
+    //
+    // Keep the old commodity alive (to prevent dangling raw pointers held by existing
+    // amount_t objects in the price history), transfer price history to the referent,
+    // then remap the commodities map entry.
+    retired_commodities.push_back(iter->second);
+    commodity_price_history.alias_commodity(*iter->second.get(), referent);
+    iter->second = (*i).second;
+  }
 
   return (*iter).second.get();
 }

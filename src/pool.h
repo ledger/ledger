@@ -70,6 +70,7 @@ public:
 
   commodities_map commodities;
   annotated_commodities_map annotated_commodities;
+  std::vector<std::shared_ptr<commodity_t>> retired_commodities;
   commodity_history_t commodity_price_history;
   commodity_t* null_commodity;
   commodity_t* default_commodity;
