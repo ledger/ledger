@@ -1,0 +1,37 @@
+; Regression test for issue #1558: --lots-fifo and --lots-lifo options.
+;
+; These options display lots sorted by acquisition date rather than the default
+; price-first ordering used by --lots. FIFO = oldest first, LIFO = newest first.
+;
+; This test uses lots where price order is the inverse of date order to ensure
+; the two orderings are distinguishable.
+
+2020/01/10 Buy AAPL early at high price
+    Assets:Brokerage         10 AAPL {$200.00} [2020/01/10]
+    Assets:Cash
+
+2020/06/15 Buy AAPL mid
+    Assets:Brokerage         5 AAPL {$150.00} [2020/06/15]
+    Assets:Cash
+
+2021/03/01 Buy AAPL late at low price
+    Assets:Brokerage         8 AAPL {$100.00} [2021/03/01]
+    Assets:Cash
+
+test bal --lots Assets:Brokerage
+8 AAPL {$100} [2021/03/01]
+5 AAPL {$150} [2020/06/15]
+10 AAPL {$200} [2020/01/10]  Assets:Brokerage
+end test
+
+test bal --lots-fifo Assets:Brokerage
+10 AAPL {$200} [2020/01/10]
+5 AAPL {$150} [2020/06/15]
+8 AAPL {$100} [2021/03/01]  Assets:Brokerage
+end test
+
+test bal --lots-lifo Assets:Brokerage
+8 AAPL {$100} [2021/03/01]
+5 AAPL {$150} [2020/06/15]
+10 AAPL {$200} [2020/01/10]  Assets:Brokerage
+end test
