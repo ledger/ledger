@@ -7508,6 +7508,13 @@ to show unrealized capital in a gain/losses report.
 When generating a ledger transaction from a CSV file using the
 @command{convert} command, add CSV, Imported, and UUID metadata.
 
+@item --round
+Round all calculated values to the display precision of their
+commodity.  This is the default behavior for display, but this option
+explicitly forces rounding in the expression pipeline, which is useful
+when @option{--unround} has been set in the init file and you want to
+override it for a specific invocation.
+
 @item --seed @var{INT}
 Set the random seed to @var{INT} for the @code{generate} command.
 Used as part of development testing.

@@ -1,0 +1,37 @@
+; Test --round option (GitHub issue #2020)
+; The --round option forces amounts to be rounded to commodity display precision.
+; It also overrides --unround when both options are given.
+
+commodity $
+    format $1,000.00
+
+2024/01/15 * High Precision Purchase
+    Expenses:Food     $1.9995
+    Assets:Checking
+
+2024/01/16 * Dividend
+    Income:Dividends  $3.33333333
+    Assets:Checking
+
+test bal --unround
+        $-5.33283333  Assets:Checking
+             $1.9995  Expenses:Food
+         $3.33333333  Income:Dividends
+--------------------
+                   0
+end test
+
+test bal --unround --round
+              $-5.33  Assets:Checking
+               $2.00  Expenses:Food
+               $3.33  Income:Dividends
+--------------------
+                   0
+end test
+
+test reg --unround --round
+24-Jan-15 High Precision Purc.. Expenses:Food                 $2.00        $2.00
+                                Assets:Checking              $-2.00            0
+24-Jan-16 Dividend              Income:Dividends              $3.33        $3.33
+                                Assets:Checking              $-3.33            0
+end test
