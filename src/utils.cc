@@ -528,7 +528,7 @@ namespace ledger {
 
 log_level_t _log_level = LOG_WARN;
 std::ostream* _log_stream = &std::cerr;
-std::ostringstream _log_buffer;
+thread_local std::ostringstream _log_buffer;
 
 #if TRACING_ON
 uint16_t _trace_level;
@@ -807,8 +807,7 @@ path resolve_path(const path& pathname) {
   path temp = pathname;
   if (temp.string()[0] == '~')
     temp = expand_path(temp);
-  temp.lexically_normal();
-  return temp;
+  return temp.lexically_normal();
 }
 
 } // namespace ledger

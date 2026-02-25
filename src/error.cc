@@ -39,8 +39,8 @@
 
 namespace ledger {
 
-std::ostringstream _ctxt_buffer;
-std::ostringstream _desc_buffer;
+thread_local std::ostringstream _ctxt_buffer;
+thread_local std::ostringstream _desc_buffer;
 
 string error_context() {
   string context = _ctxt_buffer.str(); // NOLINT(bugprone-unused-local-non-trivial-variable)
@@ -94,11 +94,13 @@ string source_context(const path& file, const std::istream::pos_type pos,
 
   std::ostringstream out;
 
+  std::unique_ptr<std::istream> in(
 #if HAVE_GPGME
-  std::istream* in(decrypted_stream_t::open_stream(file));
+    decrypted_stream_t::open_stream(file)
 #else
-  std::istream* in(new ifstream(file, std::ios::binary));
+    new ifstream(file, std::ios::binary)
 #endif
+  );
   in->seekg(pos, std::ios::beg);
 
   scoped_array<char> buf(new char[static_cast<std::size_t>(read_len) + 1]);
@@ -118,7 +120,6 @@ string source_context(const path& file, const std::istream::pos_type pos,
   if (truncated)
     out << '\n' << prefix << "...(context truncated)";
 
-  delete (in);
   return out.str();
 }
 

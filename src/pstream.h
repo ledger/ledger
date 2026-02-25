@@ -82,15 +82,26 @@ class ptristream : public std::istream {
       // as ios_base::beg/cur/end are not necessarily values of 'way' enum type ios_base::seekdir
       // based on https://svn.boost.org/trac/boost/ticket/7644
       switch (static_cast<int>(way)) {
-      case std::ios::cur:
-        setg(ptr, gptr() + off, ptr + len);
+      case std::ios::beg: {
+        std::streamoff new_pos = std::max(std::streamoff(0),
+                                          std::min(off, std::streamoff(len)));
+        setg(ptr, ptr + new_pos, ptr + len);
         break;
-      case std::ios::beg:
-        setg(ptr, ptr + off, ptr + len);
+      }
+      case std::ios::cur: {
+        std::streamoff cur_off = gptr() - ptr;
+        std::streamoff new_pos = std::max(std::streamoff(0),
+                                          std::min(cur_off + off, std::streamoff(len)));
+        setg(ptr, ptr + new_pos, ptr + len);
         break;
-      case std::ios::end:
-        setg(ptr, egptr() + off, ptr + len);
+      }
+      case std::ios::end: {
+        std::streamoff new_pos = std::max(std::streamoff(0),
+                                          std::min(std::streamoff(len) + off,
+                                                   std::streamoff(len)));
+        setg(ptr, ptr + new_pos, ptr + len);
         break;
+      }
       }
       return pos_type(gptr() - ptr);
     }

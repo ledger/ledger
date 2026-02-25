@@ -45,7 +45,7 @@
 
 namespace ledger {
 
-extern std::ostringstream _desc_buffer;
+extern thread_local std::ostringstream _desc_buffer;
 
 template <typename T>
 [[noreturn]] inline void throw_func(const string& message) {
@@ -64,7 +64,7 @@ inline void warning_func(const string& message) {
 
 #define warning_(msg) ((_desc_buffer << (msg)), warning_func(_desc_buffer.str()))
 
-extern std::ostringstream _ctxt_buffer;
+extern thread_local std::ostringstream _ctxt_buffer;
 
 #define add_error_context(msg)                                                                     \
   ((long(_ctxt_buffer.tellp()) == 0) ? (_ctxt_buffer << (msg)) : (_ctxt_buffer << '\n' << (msg)))

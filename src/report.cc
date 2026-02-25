@@ -677,24 +677,12 @@ value_t report_t::fn_strip(call_scope_t& args) {
 }
 
 value_t report_t::fn_trim(call_scope_t& args) {
-  string temp(args.value().to_string()); // NOLINT(bugprone-unused-local-non-trivial-variable)
-  scoped_array<char> buf(new char[temp.length() + 1]);
-  std::strcpy(buf.get(), temp.c_str());
-
-  const char* p = buf.get();
-  const char* e = buf.get() + temp.length() - 1;
-
-  while (p <= e && std::isspace(static_cast<unsigned char>(*p)))
-    p++;
-
-  while (e > p && std::isspace(static_cast<unsigned char>(*e)))
-    e--;
-
-  if (p > e) { // NOLINT(bugprone-branch-clone)
+  string temp = args.value().to_string();
+  auto start = temp.find_first_not_of(" \t\n\r\f\v");
+  if (start == string::npos)
     return string_value(empty_string);
-  } else {
-    return string_value(string(p, static_cast<std::string::size_type>(e - p + 1)));
-  }
+  auto end = temp.find_last_not_of(" \t\n\r\f\v");
+  return string_value(temp.substr(start, end - start + 1));
 }
 
 value_t report_t::fn_format(call_scope_t& args) {

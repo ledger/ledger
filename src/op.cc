@@ -233,6 +233,9 @@ expr_t::ptr_op_t lookup_ident(const expr_t::ptr_op_t& op, scope_t& scope) {
 } // namespace
 
 value_t expr_t::op_t::calc(scope_t& scope, ptr_op_t* locus, const int depth) {
+  if (depth > 1024)
+    throw_(calc_error, _("Expression evaluation depth limit exceeded"));
+
   try {
 
     value_t result;

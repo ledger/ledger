@@ -163,6 +163,9 @@ public:
           return string("TERM(") + *value + ")";
         case END_REACHED:
           return "END_REACHED";
+        default:
+          assert(false && "Unknown token kind");
+          return "<UNKNOWN>";
         }
       }
 

@@ -83,10 +83,23 @@ int do_fork(std::ostream** os, const path& pager_path, pid_t* pager_pid) {
     close(pfd[1]);
     close(pfd[0]);
 
-    execlp("/bin/sh", "/bin/sh", "-c", pager_path.string().c_str(), NULL);
+    // Split pager_path into argv to avoid shell injection
+    string pager_str = pager_path.string();
+    std::vector<string> parts;
+    std::istringstream iss(pager_str);
+    string token;
+    while (iss >> token)
+      parts.push_back(token);
+
+    std::vector<const char*> argv;
+    for (auto& s : parts)
+      argv.push_back(s.c_str());
+    argv.push_back(nullptr);
+
+    execvp(argv[0], const_cast<char* const*>(argv.data()));
 
     // We should never, ever reach here
-    perror("execlp: /bin/sh");
+    perror("execvp");
     exit(1);
   } else { // parent
     close(pfd[0]);
@@ -135,7 +148,7 @@ void output_stream_t::close() {
       waitpid(pager_pid, &status, 0);
       pager_pid = -1;
       if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-        throw std::logic_error(_("Error in the pager"));
+        std::cerr << "Warning: pager process exited abnormally" << std::endl;
     }
   }
 #endif
