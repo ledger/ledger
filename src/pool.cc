@@ -235,6 +235,12 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
   if (cost.has_annotation())
     per_unit_cost = per_unit_cost.strip_annotations(keep_details_t());
 
+  // Normalize per-unit cost to its display precision so that lot prices
+  // computed from total costs (@@) can be matched against the displayed value
+  // when users reference them explicitly (fixes issue #1032).
+  if (per_unit_cost.has_commodity() && per_unit_cost.keep_precision())
+    per_unit_cost.in_place_roundto(static_cast<int>(per_unit_cost.display_precision()));
+
   DEBUG("commodity.prices.add", "exchange: per-unit-cost = " << per_unit_cost);
 
   // Do not record commodity exchanges where amount's commodity has a

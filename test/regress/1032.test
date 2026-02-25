@@ -1,0 +1,15 @@
+D 1.00 GBP
+
+2011-01-01 * Opening balance
+    Assets:Investments      48.1716 AAA @@ 86.39 GBP ; @ 1.7934 GBP
+    Equity:Opening balance
+
+2011-12-06 * Sold AAA
+    Assets:Cash
+    Assets:Investments    -48.1716 AAA {1.79338033198 GBP} [2011-01-01]
+
+test bal :inv
+end test
+
+test bal :inv --lots
+end test
