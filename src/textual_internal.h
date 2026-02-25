@@ -151,6 +151,8 @@ public:
   void payee_directive(char* line);
   void payee_alias_directive(const string& payee, string alias);
   void payee_uuid_directive(const string& payee, string uuid);
+  void payee_rewrite_directive(char* line);
+  void account_rewrite_directive(char* line);
 
   void commodity_directive(char* line);
   void commodity_alias_directive(commodity_t& comm, string alias);

@@ -540,6 +540,36 @@ void instance_t::payee_uuid_directive(const string& payee, string uuid) {
   context.journal->payee_uuid_mappings[uuid] = payee;
 }
 
+void instance_t::payee_rewrite_directive(char* line) {
+  // Format: payee-rewrite PATTERN   REPLACEMENT
+  // The pattern and replacement are separated by two spaces or a tab.
+  char* p = skip_ws(line);
+  char* repl = next_element(p, true);
+  if (!repl)
+    throw_(parse_error, _("payee-rewrite directive requires a pattern and a replacement"));
+  string pattern(p);
+  trim(pattern);
+  string replacement(repl);
+  trim(replacement);
+  context.journal->payee_rewrite_mappings.push_back(
+      payee_rewrite_mapping_t(mask_t(pattern), replacement));
+}
+
+void instance_t::account_rewrite_directive(char* line) {
+  // Format: account-rewrite PATTERN   REPLACEMENT
+  // The pattern and replacement are separated by two spaces or a tab.
+  char* p = skip_ws(line);
+  char* repl = next_element(p, true);
+  if (!repl)
+    throw_(parse_error, _("account-rewrite directive requires a pattern and a replacement"));
+  string pattern(p);
+  trim(pattern);
+  string replacement(repl);
+  trim(replacement);
+  context.journal->account_rewrite_mappings.push_back(
+      account_rewrite_mapping_t(mask_t(pattern), replacement));
+}
+
 void instance_t::commodity_directive(char* line) {
   char* p = skip_ws(line);
   string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
@@ -744,6 +774,9 @@ bool instance_t::general_directive(char* line) {
     if (std::strcmp(p, "account") == 0) {
       account_directive(arg);
       return true;
+    } else if (std::strcmp(p, "account-rewrite") == 0) {
+      account_rewrite_directive(arg);
+      return true;
     } else if (std::strcmp(p, "alias") == 0) {
       alias_directive(arg);
       return true;
@@ -806,6 +839,9 @@ bool instance_t::general_directive(char* line) {
   case 'p':
     if (std::strcmp(p, "payee") == 0) {
       payee_directive(arg);
+      return true;
+    } else if (std::strcmp(p, "payee-rewrite") == 0) {
+      payee_rewrite_directive(arg);
       return true;
     } else if (std::strcmp(p, "python") == 0) {
       python_directive(arg);
