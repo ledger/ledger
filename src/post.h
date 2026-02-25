@@ -78,13 +78,13 @@ private:
   optional<string> _payee;
 
 public:
-  post_t(account_t* _account = NULL, flags_t _flags = ITEM_NORMAL)
-      : item_t(_flags), xact(NULL), account(_account) {
+  post_t(account_t* _account = nullptr, flags_t _flags = ITEM_NORMAL)
+      : item_t(_flags), xact(nullptr), account(_account) {
     TRACE_CTOR(post_t, "account_t *, flags_t");
   }
   post_t(account_t* _account, const amount_t& _amount, flags_t _flags = ITEM_NORMAL,
          const optional<string>& _note = none)
-      : item_t(_flags, _note), xact(NULL), account(_account), amount(_amount) {
+      : item_t(_flags, _note), xact(nullptr), account(_account), amount(_amount) {
     TRACE_CTOR(post_t, "account_t *, amount_t, flags_t, optional<string>");
   }
   post_t(const post_t& post)
@@ -94,9 +94,9 @@ public:
     copy_details(post);
     TRACE_CTOR(post_t, "copy");
   }
-  virtual ~post_t() { TRACE_DTOR(post_t); }
+  ~post_t() override { TRACE_DTOR(post_t); }
 
-  virtual string description() override {
+  string description() override {
     if (pos) {
       std::ostringstream buf;
       buf << _f("posting at line %1%") % pos->beg_line;
@@ -106,19 +106,19 @@ public:
     }
   }
 
-  virtual bool has_tag(const string& tag, bool inherit = true) const override;
-  virtual bool has_tag(const mask_t& tag_mask, const std::optional<mask_t>& value_mask = {},
-                       bool inherit = true) const override;
+  bool has_tag(const string& tag, bool inherit = true) const override;
+  bool has_tag(const mask_t& tag_mask, const std::optional<mask_t>& value_mask = {},
+               bool inherit = true) const override;
 
-  virtual std::optional<value_t> get_tag(const string& tag, bool inherit = true) const override;
-  virtual std::optional<value_t> get_tag(const mask_t& tag_mask,
-                                         const std::optional<mask_t>& value_mask = {},
-                                         bool inherit = true) const override;
+  std::optional<value_t> get_tag(const string& tag, bool inherit = true) const override;
+  std::optional<value_t> get_tag(const mask_t& tag_mask,
+                                 const std::optional<mask_t>& value_mask = {},
+                                 bool inherit = true) const override;
 
   virtual date_t value_date() const;
-  virtual date_t date() const override;
-  virtual date_t primary_date() const override;
-  virtual optional<date_t> aux_date() const override;
+  date_t date() const override;
+  date_t primary_date() const override;
+  optional<date_t> aux_date() const override;
 
   string payee_from_tag() const;
   string payee() const;
@@ -128,14 +128,14 @@ public:
     return !(has_flags(POST_VIRTUAL) || has_flags(POST_IS_TIMELOG)) || has_flags(POST_MUST_BALANCE);
   }
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   amount_t resolve_expr(scope_t& scope, expr_t& expr);
 
   std::size_t xact_id() const;
   std::size_t account_id() const;
 
-  virtual void copy_details(const item_t& item) override {
+  void copy_details(const item_t& item) override {
     const post_t& post(dynamic_cast<const post_t&>(item));
     xdata_ = post.xdata_;
     item_t::copy_details(item);
@@ -167,7 +167,7 @@ public:
 
     std::list<sort_value_t> sort_values;
 
-    xdata_t() : supports_flags<uint_least16_t>(), count(0), account(NULL) {
+    xdata_t() : supports_flags<uint_least16_t>(), count(0), account(nullptr) {
       TRACE_CTOR(post_t::xdata_t, "");
     }
     xdata_t(const xdata_t& other)

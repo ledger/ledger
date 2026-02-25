@@ -48,18 +48,18 @@ namespace ledger {
 
 class expr_t : public expr_base_t<value_t> {
   class parser_t;
-  typedef expr_base_t<value_t> base_type;
+  using base_type = expr_base_t<value_t>;
 
 public:
   struct token_t;
   class op_t;
-  typedef intrusive_ptr<op_t> ptr_op_t;
-  typedef intrusive_ptr<const op_t> const_ptr_op_t;
+  using ptr_op_t = intrusive_ptr<op_t>;
+  using const_ptr_op_t = intrusive_ptr<const op_t>;
 
-  enum check_expr_kind_t { EXPR_GENERAL, EXPR_ASSERTION, EXPR_CHECK };
+  enum check_expr_kind_t : uint8_t { EXPR_GENERAL, EXPR_ASSERTION, EXPR_CHECK };
 
-  typedef std::pair<expr_t, check_expr_kind_t> check_expr_pair;
-  typedef std::list<check_expr_pair> check_expr_list;
+  using check_expr_pair = std::pair<expr_t, check_expr_kind_t>;
+  using check_expr_list = std::list<check_expr_pair>;
 
   // Fast-path identifiers for common post field lookups.  When the
   // expression is a simple identifier like "amount", the evaluation
@@ -77,28 +77,28 @@ protected:
 public:
   expr_t();
   expr_t(const expr_t& other);
-  expr_t(ptr_op_t _ptr, scope_t* _context = NULL);
+  expr_t(ptr_op_t _ptr, scope_t* _context = nullptr);
 
   expr_t(const string& _str, const parse_flags_t& flags = PARSE_DEFAULT);
   expr_t(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT);
 
-  virtual ~expr_t();
+  ~expr_t() override;
 
   expr_t& operator=(const expr_t& _expr);
 
-  virtual operator bool() const noexcept override;
+  operator bool() const noexcept override;
 
   ptr_op_t get_op() noexcept;
 
   void parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
-    std::istringstream stream(str);
+    std::istringstream stream(str); // NOLINT(bugprone-unused-local-non-trivial-variable)
     return parse(stream, flags, str);
   }
 
-  virtual void parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT,
-                     const optional<string>& original_string = none) override;
-  virtual void compile(scope_t& scope) override;
-  virtual value_t real_calc(scope_t& scope) override;
+  void parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT,
+             const optional<string>& original_string = none) override;
+  void compile(scope_t& scope) override;
+  value_t real_calc(scope_t& scope) override;
 
   bool is_constant() const;
   value_t& constant_value();
@@ -109,9 +109,9 @@ public:
   fast_path_t fast_path() const { return fast_path_; }
   void set_fast_path(fast_path_t fp) { fast_path_ = fp; }
 
-  virtual string context_to_str() const override;
-  virtual void print(std::ostream& out) const override;
-  virtual void dump(std::ostream& out) const override;
+  string context_to_str() const override;
+  void print(std::ostream& out) const override;
+  void dump(std::ostream& out) const override;
 
 private:
   void detect_fast_path();
@@ -156,7 +156,7 @@ public:
       : expr_t(), term(_term), base_expr(expr), merge_operator(merge_op) {
     TRACE_CTOR(merged_expr_t, "string, string, string");
   }
-  virtual ~merged_expr_t() { TRACE_DTOR(merged_expr_t); }
+  ~merged_expr_t() override { TRACE_DTOR(merged_expr_t); }
 
   void set_term(const string& _term) { term = _term; }
   void set_base_expr(const string& expr) { base_expr = expr; }
@@ -174,7 +174,7 @@ public:
   }
   void remove(const string& expr) { exprs.remove(expr); }
 
-  virtual void compile(scope_t& scope) override;
+  void compile(scope_t& scope) override;
 };
 
 class call_scope_t;

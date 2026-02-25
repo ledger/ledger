@@ -52,7 +52,11 @@
 
 namespace ledger {
 
-DECLARE_EXCEPTION(balance_error, std::runtime_error);
+class balance_error : public std::runtime_error {
+public:
+  explicit balance_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~balance_error() noexcept override {}
+};
 
 /**
  * @class balance_t
@@ -92,8 +96,8 @@ class balance_t
                                                                              balance_t,
                                                                              long>>>>>>>>>>>>>> {
 public:
-  typedef std::unordered_map<commodity_t*, amount_t> amounts_map;
-  typedef std::vector<const amount_t*> amounts_array;
+  using amounts_map = std::unordered_map<commodity_t*, amount_t>;
+  using amounts_array = std::vector<const amount_t*>;
 
   amounts_map amounts;
 
@@ -152,8 +156,9 @@ public:
   balance_t(const balance_t& bal) : amounts(bal.amounts) { TRACE_CTOR(balance_t, "copy"); }
 
   balance_t& operator=(const balance_t& bal) {
-    if (this != &bal)
+    if (this != &bal) {
       amounts = bal.amounts;
+    }
     return *this;
   }
   balance_t& operator=(const amount_t& amt) {
@@ -380,7 +385,7 @@ public:
   }
 
   optional<balance_t> value(const datetime_t& moment = datetime_t(),
-                            const commodity_t* in_terms_of = NULL) const;
+                            const commodity_t* in_terms_of = nullptr) const;
 
   /**
    * Truth tests.  An balance may be truth test in two ways:
@@ -447,12 +452,14 @@ public:
   }
 
   amount_t to_amount() const {
+    // NOLINTBEGIN(bugprone-branch-clone)
     if (is_empty())
       throw_(balance_error, _("Cannot convert an empty balance to an amount"));
     else if (amounts.size() == 1)
       return amounts.begin()->second;
     else
       throw_(balance_error, _("Cannot convert a balance with multiple commodities to an amount"));
+    // NOLINTEND(bugprone-branch-clone)
     return amount_t();
   }
 
@@ -504,7 +511,7 @@ public:
    * user.  Mostly used by `print' and other routinse where the sort
    * order of the amounts' commodities is significant.
    */
-  void map_sorted_amounts(function<void(const amount_t&)> fn) const;
+  void map_sorted_amounts(const function<void(const amount_t&)>& fn) const;
 
   /**
    * Printing methods.  A balance may be output to a stream using the

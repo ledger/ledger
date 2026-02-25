@@ -53,7 +53,11 @@
 
 namespace ledger {
 
-DECLARE_EXCEPTION(value_error, std::runtime_error);
+class value_error : public std::runtime_error {
+public:
+  explicit value_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~value_error() noexcept override {}
+};
 
 class commodity_t;
 class scope_t;
@@ -95,17 +99,17 @@ public:
    * The sequence_t member type abstracts the type used to represent a
    * resizable "array" of value_t objects.
    */
-  typedef ptr_deque<value_t> sequence_t;
-  typedef sequence_t::iterator iterator;
-  typedef sequence_t::const_iterator const_iterator;
-  typedef sequence_t::difference_type difference_type;
+  using sequence_t = ptr_deque<value_t>;
+  using iterator = sequence_t::iterator;
+  using const_iterator = sequence_t::const_iterator;
+  using difference_type = sequence_t::difference_type;
 
   /**
    * type_t gives the type of the data contained or referenced by a
    * value_t object.  Use the type() method to get a value of type
    * type_t.
    */
-  enum type_t {
+  enum type_t : uint8_t {
     VOID,      // a null value (i.e., uninitialized)
     BOOLEAN,   // a boolean
     DATETIME,  // a date and time (Boost posix_time)
@@ -220,7 +224,7 @@ public:
       switch (type) {
       case VOID:
         return;
-      case BALANCE:
+      case BALANCE: // NOLINT(bugprone-branch-clone)
         checked_delete(std::get<balance_t*>(data));
         break;
       case SEQUENCE:
@@ -372,7 +376,9 @@ public:
     TRACE_CTOR(value_t, "copy");
   }
   value_t& operator=(const value_t& val) {
-    if (!(this == &val || storage == val.storage))
+    if (this == &val)
+      return *this;
+    if (storage != val.storage)
       storage = val.storage;
     return *this;
   }
@@ -490,7 +496,7 @@ public:
 
   // Return the "market value" of a given value at a specific time.
   value_t value(const datetime_t& moment = datetime_t(),
-                const commodity_t* in_terms_of = NULL) const;
+                const commodity_t* in_terms_of = nullptr) const;
 
   value_t exchange_commodities(const std::string& commodities, const bool add_prices = false,
                                const datetime_t& moment = datetime_t());

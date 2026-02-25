@@ -124,7 +124,7 @@ string post_t::payee() const {
   if (_payee)
     return *_payee;
 
-  string post_payee = payee_from_tag();
+  string post_payee = payee_from_tag(); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
   return post_payee != "" ? post_payee : xact ? xact->payee : "";
 }
@@ -277,7 +277,7 @@ value_t get_account(call_scope_t& args) {
       else
         name = account.fullname();
     } else {
-      account_t* acct = NULL;
+      account_t* acct = nullptr;
       account_t* master = &account;
       while (master->parent)
         master = master->parent;
@@ -401,6 +401,7 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind, const string& name)
   if (kind != symbol_t::FUNCTION)
     return item_t::lookup(kind, name);
 
+  // NOLINTBEGIN(bugprone-branch-clone)
   switch (name[0]) {
   case 'a':
     if (name[1] == '\0' || name == "amount")
@@ -529,6 +530,7 @@ expr_t::ptr_op_t post_t::lookup(const symbol_t::kind_t kind, const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_real>);
     break;
   }
+  // NOLINTEND(bugprone-branch-clone)
 
   return item_t::lookup(kind, name);
 }
@@ -552,7 +554,7 @@ std::size_t post_t::xact_id() const {
       return id;
     id++;
   }
-  assert("Failed to find posting within its transaction" == NULL);
+  assert("Failed to find posting within its transaction" == nullptr);
   return 0;
 }
 
@@ -563,7 +565,7 @@ std::size_t post_t::account_id() const {
       return id;
     id++;
   }
-  assert("Failed to find posting within its transaction" == NULL);
+  assert("Failed to find posting within its transaction" == nullptr);
   return 0;
 }
 
@@ -604,6 +606,7 @@ bool post_t::valid() const {
 }
 
 void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const {
+  // NOLINTBEGIN(bugprone-branch-clone)
   if (xdata_ && xdata_->has_flags(POST_EXT_COMPOUND)) {
     if (!xdata_->compound_value.is_null())
       add_or_set_value(value, xdata_->compound_value);
@@ -638,6 +641,7 @@ void post_t::add_to_value(value_t& value, const optional<expr_t&>& expr) const {
   } else {
     add_or_set_value(value, amount);
   }
+  // NOLINTEND(bugprone-branch-clone)
 }
 
 void post_t::set_reported_account(account_t* acct) {
@@ -648,7 +652,7 @@ void post_t::set_reported_account(account_t* acct) {
 void extend_post(post_t& post, journal_t& journal) {
   commodity_t& comm(post.amount.commodity());
 
-  annotation_t* details = (comm.has_annotation() ? &as_annotated_commodity(comm).details : NULL);
+  annotation_t* details = (comm.has_annotation() ? &as_annotated_commodity(comm).details : nullptr);
 
   if (!details || !details->value_expr) {
     std::optional<expr_t> value_expr;

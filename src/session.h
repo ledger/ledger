@@ -70,12 +70,12 @@ public:
   optional<expr_t> value_expr;
 
   explicit session_t();
-  virtual ~session_t() {
+  ~session_t() override {
     TRACE_DTOR(session_t);
     parsing_context.pop();
   }
 
-  virtual string description() override { return _("current session"); }
+  string description() override { return _("current session"); }
 
   void set_flush_on_next_data_file(const bool truth) { flush_on_next_data_file = truth; }
 
@@ -120,7 +120,7 @@ public:
 
   option_t<session_t>* lookup_option(const char* p);
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   /**
    * Option handlers
@@ -135,14 +135,14 @@ public:
 
   OPTION_(session_t, time_colon, DO() { commodity_t::time_colon_by_default = true; });
 
-  OPTION__(
+  OPTION_CTOR(
       session_t, price_exp_, // -Z
       CTOR(session_t, price_exp_) { value = "24"; });
 
-  OPTION__(
+  OPTION_CTOR(
       session_t, file_, // -f
       std::list<path> data_files;
-      CTOR(session_t, file_) {} DO_(str) {
+      CTOR(session_t, file_) {} DO_() {
         if (parent->flush_on_next_data_file) {
           data_files.clear();
           parent->flush_on_next_data_file = false;
@@ -150,8 +150,8 @@ public:
         data_files.push_back(str);
       });
 
-  OPTION__(
-      session_t, hashes_, hash_type_t hash_type = NO_HASHES; CTOR(session_t, hashes_) {} DO_(str) {
+  OPTION_CTOR(
+      session_t, hashes_, hash_type_t hash_type = NO_HASHES; CTOR(session_t, hashes_) {} DO_() {
         if (str == "sha512" || str == "SHA512") {
           hash_type = HASH_SHA512;
         } else if (str == "sha512_half" || str == "SHA512_Half") {
@@ -162,7 +162,7 @@ public:
       });
 
   OPTION_(
-      session_t, input_date_format_, DO_(str) {
+      session_t, input_date_format_, DO_() {
         // This changes static variables inside times.h, which affects the
         // basic date parser.
         set_input_date_format(str.c_str());

@@ -30,6 +30,7 @@
  */
 
 #include <system.hh>
+#include <utility>
 
 #include "chain.h"
 #include "predicate.h"
@@ -40,7 +41,7 @@
 namespace ledger {
 
 post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t& report) {
-  post_handler_ptr handler(base_handler);
+  post_handler_ptr handler(std::move(base_handler));
 
   // anonymize_posts removes all meaningful information from xact payee's and
   // account names, for the sake of creating useful bug reports.
@@ -94,7 +95,7 @@ post_handler_ptr chain_pre_post_handlers(post_handler_ptr base_handler, report_t
 
 post_handler_ptr chain_post_handlers(post_handler_ptr base_handler, report_t& report,
                                      bool for_accounts_report) {
-  post_handler_ptr handler(base_handler);
+  post_handler_ptr handler(std::move(base_handler));
   predicate_t display_predicate;
   predicate_t only_predicate;
   display_filter_posts* display_filter = nullptr;

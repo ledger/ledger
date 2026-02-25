@@ -53,10 +53,10 @@ class report_t;
 
 template <typename Derived, typename Value, typename CategoryOrTraversal>
 class iterator_facade_base : public boost::iterator_facade<Derived, Value, CategoryOrTraversal> {
-  typedef Value node_base;
+  using node_base = Value;
 
 public:
-  iterator_facade_base() : m_node(NULL) { TRACE_CTOR(iterator_facade_base, ""); }
+  iterator_facade_base() : m_node(nullptr) { TRACE_CTOR(iterator_facade_base, ""); }
   iterator_facade_base(const iterator_facade_base& i) : m_node(i.m_node) {
     TRACE_CTOR(iterator_facade_base, "copy");
   }
@@ -108,7 +108,7 @@ public:
 
   void increment() {
     if (posts_uninitialized || posts_i == posts_end)
-      m_node = NULL;
+      m_node = nullptr;
     else
       m_node = *posts_i++;
   }
@@ -234,7 +234,7 @@ class sorted_accounts_iterator : public iterator_facade_base<sorted_accounts_ite
   report_t& report;
   bool flatten_all;
 
-  typedef std::deque<account_t*> accounts_deque_t;
+  using accounts_deque_t = std::deque<account_t*>;
 
   std::list<accounts_deque_t> accounts_list;
   std::list<accounts_deque_t::const_iterator> sorted_accounts_i;

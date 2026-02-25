@@ -62,9 +62,13 @@ class commodity_t;
 struct annotation_t;
 struct keep_details_t;
 
-DECLARE_EXCEPTION(amount_error, std::runtime_error);
+class amount_error : public std::runtime_error {
+public:
+  explicit amount_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~amount_error() noexcept override {}
+};
 
-enum parse_flags_enum_t {
+enum parse_flags_enum_t : uint8_t {
   PARSE_DEFAULT = 0x00,
   PARSE_PARTIAL = 0x01,
   PARSE_SINGLE = 0x02,
@@ -76,7 +80,7 @@ enum parse_flags_enum_t {
   PARSE_SOFT_FAIL = 0x80
 };
 
-typedef flags::basic_t<parse_flags_enum_t, uint_least8_t> parse_flags_t;
+using parse_flags_t = flags::basic_t<parse_flags_enum_t, uint_least8_t>;
 
 /**
  * @brief Encapsulate infinite-precision commoditized amounts
@@ -105,7 +109,7 @@ public:
   static bool is_initialized;
 
   /** The amount's decimal precision. */
-  typedef uint_least16_t precision_t;
+  using precision_t = uint_least16_t;
 
   /** Number of places of precision by which values are extended to
       avoid losing precision during division and multiplication. */
@@ -134,7 +138,7 @@ public:
   /** Creates a value for which is_null() is true, and which has no
       value or commodity.  If used in a value expression it evaluates to
       zero, and its commodity equals \c commodity_t::null_commodity. */
-  amount_t() : quantity(NULL), commodity_(NULL) { TRACE_CTOR(amount_t, ""); }
+  amount_t() : quantity(nullptr), commodity_(nullptr) { TRACE_CTOR(amount_t, ""); }
 
   /** Convert a double to an amount.  As much precision as possible is
       decoded from the binary floating point number. */
@@ -151,7 +155,7 @@ public:
       commodity is present, the resulting commodity is \c
       commodity_t::null_commodity.  The number may be of infinite
       precision. */
-  explicit amount_t(const string& val) : quantity(NULL) {
+  explicit amount_t(const string& val) : quantity(nullptr) {
     (void)parse(val);
     TRACE_CTOR(amount_t, "const string&");
   }
@@ -159,7 +163,7 @@ public:
       amount.  If no commodity is present, the resulting commodity is \c
       commodity_t::null_commodity.  The number may be of infinite
       precision. */
-  explicit amount_t(const char* val) : quantity(NULL) {
+  explicit amount_t(const char* val) : quantity(nullptr) {
     assert(val);
     (void)parse(val);
     TRACE_CTOR(amount_t, "const char *");
@@ -191,18 +195,18 @@ public:
       copy-on-write model.  Until the copy is changed, it refers to the
       same memory used by the original via reference counting.  The \c
       amount_t::bigint_t class in amount.cc maintains the reference. */
-  amount_t(const amount_t& amt) : quantity(NULL) {
+  amount_t(const amount_t& amt) : quantity(nullptr) {
     if (amt.quantity)
       _copy(amt);
     else
-      commodity_ = NULL;
+      commodity_ = nullptr;
     TRACE_CTOR(amount_t, "copy");
   }
   /** Copy an amount object, applying the given commodity annotation
       details afterward.  This is equivalent to doing a normal copy
       (@see amount_t(const amount_t&)) and then calling
       amount_t::annotate(). */
-  amount_t(const amount_t& amt, const annotation_t& details) : quantity(NULL) {
+  amount_t(const amount_t& amt, const annotation_t& details) : quantity(nullptr) {
     assert(amt.quantity);
     _copy(amt);
     annotate(details);
@@ -415,7 +419,7 @@ public:
       $100.00.
   */
   std::optional<amount_t> value(const datetime_t& moment = datetime_t(),
-                                const commodity_t* in_terms_of = NULL) const;
+                                const commodity_t* in_terms_of = nullptr) const;
 
   std::optional<amount_t> price() const;
 
@@ -553,7 +557,7 @@ public:
       return tmp;
     }
   }
-  void clear_commodity() { commodity_ = NULL; }
+  void clear_commodity() { commodity_ = nullptr; }
 
   amount_t number() const {
     if (!has_commodity())
@@ -660,7 +664,7 @@ public:
   */
   [[nodiscard]] bool parse(std::istream& in, const parse_flags_t& flags = PARSE_DEFAULT);
   [[nodiscard]] bool parse(const string& str, const parse_flags_t& flags = PARSE_DEFAULT) {
-    std::istringstream stream(str);
+    std::istringstream stream(str); // NOLINT(bugprone-unused-local-non-trivial-variable)
     bool result = parse(stream, flags);
     return result;
   }

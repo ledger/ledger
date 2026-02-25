@@ -40,7 +40,7 @@ generate_posts_iterator::generate_posts_iterator(session_t& _session, unsigned i
                                                  std::size_t _quantity)
     : session(_session), seed(_seed), quantity(_quantity),
 
-      rnd_gen(seed == 0 ? static_cast<unsigned int>(std::time(0)) : seed),
+      rnd_gen(seed == 0 ? static_cast<unsigned int>(std::time(nullptr)) : seed),
 
       year_range(1900, 2300), year_gen(rnd_gen, year_range), mon_range(1, 12),
       mon_gen(rnd_gen, mon_range), day_range(1, 28), day_gen(rnd_gen, day_range),
@@ -94,23 +94,21 @@ void generate_posts_iterator::generate_string(std::ostream& out, int len, bool o
         output = false;
       }
       break;
-    case 3: // character
-      switch (three_gen()) {
-      case 1: // uppercase
-        out << char(upchar_gen());
-        break;
-      case 2: // lowercase
-        out << char(downchar_gen());
-        break;
-      case 3: // number
+    case 3: { // character
+      const int kind = three_gen();
+      if (kind == 1 || kind == 2) { // uppercase or lowercase
+        out << (kind == 1 ? char(upchar_gen()) : char(downchar_gen()));
+      } else if (kind == 3) { // number
         if (!only_alpha && !first)
           out << char(numchar_gen());
         else {
           i--;
           output = false;
         }
-        break;
       }
+      break;
+    }
+    default:
       break;
     }
     if (output) {
@@ -169,7 +167,7 @@ void generate_posts_iterator::generate_commodity(std::ostream& out, const string
   out << comm;
 }
 
-string generate_posts_iterator::generate_amount(std::ostream& out, value_t not_this_amount,
+string generate_posts_iterator::generate_amount(std::ostream& out, const value_t& not_this_amount,
                                                 bool no_negative, const string& exclude) {
   std::ostringstream buf;
 
@@ -237,7 +235,7 @@ bool generate_posts_iterator::generate_post(std::ostream& out, bool no_amount,
   return must_balance;
 }
 
-void generate_posts_iterator::generate_cost(std::ostream& out, value_t amount) {
+void generate_posts_iterator::generate_cost(std::ostream& out, const value_t& amount) {
   std::ostringstream buf;
 
   if (truth_gen())
@@ -345,7 +343,7 @@ void generate_posts_iterator::generate_xact(std::ostream& out) {
 void generate_posts_iterator::increment() {
   post_t* post = *posts++;
 
-  if (post == NULL && quantity > 0) {
+  if (post == nullptr && quantity > 0) {
     std::ostringstream buf;
     generate_xact(buf);
 

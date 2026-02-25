@@ -48,7 +48,7 @@ namespace ledger {
 
 using namespace boost::placeholders;
 
-typedef std::map<string, posts_list> deferred_posts_map_t;
+using deferred_posts_map_t = std::map<string, posts_list>;
 
 class account_t : public flags::supports_flags<>, public scope_t {
 #define ACCOUNT_NORMAL 0x00 // no flags at all, a basic account
@@ -68,7 +68,7 @@ public:
 
   mutable string _fullname;
 
-  account_t(account_t* _parent = NULL, const string& _name = "",
+  account_t(account_t* _parent = nullptr, const string& _name = "",
             const optional<string>& _note = none)
       : supports_flags<>(), scope_t(), parent(_parent), name(_name), note(_note),
         depth(static_cast<unsigned short>(parent ? parent->depth + 1 : 0)) {
@@ -79,9 +79,9 @@ public:
         note(other.note), depth(other.depth), accounts(other.accounts) {
     TRACE_CTOR(account_t, "copy");
   }
-  virtual ~account_t();
+  ~account_t() override;
 
-  virtual string description() override { return string(_("account ")) + fullname(); }
+  string description() override { return string(_("account ")) + fullname(); }
 
   operator string() const { return fullname(); }
   string fullname() const;
@@ -96,9 +96,8 @@ public:
   [[nodiscard]] account_t* find_account(string_view name, bool auto_create = true);
   [[nodiscard]] account_t* find_account_re(const string& regexp);
 
-  typedef transform_iterator<function<account_t*(accounts_map::value_type&)>,
-                             accounts_map::iterator>
-      accounts_map_seconds_iterator;
+  using accounts_map_seconds_iterator =
+      transform_iterator<function<account_t*(accounts_map::value_type&)>, accounts_map::iterator>;
 
   accounts_map_seconds_iterator accounts_begin() {
     return make_transform_iterator(accounts.begin(),
@@ -117,7 +116,7 @@ public:
   posts_list::iterator posts_begin() { return posts.begin(); }
   posts_list::iterator posts_end() { return posts.end(); }
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   [[nodiscard]] bool valid() const;
 
@@ -235,7 +234,7 @@ public:
 std::ostream& operator<<(std::ostream& out, const account_t& account);
 
 void put_account(property_tree::ptree& pt, const account_t& acct,
-                 function<bool(const account_t&)> pred);
+                 const function<bool(const account_t&)>& pred);
 
 // simple struct added to allow std::map to compare accounts in the accounts report
 struct account_compare {

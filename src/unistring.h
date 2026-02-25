@@ -85,7 +85,7 @@ public:
 
   std::string extract(const std::string::size_type begin = 0,
                       const std::string::size_type len = 0) const {
-    std::string utf8result;
+    std::string utf8result; // NOLINT(bugprone-unused-local-non-trivial-variable)
     std::string::size_type this_len = length();
 
     assert(begin <= this_len);
@@ -146,10 +146,10 @@ public:
     return utf8result;
   }
 
-  std::size_t find(const boost::uint32_t __s, std::size_t __pos = 0) const {
+  std::size_t find(const boost::uint32_t _s, std::size_t _pos = 0) const {
     std::size_t idx = 0;
     for (const boost::uint32_t& ch : utf32chars) {
-      if (idx >= __pos && ch == __s)
+      if (idx >= _pos && ch == _s)
         return idx;
       idx++;
     }

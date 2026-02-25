@@ -66,10 +66,10 @@ class ptristream : public std::istream {
 
       TRACE_CTOR(ptrinbuf, "char *, std::size_t");
     }
-    ~ptrinbuf() noexcept { TRACE_DTOR(ptrinbuf); }
+    ~ptrinbuf() noexcept override { TRACE_DTOR(ptrinbuf); }
 
   protected:
-    virtual int_type underflow() override {
+    int_type underflow() override {
       // is read position before end of buffer?
       if (gptr() < egptr())
         return traits_type::to_int_type(*gptr());
@@ -77,7 +77,7 @@ class ptristream : public std::istream {
         return EOF;
     }
 
-    virtual pos_type seekoff(off_type off, ios_base::seekdir way, ios_base::openmode) override {
+    pos_type seekoff(off_type off, ios_base::seekdir way, ios_base::openmode) override {
       // cast to avoid gcc '-Wswitch' warning
       // as ios_base::beg/cur/end are not necessarily values of 'way' enum type ios_base::seekdir
       // based on https://svn.boost.org/trac/boost/ticket/7644
@@ -100,7 +100,7 @@ protected:
   ptrinbuf buf;
 
 public:
-  ptristream(char* ptr, std::size_t len = 0) : std::istream(0), buf(ptr, len) { rdbuf(&buf); }
+  ptristream(char* ptr, std::size_t len = 0) : std::istream(nullptr), buf(ptr, len) { rdbuf(&buf); }
 };
 
 } // namespace ledger

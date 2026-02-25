@@ -82,8 +82,8 @@ public:
   }
 };
 
-typedef std::shared_ptr<item_handler<post_t>> post_handler_ptr;
-typedef std::shared_ptr<item_handler<account_t>> acct_handler_ptr;
+using post_handler_ptr = std::shared_ptr<item_handler<post_t>>;
+using acct_handler_ptr = std::shared_ptr<item_handler<account_t>>;
 
 class report_t;
 

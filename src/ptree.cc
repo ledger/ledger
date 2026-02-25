@@ -78,7 +78,7 @@ void format_ptree::flush() {
   case FORMAT_XML:
     auto indented = property_tree::xml_writer_make_settings<std::string>(' ', 2);
     property_tree::write_xml(out, pt, indented);
-    out << std::endl;
+    out << '\n';
     break;
   }
 }

@@ -1,3 +1,5 @@
+#include <utility>
+
 /*
  * Copyright (c) 2003-2025, John Wiegley.  All rights reserved.
  *
@@ -55,7 +57,7 @@ template <typename T>
 #define throw_(cls, msg) ((_desc_buffer << (msg)), throw_func<cls>(_desc_buffer.str()))
 
 inline void warning_func(const string& message) {
-  std::cerr << "Warning: " << message << std::endl;
+  std::cerr << "Warning: " << message << '\n';
   _desc_buffer.clear();
   _desc_buffer.str("");
 }
@@ -78,17 +80,11 @@ string line_context(const string& line, const string::size_type pos = 0,
 string source_context(const path& file, const std::istream::pos_type pos,
                       const std::istream::pos_type end_pos, const string& prefix = "");
 
-#define DECLARE_EXCEPTION(name, kind)                                                              \
-  class name : public kind {                                                                       \
-  public:                                                                                          \
-    explicit name(const string& why) noexcept : kind(why) {}                                       \
-    virtual ~name() noexcept {}                                                                    \
-  }
-
 struct error_count {
   std::size_t count;
   std::string message;
-  explicit error_count(std::size_t _count, std::string _msg) : count(_count), message(_msg) {}
+  explicit error_count(std::size_t _count, std::string _msg)
+      : count(_count), message(std::move(_msg)) {}
   const char* what() const { return message.c_str(); }
 };
 

@@ -40,16 +40,16 @@ using detail::instance_t;
 #if TIMELOG_SUPPORT
 
 void instance_t::clock_in_directive(char* line, bool capitalized) {
-  string datetime(line, 2, 19);
+  string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
   char* p = skip_ws(line + 22);
   char* n = next_element(p, true);
-  char* end = n ? next_element(n, true) : NULL;
+  char* end = n ? next_element(n, true) : nullptr;
 
   if (end && *end == ';')
     end = skip_ws(end + 1);
   else
-    end = NULL;
+    end = nullptr;
 
   position_t position;
   position.pathname = context.pathname;
@@ -60,23 +60,23 @@ void instance_t::clock_in_directive(char* line, bool capitalized) {
   position.sequence = context.sequence++;
 
   datetime_t when = parse_datetime(datetime);
-  time_xact_t event(position, when, capitalized, p ? top_account()->find_account(p) : NULL,
+  time_xact_t event(position, when, capitalized, p ? top_account()->find_account(p) : nullptr,
                     n ? n : "", end ? end : "");
 
   timelog.clock_in(event);
 }
 
 void instance_t::clock_out_directive(char* line, bool capitalized) {
-  string datetime(line, 2, 19);
+  string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
   char* p = skip_ws(line + 22);
   char* n = next_element(p, true);
-  char* end = n ? next_element(n, true) : NULL;
+  char* end = n ? next_element(n, true) : nullptr;
 
   if (end && *end == ';')
     end = skip_ws(end + 1);
   else
-    end = NULL;
+    end = nullptr;
 
   position_t position;
   position.pathname = context.pathname;
@@ -87,7 +87,7 @@ void instance_t::clock_out_directive(char* line, bool capitalized) {
   position.sequence = context.sequence++;
 
   datetime_t when = parse_datetime(datetime);
-  time_xact_t event(position, when, capitalized, p ? top_account()->find_account(p) : NULL,
+  time_xact_t event(position, when, capitalized, p ? top_account()->find_account(p) : nullptr,
                     n ? n : "", end ? end : "");
 
   context.count += timelog.clock_out(event);
@@ -126,7 +126,7 @@ void instance_t::price_xact_directive(char* line) {
 
 void instance_t::nomarket_directive(char* line) {
   char* p = skip_ws(line + 1);
-  string symbol;
+  string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
   commodity_t::parse_symbol(p, symbol);
 
   if (commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol))
@@ -289,7 +289,7 @@ void instance_t::apply_account_directive(char* line) {
   if (account_t* acct = top_account()->find_account(line))
     apply_stack.push_front(application_t("account", acct));
   else
-    assert("Failed to create account" == NULL);
+    assert("Failed to create account" == nullptr);
 }
 
 void instance_t::apply_tag_directive(char* line) {
@@ -371,13 +371,13 @@ void instance_t::apply_year_directive(char* line, bool use_apply_stack) {
       // current year.
       epoch = datetime_t(date_t(year, 12, 31));
     }
-  } catch (bad_lexical_cast&) {
+  } catch (bad_lexical_cast&) { // NOLINT(bugprone-empty-catch)
     throw_(parse_error, _f("Argument '%1%' not a valid year") % skip_ws(line));
   }
 }
 
 void instance_t::end_apply_directive(char* kind) {
-  char* b = kind ? next_element(kind) : NULL;
+  char* b = kind ? next_element(kind) : nullptr;
   string name(b ? b : "");
 
   if (apply_stack.size() <= 1) {
@@ -408,7 +408,7 @@ void instance_t::account_directive(char* line) {
   std::size_t beg_linenum = context.linenum;
 
   char* p = skip_ws(line);
-  account_t* account = context.journal->register_account(p, NULL, top_account());
+  account_t* account = context.journal->register_account(p, nullptr, top_account());
   account->add_flags(ACCOUNT_KNOWN);
   unique_ptr<auto_xact_t> ae;
 
@@ -505,7 +505,7 @@ void instance_t::account_default_directive(account_t* account) {
   context.journal->bucket = account;
 }
 
-void instance_t::account_value_directive(account_t* account, string expr_str) {
+void instance_t::account_value_directive(account_t* account, const string& expr_str) {
   account->value_expr = expr_t(expr_str);
 }
 
@@ -542,7 +542,7 @@ void instance_t::payee_uuid_directive(const string& payee, string uuid) {
 
 void instance_t::commodity_directive(char* line) {
   char* p = skip_ws(line);
-  string symbol;
+  string symbol; // NOLINT(bugprone-unused-local-non-trivial-variable)
   commodity_t::parse_symbol(p, symbol);
 
   if (commodity_t* commodity = commodity_pool_t::current_pool->find_or_create(symbol)) {
@@ -584,7 +584,7 @@ void instance_t::commodity_alias_directive(commodity_t& comm, string alias) {
   commodity_pool_t::current_pool->alias(alias, comm);
 }
 
-void instance_t::commodity_value_directive(commodity_t& comm, string expr_str) {
+void instance_t::commodity_value_directive(commodity_t& comm, const string& expr_str) {
   comm.set_value_expr(expr_t(expr_str));
 }
 
@@ -658,7 +658,7 @@ void instance_t::value_directive(char* line) {
 void instance_t::comment_directive(char* line) {
   while (in.good() && !in.eof()) {
     if (read_line(line) > 0) {
-      std::string buf(line);
+      std::string buf(line); // NOLINT(bugprone-unused-local-non-trivial-variable)
       if (starts_with(buf, "end comment") || starts_with(buf, "end test"))
         break;
     }
@@ -725,7 +725,7 @@ void instance_t::python_directive(char*) {
 #endif // HAVE_BOOST_PYTHON
 
 bool instance_t::general_directive(char* line) {
-  std::string buf(line);
+  std::string buf(line); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
   char* p = &buf[0];
   char* arg = next_element(&buf[0]);
@@ -835,6 +835,9 @@ bool instance_t::general_directive(char* line) {
       apply_year_directive(arg);
       return true;
     }
+    break;
+
+  default:
     break;
   }
 

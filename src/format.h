@@ -50,15 +50,19 @@ namespace ledger {
 
 class unistring;
 
-DECLARE_EXCEPTION(format_error, std::runtime_error);
+class format_error : public std::runtime_error {
+public:
+  explicit format_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~format_error() noexcept override {}
+};
 
 class format_t : public expr_base_t<string>, public noncopyable {
-  typedef expr_base_t<string> base_type;
+  using base_type = expr_base_t<string>;
 
   struct element_t : public flags::supports_flags<>, public noncopyable {
 #define ELEMENT_ALIGN_LEFT 0x01
 
-    enum kind_t { STRING, EXPR };
+    enum kind_t : uint8_t { STRING, EXPR };
 
     kind_t type;
     std::size_t min_width;
@@ -102,7 +106,7 @@ class format_t : public expr_base_t<string>, public noncopyable {
   scoped_ptr<element_t> elements;
 
 public:
-  static enum elision_style_t {
+  static enum elision_style_t : uint8_t {
     TRUNCATE_TRAILING,
     TRUNCATE_MIDDLE,
     TRUNCATE_LEADING,
@@ -116,19 +120,19 @@ private:
 
 public:
   format_t() : base_type() { TRACE_CTOR(format_t, ""); }
-  format_t(const string& _str, scope_t* context = NULL) : base_type(context) {
+  format_t(const string& _str, scope_t* context = nullptr) : base_type(context) {
     if (!_str.empty())
       parse_format(_str);
     TRACE_CTOR(format_t, "const string&");
   }
-  virtual ~format_t() { TRACE_DTOR(format_t); }
+  ~format_t() override { TRACE_DTOR(format_t); }
 
   void parse_format(const string& _format, const optional<format_t&>& tmpl = none) {
     elements.reset(parse_elements(_format, tmpl));
     set_text(_format);
   }
 
-  virtual void mark_uncompiled() override {
+  void mark_uncompiled() override {
     for (element_t* elem = elements.get(); elem; elem = elem->next.get()) {
       if (elem->type == element_t::EXPR) {
         expr_t& expr(std::get<expr_t>(elem->data));
@@ -137,9 +141,9 @@ public:
     }
   }
 
-  virtual result_type real_calc(scope_t& scope) override;
+  result_type real_calc(scope_t& scope) override;
 
-  virtual void dump(std::ostream& out) const override {
+  void dump(std::ostream& out) const override {
     for (const element_t* elem = elements.get(); elem; elem = elem->next.get())
       elem->dump(out);
   }

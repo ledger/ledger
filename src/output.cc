@@ -43,13 +43,14 @@ namespace ledger {
 
 format_posts::format_posts(report_t& _report, const string& format,
                            const optional<string>& _prepend_format, std::size_t _prepend_width)
-    : report(_report), prepend_width(_prepend_width), last_xact(NULL), last_post(NULL),
+    : report(_report), prepend_width(_prepend_width), last_xact(nullptr), last_post(nullptr),
       first_report_title(true) {
   const char* f = format.c_str();
 
   if (const char* p = std::strstr(f, "%/")) {
     first_line_format.parse_format(string(f, 0, static_cast<std::string::size_type>(p - f)));
     const char* n = p + 2;
+    // NOLINTBEGIN(bugprone-branch-clone)
     if (const char* pp = std::strstr(n, "%/")) {
       next_lines_format.parse_format(string(n, 0, static_cast<std::string::size_type>(pp - n)),
                                      first_line_format);
@@ -57,6 +58,7 @@ format_posts::format_posts(report_t& _report, const string& format,
     } else {
       next_lines_format.parse_format(string(n), first_line_format);
     }
+    // NOLINTEND(bugprone-branch-clone)
   } else {
     first_line_format.parse_format(format);
     next_lines_format.parse_format(format);
@@ -97,6 +99,7 @@ void format_posts::operator()(post_t& post) {
       out << prepend_format(bound_scope);
     }
 
+    // NOLINTBEGIN(bugprone-branch-clone)
     if (last_xact != post.xact) {
       if (last_xact) {
         bind_scope_t xact_scope(report, *last_xact);
@@ -109,6 +112,7 @@ void format_posts::operator()(post_t& post) {
     } else {
       out << next_lines_format(bound_scope);
     }
+    // NOLINTEND(bugprone-branch-clone)
 
     post.xdata().add_flags(POST_EXT_DISPLAYED);
     last_post = &post;
@@ -124,6 +128,7 @@ format_accounts::format_accounts(report_t& _report, const string& format,
   if (const char* p = std::strstr(f, "%/")) {
     account_line_format.parse_format(string(f, 0, static_cast<std::string::size_type>(p - f)));
     const char* n = p + 2;
+    // NOLINTBEGIN(bugprone-branch-clone)
     if (const char* pp = std::strstr(n, "%/")) {
       total_line_format.parse_format(string(n, 0, static_cast<std::string::size_type>(pp - n)),
                                      account_line_format);
@@ -131,6 +136,7 @@ format_accounts::format_accounts(report_t& _report, const string& format,
     } else {
       total_line_format.parse_format(n, account_line_format);
     }
+    // NOLINTEND(bugprone-branch-clone)
   } else {
     account_line_format.parse_format(format);
     total_line_format.parse_format(format, account_line_format);
@@ -269,7 +275,8 @@ void report_accounts::flush() {
   std::size_t prepend_width = 0;
   bool do_prepend_format;
 
-  if ((do_prepend_format = report.HANDLED(prepend_format_))) {
+  do_prepend_format = report.HANDLED(prepend_format_);
+  if (do_prepend_format) {
     prepend_format.parse_format(report.HANDLER(prepend_format_).str());
     prepend_width = report.HANDLED(prepend_width_)
                         ? lexical_cast<std::size_t>(report.HANDLER(prepend_width_).str())

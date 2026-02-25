@@ -64,9 +64,9 @@ public:
    * explicitly by calling the create methods of commodity_pool_t, or
    * implicitly by parsing a commoditized amount.
    */
-  typedef std::map<string, std::shared_ptr<commodity_t>> commodities_map;
-  typedef std::map<std::pair<string, annotation_t>, std::shared_ptr<annotated_commodity_t>>
-      annotated_commodities_map;
+  using commodities_map = std::map<string, std::shared_ptr<commodity_t>>;
+  using annotated_commodities_map =
+      std::map<std::pair<string, annotation_t>, std::shared_ptr<annotated_commodity_t>>;
 
   commodities_map commodities;
   annotated_commodities_map annotated_commodities;

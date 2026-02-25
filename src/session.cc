@@ -243,12 +243,14 @@ journal_t* session_t::get_journal() {
 }
 
 value_t session_t::fn_account(call_scope_t& args) {
+  // NOLINTBEGIN(bugprone-branch-clone)
   if (args[0].is_string())
     return scope_value(journal->find_account(args.get<string>(0), false));
   else if (args[0].is_mask())
     return scope_value(journal->find_account_re(args.get<mask_t>(0).str()));
   else
     return NULL_VALUE;
+  // NOLINTEND(bugprone-branch-clone)
 }
 
 value_t session_t::fn_min(call_scope_t& args) {
@@ -288,6 +290,7 @@ value_t session_t::fn_lot_tag(call_scope_t& args) {
 }
 
 option_t<session_t>* session_t::lookup_option(const char* p) {
+  // NOLINTBEGIN(bugprone-branch-clone)
   switch (*p) {
   case 'Q':
     OPT_CH(download); // -Q
@@ -344,8 +347,12 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
     break;
   case 'v':
     OPT(value_expr_);
+    break;
+  default:
+    break;
   }
-  return NULL;
+  // NOLINTEND(bugprone-branch-clone)
+  return nullptr;
 }
 
 expr_t::ptr_op_t session_t::lookup(const symbol_t::kind_t kind, const string& name) {
@@ -353,6 +360,7 @@ expr_t::ptr_op_t session_t::lookup(const symbol_t::kind_t kind, const string& na
 
   switch (kind) {
   case symbol_t::FUNCTION:
+    // NOLINTBEGIN(bugprone-branch-clone)
     switch (*p) {
     case 'a':
       if (is_eq(p, "account"))
@@ -388,6 +396,7 @@ expr_t::ptr_op_t session_t::lookup(const symbol_t::kind_t kind, const string& na
     default:
       break;
     }
+    // NOLINTEND(bugprone-branch-clone)
     // Check if they are trying to access an option's setting or value.
     if (option_t<session_t>* handler = lookup_option(p))
       return MAKE_OPT_FUNCTOR(session_t, handler);

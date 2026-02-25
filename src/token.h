@@ -46,7 +46,7 @@
 namespace ledger {
 
 struct expr_t::token_t : public noncopyable {
-  enum kind_t {
+  enum kind_t : uint8_t {
     ERROR, // an error occurred while tokenizing
     VALUE, // any kind of literal value
     IDENT, // [A-Za-z_]+

@@ -163,7 +163,7 @@ void time_log_t::close() {
   }
 }
 
-void time_log_t::clock_in(time_xact_t event) {
+void time_log_t::clock_in(const time_xact_t& event) {
   if (!time_xacts.empty()) {
     for (time_xact_t& time_xact : time_xacts) {
       if (event.account == time_xact.account)
@@ -174,7 +174,7 @@ void time_log_t::clock_in(time_xact_t event) {
   time_xacts.push_back(event);
 }
 
-std::size_t time_log_t::clock_out(time_xact_t event) {
+std::size_t time_log_t::clock_out(const time_xact_t& event) {
   if (time_xacts.empty())
     throw std::logic_error(_("Timelog check-out event without a check-in"));
 

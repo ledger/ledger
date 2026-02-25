@@ -83,7 +83,7 @@ char* csv_reader::next_line(std::istream& in) {
     in.getline(context.linebuf, parse_context_t::MAX_LINE);
 
   if (!in.good() || in.eof() || in.peek() == -1)
-    return NULL;
+    return nullptr;
 
   in.getline(context.linebuf, parse_context_t::MAX_LINE);
 
@@ -98,7 +98,7 @@ void csv_reader::read_index(std::istream& in) {
   std::istringstream instr(line);
 
   while (instr.good() && !instr.eof()) {
-    string field = read_field(instr);
+    string field = read_field(instr); // NOLINT(bugprone-unused-local-non-trivial-variable)
     names.push_back(field);
 
     DEBUG("csv.parse", "Header field: " << field);
@@ -114,7 +114,7 @@ void csv_reader::read_index(std::istream& in) {
 xact_t* csv_reader::read_xact(bool rich_data) {
   char* line = next_line(*context.stream.get());
   if (!line || index.empty())
-    return NULL;
+    return nullptr;
   context.linenum++;
 
   std::istringstream instr(line);
@@ -139,7 +139,7 @@ xact_t* csv_reader::read_xact(bool rich_data) {
   post->pos->sequence = context.sequence++;
 
   post->set_state(item_t::CLEARED);
-  post->account = NULL;
+  post->account = nullptr;
 
   std::vector<int>::size_type n = 0;
   amount_t amt;
@@ -183,7 +183,7 @@ xact_t* csv_reader::read_xact(bool rich_data) {
     case FIELD_CREDIT: {
       if (field.length() == 0)
         break;
-      std::istringstream amount_str(field);
+      std::istringstream amount_str(field); // NOLINT(bugprone-unused-local-non-trivial-variable)
       (void)amt.parse(amount_str, PARSE_NO_REDUCE);
       if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
         amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);
@@ -196,7 +196,7 @@ xact_t* csv_reader::read_xact(bool rich_data) {
     }
 
     case FIELD_COST: {
-      std::istringstream amount_str(field);
+      std::istringstream amount_str(field); // NOLINT(bugprone-unused-local-non-trivial-variable)
       (void)amt.parse(amount_str, PARSE_NO_REDUCE);
       if (!amt.has_commodity() && commodity_pool_t::current_pool->default_commodity)
         amt.set_commodity(*commodity_pool_t::current_pool->default_commodity);

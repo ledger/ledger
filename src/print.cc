@@ -144,7 +144,7 @@ void print_xact(report_t& report, std::ostream& out, xact_t& xact) {
 
   buf << xact.payee;
 
-  string leader = buf.str();
+  string leader = buf.str(); // NOLINT(bugprone-unused-local-non-trivial-variable)
   out << leader;
 
   std::size_t columns =

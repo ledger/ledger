@@ -46,10 +46,13 @@ intrusive_ptr<value_t::storage_t> value_t::true_value;
 intrusive_ptr<value_t::storage_t> value_t::false_value;
 
 value_t::storage_t& value_t::storage_t::operator=(const value_t::storage_t& rhs) {
+  if (this == &rhs)
+    return *this;
+
   type = rhs.type;
 
   switch (type) {
-  case BALANCE:
+  case BALANCE: // NOLINT(bugprone-branch-clone)
     data = new balance_t(*std::get<balance_t*>(rhs.data));
     break;
   case SEQUENCE:
@@ -114,7 +117,7 @@ value_t::operator bool() const {
     }
     return false;
   case SCOPE:
-    return as_scope() != NULL;
+    return as_scope() != nullptr;
   case ANY:
     return as_any().has_value();
   }
@@ -126,7 +129,7 @@ value_t::operator bool() const {
 }
 
 void value_t::set_type(type_t new_type) {
-  if (new_type == VOID) {
+  if (new_type == VOID) { // NOLINT(bugprone-branch-clone)
     storage.reset();
   } else {
     if (!storage || storage->refc > 1)
@@ -862,10 +865,7 @@ bool value_t::is_less_than(const value_t& val) const {
   case BOOLEAN:
     if (val.is_boolean()) {
       if (as_boolean()) {
-        if (!val.as_boolean())
-          return false;
-        else
-          return false;
+        return false;
       } else if (!as_boolean()) {
         if (!val.as_boolean())
           return false;
@@ -1011,10 +1011,7 @@ bool value_t::is_greater_than(const value_t& val) const {
         else
           return false;
       } else if (!as_boolean()) {
-        if (!val.as_boolean())
-          return false;
-        else
-          return false;
+        return false;
       }
     }
     break;
@@ -1325,7 +1322,7 @@ void value_t::in_place_cast(type_t cast_type) {
     case MASK: {
       // Make a copy since set_mask calls set_type which may reallocate storage,
       // invalidating the reference returned by as_string()
-      string str = as_string();
+      string str = as_string(); // NOLINT(bugprone-unused-local-non-trivial-variable)
       set_mask(str);
       return;
     }
@@ -1361,8 +1358,6 @@ void value_t::in_place_negate() {
     return;
   case INTEGER:
   case DATETIME:
-    set_long(-as_long());
-    return;
   case DATE:
     set_long(-as_long());
     return;
@@ -1391,8 +1386,6 @@ void value_t::in_place_not() {
     return;
   case INTEGER:
   case DATETIME:
-    set_boolean(!as_long());
-    return;
   case DATE:
     set_boolean(!as_long());
     return;
@@ -1442,7 +1435,7 @@ bool value_t::is_realzero() const {
     return as_sequence().empty();
 
   case SCOPE:
-    return as_scope() == NULL;
+    return as_scope() == nullptr;
   case ANY:
     return !as_any().has_value();
 
@@ -1475,7 +1468,7 @@ bool value_t::is_zero() const {
     return as_sequence().empty();
 
   case SCOPE:
-    return as_scope() == NULL;
+    return as_scope() == nullptr;
   case ANY:
     return !as_any().has_value();
 
@@ -1568,9 +1561,9 @@ value_t value_t::exchange_commodities(const std::string& commodities, const bool
         if (commodity_t* src = commodity_pool_t::current_pool->find(source_name))
           sources.push_back(&src->referent());
         else
-          sources.push_back(NULL);
+          sources.push_back(nullptr);
       } else {
-        sources.push_back(NULL);
+        sources.push_back(nullptr);
       }
     }
   }
@@ -1981,7 +1974,7 @@ void value_t::print(std::ostream& _out, const int first_width, const int latter_
     out << (as_boolean() ? "1" : "0");
     break;
 
-  case DATETIME:
+  case DATETIME: // NOLINT(bugprone-branch-clone)
     out << format_datetime(as_datetime(), FMT_WRITTEN);
     break;
 
@@ -2071,7 +2064,7 @@ void value_t::dump(std::ostream& out, const bool relaxed) const {
       out << "false";
     break;
 
-  case DATETIME:
+  case DATETIME: // NOLINT(bugprone-branch-clone)
     out << '[' << format_datetime(as_datetime(), FMT_WRITTEN) << ']';
     break;
   case DATE:

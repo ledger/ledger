@@ -55,16 +55,16 @@ class global_scope_t : public noncopyable, public scope_t {
 
 public:
   global_scope_t(char** envp);
-  ~global_scope_t();
+  ~global_scope_t() override;
 
   void quick_close() {
     if (!report_stack.empty())
       report_stack.front().quick_close();
   }
 
-  virtual string description() override { return _("global scope"); }
+  string description() override { return _("global scope"); }
 
-  void parse_init(path init_file);
+  void parse_init(const path& init_file);
   void read_init();
   void read_environment_settings(char* envp[]);
   strings_list read_command_arguments(scope_t& scope, strings_list args);
@@ -114,7 +114,7 @@ public:
   void show_version_info(std::ostream& out) {
     out << "Ledger " << Ledger_VERSION_MAJOR << '.' << Ledger_VERSION_MINOR << '.'
         << Ledger_VERSION_PATCH;
-    if (Ledger_VERSION_PRERELEASE != 0)
+    if (Ledger_VERSION_PRERELEASE != nullptr)
       out << Ledger_VERSION_PRERELEASE;
     if (std::strlen(Ledger_VERSION_DATE) > 0)
       out << '-' << Ledger_VERSION_DATE;
@@ -133,14 +133,14 @@ public:
     out << _("\n\nCopyright (c) 2003-2025, John Wiegley.  All rights reserved.\n\n\
 This program is made available under the terms of the BSD Public License.\n\
 See LICENSE file included with the distribution for details and disclaimer.");
-    out << std::endl;
+    out << '\n';
   }
 
   void report_options(report_t& report, std::ostream& out);
 
   option_t<global_scope_t>* lookup_option(const char* p);
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   OPTION(global_scope_t, args_only);
   OPTION(global_scope_t, debug_);
@@ -149,7 +149,7 @@ See LICENSE file included with the distribution for details and disclaimer.");
 
   OPTION_(global_scope_t, help, DO() { parent->visit_man_page(); }); // -h
 
-  OPTION__(
+  OPTION_CTOR(
       global_scope_t, init_file_, // -i
       CTOR(global_scope_t, init_file_) {
         if (!_init_file.empty())

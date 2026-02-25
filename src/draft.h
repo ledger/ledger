@@ -50,7 +50,7 @@ class journal_t;
 class xact_t;
 
 class draft_t : public expr_base_t<value_t> {
-  typedef expr_base_t<value_t> base_type;
+  using base_type = expr_base_t<value_t>;
 
   struct xact_template_t {
     optional<date_t> date;
@@ -92,18 +92,18 @@ public:
       parse_args(args);
     TRACE_CTOR(draft_t, "value_t");
   }
-  virtual ~draft_t() noexcept { TRACE_DTOR(draft_t); }
+  ~draft_t() noexcept override { TRACE_DTOR(draft_t); }
 
   void parse_args(const value_t& args);
 
-  virtual result_type real_calc(scope_t&) override {
+  result_type real_calc(scope_t&) override {
     assert(false);
     return true;
   }
 
   xact_t* insert(journal_t& journal);
 
-  virtual void dump(std::ostream& out) const override {
+  void dump(std::ostream& out) const override {
     if (tmpl)
       tmpl->dump(out);
   }

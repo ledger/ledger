@@ -41,6 +41,8 @@
  */
 #pragma once
 
+#include <utility>
+
 #include "expr.h"
 
 namespace ledger {
@@ -52,7 +54,7 @@ class expr_t::op_t : public noncopyable {
   friend class expr_t::parser_t;
 
 public:
-  typedef expr_t::ptr_op_t ptr_op_t;
+  using ptr_op_t = expr_t::ptr_op_t;
 
 private:
   mutable short refc;
@@ -68,7 +70,7 @@ private:
       data;
 
 public:
-  enum kind_t {
+  enum kind_t : uint8_t {
     // Constants
     PLUG,
     VALUE,
@@ -239,20 +241,21 @@ private:
   friend void intrusive_ptr_add_ref(const op_t* op);
   friend void intrusive_ptr_release(const op_t* op);
 
-  ptr_op_t copy(ptr_op_t _left = NULL, ptr_op_t _right = NULL) const {
-    ptr_op_t node(new_node(kind, _left, _right));
+  ptr_op_t copy(ptr_op_t _left = nullptr, ptr_op_t _right = nullptr) const {
+    ptr_op_t node(new_node(kind, std::move(_left), std::move(_right)));
     if (kind < TERMINALS)
       node->data = data;
     return node;
   }
 
 public:
-  static ptr_op_t new_node(kind_t _kind, ptr_op_t _left = NULL, ptr_op_t _right = NULL);
+  static ptr_op_t new_node(kind_t _kind, const ptr_op_t& _left = nullptr,
+                           const ptr_op_t& _right = nullptr);
 
-  ptr_op_t compile(scope_t& scope, const int depth = 0, scope_t* param_scope = NULL);
-  value_t calc(scope_t& scope, ptr_op_t* locus = NULL, const int depth = 0);
+  ptr_op_t compile(scope_t& scope, const int depth = 0, scope_t* param_scope = nullptr);
+  value_t calc(scope_t& scope, ptr_op_t* locus = nullptr, const int depth = 0);
 
-  value_t call(const value_t& args, scope_t& scope, ptr_op_t* locus = NULL, const int depth = 0);
+  value_t call(const value_t& args, scope_t& scope, ptr_op_t* locus = nullptr, const int depth = 0);
 
   struct context_t {
     ptr_op_t expr_op;
@@ -261,11 +264,11 @@ public:
     std::ostream::pos_type* end_pos;
     bool relaxed;
 
-    context_t() : start_pos(NULL), end_pos(NULL), relaxed(false) {}
+    context_t() : start_pos(nullptr), end_pos(nullptr), relaxed(false) {}
 
     context_t(const ptr_op_t& _expr_op, const ptr_op_t& _op_to_find,
-              std::ostream::pos_type* const _start_pos = NULL,
-              std::ostream::pos_type* const _end_pos = NULL, const bool _relaxed = true)
+              std::ostream::pos_type* const _start_pos = nullptr,
+              std::ostream::pos_type* const _end_pos = nullptr, const bool _relaxed = true)
         : expr_op(_expr_op), op_to_find(_op_to_find), start_pos(_start_pos), end_pos(_end_pos),
           relaxed(_relaxed) {}
   };
@@ -274,7 +277,7 @@ public:
   void dump(std::ostream& out, const int depth = 0) const;
 
   static ptr_op_t wrap_value(const value_t& val);
-  static ptr_op_t wrap_functor(expr_t::func_t fobj);
+  static ptr_op_t wrap_functor(const expr_t::func_t& fobj);
   static ptr_op_t wrap_scope(std::shared_ptr<scope_t> sobj);
 
 private:
@@ -283,7 +286,8 @@ private:
   value_t calc_seq(scope_t& scope, ptr_op_t* locus, const int depth);
 };
 
-inline expr_t::ptr_op_t expr_t::op_t::new_node(kind_t _kind, ptr_op_t _left, ptr_op_t _right) {
+inline expr_t::ptr_op_t expr_t::op_t::new_node(kind_t _kind, const ptr_op_t& _left,
+                                               const ptr_op_t& _right) {
   ptr_op_t node(new op_t(_kind));
   if (_left)
     node->set_left(_left);
@@ -298,17 +302,17 @@ inline expr_t::ptr_op_t expr_t::op_t::wrap_value(const value_t& val) {
   return temp;
 }
 
-inline expr_t::ptr_op_t expr_t::op_t::wrap_functor(expr_t::func_t fobj) {
+inline expr_t::ptr_op_t expr_t::op_t::wrap_functor(const expr_t::func_t& fobj) {
   ptr_op_t temp(new op_t(op_t::FUNCTION));
   temp->set_function(fobj);
   return temp;
 }
 
-#define MAKE_FUNCTOR(x) expr_t::op_t::wrap_functor(bind(&x, this, _1))
+#define MAKE_FUNCTOR(...) expr_t::op_t::wrap_functor(bind(&__VA_ARGS__, this, _1))
 #define WRAP_FUNCTOR(x) expr_t::op_t::wrap_functor(x)
 
-string op_context(const expr_t::ptr_op_t op, const expr_t::ptr_op_t locus = NULL);
+string op_context(const expr_t::ptr_op_t& op, const expr_t::ptr_op_t& locus = nullptr);
 
-value_t split_cons_expr(expr_t::ptr_op_t op);
+value_t split_cons_expr(const expr_t::ptr_op_t& op);
 
 } // namespace ledger

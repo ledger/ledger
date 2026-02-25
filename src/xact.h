@@ -41,6 +41,8 @@
  */
 #pragma once
 
+#include <utility>
+
 #include "item.h"
 #include "predicate.h"
 #include "types.h"
@@ -55,10 +57,10 @@ public:
   journal_t* journal;
   posts_list posts;
 
-  xact_base_t() : item_t(), journal(NULL) { TRACE_CTOR(xact_base_t, ""); }
+  xact_base_t() : item_t(), journal(nullptr) { TRACE_CTOR(xact_base_t, ""); }
   xact_base_t(const xact_base_t& e);
 
-  virtual ~xact_base_t();
+  ~xact_base_t() override;
 
   virtual void add_post(post_t* post);
   virtual bool remove_post(post_t* post);
@@ -85,9 +87,9 @@ public:
   xact_t() { TRACE_CTOR(xact_t, ""); }
   xact_t(const xact_t& e);
 
-  virtual ~xact_t() { TRACE_DTOR(xact_t); }
+  ~xact_t() override { TRACE_DTOR(xact_t); }
 
-  virtual string description() override {
+  string description() override {
     if (pos) {
       std::ostringstream buf;
       buf << _f("transaction at line %1%") % pos->beg_line;
@@ -97,13 +99,13 @@ public:
     }
   }
 
-  virtual void add_post(post_t* post) override;
+  void add_post(post_t* post) override;
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
-  virtual bool valid() const override;
+  bool valid() const override;
 
-  string hash(string nonce, hash_type_t hash_type) const;
+  string hash(const string& nonce, hash_type_t hash_type) const;
 };
 
 class auto_xact_t : public xact_base_t {
@@ -122,34 +124,36 @@ public:
     post_t* apply_to_post;
 
     deferred_tag_data_t(string _tag_data, bool _overwrite_existing)
-        : tag_data(_tag_data), overwrite_existing(_overwrite_existing), apply_to_post(NULL) {}
+        : tag_data(std::move(_tag_data)), overwrite_existing(_overwrite_existing),
+          apply_to_post(nullptr) {}
   };
 
-  typedef std::list<deferred_tag_data_t> deferred_notes_list;
+  using deferred_notes_list = std::list<deferred_tag_data_t>;
 
   optional<deferred_notes_list> deferred_notes;
   post_t* active_post;
 
-  auto_xact_t() : try_quick_match(true), active_post(NULL) { TRACE_CTOR(auto_xact_t, ""); }
+  auto_xact_t() : try_quick_match(true), active_post(nullptr) { TRACE_CTOR(auto_xact_t, ""); }
   auto_xact_t(const auto_xact_t& other)
-      : xact_base_t(), predicate(other.predicate), name(other.name),
+      : xact_base_t(other), predicate(other.predicate), name(other.name),
         try_quick_match(other.try_quick_match), enabled(other.enabled),
         active_post(other.active_post) {
     TRACE_CTOR(auto_xact_t, "copy");
   }
   auto_xact_t(const predicate_t& _predicate)
-      : predicate(_predicate), name(none), try_quick_match(true), enabled(true), active_post(NULL) {
+      : predicate(_predicate), name(none), try_quick_match(true), enabled(true),
+        active_post(nullptr) {
     TRACE_CTOR(auto_xact_t, "const predicate_t&");
   }
   auto_xact_t(const predicate_t& _predicate, optional<string> _name)
-      : predicate(_predicate), name(_name), try_quick_match(true), enabled(true),
-        active_post(NULL) {
+      : predicate(_predicate), name(std::move(_name)), try_quick_match(true), enabled(true),
+        active_post(nullptr) {
     TRACE_CTOR(auto_xact_t, "const predicate_t&");
   }
 
-  virtual ~auto_xact_t() { TRACE_DTOR(auto_xact_t); }
+  ~auto_xact_t() override { TRACE_DTOR(auto_xact_t); }
 
-  virtual string description() override {
+  string description() override {
     if (pos) {
       std::ostringstream buf;
       buf << _f("automated transaction at line %1%") % pos->beg_line;
@@ -159,7 +163,7 @@ public:
     }
   }
 
-  virtual void parse_tags(const char* p, scope_t&, bool overwrite_existing = true) override {
+  void parse_tags(const char* p, scope_t&, bool overwrite_existing = true) override {
     if (!deferred_notes)
       deferred_notes = deferred_notes_list();
     deferred_notes->push_back(deferred_tag_data_t(p, overwrite_existing));
@@ -183,9 +187,9 @@ public:
     TRACE_CTOR(period_xact_t, "const string&");
   }
 
-  virtual ~period_xact_t() { TRACE_DTOR(period_xact_t); }
+  ~period_xact_t() override { TRACE_DTOR(period_xact_t); }
 
-  virtual string description() override {
+  string description() override {
     if (pos) {
       std::ostringstream buf;
       buf << _f("periodic transaction at line %1%") % pos->beg_line;

@@ -37,6 +37,7 @@
 #include "scope.h"
 
 #include <boost/smart_ptr/scoped_ptr.hpp>
+#include <utility>
 
 namespace ledger {
 
@@ -48,7 +49,7 @@ expr_t::expr_t(const expr_t& other)
     : base_type(other), ptr(other.ptr), fast_path_(other.fast_path_) {
   TRACE_CTOR(expr_t, "copy");
 }
-expr_t::expr_t(ptr_op_t _ptr, scope_t* _context) : base_type(_context), ptr(_ptr) {
+expr_t::expr_t(ptr_op_t _ptr, scope_t* _context) : base_type(_context), ptr(std::move(_ptr)) {
   TRACE_CTOR(expr_t, "const ptr_op_t&, scope_t *");
 }
 
@@ -77,7 +78,7 @@ expr_t& expr_t::operator=(const expr_t& _expr) {
 }
 
 expr_t::operator bool() const noexcept {
-  return ptr.get() != NULL;
+  return ptr.get() != nullptr;
 }
 
 expr_t::ptr_op_t expr_t::get_op() noexcept {
@@ -278,7 +279,7 @@ value_t expr_value(expr_t::ptr_op_t op) {
 }
 
 value_t source_command(call_scope_t& args) {
-  std::istream* in = NULL;
+  std::istream* in = nullptr;
   scoped_ptr<ifstream> stream;
   string pathname;
 

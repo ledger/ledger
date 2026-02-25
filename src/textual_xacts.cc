@@ -180,7 +180,7 @@ void instance_t::automated_xact_directive(char* line) {
     ae->pos->beg_line = context.linenum;
     ae->pos->sequence = context.sequence++;
 
-    post_t* last_post = NULL;
+    post_t* last_post = nullptr;
 
     while (peek_whitespace_line()) {
       std::streamsize len = read_line(line);
@@ -221,7 +221,7 @@ void instance_t::automated_xact_directive(char* line) {
       } else {
         reveal_context = false;
 
-        if (post_t* post = parse_post(p, len - (p - line), top_account(), NULL, true)) {
+        if (post_t* post = parse_post(p, len - (p - line), top_account(), nullptr, true)) {
           reveal_context = true;
           ae->add_post(post);
           ae->active_post = last_post = post;
@@ -274,7 +274,7 @@ void instance_t::period_xact_directive(char* line) {
         pe.release();
       } else {
         reveal_context = true;
-        pe->journal = NULL;
+        pe->journal = nullptr;
         throw parse_error(_("Period transaction failed to balance"));
       }
     }
@@ -307,7 +307,7 @@ xact_t* instance_t::xact_directive(char* line, std::streamsize len, xact_t* prev
 
   TRACE_STOP(xacts, 1);
 
-  return NULL;
+  return nullptr;
 }
 
 void detail::parse_amount_expr(std::istream& in, scope_t& scope, post_t& post, amount_t& amount,
@@ -410,7 +410,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
   post->pos->beg_line = context.linenum;
   post->pos->sequence = context.sequence++;
 
-  std::string buf(line);
+  std::string buf(line); // NOLINT(bugprone-unused-local-non-trivial-variable)
   std::streamsize beg = 0;
 
   try {
@@ -435,6 +435,9 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
       p = skip_ws(p + 1);
       DEBUG("textual.parse", "line " << context.linenum << ": "
                                      << "Parsed the PENDING flag");
+      break;
+
+    default:
       break;
     }
 
@@ -520,7 +523,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
       }
 
       if (stream.eof()) {
-        next = NULL;
+        next = nullptr;
       } else {
         next = skip_ws(next + static_cast<std::ptrdiff_t>(stream.tellg()));
 
@@ -595,7 +598,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
                                            << "Annotated amount is " << post->amount);
 
             if (cstream.eof())
-              next = NULL;
+              next = nullptr;
             else
               next = skip_ws(p + static_cast<std::ptrdiff_t>(cstream.tellg()));
           } else {
@@ -743,7 +746,7 @@ post_t* instance_t::parse_post(char* line, std::streamsize len, account_t* accou
         }
 
         if (stream.eof())
-          next = NULL;
+          next = nullptr;
         else
           next = skip_ws(p + static_cast<std::ptrdiff_t>(stream.tellg()));
       } else {
@@ -800,7 +803,7 @@ bool instance_t::parse_posts(account_t* account, xact_base_t& xact, const bool d
     std::streamsize len = read_line(line);
     char* p = skip_ws(line);
     if (*p != ';') {
-      if (post_t* post = parse_post(line, len, account, NULL, defer_expr)) {
+      if (post_t* post = parse_post(line, len, account, nullptr, defer_expr)) {
         xact.add_post(post);
         added = true;
       }
@@ -849,6 +852,8 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
       case '!':
         xact->_state = item_t::PENDING;
         next = skip_ws(++next);
+        break;
+      default:
         break;
       }
     }
@@ -904,7 +909,7 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
 
     TRACE_START(xact_details, 1, "Time spent parsing transaction details:");
 
-    post_t* last_post = NULL;
+    post_t* last_post = nullptr;
 
     while (peek_whitespace_line()) {
       len = read_line(line);
@@ -994,10 +999,10 @@ xact_t* instance_t::parse_xact(char* line, std::streamsize len, account_t* accou
     TRACE_STOP(xact_details, 1);
 
     if (hash_type != NO_HASHES) {
-      string expected_hash = xact->hash(previous_xact && previous_xact->has_tag("Hash")
-                                            ? previous_xact->get_tag("Hash")->to_string()
-                                            : "",
-                                        hash_type);
+      const string prev_hash = (previous_xact && previous_xact->has_tag("Hash"))
+                                   ? previous_xact->get_tag("Hash")->to_string()
+                                   : "";
+      string expected_hash = xact->hash(prev_hash, hash_type);
       if (xact->has_tag("Hash")) {
         string current_hash = xact->get_tag("Hash")->to_string();
         if (!std::equal(expected_hash.begin(),

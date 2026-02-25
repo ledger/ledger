@@ -50,12 +50,16 @@ class xact_t;
 class journal_t;
 class account_t;
 
-DECLARE_EXCEPTION(csv_error, std::runtime_error);
+class csv_error : public std::runtime_error {
+public:
+  explicit csv_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~csv_error() noexcept override {}
+};
 
 class csv_reader {
   parse_context_t context;
 
-  enum headers_t {
+  enum headers_t : uint8_t {
     FIELD_DATE = 0,
     FIELD_DATE_AUX,
     FIELD_CODE,

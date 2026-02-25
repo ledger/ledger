@@ -56,25 +56,25 @@ value_t report_statistics(call_scope_t& args) {
   out << format(_f("Time period: %1% to %2% (%3% days)") % format_date(statistics.earliest_post) %
                 format_date(statistics.latest_post) %
                 (statistics.latest_post - statistics.earliest_post).days())
-      << std::endl
-      << std::endl;
+      << '\n'
+      << '\n';
 
-  out << _("  Files these postings came from:") << std::endl;
+  out << _("  Files these postings came from:") << '\n';
 
   for (const path& pathname : statistics.filenames)
     if (!pathname.empty())
-      out << "    " << pathname.string() << std::endl;
-  out << std::endl;
+      out << "    " << pathname.string() << '\n';
+  out << '\n';
 
   out << _("  Unique payees:          ");
   out.width(6);
-  out << statistics.payees_referenced.size() << std::endl;
+  out << statistics.payees_referenced.size() << '\n';
 
   out << _("  Unique accounts:        ");
   out.width(6);
-  out << statistics.accounts_referenced.size() << std::endl;
+  out << statistics.accounts_referenced.size() << '\n';
 
-  out << std::endl;
+  out << '\n';
 
   out << _("  Number of postings:     ");
   out.width(6);
@@ -84,27 +84,27 @@ value_t report_statistics(call_scope_t& args) {
   out.precision(2);
   out << (double(statistics.posts_count) /
           double((statistics.latest_post - statistics.earliest_post).days()))
-      << _(" per day)") << std::endl;
+      << _(" per day)") << '\n';
 
   out << _("  Uncleared postings:     ");
   out.width(6);
-  out << (statistics.posts_count - statistics.posts_cleared_count) << std::endl;
+  out << (statistics.posts_count - statistics.posts_cleared_count) << '\n';
 
-  out << std::endl;
+  out << '\n';
 
   out << _("  Days since last post:   ");
   out.width(6);
-  out << (CURRENT_DATE() - statistics.latest_post).days() << std::endl;
+  out << (CURRENT_DATE() - statistics.latest_post).days() << '\n';
 
   out << _("  Posts in last 7 days:   ");
   out.width(6);
-  out << statistics.posts_last_7_count << std::endl;
+  out << statistics.posts_last_7_count << '\n';
   out << _("  Posts in last 30 days:  ");
   out.width(6);
-  out << statistics.posts_last_30_count << std::endl;
+  out << statistics.posts_last_30_count << '\n';
   out << _("  Posts seen this month:  ");
   out.width(6);
-  out << statistics.posts_this_month_count << std::endl;
+  out << statistics.posts_this_month_count << '\n';
 
   out.flush();
 

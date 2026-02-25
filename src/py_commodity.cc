@@ -120,9 +120,9 @@ commodity_pool_t::commodities_map::iterator py_pool_commodities_end(commodity_po
   return pool.commodities.end();
 }
 
-typedef transform_iterator<function<string(commodity_pool_t::commodities_map::value_type&)>,
-                           commodity_pool_t::commodities_map::iterator>
-    commodities_map_firsts_iterator;
+using commodities_map_firsts_iterator =
+    transform_iterator<function<string(commodity_pool_t::commodities_map::value_type&)>,
+                       commodity_pool_t::commodities_map::iterator>;
 commodities_map_firsts_iterator
 
 py_pool_commodities_keys_begin(commodity_pool_t& pool) {
@@ -136,9 +136,9 @@ commodities_map_firsts_iterator py_pool_commodities_keys_end(commodity_pool_t& p
       boost::bind(&commodity_pool_t::commodities_map::value_type::first, _1));
 }
 
-typedef transform_iterator<function<commodity_t*(commodity_pool_t::commodities_map::value_type&)>,
-                           commodity_pool_t::commodities_map::iterator>
-    commodities_map_seconds_iterator;
+using commodities_map_seconds_iterator =
+    transform_iterator<function<commodity_t*(commodity_pool_t::commodities_map::value_type&)>,
+                       commodity_pool_t::commodities_map::iterator>;
 
 commodities_map_seconds_iterator py_pool_commodities_values_begin(commodity_pool_t& pool) {
   return make_transform_iterator(

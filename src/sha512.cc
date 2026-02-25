@@ -52,11 +52,11 @@ extern "C" {
 #define SHA512_BLOCK_LENGTH 128
 #define SHA512_DIGEST_LENGTH 64
 #define SHA512_DIGEST_STRING_LENGTH (SHA512_DIGEST_LENGTH * 2 + 1)
-typedef struct _SHA512_CTX {
+using SHA512_CTX = struct _SHA512_CTX {
   uint64_t state[8];
   uint64_t bitcount[2];
   uint8_t buffer[SHA512_BLOCK_LENGTH];
-} SHA512_CTX;
+};
 #endif /* do we have sha512 header defs */
 
 void SHA512_Init(SHA512_CTX*);
@@ -96,12 +96,12 @@ unsigned char* SHA512(void* data, unsigned int data_len, unsigned char* digest);
 #error Define BYTE_ORDER to be equal to either LITTLE_ENDIAN or BIG_ENDIAN
 #endif
 
-typedef uint8_t sha2_byte;    /* Exactly 1 byte */
-typedef uint32_t sha2_word32; /* Exactly 4 bytes */
+using sha2_byte = uint8_t;    /* Exactly 1 byte */
+using sha2_word32 = uint32_t; /* Exactly 4 bytes */
 #ifdef S_SPLINT_S
 typedef unsigned long long sha2_word64; /* lint 8 bytes */
 #else
-typedef uint64_t sha2_word64; /* Exactly 8 bytes */
+using sha2_word64 = uint64_t; /* Exactly 8 bytes */
 #endif
 
 /*** SHA-256/384/512 Various Length Definitions ***********************/
@@ -225,14 +225,14 @@ static const sha2_word64 sha512_initial_hash_value[8] = {
     0x6a09e667f3bcc908ULL, 0xbb67ae8584caa73bULL, 0x3c6ef372fe94f82bULL, 0xa54ff53a5f1d36f1ULL,
     0x510e527fade682d1ULL, 0x9b05688c2b3e6c1fULL, 0x1f83d9abfb41bd6bULL, 0x5be0cd19137e2179ULL};
 
-typedef union _ldns_sha2_buffer_union {
+using ldns_sha2_buffer_union = union _ldns_sha2_buffer_union {
   uint8_t* theChars;
   uint64_t* theLongs;
-} ldns_sha2_buffer_union;
+};
 
 /*** SHA-512: *********************************************************/
 void SHA512_Init(SHA512_CTX* context) {
-  if (context == (SHA512_CTX*)0) {
+  if (context == (SHA512_CTX*)nullptr) {
     return;
   }
   MEMCPY_BCOPY(context->state, sha512_initial_hash_value, SHA512_DIGEST_LENGTH);
@@ -326,7 +326,7 @@ void SHA512_Update(SHA512_CTX* context, void* datain, size_t len) {
   }
 
   /* Sanity check: */
-  assert(context != (SHA512_CTX*)0 && data != (sha2_byte*)0);
+  assert(context != (SHA512_CTX*)nullptr && data != (sha2_byte*)nullptr);
 
   usedspace = (context->bitcount[0] >> 3) % SHA512_BLOCK_LENGTH;
   if (usedspace > 0) {
@@ -412,10 +412,10 @@ void SHA512_Final(sha2_byte digest[], SHA512_CTX* context) {
   sha2_word64* d = (sha2_word64*)digest;
 
   /* Sanity check: */
-  assert(context != (SHA512_CTX*)0);
+  assert(context != (SHA512_CTX*)nullptr);
 
   /* If no digest buffer is passed, we don't bother doing this: */
-  if (digest != (sha2_byte*)0) {
+  if (digest != (sha2_byte*)nullptr) {
     SHA512_Last(context);
 
     /* Save the hash data for output: */

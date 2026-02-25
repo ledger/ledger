@@ -37,9 +37,9 @@
 namespace ledger {
 
 // TODO: Extend this to handle all characters which define enclosures
-bool query_t::lexer_t::unbalanced_braces(string str) {
+bool query_t::lexer_t::unbalanced_braces(const string& str) {
   int balance = 0;
-  for (char& c : str) {
+  for (const char& c : str) {
     if (c == '(')
       ++balance;
     else if (c == ')')
@@ -204,6 +204,7 @@ resume:
     consume_whitespace = false;
 
   test_ident:
+    // NOLINTBEGIN(bugprone-branch-clone)
     if (ident == "and")
       return token_t(token_t::TOK_AND);
     else if (ident == "or")
@@ -242,6 +243,7 @@ resume:
       return token_t(token_t::TOK_EXPR);
     } else
       return token_t(token_t::TERM, ident);
+    // NOLINTEND(bugprone-branch-clone)
   }
   }
 
@@ -257,6 +259,7 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
   expr_t::ptr_op_t node;
 
   lexer_t::token_t tok = lexer.next_token(tok_context);
+  // NOLINTBEGIN(bugprone-branch-clone)
   switch (tok.kind) {
   case lexer_t::token_t::TOK_SHOW:
   case lexer_t::token_t::TOK_ONLY:
@@ -358,6 +361,7 @@ query_t::parser_t::parse_query_term(query_t::lexer_t::token_t::kind_t tok_contex
     lexer.push_token(tok);
     break;
   }
+  // NOLINTEND(bugprone-branch-clone)
 
   return node;
 }

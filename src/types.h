@@ -54,10 +54,10 @@ class auto_xact_t;
 class period_xact_t;
 class account_t;
 
-typedef std::list<post_t*> posts_list;
-typedef std::list<xact_t*> xacts_list;
-typedef std::list<std::unique_ptr<auto_xact_t>> auto_xacts_list;
-typedef std::list<period_xact_t*> period_xacts_list;
-typedef std::map<std::string, account_t*, std::less<>> accounts_map;
+using posts_list = std::list<post_t*>;
+using xacts_list = std::list<xact_t*>;
+using auto_xacts_list = std::list<std::unique_ptr<auto_xact_t>>;
+using period_xacts_list = std::list<period_xact_t*>;
+using accounts_map = std::map<std::string, account_t*, std::less<>>;
 
 } // namespace ledger

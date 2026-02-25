@@ -98,11 +98,11 @@ namespace {
 void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precision,
                     int zeros_prec = -1, mpfr_rnd_t rnd = GMP_RNDN,
                     const optional<commodity_t&>& comm = none) {
-  char* buf = NULL;
+  char* buf = nullptr;
   try {
 #if DEBUG_ON
     IF_DEBUG("amount.convert") {
-      char* tbuf = mpq_get_str(NULL, 10, quant);
+      char* tbuf = mpq_get_str(nullptr, 10, quant);
       DEBUG("amount.convert", "Rational to convert = " << tbuf);
       std::free(tbuf);
     }
@@ -222,11 +222,11 @@ void stream_out_mpq(std::ostream& out, mpq_t quant, amount_t::precision_t precis
       out << buf;
     }
   } catch (...) {
-    if (buf != NULL)
+    if (buf != nullptr)
       mpfr_free_str(buf);
     throw;
   }
-  if (buf != NULL)
+  if (buf != nullptr)
     mpfr_free_str(buf);
 }
 } // namespace
@@ -311,8 +311,8 @@ void amount_t::_dup() {
 void amount_t::_clear() {
   if (quantity) {
     _release();
-    quantity = NULL;
-    commodity_ = NULL;
+    quantity = nullptr;
+    commodity_ = nullptr;
   } else {
     assert(!commodity_);
   }
@@ -328,27 +328,27 @@ void amount_t::_release() {
       quantity->~bigint_t();
     else
       checked_delete(quantity);
-    quantity = NULL;
-    commodity_ = NULL;
+    quantity = nullptr;
+    commodity_ = nullptr;
   }
 
   VERIFY(valid());
 }
 
-amount_t::amount_t(const double val) : commodity_(NULL) {
+amount_t::amount_t(const double val) : commodity_(nullptr) {
   quantity = new bigint_t;
   mpq_set_d(MP(quantity), val);
   quantity->prec = extend_by_digits; // an approximation
   TRACE_CTOR(amount_t, "const double");
 }
 
-amount_t::amount_t(const unsigned long val) : commodity_(NULL) {
+amount_t::amount_t(const unsigned long val) : commodity_(nullptr) {
   quantity = new bigint_t;
   mpq_set_ui(MP(quantity), val, 1);
   TRACE_CTOR(amount_t, "const unsigned long");
 }
 
-amount_t::amount_t(const long val) : commodity_(NULL) {
+amount_t::amount_t(const long val) : commodity_(nullptr) {
   quantity = new bigint_t;
   mpq_set_si(MP(quantity), val, 1);
   TRACE_CTOR(amount_t, "const long");
@@ -386,7 +386,7 @@ int amount_t::compare(const amount_t& amt) const {
 
 bool amount_t::operator==(const amount_t& amt) const {
   if ((quantity && !amt.quantity) || (!quantity && amt.quantity))
-    return false;
+    return false; // NOLINT(bugprone-branch-clone)
   else if (!quantity && !amt.quantity)
     return true;
   else if (commodity() != amt.commodity())
@@ -882,7 +882,7 @@ bool amount_t::is_zero() const {
       std::ostringstream out;
       stream_out_mpq(out, MP(quantity), commodity().precision());
 
-      string output = out.str();
+      string output = out.str(); // NOLINT(bugprone-unused-local-non-trivial-variable)
       if (!output.empty()) {
         for (const char* p = output.c_str(); *p; p++)
           if (*p != '0' && *p != '.' && *p != '-')
@@ -925,7 +925,7 @@ bool amount_t::has_commodity() const {
 
 void amount_t::annotate(const annotation_t& details) {
   commodity_t* this_base;
-  annotated_commodity_t* this_ann = NULL;
+  annotated_commodity_t* this_ann = nullptr;
 
   if (!quantity)
     throw_(amount_error, _("Cannot annotate the commodity of an uninitialized amount"));
@@ -940,7 +940,7 @@ void amount_t::annotate(const annotation_t& details) {
   }
   assert(this_base);
 
-  DEBUG("amount.commodities", "Annotating commodity for amount " << *this << std::endl << details);
+  DEBUG("amount.commodities", "Annotating commodity for amount " << *this << '\n' << details);
 
   if (commodity_t* ann_comm = this_base->pool().find_or_create(*this_base, details))
     set_commodity(*ann_comm);
@@ -1060,7 +1060,8 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
   if (std::isdigit(static_cast<unsigned char>(c))) {
     parse_quantity(in, quant);
 
-    if (!in.eof() && ((n = static_cast<char>(in.peek())) != '\n')) {
+    n = in.eof() ? '\n' : static_cast<char>(in.peek());
+    if (!in.eof() && n != '\n') {
       if (std::isspace(static_cast<unsigned char>(n)))
         comm_flags |= COMMODITY_STYLE_SEPARATED;
 
@@ -1069,21 +1070,22 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
       if (!symbol.empty())
         comm_flags |= COMMODITY_STYLE_SUFFIXED;
 
-      if (!flags.has_flags(PARSE_NO_ANNOT) && !in.eof() &&
-          ((n = static_cast<char>(in.peek())) != '\n'))
+      n = in.eof() ? '\n' : static_cast<char>(in.peek());
+      if (!flags.has_flags(PARSE_NO_ANNOT) && !in.eof() && n != '\n')
         details.parse(in);
     }
   } else {
     commodity_t::parse_symbol(in, symbol);
 
-    if (!in.eof() && ((n = static_cast<char>(in.peek())) != '\n')) {
+    n = in.eof() ? '\n' : static_cast<char>(in.peek());
+    if (!in.eof() && n != '\n') {
       if (std::isspace(static_cast<unsigned char>(in.peek())))
         comm_flags |= COMMODITY_STYLE_SEPARATED;
 
       parse_quantity(in, quant);
 
-      if (!flags.has_flags(PARSE_NO_ANNOT) && !quant.empty() && !in.eof() &&
-          ((n = static_cast<char>(in.peek())) != '\n'))
+      n = in.eof() ? '\n' : static_cast<char>(in.peek());
+      if (!flags.has_flags(PARSE_NO_ANNOT) && !quant.empty() && !in.eof() && n != '\n')
         details.parse(in);
     }
   }
@@ -1108,7 +1110,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
       _release();
     else
       new_quantity.reset(quantity);
-    quantity = NULL;
+    quantity = nullptr;
   }
 
   if (!new_quantity.get())
@@ -1121,7 +1123,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
   // precision if something greater was used for the quantity.
 
   if (symbol.empty()) {
-    commodity_ = NULL;
+    commodity_ = nullptr;
   } else {
     commodity_ = commodity_pool_t::current_pool->find(symbol);
     if (!commodity_)
@@ -1271,7 +1273,7 @@ bool amount_t::parse(std::istream& in, const parse_flags_t& flags) {
     mpq_div(MP(new_quantity.get()), MP(new_quantity.get()), tempq);
 
     IF_DEBUG("amount.parse") {
-      char* amt_buf = mpq_get_str(NULL, 10, MP(new_quantity.get()));
+      char* amt_buf = mpq_get_str(nullptr, 10, MP(new_quantity.get()));
       DEBUG("amount.parse", "Rational parsed = " << amt_buf);
       std::free(amt_buf);
     }

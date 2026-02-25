@@ -46,38 +46,38 @@ namespace ledger {
 
 void draft_t::xact_template_t::dump(std::ostream& out) const {
   if (date)
-    out << _("Date:       ") << *date << std::endl;
+    out << _("Date:       ") << *date << '\n';
   else
-    out << _("Date:       <today>") << std::endl;
+    out << _("Date:       <today>") << '\n';
 
   if (code)
-    out << _("Code:       ") << *code << std::endl;
+    out << _("Code:       ") << *code << '\n';
   if (note)
-    out << _("Note:       ") << *note << std::endl;
+    out << _("Note:       ") << *note << '\n';
 
   if (payee_mask.empty())
-    out << _("Payee mask: INVALID (template expression will cause an error)") << std::endl;
+    out << _("Payee mask: INVALID (template expression will cause an error)") << '\n';
   else
-    out << _("Payee mask: ") << payee_mask << std::endl;
+    out << _("Payee mask: ") << payee_mask << '\n';
 
   if (posts.empty()) {
-    out << std::endl << _("<Posting copied from last related transaction>") << std::endl;
+    out << '\n' << _("<Posting copied from last related transaction>") << '\n';
   } else {
     for (const post_template_t& post : posts) {
-      out << std::endl << _f("[Posting \"%1%\"]") % (post.from ? _("from") : _("to")) << std::endl;
+      out << '\n' << _f("[Posting \"%1%\"]") % (post.from ? _("from") : _("to")) << '\n';
 
       if (post.account_mask)
-        out << _("  Account mask: ") << *post.account_mask << std::endl;
+        out << _("  Account mask: ") << *post.account_mask << '\n';
       else if (post.from)
-        out << _("  Account mask: <use last of last related accounts>") << std::endl;
+        out << _("  Account mask: <use last of last related accounts>") << '\n';
       else
-        out << _("  Account mask: <use first of last related accounts>") << std::endl;
+        out << _("  Account mask: <use first of last related accounts>") << '\n';
 
       if (post.amount)
-        out << _("  Amount:       ") << *post.amount << std::endl;
+        out << _("  Amount:       ") << *post.amount << '\n';
 
       if (post.cost)
-        out << _("  Cost:         ") << *post.cost_operator << " " << *post.cost << std::endl;
+        out << _("  Cost:         ") << *post.cost_operator << " " << *post.cost << '\n';
     }
   }
 }
@@ -90,7 +90,7 @@ void draft_t::parse_args(const value_t& args) {
   tmpl = xact_template_t();
 
   optional<date_time::weekdays> weekday;
-  xact_template_t::post_template_t* post = NULL;
+  xact_template_t::post_template_t* post = nullptr;
   value_t::sequence_t::const_iterator begin = args.begin();
   value_t::sequence_t::const_iterator end = args.end();
 
@@ -100,87 +100,92 @@ void draft_t::parse_args(const value_t& args) {
     if (check_for_date && regex_match(arg, what, date_mask)) {
       tmpl->date_string = what[0];
       check_for_date = false;
-    } else if (check_for_date && bool(weekday = string_to_day_of_week(arg))) {
+    } else {
+      weekday = string_to_day_of_week(arg);
+      if (check_for_date && weekday) {
 #if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
-      short dow = static_cast<short>(*weekday);
+        short dow = static_cast<short>(*weekday);
 #if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 7
 #pragma GCC diagnostic pop
 #endif
-      date_t date = CURRENT_DATE() - date_duration(1);
-      while (date.day_of_week() != dow)
-        date -= date_duration(1);
-      tmpl->date = date;
-      check_for_date = false;
-    } else {
-      if (arg == "at") {
-        if (++begin == end)
-          throw std::runtime_error(_("Invalid xact command arguments"));
-        tmpl->payee_mask = (*begin).to_string();
-      } else if (arg == "to" || arg == "from") {
-        if (!post || post->account_mask) {
-          tmpl->posts.push_back(xact_template_t::post_template_t());
-          post = &tmpl->posts.back();
-        }
-        if (++begin == end)
-          throw std::runtime_error(_("Invalid xact command arguments"));
-        post->account_mask = mask_t((*begin).to_string());
-        post->from = arg == "from";
-      } else if (arg == "on") {
-        if (++begin == end)
-          throw std::runtime_error(_("Invalid xact command arguments"));
-        tmpl->date_string = (*begin).to_string();
+        date_t date = CURRENT_DATE() - date_duration(1);
+        while (date.day_of_week() != dow)
+          date -= date_duration(1);
+        tmpl->date = date;
         check_for_date = false;
-      } else if (arg == "code") {
-        if (++begin == end)
-          throw std::runtime_error(_("Invalid xact command arguments"));
-        tmpl->code = (*begin).to_string();
-      } else if (arg == "note") {
-        if (++begin == end)
-          throw std::runtime_error(_("Invalid xact command arguments"));
-        tmpl->note = (*begin).to_string();
-      } else if (arg == "rest") {
-        ; // just ignore this argument
-      } else if (arg == "@" || arg == "@@") {
-        amount_t cost;
-        post->cost_operator = arg;
-        if (++begin == end)
-          throw std::runtime_error(_("Invalid xact command arguments"));
-        arg = (*begin).to_string();
-        if (!cost.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE))
-          throw std::runtime_error(_("Invalid xact command arguments"));
-        post->cost = cost;
       } else {
-        // Without a preposition, it is either:
-        //
-        //  A payee, if we have not seen one
-        //  An account or an amount, if we have
-        //  An account if an amount has just been seen
-        //  An amount if an account has just been seen
-
-        if (tmpl->payee_mask.empty()) {
-          tmpl->payee_mask = arg;
-        } else {
-          amount_t amt;
-          optional<mask_t> account;
-
-          if (!amt.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE))
-            account = mask_t(arg);
-
-          if (!post || (account && post->account_mask) || (!account && post->amount)) {
+        // NOLINTBEGIN(bugprone-branch-clone)
+        if (arg == "at") {
+          if (++begin == end)
+            throw std::runtime_error(_("Invalid xact command arguments"));
+          tmpl->payee_mask = (*begin).to_string();
+        } else if (arg == "to" || arg == "from") {
+          if (!post || post->account_mask) {
             tmpl->posts.push_back(xact_template_t::post_template_t());
             post = &tmpl->posts.back();
           }
+          if (++begin == end)
+            throw std::runtime_error(_("Invalid xact command arguments"));
+          post->account_mask = mask_t((*begin).to_string());
+          post->from = arg == "from";
+        } else if (arg == "on") {
+          if (++begin == end)
+            throw std::runtime_error(_("Invalid xact command arguments"));
+          tmpl->date_string = (*begin).to_string();
+          check_for_date = false;
+        } else if (arg == "code") {
+          if (++begin == end)
+            throw std::runtime_error(_("Invalid xact command arguments"));
+          tmpl->code = (*begin).to_string();
+        } else if (arg == "note") {
+          if (++begin == end)
+            throw std::runtime_error(_("Invalid xact command arguments"));
+          tmpl->note = (*begin).to_string();
+        } else if (arg == "rest") {
+          ; // just ignore this argument
+        } else if (arg == "@" || arg == "@@") {
+          amount_t cost;
+          post->cost_operator = arg;
+          if (++begin == end)
+            throw std::runtime_error(_("Invalid xact command arguments"));
+          arg = (*begin).to_string();
+          if (!cost.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE))
+            throw std::runtime_error(_("Invalid xact command arguments"));
+          post->cost = cost;
+        } else {
+          // Without a preposition, it is either:
+          //
+          //  A payee, if we have not seen one
+          //  An account or an amount, if we have
+          //  An account if an amount has just been seen
+          //  An amount if an account has just been seen
 
-          if (account) {
-            post->account_mask = account;
+          if (tmpl->payee_mask.empty()) {
+            tmpl->payee_mask = arg;
           } else {
-            post->amount = amt;
-            post = NULL; // an amount concludes this posting
+            amount_t amt;
+            optional<mask_t> account;
+
+            if (!amt.parse(arg, PARSE_SOFT_FAIL | PARSE_NO_MIGRATE))
+              account = mask_t(arg);
+
+            if (!post || (account && post->account_mask) || (!account && post->amount)) {
+              tmpl->posts.push_back(xact_template_t::post_template_t());
+              post = &tmpl->posts.back();
+            }
+
+            if (account) {
+              post->account_mask = account;
+            } else {
+              post->amount = amt;
+              post = nullptr; // an amount concludes this posting
+            }
           }
         }
+        // NOLINTEND(bugprone-branch-clone)
       }
     }
   }
@@ -200,23 +205,25 @@ void draft_t::parse_args(const value_t& args) {
         has_only_from = false;
     }
 
+    // NOLINTBEGIN(bugprone-branch-clone)
     if (has_only_from) {
       tmpl->posts.push_front(xact_template_t::post_template_t());
     } else if (has_only_to) {
       tmpl->posts.push_back(xact_template_t::post_template_t());
       tmpl->posts.back().from = true;
     }
+    // NOLINTEND(bugprone-branch-clone)
   }
 }
 
 xact_t* draft_t::insert(journal_t& journal) {
   if (!tmpl)
-    return NULL;
+    return nullptr;
 
   if (tmpl->payee_mask.empty())
     throw std::runtime_error(_("'xact' command requires at least a payee"));
 
-  xact_t* matching = NULL;
+  xact_t* matching = nullptr;
   unique_ptr<xact_t> added(new xact_t);
 
   // There is no need to check drafts for errors, because we generated them.
@@ -335,7 +342,7 @@ xact_t* draft_t::insert(journal_t& journal) {
     for (xact_template_t::post_template_t& post : tmpl->posts) {
       unique_ptr<post_t> new_post;
 
-      commodity_t* found_commodity = NULL;
+      commodity_t* found_commodity = nullptr;
 
       if (matching) {
         if (post.account_mask) {
@@ -382,7 +389,7 @@ xact_t* draft_t::insert(journal_t& journal) {
         if (post.account_mask) {
           DEBUG("draft.xact", "The template has an account mask");
 
-          account_t* acct = NULL;
+          account_t* acct = nullptr;
           if (!acct) {
             acct = journal.find_account_re(post.account_mask->str());
 #if DEBUG_ON
@@ -494,12 +501,12 @@ value_t template_command(call_scope_t& args) {
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  out << _("--- Input arguments ---") << std::endl;
+  out << _("--- Input arguments ---") << '\n';
   args.value().dump(out);
-  out << std::endl << std::endl;
+  out << '\n' << '\n';
 
   draft_t draft(args.value());
-  out << _("--- Transaction template ---") << std::endl;
+  out << _("--- Transaction template ---") << '\n';
   draft.dump(out);
 
   return true;

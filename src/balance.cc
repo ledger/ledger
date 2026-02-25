@@ -135,6 +135,7 @@ balance_t& balance_t::operator/=(const amount_t& amt) {
   if (amt.is_null())
     throw_(balance_error, _("Cannot divide a balance by an uninitialized amount"));
 
+  // NOLINTBEGIN(bugprone-branch-clone)
   if (is_realzero()) {
     ;
   } else if (amt.is_realzero()) {
@@ -157,6 +158,7 @@ balance_t& balance_t::operator/=(const amount_t& amt) {
     assert(amounts.size() > 1);
     throw_(balance_error, _("Cannot divide a multi-commodity balance by a commoditized amount"));
   }
+  // NOLINTEND(bugprone-branch-clone)
   return *this;
 }
 
@@ -242,7 +244,7 @@ void balance_t::sorted_amounts(amounts_array& sorted) const {
   });
 }
 
-void balance_t::map_sorted_amounts(function<void(const amount_t&)> fn) const {
+void balance_t::map_sorted_amounts(const function<void(const amount_t&)>& fn) const {
   if (!amounts.empty()) {
     if (amounts.size() == 1) {
       const amount_t& amount((*amounts.begin()).second);
@@ -283,7 +285,7 @@ struct print_amount_from_balance {
 
     int width;
     if (!first) {
-      out << std::endl;
+      out << '\n';
       width = lwidth;
     } else {
       first = false;

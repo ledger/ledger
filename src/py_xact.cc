@@ -49,7 +49,7 @@ long posts_len(xact_base_t& xact) {
 
 post_t& posts_getitem(xact_base_t& xact, long i) {
   static long last_index = 0;
-  static xact_base_t* last_xact = NULL;
+  static xact_base_t* last_xact = nullptr;
   static posts_list::iterator elem;
 
   long len = static_cast<long>(xact.posts.size());

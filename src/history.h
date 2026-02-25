@@ -50,7 +50,7 @@
 
 namespace ledger {
 
-typedef std::map<datetime_t, amount_t> price_map_t;
+using price_map_t = std::map<datetime_t, amount_t>;
 
 class commodity_history_impl_t;
 class commodity_history_t : public noncopyable {

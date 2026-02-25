@@ -43,7 +43,7 @@ namespace ledger {
 std::shared_ptr<commodity_pool_t> commodity_pool_t::current_pool;
 
 commodity_pool_t::commodity_pool_t()
-    : default_commodity(NULL), keep_base(false), quote_leeway(86400), get_quotes(false),
+    : default_commodity(nullptr), keep_base(false), quote_leeway(86400), get_quotes(false),
       get_commodity_quote(commodity_quote_from_script) {
   null_commodity = create("");
   null_commodity->add_flags(COMMODITY_BUILTIN | COMMODITY_NOMARKET);
@@ -83,7 +83,7 @@ commodity_t* commodity_pool_t::find(const string& symbol) {
 
   if (auto i = commodities.find(symbol); i != commodities.end())
     return (*i).second.get();
-  return NULL;
+  return nullptr;
 }
 
 commodity_t* commodity_pool_t::find_or_create(const string& symbol) {
@@ -104,7 +104,7 @@ commodity_t* commodity_pool_t::alias(const string& name, commodity_t& referent) 
 }
 
 commodity_t* commodity_pool_t::create(const string& symbol, const annotation_t& details) {
-  DEBUG("pool.commodities", "commodity_pool_t::create[ann] " << "symbol " << symbol << std::endl
+  DEBUG("pool.commodities", "commodity_pool_t::create[ann] " << "symbol " << symbol << '\n'
                                                              << details);
 
   if (details)
@@ -114,23 +114,22 @@ commodity_t* commodity_pool_t::create(const string& symbol, const annotation_t& 
 }
 
 commodity_t* commodity_pool_t::find(const string& symbol, const annotation_t& details) {
-  DEBUG("pool.commodities", "commodity_pool_t::find[ann] " << "symbol " << symbol << std::endl
+  DEBUG("pool.commodities", "commodity_pool_t::find[ann] " << "symbol " << symbol << '\n'
                                                            << details);
 
   if (auto i = annotated_commodities.find(annotated_commodities_map::key_type(symbol, details));
       i != annotated_commodities.end()) {
     DEBUG("pool.commodities", "commodity_pool_t::find[ann] found "
-                                  << "symbol " << (*i).second->base_symbol() << std::endl
+                                  << "symbol " << (*i).second->base_symbol() << '\n'
                                   << as_annotated_commodity(*(*i).second.get()).details);
     return (*i).second.get();
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 
 commodity_t* commodity_pool_t::find_or_create(const string& symbol, const annotation_t& details) {
-  DEBUG("pool.commodities", "commodity_pool_t::find_or_create[ann] " << "symbol " << symbol
-                                                                     << std::endl
+  DEBUG("pool.commodities", "commodity_pool_t::find_or_create[ann] " << "symbol " << symbol << '\n'
                                                                      << details);
 
   if (details) {
@@ -147,7 +146,7 @@ commodity_t* commodity_pool_t::find_or_create(const string& symbol, const annota
 
 commodity_t* commodity_pool_t::find_or_create(commodity_t& comm, const annotation_t& details) {
   DEBUG("pool.commodities", "commodity_pool_t::find_or_create[ann:comm] "
-                                << "symbol " << comm.base_symbol() << std::endl
+                                << "symbol " << comm.base_symbol() << '\n'
                                 << details);
 
   if (details) {
@@ -164,7 +163,7 @@ commodity_t* commodity_pool_t::find_or_create(commodity_t& comm, const annotatio
 
 annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotation_t& details) {
   DEBUG("pool.commodities", "commodity_pool_t::create[ann:comm] " << "symbol " << comm.base_symbol()
-                                                                  << std::endl
+                                                                  << '\n'
                                                                   << details);
 
   assert(comm);
@@ -182,7 +181,7 @@ annotated_commodity_t* commodity_pool_t::create(commodity_t& comm, const annotat
   }
 
   DEBUG("pool.commodities", "Creating annotated commodity " << "symbol " << commodity->base_symbol()
-                                                            << std::endl
+                                                            << '\n'
                                                             << details);
 
 #if DEBUG_ON
@@ -224,7 +223,7 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
 
   commodity_t& commodity(amount.commodity());
 
-  annotation_t* current_annotation = NULL;
+  annotation_t* current_annotation = nullptr;
   if (commodity.annotated)
     current_annotation = &as_annotated_commodity(commodity).details;
 
@@ -242,7 +241,7 @@ cost_breakdown_t commodity_pool_t::exchange(const amount_t& amount, const amount
   // fixated price, since this does not establish a market value for the
   // base commodity.
   if (add_price && !per_unit_cost.is_realzero() &&
-      (current_annotation == NULL ||
+      (current_annotation == nullptr ||
        !(current_annotation->price && current_annotation->has_flags(ANNOTATION_PRICE_FIXATED))) &&
       commodity.referent() != per_unit_cost.commodity().referent()) {
     exchange(commodity, per_unit_cost, moment ? *moment : CURRENT_TIME());
@@ -287,7 +286,7 @@ commodity_pool_t::parse_price_directive(char* line, bool do_not_add_price, bool 
   char* time_field_ptr = next_element(date_field_ptr);
   if (!time_field_ptr)
     return std::nullopt;
-  string date_field = date_field_ptr;
+  string date_field = date_field_ptr; // NOLINT(bugprone-unused-local-non-trivial-variable)
 
   char* symbol_and_price;
   datetime_t datetime;
@@ -355,13 +354,13 @@ commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, co
 
   if (commodity_t* commodity = find_or_create(trim_ws(buf.get()))) {
     if (price && add_prices) {
-      for (char* p = std::strtok(price, ";"); p; p = std::strtok(NULL, ";")) {
+      for (char* p = std::strtok(price, ";"); p; p = std::strtok(nullptr, ";")) {
         commodity->add_price(moment ? *moment : CURRENT_TIME(), amount_t(p));
       }
     }
     return commodity;
   }
-  return NULL;
+  return nullptr;
 }
 
 } // namespace ledger

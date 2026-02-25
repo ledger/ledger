@@ -106,6 +106,7 @@ void output_stream_t::initialize(const optional<path>& output_file,
   // Clean up any previous state before re-initializing
   close();
 
+  // NOLINTBEGIN(bugprone-branch-clone)
   if (output_file && *output_file != "-") {
     os = new ofstream(*output_file);
   } else if (pager_path) {
@@ -115,6 +116,7 @@ void output_stream_t::initialize(const optional<path>& output_file,
   } else {
     os = &std::cout;
   }
+  // NOLINTEND(bugprone-branch-clone)
 }
 
 void output_stream_t::close() {

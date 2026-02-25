@@ -29,7 +29,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cstddef>
 #include <ledger.hh>
+#include <utility>
 
 #include "times.h"
 
@@ -42,7 +44,11 @@
 
 namespace ledger {
 
-DECLARE_EXCEPTION(assertion_failed, std::logic_error);
+class assertion_failed : public std::logic_error {
+public:
+  explicit assertion_failed(const string& why) noexcept : std::logic_error(why) {}
+  ~assertion_failed() noexcept override {}
+};
 
 void debug_assert(const string& reason, const string& func, const string& file, std::size_t line) {
   std::ostringstream buf;
@@ -65,24 +71,24 @@ namespace ledger {
 
 bool verify_enabled = false;
 
-typedef std::pair<std::string, std::size_t> allocation_pair;
-typedef std::map<void*, allocation_pair> memory_map;
-typedef std::multimap<void*, allocation_pair> objects_map;
+using allocation_pair = std::pair<std::string, std::size_t>;
+using memory_map = std::map<void*, allocation_pair>;
+using objects_map = std::multimap<void*, allocation_pair>;
 
-typedef std::pair<std::size_t, std::size_t> count_size_pair;
-typedef std::map<std::string, count_size_pair> object_count_map;
+using count_size_pair = std::pair<std::size_t, std::size_t>;
+using object_count_map = std::map<std::string, count_size_pair>;
 
 namespace {
 bool memory_tracing_active = false;
 
-memory_map* live_memory = NULL;
-memory_map* freed_memory = NULL;
-object_count_map* live_memory_count = NULL;
-object_count_map* total_memory_count = NULL;
-objects_map* live_objects = NULL;
-object_count_map* live_object_count = NULL;
-object_count_map* total_object_count = NULL;
-object_count_map* total_ctor_count = NULL;
+memory_map* live_memory = nullptr;
+memory_map* freed_memory = nullptr;
+object_count_map* live_memory_count = nullptr;
+object_count_map* total_memory_count = nullptr;
+objects_map* live_objects = nullptr;
+object_count_map* live_object_count = nullptr;
+object_count_map* total_object_count = nullptr;
+object_count_map* total_ctor_count = nullptr;
 } // namespace
 
 void initialize_memory_tracing() {
@@ -106,26 +112,26 @@ void shutdown_memory_tracing() {
   if (live_objects) {
     IF_DEBUG("memory.counts")
     report_memory(std::cerr, true);
-    else IF_DEBUG("memory.counts.live") report_memory(std::cerr);
+    else IF_DEBUG("memory.counts.live") report_memory(std::cerr); // NOLINT(bugprone-branch-clone)
     else if (live_objects->size() > 0) report_memory(std::cerr);
   }
 
   checked_delete(live_memory);
-  live_memory = NULL;
+  live_memory = nullptr;
   checked_delete(freed_memory);
-  freed_memory = NULL;
+  freed_memory = nullptr;
   checked_delete(live_memory_count);
-  live_memory_count = NULL;
+  live_memory_count = nullptr;
   checked_delete(total_memory_count);
-  total_memory_count = NULL;
+  total_memory_count = nullptr;
   checked_delete(live_objects);
-  live_objects = NULL;
+  live_objects = nullptr;
   checked_delete(live_object_count);
-  live_object_count = NULL;
+  live_object_count = nullptr;
   checked_delete(total_object_count);
-  total_object_count = NULL;
+  total_object_count = nullptr;
   checked_delete(total_ctor_count);
-  total_ctor_count = NULL;
+  total_ctor_count = nullptr;
 }
 
 inline void add_to_count_map(object_count_map& the_map, const char* name, std::size_t size) {
@@ -266,7 +272,7 @@ void stream_commified_number(std::ostream& out, std::size_t num) {
 
   buf << num;
 
-  string number(buf.str());
+  string number(buf.str()); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
   int integer_digits = 0;
   // Count the number of integer digits
@@ -286,7 +292,8 @@ void stream_commified_number(std::ostream& out, std::size_t num) {
     } else {
       obuf << *p;
 
-      if (integer_digits > 3 && --integer_digits % 3 == 0)
+      --integer_digits;
+      if (integer_digits > 2 && integer_digits % 3 == 0)
         obuf << ',';
     }
   }
@@ -297,23 +304,23 @@ void stream_commified_number(std::ostream& out, std::size_t num) {
 void stream_memory_size(std::ostream& out, std::size_t size) {
   std::ostringstream obuf;
 
-  if (size > 10 * 1024 * 1024)
+  if (size > static_cast<std::size_t>(10 * 1024 * 1024))
     obuf << "\033[1m";
-  if (size > 100 * 1024 * 1024)
+  if (size > static_cast<std::size_t>(100 * 1024 * 1024))
     obuf << "\033[31m";
 
   obuf << std::setw(7);
 
   if (size < 1024)
     obuf << size << 'b';
-  else if (size < (1024 * 1024))
+  else if (size < (static_cast<std::size_t>(1024 * 1024)))
     obuf << int(double(size) / 1024.0) << 'K';
-  else if (size < (1024 * 1024 * 1024))
+  else if (size < (static_cast<std::size_t>(1024 * 1024 * 1024)))
     obuf << int(double(size) / (1024.0 * 1024.0)) << 'M';
   else
     obuf << int(double(size) / (1024.0 * 1024.0 * 1024.0)) << 'G';
 
-  if (size > 10 * 1024 * 1024)
+  if (size > static_cast<std::size_t>(10 * 1024 * 1024))
     obuf << "\033[0m";
 
   out << obuf.str();
@@ -325,7 +332,7 @@ void report_count_map(std::ostream& out, object_count_map& the_map) {
     stream_commified_number(out, pair.second.first);
     out << "  " << std::right << std::setw(7);
     stream_memory_size(out, pair.second.second);
-    out << "  " << std::left << pair.first << std::endl;
+    out << "  " << std::left << pair.first << '\n';
   }
 }
 } // namespace
@@ -402,51 +409,51 @@ void report_memory(std::ostream& out, bool report_all) {
 
   if (live_memory_count->size() > 0) {
     out << "NOTE: There may be memory held by Boost "
-        << "and libstdc++ after ledger::shutdown()" << std::endl;
-    out << "Live memory count:" << std::endl;
+        << "and libstdc++ after ledger::shutdown()" << '\n';
+    out << "Live memory count:" << '\n';
     report_count_map(out, *live_memory_count);
   }
 
   if (live_memory->size() > 0) {
-    out << "Live memory:" << std::endl;
+    out << "Live memory:" << '\n';
 
     for (const memory_map::value_type& pair : *live_memory) {
       out << "  " << std::right << std::setw(18) << pair.first << "  " << std::right
           << std::setw(7);
       stream_memory_size(out, pair.second.second);
-      out << "  " << std::left << pair.second.first << std::endl;
+      out << "  " << std::left << pair.second.first << '\n';
     }
   }
 
   if (report_all && total_memory_count->size() > 0) {
-    out << "Total memory counts:" << std::endl;
+    out << "Total memory counts:" << '\n';
     report_count_map(out, *total_memory_count);
   }
 
   if (live_object_count->size() > 0) {
-    out << "Live object count:" << std::endl;
+    out << "Live object count:" << '\n';
     report_count_map(out, *live_object_count);
   }
 
   if (live_objects->size() > 0) {
-    out << "Live objects:" << std::endl;
+    out << "Live objects:" << '\n';
 
     for (const objects_map::value_type& pair : *live_objects) {
       out << "  " << std::right << std::setw(18) << pair.first << "  " << std::right
           << std::setw(7);
       stream_memory_size(out, pair.second.second);
-      out << "  " << std::left << pair.second.first << std::endl;
+      out << "  " << std::left << pair.second.first << '\n';
     }
   }
 
   if (report_all) {
     if (total_object_count->size() > 0) {
-      out << "Total object counts:" << std::endl;
+      out << "Total object counts:" << '\n';
       report_count_map(out, *total_object_count);
     }
 
     if (total_ctor_count->size() > 0) {
-      out << "Total constructor counts:" << std::endl;
+      out << "Total constructor counts:" << '\n';
       report_count_map(out, *total_ctor_count);
     }
   }
@@ -528,7 +535,7 @@ uint16_t _trace_level;
 #endif
 
 static bool logger_has_run = false;
-static ptime logger_start;
+static ptime logger_start; // NOLINT(cert-err58-cpp)
 
 void logger_func(log_level_t level) {
   if (!logger_has_run) {
@@ -536,7 +543,7 @@ void logger_func(log_level_t level) {
     logger_start = TRUE_CURRENT_TIME();
 
     IF_VERIFY()
-    *_log_stream << "   TIME  OBJSZ  MEMSZ" << std::endl;
+    *_log_stream << "   TIME  OBJSZ  MEMSZ" << '\n';
   }
 
   *_log_stream << std::right << std::setw(5)
@@ -591,7 +598,7 @@ void logger_func(log_level_t level) {
     break;
   }
 
-  *_log_stream << ' ' << _log_buffer.str() << std::endl;
+  *_log_stream << ' ' << _log_buffer.str() << '\n';
   _log_buffer.clear();
   _log_buffer.str("");
 }
@@ -609,14 +616,14 @@ optional<boost::u32regex> _log_category_re;
 optional<boost::regex> _log_category_re;
 #endif
 
-static struct __maybe_enable_debugging {
-  __maybe_enable_debugging() {
+static struct _maybe_enable_debugging {
+  _maybe_enable_debugging() {
     if (const char* p = std::getenv("LEDGER_DEBUG")) {
       _log_level = LOG_DEBUG;
       _log_category = p;
     }
   }
-} __maybe_enable_debugging_obj;
+} _maybe_enable_debugging_obj; // NOLINT(cert-err58-cpp)
 
 } // namespace ledger
 
@@ -640,10 +647,10 @@ struct timer_t {
 
   timer_t(log_level_t _level, std::string _description)
       : level(_level), begin(TRUE_CURRENT_TIME()), spent(time_duration(0, 0, 0, 0)),
-        description(_description), active(true) {}
+        description(std::move(_description)), active(true) {}
 };
 
-typedef std::map<std::string, timer_t> timer_map;
+using timer_map = std::map<std::string, timer_t>;
 
 static timer_map timers;
 
@@ -757,7 +764,7 @@ path expand_path(const path& pathname) {
     return pathname;
 
   std::string path_string = pathname.string();
-  const char* pfx = NULL;
+  const char* pfx = nullptr;
   string::size_type pos = path_string.find_first_of('/');
 
   if (path_string.length() == 1 || pos == 1) {

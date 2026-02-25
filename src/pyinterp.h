@@ -130,7 +130,7 @@ public:
 
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
-  OPTION_(python_interpreter_t, import_, DO_(str) { parent->import_option(str); });
+  OPTION_(python_interpreter_t, import_, DO_() { parent->import_option(str); });
 };
 
 extern std::shared_ptr<python_interpreter_t> python_session;

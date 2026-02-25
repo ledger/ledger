@@ -41,6 +41,8 @@
  */
 #pragma once
 
+#include <utility>
+
 #include "expr.h"
 #include "commodity.h"
 #include "annotate.h"
@@ -59,8 +61,8 @@ public:
     TRACE_CTOR(predicate_t, "copy");
   }
   predicate_t& operator=(const predicate_t&) = default;
-  predicate_t(ptr_op_t _ptr, const keep_details_t& _what_to_keep, scope_t* _context = NULL)
-      : expr_t(_ptr, _context), what_to_keep(_what_to_keep) {
+  predicate_t(ptr_op_t _ptr, const keep_details_t& _what_to_keep, scope_t* _context = nullptr)
+      : expr_t(std::move(_ptr), _context), what_to_keep(_what_to_keep) {
     TRACE_CTOR(predicate_t, "ptr_op_t, keep_details_t, scope_t *");
   }
   predicate_t(const string& str, const keep_details_t& _what_to_keep,
@@ -73,9 +75,9 @@ public:
       : expr_t(in, flags), what_to_keep(_what_to_keep) {
     TRACE_CTOR(predicate_t, "std::istream&, keep_details_t, parse_flags_t");
   }
-  virtual ~predicate_t() { TRACE_DTOR(predicate_t); }
+  ~predicate_t() override { TRACE_DTOR(predicate_t); }
 
-  virtual value_t real_calc(scope_t& scope) override {
+  value_t real_calc(scope_t& scope) override {
     return (*this ? expr_t::real_calc(scope).strip_annotations(what_to_keep).to_boolean() : true);
   }
 };

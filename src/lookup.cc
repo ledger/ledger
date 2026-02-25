@@ -37,9 +37,9 @@
 namespace ledger {
 
 namespace {
-typedef std::pair<xact_t*, int> score_entry_t;
-typedef std::deque<score_entry_t> scorecard_t;
-typedef std::map<uint32_t, std::size_t> char_positions_map;
+using score_entry_t = std::pair<xact_t*, int>;
+using scorecard_t = std::deque<score_entry_t>;
+using char_positions_map = std::map<uint32_t, std::size_t>;
 
 struct score_sorter {
   bool operator()(const score_entry_t& left, const score_entry_t& right) const {
@@ -47,8 +47,8 @@ struct score_sorter {
   }
 };
 
-typedef std::map<account_t*, int> account_use_map;
-typedef std::pair<account_t*, int> account_use_pair;
+using account_use_map = std::map<account_t*, int>;
+using account_use_pair = std::pair<account_t*, int>;
 
 struct usage_sorter {
   bool operator()(const account_use_pair& left, const account_use_pair& right) const {
@@ -74,12 +74,12 @@ std::pair<xact_t*, account_t*> lookup_probable_account(const string& ident,
 
   DEBUG("lookup.account", "Looking up identifier '" << lowered_ident.extract() << "'");
 #if DEBUG_ON
-  if (ref_account != NULL)
+  if (ref_account != nullptr)
     DEBUG("lookup.account", "  with reference account: " << ref_account->fullname());
 #endif
 
   xact_t* xact;
-  while (iter != end && (xact = *iter++) != NULL) {
+  while (iter != end && (xact = *iter++) != nullptr) {
 #if 0
     // Only consider transactions from the last two years (jww (2010-03-07):
     // make this an option)

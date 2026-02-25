@@ -55,7 +55,7 @@ struct date_from_python {
     PyDateTime_IMPORT;
     if (PyDate_Check(obj_ptr))
       return obj_ptr;
-    return 0;
+    return nullptr;
   }
 
   static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data) {
@@ -72,7 +72,7 @@ struct date_from_python {
   }
 };
 
-typedef register_python_conversion<date_t, date_to_python, date_from_python> date_python_conversion;
+using date_python_conversion = register_python_conversion<date_t, date_to_python, date_from_python>;
 
 struct datetime_to_python {
   static PyObject* convert(const datetime_t& moment) {
@@ -93,7 +93,7 @@ struct datetime_from_python {
     PyDateTime_IMPORT;
     if (PyDateTime_Check(obj_ptr))
       return obj_ptr;
-    return 0;
+    return nullptr;
   }
 
   static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data) {
@@ -122,8 +122,8 @@ struct datetime_from_python {
   }
 };
 
-typedef register_python_conversion<datetime_t, datetime_to_python, datetime_from_python>
-    datetime_python_conversion;
+using datetime_python_conversion =
+    register_python_conversion<datetime_t, datetime_to_python, datetime_from_python>;
 
 /* Convert time_duration to/from python */
 struct duration_to_python {
@@ -153,7 +153,7 @@ struct duration_to_python {
 struct duration_from_python {
   static void* convertible(PyObject* obj_ptr) {
     if (!PyDelta_Check(obj_ptr))
-      return 0;
+      return nullptr;
     return obj_ptr;
   }
 
@@ -181,8 +181,8 @@ struct duration_from_python {
   }
 };
 
-typedef register_python_conversion<time_duration_t, duration_to_python, duration_from_python>
-    duration_python_conversion;
+using duration_python_conversion =
+    register_python_conversion<time_duration_t, duration_to_python, duration_from_python>;
 
 datetime_t py_parse_datetime(const string& str) {
   return parse_datetime(str);

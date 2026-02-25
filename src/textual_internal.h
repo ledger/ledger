@@ -44,6 +44,7 @@
 #include "pool.h"
 #include "session.h"
 #include <algorithm>
+#include <utility>
 #if HAVE_BOOST_PYTHON
 #include "pyinterp.h"
 #endif
@@ -55,17 +56,18 @@
 
 namespace ledger::detail {
 
-typedef std::pair<commodity_t*, amount_t> fixed_rate_t;
+using fixed_rate_t = std::pair<commodity_t*, amount_t>;
 
 struct application_t {
   string label;
   std::variant<optional<datetime_t>, account_t*, string, fixed_rate_t> value;
   optional<int> saved_year_directive;
 
-  application_t(string _label, optional<datetime_t> epoch) : label(_label), value(epoch) {}
-  application_t(string _label, account_t* acct) : label(_label), value(acct) {}
-  application_t(string _label, string tag) : label(_label), value(tag) {}
-  application_t(string _label, fixed_rate_t rate) : label(_label), value(rate) {}
+  application_t(string _label, optional<datetime_t> epoch)
+      : label(std::move(_label)), value(epoch) {}
+  application_t(string _label, account_t* acct) : label(std::move(_label)), value(acct) {}
+  application_t(string _label, string tag) : label(std::move(_label)), value(tag) {}
+  application_t(string _label, fixed_rate_t rate) : label(std::move(_label)), value(rate) {}
 };
 
 class instance_t : public noncopyable, public scope_t {
@@ -82,12 +84,12 @@ public:
 #endif
 
   instance_t(parse_context_stack_t& _context_stack, parse_context_t& _context,
-             instance_t* _parent = NULL, const bool _no_assertions = false,
+             instance_t* _parent = nullptr, const bool _no_assertions = false,
              const hash_type_t _hash_type = NO_HASHES)
       : context_stack(_context_stack), context(_context), in(*context.stream.get()),
         parent(_parent), no_assertions(_no_assertions), hash_type(_hash_type), timelog(context) {}
 
-  virtual string description() override { return _("textual parser"); }
+  string description() override { return _("textual parser"); }
 
   template <typename T>
   void get_applications(std::vector<T>& result) {
@@ -112,7 +114,7 @@ public:
     if (optional<account_t*> acct = get_application<account_t*>())
       return *acct;
     else
-      return NULL;
+      return nullptr;
   }
 
   void parse();
@@ -140,7 +142,7 @@ public:
   void account_directive(char* line);
   void account_alias_directive(account_t* account, string alias);
   void account_payee_directive(account_t* account, string payee);
-  void account_value_directive(account_t* account, string expr_str);
+  void account_value_directive(account_t* account, const string& expr_str);
   void account_default_directive(account_t* account);
 
   void default_account_directive(char* args);
@@ -152,7 +154,7 @@ public:
 
   void commodity_directive(char* line);
   void commodity_alias_directive(commodity_t& comm, string alias);
-  void commodity_value_directive(commodity_t& comm, string expr_str);
+  void commodity_value_directive(commodity_t& comm, const string& expr_str);
   void commodity_format_directive(commodity_t& comm, string format);
   void commodity_nomarket_directive(commodity_t& comm);
   void commodity_default_directive(commodity_t& comm);
@@ -194,11 +196,11 @@ public:
 
   xact_t* parse_xact(char* line, std::streamsize len, account_t* account, xact_t* previous_xact);
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 };
 
 void parse_amount_expr(std::istream& in, scope_t& scope, post_t& post, amount_t& amount,
                        const parse_flags_t& flags = PARSE_DEFAULT, const bool defer_expr = false,
-                       optional<expr_t>* amount_expr = NULL);
+                       optional<expr_t>* amount_expr = nullptr);
 
 } // namespace ledger::detail

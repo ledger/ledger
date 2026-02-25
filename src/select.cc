@@ -45,7 +45,8 @@
 namespace ledger {
 
 namespace {
-bool get_principal_identifiers(expr_t::ptr_op_t expr, string& ident, bool do_transforms = false) {
+bool get_principal_identifiers(const expr_t::ptr_op_t& expr, string& ident,
+                               bool do_transforms = false) {
   bool result = true;
 
   if (expr->is_ident()) {
@@ -346,6 +347,7 @@ value_t select_command(call_scope_t& args) {
       formatter << "\\n";
       DEBUG("select.parse", "formatter: " << formatter.str());
     } else if (keyword == "from") {
+      // NOLINTBEGIN(bugprone-branch-clone)
       if (arg == "xacts" || arg == "txns" || arg == "transactions") {
         report_functor = expr_t::op_t::wrap_functor(
             reporter<>(post_handler_ptr(new print_xacts(report, report.HANDLED(raw))), report,
@@ -365,6 +367,7 @@ value_t select_command(call_scope_t& args) {
                 post_handler_ptr(new format_posts(report, formatter.str())), report,
                 string("#select")));
       }
+      // NOLINTEND(bugprone-branch-clone)
     } else if (keyword == "where") {
 #if 0
       query_t          query;
@@ -382,11 +385,13 @@ value_t select_command(call_scope_t& args) {
     } else if (keyword == "group by") {
       report.HANDLER(group_by_).on("#select", arg);
     } else if (keyword == "style") {
+      // NOLINTBEGIN(bugprone-branch-clone)
       if (arg == "csv") {
       } else if (arg == "xml") {
       } else if (arg == "json") {
       } else if (arg == "emacs") {
       }
+      // NOLINTEND(bugprone-branch-clone)
     }
 
     ++m1;

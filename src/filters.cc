@@ -30,6 +30,7 @@
  */
 
 #include <system.hh>
+#include <utility>
 
 #include "filters.h"
 #include "iterators.h"
@@ -176,7 +177,7 @@ void split_string(const string& str, const char ch, std::list<string>& strings) 
 
 account_t* create_temp_account_from_path(std::list<string>& account_names, temporaries_t& temps,
                                          account_t* master) {
-  account_t* new_account = NULL;
+  account_t* new_account = nullptr;
   for (const string& name : account_names) {
     if (new_account) {
       new_account = new_account->find_account(name);
@@ -187,7 +188,7 @@ account_t* create_temp_account_from_path(std::list<string>& account_names, tempo
     }
   }
 
-  assert(new_account != NULL);
+  assert(new_account != nullptr);
   return new_account;
 }
 } // namespace
@@ -320,10 +321,10 @@ void calc_posts::operator()(post_t& post) {
 
 namespace {
 void handle_value(const value_t& value, account_t* account, xact_t* xact, temporaries_t& temps,
-                  post_handler_ptr handler, const date_t& date = date_t(),
+                  const post_handler_ptr& handler, const date_t& date = date_t(),
                   const bool act_date_p = true, const value_t& total = value_t(),
                   const bool direct_amount = false, const bool mark_visited = false,
-                  const bool bidir_link = true, post_t* source_post = NULL) {
+                  const bool bidir_link = true, post_t* source_post = nullptr) {
   post_t& post = temps.create_post(*xact, account, bidir_link);
   post.add_flags(ITEM_GENERATED);
 
@@ -405,6 +406,7 @@ void collapse_posts::report_subtotal() {
       displayed_count++;
   }
 
+  // NOLINTBEGIN(bugprone-branch-clone)
   if (only_collapse_if_zero && !subtotal.is_zero()) {
     // --collapse-if-zero with non-zero subtotal: pass all component posts
     // through uncollapsed.  Must be checked before the displayed_count == 1
@@ -487,14 +489,15 @@ void collapse_posts::report_subtotal() {
       }
     }
   }
+  // NOLINTEND(bugprone-branch-clone)
   // When only_collapse_if_zero && subtotal.is_zero(): suppress entirely
   // (fall through to cleanup below).
 
   totals.clear();
   component_posts.clear();
 
-  last_xact = NULL;
-  last_post = NULL;
+  last_xact = nullptr;
+  last_post = nullptr;
   subtotal = 0L;
   count = 0;
 }
@@ -549,7 +552,7 @@ void related_posts::flush() {
 
 display_filter_posts::display_filter_posts(post_handler_ptr handler, report_t& _report,
                                            bool _show_rounding)
-    : item_handler<post_t>(handler), report(_report),
+    : item_handler<post_t>(std::move(handler)), report(_report),
       display_amount_expr(report.HANDLER(display_amount_).expr),
       display_total_expr(report.HANDLER(display_total_).expr), show_rounding(_show_rounding),
       has_stripped_cache(false), what_to_keep(report.what_to_keep()) {
@@ -673,13 +676,13 @@ void display_filter_posts::operator()(post_t& post) {
 changed_value_posts::changed_value_posts(post_handler_ptr handler, report_t& _report,
                                          bool _for_accounts_report, bool _show_unrealized,
                                          display_filter_posts* _display_filter)
-    : item_handler<post_t>(handler), report(_report),
+    : item_handler<post_t>(std::move(handler)), report(_report),
       total_expr(report.HANDLED(revalued_total_) ? report.HANDLER(revalued_total_).expr
                                                  : report.HANDLER(display_total_).expr),
       display_total_expr(report.HANDLER(display_total_).expr),
       changed_values_only(report.HANDLED(revalued_only)),
       historical_prices_only(report.HANDLED(historical)), for_accounts_report(_for_accounts_report),
-      show_unrealized(_show_unrealized), last_post(NULL), display_filter(_display_filter) {
+      show_unrealized(_show_unrealized), last_post(nullptr), display_filter(_display_filter) {
   string gains_equity_account_name;
   if (report.HANDLED(unrealized_gains_))
     gains_equity_account_name = report.HANDLER(unrealized_gains_).str();
@@ -709,7 +712,7 @@ void changed_value_posts::flush() {
         output_intermediate_prices(*last_post, report.terminus.date());
       output_revaluation(*last_post, report.terminus.date());
     }
-    last_post = NULL;
+    last_post = nullptr;
   }
   item_handler<post_t>::flush();
 }
@@ -739,6 +742,7 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
       xact.payee = _("Commodities revalued");
       xact._date = is_valid(date) ? date : post.value_date();
 
+      // NOLINTBEGIN(bugprone-branch-clone)
       if (!for_accounts_report) {
         handle_value(/* value=         */ diff,
                      /* account=       */ revalued_account,
@@ -767,6 +771,7 @@ void changed_value_posts::output_revaluation(post_t& post, const date_t& date) {
             /* bidir_link=    */ true,
             /* source_post=   */ &post);
       }
+      // NOLINTEND(bugprone-branch-clone)
     }
   }
 }
@@ -936,6 +941,7 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
   component_posts.clear();
 
   std::ostringstream out_date;
+  // NOLINTBEGIN(bugprone-branch-clone)
   if (spec_fmt) {
     out_date << format_date(*range_finish, FMT_CUSTOM, spec_fmt);
   } else if (date_format) {
@@ -943,6 +949,7 @@ void subtotal_posts::report_subtotal(const char* spec_fmt,
   } else {
     out_date << "- " << format_date(*range_finish);
   }
+  // NOLINTEND(bugprone-branch-clone)
 
   xact_t& xact = temps.create_xact();
   xact.payee = out_date.str();
@@ -1006,7 +1013,7 @@ void interval_posts::report_subtotal(const date_interval_t& ival) {
   if (exact_periods)
     subtotal_posts::report_subtotal();
   else
-    subtotal_posts::report_subtotal(NULL, ival);
+    subtotal_posts::report_subtotal(nullptr, ival);
 }
 
 namespace {
@@ -1020,11 +1027,13 @@ void interval_posts::operator()(post_t& post) {
   // report in two passes.  Otherwise, we only have to check whether the
   // post falls within the reporting period.
 
+  // NOLINTBEGIN(bugprone-branch-clone)
   if (interval.duration) {
     all_posts.push_back(&post);
   } else if (interval.find_period(post.date(), align_intervals)) {
     item_handler<post_t>::operator()(post);
   }
+  // NOLINTEND(bugprone-branch-clone)
 }
 
 void interval_posts::flush() {
@@ -1105,7 +1114,8 @@ struct create_post_from_amount {
 
   explicit create_post_from_amount(post_handler_ptr _handler, xact_t& _xact,
                                    account_t& _balance_account, temporaries_t& _temps)
-      : handler(_handler), xact(_xact), balance_account(_balance_account), temps(_temps) {
+      : handler(std::move(_handler)), xact(_xact), balance_account(_balance_account),
+        temps(_temps) {
     TRACE_CTOR(create_post_from_amount, "post_handler_ptr, xact_t&, account_t&, temporaries_t&");
   }
   create_post_from_amount(const create_post_from_amount& other)
@@ -1502,11 +1512,11 @@ void forecast_posts::flush() {
 }
 
 inject_posts::inject_posts(post_handler_ptr handler, const string& tag_list, account_t* master)
-    : item_handler<post_t>(handler) {
+    : item_handler<post_t>(std::move(handler)) {
   scoped_array<char> buf(new char[tag_list.length() + 1]);
   std::strcpy(buf.get(), tag_list.c_str());
 
-  for (char* q = std::strtok(buf.get(), ","); q; q = std::strtok(NULL, ",")) {
+  for (char* q = std::strtok(buf.get(), ","); q; q = std::strtok(nullptr, ",")) {
     std::list<string> account_names;
     split_string(q, ':', account_names);
 

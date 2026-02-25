@@ -41,6 +41,8 @@
  */
 #pragma once
 
+#include <utility>
+
 #include "utils.h"
 #include "times.h"
 
@@ -75,12 +77,12 @@ public:
   std::string last;
 
   explicit parse_context_t(const path& cwd)
-      : current_directory(cwd), master(NULL), scope(NULL), linenum(0), errors(0), count(0),
+      : current_directory(cwd), master(nullptr), scope(nullptr), linenum(0), errors(0), count(0),
         sequence(1) {}
 
   explicit parse_context_t(std::shared_ptr<std::istream> _stream, const path& cwd)
-      : stream(_stream), current_directory(cwd), master(NULL), scope(NULL), linenum(0), errors(0),
-        count(0), sequence(1) {}
+      : stream(std::move(_stream)), current_directory(cwd), master(nullptr), scope(nullptr),
+        linenum(0), errors(0), count(0), sequence(1) {}
 
   parse_context_t(const parse_context_t& context)
       : stream(context.stream), pathname(context.pathname),
@@ -130,7 +132,7 @@ class parse_context_stack_t {
 public:
   void push() { parsing_context.push_front(parse_context_t(safe_current_path())); }
   void push(std::shared_ptr<std::istream> stream, const path& cwd = safe_current_path()) {
-    parsing_context.push_front(parse_context_t(stream, cwd));
+    parsing_context.push_front(parse_context_t(std::move(stream), cwd));
   }
   void push(const path& pathname, const path& cwd = safe_current_path()) {
     parsing_context.push_front(open_for_reading(pathname, cwd));
