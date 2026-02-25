@@ -608,6 +608,20 @@ value_t report_t::fn_averaged_lots(call_scope_t& args) {
     return args[0];
 }
 
+value_t report_t::fn_fifo_lots(call_scope_t& args) {
+  if (args.has<balance_t>(0))
+    return fifo_lot_prices(args.get<balance_t>(0));
+  else
+    return args[0];
+}
+
+value_t report_t::fn_lifo_lots(call_scope_t& args) {
+  if (args.has<balance_t>(0))
+    return lifo_lot_prices(args.get<balance_t>(0));
+  else
+    return args[0];
+}
+
 value_t report_t::fn_market(call_scope_t& args) {
   value_t result;
   value_t arg0 = args[0];
@@ -1245,6 +1259,8 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     else OPT_ALT(lot_notes, lot_tags);
     else OPT(lots);
     else OPT(lots_actual);
+    else OPT(lots_fifo);
+    else OPT(lots_lifo);
     else OPT_ALT(tail_, last_);
     break;
   case 'm':
@@ -1449,6 +1465,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
         return MAKE_FUNCTOR(report_t::fn_format);
       else if (is_eq(p, "floor"))
         return MAKE_FUNCTOR(report_t::fn_floor);
+      else if (is_eq(p, "fifo_lots"))
+        return MAKE_FUNCTOR(report_t::fn_fifo_lots);
       break;
 
     case 'g':
@@ -1468,6 +1486,11 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
         return MAKE_FUNCTOR(report_t::fn_justify);
       else if (is_eq(p, "join"))
         return MAKE_FUNCTOR(report_t::fn_join);
+      break;
+
+    case 'l':
+      if (is_eq(p, "lifo_lots"))
+        return MAKE_FUNCTOR(report_t::fn_lifo_lots);
       break;
 
     case 'm':

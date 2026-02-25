@@ -3812,6 +3812,17 @@ order.  They are all optional.
 
 To show all lot information in a report, use @option{--lots}.
 
+@findex --lots-fifo
+@findex --lots-lifo
+@findex --average-lot-prices
+To display lots in a specific order for cost-basis accounting, use
+@option{--lots-fifo} (oldest acquisition date first, for FIFO accounting)
+or @option{--lots-lifo} (newest acquisition date first, for LIFO
+accounting).  Both options imply @option{--lot-prices} and
+@option{--lot-dates}.  To collapse all lots of the same commodity into a
+single entry using their weighted average price, use
+@option{--average-lot-prices}.
+
 @node Lot value expressions, Automated Transactions, Lot notes, Transactions
 @section Lot value expressions
 
@@ -7332,6 +7343,14 @@ a balance report.
 @item --lots-actual
 Preserve the uniqueness of commodities so they aren't merged during
 reporting without printing the lot annotations.
+
+@item --lots-fifo
+Report lots sorted by acquisition date, oldest first (FIFO order).
+Implies @option{--lot-prices} and @option{--lot-dates}.
+
+@item --lots-lifo
+Report lots sorted by acquisition date, newest first (LIFO order).
+Implies @option{--lot-prices} and @option{--lot-dates}.
 
 @item --market
 @itemx -V

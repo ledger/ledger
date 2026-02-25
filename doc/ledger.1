@@ -775,6 +775,18 @@ a balance report.
 .It Fl \-lots-actual
 Preserve the uniqueness of commodities so they aren't merged during
 reporting without printing the lot annotations.
+.It Fl \-lots-fifo
+Report lots sorted by acquisition date, oldest first (FIFO order).
+Implies
+.Fl \-lot-prices
+and
+.Fl \-lot-dates .
+.It Fl \-lots-lifo
+Report lots sorted by acquisition date, newest first (LIFO order).
+Implies
+.Fl \-lot-prices
+and
+.Fl \-lot-dates .
 .It Fl \-market Pq Fl V
 Use the latest market value for all commodities.
 .It Fl \-master-account Ar STR

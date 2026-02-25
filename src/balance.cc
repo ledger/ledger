@@ -224,8 +224,10 @@ balance_t balance_t::strip_annotations(const keep_details_t& what_to_keep) const
   // rebuilding the balance via operator+=.
   for (const amounts_map::value_type& pair : amounts) {
     if (!what_to_keep.keep_all(pair.second.commodity())) {
-      // At least one amount needs stripping; fall through to rebuild
+      // At least one amount needs stripping; fall through to rebuild.
+      // Preserve sort_order so FIFO/LIFO display preference is maintained.
       balance_t temp;
+      temp.sort_order = sort_order;
       for (const amounts_map::value_type& pair2 : amounts)
         temp += pair2.second.strip_annotations(what_to_keep);
       return temp;
@@ -239,9 +241,47 @@ void balance_t::sorted_amounts(amounts_array& sorted) const {
   for (const amounts_map::value_type& pair : amounts)
     if (!pair.second.is_null())
       sorted.push_back(&pair.second);
-  std::stable_sort(sorted.begin(), sorted.end(), [](const amount_t* left, const amount_t* right) {
-    return commodity_t::compare_by_commodity()(left, right) < 0;
-  });
+
+  if (sort_order == lot_sort_order::fifo || sort_order == lot_sort_order::lifo) {
+    const bool ascending = (sort_order == lot_sort_order::fifo);
+    std::stable_sort(
+        sorted.begin(), sorted.end(), [ascending](const amount_t* left, const amount_t* right) {
+          commodity_t& lc = left->commodity();
+          commodity_t& rc = right->commodity();
+
+          // Primary sort: base symbol (same as compare_by_commodity)
+          int cmp = lc.base_symbol().compare(rc.base_symbol());
+          if (cmp != 0)
+            return cmp < 0;
+
+          // Unannotated lots sort before annotated ones
+          if (!lc.has_annotation() && rc.has_annotation())
+            return true;
+          if (lc.has_annotation() && !rc.has_annotation())
+            return false;
+          if (!lc.has_annotation() && !rc.has_annotation())
+            return false;
+
+          // Both annotated: compare by date first (FIFO=ascending, LIFO=descending)
+          const annotated_commodity_t& alc = static_cast<const annotated_commodity_t&>(lc);
+          const annotated_commodity_t& arc = static_cast<const annotated_commodity_t&>(rc);
+
+          if (!alc.details.date && arc.details.date)
+            return ascending; // no date sorts first for FIFO, last for LIFO
+          if (alc.details.date && !arc.details.date)
+            return !ascending;
+          if (alc.details.date && arc.details.date && *alc.details.date != *arc.details.date)
+            return ascending ? *alc.details.date < *arc.details.date
+                             : *alc.details.date > *arc.details.date;
+
+          // Dates equal (or both absent): fall back to standard commodity ordering
+          return commodity_t::compare_by_commodity()(left, right) < 0;
+        });
+  } else {
+    std::stable_sort(sorted.begin(), sorted.end(), [](const amount_t* left, const amount_t* right) {
+      return commodity_t::compare_by_commodity()(left, right) < 0;
+    });
+  }
 }
 
 void balance_t::map_sorted_amounts(const function<void(const amount_t&)>& fn) const {
@@ -375,6 +415,18 @@ balance_t average_lot_prices(const balance_t& bal) {
     }
   }
 
+  return result;
+}
+
+balance_t fifo_lot_prices(const balance_t& bal) {
+  balance_t result(bal);
+  result.sort_order = balance_t::lot_sort_order::fifo;
+  return result;
+}
+
+balance_t lifo_lot_prices(const balance_t& bal) {
+  balance_t result(bal);
+  result.sort_order = balance_t::lot_sort_order::lifo;
   return result;
 }
 

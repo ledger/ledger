@@ -1,0 +1,17 @@
+2019-01-01 * Opening balance
+    Assets:Investments              1000.00 EUR
+    Equity:Opening balance         -1000.00 EUR
+
+2019-03-01 * Bought FOO early at high price
+    Assets:Investments       2 FOO {180.00 EUR} [2019-03-01]
+    Assets:Investments              -360.00 EUR
+
+2019-06-01 * Bought FOO later at low price
+    Assets:Investments       1 FOO {150.00 EUR} [2019-06-01]
+    Assets:Investments              -150.00 EUR
+
+test bal assets:investments --lots-fifo
+          490.00 EUR
+2 FOO {180.00 EUR} [2019/03/01]
+1 FOO {150.00 EUR} [2019/06/01]  Assets:Investments
+end test

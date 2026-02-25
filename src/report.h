@@ -192,6 +192,8 @@ public:
   value_t fn_to_mask(call_scope_t& scope);
   value_t fn_to_sequence(call_scope_t& scope);
   value_t fn_averaged_lots(call_scope_t& scope);
+  value_t fn_fifo_lots(call_scope_t& scope);
+  value_t fn_lifo_lots(call_scope_t& scope);
 
   value_t fn_now(call_scope_t&) { return terminus; }
   value_t fn_today(call_scope_t&) { return terminus.date(); }
@@ -285,6 +287,8 @@ public:
     HANDLER(lot_dates).report(out);
     HANDLER(lot_prices).report(out);
     HANDLER(average_lot_prices).report(out);
+    HANDLER(lots_fifo).report(out);
+    HANDLER(lots_lifo).report(out);
     HANDLER(lot_notes).report(out);
     HANDLER(lots).report(out);
     HANDLER(lots_actual).report(out);
@@ -747,6 +751,20 @@ public:
         OTHER(lot_prices).on(whence);
         OTHER(display_amount_).on(whence, "averaged_lots(display_amount)");
         OTHER(display_total_).on(whence, "averaged_lots(display_total)");
+      });
+  OPTION_(
+      report_t, lots_fifo, DO() {
+        OTHER(lot_prices).on(whence);
+        OTHER(lot_dates).on(whence);
+        OTHER(display_amount_).on(whence, "fifo_lots(display_amount)");
+        OTHER(display_total_).on(whence, "fifo_lots(display_total)");
+      });
+  OPTION_(
+      report_t, lots_lifo, DO() {
+        OTHER(lot_prices).on(whence);
+        OTHER(lot_dates).on(whence);
+        OTHER(display_amount_).on(whence, "lifo_lots(display_amount)");
+        OTHER(display_total_).on(whence, "lifo_lots(display_total)");
       });
   OPTION(report_t, lot_notes);
   OPTION(report_t, lots);
