@@ -685,7 +685,7 @@ value_t report_t::fn_scrub(call_scope_t& args) {
 }
 
 value_t report_t::fn_rounded(call_scope_t& args) {
-  return args.value().rounded();
+  return args.value().rounded_to_commodity_precision();
 }
 
 value_t report_t::fn_unrounded(call_scope_t& args) {
