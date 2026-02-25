@@ -1,0 +1,501 @@
+src/py_times.cc
+  3cb6a67a04290581 69-72,114,116,118-121
+src/pyutils.h
+  3cb6a67a04290581 124
+src/py_xact.cc
+  3cb6a67a04290581 59
+src/py_account.cc
+  3cb6a67a04290581 61-62,185
+src/pyinterp.cc
+  3cb6a67a04290581 345-347,547
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.5",
+  "base_commit_sha": "b6a1bd879014fb624b2581d7314abcc07510d2cf",
+  "prompts": {
+    "3cb6a67a04290581": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "716ae7f3-3c12-47f4-9817-9e5686617367",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<teammate-message teammate_id=\"team-lead\">\nYou are fixing bugs found during a code review of the Ledger C++ project. Fix ONLY the files listed below. Make each fix carefully and precisely. Do NOT change any other files. Do NOT reformat code beyond your fix. After all fixes, do a `git add` of just the changed files and `git commit` with a descriptive message.\n\nThe project is at the current working directory. Source files are in `src/`.\n\n## Fix 1: CRITICAL - pyutils.h:122-127 — str_to_py_unicode returns dangling PyObject*\n\nRead `src/pyutils.h`. Find the `str_to_py_unicode` template function. It creates a temporary `boost::python::object`, calls `.ptr()`, and the temporary's destructor frees the Python object before the caller uses the returned pointer.\n\nFix: Return `PyUnicode_FromString` directly without wrapping in a temporary object:\n```cpp\ntemplate &lt;typename T&gt;\nPyObject* str_to_py_unicode(const T&amp; str) {\n  return PyUnicode_FromString(str.c_str());\n}\n```\n\n## Fix 2: CRITICAL - py_times.cc:61-72 — date_from_python::construct memory leak\n\nRead `src/py_times.cc`. Find `date_from_python::construct`. It uses `new date_t(...)` on the heap instead of placement-new into Boost.Python's storage buffer.\n\nFix: Use placement-new pattern. Look at how `duration_from_python::construct` does it correctly in the same file and follow that pattern:\n```cpp\nvoid* storage =\n    reinterpret_cast&lt;converter::rvalue_from_python_storage&lt;date_t&gt;*&gt;(data)-&gt;storage.bytes;\nnew (storage) date_t(y, m, d);\ndata-&gt;convertible = storage;\n```\n\n## Fix 3: CRITICAL - py_times.cc:99-122 — datetime_from_python::construct same leak\n\nSame file. Find `datetime_from_python::construct`. Same issue — uses `new datetime_t(...)` instead of placement-new.\n\nFix: Same pattern as Fix 2 but for `datetime_t`:\n```cpp\nvoid* storage =\n    reinterpret_cast&lt;converter::rvalue_from_python_storage&lt;datetime_t&gt;*&gt;(data)-&gt;storage.bytes;\nnew (storage) datetime_t(...);\ndata-&gt;convertible = storage;\n```\n\n## Fix 4: HIGH - py_account.cc:52-78 — static mutable variables in accounts_getitem\n\nRead `src/py_account.cc`. Find `accounts_getitem`. It uses function-local `static` variables as an iterator cache. This is not thread-safe and breaks when iterating different Account objects interleaved.\n\nFix: Remove statics, use `std::next`:\n```cpp\naccount_t&amp; accounts_getitem(account_t&amp; account, long i) {\n  long len = static_cast&lt;long&gt;(account.accounts.size());\n  if (labs(i) &gt;= len) {\n    PyErr_SetString(PyExc_IndexError, _(\"Index out of range\"));\n    throw_error_already_set();\n  }\n  long x = i &lt; 0 ? len + i : i;\n  auto elem = std::next(account.accounts.begin(), x);\n  return *elem-&gt;second;\n}\n```\n\n## Fix 5: HIGH - py_xact.cc:50-76 — same static issue in posts_getitem\n\nRead `src/py_xact.cc`. Find `posts_getitem`. Same static variable issue.\n\nFix: Remove statics, use `std::next`:\n```cpp\npost_t&amp; posts_getitem(xact_base_t&amp; xact, long i) {\n  long len = static_cast&lt;long&gt;(xact.posts.size());\n  if (labs(i) &gt;= len) {\n    PyErr_SetString(PyExc_IndexError, _(\"Index out of range\"));\n    throw_error_already_set();\n  }\n  long x = i &lt; 0 ? len + i : i;\n  auto elem = std::next(xact.posts.begin(), x);\n  return **elem;\n}\n```\n\n## Fix 6: HIGH - pyinterp.cc:322-361 — memory leak when Py_Main throws\n\nRead `src/pyinterp.cc`. Find `python_command`. The `catch (const error_already_set&amp;)` handler at around line 343 calls throw_() without first freeing the argv array.\n\nFix: Add cleanup before rethrowing in the `error_already_set` catch block. Mirror the cleanup from the `catch(...)` handler:\n```cpp\n} catch (const error_already_set&amp;) {\n  PyErr_Print();\n  for (std::size_t i = 0; i &lt; args.size() + 1; i++)\n    delete[] argv[i];\n  delete[] argv;\n  throw_(std::runtime_error, _(\"Failed to execute Python module\"));\n}\n```\n\n## Fix 7: HIGH - pyinterp.cc:542-548 — catch(...) swallows exceptions\n\nIn the same file, find `functor_t::operator()`. The outermost `catch (...)` returns NULL_VALUE without rethrowing.\n\nFix: Change to rethrow:\n```cpp\n} catch (...) {\n  std::signal(SIGINT, sigint_handler);\n  throw;\n}\n```\n\n## Fix 8: HIGH - py_account.cc:199-201 — find_account_re bound to wrong method\n\nIn `src/py_account.cc`, find where `find_account_re` is defined in the Boost.Python class registration. It's incorrectly bound to `&amp;account_t::find_account`. \n\nFix: Change to `&amp;account_t::find_account_re`.\n\n## Fix 9: MEDIUM - py_times.cc:113-116 — datetime microseconds off by 10^6\n\nIn `src/py_times.cc`, in `datetime_from_python::construct`, find where microseconds are multiplied by 1000000. The value is already in microseconds, so the multiplication is wrong.\n\nFix: Remove the multiplication. Use `boost::posix_time::microseconds(PyDateTime_DATE_GET_MICROSECOND(obj_ptr))` to construct the fractional part, or simply pass the microsecond value directly without multiplying.\n\n## Fix 10: LOW - py_value.cc:310-322 — duplicate .def registrations\n\nRead `src/py_value.cc`. Find the area where `is_amount`, `is_balance`, and `is_mask` are each registered twice.\n\nFix: Remove the duplicate `.def()` lines.\n\n---\n\nAfter making ALL fixes, create a single commit:\n```\ngit add src/pyutils.h src/py_times.cc src/py_account.cc src/py_xact.cc src/pyinterp.cc src/py_value.cc\ngit commit -m \"Fix critical and high-severity bugs in Python bindings\n\n- Fix dangling PyObject* in str_to_py_unicode (use-after-free)\n- Fix memory leaks in date/datetime Python-to-C++ converters\n- Remove non-thread-safe static variables in getitem functions\n- Fix memory leak in python_command error handler\n- Fix swallowed exceptions in functor_t::operator()\n- Fix find_account_re bound to wrong C++ method\n- Fix datetime microsecond scaling (off by 10^6)\n- Remove duplicate method registrations in py_value.cc\n\nCo-Authored-By: Claude Opus 4.6 &lt;noreply@anthropic.com&gt;\"\n```\n</teammate-message>",
+          "timestamp": "2026-02-25T18:35:00.195Z"
+        },
+        {
+          "type": "assistant",
+          "text": "\n\nI'll read all the files that need to be modified first, then make the fixes.",
+          "timestamp": "2026-02-25T18:35:04.765Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/pyutils.h"
+          },
+          "timestamp": "2026-02-25T18:35:05.223Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/py_times.cc"
+          },
+          "timestamp": "2026-02-25T18:35:05.602Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/py_account.cc"
+          },
+          "timestamp": "2026-02-25T18:35:05.983Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/py_xact.cc"
+          },
+          "timestamp": "2026-02-25T18:35:06.381Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/pyinterp.cc"
+          },
+          "timestamp": "2026-02-25T18:35:06.756Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/py_value.cc"
+          },
+          "timestamp": "2026-02-25T18:35:07.197Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All files read. Now I'll apply all 10 fixes.",
+          "timestamp": "2026-02-25T18:35:11.192Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/pyutils.h",
+            "new_string": "template <typename T>\nPyObject* str_to_py_unicode(const T& str) {\n  return PyUnicode_FromString(str.c_str());\n}",
+            "old_string": "template <typename T>\nPyObject* str_to_py_unicode(const T& str) {\n  using namespace boost::python;\n  PyObject* uni = PyUnicode_FromString(str.c_str());\n  return object(handle<>(borrowed(uni))).ptr();\n}",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:14.156Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/py_times.cc",
+            "new_string": "  static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data) {\n    PyDateTime_IMPORT;\n\n    int year = PyDateTime_GET_YEAR(obj_ptr);\n    date::year_type y = gregorian::greg_year(static_cast<unsigned short>(year));\n    date::month_type m = static_cast<date::month_type>(PyDateTime_GET_MONTH(obj_ptr));\n    date::day_type d = static_cast<date::day_type>(PyDateTime_GET_DAY(obj_ptr));\n\n    void* storage =\n        reinterpret_cast<converter::rvalue_from_python_storage<date_t>*>(data)->storage.bytes;\n    new (storage) date_t(y, m, d);\n    data->convertible = storage;\n  }",
+            "old_string": "  static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data) {\n    PyDateTime_IMPORT;\n\n    int year = PyDateTime_GET_YEAR(obj_ptr);\n    date::year_type y = gregorian::greg_year(static_cast<unsigned short>(year));\n    date::month_type m = static_cast<date::month_type>(PyDateTime_GET_MONTH(obj_ptr));\n    date::day_type d = static_cast<date::day_type>(PyDateTime_GET_DAY(obj_ptr));\n\n    date_t* dte = new date_t(y, m, d);\n\n    data->convertible = (void*)dte;\n  }",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:19.816Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/py_times.cc",
+            "new_string": "  static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data) {\n    PyDateTime_IMPORT;\n\n    int year = PyDateTime_GET_YEAR(obj_ptr);\n    date::year_type y = gregorian::greg_year(static_cast<unsigned short>(year));\n    date::month_type m = static_cast<date::month_type>(PyDateTime_GET_MONTH(obj_ptr));\n    date::day_type d = static_cast<date::day_type>(PyDateTime_GET_DAY(obj_ptr));\n\n    datetime_t::time_duration_type::hour_type h =\n        static_cast<datetime_t::time_duration_type::hour_type>(PyDateTime_DATE_GET_HOUR(obj_ptr));\n    datetime_t::time_duration_type::min_type min =\n        static_cast<datetime_t::time_duration_type::min_type>(PyDateTime_DATE_GET_MINUTE(obj_ptr));\n    datetime_t::time_duration_type::sec_type s =\n        static_cast<datetime_t::time_duration_type::sec_type>(PyDateTime_DATE_GET_SECOND(obj_ptr));\n    datetime_t::time_duration_type::fractional_seconds_type us =\n        static_cast<datetime_t::time_duration_type::fractional_seconds_type>(\n            PyDateTime_DATE_GET_MICROSECOND(obj_ptr));\n\n    void* storage =\n        reinterpret_cast<converter::rvalue_from_python_storage<datetime_t>*>(data)->storage.bytes;\n    new (storage) datetime_t(date_t(y, m, d), datetime_t::time_duration_type(h, min, s, us));\n    data->convertible = storage;\n  }",
+            "old_string": "  static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data) {\n    PyDateTime_IMPORT;\n\n    int year = PyDateTime_GET_YEAR(obj_ptr);\n    date::year_type y = gregorian::greg_year(static_cast<unsigned short>(year));\n    date::month_type m = static_cast<date::month_type>(PyDateTime_GET_MONTH(obj_ptr));\n    date::day_type d = static_cast<date::day_type>(PyDateTime_GET_DAY(obj_ptr));\n\n    datetime_t::time_duration_type::hour_type h =\n        static_cast<datetime_t::time_duration_type::hour_type>(PyDateTime_DATE_GET_HOUR(obj_ptr));\n    datetime_t::time_duration_type::min_type min =\n        static_cast<datetime_t::time_duration_type::min_type>(PyDateTime_DATE_GET_MINUTE(obj_ptr));\n    datetime_t::time_duration_type::sec_type s =\n        static_cast<datetime_t::time_duration_type::sec_type>(PyDateTime_DATE_GET_SECOND(obj_ptr));\n    datetime_t::time_duration_type::fractional_seconds_type ms =\n        static_cast<datetime_t::time_duration_type::fractional_seconds_type>(\n            PyDateTime_DATE_GET_MICROSECOND(obj_ptr)) *\n        1000000;\n\n    datetime_t* moment =\n        new datetime_t(date_t(y, m, d), datetime_t::time_duration_type(h, min, s, ms));\n\n    data->convertible = (void*)moment;\n  }",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:27.403Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/py_account.cc",
+            "new_string": "account_t& accounts_getitem(account_t& account, long i) {\n  long len = static_cast<long>(account.accounts.size());\n\n  if (labs(i) >= len) {\n    PyErr_SetString(PyExc_IndexError, _(\"Index out of range\"));\n    throw_error_already_set();\n  }\n\n  long x = i < 0 ? len + i : i;\n  auto elem = std::next(account.accounts.begin(), x);\n  return *elem->second;\n}",
+            "old_string": "account_t& accounts_getitem(account_t& account, long i) {\n  static long last_index = 0;\n  static account_t* last_account = nullptr;\n  static accounts_map::iterator elem;\n\n  long len = static_cast<long>(account.accounts.size());\n\n  if (labs(i) >= len) {\n    PyErr_SetString(PyExc_IndexError, _(\"Index out of range\"));\n    throw_error_already_set();\n  }\n\n  if (&account == last_account && i == last_index + 1) {\n    last_index = i;\n    return *(*++elem).second;\n  }\n\n  long x = i < 0 ? len + i : i;\n  elem = account.accounts.begin();\n  while (--x >= 0)\n    elem++;\n\n  last_account = &account;\n  last_index = i;\n\n  return *(*elem).second;\n}",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:33.071Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/py_xact.cc",
+            "new_string": "post_t& posts_getitem(xact_base_t& xact, long i) {\n  long len = static_cast<long>(xact.posts.size());\n\n  if (labs(i) >= len) {\n    PyErr_SetString(PyExc_IndexError, _(\"Index out of range\"));\n    throw_error_already_set();\n  }\n\n  long x = i < 0 ? len + i : i;\n  auto elem = std::next(xact.posts.begin(), x);\n  return **elem;\n}",
+            "old_string": "post_t& posts_getitem(xact_base_t& xact, long i) {\n  static long last_index = 0;\n  static xact_base_t* last_xact = nullptr;\n  static posts_list::iterator elem;\n\n  long len = static_cast<long>(xact.posts.size());\n\n  if (labs(i) >= len) {\n    PyErr_SetString(PyExc_IndexError, _(\"Index out of range\"));\n    throw_error_already_set();\n  }\n\n  if (&xact == last_xact && i == last_index + 1) {\n    last_index = i;\n    return **++elem;\n  }\n\n  long x = i < 0 ? len + i : i;\n  elem = xact.posts.begin();\n  while (--x >= 0)\n    elem++;\n\n  last_xact = &xact;\n  last_index = i;\n\n  return **elem;\n}",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:36.507Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/pyinterp.cc",
+            "new_string": "  } catch (const error_already_set&) {\n    PyErr_Print();\n    for (std::size_t i = 0; i < args.size() + 1; i++)\n      delete[] argv[i];\n    delete[] argv;\n    throw_(std::runtime_error, _(\"Failed to execute Python module\"));\n  } catch (...) {",
+            "old_string": "  } catch (const error_already_set&) {\n    PyErr_Print();\n    throw_(std::runtime_error, _(\"Failed to execute Python module\"));\n  } catch (...) {",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:39.154Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/pyinterp.cc",
+            "new_string": "  } catch (...) {\n    std::signal(SIGINT, sigint_handler);\n    throw;\n  }\n  std::signal(SIGINT, sigint_handler);\n\n  return NULL_VALUE;\n}",
+            "old_string": "  } catch (...) {\n    std::signal(SIGINT, sigint_handler);\n  }\n  std::signal(SIGINT, sigint_handler);\n\n  return NULL_VALUE;\n}",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:41.002Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/py_account.cc",
+            "new_string": "      .def(\"find_account_re\", &account_t::find_account_re, return_internal_reference<>())",
+            "old_string": "      .def(\"find_account_re\", &account_t::find_account, return_internal_reference<>())",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:42.383Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/py_value.cc",
+            "new_string": "      .def(\"is_amount\", &value_t::is_amount)\n\n      .def(\"is_balance\", &value_t::is_balance)",
+            "old_string": "      .def(\"is_amount\", &value_t::is_amount)\n      .def(\"is_amount\", &value_t::is_amount)\n\n      .def(\"is_balance\", &value_t::is_balance)\n      .def(\"is_balance\", &value_t::is_balance)",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:43.987Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/py_value.cc",
+            "new_string": "      .def(\"is_mask\", &value_t::is_mask)",
+            "old_string": "      .def(\"is_mask\", &value_t::is_mask)\n      .def(\"is_mask\", &value_t::is_mask)",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:45.060Z"
+        },
+        {
+          "type": "assistant",
+          "text": "All 10 edits applied. Now let me stage and commit.",
+          "timestamp": "2026-02-25T18:35:50.981Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git add src/pyutils.h src/py_times.cc src/py_account.cc src/py_xact.cc src/pyinterp.cc src/py_value.cc",
+            "description": "Stage the 6 modified files"
+          },
+          "timestamp": "2026-02-25T18:35:52.164Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Bash",
+          "input": {
+            "command": "git commit -m \"$(cat <<'EOF'\nFix critical and high-severity bugs in Python bindings\n\n- Fix dangling PyObject* in str_to_py_unicode (use-after-free)\n- Fix memory leaks in date/datetime Python-to-C++ converters\n- Remove non-thread-safe static variables in getitem functions\n- Fix memory leak in python_command error handler\n- Fix swallowed exceptions in functor_t::operator()\n- Fix find_account_re bound to wrong C++ method\n- Fix datetime microsecond scaling (off by 10^6)\n- Remove duplicate method registrations in py_value.cc\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n)\"",
+            "description": "Commit all Python binding bug fixes"
+          },
+          "timestamp": "2026-02-25T18:36:00.241Z"
+        }
+      ],
+      "total_additions": 19,
+      "total_deletions": 50,
+      "accepted_lines": 19,
+      "overriden_lines": 0
+    },
+    "42717b5ce986fba1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2cb9d220-a438-465b-a966-d84c12e51c7c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [
+        {
+          "type": "user",
+          "text": "<teammate-message teammate_id=\"team-lead\">\nYou are fixing bugs found during a code review of the Ledger C++ project. Fix ONLY the files listed below. Make each fix carefully and precisely. Do NOT change any other files. Do NOT reformat code beyond your fix. After all fixes, do a `git add` of just the changed files and `git commit`.\n\nThe project is at the current working directory. Source files are in `src/`.\n\n## Fix 1: HIGH - textual.cc:124-135 — BOM detection guard wrong\n\nRead `src/textual.cc`. Find the UTF-8 BOM detection near line 129. It checks `context.linenum == 0` but `linenum` was already incremented to 1 at line 124. The BOM is never stripped.\n\nFix: Change the guard from `== 0` to `== 1`.\n\n## Fix 2: HIGH - textual_directives.cc:42-67 — clock_in/clock_out buffer over-read\n\nRead `src/textual_directives.cc`. Find `clock_in_directive` and `clock_out_directive`. Both access `line + 22` and `string(line, 2, 19)` without checking that the line is at least 22 characters long.\n\nFix: Add a length check at the start of each function:\n```cpp\nif (std::strlen(line) &lt; 22)\n  throw_(parse_error, _(\"Clock-in/out directive is too short\"));\n```\nMake sure to add the check before the `string datetime(line, 2, 19)` line.\n\n## Fix 3: HIGH - textual_xacts.cc:1008-1011 — Hash comparison uses prefix truncation\n\nRead `src/textual_xacts.cc`. Find the hash comparison code around line 1008. It uses `std::equal` with `min(expected, current)` length, which means a short hash tag trivially passes.\n\nFix: First check that sizes are equal, then compare:\n```cpp\nif (current_hash.size() != expected_hash.size() ||\n    !std::equal(expected_hash.begin(), expected_hash.end(), current_hash.begin()))\n```\n\n## Fix 4: MEDIUM - textual_directives.cc — No depth limit on include\n\nIn `src/textual_directives.cc`, find the `include_directive` function. It only checks for direct self-inclusion but not mutual include cycles or excessive depth.\n\nFix: At the start of `include_directive`, walk the `instance_t` parent chain to compute depth and enforce a maximum:\n```cpp\nint include_depth = 0;\nfor (instance_t* p = parent; p; p = p-&gt;parent)\n  ++include_depth;\nif (include_depth &gt; 100)\n  throw_(parse_error, _(\"Maximum include depth exceeded (100)\"));\n```\nPlace this at the very beginning of the function, before any path processing.\n\n## Fix 5: MEDIUM - textual_directives.cc:437 — Expression injection via account names\n\nIn `src/textual_directives.cc`, find where account names are concatenated into expression strings like:\n```cpp\nexpr_t expr(string(\"account == \\\"\") + account-&gt;fullname() + \"\\\"\");\n```\n\nFix: Escape double quotes in the account name before embedding:\n```cpp\nstring safe_name = account-&gt;fullname();\nboost::replace_all(safe_name, \"\\\\\", \"\\\\\\\\\");\nboost::replace_all(safe_name, \"\\\"\", \"\\\\\\\"\");\nexpr_t expr(string(\"account == \\\"\") + safe_name + \"\\\"\");\n```\nYou may need to add `#include &lt;boost/algorithm/string/replace.hpp&gt;` if not already included.\n\n## Fix 6: MEDIUM - mask.cc:356-385 — glob-to-regex doesn't escape metacharacters\n\nRead `src/mask.cc`. Find the `assign_glob` function. In the `default:` case of the character switch, literal characters are appended without escaping regex metacharacters.\n\nFix: In the default branch, check if the character is a regex metacharacter and escape it:\n```cpp\ndefault: {\n  const char* meta = \".+(){}^$|\";\n  if (std::strchr(meta, pat[i]))\n    re_pat += '\\\\';\n  re_pat += pat[i];\n  break;\n}\n```\n\n## Fix 7: LOW - token.cc:499-502 — rewind casts length to int\n\nRead `src/token.cc`. Find the `rewind` method. It casts `length` to `int` which narrows from `std::size_t`.\n\nFix: Use `std::streamoff`:\n```cpp\nin.seekg(-static_cast&lt;std::streamoff&gt;(length), std::ios::cur);\n```\n\n## Fix 8: LOW - strptime.cc — compares char against NULL\n\nRead `src/strptime.cc`. Find places where `*p != NULL`, `*format != NULL`, `*s != NULL` appear.\n\nFix: Replace each `!= NULL` or `== NULL` on char dereferences with `!= '\\0'` or `== '\\0'`.\n\n---\n\nAfter making ALL fixes, commit:\n```\ngit add src/textual.cc src/textual_directives.cc src/textual_xacts.cc src/token.cc src/mask.cc src/strptime.cc\ngit commit -m \"Fix parsing and textual processing bugs\n\n- Fix BOM detection guard (linenum already 1, not 0)\n- Add length validation for clock_in/clock_out directives\n- Fix hash comparison prefix truncation (require full match)\n- Add include depth limit (max 100) to prevent stack overflow\n- Escape account names in expression strings to prevent injection\n- Escape regex metacharacters in glob-to-regex conversion\n- Use std::streamoff in token rewind to avoid narrowing\n- Replace NULL with '\\\\0' for char comparisons in strptime\n\nCo-Authored-By: Claude Opus 4.6 &lt;noreply@anthropic.com&gt;\"\n```\n</teammate-message>",
+          "timestamp": "2026-02-25T18:35:00.627Z"
+        },
+        {
+          "type": "assistant",
+          "text": "\n\nI'll start by reading all the files that need to be modified to understand the current code before making any changes.",
+          "timestamp": "2026-02-25T18:35:05.597Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/textual.cc",
+            "limit": 20,
+            "offset": 120
+          },
+          "timestamp": "2026-02-25T18:35:06.338Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/textual_directives.cc"
+          },
+          "timestamp": "2026-02-25T18:35:06.812Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/textual_xacts.cc",
+            "limit": 20,
+            "offset": 1000
+          },
+          "timestamp": "2026-02-25T18:35:07.612Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/token.cc",
+            "limit": 20,
+            "offset": 490
+          },
+          "timestamp": "2026-02-25T18:35:08.148Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/mask.cc",
+            "limit": 40,
+            "offset": 350
+          },
+          "timestamp": "2026-02-25T18:35:08.759Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/strptime.cc"
+          },
+          "timestamp": "2026-02-25T18:35:09.128Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I have all the files read. Let me also check if boost/algorithm/string/replace.hpp is already included in textual_directives.cc or its header.",
+          "timestamp": "2026-02-25T18:35:13.777Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now let me check what headers are already included, and look at the `instance_t` class for the `parent` member.",
+          "timestamp": "2026-02-25T18:35:14.759Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "output_mode": "files_with_matches",
+            "path": "/Users/johnw/src/ledger/review/src",
+            "pattern": "boost/algorithm/string/replace"
+          },
+          "timestamp": "2026-02-25T18:35:16.016Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/review/src",
+            "pattern": "instance_t.*parent"
+          },
+          "timestamp": "2026-02-25T18:35:16.753Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Read",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/textual_internal.h",
+            "limit": 80
+          },
+          "timestamp": "2026-02-25T18:35:17.469Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Good. Now I have all the context I need. Let me check what's in `system.hh` to see if boost/algorithm/string/replace.hpp is already included there.",
+          "timestamp": "2026-02-25T18:35:21.046Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Let me check if boost replace is available through `system.hh`.",
+          "timestamp": "2026-02-25T18:35:21.491Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/review/src/system.hh",
+            "pattern": "boost/algorithm/string"
+          },
+          "timestamp": "2026-02-25T18:35:22.305Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Glob",
+          "input": {
+            "pattern": "**/system.hh"
+          },
+          "timestamp": "2026-02-25T18:35:24.835Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Glob",
+          "input": {
+            "pattern": "**/system.hh*"
+          },
+          "timestamp": "2026-02-25T18:35:28.139Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Grep",
+          "input": {
+            "output_mode": "content",
+            "path": "/Users/johnw/src/ledger/review/src/system.hh.in",
+            "pattern": "boost/algorithm/string"
+          },
+          "timestamp": "2026-02-25T18:35:31.233Z"
+        },
+        {
+          "type": "assistant",
+          "text": "`boost/algorithm/string.hpp` is already included via `system.hh`, which pulls in `boost::replace_all`. Now let me claim task #2 and apply all the fixes.",
+          "timestamp": "2026-02-25T18:35:34.852Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "TaskUpdate",
+          "input": {
+            "owner": "cpp-fixer",
+            "status": "in_progress",
+            "taskId": "2"
+          },
+          "timestamp": "2026-02-25T18:35:35.618Z"
+        },
+        {
+          "type": "assistant",
+          "text": "Now I'll apply all 8 fixes in parallel where possible.",
+          "timestamp": "2026-02-25T18:35:39.960Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/textual.cc",
+            "new_string": "    if (context.linenum == 1 &&",
+            "old_string": "    if (context.linenum == 0 &&",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:41.360Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/textual_directives.cc",
+            "new_string": "void instance_t::clock_in_directive(char* line, bool capitalized) {\n  if (std::strlen(line) < 22)\n    throw_(parse_error, _(\"Clock-in/out directive is too short\"));\n  string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)",
+            "old_string": "void instance_t::clock_in_directive(char* line, bool capitalized) {\n  string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:45.347Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/textual_directives.cc",
+            "new_string": "void instance_t::clock_out_directive(char* line, bool capitalized) {\n  if (std::strlen(line) < 22)\n    throw_(parse_error, _(\"Clock-in/out directive is too short\"));\n  string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)",
+            "old_string": "void instance_t::clock_out_directive(char* line, bool capitalized) {\n  string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:46.299Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/textual_xacts.cc",
+            "new_string": "        if (current_hash.size() != expected_hash.size() ||\n            !std::equal(expected_hash.begin(), expected_hash.end(), current_hash.begin()))",
+            "old_string": "        if (!std::equal(expected_hash.begin(),\n                        expected_hash.begin() + std::min(expected_hash.size(), current_hash.size()),\n                        current_hash.begin()))",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:48.485Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/textual_directives.cc",
+            "new_string": "void instance_t::include_directive(char* line) {\n  int include_depth = 0;\n  for (instance_t* p = parent; p; p = p->parent)\n    ++include_depth;\n  if (include_depth > 100)\n    throw_(parse_error, _(\"Maximum include depth exceeded (100)\"));\n\n  path filename;",
+            "old_string": "void instance_t::include_directive(char* line) {\n  path filename;",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:50.530Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/textual_directives.cc",
+            "new_string": "      string safe_name = account->fullname();\n      boost::replace_all(safe_name, \"\\\\\", \"\\\\\\\\\");\n      boost::replace_all(safe_name, \"\\\"\", \"\\\\\\\"\");\n      expr_t expr(string(\"account == \\\"\") + safe_name + \"\\\"\");",
+            "old_string": "      expr_t expr(string(\"account == \\\"\") + account->fullname() + \"\\\"\");",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:52.650Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/mask.cc",
+            "new_string": "    default: {\n      const char* meta = \".+(){}^$|\";\n      if (std::strchr(meta, pat[i]))\n        re_pat += '\\\\';\n      re_pat += pat[i];\n      break;\n    }",
+            "old_string": "    default:\n      re_pat += pat[i];\n      break;",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:54.712Z"
+        },
+        {
+          "type": "tool_use",
+          "name": "Edit",
+          "input": {
+            "file_path": "/Users/johnw/src/ledger/review/src/token.cc",
+            "new_string": "  in.seekg(-static_cast<std::streamoff>(length), std::ios::cur);",
+            "old_string": "  in.seekg(-int(length), std::ios::cur);",
+            "replace_all": false
+          },
+          "timestamp": "2026-02-25T18:35:56.188Z"
+        }
+      ],
+      "total_additions": 23,
+      "total_deletions": 7,
+      "accepted_lines": 23,
+      "overriden_lines": 0
+    }
+  }
+}
