@@ -85,7 +85,12 @@ string source_context(const path& file, const std::istream::pos_type pos,
     return _("<no source context>");
 
   assert(len > 0);
-  assert(len < 1048576);
+
+  // Limit the amount of source text shown in error context to avoid unbounded
+  // memory allocation for very large transactions (e.g. equity reports).
+  const std::streamoff MAX_CONTEXT_DISPLAY = 4096;
+  const bool truncated = len > MAX_CONTEXT_DISPLAY;
+  const std::streamoff read_len = truncated ? MAX_CONTEXT_DISPLAY : len;
 
   std::ostringstream out;
 
@@ -96,10 +101,10 @@ string source_context(const path& file, const std::istream::pos_type pos,
 #endif
   in->seekg(pos, std::ios::beg);
 
-  scoped_array<char> buf(new char[static_cast<std::size_t>(len) + 1]);
-  in->read(buf.get(), static_cast<std::streamsize>(len));
-  assert(in->gcount() == static_cast<std::streamsize>(len));
-  buf[static_cast<std::ptrdiff_t>(len)] = '\0';
+  scoped_array<char> buf(new char[static_cast<std::size_t>(read_len) + 1]);
+  in->read(buf.get(), static_cast<std::streamsize>(read_len));
+  const std::streamsize got = in->gcount();
+  buf[static_cast<std::ptrdiff_t>(got)] = '\0';
 
   bool first = true;
   for (char* p = std::strtok(buf.get(), "\r\n"); p; p = std::strtok(nullptr, "\r\n")) {
@@ -109,6 +114,9 @@ string source_context(const path& file, const std::istream::pos_type pos,
       out << '\n';
     out << prefix << p;
   }
+
+  if (truncated)
+    out << '\n' << prefix << "...(context truncated)";
 
   delete (in);
   return out.str();
