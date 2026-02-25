@@ -335,6 +335,21 @@ public:
   }
   void in_place_round();
 
+  /** Like rounded(), but also physically truncates the stored value to the
+      commodity's display precision using round-half-away-from-zero.  Unlike
+      rounded(), which only clears the keep_precision flag (leaving the full-
+      precision mpq intact), this method modifies the mpq value so that later
+      precision widening of the commodity cannot reveal sub-display-precision
+      residuals.  Intended for use in report expressions such as
+      rounded(cost) (the --basis amount expression) where a stable, rounded
+      stored value is required. */
+  [[nodiscard]] amount_t rounded_to_commodity_precision() const {
+    amount_t temp(*this);
+    temp.in_place_round_to_commodity_precision();
+    return temp;
+  }
+  void in_place_round_to_commodity_precision();
+
   amount_t roundto(int places) const {
     amount_t temp(*this);
     temp.in_place_roundto(places);

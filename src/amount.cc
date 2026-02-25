@@ -623,6 +623,27 @@ void amount_t::in_place_round() {
   set_keep_precision(false);
 }
 
+void amount_t::in_place_round_to_commodity_precision() {
+  if (!quantity)
+    throw_(amount_error, _("Cannot set rounding for an uninitialized amount"));
+
+  if (has_commodity()) {
+    const precision_t comm_prec = commodity().precision();
+    if (comm_prec > 0 && quantity->prec > comm_prec) {
+      in_place_roundto(comm_prec);
+      // in_place_roundto already called _dup(), so set_keep_precision is safe
+      if (keep_precision())
+        set_keep_precision(false);
+      return;
+    }
+  }
+
+  if (keep_precision()) {
+    _dup();
+    set_keep_precision(false);
+  }
+}
+
 void amount_t::in_place_truncate() {
   if (!quantity)
     throw_(amount_error, _("Cannot truncate an uninitialized amount"));

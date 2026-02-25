@@ -459,6 +459,13 @@ public:
   }
   void in_place_display_round();
 
+  [[nodiscard]] value_t rounded_to_commodity_precision() const {
+    value_t temp(*this);
+    temp.in_place_round_to_commodity_precision();
+    return temp;
+  }
+  void in_place_round_to_commodity_precision();
+
   [[nodiscard]] value_t floored() const {
     value_t temp(*this);
     temp.in_place_floor();

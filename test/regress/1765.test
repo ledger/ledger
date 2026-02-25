@@ -1,0 +1,20 @@
+; Regression test for GitHub issue #1765:
+; bal --basis should balance to zero when exchange rates produce fractional
+; costs that round to the commodity display precision.
+;
+; Before the fix, in_place_round() only set the keep_precision flag to false
+; but did not actually round the internal mpq value to the commodity's display
+; precision.  Here 1 XXX @ 0.995 CZK produces a cost of 0.995 CZK (3dp).
+; After rounded() the value must be 1.00 CZK (rounded to CZK's 2dp) so that
+; the balance report shows exactly zero.
+
+2022/05/06
+    a  1 XXX @ 0.995 CZK
+    b  -1.00 CZK
+
+test bal -B -> 0
+            1.00 CZK  a
+           -1.00 CZK  b
+--------------------
+                   0
+end test

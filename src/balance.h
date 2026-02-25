@@ -326,6 +326,16 @@ public:
       pair.second.in_place_roundto(pair.second.display_precision());
   }
 
+  [[nodiscard]] balance_t rounded_to_commodity_precision() const {
+    balance_t temp(*this);
+    temp.in_place_round_to_commodity_precision();
+    return temp;
+  }
+  void in_place_round_to_commodity_precision() {
+    for (amounts_map::value_type& pair : amounts)
+      pair.second.in_place_round_to_commodity_precision();
+  }
+
   [[nodiscard]] balance_t floored() const {
     balance_t temp(*this);
     temp.in_place_floor();
