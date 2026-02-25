@@ -725,8 +725,18 @@ value_t report_t::fn_abs(call_scope_t& args) {
 }
 
 value_t report_t::fn_truncated(call_scope_t& args) {
+  value_t& val = args[0];
+  // If no width argument is provided, do numeric truncation for amounts and
+  // balances (used in automated transaction expressions like truncated(amount)).
+  // If a width argument is provided, do string display truncation (used by the
+  // select command for column width formatting).
+  if (!args.has(1)) {
+    if (val.is_amount() || val.is_balance() || val.is_long()) {
+      return val.truncated();
+    }
+  }
   return string_value(format_t::truncate(
-      args.get<string>(0),
+      val.to_string(),
       (args.has<int>(1) && args.get<int>(1) > 0) ? static_cast<std::size_t>(args.get<int>(1)) : 0,
       args.has<int>(2) ? static_cast<std::size_t>(args.get<int>(2)) : 0));
 }

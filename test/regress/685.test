@@ -1,0 +1,12 @@
+= /Expenses:Bug Fixes/
+  (Liabilities:Refactoring)  (truncated(amount * 0.01))
+
+2012/03/09 Test Transaction
+    Expenses:Bug Fixes    4.44 USD
+    Assets:Code
+
+test reg
+12-Mar-09 Test Transaction      Expenses:Bug Fixes         4.44 USD     4.44 USD
+                                Assets:Code               -4.44 USD            0
+                                (Liabilit:Refactoring)     0.04 USD     0.04 USD
+end test
