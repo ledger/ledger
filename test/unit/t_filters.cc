@@ -1398,7 +1398,7 @@ BOOST_AUTO_TEST_CASE(testAnonymizePostsWithAssignedW8)
 
 //////////////////////////////////////////////////////////////////////
 //
-// W8 Coverage: subtotal_posts virtual/non-virtual mix (line 974-975)
+// W8 Coverage: subtotal_posts virtual/non-virtual mix (issue #2051)
 //
 
 BOOST_AUTO_TEST_CASE(testSubtotalPostsVirtualMixW8)
@@ -1421,8 +1421,12 @@ BOOST_AUTO_TEST_CASE(testSubtotalPostsVirtualMixW8)
     parse_date("2024/01/20"), exp, cash, amount_t("$5.00"));
   result2.debit->add_flags(POST_VIRTUAL);
 
-  // This should throw because mixing virtual and non-virtual
-  BOOST_CHECK_THROW(subtotal(*result2.debit), std::exception);
+  // Virtual and non-virtual postings to the same account should
+  // accumulate separately without error (fix for issue #2051)
+  BOOST_CHECK_NO_THROW(subtotal(*result2.debit));
+
+  subtotal.flush();
+  BOOST_CHECK(!collector->posts.empty());
 }
 
 //////////////////////////////////////////////////////////////////////
