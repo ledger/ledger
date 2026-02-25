@@ -1,0 +1,44 @@
+---
+# clang-tidy configuration for Ledger
+#
+# Focus on checks that find real bugs and important modernizations.
+# Checks that are too opinionated, require invasive style refactoring, or
+# produce excessive noise for a mature codebase are explicitly disabled.
+
+Checks: >-
+  bugprone-*,
+  cert-err*,
+  cert-oop*,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-using,
+  performance-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  -bugprone-exception-escape,
+  -bugprone-unchecked-optional-access,
+  -bugprone-switch-missing-default-case,
+  -cert-err58-cpp,
+  -clang-analyzer-*,
+  -modernize-use-trailing-return-type
+
+# Treat all enabled warnings as errors so the lint target fails on new issues.
+WarningsAsErrors: "*"
+
+# Only report diagnostics in project headers, not system/Boost headers.
+HeaderFilterRegex: '.*src/.*\.(h|hh)$'
+
+# Suppress warnings originating in system headers.
+SystemHeaders: false
+
+FormatStyle: file
+
+# Configuration for specific checks.
+CheckOptions:
+  # The default IncludeTypes for this check includes ::std::basic_string, which
+  # produces false positives throughout the codebase when string variables are
+  # used as arguments to functions. Strings are not RAII resource types that
+  # need to be kept alive for their side effects, so exclude them from the check.
+  # Keep the mutex/future/regex/stream types that are the real motivation.
+  - key: bugprone-unused-local-non-trivial-variable.IncludeTypes
+    value: "::std::.*mutex;::std::future;::std::basic_regex;::std::basic_stringstream;::std::bitset;::std::filesystem::path"
