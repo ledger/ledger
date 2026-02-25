@@ -1,0 +1,18 @@
+; Regression test for GitHub issue #1765 (part b):
+; When the per-unit cost does NOT round to the posted amount at the commodity
+; display precision, bal --basis reveals the imbalance explicitly.
+;
+; 0.5 A @ $5.430 produces a cost of $2.715.  With $ at 2dp, rounded($2.715)
+; = $2.72 (round half away from zero), not $2.71.  The --basis report
+; shows the imbalance as $0.01 rather than hiding the fractional remainder.
+
+2019/01/01
+    a  A0.5 @ $5.430
+    b  $-2.71
+
+test bal -B -> 0
+               $2.72  a
+              $-2.71  b
+--------------------
+               $0.01
+end test
