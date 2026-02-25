@@ -63,16 +63,14 @@ std::optional<value_t> py_value_2d(const value_t& value, const commodity_t* in_t
 }
 
 PyObject* py_base_type(value_t& value) {
-  if (value.is_boolean()) {
-    return (PyObject*)&PyBool_Type;
-  } else if (value.is_long()) {
-    return (PyObject*)&PyLong_Type;
-  } else if (value.is_string()) {
-    return (PyObject*)&PyUnicode_Type;
-  } else {
-    object typeobj(object(value).attr("__class__"));
-    return typeobj.ptr();
-  }
+  PyTypeObject* const t = value.is_boolean()  ? &PyBool_Type
+                          : value.is_long()   ? &PyLong_Type
+                          : value.is_string() ? &PyUnicode_Type
+                                              : nullptr;
+  if (t != nullptr)
+    return reinterpret_cast<PyObject*>(t);
+  object typeobj(object(value).attr("__class__"));
+  return typeobj.ptr();
 }
 
 string py_dump(const value_t& value) {

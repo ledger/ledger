@@ -43,7 +43,7 @@ std::ostringstream _ctxt_buffer;
 std::ostringstream _desc_buffer;
 
 string error_context() {
-  string context = _ctxt_buffer.str();
+  string context = _ctxt_buffer.str(); // NOLINT(bugprone-unused-local-non-trivial-variable)
   _ctxt_buffer.clear();
   _ctxt_buffer.str("");
   return context;
@@ -102,7 +102,7 @@ string source_context(const path& file, const std::istream::pos_type pos,
   buf[static_cast<std::ptrdiff_t>(len)] = '\0';
 
   bool first = true;
-  for (char* p = std::strtok(buf.get(), "\r\n"); p; p = std::strtok(NULL, "\r\n")) {
+  for (char* p = std::strtok(buf.get(), "\r\n"); p; p = std::strtok(nullptr, "\r\n")) {
     if (first)
       first = false;
     else

@@ -30,13 +30,14 @@
  */
 
 #include <system.hh>
+#include <utility>
 
 #include "option.h"
 
 namespace ledger {
 
 namespace {
-typedef std::pair<expr_t::ptr_op_t, bool> op_bool_tuple;
+using op_bool_tuple = std::pair<expr_t::ptr_op_t, bool>;
 
 op_bool_tuple find_option(scope_t& scope, const string& name) {
   char buf[128];
@@ -128,7 +129,7 @@ void process_environment(const char** envp, const string& tag, scope_t& scope) {
 
       if (*q == '=') {
         try {
-          string value = string(*p, static_cast<std::string::size_type>(q - *p));
+          string value(*p, static_cast<std::string::size_type>(q - *p));
           if (!value.empty())
             process_option(string("$") + buf, string(buf), scope, q + 1, value);
         } catch (const std::exception&) {
@@ -147,7 +148,7 @@ struct op_bool_char_tuple {
   char ch;
 
   op_bool_char_tuple(expr_t::ptr_op_t _op, bool _truth, char _ch)
-      : op(_op), truth(_truth), ch(_ch) {}
+      : op(std::move(_op)), truth(_truth), ch(_ch) {}
 };
 } // namespace
 
@@ -177,7 +178,7 @@ strings_list process_arguments(strings_list args, scope_t& scope) {
 
       string opt_name;
       const char* name = (*i).c_str() + 2;
-      const char* value = NULL;
+      const char* value = nullptr;
 
       if (const char* p = std::strchr(name, '=')) {
         opt_name = string(name, static_cast<std::string::size_type>(p - name));
@@ -191,10 +192,10 @@ strings_list process_arguments(strings_list args, scope_t& scope) {
       if (!opt.first)
         throw_(option_error, _f("Illegal option --%1%") % name);
 
-      if (opt.second && !value && ++i != args.end() && value == NULL) {
+      if (opt.second && !value && ++i != args.end() && value == nullptr) {
         value = (*i).c_str();
         DEBUG("option.args", "  read option value from arg: " << value);
-        if (value == NULL)
+        if (value == nullptr)
           throw_(option_error, _f("Missing option argument for --%1%") % name);
       }
       process_option(string("--") + name, opt.first->as_function(), scope, value,
@@ -216,11 +217,11 @@ strings_list process_arguments(strings_list args, scope_t& scope) {
       }
 
       for (op_bool_char_tuple& o : option_queue) {
-        const char* value = NULL;
+        const char* value = nullptr;
         if (o.truth && ++i != args.end()) {
           value = (*i).c_str();
           DEBUG("option.args", "  read option value from arg: " << value);
-          if (value == NULL)
+          if (value == nullptr)
             throw_(option_error, _f("Missing option argument for -%1%") % o.ch);
         }
         process_option(string("-") + o.ch, o.op->as_function(), scope, value, string("-") + o.ch);

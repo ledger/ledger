@@ -52,7 +52,7 @@ struct bool_to_python {
 struct bool_from_python {
   static void* convertible(PyObject* obj_ptr) {
     if (!PyBool_Check(obj_ptr))
-      return 0;
+      return nullptr;
     return obj_ptr;
   }
 
@@ -66,7 +66,7 @@ struct bool_from_python {
   }
 };
 
-typedef register_python_conversion<bool, bool_to_python, bool_from_python> bool_python_conversion;
+using bool_python_conversion = register_python_conversion<bool, bool_to_python, bool_from_python>;
 
 struct string_to_python {
   static PyObject* convert(const string& str) {
@@ -75,10 +75,55 @@ struct string_to_python {
   }
 };
 
+static void fill_utf8_string(string& result, PyObject* obj_ptr) {
+  Py_ssize_t size;
+#if PY_MINOR_VERSION >= 3
+  size = PyUnicode_GET_LENGTH(obj_ptr);
+  switch (PyUnicode_KIND(obj_ptr)) {
+  case PyUnicode_1BYTE_KIND: {
+    Py_UCS1* value = PyUnicode_1BYTE_DATA(obj_ptr);
+    if (value == 0)
+      throw_error_already_set();
+    utf8::utf16to8(value, value + size, std::back_inserter(result));
+  } break;
+#if PY_MINOR_VERSION < 12 && Py_UNICODE_SIZE == 2
+  case PyUnicode_WCHAR_KIND:
+#endif
+  case PyUnicode_2BYTE_KIND: {
+    Py_UCS2* value = PyUnicode_2BYTE_DATA(obj_ptr);
+    if (value == 0)
+      throw_error_already_set();
+    utf8::utf16to8(value, value + size, std::back_inserter(result));
+  } break;
+#if PY_MINOR_VERSION < 12 && Py_UNICODE_SIZE == 4
+  case PyUnicode_WCHAR_KIND:
+#endif
+  case PyUnicode_4BYTE_KIND: {
+    Py_UCS4* value = PyUnicode_4BYTE_DATA(obj_ptr);
+    if (value == 0)
+      throw_error_already_set();
+    utf8::utf32to8(value, value + size, std::back_inserter(result));
+  } break;
+  default:
+    assert("PyUnicode_KIND returned an unexpected kind" == NULL);
+  }
+#else                      // PY_MINOR_VERSION >= 3
+  size = PyUnicode_GET_SIZE(obj_ptr);
+  const Py_UNICODE* value = PyUnicode_AS_UNICODE(obj_ptr);
+#if Py_UNICODE_SIZE == 2   // UTF-16
+  utf8::utf16to8(value, value + size, std::back_inserter(result));
+#elif Py_UNICODE_SIZE == 4 // UTF-32
+  utf8::utf32to8(value, value + size, std::back_inserter(result));
+#else
+  assert("Py_UNICODE has an unexpected size" == nullptr);
+#endif
+#endif // PY_MINOR_VERSION >= 3
+}
+
 struct string_from_python {
   static void* convertible(PyObject* obj_ptr) {
     if (!PyUnicode_Check(obj_ptr))
-      return 0;
+      return nullptr;
     return obj_ptr;
   }
 
@@ -90,60 +135,16 @@ struct string_from_python {
       return;
 #endif
 
-    Py_ssize_t size;
-    string str;
-
-#if PY_MINOR_VERSION >= 3
-    size = PyUnicode_GET_LENGTH(obj_ptr);
-    switch (PyUnicode_KIND(obj_ptr)) {
-    case PyUnicode_1BYTE_KIND: {
-      Py_UCS1* value = PyUnicode_1BYTE_DATA(obj_ptr);
-      if (value == 0)
-        throw_error_already_set();
-      utf8::utf16to8(value, value + size, std::back_inserter(str));
-    } break;
-#if PY_MINOR_VERSION < 12 && Py_UNICODE_SIZE == 2
-    case PyUnicode_WCHAR_KIND:
-#endif
-    case PyUnicode_2BYTE_KIND: {
-      Py_UCS2* value = PyUnicode_2BYTE_DATA(obj_ptr);
-      if (value == 0)
-        throw_error_already_set();
-      utf8::utf16to8(value, value + size, std::back_inserter(str));
-    } break;
-#if PY_MINOR_VERSION < 12 && Py_UNICODE_SIZE == 4
-    case PyUnicode_WCHAR_KIND:
-#endif
-    case PyUnicode_4BYTE_KIND: {
-      Py_UCS4* value = PyUnicode_4BYTE_DATA(obj_ptr);
-      if (value == 0)
-        throw_error_already_set();
-      utf8::utf32to8(value, value + size, std::back_inserter(str));
-    } break;
-    default:
-      assert("PyUnicode_KIND returned an unexpected kind" == NULL);
-    }
-#else                      // PY_MINOR_VERSION >= 3
-    size = PyUnicode_GET_SIZE(obj_ptr);
-    const Py_UNICODE* value = PyUnicode_AS_UNICODE(obj_ptr);
-#if Py_UNICODE_SIZE == 2   // UTF-16
-    utf8::utf16to8(value, value + size, std::back_inserter(str));
-#elif Py_UNICODE_SIZE == 4 // UTF-32
-    utf8::utf32to8(value, value + size, std::back_inserter(str));
-#else
-    assert("Py_UNICODE has an unexpected size" == NULL);
-#endif
-#endif // PY_MINOR_VERSION >= 3
-
     void* storage =
         reinterpret_cast<converter::rvalue_from_python_storage<string>*>(data)->storage.bytes;
-    new (storage) string(str);
+    string* str_ptr = new (storage) string();
+    fill_utf8_string(*str_ptr, obj_ptr);
     data->convertible = storage;
   }
 };
 
-typedef register_python_conversion<string, string_to_python, string_from_python>
-    string_python_conversion;
+using string_python_conversion =
+    register_python_conversion<string, string_to_python, string_from_python>;
 
 void export_utils() {
   class_<supports_flags<uint_least8_t>>("SupportFlags8")

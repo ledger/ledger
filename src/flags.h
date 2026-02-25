@@ -46,7 +46,7 @@ namespace ledger::flags {
 template <typename T = boost::uint_least8_t, typename U = T>
 class supports_flags {
 public:
-  typedef T flags_t;
+  using flags_t = T;
 
 protected:
   flags_t _flags;
@@ -60,6 +60,8 @@ public:
   ~supports_flags() noexcept { TRACE_DTOR(supports_flags); }
 
   supports_flags& operator=(const supports_flags& other) {
+    if (this == &other)
+      return *this;
     _flags = other._flags;
     return *this;
   }
@@ -93,6 +95,8 @@ public:
 
   basic_t(const basic_t& other) : supports_flags<T, U>(other) { TRACE_CTOR(basic_t, "copy"); }
   basic_t& operator=(const basic_t& other) {
+    if (this == &other)
+      return *this;
     set_flags(other.flags());
     return *this;
   }
@@ -119,7 +123,7 @@ public:
 template <typename T = boost::uint_least8_t>
 class delegates_flags : public boost::noncopyable {
 public:
-  typedef T flags_t;
+  using flags_t = T;
 
 protected:
   supports_flags<T>& _flags;

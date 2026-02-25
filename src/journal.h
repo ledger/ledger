@@ -53,14 +53,14 @@ class xact_base_t;
 class parse_context_t;
 class parse_context_stack_t;
 
-typedef std::pair<mask_t, string> payee_alias_mapping_t;
-typedef std::list<payee_alias_mapping_t> payee_alias_mappings_t;
-typedef std::unordered_map<string, string> payee_uuid_mappings_t;
-typedef std::pair<mask_t, account_t*> account_mapping_t;
-typedef std::list<account_mapping_t> account_mappings_t;
-typedef std::map<string, xact_t*> checksum_map_t;
+using payee_alias_mapping_t = std::pair<mask_t, string>;
+using payee_alias_mappings_t = std::list<payee_alias_mapping_t>;
+using payee_uuid_mappings_t = std::unordered_map<string, string>;
+using account_mapping_t = std::pair<mask_t, account_t*>;
+using account_mappings_t = std::list<account_mapping_t>;
+using checksum_map_t = std::map<string, xact_t*>;
 
-typedef std::multimap<string, expr_t::check_expr_pair> tag_check_exprs_map;
+using tag_check_exprs_map = std::multimap<string, expr_t::check_expr_pair>;
 
 class journal_t : public noncopyable {
 public:
@@ -107,7 +107,7 @@ public:
   std::optional<expr_t> value_expr;
   parse_context_t* current_context;
 
-  enum checking_style_t {
+  enum checking_style_t : uint8_t {
     CHECK_PERMISSIVE,
     CHECK_NORMAL,
     CHECK_WARNING,
@@ -133,7 +133,7 @@ public:
 
   account_t* expand_aliases(string name);
 
-  account_t* register_account(string_view name, post_t* post, account_t* master = NULL);
+  account_t* register_account(string_view name, post_t* post, account_t* master = nullptr);
   string register_payee(const string& name);
   string validate_payee(const string& name_or_alias);
   void register_commodity(commodity_t& comm, std::variant<int, xact_t*, post_t*> context);

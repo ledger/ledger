@@ -57,7 +57,7 @@ void format_ptree::flush() {
                               Ledger_VERSION_PATCH));
 
   property_tree::ptree& ct(pt.put("ledger.commodities", ""));
-  for (const commodities_pair& pair : commodities)
+  for (const auto& pair : commodities)
     put_commodity(ct.add("commodity", ""), *pair.second, true);
 
   property_tree::ptree& at(pt.put("ledger.accounts", ""));
@@ -78,7 +78,7 @@ void format_ptree::flush() {
   case FORMAT_XML:
     auto indented = property_tree::xml_writer_make_settings<std::string>(' ', 2);
     property_tree::write_xml(out, pt, indented);
-    out << std::endl;
+    out << '\n';
     break;
   }
 }

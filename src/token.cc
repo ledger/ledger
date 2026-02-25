@@ -118,6 +118,8 @@ int expr_t::token_t::parse_reserved_word(std::istream& in) {
         return 1;
       }
       break;
+    default:
+      break;
     }
 
     return 0;
@@ -249,7 +251,7 @@ void expr_t::token_t::next(std::istream& in, const parse_flags_t& pflags) {
         length = static_cast<std::size_t>(in.tellg() - pos);
         break;
       }
-    } catch (const std::exception&) {}
+    } catch (const std::exception&) {} // NOLINT(bugprone-empty-catch)
 
     in.clear();
     in.seekg(pos, std::ios::beg);
@@ -505,6 +507,7 @@ void expr_t::token_t::unexpected(const char wanted) {
 
   kind = ERROR;
 
+  // NOLINTBEGIN(bugprone-branch-clone)
   if (wanted == '\0') {
     switch (prev_kind) {
     case TOK_EOF:
@@ -528,6 +531,7 @@ void expr_t::token_t::unexpected(const char wanted) {
       throw_(parse_error, _f("Unexpected expression token '%1%' (wanted '%2%')") % symbol % wanted);
     }
   }
+  // NOLINTEND(bugprone-branch-clone)
 }
 
 void expr_t::token_t::expected(const char wanted, const int c) {

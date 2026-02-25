@@ -63,8 +63,8 @@ post_t* get_sample_xact(report_t& report) {
 
     std::ostream& out(report.output_stream);
 
-    out << _("--- Context is first posting of the following transaction ---") << std::endl
-        << str << std::endl;
+    out << _("--- Context is first posting of the following transaction ---") << '\n'
+        << str << '\n';
     {
       std::shared_ptr<std::istringstream> in(new std::istringstream(str));
 
@@ -92,26 +92,26 @@ value_t parse_command(call_scope_t& args) {
 
   post_t* post = get_sample_xact(report);
 
-  out << _("--- Input expression ---") << std::endl;
-  out << arg << std::endl;
+  out << _("--- Input expression ---") << '\n';
+  out << arg << '\n';
 
-  out << std::endl << _("--- Text as parsed ---") << std::endl;
+  out << '\n' << _("--- Text as parsed ---") << '\n';
   expr_t expr(arg);
   expr.print(out);
-  out << std::endl;
+  out << '\n';
 
-  out << std::endl << _("--- Expression tree ---") << std::endl;
+  out << '\n' << _("--- Expression tree ---") << '\n';
   expr.dump(out);
 
   bind_scope_t bound_scope(args, *post);
   expr.compile(bound_scope);
-  out << std::endl << _("--- Compiled tree ---") << std::endl;
+  out << '\n' << _("--- Compiled tree ---") << '\n';
   expr.dump(out);
 
-  out << std::endl << _("--- Calculated value ---") << std::endl;
+  out << '\n' << _("--- Calculated value ---") << '\n';
   value_t result(expr.calc());
   result.strip_annotations(report.what_to_keep()).dump(out);
-  out << std::endl;
+  out << '\n';
 
   return NULL_VALUE;
 }
@@ -122,7 +122,7 @@ value_t eval_command(call_scope_t& args) {
   value_t result(expr.calc(args).strip_annotations(report.what_to_keep()));
 
   if (!result.is_null())
-    report.output_stream << result << std::endl;
+    report.output_stream << result << '\n';
 
   return NULL_VALUE;
 }
@@ -137,14 +137,14 @@ value_t format_command(call_scope_t& args) {
 
   post_t* post = get_sample_xact(report);
 
-  out << _("--- Input format string ---") << std::endl;
-  out << arg << std::endl << std::endl;
+  out << _("--- Input format string ---") << '\n';
+  out << arg << '\n' << '\n';
 
-  out << _("--- Format elements ---") << std::endl;
+  out << _("--- Format elements ---") << '\n';
   format_t fmt(arg);
   fmt.dump(out);
 
-  out << std::endl << _("--- Formatted string ---") << std::endl;
+  out << '\n' << _("--- Formatted string ---") << '\n';
   bind_scope_t bound_scope(args, *post);
   out << '"';
   out << fmt(bound_scope);
@@ -162,7 +162,7 @@ value_t period_command(call_scope_t& args) {
   std::ostream& out(report.output_stream);
 
   show_period_tokens(out, arg);
-  out << std::endl;
+  out << '\n';
 
   date_interval_t interval(arg);
   interval.dump(out);
@@ -174,9 +174,9 @@ value_t query_command(call_scope_t& args) {
   report_t& report(find_scope<report_t>(args));
   std::ostream& out(report.output_stream);
 
-  out << _("--- Input arguments ---") << std::endl;
+  out << _("--- Input arguments ---") << '\n';
   args.value().dump(out);
-  out << std::endl << std::endl;
+  out << '\n' << '\n';
 
   query_t query(args.value(), report.what_to_keep(), !report.HANDLED(collapse));
   if (query.has_query(query_t::QUERY_LIMIT)) {
@@ -187,7 +187,7 @@ value_t query_command(call_scope_t& args) {
   }
 
   if (query.has_query(query_t::QUERY_SHOW)) {
-    out << std::endl << _("====== Display predicate ======") << std::endl << std::endl;
+    out << '\n' << _("====== Display predicate ======") << '\n' << '\n';
 
     call_scope_t disp_sub_args(static_cast<scope_t&>(args));
     disp_sub_args.push_back(string_value(query.get_query(query_t::QUERY_SHOW)));

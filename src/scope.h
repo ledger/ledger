@@ -41,20 +41,22 @@
  */
 #pragma once
 
+#include <utility>
+
 #include "op.h"
 
 namespace ledger {
 
 struct symbol_t {
-  enum kind_t { UNKNOWN, FUNCTION, OPTION, PRECOMMAND, COMMAND, DIRECTIVE, FORMAT };
+  enum kind_t : uint8_t { UNKNOWN, FUNCTION, OPTION, PRECOMMAND, COMMAND, DIRECTIVE, FORMAT };
 
   kind_t kind;
   string name;
   expr_t::ptr_op_t definition;
 
-  symbol_t() : kind(UNKNOWN), name(""), definition(NULL) { TRACE_CTOR(symbol_t, ""); }
-  symbol_t(kind_t _kind, string _name, expr_t::ptr_op_t _definition = NULL)
-      : kind(_kind), name(_name), definition(_definition) {
+  symbol_t() : kind(UNKNOWN), name(""), definition(nullptr) { TRACE_CTOR(symbol_t, ""); }
+  symbol_t(kind_t _kind, string _name, expr_t::ptr_op_t _definition = nullptr)
+      : kind(_kind), name(std::move(_name)), definition(std::move(_definition)) {
     TRACE_CTOR(symbol_t, "symbol_t::kind_t, string");
   }
   symbol_t(const symbol_t& sym) : kind(sym.kind), name(sym.name), definition(sym.definition) {
@@ -78,10 +80,10 @@ public:
 
   virtual string description() = 0;
 
-  virtual void define(const symbol_t::kind_t, const string&, expr_t::ptr_op_t) {}
+  virtual void define(const symbol_t::kind_t, const string&, const expr_t::ptr_op_t&) {}
   virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) = 0;
 
-  virtual scope_t* get_parent() { return NULL; }
+  virtual scope_t* get_parent() { return nullptr; }
 
   virtual value_t::type_t type_context() const { return value_t::VOID; }
   virtual bool type_required() const { return false; }
@@ -90,34 +92,34 @@ public:
 class empty_scope_t : public scope_t {
 public:
   empty_scope_t() { TRACE_CTOR(empty_scope_t, ""); }
-  ~empty_scope_t() noexcept { TRACE_DTOR(empty_scope_t); }
+  ~empty_scope_t() noexcept override { TRACE_DTOR(empty_scope_t); }
 
-  virtual string description() override { return _("<empty>"); }
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t, const string&) override { return NULL; }
+  string description() override { return _("<empty>"); }
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t, const string&) override { return nullptr; }
 };
 
 class child_scope_t : public noncopyable, public scope_t {
 public:
   scope_t* parent;
 
-  explicit child_scope_t() : parent(NULL) { TRACE_CTOR(child_scope_t, ""); }
+  explicit child_scope_t() : parent(nullptr) { TRACE_CTOR(child_scope_t, ""); }
   explicit child_scope_t(scope_t& _parent) : parent(&_parent) {
     TRACE_CTOR(child_scope_t, "scope_t&");
   }
-  virtual ~child_scope_t() { TRACE_DTOR(child_scope_t); }
+  ~child_scope_t() override { TRACE_DTOR(child_scope_t); }
 
-  virtual scope_t* get_parent() override { return parent; }
+  scope_t* get_parent() override { return parent; }
 
-  virtual void define(const symbol_t::kind_t kind, const string& name,
-                      expr_t::ptr_op_t def) override {
+  void define(const symbol_t::kind_t kind, const string& name,
+              const expr_t::ptr_op_t& def) override {
     if (parent)
       parent->define(kind, name, def);
   }
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override {
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override {
     if (parent)
       return parent->lookup(kind, name);
-    return NULL;
+    return nullptr;
   }
 };
 
@@ -132,17 +134,17 @@ public:
     DEBUG("scope.symbols", "Binding scope " << &_parent << " with " << &_grandchild);
     TRACE_CTOR(bind_scope_t, "scope_t&, scope_t&");
   }
-  virtual ~bind_scope_t() { TRACE_DTOR(bind_scope_t); }
+  ~bind_scope_t() override { TRACE_DTOR(bind_scope_t); }
 
-  virtual string description() override { return grandchild.description(); }
+  string description() override { return grandchild.description(); }
 
-  virtual void define(const symbol_t::kind_t kind, const string& name,
-                      expr_t::ptr_op_t def) override {
+  void define(const symbol_t::kind_t kind, const string& name,
+              const expr_t::ptr_op_t& def) override {
     parent->define(kind, name, def);
     grandchild.define(kind, name, def);
   }
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override {
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override {
     if (expr_t::ptr_op_t def = grandchild.lookup(kind, name))
       return def;
     return child_scope_t::lookup(kind, name);
@@ -164,10 +166,10 @@ public:
       : bind_scope_t(_parent, _grandchild) {
     TRACE_CTOR(lexical_scope_t, "scope_t&, scope_t&");
   }
-  virtual ~lexical_scope_t() { TRACE_DTOR(lexical_scope_t); }
+  ~lexical_scope_t() override { TRACE_DTOR(lexical_scope_t); }
 
-  virtual void define(const symbol_t::kind_t kind, const string& name,
-                      expr_t::ptr_op_t def) override {
+  void define(const symbol_t::kind_t kind, const string& name,
+              const expr_t::ptr_op_t& def) override {
     grandchild.define(kind, name, def);
   }
 };
@@ -186,7 +188,7 @@ T* search_scope(scope_t* ptr, bool prefer_direct_parents = false) {
   } else if (scope_t* parent = ptr->get_parent()) {
     return search_scope<T>(parent);
   }
-  return NULL;
+  return nullptr;
 }
 
 template <typename T>
@@ -209,7 +211,7 @@ inline T& find_scope(scope_t& scope, bool prefer_direct_parents = false) {
 }
 
 class symbol_scope_t : public child_scope_t {
-  typedef std::map<symbol_t, expr_t::ptr_op_t> symbol_map;
+  using symbol_map = std::map<symbol_t, expr_t::ptr_op_t>;
 
   optional<symbol_map> symbols;
 
@@ -218,9 +220,9 @@ public:
   explicit symbol_scope_t(scope_t& _parent) : child_scope_t(_parent) {
     TRACE_CTOR(symbol_scope_t, "scope_t&");
   }
-  virtual ~symbol_scope_t() { TRACE_DTOR(symbol_scope_t); }
+  ~symbol_scope_t() override { TRACE_DTOR(symbol_scope_t); }
 
-  virtual string description() override {
+  string description() override {
     if (parent)
       return parent->description();
     else
@@ -228,10 +230,10 @@ public:
     return empty_string;
   }
 
-  virtual void define(const symbol_t::kind_t kind, const string& name,
-                      expr_t::ptr_op_t def) override;
+  void define(const symbol_t::kind_t kind, const string& name,
+              const expr_t::ptr_op_t& def) override;
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 };
 
 class context_scope_t : public child_scope_t {
@@ -244,12 +246,12 @@ public:
       : child_scope_t(_parent), value_type_context(_type_context), required(_required) {
     TRACE_CTOR(context_scope_t, "scope_t&, value_t::type_t, bool");
   }
-  virtual ~context_scope_t() { TRACE_DTOR(context_scope_t); }
+  ~context_scope_t() override { TRACE_DTOR(context_scope_t); }
 
-  virtual string description() override { return parent->description(); }
+  string description() override { return parent->description(); }
 
-  virtual value_t::type_t type_context() const override { return value_type_context; }
-  virtual bool type_required() const override { return required; }
+  value_t::type_t type_context() const override { return value_type_context; }
+  bool type_required() const override { return required; }
 };
 
 class call_scope_t : public context_scope_t {
@@ -264,12 +266,12 @@ public:
   expr_t::ptr_op_t* locus;
   const int depth;
 
-  explicit call_scope_t(scope_t& _parent, expr_t::ptr_op_t* _locus = NULL, const int _depth = 0)
-      : context_scope_t(_parent, _parent.type_context(), _parent.type_required()), ptr(NULL),
+  explicit call_scope_t(scope_t& _parent, expr_t::ptr_op_t* _locus = nullptr, const int _depth = 0)
+      : context_scope_t(_parent, _parent.type_context(), _parent.type_required()), ptr(nullptr),
         locus(_locus), depth(_depth) {
     TRACE_CTOR(call_scope_t, "scope_t&, expr_t::ptr_op_t *, const int");
   }
-  virtual ~call_scope_t() { TRACE_DTOR(call_scope_t); }
+  ~call_scope_t() override { TRACE_DTOR(call_scope_t); }
 
   void set_args(const value_t& _args) { args = _args; }
   value_t& value() {
@@ -294,9 +296,9 @@ public:
 
   template <typename T>
   T& context() {
-    if (ptr == NULL)
+    if (ptr == nullptr)
       ptr = &find_scope<T>(*this);
-    assert(ptr != NULL);
+    assert(ptr != nullptr);
     return *static_cast<T*>(ptr);
   }
 
@@ -304,12 +306,12 @@ public:
   void push_back(const value_t& val) { args.push_back(val); }
   void pop_back() { args.pop_back(); }
 
-  typedef value_t::sequence_t::iterator iterator;
+  using iterator = value_t::sequence_t::iterator;
 
   value_t::sequence_t::iterator begin() { return args.begin(); }
   value_t::sequence_t::iterator end() { return args.end(); }
 
-  typedef value_t::sequence_t::const_iterator const_iterator;
+  using const_iterator = value_t::sequence_t::const_iterator;
 
   value_t::sequence_t::const_iterator begin() const { return args.begin(); }
   value_t::sequence_t::const_iterator end() const { return args.end(); }
@@ -411,13 +413,13 @@ public:
   value_scope_t(scope_t& _parent, const value_t& _value) : child_scope_t(_parent), value(_value) {
     TRACE_CTOR(value_scope_t, "scope_t&, value_t");
   }
-  ~value_scope_t() noexcept { TRACE_DTOR(value_scope_t); }
+  ~value_scope_t() noexcept override { TRACE_DTOR(value_scope_t); }
 
-  virtual string description() override { return parent->description(); }
+  string description() override { return parent->description(); }
 
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override {
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override {
     if (kind != symbol_t::FUNCTION)
-      return NULL;
+      return nullptr;
 
     if (name == "value")
       return MAKE_FUNCTOR(value_scope_t::get_value);

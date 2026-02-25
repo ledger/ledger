@@ -111,7 +111,11 @@ public:
    */
   ~output_stream_t() {
     TRACE_DTOR(output_stream_t);
-    close();
+    try {
+      close();
+    } catch (...) { // NOLINT(bugprone-empty-catch)
+      // Destructors must not throw; swallow any exception from close()
+    }
   }
 
   /**

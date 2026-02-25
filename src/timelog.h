@@ -60,10 +60,10 @@ public:
   string note;
   position_t position;
 
-  time_xact_t() : account(NULL) { TRACE_CTOR(time_xact_t, ""); }
+  time_xact_t() : account(nullptr) { TRACE_CTOR(time_xact_t, ""); }
   time_xact_t(const optional<position_t>& _position, const datetime_t& _checkin,
-              const bool _completed = false, account_t* _account = NULL, const string& _desc = "",
-              const string& _note = "")
+              const bool _completed = false, account_t* _account = nullptr,
+              const string& _desc = "", const string& _note = "")
       : checkin(_checkin), completed(_completed), account(_account), desc(_desc), note(_note),
         position(_position ? *_position : position_t()) {
     TRACE_CTOR(time_xact_t, "position_t, datetime_t, bool, account_t *, string, string");
@@ -87,8 +87,8 @@ public:
   }
   ~time_log_t() { TRACE_DTOR(time_log_t); }
 
-  void clock_in(time_xact_t event);
-  std::size_t clock_out(time_xact_t event);
+  void clock_in(const time_xact_t& event);
+  std::size_t clock_out(const time_xact_t& event);
 
   void close();
 };

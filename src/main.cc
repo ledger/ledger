@@ -93,7 +93,7 @@ int main(int argc, char* argv[], char* envp[]) {
   ::textdomain("ledger");
 #endif
 
-  global_scope_t* global_scope = NULL;
+  global_scope_t* global_scope = nullptr;
 
   try {
     // Create the session object, which maintains nearly all state relating to
@@ -141,7 +141,7 @@ int main(int argc, char* argv[], char* envp[]) {
       // TODO: rl_attempted_completion_function = ledger_completion;
 
       while (char* p = readline(global_scope->prompt_string())) {
-        char* expansion = NULL;
+        char* expansion = nullptr;
         int result;
 
         result = history_expand(skip_ws(p), &expansion);
@@ -191,7 +191,7 @@ int main(int argc, char* argv[], char* envp[]) {
     if (global_scope)
       global_scope->report_error(err);
     else
-      std::cerr << "Exception during initialization: " << err.what() << std::endl;
+      std::cerr << "Exception during initialization: " << err.what() << '\n';
   } catch (const error_count& errors) {
     // used for a "quick" exit, and is used only if help text (such as
     // --help) was displayed

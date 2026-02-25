@@ -167,12 +167,12 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
   string tag;
   bool by_value = false;
   bool first = true;
-  for (char* q = std::strtok(buf.get(), " \t"); q; q = std::strtok(NULL, " \t")) {
+  for (char* q = std::strtok(buf.get(), " \t"); q; q = std::strtok(nullptr, " \t")) {
     const string::size_type len = std::strlen(q);
     if (len < 2)
       continue;
     if (q[0] == ':' && q[len - 1] == ':') { // a series of tags
-      for (char* r = std::strtok(q + 1, ":"); r; r = std::strtok(NULL, ":")) {
+      for (char* r = std::strtok(q + 1, ":"); r; r = std::strtok(nullptr, ":")) {
         string_map::iterator i = set_tag(r, std::nullopt, overwrite_existing);
         (*i).second.second = true;
       }
@@ -185,7 +185,7 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
       tag = string(q, len - index);
 
       string_map::iterator i;
-      string field(p + (q - buf.get()) + len);
+      string field(p + (q - buf.get()) + len); // NOLINT(bugprone-unused-local-non-trivial-variable)
       trim(field);
       if (by_value) {
         bind_scope_t bound_scope(scope, *this);
@@ -201,7 +201,7 @@ void item_t::parse_tags(const char* p, scope_t& scope, bool overwrite_existing) 
 }
 
 void item_t::append_note(const char* p, scope_t& scope, bool overwrite_existing) {
-  if (note) {
+  if (note) { // NOLINT(bugprone-branch-clone)
     *note += '\n';
     *note += p;
   } else {
@@ -386,7 +386,7 @@ value_t get_comment(item_t& item) {
   }
 }
 
-void item_t::define(const symbol_t::kind_t, const string& name, expr_t::ptr_op_t def) {
+void item_t::define(const symbol_t::kind_t, const string& name, const expr_t::ptr_op_t& def) {
   if (defining_)
     return;
   defining_ = true;
@@ -402,8 +402,9 @@ void item_t::define(const symbol_t::kind_t, const string& name, expr_t::ptr_op_t
 
 expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind, const string& name) {
   if (kind != symbol_t::FUNCTION)
-    return NULL;
+    return nullptr;
 
+  // NOLINTBEGIN(bugprone-branch-clone)
   switch (name[0]) {
   case 'a':
     if (name == "actual")
@@ -527,8 +528,9 @@ expr_t::ptr_op_t item_t::lookup(const symbol_t::kind_t kind, const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_pending>);
     break;
   }
+  // NOLINTEND(bugprone-branch-clone)
 
-  return NULL;
+  return nullptr;
 }
 
 bool item_t::valid() const {
@@ -552,7 +554,7 @@ string item_context(const item_t& item, const string& desc) {
   if (!(len > 0))
     return empty_string;
 
-  assert(len < 1024 * 1024);
+  assert(len < static_cast<std::streamoff>(1024 * 1024));
 
   std::ostringstream out;
 

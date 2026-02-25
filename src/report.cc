@@ -30,6 +30,7 @@
  */
 
 #include <system.hh>
+#include <utility>
 
 #include "report.h"
 #include "session.h"
@@ -56,7 +57,7 @@ void report_t::normalize_options(const string& verb) {
   // command it was.
 
 #if HAVE_ISATTY
-  if (!HANDLED(force_color)) {
+  if (!HANDLED(force_color)) { // NOLINT(bugprone-branch-clone)
     if (!HANDLED(no_color) && isatty(STDOUT_FILENO))
       HANDLER(color).on("?normalize");
     if (HANDLED(color) && !isatty(STDOUT_FILENO))
@@ -116,7 +117,7 @@ void report_t::normalize_options(const string& verb) {
         HANDLED(meta_).on("?normalize", string(HANDLER(meta_).str(), 0, i));
       }
     }
-    if (HANDLED(meta_width_)) {
+    if (HANDLED(meta_width_)) { // NOLINT(bugprone-branch-clone)
       HANDLER(prepend_format_)
           .on("?normalize", string("%(justify(truncated(tag(\"") + HANDLER(meta_).str() + "\"), " +
                                 HANDLED(meta_width_).value + " - 1), " +
@@ -127,7 +128,7 @@ void report_t::normalize_options(const string& verb) {
     }
   }
 
-  if (verb == "print" || verb == "xact" || verb == "dump") {
+  if (verb == "print" || verb == "xact" || verb == "dump") { // NOLINT(bugprone-branch-clone)
     HANDLER(related_all).parent = this;
     HANDLER(related_all).on("?normalize");
   } else if (verb == "equity") {
@@ -148,7 +149,7 @@ void report_t::normalize_options(const string& verb) {
   // If -j or -J were specified, set the appropriate format string now so as
   // to avoid option ordering issues were we to have done it during the
   // initial parsing of the options.
-  if (HANDLED(amount_data)) {
+  if (HANDLED(amount_data)) { // NOLINT(bugprone-branch-clone)
     HANDLER(format_).on("?normalize", HANDLER(plot_amount_format_).value);
   } else if (HANDLED(total_data)) {
     HANDLER(format_).on("?normalize", HANDLER(plot_total_format_).value);
@@ -179,9 +180,9 @@ void report_t::normalize_options(const string& verb) {
     // the market value at DATE rather than from the original cost basis.
     // For postings dated before DATE, use market(amount, DATE) as the cost
     // baseline instead of the original cost.
-    string gf_str = "[" + to_iso_extended_string(gain_from->date()) + "]";
-    HANDLER(amount_).expr.set_base_expr("(amount, date < " + gf_str + " ? market(amount, " +
-                                        gf_str + ", exchange) : cost)");
+    HANDLER(amount_).expr.set_base_expr(
+        "(amount, date < [" + to_iso_extended_string(gain_from->date()) + "] ? market(amount, [" +
+        to_iso_extended_string(gain_from->date()) + "], exchange) : cost)");
   }
 
   long cols = 0;
@@ -269,14 +270,10 @@ void report_t::normalize_period() {
   optional<date_t> begin = interval.begin();
   optional<date_t> end = interval.end();
 
-  if (!HANDLED(begin_) && begin) {
-    string predicate = "date>=[" + to_iso_extended_string(*begin) + "]";
-    HANDLER(limit_).on(string("?normalize"), predicate);
-  }
-  if (!HANDLED(end_) && end) {
-    string predicate = "date<[" + to_iso_extended_string(*end) + "]";
-    HANDLER(limit_).on(string("?normalize"), predicate);
-  }
+  if (!HANDLED(begin_) && begin)
+    HANDLER(limit_).on(string("?normalize"), "date>=[" + to_iso_extended_string(*begin) + "]");
+  if (!HANDLED(end_) && end)
+    HANDLER(limit_).on(string("?normalize"), "date<[" + to_iso_extended_string(*end) + "]");
 
   if (!interval.duration)
     HANDLER(period_).off();
@@ -320,7 +317,8 @@ struct posts_flusher {
   post_handler_ptr handler;
   report_t& report;
 
-  posts_flusher(post_handler_ptr _handler, report_t& _report) : handler(_handler), report(_report) {
+  posts_flusher(post_handler_ptr _handler, report_t& _report)
+      : handler(std::move(_handler)), report(_report) {
     TRACE_CTOR(posts_flusher, "post_handler_ptr, report_t&");
   }
   ~posts_flusher() noexcept { TRACE_DTOR(posts_flusher); }
@@ -339,7 +337,7 @@ void report_t::posts_report(post_handler_ptr handler) {
   handler = chain_pre_post_handlers(handler, *this);
 
   journal_posts_iterator walker(*session.journal.get());
-  pass_down_posts<journal_posts_iterator>(handler, walker);
+  pass_down_posts<journal_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
 
   if (!HANDLED(group_by_))
     posts_flusher(handler, *this)(value_t());
@@ -352,14 +350,14 @@ void report_t::generate_report(post_handler_ptr handler) {
       session, HANDLED(seed_) ? lexical_cast<unsigned int>(HANDLER(seed_).str()) : 0,
       HANDLED(head_) ? lexical_cast<unsigned int>(HANDLER(head_).str()) : 50);
 
-  pass_down_posts<generate_posts_iterator>(handler, walker);
+  pass_down_posts<generate_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
 }
 
 void report_t::xact_report(post_handler_ptr handler, xact_t& xact) {
   handler = chain_handlers(handler, *this);
 
   xact_posts_iterator walker(xact);
-  pass_down_posts<xact_posts_iterator>(handler, walker);
+  pass_down_posts<xact_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
 
   xact.clear_xdata();
 }
@@ -370,7 +368,7 @@ struct accounts_title_printer {
   report_t& report;
 
   accounts_title_printer(acct_handler_ptr _handler, report_t& _report)
-      : handler(_handler), report(_report) {}
+      : handler(std::move(_handler)), report(_report) {}
 
   void operator()(const value_t& val) {
     if (!report.HANDLED(no_titles)) {
@@ -386,7 +384,7 @@ struct accounts_flusher {
   report_t& report;
 
   accounts_flusher(acct_handler_ptr _handler, report_t& _report)
-      : handler(_handler), report(_report) {}
+      : handler(std::move(_handler)), report(_report) {}
 
   void operator()(const value_t&) {
     report.HANDLER(amount_).expr.mark_uncompiled();
@@ -432,7 +430,8 @@ struct accounts_flusher {
 };
 } // namespace
 
-void report_t::accounts_report(acct_handler_ptr handler) {
+void report_t::accounts_report(
+    acct_handler_ptr handler) { // NOLINT(performance-unnecessary-value-param)
   post_handler_ptr chain = chain_post_handlers(post_handler_ptr(new ignore_posts), *this,
                                                /* for_accounts_report= */ true);
   if (HANDLED(group_by_)) {
@@ -449,7 +448,7 @@ void report_t::accounts_report(acct_handler_ptr handler) {
   // objects created within it during the call to pass_down_posts, which will
   // be needed later by the pass_down_accounts.
   journal_posts_iterator walker(*session.journal.get());
-  pass_down_posts<journal_posts_iterator>(chain, walker);
+  pass_down_posts<journal_posts_iterator>(chain, walker); // NOLINT(bugprone-unused-raii)
 
   if (!HANDLED(group_by_))
     accounts_flusher(handler, *this)(value_t());
@@ -490,6 +489,7 @@ void report_t::commodities_report(post_handler_ptr handler) {
         if (new_limit.empty())
           new_limit = term;
         else
+          // NOLINTNEXTLINE(performance-inefficient-string-concatenation)
           new_limit = "(" + new_limit + ")&(" + term + ")";
       }
     }
@@ -509,7 +509,7 @@ void report_t::commodities_report(post_handler_ptr handler) {
 
   posts_commodities_iterator* walker(new posts_commodities_iterator(*session.journal.get()));
   try {
-    pass_down_posts<posts_commodities_iterator>(handler, *walker);
+    pass_down_posts<posts_commodities_iterator>(handler, *walker); // NOLINT(bugprone-unused-raii)
   } catch (...) {
     IF_VERIFY() {
       // If --verify was used, clean up the posts_commodities_iterator.
@@ -646,7 +646,7 @@ value_t report_t::fn_strip(call_scope_t& args) {
 }
 
 value_t report_t::fn_trim(call_scope_t& args) {
-  string temp(args.value().to_string());
+  string temp(args.value().to_string()); // NOLINT(bugprone-unused-local-non-trivial-variable)
   scoped_array<char> buf(new char[temp.length() + 1]);
   std::strcpy(buf.get(), temp.c_str());
 
@@ -659,7 +659,7 @@ value_t report_t::fn_trim(call_scope_t& args) {
   while (e > p && std::isspace(static_cast<unsigned char>(*e)))
     e--;
 
-  if (p > e) {
+  if (p > e) { // NOLINT(bugprone-branch-clone)
     return string_value(empty_string);
   } else {
     return string_value(string(p, static_cast<std::string::size_type>(e - p + 1)));
@@ -676,7 +676,7 @@ value_t report_t::fn_format(call_scope_t& args) {
 value_t report_t::fn_print(call_scope_t& args) {
   for (std::size_t i = 0; i < args.size(); i++)
     args[i].print(output_stream);
-  static_cast<std::ostream&>(output_stream) << std::endl;
+  static_cast<std::ostream&>(output_stream) << '\n';
   return true;
 }
 
@@ -749,7 +749,7 @@ value_t report_t::fn_quoted(call_scope_t& args) {
   std::ostringstream out;
 
   out << '"';
-  string arg(args.get<string>(0));
+  string arg(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
   for (const char ch : arg) {
     if (ch == '"')
       out << "\\\"";
@@ -765,7 +765,7 @@ value_t report_t::fn_quoted_rfc(call_scope_t& args) {
   std::ostringstream out;
 
   out << '"';
-  string arg(args.get<string>(0));
+  string arg(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
   for (const char ch : arg) {
     if (ch == '"')
       out << '"' << '"';
@@ -780,7 +780,7 @@ value_t report_t::fn_quoted_rfc(call_scope_t& args) {
 value_t report_t::fn_join(call_scope_t& args) {
   std::ostringstream out;
 
-  string arg(args.get<string>(0));
+  string arg(args.get<string>(0)); // NOLINT(bugprone-unused-local-non-trivial-variable)
   for (const char ch : arg) {
     if (ch != '\n')
       out << ch;
@@ -1033,7 +1033,7 @@ value_t report_t::reload_command(call_scope_t&) {
 
 value_t report_t::echo_command(call_scope_t& args) {
   std::ostream& out(output_stream);
-  out << args.get<string>(0) << std::endl;
+  out << args.get<string>(0) << '\n';
   return true;
 }
 
@@ -1046,7 +1046,7 @@ value_t report_t::pricemap_command(call_scope_t& args) {
 
 option_t<report_t>* report_t::lookup_option(const char* p) {
   switch (*p) {
-  case '%':
+  case '%': // NOLINT(bugprone-branch-clone)
     OPT_CH(percent);
     break;
   case 'A':
@@ -1309,11 +1309,14 @@ option_t<report_t>* report_t::lookup_option(const char* p) {
     OPT_CH(date_format_);
     else OPT(yearly);
     break;
+  default:
+    break;
   }
-  return NULL;
+  return nullptr;
 }
 
-void report_t::define(const symbol_t::kind_t kind, const string& name, expr_t::ptr_op_t def) {
+void report_t::define(const symbol_t::kind_t kind, const string& name,
+                      const expr_t::ptr_op_t& def) {
   session.define(kind, name, def);
 }
 
@@ -1328,7 +1331,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
     // Support 2.x's single-letter value expression names.
     if (*(p + 1) == '\0') {
       switch (*p) {
-      case 'd':
+      case 'd': // NOLINT(bugprone-branch-clone)
       case 'm':
         return MAKE_FUNCTOR(report_t::fn_now);
       case 'P':
@@ -1358,12 +1361,12 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
         throw_(std::runtime_error,
                _("The G and g value expression variables are no longer supported"));
       default:
-        return NULL;
+        return nullptr;
       }
     }
 
     switch (*p) {
-    case 'a':
+    case 'a': // NOLINT(bugprone-branch-clone)
       if (is_eq(p, "amount_expr"))
         return MAKE_FUNCTOR(report_t::fn_amount_expr);
       else if (is_eq(p, "ansify_if"))
@@ -1561,6 +1564,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       if (is_eq(p, "yellow"))
         return WRAP_FUNCTOR(fn_yellow);
       break;
+    default:
+      break;
     }
 
     // Check if they are trying to access an option's setting or value.
@@ -1604,7 +1609,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       HANDLED(prepend_width_) ? lexical_cast<std::size_t>(HANDLER(prepend_width_).str()) : 0))
 
   case symbol_t::COMMAND:
-    switch (*p) {
+    switch (*p) { // NOLINT(bugprone-branch-clone,bugprone-switch-missing-default-case)
     case 'a':
       if (is_eq(p, "accounts")) {
         return POSTS_REPORTER(new report_accounts(*this));
@@ -1633,7 +1638,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       break;
 
     case 'c':
-      if (is_eq(p, "csv")) {
+      if (is_eq(p, "csv")) { // NOLINT(bugprone-branch-clone)
         return FORMATTED_POSTS_REPORTER(csv_format_);
       } else if (is_eq(p, "cleared")) {
         HANDLER(amount_).on(string("#cleared"), "(amount, cleared ? amount : 0)");
@@ -1650,7 +1655,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       }
       break;
     case 'e':
-      if (is_eq(p, "equity")) {
+      if (is_eq(p, "equity")) { // NOLINT(bugprone-branch-clone)
         HANDLER(generated).on("#equity");
         return POSTS_REPORTER(new print_xacts(*this));
       } else if (is_eq(p, "entry")) {
@@ -1668,7 +1673,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       break;
 
     case 'p':
-      if (*(p + 1) == '\0' || is_eq(p, "print")) {
+      if (*(p + 1) == '\0' || is_eq(p, "print")) { // NOLINT(bugprone-branch-clone)
         return POSTS_REPORTER(new print_xacts(*this, HANDLED(raw)));
       } else if (is_eq(p, "prices")) {
         return FORMATTED_COMMODITIES_REPORTER(prices_format_);
@@ -1682,7 +1687,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       break;
 
     case 'r':
-      if (*(p + 1) == '\0' || is_eq(p, "reg") || is_eq(p, "register")) {
+      if (*(p + 1) == '\0' || is_eq(p, "reg") ||
+          is_eq(p, "register")) { // NOLINT(bugprone-branch-clone)
         return FORMATTED_POSTS_REPORTER(register_format_);
       } else if (is_eq(p, "reload")) {
         return MAKE_FUNCTOR(report_t::reload_command);
@@ -1708,12 +1714,14 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       else if (is_eq(p, "xml"))
         return POSTS_REPORTER(new format_ptree(*this, format_ptree::FORMAT_XML));
       break;
+    default:
+      break;
     }
     break;
 
   case symbol_t::PRECOMMAND:
     switch (*p) {
-    case 'a':
+    case 'a': // NOLINT(bugprone-branch-clone)
       if (is_eq(p, "args"))
         return WRAP_FUNCTOR(query_command);
       break;
@@ -1749,6 +1757,8 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       if (is_eq(p, "template"))
         return WRAP_FUNCTOR(template_command);
       break;
+    default:
+      break;
     }
     break;
 
@@ -1756,7 +1766,7 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
     break;
   }
 
-  return NULL;
+  return nullptr;
 }
 
 } // namespace ledger

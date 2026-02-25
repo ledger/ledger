@@ -113,7 +113,7 @@ std::optional<price_point_t> commodity_quote_from_script(commodity_t& commodity,
         ofstream database(*commodity_pool_t::current_pool->price_db,
                           std::ios_base::out | std::ios_base::app);
         database << "P " << format_datetime(point->second.when, FMT_WRITTEN) << " "
-                 << commodity.symbol() << " " << point->second.price << std::endl;
+                 << commodity.symbol() << " " << point->second.price << '\n';
       }
       return point->second;
     }

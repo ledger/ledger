@@ -48,7 +48,7 @@ void instance_t::parse() {
   context.curr_pos = in.tellg();
 
   bool error_flag = false;
-  xact_t* previous_xact = NULL;
+  xact_t* previous_xact = nullptr;
 
   while (in.good() && !in.eof() && in.peek() != '^' && in.good()) {
     try {
@@ -76,12 +76,12 @@ void instance_t::parse() {
 
       string err_context = error_context();
       if (!err_context.empty())
-        std::cerr << err_context << std::endl;
+        std::cerr << err_context << '\n';
 
       if (!current_context.empty())
-        std::cerr << current_context << std::endl;
+        std::cerr << current_context << '\n';
 
-      std::cerr << _("Error: ") << err.what() << std::endl;
+      std::cerr << _("Error: ") << err.what() << '\n';
       context.errors++;
       if (!current_context.empty())
         context.last = current_context + "\n" + err.what();
@@ -152,8 +152,8 @@ std::streamsize instance_t::read_line(char*& line) {
 xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact) {
   char* line;
   std::streamsize len = read_line(line);
-  if (len == 0 || line == NULL)
-    return NULL;
+  if (len == 0 || line == nullptr)
+    return nullptr;
 
   if (!std::isspace(static_cast<unsigned char>(line[0])))
     error_flag = false;
@@ -244,12 +244,14 @@ xact_t* instance_t::read_next_directive(bool& error_flag, xact_t* previous_xact)
           throw_(parse_error, _f("Directive '%1%' requires an argument") % line[0]);
         apply_year_directive(line + 1);
         break;
+      default:
+        break;
       }
     }
     break;
   }
 
-  return NULL;
+  return nullptr;
 }
 
 expr_t::ptr_op_t instance_t::lookup(const symbol_t::kind_t kind, const string& name) {
@@ -259,7 +261,7 @@ expr_t::ptr_op_t instance_t::lookup(const symbol_t::kind_t kind, const string& n
 std::size_t journal_t::read_textual(parse_context_stack_t& context_stack, hash_type_t hash_type) {
   TRACE_START(parsing_total, 1, "Total time spent parsing text:");
   {
-    instance_t instance(context_stack, context_stack.get_current(), NULL,
+    instance_t instance(context_stack, context_stack.get_current(), nullptr,
                         checking_style == journal_t::CHECK_PERMISSIVE, hash_type);
     instance.apply_stack.push_front(application_t("account", context_stack.get_current().master));
     instance.parse();

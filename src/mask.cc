@@ -44,6 +44,7 @@ namespace {
 // Supplement (U+00C0-U+00FF) and Latin Extended-A (U+0100-U+017F)
 // ranges, which include the most frequently used European diacritics.
 boost::uint32_t fold_codepoint(boost::uint32_t cp) {
+  // NOLINTBEGIN(bugprone-branch-clone)
   switch (cp) {
   // Latin-1 Supplement: uppercase
   case 0x00C0:
@@ -304,6 +305,7 @@ boost::uint32_t fold_codepoint(boost::uint32_t cp) {
   default:
     return cp;
   }
+  // NOLINTEND(bugprone-branch-clone)
 }
 
 } // namespace
@@ -330,7 +332,7 @@ string fold_diacritics(string_view text) {
   if (!changed)
     return string(text);
 
-  string result;
+  string result; // NOLINT(bugprone-unused-local-non-trivial-variable)
   utf8::unchecked::utf32to8(utf32chars.begin(), utf32chars.end(), std::back_inserter(result));
   return result;
 }

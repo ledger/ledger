@@ -50,7 +50,7 @@
 
 namespace ledger {
 
-typedef std::map<datetime_t, amount_t> price_map_t;
+using price_map_t = std::map<datetime_t, amount_t>;
 
 class commodity_history_impl_t;
 class commodity_history_t : public noncopyable {
@@ -64,7 +64,7 @@ public:
   void add_price(const commodity_t& source, const datetime_t& when, const amount_t& price);
   void remove_price(const commodity_t& source, const commodity_t& target, const datetime_t& date);
 
-  void map_prices(function<void(datetime_t, const amount_t&)> fn, const commodity_t& source,
+  void map_prices(const function<void(datetime_t, const amount_t&)>& fn, const commodity_t& source,
                   const datetime_t& moment, const datetime_t& _oldest = datetime_t(),
                   bool bidirectionally = false);
 

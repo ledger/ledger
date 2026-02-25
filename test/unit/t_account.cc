@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(testConstructRoot)
 {
   // A root account has no parent, an empty name, and depth 0
   account_t root;
-  BOOST_CHECK(root.parent == NULL);
+  BOOST_CHECK(root.parent == nullptr);
   BOOST_CHECK_EQUAL(string(""), root.name);
   BOOST_CHECK(! root.note);
   BOOST_CHECK_EQUAL(0, root.depth);
@@ -109,19 +109,19 @@ BOOST_AUTO_TEST_CASE(testFindAccountAutoCreate)
   // missing accounts along the colon-separated path
   account_t root;
   account_t* found = root.find_account("Assets:Bank:Checking");
-  BOOST_CHECK(found != NULL);
+  BOOST_CHECK(found != nullptr);
   BOOST_CHECK_EQUAL(string("Checking"), found->name);
   BOOST_CHECK_EQUAL(string("Assets:Bank:Checking"), found->fullname());
   BOOST_CHECK_EQUAL(3, found->depth);
 
   // The intermediate accounts should also have been created
   account_t* assets = root.find_account("Assets");
-  BOOST_CHECK(assets != NULL);
+  BOOST_CHECK(assets != nullptr);
   BOOST_CHECK_EQUAL(string("Assets"), assets->name);
   BOOST_CHECK_EQUAL(1, assets->depth);
 
   account_t* bank = root.find_account("Assets:Bank");
-  BOOST_CHECK(bank != NULL);
+  BOOST_CHECK(bank != nullptr);
   BOOST_CHECK_EQUAL(string("Bank"), bank->name);
   BOOST_CHECK_EQUAL(2, bank->depth);
 
@@ -137,11 +137,11 @@ BOOST_AUTO_TEST_CASE(testFindAccountNoAutoCreate)
   // find_account with auto_create=false should return NULL for missing accounts
   account_t root;
   account_t* found = root.find_account("Expenses:Food", false);
-  BOOST_CHECK(found == NULL);
+  BOOST_CHECK(found == nullptr);
 
   // Create the account, then find it with auto_create=false
   account_t* created = root.find_account("Expenses:Food", true);
-  BOOST_CHECK(created != NULL);
+  BOOST_CHECK(created != nullptr);
 
   account_t* found_again = root.find_account("Expenses:Food", false);
   BOOST_CHECK(found_again == created);
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(testFindAccountNoAutoCreate)
   // A partial path that does not exist returns NULL when auto_create is false
   // First, only "Expenses" and "Expenses:Food" exist. "Expenses:Rent" does not.
   account_t* missing = root.find_account("Expenses:Rent", false);
-  BOOST_CHECK(missing == NULL);
+  BOOST_CHECK(missing == nullptr);
 
   BOOST_CHECK(root.valid());
 }
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(testAddAndRemoveAccount)
   BOOST_CHECK_EQUAL(0, root.accounts.size());
 
   // Removing a non-existent account returns false
-  account_t other(NULL, "Phantom");
+  account_t other(nullptr, "Phantom");
   bool removed_again = root.remove_account(&other);
   BOOST_CHECK(! removed_again);
 
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(testAddAndRemovePost)
   BOOST_CHECK(expenses->posts.front() == &post2);
 
   // After remove_post, the post's account pointer is set to NULL
-  BOOST_CHECK(post1.account == NULL);
+  BOOST_CHECK(post1.account == nullptr);
 
   // Remove the second post
   removed = expenses->remove_post(&post2);
@@ -292,19 +292,19 @@ BOOST_AUTO_TEST_CASE(testAccountFlags)
   account_t temp_root;
   temp_root.add_flags(ACCOUNT_TEMP);
   account_t* child = temp_root.find_account("Temp:Child");
-  BOOST_CHECK(child != NULL);
+  BOOST_CHECK(child != nullptr);
   BOOST_CHECK(child->has_flags(ACCOUNT_TEMP));
 
   // The intermediate account should also have ACCOUNT_TEMP
   account_t* intermediate = temp_root.find_account("Temp");
-  BOOST_CHECK(intermediate != NULL);
+  BOOST_CHECK(intermediate != nullptr);
   BOOST_CHECK(intermediate->has_flags(ACCOUNT_TEMP));
 
   // ACCOUNT_GENERATED also propagates
   account_t gen_root;
   gen_root.add_flags(ACCOUNT_GENERATED);
   account_t* gen_child = gen_root.find_account("Generated:Sub");
-  BOOST_CHECK(gen_child != NULL);
+  BOOST_CHECK(gen_child != nullptr);
   BOOST_CHECK(gen_child->has_flags(ACCOUNT_GENERATED));
 
   BOOST_CHECK(root.valid());

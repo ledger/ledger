@@ -124,8 +124,9 @@
  * |-------|---------------|---------|
  * | `OPTION(type, name)` | `OPTION(report_t, color);` | Simple option, no custom handler logic |
  * | `OPTION_(type, name, body)` | `OPTION_(report_t, actual, DO() { ... });` | Option with custom
- * DO()/DO_() handler | | `OPTION__(type, name, body)` | `OPTION__(report_t, amount_, DECL1(...) { }
- * DO_(...) { ... });` | Fully custom body with extra members, custom CTOR, and handler |
+ * DO()/DO_() handler | | `OPTION_CTOR(type, name, body)` | `OPTION_CTOR(report_t, amount_,
+ * DECL1(...) { } DO_(...) { ... });` | Fully custom body with extra members, custom CTOR, and
+ * handler |
  *
  * @subsection opt_lookup Lookup Macros (used in lookup_option)
  *
@@ -240,14 +241,14 @@ public:
   bool wants_arg;
 
   option_t(const char* _name, const char _ch = '\0')
-      : name(_name), name_len(std::strlen(name)), ch(_ch), handled(false), parent(NULL), value(),
+      : name(_name), name_len(std::strlen(name)), ch(_ch), handled(false), parent(nullptr), value(),
         wants_arg(name_len > 0 ? name[name_len - 1] == '_' : false) {
     DEBUG("option.names", "Option: " << name);
     TRACE_CTOR(option_t, "const char *, const char");
   }
   option_t(const option_t& other)
       : name(other.name), name_len(other.name_len), ch(other.ch), handled(other.handled),
-        source(other.source), parent(NULL), value(other.value), wants_arg(other.wants_arg) {
+        source(other.source), parent(nullptr), value(other.value), wants_arg(other.wants_arg) {
     TRACE_CTOR(option_t, "copy");
   }
 
@@ -265,7 +266,7 @@ public:
         out.width(45);
         out << ' ';
       }
-      out << std::left << *source << std::endl;
+      out << std::left << *source << '\n';
     }
   }
 
@@ -304,7 +305,7 @@ public:
 
   void on(const char* whence, const string& str) { on(string(whence), str); }
   void on(const optional<string>& whence, const string& str) {
-    string before = value;
+    string before = value; // NOLINT(bugprone-unused-local-non-trivial-variable)
 
     handler_thunk(whence, str);
 
@@ -325,6 +326,7 @@ public:
   virtual void handler_thunk(const optional<string>&, const string&) {}
 
   value_t handler(call_scope_t& args) {
+    // NOLINTBEGIN(bugprone-branch-clone)
     if (wants_arg) {
       if (args.size() < 2)
         throw_(std::runtime_error, _f("No argument provided for %1%") % desc());
@@ -340,6 +342,7 @@ public:
     } else {
       on(args.get<string>(0));
     }
+    // NOLINTEND(bugprone-branch-clone)
     return true;
   }
 
@@ -364,13 +367,13 @@ public:
   name##option_t() : option_t<type>(#name), var value
 
 #define DO() virtual void handler_thunk([[maybe_unused]] const optional<string>& whence) override
-#define DO_(var)                                                                                   \
+#define DO_()                                                                                      \
   virtual void handler_thunk([[maybe_unused]] const optional<string>& whence,                      \
-                             [[maybe_unused]] const string& var) override
+                             [[maybe_unused]] const string& str) override
 
 #define END(name) name##handler
 
-#define COPY_OPT(name, other) name##handler(other.name##handler)
+#define COPY_OPT(name, other) name##handler((other).name##handler)
 
 #define MAKE_OPT_HANDLER(type, x) expr_t::op_t::wrap_functor(bind(&option_t<type>::handler, x, _1))
 
@@ -412,9 +415,9 @@ inline bool is_eq(const char* p, const char* n) {
   }                                                                                                \
   END(name)
 
-#define OPTION_(type, name, body) BEGIN(type, name){CTOR(type, name){} body} END(name)
+#define OPTION_(type, name, ...) BEGIN(type, name){CTOR(type, name){} __VA_ARGS__} END(name)
 
-#define OPTION__(type, name, body) BEGIN(type, name){body} END(name)
+#define OPTION_CTOR(type, name, ...) BEGIN(type, name){__VA_ARGS__} END(name)
 
 #define OTHER(name)                                                                                \
   parent->HANDLER(name).parent = parent;                                                           \
@@ -427,6 +430,10 @@ void process_environment(const char** envp, const string& tag, scope_t& scope);
 
 strings_list process_arguments(strings_list args, scope_t& scope);
 
-DECLARE_EXCEPTION(option_error, std::runtime_error);
+class option_error : public std::runtime_error {
+public:
+  explicit option_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~option_error() noexcept override {}
+};
 
 } // namespace ledger

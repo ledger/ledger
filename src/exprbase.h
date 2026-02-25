@@ -58,11 +58,31 @@
 
 namespace ledger {
 
-DECLARE_EXCEPTION(parse_error, std::runtime_error);
-DECLARE_EXCEPTION(compile_error, std::runtime_error);
-DECLARE_EXCEPTION(calc_error, std::runtime_error);
-DECLARE_EXCEPTION(recursion_error, std::runtime_error);
-DECLARE_EXCEPTION(usage_error, std::runtime_error);
+class parse_error : public std::runtime_error {
+public:
+  explicit parse_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~parse_error() noexcept override {}
+};
+class compile_error : public std::runtime_error {
+public:
+  explicit compile_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~compile_error() noexcept override {}
+};
+class calc_error : public std::runtime_error {
+public:
+  explicit calc_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~calc_error() noexcept override {}
+};
+class recursion_error : public std::runtime_error {
+public:
+  explicit recursion_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~recursion_error() noexcept override {}
+};
+class usage_error : public std::runtime_error {
+public:
+  explicit usage_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~usage_error() noexcept override {}
+};
 
 class scope_t;
 class call_scope_t;
@@ -70,9 +90,9 @@ class call_scope_t;
 template <typename ResultType>
 class expr_base_t {
 public:
-  typedef ResultType result_type;
+  using result_type = ResultType;
 
-  typedef function<result_type(call_scope_t&)> func_t;
+  using func_t = function<result_type(call_scope_t&)>;
 
 protected:
   scope_t* context;
@@ -85,7 +105,7 @@ public:
   expr_base_t(const expr_base_t& other) : context(other.context), str(other.str), compiled(false) {
     TRACE_CTOR(expr_base_t, "copy");
   }
-  expr_base_t(scope_t* _context = NULL) : context(_context), compiled(false) {
+  expr_base_t(scope_t* _context = nullptr) : context(_context), compiled(false) {
     TRACE_CTOR(expr_base_t, "scope_t *");
   }
   virtual ~expr_base_t() { TRACE_DTOR(expr_base_t); }
@@ -112,7 +132,7 @@ public:
   }
 
   void parse(const string& expr_str, const parse_flags_t& flags = PARSE_DEFAULT) {
-    std::istringstream stream(expr_str);
+    std::istringstream stream(expr_str); // NOLINT(bugprone-unused-local-non-trivial-variable)
     return parse(stream, flags, expr_str);
   }
   virtual void parse(std::istream&, const parse_flags_t& = PARSE_DEFAULT,
@@ -208,21 +228,21 @@ public:
   virtual void dump(std::ostream&) const {}
 
   result_type preview(std::ostream& out, scope_t& scope) const {
-    out << _("--- Input expression ---") << std::endl;
-    out << text() << std::endl;
+    out << _("--- Input expression ---") << '\n';
+    out << text() << '\n';
 
-    out << std::endl << _("--- Text as parsed ---") << std::endl;
+    out << '\n' << _("--- Text as parsed ---") << '\n';
     print(out);
-    out << std::endl;
+    out << '\n';
 
-    out << std::endl << _("--- Expression tree ---") << std::endl;
+    out << '\n' << _("--- Expression tree ---") << '\n';
     dump(out);
 
-    out << std::endl << _("--- Compiled tree ---") << std::endl;
+    out << '\n' << _("--- Compiled tree ---") << '\n';
     compile(scope);
     dump(out);
 
-    out << std::endl << _("--- Result value ---") << std::endl;
+    out << '\n' << _("--- Result value ---") << '\n';
     return calc();
   }
 };

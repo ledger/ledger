@@ -53,14 +53,18 @@ namespace ledger {
 struct keep_details_t;
 class commodity_pool_t;
 
-DECLARE_EXCEPTION(commodity_error, std::runtime_error);
+class commodity_error : public std::runtime_error {
+public:
+  explicit commodity_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~commodity_error() noexcept override {}
+};
 
 struct price_point_t {
   datetime_t when;
   amount_t price;
 
   price_point_t() {}
-  price_point_t(datetime_t _when, amount_t _price) : when(_when), price(_price) {}
+  price_point_t(datetime_t _when, const amount_t& _price) : when(_when), price(_price) {}
 
   bool operator==(const price_point_t& other) const {
     return when == other.when && price == other.price;
@@ -101,8 +105,8 @@ protected:
     optional<amount_t> larger;
     std::optional<expr_t> value_expr;
 
-    typedef tuple<datetime_t, datetime_t, const commodity_t*> memoized_price_entry;
-    typedef std::map<memoized_price_entry, std::optional<price_point_t>> memoized_price_map;
+    using memoized_price_entry = tuple<datetime_t, datetime_t, const commodity_t*>;
+    using memoized_price_map = std::map<memoized_price_entry, std::optional<price_point_t>>;
 
     inline static constexpr std::size_t max_price_map_size = 8;
     mutable memoized_price_map price_map;
@@ -188,14 +192,14 @@ public:
   void add_price(const datetime_t& date, const amount_t& price, const bool reflexive = true);
   void remove_price(const datetime_t& date, commodity_t& commodity);
 
-  void map_prices(function<void(datetime_t, const amount_t&)> fn,
+  void map_prices(const function<void(datetime_t, const amount_t&)>& fn,
                   const datetime_t& moment = datetime_t(), const datetime_t& _oldest = datetime_t(),
                   bool bidirectionally = false);
 
   std::optional<price_point_t> find_price_from_expr(expr_t& expr, const commodity_t* commodity,
                                                     const datetime_t& moment) const;
 
-  std::optional<price_point_t> virtual find_price(const commodity_t* commodity = NULL,
+  std::optional<price_point_t> virtual find_price(const commodity_t* commodity = nullptr,
                                                   const datetime_t& moment = datetime_t(),
                                                   const datetime_t& oldest = datetime_t()) const;
 
@@ -211,7 +215,7 @@ public:
   static void parse_symbol(std::istream& in, string& symbol);
   static void parse_symbol(char*& p, string& symbol);
   static string parse_symbol(std::istream& in) {
-    string temp;
+    string temp; // NOLINT(bugprone-unused-local-non-trivial-variable)
     parse_symbol(in, temp);
     return temp;
   }

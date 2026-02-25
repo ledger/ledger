@@ -56,15 +56,15 @@
 namespace ledger {
 using namespace boost;
 
-typedef std::string string;
+using string = std::string;
 using string_view = std::string_view;
-typedef std::list<string> strings_list;
+using strings_list = std::list<string>;
 
-typedef posix_time::ptime ptime;
-typedef ptime::time_duration_type time_duration;
-typedef gregorian::date date;
-typedef gregorian::date_duration date_duration;
-typedef posix_time::seconds seconds;
+using ptime = posix_time::ptime;
+using time_duration = ptime::time_duration_type;
+using date = gregorian::date;
+using date_duration = gregorian::date_duration;
+using seconds = posix_time::seconds;
 
 using path = std::filesystem::path;
 using ifstream = std::ifstream;
@@ -175,7 +175,7 @@ inline string to_string(std::size_t num) {
 }
 
 inline string lowered(const string& str) {
-  string tmp(str);
+  string tmp(str); // NOLINT(bugprone-unused-local-non-trivial-variable)
   to_lower(tmp);
   return tmp;
 }
@@ -195,7 +195,7 @@ inline string operator+(const char* left, const string& right) {
 
 namespace ledger {
 
-enum log_level_t {
+enum log_level_t : uint8_t {
   LOG_OFF = 0,
   LOG_CRIT,
   LOG_FATAL,
@@ -222,10 +222,14 @@ void logger_func(log_level_t level);
 
 extern uint16_t _trace_level;
 
-#define SHOW_TRACE(lvl) (ledger::_log_level >= ledger::LOG_TRACE && lvl <= ledger::_trace_level)
-#define TRACE(lvl, msg)                                                                            \
-  (SHOW_TRACE(lvl) ? ((ledger::_log_buffer << msg), ledger::logger_func(ledger::LOG_TRACE))        \
-                   : (void)0)
+#define SHOW_TRACE(lvl) (ledger::_log_level >= ledger::LOG_TRACE && (lvl) <= ledger::_trace_level)
+#define TRACE(lvl, ...)                                                                            \
+  do {                                                                                             \
+    if (SHOW_TRACE(lvl)) {                                                                         \
+      ledger::_log_buffer << __VA_ARGS__;                                                          \
+      ledger::logger_func(ledger::LOG_TRACE);                                                      \
+    }                                                                                              \
+  } while (false)
 
 #else // TRACING_ON
 
@@ -265,10 +269,14 @@ inline bool category_matches(const char* cat) {
 #define SHOW_DEBUG(cat) (ledger::_log_level >= ledger::LOG_DEBUG && ledger::category_matches(cat))
 #define SHOW_DEBUG_() SHOW_DEBUG(_this_category)
 
-#define DEBUG(cat, msg)                                                                            \
-  (SHOW_DEBUG(cat) ? ((ledger::_log_buffer << msg), ledger::logger_func(ledger::LOG_DEBUG))        \
-                   : (void)0)
-#define DEBUG_(msg) DEBUG(_this_category, msg)
+#define DEBUG(cat, ...)                                                                            \
+  do {                                                                                             \
+    if (SHOW_DEBUG(cat)) {                                                                         \
+      ledger::_log_buffer << __VA_ARGS__;                                                          \
+      ledger::logger_func(ledger::LOG_DEBUG);                                                      \
+    }                                                                                              \
+  } while (false)
+#define DEBUG_(...) DEBUG(_this_category, __VA_ARGS__)
 
 #else // DEBUG_ON
 
@@ -279,9 +287,13 @@ inline bool category_matches(const char* cat) {
 
 #endif // DEBUG_ON
 
-#define LOG_MACRO(level, msg)                                                                      \
-  (ledger::_log_level >= level ? ((ledger::_log_buffer << msg), ledger::logger_func(level))        \
-                               : (void)0)
+#define LOG_MACRO(level, ...)                                                                      \
+  do {                                                                                             \
+    if (ledger::_log_level >= (level)) {                                                           \
+      ledger::_log_buffer << __VA_ARGS__;                                                          \
+      ledger::logger_func(level);                                                                  \
+    }                                                                                              \
+  } while (false)
 
 #define SHOW_INFO() (ledger::_log_level >= ledger::LOG_INFO)
 #define SHOW_WARN() (ledger::_log_level >= ledger::LOG_WARN)
@@ -324,9 +336,13 @@ void stop_timer(const char* name);
 void finish_timer(const char* name);
 
 #if TRACING_ON
-#define TRACE_START(name, lvl, msg)                                                                \
-  (SHOW_TRACE(lvl) ? ((ledger::_log_buffer << msg), ledger::start_timer(#name, ledger::LOG_TRACE)) \
-                   : ((void)0))
+#define TRACE_START(name, lvl, ...)                                                                \
+  do {                                                                                             \
+    if (SHOW_TRACE(lvl)) {                                                                         \
+      ledger::_log_buffer << __VA_ARGS__;                                                          \
+      ledger::start_timer(#name, ledger::LOG_TRACE);                                               \
+    }                                                                                              \
+  } while (false)
 #define TRACE_STOP(name, lvl) (SHOW_TRACE(lvl) ? ledger::stop_timer(#name) : ((void)0))
 #define TRACE_FINISH(name, lvl) (SHOW_TRACE(lvl) ? ledger::finish_timer(#name) : ((void)0))
 #else
@@ -336,9 +352,13 @@ void finish_timer(const char* name);
 #endif
 
 #if DEBUG_ON
-#define DEBUG_START(name, cat, msg)                                                                \
-  (SHOW_DEBUG(cat) ? ((ledger::_log_buffer << msg), ledger::start_timer(#name, ledger::LOG_DEBUG)) \
-                   : ((void)0))
+#define DEBUG_START(name, cat, ...)                                                                \
+  do {                                                                                             \
+    if (SHOW_DEBUG(cat)) {                                                                         \
+      ledger::_log_buffer << __VA_ARGS__;                                                          \
+      ledger::start_timer(#name, ledger::LOG_DEBUG);                                               \
+    }                                                                                              \
+  } while (false)
 #define DEBUG_START_(name, msg) DEBUG_START_(name, _this_category, msg)
 #define DEBUG_STOP(name, cat) (SHOW_DEBUG(cat) ? ledger::stop_timer(#name) : ((void)0))
 #define DEBUG_STOP_(name) DEBUG_STOP_(name, _this_category)
@@ -351,9 +371,13 @@ void finish_timer(const char* name);
 #define DEBUG_FINISH(name)
 #endif
 
-#define INFO_START(name, msg)                                                                      \
-  (SHOW_INFO() ? ((ledger::_log_buffer << msg), ledger::start_timer(#name, ledger::LOG_INFO))      \
-               : ((void)0))
+#define INFO_START(name, ...)                                                                      \
+  do {                                                                                             \
+    if (SHOW_INFO()) {                                                                             \
+      ledger::_log_buffer << __VA_ARGS__;                                                          \
+      ledger::start_timer(#name, ledger::LOG_INFO);                                                \
+    }                                                                                              \
+  } while (false)
 #define INFO_STOP(name) (SHOW_INFO() ? stop_timer(#name) : ((void)0))
 #define INFO_FINISH(name) (SHOW_INFO() ? finish_timer(#name) : ((void)0))
 
@@ -384,7 +408,7 @@ void finish_timer(const char* name);
 
 #include "error.h"
 
-enum caught_signal_t { NONE_CAUGHT, INTERRUPTED, PIPE_CLOSED };
+enum caught_signal_t : uint8_t { NONE_CAUGHT, INTERRUPTED, PIPE_CLOSED };
 
 extern caught_signal_t caught_signal;
 
@@ -441,7 +465,7 @@ inline char* next_element(char* buf, bool variable = false) {
     if (!(*p == ' ' || *p == '\t'))
       continue;
 
-    if (!variable) {
+    if (!variable) { // NOLINT(bugprone-branch-clone)
       *p = '\0';
       return skip_ws(p + 1);
     } else if (*p == '\t') {
@@ -452,7 +476,7 @@ inline char* next_element(char* buf, bool variable = false) {
       return skip_ws(p + 2);
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 inline int peek_next_nonws(std::istream& in) {
@@ -467,40 +491,40 @@ inline int peek_next_nonws(std::istream& in) {
 #define READ_INTO(str, targ, size, var, cond)                                                      \
   {                                                                                                \
     char* _p = targ;                                                                               \
-    var = str.peek();                                                                              \
-    while (str.good() && !str.eof() && var != '\n' && (cond) && _p - targ < size) {                \
-      var = str.get();                                                                             \
-      if (str.eof())                                                                               \
+    (var) = (str).peek();                                                                          \
+    while ((str).good() && !(str).eof() && (var) != '\n' && (cond) && _p - (targ) < (size)) {      \
+      (var) = (str).get();                                                                         \
+      if ((str).eof())                                                                             \
         break;                                                                                     \
-      if (var == '\\') {                                                                           \
-        var = str.get();                                                                           \
+      if ((var) == '\\') {                                                                         \
+        (var) = (str).get();                                                                       \
         if (in.eof())                                                                              \
           break;                                                                                   \
         switch (var) {                                                                             \
         case 'b':                                                                                  \
-          var = '\b';                                                                              \
+          (var) = '\b';                                                                            \
           break;                                                                                   \
         case 'f':                                                                                  \
-          var = '\f';                                                                              \
+          (var) = '\f';                                                                            \
           break;                                                                                   \
         case 'n':                                                                                  \
-          var = '\n';                                                                              \
+          (var) = '\n';                                                                            \
           break;                                                                                   \
         case 'r':                                                                                  \
-          var = '\r';                                                                              \
+          (var) = '\r';                                                                            \
           break;                                                                                   \
         case 't':                                                                                  \
-          var = '\t';                                                                              \
+          (var) = '\t';                                                                            \
           break;                                                                                   \
         case 'v':                                                                                  \
-          var = '\v';                                                                              \
+          (var) = '\v';                                                                            \
           break;                                                                                   \
         default:                                                                                   \
           break;                                                                                   \
         }                                                                                          \
       }                                                                                            \
       *_p++ = var;                                                                                 \
-      var = str.peek();                                                                            \
+      (var) = (str).peek();                                                                        \
     }                                                                                              \
     *_p = '\0';                                                                                    \
   }
@@ -508,42 +532,42 @@ inline int peek_next_nonws(std::istream& in) {
 #define READ_INTO_(str, targ, size, var, idx, cond)                                                \
   {                                                                                                \
     char* _p = targ;                                                                               \
-    var = str.peek();                                                                              \
-    while (str.good() && !str.eof() && var != '\n' && (cond) && _p - targ < size) {                \
-      var = str.get();                                                                             \
-      if (str.eof())                                                                               \
+    (var) = (str).peek();                                                                          \
+    while ((str).good() && !(str).eof() && (var) != '\n' && (cond) && _p - (targ) < (size)) {      \
+      (var) = (str).get();                                                                         \
+      if ((str).eof())                                                                             \
         break;                                                                                     \
-      idx++;                                                                                       \
-      if (var == '\\') {                                                                           \
-        var = str.get();                                                                           \
+      (idx)++;                                                                                     \
+      if ((var) == '\\') {                                                                         \
+        (var) = (str).get();                                                                       \
         if (in.eof())                                                                              \
           break;                                                                                   \
         switch (var) {                                                                             \
         case 'b':                                                                                  \
-          var = '\b';                                                                              \
+          (var) = '\b';                                                                            \
           break;                                                                                   \
         case 'f':                                                                                  \
-          var = '\f';                                                                              \
+          (var) = '\f';                                                                            \
           break;                                                                                   \
         case 'n':                                                                                  \
-          var = '\n';                                                                              \
+          (var) = '\n';                                                                            \
           break;                                                                                   \
         case 'r':                                                                                  \
-          var = '\r';                                                                              \
+          (var) = '\r';                                                                            \
           break;                                                                                   \
         case 't':                                                                                  \
-          var = '\t';                                                                              \
+          (var) = '\t';                                                                            \
           break;                                                                                   \
         case 'v':                                                                                  \
-          var = '\v';                                                                              \
+          (var) = '\v';                                                                            \
           break;                                                                                   \
         default:                                                                                   \
           break;                                                                                   \
         }                                                                                          \
-        idx++;                                                                                     \
+        (idx)++;                                                                                   \
       }                                                                                            \
       *_p++ = var;                                                                                 \
-      var = str.peek();                                                                            \
+      (var) = (str).peek();                                                                        \
     }                                                                                              \
     *_p = '\0';                                                                                    \
   }
@@ -577,7 +601,7 @@ inline string sha1sum(const string& str,
   return digest_to_hex(message_digest, len);
 }
 
-enum hash_type_t { NO_HASHES = 0, HASH_SHA512 = 1, HASH_SHA512_Half = 2 };
+enum hash_type_t : uint8_t { NO_HASHES = 0, HASH_SHA512 = 1, HASH_SHA512_Half = 2 };
 
 } // namespace ledger
 

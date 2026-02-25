@@ -47,18 +47,26 @@
 
 namespace ledger {
 
-DECLARE_EXCEPTION(datetime_error, std::runtime_error);
-DECLARE_EXCEPTION(date_error, std::runtime_error);
+class datetime_error : public std::runtime_error {
+public:
+  explicit datetime_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~datetime_error() noexcept override {}
+};
+class date_error : public std::runtime_error {
+public:
+  explicit date_error(const string& why) noexcept : std::runtime_error(why) {}
+  ~date_error() noexcept override {}
+};
 
-typedef boost::posix_time::ptime datetime_t;
-typedef datetime_t::time_duration_type time_duration_t;
+using datetime_t = boost::posix_time::ptime;
+using time_duration_t = datetime_t::time_duration_type;
 
 inline bool is_valid(const datetime_t& moment) {
   return !moment.is_not_a_date_time();
 }
 
-typedef boost::gregorian::date date_t;
-typedef boost::gregorian::date_iterator date_iterator_t;
+using date_t = boost::gregorian::date;
+using date_iterator_t = boost::gregorian::date_iterator;
 
 inline bool is_valid(const date_t& moment) {
   return !moment.is_not_a_date();
@@ -93,7 +101,7 @@ inline date_t parse_date(const std::string& str) {
   return parse_date(str.c_str());
 }
 
-enum format_type_t { FMT_WRITTEN, FMT_PRINTED, FMT_CUSTOM };
+enum format_type_t : uint8_t { FMT_WRITTEN, FMT_PRINTED, FMT_CUSTOM };
 
 std::string format_datetime(const datetime_t& when, const format_type_t format_type = FMT_PRINTED,
                             const optional<const char*>& format = none);
@@ -128,6 +136,8 @@ struct date_traits_t {
   ~date_traits_t() noexcept { TRACE_DTOR(date_traits_t); }
 
   date_traits_t& operator=(const date_traits_t& traits) {
+    if (this == &traits)
+      return *this;
     has_year = traits.has_year;
     has_month = traits.has_month;
     has_day = traits.has_day;
@@ -141,7 +151,7 @@ struct date_traits_t {
 };
 
 struct date_duration_t {
-  enum skip_quantum_t { DAYS, WEEKS, MONTHS, QUARTERS, YEARS } quantum;
+  enum skip_quantum_t : uint8_t { DAYS, WEEKS, MONTHS, QUARTERS, YEARS } quantum;
   int length;
 
   date_duration_t() : quantum(DAYS), length(0) { TRACE_CTOR(date_duration_t, ""); }
@@ -228,11 +238,11 @@ public:
 #if 0
   typedef date_t::year_type        year_type;
 #else
-  typedef unsigned short year_type;
+  using year_type = unsigned short;
 #endif
-  typedef date_t::month_type month_type;
-  typedef date_t::day_type day_type;
-  typedef date_t::day_of_week_type day_of_week_type;
+  using month_type = date_t::month_type;
+  using day_type = date_t::day_type;
+  using day_of_week_type = date_t::day_of_week_type;
 
 protected:
   optional<year_type> year;
@@ -359,7 +369,7 @@ public:
 };
 
 class date_specifier_or_range_t {
-  typedef std::variant<int, date_specifier_t, date_range_t> value_type;
+  using value_type = std::variant<int, date_specifier_t, date_range_t>;
 
   value_type specifier_or_range;
 
@@ -378,29 +388,26 @@ public:
   ~date_specifier_or_range_t() noexcept { TRACE_DTOR(date_specifier_or_range_t); }
 
   optional<date_t> begin() const {
-    if (std::holds_alternative<date_specifier_t>(specifier_or_range))
-      return std::get<date_specifier_t>(specifier_or_range).begin();
-    else if (std::holds_alternative<date_range_t>(specifier_or_range))
-      return std::get<date_range_t>(specifier_or_range).begin();
-    else
-      return none;
+    if (const auto* s = std::get_if<date_specifier_t>(&specifier_or_range))
+      return s->begin();
+    if (const auto* r = std::get_if<date_range_t>(&specifier_or_range))
+      return r->begin();
+    return none;
   }
   optional<date_t> end() const {
-    if (std::holds_alternative<date_specifier_t>(specifier_or_range))
-      return std::get<date_specifier_t>(specifier_or_range).end();
-    else if (std::holds_alternative<date_range_t>(specifier_or_range))
-      return std::get<date_range_t>(specifier_or_range).end();
-    else
-      return none;
+    if (const auto* s = std::get_if<date_specifier_t>(&specifier_or_range))
+      return s->end();
+    if (const auto* r = std::get_if<date_range_t>(&specifier_or_range))
+      return r->end();
+    return none;
   }
 
   bool begin_has_year() const {
-    if (std::holds_alternative<date_specifier_t>(specifier_or_range))
-      return std::get<date_specifier_t>(specifier_or_range).has_year();
-    else if (std::holds_alternative<date_range_t>(specifier_or_range))
-      return std::get<date_range_t>(specifier_or_range).begin_has_year();
-    else
-      return false;
+    if (const auto* s = std::get_if<date_specifier_t>(&specifier_or_range))
+      return s->has_year();
+    if (const auto* r = std::get_if<date_range_t>(&specifier_or_range))
+      return r->begin_has_year();
+    return false;
   }
 
   string to_string() const {

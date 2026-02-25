@@ -196,7 +196,7 @@ int mk_wcswidth(const boost::uint32_t* pwcs, size_t n) {
   int w, width = 0;
 
   for (; *pwcs && n-- > 0; pwcs++)
-    if ((w = mk_wcwidth(*pwcs)) < 0)
+    if ((w = mk_wcwidth(*pwcs)) < 0) // NOLINT(bugprone-assignment-in-if-condition)
       return -1;
     else
       width += w;
@@ -261,7 +261,7 @@ int mk_wcswidth_cjk(const boost::uint32_t* pwcs, size_t n) {
   int w, width = 0;
 
   for (; *pwcs && n-- > 0; pwcs++)
-    if ((w = mk_wcwidth_cjk(*pwcs)) < 0)
+    if ((w = mk_wcwidth_cjk(*pwcs)) < 0) // NOLINT(bugprone-assignment-in-if-condition)
       return -1;
     else
       width += w;

@@ -29,6 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cstddef>
 #include <system.hh>
 
 #include "times.h"
@@ -108,9 +109,9 @@ temporal_io_t<date_t, gregorian::date_input_facet, gregorian::date_facet>::parse
     return date_t();
 }
 
-typedef temporal_io_t<datetime_t, posix_time::time_input_facet, posix_time::time_facet>
-    datetime_io_t;
-typedef temporal_io_t<date_t, gregorian::date_input_facet, gregorian::date_facet> date_io_t;
+using datetime_io_t =
+    temporal_io_t<datetime_t, posix_time::time_input_facet, posix_time::time_facet>;
+using date_io_t = temporal_io_t<date_t, gregorian::date_input_facet, gregorian::date_facet>;
 
 std::shared_ptr<datetime_io_t> input_datetime_io;
 std::shared_ptr<datetime_io_t> timelog_datetime_io;
@@ -123,7 +124,8 @@ std::deque<std::shared_ptr<date_io_t>> readers;
 
 bool convert_separators_to_slashes = true;
 
-date_t parse_date_mask_routine(const char* date_str, date_io_t& io, date_traits_t* traits = NULL) {
+date_t parse_date_mask_routine(const char* date_str, date_io_t& io,
+                               date_traits_t* traits = nullptr) {
   if (std::strlen(date_str) > 127) {
     throw_(date_error, _f("Invalid date: %1%") % date_str);
   }
@@ -145,7 +147,7 @@ date_t parse_date_mask_routine(const char* date_str, date_io_t& io, date_traits_
     DEBUG("times.parse", "Parsed result is:    " << when);
     DEBUG("times.parse", "Formatted result is: " << io.format(when));
 
-    string when_str = io.format(when);
+    string when_str = io.format(when); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
     const char* p = when_str.c_str();
     const char* q = buf;
@@ -191,7 +193,7 @@ date_t parse_date_mask_routine(const char* date_str, date_io_t& io, date_traits_
   return when;
 }
 
-date_t parse_date_mask(const char* date_str, date_traits_t* traits = NULL) {
+date_t parse_date_mask(const char* date_str, date_traits_t* traits = nullptr) {
   for (std::shared_ptr<date_io_t>& reader : readers) {
     date_t when = parse_date_mask_routine(date_str, *reader.get(), traits);
     if (!when.is_not_a_date())
@@ -299,7 +301,7 @@ date_t date_specifier_t::end() const {
   if (day || wday)
     return begin() + gregorian::days(1);
   else if (month)
-    return begin() + gregorian::months(1);
+    return begin() + gregorian::months(1); // NOLINT(bugprone-branch-clone)
   else if (year)
     return begin() + gregorian::years(1);
   else {
@@ -335,7 +337,7 @@ class date_parser_t {
 
   public:
     struct token_t {
-      enum kind_t {
+      enum kind_t : uint8_t {
         UNKNOWN,
 
         TOK_DATE,
@@ -385,9 +387,8 @@ class date_parser_t {
 
       } kind;
 
-      typedef std::variant<unsigned short, string, date_time::months_of_year, date_time::weekdays,
-                           date_specifier_t>
-          content_t;
+      using content_t = std::variant<unsigned short, string, date_time::months_of_year,
+                                     date_time::weekdays, date_specifier_t>;
 
       optional<content_t> value;
 
@@ -429,7 +430,7 @@ class date_parser_t {
           return "-";
         case TOK_DOT:
           return ".";
-        case TOK_A_MONTH:
+        case TOK_A_MONTH: // NOLINT(bugprone-branch-clone)
           out << date_specifier_t::month_type(std::get<date_time::months_of_year>(*value));
           break;
         case TOK_A_WDAY:
@@ -635,7 +636,7 @@ class date_parser_t {
     ~lexer_t() noexcept { TRACE_DTOR(date_parser_t::lexer_t); }
 
     token_t next_token();
-    void push_token(token_t tok) {
+    void push_token(const token_t& tok) {
       assert(token_cache.kind == token_t::UNKNOWN);
       token_cache = tok;
     }
@@ -746,11 +747,11 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
       break;
     case lexer_t::token_t::TOK_WEEK:
     case lexer_t::token_t::TOK_WEEKS:
-      when += gregorian::weeks(amount * adjust);
+      when += gregorian::weeks(static_cast<int>(amount * adjust));
       break;
     case lexer_t::token_t::TOK_DAY:
     case lexer_t::token_t::TOK_DAYS:
-      when += gregorian::days(amount * adjust);
+      when += gregorian::days(static_cast<int>(amount * adjust));
       break;
     default:
       if (amount > 31) {
@@ -789,7 +790,7 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
       date_t temp = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
       while (temp.day_of_week() != std::get<date_time::months_of_year>(*tok.value))
         temp += gregorian::days(1);
-      temp += gregorian::days(7 * adjust);
+      temp += gregorian::days(static_cast<int>(7 * adjust));
       specifier = date_specifier_t(temp);
       break;
     }
@@ -820,12 +821,12 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
       date_t base = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
       date_t temp;
       if (adjust < 0) {
-        temp = base + gregorian::days(7 * adjust);
+        temp = base + gregorian::days(static_cast<int>(7 * adjust));
       } else if (adjust == 0) {
         temp = base + gregorian::days(7);
       } else if (adjust > 0) {
-        base += gregorian::days(7 * adjust);
-        temp = base + gregorian::days(7 * adjust);
+        base += gregorian::days(static_cast<int>(7 * adjust));
+        temp = base + gregorian::days(static_cast<int>(7 * adjust));
       }
       specifier = date_specifier_t(adjust < 0 ? temp : base);
       break;
@@ -858,7 +859,6 @@ void date_parser_t::determine_when(date_parser_t::lexer_t::token_t& tok,
       specifier.year = std::get<unsigned short>(*tok.value);
       break;
     case lexer_t::token_t::END_REACHED:
-      break;
     default:
       break;
     }
@@ -977,10 +977,10 @@ void date_parser_t::handle_relative_token(lexer_t::token_t& tok,
       base += gregorian::months(amount * adjust);
       break;
     case lexer_t::token_t::TOK_WEEKS:
-      base += gregorian::weeks(amount * adjust);
+      base += gregorian::weeks(static_cast<int>(amount * adjust));
       break;
     case lexer_t::token_t::TOK_DAYS:
-      base += gregorian::days(amount * adjust);
+      base += gregorian::days(static_cast<int>(amount * adjust));
       break;
     default:
       tok.unexpected();
@@ -1016,7 +1016,7 @@ void date_parser_t::handle_relative_token(lexer_t::token_t& tok,
     date_t temp = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
     while (temp.day_of_week() != inclusion_specifier->wday)
       temp += gregorian::days(1);
-    temp += gregorian::days(7 * adjust);
+    temp += gregorian::days(static_cast<int>(7 * adjust));
     inclusion_specifier = date_specifier_t(temp);
     break;
   }
@@ -1048,12 +1048,12 @@ void date_parser_t::handle_relative_token(lexer_t::token_t& tok,
     date_t base = date_duration_t::find_nearest(today, date_duration_t::WEEKS);
     date_t temp;
     if (adjust < 0) {
-      temp = base + gregorian::days(7 * adjust);
+      temp = base + gregorian::days(static_cast<int>(7 * adjust));
     } else if (adjust == 0) {
       temp = base + gregorian::days(7);
     } else if (adjust > 0) {
-      base += gregorian::days(7 * adjust);
-      temp = base + gregorian::days(7 * adjust);
+      base += gregorian::days(static_cast<int>(7 * adjust));
+      temp = base + gregorian::days(static_cast<int>(7 * adjust));
     }
     since_specifier = date_specifier_t(adjust < 0 ? temp : base);
     until_specifier = date_specifier_t(adjust < 0 ? base : temp);
@@ -1363,7 +1363,7 @@ void date_interval_t::stabilize(const optional<date_t>& date, bool align_interva
       case date_duration_t::YEARS:
         // These start on most recent period start quantum before when.
         DEBUG("times.interval", "stabilize: monthly, quarterly or yearly duration");
-        if (align_intervals && since_specified) {
+        if (align_intervals && since_specified) { // NOLINT(bugprone-branch-clone)
           start = when;
         } else if (since_specified && initial_start) {
           // When the user specified an explicit start date (e.g.
@@ -1544,6 +1544,7 @@ date_interval_t& date_interval_t::operator++() {
 
   assert(next);
 
+  // NOLINTNEXTLINE(bugprone-branch-clone)
   if (finish && *next >= *finish) {
     start = none;
   } else {
@@ -1558,17 +1559,17 @@ date_interval_t& date_interval_t::operator++() {
 }
 
 void date_interval_t::dump(std::ostream& out) {
-  out << _("--- Before stabilization ---") << std::endl;
+  out << _("--- Before stabilization ---") << '\n';
 
   if (range)
-    out << _("   range: ") << range->to_string() << std::endl;
+    out << _("   range: ") << range->to_string() << '\n';
   if (start)
-    out << _("   start: ") << format_date(*start) << std::endl;
+    out << _("   start: ") << format_date(*start) << '\n';
   if (finish)
-    out << _("  finish: ") << format_date(*finish) << std::endl;
+    out << _("  finish: ") << format_date(*finish) << '\n';
 
   if (duration)
-    out << _("duration: ") << duration->to_string() << std::endl;
+    out << _("duration: ") << duration->to_string() << '\n';
 
   optional<date_t> when(begin());
   if (!when)
@@ -1576,19 +1577,19 @@ void date_interval_t::dump(std::ostream& out) {
 
   stabilize(when);
 
-  out << std::endl << _("--- After stabilization ---") << std::endl;
+  out << '\n' << _("--- After stabilization ---") << '\n';
 
   if (range)
-    out << _("   range: ") << range->to_string() << std::endl;
+    out << _("   range: ") << range->to_string() << '\n';
   if (start)
-    out << _("   start: ") << format_date(*start) << std::endl;
+    out << _("   start: ") << format_date(*start) << '\n';
   if (finish)
-    out << _("  finish: ") << format_date(*finish) << std::endl;
+    out << _("  finish: ") << format_date(*finish) << '\n';
 
   if (duration)
-    out << _("duration: ") << duration->to_string() << std::endl;
+    out << _("duration: ") << duration->to_string() << '\n';
 
-  out << std::endl << _("--- Sample dates in range (max. 20) ---") << std::endl;
+  out << '\n' << _("--- Sample dates in range (max. 20) ---") << '\n';
 
   date_t last_date;
 
@@ -1602,7 +1603,7 @@ void date_interval_t::dump(std::ostream& out) {
     out << (i + 1) << ": " << format_date(*start);
     if (duration)
       out << " -- " << format_date(*inclusive_end());
-    out << std::endl;
+    out << '\n';
 
     if (!duration)
       break;
@@ -1649,7 +1650,7 @@ date_parser_t::lexer_t::token_t date_parser_t::lexer_t::next_token() {
     for (i = begin; i != end && !std::isspace(static_cast<unsigned char>(*i)); i++) {}
     assert(i != begin);
 
-    string possible_date(start, i);
+    string possible_date(start, i); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
     try {
       date_traits_t traits;
@@ -1760,7 +1761,7 @@ void date_parser_t::lexer_t::token_t::unexpected() {
     kind = UNKNOWN;
     throw_(date_error, _("Unexpected end of expression"));
   default: {
-    string desc = to_string();
+    string desc = to_string(); // NOLINT(bugprone-unused-local-non-trivial-variable)
     kind = UNKNOWN;
     throw_(date_error, _f("Unexpected date period token '%1%'") % desc);
   }
@@ -1775,8 +1776,8 @@ void date_parser_t::lexer_t::token_t::expected(char wanted, char c) {
 }
 
 namespace {
-typedef std::map<std::string, std::unique_ptr<datetime_io_t>> datetime_io_map;
-typedef std::map<std::string, std::unique_ptr<date_io_t>> date_io_map;
+using datetime_io_map = std::map<std::string, std::unique_ptr<datetime_io_t>>;
+using date_io_map = std::map<std::string, std::unique_ptr<date_io_t>>;
 
 datetime_io_map temp_datetime_io;
 date_io_map temp_date_io;
@@ -1784,6 +1785,7 @@ date_io_map temp_date_io;
 
 std::string format_datetime(const datetime_t& when, const format_type_t format_type,
                             const optional<const char*>& format) {
+  // NOLINTNEXTLINE(bugprone-branch-clone)
   if (format_type == FMT_WRITTEN) {
     return written_datetime_io->format(when);
   } else if (format_type == FMT_CUSTOM && format) {
@@ -1803,6 +1805,7 @@ std::string format_datetime(const datetime_t& when, const format_type_t format_t
 
 std::string format_date(const date_t& when, const format_type_t format_type,
                         const optional<const char*>& format) {
+  // NOLINTNEXTLINE(bugprone-branch-clone)
   if (format_type == FMT_WRITTEN) {
     return written_date_io->format(when);
   } else if (format_type == FMT_CUSTOM && format) {
@@ -1882,13 +1885,13 @@ void times_shutdown() {
 void show_period_tokens(std::ostream& out, const string& arg) {
   date_parser_t::lexer_t lexer(arg.begin(), arg.end());
 
-  out << _("--- Period expression tokens ---") << std::endl;
+  out << _("--- Period expression tokens ---") << '\n';
 
   date_parser_t::lexer_t::token_t token;
   do {
     token = lexer.next_token();
     token.dump(out);
-    out << ": " << token.to_string() << std::endl;
+    out << ": " << token.to_string() << '\n';
   } while (token.kind != date_parser_t::lexer_t::token_t::END_REACHED);
 }
 

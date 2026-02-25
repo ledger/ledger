@@ -63,11 +63,12 @@ void format_t::element_t::dump(std::ostream& out) const {
   out << std::dec << int(max_width);
 
   switch (type) {
+  // NOLINTNEXTLINE(bugprone-branch-clone)
   case STRING:
-    out << "   str: '" << std::get<string>(data) << "'" << std::endl;
+    out << "   str: '" << std::get<string>(data) << "'" << '\n';
     break;
   case EXPR:
-    out << "  expr: " << std::get<expr_t>(data) << std::endl;
+    out << "  expr: " << std::get<expr_t>(data) << '\n';
     break;
   }
 }
@@ -96,7 +97,7 @@ struct format_mapping_t {
 };
 
 expr_t parse_single_expression(const char*& p, bool single_expr = true) {
-  string temp(p);
+  string temp(p); // NOLINT(bugprone-unused-local-non-trivial-variable)
   ptristream str(const_cast<char*&>(p));
   expr_t expr;
   expr.parse(str, single_expr ? PARSE_SINGLE : PARSE_PARTIAL, temp);
@@ -127,7 +128,7 @@ inline expr_t::ptr_op_t ident_node(const string& ident) {
 format_t::element_t* format_t::parse_elements(const string& fmt, const optional<format_t&>& tmpl) {
   unique_ptr<element_t> result;
 
-  element_t* current = NULL;
+  element_t* current = nullptr;
 
   static char buf[65535];
   char* q = buf;
@@ -193,6 +194,8 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
       case '-':
         current->add_flags(ELEMENT_ALIGN_LEFT);
         break;
+      default:
+        break;
       }
       ++p;
     }
@@ -228,7 +231,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
               while (*ptr && std::isalpha(static_cast<unsigned char>(*ptr)))
                 ++ptr;
               string::size_type klen = static_cast<string::size_type>(ptr - beg);
-              string keyword(beg, 0, klen);
+              string keyword(beg, klen);
               if (keyword == "min")
                 expr << (current->min_width > 0 ? static_cast<int>(current->min_width) : -1);
               else if (keyword == "max")
@@ -237,7 +240,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
                 expr << (current->has_flags(ELEMENT_ALIGN_LEFT) ? "false" : "true");
 #if DEBUG_ON
               else
-                assert("Unrecognized format substitution keyword" == NULL);
+                assert("Unrecognized format substitution keyword" == nullptr);
 #endif
             } else {
               expr << *ptr++;
@@ -358,7 +361,7 @@ format_t::element_t* format_t::parse_elements(const string& fmt, const optional<
 
         expr_t::ptr_op_t colorize_op;
         if (op->kind == expr_t::op_t::O_CONS)
-          colorize_op = op->has_right() ? op->right() : NULL;
+          colorize_op = op->has_right() ? op->right() : nullptr;
 
         if (colorize_op) {
           expr_t::ptr_op_t call3_node(new expr_t::op_t(expr_t::op_t::O_CALL));
@@ -411,7 +414,6 @@ string format_t::real_calc(scope_t& scope) {
 
   for (element_t* elem = elements.get(); elem; elem = elem->next.get()) {
     std::ostringstream out;
-    string name;
 
     if (elem->has_flags(ELEMENT_ALIGN_LEFT))
       out << std::left;
@@ -528,7 +530,7 @@ string format_t::truncate(const unistring& ustr, const std::size_t width,
       // First, chop up the Unicode string into individual segments.
       std::list<string> parts;
       string::size_type beg = 0;
-      string strcopy(ustr.extract());
+      string strcopy(ustr.extract()); // NOLINT(bugprone-unused-local-non-trivial-variable)
       for (string::size_type pos = strcopy.find(':'); pos != string::npos;
            beg = pos + 1, pos = strcopy.find(':', beg))
         parts.push_back(string(strcopy, beg, pos - beg));

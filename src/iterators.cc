@@ -50,7 +50,7 @@ void xacts_iterator::increment() {
   if (xacts_i != xacts_end)
     m_node = *xacts_i++;
   else
-    m_node = NULL;
+    m_node = nullptr;
 }
 
 void journal_posts_iterator::reset(journal_t& journal) {
@@ -59,14 +59,16 @@ void journal_posts_iterator::reset(journal_t& journal) {
 }
 
 void journal_posts_iterator::increment() {
+  // NOLINTBEGIN(bugprone-branch-clone)
   if (post_t* post = *posts++) {
     m_node = post;
   } else if (xact_t* xact = *xacts++) {
     posts.reset(*xact);
     m_node = *posts++;
   } else {
-    m_node = NULL;
+    m_node = nullptr;
   }
+  // NOLINTEND(bugprone-branch-clone)
 }
 
 namespace {
@@ -152,14 +154,16 @@ void posts_commodities_iterator::reset(journal_t& journal) {
 }
 
 void posts_commodities_iterator::increment() {
+  // NOLINTBEGIN(bugprone-branch-clone)
   if (post_t* post = *posts++) {
     m_node = post;
   } else if (xact_t* xact = *xacts++) {
     posts.reset(*xact);
     m_node = *posts++;
   } else {
-    m_node = NULL;
+    m_node = nullptr;
   }
+  // NOLINTEND(bugprone-branch-clone)
 }
 
 void basic_accounts_iterator::increment() {
@@ -169,7 +173,7 @@ void basic_accounts_iterator::increment() {
   }
 
   if (accounts_i.empty()) {
-    m_node = NULL;
+    m_node = nullptr;
   } else {
     account_t* account = (*(accounts_i.back()++)).second;
     assert(account);
@@ -235,7 +239,7 @@ void sorted_accounts_iterator::increment() {
   }
 
   if (sorted_accounts_i.empty()) {
-    m_node = NULL;
+    m_node = nullptr;
   } else {
     account_t* account = *sorted_accounts_i.back()++;
     assert(account);

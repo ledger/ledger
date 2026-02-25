@@ -53,8 +53,8 @@ class report_t;
 
 class print_xacts : public item_handler<post_t> {
 protected:
-  typedef std::list<xact_t*> xacts_list;
-  typedef std::map<xact_t*, bool> xacts_present_map;
+  using xacts_list = std::list<xact_t*>;
+  using xacts_present_map = std::map<xact_t*, bool>;
 
   report_t& report;
   xacts_present_map xacts_present;
@@ -67,14 +67,14 @@ public:
       : report(_report), print_raw(_print_raw), first_title(true) {
     TRACE_CTOR(print_xacts, "report&, bool");
   }
-  virtual ~print_xacts() { TRACE_DTOR(print_xacts); }
+  ~print_xacts() override { TRACE_DTOR(print_xacts); }
 
-  virtual void title(const string&) override;
+  void title(const string&) override;
 
-  virtual void flush() override;
-  virtual void operator()(post_t& post) override;
+  void flush() override;
+  void operator()(post_t& post) override;
 
-  virtual void clear() override {
+  void clear() override {
     xacts_present.clear();
     xacts.clear();
 

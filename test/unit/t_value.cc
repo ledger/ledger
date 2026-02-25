@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(testConstructors)
   value_t v14("comment", true);
   value_t v15(string("tag"), true);
   value_t v16(amount_t("$1").commodity());
-  value_t v17(v16);
+  const value_t& v17(v16);
 
   BOOST_CHECK(v1.valid());
   BOOST_CHECK(v2.valid());
@@ -6028,7 +6028,7 @@ BOOST_AUTO_TEST_CASE(testIsGtBalVsIntW6)
 BOOST_AUTO_TEST_CASE(testIsGtCommVsStrEqualW6)
 {
   commodity_t* comm = commodity_pool_t::current_pool->find_or_create("AAAA");
-  BOOST_CHECK(comm != NULL);
+  BOOST_CHECK(comm != nullptr);
 
   value_t comm_val(*comm);
   value_t str_val(string("AAAA"), true);
@@ -6267,7 +6267,7 @@ BOOST_AUTO_TEST_CASE(testIsGtStrVsStrW6)
 BOOST_AUTO_TEST_CASE(testIsLtCommVsStrW6)
 {
   commodity_t* comm = commodity_pool_t::current_pool->find_or_create("BBBB");
-  BOOST_CHECK(comm != NULL);
+  BOOST_CHECK(comm != nullptr);
 
   value_t comm_val(*comm);
   value_t str_val(string("ZZZZ"), true);
@@ -6282,7 +6282,7 @@ BOOST_AUTO_TEST_CASE(testIsLtCommVsStrW6)
 BOOST_AUTO_TEST_CASE(testIsLtStrVsCommW6)
 {
   commodity_t* comm = commodity_pool_t::current_pool->find_or_create("ZZZZ");
-  BOOST_CHECK(comm != NULL);
+  BOOST_CHECK(comm != nullptr);
 
   value_t str_val(string("AAAA"), true);
   value_t comm_val(*comm);
@@ -6297,7 +6297,7 @@ BOOST_AUTO_TEST_CASE(testIsLtStrVsCommW6)
 BOOST_AUTO_TEST_CASE(testIsEqCommVsStrW6)
 {
   commodity_t* comm = commodity_pool_t::current_pool->find_or_create("CCCC");
-  BOOST_CHECK(comm != NULL);
+  BOOST_CHECK(comm != nullptr);
 
   value_t comm_val(*comm);
   value_t str_val(string("CCCC"), true);
@@ -6312,7 +6312,7 @@ BOOST_AUTO_TEST_CASE(testIsEqCommVsStrW6)
 BOOST_AUTO_TEST_CASE(testIsEqStrVsCommW6)
 {
   commodity_t* comm = commodity_pool_t::current_pool->find_or_create("DDDD");
-  BOOST_CHECK(comm != NULL);
+  BOOST_CHECK(comm != nullptr);
 
   value_t str_val(string("DDDD"), true);
   value_t comm_val(*comm);

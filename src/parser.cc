@@ -48,7 +48,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_value_term(std::istream& in,
     break;
 
   case token_t::IDENT: {
-    string ident = tok.value.as_string();
+    string ident = tok.value.as_string(); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
     node = new op_t(op_t::IDENT);
     node->set_ident(ident);
@@ -220,7 +220,7 @@ expr_t::ptr_op_t expr_t::parser_t::parse_logic_expr(std::istream& in,
   if (node && !tflags.has_flags(PARSE_SINGLE)) {
     while (true) {
       op_t::kind_t kind = op_t::LAST;
-      parse_flags_t _flags = tflags;
+      const parse_flags_t& _flags = tflags;
       token_t& tok = next_token(in, tflags.plus_flags(PARSE_OP_CONTEXT));
       bool negate = false;
 

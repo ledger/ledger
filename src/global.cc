@@ -30,6 +30,7 @@
  */
 
 #include <system.hh>
+#include <utility>
 
 #include "global.h"
 #if HAVE_BOOST_PYTHON
@@ -98,14 +99,14 @@ global_scope_t::~global_scope_t() {
   // clean up everything by closing the session and deleting the session
   // object, and then shutting down the memory tracing subsystem.
   // Otherwise, let it all leak because we're about to exit anyway.
-  IF_VERIFY() set_session_context(NULL);
+  IF_VERIFY() set_session_context(nullptr);
 
 #if HAVE_BOOST_PYTHON
   python_session.reset();
 #endif
 }
 
-void global_scope_t::parse_init(path init_file) {
+void global_scope_t::parse_init(const path& init_file) {
   TRACE_START(init, 1, "Read initialization file");
 
   parse_context_stack_t parsing_context;
@@ -174,11 +175,11 @@ void global_scope_t::report_error(const std::exception& err) {
 
   if (caught_signal == NONE_CAUGHT) {
     // Display any pending error context information
-    string context = error_context();
+    const string context = error_context();
     if (!context.empty())
-      std::cerr << context << std::endl;
+      std::cerr << context << '\n';
 
-    std::cerr << _("Error: ") << err.what() << std::endl;
+    std::cerr << _("Error: ") << err.what() << '\n';
   } else {
     caught_signal = NONE_CAUGHT;
   }
@@ -195,7 +196,7 @@ void global_scope_t::execute_command(strings_list args, bool at_repl) {
   }
 
   strings_list::iterator arg = args.begin();
-  string verb = *arg++;
+  const string verb = *arg++; // NOLINT(bugprone-unused-local-non-trivial-variable)
 
   // Look for a precommand first, which is defined as any defined function
   // whose name starts with "ledger_precmd_".  The difference between a
@@ -272,7 +273,7 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl) {
   try {
     if (at_repl)
       push_report();
-    execute_command(args, at_repl);
+    execute_command(std::move(args), at_repl);
     if (at_repl)
       pop_report();
 
@@ -290,9 +291,8 @@ int global_scope_t::execute_command_wrapper(strings_list args, bool at_repl) {
 }
 
 void global_scope_t::report_options(report_t& report, std::ostream& out) {
-  out << "==============================================================================="
-      << std::endl;
-  out << "[Global scope options]" << std::endl;
+  out << "===============================================================================" << '\n';
+  out << "[Global scope options]" << '\n';
 
   HANDLER(args_only).report(out);
   HANDLER(debug_).report(out);
@@ -303,18 +303,17 @@ void global_scope_t::report_options(report_t& report, std::ostream& out) {
   HANDLER(verify).report(out);
   HANDLER(verify_memory).report(out);
 
-  out << std::endl << "[Session scope options]" << std::endl;
+  out << '\n' << "[Session scope options]" << '\n';
   report.session.report_options(out);
 
-  out << std::endl << "[Report scope options]" << std::endl;
+  out << '\n' << "[Report scope options]" << '\n';
   report.report_options(out);
-  out << "==============================================================================="
-      << std::endl;
+  out << "===============================================================================" << '\n';
 }
 
 option_t<global_scope_t>* global_scope_t::lookup_option(const char* p) {
   switch (*p) {
-  case 'a':
+  case 'a': // NOLINT(bugprone-branch-clone)
     OPT(args_only);
     break;
   case 'd':
@@ -341,13 +340,15 @@ option_t<global_scope_t>* global_scope_t::lookup_option(const char* p) {
     else OPT(verify_memory);
     else OPT(version);
     break;
+  default:
+    break;
   }
-  return NULL;
+  return nullptr;
 }
 
 expr_t::ptr_op_t global_scope_t::lookup(const symbol_t::kind_t kind, const string& name) {
   switch (kind) {
-  case symbol_t::FUNCTION:
+  case symbol_t::FUNCTION: // NOLINT(bugprone-branch-clone)
     if (option_t<global_scope_t>* handler = lookup_option(name.c_str()))
       return MAKE_OPT_FUNCTOR(global_scope_t, handler);
     break;
@@ -366,6 +367,8 @@ expr_t::ptr_op_t global_scope_t::lookup(const symbol_t::kind_t kind, const strin
       else if (is_eq(p, "pop"))
         return MAKE_FUNCTOR(global_scope_t::pop_command);
       break;
+    default:
+      break;
     }
   }
   default:
@@ -374,7 +377,7 @@ expr_t::ptr_op_t global_scope_t::lookup(const symbol_t::kind_t kind, const strin
 
   // If you're wondering how symbols from report() will be found, it's
   // because of the bind_scope_t object in execute_command() below.
-  return NULL;
+  return nullptr;
 }
 
 void global_scope_t::read_environment_settings(char* envp[]) {
@@ -409,7 +412,7 @@ void global_scope_t::read_environment_settings(char* envp[]) {
 strings_list global_scope_t::read_command_arguments(scope_t& scope, strings_list args) {
   TRACE_START(arguments, 1, "Processed command-line arguments");
 
-  strings_list remaining = process_arguments(args, scope);
+  strings_list remaining = process_arguments(std::move(args), scope);
 
   TRACE_FINISH(arguments, 1);
 

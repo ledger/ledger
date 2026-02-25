@@ -83,10 +83,10 @@ public:
 #define ITEM_NOTE_ON_NEXT_LINE 0x04 // did we see a note on the next line?
 #define ITEM_INFERRED 0x08          // bucketed item
 
-  enum state_t { UNCLEARED = 0, CLEARED, PENDING };
+  enum state_t : uint8_t { UNCLEARED = 0, CLEARED, PENDING };
 
-  typedef std::pair<std::optional<value_t>, bool> tag_data_t;
-  typedef std::map<string, tag_data_t, std::function<bool(string, string)>> string_map;
+  using tag_data_t = std::pair<std::optional<value_t>, bool>;
+  using string_map = std::map<string, tag_data_t, std::function<bool(string, string)>>;
 
   scope_t* parent;
   state_t _state;
@@ -98,16 +98,16 @@ public:
   bool defining_;
 
   item_t(flags_t _flags = ITEM_NORMAL, const optional<string>& _note = none)
-      : supports_flags<uint_least16_t>(_flags), _state(UNCLEARED), note(_note), parent(NULL),
+      : supports_flags<uint_least16_t>(_flags), parent(nullptr), _state(UNCLEARED), note(_note),
         defining_(false) {
     TRACE_CTOR(item_t, "flags_t, const string&");
   }
   item_t(const item_t& item)
-      : supports_flags<uint_least16_t>(), scope_t(), parent(NULL), defining_(false) {
+      : supports_flags<uint_least16_t>(item), scope_t(), parent(nullptr), defining_(false) {
     copy_details(item);
     TRACE_CTOR(item_t, "copy");
   }
-  virtual ~item_t() { TRACE_DTOR(item_t); }
+  ~item_t() override { TRACE_DTOR(item_t); }
 
   virtual void copy_details(const item_t& item) {
     set_flags(item.flags());
@@ -124,7 +124,7 @@ public:
   virtual bool operator==(const item_t& xact) { return this == &xact; }
   virtual bool operator!=(const item_t& xact) { return !(*this == xact); }
 
-  virtual scope_t* get_parent() override { return parent; }
+  scope_t* get_parent() override { return parent; }
 
   string id() const {
     if (std::optional<value_t> ref = get_tag(_("UUID"))) {
@@ -172,8 +172,8 @@ public:
   void set_state(state_t new_state) { _state = new_state; }
   virtual state_t state() const { return _state; }
 
-  virtual void define(const symbol_t::kind_t, const string&, expr_t::ptr_op_t) override;
-  virtual expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
+  void define(const symbol_t::kind_t, const string&, const expr_t::ptr_op_t&) override;
+  expr_t::ptr_op_t lookup(const symbol_t::kind_t kind, const string& name) override;
 
   bool valid() const;
 };

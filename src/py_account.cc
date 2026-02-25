@@ -51,7 +51,7 @@ long accounts_len(account_t& account) {
 
 account_t& accounts_getitem(account_t& account, long i) {
   static long last_index = 0;
-  static account_t* last_account = NULL;
+  static account_t* last_account = nullptr;
   static accounts_map::iterator elem;
 
   long len = static_cast<long>(account.accounts.size());

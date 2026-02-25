@@ -73,7 +73,7 @@ account_t* account_t::find_account(string_view acct_name, const bool auto_create
   i = accounts.find(first);
   if (i == accounts.end()) {
     if (!auto_create)
-      return NULL;
+      return nullptr;
 
     account = new account_t(this, string(first));
 
@@ -110,7 +110,7 @@ account_t* find_account_re_(account_t* account, const mask_t& regexp) {
     if (account_t* a = find_account_re_(pair.second, regexp))
       return a;
 
-  return NULL;
+  return nullptr;
 }
 } // namespace
 
@@ -183,7 +183,7 @@ bool account_t::remove_post(post_t* post) {
   // parsing, when the posting knows what its account is, but
   // xact_t::finalize has not yet added that posting to the account.
   posts.remove(post);
-  post->account = NULL;
+  post->account = nullptr;
 
   // Invalidate cached iterators
   if (xdata_) {
@@ -205,7 +205,8 @@ string account_t::fullname() const {
     while (first->parent) {
       first = first->parent;
       if (!first->name.empty())
-        fullname = first->name + ":" + fullname;
+        fullname = // NOLINT(performance-inefficient-string-concatenation)
+            first->name + ":" + fullname;
     }
 
     _fullname = fullname;
@@ -224,7 +225,7 @@ string account_t::partial_name(bool flat) const {
       if (count > 1 || acct->has_xflags(ACCOUNT_EXT_TO_DISPLAY))
         break;
     }
-    pname = acct->name + ":" + pname;
+    pname = acct->name + ":" + pname; // NOLINT(performance-inefficient-string-concatenation)
   }
   return pname;
 }
@@ -391,8 +392,9 @@ value_t fn_all(call_scope_t& args) {
 
 expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind, const string& fn_name) {
   if (kind != symbol_t::FUNCTION)
-    return NULL;
+    return nullptr;
 
+  // NOLINTBEGIN(bugprone-branch-clone)
   switch (fn_name[0]) {
   case 'a':
     if (fn_name[1] == '\0' || fn_name == "amount")
@@ -491,8 +493,9 @@ expr_t::ptr_op_t account_t::lookup(const symbol_t::kind_t kind, const string& fn
       return WRAP_FUNCTOR(get_wrapper<&get_total>);
     break;
   }
+  // NOLINTEND(bugprone-branch-clone)
 
-  return NULL;
+  return nullptr;
 }
 
 bool account_t::valid() const {
@@ -752,7 +755,7 @@ void account_t::xdata_t::details_t::update(post_t& post, bool gather_all) {
 }
 
 void put_account(property_tree::ptree& st, const account_t& acct,
-                 function<bool(const account_t&)> pred) {
+                 const function<bool(const account_t&)>& pred) {
   if (pred(acct)) {
     std::ostringstream buf;
     buf.width(sizeof(intptr_t) * 2);

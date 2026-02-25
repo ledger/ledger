@@ -67,7 +67,7 @@ public:
 
   public:
     struct token_t {
-      enum kind_t {
+      enum kind_t : uint8_t {
         UNKNOWN,
 
         LPAREN,
@@ -226,8 +226,8 @@ public:
 
     token_t token_cache;
 
-    lexer_t(value_t::sequence_t::const_iterator _begin, value_t::sequence_t::const_iterator _end,
-            bool _multiple_args = true)
+    lexer_t(const value_t::sequence_t::const_iterator& _begin,
+            const value_t::sequence_t::const_iterator& _end, bool _multiple_args = true)
         : begin(_begin), end(_end), consume_whitespace(false), consume_next_arg(false),
           multiple_args(_multiple_args) {
       assert(begin != end);
@@ -246,7 +246,7 @@ public:
     ~lexer_t() noexcept { TRACE_DTOR(query_t::lexer_t); }
 
     token_t next_token(token_t::kind_t tok_context = token_t::UNKNOWN);
-    void push_token(token_t tok) {
+    void push_token(const token_t& tok) {
       assert(token_cache.kind == token_t::UNKNOWN);
       token_cache = tok;
     }
@@ -256,12 +256,12 @@ public:
       return token_cache;
     }
 
-    bool unbalanced_braces(const string str);
+    bool unbalanced_braces(const string& str);
   };
 
-  enum kind_t { QUERY_LIMIT, QUERY_SHOW, QUERY_ONLY, QUERY_BOLD, QUERY_FOR };
+  enum kind_t : uint8_t { QUERY_LIMIT, QUERY_SHOW, QUERY_ONLY, QUERY_BOLD, QUERY_FOR };
 
-  typedef std::map<kind_t, string> query_map_t;
+  using query_map_t = std::map<kind_t, string>;
 
 protected:
   class parser_t {

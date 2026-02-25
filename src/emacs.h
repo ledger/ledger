@@ -59,18 +59,18 @@ protected:
 
 public:
   format_emacs_posts(report_t& _report, std::ostream& _out)
-      : report(_report), out(_out), last_xact(NULL) {
+      : report(_report), out(_out), last_xact(nullptr) {
     TRACE_CTOR(format_emacs_posts, "report_t&, std::ostream&");
   }
-  ~format_emacs_posts() { TRACE_DTOR(format_emacs_posts); }
+  ~format_emacs_posts() override { TRACE_DTOR(format_emacs_posts); }
 
   virtual void write_xact(xact_t& xact);
-  virtual void flush() override {
+  void flush() override {
     if (last_xact)
       out << "))\n";
     out.flush();
   }
-  virtual void operator()(post_t& post) override;
+  void operator()(post_t& post) override;
   virtual string escape_string(string raw);
 };
 

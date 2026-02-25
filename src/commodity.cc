@@ -30,6 +30,7 @@
  */
 
 #include <system.hh>
+#include <utility>
 
 #include "amount.h"
 #include "commodity.h"
@@ -66,7 +67,7 @@ void commodity_t::remove_price(const datetime_t& date, commodity_t& commodity) {
   base->price_map.clear(); // a price was added, invalid the map
 }
 
-void commodity_t::map_prices(function<void(datetime_t, const amount_t&)> fn,
+void commodity_t::map_prices(const function<void(datetime_t, const amount_t&)>& fn,
                              const datetime_t& moment, const datetime_t& _oldest,
                              bool bidirectionally) {
   datetime_t when;
@@ -111,7 +112,7 @@ std::optional<price_point_t> commodity_t::find_price(const commodity_t* commodit
                                                      const datetime_t& oldest) const {
   DEBUG("commodity.price.find", "commodity_t::find_price(" << symbol() << ")");
 
-  const commodity_t* target = NULL;
+  const commodity_t* target = nullptr;
   if (commodity)
     target = commodity;
   else if (pool().default_commodity)
@@ -120,7 +121,7 @@ std::optional<price_point_t> commodity_t::find_price(const commodity_t* commodit
   if (target && this == target)
     return std::nullopt;
 
-  base_t::memoized_price_entry entry(moment, oldest, commodity ? commodity : NULL);
+  base_t::memoized_price_entry entry(moment, oldest, commodity ? commodity : nullptr);
 
   DEBUG("commodity.price.find",
         "looking for memoized args: "
@@ -253,6 +254,8 @@ bool is_reserved_token(const char* buf) {
     return std::strcmp(buf, "not") == 0;
   case 't':
     return std::strcmp(buf, "true") == 0;
+  default:
+    break;
   }
   return false;
 }
@@ -308,7 +311,7 @@ void commodity_t::parse_symbol(char*& p, string& symbol) {
     char* q = std::strchr(p + 1, '"');
     if (!q)
       throw_(amount_error, _("Quoted commodity symbol lacks closing quote"));
-    symbol = string(p + 1, 0, static_cast<std::string::size_type>(q - p - 1));
+    symbol = string(p + 1, static_cast<std::string::size_type>(q - p - 1));
     p = q + 2;
   } else {
     char* q = next_element(p);
@@ -325,7 +328,7 @@ void commodity_t::parse_symbol(char*& p, string& symbol) {
 void commodity_t::print(std::ostream& out, bool elide_quotes, bool) const {
   string sym = symbol();
   if (elide_quotes && has_flags(COMMODITY_STYLE_SEPARATED) && !sym.empty() && sym[0] == '"') {
-    string subsym(sym, 1, sym.length() - 2);
+    string subsym(sym, 1, sym.length() - 2); // NOLINT(bugprone-unused-local-non-trivial-variable)
     if (!all(subsym, is_digit()))
       out << subsym;
     else

@@ -73,7 +73,7 @@ void xact_base_t::add_post(post_t* post) {
 
 bool xact_base_t::remove_post(post_t* post) {
   posts.remove(post);
-  post->xact = NULL;
+  post->xact = nullptr;
   return true;
 }
 
@@ -148,8 +148,8 @@ bool xact_base_t::finalize() {
 
   value_t balance;
   value_t virtual_balance;
-  post_t* null_post = NULL;
-  post_t* virtual_null_post = NULL;
+  post_t* null_post = nullptr;
+  post_t* virtual_null_post = nullptr;
 
   for (post_t* post : posts) {
     if (!post->must_balance())
@@ -221,12 +221,12 @@ bool xact_base_t::finalize() {
     DEBUG("xact.finalize", "there were exactly two commodities, and no null post");
 
     bool saw_cost = false;
-    post_t* top_post = NULL;
+    post_t* top_post = nullptr;
 
     for (post_t* post : posts) {
       if (!post->amount.is_null() && post->must_balance()) {
         if (post->amount.has_annotation())
-          top_post = post;
+          top_post = post; // NOLINT(bugprone-branch-clone)
         else if (!top_post)
           top_post = post;
       }
@@ -428,7 +428,7 @@ bool xact_base_t::finalize() {
     }
   }
 
-  if (null_post != NULL) {
+  if (null_post != nullptr) {
     // If one post has no value at all, its value will become the inverse of
     // the rest.  If multiple commodities are involved, multiple posts are
     // generated to balance them all.
@@ -448,7 +448,7 @@ bool xact_base_t::finalize() {
     balance = NULL_VALUE;
   }
 
-  if (virtual_null_post != NULL) {
+  if (virtual_null_post != nullptr) {
     // Same logic as null_post above, but for balanced-virtual postings.
 
     DEBUG("xact.finalize", "there was a null balanced-virtual posting");
@@ -631,6 +631,7 @@ expr_t::ptr_op_t xact_t::lookup(const symbol_t::kind_t kind, const string& name)
   if (kind != symbol_t::FUNCTION)
     return item_t::lookup(kind, name);
 
+  // NOLINTBEGIN(bugprone-branch-clone)
   switch (name[0]) {
   case 'a':
     if (name == "any")
@@ -654,6 +655,7 @@ expr_t::ptr_op_t xact_t::lookup(const symbol_t::kind_t kind, const string& name)
       return WRAP_FUNCTOR(get_wrapper<&get_payee>);
     break;
   }
+  // NOLINTEND(bugprone-branch-clone)
 
   return item_t::lookup(kind, name);
 }
@@ -685,7 +687,7 @@ std::string bufferToHex(const unsigned char* buffer, std::size_t size) {
 }
 } // namespace
 
-string xact_t::hash(string nonce, hash_type_t hash_type) const {
+string xact_t::hash(const string& nonce, hash_type_t hash_type) const {
   std::ostringstream repr;
 
   repr << nonce;
@@ -719,7 +721,7 @@ string xact_t::hash(string nonce, hash_type_t hash_type) const {
   }
 
   unsigned char data[128];
-  string repr_str(repr.str());
+  string repr_str(repr.str()); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
   SHA512(const_cast<char*>(repr_str.c_str()), repr_str.length(), data);
 
@@ -727,7 +729,7 @@ string xact_t::hash(string nonce, hash_type_t hash_type) const {
 }
 
 namespace {
-bool post_pred(expr_t::ptr_op_t op, post_t& post) {
+bool post_pred(const expr_t::ptr_op_t& op, post_t& post) {
   if (!op)
     return false;
 
@@ -834,7 +836,7 @@ void auto_xact_t::extend_xact(xact_base_t& xact, parse_context_t& context) {
       if (matches_predicate) {
         if (deferred_notes) {
           for (deferred_tag_data_t& data : *deferred_notes) {
-            if (data.apply_to_post == NULL)
+            if (data.apply_to_post == nullptr)
               initial_post->append_note(apply_format(data.tag_data, bound_scope).c_str(),
                                         bound_scope, data.overwrite_existing);
           }

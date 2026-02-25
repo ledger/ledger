@@ -90,8 +90,8 @@ value_t convert_command(call_scope_t& args) {
           post->amount.in_place_negate();
       }
 
-      string ref = (xact->has_tag(_("UUID")) ? xact->get_tag(_("UUID"))->to_string()
-                                             : sha1sum(reader.get_last_line()));
+      const string ref = xact->has_tag(_("UUID")) ? xact->get_tag(_("UUID"))->to_string()
+                                                  : sha1sum(reader.get_last_line());
 
       if (auto entry = journal.checksum_map.find(ref); entry != journal.checksum_map.end()) {
         INFO(file_context(reader.get_pathname(), reader.get_linenum())
@@ -103,7 +103,7 @@ value_t convert_command(call_scope_t& args) {
       if (report.HANDLED(rich_data) && !xact->has_tag(_("UUID")))
         xact->set_tag(_("UUID"), string_value(ref));
 
-      if (xact->posts.front()->account == NULL) {
+      if (xact->posts.front()->account == nullptr) {
         if (account_t* acct = (report.HANDLED(auto_match)
                                    ? lookup_probable_account(xact->payee, current_xacts.rbegin(),
                                                              current_xacts.rend(), bucket)

@@ -200,7 +200,7 @@ void annotation_t::parse(std::istream& in) {
 
 #if DEBUG_ON
   if (SHOW_DEBUG("amount.commodities") && *this) {
-    DEBUG("amount.commodities", "Parsed commodity annotations: " << std::endl << *this);
+    DEBUG("amount.commodities", "Parsed commodity annotations: " << '\n' << *this);
   }
 #endif
 }
@@ -272,7 +272,7 @@ std::optional<price_point_t> annotated_commodity_t::find_price(const commodity_t
 
   DEBUG("commodity.price.find", "reference time: " << when);
 
-  const commodity_t* target = NULL;
+  const commodity_t* target = nullptr;
   if (commodity)
     target = commodity;
 
@@ -301,7 +301,7 @@ std::optional<price_point_t> annotated_commodity_t::find_price(const commodity_t
 
 commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what_to_keep) {
   DEBUG("commodity.annotated.strip", "Reducing commodity "
-                                         << *this << std::endl
+                                         << *this << '\n'
                                          << "  keep price " << what_to_keep.keep_price << " "
                                          << "  keep date " << what_to_keep.keep_date << " "
                                          << "  keep tag " << what_to_keep.keep_tag);
@@ -315,7 +315,7 @@ commodity_t& annotated_commodity_t::strip_annotations(const keep_details_t& what
   bool keep_tag = (what_to_keep.keep_tag &&
                    (!what_to_keep.only_actuals || !details.has_flags(ANNOTATION_TAG_CALCULATED)));
 
-  DEBUG("commodity.annotated.strip", "Reducing commodity " << *this << std::endl
+  DEBUG("commodity.annotated.strip", "Reducing commodity " << *this << '\n'
                                                            << "  keep price " << keep_price << " "
                                                            << "  keep date " << keep_date << " "
                                                            << "  keep tag " << keep_tag);
