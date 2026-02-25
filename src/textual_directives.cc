@@ -40,7 +40,7 @@ using detail::instance_t;
 #if TIMELOG_SUPPORT
 
 void instance_t::clock_in_directive(char* line, bool capitalized) {
-  if (std::strlen(line) < 22)
+  if (std::strlen(line) < 21)
     throw_(parse_error, _("Clock-in/out directive is too short"));
   string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
@@ -69,7 +69,7 @@ void instance_t::clock_in_directive(char* line, bool capitalized) {
 }
 
 void instance_t::clock_out_directive(char* line, bool capitalized) {
-  if (std::strlen(line) < 22)
+  if (std::strlen(line) < 21)
     throw_(parse_error, _("Clock-in/out directive is too short"));
   string datetime(line, 2, 19); // NOLINT(bugprone-unused-local-non-trivial-variable)
 
