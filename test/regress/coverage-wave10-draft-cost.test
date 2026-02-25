@@ -5,8 +5,8 @@
     Expenses:Food    $50.00
     Assets:Cash
 
-test xact "Grocery" Expenses:Food '$100.00'
-2026/02/24 Grocery
+test xact 2024/06/15 "Grocery" Expenses:Food '$100.00'
+2024/06/15 Grocery
     Expenses:Food                            $100.00
     Assets:Cash
 end test
