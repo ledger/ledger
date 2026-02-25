@@ -99,7 +99,7 @@ public:
   using amounts_map = std::unordered_map<commodity_t*, amount_t>;
   using amounts_array = std::vector<const amount_t*>;
 
-  enum class lot_sort_order { by_commodity, fifo, lifo };
+  enum class lot_sort_order : std::uint8_t { by_commodity, fifo, lifo };
 
   amounts_map amounts;
   lot_sort_order sort_order = lot_sort_order::by_commodity;
