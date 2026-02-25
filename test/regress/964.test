@@ -1,0 +1,35 @@
+; Regression test for issue #964
+; Balance report with lot-priced multi-currency transaction and -X conversion
+;
+; A transaction involving currency lots with differing cost basis and
+; current price should not produce spurious Equity:Capital Gains entries
+; in the balance report, and the total should balance to zero.
+;
+; The original bug showed:
+;   $6.45  Equity:Capital Gains  (spurious entry)
+;   $6.46  total (incorrect, did not balance)
+;
+; After the fix (also resolves #712), no Equity:Capital Gains is generated
+; automatically, and the balance correctly sums to zero.
+
+2012/08/22 Payment
+    Accrued                       €208.00  {=$1.3109}     @ $1.2798689
+    Expenses                      €4.16    {=$1.2798689}  @ $1.2798689
+    Assets                        $-271.54
+    Income:Currency Conversion    $-6.45
+
+test bal -X $
+             $272.67  Accrued
+            $-271.54  Assets
+               $5.32  Expenses
+              $-6.45  Income:Currency Conversion
+--------------------
+                   0
+end test
+
+test reg -X $
+12-Aug-22 Payment               Accrued                     $272.67      $272.67
+                                Expenses                      $5.32      $277.99
+                                Assets                     $-271.54        $6.45
+                                In:Currency Conversion       $-6.45            0
+end test
