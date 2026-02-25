@@ -1,0 +1,16 @@
+; Regression test for issue #1125: per-unit price annotations (@) must round
+; each posting's cost to the commodity's precision independently before summing
+; into the balance, not accumulate full-precision (unrounded) intermediate values.
+;
+; Post 1: 0.50 bread @ $3.99 = $1.995, rounds to $2.00
+; Post 2: 1.50 bread @ $4.99 = $7.485, rounds to $7.49
+; Sum of rounded costs: $2.00 + $7.49 = $9.49, which matches Assets: -$9.49
+
+2015-07-02 Buying some bread
+    Expenses            0.50 bread @ $3.99
+    Expenses            1.50 bread @ $4.99
+    Assets              -$9.49
+
+test bal --flat --no-total Expenses
+          2.00 bread  Expenses
+end test

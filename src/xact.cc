@@ -473,12 +473,45 @@ bool xact_base_t::finalize() {
   DEBUG("xact.finalize", "resolved virtual_balance = " << virtual_balance);
 
   if (!balance.is_null() && !balance.is_zero()) {
+    // Check whether the imbalance is fully explained by independently rounding
+    // each per-unit (@) annotated cost to the price's decimal precision (issue
+    // #1125).  When a posting has 0.50 bread @ $3.99, the exact cost $1.995 is
+    // kept at full precision during accumulation.  If the user supplies the
+    // rounded total $9.49 instead of the exact $9.480, we accept the
+    // transaction by verifying: balance + Σ(roundedCost - exactCost) == 0.
+    // This only fires when there is no null posting (null posting filling
+    // already cleared balance to NULL_VALUE above).
+    {
+      value_t rounding_adj;
+      for (post_t* post : posts) {
+        if (!post->must_balance() || post->has_flags(POST_VIRTUAL))
+          continue;
+        if (!post->cost || !post->cost->keep_precision())
+          continue;
+        // Only @ (per-unit) costs, not @@ (total) or internally-calculated
+        if (post->has_flags(POST_COST_IN_FULL | POST_COST_CALCULATED))
+          continue;
+        // price_prec = cost_prec - amount_prec (cost = price * amount,
+        // so cost.prec = price.prec + amount.prec after multiply())
+        amount_t exact(post->cost->rounded());
+        const int price_prec = exact.precision() - post->amount.precision();
+        if (price_prec > 0 && exact.precision() > price_prec)
+          add_or_set_value(rounding_adj, (exact.roundto(price_prec) - exact).reduced());
+      }
+      if (!rounding_adj.is_null()) {
+        value_t test = balance;
+        test += rounding_adj;
+        if (test.is_null() || test.is_zero())
+          goto balanced;
+      }
+    }
     add_error_context(item_context(*this, _("While balancing transaction")));
     add_error_context(_("Unbalanced remainder is:"));
     add_error_context(value_context(balance));
     add_error_context(_("Amount to balance against:"));
     add_error_context(value_context(magnitude()));
     throw_(balance_error, _("Transaction does not balance"));
+  balanced:;
   }
 
   if (!virtual_balance.is_null() && !virtual_balance.is_zero()) {
