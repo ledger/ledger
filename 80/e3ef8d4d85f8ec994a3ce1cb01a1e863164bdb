@@ -1,0 +1,9 @@
+src/history.cc
+  b9f188f03c4a2266 450-451
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.6",
+  "base_commit_sha": "80e3ef8d4d85f8ec994a3ce1cb01a1e863164bdb",
+  "prompts": {}
+}
