@@ -2874,6 +2874,7 @@ doing it.
 * Commodity swaps over common base currency::
 * Lot dates::
 * Lot notes::
+* Automatic Lot Matching::
 * Lot value expressions::
 * Automated Transactions::
 @end menu
@@ -3790,7 +3791,7 @@ expressions):
     Income:Capital Gains       $-125.00
 @end smallexample
 
-@node Lot notes, Lot value expressions, Lot dates, Transactions
+@node Lot notes, Automatic Lot Matching, Lot dates, Transactions
 @section Lot notes
 @findex --lot-notes
 @findex --lots
@@ -3823,7 +3824,151 @@ accounting).  Both options imply @option{--lot-prices} and
 single entry using their weighted average price, use
 @option{--average-lot-prices}.
 
-@node Lot value expressions, Automated Transactions, Lot notes, Transactions
+@node Automatic Lot Matching, Lot value expressions, Lot notes, Transactions
+@section Automatic Lot Matching
+@findex --lot-matching
+@cindex lot matching, automatic
+@cindex FIFO lot matching
+@cindex LIFO lot matching
+
+When selling commodities that were purchased in multiple lots, you
+normally must specify which lot you are selling by including its price
+and date annotations.  The @option{--lot-matching} option automates this
+process by telling Ledger to match unannotated sales against existing
+lots using either FIFO (first in, first out) or LIFO (last in, first
+out) order:
+
+@smallexample
+$ ledger --lot-matching fifo -f journal.dat balance
+$ ledger --lot-matching lifo -f journal.dat register
+@end smallexample
+
+@subsection How Automatic Lot Matching Works
+
+Consider a journal with two purchases of BTC at different prices:
+
+@smallexample
+2020/01/15 Purchase Bitcoin - Lot A
+    Assets:Crypto         2 BTC @{$8000@} [2020/01/15]
+    Assets:USD           -$16000
+
+2020/03/20 Purchase Bitcoin - Lot B
+    Assets:Crypto         1 BTC @{$9000@} [2020/03/20]
+    Assets:USD            -$9000
+@end smallexample
+
+After these transactions, @code{Assets:Crypto} holds three BTC across
+two lots: 2 BTC at $8000 (from January) and 1 BTC at $9000 (from
+March).
+
+Now suppose you sell 1 BTC without specifying which lot:
+
+@smallexample
+2020/06/01 Sell Bitcoin
+    Assets:Crypto        -1 BTC @@ $9500
+    Assets:USD            $9500
+    Income:Capital Gains
+@end smallexample
+
+Without @option{--lot-matching}, this posting creates its own separate
+lot entry for @code{-1 BTC}, which is not associated with any of the
+purchase lots.  With @option{--lot-matching}, the sale is automatically
+annotated to match against a specific purchase lot.
+
+@subsubsection FIFO Matching
+
+With @option{--lot-matching fifo}, the sale is matched against the
+@emph{oldest} lot first.  In the example above, the 1 BTC sale would be
+matched against Lot A (purchased 2020/01/15 at $8000), leaving:
+
+@itemize
+@item
+1 BTC @{$8000@} [2020/01/15] (remainder of Lot A)
+@item
+1 BTC @{$9000@} [2020/03/20] (Lot B, untouched)
+@end itemize
+
+@subsubsection LIFO Matching
+
+With @option{--lot-matching lifo}, the sale is matched against the
+@emph{newest} lot first.  The 1 BTC sale would be matched against Lot B
+(purchased 2020/03/20 at $9000), leaving:
+
+@itemize
+@item
+2 BTC @{$8000@} [2020/01/15] (Lot A, untouched)
+@end itemize
+
+@subsection Posting Splitting Across Multiple Lots
+
+If a sale is larger than the first matching lot, Ledger automatically
+splits the posting across multiple lots.  For example, if you sell 2.5
+BTC with FIFO matching:
+
+@smallexample
+2020/06/01 Sell Bitcoin
+    Assets:Crypto        -2.5 BTC @@ $23750
+    Assets:USD            $23750
+    Income:Capital Gains
+@end smallexample
+
+Ledger splits this into two postings internally: @code{-2 BTC} matched
+against Lot A (fully consumed) and @code{-0.5 BTC} matched against
+Lot B.  The sale cost is split proportionally across the generated
+postings.
+
+@subsection Gain and Loss Calculation
+
+When you specify a sale price using the @samp{@@} cost syntax, Ledger
+computes the capital gain or loss based on the matched lot's cost basis.
+The choice of FIFO or LIFO directly affects which cost basis is used:
+
+@smallexample
+; Selling 1 BTC at $9500
+; FIFO: matches Lot A ($8000 cost) => $1500 gain
+; LIFO: matches Lot B ($9000 cost) => $500 gain
+@end smallexample
+
+@subsection Conditions for Matching
+
+Automatic lot matching applies to a posting only when all of the
+following conditions are met:
+
+@enumerate
+@item
+The posting amount is negative (it is a sale or disposal).
+@item
+The posting is unannotated---it does not already have an explicit lot
+price @samp{@{@dots{}@}} or lot date @samp{[@dots{}]}.
+@item
+The commodity has been seen with annotations in prior postings (that is,
+there are existing lots to match against).
+@item
+The account holds lots with acquisition dates; only dated lots
+participate in FIFO/LIFO ordering.
+@end enumerate
+
+If any of these conditions are not met, the posting is left as-is and no
+automatic matching occurs.
+
+@subsection Combining with Other Lot Options
+
+The @option{--lot-matching} option works well in combination with
+existing lot display options:
+
+@smallexample
+; Show matched lots in FIFO order with full lot annotations
+$ ledger --lot-matching fifo --lots -f journal.dat bal Assets:Crypto
+
+; Show matched lots in LIFO order sorted newest-first
+$ ledger --lot-matching lifo --lots-lifo -f journal.dat bal Assets:Crypto
+@end smallexample
+
+Use @option{--lots}, @option{--lots-fifo}, or @option{--lots-lifo} to
+control how lots are displayed in the output, independently of which
+matching policy is used during transaction processing.
+
+@node Lot value expressions, Automated Transactions, Automatic Lot Matching, Transactions
 @section Lot value expressions
 
 Normally when you ask Ledger to display the values of commodities held,
@@ -6458,6 +6603,11 @@ When used with @option{--gain}, compute unrealised gain relative to the
 market value at @var{DATE} rather than each lot's original cost basis.
 Only appreciation since @var{DATE} is reported.
 
+@item --lot-matching @var{POLICY}
+Automatically match unannotated commodity sales against existing lots
+using FIFO or LIFO order.  @var{POLICY} must be @samp{fifo} or
+@samp{lifo}.
+
 @end ftable
 
 @node Detailed Option Description, Period Expressions, Command-Line Quick Reference, Command-Line Syntax
@@ -6626,6 +6776,16 @@ $ ledger convert Export.csv --input-date-format "%m/%d/%Y"
 Would convert the @file{Export.csv} file to ledger format, assuming
 the dates in the CSV file are like 12/23/2009 (@pxref{Date and Time
 Format Codes}).
+
+@item --lot-matching @var{POLICY}
+Automatically match unannotated commodity sales against existing lot
+holdings using the specified @var{POLICY}.  Valid values are
+@samp{fifo} (match against the oldest lot first) and @samp{lifo}
+(match against the newest lot first).  When a sale spans multiple
+lots, the posting is automatically split.  If the posting also
+specifies a sale price using @samp{@@}, gain or loss is computed
+based on the matched lot's cost basis.  @xref{Automatic Lot
+Matching}, for a complete description and examples.
 
 @item --master-account @var{STR}
 Prepend all account names with the argument.
@@ -8333,7 +8493,10 @@ valuated in another currency.  For example:
 @findex --basis
 @findex --price
 
-Ledger presently has no way of handling such things as FIFO and LIFO.
+Ledger supports automatic FIFO and LIFO lot matching via the
+@option{--lot-matching} session option.  @xref{Automatic Lot Matching},
+for details on how to use this feature to automatically match sales
+against purchase lots.
 
 If you specify an unadorned commodity name, like AAPL, it will balance
 against itself.  If @option{--lots} are not being displayed, then it

@@ -1,0 +1,47 @@
+; Baseline test for FIFO/LIFO automatic lot matching (issue #164)
+; This tests the --lot-matching option for automatic commodity lot disposal
+
+; === Purchases ===
+2020/01/15 Purchase Bitcoin - Lot A
+    Assets:Crypto         2 BTC {$8000} [2020/01/15]
+    Assets:USD           -$16000
+
+2020/03/20 Purchase Bitcoin - Lot B
+    Assets:Crypto         1 BTC {$9000} [2020/03/20]
+    Assets:USD            -$9000
+
+; === Sale - should be matched against a lot ===
+2020/06/01 Sell Bitcoin
+    Assets:Crypto        -1 BTC @ $9500
+    Assets:USD            $9500
+    Income:Capital Gains
+
+; Without lot matching, the sale creates its own lot entry
+test bal --lots Assets:Crypto
+2 BTC {$8000} [2020/01/15]
+1 BTC {$9000} [2020/03/20]
+-1 BTC {$9500} [2020/06/01]  Assets:Crypto
+end test
+
+; FIFO: sale matched against oldest lot (Lot A at $8000)
+; 1 BTC consumed from Lot A, leaving 1 BTC in Lot A + 1 BTC in Lot B
+test --lot-matching fifo bal --lots Assets:Crypto
+1 BTC {$8000} [2020/01/15]
+1 BTC {$9000} [2020/03/20]  Assets:Crypto
+end test
+
+; LIFO: sale matched against newest lot (Lot B at $9000)
+; Lot B fully consumed, leaving 2 BTC in Lot A
+test --lot-matching lifo bal --lots Assets:Crypto
+2 BTC {$8000} [2020/01/15]  Assets:Crypto
+end test
+
+; FIFO gain/loss: sold at $9500, cost basis $8000 = $1500 gain
+test --lot-matching fifo bal Income
+              $-1500  Income:Capital Gains
+end test
+
+; LIFO gain/loss: sold at $9500, cost basis $9000 = $500 gain
+test --lot-matching lifo bal Income
+               $-500  Income:Capital Gains
+end test

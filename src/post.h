@@ -62,6 +62,8 @@ public:
 #define POST_IS_TIMELOG 0x2000            // the posting is a timelog entry
 #define POST_AMOUNT_USER_ANNOTATED 0x4000 // amount has user-specified annotations
 #define POST_AMOUNT_USER_DATE 0x8000      // amount has user-specified lot date
+  // Note: FIFO/LIFO auto-matching is indicated by the presence of an
+  // annotation without POST_AMOUNT_USER_ANNOTATED
 
   xact_t* xact; // only set for posts of regular xacts
   account_t* account;

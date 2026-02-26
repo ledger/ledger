@@ -1,0 +1,47 @@
+; Regression test for issue #164: Multi-lot split and edge cases
+; Tests cross-lot consumption with correct gain/loss calculation
+
+; === Setup: Three lots at different prices ===
+2020/01/15 Buy BTC Lot A
+    Assets:Crypto         1 BTC {$5000} [2020/01/15]
+    Assets:Cash          -$5000
+
+2020/02/15 Buy BTC Lot B
+    Assets:Crypto         1 BTC {$7000} [2020/02/15]
+    Assets:Cash          -$7000
+
+2020/03/15 Buy BTC Lot C
+    Assets:Crypto         0.5 BTC {$8000} [2020/03/15]
+    Assets:Cash          -$4000
+
+; === Sale spanning all three lots ===
+2020/06/01 Sell BTC
+    Assets:Crypto        -2.5 BTC @ $10000
+    Assets:Cash           $25000
+    Income:Capital Gains
+
+; FIFO cross-lot gain/loss:
+; Lot A: 1 BTC at $5000, sold at $10000 = $5000 gain
+; Lot B: 1 BTC at $7000, sold at $10000 = $3000 gain
+; Lot C: 0.5 BTC at $8000, sold at $10000 = $1000 gain
+; Total gain = $9000
+test --lot-matching fifo bal Income
+              $-9000  Income:Capital Gains
+end test
+
+; All lots consumed, nothing remaining
+test --lot-matching fifo bal --lots Assets:Crypto
+end test
+
+; LIFO cross-lot gain/loss:
+; Lot C: 0.5 BTC at $8000, sold at $10000 = $1000 gain
+; Lot B: 1 BTC at $7000, sold at $10000 = $3000 gain
+; Lot A: 1 BTC at $5000, sold at $10000 = $5000 gain
+; Total gain = $9000 (same total, different per-lot breakdown)
+test --lot-matching lifo bal Income
+              $-9000  Income:Capital Gains
+end test
+
+; LIFO: all lots consumed
+test --lot-matching lifo bal --lots Assets:Crypto
+end test
