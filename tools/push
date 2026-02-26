@@ -13,13 +13,13 @@ perl -i -pe "s/([-abgrc][0-9]*)?\\]\\)/-$(date +%Y%m%d)])/;" version.m4
 git add version.m4
 echo git commit -m "v$(cat version.m4 | sed 's/.*\[//' | sed 's/\].*//')"
 
-git checkout master
+git checkout main
 git merge --no-ff next
 git checkout next
-git rebase master
+git rebase main
 git push
 
-git checkout master
+git checkout main
 $ACPREP upload
 $ACPREP make dist
 
