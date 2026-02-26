@@ -180,10 +180,8 @@ public:
   OPTION(session_t, no_aliases);
   /// Lot matching policy for automatic commodity disposal: "fifo", "lifo", or "none"
   OPTION_CTOR(
-      session_t, lot_matching_,
-      lot_policy_t policy = lot_policy_t::none;
-      CTOR(session_t, lot_matching_) {}
-      DO_() {
+      session_t, lot_matching_, lot_policy_t policy = lot_policy_t::none;
+      CTOR(session_t, lot_matching_) {} DO_() {
         if (str == "fifo")
           policy = lot_policy_t::fifo;
         else if (str == "lifo")

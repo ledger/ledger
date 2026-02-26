@@ -335,9 +335,7 @@ bool xact_base_t::finalize() {
         post_t* post = copy[idx];
 
         // Only match unannotated negative amounts for commodities with lots
-        if (post->amount.is_null() ||
-            post->amount.sign() >= 0 ||
-            post->amount.has_annotation() ||
+        if (post->amount.is_null() || post->amount.sign() >= 0 || post->amount.has_annotation() ||
             !post->amount.has_commodity() ||
             !post->amount.commodity().has_flags(COMMODITY_SAW_ANNOTATED))
           continue;
@@ -348,8 +346,7 @@ bool xact_base_t::finalize() {
         // account->posts contains all posts from prior transactions (not current)
         std::map<commodity_t*, amount_t> lot_holdings;
         for (const post_t* prior : post->account->posts) {
-          if (prior->amount.has_commodity() &&
-              prior->amount.has_annotation() &&
+          if (prior->amount.has_commodity() && prior->amount.has_annotation() &&
               prior->amount.commodity().base_symbol() == base_symbol) {
             auto [it, inserted] =
                 lot_holdings.try_emplace(&prior->amount.commodity(), prior->amount);
@@ -362,8 +359,7 @@ bool xact_base_t::finalize() {
         // already matched (they modify the effective lot balance)
         for (std::size_t j = 0; j < idx; ++j) {
           post_t* earlier = copy[j];
-          if (earlier->amount.has_commodity() &&
-              earlier->amount.has_annotation() &&
+          if (earlier->amount.has_commodity() && earlier->amount.has_annotation() &&
               earlier->amount.commodity().base_symbol() == base_symbol) {
             auto [it, inserted] =
                 lot_holdings.try_emplace(&earlier->amount.commodity(), earlier->amount);
@@ -455,8 +451,7 @@ bool xact_base_t::finalize() {
         }
 
         // Adjust the first posting's cost to its proportional share
-        if (!first && original_cost && !first_consumed.is_null() &&
-            first_consumed != total_sale) {
+        if (!first && original_cost && !first_consumed.is_null() && first_consumed != total_sale) {
           post->cost = *original_cost * (first_consumed / total_sale);
         }
 
