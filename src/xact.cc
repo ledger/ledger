@@ -413,8 +413,7 @@ bool xact_base_t::finalize() {
 
         // Consume lots in order
         const amount_t total_sale = post->amount.abs(); // positive total to sell
-        const std::optional<amount_t> original_cost =
-            post->cost ? std::optional<amount_t>(*post->cost) : std::nullopt;
+        const std::optional<amount_t> original_cost = post->cost;
         amount_t remaining = total_sale;
         amount_t first_consumed;
         bool first = true;
