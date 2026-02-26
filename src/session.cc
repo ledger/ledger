@@ -323,6 +323,7 @@ option_t<session_t>* session_t::lookup_option(const char* p) {
     break;
   case 'l':
     OPT_ALT(price_exp_, leeway_);
+    else OPT(lot_matching_);
     break;
   case 'm':
     OPT(master_account_);

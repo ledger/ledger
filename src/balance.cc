@@ -97,6 +97,21 @@ balance_t& balance_t::operator-=(const amount_t& amt) {
     if (i->second.is_realzero())
       amounts.erase(i);
   } else {
+    // Check if we're adding a negative unannotated amount when annotated lots exist
+    // This handles the case where a sale is matched against a specific lot
+    if (!amt.commodity().has_annotation() && amt.sign() < 0) {
+      // Look for annotated lots of the same base commodity
+      const string& base_symbol = amt.commodity().base_symbol();
+      for (amounts_map::value_type& pair : amounts) {
+        if (pair.first->has_annotation() && pair.first->base_symbol() == base_symbol) {
+          // Found a lot - use it for the subtraction
+          amount_t annotated_amt = amt.abs();
+          annotated_amt.set_commodity(*pair.first);
+          *this -= annotated_amt;  // Recursive call with annotated amount
+          return *this;
+        }
+      }
+    }
     amounts.insert(amounts_map::value_type(&amt.commodity(), amt.negated()));
   }
   return *this;

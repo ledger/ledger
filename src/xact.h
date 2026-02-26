@@ -51,6 +51,7 @@ namespace ledger {
 
 class journal_t;
 class parse_context_t;
+class session_t;
 
 class xact_base_t : public item_t {
 public:

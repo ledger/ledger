@@ -1,0 +1,35 @@
+; Regression test for issue #164: Allow FIFO and LIFO commodity lot usage
+; Test automatic FIFO/LIFO lot matching when selling without explicit lot annotation
+
+2020/01/01 Buy BTC - Lot 1
+    Assets:Crypto       1 BTC [2020/01/01] @ $5000
+    Assets:Cash        -$5000
+
+2020/02/01 Buy BTC - Lot 2
+    Assets:Crypto       2 BTC [2020/02/01] @ $6000
+    Assets:Cash        -$12000
+
+2020/03/01 Buy BTC - Lot 3
+    Assets:Crypto       0.5 BTC [2020/03/01] @ $7000
+    Assets:Cash        -$3500
+
+; Test initial balance with lots
+test bal --lots Assets:Crypto
+1.0 BTC {$5000} [2020/01/01]
+2.0 BTC {$6000} [2020/02/01]
+0.5 BTC {$7000} [2020/03/01]  Assets:Crypto
+end test
+
+; Test FIFO ordering
+test bal --lots-fifo Assets:Crypto
+1.0 BTC {$5000} [2020/01/01]
+2.0 BTC {$6000} [2020/02/01]
+0.5 BTC {$7000} [2020/03/01]  Assets:Crypto
+end test
+
+; Test LIFO ordering
+test bal --lots-lifo Assets:Crypto
+0.5 BTC {$7000} [2020/03/01]
+2.0 BTC {$6000} [2020/02/01]
+1.0 BTC {$5000} [2020/01/01]  Assets:Crypto
+end test

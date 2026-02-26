@@ -38,6 +38,7 @@
 #include "context.h"
 #include "format.h"
 #include "pool.h"
+#include "session.h"
 
 namespace ledger {
 
@@ -328,6 +329,22 @@ bool xact_base_t::finalize() {
   posts_list copy(posts);
 
   if (has_date()) {
+    // Auto-match unannotated sales against existing lots if journal has lot matching policy
+    if (journal && journal->lot_matching_policy != "" && journal->lot_matching_policy != "none") {
+      for (post_t* post : copy) {
+        // Check for unannotated sales (negative amounts without annotations)
+        if (post->amount.sign() < 0 && !post->amount.has_annotation() && !post->cost) {
+          // Try to match against existing lots
+          if (std::optional<amount_t> matched =
+                  commodity_pool_t::current_pool->match_lot(post->amount, post->primary_date(),
+                                                            journal->lot_matching_policy)) {
+            // Annotate the sale with the matched lot's details
+            post->amount = *matched;
+          }
+        }
+      }
+    }
+
     for (post_t* post : copy) {
       if (!post->cost)
         continue;
@@ -339,7 +356,7 @@ bool xact_base_t::finalize() {
       std::optional<date_t> lot_date;
       if (post->has_flags(POST_AMOUNT_USER_DATE) && post->amount.has_annotation() &&
           post->amount.annotation().date)
-        lot_date = post->amount.annotation().date;
+        lot_date = *post->amount.annotation().date;
 
       cost_breakdown_t breakdown = commodity_pool_t::current_pool->exchange(
           post->amount, *post->cost, false, !post->has_flags(POST_COST_VIRTUAL),

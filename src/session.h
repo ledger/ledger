@@ -177,6 +177,8 @@ public:
   OPTION(session_t, value_expr_);
   OPTION(session_t, recursive_aliases);
   OPTION(session_t, no_aliases);
+  /// Lot matching policy for automatic commodity disposal: "fifo", "lifo", or "none"
+  OPTION(session_t, lot_matching_);
 };
 
 /**

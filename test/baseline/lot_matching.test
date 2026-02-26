@@ -1,0 +1,36 @@
+; Baseline test for FIFO/LIFO automatic lot matching (issue #164)
+; This demonstrates the --lot-matching option for automatic commodity lot disposal
+
+2020/01/15 Purchase Bitcoin - Lot A
+    Assets:Crypto         2 BTC [2020/01/15] @ $8000
+    Assets:USD           -$16000
+
+2020/03/20 Purchase Bitcoin - Lot B
+    Assets:Crypto         1 BTC [2020/03/20] @ $9000
+    Assets:USD            -$9000
+
+; Initial holdings - three lots total
+test reg
+15-Jan-20 Purchase Bitcoin - Lot A  Assets:Crypto              2.0 BTC
+                                    Assets:USD              -$16000
+20-Mar-20 Purchase Bitcoin - Lot B  Assets:Crypto              1.0 BTC
+                                    Assets:USD               -$9000
+end test
+
+; Show lot details
+test bal --lots Assets:Crypto
+2.0 BTC {$8000} [2020/01/15]
+1.0 BTC {$9000} [2020/03/20]  Assets:Crypto
+end test
+
+; FIFO ordering shows oldest first
+test bal --lots-fifo Assets:Crypto
+2.0 BTC {$8000} [2020/01/15]
+1.0 BTC {$9000} [2020/03/20]  Assets:Crypto
+end test
+
+; LIFO ordering shows newest first
+test bal --lots-lifo Assets:Crypto
+1.0 BTC {$9000} [2020/03/20]
+2.0 BTC {$8000} [2020/01/15]  Assets:Crypto
+end test

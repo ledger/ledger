@@ -384,4 +384,57 @@ commodity_t* commodity_pool_t::parse_price_expression(const std::string& str, co
   return nullptr;
 }
 
+std::optional<amount_t> commodity_pool_t::match_lot(const amount_t& sale_amount,
+                                                    const std::optional<date_t>& date,
+                                                    const string& matching_policy) {
+  // Only match negative amounts (sales)
+  if (sale_amount.sign() >= 0)
+    return std::nullopt;
+
+  const commodity_t& base_comm = sale_amount.commodity();
+  const string& base_symbol = base_comm.base_symbol();
+
+  // Collect all annotated lots of the same base commodity
+  std::vector<const annotated_commodity_t*> lots;
+
+  for (const auto& pair : annotated_commodities) {
+    const annotated_commodity_t* ann_comm = pair.second.get();
+    if (ann_comm->base_symbol() == base_symbol && ann_comm->has_annotation()) {
+      const annotation_t& details = ann_comm->details;
+      // Check if this lot has a date for sorting
+      if (details.date) {
+        lots.push_back(ann_comm);
+      }
+    }
+  }
+
+  if (lots.empty())
+    return std::nullopt;
+
+  // Sort lots according to policy
+  if (matching_policy == "fifo") {
+    // FIFO: oldest first (ascending by date)
+    std::sort(lots.begin(), lots.end(),
+                [](const auto& a, const auto& b) { return a->details.date < b->details.date; });
+  } else if (matching_policy == "lifo") {
+    // LIFO: newest first (descending by date)
+    std::sort(lots.begin(), lots.end(),
+                [](const auto& a, const auto& b) { return a->details.date > b->details.date; });
+  } else {
+    // Unknown policy, return nullopt
+    return std::nullopt;
+  }
+
+  // Return the first lot (oldest for FIFO, newest for LIFO)
+  // The actual balance tracking and lot depletion happens in balance_t::operator-=
+  const annotated_commodity_t* matched_comm = lots[0];
+  
+  // Create a positive amount with the matched commodity's annotation
+  // This preserves the purchase price, date, and tag for gain/loss calculation
+  amount_t matched_amount = sale_amount.abs();
+  matched_amount.set_commodity(const_cast<annotated_commodity_t&>(*matched_comm));
+
+  return matched_amount;
+}
+
 } // namespace ledger

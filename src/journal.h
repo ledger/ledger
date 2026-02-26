@@ -103,6 +103,7 @@ public:
   bool day_break;
   bool recursive_aliases;
   bool no_aliases;
+  string lot_matching_policy;  // fifo, lifo, or none
   payee_alias_mappings_t payee_alias_mappings;
   payee_uuid_mappings_t payee_uuid_mappings;
   payee_rewrite_mappings_t payee_rewrite_mappings;
