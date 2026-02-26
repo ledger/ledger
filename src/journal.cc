@@ -41,7 +41,6 @@
 #include "xact.h"
 #include "post.h"
 #include "account.h"
-#include "report.h"
 
 namespace ledger {
 
@@ -94,7 +93,6 @@ void journal_t::initialize() {
   checking_style = CHECK_NORMAL;
   recursive_aliases = false;
   no_aliases = false;
-  lot_matching_policy = "";  // Default: no automatic lot matching
 
   // Pre-register built-in metadata tags so --strict/--pedantic don't
   // warn about them.  These are tags that ledger uses internally.
@@ -454,15 +452,6 @@ std::size_t journal_t::read(parse_context_stack_t& context, hash_type_t hash_typ
     if (!current.scope)
       throw_(std::runtime_error,
              _f("No default scope in which to read journal file '%1%'") % current.pathname);
-
-    // Set lot matching policy from session if available
-    if (report_t* report = dynamic_cast<report_t*>(current.scope)) {
-      if (report->session.HANDLED(lot_matching_)) {
-        const string& policy = report->session.HANDLER(lot_matching_).str();
-        if (policy != "")
-          lot_matching_policy = policy;
-      }
-    }
 
     if (!current.master)
       current.master = master;

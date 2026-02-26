@@ -116,6 +116,7 @@ public:
     HANDLER(no_aliases).report(out);
     HANDLER(strict).report(out);
     HANDLER(value_expr_).report(out);
+    HANDLER(lot_matching_).report(out);
   }
 
   option_t<session_t>* lookup_option(const char* p);
@@ -178,7 +179,21 @@ public:
   OPTION(session_t, recursive_aliases);
   OPTION(session_t, no_aliases);
   /// Lot matching policy for automatic commodity disposal: "fifo", "lifo", or "none"
-  OPTION(session_t, lot_matching_);
+  OPTION_CTOR(
+      session_t, lot_matching_,
+      lot_policy_t policy = lot_policy_t::none;
+      CTOR(session_t, lot_matching_) {}
+      DO_() {
+        if (str == "fifo")
+          policy = lot_policy_t::fifo;
+        else if (str == "lifo")
+          policy = lot_policy_t::lifo;
+        else if (str == "none")
+          policy = lot_policy_t::none;
+        else
+          throw_(std::invalid_argument,
+                 _f("Unknown lot-matching policy '%1%': must be 'fifo', 'lifo', or 'none'") % str);
+      });
 };
 
 /**

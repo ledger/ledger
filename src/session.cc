@@ -124,6 +124,9 @@ std::size_t session_t::read_data(const string& master_account) {
   if (HANDLED(value_expr_))
     journal->value_expr = HANDLER(value_expr_).str();
 
+  if (HANDLED(lot_matching_))
+    journal->lot_matching_policy = HANDLER(lot_matching_).policy;
+
   if (price_db_path) {
     if (exists(*price_db_path)) {
       parsing_context.push(*price_db_path);
