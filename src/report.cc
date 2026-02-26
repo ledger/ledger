@@ -360,6 +360,24 @@ void report_t::posts_report(post_handler_ptr handler) {
     posts_flusher(handler, *this)(value_t());
 }
 
+void report_t::posts_report(post_handler_ptr handler, post_handler_ptr& saved_chain) {
+  handler = chain_post_handlers(handler, *this);
+  if (HANDLED(group_by_)) {
+    unique_ptr<post_splitter> splitter(new post_splitter(handler, *this, HANDLER(group_by_).expr));
+    splitter->set_postflush_func(posts_flusher(handler, *this));
+    handler = post_handler_ptr(splitter.release());
+  }
+  handler = chain_pre_post_handlers(handler, *this);
+
+  saved_chain = handler; // Keep chain alive to preserve temporary posts/accounts
+
+  journal_posts_iterator walker(*session.journal.get());
+  pass_down_posts<journal_posts_iterator>(handler, walker); // NOLINT(bugprone-unused-raii)
+
+  if (!HANDLED(group_by_))
+    posts_flusher(handler, *this)(value_t());
+}
+
 void report_t::generate_report(post_handler_ptr handler) {
   handler = chain_handlers(handler, *this);
 

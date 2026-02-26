@@ -134,6 +134,7 @@ public:
   void parse_query_args(const value_t& args, const string& whence);
 
   void posts_report(post_handler_ptr handler);
+  void posts_report(post_handler_ptr handler, post_handler_ptr& saved_chain);
   void generate_report(post_handler_ptr handler);
   void xact_report(post_handler_ptr handler, xact_t& xact);
   void accounts_report(acct_handler_ptr handler);
