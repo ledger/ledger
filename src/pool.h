@@ -111,10 +111,6 @@ public:
                             const std::optional<string>& tag = {},
                             const std::optional<date_t>& lot_date = {});
 
-  // Match unannotated sales against existing lots using FIFO/LIFO
-  std::optional<amount_t> match_lot(const amount_t& sale_amount, const std::optional<date_t>& date,
-                                    const string& matching_policy);
-
   // Parse commodity prices from a textual representation
 
   std::optional<std::pair<commodity_t*, price_point_t>>
