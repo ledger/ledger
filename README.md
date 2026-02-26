@@ -1,5 +1,5 @@
 [![Join the chat at https://gitter.im/use-package/Lobby](https://badges.gitter.im/use-package/Lobby.svg)](https://gitter.im/use-package/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-![Build Status master](https://github.com/ledger/ledger/actions/workflows/cmake.yml/badge.svg)
+![Build Status main](https://github.com/ledger/ledger/actions/workflows/cmake.yml/badge.svg)
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg?style=flat)](https://github.com/ledger/ledger/pulse/monthly)
 [![License](https://img.shields.io/badge/license-BSD-blue.svg?style=flat)](https://opensource.org/licenses/BSD-3-Clause)
 [![GitHub release](https://img.shields.io/github/release/ledger/ledger.svg?style=flat)](https://github.com/ledger/ledger/releases)
@@ -54,7 +54,7 @@ The easiest way to get them for your platform is to run this handy Python script
 
 
 If that doesn't completely work, here are the dependencies for building the
-current `master` branch:
+current `main` branch:
 
 Dependency  | Version (or greater)
 ------------|---------------------

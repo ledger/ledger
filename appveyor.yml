@@ -11,7 +11,7 @@ install:
 
 branches:
   only:
-    - master
+    - main
     - next
 
 build_script:

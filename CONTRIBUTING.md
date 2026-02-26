@@ -1,7 +1,7 @@
 Tips for contributors
 ---------------------
 
-* Please **make pull requests against `master`**.
+* Please **make pull requests against `main`**.
 * Please add a **test case** under `test/regress` when possible.
 * If you're making **changes to files for which the CI build is not
   relevant**, please **add `[ci skip]` to the end of the commit message**.
@@ -129,5 +129,5 @@ cores:
 [utfcpp]: https://utfcpp.sourceforge.net
 [small badge]: https://github.com/ledger/ledger/actions/workflows/cmake.yml/badge.svg
 [git-flow]: https://nvie.com/posts/a-successful-git-branching-model/
-[README.md]: https://github.com/ledger/ledger/blob/master/README.md
+[README.md]: https://github.com/ledger/ledger/blob/main/README.md
 [clang]: https://clang.llvm.org
