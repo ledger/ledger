@@ -1,0 +1,32 @@
+; Regression test for issue #1968
+; auxdate is ignored when a posting comment also contains a tag
+; https://github.com/ledger/ledger/issues/1968
+;
+; When a posting note contains both an auxiliary date [=YYYY-MM-DD] and a tag
+; (e.g. :foo: or foo :foo:), the auxiliary date should still be honoured.
+
+2020-10-22 * Test
+    Assets:A             5.00 EUR
+    Assets:B            -5.00 EUR ; [=2018-02-02]
+
+2020-10-22 * Test
+    Assets:A             5.00 EUR
+    Assets:B            -5.00 EUR ; [=2018-02-02] :foo:
+
+2020-10-22 * Test
+    Assets:A             5.00 EUR
+    Assets:B            -5.00 EUR ; [=2018-02-02] foo :foo:
+
+; All three postings to Assets:B should show 18-Feb-02 with --effective
+test reg --effective assets:b
+18-Feb-02 Test                  Assets:B                  -5.00 EUR    -5.00 EUR
+18-Feb-02 Test                  Assets:B                  -5.00 EUR   -10.00 EUR
+18-Feb-02 Test                  Assets:B                  -5.00 EUR   -15.00 EUR
+end test
+
+; The two postings with :foo: should be found via has_tag and also show
+; the correct effective date
+test reg --effective -l "has_tag('foo')"
+18-Feb-02 Test                  Assets:B                  -5.00 EUR    -5.00 EUR
+18-Feb-02 Test                  Assets:B                  -5.00 EUR   -10.00 EUR
+end test
