@@ -280,7 +280,7 @@ value_t expr_value(expr_t::ptr_op_t op) {
   return temp;
 }
 
-value_t source_command(call_scope_t& args) {
+value_t script_command(call_scope_t& args) {
   std::istream* in = nullptr;
   scoped_ptr<ifstream> stream;
   string pathname;
