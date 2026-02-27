@@ -1,0 +1,34 @@
+; Regression test for issue #1217:
+; When a fee posting uses "A @@ B {lot_price_in_A}" notation, the cost
+; commodity B should NOT be marked as COMMODITY_PRIMARY.  If it were, then
+; -V would fail to convert B-denominated balances back to A.
+;
+; The problematic entry is the fee posting:
+;   Expenses:Fees    0.54 EUR @@ 0.00160 ETH {334.51 EUR} [2017-06-13]
+; Previously this caused ETH to be marked as primary (because EUR was being
+; "priced in ETH"), which prevented -V from converting ETH balances to EUR.
+
+2017-06-09 * Bought ETH on Bity
+  Assets:Investments:MyEtherWallet    1.00000000 ETH @@ 243.07 EUR
+  Assets:Current:Bity                                  -243.07 EUR
+
+2017-06-13 * Bought ETH on Kraken
+  Assets:Investments:Kraken         1.00000 ETH @ 334.51 EUR
+  Expenses:Fees:Investments    0.54 EUR @@ 0.00160 ETH {334.51 EUR} [2017-06-13]
+  Assets:Investments:Kraken   -0.00160 ETH {334.51 EUR} [2017-06-13]
+  Assets:Current:Kraken
+
+; pricedb should only contain ETH prices in EUR, not a spurious EUR-in-ETH entry
+test pricedb
+P 2017/06/09 00:00:00 ETH 243.07 EUR
+P 2017/06/13 00:00:00 ETH 334.51 EUR
+end test
+
+; -V should convert ETH balances to EUR using the most recent ETH price
+test bal assets:investments -V
+          668.48 EUR  Assets:Investments
+          333.97 EUR    Kraken
+          334.51 EUR    MyEtherWallet
+--------------------
+          668.48 EUR
+end test
