@@ -1,0 +1,22 @@
+; Test that automated transactions are visible to balance assertions,
+; specifically for the tax-estimation use case from issue #1225.
+;
+; Automated transactions estimate taxes at 30% of income. When filing
+; taxes, the balance assertion should see the auto-generated $300 and
+; only post the $50 adjustment (to reach $350), not the full $350.
+
+= expr account =~ /^Income/
+    (Liabilities:Taxes:Estimated)  -0.30
+
+2000/01/15 Paycheck
+    Income:Salary               $-1000.00
+    Assets:Checking              $1000.00
+
+2000/04/15 Tax Filing
+    [Liabilities:Taxes:Estimated]   = $350.00
+    [Equity:Retained Earnings]
+
+test reg Liabilities
+00-Jan-15 Paycheck              (Liab:Taxes:Estimated)      $300.00      $300.00
+00-Apr-15 Tax Filing            [Liab:Taxes:Estimated]       $50.00      $350.00
+end test
