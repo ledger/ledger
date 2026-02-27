@@ -63,9 +63,17 @@ void create_timelog_xact(const time_xact_t& in_event, const time_xact_t& out_eve
   post->pos = in_event.position;
   post->checkin = in_event.checkin;
   post->checkout = out_event.checkin;
+
+  // Set xact temporarily so register_account can access the payee when
+  // applying payees_for_unknown_accounts mappings from account directives.
+  post->xact = curr.get();
+  account_t* account = context.journal->register_account(in_event.account->fullname(), post.get(),
+                                                         context.journal->master);
+  post->account = account;
+
   post_t* raw_post = post.release();
   curr->add_post(raw_post);
-  in_event.account->add_post(raw_post);
+  account->add_post(raw_post);
 
   if (!context.journal->add_xact(curr.get()))
     throw parse_error(_("Failed to record 'out' timelog transaction"));
