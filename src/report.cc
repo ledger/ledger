@@ -1078,6 +1078,14 @@ value_t report_t::reload_command(call_scope_t&) {
   return true;
 }
 
+value_t report_t::source_command(call_scope_t& args) {
+  if (args.has(0))
+    session.read_journal(path(args.get<string>(0)));
+  else
+    session.read_journal_files();
+  return true;
+}
+
 value_t report_t::echo_command(call_scope_t& args) {
   std::ostream& out(output_stream);
   out << args.get<string>(0) << '\n';
@@ -1757,8 +1765,6 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
     case 's':
       if (is_eq(p, "stats") || is_eq(p, "stat"))
         return WRAP_FUNCTOR(report_statistics);
-      else if (is_eq(p, "source"))
-        return WRAP_FUNCTOR(source_command);
       else if (is_eq(p, "select"))
         return WRAP_FUNCTOR(select_command);
       break;
@@ -1810,7 +1816,9 @@ expr_t::ptr_op_t report_t::lookup(const symbol_t::kind_t kind, const string& nam
       break;
     case 's':
       if (is_eq(p, "script"))
-        return WRAP_FUNCTOR(source_command);
+        return WRAP_FUNCTOR(script_command);
+      else if (is_eq(p, "source"))
+        return MAKE_FUNCTOR(report_t::source_command);
       break;
     case 't':
       if (is_eq(p, "template"))

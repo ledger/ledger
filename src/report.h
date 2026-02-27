@@ -214,6 +214,7 @@ public:
   }
 
   value_t reload_command(call_scope_t&);
+  value_t source_command(call_scope_t& args);
   value_t echo_command(call_scope_t& scope);
   value_t pricemap_command(call_scope_t& scope);
 
