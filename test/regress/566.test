@@ -1,0 +1,21 @@
+; Regression test for issue #566:
+; Y/year directive not compatible with --input-date-format
+;
+; When --input-date-format is specified, separator conversion is disabled
+; (dashes and dots are no longer converted to slashes before parsing).
+; The short-form date %m-%d must still be recognized as a built-in format
+; so that transactions using the Y directive with dash-separated dates work.
+
+Y2014
+
+04-21 * Test
+    Assets:A        10.00 EUR
+    Assets:B
+
+test bal --input-date-format %Y-%m-%d
+                   0  Assets
+           10.00 EUR    A
+          -10.00 EUR    B
+--------------------
+                   0
+end test
