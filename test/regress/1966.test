@@ -1,0 +1,31 @@
+; Regression test for bug #1966: lot date specified without explicit cost should
+; be preserved, not replaced by the transaction date during finalization.
+;
+; When a posting specifies only a lot date (no @ cost), the transaction's
+; auto-pricing logic would replace the user-specified lot date with the
+; transaction date, causing the lot to not match its counterpart.
+
+2020/10/01 Purchase
+    Expense                             1.00 EUR
+    Bank                               -1.00 EUR
+    Assets:Reimbursements               1.00 EUR [2020/10/01]
+    Income:Something                   -1.00 EUR
+
+2020/11/01 Reimbursement
+    Bank                                1.00 EUR
+    Assets:Reimbursements              -1.00 EUR [2020/10/01]
+
+test print
+2020/10/01 Purchase
+    Expense                                 1.00 EUR
+    Bank                                   -1.00 EUR
+    Assets:Reimbursements               1.00 EUR [2020/10/01]
+    Income:Something                       -1.00 EUR
+
+2020/11/01 Reimbursement
+    Bank                                    1.00 EUR
+    Assets:Reimbursements               -1.00 EUR [2020/10/01]
+end test
+
+test bal --lot-dates Assets:Reimbursements
+end test
