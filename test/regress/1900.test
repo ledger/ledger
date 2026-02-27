@@ -1,0 +1,32 @@
+; Regression test for issue #1900
+; When multiple_args is true and a single argument contains an operator like
+; '&', the lexer was accumulating trailing whitespace into the identifier
+; before the operator. For example, '. & %foo' (as one shell argument) would
+; produce (account =~ /. /) instead of (account =~ /./), because the space
+; before '&' was appended to the identifier string.
+
+2024/01/01 Store
+    ; foo: bar
+    Expenses:Food    $10.00
+    Assets:Checking
+
+2024/01/02 Store
+    Expenses:Transport    $20.00
+    Assets:Checking
+
+; Verify that '. & %foo' as a single argument correctly filters register
+; output. The dot should match any account (using regex /./), and %foo should
+; match only postings with the 'foo' metadata tag.
+; Without the fix, the dot would include a trailing space, creating /. /
+; which would still match but reveals the parsing was wrong.
+test reg '. & %foo'
+24-Jan-01 Store                 Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test
+
+; Also verify with leading and trailing spaces inside the quoted argument,
+; which should be trimmed correctly as well.
+test reg ' . & %foo '
+24-Jan-01 Store                 Expenses:Food                $10.00       $10.00
+                                Assets:Checking             $-10.00            0
+end test
