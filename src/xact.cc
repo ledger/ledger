@@ -292,7 +292,8 @@ bool xact_base_t::finalize() {
   // implicit-exchange logic above but handles the common case where several
   // commodities are purchased and their combined value in a single base
   // currency is stated explicitly (e.g. using a computed expression).
-  if (!null_post && has_date() && balance.is_balance() && balance.as_balance().amounts.size() > 2) {
+  if (!null_post && has_date() && balance.is_balance() && !balance.is_zero() &&
+      balance.as_balance().amounts.size() > 2) {
     bool any_cost = false;
     for (post_t* post : posts) {
       if (!post->must_balance() || post->has_flags(POST_VIRTUAL))
