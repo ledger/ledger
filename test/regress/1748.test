@@ -1,0 +1,37 @@
+; Regression test for issue #1748
+; The 'year' directive should not affect price history lookup across years.
+; When multiple year directives are used, the prices command must show price
+; entries from ALL years, not just the first year's entries.
+
+year 2017
+
+2017-10-24 Testing
+  Assets       12 L
+  Income       -12 EUR
+
+year 2018
+
+2018-10-24 Testing
+  Assets       12 L
+  Income       -15 EUR
+
+; Both years' implicit prices must appear in the price database.
+; Previously, the second year's prices were missing because the year
+; directive incorrectly limited the price history lookup window.
+test prices
+2017/10/24 L               1 EUR
+2018/10/24 L            1.25 EUR
+end test
+
+; Period filtering must work correctly even when year directives are present.
+test reg -p 2017
+17-Oct-24 Testing               Assets                         12 L         12 L
+                                Income                      -12 EUR      -12 EUR
+                                                                            12 L
+end test
+
+test reg -p 2018
+18-Oct-24 Testing               Assets                         12 L         12 L
+                                Income                      -15 EUR      -15 EUR
+                                                                            12 L
+end test
