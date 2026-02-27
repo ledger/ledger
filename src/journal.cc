@@ -159,8 +159,7 @@ account_t* journal_t::register_account(string_view name, post_t* post, account_t
         bool has_template_var = contains(fn, "%(");
         if (!has_template_var) {
           for (size_t i = 0; i + 1 < fn.size(); ++i) {
-            if (fn[i] == '$' &&
-                (std::isalpha((unsigned char)fn[i + 1]) || fn[i + 1] == '_')) {
+            if (fn[i] == '$' && (std::isalpha((unsigned char)fn[i + 1]) || fn[i + 1] == '_')) {
               has_template_var = true;
               break;
             }
