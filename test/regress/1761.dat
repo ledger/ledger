@@ -1,0 +1,3 @@
+--no-pager --columns=80 bal Brokerage
+--no-pager --columns=80 bal --market Brokerage
+--no-pager --columns=80 bal Brokerage
